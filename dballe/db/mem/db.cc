@@ -86,7 +86,7 @@ std::map<std::string, int> DB::get_repinfo_priorities()
     return repinfo.get_priorities();
 }
 
-void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
+void DB::insert(const Query& rec, bool can_replace, bool station_can_add)
 {
     // Obtain the station
     m_last_station_id = memdb.stations.obtain(rec, station_can_add);
@@ -120,7 +120,7 @@ int DB::last_station_id() const
     return m_last_station_id;
 }
 
-void DB::remove(const Record& query)
+void DB::remove(const Query& query)
 {
     Results<Value> res(memdb.values);
     raw_query_data(query, res);
@@ -171,7 +171,7 @@ struct MatchRepinfo : public Match<Station>
 
 }
 
-void DB::raw_query_stations(const Record& rec, memdb::Results<memdb::Station>& res)
+void DB::raw_query_stations(const Query& rec, memdb::Results<memdb::Station>& res)
 {
     // Build a matcher for queries by priority
     int prio = rec.get(DBA_KEY_PRIORITY, MISSING_INT);
@@ -257,7 +257,7 @@ void DB::raw_query_stations(const Record& rec, memdb::Results<memdb::Station>& r
 }
 
 
-void DB::raw_query_station_data(const Record& rec, memdb::Results<memdb::StationValue>& res)
+void DB::raw_query_station_data(const Query& rec, memdb::Results<memdb::StationValue>& res)
 {
     // Get a list of stations we can match
     Results<Station> res_st(memdb.stations);
@@ -267,7 +267,7 @@ void DB::raw_query_station_data(const Record& rec, memdb::Results<memdb::Station
     memdb.stationvalues.query(rec, res_st, res);
 }
 
-void DB::raw_query_data(const Record& rec, memdb::Results<memdb::Value>& res)
+void DB::raw_query_data(const Query& rec, memdb::Results<memdb::Value>& res)
 {
     // Get a list of stations we can match
     Results<Station> res_st(memdb.stations);
@@ -281,7 +281,7 @@ void DB::raw_query_data(const Record& rec, memdb::Results<memdb::Value>& res)
     memdb.values.query(rec, res_st, res_tr, res);
 }
 
-std::unique_ptr<db::Cursor> DB::query_stations(const Record& query)
+std::unique_ptr<db::Cursor> DB::query_stations(const Query& query)
 {
     unsigned int modifiers = parse_modifiers(query);
     Results<Station> res(memdb.stations);
@@ -318,7 +318,7 @@ std::unique_ptr<db::Cursor> DB::query_stations(const Record& query)
     return Cursor::createStations(*this, modifiers, res);
 }
 
-std::unique_ptr<db::Cursor> DB::query_data(const Record& query)
+std::unique_ptr<db::Cursor> DB::query_data(const Query& query)
 {
     unsigned int modifiers = parse_modifiers(query);
     bool query_station_vars = query.is_ana_context();
@@ -345,7 +345,7 @@ std::unique_ptr<db::Cursor> DB::query_data(const Record& query)
     }
 }
 
-std::unique_ptr<db::Cursor> DB::query_summary(const Record& query)
+std::unique_ptr<db::Cursor> DB::query_summary(const Query& query)
 {
     unsigned int modifiers = parse_modifiers(query);
     bool query_station_vars = query.is_ana_context();
@@ -438,7 +438,7 @@ struct CompareForExport
 
 }
 
-void DB::export_msgs(const Record& query, MsgConsumer& cons)
+void DB::export_msgs(const Query& query, MsgConsumer& cons)
 {
     Results<Value> res(memdb.values);
     raw_query_data(query, res);

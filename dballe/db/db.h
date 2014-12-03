@@ -51,6 +51,7 @@
 
 namespace dballe {
 struct Record;
+typedef Record Query;
 struct Msg;
 struct Msgs;
 struct MsgConsumer;
@@ -313,7 +314,7 @@ public:
      *   data for a station that does not yet exists in the database, it will
      *   be created.
      */
-    virtual void insert(const Record& rec, bool can_replace, bool station_can_add) = 0;
+    virtual void insert(const Query& rec, bool can_replace, bool station_can_add) = 0;
 
     /**
      * Return the station id for the last data that was inserted.
@@ -327,7 +328,7 @@ public:
      *   The record with the query data (see technical specifications, par. 1.6.4
      *   "parameter output/input") to select the items to be deleted
      */
-    virtual void remove(const Record& rec) = 0;
+    virtual void remove(const Query& rec) = 0;
 
     /**
      * Remove all data from the database.
@@ -361,7 +362,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<db::Cursor> query_stations(const Record& query) = 0;
+    virtual std::unique_ptr<db::Cursor> query_stations(const Query& query) = 0;
 
     /**
      * Query the database.
@@ -375,7 +376,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<db::Cursor> query_data(const Record& rec) = 0;
+    virtual std::unique_ptr<db::Cursor> query_data(const Query& rec) = 0;
 
     /**
      * Query a summary of what the result would be for a query.
@@ -389,7 +390,7 @@ public:
      *   provided, so it only gives all the available combinations of data
      *   contexts.
      */
-    virtual std::unique_ptr<db::Cursor> query_summary(const Record& rec) = 0;
+    virtual std::unique_ptr<db::Cursor> query_summary(const Query& rec) = 0;
 
     /**
      * Query attributes
@@ -489,7 +490,7 @@ public:
      * @param cons
      *   The MsgsConsumer that will handle the resulting messages
      */
-    virtual void export_msgs(const Record& query, MsgConsumer& cons) = 0;
+    virtual void export_msgs(const Query& query, MsgConsumer& cons) = 0;
 
     /**
      * Dump the entire contents of the database to an output stream

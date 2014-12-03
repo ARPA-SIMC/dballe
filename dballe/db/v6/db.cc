@@ -489,7 +489,7 @@ std::map<std::string, int> DB::get_repinfo_priorities()
     return repinfo().get_priorities();
 }
 
-int DB::get_rep_cod(const Record& rec)
+int DB::get_rep_cod(const Query& rec)
 {
     v6::Repinfo& ri = repinfo();
     if (const char* memo = rec.key_peek_value(DBA_KEY_REP_MEMO))
@@ -530,7 +530,7 @@ static inline int normalon(int lon)
     return ((lon + 18000000) % 36000000) - 18000000;
 }
 
-int DB::obtain_station(const Record& rec, bool can_add)
+int DB::obtain_station(const Query& rec, bool can_add)
 {
     // Look if the record already knows the ID
     if (const char* val = rec.key_peek_value(DBA_KEY_ANA_ID))
@@ -560,7 +560,7 @@ int DB::obtain_station(const Record& rec, bool can_add)
         return s.get_id(lat, lon, ident);
 }
 
-int DB::obtain_lev_tr(const Record& rec)
+int DB::obtain_lev_tr(const Query& rec)
 {
     if (rec.is_ana_context())
         return -1;
@@ -568,7 +568,7 @@ int DB::obtain_lev_tr(const Record& rec)
     return lev_tr().obtain_id(rec);
 }
 
-void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
+void DB::insert(const Query& rec, bool can_replace, bool station_can_add)
 {
     v6::Data& d = data();
 
@@ -618,7 +618,7 @@ int DB::last_station_id() const
     return _last_station_id;
 }
 
-void DB::remove(const Record& rec)
+void DB::remove(const Query& rec)
 {
     auto t = conn->transaction();
 
@@ -694,7 +694,7 @@ void DB::vacuum()
         m_lev_tr_cache->invalidate();
 }
 
-std::unique_ptr<db::Cursor> DB::query_stations(const Record& query)
+std::unique_ptr<db::Cursor> DB::query_stations(const Query& query)
 {
     unsigned int modifiers = parse_modifiers(query) | DBA_DB_MODIFIER_ANAEXTRA | DBA_DB_MODIFIER_DISTINCT;
     unique_ptr<Cursor> res(new CursorStations(*this, modifiers));
@@ -702,7 +702,7 @@ std::unique_ptr<db::Cursor> DB::query_stations(const Record& query)
     return unique_ptr<db::Cursor>(res.release());
 }
 
-std::unique_ptr<db::Cursor> DB::query_data(const Record& query)
+std::unique_ptr<db::Cursor> DB::query_data(const Query& query)
 {
     unsigned int modifiers = parse_modifiers(query);
     unique_ptr<Cursor> res;
@@ -714,7 +714,7 @@ std::unique_ptr<db::Cursor> DB::query_data(const Record& query)
     return unique_ptr<db::Cursor>(res.release());
 }
 
-std::unique_ptr<db::Cursor> DB::query_summary(const Record& rec)
+std::unique_ptr<db::Cursor> DB::query_summary(const Query& rec)
 {
     unique_ptr<Cursor> res(new CursorSummary(*this, 0));
     res->query(rec);

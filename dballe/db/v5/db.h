@@ -60,7 +60,6 @@
 #define DBA_DB_WANT_CONTEXT_ID	(1 << 9)
 
 namespace dballe {
-struct Record;
 struct Msg;
 struct Msgs;
 struct MsgConsumer;
@@ -230,7 +229,7 @@ public:
 	 * If rep_memo is specified instead, the corresponding report id is queried in
 	 * the database and set as "rep_cod" in the record.
 	 */
-	int get_rep_cod(const Record& rec);
+	int get_rep_cod(const Query& rec);
 
 	/*
 	 * Lookup, insert or replace data in station taking the values from
@@ -246,7 +245,7 @@ public:
 	 * @returns
 	 *   The station ID
 	 */
-	int obtain_station(const Record& rec, bool can_add=true);
+	int obtain_station(const Query& rec, bool can_add=true);
 
 	/*
 	 * Lookup, insert or replace data in station taking the values from
@@ -259,9 +258,9 @@ public:
 	 * @returns
 	 *   The context ID
 	 */
-	int obtain_context(const Record& rec);
+	int obtain_context(const Query& rec);
 
-    void insert(const Record& rec, bool can_replace, bool station_can_add);
+    void insert(const Query& rec, bool can_replace, bool station_can_add);
 
     int last_station_id() const;
 
@@ -272,7 +271,7 @@ public:
 	 *   The record with the query data (see technical specifications, par. 1.6.4
 	 *   "parameter output/input") to select the items to be deleted
 	 */
-	void remove(const Record& rec);
+	void remove(const Query& rec);
 
     void remove_all();
 
@@ -302,7 +301,7 @@ public:
 	 * @return
 	 *   The cursor to use to iterate over the results
 	 */
-	std::unique_ptr<db::Cursor> query(const Record& query, unsigned int wanted, unsigned int modifiers);
+	std::unique_ptr<db::Cursor> query(const Query& query, unsigned int wanted, unsigned int modifiers);
 
 	/**
 	 * Start a query on the station variables archive
@@ -312,7 +311,7 @@ public:
 	 * @return
 	 *   The cursor to use to iterate over the results
 	 */
-	std::unique_ptr<db::Cursor> query_stations(const Record& query);
+	std::unique_ptr<db::Cursor> query_stations(const Query& query);
 
 	/**
 	 * Query the database.
@@ -326,11 +325,11 @@ public:
 	 * @return
 	 *   The cursor to use to iterate over the results
 	 */
-	std::unique_ptr<db::Cursor> query_data(const Record& rec);
+	std::unique_ptr<db::Cursor> query_data(const Query& rec);
 
-    virtual std::unique_ptr<db::Cursor> query_summary(const Record& rec);
+    virtual std::unique_ptr<db::Cursor> query_summary(const Query& rec);
 
-    void query_datetime_extremes(const Record& query, Record& result);
+    void query_datetime_extremes(const Query& query, Record& result);
 
 	/**
 	 * Query attributes
@@ -391,7 +390,7 @@ public:
 	 * @param cons
 	 *   The MsgsConsumer that will handle the resulting messages
 	 */
-	void export_msgs(const Record& query, MsgConsumer& cons);
+	void export_msgs(const Query& query, MsgConsumer& cons);
 
         /**
          * Dump the entire contents of the database to an output stream

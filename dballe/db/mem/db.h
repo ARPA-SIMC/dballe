@@ -37,7 +37,6 @@
  */
 
 namespace dballe {
-struct Record;
 struct Msg;
 struct Msgs;
 struct MsgConsumer;
@@ -75,13 +74,13 @@ protected:
     std::vector<VarID> last_insert_varids;
 
     /// Query stations, returning a list of station IDs
-    void raw_query_stations(const Record& rec, memdb::Results<memdb::Station>& res);
+    void raw_query_stations(const Query& rec, memdb::Results<memdb::Station>& res);
 
     /// Query station data, returning a list of Value IDs
-    void raw_query_station_data(const Record& rec, memdb::Results<memdb::StationValue>& res);
+    void raw_query_station_data(const Query& rec, memdb::Results<memdb::StationValue>& res);
 
     /// Query data, returning a list of Value IDs
-    void raw_query_data(const Record& rec, memdb::Results<memdb::Value>& res);
+    void raw_query_data(const Query& rec, memdb::Results<memdb::Value>& res);
     
 public:
     DB();
@@ -140,7 +139,7 @@ public:
      *   If true, then it is allowed to add new station records to the database.
      *   Otherwise, data can be added only by reusing existing ones.
      */
-    void insert(const Record& rec, bool can_replace, bool station_can_add);
+    void insert(const Query& rec, bool can_replace, bool station_can_add);
 
     int last_station_id() const;
 
@@ -151,7 +150,7 @@ public:
      *   The record with the query data (see technical specifications, par. 1.6.4
      *   "parameter output/input") to select the items to be deleted
      */
-    void remove(const Record& rec);
+    void remove(const Query& rec);
 
     void remove_all();
 
@@ -174,7 +173,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    std::unique_ptr<db::Cursor> query_stations(const Record& query);
+    std::unique_ptr<db::Cursor> query_stations(const Query& query);
 
     /**
      * Query the database.
@@ -188,9 +187,9 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    std::unique_ptr<db::Cursor> query_data(const Record& rec);
+    std::unique_ptr<db::Cursor> query_data(const Query& rec);
 
-    std::unique_ptr<db::Cursor> query_summary(const Record& rec);
+    std::unique_ptr<db::Cursor> query_summary(const Query& rec);
 
     /**
      * Query attributes
@@ -251,7 +250,7 @@ public:
      * @param cons
      *   The MsgsConsumer that will handle the resulting messages
      */
-    void export_msgs(const Record& query, MsgConsumer& cons);
+    void export_msgs(const Query& query, MsgConsumer& cons);
 
     /**
      * Dump the entire contents of the database to an output stream

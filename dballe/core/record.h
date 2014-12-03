@@ -468,6 +468,8 @@ public:
 	static dba_keyword keyword_byname_len(const char* tag, int len);
 };
 
+typedef Record Query;
+
 #if 0
 /**
  * Print the difference between two records to an output stream.
