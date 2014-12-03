@@ -50,7 +50,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
     Attr& dq = attr();
 
     // Begin transaction
-    db::Transaction t(*conn);
+    auto t = conn->transaction();
 
     // Fill up the pseudoana informations needed to fetch an existing ID
 
@@ -175,11 +175,9 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
         }
     }
 
-    t.commit();
+    t->commit();
 }
 
-} // namespace v6
-} // namespace db
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
+}
+}
+}

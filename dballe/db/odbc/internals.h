@@ -115,11 +115,7 @@ public:
     void get_info(SQLUSMALLINT info_type, SQLINTEGER& res);
     void set_autocommit(bool val);
 
-    /// Commit a transaction
-    void commit();
-
-    /// Rollback a transaction
-    void rollback();
+    virtual std::unique_ptr<Transaction> transaction() override;
 
     /// Check if the database contains a table
     bool has_table(const std::string& name) override;
@@ -161,19 +157,6 @@ public:
 
 protected:
     void init_after_connect();
-};
-
-/// RAII transaction
-struct Transaction
-{
-    ODBCConnection& conn;
-    bool fired;
-
-    Transaction(Connection& conn) : conn(*dynamic_cast<ODBCConnection*>(&conn)), fired(false) {}
-    ~Transaction() { if (!fired) rollback(); }
-
-    void commit() { conn.commit(); fired = true; }
-    void rollback() { conn.rollback(); fired = true; }
 };
 
 /// ODBC statement

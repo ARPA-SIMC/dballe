@@ -154,7 +154,7 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
     // Message being built
     unique_ptr<Msg> msg;
 
-    db::Transaction t(*conn);
+    auto t = conn->transaction();
 
     // The big export query
     CursorData cur(*this, DBA_DB_MODIFIER_SORT_FOR_EXPORT);
@@ -267,11 +267,9 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
     }
 
     /* Useful for Oracle to end the session */
-    t.commit();
+    t->commit();
 }
 
-} // namespace v6
-} // namespace db
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
+}
+}
+}

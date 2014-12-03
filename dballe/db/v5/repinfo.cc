@@ -431,7 +431,7 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
 	vector<repinfo::Cache> newitems = read_repinfo_file(deffile);
 
     {
-        Transaction transaction(*conn);
+        auto transaction(conn->transaction());
 
         // Verify that we are not trying to delete a repinfo entry that is
         // in use
@@ -508,7 +508,7 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
             }
         }
 
-        transaction.commit();
+        transaction->commit();
     }
 
 	/* Reread the cache */

@@ -64,7 +64,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
     Attr& dq = attr();
 
     // Begin transaction
-    db::Transaction t(*conn);
+    auto t = conn->transaction();
 
     // Fill up the pseudoana informations needed to fetch an existing ID
 
@@ -219,7 +219,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 		}
 	}
 
-    t.commit();
+    t->commit();
 }
 
 }

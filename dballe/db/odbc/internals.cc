@@ -274,25 +274,34 @@ void ODBCConnection::set_autocommit(bool val)
         error_odbc::throwf(SQL_HANDLE_DBC, od_conn, "%s ODBC autocommit", val ? "Enabling" : "Disabling");
 }
 
-#ifdef DBA_USE_TRANSACTIONS
-void ODBCConnection::commit()
+struct ODBCTransaction : public Transaction
 {
-    int sqlres = SQLEndTran(SQL_HANDLE_DBC, od_conn, SQL_COMMIT);
-    if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-        throw error_odbc(SQL_HANDLE_DBC, od_conn, "Committing a transaction");
-}
+    SQLHDBC od_conn;
+    bool fired = false;
 
-void ODBCConnection::rollback()
+    ODBCTransaction(SQLHDBC conn) : od_conn(conn) {}
+    ~ODBCTransaction() { if (!fired) rollback(); }
+
+    void commit() override
+    {
+        int sqlres = SQLEndTran(SQL_HANDLE_DBC, od_conn, SQL_COMMIT);
+        if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
+            throw error_odbc(SQL_HANDLE_DBC, od_conn, "Committing a transaction");
+        fired = true;
+    }
+    void rollback() override
+    {
+        int sqlres = SQLEndTran(SQL_HANDLE_DBC, od_conn, SQL_ROLLBACK);
+        if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
+            throw error_odbc(SQL_HANDLE_DBC, od_conn, "Rolling back a transaction");
+        fired = true;
+    }
+};
+
+std::unique_ptr<Transaction> ODBCConnection::transaction()
 {
-    int sqlres = SQLEndTran(SQL_HANDLE_DBC, od_conn, SQL_ROLLBACK);
-    if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-        throw error_odbc(SQL_HANDLE_DBC, od_conn, "Rolling back a transaction");
+    return unique_ptr<Transaction>(new ODBCTransaction(od_conn));
 }
-#else
-// TODO: lock and unlock tables instead
-void ODBCConnection::commit() {}
-void ODBCConnection::rollback() {}
-#endif
 
 #define DBA_ODBC_MISSING_TABLE_POSTGRES "42P01"
 #define DBA_ODBC_MISSING_TABLE_MYSQL "42S01"
@@ -319,7 +328,6 @@ void ODBCConnection::drop_table_if_exists(const char* name)
             stm.exec_direct_and_close(buf, len);
             break;
     }
-    commit();
 }
 
 #define DBA_ODBC_MISSING_SEQUENCE_ORACLE "HY000"
@@ -344,8 +352,6 @@ void ODBCConnection::drop_sequence_if_exists(const char* name)
         default:
             break;
     }
-
-    commit();
 }
 
 int ODBCConnection::get_last_insert_id()

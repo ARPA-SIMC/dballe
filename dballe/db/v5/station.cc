@@ -34,11 +34,7 @@ namespace dballe {
 namespace db {
 namespace v5 {
 
-#ifdef DBA_USE_TRANSACTIONS
 #define TABLETYPE "ENGINE=InnoDB;"
-#else
-#define TABLETYPE ";"
-#endif
 static const char* init_queries_mysql[] = {
     "CREATE TABLE station ("
     "   id         INTEGER auto_increment PRIMARY KEY,"

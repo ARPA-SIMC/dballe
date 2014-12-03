@@ -123,7 +123,7 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
     // Message being built
     unique_ptr<Msg> msg;
 
-    db::Transaction t(*conn);
+    auto t = conn->transaction();
 
     // The big export query
     db::v5::Cursor cur(*this);
@@ -243,7 +243,7 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
     }
 
     /* Useful for Oracle to end the session */
-    t.commit();
+    t->commit();
 }
 
 }

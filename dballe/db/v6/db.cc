@@ -67,11 +67,7 @@ static const char* init_functions[] = {
 #endif
 
 
-#ifdef DBA_USE_TRANSACTIONS
 #define TABLETYPE "ENGINE=InnoDB;"
-#else
-#define TABLETYPE ";"
-#endif
 static const char* init_queries_mysql[] = {
     "CREATE TABLE repinfo ("
     "   id           SMALLINT PRIMARY KEY,"
@@ -366,7 +362,6 @@ Attr& DB::attr()
 
 void DB::init_after_connect()
 {
-#ifdef DBA_USE_TRANSACTIONS
     /* Set manual commit */
     if (conn->server_type == db::SQLITE)
     {
@@ -381,7 +376,6 @@ void DB::init_after_connect()
         }
     }
     conn->set_autocommit(false);
-#endif
 }
 
 void DB::run_sql(const char* query)
@@ -490,7 +484,6 @@ void DB::reset(const char* repinfo_file)
         repinfo().update(repinfo_file, &added, &deleted, &updated);
     }
     conn->set_setting("version", "V6");
-    conn->commit();
     if (m_lev_tr_cache)
         m_lev_tr_cache->invalidate();
 }
@@ -594,7 +587,7 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
     if (rec.vars().empty() && !(((s_year = rec.key_peek_value(DBA_KEY_YEAR)) != NULL) && strcmp(s_year, "1000") == 0))
         throw error_notfound("no variables found in input record");
 
-    db::Transaction t(*conn);
+    auto t = conn->transaction();
 
     int id_station = obtain_station(rec, station_can_add);
 
@@ -624,7 +617,7 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
             d.insert_or_fail(**i, &id);
         last_insert_varids.push_back(VarID((*i)->code(), id));
     }
-    t.commit();
+    t->commit();
 
     _last_station_id = id_station;
 }
@@ -636,7 +629,7 @@ int DB::last_station_id() const
 
 void DB::remove(const Record& rec)
 {
-    db::Transaction t(*conn);
+    auto t = conn->transaction();
 
     // Get the list of data to delete
     v6::CursorDataIDs c(*this, DBA_DB_MODIFIER_UNSORTED | DBA_DB_MODIFIER_STREAM);
@@ -658,18 +651,18 @@ void DB::remove(const Record& rec)
         stmd.execute_and_close();
         stma.execute_and_close();
     }
-    t.commit();
+    t->commit();
 }
 
 void DB::remove_all()
 {
-    db::Transaction t(*conn);
+    auto t = conn->transaction();
     db::Statement stm(*conn);
     stm.exec_direct_and_close("DELETE FROM attr");
     stm.exec_direct_and_close("DELETE FROM data");
     stm.exec_direct_and_close("DELETE FROM lev_tr");
     stm.exec_direct_and_close("DELETE FROM station");
-    t.commit();
+    t->commit();
 }
 
 void DB::vacuum()
@@ -690,7 +683,7 @@ void DB::vacuum()
         default: cclean = cclean_mysql; pclean = pclean_mysql; break;
     }
 
-    db::Transaction t(*conn);
+    auto t = conn->transaction();
 
     // Delete orphan lev_trs
     db::Statement stm(*conn);
@@ -706,7 +699,7 @@ void DB::vacuum()
     // Delete orphan stations
     stm.exec_direct_and_close(pclean);
 
-    t.commit();
+    t->commit();
 
     if (m_lev_tr_cache)
         m_lev_tr_cache->invalidate();
@@ -804,13 +797,13 @@ void DB::attr_insert(int id_data, wreport::Varcode id_var, const Record& attrs)
     v6::Attr& a = attr();
 
     // Begin the transaction
-    db::Transaction t(*conn);
+    auto t = conn->transaction();
 
     /* Insert all found variables */
     for (vector<Var*>::const_iterator i = attrs.vars().begin(); i != attrs.vars().end(); ++i)
         a.write(id_data, **i);
 
-    t.commit();
+    t->commit();
 }
 
 void DB::attr_remove(int id_data, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs)

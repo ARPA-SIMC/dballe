@@ -23,9 +23,7 @@
 #define DBALLE_DB_INTERNALS_H
 
 #include <wreport/error.h>
-
-/// Define to true to enable the use of transactions during writes
-#define DBA_USE_TRANSACTIONS
+#include <memory>
 
 /// Define this to enable referential integrity
 #undef USE_REF_INT
@@ -51,6 +49,8 @@
 namespace dballe {
 namespace db {
 
+class Transaction;
+
 /**
  * Supported SQL servers.
  */
@@ -73,6 +73,14 @@ struct Connection
     enum ServerType server_type;
 
     virtual ~Connection();
+
+    /**
+     * Begin a transaction.
+     *
+     * The transaction will be controller by the returned Transaction object,
+     * and will end when its destuctor is called.
+     */
+    virtual std::unique_ptr<Transaction> transaction() = 0;
 
     /// Check if the database contains a table
     virtual bool has_table(const std::string& name) = 0;
@@ -111,6 +119,15 @@ struct Connection
      * If not supported, an exception is thrown.
      */
     virtual int get_last_insert_id() = 0;
+};
+
+class Transaction
+{
+public:
+    virtual ~Transaction() {}
+
+    virtual void commit() = 0;
+    virtual void rollback() = 0;
 };
 
 }
