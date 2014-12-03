@@ -551,51 +551,30 @@ bool QueryBuilder::add_dt_where(const char* tbl)
     {
         if (memcmp(minvalues, maxvalues, 6 * sizeof(int)) == 0)
         {
-            /* Add constraint on the exact date interval */
-            qargs.sel_dtmin.year = minvalues[0];
-            qargs.sel_dtmin.month = minvalues[1];
-            qargs.sel_dtmin.day = minvalues[2];
-            qargs.sel_dtmin.hour = minvalues[3];
-            qargs.sel_dtmin.minute = minvalues[4];
-            qargs.sel_dtmin.second = minvalues[5];
-            qargs.sel_dtmin.fraction = 0;
-            sql_where.append_listf("%s.datetime=?", tbl);
+            // Add constraint on the exact date interval
+            sql_where.append_listf("%s.datetime=", tbl);
+            db.conn->add_datetime(sql_where, minvalues);
             TRACE("found exact time: adding AND %s.datetime={ts '%04d-%02d-%02d %02d:%02d:%02d.000'}\n",
                     tbl, minvalues[0], minvalues[1], minvalues[2], minvalues[3], minvalues[4], minvalues[5]);
-            stm.bind_in(qargs.input_seq++, qargs.sel_dtmin);
             found = true;
         }
         else
         {
             if (minvalues[0] != MISSING_INT)
             {
-                /* Add constraint on the minimum date interval */
-                qargs.sel_dtmin.year = minvalues[0];
-                qargs.sel_dtmin.month = minvalues[1];
-                qargs.sel_dtmin.day = minvalues[2];
-                qargs.sel_dtmin.hour = minvalues[3];
-                qargs.sel_dtmin.minute = minvalues[4];
-                qargs.sel_dtmin.second = minvalues[5];
-                qargs.sel_dtmin.fraction = 0;
-                sql_where.append_listf("%s.datetime>=?", tbl);
+                // Add constraint on the minimum date interval
+                sql_where.append_listf("%s.datetime>=", tbl);
+                db.conn->add_datetime(sql_where, minvalues);
                 TRACE("found min time: adding AND %s.datetime>={ts '%04d-%02d-%02d %02d:%02d:%02d.000'}\n",
                     tbl, minvalues[0], minvalues[1], minvalues[2], minvalues[3], minvalues[4], minvalues[5]);
-                stm.bind_in(qargs.input_seq++, qargs.sel_dtmin);
                 found = true;
             }
             if (maxvalues[0] != MISSING_INT)
             {
-                qargs.sel_dtmax.year = maxvalues[0];
-                qargs.sel_dtmax.month = maxvalues[1];
-                qargs.sel_dtmax.day = maxvalues[2];
-                qargs.sel_dtmax.hour = maxvalues[3];
-                qargs.sel_dtmax.minute = maxvalues[4];
-                qargs.sel_dtmax.second = maxvalues[5];
-                qargs.sel_dtmax.fraction = 0;
-                sql_where.append_listf("%s.datetime<=?", tbl);
+                sql_where.append_listf("%s.datetime<=", tbl);
+                db.conn->add_datetime(sql_where, maxvalues);
                 TRACE("found max time: adding AND %s.datetime<={ts '%04d-%02d-%02d %02d:%02d:%02d.000'}\n",
                         tbl, maxvalues[0], maxvalues[1], maxvalues[2], maxvalues[3], maxvalues[4], maxvalues[5]);
-                stm.bind_in(qargs.input_seq++, qargs.sel_dtmax);
                 found = true;
             }
         }

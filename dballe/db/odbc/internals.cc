@@ -33,6 +33,7 @@
 #include <unistd.h>
 #include "dballe/core/vasprintf.h"
 #include "dballe/core/verbose.h"
+#include "dballe/db/querybuf.h"
 
 #include <iostream>
 
@@ -488,6 +489,12 @@ void ODBCConnection::drop_settings()
 {
     drop_table_if_exists("dballe_settings");
 }
+
+void ODBCConnection::add_datetime(Querybuf& qb, const int* dt) const
+{
+    qb.appendf("{ts '%04d-%02d-%02d %02d:%02d:%02d'}", dt[0], dt[1], dt[2], dt[3], dt[4], dt[5]);
+}
+
 
 Statement::Statement(Connection& gconn)
 #warning eventually pass ODBCConnection

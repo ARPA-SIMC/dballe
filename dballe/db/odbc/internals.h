@@ -157,6 +157,8 @@ public:
      */
     int get_last_insert_id() override;
 
+    void add_datetime(Querybuf& qb, const int* dt) const override;
+
 protected:
     void init_after_connect();
 };

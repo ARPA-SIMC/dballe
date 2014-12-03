@@ -47,8 +47,9 @@
 /** @} */
 
 namespace dballe {
-namespace db {
+class Querybuf;
 
+namespace db {
 class Transaction;
 
 /**
@@ -122,6 +123,9 @@ struct Connection
      * If not supported, an exception is thrown.
      */
     virtual int get_last_insert_id() = 0;
+
+    /// Format a datetime and add it to the querybuf
+    virtual void add_datetime(Querybuf& qb, const int* dt) const = 0;
 };
 
 class Transaction

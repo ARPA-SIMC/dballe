@@ -72,10 +72,6 @@ namespace v6 {
  */
 struct ExtraQueryArgs
 {
-    /// Minimum datetime
-    SQL_TIMESTAMP_STRUCT    sel_dtmin;
-    /// Maximum datetime
-    SQL_TIMESTAMP_STRUCT    sel_dtmax;
     /// Positional sequence number to use to bind ODBC input parameters
     unsigned int input_seq;
 
