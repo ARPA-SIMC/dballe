@@ -116,19 +116,6 @@ struct QueryBuilder
     /// True if we are querying station information, rather than measured data
     bool query_station_vars;
 
-#if 0
-    /** What values are wanted from the query */
-    unsigned int wanted;
-
-    /** What is needed from the SELECT part of the query */
-    unsigned int select_wanted;
-
-    /** What is needed from the FROM part of the query */
-    unsigned int from_wanted;
-
-    /// true if we have already appended the "ORDER BY" clause to the query
-    bool has_orderby;
-#endif
 
     QueryBuilder(DB& db, Statement& stm, Cursor& cur, const Record& rec, unsigned int modifiers);
     virtual ~QueryBuilder() {}
@@ -148,55 +135,6 @@ protected:
     virtual void build_select() = 0;
     virtual bool build_where() = 0;
     virtual void build_order_by() = 0;
-
-#if 0
-    /**
-     * Add one or more fields to the ORDER BY part of sql_query.
-     */
-    void add_to_orderby(const char* fields);
-
-    /**
-     * Add extra JOIN clauses to sql_query according to what is wanted.
-     *
-     * @param base
-     *   The first table mentioned in the query, to which the other tables are
-     *   joined
-     */
-    void add_other_froms(unsigned int base, const Record& rec);
-
-    /// Resolve table/field dependencies adding the missing bits to from_wanted
-    void resolve_dependencies();
-
-    /// Prepare SELECT Part and see what needs to be available in the FROM part
-    void make_select();
-
-    /**
-     * Prepare the extra bits of the SELECT part that need information after
-     * dependency computation
-     */
-    void make_extra_select();
-
-    /// Build the FROM and WHERE parts of the query
-    void make_from(const Record& rec);
-
-    /// Add an int field to the WHERE part of the query, binding it as an input parameter
-    void add_int(const Record& rec, dba_keyword key, const char* sql, int needed_from);
-
-    /// Build the WHERE part of the query, and bind the input parameters
-    void make_where(const Record& rec);
-
-    /// Add repinfo-related WHERE clauses on column \a colname to \a buf from \a query
-    void add_repinfo_where(Querybuf& buf, const Record& query, const char* colname);
-
-    /// Build the big data query
-    void build_query(const Record& rec);
-
-    /// Build the query with just SELECT COUNT(*)
-    void build_count_query(const Record& rec);
-
-    /// Build the query with just a select for date extremes
-    void build_date_extremes_query(const Record& rec);
-#endif
 };
 
 struct StationQueryBuilder : public QueryBuilder
