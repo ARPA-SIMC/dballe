@@ -261,6 +261,8 @@ int DbAPI::voglioancora()
     std::vector<wreport::Varcode> arr;
     read_qc_list(arr);
 
+    qcoutput.clear_vars();
+
     // Query attributes
     int qc_count = 0;
     switch (attr_state)
