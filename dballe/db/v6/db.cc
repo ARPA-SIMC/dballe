@@ -25,7 +25,6 @@
 #include "dballe/db/modifiers.h"
 #include "dballe/db/v6/repinfo.h"
 #include "dballe/db/v5/station.h"
-#include "lev_tr.h"
 #include "cursor.h"
 #include "internals.h"
 

@@ -102,6 +102,7 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/odbc/internals.h \
 	db/odbc/v6_data.h \
 	db/odbc/v6_attr.h \
+	db/odbc/v6_levtr.h \
 	db/v5/attr.h \
 	db/v5/context.h \
 	db/v5/cursor.h \
@@ -111,7 +112,6 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/v5/station.h \
 	db/v6/db.h \
 	db/v6/repinfo.h \
-	db/v6/lev_tr.h \
 	db/v6/cursor.h \
 	db/v6/qbuilder.h
 endif
@@ -198,6 +198,7 @@ libdballe_la_SOURCES += \
 	db/odbc/internals.cc \
 	db/odbc/v6_data.cc \
 	db/odbc/v6_attr.cc \
+	db/odbc/v6_levtr.cc \
 	db/v5/repinfo.cc \
 	db/v5/station.cc \
 	db/v5/context.cc \
@@ -208,7 +209,6 @@ libdballe_la_SOURCES += \
 	db/v5/import.cc \
 	db/v5/export.cc \
 	db/v6/repinfo.cc \
-	db/v6/lev_tr.cc \
 	db/v6/db.cc \
 	db/v6/cursor.cc \
 	db/v6/qbuilder.cc \

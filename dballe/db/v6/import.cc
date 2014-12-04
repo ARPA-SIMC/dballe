@@ -22,7 +22,6 @@
 #include "db.h"
 #include "dballe/db/odbc/internals.h"
 #include "dballe/db/v5/station.h"
-#include "lev_tr.h"
 #include "internals.h"
 
 #include <dballe/msg/msgs.h>

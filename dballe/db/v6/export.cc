@@ -25,7 +25,6 @@
 #include "dballe/db/modifiers.h"
 #include "internals.h"
 
-#include "lev_tr.h"
 #include <dballe/msg/msg.h>
 #include <dballe/msg/context.h>
 

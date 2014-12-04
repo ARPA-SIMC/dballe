@@ -24,12 +24,12 @@
 #include "db.h"
 #include "dballe/db/odbc/internals.h"
 #include "dballe/db/modifiers.h"
+#include "dballe/db/v6/internals.h"
 #include "dballe/db/v6/repinfo.h"
 
 #include <wreport/var.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/record.h>
-#include "lev_tr.h"
 
 #include <sql.h>
 #include <cstdio>

@@ -19,7 +19,6 @@
 
 #include "db/test-utils-db.h"
 #include "db/v6/db.h"
-#include "db/v6/lev_tr.h"
 #include "db/v5/station.h"
 #include "db/v6/internals.h"
 
