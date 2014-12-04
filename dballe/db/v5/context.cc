@@ -52,10 +52,10 @@ Context::Context(DB& db)
     /* Override queries for some databases */
     switch (db.conn->server_type)
     {
-        case ORACLE:
+        case ServerType::ORACLE:
             insert_query = "INSERT INTO context VALUES (seq_context.NextVal, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             break;
-        case POSTGRES:
+        case ServerType::POSTGRES:
             insert_query = "INSERT INTO context VALUES (nextval(pg_get_serial_sequence('context','id')), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             break;
         default: break;

@@ -291,7 +291,7 @@ void QueryBuilder::build()
 
     sql_where.start_list(" AND ");
     bool has_where = build_where();
-    if (limit != -1 && conn.server_type == ORACLE)
+    if (limit != -1 && conn.server_type == ServerType::ORACLE)
     {
         sql_where.append_listf("rownum <= %d", limit);
         has_where = true;
@@ -308,14 +308,14 @@ void QueryBuilder::build()
     // Append ORDER BY as needed
     if (!(modifiers & DBA_DB_MODIFIER_UNSORTED))
     {
-        if (limit != -1 && conn.server_type == ORACLE)
+        if (limit != -1 && conn.server_type == ServerType::ORACLE)
             throw error_unimplemented("sorted queries with result limit are not implemented for Oracle");
 
         build_order_by();
     }
 
     // Append LIMIT if requested
-    if (limit != -1 && conn.server_type != ORACLE)
+    if (limit != -1 && conn.server_type != ServerType::ORACLE)
         sql_query.appendf(" LIMIT %d", limit);
 }
 
@@ -526,7 +526,7 @@ bool QueryBuilder::add_pa_where(const char* tbl)
                 sql_where.appendf(" AND %s_af.value BETWEEN %s AND %s)", tbl, value, value1);
         else
         {
-            const char* type = (conn.server_type == MYSQL) ? "SIGNED" : "INT";
+            const char* type = (conn.server_type == ServerType::MYSQL) ? "SIGNED" : "INT";
             if (value1 == NULL)
                 sql_where.appendf(" AND CAST(%s_af.value AS %s)%s%s)", tbl, type, op, value);
             else
@@ -675,7 +675,7 @@ bool QueryBuilder::add_datafilter_where(const char* tbl)
             sql_where.append_listf("%s.value BETWEEN %s AND %s", tbl, value, value1);
     else
     {
-        const char* type = (conn.server_type == MYSQL) ? "SIGNED" : "INT";
+        const char* type = (conn.server_type == ServerType::MYSQL) ? "SIGNED" : "INT";
         if (value1 == NULL)
             sql_where.append_listf("CAST(%s.value AS %s)%s%s", tbl, type, op, value);
         else
@@ -701,7 +701,7 @@ bool QueryBuilder::add_attrfilter_where(const char* tbl)
             sql_where.append_listf("%s_atf.value BETWEEN %s AND %s", tbl, value, value1);
     else
     {
-        const char* type = (conn.server_type == MYSQL) ? "SIGNED" : "INT";
+        const char* type = (conn.server_type == ServerType::MYSQL) ? "SIGNED" : "INT";
         if (value1 == NULL)
             sql_where.append_listf("CAST(%s_atf.value AS %s)%s%s", tbl, type, op, value);
         else

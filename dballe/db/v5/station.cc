@@ -193,11 +193,11 @@ ODBCStation::ODBCStation(ODBCConnection& conn)
     /* Override queries for some databases */
     switch (conn.server_type)
     {
-        case ORACLE:
+        case ServerType::ORACLE:
             seq_station = new db::Sequence(conn, "station_id_seq");
             insert_query = "INSERT INTO station (id, lat, lon, ident) VALUES (seq_station.NextVal, ?, ?, ?)";
             break;
-        case POSTGRES:
+        case ServerType::POSTGRES:
             insert_query = "INSERT INTO station (id, lat, lon, ident) VALUES (nextval(pg_get_serial_sequence('station', 'id')), ?, ?, ?)";
             break;
         default: break;
@@ -367,16 +367,16 @@ void Station::reset_db(ODBCConnection& conn)
     int query_count = 0;
     switch (conn.server_type)
     {
-        case db::MYSQL:
+        case ServerType::MYSQL:
             queries = init_queries_mysql;
             query_count = sizeof(init_queries_mysql) / sizeof(init_queries_mysql[0]); break;
-        case db::SQLITE:
+        case ServerType::SQLITE:
             queries = init_queries_sqlite;
             query_count = sizeof(init_queries_sqlite) / sizeof(init_queries_sqlite[0]); break;
-        case db::ORACLE:
+        case ServerType::ORACLE:
             queries = init_queries_oracle;
             query_count = sizeof(init_queries_oracle) / sizeof(init_queries_oracle[0]); break;
-        case db::POSTGRES:
+        case ServerType::POSTGRES:
             queries = init_queries_postgres;
             query_count = sizeof(init_queries_postgres) / sizeof(init_queries_postgres[0]); break;
         default:

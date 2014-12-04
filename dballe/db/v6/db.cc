@@ -363,7 +363,7 @@ Attr& DB::attr()
 void DB::init_after_connect()
 {
     /* Set manual commit */
-    if (conn->server_type == db::SQLITE)
+    if (conn->server_type == ServerType::SQLITE)
     {
         if (getenv("DBA_INSECURE_SQLITE") != NULL)
         {
@@ -413,16 +413,16 @@ void DB::reset(const char* repinfo_file)
     int query_count = 0;
     switch (conn->server_type)
     {
-        case db::MYSQL:
+        case ServerType::MYSQL:
             queries = init_queries_mysql;
             query_count = sizeof(init_queries_mysql) / sizeof(init_queries_mysql[0]); break;
-        case db::SQLITE:
+        case ServerType::SQLITE:
             queries = init_queries_sqlite;
             query_count = sizeof(init_queries_sqlite) / sizeof(init_queries_sqlite[0]); break;
-        case db::ORACLE:
+        case ServerType::ORACLE:
             queries = init_queries_oracle;
             query_count = sizeof(init_queries_oracle) / sizeof(init_queries_oracle[0]); break;
-        case db::POSTGRES:
+        case ServerType::POSTGRES:
             queries = init_queries_postgres;
             query_count = sizeof(init_queries_postgres) / sizeof(init_queries_postgres[0]); break;
         default:
@@ -630,10 +630,10 @@ void DB::vacuum()
 
     switch (conn->server_type)
     {
-        case db::MYSQL: cclean = cclean_mysql; pclean = pclean_mysql; break;
-        case db::SQLITE: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
-        case db::ORACLE: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
-        case db::POSTGRES: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
+        case ServerType::MYSQL: cclean = cclean_mysql; pclean = pclean_mysql; break;
+        case ServerType::SQLITE: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
+        case ServerType::ORACLE: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
+        case ServerType::POSTGRES: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
         default: cclean = cclean_mysql; pclean = pclean_mysql; break;
     }
 

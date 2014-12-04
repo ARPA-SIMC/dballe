@@ -216,7 +216,7 @@ int Cursor::attr_reference_id() const
 
 int Cursor::query(const Record& rec, unsigned int qwanted, unsigned int qmodifiers)
 {
-    if (db.conn->server_type == ORACLE && !(qmodifiers & DBA_DB_MODIFIER_STREAM))
+    if (db.conn->server_type == ServerType::ORACLE && !(qmodifiers & DBA_DB_MODIFIER_STREAM))
     {
         /* FIXME: this is a temporary solution giving an approximate row count only:
          * insert/delete/update queries run between the count and the select will
@@ -240,7 +240,7 @@ int Cursor::query(const Record& rec, unsigned int qwanted, unsigned int qmodifie
 
     TRACE("Performing query: %s\n", qb.sql_query.c_str());
 
-    if (modifiers & DBA_DB_MODIFIER_STREAM && db.conn->server_type != ORACLE)
+    if (modifiers & DBA_DB_MODIFIER_STREAM && db.conn->server_type != ServerType::ORACLE)
         stm->set_cursor_forward_only();
 
 #if 0
@@ -256,7 +256,7 @@ int Cursor::query(const Record& rec, unsigned int qwanted, unsigned int qmodifie
     stm->exec_direct(qb.sql_query.data(), qb.sql_query.size());
 
     /* Get the number of affected rows */
-    if (db.conn->server_type != ORACLE)
+    if (db.conn->server_type != ServerType::ORACLE)
     {
         count = stm->select_rowcount();
         TRACE("%d results\n", (int)count);
@@ -587,7 +587,7 @@ void Cursor::add_station_info(Record& rec)
     const char* query;
     switch (db.conn->server_type)
     {
-        case MYSQL:
+        case ServerType::MYSQL:
             query =
                 "SELECT d.id_var, d.value, ri.prio"
                 "  FROM context c, data d, repinfo ri"
@@ -641,13 +641,13 @@ void QueryBuilder::build_query(const Record& rec)
     if (const Var* var = rec.key_peek(DBA_KEY_LIMIT))
         limit = var->enqi();
 
-    if (limit != -1 && db.conn->server_type == ORACLE && (modifiers & DBA_DB_MODIFIER_BEST))
+    if (limit != -1 && db.conn->server_type == ServerType::ORACLE && (modifiers & DBA_DB_MODIFIER_BEST))
         throw error_unimplemented("best-value queries with result limit are not implemented for Oracle");
 
     sql_query.append("SELECT ");
     if (modifiers & DBA_DB_MODIFIER_DISTINCT)
         sql_query.append("DISTINCT ");
-    if (modifiers & DBA_DB_MODIFIER_BIGANA && db.conn->server_type == MYSQL)
+    if (modifiers & DBA_DB_MODIFIER_BIGANA && db.conn->server_type == ServerType::MYSQL)
         sql_query.append("straight_join ");
 
     /* Prepare WHERE part and see what needs to be available in the FROM part */
@@ -674,7 +674,7 @@ void QueryBuilder::build_query(const Record& rec)
     /* Append ORDER BY as needed */
     if (!(modifiers & DBA_DB_MODIFIER_UNSORTED))
     {
-        if (limit != -1 && db.conn->server_type == ORACLE)
+        if (limit != -1 && db.conn->server_type == ServerType::ORACLE)
             throw error_unimplemented("sorted queries with result limit are not implemented for Oracle");
 
         if (modifiers & DBA_DB_MODIFIER_BEST) {
@@ -708,7 +708,7 @@ void QueryBuilder::build_query(const Record& rec)
     /* Append LIMIT if requested */
     if (limit != -1)
     {
-        if (db.conn->server_type == ORACLE)
+        if (db.conn->server_type == ServerType::ORACLE)
         {
             sql_query.appendf(" AND rownum <= %d", limit);
         } else {
@@ -1431,7 +1431,7 @@ void QueryBuilder::make_where(const Record& rec)
                 sql_where.appendf("%d AND adf.value BETWEEN %s AND %s", info->var, value, value1);
         else
         {
-            const char* type = (db.conn->server_type == MYSQL) ? "SIGNED" : "INT";
+            const char* type = (db.conn->server_type == ServerType::MYSQL) ? "SIGNED" : "INT";
             if (value1 == NULL)
                 sql_where.appendf("%d AND CAST(adf.value AS %s)%s%s", info->var, type, op, value);
             else

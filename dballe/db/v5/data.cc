@@ -76,7 +76,7 @@ Data::Data(ODBCConnection& conn)
 
     /* Create the statement for replace */
     ustm = conn.odbcstatement().release();
-    if (conn.server_type == POSTGRES)
+    if (conn.server_type == ServerType::POSTGRES)
     {
         ustm->bind_in(1, value, value_ind);
         ustm->bind_in(2, id_context);
@@ -88,10 +88,10 @@ Data::Data(ODBCConnection& conn)
     }
     switch (conn.server_type)
     {
-        case MYSQL: ustm->prepare(replace_query_mysql); break;
-        case SQLITE: ustm->prepare(replace_query_sqlite); break;
-        case ORACLE: ustm->prepare(replace_query_oracle); break;
-        case POSTGRES: ustm->prepare(replace_query_postgres); break;
+        case ServerType::MYSQL: ustm->prepare(replace_query_mysql); break;
+        case ServerType::SQLITE: ustm->prepare(replace_query_sqlite); break;
+        case ServerType::ORACLE: ustm->prepare(replace_query_oracle); break;
+        case ServerType::POSTGRES: ustm->prepare(replace_query_postgres); break;
         default: ustm->prepare(replace_query_postgres); break;
     }
 
@@ -102,11 +102,11 @@ Data::Data(ODBCConnection& conn)
     iistm->bind_in(3, value, value_ind);
     switch (conn.server_type)
     {
-        case POSTGRES: iistm->prepare(insert_query); iistm->ignore_error = "FIXME"; break;
-        case ORACLE: iistm->prepare(insert_query); iistm->ignore_error = "23000"; break;
-        //case ORACLE: iistm->prepare(insert_ignore_query_oracle); break;
-        case MYSQL: iistm->prepare(insert_ignore_query_mysql); break;
-        case SQLITE: iistm->prepare(insert_ignore_query_sqlite); break;
+        case ServerType::POSTGRES: iistm->prepare(insert_query); iistm->ignore_error = "FIXME"; break;
+        case ServerType::ORACLE: iistm->prepare(insert_query); iistm->ignore_error = "23000"; break;
+        //case ServerType::ORACLE: iistm->prepare(insert_ignore_query_oracle); break;
+        case ServerType::MYSQL: iistm->prepare(insert_ignore_query_mysql); break;
+        case ServerType::SQLITE: iistm->prepare(insert_ignore_query_sqlite); break;
         default: iistm->prepare(insert_ignore_query_sqlite); break;
     }
 }
@@ -148,7 +148,7 @@ bool Data::insert_or_ignore()
 {
     int sqlres = iistm->execute();
     bool res;
-    if (conn.server_type == POSTGRES || conn.server_type == ORACLE)
+    if (conn.server_type == ServerType::POSTGRES || conn.server_type == ServerType::ORACLE)
         res = ((sqlres == SQL_SUCCESS) || (sqlres == SQL_SUCCESS_WITH_INFO));
     else
         res = iistm->rowcount() != 0;
@@ -159,7 +159,7 @@ bool Data::insert_or_ignore()
 
 void Data::insert_or_overwrite()
 {
-    if (conn.server_type == POSTGRES)
+    if (conn.server_type == ServerType::POSTGRES)
     {
         if (ustm->execute_and_close() == SQL_NO_DATA)
             istm->execute_and_close();

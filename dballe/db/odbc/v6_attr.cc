@@ -72,7 +72,7 @@ ODBCAttr::ODBCAttr(ODBCConnection& conn)
 
     // Create the statement for replace
     rstm = conn.odbcstatement().release();
-    if (conn.server_type == POSTGRES)
+    if (conn.server_type == ServerType::POSTGRES)
     {
         rstm->bind_in(1, value, value_ind);
         rstm->bind_in(2, id_data);
@@ -84,10 +84,10 @@ ODBCAttr::ODBCAttr(ODBCConnection& conn)
     }
     switch (conn.server_type)
     {
-        case MYSQL: rstm->prepare(replace_query_mysql); break;
-        case SQLITE: rstm->prepare(replace_query_sqlite); break;
-        case ORACLE: rstm->prepare(replace_query_oracle); break;
-        case POSTGRES: rstm->prepare(replace_query_postgres); break;
+        case ServerType::MYSQL: rstm->prepare(replace_query_mysql); break;
+        case ServerType::SQLITE: rstm->prepare(replace_query_sqlite); break;
+        case ServerType::ORACLE: rstm->prepare(replace_query_oracle); break;
+        case ServerType::POSTGRES: rstm->prepare(replace_query_postgres); break;
         default: rstm->prepare(replace_query_mysql); break;
     }
 }
@@ -120,7 +120,7 @@ void ODBCAttr::write(int id_data, const wreport::Var& var)
     type = var.code();
     set_value(var.value());
 
-    if (conn.server_type == POSTGRES)
+    if (conn.server_type == ServerType::POSTGRES)
     {
         if (rstm->execute_and_close() == SQL_NO_DATA)
             istm->execute_and_close();

@@ -74,8 +74,8 @@ ODBCData::ODBCData(DB& db)
     /* Create the statement for replace (where available) */
     switch (conn.server_type)
     {
-        case MYSQL:
-        case ORACLE:
+        case ServerType::MYSQL:
+        case ServerType::ORACLE:
             ioustm = conn.odbcstatement().release();
             ioustm->bind_in(1, id_station);
             ioustm->bind_in(2, id_report);
@@ -89,8 +89,8 @@ ODBCData::ODBCData(DB& db)
     }
     switch (conn.server_type)
     {
-        case MYSQL: ioustm->prepare(replace_query_mysql); break;
-        case ORACLE: ioustm->prepare(replace_query_oracle); break;
+        case ServerType::MYSQL: ioustm->prepare(replace_query_mysql); break;
+        case ServerType::ORACLE: ioustm->prepare(replace_query_oracle); break;
         default:
             break;
     }
@@ -105,11 +105,11 @@ ODBCData::ODBCData(DB& db)
     iistm->bind_in(6, value, value_ind);
     switch (conn.server_type)
     {
-        case POSTGRES: iistm->prepare(insert_query); iistm->ignore_error = "23505"; break;
-        case ORACLE: iistm->prepare(insert_query); iistm->ignore_error = "23000"; break;
-        //case ORACLE: iistm->prepare(insert_ignore_query_oracle); break;
-        case MYSQL: iistm->prepare(insert_ignore_query_mysql); break;
-        case SQLITE: iistm->prepare(insert_ignore_query_sqlite); break;
+        case ServerType::POSTGRES: iistm->prepare(insert_query); iistm->ignore_error = "23505"; break;
+        case ServerType::ORACLE: iistm->prepare(insert_query); iistm->ignore_error = "23000"; break;
+        //case ServerType::ORACLE: iistm->prepare(insert_ignore_query_oracle); break;
+        case ServerType::MYSQL: iistm->prepare(insert_ignore_query_mysql); break;
+        case ServerType::SQLITE: iistm->prepare(insert_ignore_query_sqlite); break;
         default: iistm->prepare(insert_ignore_query_sqlite); break;
     }
 
@@ -226,7 +226,7 @@ bool ODBCData::insert_or_ignore(const wreport::Var& var, int* res_id)
     set(var);
     int sqlres = iistm->execute();
     bool res;
-    if (db.conn->server_type == POSTGRES || db.conn->server_type == ORACLE)
+    if (db.conn->server_type == ServerType::POSTGRES || db.conn->server_type == ServerType::ORACLE)
         res = ((sqlres == SQL_SUCCESS) || (sqlres == SQL_SUCCESS_WITH_INFO));
     else
         res = iistm->rowcount() != 0;

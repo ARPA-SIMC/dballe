@@ -393,7 +393,7 @@ Attr& DB::attr()
 void DB::init_after_connect()
 {
     /* Set manual commit */
-    if (conn->server_type == db::SQLITE)
+    if (conn->server_type == ServerType::SQLITE)
     {
         if (getenv("DBA_INSECURE_SQLITE") != NULL)
         {
@@ -409,17 +409,17 @@ void DB::init_after_connect()
 
     switch (conn->server_type)
     {
-        case db::ORACLE:
-        case db::POSTGRES:
+        case ServerType::ORACLE:
+        case ServerType::POSTGRES:
             seq_station = new db::Sequence(*conn, "seq_station");
             seq_context = new db::Sequence(*conn, "seq_context");
             break;
-        case db::MYSQL:
+        case ServerType::MYSQL:
             stm_last_insert_id = conn->odbcstatement().release();
             stm_last_insert_id->bind_out(1, m_last_insert_id);
             stm_last_insert_id->prepare("SELECT LAST_INSERT_ID()");
             break;
-        case db::SQLITE:
+        case ServerType::SQLITE:
             stm_last_insert_id = conn->odbcstatement().release();
             stm_last_insert_id->bind_out(1, m_last_insert_id);
             stm_last_insert_id->prepare("SELECT LAST_INSERT_ROWID()");
@@ -451,12 +451,12 @@ void DB::delete_tables()
 
         switch (db->server_type)
         {
-            case MYSQL:
-            case SQLITE:
-            case ORACLE:
+            case ServerType::MYSQL:
+            case ServerType::SQLITE:
+            case ServerType::ORACLE:
                 /* No functions used by MySQL, SQLite and Oracle */
                 break;
-            case POSTGRES:
+            case ServerType::POSTGRES:
                 len = snprintf(buf, 100, "DROP FUNCTION %s CASCADE", init_functions[i]);
                 res = SQLExecDirect(stm, (unsigned char*)buf, len);
                 if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
@@ -499,16 +499,16 @@ void DB::reset(const char* repinfo_file)
     int query_count = 0;
     switch (conn->server_type)
     {
-        case db::MYSQL:
+        case ServerType::MYSQL:
             queries = init_queries_mysql;
             query_count = sizeof(init_queries_mysql) / sizeof(init_queries_mysql[0]); break;
-        case db::SQLITE:
+        case ServerType::SQLITE:
             queries = init_queries_sqlite;
             query_count = sizeof(init_queries_sqlite) / sizeof(init_queries_sqlite[0]); break;
-        case db::ORACLE:
+        case ServerType::ORACLE:
             queries = init_queries_oracle;
             query_count = sizeof(init_queries_oracle) / sizeof(init_queries_oracle[0]); break;
-        case db::POSTGRES:
+        case ServerType::POSTGRES:
             queries = init_queries_postgres;
             query_count = sizeof(init_queries_postgres) / sizeof(init_queries_postgres[0]); break;
         default:
@@ -817,10 +817,10 @@ void DB::vacuum()
 
     switch (conn->server_type)
     {
-        case db::MYSQL: cclean = cclean_mysql; pclean = pclean_mysql; break;
-        case db::SQLITE: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
-        case db::ORACLE: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
-        case db::POSTGRES: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
+        case ServerType::MYSQL: cclean = cclean_mysql; pclean = pclean_mysql; break;
+        case ServerType::SQLITE: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
+        case ServerType::ORACLE: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
+        case ServerType::POSTGRES: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
         default: cclean = cclean_mysql; pclean = pclean_mysql; break;
     }
 

@@ -56,7 +56,7 @@ class Statement;
 /**
  * Supported SQL servers.
  */
-enum ServerType
+enum class ServerType
 {
     MYSQL,
     SQLITE,

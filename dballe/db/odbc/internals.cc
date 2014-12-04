@@ -219,25 +219,25 @@ void ODBCConnection::init_after_connect()
 
     if (name.substr(0, 9) == "libmyodbc" || name.substr(0, 6) == "myodbc")
     {
-        server_type = MYSQL;
+        server_type = ServerType::MYSQL;
         // MariaDB in at least one version returns 0 for rowcount in SQL_DIAG_CURSOR_ROW_COUNT
         server_quirks = DBA_DB_QUIRK_NO_ROWCOUNT_IN_DIAG;
     }
     else if (name.substr(0, 6) == "sqlite")
     {
         string version = driver_version();
-        server_type = SQLITE;
+        server_type = ServerType::SQLITE;
         if (version < "0.99")
             server_quirks = DBA_DB_QUIRK_NO_ROWCOUNT_IN_DIAG;
     }
     else if (name.substr(0, 5) == "SQORA")
-        server_type = ORACLE;
+        server_type = ServerType::ORACLE;
     else if (name.substr(0, 11) == "libpsqlodbc" || name.substr(0, 8) == "psqlodbc")
-        server_type = POSTGRES;
+        server_type = ServerType::POSTGRES;
     else
     {
         fprintf(stderr, "ODBC driver %s is unsupported: assuming it's similar to Postgres", name.c_str());
-        server_type = POSTGRES;
+        server_type = ServerType::POSTGRES;
     }
 
     connected = true;
@@ -348,12 +348,12 @@ void ODBCConnection::drop_table_if_exists(const char* name)
 {
     switch (server_type)
     {
-        case db::MYSQL:
-        case db::POSTGRES:
-        case db::SQLITE:
+        case ServerType::MYSQL:
+        case ServerType::POSTGRES:
+        case ServerType::SQLITE:
             exec(string("DROP TABLE IF EXISTS ") + name);
             break;
-        case db::ORACLE:
+        case ServerType::ORACLE:
         {
             auto stm = odbcstatement();
             char buf[100];
@@ -372,10 +372,10 @@ void ODBCConnection::drop_sequence_if_exists(const char* name)
 {
     switch (server_type)
     {
-        case db::POSTGRES:
+        case ServerType::POSTGRES:
             exec(string("DROP SEQUENCE IF EXISTS ") + name);
             break;
-        case db::ORACLE:
+        case ServerType::ORACLE:
         {
             auto stm = odbcstatement();
             char buf[100];
@@ -397,25 +397,25 @@ int ODBCConnection::get_last_insert_id()
     {
         switch (server_type)
         {
-            case db::MYSQL:
+            case ServerType::MYSQL:
                 stm_last_insert_id = odbcstatement().release();
                 stm_last_insert_id->bind_out(1, m_last_insert_id);
                 stm_last_insert_id->prepare("SELECT LAST_INSERT_ID()");
                 break;
-            case db::SQLITE:
+            case ServerType::SQLITE:
                 stm_last_insert_id = odbcstatement().release();
                 stm_last_insert_id->bind_out(1, m_last_insert_id);
                 stm_last_insert_id->prepare("SELECT LAST_INSERT_ROWID()");
                 break;
-            case db::POSTGRES:
+            case ServerType::POSTGRES:
                 stm_last_insert_id = odbcstatement().release();
                 stm_last_insert_id->bind_out(1, m_last_insert_id);
                 stm_last_insert_id->prepare("SELECT LASTVAL()");
                 break;
+            default:
+                throw error_consistency("get_last_insert_id called on a database that does not support it");
         }
     }
-    if (!stm_last_insert_id)
-        throw error_consistency("get_last_insert_id called on a database that does not support it");
 
     stm_last_insert_id->execute();
     if (!stm_last_insert_id->fetch_expecting_one())
@@ -430,22 +430,22 @@ bool ODBCConnection::has_table(const std::string& name)
 
     switch (server_type)
     {
-        case db::MYSQL:
+        case ServerType::MYSQL:
             stm->prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name=?");
             stm->bind_in(1, name.data(), name.size());
             stm->bind_out(1, count);
             break;
-        case db::SQLITE:
+        case ServerType::SQLITE:
             stm->prepare("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?");
             stm->bind_in(1, name.data(), name.size());
             stm->bind_out(1, count);
             break;
-        case db::ORACLE:
+        case ServerType::ORACLE:
             stm->prepare("SELECT COUNT(*) FROM user_tables WHERE table_name=UPPER(?)");
             stm->bind_in(1, name.data(), name.size());
             stm->bind_out(1, count);
             break;
-        case db::POSTGRES:
+        case ServerType::POSTGRES:
             stm->prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_name=?");
             stm->bind_in(1, name.data(), name.size());
             stm->bind_out(1, count);
@@ -465,7 +465,7 @@ std::string ODBCConnection::get_setting(const std::string& key)
     SQLLEN result_len;
 
     auto stm = odbcstatement();
-    if (server_type == MYSQL)
+    if (server_type == ServerType::MYSQL)
         stm->prepare("SELECT value FROM dballe_settings WHERE `key`=?");
     else
         stm->prepare("SELECT value FROM dballe_settings WHERE \"key\"=?");
@@ -488,14 +488,14 @@ void ODBCConnection::set_setting(const std::string& key, const std::string& valu
 
     if (!has_table("dballe_settings"))
     {
-        if (server_type == MYSQL)
+        if (server_type == ServerType::MYSQL)
             exec("CREATE TABLE dballe_settings (`key` CHAR(64) NOT NULL PRIMARY KEY, value CHAR(64) NOT NULL)");
         else
             exec("CREATE TABLE dballe_settings (\"key\" CHAR(64) NOT NULL PRIMARY KEY, value CHAR(64) NOT NULL)");
     }
 
     // Remove if it exists
-    if (server_type == MYSQL)
+    if (server_type == ServerType::MYSQL)
         stm->prepare("DELETE FROM dballe_settings WHERE `key`=?");
     else
         stm->prepare("DELETE FROM dballe_settings WHERE \"key\"=?");
@@ -503,7 +503,7 @@ void ODBCConnection::set_setting(const std::string& key, const std::string& valu
     stm->execute_and_close();
 
     // Then insert it
-    if (server_type == MYSQL)
+    if (server_type == ServerType::MYSQL)
         stm->prepare("INSERT INTO dballe_settings (`key`, value) VALUES (?, ?)");
     else
         stm->prepare("INSERT INTO dballe_settings (\"key\", value) VALUES (?, ?)");
@@ -909,7 +909,7 @@ Sequence::Sequence(ODBCConnection& conn, const char* name)
     int qlen;
 
     bind_out(1, out);
-    if (conn.server_type == ORACLE)
+    if (conn.server_type == ServerType::ORACLE)
         qlen = snprintf(qbuf, 100, "SELECT %s.CurrVal FROM dual", name);
     else
         qlen = snprintf(qbuf, 100, "SELECT last_value FROM %s", name);

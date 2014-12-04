@@ -148,7 +148,7 @@ ODBCLevTr::ODBCLevTr(DB& db)
     /* Override queries for some databases */
     switch (db.conn->server_type)
     {
-        case ORACLE:
+        case ServerType::ORACLE:
             insert_query = "INSERT INTO lev_tr VALUES (seq_lev_tr.NextVal, ?, ?, ?, ?, ?, ?, ?)";
             break;
         default: break;
