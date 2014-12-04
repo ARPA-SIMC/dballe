@@ -389,42 +389,6 @@ void DB::delete_tables()
     /* Drop existing sequences */
     for (size_t i = 0; i < sizeof(init_sequences) / sizeof(init_sequences[0]); ++i)
         conn->drop_sequence_if_exists(init_sequences[i]);
-
-#if 0
-    /* Allocate statement handle */
-    DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stm));
-
-    /* Drop existing functions */
-    for (i = 0; i < sizeof(init_functions) / sizeof(init_functions[0]); i++)
-    {
-        char buf[200];
-        int len;
-
-        switch (db->server_type)
-        {
-            case MYSQL:
-            case SQLITE:
-            case ORACLE:
-                /* No functions used by MySQL, SQLite and Oracle */
-                break;
-            case POSTGRES:
-                len = snprintf(buf, 100, "DROP FUNCTION %s CASCADE", init_functions[i]);
-                res = SQLExecDirect(stm, (unsigned char*)buf, len);
-                if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-                {
-                    err = dba_db_error_odbc_except(DBA_ODBC_MISSING_FUNCTION_POSTGRES, SQL_HANDLE_STMT, stm,
-                            "Removing old function %s", init_functions[i]);
-                    if (err != DBA_OK)
-                        goto cleanup;
-                }
-                DBA_RUN_OR_GOTO(cleanup, dba_db_commit(db));
-                break;
-            default:
-                /* No sequences in unknown databases */
-                break;
-        }
-    }
-#endif
 }
 
 void DB::disappear()
@@ -677,13 +641,6 @@ void DB::vacuum()
 
     // Delete orphan lev_trs
     conn->exec(cclean);
-
-#if 0
-    /* Done with lev_tr */
-    res = SQLCloseCursor(stm);
-    if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-        return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "closing dba_db_remove_orphans cursor");
-#endif
 
     // Delete orphan stations
     conn->exec(pclean);
