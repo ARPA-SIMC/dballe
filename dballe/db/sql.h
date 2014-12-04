@@ -64,8 +64,21 @@ enum ServerType
     POSTGRES,
 };
 
-struct Connection
+class Connection
 {
+protected:
+    /**
+     * Implementation of a direct exec query with no arguments.
+     *
+     * Some connectors have implementations that can skip the step of creating
+     * prepared statements, and this is a way of taking advantage of that.
+     *
+     * We cannot just call this exec() otherwise we hide the possibility of
+     * using exec(query, args...) in subclasses.
+     */
+    virtual void impl_exec_noargs(const std::string& query) = 0;
+
+public:
     /**
      * Type of SQL server we are connected to.
      *
@@ -92,7 +105,11 @@ struct Connection
     virtual std::unique_ptr<Statement> statement() = 0;
 
     /// Execute a one-shot query
-    virtual void exec(const std::string& query) = 0;
+    void exec(const std::string& query) { impl_exec_noargs(query); }
+
+    /// Execute a one-shot query, binding input parameters
+    template<typename T, typename ...Args>
+    void exec(const std::string& query, const T& arg, const Args& ...args);
 
     /// Check if the database contains a table
     virtual bool has_table(const std::string& name) = 0;
@@ -157,11 +174,19 @@ public:
     virtual void rollback() = 0;
 };
 
-/**
- * A prepared SQL statement
- */
+/// A prepared SQL statement
 class Statement
 {
+private:
+    // Implementation of variadic bind: terminating condition
+    template<size_t total> void bindn() {}
+    // Implementation of variadic bind: recursive iteration over the parameter pack
+    template<size_t total, typename ...Args, typename T> void bindn(const T& first, const Args& ...args)
+    {
+        bind_in(total - sizeof...(args), first);
+        bindn<total>(args...);
+    }
+
 public:
     virtual ~Statement() {}
 
@@ -171,11 +196,32 @@ public:
     /// Run the statement ignoring its results
     virtual void execute_ignoring_results() = 0;
 
+    /**
+     * Bind all the arguments in a single invocation.
+     *
+     * Note that the parameter positions are used as bind column numbers, so
+     * calling this function twice will re-bind columns instead of adding new
+     * ones.
+     */
+    template<typename... Args> void bind(const Args& ...args)
+    {
+        bindn<sizeof...(args)>(args...);
+    }
+
     virtual void bind_in(int idx, const int& val) = 0;
     virtual void bind_in(int idx, const unsigned& val) = 0;
     virtual void bind_in(int idx, const unsigned short& val) = 0;
     virtual void bind_in(int idx, const char* val) = 0;
 };
+
+template<typename T, typename ...Args>
+void Connection::exec(const std::string& query, const T& arg, const Args& ...args)
+{
+    auto stm = statement();
+    stm->prepare(query);
+    stm->bind(arg, args...);
+    stm->execute_ignoring_results();
+}
 
 }
 }

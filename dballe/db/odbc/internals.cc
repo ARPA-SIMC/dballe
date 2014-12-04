@@ -333,7 +333,7 @@ std::unique_ptr<ODBCStatement> ODBCConnection::odbcstatement()
     return unique_ptr<ODBCStatement>(new ODBCStatement(*this));
 }
 
-void ODBCConnection::exec(const std::string& query)
+void ODBCConnection::impl_exec_noargs(const std::string& query)
 {
     ODBCStatement stm(*this);
     stm.exec_direct_and_close(query.c_str());
