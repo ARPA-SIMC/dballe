@@ -140,7 +140,7 @@ struct StationLayerCache : protected std::vector<wreport::Var*>
 
 static inline int sqltimecmp(const SQL_TIMESTAMP_STRUCT* a, const SQL_TIMESTAMP_STRUCT* b)
 {
-	return memcmp(a, b, sizeof(SQL_TIMESTAMP_STRUCT));
+    return memcmp(a, b, sizeof(SQL_TIMESTAMP_STRUCT));
 }
 
 void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
@@ -159,10 +159,10 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
     cur.query(rec);
 
     // Current context information used to detect context changes
-	SQL_TIMESTAMP_STRUCT last_datetime;
-	last_datetime.year = 0;
-	int last_ana_id = -1;
-	int last_rep_cod = -1;
+    SQL_TIMESTAMP_STRUCT last_datetime;
+    last_datetime.year = 0;
+    int last_ana_id = -1;
+    int last_rep_cod = -1;
 
     StationLayerCache station_cache;
 
@@ -186,12 +186,12 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
          || sqltimecmp(&(cur.sqlrec.out_datetime), &last_datetime) != 0)
         {
             // Flush current message
-			TRACE("New message\n");
-			if (msg.get() != NULL)
-			{
-				TRACE("Sending old message to consumer\n");
-				if (msg->type == MSG_PILOT || msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
-				{
+            TRACE("New message\n");
+            if (msg.get() != NULL)
+            {
+                TRACE("Sending old message to consumer\n");
+                if (msg->type == MSG_PILOT || msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
+                {
                     unique_ptr<Msg> copy(new Msg);
                     msg->sounding_pack_levels(*copy);
                     /* DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_reverse_levels(msg)); */
@@ -249,11 +249,11 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
         }
     }
 
-	if (msg.get() != NULL)
-	{
-		TRACE("Inserting leftover old message\n");
-		if (msg->type == MSG_PILOT || msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
-		{
+    if (msg.get() != NULL)
+    {
+        TRACE("Inserting leftover old message\n");
+        if (msg->type == MSG_PILOT || msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
+        {
             unique_ptr<Msg> copy(new Msg);
             msg->sounding_pack_levels(*copy);
             /* DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_reverse_levels(msg)); */
