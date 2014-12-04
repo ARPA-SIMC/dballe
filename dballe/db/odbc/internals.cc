@@ -772,6 +772,11 @@ void ODBCStatement::prepare(const char* query, int qlen)
         error_odbc::throwf(SQL_HANDLE_STMT, stm, "compiling query \"%.*s\"", qlen, query);
 }
 
+void ODBCStatement::prepare(const std::string& query)
+{
+    prepare(query.data(), query.size());
+}
+
 int ODBCStatement::execute()
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
@@ -837,6 +842,11 @@ void ODBCStatement::close_cursor_if_needed()
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_reached_completion = true;
 #endif
+}
+
+void ODBCStatement::execute_ignoring_results()
+{
+    execute_and_close();
 }
 
 int ODBCStatement::execute_and_close()

@@ -136,19 +136,45 @@ struct Connection
     virtual void add_datetime(Querybuf& qb, const int* dt) const = 0;
 };
 
+/**
+ * A RAII transaction interface.
+ *
+ * The transaction will be valid during the lifetime of this object.
+ *
+ * You can commit or rollback the transaction using its methods. If at
+ * destruction time the transaction has not been committed or rolled back, a
+ * rollback is automatically performed.
+ */
 class Transaction
 {
 public:
     virtual ~Transaction() {}
 
+    /// Commit this transaction
     virtual void commit() = 0;
+
+    /// Roll back this transaction
     virtual void rollback() = 0;
 };
 
+/**
+ * A prepared SQL statement
+ */
 class Statement
 {
 public:
     virtual ~Statement() {}
+
+    /// Compile the SQL statement
+    virtual void prepare(const std::string& query) = 0;
+
+    /// Run the statement ignoring its results
+    virtual void execute_ignoring_results() = 0;
+
+    virtual void bind_in(int idx, const int& val) = 0;
+    virtual void bind_in(int idx, const unsigned& val) = 0;
+    virtual void bind_in(int idx, const unsigned short& val) = 0;
+    virtual void bind_in(int idx, const char* val) = 0;
 };
 
 }

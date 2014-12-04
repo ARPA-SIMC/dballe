@@ -627,20 +627,20 @@ void DB::remove(const Query& rec)
     c.query(rec);
 
     // Compile the DELETE query for the data
-    auto stmd = conn->odbcstatement();
+    auto stmd = conn->statement();
     stmd->bind_in(1, c.sqlrec.out_id_data);
     stmd->prepare("DELETE FROM data WHERE id=?");
 
     // Compile the DELETE query for the attributes
-    auto stma = conn->odbcstatement();
+    auto stma = conn->statement();
     stma->bind_in(1, c.sqlrec.out_id_data);
     stma->prepare("DELETE FROM attr WHERE id_data=?");
 
     /* Iterate all the results, deleting them */
     while (c.next())
     {
-        stmd->execute_and_close();
-        stma->execute_and_close();
+        stmd->execute_ignoring_results();
+        stma->execute_ignoring_results();
     }
     t->commit();
 }

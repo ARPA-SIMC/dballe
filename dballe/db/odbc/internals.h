@@ -183,13 +183,13 @@ struct ODBCStatement : public Statement
     ~ODBCStatement();
     ODBCStatement& operator=(const ODBCStatement&) = delete;
 
-    void bind_in(int idx, const int& val);
+    void bind_in(int idx, const int& val) override;
     void bind_in(int idx, const int& val, const SQLLEN& ind);
-    void bind_in(int idx, const unsigned& val);
+    void bind_in(int idx, const unsigned& val) override;
     void bind_in(int idx, const unsigned& val, const SQLLEN& ind);
-    void bind_in(int idx, const unsigned short& val);
+    void bind_in(int idx, const unsigned short& val) override;
     void bind_in(int idx, const unsigned short& val, const SQLLEN& ind);
-    void bind_in(int idx, const char* val);
+    void bind_in(int idx, const char* val) override;
     void bind_in(int idx, const char* val, const SQLLEN& ind);
     void bind_in(int idx, const SQL_TIMESTAMP_STRUCT& val);
 
@@ -206,6 +206,7 @@ struct ODBCStatement : public Statement
 
     void prepare(const char* query);
     void prepare(const char* query, int qlen);
+    void prepare(const std::string& query) override;
 
     /// @return SQLExecute's result
     int execute();
@@ -220,6 +221,8 @@ struct ODBCStatement : public Statement
     int exec_direct_and_close(const char* query);
     /// @return SQLExecute's result
     int exec_direct_and_close(const char* query, int qlen);
+
+    void execute_ignoring_results() override;
 
     /**
      * @return the number of columns in the result set (or 0 if the statement
