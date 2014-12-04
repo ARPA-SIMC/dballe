@@ -257,6 +257,9 @@ void DbAPI::dimenticami()
 
 int DbAPI::voglioancora()
 {
+    // Query attributes
+    int qc_count = 0;
+
     // Retrieve the varcodes of the attributes that we want
     std::vector<wreport::Varcode> arr;
     read_qc_list(arr);
@@ -283,8 +286,6 @@ int DbAPI::voglioancora()
 
     qcoutput.clear_vars();
 
-    // Query attributes
-    int qc_count = 0;
     switch (attr_state)
     {
         case ATTR_REFERENCE:
