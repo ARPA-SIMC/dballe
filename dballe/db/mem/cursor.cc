@@ -195,10 +195,9 @@ void Cursor::to_record_value(Record& rec)
     rec.set(*cur_var);
 }
 
-unsigned Cursor::query_attrs(const std::vector<wreport::Varcode>& qcs, function<void(unique_ptr<Var>)> dest)
+void Cursor::query_attrs(const AttrList& qcs, function<void(unique_ptr<Var>)> dest)
 {
     // Default implementation for cursors for which this does not make any sense
-    return 0;
 }
 
 namespace {
@@ -436,9 +435,9 @@ struct CursorStationData : public CursorSorted<StationValueResultQueue>
     {
     }
 
-    unsigned query_attrs(const AttrList& qcs, function<void(unique_ptr<Var>)> dest) override
+    void query_attrs(const AttrList& qcs, function<void(unique_ptr<Var>)> dest) override
     {
-        return queue.top()->query_attrs(qcs, dest);
+        queue.top()->query_attrs(qcs, dest);
     }
 
     virtual void attr_insert(const Record& attrs)
@@ -519,9 +518,9 @@ struct CursorDataBase : public CursorSorted<QUEUE>
             this->add_station_info(rec);
     }
 
-    unsigned query_attrs(const AttrList& qcs, function<void(unique_ptr<Var>)> dest) override
+    void query_attrs(const AttrList& qcs, function<void(unique_ptr<Var>)> dest) override
     {
-        return this->cur_value->query_attrs(qcs, dest);
+        this->cur_value->query_attrs(qcs, dest);
     }
 };
 
@@ -608,29 +607,29 @@ struct CursorSummary : public Cursor
     }
 };
 
-auto_ptr<db::Cursor> Cursor::createStations(mem::DB& db, unsigned modifiers, Results<Station>& res)
+unique_ptr<db::Cursor> Cursor::createStations(mem::DB& db, unsigned modifiers, Results<Station>& res)
 {
-    return auto_ptr<db::Cursor>(new CursorStations(db, modifiers, res));
+    return unique_ptr<db::Cursor>(new CursorStations(db, modifiers, res));
 }
 
-auto_ptr<db::Cursor> Cursor::createStationData(mem::DB& db, unsigned modifiers, Results<StationValue>& res)
+unique_ptr<db::Cursor> Cursor::createStationData(mem::DB& db, unsigned modifiers, Results<StationValue>& res)
 {
-    return auto_ptr<db::Cursor>(new CursorStationData(db, modifiers, res));
+    return unique_ptr<db::Cursor>(new CursorStationData(db, modifiers, res));
 }
 
-auto_ptr<db::Cursor> Cursor::createData(mem::DB& db, unsigned modifiers, Results<Value>& res)
+unique_ptr<db::Cursor> Cursor::createData(mem::DB& db, unsigned modifiers, Results<Value>& res)
 {
-    return auto_ptr<db::Cursor>(new CursorData(db, modifiers, res));
+    return unique_ptr<db::Cursor>(new CursorData(db, modifiers, res));
 }
 
-auto_ptr<db::Cursor> Cursor::createDataBest(mem::DB& db, unsigned modifiers, Results<Value>& res)
+unique_ptr<db::Cursor> Cursor::createDataBest(mem::DB& db, unsigned modifiers, Results<Value>& res)
 {
-    return auto_ptr<db::Cursor>(new CursorDataBest(db, modifiers, res));
+    return unique_ptr<db::Cursor>(new CursorDataBest(db, modifiers, res));
 }
 
-auto_ptr<db::Cursor> Cursor::createSummary(mem::DB& db, unsigned modifiers, Results<Value>& res)
+unique_ptr<db::Cursor> Cursor::createSummary(mem::DB& db, unsigned modifiers, Results<Value>& res)
 {
-    return auto_ptr<db::Cursor>(new CursorSummary(db, modifiers, res));
+    return unique_ptr<db::Cursor>(new CursorSummary(db, modifiers, res));
 }
 
 

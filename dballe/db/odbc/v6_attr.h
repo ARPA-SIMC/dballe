@@ -82,7 +82,7 @@ public:
      * @return
      *   The error indicator for the function (See @ref error.h)
      */
-    void read(int id_data, wreport::Var& var) override;
+    void read(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
 
     /**
      * Dump the entire contents of the table to an output stream

@@ -119,7 +119,7 @@ struct Attr
      * @return
      *   The error indicator for the function (See @ref error.h)
      */
-    virtual void read(int id_data, wreport::Var& var) = 0;
+    virtual void read(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
 
     /**
      * Dump the entire contents of the table to an output stream

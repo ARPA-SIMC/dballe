@@ -26,6 +26,7 @@
 #include <cstring>
 
 using namespace std;
+using namespace wreport;
 
 namespace dballe {
 namespace db {
@@ -127,16 +128,16 @@ void ODBCAttr::write(int id_data, const wreport::Var& var)
         rstm->execute_and_close();
 }
 
-void ODBCAttr::read(int id_data, wreport::Var& var)
+void ODBCAttr::read(int id_data, function<void(unique_ptr<Var>)> dest)
 {
     this->id_data = id_data;
 
     // Query all attributes for this var in the current context
     sstm->execute();
 
-    // Make attribues from the result, and add them to var
+    // Make variables out of the results and send them to dest
     while (sstm->fetch())
-        var.seta(auto_ptr<wreport::Var>(newvar(type, value).release()));
+        dest(newvar(type, value));
 
     sstm->close_cursor();
 }

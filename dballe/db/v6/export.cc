@@ -178,7 +178,7 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
         unique_ptr<Var> var(newvar(cur.sqlrec.out_varcode, cur.sqlrec.out_value));
 
         /* Load the attributes from the database */
-        at.read(cur.sqlrec.out_id_data, *var);
+        at.read(cur.sqlrec.out_id_data, [&](unique_ptr<Var> attr) { var->seta(auto_ptr<Var>(attr.release())); });
 
         /* See if we have the start of a new message */
         if (cur.sqlrec.out_ana_id != last_ana_id

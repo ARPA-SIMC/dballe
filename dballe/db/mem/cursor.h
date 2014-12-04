@@ -88,7 +88,7 @@ public:
     /**
      * Query attributes for the current variable
      */
-    unsigned query_attrs(const AttrList& qcs, std::function<void(std::unique_ptr<wreport::Var>)> dest);
+    void query_attrs(const AttrList& qcs, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
 
     virtual int get_station_id() const;
     virtual double get_lat() const;
@@ -111,11 +111,11 @@ public:
      */
     virtual unsigned test_iterate(FILE* dump=0) = 0;
 #endif
-    static std::auto_ptr<db::Cursor> createStations(mem::DB& db, unsigned modifiers, memdb::Results<memdb::Station>& res);
-    static std::auto_ptr<db::Cursor> createStationData(mem::DB& db, unsigned modifiers, memdb::Results<memdb::StationValue>& res);
-    static std::auto_ptr<db::Cursor> createData(mem::DB& db, unsigned modifiers, memdb::Results<memdb::Value>& res);
-    static std::auto_ptr<db::Cursor> createDataBest(mem::DB& db, unsigned modifiers, memdb::Results<memdb::Value>& res);
-    static std::auto_ptr<db::Cursor> createSummary(mem::DB& db, unsigned modifiers, memdb::Results<memdb::Value>& res);
+    static std::unique_ptr<db::Cursor> createStations(mem::DB& db, unsigned modifiers, memdb::Results<memdb::Station>& res);
+    static std::unique_ptr<db::Cursor> createStationData(mem::DB& db, unsigned modifiers, memdb::Results<memdb::StationValue>& res);
+    static std::unique_ptr<db::Cursor> createData(mem::DB& db, unsigned modifiers, memdb::Results<memdb::Value>& res);
+    static std::unique_ptr<db::Cursor> createDataBest(mem::DB& db, unsigned modifiers, memdb::Results<memdb::Value>& res);
+    static std::unique_ptr<db::Cursor> createSummary(mem::DB& db, unsigned modifiers, memdb::Results<memdb::Value>& res);
 
 protected:
     /**

@@ -112,7 +112,7 @@ void to::test<2>()
     {
         Var var(varinfo(WR_VAR(0, 1, 2)));
         wassert(actual(var.next_attr()).isfalse());
-        at->read(1, var);
+        at->read(1, [&](unique_ptr<Var> attr) { var.seta(auto_ptr<Var>(attr.release())); });
         wassert(actual(var.next_attr()).istrue());
         const Var* attr = var.next_attr();
         wassert(actual(attr->value()) == "50");
@@ -123,7 +123,7 @@ void to::test<2>()
     {
         Var var(varinfo(WR_VAR(0, 1, 2)));
         wassert(actual(var.next_attr()).isfalse());
-        at->read(2, var);
+        at->read(2, [&](unique_ptr<Var> attr) { var.seta(auto_ptr<Var>(attr.release())); });
         wassert(actual(var.next_attr()).istrue());
         const Var* attr = var.next_attr();
         wassert(actual(attr->value()) == "75");

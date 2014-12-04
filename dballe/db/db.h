@@ -154,7 +154,7 @@ public:
     /**
      * Query attributes for the current variable
      */
-    virtual unsigned query_attrs(const AttrList& qcs, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
+    virtual void query_attrs(const AttrList& qcs, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
 
     /**
      * Insert/overwrite new attributes for the current variable
@@ -408,7 +408,7 @@ public:
      * @return
      *   Number of attributes returned in attrs
      */
-    virtual unsigned query_attrs(int reference_id, wreport::Varcode id_var, const db::AttrList& qcs,
+    virtual void query_attrs(int reference_id, wreport::Varcode id_var, const db::AttrList& qcs,
             std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
 
     /**

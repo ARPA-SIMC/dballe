@@ -270,12 +270,16 @@ int DbAPI::voglioancora()
         case ATTR_REFERENCE:
             if (attr_reference_id == missing_int || attr_varid == 0)
                 throw error_consistency("voglioancora was not called after a dammelo, or was called with an invalid *context_id or *var_related");
-            qc_count = db.query_attrs(attr_reference_id, attr_varid, arr, [&](unique_ptr<Var> var) {
+            db.query_attrs(attr_reference_id, attr_varid, arr, [&](unique_ptr<Var> var) {
                 qcoutput.add(move(var));
+                ++qc_count;
             });
             break;
         case ATTR_DAMMELO:
-            qc_count = query_cur->query_attrs(arr, [&](unique_ptr<Var> var) { qcoutput.add(move(var)); });
+            query_cur->query_attrs(arr, [&](unique_ptr<Var> var) {
+                qcoutput.add(move(var));
+                ++qc_count;
+            });
             break;
         case ATTR_PRENDILO:
             throw error_consistency("voglioancora cannot be called after a prendilo");
