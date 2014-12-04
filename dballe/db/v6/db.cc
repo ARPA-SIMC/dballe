@@ -293,11 +293,11 @@ static const char* init_queries_oracle[] = {
 
 
 // First part of initialising a dba_db
-DB::DB(unique_ptr<ODBCConnection>& conn)
+DB::DB(unique_ptr<Connection> conn)
     : conn(conn.release()),
       m_repinfo(0), m_station(0), m_lev_tr(0), m_lev_tr_cache(0),
       m_data(0), m_attr(0),
-      seq_lev_tr(0), seq_data(0), _last_station_id(0)
+      seq_data(0), _last_station_id(0)
 {
     init_after_connect();
 
@@ -314,21 +314,20 @@ DB::~DB()
     if (m_station) delete m_station;
     if (m_repinfo) delete m_repinfo;
     if (seq_data) delete seq_data;
-    if (seq_lev_tr) delete seq_lev_tr;
     if (conn) delete conn;
 }
 
 v6::Repinfo& DB::repinfo()
 {
     if (m_repinfo == NULL)
-        m_repinfo = new Repinfo(conn);
+        m_repinfo = new Repinfo(dynamic_cast<ODBCConnection*>(conn));
     return *m_repinfo;
 }
 
 v5::Station& DB::station()
 {
     if (m_station == NULL)
-        m_station = v5::Station::create(*this->conn).release();
+        m_station = v5::Station::create(*dynamic_cast<ODBCConnection*>(this->conn)).release();
     return *m_station;
 }
 
@@ -375,10 +374,7 @@ void DB::init_after_connect()
             conn->exec("PRAGMA legacy_file_format = 0");
         }
     }
-    conn->set_autocommit(false);
 }
-
-#define DBA_ODBC_MISSING_FUNCTION_POSTGRES "42883"
 
 void DB::delete_tables()
 {
@@ -470,14 +466,6 @@ int DB::rep_cod_from_memo(const char* memo)
 bool DB::check_rep_cod(int rep_cod)
 {
     return repinfo().has_id(rep_cod);
-}
-
-int DB::last_lev_tr_insert_id()
-{
-    if (seq_lev_tr)
-        return seq_lev_tr->read();
-    else
-        return conn->get_last_insert_id();
 }
 
 int DB::last_data_insert_id()

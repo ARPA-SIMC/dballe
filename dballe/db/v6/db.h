@@ -65,7 +65,6 @@ struct MsgConsumer;
 
 namespace db {
 struct Connection;
-struct ODBCConnection;
 struct Statement;
 struct Sequence;
 
@@ -86,8 +85,8 @@ struct Attr;
 class DB : public dballe::DB
 {
 public:
-    /** ODBC database connection */
-    db::ODBCConnection* conn;
+    /// Database connection
+    db::Connection* conn;
 
 protected:
     /// Store information about the database ID of a variable
@@ -128,8 +127,6 @@ protected:
      * They are NULL for databases such as MySQL that do not use sequences.
      * @{
      */
-    /** lev_tr ID sequence */
-    db::Sequence* seq_lev_tr;
     /** data ID sequence */
     db::Sequence* seq_data;
     /** @} */
@@ -138,7 +135,7 @@ protected:
 
     void init_after_connect();
 
-    DB(std::unique_ptr<ODBCConnection>& conn);
+    DB(std::unique_ptr<Connection> conn);
 
 public:
     virtual ~DB();
@@ -218,11 +215,6 @@ public:
      *   true if the report code is supported, false if not
      */
     bool check_rep_cod(int rep_cod);
-
-    /**
-     * Return the ID of the last inserted lev_tr
-     */
-    int last_lev_tr_insert_id();
 
     /**
      * Return the ID of the last inserted data

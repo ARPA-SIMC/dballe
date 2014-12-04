@@ -258,6 +258,8 @@ void ODBCConnection::init_after_connect()
         if (v & SQL_CA2_CRC_EXACT) TRACE("SQL_STATIC_CURSOR_ATTRIBUTES2, SQL_CA2_CRC_EXACT\n");
         if (v & SQL_CA2_CRC_APPROXIMATE) TRACE("SQL_STATIC_CURSOR_ATTRIBUTES2, SQL_CA2_CRC_APPROXIMATE\n");
     }
+
+    set_autocommit(false);
 }
 
 std::string ODBCConnection::driver_name()

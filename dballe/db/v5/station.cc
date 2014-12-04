@@ -355,16 +355,13 @@ void ODBCStation::dump(FILE* out)
     stm->close_cursor();
 }
 
-void Station::reset_db(ODBCConnection& conn)
+void Station::reset_db(Connection& conn)
 {
     conn.drop_table_if_exists("station");
     conn.drop_sequence_if_exists("seq_station");
 
-    /* Allocate statement handle */
-    auto stm = conn.odbcstatement();
-
     const char** queries = NULL;
-    int query_count = 0;
+    unsigned query_count = 0;
     switch (conn.server_type)
     {
         case ServerType::MYSQL:
@@ -384,8 +381,8 @@ void Station::reset_db(ODBCConnection& conn)
             query_count = sizeof(init_queries_postgres) / sizeof(init_queries_postgres[0]); break;
     }
     /* Create tables */
-    for (int i = 0; i < query_count; i++)
-        stm->exec_direct_and_close(queries[i]);
+    for (unsigned i = 0; i < query_count; i++)
+        conn.exec(queries[i]);
 }
 
 Station::~Station()

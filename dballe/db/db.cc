@@ -114,7 +114,7 @@ unique_ptr<DB> DB::instantiate_db(unique_ptr<ODBCConnection> conn)
     switch (format)
     {
         case V5: return unique_ptr<DB>(new v5::DB(conn));
-        case V6: return unique_ptr<DB>(new v6::DB(conn));
+        case V6: return unique_ptr<DB>(new v6::DB(unique_ptr<Connection>(conn.release())));
         default: error_consistency::throwf("requested unknown format %d", (int)format);
     }
 #else

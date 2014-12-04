@@ -40,6 +40,7 @@ struct DB;
 struct Record;
 
 namespace db {
+struct ODBCConnection;
 struct ODBCStatement;
 
 namespace v6 {
@@ -81,8 +82,11 @@ struct Cursor : public db::Cursor
         bool querybest_fields_are_the_same(const SQLRecord& r);
     };
 
-    /** Database to operate on */
+    /// Database to operate on
     v6::DB& db;
+
+    /// ODBC database connection to use
+    ODBCConnection& conn;
 
     /** Modifier flags to enable special query behaviours */
     const unsigned int modifiers;

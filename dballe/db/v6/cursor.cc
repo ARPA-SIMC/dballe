@@ -62,7 +62,7 @@ bool Cursor::SQLRecord::querybest_fields_are_the_same(const SQLRecord& r)
 }
 
 Cursor::Cursor(v6::DB& db, unsigned int modifiers)
-    : db(db), modifiers(modifiers)
+    : db(db), conn(*dynamic_cast<ODBCConnection*>(db.conn)), modifiers(modifiers)
 {
 }
 
@@ -218,7 +218,7 @@ void Cursor::add_station_info(Record& rec)
      * STATION,     B01002   258
     */
     const char* query;
-    switch (db.conn->server_type)
+    switch (conn.server_type)
     {
         case ServerType::MYSQL:
             query =
@@ -246,7 +246,7 @@ void Cursor::add_station_info(Record& rec)
     SQLLEN st_out_val_ind;
 
     /* Allocate statement handle */
-    auto stm = db.conn->odbcstatement();
+    auto stm = conn.odbcstatement();
 
     /* Bind input fields */
     stm->bind_in(1, sqlrec.out_ana_id);
@@ -266,7 +266,7 @@ void Cursor::add_station_info(Record& rec)
 CursorLinear::CursorLinear(DB& db, unsigned int modifiers)
     : Cursor(db, modifiers), stm(0)
 {
-    stm = db.conn->odbcstatement().release();
+    stm = conn.odbcstatement().release();
 }
 
 CursorLinear::~CursorLinear()
@@ -293,7 +293,7 @@ void CursorLinear::discard_rest()
 void CursorStations::query(const Record& rec)
 {
 #if 0
-    if (db.conn->server_type == ServerType::ORACLE && !(modifiers & DBA_DB_MODIFIER_STREAM))
+    if (conn.server_type == ServerType::ORACLE && !(modifiers & DBA_DB_MODIFIER_STREAM))
     {
         /* FIXME: this is a temporary solution giving an approximate row count only:
          * insert/delete/update queries run between the count and the select will
@@ -305,7 +305,7 @@ void CursorStations::query(const Record& rec)
     StationQueryBuilder qb(db, *stm, *this, rec, modifiers);
     qb.build();
 
-    if (modifiers & DBA_DB_MODIFIER_STREAM && db.conn->server_type != ServerType::ORACLE)
+    if (modifiers & DBA_DB_MODIFIER_STREAM && conn.server_type != ServerType::ORACLE)
     {
         stm->set_cursor_forward_only();
     //} else {
@@ -316,7 +316,7 @@ void CursorStations::query(const Record& rec)
     //fprintf(stderr, "Query: %s\n", qb.sql_query.c_str());
 
     // Get the number of affected rows
-    if (db.conn->server_type != ServerType::ORACLE)
+    if (conn.server_type != ServerType::ORACLE)
         count = stm->select_rowcount();
 }
 
@@ -348,7 +348,7 @@ unsigned CursorStations::test_iterate(FILE* dump)
 void CursorData::query(const Record& rec)
 {
 #if 0
-    if (db.conn->server_type == ServerType::ORACLE && !(modifiers & DBA_DB_MODIFIER_STREAM))
+    if (conn.server_type == ServerType::ORACLE && !(modifiers & DBA_DB_MODIFIER_STREAM))
     {
         /* FIXME: this is a temporary solution giving an approximate row count only:
          * insert/delete/update queries run between the count and the select will
@@ -360,12 +360,12 @@ void CursorData::query(const Record& rec)
     qb.build();
     //fprintf(stderr, "Query: %s\n", qb.sql_query.c_str());
 
-    if (modifiers & DBA_DB_MODIFIER_STREAM && db.conn->server_type != ServerType::ORACLE)
+    if (modifiers & DBA_DB_MODIFIER_STREAM && conn.server_type != ServerType::ORACLE)
         stm->set_cursor_forward_only();
     stm->exec_direct(qb.sql_query.data(), qb.sql_query.size());
 
     // Get the number of affected rows
-    if (db.conn->server_type != ServerType::ORACLE)
+    if (conn.server_type != ServerType::ORACLE)
         count = stm->select_rowcount();
 }
 
@@ -415,7 +415,7 @@ void CursorDataIDs::query(const Record& rec)
     qb.build();
     //fprintf(stderr, "Query: %s\n", qb.sql_query.c_str());
 
-    if (modifiers & DBA_DB_MODIFIER_STREAM && db.conn->server_type != ServerType::ORACLE)
+    if (modifiers & DBA_DB_MODIFIER_STREAM && conn.server_type != ServerType::ORACLE)
         stm->set_cursor_forward_only();
     stm->exec_direct(qb.sql_query.data(), qb.sql_query.size());
 
@@ -519,7 +519,7 @@ CursorBest::~CursorBest() {}
 
 void CursorBest::query(const Record& rec)
 {
-    auto stm = db.conn->odbcstatement();
+    auto stm = conn.odbcstatement();
 
     DataQueryBuilder qb(db, *stm, *this, rec, modifiers);
     qb.build();

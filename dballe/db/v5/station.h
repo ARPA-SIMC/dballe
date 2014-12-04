@@ -33,6 +33,7 @@
 
 namespace dballe {
 namespace db {
+struct Connection;
 struct ODBCConnection;
 
 namespace v5 {
@@ -73,7 +74,7 @@ public:
     /**
      * Clear (if applicable) and recreate the table structure in the database
      */
-    static void reset_db(db::ODBCConnection& conn);
+    static void reset_db(Connection& conn);
 };
 
 }

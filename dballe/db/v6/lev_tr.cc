@@ -47,7 +47,10 @@ protected:
     /**
      * DB connection.
      */
-    DB& db;
+    ODBCConnection& conn;
+
+    /// lev_tr ID sequence, for databases that need it
+    db::Sequence* seq_lev_tr = nullptr;
 
     /** Precompiled select statement */
     ODBCStatement* sstm = nullptr;
@@ -106,7 +109,7 @@ protected:
     void remove();
 
 public:
-    ODBCLevTr(DB& db);
+    ODBCLevTr(ODBCConnection& conn);
     ODBCLevTr(const LevTr&) = delete;
     ODBCLevTr(const LevTr&&) = delete;
     ODBCLevTr& operator=(const ODBCLevTr&) = delete;
@@ -131,8 +134,8 @@ public:
 };
 
 
-ODBCLevTr::ODBCLevTr(DB& db)
-    : db(db)
+ODBCLevTr::ODBCLevTr(ODBCConnection& conn)
+    : conn(conn)
 {
     const char* select_query =
         "SELECT id FROM lev_tr WHERE"
@@ -146,16 +149,17 @@ ODBCLevTr::ODBCLevTr(DB& db)
         "DELETE FROM lev_tr WHERE id=?";
 
     /* Override queries for some databases */
-    switch (db.conn->server_type)
+    switch (conn.server_type)
     {
         case ServerType::ORACLE:
             insert_query = "INSERT INTO lev_tr VALUES (seq_lev_tr.NextVal, ?, ?, ?, ?, ?, ?, ?)";
+            seq_lev_tr = new Sequence(conn, "seq_lev_tr");
             break;
         default: break;
     }
 
     /* Create the statement for select fixed */
-    sstm = db.conn->odbcstatement().release();
+    sstm = conn.odbcstatement().release();
     sstm->bind_in(1, ltype1);
     sstm->bind_in(2, l1);
     sstm->bind_in(3, ltype2);
@@ -167,7 +171,7 @@ ODBCLevTr::ODBCLevTr(DB& db)
     sstm->prepare(select_query);
 
     /* Create the statement for select data */
-    sdstm = db.conn->odbcstatement().release();
+    sdstm = conn.odbcstatement().release();
     sdstm->bind_in(1, id);
     sdstm->bind_out(1, ltype1);
     sdstm->bind_out(2, l1);
@@ -179,7 +183,7 @@ ODBCLevTr::ODBCLevTr(DB& db)
     sdstm->prepare(select_data_query);
 
     /* Create the statement for insert */
-    istm = db.conn->odbcstatement().release();
+    istm = conn.odbcstatement().release();
     istm->bind_in(1, ltype1);
     istm->bind_in(2, l1);
     istm->bind_in(3, ltype2);
@@ -190,13 +194,14 @@ ODBCLevTr::ODBCLevTr(DB& db)
     istm->prepare(insert_query);
 
     /* Create the statement for remove */
-    dstm = db.conn->odbcstatement().release();
+    dstm = conn.odbcstatement().release();
     dstm->bind_in(1, id);
     dstm->prepare(remove_query);
 }
 
 ODBCLevTr::~ODBCLevTr()
 {
+    delete seq_lev_tr;
     if (sstm) delete sstm;
     if (sdstm) delete sdstm;
     if (istm) delete istm;
@@ -283,7 +288,11 @@ int ODBCLevTr::obtain_id(const Record& rec)
 int ODBCLevTr::insert()
 {
     istm->execute_and_close();
-    return db.last_lev_tr_insert_id();
+
+    if (seq_lev_tr)
+        return seq_lev_tr->read();
+    else
+        return conn.get_last_insert_id();
 }
 
 void ODBCLevTr::remove()
@@ -302,7 +311,7 @@ void ODBCLevTr::dump(FILE* out)
     int p1;
     int p2;
 
-    auto stm = db.conn->odbcstatement();
+    auto stm = conn.odbcstatement();
     stm->bind_out(1, id);
     stm->bind_out(2, ltype1);
     stm->bind_out(3, l1);
@@ -334,7 +343,10 @@ void ODBCLevTr::dump(FILE* out)
 
 unique_ptr<LevTr> LevTr::create(DB& db)
 {
-    return unique_ptr<LevTr>(new ODBCLevTr(db));
+    if (ODBCConnection* conn = dynamic_cast<ODBCConnection*>(db.conn))
+        return unique_ptr<LevTr>(new ODBCLevTr(*conn));
+    else
+        throw error_unimplemented("v6 DB LevTr not yet implemented for non-ODBC connectors");
 }
 
 LevTr::~LevTr() {}
@@ -423,11 +435,11 @@ struct MapLevTrCache : public LevTrCache
     {
         // Output values
         SQLOut out;
-        DB& db;
+        ODBCConnection& conn;
         unique_ptr<ODBCStatement> stm;
 
-        FetchStatement(DB& db)
-            : db(db), stm(db.conn->odbcstatement())
+        FetchStatement(ODBCConnection& conn)
+            : conn(conn), stm(conn.odbcstatement())
         {
             // Create the fetch query
             stm->bind_in(1, out.id);
@@ -444,7 +456,7 @@ struct MapLevTrCache : public LevTrCache
         void prefetch(map<int, Item>& cache)
         {
             // Prefetch everything
-            auto stm = db.conn->odbcstatement();
+            auto stm = conn.odbcstatement();
             stm->bind_out(1, out.id);
             stm->bind_out(2, out.ltype1);
             stm->bind_out(3, out.l1);
@@ -473,8 +485,8 @@ struct MapLevTrCache : public LevTrCache
     mutable FetchStatement stm;
 
 
-    MapLevTrCache(DB& db)
-        : stm(db)
+    MapLevTrCache(ODBCConnection& conn)
+        : stm(conn)
     {
         // TODO: make prefetch optional if needed, controlled by an env
         //       variable
@@ -551,7 +563,10 @@ std::auto_ptr<LevTrCache> LevTrCache::create(DB& db)
 {
     // TODO: check env vars to select alternate caching implementations, such
     // as a hit/miss that queries single items from the DB when not in cache
-    return auto_ptr<LevTrCache>(new MapLevTrCache(db));
+    if (ODBCConnection* conn = dynamic_cast<ODBCConnection*>(db.conn))
+        return auto_ptr<LevTrCache>(new MapLevTrCache(*conn));
+    else
+        throw error_unimplemented("v6 DB LevTr cache not yet implemented for non-ODBC connectors");
 }
 
 } // namespace v6

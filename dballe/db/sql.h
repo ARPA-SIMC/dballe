@@ -85,7 +85,7 @@ public:
      * Use this to tell which SQL dialect to use, in case standard SQL
      * behaviour is not enough
      */
-    enum ServerType server_type;
+    ServerType server_type;
 
     virtual ~Connection();
 

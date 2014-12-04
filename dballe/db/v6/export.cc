@@ -79,7 +79,7 @@ struct StationLayerCache : protected std::vector<wreport::Var*>
             "   AND d.id_lev_tr = -1"
             " ORDER BY d.id_var, a.type";
 
-        auto stm = db.conn->odbcstatement();
+        auto stm = dynamic_cast<ODBCConnection*>(db.conn)->odbcstatement();
 
         stm->bind_in(1, id_station);
         stm->bind_in(2, id_report);

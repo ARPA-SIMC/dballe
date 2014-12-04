@@ -35,14 +35,20 @@ Data::~Data() {}
 
 unique_ptr<Data> Data::create(DB& db)
 {
-    return unique_ptr<Data>(new ODBCData(db));
+    if (ODBCConnection* conn = dynamic_cast<ODBCConnection*>(db.conn))
+        return unique_ptr<Data>(new ODBCData(db));
+    else
+        throw error_unimplemented("v6 DB Data not yet implemented for non-ODBC connectors");
 }
 
 
 Attr::~Attr() {}
 unique_ptr<Attr> Attr::create(DB& db)
 {
-    return unique_ptr<Attr>(new ODBCAttr(*db.conn));
+    if (ODBCConnection* conn = dynamic_cast<ODBCConnection*>(db.conn))
+        return unique_ptr<Attr>(new ODBCAttr(*conn));
+    else
+        throw error_unimplemented("v6 DB attr not yet implemented for non-ODBC connectors");
 }
 
 }
