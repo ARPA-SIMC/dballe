@@ -549,8 +549,7 @@ template<> template<> void to::test<8>()
 
     // Query back the data
     qc.clear();
-    vector<Varcode> codes;
-    wassert(actual(run_query_attrs(*db, qc, context_id, WR_VAR(0, 1, 11), codes)) == 3);
+    wassert(actual(run_query_attrs(*db, qc, context_id, WR_VAR(0, 1, 11))) == 3);
 
     const Var* attr = qc.var_peek(WR_VAR(0, 33, 2));
     ensure(attr != NULL);
@@ -565,6 +564,7 @@ template<> template<> void to::test<8>()
     ensure_equals(attr->enqi(), 33);
 
     // Delete a couple of items
+    vector<Varcode> codes;
     codes.push_back(WR_VAR(0, 33, 2));
     codes.push_back(WR_VAR(0, 33, 5));
     db->attr_remove(context_id, WR_VAR(0, 1, 11), codes);
@@ -577,11 +577,7 @@ template<> template<> void to::test<8>()
 
     /* Query back the data */
     qc.clear();
-    codes.clear();
-    codes.push_back(WR_VAR(0, 33, 2));
-    codes.push_back(WR_VAR(0, 33, 3));
-    codes.push_back(WR_VAR(0, 33, 5));
-    wassert(actual(run_query_attrs(*db, qc, context_id, WR_VAR(0, 1, 11), codes)) == 1);
+    wassert(actual(run_query_attrs(*db, qc, context_id, WR_VAR(0, 1, 11))) == 1);
 
     ensure(qc.var_peek(WR_VAR(0, 33, 2)) == NULL);
     ensure(qc.var_peek(WR_VAR(0, 33, 5)) == NULL);
@@ -639,8 +635,7 @@ template<> template<> void to::test<10>()
     cur->discard_rest();
 
     qc.clear();
-    vector<Varcode> codes;
-    wassert(actual(run_query_attrs(*db, qc, attr_id, WR_VAR(0, 1, 11), codes)) == 10);
+    wassert(actual(run_query_attrs(*db, qc, attr_id, WR_VAR(0, 1, 11))) == 10);
 
     // Check that all the attributes come out
     const vector<Var*> vars = qc.vars();
@@ -883,10 +878,8 @@ template<> template<> void to::test<17>()
     ensure_equals(var.enqi(), 300);
 
     // Query the attributes and check that they are there
-    AttrList qcs;
-    qcs.push_back(WR_VAR(0, 33, 7));
     Record qattrs;
-    wassert(actual(run_query_attrs(*cur, qattrs, qcs)) == 1);
+    wassert(actual(run_query_attrs(*cur, qattrs)) == 1);
     ensure_equals(qattrs.get(WR_VAR(0, 33, 7), MISSING_INT), 50);
 
     // Update it
@@ -910,7 +903,7 @@ template<> template<> void to::test<17>()
     ensure_equals(var.enqi(), 200);
 
     qattrs.clear();
-    wassert(actual(run_query_attrs(*cur, qattrs, qcs)) == 1);
+    wassert(actual(run_query_attrs(*cur, qattrs)) == 1);
     ensure_equals(qattrs.get(WR_VAR(0, 33, 7), MISSING_INT), 50);
 }
 

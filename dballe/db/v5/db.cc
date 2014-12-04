@@ -1029,27 +1029,15 @@ void DB::query_datetime_extremes(const Query& query, Record& result)
     cursor.query_datetime_extremes(query, result);
 }
 
-void DB::query_attrs(int reference_id, wreport::Varcode id_var, const db::AttrList& qcs,
+void DB::query_attrs(int reference_id, wreport::Varcode id_var,
         std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     // Create the query
     Querybuf query(200);
-    if (qcs.empty())
-        /* If qcs is null, query all QC data */
-        query.append(
-                "SELECT type, value"
-                "  FROM attr"
-                " WHERE id_context = ? AND id_var = ?");
-    else {
-        query.append(
-                "SELECT type, value"
-                "  FROM attr"
-                " WHERE id_context = ? AND id_var = ? AND type IN (");
-        query.start_list(", ");
-        for (vector<Varcode>::const_iterator i = qcs.begin(); i != qcs.end(); ++i)
-            query.append_listf("%hd", *i);
-        query.append(")");
-    }
+    query.append(
+            "SELECT type, value"
+            "  FROM attr"
+            " WHERE id_context = ? AND id_var = ?");
 
     // Perform the query
     Varcode out_type;

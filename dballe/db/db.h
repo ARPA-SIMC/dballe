@@ -154,7 +154,7 @@ public:
     /**
      * Query attributes for the current variable
      */
-    virtual void query_attrs(const AttrList& qcs, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
+    virtual void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
 
     /**
      * Insert/overwrite new attributes for the current variable
@@ -400,15 +400,12 @@ public:
      *   The id (returned by Cursor::attr_reference_id()) used to refer to the variable we query
      * @param id_var
      *   The varcode of the variable related to the attributes to retrieve.  See @ref vartable.h
-     * @param qcs
-     *   The WMO codes of the QC values requested.  If it is empty, then all values
-     *   are returned.
      * @param dest
      *   The function that will be called on each resulting attribut
      * @return
      *   Number of attributes returned in attrs
      */
-    virtual void query_attrs(int reference_id, wreport::Varcode id_var, const db::AttrList& qcs,
+    virtual void query_attrs(int reference_id, wreport::Varcode id_var,
             std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
 
     /**

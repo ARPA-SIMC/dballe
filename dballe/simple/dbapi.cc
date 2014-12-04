@@ -261,6 +261,26 @@ int DbAPI::voglioancora()
     std::vector<wreport::Varcode> arr;
     read_qc_list(arr);
 
+    function<void(unique_ptr<Var>)> dest;
+
+    if (arr.empty())
+    {
+        dest = [&](unique_ptr<Var> var) {
+            qcoutput.add(move(var));
+            ++qc_count;
+        };
+    } else {
+        dest = [&](unique_ptr<Var> var) {
+            for (auto code: arr)
+                if (code == var->code())
+                {
+                    qcoutput.add(move(var));
+                    ++qc_count;
+                    break;
+                }
+        };
+    }
+
     qcoutput.clear_vars();
 
     // Query attributes
@@ -270,16 +290,10 @@ int DbAPI::voglioancora()
         case ATTR_REFERENCE:
             if (attr_reference_id == missing_int || attr_varid == 0)
                 throw error_consistency("voglioancora was not called after a dammelo, or was called with an invalid *context_id or *var_related");
-            db.query_attrs(attr_reference_id, attr_varid, arr, [&](unique_ptr<Var> var) {
-                qcoutput.add(move(var));
-                ++qc_count;
-            });
+            db.query_attrs(attr_reference_id, attr_varid, dest);
             break;
         case ATTR_DAMMELO:
-            query_cur->query_attrs(arr, [&](unique_ptr<Var> var) {
-                qcoutput.add(move(var));
-                ++qc_count;
-            });
+            query_cur->query_attrs(dest);
             break;
         case ATTR_PRENDILO:
             throw error_consistency("voglioancora cannot be called after a prendilo");

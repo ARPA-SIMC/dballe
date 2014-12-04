@@ -192,9 +192,9 @@ void Cursor::to_record_varcode(Record& rec)
     rec.key(DBA_KEY_VAR).setc(bname);
 }
 
-void Cursor::query_attrs(const AttrList& qcs, function<void(unique_ptr<Var>)> dest)
+void Cursor::query_attrs(function<void(unique_ptr<Var>)> dest)
 {
-    db.query_attrs(sqlrec.out_id_data, sqlrec.out_varcode, qcs, dest);
+    db.query_attrs(sqlrec.out_id_data, sqlrec.out_varcode, dest);
 }
 
 void Cursor::attr_insert(const dballe::Record& attrs)

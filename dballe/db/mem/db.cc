@@ -360,10 +360,10 @@ std::unique_ptr<db::Cursor> DB::query_summary(const Query& query)
     }
 }
 
-void DB::query_attrs(int id_data, wreport::Varcode id_var, const db::AttrList& qcs,
+void DB::query_attrs(int id_data, wreport::Varcode id_var,
         std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
-    memdb.values[id_data]->query_attrs(qcs, dest);
+    memdb.values[id_data]->query_attrs(dest);
 }
 
 void DB::attr_insert(wreport::Varcode id_var, const Record& attrs)

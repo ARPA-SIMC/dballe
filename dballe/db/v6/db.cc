@@ -721,44 +721,12 @@ std::unique_ptr<db::Cursor> DB::query_summary(const Query& rec)
     return unique_ptr<db::Cursor>(res.release());
 }
 
-void DB::query_attrs(int id_data, wreport::Varcode id_var, const db::AttrList& qcs,
+void DB::query_attrs(int id_data, wreport::Varcode id_var,
         std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     // Create the query
-    Querybuf query(200);
-    if (qcs.empty())
-    {
-        v6::Attr& a = attr();
-        a.read(id_data, dest);
-    }
-    else {
-        query.append(
-                "SELECT type, value"
-                "  FROM attr"
-                " WHERE id_data = ? AND type IN (");
-        query.start_list(", ");
-        for (vector<Varcode>::const_iterator i = qcs.begin(); i != qcs.end(); ++i)
-            query.append_listf("%hd", *i);
-        query.append(")");
-
-        // Perform the query
-        Varcode out_type;
-        char out_value[255];
-
-        auto stm = conn->odbcstatement();
-        stm->bind_in(1, id_data);
-        stm->bind_out(1, out_type);
-        stm->bind_out(2, out_value, 255);
-
-        TRACE("attr read query: %s with id_data %d var %01d%02d%03d\n", query.c_str(), id_data,
-                WR_VAR_F(id_var), WR_VAR_X(id_var), WR_VAR_Y(id_var));
-
-        stm->exec_direct(query.c_str());
-
-        // Fetch the results
-        while (stm->fetch())
-            dest(newvar(out_type, out_value));
-    }
+    v6::Attr& a = attr();
+    a.read(id_data, dest);
 }
 
 void DB::attr_insert(wreport::Varcode id_var, const Record& attrs)

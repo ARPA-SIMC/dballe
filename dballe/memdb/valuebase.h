@@ -40,7 +40,7 @@ struct ValueBase
         : var(var.release()) {}
     ~ValueBase();
 
-    void query_attrs(const std::vector<wreport::Varcode>& qcs, std::function<void(std::unique_ptr<wreport::Var>)> dest) const;
+    void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest) const;
 
     void attr_insert(const Record& attrs);
     void attr_remove(const std::vector<wreport::Varcode>& qcs);
