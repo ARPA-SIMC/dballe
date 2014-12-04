@@ -63,42 +63,42 @@ ODBCLevTr::ODBCLevTr(ODBCConnection& conn)
 
     /* Create the statement for select fixed */
     sstm = conn.odbcstatement().release();
-    sstm->bind_in(1, ltype1);
-    sstm->bind_in(2, l1);
-    sstm->bind_in(3, ltype2);
-    sstm->bind_in(4, l2);
-    sstm->bind_in(5, pind);
-    sstm->bind_in(6, p1);
-    sstm->bind_in(7, p2);
-    sstm->bind_out(1, id);
+    sstm->bind_in(1, working_row.ltype1);
+    sstm->bind_in(2, working_row.l1);
+    sstm->bind_in(3, working_row.ltype2);
+    sstm->bind_in(4, working_row.l2);
+    sstm->bind_in(5, working_row.pind);
+    sstm->bind_in(6, working_row.p1);
+    sstm->bind_in(7, working_row.p2);
+    sstm->bind_out(1, working_row.id);
     sstm->prepare(select_query);
 
     /* Create the statement for select data */
     sdstm = conn.odbcstatement().release();
-    sdstm->bind_in(1, id);
-    sdstm->bind_out(1, ltype1);
-    sdstm->bind_out(2, l1);
-    sdstm->bind_out(3, ltype2);
-    sdstm->bind_out(4, l2);
-    sdstm->bind_out(5, pind);
-    sdstm->bind_out(6, p1);
-    sdstm->bind_out(7, p2);
+    sdstm->bind_in(1, working_row.id);
+    sdstm->bind_out(1, working_row.ltype1);
+    sdstm->bind_out(2, working_row.l1);
+    sdstm->bind_out(3, working_row.ltype2);
+    sdstm->bind_out(4, working_row.l2);
+    sdstm->bind_out(5, working_row.pind);
+    sdstm->bind_out(6, working_row.p1);
+    sdstm->bind_out(7, working_row.p2);
     sdstm->prepare(select_data_query);
 
     /* Create the statement for insert */
     istm = conn.odbcstatement().release();
-    istm->bind_in(1, ltype1);
-    istm->bind_in(2, l1);
-    istm->bind_in(3, ltype2);
-    istm->bind_in(4, l2);
-    istm->bind_in(5, pind);
-    istm->bind_in(6, p1);
-    istm->bind_in(7, p2);
+    istm->bind_in(1, working_row.ltype1);
+    istm->bind_in(2, working_row.l1);
+    istm->bind_in(3, working_row.ltype2);
+    istm->bind_in(4, working_row.l2);
+    istm->bind_in(5, working_row.pind);
+    istm->bind_in(6, working_row.p1);
+    istm->bind_in(7, working_row.p2);
     istm->prepare(insert_query);
 
     /* Create the statement for remove */
     dstm = conn.odbcstatement().release();
-    dstm->bind_in(1, id);
+    dstm->bind_in(1, working_row.id);
     dstm->prepare(remove_query);
 }
 
@@ -118,30 +118,22 @@ int ODBCLevTr::get_id()
     /* Get the result */
     int res;
     if (sstm->fetch_expecting_one())
-        res = id;
+        res = working_row.id;
     else
         res = -1;
 
     return res;
 }
 
-void ODBCLevTr::get_data(int qid)
-{
-    id = qid;
-    sdstm->execute();
-    if (!sdstm->fetch_expecting_one())
-        error_notfound::throwf("no data found for lev_tr id %d", qid);
-}
-
 int ODBCLevTr::obtain_id(const Level& lev, const Trange& tr)
 {
-    ltype1 = lev.ltype1;
-    l1 = lev.l1;
-    ltype2 = lev.ltype2;
-    l2 = lev.l2;
-    pind = tr.pind;
-    p1 = tr.p1;
-    p2 = tr.p2;
+    working_row.ltype1 = lev.ltype1;
+    working_row.l1 = lev.l1;
+    working_row.ltype2 = lev.ltype2;
+    working_row.l2 = lev.l2;
+    working_row.pind = tr.pind;
+    working_row.p1 = tr.p1;
+    working_row.p2 = tr.p2;
 
     // Check for an existing lev_tr with these data
     int id = get_id();
@@ -153,33 +145,33 @@ int ODBCLevTr::obtain_id(const Level& lev, const Trange& tr)
 int ODBCLevTr::obtain_id(const Record& rec)
 {
     if (const Var* var = rec.key_peek(DBA_KEY_LEVELTYPE1))
-        ltype1 = var->enqi();
+        working_row.ltype1 = var->enqi();
     else
-        ltype1 = MISSING_INT;
+        working_row.ltype1 = MISSING_INT;
     if (const Var* var = rec.key_peek(DBA_KEY_L1))
-        l1 = var->enqi();
+        working_row.l1 = var->enqi();
     else
-        l1 = MISSING_INT;
+        working_row.l1 = MISSING_INT;
     if (const Var* var = rec.key_peek(DBA_KEY_LEVELTYPE2))
-        ltype2 = var->enqi();
+        working_row.ltype2 = var->enqi();
     else
-        ltype2 = MISSING_INT;
+        working_row.ltype2 = MISSING_INT;
     if (const Var* var = rec.key_peek(DBA_KEY_L2))
-        l2 = var->enqi();
+        working_row.l2 = var->enqi();
     else
-        l2 = MISSING_INT;
+        working_row.l2 = MISSING_INT;
     if (const Var* var = rec.key_peek(DBA_KEY_PINDICATOR))
-        pind = var->enqi();
+        working_row.pind = var->enqi();
     else
-        pind = MISSING_INT;
+        working_row.pind = MISSING_INT;
     if (const Var* var = rec.key_peek(DBA_KEY_P1))
-        p1 = var->enqi();
+        working_row.p1 = var->enqi();
     else
-        p1 = MISSING_INT;
+        working_row.p1 = MISSING_INT;
     if (const Var* var = rec.key_peek(DBA_KEY_P2))
-        p2 = var->enqi();
+        working_row.p2 = var->enqi();
     else
-        p2 = MISSING_INT;
+        working_row.p2 = MISSING_INT;
 
     // Check for an existing lev_tr with these data
     int id = get_id();
@@ -201,6 +193,32 @@ int ODBCLevTr::insert()
 void ODBCLevTr::remove()
 {
     dstm->execute_and_close();
+}
+
+const LevTr::DBRow* ODBCLevTr::read(int id)
+{
+    working_row.id = id;
+    sdstm->execute();
+    if (!sdstm->fetch_expecting_one())
+        return nullptr;
+    return &working_row;
+}
+
+void ODBCLevTr::read_all(std::function<void(const LevTr::DBRow&)> dest)
+{
+    // Prefetch everything
+    auto stm = conn.odbcstatement();
+    stm->bind_out(1, working_row.id);
+    stm->bind_out(2, working_row.ltype1);
+    stm->bind_out(3, working_row.l1);
+    stm->bind_out(4, working_row.ltype2);
+    stm->bind_out(5, working_row.l2);
+    stm->bind_out(6, working_row.pind);
+    stm->bind_out(7, working_row.p1);
+    stm->bind_out(8, working_row.p2);
+    stm->exec_direct("SELECT id, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr");
+    while (stm->fetch())
+        dest(working_row);
 }
 
 void ODBCLevTr::dump(FILE* out)

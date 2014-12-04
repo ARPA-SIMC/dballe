@@ -71,23 +71,7 @@ protected:
     /** Precompiled delete statement */
     ODBCStatement* dstm = nullptr;
 
-    /// lev_tr ID SQL parameter
-    int id;
-
-    /// First level type SQL parameter
-    int ltype1;
-    /// Level L1 SQL parameter
-    int l1;
-    /// Second level type SQL parameter
-    int ltype2;
-    /// Level L2 SQL parameter
-    int l2;
-    /// Time range type SQL parameter
-    int pind;
-    /// Time range P1 SQL parameter
-    int p1;
-    /// Time range P2 SQL parameter
-    int p2;
+    DBRow working_row;
 
     /**
      * Insert a new lev_tr in the database
@@ -104,14 +88,6 @@ protected:
      *   The database ID, or -1 if no existing lev_tr entry matches the given values
      */
     int get_id();
-
-    /**
-     * Get lev_tr information given a lev_tr ID
-     *
-     * @param id
-     *   ID of the lev_tr to query
-     */
-    void get_data(int id);
 
     /**
      * Remove a lev_tr record
@@ -136,6 +112,9 @@ public:
      * not already exist
      */
     int obtain_id(const Record& rec) override;
+
+    const DBRow* read(int id) override;
+    void read_all(std::function<void(const DBRow&)> dest) override;
 
     /**
      * Dump the entire contents of the table to an output stream

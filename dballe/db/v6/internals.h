@@ -52,6 +52,26 @@ struct DB;
  */
 struct LevTr
 {
+    struct DBRow
+    {
+        /// lev_tr ID SQL parameter
+        int id;
+        /// First level type SQL parameter
+        int ltype1;
+        /// Level L1 SQL parameter
+        int l1;
+        /// Second level type SQL parameter
+        int ltype2;
+        /// Level L2 SQL parameter
+        int l2;
+        /// Time range type SQL parameter
+        int pind;
+        /// Time range P1 SQL parameter
+        int p1;
+        /// Time range P2 SQL parameter
+        int p2;
+    };
+
     static std::unique_ptr<LevTr> create(DB& db);
 
     virtual ~LevTr();
@@ -67,6 +87,12 @@ struct LevTr
      * not already exist
      */
     virtual int obtain_id(const Record& rec) = 0;
+
+    /// Read the LevTr data for an id, returns nullptr if not found
+    virtual const DBRow* read(int id) = 0;
+
+    /// Read the contents of the LevTr table
+    virtual void read_all(std::function<void(const DBRow&)> dest) = 0;
 
     /// Dump the entire contents of the table to an output stream
     virtual void dump(FILE* out) = 0;
@@ -102,7 +128,7 @@ struct LevTrCache
     /// Dump cache contents to an output stream
     virtual void dump(FILE* out) const = 0;
 
-    static std::auto_ptr<LevTrCache> create(DB& db);
+    static std::unique_ptr<LevTrCache> create(DB& db);
 };
 
 /**

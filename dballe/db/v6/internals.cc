@@ -51,18 +51,6 @@ LevTrCache::~LevTrCache() {}
 
 struct MapLevTrCache : public LevTrCache
 {
-    struct SQLOut
-    {
-        int id;
-        int ltype1;
-        int l1;
-        int ltype2;
-        int l2;
-        int pind;
-        int p1;
-        int p2;
-    };
-
     struct Item
     {
         int ltype1;
@@ -72,7 +60,7 @@ struct MapLevTrCache : public LevTrCache
         int pind;
         int p1;
         int p2;
-        Item(const SQLOut& o)
+        Item(const LevTr::DBRow& o)
             : ltype1(o.ltype1), l1(o.l1),
               ltype2(o.ltype2), l2(o.l2),
               pind(o.pind), p1(o.p1), p2(o.p2) {}
@@ -126,66 +114,17 @@ struct MapLevTrCache : public LevTrCache
         }
     };
 
-    struct FetchStatement
-    {
-        // Output values
-        SQLOut out;
-        ODBCConnection& conn;
-        unique_ptr<ODBCStatement> stm;
-
-        FetchStatement(ODBCConnection& conn)
-            : conn(conn), stm(conn.odbcstatement())
-        {
-            // Create the fetch query
-            stm->bind_in(1, out.id);
-            stm->bind_out(1, out.ltype1);
-            stm->bind_out(2, out.l1);
-            stm->bind_out(3, out.ltype2);
-            stm->bind_out(4, out.l2);
-            stm->bind_out(5, out.pind);
-            stm->bind_out(6, out.p1);
-            stm->bind_out(7, out.p2);
-            stm->prepare("SELECT ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr WHERE id=?");
-        }
-
-        void prefetch(map<int, Item>& cache)
-        {
-            // Prefetch everything
-            auto stm = conn.odbcstatement();
-            stm->bind_out(1, out.id);
-            stm->bind_out(2, out.ltype1);
-            stm->bind_out(3, out.l1);
-            stm->bind_out(4, out.ltype2);
-            stm->bind_out(5, out.l2);
-            stm->bind_out(6, out.pind);
-            stm->bind_out(7, out.p1);
-            stm->bind_out(8, out.p2);
-            stm->exec_direct("SELECT id, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr");
-            while (stm->fetch())
-                cache.insert(make_pair((int)out.id, Item(out)));
-        }
-
-        bool get(int id)
-        {
-            out.id = id;
-            stm->execute();
-            if (!stm->fetch_expecting_one())
-                return false;
-            return true;
-        }
-
-    };
-
+    mutable LevTr* levtr;
     mutable map<int, Item> cache;
-    mutable FetchStatement stm;
 
-
-    MapLevTrCache(ODBCConnection& conn)
-        : stm(conn)
+    MapLevTrCache(LevTr& levtr)
+        : levtr(&levtr)
     {
         // TODO: make prefetch optional if needed, controlled by an env
         //       variable
-        stm.prefetch(cache);
+        levtr.read_all([&](const LevTr::DBRow& row) {
+            cache.insert(make_pair(row.id, Item(row)));
+        });
     }
 
     const Item* get(int id) const
@@ -196,11 +135,11 @@ struct MapLevTrCache : public LevTrCache
         if (i != cache.end()) return &(i->second);
 
         // Miss: try the DB
-        if (!stm.get(id))
-            return 0;
+        const LevTr::DBRow* row = levtr->read(id);
+        if (!row) return 0;
 
         // Fill cache
-        pair<map<int, Item>::iterator, bool> res = cache.insert(make_pair(id, Item(stm.out)));
+        pair<map<int, Item>::iterator, bool> res = cache.insert(make_pair(id, Item(*row)));
         return &(res.first->second);
     }
 
@@ -254,12 +193,12 @@ struct MapLevTrCache : public LevTrCache
 };
 
 
-std::auto_ptr<LevTrCache> LevTrCache::create(DB& db)
+std::unique_ptr<LevTrCache> LevTrCache::create(DB& db)
 {
     // TODO: check env vars to select alternate caching implementations, such
     // as a hit/miss that queries single items from the DB when not in cache
     if (ODBCConnection* conn = dynamic_cast<ODBCConnection*>(db.conn))
-        return auto_ptr<LevTrCache>(new MapLevTrCache(*conn));
+        return unique_ptr<LevTrCache>(new MapLevTrCache(db.lev_tr()));
     else
         throw error_unimplemented("v6 DB LevTr cache not yet implemented for non-ODBC connectors");
 }
