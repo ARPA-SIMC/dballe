@@ -21,6 +21,8 @@
 
 #include "station.h"
 #include "dballe/db/odbc/internals.h"
+#include "dballe/core/var.h"
+#include <wreport/var.h>
 #include <sqltypes.h>
 #include <cstring>
 #include <sql.h>
@@ -166,6 +168,8 @@ public:
      *   Resulting ID of the station
      */
     int obtain_id(int lat, int lon, const char* ident=NULL, bool* inserted=NULL) override;
+
+    void get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
 
     /**
      * Dump the entire contents of the table to an output stream
@@ -328,6 +332,71 @@ void ODBCStation::update()
 void ODBCStation::remove()
 {
     dstm->execute_and_close();
+}
+
+void ODBCStation::get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+{
+    // Perform the query
+    static const char query[] =
+        "SELECT d.id_var, d.value, a.type, a.value"
+        "  FROM context c, data d"
+        "  LEFT JOIN attr a ON a.id_context = d.id_context AND a.id_var = d.id_var"
+        " WHERE d.id_context = c.id AND c.id_ana = ? AND c.id_report = ?"
+        "   AND c.datetime = {ts '1000-01-01 00:00:00.000'}"
+        " ORDER BY d.id_var, a.type";
+
+    auto stm = conn.odbcstatement();
+
+    stm->bind_in(1, id_station);
+    stm->bind_in(2, id_report);
+
+    Varcode out_varcode;
+    stm->bind_out(1, out_varcode);
+
+    char out_value[255];
+    stm->bind_out(2, out_value, sizeof(out_value));
+
+    int out_attr_varcode;       SQLLEN out_attr_varcode_ind;
+    stm->bind_out(3, out_attr_varcode, out_attr_varcode_ind);
+
+    char out_attr_value[255];   SQLLEN out_attr_value_ind;
+    stm->bind_out(4, out_attr_value, sizeof(out_attr_value), out_attr_value_ind);
+
+    TRACE("fill_ana_layer Performing query: %s with idst %d idrep %d\n", query, id_station, id_report);
+    stm->exec_direct(query);
+
+    // Retrieve results
+    Varcode last_varcode = 0;
+    unique_ptr<Var> var;
+    while (stm->fetch())
+    {
+        TRACE("fill_ana_layer Got B%02ld%03ld %s\n", WR_VAR_X(out_varcode), WR_VAR_Y(out_varcode), out_value);
+
+        // First process the variable, possibly inserting the old one in the message
+        if (last_varcode != out_varcode)
+        {
+            TRACE("fill_ana_layer new var\n");
+            if (var.get())
+            {
+                TRACE("fill_ana_layer inserting old var B%02d%03d\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()));
+                dest(move(var));
+            }
+            var = newvar(out_varcode, out_value);
+            last_varcode = out_varcode;
+        }
+
+        if (out_attr_varcode_ind != -1)
+        {
+            TRACE("fill_ana_layer new attribute\n");
+            var->seta(ap_newvar(out_attr_varcode, out_attr_value));
+        }
+    }
+
+    if (var.get())
+    {
+        TRACE("fill_ana_layer inserting leftover old var B%02d%03d\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()));
+        dest(move(var));
+    }
 }
 
 void ODBCStation::dump(FILE* out)

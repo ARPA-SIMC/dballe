@@ -31,6 +31,10 @@
 #include <memory>
 #include <cstdio>
 
+namespace wreport {
+struct Var;
+}
+
 namespace dballe {
 namespace db {
 struct Connection;
@@ -69,6 +73,11 @@ public:
      * Dump the entire contents of the table to an output stream
      */
     virtual void dump(FILE* out) = 0;
+
+    /**
+     * Export station variables
+     */
+    virtual void get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
 
     /**
      * Clear (if applicable) and recreate the table structure in the database
