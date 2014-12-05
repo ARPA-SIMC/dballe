@@ -101,6 +101,7 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/sql.h \
 	db/odbc/internals.h \
 	db/odbc/repinfo.h \
+	db/odbc/station.h \
 	db/odbc/v6_data.h \
 	db/odbc/v6_attr.h \
 	db/odbc/v6_levtr.h \
@@ -197,6 +198,7 @@ libdballe_la_SOURCES += \
 	db/sql.cc \
 	db/odbc/internals.cc \
 	db/odbc/repinfo.cc \
+	db/odbc/station.cc \
 	db/odbc/v6_data.cc \
 	db/odbc/v6_attr.cc \
 	db/odbc/v6_levtr.cc \
