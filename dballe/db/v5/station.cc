@@ -389,9 +389,12 @@ Station::~Station()
 {
 }
 
-std::unique_ptr<Station> Station::create(db::ODBCConnection& conn)
+std::unique_ptr<Station> Station::create(Connection& conn)
 {
-    return unique_ptr<Station>(new ODBCStation(conn));
+    if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(&conn))
+        return unique_ptr<Station>(new ODBCStation(*c));
+    else
+        throw error_unimplemented("v5 station not yet implemented for non-ODBC connectors");
 }
 
 }

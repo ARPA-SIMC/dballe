@@ -34,7 +34,6 @@
 namespace dballe {
 namespace db {
 struct Connection;
-struct ODBCConnection;
 
 namespace v5 {
 
@@ -42,7 +41,7 @@ struct Station
 {
 public:
     /// Instantiate a Station object for this connection
-    static std::unique_ptr<Station> create(db::ODBCConnection& conn);
+    static std::unique_ptr<Station> create(Connection& conn);
 
     virtual ~Station();
 

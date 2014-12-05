@@ -217,7 +217,7 @@ Data::~Data() {}
 unique_ptr<Data> Data::create(DB& db)
 {
     if (ODBCConnection* conn = dynamic_cast<ODBCConnection*>(db.conn))
-        return unique_ptr<Data>(new ODBCData(db));
+        return unique_ptr<Data>(new ODBCData(*conn));
     else
         throw error_unimplemented("v6 DB Data not yet implemented for non-ODBC connectors");
 }

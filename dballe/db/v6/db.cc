@@ -296,7 +296,7 @@ DB::DB(unique_ptr<Connection> conn)
     : conn(conn.release()),
       m_repinfo(0), m_station(0), m_lev_tr(0), m_lev_tr_cache(0),
       m_data(0), m_attr(0),
-      seq_data(0), _last_station_id(0)
+      _last_station_id(0)
 {
     init_after_connect();
 
@@ -312,7 +312,6 @@ DB::~DB()
     if (m_lev_tr) delete m_lev_tr;
     if (m_station) delete m_station;
     if (m_repinfo) delete m_repinfo;
-    if (seq_data) delete seq_data;
     if (conn) delete conn;
 }
 
@@ -326,7 +325,7 @@ v5::Repinfo& DB::repinfo()
 v5::Station& DB::station()
 {
     if (m_station == NULL)
-        m_station = v5::Station::create(*dynamic_cast<ODBCConnection*>(this->conn)).release();
+        m_station = v5::Station::create(*conn).release();
     return *m_station;
 }
 
@@ -463,14 +462,6 @@ int DB::get_rep_cod(const Query& rec)
 int DB::rep_cod_from_memo(const char* memo)
 {
     return repinfo().obtain_id(memo);
-}
-
-int DB::last_data_insert_id()
-{
-    if (seq_data)
-        return seq_data->read();
-    else
-        return conn->get_last_insert_id();
 }
 
 // Normalise longitude values to the [-180..180[ interval

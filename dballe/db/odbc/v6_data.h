@@ -45,8 +45,10 @@ class ODBCData : public Data
 {
 protected:
     /** DB connection. */
-    v6::DB& db;
     ODBCConnection& conn;
+
+    /// data ID sequence, for databases that need it
+    db::Sequence* seq_data = nullptr;
 
     /** Precompiled insert statement */
     ODBCStatement* istm;
@@ -88,7 +90,7 @@ protected:
     void set(const wreport::Var& var);
 
 public:
-    ODBCData(v6::DB& conn);
+    ODBCData(ODBCConnection& conn);
     ODBCData(const ODBCData&) = delete;
     ODBCData(const ODBCData&&) = delete;
     ODBCData& operator=(const ODBCData&) = delete;

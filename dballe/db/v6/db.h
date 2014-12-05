@@ -121,16 +121,6 @@ protected:
     struct Attr* m_attr;
     /** @} */
 
-    /**
-     * Sequence accessors.
-     *
-     * They are NULL for databases such as MySQL that do not use sequences.
-     * @{
-     */
-    /** data ID sequence */
-    db::Sequence* seq_data;
-    /** @} */
-
     int _last_station_id;
 
     void init_after_connect();
@@ -205,11 +195,6 @@ public:
      * Get the report code from a report mnemonic
      */
     int rep_cod_from_memo(const char* memo);
-
-    /**
-     * Return the ID of the last inserted data
-     */
-    int last_data_insert_id();
 
     /**
      * Get the report id from this record.

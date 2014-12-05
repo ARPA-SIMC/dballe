@@ -12,9 +12,8 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
-ODBCData::ODBCData(DB& db)
-#warning Pass an ODBCConnection at some point
-    : db(db), conn(*dynamic_cast<ODBCConnection*>(db.conn)), istm(0), ustm(0), ioustm(0), iistm(0), sidstm(0)
+ODBCData::ODBCData(ODBCConnection& conn)
+    : conn(conn), istm(0), ustm(0), ioustm(0), iistm(0), sidstm(0)
 {
     const char* insert_query =
         "INSERT INTO data (id_station, id_report, id_lev_tr, datetime, id_var, value) VALUES(?, ?, ?, ?, ?, ?)";
@@ -50,6 +49,16 @@ ODBCData::ODBCData(DB& db)
         " WHEN NOT MATCHED THEN"
         "  INSERT (id_context, id_var, value) VALUES (cnt, var, val)";
     */
+
+    /* Override queries for some databases */
+    switch (conn.server_type)
+    {
+        case ServerType::ORACLE:
+            insert_query = "INSERT INTO data (id, id_station, id_report, id_lev_tr, datetime, id_var, value) VALUES(seq_data.NextVal, ?, ?, ?, ?, ?, ?)";
+            seq_data = new Sequence(conn, "seq_data");
+            break;
+        default: break;
+    }
 
     /* Create the statement for insert */
     istm = conn.odbcstatement().release();
@@ -126,6 +135,7 @@ ODBCData::ODBCData(DB& db)
 
 ODBCData::~ODBCData()
 {
+    delete seq_data;
     if (istm) delete istm;
     if (ustm) delete ustm;
     if (ioustm) delete ioustm;
@@ -218,7 +228,12 @@ void ODBCData::insert_or_fail(const wreport::Var& var, int* res_id)
     set(var);
     istm->execute_and_close();
     if (res_id)
-        *res_id = db.last_data_insert_id();
+    {
+        if (seq_data)
+            *res_id = seq_data->read();
+        else
+            *res_id = conn.get_last_insert_id();
+    }
 }
 
 bool ODBCData::insert_or_ignore(const wreport::Var& var, int* res_id)
@@ -226,13 +241,18 @@ bool ODBCData::insert_or_ignore(const wreport::Var& var, int* res_id)
     set(var);
     int sqlres = iistm->execute();
     bool res;
-    if (db.conn->server_type == ServerType::POSTGRES || db.conn->server_type == ServerType::ORACLE)
+    if (conn.server_type == ServerType::POSTGRES || conn.server_type == ServerType::ORACLE)
         res = ((sqlres == SQL_SUCCESS) || (sqlres == SQL_SUCCESS_WITH_INFO));
     else
         res = iistm->rowcount() != 0;
     iistm->close_cursor_if_needed();
     if (res_id)
-        *res_id = db.last_data_insert_id();
+    {
+        if (seq_data)
+            *res_id = seq_data->read();
+        else
+            *res_id = conn.get_last_insert_id();
+    }
     return res;
 }
 
@@ -251,7 +271,10 @@ void ODBCData::insert_or_overwrite(const wreport::Var& var, int* res_id)
         else
         {
             istm->execute_and_close();
-            *res_id = db.last_data_insert_id();
+            if (seq_data)
+                *res_id = seq_data->read();
+            else
+                *res_id = conn.get_last_insert_id();
         }
     } else {
         if (ioustm)
