@@ -504,17 +504,8 @@ void Cursor::to_record(Record& rec)
     }
 
     if (from_wanted & (DBA_DB_FROM_RI | DBA_DB_FROM_C))
-    {
         if (wanted & DBA_DB_WANT_REPCOD)
-        {
-            const v5::repinfo::Cache* c = ri.get_by_id(out_rep_cod);
-            if (c != NULL)
-            {
-                rec.key(DBA_KEY_REP_MEMO).setc(c->memo.c_str());
-                rec.key(DBA_KEY_PRIORITY).seti(c->prio);
-            }
-        }
-    }
+            ri.to_record(out_rep_cod, rec);
 
     if (modifiers & DBA_DB_MODIFIER_ANAEXTRA)
         add_station_info(rec);
@@ -529,12 +520,9 @@ const char* Cursor::get_ident(const char* def) const
         return def;
     return out_ident;
 }
-const char* Cursor::get_rep_memo(const char* def) const
+const char* Cursor::get_rep_memo() const
 {
-    v5::Repinfo& ri = db.repinfo();
-    const v5::repinfo::Cache* c = ri.get_by_id(out_rep_cod);
-    if (c == NULL) return def;
-    return c->memo.c_str();
+    return db.repinfo().get_rep_memo(out_rep_cod);
 }
 Level Cursor::get_level() const
 {

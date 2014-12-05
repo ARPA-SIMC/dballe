@@ -128,7 +128,7 @@ public:
     virtual const char* get_ident(const char* def=0) const = 0;
 
     /// Get the report name
-    virtual const char* get_rep_memo(const char* def=0) const = 0;
+    virtual const char* get_rep_memo() const = 0;
 
     /// Get the level
     virtual Level get_level() const = 0;

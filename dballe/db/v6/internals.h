@@ -29,6 +29,7 @@
  */
 
 #include <dballe/core/defs.h>
+#include <dballe/db/v5/repinfo.h>
 #include <wreport/var.h>
 #include <memory>
 #include <cstdio>
@@ -46,6 +47,9 @@ struct Connection;
 
 namespace v6 {
 struct DB;
+
+/// Precompiled queries to manipulate the repinfo table
+std::unique_ptr<v5::Repinfo> create_repinfo(Connection& conn);
 
 /**
  * Precompiled queries to manipulate the lev_tr table

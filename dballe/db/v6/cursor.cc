@@ -93,12 +93,9 @@ const char* Cursor::get_ident(const char* def) const
         return def;
     return sqlrec.out_ident;
 }
-const char* Cursor::get_rep_memo(const char* def) const
+const char* Cursor::get_rep_memo() const
 {
-    v5::Repinfo& ri = db.repinfo();
-    const v5::repinfo::Cache* c = ri.get_by_id(sqlrec.out_rep_cod);
-    if (c == NULL) return def;
-    return c->memo.c_str();
+    return db.repinfo().get_rep_memo(sqlrec.out_rep_cod);
 }
 Level Cursor::get_level() const
 {
@@ -144,17 +141,7 @@ void Cursor::to_record_pseudoana(Record& rec)
 
 void Cursor::to_record_repinfo(Record& rec)
 {
-    db::v6::Repinfo& ri = db.repinfo();
-
-    const v5::repinfo::Cache* c = ri.get_by_id(sqlrec.out_rep_cod);
-    if (c != NULL)
-    {
-        rec.key(DBA_KEY_REP_MEMO).setc(c->memo.c_str());
-        rec.key(DBA_KEY_PRIORITY).seti(c->prio);
-    } else {
-        rec.key(DBA_KEY_REP_MEMO).unset();
-        rec.key(DBA_KEY_PRIORITY).unset();
-    }
+    db.repinfo().to_record(sqlrec.out_rep_cod, rec);
 }
 
 void Cursor::to_record_ltr(Record& rec)
@@ -566,7 +553,7 @@ unsigned CursorBest::test_iterate(FILE* dump)
 
 int CursorBest::buffer_results(ODBCStatement& stm)
 {
-    db::v6::Repinfo& ri = db.repinfo();
+    db::v5::Repinfo& ri = db.repinfo();
 
     bool first = true;
     SQLRecord best;
@@ -575,8 +562,7 @@ int CursorBest::buffer_results(ODBCStatement& stm)
     while (stm.fetch())
     {
         // Fill priority
-        const db::v5::repinfo::Cache* ri_entry = ri.get_by_id(sqlrec.out_rep_cod);
-        sqlrec.priority = ri_entry ? ri_entry->prio : INT_MAX;
+        sqlrec.priority = ri.get_priority(sqlrec.out_rep_cod);
 
         // Filter results keeping only those with the best priority
         if (first)

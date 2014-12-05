@@ -21,6 +21,7 @@
 
 #include "db.h"
 #include "dballe/db/odbc/internals.h"
+#include "dballe/db/v5/repinfo.h"
 #include "station.h"
 #include "context.h"
 #include "data.h"
@@ -98,13 +99,13 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 
     // Report code
     if (repmemo != NULL)
-        dc.id_report = rep_cod_from_memo(repmemo);
+        dc.id_report = repinfo().obtain_id(repmemo);
     else {
         // TODO: check if B01194 first
         if (const Var* var = msg.get_rep_memo_var())
-            dc.id_report = rep_cod_from_memo(var->value());
+            dc.id_report = repinfo().obtain_id(var->value());
         else
-            dc.id_report = rep_cod_from_memo(Msg::repmemo_from_type(msg.type));
+            dc.id_report = repinfo().obtain_id(Msg::repmemo_from_type(msg.type));
     }
 
 	if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || inserted_pseudoana)

@@ -198,21 +198,6 @@ public:
     virtual std::map<std::string, int> get_repinfo_priorities();
 
 	/**
-	 * Get the report code from a report mnemonic
-	 */
-	int rep_cod_from_memo(const char* memo);
-
-	/**
-	 * Verify that a rep_cod is supported by the database
-	 *
-	 * @param rep_cod
-	 *   The report code to verify
-	 * @returns
-	 *   true if the report code is supported, false if not
-	 */
-	bool check_rep_cod(int rep_cod);
-
-	/**
 	 * Return the ID of the last inserted station
 	 */
 	int last_station_insert_id();

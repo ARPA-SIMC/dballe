@@ -358,7 +358,7 @@ void dba_db_delete(dba_db db)
 Repinfo& DB::repinfo()
 {
     if (m_repinfo == NULL)
-        m_repinfo = new Repinfo(conn);
+        m_repinfo = Repinfo::create(*conn).release();
     return *m_repinfo;
 }
 
@@ -486,7 +486,10 @@ void DB::disappear()
 
     /* Invalidate the repinfo cache if we have a repinfo structure active */
     if (m_repinfo)
-        m_repinfo->invalidate_cache();
+    {
+        delete m_repinfo;
+        m_repinfo = nullptr;
+    }
 
     conn->drop_settings();
 }
@@ -544,16 +547,6 @@ int DB::get_rep_cod(const Query& rec)
         return ri.get_id(memo);
     else
         throw error_notfound("input record has neither rep_cod nor rep_memo");
-}
-
-int DB::rep_cod_from_memo(const char* memo)
-{
-    return repinfo().obtain_id(memo);
-}
-
-bool DB::check_rep_cod(int rep_cod)
-{
-    return repinfo().has_id(rep_cod);
 }
 
 #if 0

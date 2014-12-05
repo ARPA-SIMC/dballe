@@ -21,6 +21,7 @@
 
 #include "internals.h"
 #include "db.h"
+#include "dballe/db/odbc/repinfo.h"
 #include "dballe/db/odbc/v6_levtr.h"
 #include "dballe/db/odbc/v6_data.h"
 #include "dballe/db/odbc/v6_attr.h"
@@ -35,6 +36,14 @@ using namespace std;
 namespace dballe {
 namespace db {
 namespace v6 {
+
+std::unique_ptr<v5::Repinfo> create_repinfo(Connection& conn)
+{
+    if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(&conn))
+        return unique_ptr<v5::Repinfo>(new v6::ODBCRepinfo(*c));
+    else
+        throw error_unimplemented("v6 DB repinfo not yet implemented for non-ODBC connectors");
+}
 
 unique_ptr<LevTr> LevTr::create(DB& db)
 {

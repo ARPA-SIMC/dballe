@@ -46,10 +46,10 @@ void to::test<1>()
 {
 	use_db();
 
-	ensure_equals(ri->get_id("synop"), 1);
-	ensure_equals(ri->get_id("generic"), 255);
-	ensure_equals(ri->has_id(1), true);
-	ensure_equals(ri->has_id(199), false);
+    wassert(actual(ri->get_id("synop")) == 1);
+    wassert(actual(ri->get_id("generic")) == 255);
+    wassert(actual(ri->get_rep_memo(1)) == "synop");
+    wassert(actual(ri->get_priority(199)) == INT_MAX);
 }
 
 /* Test update */
@@ -95,7 +95,8 @@ void to::test<4>()
 {
 	use_db();
 
-	ensure_equals(ri->get_by_memo("generic")->prio, 1000);
+    int id = ri->get_id("generic");
+    wassert(actual(ri->get_priority(id)) == 1000);
 
 	int added, deleted, updated;
 	ri->update((string(getenv("DBA_TESTDATA")) + "/test-repinfo2.csv").c_str(), &added, &deleted, &updated);
@@ -104,7 +105,7 @@ void to::test<4>()
 	ensure_equals(deleted, 11);
 	ensure_equals(updated, 2);
 
-	ensure_equals(ri->get_by_memo("generic")->prio, -5);
+    wassert(actual(ri->get_priority(id)) == -5);
 }
 
 // Test automatic repinfo creation
@@ -113,23 +114,15 @@ void to::test<5>()
 {
     use_db();
 
-    wassert(actual(ri->obtain_id("foobar")) > 0);
-    const repinfo::Cache *c = ri->get_by_memo("foobar");
-    wassert(actual(c) != (const repinfo::Cache *)NULL);
-    wassert(actual(c->id) == 256);
-    wassert(actual(c->memo) == "foobar");
-    wassert(actual(c->desc) == "foobar");
-    wassert(actual(c->prio) == 1001);
+    int id = ri->obtain_id("foobar");
+    wassert(actual(id) > 0);
+    wassert(actual(ri->get_rep_memo(id)) == "foobar");
+    wassert(actual(ri->get_priority(id)) == 1001);
 
-    wassert(actual(ri->obtain_id("barbaz")) > 0);
-    c = ri->get_by_memo("barbaz");
-    wassert(actual(c) != (const repinfo::Cache *)NULL);
-    wassert(actual(c->id) == 257);
-    wassert(actual(c->memo) == "barbaz");
-    wassert(actual(c->desc) == "barbaz");
-    wassert(actual(c->prio) == 1002);
+    id = ri->obtain_id("barbaz");
+    wassert(actual(id) > 0);
+    wassert(actual(ri->get_rep_memo(id)) == "barbaz");
+    wassert(actual(ri->get_priority(id)) == 1002);
 }
 
 }
-
-/* vim:set ts=4 sw=4: */

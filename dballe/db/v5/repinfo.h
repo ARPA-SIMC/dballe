@@ -1,7 +1,7 @@
 /*
  * db/v5/repinfo - repinfo table management
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,120 +28,71 @@
  * Repinfo table management used by the db module.
  */
 
-#include <vector>
-#include <string>
+#include <memory>
 #include <map>
+#include <string>
+#include <vector>
 
 namespace dballe {
 struct Record;
 
 namespace db {
-struct ODBCConnection;
+struct Connection;
 
 namespace v5 {
 
-namespace repinfo {
-
-/** repinfo cache entry */
-struct Cache
-{
-    /// Report code
-    unsigned id;
-
-	/** Report name */
-	std::string memo;
-	/** Report description */
-	std::string desc;
-    /// Report priority
-    int prio;
-	/** Report descriptor (currently unused) */
-	std::string descriptor;
-    /// Report A table value (currently unused)
-    unsigned tablea;
-
-	/** New report name used when updating the repinfo table */
-	std::string new_memo;
-	/** New report description used when updating the repinfo table */
-	std::string new_desc;
-    /// New report priority used when updating the repinfo table
-    int new_prio;
-	/** New report descriptor used when updating the repinfo table */
-	std::string new_descriptor;
-    /// New report A table value used when updating the repinfo table
-    unsigned new_tablea;
-
-	Cache(int id, const std::string& memo, const std::string& desc, int prio, const std::string& descriptor, int tablea);
-	void make_new();
-};
-
-/** reverse rep_memo -> rep_cod cache entry */
-struct Memoidx
-{
-	/** Report name */
-	std::string memo;
-	/** Report code */
-	int id;
-
-	bool operator<(const Memoidx& memo) const;
-};
-
-}
-
-/**
- * Fast cached access to the repinfo table
- */
+/// Fast cached access to the repinfo table
 struct Repinfo
 {
-	/** Cache of table entries */
-	std::vector<repinfo::Cache> cache;
+    Connection& conn;
 
-	/** rep_memo -> rep_cod reverse index */
-	mutable std::vector<repinfo::Memoidx> memo_idx;
+    Repinfo(Connection& conn);
+    virtual ~Repinfo() {}
 
+    static std::unique_ptr<Repinfo> create(Connection& conn);
 
     /**
-     * DB connection. The pointer is assumed always valid during the
-     * lifetime of the object
+     * Fill repinfo information in a Record based on the repinfo entry with the
+     * given ID
      */
-    ODBCConnection* conn;
+    virtual void to_record(int id, Record& rec) = 0;
 
-    Repinfo(ODBCConnection* conn);
-    virtual ~Repinfo();
+    /// Get the rep_memo for a given ID; throws if id is not valud
+    virtual const char* get_rep_memo(int id) = 0;
 
-	/**
-	 * Invalidate the repinfo cache.  To be called if the repinfo table is modified
-	 * externally; for example, when the table is recreated on database reset.
-	 */
-	void invalidate_cache();
+    /// Get the ID for a given rep_memo; throws if rep_memo is not valid
+    virtual int get_id(const char* rep_memo) = 0;
 
-	/**
-	 * Update the report type information in the database using the data from the
-	 * given file.
-	 *
-	 * @param ri
-	 *   dba_db_repinfo used to update the database
-	 * @param deffile
-	 *   Pathname of the file to use for the update.  The NULL value is accepted
-	 *   and means to use the default configure repinfo.csv file.
-	 * @retval added
-	 *   Number of entries that have been added during the update.
-	 * @retval deleted
-	 *   Number of entries that have been deleted during the update.
-	 * @retval updated
-	 *   Number of entries that have been updated during the update.
-	 */
-	void update(const char* deffile, int* added, int* deleted, int* updated);
+    /// Get the priority for a given ID; returns INT_MAX if id is not valid
+    virtual int get_priority(int id) = 0;
 
-	/**
-	 * Get the id of a repinfo entry given its name
-	 *
-	 * @param memo
-	 *   The name to query
-	 * @return
-	 *   The resulting id.  It will always be a valid one, because the functions
-	 *   fails if memo is not found.
-	 */
-	int get_id(const char* memo) const;
+    /**
+     * Update the report type information in the database using the data from the
+     * given file.
+     *
+     * @param ri
+     *   dba_db_repinfo used to update the database
+     * @param deffile
+     *   Pathname of the file to use for the update.  The NULL value is accepted
+     *   and means to use the default configure repinfo.csv file.
+     * @retval added
+     *   Number of entries that have been added during the update.
+     * @retval deleted
+     *   Number of entries that have been deleted during the update.
+     * @retval updated
+     *   Number of entries that have been updated during the update.
+     */
+    virtual void update(const char* deffile, int* added, int* deleted, int* updated) = 0;
+
+    /**
+     * Get a mapping between rep_memo and their priorities
+     */
+    virtual std::map<std::string, int> get_priorities() = 0;
+
+    /**
+     * Return a vector of IDs matching the priority constraints in the given record.
+     */
+    virtual std::vector<int> ids_by_prio(const Record& rec) = 0;
 
     /**
      * Get the id of a repinfo entry given its name.
@@ -153,75 +104,13 @@ struct Repinfo
      * @return
      *   The resulting id.
      */
-    int obtain_id(const char* memo);
+    virtual int obtain_id(const char* memo) = 0;
 
-	/**
-	 * Check if the database contains the given rep_cod id
-	 *
-	 * @param id
-	 *   id to check
-	 * @return
-	 *   true if id exists, else false.
-	 */
-	bool has_id(unsigned id) const;
-
-	/**
-	 * Get a repinfo cache entry by id.
-	 *
-	 * @param id
-	 *   id to query
-	 * @return
-	 *   The Cache structure found, or NULL if none was found.
-	 */
-	const repinfo::Cache* get_by_id(unsigned id) const;
-
-	/**
-	 * Get a repinfo cache entry by name.
-	 *
-	 * @param memo
-	 *   name to query
-	 * @return
-	 *   The Cache structure found, or NULL if none was found.
-	 */
-	const repinfo::Cache* get_by_memo(const char* memo) const;
-
-    /**
-     * Return a vector of IDs matching the priority constraints in the given record.
-     */
-    std::vector<int> ids_by_prio(const Record& rec) const;
-
-    /**
-     * Get a mapping between rep_memo and their priorities
-     */
-    std::map<std::string, int> get_priorities() const;
-
-    /**
-     * Dump the entire contents of the table to an output stream
-     */
-    void dump(FILE* out);
-
-protected:
-    /// Return how many time this ID is used in the database
-    virtual int id_use_count(unsigned id, const char* name);
-
-	void read_cache();
-	void cache_append(unsigned id, const char* memo, const char* desc, int prio, const char* descriptor, int tablea);
-	void rebuild_memo_idx() const;
-	int cache_find_by_memo(const char* memo) const;
-	int cache_find_by_id(unsigned id) const;
-	std::vector<repinfo::Cache> read_repinfo_file(const char* deffile);
-    /// Create an automatic entry for a missing memo, and insert it in the database
-    void insert_auto_entry(const char* memo);
-
-private:
-	// disallow copy
-	Repinfo(const Repinfo&);
-	Repinfo& operator=(const Repinfo&);
+    /// Dump the entire contents of the database to an output stream
+    virtual void dump(FILE* out) = 0;
 };
 
-} // namespace v5
-} // namespace db
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
+}
+}
+}
 #endif

@@ -28,6 +28,7 @@
  * lev_tr table management used by the db module.
  */
 
+#include <dballe/db/db.h>
 #include <dballe/db/v6/internals.h>
 #include <dballe/db/odbc/internals.h>
 #include <cstdio>

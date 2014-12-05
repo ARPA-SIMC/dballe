@@ -316,10 +316,10 @@ DB::~DB()
     if (conn) delete conn;
 }
 
-v6::Repinfo& DB::repinfo()
+v5::Repinfo& DB::repinfo()
 {
     if (m_repinfo == NULL)
-        m_repinfo = new Repinfo(dynamic_cast<ODBCConnection*>(conn));
+        m_repinfo = create_repinfo(*conn).release();
     return *m_repinfo;
 }
 
@@ -395,7 +395,10 @@ void DB::disappear()
 
     // Invalidate the repinfo cache if we have a repinfo structure active
     if (m_repinfo)
-        m_repinfo->invalidate_cache();
+    {
+        delete m_repinfo;
+        m_repinfo = 0;
+    }
 
     conn->drop_settings();
 }
@@ -450,7 +453,7 @@ std::map<std::string, int> DB::get_repinfo_priorities()
 
 int DB::get_rep_cod(const Query& rec)
 {
-    v6::Repinfo& ri = repinfo();
+    v5::Repinfo& ri = repinfo();
     if (const char* memo = rec.key_peek_value(DBA_KEY_REP_MEMO))
         return ri.get_id(memo);
     else
@@ -460,11 +463,6 @@ int DB::get_rep_cod(const Query& rec)
 int DB::rep_cod_from_memo(const char* memo)
 {
     return repinfo().obtain_id(memo);
-}
-
-bool DB::check_rep_cod(int rep_cod)
-{
-    return repinfo().has_id(rep_cod);
 }
 
 int DB::last_data_insert_id()

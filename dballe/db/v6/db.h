@@ -69,11 +69,11 @@ struct Statement;
 struct Sequence;
 
 namespace v5 {
+struct Repinfo;
 struct Station;
 }
 
 namespace v6 {
-struct Repinfo;
 struct LevTr;
 struct LevTrCache;
 struct Data;
@@ -108,7 +108,7 @@ protected:
      * @{
      */
     /** Report information */
-    struct v6::Repinfo* m_repinfo;
+    struct v5::Repinfo* m_repinfo;
     /** Station information */
     struct v5::Station* m_station;
     /** Level/timerange information */
@@ -143,7 +143,7 @@ public:
     db::Format format() const { return V6; }
 
     /// Access the repinfo table
-    v6::Repinfo& repinfo();
+    v5::Repinfo& repinfo();
 
     /// Access the station table
     v5::Station& station();
@@ -205,16 +205,6 @@ public:
      * Get the report code from a report mnemonic
      */
     int rep_cod_from_memo(const char* memo);
-
-    /**
-     * Verify that a rep_cod is supported by the database
-     *
-     * @param rep_cod
-     *   The report code to verify
-     * @returns
-     *   true if the report code is supported, false if not
-     */
-    bool check_rep_cod(int rep_cod);
 
     /**
      * Return the ID of the last inserted data

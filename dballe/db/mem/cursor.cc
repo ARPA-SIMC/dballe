@@ -107,7 +107,7 @@ const char* Cursor::get_ident(const char* def) const
     else
         return def;
 }
-const char* Cursor::get_rep_memo(const char* def) const { return cur_station->report.c_str(); }
+const char* Cursor::get_rep_memo() const { return cur_station->report.c_str(); }
 
 Level Cursor::get_level() const
 {

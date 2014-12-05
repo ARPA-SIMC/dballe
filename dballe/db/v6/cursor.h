@@ -136,7 +136,7 @@ struct Cursor : public db::Cursor
     virtual double get_lat() const;
     virtual double get_lon() const;
     virtual const char* get_ident(const char* def=0) const;
-    virtual const char* get_rep_memo(const char* def=0) const;
+    virtual const char* get_rep_memo() const;
     virtual Level get_level() const;
     virtual Trange get_trange() const;
     virtual void get_datetime(int (&dt)[6]) const;
