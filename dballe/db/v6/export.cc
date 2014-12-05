@@ -23,6 +23,7 @@
 #include "cursor.h"
 #include "dballe/db/odbc/internals.h"
 #include "dballe/db/modifiers.h"
+#include "dballe/db/v6/internals.h"
 #include "internals.h"
 
 #include <dballe/msg/msg.h>
@@ -69,69 +70,9 @@ struct StationLayerCache : protected std::vector<wreport::Var*>
     {
         reset();
 
-        // Perform the query
-        static const char query[] =
-            "SELECT d.id_var, d.value, a.type, a.value"
-            "  FROM data d"
-            "  LEFT JOIN attr a ON a.id_data = d.id"
-            " WHERE d.id_station = ? AND d.id_report = ?"
-            "   AND d.id_lev_tr = -1"
-            " ORDER BY d.id_var, a.type";
-
-        auto stm = dynamic_cast<ODBCConnection*>(db.conn)->odbcstatement();
-
-        stm->bind_in(1, id_station);
-        stm->bind_in(2, id_report);
-
-        Varcode out_varcode;
-        stm->bind_out(1, out_varcode);
-
-        char out_value[255];
-        stm->bind_out(2, out_value, sizeof(out_value));
-
-        Varcode out_attr_varcode;
-        SQLLEN out_attr_varcode_ind;
-        stm->bind_out(3, out_attr_varcode, out_attr_varcode_ind);
-
-        char out_attr_value[255];
-        SQLLEN out_attr_value_ind;
-        stm->bind_out(4, out_attr_value, sizeof(out_attr_value), out_attr_value_ind);
-
-        TRACE("StationLayerCache::fill Performing query: %s with idst %d idrep %d\n", query, id_station, id_report);
-        stm->exec_direct(query);
-
-        // Retrieve results
-        Varcode last_varcode = 0;
-        unique_ptr<Var> var;
-        while (stm->fetch())
-        {
-            TRACE("StationLayerCache::fill Got B%02ld%03ld %s\n", WR_VAR_X(out_varcode), WR_VAR_Y(out_varcode), out_value);
-
-            // First process the variable, possibly inserting the old one in the message
-            if (last_varcode != out_varcode)
-            {
-                TRACE("StationLayerCache::fill new var\n");
-                if (var.get())
-                {
-                    TRACE("StationLayerCache::fill inserting old var B%02d%03d\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()));
-                    push_back(var.release());
-                }
-                var = newvar(out_varcode, out_value);
-                last_varcode = out_varcode;
-            }
-
-            if (out_attr_varcode_ind != -1)
-            {
-                TRACE("fill_ana_layer new attribute\n");
-                var->seta(ap_newvar(out_attr_varcode, out_attr_value));
-            }
-        }
-
-        if (var.get())
-        {
-            TRACE("fill_ana_layer inserting leftover old var B%02d%03d\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()));
+        db.station().get_station_vars(id_station, id_report, [&](std::unique_ptr<wreport::Var> var) {
             push_back(var.release());
-        }
+        });
     }
 };
 

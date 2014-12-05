@@ -23,8 +23,6 @@
 #include "dballe/db/sql.h"
 #include "dballe/db/odbc/internals.h"
 #include "dballe/db/modifiers.h"
-#include "dballe/db/v6/repinfo.h"
-#include "dballe/db/v5/station.h"
 #include "cursor.h"
 #include "internals.h"
 
@@ -325,7 +323,7 @@ v5::Repinfo& DB::repinfo()
 v5::Station& DB::station()
 {
     if (m_station == NULL)
-        m_station = v5::Station::create(*conn).release();
+        m_station = create_station(*conn).release();
     return *m_station;
 }
 

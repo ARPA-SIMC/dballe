@@ -30,6 +30,7 @@
 
 #include <dballe/core/defs.h>
 #include <dballe/db/v5/repinfo.h>
+#include <dballe/db/v5/station.h>
 #include <wreport/var.h>
 #include <memory>
 #include <cstdio>
@@ -50,6 +51,9 @@ struct DB;
 
 /// Precompiled queries to manipulate the repinfo table
 std::unique_ptr<v5::Repinfo> create_repinfo(Connection& conn);
+
+/// Precompiled queries to manipulate the station table
+std::unique_ptr<v5::Station> create_station(Connection& conn);
 
 /**
  * Precompiled queries to manipulate the lev_tr table

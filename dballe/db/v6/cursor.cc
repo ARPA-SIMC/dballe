@@ -25,7 +25,6 @@
 #include "dballe/db/odbc/internals.h"
 #include "dballe/db/modifiers.h"
 #include "dballe/db/v6/internals.h"
-#include "dballe/db/v6/repinfo.h"
 
 #include <wreport/var.h>
 #include <dballe/core/defs.h>

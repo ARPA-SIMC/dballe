@@ -22,8 +22,8 @@
 #include "qbuilder.h"
 #include "dballe/core/defs.h"
 #include "dballe/core/aliases.h"
-#include "dballe/db/v6/repinfo.h"
 #include "dballe/db/modifiers.h"
+#include "dballe/db/v6/internals.h"
 #include <wreport/var.h>
 #include <sql.h>
 #include <regex.h>

@@ -145,7 +145,18 @@ public:
 };
 
 }
-}
+
+namespace v6 {
+
+class ODBCStation : public v5::ODBCStation
+{
+public:
+    ODBCStation(ODBCConnection& conn);
+    void get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
+};
+
 }
 
+}
+}
 #endif
