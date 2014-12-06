@@ -190,6 +190,8 @@ private:
 public:
     virtual ~Statement() {}
 
+    virtual void set_cursor_forward_only() = 0;
+
     /// Compile the SQL statement
     virtual void prepare(const std::string& query) = 0;
 

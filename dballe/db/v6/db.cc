@@ -21,8 +21,8 @@
 
 #include "db.h"
 #include "dballe/db/sql.h"
-#include "dballe/db/odbc/internals.h"
 #include "dballe/db/modifiers.h"
+#include "dballe/db/querybuf.h"
 #include "cursor.h"
 #include "internals.h"
 
@@ -556,31 +556,9 @@ int DB::last_station_id() const
     return _last_station_id;
 }
 
-void DB::remove(const Query& rec)
+void DB::remove(const Query& query)
 {
-    auto t = conn->transaction();
-
-    // Get the list of data to delete
-    v6::CursorDataIDs c(*this, DBA_DB_MODIFIER_UNSORTED | DBA_DB_MODIFIER_STREAM);
-    c.query(rec);
-
-    // Compile the DELETE query for the data
-    auto stmd = conn->statement();
-    stmd->bind_in(1, c.sqlrec.out_id_data);
-    stmd->prepare("DELETE FROM data WHERE id=?");
-
-    // Compile the DELETE query for the attributes
-    auto stma = conn->statement();
-    stma->bind_in(1, c.sqlrec.out_id_data);
-    stma->prepare("DELETE FROM attr WHERE id_data=?");
-
-    /* Iterate all the results, deleting them */
-    while (c.next())
-    {
-        stmd->execute_ignoring_results();
-        stma->execute_ignoring_results();
-    }
-    t->commit();
+    Cursor::run_delete_query(*this, query);
 }
 
 void DB::remove_all()
@@ -627,29 +605,17 @@ void DB::vacuum()
 
 std::unique_ptr<db::Cursor> DB::query_stations(const Query& query)
 {
-    unsigned int modifiers = parse_modifiers(query) | DBA_DB_MODIFIER_ANAEXTRA | DBA_DB_MODIFIER_DISTINCT;
-    unique_ptr<Cursor> res(new CursorStations(*this, modifiers));
-    res->query(query);
-    return unique_ptr<db::Cursor>(res.release());
+    return Cursor::run_station_query(*this, query);
 }
 
 std::unique_ptr<db::Cursor> DB::query_data(const Query& query)
 {
-    unsigned int modifiers = parse_modifiers(query);
-    unique_ptr<Cursor> res;
-    if (modifiers & DBA_DB_MODIFIER_BEST)
-        res.reset(new CursorBest(*this, modifiers));
-    else
-        res.reset(new CursorData(*this, modifiers));
-    res->query(query);
-    return unique_ptr<db::Cursor>(res.release());
+    return Cursor::run_data_query(*this, query);
 }
 
-std::unique_ptr<db::Cursor> DB::query_summary(const Query& rec)
+std::unique_ptr<db::Cursor> DB::query_summary(const Query& query)
 {
-    unique_ptr<Cursor> res(new CursorSummary(*this, 0));
-    res->query(rec);
-    return unique_ptr<db::Cursor>(res.release());
+    return Cursor::run_summary_query(*this, query);
 }
 
 void DB::query_attrs(int id_data, wreport::Varcode id_var,

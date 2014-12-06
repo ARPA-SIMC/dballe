@@ -238,7 +238,7 @@ struct ODBCStatement : public Statement
     /// Row count for insert, delete and other non-select operations
     size_t rowcount();
 
-    void set_cursor_forward_only();
+    void set_cursor_forward_only() override;
     void set_cursor_static();
 
 protected:

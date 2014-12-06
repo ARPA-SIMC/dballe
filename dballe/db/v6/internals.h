@@ -45,6 +45,7 @@ struct Context;
 
 namespace db {
 struct Connection;
+struct Statement;
 
 namespace v6 {
 struct DB;
@@ -224,6 +225,46 @@ struct Attr
      */
     virtual void dump(FILE* out) = 0;
 };
+
+/// Query results from SQL output
+struct SQLRecord
+{
+    int out_lat;
+    int out_lon;
+    char out_ident[64];
+    int out_ident_size; // -1 for NULL
+    wreport::Varcode out_varcode;
+    Datetime out_datetime;
+    char out_value[255];
+    int out_rep_cod;
+    int out_ana_id;
+    int out_id_ltr;
+    int out_id_data;
+    int priority;
+
+    /**
+     * Checks true if ana_id, id_ltr, datetime and varcode are the same in
+     * both records
+     *
+     * @returns true if they match, false if they are different
+     */
+    bool querybest_fields_are_the_same(const SQLRecord& r);
+};
+
+/**
+ * Run a query on the given statement, returning results as SQLRecord objects
+ *
+ * SQLRecord is filled with the output variables according to which sel_* is true.
+ *
+ * Query will dispatch to the right connector routines for the query, based on
+ * the actual implementation of stm.
+ */
+void run_built_query(
+        Statement& stm,
+        bool sel_station, bool sel_varinfo, bool sel_data_id, bool sel_data,
+        std::function<void(SQLRecord& rec)> dest);
+
+void run_delete_query(Connection& conn, Statement& stm);
 
 }
 }

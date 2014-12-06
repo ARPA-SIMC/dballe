@@ -22,6 +22,7 @@
 #include "db.h"
 #include "cursor.h"
 #include "internals.h"
+#include "qbuilder.h"
 #include "dballe/db/modifiers.h"
 #include "dballe/db/sql.h"
 
@@ -82,8 +83,9 @@ static inline int sqltimecmp(const SQL_TIMESTAMP_STRUCT* a, const SQL_TIMESTAMP_
     return memcmp(a, b, sizeof(SQL_TIMESTAMP_STRUCT));
 }
 
-void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
+void DB::export_msgs(const Query& query, MsgConsumer& consumer)
 {
+    v5::Repinfo& ri = repinfo();
     Attr& at = attr();
     LevTrCache& ltrc = lev_tr_cache();
 
@@ -93,36 +95,40 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
     auto t = conn->transaction();
 
     // The big export query
-    CursorData cur(*this, DBA_DB_MODIFIER_SORT_FOR_EXPORT);
-            /*  DBA_DB_MODIFIER_STREAM)); */
-    cur.query(rec);
+    auto stm = conn->statement();
+    stm->set_cursor_forward_only();
+
+    DataQueryBuilder qb(*this, *stm, query, DBA_DB_MODIFIER_SORT_FOR_EXPORT);
+    qb.build();
+    stm->prepare(qb.sql_query);
 
     // Current context information used to detect context changes
-    SQL_TIMESTAMP_STRUCT last_datetime;
-    last_datetime.year = 0;
+    Datetime last_datetime;
     int last_ana_id = -1;
     int last_rep_cod = -1;
 
     StationLayerCache station_cache;
 
     // Retrieve results
-    while (cur.next())
-    {
+    run_built_query(
+            qb.stm,
+            qb.select_station, qb.select_varinfo, qb.select_data_id, qb.select_data,
+            [&](SQLRecord& sqlrec) {
         //TRACE("Got B%02d%03d %ld,%ld, %ld,%ld %ld,%ld,%ld %s\n",
-        //        WR_VAR_X(cur.sqlrec.out_varcode), WR_VAR_Y(cur.sqlrec.out_varcode),
-        //        cur.sqlrec.out_ltype1, cur.sqlrec.out_l1, cur.sqlrec.out_ltype2, cur.sqlrec.out_l2, cur.sqlrec.out_pind, cur.sqlrec.out_p1, cur.sqlrec.out_p2,
-        //        cur.sqlrec.out_value);
+        //        WR_VAR_X(sqlrec.out_varcode), WR_VAR_Y(sqlrec.out_varcode),
+        //        sqlrec.out_ltype1, sqlrec.out_l1, sqlrec.out_ltype2, sqlrec.out_l2, sqlrec.out_pind, sqlrec.out_p1, sqlrec.out_p2,
+        //        sqlrec.out_value);
 
         /* Create the variable that we got on this iteration */
-        unique_ptr<Var> var(newvar(cur.sqlrec.out_varcode, cur.sqlrec.out_value));
+        unique_ptr<Var> var(newvar(sqlrec.out_varcode, sqlrec.out_value));
 
         /* Load the attributes from the database */
-        at.read(cur.sqlrec.out_id_data, [&](unique_ptr<Var> attr) { var->seta(auto_ptr<Var>(attr.release())); });
+        at.read(sqlrec.out_id_data, [&](unique_ptr<Var> attr) { var->seta(auto_ptr<Var>(attr.release())); });
 
         /* See if we have the start of a new message */
-        if (cur.sqlrec.out_ana_id != last_ana_id
-         || cur.sqlrec.out_rep_cod != last_rep_cod
-         || sqltimecmp(&(cur.sqlrec.out_datetime), &last_datetime) != 0)
+        if (sqlrec.out_ana_id != last_ana_id
+         || sqlrec.out_rep_cod != last_rep_cod
+         || sqlrec.out_datetime != last_datetime)
         {
             // Flush current message
             TRACE("New message\n");
@@ -144,49 +150,49 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
             msg::Context& c_st = msg->obtain_station_context();
 
             // Update station layer cache if needed
-            if (cur.sqlrec.out_ana_id != last_ana_id || cur.sqlrec.out_rep_cod != last_rep_cod)
-                station_cache.fill(*this, cur.sqlrec.out_ana_id, cur.sqlrec.out_rep_cod);
+            if (sqlrec.out_ana_id != last_ana_id || sqlrec.out_rep_cod != last_rep_cod)
+                station_cache.fill(*this, sqlrec.out_ana_id, sqlrec.out_rep_cod);
 
             // Fill in report information
             {
-                const char* memo = cur.get_rep_memo();
+                const char* memo = ri.get_rep_memo(sqlrec.out_rep_cod);
                 c_st.set_rep_memo(memo);
                 msg->type = Msg::type_from_repmemo(memo);
             }
 
             // Fill in the basic station values
-            c_st.seti(WR_VAR(0, 5, 1), cur.sqlrec.out_lat);
-            c_st.seti(WR_VAR(0, 6, 1), cur.sqlrec.out_lon);
-            if (cur.sqlrec.out_ident_ind != SQL_NULL_DATA)
-                c_st.set_ident(cur.sqlrec.out_ident);
+            c_st.seti(WR_VAR(0, 5, 1), sqlrec.out_lat);
+            c_st.seti(WR_VAR(0, 6, 1), sqlrec.out_lon);
+            if (sqlrec.out_ident_size != -1)
+                c_st.set_ident(sqlrec.out_ident);
 
             // Fill in datetime
-            c_st.set_year(cur.sqlrec.out_datetime.year);
-            c_st.set_month(cur.sqlrec.out_datetime.month);
-            c_st.set_day(cur.sqlrec.out_datetime.day);
-            c_st.set_hour(cur.sqlrec.out_datetime.hour);
-            c_st.set_minute(cur.sqlrec.out_datetime.minute);
-            c_st.set_second(cur.sqlrec.out_datetime.second);
+            c_st.set_year(sqlrec.out_datetime.date.year);
+            c_st.set_month(sqlrec.out_datetime.date.month);
+            c_st.set_day(sqlrec.out_datetime.date.day);
+            c_st.set_hour(sqlrec.out_datetime.time.hour);
+            c_st.set_minute(sqlrec.out_datetime.time.minute);
+            c_st.set_second(sqlrec.out_datetime.time.second);
 
             // Fill in station information
             station_cache.to_context(c_st);
 
             // Update current context information
-            last_datetime = cur.sqlrec.out_datetime;
-            last_ana_id = cur.sqlrec.out_ana_id;
-            last_rep_cod = cur.sqlrec.out_rep_cod;
+            last_datetime = sqlrec.out_datetime;
+            last_ana_id = sqlrec.out_ana_id;
+            last_rep_cod = sqlrec.out_rep_cod;
         }
 
         TRACE("Inserting var B%02d%03d (%s)\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()), var->value());
-        if (cur.sqlrec.out_id_ltr == -1)
+        if (sqlrec.out_id_ltr == -1)
         {
             msg->set(move(var), Level::ana(), Trange::ana());
         } else {
-            msg::Context* ctx = ltrc.to_msg(cur.sqlrec.out_id_ltr, *msg);
+            msg::Context* ctx = ltrc.to_msg(sqlrec.out_id_ltr, *msg);
             if (ctx)
                 ctx->set(move(var));
         }
-    }
+    });
 
     if (msg.get() != NULL)
     {

@@ -218,6 +218,7 @@ struct Date
     unsigned char month;
     unsigned char day;
 
+    Date() : year(MISSING_INT), month(MISSING_INT), day(MISSING_INT) {}
     Date(unsigned short year, unsigned char month=1, unsigned char day=1)
         : year(year), month(month), day(day)
     {
@@ -226,6 +227,13 @@ struct Date
     Date(const int* val)
         : year(val[0]), month(val[1]), day(val[2])
     {
+    }
+
+    void fill(int* vals) const
+    {
+        vals[0] = (unsigned)year;
+        vals[1] = (unsigned)month;
+        vals[2] = (unsigned)day;
     }
 
     int compare(const Date& o) const
@@ -249,12 +257,20 @@ struct Time
     unsigned char minute;
     unsigned char second;
 
-    Time(unsigned char hour=0, unsigned char minute=0, unsigned char second=0)
+    Time() : hour(MISSING_INT), minute(MISSING_INT), second(MISSING_INT) {}
+    Time(unsigned char hour, unsigned char minute=0, unsigned char second=0)
         : hour(hour), minute(minute), second(second) {}
     Time(const Time& d) : hour(d.hour), minute(d.minute), second(d.second) {}
     Time(const int* val)
         : hour(val[0]), minute(val[1]), second(val[2])
     {
+    }
+
+    void fill(int* vals) const
+    {
+        vals[0] = (unsigned)hour;
+        vals[1] = (unsigned)minute;
+        vals[2] = (unsigned)second;
     }
 
     int compare(const Time& o) const
@@ -278,6 +294,7 @@ struct Datetime
     Date date;
     Time time;
 
+    Datetime() {}
     Datetime(const Date& date, const Time& time) : date(date), time(time) {}
     Datetime(unsigned short year, unsigned char month=1, unsigned char day=1,
              unsigned char hour=0, unsigned char minute=0, unsigned char second=0)
@@ -288,6 +305,12 @@ struct Datetime
     {
         if (int res = date.compare(o.date)) return res;
         return time.compare(o.time);
+    }
+
+    void fill(int* vals) const
+    {
+        date.fill(vals);
+        time.fill(vals + 3);
     }
 
     bool operator==(const Datetime& dt) const;

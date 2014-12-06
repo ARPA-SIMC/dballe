@@ -28,12 +28,11 @@
 #ifndef DBA_DB_V6_QBUILDER_H
 #define DBA_DB_V6_QBUILDER_H
 
-#include "dballe/db/querybuf.h"
-#include "dballe/db/odbc/internals.h"
-#include "dballe/db/db.h"
-#include "dballe/core/record.h"
-#include "db.h"
-#include "cursor.h"
+#include <dballe/db/querybuf.h>
+#include <dballe/db/sql.h>
+#include <dballe/db/v6/db.h>
+#include <dballe/db/v6/cursor.h>
+#include <dballe/core/record.h>
 #include <regex.h>
 
 #if 0
@@ -66,18 +65,6 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
-/**
- * Copies of bind values that cannot be bound to data inside the query
- * Record
- */
-struct ExtraQueryArgs
-{
-    /// Positional sequence number to use to bind ODBC input parameters
-    unsigned int input_seq;
-
-    ExtraQueryArgs() : input_seq(1) {};
-};
-
 struct QueryBuilder
 {
     Connection& conn;
@@ -86,10 +73,27 @@ struct QueryBuilder
     DB& db;
 
     /** Statement to bind variables to */
-    ODBCStatement& stm;
+    Statement& stm;
 
-    /** Cursor with the output variables */
-    Cursor& cur;
+    bool select_station = false; // ana_id, lat, lon, ident
+    // stm.bind_out(output_seq++, cur.sqlrec.out_ana_id);
+    // stm.bind_out(output_seq++, cur.sqlrec.out_lat);
+    // stm.bind_out(output_seq++, cur.sqlrec.out_lon);
+    // stm.bind_out(output_seq++, cur.sqlrec.out_ident, sizeof(cur.sqlrec.out_ident), cur.sqlrec.out_ident_ind);
+
+    bool select_varinfo = false; // rep_cod, id_ltr, varcode
+    // stm.bind_out(output_seq++, cur.sqlrec.out_rep_cod);
+    // stm.bind_out(output_seq++, cur.sqlrec.out_id_ltr);
+    // stm.bind_out(output_seq++, cur.sqlrec.out_varcode);
+
+    // IdQuery
+    bool select_data_id = false; // id_data
+    // stm.bind_out(output_seq++, cur.sqlrec.out_id_data);
+
+    // DataQuery
+    bool select_data = false; // datetime, value
+    // stm.bind_out(output_seq++, cur.sqlrec.out_datetime);
+    // stm.bind_out(output_seq++, cur.sqlrec.out_value, sizeof(cur.sqlrec.out_value));
 
     /// Record with the query
     const Record& rec;
@@ -106,16 +110,14 @@ struct QueryBuilder
     /// Modifier flags to enable special query behaviours
     const unsigned int modifiers;
 
-    ExtraQueryArgs qargs;
-
-    /// Sequence number to use to bind ODBC output parameters
-    unsigned int output_seq;
+    /// Positional sequence number to use to bind input parameters
+    unsigned int input_seq = 1;
 
     /// True if we are querying station information, rather than measured data
     bool query_station_vars;
 
 
-    QueryBuilder(DB& db, ODBCStatement& stm, Cursor& cur, const Record& rec, unsigned int modifiers);
+    QueryBuilder(DB& db, Statement& stm, const Record& rec, unsigned int modifiers);
     virtual ~QueryBuilder() {}
 
     void build();
@@ -137,8 +139,8 @@ protected:
 
 struct StationQueryBuilder : public QueryBuilder
 {
-    StationQueryBuilder(DB& db, ODBCStatement& stm, Cursor& cur, const Record& rec, unsigned int modifiers)
-        : QueryBuilder(db, stm, cur, rec, modifiers) {}
+    StationQueryBuilder(DB& db, Statement& stm, const Record& rec, unsigned int modifiers)
+        : QueryBuilder(db, stm, rec, modifiers) {}
 
     virtual void build_select();
     virtual bool build_where();
@@ -149,7 +151,7 @@ struct DataQueryBuilder : public QueryBuilder
 {
     int query_data_id;
 
-    DataQueryBuilder(DB& db, ODBCStatement& stm, Cursor& cur, const Record& rec, unsigned int modifiers);
+    DataQueryBuilder(DB& db, Statement& stm, const Record& rec, unsigned int modifiers);
 
     virtual void build_select();
     virtual bool build_where();
@@ -158,8 +160,8 @@ struct DataQueryBuilder : public QueryBuilder
 
 struct IdQueryBuilder : public DataQueryBuilder
 {
-    IdQueryBuilder(DB& db, ODBCStatement& stm, Cursor& cur, const Record& rec, unsigned int modifiers)
-        : DataQueryBuilder(db, stm, cur, rec, modifiers) {}
+    IdQueryBuilder(DB& db, Statement& stm, const Record& rec, unsigned int modifiers)
+        : DataQueryBuilder(db, stm, rec, modifiers) {}
 
     virtual void build_select();
     virtual void build_order_by();
@@ -167,10 +169,8 @@ struct IdQueryBuilder : public DataQueryBuilder
 
 struct SummaryQueryBuilder : public DataQueryBuilder
 {
-    CursorSummary& cur_s;
-
-    SummaryQueryBuilder(DB& db, ODBCStatement& stm, CursorSummary& cur, const Record& rec, unsigned int modifiers)
-        : DataQueryBuilder(db, stm, cur, rec, modifiers), cur_s(cur) {}
+    SummaryQueryBuilder(DB& db, Statement& stm, const Record& rec, unsigned int modifiers)
+        : DataQueryBuilder(db, stm, rec, modifiers) {}
 
     virtual void build_select();
     virtual void build_order_by();

@@ -26,6 +26,7 @@
 #include "dballe/db/odbc/v6_levtr.h"
 #include "dballe/db/odbc/v6_data.h"
 #include "dballe/db/odbc/v6_attr.h"
+#include "dballe/db/odbc/v6_run_query.h"
 #include "dballe/core/record.h"
 #include "dballe/msg/context.h"
 #include "dballe/msg/msg.h"
@@ -239,6 +240,36 @@ unique_ptr<Attr> Attr::create(DB& db)
         return unique_ptr<Attr>(new ODBCAttr(*conn));
     else
         throw error_unimplemented("v6 DB attr not yet implemented for non-ODBC connectors");
+}
+
+bool SQLRecord::querybest_fields_are_the_same(const SQLRecord& r)
+{
+    if (out_ana_id != r.out_ana_id) return false;
+    if (out_id_ltr != r.out_id_ltr) return false;
+    if (out_datetime != r.out_datetime) return false;
+    if (out_varcode != r.out_varcode) return false;
+    return true;
+}
+
+void run_built_query(
+        Statement& stm,
+        bool sel_station, bool sel_varinfo, bool sel_data_id, bool sel_data,
+        std::function<void(SQLRecord& rec)> dest)
+{
+    if (ODBCStatement* s = dynamic_cast<ODBCStatement*>(&stm))
+    {
+        odbc_run_built_query(*s, sel_station, sel_varinfo, sel_data_id, sel_data, dest);
+    } else
+        throw error_unimplemented("v6 DB run_built_query not yet implemented for non-ODBC connectors");
+}
+
+void run_delete_query(Connection& conn, Statement& stm)
+{
+    if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(&conn))
+    {
+        odbc_run_delete_query(*c, *dynamic_cast<ODBCStatement*>(&stm));
+    } else
+        throw error_unimplemented("v6 DB run_delete_query not yet implemented for non-ODBC connectors");
 }
 
 }

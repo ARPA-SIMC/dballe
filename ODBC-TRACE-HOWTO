@@ -1,0 +1,10 @@
+To trace the ODBC calls:
+
+mkdir /tmp/odbc
+cp /etc/odbcinst.ini /tmp/odbc
+cat << EOT >> /tmp/odbc/odbcinst.ini
+[ODBC]
+Trace           = Yes
+TraceFile               =  /tmp/test.log
+EOT
+ODBCSYSINI=/tmp/odbc ./run-check ...

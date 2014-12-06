@@ -29,6 +29,7 @@
 #define DBA_DB_V6_CURSOR_H
 
 #include <dballe/db/db.h>
+#include <dballe/db/v6/internals.h>
 #include <dballe/core/structbuf.h>
 #include <wreport/varinfo.h>
 #include <sqltypes.h>
@@ -40,11 +41,12 @@ struct DB;
 struct Record;
 
 namespace db {
-struct ODBCConnection;
-struct ODBCStatement;
+struct Connection;
+struct Statement;
 
 namespace v6 {
 struct DB;
+struct QueryBuilder;
 
 /**
  * Simple typedef to make typing easier, and also to help some versions of swig
@@ -58,49 +60,21 @@ typedef std::vector<wreport::Varcode> AttrList;
  */
 struct Cursor : public db::Cursor
 {
-    /// Query results from SQL output
-    struct SQLRecord
-    {
-        int  out_lat;
-        int  out_lon;
-        char    out_ident[64];      SQLLEN out_ident_ind;
-        wreport::Varcode        out_varcode;
-        SQL_TIMESTAMP_STRUCT    out_datetime;
-        char    out_value[255];
-        int  out_rep_cod;
-        int  out_ana_id;
-        int  out_id_ltr;
-        int  out_id_data;
-        int priority;
-
-        /**
-         * Checks true if ana_id, id_ltr, datetime and varcode are the same in
-         * both records
-         *
-         * @returns true if they match, false if they are different
-         */
-        bool querybest_fields_are_the_same(const SQLRecord& r);
-    };
-
     /// Database to operate on
     v6::DB& db;
-
-    /// ODBC database connection to use
-    ODBCConnection& conn;
 
     /** Modifier flags to enable special query behaviours */
     const unsigned int modifiers;
 
-    /** Number of results still to be fetched */
-    int count;
+    /// Results from the query
+    Structbuf<SQLRecord> results;
 
-    /// Results written by fetch
-    SQLRecord sqlrec;
-
+    /// Current result element being iterated
+    int cur = -1;
 
     virtual ~Cursor();
 
-    virtual dballe::DB& get_db() const;
+    dballe::DB& get_db() const override;
 
     /**
      * Get the number of rows still to be fetched
@@ -109,10 +83,7 @@ struct Cursor : public db::Cursor
      *   The number of rows still to be queried.  The value is undefined if no
      *   query has been successfully peformed yet using this cursor.
      */
-    int remaining() const;
-
-    /// Perform the query
-    virtual void query(const Record& query) = 0;
+    int remaining() const override;
 
     /**
      * Get a new item from the results of a query
@@ -120,17 +91,17 @@ struct Cursor : public db::Cursor
      * @returns
      *   true if a new record has been read, false if there is no more data to read
      */
-    virtual bool next() = 0;
+    bool next() override;
 
     /// Discard the results that have not been read yet
-    virtual void discard_rest() = 0;
+    void discard_rest() override;
 
     /**
      * Query attributes for the current variable
      */
     void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
-    virtual void attr_insert(const Record& attrs);
-    virtual void attr_remove(const AttrList& qcs);
+    void attr_insert(const Record& attrs) override;
+    void attr_remove(const AttrList& qcs) override;
 
     virtual int get_station_id() const;
     virtual double get_lat() const;
@@ -152,7 +123,15 @@ struct Cursor : public db::Cursor
      */
     virtual unsigned test_iterate(FILE* dump=0) = 0;
 
+    static std::unique_ptr<Cursor> run_station_query(DB& db, const Query& query);
+    static std::unique_ptr<Cursor> run_data_query(DB& db, const Query& query);
+    static std::unique_ptr<Cursor> run_summary_query(DB& db, const Query& query);
+    static void run_delete_query(DB& db, const Query& query);
+
 protected:
+    /// Run the query in qb and fill results with its output
+    virtual void load(const QueryBuilder& qb);
+
     /**
      * Create a query cursor
      *
@@ -169,125 +148,66 @@ protected:
     void to_record_datetime(Record& rec);
     void to_record_varcode(Record& rec);
 
-    int query_stations(ODBCStatement& stm, const Record& rec);
-    int query_data(ODBCStatement& stm, const Record& rec);
-
     /// Query extra station info and add it to \a rec
     void add_station_info(Record& rec);
-
-    /**
-     * Return the number of results for a query.
-     *
-     * This is the same as Cursor::query, but it does a SELECT COUNT(*) only.
-     *
-     * @warning: do not use it except to get an approximate row count:
-     * insert/delete/update queries run between the count and the select will
-     * change the size of the result set.
-     */
-    //int getcount(const Record& query);
 };
 
-class CursorLinear : public Cursor
+struct CursorStations : public Cursor
 {
-public:
-    virtual ~CursorLinear();
-
-protected:
-    /** ODBC statement to use for the query */
-    ODBCStatement* stm;
-
-    CursorLinear(DB& db, unsigned int modifiers);
-
-    virtual void discard_rest();
-    virtual bool next();
-
-    friend class dballe::db::v6::DB;
-};
-
-struct CursorStations : public CursorLinear
-{
+    ~CursorStations();
     /// Query station info
-    virtual void query(const Record& rec);
     virtual void to_record(Record& rec);
     virtual unsigned test_iterate(FILE* dump=0);
 
 protected:
     CursorStations(DB& db, unsigned int modifiers)
-        : CursorLinear(db, modifiers) {}
+        : Cursor(db, modifiers) {}
 
-    friend class dballe::db::v6::DB;
+    friend class Cursor;
 };
 
-struct CursorData : public CursorLinear
+struct CursorData : public Cursor
 {
+    ~CursorData();
     /// Query data
-    virtual void query(const Record& rec);
     virtual void to_record(Record& rec);
     virtual unsigned test_iterate(FILE* dump=0);
 
-    /// Query count of items (only for stations and data)
-    //int query_count(const Record& rec);
-
 protected:
     CursorData(DB& db, unsigned int modifiers)
-        : CursorLinear(db, modifiers) {}
+        : Cursor(db, modifiers) {}
 
-    friend class dballe::db::v6::DB;
+    friend class Cursor;
 };
 
-class CursorSummary : public CursorLinear
+struct CursorSummary : public Cursor
 {
-public:
-    SQL_TIMESTAMP_STRUCT    out_datetime_max;
-
-    /// Query stats about all possible context combinations
-    virtual void query(const Record& rec);
+    ~CursorSummary();
     virtual void to_record(Record& rec);
     virtual unsigned test_iterate(FILE* dump=0);
 
 protected:
     CursorSummary(DB& db, unsigned int modifiers)
-        : CursorLinear(db, modifiers) {}
+        : Cursor(db, modifiers) {}
 
-    friend class dballe::db::v6::DB;
+    friend class Cursor;
 };
 
-struct CursorDataIDs : public CursorLinear
+struct CursorBest : public Cursor
 {
-    /// Query the data IDs only, to use to delete things
-    virtual void query(const Record& rec);
+    ~CursorBest();
+
     virtual void to_record(Record& rec);
     virtual unsigned test_iterate(FILE* dump=0);
 
 protected:
-    CursorDataIDs(DB& db, unsigned int modifiers)
-        : CursorLinear(db, modifiers) {}
+    CursorBest(DB& db, unsigned int modifiers)
+        : Cursor(db, modifiers) {}
 
-    friend class dballe::db::v6::DB;
-};
+    /// Run the query in qb and fill results with its output
+    virtual void load(const QueryBuilder& qb);
 
-class CursorBest : public Cursor
-{
-public:
-    virtual ~CursorBest();
-
-    virtual void query(const Record& rec);
-    virtual void to_record(Record& rec);
-    virtual unsigned test_iterate(FILE* dump=0);
-
-protected:
-    Structbuf<SQLRecord> results;
-
-    CursorBest(DB& db, unsigned int modifiers);
-
-    // Save all cursor results to a temp file, filtered to keep the best values
-    // only
-    int buffer_results(ODBCStatement& stm);
-
-    virtual void discard_rest();
-    virtual bool next();
-
-    friend class dballe::db::v6::DB;
+    friend class Cursor;
 };
 
 } // namespace v6

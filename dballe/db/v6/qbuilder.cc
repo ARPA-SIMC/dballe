@@ -269,15 +269,15 @@ struct Constraints
     }
 };
 
-QueryBuilder::QueryBuilder(DB& db, ODBCStatement& stm, Cursor& cur, const Record& rec, unsigned int modifiers)
-    : conn(*db.conn), db(db), stm(stm), cur(cur), rec(rec), sql_query(2048), sql_from(1024), sql_where(1024),
-      modifiers(modifiers), output_seq(1), query_station_vars(false)
+QueryBuilder::QueryBuilder(DB& db, Statement& stm, const Record& rec, unsigned int modifiers)
+    : conn(*db.conn), db(db), stm(stm), rec(rec), sql_query(2048), sql_from(1024), sql_where(1024),
+      modifiers(modifiers), query_station_vars(false)
 {
     query_station_vars = rec.is_ana_context();
 }
 
-DataQueryBuilder::DataQueryBuilder(DB& db, ODBCStatement& stm, Cursor& cur, const Record& rec, unsigned int modifiers)
-    : QueryBuilder(db, stm, cur, rec, modifiers)
+DataQueryBuilder::DataQueryBuilder(DB& db, Statement& stm, const Record& rec, unsigned int modifiers)
+    : QueryBuilder(db, stm, rec, modifiers)
 {
     query_data_id = rec.get(DBA_KEY_CONTEXT_ID, MISSING_INT);
 }
@@ -322,13 +322,10 @@ void QueryBuilder::build()
 void StationQueryBuilder::build_select()
 {
     sql_query.append("SELECT s.id, s.lat, s.lon, s.ident");
-    stm.bind_out(output_seq++, cur.sqlrec.out_ana_id);
-    stm.bind_out(output_seq++, cur.sqlrec.out_lat);
-    stm.bind_out(output_seq++, cur.sqlrec.out_lon);
-    stm.bind_out(output_seq++, cur.sqlrec.out_ident, sizeof(cur.sqlrec.out_ident), cur.sqlrec.out_ident_ind);
     sql_from.append(
             " FROM station s"
     );
+    select_station = true;
 }
 
 bool StationQueryBuilder::build_where()
@@ -364,17 +361,11 @@ void StationQueryBuilder::build_order_by()
 
 void DataQueryBuilder::build_select()
 {
-    sql_query.append("SELECT s.id, s.lat, s.lon, s.ident, d.id, d.datetime, d.id_report, d.id_lev_tr, d.id_var, d.value");
-    stm.bind_out(output_seq++, cur.sqlrec.out_ana_id);
-    stm.bind_out(output_seq++, cur.sqlrec.out_lat);
-    stm.bind_out(output_seq++, cur.sqlrec.out_lon);
-    stm.bind_out(output_seq++, cur.sqlrec.out_ident, sizeof(cur.sqlrec.out_ident), cur.sqlrec.out_ident_ind);
-    stm.bind_out(output_seq++, cur.sqlrec.out_id_data);
-    stm.bind_out(output_seq++, cur.sqlrec.out_datetime);
-    stm.bind_out(output_seq++, cur.sqlrec.out_rep_cod);
-    stm.bind_out(output_seq++, cur.sqlrec.out_id_ltr);
-    stm.bind_out(output_seq++, cur.sqlrec.out_varcode);
-    stm.bind_out(output_seq++, cur.sqlrec.out_value, sizeof(cur.sqlrec.out_value));
+    sql_query.append("SELECT s.id, s.lat, s.lon, s.ident, d.id_report, d.id_lev_tr, d.id_var, d.id, d.datetime, d.value");
+    select_station = true;
+    select_varinfo = true;
+    select_data_id = true;
+    select_data = true;
     sql_from.append(
             " FROM station s"
             " JOIN data d ON s.id=d.id_station"
@@ -430,7 +421,7 @@ void DataQueryBuilder::build_order_by()
 void IdQueryBuilder::build_select()
 {
     sql_query.append("SELECT d.id");
-    stm.bind_out(output_seq++, cur.sqlrec.out_id_data);
+    select_data_id = true;
     sql_from.append(
             " FROM station s"
             " JOIN data d ON s.id = d.id_station"
@@ -450,13 +441,8 @@ void SummaryQueryBuilder::build_select()
     // sql_query.append("SELECT s.id, s.lat, s.lon, s.ident, d.id_report, d.id_lev_tr, d.id_var, COUNT(*), MIN(d.datetime), MAX(d.dat
 
     sql_query.append("SELECT DISTINCT s.id, s.lat, s.lon, s.ident, d.id_report, d.id_lev_tr, d.id_var");
-    stm.bind_out(output_seq++, cur.sqlrec.out_ana_id);
-    stm.bind_out(output_seq++, cur.sqlrec.out_lat);
-    stm.bind_out(output_seq++, cur.sqlrec.out_lon);
-    stm.bind_out(output_seq++, cur.sqlrec.out_ident, sizeof(cur.sqlrec.out_ident), cur.sqlrec.out_ident_ind);
-    stm.bind_out(output_seq++, cur.sqlrec.out_rep_cod);
-    stm.bind_out(output_seq++, cur.sqlrec.out_id_ltr);
-    stm.bind_out(output_seq++, cur.sqlrec.out_varcode);
+    select_station = true;
+    select_varinfo = true;
     /*
     // Abuse id_data and datetime for count and min(datetime)
     stm.bind_out(output_seq++, cur.sqlrec.out_id_data);
@@ -492,7 +478,7 @@ bool QueryBuilder::add_pa_where(const char* tbl)
     {
         sql_where.append_listf("%s.ident=?", tbl);
         TRACE("found ident: adding AND %s.ident = ?.  val is %s\n", tbl, val);
-        stm.bind_in(qargs.input_seq++, val);
+        stm.bind_in(input_seq++, val);
         c.found = true;
     }
     if (const char* val = rec.var_peek_value(WR_VAR(0, 1, 1)))
