@@ -36,6 +36,8 @@ struct Var;
 }
 
 namespace dballe {
+struct Record;
+
 namespace db {
 struct Connection;
 
@@ -78,6 +80,14 @@ public:
      * Export station variables
      */
     virtual void get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
+
+    /**
+     * Add all station variables (without attributes) to rec.
+     *
+     * If the same variable exists in many different networks, the one with the
+     * highest priority will be used.
+     */
+    virtual void add_station_vars(int id_station, Record& rec) = 0;
 
     /**
      * Clear (if applicable) and recreate the table structure in the database

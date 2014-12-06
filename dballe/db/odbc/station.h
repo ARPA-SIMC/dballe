@@ -137,6 +137,7 @@ public:
     int obtain_id(int lat, int lon, const char* ident=NULL, bool* inserted=NULL) override;
 
     void get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
+    void add_station_vars(int id_station, Record& rec) override;
 
     /**
      * Dump the entire contents of the table to an output stream
@@ -153,6 +154,7 @@ class ODBCStation : public v5::ODBCStation
 public:
     ODBCStation(ODBCConnection& conn);
     void get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
+    void add_station_vars(int id_station, Record& rec) override;
 };
 
 }

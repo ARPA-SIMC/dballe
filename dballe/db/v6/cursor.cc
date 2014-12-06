@@ -195,58 +195,7 @@ void Cursor::attr_remove(const AttrList& qcs)
 
 void Cursor::add_station_info(Record& rec)
 {
-    /* Extra variables to add:
-     *
-     * HEIGHT,      B07001  1793
-     * HEIGHT_BARO, B07031  1823
-     * ST_NAME,     B01019   275
-     * BLOCK,       B01001   257
-     * STATION,     B01002   258
-    */
-    const char* query;
-    switch (conn.server_type)
-    {
-        case ServerType::MYSQL:
-            query =
-                "SELECT d.id_var, d.value, ri.prio"
-                "  FROM data d, repinfo ri"
-                " WHERE d.id_lev_tr = -1 AND ri.id = d.id_report AND d.id_station = ?"
-                " GROUP BY d.id_var,ri.id "
-                "HAVING ri.prio=MAX(ri.prio)";
-            break;
-        default:
-            query =
-                "SELECT d.id_var, d.value"
-                "  FROM data d, repinfo ri"
-                " WHERE d.id_lev_tr = -1 AND ri.id = d.id_report AND d.id_station = ?"
-                " AND ri.prio=("
-                "  SELECT MAX(sri.prio) FROM repinfo sri"
-                "    JOIN data sd ON sri.id=sd.id_report"
-                "  WHERE sd.id_station=d.id_station AND sd.id_lev_tr = -1"
-                "    AND sd.id_var=d.id_var)";
-            break;
-    }
-
-    unsigned short st_out_code;
-    char st_out_val[256];
-    SQLLEN st_out_val_ind;
-
-    /* Allocate statement handle */
-    auto stm = conn.odbcstatement();
-
-    /* Bind input fields */
-    stm->bind_in(1, sqlrec.out_ana_id);
-
-    /* Bind output fields */
-    stm->bind_out(1, st_out_code);
-    stm->bind_out(2, st_out_val, sizeof(st_out_val), st_out_val_ind);
-
-    /* Perform the query */
-    stm->exec_direct(query);
-
-    /* Get the results and save them in the record */
-    while (stm->fetch())
-        rec.var(st_out_code).setc(st_out_val);
+    db.station().add_station_vars(sqlrec.out_ana_id, rec);
 }
 
 CursorLinear::CursorLinear(DB& db, unsigned int modifiers)

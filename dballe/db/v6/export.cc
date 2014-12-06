@@ -21,10 +21,9 @@
 
 #include "db.h"
 #include "cursor.h"
-#include "dballe/db/odbc/internals.h"
-#include "dballe/db/modifiers.h"
-#include "dballe/db/v6/internals.h"
 #include "internals.h"
+#include "dballe/db/modifiers.h"
+#include "dballe/db/sql.h"
 
 #include <dballe/msg/msg.h>
 #include <dballe/msg/context.h>

@@ -22,6 +22,7 @@
 #include "station.h"
 #include "dballe/db/odbc/internals.h"
 #include "dballe/core/var.h"
+#include "dballe/core/record.h"
 #include <wreport/var.h>
 #include <sqltypes.h>
 #include <cstring>
@@ -34,49 +35,6 @@ using namespace std;
 namespace dballe {
 namespace db {
 namespace v5 {
-
-#define TABLETYPE "ENGINE=InnoDB;"
-static const char* init_queries_mysql[] = {
-    "CREATE TABLE station ("
-    "   id         INTEGER auto_increment PRIMARY KEY,"
-    "   lat        INTEGER NOT NULL,"
-    "   lon        INTEGER NOT NULL,"
-    "   ident      CHAR(64),"
-    "   UNIQUE INDEX(lat, lon, ident(8)),"
-    "   INDEX(lon)"
-    ") " TABLETYPE,
-};
-static const char* init_queries_postgres[] = {
-    "CREATE TABLE station ("
-    "   id         SERIAL PRIMARY KEY,"
-    "   lat        INTEGER NOT NULL,"
-    "   lon        INTEGER NOT NULL,"
-    "   ident      VARCHAR(64)"
-    ") ",
-    "CREATE UNIQUE INDEX pa_uniq ON station(lat, lon, ident)",
-    "CREATE INDEX pa_lon ON station(lon)",
-};
-static const char* init_queries_sqlite[] = {
-    "CREATE TABLE station ("
-    "   id         INTEGER PRIMARY KEY,"
-    "   lat        INTEGER NOT NULL,"
-    "   lon        INTEGER NOT NULL,"
-    "   ident      CHAR(64),"
-    "   UNIQUE (lat, lon, ident)"
-    ") ",
-    "CREATE INDEX pa_lon ON station(lon)",
-};
-static const char* init_queries_oracle[] = {
-    "CREATE TABLE station ("
-    "   id         INTEGER PRIMARY KEY,"
-    "   lat        INTEGER NOT NULL,"
-    "   lon        INTEGER NOT NULL,"
-    "   ident      VARCHAR2(64),"
-    "   UNIQUE (lat, lon, ident)"
-    ") ",
-    "CREATE INDEX pa_lon ON station(lon)",
-    "CREATE SEQUENCE seq_station",
-};
 
 ODBCStation::ODBCStation(ODBCConnection& conn)
     : conn(conn), seq_station(0), sfstm(0), smstm(0), sstm(0), istm(0), ustm(0), dstm(0)
@@ -325,34 +283,65 @@ void ODBCStation::dump(FILE* out)
     stm->close_cursor();
 }
 
-void Station::reset_db(Connection& conn)
+void ODBCStation::add_station_vars(int id_station, Record& rec)
 {
-    conn.drop_table_if_exists("station");
-    conn.drop_sequence_if_exists("seq_station");
-
-    const char** queries = NULL;
-    unsigned query_count = 0;
+    /* Extra variables to add:
+     *
+     * HEIGHT,      B07001  1793
+     * HEIGHT_BARO, B07031  1823
+     * ST_NAME,     B01019   275
+     * BLOCK,       B01001   257
+     * STATION,     B01002   258
+    */
+    const char* query;
     switch (conn.server_type)
     {
         case ServerType::MYSQL:
-            queries = init_queries_mysql;
-            query_count = sizeof(init_queries_mysql) / sizeof(init_queries_mysql[0]); break;
-        case ServerType::SQLITE:
-            queries = init_queries_sqlite;
-            query_count = sizeof(init_queries_sqlite) / sizeof(init_queries_sqlite[0]); break;
-        case ServerType::ORACLE:
-            queries = init_queries_oracle;
-            query_count = sizeof(init_queries_oracle) / sizeof(init_queries_oracle[0]); break;
-        case ServerType::POSTGRES:
-            queries = init_queries_postgres;
-            query_count = sizeof(init_queries_postgres) / sizeof(init_queries_postgres[0]); break;
+            query =
+                "SELECT d.id_var, d.value, ri.prio"
+                "  FROM context c, data d, repinfo ri"
+                " WHERE c.id = d.id_context AND ri.id = c.id_report AND c.id_ana = ?"
+                "   AND c.datetime = {ts '1000-01-01 00:00:00.000'}"
+                " GROUP BY d.id_var,ri.id "
+                "HAVING ri.prio=MAX(ri.prio)";
+            break;
         default:
-            queries = init_queries_postgres;
-            query_count = sizeof(init_queries_postgres) / sizeof(init_queries_postgres[0]); break;
+            query =
+                "SELECT d.id_var, d.value"
+                "  FROM context c, data d, repinfo ri"
+                " WHERE c.id = d.id_context AND ri.id = c.id_report AND c.id_ana = ?"
+                "   AND c.datetime = {ts '1000-01-01 00:00:00.000'}"
+                " AND ri.prio=("
+                "  SELECT MAX(sri.prio) FROM repinfo sri"
+                "    JOIN context sc ON sri.id=sc.id_report"
+                "    JOIN data sd ON sc.id=sd.id_context"
+                "  WHERE sc.id_ana=c.id_ana"
+                "    AND sc.ltype1=c.ltype1 AND sc.l1=c.l1 AND sc.ltype2=c.ltype2 AND sc.l2=c.l2"
+                "    AND sc.ptype=c.ptype AND sc.p1=c.p1 AND sc.p2=c.p2"
+                "    AND sc.datetime=c.datetime AND sd.id_var=d.id_var)";
+            break;
     }
-    /* Create tables */
-    for (unsigned i = 0; i < query_count; i++)
-        conn.exec(queries[i]);
+
+    unsigned short st_out_code;
+    char st_out_val[256];
+    SQLLEN st_out_val_ind;
+
+    /* Allocate statement handle */
+    auto stm = conn.odbcstatement();
+
+    /* Bind input fields */
+    stm->bind_in(1, id_station);
+
+    /* Bind output fields */
+    stm->bind_out(1, st_out_code);
+    stm->bind_out(2, st_out_val, sizeof(st_out_val), st_out_val_ind);
+
+    /* Perform the query */
+    stm->exec_direct(query);
+
+    /* Get the results and save them in the record */
+    while (stm->fetch())
+        rec.var(st_out_code).setc(st_out_val);
 }
 
 }
@@ -427,6 +416,46 @@ void ODBCStation::get_station_vars(int id_station, int id_report, std::function<
         TRACE("fill_ana_layer inserting leftover old var B%02d%03d\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()));
         dest(move(var));
     }
+}
+
+void ODBCStation::add_station_vars(int id_station, Record& rec)
+{
+    const char* query;
+    switch (conn.server_type)
+    {
+        case ServerType::MYSQL:
+            query =
+                "SELECT d.id_var, d.value, ri.prio"
+                "  FROM data d, repinfo ri"
+                " WHERE d.id_lev_tr = -1 AND ri.id = d.id_report AND d.id_station = ?"
+                " GROUP BY d.id_var,ri.id "
+                "HAVING ri.prio=MAX(ri.prio)";
+            break;
+        default:
+            query =
+                "SELECT d.id_var, d.value"
+                "  FROM data d, repinfo ri"
+                " WHERE d.id_lev_tr = -1 AND ri.id = d.id_report AND d.id_station = ?"
+                " AND ri.prio=("
+                "  SELECT MAX(sri.prio) FROM repinfo sri"
+                "    JOIN data sd ON sri.id=sd.id_report"
+                "  WHERE sd.id_station=d.id_station AND sd.id_lev_tr = -1"
+                "    AND sd.id_var=d.id_var)";
+            break;
+    }
+
+    unsigned short st_out_code;
+    char st_out_val[256];
+    SQLLEN st_out_val_ind;
+
+    auto stm = conn.odbcstatement();
+    stm->bind_in(1, id_station);
+    stm->bind_out(1, st_out_code);
+    stm->bind_out(2, st_out_val, sizeof(st_out_val), st_out_val_ind);
+
+    stm->exec_direct(query);
+    while (stm->fetch())
+        rec.var(st_out_code).setc(st_out_val);
 }
 
 }
