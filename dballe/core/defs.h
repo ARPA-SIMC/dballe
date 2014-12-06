@@ -218,7 +218,7 @@ struct Date
     unsigned char month;
     unsigned char day;
 
-    Date() : year(MISSING_INT), month(MISSING_INT), day(MISSING_INT) {}
+    Date() : year(0xffff), month(0xff), day(0xff) {}
     Date(unsigned short year, unsigned char month=1, unsigned char day=1)
         : year(year), month(month), day(day)
     {
@@ -257,7 +257,7 @@ struct Time
     unsigned char minute;
     unsigned char second;
 
-    Time() : hour(MISSING_INT), minute(MISSING_INT), second(MISSING_INT) {}
+    Time() : hour(0xff), minute(0xff), second(0xff) {}
     Time(unsigned char hour, unsigned char minute=0, unsigned char second=0)
         : hour(hour), minute(minute), second(second) {}
     Time(const Time& d) : hour(d.hour), minute(d.minute), second(d.second) {}
