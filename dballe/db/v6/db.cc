@@ -35,8 +35,6 @@
 #include <limits.h>
 #include <unistd.h>
 
-#include <sql.h>
-
 using namespace std;
 using namespace wreport;
 

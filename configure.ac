@@ -138,6 +138,9 @@ dnl Check for wreport
 PKG_CHECK_MODULES(WREPORT,libwreport >= 2.11)
 PKG_CHECK_EXISTS([libwreport-test >= 2.11], [have_wreport_test=yes], [have_wreport_test=no])
 
+dnl Check for sqlite3
+PKG_CHECK_MODULES(SQLITE3, sqlite3)
+
 dnl Check for unixodbc
 have_odbc=yes
 AC_CHECK_HEADER(sql.h, AC_DEFINE(HAVE_ODBC_H, 1, sql.h (part of unixodbc) has been found),

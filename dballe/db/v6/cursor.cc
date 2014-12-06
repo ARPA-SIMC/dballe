@@ -29,7 +29,6 @@
 #include <dballe/core/defs.h>
 #include <dballe/core/record.h>
 
-#include <sql.h>
 #include <cstdio>
 #include <cstring>
 

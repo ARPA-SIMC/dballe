@@ -33,8 +33,6 @@
 #include <cstring>
 #include <iostream>
 
-#include <sql.h>
-
 using namespace wreport;
 using namespace std;
 

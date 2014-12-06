@@ -25,7 +25,6 @@
 #include "dballe/db/modifiers.h"
 #include "dballe/db/v6/internals.h"
 #include <wreport/var.h>
-#include <sql.h>
 #include <regex.h>
 #include <cstring>
 #include <cstdlib>

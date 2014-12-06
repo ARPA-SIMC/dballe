@@ -6,6 +6,6 @@ includedir=@includedir@
 Name: libdballe
 Description: DB-All.e C library
 Version: @VERSION@
-Requires: libwreport >= 1.0
+Requires: libwreport >= 1.0, sqlite3
 Cflags: -I${includedir}
 Libs: -L${libdir} -ldballe

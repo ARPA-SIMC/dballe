@@ -3,7 +3,7 @@
 EXTRA_DIST=
 CLEANFILES=
 
-AM_CPPFLAGS = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) -I$(top_builddir) $(WREPORT_CFLAGS) $(LUA_CFLAGS)
+AM_CPPFLAGS = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) -I$(top_builddir) $(WREPORT_CFLAGS) $(SQLITE3_CFLAGS) $(LUA_CFLAGS)
 
 #
 # Autobuilt files
@@ -86,7 +86,13 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/mem/repinfo.h \
 	db/mem/cursor.h \
 	db/mem/db.h \
+	db/querybuf.h \
+	db/sql.h \
+	db/sqlite/internals.h \
 	db/v6/internals.h \
+	db/v6/db.h \
+	db/v6/cursor.h \
+	db/v6/qbuilder.h \
 	cmdline/cmdline.h \
 	cmdline/conversion.h \
 	cmdline/processor.h \
@@ -97,8 +103,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	simple/msgapi.h
 if HAVE_ODBC
 nobase_dist_dballeinclude_HEADERS += \
-	db/querybuf.h \
-	db/sql.h \
 	db/odbc/internals.h \
 	db/odbc/repinfo.h \
 	db/odbc/station.h \
@@ -112,10 +116,7 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/v5/data.h \
 	db/v5/db.h \
 	db/v5/repinfo.h \
-	db/v5/station.h \
-	db/v6/db.h \
-	db/v6/cursor.h \
-	db/v6/qbuilder.h
+	db/v5/station.h
 endif
 
 lib_LTLIBRARIES = libdballe.la
@@ -180,10 +181,18 @@ libdballe_la_SOURCES = \
 	msg/wr_exporters/pollution.cc \
 	db/modifiers.cc \
 	db/db.cc \
+	db/querybuf.cc \
+	db/sql.cc \
+	db/sqlite/internals.cc \
 	db/mem/repinfo.cc \
 	db/mem/cursor.cc \
 	db/mem/db.cc \
 	db/v6/internals.cc \
+	db/v6/db.cc \
+	db/v6/cursor.cc \
+	db/v6/qbuilder.cc \
+	db/v6/import.cc \
+	db/v6/export.cc \
 	cmdline/cmdline.cc \
 	cmdline/processor.cc \
 	cmdline/conversion.cc \
@@ -195,8 +204,6 @@ libdballe_la_SOURCES = \
 
 if HAVE_ODBC
 libdballe_la_SOURCES += \
-	db/querybuf.cc \
-	db/sql.cc \
 	db/odbc/internals.cc \
 	db/odbc/repinfo.cc \
 	db/odbc/station.cc \
@@ -212,15 +219,10 @@ libdballe_la_SOURCES += \
 	db/v5/cursor.cc \
 	db/v5/db.cc \
 	db/v5/import.cc \
-	db/v5/export.cc \
-	db/v6/db.cc \
-	db/v6/cursor.cc \
-	db/v6/qbuilder.cc \
-	db/v6/import.cc \
-	db/v6/export.cc
+	db/v5/export.cc
 endif
 
-libdballe_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(WREPORT_LIBS) $(LUA_LIBS)
+libdballe_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(WREPORT_LIBS) $(SQLITE3_LIBS) $(LUA_LIBS)
 #libdballe_la_LDFLAGS = -lstdc++ -version-info @LIBDBALLE_VERSION_INFO@
 
 # filter.cc and sat.cc are here for now until I manage to turn them into a working system
@@ -296,6 +298,8 @@ tut_test_SOURCES = \
 	msg/tests/wr_codec_generic.cc \
 	db/test-utils-db.cc \
 	db/modifiers-tut.cc \
+	db/querybuf-tut.cc \
+	db/sqlite/internals-tut.cc \
 	db/db-basic-tut.cc \
 	db/db-misc-tut.cc \
 	db/db-station-query-tut.cc \
@@ -306,6 +310,10 @@ tut_test_SOURCES = \
 	db/mem/repinfo-tut.cc \
 	db/mem/cursor-tut.cc \
 	db/mem/db-tut.cc \
+	db/v6/tests/lev_tr.cc \
+	db/v6/tests/data.cc \
+	db/v6/tests/attr.cc \
+	db/v6/tests/db.cc
 	simple/msgapi-tut.cc \
 	cmdline/dbadb-tut.cc \
 	simple/dbapi-tut.cc
@@ -316,25 +324,21 @@ tut_test_SOURCES += \
 endif
 if HAVE_ODBC
 tut_test_SOURCES += \
-	db/tests/querybuf.cc \
-	db/tests/internals.cc \
-	db/tests/sqlite.cc \
+	db/odbc/internals-tut.cc \
+	db/odbc/sqlite-tut.cc \
 	db/v5/tests/repinfo.cc \
 	db/v5/tests/station.cc \
 	db/v5/tests/context.cc \
 	db/v5/tests/data.cc \
 	db/v5/tests/attr.cc \
-	db/v5/tests/db.cc \
-	db/v6/tests/lev_tr.cc \
-	db/v6/tests/data.cc \
-	db/v6/tests/attr.cc \
-	db/v6/tests/db.cc
+	db/v5/tests/db.cc
 endif
 
 tut_test_LDADD = \
 	libdballe.la \
 	$(WREPORT_LIBS) \
 	$(WREPORT_TEST_LIBS) \
+	$(SQLITE3_LIBS) \
 	$(LUA_LIBS) \
 	$(WIBBLE_LIBS)
 
@@ -349,6 +353,7 @@ dump_core_info_SOURCES = core/dump-core-info.cc
 dump_core_info_LDADD = \
 	libdballe.la \
 	$(WREPORT_LIBS) \
+	$(SQLITE3_LIBS) \
 	$(LUA_LIBS)
 
 # core
