@@ -21,10 +21,10 @@
 
 #include "internals.h"
 
-#if 0
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
+#if 0
 #include <cstring>
 #include <cstdlib>
 #include <limits.h>
@@ -42,11 +42,23 @@ using namespace wreport;
 namespace dballe {
 namespace db {
 
+namespace {
+
+}
+
+
 error_sqlite::error_sqlite(sqlite3* db, const std::string& msg)
 {
     this->msg = msg;
     this->msg += ":";
     this->msg += sqlite3_errmsg(db);
+}
+
+error_sqlite::error_sqlite(const std::string& dbmsg, const std::string& msg)
+{
+    this->msg = msg;
+    this->msg += ":";
+    this->msg += dbmsg;
 }
 
 void error_sqlite::throwf(sqlite3* db, const char* fmt, ...)
@@ -64,220 +76,146 @@ void error_sqlite::throwf(sqlite3* db, const char* fmt, ...)
     throw error_sqlite(db, msg);
 }
 
-#if 0
-ODBCConnection::ODBCConnection()
-    : connected(false), server_quirks(0), stm_last_insert_id(0)
+SQLiteConnection::SQLiteConnection()
 {
-    /* Allocate the ODBC connection handle */
-    Environment& env = Environment::get();
-    int sqlres = SQLAllocHandle(SQL_HANDLE_DBC, env.od_env, &od_conn);
-    if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-        throw error_odbc(SQL_HANDLE_DBC, od_conn, "Allocating new connection handle");
 }
 
-ODBCConnection::~ODBCConnection()
+SQLiteConnection::~SQLiteConnection()
 {
-    if (stm_last_insert_id) delete stm_last_insert_id;
-    if (connected)
+    if (db) sqlite3_close(db);
+}
+
+void SQLiteConnection::open_file(const std::string& pathname, int flags)
+{
+    int res = sqlite3_open_v2(pathname.c_str(), &db, flags, nullptr);
+    if (res != SQLITE_OK)
     {
-        int sqlres = SQLEndTran(SQL_HANDLE_DBC, od_conn, SQL_ROLLBACK);
-        if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-            verbose_odbc_error(SQL_HANDLE_DBC, od_conn, "Cannot close existing transactions");
-
-        sqlres = SQLDisconnect(od_conn);
-        if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-            verbose_odbc_error(SQL_HANDLE_DBC, od_conn, "Cannot disconnect from database");
+        // From http://www.sqlite.org/c3ref/open.html
+        // Whether or not an error occurs when it is opened, resources
+        // associated with the database connection handle should be
+        // released by passing it to sqlite3_close() when it is no longer
+        // required.
+        std::string errmsg(sqlite3_errmsg(db));
+        sqlite3_close(db);
+        db = nullptr;
+        throw error_sqlite(errmsg, "opening " + pathname);
     }
-    int sqlres = SQLFreeHandle(SQL_HANDLE_DBC, od_conn);
-    if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-        verbose_odbc_error(SQL_HANDLE_DBC, od_conn, "Cannot free handle");
-}
-
-void ODBCConnection::connect(const char* dsn, const char* user, const char* password)
-{
-    /* Connect to the DSN */
-    int sqlres = SQLConnect(od_conn,
-                (SQLCHAR*)dsn, SQL_NTS,
-                (SQLCHAR*)user, SQL_NTS,
-                (SQLCHAR*)(password == NULL ? "" : password), SQL_NTS);
-    if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-        error_odbc::throwf(SQL_HANDLE_DBC, od_conn, "Connecting to DSN %s as user %s", dsn, user);
     init_after_connect();
 }
 
-void ODBCConnection::connect_file(const std::string& fname)
+void SQLiteConnection::open_memory(int flags)
 {
-    // Access sqlite file directly
-    string buf;
-    if (fname[0] != '/')
+    open_file(":memory:", flags);
+}
+
+void SQLiteConnection::open_private_file(int flags)
+{
+    open_file("", flags);
+}
+
+void SQLiteConnection::init_after_connect()
+{
+    server_type = ServerType::SQLITE;
+    // autocommit is off by default when inside a transaction
+    // set_autocommit(false);
+}
+
+void SQLiteConnection::wrap_sqlite3_exec(const std::string& query)
+{
+    char* errmsg;
+    int res = sqlite3_exec(db, query.c_str(), nullptr, nullptr, &errmsg);
+    if (res != SQLITE_OK && errmsg)
     {
-        char cwd[PATH_MAX];
-        buf = "Driver=SQLite3;Database=";
-        buf += getcwd(cwd, PATH_MAX);
-        buf += "/";
-        buf += fname;
-        buf += ";";
+        // http://www.sqlite.org/c3ref/exec.html
+        //
+        // If the 5th parameter to sqlite3_exec() is not NULL then any error
+        // message is written into memory obtained from sqlite3_malloc() and
+        // passed back through the 5th parameter. To avoid memory leaks, the
+        // application should invoke sqlite3_free() on error message strings
+        // returned through the 5th parameter of of sqlite3_exec() after the
+        // error message string is no longer needed.·
+        std::string msg(errmsg);
+        sqlite3_free(errmsg);
+        throw error_sqlite(errmsg, "executing " + query);
     }
-    else
+}
+
+void SQLiteConnection::wrap_sqlite3_exec_nothrow(const std::string& query) noexcept
+{
+    char* errmsg;
+    int res = sqlite3_exec(db, query.c_str(), nullptr, nullptr, &errmsg);
+    if (res != SQLITE_OK && errmsg)
     {
-        buf = "Driver=SQLite3;Database=";
-        buf += fname;
-        buf += ";";
+        // http://www.sqlite.org/c3ref/exec.html
+        //
+        // If the 5th parameter to sqlite3_exec() is not NULL then any error
+        // message is written into memory obtained from sqlite3_malloc() and
+        // passed back through the 5th parameter. To avoid memory leaks, the
+        // application should invoke sqlite3_free() on error message strings
+        // returned through the 5th parameter of of sqlite3_exec() after the
+        // error message string is no longer needed.·
+        fprintf(stderr, "cannot execute '%s': %s\n", query.c_str(), errmsg);
+        sqlite3_free(errmsg);
     }
-    driver_connect(buf.c_str());
 }
 
-void ODBCConnection::driver_connect(const char* config)
+struct SQLiteTransaction : public Transaction
 {
-    /* Connect to the DSN */
-    char sdcout[1024];
-    SQLSMALLINT outlen;
-    int sqlres = SQLDriverConnect(od_conn, NULL,
-                    (SQLCHAR*)config, SQL_NTS,
-                    (SQLCHAR*)sdcout, 1024, &outlen,
-                    SQL_DRIVER_NOPROMPT);
-
-    if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-        error_odbc::throwf(SQL_HANDLE_DBC, od_conn, "Connecting to DB using configuration %s", config);
-    init_after_connect();
-}
-
-void ODBCConnection::init_after_connect()
-{
-    /* Find out what kind of database we are working with */
-    string name = driver_name();
-
-    if (name.substr(0, 9) == "libmyodbc" || name.substr(0, 6) == "myodbc")
-    {
-        server_type = ServerType::MYSQL;
-        // MariaDB in at least one version returns 0 for rowcount in SQL_DIAG_CURSOR_ROW_COUNT
-        server_quirks = DBA_DB_QUIRK_NO_ROWCOUNT_IN_DIAG;
-    }
-    else if (name.substr(0, 6) == "sqlite")
-    {
-        string version = driver_version();
-        server_type = ServerType::SQLITE;
-        if (version < "0.99")
-            server_quirks = DBA_DB_QUIRK_NO_ROWCOUNT_IN_DIAG;
-    }
-    else if (name.substr(0, 5) == "SQORA")
-        server_type = ServerType::ORACLE;
-    else if (name.substr(0, 11) == "libpsqlodbc" || name.substr(0, 8) == "psqlodbc")
-        server_type = ServerType::POSTGRES;
-    else
-    {
-        fprintf(stderr, "ODBC driver %s is unsupported: assuming it's similar to Postgres", name.c_str());
-        server_type = ServerType::POSTGRES;
-    }
-
-    connected = true;
-
-    IFTRACE {
-        SQLINTEGER v;
-        get_info(SQL_DYNAMIC_CURSOR_ATTRIBUTES2, v);
-        if (v & SQL_CA2_CRC_EXACT) TRACE("SQL_DYNAMIC_CURSOR_ATTRIBUTES2 SQL_CA2_CRC_EXACT\n");
-        if (v & SQL_CA2_CRC_APPROXIMATE) TRACE("SQL_DYNAMIC_CURSOR_ATTRIBUTES2 SQL_CA2_CRC_APPROXIMATE\n");
-        get_info(SQL_FORWARD_ONLY_CURSOR_ATTRIBUTES2, v);
-        if (v & SQL_CA2_CRC_EXACT) TRACE("SQL_FORWARD_ONLY_CURSOR_ATTRIBUTES2 SQL_CA2_CRC_EXACT\n");
-        if (v & SQL_CA2_CRC_APPROXIMATE) TRACE("SQL_FORWARD_ONLY_CURSOR_ATTRIBUTES2 SQL_CA2_CRC_APPROXIMATE\n");
-
-        get_info(SQL_KEYSET_CURSOR_ATTRIBUTES2, v);
-        if (v & SQL_CA2_CRC_EXACT) TRACE("SQL_KEYSET_CURSOR_ATTRIBUTES2, SQL_CA2_CRC_EXACT\n");
-        if (v & SQL_CA2_CRC_APPROXIMATE) TRACE("SQL_KEYSET_CURSOR_ATTRIBUTES2, SQL_CA2_CRC_APPROXIMATE\n");
-        get_info(SQL_STATIC_CURSOR_ATTRIBUTES2, v);
-        if (v & SQL_CA2_CRC_EXACT) TRACE("SQL_STATIC_CURSOR_ATTRIBUTES2, SQL_CA2_CRC_EXACT\n");
-        if (v & SQL_CA2_CRC_APPROXIMATE) TRACE("SQL_STATIC_CURSOR_ATTRIBUTES2, SQL_CA2_CRC_APPROXIMATE\n");
-    }
-
-    set_autocommit(false);
-}
-
-std::string ODBCConnection::driver_name()
-{
-    char drivername[50];
-    SQLSMALLINT len;
-    int sqlres = SQLGetInfo(od_conn, SQL_DRIVER_NAME, (SQLPOINTER)drivername, 50, &len);
-    if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-        throw error_odbc(SQL_HANDLE_DBC, od_conn, "Getting ODBC driver name");
-    return string(drivername, len);
-}
-
-std::string ODBCConnection::driver_version()
-{
-    char driverver[50];
-    SQLSMALLINT len;
-    int sqlres = SQLGetInfo(od_conn, SQL_DRIVER_VER, (SQLPOINTER)driverver, 50, &len);
-    if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-        throw error_odbc(SQL_HANDLE_DBC, od_conn, "Getting ODBC driver version");
-    return string(driverver, len);
-}
-
-void ODBCConnection::get_info(SQLUSMALLINT info_type, SQLINTEGER& res)
-{
-    int sqlres = SQLGetInfo(od_conn, info_type, &res, 0, 0);
-    if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-        throw error_odbc(SQL_HANDLE_DBC, od_conn, "Getting ODBC driver information");
-}
-
-void ODBCConnection::set_autocommit(bool val)
-{
-    int sqlres = SQLSetConnectAttr(od_conn, SQL_ATTR_AUTOCOMMIT, (void*)(val ? SQL_AUTOCOMMIT_ON : SQL_AUTOCOMMIT_OFF), 0);
-    if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-        error_odbc::throwf(SQL_HANDLE_DBC, od_conn, "%s ODBC autocommit", val ? "Enabling" : "Disabling");
-}
-
-struct ODBCTransaction : public Transaction
-{
-    SQLHDBC od_conn;
+    SQLiteConnection& conn;
     bool fired = false;
 
-    ODBCTransaction(SQLHDBC conn) : od_conn(conn) {}
-    ~ODBCTransaction() { if (!fired) rollback(); }
+    SQLiteTransaction(SQLiteConnection& conn) : conn(conn)
+    {
+    }
+    ~SQLiteTransaction() { if (!fired) rollback_nothrow(); }
 
     void commit() override
     {
-        int sqlres = SQLEndTran(SQL_HANDLE_DBC, od_conn, SQL_COMMIT);
-        if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-            throw error_odbc(SQL_HANDLE_DBC, od_conn, "Committing a transaction");
+        conn.wrap_sqlite3_exec("COMMIT");
         fired = true;
     }
     void rollback() override
     {
-        int sqlres = SQLEndTran(SQL_HANDLE_DBC, od_conn, SQL_ROLLBACK);
-        if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-            throw error_odbc(SQL_HANDLE_DBC, od_conn, "Rolling back a transaction");
+        conn.wrap_sqlite3_exec("ROLLBACK");
+        fired = true;
+    }
+    void rollback_nothrow()
+    {
+        conn.wrap_sqlite3_exec_nothrow("ROLLBACK");
         fired = true;
     }
 };
 
-std::unique_ptr<Transaction> ODBCConnection::transaction()
+std::unique_ptr<Transaction> SQLiteConnection::transaction()
 {
-    return unique_ptr<Transaction>(new ODBCTransaction(od_conn));
+    wrap_sqlite3_exec("BEGIN");
+    return unique_ptr<Transaction>(new SQLiteTransaction(*this));
 }
 
-std::unique_ptr<Statement> ODBCConnection::statement()
+std::unique_ptr<Statement> SQLiteConnection::statement()
 {
-    return unique_ptr<Statement>(new ODBCStatement(*this));
+#if 0
+    return unique_ptr<Statement>(new SQLiteStatement(*this));
+#endif
 }
 
-std::unique_ptr<ODBCStatement> ODBCConnection::odbcstatement()
+std::unique_ptr<SQLiteStatement> SQLiteConnection::sqlitestatement()
 {
-    return unique_ptr<ODBCStatement>(new ODBCStatement(*this));
+#if 0
+    return unique_ptr<SQLiteStatement>(new SQLiteStatement(*this));
+#endif
 }
 
-void ODBCConnection::impl_exec_noargs(const std::string& query)
+void SQLiteConnection::impl_exec_noargs(const std::string& query)
 {
-    ODBCStatement stm(*this);
-    stm.exec_direct_and_close(query.c_str());
+    wrap_sqlite3_exec(query);
 }
 
-#define DBA_ODBC_MISSING_TABLE_POSTGRES "42P01"
-#define DBA_ODBC_MISSING_TABLE_MYSQL "42S01"
 #define DBA_ODBC_MISSING_TABLE_SQLITE "HY000"
-#define DBA_ODBC_MISSING_TABLE_ORACLE "42S02"
 
-void ODBCConnection::drop_table_if_exists(const char* name)
+void SQLiteConnection::drop_table_if_exists(const char* name)
 {
+#if 0
     switch (server_type)
     {
         case ServerType::MYSQL:
@@ -296,12 +234,12 @@ void ODBCConnection::drop_table_if_exists(const char* name)
             break;
         }
     }
+#endif
 }
 
-#define DBA_ODBC_MISSING_SEQUENCE_ORACLE "HY000"
-#define DBA_ODBC_MISSING_SEQUENCE_POSTGRES "42P01"
-void ODBCConnection::drop_sequence_if_exists(const char* name)
+void SQLiteConnection::drop_sequence_if_exists(const char* name)
 {
+#if 0
     switch (server_type)
     {
         case ServerType::POSTGRES:
@@ -320,10 +258,12 @@ void ODBCConnection::drop_sequence_if_exists(const char* name)
         default:
             break;
     }
+#endif
 }
 
-int ODBCConnection::get_last_insert_id()
+int SQLiteConnection::get_last_insert_id()
 {
+#if 0
     // Compile the query on demand
     if (!stm_last_insert_id)
     {
@@ -353,10 +293,12 @@ int ODBCConnection::get_last_insert_id()
     if (!stm_last_insert_id->fetch_expecting_one())
         throw error_consistency("no last insert ID value returned from database");
     return m_last_insert_id;
+#endif
 }
 
-bool ODBCConnection::has_table(const std::string& name)
+bool SQLiteConnection::has_table(const std::string& name)
 {
+#if 0
     auto stm = odbcstatement();
     int count;
 
@@ -386,10 +328,12 @@ bool ODBCConnection::has_table(const std::string& name)
     stm->execute();
     stm->fetch_expecting_one();
     return count > 0;
+#endif
 }
 
-std::string ODBCConnection::get_setting(const std::string& key)
+std::string SQLiteConnection::get_setting(const std::string& key)
 {
+#if 0
     if (!has_table("dballe_settings"))
         return string();
 
@@ -412,10 +356,12 @@ std::string ODBCConnection::get_setting(const std::string& key)
     if (n != string::npos)
         res.erase(n+1);
     return res;
+#endif
 }
 
-void ODBCConnection::set_setting(const std::string& key, const std::string& value)
+void SQLiteConnection::set_setting(const std::string& key, const std::string& value)
 {
+#if 0
     auto stm = odbcstatement();
 
     if (!has_table("dballe_settings"))
@@ -444,29 +390,37 @@ void ODBCConnection::set_setting(const std::string& key, const std::string& valu
     stm->bind_in(1, key.data(), key_size);
     stm->bind_in(2, value.data(), value_size);
     stm->execute_and_close();
+#endif
 }
 
-void ODBCConnection::drop_settings()
+void SQLiteConnection::drop_settings()
 {
+#if 0
     drop_table_if_exists("dballe_settings");
+#endif
 }
 
-void ODBCConnection::add_datetime(Querybuf& qb, const int* dt) const
+void SQLiteConnection::add_datetime(Querybuf& qb, const int* dt) const
 {
+#if 0
     qb.appendf("{ts '%04d-%02d-%02d %02d:%02d:%02d'}", dt[0], dt[1], dt[2], dt[3], dt[4], dt[5]);
+#endif
 }
 
 
-ODBCStatement::ODBCStatement(ODBCConnection& conn)
+SQLiteStatement::SQLiteStatement(SQLiteConnection& conn)
     : conn(conn)
 {
+#if 0
     int sqlres = SQLAllocHandle(SQL_HANDLE_STMT, conn.od_conn, &stm);
     if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
         throw error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
+#endif
 }
 
-ODBCStatement::~ODBCStatement()
+SQLiteStatement::~SQLiteStatement()
 {
+#if 0
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     if (!debug_reached_completion)
     {
@@ -477,8 +431,10 @@ ODBCStatement::~ODBCStatement()
     }
 #endif
     SQLFreeHandle(SQL_HANDLE_STMT, stm);
+#endif
 }
 
+#if 0
 bool ODBCStatement::error_is_ignored()
 {
     if (!ignore_error) return false;
@@ -500,52 +456,70 @@ bool ODBCStatement::is_error(int sqlres)
         && (sqlres != SQL_NO_DATA)
         && !error_is_ignored();
 }
+#endif
 
-void ODBCStatement::bind_in(int idx, const int& val)
+void SQLiteStatement::bind_in(int idx, const int& val)
 {
+#if 0
     // cast away const because the ODBC API is not const-aware
     SQLBindParameter(stm, idx, SQL_PARAM_INPUT, get_odbc_integer_type<true, sizeof(const int)>(), SQL_INTEGER, 0, 0, (int*)&val, 0, 0);
+#endif
 }
-void ODBCStatement::bind_in(int idx, const int& val, const SQLLEN& ind)
+#if 0
+void SQLiteStatement::bind_in(int idx, const int& val, const SQLLEN& ind)
 {
     // cast away const because the ODBC API is not const-aware
     SQLBindParameter(stm, idx, SQL_PARAM_INPUT, get_odbc_integer_type<true, sizeof(const int)>(), SQL_INTEGER, 0, 0, (int*)&val, 0, (SQLLEN*)&ind);
 }
+#endif
 
-void ODBCStatement::bind_in(int idx, const unsigned& val)
+void SQLiteStatement::bind_in(int idx, const unsigned& val)
 {
+#if 0
     // cast away const because the ODBC API is not const-aware
     SQLBindParameter(stm, idx, SQL_PARAM_INPUT, get_odbc_integer_type<false, sizeof(const unsigned)>(), SQL_INTEGER, 0, 0, (unsigned*)&val, 0, 0);
+#endif
 }
-void ODBCStatement::bind_in(int idx, const unsigned& val, const SQLLEN& ind)
+#if 0
+void SQLiteStatement::bind_in(int idx, const unsigned& val, const SQLLEN& ind)
 {
     // cast away const because the ODBC API is not const-aware
     SQLBindParameter(stm, idx, SQL_PARAM_INPUT, get_odbc_integer_type<false, sizeof(const unsigned)>(), SQL_INTEGER, 0, 0, (unsigned*)&val, 0, (SQLLEN*)&ind);
 }
+#endif
 
-void ODBCStatement::bind_in(int idx, const unsigned short& val)
+void SQLiteStatement::bind_in(int idx, const unsigned short& val)
 {
+#if 0
     // cast away const because the ODBC API is not const-aware
     SQLBindParameter(stm, idx, SQL_PARAM_INPUT, get_odbc_integer_type<false, sizeof(const unsigned short)>(), SQL_INTEGER, 0, 0, (unsigned short*)&val, 0, 0);
+#endif
 }
-void ODBCStatement::bind_in(int idx, const unsigned short& val, const SQLLEN& ind)
+#if 0
+void SQLiteStatement::bind_in(int idx, const unsigned short& val, const SQLLEN& ind)
 {
     // cast away const because the ODBC API is not const-aware
     SQLBindParameter(stm, idx, SQL_PARAM_INPUT, get_odbc_integer_type<false, sizeof(const unsigned short)>(), SQL_INTEGER, 0, 0, (unsigned short*)&val, 0, (SQLLEN*)&ind);
 }
+#endif
 
-void ODBCStatement::bind_in(int idx, const char* val)
+void SQLiteStatement::bind_in(int idx, const char* val)
 {
+#if 0
     // cast away const because the ODBC API is not const-aware
     SQLBindParameter(stm, idx, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)val, 0, 0);
+#endif
 }
-void ODBCStatement::bind_in(int idx, const char* val, const SQLLEN& ind)
+#if 0
+void SQLiteStatement::bind_in(int idx, const char* val, const SQLLEN& ind)
 {
     // cast away const because the ODBC API is not const-aware
     SQLBindParameter(stm, idx, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)val, 0, (SQLLEN*)&ind);
 }
+#endif
 
-void ODBCStatement::bind_in(int idx, const SQL_TIMESTAMP_STRUCT& val)
+#if 0
+void SQLiteStatement::bind_in(int idx, const SQL_TIMESTAMP_STRUCT& val)
 {
     // cast away const because the ODBC API is not const-aware
     //if (conn.server_type == POSTGRES || conn.server_type == SQLITE)
@@ -553,52 +527,9 @@ void ODBCStatement::bind_in(int idx, const SQL_TIMESTAMP_STRUCT& val)
     //else
         //SQLBindParameter(stm, idx, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_DATETIME, 0, 0, (SQL_TIMESTAMP_STRUCT*)&val, 0, 0);
 }
+#endif
 
-void ODBCStatement::bind_out(int idx, int& val)
-{
-    SQLBindCol(stm, idx, get_odbc_integer_type<true, sizeof(int)>(), &val, sizeof(val), 0);
-}
-void ODBCStatement::bind_out(int idx, int& val, SQLLEN& ind)
-{
-    SQLBindCol(stm, idx, get_odbc_integer_type<true, sizeof(int)>(), &val, sizeof(val), &ind);
-}
-
-void ODBCStatement::bind_out(int idx, unsigned& val)
-{
-    SQLBindCol(stm, idx, get_odbc_integer_type<false, sizeof(int)>(), &val, sizeof(val), 0);
-}
-void ODBCStatement::bind_out(int idx, unsigned& val, SQLLEN& ind)
-{
-    SQLBindCol(stm, idx, get_odbc_integer_type<false, sizeof(int)>(), &val, sizeof(val), &ind);
-}
-
-void ODBCStatement::bind_out(int idx, unsigned short& val)
-{
-    SQLBindCol(stm, idx, SQL_C_USHORT, &val, sizeof(val), 0);
-}
-void ODBCStatement::bind_out(int idx, unsigned short& val, SQLLEN& ind)
-{
-    SQLBindCol(stm, idx, SQL_C_USHORT, &val, sizeof(val), &ind);
-}
-
-void ODBCStatement::bind_out(int idx, char* val, SQLLEN buflen)
-{
-    SQLBindCol(stm, idx, SQL_C_CHAR, val, buflen, 0);
-}
-void ODBCStatement::bind_out(int idx, char* val, SQLLEN buflen, SQLLEN& ind)
-{
-    SQLBindCol(stm, idx, SQL_C_CHAR, val, buflen, &ind);
-}
-
-void ODBCStatement::bind_out(int idx, SQL_TIMESTAMP_STRUCT& val)
-{
-    SQLBindCol(stm, idx, SQL_C_TYPE_TIMESTAMP, &val, sizeof(val), 0);
-}
-void ODBCStatement::bind_out(int idx, SQL_TIMESTAMP_STRUCT& val, SQLLEN& ind)
-{
-    SQLBindCol(stm, idx, SQL_C_TYPE_TIMESTAMP, &val, sizeof(val), &ind);
-}
-
+#if 0
 bool ODBCStatement::fetch()
 {
     int sqlres = SQLFetch(stm);
@@ -649,15 +580,19 @@ size_t ODBCStatement::rowcount()
         throw error_odbc(SQL_HANDLE_STMT, stm, "reading row count");
     return res;
 }
+#endif
 
-void ODBCStatement::set_cursor_forward_only()
+void SQLiteStatement::set_cursor_forward_only()
 {
+#if 0
     int sqlres = SQLSetStmtAttr(stm, SQL_ATTR_CURSOR_TYPE,
         (SQLPOINTER)SQL_CURSOR_FORWARD_ONLY, SQL_IS_INTEGER);
     if (is_error(sqlres))
         throw error_odbc(SQL_HANDLE_STMT, stm, "setting SQL_CURSOR_FORWARD_ONLY");
+#endif
 }
 
+#if 0
 void ODBCStatement::set_cursor_static()
 {
     int sqlres = SQLSetStmtAttr(stm, SQL_ATTR_CURSOR_TYPE,
@@ -676,7 +611,7 @@ void ODBCStatement::close_cursor()
 #endif
 }
 
-void ODBCStatement::prepare(const char* query)
+void SQLiteStatement::prepare(const char* query)
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     if (!debug_reached_completion)
@@ -703,12 +638,16 @@ void ODBCStatement::prepare(const char* query, int qlen)
     if (is_error(SQLPrepare(stm, (unsigned char*)query, qlen)))
         error_odbc::throwf(SQL_HANDLE_STMT, stm, "compiling query \"%.*s\"", qlen, query);
 }
+#endif
 
-void ODBCStatement::prepare(const std::string& query)
+void SQLiteStatement::prepare(const std::string& query)
 {
+#if 0
     prepare(query.data(), query.size());
+#endif
 }
 
+#if 0
 int ODBCStatement::execute()
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
@@ -775,12 +714,16 @@ void ODBCStatement::close_cursor_if_needed()
     debug_reached_completion = true;
 #endif
 }
+#endif
 
-void ODBCStatement::execute_ignoring_results()
+void SQLiteStatement::execute_ignoring_results()
 {
+#if 0
     execute_and_close();
+#endif
 }
 
+#if 0
 int ODBCStatement::execute_and_close()
 {
     int sqlres = SQLExecute(stm);

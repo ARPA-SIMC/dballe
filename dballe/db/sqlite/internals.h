@@ -24,7 +24,6 @@
 
 #include <dballe/db/db.h>
 #include <dballe/db/sql.h>
-#include <dballe/db/querybuf.h>
 #include <sqlite3.h>
 
 namespace dballe {
@@ -43,6 +42,7 @@ struct error_sqlite : public db::error
      * report
      */
     error_sqlite(sqlite3* db, const std::string& msg);
+    error_sqlite(const std::string& dbmsg, const std::string& msg);
     ~error_sqlite() throw () {}
 
     wreport::ErrorCode code() const throw () { return wreport::WR_ERR_ODBC; }
@@ -53,15 +53,14 @@ struct error_sqlite : public db::error
 };
 
 /// Database connection
-struct SQLiteConnection : public Connection
+class SQLiteConnection : public Connection
 {
-    /// Database connection
-    sqlite3* od_conn;
-    /// True if the connection is open
-    bool connected;
-
 protected:
+    /// Database connection
+    sqlite3* db = nullptr;
+
     void impl_exec_noargs(const std::string& query) override;
+    void init_after_connect();
 
 public:
     SQLiteConnection();
@@ -71,9 +70,9 @@ public:
 
     SQLiteConnection& operator=(const SQLiteConnection&) = delete;
 
-    void open_file(const std::string& fname);
-    void open_memory();
-    void open_private_file();
+    void open_file(const std::string& pathname, int flags=SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
+    void open_memory(int flags=SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
+    void open_private_file(int flags=SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
 
     std::unique_ptr<Transaction> transaction() override;
     std::unique_ptr<Statement> statement() override;
@@ -119,8 +118,9 @@ public:
 
     void add_datetime(Querybuf& qb, const int* dt) const override;
 
-protected:
-    void init_after_connect();
+    /// Wrap sqlite3_exec, without a callback
+    void wrap_sqlite3_exec(const std::string& query);
+    void wrap_sqlite3_exec_nothrow(const std::string& query) noexcept;
 };
 
 /// SQLite statement

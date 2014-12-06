@@ -23,6 +23,7 @@
 #define DBALLE_DB_INTERNALS_H
 
 #include <wreport/error.h>
+#include <string>
 #include <memory>
 
 /// Define this to enable referential integrity
