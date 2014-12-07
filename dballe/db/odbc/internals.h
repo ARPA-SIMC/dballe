@@ -117,8 +117,9 @@ public:
     void set_autocommit(bool val);
 
     std::unique_ptr<Transaction> transaction() override;
-    std::unique_ptr<Statement> statement() override;
-    std::unique_ptr<ODBCStatement> odbcstatement();
+    std::unique_ptr<Statement> statement(const std::string& query) override;
+    std::unique_ptr<ODBCStatement> odbcstatement(const std::string& query);
+    std::unique_ptr<ODBCStatement> dbv5_odbcstatement();
 
     /// Check if the database contains a table
     bool has_table(const std::string& name) override;
@@ -206,21 +207,21 @@ struct ODBCStatement : public Statement
 
     void prepare(const char* query);
     void prepare(const char* query, int qlen);
-    void prepare(const std::string& query) override;
+    void prepare(const std::string& query);
 
     /// @return SQLExecute's result
     int execute();
     /// @return SQLExecute's result
-    int exec_direct(const char* query);
+    int dbv5_exec_direct(const char* query);
     /// @return SQLExecute's result
-    int exec_direct(const char* query, int qlen);
+    int dbv5_exec_direct(const char* query, int qlen);
 
     /// @return SQLExecute's result
     int execute_and_close();
     /// @return SQLExecute's result
-    int exec_direct_and_close(const char* query);
+    int dbv5_exec_direct_and_close(const char* query);
     /// @return SQLExecute's result
-    int exec_direct_and_close(const char* query, int qlen);
+    int dbv5_exec_direct_and_close(const char* query, int qlen);
 
     void execute_ignoring_results() override;
 
@@ -238,7 +239,7 @@ struct ODBCStatement : public Statement
     /// Row count for insert, delete and other non-select operations
     size_t rowcount();
 
-    void set_cursor_forward_only() override;
+    void dbv5_set_cursor_forward_only();
     void set_cursor_static();
 
 protected:

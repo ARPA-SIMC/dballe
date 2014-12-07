@@ -19,6 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 #include "v6_run_query.h"
+#include "dballe/db/v6/qbuilder.h"
 #include <sqltypes.h>
 #include <sql.h>
 
@@ -26,43 +27,45 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
-void odbc_run_built_query(
-        ODBCStatement& stm,
-        bool sel_station, bool sel_varinfo, bool sel_data_id, bool sel_data,
+void odbc_run_built_query(ODBCConnection& conn, const QueryBuilder& qb,
         std::function<void(SQLRecord& rec)> dest)
 {
+    auto stm = conn.odbcstatement(qb.sql_query);
+
+    if (qb.bind_in_ident) stm->bind_in(1, qb.bind_in_ident);
+
     SQLRecord rec;
     int output_seq = 1;
 
     SQLLEN out_ident_ind;
 
-    if (sel_station)
+    if (qb.select_station)
     {
-        stm.bind_out(output_seq++, rec.out_ana_id);
-        stm.bind_out(output_seq++, rec.out_lat);
-        stm.bind_out(output_seq++, rec.out_lon);
-        stm.bind_out(output_seq++, rec.out_ident, sizeof(rec.out_ident), out_ident_ind);
+        stm->bind_out(output_seq++, rec.out_ana_id);
+        stm->bind_out(output_seq++, rec.out_lat);
+        stm->bind_out(output_seq++, rec.out_lon);
+        stm->bind_out(output_seq++, rec.out_ident, sizeof(rec.out_ident), out_ident_ind);
     }
 
-    if (sel_varinfo)
+    if (qb.select_varinfo)
     {
-        stm.bind_out(output_seq++, rec.out_rep_cod);
-        stm.bind_out(output_seq++, rec.out_id_ltr);
-        stm.bind_out(output_seq++, rec.out_varcode);
+        stm->bind_out(output_seq++, rec.out_rep_cod);
+        stm->bind_out(output_seq++, rec.out_id_ltr);
+        stm->bind_out(output_seq++, rec.out_varcode);
     }
 
-    if (sel_data_id)
-        stm.bind_out(output_seq++, rec.out_id_data);
+    if (qb.select_data_id)
+        stm->bind_out(output_seq++, rec.out_id_data);
 
     SQL_TIMESTAMP_STRUCT out_datetime;
-    if (sel_data)
+    if (qb.select_data)
     {
-        stm.bind_out(output_seq++, out_datetime);
-        stm.bind_out(output_seq++, rec.out_value, sizeof(rec.out_value));
+        stm->bind_out(output_seq++, out_datetime);
+        stm->bind_out(output_seq++, rec.out_value, sizeof(rec.out_value));
     }
-    stm.execute();
+    stm->execute();
 
-    while (stm.fetch())
+    while (stm->fetch())
     {
         // Apply fixes here to demangle timestamps and NULL indicators
         if (out_ident_ind == SQL_NULL_DATA)
@@ -80,29 +83,30 @@ void odbc_run_built_query(
         dest(rec);
     }
 
-    stm.close_cursor();
+    stm->close_cursor();
 }
 
-void odbc_run_delete_query(ODBCConnection& conn, ODBCStatement& stm)
+void odbc_run_delete_query(ODBCConnection& conn, const QueryBuilder& qb)
 {
+    auto stm = conn.odbcstatement(qb.sql_query);
+    if (qb.bind_in_ident) stm->bind_in(1, qb.bind_in_ident);
+
     // Get the list of data to delete
     int out_id_data;
-    stm.bind_out(1, out_id_data);
+    stm->bind_out(1, out_id_data);
 
     // Compile the DELETE query for the data
-    auto stmd = conn.statement();
+    auto stmd = conn.statement("DELETE FROM data WHERE id=?");
     stmd->bind_in(1, out_id_data);
-    stmd->prepare("DELETE FROM data WHERE id=?");
 
     // Compile the DELETE query for the attributes
-    auto stma = conn.statement();
+    auto stma = conn.statement("DELETE FROM attr WHERE id_data=?");
     stma->bind_in(1, out_id_data);
-    stma->prepare("DELETE FROM attr WHERE id_data=?");
 
-    stm.execute();
+    stm->execute();
 
     // Iterate all the data_id results, deleting the related data and attributes
-    while (stm.fetch())
+    while (stm->fetch())
     {
         stmd->execute_ignoring_results();
         stma->execute_ignoring_results();

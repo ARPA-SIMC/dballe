@@ -61,31 +61,35 @@ ODBCData::ODBCData(ODBCConnection& conn)
     }
 
     /* Create the statement for insert */
-    istm = conn.odbcstatement().release();
+    istm = conn.odbcstatement(insert_query).release();
     istm->bind_in(1, id_station);
     istm->bind_in(2, id_report);
     istm->bind_in(3, id_lev_tr);
     istm->bind_in(4, date);
     istm->bind_in(5, id_var);
     istm->bind_in(6, value, value_ind);
-    istm->prepare(insert_query);
 
     /* Create the statement for update */
-    ustm = conn.odbcstatement().release();
+    ustm = conn.odbcstatement(update_query).release();
     ustm->bind_in(1, value, value_ind);
     ustm->bind_in(2, id_station);
     ustm->bind_in(3, id_report);
     ustm->bind_in(4, id_lev_tr);
     ustm->bind_in(5, date);
     ustm->bind_in(6, id_var);
-    ustm->prepare(update_query);
 
     /* Create the statement for replace (where available) */
     switch (conn.server_type)
     {
+        case ServerType::MYSQL: ioustm = conn.odbcstatement(replace_query_mysql).release(); break;
+        case ServerType::ORACLE: ioustm = conn.odbcstatement(replace_query_oracle).release(); break;
+        default:
+            break;
+    }
+    switch (conn.server_type)
+    {
         case ServerType::MYSQL:
         case ServerType::ORACLE:
-            ioustm = conn.odbcstatement().release();
             ioustm->bind_in(1, id_station);
             ioustm->bind_in(2, id_report);
             ioustm->bind_in(3, id_lev_tr);
@@ -96,41 +100,32 @@ ODBCData::ODBCData(ODBCConnection& conn)
         default:
             break;
     }
-    switch (conn.server_type)
-    {
-        case ServerType::MYSQL: ioustm->prepare(replace_query_mysql); break;
-        case ServerType::ORACLE: ioustm->prepare(replace_query_oracle); break;
-        default:
-            break;
-    }
 
     /* Create the statement for insert ignore */
-    iistm = conn.odbcstatement().release();
+    switch (conn.server_type)
+    {
+        case ServerType::POSTGRES: iistm = conn.odbcstatement(insert_query).release(); iistm->ignore_error = "23505"; break;
+        case ServerType::ORACLE: iistm = conn.odbcstatement(insert_query).release(); iistm->ignore_error = "23000"; break;
+        //case ServerType::ORACLE: iistm = conn.odbcstatement((insert_ignore_query_oracle); break;
+        case ServerType::MYSQL: iistm = conn.odbcstatement(insert_ignore_query_mysql).release(); break;
+        case ServerType::SQLITE: iistm = conn.odbcstatement(insert_ignore_query_sqlite).release(); break;
+        default: iistm = conn.odbcstatement(insert_ignore_query_sqlite).release(); break;
+    }
     iistm->bind_in(1, id_station);
     iistm->bind_in(2, id_report);
     iistm->bind_in(3, id_lev_tr);
     iistm->bind_in(4, date);
     iistm->bind_in(5, id_var);
     iistm->bind_in(6, value, value_ind);
-    switch (conn.server_type)
-    {
-        case ServerType::POSTGRES: iistm->prepare(insert_query); iistm->ignore_error = "23505"; break;
-        case ServerType::ORACLE: iistm->prepare(insert_query); iistm->ignore_error = "23000"; break;
-        //case ServerType::ORACLE: iistm->prepare(insert_ignore_query_oracle); break;
-        case ServerType::MYSQL: iistm->prepare(insert_ignore_query_mysql); break;
-        case ServerType::SQLITE: iistm->prepare(insert_ignore_query_sqlite); break;
-        default: iistm->prepare(insert_ignore_query_sqlite); break;
-    }
 
     /* Create the statement for select id */
-    sidstm = conn.odbcstatement().release();
+    sidstm = conn.odbcstatement(select_id_query).release();
     sidstm->bind_in(1, id_station);
     sidstm->bind_in(2, id_report);
     sidstm->bind_in(3, id_lev_tr);
     sidstm->bind_in(4, date);
     sidstm->bind_in(5, id_var);
     sidstm->bind_out(1, id);
-    sidstm->prepare(select_id_query);
 }
 
 ODBCData::~ODBCData()
@@ -298,7 +293,7 @@ void ODBCData::dump(FILE* out)
     char value[255];
     SQLLEN value_ind;
 
-    auto stm = conn.odbcstatement();
+    auto stm = conn.odbcstatement("SELECT id, id_station, id_report, id_lev_tr, datetime, id_var, value FROM data");
     stm->bind_out(1, id);
     stm->bind_out(2, id_station);
     stm->bind_out(3, id_report);
@@ -306,7 +301,7 @@ void ODBCData::dump(FILE* out)
     stm->bind_out(5, date);
     stm->bind_out(6, id_var);
     stm->bind_out(7, value, 255, value_ind);
-    stm->exec_direct("SELECT id, id_station, id_report, id_lev_tr, datetime, id_var, value FROM data");
+    stm->execute();
     int count;
     fprintf(out, "dump of table data:\n");
     fprintf(out, " id   st   rep ltr  datetime              var\n");

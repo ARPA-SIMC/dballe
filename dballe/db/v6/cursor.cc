@@ -192,12 +192,9 @@ void Cursor::add_station_info(Record& rec)
 unique_ptr<Cursor> Cursor::run_station_query(DB& db, const Query& query)
 {
     unsigned int modifiers = parse_modifiers(query) | DBA_DB_MODIFIER_ANAEXTRA | DBA_DB_MODIFIER_DISTINCT;
-    auto stm = db.conn->statement();
-    stm->set_cursor_forward_only();
 
-    StationQueryBuilder qb(db, *stm, query, modifiers);
+    StationQueryBuilder qb(db, query, modifiers);
     qb.build();
-    stm->prepare(qb.sql_query);
 
     unique_ptr<Cursor> res(new CursorStations(db, modifiers));
     res->load(qb);
@@ -207,14 +204,10 @@ unique_ptr<Cursor> Cursor::run_station_query(DB& db, const Query& query)
 unique_ptr<Cursor> Cursor::run_data_query(DB& db, const Query& query)
 {
     unsigned int modifiers = parse_modifiers(query);
-    auto stm = db.conn->statement();
-    stm->set_cursor_forward_only();
-
-    DataQueryBuilder qb(db, *stm, query, modifiers);
+    DataQueryBuilder qb(db, query, modifiers);
     qb.build();
-    stm->prepare(qb.sql_query);
-    unique_ptr<Cursor> res;
 
+    unique_ptr<Cursor> res;
     if (modifiers & DBA_DB_MODIFIER_BEST)
     {
         res.reset(new CursorBest(db, modifiers));
@@ -222,23 +215,17 @@ unique_ptr<Cursor> Cursor::run_data_query(DB& db, const Query& query)
         res.reset(new CursorData(db, modifiers));
     }
     res->load(qb);
-
     return res;
 }
 
 unique_ptr<Cursor> Cursor::run_summary_query(DB& db, const Query& query)
 {
     unsigned int modifiers = parse_modifiers(query);
-    auto stm = db.conn->statement();
-    stm->set_cursor_forward_only();
-
     if (modifiers & DBA_DB_MODIFIER_BEST)
         throw error_consistency("cannot use query=best on summary queries");
 
-    SummaryQueryBuilder qb(db, *stm, query, modifiers);
+    SummaryQueryBuilder qb(db, query, modifiers);
     qb.build();
-    stm->prepare(qb.sql_query);
-    //fprintf(stderr, "Query: %s\n", qb.sql_query.c_str());
 
     unique_ptr<Cursor> res(new CursorSummary(db, modifiers));
     res->load(qb);
@@ -250,28 +237,20 @@ void Cursor::run_delete_query(DB& db, const Query& query)
     auto t = db.conn->transaction();
 
     unsigned int modifiers = parse_modifiers(query);
-    auto stm = db.conn->statement();
-    stm->set_cursor_forward_only();
-
     if (modifiers & DBA_DB_MODIFIER_BEST)
         throw error_consistency("cannot use query=best on summary queries");
 
-    IdQueryBuilder qb(db, *stm, query, modifiers);
+    IdQueryBuilder qb(db, query, modifiers);
     qb.build();
-    stm->prepare(qb.sql_query);
-    //fprintf(stderr, "Query: %s\n", qb.sql_query.c_str());
 
-    v6::run_delete_query(*db.conn, *stm);
+    v6::run_delete_query(*db.conn, qb);
 
     t->commit();
 }
 
 void Cursor::load(const QueryBuilder& qb)
 {
-    run_built_query(
-            qb.stm,
-            qb.select_station, qb.select_varinfo, qb.select_data_id, qb.select_data,
-            [&](SQLRecord& rec) {
+    run_built_query(*db.conn, qb, [&](SQLRecord& rec) {
         results.append(rec);
     });
     // We are done adding, prepare the structbuf for reading
@@ -444,11 +423,7 @@ void CursorBest::load(const QueryBuilder& qb)
     bool first = true;
     SQLRecord best;
 
-    run_built_query(
-            qb.stm,
-            qb.select_station, qb.select_varinfo, qb.select_data_id, qb.select_data,
-            [&](SQLRecord& rec) {
-
+    run_built_query(*db.conn, qb, [&](SQLRecord& rec) {
         // Fill priority
         rec.priority = ri.get_priority(rec.out_rep_cod);
 

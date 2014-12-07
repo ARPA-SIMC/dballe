@@ -57,21 +57,26 @@ ODBCAttr::ODBCAttr(ODBCConnection& conn)
         "UPDATE attr SET value=? WHERE id_data=? AND type=?";
 
     // Create the statement for select
-    sstm = conn.odbcstatement().release();
+    sstm = conn.odbcstatement(select_query).release();
     sstm->bind_in(1, id_data);
     sstm->bind_out(1, type);
     sstm->bind_out(2, value, sizeof(value));
-    sstm->prepare(select_query);
 
     // Create the statement for insert
-    istm = conn.odbcstatement().release();
+    istm = conn.odbcstatement(insert_query).release();
     istm->bind_in(1, id_data);
     istm->bind_in(2, type);
     istm->bind_in(3, value, value_ind);
-    istm->prepare(insert_query);
 
     // Create the statement for replace
-    rstm = conn.odbcstatement().release();
+    switch (conn.server_type)
+    {
+        case ServerType::MYSQL: rstm = conn.odbcstatement(replace_query_mysql).release(); break;
+        case ServerType::SQLITE: rstm = conn.odbcstatement(replace_query_sqlite).release(); break;
+        case ServerType::ORACLE: rstm = conn.odbcstatement(replace_query_oracle).release(); break;
+        case ServerType::POSTGRES: rstm = conn.odbcstatement(replace_query_postgres).release(); break;
+        default: rstm = conn.odbcstatement(replace_query_mysql).release(); break;
+    }
     if (conn.server_type == ServerType::POSTGRES)
     {
         rstm->bind_in(1, value, value_ind);
@@ -81,14 +86,6 @@ ODBCAttr::ODBCAttr(ODBCConnection& conn)
         rstm->bind_in(1, id_data);
         rstm->bind_in(2, type);
         rstm->bind_in(3, value, value_ind);
-    }
-    switch (conn.server_type)
-    {
-        case ServerType::MYSQL: rstm->prepare(replace_query_mysql); break;
-        case ServerType::SQLITE: rstm->prepare(replace_query_sqlite); break;
-        case ServerType::ORACLE: rstm->prepare(replace_query_oracle); break;
-        case ServerType::POSTGRES: rstm->prepare(replace_query_postgres); break;
-        default: rstm->prepare(replace_query_mysql); break;
     }
 }
 
@@ -149,11 +146,11 @@ void ODBCAttr::dump(FILE* out)
     char value[255];
     SQLLEN value_ind;
 
-    auto stm = conn.odbcstatement();
+    auto stm = conn.odbcstatement("SELECT id_data, type, value FROM attr");
     stm->bind_out(1, id_data);
     stm->bind_out(2, type);
     stm->bind_out(3, value, 255, value_ind);
-    stm->exec_direct("SELECT id_data, type, value FROM attr");
+    stm->execute();
     int count;
     fprintf(out, "dump of table attr:\n");
     for (count = 0; stm->fetch(); ++count)

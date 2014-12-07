@@ -415,14 +415,12 @@ void DB::init_after_connect()
             seq_context = new db::Sequence(*conn, "seq_context");
             break;
         case ServerType::MYSQL:
-            stm_last_insert_id = conn->odbcstatement().release();
+            stm_last_insert_id = conn->odbcstatement("SELECT LAST_INSERT_ID()").release();
             stm_last_insert_id->bind_out(1, m_last_insert_id);
-            stm_last_insert_id->prepare("SELECT LAST_INSERT_ID()");
             break;
         case ServerType::SQLITE:
-            stm_last_insert_id = conn->odbcstatement().release();
+            stm_last_insert_id = conn->odbcstatement("SELECT LAST_INSERT_ROWID()").release();
             stm_last_insert_id->bind_out(1, m_last_insert_id);
-            stm_last_insert_id->prepare("SELECT LAST_INSERT_ROWID()");
             break;
     }
 }
@@ -764,16 +762,14 @@ void DB::remove(const Query& rec)
     db::v5::Cursor c(*this);
 
     // Compile the DELETE query for the data
-    auto stmd = conn->odbcstatement();
+    auto stmd = conn->odbcstatement("DELETE FROM data WHERE id_context=? AND id_var=?");
     stmd->bind_in(1, c.out_context_id);
     stmd->bind_in(2, c.out_varcode);
-    stmd->prepare("DELETE FROM data WHERE id_context=? AND id_var=?");
 
     // Compile the DELETE query for the attributes
-    auto stma = conn->odbcstatement();
+    auto stma = conn->odbcstatement("DELETE FROM attr WHERE id_context=? AND id_var=?");
     stma->bind_in(1, c.out_context_id);
     stma->bind_in(2, c.out_varcode);
-    stma->prepare("DELETE FROM attr WHERE id_context=? AND id_var=?");
 
     // Get the list of data to delete
     c.query(rec,
@@ -1036,7 +1032,7 @@ void DB::query_attrs(int reference_id, wreport::Varcode id_var,
     Varcode out_type;
     char out_value[255];
 
-    auto stm = conn->odbcstatement();
+    auto stm = conn->odbcstatement(query);
     stm->bind_in(1, reference_id);
     stm->bind_in(2, id_var);
     stm->bind_out(1, out_type);
@@ -1045,7 +1041,7 @@ void DB::query_attrs(int reference_id, wreport::Varcode id_var,
     TRACE("attr read query: %s with ctx %d var %01d%02d%03d\n", query.c_str(), (int)in_id_context,
             WR_VAR_F(id_var), WR_VAR_X(id_var), WR_VAR_Y(id_var));
 
-    stm->exec_direct(query.c_str());
+    stm->execute();
 
     // Fetch the results
     while (stm->fetch())
@@ -1093,10 +1089,10 @@ void DB::attr_remove(int reference_id, wreport::Varcode id_var, const std::vecto
 
     // dba_verbose(DBA_VERB_DB_SQL, "Performing query %s for id %d,B%02d%03d\n", query, id_context, DBA_VAR_X(id_var), DBA_VAR_Y(id_var));
 
-    auto stm = conn->odbcstatement();
+    auto stm = conn->odbcstatement(query);
     stm->bind_in(1, reference_id);
     stm->bind_in(2, id_var);
-    stm->exec_direct_and_close(query.c_str());
+    stm->execute_and_close();
 }
 
 void DB::dump(FILE* out)

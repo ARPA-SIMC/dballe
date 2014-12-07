@@ -75,8 +75,8 @@ public:
     void open_private_file(int flags=SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
 
     std::unique_ptr<Transaction> transaction() override;
-    std::unique_ptr<Statement> statement() override;
-    std::unique_ptr<SQLiteStatement> sqlitestatement();
+    std::unique_ptr<Statement> statement(const std::string& query) override;
+    std::unique_ptr<SQLiteStatement> sqlitestatement(const std::string& query);
 
     /// Check if the database contains a table
     bool has_table(const std::string& name) override;
@@ -145,11 +145,6 @@ struct SQLiteStatement : public Statement
     //void bind_in(int idx, const char* val, const SQLLEN& ind);
     //void bind_in(int idx, const SQL_TIMESTAMP_STRUCT& val);
 
-    //void prepare(const char* query);
-    //void prepare(const char* query, int qlen);
-    void prepare(const std::string& query) override;
-
-    void set_cursor_forward_only() override;
     void execute_ignoring_results() override;
 
 #if 0
@@ -180,8 +175,6 @@ struct SQLiteStatement : public Statement
     size_t select_rowcount();
     /// Row count for insert, delete and other non-select operations
     size_t rowcount();
-
-    void set_cursor_static();
 #endif
 };
 

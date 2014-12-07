@@ -193,7 +193,7 @@ struct QueryBuilder
 Cursor::Cursor(v5::DB& db)
     : db(db), stm(0)
 {
-    stm = db.conn->odbcstatement().release();
+    stm = db.conn->dbv5_odbcstatement().release();
 }
 
 Cursor::~Cursor()
@@ -242,7 +242,7 @@ int Cursor::query(const Record& rec, unsigned int qwanted, unsigned int qmodifie
     TRACE("Performing query: %s\n", qb.sql_query.c_str());
 
     if (modifiers & DBA_DB_MODIFIER_STREAM && db.conn->server_type != ServerType::ORACLE)
-        stm->set_cursor_forward_only();
+        stm->dbv5_set_cursor_forward_only();
 
 #if 0
     //DBA_RUN_OR_RETURN(setstmtattr(cur->stm, SQL_ATTR_CURSOR_TYPE, (SQLPOINTER)SQL_CURSOR_STATIC, SQL_IS_INTEGER, "Setting SQL_CURSOR_STATIC"));
@@ -254,7 +254,7 @@ int Cursor::query(const Record& rec, unsigned int qwanted, unsigned int qmodifie
     //fprintf(stderr, "** Q %s\n", dba_querybuf_get(sql_query));
 
     /* Perform the query */
-    stm->exec_direct(qb.sql_query.data(), qb.sql_query.size());
+    stm->dbv5_exec_direct(qb.sql_query.data(), qb.sql_query.size());
 
     /* Get the number of affected rows */
     if (db.conn->server_type != ServerType::ORACLE)
@@ -290,10 +290,10 @@ void Cursor::query_datetime_extremes(const Record& query, Record& result)
 
     TRACE("Performing query: %s\n", qb.sql_query.c_str());
 
-    stm->set_cursor_forward_only();
+    stm->dbv5_set_cursor_forward_only();
 
     /* Perform the query */
-    stm->exec_direct(qb.sql_query.data(), qb.sql_query.size());
+    stm->dbv5_exec_direct(qb.sql_query.data(), qb.sql_query.size());
 
     // Fetch result row
     bool res = stm->fetch();
@@ -351,7 +351,7 @@ int Cursor::getcount(const Record& rec, unsigned int qwanted, unsigned int qmodi
     /* fprintf(stderr, "Performing query: %s\n", dba_querybuf_get(sql_query)); */
 
     /* Perform the query */
-    stm->exec_direct(qb.sql_query.data(), qb.sql_query.size());
+    stm->dbv5_exec_direct(qb.sql_query.data(), qb.sql_query.size());
 
     if (!stm->fetch())
         throw error_consistency("no results when trying to get the row count");

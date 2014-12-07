@@ -67,47 +67,41 @@ ODBCStation::ODBCStation(ODBCConnection& conn)
     }
 
     /* Create the statement for select fixed */
-    sfstm = conn.odbcstatement().release();
+    sfstm = conn.odbcstatement(select_fixed_query).release();
     sfstm->bind_in(1, lat);
     sfstm->bind_in(2, lon);
     sfstm->bind_out(1, id);
-    sfstm->prepare(select_fixed_query);
 
     /* Create the statement for select mobile */
-    smstm = conn.odbcstatement().release();
+    smstm = conn.odbcstatement(select_mobile_query).release();
     smstm->bind_in(1, lat);
     smstm->bind_in(2, lon);
     smstm->bind_in(3, ident, ident_ind);
     smstm->bind_out(1, id);
-    smstm->prepare(select_mobile_query);
 
     /* Create the statement for select station data */
-    sstm = conn.odbcstatement().release();
+    sstm = conn.odbcstatement(select_query).release();
     sstm->bind_in(1, id);
     sstm->bind_out(1, lat);
     sstm->bind_out(2, lon);
     sstm->bind_out(3, ident, sizeof(ident), ident_ind);
-    sstm->prepare(select_query);
 
     /* Create the statement for insert */
-    istm = conn.odbcstatement().release();
+    istm = conn.odbcstatement(insert_query).release();
     istm->bind_in(1, lat);
     istm->bind_in(2, lon);
     istm->bind_in(3, ident, ident_ind);
-    istm->prepare(insert_query);
 
     /* Create the statement for update */
-    ustm = conn.odbcstatement().release();
+    ustm = conn.odbcstatement(update_query).release();
     ustm->bind_in(1, lat);
     ustm->bind_in(2, lon);
     ustm->bind_in(3, ident, ident_ind);
     ustm->bind_in(4, id);
-    ustm->prepare(update_query);
 
     /* Create the statement for remove */
-    dstm = conn.odbcstatement().release();
+    dstm = conn.odbcstatement(remove_query).release();
     dstm->bind_in(1, id);
-    dstm->prepare(remove_query);
 }
 
 ODBCStation::~ODBCStation()
@@ -204,7 +198,7 @@ void ODBCStation::get_station_vars(int id_station, int id_report, std::function<
         "   AND c.datetime = {ts '1000-01-01 00:00:00.000'}"
         " ORDER BY d.id_var, a.type";
 
-    auto stm = conn.odbcstatement();
+    auto stm = conn.odbcstatement(query);
 
     stm->bind_in(1, id_station);
     stm->bind_in(2, id_report);
@@ -222,7 +216,7 @@ void ODBCStation::get_station_vars(int id_station, int id_report, std::function<
     stm->bind_out(4, out_attr_value, sizeof(out_attr_value), out_attr_value_ind);
 
     TRACE("fill_ana_layer Performing query: %s with idst %d idrep %d\n", query, id_station, id_report);
-    stm->exec_direct(query);
+    stm->execute();
 
     // Retrieve results
     Varcode last_varcode = 0;
@@ -266,12 +260,12 @@ void ODBCStation::dump(FILE* out)
     char ident[64];
     SQLLEN ident_ind;
 
-    auto stm = conn.odbcstatement();
+    auto stm = conn.odbcstatement("SELECT id, lat, lon, ident FROM station");
     stm->bind_out(1, id);
     stm->bind_out(2, lat);
     stm->bind_out(3, lon);
     stm->bind_out(4, ident, 64, ident_ind);
-    stm->exec_direct("SELECT id, lat, lon, ident FROM station");
+    stm->execute();
     int count;
     fprintf(out, "dump of table station:\n");
     for (count = 0; stm->fetch(); ++count)
@@ -326,18 +320,11 @@ void ODBCStation::add_station_vars(int id_station, Record& rec)
     char st_out_val[256];
     SQLLEN st_out_val_ind;
 
-    /* Allocate statement handle */
-    auto stm = conn.odbcstatement();
-
-    /* Bind input fields */
+    auto stm = conn.odbcstatement(query);
     stm->bind_in(1, id_station);
-
-    /* Bind output fields */
     stm->bind_out(1, st_out_code);
     stm->bind_out(2, st_out_val, sizeof(st_out_val), st_out_val_ind);
-
-    /* Perform the query */
-    stm->exec_direct(query);
+    stm->execute();
 
     /* Get the results and save them in the record */
     while (stm->fetch())
@@ -362,7 +349,7 @@ void ODBCStation::get_station_vars(int id_station, int id_report, std::function<
         "   AND d.id_lev_tr = -1"
         " ORDER BY d.id_var, a.type";
 
-    auto stm = conn.odbcstatement();
+    auto stm = conn.odbcstatement(query);
 
     stm->bind_in(1, id_station);
     stm->bind_in(2, id_report);
@@ -382,7 +369,7 @@ void ODBCStation::get_station_vars(int id_station, int id_report, std::function<
     stm->bind_out(4, out_attr_value, sizeof(out_attr_value), out_attr_value_ind);
 
     TRACE("StationLayerCache::fill Performing query: %s with idst %d idrep %d\n", query, id_station, id_report);
-    stm->exec_direct(query);
+    stm->execute();
 
     // Retrieve results
     Varcode last_varcode = 0;
@@ -448,12 +435,12 @@ void ODBCStation::add_station_vars(int id_station, Record& rec)
     char st_out_val[256];
     SQLLEN st_out_val_ind;
 
-    auto stm = conn.odbcstatement();
+    auto stm = conn.odbcstatement(query);
     stm->bind_in(1, id_station);
     stm->bind_out(1, st_out_code);
     stm->bind_out(2, st_out_val, sizeof(st_out_val), st_out_val_ind);
 
-    stm->exec_direct(query);
+    stm->execute();
     while (stm->fetch())
         rec.var(st_out_code).setc(st_out_val);
 }

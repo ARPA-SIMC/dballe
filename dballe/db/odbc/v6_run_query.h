@@ -28,15 +28,13 @@
 namespace dballe {
 namespace db {
 namespace v6 {
+struct QueryBuilder;
 
 // ODBC implementation for dballe::db::v6::run_built_query
-void odbc_run_built_query(
-        ODBCStatement& stm,
-        bool sel_station, bool sel_varinfo, bool sel_data_id, bool sel_data,
-        std::function<void(SQLRecord& rec)> dest);
+void odbc_run_built_query(ODBCConnection& conn, const QueryBuilder& qb, std::function<void(SQLRecord& rec)> dest);
 
 // ODBC implementation for dballe::db::v6::run_delete_query
-void odbc_run_delete_query(ODBCConnection& conn, ODBCStatement& stm);
+void odbc_run_delete_query(ODBCConnection& conn, const QueryBuilder& qb);
 
 }
 }

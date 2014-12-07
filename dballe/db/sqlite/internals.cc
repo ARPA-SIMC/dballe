@@ -192,12 +192,12 @@ std::unique_ptr<Transaction> SQLiteConnection::transaction()
     return unique_ptr<Transaction>(new SQLiteTransaction(*this));
 }
 
-std::unique_ptr<Statement> SQLiteConnection::statement()
+std::unique_ptr<Statement> SQLiteConnection::statement(const std::string& query)
 {
     return unique_ptr<Statement>(new SQLiteStatement(*this));
 }
 
-std::unique_ptr<SQLiteStatement> SQLiteConnection::sqlitestatement()
+std::unique_ptr<SQLiteStatement> SQLiteConnection::sqlitestatement(const std::string& query)
 {
     return unique_ptr<SQLiteStatement>(new SQLiteStatement(*this));
 }
@@ -577,25 +577,7 @@ size_t ODBCStatement::rowcount()
 }
 #endif
 
-void SQLiteStatement::set_cursor_forward_only()
-{
 #if 0
-    int sqlres = SQLSetStmtAttr(stm, SQL_ATTR_CURSOR_TYPE,
-        (SQLPOINTER)SQL_CURSOR_FORWARD_ONLY, SQL_IS_INTEGER);
-    if (is_error(sqlres))
-        throw error_odbc(SQL_HANDLE_STMT, stm, "setting SQL_CURSOR_FORWARD_ONLY");
-#endif
-}
-
-#if 0
-void ODBCStatement::set_cursor_static()
-{
-    int sqlres = SQLSetStmtAttr(stm, SQL_ATTR_CURSOR_TYPE,
-        (SQLPOINTER)SQL_CURSOR_STATIC, SQL_IS_INTEGER);
-    if (is_error(sqlres))
-        throw error_odbc(SQL_HANDLE_STMT, stm, "setting SQL_CURSOR_STATIC");
-}
-
 void ODBCStatement::close_cursor()
 {
     int sqlres = SQLCloseCursor(stm);
@@ -606,43 +588,6 @@ void ODBCStatement::close_cursor()
 #endif
 }
 
-void SQLiteStatement::prepare(const char* query)
-{
-#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
-    if (!debug_reached_completion)
-    {
-        string msg = "Statement " + debug_query + " prepare was called before reaching completion";
-        fprintf(stderr, "-- %s\n", msg.c_str());
-        //throw error_consistency(msg);
-    }
-#endif
-#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
-    debug_query = query;
-#endif
-    // Casting out 'const' because ODBC API is not const-conscious
-    if (is_error(SQLPrepare(stm, (unsigned char*)query, SQL_NTS)))
-        error_odbc::throwf(SQL_HANDLE_STMT, stm, "compiling query \"%s\"", query);
-}
-
-void ODBCStatement::prepare(const char* query, int qlen)
-{
-#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
-    debug_query = string(query, qlen);
-#endif
-    // Casting out 'const' because ODBC API is not const-conscious
-    if (is_error(SQLPrepare(stm, (unsigned char*)query, qlen)))
-        error_odbc::throwf(SQL_HANDLE_STMT, stm, "compiling query \"%.*s\"", qlen, query);
-}
-#endif
-
-void SQLiteStatement::prepare(const std::string& query)
-{
-#if 0
-    prepare(query.data(), query.size());
-#endif
-}
-
-#if 0
 int ODBCStatement::execute()
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS

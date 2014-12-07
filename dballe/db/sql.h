@@ -103,7 +103,7 @@ public:
      *
      * A statement holds a precompiled query, and input/output bind arguments.
      */
-    virtual std::unique_ptr<Statement> statement() = 0;
+    virtual std::unique_ptr<Statement> statement(const std::string& query) = 0;
 
     /// Execute a one-shot query
     void exec(const std::string& query) { impl_exec_noargs(query); }
@@ -191,11 +191,6 @@ private:
 public:
     virtual ~Statement() {}
 
-    virtual void set_cursor_forward_only() = 0;
-
-    /// Compile the SQL statement
-    virtual void prepare(const std::string& query) = 0;
-
     /// Run the statement ignoring its results
     virtual void execute_ignoring_results() = 0;
 
@@ -220,8 +215,7 @@ public:
 template<typename T, typename ...Args>
 void Connection::exec(const std::string& query, const T& arg, const Args& ...args)
 {
-    auto stm = statement();
-    stm->prepare(query);
+    auto stm = statement(query);
     stm->bind(arg, args...);
     stm->execute_ignoring_results();
 }

@@ -251,23 +251,20 @@ bool SQLRecord::querybest_fields_are_the_same(const SQLRecord& r)
     return true;
 }
 
-void run_built_query(
-        Statement& stm,
-        bool sel_station, bool sel_varinfo, bool sel_data_id, bool sel_data,
-        std::function<void(SQLRecord& rec)> dest)
+void run_built_query(Connection& conn, const QueryBuilder& qb, std::function<void(SQLRecord& rec)> dest)
 {
-    if (ODBCStatement* s = dynamic_cast<ODBCStatement*>(&stm))
+    if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(&conn))
     {
-        odbc_run_built_query(*s, sel_station, sel_varinfo, sel_data_id, sel_data, dest);
+        odbc_run_built_query(*c, qb, dest);
     } else
         throw error_unimplemented("v6 DB run_built_query not yet implemented for non-ODBC connectors");
 }
 
-void run_delete_query(Connection& conn, Statement& stm)
+void run_delete_query(Connection& conn, const QueryBuilder& qb)
 {
     if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(&conn))
     {
-        odbc_run_delete_query(*c, *dynamic_cast<ODBCStatement*>(&stm));
+        odbc_run_delete_query(*c, qb);
     } else
         throw error_unimplemented("v6 DB run_delete_query not yet implemented for non-ODBC connectors");
 }

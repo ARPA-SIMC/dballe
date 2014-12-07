@@ -93,12 +93,8 @@ void DB::export_msgs(const Query& query, MsgConsumer& consumer)
     auto t = conn->transaction();
 
     // The big export query
-    auto stm = conn->statement();
-    stm->set_cursor_forward_only();
-
-    DataQueryBuilder qb(*this, *stm, query, DBA_DB_MODIFIER_SORT_FOR_EXPORT);
+    DataQueryBuilder qb(*this, query, DBA_DB_MODIFIER_SORT_FOR_EXPORT);
     qb.build();
-    stm->prepare(qb.sql_query);
 
     // Current context information used to detect context changes
     Datetime last_datetime;
@@ -108,10 +104,7 @@ void DB::export_msgs(const Query& query, MsgConsumer& consumer)
     StationLayerCache station_cache;
 
     // Retrieve results
-    run_built_query(
-            qb.stm,
-            qb.select_station, qb.select_varinfo, qb.select_data_id, qb.select_data,
-            [&](SQLRecord& sqlrec) {
+    run_built_query(*conn, qb, [&](SQLRecord& sqlrec) {
         //TRACE("Got B%02d%03d %ld,%ld, %ld,%ld %ld,%ld,%ld %s\n",
         //        WR_VAR_X(sqlrec.out_varcode), WR_VAR_Y(sqlrec.out_varcode),
         //        sqlrec.out_ltype1, sqlrec.out_l1, sqlrec.out_ltype2, sqlrec.out_l2, sqlrec.out_pind, sqlrec.out_p1, sqlrec.out_p2,

@@ -268,15 +268,15 @@ struct Constraints
     }
 };
 
-QueryBuilder::QueryBuilder(DB& db, Statement& stm, const Record& rec, unsigned int modifiers)
-    : conn(*db.conn), db(db), stm(stm), rec(rec), sql_query(2048), sql_from(1024), sql_where(1024),
+QueryBuilder::QueryBuilder(DB& db, const Record& rec, unsigned int modifiers)
+    : conn(*db.conn), db(db), rec(rec), sql_query(2048), sql_from(1024), sql_where(1024),
       modifiers(modifiers), query_station_vars(false)
 {
     query_station_vars = rec.is_ana_context();
 }
 
-DataQueryBuilder::DataQueryBuilder(DB& db, Statement& stm, const Record& rec, unsigned int modifiers)
-    : QueryBuilder(db, stm, rec, modifiers)
+DataQueryBuilder::DataQueryBuilder(DB& db, const Record& rec, unsigned int modifiers)
+    : QueryBuilder(db, rec, modifiers)
 {
     query_data_id = rec.get(DBA_KEY_CONTEXT_ID, MISSING_INT);
 }
@@ -477,7 +477,7 @@ bool QueryBuilder::add_pa_where(const char* tbl)
     {
         sql_where.append_listf("%s.ident=?", tbl);
         TRACE("found ident: adding AND %s.ident = ?.  val is %s\n", tbl, val);
-        stm.bind_in(input_seq++, val);
+        bind_in_ident = val;
         c.found = true;
     }
     if (const char* val = rec.var_peek_value(WR_VAR(0, 1, 1)))

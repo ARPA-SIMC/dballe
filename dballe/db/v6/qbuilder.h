@@ -72,8 +72,13 @@ struct QueryBuilder
     /** Database to operate on */
     DB& db;
 
-    /** Statement to bind variables to */
-    Statement& stm;
+    /**
+     * If defined, it need to point to the identifier to be used as the only
+     * bound input parameter.
+     *
+     * If not defined, there are no bound input parameters in this query
+     */
+    const char* bind_in_ident = nullptr;
 
     bool select_station = false; // ana_id, lat, lon, ident
     // stm.bind_out(output_seq++, cur.sqlrec.out_ana_id);
@@ -110,14 +115,11 @@ struct QueryBuilder
     /// Modifier flags to enable special query behaviours
     const unsigned int modifiers;
 
-    /// Positional sequence number to use to bind input parameters
-    unsigned int input_seq = 1;
-
     /// True if we are querying station information, rather than measured data
     bool query_station_vars;
 
 
-    QueryBuilder(DB& db, Statement& stm, const Record& rec, unsigned int modifiers);
+    QueryBuilder(DB& db, const Record& rec, unsigned int modifiers);
     virtual ~QueryBuilder() {}
 
     void build();
@@ -139,8 +141,8 @@ protected:
 
 struct StationQueryBuilder : public QueryBuilder
 {
-    StationQueryBuilder(DB& db, Statement& stm, const Record& rec, unsigned int modifiers)
-        : QueryBuilder(db, stm, rec, modifiers) {}
+    StationQueryBuilder(DB& db, const Record& rec, unsigned int modifiers)
+        : QueryBuilder(db, rec, modifiers) {}
 
     virtual void build_select();
     virtual bool build_where();
@@ -151,7 +153,7 @@ struct DataQueryBuilder : public QueryBuilder
 {
     int query_data_id;
 
-    DataQueryBuilder(DB& db, Statement& stm, const Record& rec, unsigned int modifiers);
+    DataQueryBuilder(DB& db, const Record& rec, unsigned int modifiers);
 
     virtual void build_select();
     virtual bool build_where();
@@ -160,8 +162,8 @@ struct DataQueryBuilder : public QueryBuilder
 
 struct IdQueryBuilder : public DataQueryBuilder
 {
-    IdQueryBuilder(DB& db, Statement& stm, const Record& rec, unsigned int modifiers)
-        : DataQueryBuilder(db, stm, rec, modifiers) {}
+    IdQueryBuilder(DB& db, const Record& rec, unsigned int modifiers)
+        : DataQueryBuilder(db, rec, modifiers) {}
 
     virtual void build_select();
     virtual void build_order_by();
@@ -169,8 +171,8 @@ struct IdQueryBuilder : public DataQueryBuilder
 
 struct SummaryQueryBuilder : public DataQueryBuilder
 {
-    SummaryQueryBuilder(DB& db, Statement& stm, const Record& rec, unsigned int modifiers)
-        : DataQueryBuilder(db, stm, rec, modifiers) {}
+    SummaryQueryBuilder(DB& db, const Record& rec, unsigned int modifiers)
+        : DataQueryBuilder(db, rec, modifiers) {}
 
     virtual void build_select();
     virtual void build_order_by();

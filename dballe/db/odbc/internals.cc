@@ -325,20 +325,29 @@ std::unique_ptr<Transaction> ODBCConnection::transaction()
     return unique_ptr<Transaction>(new ODBCTransaction(od_conn));
 }
 
-std::unique_ptr<Statement> ODBCConnection::statement()
+std::unique_ptr<Statement> ODBCConnection::statement(const std::string& query)
 {
-    return unique_ptr<Statement>(new ODBCStatement(*this));
+    return unique_ptr<Statement>(odbcstatement(query).release());
 }
 
-std::unique_ptr<ODBCStatement> ODBCConnection::odbcstatement()
+std::unique_ptr<ODBCStatement> ODBCConnection::odbcstatement(const std::string& query)
 {
-    return unique_ptr<ODBCStatement>(new ODBCStatement(*this));
+    unique_ptr<ODBCStatement> res(new ODBCStatement(*this));
+    res->dbv5_set_cursor_forward_only();
+    res->prepare(query);
+    return res;
+}
+
+std::unique_ptr<ODBCStatement> ODBCConnection::dbv5_odbcstatement()
+{
+    unique_ptr<ODBCStatement> res(new ODBCStatement(*this));
+    return res;
 }
 
 void ODBCConnection::impl_exec_noargs(const std::string& query)
 {
     ODBCStatement stm(*this);
-    stm.exec_direct_and_close(query.c_str());
+    stm.dbv5_exec_direct_and_close(query.c_str());
 }
 
 #define DBA_ODBC_MISSING_TABLE_POSTGRES "42P01"
@@ -357,12 +366,12 @@ void ODBCConnection::drop_table_if_exists(const char* name)
             break;
         case ServerType::ORACLE:
         {
-            auto stm = odbcstatement();
             char buf[100];
             int len;
-            stm->ignore_error = DBA_ODBC_MISSING_TABLE_ORACLE;
             len = snprintf(buf, 100, "DROP TABLE %s", name);
-            stm->exec_direct_and_close(buf, len);
+            auto stm = odbcstatement(string(buf, len));
+            stm->ignore_error = DBA_ODBC_MISSING_TABLE_ORACLE;
+            stm->execute_and_close();
             break;
         }
     }
@@ -379,12 +388,12 @@ void ODBCConnection::drop_sequence_if_exists(const char* name)
             break;
         case ServerType::ORACLE:
         {
-            auto stm = odbcstatement();
             char buf[100];
             int len;
-            stm->ignore_error = DBA_ODBC_MISSING_SEQUENCE_ORACLE;
             len = snprintf(buf, 100, "DROP SEQUENCE %s", name);
-            stm->exec_direct_and_close(buf, len);
+            auto stm = odbcstatement(string(buf, len));
+            stm->ignore_error = DBA_ODBC_MISSING_SEQUENCE_ORACLE;
+            stm->execute_and_close();
             break;
         }
         default:
@@ -400,19 +409,16 @@ int ODBCConnection::get_last_insert_id()
         switch (server_type)
         {
             case ServerType::MYSQL:
-                stm_last_insert_id = odbcstatement().release();
+                stm_last_insert_id = odbcstatement("SELECT LAST_INSERT_ID()").release();
                 stm_last_insert_id->bind_out(1, m_last_insert_id);
-                stm_last_insert_id->prepare("SELECT LAST_INSERT_ID()");
                 break;
             case ServerType::SQLITE:
-                stm_last_insert_id = odbcstatement().release();
+                stm_last_insert_id = odbcstatement("SELECT LAST_INSERT_ROWID()").release();
                 stm_last_insert_id->bind_out(1, m_last_insert_id);
-                stm_last_insert_id->prepare("SELECT LAST_INSERT_ROWID()");
                 break;
             case ServerType::POSTGRES:
-                stm_last_insert_id = odbcstatement().release();
+                stm_last_insert_id = odbcstatement("SELECT LASTVAL()").release();
                 stm_last_insert_id->bind_out(1, m_last_insert_id);
-                stm_last_insert_id->prepare("SELECT LASTVAL()");
                 break;
             default:
                 throw error_consistency("get_last_insert_id called on a database that does not support it");
@@ -427,28 +433,28 @@ int ODBCConnection::get_last_insert_id()
 
 bool ODBCConnection::has_table(const std::string& name)
 {
-    auto stm = odbcstatement();
+    unique_ptr<ODBCStatement> stm;
     int count;
 
     switch (server_type)
     {
         case ServerType::MYSQL:
-            stm->prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name=?");
+            stm = odbcstatement("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name=?");
             stm->bind_in(1, name.data(), name.size());
             stm->bind_out(1, count);
             break;
         case ServerType::SQLITE:
-            stm->prepare("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?");
+            stm = odbcstatement("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?");
             stm->bind_in(1, name.data(), name.size());
             stm->bind_out(1, count);
             break;
         case ServerType::ORACLE:
-            stm->prepare("SELECT COUNT(*) FROM user_tables WHERE table_name=UPPER(?)");
+            stm = odbcstatement("SELECT COUNT(*) FROM user_tables WHERE table_name=UPPER(?)");
             stm->bind_in(1, name.data(), name.size());
             stm->bind_out(1, count);
             break;
         case ServerType::POSTGRES:
-            stm->prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_name=?");
+            stm = odbcstatement("SELECT COUNT(*) FROM information_schema.tables WHERE table_name=?");
             stm->bind_in(1, name.data(), name.size());
             stm->bind_out(1, count);
             break;
@@ -466,11 +472,11 @@ std::string ODBCConnection::get_setting(const std::string& key)
     char result[64];
     SQLLEN result_len;
 
-    auto stm = odbcstatement();
+    unique_ptr<ODBCStatement> stm;
     if (server_type == ServerType::MYSQL)
-        stm->prepare("SELECT value FROM dballe_settings WHERE `key`=?");
+        stm = odbcstatement("SELECT value FROM dballe_settings WHERE `key`=?");
     else
-        stm->prepare("SELECT value FROM dballe_settings WHERE \"key\"=?");
+        stm = odbcstatement("SELECT value FROM dballe_settings WHERE \"key\"=?");
     stm->bind_in(1, key.data(), key.size());
     stm->bind_out(1, result, 64, result_len);
     stm->execute();
@@ -486,8 +492,6 @@ std::string ODBCConnection::get_setting(const std::string& key)
 
 void ODBCConnection::set_setting(const std::string& key, const std::string& value)
 {
-    auto stm = odbcstatement();
-
     if (!has_table("dballe_settings"))
     {
         if (server_type == ServerType::MYSQL)
@@ -497,18 +501,19 @@ void ODBCConnection::set_setting(const std::string& key, const std::string& valu
     }
 
     // Remove if it exists
+    unique_ptr<ODBCStatement> stm;
     if (server_type == ServerType::MYSQL)
-        stm->prepare("DELETE FROM dballe_settings WHERE `key`=?");
+        stm = odbcstatement("DELETE FROM dballe_settings WHERE `key`=?");
     else
-        stm->prepare("DELETE FROM dballe_settings WHERE \"key\"=?");
+        stm = odbcstatement("DELETE FROM dballe_settings WHERE \"key\"=?");
     stm->bind_in(1, key.data(), key.size());
     stm->execute_and_close();
 
     // Then insert it
     if (server_type == ServerType::MYSQL)
-        stm->prepare("INSERT INTO dballe_settings (`key`, value) VALUES (?, ?)");
+        stm = odbcstatement("INSERT INTO dballe_settings (`key`, value) VALUES (?, ?)");
     else
-        stm->prepare("INSERT INTO dballe_settings (\"key\", value) VALUES (?, ?)");
+        stm = odbcstatement("INSERT INTO dballe_settings (\"key\", value) VALUES (?, ?)");
     SQLLEN key_size = key.size();
     SQLLEN value_size = value.size();
     stm->bind_in(1, key.data(), key_size);
@@ -720,7 +725,7 @@ size_t ODBCStatement::rowcount()
     return res;
 }
 
-void ODBCStatement::set_cursor_forward_only()
+void ODBCStatement::dbv5_set_cursor_forward_only()
 {
     int sqlres = SQLSetStmtAttr(stm, SQL_ATTR_CURSOR_TYPE,
         (SQLPOINTER)SQL_CURSOR_FORWARD_ONLY, SQL_IS_INTEGER);
@@ -798,7 +803,7 @@ int ODBCStatement::execute()
     return sqlres;
 }
 
-int ODBCStatement::exec_direct(const char* query)
+int ODBCStatement::dbv5_exec_direct(const char* query)
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_query = query;
@@ -813,7 +818,7 @@ int ODBCStatement::exec_direct(const char* query)
     return sqlres;
 }
 
-int ODBCStatement::exec_direct(const char* query, int qlen)
+int ODBCStatement::dbv5_exec_direct(const char* query, int qlen)
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_query = string(query, qlen);
@@ -863,7 +868,7 @@ int ODBCStatement::execute_and_close()
     return sqlres;
 }
 
-int ODBCStatement::exec_direct_and_close(const char* query)
+int ODBCStatement::dbv5_exec_direct_and_close(const char* query)
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_query = query;
@@ -879,7 +884,7 @@ int ODBCStatement::exec_direct_and_close(const char* query)
     return sqlres;
 }
 
-int ODBCStatement::exec_direct_and_close(const char* query, int qlen)
+int ODBCStatement::dbv5_exec_direct_and_close(const char* query, int qlen)
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_query = string(query, qlen);

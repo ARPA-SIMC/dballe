@@ -68,14 +68,20 @@ Data::Data(ODBCConnection& conn)
     */
 
     /* Create the statement for insert */
-    istm = conn.odbcstatement().release();
+    istm = conn.odbcstatement(insert_query).release();
     istm->bind_in(1, id_context);
     istm->bind_in(2, id_var);
     istm->bind_in(3, value, value_ind);
-    istm->prepare(insert_query);
 
     /* Create the statement for replace */
-    ustm = conn.odbcstatement().release();
+    switch (conn.server_type)
+    {
+        case ServerType::MYSQL: ustm = conn.odbcstatement(replace_query_mysql).release(); break;
+        case ServerType::SQLITE: ustm = conn.odbcstatement(replace_query_sqlite).release(); break;
+        case ServerType::ORACLE: ustm = conn.odbcstatement(replace_query_oracle).release(); break;
+        case ServerType::POSTGRES: ustm = conn.odbcstatement(replace_query_postgres).release(); break;
+        default: ustm = conn.odbcstatement(replace_query_postgres).release(); break;
+    }
     if (conn.server_type == ServerType::POSTGRES)
     {
         ustm->bind_in(1, value, value_ind);
@@ -86,29 +92,20 @@ Data::Data(ODBCConnection& conn)
         ustm->bind_in(2, id_var);
         ustm->bind_in(3, value, value_ind);
     }
-    switch (conn.server_type)
-    {
-        case ServerType::MYSQL: ustm->prepare(replace_query_mysql); break;
-        case ServerType::SQLITE: ustm->prepare(replace_query_sqlite); break;
-        case ServerType::ORACLE: ustm->prepare(replace_query_oracle); break;
-        case ServerType::POSTGRES: ustm->prepare(replace_query_postgres); break;
-        default: ustm->prepare(replace_query_postgres); break;
-    }
 
     /* Create the statement for insert ignore */
-    iistm = conn.odbcstatement().release();
+    switch (conn.server_type)
+    {
+        case ServerType::POSTGRES: iistm = conn.odbcstatement(insert_query).release(); iistm->ignore_error = "FIXME"; break;
+        case ServerType::ORACLE: iistm = conn.odbcstatement(insert_query).release(); iistm->ignore_error = "23000"; break;
+        //case ServerType::ORACLE: iistm = conn.odbcstatement(insert_ignore_query_oracle).release(); break;
+        case ServerType::MYSQL: iistm = conn.odbcstatement(insert_ignore_query_mysql).release(); break;
+        case ServerType::SQLITE: iistm = conn.odbcstatement(insert_ignore_query_sqlite).release(); break;
+        default: iistm = conn.odbcstatement(insert_ignore_query_sqlite).release(); break;
+    }
     iistm->bind_in(1, id_context);
     iistm->bind_in(2, id_var);
     iistm->bind_in(3, value, value_ind);
-    switch (conn.server_type)
-    {
-        case ServerType::POSTGRES: iistm->prepare(insert_query); iistm->ignore_error = "FIXME"; break;
-        case ServerType::ORACLE: iistm->prepare(insert_query); iistm->ignore_error = "23000"; break;
-        //case ServerType::ORACLE: iistm->prepare(insert_ignore_query_oracle); break;
-        case ServerType::MYSQL: iistm->prepare(insert_ignore_query_mysql); break;
-        case ServerType::SQLITE: iistm->prepare(insert_ignore_query_sqlite); break;
-        default: iistm->prepare(insert_ignore_query_sqlite); break;
-    }
 }
 
 Data::~Data()
@@ -174,11 +171,11 @@ void Data::dump(FILE* out)
     char value[255];
     SQLLEN value_ind;
 
-    auto stm = conn.odbcstatement();
+    auto stm = conn.odbcstatement("SELECT id_context, id_var, value FROM data");
     stm->bind_out(1, id_context);
     stm->bind_out(2, id_var);
     stm->bind_out(3, value, 255, value_ind);
-    stm->exec_direct("SELECT id_context, id_var, value FROM data");
+    stm->execute();
     int count;
     fprintf(out, "dump of table data:\n");
     for (count = 0; stm->fetch(); ++count)

@@ -66,11 +66,9 @@ void to::test<1>()
 	reset();
 
     auto& c = connection();
-    auto s = c.odbcstatement();
+    c.exec("INSERT INTO dballe_test VALUES (42)");
 
-    s->exec_direct("INSERT INTO dballe_test VALUES (42)");
-
-    s->prepare("SELECT val FROM dballe_test");
+    auto s = c.odbcstatement("SELECT val FROM dballe_test");
     int val = 0;
     s->bind_out(1, val);
     s->execute();
@@ -89,11 +87,9 @@ void to::test<2>()
 	reset();
 
     auto& c = connection();
-    auto s = c.odbcstatement();
+    c.exec("INSERT INTO dballe_test VALUES (42)");
 
-    s->exec_direct("INSERT INTO dballe_test VALUES (42)");
-
-    s->prepare("SELECT val FROM dballe_test");
+    auto s = c.odbcstatement("SELECT val FROM dballe_test");
     int val = 0;
     SQLLEN ind = 0;
     s->bind_out(1, val, ind);
@@ -114,11 +110,9 @@ void to::test<3>()
 	reset();
 
     auto& c = connection();
-    auto s = c.odbcstatement();
+    c.exec("INSERT INTO dballe_test VALUES (42)");
 
-    s->exec_direct("INSERT INTO dballe_test VALUES (42)");
-
-    s->prepare("SELECT val FROM dballe_test");
+    auto s = c.odbcstatement("SELECT val FROM dballe_test");
     unsigned val = 0;
     s->bind_out(1, val);
     s->execute();
@@ -137,11 +131,9 @@ void to::test<4>()
 	reset();
 
     auto& c = connection();
-    auto s = c.odbcstatement();
+    c.exec("INSERT INTO dballe_test VALUES (42)");
 
-    s->exec_direct("INSERT INTO dballe_test VALUES (42)");
-
-    s->prepare("SELECT val FROM dballe_test");
+    auto s = c.odbcstatement("SELECT val FROM dballe_test");
     unsigned val = 0;
     SQLLEN ind = 0;
     s->bind_out(1, val, ind);
@@ -162,11 +154,8 @@ void to::test<5>()
 	reset();
 
     auto& c = connection();
-    auto s = c.odbcstatement();
-
-    s->exec_direct("INSERT INTO dballe_test VALUES (42)");
-
-    s->prepare("SELECT val FROM dballe_test");
+    c.exec("INSERT INTO dballe_test VALUES (42)");
+    auto s = c.odbcstatement("SELECT val FROM dballe_test");
     unsigned short val = 0;
     s->bind_out(1, val);
     s->execute();
@@ -206,10 +195,4 @@ void to::test<7>()
     ensure_equals(c.get_setting("test_key"), "42");
 }
 
-    //void bind_out(int idx, char* val, SQLLEN buflen);
-    //void bind_out(int idx, char* val, SQLLEN buflen, SQLLEN& ind);
-    //void bind_out(int idx, SQL_TIMESTAMP_STRUCT& val);
-
 }
-
-/* vim:set ts=4 sw=4: */

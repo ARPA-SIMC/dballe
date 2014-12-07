@@ -62,7 +62,7 @@ ODBCLevTr::ODBCLevTr(ODBCConnection& conn)
     }
 
     /* Create the statement for select fixed */
-    sstm = conn.odbcstatement().release();
+    sstm = conn.odbcstatement(select_query).release();
     sstm->bind_in(1, working_row.ltype1);
     sstm->bind_in(2, working_row.l1);
     sstm->bind_in(3, working_row.ltype2);
@@ -71,10 +71,9 @@ ODBCLevTr::ODBCLevTr(ODBCConnection& conn)
     sstm->bind_in(6, working_row.p1);
     sstm->bind_in(7, working_row.p2);
     sstm->bind_out(1, working_row.id);
-    sstm->prepare(select_query);
 
     /* Create the statement for select data */
-    sdstm = conn.odbcstatement().release();
+    sdstm = conn.odbcstatement(select_data_query).release();
     sdstm->bind_in(1, working_row.id);
     sdstm->bind_out(1, working_row.ltype1);
     sdstm->bind_out(2, working_row.l1);
@@ -83,10 +82,9 @@ ODBCLevTr::ODBCLevTr(ODBCConnection& conn)
     sdstm->bind_out(5, working_row.pind);
     sdstm->bind_out(6, working_row.p1);
     sdstm->bind_out(7, working_row.p2);
-    sdstm->prepare(select_data_query);
 
     /* Create the statement for insert */
-    istm = conn.odbcstatement().release();
+    istm = conn.odbcstatement(insert_query).release();
     istm->bind_in(1, working_row.ltype1);
     istm->bind_in(2, working_row.l1);
     istm->bind_in(3, working_row.ltype2);
@@ -94,12 +92,10 @@ ODBCLevTr::ODBCLevTr(ODBCConnection& conn)
     istm->bind_in(5, working_row.pind);
     istm->bind_in(6, working_row.p1);
     istm->bind_in(7, working_row.p2);
-    istm->prepare(insert_query);
 
     /* Create the statement for remove */
-    dstm = conn.odbcstatement().release();
+    dstm = conn.odbcstatement(remove_query).release();
     dstm->bind_in(1, working_row.id);
-    dstm->prepare(remove_query);
 }
 
 ODBCLevTr::~ODBCLevTr()
@@ -207,7 +203,7 @@ const LevTr::DBRow* ODBCLevTr::read(int id)
 void ODBCLevTr::read_all(std::function<void(const LevTr::DBRow&)> dest)
 {
     // Prefetch everything
-    auto stm = conn.odbcstatement();
+    auto stm = conn.odbcstatement("SELECT id, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr");
     stm->bind_out(1, working_row.id);
     stm->bind_out(2, working_row.ltype1);
     stm->bind_out(3, working_row.l1);
@@ -216,7 +212,7 @@ void ODBCLevTr::read_all(std::function<void(const LevTr::DBRow&)> dest)
     stm->bind_out(6, working_row.pind);
     stm->bind_out(7, working_row.p1);
     stm->bind_out(8, working_row.p2);
-    stm->exec_direct("SELECT id, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr");
+    stm->execute();
     while (stm->fetch())
         dest(working_row);
 }
@@ -232,7 +228,7 @@ void ODBCLevTr::dump(FILE* out)
     int p1;
     int p2;
 
-    auto stm = conn.odbcstatement();
+    auto stm = conn.odbcstatement("SELECT id, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr ORDER BY id");
     stm->bind_out(1, id);
     stm->bind_out(2, ltype1);
     stm->bind_out(3, l1);
@@ -241,7 +237,7 @@ void ODBCLevTr::dump(FILE* out)
     stm->bind_out(6, pind);
     stm->bind_out(7, p1);
     stm->bind_out(8, p2);
-    stm->exec_direct("SELECT id, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr ORDER BY id");
+    stm->execute();
     int count;
     fprintf(out, "dump of table lev_tr:\n");
     fprintf(out, "   id   lev              tr\n");

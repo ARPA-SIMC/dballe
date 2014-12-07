@@ -93,7 +93,7 @@ const char* ODBCRepinfo::get_rep_memo(int id)
 
 void ODBCRepinfo::read_cache()
 {
-    auto stm = conn.odbcstatement();
+    auto stm = conn.odbcstatement("SELECT id, memo, description, prio, descriptor, tablea FROM repinfo ORDER BY id");
 
     unsigned id;
     char memo[20]; SQLLEN memo_ind;
@@ -111,7 +111,7 @@ void ODBCRepinfo::read_cache()
     stm->bind_out(5, descriptor, sizeof(descriptor), descriptor_ind);
     stm->bind_out(6, tablea);
 
-    stm->exec_direct("SELECT id, memo, description, prio, descriptor, tablea FROM repinfo ORDER BY id");
+    stm->execute();
 
     /* Get the results and save them in the record */
     while (stm->fetch())
@@ -123,28 +123,25 @@ void ODBCRepinfo::read_cache()
 
 void ODBCRepinfo::insert_auto_entry(const char* memo)
 {
-    auto stm = conn.odbcstatement();
-
+    auto stm = conn.odbcstatement("SELECT MAX(id) FROM repinfo");
     unsigned id;
     stm->bind_out(1, id);
-    stm->exec_direct("SELECT MAX(id) FROM repinfo");
+    stm->execute();
     stm->fetch_expecting_one();
 
+    stm = conn.odbcstatement("SELECT MAX(prio) FROM repinfo");
     unsigned prio;
     stm->bind_out(1, prio);
-    stm->exec_direct("SELECT MAX(prio) FROM repinfo");
+    stm->execute();
     stm->fetch_expecting_one();
 
     ++id;
     ++prio;
 
-    stm->bind_in(1, id);
-    stm->bind_in(2, memo);
-    stm->bind_in(3, memo);
-    stm->bind_in(4, prio);
-
-    stm->exec_direct_and_close("INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)"
-                    " VALUES (?, ?, ?, ?, '-', 255)");
+    conn.exec(R"(
+        INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)
+               VALUES (?, ?, ?, ?, '-', 255)
+    )", id, memo, memo, prio);
 }
 
 void ODBCRepinfo::cache_append(unsigned id, const char* memo, const char* desc, int prio, const char* descriptor, int tablea)
@@ -439,8 +436,7 @@ int ODBCRepinfo::id_use_count(unsigned id, const char* name)
 {
     unsigned dbid = id;
     unsigned count;
-    auto stm = conn.odbcstatement();
-    stm->prepare("SELECT COUNT(1) FROM context WHERE id_report = ?");
+    auto stm = conn.odbcstatement("SELECT COUNT(1) FROM context WHERE id_report = ?");
     stm->bind_in(1, dbid);
     stm->bind_out(1, count);
     stm->execute();
@@ -475,8 +471,7 @@ void ODBCRepinfo::update(const char* deffile, int* added, int* deleted, int* upd
 
         /* Delete the items that were deleted */
         {
-            auto stm = conn.odbcstatement();
-            stm->prepare("DELETE FROM repinfo WHERE id=?");
+            auto stm = conn.odbcstatement("DELETE FROM repinfo WHERE id=?");
             for (size_t i = 0; i < cache.size(); ++i)
                 if (!cache[i].memo.empty() && cache[i].new_memo.empty())
                 {
@@ -490,9 +485,10 @@ void ODBCRepinfo::update(const char* deffile, int* added, int* deleted, int* upd
 
         /* Update the items that were modified */
         {
-            auto stm = conn.odbcstatement();
-            stm->prepare("UPDATE repinfo set memo=?, description=?, prio=?, descriptor=?, tablea=?"
-                    "  WHERE id=?");
+            auto stm = conn.odbcstatement(R"(
+                UPDATE repinfo set memo=?, description=?, prio=?, descriptor=?, tablea=?
+                 WHERE id=?
+            )");
             for (size_t i = 0; i < cache.size(); ++i)
                 if (!cache[i].memo.empty() && !cache[i].new_memo.empty())
                 {
@@ -513,9 +509,10 @@ void ODBCRepinfo::update(const char* deffile, int* added, int* deleted, int* upd
         /* Insert the new items */
         if (!newitems.empty())
         {
-            auto stm = conn.odbcstatement();
-            stm->prepare("INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)"
-                    "     VALUES (?, ?, ?, ?, ?, ?)");
+            auto stm = conn.odbcstatement(R"(
+                INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)
+                     VALUES (?, ?, ?, ?, ?, ?)
+            )");
 
             for (vector<repinfo::Cache>::const_iterator i = newitems.begin();
                     i != newitems.end(); ++i)
@@ -550,16 +547,14 @@ void ODBCRepinfo::dump(FILE* out)
     char descriptor[6]; SQLLEN descriptor_ind;
     unsigned tablea;
 
-    auto stm = conn.odbcstatement();
-
+    auto stm = conn.odbcstatement("SELECT id, memo, description, prio, descriptor, tablea FROM repinfo ORDER BY id");
     stm->bind_out(1, id);
     stm->bind_out(2, memo, sizeof(memo), memo_ind);
     stm->bind_out(3, description, sizeof(description), description_ind);
     stm->bind_out(4, prio);
     stm->bind_out(5, descriptor, sizeof(descriptor), descriptor_ind);
     stm->bind_out(6, tablea);
-
-    stm->exec_direct("SELECT id, memo, description, prio, descriptor, tablea FROM repinfo ORDER BY id");
+    stm->execute();
 
     int count;
     fprintf(out, "dump of table repinfo:\n");
@@ -588,8 +583,7 @@ ODBCRepinfo::ODBCRepinfo(ODBCConnection& conn) : v5::ODBCRepinfo(conn) {}
 int ODBCRepinfo::id_use_count(unsigned id, const char* name)
 {
     unsigned count;
-    auto stm = conn.odbcstatement();
-    stm->prepare("SELECT COUNT(1) FROM data WHERE id_report = ?");
+    auto stm = conn.odbcstatement("SELECT COUNT(1) FROM data WHERE id_report = ?");
     stm->bind_in(1, id);
     stm->bind_out(1, count);
     stm->execute();

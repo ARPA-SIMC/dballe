@@ -49,6 +49,7 @@ struct Statement;
 
 namespace v6 {
 struct DB;
+struct QueryBuilder;
 
 /// Precompiled queries to manipulate the repinfo table
 std::unique_ptr<v5::Repinfo> create_repinfo(Connection& conn);
@@ -259,12 +260,9 @@ struct SQLRecord
  * Query will dispatch to the right connector routines for the query, based on
  * the actual implementation of stm.
  */
-void run_built_query(
-        Statement& stm,
-        bool sel_station, bool sel_varinfo, bool sel_data_id, bool sel_data,
-        std::function<void(SQLRecord& rec)> dest);
+void run_built_query(Connection& conn, const QueryBuilder& qb, std::function<void(SQLRecord& rec)> dest);
 
-void run_delete_query(Connection& conn, Statement& stm);
+void run_delete_query(Connection& conn, const QueryBuilder& qb);
 
 }
 }
