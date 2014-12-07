@@ -127,7 +127,7 @@ public:
 struct SQLiteStatement : public Statement
 {
     const SQLiteConnection& conn;
-    sqlite3_stmt *stm;
+    sqlite3_stmt *stm = nullptr;
 
     SQLiteStatement(SQLiteConnection& conn);
     SQLiteStatement(const SQLiteStatement&) = delete;

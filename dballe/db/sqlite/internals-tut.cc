@@ -27,32 +27,23 @@ using namespace std;
 
 namespace tut {
 
-struct db_sqlite_internals_shar : public dballe::tests::db_test
+struct db_sqlite_internals_shar
 {
-    db_sqlite_internals_shar() : dballe::tests::db_test(db::V6)
+    SQLiteConnection conn;
+
+    db_sqlite_internals_shar()
     {
-        if (!has_db()) return;
+        conn.open_memory();
     }
 
     ~db_sqlite_internals_shar()
     {
     }
 
-    SQLiteConnection& connection()
-    {
-#if 0
-        if (db::v6::DB* d = dynamic_cast<db::v6::DB*>(db.get()))
-            return *(d->conn);
-        else
-            throw error_consistency("test DB is not a v6 DB");
-#endif
-    }
-
     void reset()
     {
-        Connection& c = connection();
-        c.drop_table_if_exists("dballe_test");
-        c.exec("CREATE TABLE dballe_test (val INTEGER NOT NULL)");
+        conn.drop_table_if_exists("dballe_test");
+        conn.exec("CREATE TABLE dballe_test (val INTEGER NOT NULL)");
     }
 };
 TESTGRP(db_sqlite_internals);
@@ -61,14 +52,14 @@ TESTGRP(db_sqlite_internals);
 template<> template<>
 void to::test<1>()
 {
-#if 0
-    use_db();
     reset();
 
-    auto& c = connection();
-    auto s = c.odbcstatement();
+    conn.exec("INSERT INTO dballe_test VALUES (42)");
+    //conn.exec("INSERT INTO dballe_test VALUES (?)", 42);
 
-    s->exec_direct("INSERT INTO dballe_test VALUES (42)");
+    //auto s = conn.sqlitestatement();
+
+#if 0
 
     s->prepare("SELECT val FROM dballe_test");
     int val = 0;
@@ -91,7 +82,7 @@ void to::test<2>()
     reset();
 
     auto& c = connection();
-    auto s = c.odbcstatement();
+    auto s = c.sqlitestatement();
 
     s->exec_direct("INSERT INTO dballe_test VALUES (42)");
 
@@ -116,7 +107,7 @@ void to::test<3>()
     reset();
 
     auto& c = connection();
-    auto s = c.odbcstatement();
+    auto s = c.sqlitestatement();
 
     s->exec_direct("INSERT INTO dballe_test VALUES (42)");
 
@@ -139,7 +130,7 @@ void to::test<4>()
     reset();
 
     auto& c = connection();
-    auto s = c.odbcstatement();
+    auto s = c.sqlitestatement();
 
     s->exec_direct("INSERT INTO dballe_test VALUES (42)");
 
@@ -164,7 +155,7 @@ void to::test<5>()
     reset();
 
     auto& c = connection();
-    auto s = c.odbcstatement();
+    auto s = c.sqlitestatement();
 
     s->exec_direct("INSERT INTO dballe_test VALUES (42)");
 

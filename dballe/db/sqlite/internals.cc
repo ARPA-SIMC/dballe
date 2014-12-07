@@ -194,16 +194,12 @@ std::unique_ptr<Transaction> SQLiteConnection::transaction()
 
 std::unique_ptr<Statement> SQLiteConnection::statement()
 {
-#if 0
     return unique_ptr<Statement>(new SQLiteStatement(*this));
-#endif
 }
 
 std::unique_ptr<SQLiteStatement> SQLiteConnection::sqlitestatement()
 {
-#if 0
     return unique_ptr<SQLiteStatement>(new SQLiteStatement(*this));
-#endif
 }
 
 void SQLiteConnection::impl_exec_noargs(const std::string& query)
@@ -211,11 +207,10 @@ void SQLiteConnection::impl_exec_noargs(const std::string& query)
     wrap_sqlite3_exec(query);
 }
 
-#define DBA_ODBC_MISSING_TABLE_SQLITE "HY000"
-
 void SQLiteConnection::drop_table_if_exists(const char* name)
 {
 #if 0
+#define DBA_ODBC_MISSING_TABLE_SQLITE "HY000"
     switch (server_type)
     {
         case ServerType::MYSQL:

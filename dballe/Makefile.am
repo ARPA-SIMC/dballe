@@ -313,7 +313,7 @@ tut_test_SOURCES = \
 	db/v6/tests/lev_tr.cc \
 	db/v6/tests/data.cc \
 	db/v6/tests/attr.cc \
-	db/v6/tests/db.cc
+	db/v6/tests/db.cc \
 	simple/msgapi-tut.cc \
 	cmdline/dbadb-tut.cc \
 	simple/dbapi-tut.cc
