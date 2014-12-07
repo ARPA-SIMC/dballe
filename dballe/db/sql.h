@@ -184,7 +184,7 @@ private:
     // Implementation of variadic bind: recursive iteration over the parameter pack
     template<size_t total, typename ...Args, typename T> void bindn(const T& first, const Args& ...args)
     {
-        bind_in(total - sizeof...(args), first);
+        bind_val(total - sizeof...(args), first);
         bindn<total>(args...);
     }
 
@@ -206,10 +206,14 @@ public:
         bindn<sizeof...(args)>(args...);
     }
 
-    virtual void bind_in(int idx, const int& val) = 0;
-    virtual void bind_in(int idx, const unsigned& val) = 0;
-    virtual void bind_in(int idx, const unsigned short& val) = 0;
-    virtual void bind_in(int idx, const char* val) = 0;
+    /// Pass an int value to fill an input placeholder
+    virtual void bind_val(int idx, int val) = 0;
+    /// Pass an unsigned value to fill an input placeholder
+    virtual void bind_val(int idx, unsigned val) = 0;
+    /// Pass an unsigned short value to fill an input placeholder
+    virtual void bind_val(int idx, unsigned short val) = 0;
+    /// Pass a string value to fill an input placeholder
+    virtual void bind_val(int idx, const std::string& val) = 0;
 };
 
 template<typename T, typename ...Args>

@@ -184,13 +184,18 @@ struct ODBCStatement : public Statement
     ~ODBCStatement();
     ODBCStatement& operator=(const ODBCStatement&) = delete;
 
-    void bind_in(int idx, const int& val) override;
+    void bind_val(int idx, int val) override;
+    void bind_val(int idx, unsigned val) override;
+    void bind_val(int idx, unsigned short val) override;
+    void bind_val(int idx, const std::string& val) override;
+
+    void bind_in(int idx, const int& val);
     void bind_in(int idx, const int& val, const SQLLEN& ind);
-    void bind_in(int idx, const unsigned& val) override;
+    void bind_in(int idx, const unsigned& val);
     void bind_in(int idx, const unsigned& val, const SQLLEN& ind);
-    void bind_in(int idx, const unsigned short& val) override;
+    void bind_in(int idx, const unsigned short& val);
     void bind_in(int idx, const unsigned short& val, const SQLLEN& ind);
-    void bind_in(int idx, const char* val) override;
+    void bind_in(int idx, const char* val);
     void bind_in(int idx, const char* val, const SQLLEN& ind);
     void bind_in(int idx, const SQL_TIMESTAMP_STRUCT& val);
 

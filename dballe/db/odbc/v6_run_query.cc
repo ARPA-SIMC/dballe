@@ -96,11 +96,11 @@ void odbc_run_delete_query(ODBCConnection& conn, const QueryBuilder& qb)
     stm->bind_out(1, out_id_data);
 
     // Compile the DELETE query for the data
-    auto stmd = conn.statement("DELETE FROM data WHERE id=?");
+    auto stmd = conn.odbcstatement("DELETE FROM data WHERE id=?");
     stmd->bind_in(1, out_id_data);
 
     // Compile the DELETE query for the attributes
-    auto stma = conn.statement("DELETE FROM attr WHERE id_data=?");
+    auto stma = conn.odbcstatement("DELETE FROM attr WHERE id_data=?");
     stma->bind_in(1, out_id_data);
 
     stm->execute();

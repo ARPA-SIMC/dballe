@@ -576,6 +576,26 @@ bool ODBCStatement::is_error(int sqlres)
         && !error_is_ignored();
 }
 
+void ODBCStatement::bind_val(int idx, int val)
+{
+    throw error_unimplemented("odbc bind_val int");
+}
+
+void ODBCStatement::bind_val(int idx, unsigned val)
+{
+    throw error_unimplemented("odbc bind_val unsigned");
+}
+
+void ODBCStatement::bind_val(int idx, unsigned short val)
+{
+    throw error_unimplemented("odbc bind_val ushort");
+}
+
+void ODBCStatement::bind_val(int idx, const std::string& val)
+{
+    throw error_unimplemented("odbc bind_val string");
+}
+
 void ODBCStatement::bind_in(int idx, const int& val)
 {
     // cast away const because the ODBC API is not const-aware

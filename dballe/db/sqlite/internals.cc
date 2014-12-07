@@ -194,12 +194,12 @@ std::unique_ptr<Transaction> SQLiteConnection::transaction()
 
 std::unique_ptr<Statement> SQLiteConnection::statement(const std::string& query)
 {
-    return unique_ptr<Statement>(new SQLiteStatement(*this));
+    return unique_ptr<Statement>(new SQLiteStatement(*this, query));
 }
 
 std::unique_ptr<SQLiteStatement> SQLiteConnection::sqlitestatement(const std::string& query)
 {
-    return unique_ptr<SQLiteStatement>(new SQLiteStatement(*this));
+    return unique_ptr<SQLiteStatement>(new SQLiteStatement(*this, query));
 }
 
 void SQLiteConnection::impl_exec_noargs(const std::string& query)
@@ -403,126 +403,84 @@ void SQLiteConnection::add_datetime(Querybuf& qb, const int* dt) const
 }
 
 
-SQLiteStatement::SQLiteStatement(SQLiteConnection& conn)
+SQLiteStatement::SQLiteStatement(SQLiteConnection& conn, const std::string& query)
     : conn(conn)
 {
-#if 0
-    int sqlres = SQLAllocHandle(SQL_HANDLE_STMT, conn.od_conn, &stm);
-    if ((sqlres != SQL_SUCCESS) && (sqlres != SQL_SUCCESS_WITH_INFO))
-        throw error_odbc(SQL_HANDLE_STMT, stm, "Allocating new statement handle");
-#endif
+    // From http://www.sqlite.org/c3ref/prepare.html:
+    // If the caller knows that the supplied string is nul-terminated, then
+    // there is a small performance advantage to be gained by passing an nByte
+    // parameter that is equal to the number of bytes in the input string
+    // including the nul-terminator bytes as this saves SQLite from having to
+    // make a copy of the input string.
+    int res = sqlite3_prepare_v2(conn, query.c_str(), query.size() + 1, &stm, nullptr);
+    if (res != SQLITE_OK)
+        error_sqlite::throwf(conn, "cannot compile query '%s'", query.c_str());
 }
 
 SQLiteStatement::~SQLiteStatement()
 {
-#if 0
-#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
-    if (!debug_reached_completion)
+    // Invoking sqlite3_finalize() on a NULL pointer is a harmless no-op.
+    sqlite3_finalize(stm);
+}
+
+void SQLiteStatement::execute(std::function<void()> on_row)
+{
+    if (sqlite3_reset(stm) != SQLITE_OK)
+        throw error_sqlite(conn, "cannot reset the query for a new execution");
+
+    while (true)
     {
-        string msg("Statement " + debug_query + " destroyed before reaching completion");
-        fprintf(stderr, "-- %s\n", msg.c_str());
-        //throw error_consistency(msg)
-        SQLCloseCursor(stm);
+        switch (sqlite3_step(stm))
+        {
+            case SQLITE_ROW: on_row(); break;
+            case SQLITE_DONE: return;
+            case SQLITE_BUSY:
+            case SQLITE_MISUSE:
+            default:
+                throw error_sqlite(conn, "cannot execute the query");
+        }
     }
-#endif
-    SQLFreeHandle(SQL_HANDLE_STMT, stm);
-#endif
 }
 
-#if 0
-bool ODBCStatement::error_is_ignored()
+void SQLiteStatement::execute_ignoring_results()
 {
-    if (!ignore_error) return false;
-
-    // Retrieve the current error code
-    char stat[10];
-    SQLINTEGER err;
-    SQLSMALLINT mlen;
-    SQLGetDiagRec(SQL_HANDLE_STMT, stm, 1, (unsigned char*)stat, &err, NULL, 0, &mlen);
-
-    // Ignore the given SQL error
-    return memcmp(stat, ignore_error, 5) == 0;
+    while (true)
+    {
+        switch (sqlite3_step(stm))
+        {
+            case SQLITE_ROW: break;
+            case SQLITE_DONE: return;
+            case SQLITE_BUSY:
+            case SQLITE_MISUSE:
+            default:
+                throw error_sqlite(conn, "query execution failed");
+        }
+    }
 }
 
-bool ODBCStatement::is_error(int sqlres)
+void SQLiteStatement::bind_val(int idx, int val)
 {
-    return (sqlres != SQL_SUCCESS)
-        && (sqlres != SQL_SUCCESS_WITH_INFO)
-        && (sqlres != SQL_NO_DATA)
-        && !error_is_ignored();
+    if (sqlite3_bind_int(stm, idx, val) != SQLITE_OK)
+        throw error_sqlite(conn, "cannot bind an int input column");
 }
-#endif
 
-void SQLiteStatement::bind_in(int idx, const int& val)
+void SQLiteStatement::bind_val(int idx, unsigned val)
 {
-#if 0
-    // cast away const because the ODBC API is not const-aware
-    SQLBindParameter(stm, idx, SQL_PARAM_INPUT, get_odbc_integer_type<true, sizeof(const int)>(), SQL_INTEGER, 0, 0, (int*)&val, 0, 0);
-#endif
+    if (sqlite3_bind_int64(stm, idx, val) != SQLITE_OK)
+        throw error_sqlite(conn, "cannot bind an int64 input column");
 }
-#if 0
-void SQLiteStatement::bind_in(int idx, const int& val, const SQLLEN& ind)
-{
-    // cast away const because the ODBC API is not const-aware
-    SQLBindParameter(stm, idx, SQL_PARAM_INPUT, get_odbc_integer_type<true, sizeof(const int)>(), SQL_INTEGER, 0, 0, (int*)&val, 0, (SQLLEN*)&ind);
-}
-#endif
 
-void SQLiteStatement::bind_in(int idx, const unsigned& val)
+void SQLiteStatement::bind_val(int idx, unsigned short val)
 {
-#if 0
-    // cast away const because the ODBC API is not const-aware
-    SQLBindParameter(stm, idx, SQL_PARAM_INPUT, get_odbc_integer_type<false, sizeof(const unsigned)>(), SQL_INTEGER, 0, 0, (unsigned*)&val, 0, 0);
-#endif
+    if (sqlite3_bind_int(stm, idx, val) != SQLITE_OK)
+        throw error_sqlite(conn, "cannot bind an int input column");
 }
-#if 0
-void SQLiteStatement::bind_in(int idx, const unsigned& val, const SQLLEN& ind)
-{
-    // cast away const because the ODBC API is not const-aware
-    SQLBindParameter(stm, idx, SQL_PARAM_INPUT, get_odbc_integer_type<false, sizeof(const unsigned)>(), SQL_INTEGER, 0, 0, (unsigned*)&val, 0, (SQLLEN*)&ind);
-}
-#endif
 
-void SQLiteStatement::bind_in(int idx, const unsigned short& val)
+void SQLiteStatement::bind_val(int idx, const std::string& val)
 {
-#if 0
-    // cast away const because the ODBC API is not const-aware
-    SQLBindParameter(stm, idx, SQL_PARAM_INPUT, get_odbc_integer_type<false, sizeof(const unsigned short)>(), SQL_INTEGER, 0, 0, (unsigned short*)&val, 0, 0);
-#endif
+    if (sqlite3_bind_text(stm, idx, val.data(), val.size(), SQLITE_TRANSIENT))
+        throw error_sqlite(conn, "cannot bind a text input column");
 }
-#if 0
-void SQLiteStatement::bind_in(int idx, const unsigned short& val, const SQLLEN& ind)
-{
-    // cast away const because the ODBC API is not const-aware
-    SQLBindParameter(stm, idx, SQL_PARAM_INPUT, get_odbc_integer_type<false, sizeof(const unsigned short)>(), SQL_INTEGER, 0, 0, (unsigned short*)&val, 0, (SQLLEN*)&ind);
-}
-#endif
-
-void SQLiteStatement::bind_in(int idx, const char* val)
-{
-#if 0
-    // cast away const because the ODBC API is not const-aware
-    SQLBindParameter(stm, idx, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)val, 0, 0);
-#endif
-}
-#if 0
-void SQLiteStatement::bind_in(int idx, const char* val, const SQLLEN& ind)
-{
-    // cast away const because the ODBC API is not const-aware
-    SQLBindParameter(stm, idx, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)val, 0, (SQLLEN*)&ind);
-}
-#endif
-
-#if 0
-void SQLiteStatement::bind_in(int idx, const SQL_TIMESTAMP_STRUCT& val)
-{
-    // cast away const because the ODBC API is not const-aware
-    //if (conn.server_type == POSTGRES || conn.server_type == SQLITE)
-        SQLBindParameter(stm, idx, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_TIMESTAMP, 0, 0, (SQL_TIMESTAMP_STRUCT*)&val, 0, 0);
-    //else
-        //SQLBindParameter(stm, idx, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_DATETIME, 0, 0, (SQL_TIMESTAMP_STRUCT*)&val, 0, 0);
-}
-#endif
 
 #if 0
 bool ODBCStatement::fetch()
@@ -655,13 +613,6 @@ void ODBCStatement::close_cursor_if_needed()
 #endif
 }
 #endif
-
-void SQLiteStatement::execute_ignoring_results()
-{
-#if 0
-    execute_and_close();
-#endif
-}
 
 #if 0
 int ODBCStatement::execute_and_close()

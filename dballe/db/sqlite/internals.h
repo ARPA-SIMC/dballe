@@ -70,6 +70,8 @@ public:
 
     SQLiteConnection& operator=(const SQLiteConnection&) = delete;
 
+    operator sqlite3*() { return db; }
+
     void open_file(const std::string& pathname, int flags=SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
     void open_memory(int flags=SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
     void open_private_file(int flags=SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
@@ -126,27 +128,44 @@ public:
 /// SQLite statement
 struct SQLiteStatement : public Statement
 {
-    const SQLiteConnection& conn;
+    SQLiteConnection& conn;
     sqlite3_stmt *stm = nullptr;
 
-    SQLiteStatement(SQLiteConnection& conn);
+    SQLiteStatement(SQLiteConnection& conn, const std::string& query);
     SQLiteStatement(const SQLiteStatement&) = delete;
     SQLiteStatement(const SQLiteStatement&&) = delete;
     ~SQLiteStatement();
     SQLiteStatement& operator=(const SQLiteStatement&) = delete;
 
-    void bind_in(int idx, const int& val) override;
-    //void bind_in(int idx, const int& val, const SQLLEN& ind);
-    void bind_in(int idx, const unsigned& val) override;
-    //void bind_in(int idx, const unsigned& val, const SQLLEN& ind);
-    void bind_in(int idx, const unsigned short& val) override;
-    //void bind_in(int idx, const unsigned short& val, const SQLLEN& ind);
-    void bind_in(int idx, const char* val) override;
-    //void bind_in(int idx, const char* val, const SQLLEN& ind);
-    //void bind_in(int idx, const SQL_TIMESTAMP_STRUCT& val);
+    void bind_val(int idx, int val) override;
+    void bind_val(int idx, unsigned val) override;
+    void bind_val(int idx, unsigned short val) override;
+    void bind_val(int idx, const std::string& val) override;
 
     void execute_ignoring_results() override;
 
+    /// Run the query, calling on_row for every row in the result
+    void execute(std::function<void()> on_row);
+
+    /// Read the int value of a column in the result set
+    int column_int(int col) { return sqlite3_column_int(stm, col); }
+
+    /// Read the int value of a column in the result set
+    sqlite3_int64 column_int64(int col) { return sqlite3_column_int64(stm, col); }
+
+    /// Read the double value of a column in the result set
+    double column_double(int col) { return sqlite3_column_double(stm, col); }
+
+    std::string column_string(int col)
+    {
+        const char* res = (const char*)sqlite3_column_text(stm, col);
+        if (res == NULL)
+            return std::string();
+        else
+            return res;
+    }
+
+    operator sqlite3_stmt*() { return stm; }
 #if 0
     /// @return SQLExecute's result
     int execute();

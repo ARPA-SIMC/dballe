@@ -54,23 +54,19 @@ void to::test<1>()
 {
     reset();
 
-    conn.exec("INSERT INTO dballe_test VALUES (42)");
-    //conn.exec("INSERT INTO dballe_test VALUES (?)", 42);
+    conn.exec("INSERT INTO dballe_test VALUES (1)");
+    conn.exec("INSERT INTO dballe_test VALUES (?)", 2);
 
-    //auto s = conn.sqlitestatement();
+    auto s = conn.sqlitestatement("SELECT val FROM dballe_test");
 
-#if 0
-
-    s->prepare("SELECT val FROM dballe_test");
     int val = 0;
-    s->bind_out(1, val);
-    s->execute();
     unsigned count = 0;
-    while (s->fetch())
+    s->execute([&]() {
+        val += s->column_int(0);
         ++count;
-    wassert(actual(val) == 42);
-    wassert(actual(count) == 1);
-#endif
+    });
+    wassert(actual(count) == 2);
+    wassert(actual(val) == 3);
 }
 
 #if 0
