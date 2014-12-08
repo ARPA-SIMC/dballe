@@ -193,7 +193,9 @@ struct QueryBuilder
 Cursor::Cursor(v5::DB& db)
     : db(db), stm(0)
 {
-    stm = db.conn->dbv5_odbcstatement().release();
+    ODBCConnection* c = dynamic_cast<ODBCConnection*>(db.conn);
+    if (!c) throw error_unimplemented("v5 Cursor is only implemented on ODBC conncetors");
+    stm = c->dbv5_odbcstatement().release();
 }
 
 Cursor::~Cursor()

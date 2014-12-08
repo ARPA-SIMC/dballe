@@ -263,7 +263,8 @@ db_test::db_test(bool reset)
 db_test::db_test(db::Format format, bool reset)
 {
     orig_format = DB::get_default_format();
-    if (reset) disappear();
+    // FIXME: currently v5 DB cannnot disappear on sqlite files
+    if (reset) try { disappear(); } catch (...) {}
     DB::set_default_format(format);
     db = DB::connect_test();
     if (reset) db->reset();

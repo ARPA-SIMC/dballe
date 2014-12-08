@@ -315,10 +315,7 @@ static const char* init_queries_oracle[] = {
 
 // First part of initialising a dba_db
 DB::DB(unique_ptr<ODBCConnection> conn)
-    : conn(conn.release()),
-      m_repinfo(0), m_station(0), m_context(0), m_data(0), m_attr(0),
-      stm_last_insert_id(0),
-      seq_station(0), seq_context(0), _last_station_id(0)
+    : conn(conn.release())
 {
     init_after_connect();
 
@@ -333,9 +330,6 @@ DB::~DB()
     if (m_context) delete m_context;
     if (m_station) delete m_station;
     if (m_repinfo) delete m_repinfo;
-    if (seq_context) delete seq_context;
-    if (seq_station) delete seq_station;
-    if (stm_last_insert_id) delete stm_last_insert_id;
     if (conn) delete conn;
 }
 
@@ -372,21 +366,33 @@ Station& DB::station()
 Context& DB::context()
 {
     if (m_context == NULL)
-        m_context = new Context(*this);
+    {
+        ODBCConnection* c = dynamic_cast<ODBCConnection*>(conn);
+        if (!c) throw error_unimplemented("v5 DB Context only works with ODBC connectors");
+        m_context = new Context(*c);
+    }
     return *m_context;
 }
 
 Data& DB::data()
 {
     if (m_data == NULL)
-        m_data = new Data(*conn);
+    {
+        ODBCConnection* c = dynamic_cast<ODBCConnection*>(conn);
+        if (!c) throw error_unimplemented("v5 DB Data only works with ODBC connectors");
+        m_data = new Data(*c);
+    }
     return *m_data;
 }
 
 Attr& DB::attr()
 {
     if (m_attr == NULL)
-        m_attr = new Attr(*conn);
+    {
+        ODBCConnection* c = dynamic_cast<ODBCConnection*>(conn);
+        if (!c) throw error_unimplemented("v5 DB Attr only works with ODBC connectors");
+        m_attr = new Attr(*c);
+    }
     return *m_attr;
 }
 
@@ -404,24 +410,6 @@ void DB::init_after_connect()
             conn->exec("PRAGMA journal_mode = MEMORY");
             conn->exec("PRAGMA legacy_file_format = 0");
         }
-    } else
-        conn->set_autocommit(false);
-
-    switch (conn->server_type)
-    {
-        case ServerType::ORACLE:
-        case ServerType::POSTGRES:
-            seq_station = new db::Sequence(*conn, "seq_station");
-            seq_context = new db::Sequence(*conn, "seq_context");
-            break;
-        case ServerType::MYSQL:
-            stm_last_insert_id = conn->odbcstatement("SELECT LAST_INSERT_ID()").release();
-            stm_last_insert_id->bind_out(1, m_last_insert_id);
-            break;
-        case ServerType::SQLITE:
-            stm_last_insert_id = conn->odbcstatement("SELECT LAST_INSERT_ROWID()").release();
-            stm_last_insert_id->bind_out(1, m_last_insert_id);
-            break;
     }
 }
 
@@ -601,32 +589,6 @@ static dba_err update_station_extra_info(dba_db db, dba_record rec, int id_ana)
 }
 #endif
 
-int DB::last_station_insert_id()
-{
-    if (seq_station)
-        return seq_station->read();
-    else
-    {
-        stm_last_insert_id->execute();
-        if (!stm_last_insert_id->fetch_expecting_one())
-            throw error_consistency("no last insert ID value returned from database");
-        return m_last_insert_id;
-    }
-}
-
-int DB::last_context_insert_id()
-{
-    if (seq_context)
-        return seq_context->read();
-    else
-    {
-        stm_last_insert_id->execute();
-        if (!stm_last_insert_id->fetch_expecting_one())
-            throw error_consistency("no last insert ID value returned from database");
-        return m_last_insert_id;
-    }
-}
-
 // Normalise longitude values to the [-180..180[ interval
 static inline int normalon(int lon)
 {
@@ -758,26 +720,29 @@ int DB::last_station_id() const
 
 void DB::remove(const Query& rec)
 {
-    auto t(conn->transaction());
-    db::v5::Cursor c(*this);
+    ODBCConnection* c = dynamic_cast<ODBCConnection*>(conn);
+    if (!c) throw error_unimplemented("v5 remove only works on ODBC connectors");
+
+    auto t(c->transaction());
+    db::v5::Cursor cur(*this);
 
     // Compile the DELETE query for the data
-    auto stmd = conn->odbcstatement("DELETE FROM data WHERE id_context=? AND id_var=?");
-    stmd->bind_in(1, c.out_context_id);
-    stmd->bind_in(2, c.out_varcode);
+    auto stmd = c->odbcstatement("DELETE FROM data WHERE id_context=? AND id_var=?");
+    stmd->bind_in(1, cur.out_context_id);
+    stmd->bind_in(2, cur.out_varcode);
 
     // Compile the DELETE query for the attributes
-    auto stma = conn->odbcstatement("DELETE FROM attr WHERE id_context=? AND id_var=?");
-    stma->bind_in(1, c.out_context_id);
-    stma->bind_in(2, c.out_varcode);
+    auto stma = c->odbcstatement("DELETE FROM attr WHERE id_context=? AND id_var=?");
+    stma->bind_in(1, cur.out_context_id);
+    stma->bind_in(2, cur.out_varcode);
 
     // Get the list of data to delete
-    c.query(rec,
+    cur.query(rec,
             DBA_DB_WANT_CONTEXT_ID | DBA_DB_WANT_VAR_NAME,
             DBA_DB_MODIFIER_UNSORTED | DBA_DB_MODIFIER_STREAM);
 
     /* Iterate all the results, deleting them */
-    while (c.next())
+    while (cur.next())
     {
         stmd->execute_and_close();
         stma->execute_and_close();
@@ -1021,6 +986,9 @@ void DB::query_datetime_extremes(const Query& query, Record& result)
 void DB::query_attrs(int reference_id, wreport::Varcode id_var,
         std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
+    ODBCConnection* c = dynamic_cast<ODBCConnection*>(conn);
+    if (!c) throw error_unimplemented("v5 query_attrs only works with ODBC connectors");
+
     // Create the query
     Querybuf query(200);
     query.append(
@@ -1032,7 +1000,7 @@ void DB::query_attrs(int reference_id, wreport::Varcode id_var,
     Varcode out_type;
     char out_value[255];
 
-    auto stm = conn->odbcstatement(query);
+    auto stm = c->odbcstatement(query);
     stm->bind_in(1, reference_id);
     stm->bind_in(2, id_var);
     stm->bind_out(1, out_type);
@@ -1075,6 +1043,9 @@ void DB::attr_insert(int reference_id, wreport::Varcode id_var, const Record& at
 
 void DB::attr_remove(int reference_id, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs)
 {
+    ODBCConnection* c = dynamic_cast<ODBCConnection*>(conn);
+    if (!c) throw error_unimplemented("v5 attr_remove only works with ODBC connectors");
+
     // Create the query
     Querybuf query(500);
     if (qcs.empty())
@@ -1089,7 +1060,7 @@ void DB::attr_remove(int reference_id, wreport::Varcode id_var, const std::vecto
 
     // dba_verbose(DBA_VERB_DB_SQL, "Performing query %s for id %d,B%02d%03d\n", query, id_context, DBA_VAR_X(id_var), DBA_VAR_Y(id_var));
 
-    auto stm = conn->odbcstatement(query);
+    auto stm = c->odbcstatement(query);
     stm->bind_in(1, reference_id);
     stm->bind_in(2, id_var);
     stm->execute_and_close();

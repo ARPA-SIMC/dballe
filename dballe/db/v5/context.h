@@ -35,6 +35,7 @@ namespace dballe {
 namespace db {
 struct ODBCConnection;
 struct ODBCStatement;
+struct Sequence;
 
 namespace v5 {
 struct DB;
@@ -47,16 +48,19 @@ struct Context
     /**
      * DB connection.
      */
-    v5::DB& db;
+    ODBCConnection& conn;
+
+    /// Context ID sequence
+    Sequence* seq_context = nullptr;
 
     /** Precompiled select statement */
-    ODBCStatement* sstm;
+    ODBCStatement* sstm = nullptr;
     /** Precompiled select data statement */
-    ODBCStatement* sdstm;
+    ODBCStatement* sdstm = nullptr;
     /** Precompiled insert statement */
-    ODBCStatement* istm;
+    ODBCStatement* istm = nullptr;
     /** Precompiled delete statement */
-    ODBCStatement* dstm;
+    ODBCStatement* dstm = nullptr;
 
     /// Context ID SQL parameter
     int id;
@@ -82,7 +86,7 @@ struct Context
     /// Time range P2 SQL parameter
     int p2;
 
-    Context(v5::DB& db);
+    Context(ODBCConnection& conn);
     ~Context();
 
     /**

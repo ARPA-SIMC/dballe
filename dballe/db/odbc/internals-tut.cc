@@ -44,7 +44,12 @@ struct db_internals_shar : public dballe::tests::db_test
     ODBCConnection& connection()
     {
         if (db::v5::DB* d = dynamic_cast<db::v5::DB*>(db.get()))
-            return *(d->conn);
+        {
+            if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(d->conn))
+                return *c;
+            else
+                throw error_consistency("test DB is not using an ODBC connection");
+        }
         else
             throw error_consistency("test DB is not a v5 DB");
     }

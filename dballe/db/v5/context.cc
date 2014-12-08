@@ -35,8 +35,8 @@ namespace dballe {
 namespace db {
 namespace v5 {
 
-Context::Context(DB& db)
-    : db(db), sstm(0), sdstm(0), istm(0), dstm(0)
+Context::Context(ODBCConnection& conn)
+    : conn(conn)
 {
     const char* select_query =
         "SELECT id FROM context WHERE id_ana=? AND id_report=? AND datetime=?"
@@ -50,9 +50,10 @@ Context::Context(DB& db)
         "DELETE FROM context WHERE id=?";
 
     /* Override queries for some databases */
-    switch (db.conn->server_type)
+    switch (conn.server_type)
     {
         case ServerType::ORACLE:
+            seq_context = new db::Sequence(conn, "seq_context");
             insert_query = "INSERT INTO context VALUES (seq_context.NextVal, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             break;
         case ServerType::POSTGRES:
@@ -64,7 +65,7 @@ Context::Context(DB& db)
     date.fraction = 0;
 
     /* Create the statement for select fixed */
-    sstm = db.conn->odbcstatement(select_query).release();
+    sstm = conn.odbcstatement(select_query).release();
     sstm->bind_in(1, id_station);
     sstm->bind_in(2, id_report);
     sstm->bind_in(3, date);
@@ -78,7 +79,7 @@ Context::Context(DB& db)
     sstm->bind_out(1, id);
 
     /* Create the statement for select data */
-    sdstm = db.conn->odbcstatement(select_data_query).release();
+    sdstm = conn.odbcstatement(select_data_query).release();
     sdstm->bind_in(1, id);
     sdstm->bind_out(1, id_station);
     sdstm->bind_out(2, id_report);
@@ -92,7 +93,7 @@ Context::Context(DB& db)
     sdstm->bind_out(10, p2);
 
     /* Create the statement for insert */
-    istm = db.conn->odbcstatement(insert_query).release();
+    istm = conn.odbcstatement(insert_query).release();
     istm->bind_in(1, id_station);
     istm->bind_in(2, id_report);
     istm->bind_in(3, date);
@@ -105,16 +106,17 @@ Context::Context(DB& db)
     istm->bind_in(10, p2);
 
     /* Create the statement for remove */
-    dstm = db.conn->odbcstatement(remove_query).release();
+    dstm = conn.odbcstatement(remove_query).release();
     dstm->bind_in(1, id);
 }
 
 Context::~Context()
 {
-    if (sstm) delete sstm;
-    if (sdstm) delete sdstm;
-    if (istm) delete istm;
-    if (dstm) delete dstm;
+    delete sstm;
+    delete sdstm;
+    delete istm;
+    delete dstm;
+    delete seq_context;
 }
 
 int Context::get_id()
@@ -162,7 +164,10 @@ int Context::obtain_station_info()
 int Context::insert()
 {
     istm->execute_and_close();
-    return db.last_context_insert_id();
+    if (seq_context)
+        return seq_context->read();
+    else
+        return conn.get_last_insert_id();
 }
 
 void Context::remove()
@@ -184,7 +189,7 @@ void Context::dump(FILE* out)
     int p1;
     int p2;
 
-    auto stm = db.conn->odbcstatement("SELECT id, id_ana, id_report, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM context ORDER BY id");
+    auto stm = conn.odbcstatement("SELECT id, id_ana, id_report, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM context ORDER BY id");
     stm->bind_out(1, id);
     stm->bind_out(2, id_station);
     stm->bind_out(3, id_report);
