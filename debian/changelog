@@ -1,3 +1,11 @@
+dballe (7.0-1) UNRELEASED; urgency=medium
+
+  * New upstream release
+     - rewritten database connection interface to support multiple connector
+       backends: now supported are ODBC and libsqlite3
+
+ -- Enrico Zini <enrico@enricozini.org>  Mon, 08 Dec 2014 19:27:41 +0100
+
 dballe (6.8-1) unstable; urgency=low
 
   * New upstream release

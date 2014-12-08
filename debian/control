@@ -17,7 +17,7 @@ Vcs-Svn: https://svn.smr.arpa.emr.it/dballe/dballe/trunk
 Package: libdballe-dev
 Section: libdevel
 Architecture: any
-Depends: libdballe6 (= ${binary:Version}), ${misc:Depends}
+Depends: libdballe7 (= ${binary:Version}), ${misc:Depends}
 Recommends: pkg-config
 Conflicts: libdballe-core-dev, libdballe-bufrex-dev, libdballe-msg-dev, libdballe-db-dev
 Description: DB-All.e C development library for weather research
@@ -56,7 +56,7 @@ Description: documentation for the DB-ALL.e C library for weather research
  .
  This is the documentation for the DB_All.e development the library.
 
-Package: libdballe6
+Package: libdballe7
 Section: libs
 Architecture: any
 Depends: dballe-common, ${shlibs:Depends}, ${misc:Depends}
