@@ -48,7 +48,7 @@ void sqlite_run_built_query(SQLiteConnection& conn, const QueryBuilder& qb,
             rec.out_lon = stm->column_int(output_seq++);
             if (stm->column_isnull(output_seq))
             {
-                rec.out_ident_size == -1;
+                rec.out_ident_size = -1;
                 rec.out_ident[0] = 0;
             } else {
                 string ident = stm->column_string(output_seq);
@@ -71,14 +71,7 @@ void sqlite_run_built_query(SQLiteConnection& conn, const QueryBuilder& qb,
 
         if (qb.select_data)
         {
-            string dt = stm->column_string(output_seq++);
-            sscanf(dt.c_str(), "%04d-%02d-%02d %02d:%02d:%02d",
-                    &rec.out_datetime.date.year,
-                    &rec.out_datetime.date.month,
-                    &rec.out_datetime.date.day,
-                    &rec.out_datetime.time.hour,
-                    &rec.out_datetime.time.minute,
-                    &rec.out_datetime.time.second);
+            rec.out_datetime = stm->column_datetime(output_seq++);
 
             string value = stm->column_string(output_seq++);
             unsigned val_size = max(value.size(), (string::size_type)255);

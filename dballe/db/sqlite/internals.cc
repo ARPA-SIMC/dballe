@@ -314,6 +314,20 @@ SQLiteStatement::~SQLiteStatement()
     sqlite3_finalize(stm);
 }
 
+Datetime SQLiteStatement::column_datetime(int col)
+{
+    Datetime res;
+    string dt = column_string(col);
+    sscanf(dt.c_str(), "%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu",
+            &res.date.year,
+            &res.date.month,
+            &res.date.day,
+            &res.time.hour,
+            &res.time.minute,
+            &res.time.second);
+    return res;
+}
+
 void SQLiteStatement::execute(std::function<void()> on_row)
 {
     while (true)
@@ -411,7 +425,7 @@ void SQLiteStatement::bind_val(int idx, unsigned short val)
 void SQLiteStatement::bind_val(int idx, const Datetime& val)
 {
     char* buf;
-    int size = asprintf(&buf, "'%04d-%02d-%02d %02d:%02d:%02d'",
+    int size = asprintf(&buf, "%04d-%02d-%02d %02d:%02d:%02d",
             val.date.year, val.date.month, val.date.day,
             val.time.hour, val.time.minute, val.time.second);
     if (sqlite3_bind_text(stm, idx, buf, size, free) != SQLITE_OK)

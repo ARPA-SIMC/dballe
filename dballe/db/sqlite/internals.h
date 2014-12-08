@@ -199,6 +199,9 @@ struct SQLiteStatement
             return res;
     }
 
+    /// Read the string value of a column and parse it as a Datetime
+    Datetime column_datetime(int col);
+
     /// Check if a column has a NULL value (0-based)
     bool column_isnull(int col) { return sqlite3_column_type(stm, col) == SQLITE_NULL; }
 
