@@ -458,27 +458,33 @@ void SQLiteStatement::execute_ignoring_results()
     }
 }
 
-void SQLiteStatement::bind_val(int idx, int val)
+void SQLiteStatement::bind_val(int idx, const int& val)
 {
     if (sqlite3_bind_int(stm, idx, val) != SQLITE_OK)
         throw error_sqlite(conn, "cannot bind an int input column");
 }
 
-void SQLiteStatement::bind_val(int idx, unsigned val)
+void SQLiteStatement::bind_val(int idx, const unsigned& val)
 {
     if (sqlite3_bind_int64(stm, idx, val) != SQLITE_OK)
         throw error_sqlite(conn, "cannot bind an int64 input column");
 }
 
-void SQLiteStatement::bind_val(int idx, unsigned short val)
+void SQLiteStatement::bind_val(int idx, const unsigned short& val)
 {
     if (sqlite3_bind_int(stm, idx, val) != SQLITE_OK)
         throw error_sqlite(conn, "cannot bind an int input column");
 }
 
+void SQLiteStatement::bind_val(int idx, const char* val)
+{
+    if (sqlite3_bind_text(stm, idx, val, -1, SQLITE_STATIC))
+        throw error_sqlite(conn, "cannot bind a text input column");
+}
+
 void SQLiteStatement::bind_val(int idx, const std::string& val)
 {
-    if (sqlite3_bind_text(stm, idx, val.data(), val.size(), SQLITE_TRANSIENT))
+    if (sqlite3_bind_text(stm, idx, val.data(), val.size(), SQLITE_STATIC))
         throw error_sqlite(conn, "cannot bind a text input column");
 }
 

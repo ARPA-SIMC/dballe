@@ -188,6 +188,18 @@ private:
         bindn<total>(args...);
     }
 
+protected:
+    /// Pass an int value to fill an input placeholder
+    virtual void bind_val(int idx, const int& val) = 0;
+    /// Pass an unsigned value to fill an input placeholder
+    virtual void bind_val(int idx, const unsigned& val) = 0;
+    /// Pass an unsigned short value to fill an input placeholder
+    virtual void bind_val(int idx, const unsigned short& val) = 0;
+    /// Pass a string value to fill an input placeholder
+    virtual void bind_val(int idx, const char* val) = 0;
+    /// Pass a string value to fill an input placeholder
+    virtual void bind_val(int idx, const std::string& val) = 0;
+
 public:
     virtual ~Statement() {}
 
@@ -205,15 +217,6 @@ public:
     {
         bindn<sizeof...(args)>(args...);
     }
-
-    /// Pass an int value to fill an input placeholder
-    virtual void bind_val(int idx, int val) = 0;
-    /// Pass an unsigned value to fill an input placeholder
-    virtual void bind_val(int idx, unsigned val) = 0;
-    /// Pass an unsigned short value to fill an input placeholder
-    virtual void bind_val(int idx, unsigned short val) = 0;
-    /// Pass a string value to fill an input placeholder
-    virtual void bind_val(int idx, const std::string& val) = 0;
 };
 
 template<typename T, typename ...Args>

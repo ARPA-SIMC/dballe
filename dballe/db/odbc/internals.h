@@ -33,6 +33,7 @@
 #include <dballe/db/sql.h>
 #include <dballe/db/querybuf.h>
 #include <sqltypes.h>
+#include <list>
 
 // Bit values for server/driver quirks
 #define DBA_DB_QUIRK_NO_ROWCOUNT_IN_DIAG (1 << 0)
@@ -184,10 +185,20 @@ struct ODBCStatement : public Statement
     ~ODBCStatement();
     ODBCStatement& operator=(const ODBCStatement&) = delete;
 
-    void bind_val(int idx, int val) override;
-    void bind_val(int idx, unsigned val) override;
-    void bind_val(int idx, unsigned short val) override;
-    void bind_val(int idx, const std::string& val) override;
+    /*
+     * Note the difference between bind_val and bind_in: both do the same, but
+     * when you call bind_val, the guarantee that is made is that the value is
+     * used the first time the query is run, and the input behaviour is
+     * undefined if the statement is called again. When you use bind_in, you
+     * bind to a memory location that is reread every time the query is
+     * performed.
+     */
+
+    void bind_val(int idx, const int& val) override { bind_in(idx, val); }
+    void bind_val(int idx, const unsigned& val) override { bind_in(idx, val); }
+    void bind_val(int idx, const unsigned short& val) override { bind_in(idx, val); }
+    void bind_val(int idx, const char* val) override { bind_in(idx, val); }
+    void bind_val(int idx, const std::string& val) override { bind_in(idx, val); }
 
     void bind_in(int idx, const int& val);
     void bind_in(int idx, const int& val, const SQLLEN& ind);
@@ -197,6 +208,7 @@ struct ODBCStatement : public Statement
     void bind_in(int idx, const unsigned short& val, const SQLLEN& ind);
     void bind_in(int idx, const char* val);
     void bind_in(int idx, const char* val, const SQLLEN& ind);
+    void bind_in(int idx, const std::string& val);
     void bind_in(int idx, const SQL_TIMESTAMP_STRUCT& val);
 
     void bind_out(int idx, int& val);

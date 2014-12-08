@@ -531,7 +531,6 @@ void ODBCConnection::add_datetime(Querybuf& qb, const int* dt) const
     qb.appendf("{ts '%04d-%02d-%02d %02d:%02d:%02d'}", dt[0], dt[1], dt[2], dt[3], dt[4], dt[5]);
 }
 
-
 ODBCStatement::ODBCStatement(ODBCConnection& conn)
     : conn(conn)
 {
@@ -576,26 +575,6 @@ bool ODBCStatement::is_error(int sqlres)
         && !error_is_ignored();
 }
 
-void ODBCStatement::bind_val(int idx, int val)
-{
-    throw error_unimplemented("odbc bind_val int");
-}
-
-void ODBCStatement::bind_val(int idx, unsigned val)
-{
-    throw error_unimplemented("odbc bind_val unsigned");
-}
-
-void ODBCStatement::bind_val(int idx, unsigned short val)
-{
-    throw error_unimplemented("odbc bind_val ushort");
-}
-
-void ODBCStatement::bind_val(int idx, const std::string& val)
-{
-    throw error_unimplemented("odbc bind_val string");
-}
-
 void ODBCStatement::bind_in(int idx, const int& val)
 {
     // cast away const because the ODBC API is not const-aware
@@ -638,6 +617,12 @@ void ODBCStatement::bind_in(int idx, const char* val, const SQLLEN& ind)
 {
     // cast away const because the ODBC API is not const-aware
     SQLBindParameter(stm, idx, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)val, 0, (SQLLEN*)&ind);
+}
+
+void ODBCStatement::bind_in(int idx, const std::string& val)
+{
+    // cast away const because the ODBC API is not const-aware
+    SQLBindParameter(stm, idx, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, (char*)val.c_str(), 0, nullptr);
 }
 
 void ODBCStatement::bind_in(int idx, const SQL_TIMESTAMP_STRUCT& val)

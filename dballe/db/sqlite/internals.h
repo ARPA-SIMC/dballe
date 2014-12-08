@@ -137,9 +137,10 @@ struct SQLiteStatement : public Statement
     ~SQLiteStatement();
     SQLiteStatement& operator=(const SQLiteStatement&) = delete;
 
-    void bind_val(int idx, int val) override;
-    void bind_val(int idx, unsigned val) override;
-    void bind_val(int idx, unsigned short val) override;
+    void bind_val(int idx, const int& val) override;
+    void bind_val(int idx, const unsigned& val) override;
+    void bind_val(int idx, const unsigned short& val) override;
+    void bind_val(int idx, const char* val) override;
     void bind_val(int idx, const std::string& val) override;
 
     void execute_ignoring_results() override;
