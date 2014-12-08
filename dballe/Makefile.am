@@ -325,7 +325,6 @@ endif
 if HAVE_ODBC
 tut_test_SOURCES += \
 	db/odbc/internals-tut.cc \
-	db/odbc/sqlite-tut.cc \
 	db/v5/tests/repinfo.cc \
 	db/v5/tests/station.cc \
 	db/v5/tests/context.cc \
