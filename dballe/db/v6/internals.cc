@@ -23,7 +23,10 @@
 #include "db.h"
 #include "dballe/db/sqlite/internals.h"
 #include "dballe/db/sqlite/repinfo.h"
+#include "dballe/db/sqlite/station.h"
 #include "dballe/db/sqlite/v6_levtr.h"
+#include "dballe/db/sqlite/v6_data.h"
+#include "dballe/db/sqlite/v6_attr.h"
 #include "dballe/db/odbc/internals.h"
 #include "dballe/db/odbc/repinfo.h"
 #include "dballe/db/odbc/station.h"
@@ -57,6 +60,8 @@ std::unique_ptr<v5::Station> create_station(Connection& conn)
 {
     if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(&conn))
         return unique_ptr<v5::Station>(new v6::ODBCStation(*c));
+    else if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(&conn))
+        return unique_ptr<v5::Station>(new v6::SQLiteStation(*c));
     else
         throw error_unimplemented("v6 DB station not yet implemented for non-ODBC connectors");
 }
@@ -228,13 +233,14 @@ std::unique_ptr<LevTrCache> LevTrCache::create(DB& db)
 }
 
 Data::~Data() {}
-
 unique_ptr<Data> Data::create(DB& db)
 {
     if (ODBCConnection* conn = dynamic_cast<ODBCConnection*>(db.conn))
         return unique_ptr<Data>(new ODBCData(*conn));
+    else if (SQLiteConnection* conn = dynamic_cast<SQLiteConnection*>(db.conn))
+        return unique_ptr<Data>(new SQLiteData(*conn));
     else
-        throw error_unimplemented("v6 DB Data not yet implemented for non-ODBC connectors");
+        throw error_unimplemented("v6 DB Data only implemented for ODBC and SQLite connectors");
 }
 
 
@@ -243,8 +249,10 @@ unique_ptr<Attr> Attr::create(DB& db)
 {
     if (ODBCConnection* conn = dynamic_cast<ODBCConnection*>(db.conn))
         return unique_ptr<Attr>(new ODBCAttr(*conn));
+    if (SQLiteConnection* conn = dynamic_cast<SQLiteConnection*>(db.conn))
+        return unique_ptr<Attr>(new SQLiteAttr(*conn));
     else
-        throw error_unimplemented("v6 DB attr not yet implemented for non-ODBC connectors");
+        throw error_unimplemented("v6 DB attr only implemented for ODBC and SQLite connectors");
 }
 
 bool SQLRecord::querybest_fields_are_the_same(const SQLRecord& r)

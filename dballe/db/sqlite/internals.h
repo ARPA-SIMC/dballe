@@ -121,6 +121,9 @@ public:
      */
     int get_last_insert_id() override;
 
+    /// Count the number of rows modified by the last query that was run
+    int changes();
+
     void add_datetime(Querybuf& qb, const int* dt) const override;
 
     /// Wrap sqlite3_exec, without a callback
@@ -152,9 +155,11 @@ struct SQLiteStatement
         bindn<sizeof...(args)>(args...);
     }
 
+    void bind_null_val(int idx);
     void bind_val(int idx, int val);
     void bind_val(int idx, unsigned val);
     void bind_val(int idx, unsigned short val);
+    void bind_val(int idx, const Datetime& val);
     void bind_val(int idx, const char* val); // Warning: SQLITE_STATIC is used
     void bind_val(int idx, const std::string& val); // Warning: SQLITE_STATIC is used
 

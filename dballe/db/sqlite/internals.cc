@@ -26,13 +26,12 @@
 #include <cstdlib>
 #include "dballe/core/vasprintf.h"
 #include "dballe/db/querybuf.h"
+#include <cstdlib>
 #if 0
 #include <cstring>
-#include <cstdlib>
 #include <limits.h>
 #include <unistd.h>
 #include "dballe/core/verbose.h"
-
 #include <iostream>
 #endif
 
@@ -290,6 +289,10 @@ void SQLiteConnection::add_datetime(Querybuf& qb, const int* dt) const
     qb.appendf("'%04d-%02d-%02d %02d:%02d:%02d'", dt[0], dt[1], dt[2], dt[3], dt[4], dt[5]);
 }
 
+int SQLiteConnection::changes()
+{
+    return sqlite3_changes(db);
+}
 
 SQLiteStatement::SQLiteStatement(SQLiteConnection& conn, const std::string& query)
     : conn(conn)
@@ -381,6 +384,12 @@ void SQLiteStatement::execute()
     }
 }
 
+void SQLiteStatement::bind_null_val(int idx)
+{
+    if (sqlite3_bind_null(stm, idx) != SQLITE_OK)
+        throw error_sqlite(conn, "cannot bind a NULL input column");
+}
+
 void SQLiteStatement::bind_val(int idx, int val)
 {
     if (sqlite3_bind_int(stm, idx, val) != SQLITE_OK)
@@ -397,6 +406,16 @@ void SQLiteStatement::bind_val(int idx, unsigned short val)
 {
     if (sqlite3_bind_int(stm, idx, val) != SQLITE_OK)
         throw error_sqlite(conn, "cannot bind an int input column");
+}
+
+void SQLiteStatement::bind_val(int idx, const Datetime& val)
+{
+    char* buf;
+    int size = asprintf(&buf, "'%04d-%02d-%02d %02d:%02d:%02d'",
+            val.date.year, val.date.month, val.date.day,
+            val.time.hour, val.time.minute, val.time.second);
+    if (sqlite3_bind_text(stm, idx, buf, size, free) != SQLITE_OK)
+        throw error_sqlite(conn, "cannot bind a text (from Datetime) input column");
 }
 
 void SQLiteStatement::bind_val(int idx, const char* val)
@@ -419,8 +438,7 @@ void SQLiteStatement::wrap_sqlite3_reset()
 
 void SQLiteStatement::wrap_sqlite3_reset_nothrow() noexcept
 {
-    if (sqlite3_reset(stm) != SQLITE_OK)
-        fprintf(stderr, "cannot reset the query: %s\n", sqlite3_errmsg(conn));
+    sqlite3_reset(stm);
 }
 
 void SQLiteStatement::reset_and_throw(const std::string& errmsg)
