@@ -94,6 +94,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/sqlite/v6_levtr.h \
 	db/sqlite/v6_data.h \
 	db/sqlite/v6_attr.h \
+	db/sqlite/v6_run_query.h \
 	db/v6/internals.h \
 	db/v6/db.h \
 	db/v6/cursor.h \
@@ -194,6 +195,7 @@ libdballe_la_SOURCES = \
 	db/sqlite/v6_levtr.cc \
 	db/sqlite/v6_data.cc \
 	db/sqlite/v6_attr.cc \
+	db/sqlite/v6_run_query.cc \
 	db/mem/repinfo.cc \
 	db/mem/cursor.cc \
 	db/mem/db.cc \

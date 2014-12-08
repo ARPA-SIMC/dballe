@@ -27,6 +27,7 @@
 #include "dballe/db/sqlite/v6_levtr.h"
 #include "dballe/db/sqlite/v6_data.h"
 #include "dballe/db/sqlite/v6_attr.h"
+#include "dballe/db/sqlite/v6_run_query.h"
 #include "dballe/db/odbc/internals.h"
 #include "dballe/db/odbc/repinfo.h"
 #include "dballe/db/odbc/station.h"
@@ -267,18 +268,20 @@ bool SQLRecord::querybest_fields_are_the_same(const SQLRecord& r)
 void run_built_query(Connection& conn, const QueryBuilder& qb, std::function<void(SQLRecord& rec)> dest)
 {
     if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(&conn))
-    {
         odbc_run_built_query(*c, qb, dest);
-    } else
+    else if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(&conn))
+        sqlite_run_built_query(*c, qb, dest);
+    else
         throw error_unimplemented("v6 DB run_built_query not yet implemented for non-ODBC connectors");
 }
 
 void run_delete_query(Connection& conn, const QueryBuilder& qb)
 {
     if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(&conn))
-    {
         odbc_run_delete_query(*c, qb);
-    } else
+    else if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(&conn))
+        sqlite_run_delete_query(*c, qb);
+    else
         throw error_unimplemented("v6 DB run_delete_query not yet implemented for non-ODBC connectors");
 }
 
