@@ -59,6 +59,10 @@ protected:
     /// Database connection
     sqlite3* db = nullptr;
 
+protected:
+    /// Precompiled LAST_INSERT_ID statement
+    SQLiteStatement* stm_last_insert_id = nullptr;
+
     void impl_exec_noargs(const std::string& query) override;
     void init_after_connect();
 
@@ -148,15 +152,22 @@ struct SQLiteStatement : public Statement
     /// Run the query, calling on_row for every row in the result
     void execute(std::function<void()> on_row);
 
-    /// Read the int value of a column in the result set
+    /**
+     * Run the query, raising an error if there is more than one row in the
+     * result
+     */
+    void execute_one(std::function<void()> on_row);
+
+    /// Read the int value of a column in the result set (0-based)
     int column_int(int col) { return sqlite3_column_int(stm, col); }
 
-    /// Read the int value of a column in the result set
+    /// Read the int value of a column in the result set (0-based)
     sqlite3_int64 column_int64(int col) { return sqlite3_column_int64(stm, col); }
 
-    /// Read the double value of a column in the result set
+    /// Read the double value of a column in the result set (0-based)
     double column_double(int col) { return sqlite3_column_double(stm, col); }
 
+    /// Read the string value of a column in the result set (0-based)
     std::string column_string(int col)
     {
         const char* res = (const char*)sqlite3_column_text(stm, col);
@@ -165,6 +176,9 @@ struct SQLiteStatement : public Statement
         else
             return res;
     }
+
+    /// Check if a column has a NULL value (0-based)
+    bool column_isnull(int col) { return sqlite3_column_type(stm, col) == SQLITE_NULL; }
 
     operator sqlite3_stmt*() { return stm; }
 #if 0
@@ -196,6 +210,8 @@ struct SQLiteStatement : public Statement
     /// Row count for insert, delete and other non-select operations
     size_t rowcount();
 #endif
+
+    friend class SQLiteConnection;
 };
 
 }

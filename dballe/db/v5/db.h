@@ -134,7 +134,7 @@ protected:
 	 */
 	void fill_ana_layer(Msg& msg, int id_station, int id_report);
 
-    DB(std::unique_ptr<ODBCConnection>& conn);
+    DB(std::unique_ptr<ODBCConnection> conn);
 
 public:
     ~DB();

@@ -314,7 +314,7 @@ static const char* init_queries_oracle[] = {
 
 
 // First part of initialising a dba_db
-DB::DB(unique_ptr<ODBCConnection>& conn)
+DB::DB(unique_ptr<ODBCConnection> conn)
     : conn(conn.release()),
       m_repinfo(0), m_station(0), m_context(0), m_data(0), m_attr(0),
       stm_last_insert_id(0),

@@ -24,6 +24,7 @@
 #include "v5/db.h"
 #include "v6/db.h"
 #include "mem/db.h"
+#include "sqlite/internals.h"
 #ifdef HAVE_ODBC
 #include "odbc/internals.h"
 #endif
@@ -81,9 +82,8 @@ bool DB::is_url(const char* str)
     return false;
 }
 
-unique_ptr<DB> DB::instantiate_db(unique_ptr<ODBCConnection> conn)
+unique_ptr<DB> DB::instantiate_db(unique_ptr<Connection> conn)
 {
-#ifdef HAVE_ODBC
     // Autodetect format
     Format format = default_format;
 
@@ -113,13 +113,22 @@ unique_ptr<DB> DB::instantiate_db(unique_ptr<ODBCConnection> conn)
 
     switch (format)
     {
-        case V5: return unique_ptr<DB>(new v5::DB(conn));
+        case V5:
+#ifdef HAVE_ODBC
+            if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(conn.get()))
+            {
+                conn.release();
+                unique_ptr<ODBCConnection> oc(c);
+                return unique_ptr<DB>(new v5::DB(move(oc)));
+            } else {
+                throw error_consistency("cannot open a v5 DB with a non-ODBC connector; for example, cannot open a v5 database in a sqlite file");
+            }
+#else
+            throw error_unimplemented("ODBC support is not available");
+#endif
         case V6: return unique_ptr<DB>(new v6::DB(unique_ptr<Connection>(conn.release())));
         default: error_consistency::throwf("requested unknown format %d", (int)format);
     }
-#else
-    throw error_unimplemented("ODBC support is not available");
-#endif
 }
 
 unique_ptr<DB> DB::connect(const char* dsn, const char* user, const char* password)
@@ -135,13 +144,9 @@ unique_ptr<DB> DB::connect(const char* dsn, const char* user, const char* passwo
 
 unique_ptr<DB> DB::connect_from_file(const char* pathname)
 {
-#ifdef HAVE_ODBC
-    unique_ptr<ODBCConnection> conn(new ODBCConnection);
-    conn->connect_file(pathname);
-    return instantiate_db(move(conn));
-#else
-    throw error_unimplemented("ODBC support is not available");
-#endif
+    unique_ptr<SQLiteConnection> conn(new SQLiteConnection);
+    conn->open_file(pathname);
+    return instantiate_db(unique_ptr<Connection>(conn.release()));
 }
 
 unique_ptr<DB> DB::connect_from_url(const char* url)
@@ -160,6 +165,7 @@ unique_ptr<DB> DB::connect_from_url(const char* url)
     }
     if (strncmp(url, "odbc://", 7) == 0)
     {
+#ifdef HAVE_ODBC
         string buf(url + 7);
         size_t pos = buf.find('@');
         if (pos == string::npos)
@@ -180,6 +186,9 @@ unique_ptr<DB> DB::connect_from_url(const char* url)
         string pass = userpass.substr(pos + 1);
 
         return connect(dsn.c_str(), user.c_str(), pass.c_str()); // odbc://user:pass@dsn
+#else
+        throw error_unimplemented("ODBC support is not available");
+#endif
     }
     if (strncmp(url, "test:", 5) == 0)
     {
@@ -198,7 +207,6 @@ unique_ptr<DB> DB::connect_memory(const std::string& arg)
 
 unique_ptr<DB> DB::connect_test()
 {
-#ifdef HAVE_ODBC
     if (default_format == MEM)
         return connect_memory();
 
@@ -207,9 +215,6 @@ unique_ptr<DB> DB::connect_test()
         return connect_from_url(envurl);
     else
         return connect_from_file("test.sqlite");
-#else
-    return connect_memory();
-#endif
 }
 
 const char* DB::default_repinfo_file()

@@ -69,131 +69,97 @@ void to::test<1>()
     wassert(actual(val) == 3);
 }
 
-#if 0
-// Test querying int values, with indicators
+// Test querying int values, with potential NULLs
 template<> template<>
 void to::test<2>()
 {
-    use_db();
     reset();
 
-    auto& c = connection();
-    auto s = c.sqlitestatement();
+    conn.exec("CREATE TABLE dballe_testnull (val INTEGER)");
+    conn.exec("INSERT INTO dballe_testnull VALUES (NULL)");
+    conn.exec("INSERT INTO dballe_testnull VALUES (42)");
 
-    s->exec_direct("INSERT INTO dballe_test VALUES (42)");
+    auto s = conn.sqlitestatement("SELECT val FROM dballe_testnull");
 
-    s->prepare("SELECT val FROM dballe_test");
     int val = 0;
-    SQLLEN ind = 0;
-    s->bind_out(1, val, ind);
-    s->execute();
     unsigned count = 0;
-    while (s->fetch())
+    unsigned countnulls = 0;
+    s->execute([&]() {
+        if (s->column_isnull(0))
+            ++countnulls;
+        else
+            val += s->column_int(0);
         ++count;
+    });
+
     wassert(actual(val) == 42);
-    wassert(actual(ind) != SQL_NULL_DATA);
-    wassert(actual(count) == 1);
+    wassert(actual(count) == 2);
+    wassert(actual(countnulls) == 1);
 }
 
 // Test querying unsigned values
 template<> template<>
 void to::test<3>()
 {
-    use_db();
     reset();
 
-    auto& c = connection();
-    auto s = c.sqlitestatement();
+    conn.exec("INSERT INTO dballe_test VALUES (?)", 0xFFFFFFFE);
 
-    s->exec_direct("INSERT INTO dballe_test VALUES (42)");
+    auto s = conn.sqlitestatement("SELECT val FROM dballe_test");
 
-    s->prepare("SELECT val FROM dballe_test");
     unsigned val = 0;
-    s->bind_out(1, val);
-    s->execute();
     unsigned count = 0;
-    while (s->fetch())
+    s->execute([&]() {
+        val += s->column_int64(0);
         ++count;
-    wassert(actual(val) == 42);
+    });
     wassert(actual(count) == 1);
-}
-
-// Test querying unsigned values, with indicators
-template<> template<>
-void to::test<4>()
-{
-    use_db();
-    reset();
-
-    auto& c = connection();
-    auto s = c.sqlitestatement();
-
-    s->exec_direct("INSERT INTO dballe_test VALUES (42)");
-
-    s->prepare("SELECT val FROM dballe_test");
-    unsigned val = 0;
-    SQLLEN ind = 0;
-    s->bind_out(1, val, ind);
-    s->execute();
-    unsigned count = 0;
-    while (s->fetch())
-        ++count;
-    wassert(actual(val) == 42);
-    wassert(actual(ind) != SQL_NULL_DATA);
-    wassert(actual(count) == 1);
+    wassert(actual(val) == 0xFFFFFFFE);
 }
 
 // Test querying unsigned short values
 template<> template<>
 void to::test<5>()
 {
-    use_db();
     reset();
 
-    auto& c = connection();
-    auto s = c.sqlitestatement();
+    conn.exec("INSERT INTO dballe_test VALUES (?)", WR_VAR(3, 1, 12));
 
-    s->exec_direct("INSERT INTO dballe_test VALUES (42)");
+    auto s = conn.sqlitestatement("SELECT val FROM dballe_test");
 
-    s->prepare("SELECT val FROM dballe_test");
-    unsigned short val = 0;
-    s->bind_out(1, val);
-    s->execute();
+    Varcode val = 0;
     unsigned count = 0;
-    while (s->fetch())
+    s->execute([&]() {
+        val = (Varcode)s->column_int(0);
         ++count;
-    wassert(actual(val) == 42);
+    });
     wassert(actual(count) == 1);
+    wassert(actual(val) == WR_VAR(3, 1, 12));
 }
 
 // Test has_tables
 template<> template<>
 void to::test<6>()
 {
-    use_db();
     reset();
 
-    db::Connection& c = connection();
-    ensure(!c.has_table("this_should_not_exist"));
-    ensure(c.has_table("dballe_test"));
+    wassert(actual(conn.has_table("this_should_not_exist")).isfalse());
+    wassert(actual(conn.has_table("dballe_test")).istrue());
 }
 
 // Test settings
 template<> template<>
 void to::test<7>()
 {
-    use_db();
-    auto& c = connection();
-    c.drop_table_if_exists("dballe_settings");
-    ensure(!c.has_table("dballe_settings"));
+    conn.drop_table_if_exists("dballe_settings");
+    wassert(actual(conn.has_table("dballe_settings")).isfalse());
 
-    ensure_equals(c.get_setting("test_key"), "");
+    wassert(actual(conn.get_setting("test_key")) == "");
 
-    c.set_setting("test_key", "42");
-    ensure(c.has_table("dballe_settings"));
+    conn.set_setting("test_key", "42");
+    wassert(actual(conn.has_table("dballe_settings")).istrue());
 
-    ensure_equals(c.get_setting("test_key"), "42");
+    wassert(actual(conn.get_setting("test_key")) == "42");
 }
-#endif
 
 }

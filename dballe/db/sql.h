@@ -189,6 +189,14 @@ private:
     }
 
 protected:
+    /*
+     * These are protected because diffent connectors have subtly different
+     * semantics for what happens with input arguments the second time the
+     * statement is executed.
+     *
+     * These methods are therefore only used to support Connection::exec.
+     */
+
     /// Pass an int value to fill an input placeholder
     virtual void bind_val(int idx, const int& val) = 0;
     /// Pass an unsigned value to fill an input placeholder
@@ -199,12 +207,6 @@ protected:
     virtual void bind_val(int idx, const char* val) = 0;
     /// Pass a string value to fill an input placeholder
     virtual void bind_val(int idx, const std::string& val) = 0;
-
-public:
-    virtual ~Statement() {}
-
-    /// Run the statement ignoring its results
-    virtual void execute_ignoring_results() = 0;
 
     /**
      * Bind all the arguments in a single invocation.
@@ -217,6 +219,14 @@ public:
     {
         bindn<sizeof...(args)>(args...);
     }
+
+    /// Run the statement ignoring its results
+    virtual void execute_ignoring_results() = 0;
+
+public:
+    virtual ~Statement() {}
+
+    friend class Connection;
 };
 
 template<typename T, typename ...Args>

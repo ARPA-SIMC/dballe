@@ -24,14 +24,14 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
+#include "dballe/core/vasprintf.h"
+#include "dballe/db/querybuf.h"
 #if 0
 #include <cstring>
 #include <cstdlib>
 #include <limits.h>
 #include <unistd.h>
-#include "dballe/core/vasprintf.h"
 #include "dballe/core/verbose.h"
-#include "dballe/db/querybuf.h"
 
 #include <iostream>
 #endif
@@ -82,6 +82,11 @@ SQLiteConnection::SQLiteConnection()
 
 SQLiteConnection::~SQLiteConnection()
 {
+    // http://stackoverflow.com/questions/615355/is-there-any-reason-to-check-for-a-null-pointer-before-deleting
+    // ISO/IEC 14882:2003 section 5.3.5 paragraph 2, second sentence: "In
+    // either alternative, if the value of the operand of delete is the null
+    // pointer the operation has no effect."
+    delete stm_last_insert_id;
     if (db) sqlite3_close(db);
 }
 
@@ -209,197 +214,77 @@ void SQLiteConnection::impl_exec_noargs(const std::string& query)
 
 void SQLiteConnection::drop_table_if_exists(const char* name)
 {
-#if 0
-#define DBA_ODBC_MISSING_TABLE_SQLITE "HY000"
-    switch (server_type)
-    {
-        case ServerType::MYSQL:
-        case ServerType::POSTGRES:
-        case ServerType::SQLITE:
-            exec(string("DROP TABLE IF EXISTS ") + name);
-            break;
-        case ServerType::ORACLE:
-        {
-            auto stm = odbcstatement();
-            char buf[100];
-            int len;
-            stm->ignore_error = DBA_ODBC_MISSING_TABLE_ORACLE;
-            len = snprintf(buf, 100, "DROP TABLE %s", name);
-            stm->exec_direct_and_close(buf, len);
-            break;
-        }
-    }
-#endif
+    exec(string("DROP TABLE IF EXISTS ") + name);
 }
 
 void SQLiteConnection::drop_sequence_if_exists(const char* name)
 {
-#if 0
-    switch (server_type)
-    {
-        case ServerType::POSTGRES:
-            exec(string("DROP SEQUENCE IF EXISTS ") + name);
-            break;
-        case ServerType::ORACLE:
-        {
-            auto stm = odbcstatement();
-            char buf[100];
-            int len;
-            stm->ignore_error = DBA_ODBC_MISSING_SEQUENCE_ORACLE;
-            len = snprintf(buf, 100, "DROP SEQUENCE %s", name);
-            stm->exec_direct_and_close(buf, len);
-            break;
-        }
-        default:
-            break;
-    }
-#endif
+    throw error_unimplemented("Sequences are not supported in DB-All.e's SQLITE connector");
 }
 
 int SQLiteConnection::get_last_insert_id()
 {
-#if 0
     // Compile the query on demand
     if (!stm_last_insert_id)
-    {
-        switch (server_type)
-        {
-            case ServerType::MYSQL:
-                stm_last_insert_id = odbcstatement().release();
-                stm_last_insert_id->bind_out(1, m_last_insert_id);
-                stm_last_insert_id->prepare("SELECT LAST_INSERT_ID()");
-                break;
-            case ServerType::SQLITE:
-                stm_last_insert_id = odbcstatement().release();
-                stm_last_insert_id->bind_out(1, m_last_insert_id);
-                stm_last_insert_id->prepare("SELECT LAST_INSERT_ROWID()");
-                break;
-            case ServerType::POSTGRES:
-                stm_last_insert_id = odbcstatement().release();
-                stm_last_insert_id->bind_out(1, m_last_insert_id);
-                stm_last_insert_id->prepare("SELECT LASTVAL()");
-                break;
-            default:
-                throw error_consistency("get_last_insert_id called on a database that does not support it");
-        }
-    }
+        stm_last_insert_id = sqlitestatement("SELECT LAST_INSERT_ROWID()").release();
 
-    stm_last_insert_id->execute();
-    if (!stm_last_insert_id->fetch_expecting_one())
+    bool found = false;
+    int res;
+    stm_last_insert_id->execute_one([&]() {
+        found = true;
+        res = stm_last_insert_id->column_int(0);
+    });
+    if (!found);
         throw error_consistency("no last insert ID value returned from database");
-    return m_last_insert_id;
-#endif
+    return res;
 }
 
 bool SQLiteConnection::has_table(const std::string& name)
 {
-#if 0
-    auto stm = odbcstatement();
-    int count;
+    auto stm = sqlitestatement("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?");
+    stm->bind(name);
 
-    switch (server_type)
-    {
-        case ServerType::MYSQL:
-            stm->prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name=?");
-            stm->bind_in(1, name.data(), name.size());
-            stm->bind_out(1, count);
-            break;
-        case ServerType::SQLITE:
-            stm->prepare("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?");
-            stm->bind_in(1, name.data(), name.size());
-            stm->bind_out(1, count);
-            break;
-        case ServerType::ORACLE:
-            stm->prepare("SELECT COUNT(*) FROM user_tables WHERE table_name=UPPER(?)");
-            stm->bind_in(1, name.data(), name.size());
-            stm->bind_out(1, count);
-            break;
-        case ServerType::POSTGRES:
-            stm->prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_name=?");
-            stm->bind_in(1, name.data(), name.size());
-            stm->bind_out(1, count);
-            break;
-    }
-    stm->execute();
-    stm->fetch_expecting_one();
+    bool found = false;
+    int count = 0;;
+    stm->execute_one([&]() {
+        found = true;
+        count += stm->column_int(0);
+    });
+
     return count > 0;
-#endif
 }
 
 std::string SQLiteConnection::get_setting(const std::string& key)
 {
-#if 0
     if (!has_table("dballe_settings"))
         return string();
 
-    char result[64];
-    SQLLEN result_len;
-
-    auto stm = odbcstatement();
-    if (server_type == ServerType::MYSQL)
-        stm->prepare("SELECT value FROM dballe_settings WHERE `key`=?");
-    else
-        stm->prepare("SELECT value FROM dballe_settings WHERE \"key\"=?");
-    stm->bind_in(1, key.data(), key.size());
-    stm->bind_out(1, result, 64, result_len);
-    stm->execute();
+    auto stm = sqlitestatement("SELECT value FROM dballe_settings WHERE \"key\"=?");
+    stm->bind(key);
     string res;
-    while (stm->fetch())
-        res = string(result, result_len);
-    // rtrim string
-    size_t n = res.substr(0, 63).find_last_not_of(' ');
-    if (n != string::npos)
-        res.erase(n+1);
+    stm->execute_one([&]() {
+        res = stm->column_string(0);
+    });
+
     return res;
-#endif
 }
 
 void SQLiteConnection::set_setting(const std::string& key, const std::string& value)
 {
-#if 0
-    auto stm = odbcstatement();
-
     if (!has_table("dballe_settings"))
-    {
-        if (server_type == ServerType::MYSQL)
-            exec("CREATE TABLE dballe_settings (`key` CHAR(64) NOT NULL PRIMARY KEY, value CHAR(64) NOT NULL)");
-        else
-            exec("CREATE TABLE dballe_settings (\"key\" CHAR(64) NOT NULL PRIMARY KEY, value CHAR(64) NOT NULL)");
-    }
+        exec("CREATE TABLE dballe_settings (\"key\" CHAR(64) NOT NULL PRIMARY KEY, value CHAR(64) NOT NULL)");
 
-    // Remove if it exists
-    if (server_type == ServerType::MYSQL)
-        stm->prepare("DELETE FROM dballe_settings WHERE `key`=?");
-    else
-        stm->prepare("DELETE FROM dballe_settings WHERE \"key\"=?");
-    stm->bind_in(1, key.data(), key.size());
-    stm->execute_and_close();
-
-    // Then insert it
-    if (server_type == ServerType::MYSQL)
-        stm->prepare("INSERT INTO dballe_settings (`key`, value) VALUES (?, ?)");
-    else
-        stm->prepare("INSERT INTO dballe_settings (\"key\", value) VALUES (?, ?)");
-    SQLLEN key_size = key.size();
-    SQLLEN value_size = value.size();
-    stm->bind_in(1, key.data(), key_size);
-    stm->bind_in(2, value.data(), value_size);
-    stm->execute_and_close();
-#endif
+    exec("INSERT OR REPLACE INTO dballe_settings (\"key\", value) VALUES (?, ?)", key, value);
 }
 
 void SQLiteConnection::drop_settings()
 {
-#if 0
     drop_table_if_exists("dballe_settings");
-#endif
 }
 
 void SQLiteConnection::add_datetime(Querybuf& qb, const int* dt) const
 {
-#if 0
-    qb.appendf("{ts '%04d-%02d-%02d %02d:%02d:%02d'}", dt[0], dt[1], dt[2], dt[3], dt[4], dt[5]);
-#endif
+    qb.appendf("'%04d-%02d-%02d %02d:%02d:%02d'", dt[0], dt[1], dt[2], dt[3], dt[4], dt[5]);
 }
 
 
@@ -433,6 +318,35 @@ void SQLiteStatement::execute(std::function<void()> on_row)
         switch (sqlite3_step(stm))
         {
             case SQLITE_ROW: on_row(); break;
+            case SQLITE_DONE: return;
+            case SQLITE_BUSY:
+            case SQLITE_MISUSE:
+            default:
+                throw error_sqlite(conn, "cannot execute the query");
+        }
+    }
+}
+
+void SQLiteStatement::execute_one(std::function<void()> on_row)
+{
+    if (sqlite3_reset(stm) != SQLITE_OK)
+        throw error_sqlite(conn, "cannot reset the query for a new execution");
+
+    bool has_result = false;
+    while (true)
+    {
+        switch (sqlite3_step(stm))
+        {
+            case SQLITE_ROW:
+                if (has_result)
+                {
+                    if (sqlite3_reset(stm) != SQLITE_OK)
+                        throw error_sqlite(conn, "cannot reset the query before reporting that it had more than the one expected row in the result");
+                    throw error_consistency("query result has more than the one expected row");
+                }
+                on_row();
+                has_result = true;
+                break;
             case SQLITE_DONE: return;
             case SQLITE_BUSY:
             case SQLITE_MISUSE:
