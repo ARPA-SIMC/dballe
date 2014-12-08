@@ -162,4 +162,15 @@ void to::test<7>()
     wassert(actual(conn.get_setting("test_key")) == "42");
 }
 
+// Test auto_increment
+template<> template<>
+void to::test<8>()
+{
+    conn.exec("CREATE TABLE dballe_testai (id INTEGER PRIMARY KEY, val INTEGER)");
+    conn.exec("INSERT INTO dballe_testai (val) VALUES (42)");
+    wassert(actual(conn.get_last_insert_id()) == 1);
+    conn.exec("INSERT INTO dballe_testai (val) VALUES (43)");
+    wassert(actual(conn.get_last_insert_id()) == 2);
+}
+
 }

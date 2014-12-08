@@ -60,9 +60,6 @@ protected:
     sqlite3* db = nullptr;
 
 protected:
-    /// Precompiled LAST_INSERT_ID statement
-    SQLiteStatement* stm_last_insert_id = nullptr;
-
     void impl_exec_void(const std::string& query) override;
     void impl_exec_void_int(const std::string& query, int arg1) override;
     void impl_exec_void_string(const std::string& query, const std::string& arg1) override;
@@ -249,15 +246,6 @@ private:
         bindn<total>(args...);
     }
 };
-#if 0
-template<typename T, typename ...Args>
-void Connection::exec(const std::string& query, const T& arg, const Args& ...args)
-{
-    auto stm = statement(query);
-    stm->bind(arg, args...);
-    stm->execute_ignoring_results();
-}
-#endif
 
 }
 }

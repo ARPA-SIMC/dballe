@@ -82,11 +82,6 @@ SQLiteConnection::SQLiteConnection()
 
 SQLiteConnection::~SQLiteConnection()
 {
-    // http://stackoverflow.com/questions/615355/is-there-any-reason-to-check-for-a-null-pointer-before-deleting
-    // ISO/IEC 14882:2003 section 5.3.5 paragraph 2, second sentence: "In
-    // either alternative, if the value of the operand of delete is the null
-    // pointer the operation has no effect."
-    delete stm_last_insert_id;
     if (db) sqlite3_close(db);
 }
 
@@ -241,17 +236,8 @@ void SQLiteConnection::drop_sequence_if_exists(const char* name)
 
 int SQLiteConnection::get_last_insert_id()
 {
-    // Compile the query on demand
-    if (!stm_last_insert_id)
-        stm_last_insert_id = sqlitestatement("SELECT LAST_INSERT_ROWID()").release();
-
-    bool found = false;
-    int res;
-    stm_last_insert_id->execute_one([&]() {
-        found = true;
-        res = stm_last_insert_id->column_int(0);
-    });
-    if (!found);
+    int res = sqlite3_last_insert_rowid(db);
+    if (res == 0)
         throw error_consistency("no last insert ID value returned from database");
     return res;
 }
