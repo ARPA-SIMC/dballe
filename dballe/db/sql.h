@@ -95,13 +95,6 @@ public:
      */
     virtual std::unique_ptr<Transaction> transaction() = 0;
 
-    /**
-     * Create a statement.
-     *
-     * A statement holds a precompiled query, and input/output bind arguments.
-     */
-    virtual std::unique_ptr<Statement> statement(const std::string& query) = 0;
-
     /// Execute a one-shot query
     void exec(const std::string& query) { impl_exec_void(query); }
 
@@ -175,38 +168,6 @@ public:
 
     /// Roll back this transaction
     virtual void rollback() = 0;
-};
-
-/// A prepared SQL statement
-class Statement
-{
-protected:
-#if 0
-    /*
-     * These are protected because diffent connectors have subtly different
-     * semantics for what happens with input arguments the second time the
-     * statement is executed.
-     *
-     * These methods are therefore only used to support Connection::exec.
-     */
-
-    /// Pass an int value to fill an input placeholder
-    virtual void bind_val(int idx, const int& val) = 0;
-    /// Pass an unsigned value to fill an input placeholder
-    virtual void bind_val(int idx, const unsigned& val) = 0;
-    /// Pass an unsigned short value to fill an input placeholder
-    virtual void bind_val(int idx, const unsigned short& val) = 0;
-    /// Pass a string value to fill an input placeholder
-    virtual void bind_val(int idx, const char* val) = 0;
-    /// Pass a string value to fill an input placeholder
-    virtual void bind_val(int idx, const std::string& val) = 0;
-
-    /// Run the statement ignoring its results
-    virtual void execute_ignoring_results() = 0;
-#endif
-
-public:
-    virtual ~Statement() {}
 };
 
 }

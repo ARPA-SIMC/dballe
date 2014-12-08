@@ -121,7 +121,6 @@ public:
     void set_autocommit(bool val);
 
     std::unique_ptr<Transaction> transaction() override;
-    std::unique_ptr<Statement> statement(const std::string& query) override;
     std::unique_ptr<ODBCStatement> odbcstatement(const std::string& query);
     std::unique_ptr<ODBCStatement> dbv5_odbcstatement();
 
@@ -170,7 +169,7 @@ protected:
 };
 
 /// ODBC statement
-struct ODBCStatement : public Statement
+struct ODBCStatement
 {
     const ODBCConnection& conn;
     SQLHSTMT stm = nullptr;

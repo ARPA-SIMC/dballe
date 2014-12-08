@@ -325,11 +325,6 @@ std::unique_ptr<Transaction> ODBCConnection::transaction()
     return unique_ptr<Transaction>(new ODBCTransaction(od_conn));
 }
 
-std::unique_ptr<Statement> ODBCConnection::statement(const std::string& query)
-{
-    return unique_ptr<Statement>(odbcstatement(query).release());
-}
-
 std::unique_ptr<ODBCStatement> ODBCConnection::odbcstatement(const std::string& query)
 {
     unique_ptr<ODBCStatement> res(new ODBCStatement(*this));

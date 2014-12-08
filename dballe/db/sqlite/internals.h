@@ -84,7 +84,6 @@ public:
     void open_private_file(int flags=SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
 
     std::unique_ptr<Transaction> transaction() override;
-    std::unique_ptr<Statement> statement(const std::string& query) override;
     std::unique_ptr<SQLiteStatement> sqlitestatement(const std::string& query);
 
     /// Check if the database contains a table
@@ -133,7 +132,7 @@ public:
 };
 
 /// SQLite statement
-struct SQLiteStatement : public Statement
+struct SQLiteStatement
 {
     SQLiteConnection& conn;
     sqlite3_stmt *stm = nullptr;

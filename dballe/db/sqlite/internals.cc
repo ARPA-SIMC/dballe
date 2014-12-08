@@ -197,11 +197,6 @@ std::unique_ptr<Transaction> SQLiteConnection::transaction()
     return unique_ptr<Transaction>(new SQLiteTransaction(*this));
 }
 
-std::unique_ptr<Statement> SQLiteConnection::statement(const std::string& query)
-{
-    return unique_ptr<Statement>(new SQLiteStatement(*this, query));
-}
-
 std::unique_ptr<SQLiteStatement> SQLiteConnection::sqlitestatement(const std::string& query)
 {
     return unique_ptr<SQLiteStatement>(new SQLiteStatement(*this, query));
