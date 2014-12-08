@@ -69,15 +69,12 @@ class Connection
 {
 protected:
     /**
-     * Implementation of a direct exec query with no arguments.
-     *
-     * Some connectors have implementations that can skip the step of creating
-     * prepared statements, and this is a way of taking advantage of that.
-     *
-     * We cannot just call this exec() otherwise we hide the possibility of
-     * using exec(query, args...) in subclasses.
+     * Implementations of some commonly used pattern of one-shot exec queries
      */
-    virtual void impl_exec_noargs(const std::string& query) = 0;
+    virtual void impl_exec_void(const std::string& query) = 0;
+    virtual void impl_exec_void_int(const std::string& query, int arg1) = 0;
+    virtual void impl_exec_void_string(const std::string& query, const std::string& arg1) = 0;
+    virtual void impl_exec_void_string_string(const std::string& query, const std::string& arg1, const std::string& arg2) = 0;
 
 public:
     /**
@@ -106,11 +103,16 @@ public:
     virtual std::unique_ptr<Statement> statement(const std::string& query) = 0;
 
     /// Execute a one-shot query
-    void exec(const std::string& query) { impl_exec_noargs(query); }
+    void exec(const std::string& query) { impl_exec_void(query); }
 
-    /// Execute a one-shot query, binding input parameters
-    template<typename T, typename ...Args>
-    void exec(const std::string& query, const T& arg, const Args& ...args);
+    /// Execute a one-shot query
+    void exec(const std::string& query, int arg1) { impl_exec_void_int(query, arg1); }
+
+    /// Execute a one-shot query
+    void exec(const std::string& query, const std::string& arg1) { impl_exec_void_string(query, arg1); }
+
+    /// Execute a one-shot query
+    void exec(const std::string& query, const std::string& arg1, const std::string& arg2) { impl_exec_void_string_string(query, arg1, arg2); }
 
     /// Check if the database contains a table
     virtual bool has_table(const std::string& name) = 0;
@@ -178,17 +180,8 @@ public:
 /// A prepared SQL statement
 class Statement
 {
-private:
-    // Implementation of variadic bind: terminating condition
-    template<size_t total> void bindn() {}
-    // Implementation of variadic bind: recursive iteration over the parameter pack
-    template<size_t total, typename ...Args, typename T> void bindn(const T& first, const Args& ...args)
-    {
-        bind_val(total - sizeof...(args), first);
-        bindn<total>(args...);
-    }
-
 protected:
+#if 0
     /*
      * These are protected because diffent connectors have subtly different
      * semantics for what happens with input arguments the second time the
@@ -208,34 +201,13 @@ protected:
     /// Pass a string value to fill an input placeholder
     virtual void bind_val(int idx, const std::string& val) = 0;
 
-    /**
-     * Bind all the arguments in a single invocation.
-     *
-     * Note that the parameter positions are used as bind column numbers, so
-     * calling this function twice will re-bind columns instead of adding new
-     * ones.
-     */
-    template<typename... Args> void bind(const Args& ...args)
-    {
-        bindn<sizeof...(args)>(args...);
-    }
-
     /// Run the statement ignoring its results
     virtual void execute_ignoring_results() = 0;
+#endif
 
 public:
     virtual ~Statement() {}
-
-    friend class Connection;
 };
-
-template<typename T, typename ...Args>
-void Connection::exec(const std::string& query, const T& arg, const Args& ...args)
-{
-    auto stm = statement(query);
-    stm->bind(arg, args...);
-    stm->execute_ignoring_results();
-}
 
 }
 }

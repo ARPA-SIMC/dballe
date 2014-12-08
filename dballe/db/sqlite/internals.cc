@@ -207,9 +207,31 @@ std::unique_ptr<SQLiteStatement> SQLiteConnection::sqlitestatement(const std::st
     return unique_ptr<SQLiteStatement>(new SQLiteStatement(*this, query));
 }
 
-void SQLiteConnection::impl_exec_noargs(const std::string& query)
+void SQLiteConnection::impl_exec_void(const std::string& query)
 {
     wrap_sqlite3_exec(query);
+}
+
+void SQLiteConnection::impl_exec_void_int(const std::string& query, int arg1)
+{
+    auto s = sqlitestatement(query);
+    s->bind_val(1, arg1);
+    s->execute();
+}
+
+void SQLiteConnection::impl_exec_void_string(const std::string& query, const std::string& arg1)
+{
+    auto s = sqlitestatement(query);
+    s->bind_val(1, arg1);
+    s->execute();
+}
+
+void SQLiteConnection::impl_exec_void_string_string(const std::string& query, const std::string& arg1, const std::string& arg2)
+{
+    auto s = sqlitestatement(query);
+    s->bind_val(1, arg1);
+    s->bind_val(2, arg2);
+    s->execute();
 }
 
 void SQLiteConnection::drop_table_if_exists(const char* name)
@@ -219,7 +241,7 @@ void SQLiteConnection::drop_table_if_exists(const char* name)
 
 void SQLiteConnection::drop_sequence_if_exists(const char* name)
 {
-    throw error_unimplemented("Sequences are not supported in DB-All.e's SQLITE connector");
+    // There are no sequences in sqlite, so we just do nothing
 }
 
 int SQLiteConnection::get_last_insert_id()
@@ -310,28 +332,31 @@ SQLiteStatement::~SQLiteStatement()
 
 void SQLiteStatement::execute(std::function<void()> on_row)
 {
-    if (sqlite3_reset(stm) != SQLITE_OK)
-        throw error_sqlite(conn, "cannot reset the query for a new execution");
-
     while (true)
     {
         switch (sqlite3_step(stm))
         {
-            case SQLITE_ROW: on_row(); break;
-            case SQLITE_DONE: return;
+            case SQLITE_ROW:
+                try {
+                    on_row();
+                } catch (...) {
+                    wrap_sqlite3_reset_nothrow();
+                    throw;
+                }
+                break;
+            case SQLITE_DONE:
+                wrap_sqlite3_reset();
+                return;
             case SQLITE_BUSY:
             case SQLITE_MISUSE:
             default:
-                throw error_sqlite(conn, "cannot execute the query");
+                reset_and_throw("cannot execute the query");
         }
     }
 }
 
 void SQLiteStatement::execute_one(std::function<void()> on_row)
 {
-    if (sqlite3_reset(stm) != SQLITE_OK)
-        throw error_sqlite(conn, "cannot reset the query for a new execution");
-
     bool has_result = false;
     while (true)
     {
@@ -340,51 +365,54 @@ void SQLiteStatement::execute_one(std::function<void()> on_row)
             case SQLITE_ROW:
                 if (has_result)
                 {
-                    if (sqlite3_reset(stm) != SQLITE_OK)
-                        throw error_sqlite(conn, "cannot reset the query before reporting that it had more than the one expected row in the result");
+                    wrap_sqlite3_reset();
                     throw error_consistency("query result has more than the one expected row");
                 }
                 on_row();
                 has_result = true;
                 break;
-            case SQLITE_DONE: return;
+            case SQLITE_DONE:
+                wrap_sqlite3_reset();
+                return;
             case SQLITE_BUSY:
             case SQLITE_MISUSE:
             default:
-                throw error_sqlite(conn, "cannot execute the query");
+                reset_and_throw("cannot execute the query");
         }
     }
 }
 
-void SQLiteStatement::execute_ignoring_results()
+void SQLiteStatement::execute()
 {
     while (true)
     {
         switch (sqlite3_step(stm))
         {
-            case SQLITE_ROW: break;
-            case SQLITE_DONE: return;
+            case SQLITE_ROW:
+            case SQLITE_DONE:
+                wrap_sqlite3_reset();
+                return;
             case SQLITE_BUSY:
             case SQLITE_MISUSE:
             default:
-                throw error_sqlite(conn, "query execution failed");
+                reset_and_throw("cannot execute the query");
         }
     }
 }
 
-void SQLiteStatement::bind_val(int idx, const int& val)
+void SQLiteStatement::bind_val(int idx, int val)
 {
     if (sqlite3_bind_int(stm, idx, val) != SQLITE_OK)
         throw error_sqlite(conn, "cannot bind an int input column");
 }
 
-void SQLiteStatement::bind_val(int idx, const unsigned& val)
+void SQLiteStatement::bind_val(int idx, unsigned val)
 {
     if (sqlite3_bind_int64(stm, idx, val) != SQLITE_OK)
         throw error_sqlite(conn, "cannot bind an int64 input column");
 }
 
-void SQLiteStatement::bind_val(int idx, const unsigned short& val)
+void SQLiteStatement::bind_val(int idx, unsigned short val)
 {
     if (sqlite3_bind_int(stm, idx, val) != SQLITE_OK)
         throw error_sqlite(conn, "cannot bind an int input column");
@@ -400,6 +428,25 @@ void SQLiteStatement::bind_val(int idx, const std::string& val)
 {
     if (sqlite3_bind_text(stm, idx, val.data(), val.size(), SQLITE_STATIC))
         throw error_sqlite(conn, "cannot bind a text input column");
+}
+
+void SQLiteStatement::wrap_sqlite3_reset()
+{
+    if (sqlite3_reset(stm) != SQLITE_OK)
+        throw error_sqlite(conn, "cannot reset the query");
+}
+
+void SQLiteStatement::wrap_sqlite3_reset_nothrow() noexcept
+{
+    if (sqlite3_reset(stm) != SQLITE_OK)
+        fprintf(stderr, "cannot reset the query: %s\n", sqlite3_errmsg(conn));
+}
+
+void SQLiteStatement::reset_and_throw(const std::string& errmsg)
+{
+    std::string sqlite_errmsg(sqlite3_errmsg(conn));
+    wrap_sqlite3_reset_nothrow();
+    throw error_sqlite(sqlite_errmsg, errmsg);
 }
 
 #if 0

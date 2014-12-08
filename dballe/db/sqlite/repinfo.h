@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_ODBC_V5_REPINFO_H
-#define DBALLE_DB_ODBC_V5_REPINFO_H
+#ifndef DBALLE_DB_SQLITE_V5_REPINFO_H
+#define DBALLE_DB_SQLITE_V5_REPINFO_H
 
 /** @file
  * @ingroup db
@@ -37,26 +37,26 @@ namespace dballe {
 struct Record;
 
 namespace db {
-struct ODBCConnection;
+struct SQLiteConnection;
 
 namespace v5 {
 
 /**
  * Fast cached access to the repinfo table
  */
-struct ODBCRepinfo : public Repinfo
+struct SQLiteRepinfo : public Repinfo
 {
     /**
      * DB connection. The pointer is assumed always valid during the
      * lifetime of the object
      */
-    ODBCConnection& conn;
+    SQLiteConnection& conn;
 
-    ODBCRepinfo(ODBCConnection& conn);
-    ODBCRepinfo(const ODBCRepinfo&) = delete;
-    ODBCRepinfo(const ODBCRepinfo&&) = delete;
-    virtual ~ODBCRepinfo();
-    ODBCRepinfo& operator=(const ODBCRepinfo&) = delete;
+    SQLiteRepinfo(SQLiteConnection& conn);
+    SQLiteRepinfo(const SQLiteRepinfo&) = delete;
+    SQLiteRepinfo(const SQLiteRepinfo&&) = delete;
+    virtual ~SQLiteRepinfo();
+    SQLiteRepinfo& operator=(const SQLiteRepinfo&) = delete;
 
     void update(const char* deffile, int* added, int* deleted, int* updated) override;
     void dump(FILE* out) override;
@@ -73,9 +73,9 @@ protected:
 
 namespace v6 {
 
-struct ODBCRepinfo : public v5::ODBCRepinfo
+struct SQLiteRepinfo : public v5::SQLiteRepinfo
 {
-    ODBCRepinfo(ODBCConnection& conn);
+    SQLiteRepinfo(SQLiteConnection& conn);
 
 protected:
     int id_use_count(unsigned id, const char* name) override;

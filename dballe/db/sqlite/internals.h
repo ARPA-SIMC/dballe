@@ -63,7 +63,10 @@ protected:
     /// Precompiled LAST_INSERT_ID statement
     SQLiteStatement* stm_last_insert_id = nullptr;
 
-    void impl_exec_noargs(const std::string& query) override;
+    void impl_exec_void(const std::string& query) override;
+    void impl_exec_void_int(const std::string& query, int arg1) override;
+    void impl_exec_void_string(const std::string& query, const std::string& arg1) override;
+    void impl_exec_void_string_string(const std::string& query, const std::string& arg1, const std::string& arg2) override;
     void init_after_connect();
 
 public:
@@ -141,15 +144,33 @@ struct SQLiteStatement : public Statement
     ~SQLiteStatement();
     SQLiteStatement& operator=(const SQLiteStatement&) = delete;
 
-    void bind_val(int idx, const int& val) override;
-    void bind_val(int idx, const unsigned& val) override;
-    void bind_val(int idx, const unsigned short& val) override;
-    void bind_val(int idx, const char* val) override;
-    void bind_val(int idx, const std::string& val) override;
+    /**
+     * Bind all the arguments in a single invocation.
+     *
+     * Note that the parameter positions are used as bind column numbers, so
+     * calling this function twice will re-bind columns instead of adding new
+     * ones.
+     */
+    template<typename... Args> void bind(const Args& ...args)
+    {
+        bindn<sizeof...(args)>(args...);
+    }
 
-    void execute_ignoring_results() override;
+    void bind_val(int idx, int val);
+    void bind_val(int idx, unsigned val);
+    void bind_val(int idx, unsigned short val);
+    void bind_val(int idx, const char* val); // Warning: SQLITE_STATIC is used
+    void bind_val(int idx, const std::string& val); // Warning: SQLITE_STATIC is used
 
-    /// Run the query, calling on_row for every row in the result
+    /// Run the query, ignoring all results
+    void execute();
+
+    /**
+     * Run the query, calling on_row for every row in the result.
+     *
+     * At the end of the function, the statement is reset, even in case an
+     * exception is thrown.
+     */
     void execute(std::function<void()> on_row);
 
     /**
@@ -179,6 +200,14 @@ struct SQLiteStatement : public Statement
 
     /// Check if a column has a NULL value (0-based)
     bool column_isnull(int col) { return sqlite3_column_type(stm, col) == SQLITE_NULL; }
+
+    void wrap_sqlite3_reset();
+    void wrap_sqlite3_reset_nothrow() noexcept;
+    /**
+     * Get the current error message, reset the statement and throw
+     * error_sqlite
+     */
+    [[noreturn]] void reset_and_throw(const std::string& errmsg);
 
     operator sqlite3_stmt*() { return stm; }
 #if 0
@@ -211,8 +240,25 @@ struct SQLiteStatement : public Statement
     size_t rowcount();
 #endif
 
-    friend class SQLiteConnection;
+private:
+    // Implementation of variadic bind: terminating condition
+    template<size_t total> void bindn() {}
+    // Implementation of variadic bind: recursive iteration over the parameter pack
+    template<size_t total, typename ...Args, typename T> void bindn(const T& first, const Args& ...args)
+    {
+        bind_val(total - sizeof...(args), first);
+        bindn<total>(args...);
+    }
 };
+#if 0
+template<typename T, typename ...Args>
+void Connection::exec(const std::string& query, const T& arg, const Args& ...args)
+{
+    auto stm = statement(query);
+    stm->bind(arg, args...);
+    stm->execute_ignoring_results();
+}
+#endif
 
 }
 }

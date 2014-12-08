@@ -89,6 +89,8 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/querybuf.h \
 	db/sql.h \
 	db/sqlite/internals.h \
+	db/sqlite/repinfo.h \
+	db/sqlite/v6_levtr.h \
 	db/v6/internals.h \
 	db/v6/db.h \
 	db/v6/cursor.h \
@@ -184,6 +186,8 @@ libdballe_la_SOURCES = \
 	db/querybuf.cc \
 	db/sql.cc \
 	db/sqlite/internals.cc \
+	db/sqlite/repinfo.cc \
+	db/sqlite/v6_levtr.cc \
 	db/mem/repinfo.cc \
 	db/mem/cursor.cc \
 	db/mem/db.cc \

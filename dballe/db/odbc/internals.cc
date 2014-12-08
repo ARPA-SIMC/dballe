@@ -344,9 +344,31 @@ std::unique_ptr<ODBCStatement> ODBCConnection::dbv5_odbcstatement()
     return res;
 }
 
-void ODBCConnection::impl_exec_noargs(const std::string& query)
+void ODBCConnection::impl_exec_void(const std::string& query)
 {
     ODBCStatement stm(*this);
+    stm.dbv5_exec_direct_and_close(query.c_str());
+}
+
+void ODBCConnection::impl_exec_void_int(const std::string& query, int arg1)
+{
+    ODBCStatement stm(*this);
+    stm.bind_in(1, arg1);
+    stm.dbv5_exec_direct_and_close(query.c_str());
+}
+
+void ODBCConnection::impl_exec_void_string(const std::string& query, const std::string& arg1)
+{
+    ODBCStatement stm(*this);
+    stm.bind_in(1, arg1);
+    stm.dbv5_exec_direct_and_close(query.c_str());
+}
+
+void ODBCConnection::impl_exec_void_string_string(const std::string& query, const std::string& arg1, const std::string& arg2)
+{
+    ODBCStatement stm(*this);
+    stm.bind_in(1, arg1);
+    stm.bind_in(2, arg2);
     stm.dbv5_exec_direct_and_close(query.c_str());
 }
 
