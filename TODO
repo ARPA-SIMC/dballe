@@ -1,3 +1,33 @@
+DA TESTARE
 
+mail 2014-12-01 by dbranchini
 
- - mancano tetex-extra, python-dev tra le dipendenze elencate nel sito
+> $ dbadb wipe --dsn=sqlite:qualcosa.sqlite
+> segmentation fault (core dumped)
+
+aperto bug su sqliteodbc:
+https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=771669
+
+riscritta interfaccia bypassando odbc per sqlite (mail 2014-12-8 by ezini)
+
+__________________________________________________________________________
+
+DA SISTEMARE
+
+mail 2014-11-12 by ppatruno
+
+> vengono importati due bufr da un file in memdb e poi exportati a un altro 
+> file; la cosa viene fatta in due passi leggendo e scrivendo un bufr alla 
+> volta.
+> La differenza tra i due trace è l'esecuzione di una dimenticami sul memdb 
+> dopo l'importazione del primo bufr e così facendo il secondo bufr non viene 
+> piu' letto dal file. Nel secondo trace la dimenticami non viene fatta e 
+> tutto funziona leggendo anche il secondo bufr dal file.
+
+__________________________________________________________________________
+
+DA IMPLEMENTARE
+
+riunione 2014-12-17 by ppatruno, ezini, dbranchini, edigiacomo
+
+> postgresql: bypassare odbc usando driver nativi
