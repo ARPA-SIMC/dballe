@@ -19,6 +19,12 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
+/* TODO:
+ * - Can we use bulk inserts?
+ *   http://dev.mysql.com/doc/refman/5.0/en/declare-handlers.html
+ *   http://dev.mysql.com/doc/refman/5.0/en/cursors.html
+ */
+
 #include "internals.h"
 
 #include <sql.h>

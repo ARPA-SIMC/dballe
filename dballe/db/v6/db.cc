@@ -61,6 +61,12 @@ static const char* init_functions[] = {
 };
 #endif
 
+/* TODO:
+ * - Controllare che gli indici UNIQUE abbiano un senso, altrimenti tenerli solo
+ *   per debug: ad ogni modo io in fase di insert devo fare una select, quindi...
+ * - Controllare che l'indice unique di pseudoana abbia un senso quando ident is
+ *   null, altrimenti si può pensare di toglierlo
+ */
 
 #define TABLETYPE "ENGINE=InnoDB;"
 static const char* init_queries_mysql[] = {
