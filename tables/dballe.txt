@@ -118,6 +118,7 @@
  011016 EXTREME COUNTERCLOCKWISE WIND DIRECTION OF A VARIABLE WIND       DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  011017 EXTREME CLOCKWISE WIND DIRECTION OF A VARIABLE WIND              DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  011031 DEGREE OF TURBULENCE                                             CODE TABLE 11031           0            0   4 CODE TABLE 11031          0          2
+ 011036 MAXIMUM DERIVED EQUIVALENT VERTICAL GUST SPEED                   M/S                        1            0  10 M/S                       1          4
  011037 TURBULENCE INDEX                                                 CODE TABLE 11037           0            0   6 CODE TABLE 11037          0          2
  011039 EXTENDED TIME OF OCCURRENCE OF PEAK  EDDY DISSIPATION RATE       CODE TABLE 11039           0            0   6 CODE TABLE 11039          0          2
  011041 MAXIMUM WIND GUST SPEED                                          M/S                        1            0  12 M/S                       1          4
