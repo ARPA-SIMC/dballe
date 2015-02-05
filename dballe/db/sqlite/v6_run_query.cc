@@ -79,6 +79,13 @@ void sqlite_run_built_query(SQLiteConnection& conn, const QueryBuilder& qb,
             rec.out_value[val_size] = 0;
         }
 
+        if (qb.select_summary_details)
+        {
+            rec.out_id_data = stm->column_int(output_seq++);
+            rec.out_datetime = stm->column_datetime(output_seq++);
+            rec.out_datetimemax = stm->column_datetime(output_seq++);
+        }
+
         dest(rec);
     });
 }

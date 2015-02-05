@@ -117,7 +117,27 @@ template<> template<> void to::test<3>()
 {
     wassert(actual(db).try_summary_query("year=1001", 0));
     wassert(actual(db).try_summary_query("yearmin=1999", 0));
-    wassert(actual(db).try_summary_query("yearmin=1945", 4));
+    auto check_base = [](WIBBLE_TEST_LOCPRM, const vector<Record>& res) {
+        wassert(actual(res[0][DBA_KEY_LAT].enqi()) == 1234560);
+        wassert(actual(res[0][DBA_KEY_LON].enqi()) == 7654320);
+        wassert(actual(res[0].get_level()) == Level(10, 11, 15, 22));
+        wassert(actual(res[0].get_trange()) == Trange(20, 111, 122));
+        wassert(actual(res[0][DBA_KEY_VAR].enqc()) == "B12101");
+    };
+    auto check_nodetails = [&](WIBBLE_TEST_LOCPRM, const vector<Record>& res) {
+        wruntest(check_base, res);
+        wassert(actual(res[0].contains(DBA_KEY_CONTEXT_ID)).isfalse());
+        wassert(actual(res[0].contains(DBA_KEY_YEARMIN)).isfalse());
+        wassert(actual(res[0].contains(DBA_KEY_YEARMAX)).isfalse());
+    };
+    auto check_details = [&](WIBBLE_TEST_LOCPRM, const vector<Record>& res) {
+        wruntest(check_base, res);
+        wassert(actual(res[0][DBA_KEY_CONTEXT_ID].enqi()) == 2);
+        wassert(actual(res[0].get_datetimemin()) == Datetime(1945, 4, 25, 8));
+        wassert(actual(res[0].get_datetimemax()) == Datetime(1945, 4, 26, 8));
+    };
+    wassert(actual(db).try_summary_query("yearmin=1945", 4, check_nodetails));
+    wassert(actual(db).try_summary_query("yearmin=1945, query=details", 4, check_details));
     wassert(actual(db).try_summary_query("yearmax=1944", 0));
     wassert(actual(db).try_summary_query("yearmax=1945", 4));
     wassert(actual(db).try_summary_query("yearmax=2030", 4));

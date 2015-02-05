@@ -332,9 +332,15 @@ void CursorSummary::to_record(Record& rec)
 {
     to_record_pseudoana(rec);
     to_record_repinfo(rec);
-    //rec.key(DBA_KEY_CONTEXT_ID).seti(results[cur].out_id_data);
     to_record_varcode(rec);
     to_record_ltr(rec);
+
+    if (modifiers & DBA_DB_MODIFIER_SUMMARY_DETAILS)
+    {
+        rec.key(DBA_KEY_CONTEXT_ID).seti(results[cur].out_id_data);
+        rec.setmin(results[cur].out_datetime);
+        rec.setmax(results[cur].out_datetimemax);
+    }
 
     /*
     // Min datetime

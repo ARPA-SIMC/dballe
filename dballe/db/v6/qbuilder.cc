@@ -443,6 +443,7 @@ void SummaryQueryBuilder::build_select()
             SELECT s.id, s.lat, s.lon, s.ident, d.id_report, d.id_lev_tr, d.id_var,
                    COUNT(*), MIN(d.datetime), MAX(d.datetime)
         )");
+        select_summary_details = true;
     } else {
         sql_query.append("SELECT DISTINCT s.id, s.lat, s.lon, s.ident, d.id_report, d.id_lev_tr, d.id_var");
     }

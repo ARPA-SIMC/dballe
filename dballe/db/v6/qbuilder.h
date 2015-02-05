@@ -55,24 +55,17 @@ struct QueryBuilder
     const char* bind_in_ident = nullptr;
 
     bool select_station = false; // ana_id, lat, lon, ident
-    // stm.bind_out(output_seq++, cur.sqlrec.out_ana_id);
-    // stm.bind_out(output_seq++, cur.sqlrec.out_lat);
-    // stm.bind_out(output_seq++, cur.sqlrec.out_lon);
-    // stm.bind_out(output_seq++, cur.sqlrec.out_ident, sizeof(cur.sqlrec.out_ident), cur.sqlrec.out_ident_ind);
 
     bool select_varinfo = false; // rep_cod, id_ltr, varcode
-    // stm.bind_out(output_seq++, cur.sqlrec.out_rep_cod);
-    // stm.bind_out(output_seq++, cur.sqlrec.out_id_ltr);
-    // stm.bind_out(output_seq++, cur.sqlrec.out_varcode);
 
     // IdQuery
     bool select_data_id = false; // id_data
-    // stm.bind_out(output_seq++, cur.sqlrec.out_id_data);
 
     // DataQuery
     bool select_data = false; // datetime, value
-    // stm.bind_out(output_seq++, cur.sqlrec.out_datetime);
-    // stm.bind_out(output_seq++, cur.sqlrec.out_value, sizeof(cur.sqlrec.out_value));
+
+    // SummaryQuery
+    bool select_summary_details = false; // id_data, datetime, datetimemax
 
     /// Record with the query
     const Record& rec;

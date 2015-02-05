@@ -26,6 +26,7 @@
 #include "dballe/msg/vars.h"
 #include <wreport/error.h>
 #include <wibble/string.h>
+#include <algorithm>
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -249,8 +250,35 @@ void TestDBTrySummaryQuery::check(WIBBLE_TEST_LOCPRM) const
     // query_summary counts results in advance only optionally
     if (cur->remaining() != 0)
         wassert(actual(cur->remaining()) == expected);
-    unsigned count = cur->test_iterate(/* stderr */);
-    wassert(actual(count) == expected);
+
+    vector<Record> results;
+    while (cur->next())
+    {
+        results.emplace_back(Record());
+        cur->to_record(results.back());
+    }
+    wassert(actual(results.size()) == expected);
+
+    if (check_results)
+    {
+        // Sort the records, to make it easier to test results later
+        std::sort(results.begin(), results.end(), [](const Record& a, const Record& b) {
+            if (int res = a[DBA_KEY_ANA_ID].enqi() - b[DBA_KEY_ANA_ID].enqi()) return res < 0;
+            string sa = a[DBA_KEY_REP_MEMO].enqc();
+            string sb = b[DBA_KEY_REP_MEMO].enqc();
+            if (sa < sb) return true;
+            if (sa > sb) return false;
+            Level la = a.get_level();
+            Level lb = b.get_level();
+            if (int res = la.compare(lb)) return res < 0;
+            sa = a[DBA_KEY_VAR].enqc();
+            sb = b[DBA_KEY_VAR].enqc();
+            if (sa < sb) return true;
+            return false;
+        });
+
+        wruntest(check_results, results);
+    }
 }
 
 db_test::db_test(bool reset)

@@ -660,6 +660,29 @@ Datetime Record::get_datetime() const
         get(DBA_KEY_SEC, 0));
 }
 
+Datetime Record::get_datetimemin() const
+{
+    return Datetime(
+        get(DBA_KEY_YEARMIN).enqi(),
+        get(DBA_KEY_MONTHMIN, 1),
+        get(DBA_KEY_DAYMIN, 1),
+        get(DBA_KEY_HOURMIN, 0),
+        get(DBA_KEY_MINUMIN, 0),
+        get(DBA_KEY_SECMIN, 0));
+}
+
+Datetime Record::get_datetimemax() const
+{
+    int year = get(DBA_KEY_YEARMAX).enqi();
+    int month = get(DBA_KEY_MONTHMAX, 12);
+    int day = get(DBA_KEY_DAYMAX, 0);
+    if (day == 0) day = Date::days_in_month(year, month);
+    return Datetime(year, month, day,
+        get(DBA_KEY_HOURMAX, 23),
+        get(DBA_KEY_MINUMAX, 59),
+        get(DBA_KEY_SECMAX, 59));
+}
+
 void Record::unset_datetime()
 {
     unset(DBA_KEY_YEAR);

@@ -247,6 +247,8 @@ struct Date
     bool operator>(const Date& dt) const;
     bool operator==(const Date& dt) const;
     bool operator!=(const Date& dt) const;
+
+    static int days_in_month(int year, int month);
 };
 
 std::ostream& operator<<(std::ostream& out, const Date& dt);

@@ -327,6 +327,8 @@ public:
 	Level get_level() const;
 	Trange get_trange() const;
     Datetime get_datetime() const;
+    Datetime get_datetimemin() const;
+    Datetime get_datetimemax() const;
     void set(const Datetime& dt);
     void setmin(const Datetime& dt);
     void setmax(const Datetime& dt);

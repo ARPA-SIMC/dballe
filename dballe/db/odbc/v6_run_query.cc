@@ -63,6 +63,15 @@ void odbc_run_built_query(ODBCConnection& conn, const QueryBuilder& qb,
         stm->bind_out(output_seq++, out_datetime);
         stm->bind_out(output_seq++, rec.out_value, sizeof(rec.out_value));
     }
+
+    SQL_TIMESTAMP_STRUCT out_datetimemax;
+    if (qb.select_summary_details)
+    {
+        stm->bind_out(output_seq++, rec.out_id_data);
+        stm->bind_out(output_seq++, out_datetime);
+        stm->bind_out(output_seq++, out_datetimemax);
+    }
+
     stm->execute();
 
     while (stm->fetch())
@@ -79,6 +88,16 @@ void odbc_run_built_query(ODBCConnection& conn, const QueryBuilder& qb,
         rec.out_datetime.time.hour = out_datetime.hour;
         rec.out_datetime.time.minute = out_datetime.minute;
         rec.out_datetime.time.second = out_datetime.second;
+
+        if (qb.select_summary_details)
+        {
+            rec.out_datetimemax.date.year = out_datetimemax.year;
+            rec.out_datetimemax.date.month = out_datetimemax.month;
+            rec.out_datetimemax.date.day = out_datetimemax.day;
+            rec.out_datetimemax.time.hour = out_datetimemax.hour;
+            rec.out_datetimemax.time.minute = out_datetimemax.minute;
+            rec.out_datetimemax.time.second = out_datetimemax.second;
+        }
 
         dest(rec);
     }

@@ -236,6 +236,7 @@ struct SQLRecord
     int out_ident_size; // -1 for NULL
     wreport::Varcode out_varcode;
     Datetime out_datetime;
+    Datetime out_datetimemax;
     char out_value[255];
     int out_rep_cod;
     int out_ana_id;
