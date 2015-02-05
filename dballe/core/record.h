@@ -1,7 +1,7 @@
 /*
  * dballe/record - groups of related variables
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -351,6 +351,16 @@ public:
 
     /// Check if this record is set to the ana context
     bool is_ana_context() const;
+
+    /**
+     * Iterate all keys in the record, calling f on them.
+     *
+     * Iteration stops if f returns false.
+     *
+     * The function returns true if it reached the end of the iteration, or
+     * false if it stopped because f returned false.
+     */
+    bool iter_keys(std::function<bool(dba_keyword, const wreport::Var&)> f) const;
 
     /// Return the varcode-sorted vector with the variables
     const std::vector<wreport::Var*>& vars() const;

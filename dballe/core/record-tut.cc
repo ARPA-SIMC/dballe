@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -412,6 +412,26 @@ void to::test<8>()
     wassert(actual(dt[3]) == 17);
     wassert(actual(dt[4]) == 30);
     wassert(actual(dt[5]) == 30);
+}
+
+
+// Test iteration
+template<> template<>
+void to::test<9>()
+{
+    Record rec;
+    rec.set(DBA_KEY_PRIORITY, 1);
+    rec.set_datetime(2013, 11, 1, 12, 0, 0);
+    rec.set(DBA_KEY_VAR_RELATED, "B12123");
+
+    unsigned count = 0;
+    bool res = rec.iter_keys([&count](dba_keyword k, const wreport::Var& v) {
+        ++count;
+        return true;
+    });
+
+    wassert(actual(res).istrue());
+    wassert(actual(count) == 8);
 }
 
 #if 0

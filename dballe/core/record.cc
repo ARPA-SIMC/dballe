@@ -1,7 +1,7 @@
 /*
  * dballe/record - groups of related variables
  *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -525,6 +525,17 @@ void Record::unset(const char* name)
 		return var_unset(code);
 	}
 }
+
+bool Record::iter_keys(std::function<bool(dba_keyword, const wreport::Var&)> f) const
+{
+    for (unsigned i = 0; i < KEYWORD_TABLE_SIZE; ++i)
+    {
+        if (keydata[i] == NULL) continue;
+        if (!f((dba_keyword)i, *keydata[i])) return false;
+    }
+    return true;
+}
+
 
 const std::vector<wreport::Var*>& Record::vars() const
 {
