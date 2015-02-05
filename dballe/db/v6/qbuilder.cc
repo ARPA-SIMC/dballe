@@ -437,9 +437,16 @@ void IdQueryBuilder::build_order_by()
 
 void SummaryQueryBuilder::build_select()
 {
-    // sql_query.append("SELECT s.id, s.lat, s.lon, s.ident, d.id_report, d.id_lev_tr, d.id_var, COUNT(*), MIN(d.datetime), MAX(d.dat
+    if (modifiers & DBA_DB_MODIFIER_SUMMARY_DETAILS)
+    {
+        sql_query.append(R"(
+            SELECT s.id, s.lat, s.lon, s.ident, d.id_report, d.id_lev_tr, d.id_var,
+                   COUNT(*), MIN(d.datetime), MAX(d.datetime)
+        )");
+    } else {
+        sql_query.append("SELECT DISTINCT s.id, s.lat, s.lon, s.ident, d.id_report, d.id_lev_tr, d.id_var");
+    }
 
-    sql_query.append("SELECT DISTINCT s.id, s.lat, s.lon, s.ident, d.id_report, d.id_lev_tr, d.id_var");
     select_station = true;
     select_varinfo = true;
     /*
@@ -460,9 +467,9 @@ void SummaryQueryBuilder::build_select()
 
 void SummaryQueryBuilder::build_order_by()
 {
-    // No ordering required
-    // But we add a GROUP BY
-    //sql_query.append(" GROUP BY s.id, d.id_report, d.id_lev_tr, d.id_var");
+    // No ordering required, but we may add a GROUP BY
+    if (modifiers & DBA_DB_MODIFIER_SUMMARY_DETAILS)
+        sql_query.append(" GROUP BY s.id, d.id_report, d.id_lev_tr, d.id_var");
 }
 
 

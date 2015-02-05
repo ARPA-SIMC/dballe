@@ -1,7 +1,7 @@
 /*
  * dballe/db/modifiers - Parse query=* modifiers
  *
- * Copyright (C) 2007--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2007--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,6 +47,8 @@
 #define DBA_DB_MODIFIER_STREAM      (1 << 6)
 /** Sort by report after ana_id, to ease reconstructing messages on export */
 #define DBA_DB_MODIFIER_SORT_FOR_EXPORT (1 << 7)
+/// Add minimum date, maximum date and data count details to summary query results
+#define DBA_DB_MODIFIER_SUMMARY_DETAILS (1 << 8)
 
 namespace dballe {
 struct Record;

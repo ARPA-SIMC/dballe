@@ -35,32 +35,6 @@
 #include <dballe/core/record.h>
 #include <regex.h>
 
-#if 0
-/**
- * Constants used to define what is needed from the FROM part of the query
- */
-/** Add pseudoana to the FROM part of the query */
-#define DBA_DB_FROM_PA          (1 << 0)
-/** Add lev_tr to the FROM part of the query */
-#define DBA_DB_FROM_LTR         (1 << 1)
-/** Add data to the FROM part of the query */
-#define DBA_DB_FROM_D           (1 << 2)
-/** Add repinfo to the FROM part of the query */
-#define DBA_DB_FROM_RI          (1 << 3)
-/** Add the the block variables as 'dblo' to the FROM part of the query */
-#define DBA_DB_FROM_DBLO        (1 << 5)
-/** Add the the station variables as 'dsta' to the FROM part of the query */
-#define DBA_DB_FROM_DSTA        (1 << 6)
-/** Add the the pseudoana variables as 'dana' to the FROM part of the query */
-#define DBA_DB_FROM_DANA        (1 << 7)
-/** Add an extra data table as 'ddf' to the FROM part of the query, to restrict
- * the query on variable values */
-#define DBA_DB_FROM_DDF         (1 << 8)
-/** Add an extra attr table as 'adf' to the FROM part of the query, to restrict
- * the query on variable attributes */
-#define DBA_DB_FROM_ADF         (1 << 9)
-#endif
-
 namespace dballe {
 namespace db {
 namespace v6 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -268,10 +268,8 @@ template<> template<> void to::test<15>()
 namespace {
 
 tut::tg db_tests_query_mem_tg("db_summary_query_mem", MEM);
-#ifdef HAVE_ODBC
 // tut::tg db_tests_query_v5_tg("db_summary_query_v5", V5); Summary queries are not implemented for V5 databases
 tut::tg db_tests_query_v6_tg("db_summary_query_v6", V6);
-#endif
 
 }
 

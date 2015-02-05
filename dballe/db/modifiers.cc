@@ -1,7 +1,7 @@
 /*
  * dballe/db/modifiers - Parse query=* modifiers
  *
- * Copyright (C) 2007--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2007--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,6 +63,12 @@ unsigned parse_modifiers(const Record& rec)
                     modifiers |= DBA_DB_MODIFIER_UNSORTED;
                 else if (strncmp(s, "stream", 6) == 0)
                     modifiers |= DBA_DB_MODIFIER_STREAM;
+                else
+                    got = 0;
+                break;
+            case 7:
+                if (strncmp(s, "details", 7) == 0)
+                    modifiers |= DBA_DB_MODIFIER_SUMMARY_DETAILS;
                 else
                     got = 0;
                 break;

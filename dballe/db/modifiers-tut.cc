@@ -48,4 +48,12 @@ void to::test<1>()
     wassert(actual(db::parse_modifiers(rec)) == DBA_DB_MODIFIER_BEST);
 }
 
+template<> template<>
+void to::test<2>()
+{
+    Record rec;
+    rec.set("query", "details");
+    wassert(actual(db::parse_modifiers(rec)) == DBA_DB_MODIFIER_SUMMARY_DETAILS);
+}
+
 }
