@@ -976,7 +976,9 @@ void Record::parse_date_extremes(int* minvalues, int* maxvalues) const
         minvalues[3] = minvalues[3] != MISSING_INT ? minvalues[3] : 0;
         minvalues[4] = minvalues[4] != MISSING_INT ? minvalues[4] : 0;
         minvalues[5] = minvalues[5] != MISSING_INT ? minvalues[5] : 0;
-    }
+    } else
+        for (unsigned i = 1; i < 6; ++i)
+            minvalues[i] = MISSING_INT;
 
     if (maxvalues[0] != MISSING_INT)
     {
@@ -985,7 +987,19 @@ void Record::parse_date_extremes(int* minvalues, int* maxvalues) const
         maxvalues[3] = maxvalues[3] != MISSING_INT ? maxvalues[3] : 23;
         maxvalues[4] = maxvalues[4] != MISSING_INT ? maxvalues[4] : 59;
         maxvalues[5] = maxvalues[5] != MISSING_INT ? maxvalues[5] : 59;
-    }
+    } else
+        for (unsigned i = 1; i < 6; ++i)
+            maxvalues[i] = MISSING_INT;
+}
+
+/* Buf must be at least 25 bytes long; values must be at least 6 ints long */
+void Record::parse_date_extremes(Datetime& dtmin, Datetime& dtmax) const
+{
+    int raw_min[6];
+    int raw_max[6];
+    parse_date_extremes(raw_min, raw_max);
+    dtmin.from_array(raw_min);
+    dtmax.from_array(raw_max);
 }
 
 void Record::parse_date(int* values) const

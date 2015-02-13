@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -92,9 +92,34 @@ void to::test<5>()
     wassert(actual(Datetime(2013, 1, 1, 0, 0, 0)) < Datetime(2013, 1, 1, 0, 1, 0));
     wassert(actual(Datetime(2013, 1, 1, 0, 0, 0)) < Datetime(2013, 1, 1, 0, 0, 1));
     wassert(actual(Datetime(1945, 4, 25, 8, 0, 0)) != Datetime(1945, 4, 26, 8, 0, 0));
+}
 
+// Test Datetime ranges
+template<> template<>
+void to::test<6>()
+{
+    Datetime missing;
+    Datetime dt_2010(2010, 1, 1, 0, 0, 0);
+    Datetime dt_2011(2011, 1, 1, 0, 0, 0);
+    Datetime dt_2012(2012, 1, 1, 0, 0, 0);
+    Datetime dt_2013(2013, 1, 1, 0, 0, 0);
+
+    // Test equality
+    wassert(actual(Datetime::range_equals(missing, missing, missing, missing)).istrue());
+    wassert(actual(Datetime::range_equals(dt_2010, dt_2011, dt_2010, dt_2011)).istrue());
+    wassert(actual(Datetime::range_equals(dt_2010, missing, missing, missing)).isfalse());
+    wassert(actual(Datetime::range_equals(missing, dt_2010, missing, missing)).isfalse());
+    wassert(actual(Datetime::range_equals(missing, missing, dt_2010, missing)).isfalse());
+    wassert(actual(Datetime::range_equals(missing, missing, missing, dt_2010)).isfalse());
+    wassert(actual(Datetime::range_equals(dt_2010, dt_2011, dt_2012, dt_2013)).isfalse());
+
+    // Test contains
+    wassert(actual(Datetime::range_contains(missing, missing, missing, missing)).istrue());
+    wassert(actual(Datetime::range_contains(dt_2010, dt_2011, dt_2010, dt_2011)).istrue());
+    wassert(actual(Datetime::range_contains(missing, missing, dt_2011, dt_2012)).istrue());
+    wassert(actual(Datetime::range_contains(dt_2011, dt_2012, missing, missing)).isfalse());
+    wassert(actual(Datetime::range_contains(dt_2010, dt_2013, dt_2011, dt_2012)).istrue());
+    wassert(actual(Datetime::range_contains(dt_2010, dt_2012, dt_2011, dt_2013)).isfalse());
 }
 
 }
-
-/* vim:set ts=4 sw=4: */

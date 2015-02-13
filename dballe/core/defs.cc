@@ -179,6 +179,25 @@ bool Datetime::operator>(const Datetime& dt) const
     return time > dt.time;
 }
 
+bool Datetime::range_equals(
+        const Datetime& begin1, const Datetime& until1,
+        const Datetime& begin2, const Datetime& until2)
+{
+    return begin1 == begin2 && until1 == until2;
+}
+
+bool Datetime::range_contains(
+        const Datetime& begin1, const Datetime& until1,
+        const Datetime& begin2, const Datetime& until2)
+{
+    if (!begin1.is_missing() && (begin2.is_missing() || begin2 < begin1))
+        return false;
+
+    if (!until1.is_missing() && (until2.is_missing() || until2 > until1))
+        return false;
+
+    return true;
+}
 
 namespace {
 std::string fmtf( const char* f, ... )

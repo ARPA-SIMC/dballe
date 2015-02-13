@@ -229,7 +229,17 @@ struct Date
     {
     }
 
-    void fill(int* vals) const
+    /// Check if this date is the missing value
+    bool is_missing() const { return year == 0xffff; }
+
+    void from_array(const int* vals)
+    {
+        year = vals[0];
+        month = vals[1];
+        day = vals[2];
+    }
+
+    void to_array(int* vals) const
     {
         vals[0] = (unsigned)year;
         vals[1] = (unsigned)month;
@@ -268,7 +278,17 @@ struct Time
     {
     }
 
-    void fill(int* vals) const
+    /// Check if this time is the missing value
+    bool is_missing() const { return hour == 0xff; }
+
+    void from_array(const int* vals)
+    {
+        hour = vals[0];
+        minute = vals[1];
+        second = vals[2];
+    }
+
+    void to_array(int* vals) const
     {
         vals[0] = (unsigned)hour;
         vals[1] = (unsigned)minute;
@@ -303,22 +323,44 @@ struct Datetime
         : date(year, month, day), time(hour, minute, second) {}
     Datetime(const int* val) : date(val), time(val+3) {}
 
+    /// Check if this datetime is the missing value
+    bool is_missing() const { return date.is_missing(); }
+
     int compare(const Datetime& o) const
     {
         if (int res = date.compare(o.date)) return res;
         return time.compare(o.time);
     }
 
-    void fill(int* vals) const
+    void from_array(const int* vals)
     {
-        date.fill(vals);
-        time.fill(vals + 3);
+        date.from_array(vals);
+        time.from_array(vals + 3);
+    }
+
+    void to_array(int* vals) const
+    {
+        date.to_array(vals);
+        time.to_array(vals + 3);
     }
 
     bool operator==(const Datetime& dt) const;
     bool operator!=(const Datetime& dt) const;
     bool operator<(const Datetime& dt) const;
     bool operator>(const Datetime& dt) const;
+
+    /// Check if the two ranges are the same
+    static bool range_equals(
+            const Datetime& begin1, const Datetime& until1,
+            const Datetime& begin2, const Datetime& until2);
+
+    /**
+     * Checks if the interval [begin1, end1] contains [begin2, end2] or if the
+     * two intervals are the same
+     */
+    static bool range_contains(
+            const Datetime& begin1, const Datetime& until1,
+            const Datetime& begin2, const Datetime& until2);
 };
 
 std::ostream& operator<<(std::ostream& out, const Datetime& dt);

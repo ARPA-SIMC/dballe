@@ -111,7 +111,7 @@ Trange Cursor::get_trange() const
 }
 void Cursor::get_datetime(int (&dt)[6]) const
 {
-    results[cur].out_datetime.fill(dt);
+    results[cur].out_datetime.to_array(dt);
 }
 wreport::Varcode Cursor::get_varcode() const { return (wreport::Varcode)results[cur].out_varcode; }
 wreport::Var Cursor::get_var() const

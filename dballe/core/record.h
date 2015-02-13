@@ -398,6 +398,9 @@ public:
 	 */
 	void parse_date_extremes(int* minvalues, int* maxvalues) const;
 
+    // Same as parse_date_extremes(int*, int*) but it fills Datetime objects
+    void parse_date_extremes(Datetime& dtmin, Datetime& dtmax) const;
+
 	/**
 	 * Parse the date set in the Record.
 	 *

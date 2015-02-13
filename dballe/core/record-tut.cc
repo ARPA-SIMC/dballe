@@ -434,6 +434,29 @@ void to::test<9>()
     wassert(actual(count) == 8);
 }
 
+// Test querying extremes by Datetime
+template<> template<>
+void to::test<10>()
+{
+    Query rec;
+
+    Datetime dtmin, dtmax;
+
+    rec.parse_date_extremes(dtmin, dtmax);
+    wassert(actual(dtmin.is_missing()).istrue());
+    wassert(actual(dtmax.is_missing()).istrue());
+
+    rec.setmin(Datetime(2010, 1, 1, 0, 0, 0));
+    rec.parse_date_extremes(dtmin, dtmax);
+    wassert(actual(dtmin) == Datetime(2010, 1, 1, 0, 0, 0));
+    wassert(actual(dtmax.is_missing()).istrue());
+
+    rec.setmax(Datetime(2011, 2, 3, 4, 5, 6));
+    rec.parse_date_extremes(dtmin, dtmax);
+    wassert(actual(dtmin) == Datetime(2010, 1, 1, 0, 0, 0));
+    wassert(actual(dtmax) == Datetime(2011, 2, 3, 4, 5, 6));
+}
+
 #if 0
 // Test set_from_string
 template<> template<>
