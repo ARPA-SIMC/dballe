@@ -149,7 +149,7 @@ protected:
 
 public:
     /// Check if the stack is empty
-    bool is_empty() const { return summaries.empty(); }
+    bool empty() const { return summaries.empty(); }
 
     /// Return the stack size. Only really useful for tests.
     unsigned size() const { return summaries.size(); }
