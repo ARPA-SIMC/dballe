@@ -361,6 +361,12 @@ struct Datetime
     static bool range_contains(
             const Datetime& begin1, const Datetime& until1,
             const Datetime& begin2, const Datetime& until2);
+
+    /// Check if the two ranges are completely disjoint
+    static bool range_disjoint(
+            const Datetime& begin1, const Datetime& until1,
+            const Datetime& begin2, const Datetime& until2);
+
 };
 
 std::ostream& operator<<(std::ostream& out, const Datetime& dt);

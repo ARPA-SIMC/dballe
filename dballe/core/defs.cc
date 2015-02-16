@@ -199,6 +199,19 @@ bool Datetime::range_contains(
     return true;
 }
 
+bool Datetime::range_disjoint(
+        const Datetime& begin1, const Datetime& until1,
+        const Datetime& begin2, const Datetime& until2)
+{
+    if (!until1.is_missing() && !begin2.is_missing() && until1 < until2)
+        return true;
+
+    if (!until2.is_missing() && !begin1.is_missing() && until2 < until1)
+        return true;
+
+    return false;
+}
+
 namespace {
 std::string fmtf( const char* f, ... )
 {

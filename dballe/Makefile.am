@@ -99,6 +99,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/v6/db.h \
 	db/v6/cursor.h \
 	db/v6/qbuilder.h \
+	db/summary.h \
 	cmdline/cmdline.h \
 	cmdline/conversion.h \
 	cmdline/processor.h \
@@ -205,6 +206,7 @@ libdballe_la_SOURCES = \
 	db/v6/qbuilder.cc \
 	db/v6/import.cc \
 	db/v6/export.cc \
+	db/summary.cc \
 	cmdline/cmdline.cc \
 	cmdline/processor.cc \
 	cmdline/conversion.cc \
@@ -326,6 +328,7 @@ tut_test_SOURCES = \
 	db/v6/tests/data.cc \
 	db/v6/tests/attr.cc \
 	db/v6/tests/db.cc \
+	db/summary-tut.cc \
 	simple/msgapi-tut.cc \
 	cmdline/dbadb-tut.cc \
 	simple/dbapi-tut.cc
