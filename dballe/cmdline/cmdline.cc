@@ -21,7 +21,7 @@
 #include <dballe/core/record.h>
 #include "dballe/core/vasprintf.h"
 #include <dballe/msg/wr_codec.h>
-//#include <dballe/core/verbose.h>
+#include <dballe/core/verbose.h>
 
 #include <popt.h>
 #include <string.h>
@@ -425,7 +425,7 @@ int dba_cmdline_dispatch_main (const struct program_info* pinfo, const struct to
 {
     int i;
 
-    // TODO dba_verbose_init();
+    dba_verbose_init();
 
     /* Dispatch execution to the handler for the various commands */
     for (i = 1; i < argc; i++)

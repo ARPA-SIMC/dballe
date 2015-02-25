@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -471,7 +471,6 @@ void to::test<27>()
     ensure_equals(msg.type, MSG_PILOT);
 }
 
-
 template<> template<>
 void to::test<28>()
 {
@@ -480,6 +479,17 @@ void to::test<28>()
     const Msg& msg = *(*msgs)[0];
     ensure_equals(msg.type, MSG_TEMP);
 }
+
+// Wind profiler
+template<> template<>
+void to::test<29>()
+{
+    unique_ptr<Msgs> msgs = read_msgs("bufr/temp-windprof1.bufr", BUFR);
+    ensure_equals(msgs->size(), 1u);
+    const Msg& msg = *(*msgs)[0];
+    ensure_equals(msg.type, MSG_TEMP);
+}
+
 #if 0
 /* Check that a BUFR from a synop high-level station correctly reports isobaric
  * surface and geopotential */

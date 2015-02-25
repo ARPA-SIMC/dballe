@@ -23,6 +23,7 @@
 #include <wreport/conv.h>
 #include <wreport/codetables.h>
 #include <dballe/msg/context.h>
+#include <dballe/core/verbose.h>
 #include <cmath>
 
 // Define to debug the sounding group matching algorithm
@@ -250,7 +251,7 @@ void TempImporter::import_var(const Var& var)
 /* Date/time of launch */
         case WR_VAR(0,  8, 21):
             if (var.enqi() != 18)
-                    error_consistency::throwf("TEMP time significance is %d instead of 18", var.enqi());
+                dba_verbose(DBA_VERB_BUFREX_MSG, "TEMP time significance is %d instead of 18", var.enqi());
             break;
 /* Horizontal and vertical coordinates of launch site */
         case WR_VAR(0,  7,  1):
