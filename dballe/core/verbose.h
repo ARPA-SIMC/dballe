@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef VERBOSE_H
-#define VERBOSE_H
+#ifndef DBA_VERBOSE_H
+#define DBA_VERBOSE_H
 
 #ifdef  __cplusplus
 extern "C" {
@@ -53,6 +53,9 @@ enum {
  * level of verbose messages are enabled.
  */
 void dba_verbose_init();
+
+/// Set the bitmask specifying which messages are printed
+void dba_verbose_set_mask(int mask);
 
 /**
  * Return 1 if the given verbose level has been requested in output, else 0

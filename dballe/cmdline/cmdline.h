@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,8 @@
 #include <wreport/error.h>
 #include <dballe/core/rawmsg.h>
 #include <popt.h>
+#include <memory>
+#include <vector>
 #include <list>
 #include <string>
 
@@ -36,31 +38,49 @@ struct Record;
 
 namespace cmdline {
 
-struct op_dispatch_table
+struct Subcommand
 {
-    int (*func)(poptContext);
-    const char* aliases[3];
-    const char* usage;
-    const char* desc;
-    const char* longdesc;
-    struct poptOption* optable;
+    std::vector<std::string> names;
+    std::string usage;
+    std::string desc;
+    std::string longdesc;
+    int op_verbose;
+
+    virtual ~Subcommand() {}
+
+    virtual void add_to_optable(std::vector<poptOption>& opts) const;
+    virtual int main(poptContext) = 0;
+
+    poptContext make_popt_context(int argc, const char* argv[]) const;
+    void manpage_print_options(FILE* out);
 };
 
 #define ODT_END { NULL, NULL, NULL, NULL, NULL, NULL }
 
-struct tool_desc
+struct Command
 {
-    const char* desc;
-    const char* longdesc;
-    struct op_dispatch_table* ops;  
-};
+    std::string name;
+    std::string desc;
+    std::string longdesc;
+    std::string manpage_examples_section;
+    std::string manpage_files_section;
+    std::string manpage_seealso_section;
 
-struct program_info
-{
-    const char* name;
-    const char* manpage_examples_section;
-    const char* manpage_files_section;
-    const char* manpage_seealso_section;
+    std::vector<Subcommand*> ops;
+
+    ~Command();
+
+    /// Add an action to this tool, taking ownership of its memory management
+    void add_subcommand(Subcommand* action);
+    void add_subcommand(std::unique_ptr<Subcommand>&& action);
+
+    Subcommand* find_action(const std::string& name) const;
+
+    void usage(const std::string& selfpath, FILE* out) const;
+    void manpage(FILE* out) const;
+
+    /// Process commandline arguments and perform the action requested
+    int main(int argc, const char* argv[]);
 };
 
 /// Report an error with command line options
@@ -94,11 +114,6 @@ void dba_cmdline_error(poptContext optCon, const char* fmt, ...) __attribute__ (
  * Return the ::dba_encoding that corresponds to the name in the string
  */
 Encoding dba_cmdline_stringToMsgType(const char* type);
-
-/**
- * Process commandline arguments and perform the action requested
- */
-int dba_cmdline_dispatch_main(const struct program_info* pinfo, const struct tool_desc* desc, int argc, const char* argv[]);
 
 /**
  * Get a DB-ALLe query from commandline parameters in the form key=value

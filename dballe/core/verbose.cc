@@ -60,6 +60,11 @@ void dba_verbose_init()
 	}
 }
 
+void dba_verbose_set_mask(int mask)
+{
+    level = mask;
+}
+
 int dba_verbose_is_allowed(int lev)
 {
 	return (level & lev) != 0;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,11 +30,167 @@
 #include <ctype.h>
 #include <time.h>
 
+using namespace std;
+
 namespace dballe {
 namespace cmdline {
 
-static const struct op_dispatch_table* op_table_lookup(const struct tool_desc* desc, const char* name);
-static void usage(const struct tool_desc* desc, const char* selfpath, FILE* out);
+static int is_tableend(struct poptOption* op)
+{
+    return op->longName == NULL && \
+           op->shortName == '\0' && \
+           op->argInfo == 0 && \
+           op->arg == 0 && \
+           op->val == 0 && \
+           op->descrip == NULL && \
+           op->argDescrip == NULL;
+}
+
+static void manpage_print_options(const char* title, struct poptOption* optable, FILE* out)
+{
+    int i;
+
+    fprintf(out, ".SS %s\n", title);
+
+    for (i = 0; !is_tableend(&(optable[i])); i++)
+    {
+        int bol = 1;
+
+        if (optable[i].argInfo == POPT_ARG_INCLUDE_TABLE)
+            continue;
+        /*
+        .TP
+        .B \-d, \-\-distance
+        (only valid for the \fIrelated\fP command)
+        Set the maximum distance to use for the "related" option.
+        (see the \fI\-\-distance\fP option in \fBtagcoll\fP(1))
+        */
+        fprintf(out, ".TP\n.B");
+        if (optable[i].argInfo == POPT_ARG_NONE)
+        {
+            if (optable[i].shortName != '\0')
+            {
+                fprintf(out, " \\-%c", optable[i].shortName);
+                bol = 0;
+            }
+            if (optable[i].longName != nullptr)
+            {
+                fprintf(out, "%s \\-\\-%s", bol ? "" : ",", optable[i].longName);
+                bol = 0;
+            }
+        } else {
+            if (optable[i].shortName != '\0')
+            {
+                fprintf(out, " \\-%c %s", optable[i].shortName, optable[i].argDescrip);
+                bol = 0;
+            }
+            if (optable[i].longName != nullptr)
+            {
+                fprintf(out, "%s \\-\\-%s=%s", bol ? "" : ",", optable[i].longName, optable[i].argDescrip);
+                bol = 0;
+            }
+        }
+        fprintf(out, "\n%s\n", optable[i].descrip);
+    }
+}
+
+void Subcommand::add_to_optable(std::vector<poptOption>& opts) const
+{
+    opts.push_back({ "help", '?', 0, 0, 1, "print an help message" });
+    opts.push_back({ "verbose", 0, POPT_ARG_NONE, (void*)&op_verbose, 0, "verbose output", 0 });
+}
+
+void Subcommand::manpage_print_options(FILE* out)
+{
+    string title("Option for command ");
+    title += names[0];
+    vector<poptOption> opts;
+    add_to_optable(opts);
+    opts.push_back(POPT_TABLEEND);
+    cmdline::manpage_print_options(
+            title.c_str(),
+            opts.data(),
+            out);
+}
+
+poptContext Subcommand::make_popt_context(int argc, const char* argv[]) const
+{
+    vector<poptOption> opts;
+    add_to_optable(opts);
+    opts.push_back(POPT_TABLEEND);
+    poptContext optCon = poptGetContext(NULL, argc, argv, opts.data(), 0);
+
+    // Build the help information for this entry
+    string help(usage + "\n\n" + desc + ".\n\n");
+    if (!longdesc.empty())
+        help += longdesc + ".\n\n";
+    help += "Options are:";
+    poptSetOtherOptionHelp(optCon, help.c_str());
+
+    return optCon;
+}
+
+
+Command::~Command()
+{
+    for (auto a: ops)
+        delete a;
+}
+
+void Command::add_subcommand(Subcommand* action)
+{
+    ops.push_back(action);
+}
+
+void Command::add_subcommand(std::unique_ptr<Subcommand>&& action)
+{
+    add_subcommand(action.release());
+}
+
+Subcommand* Command::find_action(const std::string& name) const
+{
+    for (auto& a: ops)
+        for (const auto& n: a->names)
+            if (name == n)
+                return a;
+    return nullptr;
+}
+
+void Command::usage(const std::string& selfpath, FILE* out) const
+{
+    // Get the executable name
+    size_t pos = selfpath.rfind('/');
+    const char* self = selfpath.c_str();
+    if (pos != string::npos)
+        self += pos + 1;
+
+    fprintf(out, "Usage: %s <command> [options] [arguments]\n\n%s.\n%s.\n\n",
+            self, desc.c_str(), longdesc.c_str());
+    fprintf(out, "Available commands are:\n");
+    fprintf(out, "\t%s help\n", self);
+    fprintf(out, "\t\tdisplay this help message\n");
+    fprintf(out, "\t%s help manpage\n", self);
+    fprintf(out, "\t\tgenerate the manpage for %s\n", self);
+
+    for (auto& a: ops)
+    {
+        bool first = true;
+        for (auto& name: a->names)
+        {
+            if (first)
+            {
+                fprintf(out, "\t%s %s", self, name.c_str());
+                first = false;
+            }
+            else
+                fprintf(out, " or %s", name.c_str());
+        }
+        fprintf(out, "\n\t\t%s\n", a->desc.c_str());
+    }
+
+    fprintf(out, "\nCalling `%s <command> --help' will give help on the specific command\n", self);
+}
+
 
 #if 0
 void dba_cmdline_print_dba_error()
@@ -97,111 +253,10 @@ Encoding dba_cmdline_stringToMsgType(const char* type)
         error_cmdline::throwf("'%s' is not a valid format type", type);
 }
 
-static const struct op_dispatch_table* op_table_lookup(const struct tool_desc* desc, const char* name)
-{
-    const struct op_dispatch_table* op_table = desc->ops;
-    int i, j;
-    for (i = 0; op_table[i].desc != NULL; i++)
-        for (j = 0; op_table[i].aliases[j] != NULL; j++)
-            if (strcmp(name, op_table[i].aliases[j]) == 0)
-                return &(op_table[i]);
-    return NULL;
-}
-
-static void usage(const struct tool_desc* desc, const char* selfpath, FILE* out)
-{
-    const struct op_dispatch_table* op_table = desc->ops;
-    int i, j;
-    const char* self = strrchr(selfpath, '/');
-    if (self == NULL) self = selfpath; else self++;
-
-    fprintf(out, "Usage: %s <command> [options] [arguments]\n\n%s.\n%s.\n\n",
-            self, desc->desc, desc->longdesc);
-    fprintf(out, "Available commands are:\n");
-    fprintf(out, "\t%s help\n", self);
-    fprintf(out, "\t\tdisplay this help message\n");
-    fprintf(out, "\t%s help manpage\n", self);
-    fprintf(out, "\t\tgenerate the manpage for %s\n", self);
-
-    for (i = 0; op_table[i].desc != NULL; i++)
-    {
-        for (j = 0; op_table[i].aliases[j] != NULL; j++)
-        {
-            if (j == 0)
-                fprintf(out, "\t%s %s", self, op_table[i].aliases[j]);
-            else
-                fprintf(out, " or %s", op_table[i].aliases[j]);
-        }
-        fprintf(out, "\n\t\t%s\n", op_table[i].desc);
-    }
-
-    fprintf(out, "\nCalling `%s <command> --help' will give help on the specific command\n", self);
-}
-
-static int is_tableend(struct poptOption* op)
-{
-    return op->longName == NULL && \
-           op->shortName == '\0' && \
-           op->argInfo == 0 && \
-           op->arg == 0 && \
-           op->val == 0 && \
-           op->descrip == NULL && \
-           op->argDescrip == NULL;
-}
-
-static void manpage_print_options(const char* title, struct poptOption* optable, FILE* out)
-{
-    int i;
-
-    fprintf(out, ".SS %s\n", title);
-
-    for (i = 0; !is_tableend(&(optable[i])); i++)
-    {
-        int bol = 1;
-
-        if (optable[i].argInfo == POPT_ARG_INCLUDE_TABLE)
-            continue;
-        /*
-        .TP
-        .B \-d, \-\-distance
-        (only valid for the \fIrelated\fP command)
-        Set the maximum distance to use for the "related" option.
-        (see the \fI\-\-distance\fP option in \fBtagcoll\fP(1))
-        */
-        fprintf(out, ".TP\n.B");
-        if (optable[i].argInfo == POPT_ARG_NONE)
-        {
-            if (optable[i].shortName != '\0')
-            {
-                fprintf(out, " \\-%c", optable[i].shortName);
-                bol = 0;
-            }
-            if (optable[i].longName != '\0')
-            {
-                fprintf(out, "%s \\-\\-%s", bol ? "" : ",", optable[i].longName);
-                bol = 0;
-            }
-        } else {
-            if (optable[i].shortName != '\0')
-            {
-                fprintf(out, " \\-%c %s", optable[i].shortName, optable[i].argDescrip);
-                bol = 0;
-            }
-            if (optable[i].longName != '\0')
-            {
-                fprintf(out, "%s \\-\\-%s=%s", bol ? "" : ",", optable[i].longName, optable[i].argDescrip);
-                bol = 0;
-            }
-        }
-        fprintf(out, "\n%s\n", optable[i].descrip);
-    }
-}
-
-static void manpage(const struct program_info* pinfo, const struct tool_desc* desc, FILE* out)
+void Command::manpage(FILE* out) const
 {
     static const char* months[] = { "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec" };
-    const struct op_dispatch_table* op_table = desc->ops;
-    const char* self = pinfo->name;
+    const char* self = name.c_str();
     char* uself;
     time_t curtime = time(NULL);
     struct tm* loctime = localtime(&curtime);
@@ -239,7 +294,7 @@ static void manpage(const struct program_info* pinfo, const struct tool_desc* de
     */
     fprintf(out,
             ".SH NAME\n"
-            "%s \\- %s\n", self, desc->desc);
+            "%s \\- %s\n", self, desc.c_str());
     /*
     .SH SYNOPSIS
     .B debtags
@@ -265,13 +320,13 @@ static void manpage(const struct program_info* pinfo, const struct tool_desc* de
     [...]
     */
     fprintf(out, ".SH DESCRIPTION\n");
-    for (i = 0; desc->longdesc[i] != '\0'; i++)
-        switch (desc->longdesc[i])
+    for (i = 0; longdesc[i] != '\0'; i++)
+        switch (longdesc[i])
         {
             case '\n': fprintf(out, "\n.P\n"); break;
             case '-': fprintf(out, "\\-"); break;
             default:
-                putc(desc->longdesc[i], out);
+                putc(longdesc[i], out);
                 break;
         }
     fprintf(out, ".\n.P\n"
@@ -285,8 +340,8 @@ static void manpage(const struct program_info* pinfo, const struct tool_desc* de
             "\\fBhelp manpage\\fP\n"
             ".br\n"
             "Print this manpage.\n", self);
-    
-    for (op = 0; op_table[op].desc != NULL; op++)
+
+    for (auto& op: ops)
     {
         /*
         .TP
@@ -301,10 +356,10 @@ static void manpage(const struct program_info* pinfo, const struct tool_desc* de
                 "\\fB%s\\fP\n"
                 ".br\n"
                 "%s.\n",
-                    op_table[op].usage,
-                    op_table[op].desc);
-        if (op_table[op].longdesc != NULL)
-            fprintf(out, "%s.\n", op_table[op].longdesc);
+                    op->usage.c_str(),
+                    op->desc.c_str());
+        if (!op->longdesc.empty())
+            fprintf(out, "%s.\n", op->longdesc.c_str());
     }
 
     /*
@@ -324,104 +379,63 @@ static void manpage(const struct program_info* pinfo, const struct tool_desc* de
     {
         struct poptOption* seen[20];
         seen[0] = NULL;
-        for (op = 0; op_table[op].desc != NULL; op++)
-            for (i = 0; !is_tableend(&(op_table[op].optable[i])); i++)
-                if (op_table[op].optable[i].argInfo == POPT_ARG_INCLUDE_TABLE)
+        for (Subcommand* op: ops)
+        {
+            vector<poptOption> optable;
+            op->add_to_optable(optable);
+            for (auto& sw: optable)
+                if (sw.argInfo == POPT_ARG_INCLUDE_TABLE)
                 {
                     int is_seen = 0;
                     int j;
                     for (j = 0; seen[j] != NULL && j < 20; j++)
-                        if (seen[j] == op_table[op].optable[i].arg)
+                        if (seen[j] == sw.arg)
                             is_seen = 1;
                     if (!is_seen && j < 20)
                     {
-                        seen[j] = (struct poptOption*)op_table[op].optable[i].arg;
+                        seen[j] = (struct poptOption*)sw.arg;
                         seen[j+1] = NULL;
 
-                        manpage_print_options(
-                                op_table[op].optable[i].descrip, 
-                                (struct poptOption*)op_table[op].optable[i].arg, 
-                                out);
+                        manpage_print_options(sw.descrip, (struct poptOption*)sw.arg, out);
                     }
                 }
+        }
     }
     /*
      * Then document the rest, without
      * repeating the options in the subgroups.
      */
-    for (op = 0; op_table[op].desc != NULL; op++)
-    {
-        char title[128];
-        strcpy(title, "Option for command ");
-        strcat(title, op_table[op].aliases[0]);
-        manpage_print_options(
-                title,
-                (struct poptOption*)op_table[op].optable, 
-                out);
-    }
+    for (auto& op: ops)
+        op->manpage_print_options(out);
 
     /* .SH EXAMPLES */
-    if (pinfo->manpage_examples_section != NULL)
+    if (!manpage_examples_section.empty())
     {
         fprintf(out, ".SH EXAMPLES\n");
-        fputs(pinfo->manpage_examples_section, out);
+        fputs(manpage_examples_section.c_str(), out);
     }
 
     /* .SH FILES */
-    if (pinfo->manpage_files_section != NULL)
+    if (!manpage_files_section.empty())
     {
         fprintf(out, ".SH FILES\n");
-        fputs(pinfo->manpage_files_section, out);
+        fputs(manpage_files_section.c_str(), out);
     }
 
     /* .SH SEE ALSO */
-    if (pinfo->manpage_seealso_section != NULL)
+    if (!manpage_seealso_section.empty())
     {
         fprintf(out, ".SH SEE ALSO\n");
-        fputs(pinfo->manpage_seealso_section, out);
+        fputs(manpage_seealso_section.c_str(), out);
     }
-        
-        
-/*
-.SH FILES
-.TP
-.B /var/lib/debtags/vocabulary
-.br
-The normative tag vocabulary
-.TP
-.B /etc/debtags/sources.list
-.br
-The list of sources to build the package tags database from
-.TP
-.B /var/lib/debtags/package\-tags
-.br
-The system package tags database, only kept as an easily parsable reference.
-In the same directory there is a the binary index with the same content, used
-by applications for fast access.
 
-.SH SEE ALSO
-.BR debtags-edit (1),
-.BR tagcoll (1),
-.BR tagcolledit (1),
-.BR apt-cache (1),
-.br
-.BR http://debtags.alioth.debian.org/
-.br
-.BR http://debian.vitavonni.de/packagebrowser/
-*/
-    /*
-    .SH AUTHOR
-    \fBdebtags\fP has been written by Enrico Zini <enrico@debian.org>, with a great
-    deal of ideas and feedback from many people around the debtags-devel,
-    debian-devel and the previous deb-usability mailing lists.
-    */      
     fprintf(out,
             ".SH AUTHOR\n"
             "\\fB%s\\fP has been written by Enrico Zini <enrico@enricozini.com> "
             "for ARPA Emilia Romagna, Servizio Idrometeorologico.\n", self);
 }
 
-int dba_cmdline_dispatch_main (const struct program_info* pinfo, const struct tool_desc* desc, int argc, const char* argv[])
+int Command::main(int argc, const char* argv[])
 {
     int i;
 
@@ -430,8 +444,6 @@ int dba_cmdline_dispatch_main (const struct program_info* pinfo, const struct to
     /* Dispatch execution to the handler for the various commands */
     for (i = 1; i < argc; i++)
     {
-        const struct op_dispatch_table* action;
-
         /* Check if the user asked for help */
         if (strcmp(argv[i], "--help") == 0 ||
             strcmp(argv[i], "help") == 0)
@@ -439,74 +451,44 @@ int dba_cmdline_dispatch_main (const struct program_info* pinfo, const struct to
             if (i+1 < argc)
             {
                 if (strcmp(argv[i+1], "manpage") == 0)
-                    manpage(pinfo, desc, stdout);
+                    manpage(stdout);
                 else
                 {
-                    poptContext optCon;
-                    char help[1024];
-
-                    if ((action = op_table_lookup(desc, argv[i+1])) == NULL)
+                    const Subcommand* action = find_action(argv[i+1]);
+                    if (action == nullptr)
                     {
                         fputs("Error parsing commandline: ", stderr);
                         fprintf(stderr, "cannot get help on non-existing command '%s'", argv[i+1]);
                         fputc('\n', stderr);
                         fputc('\n', stderr);
-                        usage(desc, argv[0], stderr);
+                        usage(argv[0], stderr);
                         exit(1);
                     }
-                    optCon = poptGetContext(NULL, argc, argv, action->optable, 0);
-
-                    /* Build the help information for this entry */
-                    strcpy(help, action->usage);
-                    strcat(help, "\n\n");
-                    strcat(help, action->desc);
-                    strcat(help, ".\n\n");
-                    if (action->longdesc != NULL)
-                    {
-                        strcat(help, action->longdesc);
-                        strcat(help, ".\n\n");
-                    }
-                    strcat(help, "Options are:");
-                    poptSetOtherOptionHelp(optCon, help);
-
+                    poptContext optCon = action->make_popt_context(argc, argv);
                     poptPrintHelp(optCon, stdout, 0);
+                    poptFreeContext(optCon);
                 }
             }
             else
-                usage(desc, argv[0], stdout);
+                usage(argv[0], stdout);
             return 0;
         }
-        
+
         /* Skip switches */
         if (argv[i][0] == '-')
             continue;
 
         /* Try the dispatch table */
-        action = op_table_lookup(desc, argv[i]);
-        if (action == NULL)
+        Subcommand* action = find_action(argv[i]);
+        if (action == nullptr)
         {
-            usage(desc, argv[0], stderr);
+            usage(argv[0], stderr);
             return 1;
         } else {
-            poptContext optCon = poptGetContext(NULL, argc, argv, action->optable, 0);
-            char help[1024];
+            poptContext optCon = action->make_popt_context(argc, argv);
+
+            // Parse commandline
             int nextOp;
-
-            /* Build the help information for this entry */
-            strcpy(help, action->usage);
-            strcat(help, "\n\n");
-            strcat(help, action->desc);
-            strcat(help, ".\n\n");
-            if (action->longdesc != NULL)
-            {
-                strcat(help, action->longdesc);
-                strcat(help, ".\n\n");
-            }
-            strcat(help, "Options are:");
-
-            poptSetOtherOptionHelp(optCon, help);
-
-            /* Parse commandline */
             while ((nextOp = poptGetNextOpt(optCon)) != -1)
             {
                 if (nextOp == 1)
@@ -518,9 +500,14 @@ int dba_cmdline_dispatch_main (const struct program_info* pinfo, const struct to
                 }
             }
 
+            if (action->op_verbose)
+            {
+                dba_verbose_set_mask(0xffffffff);
+            }
+
             int res = 0;
             try {
-                res = action->func(optCon);
+                res = action->main(optCon);
             } catch (error_cmdline& e) {
                 fprintf(stderr, "Error parsing commandline: %s\n", e.what());
                 fputc('\n', stderr);
@@ -536,7 +523,7 @@ int dba_cmdline_dispatch_main (const struct program_info* pinfo, const struct to
     }
 
     /* Nothing found on the dispatch table */
-    usage(desc, argv[0], stderr);
+    usage(argv[0], stderr);
     return 1;
 }
 

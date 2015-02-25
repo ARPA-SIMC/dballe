@@ -576,80 +576,176 @@ struct WriteRaw : public cmdline::Action
     }
 };
 
-int do_scan(poptContext optCon)
+struct Scan : public cmdline::Subcommand
 {
-    /* Throw away the command name */
-    poptGetArg(optCon);
-
-    Record query;
-    if (dba_cmdline_get_query(optCon, query) > 0)
-        reader.filter.matcher_from_record(query);
-    Summarise s;
-    reader.read(get_filenames(optCon), s);
-    return 0;
-}
-
-int do_head(poptContext optCon)
-{
-    /* Throw away the command name */
-    poptGetArg(optCon);
-
-    Record query;
-    if (dba_cmdline_get_query(optCon, query) > 0)
-        reader.filter.matcher_from_record(query);
-
-    Head head;
-    reader.read(get_filenames(optCon), head);
-    return 0;
-}
-
-int do_dump(poptContext optCon)
-{
-    unique_ptr<cmdline::Action> action;
-    if (op_dump_csv)
+    Scan()
     {
-        if (op_dump_interpreted)
-            action.reset(new CSVMsgs);
-        else
-            action.reset(new CSVBulletin);
+        names.push_back("scan");
+        usage = "scan [options] [filter] filename [filename [...]]";
+        desc = "Summarise the contents of a file with meteorological data";
     }
-    else if (op_dump_interpreted)
-        action.reset(new DumpCooked);
-    else if (op_dump_text)
-        action.reset(new DumpText);
-    else if (op_dump_structured)
-        action.reset(new DumpStructured);
-    else if (op_dump_dds)
-        action.reset(new DumpDDS);
-    else 
-        action.reset(new DumpMessage);
 
-    /* Throw away the command name */
-    poptGetArg(optCon);
-    if (op_precise_import) reader.import_opts.simplified = false;
+    void add_to_optable(std::vector<poptOption>& opts) const override
+    {
+        Subcommand::add_to_optable(opts);
+        opts.push_back({ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
+            "format of the input data ('bufr', 'crex', 'aof')", "type" });
+        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+            "write unprocessed data to this file", "fname" });
+        opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
+                "Options used to filter messages", 0 });
+    }
 
-    Record query;
-    if (dba_cmdline_get_query(optCon, query) > 0)
-        reader.filter.matcher_from_record(query);
+    int main(poptContext optCon) override
+    {
+        /* Throw away the command name */
+        poptGetArg(optCon);
 
-    reader.read(get_filenames(optCon), *action);
-    return 0;
-}
+        Record query;
+        if (dba_cmdline_get_query(optCon, query) > 0)
+            reader.filter.matcher_from_record(query);
+        Summarise s;
+        reader.read(get_filenames(optCon), s);
+        return 0;
+    }
+};
 
-int do_cat(poptContext optCon)
+struct HeadCmd : public cmdline::Subcommand
 {
-    /* Throw away the command name */
-    poptGetArg(optCon);
+    HeadCmd()
+    {
+        names.push_back("head");
+        usage = "head [options] [filter] filename [filename [...]]";
+        desc = "Dump the contents of the header of a file with meteorological data";
+    }
 
-    Record query;
-    if (dba_cmdline_get_query(optCon, query) > 0)
-        reader.filter.matcher_from_record(query);
+    void add_to_optable(std::vector<poptOption>& opts) const override
+    {
+        Subcommand::add_to_optable(opts);
+        opts.push_back({ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
+            "format of the input data ('bufr', 'crex', 'aof')", "type" });
+        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+            "write unprocessed data to this file", "fname" });
+        opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
+                "Options used to filter messages", 0 });
+    }
 
-    /*DBA_RUN_OR_RETURN(aof_file_write_header(file, 0, 0)); */
-    WriteRaw wraw;
-    reader.read(get_filenames(optCon), wraw);
-    return 0;
-}
+    int main(poptContext optCon) override
+    {
+        /* Throw away the command name */
+        poptGetArg(optCon);
+
+        Record query;
+        if (dba_cmdline_get_query(optCon, query) > 0)
+            reader.filter.matcher_from_record(query);
+
+        Head head;
+        reader.read(get_filenames(optCon), head);
+        return 0;
+    }
+};
+
+struct Dump : public cmdline::Subcommand
+{
+    Dump()
+    {
+        names.push_back("dump");
+        usage = "dump [options] [filter] filename [filename [...]]";
+        desc = "Dump the contents of a file with meteorological data";
+    }
+
+    void add_to_optable(std::vector<poptOption>& opts) const override
+    {
+        Subcommand::add_to_optable(opts);
+        opts.push_back({ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
+            "format of the input data ('bufr', 'crex', 'aof')", "type" });
+        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+            "write unprocessed data to this file", "fname" });
+        opts.push_back({ "interpreted", 0, 0, &op_dump_interpreted, 0,
+            "dump the message as understood by the importer", 0 });
+        opts.push_back({ "precise", 0, 0, &op_precise_import, 0,
+            "import messages using precise contexts instead of standard ones", 0 });
+        opts.push_back({ "text", 0, 0, &op_dump_text, 0,
+            "dump as text that can be processed by dbamsg makebufr", 0 });
+        opts.push_back({ "csv", 0, 0, &op_dump_csv, 0,
+            "dump in machine readable CSV format", 0 });
+        opts.push_back({ "dds", 0, 0, &op_dump_dds, 0,
+            "dump structure of data description section", 0 });
+        opts.push_back({ "structured", 0, 0, &op_dump_structured, 0,
+            "structured dump of the message contents", 0 });
+        opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
+            "Options used to filter messages", 0 });
+    }
+
+    int main(poptContext optCon) override
+    {
+        unique_ptr<cmdline::Action> action;
+        if (op_dump_csv)
+        {
+            if (op_dump_interpreted)
+                action.reset(new CSVMsgs);
+            else
+                action.reset(new CSVBulletin);
+        }
+        else if (op_dump_interpreted)
+            action.reset(new DumpCooked);
+        else if (op_dump_text)
+            action.reset(new DumpText);
+        else if (op_dump_structured)
+            action.reset(new DumpStructured);
+        else if (op_dump_dds)
+            action.reset(new DumpDDS);
+        else 
+            action.reset(new DumpMessage);
+
+        /* Throw away the command name */
+        poptGetArg(optCon);
+        if (op_precise_import) reader.import_opts.simplified = false;
+
+        Record query;
+        if (dba_cmdline_get_query(optCon, query) > 0)
+            reader.filter.matcher_from_record(query);
+
+        reader.read(get_filenames(optCon), *action);
+        return 0;
+    }
+};
+
+struct Cat : public cmdline::Subcommand
+{
+    Cat()
+    {
+        names.push_back("cat");
+        usage = "cat [options] [filter] filename [filename [...]]";
+        desc = "Dump the raw data of a file with meteorological data";
+    }
+
+    void add_to_optable(std::vector<poptOption>& opts) const override
+    {
+        Subcommand::add_to_optable(opts);
+        opts.push_back({ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
+            "format of the input data ('bufr', 'crex', 'aof')", "type" });
+        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+            "write unprocessed data to this file", "fname" });
+        opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
+            "Options used to filter messages", 0 });
+    }
+
+    int main(poptContext optCon) override
+    {
+        /* Throw away the command name */
+        poptGetArg(optCon);
+
+        Record query;
+        if (dba_cmdline_get_query(optCon, query) > 0)
+            reader.filter.matcher_from_record(query);
+
+        /*DBA_RUN_OR_RETURN(aof_file_write_header(file, 0, 0)); */
+        WriteRaw wraw;
+        reader.read(get_filenames(optCon), wraw);
+        return 0;
+    }
+};
 
 struct StoreMessages : public cmdline::Action, public vector<Rawmsg>
 {
@@ -719,172 +815,265 @@ static dba_err bisect(
 }
 #endif
 
-int do_bisect(poptContext optCon)
+struct Bisect : public cmdline::Subcommand
 {
+    Bisect()
+    {
+        names.push_back("bisect");
+        usage = "bisect [options] --test=testscript filename";
+        desc = "Bisect filename and output the minimum subsequence found for which testscript fails.";
+        longdesc = "Run testscript passing parts of filename on its stdin and checking the return code.  Then divide the input in half and try on each half.  Keep going until testscript does not fail in any portion of the file.  Output to stdout the smallest portion for which testscript fails.  This is useful to isolate the few messages in a file that cause problems";
+    }
+
+    void add_to_optable(std::vector<poptOption>& opts) const override
+    {
+        Subcommand::add_to_optable(opts);
+        opts.push_back({ "test", 0, POPT_ARG_STRING, &op_bisect_cmd, 0,
+            "command to run to test a message group", "cmd" });
+        opts.push_back({ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
+            "format of the input data ('bufr', 'crex', 'aof')", "type" });
+        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+            "write unprocessed data to this file", "fname" });
+        opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
+            "Options used to filter messages", 0 });
+    }
+
+    int main(poptContext optCon) override
+    {
 #if 0
-	struct message_vector vec = { 0, 0, 0 };
-	struct bisect_candidate candidate;
-	int old_op_verbose = op_verbose;
-	size_t i;
+        struct message_vector vec = { 0, 0, 0 };
+        struct bisect_candidate candidate;
+        int old_op_verbose = op_verbose;
+        size_t i;
 
-	/* Throw away the command name */
-	poptGetArg(optCon);
+        /* Throw away the command name */
+        poptGetArg(optCon);
 
-	if (op_bisect_cmd == NULL)
-		return dba_error_consistency("you need to use --test=command");
+        if (op_bisect_cmd == NULL)
+            return dba_error_consistency("you need to use --test=command");
 
-	/* Read all input messages a vector of dba_rawmsg */
-	op_verbose = 0;
-	DBA_RUN_OR_RETURN(process_all(optCon, 
-				dba_cmdline_stringToMsgType(reader.input_type, optCon),
-				&reader.filter, store_messages, &vec));
-	op_verbose = old_op_verbose;
+        /* Read all input messages a vector of dba_rawmsg */
+        op_verbose = 0;
+        DBA_RUN_OR_RETURN(process_all(optCon, 
+                    dba_cmdline_stringToMsgType(reader.input_type, optCon),
+                    &reader.filter, store_messages, &vec));
+        op_verbose = old_op_verbose;
 
-	/* Establish a handler for SIGHUP signals. */
-	signal(SIGHUP, stop_bisect);
+        /* Establish a handler for SIGHUP signals. */
+        signal(SIGHUP, stop_bisect);
 
-	/* Bisect working on the vector */
-	candidate.first = 0;
-	candidate.last = vec.len;
-	DBA_RUN_OR_RETURN(bisect(&candidate, &vec, candidate.first, candidate.last));
+        /* Bisect working on the vector */
+        candidate.first = 0;
+        candidate.last = vec.len;
+        DBA_RUN_OR_RETURN(bisect(&candidate, &vec, candidate.first, candidate.last));
 
-	if (op_verbose)
-	{
-		if (flag_bisect_stop)
-			fprintf(stderr, "Stopped by SIGHUP.\n");
-		fprintf(stderr, "Selected messages %zd-%zd.\n", candidate.first, candidate.last);
-	}
+        if (op_verbose)
+        {
+            if (flag_bisect_stop)
+                fprintf(stderr, "Stopped by SIGHUP.\n");
+            fprintf(stderr, "Selected messages %zd-%zd.\n", candidate.first, candidate.last);
+        }
 
-	/* Output the candidate messages */
-	for (; candidate.first < candidate.last; ++candidate.first)
-	{
-		dba_rawmsg msg = vec.messages[candidate.first];
-		if (fwrite(msg->buf, msg->len, 1, stdout) == 0)
-			return dba_error_system("writing message %d to standard output", msg->index);
-	}
+        /* Output the candidate messages */
+        for (; candidate.first < candidate.last; ++candidate.first)
+        {
+            dba_rawmsg msg = vec.messages[candidate.first];
+            if (fwrite(msg->buf, msg->len, 1, stdout) == 0)
+                return dba_error_system("writing message %d to standard output", msg->index);
+        }
 
-	for (i = 0; i < vec.len; ++i)
-		dba_rawmsg_delete(vec.messages[i]);
-	free(vec.messages);
+        for (i = 0; i < vec.len; ++i)
+            dba_rawmsg_delete(vec.messages[i]);
+        free(vec.messages);
 
-	return dba_error_ok();
+        return dba_error_ok();
 #endif
-	throw error_unimplemented("bisect is currently not implemented");
-}
+        throw error_unimplemented("bisect is currently not implemented");
+    }
+};
 
-int do_convert(poptContext optCon)
+struct Convert : public cmdline::Subcommand
 {
-    msg::Exporter::Options opts;
-    cmdline::Converter conv;
-    reader.verbose = op_verbose;
+    Convert()
+    {
+        names.push_back("convert");
+        names.push_back("conv");
+        usage = "convert [options] [filter] filename [filename [...]]";
+        desc = "Convert meteorological data between different formats";
+    }
 
-	/* Throw away the command name */
-	poptGetArg(optCon);
+    void add_to_optable(std::vector<poptOption>& opts) const override
+    {
+        Subcommand::add_to_optable(opts);
+        opts.push_back({ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
+            "format of the input data ('bufr', 'crex', 'aof', 'csv')", "type" });
+        opts.push_back({ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
+            "format of the data in output ('bufr', 'crex', 'aof')", "type" });
+        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+            "write unprocessed data to this file", "fname" });
+        opts.push_back({ "template", 0, POPT_ARG_STRING, &op_output_template, 0,
+            "template of the data in output (autoselect if not specified, 'list' gives a list)", "name" });
+        opts.push_back({ "report", 'r', POPT_ARG_STRING, &op_report, 0,
+            "force output data to be of this type of report", "rep_memo" });
+        opts.push_back({ "precise", 0, 0, &op_precise_import, 0,
+            "import messages using precise contexts instead of standard ones", 0 });
+        opts.push_back({ "bufr2netcdf-categories", 0, 0, &op_bufr2netcdf_categories, 0,
+            "recompute data categories and subcategories according to message contents, for use as input to bufr2netcdf", 0 });
+        opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
+            "Options used to filter messages", 0 });
+        opts.push_back({ "output", 'o', POPT_ARG_STRING, &op_output_file, 0,
+            "destination file. Default: stdandard output", "fname" });
+    }
 
-	if (strcmp(op_output_template, "list") == 0)
-	{
-		list_templates();
-		return 0;
-	}
+    int main(poptContext optCon) override
+    {
+        msg::Exporter::Options opts;
+        cmdline::Converter conv;
+        reader.verbose = op_verbose;
 
-    Record query;
-    if (dba_cmdline_get_query(optCon, query) > 0)
-        reader.filter.matcher_from_record(query);
+        /* Throw away the command name */
+        poptGetArg(optCon);
 
-    if (op_precise_import) reader.import_opts.simplified = false;
+        if (strcmp(op_output_template, "list") == 0)
+        {
+            list_templates();
+            return 0;
+        }
 
-	Encoding outtype = dba_cmdline_stringToMsgType(op_output_type);
+        Record query;
+        if (dba_cmdline_get_query(optCon, query) > 0)
+            reader.filter.matcher_from_record(query);
 
-	if (op_report[0] != 0)
-		conv.dest_rep_memo = op_report;
-	else
-		conv.dest_rep_memo = NULL;
+        if (op_precise_import) reader.import_opts.simplified = false;
 
-	if (op_output_template[0] != 0)
-	{
-		conv.dest_template = op_output_template;
-		opts.template_name = op_output_template;
-	}
+        Encoding outtype = dba_cmdline_stringToMsgType(op_output_type);
 
-    conv.bufr2netcdf_categories = op_bufr2netcdf_categories != 0;
+        if (op_report[0] != 0)
+            conv.dest_rep_memo = op_report;
+        else
+            conv.dest_rep_memo = NULL;
 
-    conv.file = File::create(outtype, op_output_file, "w").release();
-    conv.exporter = msg::Exporter::create(outtype, opts).release();
+        if (op_output_template[0] != 0)
+        {
+            conv.dest_template = op_output_template;
+            opts.template_name = op_output_template;
+        }
 
-    reader.read(get_filenames(optCon), conv);
+        conv.bufr2netcdf_categories = op_bufr2netcdf_categories != 0;
 
-    return 0;
-}
+        conv.file = File::create(outtype, op_output_file, "w").release();
+        conv.exporter = msg::Exporter::create(outtype, opts).release();
 
-int do_compare(poptContext optCon)
+        reader.read(get_filenames(optCon), conv);
+
+        return 0;
+    }
+};
+
+
+struct Compare : public cmdline::Subcommand
 {
-	/* Throw away the command name */
-	poptGetArg(optCon);
+    Compare()
+    {
+        names.push_back("compare");
+        names.push_back("cmp");
+        usage = "compare [options] filename1 [filename2]";
+        desc = "Compare two files with meteorological data";
+    }
 
-	/* Read the file names */
-	const char* file1_name = poptGetArg(optCon);
-	if (file1_name == NULL)
-		dba_cmdline_error(optCon, "input file needs to be specified");
+    void add_to_optable(std::vector<poptOption>& opts) const override
+    {
+        Subcommand::add_to_optable(opts);
+        opts.push_back({ "type1", 't', POPT_ARG_STRING, &reader.input_type, 0,
+            "format of the first file to compare ('bufr', 'crex', 'aof')", "type" });
+        opts.push_back({ "type2", 'd', POPT_ARG_STRING, &op_output_type, 0,
+            "format of the second file to compare ('bufr', 'crex', 'aof')", "type" });
+        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+            "write unprocessed data to this file", "fname" });
+        opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
+            "Options used to filter messages", 0 });
+    }
 
-	const char* file2_name = poptGetArg(optCon);
-	if (file2_name == NULL)
-		file2_name = "(stdin)";
+    int main(poptContext optCon) override
+    {
+        /* Throw away the command name */
+        poptGetArg(optCon);
 
-	Encoding in_type = dba_cmdline_stringToMsgType(reader.input_type);
-	Encoding out_type = dba_cmdline_stringToMsgType(op_output_type);
-	File* file1 = File::create(in_type, file1_name, "r").release();
-	File* file2 = File::create(out_type, file2_name, "r").release();
-	std::unique_ptr<msg::Importer> importer = msg::Importer::create(in_type);
-	std::unique_ptr<msg::Exporter> exporter = msg::Exporter::create(out_type);
-	size_t idx = 0;
-	for ( ; ; ++idx)
-	{
-		++idx;
+        /* Read the file names */
+        const char* file1_name = poptGetArg(optCon);
+        if (file1_name == NULL)
+            dba_cmdline_error(optCon, "input file needs to be specified");
 
-		Rawmsg msg1;
-		Rawmsg msg2;
-		bool found1 = file1->read(msg1);
-		bool found2 = file2->read(msg2);
+        const char* file2_name = poptGetArg(optCon);
+        if (file2_name == NULL)
+            file2_name = "(stdin)";
 
-		if (found1 != found2)
-			throw error_consistency("The files contain a different number of messages");
-		if (!found1 && !found2)
-			break;
+        Encoding in_type = dba_cmdline_stringToMsgType(reader.input_type);
+        Encoding out_type = dba_cmdline_stringToMsgType(op_output_type);
+        File* file1 = File::create(in_type, file1_name, "r").release();
+        File* file2 = File::create(out_type, file2_name, "r").release();
+        std::unique_ptr<msg::Importer> importer = msg::Importer::create(in_type);
+        std::unique_ptr<msg::Exporter> exporter = msg::Exporter::create(out_type);
+        size_t idx = 0;
+        for ( ; ; ++idx)
+        {
+            ++idx;
 
-		Msgs msgs1;
-		Msgs msgs2;
-		importer->from_rawmsg(msg1, msgs1);
-		importer->from_rawmsg(msg2, msgs2);
+            Rawmsg msg1;
+            Rawmsg msg2;
+            bool found1 = file1->read(msg1);
+            bool found2 = file2->read(msg2);
 
-        notes::Collect c(cerr);
-        int diffs = msgs1.diff(msgs2);
-        if (diffs > 0)
-            error_consistency::throwf("Messages #%zd contain %d differences", idx, diffs);
-	}
-	if (idx == 0)
-		throw error_consistency("The files do not contain messages");
-	return 0;
-}
+            if (found1 != found2)
+                throw error_consistency("The files contain a different number of messages");
+            if (!found1 && !found2)
+                break;
 
-int do_fixaof(poptContext optCon)
+            Msgs msgs1;
+            Msgs msgs2;
+            importer->from_rawmsg(msg1, msgs1);
+            importer->from_rawmsg(msg2, msgs2);
+
+            notes::Collect c(cerr);
+            int diffs = msgs1.diff(msgs2);
+            if (diffs > 0)
+                error_consistency::throwf("Messages #%zd contain %d differences", idx, diffs);
+        }
+        if (idx == 0)
+            throw error_consistency("The files do not contain messages");
+        return 0;
+    }
+};
+
+struct FixAOF : public cmdline::Subcommand
 {
-	/* Throw away the command name */
-	poptGetArg(optCon);
+    FixAOF()
+    {
+        names.push_back("fixaof");
+        usage = "fixaof [options] filename [filename1 [...]]]";
+        desc = "Recomputes the start and end of observation period in the headers of the given AOF files";
+    }
 
-	int count = 0;
-	while (const char* filename = poptGetArg(optCon))
-	{
-		unique_ptr<File> file = File::create(AOF, filename, "rb+");
-		AofFile* aoffile = dynamic_cast<AofFile*>(file.get());
-		aoffile->fix_header();
-		++count;
-	}
+    int main(poptContext optCon) override
+    {
+        /* Throw away the command name */
+        poptGetArg(optCon);
 
-	if (count == 0)
-		dba_cmdline_error(optCon, "at least one input file needs to be specified");
+        int count = 0;
+        while (const char* filename = poptGetArg(optCon))
+        {
+            unique_ptr<File> file = File::create(AOF, filename, "rb+");
+            AofFile* aoffile = dynamic_cast<AofFile*>(file.get());
+            aoffile->fix_header();
+            ++count;
+        }
 
-	return 0;
-}
+        if (count == 0)
+            dba_cmdline_error(optCon, "at least one input file needs to be specified");
+
+        return 0;
+    }
+};
 
 #if 0
 static dba_err readfield(FILE* in, char** name, char** value)
@@ -1045,291 +1234,115 @@ cleanup:
 }
 #endif
 
-int do_makebufr(poptContext optCon)
+struct MakeBUFR : public cmdline::Subcommand
 {
-	throw error_unimplemented("makebufr not implemented");
+    MakeBUFR()
+    {
+        names.push_back("makebufr");
+        names.push_back("mkbufr");
+        usage = "makebufr [options] filename [filename1 [...]]]";
+        desc = "Read a simple description of a BUFR file and output the BUFR file.";
+        longdesc = "Read a simple description of a BUFR file and output the BUFR file.  This only works for simple BUFR messages without attributes encoded with data present bitmaps";
+    }
+
+    int main(poptContext optCon) override
+    {
+        throw error_unimplemented("makebufr not implemented");
 #if 0
-	dba_err err = DBA_OK;
-	bufrex_msg msg = NULL;
-	dba_rawmsg rmsg = NULL;
-	dba_file outfile = NULL;
-	const char* filename;
-	FILE* in = NULL;
-	int count = 0;
+        dba_err err = DBA_OK;
+        bufrex_msg msg = NULL;
+        dba_rawmsg rmsg = NULL;
+        dba_file outfile = NULL;
+        const char* filename;
+        FILE* in = NULL;
+        int count = 0;
 
-	DBA_RUN_OR_RETURN(bufrex_msg_create(BUFREX_BUFR, &msg));
-	DBA_RUN_OR_GOTO(cleanup, dba_file_create(BUFR, "(stdout)", "w", &outfile));
+        DBA_RUN_OR_RETURN(bufrex_msg_create(BUFREX_BUFR, &msg));
+        DBA_RUN_OR_GOTO(cleanup, dba_file_create(BUFR, "(stdout)", "w", &outfile));
 
-	/* Throw away the command name */
-	poptGetArg(optCon);
+        /* Throw away the command name */
+        poptGetArg(optCon);
 
-	while ((filename = poptGetArg(optCon)) != NULL)
-	{
-		int found;
-		in = fopen(filename, "r");
-		if (in == NULL)
-		{
-			err = dba_error_system("opening file %s", filename);
-			goto cleanup;
-		}
-		while (1)
-		{
-			DBA_RUN_OR_GOTO(cleanup, parsetextgrib(in, msg, &found));
-			if (found)
-			{
-				DBA_RUN_OR_GOTO(cleanup, bufrex_msg_encode(msg, &rmsg));
-				DBA_RUN_OR_GOTO(cleanup, dba_file_write(outfile, rmsg));
-				dba_rawmsg_delete(rmsg); rmsg = NULL;
-			} else
-				break;
-		}
-		fclose(in); in = NULL;
-		++count;
-	}
+        while ((filename = poptGetArg(optCon)) != NULL)
+        {
+            int found;
+            in = fopen(filename, "r");
+            if (in == NULL)
+            {
+                err = dba_error_system("opening file %s", filename);
+                goto cleanup;
+            }
+            while (1)
+            {
+                DBA_RUN_OR_GOTO(cleanup, parsetextgrib(in, msg, &found));
+                if (found)
+                {
+                    DBA_RUN_OR_GOTO(cleanup, bufrex_msg_encode(msg, &rmsg));
+                    DBA_RUN_OR_GOTO(cleanup, dba_file_write(outfile, rmsg));
+                    dba_rawmsg_delete(rmsg); rmsg = NULL;
+                } else
+                    break;
+            }
+            fclose(in); in = NULL;
+            ++count;
+        }
 
-	if (count == 0)
-		dba_cmdline_error(optCon, "at least one input file needs to be specified");
+        if (count == 0)
+            dba_cmdline_error(optCon, "at least one input file needs to be specified");
 
-cleanup:
-	if (in != NULL)
-		fclose(in);
-	if (msg)
-		bufrex_msg_delete(msg);
-	if (rmsg)
-		dba_rawmsg_delete(rmsg);
-	if (outfile)
-		dba_file_delete(outfile);
-	return err == DBA_OK ? dba_error_ok() : err;
+    cleanup:
+        if (in != NULL)
+            fclose(in);
+        if (msg)
+            bufrex_msg_delete(msg);
+        if (rmsg)
+            dba_rawmsg_delete(rmsg);
+        if (outfile)
+            dba_file_delete(outfile);
+        return err == DBA_OK ? dba_error_ok() : err;
 #endif
-	return 0;
-}
-
-static struct tool_desc dbamsg;
-
-struct poptOption dbamsg_scan_options[] = {
-	{ "help", '?', 0, 0, 1, "print an help message", 0 },
-	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
-	{ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
-		"format of the input data ('bufr', 'crex', 'aof')", "type" },
-    { "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
-        "write unprocessed data to this file", "fname" },
-	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
-		"Options used to filter messages", 0 },
-	POPT_TABLEEND
-};
-
-struct poptOption dbamsg_dump_options[] = {
-	{ "help", '?', 0, 0, 1, "print an help message", 0 },
-	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
-	{ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
-		"format of the input data ('bufr', 'crex', 'aof')", "type" },
-    { "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
-        "write unprocessed data to this file", "fname" },
-	{ "interpreted", 0, 0, &op_dump_interpreted, 0,
-		"dump the message as understood by the importer", 0 },
-	{ "precise", 0, 0, &op_precise_import, 0,
-		"import messages using precise contexts instead of standard ones", 0 },
-	{ "text", 0, 0, &op_dump_text, 0,
-		"dump as text that can be processed by dbamsg makebufr", 0 },
-	{ "csv", 0, 0, &op_dump_csv, 0,
-		"dump in machine readable CSV format", 0 },
-	{ "dds", 0, 0, &op_dump_dds, 0,
-		"dump structure of data description section", 0 },
-	{ "structured", 0, 0, &op_dump_structured, 0,
-		"structured dump of the message contents", 0 },
-	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
-		"Options used to filter messages", 0 },
-	POPT_TABLEEND
-};
-
-struct poptOption dbamsg_cat_options[] = {
-	{ "help", '?', 0, 0, 1, "print an help message", 0 },
-	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
-	{ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
-		"format of the input data ('bufr', 'crex', 'aof')", "type" },
-    { "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
-        "write unprocessed data to this file", "fname" },
-	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
-		"Options used to filter messages", 0 },
-	POPT_TABLEEND
-};
-
-struct poptOption dbamsg_convert_options[] = {
-	{ "help", '?', 0, 0, 1, "print an help message", 0 },
-	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
-	{ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
-		"format of the input data ('bufr', 'crex', 'aof', 'csv')", "type" },
-	{ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
-		"format of the data in output ('bufr', 'crex', 'aof')", "type" },
-    { "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
-        "write unprocessed data to this file", "fname" },
-	{ "template", 0, POPT_ARG_STRING, &op_output_template, 0,
-		"template of the data in output (autoselect if not specified, 'list' gives a list)", "name" },
-	{ "report", 'r', POPT_ARG_STRING, &op_report, 0,
-		"force output data to be of this type of report", "rep_memo" },
-	{ "precise", 0, 0, &op_precise_import, 0,
-		"import messages using precise contexts instead of standard ones", 0 },
-    { "bufr2netcdf-categories", 0, 0, &op_bufr2netcdf_categories, 0,
-        "recompute data categories and subcategories according to message contents, for use as input to bufr2netcdf", 0 },
-	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
-		"Options used to filter messages", 0 },
-    { "output", 'o', POPT_ARG_STRING, &op_output_file, 0,
-        "destination file. Default: stdandard output", "fname" },
-	POPT_TABLEEND
-};
-
-struct poptOption dbamsg_compare_options[] = {
-	{ "help", '?', 0, 0, 1, "print an help message", 0 },
-	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
-	{ "type1", 't', POPT_ARG_STRING, &reader.input_type, 0,
-		"format of the first file to compare ('bufr', 'crex', 'aof')", "type" },
-	{ "type2", 'd', POPT_ARG_STRING, &op_output_type, 0,
-		"format of the second file to compare ('bufr', 'crex', 'aof')", "type" },
-    { "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
-        "write unprocessed data to this file", "fname" },
-	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
-		"Options used to filter messages", 0 },
-	POPT_TABLEEND
-};
-
-struct poptOption dbamsg_fixaof_options[] = {
-	{ "help", '?', 0, 0, 1, "print an help message", 0 },
-	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
-	POPT_TABLEEND
-};
-
-struct poptOption dbamsg_makebufr_options[] = {
-	{ "help", '?', 0, 0, 1, "print an help message", 0 },
-	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
-	POPT_TABLEEND
-};
-
-struct poptOption dbamsg_bisect_options[] = {
-	{ "help", '?', 0, 0, 1, "print an help message", 0 },
-	{ "verbose", 0, POPT_ARG_NONE, &op_verbose, 0, "verbose output", 0 },
-	{ "test", 0, POPT_ARG_STRING, &op_bisect_cmd, 0,
-		"command to run to test a message group", "cmd" },
-	{ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
-		"format of the input data ('bufr', 'crex', 'aof')", "type" },
-    { "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
-        "write unprocessed data to this file", "fname" },
-	{ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
-		"Options used to filter messages", 0 },
-	POPT_TABLEEND
-};
-
-static void init()
-{
-	dbamsg.desc = "Work with encoded meteorological data";
-	dbamsg.longdesc =
-		"Examine, dump and convert files containing meteorological data. "
-		"It supports observations encoded in BUFR, CREX and AOF formats";
-	dbamsg.ops = (struct op_dispatch_table*)calloc(11, sizeof(struct op_dispatch_table));
-
-	dbamsg.ops[0].func = do_scan;
-	dbamsg.ops[0].aliases[0] = "scan";
-	dbamsg.ops[0].usage = "scan [options] [filter] filename [filename [...]]";
-	dbamsg.ops[0].desc = "Summarise the contents of a file with meteorological data";
-	dbamsg.ops[0].longdesc = NULL;
-	dbamsg.ops[0].optable = dbamsg_scan_options;
-
-	dbamsg.ops[1].func = do_dump;
-	dbamsg.ops[1].aliases[0] = "dump";
-	dbamsg.ops[1].usage = "dump [options] [filter] filename [filename [...]]";
-	dbamsg.ops[1].desc = "Dump the contents of a file with meteorological data";
-	dbamsg.ops[1].longdesc = NULL;
-	dbamsg.ops[1].optable = dbamsg_dump_options;
-
-	dbamsg.ops[2].func = do_cat;
-	dbamsg.ops[2].aliases[0] = "cat";
-	dbamsg.ops[2].usage = "cat [options] [filter] filename [filename [...]]";
-	dbamsg.ops[2].desc = "Dump the raw data of a file with meteorological data";
-	dbamsg.ops[2].longdesc = NULL;
-	dbamsg.ops[2].optable = dbamsg_cat_options;
-
-	dbamsg.ops[3].func = do_convert;
-	dbamsg.ops[3].aliases[0] = "convert";
-	dbamsg.ops[3].aliases[1] = "conv";
-	dbamsg.ops[3].usage = "convert [options] [filter] filename [filename [...]]";
-	dbamsg.ops[3].desc = "Convert meteorological data between different formats";
-	dbamsg.ops[3].longdesc = NULL;
-	dbamsg.ops[3].optable = dbamsg_convert_options;
-
-	dbamsg.ops[4].func = do_compare;
-	dbamsg.ops[4].aliases[0] = "compare";
-	dbamsg.ops[4].aliases[1] = "cmp";
-	dbamsg.ops[4].usage = "compare [options] filename1 [filename2]";
-	dbamsg.ops[4].desc = "Compare two files with meteorological data";
-	dbamsg.ops[4].longdesc = NULL;
-	dbamsg.ops[4].optable = dbamsg_compare_options;
-
-	dbamsg.ops[5].func = do_fixaof;
-	dbamsg.ops[5].aliases[0] = "fixaof";
-	dbamsg.ops[5].usage = "fixaof [options] filename [filename1 [...]]]";
-	dbamsg.ops[5].desc = "Recomputes the start and end of observation period in the headers of the given AOF files";
-	dbamsg.ops[5].longdesc = NULL;
-	dbamsg.ops[5].optable = dbamsg_fixaof_options;
-
-	dbamsg.ops[6].func = do_makebufr;
-	dbamsg.ops[6].aliases[0] = "makebufr";
-	dbamsg.ops[6].aliases[1] = "mkbufr";
-	dbamsg.ops[6].usage = "makebufr [options] filename [filename1 [...]]]";
-	dbamsg.ops[6].desc = "Read a simple description of a BUFR file and output the BUFR file.";
-	dbamsg.ops[6].longdesc = "Read a simple description of a BUFR file and output the BUFR file.  This only works for simple BUFR messages without attributes encoded with data present bitmaps";
-	dbamsg.ops[6].optable = dbamsg_makebufr_options;
-
-	dbamsg.ops[7].func = do_bisect;
-	dbamsg.ops[7].aliases[0] = "bisect";
-	dbamsg.ops[7].usage = "bisect [options] --test=testscript filename";
-	dbamsg.ops[7].desc = "Bisect filename and output the minimum subsequence found for which testscript fails.";
-	dbamsg.ops[7].longdesc = "Run testscript passing parts of filename on its stdin and checking the return code.  Then divide the input in half and try on each half.  Keep going until testscript does not fail in any portion of the file.  Output to stdout the smallest portion for which testscript fails.  This is useful to isolate the few messages in a file that cause problems";
-	dbamsg.ops[7].optable = dbamsg_bisect_options;
-
-	dbamsg.ops[8].func = do_head;
-	dbamsg.ops[8].aliases[0] = "head";
-	dbamsg.ops[8].usage = "head [options] [filter] filename [filename [...]]";
-	dbamsg.ops[8].desc = "Dump the contents of the header of a file with meteorological data";
-	dbamsg.ops[8].longdesc = NULL;
-	dbamsg.ops[8].optable = dbamsg_scan_options;
-
-	dbamsg.ops[9].func = NULL;
-	dbamsg.ops[9].usage = NULL;
-	dbamsg.ops[9].desc = NULL;
-	dbamsg.ops[9].longdesc = NULL;
-	dbamsg.ops[9].optable = NULL;
-};
-
-static struct program_info proginfo = {
-	"dbamsg",
-	"Here are some example invocations of \\fBdbamsg\\fP:\n"
-	".P\n"
-	".nf\n"
-	"  # Convert an AOF message to BUFR\n"
-	"  dbamsg convert file.aof > file.bufr\n"
-	"\n"
-	"  # Convert a BUFR message to CREX\n"
-	"  dbamsg convert file.bufr -d crex > file.crex\n"
-	"\n"
-	"  # Convert BUFR messages to CREX, but skip all those not in january 2010\n"
-	"  dbamsg convert year=2010 month=1 file.bufr -d crex > file.crex\n"
-	"\n"
-	"  # Dump the content of a message, as they are in the message\n"
-	"  dbamsg dump file.bufr\n"
-	"\n"
-	"  # Dump the content of a message, interpreted as physical quantities\n"
-	"  dbamsg dump --interpreted file.bufr\n"
-	".fi\n"
-	,
-	NULL,
-	NULL
+        return 0;
+    }
 };
 
 int main (int argc, const char* argv[])
 {
-	int res;
-	init();
-	res = dba_cmdline_dispatch_main(&proginfo, &dbamsg, argc, argv);
-	return res;
-}
+    Command dbamsg;
+    dbamsg.name = "dbamsg";
+    dbamsg.desc = "Work with encoded meteorological data";
+    dbamsg.longdesc =
+        "Examine, dump and convert files containing meteorological data. "
+        "It supports observations encoded in BUFR, CREX and AOF formats";
+    dbamsg.manpage_examples_section = R"(
+Here are some example invocations of \\fBdbamsg\\fP:
+.P
+.nf
+  # Convert an AOF message to BUFR
+  dbamsg convert file.aof > file.bufr
 
-/* vim:set ts=4 sw=4: */
+  # Convert a BUFR message to CREX
+  dbamsg convert file.bufr -d crex > file.crex
+
+  # Convert BUFR messages to CREX, but skip all those not in january 2010
+  dbamsg convert year=2010 month=1 file.bufr -d crex > file.crex
+
+  # Dump the content of a message, as they are in the message
+  dbamsg dump file.bufr
+
+  # Dump the content of a message, interpreted as physical quantities
+  dbamsg dump --interpreted file.bufr
+.fi
+)";
+
+    dbamsg.add_subcommand(new Scan);
+    dbamsg.add_subcommand(new HeadCmd);
+    dbamsg.add_subcommand(new Dump);
+    dbamsg.add_subcommand(new Cat);
+    dbamsg.add_subcommand(new Bisect);
+    dbamsg.add_subcommand(new Convert);
+    dbamsg.add_subcommand(new Compare);
+    dbamsg.add_subcommand(new FixAOF);
+    dbamsg.add_subcommand(new MakeBUFR);
+
+    return dbamsg.main(argc, argv);
+}
