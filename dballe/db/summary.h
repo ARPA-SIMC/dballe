@@ -84,7 +84,6 @@ public:
     std::set<dballe::Level> all_levels;
     std::set<dballe::Trange> all_tranges;
     std::set<wreport::Varcode> all_varcodes;
-    std::set<std::string> all_idents;
 
     // Last known minimum datetime for the data that we have
     dballe::Datetime dtmin;

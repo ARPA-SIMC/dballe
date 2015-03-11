@@ -62,7 +62,6 @@ void to::test<1>()
     wassert(actual(s.all_levels.size()) == 1);
     wassert(actual(s.all_tranges.size()) == 2);
     wassert(actual(s.all_varcodes.size()) == 2);
-    wassert(actual(s.all_idents.size()) == 0);
     wassert(actual(s.datetime_min()) == Datetime(1945, 4, 25, 8));
     wassert(actual(s.datetime_max()) == Datetime(1945, 4, 25, 8, 30));
     wassert(actual(s.data_count()) == 4);
