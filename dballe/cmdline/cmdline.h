@@ -51,7 +51,15 @@ struct Subcommand
     virtual void add_to_optable(std::vector<poptOption>& opts) const;
     virtual int main(poptContext) = 0;
 
-    poptContext make_popt_context(int argc, const char* argv[]) const;
+    /**
+     * Create a popt context for this subcommand.
+     *
+     * Options are appended to opts, which is generally passed empty. Its
+     * memory needs to be owned by the caller, because the resulting
+     * poptContext will refer to data inside it, so the lifetime of the vector
+     * should be at least as long as the lifetime of the resulting poptContext.
+     */
+    poptContext make_popt_context(int argc, const char* argv[], std::vector<poptOption>& opts) const;
     void manpage_print_options(FILE* out);
 };
 

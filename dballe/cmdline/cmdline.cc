@@ -113,9 +113,8 @@ void Subcommand::manpage_print_options(FILE* out)
             out);
 }
 
-poptContext Subcommand::make_popt_context(int argc, const char* argv[]) const
+poptContext Subcommand::make_popt_context(int argc, const char* argv[], vector<poptOption>& opts) const
 {
-    vector<poptOption> opts;
     add_to_optable(opts);
     opts.push_back(POPT_TABLEEND);
     poptContext optCon = poptGetContext(NULL, argc, argv, opts.data(), 0);
@@ -464,7 +463,8 @@ int Command::main(int argc, const char* argv[])
                         usage(argv[0], stderr);
                         exit(1);
                     }
-                    poptContext optCon = action->make_popt_context(argc, argv);
+                    vector<poptOption> opts;
+                    poptContext optCon = action->make_popt_context(argc, argv, opts);
                     poptPrintHelp(optCon, stdout, 0);
                     poptFreeContext(optCon);
                 }
@@ -485,7 +485,8 @@ int Command::main(int argc, const char* argv[])
             usage(argv[0], stderr);
             return 1;
         } else {
-            poptContext optCon = action->make_popt_context(argc, argv);
+            vector<poptOption> opts;
+            poptContext optCon = action->make_popt_context(argc, argv, opts);
 
             // Parse commandline
             int nextOp;
