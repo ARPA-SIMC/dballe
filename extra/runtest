@@ -46,7 +46,7 @@ then
 else
 	echo "Running $DEBUGGER $CMD $ARGS"
 	RES=0
-	if !  $DEBUGGER $CMD $ARGS
+	if ! $DEBUGGER $CMD $ARGS
 	then
 		RES=$?
 		echo "Failed with result $RES"
