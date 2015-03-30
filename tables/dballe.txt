@@ -202,11 +202,16 @@
  013228 [SIM] Piezometric level                                          M                          3            0  18 M                         3          6
  013229 [SIM] Density of snow                                            KG/M**3                    1            0  14 KG/M**3                   1          5
  013230 [SIM] Convective Available Potential Energy (CAPE)               J/KG                       1            0  17 J/KG                      1          5
+ 014002 Long-wave radiation, integrated over period specified            J M-2                     -3       -65536  17 J M-2                    -3         5
+ 014004 Short-wave radiation, integrated over period specified           J M-2                     -3       -65536  17 J M-2                    -3         5
  014016 NET RADIATION                                                    J/M**2                    -4       -16384  15 J/M**2                   -4          5
  014017 INSTANTANEOUS LONG-WAVE RADIATION (incoming)                     W/M**2                     0        -2048  12 W/M**2                    0          4
  014018 INSTANTANEOUS SHORT-WAVE RADIATION (incoming)                    W/M**2                     0        -2048  12 W/M**2                   -3          4
  014019 SURFACE ALBEDO                                                   %                          0            0   7 %                         0          3
  014021 GLOBAL SOLAR RADIATION, INTEGRATED OVER PERIOD SPECIFIED         J/M**2                    -4            0  15 J/M**2                   -4          5
+ 014028 Global solar radiation (high accuracy), integrated over period s J M-2                     -2            0  20 J M-2                    -2         6
+ 014029 Diffuse solar radiation (high accuracy), integrated over period  J M-2                     -2            0  20 J M-2                    -2         6
+ 014030 Direct solar radiation (high accuracy), integrated over period s J M-2                     -2            0  20 J M-2                    -2         6
  014031 TOTAL SUNSHINE                                                   MINUTE                     0            0  11 MINUTE                    0          4
  014192 [SIM] Instantenous sensible heat flux                            W/m**2                     0        -1024  11 W/M**2                    0          4
  014193 [SIM] Instantenous latent heat flux                              W/m**2                     0        -1024  11 W/M**2                    0          4

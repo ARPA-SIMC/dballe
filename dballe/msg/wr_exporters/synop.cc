@@ -59,6 +59,8 @@ struct Synop : public Template
     const msg::Context* c_sunshine1;
     const msg::Context* c_sunshine2;
     const msg::Context* c_evapo;
+    const msg::Context* c_radiation1;
+    const msg::Context* c_radiation24;
 
     Synop(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
@@ -68,6 +70,8 @@ struct Synop : public Template
         c_sunshine1 = NULL;
         c_sunshine2 = NULL;
         c_evapo = NULL;
+        c_radiation1 = NULL;
+        c_radiation24 = NULL;
 
         // Scan message finding context for the data that follow
         for (std::vector<msg::Context*>::const_iterator i = msg->data.begin();
@@ -81,18 +85,37 @@ struct Synop : public Template
                     switch (c->trange.pind)
                     {
                         case 1:
-                            // msg->set(var, WR_VAR(0, 14, 31), Level(1), Trange(1, 0, time_period));
-                            if (c->find(WR_VAR(0, 14, 31)))
+                            for (const auto v: c->data)
                             {
-                                if (!c_sunshine1)
-                                    c_sunshine1 = c;
-                                else if (!c_sunshine2)
-                                    c_sunshine2 = c;
+                                switch (v->code())
+                                {
+                                    case WR_VAR(0, 14, 31):
+                                        if (!c_sunshine1)
+                                            c_sunshine1 = c;
+                                        else if (!c_sunshine2)
+                                            c_sunshine2 = c;
+                                        break;
+                                    case WR_VAR(0, 13, 33):
+                                        c_evapo = c;
+                                        break;
+                                    case WR_VAR(0, 14,  2):
+                                    case WR_VAR(0, 14,  4):
+                                    case WR_VAR(0, 14, 16):
+                                    case WR_VAR(0, 14, 28):
+                                    case WR_VAR(0, 14, 29):
+                                    case WR_VAR(0, 14, 30):
+                                        switch (c->trange.p2)
+                                        {
+                                            case  1 * 3600:
+                                                c_radiation1 = c;
+                                                break;
+                                            case 24 * 3600:
+                                                c_radiation24 = c;
+                                                break;
+                                        }
+                                        break;
+                                }
                             }
-
-                            // msg->set(var, WR_VAR(0, 13, 33), Level(1), Trange(1, 0, -time_period));
-                            if (c->find(WR_VAR(0, 13, 33)))
-                                c_evapo = c;
                             break;
                     }
                     break;
@@ -556,21 +579,43 @@ struct SynopWMO : public Synop
 
 #warning TODO
         // D02045  Radiation data (1 hour period)
-        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 14,  2)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 14,  4)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 14, 16)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 14, 28)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 14, 29)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 14, 30)); // TODO
+        if (c_radiation1)
+        {
+            subset.store_variable_d(WR_VAR(0,  4, 24), -c_radiation1->trange.p2/3600);
+            add(WR_VAR(0, 14,  2), c_radiation1);
+            add(WR_VAR(0, 14,  4), c_radiation1);
+            add(WR_VAR(0, 14, 16), c_radiation1);
+            add(WR_VAR(0, 14, 28), c_radiation1);
+            add(WR_VAR(0, 14, 29), c_radiation1);
+            add(WR_VAR(0, 14, 30), c_radiation1);
+        } else {
+            subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
+            subset.store_variable_undef(WR_VAR(0, 14,  2)); // TODO
+            subset.store_variable_undef(WR_VAR(0, 14,  4)); // TODO
+            subset.store_variable_undef(WR_VAR(0, 14, 16)); // TODO
+            subset.store_variable_undef(WR_VAR(0, 14, 28)); // TODO
+            subset.store_variable_undef(WR_VAR(0, 14, 29)); // TODO
+            subset.store_variable_undef(WR_VAR(0, 14, 30)); // TODO
+        }
         // D02045  Radiation data (24 hour period)
-        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 14,  2)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 14,  4)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 14, 16)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 14, 28)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 14, 29)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 14, 30)); // TODO
+        if (c_radiation24)
+        {
+            subset.store_variable_d(WR_VAR(0,  4, 24), -c_radiation24->trange.p2/3600);
+            add(WR_VAR(0, 14,  2), c_radiation24);
+            add(WR_VAR(0, 14,  4), c_radiation24);
+            add(WR_VAR(0, 14, 16), c_radiation24);
+            add(WR_VAR(0, 14, 28), c_radiation24);
+            add(WR_VAR(0, 14, 29), c_radiation24);
+            add(WR_VAR(0, 14, 30), c_radiation24);
+        } else {
+            subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
+            subset.store_variable_undef(WR_VAR(0, 14,  2)); // TODO
+            subset.store_variable_undef(WR_VAR(0, 14,  4)); // TODO
+            subset.store_variable_undef(WR_VAR(0, 14, 16)); // TODO
+            subset.store_variable_undef(WR_VAR(0, 14, 28)); // TODO
+            subset.store_variable_undef(WR_VAR(0, 14, 29)); // TODO
+            subset.store_variable_undef(WR_VAR(0, 14, 30)); // TODO
+        }
         // D02046  Temperature change
         subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
         subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO

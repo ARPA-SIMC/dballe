@@ -80,8 +80,17 @@ void SynopImporter::import_var(const Var& var)
             break;
 
         // Radiation data
-        case WR_VAR(0, 14, 2):
-            throw error_unimplemented("wow, a synop with radiation info, please give it to Enrico");
+        case WR_VAR(0, 14,  2):
+        case WR_VAR(0, 14,  4):
+        case WR_VAR(0, 14, 16):
+        case WR_VAR(0, 14, 28):
+        case WR_VAR(0, 14, 29):
+        case WR_VAR(0, 14, 30):
+            if (trange.time_period == MISSING_INT)
+                msg->set(var, var.code(), Level(1), Trange(1));
+            else
+                msg->set(var, var.code(), Level(1), Trange(1, 0, abs(trange.time_period)));
+            break;
 
         // Temperature change
         case WR_VAR(0, 12, 49):

@@ -249,17 +249,17 @@ struct TestCodec
     MessageTweakers after_convert_reimport_on_orig;
     MessageTweakers after_convert_reimport;
 
-    void do_compare(const dballe::tests::Location& loc, const TestMessage& msg1, const TestMessage& msg2);
+    void do_compare(WIBBLE_TEST_LOCPRM, const TestMessage& msg1, const TestMessage& msg2);
 
     TestCodec(const std::string& fname, Encoding type=BUFR);
 
     void configure_ecmwf_to_wmo_tweaks();
 
     // "import, export, import again, compare" test
-    void run_reimport(const dballe::tests::Location& loc);
+    void run_reimport(WIBBLE_TEST_LOCPRM);
 
     // "import, export as different template, import again, compare" test
-    void run_convert(const dballe::tests::Location& loc, const std::string& tplname);
+    void run_convert(WIBBLE_TEST_LOCPRM, const std::string& tplname);
 };
 
 #define TEST_reimport(obj) obj.run_reimport(wibble::tests::Location(__FILE__, __LINE__, #obj ".run_reimport"))

@@ -151,6 +151,29 @@ void to::test<8>()
     TEST_convert(test, "pilot-wmo");
 }
 
+// Test import/export of GTS synop with radiation information
+template<> template<>
+void to::test<9>()
+{
+    dballe::tests::TestCodec test("bufr/synop-rad1.bufr");
+    test.expected_subsets = 25;
+    test.expected_min_vars = 50;
+
+    TEST_reimport(test);
+    TEST_convert(test, "synop-wmo");
+}
+
+// Test import/export of GTS synop with radiation information
+template<> template<>
+void to::test<10>()
+{
+    dballe::tests::TestCodec test("bufr/synop-rad2.bufr");
+    test.expected_min_vars = 50;
+
+    wruntest(test.run_reimport);
+    TEST_convert(test, "synop-wmo");
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

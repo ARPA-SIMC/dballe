@@ -34,6 +34,7 @@
 #include <fstream>
 
 using namespace wibble;
+using namespace wibble::tests;
 using namespace wreport;
 using namespace std;
 
@@ -644,7 +645,7 @@ void TestCodec::configure_ecmwf_to_wmo_tweaks()
     after_convert_import.add(new tweaks::StripQCAttrs);
 }
 
-void TestCodec::do_compare(const dballe::tests::Location& loc, const TestMessage& msg1, const TestMessage& msg2)
+void TestCodec::do_compare(WIBBLE_TEST_LOCPRM, const TestMessage& msg1, const TestMessage& msg2)
 {
     // Compare msgs
     {
@@ -657,16 +658,16 @@ void TestCodec::do_compare(const dballe::tests::Location& loc, const TestMessage
             dballe::tests::dump("msg2", msg2.msgs);
             dballe::tests::dump("msg", msg2.raw);
             dballe::tests::dump("diffs", str.str(), "details of differences");
-            throw tut::failure(loc.msg(str::fmtf("found %d differences", diffs)));
+            throw tut::failure(wibble_test_location.msg(str::fmtf("found %d differences", diffs)));
         }
     }
 
     // Compare bulletins
     try {
         if (msg2.bulletin->subsets.size() != (unsigned)expected_subsets)
-            throw tut::failure(loc.msg(str::fmtf("Number of subsets differ from expected: %zd != %d\n", msg2.bulletin->subsets.size(), expected_subsets)));
+            throw tut::failure(wibble_test_location.msg(str::fmtf("Number of subsets differ from expected: %zd != %d\n", msg2.bulletin->subsets.size(), expected_subsets)));
         if (msg2.bulletin->subsets[0].size() < (unsigned)expected_min_vars)
-            throw tut::failure(loc.msg(str::fmtf("Number of items in first subset is too small: %zd < %d\n", msg2.bulletin->subsets[0].size(), expected_min_vars)));
+            throw tut::failure(wibble_test_location.msg(str::fmtf("Number of items in first subset is too small: %zd < %d\n", msg2.bulletin->subsets[0].size(), expected_min_vars)));
     } catch (...) {
         dballe::tests::dump("bull1", *msg1.bulletin);
         dballe::tests::dump("bull2", *msg2.bulletin);
@@ -675,9 +676,9 @@ void TestCodec::do_compare(const dballe::tests::Location& loc, const TestMessage
     }
 }
 
-void TestCodec::run_reimport(const dballe::tests::Location& loc)
+void TestCodec::run_reimport(WIBBLE_TEST_LOCPRM)
 {
-    if (verbose) cerr << "Running test " << loc.locstr() << endl;
+    if (verbose) cerr << "Running test " << wibble_test_location.locstr() << endl;
 
     // Import
     if (verbose) cerr << "Importing " << fname << " " << input_opts.to_string() << endl;
@@ -685,10 +686,10 @@ void TestCodec::run_reimport(const dballe::tests::Location& loc)
     try {
         orig.read_from_file(fname, input_opts);
     } catch (std::exception& e) {
-        throw tut::failure(loc.msg(string("cannot decode ") + fname + ": " + e.what()));
+        throw tut::failure(wibble_test_location.msg(string("cannot decode ") + fname + ": " + e.what()));
     }
 
-    inner_ensure(orig.msgs.size() > 0);
+    wassert(actual(orig.msgs.size()) > 0);
 
     // Run tweaks
     after_reimport_import.apply(orig.msgs);
@@ -701,7 +702,7 @@ void TestCodec::run_reimport(const dballe::tests::Location& loc)
     } catch (std::exception& e) {
         //dballe::tests::dump("bul1", *exported);
         //balle::tests::dump("msg1", *msgs1);
-        throw tut::failure(loc.msg(string("cannot export: ") + e.what()));
+        throw tut::failure(wibble_test_location.msg(string("cannot export: ") + e.what()));
     }
 
     // Import again
@@ -711,23 +712,23 @@ void TestCodec::run_reimport(const dballe::tests::Location& loc)
     } catch (std::exception& e) {
         //dballe::tests::dump("msg1", *msgs1);
         //dballe::tests::dump("msg", rawmsg);
-        throw tut::failure(loc.msg(string("importing from exported rawmsg: ") + e.what()));
+        throw tut::failure(wibble_test_location.msg(string("importing from exported rawmsg: ") + e.what()));
     }
 
     // Run tweaks
     after_reimport_reimport.apply(final.msgs);
 
     try {
-        do_compare(loc, orig, final);
+        wruntest(do_compare, orig, final);
     } catch (...) {
         dballe::tests::dump("reexported", exported.raw);
         throw;
     }
 }
 
-void TestCodec::run_convert(const dballe::tests::Location& loc, const std::string& tplname)
+void TestCodec::run_convert(WIBBLE_TEST_LOCPRM, const std::string& tplname)
 {
-    if (verbose) cerr << "Running test " << loc.locstr() << endl;
+    if (verbose) cerr << "Running test " << wibble_test_location.locstr() << endl;
 
     // Import
     if (verbose) cerr << "Importing " << fname << " " << input_opts.to_string() << endl;
@@ -735,10 +736,10 @@ void TestCodec::run_convert(const dballe::tests::Location& loc, const std::strin
     try {
         orig.read_from_file(fname, input_opts);
     } catch (std::exception& e) {
-        throw tut::failure(loc.msg(string("cannot decode ") + fname + ": " + e.what()));
+        throw tut::failure(wibble_test_location.msg(string("cannot decode ") + fname + ": " + e.what()));
     }
 
-    inner_ensure(orig.msgs.size() > 0);
+    wassert(actual(orig.msgs.size()) > 0);
 
     // Run tweaks
     after_convert_import.apply(orig.msgs);
@@ -753,7 +754,7 @@ void TestCodec::run_convert(const dballe::tests::Location& loc, const std::strin
     } catch (std::exception& e) {
         //dballe::tests::dump("bul1", *exported);
         //balle::tests::dump("msg1", *msgs1);
-        throw tut::failure(loc.msg(string("cannot export: ") + e.what()));
+        throw tut::failure(wibble_test_location.msg(string("cannot export: ") + e.what()));
     }
 
     // Import again
@@ -763,7 +764,7 @@ void TestCodec::run_convert(const dballe::tests::Location& loc, const std::strin
     } catch (std::exception& e) {
         //dballe::tests::dump("msg1", *msgs1);
         //dballe::tests::dump("msg", rawmsg);
-        throw tut::failure(loc.msg(string("importing from exported rawmsg: ") + e.what()));
+        throw tut::failure(wibble_test_location.msg(string("importing from exported rawmsg: ") + e.what()));
     }
 
     // Run tweaks
@@ -771,7 +772,7 @@ void TestCodec::run_convert(const dballe::tests::Location& loc, const std::strin
     after_convert_reimport.apply(final.msgs);
 
     try {
-        do_compare(loc, orig, final);
+        wruntest(do_compare, orig, final);
     } catch (...) {
         dballe::tests::dump("converted", exported.raw);
         throw;
