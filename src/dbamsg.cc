@@ -74,7 +74,7 @@ struct poptOption grepTable[] = {
 		"match BUFR messages with the given data subcategory", "num" },
 	{ "check-digit", 0, POPT_ARG_INT, &reader.filter.checkdigit, 0,
 		"match CREX messages with check digit (if 1) or without check digit (if 0)", "num" },
-	{ "unparsable", 0, POPT_ARG_STRING, &reader.filter.unparsable, 0,
+	{ "unparsable", 0, 0, &reader.filter.unparsable, 0,
 		"match only messages that cannot be parsed", 0 },
 	{ "parsable", 0, 0, &reader.filter.parsable, 0,
 		"match only messages that can be parsed", 0 },
