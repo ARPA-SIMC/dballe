@@ -3,6 +3,8 @@ dballe (7.1-1) UNRELEASED; urgency=medium
   * New upstream release
      - implemented encoding and decoding of radiation data
      - implemented handling of temperature change information in synop messages
+     - deal with SYNOP messages which do not transmit the pressure of the
+       standard level
 
  -- Enrico Zini <enrico@enricozini.org>  Tue, 31 Mar 2015 14:47:14 +0200
 
