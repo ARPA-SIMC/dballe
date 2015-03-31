@@ -1,4 +1,12 @@
-dballe (7.0-1) UNRELEASED; urgency=medium
+dballe (7.1-1) UNRELEASED; urgency=medium
+
+  * New upstream release
+     - implemented encoding and decoding of radiation data
+     - implemented handling of temperature change information in synop messages
+
+ -- Enrico Zini <enrico@enricozini.org>  Tue, 31 Mar 2015 14:47:14 +0200
+
+dballe (7.0-1) unstable; urgency=medium
 
   * New upstream release
      - rewritten database connection interface to support multiple connector
