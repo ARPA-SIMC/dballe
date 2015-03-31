@@ -642,7 +642,7 @@ void TestMessage::read_from_msgs(const Msgs& _msgs, const msg::Exporter::Options
 }
 
 TestCodec::TestCodec(const std::string& fname, Encoding type)
-    : fname(fname), type(type), verbose(false), expected_subsets(1), expected_min_vars(1)
+    : fname(fname), type(type)
 {
 }
 
@@ -662,7 +662,7 @@ void TestCodec::do_compare(WIBBLE_TEST_LOCPRM, const TestMessage& msg1, const Te
         {
             dballe::tests::dump("msg1", msg1.msgs);
             dballe::tests::dump("msg2", msg2.msgs);
-            dballe::tests::dump("msg", msg2.raw);
+            dballe::tests::dump("msg2", msg2.raw);
             dballe::tests::dump("diffs", str.str(), "details of differences");
             throw tut::failure(wibble_test_location.msg(str::fmtf("found %d differences", diffs)));
         }
@@ -687,7 +687,7 @@ void TestCodec::run_reimport(WIBBLE_TEST_LOCPRM)
     if (verbose) cerr << "Running test " << wibble_test_location.locstr() << endl;
 
     // Import
-    if (verbose) cerr << "Importing " << fname << " " << input_opts.to_string() << endl;
+    if (verbose) cerr << "Importing " << fname << " with options '" << input_opts.to_string() << "'" << endl;
     TestMessage orig(type, "orig");
     try {
         orig.read_from_file(fname, input_opts);
@@ -701,7 +701,7 @@ void TestCodec::run_reimport(WIBBLE_TEST_LOCPRM)
     after_reimport_import.apply(orig.msgs);
 
     // Export
-    if (verbose) cerr << "Exporting " << output_opts.to_string() << endl;
+    if (verbose) cerr << "Exporting with options '" << output_opts.to_string() << "'" << endl;
     TestMessage exported(type, "exported");
     try {
         exported.read_from_msgs(orig.msgs, output_opts);
@@ -712,6 +712,7 @@ void TestCodec::run_reimport(WIBBLE_TEST_LOCPRM)
     }
 
     // Import again
+    if (verbose) cerr << "Reimporting with options '" << input_opts.to_string() << "'" << endl;
     TestMessage final(type, "final");
     try {
         final.read_from_raw(exported.raw, input_opts);
@@ -737,7 +738,7 @@ void TestCodec::run_convert(WIBBLE_TEST_LOCPRM, const std::string& tplname)
     if (verbose) cerr << "Running test " << wibble_test_location.locstr() << endl;
 
     // Import
-    if (verbose) cerr << "Importing " << fname << " " << input_opts.to_string() << endl;
+    if (verbose) cerr << "Importing " << fname << " with options " << input_opts.to_string() << endl;
     TestMessage orig(type, "orig");
     try {
         orig.read_from_file(fname, input_opts);
@@ -751,7 +752,7 @@ void TestCodec::run_convert(WIBBLE_TEST_LOCPRM, const std::string& tplname)
     after_convert_import.apply(orig.msgs);
 
     // Export
-    if (verbose) cerr << "Exporting " << output_opts.to_string() << endl;
+    if (verbose) cerr << "Exporting with template " << tplname << " and options " << output_opts.to_string() << endl;
     msg::Exporter::Options output_opts = this->output_opts;
     output_opts.template_name = tplname;
     TestMessage exported(type, "exported");

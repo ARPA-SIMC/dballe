@@ -169,9 +169,10 @@ void to::test<10>()
 {
     dballe::tests::TestCodec test("bufr/synop-rad2.bufr");
     test.expected_min_vars = 50;
+    test.verbose = true;
 
     wruntest(test.run_reimport);
-    TEST_convert(test, "synop-wmo");
+    wruntest(test.run_convert, "synop-wmo");
 }
 
 // Test import/export of GTS synop with temperature change information

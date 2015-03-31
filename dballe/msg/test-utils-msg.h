@@ -238,11 +238,11 @@ struct TestCodec
 {
     std::string fname;
     Encoding type;
-    bool verbose;
+    bool verbose = false;
     msg::Importer::Options input_opts;
     msg::Exporter::Options output_opts;
-    int expected_subsets;
-    int expected_min_vars;
+    int expected_subsets = 1;
+    int expected_min_vars = 1;
     MessageTweakers after_reimport_import;
     MessageTweakers after_reimport_reimport;
     MessageTweakers after_convert_import;
