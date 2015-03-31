@@ -186,6 +186,17 @@ void to::test<11>()
     TEST_convert(test, "synop-wmo");
 }
 
+// Test import/export of GTS synop with temperature change information
+template<> template<>
+void to::test<12>()
+{
+    dballe::tests::TestCodec test("bufr/temp-timesig18.bufr");
+    test.expected_min_vars = 50;
+
+    wruntest(test.run_reimport);
+    TEST_convert(test, "synop-wmo");
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

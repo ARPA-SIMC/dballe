@@ -153,6 +153,13 @@ void TimerangeContext::peek_var(const Var& var, unsigned pos)
             case WR_VAR(0,  8, 21):
                 // Time significance
                 time_sig = var.enqi();
+                // If we get time significance 18 "Radiosonde launch time"
+                // before getting the initial reference time, they are trying
+                // to tell us that they are giving us the radiosonde launch
+                // time: ignore it, since it is already what we gave for
+                // granted.
+                if (hour == MISSING_INT and time_sig == 18)
+                    time_sig = MISSING_TIME_SIG;
                 break;
         }
     } else {
