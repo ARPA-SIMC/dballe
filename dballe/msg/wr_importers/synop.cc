@@ -94,8 +94,8 @@ void SynopImporter::import_var(const Var& var)
 
         // Temperature change
         case WR_VAR(0, 12, 49):
-            throw error_unimplemented("wow, a synop with temperature change info, please give it to Enrico");
-
+            msg->set(var, WR_VAR(0, 12, 49), Level(1), Trange(4, -abs(trange.time_period_offset), abs(trange.time_period)));
+            break;
         case WR_VAR(0, 22, 42): msg->set_water_temp_var(var); break;
         case WR_VAR(0, 12,  5): msg->set_wet_temp_2m_var(var); break;
         case WR_VAR(0, 10,197): msg->set_height_anem_var(var); break;

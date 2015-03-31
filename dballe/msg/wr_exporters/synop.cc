@@ -61,6 +61,7 @@ struct Synop : public Template
     const msg::Context* c_evapo;
     const msg::Context* c_radiation1;
     const msg::Context* c_radiation24;
+    const msg::Context* c_tchange;
 
     Synop(const Exporter::Options& opts, const Msgs& msgs)
         : Template(opts, msgs) {}
@@ -72,6 +73,7 @@ struct Synop : public Template
         c_evapo = NULL;
         c_radiation1 = NULL;
         c_radiation24 = NULL;
+        c_tchange = NULL;
 
         // Scan message finding context for the data that follow
         for (std::vector<msg::Context*>::const_iterator i = msg->data.begin();
@@ -116,6 +118,10 @@ struct Synop : public Template
                                         break;
                                 }
                             }
+                            break;
+                        case 4:
+                            if (c->find(WR_VAR(0, 12, 49)))
+                                c_tchange = c;
                             break;
                     }
                     break;
@@ -589,13 +595,13 @@ struct SynopWMO : public Synop
             add(WR_VAR(0, 14, 29), c_radiation1);
             add(WR_VAR(0, 14, 30), c_radiation1);
         } else {
-            subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
-            subset.store_variable_undef(WR_VAR(0, 14,  2)); // TODO
-            subset.store_variable_undef(WR_VAR(0, 14,  4)); // TODO
-            subset.store_variable_undef(WR_VAR(0, 14, 16)); // TODO
-            subset.store_variable_undef(WR_VAR(0, 14, 28)); // TODO
-            subset.store_variable_undef(WR_VAR(0, 14, 29)); // TODO
-            subset.store_variable_undef(WR_VAR(0, 14, 30)); // TODO
+            subset.store_variable_undef(WR_VAR(0,  4, 24));
+            subset.store_variable_undef(WR_VAR(0, 14,  2));
+            subset.store_variable_undef(WR_VAR(0, 14,  4));
+            subset.store_variable_undef(WR_VAR(0, 14, 16));
+            subset.store_variable_undef(WR_VAR(0, 14, 28));
+            subset.store_variable_undef(WR_VAR(0, 14, 29));
+            subset.store_variable_undef(WR_VAR(0, 14, 30));
         }
         // D02045  Radiation data (24 hour period)
         if (c_radiation24)
@@ -608,18 +614,37 @@ struct SynopWMO : public Synop
             add(WR_VAR(0, 14, 29), c_radiation24);
             add(WR_VAR(0, 14, 30), c_radiation24);
         } else {
-            subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
-            subset.store_variable_undef(WR_VAR(0, 14,  2)); // TODO
-            subset.store_variable_undef(WR_VAR(0, 14,  4)); // TODO
-            subset.store_variable_undef(WR_VAR(0, 14, 16)); // TODO
-            subset.store_variable_undef(WR_VAR(0, 14, 28)); // TODO
-            subset.store_variable_undef(WR_VAR(0, 14, 29)); // TODO
-            subset.store_variable_undef(WR_VAR(0, 14, 30)); // TODO
+            subset.store_variable_undef(WR_VAR(0,  4, 24));
+            subset.store_variable_undef(WR_VAR(0, 14,  2));
+            subset.store_variable_undef(WR_VAR(0, 14,  4));
+            subset.store_variable_undef(WR_VAR(0, 14, 16));
+            subset.store_variable_undef(WR_VAR(0, 14, 28));
+            subset.store_variable_undef(WR_VAR(0, 14, 29));
+            subset.store_variable_undef(WR_VAR(0, 14, 30));
         }
         // D02046  Temperature change
-        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
-        subset.store_variable_undef(WR_VAR(0,  4, 24)); // TODO
-        subset.store_variable_undef(WR_VAR(0, 12, 49)); // TODO
+        if (c_tchange)
+        {
+            // Duration of statistical processing
+            if (c_tchange->trange.p2 != MISSING_INT)
+                subset.store_variable_d(WR_VAR(0,  4, 24), -c_tchange->trange.p2 / 3600);
+            else
+                subset.store_variable_undef(WR_VAR(0,  4, 24));
+
+            // Offset from end of interval to synop reference time
+            if (c_tchange->trange.p1 != 0 && c_tchange->trange.p1 != MISSING_INT)
+                subset.store_variable_d(WR_VAR(0,  4, 24), c_tchange->trange.p1 / 3600);
+            else if (c_tchange->trange.p1 == MISSING_INT || c_tchange->trange.p2 == MISSING_INT)
+                subset.store_variable_undef(WR_VAR(0,  4, 24));
+            else
+                subset.store_variable_d(WR_VAR(0,  4, 24), 0);
+
+            add(WR_VAR(0, 12, 49), c_tchange);
+        } else {
+            subset.store_variable_undef(WR_VAR(0,  4, 24));
+            subset.store_variable_undef(WR_VAR(0,  4, 24));
+            subset.store_variable_undef(WR_VAR(0, 12, 49));
+        }
     }
 };
 

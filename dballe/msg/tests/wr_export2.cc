@@ -163,11 +163,22 @@ void to::test<9>()
     TEST_convert(test, "synop-wmo");
 }
 
-// Test import/export of GTS synop with radiation information
+// Test import/export of GTS synop without pressure of standard level
 template<> template<>
 void to::test<10>()
 {
     dballe::tests::TestCodec test("bufr/synop-rad2.bufr");
+    test.expected_min_vars = 50;
+
+    wruntest(test.run_reimport);
+    TEST_convert(test, "synop-wmo");
+}
+
+// Test import/export of GTS synop with temperature change information
+template<> template<>
+void to::test<11>()
+{
+    dballe::tests::TestCodec test("bufr/synop-tchange.bufr");
     test.expected_min_vars = 50;
 
     wruntest(test.run_reimport);
