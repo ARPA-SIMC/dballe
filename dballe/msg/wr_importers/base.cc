@@ -483,8 +483,9 @@ void ContextChooser::set_wind_max(const wreport::Var& var, int shortcut)
 void ContextChooser::set_pressure(const wreport::Var& var)
 {
     if (level.press_std == MISSING_PRESS_STD)
-        throw error_consistency("B10009 given without pressure of standard level");
-    msg->set(var, WR_VAR(0, 10,  8), Level(100, level.press_std), Trange::instant());
+        msg->set(var, WR_VAR(0, 10,  8), Level(100), Trange::instant());
+    else
+        msg->set(var, WR_VAR(0, 10,  8), Level(100, level.press_std), Trange::instant());
 }
 
 void ContextChooser::set_water_temperature(const wreport::Var& var)

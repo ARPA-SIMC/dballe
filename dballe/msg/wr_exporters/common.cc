@@ -387,7 +387,12 @@ void CommonSynopExporter::add_D02031()
 void CommonSynopExporter::add_pressure()
 {
     if (c_geopotential)
-        subset->store_variable_d(WR_VAR(0, 7, 4), c_geopotential->level.l1);
+    {
+        if (c_geopotential->level.l1 == MISSING_INT)
+            subset->store_variable_undef(WR_VAR(0, 7, 4));
+        else
+            subset->store_variable_d(WR_VAR(0, 7, 4), c_geopotential->level.l1);
+    }
     else
         subset->store_variable_undef(WR_VAR(0,  7,  4));
 }
