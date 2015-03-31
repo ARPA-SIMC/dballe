@@ -583,7 +583,6 @@ struct SynopWMO : public Synop
         }
         add(WR_VAR(0, 13, 33), c_evapo);
 
-#warning TODO
         // D02045  Radiation data (1 hour period)
         if (c_radiation1)
         {

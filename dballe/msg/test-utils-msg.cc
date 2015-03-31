@@ -439,6 +439,12 @@ void RemoveSynopWMOOnlyVars::tweak(Msgs& msgs)
             c.remove(WR_VAR(0,  2,  4)); // Type of instrumentation for evaporation measurement
             c.remove(WR_VAR(0,  2,  2)); // Type of instrumentation for wind measurement
             c.remove(WR_VAR(0,  1, 19)); // Long station or site name
+            c.remove(WR_VAR(0, 14,  2)); // Radiation data
+            c.remove(WR_VAR(0, 14,  4)); // Radiation data
+            c.remove(WR_VAR(0, 14, 16)); // Radiation data
+            c.remove(WR_VAR(0, 14, 28)); // Radiation data
+            c.remove(WR_VAR(0, 14, 29)); // Radiation data
+            c.remove(WR_VAR(0, 14, 30)); // Radiation data
             if (c.find(WR_VAR(0, 13, 11)))
             {
                 // Keep only one total precipitation measurement common
