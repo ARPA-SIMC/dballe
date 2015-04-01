@@ -95,7 +95,8 @@ void ODBCRepinfo::insert_auto_entry(const char* memo)
     )");
     stm->bind_in(1, id);
     stm->bind_in(2, memo);
-    stm->bind_in(3, prio);
+    stm->bind_in(3, memo);
+    stm->bind_in(4, prio);
     stm->execute_ignoring_results();
 }
 
