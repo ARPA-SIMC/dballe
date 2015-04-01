@@ -20,6 +20,7 @@
 #include "config.h"
 #include "db/test-utils-db.h"
 #include "db/querybuf.h"
+#include "db/mem/db.h"
 #include <wibble/string.h>
 
 using namespace dballe;
@@ -155,21 +156,47 @@ template<> template<> void to::test<4>()
 
     // Iterate the station database
     unique_ptr<db::Cursor> cur = db->query_stations(query);
-    wassert(actual(cur->remaining()) == 1);
 
-    // There should be an item
-    ensure(cur->next());
-    ensure_equals(cur->get_lat(), 12.34560);
-    ensure_equals(cur->get_lon(), 76.54320);
-    ensure_equals(cur->get_ident(), (const char*)0);
+    if (dynamic_cast<db::mem::DB*>(db.get()))
+    {
+        // Memdb has one station entry per (lat, lon, ident, network)
+        wassert(actual(cur->remaining()) == 2);
 
-    // Check that the result matches
-    wassert(actual(cur).station_keys_match(f.dataset0.station));
+        // There should be an item
+        wassert(actual(cur->next()).istrue());
+        wassert(actual(cur->get_lat()) == 12.34560);
+        wassert(actual(cur->get_lon()) == 76.54320);
+        wassert(actual(cur->get_rep_memo()) == "metar");
+        wassert(actual((void*)cur->get_ident()) == (void*)0);
 
-    // There should be only one item
-    ensure_equals(cur->remaining(), 0);
+        // Check that the result matches
+        wassert(actual(cur).station_keys_match(f.dataset0.station));
 
-    ensure(!cur->next());
+        wassert(actual(cur->next()).istrue());
+        wassert(actual(cur->get_lat()) == 12.34560);
+        wassert(actual(cur->get_lon()) == 76.54320);
+        wassert(actual(cur->get_rep_memo()) == "synop");
+        wassert(actual((void*)cur->get_ident()) == (void*)0);
+
+        // Check that the result matches
+        wassert(actual(cur).station_keys_match(f.dataset0.station));
+    } else {
+        // V5 and V6 have one station entry (lat, lon, ident)
+        wassert(actual(cur->remaining()) == 1);
+
+        // There should be an item
+        wassert(actual(cur->next()).istrue());
+        wassert(actual(cur->get_lat()) == 12.34560);
+        wassert(actual(cur->get_lon()) == 76.54320);
+        wassert(actual((void*)cur->get_ident()) == (void*)0);
+
+        // Check that the result matches
+        wassert(actual(cur).station_keys_match(f.dataset0.station));
+
+        // There should be only one item
+    }
+    wassert(actual(cur->remaining()) == 0);
+    wassert(actual(cur->next()).isfalse());
 }
 
 template<> template<> void to::test<5>()
@@ -748,28 +775,21 @@ template<> template<> void to::test<12>()
 
 template<> template<> void to::test<13>()
 {
+#warning BEST queries of station values are not yet implemented for memdb
+    if (dynamic_cast<db::mem::DB*>(db.get()))
+        return;
+
     // Reproduce a querybest scenario which produced invalid SQL
     OldDballeTestFixture f;
     wruntest(populate_database, f);
 
-    // SELECT pa.lat, pa.lon, pa.ident,
-    //        d.datetime, d.id_report, d.id_var, d.value,
-    //        ri.prio, pa.id, d.id, d.id_lev_tr
-    //   FROM data d
-    //   JOIN station pa ON d.id_station = pa.id
-    //   JOIN repinfo ri ON ri.id=d.id_report
-    //  WHERE pa.lat>=? AND pa.lat<=? AND pa.lon>=? AND pa.lon<=? AND pa.ident IS NULL
-    //    AND d.datetime=?
-    //    AND d.id_var IN (1822)
-    //    AND ri.prio=(SELECT MAX(sri.prio) FROM repinfo sri JOIN data sd ON sri.id=sd.id_report WHERE sd.id_station=d.id_station AND sd.id_lev_tr=d.id_lev_tr AND sd.datetime=d.datetime AND sd.id_var=d.id_var)
-    //    AND d.id_lev_tr IS NULLORDER BY d.id_station, d.datetime
     Record rec;
-    rec.set(DBA_KEY_YEAR,  1000);
-    rec.set(DBA_KEY_MONTH,    1);
-    rec.set(DBA_KEY_DAY,      1);
-    rec.set(DBA_KEY_HOUR,     0);
-    rec.set(DBA_KEY_MIN,     0);
-    rec.set(DBA_KEY_QUERY,    "best");
+    rec.set(DBA_KEY_YEAR, 1000);
+    rec.set(DBA_KEY_MONTH, 1);
+    rec.set(DBA_KEY_DAY, 1);
+    rec.set(DBA_KEY_HOUR, 0);
+    rec.set(DBA_KEY_MIN, 0);
+    rec.set(DBA_KEY_QUERY, "best");
     unique_ptr<db::Cursor> cur = db->query_data(rec);
     while (cur->next())
     {
