@@ -109,6 +109,8 @@ protected:
      */
     void remove();
 
+    void impl_add_station_vars(const char* query, int id_station, Record& rec);
+
 public:
     ODBCStation(ODBCConnection& conn);
     ~ODBCStation();
