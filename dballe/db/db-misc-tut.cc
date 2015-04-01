@@ -189,26 +189,26 @@ template<> template<> void to::test<5>()
     // Make the query
     unique_ptr<db::Cursor> cur = db->query_data(query);
 
-    ensure_equals(cur->remaining(), 4);
+    wassert(actual(cur->remaining()) == 4);
 
     // There should be four items
-    ensure(cur->next());
-    ensure_equals(cur->get_lat(), 12.34560);
-    ensure_equals(cur->get_lon(), 76.54320);
-    ensure_equals(cur->get_ident(), (const char*)0);
-    ensure(cur->get_rep_memo());
-    ensure_equals(string(cur->get_rep_memo()), "synop");
-    ensure_equals(cur->get_level(), Level(10, 11, 15, 22));
-    ensure_equals(cur->get_trange(), Trange(20, 111, 122));
-    ensure_equals(cur->get_varcode(), WR_VAR(0, 1, 11));
-    ensure_equals(cur->get_var().code(), WR_VAR(0, 1, 11));
-    ensure_equals(cur->remaining(), 3);
-    ensure(cur->next());
-    ensure_equals(cur->remaining(), 2);
-    ensure(cur->next());
-    ensure_equals(cur->remaining(), 1);
-    ensure(cur->next());
-    ensure_equals(cur->remaining(), 0);
+    wassert(actual(cur->next()).istrue());
+    wassert(actual(cur->get_lat()) == 12.34560);
+    wassert(actual(cur->get_lon()) == 76.54320);
+    wassert(actual((void*)cur->get_ident()) == (void*)0);
+    wassert(actual((void*)cur->get_rep_memo()).istrue());
+    wassert(actual(cur->get_rep_memo()) == "synop");
+    wassert(actual(cur->get_level()) == Level(10, 11, 15, 22));
+    wassert(actual(cur->get_trange()) == Trange(20, 111, 122));
+    wassert(actual(cur->get_varcode()) == WR_VAR(0, 1, 11));
+    wassert(actual(cur->get_var().code()) == WR_VAR(0, 1, 11));
+    wassert(actual(cur->remaining()) == 3);
+    wassert(actual(cur->next()).istrue());
+    wassert(actual(cur->remaining()) == 2);
+    wassert(actual(cur->next()).istrue());
+    wassert(actual(cur->remaining()) == 1);
+    wassert(actual(cur->next()).istrue());
+    wassert(actual(cur->remaining()) == 0);
 
     // Now there should not be anything anymore
     ensure(!cur->next());

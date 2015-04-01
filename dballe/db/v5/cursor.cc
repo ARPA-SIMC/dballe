@@ -613,7 +613,7 @@ void QueryBuilder::build_query(const Record& rec)
             throw error_unimplemented("sorted queries with result limit are not implemented for Oracle");
 
         if (modifiers & DBA_DB_MODIFIER_BEST) {
-            sql_query.append("ORDER BY c.id_ana, c.datetime, c.ltype1, c.l1, c.ltype2, c.l2, c.ptype, c.p1, c.p2");
+            sql_query.append("ORDER BY c.id_ana, c.datetime, c.ltype1, c.l1, c.ltype2, c.l2, c.ptype, c.p1, c.p2, d.id_var");
         } else if (select_wanted & DBA_DB_FROM_C) {
             if (wanted & DBA_DB_WANT_ANA_ID)
                 add_to_orderby("c.id_ana");
