@@ -137,7 +137,7 @@ struct QueryBuilder
     int  sel_context_id;
     /** @} */
 
-    QueryBuilder(v5::DB& db, ODBCStatement& stm, Cursor& cur, int wanted, int modifiers)
+    QueryBuilder(v5::DB& db, ODBCStatement& stm, Cursor& cur, unsigned int wanted, unsigned int modifiers)
         : db(db), stm(stm), cur(cur), sql_query(2048), sql_where(1024),
           wanted(wanted), modifiers(modifiers),
           select_wanted(0), from_wanted(0), input_seq(1), output_seq(1),
@@ -734,7 +734,7 @@ void QueryBuilder::make_from()
 
 void QueryBuilder::init_modifiers(const Record& rec)
 {
-    modifiers = parse_modifiers(rec);
+    modifiers |= parse_modifiers(rec);
 }
 
 void QueryBuilder::add_to_orderby(const char* fields)

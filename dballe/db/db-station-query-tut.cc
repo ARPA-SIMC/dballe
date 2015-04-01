@@ -19,6 +19,7 @@
 
 #include "config.h"
 #include "db/test-utils-db.h"
+#include "db/mem/db.h"
 
 using namespace dballe;
 using namespace dballe::db;
@@ -139,14 +140,19 @@ template<> template<> void to::test<4>()
 
 template<> template<> void to::test<5>()
 {
-    wassert(actual(db).try_station_query("B01001=1", 1));
+    unsigned int some = 1;
+    // memdb has one station entry per network
+    if (dynamic_cast<db::mem::DB*>(db.get()))
+        some = 2;
+
+    wassert(actual(db).try_station_query("B01001=1", some));
     wassert(actual(db).try_station_query("B01001=2", 0));
-    wassert(actual(db).try_station_query("B01001=3", 1));
+    wassert(actual(db).try_station_query("B01001=3", some));
     wassert(actual(db).try_station_query("B01001=4", 0));
     wassert(actual(db).try_station_query("B01002=1", 0));
-    wassert(actual(db).try_station_query("B01002=2", 1));
+    wassert(actual(db).try_station_query("B01002=2", some));
     wassert(actual(db).try_station_query("B01002=3", 0));
-    wassert(actual(db).try_station_query("B01002=4", 1));
+    wassert(actual(db).try_station_query("B01002=4", some));
 }
 
 template<> template<> void to::test<6>()
