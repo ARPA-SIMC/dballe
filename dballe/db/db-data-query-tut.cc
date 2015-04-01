@@ -19,6 +19,7 @@
 
 #include "config.h"
 #include "db/test-utils-db.h"
+#include "db/v5/db.h"
 #include <wibble/string.h>
 
 using namespace dballe;
@@ -258,9 +259,16 @@ template<> template<> void to::test<14>()
 template<> template<> void to::test<15>()
 {
     wruntest(populate<OldDballeTestFixture>);
-    // context ID queries
-    TRY_QUERY("context_id=1", 1);
-    TRY_QUERY("context_id=11", 0);
+    if (dynamic_cast<db::v5::DB*>(db.get()))
+    {
+        // context ID queries
+        TRY_QUERY("context_id=1", 5);
+        TRY_QUERY("context_id=11", 0);
+    } else {
+        // context ID queries
+        TRY_QUERY("context_id=1", 1);
+        TRY_QUERY("context_id=11", 0);
+    }
 }
 
 namespace {
