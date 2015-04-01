@@ -109,7 +109,7 @@ template<> template<> void to::test<2>()
     } catch (error_consistency& e) {
         wassert(actual(e.what()).contains("insert a station entry when it is forbidden"));
     } catch (error_notfound& e) {
-        wassert(actual(e.what()).contains("synop station not found at"));
+        wassert(actual(e.what()).contains("station not found"));
     }
 
     // Insert the record
