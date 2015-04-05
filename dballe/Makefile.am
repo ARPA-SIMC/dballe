@@ -228,8 +228,8 @@ libdballe_la_SOURCES = \
 if HAVE_LIBPQ
 libdballe_la_SOURCES += \
 	db/postgresql/internals.cc \
-	db/postgresql/repinfo.cc
-#	db/postgresql/station.cc \
+	db/postgresql/repinfo.cc \
+	db/postgresql/station.cc
 #	db/postgresql/v6_levtr.cc \
 #	db/postgresql/v6_data.cc \
 #	db/postgresql/v6_attr.cc \
@@ -340,6 +340,7 @@ tut_test_SOURCES = \
 	db/db-summary-query-tut.cc \
 	db/db-import-tut.cc \
 	db/db-export-tut.cc \
+	db/db-station-tut.cc \
 	db/mem/repinfo-tut.cc \
 	db/mem/cursor-tut.cc \
 	db/mem/db-tut.cc \
@@ -364,7 +365,6 @@ if HAVE_ODBC
 tut_test_SOURCES += \
 	db/odbc/internals-tut.cc \
 	db/v5/tests/repinfo.cc \
-	db/v5/tests/station.cc \
 	db/v5/tests/context.cc \
 	db/v5/tests/data.cc \
 	db/v5/tests/attr.cc \

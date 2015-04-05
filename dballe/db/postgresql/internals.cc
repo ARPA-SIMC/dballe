@@ -229,12 +229,19 @@ std::unique_ptr<Transaction> PostgreSQLConnection::transaction()
     return unique_ptr<Transaction>(new PostgreSQLTransaction(*this));
 }
 
-/*
-std::unique_ptr<PostgreSQLStatement> PostgreSQLConnection::pqstatement(const std::string& query)
+void PostgreSQLConnection::prepare(const std::string& name, const std::string& query)
 {
-    return unique_ptr<PostgreSQLStatement>(new PostgreSQLStatement(*this, query));
+    using namespace postgresql;
+    Result res(PQprepare(db, name.c_str(), query.c_str(), 0, nullptr));
+    res.expect_no_data("prepare:" + query);
 }
-*/
+
+#if 0
+std::unique_ptr<PostgreSQLCompiledQuery> PostgreSQLConnection::pqstatement(const std::string& name, const std::string& query)
+{
+    return unique_ptr<PostgreSQLCompiledQuery>(new PostgreSQLCompiledQuery(*this, name, query));
+}
+#endif
 
 void PostgreSQLConnection::impl_exec_void(const std::string& query)
 {
@@ -331,27 +338,21 @@ int PostgreSQLConnection::changes()
 }
 
 #if 0
-PostgreSQLStatement::PostgreSQLStatement(PostgreSQLConnection& conn, const std::string& query)
-    : conn(conn)
+PostgreSQLCompiledQuery::PostgreSQLCompiledQuery(PostgreSQLConnection& conn, const std::string& name, const std::string& query)
+    : conn(conn), name(name), query(query)
 {
-    // From http://www.sqlite.org/c3ref/prepare.html:
-    // If the caller knows that the supplied string is nul-terminated, then
-    // there is a small performance advantage to be gained by passing an nByte
-    // parameter that is equal to the number of bytes in the input string
-    // including the nul-terminator bytes as this saves PostgreSQL from having to
-    // make a copy of the input string.
-    int res = sqlite3_prepare_v2(conn, query.c_str(), query.size() + 1, &stm, nullptr);
-    if (res != SQLITE_OK)
-        error_postgresql::throwf(conn, "cannot compile query '%s'", query.c_str());
 }
 
-PostgreSQLStatement::~PostgreSQLStatement()
+PostgreSQLCompiledQuery::~PostgreSQLCompiledQuery()
 {
-    // Invoking sqlite3_finalize() on a NULL pointer is a harmless no-op.
-    sqlite3_finalize(stm);
+    // FIXME: is this really needed?
+    string query = "DEALLOCATE " + name;
+    conn.pqexec_nothrow(query.c_str());
 }
+#endif
 
-Datetime PostgreSQLStatement::column_datetime(int col)
+#if 0
+Datetime PostgreSQLCompiledQuery::column_datetime(int col)
 {
     Datetime res;
     string dt = column_string(col);
@@ -365,7 +366,7 @@ Datetime PostgreSQLStatement::column_datetime(int col)
     return res;
 }
 
-void PostgreSQLStatement::execute(std::function<void()> on_row)
+void PostgreSQLCompiledQuery::execute(std::function<void()> on_row)
 {
     while (true)
     {
@@ -390,7 +391,7 @@ void PostgreSQLStatement::execute(std::function<void()> on_row)
     }
 }
 
-void PostgreSQLStatement::execute_one(std::function<void()> on_row)
+void PostgreSQLCompiledQuery::execute_one(std::function<void()> on_row)
 {
     bool has_result = false;
     while (true)
@@ -417,7 +418,7 @@ void PostgreSQLStatement::execute_one(std::function<void()> on_row)
     }
 }
 
-void PostgreSQLStatement::execute()
+void PostgreSQLCompiledQuery::execute()
 {
     while (true)
     {
@@ -435,31 +436,31 @@ void PostgreSQLStatement::execute()
     }
 }
 
-void PostgreSQLStatement::bind_null_val(int idx)
+void PostgreSQLCompiledQuery::bind_null_val(int idx)
 {
     if (sqlite3_bind_null(stm, idx) != SQLITE_OK)
         throw error_postgresql(conn, "cannot bind a NULL input column");
 }
 
-void PostgreSQLStatement::bind_val(int idx, int val)
+void PostgreSQLCompiledQuery::bind_val(int idx, int val)
 {
     if (sqlite3_bind_int(stm, idx, val) != SQLITE_OK)
         throw error_postgresql(conn, "cannot bind an int input column");
 }
 
-void PostgreSQLStatement::bind_val(int idx, unsigned val)
+void PostgreSQLCompiledQuery::bind_val(int idx, unsigned val)
 {
     if (sqlite3_bind_int64(stm, idx, val) != SQLITE_OK)
         throw error_postgresql(conn, "cannot bind an int64 input column");
 }
 
-void PostgreSQLStatement::bind_val(int idx, unsigned short val)
+void PostgreSQLCompiledQuery::bind_val(int idx, unsigned short val)
 {
     if (sqlite3_bind_int(stm, idx, val) != SQLITE_OK)
         throw error_postgresql(conn, "cannot bind an int input column");
 }
 
-void PostgreSQLStatement::bind_val(int idx, const Datetime& val)
+void PostgreSQLCompiledQuery::bind_val(int idx, const Datetime& val)
 {
     char* buf;
     int size = asprintf(&buf, "%04d-%02d-%02d %02d:%02d:%02d",
@@ -469,30 +470,30 @@ void PostgreSQLStatement::bind_val(int idx, const Datetime& val)
         throw error_postgresql(conn, "cannot bind a text (from Datetime) input column");
 }
 
-void PostgreSQLStatement::bind_val(int idx, const char* val)
+void PostgreSQLCompiledQuery::bind_val(int idx, const char* val)
 {
     if (sqlite3_bind_text(stm, idx, val, -1, SQLITE_STATIC))
         throw error_postgresql(conn, "cannot bind a text input column");
 }
 
-void PostgreSQLStatement::bind_val(int idx, const std::string& val)
+void PostgreSQLCompiledQuery::bind_val(int idx, const std::string& val)
 {
     if (sqlite3_bind_text(stm, idx, val.data(), val.size(), SQLITE_STATIC))
         throw error_postgresql(conn, "cannot bind a text input column");
 }
 
-void PostgreSQLStatement::wrap_sqlite3_reset()
+void PostgreSQLCompiledQuery::wrap_sqlite3_reset()
 {
     if (sqlite3_reset(stm) != SQLITE_OK)
         throw error_postgresql(conn, "cannot reset the query");
 }
 
-void PostgreSQLStatement::wrap_sqlite3_reset_nothrow() noexcept
+void PostgreSQLCompiledQuery::wrap_sqlite3_reset_nothrow() noexcept
 {
     sqlite3_reset(stm);
 }
 
-void PostgreSQLStatement::reset_and_throw(const std::string& errmsg)
+void PostgreSQLCompiledQuery::reset_and_throw(const std::string& errmsg)
 {
     std::string sqlite_errmsg(sqlite3_errmsg(conn));
     wrap_sqlite3_reset_nothrow();
@@ -501,7 +502,7 @@ void PostgreSQLStatement::reset_and_throw(const std::string& errmsg)
 #endif
 
 #if 0
-bool ODBCStatement::fetch()
+bool ODBCCompiledQuery::fetch()
 {
     int sqlres = SQLFetch(stm);
     if (sqlres == SQL_NO_DATA)
@@ -516,7 +517,7 @@ bool ODBCStatement::fetch()
     return true;
 }
 
-bool ODBCStatement::fetch_expecting_one()
+bool ODBCCompiledQuery::fetch_expecting_one()
 {
     if (!fetch())
     {
@@ -529,7 +530,7 @@ bool ODBCStatement::fetch_expecting_one()
     return true;
 }
 
-size_t ODBCStatement::select_rowcount()
+size_t ODBCCompiledQuery::select_rowcount()
 {
     if (conn.server_quirks & DBA_DB_QUIRK_NO_ROWCOUNT_IN_DIAG)
         return rowcount();
@@ -543,7 +544,7 @@ size_t ODBCStatement::select_rowcount()
     return res;
 }
 
-size_t ODBCStatement::rowcount()
+size_t ODBCCompiledQuery::rowcount()
 {
     SQLLEN res;
     int sqlres = SQLRowCount(stm, &res);
@@ -554,7 +555,7 @@ size_t ODBCStatement::rowcount()
 #endif
 
 #if 0
-void ODBCStatement::close_cursor()
+void ODBCCompiledQuery::close_cursor()
 {
     int sqlres = SQLCloseCursor(stm);
     if (is_error(sqlres))
@@ -564,12 +565,12 @@ void ODBCStatement::close_cursor()
 #endif
 }
 
-int ODBCStatement::execute()
+int ODBCCompiledQuery::execute()
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     if (!debug_reached_completion)
     {
-        string msg = "Statement " + debug_query + " restarted before reaching completion";
+        string msg = "CompiledQuery " + debug_query + " restarted before reaching completion";
         fprintf(stderr, "-- %s\n", msg.c_str());
         //throw error_consistency(msg);
     }
@@ -583,7 +584,7 @@ int ODBCStatement::execute()
     return sqlres;
 }
 
-int ODBCStatement::exec_direct(const char* query)
+int ODBCCompiledQuery::exec_direct(const char* query)
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_query = query;
@@ -598,7 +599,7 @@ int ODBCStatement::exec_direct(const char* query)
     return sqlres;
 }
 
-int ODBCStatement::exec_direct(const char* query, int qlen)
+int ODBCCompiledQuery::exec_direct(const char* query, int qlen)
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_query = string(query, qlen);
@@ -613,7 +614,7 @@ int ODBCStatement::exec_direct(const char* query, int qlen)
     return sqlres;
 }
 
-void ODBCStatement::close_cursor_if_needed()
+void ODBCCompiledQuery::close_cursor_if_needed()
 {
     /*
     // If the query raised an error that we are ignoring, closing the cursor
@@ -633,7 +634,7 @@ void ODBCStatement::close_cursor_if_needed()
 #endif
 
 #if 0
-int ODBCStatement::execute_and_close()
+int ODBCCompiledQuery::execute_and_close()
 {
     int sqlres = SQLExecute(stm);
     if (is_error(sqlres))
@@ -645,7 +646,7 @@ int ODBCStatement::execute_and_close()
     return sqlres;
 }
 
-int ODBCStatement::exec_direct_and_close(const char* query)
+int ODBCCompiledQuery::exec_direct_and_close(const char* query)
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_query = query;
@@ -661,7 +662,7 @@ int ODBCStatement::exec_direct_and_close(const char* query)
     return sqlres;
 }
 
-int ODBCStatement::exec_direct_and_close(const char* query, int qlen)
+int ODBCCompiledQuery::exec_direct_and_close(const char* query, int qlen)
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_query = string(query, qlen);
@@ -677,7 +678,7 @@ int ODBCStatement::exec_direct_and_close(const char* query, int qlen)
     return sqlres;
 }
 
-int ODBCStatement::columns_count()
+int ODBCCompiledQuery::columns_count()
 {
     SQLSMALLINT res;
     int sqlres = SQLNumResultCols(stm, &res);
@@ -687,7 +688,7 @@ int ODBCStatement::columns_count()
 }
 
 Sequence::Sequence(ODBCConnection& conn, const char* name)
-    : ODBCStatement(conn)
+    : ODBCCompiledQuery(conn)
 {
     char qbuf[100];
     int qlen;

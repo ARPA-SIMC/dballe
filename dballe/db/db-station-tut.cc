@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,74 +17,65 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
+#include "config.h"
 #include "db/test-utils-db.h"
 #include "db/v5/db.h"
+#include "db/v6/db.h"
 #include "db/v5/station.h"
 #include <sql.h>
 
 using namespace dballe;
-using namespace dballe::db::v5;
+using namespace dballe::tests;
+using namespace wreport;
 using namespace wibble::tests;
 using namespace std;
 
-namespace tut {
+namespace {
 
-struct dbv5_station_shar : public dballe::tests::db_test
+struct db_tests_station : public dballe::tests::db_test
 {
-    Station* st;
-
-    dbv5_station_shar() : dballe::tests::db_test(db::V5)
+    db::v5::Station& station()
     {
-        if (!has_db()) return;
-        st = &v5().station();
+        if (db::v5::DB* db5 = dynamic_cast<db::v5::DB*>(db.get()))
+            return db5->station();
+        if (db::v6::DB* db6 = dynamic_cast<db::v6::DB*>(db.get()))
+            return db6->station();
+        throw error_consistency("cannot test stations on the current DB");
     }
 };
-TESTGRP(dbv5_station);
 
-/* Test dba_db_pseudoana_set_ident */
+}
+
+namespace tut {
+
+typedef db_tg<db_tests_station> tg;
+typedef tg::object to;
+
+// Insert some values and try to read them again
 template<> template<>
 void to::test<1>()
 {
-#if 0
-    // FIXME: these are now unaccessible internals
-	use_db();
-
-	// Set to a valid value
-	st->set_ident("ciao");
-	ensure_equals(st->ident, string("ciao"));
-	ensure_equals(st->ident_ind, 4);
-
-	// Set to NULL
-	st->set_ident(NULL);
-	ensure_equals(st->ident[0], 0);
-	ensure_equals(st->ident_ind, SQL_NULL_DATA);
-#endif
-}
-
-/* Insert some values and try to read them again */
-template<> template<>
-void to::test<2>()
-{
     use_db();
+    db::v5::Station& st = station();
     bool inserted;
 
     // Insert a mobile station
-    wassert(actual(st->obtain_id(4500000, 1100000, "ciao", &inserted)) == 1);
+    wassert(actual(st.obtain_id(4500000, 1100000, "ciao", &inserted)) == 1);
     wassert(actual(inserted).istrue());
-    wassert(actual(st->obtain_id(4500000, 1100000, "ciao", &inserted)) == 1);
+    wassert(actual(st.obtain_id(4500000, 1100000, "ciao", &inserted)) == 1);
     wassert(actual(inserted).isfalse());
 
     // Insert a fixed station
-    wassert(actual(st->obtain_id(4600000, 1200000, NULL, &inserted)) == 2);
+    wassert(actual(st.obtain_id(4600000, 1200000, NULL, &inserted)) == 2);
     wassert(actual(inserted).istrue());
-    wassert(actual(st->obtain_id(4600000, 1200000, NULL, &inserted)) == 2);
+    wassert(actual(st.obtain_id(4600000, 1200000, NULL, &inserted)) == 2);
     wassert(actual(inserted).isfalse());
 
     // Get the ID of the first station
-    wassert(actual(st->get_id(4500000, 1100000, "ciao")) == 1);
+    wassert(actual(st.get_id(4500000, 1100000, "ciao")) == 1);
 
     // Get the ID of the second station
-    wassert(actual(st->get_id(4600000, 1200000)) == 2);
+    wassert(actual(st.get_id(4600000, 1200000)) == 2);
 
 #if 0
     // FIXME: unused functions now unaccessible
@@ -124,4 +115,11 @@ void to::test<2>()
 
 }
 
-/* vim:set ts=4 sw=4: */
+namespace {
+
+#ifdef HAVE_ODBC
+tut::tg db_tests_query_v5_tg("db_station_v5", db::V5);
+#endif
+tut::tg db_tests_query_v6_tg("db_station_v6", db::V6);
+
+}

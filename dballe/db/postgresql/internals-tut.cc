@@ -172,4 +172,25 @@ void to::test<8>()
     wassert(actual(r2.get_int4(0, 0)) == 2);
 }
 
+// Test prepared statements
+template<> template<>
+void to::test<9>()
+{
+    reset();
+    conn.exec_no_data("INSERT INTO dballe_test VALUES (1)");
+    conn.exec_no_data("INSERT INTO dballe_test VALUES (2)");
+
+    conn.prepare("db_postgresql_internals_9", "SELECT val FROM dballe_test");
+
+    auto s = conn.exec_prepared("db_postgresql_internals_9");
+    wassert(actual(s.rowcount()) == 2);
+
+    int val = 0;
+    for (unsigned row = 0; row < 2; ++row)
+        val += s.get_int4(row, 0);
+
+    wassert(actual(val) == 3);
+}
+
+
 }

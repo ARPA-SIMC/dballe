@@ -86,19 +86,30 @@ protected:
     {
     }
 
-#if 0
     /// Fill in the argument structures
     template<typename... REST>
-    void _add(unsigned pos, uint32_t arg, REST... rest)
+    void _add(unsigned pos, std::nullptr_t arg, REST... rest)
     {
-        local[pos] = malloc(sizeof(uint32_t));
-        *(uint32_t*)local[pos] = htonl(arg);
+        local[pos] = nullptr;
+        args[pos] = nullptr;
+        lengths[pos] = 0;
+        formats[pos] = 0;
+        _add(pos + 1, rest...);
+    }
+
+    /// Fill in the argument structures
+    template<typename... REST>
+    void _add(unsigned pos, int32_t arg, REST... rest)
+    {
+        local[pos] = malloc(sizeof(int32_t));
+        *(int32_t*)local[pos] = (int32_t)htonl((uint32_t)arg);
         args[pos] = (const char*)local[pos];
-        lengths[pos] = sizeof(uint32_t);
+        lengths[pos] = sizeof(int32_t);
         formats[pos] = 1;
         _add(pos + 1, rest...);
     }
 
+#if 0
     /// Fill in the argument structures
     template<typename... REST>
     void _add(unsigned pos, uint64_t arg, REST... rest)
@@ -129,6 +140,7 @@ struct Result
 {
     PGresult* res;
 
+    Result() : res(nullptr) {}
     Result(PGresult* res) : res(res) {}
     ~Result() { PQclear(res); }
 
@@ -231,7 +243,9 @@ public:
     void open(const std::string& connection_string);
 
     std::unique_ptr<Transaction> transaction() override;
-    //std::unique_ptr<PostgreSQLStatement> pqstatement(const std::string& query);
+
+    /// Precompile a query
+    void prepare(const std::string& name, const std::string& query);
 
     void exec_no_data(const std::string& query)
     {
@@ -276,6 +290,52 @@ public:
         postgresql::Params<ARGS...> params(args...);
         postgresql::Result res(PQexecParams(db, query.c_str(), params.count, nullptr, params.args, params.lengths, params.formats, 1));
         res.expect_one_row(query);
+        return res;
+    }
+
+    void exec_prepared_no_data(const std::string& name)
+    {
+        postgresql::Result res(PQexecPrepared(db, name.c_str(), 0, nullptr, nullptr, nullptr, 1));
+        res.expect_no_data(name);
+    }
+
+    postgresql::Result exec_prepared(const std::string& name)
+    {
+        postgresql::Result res(PQexecPrepared(db, name.c_str(), 0, nullptr, nullptr, nullptr, 1));
+        res.expect_result(name);
+        return res;
+    }
+
+    postgresql::Result exec_prepared_one_row(const std::string& name)
+    {
+        postgresql::Result res(PQexecPrepared(db, name.c_str(), 0, nullptr, nullptr, nullptr, 1));
+        res.expect_one_row(name);
+        return res;
+    }
+
+    template<typename ...ARGS>
+    void exec_prepared_no_data(const std::string& name, ARGS... args)
+    {
+        postgresql::Params<ARGS...> params(args...);
+        postgresql::Result res(PQexecPrepared(db, name.c_str(), params.count, params.args, params.lengths, params.formats, 1));
+        res.expect_no_data(name);
+    }
+
+    template<typename ...ARGS>
+    postgresql::Result exec_prepared(const std::string& name, ARGS... args)
+    {
+        postgresql::Params<ARGS...> params(args...);
+        postgresql::Result res(PQexecPrepared(db, name.c_str(), params.count, params.args, params.lengths, params.formats, 1));
+        res.expect_result(name);
+        return res;
+    }
+
+    template<typename ...ARGS>
+    postgresql::Result exec_prepared_one_row(const std::string& name, ARGS... args)
+    {
+        postgresql::Params<ARGS...> params(args...);
+        postgresql::Result res(PQexecPrepared(db, name.c_str(), params.count, params.args, params.lengths, params.formats, 1));
+        res.expect_one_row(name);
         return res;
     }
 
@@ -334,18 +394,21 @@ public:
 };
 
 #if 0
-/// PostgreSQL statement
-struct PostgreSQLStatement
+/// PostgreSQL compiled query
+struct PostgreSQLCompiledQuery
 {
+    /// Database connection
     PostgreSQLConnection& conn;
-    std::string t65
-    sqlite3_stmt *stm = nullptr;
+    /// Precompiled query name
+    std::string name;
+    /// Precompiled query SQL body, used for error reporting
+    std::string query;
 
-    PostgreSQLStatement(PostgreSQLConnection& conn, const std::string& query);
-    PostgreSQLStatement(const PostgreSQLStatement&) = delete;
-    PostgreSQLStatement(const PostgreSQLStatement&&) = delete;
-    ~PostgreSQLStatement();
-    PostgreSQLStatement& operator=(const PostgreSQLStatement&) = delete;
+    PostgreSQLCompiledQuery(PostgreSQLConnection& conn, const std::string& name, const std::string& query);
+    PostgreSQLCompiledQuery(const PostgreSQLCompiledQuery&) = delete;
+    PostgreSQLCompiledQuery(const PostgreSQLCompiledQuery&&) = delete;
+    ~PostgreSQLCompiledQuery();
+    PostgreSQLCompiledQuery& operator=(const PostgreSQLCompiledQuery&) = delete;
 
     /**
      * Bind all the arguments in a single invocation.

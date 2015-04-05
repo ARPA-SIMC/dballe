@@ -30,6 +30,7 @@
 #include "dballe/db/sqlite/v6_run_query.h"
 #include "dballe/db/postgresql/internals.h"
 #include "dballe/db/postgresql/repinfo.h"
+#include "dballe/db/postgresql/station.h"
 #include "dballe/db/odbc/internals.h"
 #include "dballe/db/odbc/repinfo.h"
 #include "dballe/db/odbc/station.h"
@@ -67,6 +68,8 @@ std::unique_ptr<v5::Station> create_station(Connection& conn)
         return unique_ptr<v5::Station>(new v6::ODBCStation(*c));
     else if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(&conn))
         return unique_ptr<v5::Station>(new v6::SQLiteStation(*c));
+    else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(&conn))
+        return unique_ptr<v5::Station>(new v6::PostgreSQLStation(*c));
     else
         throw error_unimplemented("v6 DB station not yet implemented for non-ODBC connectors");
 }
