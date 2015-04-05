@@ -28,6 +28,8 @@
 #include "dballe/db/sqlite/v6_data.h"
 #include "dballe/db/sqlite/v6_attr.h"
 #include "dballe/db/sqlite/v6_run_query.h"
+#include "dballe/db/postgresql/internals.h"
+#include "dballe/db/postgresql/repinfo.h"
 #include "dballe/db/odbc/internals.h"
 #include "dballe/db/odbc/repinfo.h"
 #include "dballe/db/odbc/station.h"
@@ -53,6 +55,8 @@ std::unique_ptr<v5::Repinfo> create_repinfo(Connection& conn)
         return unique_ptr<v5::Repinfo>(new v6::ODBCRepinfo(*c));
     else if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(&conn))
         return unique_ptr<v5::Repinfo>(new v6::SQLiteRepinfo(*c));
+    else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(&conn))
+        return unique_ptr<v5::Repinfo>(new v6::PostgreSQLRepinfo(*c));
     else
         throw error_unimplemented("v6 DB repinfo only implemented for ODBC and SQLite connectors");
 }

@@ -227,8 +227,8 @@ libdballe_la_SOURCES = \
 	simple/dbapi.cc
 if HAVE_LIBPQ
 libdballe_la_SOURCES += \
-	db/postgresql/internals.cc
-#	db/postgresql/repinfo.cc \
+	db/postgresql/internals.cc \
+	db/postgresql/repinfo.cc
 #	db/postgresql/station.cc \
 #	db/postgresql/v6_levtr.cc \
 #	db/postgresql/v6_data.cc \
