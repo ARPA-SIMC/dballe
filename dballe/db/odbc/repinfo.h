@@ -28,7 +28,7 @@
  * Repinfo table management used by the db module.
  */
 
-#include <dballe/db/v5/repinfo.h>
+#include <dballe/db/sql/repinfo.h>
 #include <vector>
 #include <string>
 #include <map>
@@ -44,7 +44,7 @@ namespace v5 {
 /**
  * Fast cached access to the repinfo table
  */
-struct ODBCRepinfo : public Repinfo
+struct ODBCRepinfo : public sql::Repinfo
 {
     /**
      * DB connection. The pointer is assumed always valid during the

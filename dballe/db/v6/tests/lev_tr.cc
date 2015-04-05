@@ -20,7 +20,7 @@
 #include "db/test-utils-db.h"
 #include "db/v6/db.h"
 #include "db/v6/internals.h"
-#include "db/v5/station.h"
+#include "db/sql/station.h"
 
 using namespace dballe;
 using namespace wibble::tests;

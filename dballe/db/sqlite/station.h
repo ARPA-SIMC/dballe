@@ -28,7 +28,7 @@
  * Station table management used by the db module.
  */
 
-#include <dballe/db/v5/station.h>
+#include <dballe/db/sql/station.h>
 #include <functional>
 #include <memory>
 
@@ -46,7 +46,7 @@ namespace v5 {
 /**
  * Precompiled queries to manipulate the station table
  */
-class SQLiteStation : public Station
+class SQLiteStation : public sql::Station
 {
 protected:
     /**

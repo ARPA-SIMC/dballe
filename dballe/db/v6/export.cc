@@ -83,7 +83,7 @@ static inline int sqltimecmp(const SQL_TIMESTAMP_STRUCT* a, const SQL_TIMESTAMP_
 
 void DB::export_msgs(const Query& query, MsgConsumer& consumer)
 {
-    v5::Repinfo& ri = repinfo();
+    sql::Repinfo& ri = repinfo();
     Attr& at = attr();
     LevTrCache& ltrc = lev_tr_cache();
 

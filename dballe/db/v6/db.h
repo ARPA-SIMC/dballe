@@ -68,7 +68,7 @@ struct Connection;
 struct Statement;
 struct Sequence;
 
-namespace v5 {
+namespace sql {
 struct Repinfo;
 struct Station;
 }
@@ -108,9 +108,9 @@ protected:
      * @{
      */
     /** Report information */
-    struct v5::Repinfo* m_repinfo;
+    struct sql::Repinfo* m_repinfo;
     /** Station information */
-    struct v5::Station* m_station;
+    struct sql::Station* m_station;
     /** Level/timerange information */
     struct LevTr* m_lev_tr;
     /// Level/timerange cache
@@ -133,10 +133,10 @@ public:
     db::Format format() const { return V6; }
 
     /// Access the repinfo table
-    v5::Repinfo& repinfo();
+    sql::Repinfo& repinfo();
 
     /// Access the station table
-    v5::Station& station();
+    sql::Station& station();
 
     /// Access the lev_tr table
     LevTr& lev_tr();

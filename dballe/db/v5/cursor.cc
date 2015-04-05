@@ -23,8 +23,8 @@
 #include "db.h"
 #include "dballe/db/odbc/internals.h"
 #include "dballe/db/modifiers.h"
-#include "repinfo.h"
-#include "station.h"
+#include "dballe/db/sql/repinfo.h"
+#include "dballe/db/sql/station.h"
 
 #include <wreport/var.h>
 #include <dballe/core/defs.h>
@@ -391,7 +391,7 @@ void Cursor::to_record(Record& rec)
      * just overwrite the previous ones, as the range of output parameters does
      * not change */
     /* dba_record_clear(rec); */
-    v5::Repinfo& ri = db.repinfo();
+    sql::Repinfo& ri = db.repinfo();
 
     if (from_wanted & DBA_DB_FROM_PA)
     {

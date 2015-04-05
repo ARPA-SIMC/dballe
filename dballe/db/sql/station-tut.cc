@@ -21,8 +21,7 @@
 #include "db/test-utils-db.h"
 #include "db/v5/db.h"
 #include "db/v6/db.h"
-#include "db/v5/station.h"
-#include <sql.h>
+#include "db/sql/station.h"
 
 using namespace dballe;
 using namespace dballe::tests;
@@ -32,15 +31,15 @@ using namespace std;
 
 namespace {
 
-struct db_tests_station : public dballe::tests::db_test
+struct db_sql_station : public dballe::tests::db_test
 {
-    db::v5::Station& station()
+    db::sql::Station& station()
     {
         if (db::v5::DB* db5 = dynamic_cast<db::v5::DB*>(db.get()))
             return db5->station();
         if (db::v6::DB* db6 = dynamic_cast<db::v6::DB*>(db.get()))
             return db6->station();
-        throw error_consistency("cannot test stations on the current DB");
+        throw error_consistency("cannot test station on the current DB");
     }
 };
 
@@ -48,7 +47,7 @@ struct db_tests_station : public dballe::tests::db_test
 
 namespace tut {
 
-typedef db_tg<db_tests_station> tg;
+typedef db_tg<db_sql_station> tg;
 typedef tg::object to;
 
 // Insert some values and try to read them again
@@ -56,7 +55,8 @@ template<> template<>
 void to::test<1>()
 {
     use_db();
-    db::v5::Station& st = station();
+    db->reset();
+    auto& st = station();
     bool inserted;
 
     // Insert a mobile station
@@ -118,8 +118,8 @@ void to::test<1>()
 namespace {
 
 #ifdef HAVE_ODBC
-tut::tg db_tests_query_v5_tg("db_station_v5", db::V5);
+tut::tg db_tests_query_v5_tg("db_sql_station_v5", db::V5);
 #endif
-tut::tg db_tests_query_v6_tg("db_station_v6", db::V6);
+tut::tg db_tests_query_v6_tg("db_sql_station_v6", db::V6);
 
 }

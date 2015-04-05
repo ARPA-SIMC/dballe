@@ -75,7 +75,7 @@ bool SQLiteStation::maybe_get_id(int lat, int lon, const char* ident, int* id)
         sfstm->bind_val(2, lon);
         s = sfstm;
     }
-    bool found;
+    bool found = false;
     s->execute([&]() {
         found = true;
         *id = s->column_int(0);

@@ -88,6 +88,8 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/mem/db.h \
 	db/querybuf.h \
 	db/sql.h \
+	db/sql/repinfo.h \
+	db/sql/station.h \
 	db/sqlite/internals.h \
 	db/sqlite/repinfo.h \
 	db/sqlite/station.h \
@@ -131,9 +133,7 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/v5/context.h \
 	db/v5/cursor.h \
 	db/v5/data.h \
-	db/v5/db.h \
-	db/v5/repinfo.h \
-	db/v5/station.h
+	db/v5/db.h
 endif
 
 lib_LTLIBRARIES = libdballe.la
@@ -200,6 +200,8 @@ libdballe_la_SOURCES = \
 	db/db.cc \
 	db/querybuf.cc \
 	db/sql.cc \
+	db/sql/repinfo.cc \
+	db/sql/station.cc \
 	db/sqlite/internals.cc \
 	db/sqlite/repinfo.cc \
 	db/sqlite/station.cc \
@@ -244,8 +246,6 @@ libdballe_la_SOURCES += \
 	db/odbc/v6_attr.cc \
 	db/odbc/v6_levtr.cc \
 	db/odbc/v6_run_query.cc \
-	db/v5/repinfo.cc \
-	db/v5/station.cc \
 	db/v5/context.cc \
 	db/v5/data.cc \
 	db/v5/attr.cc \
@@ -332,6 +332,8 @@ tut_test_SOURCES = \
 	db/test-utils-db.cc \
 	db/modifiers-tut.cc \
 	db/querybuf-tut.cc \
+	db/sql/repinfo-tut.cc \
+	db/sql/station-tut.cc \
 	db/sqlite/internals-tut.cc \
 	db/db-basic-tut.cc \
 	db/db-misc-tut.cc \
@@ -340,7 +342,6 @@ tut_test_SOURCES = \
 	db/db-summary-query-tut.cc \
 	db/db-import-tut.cc \
 	db/db-export-tut.cc \
-	db/db-station-tut.cc \
 	db/mem/repinfo-tut.cc \
 	db/mem/cursor-tut.cc \
 	db/mem/db-tut.cc \
@@ -364,7 +365,6 @@ endif
 if HAVE_ODBC
 tut_test_SOURCES += \
 	db/odbc/internals-tut.cc \
-	db/v5/tests/repinfo.cc \
 	db/v5/tests/context.cc \
 	db/v5/tests/data.cc \
 	db/v5/tests/attr.cc \

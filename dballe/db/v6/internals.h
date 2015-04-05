@@ -29,8 +29,8 @@
  */
 
 #include <dballe/core/defs.h>
-#include <dballe/db/v5/repinfo.h>
-#include <dballe/db/v5/station.h>
+#include <dballe/db/sql/repinfo.h>
+#include <dballe/db/sql/station.h>
 #include <wreport/var.h>
 #include <memory>
 #include <cstdio>
@@ -52,10 +52,10 @@ struct DB;
 struct QueryBuilder;
 
 /// Precompiled queries to manipulate the repinfo table
-std::unique_ptr<v5::Repinfo> create_repinfo(Connection& conn);
+std::unique_ptr<sql::Repinfo> create_repinfo(Connection& conn);
 
 /// Precompiled queries to manipulate the station table
-std::unique_ptr<v5::Station> create_station(Connection& conn);
+std::unique_ptr<sql::Station> create_station(Connection& conn);
 
 /**
  * Precompiled queries to manipulate the lev_tr table

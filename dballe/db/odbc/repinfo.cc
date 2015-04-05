@@ -142,7 +142,7 @@ void ODBCRepinfo::update(const char* deffile, int* added, int* deleted, int* upd
     *added = *deleted = *updated = 0;
 
     // Read the new repinfo data from file
-    vector<repinfo::Cache> newitems = read_repinfo_file(deffile);
+    vector<sql::repinfo::Cache> newitems = read_repinfo_file(deffile);
 
     {
         auto transaction(conn.transaction());
@@ -206,7 +206,7 @@ void ODBCRepinfo::update(const char* deffile, int* added, int* deleted, int* upd
                      VALUES (?, ?, ?, ?, ?, ?)
             )");
 
-            for (vector<repinfo::Cache>::const_iterator i = newitems.begin();
+            for (vector<sql::repinfo::Cache>::const_iterator i = newitems.begin();
                     i != newitems.end(); ++i)
             {
                 stm->bind_in(1, i->id);

@@ -67,9 +67,12 @@ namespace db {
 struct Connection;
 struct Sequence;
 
-namespace v5 {
+namespace sql {
 struct Repinfo;
 struct Station;
+}
+
+namespace v5 {
 struct Context;
 struct Data;
 struct Attr;
@@ -93,10 +96,10 @@ protected:
 	 * using one of the dba_db_need_* functions
 	 * @{
 	 */
-	/** Report information */
-	struct Repinfo* m_repinfo = nullptr;
-	/** Station information */
-	struct Station* m_station = nullptr;
+    /** Report information */
+    struct sql::Repinfo* m_repinfo = nullptr;
+    /** Station information */
+    struct sql::Station* m_station = nullptr;
 	/** Variable context */
 	struct Context* m_context = nullptr;
 	/** Variable data */
@@ -122,11 +125,11 @@ public:
 
     db::Format format() const { return V5; }
 
-	/// Access the repinfo table
-	Repinfo& repinfo();
+    /// Access the repinfo table
+    sql::Repinfo& repinfo();
 
-	/// Access the station table
-	Station& station();
+    /// Access the station table
+    sql::Station& station();
 
 	/// Access the context table
 	Context& context();

@@ -1,7 +1,7 @@
 /*
  * db/station - station table management
  *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,12 +73,13 @@ static const char* init_queries_oracle[] = {
 
 namespace dballe {
 namespace db {
-namespace v5 {
+namespace sql {
 
 Station::~Station()
 {
 }
 
+#if 0
 std::unique_ptr<Station> Station::create(Connection& conn)
 {
     if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(&conn))
@@ -86,6 +87,7 @@ std::unique_ptr<Station> Station::create(Connection& conn)
     else
         throw error_unimplemented("v5 station not yet implemented for non-ODBC connectors");
 }
+#endif
 
 void Station::reset_db(Connection& conn)
 {

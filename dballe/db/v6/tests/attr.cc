@@ -20,7 +20,7 @@
 #include "db/test-utils-db.h"
 #include "db/v6/db.h"
 #include "db/v6/internals.h"
-#include "db/v5/station.h"
+#include "db/sql/station.h"
 
 using namespace dballe;
 using namespace dballe::db;
@@ -39,7 +39,7 @@ struct dbv6_attr_shar : public dballe::tests::db_test
         if (!has_db()) return;
         at = &v6().attr();
 
-        db::v5::Station& st = v6().station();
+        db::sql::Station& st = v6().station();
         db::v6::LevTr& lt = v6().lev_tr();
         db::v6::Data& da = v6().data();
 

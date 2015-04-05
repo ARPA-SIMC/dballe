@@ -425,7 +425,7 @@ unsigned CursorBest::test_iterate(FILE* dump)
 
 void CursorBest::load(const QueryBuilder& qb)
 {
-    db::v5::Repinfo& ri = db.repinfo();
+    db::sql::Repinfo& ri = db.repinfo();
     bool first = true;
     SQLRecord best;
 

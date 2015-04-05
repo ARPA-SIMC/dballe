@@ -22,9 +22,9 @@
 #include "repinfo.h"
 #include "dballe/db/sql.h"
 #include "dballe/db/odbc/internals.h"
-#include "dballe/db/odbc/repinfo.h"
+//#include "dballe/db/odbc/repinfo.h"
 #include "dballe/db/sqlite/internals.h"
-#include "dballe/db/sqlite/repinfo.h"
+//#include "dballe/db/sqlite/repinfo.h"
 #include "dballe/core/record.h"
 #include "dballe/core/csv.h"
 #include <wreport/error.h>
@@ -35,13 +35,14 @@ using namespace std;
 
 namespace dballe {
 namespace db {
-namespace v5 {
+namespace sql {
 
 Repinfo::Repinfo(Connection& conn)
     : conn(conn)
 {
 }
 
+#if 0
 std::unique_ptr<Repinfo> Repinfo::create(Connection& conn)
 {
     if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(&conn))
@@ -51,6 +52,7 @@ std::unique_ptr<Repinfo> Repinfo::create(Connection& conn)
     else
         throw error_unimplemented("v5 DB repinfo not yet implemented for non-ODBC connectors");
 }
+#endif
 
 void Repinfo::to_record(int id, Record& rec)
 {
@@ -67,7 +69,7 @@ void Repinfo::to_record(int id, Record& rec)
 
 const char* Repinfo::get_rep_memo(int id)
 {
-    if (const v5::repinfo::Cache* c = get_by_id(id))
+    if (const repinfo::Cache* c = get_by_id(id))
         return c->memo.c_str();
     error_notfound::throwf("rep_memo not found for report code %d", id);
 }

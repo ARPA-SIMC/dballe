@@ -317,14 +317,14 @@ DB::~DB()
     if (conn) delete conn;
 }
 
-v5::Repinfo& DB::repinfo()
+sql::Repinfo& DB::repinfo()
 {
     if (m_repinfo == NULL)
         m_repinfo = create_repinfo(*conn).release();
     return *m_repinfo;
 }
 
-v5::Station& DB::station()
+sql::Station& DB::station()
 {
     if (m_station == NULL)
         m_station = create_station(*conn).release();
@@ -389,7 +389,7 @@ void DB::delete_tables()
 
 void DB::disappear()
 {
-    v5::Station::reset_db(*conn);
+    sql::Station::reset_db(*conn);
 
     // Drop existing tables
     delete_tables();
@@ -454,7 +454,7 @@ std::map<std::string, int> DB::get_repinfo_priorities()
 
 int DB::get_rep_cod(const Query& rec)
 {
-    v5::Repinfo& ri = repinfo();
+    sql::Repinfo& ri = repinfo();
     if (const char* memo = rec.key_peek_value(DBA_KEY_REP_MEMO))
         return ri.get_id(memo);
     else
@@ -478,7 +478,7 @@ int DB::obtain_station(const Query& rec, bool can_add)
     if (const char* val = rec.key_peek_value(DBA_KEY_ANA_ID))
         return strtol(val, 0, 10);
 
-    v5::Station& s = station();
+    sql::Station& s = station();
 
     // Look for the key data in the record
     int lat;

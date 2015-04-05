@@ -91,7 +91,7 @@ void PostgreSQLRepinfo::update(const char* deffile, int* added, int* deleted, in
     *added = *deleted = *updated = 0;
 
     // Read the new repinfo data from file
-    vector<repinfo::Cache> newitems = read_repinfo_file(deffile);
+    vector<sql::repinfo::Cache> newitems = read_repinfo_file(deffile);
 
     {
         auto transaction(conn.transaction());
@@ -144,7 +144,7 @@ void PostgreSQLRepinfo::update(const char* deffile, int* added, int* deleted, in
         /* Insert the new items */
         if (!newitems.empty())
         {
-            for (vector<repinfo::Cache>::const_iterator i = newitems.begin();
+            for (vector<sql::repinfo::Cache>::const_iterator i = newitems.begin();
                     i != newitems.end(); ++i)
             {
                 Querybuf query(512);

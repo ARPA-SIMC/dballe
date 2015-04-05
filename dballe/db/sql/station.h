@@ -1,7 +1,7 @@
 /*
  * db/station - station table management
  *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_V5_STATION_H
-#define DBALLE_DB_V5_STATION_H
+#ifndef DBALLE_DB_SQL_STATION_H
+#define DBALLE_DB_SQL_STATION_H
 
 /** @file
  * @ingroup db
@@ -41,13 +41,13 @@ struct Record;
 namespace db {
 struct Connection;
 
-namespace v5 {
+namespace sql {
 
 struct Station
 {
 public:
     /// Instantiate a Station object for this connection
-    static std::unique_ptr<Station> create(Connection& conn);
+    //static std::unique_ptr<Station> create(Connection& conn);
 
     virtual ~Station();
 

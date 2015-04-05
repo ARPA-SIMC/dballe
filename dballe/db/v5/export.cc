@@ -23,7 +23,7 @@
 #include "cursor.h"
 #include "dballe/db/odbc/internals.h"
 #include "dballe/db/modifiers.h"
-#include "dballe/db/v5/station.h"
+#include "dballe/db/sql/station.h"
 #include "attr.h"
 
 #include <dballe/msg/msg.h>

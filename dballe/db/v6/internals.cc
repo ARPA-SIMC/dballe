@@ -50,26 +50,26 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
-std::unique_ptr<v5::Repinfo> create_repinfo(Connection& conn)
+std::unique_ptr<sql::Repinfo> create_repinfo(Connection& conn)
 {
     if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(&conn))
-        return unique_ptr<v5::Repinfo>(new v6::ODBCRepinfo(*c));
+        return unique_ptr<sql::Repinfo>(new v6::ODBCRepinfo(*c));
     else if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(&conn))
-        return unique_ptr<v5::Repinfo>(new v6::SQLiteRepinfo(*c));
+        return unique_ptr<sql::Repinfo>(new v6::SQLiteRepinfo(*c));
     else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(&conn))
-        return unique_ptr<v5::Repinfo>(new v6::PostgreSQLRepinfo(*c));
+        return unique_ptr<sql::Repinfo>(new v6::PostgreSQLRepinfo(*c));
     else
         throw error_unimplemented("v6 DB repinfo only implemented for ODBC and SQLite connectors");
 }
 
-std::unique_ptr<v5::Station> create_station(Connection& conn)
+std::unique_ptr<sql::Station> create_station(Connection& conn)
 {
     if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(&conn))
-        return unique_ptr<v5::Station>(new v6::ODBCStation(*c));
+        return unique_ptr<sql::Station>(new v6::ODBCStation(*c));
     else if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(&conn))
-        return unique_ptr<v5::Station>(new v6::SQLiteStation(*c));
+        return unique_ptr<sql::Station>(new v6::SQLiteStation(*c));
     else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(&conn))
-        return unique_ptr<v5::Station>(new v6::PostgreSQLStation(*c));
+        return unique_ptr<sql::Station>(new v6::PostgreSQLStation(*c));
     else
         throw error_unimplemented("v6 DB station not yet implemented for non-ODBC connectors");
 }

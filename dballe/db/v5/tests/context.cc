@@ -21,7 +21,7 @@
 #include "db/odbc/internals.h"
 #include "db/v5/db.h"
 #include "db/v5/context.h"
-#include "db/v5/station.h"
+#include "db/sql/station.h"
 
 using namespace dballe;
 using namespace dballe::db;
@@ -39,7 +39,7 @@ struct dbv5_context_shar : public dballe::tests::db_test
     {
         if (!has_db()) return;
         co = &v5().context();
-        Station& st = v5().station();
+        sql::Station& st = v5().station();
 
         // Insert a mobile station
         wassert(actual(st.obtain_id(4500000, 1100000, "ciao")) == 1);

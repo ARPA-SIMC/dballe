@@ -1,7 +1,7 @@
 /*
- * db/v5/repinfo - repinfo table management
+ * db/sql/repinfo - repinfo table management
  *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_V5_REPINFO_H
-#define DBALLE_DB_V5_REPINFO_H
+#ifndef DBALLE_DB_SQL_REPINFO_H
+#define DBALLE_DB_SQL_REPINFO_H
 
 /** @file
  * @ingroup db
@@ -39,7 +39,7 @@ struct Record;
 namespace db {
 struct Connection;
 
-namespace v5 {
+namespace sql {
 
 namespace repinfo {
 
@@ -96,7 +96,7 @@ struct Repinfo
     Repinfo(Connection& conn);
     virtual ~Repinfo() {}
 
-    static std::unique_ptr<Repinfo> create(Connection& conn);
+    //static std::unique_ptr<Repinfo> create(Connection& conn);
 
     /**
      * Fill repinfo information in a Record based on the repinfo entry with the

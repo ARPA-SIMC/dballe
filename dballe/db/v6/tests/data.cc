@@ -19,7 +19,7 @@
 
 #include "db/test-utils-db.h"
 #include "db/v6/db.h"
-#include "db/v5/station.h"
+#include "db/sql/station.h"
 #include "db/v6/internals.h"
 
 using namespace dballe;
@@ -40,7 +40,7 @@ struct dbv6_data_shar : public dballe::tests::db_test
         db::v6::DB& v6db = v6();
         da = &v6db.data();
 
-        db::v5::Station& st = v6db.station();
+        db::sql::Station& st = v6db.station();
         db::v6::LevTr& lt = v6db.lev_tr();
 
         // Insert a mobile station

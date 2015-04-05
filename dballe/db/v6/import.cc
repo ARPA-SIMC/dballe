@@ -21,7 +21,7 @@
 
 #include "db.h"
 #include "dballe/db/sql.h"
-#include "dballe/db/v5/station.h"
+#include "dballe/db/sql/station.h"
 #include "internals.h"
 
 #include <dballe/msg/msgs.h>
@@ -43,7 +43,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 	// Check if the station is mobile
     bool mobile = msg.get_ident_var() != NULL;
 	
-    v5::Station& st = station();
+    sql::Station& st = station();
     LevTr& lt = lev_tr();
     Data& dd = data();
     Attr& dq = attr();

@@ -21,8 +21,8 @@
 
 #include "db.h"
 #include "dballe/db/odbc/internals.h"
-#include "dballe/db/v5/repinfo.h"
-#include "station.h"
+#include "dballe/db/sql/repinfo.h"
+#include "dballe/db/sql/station.h"
 #include "context.h"
 #include "data.h"
 #include "attr.h"
@@ -59,7 +59,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 	// Check if the station is mobile
     bool mobile = msg.get_ident_var() != NULL;
 
-    Station& st = station();
+    sql::Station& st = station();
     Context& dc = context();
     Data& dd = data();
     Attr& dq = attr();

@@ -20,10 +20,18 @@
  */
 
 #include "db.h"
+#include "dballe/db/sqlite/internals.h"
+#include "dballe/db/postgresql/internals.h"
 #include "dballe/db/odbc/internals.h"
 #include "dballe/db/modifiers.h"
-#include "repinfo.h"
-#include "station.h"
+#include "dballe/db/sql/repinfo.h"
+#include "dballe/db/sqlite/repinfo.h"
+#include "dballe/db/postgresql/repinfo.h"
+#include "dballe/db/odbc/repinfo.h"
+#include "dballe/db/sql/station.h"
+#include "dballe/db/sqlite/station.h"
+#include "dballe/db/postgresql/station.h"
+#include "dballe/db/odbc/station.h"
 #include "context.h"
 #include "data.h"
 #include "cursor.h"
@@ -349,17 +357,35 @@ void dba_db_delete(dba_db db)
 }
 #endif
 
-Repinfo& DB::repinfo()
+sql::Repinfo& DB::repinfo()
 {
     if (m_repinfo == NULL)
-        m_repinfo = Repinfo::create(*conn).release();
+    {
+        if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(conn))
+            m_repinfo = new v5::ODBCRepinfo(*c);
+        else if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(conn))
+            m_repinfo = new v5::SQLiteRepinfo(*c);
+        else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(conn))
+            m_repinfo = new v5::PostgreSQLRepinfo(*c);
+        else
+            throw error_unimplemented("v5 DB repinfo only implemented for ODBC and SQLite connectors");
+    }
     return *m_repinfo;
 }
 
-Station& DB::station()
+sql::Station& DB::station()
 {
     if (m_station == NULL)
-        m_station = Station::create(*this->conn).release();
+    {
+        if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(conn))
+            m_station = new v5::ODBCStation(*c);
+        else if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(conn))
+            m_station = new v5::SQLiteStation(*c);
+        else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(conn))
+            m_station = new v5::PostgreSQLStation(*c);
+        else
+            throw error_unimplemented("v5 DB station not yet implemented for non-ODBC connectors");
+    }
     return *m_station;
 }
 
@@ -465,7 +491,7 @@ void DB::delete_tables()
 
 void DB::disappear()
 {
-    Station::reset_db(*conn);
+    sql::Station::reset_db(*conn);
 
     /* Drop existing tables */
     delete_tables();
@@ -528,7 +554,7 @@ std::map<std::string, int> DB::get_repinfo_priorities()
 
 int DB::get_rep_cod(const Query& rec)
 {
-    Repinfo& ri = repinfo();
+    sql::Repinfo& ri = repinfo();
     if (const char* memo = rec.key_peek_value(DBA_KEY_REP_MEMO))
         return ri.get_id(memo);
     else
@@ -601,7 +627,7 @@ int DB::obtain_station(const Query& rec, bool can_add)
     if (const char* val = rec.key_peek_value(DBA_KEY_ANA_ID))
         return strtol(val, 0, 10);
 
-    Station& s = station();
+    sql::Station& s = station();
 
     // Look for the key data in the record
     int lat;

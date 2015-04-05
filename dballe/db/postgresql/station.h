@@ -28,7 +28,7 @@
  * Station table management used by the db module.
  */
 
-#include <dballe/db/v5/station.h>
+#include <dballe/db/sql/station.h>
 #include <functional>
 #include <memory>
 
@@ -42,7 +42,7 @@ struct PostgreSQLConnection;
 namespace postgresql {
 struct Result;
 
-class StationBase : public v5::Station
+class StationBase : public sql::Station
 {
 protected:
     /**

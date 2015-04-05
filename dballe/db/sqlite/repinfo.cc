@@ -105,7 +105,7 @@ void SQLiteRepinfo::update(const char* deffile, int* added, int* deleted, int* u
     *added = *deleted = *updated = 0;
 
     // Read the new repinfo data from file
-    vector<repinfo::Cache> newitems = read_repinfo_file(deffile);
+    vector<sql::repinfo::Cache> newitems = read_repinfo_file(deffile);
 
     {
         auto transaction(conn.transaction());
@@ -165,7 +165,7 @@ void SQLiteRepinfo::update(const char* deffile, int* added, int* deleted, int* u
                      VALUES (?, ?, ?, ?, ?, ?)
             )");
 
-            for (vector<repinfo::Cache>::const_iterator i = newitems.begin();
+            for (vector<sql::repinfo::Cache>::const_iterator i = newitems.begin();
                     i != newitems.end(); ++i)
             {
                 stm->bind(
