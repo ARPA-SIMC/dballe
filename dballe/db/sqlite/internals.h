@@ -61,7 +61,6 @@ protected:
 
 protected:
     void impl_exec_void(const std::string& query) override;
-    void impl_exec_void_int(const std::string& query, int arg1) override;
     void impl_exec_void_string(const std::string& query, const std::string& arg1) override;
     void impl_exec_void_string_string(const std::string& query, const std::string& arg1, const std::string& arg2) override;
     void init_after_connect();

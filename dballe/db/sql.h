@@ -72,7 +72,6 @@ protected:
      * Implementations of some commonly used pattern of one-shot exec queries
      */
     virtual void impl_exec_void(const std::string& query) = 0;
-    virtual void impl_exec_void_int(const std::string& query, int arg1) = 0;
     virtual void impl_exec_void_string(const std::string& query, const std::string& arg1) = 0;
     virtual void impl_exec_void_string_string(const std::string& query, const std::string& arg1, const std::string& arg2) = 0;
 
@@ -97,9 +96,6 @@ public:
 
     /// Execute a one-shot query
     void exec(const std::string& query) { impl_exec_void(query); }
-
-    /// Execute a one-shot query
-    void exec(const std::string& query, int arg1) { impl_exec_void_int(query, arg1); }
 
     /// Execute a one-shot query
     void exec(const std::string& query, const std::string& arg1) { impl_exec_void_string(query, arg1); }

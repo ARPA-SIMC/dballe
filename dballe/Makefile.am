@@ -3,7 +3,7 @@
 EXTRA_DIST=
 CLEANFILES=
 
-AM_CPPFLAGS = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) -I$(top_builddir) $(WREPORT_CFLAGS) $(SQLITE3_CFLAGS) $(LUA_CFLAGS)
+AM_CPPFLAGS = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) -I$(top_builddir) $(WREPORT_CFLAGS) $(SQLITE3_CFLAGS) $(LIBPQ_CFLAGS) $(LUA_CFLAGS)
 
 #
 # Autobuilt files
@@ -108,6 +108,16 @@ nobase_dist_dballeinclude_HEADERS = \
 	simple/simple.h \
 	simple/commonapi.h \
 	simple/msgapi.h
+if HAVE_LIBPQ
+nobase_dist_dballeinclude_HEADERS += \
+	db/postgresql/internals.h \
+	db/postgresql/repinfo.h \
+	db/postgresql/station.h \
+	db/postgresql/v6_levtr.h \
+	db/postgresql/v6_data.h \
+	db/postgresql/v6_attr.h \
+	db/postgresql/v6_run_query.h
+endif
 if HAVE_ODBC
 nobase_dist_dballeinclude_HEADERS += \
 	db/odbc/internals.h \
@@ -215,7 +225,16 @@ libdballe_la_SOURCES = \
 	simple/commonapi.cc \
 	simple/msgapi.cc \
 	simple/dbapi.cc
-
+if HAVE_LIBPQ
+libdballe_la_SOURCES += \
+	db/postgresql/internals.cc
+#	db/postgresql/repinfo.cc \
+#	db/postgresql/station.cc \
+#	db/postgresql/v6_levtr.cc \
+#	db/postgresql/v6_data.cc \
+#	db/postgresql/v6_attr.cc \
+#	db/postgresql/v6_run_query.cc
+endif
 if HAVE_ODBC
 libdballe_la_SOURCES += \
 	db/odbc/internals.cc \
@@ -236,7 +255,7 @@ libdballe_la_SOURCES += \
 	db/v5/export.cc
 endif
 
-libdballe_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(WREPORT_LIBS) $(SQLITE3_LIBS) $(LUA_LIBS)
+libdballe_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(WREPORT_LIBS) $(SQLITE3_LIBS) $(LIBPQ_LIBS) $(LUA_LIBS)
 #libdballe_la_LDFLAGS = -lstdc++ -version-info @LIBDBALLE_VERSION_INFO@
 
 # filter.cc and sat.cc are here for now until I manage to turn them into a working system
@@ -337,6 +356,10 @@ tut_test_SOURCES += \
 	msg/tests/lua.cc \
 	msg/test-utils-lua.cc
 endif
+if HAVE_LIBPQ
+tut_test_SOURCES += \
+	db/postgresql/internals-tut.cc
+endif
 if HAVE_ODBC
 tut_test_SOURCES += \
 	db/odbc/internals-tut.cc \
@@ -353,6 +376,7 @@ tut_test_LDADD = \
 	$(WREPORT_LIBS) \
 	$(WREPORT_TEST_LIBS) \
 	$(SQLITE3_LIBS) \
+	$(LIBPQ_LIBS) \
 	$(LUA_LIBS) \
 	$(WIBBLE_LIBS)
 
@@ -368,6 +392,7 @@ dump_core_info_LDADD = \
 	libdballe.la \
 	$(WREPORT_LIBS) \
 	$(SQLITE3_LIBS) \
+	$(LIBPQ_LIBS) \
 	$(LUA_LIBS)
 
 # core

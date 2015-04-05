@@ -141,6 +141,15 @@ PKG_CHECK_EXISTS([libwreport-test >= 2.11], [have_wreport_test=yes], [have_wrepo
 dnl Check for sqlite3
 PKG_CHECK_MODULES(SQLITE3, sqlite3)
 
+dnl Check for libpq
+PKG_CHECK_EXISTS(libpq, [have_libpq=yes], [have_libpq=no])
+if test x$have_libpq = xyes
+then
+    PKG_CHECK_MODULES(LIBPQ, libpq)
+    AC_DEFINE([HAVE_LIBPQ], 1, [PostgreSQL is available])
+fi
+AM_CONDITIONAL([HAVE_LIBPQ], [test x"$have_libpq" = x"yes"])
+
 dnl Check for unixodbc
 have_odbc=yes
 AC_CHECK_HEADER(sql.h, AC_DEFINE(HAVE_ODBC_H, 1, sql.h (part of unixodbc) has been found),
@@ -306,6 +315,7 @@ AC_MSG_NOTICE([
 ===================================================
 $PACKAGE_NAME-$PACKAGE_VERSION configuration:
 AS_HELP_STRING([ODBC:], [$have_odbc])
+AS_HELP_STRING([PostgreSQL:], [$have_libpq])
 AS_HELP_STRING([Fortran:], [$enable_dballef])
 AS_HELP_STRING([Python:], [$enable_dballe_python])
 AS_HELP_STRING([documentation:], [$enable_docs])

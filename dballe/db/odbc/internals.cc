@@ -351,13 +351,6 @@ void ODBCConnection::impl_exec_void(const std::string& query)
     stm.dbv5_exec_direct_and_close(query.c_str());
 }
 
-void ODBCConnection::impl_exec_void_int(const std::string& query, int arg1)
-{
-    ODBCStatement stm(*this);
-    stm.bind_in(1, arg1);
-    stm.dbv5_exec_direct_and_close(query.c_str());
-}
-
 void ODBCConnection::impl_exec_void_string(const std::string& query, const std::string& arg1)
 {
     ODBCStatement stm(*this);

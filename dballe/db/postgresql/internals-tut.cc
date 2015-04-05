@@ -27,26 +27,27 @@ using namespace std;
 
 namespace tut {
 
-struct db_sqlite_internals_shar
+struct db_postgresql_internals_shar
 {
-    SQLiteConnection conn;
+    PostgreSQLConnection conn;
 
-    db_sqlite_internals_shar()
+    db_postgresql_internals_shar()
     {
-        conn.open_memory();
+        // http://www.postgresql.org/docs/9.3/static/libpq-connect.html#LIBPQ-CONNSTRING
+        conn.open("postgresql://enrico@/enrico");
     }
 
-    ~db_sqlite_internals_shar()
+    ~db_postgresql_internals_shar()
     {
     }
 
     void reset()
     {
         conn.drop_table_if_exists("dballe_test");
-        conn.exec("CREATE TABLE dballe_test (val INTEGER NOT NULL)");
+        conn.exec_no_data("CREATE TABLE dballe_test (val INTEGER NOT NULL)");
     }
 };
-TESTGRP(db_sqlite_internals);
+TESTGRP(db_postgresql_internals);
 
 // Test querying int values
 template<> template<>
@@ -54,18 +55,16 @@ void to::test<1>()
 {
     reset();
 
-    conn.exec("INSERT INTO dballe_test VALUES (1)");
-    conn.exec("INSERT INTO dballe_test VALUES (2)");
+    conn.exec_no_data("INSERT INTO dballe_test VALUES (1)");
+    conn.exec_no_data("INSERT INTO dballe_test VALUES (2)");
 
-    auto s = conn.sqlitestatement("SELECT val FROM dballe_test");
+    auto s = conn.exec("SELECT val FROM dballe_test");
+    wassert(actual(s.rowcount()) == 2);
 
     int val = 0;
-    unsigned count = 0;
-    s->execute([&]() {
-        val += s->column_int(0);
-        ++count;
-    });
-    wassert(actual(count) == 2);
+    for (unsigned row = 0; row < 2; ++row)
+        val += s.get_int4(row, 0);
+
     wassert(actual(val) == 3);
 }
 
@@ -75,25 +74,25 @@ void to::test<2>()
 {
     reset();
 
-    conn.exec("CREATE TABLE dballe_testnull (val INTEGER)");
-    conn.exec("INSERT INTO dballe_testnull VALUES (NULL)");
-    conn.exec("INSERT INTO dballe_testnull VALUES (42)");
+    conn.drop_table_if_exists("dballe_testnull");
+    conn.exec_no_data("CREATE TABLE dballe_testnull (val INTEGER)");
+    conn.exec_no_data("INSERT INTO dballe_testnull VALUES (NULL)");
+    conn.exec_no_data("INSERT INTO dballe_testnull VALUES (42)");
 
-    auto s = conn.sqlitestatement("SELECT val FROM dballe_testnull");
+    auto s = conn.exec("SELECT val FROM dballe_testnull");
+    wassert(actual(s.rowcount()) == 2);
 
     int val = 0;
-    unsigned count = 0;
     unsigned countnulls = 0;
-    s->execute([&]() {
-        if (s->column_isnull(0))
+    for (unsigned row = 0; row < 2; ++row)
+    {
+        if (s.is_null(row, 0))
             ++countnulls;
         else
-            val += s->column_int(0);
-        ++count;
-    });
+            val += s.get_int4(row, 0);
+    }
 
     wassert(actual(val) == 42);
-    wassert(actual(count) == 2);
     wassert(actual(countnulls) == 1);
 }
 
@@ -103,17 +102,16 @@ void to::test<3>()
 {
     reset();
 
-    conn.exec("INSERT INTO dballe_test VALUES (0xFFFFFFFE)");
+    conn.drop_table_if_exists("dballe_testbig");
+    conn.exec_no_data("CREATE TABLE dballe_testbig (val BIGINT)");
+    conn.exec_no_data("INSERT INTO dballe_testbig VALUES (x'FFFFFFFE'::bigint)");
 
-    auto s = conn.sqlitestatement("SELECT val FROM dballe_test");
+    auto s = conn.exec("SELECT val FROM dballe_testbig");
+    wassert(actual(s.rowcount()) == 1);
 
     unsigned val = 0;
-    unsigned count = 0;
-    s->execute([&]() {
-        val += s->column_int64(0);
-        ++count;
-    });
-    wassert(actual(count) == 1);
+    for (unsigned row = 0; row < 1; ++row)
+        val += s.get_int8(row, 0);
     wassert(actual(val) == 0xFFFFFFFE);
 }
 
@@ -123,20 +121,17 @@ void to::test<5>()
 {
     reset();
 
-    char buf[200];
-    snprintf(buf, 200, "INSERT INTO dballe_test VALUES (%d)", (int)WR_VAR(3, 1, 12));
-    conn.exec(buf);
+    conn.drop_table_if_exists("dballe_testshort");
+    conn.exec_no_data("CREATE TABLE dballe_testshort (val SMALLINT)");
+    conn.exec_no_data("INSERT INTO dballe_testshort VALUES (123)");
 
-    auto s = conn.sqlitestatement("SELECT val FROM dballe_test");
+    auto s = conn.exec("SELECT val FROM dballe_testshort");
+    wassert(actual(s.rowcount()) == 1);
 
     Varcode val = 0;
-    unsigned count = 0;
-    s->execute([&]() {
-        val = (Varcode)s->column_int(0);
-        ++count;
-    });
-    wassert(actual(count) == 1);
-    wassert(actual(val) == WR_VAR(3, 1, 12));
+    for (unsigned row = 0; row < 1; ++row)
+        val += s.get_int2(row, 0);
+    wassert(actual(val) == 123);
 }
 
 // Test has_tables
@@ -162,17 +157,19 @@ void to::test<7>()
     wassert(actual(conn.has_table("dballe_settings")).istrue());
 
     wassert(actual(conn.get_setting("test_key")) == "42");
+    wassert(actual(conn.get_setting("test_key1")) == "");
 }
 
 // Test auto_increment
 template<> template<>
 void to::test<8>()
 {
-    conn.exec("CREATE TABLE dballe_testai (id INTEGER PRIMARY KEY, val INTEGER)");
-    conn.exec("INSERT INTO dballe_testai (val) VALUES (42)");
-    wassert(actual(conn.get_last_insert_id()) == 1);
-    conn.exec("INSERT INTO dballe_testai (val) VALUES (43)");
-    wassert(actual(conn.get_last_insert_id()) == 2);
+    conn.drop_table_if_exists("dballe_testai");
+    conn.exec_no_data("CREATE TABLE dballe_testai (id SERIAL PRIMARY KEY, val INTEGER)");
+    auto r1 = conn.exec_one_row("INSERT INTO dballe_testai (id, val) VALUES (DEFAULT, 42) RETURNING id");
+    wassert(actual(r1.get_int4(0, 0)) == 1);
+    auto r2 = conn.exec_one_row("INSERT INTO dballe_testai (id, val) VALUES (DEFAULT, 43) RETURNING id");
+    wassert(actual(r2.get_int4(0, 0)) == 2);
 }
 
 }

@@ -1,7 +1,7 @@
 /*
- * db/sqlite/internals - Implementation infrastructure for the SQLite DB connection
+ * db/sqlite/internals - Implementation infrastructure for the PostgreSQL DB connection
  *
- * Copyright (C) 2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,13 +27,8 @@
 #include "dballe/core/vasprintf.h"
 #include "dballe/db/querybuf.h"
 #include <cstdlib>
-#if 0
-#include <cstring>
-#include <limits.h>
-#include <unistd.h>
-#include "dballe/core/verbose.h"
-#include <iostream>
-#endif
+#include <arpa/inet.h>
+#include <endian.h>
 
 using namespace std;
 using namespace wreport;
@@ -41,26 +36,94 @@ using namespace wreport;
 namespace dballe {
 namespace db {
 
-namespace {
+namespace postgresql {
+
+void Result::expect_no_data(const std::string& query)
+{
+    switch (PQresultStatus(res))
+    {
+        case PGRES_COMMAND_OK:
+            break;
+        case PGRES_TUPLES_OK:
+            throw error_postgresql("tuples_ok", "data (possibly an empty set) returned by " + query);
+        default:
+            throw error_postgresql(res, "executing " + query);
+    }
+}
+
+void Result::expect_result(const std::string& query)
+{
+    switch (PQresultStatus(res))
+    {
+        case PGRES_TUPLES_OK:
+            break;
+        case PGRES_COMMAND_OK:
+            throw error_postgresql("command_ok", "no data returned by " + query);
+        default:
+            throw error_postgresql(res, "executing " + query);
+    }
+}
+
+void Result::expect_one_row(const std::string& query)
+{
+    switch (PQresultStatus(res))
+    {
+        case PGRES_TUPLES_OK:
+            break;
+        case PGRES_COMMAND_OK:
+            throw error_postgresql("command_ok", "no data returned by " + query);
+        default:
+            throw error_postgresql(res, "executing " + query);
+    }
+    unsigned rows = rowcount();
+    if (rows != 1)
+        error_consistency::throwf("Got %u results instead of 1 when running %s", rows, query.c_str());
+}
+
+void Result::expect_success(const std::string& query)
+{
+    switch (PQresultStatus(res))
+    {
+        case PGRES_TUPLES_OK:
+        case PGRES_COMMAND_OK:
+            break;
+        default:
+            throw error_postgresql(res, "executing " + query);
+    }
+}
+
+/// Return a result value, transmitted in binary as a 4 bit integer
+uint64_t Result::get_int8(unsigned row, unsigned col) const
+{
+    char* val = PQgetvalue(res, row, col);
+    return be64toh(*(uint64_t*)val);
+}
 
 }
 
 
-error_sqlite::error_sqlite(sqlite3* db, const std::string& msg)
+error_postgresql::error_postgresql(PGconn* db, const std::string& msg)
 {
     this->msg = msg;
-    this->msg += ":";
-    this->msg += sqlite3_errmsg(db);
+    this->msg += ": ";
+    this->msg += PQerrorMessage(db);
 }
 
-error_sqlite::error_sqlite(const std::string& dbmsg, const std::string& msg)
+error_postgresql::error_postgresql(PGresult* res, const std::string& msg)
 {
     this->msg = msg;
-    this->msg += ":";
+    this->msg += ": ";
+    this->msg += PQresultErrorMessage(res);
+}
+
+error_postgresql::error_postgresql(const std::string& dbmsg, const std::string& msg)
+{
+    this->msg = msg;
+    this->msg += ": ";
     this->msg += dbmsg;
 }
 
-void error_sqlite::throwf(sqlite3* db, const char* fmt, ...)
+void error_postgresql::throwf(PGconn* db, const char* fmt, ...)
 {
     // Format the arguments
     va_list ap;
@@ -72,242 +135,223 @@ void error_sqlite::throwf(sqlite3* db, const char* fmt, ...)
     // Convert to string
     std::string msg(cmsg);
     free(cmsg);
-    throw error_sqlite(db, msg);
+    throw error_postgresql(db, msg);
 }
 
-SQLiteConnection::SQLiteConnection()
+void error_postgresql::throwf(PGresult* res, const char* fmt, ...)
+{
+    // Format the arguments
+    va_list ap;
+    va_start(ap, fmt);
+    char* cmsg;
+    vasprintf(&cmsg, fmt, ap);
+    va_end(ap);
+
+    // Convert to string
+    std::string msg(cmsg);
+    free(cmsg);
+    throw error_postgresql(res, msg);
+}
+
+PostgreSQLConnection::PostgreSQLConnection()
 {
 }
 
-SQLiteConnection::~SQLiteConnection()
+PostgreSQLConnection::~PostgreSQLConnection()
 {
-    if (db) sqlite3_close(db);
+    if (db) PQfinish(db);
 }
 
-void SQLiteConnection::open_file(const std::string& pathname, int flags)
+void PostgreSQLConnection::open(const std::string& connection_string)
 {
-    int res = sqlite3_open_v2(pathname.c_str(), &db, flags, nullptr);
-    if (res != SQLITE_OK)
-    {
-        // From http://www.sqlite.org/c3ref/open.html
-        // Whether or not an error occurs when it is opened, resources
-        // associated with the database connection handle should be
-        // released by passing it to sqlite3_close() when it is no longer
-        // required.
-        std::string errmsg(sqlite3_errmsg(db));
-        sqlite3_close(db);
-        db = nullptr;
-        throw error_sqlite(errmsg, "opening " + pathname);
-    }
+    db = PQconnectdb(connection_string.c_str());
+    if (PQstatus(db) != CONNECTION_OK)
+        throw error_postgresql(db, "opening " + connection_string);
     init_after_connect();
 }
 
-void SQLiteConnection::open_memory(int flags)
+void PostgreSQLConnection::init_after_connect()
 {
-    open_file(":memory:", flags);
+    server_type = ServerType::POSTGRES;
+    // Hide warning notices, like "table does not exists" in "DROP TABLE ... IF EXISTS"
+    exec_no_data("SET client_min_messages = error");
 }
 
-void SQLiteConnection::open_private_file(int flags)
+void PostgreSQLConnection::pqexec(const std::string& query)
 {
-    open_file("", flags);
+    postgresql::Result res(PQexec(db, query.c_str()));
+    res.expect_success(query);
 }
 
-void SQLiteConnection::init_after_connect()
+void PostgreSQLConnection::pqexec_nothrow(const std::string& query) noexcept
 {
-    server_type = ServerType::SQLITE;
-    // autocommit is off by default when inside a transaction
-    // set_autocommit(false);
-}
-
-void SQLiteConnection::wrap_sqlite3_exec(const std::string& query)
-{
-    char* errmsg;
-    int res = sqlite3_exec(db, query.c_str(), nullptr, nullptr, &errmsg);
-    if (res != SQLITE_OK && errmsg)
+    postgresql::Result res(PQexec(db, query.c_str()));
+    switch (PQresultStatus(res))
     {
-        // http://www.sqlite.org/c3ref/exec.html
-        //
-        // If the 5th parameter to sqlite3_exec() is not NULL then any error
-        // message is written into memory obtained from sqlite3_malloc() and
-        // passed back through the 5th parameter. To avoid memory leaks, the
-        // application should invoke sqlite3_free() on error message strings
-        // returned through the 5th parameter of of sqlite3_exec() after the
-        // error message string is no longer needed.·
-        std::string msg(errmsg);
-        sqlite3_free(errmsg);
-        throw error_sqlite(errmsg, "executing " + query);
+        case PGRES_COMMAND_OK:
+        case PGRES_TUPLES_OK:
+            return;
+        default:
+            fprintf(stderr, "cannot execute '%s': %s\n", query.c_str(), PQresultErrorMessage(res));
     }
 }
 
-void SQLiteConnection::wrap_sqlite3_exec_nothrow(const std::string& query) noexcept
+struct PostgreSQLTransaction : public Transaction
 {
-    char* errmsg;
-    int res = sqlite3_exec(db, query.c_str(), nullptr, nullptr, &errmsg);
-    if (res != SQLITE_OK && errmsg)
-    {
-        // http://www.sqlite.org/c3ref/exec.html
-        //
-        // If the 5th parameter to sqlite3_exec() is not NULL then any error
-        // message is written into memory obtained from sqlite3_malloc() and
-        // passed back through the 5th parameter. To avoid memory leaks, the
-        // application should invoke sqlite3_free() on error message strings
-        // returned through the 5th parameter of of sqlite3_exec() after the
-        // error message string is no longer needed.·
-        fprintf(stderr, "cannot execute '%s': %s\n", query.c_str(), errmsg);
-        sqlite3_free(errmsg);
-    }
-}
-
-struct SQLiteTransaction : public Transaction
-{
-    SQLiteConnection& conn;
+    PostgreSQLConnection& conn;
     bool fired = false;
 
-    SQLiteTransaction(SQLiteConnection& conn) : conn(conn)
+    PostgreSQLTransaction(PostgreSQLConnection& conn) : conn(conn)
     {
     }
-    ~SQLiteTransaction() { if (!fired) rollback_nothrow(); }
+    ~PostgreSQLTransaction() { if (!fired) rollback_nothrow(); }
 
     void commit() override
     {
-        conn.wrap_sqlite3_exec("COMMIT");
+        conn.exec_no_data("COMMIT");
         fired = true;
     }
     void rollback() override
     {
-        conn.wrap_sqlite3_exec("ROLLBACK");
+        conn.exec_no_data("ROLLBACK");
         fired = true;
     }
     void rollback_nothrow()
     {
-        conn.wrap_sqlite3_exec_nothrow("ROLLBACK");
+        conn.pqexec_nothrow("ROLLBACK");
         fired = true;
     }
 };
 
-std::unique_ptr<Transaction> SQLiteConnection::transaction()
+std::unique_ptr<Transaction> PostgreSQLConnection::transaction()
 {
-    wrap_sqlite3_exec("BEGIN");
-    return unique_ptr<Transaction>(new SQLiteTransaction(*this));
+    exec_no_data("BEGIN");
+    return unique_ptr<Transaction>(new PostgreSQLTransaction(*this));
 }
 
-std::unique_ptr<SQLiteStatement> SQLiteConnection::sqlitestatement(const std::string& query)
+/*
+std::unique_ptr<PostgreSQLStatement> PostgreSQLConnection::pqstatement(const std::string& query)
 {
-    return unique_ptr<SQLiteStatement>(new SQLiteStatement(*this, query));
+    return unique_ptr<PostgreSQLStatement>(new PostgreSQLStatement(*this, query));
+}
+*/
+
+void PostgreSQLConnection::impl_exec_void(const std::string& query)
+{
+    pqexec(query);
 }
 
-void SQLiteConnection::impl_exec_void(const std::string& query)
+void PostgreSQLConnection::impl_exec_void_string(const std::string& query, const std::string& arg1)
 {
-    wrap_sqlite3_exec(query);
+    exec(query, arg1);
 }
 
-void SQLiteConnection::impl_exec_void_string(const std::string& query, const std::string& arg1)
+void PostgreSQLConnection::impl_exec_void_string_string(const std::string& query, const std::string& arg1, const std::string& arg2)
 {
-    auto s = sqlitestatement(query);
-    s->bind_val(1, arg1);
-    s->execute();
+    exec(query, arg1, arg2);
 }
 
-void SQLiteConnection::impl_exec_void_string_string(const std::string& query, const std::string& arg1, const std::string& arg2)
+void PostgreSQLConnection::drop_table_if_exists(const char* name)
 {
-    auto s = sqlitestatement(query);
-    s->bind_val(1, arg1);
-    s->bind_val(2, arg2);
-    s->execute();
+    exec_no_data(string("DROP TABLE IF EXISTS ") + name);
 }
 
-void SQLiteConnection::drop_table_if_exists(const char* name)
+void PostgreSQLConnection::drop_sequence_if_exists(const char* name)
 {
-    exec(string("DROP TABLE IF EXISTS ") + name);
+    // We do not use sequences with PostgreSQL
 }
 
-void SQLiteConnection::drop_sequence_if_exists(const char* name)
+int PostgreSQLConnection::get_last_insert_id()
 {
-    // There are no sequences in sqlite, so we just do nothing
+    throw error_unimplemented("last insert id for postgres");
 }
 
-int SQLiteConnection::get_last_insert_id()
+bool PostgreSQLConnection::has_table(const std::string& name)
 {
-    int res = sqlite3_last_insert_rowid(db);
-    if (res == 0)
-        throw error_consistency("no last insert ID value returned from database");
-    return res;
+    using namespace postgresql;
+
+    const char* query = R"(
+        SELECT EXISTS (
+                SELECT 1
+                  FROM pg_catalog.pg_class c
+                  JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                 WHERE n.nspname = 'public'
+                   AND c.relname = $1::text
+        ))";
+
+    Result res = exec_one_row(query, name);
+    return res.get_bool(0, 0);
 }
 
-bool SQLiteConnection::has_table(const std::string& name)
+std::string PostgreSQLConnection::get_setting(const std::string& key)
 {
-    auto stm = sqlitestatement("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?");
-    stm->bind(name);
+    using namespace postgresql;
 
-    bool found = false;
-    int count = 0;;
-    stm->execute_one([&]() {
-        found = true;
-        count += stm->column_int(0);
-    });
-
-    return count > 0;
-}
-
-std::string SQLiteConnection::get_setting(const std::string& key)
-{
     if (!has_table("dballe_settings"))
         return string();
 
-    auto stm = sqlitestatement("SELECT value FROM dballe_settings WHERE \"key\"=?");
-    stm->bind(key);
-    string res;
-    stm->execute_one([&]() {
-        res = stm->column_string(0);
-    });
-
-    return res;
+    const char* query = "SELECT value FROM dballe_settings WHERE \"key\"=$1::text";
+    Result res = exec(query, key);
+    if (res.rowcount() == 0)
+        return string();
+    if (res.rowcount() > 1)
+        error_consistency::throwf("got %d results instead of 1 executing %s", res.rowcount(), query);
+    return res.get_string(0, 0);
 }
 
-void SQLiteConnection::set_setting(const std::string& key, const std::string& value)
+void PostgreSQLConnection::set_setting(const std::string& key, const std::string& value)
 {
     if (!has_table("dballe_settings"))
-        exec("CREATE TABLE dballe_settings (\"key\" CHAR(64) NOT NULL PRIMARY KEY, value CHAR(64) NOT NULL)");
+        exec_no_data("CREATE TABLE dballe_settings (\"key\" TEXT NOT NULL PRIMARY KEY, value TEXT NOT NULL)");
 
-    exec("INSERT OR REPLACE INTO dballe_settings (\"key\", value) VALUES (?, ?)", key, value);
+    auto trans = transaction();
+    exec_no_data("LOCK TABLE dballe_settings IN EXCLUSIVE MODE");
+    auto s = exec_one_row("SELECT EXISTS (SELECT 1 FROM dballe_settings WHERE \"key\"=$1::text)", key);
+    if (s.get_bool(0, 0))
+        exec_no_data("UPDATE dballe_settings SET value=$2::text WHERE \"key\"=$1::text", key, value);
+    else
+        exec_no_data("INSERT INTO dballe_settings (\"key\", value) VALUES ($1::text, $2::text)", key, value);
+    trans->commit();
 }
 
-void SQLiteConnection::drop_settings()
+void PostgreSQLConnection::drop_settings()
 {
     drop_table_if_exists("dballe_settings");
 }
 
-void SQLiteConnection::add_datetime(Querybuf& qb, const int* dt) const
+void PostgreSQLConnection::add_datetime(Querybuf& qb, const int* dt) const
 {
     qb.appendf("'%04d-%02d-%02d %02d:%02d:%02d'", dt[0], dt[1], dt[2], dt[3], dt[4], dt[5]);
 }
 
-int SQLiteConnection::changes()
+int PostgreSQLConnection::changes()
 {
-    return sqlite3_changes(db);
+    throw error_unimplemented("changes");
+    //return sqlite3_changes(db);
 }
 
-SQLiteStatement::SQLiteStatement(SQLiteConnection& conn, const std::string& query)
+#if 0
+PostgreSQLStatement::PostgreSQLStatement(PostgreSQLConnection& conn, const std::string& query)
     : conn(conn)
 {
     // From http://www.sqlite.org/c3ref/prepare.html:
     // If the caller knows that the supplied string is nul-terminated, then
     // there is a small performance advantage to be gained by passing an nByte
     // parameter that is equal to the number of bytes in the input string
-    // including the nul-terminator bytes as this saves SQLite from having to
+    // including the nul-terminator bytes as this saves PostgreSQL from having to
     // make a copy of the input string.
     int res = sqlite3_prepare_v2(conn, query.c_str(), query.size() + 1, &stm, nullptr);
     if (res != SQLITE_OK)
-        error_sqlite::throwf(conn, "cannot compile query '%s'", query.c_str());
+        error_postgresql::throwf(conn, "cannot compile query '%s'", query.c_str());
 }
 
-SQLiteStatement::~SQLiteStatement()
+PostgreSQLStatement::~PostgreSQLStatement()
 {
     // Invoking sqlite3_finalize() on a NULL pointer is a harmless no-op.
     sqlite3_finalize(stm);
 }
 
-Datetime SQLiteStatement::column_datetime(int col)
+Datetime PostgreSQLStatement::column_datetime(int col)
 {
     Datetime res;
     string dt = column_string(col);
@@ -321,7 +365,7 @@ Datetime SQLiteStatement::column_datetime(int col)
     return res;
 }
 
-void SQLiteStatement::execute(std::function<void()> on_row)
+void PostgreSQLStatement::execute(std::function<void()> on_row)
 {
     while (true)
     {
@@ -346,7 +390,7 @@ void SQLiteStatement::execute(std::function<void()> on_row)
     }
 }
 
-void SQLiteStatement::execute_one(std::function<void()> on_row)
+void PostgreSQLStatement::execute_one(std::function<void()> on_row)
 {
     bool has_result = false;
     while (true)
@@ -373,7 +417,7 @@ void SQLiteStatement::execute_one(std::function<void()> on_row)
     }
 }
 
-void SQLiteStatement::execute()
+void PostgreSQLStatement::execute()
 {
     while (true)
     {
@@ -391,69 +435,70 @@ void SQLiteStatement::execute()
     }
 }
 
-void SQLiteStatement::bind_null_val(int idx)
+void PostgreSQLStatement::bind_null_val(int idx)
 {
     if (sqlite3_bind_null(stm, idx) != SQLITE_OK)
-        throw error_sqlite(conn, "cannot bind a NULL input column");
+        throw error_postgresql(conn, "cannot bind a NULL input column");
 }
 
-void SQLiteStatement::bind_val(int idx, int val)
+void PostgreSQLStatement::bind_val(int idx, int val)
 {
     if (sqlite3_bind_int(stm, idx, val) != SQLITE_OK)
-        throw error_sqlite(conn, "cannot bind an int input column");
+        throw error_postgresql(conn, "cannot bind an int input column");
 }
 
-void SQLiteStatement::bind_val(int idx, unsigned val)
+void PostgreSQLStatement::bind_val(int idx, unsigned val)
 {
     if (sqlite3_bind_int64(stm, idx, val) != SQLITE_OK)
-        throw error_sqlite(conn, "cannot bind an int64 input column");
+        throw error_postgresql(conn, "cannot bind an int64 input column");
 }
 
-void SQLiteStatement::bind_val(int idx, unsigned short val)
+void PostgreSQLStatement::bind_val(int idx, unsigned short val)
 {
     if (sqlite3_bind_int(stm, idx, val) != SQLITE_OK)
-        throw error_sqlite(conn, "cannot bind an int input column");
+        throw error_postgresql(conn, "cannot bind an int input column");
 }
 
-void SQLiteStatement::bind_val(int idx, const Datetime& val)
+void PostgreSQLStatement::bind_val(int idx, const Datetime& val)
 {
     char* buf;
     int size = asprintf(&buf, "%04d-%02d-%02d %02d:%02d:%02d",
             val.date.year, val.date.month, val.date.day,
             val.time.hour, val.time.minute, val.time.second);
     if (sqlite3_bind_text(stm, idx, buf, size, free) != SQLITE_OK)
-        throw error_sqlite(conn, "cannot bind a text (from Datetime) input column");
+        throw error_postgresql(conn, "cannot bind a text (from Datetime) input column");
 }
 
-void SQLiteStatement::bind_val(int idx, const char* val)
+void PostgreSQLStatement::bind_val(int idx, const char* val)
 {
     if (sqlite3_bind_text(stm, idx, val, -1, SQLITE_STATIC))
-        throw error_sqlite(conn, "cannot bind a text input column");
+        throw error_postgresql(conn, "cannot bind a text input column");
 }
 
-void SQLiteStatement::bind_val(int idx, const std::string& val)
+void PostgreSQLStatement::bind_val(int idx, const std::string& val)
 {
     if (sqlite3_bind_text(stm, idx, val.data(), val.size(), SQLITE_STATIC))
-        throw error_sqlite(conn, "cannot bind a text input column");
+        throw error_postgresql(conn, "cannot bind a text input column");
 }
 
-void SQLiteStatement::wrap_sqlite3_reset()
+void PostgreSQLStatement::wrap_sqlite3_reset()
 {
     if (sqlite3_reset(stm) != SQLITE_OK)
-        throw error_sqlite(conn, "cannot reset the query");
+        throw error_postgresql(conn, "cannot reset the query");
 }
 
-void SQLiteStatement::wrap_sqlite3_reset_nothrow() noexcept
+void PostgreSQLStatement::wrap_sqlite3_reset_nothrow() noexcept
 {
     sqlite3_reset(stm);
 }
 
-void SQLiteStatement::reset_and_throw(const std::string& errmsg)
+void PostgreSQLStatement::reset_and_throw(const std::string& errmsg)
 {
     std::string sqlite_errmsg(sqlite3_errmsg(conn));
     wrap_sqlite3_reset_nothrow();
-    throw error_sqlite(sqlite_errmsg, errmsg);
+    throw error_postgresql(sqlite_errmsg, errmsg);
 }
+#endif
 
 #if 0
 bool ODBCStatement::fetch()

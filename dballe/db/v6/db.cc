@@ -659,19 +659,19 @@ void DB::attr_insert(int id_data, wreport::Varcode id_var, const Record& attrs)
 
 void DB::attr_remove(int id_data, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs)
 {
+    Querybuf query(500);
     if (qcs.empty())
         // Delete all attributes
-        conn->exec("DELETE FROM attr WHERE id_data=?", id_data);
+        query.appendf("DELETE FROM attr WHERE id_data=%d", id_data);
     else {
         // Delete only the attributes in qcs
-        Querybuf query(500);
         query.appendf("DELETE FROM attr WHERE id_data=%d AND type IN (", id_data);
         query.start_list(", ");
         for (vector<Varcode>::const_iterator i = qcs.begin(); i != qcs.end(); ++i)
             query.append_listf("%hd", *i);
         query.append(")");
-        conn->exec(query);
     }
+    conn->exec(query);
     // dba_verbose(DBA_VERB_DB_SQL, "Performing query %s for id %d,B%02d%03d\n", query, id_lev_tr, DBA_VAR_X(id_var), DBA_VAR_Y(id_var));
 }
 

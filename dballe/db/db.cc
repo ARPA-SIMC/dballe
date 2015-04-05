@@ -1,7 +1,7 @@
 /*
  * dballe/db - Archive for point-based meteorological data
  *
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,9 @@
 #include "sqlite/internals.h"
 #ifdef HAVE_ODBC
 #include "odbc/internals.h"
+#endif
+#ifdef HAVE_LIBPQ
+#include "postgresql/internals.h"
 #endif
 #include "dballe/msg/msgs.h"
 #include <wreport/error.h>
@@ -78,6 +81,7 @@ bool DB::is_url(const char* str)
     if (strncmp(str, "mem:", 4) == 0) return true;
     if (strncmp(str, "sqlite:", 7) == 0) return true;
     if (strncmp(str, "odbc://", 7) == 0) return true;
+    if (strncmp(str, "postgresql:", 11) == 0) return true;
     if (strncmp(str, "test:", 5) == 0) return true;
     return false;
 }
@@ -121,7 +125,7 @@ unique_ptr<DB> DB::instantiate_db(unique_ptr<Connection> conn)
                 unique_ptr<ODBCConnection> oc(c);
                 return unique_ptr<DB>(new v5::DB(move(oc)));
             } else {
-                throw error_consistency("cannot open a v5 DB with a non-ODBC connector; for example, cannot open a v5 database in a sqlite file");
+                throw error_consistency("cannot open a v5 DB with a non-ODBC connector; for example, cannot open a v5 database in a SQLite file or PostgreSQL database");
             }
 #else
             throw error_unimplemented("ODBC support is not available");
@@ -162,6 +166,12 @@ unique_ptr<DB> DB::connect_from_url(const char* url)
     if (strncmp(url, "mem:", 4) == 0)
     {
         return connect_memory(url + 4);
+    }
+    if (strncmp(url, "postgresql:", 11) == 0)
+    {
+        unique_ptr<PostgreSQLConnection> conn(new PostgreSQLConnection);
+        conn->open(url);
+        return instantiate_db(unique_ptr<Connection>(conn.release()));
     }
     if (strncmp(url, "odbc://", 7) == 0)
     {
