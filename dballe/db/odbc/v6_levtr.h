@@ -29,7 +29,7 @@
  */
 
 #include <dballe/db/db.h>
-#include <dballe/db/v6/internals.h>
+#include <dballe/db/sql/levtr.h>
 #include <dballe/db/odbc/internals.h>
 #include <cstdio>
 #include <memory>
@@ -52,7 +52,7 @@ struct DB;
 /**
  * Precompiled queries to manipulate the lev_tr table
  */
-struct ODBCLevTr : public LevTr
+struct ODBCLevTr : public sql::LevTr
 {
 protected:
     /**

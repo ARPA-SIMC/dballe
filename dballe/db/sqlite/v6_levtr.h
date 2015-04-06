@@ -23,7 +23,7 @@
 #define DBALLE_DB_SQLITE_V6_LEV_TR_H
 
 #include <dballe/db/db.h>
-#include <dballe/db/v6/internals.h>
+#include <dballe/db/sql/levtr.h>
 #include <dballe/db/sqlite/internals.h>
 #include <cstdio>
 #include <memory>
@@ -46,7 +46,7 @@ struct DB;
 /**
  * Precompiled queries to manipulate the lev_tr table
  */
-struct SQLiteLevTr : public LevTr
+struct SQLiteLevTr : public sql::LevTr
 {
 protected:
     /**

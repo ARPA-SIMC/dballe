@@ -41,7 +41,7 @@ struct dbv6_data_shar : public dballe::tests::db_test
         da = &v6db.data();
 
         db::sql::Station& st = v6db.station();
-        db::v6::LevTr& lt = v6db.lev_tr();
+        db::sql::LevTr& lt = v6db.lev_tr();
 
         // Insert a mobile station
         wassert(actual(st.obtain_id(4500000, 1100000, "ciao")) == 1);

@@ -90,6 +90,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/sql.h \
 	db/sql/repinfo.h \
 	db/sql/station.h \
+	db/sql/levtr.h \
 	db/sqlite/internals.h \
 	db/sqlite/repinfo.h \
 	db/sqlite/station.h \
@@ -202,6 +203,7 @@ libdballe_la_SOURCES = \
 	db/sql.cc \
 	db/sql/repinfo.cc \
 	db/sql/station.cc \
+	db/sql/levtr.cc \
 	db/sqlite/internals.cc \
 	db/sqlite/repinfo.cc \
 	db/sqlite/station.cc \
@@ -334,6 +336,7 @@ tut_test_SOURCES = \
 	db/querybuf-tut.cc \
 	db/sql/repinfo-tut.cc \
 	db/sql/station-tut.cc \
+	db/sql/levtr-tut.cc \
 	db/sqlite/internals-tut.cc \
 	db/db-basic-tut.cc \
 	db/db-misc-tut.cc \
@@ -345,7 +348,6 @@ tut_test_SOURCES = \
 	db/mem/repinfo-tut.cc \
 	db/mem/cursor-tut.cc \
 	db/mem/db-tut.cc \
-	db/v6/tests/lev_tr.cc \
 	db/v6/tests/data.cc \
 	db/v6/tests/attr.cc \
 	db/v6/tests/db.cc \

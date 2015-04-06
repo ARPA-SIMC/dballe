@@ -331,17 +331,17 @@ sql::Station& DB::station()
     return *m_station;
 }
 
-LevTr& DB::lev_tr()
+sql::LevTr& DB::lev_tr()
 {
     if (m_lev_tr == NULL)
-        m_lev_tr = v6::LevTr::create(*this).release();
+        m_lev_tr = create_levtr(*conn).release();
     return *m_lev_tr;
 }
 
-LevTrCache& DB::lev_tr_cache()
+sql::LevTrCache& DB::lev_tr_cache()
 {
     if (m_lev_tr_cache == NULL)
-        m_lev_tr_cache = v6::LevTrCache::create(*this).release();
+        m_lev_tr_cache = sql::LevTrCache::create(lev_tr()).release();
     return *m_lev_tr_cache;
 }
 

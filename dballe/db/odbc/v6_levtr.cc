@@ -191,7 +191,7 @@ void ODBCLevTr::remove()
     dstm->execute_and_close();
 }
 
-const LevTr::DBRow* ODBCLevTr::read(int id)
+const sql::LevTr::DBRow* ODBCLevTr::read(int id)
 {
     working_row.id = id;
     sdstm->execute();

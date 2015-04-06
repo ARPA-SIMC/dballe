@@ -44,7 +44,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
     bool mobile = msg.get_ident_var() != NULL;
 	
     sql::Station& st = station();
-    LevTr& lt = lev_tr();
+    sql::LevTr& lt = lev_tr();
     Data& dd = data();
     Attr& dq = attr();
 

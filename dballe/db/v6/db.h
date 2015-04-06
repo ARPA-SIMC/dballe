@@ -71,11 +71,11 @@ struct Sequence;
 namespace sql {
 struct Repinfo;
 struct Station;
+struct LevTr;
+struct LevTrCache;
 }
 
 namespace v6 {
-struct LevTr;
-struct LevTrCache;
 struct Data;
 struct Attr;
 
@@ -112,9 +112,9 @@ protected:
     /** Station information */
     struct sql::Station* m_station;
     /** Level/timerange information */
-    struct LevTr* m_lev_tr;
+    struct sql::LevTr* m_lev_tr;
     /// Level/timerange cache
-    struct LevTrCache* m_lev_tr_cache;
+    struct sql::LevTrCache* m_lev_tr_cache;
     /** Variable data */
     struct Data* m_data;
     /** Variable attributes */
@@ -139,10 +139,10 @@ public:
     sql::Station& station();
 
     /// Access the lev_tr table
-    LevTr& lev_tr();
+    sql::LevTr& lev_tr();
 
     /// Access the lev_tr cache
-    LevTrCache& lev_tr_cache();
+    sql::LevTrCache& lev_tr_cache();
 
     /// Access the data table
     Data& data();

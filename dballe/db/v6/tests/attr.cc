@@ -40,7 +40,7 @@ struct dbv6_attr_shar : public dballe::tests::db_test
         at = &v6().attr();
 
         db::sql::Station& st = v6().station();
-        db::v6::LevTr& lt = v6().lev_tr();
+        db::sql::LevTr& lt = v6().lev_tr();
         db::v6::Data& da = v6().data();
 
         // Insert a mobile station

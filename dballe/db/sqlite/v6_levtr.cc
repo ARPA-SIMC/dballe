@@ -142,7 +142,7 @@ int SQLiteLevTr::obtain_id(const Record& rec)
     return obtain_id(lev, tr);
 }
 
-const LevTr::DBRow* SQLiteLevTr::read(int id)
+const sql::LevTr::DBRow* SQLiteLevTr::read(int id)
 {
     sdstm->bind(id);
     bool found = false;

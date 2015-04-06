@@ -85,7 +85,7 @@ void DB::export_msgs(const Query& query, MsgConsumer& consumer)
 {
     sql::Repinfo& ri = repinfo();
     Attr& at = attr();
-    LevTrCache& ltrc = lev_tr_cache();
+    sql::LevTrCache& ltrc = lev_tr_cache();
 
     // Message being built
     unique_ptr<Msg> msg;

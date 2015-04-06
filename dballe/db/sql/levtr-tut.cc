@@ -28,17 +28,17 @@ using namespace std;
 
 namespace tut {
 
-struct dbv6_lev_tr_shar : public dballe::tests::db_test
+struct db_sql_levtr_shar : public dballe::tests::db_test
 {
-    db::v6::LevTr* co;
+    db::sql::LevTr* co;
 
-    dbv6_lev_tr_shar() : dballe::tests::db_test(db::V6)
+    db_sql_levtr_shar() : dballe::tests::db_test(db::V6)
     {
         if (!has_db()) return;
         co = &v6().lev_tr();
     }
 };
-TESTGRP(dbv6_lev_tr);
+TESTGRP(db_sql_levtr);
 
 /* Insert some values and try to read them again */
 template<> template<>
