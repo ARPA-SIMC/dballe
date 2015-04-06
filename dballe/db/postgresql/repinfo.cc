@@ -66,7 +66,7 @@ void PostgreSQLRepinfo::read_cache()
 void PostgreSQLRepinfo::insert_auto_entry(const char* memo)
 {
     unsigned id = conn.exec_one_row("SELECT MAX(id) FROM repinfo").get_int4(0, 0);
-    unsigned prio = conn.exec_one_row("SELECT MAX(prio) FROM repinfo").get_int4(0, 0);
+    int prio = conn.exec_one_row("SELECT MAX(prio) FROM repinfo").get_int4(0, 0);
 
     ++id;
     ++prio;
@@ -74,7 +74,7 @@ void PostgreSQLRepinfo::insert_auto_entry(const char* memo)
     Querybuf query(500);
     query.appendf(R"(
         INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)
-               VALUES (%u, $1::text, $1::text, %u, '-', 255)
+               VALUES (%u, $1::text, $1::text, %d, '-', 255)
     )", id, prio);
     conn.exec_no_data(query, memo);
 }
@@ -133,7 +133,7 @@ void PostgreSQLRepinfo::update(const char* deffile, int* added, int* deleted, in
                 {
                     Querybuf query(512);
                     query.appendf(R"(
-                        UPDATE repinfo set memo=$1::text, description=$2::text, prio=%u, descriptor=$3::text, tablea=%u
+                        UPDATE repinfo set memo=$1::text, description=$2::text, prio=%d, descriptor=$3::text, tablea=%u
                          WHERE id=%u
                     )", cache[i].new_prio, cache[i].new_tablea, cache[i].id);
                     conn.exec_no_data(query, cache[i].new_memo, cache[i].new_desc, cache[i].new_descriptor);
@@ -150,7 +150,7 @@ void PostgreSQLRepinfo::update(const char* deffile, int* added, int* deleted, in
                 Querybuf query(512);
                 query.appendf(R"(
                     INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)
-                         VALUES (%u, $1::text, $2::text, %u, $3::text, %u)
+                         VALUES (%u, $1::text, $2::text, %d, $3::text, %u)
                 )", i->id, i->new_prio, i->new_tablea);
                 conn.exec_no_data(query, i->new_memo, i->new_desc, i->new_descriptor);
                 ++*added;

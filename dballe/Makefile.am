@@ -94,7 +94,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/sqlite/internals.h \
 	db/sqlite/repinfo.h \
 	db/sqlite/station.h \
-	db/sqlite/v6_levtr.h \
+	db/sqlite/levtr.h \
 	db/sqlite/v6_data.h \
 	db/sqlite/v6_attr.h \
 	db/sqlite/v6_run_query.h \
@@ -116,7 +116,7 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/postgresql/internals.h \
 	db/postgresql/repinfo.h \
 	db/postgresql/station.h \
-	db/postgresql/v6_levtr.h \
+	db/postgresql/levtr.h \
 	db/postgresql/v6_data.h \
 	db/postgresql/v6_attr.h \
 	db/postgresql/v6_run_query.h
@@ -128,7 +128,7 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/odbc/station.h \
 	db/odbc/v6_data.h \
 	db/odbc/v6_attr.h \
-	db/odbc/v6_levtr.h \
+	db/odbc/levtr.h \
 	db/odbc/v6_run_query.h \
 	db/v5/attr.h \
 	db/v5/context.h \
@@ -207,7 +207,7 @@ libdballe_la_SOURCES = \
 	db/sqlite/internals.cc \
 	db/sqlite/repinfo.cc \
 	db/sqlite/station.cc \
-	db/sqlite/v6_levtr.cc \
+	db/sqlite/levtr.cc \
 	db/sqlite/v6_data.cc \
 	db/sqlite/v6_attr.cc \
 	db/sqlite/v6_run_query.cc \
@@ -233,8 +233,8 @@ if HAVE_LIBPQ
 libdballe_la_SOURCES += \
 	db/postgresql/internals.cc \
 	db/postgresql/repinfo.cc \
-	db/postgresql/station.cc
-#	db/postgresql/v6_levtr.cc \
+	db/postgresql/station.cc \
+	db/postgresql/levtr.cc
 #	db/postgresql/v6_data.cc \
 #	db/postgresql/v6_attr.cc \
 #	db/postgresql/v6_run_query.cc
@@ -244,9 +244,9 @@ libdballe_la_SOURCES += \
 	db/odbc/internals.cc \
 	db/odbc/repinfo.cc \
 	db/odbc/station.cc \
+	db/odbc/levtr.cc \
 	db/odbc/v6_data.cc \
 	db/odbc/v6_attr.cc \
-	db/odbc/v6_levtr.cc \
 	db/odbc/v6_run_query.cc \
 	db/v5/context.cc \
 	db/v5/data.cc \

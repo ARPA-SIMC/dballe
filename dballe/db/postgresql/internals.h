@@ -125,6 +125,17 @@ protected:
 
     /// Fill in the argument structures
     template<typename... REST>
+    void _add(unsigned pos, const char* arg, REST... rest)
+    {
+        local[pos] = nullptr;
+        args[pos] = arg;
+        lengths[pos] = 0;
+        formats[pos] = 0;
+        _add(pos + 1, rest...);
+    }
+
+    /// Fill in the argument structures
+    template<typename... REST>
     void _add(unsigned pos, const std::string& arg, REST... rest)
     {
         local[pos] = nullptr;

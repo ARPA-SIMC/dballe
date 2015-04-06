@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "v6_levtr.h"
+#include "levtr.h"
 #include "dballe/db/odbc/internals.h"
 #include "dballe/core/defs.h"
 #include "dballe/core/record.h"

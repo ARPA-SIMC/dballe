@@ -24,17 +24,18 @@
 #include "dballe/db/sqlite/internals.h"
 #include "dballe/db/sqlite/repinfo.h"
 #include "dballe/db/sqlite/station.h"
-#include "dballe/db/sqlite/v6_levtr.h"
+#include "dballe/db/sqlite/levtr.h"
 #include "dballe/db/sqlite/v6_data.h"
 #include "dballe/db/sqlite/v6_attr.h"
 #include "dballe/db/sqlite/v6_run_query.h"
 #include "dballe/db/postgresql/internals.h"
 #include "dballe/db/postgresql/repinfo.h"
 #include "dballe/db/postgresql/station.h"
+#include "dballe/db/postgresql/levtr.h"
 #include "dballe/db/odbc/internals.h"
 #include "dballe/db/odbc/repinfo.h"
 #include "dballe/db/odbc/station.h"
-#include "dballe/db/odbc/v6_levtr.h"
+#include "dballe/db/odbc/levtr.h"
 #include "dballe/db/odbc/v6_data.h"
 #include "dballe/db/odbc/v6_attr.h"
 #include "dballe/db/odbc/v6_run_query.h"
@@ -80,6 +81,8 @@ unique_ptr<sql::LevTr> create_levtr(Connection& conn)
         return unique_ptr<sql::LevTr>(new v6::ODBCLevTr(*c));
     else if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(&conn))
         return unique_ptr<sql::LevTr>(new v6::SQLiteLevTr(*c));
+    else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(&conn))
+        return unique_ptr<sql::LevTr>(new v6::PostgreSQLLevTr(*c));
     else
         throw error_unimplemented("v6 DB LevTr only implemented ODBC and SQLite connectors");
 }

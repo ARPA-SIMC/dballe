@@ -20,7 +20,7 @@
 #include "db/test-utils-db.h"
 #include "db/v6/db.h"
 #include "db/v6/internals.h"
-#include "db/sql/station.h"
+#include "db/sql/levtr.h"
 
 using namespace dballe;
 using namespace wibble::tests;
@@ -30,12 +30,12 @@ namespace tut {
 
 struct db_sql_levtr_shar : public dballe::tests::db_test
 {
-    db::sql::LevTr* co;
-
     db_sql_levtr_shar() : dballe::tests::db_test(db::V6)
     {
-        if (!has_db()) return;
-        co = &v6().lev_tr();
+    }
+    db::sql::LevTr& levtr()
+    {
+        return v6().lev_tr();
     }
 };
 TESTGRP(db_sql_levtr);
@@ -44,13 +44,14 @@ TESTGRP(db_sql_levtr);
 template<> template<>
 void to::test<1>()
 {
-	use_db();
+    use_db();
+    auto& lt = levtr();
 
     // Insert a lev_tr
-    wassert(actual(co->obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);
+    wassert(actual(lt.obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);
 
     // Insert another lev_tr
-    wassert(actual(co->obtain_id(Level(2, 3, 1, 4), Trange(5, 6, 7))) == 2);
+    wassert(actual(lt.obtain_id(Level(2, 3, 1, 4), Trange(5, 6, 7))) == 2);
 
 #if 0
 	// Get the ID of the first lev_tr

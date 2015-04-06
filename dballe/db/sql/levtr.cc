@@ -24,27 +24,6 @@
 #include "dballe/msg/msg.h"
 #include <map>
 #include <sstream>
-#if 0
-#include "db.h"
-#include "dballe/db/sqlite/internals.h"
-#include "dballe/db/sqlite/repinfo.h"
-#include "dballe/db/sqlite/station.h"
-#include "dballe/db/sqlite/v6_levtr.h"
-#include "dballe/db/sqlite/v6_data.h"
-#include "dballe/db/sqlite/v6_attr.h"
-#include "dballe/db/sqlite/v6_run_query.h"
-#include "dballe/db/postgresql/internals.h"
-#include "dballe/db/postgresql/repinfo.h"
-#include "dballe/db/postgresql/station.h"
-#include "dballe/db/odbc/internals.h"
-#include "dballe/db/odbc/repinfo.h"
-#include "dballe/db/odbc/station.h"
-#include "dballe/db/odbc/v6_levtr.h"
-#include "dballe/db/odbc/v6_data.h"
-#include "dballe/db/odbc/v6_attr.h"
-#include "dballe/db/odbc/v6_run_query.h"
-#include "dballe/msg/context.h"
-#endif
 
 //using namespace wreport;
 using namespace std;

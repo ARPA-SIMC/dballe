@@ -192,5 +192,39 @@ void to::test<9>()
     wassert(actual(val) == 3);
 }
 
+// Test prepared statements with int arguments
+template<> template<>
+void to::test<10>()
+{
+    reset();
+    conn.exec_no_data("INSERT INTO dballe_test VALUES (1)");
+    conn.exec_no_data("INSERT INTO dballe_test VALUES (2)");
+    conn.prepare("db_postgresql_internals_10", "SELECT val FROM dballe_test WHERE val=$1::int4");
+
+    auto res = conn.exec_prepared("db_postgresql_internals_10", 1);
+    wassert(actual(res.rowcount()) == 1);
+    wassert(actual(res.get_int4(0, 0)) == 1);
+}
+
+// Test prepared statements with string arguments
+template<> template<>
+void to::test<11>()
+{
+    reset();
+    conn.drop_table_if_exists("db_postgresql_internals_11");
+    conn.exec_no_data("CREATE TABLE db_postgresql_internals_11 (val TEXT)");
+    conn.exec_no_data("INSERT INTO db_postgresql_internals_11 VALUES ('foo')");
+    conn.exec_no_data("INSERT INTO db_postgresql_internals_11 VALUES ('bar')");
+    conn.prepare("db_postgresql_internals_11_select", "SELECT val FROM db_postgresql_internals_11 WHERE val=$1::text");
+
+    auto res1 = conn.exec_prepared("db_postgresql_internals_11_select", "foo");
+    wassert(actual(res1.rowcount()) == 1);
+    wassert(actual(res1.get_string(0, 0)) == "foo");
+
+    auto res2 = conn.exec_prepared("db_postgresql_internals_11_select", string("foo"));
+    wassert(actual(res2.rowcount()) == 1);
+    wassert(actual(res2.get_string(0, 0)) == "foo");
+}
+
 
 }

@@ -39,7 +39,7 @@ StationBase::StationBase(PostgreSQLConnection& conn)
     // Precompile our statements
     conn.prepare("v5_station_select_fixed", "SELECT id FROM station WHERE lat=$1::int4 AND lon=$2::int4 AND ident IS NULL");
     conn.prepare("v5_station_select_mobile", "SELECT id FROM station WHERE lat=$1::int4 AND lon=$2::int4 AND ident=$3::text");
-    conn.prepare("v5_station_insert", "INSERT INTO station (id, lat, lon, ident) VALUES (DEFAULT, $1::int4, $2::int4, $3::text);");
+    conn.prepare("v5_station_insert", "INSERT INTO station (id, lat, lon, ident) VALUES (DEFAULT, $1::int4, $2::int4, $3::text) RETURNING id");
 }
 
 StationBase::~StationBase()
@@ -60,7 +60,9 @@ bool StationBase::maybe_get_id(int lat, int lon, const char* ident, int* id)
     switch (rows)
     {
         case 0: return false;
-        case 1: return res.get_int4(0, 0);
+        case 1:
+            *id = res.get_int4(0, 0);
+            return true;
         default: error_consistency::throwf("select station ID query returned %u results", rows);
     }
 }
@@ -183,7 +185,7 @@ PostgreSQLStation::PostgreSQLStation(PostgreSQLConnection& conn)
     conn.prepare("v5_station_add_station_vars", R"(
         SELECT d.id_var, d.value
           FROM context c, data d, repinfo ri
-         WHERE c.id = d.id_context AND ri.id = c.id_report AND c.id_ana=$1::int4
+         WHERE c.id = d.id_context AND ri.id = c.id_report AND c.id_ana = $1::int4
            AND c.datetime=TIMESTAMP '1000-01-01 00:00:00+00'
          AND ri.prio=(
           SELECT MAX(sri.prio) FROM repinfo sri
@@ -211,14 +213,14 @@ PostgreSQLStation::PostgreSQLStation(PostgreSQLConnection& conn)
         SELECT d.id_var, d.value, a.type, a.value
           FROM data d
           LEFT JOIN attr a ON a.id_data = d.id
-         WHERE d.id_station=? AND d.id_report=?
+         WHERE d.id_station=$1::int4 AND d.id_report=$2::int4
            AND d.id_lev_tr = -1
          ORDER BY d.id_var, a.type
     )");
     conn.prepare("v5_station_add_station_vars", R"(
         SELECT d.id_var, d.value
           FROM data d, repinfo ri
-         WHERE d.id_lev_tr = -1 AND ri.id = d.id_report AND d.id_station = ?
+         WHERE d.id_lev_tr = -1 AND ri.id = d.id_report AND d.id_station = $1::int4
          AND ri.prio=(
           SELECT MAX(sri.prio) FROM repinfo sri
             JOIN data sd ON sri.id=sd.id_report
