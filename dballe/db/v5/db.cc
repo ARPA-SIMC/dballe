@@ -32,8 +32,9 @@
 #include "dballe/db/sqlite/station.h"
 #include "dballe/db/postgresql/station.h"
 #include "dballe/db/odbc/station.h"
+#include "dballe/db/sql/datav5.h"
+#include "dballe/db/odbc/datav5.h"
 #include "context.h"
-#include "data.h"
 #include "cursor.h"
 #include "attr.h"
 
@@ -400,13 +401,13 @@ Context& DB::context()
     return *m_context;
 }
 
-Data& DB::data()
+sql::DataV5& DB::data()
 {
     if (m_data == NULL)
     {
         ODBCConnection* c = dynamic_cast<ODBCConnection*>(conn);
         if (!c) throw error_unimplemented("v5 DB Data only works with ODBC connectors");
-        m_data = new Data(*c);
+        m_data = new ODBCDataV5(*c);
     }
     return *m_data;
 }
@@ -706,7 +707,7 @@ int DB::obtain_context(const Query& rec)
 
 void DB::insert(const Query& rec, bool can_replace, bool station_can_add)
 {
-    Data& d = data();
+    sql::DataV5& d = data();
 
     /* Check for the existance of non-context data, otherwise it's all
      * useless.  Not inserting data is fine in case of setcontextana */
@@ -720,7 +721,8 @@ void DB::insert(const Query& rec, bool can_replace, bool station_can_add)
     int id_station = obtain_station(rec, station_can_add);
 
     // Insert the context data, and get the ID
-    d.id_context = obtain_context(rec);
+    int id_context = obtain_context(rec);
+    d.set_context_id(id_context);
 
     // Insert all the variables we find
     for (vector<Var*>::const_iterator i = rec.vars().begin(); i != rec.vars().end(); ++i)
@@ -735,7 +737,7 @@ void DB::insert(const Query& rec, bool can_replace, bool station_can_add)
 
     t->commit();
 
-    last_context_id = d.id_context;
+    last_context_id = id_context;
     _last_station_id = id_station;
 }
 

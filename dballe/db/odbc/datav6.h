@@ -28,7 +28,7 @@
  * Data table management used by the db module.
  */
 
-#include <dballe/db/v6/internals.h>
+#include <dballe/db/sql/datav6.h>
 #include <dballe/db/odbc/internals.h>
 
 namespace dballe {
@@ -41,7 +41,7 @@ struct DB;
 /**
  * Precompiled query to manipulate the data table
  */
-class ODBCData : public Data
+class ODBCDataV6 : public sql::DataV6
 {
 protected:
     /** DB connection. */
@@ -64,12 +64,6 @@ protected:
     /** data ID SQL parameter */
     int id;
 
-    /** Station ID SQL parameter */
-    int id_station;
-    /** Report ID SQL parameter */
-    int id_report;
-    /** Context ID SQL parameter */
-    int id_lev_tr;
     /** Date SQL parameter */
     SQL_TIMESTAMP_STRUCT date;
     /** Variable type SQL parameter */
@@ -90,14 +84,11 @@ protected:
     void set(const wreport::Var& var);
 
 public:
-    ODBCData(ODBCConnection& conn);
-    ODBCData(const ODBCData&) = delete;
-    ODBCData(const ODBCData&&) = delete;
-    ODBCData& operator=(const ODBCData&) = delete;
-    ~ODBCData();
-
-    /// Set the IDs that identify this variable
-    void set_context(int id_station, int id_report, int id_lev_tr) override;
+    ODBCDataV6(ODBCConnection& conn);
+    ODBCDataV6(const ODBCDataV6&) = delete;
+    ODBCDataV6(const ODBCDataV6&&) = delete;
+    ODBCDataV6& operator=(const ODBCDataV6&) = delete;
+    ~ODBCDataV6();
 
     /// Set id_lev_tr and datetime to mean 'station information'
     void set_station_info(int id_station, int id_report) override;

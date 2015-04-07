@@ -74,6 +74,49 @@ Trange::Trange(const char* pind, const char* p1, const char* p2)
 {
 }
 
+int Date::to_julian() const
+{
+    // From http://libpqtypes.esilo.com/browse_source.html?file=datetime.c
+    int y = year;
+    int m = month;
+    if (m > 2)
+    {
+        m += 1;
+        y += 4800;
+    }
+    else
+    {
+        m += 13;
+        y += 4799;
+    }
+
+    int century = y / 100;
+    int julian = y * 365 - 32167;
+    julian += y / 4 - century + century / 4;
+    julian += 7834 * m / 256 + day;
+
+    return julian;
+}
+
+void Date::from_julian(int jday)
+{
+    // From http://libpqtypes.esilo.com/browse_source.html?file=datetime.c
+    unsigned julian = jday + 32044;
+    unsigned quad = julian / 146097;
+    unsigned extra = (julian - quad * 146097) * 4 + 3;
+    julian += 60 + quad * 3 + extra / 146097;
+    quad = julian / 1461;
+    julian -= quad * 1461;
+    int y = julian * 4 / 1461;
+    julian = ((y != 0) ? ((julian + 305) % 365) : ((julian + 306) % 366))
+        + 123;
+    y += quad * 4;
+    year = y - 4800;
+    quad = julian * 2141 / 65536;
+    day = julian - 7834 * quad / 256;
+    month = (quad + 10) % 12 + 1;
+}
+
 bool Date::operator==(const Date& dt) const
 {
     return year == dt.year && month == dt.month && day == dt.day;

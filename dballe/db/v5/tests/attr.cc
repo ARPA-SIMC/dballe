@@ -21,9 +21,9 @@
 #include "db/odbc/internals.h"
 #include "db/v5/db.h"
 #include "db/v5/attr.h"
-#include "db/v5/data.h"
 #include "db/v5/context.h"
 #include "db/sql/station.h"
+#include "db/sql/datav5.h"
 
 using namespace dballe;
 using namespace dballe::db;
@@ -45,7 +45,7 @@ struct dbv5_attr_shar : public dballe::tests::db_test
 
         sql::Station& st = v5().station();
         Context& co = v5().context();
-        Data& da = v5().data();
+        sql::DataV5& da = v5().data();
 
         // Insert a mobile station
         wassert(actual(st.obtain_id(4500000, 1100000, "ciao")) == 1);
@@ -79,18 +79,16 @@ struct dbv5_attr_shar : public dballe::tests::db_test
 		co.p2 = 7;
 		ensure_equals(co.insert(), 2);
 
-		// Insert a datum
-		da.id_context = 1;
-		da.id_var = WR_VAR(0, 1, 2);
-		da.set_value("123");
+        // Insert a datum
+        da.set_context_id(1);
+        da.set(*newvar(WR_VAR(0, 1, 2), "123"));
         da.insert_or_fail();
 
-		// Insert another datum
-		da.id_context = 2;
-		da.id_var = WR_VAR(0, 1, 2);
-		da.set_value("234");
+        // Insert another datum
+        da.set_context_id(2);
+        da.set(*newvar(WR_VAR(0, 1, 2), "234"));
         da.insert_or_fail();
-	}
+    }
 };
 TESTGRP(dbv5_attr);
 

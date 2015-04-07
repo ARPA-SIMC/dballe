@@ -1,7 +1,7 @@
 /*
  * db/v6/data - data table management
  *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_SQLITE_V6_DATA_H
-#define DBALLE_DB_SQLITE_V6_DATA_H
+#ifndef DBALLE_DB_POSTGRESQL_DATAV6_H
+#define DBALLE_DB_POSTGRESQL_DATAV6_H
 
 /** @file
  * @ingroup db
@@ -28,8 +28,8 @@
  * Data table management used by the db module.
  */
 
-#include <dballe/db/v6/internals.h>
-#include <dballe/db/sqlite/internals.h>
+#include <dballe/db/sql/datav6.h>
+#include <dballe/db/postgresql/internals.h>
 
 namespace dballe {
 struct Record;
@@ -41,39 +41,21 @@ struct DB;
 /**
  * Precompiled query to manipulate the data table
  */
-class SQLiteData : public Data
+class PostgreSQLDataV6 : public sql::DataV6
 {
 protected:
     /** DB connection. */
-    SQLiteConnection& conn;
+    PostgreSQLConnection& conn;
 
-    /** Precompiled insert statement */
-    SQLiteStatement* istm = nullptr;
-    /** Precompiled update statement */
-    SQLiteStatement* ustm = nullptr;
-    /** Precompiled insert or ignore statement */
-    SQLiteStatement* iistm = nullptr;
-    /** Precompiled select ID statement */
-    SQLiteStatement* sidstm = nullptr;
-
-    /// Station ID SQL parameter
-    int id_station;
-    /// Report ID SQL parameter
-    int id_report;
-    /// Context ID SQL parameter
-    int id_lev_tr;
     /// Date SQL parameter
     Datetime date;
 
 public:
-    SQLiteData(SQLiteConnection& conn);
-    SQLiteData(const SQLiteData&) = delete;
-    SQLiteData(const SQLiteData&&) = delete;
-    SQLiteData& operator=(const SQLiteData&) = delete;
-    ~SQLiteData();
-
-    /// Set the IDs that identify this variable
-    void set_context(int id_station, int id_report, int id_lev_tr) override;
+    PostgreSQLDataV6(PostgreSQLConnection& conn);
+    PostgreSQLDataV6(const PostgreSQLDataV6&) = delete;
+    PostgreSQLDataV6(const PostgreSQLDataV6&&) = delete;
+    PostgreSQLDataV6& operator=(const PostgreSQLDataV6&) = delete;
+    ~PostgreSQLDataV6();
 
     /// Set id_lev_tr and datetime to mean 'station information'
     void set_station_info(int id_station, int id_report) override;

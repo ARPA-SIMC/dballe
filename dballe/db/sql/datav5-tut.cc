@@ -19,8 +19,8 @@
 
 #include "db/test-utils-db.h"
 #include "db/odbc/internals.h"
+#include "db/odbc/datav5.h"
 #include "db/v5/db.h"
-#include "db/v5/data.h"
 #include "db/v5/context.h"
 #include "db/sql/station.h"
 
@@ -28,18 +28,20 @@ using namespace dballe;
 using namespace dballe::db;
 using namespace dballe::db::v5;
 using namespace wibble::tests;
+using namespace wreport;
 using namespace std;
 
 namespace tut {
 
 struct dbv5_data_shar : public dballe::tests::db_test
 {
-    Data* da;
+    v5::ODBCDataV5* da;
 
     dbv5_data_shar() : dballe::tests::db_test(db::V5)
     {
         if (!has_db()) return;
-        da = &v5().data();
+        da = dynamic_cast<v5::ODBCDataV5*>(&v5().data());
+        if (!da) throw error_consistency("cannot test V5 ODBC data on the current database");
 
         sql::Station& st = v5().station();
         Context& co = v5().context();

@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "data.h"
+#include "datav5.h"
 #include "dballe/db/odbc/internals.h"
 
 #include <sql.h>
@@ -32,7 +32,7 @@ namespace dballe {
 namespace db {
 namespace v5 {
 
-Data::Data(ODBCConnection& conn)
+ODBCDataV5::ODBCDataV5(ODBCConnection& conn)
     : conn(conn), istm(0), ustm(0), iistm(0)
 {
     const char* insert_query =
@@ -108,20 +108,25 @@ Data::Data(ODBCConnection& conn)
     iistm->bind_in(3, value, value_ind);
 }
 
-Data::~Data()
+ODBCDataV5::~ODBCDataV5()
 {
     if (istm) delete istm;
     if (ustm) delete ustm;
     if (iistm) delete iistm;
 }
 
-void Data::set(const wreport::Var& var)
+void ODBCDataV5::set_context_id(int context_id)
+{
+    id_context = context_id;
+}
+
+void ODBCDataV5::set(const wreport::Var& var)
 {
     id_var = var.code();
     set_value(var.value());
 }
 
-void Data::set_value(const char* qvalue)
+void ODBCDataV5::set_value(const char* qvalue)
 {
     if (qvalue == NULL)
     {
@@ -136,12 +141,12 @@ void Data::set_value(const char* qvalue)
     }
 }
 
-void Data::insert_or_fail()
+void ODBCDataV5::insert_or_fail()
 {
     istm->execute_and_close();
 }
 
-bool Data::insert_or_ignore()
+bool ODBCDataV5::insert_or_ignore()
 {
     int sqlres = iistm->execute();
     bool res;
@@ -154,7 +159,7 @@ bool Data::insert_or_ignore()
     return res;
 }
 
-void Data::insert_or_overwrite()
+void ODBCDataV5::insert_or_overwrite()
 {
     if (conn.server_type == ServerType::POSTGRES)
     {
@@ -164,7 +169,7 @@ void Data::insert_or_overwrite()
         ustm->execute_and_close();
 }
 
-void Data::dump(FILE* out)
+void ODBCDataV5::dump(FILE* out)
 {
     int id_context;
     wreport::Varcode id_var;

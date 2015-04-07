@@ -45,7 +45,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 	
     sql::Station& st = station();
     sql::LevTr& lt = lev_tr();
-    Data& dd = data();
+    sql::DataV6& dd = data();
     Attr& dq = attr();
 
     // Begin transaction

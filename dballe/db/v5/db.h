@@ -70,11 +70,11 @@ struct Sequence;
 namespace sql {
 struct Repinfo;
 struct Station;
+struct DataV5;
 }
 
 namespace v5 {
 struct Context;
-struct Data;
 struct Attr;
 
 /**
@@ -102,8 +102,8 @@ protected:
     struct sql::Station* m_station = nullptr;
 	/** Variable context */
 	struct Context* m_context = nullptr;
-	/** Variable data */
-	struct Data* m_data = nullptr;
+    /** Variable data */
+    struct sql::DataV5* m_data = nullptr;
 	/** Variable attributes */
 	struct Attr* m_attr = nullptr;
 	/** @} */
@@ -134,8 +134,8 @@ public:
 	/// Access the context table
 	Context& context();
 
-	/// Access the data table
-	Data& data();
+    /// Access the data table
+    sql::DataV5& data();
 
 	/// Access the data table
 	Attr& attr();

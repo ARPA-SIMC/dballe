@@ -345,10 +345,10 @@ sql::LevTrCache& DB::lev_tr_cache()
     return *m_lev_tr_cache;
 }
 
-Data& DB::data()
+sql::DataV6& DB::data()
 {
     if (m_data == NULL)
-        m_data = v6::Data::create(*this).release();
+        m_data = create_datav6(*conn).release();
     return *m_data;
 }
 
@@ -512,7 +512,7 @@ int DB::obtain_lev_tr(const Query& rec)
 
 void DB::insert(const Query& rec, bool can_replace, bool station_can_add)
 {
-    v6::Data& d = data();
+    sql::DataV6& d = data();
 
     /* Check for the existance of non-lev_tr data, otherwise it's all
      * useless.  Not inserting data is fine in case of setlev_trana */

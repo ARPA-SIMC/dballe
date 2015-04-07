@@ -23,26 +23,13 @@
 #include "dballe/db/odbc/internals.h"
 #include "dballe/db/sql/repinfo.h"
 #include "dballe/db/sql/station.h"
+#include "dballe/db/sql/datav5.h"
 #include "context.h"
-#include "data.h"
 #include "attr.h"
 
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/msg.h>
 #include <dballe/msg/context.h>
-#if 0
-
-#include "dballe/core/conv.h"
-#include "dballe/msg/context.h"
-
-#include <sql.h>
-#include <sqlext.h>
-
-#include <string.h>
-#include <stdlib.h>
-
-#include "config.h"
-#endif
 
 using namespace wreport;
 
@@ -61,7 +48,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 
     sql::Station& st = station();
     Context& dc = context();
-    Data& dd = data();
+    sql::DataV5& dd = data();
     Attr& dq = attr();
 
     // Begin transaction
@@ -108,9 +95,10 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
             dc.id_report = repinfo().obtain_id(Msg::repmemo_from_type(msg.type));
     }
 
-	if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || inserted_pseudoana)
-	{
-        dd.id_context = dc.obtain_station_info();
+    if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || inserted_pseudoana)
+    {
+        int id_context = dc.obtain_station_info();
+        dd.set_context_id(id_context);
 
 		// Insert the rest of the station information
 		for (size_t i = 0; i < l_ana->data.size(); ++i)
@@ -132,8 +120,8 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 				inserted = true;
 			}
 
-			dq.id_context = dd.id_context;
-			dq.id_var = l_ana->data[i]->code();
+            dq.id_context = id_context;
+            dq.id_var = l_ana->data[i]->code();
 
 			/* Insert the attributes */
 			if (inserted && (flags & DBA_IMPORT_ATTRS))
@@ -187,10 +175,11 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 		dc.p1 = ctx.trange.p1;
 		dc.p2 = ctx.trange.p2;
 
-		// Get the database ID of the context
-        dd.id_context = dc.get_id();
-		if (dd.id_context == -1)
-            dd.id_context = dc.insert();
+        // Get the database ID of the context
+        int id_context = dc.get_id();
+        if (id_context == -1)
+            id_context = dc.insert();
+        dd.set_context_id(id_context);
 
 		for (size_t j = 0; j < ctx.data.size(); ++j)
 		{
@@ -207,8 +196,8 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 			/* Insert the attributes */
 			if (flags & DBA_IMPORT_ATTRS)
 			{
-				dq.id_context = dd.id_context;
-				dq.id_var = var.code();
+                dq.id_context = id_context;
+                dq.id_var = var.code();
 
 				for (const Var* attr = var.next_attr(); attr; attr = attr->next_attr())
 					if (attr->value() != NULL)

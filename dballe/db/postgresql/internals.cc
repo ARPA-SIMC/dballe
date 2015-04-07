@@ -28,6 +28,7 @@
 #include "dballe/db/querybuf.h"
 #include <cstdlib>
 #include <arpa/inet.h>
+#define _BSD_SOURCE             /* See feature_test_macros(7) */
 #include <endian.h>
 
 using namespace std;
@@ -37,6 +38,23 @@ namespace dballe {
 namespace db {
 
 namespace postgresql {
+
+// From http://libpqtypes.esilo.com/browse_source.html?file=datetime.c
+static const int EPOCH_JDATE = 2451545; // == 2000-01-01
+
+int64_t encode_int64_t(int64_t arg)
+{
+    return htobe64(arg);
+}
+
+int64_t encode_datetime(const Datetime& arg)
+{
+    int64_t encoded = arg.date.to_julian() - EPOCH_JDATE;
+    encoded *= 86400;
+    encoded += arg.time.hour * 3600 + arg.time.minute * 60 + arg.time.second;
+    encoded *= 1000000;
+    return (int64_t)htobe64(encoded);
+}
 
 void Result::expect_no_data(const std::string& query)
 {
@@ -97,6 +115,31 @@ uint64_t Result::get_int8(unsigned row, unsigned col) const
 {
     char* val = PQgetvalue(res, row, col);
     return be64toh(*(uint64_t*)val);
+}
+
+Datetime Result::get_timestamp(unsigned row, unsigned col) const
+{
+    // Adapter from http://libpqtypes.esilo.com/browse_source.html?file=datetime.c
+    Datetime dt;
+
+    // Decode from big endian
+    int64_t decoded = be64toh(*(uint64_t*)PQgetvalue(res, row, col));
+
+    // Convert from microseconds to seconds
+    decoded = decoded / 1000000;
+
+    // Decode time
+    int time = decoded % 86400;
+    dt.time.hour = time / 3600;
+    dt.time.minute = (time / 60) % 60;
+    dt.time.second = time % 60;
+
+    // Decode date
+    int jdate = decoded / 86400;
+    jdate += EPOCH_JDATE;
+    dt.date.from_julian(jdate);
+
+    return dt;
 }
 
 }

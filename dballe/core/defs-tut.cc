@@ -122,4 +122,17 @@ void to::test<6>()
     wassert(actual(Datetime::range_contains(dt_2010, dt_2012, dt_2011, dt_2013)).isfalse());
 }
 
+// Test Datetime to/from julian days conversion
+template<> template<>
+void to::test<7>()
+{
+    Date d(2015, 4, 25);
+    wassert(actual(d.to_julian()) == 2457138);
+
+    d.from_julian(2457138);
+    wassert(actual(d.year) == 2015);
+    wassert(actual(d.month) == 4);
+    wassert(actual(d.day) == 25);
+}
+
 }

@@ -77,6 +77,7 @@ int StationBase::get_id(int lat, int lon, const char* ident)
 
 int StationBase::obtain_id(int lat, int lon, const char* ident, bool* inserted)
 {
+    // TODO: lock table
     using namespace postgresql;
     int id;
     if (maybe_get_id(lat, lon, ident, &id))

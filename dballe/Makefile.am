@@ -91,11 +91,13 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/sql/repinfo.h \
 	db/sql/station.h \
 	db/sql/levtr.h \
+	db/sql/datav5.h \
+	db/sql/datav6.h \
 	db/sqlite/internals.h \
 	db/sqlite/repinfo.h \
 	db/sqlite/station.h \
 	db/sqlite/levtr.h \
-	db/sqlite/v6_data.h \
+	db/sqlite/datav6.h \
 	db/sqlite/v6_attr.h \
 	db/sqlite/v6_run_query.h \
 	db/v6/internals.h \
@@ -117,7 +119,7 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/postgresql/repinfo.h \
 	db/postgresql/station.h \
 	db/postgresql/levtr.h \
-	db/postgresql/v6_data.h \
+	db/postgresql/datav6.h \
 	db/postgresql/v6_attr.h \
 	db/postgresql/v6_run_query.h
 endif
@@ -126,14 +128,14 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/odbc/internals.h \
 	db/odbc/repinfo.h \
 	db/odbc/station.h \
-	db/odbc/v6_data.h \
+	db/odbc/datav5.h \
+	db/odbc/datav6.h \
 	db/odbc/v6_attr.h \
 	db/odbc/levtr.h \
 	db/odbc/v6_run_query.h \
 	db/v5/attr.h \
 	db/v5/context.h \
 	db/v5/cursor.h \
-	db/v5/data.h \
 	db/v5/db.h
 endif
 
@@ -204,11 +206,13 @@ libdballe_la_SOURCES = \
 	db/sql/repinfo.cc \
 	db/sql/station.cc \
 	db/sql/levtr.cc \
+	db/sql/datav5.cc \
+	db/sql/datav6.cc \
 	db/sqlite/internals.cc \
 	db/sqlite/repinfo.cc \
 	db/sqlite/station.cc \
 	db/sqlite/levtr.cc \
-	db/sqlite/v6_data.cc \
+	db/sqlite/datav6.cc \
 	db/sqlite/v6_attr.cc \
 	db/sqlite/v6_run_query.cc \
 	db/mem/repinfo.cc \
@@ -234,8 +238,8 @@ libdballe_la_SOURCES += \
 	db/postgresql/internals.cc \
 	db/postgresql/repinfo.cc \
 	db/postgresql/station.cc \
-	db/postgresql/levtr.cc
-#	db/postgresql/v6_data.cc \
+	db/postgresql/levtr.cc \
+	db/postgresql/datav6.cc
 #	db/postgresql/v6_attr.cc \
 #	db/postgresql/v6_run_query.cc
 endif
@@ -245,11 +249,11 @@ libdballe_la_SOURCES += \
 	db/odbc/repinfo.cc \
 	db/odbc/station.cc \
 	db/odbc/levtr.cc \
-	db/odbc/v6_data.cc \
+	db/odbc/datav5.cc \
+	db/odbc/datav6.cc \
 	db/odbc/v6_attr.cc \
 	db/odbc/v6_run_query.cc \
 	db/v5/context.cc \
-	db/v5/data.cc \
 	db/v5/attr.cc \
 	db/v5/cursor.cc \
 	db/v5/db.cc \
@@ -337,6 +341,7 @@ tut_test_SOURCES = \
 	db/sql/repinfo-tut.cc \
 	db/sql/station-tut.cc \
 	db/sql/levtr-tut.cc \
+	db/sql/datav6-tut.cc \
 	db/sqlite/internals-tut.cc \
 	db/db-basic-tut.cc \
 	db/db-misc-tut.cc \
@@ -348,7 +353,6 @@ tut_test_SOURCES = \
 	db/mem/repinfo-tut.cc \
 	db/mem/cursor-tut.cc \
 	db/mem/db-tut.cc \
-	db/v6/tests/data.cc \
 	db/v6/tests/attr.cc \
 	db/v6/tests/db.cc \
 	db/summary-tut.cc \
@@ -366,9 +370,9 @@ tut_test_SOURCES += \
 endif
 if HAVE_ODBC
 tut_test_SOURCES += \
+	db/sql/datav5-tut.cc \
 	db/odbc/internals-tut.cc \
 	db/v5/tests/context.cc \
-	db/v5/tests/data.cc \
 	db/v5/tests/attr.cc \
 	db/v5/tests/db.cc
 endif

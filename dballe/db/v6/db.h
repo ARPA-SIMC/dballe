@@ -73,10 +73,10 @@ struct Repinfo;
 struct Station;
 struct LevTr;
 struct LevTrCache;
+struct DataV6;
 }
 
 namespace v6 {
-struct Data;
 struct Attr;
 
 /**
@@ -116,7 +116,7 @@ protected:
     /// Level/timerange cache
     struct sql::LevTrCache* m_lev_tr_cache;
     /** Variable data */
-    struct Data* m_data;
+    struct sql::DataV6* m_data;
     /** Variable attributes */
     struct Attr* m_attr;
     /** @} */
@@ -145,7 +145,7 @@ public:
     sql::LevTrCache& lev_tr_cache();
 
     /// Access the data table
-    Data& data();
+    sql::DataV6& data();
 
     /// Access the data table
     Attr& attr();

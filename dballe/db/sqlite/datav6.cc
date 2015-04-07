@@ -1,4 +1,4 @@
-#include "v6_data.h"
+#include "datav6.h"
 #include "dballe/db/sql.h"
 #include "dballe/db/v6/db.h"
 #include "dballe/core/record.h"
@@ -11,7 +11,7 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
-SQLiteData::SQLiteData(SQLiteConnection& conn)
+SQLiteDataV6::SQLiteDataV6(SQLiteConnection& conn)
     : conn(conn)
 {
     const char* insert_query =
@@ -37,7 +37,7 @@ SQLiteData::SQLiteData(SQLiteConnection& conn)
     sidstm = conn.sqlitestatement(select_id_query).release();
 }
 
-SQLiteData::~SQLiteData()
+SQLiteDataV6::~SQLiteDataV6()
 {
     if (istm) delete istm;
     if (ustm) delete ustm;
@@ -45,24 +45,17 @@ SQLiteData::~SQLiteData()
     if (sidstm) delete sidstm;
 }
 
-void SQLiteData::set_context(int id_station, int id_report, int id_lev_tr)
-{
-    this->id_station = id_station;
-    this->id_report = id_report;
-    this->id_lev_tr = id_lev_tr;
-}
-
-void SQLiteData::set_date(const Record& rec)
+void SQLiteDataV6::set_date(const Record& rec)
 {
     date = rec.get_datetime();
 }
 
-void SQLiteData::set_date(int ye, int mo, int da, int ho, int mi, int se)
+void SQLiteDataV6::set_date(int ye, int mo, int da, int ho, int mi, int se)
 {
     date = Datetime(ye, mo, da, ho, mi, se);
 }
 
-void SQLiteData::set_station_info(int id_station, int id_report)
+void SQLiteDataV6::set_station_info(int id_station, int id_report)
 {
     this->id_station = id_station;
     this->id_report = id_report;
@@ -73,7 +66,7 @@ void SQLiteData::set_station_info(int id_station, int id_report)
     date = Datetime(1000, 1, 1, 0, 0, 0);
 }
 
-void SQLiteData::insert_or_fail(const wreport::Var& var, int* res_id)
+void SQLiteDataV6::insert_or_fail(const wreport::Var& var, int* res_id)
 {
     istm->bind_val(1, id_station);
     istm->bind_val(2, id_report);
@@ -88,7 +81,7 @@ void SQLiteData::insert_or_fail(const wreport::Var& var, int* res_id)
     if (res_id) *res_id = conn.get_last_insert_id();
 }
 
-bool SQLiteData::insert_or_ignore(const wreport::Var& var, int* res_id)
+bool SQLiteDataV6::insert_or_ignore(const wreport::Var& var, int* res_id)
 {
     iistm->bind_val(1, id_station);
     iistm->bind_val(2, id_report);
@@ -105,7 +98,7 @@ bool SQLiteData::insert_or_ignore(const wreport::Var& var, int* res_id)
     return true;
 }
 
-void SQLiteData::insert_or_overwrite(const wreport::Var& var, int* res_id)
+void SQLiteDataV6::insert_or_overwrite(const wreport::Var& var, int* res_id)
 {
     // select id
     sidstm->bind_val(1, id_station);
@@ -146,7 +139,7 @@ void SQLiteData::insert_or_overwrite(const wreport::Var& var, int* res_id)
     }
 }
 
-void SQLiteData::dump(FILE* out)
+void SQLiteDataV6::dump(FILE* out)
 {
     int count = 0;
     fprintf(out, "dump of table data:\n");

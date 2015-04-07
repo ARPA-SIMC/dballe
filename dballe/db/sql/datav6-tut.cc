@@ -23,23 +23,18 @@
 #include "db/v6/internals.h"
 
 using namespace dballe;
-using namespace dballe::db;
+using namespace dballe::tests;
 using namespace wreport;
 using namespace wibble::tests;
 using namespace std;
 
-namespace tut {
+namespace {
 
-struct dbv6_data_shar : public dballe::tests::db_test
+struct db_sql_datav6 : public dballe::tests::db_test
 {
-    db::v6::Data* da;
-
-    dbv6_data_shar() : dballe::tests::db_test(db::V6)
+    db_sql_datav6()
     {
-        if (!has_db()) return;
         db::v6::DB& v6db = v6();
-        da = &v6db.data();
-
         db::sql::Station& st = v6db.station();
         db::sql::LevTr& lt = v6db.lev_tr();
 
@@ -56,85 +51,78 @@ struct dbv6_data_shar : public dballe::tests::db_test
         wassert(actual(lt.obtain_id(Level(2, 3, 1, 4), Trange(5, 6, 7))) == 2);
     }
 
+    db::sql::DataV6& data()
+    {
+        if (db::v6::DB* db6 = dynamic_cast<db::v6::DB*>(db.get()))
+            return db6->data();
+        throw error_consistency("cannot test datav6 on the current DB");
+    }
 };
-TESTGRP(dbv6_data);
 
-/* Test Data::set * */
-template<> template<>
-void to::test<1>()
-{
-#if 0
-    // Now this is just an internal function
-	use_db();
-
-    // Test set
-    da->set(var(WR_VAR(0, 1, 2), 123));
-    ensure_varcode_equals(da->id_var, WR_VAR(0, 1, 2));
-	ensure_equals(da->value, string("123"));
-	ensure_equals(da->value_ind, 3);
-
-    // Test set_value
-    da->set_value("32");
-    ensure_varcode_equals(da->id_var, WR_VAR(0, 1, 2));
-	ensure_equals(da->value, string("32"));
-	ensure_equals(da->value_ind, 2);
-#endif
 }
 
+namespace tut {
 
-/* Insert some values and try to read them again */
-template<> template<>
-void to::test<2>()
+typedef db_tg<db_sql_datav6> tg;
+typedef tg::object to;
+
+// Insert some values and try to read them again
+template<> template<> void to::test<1>()
 {
     use_db();
+    auto& da = data();
 
     // Insert a datum
-    da->set_context(1, 1, 1);
-    da->set_date(2001, 2, 3, 4, 5, 6);
-    da->insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 123));
+    da.set_context(1, 1, 1);
+    da.set_date(2001, 2, 3, 4, 5, 6);
+    da.insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 123));
 
     // Insert another datum
-    da->set_context(2, 2, 2);
-    da->set_date(2002, 3, 4, 5, 6, 7);
-    da->insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 234));
+    da.set_context(2, 2, 2);
+    da.set_date(2002, 3, 4, 5, 6, 7);
+    da.insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 234));
 
     // Reinsert a datum: it should fail
-    da->set_context(1, 1, 1);
-    da->set_date(2001, 2, 3, 4, 5, 6);
+    da.set_context(1, 1, 1);
+    da.set_date(2001, 2, 3, 4, 5, 6);
     try {
-        da->insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 123));
+        da.insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 123));
         ensure(false);
     } catch (db::error& e) {
         //ensure_contains(e.what(), "uplicate");
     }
 
     // Reinsert the other datum: it should fail
-    da->set_context(2, 2, 2);
-    da->set_date(2002, 3, 4, 5, 6, 7);
+    da.set_context(2, 2, 2);
+    da.set_date(2002, 3, 4, 5, 6, 7);
     try {
-        da->insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 234));
+        da.insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 234));
         ensure(false);
     } catch (db::error& e) {
         //ensure_contains(e.what(), "uplicate");
     }
 
     // Reinsert a datum with overwrite: it should work
-    da->set_context(1, 1, 1);
-    da->set_date(2001, 2, 3, 4, 5, 6);
-    da->insert_or_overwrite(Var(varinfo(WR_VAR(0, 1, 2)), 123));
+    da.set_context(1, 1, 1);
+    da.set_date(2001, 2, 3, 4, 5, 6);
+    da.insert_or_overwrite(Var(varinfo(WR_VAR(0, 1, 2)), 123));
 
     // Reinsert the other datum with overwrite: it should work
-    da->set_context(2, 2, 2);
-    da->set_date(2002, 3, 4, 5, 6, 7);
-    da->insert_or_overwrite(Var(varinfo(WR_VAR(0, 1, 2)), 234));
+    da.set_context(2, 2, 2);
+    da.set_date(2002, 3, 4, 5, 6, 7);
+    da.insert_or_overwrite(Var(varinfo(WR_VAR(0, 1, 2)), 234));
 
     // Insert a new datum with ignore: it should insert
-    da->set_context(2, 2, 3);
-    wassert(actual(da->insert_or_ignore(Var(varinfo(WR_VAR(0, 1, 2)), 234))) == true);
+    da.set_context(2, 2, 3);
+    wassert(actual(da.insert_or_ignore(Var(varinfo(WR_VAR(0, 1, 2)), 234))) == true);
 
     // Reinsert the same datum with ignore: it should ignore
-    wassert(actual(da->insert_or_ignore(Var(varinfo(WR_VAR(0, 1, 2)), 234))) == false);
+    wassert(actual(da.insert_or_ignore(Var(varinfo(WR_VAR(0, 1, 2)), 234))) == false);
 
+    // Reinsert a nonexisting datum with overwrite: it should work
+    da.set_context(1, 1, 1);
+    da.set_date(2005, 2, 3, 4, 5, 6);
+    da.insert_or_overwrite(Var(varinfo(WR_VAR(0, 1, 2)), 123));
 #if 0
 	// Get the ID of the first data
 	lt->id = 0;
@@ -222,4 +210,8 @@ void to::test<2>()
 
 }
 
-/* vim:set ts=4 sw=4: */
+namespace {
+
+tut::tg db_test_sql_datav6_tg("db_sql_datav6", db::V6);
+
+}

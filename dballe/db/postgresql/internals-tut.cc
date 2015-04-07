@@ -226,5 +226,24 @@ void to::test<11>()
     wassert(actual(res2.get_string(0, 0)) == "foo");
 }
 
+// Test prepared statements with datetime arguments
+template<> template<>
+void to::test<12>()
+{
+    reset();
+    conn.drop_table_if_exists("db_postgresql_internals_12");
+    conn.exec_no_data("CREATE TABLE db_postgresql_internals_12 (val TIMESTAMP)");
+    conn.exec_no_data("INSERT INTO db_postgresql_internals_12 VALUES ('2015-04-01 12:30:45')");
+    conn.prepare("db_postgresql_internals_12_select", "SELECT val FROM db_postgresql_internals_12 WHERE val=$1::timestamp");
+
+    auto res1 = conn.exec("SELECT val FROM db_postgresql_internals_12");
+    wassert(actual(res1.rowcount()) == 1);
+    wassert(actual(res1.get_timestamp(0, 0)) == Datetime(2015, 4, 1, 12, 30, 45));
+
+    auto res2 = conn.exec_prepared("db_postgresql_internals_12_select", Datetime(2015, 4, 1, 12, 30, 45));
+    wassert(actual(res2.rowcount()) == 1);
+    wassert(actual(res2.get_timestamp(0, 0)) == Datetime(2015, 4, 1, 12, 30, 45));
+}
+
 
 }

@@ -232,6 +232,12 @@ struct Date
     /// Check if this date is the missing value
     bool is_missing() const { return year == 0xffff; }
 
+    /// Convert the date to Julian day
+    int to_julian() const;
+
+    /// Set the date from a Julian day
+    void from_julian(int jday);
+
     void from_array(const int* vals)
     {
         year = vals[0];

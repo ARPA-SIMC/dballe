@@ -1,4 +1,4 @@
-#include "v6_data.h"
+#include "datav6.h"
 #include "dballe/db/sql.h"
 #include "dballe/db/v6/db.h"
 #include "dballe/core/record.h"
@@ -12,7 +12,7 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
-ODBCData::ODBCData(ODBCConnection& conn)
+ODBCDataV6::ODBCDataV6(ODBCConnection& conn)
     : conn(conn), istm(0), ustm(0), ioustm(0), iistm(0), sidstm(0)
 {
     const char* insert_query =
@@ -128,7 +128,7 @@ ODBCData::ODBCData(ODBCConnection& conn)
     sidstm->bind_out(1, id);
 }
 
-ODBCData::~ODBCData()
+ODBCDataV6::~ODBCDataV6()
 {
     delete seq_data;
     if (istm) delete istm;
@@ -138,14 +138,7 @@ ODBCData::~ODBCData()
     if (sidstm) delete sidstm;
 }
 
-void ODBCData::set_context(int id_station, int id_report, int id_lev_tr)
-{
-    this->id_station = id_station;
-    this->id_report = id_report;
-    this->id_lev_tr = id_lev_tr;
-}
-
-void ODBCData::set_date(const Record& rec)
+void ODBCDataV6::set_date(const Record& rec)
 {
     /* Also input the seconds, defaulting to 0 if not found */
     const Var* year = rec.key_peek(DBA_KEY_YEAR);
@@ -169,7 +162,7 @@ void ODBCData::set_date(const Record& rec)
         throw error_notfound("datetime informations not found among context information");
 }
 
-void ODBCData::set_date(int ye, int mo, int da, int ho, int mi, int se)
+void ODBCDataV6::set_date(int ye, int mo, int da, int ho, int mi, int se)
 {
     date.year = ye;
     date.month = mo;
@@ -180,7 +173,7 @@ void ODBCData::set_date(int ye, int mo, int da, int ho, int mi, int se)
     date.fraction = 0;
 }
 
-void ODBCData::set_station_info(int id_station, int id_report)
+void ODBCDataV6::set_station_info(int id_station, int id_report)
 {
     this->id_station = id_station;
     this->id_report = id_report;
@@ -197,13 +190,13 @@ void ODBCData::set_station_info(int id_station, int id_report)
     date.fraction = 0;
 }
 
-void ODBCData::set(const wreport::Var& var)
+void ODBCDataV6::set(const wreport::Var& var)
 {
     id_var = var.code();
     set_value(var.value());
 }
 
-void ODBCData::set_value(const char* qvalue)
+void ODBCDataV6::set_value(const char* qvalue)
 {
     if (qvalue == NULL)
     {
@@ -218,7 +211,7 @@ void ODBCData::set_value(const char* qvalue)
     }
 }
 
-void ODBCData::insert_or_fail(const wreport::Var& var, int* res_id)
+void ODBCDataV6::insert_or_fail(const wreport::Var& var, int* res_id)
 {
     set(var);
     istm->execute_and_close();
@@ -231,7 +224,7 @@ void ODBCData::insert_or_fail(const wreport::Var& var, int* res_id)
     }
 }
 
-bool ODBCData::insert_or_ignore(const wreport::Var& var, int* res_id)
+bool ODBCDataV6::insert_or_ignore(const wreport::Var& var, int* res_id)
 {
     set(var);
     int sqlres = iistm->execute();
@@ -251,7 +244,7 @@ bool ODBCData::insert_or_ignore(const wreport::Var& var, int* res_id)
     return res;
 }
 
-void ODBCData::insert_or_overwrite(const wreport::Var& var, int* res_id)
+void ODBCDataV6::insert_or_overwrite(const wreport::Var& var, int* res_id)
 {
     set(var);
     if (res_id)
@@ -282,7 +275,7 @@ void ODBCData::insert_or_overwrite(const wreport::Var& var, int* res_id)
     }
 }
 
-void ODBCData::dump(FILE* out)
+void ODBCDataV6::dump(FILE* out)
 {
     int id;
     int id_station;

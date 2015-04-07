@@ -25,18 +25,19 @@
 #include "dballe/db/sqlite/repinfo.h"
 #include "dballe/db/sqlite/station.h"
 #include "dballe/db/sqlite/levtr.h"
-#include "dballe/db/sqlite/v6_data.h"
+#include "dballe/db/sqlite/datav6.h"
 #include "dballe/db/sqlite/v6_attr.h"
 #include "dballe/db/sqlite/v6_run_query.h"
 #include "dballe/db/postgresql/internals.h"
 #include "dballe/db/postgresql/repinfo.h"
 #include "dballe/db/postgresql/station.h"
 #include "dballe/db/postgresql/levtr.h"
+#include "dballe/db/postgresql/datav6.h"
 #include "dballe/db/odbc/internals.h"
 #include "dballe/db/odbc/repinfo.h"
 #include "dballe/db/odbc/station.h"
 #include "dballe/db/odbc/levtr.h"
-#include "dballe/db/odbc/v6_data.h"
+#include "dballe/db/odbc/datav6.h"
 #include "dballe/db/odbc/v6_attr.h"
 #include "dballe/db/odbc/v6_run_query.h"
 #include "dballe/core/record.h"
@@ -88,13 +89,14 @@ unique_ptr<sql::LevTr> create_levtr(Connection& conn)
 }
 
 
-Data::~Data() {}
-unique_ptr<Data> Data::create(DB& db)
+unique_ptr<sql::DataV6> create_datav6(Connection& conn)
 {
-    if (ODBCConnection* conn = dynamic_cast<ODBCConnection*>(db.conn))
-        return unique_ptr<Data>(new ODBCData(*conn));
-    else if (SQLiteConnection* conn = dynamic_cast<SQLiteConnection*>(db.conn))
-        return unique_ptr<Data>(new SQLiteData(*conn));
+    if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(&conn))
+        return unique_ptr<sql::DataV6>(new ODBCDataV6(*c));
+    else if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(&conn))
+        return unique_ptr<sql::DataV6>(new SQLiteDataV6(*c));
+    else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(&conn))
+        return unique_ptr<sql::DataV6>(new PostgreSQLDataV6(*c));
     else
         throw error_unimplemented("v6 DB Data only implemented for ODBC and SQLite connectors");
 }

@@ -1,7 +1,7 @@
 /*
- * db/data - data table management
+ * db/v6/data - data table management
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_V5_DATA_H
-#define DBALLE_DB_V5_DATA_H
+#ifndef DBALLE_DB_SQLITE_V6_DATA_H
+#define DBALLE_DB_SQLITE_V6_DATA_H
 
 /** @file
  * @ingroup db
@@ -28,62 +28,59 @@
  * Data table management used by the db module.
  */
 
-#include <wreport/var.h>
-#include <sqltypes.h>
-#include <cstdio>
+#include <dballe/db/sql/datav6.h>
+#include <dballe/db/sqlite/internals.h>
 
 namespace dballe {
-struct DB;
+struct Record;
 
 namespace db {
-struct ODBCConnection;
-struct ODBCStatement;
-
-namespace v5 {
+namespace v6 {
+struct DB;
 
 /**
  * Precompiled query to manipulate the data table
  */
-struct Data
+class SQLiteDataV6 : public sql::DataV6
 {
+protected:
     /** DB connection. */
-    ODBCConnection& conn;
+    SQLiteConnection& conn;
 
     /** Precompiled insert statement */
-    ODBCStatement* istm;
+    SQLiteStatement* istm = nullptr;
     /** Precompiled update statement */
-    ODBCStatement* ustm;
+    SQLiteStatement* ustm = nullptr;
     /** Precompiled insert or ignore statement */
-    ODBCStatement* iistm;
+    SQLiteStatement* iistm = nullptr;
+    /** Precompiled select ID statement */
+    SQLiteStatement* sidstm = nullptr;
 
-    /// Context ID SQL parameter
-    int id_context;
-    /** Variable type SQL parameter */
-    wreport::Varcode id_var;
-    /** Variable value SQL parameter */
-    char value[255];
-    /** Variable value indicator */
-    SQLLEN value_ind;
+    /// Date SQL parameter
+    Datetime date;
 
-    Data(ODBCConnection& conn);
-    ~Data();
+public:
+    SQLiteDataV6(SQLiteConnection& conn);
+    SQLiteDataV6(const SQLiteDataV6&) = delete;
+    SQLiteDataV6(const SQLiteDataV6&&) = delete;
+    SQLiteDataV6& operator=(const SQLiteDataV6&) = delete;
+    ~SQLiteDataV6();
 
-    /**
-     * Set the value input fields using a wreport::Var
-     */
-    void set(const wreport::Var& var);
+    /// Set id_lev_tr and datetime to mean 'station information'
+    void set_station_info(int id_station, int id_report) override;
 
-    /**
-     * Set the value input fields using a string value
-     */
-    void set_value(const char* value);
+    /// Set the date from the date information in the record
+    void set_date(const Record& rec) override;
+
+    /// Set the date from a split up date
+    void set_date(int ye, int mo, int da, int ho, int mi, int se) override;
 
     /**
      * Insert an entry into the data table, failing on conflicts.
      *
      * Trying to replace an existing value will result in an error.
      */
-    void insert_or_fail();
+    void insert_or_fail(const wreport::Var& var, int* res_id=nullptr) override;
 
     /**
      * Insert an entry into the data table, ignoring conflicts.
@@ -92,30 +89,26 @@ struct Data
      *
      * @return true if it was inserted, false if it was already present
      */
-    bool insert_or_ignore();
+    bool insert_or_ignore(const wreport::Var& var, int* res_id=nullptr) override;
 
     /**
      * Insert an entry into the data table, overwriting on conflicts.
      *
      * An existing data with the same context and ::dba_varcode will be
      * overwritten.
+     *
+     * If id is not NULL, it stores the database id of the inserted/modified
+     * data in *id.
      */
-    void insert_or_overwrite();
+    void insert_or_overwrite(const wreport::Var& var, int* res_id=nullptr) override;
 
     /**
      * Dump the entire contents of the table to an output stream
      */
-    void dump(FILE* out);
-
-private:
-    // disallow copy
-    Data(const Data&);
-    Data& operator=(const Data&);
+    void dump(FILE* out) override;
 };
 
-} // namespace v5
-} // namespace db
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
+}
+}
+}
 #endif

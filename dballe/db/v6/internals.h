@@ -32,6 +32,7 @@
 #include <dballe/db/sql/repinfo.h>
 #include <dballe/db/sql/station.h>
 #include <dballe/db/sql/levtr.h>
+#include <dballe/db/sql/datav6.h>
 #include <wreport/var.h>
 #include <memory>
 #include <cstdio>
@@ -61,59 +62,8 @@ std::unique_ptr<sql::Station> create_station(Connection& conn);
 /// Precompiled queries to manipulate the levtr table
 std::unique_ptr<sql::LevTr> create_levtr(Connection& conn);
 
-/**
- * Precompiled query to manipulate the data table
- */
-struct Data
-{
-    static std::unique_ptr<Data> create(DB& conn);
-    virtual ~Data();
-
-    /// Set the IDs that identify this variable
-    virtual void set_context(int id_station, int id_report, int id_lev_tr) = 0;
-
-    /// Set id_lev_tr and datetime to mean 'station information'
-    virtual void set_station_info(int id_station, int id_report) = 0;
-
-    /// Set the date from the date information in the record
-    virtual void set_date(const Record& rec) = 0;
-
-    /// Set the date from a split up date
-    virtual void set_date(int ye, int mo, int da, int ho, int mi, int se) = 0;
-
-    /**
-     * Insert an entry into the data table, failing on conflicts.
-     *
-     * Trying to replace an existing value will result in an error.
-     */
-    virtual void insert_or_fail(const wreport::Var& var, int* res_id=nullptr) = 0;
-
-    /**
-     * Insert an entry into the data table, ignoring conflicts.
-     *
-     * Trying to replace an existing value will do nothing.
-     *
-     * @return true if it was inserted, false if it was already present
-     */
-    virtual bool insert_or_ignore(const wreport::Var& var, int* res_id=nullptr) = 0;
-
-    /**
-     * Insert an entry into the data table, overwriting on conflicts.
-     *
-     * An existing data with the same context and ::dba_varcode will be
-     * overwritten.
-     *
-     * If id is not NULL, it stores the database id of the inserted/modified
-     * data in *id.
-     */
-    virtual void insert_or_overwrite(const wreport::Var& var, int* res_id=nullptr) = 0;
-
-    /**
-     * Dump the entire contents of the table to an output stream
-     */
-    virtual void dump(FILE* out) = 0;
-};
-
+/// Precompiled queries to manipulate the levtr table
+std::unique_ptr<sql::DataV6> create_datav6(Connection& conn);
 
 /**
  * Precompiled queries to manipulate the attr table
