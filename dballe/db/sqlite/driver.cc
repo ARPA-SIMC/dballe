@@ -173,6 +173,89 @@ void Driver::run_delete_query_v6(const v6::QueryBuilder& qb)
     });
 }
 
+void Driver::create_tables_v5()
+{
+}
+void Driver::create_tables_v6()
+{
+    conn.exec(R"(
+        CREATE TABLE station (
+           id         INTEGER PRIMARY KEY,
+           lat        INTEGER NOT NULL,
+           lon        INTEGER NOT NULL,
+           ident      CHAR(64),
+           UNIQUE (lat, lon, ident)
+        );
+        CREATE INDEX pa_lon ON station(lon);
+    )");
+    conn.exec(R"(
+        CREATE TABLE repinfo (
+           id           INTEGER PRIMARY KEY,
+           memo         VARCHAR(30) NOT NULL,
+           description  VARCHAR(255) NOT NULL,
+           prio         INTEGER NOT NULL,
+           descriptor   CHAR(6) NOT NULL,
+           tablea       INTEGER NOT NULL,
+           UNIQUE (prio),
+           UNIQUE (memo)
+        );
+    )");
+    conn.exec(R"(
+        CREATE TABLE lev_tr (
+           id         INTEGER PRIMARY KEY,
+           ltype1      INTEGER NOT NULL,
+           l1          INTEGER NOT NULL,
+           ltype2      INTEGER NOT NULL,
+           l2          INTEGER NOT NULL,
+           ptype       INTEGER NOT NULL,
+           p1          INTEGER NOT NULL,
+           p2          INTEGER NOT NULL,
+           UNIQUE (ltype1, l1, ltype2, l2, ptype, p1, p2)
+        );
+    )");
+    conn.exec(R"(
+        CREATE TABLE data (
+           id          INTEGER PRIMARY KEY,
+           id_station  INTEGER NOT NULL,
+           id_report   INTEGER NOT NULL,
+           id_lev_tr   INTEGER NOT NULL,
+           datetime    TEXT NOT NULL,
+           id_var      INTEGER NOT NULL,
+           value       VARCHAR(255) NOT NULL,
+           UNIQUE (id_station, datetime, id_lev_tr, id_report, id_var)
+        );
+        CREATE INDEX data_report ON data(id_report);
+        CREATE INDEX data_lt ON data(id_lev_tr);
+    )");
+    conn.exec(R"(
+        CREATE TABLE attr (
+           id_data     INTEGER NOT NULL,
+           type        INTEGER NOT NULL,
+           value       VARCHAR(255) NOT NULL,
+           UNIQUE (id_data, type)
+        );
+    )");
+    conn.set_setting("version", "V6");
+}
+void Driver::delete_tables_v5()
+{
+    conn.drop_table_if_exists("attr");
+    conn.drop_table_if_exists("data");
+    conn.drop_table_if_exists("context");
+    conn.drop_table_if_exists("repinfo");
+    conn.drop_table_if_exists("station");
+    conn.drop_settings();
+}
+void Driver::delete_tables_v6()
+{
+    conn.drop_table_if_exists("attr");
+    conn.drop_table_if_exists("data");
+    conn.drop_table_if_exists("lev_tr");
+    conn.drop_table_if_exists("repinfo");
+    conn.drop_table_if_exists("station");
+    conn.drop_settings();
+}
+
 }
 }
 }

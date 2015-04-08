@@ -88,11 +88,6 @@ public:
      * highest priority will be used.
      */
     virtual void add_station_vars(int id_station, Record& rec) = 0;
-
-    /**
-     * Clear (if applicable) and recreate the table structure in the database
-     */
-    static void reset_db(Connection& conn);
 };
 
 }

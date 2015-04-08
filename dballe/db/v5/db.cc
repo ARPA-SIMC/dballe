@@ -53,77 +53,6 @@ namespace v5 {
  * Database init queries
  */
 
-static const char* init_tables[] = {
-    // Delete 'pseudoana' to clean up pre-5.0 databases
-    "attr", "data", "context", "repinfo", "pseudoana"
-};
-static const char* init_sequences[] = {
-    // Delete 'seq_pseudoana' to clean up pre-5.0 databases
-    "seq_context", "seq_pseudoana"
-};
-static const char* init_functions[] = {
-/*  "identity (val anyelement, val1 anyelement)", */
-};
-
-
-#define TABLETYPE "ENGINE=InnoDB;"
-static const char* init_queries_mysql[] = {
-    "CREATE TABLE repinfo ("
-    "   id           SMALLINT PRIMARY KEY,"
-    "   memo         VARCHAR(20) NOT NULL,"
-    "   description  VARCHAR(255) NOT NULL,"
-    "   prio         INTEGER NOT NULL,"
-    "   descriptor   CHAR(6) NOT NULL,"
-    "   tablea       INTEGER NOT NULL,"
-    "   UNIQUE INDEX (prio),"
-    "   UNIQUE INDEX (memo)"
-    ") " TABLETYPE,
-    "CREATE TABLE context ("
-    "   id          INTEGER auto_increment PRIMARY KEY,"
-    "   id_ana      INTEGER NOT NULL,"
-    "   id_report   SMALLINT NOT NULL,"
-    "   datetime    DATETIME NOT NULL,"
-    "   ltype1      INTEGER NOT NULL,"
-    "   l1          INTEGER NOT NULL,"
-    "   ltype2      INTEGER NOT NULL,"
-    "   l2          INTEGER NOT NULL,"
-    "   ptype       INTEGER NOT NULL,"
-    "   p1          INTEGER NOT NULL,"
-    "   p2          INTEGER NOT NULL,"
-    "   UNIQUE INDEX (id_ana, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2, id_report),"
-    "   INDEX (id_ana),"
-    "   INDEX (id_report),"
-    "   INDEX (datetime),"
-    "   INDEX (ltype1, l1, ltype2, l2),"
-    "   INDEX (ptype, p1, p2)"
-#ifdef USE_REF_INT
-    "   , FOREIGN KEY (id_ana) REFERENCES station (id) ON DELETE CASCADE,"
-    "   FOREIGN KEY (id_report) REFERENCES repinfo (id) ON DELETE CASCADE"
-#endif
-    ") " TABLETYPE,
-    "CREATE TABLE data ("
-    "   id_context  INTEGER NOT NULL,"
-    "   id_var      SMALLINT NOT NULL,"
-    "   value       VARCHAR(255) NOT NULL,"
-    "   INDEX (id_context),"
-    "   UNIQUE INDEX(id_var, id_context)"
-#ifdef USE_REF_INT
-    "   , FOREIGN KEY (id_context) REFERENCES context (id) ON DELETE CASCADE"
-#endif
-    ") " TABLETYPE,
-    "CREATE TABLE attr ("
-    "   id_context  INTEGER NOT NULL,"
-    "   id_var      SMALLINT NOT NULL,"
-    "   type        SMALLINT NOT NULL,"
-    "   value       VARCHAR(255) NOT NULL,"
-    "   INDEX (id_context, id_var),"
-    "   UNIQUE INDEX (id_context, id_var, type)"
-#ifdef USE_REF_INT
-    "   , FOREIGN KEY (id_context, id_var) REFERENCES data (id_context, id_var) ON DELETE CASCADE"
-#endif
-    ") " TABLETYPE,
-};
-
 static const char* init_queries_postgres[] = {
     "CREATE TABLE repinfo ("
     "   id           INTEGER PRIMARY KEY,"
@@ -253,64 +182,6 @@ static const char* init_queries_sqlite[] = {
     "CREATE INDEX at_da ON attr(id_context, id_var)",
 };
 
-static const char* init_queries_oracle[] = {
-    "CREATE TABLE repinfo ("
-    "   id           INTEGER PRIMARY KEY,"
-    "   memo         VARCHAR2(30) NOT NULL,"
-    "   description  VARCHAR2(255) NOT NULL,"
-    "   prio         INTEGER NOT NULL,"
-    "   descriptor   CHAR(6) NOT NULL,"
-    "   tablea       INTEGER NOT NULL,"
-    "   UNIQUE (prio),"
-    "   UNIQUE (memo)"
-    ") ",
-    "CREATE TABLE context ("
-    "   id          INTEGER PRIMARY KEY,"
-    "   id_ana      INTEGER NOT NULL,"
-    "   id_report   INTEGER NOT NULL,"
-    "   datetime    DATE NOT NULL,"
-    "   ltype1      INTEGER NOT NULL,"
-    "   l1          INTEGER NOT NULL,"
-    "   ltype2      INTEGER NOT NULL,"
-    "   l2          INTEGER NOT NULL,"
-    "   ptype       INTEGER NOT NULL,"
-    "   p1          INTEGER NOT NULL,"
-    "   p2          INTEGER NOT NULL,"
-    "   UNIQUE (id_ana, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2, id_report)"
-#ifdef USE_REF_INT
-    "   , FOREIGN KEY (id_ana) REFERENCES station (id) ON DELETE CASCADE,"
-    "   FOREIGN KEY (id_report) REFERENCES repinfo (id) ON DELETE CASCADE"
-#endif
-    ") ",
-    "CREATE INDEX co_ana ON context(id_ana)",
-    "CREATE INDEX co_report ON context(id_report)",
-    "CREATE INDEX co_dt ON context(datetime)",
-    "CREATE INDEX co_lt ON context(ltype1, l1, ltype2, l2)",
-    "CREATE INDEX co_pt ON context(ptype, p1, p2)",
-    "CREATE SEQUENCE seq_context",
-    "CREATE TABLE data ("
-    "   id_context  INTEGER NOT NULL,"
-    "   id_var      INTEGER NOT NULL,"
-    "   value       VARCHAR2(255) NOT NULL,"
-    "   UNIQUE (id_var, id_context)"
-#ifdef USE_REF_INT
-    "   , FOREIGN KEY (id_context) REFERENCES context (id) ON DELETE CASCADE"
-#endif
-    ") ",
-    "CREATE INDEX da_co ON data(id_context)",
-    "CREATE TABLE attr ("
-    "   id_context  INTEGER NOT NULL,"
-    "   id_var      INTEGER NOT NULL,"
-    "   type        INTEGER NOT NULL,"
-    "   value       VARCHAR2(255) NOT NULL,"
-    "   UNIQUE (id_context, id_var, type)"
-#ifdef USE_REF_INT
-    "   , FOREIGN KEY (id_context, id_var) REFERENCES data (id_context, id_var) ON DELETE CASCADE"
-#endif
-    ") ",
-    "CREATE INDEX at_da ON attr(id_context, id_var)",
-};
-
 
 /*
  * DB implementation
@@ -414,58 +285,13 @@ void DB::init_after_connect()
 
 void DB::delete_tables()
 {
-    /* Drop existing tables */
-    for (size_t i = 0; i < sizeof(init_tables) / sizeof(init_tables[0]); ++i)
-        conn->drop_table_if_exists(init_tables[i]);
-
-    /* Drop existing sequences */
-    for (size_t i = 0; i < sizeof(init_sequences) / sizeof(init_sequences[0]); ++i)
-        conn->drop_sequence_if_exists(init_sequences[i]);
-
-#if 0
-    /* Allocate statement handle */
-    DBA_RUN_OR_GOTO(cleanup, dba_db_statement_create(db, &stm));
-
-    /* Drop existing functions */
-    for (i = 0; i < sizeof(init_functions) / sizeof(init_functions[0]); i++)
-    {
-        char buf[200];
-        int len;
-
-        switch (db->server_type)
-        {
-            case ServerType::MYSQL:
-            case ServerType::SQLITE:
-            case ServerType::ORACLE:
-                /* No functions used by MySQL, SQLite and Oracle */
-                break;
-            case ServerType::POSTGRES:
-                len = snprintf(buf, 100, "DROP FUNCTION %s CASCADE", init_functions[i]);
-                res = SQLExecDirect(stm, (unsigned char*)buf, len);
-                if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-                {
-                    err = dba_db_error_odbc_except(DBA_ODBC_MISSING_FUNCTION_POSTGRES, SQL_HANDLE_STMT, stm,
-                            "Removing old function %s", init_functions[i]);
-                    if (err != DBA_OK)
-                        goto cleanup;
-                }
-                DBA_RUN_OR_GOTO(cleanup, dba_db_commit(db));
-                break;
-            default:
-                /* No sequences in unknown databases */
-                break;
-        }
-    }
-#endif
+    m_driver->delete_tables_v5();
 }
 
 
 void DB::disappear()
 {
-    sql::Station::reset_db(*conn);
-
-    /* Drop existing tables */
-    delete_tables();
+    m_driver->delete_tables_v5();
 
     /* Invalidate the repinfo cache if we have a repinfo structure active */
     if (m_repinfo)
@@ -473,44 +299,18 @@ void DB::disappear()
         delete m_repinfo;
         m_repinfo = nullptr;
     }
-
-    conn->drop_settings();
 }
 
 void DB::reset(const char* repinfo_file)
 {
     disappear();
-
-    const char** queries = NULL;
-    int query_count = 0;
-    switch (conn->server_type)
-    {
-        case ServerType::MYSQL:
-            queries = init_queries_mysql;
-            query_count = sizeof(init_queries_mysql) / sizeof(init_queries_mysql[0]); break;
-        case ServerType::SQLITE:
-            queries = init_queries_sqlite;
-            query_count = sizeof(init_queries_sqlite) / sizeof(init_queries_sqlite[0]); break;
-        case ServerType::ORACLE:
-            queries = init_queries_oracle;
-            query_count = sizeof(init_queries_oracle) / sizeof(init_queries_oracle[0]); break;
-        case ServerType::POSTGRES:
-            queries = init_queries_postgres;
-            query_count = sizeof(init_queries_postgres) / sizeof(init_queries_postgres[0]); break;
-        default:
-            queries = init_queries_postgres;
-            query_count = sizeof(init_queries_postgres) / sizeof(init_queries_postgres[0]); break;
-    }
-    /* Create tables */
-    for (int i = 0; i < query_count; i++)
-        conn->exec(queries[i]);
+    m_driver->create_tables_v5();
 
     /* Populate the tables with values */
     {
         int added, deleted, updated;
         repinfo().update(repinfo_file, &added, &deleted, &updated);
     }
-    conn->set_setting("version", "V5");
 }
 
 void DB::update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated)

@@ -47,6 +47,10 @@ struct Driver : public sql::Driver
     std::unique_ptr<sql::AttrV6> create_attrv6() override;
     void run_built_query_v6(const v6::QueryBuilder& qb, std::function<void(sql::SQLRecordV6& rec)> dest) override;
     void run_delete_query_v6(const v6::QueryBuilder& qb) override;
+    void create_tables_v5() override;
+    void create_tables_v6() override;
+    void delete_tables_v5() override;
+    void delete_tables_v6() override;
 };
 
 }

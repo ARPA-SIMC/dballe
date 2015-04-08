@@ -124,6 +124,18 @@ struct Driver
     /// Run the query to delete all records selected by the given QueryBuilder
     virtual void run_delete_query_v6(const v6::QueryBuilder& qb) = 0;
 
+    /// Create all missing tables for V5 databases
+    virtual void create_tables_v5() = 0;
+
+    /// Create all missing tables for V6 databases
+    virtual void create_tables_v6() = 0;
+
+    /// Delete all tables for V5 databases
+    virtual void delete_tables_v5() = 0;
+
+    /// Delete all tables for V6 databases
+    virtual void delete_tables_v6() = 0;
+
     /// Create a Driver for this connection
     static std::unique_ptr<Driver> create(Connection& conn);
 };

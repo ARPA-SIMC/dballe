@@ -47,257 +47,6 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
-/*
- * Database init queries
- */
-
-static const char* init_tables[] = {
-    // Delete 'context' to clean up pre-5.0 databases
-    "attr", "data", "context", "lev_tr", "repinfo", "pseudoana"
-};
-static const char* init_sequences[] = {
-    // Delete 'seq_pseudoana' to clean up pre-5.0 databases
-    // Delete 'seq_context' to clean up pre-6.0 databases
-    "seq_data", "seq_lev_tr", "seq_context", "seq_pseudoana"
-};
-#if 0
-static const char* init_functions[] = {
-/*  "identity (val anyelement, val1 anyelement)", */
-};
-#endif
-
-/* TODO:
- * - Controllare che gli indici UNIQUE abbiano un senso, altrimenti tenerli solo
- *   per debug: ad ogni modo io in fase di insert devo fare una select, quindi...
- * - Controllare che l'indice unique di pseudoana abbia un senso quando ident is
- *   null, altrimenti si può pensare di toglierlo
- */
-
-#define TABLETYPE "ENGINE=InnoDB;"
-static const char* init_queries_mysql[] = {
-    "CREATE TABLE repinfo ("
-    "   id           SMALLINT PRIMARY KEY,"
-    "   memo         VARCHAR(20) NOT NULL,"
-    "   description  VARCHAR(255) NOT NULL,"
-    "   prio         INTEGER NOT NULL,"
-    "   descriptor   CHAR(6) NOT NULL,"
-    "   tablea       INTEGER NOT NULL,"
-    "   UNIQUE INDEX (prio),"
-    "   UNIQUE INDEX (memo)"
-    ") " TABLETYPE,
-    "CREATE TABLE lev_tr ("
-    "   id          INTEGER auto_increment PRIMARY KEY,"
-    "   ltype1      INTEGER NOT NULL,"
-    "   l1          INTEGER NOT NULL,"
-    "   ltype2      INTEGER NOT NULL,"
-    "   l2          INTEGER NOT NULL,"
-    "   ptype       INTEGER NOT NULL,"
-    "   p1          INTEGER NOT NULL,"
-    "   p2          INTEGER NOT NULL,"
-    "   UNIQUE INDEX (ltype1, l1, ltype2, l2, ptype, p1, p2)"
-    ") " TABLETYPE,
-    "CREATE TABLE data ("
-    "   id          INTEGER auto_increment PRIMARY KEY,"
-    "   id_station  SMALLINT NOT NULL,"
-    "   id_report   INTEGER NOT NULL,"
-    "   id_lev_tr   INTEGER NOT NULL,"
-    "   datetime    DATETIME NOT NULL,"
-    "   id_var      SMALLINT NOT NULL,"
-    "   value       VARCHAR(255) NOT NULL,"
-    "   UNIQUE INDEX(id_station, datetime, id_lev_tr, id_report, id_var),"
-    "   INDEX(datetime),"
-    "   INDEX(id_lev_tr)"
-#ifdef USE_REF_INT
-    "   , FOREIGN KEY (id_station) REFERENCES station (id) ON DELETE CASCADE"
-    "   , FOREIGN KEY (id_lev_tr) REFERENCES lev_tr (id) ON DELETE CASCADE"
-    "   , FOREIGN KEY (id_report) REFERENCES repinfo (id) ON DELETE CASCADE"
-#endif
-    ") " TABLETYPE,
-    "CREATE TABLE attr ("
-    "   id_data     INTEGER NOT NULL,"
-    "   type        SMALLINT NOT NULL,"
-    "   value       VARCHAR(255) NOT NULL,"
-    "   UNIQUE INDEX (id_data, type)"
-#ifdef USE_REF_INT
-    "   , FOREIGN KEY (id_data) REFERENCES data (id) ON DELETE CASCADE"
-#endif
-    ") " TABLETYPE,
-};
-
-static const char* init_queries_postgres[] = {
-    "CREATE TABLE repinfo ("
-    "   id           INTEGER PRIMARY KEY,"
-    "   memo         VARCHAR(30) NOT NULL,"
-    "   description  VARCHAR(255) NOT NULL,"
-    "   prio         INTEGER NOT NULL,"
-    "   descriptor   CHAR(6) NOT NULL,"
-    "   tablea       INTEGER NOT NULL"
-    ") ",
-    "CREATE UNIQUE INDEX ri_memo_uniq ON repinfo(memo)",
-    "CREATE UNIQUE INDEX ri_prio_uniq ON repinfo(prio)",
-    "CREATE TABLE lev_tr ("
-    "   id          SERIAL PRIMARY KEY,"
-    "   ltype1      INTEGER NOT NULL,"
-    "   l1          INTEGER NOT NULL,"
-    "   ltype2      INTEGER NOT NULL,"
-    "   l2          INTEGER NOT NULL,"
-    "   ptype       INTEGER NOT NULL,"
-    "   p1          INTEGER NOT NULL,"
-    "   p2          INTEGER NOT NULL"
-    ") ",
-    "CREATE UNIQUE INDEX lev_tr_uniq ON lev_tr(ltype1, l1, ltype2, l2, ptype, p1, p2)",
-    "CREATE TABLE data ("
-    "   id          SERIAL PRIMARY KEY,"
-    "   id_station  INTEGER NOT NULL,"
-    "   id_report   INTEGER NOT NULL,"
-    "   id_lev_tr   INTEGER NOT NULL,"
-    "   datetime    TIMESTAMP NOT NULL,"
-    "   id_var      INTEGER NOT NULL,"
-    "   value       VARCHAR(255) NOT NULL"
-#ifdef USE_REF_INT
-    "   , FOREIGN KEY (id_station) REFERENCES station (id) ON DELETE CASCADE"
-    "   , FOREIGN KEY (id_report) REFERENCES repinfo (id) ON DELETE CASCADE"
-    "   , FOREIGN KEY (id_lev_tr) REFERENCES lev_tr (id) ON DELETE CASCADE"
-#endif
-    ") ",
-    "CREATE UNIQUE INDEX data_uniq on data(id_station, datetime, id_lev_tr, id_report, id_var)",
-    "CREATE INDEX data_ana ON data(id_station)",
-    "CREATE INDEX data_report ON data(id_report)",
-    "CREATE INDEX data_dt ON data(datetime)",
-    "CREATE INDEX data_lt ON data(id_lev_tr)",
-    "CREATE TABLE attr ("
-    "   id_data     INTEGER NOT NULL,"
-    "   type        INTEGER NOT NULL,"
-    "   value       VARCHAR(255) NOT NULL"
-#ifdef USE_REF_INT
-    "   , FOREIGN KEY (id_data) REFERENCES data (id) ON DELETE CASCADE"
-#endif
-    ") ",
-    "CREATE UNIQUE INDEX attr_uniq ON attr(id_data, type)",
-/*
- * Not a good idea: it works on ALL inserts, even on those that should fail
-    "CREATE RULE data_insert_or_update AS "
-    " ON INSERT TO data "
-    " WHERE (new.id_context, new.id_var) IN ( "
-    " SELECT id_context, id_var "
-    " FROM data "
-    " WHERE id_context=new.id_context AND id_var=new.id_var) "
-    " DO INSTEAD "
-    " UPDATE data SET value=new.value "
-    " WHERE id_context=new.id_context AND id_var=new.id_var",
-*/
-    /*"CREATE FUNCTION identity (val anyelement, val1 anyelement, OUT val anyelement) AS 'select $2' LANGUAGE sql STRICT",
-    "CREATE AGGREGATE anyval ( basetype=anyelement, sfunc='identity', stype='anyelement' )",*/
-};
-
-static const char* init_queries_sqlite[] = {
-    "CREATE TABLE repinfo ("
-    "   id           INTEGER PRIMARY KEY,"
-    "   memo         VARCHAR(30) NOT NULL,"
-    "   description  VARCHAR(255) NOT NULL,"
-    "   prio         INTEGER NOT NULL,"
-    "   descriptor   CHAR(6) NOT NULL,"
-    "   tablea       INTEGER NOT NULL,"
-    "   UNIQUE (prio),"
-    "   UNIQUE (memo)"
-    ") ",
-    "CREATE TABLE lev_tr ("
-    "   id         INTEGER PRIMARY KEY,"
-    "   ltype1      INTEGER NOT NULL,"
-    "   l1          INTEGER NOT NULL,"
-    "   ltype2      INTEGER NOT NULL,"
-    "   l2          INTEGER NOT NULL,"
-    "   ptype       INTEGER NOT NULL,"
-    "   p1          INTEGER NOT NULL,"
-    "   p2          INTEGER NOT NULL,"
-    "   UNIQUE (ltype1, l1, ltype2, l2, ptype, p1, p2)"
-    ") ",
-    "CREATE TABLE data ("
-    "   id          INTEGER PRIMARY KEY,"
-    "   id_station  INTEGER NOT NULL,"
-    "   id_report   INTEGER NOT NULL,"
-    "   id_lev_tr   INTEGER NOT NULL,"
-    "   datetime    TEXT NOT NULL,"
-    "   id_var      INTEGER NOT NULL,"
-    "   value       VARCHAR(255) NOT NULL,"
-    "   UNIQUE (id_station, datetime, id_lev_tr, id_report, id_var)"
-#ifdef USE_REF_INT
-    "   , FOREIGN KEY (id_station) REFERENCES station (id) ON DELETE CASCADE"
-    "   , FOREIGN KEY (id_report) REFERENCES repinfo (id) ON DELETE CASCADE"
-    "   , FOREIGN KEY (id_lev_tr) REFERENCES lev_tr (id) ON DELETE CASCADE"
-#endif
-    ") ",
-    "CREATE INDEX data_report ON data(id_report)",
-    "CREATE INDEX data_lt ON data(id_lev_tr)",
-    "CREATE TABLE attr ("
-    "   id_data     INTEGER NOT NULL,"
-    "   type        INTEGER NOT NULL,"
-    "   value       VARCHAR(255) NOT NULL,"
-    "   UNIQUE (id_data, type)"
-#ifdef USE_REF_INT
-    "   , FOREIGN KEY (id_data) REFERENCES data (id) ON DELETE CASCADE"
-#endif
-    ") "
-};
-
-static const char* init_queries_oracle[] = {
-    "CREATE TABLE repinfo ("
-    "   id           INTEGER PRIMARY KEY,"
-    "   memo         VARCHAR2(30) NOT NULL,"
-    "   description  VARCHAR2(255) NOT NULL,"
-    "   prio         INTEGER NOT NULL,"
-    "   descriptor   CHAR(6) NOT NULL,"
-    "   tablea       INTEGER NOT NULL,"
-    "   UNIQUE (prio),"
-    "   UNIQUE (memo)"
-    ") ",
-    "CREATE TABLE lev_tr ("
-    "   id          INTEGER PRIMARY KEY,"
-    "   ltype1      INTEGER NOT NULL,"
-    "   l1          INTEGER NOT NULL,"
-    "   ltype2      INTEGER NOT NULL,"
-    "   l2          INTEGER NOT NULL,"
-    "   ptype       INTEGER NOT NULL,"
-    "   p1          INTEGER NOT NULL,"
-    "   p2          INTEGER NOT NULL,"
-    ") ",
-    "CREATE SEQUENCE seq_lev_tr",
-    "CREATE UNIQUE INDEX lev_tr_uniq ON lev_tr(ltype1, l1, ltype2, l2, ptype, p1, p2)"
-    "CREATE TABLE data ("
-    "   id          SERIAL PRIMARY KEY,"
-    "   id_station  INTEGER NOT NULL,"
-    "   id_report   INTEGER NOT NULL,"
-    "   id_lev_tr   INTEGER NOT NULL,"
-    "   datetime    DATE NOT NULL,"
-    "   id_var      INTEGER NOT NULL,"
-    "   value       VARCHAR(255) NOT NULL,"
-#ifdef USE_REF_INT
-    "   , FOREIGN KEY (id_station) REFERENCES station (id) ON DELETE CASCADE"
-    "   , FOREIGN KEY (id_report) REFERENCES repinfo (id) ON DELETE CASCADE"
-    "   , FOREIGN KEY (id_lev_tr) REFERENCES lev_tr (id) ON DELETE CASCADE"
-#endif
-    ") ",
-    "CREATE UNIQUE INDEX data_uniq(id_station, datetime, id_lev_tr, id_report, id_var)",
-    "CREATE INDEX data_sta ON data(id_station)",
-    "CREATE INDEX data_rep ON data(id_report)",
-    "CREATE INDEX data_dt ON data(datetime)",
-    "CREATE INDEX data_lt ON data(id_lev_tr)",
-    "CREATE TABLE attr ("
-    "   id_data     INTEGER NOT NULL,"
-    "   type        INTEGER NOT NULL,"
-    "   value       VARCHAR(255) NOT NULL,"
-#ifdef USE_REF_INT
-    "   , FOREIGN KEY (id_data) REFERENCES data (id) ON DELETE CASCADE"
-#endif
-    ") ",
-    "CREATE UNIQUE INDEX attr_uniq ON attr(id_data, type)",
-};
-
-/*
- * DB implementation
- */
-
-
 // First part of initialising a dba_db
 DB::DB(unique_ptr<Connection> conn)
     : conn(conn.release()),
@@ -390,21 +139,12 @@ void DB::init_after_connect()
 
 void DB::delete_tables()
 {
-    /* Drop existing tables */
-    for (size_t i = 0; i < sizeof(init_tables) / sizeof(init_tables[0]); ++i)
-        conn->drop_table_if_exists(init_tables[i]);
-
-    /* Drop existing sequences */
-    for (size_t i = 0; i < sizeof(init_sequences) / sizeof(init_sequences[0]); ++i)
-        conn->drop_sequence_if_exists(init_sequences[i]);
+    m_driver->delete_tables_v6();
 }
 
 void DB::disappear()
 {
-    sql::Station::reset_db(*conn);
-
-    // Drop existing tables
-    delete_tables();
+    m_driver->delete_tables_v6();
 
     // Invalidate the repinfo cache if we have a repinfo structure active
     if (m_repinfo)
@@ -412,44 +152,18 @@ void DB::disappear()
         delete m_repinfo;
         m_repinfo = 0;
     }
-
-    conn->drop_settings();
 }
 
 void DB::reset(const char* repinfo_file)
 {
     disappear();
-
-    const char** queries = NULL;
-    int query_count = 0;
-    switch (conn->server_type)
-    {
-        case ServerType::MYSQL:
-            queries = init_queries_mysql;
-            query_count = sizeof(init_queries_mysql) / sizeof(init_queries_mysql[0]); break;
-        case ServerType::SQLITE:
-            queries = init_queries_sqlite;
-            query_count = sizeof(init_queries_sqlite) / sizeof(init_queries_sqlite[0]); break;
-        case ServerType::ORACLE:
-            queries = init_queries_oracle;
-            query_count = sizeof(init_queries_oracle) / sizeof(init_queries_oracle[0]); break;
-        case ServerType::POSTGRES:
-            queries = init_queries_postgres;
-            query_count = sizeof(init_queries_postgres) / sizeof(init_queries_postgres[0]); break;
-        default:
-            queries = init_queries_postgres;
-            query_count = sizeof(init_queries_postgres) / sizeof(init_queries_postgres[0]); break;
-    }
-    /* Create tables */
-    for (int i = 0; i < query_count; i++)
-        conn->exec(queries[i]);
+    m_driver->create_tables_v6();
 
     /* Populate the tables with values */
     {
         int added, deleted, updated;
         repinfo().update(repinfo_file, &added, &deleted, &updated);
     }
-    conn->set_setting("version", "V6");
     if (m_lev_tr_cache)
         m_lev_tr_cache->invalidate();
 }
@@ -710,8 +424,6 @@ void DB::dump(FILE* out)
     }
 #endif
 
-} // namespace v6
-} // namespace db
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
+}
+}
+}

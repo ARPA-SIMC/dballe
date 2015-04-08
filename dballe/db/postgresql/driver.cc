@@ -237,6 +237,105 @@ void Driver::run_delete_query_v6(const v6::QueryBuilder& qb)
     throw error_unimplemented("delete V6");
 }
 
+void Driver::create_tables_v5()
+{
+}
+void Driver::create_tables_v6()
+{
+    conn.exec_no_data(R"(
+        CREATE TABLE station (
+           id         SERIAL PRIMARY KEY,
+           lat        INTEGER NOT NULL,
+           lon        INTEGER NOT NULL,
+           ident      VARCHAR(64)
+        );
+    )");
+    conn.exec_no_data("CREATE UNIQUE INDEX pa_uniq ON station(lat, lon, ident);");
+    conn.exec_no_data("CREATE INDEX pa_lon ON station(lon);");
+    conn.exec_no_data(R"(
+        CREATE TABLE repinfo (
+           id           INTEGER PRIMARY KEY,
+           memo         VARCHAR(30) NOT NULL,
+           description  VARCHAR(255) NOT NULL,
+           prio         INTEGER NOT NULL,
+           descriptor   CHAR(6) NOT NULL,
+           tablea       INTEGER NOT NULL
+        );
+    )");
+    conn.exec_no_data("CREATE UNIQUE INDEX ri_memo_uniq ON repinfo(memo);");
+    conn.exec_no_data("CREATE UNIQUE INDEX ri_prio_uniq ON repinfo(prio);");
+    conn.exec_no_data(R"(
+        CREATE TABLE lev_tr (
+           id          SERIAL PRIMARY KEY,
+           ltype1      INTEGER NOT NULL,
+           l1          INTEGER NOT NULL,
+           ltype2      INTEGER NOT NULL,
+           l2          INTEGER NOT NULL,
+           ptype       INTEGER NOT NULL,
+           p1          INTEGER NOT NULL,
+           p2          INTEGER NOT NULL
+        );
+    )");
+    conn.exec_no_data("CREATE UNIQUE INDEX lev_tr_uniq ON lev_tr(ltype1, l1, ltype2, l2, ptype, p1, p2);");
+    conn.exec_no_data(R"(
+        CREATE TABLE data (
+           id          SERIAL PRIMARY KEY,
+           id_station  INTEGER NOT NULL REFERENCES station (id) ON DELETE CASCADE,
+           id_report   INTEGER NOT NULL REFERENCES repinfo (id) ON DELETE CASCADE,
+           id_lev_tr   INTEGER NOT NULL,
+           datetime    TIMESTAMP NOT NULL,
+           id_var      INTEGER NOT NULL,
+           value       VARCHAR(255) NOT NULL
+        );
+    )");
+    conn.exec_no_data("CREATE UNIQUE INDEX data_uniq on data(id_station, datetime, id_lev_tr, id_report, id_var);");
+    conn.exec_no_data("CREATE INDEX data_ana ON data(id_station);");
+    conn.exec_no_data("CREATE INDEX data_report ON data(id_report);");
+    conn.exec_no_data("CREATE INDEX data_dt ON data(datetime);");
+    conn.exec_no_data("CREATE INDEX data_lt ON data(id_lev_tr);");
+    conn.exec_no_data(R"(
+        CREATE TABLE attr (
+           id_data     INTEGER NOT NULL REFERENCES data (id) ON DELETE CASCADE,
+           type        INTEGER NOT NULL,
+           value       VARCHAR(255) NOT NULL
+        );
+    )");
+    conn.exec_no_data("CREATE UNIQUE INDEX attr_uniq ON attr(id_data, type);");
+/*
+ * Not a good idea: it works on ALL inserts, even on those that should fail
+    "CREATE RULE data_insert_or_update AS "
+    " ON INSERT TO data "
+    " WHERE (new.id_context, new.id_var) IN ( "
+    " SELECT id_context, id_var "
+    " FROM data "
+    " WHERE id_context=new.id_context AND id_var=new.id_var) "
+    " DO INSTEAD "
+    " UPDATE data SET value=new.value "
+    " WHERE id_context=new.id_context AND id_var=new.id_var",
+*/
+    /*"CREATE FUNCTION identity (val anyelement, val1 anyelement, OUT val anyelement) AS 'select $2' LANGUAGE sql STRICT",
+    "CREATE AGGREGATE anyval ( basetype=anyelement, sfunc='identity', stype='anyelement' )",*/
+    conn.set_setting("version", "V6");
+}
+void Driver::delete_tables_v5()
+{
+    conn.drop_table_if_exists("attr");
+    conn.drop_table_if_exists("data");
+    conn.drop_table_if_exists("context");
+    conn.drop_table_if_exists("repinfo");
+    conn.drop_table_if_exists("station");
+    conn.drop_settings();
+}
+void Driver::delete_tables_v6()
+{
+    conn.drop_table_if_exists("attr");
+    conn.drop_table_if_exists("data");
+    conn.drop_table_if_exists("lev_tr");
+    conn.drop_table_if_exists("repinfo");
+    conn.drop_table_if_exists("station");
+    conn.drop_settings();
+}
+
 }
 }
 }

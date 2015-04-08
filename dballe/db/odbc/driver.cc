@@ -199,6 +199,299 @@ void Driver::run_delete_query_v6(const v6::QueryBuilder& qb)
     }
 }
 
+void Driver::create_tables_v5()
+{
+    switch (conn.server_type)
+    {
+        case ServerType::MYSQL:
+            conn.exec(R"(
+                CREATE TABLE station (
+                   id         INTEGER auto_increment PRIMARY KEY,
+                   lat        INTEGER NOT NULL,
+                   lon        INTEGER NOT NULL,
+                   ident      CHAR(64),
+                   UNIQUE INDEX(lat, lon, ident(8)),
+                   INDEX(lon)
+                ) ENGINE=InnoDB;
+            )");
+            conn.exec(R"(
+                CREATE TABLE repinfo (
+                   id           SMALLINT PRIMARY KEY,
+                   memo         VARCHAR(20) NOT NULL,
+                   description  VARCHAR(255) NOT NULL,
+                   prio         INTEGER NOT NULL,
+                   descriptor   CHAR(6) NOT NULL,
+                   tablea       INTEGER NOT NULL,
+                   UNIQUE INDEX (prio),
+                   UNIQUE INDEX (memo)
+                ) ENGINE=InnoDB;
+            )");
+            conn.exec(R"(
+                CREATE TABLE context (
+                   id          INTEGER auto_increment PRIMARY KEY,
+                   id_ana      INTEGER NOT NULL,
+                   id_report   SMALLINT NOT NULL,
+                   datetime    DATETIME NOT NULL,
+                   ltype1      INTEGER NOT NULL,
+                   l1          INTEGER NOT NULL,
+                   ltype2      INTEGER NOT NULL,
+                   l2          INTEGER NOT NULL,
+                   ptype       INTEGER NOT NULL,
+                   p1          INTEGER NOT NULL,
+                   p2          INTEGER NOT NULL,
+                   UNIQUE INDEX (id_ana, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2, id_report),
+                   INDEX (id_ana),
+                   INDEX (id_report),
+                   INDEX (datetime),
+                   INDEX (ltype1, l1, ltype2, l2),
+                   INDEX (ptype, p1, p2)
+               ) ENGINE=InnoDB;
+            )");
+            conn.exec(R"(
+                CREATE TABLE data (
+                   id_context  INTEGER NOT NULL,
+                   id_var      SMALLINT NOT NULL,
+                   value       VARCHAR(255) NOT NULL,
+                   INDEX (id_context),
+                   UNIQUE INDEX(id_var, id_context)
+               ) ENGINE=InnoDB;
+            )");
+            conn.exec(R"(
+                CREATE TABLE attr (
+                   id_context  INTEGER NOT NULL,
+                   id_var      SMALLINT NOT NULL,
+                   type        SMALLINT NOT NULL,
+                   value       VARCHAR(255) NOT NULL,
+                   INDEX (id_context, id_var),
+                   UNIQUE INDEX (id_context, id_var, type)
+               ) ENGINE=InnoDB;
+            )");
+            break;
+        case ServerType::ORACLE:
+            conn.exec(R"(
+                CREATE TABLE station (
+                   id         INTEGER PRIMARY KEY,
+                   lat        INTEGER NOT NULL,
+                   lon        INTEGER NOT NULL,
+                   ident      VARCHAR2(64),
+                   UNIQUE (lat, lon, ident)
+                );
+                CREATE INDEX pa_lon ON station(lon);
+                CREATE SEQUENCE seq_station;
+            )");
+            conn.exec(R"(
+                CREATE TABLE repinfo (
+                   id           INTEGER PRIMARY KEY,
+                   memo         VARCHAR2(30) NOT NULL,
+                   description  VARCHAR2(255) NOT NULL,
+                   prio         INTEGER NOT NULL,
+                   descriptor   CHAR(6) NOT NULL,
+                   tablea       INTEGER NOT NULL,
+                   UNIQUE (prio),
+                   UNIQUE (memo)
+                )
+            )");
+            conn.exec(R"(
+                CREATE TABLE context (
+                   id          INTEGER PRIMARY KEY,
+                   id_ana      INTEGER NOT NULL,
+                   id_report   INTEGER NOT NULL,
+                   datetime    DATE NOT NULL,
+                   ltype1      INTEGER NOT NULL,
+                   l1          INTEGER NOT NULL,
+                   ltype2      INTEGER NOT NULL,
+                   l2          INTEGER NOT NULL,
+                   ptype       INTEGER NOT NULL,
+                   p1          INTEGER NOT NULL,
+                   p2          INTEGER NOT NULL,
+                   UNIQUE (id_ana, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2, id_report)
+                );
+                CREATE INDEX co_ana ON context(id_ana);
+                CREATE INDEX co_report ON context(id_report);
+                CREATE INDEX co_dt ON context(datetime);
+                CREATE INDEX co_lt ON context(ltype1, l1, ltype2, l2);
+                CREATE INDEX co_pt ON context(ptype, p1, p2);
+                CREATE SEQUENCE seq_context;
+            )");
+            conn.exec(R"(
+                CREATE TABLE data (
+                   id_context  INTEGER NOT NULL,
+                   id_var      INTEGER NOT NULL,
+                   value       VARCHAR2(255) NOT NULL,
+                   UNIQUE (id_var, id_context)
+                );
+                CREATE INDEX da_co ON data(id_context);
+            )");
+            conn.exec(R"(
+                CREATE TABLE attr (
+                   id_context  INTEGER NOT NULL,
+                   id_var      INTEGER NOT NULL,
+                   type        INTEGER NOT NULL,
+                   value       VARCHAR2(255) NOT NULL,
+                   UNIQUE (id_context, id_var, type)
+                );
+                CREATE INDEX at_da ON attr(id_context, id_var);
+            )");
+            break;
+        default:
+            throw error_unimplemented("ODBC connection is only supported for MySQL and Oracle");
+    }
+    conn.set_setting("version", "V5");
+}
+void Driver::create_tables_v6()
+{
+    switch (conn.server_type)
+    {
+        case ServerType::MYSQL:
+            conn.exec(R"(
+                CREATE TABLE station (
+                   id         INTEGER auto_increment PRIMARY KEY,
+                   lat        INTEGER NOT NULL,
+                   lon        INTEGER NOT NULL,
+                   ident      CHAR(64),
+                   UNIQUE INDEX(lat, lon, ident(8)),
+                   INDEX(lon)
+                ) ENGINE=InnoDB;
+            )");
+            conn.exec(R"(
+                CREATE TABLE repinfo (
+                   id           SMALLINT PRIMARY KEY,
+                   memo         VARCHAR(20) NOT NULL,
+                   description  VARCHAR(255) NOT NULL,
+                   prio         INTEGER NOT NULL,
+                   descriptor   CHAR(6) NOT NULL,
+                   tablea       INTEGER NOT NULL,
+                   UNIQUE INDEX (prio),
+                   UNIQUE INDEX (memo)
+                ) ENGINE=InnoDB;
+            )");
+            conn.exec(R"(
+                CREATE TABLE lev_tr (
+                   id          INTEGER auto_increment PRIMARY KEY,
+                   ltype1      INTEGER NOT NULL,
+                   l1          INTEGER NOT NULL,
+                   ltype2      INTEGER NOT NULL,
+                   l2          INTEGER NOT NULL,
+                   ptype       INTEGER NOT NULL,
+                   p1          INTEGER NOT NULL,
+                   p2          INTEGER NOT NULL,
+                   UNIQUE INDEX (ltype1, l1, ltype2, l2, ptype, p1, p2)
+               ) ENGINE=InnoDB;
+            )");
+            conn.exec(R"(
+                CREATE TABLE data (
+                   id          INTEGER auto_increment PRIMARY KEY,
+                   id_station  SMALLINT NOT NULL,
+                   id_report   INTEGER NOT NULL,
+                   id_lev_tr   INTEGER NOT NULL,
+                   datetime    DATETIME NOT NULL,
+                   id_var      SMALLINT NOT NULL,
+                   value       VARCHAR(255) NOT NULL,
+                   UNIQUE INDEX(id_station, datetime, id_lev_tr, id_report, id_var),
+                   INDEX(datetime),
+                   INDEX(id_lev_tr)
+               ) ENGINE=InnoDB;
+            )");
+            conn.exec(R"(
+                CREATE TABLE attr (
+                   id_data     INTEGER NOT NULL,
+                   type        SMALLINT NOT NULL,
+                   value       VARCHAR(255) NOT NULL,
+                   UNIQUE INDEX (id_data, type)
+               ) ENGINE=InnoDB;
+            )");
+            break;
+        case ServerType::ORACLE:
+            conn.exec(R"(
+                CREATE TABLE station (
+                   id         INTEGER PRIMARY KEY,
+                   lat        INTEGER NOT NULL,
+                   lon        INTEGER NOT NULL,
+                   ident      VARCHAR2(64),
+                   UNIQUE (lat, lon, ident)
+                );
+                CREATE INDEX pa_lon ON station(lon);
+                CREATE SEQUENCE seq_station;
+            )");
+            conn.exec(R"(
+                CREATE TABLE repinfo (
+                   id           INTEGER PRIMARY KEY,
+                   memo         VARCHAR2(30) NOT NULL,
+                   description  VARCHAR2(255) NOT NULL,
+                   prio         INTEGER NOT NULL,
+                   descriptor   CHAR(6) NOT NULL,
+                   tablea       INTEGER NOT NULL,
+                   UNIQUE (prio),
+                   UNIQUE (memo)
+                )
+            )");
+            conn.exec(R"(
+                CREATE TABLE lev_tr (
+                   id          INTEGER PRIMARY KEY,
+                   ltype1      INTEGER NOT NULL,
+                   l1          INTEGER NOT NULL,
+                   ltype2      INTEGER NOT NULL,
+                   l2          INTEGER NOT NULL,
+                   ptype       INTEGER NOT NULL,
+                   p1          INTEGER NOT NULL,
+                   p2          INTEGER NOT NULL,
+                );
+                CREATE SEQUENCE seq_lev_tr;
+                CREATE UNIQUE INDEX lev_tr_uniq ON lev_tr(ltype1, l1, ltype2, l2, ptype, p1, p2);
+            )");
+            conn.exec(R"(
+                CREATE TABLE data (
+                   id          SERIAL PRIMARY KEY,
+                   id_station  INTEGER NOT NULL,
+                   id_report   INTEGER NOT NULL,
+                   id_lev_tr   INTEGER NOT NULL,
+                   datetime    DATE NOT NULL,
+                   id_var      INTEGER NOT NULL,
+                   value       VARCHAR(255) NOT NULL,
+                );
+                CREATE UNIQUE INDEX data_uniq(id_station, datetime, id_lev_tr, id_report, id_var);
+                CREATE INDEX data_sta ON data(id_station);
+                CREATE INDEX data_rep ON data(id_report);
+                CREATE INDEX data_dt ON data(datetime);
+                CREATE INDEX data_lt ON data(id_lev_tr);
+            )");
+            conn.exec(R"(
+                CREATE TABLE attr ("
+                   id_data     INTEGER NOT NULL,
+                   type        INTEGER NOT NULL,
+                   value       VARCHAR(255) NOT NULL,
+                );
+                CREATE UNIQUE INDEX attr_uniq ON attr(id_data, type);
+            )");
+            break;
+        default:
+            throw error_unimplemented("ODBC connection is only supported for MySQL and Oracle");
+    }
+    conn.set_setting("version", "V6");
+}
+void Driver::delete_tables_v5()
+{
+    conn.drop_sequence_if_exists("seq_context"); // Oracle only
+    conn.drop_sequence_if_exists("seq_station"); // Oracle only
+    conn.drop_table_if_exists("attr");
+    conn.drop_table_if_exists("data");
+    conn.drop_table_if_exists("context");
+    conn.drop_table_if_exists("repinfo");
+    conn.drop_table_if_exists("station");
+    conn.drop_settings();
+}
+void Driver::delete_tables_v6()
+{
+    conn.drop_sequence_if_exists("seq_lev_tr");  // Oracle only
+    conn.drop_sequence_if_exists("seq_station"); // Oracle only
+    conn.drop_table_if_exists("attr");
+    conn.drop_table_if_exists("data");
+    conn.drop_table_if_exists("lev_tr");
+    conn.drop_table_if_exists("repinfo");
+    conn.drop_table_if_exists("station");
+    conn.drop_settings();
+}
+
 }
 }
 }
