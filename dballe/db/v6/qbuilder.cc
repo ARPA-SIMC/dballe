@@ -441,7 +441,7 @@ void SummaryQueryBuilder::build_select()
     {
         sql_query.append(R"(
             SELECT s.id, s.lat, s.lon, s.ident, d.id_report, d.id_lev_tr, d.id_var,
-                   COUNT(*), MIN(d.datetime), MAX(d.datetime)
+                   COUNT(1), MIN(d.datetime), MAX(d.datetime)
         )");
         select_summary_details = true;
     } else {

@@ -193,7 +193,7 @@ void Driver::run_built_query_v6(
 
             if (qb.select_summary_details)
             {
-                rec.out_id_data = res.get_int4(row, output_seq++);
+                rec.out_id_data = res.get_int8(row, output_seq++);
                 rec.out_datetime = res.get_timestamp(row, output_seq++);
                 rec.out_datetimemax = res.get_timestamp(row, output_seq++);
             }
