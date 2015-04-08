@@ -33,6 +33,7 @@
 #include "dballe/db/postgresql/station.h"
 #include "dballe/db/postgresql/levtr.h"
 #include "dballe/db/postgresql/datav6.h"
+#include "dballe/db/postgresql/attrv6.h"
 #include "dballe/db/odbc/internals.h"
 #include "dballe/db/odbc/repinfo.h"
 #include "dballe/db/odbc/station.h"
@@ -106,8 +107,8 @@ unique_ptr<sql::AttrV6> create_attrv6(Connection& conn)
         return unique_ptr<sql::AttrV6>(new ODBCAttrV6(*c));
     else if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(&conn))
         return unique_ptr<sql::AttrV6>(new SQLiteAttrV6(*c));
-    //else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(&conn))
-        //return unique_ptr<sql::AttrV6>(new PostgreSQLAttrV6(*c));
+    else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(&conn))
+        return unique_ptr<sql::AttrV6>(new PostgreSQLAttrV6(*c));
     else
         throw error_unimplemented("v6 DB Data only implemented for ODBC and SQLite connectors");
 }

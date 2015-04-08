@@ -117,9 +117,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 
             /* Insert the attributes */
             if (inserted && (flags & DBA_IMPORT_ATTRS))
-                for (const Var* attr = l_ana->data[i]->next_attr(); attr != NULL; attr = attr->next_attr())
-                    if (attr->value() != NULL)
-                        dq.write(id_data, *attr);
+                dq.add(id_data, *(l_ana->data[i]));
         }
     }
 
@@ -168,9 +166,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 
             /* Insert the attributes */
             if (flags & DBA_IMPORT_ATTRS)
-                for (const Var* attr = var.next_attr(); attr; attr = attr->next_attr())
-                    if (attr->value() != NULL)
-                        dq.write(id_data, *attr);
+                dq.add(id_data, var);
         }
     }
 

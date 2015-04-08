@@ -68,6 +68,15 @@ struct db_sql_attrv6 : public dballe::tests::db_test
             return db6->attr();
         throw error_consistency("cannot test attrv6 on the current DB");
     }
+
+    Var query(int id_data, unsigned expected_attr_count)
+    {
+        Var res(varinfo(WR_VAR(0, 12, 101)));
+        unsigned count = 0;
+        attr().read(id_data, [&](unique_ptr<Var> attr) { res.seta(auto_ptr<Var>(attr.release())); ++count; });
+        wassert(actual(count) == expected_attr_count);
+        return res;
+    }
 };
 
 }
@@ -83,39 +92,53 @@ template<> template<> void to::test<1>()
     use_db();
     auto& at = attr();
 
+    Var var1(varinfo(WR_VAR(0, 12, 101)), 280.0);
+    var1.seta(ap_newvar(WR_VAR(0, 33, 7), 50));
+
+    Var var2(varinfo(WR_VAR(0, 12, 101)), 280.0);
+    var2.seta(ap_newvar(WR_VAR(0, 33, 7), 75));
+
     // Insert a datum
-    at.write(1, Var(varinfo(WR_VAR(0, 33, 7)), 50));
+    at.add(1, var1);
 
     // Insert another datum
-    at.write(2, Var(varinfo(WR_VAR(0, 33, 7)), 75));
+    at.add(2, var2);
 
-    // Reinsert a datum: it should work
-    at.write(1, Var(varinfo(WR_VAR(0, 33, 7)), 50));
+    // Reinsert the same datum: it should work, doing no insert/update queries
+    at.add(1, var1);
 
-    // Reinsert the other datum: it should work
-    at.write(2, Var(varinfo(WR_VAR(0, 33, 7)), 75));
+    // Reinsert the other same datum: it should work, doing no insert/update queries
+    at.add(2, var2);
 
     // Load the attributes for the first variable
     {
-        Var var(varinfo(WR_VAR(0, 1, 2)));
-        wassert(actual(var.next_attr()).isfalse());
-        at.read(1, [&](unique_ptr<Var> attr) { var.seta(auto_ptr<Var>(attr.release())); });
-        wassert(actual(var.next_attr()).istrue());
-        const Var* attr = var.next_attr();
-        wassert(actual(attr->value()) == "50");
-        wassert(actual(attr->next_attr()).isfalse());
+        Var var(query(1, 1));
+        wassert(actual(var.next_attr()->code()) == WR_VAR(0, 33, 7));
+        wassert(actual(var.next_attr()->value()) == "50");
     }
 
     // Load the attributes for the second variable
     {
-        Var var(varinfo(WR_VAR(0, 1, 2)));
-        wassert(actual(var.next_attr()).isfalse());
-        at.read(2, [&](unique_ptr<Var> attr) { var.seta(auto_ptr<Var>(attr.release())); });
-        wassert(actual(var.next_attr()).istrue());
-        const Var* attr = var.next_attr();
-        wassert(actual(attr->value()) == "75");
-        wassert(actual(attr->next_attr()).isfalse());
+        Var var(query(2, 1));
+        wassert(actual(var.next_attr()->code()) == WR_VAR(0, 33, 7));
+        wassert(actual(var.next_attr()->value()) == "75");
     }
+
+    // Update both values
+    at.add(1, var2);
+    at.add(2, var1);
+    {
+        Var var(query(1, 1));
+        wassert(actual(var.next_attr()->code()) == WR_VAR(0, 33, 7));
+        wassert(actual(var.next_attr()->value()) == "75");
+    }
+    {
+        Var var(query(2, 1));
+        wassert(actual(var.next_attr()->code()) == WR_VAR(0, 33, 7));
+        wassert(actual(var.next_attr()->value()) == "50");
+    }
+
+    // TODO: test a mix of update and insert
 }
 
 }

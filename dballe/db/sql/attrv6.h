@@ -24,27 +24,48 @@
 
 #include <wreport/var.h>
 #include <functional>
+#include <vector>
 #include <memory>
 #include <cstdio>
 
 namespace dballe {
+struct Record;
+
 namespace db {
 namespace sql {
+
+struct AttributeList;
 
 /**
  * Precompiled queries to manipulate the attr table
  */
 struct AttrV6
 {
+protected:
+    /**
+     * Add all the attributes in attrs as attributes of the variable id_data.
+     *
+     * Existing attributes are replaced if they are also found in var, but are
+     * not deleted if they are not found in var.
+     */
+    virtual void impl_add(int id_data, AttributeList& attrs) = 0;
+
+public:
     virtual ~AttrV6();
 
     /**
-     * Insert an entry into the attr table
+     * Add all the variables in attrs as attributes of id_data.
      *
-     * If set to true, an existing attribute with the same context and
-     * wreport::Varcode will be overwritten
+     * Existing attributes are replaced but not deleted.
      */
-    virtual void write(int id_data, const wreport::Var& var) = 0;
+    void add(int id_data, const Record& attrs);
+
+    /**
+     * Add all the attributes of var as attributes of id_data.
+     *
+     * Existing attributes are replaced but not deleted.
+     */
+    void add(int id_data, const wreport::Var& var);
 
     /**
      * Load from the database all the attributes for var

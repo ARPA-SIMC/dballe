@@ -88,6 +88,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/mem/db.h \
 	db/querybuf.h \
 	db/sql.h \
+	db/sql/internals.h \
 	db/sql/repinfo.h \
 	db/sql/station.h \
 	db/sql/levtr.h \

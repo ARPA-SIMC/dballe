@@ -15,12 +15,12 @@ namespace v6 {
 PostgreSQLDataV6::PostgreSQLDataV6(PostgreSQLConnection& conn)
     : conn(conn)
 {
-    conn.prepare("v6_data_insert", R"(
+    conn.prepare("datav6_insert", R"(
         INSERT INTO data (id, id_station, id_report, id_lev_tr, datetime, id_var, value)
              VALUES (DEFAULT, $1::int4, $2::int4, $3::int4, $4::timestamp, $5::int4, $6::text)
           RETURNING id
     )");
-    conn.prepare("v6_data_insert_ignore", R"(
+    conn.prepare("datav6_insert_ignore", R"(
         INSERT INTO data (id_station, id_report, id_lev_tr, datetime, id_var, value)
              SELECT $1::int4, $2::int4, $3::int4, $4::timestamp, $5::int4, $6::text
               WHERE NOT EXISTS (
@@ -32,10 +32,10 @@ PostgreSQLDataV6::PostgreSQLDataV6(PostgreSQLConnection& conn)
                     )
           RETURNING id
     )");
-    conn.prepare("v6_data_update", R"(
+    conn.prepare("datav6_update", R"(
         UPDATE data SET value=$2::text WHERE id=$1::int4
     )");
-    conn.prepare("v6_data_select_id", R"(
+    conn.prepare("datav6_select_id", R"(
         SELECT id FROM data
          WHERE id_station=$1::int4 AND id_report=$2::int4
            AND id_lev_tr=$3::int4 AND datetime=$4::timestamp AND id_var=$5::int4
@@ -72,9 +72,9 @@ void PostgreSQLDataV6::insert_or_fail(const wreport::Var& var, int* res_id)
     using namespace postgresql;
     Result res;
     if (const char* val = var.value())
-        res = move(conn.exec_prepared_one_row("v6_data_insert", id_station, id_report, id_lev_tr, date, (int)var.code(), val));
+        res = move(conn.exec_prepared_one_row("datav6_insert", id_station, id_report, id_lev_tr, date, (int)var.code(), val));
     else
-        res = move(conn.exec_prepared_one_row("v6_data_insert", id_station, id_report, id_lev_tr, date, (int)var.code(), nullptr));
+        res = move(conn.exec_prepared_one_row("datav6_insert", id_station, id_report, id_lev_tr, date, (int)var.code(), nullptr));
 
     if (res_id)
         *res_id = res.get_int4(0, 0);
@@ -85,9 +85,9 @@ bool PostgreSQLDataV6::insert_or_ignore(const wreport::Var& var, int* res_id)
     using namespace postgresql;
     Result res;
     if (const char* val = var.value())
-        res = move(conn.exec_prepared_unchecked("v6_data_insert_ignore", id_station, id_report, id_lev_tr, date, (int)var.code(), val));
+        res = move(conn.exec_prepared_unchecked("datav6_insert_ignore", id_station, id_report, id_lev_tr, date, (int)var.code(), val));
     else
-        res = move(conn.exec_prepared_unchecked("v6_data_insert_ignore", id_station, id_report, id_lev_tr, date, (int)var.code(), nullptr));
+        res = move(conn.exec_prepared_unchecked("datav6_insert_ignore", id_station, id_report, id_lev_tr, date, (int)var.code(), nullptr));
 
     switch (res.rowcount())
     {
@@ -96,7 +96,7 @@ bool PostgreSQLDataV6::insert_or_ignore(const wreport::Var& var, int* res_id)
             if (res_id) *res_id = res.get_int4(0, 0);
             return true;
         default:
-            error_consistency::throwf("got %d results instead of 1 executing precompiled query v6_data_insert_ignore", res.rowcount());
+            error_consistency::throwf("got %d results instead of 1 executing precompiled query datav6_insert_ignore", res.rowcount());
     }
     return true;
 
@@ -108,7 +108,7 @@ void PostgreSQLDataV6::insert_or_overwrite(const wreport::Var& var, int* res_id)
     auto trans = conn.transaction();
     conn.exec_no_data("LOCK TABLE data IN EXCLUSIVE MODE");
 
-    auto res_sel = conn.exec_prepared("v6_data_select_id", id_station, id_report, id_lev_tr, date, (int)var.code());
+    auto res_sel = conn.exec_prepared("datav6_select_id", id_station, id_report, id_lev_tr, date, (int)var.code());
     switch (res_sel.rowcount())
     {
         case 0:
@@ -116,9 +116,9 @@ void PostgreSQLDataV6::insert_or_overwrite(const wreport::Var& var, int* res_id)
             // None present, do insert
             Result res;
             if (const char* val = var.value())
-                res = move(conn.exec_prepared_one_row("v6_data_insert", id_station, id_report, id_lev_tr, date, (int)var.code(), val));
+                res = move(conn.exec_prepared_one_row("datav6_insert", id_station, id_report, id_lev_tr, date, (int)var.code(), val));
             else
-                res = move(conn.exec_prepared_one_row("v6_data_insert", id_station, id_report, id_lev_tr, date, (int)var.code(), nullptr));
+                res = move(conn.exec_prepared_one_row("datav6_insert", id_station, id_report, id_lev_tr, date, (int)var.code(), nullptr));
             if (res_id) *res_id = res.get_int4(0, 0);
             break;
         }
@@ -129,9 +129,9 @@ void PostgreSQLDataV6::insert_or_overwrite(const wreport::Var& var, int* res_id)
             if (res_id) *res_id = id;
 
             if (const char* val = var.value())
-                conn.exec_prepared_no_data("v6_data_update", id, val);
+                conn.exec_prepared_no_data("datav6_update", id, val);
             else
-                conn.exec_prepared_no_data("v6_data_update", id, nullptr);
+                conn.exec_prepared_no_data("datav6_update", id, nullptr);
             break;
         }
         default: error_consistency::throwf("get id data v6 query returned %u results", res_sel.rowcount());

@@ -23,7 +23,7 @@
 #define DBALLE_DB_POSTGRESQL_ATTRV6_H
 
 #include <dballe/db/sql/attrv6.h>
-#include <dballe/db/sqlite/internals.h>
+#include <dballe/db/postgresql/internals.h>
 
 namespace dballe {
 namespace db {
@@ -34,15 +34,11 @@ namespace v6 {
  */
 class PostgreSQLAttrV6 : public sql::AttrV6
 {
-#if 0
 protected:
     /** DB connection. */
     PostgreSQLConnection& conn;
 
-    /** Precompiled select statement */
-    PostgreSQLStatement* sstm = nullptr;
-    /** Precompiled replace statement */
-    PostgreSQLStatement* rstm = nullptr;
+    void impl_add(int id_data, sql::AttributeList& attrs) override;
 
 public:
     PostgreSQLAttrV6(PostgreSQLConnection& conn);
@@ -50,14 +46,6 @@ public:
     PostgreSQLAttrV6(const PostgreSQLAttrV6&&) = delete;
     PostgreSQLAttrV6& operator=(const PostgreSQLAttrV6&) = delete;
     ~PostgreSQLAttrV6();
-
-    /**
-     * Insert an entry into the attr table
-     *
-     * If set to true, an existing attribute with the same context and
-     * wreport::Varcode will be overwritten
-     */
-    void write(int id_data, const wreport::Var& var) override;
 
     /**
      * Load from the database all the attributes for var
@@ -73,7 +61,6 @@ public:
      * Dump the entire contents of the table to an output stream
      */
     void dump(FILE* out) override;
-#endif
 };
 
 }

@@ -62,17 +62,11 @@ protected:
      */
     void set_value(const char* value);
 
+    void impl_add(int id_data, sql::AttributeList& attrs) override;
+
 public:
     ODBCAttrV6(ODBCConnection& conn);
     ~ODBCAttrV6();
-
-    /**
-     * Insert an entry into the attr table
-     *
-     * If set to true, an existing attribute with the same context and
-     * wreport::Varcode will be overwritten
-     */
-    void write(int id_data, const wreport::Var& var) override;
 
     /**
      * Load from the database all the attributes for var

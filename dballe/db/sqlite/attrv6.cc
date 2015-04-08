@@ -19,6 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 #include "attrv6.h"
+#include "dballe/db/sql/internals.h"
 #include "dballe/core/var.h"
 
 using namespace std;
@@ -50,15 +51,15 @@ SQLiteAttrV6::~SQLiteAttrV6()
     delete rstm;
 }
 
-void SQLiteAttrV6::write(int id_data, const wreport::Var& var)
+void SQLiteAttrV6::impl_add(int id_data, sql::AttributeList& attrs)
 {
-    rstm->bind_val(1, id_data);
-    rstm->bind_val(2, var.code());
-    if (var.value())
-        rstm->bind_val(3, var.value());
-    else
-        rstm->bind_null_val(3);
-    rstm->execute();
+    for (auto i : attrs)
+    {
+        rstm->bind_val(1, id_data);
+        rstm->bind_val(2, i.first);
+        rstm->bind_val(3, i.second);
+        rstm->execute();
+    }
 }
 
 void SQLiteAttrV6::read(int id_data, function<void(unique_ptr<Var>)> dest)
@@ -87,7 +88,7 @@ void SQLiteAttrV6::dump(FILE* out)
         else
         {
             string val = stm->column_string(2);
-            fprintf(out, " %.*s\n", val.size(), val.data());
+            fprintf(out, " %.*s\n", (int)val.size(), val.data());
         }
         ++count;
     });

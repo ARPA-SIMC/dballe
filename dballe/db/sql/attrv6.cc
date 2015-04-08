@@ -1,5 +1,5 @@
 /*
- * db/v6/attr - attr table management
+ * db/sql/attrv6 - v6 implementation of attr table
  *
  * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -20,32 +20,8 @@
  */
 
 #include "attrv6.h"
-#if 0
-#include "db.h"
-#include "dballe/db/sqlite/internals.h"
-#include "dballe/db/sqlite/repinfo.h"
-#include "dballe/db/sqlite/station.h"
-#include "dballe/db/sqlite/levtr.h"
-#include "dballe/db/sqlite/datav6.h"
-#include "dballe/db/sqlite/v6_attr.h"
-#include "dballe/db/sqlite/v6_run_query.h"
-#include "dballe/db/postgresql/internals.h"
-#include "dballe/db/postgresql/repinfo.h"
-#include "dballe/db/postgresql/station.h"
-#include "dballe/db/postgresql/levtr.h"
-#include "dballe/db/postgresql/datav6.h"
-#include "dballe/db/odbc/internals.h"
-#include "dballe/db/odbc/repinfo.h"
-#include "dballe/db/odbc/station.h"
-#include "dballe/db/odbc/levtr.h"
-#include "dballe/db/odbc/datav6.h"
-#include "dballe/db/odbc/v6_attr.h"
-#include "dballe/db/odbc/v6_run_query.h"
+#include "internals.h"
 #include "dballe/core/record.h"
-#include "dballe/msg/context.h"
-#include "dballe/msg/msg.h"
-#include <sstream>
-#endif
 
 using namespace wreport;
 using namespace std;
@@ -55,6 +31,26 @@ namespace db {
 namespace sql {
 
 AttrV6::~AttrV6() {}
+
+void AttrV6::add(int id_data, const Record& attrs)
+{
+    sql::AttributeList alist;
+    for (vector<Var*>::const_iterator i = attrs.vars().begin(); i != attrs.vars().end(); ++i)
+        if ((*i)->value() != NULL)
+            alist.add((*i)->code(), (*i)->value());
+    if (alist.empty()) return;
+    impl_add(id_data, alist);
+}
+
+void AttrV6::add(int id_data, const wreport::Var& var)
+{
+    sql::AttributeList alist;
+    for (const Var* attr = var.next_attr(); attr != NULL; attr = attr->next_attr())
+        if (attr->value() != NULL)
+            alist.add(attr->code(), attr->value());
+    if (alist.empty()) return;
+    impl_add(id_data, alist);
+}
 
 }
 }

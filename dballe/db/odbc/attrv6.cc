@@ -19,6 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 #include "attrv6.h"
+#include "dballe/db/sql/internals.h"
 #include "dballe/core/var.h"
 #include <memory>
 #include <sqltypes.h>
@@ -111,18 +112,21 @@ void ODBCAttrV6::set_value(const char* qvalue)
     }
 }
 
-void ODBCAttrV6::write(int id_data, const wreport::Var& var)
+void ODBCAttrV6::impl_add(int id_data, sql::AttributeList& attrs)
 {
     this->id_data = id_data;
-    type = var.code();
-    set_value(var.value());
-
-    if (conn.server_type == ServerType::POSTGRES)
+    for (auto i : attrs)
     {
-        if (rstm->execute_and_close() == SQL_NO_DATA)
-            istm->execute_and_close();
-    } else
-        rstm->execute_and_close();
+        type = i.first;
+        set_value(i.second);
+
+        if (conn.server_type == ServerType::POSTGRES)
+        {
+            if (rstm->execute_and_close() == SQL_NO_DATA)
+                istm->execute_and_close();
+        } else
+            rstm->execute_and_close();
+    }
 }
 
 void ODBCAttrV6::read(int id_data, function<void(unique_ptr<Var>)> dest)

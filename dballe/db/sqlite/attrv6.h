@@ -1,5 +1,5 @@
 /*
- * db/v6/odbc/attr - attribute table management
+ * db/sqlite/attr - attribute table management
  *
  * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -43,20 +43,14 @@ protected:
     /** Precompiled replace statement */
     SQLiteStatement* rstm = nullptr;
 
+    void impl_add(int id_data, sql::AttributeList& attrs) override;
+
 public:
     SQLiteAttrV6(SQLiteConnection& conn);
     SQLiteAttrV6(const SQLiteAttrV6&) = delete;
     SQLiteAttrV6(const SQLiteAttrV6&&) = delete;
     SQLiteAttrV6& operator=(const SQLiteAttrV6&) = delete;
     ~SQLiteAttrV6();
-
-    /**
-     * Insert an entry into the attr table
-     *
-     * If set to true, an existing attribute with the same context and
-     * wreport::Varcode will be overwritten
-     */
-    void write(int id_data, const wreport::Var& var) override;
 
     /**
      * Load from the database all the attributes for var

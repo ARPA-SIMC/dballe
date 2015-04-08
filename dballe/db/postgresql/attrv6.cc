@@ -19,7 +19,9 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 #include "attrv6.h"
+#include "dballe/db/sql/internals.h"
 #include "dballe/core/var.h"
+#include <cstring>
 
 using namespace std;
 using namespace wreport;
@@ -28,73 +30,110 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
-#if 0
 PostgreSQLAttrV6::PostgreSQLAttrV6(PostgreSQLConnection& conn)
     : conn(conn)
 {
-    const char* select_query =
-        "SELECT type, value FROM attr WHERE id_data=?";
-    const char* replace_query =
-        "INSERT OR REPLACE INTO attr (id_data, type, value)"
-        " VALUES(?, ?, ?)";
-
-    // Create the statement for select
-    sstm = conn.sqlitestatement(select_query).release();
-
-    // Create the statement for replace
-    rstm = conn.sqlitestatement(replace_query).release();
+    conn.prepare("attrv6_select", R"(
+        SELECT type, value FROM attr WHERE id_data=$1::int4
+    )");
+    conn.prepare("attrv6_select_existing", R"(
+        SELECT type, value FROM attr WHERE id_data=$1::int4
+    )");
+    conn.prepare("attrv6_insert", R"(
+        INSERT INTO attr (id_data, type, value) VALUES ($1::int4, $2::int4, $3::text)
+    )");
+    conn.prepare("attrv6_update", R"(
+        UPDATE attr SET value=$3::text WHERE id_data=$1::int4 AND type=$2::int4
+    )");
 }
 
 PostgreSQLAttrV6::~PostgreSQLAttrV6()
 {
-    delete sstm;
-    delete rstm;
 }
 
-void PostgreSQLAttrV6::write(int id_data, const wreport::Var& var)
+void PostgreSQLAttrV6::impl_add(int id_data, sql::AttributeList& attrs)
 {
-    rstm->bind_val(1, id_data);
-    rstm->bind_val(2, var.code());
-    if (var.value())
-        rstm->bind_val(3, var.value());
-    else
-        rstm->bind_null_val(3);
-    rstm->execute();
+    using namespace postgresql;
+
+    auto trans = conn.transaction();
+    conn.exec_no_data("LOCK TABLE attr IN EXCLUSIVE MODE");
+
+    // Get the current status of attributes
+    Result res_current(conn.exec_prepared("attrv6_select_existing", id_data));
+    for (unsigned row = 0; row < res_current.rowcount(); ++row)
+    {
+        Varcode code = res_current.get_int4(row, 0);
+        if (const char* val = attrs.pop(code))
+        {
+            if (strcmp(val, res_current.get_string(row, 1)) == 0)
+                // Same value, nothing to do
+                continue;
+
+            // Update
+            conn.exec_prepared_no_data("attrv6_update", id_data, (int)code, val);
+        }
+    }
+    for (auto a: attrs)
+        // Insert
+        conn.exec_prepared_no_data("attrv6_insert", id_data, a.first, a.second);
+
+#if 0
+    // Send the new attributes to the server in a temporary table
+    conn.exec_no_data("CREATE TEMPORARY TABLE attrv6_insert_tmp (type INTEGER NOT NULL, value VARCHAR(255) NOT NULL) ON COMMIT DROP");
+    for (const auto& val: attrs)
+        conn.exec_no_data("INSERT INTO attrv6_insert_tmp VALUES ($1::int4, $2::text)", (int)val.first, val.second);
+
+    // Perform updates
+    conn.exec_no_data(R"(
+        UPDATE attr a
+           SET value=i.value
+          FROM attrv6_insert_tmp i
+         WHERE a.id_data=$1::int4 AND a.type=i.type
+    )", id_data);
+
+    // Perform inserts
+    conn.exec_no_data(R"(
+        INSERT INTO attr (id_data, type, value) (
+             SELECT $1::int4, i.type, i.value
+               FROM attrv6_insert_tmp i
+              WHERE NOT EXISTS (SELECT 1 FROM attr WHERE id_data=$1::int4 AND type=i.type)
+        )
+    )", id_data);
+#endif
+
+    trans->commit();
 }
 
 void PostgreSQLAttrV6::read(int id_data, function<void(unique_ptr<Var>)> dest)
 {
-    sstm->bind_val(1, id_data);
-    sstm->execute([&]() {
-        if (sstm->column_isnull(1))
-            dest(newvar(sstm->column_int(0)));
+    using namespace postgresql;
+    Result res = conn.exec_prepared("attrv6_select", id_data);
+    for (unsigned row = 0; row < res.rowcount(); ++row)
+    {
+        if (res.is_null(row, 1))
+            dest(newvar(res.get_int4(row, 0)));
         else
-            dest(newvar(sstm->column_int(0), sstm->column_string(1).c_str()));
-    });
+            dest(newvar(res.get_int4(row, 0), res.get_string(row, 1)));
+    }
 }
 
 void PostgreSQLAttrV6::dump(FILE* out)
 {
     int count = 0;
     fprintf(out, "dump of table attr:\n");
-    auto stm = conn.sqlitestatement("SELECT id_data, type, value FROM attr");
-    stm->execute([&]() {
-        Varcode type = stm->column_int(1);
-        fprintf(out, " %4d, %01d%02d%03d",
-                stm->column_int(0),
-                WR_VAR_F(type), WR_VAR_X(type), WR_VAR_Y(type));
-        if (stm->column_isnull(2))
-            fprintf(out, "\n");
-        else
-        {
-            string val = stm->column_string(2);
-            fprintf(out, " %.*s\n", val.size(), val.data());
-        }
+    auto res = conn.exec("SELECT id_data, type, value FROM attr");
+    for (unsigned row = 0; row < res.rowcount(); ++row)
+    {
+        Varcode type = res.get_int4(row, 1);
+        const char* val = res.get_string(row, 2);
+        fprintf(out, " %4d, %01d%02d%03d %s",
+                res.get_int4(row, 0),
+                WR_VAR_F(type), WR_VAR_X(type), WR_VAR_Y(type),
+                val);
         ++count;
-    });
+    }
     fprintf(out, "%d element%s in table attr\n", count, count != 1 ? "s" : "");
 }
-#endif
 
 }
 }
