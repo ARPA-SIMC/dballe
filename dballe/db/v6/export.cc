@@ -103,8 +103,18 @@ void DB::export_msgs(const Query& query, MsgConsumer& consumer)
 
     StationLayerCache station_cache;
 
-    // Retrieve results
+    // Retrieve results, buffering them locally to avoid performing concurrent
+    // queries
+    Structbuf<sql::SQLRecordV6> results;
     driver().run_built_query_v6(qb, [&](sql::SQLRecordV6& sqlrec) {
+        results.append(sqlrec);
+    });
+    results.ready_to_read();
+
+    for (unsigned row = 0; row < results.size(); ++row)
+    {
+        const sql::SQLRecordV6& sqlrec = results[row];
+
         //TRACE("Got B%02d%03d %ld,%ld, %ld,%ld %ld,%ld,%ld %s\n",
         //        WR_VAR_X(sqlrec.out_varcode), WR_VAR_Y(sqlrec.out_varcode),
         //        sqlrec.out_ltype1, sqlrec.out_l1, sqlrec.out_ltype2, sqlrec.out_l2, sqlrec.out_pind, sqlrec.out_p1, sqlrec.out_p2,
@@ -183,7 +193,7 @@ void DB::export_msgs(const Query& query, MsgConsumer& consumer)
             if (ctx)
                 ctx->set(move(var));
         }
-    });
+    }
 
     if (msg.get() != NULL)
     {
