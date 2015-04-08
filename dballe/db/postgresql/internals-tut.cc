@@ -234,15 +234,24 @@ void to::test<12>()
     conn.drop_table_if_exists("db_postgresql_internals_12");
     conn.exec_no_data("CREATE TABLE db_postgresql_internals_12 (val TIMESTAMP)");
     conn.exec_no_data("INSERT INTO db_postgresql_internals_12 VALUES ('2015-04-01 12:30:45')");
+    conn.exec_no_data("INSERT INTO db_postgresql_internals_12 VALUES ('1945-04-25 08:10:20')");
     conn.prepare("db_postgresql_internals_12_select", "SELECT val FROM db_postgresql_internals_12 WHERE val=$1::timestamp");
 
-    auto res1 = conn.exec("SELECT val FROM db_postgresql_internals_12");
+    auto res1 = conn.exec("SELECT val FROM db_postgresql_internals_12 WHERE val=TIMESTAMP '2015-04-01 12:30:45'");
     wassert(actual(res1.rowcount()) == 1);
     wassert(actual(res1.get_timestamp(0, 0)) == Datetime(2015, 4, 1, 12, 30, 45));
 
     auto res2 = conn.exec_prepared("db_postgresql_internals_12_select", Datetime(2015, 4, 1, 12, 30, 45));
     wassert(actual(res2.rowcount()) == 1);
     wassert(actual(res2.get_timestamp(0, 0)) == Datetime(2015, 4, 1, 12, 30, 45));
+
+    auto res3 = conn.exec("SELECT val FROM db_postgresql_internals_12 WHERE val=TIMESTAMP '1945-04-25 08:10:20'");
+    wassert(actual(res3.rowcount()) == 1);
+    wassert(actual(res3.get_timestamp(0, 0)) == Datetime(1945, 4, 25, 8, 10, 20));
+
+    auto res4 = conn.exec_prepared("db_postgresql_internals_12_select", Datetime(1945, 4, 25, 8, 10, 20));
+    wassert(actual(res4.rowcount()) == 1);
+    wassert(actual(res4.get_timestamp(0, 0)) == Datetime(1945, 4, 25, 8, 10, 20));
 }
 
 

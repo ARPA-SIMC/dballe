@@ -95,6 +95,8 @@ void Driver::run_built_query_v6(
 {
     using namespace dballe::db::postgresql;
 
+    // fprintf(stderr, "QUERY %d %s\n", qb.bind_in_ident, qb.sql_query.c_str());
+
     // Start the query asynchronously
     int res;
     if (qb.bind_in_ident)
@@ -147,6 +149,7 @@ void Driver::run_built_query_v6(
                     throw error_postgresql(res, "executing " + qb.sql_query);
             }
         }
+        // fprintf(stderr, "ST %d vi %d did %d d %d sd %d\n", qb.select_station, qb.select_varinfo, qb.select_data_id, qb.select_data, qb.select_summary_details);
         for (unsigned row = 0; row < res.rowcount(); ++row)
         {
             int output_seq = 0;
@@ -195,6 +198,7 @@ void Driver::run_built_query_v6(
                 rec.out_datetimemax = res.get_timestamp(row, output_seq++);
             }
 
+            // rec.dump(stderr);
             try {
                 dest(rec);
             } catch (std::exception& e) {

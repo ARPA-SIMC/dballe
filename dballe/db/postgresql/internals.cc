@@ -128,14 +128,21 @@ Datetime Result::get_timestamp(unsigned row, unsigned col) const
     // Convert from microseconds to seconds
     decoded = decoded / 1000000;
 
-    // Decode time
+    // Split date and time
     int time = decoded % 86400;
+    int jdate = decoded / 86400;
+    if (time < 0)
+    {
+        time += 86400;
+        jdate -= 1;
+    }
+
+    // Decode time
     dt.time.hour = time / 3600;
     dt.time.minute = (time / 60) % 60;
     dt.time.second = time % 60;
 
     // Decode date
-    int jdate = decoded / 86400;
     jdate += EPOCH_JDATE;
     dt.date.from_julian(jdate);
 
