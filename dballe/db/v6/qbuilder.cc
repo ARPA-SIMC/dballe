@@ -337,13 +337,13 @@ bool StationQueryBuilder::build_where()
     if (const char* val = rec.key_peek_value(DBA_KEY_VAR))
     {
         sql_where.append_listf("EXISTS(SELECT id FROM data s_stvar"
-                               " WHERE s_stvar.id_station=s.id AND s_stvar.id_lev_tr!=-1"
+                               " WHERE s_stvar.id_station=s.id AND s_stvar.id_lev_tr != -1"
                                "   AND s_stvar.id_var=%d)",
                                descriptor_code(val));
         has_where = true;
     } else if (const char* val = rec.key_peek_value(DBA_KEY_VARLIST)) {
         sql_where.append_listf("EXISTS(SELECT id FROM data s_stvar"
-                               " WHERE s_stvar.id_station=s.id AND s_stvar.id_lev_tr!=-1"
+                               " WHERE s_stvar.id_station=s.id AND s_stvar.id_lev_tr != -1"
                                "   AND s_stvar.id_var IN (");
         sql_where.append_varlist(val);
         sql_where.append("))");
