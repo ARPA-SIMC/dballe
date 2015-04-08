@@ -214,27 +214,16 @@ void Driver::run_built_query_v6(
 
 void Driver::run_delete_query_v6(const v6::QueryBuilder& qb)
 {
-#if 0
-    auto stmd = conn.sqlitestatement("DELETE FROM data WHERE id=?");
-    auto stma = conn.sqlitestatement("DELETE FROM attr WHERE id_data=?");
-    auto stm = conn.sqlitestatement(qb.sql_query);
-    if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
-
-    // Iterate all the data_id results, deleting the related data and attributes
-    stm->execute([&]() {
-        // Get the list of data to delete
-        int out_id_data = stm->column_int(0);
-
-        // Compile the DELETE query for the data
-        stmd->bind_val(1, out_id_data);
-        stmd->execute();
-
-        // Compile the DELETE query for the attributes
-        stma->bind_val(1, out_id_data);
-        stma->execute();
-    });
-#endif
-    throw error_unimplemented("delete V6");
+    Querybuf dq(512);
+    dq.append("DELETE FROM data WHERE id IN (");
+    dq.append(qb.sql_query);
+    dq.append(")");
+    if (qb.bind_in_ident)
+    {
+        conn.exec_no_data(dq.c_str(), qb.bind_in_ident);
+    } else {
+        conn.exec_no_data(dq.c_str());
+    }
 }
 
 void Driver::create_tables_v5()
