@@ -20,10 +20,11 @@
 #include "db/test-utils-db.h"
 #include "db/odbc/internals.h"
 #include "db/v5/db.h"
-#include "db/v5/attr.h"
 #include "db/v5/context.h"
 #include "db/sql/station.h"
 #include "db/sql/datav5.h"
+#include "db/sql/attrv5.h"
+#include "db/odbc/attrv5.h"
 
 using namespace dballe;
 using namespace dballe::db;
@@ -36,12 +37,12 @@ namespace tut {
 
 struct dbv5_attr_shar : public dballe::tests::db_test
 {
-    Attr* at;
+    ODBCAttrV5* at;
 
     dbv5_attr_shar() : dballe::tests::db_test(db::V5)
     {
         if (!has_db()) return;
-        at = &v5().attr();
+        at = dynamic_cast<ODBCAttrV5*>(&v5().attr());
 
         sql::Station& st = v5().station();
         Context& co = v5().context();
@@ -144,24 +145,22 @@ void to::test<2>()
 	at->set_value("75");
     at->insert();
 
-	// Load the attributes for the first variable
+    // Load the attributes for the first variable
     {
         Var var(varinfo(WR_VAR(0, 1, 2)));
-        at->id_context = 1;
         ensure(var.next_attr() == 0);
-        at->load(var);
+        at->load(1, var);
         ensure(var.next_attr() != 0);
         const Var* attr = var.next_attr();
         ensure_equals(string(attr->value()), "50");
         ensure(attr->next_attr() == NULL);
     }
 
-	// Load the attributes for the second variable
+    // Load the attributes for the second variable
     {
         Var var(varinfo(WR_VAR(0, 1, 2)));
-        at->id_context = 2;
         ensure(var.next_attr() == 0);
-        at->load(var);
+        at->load(2, var);
         ensure(var.next_attr() != 0);
         const Var* attr = var.next_attr();
         ensure_equals(string(attr->value()), "75");

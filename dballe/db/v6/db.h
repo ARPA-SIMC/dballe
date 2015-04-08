@@ -74,10 +74,10 @@ struct Station;
 struct LevTr;
 struct LevTrCache;
 struct DataV6;
+struct AttrV6;
 }
 
 namespace v6 {
-struct Attr;
 
 /**
  * DB-ALLe database connection
@@ -118,7 +118,7 @@ protected:
     /** Variable data */
     struct sql::DataV6* m_data;
     /** Variable attributes */
-    struct Attr* m_attr;
+    struct sql::AttrV6* m_attr;
     /** @} */
 
     int _last_station_id;
@@ -148,7 +148,7 @@ public:
     sql::DataV6& data();
 
     /// Access the data table
-    Attr& attr();
+    sql::AttrV6& attr();
 
     void disappear();
 

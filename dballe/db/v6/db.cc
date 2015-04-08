@@ -352,10 +352,10 @@ sql::DataV6& DB::data()
     return *m_data;
 }
 
-Attr& DB::attr()
+sql::AttrV6& DB::attr()
 {
     if (m_attr == NULL)
-        m_attr = v6::Attr::create(*this).release();
+        m_attr = create_attrv6(*conn).release();
     return *m_attr;
 }
 
@@ -626,7 +626,7 @@ void DB::query_attrs(int id_data, wreport::Varcode id_var,
         std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     // Create the query
-    v6::Attr& a = attr();
+    sql::AttrV6& a = attr();
     a.read(id_data, dest);
 }
 
@@ -645,7 +645,7 @@ void DB::attr_insert(wreport::Varcode id_var, const Record& attrs)
 
 void DB::attr_insert(int id_data, wreport::Varcode id_var, const Record& attrs)
 {
-    v6::Attr& a = attr();
+    sql::AttrV6& a = attr();
 
     // Begin the transaction
     auto t = conn->transaction();

@@ -33,6 +33,7 @@
 #include <dballe/db/sql/station.h>
 #include <dballe/db/sql/levtr.h>
 #include <dballe/db/sql/datav6.h>
+#include <dballe/db/sql/attrv6.h>
 #include <wreport/var.h>
 #include <memory>
 #include <cstdio>
@@ -65,37 +66,8 @@ std::unique_ptr<sql::LevTr> create_levtr(Connection& conn);
 /// Precompiled queries to manipulate the levtr table
 std::unique_ptr<sql::DataV6> create_datav6(Connection& conn);
 
-/**
- * Precompiled queries to manipulate the attr table
- */
-struct Attr
-{
-    static std::unique_ptr<Attr> create(DB& db);
-    virtual ~Attr();
-
-    /**
-     * Insert an entry into the attr table
-     *
-     * If set to true, an existing attribute with the same context and
-     * wreport::Varcode will be overwritten
-     */
-    virtual void write(int id_data, const wreport::Var& var) = 0;
-
-    /**
-     * Load from the database all the attributes for var
-     *
-     * @param var
-     *   wreport::Var to which the resulting attributes will be added
-     * @return
-     *   The error indicator for the function (See @ref error.h)
-     */
-    virtual void read(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
-
-    /**
-     * Dump the entire contents of the table to an output stream
-     */
-    virtual void dump(FILE* out) = 0;
-};
+/// Precompiled queries to manipulate the levtr table
+std::unique_ptr<sql::AttrV6> create_attrv6(Connection& conn);
 
 /// Query results from SQL output
 struct SQLRecord

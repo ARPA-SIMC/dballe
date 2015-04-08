@@ -34,9 +34,10 @@
 #include "dballe/db/odbc/station.h"
 #include "dballe/db/sql/datav5.h"
 #include "dballe/db/odbc/datav5.h"
+#include "dballe/db/sql/attrv5.h"
+#include "dballe/db/odbc/attrv5.h"
 #include "context.h"
 #include "cursor.h"
-#include "attr.h"
 
 #include <dballe/core/record.h>
 #include <dballe/core/defs.h>
@@ -412,13 +413,13 @@ sql::DataV5& DB::data()
     return *m_data;
 }
 
-Attr& DB::attr()
+sql::AttrV5& DB::attr()
 {
     if (m_attr == NULL)
     {
         ODBCConnection* c = dynamic_cast<ODBCConnection*>(conn);
         if (!c) throw error_unimplemented("v5 DB Attr only works with ODBC connectors");
-        m_attr = new Attr(*c);
+        m_attr = new ODBCAttrV5(*c);
     }
     return *m_attr;
 }
@@ -1051,10 +1052,9 @@ void DB::attr_insert(wreport::Varcode id_var, const Record& attrs)
 
 void DB::attr_insert(int reference_id, wreport::Varcode id_var, const Record& attrs)
 {
-    Attr& a = attr();
+    sql::AttrV5& a = attr();
 
-    a.id_context = reference_id;
-    a.id_var = id_var;
+    a.set_context(reference_id, id_var);
 
     // Begin the transaction
     auto t = conn->transaction();

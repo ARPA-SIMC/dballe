@@ -24,8 +24,8 @@
 #include "dballe/db/sql/repinfo.h"
 #include "dballe/db/sql/station.h"
 #include "dballe/db/sql/datav5.h"
+#include "dballe/db/sql/attrv5.h"
 #include "context.h"
-#include "attr.h"
 
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/msg.h>
@@ -49,7 +49,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
     sql::Station& st = station();
     Context& dc = context();
     sql::DataV5& dd = data();
-    Attr& dq = attr();
+    sql::AttrV5& dq = attr();
 
     // Begin transaction
     auto t = conn->transaction();
@@ -120,11 +120,10 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 				inserted = true;
 			}
 
-            dq.id_context = id_context;
-            dq.id_var = l_ana->data[i]->code();
+            dq.set_context(id_context, l_ana->data[i]->code());
 
-			/* Insert the attributes */
-			if (inserted && (flags & DBA_IMPORT_ATTRS))
+            /* Insert the attributes */
+            if (inserted && (flags & DBA_IMPORT_ATTRS))
                 for (const Var* attr = l_ana->data[i]->next_attr(); attr != NULL; attr = attr->next_attr())
 					if (attr->value() != NULL)
 					{
@@ -193,11 +192,10 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 			else
 				dd.insert_or_fail();
 
-			/* Insert the attributes */
-			if (flags & DBA_IMPORT_ATTRS)
-			{
-                dq.id_context = id_context;
-                dq.id_var = var.code();
+            /* Insert the attributes */
+            if (flags & DBA_IMPORT_ATTRS)
+            {
+                dq.set_context(id_context, var.code());
 
 				for (const Var* attr = var.next_attr(); attr; attr = attr->next_attr())
 					if (attr->value() != NULL)

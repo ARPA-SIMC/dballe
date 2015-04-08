@@ -1,7 +1,7 @@
 /*
- * db/attr - attr table management
+ * db/v6/odbc/attr - attribute table management
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,58 +18,55 @@
  *
  * Author: Enrico Zini <enrico@enricozini.com>
  */
-
-#include "attr.h"
-#include "dballe/db/odbc/internals.h"
-#include <dballe/core/var.h>
-
+#include "attrv6.h"
+#include "dballe/core/var.h"
+#include <memory>
+#include <sqltypes.h>
 #include <sql.h>
 #include <cstring>
 
-using namespace wreport;
 using namespace std;
+using namespace wreport;
 
 namespace dballe {
 namespace db {
-namespace v5 {
+namespace v6 {
 
-Attr::Attr(ODBCConnection& conn)
+ODBCAttrV6::ODBCAttrV6(ODBCConnection& conn)
     : conn(conn), sstm(0), istm(0), rstm(0)
 {
     const char* select_query =
-        "SELECT type, value FROM attr WHERE id_context=? and id_var=?";
+        "SELECT type, value FROM attr WHERE id_data=?";
     const char* insert_query =
-        "INSERT INTO attr (id_context, id_var, type, value)"
-        " VALUES(?, ?, ?, ?)";
+        "INSERT INTO attr (id_data, type, value)"
+        " VALUES(?, ?, ?)";
     const char* replace_query_mysql =
-        "INSERT INTO attr (id_context, id_var, type, value)"
-        " VALUES(?, ?, ?, ?) ON DUPLICATE KEY UPDATE value=VALUES(value)";
+        "INSERT INTO attr (id_data, type, value)"
+        " VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE value=VALUES(value)";
     const char* replace_query_sqlite =
-        "INSERT OR REPLACE INTO attr (id_context, id_var, type, value)"
-        " VALUES(?, ?, ?, ?)";
+        "INSERT OR REPLACE INTO attr (id_data, type, value)"
+        " VALUES(?, ?, ?)";
     const char* replace_query_oracle =
         "MERGE INTO attr USING"
-        " (SELECT ? as cnt, ? as var, ? as t, ? as val FROM dual)"
-        " ON (id_context=cnt AND id_var=var AND type=t)"
+        " (SELECT ? as data, ? as t, ? as val FROM dual)"
+        " ON (id_data=data AND type=t)"
         " WHEN MATCHED THEN UPDATE SET value=val"
         " WHEN NOT MATCHED THEN"
-        "  INSERT (id_context, id_var, type, value) VALUES (cnt, var, t, val)";
+        "  INSERT (id_data, type, value) VALUES (data, t, val)";
     const char* replace_query_postgres =
-        "UPDATE attr SET value=? WHERE id_context=? AND id_var=? AND type=?";
+        "UPDATE attr SET value=? WHERE id_data=? AND type=?";
 
     // Create the statement for select
     sstm = conn.odbcstatement(select_query).release();
-    sstm->bind_in(1, id_context);
-    sstm->bind_in(2, id_var);
+    sstm->bind_in(1, id_data);
     sstm->bind_out(1, type);
     sstm->bind_out(2, value, sizeof(value));
 
     // Create the statement for insert
     istm = conn.odbcstatement(insert_query).release();
-    istm->bind_in(1, id_context);
-    istm->bind_in(2, id_var);
-    istm->bind_in(3, type);
-    istm->bind_in(4, value, value_ind);
+    istm->bind_in(1, id_data);
+    istm->bind_in(2, type);
+    istm->bind_in(3, value, value_ind);
 
     // Create the statement for replace
     switch (conn.server_type)
@@ -83,31 +80,23 @@ Attr::Attr(ODBCConnection& conn)
     if (conn.server_type == ServerType::POSTGRES)
     {
         rstm->bind_in(1, value, value_ind);
-        rstm->bind_in(2, id_context);
-        rstm->bind_in(3, id_var);
-        rstm->bind_in(4, type);
-    } else {
-        rstm->bind_in(1, id_context);
-        rstm->bind_in(2, id_var);
+        rstm->bind_in(2, id_data);
         rstm->bind_in(3, type);
-        rstm->bind_in(4, value, value_ind);
+    } else {
+        rstm->bind_in(1, id_data);
+        rstm->bind_in(2, type);
+        rstm->bind_in(3, value, value_ind);
     }
 }
 
-Attr::~Attr()
+ODBCAttrV6::~ODBCAttrV6()
 {
     if (sstm) delete sstm;
     if (istm) delete istm;
     if (rstm) delete rstm;
 }
 
-void Attr::set(const wreport::Var& var)
-{
-    type = var.code();
-    set_value(var.value());
-}
-
-void Attr::set_value(const char* qvalue)
+void ODBCAttrV6::set_value(const char* qvalue)
 {
     if (qvalue == NULL)
     {
@@ -122,8 +111,12 @@ void Attr::set_value(const char* qvalue)
     }
 }
 
-void Attr::insert()
+void ODBCAttrV6::write(int id_data, const wreport::Var& var)
 {
+    this->id_data = id_data;
+    type = var.code();
+    set_value(var.value());
+
     if (conn.server_type == ServerType::POSTGRES)
     {
         if (rstm->execute_and_close() == SQL_NO_DATA)
@@ -132,40 +125,38 @@ void Attr::insert()
         rstm->execute_and_close();
 }
 
-void Attr::load(wreport::Var& var)
+void ODBCAttrV6::read(int id_data, function<void(unique_ptr<Var>)> dest)
 {
+    this->id_data = id_data;
+
     // Query all attributes for this var in the current context
-    id_var = var.code();
     sstm->execute();
 
-    // Make attribues from the result, and add them to var
+    // Make variables out of the results and send them to dest
     while (sstm->fetch())
-        var.seta(ap_newvar(type, value));
+        dest(newvar(type, value));
 
     sstm->close_cursor();
 }
 
-void Attr::dump(FILE* out)
+void ODBCAttrV6::dump(FILE* out)
 {
-    int id_context;
-    wreport::Varcode id_var;
+    int id_data;
     wreport::Varcode type;
     char value[255];
     SQLLEN value_ind;
 
-    auto stm = conn.odbcstatement("SELECT id_context, id_var, type, value FROM attr");
-    stm->bind_out(1, id_context);
-    stm->bind_out(2, id_var);
-    stm->bind_out(3, type);
-    stm->bind_out(4, value, 255, value_ind);
+    auto stm = conn.odbcstatement("SELECT id_data, type, value FROM attr");
+    stm->bind_out(1, id_data);
+    stm->bind_out(2, type);
+    stm->bind_out(3, value, 255, value_ind);
     stm->execute();
     int count;
     fprintf(out, "dump of table attr:\n");
     for (count = 0; stm->fetch(); ++count)
     {
-        fprintf(out, " %4d, %01d%02d%03d, %01d%02d%03d",
-                (int)id_context,
-                WR_VAR_F(id_var), WR_VAR_X(id_var), WR_VAR_Y(id_var),
+        fprintf(out, " %4d, %01d%02d%03d",
+                (int)id_data,
                 WR_VAR_F(type), WR_VAR_X(type), WR_VAR_Y(type));
         if (value_ind == SQL_NTS)
                 fprintf(out, "\n");
@@ -179,3 +170,4 @@ void Attr::dump(FILE* out)
 }
 }
 }
+

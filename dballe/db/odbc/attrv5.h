@@ -1,7 +1,7 @@
 /*
  * db/attr - attr table management
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_V5_ATTR_H
-#define DBALLE_DB_V5_ATTR_H
+#ifndef DBALLE_DB_ODBC_ATTRV5_H
+#define DBALLE_DB_ODBC_ATTRV5_H
 
 /** @file
  * @ingroup db
@@ -28,6 +28,7 @@
  * Attribute table management used by the db module.
  */
 
+#include <dballe/db/sql/attrv5.h>
 #include <wreport/var.h>
 #include <sqltypes.h>
 #include <cstdio>
@@ -44,7 +45,7 @@ namespace v5 {
 /**
  * Precompiled queries to manipulate the attr table
  */
-struct Attr
+struct ODBCAttrV5 : public sql::AttrV5
 {
     /** DB connection. */
     ODBCConnection& conn;
@@ -67,8 +68,10 @@ struct Attr
     /** attribute value indicator */
     SQLLEN value_ind;
 
-    Attr(ODBCConnection& conn);
-    ~Attr();
+    ODBCAttrV5(ODBCConnection& conn);
+    ~ODBCAttrV5();
+
+    void set_context(int id_context, wreport::Varcode id_var) override;
 
     /**
      * Set the input fields using the values in a wreport::Var
@@ -76,7 +79,7 @@ struct Attr
      * @param var
      *   The Var with the data to copy into ins
      */
-    void set(const wreport::Var& var);
+    void set(const wreport::Var& var) override;
 
     /**
      * Set the value input field from a string
@@ -84,7 +87,7 @@ struct Attr
      * @param value
      *   The value to copy into ins
      */
-    void set_value(const char* value);
+    void set_value(const char* value) override;
 
     /**
      * Insert an entry into the attr table
@@ -94,7 +97,7 @@ struct Attr
      *   wreport::Varcode will be overwritten; else, trying to replace an
      *   existing attribute will result in an error.
      */
-    void insert();
+    void insert() override;
 
     /**
      * Load from the database all the attributes for var
@@ -104,17 +107,17 @@ struct Attr
      * @return
      *   The error indicator for the function (See @ref error.h)
      */
-    void load(wreport::Var& var);
+    void load(int id_context, wreport::Var& var) override;
 
     /**
      * Dump the entire contents of the table to an output stream
      */
-    void dump(FILE* out);
+    void dump(FILE* out) override;
 
 private:
     // disallow copy
-    Attr(const Attr&);
-    Attr& operator=(const Attr&);
+    ODBCAttrV5(const ODBCAttrV5&);
+    ODBCAttrV5& operator=(const ODBCAttrV5&);
 };
 
 } // namespace v5

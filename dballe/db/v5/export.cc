@@ -24,7 +24,7 @@
 #include "dballe/db/odbc/internals.h"
 #include "dballe/db/modifiers.h"
 #include "dballe/db/sql/station.h"
-#include "attr.h"
+#include "dballe/db/sql/attrv5.h"
 
 #include <dballe/msg/msg.h>
 
@@ -58,7 +58,7 @@ static inline int sqltimecmp(const SQL_TIMESTAMP_STRUCT* a, const SQL_TIMESTAMP_
 
 void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
 {
-    Attr& at = attr();
+    sql::AttrV5& at = attr();
 
     // Message being built
     unique_ptr<Msg> msg;
@@ -102,9 +102,8 @@ void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
 		/* Create the variable that we got on this iteration */
         unique_ptr<Var> var(newvar(cur.out_varcode, cur.out_value));
 
-		/* Load the attributes from the database */
-        at.id_context = cur.out_context_id;
-        at.load(*var);
+        // Load the attributes from the database
+        at.load(cur.out_context_id, *var);
 
 		/* See if we have the start of a new message */
 		if (cur.out_lat != last_lat || cur.out_lon != last_lon || sqltimecmp(&(cur.out_datetime), &last_datetime) != 0 || ident_differs || cur.out_rep_cod != last_rep_cod)

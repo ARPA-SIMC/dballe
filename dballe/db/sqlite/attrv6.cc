@@ -1,7 +1,7 @@
 /*
- * db/v6/odbc/attr - attribute table management
+ * db/sqlite/attrv6 - attribute table management
  *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * Author: Enrico Zini <enrico@enricozini.com>
  */
-#include "v6_attr.h"
+#include "attrv6.h"
 #include "dballe/core/var.h"
 
 using namespace std;
@@ -28,7 +28,7 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
-SQLiteAttr::SQLiteAttr(SQLiteConnection& conn)
+SQLiteAttrV6::SQLiteAttrV6(SQLiteConnection& conn)
     : conn(conn)
 {
     const char* select_query =
@@ -44,13 +44,13 @@ SQLiteAttr::SQLiteAttr(SQLiteConnection& conn)
     rstm = conn.sqlitestatement(replace_query).release();
 }
 
-SQLiteAttr::~SQLiteAttr()
+SQLiteAttrV6::~SQLiteAttrV6()
 {
     delete sstm;
     delete rstm;
 }
 
-void SQLiteAttr::write(int id_data, const wreport::Var& var)
+void SQLiteAttrV6::write(int id_data, const wreport::Var& var)
 {
     rstm->bind_val(1, id_data);
     rstm->bind_val(2, var.code());
@@ -61,7 +61,7 @@ void SQLiteAttr::write(int id_data, const wreport::Var& var)
     rstm->execute();
 }
 
-void SQLiteAttr::read(int id_data, function<void(unique_ptr<Var>)> dest)
+void SQLiteAttrV6::read(int id_data, function<void(unique_ptr<Var>)> dest)
 {
     sstm->bind_val(1, id_data);
     sstm->execute([&]() {
@@ -72,7 +72,7 @@ void SQLiteAttr::read(int id_data, function<void(unique_ptr<Var>)> dest)
     });
 }
 
-void SQLiteAttr::dump(FILE* out)
+void SQLiteAttrV6::dump(FILE* out)
 {
     int count = 0;
     fprintf(out, "dump of table attr:\n");

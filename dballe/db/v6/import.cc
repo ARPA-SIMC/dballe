@@ -42,11 +42,11 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 
 	// Check if the station is mobile
     bool mobile = msg.get_ident_var() != NULL;
-	
+
     sql::Station& st = station();
     sql::LevTr& lt = lev_tr();
     sql::DataV6& dd = data();
-    Attr& dq = attr();
+    sql::AttrV6& dq = attr();
 
     // Begin transaction
     auto t = conn->transaction();

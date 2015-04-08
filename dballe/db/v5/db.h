@@ -71,11 +71,11 @@ namespace sql {
 struct Repinfo;
 struct Station;
 struct DataV5;
+struct AttrV5;
 }
 
 namespace v5 {
 struct Context;
-struct Attr;
 
 /**
  * DB-ALLe database connection
@@ -104,9 +104,9 @@ protected:
 	struct Context* m_context = nullptr;
     /** Variable data */
     struct sql::DataV5* m_data = nullptr;
-	/** Variable attributes */
-	struct Attr* m_attr = nullptr;
-	/** @} */
+    /** Variable attributes */
+    struct sql::AttrV5* m_attr = nullptr;
+    /** @} */
 
     int _last_station_id = 0;
 
@@ -137,8 +137,8 @@ public:
     /// Access the data table
     sql::DataV5& data();
 
-	/// Access the data table
-	Attr& attr();
+    /// Access the data table
+    sql::AttrV5& attr();
 
     void disappear();
 

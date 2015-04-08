@@ -26,7 +26,7 @@
 #include "dballe/db/sqlite/station.h"
 #include "dballe/db/sqlite/levtr.h"
 #include "dballe/db/sqlite/datav6.h"
-#include "dballe/db/sqlite/v6_attr.h"
+#include "dballe/db/sqlite/attrv6.h"
 #include "dballe/db/sqlite/v6_run_query.h"
 #include "dballe/db/postgresql/internals.h"
 #include "dballe/db/postgresql/repinfo.h"
@@ -38,7 +38,7 @@
 #include "dballe/db/odbc/station.h"
 #include "dballe/db/odbc/levtr.h"
 #include "dballe/db/odbc/datav6.h"
-#include "dballe/db/odbc/v6_attr.h"
+#include "dballe/db/odbc/attrv6.h"
 #include "dballe/db/odbc/v6_run_query.h"
 #include "dballe/core/record.h"
 #include "dballe/msg/context.h"
@@ -88,7 +88,6 @@ unique_ptr<sql::LevTr> create_levtr(Connection& conn)
         throw error_unimplemented("v6 DB LevTr only implemented ODBC and SQLite connectors");
 }
 
-
 unique_ptr<sql::DataV6> create_datav6(Connection& conn)
 {
     if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(&conn))
@@ -101,17 +100,18 @@ unique_ptr<sql::DataV6> create_datav6(Connection& conn)
         throw error_unimplemented("v6 DB Data only implemented for ODBC and SQLite connectors");
 }
 
-
-Attr::~Attr() {}
-unique_ptr<Attr> Attr::create(DB& db)
+unique_ptr<sql::AttrV6> create_attrv6(Connection& conn)
 {
-    if (ODBCConnection* conn = dynamic_cast<ODBCConnection*>(db.conn))
-        return unique_ptr<Attr>(new ODBCAttr(*conn));
-    if (SQLiteConnection* conn = dynamic_cast<SQLiteConnection*>(db.conn))
-        return unique_ptr<Attr>(new SQLiteAttr(*conn));
+    if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(&conn))
+        return unique_ptr<sql::AttrV6>(new ODBCAttrV6(*c));
+    else if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(&conn))
+        return unique_ptr<sql::AttrV6>(new SQLiteAttrV6(*c));
+    //else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(&conn))
+        //return unique_ptr<sql::AttrV6>(new PostgreSQLAttrV6(*c));
     else
-        throw error_unimplemented("v6 DB attr only implemented for ODBC and SQLite connectors");
+        throw error_unimplemented("v6 DB Data only implemented for ODBC and SQLite connectors");
 }
+
 
 bool SQLRecord::querybest_fields_are_the_same(const SQLRecord& r)
 {

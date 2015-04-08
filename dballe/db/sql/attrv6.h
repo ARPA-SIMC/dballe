@@ -1,7 +1,7 @@
 /*
- * db/v6/odbc/attr - attribute table management
+ * db/sql/attrv6 - v6 implementation of attr table
  *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,52 +19,24 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_ODBC_V6_ATTR_H
-#define DBALLE_DB_ODBC_V6_ATTR_H
+#ifndef DBALLE_DB_SQL_ATTRV6_H
+#define DBALLE_DB_SQL_ATTRV6_H
 
-#include <dballe/db/v6/internals.h>
-#include <dballe/db/odbc/internals.h>
+#include <wreport/var.h>
+#include <functional>
+#include <memory>
+#include <cstdio>
 
 namespace dballe {
 namespace db {
-namespace v6 {
+namespace sql {
 
 /**
  * Precompiled queries to manipulate the attr table
  */
-class ODBCAttr : public Attr
+struct AttrV6
 {
-protected:
-    /** DB connection. */
-    ODBCConnection& conn;
-
-    /** Precompiled select statement */
-    ODBCStatement* sstm;
-    /** Precompiled insert statement */
-    ODBCStatement* istm;
-    /** Precompiled replace statement */
-    ODBCStatement* rstm;
-
-    /** id_data SQL parameter */
-    int id_data;
-    /** attribute id SQL parameter */
-    wreport::Varcode type;
-    /** attribute value SQL parameter */
-    char value[255];
-    /** attribute value indicator */
-    SQLLEN value_ind;
-
-    /**
-     * Set the value input field from a string
-     *
-     * @param value
-     *   The value to copy into ins
-     */
-    void set_value(const char* value);
-
-public:
-    ODBCAttr(ODBCConnection& conn);
-    ~ODBCAttr();
+    virtual ~AttrV6();
 
     /**
      * Insert an entry into the attr table
@@ -72,7 +44,7 @@ public:
      * If set to true, an existing attribute with the same context and
      * wreport::Varcode will be overwritten
      */
-    void write(int id_data, const wreport::Var& var) override;
+    virtual void write(int id_data, const wreport::Var& var) = 0;
 
     /**
      * Load from the database all the attributes for var
@@ -82,20 +54,17 @@ public:
      * @return
      *   The error indicator for the function (See @ref error.h)
      */
-    void read(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
+    virtual void read(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
 
     /**
      * Dump the entire contents of the table to an output stream
      */
-    void dump(FILE* out) override;
-
-private:
-    // disallow copy
-    ODBCAttr(const ODBCAttr&);
-    ODBCAttr& operator=(const ODBCAttr&);
+    virtual void dump(FILE* out) = 0;
 };
 
 }
 }
 }
+
 #endif
+

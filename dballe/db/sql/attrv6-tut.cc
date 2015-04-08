@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,28 +19,24 @@
 
 #include "db/test-utils-db.h"
 #include "db/v6/db.h"
+#include "db/sql/attrv6.h"
 #include "db/v6/internals.h"
-#include "db/sql/station.h"
 
 using namespace dballe;
-using namespace dballe::db;
+using namespace dballe::tests;
 using namespace wreport;
 using namespace wibble::tests;
 using namespace std;
 
-namespace tut {
+namespace {
 
-struct dbv6_attr_shar : public dballe::tests::db_test
+struct db_sql_attrv6 : public dballe::tests::db_test
 {
-    db::v6::Attr* at;
-
-    dbv6_attr_shar() : dballe::tests::db_test(db::V6)
+    db_sql_attrv6()
     {
-        if (!has_db()) return;
-        at = &v6().attr();
-
-        db::sql::Station& st = v6().station();
-        db::sql::LevTr& lt = v6().lev_tr();
+        db::v6::DB& v6db = v6();
+        db::sql::Station& st = v6db.station();
+        db::sql::LevTr& lt = v6db.lev_tr();
         db::sql::DataV6& da = v6().data();
 
         // Insert a mobile station
@@ -65,53 +61,45 @@ struct dbv6_attr_shar : public dballe::tests::db_test
         da.set_date(2002, 3, 4, 5, 6, 7);
         da.insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 234));
     }
+
+    db::sql::AttrV6& attr()
+    {
+        if (db::v6::DB* db6 = dynamic_cast<db::v6::DB*>(db.get()))
+            return db6->attr();
+        throw error_consistency("cannot test attrv6 on the current DB");
+    }
 };
-TESTGRP(dbv6_attr);
 
-/* Test dba_db_data_set* */
-template<> template<>
-void to::test<1>()
-{
-#if 0
-    // Currently these are inaccessible internals
-	use_db();
-
-	// Test dba_db_attr_set
-	at->set(var(WR_VAR(0, 1, 2), 123));
-	ensure_equals(at->value, string("123"));
-	ensure_equals(at->value_ind, 3);
-	
-	// Test dba_db_attr_set_value
-    at->set_value("32");
-	ensure_equals(at->value, string("32"));
-	ensure_equals(at->value_ind, 2);
-#endif
 }
 
+namespace tut {
 
-/* Insert some values and try to read them again */
-template<> template<>
-void to::test<2>()
+typedef db_tg<db_sql_attrv6> tg;
+typedef tg::object to;
+
+// Insert some values and try to read them again
+template<> template<> void to::test<1>()
 {
     use_db();
+    auto& at = attr();
 
     // Insert a datum
-    at->write(1, Var(varinfo(WR_VAR(0, 33, 7)), 50));
+    at.write(1, Var(varinfo(WR_VAR(0, 33, 7)), 50));
 
     // Insert another datum
-    at->write(2, Var(varinfo(WR_VAR(0, 33, 7)), 75));
+    at.write(2, Var(varinfo(WR_VAR(0, 33, 7)), 75));
 
     // Reinsert a datum: it should work
-    at->write(1, Var(varinfo(WR_VAR(0, 33, 7)), 50));
+    at.write(1, Var(varinfo(WR_VAR(0, 33, 7)), 50));
 
     // Reinsert the other datum: it should work
-    at->write(2, Var(varinfo(WR_VAR(0, 33, 7)), 75));
+    at.write(2, Var(varinfo(WR_VAR(0, 33, 7)), 75));
 
     // Load the attributes for the first variable
     {
         Var var(varinfo(WR_VAR(0, 1, 2)));
         wassert(actual(var.next_attr()).isfalse());
-        at->read(1, [&](unique_ptr<Var> attr) { var.seta(auto_ptr<Var>(attr.release())); });
+        at.read(1, [&](unique_ptr<Var> attr) { var.seta(auto_ptr<Var>(attr.release())); });
         wassert(actual(var.next_attr()).istrue());
         const Var* attr = var.next_attr();
         wassert(actual(attr->value()) == "50");
@@ -122,7 +110,7 @@ void to::test<2>()
     {
         Var var(varinfo(WR_VAR(0, 1, 2)));
         wassert(actual(var.next_attr()).isfalse());
-        at->read(2, [&](unique_ptr<Var> attr) { var.seta(auto_ptr<Var>(attr.release())); });
+        at.read(2, [&](unique_ptr<Var> attr) { var.seta(auto_ptr<Var>(attr.release())); });
         wassert(actual(var.next_attr()).istrue());
         const Var* attr = var.next_attr();
         wassert(actual(attr->value()) == "75");
@@ -132,4 +120,8 @@ void to::test<2>()
 
 }
 
-/* vim:set ts=4 sw=4: */
+namespace {
+
+tut::tg db_test_sql_attrv6_tg("db_sql_attrv6", db::V6);
+
+}

@@ -1,7 +1,7 @@
 /*
  * db/v6/odbc/attr - attribute table management
  *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,10 +19,10 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_SQLITE_V6_ATTR_H
-#define DBALLE_DB_SQLITE_V6_ATTR_H
+#ifndef DBALLE_DB_SQLITE_ATTRV6_H
+#define DBALLE_DB_SQLITE_ATTRV6_H
 
-#include <dballe/db/v6/internals.h>
+#include <dballe/db/sql/attrv6.h>
 #include <dballe/db/sqlite/internals.h>
 
 namespace dballe {
@@ -32,7 +32,7 @@ namespace v6 {
 /**
  * Precompiled queries to manipulate the attr table
  */
-class SQLiteAttr : public Attr
+class SQLiteAttrV6 : public sql::AttrV6
 {
 protected:
     /** DB connection. */
@@ -44,11 +44,11 @@ protected:
     SQLiteStatement* rstm = nullptr;
 
 public:
-    SQLiteAttr(SQLiteConnection& conn);
-    SQLiteAttr(const SQLiteAttr&) = delete;
-    SQLiteAttr(const SQLiteAttr&&) = delete;
-    SQLiteAttr& operator=(const SQLiteAttr&) = delete;
-    ~SQLiteAttr();
+    SQLiteAttrV6(SQLiteConnection& conn);
+    SQLiteAttrV6(const SQLiteAttrV6&) = delete;
+    SQLiteAttrV6(const SQLiteAttrV6&&) = delete;
+    SQLiteAttrV6& operator=(const SQLiteAttrV6&) = delete;
+    ~SQLiteAttrV6();
 
     /**
      * Insert an entry into the attr table
