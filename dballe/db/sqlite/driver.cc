@@ -113,7 +113,7 @@ void Driver::run_built_query_v6(
                 rec.out_ident[0] = 0;
             } else {
                 string ident = stm->column_string(output_seq);
-                rec.out_ident_size = max(ident.size(), (string::size_type)63);
+                rec.out_ident_size = min(ident.size(), (string::size_type)63);
                 memcpy(rec.out_ident, ident.data(), rec.out_ident_size);
                 rec.out_ident[rec.out_ident_size] = 0;
             }
@@ -135,7 +135,7 @@ void Driver::run_built_query_v6(
             rec.out_datetime = stm->column_datetime(output_seq++);
 
             string value = stm->column_string(output_seq++);
-            unsigned val_size = max(value.size(), (string::size_type)255);
+            unsigned val_size = min(value.size(), (string::size_type)255);
             memcpy(rec.out_value, value.data(), val_size);
             rec.out_value[val_size] = 0;
         }

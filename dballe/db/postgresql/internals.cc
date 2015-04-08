@@ -311,6 +311,39 @@ void PostgreSQLConnection::drop_sequence_if_exists(const char* name)
     // We do not use sequences with PostgreSQL
 }
 
+void PostgreSQLConnection::cancel_running_query_nothrow() noexcept
+{
+    PGcancel* c = PQgetCancel(db);
+    if (!c) return;
+
+    char errbuf[256];
+    if (!PQcancel(c, errbuf, 256))
+        fprintf(stderr, "cannot send cancellation request: %s\n", errbuf);
+
+    PQfreeCancel(c);
+}
+
+void PostgreSQLConnection::discard_all_input_nothrow() noexcept
+{
+    using namespace postgresql;
+
+    while (true)
+    {
+        Result res(PQgetResult(db));
+        if (!res) break;
+        switch (PQresultStatus(res))
+        {
+            case PGRES_TUPLES_OK: break;
+            case PGRES_COMMAND_OK:
+                fprintf(stderr, "flushing input from PostgreSQL server returned an empty result\n");
+                break;
+            default:
+                fprintf(stderr, "flushing input from PostgreSQL server returned an error: %s\n", PQresultErrorMessage(res));
+                break;
+        }
+    }
+}
+
 int PostgreSQLConnection::get_last_insert_id()
 {
     throw error_unimplemented("last insert id for postgres");

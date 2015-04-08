@@ -31,6 +31,7 @@
 #include "dballe/db/odbc/driver.h"
 #include "dballe/db/odbc/internals.h"
 #endif
+#include <sstream>
 
 using namespace wreport;
 using namespace std;
@@ -46,6 +47,20 @@ bool SQLRecordV6::querybest_fields_are_the_same(const SQLRecordV6& r)
     if (out_datetime != r.out_datetime) return false;
     if (out_varcode != r.out_varcode) return false;
     return true;
+}
+
+void SQLRecordV6::dump(FILE* out)
+{
+    fprintf(out, "st: %d %6d %6d ", out_ana_id, out_lat, out_lon);
+    if (out_ident_size == -1)
+        fputs("fixed, ", out);
+    else
+        fprintf(out, "%.*s, ", out_ident_size, out_ident);
+    fprintf(out, "rc: %d %d, ltr %d, did %d, ", out_rep_cod, priority, out_id_ltr, out_id_data);
+    stringstream s;
+    s << "dt: " << out_datetime << " " << out_datetimemax << ", ";
+    fputs(s.str().c_str(), out);
+    fprintf(out, "%d%02d%03d %s\n", WR_VAR_F(out_varcode), WR_VAR_X(out_varcode), WR_VAR_Y(out_varcode), out_value);
 }
 
 Driver::~Driver()

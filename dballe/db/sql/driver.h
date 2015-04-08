@@ -32,6 +32,7 @@
 #include <wreport/var.h>
 #include <memory>
 #include <functional>
+#include <cstdio>
 
 namespace dballe {
 namespace db {
@@ -74,6 +75,9 @@ struct SQLRecordV6
      * @returns true if they match, false if they are different
      */
     bool querybest_fields_are_the_same(const SQLRecordV6& r);
+
+    /// Dump the record as a single line to the given output stream
+    void dump(FILE* out);
 };
 
 struct Driver

@@ -130,8 +130,6 @@ template<> template<> void to::test<5>()
     rec.set(WR_VAR(0, 1, 19), "Esmac");
     db->insert(rec, true, true);
 
-    //db->dump(stderr);
-
     // Query back all the data
     Query query;
     auto cur = db->query_stations(query);

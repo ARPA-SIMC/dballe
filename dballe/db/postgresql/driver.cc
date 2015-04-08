@@ -93,65 +93,119 @@ void Driver::run_built_query_v6(
         const v6::QueryBuilder& qb,
         std::function<void(sql::SQLRecordV6& rec)> dest)
 {
-#if 0
-    auto stm = conn.sqlitestatement(qb.sql_query);
+    using namespace dballe::db::postgresql;
 
-    if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
+    // Start the query asynchronously
+    int res;
+    if (qb.bind_in_ident)
+    {
+        const char* args[1] = { qb.bind_in_ident };
+        res = PQsendQueryParams(conn, qb.sql_query.c_str(), 1, nullptr, args, nullptr, nullptr, 1);
+    } else {
+        res = PQsendQueryParams(conn, qb.sql_query.c_str(), 0, nullptr, nullptr, nullptr, nullptr, 1);
+    }
+    if (!res)
+        throw error_postgresql(conn, "executing " + qb.sql_query);
+
+    // http://www.postgresql.org/docs/9.4/static/libpq-single-row-mode.html
+    if (!PQsetSingleRowMode(conn))
+    {
+        string errmsg(PQerrorMessage(conn));
+        conn.cancel_running_query_nothrow();
+        conn.discard_all_input_nothrow();
+        throw error_postgresql(errmsg, "cannot set single row mode for query " + qb.sql_query);
+    }
 
     sql::SQLRecordV6 rec;
-    stm->execute([&]() {
-        int output_seq = 0;
-        SQLLEN out_ident_ind;
+    while (true)
+    {
+        Result res(PQgetResult(conn));
+        if (!res) break;
 
-        if (qb.select_station)
+        // Note: Even when PQresultStatus indicates a fatal error, PQgetResult
+        // should be called until it returns a null pointer to allow libpq to
+        // process the error information completely.
+        //  (http://www.postgresql.org/docs/9.1/static/libpq-async.html)
+
+        // If we get what we don't want, cancel, flush our input and throw
+        if (PQresultStatus(res) == PGRES_SINGLE_TUPLE)
         {
-            rec.out_ana_id = stm->column_int(output_seq++);
-            rec.out_lat = stm->column_int(output_seq++);
-            rec.out_lon = stm->column_int(output_seq++);
-            if (stm->column_isnull(output_seq))
+            // Ok, we have a tuple
+        } else if (PQresultStatus(res) == PGRES_TUPLES_OK) {
+            // No more rows will arrive
+            continue;
+        } else {
+            // An error arrived
+            conn.cancel_running_query_nothrow();
+            conn.discard_all_input_nothrow();
+
+            switch (PQresultStatus(res))
             {
-                rec.out_ident_size = -1;
-                rec.out_ident[0] = 0;
-            } else {
-                string ident = stm->column_string(output_seq);
-                rec.out_ident_size = max(ident.size(), (string::size_type)63);
-                memcpy(rec.out_ident, ident.data(), rec.out_ident_size);
-                rec.out_ident[rec.out_ident_size] = 0;
+                case PGRES_COMMAND_OK:
+                    throw error_postgresql("command_ok", "no data returned by query " + qb.sql_query);
+                default:
+                    throw error_postgresql(res, "executing " + qb.sql_query);
             }
-            ++output_seq;
         }
-
-        if (qb.select_varinfo)
+        for (unsigned row = 0; row < res.rowcount(); ++row)
         {
-            rec.out_rep_cod = stm->column_int(output_seq++);
-            rec.out_id_ltr = stm->column_int(output_seq++);
-            rec.out_varcode = stm->column_int(output_seq++);
+            int output_seq = 0;
+            if (qb.select_station)
+            {
+                rec.out_ana_id = res.get_int4(row, output_seq++);
+                rec.out_lat = res.get_int4(row, output_seq++);
+                rec.out_lon = res.get_int4(row, output_seq++);
+                if (res.is_null(row, output_seq))
+                {
+                    rec.out_ident_size = -1;
+                    rec.out_ident[0] = 0;
+                } else {
+                    const char* ident = res.get_string(row, output_seq);
+                    rec.out_ident_size = min(PQgetlength(res, row, output_seq), 63);
+                    memcpy(rec.out_ident, ident, rec.out_ident_size);
+                    rec.out_ident[rec.out_ident_size] = 0;
+                }
+                ++output_seq;
+            }
+
+            if (qb.select_varinfo)
+            {
+                rec.out_rep_cod = res.get_int4(row, output_seq++);
+                rec.out_id_ltr = res.get_int4(row, output_seq++);
+                rec.out_varcode = res.get_int4(row, output_seq++);
+            }
+
+            if (qb.select_data_id)
+                rec.out_id_data = res.get_int4(row, output_seq++);
+
+            if (qb.select_data)
+            {
+                rec.out_datetime = res.get_timestamp(row, output_seq++);
+
+                int value_len = min(PQgetlength(res, row, output_seq), 255);
+                const char* value = res.get_string(row, output_seq++);
+                memcpy(rec.out_value, value, value_len);
+                rec.out_value[value_len] = 0;
+            }
+
+            if (qb.select_summary_details)
+            {
+                rec.out_id_data = res.get_int4(row, output_seq++);
+                rec.out_datetime = res.get_timestamp(row, output_seq++);
+                rec.out_datetimemax = res.get_timestamp(row, output_seq++);
+            }
+
+            try {
+                dest(rec);
+            } catch (std::exception& e) {
+                // If we get an exception from downstream, cancel, flush all
+                // input and rethrow it
+                conn.cancel_running_query_nothrow();
+                conn.discard_all_input_nothrow();
+                throw;
+            }
         }
-
-        if (qb.select_data_id)
-            rec.out_id_data = stm->column_int(output_seq++);
-
-        if (qb.select_data)
-        {
-            rec.out_datetime = stm->column_datetime(output_seq++);
-
-            string value = stm->column_string(output_seq++);
-            unsigned val_size = max(value.size(), (string::size_type)255);
-            memcpy(rec.out_value, value.data(), val_size);
-            rec.out_value[val_size] = 0;
-        }
-
-        if (qb.select_summary_details)
-        {
-            rec.out_id_data = stm->column_int(output_seq++);
-            rec.out_datetime = stm->column_datetime(output_seq++);
-            rec.out_datetimemax = stm->column_datetime(output_seq++);
-        }
-
-        dest(rec);
-    });
-#endif
-    throw error_unimplemented("query V6");
+    }
 }
 
 void Driver::run_delete_query_v6(const v6::QueryBuilder& qb)

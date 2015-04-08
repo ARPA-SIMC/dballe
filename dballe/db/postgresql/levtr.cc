@@ -39,7 +39,7 @@ namespace postgresql {
 
 namespace {
 
-Level to_level(const postgresql::Result& res, unsigned row, int first_id=0)
+Level to_level(const postgresql::Result& res, unsigned row, int first_id)
 {
     return Level(
             res.get_int4(row, first_id),
@@ -48,7 +48,7 @@ Level to_level(const postgresql::Result& res, unsigned row, int first_id=0)
             res.get_int4(row, first_id + 3));
 }
 
-Trange to_trange(const postgresql::Result& res, unsigned row, int first_id=0)
+Trange to_trange(const postgresql::Result& res, unsigned row, int first_id)
 {
     return Trange(
             res.get_int4(row, first_id),
@@ -182,12 +182,12 @@ void PostgreSQLLevTrV6::dump(FILE* out)
         fprintf(out, " %4d ", res.get_int4(row, 0));
         {
             stringstream str;
-            str << to_level(res, 1);
+            str << to_level(res, row, 1);
             fprintf(out, "%-20s ", str.str().c_str());
         }
         {
             stringstream str;
-            str << to_trange(res, 5);
+            str << to_trange(res, row, 5);
             fprintf(out, "%-10s\n", str.str().c_str());
         }
         ++count;
