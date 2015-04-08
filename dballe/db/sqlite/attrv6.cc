@@ -27,7 +27,7 @@ using namespace wreport;
 
 namespace dballe {
 namespace db {
-namespace v6 {
+namespace sqlite {
 
 SQLiteAttrV6::SQLiteAttrV6(SQLiteConnection& conn)
     : conn(conn)

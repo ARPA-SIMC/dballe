@@ -91,33 +91,24 @@ public:
     void dump(FILE* out) override;
 };
 
-}
-
-namespace v5 {
-
 /**
  * Precompiled queries to manipulate the station table
  */
-class PostgreSQLStation : public postgresql::StationBase
+class PostgreSQLStationV5 : public postgresql::StationBase
 {
 public:
-    PostgreSQLStation(PostgreSQLConnection& conn);
-    ~PostgreSQLStation();
+    PostgreSQLStationV5(PostgreSQLConnection& conn);
+    ~PostgreSQLStationV5();
+};
+
+class PostgreSQLStationV6 : public postgresql::StationBase
+{
+public:
+    PostgreSQLStationV6(PostgreSQLConnection& conn);
+    ~PostgreSQLStationV6();
 };
 
 }
-
-namespace v6 {
-
-class PostgreSQLStation : public postgresql::StationBase
-{
-public:
-    PostgreSQLStation(PostgreSQLConnection& conn);
-    ~PostgreSQLStation();
-};
-
-}
-
 }
 }
 #endif

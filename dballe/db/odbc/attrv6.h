@@ -1,5 +1,5 @@
 /*
- * db/v6/odbc/attr - attribute table management
+ * db/odbc/attrv6 - attribute table management
  *
  * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -27,7 +27,7 @@
 
 namespace dballe {
 namespace db {
-namespace v6 {
+namespace odbc {
 
 /**
  * Precompiled queries to manipulate the attr table

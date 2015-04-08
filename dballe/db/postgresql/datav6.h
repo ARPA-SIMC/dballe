@@ -35,7 +35,7 @@ namespace dballe {
 struct Record;
 
 namespace db {
-namespace v6 {
+namespace postgresql {
 struct DB;
 
 /**

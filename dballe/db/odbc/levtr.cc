@@ -35,9 +35,9 @@ using namespace std;
 
 namespace dballe {
 namespace db {
-namespace v6 {
+namespace odbc {
 
-ODBCLevTr::ODBCLevTr(ODBCConnection& conn)
+ODBCLevTrV6::ODBCLevTrV6(ODBCConnection& conn)
     : conn(conn)
 {
     const char* select_query =
@@ -98,7 +98,7 @@ ODBCLevTr::ODBCLevTr(ODBCConnection& conn)
     dstm->bind_in(1, working_row.id);
 }
 
-ODBCLevTr::~ODBCLevTr()
+ODBCLevTrV6::~ODBCLevTrV6()
 {
     delete seq_lev_tr;
     if (sstm) delete sstm;
@@ -107,7 +107,7 @@ ODBCLevTr::~ODBCLevTr()
     if (dstm) delete dstm;
 }
 
-int ODBCLevTr::get_id()
+int ODBCLevTrV6::get_id()
 {
     sstm->execute();
 
@@ -121,7 +121,7 @@ int ODBCLevTr::get_id()
     return res;
 }
 
-int ODBCLevTr::obtain_id(const Level& lev, const Trange& tr)
+int ODBCLevTrV6::obtain_id(const Level& lev, const Trange& tr)
 {
     working_row.ltype1 = lev.ltype1;
     working_row.l1 = lev.l1;
@@ -138,7 +138,7 @@ int ODBCLevTr::obtain_id(const Level& lev, const Trange& tr)
     return insert();
 }
 
-int ODBCLevTr::obtain_id(const Record& rec)
+int ODBCLevTrV6::obtain_id(const Record& rec)
 {
     if (const Var* var = rec.key_peek(DBA_KEY_LEVELTYPE1))
         working_row.ltype1 = var->enqi();
@@ -176,7 +176,7 @@ int ODBCLevTr::obtain_id(const Record& rec)
     return insert();
 }
 
-int ODBCLevTr::insert()
+int ODBCLevTrV6::insert()
 {
     istm->execute_and_close();
 
@@ -186,12 +186,12 @@ int ODBCLevTr::insert()
         return conn.get_last_insert_id();
 }
 
-void ODBCLevTr::remove()
+void ODBCLevTrV6::remove()
 {
     dstm->execute_and_close();
 }
 
-const sql::LevTr::DBRow* ODBCLevTr::read(int id)
+const sql::LevTr::DBRow* ODBCLevTrV6::read(int id)
 {
     working_row.id = id;
     sdstm->execute();
@@ -200,7 +200,7 @@ const sql::LevTr::DBRow* ODBCLevTr::read(int id)
     return &working_row;
 }
 
-void ODBCLevTr::read_all(std::function<void(const LevTr::DBRow&)> dest)
+void ODBCLevTrV6::read_all(std::function<void(const LevTr::DBRow&)> dest)
 {
     // Prefetch everything
     auto stm = conn.odbcstatement("SELECT id, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr");
@@ -217,7 +217,7 @@ void ODBCLevTr::read_all(std::function<void(const LevTr::DBRow&)> dest)
         dest(working_row);
 }
 
-void ODBCLevTr::dump(FILE* out)
+void ODBCLevTrV6::dump(FILE* out)
 {
     int id;
     int ltype1;

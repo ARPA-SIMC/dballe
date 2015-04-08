@@ -1,7 +1,7 @@
 /*
- * db/odbc/v6_run_query - run a prebuilt query on the SQLite connector
+ * db/postgresql/driver - Backend PostgreSQL driver
  *
- * Copyright (C) 2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,25 +18,87 @@
  *
  * Author: Enrico Zini <enrico@enricozini.com>
  */
-#include "v6_run_query.h"
+#include "driver.h"
+#include "repinfo.h"
+#include "station.h"
+#include "levtr.h"
+#include "datav6.h"
+#include "attrv6.h"
 #include "dballe/db/v6/qbuilder.h"
 #include <algorithm>
 #include <cstring>
 
 using namespace std;
+using namespace wreport;
 
 namespace dballe {
 namespace db {
-namespace v6 {
+namespace postgresql {
 
-void sqlite_run_built_query(SQLiteConnection& conn, const QueryBuilder& qb,
-        std::function<void(SQLRecord& rec)> dest)
+Driver::Driver(PostgreSQLConnection& conn)
+    : conn(conn)
 {
+}
+
+Driver::~Driver()
+{
+}
+
+std::unique_ptr<sql::Repinfo> Driver::create_repinfov5()
+{
+    return unique_ptr<sql::Repinfo>(new PostgreSQLRepinfoV5(conn));
+}
+
+std::unique_ptr<sql::Repinfo> Driver::create_repinfov6()
+{
+    return unique_ptr<sql::Repinfo>(new PostgreSQLRepinfoV6(conn));
+}
+
+std::unique_ptr<sql::Station> Driver::create_stationv5()
+{
+    return unique_ptr<sql::Station>(new PostgreSQLStationV5(conn));
+}
+
+std::unique_ptr<sql::Station> Driver::create_stationv6()
+{
+    return unique_ptr<sql::Station>(new PostgreSQLStationV6(conn));
+}
+
+std::unique_ptr<sql::LevTr> Driver::create_levtrv6()
+{
+    return unique_ptr<sql::LevTr>(new PostgreSQLLevTrV6(conn));
+}
+
+std::unique_ptr<sql::DataV5> Driver::create_datav5()
+{
+    throw error_unimplemented("datav5 not implemented for PostgreSQL");
+}
+
+std::unique_ptr<sql::DataV6> Driver::create_datav6()
+{
+    return unique_ptr<sql::DataV6>(new PostgreSQLDataV6(conn));
+}
+
+std::unique_ptr<sql::AttrV5> Driver::create_attrv5()
+{
+    throw error_unimplemented("attrv5 not implemented for PostgreSQL");
+}
+
+std::unique_ptr<sql::AttrV6> Driver::create_attrv6()
+{
+    return unique_ptr<sql::AttrV6>(new PostgreSQLAttrV6(conn));
+}
+
+void Driver::run_built_query_v6(
+        const v6::QueryBuilder& qb,
+        std::function<void(sql::SQLRecordV6& rec)> dest)
+{
+#if 0
     auto stm = conn.sqlitestatement(qb.sql_query);
 
     if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
 
-    SQLRecord rec;
+    sql::SQLRecordV6 rec;
     stm->execute([&]() {
         int output_seq = 0;
         SQLLEN out_ident_ind;
@@ -88,10 +150,13 @@ void sqlite_run_built_query(SQLiteConnection& conn, const QueryBuilder& qb,
 
         dest(rec);
     });
+#endif
+    throw error_unimplemented("query V6");
 }
 
-void sqlite_run_delete_query(SQLiteConnection& conn, const QueryBuilder& qb)
+void Driver::run_delete_query_v6(const v6::QueryBuilder& qb)
 {
+#if 0
     auto stmd = conn.sqlitestatement("DELETE FROM data WHERE id=?");
     auto stma = conn.sqlitestatement("DELETE FROM attr WHERE id_data=?");
     auto stm = conn.sqlitestatement(qb.sql_query);
@@ -110,6 +175,8 @@ void sqlite_run_delete_query(SQLiteConnection& conn, const QueryBuilder& qb)
         stma->bind_val(1, out_id_data);
         stma->execute();
     });
+#endif
+    throw error_unimplemented("delete V6");
 }
 
 }

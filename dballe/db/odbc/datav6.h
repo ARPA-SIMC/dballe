@@ -1,7 +1,7 @@
 /*
- * db/v6/data - data table management
+ * db/odbc/datav6 - data table management
  *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_ODBC_V6_DATA_H
-#define DBALLE_DB_ODBC_V6_DATA_H
+#ifndef DBALLE_DB_ODBC_DATAV6_H
+#define DBALLE_DB_ODBC_DATAV6_H
 
 /** @file
  * @ingroup db
@@ -35,7 +35,7 @@ namespace dballe {
 struct Record;
 
 namespace db {
-namespace v6 {
+namespace odbc {
 struct DB;
 
 /**

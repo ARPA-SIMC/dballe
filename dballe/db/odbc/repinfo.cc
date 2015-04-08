@@ -29,19 +29,19 @@ using namespace std;
 
 namespace dballe {
 namespace db {
-namespace v5 {
+namespace odbc {
 
-ODBCRepinfo::ODBCRepinfo(ODBCConnection& conn)
+ODBCRepinfoV5::ODBCRepinfoV5(ODBCConnection& conn)
     : Repinfo(conn), conn(conn)
 {
     read_cache();
 }
 
-ODBCRepinfo::~ODBCRepinfo()
+ODBCRepinfoV5::~ODBCRepinfoV5()
 {
 }
 
-void ODBCRepinfo::read_cache()
+void ODBCRepinfoV5::read_cache()
 {
     auto stm = conn.odbcstatement("SELECT id, memo, description, prio, descriptor, tablea FROM repinfo ORDER BY id");
 
@@ -72,7 +72,7 @@ void ODBCRepinfo::read_cache()
     rebuild_memo_idx();
 }
 
-void ODBCRepinfo::insert_auto_entry(const char* memo)
+void ODBCRepinfoV5::insert_auto_entry(const char* memo)
 {
     auto stm = conn.odbcstatement("SELECT MAX(id) FROM repinfo");
     unsigned id;
@@ -124,7 +124,7 @@ static void commit_cache_item(struct _dba_db_repinfo_cache* item)
 #endif
 
 
-int ODBCRepinfo::id_use_count(unsigned id, const char* name)
+int ODBCRepinfoV5::id_use_count(unsigned id, const char* name)
 {
     unsigned dbid = id;
     unsigned count;
@@ -137,7 +137,7 @@ int ODBCRepinfo::id_use_count(unsigned id, const char* name)
     return count;
 }
 
-void ODBCRepinfo::update(const char* deffile, int* added, int* deleted, int* updated)
+void ODBCRepinfoV5::update(const char* deffile, int* added, int* deleted, int* updated)
 {
     *added = *deleted = *updated = 0;
 
@@ -230,7 +230,7 @@ void ODBCRepinfo::update(const char* deffile, int* added, int* deleted, int* upd
     read_cache();
 }
 
-void ODBCRepinfo::dump(FILE* out)
+void ODBCRepinfoV5::dump(FILE* out)
 {
     unsigned id;
     char memo[20]; SQLLEN memo_ind;
@@ -266,13 +266,9 @@ void ODBCRepinfo::dump(FILE* out)
 }
 
 
-}
+ODBCRepinfoV6::ODBCRepinfoV6(ODBCConnection& conn) : ODBCRepinfoV5(conn) {}
 
-namespace v6 {
-
-ODBCRepinfo::ODBCRepinfo(ODBCConnection& conn) : v5::ODBCRepinfo(conn) {}
-
-int ODBCRepinfo::id_use_count(unsigned id, const char* name)
+int ODBCRepinfoV6::id_use_count(unsigned id, const char* name)
 {
     unsigned count;
     auto stm = conn.odbcstatement("SELECT COUNT(1) FROM data WHERE id_report = ?");

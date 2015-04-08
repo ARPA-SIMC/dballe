@@ -1,7 +1,7 @@
 /*
  * db/station - station table management
  *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,14 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_ODBC_V5_STATION_H
-#define DBALLE_DB_ODBC_V5_STATION_H
-
-/** @file
- * @ingroup db
- *
- * Station table management used by the db module.
- */
+#ifndef DBALLE_DB_ODBC_STATION_H
+#define DBALLE_DB_ODBC_STATION_H
 
 #include <dballe/db/sql/station.h>
 #include <sqltypes.h>
@@ -43,12 +37,12 @@ struct ODBCConnection;
 struct ODBCStatement;
 struct Sequence;
 
-namespace v5 {
+namespace odbc {
 
 /**
  * Precompiled queries to manipulate the station table
  */
-class ODBCStation : public sql::Station
+class ODBCStationV5 : public sql::Station
 {
 protected:
     /**
@@ -112,11 +106,11 @@ protected:
     void impl_add_station_vars(const char* query, int id_station, Record& rec);
 
 public:
-    ODBCStation(ODBCConnection& conn);
-    ~ODBCStation();
-    ODBCStation(const ODBCStation&) = delete;
-    ODBCStation(const ODBCStation&&) = delete;
-    ODBCStation& operator=(const ODBCStation&) = delete;
+    ODBCStationV5(ODBCConnection& conn);
+    ~ODBCStationV5();
+    ODBCStationV5(const ODBCStationV5&) = delete;
+    ODBCStationV5(const ODBCStationV5&&) = delete;
+    ODBCStationV5& operator=(const ODBCStationV5&) = delete;
 
     /**
      * Get the station ID given latitude, longitude and mobile identifier.
@@ -147,14 +141,11 @@ public:
     void dump(FILE* out) override;
 };
 
-}
 
-namespace v6 {
-
-class ODBCStation : public v5::ODBCStation
+class ODBCStationV6 : public ODBCStationV5
 {
 public:
-    ODBCStation(ODBCConnection& conn);
+    ODBCStationV6(ODBCConnection& conn);
     void get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
     void add_station_vars(int id_station, Record& rec) override;
 };

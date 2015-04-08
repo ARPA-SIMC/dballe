@@ -1,7 +1,7 @@
 /*
- * db/v6/lev_tr - lev_tr table management
+ * db/odbc/lev_tr - lev_tr table management
  *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_ODBC_V6_LEV_TR_H
-#define DBALLE_DB_ODBC_V6_LEV_TR_H
+#ifndef DBALLE_DB_ODBC_LEV_TR_H
+#define DBALLE_DB_ODBC_LEV_TR_H
 
 /** @file
  * @ingroup db
@@ -46,13 +46,13 @@ namespace db {
 struct Connection;
 struct Statement;
 
-namespace v6 {
+namespace odbc {
 struct DB;
 
 /**
  * Precompiled queries to manipulate the lev_tr table
  */
-struct ODBCLevTr : public sql::LevTr
+struct ODBCLevTrV6 : public sql::LevTr
 {
 protected:
     /**
@@ -96,11 +96,11 @@ protected:
     void remove();
 
 public:
-    ODBCLevTr(ODBCConnection& conn);
-    ODBCLevTr(const LevTr&) = delete;
-    ODBCLevTr(const LevTr&&) = delete;
-    ODBCLevTr& operator=(const ODBCLevTr&) = delete;
-    ~ODBCLevTr();
+    ODBCLevTrV6(ODBCConnection& conn);
+    ODBCLevTrV6(const LevTr&) = delete;
+    ODBCLevTrV6(const LevTr&&) = delete;
+    ODBCLevTrV6& operator=(const ODBCLevTrV6&) = delete;
+    ~ODBCLevTrV6();
 
     /**
      * Return the ID for the given Level and Trange, adding it to the database

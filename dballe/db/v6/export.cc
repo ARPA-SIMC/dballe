@@ -1,7 +1,7 @@
 /*
  * db/v6/export - Export Msg data from the database
  *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,14 +21,14 @@
 
 #include "db.h"
 #include "cursor.h"
-#include "internals.h"
 #include "qbuilder.h"
 #include "dballe/db/modifiers.h"
-#include "dballe/db/sql.h"
-
+#include "dballe/db/sql/repinfo.h"
+#include "dballe/db/sql/station.h"
+#include "dballe/db/sql/levtr.h"
+#include "dballe/db/sql/attrv6.h"
 #include <dballe/msg/msg.h>
 #include <dballe/msg/context.h>
-
 #include <memory>
 #include <cstring>
 #include <iostream>
@@ -104,7 +104,7 @@ void DB::export_msgs(const Query& query, MsgConsumer& consumer)
     StationLayerCache station_cache;
 
     // Retrieve results
-    run_built_query(*conn, qb, [&](SQLRecord& sqlrec) {
+    driver().run_built_query_v6(qb, [&](sql::SQLRecordV6& sqlrec) {
         //TRACE("Got B%02d%03d %ld,%ld, %ld,%ld %ld,%ld,%ld %s\n",
         //        WR_VAR_X(sqlrec.out_varcode), WR_VAR_Y(sqlrec.out_varcode),
         //        sqlrec.out_ltype1, sqlrec.out_l1, sqlrec.out_ltype2, sqlrec.out_l2, sqlrec.out_pind, sqlrec.out_p1, sqlrec.out_p2,

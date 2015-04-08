@@ -29,19 +29,19 @@ using namespace std;
 
 namespace dballe {
 namespace db {
-namespace v5 {
+namespace postgresql {
 
-PostgreSQLRepinfo::PostgreSQLRepinfo(PostgreSQLConnection& conn)
+PostgreSQLRepinfoV5::PostgreSQLRepinfoV5(PostgreSQLConnection& conn)
     : Repinfo(conn), conn(conn)
 {
     read_cache();
 }
 
-PostgreSQLRepinfo::~PostgreSQLRepinfo()
+PostgreSQLRepinfoV5::~PostgreSQLRepinfoV5()
 {
 }
 
-void PostgreSQLRepinfo::read_cache()
+void PostgreSQLRepinfoV5::read_cache()
 {
     cache.clear();
     memo_idx.clear();
@@ -63,7 +63,7 @@ void PostgreSQLRepinfo::read_cache()
     rebuild_memo_idx();
 }
 
-void PostgreSQLRepinfo::insert_auto_entry(const char* memo)
+void PostgreSQLRepinfoV5::insert_auto_entry(const char* memo)
 {
     unsigned id = conn.exec_one_row("SELECT MAX(id) FROM repinfo").get_int4(0, 0);
     int prio = conn.exec_one_row("SELECT MAX(prio) FROM repinfo").get_int4(0, 0);
@@ -79,14 +79,14 @@ void PostgreSQLRepinfo::insert_auto_entry(const char* memo)
     conn.exec_no_data(query, memo);
 }
 
-int PostgreSQLRepinfo::id_use_count(unsigned id, const char* name)
+int PostgreSQLRepinfoV5::id_use_count(unsigned id, const char* name)
 {
     Querybuf query(500);
     query.appendf("SELECT COUNT(1) FROM context WHERE id_report=%u", id);
     return conn.exec_one_row(query).get_int4(0, 0);
 }
 
-void PostgreSQLRepinfo::update(const char* deffile, int* added, int* deleted, int* updated)
+void PostgreSQLRepinfoV5::update(const char* deffile, int* added, int* deleted, int* updated)
 {
     *added = *deleted = *updated = 0;
 
@@ -164,7 +164,7 @@ void PostgreSQLRepinfo::update(const char* deffile, int* added, int* deleted, in
     read_cache();
 }
 
-void PostgreSQLRepinfo::dump(FILE* out)
+void PostgreSQLRepinfoV5::dump(FILE* out)
 {
     fprintf(out, "dump of table repinfo:\n");
     fprintf(out, "   id   memo   description  prio   desc  tablea\n");
@@ -188,14 +188,9 @@ void PostgreSQLRepinfo::dump(FILE* out)
     fprintf(out, "%d element%s in table repinfo\n", count, count != 1 ? "s" : "");
 }
 
+PostgreSQLRepinfoV6::PostgreSQLRepinfoV6(PostgreSQLConnection& conn) : PostgreSQLRepinfoV5(conn) {}
 
-}
-
-namespace v6 {
-
-PostgreSQLRepinfo::PostgreSQLRepinfo(PostgreSQLConnection& conn) : v5::PostgreSQLRepinfo(conn) {}
-
-int PostgreSQLRepinfo::id_use_count(unsigned id, const char* name)
+int PostgreSQLRepinfoV6::id_use_count(unsigned id, const char* name)
 {
     Querybuf query(500);
     query.appendf("SELECT COUNT(1) FROM data WHERE id_report=%u", id);

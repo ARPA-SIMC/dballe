@@ -9,7 +9,7 @@ using namespace std;
 
 namespace dballe {
 namespace db {
-namespace v6 {
+namespace sqlite {
 
 SQLiteDataV6::SQLiteDataV6(SQLiteConnection& conn)
     : conn(conn)

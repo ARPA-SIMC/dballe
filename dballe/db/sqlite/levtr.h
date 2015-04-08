@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_SQLITE_V6_LEV_TR_H
-#define DBALLE_DB_SQLITE_V6_LEV_TR_H
+#ifndef DBALLE_DB_SQLITE_LEVTRV6_H
+#define DBALLE_DB_SQLITE_LEVTRV6_H
 
 #include <dballe/db/db.h>
 #include <dballe/db/sql/levtr.h>
@@ -40,13 +40,13 @@ namespace db {
 struct Connection;
 struct Statement;
 
-namespace v6 {
+namespace sqlite {
 struct DB;
 
 /**
  * Precompiled queries to manipulate the lev_tr table
  */
-struct SQLiteLevTr : public sql::LevTr
+struct SQLiteLevTrV6 : public sql::LevTr
 {
 protected:
     /**
@@ -66,11 +66,11 @@ protected:
     DBRow working_row;
 
 public:
-    SQLiteLevTr(SQLiteConnection& conn);
-    SQLiteLevTr(const LevTr&) = delete;
-    SQLiteLevTr(const LevTr&&) = delete;
-    SQLiteLevTr& operator=(const SQLiteLevTr&) = delete;
-    ~SQLiteLevTr();
+    SQLiteLevTrV6(SQLiteConnection& conn);
+    SQLiteLevTrV6(const LevTr&) = delete;
+    SQLiteLevTrV6(const LevTr&&) = delete;
+    SQLiteLevTrV6& operator=(const SQLiteLevTrV6&) = delete;
+    ~SQLiteLevTrV6();
 
     /**
      * Return the ID for the given Level and Trange, adding it to the database

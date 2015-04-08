@@ -1,7 +1,7 @@
 /*
- * db/v5/repinfo - repinfo table management
+ * db/odbc/repinfo - repinfo table management
  *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_ODBC_V5_REPINFO_H
-#define DBALLE_DB_ODBC_V5_REPINFO_H
+#ifndef DBALLE_DB_ODBC_REPINFO_H
+#define DBALLE_DB_ODBC_REPINFO_H
 
 /** @file
  * @ingroup db
@@ -39,12 +39,12 @@ struct Record;
 namespace db {
 struct ODBCConnection;
 
-namespace v5 {
+namespace odbc {
 
 /**
  * Fast cached access to the repinfo table
  */
-struct ODBCRepinfo : public sql::Repinfo
+struct ODBCRepinfoV5 : public sql::Repinfo
 {
     /**
      * DB connection. The pointer is assumed always valid during the
@@ -52,11 +52,11 @@ struct ODBCRepinfo : public sql::Repinfo
      */
     ODBCConnection& conn;
 
-    ODBCRepinfo(ODBCConnection& conn);
-    ODBCRepinfo(const ODBCRepinfo&) = delete;
-    ODBCRepinfo(const ODBCRepinfo&&) = delete;
-    virtual ~ODBCRepinfo();
-    ODBCRepinfo& operator=(const ODBCRepinfo&) = delete;
+    ODBCRepinfoV5(ODBCConnection& conn);
+    ODBCRepinfoV5(const ODBCRepinfoV5&) = delete;
+    ODBCRepinfoV5(const ODBCRepinfoV5&&) = delete;
+    virtual ~ODBCRepinfoV5();
+    ODBCRepinfoV5& operator=(const ODBCRepinfoV5&) = delete;
 
     void update(const char* deffile, int* added, int* deleted, int* updated) override;
     void dump(FILE* out) override;
@@ -69,13 +69,9 @@ protected:
     void insert_auto_entry(const char* memo) override;
 };
 
-}
-
-namespace v6 {
-
-struct ODBCRepinfo : public v5::ODBCRepinfo
+struct ODBCRepinfoV6 : public ODBCRepinfoV5
 {
-    ODBCRepinfo(ODBCConnection& conn);
+    ODBCRepinfoV6(ODBCConnection& conn);
 
 protected:
     int id_use_count(unsigned id, const char* name) override;

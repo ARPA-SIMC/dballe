@@ -27,7 +27,7 @@
 
 namespace dballe {
 namespace db {
-namespace v6 {
+namespace sqlite {
 
 /**
  * Precompiled queries to manipulate the attr table

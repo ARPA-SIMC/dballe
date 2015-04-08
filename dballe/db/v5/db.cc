@@ -22,25 +22,14 @@
 #include "db.h"
 #include "config.h"
 #include "dballe/db/modifiers.h"
+#include "dballe/db/sql/driver.h"
 #include "dballe/db/sql/repinfo.h"
 #include "dballe/db/sql/station.h"
 #include "context.h"
 #include "dballe/db/sql/datav5.h"
 #include "dballe/db/sql/attrv5.h"
-#include "dballe/db/sqlite/internals.h"
-#include "dballe/db/sqlite/repinfo.h"
-#include "dballe/db/sqlite/station.h"
 #ifdef HAVE_ODBC
 #include "dballe/db/odbc/internals.h"
-#include "dballe/db/odbc/repinfo.h"
-#include "dballe/db/odbc/station.h"
-#include "dballe/db/odbc/datav5.h"
-#include "dballe/db/odbc/attrv5.h"
-#endif
-#ifdef HAVE_LIBPQ
-#include "dballe/db/postgresql/internals.h"
-#include "dballe/db/postgresql/repinfo.h"
-#include "dballe/db/postgresql/station.h"
 #endif
 #include "cursor.h"
 
@@ -330,7 +319,7 @@ static const char* init_queries_oracle[] = {
 
 // First part of initialising a dba_db
 DB::DB(unique_ptr<ODBCConnection> conn)
-    : conn(conn.release())
+    : conn(conn.release()), m_driver(sql::Driver::create(*this->conn).release())
 {
     init_after_connect();
 
@@ -340,12 +329,13 @@ DB::DB(unique_ptr<ODBCConnection> conn)
 
 DB::~DB()
 {
-    if (m_attr) delete m_attr;
-    if (m_data) delete m_data;
-    if (m_context) delete m_context;
-    if (m_station) delete m_station;
-    if (m_repinfo) delete m_repinfo;
-    if (conn) delete conn;
+    delete m_attr;
+    delete m_data;
+    delete m_context;
+    delete m_station;
+    delete m_repinfo;
+    delete m_driver;
+    delete conn;
 }
 
 #if 0
@@ -367,40 +357,14 @@ void dba_db_delete(dba_db db)
 sql::Repinfo& DB::repinfo()
 {
     if (m_repinfo == NULL)
-    {
-        if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(conn))
-            m_repinfo = new v5::SQLiteRepinfo(*c);
-#ifdef HAVE_ODBC
-        else if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(conn))
-            m_repinfo = new v5::ODBCRepinfo(*c);
-#endif
-#ifdef HAVE_LIBPQ
-        else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(conn))
-            m_repinfo = new v5::PostgreSQLRepinfo(*c);
-#endif
-        else
-            throw error_unimplemented("v5 DB repinfo only implemented for ODBC, SQLite and PostgreSQL connectors, when available");
-    }
+        m_repinfo = m_driver->create_repinfov5().release();
     return *m_repinfo;
 }
 
 sql::Station& DB::station()
 {
     if (m_station == NULL)
-    {
-        if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(conn))
-            m_station = new v5::SQLiteStation(*c);
-#ifdef HAVE_ODBC
-        else if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(conn))
-            m_station = new v5::ODBCStation(*c);
-#endif
-#ifdef HAVE_LIBPQ
-        else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(conn))
-            m_station = new v5::PostgreSQLStation(*c);
-#endif
-        else
-            throw error_unimplemented("v5 DB station only implemented for ODBC, SQLite and PostgreSQL connectors, when available");
-    }
+        m_station = m_driver->create_stationv5().release();
     return *m_station;
 }
 
@@ -418,22 +382,14 @@ Context& DB::context()
 sql::DataV5& DB::data()
 {
     if (m_data == NULL)
-    {
-        ODBCConnection* c = dynamic_cast<ODBCConnection*>(conn);
-        if (!c) throw error_unimplemented("v5 DB Data only works with ODBC connectors");
-        m_data = new ODBCDataV5(*c);
-    }
+        m_data = m_driver->create_datav5().release();
     return *m_data;
 }
 
 sql::AttrV5& DB::attr()
 {
     if (m_attr == NULL)
-    {
-        ODBCConnection* c = dynamic_cast<ODBCConnection*>(conn);
-        if (!c) throw error_unimplemented("v5 DB Attr only works with ODBC connectors");
-        m_attr = new ODBCAttrV5(*c);
-    }
+        m_attr = m_driver->create_attrv5().release();
     return *m_attr;
 }
 

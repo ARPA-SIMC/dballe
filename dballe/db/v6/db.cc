@@ -21,10 +21,15 @@
 
 #include "db.h"
 #include "dballe/db/sql.h"
+#include "dballe/db/sql/driver.h"
+#include "dballe/db/sql/repinfo.h"
+#include "dballe/db/sql/station.h"
+#include "dballe/db/sql/levtr.h"
+#include "dballe/db/sql/datav6.h"
+#include "dballe/db/sql/attrv6.h"
 #include "dballe/db/modifiers.h"
 #include "dballe/db/querybuf.h"
 #include "cursor.h"
-#include "internals.h"
 
 #include <dballe/core/record.h>
 #include <dballe/core/defs.h>
@@ -296,6 +301,7 @@ static const char* init_queries_oracle[] = {
 // First part of initialising a dba_db
 DB::DB(unique_ptr<Connection> conn)
     : conn(conn.release()),
+      m_driver(sql::Driver::create(*this->conn).release()),
       m_repinfo(0), m_station(0), m_lev_tr(0), m_lev_tr_cache(0),
       m_data(0), m_attr(0),
       _last_station_id(0)
@@ -308,33 +314,39 @@ DB::DB(unique_ptr<Connection> conn)
 
 DB::~DB()
 {
-    if (m_attr) delete m_attr;
-    if (m_data) delete m_data;
-    if (m_lev_tr_cache) delete m_lev_tr_cache;
-    if (m_lev_tr) delete m_lev_tr;
-    if (m_station) delete m_station;
-    if (m_repinfo) delete m_repinfo;
-    if (conn) delete conn;
+    delete m_attr;
+    delete m_data;
+    delete m_lev_tr_cache;
+    delete m_lev_tr;
+    delete m_station;
+    delete m_repinfo;
+    delete m_driver;
+    delete conn;
+}
+
+sql::Driver& DB::driver()
+{
+    return *m_driver;
 }
 
 sql::Repinfo& DB::repinfo()
 {
     if (m_repinfo == NULL)
-        m_repinfo = create_repinfo(*conn).release();
+        m_repinfo = m_driver->create_repinfov6().release();
     return *m_repinfo;
 }
 
 sql::Station& DB::station()
 {
     if (m_station == NULL)
-        m_station = create_station(*conn).release();
+        m_station = m_driver->create_stationv6().release();
     return *m_station;
 }
 
 sql::LevTr& DB::lev_tr()
 {
     if (m_lev_tr == NULL)
-        m_lev_tr = create_levtr(*conn).release();
+        m_lev_tr = m_driver->create_levtrv6().release();
     return *m_lev_tr;
 }
 
@@ -348,14 +360,14 @@ sql::LevTrCache& DB::lev_tr_cache()
 sql::DataV6& DB::data()
 {
     if (m_data == NULL)
-        m_data = create_datav6(*conn).release();
+        m_data = m_driver->create_datav6().release();
     return *m_data;
 }
 
 sql::AttrV6& DB::attr()
 {
     if (m_attr == NULL)
-        m_attr = create_attrv6(*conn).release();
+        m_attr = m_driver->create_attrv6().release();
     return *m_attr;
 }
 

@@ -1,5 +1,5 @@
 /*
- * db/v6/odbc/attr - attribute table management
+ * db/odbc/attrv6 - attribute table management
  *
  * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -31,7 +31,7 @@ using namespace wreport;
 
 namespace dballe {
 namespace db {
-namespace v6 {
+namespace odbc {
 
 ODBCAttrV6::ODBCAttrV6(ODBCConnection& conn)
     : conn(conn), sstm(0), istm(0), rstm(0)

@@ -10,7 +10,7 @@ using namespace std;
 
 namespace dballe {
 namespace db {
-namespace v6 {
+namespace postgresql {
 
 PostgreSQLDataV6::PostgreSQLDataV6(PostgreSQLConnection& conn)
     : conn(conn)

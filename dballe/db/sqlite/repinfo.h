@@ -39,12 +39,12 @@ struct Record;
 namespace db {
 struct SQLiteConnection;
 
-namespace v5 {
+namespace sqlite {
 
 /**
  * Fast cached access to the repinfo table
  */
-struct SQLiteRepinfo : public sql::Repinfo
+struct SQLiteRepinfoV5 : public sql::Repinfo
 {
     /**
      * DB connection. The pointer is assumed always valid during the
@@ -52,11 +52,11 @@ struct SQLiteRepinfo : public sql::Repinfo
      */
     SQLiteConnection& conn;
 
-    SQLiteRepinfo(SQLiteConnection& conn);
-    SQLiteRepinfo(const SQLiteRepinfo&) = delete;
-    SQLiteRepinfo(const SQLiteRepinfo&&) = delete;
-    virtual ~SQLiteRepinfo();
-    SQLiteRepinfo& operator=(const SQLiteRepinfo&) = delete;
+    SQLiteRepinfoV5(SQLiteConnection& conn);
+    SQLiteRepinfoV5(const SQLiteRepinfoV5&) = delete;
+    SQLiteRepinfoV5(const SQLiteRepinfoV5&&) = delete;
+    virtual ~SQLiteRepinfoV5();
+    SQLiteRepinfoV5& operator=(const SQLiteRepinfoV5&) = delete;
 
     void update(const char* deffile, int* added, int* deleted, int* updated) override;
     void dump(FILE* out) override;
@@ -69,13 +69,9 @@ protected:
     void insert_auto_entry(const char* memo) override;
 };
 
-}
-
-namespace v6 {
-
-struct SQLiteRepinfo : public v5::SQLiteRepinfo
+struct SQLiteRepinfoV6 : public SQLiteRepinfoV5
 {
-    SQLiteRepinfo(SQLiteConnection& conn);
+    SQLiteRepinfoV6(SQLiteConnection& conn);
 
 protected:
     int id_use_count(unsigned id, const char* name) override;

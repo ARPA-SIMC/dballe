@@ -1,5 +1,5 @@
 /*
- * db/attr - attr table management
+ * db/odbc/attrv5 - attr table management
  *
  * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -40,7 +40,7 @@ namespace db {
 struct ODBCConnection;
 struct ODBCStatement;
 
-namespace v5 {
+namespace odbc {
 
 /**
  * Precompiled queries to manipulate the attr table

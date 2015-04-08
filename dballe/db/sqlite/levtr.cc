@@ -34,7 +34,7 @@ using namespace std;
 
 namespace dballe {
 namespace db {
-namespace v6 {
+namespace sqlite {
 
 namespace {
 
@@ -57,7 +57,7 @@ Trange to_trange(SQLiteStatement& stm, int first_id=0)
 
 }
 
-SQLiteLevTr::SQLiteLevTr(SQLiteConnection& conn)
+SQLiteLevTrV6::SQLiteLevTrV6(SQLiteConnection& conn)
     : conn(conn)
 {
     const char* select_query =
@@ -79,14 +79,14 @@ SQLiteLevTr::SQLiteLevTr(SQLiteConnection& conn)
     istm = conn.sqlitestatement(insert_query).release();
 }
 
-SQLiteLevTr::~SQLiteLevTr()
+SQLiteLevTrV6::~SQLiteLevTrV6()
 {
     delete sstm;
     delete sdstm;
     delete istm;
 }
 
-int SQLiteLevTr::obtain_id(const Level& lev, const Trange& tr)
+int SQLiteLevTrV6::obtain_id(const Level& lev, const Trange& tr)
 {
     sstm->bind(lev.ltype1, lev.l1, lev.ltype2, lev.l2, tr.pind, tr.p1, tr.p2);
 
@@ -104,7 +104,7 @@ int SQLiteLevTr::obtain_id(const Level& lev, const Trange& tr)
     return conn.get_last_insert_id();
 }
 
-int SQLiteLevTr::obtain_id(const Record& rec)
+int SQLiteLevTrV6::obtain_id(const Record& rec)
 {
     Level lev;
     if (const Var* var = rec.key_peek(DBA_KEY_LEVELTYPE1))
@@ -141,7 +141,7 @@ int SQLiteLevTr::obtain_id(const Record& rec)
     return obtain_id(lev, tr);
 }
 
-const sql::LevTr::DBRow* SQLiteLevTr::read(int id)
+const sql::LevTr::DBRow* SQLiteLevTrV6::read(int id)
 {
     sdstm->bind(id);
     bool found = false;
@@ -161,7 +161,7 @@ const sql::LevTr::DBRow* SQLiteLevTr::read(int id)
     return &working_row;
 }
 
-void SQLiteLevTr::read_all(std::function<void(const LevTr::DBRow&)> dest)
+void SQLiteLevTrV6::read_all(std::function<void(const LevTr::DBRow&)> dest)
 {
     auto stm = conn.sqlitestatement("SELECT id, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr");
     stm->execute([&]() {
@@ -177,7 +177,7 @@ void SQLiteLevTr::read_all(std::function<void(const LevTr::DBRow&)> dest)
     });
 }
 
-void SQLiteLevTr::dump(FILE* out)
+void SQLiteLevTrV6::dump(FILE* out)
 {
     int count = 0;
     fprintf(out, "dump of table lev_tr:\n");

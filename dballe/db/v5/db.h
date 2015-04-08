@@ -68,6 +68,7 @@ struct Connection;
 struct Sequence;
 
 namespace sql {
+struct Driver;
 struct Repinfo;
 struct Station;
 struct DataV5;
@@ -88,6 +89,8 @@ public:
 
 protected:
     int last_context_id;
+
+    sql::Driver* m_driver = nullptr;
 
 	/**
 	 * Accessors for the various parts of the database.

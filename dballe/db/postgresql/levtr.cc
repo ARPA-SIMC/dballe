@@ -35,7 +35,7 @@ using namespace std;
 
 namespace dballe {
 namespace db {
-namespace v6 {
+namespace postgresql {
 
 namespace {
 
@@ -58,7 +58,7 @@ Trange to_trange(const postgresql::Result& res, unsigned row, int first_id=0)
 
 }
 
-PostgreSQLLevTr::PostgreSQLLevTr(PostgreSQLConnection& conn)
+PostgreSQLLevTrV6::PostgreSQLLevTrV6(PostgreSQLConnection& conn)
     : conn(conn)
 {
     conn.prepare("v6_levtr_select_id", R"(
@@ -74,11 +74,11 @@ PostgreSQLLevTr::PostgreSQLLevTr(PostgreSQLConnection& conn)
     )");
 }
 
-PostgreSQLLevTr::~PostgreSQLLevTr()
+PostgreSQLLevTrV6::~PostgreSQLLevTrV6()
 {
 }
 
-int PostgreSQLLevTr::obtain_id(const Level& lev, const Trange& tr)
+int PostgreSQLLevTrV6::obtain_id(const Level& lev, const Trange& tr)
 {
     using namespace postgresql;
     Result res = conn.exec_prepared("v6_levtr_select_id",
@@ -97,7 +97,7 @@ int PostgreSQLLevTr::obtain_id(const Level& lev, const Trange& tr)
             lev.ltype1, lev.l1, lev.ltype2, lev.l2, tr.pind, tr.p1, tr.p2).get_int4(0, 0);
 }
 
-int PostgreSQLLevTr::obtain_id(const Record& rec)
+int PostgreSQLLevTrV6::obtain_id(const Record& rec)
 {
     Level lev;
     if (const Var* var = rec.key_peek(DBA_KEY_LEVELTYPE1))
@@ -134,7 +134,7 @@ int PostgreSQLLevTr::obtain_id(const Record& rec)
     return obtain_id(lev, tr);
 }
 
-const sql::LevTr::DBRow* PostgreSQLLevTr::read(int id)
+const sql::LevTr::DBRow* PostgreSQLLevTrV6::read(int id)
 {
     auto res = conn.exec_prepared("v6_levtr_select_data", id);
     switch (res.rowcount())
@@ -154,7 +154,7 @@ const sql::LevTr::DBRow* PostgreSQLLevTr::read(int id)
     }
 }
 
-void PostgreSQLLevTr::read_all(std::function<void(const LevTr::DBRow&)> dest)
+void PostgreSQLLevTrV6::read_all(std::function<void(const LevTr::DBRow&)> dest)
 {
     auto res = conn.exec("SELECT id, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr");
     for (unsigned row = 0; row < res.rowcount(); ++row)
@@ -171,7 +171,7 @@ void PostgreSQLLevTr::read_all(std::function<void(const LevTr::DBRow&)> dest)
     }
 }
 
-void PostgreSQLLevTr::dump(FILE* out)
+void PostgreSQLLevTrV6::dump(FILE* out)
 {
     int count = 0;
     fprintf(out, "dump of table lev_tr:\n");

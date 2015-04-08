@@ -19,8 +19,10 @@
 
 #include "db/test-utils-db.h"
 #include "db/v6/db.h"
+#include "db/sql/station.h"
+#include "db/sql/levtr.h"
+#include "db/sql/datav6.h"
 #include "db/sql/attrv6.h"
-#include "db/v6/internals.h"
 
 using namespace dballe;
 using namespace dballe::tests;

@@ -10,7 +10,7 @@ using namespace wreport;
 
 namespace dballe {
 namespace db {
-namespace v6 {
+namespace odbc {
 
 ODBCDataV6::ODBCDataV6(ODBCConnection& conn)
     : conn(conn), istm(0), ustm(0), ioustm(0), iistm(0), sidstm(0)

@@ -23,7 +23,9 @@
 #include "qbuilder.h"
 #include "db.h"
 #include "dballe/db/modifiers.h"
-#include "dballe/db/v6/internals.h"
+#include "dballe/db/sql/repinfo.h"
+#include "dballe/db/sql/station.h"
+#include "dballe/db/sql/levtr.h"
 
 #include <wreport/var.h>
 #include <dballe/core/defs.h>
@@ -243,14 +245,14 @@ void Cursor::run_delete_query(DB& db, const Query& query)
     IdQueryBuilder qb(db, query, modifiers);
     qb.build();
 
-    v6::run_delete_query(*db.conn, qb);
+    db.driver().run_delete_query_v6(qb);
 
     t->commit();
 }
 
 void Cursor::load(const QueryBuilder& qb)
 {
-    run_built_query(*db.conn, qb, [&](SQLRecord& rec) {
+    db.driver().run_built_query_v6(qb, [&](sql::SQLRecordV6& rec) {
         results.append(rec);
     });
     // We are done adding, prepare the structbuf for reading
@@ -427,9 +429,9 @@ void CursorBest::load(const QueryBuilder& qb)
 {
     db::sql::Repinfo& ri = db.repinfo();
     bool first = true;
-    SQLRecord best;
+    sql::SQLRecordV6 best;
 
-    run_built_query(*db.conn, qb, [&](SQLRecord& rec) {
+    db.driver().run_built_query_v6(qb, [&](sql::SQLRecordV6& rec) {
         // Fill priority
         rec.priority = ri.get_priority(rec.out_rep_cod);
 

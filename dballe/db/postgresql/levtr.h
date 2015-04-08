@@ -40,13 +40,13 @@ namespace db {
 struct Connection;
 struct Statement;
 
-namespace v6 {
+namespace postgresql {
 struct DB;
 
 /**
  * Precompiled queries to manipulate the lev_tr table
  */
-struct PostgreSQLLevTr : public sql::LevTr
+struct PostgreSQLLevTrV6 : public sql::LevTr
 {
 protected:
     /**
@@ -57,11 +57,11 @@ protected:
     DBRow working_row;
 
 public:
-    PostgreSQLLevTr(PostgreSQLConnection& conn);
-    PostgreSQLLevTr(const LevTr&) = delete;
-    PostgreSQLLevTr(const LevTr&&) = delete;
-    PostgreSQLLevTr& operator=(const PostgreSQLLevTr&) = delete;
-    ~PostgreSQLLevTr();
+    PostgreSQLLevTrV6(PostgreSQLConnection& conn);
+    PostgreSQLLevTrV6(const LevTr&) = delete;
+    PostgreSQLLevTrV6(const LevTr&&) = delete;
+    PostgreSQLLevTrV6& operator=(const PostgreSQLLevTrV6&) = delete;
+    ~PostgreSQLLevTrV6();
 
     /**
      * Return the ID for the given Level and Trange, adding it to the database

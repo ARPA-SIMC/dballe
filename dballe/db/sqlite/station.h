@@ -41,12 +41,12 @@ namespace db {
 struct SQLiteConnection;
 struct SQLiteStatement;
 
-namespace v5 {
+namespace sqlite {
 
 /**
  * Precompiled queries to manipulate the station table
  */
-class SQLiteStation : public sql::Station
+class SQLiteStationV5 : public sql::Station
 {
 protected:
     /**
@@ -68,11 +68,11 @@ protected:
     void read_station_vars(SQLiteStatement& stm, std::function<void(std::unique_ptr<wreport::Var>)> dest);
 
 public:
-    SQLiteStation(SQLiteConnection& conn);
-    ~SQLiteStation();
-    SQLiteStation(const SQLiteStation&) = delete;
-    SQLiteStation(const SQLiteStation&&) = delete;
-    SQLiteStation& operator=(const SQLiteStation&) = delete;
+    SQLiteStationV5(SQLiteConnection& conn);
+    ~SQLiteStationV5();
+    SQLiteStationV5(const SQLiteStationV5&) = delete;
+    SQLiteStationV5(const SQLiteStationV5&&) = delete;
+    SQLiteStationV5& operator=(const SQLiteStationV5&) = delete;
 
     /**
      * Get the station ID given latitude, longitude and mobile identifier.
@@ -103,14 +103,10 @@ public:
     void dump(FILE* out) override;
 };
 
-}
-
-namespace v6 {
-
-class SQLiteStation : public v5::SQLiteStation
+class SQLiteStationV6 : public SQLiteStationV5
 {
 public:
-    SQLiteStation(SQLiteConnection& conn);
+    SQLiteStationV6(SQLiteConnection& conn);
     void get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
     void add_station_vars(int id_station, Record& rec) override;
 };

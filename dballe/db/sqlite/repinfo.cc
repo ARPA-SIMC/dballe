@@ -28,19 +28,19 @@ using namespace std;
 
 namespace dballe {
 namespace db {
-namespace v5 {
+namespace sqlite {
 
-SQLiteRepinfo::SQLiteRepinfo(SQLiteConnection& conn)
+SQLiteRepinfoV5::SQLiteRepinfoV5(SQLiteConnection& conn)
     : Repinfo(conn), conn(conn)
 {
     read_cache();
 }
 
-SQLiteRepinfo::~SQLiteRepinfo()
+SQLiteRepinfoV5::~SQLiteRepinfoV5()
 {
 }
 
-void SQLiteRepinfo::read_cache()
+void SQLiteRepinfoV5::read_cache()
 {
     cache.clear();
     memo_idx.clear();
@@ -64,7 +64,7 @@ void SQLiteRepinfo::read_cache()
     rebuild_memo_idx();
 }
 
-void SQLiteRepinfo::insert_auto_entry(const char* memo)
+void SQLiteRepinfoV5::insert_auto_entry(const char* memo)
 {
     auto stm = conn.sqlitestatement("SELECT MAX(id) FROM repinfo");
     unsigned id;
@@ -89,7 +89,7 @@ void SQLiteRepinfo::insert_auto_entry(const char* memo)
     stm->execute();
 }
 
-int SQLiteRepinfo::id_use_count(unsigned id, const char* name)
+int SQLiteRepinfoV5::id_use_count(unsigned id, const char* name)
 {
     unsigned count = 0;
     auto stm = conn.sqlitestatement("SELECT COUNT(1) FROM context WHERE id_report=?");
@@ -100,7 +100,7 @@ int SQLiteRepinfo::id_use_count(unsigned id, const char* name)
     return count;
 }
 
-void SQLiteRepinfo::update(const char* deffile, int* added, int* deleted, int* updated)
+void SQLiteRepinfoV5::update(const char* deffile, int* added, int* deleted, int* updated)
 {
     *added = *deleted = *updated = 0;
 
@@ -187,7 +187,7 @@ void SQLiteRepinfo::update(const char* deffile, int* added, int* deleted, int* u
     read_cache();
 }
 
-void SQLiteRepinfo::dump(FILE* out)
+void SQLiteRepinfoV5::dump(FILE* out)
 {
     fprintf(out, "dump of table repinfo:\n");
     fprintf(out, "   id   memo   description  prio   desc  tablea\n");
@@ -211,14 +211,9 @@ void SQLiteRepinfo::dump(FILE* out)
     fprintf(out, "%d element%s in table repinfo\n", count, count != 1 ? "s" : "");
 }
 
+SQLiteRepinfoV6::SQLiteRepinfoV6(SQLiteConnection& conn) : SQLiteRepinfoV5(conn) {}
 
-}
-
-namespace v6 {
-
-SQLiteRepinfo::SQLiteRepinfo(SQLiteConnection& conn) : v5::SQLiteRepinfo(conn) {}
-
-int SQLiteRepinfo::id_use_count(unsigned id, const char* name)
+int SQLiteRepinfoV6::id_use_count(unsigned id, const char* name)
 {
     unsigned count = 0;
     auto stm = conn.sqlitestatement("SELECT COUNT(1) FROM data WHERE id_report=?");
@@ -230,6 +225,5 @@ int SQLiteRepinfo::id_use_count(unsigned id, const char* name)
 }
 
 }
-
 }
 }

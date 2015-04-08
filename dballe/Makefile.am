@@ -96,14 +96,14 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/sql/datav6.h \
 	db/sql/attrv5.h \
 	db/sql/attrv6.h \
+	db/sql/driver.h \
 	db/sqlite/internals.h \
 	db/sqlite/repinfo.h \
 	db/sqlite/station.h \
 	db/sqlite/levtr.h \
 	db/sqlite/datav6.h \
 	db/sqlite/attrv6.h \
-	db/sqlite/v6_run_query.h \
-	db/v6/internals.h \
+	db/sqlite/driver.h \
 	db/v6/db.h \
 	db/v6/cursor.h \
 	db/v6/qbuilder.h \
@@ -124,7 +124,7 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/postgresql/levtr.h \
 	db/postgresql/datav6.h \
 	db/postgresql/attrv6.h \
-	db/postgresql/v6_run_query.h
+	db/postgresql/driver.h
 endif
 if HAVE_ODBC
 nobase_dist_dballeinclude_HEADERS += \
@@ -136,7 +136,7 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/odbc/datav6.h \
 	db/odbc/attrv5.h \
 	db/odbc/attrv6.h \
-	db/odbc/v6_run_query.h \
+	db/odbc/driver.h \
 	db/v5/context.h \
 	db/v5/cursor.h \
 	db/v5/db.h
@@ -213,17 +213,17 @@ libdballe_la_SOURCES = \
 	db/sql/datav6.cc \
 	db/sql/attrv5.cc \
 	db/sql/attrv6.cc \
+	db/sql/driver.cc \
 	db/sqlite/internals.cc \
 	db/sqlite/repinfo.cc \
 	db/sqlite/station.cc \
 	db/sqlite/levtr.cc \
 	db/sqlite/datav6.cc \
 	db/sqlite/attrv6.cc \
-	db/sqlite/v6_run_query.cc \
+	db/sqlite/driver.cc \
 	db/mem/repinfo.cc \
 	db/mem/cursor.cc \
 	db/mem/db.cc \
-	db/v6/internals.cc \
 	db/v6/db.cc \
 	db/v6/cursor.cc \
 	db/v6/qbuilder.cc \
@@ -245,8 +245,8 @@ libdballe_la_SOURCES += \
 	db/postgresql/station.cc \
 	db/postgresql/levtr.cc \
 	db/postgresql/datav6.cc \
-	db/postgresql/attrv6.cc
-#	db/postgresql/v6_run_query.cc
+	db/postgresql/attrv6.cc \
+	db/postgresql/driver.cc
 endif
 if HAVE_ODBC
 libdballe_la_SOURCES += \
@@ -258,7 +258,7 @@ libdballe_la_SOURCES += \
 	db/odbc/datav6.cc \
 	db/odbc/attrv5.cc \
 	db/odbc/attrv6.cc \
-	db/odbc/v6_run_query.cc \
+	db/odbc/driver.cc \
 	db/v5/context.cc \
 	db/v5/cursor.cc \
 	db/v5/db.cc \
@@ -267,7 +267,6 @@ libdballe_la_SOURCES += \
 endif
 
 libdballe_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(WREPORT_LIBS) $(SQLITE3_LIBS) $(LIBPQ_LIBS) $(LUA_LIBS)
-#libdballe_la_LDFLAGS = -lstdc++ -version-info @LIBDBALLE_VERSION_INFO@
 
 # filter.cc and sat.cc are here for now until I manage to turn them into a working system
 EXTRA_DIST += \
@@ -359,7 +358,7 @@ tut_test_SOURCES = \
 	db/mem/repinfo-tut.cc \
 	db/mem/cursor-tut.cc \
 	db/mem/db-tut.cc \
-	db/v6/tests/db.cc \
+	db/v6/db-tut.cc \
 	db/summary-tut.cc \
 	simple/msgapi-tut.cc \
 	cmdline/dbadb-tut.cc \

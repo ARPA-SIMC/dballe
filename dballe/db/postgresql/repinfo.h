@@ -39,12 +39,12 @@ struct Record;
 namespace db {
 struct PostgreSQLConnection;
 
-namespace v5 {
+namespace postgresql {
 
 /**
  * Fast cached access to the repinfo table
  */
-struct PostgreSQLRepinfo : public sql::Repinfo
+struct PostgreSQLRepinfoV5 : public sql::Repinfo
 {
     /**
      * DB connection. The pointer is assumed always valid during the
@@ -52,11 +52,11 @@ struct PostgreSQLRepinfo : public sql::Repinfo
      */
     PostgreSQLConnection& conn;
 
-    PostgreSQLRepinfo(PostgreSQLConnection& conn);
-    PostgreSQLRepinfo(const PostgreSQLRepinfo&) = delete;
-    PostgreSQLRepinfo(const PostgreSQLRepinfo&&) = delete;
-    virtual ~PostgreSQLRepinfo();
-    PostgreSQLRepinfo& operator=(const PostgreSQLRepinfo&) = delete;
+    PostgreSQLRepinfoV5(PostgreSQLConnection& conn);
+    PostgreSQLRepinfoV5(const PostgreSQLRepinfoV5&) = delete;
+    PostgreSQLRepinfoV5(const PostgreSQLRepinfoV5&&) = delete;
+    virtual ~PostgreSQLRepinfoV5();
+    PostgreSQLRepinfoV5& operator=(const PostgreSQLRepinfoV5&) = delete;
 
     void update(const char* deffile, int* added, int* deleted, int* updated) override;
     void dump(FILE* out) override;
@@ -69,13 +69,9 @@ protected:
     void insert_auto_entry(const char* memo) override;
 };
 
-}
-
-namespace v6 {
-
-struct PostgreSQLRepinfo : public v5::PostgreSQLRepinfo
+struct PostgreSQLRepinfoV6 : public PostgreSQLRepinfoV5
 {
-    PostgreSQLRepinfo(PostgreSQLConnection& conn);
+    PostgreSQLRepinfoV6(PostgreSQLConnection& conn);
 
 protected:
     int id_use_count(unsigned id, const char* name) override;

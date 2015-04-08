@@ -19,7 +19,6 @@
 
 #include "db/test-utils-db.h"
 #include "db/v6/db.h"
-#include "db/v6/internals.h"
 #include "db/sql/levtr.h"
 
 using namespace dballe;

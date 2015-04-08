@@ -69,6 +69,7 @@ struct Statement;
 struct Sequence;
 
 namespace sql {
+struct Driver;
 struct Repinfo;
 struct Station;
 struct LevTr;
@@ -99,6 +100,9 @@ protected:
 
     /// Store database variable IDs for all last inserted variables
     std::vector<VarID> last_insert_varids;
+
+    /// SQL driver backend
+    sql::Driver* m_driver;
 
     /**
      * Accessors for the various parts of the database.
@@ -131,6 +135,9 @@ public:
     virtual ~DB();
 
     db::Format format() const { return V6; }
+
+    /// Access the backend DB driver
+    sql::Driver& driver();
 
     /// Access the repinfo table
     sql::Repinfo& repinfo();

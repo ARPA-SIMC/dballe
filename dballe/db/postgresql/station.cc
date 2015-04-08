@@ -31,8 +31,8 @@ using namespace std;
 
 namespace dballe {
 namespace db {
-
 namespace postgresql {
+
 StationBase::StationBase(PostgreSQLConnection& conn)
     : conn(conn)
 {
@@ -167,12 +167,8 @@ void StationBase::dump(FILE* out)
     fprintf(out, "%d element%s in table station\n", count, count != 1 ? "s" : "");
 }
 
-}
 
-
-namespace v5 {
-
-PostgreSQLStation::PostgreSQLStation(PostgreSQLConnection& conn)
+PostgreSQLStationV5::PostgreSQLStationV5(PostgreSQLConnection& conn)
     : StationBase(conn)
 {
     conn.prepare("v5_station_get_station_vars", R"(
@@ -198,16 +194,12 @@ PostgreSQLStation::PostgreSQLStation(PostgreSQLConnection& conn)
             AND sc.datetime=c.datetime AND sd.id_var=d.id_var)
     )");
 }
-PostgreSQLStation::~PostgreSQLStation()
+PostgreSQLStationV5::~PostgreSQLStationV5()
 {
 }
 
-}
 
-
-namespace v6 {
-
-PostgreSQLStation::PostgreSQLStation(PostgreSQLConnection& conn)
+PostgreSQLStationV6::PostgreSQLStationV6(PostgreSQLConnection& conn)
     : StationBase(conn)
 {
     conn.prepare("v5_station_get_station_vars", R"(
@@ -229,7 +221,7 @@ PostgreSQLStation::PostgreSQLStation(PostgreSQLConnection& conn)
             AND sd.id_var=d.id_var)
     )");
 }
-PostgreSQLStation::~PostgreSQLStation()
+PostgreSQLStationV6::~PostgreSQLStationV6()
 {
 }
 

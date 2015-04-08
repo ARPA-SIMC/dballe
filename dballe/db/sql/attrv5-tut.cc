@@ -28,7 +28,6 @@
 
 using namespace dballe;
 using namespace dballe::db;
-using namespace dballe::db::v5;
 using namespace wreport;
 using namespace wibble::tests;
 using namespace std;
@@ -37,15 +36,15 @@ namespace tut {
 
 struct dbv5_attr_shar : public dballe::tests::db_test
 {
-    ODBCAttrV5* at;
+    odbc::ODBCAttrV5* at;
 
     dbv5_attr_shar() : dballe::tests::db_test(db::V5)
     {
         if (!has_db()) return;
-        at = dynamic_cast<ODBCAttrV5*>(&v5().attr());
+        at = dynamic_cast<odbc::ODBCAttrV5*>(&v5().attr());
 
         sql::Station& st = v5().station();
-        Context& co = v5().context();
+        v5::Context& co = v5().context();
         sql::DataV5& da = v5().data();
 
         // Insert a mobile station

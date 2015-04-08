@@ -1,5 +1,5 @@
 /*
- * db/attr - attr table management
+ * db/odbc/attrv5 - attr table management
  *
  * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -31,7 +31,7 @@ using namespace std;
 
 namespace dballe {
 namespace db {
-namespace v5 {
+namespace odbc {
 
 ODBCAttrV5::ODBCAttrV5(ODBCConnection& conn)
     : conn(conn), sstm(0), istm(0), rstm(0)

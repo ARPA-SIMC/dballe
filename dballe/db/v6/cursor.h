@@ -29,7 +29,7 @@
 #define DBA_DB_V6_CURSOR_H
 
 #include <dballe/db/db.h>
-#include <dballe/db/v6/internals.h>
+#include <dballe/db/sql/driver.h>
 #include <dballe/core/structbuf.h>
 #include <wreport/varinfo.h>
 #include <sqltypes.h>
@@ -67,7 +67,7 @@ struct Cursor : public db::Cursor
     const unsigned int modifiers;
 
     /// Results from the query
-    Structbuf<SQLRecord> results;
+    Structbuf<sql::SQLRecordV6> results;
 
     /// Current result element being iterated
     int cur = -1;
