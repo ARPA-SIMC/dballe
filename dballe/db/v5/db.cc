@@ -20,23 +20,28 @@
  */
 
 #include "db.h"
-#include "dballe/db/sqlite/internals.h"
-#include "dballe/db/postgresql/internals.h"
-#include "dballe/db/odbc/internals.h"
+#include "config.h"
 #include "dballe/db/modifiers.h"
 #include "dballe/db/sql/repinfo.h"
-#include "dballe/db/sqlite/repinfo.h"
-#include "dballe/db/postgresql/repinfo.h"
-#include "dballe/db/odbc/repinfo.h"
 #include "dballe/db/sql/station.h"
-#include "dballe/db/sqlite/station.h"
-#include "dballe/db/postgresql/station.h"
-#include "dballe/db/odbc/station.h"
-#include "dballe/db/sql/datav5.h"
-#include "dballe/db/odbc/datav5.h"
-#include "dballe/db/sql/attrv5.h"
-#include "dballe/db/odbc/attrv5.h"
 #include "context.h"
+#include "dballe/db/sql/datav5.h"
+#include "dballe/db/sql/attrv5.h"
+#include "dballe/db/sqlite/internals.h"
+#include "dballe/db/sqlite/repinfo.h"
+#include "dballe/db/sqlite/station.h"
+#ifdef HAVE_ODBC
+#include "dballe/db/odbc/internals.h"
+#include "dballe/db/odbc/repinfo.h"
+#include "dballe/db/odbc/station.h"
+#include "dballe/db/odbc/datav5.h"
+#include "dballe/db/odbc/attrv5.h"
+#endif
+#ifdef HAVE_LIBPQ
+#include "dballe/db/postgresql/internals.h"
+#include "dballe/db/postgresql/repinfo.h"
+#include "dballe/db/postgresql/station.h"
+#endif
 #include "cursor.h"
 
 #include <dballe/core/record.h>
@@ -363,14 +368,18 @@ sql::Repinfo& DB::repinfo()
 {
     if (m_repinfo == NULL)
     {
-        if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(conn))
-            m_repinfo = new v5::ODBCRepinfo(*c);
-        else if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(conn))
+        if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(conn))
             m_repinfo = new v5::SQLiteRepinfo(*c);
+#ifdef HAVE_ODBC
+        else if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(conn))
+            m_repinfo = new v5::ODBCRepinfo(*c);
+#endif
+#ifdef HAVE_LIBPQ
         else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(conn))
             m_repinfo = new v5::PostgreSQLRepinfo(*c);
+#endif
         else
-            throw error_unimplemented("v5 DB repinfo only implemented for ODBC and SQLite connectors");
+            throw error_unimplemented("v5 DB repinfo only implemented for ODBC, SQLite and PostgreSQL connectors, when available");
     }
     return *m_repinfo;
 }
@@ -379,14 +388,18 @@ sql::Station& DB::station()
 {
     if (m_station == NULL)
     {
-        if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(conn))
-            m_station = new v5::ODBCStation(*c);
-        else if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(conn))
+        if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(conn))
             m_station = new v5::SQLiteStation(*c);
+#ifdef HAVE_ODBC
+        else if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(conn))
+            m_station = new v5::ODBCStation(*c);
+#endif
+#ifdef HAVE_LIBPQ
         else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(conn))
             m_station = new v5::PostgreSQLStation(*c);
+#endif
         else
-            throw error_unimplemented("v5 DB station not yet implemented for non-ODBC connectors");
+            throw error_unimplemented("v5 DB station only implemented for ODBC, SQLite and PostgreSQL connectors, when available");
     }
     return *m_station;
 }

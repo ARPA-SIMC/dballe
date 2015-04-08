@@ -169,9 +169,13 @@ unique_ptr<DB> DB::connect_from_url(const char* url)
     }
     if (strncmp(url, "postgresql:", 11) == 0)
     {
+#ifdef HAVE_LIBPQ
         unique_ptr<PostgreSQLConnection> conn(new PostgreSQLConnection);
         conn->open(url);
         return instantiate_db(unique_ptr<Connection>(conn.release()));
+#else
+        throw error_unimplemented("PostgreSQL support is not available");
+#endif
     }
     if (strncmp(url, "odbc://", 7) == 0)
     {
