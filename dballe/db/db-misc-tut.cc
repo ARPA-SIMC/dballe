@@ -552,20 +552,20 @@ template<> template<> void to::test<8>()
     unique_ptr<db::Cursor> cur = db->query_data(query);
 
     // Move the cursor to B01011
+    int context_id;
     bool found = false;
     while (cur->next())
     {
         cur->to_record(result);
         if (result.vars()[0]->code() == WR_VAR(0, 1, 11))
         {
+            context_id = cur->attr_reference_id();
             cur->discard_rest();
             found = true;
             break;
         }
     }
     ensure(found);
-
-    int context_id = cur->attr_reference_id();
 
     // Insert new attributes about this report
     Record qc;
