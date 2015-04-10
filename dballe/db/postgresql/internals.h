@@ -275,9 +275,20 @@ public:
     /// Precompile a query
     void prepare(const std::string& name, const std::string& query);
 
+    postgresql::Result exec_unchecked(const char* query)
+    {
+        return PQexecParams(db, query, 0, nullptr, nullptr, nullptr, nullptr, 1);
+    }
+
     postgresql::Result exec_unchecked(const std::string& query)
     {
         return PQexecParams(db, query.c_str(), 0, nullptr, nullptr, nullptr, nullptr, 1);
+    }
+
+    void exec_no_data(const char* query)
+    {
+        postgresql::Result res(PQexecParams(db, query, 0, nullptr, nullptr, nullptr, nullptr, 1));
+        res.expect_no_data(query);
     }
 
     void exec_no_data(const std::string& query)
@@ -286,10 +297,24 @@ public:
         res.expect_no_data(query);
     }
 
+    postgresql::Result exec(const char* query)
+    {
+        postgresql::Result res(PQexecParams(db, query, 0, nullptr, nullptr, nullptr, nullptr, 1));
+        res.expect_result(query);
+        return res;
+    }
+
     postgresql::Result exec(const std::string& query)
     {
         postgresql::Result res(PQexecParams(db, query.c_str(), 0, nullptr, nullptr, nullptr, nullptr, 1));
         res.expect_result(query);
+        return res;
+    }
+
+    postgresql::Result exec_one_row(const char* query)
+    {
+        postgresql::Result res(PQexecParams(db, query, 0, nullptr, nullptr, nullptr, nullptr, 1));
+        res.expect_one_row(query);
         return res;
     }
 
@@ -301,12 +326,26 @@ public:
     }
 
     template<typename ...ARGS>
+    postgresql::Result exec_unchecked(const char* query, ARGS... args)
+    {
+        postgresql::Params<ARGS...> params(args...);
+        return PQexecParams(db, query, params.count, nullptr, params.args, params.lengths, params.formats, 1);
+    }
+
+    template<typename ...ARGS>
     postgresql::Result exec_unchecked(const std::string& query, ARGS... args)
     {
         postgresql::Params<ARGS...> params(args...);
         return PQexecParams(db, query.c_str(), params.count, nullptr, params.args, params.lengths, params.formats, 1);
     }
 
+    template<typename ...ARGS>
+    void exec_no_data(const char* query, ARGS... args)
+    {
+        postgresql::Params<ARGS...> params(args...);
+        postgresql::Result res(PQexecParams(db, query, params.count, nullptr, params.args, params.lengths, params.formats, 1));
+        res.expect_no_data(query);
+    }
     template<typename ...ARGS>
     void exec_no_data(const std::string& query, ARGS... args)
     {
@@ -316,11 +355,29 @@ public:
     }
 
     template<typename ...ARGS>
+    postgresql::Result exec(const char* query, ARGS... args)
+    {
+        postgresql::Params<ARGS...> params(args...);
+        postgresql::Result res(PQexecParams(db, query, params.count, nullptr, params.args, params.lengths, params.formats, 1));
+        res.expect_result(query);
+        return res;
+    }
+
+    template<typename ...ARGS>
     postgresql::Result exec(const std::string& query, ARGS... args)
     {
         postgresql::Params<ARGS...> params(args...);
         postgresql::Result res(PQexecParams(db, query.c_str(), params.count, nullptr, params.args, params.lengths, params.formats, 1));
         res.expect_result(query);
+        return res;
+    }
+
+    template<typename ...ARGS>
+    postgresql::Result exec_one_row(const char* query, ARGS... args)
+    {
+        postgresql::Params<ARGS...> params(args...);
+        postgresql::Result res(PQexecParams(db, query, params.count, nullptr, params.args, params.lengths, params.formats, 1));
+        res.expect_one_row(query);
         return res;
     }
 
