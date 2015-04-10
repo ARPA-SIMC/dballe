@@ -233,7 +233,7 @@ struct Progress : bench::Progress
     }
     void start_iteration(const Benchmark& b, unsigned cur, unsigned total) override
     {
-        printf("\r%s: iteration %u/%u... ", b.name.c_str(), cur + 1, total);
+        printf("\r%s: iteration %u/%u...    ", b.name.c_str(), cur + 1, total);
         fflush(stdout);
     }
     void end_iteration(const Benchmark& b, unsigned cur, unsigned total) override
