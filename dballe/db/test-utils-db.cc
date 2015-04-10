@@ -284,7 +284,7 @@ void TestDBTrySummaryQuery::check(WIBBLE_TEST_LOCPRM) const
 db_test::db_test(bool reset)
 {
     if (reset) disappear();
-    db = DB::connect_test();
+    db = db::DB::connect_test();
     if (reset) db->reset();
 }
 

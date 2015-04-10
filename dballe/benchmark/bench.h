@@ -128,45 +128,6 @@ struct Registry
     static Registry& get();
 };
 
-#if 0
-struct LogEntry
-{
-    std::string b_name;
-    std::string name;
-    double utime = 0;
-    double stime = 0;
-
-    LogEntry(const Benchmark& bmark, const std::string& name);
-    LogEntry(const Benchmark& bmark, const std::string& name, double utime, double stime);
-
-    void print(std::ostream& out);
-};
-#endif
-
-#if 0
-struct Runner
-{
-    std::vector<Benchmark*> benchmarks;
-    std::vector<LogEntry> log;
-
-    ~Runner();
-
-    /// Add a benchmark to this runner
-    void add(Benchmark* b);
-
-    /// Time the execution of a function, logging it with the given benchmark
-    /// and function name
-    void timeit(const Benchmark& bench, const std::string& name, std::function<void()> func, unsigned repeat=1);
-
-    /// Run all benchmarks that have been added to this runner
-    void run();
-
-    /// Dump benchmark measurements in CSV format
-    void dump_csv(std::ostream& out);
-};
-#endif
-
-
 }
 }
 

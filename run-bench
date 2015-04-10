@@ -1,0 +1,31 @@
+#!/bin/sh -ue
+
+for conffile in ./run-check.conf .git/run-check.conf
+do
+	if [ -f "$conffile" ]
+	then
+		. "$conffile"
+		export DBA_DB
+		break
+	fi
+done
+
+make -C dballe
+make -C dballe bench-run
+
+cd dballe
+exec ../extra/runtest bench-run
+
+#if [ -d .svn ]
+#then
+#	SVNID=$(svn info | sed -nre 's/^Revision: //p')
+#elif [ -d .git ]
+#then
+#	SVNID=$(git svn info | sed -nre 's/^Revision: //p')
+#else
+#	echo "No .svn or .git directory found" >&2
+#	exit 1
+#fi
+#
+#cd src
+#eatmydata ../run-local ./benchmark > "bench/$SVNID-`hostname`-`date +%Y%m%d-%H%M%S`.csv"

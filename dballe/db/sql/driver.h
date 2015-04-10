@@ -136,6 +136,12 @@ struct Driver
     /// Delete all tables for V6 databases
     virtual void delete_tables_v6() = 0;
 
+    /// Empty all tables for V5 databases, assuming that they exist, without touching the repinfo table
+    //virtual void remove_all_v5() = 0;
+
+    /// Empty all tables for V5 databases, assuming that they exist, without touching the repinfo table
+    //virtual void remove_all_v6() = 0;
+
     /// Create a Driver for this connection
     static std::unique_ptr<Driver> create(Connection& conn);
 };

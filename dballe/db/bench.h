@@ -16,20 +16,40 @@
  *
  * Author: Enrico Zini <enrico@enricozini.com>
  */
-#include "dballe/db/bench.h"
+#ifndef DBALLE_DB_BENCH_UTILS_H
+#define DBALLE_DB_BENCH_UTILS_H
 
-using namespace dballe;
-using namespace std;
+#include <dballe/benchmark/bench.h>
+#include <dballe/db/db.h>
 
-namespace {
+namespace dballe {
+namespace bench {
 
-struct B : bench::DBBenchmark
+struct DBBenchmark : bench::Benchmark
 {
-    using bench::DBBenchmark::DBBenchmark;
+    using bench::Benchmark::Benchmark;
 
-    void main() override
+    std::unique_ptr<DB> db;
+
+    void setup_main() override
     {
+        db = DB::connect_test();
+        db->reset();
     }
-} test("foo");
+
+    void teardown_main() override
+    {
+        db->disappear();
+        db.reset(0);
+    }
+
+    void setup_iteration()
+    {
+        db->remove_all();
+    }
+};
 
 }
+}
+
+#endif

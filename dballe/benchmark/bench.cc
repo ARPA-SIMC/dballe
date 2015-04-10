@@ -51,10 +51,6 @@ void Task::collect(std::function<void()> f)
 
     utime += tms_end.tms_utime - tms_start.tms_utime;
     stime += tms_end.tms_stime - tms_start.tms_stime;
-/*
-    log.push_back(LogEntry(bench, name, (double)utime/ticks_per_sec, (double)stime/ticks_per_sec));
-    log.back().print(cerr);
-*/
 }
 
 void Registry::add(Benchmark* b)
@@ -101,7 +97,7 @@ void Benchmark::print_timings()
 
     for (auto t: tasks)
     {
-        fprintf(stdout, "%s.%s: %d times, user: %.2fs, sys: %.2fs, total: %.2fs\n",
+        fprintf(stdout, "%s.%s: %d runs, user: %.2fs, sys: %.2fs, total: %.2fs\n",
                 name.c_str(),
                 t->name.c_str(),
                 t->run_count,
@@ -112,54 +108,6 @@ void Benchmark::print_timings()
 }
 
 #if 0
-LogEntry::LogEntry(const Benchmark& bmark, const std::string& name)
-    : b_name(bmark.name), name(name) {}
-
-LogEntry::LogEntry(const Benchmark& bmark, const std::string& name, double utime, double stime)
-    : b_name(bmark.name), name(name), utime(utime), stime(stime) {}
-
-void LogEntry::print(std::ostream& out)
-{
-    out << setprecision(2) << fixed
-        << b_name << ":" << name << ": user: " << utime << " sys: " << stime << " total: " << (utime + stime) << endl;
-}
-#endif
-
-#if 0
-Runner::~Runner()
-{
-    for (auto i : benchmarks)
-        delete i;
-}
-
-void Runner::add(Benchmark* b)
-{
-    benchmarks.push_back(b);
-}
-
-void Runner::timeit(const Benchmark& bench, const std::string& name, std::function<void()> func, unsigned repeat)
-{
-    struct tms tms_start, tms_end;
-    times(&tms_start);
-    for (unsigned i = 0; i < repeat; ++i)
-        func();
-    times(&tms_end);
-
-    clock_t utime = tms_end.tms_utime - tms_start.tms_utime;
-    clock_t stime = tms_end.tms_stime - tms_start.tms_stime;
-
-    log.push_back(LogEntry(bench, name, (double)utime/ticks_per_sec, (double)stime/ticks_per_sec));
-    log.back().print(cerr);
-}
-
-void Runner::run()
-{
-    for (auto i : benchmarks)
-    {
-        i->run(*this);
-    }
-}
-
 void Runner::dump_csv(std::ostream& out)
 {
     out << "Suite,Test,User,System" << endl;

@@ -32,6 +32,7 @@ BUILT_SOURCES += msg/vars.h msg/vars.cc msg/vars.gperf msg/msg-extravars.h msg/c
 EXTRA_DIST += msg/mkvars msg/vars.csv msg/vars.h msg/vars.gperf msg/vars.cc msg/vars.cc msg/msg-extravars.h msg/context-extravars.h
 
 noinst_PROGRAMS =
+EXTRA_PROGRAMS =
 
 
 #
@@ -396,15 +397,25 @@ tut_test_LDADD = \
 # Benchmark
 #
 
-noinst_PROGRAMS += bench-run
+EXTRA_PROGRAMS += bench-run
 
 dist_noinst_HEADERS += \
 	benchmark/bench.h
+	benchmark/db/bench.h
 
 bench_run_SOURCES = \
 	benchmark/bench.cc \
 	db/db-import-bench.cc \
 	benchmark/bench-main.cc
+bench_run_LDADD = \
+	libdballe.la \
+	$(WREPORT_LIBS) \
+	$(WREPORT_TEST_LIBS) \
+	$(SQLITE3_LIBS) \
+	$(LIBPQ_LIBS) \
+	$(LUA_LIBS) \
+	$(WIBBLE_LIBS)
+
 
 #
 # Documentation

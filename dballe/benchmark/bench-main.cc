@@ -229,18 +229,22 @@ struct Progress : bench::Progress
     void start_benchmark(const Benchmark& b) override
     {
         printf("%s: starting... ", b.name.c_str());
+        fflush(stdout);
     }
     void start_iteration(const Benchmark& b, unsigned cur, unsigned total) override
     {
         printf("\r%s: iteration %u/%u... ", b.name.c_str(), cur, total);
+        fflush(stdout);
     }
     void end_iteration(const Benchmark& b, unsigned cur, unsigned total) override
     {
         printf("\r%s: iteration %u/%u done.", b.name.c_str(), cur, total);
+        fflush(stdout);
     }
     void end_benchmark(const Benchmark& b) override
     {
         printf("\r%s: done.                   \r", b.name.c_str());
+        fflush(stdout);
     }
 };
 
@@ -251,7 +255,12 @@ int main (int argc, const char* argv[])
     // Run all benchmarks
     for (auto b: Registry::get().benchmarks)
     {
-        b->run(progress);
+        try {
+            b->run(progress);
+        } catch (std::exception& e) {
+            fprintf(stdout, "\r%s: benchmark failed: %s\n", b->name.c_str(), e.what());
+            continue;
+        }
         b->print_timings();
     }
 
