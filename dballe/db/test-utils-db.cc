@@ -21,8 +21,8 @@
 #include "test-utils-db.h"
 #ifdef HAVE_ODBC
 #include "dballe/db/v5/db.h"
-#include "dballe/db/v6/db.h"
 #endif
+#include "dballe/db/v6/db.h"
 #include "dballe/msg/vars.h"
 #include <wreport/error.h>
 #include <wibble/string.h>
@@ -284,7 +284,7 @@ void TestDBTrySummaryQuery::check(WIBBLE_TEST_LOCPRM) const
 db_test::db_test(bool reset)
 {
     if (reset) disappear();
-    db = db::DB::connect_test();
+    db = DB::connect_test();
     if (reset) db->reset();
 }
 
