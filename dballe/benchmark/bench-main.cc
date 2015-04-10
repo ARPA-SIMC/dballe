@@ -17,7 +17,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "bench/bench.h"
+#include "benchmark/bench.h"
 #include <dballe/core/file.h>
 #include <dballe/core/rawmsg.h>
 #include <dballe/core/record.h>
@@ -38,6 +38,7 @@ using namespace dballe::bench;
 
 namespace {
 
+#if 0
 // Set a record from a ", "-separated string of assignments
 void set_record_from_string(Record& rec, const std::string& s)
 {
@@ -219,11 +220,42 @@ struct FileBenchmark : public Benchmark
         db = 0;
     }
 };
+#endif
 
 }
 
+struct Progress : bench::Progress
+{
+    void start_benchmark(const Benchmark& b) override
+    {
+        printf("%s: starting... ", b.name.c_str());
+    }
+    void start_iteration(const Benchmark& b, unsigned cur, unsigned total) override
+    {
+        printf("\r%s: iteration %u/%u... ", b.name.c_str(), cur, total);
+    }
+    void end_iteration(const Benchmark& b, unsigned cur, unsigned total) override
+    {
+        printf("\r%s: iteration %u/%u done.", b.name.c_str(), cur, total);
+    }
+    void end_benchmark(const Benchmark& b) override
+    {
+        printf("\r%s: done.                   \r", b.name.c_str());
+    }
+};
+
 int main (int argc, const char* argv[])
 {
+    ::Progress progress;
+
+    // Run all benchmarks
+    for (auto b: Registry::get().benchmarks)
+    {
+        b->run(progress);
+        b->print_timings();
+    }
+
+#if 0
     Runner runner;
     FileBenchmark* fb;
     runner.add(fb = new FileBenchmark("synop", "fixed stations, few levels", "synop1_20130615_20130620.bufr"));
@@ -233,4 +265,5 @@ int main (int argc, const char* argv[])
     runner.run();
     runner.dump_csv(cout);
     return 0;
+#endif
 }

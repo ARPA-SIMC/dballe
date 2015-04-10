@@ -31,6 +31,8 @@ msg/vars.cc: msg/vars.gperf
 BUILT_SOURCES += msg/vars.h msg/vars.cc msg/vars.gperf msg/msg-extravars.h msg/context-extravars.h
 EXTRA_DIST += msg/mkvars msg/vars.csv msg/vars.h msg/vars.gperf msg/vars.cc msg/vars.cc msg/msg-extravars.h msg/context-extravars.h
 
+noinst_PROGRAMS =
+
 
 #
 # Shared library
@@ -390,12 +392,25 @@ tut_test_LDADD = \
 	$(LUA_LIBS) \
 	$(WIBBLE_LIBS)
 
+#
+# Benchmark
+#
+
+noinst_PROGRAMS += bench-run
+
+dist_noinst_HEADERS += \
+	benchmark/bench.h
+
+bench_run_SOURCES = \
+	benchmark/bench.cc \
+	db/db-import-bench.cc \
+	benchmark/bench-main.cc
 
 #
 # Documentation
 #
 
-noinst_PROGRAMS = dump-core-info
+noinst_PROGRAMS += dump-core-info
 
 dump_core_info_SOURCES = core/dump-core-info.cc
 dump_core_info_LDADD = \
