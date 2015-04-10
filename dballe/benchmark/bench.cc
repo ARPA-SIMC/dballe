@@ -97,13 +97,16 @@ void Benchmark::print_timings()
 
     for (auto t: tasks)
     {
-        fprintf(stdout, "%s.%s: %d runs, user: %.2fs, sys: %.2fs, total: %.2fs\n",
+        fprintf(stdout, "%s.%s: %d runs, user: %.2fs (%.1f%%), sys: %.2fs (%.1f%%), total: %.2fs (%.1f%%)\n",
                 name.c_str(),
                 t->name.c_str(),
                 t->run_count,
                 t->utime / ticks_per_sec,
+                t->utime * 100.0 / task_main.utime,
                 t->stime / ticks_per_sec,
-                (t->utime + t->stime) / ticks_per_sec);
+                t->stime * 100.0 / task_main.stime,
+                (t->utime + t->stime) / ticks_per_sec,
+                (t->utime + t->stime) * 100.0 / (task_main.utime + task_main.stime));
     }
 }
 

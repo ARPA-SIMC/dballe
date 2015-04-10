@@ -1,7 +1,7 @@
 /*
  * dballe/aof_codec - AOF import
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ AOFImporter::AOFImporter(const Options& opts)
     : Importer(opts) {}
 AOFImporter::~AOFImporter() {}
 
-void AOFImporter::from_rawmsg(const Rawmsg& msg, Msgs& msgs) const
+bool AOFImporter::foreach_decoded(const Rawmsg& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const
 {
     /* char id[10]; */
     TRACE("aof_message_decode\n");
@@ -85,7 +85,7 @@ void AOFImporter::from_rawmsg(const Rawmsg& msg, Msgs& msgs) const
                     OBS(5), OBS(6));
     }
 
-    msgs.acquire(std::move(out));
+    return dest(std::move(out));
 }
 
 void AOFImporter::from_bulletin(const wreport::Bulletin&, Msgs&) const

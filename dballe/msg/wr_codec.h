@@ -1,7 +1,7 @@
 /*
  * dballe/wr_codec - BUFR/CREX import and export
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,7 +47,21 @@ public:
     /**
      * Import a decoded BUFR/CREX message
      */
-    virtual void from_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const;
+    void from_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const;
+
+    /**
+     * Decode a message from its decoded bulletin, calling \a dest on each
+     * resulting Msg.
+     *
+     * Return false from \a dest to stop decoding.
+     *
+     * @param rmsg
+     *   Encoded message.
+     * @retval dest
+     *   The function that consumes the decoded messages.
+     * @returns true if it got to the end of decoding, false if dest returned false.
+     */
+    bool foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const;
 };
 
 class BufrImporter : public WRImporter
@@ -56,7 +70,7 @@ public:
     BufrImporter(const Options& opts=Options());
     virtual ~BufrImporter();
 
-    virtual void from_rawmsg(const Rawmsg& msg, Msgs& msgs) const;
+    bool foreach_decoded(const Rawmsg& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const override;
 };
 
 class CrexImporter : public WRImporter
@@ -65,7 +79,7 @@ public:
     CrexImporter(const Options& opts=Options());
     virtual ~CrexImporter();
 
-    virtual void from_rawmsg(const Rawmsg& msg, Msgs& msgs) const;
+    bool foreach_decoded(const Rawmsg& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const override;
 };
 
 

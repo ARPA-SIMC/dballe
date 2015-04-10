@@ -1,7 +1,7 @@
 /*
  * msg/codec - General codec options
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ struct Bulletin;
 namespace dballe {
 struct Rawmsg;
 struct Msgs;
+struct Msg;
 
 namespace msg {
 
@@ -89,7 +90,21 @@ public:
      * @retval msgs
      *   The resulting ::dba_msg
      */
-    virtual void from_rawmsg(const Rawmsg& msg, Msgs& msgs) const = 0;
+    void from_rawmsg(const Rawmsg& msg, Msgs& msgs) const;
+
+    /**
+     * Decode a message from its raw encoded representation, calling \a dest on
+     * each resulting Msg.
+     *
+     * Return false from \a dest to stop decoding.
+     *
+     * @param rmsg
+     *   Encoded message.
+     * @retval dest
+     *   The function that consumes the decoded messages.
+     * @returns true if it got to the end of decoding, false if dest returned false.
+     */
+    virtual bool foreach_decoded(const Rawmsg& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const = 0;
 
     /**
      * Import a decoded BUFR/CREX message

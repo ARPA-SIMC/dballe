@@ -90,6 +90,18 @@ public:
 	 */
 	virtual bool read(Rawmsg& msg) = 0;
 
+    /**
+     * Read all the messages from the file, calling the function on each of
+     * them.
+     *
+     * Return false from @a dest to stop reading.
+     *
+     * @return
+     *   true if all file was read, false if reading was stopped because @a
+     *   dest returned false.
+     */
+    virtual bool foreach(std::function<bool(const Rawmsg&)> dest);
+
 	/**
 	 * Write the encoded message data to the file
 	 *
@@ -115,6 +127,21 @@ public:
 	 *   The newly allocated File, that needs to be deleted by the caller.
 	 */
 	static std::unique_ptr<File> create(Encoding type, const std::string& name, const char* mode);
+
+
+    /**
+     * Resolve the location of a test data file
+     *
+     * This should only be used during dballe unit tests.
+     */
+    static std::string resolve_test_data_file(const std::string& name);
+
+    /**
+     * Open a test data file.
+     *
+     * This should only be used during dballe unit tests.
+     */
+    static std::unique_ptr<File> open_test_data_file(Encoding type, const std::string& name);
 };
 
 } // namespace dballe

@@ -1,7 +1,7 @@
 /*
  * dballe/wr_codec - BUFR/CREX import and export
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,25 +39,30 @@ BufrImporter::BufrImporter(const Options& opts)
     : WRImporter(opts) {}
 BufrImporter::~BufrImporter() {}
 
-void BufrImporter::from_rawmsg(const Rawmsg& msg, Msgs& msgs) const
+bool BufrImporter::foreach_decoded(const Rawmsg& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const
 {
     unique_ptr<BufrBulletin> bulletin(BufrBulletin::create());
     bulletin->decode(msg);
-    from_bulletin(*bulletin, msgs);
+    foreach_decoded_bulletin(*bulletin, dest);
 }
 
 CrexImporter::CrexImporter(const Options& opts)
     : WRImporter(opts) {}
 CrexImporter::~CrexImporter() {}
 
-void CrexImporter::from_rawmsg(const Rawmsg& msg, Msgs& msgs) const
+bool CrexImporter::foreach_decoded(const Rawmsg& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const
 {
     unique_ptr<CrexBulletin> bulletin(CrexBulletin::create());
     bulletin->decode(msg);
-    from_bulletin(*bulletin, msgs);
+    foreach_decoded_bulletin(*bulletin, dest);
 }
 
 void WRImporter::from_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const
+{
+    foreach_decoded_bulletin(msg, [&](unique_ptr<Msg> m) { msgs.acquire(move(m)); return true; });
+}
+
+bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const
 {
     // Infer the right importer. See Common Code Table C-13
     std::unique_ptr<wr::Importer> importer;
@@ -107,8 +112,10 @@ void WRImporter::from_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const
         std::unique_ptr<Msg> newmsg(new Msg);
         newmsg->type = type;
         importer->import(msg.subsets[i], *newmsg);
-        msgs.acquire(move(newmsg));
+        if (!dest(move(newmsg)))
+            return false;
     }
+    return true;
 }
 
 

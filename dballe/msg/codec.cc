@@ -1,7 +1,7 @@
 /*
  * msg/codec - General codec options
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 #include "codec.h"
 #include "aof_codec.h"
 #include "wr_codec.h"
+#include "msgs.h"
 #include <dballe/core/rawmsg.h>
 #include <wreport/error.h>
 #include <wreport/bulletin.h>
@@ -64,6 +65,11 @@ Importer::Importer(const Options& opts)
 
 Importer::~Importer()
 {
+}
+
+void Importer::from_rawmsg(const Rawmsg& msg, Msgs& msgs) const
+{
+    foreach_decoded(msg, [&](unique_ptr<Msg> m) { msgs.acquire(move(m)); return true; });
 }
 
 std::unique_ptr<Importer> Importer::create(Encoding type, const Options& opts)

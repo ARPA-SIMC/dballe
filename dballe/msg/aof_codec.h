@@ -1,7 +1,7 @@
 /*
  * dballe/aof_codec - AOF import
  *
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -89,17 +89,7 @@ public:
     AOFImporter(const Options& opts=Options());
     virtual ~AOFImporter();
 
-    /**
-     * Decode a message from its raw encoded representation
-     *
-     * @param rmsg
-     *   Encoded message
-     * @retval msgs
-     *   The resulting ::dba_msg
-     * @return
-     *   The error indicator for the function. See @ref error.h
-     */
-    virtual void from_rawmsg(const Rawmsg& msg, Msgs& msgs) const;
+    bool foreach_decoded(const Rawmsg& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const override;
 
     /**
      * Import a decoded BUFR/CREX message

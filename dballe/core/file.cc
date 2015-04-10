@@ -167,6 +167,29 @@ void File::write(const Rawmsg& msg)
 		error_system::throwf("writing message data (%zd bytes) on output", msg.size());
 }
 
+bool File::foreach(std::function<bool(const Rawmsg&)> dest)
+{
+    Rawmsg rmsg;
+    while (read(rmsg))
+        if (!dest(rmsg))
+            return false;
+    return true;
+}
+
+std::string File::resolve_test_data_file(const std::string& name)
+{
+    // Skip appending the test data path for pathnames starting with ./
+    if (name[0] == '.') return name;
+    const char* testdatadirenv = getenv("DBA_TESTDATA");
+    std::string testdatadir = testdatadirenv ? testdatadirenv : ".";
+    return testdatadir + "/" + name;
+}
+
+std::unique_ptr<File> File::open_test_data_file(Encoding type, const std::string& name)
+{
+    return File::create(type, resolve_test_data_file(name), "r");
+}
+
 #if 0
 dba_err dba_file_read(dba_file file, dba_rawmsg msg, int* found)
 {

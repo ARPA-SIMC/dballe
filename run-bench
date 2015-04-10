@@ -1,20 +1,36 @@
-#!/bin/sh -ue
+#!/usr/bin/env python3
 
-for conffile in ./run-check.conf .git/run-check.conf
-do
-	if [ -f "$conffile" ]
-	then
-		. "$conffile"
-		export DBA_DB
-		break
-	fi
-done
+import shutil
+import os
+import shlex
+import subprocess
+import sys
 
-make -C dballe
-make -C dballe bench-run
+env = dict(os.environ)
 
-cd dballe
-exec ../extra/runtest bench-run
+def read_conffile(fd):
+    for line in fd:
+        line = line.strip()
+        if not line or line.startswith("#"): continue
+        if '=' in line:
+            key, val = line.split("=", 1)
+            env[key] = shlex.split(val)[0]
+
+for conffile in ("./run-check.conf", ".git/run-check.conf"):
+    if not os.path.exists(conffile): continue
+    with open(conffile, "rt") as fd:
+        read_conffile(fd)
+
+subprocess.check_call(["make", "-C", "dballe"])
+subprocess.check_call(["make", "-C", "dballe", "bench-run"])
+
+for arg in sys.argv[1:]:
+    if '=' in arg:
+        key, val = arg.split("=", 1)
+        env[key] = val
+
+os.chdir("dballe")
+os.execve("../extra/runtest", ["../extra/runtest", "bench-run"], env)
 
 #if [ -d .svn ]
 #then
