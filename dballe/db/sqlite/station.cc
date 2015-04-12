@@ -131,14 +131,14 @@ void SQLiteStationV5::read_station_vars(SQLiteStatement& stm, std::function<void
                 TRACE("fill_ana_layer inserting old var B%02d%03d\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()));
                 dest(move(var));
             }
-            var = newvar(code, stm.column_string(1).c_str());
+            var = newvar(code, stm.column_string(1));
             last_varcode = code;
         }
 
         if (!stm.column_isnull(2))
         {
             TRACE("fill_ana_layer new attribute\n");
-            var->seta(ap_newvar(stm.column_int(2), stm.column_string(3).c_str()));
+            var->seta(ap_newvar(stm.column_int(2), stm.column_string(3)));
         }
     });
 
@@ -181,10 +181,7 @@ void SQLiteStationV5::dump(FILE* out)
         if (stm->column_isnull(3))
             putc('\n', out);
         else
-        {
-            string ident = stm->column_string(3);
-            fprintf(out, ", %.*s\n", ident.size(), ident.data());
-        }
+            fprintf(out, ", %s\n", stm->column_string(3));
         ++count;
     });
     fprintf(out, "%d element%s in table station\n", count, count != 1 ? "s" : "");
@@ -218,7 +215,7 @@ void SQLiteStationV5::add_station_vars(int id_station, Record& rec)
     auto stm = conn.sqlitestatement(query);
     stm->bind(id_station);
     stm->execute([&]() {
-        rec.var(stm->column_int(0)).setc(stm->column_string(1).c_str());
+        rec.var(stm->column_int(0)).setc(stm->column_string(1));
     });
 }
 
@@ -260,7 +257,7 @@ void SQLiteStationV6::add_station_vars(int id_station, Record& rec)
     auto stm = conn.sqlitestatement(query);
     stm->bind(id_station);
     stm->execute([&]() {
-        rec.var(stm->column_int(0)).setc(stm->column_string(1).c_str());
+        rec.var(stm->column_int(0)).setc(stm->column_string(1));
     });
 }
 

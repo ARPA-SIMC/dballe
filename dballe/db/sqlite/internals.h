@@ -189,14 +189,7 @@ struct SQLiteStatement
     double column_double(int col) { return sqlite3_column_double(stm, col); }
 
     /// Read the string value of a column in the result set (0-based)
-    std::string column_string(int col)
-    {
-        const char* res = (const char*)sqlite3_column_text(stm, col);
-        if (res == NULL)
-            return std::string();
-        else
-            return res;
-    }
+    const char* column_string(int col) { return (const char*)sqlite3_column_text(stm, col); }
 
     /// Read the string value of a column and parse it as a Datetime
     Datetime column_datetime(int col);

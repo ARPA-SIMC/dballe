@@ -158,10 +158,7 @@ void StationBase::dump(FILE* out)
         if (res.is_null(row, 3))
             putc('\n', out);
         else
-        {
-            string ident = res.get_string(row, 3);
-            fprintf(out, ", %.*s\n", ident.size(), ident.data());
-        }
+            fprintf(out, ", %s\n", res.get_string(row, 3));
         ++count;
     }
     fprintf(out, "%d element%s in table station\n", count, count != 1 ? "s" : "");

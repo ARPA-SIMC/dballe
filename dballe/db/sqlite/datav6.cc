@@ -147,7 +147,7 @@ void SQLiteDataV6::dump(FILE* out)
     auto stm = conn.sqlitestatement("SELECT id, id_station, id_report, id_lev_tr, datetime, id_var, value FROM data");
     stm->execute([&]() {
         int id_lev_tr = stm->column_int(3);
-        string datetime = stm->column_string(4);
+        const char* datetime = stm->column_string(4);
         Varcode code = stm->column_int(5);
 
         char ltr[20];
@@ -161,15 +161,12 @@ void SQLiteDataV6::dump(FILE* out)
                 stm->column_int(1),
                 stm->column_int(2),
                 ltr,
-                datetime.c_str(),
+                datetime,
                 WR_VAR_F(code), WR_VAR_X(code), WR_VAR_Y(code));
         if (stm->column_isnull(6))
             fprintf(out, "\n");
         else
-        {
-            string val = stm->column_string(6);
-            fprintf(out, " %.*s\n", val.size(), val.data());
-        }
+            fprintf(out, " %.*s\n", stm->column_string(6));
 
         ++count;
     });

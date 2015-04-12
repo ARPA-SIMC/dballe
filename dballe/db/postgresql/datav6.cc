@@ -170,10 +170,7 @@ void PostgreSQLDataV6::dump(FILE* out)
         if (res.is_null(row, 6))
             fprintf(out, "\n");
         else
-        {
-            string val = res.get_string(row, 6);
-            fprintf(out, " %.*s\n", (int)val.size(), val.data());
-        }
+            fprintf(out, " %s\n", res.get_string(row, 6));
 
         ++count;
     };

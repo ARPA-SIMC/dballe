@@ -69,7 +69,7 @@ void SQLiteAttrV6::read(int id_data, function<void(unique_ptr<Var>)> dest)
         if (sstm->column_isnull(1))
             dest(newvar(sstm->column_int(0)));
         else
-            dest(newvar(sstm->column_int(0), sstm->column_string(1).c_str()));
+            dest(newvar(sstm->column_int(0), sstm->column_string(1)));
     });
 }
 
@@ -86,10 +86,7 @@ void SQLiteAttrV6::dump(FILE* out)
         if (stm->column_isnull(2))
             fprintf(out, "\n");
         else
-        {
-            string val = stm->column_string(2);
-            fprintf(out, " %.*s\n", (int)val.size(), val.data());
-        }
+            fprintf(out, " %s\n", stm->column_string(2));
         ++count;
     });
     fprintf(out, "%d element%s in table attr\n", count, count != 1 ? "s" : "");

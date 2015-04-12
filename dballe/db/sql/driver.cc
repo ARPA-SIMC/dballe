@@ -31,6 +31,7 @@
 #include "dballe/db/odbc/driver.h"
 #include "dballe/db/odbc/internals.h"
 #endif
+#include <cstring>
 #include <sstream>
 
 using namespace wreport;
