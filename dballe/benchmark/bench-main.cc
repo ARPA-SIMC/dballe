@@ -258,7 +258,7 @@ int main (int argc, const char* argv[])
         try {
             b->run(progress);
         } catch (std::exception& e) {
-            fprintf(stdout, "\r%s: benchmark failed: %s\n", b->name.c_str(), e.what());
+            fprintf(stdout, "\n%s: benchmark failed: %s\n", b->name.c_str(), e.what());
             continue;
         }
         b->print_timings();
