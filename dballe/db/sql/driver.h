@@ -32,6 +32,7 @@
 #include <wreport/var.h>
 #include <memory>
 #include <functional>
+#include <vector>
 #include <cstdio>
 
 namespace dballe {
@@ -80,6 +81,54 @@ struct SQLRecordV6
     void dump(FILE* out);
 };
 
+/**
+ * Input for a bulk insert of a lot of variables sharing the same context
+ * information.
+ */
+struct BulkInsertV6
+{
+    struct Var
+    {
+        static const unsigned FLAG_NEEDS_UPDATE = 1 << 0;
+        static const unsigned FLAG_UPDATED      = 1 << 1;
+        static const unsigned FLAG_NEEDS_INSERT = 1 << 2;
+        static const unsigned FLAG_INSERTED     = 1 << 3;
+        int id_levtr;
+        int id_data;
+        const wreport::Var* var;
+        unsigned flags = 0;
+
+        Var(const wreport::Var* var, int id_levtr=-1, int id_data=-1)
+            : id_levtr(id_levtr), id_data(id_data), var(var)
+        {
+        }
+        bool operator<(const Var& v) const
+        {
+            if (int d = id_levtr - v.id_levtr) return d < 0;
+            return var->code() < v.var->code();
+        }
+
+        bool needs_update() const { return flags | FLAG_NEEDS_UPDATE; }
+        bool updated() const { return flags | FLAG_UPDATED; }
+        bool needs_insert() const { return flags | FLAG_NEEDS_INSERT; }
+        bool inserted() const { return flags | FLAG_INSERTED; }
+        void set_needs_update() { flags |= FLAG_NEEDS_UPDATE; }
+        void set_updated() { flags = (flags & ~FLAG_NEEDS_UPDATE) | FLAG_UPDATED; }
+        void set_needs_insert() { flags |= FLAG_NEEDS_INSERT; }
+        void set_inserted() { flags = (flags & ~FLAG_NEEDS_INSERT) | FLAG_INSERTED; }
+    };
+
+    int id_station;
+    int id_report;
+    Datetime datetime;
+    std::vector<Var> vars;
+
+    void add(const wreport::Var* var, int id_levtr)
+    {
+        vars.emplace_back(var, id_levtr);
+    }
+};
+
 struct Driver
 {
     virtual ~Driver();
@@ -110,6 +159,9 @@ struct Driver
 
     /// Precompiled queries to manipulate the attr table
     virtual std::unique_ptr<sql::AttrV6> create_attrv6() = 0;
+
+    /// Bulk variable insert
+    virtual void bulk_insert_v6(BulkInsertV6& vars, bool update_existing=true);
 
     /**
      * Run a query on the given statement, returning results as SQLRecordV6 objects

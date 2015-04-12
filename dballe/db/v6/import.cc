@@ -21,6 +21,7 @@
 
 #include "db.h"
 #include "dballe/db/sql.h"
+#include "dballe/db/sql/driver.h"
 #include "dballe/db/sql/station.h"
 #include "dballe/db/sql/levtr.h"
 #include "dballe/db/sql/datav6.h"
@@ -29,6 +30,8 @@
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/msg.h>
 #include <dballe/msg/context.h>
+
+#undef USE_BULK_INSERT
 
 using namespace wreport;
 
@@ -94,35 +97,117 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
             id_report = rep_cod_from_memo(Msg::repmemo_from_type(msg.type));
     }
 
-	if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || inserted_pseudoana)
-	{
+    if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || inserted_pseudoana)
+    {
+#if USE_BULK_INSERT
+        // Prepare a bulk insert
+        sql::BulkInsertV6 vars;
+        vars.id_station = id_station;
+        vars.id_report = id_report;
+        vars.datetime = Datetime(1000, 1, 1, 0, 0, 0);
+        for (size_t i = 0; i < l_ana->data.size(); ++i)
+        {
+            Varcode code = l_ana->data[i]->code();
+            // Do not import datetime in the station info context
+            if (code >= WR_VAR(0, 4, 1) && code <= WR_VAR(0, 4, 6))
+                continue;
+            vars.add(l_ana->data[i], -1);
+        }
+
+        // Run the bulk insert
+        driver().bulk_insert_v6(vars, (flags & DBA_IMPORT_OVERWRITE));
+
+        // Insert the attributes
+        if (flags & DBA_IMPORT_ATTRS)
+            for (auto v: vars.vars)
+            {
+                if (v.inserted())
+                {
+                    dq.add(v.id_data, *v.var);
+                }
+            }
+#else
         dd.set_station_info(id_station, id_report);
 
-		// Insert the rest of the station information
-		for (size_t i = 0; i < l_ana->data.size(); ++i)
-		{
+        // Insert the rest of the station information
+        for (size_t i = 0; i < l_ana->data.size(); ++i)
+        {
             Varcode code = l_ana->data[i]->code();
-			// Do not import datetime in the station info context
-			if (code >= WR_VAR(0, 4, 1) && code <= WR_VAR(0, 4, 6))
-				continue;
+            // Do not import datetime in the station info context
+            if (code >= WR_VAR(0, 4, 1) && code <= WR_VAR(0, 4, 6))
+                continue;
 
             bool inserted = false;
             int id_data;
-			if ((flags & DBA_IMPORT_OVERWRITE) == 0)
-			{
-				// Insert only if it is missing
-				inserted = dd.insert_or_ignore(*l_ana->data[i], &id_data);
-			} else {
-				dd.insert_or_overwrite(*l_ana->data[i], &id_data);
-				inserted = true;
-			}
+            if ((flags & DBA_IMPORT_OVERWRITE) == 0)
+            {
+                // Insert only if it is missing
+                inserted = dd.insert_or_ignore(*l_ana->data[i], &id_data);
+            } else {
+                dd.insert_or_overwrite(*l_ana->data[i], &id_data);
+                inserted = true;
+            }
 
             /* Insert the attributes */
             if (inserted && (flags & DBA_IMPORT_ATTRS))
                 dq.add(id_data, *(l_ana->data[i]));
         }
+#endif
     }
 
+#if USE_BULK_INSERT
+    sql::BulkInsertV6 vars;
+    vars.id_station = id_station;
+    vars.id_report = id_report;
+
+    // Date and time
+    {
+        const Var* year = l_ana->find_by_id(DBA_MSG_YEAR);
+        const Var* month = l_ana->find_by_id(DBA_MSG_MONTH);
+        const Var* day = l_ana->find_by_id(DBA_MSG_DAY);
+        const Var* hour = l_ana->find_by_id(DBA_MSG_HOUR);
+        const Var* min = l_ana->find_by_id(DBA_MSG_MINUTE);
+        const Var* sec = l_ana->find_by_id(DBA_MSG_SECOND);
+
+        if (year == NULL || month == NULL || day == NULL || hour == NULL || min == NULL)
+            throw error_notfound("date/time informations not found (or incomplete) in message to insert");
+
+        vars.datetime = Datetime(year->enqi(), month->enqi(), day->enqi(), hour->enqi(), min->enqi(), sec ? sec->enqi() : 0);
+    }
+
+    // Fill the bulk insert with the rest of the data
+    for (size_t i = 0; i < msg.data.size(); ++i)
+    {
+        const msg::Context& ctx = *msg.data[i];
+        bool is_ana_level = ctx.level == Level::ana() && ctx.trange == Trange();
+
+        // Skip the station info level
+        if (is_ana_level) continue;
+
+        // Get the database ID of the lev_tr
+        int id_lev_tr = lt.obtain_id(ctx.level, ctx.trange);
+
+        for (size_t j = 0; j < ctx.data.size(); ++j)
+        {
+            const Var* var = ctx.data[j];
+            if (not var->isset()) continue;
+            vars.add(var, id_lev_tr);
+        }
+    }
+
+    // Run the bulk insert
+    driver().bulk_insert_v6(vars, (flags & DBA_IMPORT_OVERWRITE));
+
+    // Insert the attributes
+    if (flags & DBA_IMPORT_ATTRS)
+        for (auto v: vars.vars)
+        {
+            if (v.inserted())
+            {
+                dq.add(v.id_data, *v.var);
+            }
+        }
+#else
     // Fill up the common context information for the rest of the data
 
     // Date and time
@@ -171,6 +256,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
                 dq.add(id_data, var);
         }
     }
+#endif
 
     t->commit();
 }

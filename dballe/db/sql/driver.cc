@@ -67,6 +67,11 @@ Driver::~Driver()
 {
 }
 
+void Driver::bulk_insert_v6(BulkInsertV6& vars, bool update_existing)
+{
+    throw error_unimplemented("bulk insert v6 not implemented on this database connector");
+}
+
 std::unique_ptr<Driver> Driver::create(Connection& conn)
 {
     if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(&conn))

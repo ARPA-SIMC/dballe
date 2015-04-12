@@ -400,8 +400,8 @@ tut_test_LDADD = \
 EXTRA_PROGRAMS += bench-run
 
 dist_noinst_HEADERS += \
-	benchmark/bench.h
-	benchmark/db/bench.h
+	benchmark/bench.h \
+	db/bench.h
 
 bench_run_SOURCES = \
 	benchmark/bench.cc \

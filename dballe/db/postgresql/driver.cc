@@ -89,6 +89,141 @@ std::unique_ptr<sql::AttrV6> Driver::create_attrv6()
     return unique_ptr<sql::AttrV6>(new PostgreSQLAttrV6(conn));
 }
 
+void Driver::bulk_insert_v6(sql::BulkInsertV6& vars, bool update_existing)
+{
+    std::sort(vars.vars.begin(), vars.vars.end());
+
+    using namespace postgresql;
+    const char* select_query = R"(
+        SELECT id, id_lev_tr, id_var, value
+          FROM data
+         WHERE id_station=$1::int4 AND id_report=$2::int4 AND datetime=$3::timestamp
+         ORDER BY id_lev_tr, id_var
+    )";
+
+    // TODO: call this on the parent, which is managing the transaction
+    //conn.exec_no_data("LOCK TABLE data IN EXCLUSIVE MODE");
+
+    // Get the current status of variables for this context
+    Result existing(conn.exec(select_query, vars.id_station, vars.id_report, vars.datetime));
+
+    // Scan the result in parallel with the variable list, annotating changed
+    // items with their data ID
+    auto vars_in = vars.vars.begin();
+    unsigned row = 0;
+    bool do_insert = false;
+    bool do_update = false;
+    while (row < existing.rowcount() && vars_in != vars.vars.end())
+    {
+        int id_levtr = existing.get_int4(row, 1);
+        if (id_levtr < vars_in->id_levtr)
+        {
+            ++row;
+            continue;
+        } else if (id_levtr > vars_in->id_levtr) {
+            // We have an input variable that is not currently in the DB
+            do_insert = true;
+            vars_in->set_needs_insert();
+            ++vars_in;
+            continue;
+        }
+
+        // id_levtr is the same
+
+        Varcode code = (Varcode)existing.get_int4(row, 2);
+        if (code < vars_in->var->code())
+        {
+            ++row;
+            continue;
+        } else if (code > vars_in->var->code()) {
+            ++vars_in;
+            continue;
+        }
+
+        // var code is the same
+
+        // Annotate with the ID
+        vars_in->id_data = existing.get_int4(row, 0);
+
+        const char *val = existing.get_string(row, 3);
+        if (strcmp(val, vars_in->var->value()) != 0)
+        {
+            vars_in->set_needs_update();
+            do_update = true;
+        }
+
+        ++row;
+        ++vars_in;
+    }
+    for ( ; vars_in != vars.vars.end(); ++vars_in)
+    {
+        vars_in->set_needs_insert();
+        do_insert = true;
+    }
+
+    // We now have a todo-list
+
+    if (update_existing && do_update)
+    {
+        Querybuf dq(512);
+        dq.append("UPDATE data as d SET value=i.value FROM (value");
+        dq.start_list(",");
+        for (auto v: vars.vars)
+        {
+            if (!v.needs_update()) continue;
+            char* escaped_val = PQescapeLiteral(conn, v.var->value(), strlen(v.var->value()));
+            if (!escaped_val)
+                throw error_postgresql(conn, string("escaping string '") + v.var->value() + "'");
+            dq.append_listf("(%d, %s)", v.id_data, escaped_val);
+            PQfreemem(escaped_val);
+            v.set_updated();
+        }
+        dq.append(") AS i(id, value) WHERE d.id = i.id");
+        conn.exec_no_data(dq);
+        //fprintf(stderr, "Update query: %s\n", dq.c_str());
+    }
+
+    if (do_insert)
+    {
+        Querybuf dq(512);
+        dq.append("INSERT INTO data (id, id_station, id_report, id_lev_tr, datetime, id_var, value) VALUES ");
+        dq.start_list(",");
+        for (auto v: vars.vars)
+        {
+            if (!v.needs_insert()) continue;
+            char* escaped_val = PQescapeLiteral(conn, v.var->value(), strlen(v.var->value()));
+            if (!escaped_val)
+                throw error_postgresql(conn, string("escaping string '") + v.var->value() + "'");
+            dq.append_listf("(DEFAULT, %d, %d, %d, '%04d-%02d-%02d %02d:%02d:%02d', %d, %s)",
+                    vars.id_station, vars.id_report, v.id_levtr,
+                    vars.datetime.date.year, vars.datetime.date.month, vars.datetime.date.day,
+                    vars.datetime.time.hour, vars.datetime.time.minute, vars.datetime.time.second,
+                    (int)v.var->code(), escaped_val);
+            PQfreemem(escaped_val);
+        }
+        dq.append(" RETURNING id");
+
+        //fprintf(stderr, "Insert query: %s\n", dq.c_str());
+
+        // Run the insert query and read back the new IDs
+        Result res(conn.exec(dq));
+        unsigned row = 0;
+        auto v = vars.vars.begin();
+        while (row < res.rowcount() && v != vars.vars.end())
+        {
+            if (!v->needs_insert())
+            {
+               ++v;
+               continue;
+            }
+            v->id_data = res.get_int4(row, 0);
+            v->set_inserted();
+            ++v;
+            ++row;
+        }
+    }
+}
+
 void Driver::run_built_query_v6(
         const v6::QueryBuilder& qb,
         std::function<void(sql::SQLRecordV6& rec)> dest)
