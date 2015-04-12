@@ -126,7 +126,7 @@ void Driver::bulk_insert_v6(sql::bulk::InsertV6& vars, bool update_existing)
     if (update_existing && todo.do_update)
     {
         Querybuf dq(512);
-        dq.append("UPDATE data as d SET value=i.value FROM (value");
+        dq.append("UPDATE data as d SET value=i.value FROM (values ");
         dq.start_list(",");
         for (auto& v: vars)
         {
@@ -139,8 +139,8 @@ void Driver::bulk_insert_v6(sql::bulk::InsertV6& vars, bool update_existing)
             v.set_updated();
         }
         dq.append(") AS i(id, value) WHERE d.id = i.id");
-        conn.exec_no_data(dq);
         //fprintf(stderr, "Update query: %s\n", dq.c_str());
+        conn.exec_no_data(dq);
     }
 
     if (todo.do_insert)
