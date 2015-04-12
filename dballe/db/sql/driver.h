@@ -107,10 +107,10 @@ struct VarV6
         return var->code() < v.var->code();
     }
 
-    bool needs_update() const { return flags | FLAG_NEEDS_UPDATE; }
-    bool updated() const { return flags | FLAG_UPDATED; }
-    bool needs_insert() const { return flags | FLAG_NEEDS_INSERT; }
-    bool inserted() const { return flags | FLAG_INSERTED; }
+    bool needs_update() const { return flags & FLAG_NEEDS_UPDATE; }
+    bool updated() const { return flags & FLAG_UPDATED; }
+    bool needs_insert() const { return flags & FLAG_NEEDS_INSERT; }
+    bool inserted() const { return flags & FLAG_INSERTED; }
     void set_needs_update() { flags |= FLAG_NEEDS_UPDATE; }
     void set_updated() { flags = (flags & ~FLAG_NEEDS_UPDATE) | FLAG_UPDATED; }
     void set_needs_insert() { flags |= FLAG_NEEDS_INSERT; }
