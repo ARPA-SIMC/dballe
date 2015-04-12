@@ -115,6 +115,8 @@ struct VarV6
     void set_updated() { flags = (flags & ~FLAG_NEEDS_UPDATE) | FLAG_UPDATED; }
     void set_needs_insert() { flags |= FLAG_NEEDS_INSERT; }
     void set_inserted() { flags = (flags & ~FLAG_NEEDS_INSERT) | FLAG_INSERTED; }
+
+    void dump(FILE* out) const;
 };
 
 
@@ -132,6 +134,8 @@ struct InsertV6 : public std::vector<VarV6>
     {
         emplace_back(var, id_levtr);
     }
+
+    void dump(FILE* out) const;
 };
 
 /**
@@ -149,6 +153,8 @@ struct AnnotateVarsV6
 
     bool annotate(int id_data, int id_levtr, wreport::Varcode code, const char* value);
     void annotate_end();
+
+    void dump(FILE* out) const;
 };
 
 }
@@ -186,7 +192,7 @@ struct Driver
     virtual std::unique_ptr<sql::AttrV6> create_attrv6() = 0;
 
     /// Bulk variable insert
-    virtual void bulk_insert_v6(bulk::InsertV6& vars, bool update_existing=true);
+    virtual void bulk_insert_v6(bulk::InsertV6& vars, bool update_existing=true) = 0;
 
     /**
      * Run a query on the given statement, returning results as SQLRecordV6 objects

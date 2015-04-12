@@ -146,15 +146,48 @@ void AnnotateVarsV6::annotate_end()
     }
 }
 
+void AnnotateVarsV6::dump(FILE* out) const
+{
+    fprintf(out, "Needs insert: %d, needs update: %d\n", do_insert, do_update);
+    vars.dump(out);
+}
+
+void VarV6::dump(FILE* out) const
+{
+    fprintf(out, "ltr:%d data:%d flags:%c%c%c%c %01d%02d%03d(%d): %s\n",
+            id_levtr, id_data,
+#if 0
+            (flags & FLAG_NEEDS_UPDATE) ? 'u' : '-',
+            (flags & FLAG_UPDATED) ? 'U' : '-',
+            (flags & FLAG_NEEDS_INSERT) ? 'i' : '-',
+            (flags & FLAG_INSERTED) ? 'I' : '-',
+#endif
+            needs_update() ? 'u' : '-',
+            updated() ? 'U' : '-',
+            needs_insert() ? 'i' : '-',
+            inserted() ? 'I' : '-',
+            WR_VAR_F(var->code()), WR_VAR_X(var->code()), WR_VAR_Y(var->code()),
+            (int)(var->code()),
+            var->value());
+}
+
+void InsertV6::dump(FILE* out) const
+{
+    fprintf(out, "ID station: %d, ID report: %d, datetime: %04d-%02d-%02d %02d:%02d:%02d\n",
+            id_station, id_report,
+            datetime.date.year, datetime.date.month, datetime.date.day,
+            datetime.time.hour, datetime.time.minute, datetime.time.second);
+    for (unsigned i = 0; i < size(); ++i)
+    {
+        fprintf(out, "%3u/%3zd: ", i, size());
+        (*this)[i].dump(out);
+    }
+}
+
 }
 
 Driver::~Driver()
 {
-}
-
-void Driver::bulk_insert_v6(bulk::InsertV6& vars, bool update_existing)
-{
-    throw error_unimplemented("bulk insert v6 not implemented on this database connector");
 }
 
 std::unique_ptr<Driver> Driver::create(Connection& conn)
