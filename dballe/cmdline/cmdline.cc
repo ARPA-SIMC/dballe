@@ -132,7 +132,7 @@ poptContext Subcommand::make_popt_context(int argc, const char* argv[], vector<p
 
 Command::~Command()
 {
-    for (auto a: ops)
+    for (auto& a: ops)
         delete a;
 }
 

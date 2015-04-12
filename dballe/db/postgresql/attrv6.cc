@@ -73,7 +73,7 @@ void PostgreSQLAttrV6::impl_add(int id_data, sql::AttributeList& attrs)
             conn.exec_prepared_no_data("attrv6_update", id_data, (int)code, val);
         }
     }
-    for (auto a: attrs)
+    for (auto& a: attrs)
         // Insert
         conn.exec_prepared_no_data("attrv6_insert", id_data, a.first, a.second);
 

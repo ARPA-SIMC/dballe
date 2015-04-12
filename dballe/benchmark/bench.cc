@@ -95,7 +95,7 @@ void Benchmark::print_timings()
 {
     double ticks_per_second = (double)sysconf(_SC_CLK_TCK);
 
-    for (auto t: tasks)
+    for (auto& t: tasks)
     {
         fprintf(stdout, "%s.%s: %d runs, user: %.2fs (%.1f%%), sys: %.2fs (%.1f%%), total: %.2fs (%.1f%%)\n",
                 name.c_str(),

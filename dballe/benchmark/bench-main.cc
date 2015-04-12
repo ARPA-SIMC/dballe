@@ -253,7 +253,7 @@ int main (int argc, const char* argv[])
     ::Progress progress;
 
     // Run all benchmarks
-    for (auto b: Registry::get().benchmarks)
+    for (auto& b: Registry::get().benchmarks)
     {
         try {
             b->run(progress);

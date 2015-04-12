@@ -53,7 +53,7 @@ SQLiteAttrV6::~SQLiteAttrV6()
 
 void SQLiteAttrV6::impl_add(int id_data, sql::AttributeList& attrs)
 {
-    for (auto i : attrs)
+    for (auto& i : attrs)
     {
         rstm->bind_val(1, id_data);
         rstm->bind_val(2, i.first);

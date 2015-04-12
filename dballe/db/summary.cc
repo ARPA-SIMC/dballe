@@ -89,7 +89,7 @@ summary::Support Summary::supports(const Query& query) const
     Support res = Support::EXACT;
 
     // Check differences in the value/attr based query filters
-    for (auto k: { DBA_KEY_ANA_FILTER, DBA_KEY_DATA_FILTER, DBA_KEY_ATTR_FILTER })
+    for (const auto& k: { DBA_KEY_ANA_FILTER, DBA_KEY_DATA_FILTER, DBA_KEY_ATTR_FILTER })
     {
         // If query has introduced a filter, then this filter can only give approximate results
         const char* our_filter = this->query.key_peek_value(k);
@@ -143,7 +143,7 @@ summary::Support Summary::supports(const Query& query) const
             res = Support::OVERESTIMATED;
         } else if (res == Support::EXACT) {
             // The query introduced further restrictions, check with the actual entries what we can do
-            for (auto e: summary)
+            for (const auto& e: summary)
             {
                 if (Datetime::range_contains(new_min, new_max, e.datemin, e.datemax))
                     ; // If the query entirely contains this summary entry, we can still match it exactly

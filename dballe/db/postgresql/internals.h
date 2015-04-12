@@ -74,7 +74,7 @@ template<typename... ARGS> struct Params
     }
     ~Params()
     {
-        for (auto i: local)
+        for (auto& i: local)
             free(i);
     }
 

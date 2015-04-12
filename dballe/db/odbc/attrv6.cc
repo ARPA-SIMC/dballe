@@ -115,7 +115,7 @@ void ODBCAttrV6::set_value(const char* qvalue)
 void ODBCAttrV6::impl_add(int id_data, sql::AttributeList& attrs)
 {
     this->id_data = id_data;
-    for (auto i : attrs)
+    for (auto& i : attrs)
     {
         type = i.first;
         set_value(i.second);
