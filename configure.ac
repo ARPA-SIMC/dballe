@@ -124,22 +124,25 @@ then
 	AC_SUBST(docdir)
 fi
 
+dnl Check for python
 AM_PATH_PYTHON([], [], [
 	enable_dballe_python=no
 ])
-
 if test x$enable_dballe_python = xyes
 then
     PYTHON_CFLAGS=`unset CFLAGS; $PYTHON-config --cflags`
     AC_SUBST(PYTHON_CFLAGS)
 fi
 
+
 dnl Check for wreport
 PKG_CHECK_MODULES(WREPORT,libwreport >= 2.11)
 PKG_CHECK_EXISTS([libwreport-test >= 2.11], [have_wreport_test=yes], [have_wreport_test=no])
 
+
 dnl Check for sqlite3
 PKG_CHECK_MODULES(SQLITE3, sqlite3)
+
 
 dnl Check for libpq
 PKG_CHECK_EXISTS(libpq, [have_libpq=yes], [have_libpq=no])
@@ -149,6 +152,7 @@ then
     AC_DEFINE([HAVE_LIBPQ], 1, [PostgreSQL is available])
 fi
 AM_CONDITIONAL([HAVE_LIBPQ], [test x"$have_libpq" = x"yes"])
+
 
 dnl Check for libmysqlclient
 AC_PATH_PROG(mysql_config, [mysql_config])
@@ -164,7 +168,6 @@ else
 fi
 
 
-
 dnl Check for unixodbc
 have_odbc=yes
 AC_CHECK_HEADER(sql.h, AC_DEFINE(HAVE_ODBC_H, 1, sql.h (part of unixodbc) has been found),
@@ -175,6 +178,7 @@ AC_CHECK_LIB(odbc, SQLAllocHandle, LIBS="$LIBS -lodbc",
         AC_MSG_WARN([*** libodbc not found. Check 'config.log' for more details.])
         have_odbc=no
 )
+
 
 dnl Check for lua
 PKG_CHECK_EXISTS([lua5.2], [have_lua=yes], [have_lua=no])
@@ -210,6 +214,7 @@ then
 fi
 AM_CONDITIONAL([LUA], [test x"$have_lua" = x"yes"])
 
+
 dnl Check for wibble
 PKG_CHECK_EXISTS([libwibble], [have_wibble=yes], [have_wibble=no])
 if test x$have_wibble = xyes && test x$have_wreport_test = xyes
@@ -222,6 +227,7 @@ else
 	test x$have_wreport_test = xno && AC_MSG_WARN([libwreport-test not found, tests will be disabled])
 	enable_tests=no
 fi
+
 
 dnl Check for popt
 AC_CHECK_HEADER(popt.h, AC_DEFINE(HAVE_POPT_H, 1, popt.h has been found),
