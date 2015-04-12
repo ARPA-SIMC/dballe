@@ -99,9 +99,9 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 
     if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || inserted_pseudoana)
     {
-#if USE_BULK_INSERT
+#ifdef USE_BULK_INSERT
         // Prepare a bulk insert
-        sql::BulkInsertV6 vars;
+        sql::bulk::InsertV6 vars;
         vars.id_station = id_station;
         vars.id_report = id_report;
         vars.datetime = Datetime(1000, 1, 1, 0, 0, 0);
@@ -119,13 +119,9 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 
         // Insert the attributes
         if (flags & DBA_IMPORT_ATTRS)
-            for (auto v: vars.vars)
-            {
+            for (const auto& v: vars)
                 if (v.inserted())
-                {
                     dq.add(v.id_data, *v.var);
-                }
-            }
 #else
         dd.set_station_info(id_station, id_report);
 
@@ -155,8 +151,8 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 #endif
     }
 
-#if USE_BULK_INSERT
-    sql::BulkInsertV6 vars;
+#ifdef USE_BULK_INSERT
+    sql::bulk::InsertV6 vars;
     vars.id_station = id_station;
     vars.id_report = id_report;
 
@@ -200,13 +196,9 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 
     // Insert the attributes
     if (flags & DBA_IMPORT_ATTRS)
-        for (auto v: vars.vars)
-        {
+        for (const auto& v: vars)
             if (v.inserted())
-            {
                 dq.add(v.id_data, *v.var);
-            }
-        }
 #else
     // Fill up the common context information for the rest of the data
 

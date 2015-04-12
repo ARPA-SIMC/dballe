@@ -64,11 +64,79 @@ void SQLRecordV6::dump(FILE* out)
     fprintf(out, "%d%02d%03d %s\n", WR_VAR_F(out_varcode), WR_VAR_X(out_varcode), WR_VAR_Y(out_varcode), out_value);
 }
 
+namespace bulk {
+
+bool AnnotateVarsV6::annotate(int id_data, int id_levtr, Varcode code, const char* value)
+{
+    while (iter != vars.end())
+    {
+        // This variable is not on our list: stop here and wait for a new one
+        if (id_levtr < iter->id_levtr)
+            return true;
+
+        // iter points to a variable that is not currently in the DB
+        if (id_levtr > iter->id_levtr)
+        {
+            do_insert = true;
+            iter->set_needs_insert();
+            ++iter;
+            continue;
+        }
+
+        // id_levtr is the same
+
+        // This variable is not on our list: stop here and wait for a new one
+        if (code < iter->var->code())
+            return true;
+
+        // iter points to a variable that is not currently in the DB
+        if (code > iter->var->code())
+        {
+            do_insert = true;
+            iter->set_needs_insert();
+            ++iter;
+            continue;
+        }
+
+        // iter points to a variable that is also in the DB
+
+        // Annotate with the ID
+        iter->id_data = id_data;
+
+        // If the value is different, we need to update
+        if (strcmp(value, iter->var->value()) != 0)
+        {
+            iter->set_needs_update();
+            do_update = true;
+        }
+
+        // We processed this variable: stop here and wait for a new one
+        ++iter;
+        return true;
+    }
+
+    // We have no more variables to consider: signal the caller that they can
+    // stop iterating if they wish.
+    return false;
+}
+
+void AnnotateVarsV6::annotate_end()
+{
+    // Mark all remaining variables as needing insert
+    for ( ; iter != vars.end(); ++iter)
+    {
+        iter->set_needs_insert();
+        do_insert = true;
+    }
+}
+
+}
+
 Driver::~Driver()
 {
 }
 
-void Driver::bulk_insert_v6(BulkInsertV6& vars, bool update_existing)
+void Driver::bulk_insert_v6(bulk::InsertV6& vars, bool update_existing)
 {
     throw error_unimplemented("bulk insert v6 not implemented on this database connector");
 }

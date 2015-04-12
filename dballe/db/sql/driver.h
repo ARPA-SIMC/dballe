@@ -81,53 +81,78 @@ struct SQLRecordV6
     void dump(FILE* out);
 };
 
+namespace bulk {
+
+/**
+ * Workflow information about a variable listed for bulk insert/update
+ */
+struct VarV6
+{
+    static const unsigned FLAG_NEEDS_UPDATE = 1 << 0;
+    static const unsigned FLAG_UPDATED      = 1 << 1;
+    static const unsigned FLAG_NEEDS_INSERT = 1 << 2;
+    static const unsigned FLAG_INSERTED     = 1 << 3;
+    int id_levtr;
+    int id_data;
+    const wreport::Var* var;
+    unsigned flags = 0;
+
+    VarV6(const wreport::Var* var, int id_levtr=-1, int id_data=-1)
+        : id_levtr(id_levtr), id_data(id_data), var(var)
+    {
+    }
+    bool operator<(const VarV6& v) const
+    {
+        if (int d = id_levtr - v.id_levtr) return d < 0;
+        return var->code() < v.var->code();
+    }
+
+    bool needs_update() const { return flags | FLAG_NEEDS_UPDATE; }
+    bool updated() const { return flags | FLAG_UPDATED; }
+    bool needs_insert() const { return flags | FLAG_NEEDS_INSERT; }
+    bool inserted() const { return flags | FLAG_INSERTED; }
+    void set_needs_update() { flags |= FLAG_NEEDS_UPDATE; }
+    void set_updated() { flags = (flags & ~FLAG_NEEDS_UPDATE) | FLAG_UPDATED; }
+    void set_needs_insert() { flags |= FLAG_NEEDS_INSERT; }
+    void set_inserted() { flags = (flags & ~FLAG_NEEDS_INSERT) | FLAG_INSERTED; }
+};
+
+
 /**
  * Input for a bulk insert of a lot of variables sharing the same context
  * information.
  */
-struct BulkInsertV6
+struct InsertV6 : public std::vector<VarV6>
 {
-    struct Var
-    {
-        static const unsigned FLAG_NEEDS_UPDATE = 1 << 0;
-        static const unsigned FLAG_UPDATED      = 1 << 1;
-        static const unsigned FLAG_NEEDS_INSERT = 1 << 2;
-        static const unsigned FLAG_INSERTED     = 1 << 3;
-        int id_levtr;
-        int id_data;
-        const wreport::Var* var;
-        unsigned flags = 0;
-
-        Var(const wreport::Var* var, int id_levtr=-1, int id_data=-1)
-            : id_levtr(id_levtr), id_data(id_data), var(var)
-        {
-        }
-        bool operator<(const Var& v) const
-        {
-            if (int d = id_levtr - v.id_levtr) return d < 0;
-            return var->code() < v.var->code();
-        }
-
-        bool needs_update() const { return flags | FLAG_NEEDS_UPDATE; }
-        bool updated() const { return flags | FLAG_UPDATED; }
-        bool needs_insert() const { return flags | FLAG_NEEDS_INSERT; }
-        bool inserted() const { return flags | FLAG_INSERTED; }
-        void set_needs_update() { flags |= FLAG_NEEDS_UPDATE; }
-        void set_updated() { flags = (flags & ~FLAG_NEEDS_UPDATE) | FLAG_UPDATED; }
-        void set_needs_insert() { flags |= FLAG_NEEDS_INSERT; }
-        void set_inserted() { flags = (flags & ~FLAG_NEEDS_INSERT) | FLAG_INSERTED; }
-    };
-
     int id_station;
     int id_report;
     Datetime datetime;
-    std::vector<Var> vars;
 
     void add(const wreport::Var* var, int id_levtr)
     {
-        vars.emplace_back(var, id_levtr);
+        emplace_back(var, id_levtr);
     }
 };
+
+/**
+ * Helper class for annotating InsertV6 variables with the current status of
+ * the database.
+ */
+struct AnnotateVarsV6
+{
+    InsertV6& vars;
+    InsertV6::iterator iter;
+    bool do_insert = false;
+    bool do_update = false;
+
+    AnnotateVarsV6(InsertV6& vars) : vars(vars), iter(vars.begin()) {}
+
+    bool annotate(int id_data, int id_levtr, wreport::Varcode code, const char* value);
+    void annotate_end();
+};
+
+}
+
 
 struct Driver
 {
@@ -161,7 +186,7 @@ struct Driver
     virtual std::unique_ptr<sql::AttrV6> create_attrv6() = 0;
 
     /// Bulk variable insert
-    virtual void bulk_insert_v6(BulkInsertV6& vars, bool update_existing=true);
+    virtual void bulk_insert_v6(bulk::InsertV6& vars, bool update_existing=true);
 
     /**
      * Run a query on the given statement, returning results as SQLRecordV6 objects

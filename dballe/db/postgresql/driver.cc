@@ -89,9 +89,9 @@ std::unique_ptr<sql::AttrV6> Driver::create_attrv6()
     return unique_ptr<sql::AttrV6>(new PostgreSQLAttrV6(conn));
 }
 
-void Driver::bulk_insert_v6(sql::BulkInsertV6& vars, bool update_existing)
+void Driver::bulk_insert_v6(sql::bulk::InsertV6& vars, bool update_existing)
 {
-    std::sort(vars.vars.begin(), vars.vars.end());
+    std::sort(vars.begin(), vars.end());
 
     using namespace postgresql;
     const char* select_query = R"(
@@ -109,66 +109,26 @@ void Driver::bulk_insert_v6(sql::BulkInsertV6& vars, bool update_existing)
 
     // Scan the result in parallel with the variable list, annotating changed
     // items with their data ID
-    auto vars_in = vars.vars.begin();
-    unsigned row = 0;
-    bool do_insert = false;
-    bool do_update = false;
-    while (row < existing.rowcount() && vars_in != vars.vars.end())
+    sql::bulk::AnnotateVarsV6 todo(vars);
+    for (unsigned row = 0; row < existing.rowcount(); ++row)
     {
-        int id_levtr = existing.get_int4(row, 1);
-        if (id_levtr < vars_in->id_levtr)
-        {
-            ++row;
-            continue;
-        } else if (id_levtr > vars_in->id_levtr) {
-            // We have an input variable that is not currently in the DB
-            do_insert = true;
-            vars_in->set_needs_insert();
-            ++vars_in;
-            continue;
-        }
-
-        // id_levtr is the same
-
-        Varcode code = (Varcode)existing.get_int4(row, 2);
-        if (code < vars_in->var->code())
-        {
-            ++row;
-            continue;
-        } else if (code > vars_in->var->code()) {
-            ++vars_in;
-            continue;
-        }
-
-        // var code is the same
-
-        // Annotate with the ID
-        vars_in->id_data = existing.get_int4(row, 0);
-
-        const char *val = existing.get_string(row, 3);
-        if (strcmp(val, vars_in->var->value()) != 0)
-        {
-            vars_in->set_needs_update();
-            do_update = true;
-        }
-
-        ++row;
-        ++vars_in;
+        if (!todo.annotate(
+                existing.get_int4(row, 0),
+                existing.get_int4(row, 1),
+                (Varcode)existing.get_int4(row, 2),
+                existing.get_string(row, 3)))
+            break;
     }
-    for ( ; vars_in != vars.vars.end(); ++vars_in)
-    {
-        vars_in->set_needs_insert();
-        do_insert = true;
-    }
+    todo.annotate_end();
 
     // We now have a todo-list
 
-    if (update_existing && do_update)
+    if (update_existing && todo.do_update)
     {
         Querybuf dq(512);
         dq.append("UPDATE data as d SET value=i.value FROM (value");
         dq.start_list(",");
-        for (auto v: vars.vars)
+        for (auto& v: vars)
         {
             if (!v.needs_update()) continue;
             char* escaped_val = PQescapeLiteral(conn, v.var->value(), strlen(v.var->value()));
@@ -183,12 +143,12 @@ void Driver::bulk_insert_v6(sql::BulkInsertV6& vars, bool update_existing)
         //fprintf(stderr, "Update query: %s\n", dq.c_str());
     }
 
-    if (do_insert)
+    if (todo.do_insert)
     {
         Querybuf dq(512);
         dq.append("INSERT INTO data (id, id_station, id_report, id_lev_tr, datetime, id_var, value) VALUES ");
         dq.start_list(",");
-        for (auto v: vars.vars)
+        for (auto& v: vars)
         {
             if (!v.needs_insert()) continue;
             char* escaped_val = PQescapeLiteral(conn, v.var->value(), strlen(v.var->value()));
@@ -208,8 +168,8 @@ void Driver::bulk_insert_v6(sql::BulkInsertV6& vars, bool update_existing)
         // Run the insert query and read back the new IDs
         Result res(conn.exec(dq));
         unsigned row = 0;
-        auto v = vars.vars.begin();
-        while (row < res.rowcount() && v != vars.vars.end())
+        auto v = vars.begin();
+        while (row < res.rowcount() && v != vars.end())
         {
             if (!v->needs_insert())
             {
