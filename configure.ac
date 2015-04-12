@@ -150,6 +150,21 @@ then
 fi
 AM_CONDITIONAL([HAVE_LIBPQ], [test x"$have_libpq" = x"yes"])
 
+dnl Check for libmysqlclient
+AC_PATH_PROG(mysql_config, [mysql_config])
+if test x$mysql_config = x
+then
+    have_mysql=no
+else
+    have_mysql=yes
+    MYSQL_CFLAGS=`$mysql_config --cflags`
+    MYSQL_LIBS=`$mysql_config --libs_r`
+    AC_SUBST(MYSQL_CFLAGS)
+    AC_SUBST(MYSQL_LIBS)
+fi
+
+
+
 dnl Check for unixodbc
 have_odbc=yes
 AC_CHECK_HEADER(sql.h, AC_DEFINE(HAVE_ODBC_H, 1, sql.h (part of unixodbc) has been found),
@@ -316,6 +331,7 @@ AC_MSG_NOTICE([
 $PACKAGE_NAME-$PACKAGE_VERSION configuration:
 AS_HELP_STRING([ODBC:], [$have_odbc])
 AS_HELP_STRING([PostgreSQL:], [$have_libpq])
+AS_HELP_STRING([MySQL:], [$have_mysql])
 AS_HELP_STRING([Fortran:], [$enable_dballef])
 AS_HELP_STRING([Python:], [$enable_dballe_python])
 AS_HELP_STRING([documentation:], [$enable_docs])
