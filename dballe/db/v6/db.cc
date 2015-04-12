@@ -152,6 +152,8 @@ void DB::disappear()
         delete m_repinfo;
         m_repinfo = 0;
     }
+    if (m_lev_tr_cache)
+        m_lev_tr_cache->invalidate();
 }
 
 void DB::reset(const char* repinfo_file)
@@ -164,8 +166,6 @@ void DB::reset(const char* repinfo_file)
         int added, deleted, updated;
         repinfo().update(repinfo_file, &added, &deleted, &updated);
     }
-    if (m_lev_tr_cache)
-        m_lev_tr_cache->invalidate();
 }
 
 void DB::update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated)
@@ -299,6 +299,8 @@ void DB::remove_all()
     conn->exec("DELETE FROM lev_tr");
     conn->exec("DELETE FROM station");
     t->commit();
+    if (m_lev_tr_cache)
+        m_lev_tr_cache->invalidate();
 }
 
 void DB::vacuum()
