@@ -48,7 +48,22 @@ struct MsgCollector : public vector<Msg*>, public MsgConsumer
     {
         push_back(msg.release());
     }
+
+    void from_db(DB& db, const char* query)
+    {
+        Query q;
+        q.set_from_string(query);
+        db.export_msgs(q, *this);
+    }
 };
+
+unsigned diff_msg(Msg& first, Msg& second, const char* tag)
+{
+    notes::Collect c(cerr);
+    int diffs = first.diff(second);
+    if (diffs) dballe::tests::track_different_msgs(first, second, tag);
+    return diffs;
+}
 
 static void normalise_datetime(Msg& msg)
 {
@@ -106,10 +121,7 @@ template<> template<> void to::test<1>()
             ensure_equals(msgs.size(), 1u);
             ensure(msgs[0] != NULL);
 
-            notes::Collect c(cerr);
-            int diffs = msg.diff(*msgs[0]);
-            if (diffs) dballe::tests::track_different_msgs(msg, *msgs[0], "crex");
-            ensure_equals(diffs, 0);
+            wassert(actual(diff_msg(msg, *msgs[0], "crex")) == 0);
         } catch (std::exception& e) {
             throw tut::failure(string("[") + files[i] + "] " + e.what());
         }
@@ -142,10 +154,7 @@ template<> template<> void to::test<2>()
             // Explicitly set the rep_memo variable that is added during export
             msg.set_rep_memo(Msg::repmemo_from_type(msg.type));
 
-            notes::Collect c(cerr);
-            int diffs = msg.diff(*msgs[0]);
-            if (diffs) dballe::tests::track_different_msgs(msg, *msgs[0], "bufr");
-            ensure_equals(diffs, 0);
+            wassert(actual(diff_msg(msg, *msgs[0], "bufr")) == 0);
         } catch (std::exception& e) {
             throw tut::failure(string("[") + files[i] + "] " + e.what());
         }
@@ -179,10 +188,7 @@ template<> template<> void to::test<3>()
             ensure_equals(msgs.size(), 1u);
             ensure(msgs[0] != NULL);
 
-            notes::Collect c(cerr);
-            int diffs = msg.diff(*msgs[0]);
-            if (diffs) dballe::tests::track_different_msgs(msg, *msgs[0], "bufr");
-            ensure_equals(diffs, 0);
+            wassert(actual(diff_msg(msg, *msgs[0], "bufr")) == 0);
         } catch (std::exception& e) {
             throw tut::failure(string("[") + files[i] + "] " + e.what());
         }
@@ -223,14 +229,8 @@ template<> template<> void to::test<4>()
     ensure(msgs[1] != NULL);
 
     // Compare the two dba_msg
-    notes::Collect c(cerr);
-    int diffs = msg1.diff(*msgs[0]);
-    if (diffs) dballe::tests::track_different_msgs(msg1, *msgs[0], "synop1");
-    ensure_equals(diffs, 0);
-
-    diffs = msg2.diff(*msgs[1]);
-    if (diffs) dballe::tests::track_different_msgs(msg2, *msgs[1], "synop2");
-    ensure_equals(diffs, 0);
+    wassert(actual(diff_msg(msg1, *msgs[0], "synop1")) == 0);
+    wassert(actual(diff_msg(msg2, *msgs[1], "synop2")) == 0);
 }
 
 template<> template<> void to::test<5>()
@@ -251,10 +251,7 @@ template<> template<> void to::test<5>()
     ensure(outmsgs[0] != NULL);
 
     // Compare the two dba_msg
-    notes::Collect c(cerr);
-    int diffs = msg.diff(*outmsgs[0]);
-    if (diffs) dballe::tests::track_different_msgs(msg, *outmsgs[0], "enrico");
-    ensure_equals(diffs, 0);
+    wassert(actual(diff_msg(msg, *outmsgs[0], "enrico")) == 0);
 }
 
 // Check that a message that only contains station variables does get imported
@@ -287,6 +284,60 @@ void to::test<6>()
     wassert(actual(vars[3]->format()) == "10.00000");
     wassert(actual(varcode_format(vars[4]->code())) == "B07030");
     wassert(actual(vars[4]->format()) == "22.3");
+}
+
+// Try importing into a dirty database, no attributes involved
+template<> template<>
+void to::test<7>()
+{
+    auto add_common = [](Msg& msg) {
+        msg.type = MSG_SYNOP;
+        msg.set_rep_memo("synop");
+        msg.set_latitude(45.4);
+        msg.set_longitude(11.2);
+        msg.set_year(2015);
+        msg.set_month(4);
+        msg.set_day(25);
+        msg.set_hour(12);
+        msg.set_minute(30);
+        msg.set_second(45);
+    };
+
+    // Build test messages
+    Msg first;
+    add_common(first);
+    first.set_block(1);               // Station variable
+    first.set_station(2);             // Station variable
+    first.set_temp_2m(280.1);         // Data variable
+    first.set_wet_temp_2m(275.8);     // Data variable
+
+    Msg second;
+    add_common(second);
+    second.set_block(5);              // Station variable, different value
+    second.set_station(2);            // Station variable, same value
+    second.set_height_station(101.0); // Station variable, new value
+    second.set_temp_2m(281.1);        // Data variable, different value
+    second.set_wet_temp_2m(275.8);    // Data variable, same value
+    second.set_humidity(55.6);        // Data variable, new value
+
+    // Import the first message
+    db->remove_all();
+    db->import_msg(first, NULL, DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE);
+
+    // Export and check
+    MsgCollector export_first;
+    export_first.from_db(*db, "rep_memo=synop");
+    wassert(actual(export_first.size()) == 1);
+    wassert(actual(diff_msg(first, *export_first[0], "first")) == 0);
+
+    // Import the second message
+    db->import_msg(second, NULL, DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE);
+
+    // Export and check
+    MsgCollector export_second;
+    export_second.from_db(*db, "rep_memo=synop");
+    wassert(actual(export_second.size()) == 1);
+    wassert(actual(diff_msg(second, *export_second[0], "second")) == 0);
 }
 
 #if 0
