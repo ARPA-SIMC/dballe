@@ -92,7 +92,7 @@ template<> template<> void to::test<1>()
             Msg& msg = *(*inmsgs)[0];
             normalise_datetime(msg);
 
-            db->reset();
+            db->remove_all();
             db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
             // Explicitly set the rep_memo variable that is added during export
@@ -128,7 +128,7 @@ template<> template<> void to::test<2>()
             Msg& msg = *(*inmsgs)[0];
             normalise_datetime(msg);
 
-            db->reset();
+            db->remove_all();
             db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
             query.clear();
@@ -163,7 +163,7 @@ template<> template<> void to::test<3>()
             Msg& msg = *(*inmsgs)[0];
             normalise_datetime(msg);
 
-            db->reset();
+            db->remove_all();
             db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
             // Explicitly set the rep_memo variable that is added during export
@@ -203,7 +203,7 @@ template<> template<> void to::test<4>()
     normalise_datetime(msg1);
     normalise_datetime(msg2);
 
-    db->reset();
+    db->remove_all();
     db->import_msg(msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
     db->import_msg(msg2, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
@@ -239,7 +239,7 @@ template<> template<> void to::test<5>()
     std::unique_ptr<Msgs> msgs = read_msgs("bufr/generic-new-repmemo.bufr", BUFR);
     Msg& msg = *(*msgs)[0];
 
-    db->reset();
+    db->remove_all();
     db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
     query.clear();
@@ -264,7 +264,7 @@ void to::test<6>()
     std::unique_ptr<Msgs> msgs = read_msgs("bufr/generic-onlystation.bufr", BUFR);
     Msg& msg = *(*msgs)[0];
 
-    db->reset();
+    db->remove_all();
     db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
     query.clear();
