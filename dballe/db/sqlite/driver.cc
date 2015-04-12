@@ -126,7 +126,7 @@ void Driver::bulk_insert_v6(sql::bulk::InsertV6& vars, bool update_existing)
         for (auto& v: vars)
         {
             if (!v.needs_update()) continue;
-            update_stm->bind(v.id_data, v.var->value());
+            update_stm->bind(v.var->value(), v.id_data);
             update_stm->execute();
             v.set_updated();
         }
