@@ -165,7 +165,9 @@ else
     MYSQL_LIBS=`$mysql_config --libs_r`
     AC_SUBST(MYSQL_CFLAGS)
     AC_SUBST(MYSQL_LIBS)
+    AC_DEFINE([HAVE_MYSQL], 1, [MySQL is available])
 fi
+AM_CONDITIONAL([HAVE_MYSQL], [test x"$have_mysql" = x"yes"])
 
 
 dnl Check for unixodbc

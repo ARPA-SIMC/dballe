@@ -3,7 +3,9 @@
 EXTRA_DIST=
 CLEANFILES=
 
-AM_CPPFLAGS = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) -I$(top_builddir) $(WREPORT_CFLAGS) $(SQLITE3_CFLAGS) $(LIBPQ_CFLAGS) $(LUA_CFLAGS)
+AM_CPPFLAGS = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) -I$(top_builddir) $(WREPORT_CFLAGS) $(LIBPQ_CFLAGS) $(SQLITE3_CFLAGS) $(MYSQL_CFLAGS) $(LUA_CFLAGS)
+
+common_libs = $(WREPORT_LIBS) $(LIBPQ_LIBS) $(SQLITE3_LIBS) $(MYSQL_LIBS) $(LUA_LIBS)
 
 #
 # Autobuilt files
@@ -269,7 +271,7 @@ libdballe_la_SOURCES += \
 	db/v5/export.cc
 endif
 
-libdballe_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(WREPORT_LIBS) $(SQLITE3_LIBS) $(LIBPQ_LIBS) $(LUA_LIBS)
+libdballe_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(common_libs)
 
 # filter.cc and sat.cc are here for now until I manage to turn them into a working system
 EXTRA_DIST += \
@@ -386,11 +388,8 @@ endif
 
 tut_test_LDADD = \
 	libdballe.la \
-	$(WREPORT_LIBS) \
+	$(common_libs) \
 	$(WREPORT_TEST_LIBS) \
-	$(SQLITE3_LIBS) \
-	$(LIBPQ_LIBS) \
-	$(LUA_LIBS) \
 	$(WIBBLE_LIBS)
 
 #
@@ -409,12 +408,7 @@ bench_run_SOURCES = \
 	benchmark/bench-main.cc
 bench_run_LDADD = \
 	libdballe.la \
-	$(WREPORT_LIBS) \
-	$(WREPORT_TEST_LIBS) \
-	$(SQLITE3_LIBS) \
-	$(LIBPQ_LIBS) \
-	$(LUA_LIBS) \
-	$(WIBBLE_LIBS)
+	$(common_libs)
 
 
 #
@@ -426,10 +420,7 @@ noinst_PROGRAMS += dump-core-info
 dump_core_info_SOURCES = core/dump-core-info.cc
 dump_core_info_LDADD = \
 	libdballe.la \
-	$(WREPORT_LIBS) \
-	$(SQLITE3_LIBS) \
-	$(LIBPQ_LIBS) \
-	$(LUA_LIBS)
+	$(common_libs)
 
 # core
 
