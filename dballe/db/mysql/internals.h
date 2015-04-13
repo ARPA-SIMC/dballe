@@ -1,7 +1,7 @@
 /*
- * db/sqlite/internals - Implementation infrastructure for the SQLite DB connection
+ * db/mysql/internals - Implementation infrastructure for the MySQL DB connection
  *
- * Copyright (C) 2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,21 +19,22 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_SQLITE_INTERNALS_H
-#define DBALLE_DB_SQLITE_INTERNALS_H
+#ifndef DBALLE_DB_MYSQL_INTERNALS_H
+#define DBALLE_DB_MYSQL_INTERNALS_H
 
 #include <dballe/db/db.h>
 #include <dballe/db/sql.h>
-#include <sqlite3.h>
+#include <cstdlib>
+#include <mysql.h>
 
 namespace dballe {
 namespace db {
-struct SQLiteStatement;
+struct MySQLStatement;
 
 /**
- * Report an SQLite error
+ * Report a MySQL error
  */
-struct error_sqlite : public db::error
+struct error_mysql : public db::error
 {
     std::string msg;
 
@@ -41,44 +42,152 @@ struct error_sqlite : public db::error
      * Copy informations from the ODBC diagnostic record to the dba error
      * report
      */
-    error_sqlite(sqlite3* db, const std::string& msg);
-    error_sqlite(const std::string& dbmsg, const std::string& msg);
-    ~error_sqlite() throw () {}
+    error_mysql(MYSQL* db, const std::string& msg);
+    error_mysql(const std::string& dbmsg, const std::string& msg);
+    ~error_mysql() throw () {}
 
     wreport::ErrorCode code() const throw () { return wreport::WR_ERR_ODBC; }
 
     virtual const char* what() const throw () { return msg.c_str(); }
 
-    static void throwf(sqlite3* db, const char* fmt, ...) WREPORT_THROWF_ATTRS(2, 3);
+    static void throwf(MYSQL* db, const char* fmt, ...) WREPORT_THROWF_ATTRS(2, 3);
 };
 
+namespace mysql {
+
+struct ConnectInfo
+{
+    std::string host;
+    std::string user;
+    bool has_passwd = false;
+    std::string passwd;
+    bool has_dbname = false;
+    std::string dbname;
+    unsigned port = 0;
+    std::string unix_socket;
+
+    // Reset everything to defaults
+    void reset();
+    void parse_url(const std::string& url);
+    // Modeled after http://dev.mysql.com/doc/connector-j/en/connector-j-reference-configuration-properties.html
+    std::string to_url() const;
+};
+
+struct Row
+{
+    MYSQL_RES* res = nullptr;
+    MYSQL_ROW row = nullptr;
+
+    Row(MYSQL_RES* res, MYSQL_ROW row) : res(res), row(row) {}
+
+    operator bool() const { return row != nullptr; }
+    operator MYSQL_ROW() { return row; }
+    operator const MYSQL_ROW() const { return row; }
+
+    int as_int(unsigned col) const { return strtol(row[col], 0, 10); }
+    unsigned as_unsigned(unsigned col) const { return strtoul(row[col], 0, 10); }
+    const char* as_cstring(unsigned col) const { return row[col]; }
+    std::string as_string(unsigned col) const { return std::string(row[col], mysql_fetch_lengths(res)[col]); }
+    bool isnull(unsigned col) const { return row[col] == nullptr; }
+};
+
+struct Result
+{
+    MYSQL_RES* res = nullptr;
+
+    Result() : res(nullptr) {}
+    Result(MYSQL_RES* res) : res(res) {}
+    ~Result() { if (res) mysql_free_result(res); }
+
+    /// Implement move
+    Result(Result&& o) : res(o.res) { o.res = nullptr; }
+    Result& operator=(Result&& o)
+    {
+        if (this == &o) return *this;
+        if (res) mysql_free_result(res);
+        res = o.res;
+        o.res = nullptr;
+        return *this;
+    }
+
+    operator bool() const { return res != nullptr; }
+
+    operator MYSQL_RES*() { return res; }
+    operator const MYSQL_RES*() const { return res; }
+
+    unsigned rowcount() const { return mysql_num_rows(res); }
+
+    /// Check that the function returned only one row, and return that row.
+    Row expect_one_result();
+
+    /**
+     * Fetch one row.
+     *
+     * Note: mysql_fetch_row does not reset the error indicator, so there is no
+     * way to tell the end of the iteration from an error. As a consequence,
+     * this is only safe to call after a mysql_store_result.
+     *
+     * Accessing mysql_use_result results is implemented using execute_fetch.
+     */
+    Row fetch() { return Row(res, mysql_fetch_row(res)); }
+
+    // Prevent copy
+    Result(const Result&) = delete;
+    Result& operator=(const Result&) = delete;
+};
+
+}
+
+
 /// Database connection
-class SQLiteConnection : public Connection
+class MySQLConnection : public Connection
 {
 protected:
     /// Database connection
-    sqlite3* db = nullptr;
+    MYSQL* db = nullptr;
 
 protected:
     void impl_exec_void(const std::string& query) override;
     void init_after_connect();
 
 public:
-    SQLiteConnection();
-    SQLiteConnection(const SQLiteConnection&) = delete;
-    SQLiteConnection(const SQLiteConnection&&) = delete;
-    ~SQLiteConnection();
+    MySQLConnection();
+    MySQLConnection(const MySQLConnection&) = delete;
+    MySQLConnection(const MySQLConnection&&) = delete;
+    ~MySQLConnection();
+    MySQLConnection& operator=(const MySQLConnection&) = delete;
+    MySQLConnection& operator=(const MySQLConnection&&) = delete;
 
-    SQLiteConnection& operator=(const SQLiteConnection&) = delete;
+    operator MYSQL*() { return db; }
 
-    operator sqlite3*() { return db; }
+    // See https://dev.mysql.com/doc/refman/5.0/en/mysql-real-connect.html
+    void open(const mysql::ConnectInfo& info);
+    // See http://dev.mysql.com/doc/connector-j/en/connector-j-reference-configuration-properties.html
+    void open_url(const std::string& url);
+    void open_test();
 
-    void open_file(const std::string& pathname, int flags=SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
-    void open_memory(int flags=SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
-    void open_private_file(int flags=SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
+    /// Escape a string
+    std::string escape(std::string str);
+
+    // Run a query, checking that it is successful and it gives no results
+    void exec_no_data(const char* query);
+    // Run a query, checking that it is successful and it gives no results
+    void exec_no_data(const std::string& query);
+    // Run a query, with a locally stored result
+    mysql::Result exec_store(const char* query);
+    // Run a query, with a locally stored result
+    mysql::Result exec_store(const std::string& query);
+#if 0
+    // Run a query, with a remotely fetched result
+    void execute_fetch(const char* query, std::function<void, mysql::Row> dest);
+    // Run a query, with a remotely fetched result
+    void execute_fetch(const std::string& query, std::function<void, mysql::Row> dest);
+#endif
 
     std::unique_ptr<Transaction> transaction() override;
-    std::unique_ptr<SQLiteStatement> sqlitestatement(const std::string& query);
+#if 0
+    std::unique_ptr<MySQLStatement> mysqlstatement(const std::string& query);
+#endif
 
     /// Check if the database contains a table
     bool has_table(const std::string& name) override;
@@ -114,26 +223,29 @@ public:
     int get_last_insert_id();
 
     /// Count the number of rows modified by the last query that was run
-    int changes();
+    //int changes();
 
     void add_datetime(Querybuf& qb, const int* dt) const override;
 
+#if 0
     /// Wrap sqlite3_exec, without a callback
     void wrap_sqlite3_exec(const std::string& query);
     void wrap_sqlite3_exec_nothrow(const std::string& query) noexcept;
+#endif
 };
 
-/// SQLite statement
-struct SQLiteStatement
+#if 0
+/// MySQL statement
+struct MySQLStatement
 {
-    SQLiteConnection& conn;
+    MySQLConnection& conn;
     sqlite3_stmt *stm = nullptr;
 
-    SQLiteStatement(SQLiteConnection& conn, const std::string& query);
-    SQLiteStatement(const SQLiteStatement&) = delete;
-    SQLiteStatement(const SQLiteStatement&&) = delete;
-    ~SQLiteStatement();
-    SQLiteStatement& operator=(const SQLiteStatement&) = delete;
+    MySQLStatement(MySQLConnection& conn, const std::string& query);
+    MySQLStatement(const MySQLStatement&) = delete;
+    MySQLStatement(const MySQLStatement&&) = delete;
+    ~MySQLStatement();
+    MySQLStatement& operator=(const MySQLStatement&) = delete;
 
     /**
      * Bind all the arguments in a single invocation.
@@ -239,6 +351,7 @@ private:
         bindn<total>(args...);
     }
 };
+#endif
 
 }
 }

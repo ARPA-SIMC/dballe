@@ -1,7 +1,7 @@
 /*
- * db/sqlite/internals - Implementation infrastructure for the SQLite DB connection
+ * db/mysql/internals - Implementation infrastructure for the MySQL DB connection
  *
- * Copyright (C) 2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,20 +20,13 @@
  */
 
 #include "internals.h"
-
+#include "dballe/core/vasprintf.h"
+#include "dballe/db/querybuf.h"
+#include <regex>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
-#include "dballe/core/vasprintf.h"
-#include "dballe/db/querybuf.h"
-#include <cstdlib>
-#if 0
-#include <cstring>
-#include <limits.h>
-#include <unistd.h>
-#include "dballe/core/verbose.h"
 #include <iostream>
-#endif
 
 using namespace std;
 using namespace wreport;
@@ -41,26 +34,21 @@ using namespace wreport;
 namespace dballe {
 namespace db {
 
-namespace {
-
-}
-
-
-error_sqlite::error_sqlite(sqlite3* db, const std::string& msg)
+error_mysql::error_mysql(MYSQL* db, const std::string& msg)
 {
     this->msg = msg;
     this->msg += ":";
-    this->msg += sqlite3_errmsg(db);
+    this->msg += mysql_error(db);
 }
 
-error_sqlite::error_sqlite(const std::string& dbmsg, const std::string& msg)
+error_mysql::error_mysql(const std::string& dbmsg, const std::string& msg)
 {
     this->msg = msg;
     this->msg += ":";
     this->msg += dbmsg;
 }
 
-void error_sqlite::throwf(sqlite3* db, const char* fmt, ...)
+void error_mysql::throwf(MYSQL* db, const char* fmt, ...)
 {
     // Format the arguments
     va_list ap;
@@ -72,54 +60,229 @@ void error_sqlite::throwf(sqlite3* db, const char* fmt, ...)
     // Convert to string
     std::string msg(cmsg);
     free(cmsg);
-    throw error_sqlite(db, msg);
+    throw error_mysql(db, msg);
 }
 
-SQLiteConnection::SQLiteConnection()
+namespace mysql {
+
+void ConnectInfo::reset()
 {
+    host.clear();
+    user.clear();
+    has_passwd = false;
+    passwd.clear();
+    has_dbname = false;
+    dbname.clear();
+    port = 0;
+    unix_socket.clear();
 }
 
-SQLiteConnection::~SQLiteConnection()
+void ConnectInfo::parse_url(const std::string& url)
 {
-    if (db) sqlite3_close(db);
-}
+    // mysql://[host][:port]/[database][?propertyName1][=propertyValue1][&propertyName2][=propertyValue2]...
+    reset();
 
-void SQLiteConnection::open_file(const std::string& pathname, int flags)
-{
-    int res = sqlite3_open_v2(pathname.c_str(), &db, flags, nullptr);
-    if (res != SQLITE_OK)
+    if (url == "mysql:" || url == "mysql://" || url == "mysql:///")
+        return;
+
+    regex re_remote(R"(^mysql://([^:/]+)?(:\d+)?/([^?]+)?(\?.+)?$)", regex_constants::ECMAScript);
+    smatch res;
+    if (!regex_match(url, res, re_remote))
+        throw error_consistency("cannot parse MySQL connect URL '" + url + "'");
+
+    // Host
+    if (res[1].matched)
+        host = res[1].str();
+    // Port
+    if (res[2].matched)
+        port = stoul(res[2].str().substr(1));
+    // DB name
+    if (res[3].matched)
     {
-        // From http://www.sqlite.org/c3ref/open.html
-        // Whether or not an error occurs when it is opened, resources
-        // associated with the database connection handle should be
-        // released by passing it to sqlite3_close() when it is no longer
-        // required.
-        std::string errmsg(sqlite3_errmsg(db));
-        sqlite3_close(db);
-        db = nullptr;
-        throw error_sqlite(errmsg, "opening " + pathname);
+        has_dbname = true;
+        dbname = res[3].str();
     }
+    // Query string
+    if (res[4].matched)
+    {
+        // ?arg[=val]&arg[=val]...
+        regex re_qstring(R"([?&]([^=]+)(=[^&]+)?)", regex_constants::ECMAScript);
+        string qstring = res[4].str();
+        for (auto i = sregex_iterator(qstring.begin(), qstring.end(), re_qstring); i != sregex_iterator(); ++i)
+        {
+            smatch match = *i;
+            if (match[1].str() == "user")
+                user = match[2].str().substr(1);
+            else if (match[1].str() == "password")
+            {
+                has_passwd = true;
+                passwd = match[2].str().substr(1);
+            }
+        }
+    }
+}
+
+std::string ConnectInfo::to_url() const
+{
+    std::string res = "mysql://";
+    if (!user.empty() || !passwd.empty())
+    {
+        res += user;
+        if (has_passwd)
+            res += ":" + passwd;
+        res += "@";
+    }
+    res += host;
+    if (port != 0)
+        res += ":" + to_string(port);
+    res += "/" + dbname;
+
+    // TODO: currently unsupported unix_socket;
+    return res;
+}
+
+Row Result::expect_one_result()
+{
+    if (mysql_num_rows(res) != 1)
+        error_consistency::throwf("query returned %u rows instead of 1", (unsigned)mysql_num_rows(res));
+    return Row(res, mysql_fetch_row(res));
+}
+
+}
+
+MySQLConnection::MySQLConnection()
+{
+    db = mysql_init(nullptr);
+    // mysql_error does seem to work with nullptr as its argument. I only saw
+    // it return empty strings, though, because I have not been able to find a
+    // way to make mysql_int fail for real
+    if (!db) throw error_mysql(nullptr, "failed to create a MYSQL object");
+}
+
+MySQLConnection::~MySQLConnection()
+{
+    if (db) mysql_close(db);
+}
+
+void MySQLConnection::open(const mysql::ConnectInfo& info)
+{
+    // See http://www.enricozini.org/2012/tips/sa-sqlmode-traditional/
+    mysql_options(db, MYSQL_INIT_COMMAND, "SET sql_mode='traditional'");
+    // TODO: benchmark with and without compression
+    //mysql_options(db, MYSQL_OPT_COMPRESS, 0);
+    // Auto-reconnect transparently messes up all assumptions, so we switch it
+    // off: see https://dev.mysql.com/doc/refman/5.0/en/auto-reconnect.html
+    my_bool reconnect = 0;
+    mysql_options(db, MYSQL_OPT_RECONNECT, &reconnect);
+    if (!mysql_real_connect(db,
+                info.host.empty() ? nullptr : info.host.c_str(),
+                info.user.c_str(),
+                info.has_passwd ? info.passwd.c_str() : nullptr,
+                info.dbname.c_str(),
+                info.port,
+                info.unix_socket.empty() ? nullptr : info.unix_socket.c_str(),
+                CLIENT_REMEMBER_OPTIONS))
+        throw error_mysql(db, "cannot open MySQL connection to " + info.to_url());
     init_after_connect();
 }
 
-void SQLiteConnection::open_memory(int flags)
+void MySQLConnection::open_url(const std::string& url)
 {
-    open_file(":memory:", flags);
+    using namespace mysql;
+    ConnectInfo info;
+    info.parse_url(url);
+    open(info);
 }
 
-void SQLiteConnection::open_private_file(int flags)
+void MySQLConnection::open_test()
 {
-    open_file("", flags);
+    const char* envurl = getenv("DBA_DB_MYSQL");
+    if (envurl == NULL)
+        throw error_consistency("DBA_DB_MYSQL not defined");
+    return open_url(envurl);
 }
 
-void SQLiteConnection::init_after_connect()
+void MySQLConnection::init_after_connect()
 {
-    server_type = ServerType::SQLITE;
+    server_type = ServerType::MYSQL;
     // autocommit is off by default when inside a transaction
     // set_autocommit(false);
 }
 
-void SQLiteConnection::wrap_sqlite3_exec(const std::string& query)
+std::string MySQLConnection::escape(std::string str)
+{
+    // Dirty: we write directly inside the resulting std::string storage.
+    // It should work in C++11, although not according to its specifications,
+    // and if for some reason we discover that it does not work, this can be
+    // rewritten with one extra string copy.
+    string res(str.size() * 2 + 1, 0);
+    unsigned long len = mysql_real_escape_string(db, const_cast<char*>(res.data()), str.data(), str.size());
+    res.resize(len);
+    return res;
+}
+
+void MySQLConnection::exec_no_data(const char* query)
+{
+    using namespace mysql;
+
+    if (mysql_query(db, query))
+        error_mysql::throwf(db, "cannot execute '%s'", query);
+
+    Result res(mysql_store_result(db));
+    if (res)
+        error_consistency::throwf("query '%s' returned %u rows instead of zero",
+                query, (unsigned)mysql_num_rows(res));
+    else if (mysql_errno(db))
+        error_mysql::throwf(db, "cannot store result of query '%s'", query);
+}
+
+void MySQLConnection::exec_no_data(const std::string& query)
+{
+    using namespace mysql;
+
+    if (mysql_real_query(db, query.data(), query.size()))
+        error_mysql::throwf(db, "cannot execute '%s'", query.c_str());
+
+    Result res(mysql_store_result(db));
+    if (res)
+        error_consistency::throwf("query '%s' returned %u rows instead of zero",
+                query.c_str(), (unsigned)mysql_num_rows(res));
+    else if (mysql_errno(db))
+        error_mysql::throwf(db, "cannot store result of query '%s'", query.c_str());
+}
+
+mysql::Result MySQLConnection::exec_store(const char* query)
+{
+    using namespace mysql;
+
+    if (mysql_query(db, query))
+        error_mysql::throwf(db, "cannot execute '%s'", query);
+    Result res(mysql_store_result(db));
+    if (res) return res;
+
+    if (mysql_errno(db))
+        error_mysql::throwf(db, "cannot store result of query '%s'", query);
+    else
+        error_consistency::throwf("query '%s' returned no data", query);
+}
+
+mysql::Result MySQLConnection::exec_store(const std::string& query)
+{
+    using namespace mysql;
+
+    if (mysql_real_query(db, query.data(), query.size()))
+        error_mysql::throwf(db, "cannot execute '%s'", query.c_str());
+    Result res(mysql_store_result(db));
+    if (res) return res;
+
+    if (mysql_errno(db))
+        error_mysql::throwf(db, "cannot store result of query '%s'", query.c_str());
+    else
+        error_consistency::throwf("query '%s' returned no data", query.c_str());
+}
+
+#if 0
+void MySQLConnection::wrap_sqlite3_exec(const std::string& query)
 {
     char* errmsg;
     int res = sqlite3_exec(db, query.c_str(), nullptr, nullptr, &errmsg);
@@ -139,7 +302,7 @@ void SQLiteConnection::wrap_sqlite3_exec(const std::string& query)
     }
 }
 
-void SQLiteConnection::wrap_sqlite3_exec_nothrow(const std::string& query) noexcept
+void MySQLConnection::wrap_sqlite3_exec_nothrow(const std::string& query) noexcept
 {
     char* errmsg;
     int res = sqlite3_exec(db, query.c_str(), nullptr, nullptr, &errmsg);
@@ -157,16 +320,18 @@ void SQLiteConnection::wrap_sqlite3_exec_nothrow(const std::string& query) noexc
         sqlite3_free(errmsg);
     }
 }
+#endif
 
-struct SQLiteTransaction : public Transaction
+#if 0
+struct MySQLTransaction : public Transaction
 {
-    SQLiteConnection& conn;
+    MySQLConnection& conn;
     bool fired = false;
 
-    SQLiteTransaction(SQLiteConnection& conn) : conn(conn)
+    MySQLTransaction(MySQLConnection& conn) : conn(conn)
     {
     }
-    ~SQLiteTransaction() { if (!fired) rollback_nothrow(); }
+    ~MySQLTransaction() { if (!fired) rollback_nothrow(); }
 
     void commit() override
     {
@@ -184,112 +349,116 @@ struct SQLiteTransaction : public Transaction
         fired = true;
     }
 };
+#endif
 
-std::unique_ptr<Transaction> SQLiteConnection::transaction()
+std::unique_ptr<Transaction> MySQLConnection::transaction()
 {
+    throw error_unimplemented("mysql transaction");
+#if 0
     wrap_sqlite3_exec("BEGIN");
-    return unique_ptr<Transaction>(new SQLiteTransaction(*this));
+    return unique_ptr<Transaction>(new MySQLTransaction(*this));
+#endif
 }
 
-std::unique_ptr<SQLiteStatement> SQLiteConnection::sqlitestatement(const std::string& query)
+#if 0
+std::unique_ptr<MySQLStatement> MySQLConnection::sqlitestatement(const std::string& query)
 {
-    return unique_ptr<SQLiteStatement>(new SQLiteStatement(*this, query));
+    return unique_ptr<MySQLStatement>(new MySQLStatement(*this, query));
+}
+#endif
+
+void MySQLConnection::impl_exec_void(const std::string& query)
+{
+    exec_no_data(query);
 }
 
-void SQLiteConnection::impl_exec_void(const std::string& query)
+void MySQLConnection::drop_table_if_exists(const char* name)
 {
-    wrap_sqlite3_exec(query);
+    exec_no_data(string("DROP TABLE IF EXISTS ") + name);
 }
 
-void SQLiteConnection::drop_table_if_exists(const char* name)
+int MySQLConnection::get_last_insert_id()
 {
-    exec(string("DROP TABLE IF EXISTS ") + name);
+    return mysql_insert_id(db);
 }
 
-int SQLiteConnection::get_last_insert_id()
+bool MySQLConnection::has_table(const std::string& name)
 {
-    int res = sqlite3_last_insert_rowid(db);
-    if (res == 0)
-        throw error_consistency("no last insert ID value returned from database");
-    return res;
+    using namespace mysql;
+    string query = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='" + name + "'";
+    Result res(exec_store(query));
+    Row row = res.expect_one_result();
+    return row.as_unsigned(0) > 0;
 }
 
-bool SQLiteConnection::has_table(const std::string& name)
+std::string MySQLConnection::get_setting(const std::string& key)
 {
-    auto stm = sqlitestatement("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?");
-    stm->bind(name);
-
-    bool found = false;
-    int count = 0;;
-    stm->execute_one([&]() {
-        found = true;
-        count += stm->column_int(0);
-    });
-
-    return count > 0;
-}
-
-std::string SQLiteConnection::get_setting(const std::string& key)
-{
+    using namespace mysql;
     if (!has_table("dballe_settings"))
         return string();
 
-    auto stm = sqlitestatement("SELECT value FROM dballe_settings WHERE \"key\"=?");
-    stm->bind(key);
-    string res;
-    stm->execute_one([&]() {
-        res = stm->column_string(0);
-    });
+    string query = "SELECT value FROM dballe_settings WHERE `key`='";
+    query += escape(key);
+    query += '\'';
 
-    return res;
+    Result res(exec_store(query));
+    Row row = res.expect_one_result();
+    return row.as_string(0);
 }
 
-void SQLiteConnection::set_setting(const std::string& key, const std::string& value)
+void MySQLConnection::set_setting(const std::string& key, const std::string& value)
 {
     if (!has_table("dballe_settings"))
-        exec("CREATE TABLE dballe_settings (\"key\" CHAR(64) NOT NULL PRIMARY KEY, value CHAR(64) NOT NULL)");
+        exec_no_data("CREATE TABLE dballe_settings (`key` CHAR(64) NOT NULL PRIMARY KEY, value CHAR(64) NOT NULL)");
 
-    auto stm = sqlitestatement("INSERT OR REPLACE INTO dballe_settings (\"key\", value) VALUES (?, ?)");
-    stm->bind(key, value);
-    stm->execute();
+    string query = "INSERT INTO dballe_settings (`key`, value) VALUES ('";
+    query += escape(key);
+    query += "', '";
+    query += escape(value);
+    query += "') ON DUPLICATE KEY UPDATE value=VALUES(value)";
+    exec_no_data(query);
 }
 
-void SQLiteConnection::drop_settings()
+void MySQLConnection::drop_settings()
 {
     drop_table_if_exists("dballe_settings");
 }
 
-void SQLiteConnection::add_datetime(Querybuf& qb, const int* dt) const
+void MySQLConnection::add_datetime(Querybuf& qb, const int* dt) const
 {
     qb.appendf("'%04d-%02d-%02d %02d:%02d:%02d'", dt[0], dt[1], dt[2], dt[3], dt[4], dt[5]);
 }
 
-int SQLiteConnection::changes()
+#if 0
+int MySQLConnection::changes()
 {
-    return sqlite3_changes(db);
+    throw error_unimplemented("mysql changes");
+    //return sqlite3_changes(db);
 }
+#endif
 
-SQLiteStatement::SQLiteStatement(SQLiteConnection& conn, const std::string& query)
+#if 0
+MySQLStatement::MySQLStatement(MySQLConnection& conn, const std::string& query)
     : conn(conn)
 {
     // From http://www.sqlite.org/c3ref/prepare.html:
     // If the caller knows that the supplied string is nul-terminated, then
     // there is a small performance advantage to be gained by passing an nByte
     // parameter that is equal to the number of bytes in the input string
-    // including the nul-terminator bytes as this saves SQLite from having to
+    // including the nul-terminator bytes as this saves MySQL from having to
     // make a copy of the input string.
     int res = sqlite3_prepare_v2(conn, query.c_str(), query.size() + 1, &stm, nullptr);
     if (res != SQLITE_OK)
         error_sqlite::throwf(conn, "cannot compile query '%s'", query.c_str());
 }
 
-SQLiteStatement::~SQLiteStatement()
+MySQLStatement::~MySQLStatement()
 {
     // Invoking sqlite3_finalize() on a NULL pointer is a harmless no-op.
     sqlite3_finalize(stm);
 }
 
-Datetime SQLiteStatement::column_datetime(int col)
+Datetime MySQLStatement::column_datetime(int col)
 {
     Datetime res;
     string dt = column_string(col);
@@ -303,7 +472,7 @@ Datetime SQLiteStatement::column_datetime(int col)
     return res;
 }
 
-void SQLiteStatement::execute(std::function<void()> on_row)
+void MySQLStatement::execute(std::function<void()> on_row)
 {
     while (true)
     {
@@ -328,7 +497,7 @@ void SQLiteStatement::execute(std::function<void()> on_row)
     }
 }
 
-void SQLiteStatement::execute_one(std::function<void()> on_row)
+void MySQLStatement::execute_one(std::function<void()> on_row)
 {
     bool has_result = false;
     while (true)
@@ -355,7 +524,7 @@ void SQLiteStatement::execute_one(std::function<void()> on_row)
     }
 }
 
-void SQLiteStatement::execute()
+void MySQLStatement::execute()
 {
     while (true)
     {
@@ -373,31 +542,31 @@ void SQLiteStatement::execute()
     }
 }
 
-void SQLiteStatement::bind_null_val(int idx)
+void MySQLStatement::bind_null_val(int idx)
 {
     if (sqlite3_bind_null(stm, idx) != SQLITE_OK)
         throw error_sqlite(conn, "cannot bind a NULL input column");
 }
 
-void SQLiteStatement::bind_val(int idx, int val)
+void MySQLStatement::bind_val(int idx, int val)
 {
     if (sqlite3_bind_int(stm, idx, val) != SQLITE_OK)
         throw error_sqlite(conn, "cannot bind an int input column");
 }
 
-void SQLiteStatement::bind_val(int idx, unsigned val)
+void MySQLStatement::bind_val(int idx, unsigned val)
 {
     if (sqlite3_bind_int64(stm, idx, val) != SQLITE_OK)
         throw error_sqlite(conn, "cannot bind an int64 input column");
 }
 
-void SQLiteStatement::bind_val(int idx, unsigned short val)
+void MySQLStatement::bind_val(int idx, unsigned short val)
 {
     if (sqlite3_bind_int(stm, idx, val) != SQLITE_OK)
         throw error_sqlite(conn, "cannot bind an int input column");
 }
 
-void SQLiteStatement::bind_val(int idx, const Datetime& val)
+void MySQLStatement::bind_val(int idx, const Datetime& val)
 {
     char* buf;
     int size = asprintf(&buf, "%04d-%02d-%02d %02d:%02d:%02d",
@@ -407,35 +576,37 @@ void SQLiteStatement::bind_val(int idx, const Datetime& val)
         throw error_sqlite(conn, "cannot bind a text (from Datetime) input column");
 }
 
-void SQLiteStatement::bind_val(int idx, const char* val)
+void MySQLStatement::bind_val(int idx, const char* val)
 {
     if (sqlite3_bind_text(stm, idx, val, -1, SQLITE_STATIC))
         throw error_sqlite(conn, "cannot bind a text input column");
 }
 
-void SQLiteStatement::bind_val(int idx, const std::string& val)
+void MySQLStatement::bind_val(int idx, const std::string& val)
 {
     if (sqlite3_bind_text(stm, idx, val.data(), val.size(), SQLITE_STATIC))
         throw error_sqlite(conn, "cannot bind a text input column");
 }
 
-void SQLiteStatement::wrap_sqlite3_reset()
+void MySQLStatement::wrap_sqlite3_reset()
 {
     if (sqlite3_reset(stm) != SQLITE_OK)
         throw error_sqlite(conn, "cannot reset the query");
 }
 
-void SQLiteStatement::wrap_sqlite3_reset_nothrow() noexcept
+void MySQLStatement::wrap_sqlite3_reset_nothrow() noexcept
 {
     sqlite3_reset(stm);
 }
 
-void SQLiteStatement::reset_and_throw(const std::string& errmsg)
+void MySQLStatement::reset_and_throw(const std::string& errmsg)
 {
     std::string sqlite_errmsg(sqlite3_errmsg(conn));
     wrap_sqlite3_reset_nothrow();
     throw error_sqlite(sqlite_errmsg, errmsg);
 }
+
+#endif
 
 #if 0
 bool ODBCStatement::fetch()

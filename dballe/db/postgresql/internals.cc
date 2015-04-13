@@ -212,12 +212,20 @@ PostgreSQLConnection::~PostgreSQLConnection()
     if (db) PQfinish(db);
 }
 
-void PostgreSQLConnection::open(const std::string& connection_string)
+void PostgreSQLConnection::open_url(const std::string& connection_string)
 {
     db = PQconnectdb(connection_string.c_str());
     if (PQstatus(db) != CONNECTION_OK)
         throw error_postgresql(db, "opening " + connection_string);
     init_after_connect();
+}
+
+void PostgreSQLConnection::open_test()
+{
+    const char* envurl = getenv("DBA_DB_POSTGRESQL");
+    if (envurl == NULL)
+        throw error_consistency("DBA_DB_POSTGRESQL not defined");
+    return open_url(envurl);
 }
 
 void PostgreSQLConnection::init_after_connect()
@@ -298,24 +306,9 @@ void PostgreSQLConnection::impl_exec_void(const std::string& query)
     pqexec(query);
 }
 
-void PostgreSQLConnection::impl_exec_void_string(const std::string& query, const std::string& arg1)
-{
-    exec(query, arg1);
-}
-
-void PostgreSQLConnection::impl_exec_void_string_string(const std::string& query, const std::string& arg1, const std::string& arg2)
-{
-    exec(query, arg1, arg2);
-}
-
 void PostgreSQLConnection::drop_table_if_exists(const char* name)
 {
     exec_no_data(string("DROP TABLE IF EXISTS ") + name);
-}
-
-void PostgreSQLConnection::drop_sequence_if_exists(const char* name)
-{
-    // We do not use sequences with PostgreSQL
 }
 
 void PostgreSQLConnection::cancel_running_query_nothrow() noexcept
@@ -349,11 +342,6 @@ void PostgreSQLConnection::discard_all_input_nothrow() noexcept
                 break;
         }
     }
-}
-
-int PostgreSQLConnection::get_last_insert_id()
-{
-    throw error_unimplemented("last insert id for postgres");
 }
 
 bool PostgreSQLConnection::has_table(const std::string& name)

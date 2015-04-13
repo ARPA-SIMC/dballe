@@ -33,8 +33,7 @@ struct db_postgresql_internals_shar
 
     db_postgresql_internals_shar()
     {
-        // http://www.postgresql.org/docs/9.3/static/libpq-connect.html#LIBPQ-CONNSTRING
-        conn.open("postgresql://enrico@/enrico");
+        conn.open_test();
     }
 
     ~db_postgresql_internals_shar()

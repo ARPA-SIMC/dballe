@@ -72,8 +72,6 @@ protected:
      * Implementations of some commonly used pattern of one-shot exec queries
      */
     virtual void impl_exec_void(const std::string& query) = 0;
-    virtual void impl_exec_void_string(const std::string& query, const std::string& arg1) = 0;
-    virtual void impl_exec_void_string_string(const std::string& query, const std::string& arg1, const std::string& arg2) = 0;
 
 public:
     /**
@@ -97,12 +95,6 @@ public:
     /// Execute a one-shot query
     void exec(const std::string& query) { impl_exec_void(query); }
 
-    /// Execute a one-shot query
-    void exec(const std::string& query, const std::string& arg1) { impl_exec_void_string(query, arg1); }
-
-    /// Execute a one-shot query
-    void exec(const std::string& query, const std::string& arg1, const std::string& arg2) { impl_exec_void_string_string(query, arg1, arg2); }
-
     /// Check if the database contains a table
     virtual bool has_table(const std::string& name) = 0;
 
@@ -122,24 +114,6 @@ public:
 
     /// Drop the settings table
     virtual void drop_settings() = 0;
-
-    /**
-     * Delete a table in the database if it exists, otherwise do nothing.
-     */
-    virtual void drop_table_if_exists(const char* name) = 0;
-
-    /**
-     * Delete a sequence in the database if it exists, otherwise do nothing.
-     */
-    virtual void drop_sequence_if_exists(const char* name) = 0;
-
-    /**
-     * Return LAST_INSERT_ID or LAST_INSER_ROWID or whatever is appropriate for
-     * the current database, if supported.
-     *
-     * If not supported, an exception is thrown.
-     */
-    virtual int get_last_insert_id() = 0;
 
     /// Format a datetime and add it to the querybuf
     virtual void add_datetime(Querybuf& qb, const int* dt) const = 0;

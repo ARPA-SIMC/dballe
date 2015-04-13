@@ -100,8 +100,6 @@ protected:
     int m_last_insert_id;
 
     void impl_exec_void(const std::string& query) override;
-    void impl_exec_void_string(const std::string& query, const std::string& arg1) override;
-    void impl_exec_void_string_string(const std::string& query, const std::string& arg1, const std::string& arg2) override;
 
 public:
     ODBCConnection();
@@ -146,12 +144,12 @@ public:
     /**
      * Delete a table in the database if it exists, otherwise do nothing.
      */
-    void drop_table_if_exists(const char* name) override;
+    void drop_table_if_exists(const char* name);
 
     /**
      * Delete a sequence in the database if it exists, otherwise do nothing.
      */
-    void drop_sequence_if_exists(const char* name) override;
+    void drop_sequence_if_exists(const char* name);
 
     /**
      * Return LAST_INSERT_ID or LAST_INSER_ROWID or whatever is appropriate for
@@ -159,7 +157,7 @@ public:
      *
      * If not supported, an exception is thrown.
      */
-    int get_last_insert_id() override;
+    int get_last_insert_id();
 
     void add_datetime(Querybuf& qb, const int* dt) const override;
 

@@ -31,6 +31,9 @@
 #ifdef HAVE_LIBPQ
 #include "postgresql/internals.h"
 #endif
+#ifdef HAVE_MYSQL
+#include "mysql/internals.h"
+#endif
 #include "dballe/msg/msgs.h"
 #include <wreport/error.h>
 #include <cstring>
@@ -80,8 +83,9 @@ bool DB::is_url(const char* str)
 {
     if (strncmp(str, "mem:", 4) == 0) return true;
     if (strncmp(str, "sqlite:", 7) == 0) return true;
-    if (strncmp(str, "odbc://", 7) == 0) return true;
     if (strncmp(str, "postgresql:", 11) == 0) return true;
+    if (strncmp(str, "mysql:", 11) == 0) return true;
+    if (strncmp(str, "odbc://", 7) == 0) return true;
     if (strncmp(str, "test:", 5) == 0) return true;
     return false;
 }
@@ -171,10 +175,20 @@ unique_ptr<DB> DB::connect_from_url(const char* url)
     {
 #ifdef HAVE_LIBPQ
         unique_ptr<PostgreSQLConnection> conn(new PostgreSQLConnection);
-        conn->open(url);
+        conn->open_url(url);
         return instantiate_db(unique_ptr<Connection>(conn.release()));
 #else
         throw error_unimplemented("PostgreSQL support is not available");
+#endif
+    }
+    if (strncmp(url, "mysql:", 11) == 0)
+    {
+#ifdef HAVE_MYSQL
+        unique_ptr<MySQLConnection> conn(new MySQLConnection);
+        conn->open_url(url);
+        return instantiate_db(unique_ptr<Connection>(conn.release()));
+#else
+        throw error_unimplemented("MySQL support is not available");
 #endif
     }
     if (strncmp(url, "odbc://", 7) == 0)

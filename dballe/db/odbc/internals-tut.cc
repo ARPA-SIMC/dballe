@@ -56,7 +56,7 @@ struct db_internals_shar : public dballe::tests::db_test
 
     void reset()
     {
-        Connection& c = connection();
+        ODBCConnection& c = connection();
         c.drop_table_if_exists("dballe_test");
         c.exec("CREATE TABLE dballe_test (val INTEGER NOT NULL)");
     }

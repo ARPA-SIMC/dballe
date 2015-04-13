@@ -351,21 +351,6 @@ void ODBCConnection::impl_exec_void(const std::string& query)
     stm.dbv5_exec_direct_and_close(query.c_str());
 }
 
-void ODBCConnection::impl_exec_void_string(const std::string& query, const std::string& arg1)
-{
-    ODBCStatement stm(*this);
-    stm.bind_in(1, arg1);
-    stm.dbv5_exec_direct_and_close(query.c_str());
-}
-
-void ODBCConnection::impl_exec_void_string_string(const std::string& query, const std::string& arg1, const std::string& arg2)
-{
-    ODBCStatement stm(*this);
-    stm.bind_in(1, arg1);
-    stm.bind_in(2, arg2);
-    stm.dbv5_exec_direct_and_close(query.c_str());
-}
-
 #define DBA_ODBC_MISSING_TABLE_POSTGRES "42P01"
 #define DBA_ODBC_MISSING_TABLE_MYSQL "42S01"
 #define DBA_ODBC_MISSING_TABLE_SQLITE "HY000"

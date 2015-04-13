@@ -131,6 +131,16 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/postgresql/attrv6.h \
 	db/postgresql/driver.h
 endif
+if HAVE_MYSQL
+nobase_dist_dballeinclude_HEADERS += \
+	db/mysql/internals.h \
+	db/mysql/repinfo.h \
+	db/mysql/station.h \
+	db/mysql/levtr.h \
+	db/mysql/datav6.h \
+	db/mysql/attrv6.h \
+	db/mysql/driver.h
+endif
 if HAVE_ODBC
 nobase_dist_dballeinclude_HEADERS += \
 	db/odbc/internals.h \
@@ -252,6 +262,16 @@ libdballe_la_SOURCES += \
 	db/postgresql/datav6.cc \
 	db/postgresql/attrv6.cc \
 	db/postgresql/driver.cc
+endif
+if HAVE_MYSQL
+libdballe_la_SOURCES += \
+	db/mysql/internals.cc
+#	db/mysql/repinfo.cc \
+#	db/mysql/station.cc \
+#	db/mysql/levtr.cc \
+#	db/mysql/datav6.cc \
+#	db/mysql/attrv6.cc \
+#	db/mysql/driver.cc
 endif
 if HAVE_ODBC
 libdballe_la_SOURCES += \
@@ -376,6 +396,10 @@ endif
 if HAVE_LIBPQ
 tut_test_SOURCES += \
 	db/postgresql/internals-tut.cc
+endif
+if HAVE_MYSQL
+tut_test_SOURCES += \
+	db/mysql/internals-tut.cc
 endif
 if HAVE_ODBC
 tut_test_SOURCES += \
