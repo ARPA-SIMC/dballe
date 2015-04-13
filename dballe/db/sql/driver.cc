@@ -190,6 +190,21 @@ Driver::~Driver()
 {
 }
 
+void Driver::remove_all_v5()
+{
+    exec_no_data("DELETE FROM attr");
+    exec_no_data("DELETE FROM data");
+    exec_no_data("DELETE FROM context");
+    exec_no_data("DELETE FROM station");
+}
+void Driver::remove_all_v6()
+{
+    exec_no_data("DELETE FROM attr");
+    exec_no_data("DELETE FROM data");
+    exec_no_data("DELETE FROM lev_tr");
+    exec_no_data("DELETE FROM station");
+}
+
 std::unique_ptr<Driver> Driver::create(Connection& conn)
 {
     if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(&conn))

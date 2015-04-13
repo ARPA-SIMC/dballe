@@ -565,6 +565,66 @@ void Driver::delete_tables_v6()
     conn.drop_table_if_exists("station");
     conn.drop_settings();
 }
+void Driver::vacuum_v5()
+{
+    switch (conn.server_type)
+    {
+        case ServerType::MYSQL:
+            conn.exec("DELETE c FROM context c LEFT JOIN data d ON d.id_context = c.id WHERE d.id_context IS NULL");
+            conn.exec("DELETE p FROM station p LEFT JOIN context c ON c.id_ana = p.id WHERE c.id is NULL");
+            break;
+        default:
+            conn.exec(R"(
+                DELETE FROM context
+                      WHERE id IN (
+                              SELECT c.id
+                                FROM context c
+                           LEFT JOIN data d ON d.id_context = c.id
+                               WHERE d.id_context IS NULL)
+            )");
+            conn.exec(R"(
+                DELETE FROM station
+                      WHERE id IN (
+                              SELECT p.id
+                                FROM station p
+                           LEFT JOIN context c ON c.id_ana = p.id
+                               WHERE c.id IS NULL)
+            )");
+            break;
+    }
+}
+void Driver::vacuum_v6()
+{
+    switch (conn.server_type)
+    {
+        case ServerType::MYSQL:
+            conn.exec("DELETE c FROM lev_tr c LEFT JOIN data d ON d.id_lev_tr = c.id WHERE d.id_lev_tr IS NULL");
+            conn.exec("DELETE p FROM station p LEFT JOIN data d ON d.id_station = p.id WHERE d.id IS NULL");
+            break;
+        default:
+            conn.exec(R"(
+                DELETE FROM lev_tr WHERE id IN (
+                    SELECT ltr.id
+                      FROM lev_tr ltr
+                 LEFT JOIN data d ON d.id_lev_tr = ltr.id
+                     WHERE d.id_lev_tr is NULL)
+            )");
+            conn.exec(R"(
+                DELETE FROM station WHERE id IN (
+                    SELECT p.id
+                      FROM station p
+                 LEFT JOIN data d ON d.id_station = p.id
+                     WHERE d.id is NULL)
+            )");
+            break;
+    }
+}
+
+void Driver::exec_no_data(const std::string& query)
+{
+    conn.exec(query);
+}
+
 
 }
 }

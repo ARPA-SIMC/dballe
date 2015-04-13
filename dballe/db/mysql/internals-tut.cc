@@ -43,7 +43,7 @@ struct db_mysql_internals_shar
     void reset()
     {
         conn.drop_table_if_exists("dballe_test");
-        conn.exec("CREATE TABLE dballe_test (val INTEGER NOT NULL)");
+        conn.exec_no_data("CREATE TABLE dballe_test (val INTEGER NOT NULL)");
     }
 };
 TESTGRP(db_mysql_internals);

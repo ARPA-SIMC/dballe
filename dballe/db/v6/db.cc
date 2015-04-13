@@ -122,19 +122,6 @@ sql::AttrV6& DB::attr()
 
 void DB::init_after_connect()
 {
-    /* Set manual commit */
-    if (conn->server_type == ServerType::SQLITE)
-    {
-        if (getenv("DBA_INSECURE_SQLITE") != NULL)
-        {
-            conn->exec("PRAGMA synchronous = OFF");
-            conn->exec("PRAGMA journal_mode = OFF");
-            conn->exec("PRAGMA legacy_file_format = 0");
-        } else {
-            conn->exec("PRAGMA journal_mode = MEMORY");
-            conn->exec("PRAGMA legacy_file_format = 0");
-        }
-    }
 }
 
 void DB::delete_tables()
@@ -293,44 +280,14 @@ void DB::remove(const Query& query)
 
 void DB::remove_all()
 {
-    auto t = conn->transaction();
-    conn->exec("DELETE FROM attr");
-    conn->exec("DELETE FROM data");
-    conn->exec("DELETE FROM lev_tr");
-    conn->exec("DELETE FROM station");
-    t->commit();
+    driver().remove_all_v6();
     if (m_lev_tr_cache)
         m_lev_tr_cache->invalidate();
 }
 
 void DB::vacuum()
 {
-    static const char* cclean_mysql = "delete c from lev_tr c left join data d on d.id_lev_tr = c.id where d.id_lev_tr is NULL";
-    static const char* pclean_mysql = "delete p from station p left join data d on d.id_station = p.id where d.id is NULL";
-    static const char* cclean_sqlite = "delete from lev_tr where id in (select ltr.id from lev_tr ltr left join data d on d.id_lev_tr = ltr.id where d.id_lev_tr is NULL)";
-    static const char* pclean_sqlite = "delete from station where id in (select p.id from station p left join data d on d.id_station = p.id where d.id is NULL)";
-    static const char* cclean = NULL;
-    static const char* pclean = NULL;
-
-    switch (conn->server_type)
-    {
-        case ServerType::MYSQL: cclean = cclean_mysql; pclean = pclean_mysql; break;
-        case ServerType::SQLITE: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
-        case ServerType::ORACLE: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
-        case ServerType::POSTGRES: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
-        default: cclean = cclean_mysql; pclean = pclean_mysql; break;
-    }
-
-    auto t = conn->transaction();
-
-    // Delete orphan lev_trs
-    conn->exec(cclean);
-
-    // Delete orphan stations
-    conn->exec(pclean);
-
-    t->commit();
-
+    driver().vacuum_v6();
     if (m_lev_tr_cache)
         m_lev_tr_cache->invalidate();
 }
@@ -398,7 +355,7 @@ void DB::attr_remove(int id_data, wreport::Varcode id_var, const std::vector<wre
             query.append_listf("%hd", *i);
         query.append(")");
     }
-    conn->exec(query);
+    driver().exec_no_data(query);
     // dba_verbose(DBA_VERB_DB_SQL, "Performing query %s for id %d,B%02d%03d\n", query, id_lev_tr, DBA_VAR_X(id_var), DBA_VAR_Y(id_var));
 }
 

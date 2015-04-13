@@ -266,19 +266,6 @@ sql::AttrV5& DB::attr()
 
 void DB::init_after_connect()
 {
-    /* Set manual commit */
-    if (conn->server_type == ServerType::SQLITE)
-    {
-        if (getenv("DBA_INSECURE_SQLITE") != NULL)
-        {
-            conn->exec("PRAGMA synchronous = OFF");
-            conn->exec("PRAGMA journal_mode = OFF");
-            conn->exec("PRAGMA legacy_file_format = 0");
-        } else {
-            conn->exec("PRAGMA journal_mode = MEMORY");
-            conn->exec("PRAGMA legacy_file_format = 0");
-        }
-    }
 }
 
 #define DBA_ODBC_MISSING_FUNCTION_POSTGRES "42883"
@@ -550,47 +537,12 @@ void DB::remove(const Query& rec)
 
 void DB::remove_all()
 {
-    auto t = conn->transaction();
-    conn->exec("DELETE FROM attr");
-    conn->exec("DELETE FROM data");
-    conn->exec("DELETE FROM context");
-    conn->exec("DELETE FROM station");
-    t->commit();
+    m_driver->remove_all_v5();
 }
 
 void DB::vacuum()
 {
-    static const char* cclean_mysql = "delete c from context c left join data d on d.id_context = c.id where d.id_context is NULL";
-    static const char* pclean_mysql = "delete p from station p left join context c on c.id_ana = p.id where c.id is NULL";
-    static const char* cclean_sqlite = "delete from context where id in (select c.id from context c left join data d on d.id_context = c.id where d.id_context is NULL)";
-    static const char* pclean_sqlite = "delete from station where id in (select p.id from station p left join context c on c.id_ana = p.id where c.id is NULL)";
-    static const char* cclean = NULL;
-    static const char* pclean = NULL;
-
-    switch (conn->server_type)
-    {
-        case ServerType::MYSQL: cclean = cclean_mysql; pclean = pclean_mysql; break;
-        case ServerType::SQLITE: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
-        case ServerType::ORACLE: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
-        case ServerType::POSTGRES: cclean = cclean_sqlite; pclean = pclean_sqlite; break;
-        default: cclean = cclean_mysql; pclean = pclean_mysql; break;
-    }
-
-    auto t = conn->transaction();
-
-    conn->exec(cclean);
-
-#if 0
-    /* Done with context */
-    res = SQLCloseCursor(stm);
-    if ((res != SQL_SUCCESS) && (res != SQL_SUCCESS_WITH_INFO))
-        return dba_db_error_odbc(SQL_HANDLE_STMT, stm, "closing dba_db_remove_orphans cursor");
-#endif
-
-    // Delete orphan stations
-    conn->exec(pclean);
-
-    t->commit();
+    m_driver->vacuum_v5();
 }
 
 #if 0

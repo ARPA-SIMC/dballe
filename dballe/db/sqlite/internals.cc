@@ -117,9 +117,19 @@ void SQLiteConnection::init_after_connect()
     server_type = ServerType::SQLITE;
     // autocommit is off by default when inside a transaction
     // set_autocommit(false);
+
+    if (getenv("DBA_INSECURE_SQLITE") != NULL)
+    {
+        exec("PRAGMA synchronous = OFF");
+        exec("PRAGMA journal_mode = OFF");
+        exec("PRAGMA legacy_file_format = 0");
+    } else {
+        exec("PRAGMA journal_mode = MEMORY");
+        exec("PRAGMA legacy_file_format = 0");
+    }
 }
 
-void SQLiteConnection::wrap_sqlite3_exec(const std::string& query)
+void SQLiteConnection::exec(const std::string& query)
 {
     char* errmsg;
     int res = sqlite3_exec(db, query.c_str(), nullptr, nullptr, &errmsg);
@@ -139,7 +149,7 @@ void SQLiteConnection::wrap_sqlite3_exec(const std::string& query)
     }
 }
 
-void SQLiteConnection::wrap_sqlite3_exec_nothrow(const std::string& query) noexcept
+void SQLiteConnection::exec_nothrow(const std::string& query) noexcept
 {
     char* errmsg;
     int res = sqlite3_exec(db, query.c_str(), nullptr, nullptr, &errmsg);
@@ -170,35 +180,30 @@ struct SQLiteTransaction : public Transaction
 
     void commit() override
     {
-        conn.wrap_sqlite3_exec("COMMIT");
+        conn.exec("COMMIT");
         fired = true;
     }
     void rollback() override
     {
-        conn.wrap_sqlite3_exec("ROLLBACK");
+        conn.exec("ROLLBACK");
         fired = true;
     }
     void rollback_nothrow()
     {
-        conn.wrap_sqlite3_exec_nothrow("ROLLBACK");
+        conn.exec_nothrow("ROLLBACK");
         fired = true;
     }
 };
 
 std::unique_ptr<Transaction> SQLiteConnection::transaction()
 {
-    wrap_sqlite3_exec("BEGIN");
+    exec("BEGIN");
     return unique_ptr<Transaction>(new SQLiteTransaction(*this));
 }
 
 std::unique_ptr<SQLiteStatement> SQLiteConnection::sqlitestatement(const std::string& query)
 {
     return unique_ptr<SQLiteStatement>(new SQLiteStatement(*this, query));
-}
-
-void SQLiteConnection::impl_exec_void(const std::string& query)
-{
-    wrap_sqlite3_exec(query);
 }
 
 void SQLiteConnection::drop_table_if_exists(const char* name)

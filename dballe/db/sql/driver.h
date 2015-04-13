@@ -162,7 +162,11 @@ struct AnnotateVarsV6
 
 struct Driver
 {
+public:
     virtual ~Driver();
+
+    /// Run a SQL query that is expected to return no data
+    virtual void exec_no_data(const std::string& query) = 0;
 
     /// Precompiled queries to manipulate the repinfo table
     virtual std::unique_ptr<sql::Repinfo> create_repinfov5() = 0;
@@ -220,10 +224,16 @@ struct Driver
     virtual void delete_tables_v6() = 0;
 
     /// Empty all tables for V5 databases, assuming that they exist, without touching the repinfo table
-    //virtual void remove_all_v5() = 0;
+    virtual void remove_all_v5();
 
     /// Empty all tables for V5 databases, assuming that they exist, without touching the repinfo table
-    //virtual void remove_all_v6() = 0;
+    virtual void remove_all_v6();
+
+    /// Perform database cleanup/maintenance on v5 databases
+    virtual void vacuum_v5() = 0;
+
+    /// Perform database cleanup/maintenance on v6 databases
+    virtual void vacuum_v6() = 0;
 
     /// Create a Driver for this connection
     static std::unique_ptr<Driver> create(Connection& conn);

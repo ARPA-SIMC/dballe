@@ -67,12 +67,6 @@ enum class ServerType
 
 class Connection
 {
-protected:
-    /**
-     * Implementations of some commonly used pattern of one-shot exec queries
-     */
-    virtual void impl_exec_void(const std::string& query) = 0;
-
 public:
     /**
      * Type of SQL server we are connected to.
@@ -91,9 +85,6 @@ public:
      * and will end when its destuctor is called.
      */
     virtual std::unique_ptr<Transaction> transaction() = 0;
-
-    /// Execute a one-shot query
-    void exec(const std::string& query) { impl_exec_void(query); }
 
     /// Check if the database contains a table
     virtual bool has_table(const std::string& name) = 0;

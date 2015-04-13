@@ -345,7 +345,7 @@ std::unique_ptr<ODBCStatement> ODBCConnection::dbv5_odbcstatement()
     return res;
 }
 
-void ODBCConnection::impl_exec_void(const std::string& query)
+void ODBCConnection::exec(const std::string& query)
 {
     ODBCStatement stm(*this);
     stm.dbv5_exec_direct_and_close(query.c_str());

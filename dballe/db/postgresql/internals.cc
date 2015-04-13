@@ -301,11 +301,6 @@ std::unique_ptr<PostgreSQLCompiledQuery> PostgreSQLConnection::pqstatement(const
 }
 #endif
 
-void PostgreSQLConnection::impl_exec_void(const std::string& query)
-{
-    pqexec(query);
-}
-
 void PostgreSQLConnection::drop_table_if_exists(const char* name)
 {
     exec_no_data(string("DROP TABLE IF EXISTS ") + name);

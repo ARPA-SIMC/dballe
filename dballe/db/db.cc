@@ -84,7 +84,7 @@ bool DB::is_url(const char* str)
     if (strncmp(str, "mem:", 4) == 0) return true;
     if (strncmp(str, "sqlite:", 7) == 0) return true;
     if (strncmp(str, "postgresql:", 11) == 0) return true;
-    if (strncmp(str, "mysql:", 11) == 0) return true;
+    if (strncmp(str, "mysql:", 6) == 0) return true;
     if (strncmp(str, "odbc://", 7) == 0) return true;
     if (strncmp(str, "test:", 5) == 0) return true;
     return false;
@@ -181,7 +181,7 @@ unique_ptr<DB> DB::connect_from_url(const char* url)
         throw error_unimplemented("PostgreSQL support is not available");
 #endif
     }
-    if (strncmp(url, "mysql:", 11) == 0)
+    if (strncmp(url, "mysql:", 6) == 0)
     {
 #ifdef HAVE_MYSQL
         unique_ptr<MySQLConnection> conn(new MySQLConnection);

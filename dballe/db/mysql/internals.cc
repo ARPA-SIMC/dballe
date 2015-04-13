@@ -367,11 +367,6 @@ std::unique_ptr<MySQLStatement> MySQLConnection::sqlitestatement(const std::stri
 }
 #endif
 
-void MySQLConnection::impl_exec_void(const std::string& query)
-{
-    exec_no_data(query);
-}
-
 void MySQLConnection::drop_table_if_exists(const char* name)
 {
     exec_no_data(string("DROP TABLE IF EXISTS ") + name);
@@ -402,7 +397,11 @@ std::string MySQLConnection::get_setting(const std::string& key)
     query += '\'';
 
     Result res(exec_store(query));
-    Row row = res.expect_one_result();
+    if (res.rowcount() == 0)
+        return string();
+    if (res.rowcount() > 1)
+        error_consistency::throwf("got %d results instead of 1 executing %s", res.rowcount(), query.c_str());
+    Row row = res.fetch();
     return row.as_string(0);
 }
 

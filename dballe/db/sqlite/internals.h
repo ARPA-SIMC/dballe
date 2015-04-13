@@ -60,7 +60,6 @@ protected:
     sqlite3* db = nullptr;
 
 protected:
-    void impl_exec_void(const std::string& query) override;
     void init_after_connect();
 
 public:
@@ -119,8 +118,8 @@ public:
     void add_datetime(Querybuf& qb, const int* dt) const override;
 
     /// Wrap sqlite3_exec, without a callback
-    void wrap_sqlite3_exec(const std::string& query);
-    void wrap_sqlite3_exec_nothrow(const std::string& query) noexcept;
+    void exec(const std::string& query);
+    void exec_nothrow(const std::string& query) noexcept;
 };
 
 /// SQLite statement

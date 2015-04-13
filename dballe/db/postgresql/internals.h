@@ -253,7 +253,6 @@ protected:
     PGconn* db = nullptr;
 
 protected:
-    void impl_exec_void(const std::string& query) override;
     void init_after_connect();
 
 public:

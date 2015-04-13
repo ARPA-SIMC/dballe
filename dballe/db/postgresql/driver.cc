@@ -419,6 +419,47 @@ void Driver::delete_tables_v6()
     conn.drop_table_if_exists("station");
     conn.drop_settings();
 }
+void Driver::vacuum_v5()
+{
+    conn.exec_no_data(R"(
+        DELETE FROM context
+              WHERE id IN (
+                      SELECT c.id
+                        FROM context c
+                   LEFT JOIN data d ON d.id_context = c.id
+                       WHERE d.id_context IS NULL)
+    )");
+    conn.exec_no_data(R"(
+        DELETE FROM station
+              WHERE id IN (
+                      SELECT p.id
+                        FROM station p
+                   LEFT JOIN context c ON c.id_ana = p.id
+                       WHERE c.id IS NULL)
+    )");
+}
+void Driver::vacuum_v6()
+{
+    conn.exec_no_data(R"(
+        DELETE FROM lev_tr WHERE id IN (
+            SELECT ltr.id
+              FROM lev_tr ltr
+         LEFT JOIN data d ON d.id_lev_tr = ltr.id
+             WHERE d.id_lev_tr is NULL)
+    )");
+    conn.exec_no_data(R"(
+        DELETE FROM station WHERE id IN (
+            SELECT p.id
+              FROM station p
+         LEFT JOIN data d ON d.id_station = p.id
+             WHERE d.id is NULL)
+    )");
+}
+
+void Driver::exec_no_data(const std::string& query)
+{
+    conn.exec_no_data(query);
+}
 
 }
 }
