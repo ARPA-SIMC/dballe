@@ -31,7 +31,7 @@
 #include <dballe/msg/msg.h>
 #include <dballe/msg/context.h>
 
-#undef USE_BULK_INSERT
+#define USE_BULK_INSERT
 
 using namespace wreport;
 
