@@ -370,7 +370,7 @@ void Driver::create_tables_v5()
         CREATE TABLE data (
            id_context  INTEGER NOT NULL,
            id_var      INTEGER NOT NULL,
-           value       VARCHAR2(255) NOT NULL
+           value       VARCHAR(255) NOT NULL
         );
     )");
     conn.exec_no_data("CREATE UNIQUE INDEX data_uniq ON data(id_var, id_context);");
@@ -380,7 +380,7 @@ void Driver::create_tables_v5()
            id_context  INTEGER NOT NULL,
            id_var      INTEGER NOT NULL,
            type        INTEGER NOT NULL,
-           value       VARCHAR2(255) NOT NULL,
+           value       VARCHAR(255) NOT NULL
         );
     )");
     conn.exec_no_data("CREATE UNIQUE INDEX attr_uniq ON attr(id_context, id_var, type);");
