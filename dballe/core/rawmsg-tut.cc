@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,40 +21,34 @@
 #include "core/rawmsg.h"
 
 using namespace std;
+using namespace wibble::tests;
 using namespace dballe;
 
-namespace tut {
+namespace {
 
-struct rawmsg_shar
-{
-	rawmsg_shar()
-	{
-	}
+typedef dballe::tests::test_group<> test_group;
+typedef test_group::Test Test;
+typedef test_group::Fixture Fixture;
 
-	~rawmsg_shar()
-	{
-	}
+std::vector<Test> tests {
+    Test("empty", [](Fixture& f) {
+        Rawmsg msg;
+
+        wassert(actual(msg.file.empty()).istrue());
+        wassert(actual(msg.offset) == 0);
+        wassert(actual(msg.index) == 0);
+        wassert(actual(msg.size()) == 0);
+
+        /* Resetting an empty message should do anything special */
+        msg.clear();
+        wassert(actual(msg.file.empty()).istrue());
+        wassert(actual(msg.offset) == 0);
+        wassert(actual(msg.index) == 0);
+        wassert(actual(msg.size()) == 0u);
+    }),
 };
-TESTGRP(rawmsg);
 
-// Basic generic tests
-template<> template<>
-void to::test<1>()
-{
-	Rawmsg msg;
-
-	ensure(msg.file.empty());
-	ensure_equals(msg.offset, 0);
-	ensure_equals(msg.index, 0);
-	ensure_equals(msg.size(), 0u);
-
-	/* Resetting an empty message should do anything special */
-	msg.clear();
-	ensure(msg.file.empty());
-	ensure_equals(msg.offset, 0);
-	ensure_equals(msg.index, 0);
-	ensure_equals(msg.size(), 0u);
-}
+test_group newtg("core_rawmsg", tests);
 
 }
 

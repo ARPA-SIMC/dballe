@@ -35,6 +35,165 @@
 namespace dballe {
 namespace tests {
 
+/**
+ * Base class for test fixtures.
+ *
+ * A fixture will have a constructor and a destructor to do setup/teardown, and
+ * a reset() function to be called inbetween tests.
+ *
+ * Fixtures do not need to descend from Fixture: this implementation is
+ * provided as a default for tests that do not need one, or as a base for
+ * fixtures that do not need reset().
+ */
+struct Fixture
+{
+    // Reset inbetween tests
+    void reset() {}
+};
+
+/**
+ * Check if a test can be run.
+ *
+ * This is used to implement extra test filtering features like glob matching
+ * on group or test names.
+ */
+bool test_can_run(const std::string& group_name, const std::string& test_name);
+
+/**
+ * Alternative to tut::test_group.
+ *
+ * Tests are registered using a vector of lambdas, and it implements smarter
+ * matching on group names and test names.
+ *
+ * There can be any number of tests.
+ *
+ * This could not have been implemented on top of the existing tut::test_group,
+ * because all its working components are declared private and are not
+ * accessible to subclasses.
+ */
+template<typename T=Fixture>
+struct test_group : public tut::group_base
+{
+    typedef std::function<void(T&)> test_func_t;
+    typedef T Fixture;
+
+    struct Test
+    {
+        std::string name;
+        test_func_t func;
+
+        Test(const std::string& name, test_func_t func)
+            : name(name), func(func) {}
+    };
+    typedef std::vector<Test> Tests;
+
+    /// Name of this test group
+    std::string name;
+    /// Storage for all our tests.
+    Tests tests;
+    /// Current test when running them in sequence
+    typename std::vector<Test>::iterator cur_test;
+    /// Fixture for the tests
+    T* fixture = 0;
+
+    test_group(const char* name, const std::vector<Test>& tests)
+        : name(name), tests(tests)
+    {
+        // register itself
+        tut::runner.get().register_group(name, this);
+    }
+
+    virtual T* create_fixture()
+    {
+        return new T;
+    }
+
+    void delete_fixture()
+    {
+        try {
+            delete fixture;
+        } catch (std::exception& e) {
+            fprintf(stderr, "Warning: exception caught while deleting fixture for test group %s: %s", name.c_str(), e.what());
+        }
+        fixture = 0;
+    }
+
+    void rewind() override
+    {
+        delete_fixture();
+        cur_test = tests.begin();
+    }
+
+    tut::test_result run_next() override
+    {
+        // Skip those tests that should not run
+        while (cur_test != tests.end() && !test_can_run(name, cur_test->name))
+            ++cur_test;
+
+        if (cur_test == tests.end())
+        {
+            delete_fixture();
+            throw tut::no_more_tests();
+        }
+
+        tut::test_result res = run(cur_test);
+        ++cur_test;
+        return res;
+    }
+
+    // execute one test
+    tut::test_result run_test(int n) override
+    {
+        --n; // From 1-based to 0-based
+        if (n < 0 || n >= tests.size())
+            throw tut::beyond_last_test();
+
+        if (!test_can_run(name, tests[n].name))
+            throw tut::beyond_last_test();
+
+        tut::test_result res = run(tests.begin() + n);
+        delete_fixture();
+        return res;
+    }
+
+    tut::test_result run(typename std::vector<Test>::iterator test)
+    {
+        int pos = test - tests.begin() + 1;
+        // Create fixture if it does not exist yet
+        if (!fixture)
+        {
+            try {
+                fixture = create_fixture();
+            } catch (std::exception& e) {
+                fprintf(stderr, "Warning: exception caught while creating fixture for test group %s: %s", name.c_str(), e.what());
+                return tut::test_result(name, pos, tut::test_result::ex_ctor, e);
+            }
+        } else {
+            try {
+                fixture->reset();
+            } catch (std::exception& e) {
+                fprintf(stderr, "Warning: exception caught while resetting the fixture for test group %s: %s", name.c_str(), e.what());
+                return tut::test_result(name, pos, tut::test_result::ex_ctor, e);
+            }
+        }
+        try {
+            test->func(*fixture);
+        } catch (const tut::failure& e) {
+            // test failed because of ensure() or similar method
+            return tut::test_result(name, pos, tut::test_result::fail, e);
+        } catch (const std::exception& e) {
+            // test failed with std::exception
+            return tut::test_result(name, pos, tut::test_result::ex, e);
+        } catch (...) {
+            // test failed with unknown exception
+            return tut::test_result(name, pos, tut::test_result::ex);
+        }
+
+        return tut::test_result(name, pos, tut::test_result::ok);
+    }
+};
+
+
 /*
 static void _ensureRecordHas(const char* file, int line, dba_record rec, const char* key, int val)
 {

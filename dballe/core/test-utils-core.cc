@@ -34,6 +34,10 @@ namespace tests {
 
 static std::string tag;
 
+bool test_can_run(const std::string& group_name, const std::string& test_name)
+{
+    return true;
+}
 
 /*
 static void _ensureRecordHas(const char* file, int line, dba_record rec, const char* key, int val)
