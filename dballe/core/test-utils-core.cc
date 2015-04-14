@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
+#include <fnmatch.h>
 
 using namespace wibble;
 using namespace wreport;
@@ -36,6 +37,10 @@ static std::string tag;
 
 bool test_can_run(const std::string& group_name, const std::string& test_name)
 {
+    const char* filter = getenv("FILTER");
+    if (!filter) return true;
+    if (fnmatch(filter, group_name.c_str(), 0) == FNM_NOMATCH)
+        return false;
     return true;
 }
 
