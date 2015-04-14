@@ -27,6 +27,10 @@
 #include "dballe/db/postgresql/driver.h"
 #include "dballe/db/postgresql/internals.h"
 #endif
+#ifdef HAVE_MYSQL
+#include "dballe/db/mysql/driver.h"
+#include "dballe/db/mysql/internals.h"
+#endif
 #ifdef HAVE_ODBC
 #include "dballe/db/odbc/driver.h"
 #include "dballe/db/odbc/internals.h"
@@ -217,8 +221,22 @@ std::unique_ptr<Driver> Driver::create(Connection& conn)
     else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(&conn))
         return unique_ptr<Driver>(new postgresql::Driver(*c));
 #endif
+#ifdef HAVE_MYSQL
+    else if (MySQLConnection* c = dynamic_cast<MySQLConnection*>(&conn))
+        return unique_ptr<Driver>(new mysql::Driver(*c));
+#endif
     else
-        throw error_unimplemented("DB drivers only implemented for ODBC, SQLite and PostgreSQL connectors, when available");
+        throw error_unimplemented("DB drivers only implemented for "
+#ifdef HAVE_LIBPQ
+                "PostgreSQL, "
+#endif
+#ifdef HAVE_MYSQL
+                "MySQL, "
+#endif
+#ifdef HAVE_ODBC
+                "ODBC, "
+#endif
+                " and SQLite connectors");
 }
 
 }
