@@ -21,18 +21,13 @@
 
 #include "config.h"
 #include "db.h"
+#include "sql.h"
 #include "v5/db.h"
 #include "v6/db.h"
 #include "mem/db.h"
 #include "sqlite/internals.h"
 #ifdef HAVE_ODBC
 #include "odbc/internals.h"
-#endif
-#ifdef HAVE_LIBPQ
-#include "postgresql/internals.h"
-#endif
-#ifdef HAVE_MYSQL
-#include "mysql/internals.h"
 #endif
 #include "dballe/msg/msgs.h"
 #include <wreport/error.h>
@@ -159,70 +154,13 @@ unique_ptr<DB> DB::connect_from_file(const char* pathname)
 
 unique_ptr<DB> DB::connect_from_url(const char* url)
 {
-    if (strncmp(url, "sqlite://", 9) == 0)
-    {
-        return connect_from_file(url + 9);
-    }
-    if (strncmp(url, "sqlite:", 7) == 0)
-    {
-        return connect_from_file(url + 7);
-    }
     if (strncmp(url, "mem:", 4) == 0)
     {
         return connect_memory(url + 4);
+    } else {
+        unique_ptr<Connection> conn(Connection::create_from_url(url));
+        return instantiate_db(move(conn));
     }
-    if (strncmp(url, "postgresql:", 11) == 0)
-    {
-#ifdef HAVE_LIBPQ
-        unique_ptr<PostgreSQLConnection> conn(new PostgreSQLConnection);
-        conn->open_url(url);
-        return instantiate_db(unique_ptr<Connection>(conn.release()));
-#else
-        throw error_unimplemented("PostgreSQL support is not available");
-#endif
-    }
-    if (strncmp(url, "mysql:", 6) == 0)
-    {
-#ifdef HAVE_MYSQL
-        unique_ptr<MySQLConnection> conn(new MySQLConnection);
-        conn->open_url(url);
-        return instantiate_db(unique_ptr<Connection>(conn.release()));
-#else
-        throw error_unimplemented("MySQL support is not available");
-#endif
-    }
-    if (strncmp(url, "odbc://", 7) == 0)
-    {
-#ifdef HAVE_ODBC
-        string buf(url + 7);
-        size_t pos = buf.find('@');
-        if (pos == string::npos)
-        {
-            return connect(buf.c_str(), "", ""); // odbc://dsn
-        }
-        // Split the string at '@'
-        string userpass = buf.substr(0, pos);
-        string dsn = buf.substr(pos + 1);
-
-        pos = userpass.find(':');
-        if (pos == string::npos)
-        {
-            return connect(dsn.c_str(), userpass.c_str(), ""); // odbc://user@dsn
-        }
-
-        string user = userpass.substr(0, pos);
-        string pass = userpass.substr(pos + 1);
-
-        return connect(dsn.c_str(), user.c_str(), pass.c_str()); // odbc://user:pass@dsn
-#else
-        throw error_unimplemented("ODBC support is not available");
-#endif
-    }
-    if (strncmp(url, "test:", 5) == 0)
-    {
-        return connect_test();
-    }
-    error_consistency::throwf("unknown url \"%s\"", url);
 }
 
 unique_ptr<DB> DB::connect_memory(const std::string& arg)

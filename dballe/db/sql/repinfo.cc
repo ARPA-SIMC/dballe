@@ -1,7 +1,7 @@
 /*
- * db/v5/repinfo - repinfo table management
+ * db/sql/repinfo - repinfo table management
  *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -328,6 +328,49 @@ std::vector<repinfo::Cache> Repinfo::read_repinfo_file(const char* deffile)
     return newitems;
 }
 
+void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated)
+{
+    *added = *deleted = *updated = 0;
+
+    // Read the new repinfo data from file
+    vector<sql::repinfo::Cache> newitems = read_repinfo_file(deffile);
+
+    // Verify that we are not trying to delete a repinfo entry that is
+    // in use
+    for (const auto& entry : cache)
+        /* Ensure that we are not deleting a repinfo entry that is already in use */
+        if (!entry.memo.empty() && entry.new_memo.empty())
+            if (id_use_count(entry.id, entry.memo.c_str()) > 0)
+                error_consistency::throwf(
+                        "trying to delete repinfo entry %u,%s which is currently in use",
+                        (unsigned)entry.id, entry.memo.c_str());
+
+    // Perform the changes
+
+    for (const auto& entry : cache)
+    {
+        if (!entry.memo.empty() && entry.new_memo.empty())
+        {
+            // Delete the items that were deleted */
+            delete_entry(entry.id);
+            ++*deleted;
+        } else if (!entry.memo.empty() && !entry.new_memo.empty()) {
+            // Update the items that were modified
+            update_entry(entry);
+            ++*updated;
+        }
+    }
+
+    // Insert the new items
+    for (const auto& entry : newitems)
+    {
+        insert_entry(entry);
+        ++*added;
+    }
+
+    // Reread the cache
+    read_cache();
+}
 
 namespace repinfo {
 

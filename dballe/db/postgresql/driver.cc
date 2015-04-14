@@ -323,6 +323,68 @@ void Driver::run_delete_query_v6(const v6::QueryBuilder& qb)
 
 void Driver::create_tables_v5()
 {
+    conn.exec_no_data(R"(
+        CREATE TABLE station (
+           id         SERIAL PRIMARY KEY,
+           lat        INTEGER NOT NULL,
+           lon        INTEGER NOT NULL,
+           ident      VARCHAR(64)
+        );
+    )");
+    conn.exec_no_data("CREATE UNIQUE INDEX pa_uniq ON station(lat, lon, ident);");
+    conn.exec_no_data("CREATE INDEX pa_lon ON station(lon);");
+    conn.exec_no_data(R"(
+        CREATE TABLE repinfo (
+           id           INTEGER PRIMARY KEY,
+           memo         VARCHAR(30) NOT NULL,
+           description  VARCHAR(255) NOT NULL,
+           prio         INTEGER NOT NULL,
+           descriptor   CHAR(6) NOT NULL,
+           tablea       INTEGER NOT NULL
+        );
+    )");
+    conn.exec_no_data("CREATE UNIQUE INDEX ri_memo_uniq ON repinfo(memo);");
+    conn.exec_no_data("CREATE UNIQUE INDEX ri_prio_uniq ON repinfo(prio);");
+    conn.exec_no_data(R"(
+        CREATE TABLE context (
+           id          INTEGER PRIMARY KEY,
+           id_ana      INTEGER NOT NULL,
+           id_report   INTEGER NOT NULL,
+           datetime    TIMESTAMP NOT NULL,
+           ltype1      INTEGER NOT NULL,
+           l1          INTEGER NOT NULL,
+           ltype2      INTEGER NOT NULL,
+           l2          INTEGER NOT NULL,
+           ptype       INTEGER NOT NULL,
+           p1          INTEGER NOT NULL,
+           p2          INTEGER NOT NULL
+        );
+    )");
+    conn.exec_no_data("CREATE UNIQUE INDEX context_uniq ON context(id_ana, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2, id_report);");
+    conn.exec_no_data("CREATE INDEX co_ana ON context(id_ana);");
+    conn.exec_no_data("CREATE INDEX co_report ON context(id_report);");
+    conn.exec_no_data("CREATE INDEX co_dt ON context(datetime);");
+    conn.exec_no_data("CREATE INDEX co_lt ON context(ltype1, l1, ltype2, l2);");
+    conn.exec_no_data("CREATE INDEX co_pt ON context(ptype, p1, p2);");
+    conn.exec_no_data(R"(
+        CREATE TABLE data (
+           id_context  INTEGER NOT NULL,
+           id_var      INTEGER NOT NULL,
+           value       VARCHAR2(255) NOT NULL
+        );
+    )");
+    conn.exec_no_data("CREATE UNIQUE INDEX data_uniq ON data(id_var, id_context);");
+    conn.exec_no_data("CREATE INDEX da_co ON data(id_context);");
+    conn.exec_no_data(R"(
+        CREATE TABLE attr (
+           id_context  INTEGER NOT NULL,
+           id_var      INTEGER NOT NULL,
+           type        INTEGER NOT NULL,
+           value       VARCHAR2(255) NOT NULL,
+        );
+    )");
+    conn.exec_no_data("CREATE UNIQUE INDEX attr_uniq ON attr(id_context, id_var, type);");
+    conn.exec_no_data("CREATE INDEX at_da ON attr(id_context, id_var);");
 }
 void Driver::create_tables_v6()
 {

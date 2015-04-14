@@ -19,9 +19,15 @@
 
 #include <dballe/msg/test-utils-msg.h>
 #include <dballe/db/db.h>
+#include <dballe/db/sql/driver.h>
 
 namespace dballe {
 namespace db {
+struct Connection;
+
+namespace sql {
+struct Driver;
+}
 namespace v5 {
 class DB;
 }
@@ -39,23 +45,37 @@ struct OverrideTestDBFormat
     ~OverrideTestDBFormat();
 };
 
+struct OverrideTestBackend
+{
+    const char* old_backend;
+    OverrideTestBackend(const char* backend);
+    ~OverrideTestBackend();
+};
+
+bool test_group_should_run(const char* name);
+
 template<typename T>
 struct db_tg : public tut::test_group<T>
 {
     dballe::db::Format db_format;
-    db_tg(const char* name, dballe::db::Format fmt)
-        : tut::test_group<T>(name), db_format(fmt)
+    const char* backend = 0;
+    const char* name;
+
+    db_tg(const char* name, dballe::db::Format fmt, const char* backend=0)
+        : tut::test_group<T>(name), db_format(fmt), backend(backend), name(name)
     {
     }
 
     tut::test_result run_next()
     {
         dballe::tests::OverrideTestDBFormat otf(db_format);
+        dballe::tests::OverrideTestBackend otb(backend);
         return tut::test_group<T>::run_next();
     }
     tut::test_result run_test(int n)
     {
         dballe::tests::OverrideTestDBFormat otf(db_format);
+        dballe::tests::OverrideTestBackend otb(backend);
         return tut::test_group<T>::run_test(n);
     }
 };
@@ -236,6 +256,41 @@ struct TestDBTrySummaryQuery
     void check(WIBBLE_TEST_LOCPRM) const;
 };
 
+std::unique_ptr<db::Connection> get_test_connection(const char* backend);
+
+/// Test fixture for SQL backend drivers
+struct DriverFixture
+{
+    static const char* backend;
+    static db::Format format;
+
+    db::Connection* conn = nullptr;
+    db::sql::Driver* driver = nullptr;
+
+    DriverFixture();
+    ~DriverFixture();
+    void reset();
+};
+
+template<typename T=Fixture>
+struct driver_test_group : public dballe::tests::test_group<T>
+{
+    const char* backend;
+    db::Format dbformat;
+
+    driver_test_group(const char* name, const char* backend, db::Format dbformat, const typename dballe::tests::test_group<T>::Tests& tests)
+        : dballe::tests::test_group<T>(name, tests), backend(backend), dbformat(dbformat)
+    {
+    }
+
+    T* create_fixture()
+    {
+        DriverFixture::backend = backend;
+        DriverFixture::format = dbformat;
+        return dballe::tests::test_group<T>::create_fixture();
+    }
+};
+
 struct db_test
 {
     // DB handle
@@ -250,9 +305,9 @@ struct db_test
     db::v5::DB& v5();
     db::v6::DB& v6();
 
-    db_test(bool reset=true);
-	db_test(db::Format format, bool reset=true);
-	~db_test();
+    db_test();
+    db_test(db::Format format);
+    ~db_test();
 
     template<typename FIXTURE>
     void populate(WIBBLE_TEST_LOCPRM)

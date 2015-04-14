@@ -239,6 +239,68 @@ void Driver::run_delete_query_v6(const v6::QueryBuilder& qb)
 
 void Driver::create_tables_v5()
 {
+    conn.exec(R"(
+        CREATE TABLE station (
+           id         INTEGER PRIMARY KEY,
+           lat        INTEGER NOT NULL,
+           lon        INTEGER NOT NULL,
+           ident      CHAR(64),
+           UNIQUE (lat, lon, ident)
+        );
+        CREATE INDEX pa_lon ON station(lon);
+    )");
+    conn.exec(R"(
+        CREATE TABLE repinfo (
+           id           INTEGER PRIMARY KEY,
+           memo         VARCHAR(30) NOT NULL,
+           description  VARCHAR(255) NOT NULL,
+           prio         INTEGER NOT NULL,
+           descriptor   CHAR(6) NOT NULL,
+           tablea       INTEGER NOT NULL,
+           UNIQUE (prio),
+           UNIQUE (memo)
+        );
+    )");
+    conn.exec(R"(
+        CREATE TABLE context (
+           id          INTEGER PRIMARY KEY,
+           id_ana      INTEGER NOT NULL,
+           id_report   INTEGER NOT NULL,
+           datetime    TEXT NOT NULL,
+           ltype1      INTEGER NOT NULL,
+           l1          INTEGER NOT NULL,
+           ltype2      INTEGER NOT NULL,
+           l2          INTEGER NOT NULL,
+           ptype       INTEGER NOT NULL,
+           p1          INTEGER NOT NULL,
+           p2          INTEGER NOT NULL,
+           UNIQUE (id_ana, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2, id_report)
+        );
+        CREATE INDEX co_ana ON context(id_ana);
+        CREATE INDEX co_report ON context(id_report);
+        CREATE INDEX co_dt ON context(datetime);
+        CREATE INDEX co_lt ON context(ltype1, l1, ltype2, l2);
+        CREATE INDEX co_pt ON context(ptype, p1, p2);
+    )");
+    conn.exec(R"(
+        CREATE TABLE data (
+           id_context  INTEGER NOT NULL,
+           id_var      INTEGER NOT NULL,
+           value       VARCHAR2(255) NOT NULL,
+           UNIQUE (id_var, id_context)
+        );
+        CREATE INDEX da_co ON data(id_context);
+    )");
+    conn.exec(R"(
+        CREATE TABLE attr (
+           id_context  INTEGER NOT NULL,
+           id_var      INTEGER NOT NULL,
+           type        INTEGER NOT NULL,
+           value       VARCHAR2(255) NOT NULL,
+           UNIQUE (id_context, id_var, type)
+        );
+        CREATE INDEX at_da ON attr(id_context, id_var);
+    )");
 }
 void Driver::create_tables_v6()
 {

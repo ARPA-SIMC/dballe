@@ -1,7 +1,7 @@
 /*
- * db/v5/repinfo - repinfo table management
+ * db/sqlite/repinfo - repinfo table management
  *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,14 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_SQLITE_V5_REPINFO_H
-#define DBALLE_DB_SQLITE_V5_REPINFO_H
-
-/** @file
- * @ingroup db
- *
- * Repinfo table management used by the db module.
- */
+#ifndef DBALLE_DB_SQLITE_REPINFO_H
+#define DBALLE_DB_SQLITE_REPINFO_H
 
 #include <dballe/db/sql/repinfo.h>
 #include <vector>
@@ -58,13 +52,14 @@ struct SQLiteRepinfoV5 : public sql::Repinfo
     virtual ~SQLiteRepinfoV5();
     SQLiteRepinfoV5& operator=(const SQLiteRepinfoV5&) = delete;
 
-    void update(const char* deffile, int* added, int* deleted, int* updated) override;
     void dump(FILE* out) override;
 
 protected:
     /// Return how many time this ID is used in the database
-    virtual int id_use_count(unsigned id, const char* name);
-
+    int id_use_count(unsigned id, const char* name) override;
+    void delete_entry(unsigned id) override;
+    void update_entry(const sql::repinfo::Cache& entry) override;
+    void insert_entry(const sql::repinfo::Cache& entry) override;
     void read_cache() override;
     void insert_auto_entry(const char* memo) override;
 };

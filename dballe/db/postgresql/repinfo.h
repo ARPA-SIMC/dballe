@@ -58,12 +58,13 @@ struct PostgreSQLRepinfoV5 : public sql::Repinfo
     virtual ~PostgreSQLRepinfoV5();
     PostgreSQLRepinfoV5& operator=(const PostgreSQLRepinfoV5&) = delete;
 
-    void update(const char* deffile, int* added, int* deleted, int* updated) override;
     void dump(FILE* out) override;
 
 protected:
-    /// Return how many time this ID is used in the database
-    virtual int id_use_count(unsigned id, const char* name);
+    int id_use_count(unsigned id, const char* name) override;
+    void delete_entry(unsigned id) override;
+    void update_entry(const sql::repinfo::Cache& entry) override;
+    void insert_entry(const sql::repinfo::Cache& entry) override;
 
     void read_cache() override;
     void insert_auto_entry(const char* memo) override;

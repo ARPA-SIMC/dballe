@@ -47,14 +47,12 @@ Driver::~Driver()
 
 std::unique_ptr<sql::Repinfo> Driver::create_repinfov5()
 {
-    throw error_unimplemented("repinfov5 not implemented");
-    //return unique_ptr<sql::Repinfo>(new MySQLRepinfoV5(conn));
+    return unique_ptr<sql::Repinfo>(new MySQLRepinfoV5(conn));
 }
 
 std::unique_ptr<sql::Repinfo> Driver::create_repinfov6()
 {
-    throw error_unimplemented("repinfov6 not implemented");
-    //return unique_ptr<sql::Repinfo>(new MySQLRepinfoV6(conn));
+    return unique_ptr<sql::Repinfo>(new MySQLRepinfoV6(conn));
 }
 
 std::unique_ptr<sql::Station> Driver::create_stationv5()

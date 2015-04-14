@@ -209,7 +209,20 @@ void MySQLConnection::init_after_connect()
     // set_autocommit(false);
 }
 
-std::string MySQLConnection::escape(std::string str)
+std::string MySQLConnection::escape(const char* str)
+{
+    // Dirty: we write directly inside the resulting std::string storage.
+    // It should work in C++11, although not according to its specifications,
+    // and if for some reason we discover that it does not work, this can be
+    // rewritten with one extra string copy.
+    size_t str_len = strlen(str);
+    string res(str_len * 2 + 1, 0);
+    unsigned long len = mysql_real_escape_string(db, const_cast<char*>(res.data()), str, str_len);
+    res.resize(len);
+    return res;
+}
+
+std::string MySQLConnection::escape(const std::string& str)
 {
     // Dirty: we write directly inside the resulting std::string storage.
     // It should work in C++11, although not according to its specifications,

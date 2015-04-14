@@ -22,26 +22,32 @@
 #include "db/sql/levtr.h"
 
 using namespace dballe;
+using namespace dballe::tests;
 using namespace wibble::tests;
+using namespace wreport;
 using namespace std;
+
+namespace {
+
+struct db_sql_levtr : public dballe::tests::db_test
+{
+    db::sql::LevTr& levtr()
+    {
+        if (db::v6::DB* db6 = dynamic_cast<db::v6::DB*>(db.get()))
+            return db6->lev_tr();
+        throw error_consistency("cannot test repinfo on the current DB");
+    }
+};
+
+}
 
 namespace tut {
 
-struct db_sql_levtr_shar : public dballe::tests::db_test
-{
-    db_sql_levtr_shar() : dballe::tests::db_test(db::V6)
-    {
-    }
-    db::sql::LevTr& levtr()
-    {
-        return v6().lev_tr();
-    }
-};
-TESTGRP(db_sql_levtr);
+typedef db_tg<db_sql_levtr> tg;
+typedef tg::object to;
 
-/* Insert some values and try to read them again */
-template<> template<>
-void to::test<1>()
+// Insert some values and try to read them again
+template<> template<> void to::test<1>()
 {
     use_db();
     auto& lt = levtr();
@@ -127,4 +133,8 @@ void to::test<1>()
 
 }
 
-/* vim:set ts=4 sw=4: */
+namespace {
+
+tut::tg v6_tg("db_sql_levtr_v6", db::V6);
+
+}

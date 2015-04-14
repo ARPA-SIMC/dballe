@@ -30,7 +30,7 @@ namespace tut {
 
 struct db_summary_shar: public dballe::tests::db_test
 {
-    db_summary_shar() : db_test(V6, true)
+    db_summary_shar() : db_test(V6)
     {
     }
 

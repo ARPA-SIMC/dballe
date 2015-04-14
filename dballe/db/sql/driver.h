@@ -29,6 +29,7 @@
  */
 
 #include <dballe/core/defs.h>
+#include <dballe/db/defs.h>
 #include <wreport/var.h>
 #include <memory>
 #include <functional>
@@ -211,17 +212,26 @@ public:
     /// Run the query to delete all records selected by the given QueryBuilder
     virtual void run_delete_query_v6(const v6::QueryBuilder& qb) = 0;
 
+    /// Create all missing tables for a DB with the given format
+    void create_tables(db::Format format);
+
     /// Create all missing tables for V5 databases
     virtual void create_tables_v5() = 0;
 
     /// Create all missing tables for V6 databases
     virtual void create_tables_v6() = 0;
 
-    /// Delete all tables for V5 databases
+    /// Delete all existing tables for a DB with the given format
+    void delete_tables(db::Format format);
+
+    /// Delete all existing tables for V5 databases
     virtual void delete_tables_v5() = 0;
 
-    /// Delete all tables for V6 databases
+    /// Delete all existing tables for V6 databases
     virtual void delete_tables_v6() = 0;
+
+    /// Empty all tables for a DB with the given format
+    void remove_all(db::Format format);
 
     /// Empty all tables for V5 databases, assuming that they exist, without touching the repinfo table
     virtual void remove_all_v5();

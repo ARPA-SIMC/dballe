@@ -23,6 +23,8 @@
 #include "dballe/db/v5/db.h"
 #endif
 #include "dballe/db/v6/db.h"
+#include "dballe/db/sql.h"
+#include "dballe/db/sql/driver.h"
 #include "dballe/msg/vars.h"
 #include <wreport/error.h>
 #include <wibble/string.h>
@@ -40,6 +42,8 @@ using namespace wibble::tests;
 namespace dballe {
 namespace tests {
 
+static const char* test_connection_backend = 0;
+
 OverrideTestDBFormat::OverrideTestDBFormat(dballe::db::Format fmt)
     : old_format(DB::get_default_format())
 {
@@ -49,6 +53,22 @@ OverrideTestDBFormat::OverrideTestDBFormat(dballe::db::Format fmt)
 OverrideTestDBFormat::~OverrideTestDBFormat()
 {
     DB::set_default_format(old_format);
+}
+
+OverrideTestBackend::OverrideTestBackend(const char* backend)
+    : old_backend(test_connection_backend)
+{
+    test_connection_backend = backend;
+}
+
+OverrideTestBackend::~OverrideTestBackend()
+{
+    test_connection_backend = old_backend;
+}
+
+bool test_group_should_run(const char* name)
+{
+    return false;
 }
 
 void TestStation::set_latlonident_into(Record& rec) const
@@ -281,25 +301,61 @@ void TestDBTrySummaryQuery::check(WIBBLE_TEST_LOCPRM) const
     }
 }
 
-db_test::db_test(bool reset)
+std::unique_ptr<db::Connection> get_test_connection(const char* backend)
 {
-    if (reset) disappear();
-    db = DB::connect_test();
-    if (reset) db->reset();
+    std::string envname = "DBA_DB";
+    if (backend)
+    {
+        envname = "DBA_DB_";
+        envname += backend;
+    }
+    const char* envurl = getenv(envname.c_str());
+    if (envurl == NULL)
+        error_consistency::throwf("Environment variable %s is not set", envname.c_str());
+    return db::Connection::create_from_url(envurl);
 }
 
-db_test::db_test(db::Format format, bool reset)
+const char* DriverFixture::backend = nullptr;
+db::Format DriverFixture::format = db::V6;
+
+DriverFixture::DriverFixture()
+{
+    conn = get_test_connection(backend).release();
+    driver = db::sql::Driver::create(*conn).release();
+    driver->delete_tables(format);
+    driver->create_tables(format);
+}
+
+DriverFixture::~DriverFixture()
+{
+    driver->delete_tables(format);
+    delete driver;
+    delete conn;
+}
+
+void DriverFixture::reset()
+{
+    driver->remove_all(format);
+}
+
+
+db_test::db_test()
+{
+    db = DB::connect_test();
+    db->reset();
+}
+
+db_test::db_test(db::Format format)
 {
     orig_format = DB::get_default_format();
-    // FIXME: currently v5 DB cannnot disappear on sqlite files
-    if (reset) try { disappear(); } catch (...) {}
     DB::set_default_format(format);
     db = DB::connect_test();
-    if (reset) db->reset();
+    db->reset();
 }
 
 db_test::~db_test()
 {
+    db->disappear();
     DB::set_default_format(orig_format);
 }
 

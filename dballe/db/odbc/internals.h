@@ -108,6 +108,7 @@ public:
     ODBCConnection& operator=(const ODBCConnection&) = delete;
 
     void connect(const char* dsn, const char* user, const char* password);
+    void connect_url(const char* url);
     void connect_file(const std::string& fname);
     void driver_connect(const char* config);
     std::string driver_name();

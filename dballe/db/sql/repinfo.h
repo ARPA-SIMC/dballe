@@ -129,7 +129,7 @@ struct Repinfo
      * @retval updated
      *   Number of entries that have been updated during the update.
      */
-    virtual void update(const char* deffile, int* added, int* deleted, int* updated) = 0;
+    void update(const char* deffile, int* added, int* deleted, int* updated);
 
     /**
      * Get a mapping between rep_memo and their priorities
@@ -183,6 +183,18 @@ protected:
 
     /// Read cache entries from a repinfo file on disk
     std::vector<repinfo::Cache> read_repinfo_file(const char* deffile);
+
+    /// Return how many time this ID is used in the database
+    virtual int id_use_count(unsigned id, const char* name) = 0;
+
+    /// Delete a repinfo entry
+    virtual void delete_entry(unsigned id) = 0;
+
+    /// Update an entry using the new_* fields of \a entry
+    virtual void update_entry(const repinfo::Cache& entry) = 0;
+
+    /// Insert an entry using the new_* fields of \a entry
+    virtual void insert_entry(const repinfo::Cache& entry) = 0;
 
     /// Reread the repinfo cache from the database
     virtual void read_cache() = 0;

@@ -165,8 +165,10 @@ public:
     void open_url(const std::string& url);
     void open_test();
 
+    /// Escape a C string
+    std::string escape(const char* str);
     /// Escape a string
-    std::string escape(std::string str);
+    std::string escape(const std::string& str);
 
     // Run a query, checking that it is successful and it gives no results
     void exec_no_data(const char* query);

@@ -137,97 +137,42 @@ int ODBCRepinfoV5::id_use_count(unsigned id, const char* name)
     return count;
 }
 
-void ODBCRepinfoV5::update(const char* deffile, int* added, int* deleted, int* updated)
+void ODBCRepinfoV5::delete_entry(unsigned id)
 {
-    *added = *deleted = *updated = 0;
+    auto stm = conn.odbcstatement("DELETE FROM repinfo WHERE id=?");
+    stm->bind_in(1, id);
+    stm->execute_and_close();
+}
 
-    // Read the new repinfo data from file
-    vector<sql::repinfo::Cache> newitems = read_repinfo_file(deffile);
+void ODBCRepinfoV5::update_entry(const sql::repinfo::Cache& entry)
+{
+    auto stm = conn.odbcstatement(R"(
+        UPDATE repinfo set memo=?, description=?, prio=?, descriptor=?, tablea=?
+         WHERE id=?
+    )");
+    stm->bind_in(1, entry.new_memo.c_str());
+    stm->bind_in(2, entry.new_desc.c_str());
+    stm->bind_in(3, entry.new_prio);
+    stm->bind_in(4, entry.new_descriptor.c_str());
+    stm->bind_in(5, entry.new_tablea);
+    stm->bind_in(6, entry.id);
+    stm->execute_and_close();
+}
 
-    {
-        auto transaction(conn.transaction());
+void ODBCRepinfoV5::insert_entry(const sql::repinfo::Cache& entry)
+{
+    auto stm = conn.odbcstatement(R"(
+        INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)
+             VALUES (?, ?, ?, ?, ?, ?)
+    )");
 
-        // Verify that we are not trying to delete a repinfo entry that is
-        // in use
-        for (size_t i = 0; i < cache.size(); ++i)
-        {
-            /* Ensure that we are not deleting a repinfo entry that is already in use */
-            if (!cache[i].memo.empty() && cache[i].new_memo.empty())
-                if (id_use_count(cache[i].id, cache[i].memo.c_str()) > 0)
-                    error_consistency::throwf(
-                            "trying to delete repinfo entry %u,%s which is currently in use",
-                            (unsigned)cache[i].id, cache[i].memo.c_str());
-        }
-
-        /* Perform the changes */
-
-        /* Delete the items that were deleted */
-        {
-            auto stm = conn.odbcstatement("DELETE FROM repinfo WHERE id=?");
-            for (size_t i = 0; i < cache.size(); ++i)
-                if (!cache[i].memo.empty() && cache[i].new_memo.empty())
-                {
-                    stm->bind_in(1, cache[i].id);
-                    stm->execute_and_close();
-
-                    /* clear_cache_item(&(ri->cache[i])); */
-                    ++*deleted;
-                }
-        }
-
-        /* Update the items that were modified */
-        {
-            auto stm = conn.odbcstatement(R"(
-                UPDATE repinfo set memo=?, description=?, prio=?, descriptor=?, tablea=?
-                 WHERE id=?
-            )");
-            for (size_t i = 0; i < cache.size(); ++i)
-                if (!cache[i].memo.empty() && !cache[i].new_memo.empty())
-                {
-                    stm->bind_in(1, cache[i].new_memo.c_str());
-                    stm->bind_in(2, cache[i].new_desc.c_str());
-                    stm->bind_in(3, cache[i].new_prio);
-                    stm->bind_in(4, cache[i].new_descriptor.c_str());
-                    stm->bind_in(5, cache[i].new_tablea);
-                    stm->bind_in(6, cache[i].id);
-
-                    stm->execute_and_close();
-
-                    /* commit_cache_item(&(ri->cache[i])); */
-                    ++*updated;
-                }
-        }
-
-        /* Insert the new items */
-        if (!newitems.empty())
-        {
-            auto stm = conn.odbcstatement(R"(
-                INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)
-                     VALUES (?, ?, ?, ?, ?, ?)
-            )");
-
-            for (vector<sql::repinfo::Cache>::const_iterator i = newitems.begin();
-                    i != newitems.end(); ++i)
-            {
-                stm->bind_in(1, i->id);
-                stm->bind_in(2, i->new_memo.c_str());
-                stm->bind_in(3, i->new_desc.c_str());
-                stm->bind_in(4, i->new_prio);
-                stm->bind_in(5, i->new_descriptor.c_str());
-                stm->bind_in(6, i->new_tablea);
-
-                stm->execute_and_close();
-
-                /* DBA_RUN_OR_GOTO(cleanup, cache_append(ri, id, memo, description, prio, descriptor, tablea)); */
-                ++*added;
-            }
-        }
-
-        transaction->commit();
-    }
-
-    /* Reread the cache */
-    read_cache();
+    stm->bind_in(1, entry.id);
+    stm->bind_in(2, entry.new_memo.c_str());
+    stm->bind_in(3, entry.new_desc.c_str());
+    stm->bind_in(4, entry.new_prio);
+    stm->bind_in(5, entry.new_descriptor.c_str());
+    stm->bind_in(6, entry.new_tablea);
+    stm->execute_and_close();
 }
 
 void ODBCRepinfoV5::dump(FILE* out)

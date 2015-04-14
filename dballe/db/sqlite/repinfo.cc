@@ -100,91 +100,43 @@ int SQLiteRepinfoV5::id_use_count(unsigned id, const char* name)
     return count;
 }
 
-void SQLiteRepinfoV5::update(const char* deffile, int* added, int* deleted, int* updated)
+void SQLiteRepinfoV5::delete_entry(unsigned id)
 {
-    *added = *deleted = *updated = 0;
+    auto stm = conn.sqlitestatement("DELETE FROM repinfo WHERE id=?");
+    stm->bind(id);
+    stm->execute();
+}
 
-    // Read the new repinfo data from file
-    vector<sql::repinfo::Cache> newitems = read_repinfo_file(deffile);
+void SQLiteRepinfoV5::update_entry(const sql::repinfo::Cache& entry)
+{
+    auto stm = conn.sqlitestatement(R"(
+        UPDATE repinfo set memo=?, description=?, prio=?, descriptor=?, tablea=?
+         WHERE id=?
+    )");
+    stm->bind(
+            entry.new_memo,
+            entry.new_desc,
+            entry.new_prio,
+            entry.new_descriptor.c_str(),
+            entry.new_tablea,
+            entry.id);
+    stm->execute();
+}
 
-    {
-        auto transaction(conn.transaction());
-
-        // Verify that we are not trying to delete a repinfo entry that is
-        // in use
-        for (size_t i = 0; i < cache.size(); ++i)
-        {
-            /* Ensure that we are not deleting a repinfo entry that is already in use */
-            if (!cache[i].memo.empty() && cache[i].new_memo.empty())
-                if (id_use_count(cache[i].id, cache[i].memo.c_str()) > 0)
-                    error_consistency::throwf(
-                            "trying to delete repinfo entry %u,%s which is currently in use",
-                            (unsigned)cache[i].id, cache[i].memo.c_str());
-        }
-
-        /* Perform the changes */
-
-        /* Delete the items that were deleted */
-        {
-            auto stm = conn.sqlitestatement("DELETE FROM repinfo WHERE id=?");
-            for (size_t i = 0; i < cache.size(); ++i)
-                if (!cache[i].memo.empty() && cache[i].new_memo.empty())
-                {
-                    stm->bind(cache[i].id);
-                    stm->execute();
-                    ++*deleted;
-                }
-        }
-
-        /* Update the items that were modified */
-        {
-            auto stm = conn.sqlitestatement(R"(
-                UPDATE repinfo set memo=?, description=?, prio=?, descriptor=?, tablea=?
-                 WHERE id=?
-            )");
-            for (size_t i = 0; i < cache.size(); ++i)
-                if (!cache[i].memo.empty() && !cache[i].new_memo.empty())
-                {
-                    stm->bind(
-                            cache[i].new_memo,
-                            cache[i].new_desc,
-                            cache[i].new_prio,
-                            cache[i].new_descriptor.c_str(),
-                            cache[i].new_tablea,
-                            cache[i].id);
-                    stm->execute();
-                    ++*updated;
-                }
-        }
-
-        /* Insert the new items */
-        if (!newitems.empty())
-        {
-            auto stm = conn.sqlitestatement(R"(
-                INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)
-                     VALUES (?, ?, ?, ?, ?, ?)
-            )");
-
-            for (vector<sql::repinfo::Cache>::const_iterator i = newitems.begin();
-                    i != newitems.end(); ++i)
-            {
-                stm->bind(
-                    i->id,
-                    i->new_memo,
-                    i->new_desc,
-                    i->new_prio,
-                    i->new_descriptor,
-                    i->new_tablea);
-                stm->execute();
-                ++*added;
-            }
-        }
-
-        transaction->commit();
-    }
-
-    /* Reread the cache */
-    read_cache();
+void SQLiteRepinfoV5::insert_entry(const sql::repinfo::Cache& entry)
+{
+    auto stm = conn.sqlitestatement(R"(
+        INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)
+             VALUES (?, ?, ?, ?, ?, ?)
+    )");
+    stm->bind(
+        entry.id,
+        entry.new_memo,
+        entry.new_desc,
+        entry.new_prio,
+        entry.new_descriptor,
+        entry.new_tablea);
+    stm->execute();
 }
 
 void SQLiteRepinfoV5::dump(FILE* out)

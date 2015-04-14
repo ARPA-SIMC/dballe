@@ -1,7 +1,7 @@
 /*
- * db/odbc/repinfo - repinfo table management
+ * db/mysql/repinfo - repinfo table management
  *
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,14 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_ODBC_REPINFO_H
-#define DBALLE_DB_ODBC_REPINFO_H
-
-/** @file
- * @ingroup db
- *
- * Repinfo table management used by the db module.
- */
+#ifndef DBALLE_DB_MYSQL_REPINFO_H
+#define DBALLE_DB_MYSQL_REPINFO_H
 
 #include <dballe/db/sql/repinfo.h>
 #include <vector>
@@ -37,42 +31,41 @@ namespace dballe {
 struct Record;
 
 namespace db {
-struct ODBCConnection;
+struct MySQLConnection;
 
-namespace odbc {
+namespace mysql {
 
 /**
  * Fast cached access to the repinfo table
  */
-struct ODBCRepinfoV5 : public sql::Repinfo
+struct MySQLRepinfoV5 : public sql::Repinfo
 {
     /**
      * DB connection. The pointer is assumed always valid during the
      * lifetime of the object
      */
-    ODBCConnection& conn;
+    MySQLConnection& conn;
 
-    ODBCRepinfoV5(ODBCConnection& conn);
-    ODBCRepinfoV5(const ODBCRepinfoV5&) = delete;
-    ODBCRepinfoV5(const ODBCRepinfoV5&&) = delete;
-    virtual ~ODBCRepinfoV5();
-    ODBCRepinfoV5& operator=(const ODBCRepinfoV5&) = delete;
+    MySQLRepinfoV5(MySQLConnection& conn);
+    MySQLRepinfoV5(const MySQLRepinfoV5&) = delete;
+    MySQLRepinfoV5(const MySQLRepinfoV5&&) = delete;
+    virtual ~MySQLRepinfoV5();
+    MySQLRepinfoV5& operator=(const MySQLRepinfoV5&) = delete;
 
     void dump(FILE* out) override;
 
 protected:
-    int id_use_count(unsigned id, const char* name) override;
     void delete_entry(unsigned id) override;
     void update_entry(const sql::repinfo::Cache& entry) override;
     void insert_entry(const sql::repinfo::Cache& entry) override;
-
+    int id_use_count(unsigned id, const char* name) override;
     void read_cache() override;
     void insert_auto_entry(const char* memo) override;
 };
 
-struct ODBCRepinfoV6 : public ODBCRepinfoV5
+struct MySQLRepinfoV6 : public MySQLRepinfoV5
 {
-    ODBCRepinfoV6(ODBCConnection& conn);
+    MySQLRepinfoV6(MySQLConnection& conn);
 
 protected:
     int id_use_count(unsigned id, const char* name) override;
