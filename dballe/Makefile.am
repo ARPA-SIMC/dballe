@@ -87,6 +87,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	msg/wr_codec.h \
 	msg/wr_exporters/common.h \
 	db/modifiers.h \
+	db/defs.h \
 	db/db.h \
 	db/mem/repinfo.h \
 	db/mem/cursor.h \

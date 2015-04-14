@@ -19,10 +19,11 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBA_DB_H
-#define DBA_DB_H
+#ifndef DBALLE_DB_H
+#define DBALLE_DB_H
 
 #include <dballe/core/defs.h>
+#include <dballe/db/defs.h>
 #include <wreport/varinfo.h>
 #include <wreport/var.h>
 #include <vector>
@@ -36,19 +37,6 @@
  * Functions used to connect to DB-All.e and insert, query and delete data.
  */
 
-/**
- * Flags controlling message import
- * @{
- */
-/* Import the attributes. */
-#define DBA_IMPORT_ATTRS		1
-/* Attempt to merge pseudoana extra information into the existing ones. */
-#define DBA_IMPORT_FULL_PSEUDOANA	2
-/* Message data will overwrite existing values; otherwise, trying to insert
- * existing data will cause an error. */
-#define DBA_IMPORT_OVERWRITE		8
-/// @}
-
 namespace dballe {
 struct Record;
 typedef Record Query;
@@ -60,19 +48,6 @@ struct DB;
 namespace db {
 struct Connection;
 struct ODBCConnection;
-
-/**
- * Supported formats
- */
-typedef enum {
-    V5 = 0,
-    V6 = 1,
-    MEM = 2,
-    MESSAGES = 3,
-} Format;
-
-/// Base exception for database errors
-struct error : public wreport::error {};
 
 /**
  * Simple typedef to make typing easier
