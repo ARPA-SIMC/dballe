@@ -31,161 +31,155 @@ using namespace std;
 
 namespace {
 
-struct db_tests_basic : public dballe::tests::db_test
-{
+typedef dballe::tests::DBFixture Fixture;
+typedef dballe::tests::db_test_group<Fixture> test_group;
+typedef test_group::Test Test;
+
+std::vector<Test> tests {
+    // Test simple queries
+    Test("reset", [](Fixture& f) {
+        // Run twice to see if it is idempotent
+        auto& db = *f.db;
+        db.reset();
+        db.reset();
+    }),
+    Test("repinfo", [](Fixture& f) {
+        // Test repinfo-related functions
+        auto& db = *f.db;
+        std::map<std::string, int> prios = db.get_repinfo_priorities();
+        wassert(actual(prios.find("synop") != prios.end()).istrue());
+        wassert(actual(prios["synop"]) == 101);
+
+        int added, deleted, updated;
+        db.update_repinfo((string(getenv("DBA_TESTDATA")) + "/test-repinfo1.csv").c_str(), &added, &deleted, &updated);
+
+        wassert(actual(added) == 3);
+        wassert(actual(deleted) == 11);
+        wassert(actual(updated) == 2);
+
+        prios = db.get_repinfo_priorities();
+        wassert(actual(prios.find("fixspnpo") != prios.end()).istrue());
+        wassert(actual(prios["fixspnpo"]) == 200);
+    }),
+    Test("vacuum", [](Fixture& f) {
+        // Just invoke vacuum
+        auto& db = *f.db;
+        db.vacuum();
+    }),
+    Test("simple", [](Fixture& f) {
+        // Test remove_all
+        auto& db = *f.db;
+        db.remove_all();
+        Record query;
+        std::unique_ptr<db::Cursor> cur = db.query_data(query);
+        wassert(actual(cur->remaining()) == 0);
+
+        // Check that it is idempotent
+        db.remove_all();
+        cur = db.query_data(query);
+        wassert(actual(cur->remaining()) == 0);
+
+        // Insert something
+        wruntest(f.populate<OldDballeTestFixture>);
+
+        cur = db.query_data(query);
+        wassert(actual(cur->remaining()) == 4);
+
+        db.remove_all();
+
+        cur = db.query_data(query);
+        wassert(actual(cur->remaining()) == 0);
+    }),
+    Test("stationdata", [](Fixture& f) {
+        // Test adding station data for different networks
+        auto& db = *f.db;
+        db.reset();
+
+        Record rec;
+
+        rec.set(DBA_KEY_LAT, 12.077);
+        rec.set(DBA_KEY_LON, 44.600);
+
+        // Insert two values in two networks
+        rec.set(Level(103, 2000));
+        rec.set(Trange::instant());
+        rec.set(Datetime(2014, 1, 1, 0, 0, 0));
+        rec.set(DBA_KEY_REP_MEMO, "synop");
+        rec.set(WR_VAR(0, 12, 101), 273.15);
+        db.insert(rec, true, true);
+        rec.set(DBA_KEY_REP_MEMO, "temp");
+        rec.set(WR_VAR(0, 12, 101), 274.15);
+        db.insert(rec, true, true);
+
+        // Insert station names in both networks
+        rec.set_ana_context();
+        rec.set(DBA_KEY_REP_MEMO, "synop");
+        rec.set(WR_VAR(0, 1, 19), "Camse");
+        db.insert(rec, true, true);
+        rec.set(DBA_KEY_REP_MEMO, "temp");
+        rec.set(WR_VAR(0, 1, 19), "Esmac");
+        db.insert(rec, true, true);
+
+        // Query back all the data
+        Query query;
+        auto cur = db.query_stations(query);
+
+        // Check results
+        Record result;
+        if (dynamic_cast<db::mem::DB*>(f.db))
+        {
+            // For mem databases, we get one record per (station, network)
+            // combination
+            wassert(actual(cur->next()).istrue());
+            wassert(actual(cur->get_station_id()) == 1);
+            wassert(actual(cur->get_rep_memo()) == "temp");
+            cur->to_record(result);
+            wassert(actual(result.get(WR_VAR(0, 1, 19)).value()) == "Esmac");
+
+            wassert(actual(cur->next()).istrue());
+            wassert(actual(cur->get_station_id()) == 0);
+            wassert(actual(cur->get_rep_memo()) == "synop");
+            cur->to_record(result);
+            wassert(actual(result.get(WR_VAR(0, 1, 19)).value()) == "Camse");
+        } else {
+            // For normal databases, we only get one record, with the station
+            // values merged keeping values for the best networks
+            wassert(actual(cur->next()).istrue());
+            wassert(actual(cur->get_station_id()) == 1);
+            cur->to_record(result);
+            wassert(actual(result.get(WR_VAR(0, 1, 19)).value()) == "Camse");
+
+            wassert(actual(cur->next()).isfalse());
+        }
+
+        query.clear();
+        Msgs msgs;
+        msg::AcquireMessages amsg(msgs);
+        db.export_msgs(query, amsg);
+        wassert(actual(msgs.size()) == 2);
+
+        //msgs.print(stderr);
+
+        wassert(actual(msgs[0]->get_rep_memo_var()->enqc()) == "synop");
+        wassert(actual(msgs[0]->get_st_name_var()->enqc()) == "Camse");
+        wassert(actual(msgs[0]->get_temp_2m_var()->enqd()) == 273.15);
+        wassert(actual(msgs[1]->get_rep_memo_var()->enqc()) == "temp");
+        wassert(actual(msgs[1]->get_st_name_var()->enqc()) == "Esmac");
+        wassert(actual(msgs[1]->get_temp_2m_var()->enqd()) == 274.15);
+    }),
 };
 
-}
-
-namespace tut {
-
-typedef db_tg<db_tests_basic> tg;
-typedef tg::object to;
-
-
-template<> template<> void to::test<1>()
-{
-    // Run twice to see if it is idempotent
-    db->reset();
-    db->reset();
-}
-
-template<> template<> void to::test<2>()
-{
-    // Test repinfo-related functions
-    std::map<std::string, int> prios = db->get_repinfo_priorities();
-    wassert(actual(prios.find("synop") != prios.end()).istrue());
-    wassert(actual(prios["synop"]) == 101);
-
-    int added, deleted, updated;
-    db->update_repinfo((string(getenv("DBA_TESTDATA")) + "/test-repinfo1.csv").c_str(), &added, &deleted, &updated);
-
-    wassert(actual(added) == 3);
-    wassert(actual(deleted) == 11);
-    wassert(actual(updated) == 2);
-
-    prios = db->get_repinfo_priorities();
-    wassert(actual(prios.find("fixspnpo") != prios.end()).istrue());
-    wassert(actual(prios["fixspnpo"]) == 200);
-}
-
-template<> template<> void to::test<3>()
-{
-    // Just invoke vacuum
-    db->vacuum();
-}
-
-template<> template<> void to::test<4>()
-{
-    // Test remove_all
-    db->remove_all();
-    Record query;
-    std::unique_ptr<db::Cursor> cur = db->query_data(query);
-    wassert(actual(cur->remaining()) == 0);
-
-    // Check that it is idempotent
-    db->remove_all();
-    cur = db->query_data(query);
-    wassert(actual(cur->remaining()) == 0);
-
-    // Insert something
-    wruntest(populate<OldDballeTestFixture>);
-
-    cur = db->query_data(query);
-    wassert(actual(cur->remaining()) == 4);
-
-    db->remove_all();
-
-    cur = db->query_data(query);
-    wassert(actual(cur->remaining()) == 0);
-}
-
-// Test adding station data for different networks
-template<> template<> void to::test<5>()
-{
-    db->reset();
-
-    Record rec;
-
-    rec.set(DBA_KEY_LAT, 12.077);
-    rec.set(DBA_KEY_LON, 44.600);
-
-    // Insert two values in two networks
-    rec.set(Level(103, 2000));
-    rec.set(Trange::instant());
-    rec.set(Datetime(2014, 1, 1, 0, 0, 0));
-    rec.set(DBA_KEY_REP_MEMO, "synop");
-    rec.set(WR_VAR(0, 12, 101), 273.15);
-    db->insert(rec, true, true);
-    rec.set(DBA_KEY_REP_MEMO, "temp");
-    rec.set(WR_VAR(0, 12, 101), 274.15);
-    db->insert(rec, true, true);
-
-    // Insert station names in both networks
-    rec.set_ana_context();
-    rec.set(DBA_KEY_REP_MEMO, "synop");
-    rec.set(WR_VAR(0, 1, 19), "Camse");
-    db->insert(rec, true, true);
-    rec.set(DBA_KEY_REP_MEMO, "temp");
-    rec.set(WR_VAR(0, 1, 19), "Esmac");
-    db->insert(rec, true, true);
-
-    // Query back all the data
-    Query query;
-    auto cur = db->query_stations(query);
-
-    // Check results
-    Record result;
-    if (dynamic_cast<db::mem::DB*>(db.get()))
-    {
-        // For mem databases, we get one record per (station, network)
-        // combination
-        wassert(actual(cur->next()).istrue());
-        wassert(actual(cur->get_station_id()) == 1);
-        wassert(actual(cur->get_rep_memo()) == "temp");
-        cur->to_record(result);
-        wassert(actual(result.get(WR_VAR(0, 1, 19)).value()) == "Esmac");
-
-        wassert(actual(cur->next()).istrue());
-        wassert(actual(cur->get_station_id()) == 0);
-        wassert(actual(cur->get_rep_memo()) == "synop");
-        cur->to_record(result);
-        wassert(actual(result.get(WR_VAR(0, 1, 19)).value()) == "Camse");
-    } else {
-        // For normal databases, we only get one record, with the station
-        // values merged keeping values for the best networks
-        wassert(actual(cur->next()).istrue());
-        wassert(actual(cur->get_station_id()) == 1);
-        cur->to_record(result);
-        wassert(actual(result.get(WR_VAR(0, 1, 19)).value()) == "Camse");
-
-        wassert(actual(cur->next()).isfalse());
-    }
-
-    query.clear();
-    Msgs msgs;
-    msg::AcquireMessages amsg(msgs);
-    db->export_msgs(query, amsg);
-    wassert(actual(msgs.size()) == 2);
-
-    //msgs.print(stderr);
-
-    wassert(actual(msgs[0]->get_rep_memo_var()->enqc()) == "synop");
-    wassert(actual(msgs[0]->get_st_name_var()->enqc()) == "Camse");
-    wassert(actual(msgs[0]->get_temp_2m_var()->enqd()) == 273.15);
-    wassert(actual(msgs[1]->get_rep_memo_var()->enqc()) == "temp");
-    wassert(actual(msgs[1]->get_st_name_var()->enqc()) == "Esmac");
-    wassert(actual(msgs[1]->get_temp_2m_var()->enqd()) == 274.15);
-}
-
-}
-
-namespace {
-
-tut::tg db_tests_query_mem_tg("db_basic_mem", MEM);
+test_group tg1("db_basic_mem", nullptr, db::MEM, tests);
+test_group tg2("db_basic_v6_sqlite", "SQLITE", db::V6, tests);
 #ifdef HAVE_ODBC
-tut::tg db_tests_query_v5_tg("db_basic_v5", V5);
-tut::tg db_tests_query_v6_tg("db_basic_v6", V6);
+test_group tg3("db_basic_v5_odbc", "ODBC", db::V5, tests);
+test_group tg4("db_basic_v6_odbc", "ODBC", db::V6, tests);
+#endif
+#ifdef HAVE_LIBPQ
+test_group tg6("db_basic_v6_postgresql", "POSTGRESQL", db::V6, tests);
+#endif
+#ifdef HAVE_MYSQL
+test_group tg8("db_basic_v6_mysql", "MYSQL", db::V6, tests);
 #endif
 
 }

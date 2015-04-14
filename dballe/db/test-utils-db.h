@@ -22,6 +22,8 @@
 #include <dballe/db/sql/driver.h>
 
 namespace dballe {
+struct DB;
+
 namespace db {
 struct Connection;
 
@@ -272,7 +274,7 @@ struct DriverFixture
     void reset();
 };
 
-template<typename T=Fixture>
+template<typename T=DriverFixture>
 struct driver_test_group : public dballe::tests::test_group<T>
 {
     const char* backend;
@@ -290,6 +292,50 @@ struct driver_test_group : public dballe::tests::test_group<T>
         return dballe::tests::test_group<T>::create_fixture();
     }
 };
+
+
+struct DBFixture
+{
+    static const char* backend;
+    static db::Format format;
+
+    DB* db = nullptr;
+
+    DBFixture();
+    ~DBFixture();
+    void reset();
+
+    std::unique_ptr<DB> create_db();
+
+    template<typename FIXTURE>
+    void populate(WIBBLE_TEST_LOCPRM)
+    {
+        FIXTURE fixture;
+        wruntest(populate_database, fixture);
+    }
+
+    void populate_database(WIBBLE_TEST_LOCPRM, const TestFixture& fixture);
+};
+
+template<typename T=DBFixture>
+struct db_test_group : public dballe::tests::test_group<T>
+{
+    const char* backend;
+    db::Format dbformat;
+
+    db_test_group(const char* name, const char* backend, db::Format dbformat, const typename dballe::tests::test_group<T>::Tests& tests)
+        : dballe::tests::test_group<T>(name, tests), backend(backend), dbformat(dbformat)
+    {
+    }
+
+    T* create_fixture()
+    {
+        DBFixture::backend = backend;
+        DBFixture::format = dbformat;
+        return dballe::tests::test_group<T>::create_fixture();
+    }
+};
+
 
 struct db_test
 {

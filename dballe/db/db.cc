@@ -85,7 +85,7 @@ bool DB::is_url(const char* str)
     return false;
 }
 
-unique_ptr<DB> DB::instantiate_db(unique_ptr<Connection> conn)
+unique_ptr<DB> DB::create(unique_ptr<Connection> conn)
 {
     // Autodetect format
     Format format = default_format;
@@ -139,7 +139,7 @@ unique_ptr<DB> DB::connect(const char* dsn, const char* user, const char* passwo
 #ifdef HAVE_ODBC
     unique_ptr<ODBCConnection> conn(new ODBCConnection);
     conn->connect(dsn, user, password);
-    return instantiate_db(move(conn));
+    return create(move(conn));
 #else
     throw error_unimplemented("ODBC support is not available");
 #endif
@@ -149,7 +149,7 @@ unique_ptr<DB> DB::connect_from_file(const char* pathname)
 {
     unique_ptr<SQLiteConnection> conn(new SQLiteConnection);
     conn->open_file(pathname);
-    return instantiate_db(unique_ptr<Connection>(conn.release()));
+    return create(unique_ptr<Connection>(conn.release()));
 }
 
 unique_ptr<DB> DB::connect_from_url(const char* url)
@@ -159,7 +159,7 @@ unique_ptr<DB> DB::connect_from_url(const char* url)
         return connect_memory(url + 4);
     } else {
         unique_ptr<Connection> conn(Connection::create_from_url(url));
-        return instantiate_db(move(conn));
+        return create(move(conn));
     }
 }
 

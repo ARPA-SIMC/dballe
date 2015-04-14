@@ -328,7 +328,8 @@ DriverFixture::DriverFixture()
 
 DriverFixture::~DriverFixture()
 {
-    driver->delete_tables(format);
+    if (getenv("PAUSE") == nullptr)
+        driver->delete_tables(format);
     delete driver;
     delete conn;
 }
@@ -336,6 +337,47 @@ DriverFixture::~DriverFixture()
 void DriverFixture::reset()
 {
     driver->remove_all(format);
+}
+
+const char* DBFixture::backend = nullptr;
+db::Format DBFixture::format = db::V6;
+
+DBFixture::DBFixture()
+{
+    db = create_db().release();
+    db->reset();
+}
+
+DBFixture::~DBFixture()
+{
+    if (getenv("PAUSE") == nullptr)
+        db->disappear();
+    delete db;
+}
+
+void DBFixture::reset()
+{
+    db->remove_all();
+    int added, deleted, updated;
+    db->update_repinfo(nullptr, &added, &deleted, &updated);
+}
+
+std::unique_ptr<DB> DBFixture::create_db()
+{
+    if (format == db::MEM)
+    {
+        return DB::connect_memory();
+    } else {
+        OverrideTestDBFormat odbf(format);
+        auto conn = get_test_connection(backend);
+        return DB::create(move(conn));
+    }
+}
+
+
+void DBFixture::populate_database(WIBBLE_TEST_LOCPRM, const TestFixture& fixture)
+{
+    wruntest(fixture.populate_db, *db);
 }
 
 

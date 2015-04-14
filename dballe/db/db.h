@@ -215,6 +215,11 @@ public:
     static std::unique_ptr<DB> connect_test();
 
     /**
+     * Create a database from an open Connection
+     */
+    static std::unique_ptr<DB> create(std::unique_ptr<db::Connection> conn);
+
+    /**
      * Return TRUE if the string looks like a DB URL
      *
      * @param str
@@ -473,9 +478,6 @@ public:
 
     /// Return the default repinfo file pathname
     static const char* default_repinfo_file();
-
-protected:
-    static std::unique_ptr<DB> instantiate_db(std::unique_ptr<db::Connection> conn);
 };
 
 }
