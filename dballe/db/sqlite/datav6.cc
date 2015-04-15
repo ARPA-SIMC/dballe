@@ -166,7 +166,7 @@ void SQLiteDataV6::dump(FILE* out)
         if (stm->column_isnull(6))
             fprintf(out, "\n");
         else
-            fprintf(out, " %.*s\n", stm->column_string(6));
+            fprintf(out, " %s\n", stm->column_string(6));
 
         ++count;
     });

@@ -39,7 +39,6 @@ struct Var;
 namespace dballe {
 namespace db {
 struct MySQLConnection;
-struct MySQLStatement;
 
 namespace mysql {
 

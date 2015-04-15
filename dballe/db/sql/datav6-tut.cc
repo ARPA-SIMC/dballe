@@ -22,6 +22,7 @@
 #include "db/sql/station.h"
 #include "db/sql/levtr.h"
 #include "db/sql/datav6.h"
+#include "config.h"
 
 using namespace dballe;
 using namespace dballe::tests;
@@ -31,188 +32,113 @@ using namespace std;
 
 namespace {
 
-struct db_sql_datav6 : public dballe::tests::db_test
+struct Fixture : dballe::tests::DriverFixture
 {
-    db_sql_datav6()
+    unique_ptr<db::sql::DataV6> data;
+
+    Fixture()
     {
-        db::v6::DB& v6db = v6();
-        db::sql::Station& st = v6db.station();
-        db::sql::LevTr& lt = v6db.lev_tr();
+        reset_data();
+
+        auto st = driver->create_stationv6();
+        auto lt = driver->create_levtrv6();
 
         // Insert a mobile station
-        wassert(actual(st.obtain_id(4500000, 1100000, "ciao")) == 1);
+        wassert(actual(st->obtain_id(4500000, 1100000, "ciao")) == 1);
 
         // Insert a fixed station
-        wassert(actual(st.obtain_id(4600000, 1200000)) == 2);
+        wassert(actual(st->obtain_id(4600000, 1200000)) == 2);
 
         // Insert a lev_tr
-        wassert(actual(lt.obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);
+        wassert(actual(lt->obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);
 
         // Insert another lev_tr
-        wassert(actual(lt.obtain_id(Level(2, 3, 1, 4), Trange(5, 6, 7))) == 2);
+        wassert(actual(lt->obtain_id(Level(2, 3, 1, 4), Trange(5, 6, 7))) == 2);
     }
 
-    db::sql::DataV6& data()
+    void reset_data()
     {
-        if (db::v6::DB* db6 = dynamic_cast<db::v6::DB*>(db.get()))
-            return db6->data();
-        throw error_consistency("cannot test datav6 on the current DB");
+        driver->exec_no_data("DELETE FROM data");
+        data = driver->create_datav6();
+    }
+
+    void reset()
+    {
+        dballe::tests::DriverFixture::reset();
+        reset_data();
     }
 };
 
-}
+typedef dballe::tests::driver_test_group<Fixture> test_group;
+typedef test_group::Test Test;
 
-namespace tut {
+std::vector<Test> tests {
+    Test("insert", [](Fixture& f) {
+        auto& da = *f.data;
 
-typedef db_tg<db_sql_datav6> tg;
-typedef tg::object to;
-
-// Insert some values and try to read them again
-template<> template<> void to::test<1>()
-{
-    use_db();
-    auto& da = data();
-
-    // Insert a datum
-    da.set_context(1, 1, 1);
-    da.set_date(2001, 2, 3, 4, 5, 6);
-    da.insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 123));
-
-    // Insert another datum
-    da.set_context(2, 2, 2);
-    da.set_date(2002, 3, 4, 5, 6, 7);
-    da.insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 234));
-
-    // Reinsert a datum: it should fail
-    da.set_context(1, 1, 1);
-    da.set_date(2001, 2, 3, 4, 5, 6);
-    try {
+        // Insert a datum
+        da.set_context(1, 1, 1);
+        da.set_date(2001, 2, 3, 4, 5, 6);
         da.insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 123));
-        ensure(false);
-    } catch (db::error& e) {
-        //ensure_contains(e.what(), "uplicate");
-    }
 
-    // Reinsert the other datum: it should fail
-    da.set_context(2, 2, 2);
-    da.set_date(2002, 3, 4, 5, 6, 7);
-    try {
+        // Insert another datum
+        da.set_context(2, 2, 2);
+        da.set_date(2002, 3, 4, 5, 6, 7);
         da.insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 234));
-        ensure(false);
-    } catch (db::error& e) {
-        //ensure_contains(e.what(), "uplicate");
-    }
 
-    // Reinsert a datum with overwrite: it should work
-    da.set_context(1, 1, 1);
-    da.set_date(2001, 2, 3, 4, 5, 6);
-    da.insert_or_overwrite(Var(varinfo(WR_VAR(0, 1, 2)), 123));
+        // Reinsert a datum: it should fail
+        da.set_context(1, 1, 1);
+        da.set_date(2001, 2, 3, 4, 5, 6);
+        try {
+            da.insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 123));
+            ensure(false);
+        } catch (db::error& e) {
+            //ensure_contains(e.what(), "uplicate");
+        }
 
-    // Reinsert the other datum with overwrite: it should work
-    da.set_context(2, 2, 2);
-    da.set_date(2002, 3, 4, 5, 6, 7);
-    da.insert_or_overwrite(Var(varinfo(WR_VAR(0, 1, 2)), 234));
+        // Reinsert the other datum: it should fail
+        da.set_context(2, 2, 2);
+        da.set_date(2002, 3, 4, 5, 6, 7);
+        try {
+            da.insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 234));
+            ensure(false);
+        } catch (db::error& e) {
+            //ensure_contains(e.what(), "uplicate");
+        }
 
-    // Insert a new datum with ignore: it should insert
-    da.set_context(2, 2, 3);
-    wassert(actual(da.insert_or_ignore(Var(varinfo(WR_VAR(0, 1, 2)), 234))) == true);
+        // Reinsert a datum with overwrite: it should work
+        da.set_context(1, 1, 1);
+        da.set_date(2001, 2, 3, 4, 5, 6);
+        da.insert_or_overwrite(Var(varinfo(WR_VAR(0, 1, 2)), 123));
 
-    // Reinsert the same datum with ignore: it should ignore
-    wassert(actual(da.insert_or_ignore(Var(varinfo(WR_VAR(0, 1, 2)), 234))) == false);
+        // Reinsert the other datum with overwrite: it should work
+        da.set_context(2, 2, 2);
+        da.set_date(2002, 3, 4, 5, 6, 7);
+        da.insert_or_overwrite(Var(varinfo(WR_VAR(0, 1, 2)), 234));
 
-    // Reinsert a nonexisting datum with overwrite: it should work
-    da.set_context(1, 1, 1);
-    da.set_date(2005, 2, 3, 4, 5, 6);
-    da.insert_or_overwrite(Var(varinfo(WR_VAR(0, 1, 2)), 123));
-#if 0
-	// Get the ID of the first data
-	lt->id = 0;
-	lt->id_ana = 1;
-	lt->id_report = 1;
-	lt->date_ind = snprintf(lt->date, 25, "%04d-%02d-%02d %02d:%02d:%02d", 2001, 2, 3, 4, 5, 6);
-	lt->ltype = 1;
-	lt->l1 = 2;
-	lt->l2 = 3;
-	lt->pind = 4;
-	lt->p1 = 5;
-	lt->p2 = 6;
-	CHECKED(dba_db_data_get_id(lt, &id));
-	ensure_equals(id, 1);
+        // Insert a new datum with ignore: it should insert
+        da.set_context(2, 2, 3);
+        wassert(actual(da.insert_or_ignore(Var(varinfo(WR_VAR(0, 1, 2)), 234))) == true);
 
-	// Get the ID of the second data
-	lt->id = 0;
-	lt->id_ana = 2;
-	lt->id_report = 2;
-	lt->date_ind = snprintf(lt->date, 25, "%04d-%02d-%02d %02d:%02d:%02d", 2002, 3, 4, 5, 6, 7);
-	lt->ltype = 2;
-	lt->l1 = 3;
-	lt->l2 = 4;
-	lt->pind = 5;
-	lt->p1 = 6;
-	lt->p2 = 7;
-	CHECKED(dba_db_data_get_id(lt, &id));
-	ensure_equals(id, 2);
+        // Reinsert the same datum with ignore: it should ignore
+        wassert(actual(da.insert_or_ignore(Var(varinfo(WR_VAR(0, 1, 2)), 234))) == false);
 
-	// Get info on the first data
-	CHECKED(dba_db_data_get_data(lt, 1));
-	ensure_equals(lt->id_ana, 1);
-	ensure_equals(lt->id_report, 1);
-	ensure_equals(lt->date, string("2001-02-03 04:05:06"));
-	ensure_equals(lt->date_ind, 19);
-	ensure_equals(lt->ltype, 1);
-	ensure_equals(lt->l1, 2);
-	ensure_equals(lt->l2, 3);
-	ensure_equals(lt->pind, 4);
-	ensure_equals(lt->p1, 5);
-	ensure_equals(lt->p2, 6);
+        // Reinsert a nonexisting datum with overwrite: it should work
+        da.set_context(1, 1, 1);
+        da.set_date(2005, 2, 3, 4, 5, 6);
+        da.insert_or_overwrite(Var(varinfo(WR_VAR(0, 1, 2)), 123));
+    }),
+};
 
-	// Get info on the second data
-	CHECKED(dba_db_data_get_data(lt, 2));
-	ensure_equals(lt->id_ana, 2);
-	ensure_equals(lt->id_report, 2);
-	ensure_equals(lt->date, string("2002-03-04 05:06:07"));
-	ensure_equals(lt->date_ind, 19);
-	ensure_equals(lt->ltype, 2);
-	ensure_equals(lt->l1, 3);
-	ensure_equals(lt->l2, 4);
-	ensure_equals(lt->pind, 5);
-	ensure_equals(lt->p1, 6);
-	ensure_equals(lt->p2, 7);
+test_group tg1("db_sql_data_v6_sqlite", "SQLITE", db::V6, tests);
+#ifdef HAVE_ODBC
+test_group tg2("db_sql_data_v6_odbc", "ODBC", db::V6, tests);
 #endif
-
-#if 0
-	// Update the second data
-	lt->id = 2;
-	lt->id_ana = 2;
-	lt->id_report = 2;
-	lt->date_ind = snprintf(lt->date, 25, "%04d-%02d-%02d %02d:%02d:%02d", 2003, 4, 5, 6, 7, 8);
-	lt->ltype = 3;
-	lt->l1 = 4;
-	lt->l2 = 5;
-	lt->pind = 6;
-	lt->p1 = 7;
-	lt->p2 = 8;
-	CHECKED(dba_db_data_update(lt));
-
-	// Get info on the first station: it should be unchanged
-	CHECKED(dba_db_data_get_data(pa, 1));
-	ensure_equals(pa->lat, 4500000);
-	ensure_equals(pa->lon, 1100000);
-	ensure_equals(pa->ident, string("ciao"));
-	ensure_equals(pa->ident_ind, 4);
-
-	// Get info on the second station: it should be updated
-	CHECKED(dba_db_data_get_data(pa, 2));
-	ensure_equals(pa->lat, 4700000);
-	ensure_equals(pa->lon, 1300000);
-	ensure_equals(pa->ident[0], 0);
+#ifdef HAVE_LIBPQ
+test_group tg3("db_sql_data_v6_postgresql", "POSTGRESQL", db::V6, tests);
 #endif
-}
-
-}
-
-namespace {
-
-tut::tg db_test_sql_datav6_tg("db_sql_datav6", db::V6);
+#ifdef HAVE_MYSQL
+test_group tg4("db_sql_data_v6_mysql", "MYSQL", db::V6, tests);
+#endif
 
 }

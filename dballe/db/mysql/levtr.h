@@ -38,7 +38,6 @@ struct Context;
 
 namespace db {
 struct Connection;
-struct Statement;
 
 namespace mysql {
 struct DB;

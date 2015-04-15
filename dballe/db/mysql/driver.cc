@@ -77,7 +77,7 @@ std::unique_ptr<sql::DataV5> Driver::create_datav5()
 
 std::unique_ptr<sql::DataV6> Driver::create_datav6()
 {
-    //return unique_ptr<sql::DataV6>(new MySQLDataV6(conn));
+    return unique_ptr<sql::DataV6>(new MySQLDataV6(conn));
 }
 
 std::unique_ptr<sql::AttrV5> Driver::create_attrv5()
