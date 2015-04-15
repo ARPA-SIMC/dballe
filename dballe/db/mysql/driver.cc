@@ -87,8 +87,7 @@ std::unique_ptr<sql::AttrV5> Driver::create_attrv5()
 
 std::unique_ptr<sql::AttrV6> Driver::create_attrv6()
 {
-    throw error_unimplemented("attrv6 not implemented");
-    //return unique_ptr<sql::AttrV6>(new MySQLAttrV6(conn));
+    return unique_ptr<sql::AttrV6>(new MySQLAttrV6(conn));
 }
 
 void Driver::bulk_insert_v6(sql::bulk::InsertV6& vars, bool update_existing)

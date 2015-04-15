@@ -23,6 +23,7 @@
 #include "db/sql/levtr.h"
 #include "db/sql/datav6.h"
 #include "db/sql/attrv6.h"
+#include "config.h"
 
 using namespace dballe;
 using namespace dballe::tests;
@@ -32,121 +33,129 @@ using namespace std;
 
 namespace {
 
-struct db_sql_attrv6 : public dballe::tests::db_test
+struct Fixture : dballe::tests::DriverFixture
 {
-    db_sql_attrv6()
+    unique_ptr<db::sql::AttrV6> attr;
+
+    Fixture()
     {
-        db::v6::DB& v6db = v6();
-        db::sql::Station& st = v6db.station();
-        db::sql::LevTr& lt = v6db.lev_tr();
-        db::sql::DataV6& da = v6().data();
+        reset_attr();
+
+        auto st = driver->create_stationv6();
+        auto lt = driver->create_levtrv6();
+        auto da = driver->create_datav6();
 
         // Insert a mobile station
-        wassert(actual(st.obtain_id(4500000, 1100000, "ciao")) == 1);
+        wassert(actual(st->obtain_id(4500000, 1100000, "ciao")) == 1);
 
         // Insert a fixed station
-        wassert(actual(st.obtain_id(4600000, 1200000)) == 2);
+        wassert(actual(st->obtain_id(4600000, 1200000)) == 2);
 
         // Insert a lev_tr
-        wassert(actual(lt.obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);
+        wassert(actual(lt->obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);
 
         // Insert another lev_tr
-        wassert(actual(lt.obtain_id(Level(2, 3, 1, 4), Trange(5, 6, 7))) == 2);
+        wassert(actual(lt->obtain_id(Level(2, 3, 1, 4), Trange(5, 6, 7))) == 2);
 
         // Insert a datum
-        da.set_context(1, 1, 1);
-        da.set_date(2001, 2, 3, 4, 5, 6);
-        da.insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 123));
+        da->set_context(1, 1, 1);
+        da->set_date(2001, 2, 3, 4, 5, 6);
+        da->insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 123));
 
         // Insert another datum
-        da.set_context(2, 2, 2);
-        da.set_date(2002, 3, 4, 5, 6, 7);
-        da.insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 234));
+        da->set_context(2, 2, 2);
+        da->set_date(2002, 3, 4, 5, 6, 7);
+        da->insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 234));
     }
 
-    db::sql::AttrV6& attr()
+    void reset_attr()
     {
-        if (db::v6::DB* db6 = dynamic_cast<db::v6::DB*>(db.get()))
-            return db6->attr();
-        throw error_consistency("cannot test attrv6 on the current DB");
+        driver->exec_no_data("DELETE FROM attr");
+        attr = driver->create_attrv6();
+    }
+
+    void reset()
+    {
+        dballe::tests::DriverFixture::reset();
+        reset_attr();
     }
 
     Var query(int id_data, unsigned expected_attr_count)
     {
         Var res(varinfo(WR_VAR(0, 12, 101)));
         unsigned count = 0;
-        attr().read(id_data, [&](unique_ptr<Var> attr) { res.seta(auto_ptr<Var>(attr.release())); ++count; });
+        attr->read(id_data, [&](unique_ptr<Var> attr) { res.seta(auto_ptr<Var>(attr.release())); ++count; });
         wassert(actual(count) == expected_attr_count);
         return res;
     }
 };
 
-}
+typedef dballe::tests::driver_test_group<Fixture> test_group;
+typedef test_group::Test Test;
 
-namespace tut {
+std::vector<Test> tests {
+    Test("insert", [](Fixture& f) {
+        auto& at = *f.attr;
 
-typedef db_tg<db_sql_attrv6> tg;
-typedef tg::object to;
+        Var var1(varinfo(WR_VAR(0, 12, 101)), 280.0);
+        var1.seta(ap_newvar(WR_VAR(0, 33, 7), 50));
 
-// Insert some values and try to read them again
-template<> template<> void to::test<1>()
-{
-    use_db();
-    auto& at = attr();
+        Var var2(varinfo(WR_VAR(0, 12, 101)), 280.0);
+        var2.seta(ap_newvar(WR_VAR(0, 33, 7), 75));
 
-    Var var1(varinfo(WR_VAR(0, 12, 101)), 280.0);
-    var1.seta(ap_newvar(WR_VAR(0, 33, 7), 50));
+        // Insert a datum
+        at.add(1, var1);
 
-    Var var2(varinfo(WR_VAR(0, 12, 101)), 280.0);
-    var2.seta(ap_newvar(WR_VAR(0, 33, 7), 75));
+        // Insert another datum
+        at.add(2, var2);
 
-    // Insert a datum
-    at.add(1, var1);
+        // Reinsert the same datum: it should work, doing no insert/update queries
+        at.add(1, var1);
 
-    // Insert another datum
-    at.add(2, var2);
+        // Reinsert the other same datum: it should work, doing no insert/update queries
+        at.add(2, var2);
 
-    // Reinsert the same datum: it should work, doing no insert/update queries
-    at.add(1, var1);
+        // Load the attributes for the first variable
+        {
+            Var var(f.query(1, 1));
+            wassert(actual(var.next_attr()->code()) == WR_VAR(0, 33, 7));
+            wassert(actual(var.next_attr()->value()) == "50");
+        }
 
-    // Reinsert the other same datum: it should work, doing no insert/update queries
-    at.add(2, var2);
+        // Load the attributes for the second variable
+        {
+            Var var(f.query(2, 1));
+            wassert(actual(var.next_attr()->code()) == WR_VAR(0, 33, 7));
+            wassert(actual(var.next_attr()->value()) == "75");
+        }
 
-    // Load the attributes for the first variable
-    {
-        Var var(query(1, 1));
-        wassert(actual(var.next_attr()->code()) == WR_VAR(0, 33, 7));
-        wassert(actual(var.next_attr()->value()) == "50");
-    }
+        // Update both values
+        at.add(1, var2);
+        at.add(2, var1);
+        {
+            Var var(f.query(1, 1));
+            wassert(actual(var.next_attr()->code()) == WR_VAR(0, 33, 7));
+            wassert(actual(var.next_attr()->value()) == "75");
+        }
+        {
+            Var var(f.query(2, 1));
+            wassert(actual(var.next_attr()->code()) == WR_VAR(0, 33, 7));
+            wassert(actual(var.next_attr()->value()) == "50");
+        }
 
-    // Load the attributes for the second variable
-    {
-        Var var(query(2, 1));
-        wassert(actual(var.next_attr()->code()) == WR_VAR(0, 33, 7));
-        wassert(actual(var.next_attr()->value()) == "75");
-    }
+        // TODO: test a mix of update and insert
+    }),
+};
 
-    // Update both values
-    at.add(1, var2);
-    at.add(2, var1);
-    {
-        Var var(query(1, 1));
-        wassert(actual(var.next_attr()->code()) == WR_VAR(0, 33, 7));
-        wassert(actual(var.next_attr()->value()) == "75");
-    }
-    {
-        Var var(query(2, 1));
-        wassert(actual(var.next_attr()->code()) == WR_VAR(0, 33, 7));
-        wassert(actual(var.next_attr()->value()) == "50");
-    }
-
-    // TODO: test a mix of update and insert
-}
-
-}
-
-namespace {
-
-tut::tg db_test_sql_attrv6_tg("db_sql_attrv6", db::V6);
+test_group tg1("db_sql_attr_v6_sqlite", "SQLITE", db::V6, tests);
+#ifdef HAVE_ODBC
+test_group tg2("db_sql_attr_v6_odbc", "ODBC", db::V6, tests);
+#endif
+#ifdef HAVE_LIBPQ
+test_group tg3("db_sql_attr_v6_postgresql", "POSTGRESQL", db::V6, tests);
+#endif
+#ifdef HAVE_MYSQL
+test_group tg4("db_sql_attr_v6_mysql", "MYSQL", db::V6, tests);
+#endif
 
 }
