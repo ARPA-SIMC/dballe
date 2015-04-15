@@ -268,8 +268,8 @@ if HAVE_MYSQL
 libdballe_la_SOURCES += \
 	db/mysql/internals.cc \
 	db/mysql/driver.cc \
-	db/mysql/repinfo.cc
-#	db/mysql/station.cc \
+	db/mysql/repinfo.cc \
+	db/mysql/station.cc
 #	db/mysql/levtr.cc \
 #	db/mysql/datav6.cc \
 #	db/mysql/attrv6.cc

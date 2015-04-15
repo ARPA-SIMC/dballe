@@ -57,14 +57,12 @@ std::unique_ptr<sql::Repinfo> Driver::create_repinfov6()
 
 std::unique_ptr<sql::Station> Driver::create_stationv5()
 {
-    throw error_unimplemented("stationv5 not implemented");
-    //return unique_ptr<sql::Station>(new MySQLStationV5(conn));
+    return unique_ptr<sql::Station>(new MySQLStationV5(conn));
 }
 
 std::unique_ptr<sql::Station> Driver::create_stationv6()
 {
-    throw error_unimplemented("stationv6 not implemented");
-    //return unique_ptr<sql::Station>(new MySQLStationV6(conn));
+    return unique_ptr<sql::Station>(new MySQLStationV6(conn));
 }
 
 std::unique_ptr<sql::LevTr> Driver::create_levtrv6()

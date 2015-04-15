@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,15 +47,6 @@ struct OverrideTestDBFormat
     ~OverrideTestDBFormat();
 };
 
-struct OverrideTestBackend
-{
-    const char* old_backend;
-    OverrideTestBackend(const char* backend);
-    ~OverrideTestBackend();
-};
-
-bool test_group_should_run(const char* name);
-
 template<typename T>
 struct db_tg : public tut::test_group<T>
 {
@@ -71,13 +62,11 @@ struct db_tg : public tut::test_group<T>
     tut::test_result run_next()
     {
         dballe::tests::OverrideTestDBFormat otf(db_format);
-        dballe::tests::OverrideTestBackend otb(backend);
         return tut::test_group<T>::run_next();
     }
     tut::test_result run_test(int n)
     {
         dballe::tests::OverrideTestDBFormat otf(db_format);
-        dballe::tests::OverrideTestBackend otb(backend);
         return tut::test_group<T>::run_test(n);
     }
 };

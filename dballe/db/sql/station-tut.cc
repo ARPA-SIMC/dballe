@@ -21,6 +21,7 @@
 #include "db/test-utils-db.h"
 #include "db/v5/db.h"
 #include "db/v6/db.h"
+#include "db/sql.h"
 #include "db/sql/station.h"
 
 using namespace dballe;
@@ -31,95 +32,82 @@ using namespace std;
 
 namespace {
 
-struct db_sql_station : public dballe::tests::db_test
+struct Fixture : dballe::tests::DriverFixture
 {
-    db::sql::Station& station()
+    unique_ptr<db::sql::Station> station;
+
+    Fixture()
     {
-        if (db::v5::DB* db5 = dynamic_cast<db::v5::DB*>(db.get()))
-            return db5->station();
-        if (db::v6::DB* db6 = dynamic_cast<db::v6::DB*>(db.get()))
-            return db6->station();
-        throw error_consistency("cannot test station on the current DB");
+        reset_station();
+    }
+
+    void reset_station()
+    {
+        if (conn->has_table("station"))
+            driver->exec_no_data("DELETE FROM station");
+
+        switch (format)
+        {
+            case db::V5:
+                station = driver->create_stationv5();
+                break;
+            case db::V6:
+                station = driver->create_stationv6();
+                break;
+            default:
+                throw error_consistency("cannot test station on the current DB format");
+        }
+    }
+
+    void reset()
+    {
+        dballe::tests::DriverFixture::reset();
+        reset_station();
     }
 };
 
-}
+typedef dballe::tests::driver_test_group<Fixture> test_group;
+typedef test_group::Test Test;
 
-namespace tut {
+std::vector<Test> tests {
+    Test("insert", [](Fixture& f) {
+        // Insert some values and try to read them again
+        auto& st = *f.station;
+        bool inserted;
 
-typedef db_tg<db_sql_station> tg;
-typedef tg::object to;
+        // Insert a mobile station
+        wassert(actual(st.obtain_id(4500000, 1100000, "ciao", &inserted)) == 1);
+        wassert(actual(inserted).istrue());
+        wassert(actual(st.obtain_id(4500000, 1100000, "ciao", &inserted)) == 1);
+        wassert(actual(inserted).isfalse());
 
-// Insert some values and try to read them again
-template<> template<>
-void to::test<1>()
-{
-    use_db();
-    db->reset();
-    auto& st = station();
-    bool inserted;
+        // Insert a fixed station
+        wassert(actual(st.obtain_id(4600000, 1200000, NULL, &inserted)) == 2);
+        wassert(actual(inserted).istrue());
+        wassert(actual(st.obtain_id(4600000, 1200000, NULL, &inserted)) == 2);
+        wassert(actual(inserted).isfalse());
 
-    // Insert a mobile station
-    wassert(actual(st.obtain_id(4500000, 1100000, "ciao", &inserted)) == 1);
-    wassert(actual(inserted).istrue());
-    wassert(actual(st.obtain_id(4500000, 1100000, "ciao", &inserted)) == 1);
-    wassert(actual(inserted).isfalse());
+        // Get the ID of the first station
+        wassert(actual(st.get_id(4500000, 1100000, "ciao")) == 1);
 
-    // Insert a fixed station
-    wassert(actual(st.obtain_id(4600000, 1200000, NULL, &inserted)) == 2);
-    wassert(actual(inserted).istrue());
-    wassert(actual(st.obtain_id(4600000, 1200000, NULL, &inserted)) == 2);
-    wassert(actual(inserted).isfalse());
+        // Get the ID of the second station
+        wassert(actual(st.get_id(4600000, 1200000)) == 2);
+    }),
+};
 
-    // Get the ID of the first station
-    wassert(actual(st.get_id(4500000, 1100000, "ciao")) == 1);
-
-    // Get the ID of the second station
-    wassert(actual(st.get_id(4600000, 1200000)) == 2);
-
-#if 0
-    // FIXME: unused functions now unaccessible
-	// Get info on the first station
-	st->get_data(1);
-	ensure_equals(st->lat, 4500000);
-	ensure_equals(st->lon, 1100000);
-	ensure_equals(st->ident, string("ciao"));
-	ensure_equals(st->ident_ind, 4);
-
-	// Get info on the second station
-	st->get_data(2);
-	ensure_equals(st->lat, 4600000);
-	ensure_equals(st->lon, 1200000);
-	ensure_equals(st->ident[0], 0);
-
-	// Update the second station
-	st->id = 2;
-	st->lat = 4700000;
-	st->lon = 1300000;
-	st->update();
-
-	// Get info on the first station: it should be unchanged
-	st->get_data(1);
-	ensure_equals(st->lat, 4500000);
-	ensure_equals(st->lon, 1100000);
-	ensure_equals(st->ident, string("ciao"));
-	ensure_equals(st->ident_ind, 4);
-
-	// Get info on the second station: it should be updated
-	st->get_data(2);
-	ensure_equals(st->lat, 4700000);
-	ensure_equals(st->lon, 1300000);
-	ensure_equals(st->ident[0], 0);
-#endif
-}
-
-}
-
-namespace {
-
+test_group tg1("db_sql_station_v5_sqlite", "SQLITE", db::V5, tests);
+test_group tg2("db_sql_station_v6_sqlite", "SQLITE", db::V6, tests);
 #ifdef HAVE_ODBC
-tut::tg db_tests_query_v5_tg("db_sql_station_v5", db::V5);
+test_group tg3("db_sql_station_v5_odbc", "ODBC", db::V5, tests);
+test_group tg4("db_sql_station_v6_odbc", "ODBC", db::V6, tests);
 #endif
-tut::tg db_tests_query_v6_tg("db_sql_station_v6", db::V6);
+#ifdef HAVE_LIBPQ
+test_group tg5("db_sql_station_v5_postgresql", "POSTGRESQL", db::V5, tests);
+test_group tg6("db_sql_station_v6_postgresql", "POSTGRESQL", db::V6, tests);
+#endif
+#ifdef HAVE_MYSQL
+test_group tg7("db_sql_station_v5_mysql", "MYSQL", db::V5, tests);
+test_group tg8("db_sql_station_v6_mysql", "MYSQL", db::V6, tests);
+#endif
 
 }

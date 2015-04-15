@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,8 +42,6 @@ using namespace wibble::tests;
 namespace dballe {
 namespace tests {
 
-static const char* test_connection_backend = 0;
-
 OverrideTestDBFormat::OverrideTestDBFormat(dballe::db::Format fmt)
     : old_format(DB::get_default_format())
 {
@@ -53,22 +51,6 @@ OverrideTestDBFormat::OverrideTestDBFormat(dballe::db::Format fmt)
 OverrideTestDBFormat::~OverrideTestDBFormat()
 {
     DB::set_default_format(old_format);
-}
-
-OverrideTestBackend::OverrideTestBackend(const char* backend)
-    : old_backend(test_connection_backend)
-{
-    test_connection_backend = backend;
-}
-
-OverrideTestBackend::~OverrideTestBackend()
-{
-    test_connection_backend = old_backend;
-}
-
-bool test_group_should_run(const char* name)
-{
-    return false;
 }
 
 void TestStation::set_latlonident_into(Record& rec) const
