@@ -19,6 +19,7 @@
 
 #include "db/test-utils-db.h"
 #include "db/v6/db.h"
+#include "db/sql/repinfo.h"
 #include "db/sql/station.h"
 #include "db/sql/levtr.h"
 #include "db/sql/datav6.h"
@@ -44,6 +45,9 @@ struct Fixture : dballe::tests::DriverFixture
         auto st = driver->create_stationv6();
         auto lt = driver->create_levtrv6();
         auto da = driver->create_datav6();
+
+        int added, deleted, updated;
+        driver->create_repinfov6()->update(nullptr, &added, &deleted, &updated);
 
         // Insert a mobile station
         wassert(actual(st->obtain_id(4500000, 1100000, "ciao")) == 1);
