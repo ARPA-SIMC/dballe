@@ -38,10 +38,17 @@ static std::string tag;
 bool test_can_run(const std::string& group_name, const std::string& test_name)
 {
     const char* filter = getenv("FILTER");
-    if (!filter) return true;
-    if (fnmatch(filter, group_name.c_str(), 0) == FNM_NOMATCH)
+    const char* except = getenv("EXCEPT");
+
+    if (!filter && !except) return true;
+
+    if (filter && fnmatch(filter, group_name.c_str(), 0) == FNM_NOMATCH)
         return false;
-    return true;
+
+    if (!except || fnmatch(except, group_name.c_str(), 0) == FNM_NOMATCH)
+        return true;
+
+    return false;
 }
 
 /*
