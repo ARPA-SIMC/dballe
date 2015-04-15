@@ -17,12 +17,12 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "config.h"
 #include "db/test-utils-db.h"
 #include "db/v5/db.h"
 #include "db/v6/db.h"
 #include "db/sql.h"
 #include "db/sql/station.h"
+#include "config.h"
 
 using namespace dballe;
 using namespace dballe::tests;

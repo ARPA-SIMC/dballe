@@ -67,8 +67,7 @@ std::unique_ptr<sql::Station> Driver::create_stationv6()
 
 std::unique_ptr<sql::LevTr> Driver::create_levtrv6()
 {
-    throw error_unimplemented("levtrv6 not implemented");
-    //return unique_ptr<sql::LevTr>(new MySQLLevTrV6(conn));
+    return unique_ptr<sql::LevTr>(new MySQLLevTrV6(conn));
 }
 
 std::unique_ptr<sql::DataV5> Driver::create_datav5()
@@ -78,7 +77,6 @@ std::unique_ptr<sql::DataV5> Driver::create_datav5()
 
 std::unique_ptr<sql::DataV6> Driver::create_datav6()
 {
-    throw error_unimplemented("datav6 not implemented");
     //return unique_ptr<sql::DataV6>(new MySQLDataV6(conn));
 }
 
