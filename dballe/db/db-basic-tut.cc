@@ -167,6 +167,31 @@ std::vector<Test> tests {
         wassert(actual(msgs[1]->get_st_name_var()->enqc()) == "Esmac");
         wassert(actual(msgs[1]->get_temp_2m_var()->enqd()) == 274.15);
     }),
+    Test("query_ident", [](Fixture& f) {
+        // Try querying by ident
+        auto& db = *f.db;
+
+        // Insert a mobile station
+        Record rec;
+        rec.set_from_string("rep_memo=synop");
+        rec.set_from_string("lat=44.10");
+        rec.set_from_string("lon=11.50");
+        rec.set_from_string("ident=foo");
+        rec.set(Level(1));
+        rec.set(Trange::instant());
+        rec.set(Datetime(2015, 4, 25, 12, 30, 45));
+        rec.set(WR_VAR(0, 12, 101), 295.1);
+        db.insert(rec, true, true);
+
+        wassert(actual(db).try_station_query("ident=foo", 1));
+        wassert(actual(db).try_station_query("ident=bar", 0));
+        wassert(actual(db).try_station_query("mobile=1", 1));
+        wassert(actual(db).try_station_query("mobile=0", 0));
+        wassert(actual(db).try_data_query("ident=foo", 1));
+        wassert(actual(db).try_data_query("ident=bar", 0));
+        wassert(actual(db).try_data_query("mobile=1", 1));
+        wassert(actual(db).try_data_query("mobile=0", 0));
+    }),
 };
 
 test_group tg1("db_basic_mem", nullptr, db::MEM, tests);

@@ -92,97 +92,91 @@ std::unique_ptr<sql::AttrV6> Driver::create_attrv6()
 
 void Driver::bulk_insert_v6(sql::bulk::InsertV6& vars, bool update_existing)
 {
-    throw error_unimplemented("bulk insert v6 not implemented");
-#if 0
     std::sort(vars.begin(), vars.end());
 
-    const char* select_query = R"(
+    // Get the current status of variables for this context
+    Querybuf select;
+    select.appendf(R"(
         SELECT id, id_lev_tr, id_var, value
           FROM data
-         WHERE id_station=? AND id_report=? AND datetime=?
+         WHERE id_station=%d AND id_report=%d AND datetime='%04d-%02d-%02d %02d:%02d:%02d'
          ORDER BY id_lev_tr, id_var
-    )";
-
-    // Get the current status of variables for this context
-    auto stm = conn.sqlitestatement(select_query);
-    stm->bind_val(1, vars.id_station);
-    stm->bind_val(2, vars.id_report);
-    stm->bind_val(3, vars.datetime);
-
+    )", vars.id_station, vars.id_report,
+        vars.datetime.date.year, vars.datetime.date.month, vars.datetime.date.day,
+        vars.datetime.time.hour, vars.datetime.time.minute, vars.datetime.time.second);
     // Scan the result in parallel with the variable list, annotating changed
     // items with their data ID
     sql::bulk::AnnotateVarsV6 todo(vars);
-    stm->execute([&]() {
+    auto select_res = conn.exec_store(select);
+    while (auto row = select_res.fetch())
+    {
         todo.annotate(
-                stm->column_int(0),
-                stm->column_int(1),
-                stm->column_int(2),
-                stm->column_string(3));
-    });
+                row.as_int(0),
+                row.as_int(1),
+                row.as_int(2),
+                row.as_cstring(3));
+    }
     todo.annotate_end();
 
     // We now have a todo-list
 
     if (update_existing && todo.do_update)
     {
-        auto update_stm = conn.sqlitestatement("UPDATE data SET value=? WHERE id=?");
         for (auto& v: vars)
         {
             if (!v.needs_update()) continue;
-            update_stm->bind(v.var->value(), v.id_data);
-            update_stm->execute();
+            string escaped_value = conn.escape(v.var->value());
+            Querybuf update;
+            update.appendf("UPDATE data SET value='%s' WHERE id=%d", escaped_value.c_str(), v.id_data);
+            conn.exec_no_data(update);
             v.set_updated();
         }
     }
 
     if (todo.do_insert)
     {
-        Querybuf dq(512);
-        dq.appendf(R"(
-            INSERT INTO data (id_station, id_report, id_lev_tr, datetime, id_var, value)
-                 VALUES (%d, %d, ?, '%04d-%02d-%02d %02d:%02d:%02d', ?, ?)
-        )", vars.id_station, vars.id_report,
-            vars.datetime.date.year, vars.datetime.date.month, vars.datetime.date.day,
-            vars.datetime.time.hour, vars.datetime.time.minute, vars.datetime.time.second);
-        auto insert = conn.sqlitestatement(dq);
         for (auto& v: vars)
         {
             if (!v.needs_insert()) continue;
-            insert->bind(v.id_levtr, v.var->code(), v.var->value());
-            insert->execute();
+            string escaped_value = conn.escape(v.var->value());
+            Querybuf insert(512);
+            insert.appendf(R"(
+                INSERT INTO data (id_station, id_report, id_lev_tr, datetime, id_var, value)
+                     VALUES (%d, %d, %d '%04d-%02d-%02d %02d:%02d:%02d', %d, '%s')
+            )", vars.id_station, vars.id_report, v.id_levtr,
+                vars.datetime.date.year, vars.datetime.date.month, vars.datetime.date.day,
+                vars.datetime.time.hour, vars.datetime.time.minute, vars.datetime.time.second,
+                v.var->code(), escaped_value.c_str());
+            conn.exec_no_data(insert);
             v.id_data = conn.get_last_insert_id();
             v.set_inserted();
         }
     }
-#endif
 }
 
 void Driver::run_built_query_v6(
         const v6::QueryBuilder& qb,
         std::function<void(sql::SQLRecordV6& rec)> dest)
 {
-    throw error_unimplemented("run_built_query_v6 not implemented");
-#if 0
-    auto stm = conn.sqlitestatement(qb.sql_query);
-
-    if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
+    if (qb.bind_in_ident)
+        throw error_unimplemented("binding in MySQL driver is not implemented");
 
     sql::SQLRecordV6 rec;
-    stm->execute([&]() {
+    conn.exec_use(qb.sql_query, [&](const Row& row) {
         int output_seq = 0;
         SQLLEN out_ident_ind;
 
         if (qb.select_station)
         {
-            rec.out_ana_id = stm->column_int(output_seq++);
-            rec.out_lat = stm->column_int(output_seq++);
-            rec.out_lon = stm->column_int(output_seq++);
-            if (stm->column_isnull(output_seq))
+            rec.out_ana_id = row.as_int(output_seq++);
+            rec.out_lat = row.as_int(output_seq++);
+            rec.out_lon = row.as_int(output_seq++);
+            if (row.isnull(output_seq))
             {
                 rec.out_ident_size = -1;
                 rec.out_ident[0] = 0;
             } else {
-                const char* ident = stm->column_string(output_seq);
+                const char* ident = row.as_cstring(output_seq);
                 rec.out_ident_size = min(strlen(ident), (string::size_type)63);
                 memcpy(rec.out_ident, ident, rec.out_ident_size);
                 rec.out_ident[rec.out_ident_size] = 0;
@@ -192,19 +186,19 @@ void Driver::run_built_query_v6(
 
         if (qb.select_varinfo)
         {
-            rec.out_rep_cod = stm->column_int(output_seq++);
-            rec.out_id_ltr = stm->column_int(output_seq++);
-            rec.out_varcode = stm->column_int(output_seq++);
+            rec.out_rep_cod = row.as_int(output_seq++);
+            rec.out_id_ltr = row.as_int(output_seq++);
+            rec.out_varcode = row.as_int(output_seq++);
         }
 
         if (qb.select_data_id)
-            rec.out_id_data = stm->column_int(output_seq++);
+            rec.out_id_data = row.as_int(output_seq++);
 
         if (qb.select_data)
         {
-            rec.out_datetime = stm->column_datetime(output_seq++);
+            rec.out_datetime = row.as_datetime(output_seq++);
 
-            const char* value = stm->column_string(output_seq++);
+            const char* value = row.as_cstring(output_seq++);
             unsigned val_size = min(strlen(value), (string::size_type)255);
             memcpy(rec.out_value, value, val_size);
             rec.out_value[val_size] = 0;
@@ -212,39 +206,24 @@ void Driver::run_built_query_v6(
 
         if (qb.select_summary_details)
         {
-            rec.out_id_data = stm->column_int(output_seq++);
-            rec.out_datetime = stm->column_datetime(output_seq++);
-            rec.out_datetimemax = stm->column_datetime(output_seq++);
+            rec.out_id_data = row.as_int(output_seq++);
+            rec.out_datetime = row.as_datetime(output_seq++);
+            rec.out_datetimemax = row.as_datetime(output_seq++);
         }
 
         dest(rec);
     });
-#endif
 }
 
 void Driver::run_delete_query_v6(const v6::QueryBuilder& qb)
 {
-    throw error_unimplemented("run_delete_query_v6 not implemented");
-#if 0
-    auto stmd = conn.sqlitestatement("DELETE FROM data WHERE id=?");
-    auto stma = conn.sqlitestatement("DELETE FROM attr WHERE id_data=?");
-    auto stm = conn.sqlitestatement(qb.sql_query);
-    if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
-
-    // Iterate all the data_id results, deleting the related data and attributes
-    stm->execute([&]() {
-        // Get the list of data to delete
-        int out_id_data = stm->column_int(0);
-
-        // Compile the DELETE query for the data
-        stmd->bind_val(1, out_id_data);
-        stmd->execute();
-
-        // Compile the DELETE query for the attributes
-        stma->bind_val(1, out_id_data);
-        stma->execute();
-    });
-#endif
+    if (qb.bind_in_ident)
+        throw error_unimplemented("binding in MySQL driver is not implemented");
+    Querybuf dq(512);
+    dq.append("DELETE FROM data WHERE id IN (");
+    dq.append(qb.sql_query);
+    dq.append(")");
+    conn.exec_no_data(dq);
 }
 
 void Driver::create_tables_v5()

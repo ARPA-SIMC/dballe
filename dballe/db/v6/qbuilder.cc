@@ -28,6 +28,13 @@
 #include <regex.h>
 #include <cstring>
 #include <cstdlib>
+#include "config.h"
+#ifdef HAVE_LIBPQ
+#include "dballe/db/postgresql/internals.h"
+#endif
+#ifdef HAVE_MYSQL
+#include "dballe/db/mysql/internals.h"
+#endif
 
 using namespace std;
 using namespace wreport;
@@ -483,9 +490,27 @@ bool QueryBuilder::add_pa_where(const char* tbl)
     c.add_mobile();
     if (const char* val = rec.key_peek_value(DBA_KEY_IDENT))
     {
-        sql_where.append_listf("%s.ident=?", tbl);
-        TRACE("found ident: adding AND %s.ident = ?.  val is %s\n", tbl, val);
-        bind_in_ident = val;
+        if (false) {
+            // This is only here to move the other optional bits into else ifs
+            // that can be compiled out
+            ;
+#if HAVE_LIBPQ
+        } else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(&conn)) {
+            sql_where.append_listf("%s.ident=$1::text", tbl);
+            bind_in_ident = val;
+            TRACE("found ident: adding AND %s.ident=$1::text.  val is %s\n", tbl, val);
+#endif
+#if HAVE_MYSQL
+        } else if (MySQLConnection* c = dynamic_cast<MySQLConnection*>(&conn)) {
+            string escaped = c->escape(val);
+            sql_where.append_listf("%s.ident='%s'", tbl, escaped.c_str());
+            TRACE("found ident: adding AND %s.ident='%s'.  val is %s\n", tbl, escape.c_str(), val);
+#endif
+        } else {
+            sql_where.append_listf("%s.ident=?", tbl);
+            bind_in_ident = val;
+            TRACE("found ident: adding AND %s.ident = ?.  val is %s\n", tbl, val);
+        }
         c.found = true;
     }
     if (const char* val = rec.var_peek_value(WR_VAR(0, 1, 1)))

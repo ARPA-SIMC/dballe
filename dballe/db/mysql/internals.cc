@@ -141,6 +141,20 @@ std::string ConnectInfo::to_url() const
     return res;
 }
 
+Datetime Row::as_datetime(int col) const
+{
+    Datetime res;
+    sscanf(as_cstring(col), "%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu",
+            &res.date.year,
+            &res.date.month,
+            &res.date.day,
+            &res.time.hour,
+            &res.time.minute,
+            &res.time.second);
+    return res;
+}
+
+
 Row Result::expect_one_result()
 {
     if (mysql_num_rows(res) != 1)
@@ -292,6 +306,71 @@ mysql::Result MySQLConnection::exec_store(const std::string& query)
         error_mysql::throwf(db, "cannot store result of query '%s'", query.c_str());
     else
         error_consistency::throwf("query '%s' returned no data", query.c_str());
+}
+
+void MySQLConnection::exec_use(const char* query, std::function<void(const mysql::Row&)> dest)
+{
+    using namespace mysql;
+
+    if (mysql_query(db, query))
+        error_mysql::throwf(db, "cannot execute '%s'", query);
+    Result res(mysql_use_result(db));
+    if (!res)
+    {
+        if (mysql_errno(db))
+            error_mysql::throwf(db, "cannot store result of query '%s'", query);
+        else
+            error_consistency::throwf("query '%s' returned no data", query);
+    }
+    send_result(move(res), dest);
+}
+
+void MySQLConnection::exec_use(const std::string& query, std::function<void(const mysql::Row&)> dest)
+{
+    using namespace mysql;
+
+    if (mysql_real_query(db, query.data(), query.size()))
+        error_mysql::throwf(db, "cannot execute '%s'", query.c_str());
+    Result res(mysql_use_result(db));
+    if (!res)
+    {
+        if (mysql_errno(db))
+            error_mysql::throwf(db, "cannot store result of query '%s'", query.c_str());
+        else
+            error_consistency::throwf("query '%s' returned no data", query.c_str());
+    }
+    send_result(move(res), dest);
+}
+
+void MySQLConnection::send_result(mysql::Result&& res, std::function<void(const mysql::Row&)> dest)
+{
+    using namespace mysql;
+
+    while (Row row = res.fetch())
+    {
+        try {
+            dest(row);
+        } catch (...) {
+            // If dest throws an exception, we still need to flush the inbound
+            // rows before rethrowing it: this is not done automatically when
+            // closing the result, and not doing it will break the next
+            // queries.
+            //
+            // fetch() will not throw exceptions (see its documentation)
+            // because mysql_fetch_row has no usable error reporting.
+            // If there is a network connectivity problem, we will never know it.
+            //
+            // See: https://dev.mysql.com/doc/refman/5.0/en/mysql-use-result.html
+            //    «When using mysql_use_result(), you must execute
+            //    mysql_fetch_row() until a NULL value is returned, otherwise,
+            //    the unfetched rows are returned as part of the result set for
+            //    your next query. The C API gives the error 'Commands out of
+            //    sync; you can't run this command now' if you forget to do
+            //    this!»
+            while (res.fetch()) ;
+            throw;
+        }
+    }
 }
 
 #if 0

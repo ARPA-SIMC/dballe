@@ -88,6 +88,7 @@ struct Row
     unsigned as_unsigned(unsigned col) const { return strtoul(row[col], 0, 10); }
     const char* as_cstring(unsigned col) const { return row[col]; }
     std::string as_string(unsigned col) const { return std::string(row[col], mysql_fetch_lengths(res)[col]); }
+    Datetime as_datetime(int col) const;
     bool isnull(unsigned col) const { return row[col] == nullptr; }
 };
 
@@ -146,6 +147,8 @@ protected:
     /// Database connection
     MYSQL* db = nullptr;
 
+    void send_result(mysql::Result&& res, std::function<void(const mysql::Row&)> dest);
+
 protected:
     void init_after_connect();
 
@@ -178,12 +181,10 @@ public:
     mysql::Result exec_store(const char* query);
     // Run a query, with a locally stored result
     mysql::Result exec_store(const std::string& query);
-#if 0
     // Run a query, with a remotely fetched result
-    void execute_fetch(const char* query, std::function<void, mysql::Row> dest);
+    void exec_use(const char* query, std::function<void(const mysql::Row&)> dest);
     // Run a query, with a remotely fetched result
-    void execute_fetch(const std::string& query, std::function<void, mysql::Row> dest);
-#endif
+    void exec_use(const std::string& query, std::function<void(const mysql::Row&)> dest);
 
     std::unique_ptr<Transaction> transaction() override;
 #if 0
