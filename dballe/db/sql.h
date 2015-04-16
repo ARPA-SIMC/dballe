@@ -135,6 +135,10 @@ public:
 
     /// Roll back this transaction
     virtual void rollback() = 0;
+
+    /// Get an exclusive lock on the given table until the end of the
+    /// transaction
+    virtual void lock_table(const char* name) = 0;
 };
 
 }

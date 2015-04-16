@@ -348,6 +348,12 @@ struct ODBCTransaction : public Transaction
             throw error_odbc(SQL_HANDLE_DBC, od_conn, "Rolling back a transaction");
         fired = true;
     }
+    void lock_table(const char* name) override
+    {
+        // No idea what to do here: ODBC is now used mostly for Oracle support,
+        // which is being dismissed, or MySQL support, which does not support
+        // table locks inside transactions.
+    }
 };
 
 std::unique_ptr<Transaction> ODBCConnection::transaction()

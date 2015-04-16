@@ -424,6 +424,14 @@ struct MySQLTransaction : public Transaction
         conn.exec_no_data_nothrow("ROLLBACK");
         fired = true;
     }
+    void lock_table(const char* name) override
+    {
+        // https://dev.mysql.com/doc/refman/5.0/en/lock-tables-and-transactions.html
+        //   LOCK TABLES is not transaction-safe and implicitly commits any active transaction before attempting to lock the tables.
+        //
+        // So we do nothing here, and pray that MySQL's default transaction
+        // isolation is enough to prevent most concurrency problems.
+    }
 };
 
 std::unique_ptr<Transaction> MySQLConnection::transaction()

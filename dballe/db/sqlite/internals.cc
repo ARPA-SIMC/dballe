@@ -193,6 +193,11 @@ struct SQLiteTransaction : public Transaction
         conn.exec_nothrow("ROLLBACK");
         fired = true;
     }
+    void lock_table(const char* name) override
+    {
+        // Nothing to do: SQLite locks the whole database, so table locking
+        // is not needed
+    }
 };
 
 std::unique_ptr<Transaction> SQLiteConnection::transaction()

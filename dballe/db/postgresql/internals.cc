@@ -279,6 +279,12 @@ struct PostgreSQLTransaction : public Transaction
         conn.pqexec_nothrow("ROLLBACK");
         fired = true;
     }
+    void lock_table(const char* name) override
+    {
+        char buf[256];
+        snprintf(buf, 256, "LOCK TABLE %s IN EXCLUSIVE MODE", name);
+        conn.pqexec(buf);
+    }
 };
 
 std::unique_ptr<Transaction> PostgreSQLConnection::transaction()
