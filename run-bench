@@ -14,7 +14,10 @@ def read_conffile(fd):
         if not line or line.startswith("#"): continue
         if '=' in line:
             key, val = line.split("=", 1)
-            env[key] = shlex.split(val)[0]
+            val = shlex.split(val)[0]
+            if val.startswith("$"):
+                val = env[val[1:]]
+            env[key] = val
 
 for conffile in ("./run-check.conf", ".git/run-check.conf"):
     if not os.path.exists(conffile): continue
