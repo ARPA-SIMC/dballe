@@ -120,7 +120,7 @@ void SQLiteDataV6::insert_or_overwrite(const wreport::Var& var, int* res_id)
     }
 }
 
-void SQLiteDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, bool update_existing)
+void SQLiteDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode)
 {
     std::sort(vars.begin(), vars.end());
 
@@ -151,16 +151,26 @@ void SQLiteDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, bool update
 
     // We now have a todo-list
 
-    if (update_existing && todo.do_update)
+    switch (update_mode)
     {
-        auto update_stm = conn.sqlitestatement("UPDATE data SET value=? WHERE id=?");
-        for (auto& v: vars)
-        {
-            if (!v.needs_update()) continue;
-            update_stm->bind(v.var->value(), v.id_data);
-            update_stm->execute();
-            v.set_updated();
-        }
+        case UPDATE:
+            if (todo.do_update)
+            {
+                auto update_stm = conn.sqlitestatement("UPDATE data SET value=? WHERE id=?");
+                for (auto& v: vars)
+                {
+                    if (!v.needs_update()) continue;
+                    update_stm->bind(v.var->value(), v.id_data);
+                    update_stm->execute();
+                    v.set_updated();
+                }
+            }
+            break;
+        case IGNORE:
+            break;
+        case ERROR:
+            if (todo.do_update)
+                throw error_consistency("refusing to overwrite existing data");
     }
 
     if (todo.do_insert)

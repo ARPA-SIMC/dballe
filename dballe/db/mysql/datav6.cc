@@ -78,7 +78,7 @@ void MySQLDataV6::insert_or_overwrite(const wreport::Var& var, int* res_id)
     if (res_id) *res_id = conn.get_last_insert_id();
 }
 
-void MySQLDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, bool update_existing)
+void MySQLDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode)
 {
     std::sort(vars.begin(), vars.end());
 
@@ -108,17 +108,27 @@ void MySQLDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, bool update_
 
     // We now have a todo-list
 
-    if (update_existing && todo.do_update)
+    switch (update_mode)
     {
-        for (auto& v: vars)
-        {
-            if (!v.needs_update()) continue;
-            string escaped_value = conn.escape(v.var->value());
-            Querybuf update;
-            update.appendf("UPDATE data SET value='%s' WHERE id=%d", escaped_value.c_str(), v.id_data);
-            conn.exec_no_data(update);
-            v.set_updated();
-        }
+        case UPDATE:
+            if (todo.do_update)
+            {
+                for (auto& v: vars)
+                {
+                    if (!v.needs_update()) continue;
+                    string escaped_value = conn.escape(v.var->value());
+                    Querybuf update;
+                    update.appendf("UPDATE data SET value='%s' WHERE id=%d", escaped_value.c_str(), v.id_data);
+                    conn.exec_no_data(update);
+                    v.set_updated();
+                }
+            }
+            break;
+        case IGNORE:
+            break;
+        case ERROR:
+            if (todo.do_update)
+                throw error_consistency("refusing to overwrite existing data");
     }
 
     if (todo.do_insert)

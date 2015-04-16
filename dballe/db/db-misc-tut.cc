@@ -115,12 +115,13 @@ std::vector<Test> tests {
         wrunchecked(db.insert(insert, false, true));
         // Check if duplicate updates are allowed by insert
         wrunchecked(db.insert(insert, true, false));
-        // Check if duplicate updates are trapped by insert_new
+        // Check if overwrites are trapped by insert_new
+        insert.set(WR_VAR(0, 1, 11), "DB-All.e?");
         try {
             db.insert(insert, false, false);
             ensure(false);
         } catch (wreport::error& e) {
-            wassert(actual(e.what()).matches("([Dd]uplicate|not unique|cannot replace an existing value|UNIQUE constraint failed:)"));
+            wassert(actual(e.what()).matches("refusing to overwrite existing data|cannot replace an existing value"));
         }
     }),
     Test("insert_twice", [](Fixture& f) {
@@ -135,11 +136,12 @@ std::vector<Test> tests {
         // Insert the record twice
         wrunchecked(db.insert(insert, false, true));
         // This should fail, refusing to replace station info
+        insert.set(WR_VAR(0, 1, 11), "DB-All.e?");
         try {
             db.insert(insert, false, true);
             ensure(false);
         } catch (wreport::error& e) {
-            wassert(actual(e.what()).matches("([Dd]uplicate|not unique|cannot replace an existing value|UNIQUE constraint failed:)"));
+            wassert(actual(e.what()).matches("refusing to overwrite existing data|cannot replace an existing value"));
         }
     }),
     Test("query_station", [](Fixture& f) {

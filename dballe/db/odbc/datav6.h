@@ -88,7 +88,7 @@ public:
     ODBCDataV6& operator=(const ODBCDataV6&) = delete;
     ~ODBCDataV6();
 
-    void insert(Transaction& t, sql::bulk::InsertV6& vars, bool update_existing) override;
+    void insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode=UPDATE) override;
     void remove(const v6::QueryBuilder& qb) override;
 
     /// Set id_lev_tr and datetime to mean 'station information'

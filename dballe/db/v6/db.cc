@@ -235,37 +235,34 @@ void DB::insert(const Query& rec, bool can_replace, bool station_can_add)
 
     auto t = conn->transaction();
 
-    int id_station = obtain_station(rec, station_can_add);
-
-    d.set_context(
-            // Insert the station data, and get the ID
-            id_station,
-            // Get the ID of the report
-            get_rep_cod(rec),
-            // Insert the lev_tr data, and get the ID
-            obtain_lev_tr(rec)
-    );
-
+    sql::bulk::InsertV6 vars;
+    // Insert the station data, and get the ID
+    vars.id_station = obtain_station(rec, station_can_add);
+    // Get the ID of the report
+    vars.id_report = get_rep_cod(rec);
     // Set the date from the record contents
-    d.set_date(rec);
+    vars.datetime = rec.get_datetime();
+
+    // Insert the lev_tr data, and get the ID
+    int id_levtr = obtain_lev_tr(rec);
 
     // Reset the variable ID store
     last_insert_varids.clear();
 
-    // Insert all the variables we find
+    // Add all the variables we find
     for (vector<Var*>::const_iterator i = rec.vars().begin(); i != rec.vars().end(); ++i)
-    {
-        int id;
-        // Datum to be inserted, linked to id_station and all the other IDs
-        if (can_replace)
-            d.insert_or_overwrite(**i, &id);
-        else
-            d.insert_or_fail(**i, &id);
-        last_insert_varids.push_back(VarID((*i)->code(), id));
-    }
+        vars.add(*i, id_levtr);
+
+    // Do the insert
+    d.insert(*t, vars, can_replace ? sql::DataV6::UPDATE : sql::DataV6::ERROR);
+
+    // Read the IDs from the results
+    for (const auto& v: vars)
+        if (v.inserted())
+            last_insert_varids.push_back(VarID(v.var->code(), v.id_data));
     t->commit();
 
-    _last_station_id = id_station;
+    _last_station_id = vars.id_station;
 }
 
 int DB::last_station_id() const

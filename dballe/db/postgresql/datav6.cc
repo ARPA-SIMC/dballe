@@ -117,7 +117,7 @@ void PostgreSQLDataV6::insert_or_overwrite(const wreport::Var& var, int* res_id)
     }
 }
 
-void PostgreSQLDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, bool update_existing)
+void PostgreSQLDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode)
 {
     std::sort(vars.begin(), vars.end());
 
@@ -150,25 +150,36 @@ void PostgreSQLDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, bool up
 
     // We now have a todo-list
 
-    if (update_existing && todo.do_update)
+    switch (update_mode)
     {
-        Querybuf dq(512);
-        dq.append("UPDATE data as d SET value=i.value FROM (values ");
-        dq.start_list(",");
-        for (auto& v: vars)
-        {
-            if (!v.needs_update()) continue;
-            char* escaped_val = PQescapeLiteral(conn, v.var->value(), strlen(v.var->value()));
-            if (!escaped_val)
-                throw error_postgresql(conn, string("escaping string '") + v.var->value() + "'");
-            dq.append_listf("(%d, %s)", v.id_data, escaped_val);
-            PQfreemem(escaped_val);
-            v.set_updated();
-        }
-        dq.append(") AS i(id, value) WHERE d.id = i.id");
-        //fprintf(stderr, "Update query: %s\n", dq.c_str());
-        conn.exec_no_data(dq);
+        case UPDATE:
+            if (todo.do_update)
+            {
+                Querybuf dq(512);
+                dq.append("UPDATE data as d SET value=i.value FROM (values ");
+                dq.start_list(",");
+                for (auto& v: vars)
+                {
+                    if (!v.needs_update()) continue;
+                    char* escaped_val = PQescapeLiteral(conn, v.var->value(), strlen(v.var->value()));
+                    if (!escaped_val)
+                        throw error_postgresql(conn, string("escaping string '") + v.var->value() + "'");
+                    dq.append_listf("(%d, %s)", v.id_data, escaped_val);
+                    PQfreemem(escaped_val);
+                    v.set_updated();
+                }
+                dq.append(") AS i(id, value) WHERE d.id = i.id");
+                //fprintf(stderr, "Update query: %s\n", dq.c_str());
+                conn.exec_no_data(dq);
+            }
+            break;
+        case IGNORE:
+            break;
+        case ERROR:
+            if (todo.do_update)
+                throw error_consistency("refusing to overwrite existing data");
     }
+
 
     if (todo.do_insert)
     {
