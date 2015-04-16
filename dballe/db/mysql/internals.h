@@ -173,6 +173,11 @@ public:
     /// Escape a string
     std::string escape(const std::string& str);
 
+    /**
+     * Run a query throwing no exceptions, warning on stderr if it is not
+     * successful or if it gives a nonempty result
+     */
+    void exec_no_data_nothrow(const char* query) noexcept;
     // Run a query, checking that it is successful and it gives no results
     void exec_no_data(const char* query);
     // Run a query, checking that it is successful and it gives no results
@@ -187,9 +192,6 @@ public:
     void exec_use(const std::string& query, std::function<void(const mysql::Row&)> dest);
 
     std::unique_ptr<Transaction> transaction() override;
-#if 0
-    std::unique_ptr<MySQLStatement> mysqlstatement(const std::string& query);
-#endif
 
     /// Check if the database contains a table
     bool has_table(const std::string& name) override;

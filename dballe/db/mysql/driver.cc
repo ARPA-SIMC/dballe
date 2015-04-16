@@ -142,7 +142,7 @@ void Driver::bulk_insert_v6(sql::bulk::InsertV6& vars, bool update_existing)
             Querybuf insert(512);
             insert.appendf(R"(
                 INSERT INTO data (id_station, id_report, id_lev_tr, datetime, id_var, value)
-                     VALUES (%d, %d, %d '%04d-%02d-%02d %02d:%02d:%02d', %d, '%s')
+                     VALUES (%d, %d, %d, '%04d-%02d-%02d %02d:%02d:%02d', %d, '%s')
             )", vars.id_station, vars.id_report, v.id_levtr,
                 vars.datetime.date.year, vars.datetime.date.month, vars.datetime.date.day,
                 vars.datetime.time.hour, vars.datetime.time.minute, vars.datetime.time.second,
@@ -164,8 +164,6 @@ void Driver::run_built_query_v6(
     sql::SQLRecordV6 rec;
     conn.exec_use(qb.sql_query, [&](const Row& row) {
         int output_seq = 0;
-        SQLLEN out_ident_ind;
-
         if (qb.select_station)
         {
             rec.out_ana_id = row.as_int(output_seq++);
@@ -221,7 +219,12 @@ void Driver::run_delete_query_v6(const v6::QueryBuilder& qb)
         throw error_unimplemented("binding in MySQL driver is not implemented");
     Querybuf dq(512);
     dq.append("DELETE FROM data WHERE id IN (");
-    dq.append(qb.sql_query);
+    dq.start_list(",");
+    auto res = conn.exec_store(qb.sql_query);
+    while (auto row = res.fetch())
+        // Note: if the query gets too long, we can split this in more DELETE
+        // runs
+        dq.append_list(row.as_cstring(0));
     dq.append(")");
     conn.exec_no_data(dq);
 }

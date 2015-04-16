@@ -164,7 +164,6 @@ void Driver::run_built_query_v6(
     sql::SQLRecordV6 rec;
     stm->execute([&]() {
         int output_seq = 0;
-        SQLLEN out_ident_ind;
 
         if (qb.select_station)
         {
