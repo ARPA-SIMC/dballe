@@ -148,16 +148,16 @@ void DB::reset(const char* repinfo_file)
     disappear();
     m_driver->create_tables_v6();
 
-    /* Populate the tables with values */
-    {
-        int added, deleted, updated;
-        repinfo().update(repinfo_file, &added, &deleted, &updated);
-    }
+    // Populate the tables with values
+    int added, deleted, updated;
+    update_repinfo(repinfo_file, &added, &deleted, &updated);
 }
 
 void DB::update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated)
 {
+    auto t = conn->transaction();
     repinfo().update(repinfo_file, added, deleted, updated);
+    t->commit();
 }
 
 std::map<std::string, int> DB::get_repinfo_priorities()
@@ -275,21 +275,27 @@ int DB::last_station_id() const
 
 void DB::remove(const Query& query)
 {
+    auto t = conn->transaction();
     Cursor::run_delete_query(*this, query);
+    t->commit();
 }
 
 void DB::remove_all()
 {
+    auto t = conn->transaction();
     driver().remove_all_v6();
     if (m_lev_tr_cache)
         m_lev_tr_cache->invalidate();
+    t->commit();
 }
 
 void DB::vacuum()
 {
+    auto t = conn->transaction();
     driver().vacuum_v6();
     if (m_lev_tr_cache)
         m_lev_tr_cache->invalidate();
+    t->commit();
 }
 
 std::unique_ptr<db::Cursor> DB::query_stations(const Query& query)

@@ -55,7 +55,6 @@ void PostgreSQLAttrV6::impl_add(int id_data, sql::AttributeList& attrs)
 {
     using namespace postgresql;
 
-    auto trans = conn.transaction();
     conn.exec_no_data("LOCK TABLE attr IN EXCLUSIVE MODE");
 
     // Get the current status of attributes
@@ -100,8 +99,6 @@ void PostgreSQLAttrV6::impl_add(int id_data, sql::AttributeList& attrs)
         )
     )", id_data);
 #endif
-
-    trans->commit();
 }
 
 void PostgreSQLAttrV6::read(int id_data, function<void(unique_ptr<Var>)> dest)

@@ -101,8 +101,7 @@ void Driver::bulk_insert_v6(sql::bulk::InsertV6& vars, bool update_existing)
          ORDER BY id_lev_tr, id_var
     )";
 
-    // TODO: call this on the parent, which is managing the transaction
-    //conn.exec_no_data("LOCK TABLE data IN EXCLUSIVE MODE");
+    conn.exec_no_data("LOCK TABLE data IN EXCLUSIVE MODE");
 
     // Get the current status of variables for this context
     Result existing(conn.exec(select_query, vars.id_station, vars.id_report, vars.datetime));

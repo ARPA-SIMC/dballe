@@ -105,7 +105,7 @@ bool PostgreSQLDataV6::insert_or_ignore(const wreport::Var& var, int* res_id)
 void PostgreSQLDataV6::insert_or_overwrite(const wreport::Var& var, int* res_id)
 {
     using namespace postgresql;
-    auto trans = conn.transaction();
+
     conn.exec_no_data("LOCK TABLE data IN EXCLUSIVE MODE");
 
     auto res_sel = conn.exec_prepared("datav6_select_id", id_station, id_report, id_lev_tr, date, (int)var.code());
@@ -136,8 +136,6 @@ void PostgreSQLDataV6::insert_or_overwrite(const wreport::Var& var, int* res_id)
         }
         default: error_consistency::throwf("get id data v6 query returned %u results", res_sel.rowcount());
     }
-
-    trans->commit();
 }
 
 void PostgreSQLDataV6::dump(FILE* out)
