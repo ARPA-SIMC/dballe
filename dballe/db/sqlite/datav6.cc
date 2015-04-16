@@ -32,8 +32,6 @@ SQLiteDataV6::~SQLiteDataV6()
 
 void SQLiteDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode)
 {
-    std::sort(vars.begin(), vars.end());
-
     const char* select_query = R"(
         SELECT id, id_lev_tr, id_var, value
           FROM data

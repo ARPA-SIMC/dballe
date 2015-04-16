@@ -24,8 +24,6 @@ MySQLDataV6::~MySQLDataV6()
 
 void MySQLDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode)
 {
-    std::sort(vars.begin(), vars.end());
-
     // Get the current status of variables for this context
     Querybuf select;
     select.appendf(R"(

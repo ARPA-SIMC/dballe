@@ -116,9 +116,22 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 
         // Insert the attributes
         if (flags & DBA_IMPORT_ATTRS)
+        {
+#if 0
             for (const auto& v: vars)
                 if (v.inserted())
                     dq.add(v.id_data, *v.var);
+#else
+            sql::bulk::InsertAttrsV6 attrs;
+            for (const auto& v: vars)
+            {
+                if (!v.inserted()) continue;
+                attrs.add_all(*v.var, v.id_data);
+            }
+            if (!attrs.empty())
+                dq.insert(*t, attrs, sql::AttrV6::UPDATE);
+#endif
+        }
     }
 
     sql::bulk::InsertV6 vars;
@@ -165,9 +178,22 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 
     // Insert the attributes
     if (flags & DBA_IMPORT_ATTRS)
+    {
+#if 0
         for (const auto& v: vars)
             if (v.inserted())
                 dq.add(v.id_data, *v.var);
+#else
+        sql::bulk::InsertAttrsV6 attrs;
+        for (const auto& v: vars)
+        {
+            if (!v.inserted()) continue;
+            attrs.add_all(*v.var, v.id_data);
+        }
+        if (!attrs.empty())
+            dq.insert(*t, attrs, sql::AttrV6::UPDATE);
+#endif
+    }
 
     t->commit();
 }

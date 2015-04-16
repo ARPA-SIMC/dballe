@@ -22,6 +22,7 @@
 #ifndef DBALLE_DB_SQL_ATTRV6_H
 #define DBALLE_DB_SQL_ATTRV6_H
 
+#include <dballe/db/sql/datav6.h>
 #include <wreport/var.h>
 #include <functional>
 #include <vector>
@@ -33,8 +34,11 @@ struct Record;
 
 namespace db {
 namespace sql {
-
 struct AttributeList;
+
+namespace bulk {
+struct InsertAttrsV6;
+}
 
 /**
  * Precompiled queries to manipulate the attr table
@@ -51,7 +55,16 @@ protected:
     virtual void impl_add(int id_data, AttributeList& attrs) = 0;
 
 public:
+    enum UpdateMode {
+        UPDATE,
+        IGNORE,
+        ERROR,
+    };
+
     virtual ~AttrV6();
+
+    /// Bulk attribute insert
+    virtual void insert(Transaction& t, sql::bulk::InsertAttrsV6& vars, UpdateMode update_mode=UPDATE);
 
     /**
      * Add all the variables in attrs as attributes of id_data.
@@ -82,6 +95,65 @@ public:
      */
     virtual void dump(FILE* out) = 0;
 };
+
+namespace bulk {
+
+/**
+ * Workflow information about an attribute variable listed for bulk
+ * insert/update
+ */
+struct AttrV6 : public Item
+{
+    int id_data;
+    const wreport::Var* attr;
+
+    AttrV6(const wreport::Var* attr, int id_data=-1)
+        : id_data(id_data), attr(attr)
+    {
+    }
+    bool operator<(const AttrV6& v) const
+    {
+        if (int d = id_data - v.id_data) return d < 0;
+        return attr->code() < v.attr->code();
+    }
+
+    void dump(FILE* out) const;
+};
+
+struct InsertAttrsV6 : public std::vector<AttrV6>
+{
+    void add(const wreport::Var* attr, int id_data)
+    {
+        emplace_back(attr, id_data);
+    }
+
+    // Add all attributes of the given variable
+    void add_all(const wreport::Var& var, int id_data);
+
+    void dump(FILE* out) const;
+};
+
+/**
+ * Helper class for annotating InsertV6 variables with the current status of
+ * the database.
+ */
+struct AnnotateAttrsV6
+{
+    InsertAttrsV6& attrs;
+    InsertAttrsV6::iterator iter;
+    bool do_insert = false;
+    bool do_update = false;
+
+    AnnotateAttrsV6(InsertAttrsV6& attrs);
+
+    bool annotate(int id_data, wreport::Varcode code, const char* value);
+    void annotate_end();
+
+    void dump(FILE* out) const;
+};
+
+}
+
 
 }
 }

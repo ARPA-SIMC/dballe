@@ -19,6 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 #include "datav6.h"
+#include <algorithm>
 #include <cstring>
 
 using namespace std;
@@ -31,6 +32,22 @@ namespace sql {
 DataV6::~DataV6() {}
 
 namespace bulk {
+
+void Item::format_flags(char* dest) const
+{
+    dest[0] = needs_update() ? 'u' : '-',
+    dest[1] = updated() ? 'U' : '-',
+    dest[2] = needs_insert() ? 'i' : '-',
+    dest[3] = inserted() ? 'I' : '-',
+    dest[4] = 0;
+}
+
+AnnotateVarsV6::AnnotateVarsV6(InsertV6& vars)
+    : vars(vars)
+{
+    std::sort(vars.begin(), vars.end());
+    iter = vars.begin();
+}
 
 bool AnnotateVarsV6::annotate(int id_data, int id_levtr, Varcode code, const char* value)
 {
@@ -120,18 +137,10 @@ void AnnotateVarsV6::dump(FILE* out) const
 
 void VarV6::dump(FILE* out) const
 {
-    fprintf(out, "ltr:%d data:%d flags:%c%c%c%c %01d%02d%03d(%d): %s\n",
-            id_levtr, id_data,
-#if 0
-            (flags & FLAG_NEEDS_UPDATE) ? 'u' : '-',
-            (flags & FLAG_UPDATED) ? 'U' : '-',
-            (flags & FLAG_NEEDS_INSERT) ? 'i' : '-',
-            (flags & FLAG_INSERTED) ? 'I' : '-',
-#endif
-            needs_update() ? 'u' : '-',
-            updated() ? 'U' : '-',
-            needs_insert() ? 'i' : '-',
-            inserted() ? 'I' : '-',
+    char flags[5];
+    format_flags(flags);
+    fprintf(out, "ltr:%d data:%d flags:%s %01d%02d%03d(%d): %s\n",
+            id_levtr, id_data, flags,
             WR_VAR_F(var->code()), WR_VAR_X(var->code()), WR_VAR_Y(var->code()),
             (int)(var->code()),
             var->value());

@@ -20,6 +20,7 @@
  */
 #include "attrv6.h"
 #include "dballe/db/sql/internals.h"
+#include "dballe/db/querybuf.h"
 #include "dballe/core/var.h"
 
 using namespace std;
@@ -71,6 +72,71 @@ void SQLiteAttrV6::read(int id_data, function<void(unique_ptr<Var>)> dest)
         else
             dest(newvar(sstm->column_int(0), sstm->column_string(1)));
     });
+}
+
+void SQLiteAttrV6::insert(Transaction& t, sql::bulk::InsertAttrsV6& attrs, UpdateMode update_mode)
+{
+    Querybuf select_query;
+    select_query.append("SELECT id_data, type, value FROM attr WHERE id_data IN (");
+    select_query.start_list(",");
+    int last_data_id = -1;
+    for (const auto& a: attrs)
+    {
+        if (a.id_data == last_data_id) continue;
+        select_query.append_listf("%d", a.id_data);
+        last_data_id = a.id_data;
+    }
+    select_query.append(") ORDER BY id_data, type");
+
+    // Get the current status of variables for this context
+    auto sstm = conn.sqlitestatement(select_query);
+
+    // Scan the result in parallel with the variable list, annotating changed
+    // items with their data ID
+    sql::bulk::AnnotateAttrsV6 todo(attrs);
+    sstm->execute([&]() {
+        todo.annotate(
+                sstm->column_int(0),
+                sstm->column_int(1),
+                sstm->column_string(2));
+    });
+    todo.annotate_end();
+
+    // We now have a todo-list
+
+    switch (update_mode)
+    {
+        case UPDATE:
+            if (todo.do_update)
+            {
+                auto update_stm = conn.sqlitestatement("UPDATE attr SET value=? WHERE id_data=? AND type=?");
+                for (auto& v: attrs)
+                {
+                    if (!v.needs_update()) continue;
+                    update_stm->bind(v.attr->value(), v.id_data, v.attr->code());
+                    update_stm->execute();
+                    v.set_updated();
+                }
+            }
+            break;
+        case IGNORE:
+            break;
+        case ERROR:
+            if (todo.do_update)
+                throw error_consistency("refusing to overwrite existing data");
+    }
+
+    if (todo.do_insert)
+    {
+        auto insert = conn.sqlitestatement("INSERT INTO attr (id_data, type, value) VALUES (?, ?, ?)");
+        for (auto& v: attrs)
+        {
+            if (!v.needs_insert()) continue;
+            insert->bind(v.id_data, v.attr->code(), v.attr->value());
+            insert->execute();
+            v.set_inserted();
+        }
+    }
 }
 
 void SQLiteAttrV6::dump(FILE* out)

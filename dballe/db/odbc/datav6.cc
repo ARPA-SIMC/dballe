@@ -24,8 +24,6 @@ ODBCDataV6::~ODBCDataV6()
 
 void ODBCDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode)
 {
-    std::sort(vars.begin(), vars.end());
-
     Querybuf select_query(512);
     select_query.appendf(R"(
         SELECT id, id_lev_tr, id_var, value
