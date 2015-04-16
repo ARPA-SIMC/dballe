@@ -103,25 +103,25 @@ struct Cursor : public db::Cursor
     void attr_insert(const Record& attrs) override;
     void attr_remove(const AttrList& qcs) override;
 
-    virtual int get_station_id() const;
-    virtual double get_lat() const;
-    virtual double get_lon() const;
-    virtual const char* get_ident(const char* def=0) const;
-    virtual const char* get_rep_memo() const;
-    virtual Level get_level() const;
-    virtual Trange get_trange() const;
-    virtual void get_datetime(int (&dt)[6]) const;
-    virtual wreport::Varcode get_varcode() const;
-    virtual wreport::Var get_var() const;
+    int get_station_id() const override;
+    double get_lat() const override;
+    double get_lon() const override;
+    const char* get_ident(const char* def=0) const override;
+    const char* get_rep_memo() const override;
+    Level get_level() const override;
+    Trange get_trange() const override;
+    void get_datetime(int (&dt)[6]) const override;
+    wreport::Varcode get_varcode() const override;
+    wreport::Var get_var() const override;
 
-    virtual int attr_reference_id() const;
+    int attr_reference_id() const override;
 
     /**
      * Iterate the cursor until the end, returning the number of items.
      *
      * If dump is a FILE pointer, also dump the cursor values to it
      */
-    virtual unsigned test_iterate(FILE* dump=0) = 0;
+    unsigned test_iterate(FILE* dump=0) override = 0;
 
     static std::unique_ptr<Cursor> run_station_query(DB& db, const Query& query);
     static std::unique_ptr<Cursor> run_data_query(DB& db, const Query& query);
