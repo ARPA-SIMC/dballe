@@ -31,8 +31,6 @@
 #include <dballe/msg/msg.h>
 #include <dballe/msg/context.h>
 
-#define USE_BULK_INSERT
-
 using namespace wreport;
 
 namespace dballe {
@@ -99,7 +97,6 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
 
     if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || inserted_pseudoana)
     {
-#ifdef USE_BULK_INSERT
         // Prepare a bulk insert
         sql::bulk::InsertV6 vars;
         vars.id_station = id_station;
@@ -115,43 +112,15 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
         }
 
         // Run the bulk insert
-        driver().bulk_insert_v6(vars, (flags & DBA_IMPORT_OVERWRITE));
+        driver().bulk_insert_v6(*t, vars, (flags & DBA_IMPORT_OVERWRITE));
 
         // Insert the attributes
         if (flags & DBA_IMPORT_ATTRS)
             for (const auto& v: vars)
                 if (v.inserted())
                     dq.add(v.id_data, *v.var);
-#else
-        dd.set_station_info(id_station, id_report);
-
-        // Insert the rest of the station information
-        for (size_t i = 0; i < l_ana->data.size(); ++i)
-        {
-            Varcode code = l_ana->data[i]->code();
-            // Do not import datetime in the station info context
-            if (code >= WR_VAR(0, 4, 1) && code <= WR_VAR(0, 4, 6))
-                continue;
-
-            bool inserted = false;
-            int id_data;
-            if ((flags & DBA_IMPORT_OVERWRITE) == 0)
-            {
-                // Insert only if it is missing
-                inserted = dd.insert_or_ignore(*l_ana->data[i], &id_data);
-            } else {
-                dd.insert_or_overwrite(*l_ana->data[i], &id_data);
-                inserted = true;
-            }
-
-            /* Insert the attributes */
-            if (inserted && (flags & DBA_IMPORT_ATTRS))
-                dq.add(id_data, *(l_ana->data[i]));
-        }
-#endif
     }
 
-#ifdef USE_BULK_INSERT
     sql::bulk::InsertV6 vars;
     vars.id_station = id_station;
     vars.id_report = id_report;
@@ -192,63 +161,13 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
     }
 
     // Run the bulk insert
-    driver().bulk_insert_v6(vars, (flags & DBA_IMPORT_OVERWRITE));
+    driver().bulk_insert_v6(*t, vars, (flags & DBA_IMPORT_OVERWRITE));
 
     // Insert the attributes
     if (flags & DBA_IMPORT_ATTRS)
         for (const auto& v: vars)
             if (v.inserted())
                 dq.add(v.id_data, *v.var);
-#else
-    // Fill up the common context information for the rest of the data
-
-    // Date and time
-    {
-        const Var* year = l_ana->find_by_id(DBA_MSG_YEAR);
-        const Var* month = l_ana->find_by_id(DBA_MSG_MONTH);
-        const Var* day = l_ana->find_by_id(DBA_MSG_DAY);
-        const Var* hour = l_ana->find_by_id(DBA_MSG_HOUR);
-        const Var* min = l_ana->find_by_id(DBA_MSG_MINUTE);
-        const Var* sec = l_ana->find_by_id(DBA_MSG_SECOND);
-
-        if (year == NULL || month == NULL || day == NULL || hour == NULL || min == NULL)
-            throw error_notfound("date/time informations not found (or incomplete) in message to insert");
-
-        dd.set_date(year->enqi(), month->enqi(), day->enqi(), hour->enqi(), min->enqi(), sec ? sec->enqi() : 0);
-    }
-
-	/* Insert the rest of the data */
-	for (size_t i = 0; i < msg.data.size(); ++i)
-	{
-		const msg::Context& ctx = *msg.data[i];
-		bool is_ana_level = ctx.level == Level::ana() && ctx.trange == Trange();
-
-        // Skip the station info level
-        if (is_ana_level) continue;
-
-        // Get the database ID of the lev_tr
-        int id_lev_tr = lt.obtain_id(ctx.level, ctx.trange);
-
-        dd.set_context(id_station, id_report, id_lev_tr);
-
-		for (size_t j = 0; j < ctx.data.size(); ++j)
-		{
-            const Var& var = *ctx.data[j];
-            if (not var.isset()) continue;
-
-            // Insert the variable
-            int id_data;
-            if (flags & DBA_IMPORT_OVERWRITE)
-                dd.insert_or_overwrite(var, &id_data);
-            else
-                dd.insert_or_fail(var, &id_data);
-
-            /* Insert the attributes */
-            if (flags & DBA_IMPORT_ATTRS)
-                dq.add(id_data, var);
-        }
-    }
-#endif
 
     t->commit();
 }

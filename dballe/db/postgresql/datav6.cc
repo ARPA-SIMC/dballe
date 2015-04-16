@@ -80,28 +80,6 @@ void PostgreSQLDataV6::insert_or_fail(const wreport::Var& var, int* res_id)
         *res_id = res.get_int4(0, 0);
 }
 
-bool PostgreSQLDataV6::insert_or_ignore(const wreport::Var& var, int* res_id)
-{
-    using namespace postgresql;
-    Result res;
-    if (const char* val = var.value())
-        res = move(conn.exec_prepared_unchecked("datav6_insert_ignore", id_station, id_report, id_lev_tr, date, (int)var.code(), val));
-    else
-        res = move(conn.exec_prepared_unchecked("datav6_insert_ignore", id_station, id_report, id_lev_tr, date, (int)var.code(), nullptr));
-
-    switch (res.rowcount())
-    {
-        case 0: return false;
-        case 1:
-            if (res_id) *res_id = res.get_int4(0, 0);
-            return true;
-        default:
-            error_consistency::throwf("got %d results instead of 1 executing precompiled query datav6_insert_ignore", res.rowcount());
-    }
-    return true;
-
-}
-
 void PostgreSQLDataV6::insert_or_overwrite(const wreport::Var& var, int* res_id)
 {
     using namespace postgresql;

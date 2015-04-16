@@ -56,8 +56,6 @@ protected:
     ODBCStatement* ustm;
     /** Precompiled insert or update statement, for DBs where it is available */
     ODBCStatement* ioustm;
-    /** Precompiled insert or ignore statement */
-    ODBCStatement* iistm;
     /** Precompiled select ID statement */
     ODBCStatement* sidstm;
 
@@ -105,15 +103,6 @@ public:
      * Trying to replace an existing value will result in an error.
      */
     void insert_or_fail(const wreport::Var& var, int* res_id=nullptr) override;
-
-    /**
-     * Insert an entry into the data table, ignoring conflicts.
-     *
-     * Trying to replace an existing value will do nothing.
-     *
-     * @return true if it was inserted, false if it was already present
-     */
-    bool insert_or_ignore(const wreport::Var& var, int* res_id=nullptr) override;
 
     /**
      * Insert an entry into the data table, overwriting on conflicts.

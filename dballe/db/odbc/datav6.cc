@@ -13,7 +13,7 @@ namespace db {
 namespace odbc {
 
 ODBCDataV6::ODBCDataV6(ODBCConnection& conn)
-    : conn(conn), istm(0), ustm(0), ioustm(0), iistm(0), sidstm(0)
+    : conn(conn), istm(0), ustm(0), ioustm(0), sidstm(0)
 {
     const char* insert_query =
         "INSERT INTO data (id_station, id_report, id_lev_tr, datetime, id_var, value) VALUES(?, ?, ?, ?, ?, ?)";
@@ -101,23 +101,6 @@ ODBCDataV6::ODBCDataV6(ODBCConnection& conn)
             break;
     }
 
-    /* Create the statement for insert ignore */
-    switch (conn.server_type)
-    {
-        case ServerType::POSTGRES: iistm = conn.odbcstatement(insert_query).release(); iistm->ignore_error = "23505"; break;
-        case ServerType::ORACLE: iistm = conn.odbcstatement(insert_query).release(); iistm->ignore_error = "23000"; break;
-        //case ServerType::ORACLE: iistm = conn.odbcstatement((insert_ignore_query_oracle); break;
-        case ServerType::MYSQL: iistm = conn.odbcstatement(insert_ignore_query_mysql).release(); break;
-        case ServerType::SQLITE: iistm = conn.odbcstatement(insert_ignore_query_sqlite).release(); break;
-        default: iistm = conn.odbcstatement(insert_ignore_query_sqlite).release(); break;
-    }
-    iistm->bind_in(1, id_station);
-    iistm->bind_in(2, id_report);
-    iistm->bind_in(3, id_lev_tr);
-    iistm->bind_in(4, date);
-    iistm->bind_in(5, id_var);
-    iistm->bind_in(6, value, value_ind);
-
     /* Create the statement for select id */
     sidstm = conn.odbcstatement(select_id_query).release();
     sidstm->bind_in(1, id_station);
@@ -134,7 +117,6 @@ ODBCDataV6::~ODBCDataV6()
     if (istm) delete istm;
     if (ustm) delete ustm;
     if (ioustm) delete ioustm;
-    if (iistm) delete iistm;
     if (sidstm) delete sidstm;
 }
 
@@ -222,26 +204,6 @@ void ODBCDataV6::insert_or_fail(const wreport::Var& var, int* res_id)
         else
             *res_id = conn.get_last_insert_id();
     }
-}
-
-bool ODBCDataV6::insert_or_ignore(const wreport::Var& var, int* res_id)
-{
-    set(var);
-    int sqlres = iistm->execute();
-    bool res;
-    if (conn.server_type == ServerType::POSTGRES || conn.server_type == ServerType::ORACLE)
-        res = ((sqlres == SQL_SUCCESS) || (sqlres == SQL_SUCCESS_WITH_INFO));
-    else
-        res = iistm->rowcount() != 0;
-    iistm->close_cursor_if_needed();
-    if (res_id)
-    {
-        if (seq_data)
-            *res_id = seq_data->read();
-        else
-            *res_id = conn.get_last_insert_id();
-    }
-    return res;
 }
 
 void ODBCDataV6::insert_or_overwrite(const wreport::Var& var, int* res_id)

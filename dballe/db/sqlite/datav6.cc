@@ -30,9 +30,6 @@ SQLiteDataV6::SQLiteDataV6(SQLiteConnection& conn)
     // Create the statement for update
     ustm = conn.sqlitestatement(update_query).release();
 
-    // Create the statement for insert ignore
-    iistm = conn.sqlitestatement(insert_ignore_query).release();
-
     // Create the statement for select id
     sidstm = conn.sqlitestatement(select_id_query).release();
 }
@@ -41,7 +38,6 @@ SQLiteDataV6::~SQLiteDataV6()
 {
     if (istm) delete istm;
     if (ustm) delete ustm;
-    if (iistm) delete iistm;
     if (sidstm) delete sidstm;
 }
 
@@ -79,23 +75,6 @@ void SQLiteDataV6::insert_or_fail(const wreport::Var& var, int* res_id)
         istm->bind_null_val(6);
     istm->execute();
     if (res_id) *res_id = conn.get_last_insert_id();
-}
-
-bool SQLiteDataV6::insert_or_ignore(const wreport::Var& var, int* res_id)
-{
-    iistm->bind_val(1, id_station);
-    iistm->bind_val(2, id_report);
-    iistm->bind_val(3, id_lev_tr);
-    iistm->bind_val(4, date);
-    iistm->bind_val(5, var.code());
-    if (const char* val = var.value())
-        iistm->bind_val(6, val);
-    else
-        iistm->bind_null_val(6);
-    iistm->execute();
-    if (conn.changes() == 0) return false;
-    if (res_id) *res_id = conn.get_last_insert_id();
-    return true;
 }
 
 void SQLiteDataV6::insert_or_overwrite(const wreport::Var& var, int* res_id)

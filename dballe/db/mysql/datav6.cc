@@ -58,25 +58,6 @@ void MySQLDataV6::insert_or_fail(const wreport::Var& var, int* res_id)
     if (res_id) *res_id = conn.get_last_insert_id();
 }
 
-bool MySQLDataV6::insert_or_ignore(const wreport::Var& var, int* res_id)
-{
-    if (!var.value()) return false;
-    string escaped_value = conn.escape(var.value());
-
-    Querybuf insert;
-    insert.appendf(R"(
-        INSERT IGNORE INTO data (id_station, id_report, id_lev_tr, datetime, id_var, value)
-        VALUES (%d, %d, %d, '%04d-%02d-%02d %02d:%02d:%02d', %d, '%s')
-    )", id_station, id_report, id_lev_tr,
-        date.date.year, date.date.month, date.date.day,
-        date.time.hour, date.time.minute, date.time.second,
-        (int)var.code(), escaped_value.c_str());
-    conn.exec_no_data(insert);
-    if (mysql_affected_rows(conn) == 0) return false;
-    if (res_id) *res_id = conn.get_last_insert_id();
-    return true;
-}
-
 void MySQLDataV6::insert_or_overwrite(const wreport::Var& var, int* res_id)
 {
     if (!var.value()) return;
