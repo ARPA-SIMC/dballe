@@ -39,6 +39,7 @@
 namespace dballe {
 namespace db {
 struct Connection;
+struct Transaction;
 
 namespace v6 {
 struct QueryBuilder;
@@ -82,85 +83,6 @@ struct SQLRecordV6
     void dump(FILE* out);
 };
 
-namespace bulk {
-
-/**
- * Workflow information about a variable listed for bulk insert/update
- */
-struct VarV6
-{
-    static const unsigned FLAG_NEEDS_UPDATE = 1 << 0;
-    static const unsigned FLAG_UPDATED      = 1 << 1;
-    static const unsigned FLAG_NEEDS_INSERT = 1 << 2;
-    static const unsigned FLAG_INSERTED     = 1 << 3;
-    int id_levtr;
-    int id_data;
-    const wreport::Var* var;
-    unsigned flags = 0;
-
-    VarV6(const wreport::Var* var, int id_levtr=-1, int id_data=-1)
-        : id_levtr(id_levtr), id_data(id_data), var(var)
-    {
-    }
-    bool operator<(const VarV6& v) const
-    {
-        if (int d = id_levtr - v.id_levtr) return d < 0;
-        return var->code() < v.var->code();
-    }
-
-    bool needs_update() const { return flags & FLAG_NEEDS_UPDATE; }
-    bool updated() const { return flags & FLAG_UPDATED; }
-    bool needs_insert() const { return flags & FLAG_NEEDS_INSERT; }
-    bool inserted() const { return flags & FLAG_INSERTED; }
-    void set_needs_update() { flags |= FLAG_NEEDS_UPDATE; }
-    void set_updated() { flags = (flags & ~FLAG_NEEDS_UPDATE) | FLAG_UPDATED; }
-    void set_needs_insert() { flags |= FLAG_NEEDS_INSERT; }
-    void set_inserted() { flags = (flags & ~FLAG_NEEDS_INSERT) | FLAG_INSERTED; }
-
-    void dump(FILE* out) const;
-};
-
-
-/**
- * Input for a bulk insert of a lot of variables sharing the same context
- * information.
- */
-struct InsertV6 : public std::vector<VarV6>
-{
-    int id_station;
-    int id_report;
-    Datetime datetime;
-
-    void add(const wreport::Var* var, int id_levtr)
-    {
-        emplace_back(var, id_levtr);
-    }
-
-    void dump(FILE* out) const;
-};
-
-/**
- * Helper class for annotating InsertV6 variables with the current status of
- * the database.
- */
-struct AnnotateVarsV6
-{
-    InsertV6& vars;
-    InsertV6::iterator iter;
-    bool do_insert = false;
-    bool do_update = false;
-
-    AnnotateVarsV6(InsertV6& vars) : vars(vars), iter(vars.begin()) {}
-
-    bool annotate(int id_data, int id_levtr, wreport::Varcode code, const char* value);
-    void annotate_end();
-
-    void dump(FILE* out) const;
-};
-
-}
-
-
 struct Driver
 {
 public:
@@ -196,9 +118,6 @@ public:
     /// Precompiled queries to manipulate the attr table
     virtual std::unique_ptr<sql::AttrV6> create_attrv6() = 0;
 
-    /// Bulk variable insert
-    virtual void bulk_insert_v6(bulk::InsertV6& vars, bool update_existing=true) = 0;
-
     /**
      * Run a query on the given statement, returning results as SQLRecordV6 objects
      *
@@ -208,9 +127,6 @@ public:
      * the actual implementation of stm.
      */
     virtual void run_built_query_v6(const v6::QueryBuilder& qb, std::function<void(SQLRecordV6& rec)> dest) = 0;
-
-    /// Run the query to delete all records selected by the given QueryBuilder
-    virtual void run_delete_query_v6(const v6::QueryBuilder& qb) = 0;
 
     /// Create all missing tables for a DB with the given format
     void create_tables(db::Format format);

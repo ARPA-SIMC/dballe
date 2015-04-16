@@ -19,6 +19,7 @@
 
 #include "db/test-utils-db.h"
 #include "db/v6/db.h"
+#include "db/sql.h"
 #include "db/sql/repinfo.h"
 #include "db/sql/station.h"
 #include "db/sql/levtr.h"
@@ -78,59 +79,73 @@ typedef test_group::Test Test;
 
 std::vector<Test> tests {
     Test("insert", [](Fixture& f) {
+        using namespace dballe::db::sql;
         auto& da = *f.data;
 
+        auto t = f.conn->transaction();
+
+        auto insert_sample1 = [&](bulk::InsertV6& vars, int value, bool update) {
+            vars.id_station = 1;
+            vars.id_report = 1;
+            vars.datetime = Datetime(2001, 2, 3, 4, 5, 6);
+            Var var(varinfo(WR_VAR(0, 1, 2)), value);
+            vars.add(&var, 1);
+            da.insert(*t, vars, update);
+        };
+
         // Insert a datum
-        da.set_context(1, 1, 1);
-        da.set_date(2001, 2, 3, 4, 5, 6);
-        da.insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 123));
+        {
+            bulk::InsertV6 vars;
+            insert_sample1(vars, 123, false);
+            wassert(actual(vars[0].id_data) == 1);
+            wassert(actual(vars[0].inserted()).istrue());
+            wassert(actual(vars[0].updated()).isfalse());
+        }
 
         // Insert another datum
-        da.set_context(2, 2, 2);
-        da.set_date(2002, 3, 4, 5, 6, 7);
-        da.insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 234));
-
-        // Reinsert a datum: it should fail
-        da.set_context(1, 1, 1);
-        da.set_date(2001, 2, 3, 4, 5, 6);
-        try {
-            da.insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 123));
-            ensure(false);
-        } catch (db::error& e) {
-            //ensure_contains(e.what(), "uplicate");
+        {
+            bulk::InsertV6 vars;
+            vars.id_station = 2;
+            vars.id_report = 2;
+            vars.datetime = Datetime(2002, 3, 4, 5, 6, 7);
+            Var var(varinfo(WR_VAR(0, 1, 2)), 234);
+            vars.add(&var, 2);
+            da.insert(*t, vars, true);
+            wassert(actual(vars[0].id_data) == 2);
+            wassert(actual(vars[0].inserted()).istrue());
+            wassert(actual(vars[0].updated()).isfalse());
         }
 
-        // Reinsert the other datum: it should fail
-        da.set_context(2, 2, 2);
-        da.set_date(2002, 3, 4, 5, 6, 7);
-        try {
-            da.insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 234));
-            ensure(false);
-        } catch (db::error& e) {
-            //ensure_contains(e.what(), "uplicate");
+        // Reinsert the first datum: it should find its ID and do nothing
+        {
+            bulk::InsertV6 vars;
+            insert_sample1(vars, 123, true);
+            wassert(actual(vars[0].id_data) == 1);
+            wassert(actual(vars[0].inserted()).isfalse());
+            wassert(actual(vars[0].updated()).isfalse());
         }
 
-        // Reinsert a datum with overwrite: it should work
-        da.set_context(1, 1, 1);
-        da.set_date(2001, 2, 3, 4, 5, 6);
-        da.insert_or_overwrite(Var(varinfo(WR_VAR(0, 1, 2)), 123));
+        // Reinsert the first datum, with a different value and no overwrite:
+        // it should find its ID and do nothing
+        {
+            bulk::InsertV6 vars;
+            insert_sample1(vars, 125, false);
+            wassert(actual(vars[0].id_data) == 1);
+            wassert(actual(vars[0].inserted()).isfalse());
+            wassert(actual(vars[0].updated()).isfalse());
+        }
 
-        // Reinsert the other datum with overwrite: it should work
-        da.set_context(2, 2, 2);
-        da.set_date(2002, 3, 4, 5, 6, 7);
-        da.insert_or_overwrite(Var(varinfo(WR_VAR(0, 1, 2)), 234));
+        // Reinsert the first datum, with a different value and overwrite:
+        // it should find its ID and update it
+        {
+            bulk::InsertV6 vars;
+            insert_sample1(vars, 125, true);
+            wassert(actual(vars[0].id_data) == 1);
+            wassert(actual(vars[0].inserted()).isfalse());
+            wassert(actual(vars[0].updated()).istrue());
+        }
 
-        // Insert a new datum with ignore: it should insert
-        da.set_context(2, 2, 3);
-        wassert(actual(da.insert_or_ignore(Var(varinfo(WR_VAR(0, 1, 2)), 234))) == true);
-
-        // Reinsert the same datum with ignore: it should ignore
-        wassert(actual(da.insert_or_ignore(Var(varinfo(WR_VAR(0, 1, 2)), 234))) == false);
-
-        // Reinsert a nonexisting datum with overwrite: it should work
-        da.set_context(1, 1, 1);
-        da.set_date(2005, 2, 3, 4, 5, 6);
-        da.insert_or_overwrite(Var(varinfo(WR_VAR(0, 1, 2)), 123));
+        t->commit();
     }),
 };
 

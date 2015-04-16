@@ -64,6 +64,9 @@ public:
     SQLiteDataV6& operator=(const SQLiteDataV6&) = delete;
     ~SQLiteDataV6();
 
+    void insert(Transaction& t, sql::bulk::InsertV6& vars, bool update_existing) override;
+    void remove(const v6::QueryBuilder& qb) override;
+
     /// Set id_lev_tr and datetime to mean 'station information'
     void set_station_info(int id_station, int id_report) override;
 

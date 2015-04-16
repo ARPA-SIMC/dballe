@@ -1,7 +1,8 @@
 #include "datav6.h"
 #include "dballe/db/sql.h"
-#include "dballe/db/v6/db.h"
+#include "dballe/db/v6/qbuilder.h"
 #include "dballe/core/record.h"
+#include <algorithm>
 #include <cstring>
 #include <sstream>
 
@@ -113,6 +114,114 @@ void PostgreSQLDataV6::insert_or_overwrite(const wreport::Var& var, int* res_id)
             break;
         }
         default: error_consistency::throwf("get id data v6 query returned %u results", res_sel.rowcount());
+    }
+}
+
+void PostgreSQLDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, bool update_existing)
+{
+    std::sort(vars.begin(), vars.end());
+
+    using namespace postgresql;
+    const char* select_query = R"(
+        SELECT id, id_lev_tr, id_var, value
+          FROM data
+         WHERE id_station=$1::int4 AND id_report=$2::int4 AND datetime=$3::timestamp
+         ORDER BY id_lev_tr, id_var
+    )";
+
+    t.lock_table("data");
+
+    // Get the current status of variables for this context
+    Result existing(conn.exec(select_query, vars.id_station, vars.id_report, vars.datetime));
+
+    // Scan the result in parallel with the variable list, annotating changed
+    // items with their data ID
+    sql::bulk::AnnotateVarsV6 todo(vars);
+    for (unsigned row = 0; row < existing.rowcount(); ++row)
+    {
+        if (!todo.annotate(
+                existing.get_int4(row, 0),
+                existing.get_int4(row, 1),
+                (Varcode)existing.get_int4(row, 2),
+                existing.get_string(row, 3)))
+            break;
+    }
+    todo.annotate_end();
+
+    // We now have a todo-list
+
+    if (update_existing && todo.do_update)
+    {
+        Querybuf dq(512);
+        dq.append("UPDATE data as d SET value=i.value FROM (values ");
+        dq.start_list(",");
+        for (auto& v: vars)
+        {
+            if (!v.needs_update()) continue;
+            char* escaped_val = PQescapeLiteral(conn, v.var->value(), strlen(v.var->value()));
+            if (!escaped_val)
+                throw error_postgresql(conn, string("escaping string '") + v.var->value() + "'");
+            dq.append_listf("(%d, %s)", v.id_data, escaped_val);
+            PQfreemem(escaped_val);
+            v.set_updated();
+        }
+        dq.append(") AS i(id, value) WHERE d.id = i.id");
+        //fprintf(stderr, "Update query: %s\n", dq.c_str());
+        conn.exec_no_data(dq);
+    }
+
+    if (todo.do_insert)
+    {
+        Querybuf dq(512);
+        dq.append("INSERT INTO data (id, id_station, id_report, id_lev_tr, datetime, id_var, value) VALUES ");
+        dq.start_list(",");
+        for (auto& v: vars)
+        {
+            if (!v.needs_insert()) continue;
+            char* escaped_val = PQescapeLiteral(conn, v.var->value(), strlen(v.var->value()));
+            if (!escaped_val)
+                throw error_postgresql(conn, string("escaping string '") + v.var->value() + "'");
+            dq.append_listf("(DEFAULT, %d, %d, %d, '%04d-%02d-%02d %02d:%02d:%02d', %d, %s)",
+                    vars.id_station, vars.id_report, v.id_levtr,
+                    vars.datetime.date.year, vars.datetime.date.month, vars.datetime.date.day,
+                    vars.datetime.time.hour, vars.datetime.time.minute, vars.datetime.time.second,
+                    (int)v.var->code(), escaped_val);
+            PQfreemem(escaped_val);
+        }
+        dq.append(" RETURNING id");
+
+        //fprintf(stderr, "Insert query: %s\n", dq.c_str());
+
+        // Run the insert query and read back the new IDs
+        Result res(conn.exec(dq));
+        unsigned row = 0;
+        auto v = vars.begin();
+        while (row < res.rowcount() && v != vars.end())
+        {
+            if (!v->needs_insert())
+            {
+               ++v;
+               continue;
+            }
+            v->id_data = res.get_int4(row, 0);
+            v->set_inserted();
+            ++v;
+            ++row;
+        }
+    }
+}
+
+void PostgreSQLDataV6::remove(const v6::QueryBuilder& qb)
+{
+    Querybuf dq(512);
+    dq.append("DELETE FROM data WHERE id IN (");
+    dq.append(qb.sql_query);
+    dq.append(")");
+    if (qb.bind_in_ident)
+    {
+        conn.exec_no_data(dq.c_str(), qb.bind_in_ident);
+    } else {
+        conn.exec_no_data(dq.c_str());
     }
 }
 

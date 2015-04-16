@@ -1,10 +1,11 @@
 #include "datav6.h"
 #include "dballe/db/sql.h"
-#include "dballe/db/v6/db.h"
+#include "dballe/db/v6/qbuilder.h"
 #include "dballe/core/record.h"
+#include <algorithm>
+#include <cstring>
 #include <sqltypes.h>
 #include <sql.h>
-#include <cstring>
 
 using namespace wreport;
 
@@ -236,6 +237,108 @@ void ODBCDataV6::insert_or_overwrite(const wreport::Var& var, int* res_id)
         }
     }
 }
+
+void ODBCDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, bool update_existing)
+{
+    std::sort(vars.begin(), vars.end());
+
+    Querybuf select_query(512);
+    select_query.appendf(R"(
+        SELECT id, id_lev_tr, id_var, value
+          FROM data
+         WHERE id_station=%d AND id_report=%d AND datetime={ts '%04d-%02d-%02d %02d:%02d:%02d'}
+         ORDER BY id_lev_tr, id_var
+    )", vars.id_station, vars.id_report,
+        vars.datetime.date.year, vars.datetime.date.month, vars.datetime.date.day,
+        vars.datetime.time.hour, vars.datetime.time.minute, vars.datetime.time.second);
+
+    // Get the current status of variables for this context
+    auto stm = conn.odbcstatement(select_query);
+
+    int id_data;
+    int id_levtr;
+    int id_var;
+    char value[255];
+    stm->bind_out(1, id_data);
+    stm->bind_out(2, id_levtr);
+    stm->bind_out(3, id_var);
+    stm->bind_out(4, value, 255);
+
+    // Scan the result in parallel with the variable list, annotating changed
+    // items with their data ID
+    sql::bulk::AnnotateVarsV6 todo(vars);
+    stm->execute();
+    while (stm->fetch())
+        todo.annotate(id_data, id_levtr, id_var, value);
+    todo.annotate_end();
+
+    // We now have a todo-list
+
+    if (update_existing && todo.do_update)
+    {
+        auto update_stm = conn.odbcstatement("UPDATE data SET value=? WHERE id=?");
+        for (auto& v: vars)
+        {
+            if (!v.needs_update()) continue;
+            update_stm->bind_in(1, v.var->value());
+            update_stm->bind_in(2, v.id_data);
+            update_stm->execute_and_close();
+            v.set_updated();
+        }
+    }
+
+    if (todo.do_insert)
+    {
+        Querybuf dq(512);
+        dq.appendf(R"(
+            INSERT INTO data (id_station, id_report, id_lev_tr, datetime, id_var, value)
+                 VALUES (%d, %d, ?, '%04d-%02d-%02d %02d:%02d:%02d', ?, ?)
+        )", vars.id_station, vars.id_report,
+            vars.datetime.date.year, vars.datetime.date.month, vars.datetime.date.day,
+            vars.datetime.time.hour, vars.datetime.time.minute, vars.datetime.time.second);
+        auto insert = conn.odbcstatement(dq);
+        int varcode;
+        insert->bind_in(2, varcode);
+        for (auto& v: vars)
+        {
+            if (!v.needs_insert()) continue;
+            insert->bind_in(1, v.id_levtr);
+            varcode = v.var->code();
+            insert->bind_in(3, v.var->value());
+            insert->execute();
+            v.id_data = conn.get_last_insert_id();
+            v.set_inserted();
+        }
+    }
+}
+
+void ODBCDataV6::remove(const v6::QueryBuilder& qb)
+{
+    auto stm = conn.odbcstatement(qb.sql_query);
+    if (qb.bind_in_ident) stm->bind_in(1, qb.bind_in_ident);
+
+    // Get the list of data to delete
+    int out_id_data;
+    stm->bind_out(1, out_id_data);
+
+    // Compile the DELETE query for the data
+    auto stmd = conn.odbcstatement("DELETE FROM data WHERE id=?");
+    stmd->bind_in(1, out_id_data);
+
+    // Compile the DELETE query for the attributes
+    auto stma = conn.odbcstatement("DELETE FROM attr WHERE id_data=?");
+    stma->bind_in(1, out_id_data);
+
+    stm->execute();
+
+    // Iterate all the data_id results, deleting the related data and attributes
+    while (stm->fetch())
+    {
+        stmd->execute_ignoring_results();
+        stma->execute_ignoring_results();
+    }
+}
+
 
 void ODBCDataV6::dump(FILE* out)
 {

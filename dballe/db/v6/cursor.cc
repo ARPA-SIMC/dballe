@@ -26,6 +26,7 @@
 #include "dballe/db/sql/repinfo.h"
 #include "dballe/db/sql/station.h"
 #include "dballe/db/sql/levtr.h"
+#include "dballe/db/sql/datav6.h"
 
 #include <wreport/var.h>
 #include <dballe/core/defs.h>
@@ -236,8 +237,6 @@ unique_ptr<Cursor> Cursor::run_summary_query(DB& db, const Query& query)
 
 void Cursor::run_delete_query(DB& db, const Query& query)
 {
-    auto t = db.conn->transaction();
-
     unsigned int modifiers = parse_modifiers(query);
     if (modifiers & DBA_DB_MODIFIER_BEST)
         throw error_consistency("cannot use query=best on summary queries");
@@ -245,9 +244,7 @@ void Cursor::run_delete_query(DB& db, const Query& query)
     IdQueryBuilder qb(db, query, modifiers);
     qb.build();
 
-    db.driver().run_delete_query_v6(qb);
-
-    t->commit();
+    db.data().remove(qb);
 }
 
 void Cursor::load(const QueryBuilder& qb)

@@ -112,7 +112,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
         }
 
         // Run the bulk insert
-        driver().bulk_insert_v6(*t, vars, (flags & DBA_IMPORT_OVERWRITE));
+        dd.insert(*t, vars, (flags & DBA_IMPORT_OVERWRITE));
 
         // Insert the attributes
         if (flags & DBA_IMPORT_ATTRS)
@@ -161,7 +161,7 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
     }
 
     // Run the bulk insert
-    driver().bulk_insert_v6(*t, vars, (flags & DBA_IMPORT_OVERWRITE));
+    dd.insert(*t, vars, (flags & DBA_IMPORT_OVERWRITE));
 
     // Insert the attributes
     if (flags & DBA_IMPORT_ATTRS)
