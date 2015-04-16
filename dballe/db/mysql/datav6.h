@@ -47,9 +47,6 @@ protected:
     /** DB connection. */
     MySQLConnection& conn;
 
-    /// Date SQL parameter
-    Datetime date;
-
 public:
     MySQLDataV6(MySQLConnection& conn);
     MySQLDataV6(const MySQLDataV6&) = delete;
@@ -59,37 +56,6 @@ public:
 
     void insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode=UPDATE) override;
     void remove(const v6::QueryBuilder& qb) override;
-
-    /// Set id_lev_tr and datetime to mean 'station information'
-    void set_station_info(int id_station, int id_report) override;
-
-    /// Set the date from the date information in the record
-    void set_date(const Record& rec) override;
-
-    /// Set the date from a split up date
-    void set_date(int ye, int mo, int da, int ho, int mi, int se) override;
-
-    /**
-     * Insert an entry into the data table, failing on conflicts.
-     *
-     * Trying to replace an existing value will result in an error.
-     */
-    void insert_or_fail(const wreport::Var& var, int* res_id=nullptr) override;
-
-    /**
-     * Insert an entry into the data table, overwriting on conflicts.
-     *
-     * An existing data with the same context and ::dba_varcode will be
-     * overwritten.
-     *
-     * If id is not NULL, it stores the database id of the inserted/modified
-     * data in *id.
-     */
-    void insert_or_overwrite(const wreport::Var& var, int* res_id=nullptr) override;
-
-    /**
-     * Dump the entire contents of the table to an output stream
-     */
     void dump(FILE* out) override;
 };
 

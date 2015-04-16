@@ -19,6 +19,7 @@
 
 #include "db/test-utils-db.h"
 #include "db/v6/db.h"
+#include "db/sql.h"
 #include "db/sql/repinfo.h"
 #include "db/sql/station.h"
 #include "db/sql/levtr.h"
@@ -40,6 +41,7 @@ struct Fixture : dballe::tests::DriverFixture
 
     Fixture()
     {
+        using namespace dballe::db::sql;
         reset_attr();
 
         auto st = driver->create_stationv6();
@@ -61,15 +63,29 @@ struct Fixture : dballe::tests::DriverFixture
         // Insert another lev_tr
         wassert(actual(lt->obtain_id(Level(2, 3, 1, 4), Trange(5, 6, 7))) == 2);
 
+        auto t = conn->transaction();
         // Insert a datum
-        da->set_context(1, 1, 1);
-        da->set_date(2001, 2, 3, 4, 5, 6);
-        da->insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 123));
+        {
+            bulk::InsertV6 vars;
+            vars.id_station = 1;
+            vars.id_report = 1;
+            vars.datetime = Datetime(2001, 2, 3, 4, 5, 6);
+            Var var(varinfo(WR_VAR(0, 1, 2)), 123);
+            vars.add(&var, 1);
+            da->insert(*t, vars, DataV6::ERROR);
+        }
 
         // Insert another datum
-        da->set_context(2, 2, 2);
-        da->set_date(2002, 3, 4, 5, 6, 7);
-        da->insert_or_fail(Var(varinfo(WR_VAR(0, 1, 2)), 234));
+        {
+            bulk::InsertV6 vars;
+            vars.id_station = 2;
+            vars.id_report = 2;
+            vars.datetime = Datetime(2002, 3, 4, 5, 6, 7);
+            Var var(varinfo(WR_VAR(0, 1, 2)), 234);
+            vars.add(&var, 2);
+            da->insert(*t, vars, DataV6::ERROR);
+        }
+        t->commit();
     }
 
     void reset_attr()

@@ -56,14 +56,6 @@ struct InsertV6;
  */
 struct DataV6
 {
-protected:
-    /// Station ID SQL parameter
-    int id_station;
-    /// Report ID SQL parameter
-    int id_report;
-    /// Context ID SQL parameter
-    int id_lev_tr;
-
 public:
     enum UpdateMode {
         UPDATE,
@@ -79,40 +71,7 @@ public:
     /// Run the query to delete all records selected by the given QueryBuilder
     virtual void remove(const v6::QueryBuilder& qb) = 0;
 
-
-    /// Set the IDs that identify this variable
-    virtual void set_context(int id_station, int id_report, int id_lev_tr);
-
-    /// Set id_lev_tr and datetime to mean 'station information'
-    virtual void set_station_info(int id_station, int id_report) = 0;
-
-    /// Set the date from the date information in the record
-    virtual void set_date(const Record& rec) = 0;
-
-    /// Set the date from a split up date
-    virtual void set_date(int ye, int mo, int da, int ho, int mi, int se) = 0;
-
-    /**
-     * Insert an entry into the data table, failing on conflicts.
-     *
-     * Trying to replace an existing value will result in an error.
-     */
-    virtual void insert_or_fail(const wreport::Var& var, int* res_id=nullptr) = 0;
-
-    /**
-     * Insert an entry into the data table, overwriting on conflicts.
-     *
-     * An existing data with the same context and ::dba_varcode will be
-     * overwritten.
-     *
-     * If id is not NULL, it stores the database id of the inserted/modified
-     * data in *id.
-     */
-    virtual void insert_or_overwrite(const wreport::Var& var, int* res_id=nullptr) = 0;
-
-    /**
-     * Dump the entire contents of the table to an output stream
-     */
+    /// Dump the entire contents of the table to an output stream
     virtual void dump(FILE* out) = 0;
 };
 

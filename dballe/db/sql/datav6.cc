@@ -30,13 +30,6 @@ namespace sql {
 
 DataV6::~DataV6() {}
 
-void DataV6::set_context(int id_station, int id_report, int id_lev_tr)
-{
-    this->id_station = id_station;
-    this->id_report = id_report;
-    this->id_lev_tr = id_lev_tr;
-}
-
 namespace bulk {
 
 bool AnnotateVarsV6::annotate(int id_data, int id_levtr, Varcode code, const char* value)
