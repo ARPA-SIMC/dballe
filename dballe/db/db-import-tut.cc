@@ -32,11 +32,6 @@ using namespace std;
 
 namespace {
 
-struct db_import : public dballe::tests::db_test
-{
-    Record query;
-};
-
 struct MsgCollector : public vector<Msg*>, public MsgConsumer
 {
     ~MsgCollector()
@@ -82,542 +77,271 @@ static void normalise_datetime(Msg& msg)
         msg.set_second(0, -1);
 }
 
-}
 
-namespace tut {
-
-using namespace dballe::tests;
-typedef db_tg<db_import> tg;
-typedef tg::object to;
-
-
-template<> template<> void to::test<1>()
-{
-    // Test import/export with all CREX samples
-    const char** files = dballe::tests::crex_files;
-    set<string> blacklist;
-    // These files have no data to import
-    blacklist.insert("crex/test-synop1.crex");
-    blacklist.insert("crex/test-synop3.crex");
-    for (int i = 0; files[i] != NULL; ++i)
-    {
-        if (blacklist.find(files[i]) != blacklist.end()) continue;
-        try {
-            std::unique_ptr<Msgs> inmsgs = read_msgs(files[i], CREX);
-            Msg& msg = *(*inmsgs)[0];
-            normalise_datetime(msg);
-
-            db->remove_all();
-            db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
-
-            // Explicitly set the rep_memo variable that is added during export
-            msg.set_rep_memo(Msg::repmemo_from_type(msg.type));
-
-            query.clear();
-            query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg.type));
-
-            MsgCollector msgs;
-            db->export_msgs(query, msgs);
-            ensure_equals(msgs.size(), 1u);
-            ensure(msgs[0] != NULL);
-
-            wassert(actual(diff_msg(msg, *msgs[0], "crex")) == 0);
-        } catch (std::exception& e) {
-            throw tut::failure(string("[") + files[i] + "] " + e.what());
-        }
-    }
-}
-
-template<> template<> void to::test<2>()
-{
-    // Test import/export with all BUFR samples
-
-    const char** files = dballe::tests::bufr_files;
-    for (int i = 0; files[i] != NULL; i++)
-    {
-        try {
-            std::unique_ptr<Msgs> inmsgs = read_msgs(files[i], BUFR);
-            Msg& msg = *(*inmsgs)[0];
-            normalise_datetime(msg);
-
-            db->remove_all();
-            db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
-
-            query.clear();
-            query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg.type));
-
-            MsgCollector msgs;
-            db->export_msgs(query, msgs);
-            ensure_equals(msgs.size(), 1u);
-            ensure(msgs[0] != NULL);
-
-            // Explicitly set the rep_memo variable that is added during export
-            msg.set_rep_memo(Msg::repmemo_from_type(msg.type));
-
-            wassert(actual(diff_msg(msg, *msgs[0], "bufr")) == 0);
-        } catch (std::exception& e) {
-            throw tut::failure(string("[") + files[i] + "] " + e.what());
-        }
-    }
-}
-
-template<> template<> void to::test<3>()
-{
-    // Test import/export with all AOF samples
-    const char** files = dballe::tests::aof_files;
-    for (int i = 0; files[i] != NULL; i++)
-    {
-        try {
-            std::unique_ptr<Msgs> inmsgs = read_msgs(files[i], AOF);
-            Msg& msg = *(*inmsgs)[0];
-            normalise_datetime(msg);
-
-            db->remove_all();
-            db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
-
-            // Explicitly set the rep_memo variable that is added during export
-            msg.set_rep_memo(Msg::repmemo_from_type(msg.type));
-
-            // db->dump(stderr);
-
-            query.clear();
-            query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg.type));
-
-            MsgCollector msgs;
-            db->export_msgs(query, msgs);
-            ensure_equals(msgs.size(), 1u);
-            ensure(msgs[0] != NULL);
-
-            wassert(actual(diff_msg(msg, *msgs[0], "bufr")) == 0);
-        } catch (std::exception& e) {
-            throw tut::failure(string("[") + files[i] + "] " + e.what());
-        }
-    }
-}
-
-template<> template<> void to::test<4>()
-{
-    // Check that multiple messages are correctly identified during export
-
-    // msg1 has latitude 33.88
-    // msg2 has latitude 46.22
-    std::unique_ptr<Msgs> msgs1 = read_msgs("bufr/obs0-1.22.bufr", BUFR);
-    std::unique_ptr<Msgs> msgs2 = read_msgs("bufr/obs0-3.504.bufr", BUFR);
-    Msg& msg1 = *(*msgs1)[0];
-    Msg& msg2 = *(*msgs2)[0];
-
-    normalise_datetime(msg1);
-    normalise_datetime(msg2);
-
-    db->remove_all();
-    db->import_msg(msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
-    db->import_msg(msg2, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
-
-    // Explicitly set the rep_memo variable that is added during export
-    msg1.set_rep_memo(Msg::repmemo_from_type(msg1.type));
-    msg2.set_rep_memo(Msg::repmemo_from_type(msg2.type));
-
-    query.clear();
-    query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg1.type));
-
-    // Warning: this test used to fail with older versions of MySQL.
-    // See http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=397597
-    MsgCollector msgs;
-    db->export_msgs(query, msgs);
-    ensure_equals(msgs.size(), 2u);
-    ensure(msgs[0] != NULL);
-    ensure(msgs[1] != NULL);
-
-    // Compare the two dba_msg
-    wassert(actual(diff_msg(msg1, *msgs[0], "synop1")) == 0);
-    wassert(actual(diff_msg(msg2, *msgs[1], "synop2")) == 0);
-}
-
-template<> template<> void to::test<5>()
-{
-    // Check automatic repinfo allocation
-    std::unique_ptr<Msgs> msgs = read_msgs("bufr/generic-new-repmemo.bufr", BUFR);
-    Msg& msg = *(*msgs)[0];
-
-    db->remove_all();
-    db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
-
-    query.clear();
-    query.set(DBA_KEY_REP_MEMO, "enrico");
-
-    MsgCollector outmsgs;
-    db->export_msgs(query, outmsgs);
-    wassert(actual(outmsgs.size()) == 1u);
-    ensure(outmsgs[0] != NULL);
-
-    // Compare the two dba_msg
-    wassert(actual(diff_msg(msg, *outmsgs[0], "enrico")) == 0);
-}
-
-// Check that a message that only contains station variables does get imported
-template<> template<>
-void to::test<6>()
-{
-    std::unique_ptr<Msgs> msgs = read_msgs("bufr/generic-onlystation.bufr", BUFR);
-    Msg& msg = *(*msgs)[0];
-
-    db->remove_all();
-    db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
-
-    query.clear();
-    std::unique_ptr<db::Cursor> cur = db->query_stations(query);
-    wassert(actual(cur->remaining()) == 1);
-    wassert(actual(cur->next()).istrue());
-
-    Record result;
-    cur->to_record(result);
-
-    const std::vector<wreport::Var*>& vars = result.vars();
-    wassert(actual(vars.size()) == 5);
-    wassert(actual(varcode_format(vars[0]->code())) == "B01019");
-    wassert(actual(vars[0]->format()) == "My beautifull station");
-    wassert(actual(varcode_format(vars[1]->code())) == "B01194");
-    wassert(actual(vars[1]->format()) == "generic");
-    wassert(actual(varcode_format(vars[2]->code())) == "B05001");
-    wassert(actual(vars[2]->format()) == "45.00000");
-    wassert(actual(varcode_format(vars[3]->code())) == "B06001");
-    wassert(actual(vars[3]->format()) == "10.00000");
-    wassert(actual(varcode_format(vars[4]->code())) == "B07030");
-    wassert(actual(vars[4]->format()) == "22.3");
-}
-
-// Try importing into a dirty database, no attributes involved
-template<> template<>
-void to::test<7>()
-{
-    auto add_common = [](Msg& msg) {
-        msg.type = MSG_SYNOP;
-        msg.set_rep_memo("synop");
-        msg.set_latitude(45.4);
-        msg.set_longitude(11.2);
-        msg.set_year(2015);
-        msg.set_month(4);
-        msg.set_day(25);
-        msg.set_hour(12);
-        msg.set_minute(30);
-        msg.set_second(45);
-    };
-
-    // Build test messages
-    Msg first;
-    add_common(first);
-    first.set_block(1);               // Station variable
-    first.set_station(2);             // Station variable
-    first.set_temp_2m(280.1);         // Data variable
-    first.set_wet_temp_2m(275.8);     // Data variable
-
-    Msg second;
-    add_common(second);
-    second.set_block(5);              // Station variable, different value
-    second.set_station(2);            // Station variable, same value
-    second.set_height_station(101.0); // Station variable, new value
-    second.set_temp_2m(281.1);        // Data variable, different value
-    second.set_wet_temp_2m(275.8);    // Data variable, same value
-    second.set_humidity(55.6);        // Data variable, new value
-
-    // Import the first message
-    db->remove_all();
-    db->import_msg(first, NULL, DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE);
-
-    // Export and check
-    MsgCollector export_first;
-    export_first.from_db(*db, "rep_memo=synop");
-    wassert(actual(export_first.size()) == 1);
-    wassert(actual(diff_msg(first, *export_first[0], "first")) == 0);
-
-    // Import the second message
-    db->import_msg(second, NULL, DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE);
-
-    // Export and check
-    MsgCollector export_second;
-    export_second.from_db(*db, "rep_memo=synop");
-    wassert(actual(export_second.size()) == 1);
-    wassert(actual(diff_msg(second, *export_second[0], "second")) == 0);
-}
-
-#if 0
-// Check that all imported messages are found on export
-template<> template<>
-void to::test<5>()
-{
-    use_db();
-
-    msg_generator gen;
-
-    CHECKED(dba_db_reset(db, NULL));
-
-    /* Fix the seed so that we always get predictable results */
-    srand(1);
-    
-    /* Import 100 random messages */
-    for (int i = 0; i < 100; i++)
-    {
-        dba_msg msg;
-        CHECKED(dba_msg_create(&msg));
-        CHECKED(gen.fill_message(msg, rnd(0.8)));
-        CHECKED(dba_import_msg(db, msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA));
-        dba_msg_delete(msg);
-    }
-
-    // Prepare the query
-    dba_record query;
-    CHECKED(dba_record_create(&query));
-    CHECKED(dba_record_key_seti(query, DBA_KEY_REP_COD, 255));
-
-    // Export
-    vector<dba_msg> msgs;
-    CHECKED(dba_db_export(db, query, msg_collector, &msgs));
-    gen_ensure_equals(msgs.size(), 100u);
-    for (vector<dba_msg>::iterator i = msgs.begin(); i != msgs.end(); ++i)
-    {
-        gen_ensure(*i != NULL);
-        dba_msg_delete(*i);
-    }
-
-    dba_record_delete(query);
-}
-
-static dba_err msg_counter(dba_msgs msgs, void* data)
-{
-    (*(int*)data) += msgs->len;
-    dba_msgs_delete(msgs);
-    return dba_error_ok();
-}
-
-// Check that the right messages are exported
-template<> template<>
-void to::test<6>()
-{
-    use_db();
-
-    msg_vector msgs;
-
-    // All the various input messages with unique data
-    static const char* bufr_files[] = {
-        "bufr/obs0-1.22.bufr",
-        "bufr/obs0-3.504.bufr",
-        "bufr/obs1-11.16.bufr",
-        "bufr/obs1-13.36.bufr",
-        "bufr/obs1-19.3.bufr",
-        "bufr/synop-old-buoy.bufr",
-        "bufr/obs1-9.2.bufr",
-        "bufr/obs1-140.454.bufr",
-        "bufr/obs2-101.16.bufr",
-        "bufr/obs2-102.1.bufr",
-        "bufr/obs2-91.2.bufr",
-        "bufr/airep-old-4-142.bufr",
-        "bufr/obs4-142.1.bufr",
-        "bufr/obs4-144.4.bufr",
-        "bufr/obs4-145.4.bufr",
-    };
-    static const char* crex_files[] = {
-        "crex/test-mare1.crex",
-        "crex/test-synop0.crex",
-        "crex/test-synop2.crex",
-        "crex/test-temp0.crex",
-    };
-    static const char* aof_files[] = {
-        "aof/obs1-14.63.aof",
-        "aof/obs1-21.1.aof",
-        "aof/obs1-24.2104.aof",
-        "aof/obs1-24.34.aof",
-        "aof/obs2-144.2198.aof",
-        "aof/obs4-165.2027.aof",
-        "aof/obs5-35.61.aof",
-        "aof/obs6-32.1573.aof",
-    };
-
-    for (size_t i = 0; i < sizeof(bufr_files) / sizeof(const char*); i++)
-        CHECKED(read_file(BUFR, bufr_files[i], msgs));
-    for (size_t i = 0; i < sizeof(crex_files) / sizeof(const char*); i++)
-        CHECKED(read_file(CREX, crex_files[i], msgs));
-    for (size_t i = 0; i < sizeof(aof_files) / sizeof(const char*); i++)
-        CHECKED(read_file(AOF, aof_files[i], msgs));
-
-    CHECKED(dba_db_reset(db, NULL));
-
-    map<dba_msg_type, int> rep_types;
-    for (msg_vector::const_iterator i = msgs.begin(); i != msgs.end(); i++)
-    {
-        CHECKED(dba_import_msgs(db, *i, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE));
-        rep_types[(*i)->msgs[0]->type]++;
-    }
-
-    dba_record query;
-    CHECKED(dba_record_create(&query));
-    for (map<dba_msg_type, int>::const_iterator i = rep_types.begin(); i != rep_types.end(); i++)
-    {
-        test_tag(dba_msg_type_name(i->first));
-
-        int count = 0;
-        CHECKED(dba_record_key_setc(query, DBA_KEY_REP_MEMO, dba_msg_repmemo_from_type(i->first)));
-        CHECKED(dba_db_export(db, query, msg_counter, &count));
-        gen_ensure_equals(count, i->second);
-    }
-
-    test_untag();
-}
-
-static void clear_datetime_attrs(dba_msg msg)
-{
-    for (int i = 0; i < msg->data_count; i++)
-    {
-        dba_msg_context ctx = msg->data[i];
-        if (ctx->ltype1 != 257) continue;
-        for (int j = 0; j < ctx->data_count; j++)
+typedef dballe::tests::DBFixture Fixture;
+typedef dballe::tests::db_test_group<Fixture> test_group;
+typedef test_group::Test Test;
+
+std::vector<Test> tests {
+    Test("crex", [](Fixture& f) {
+        auto& db = f.db;
+        Record query;
+        // Test import/export with all CREX samples
+        const char** files = dballe::tests::crex_files;
+        set<string> blacklist;
+        // These files have no data to import
+        blacklist.insert("crex/test-synop1.crex");
+        blacklist.insert("crex/test-synop3.crex");
+        for (int i = 0; files[i] != NULL; ++i)
         {
-            dba_var var = ctx->data[j];
-            if (DBA_VAR_X(dba_var_code(var)) != 4) continue;
-            dba_var_clear_attrs(var);
+            if (blacklist.find(files[i]) != blacklist.end()) continue;
+            try {
+                std::unique_ptr<Msgs> inmsgs = read_msgs(files[i], CREX);
+                Msg& msg = *(*inmsgs)[0];
+                normalise_datetime(msg);
+
+                db->remove_all();
+                db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+
+                // Explicitly set the rep_memo variable that is added during export
+                msg.set_rep_memo(Msg::repmemo_from_type(msg.type));
+
+                query.clear();
+                query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg.type));
+
+                MsgCollector msgs;
+                db->export_msgs(query, msgs);
+                ensure_equals(msgs.size(), 1u);
+                ensure(msgs[0] != NULL);
+
+                wassert(actual(diff_msg(msg, *msgs[0], "crex")) == 0);
+            } catch (std::exception& e) {
+                throw tut::failure(string("[") + files[i] + "] " + e.what());
+            }
         }
-    }
-}
+    }),
+    Test("bufr", [](Fixture& f) {
+        // Test import/export with all BUFR samples
+        auto& db = f.db;
+        Record query;
+        const char** files = dballe::tests::bufr_files;
+        for (int i = 0; files[i] != NULL; i++)
+        {
+            try {
+                std::unique_ptr<Msgs> inmsgs = read_msgs(files[i], BUFR);
+                Msg& msg = *(*inmsgs)[0];
+                normalise_datetime(msg);
 
-// Check a case when two AOF messages cannot be exported after import
-template<> template<>
-void to::test<7>()
-{
-    use_db();
+                db->remove_all();
+                db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
-    msg_vector msgs;
-    const char* fname = "aof/err1.aof";
+                query.clear();
+                query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg.type));
 
-    CHECKED(read_file(AOF, fname, msgs));
+                MsgCollector msgs;
+                db->export_msgs(query, msgs);
+                ensure_equals(msgs.size(), 1u);
+                ensure(msgs[0] != NULL);
 
-    CHECKED(dba_db_reset(db, NULL));
+                // Explicitly set the rep_memo variable that is added during export
+                msg.set_rep_memo(Msg::repmemo_from_type(msg.type));
 
-    for (msg_vector::const_iterator i = msgs.begin(); i != msgs.end(); i++)
-    {
-        CHECKED(dba_import_msgs(db, *i, NULL, DBA_IMPORT_ATTRS));
-    }
+                wassert(actual(diff_msg(msg, *msgs[0], "bufr")) == 0);
+            } catch (std::exception& e) {
+                throw tut::failure(string("[") + files[i] + "] " + e.what());
+            }
+        }
+    }),
+    Test("aof", [](Fixture& f) {
+        // Test import/export with all AOF samples
+        auto& db = f.db;
+        Record query;
+        const char** files = dballe::tests::aof_files;
+        for (int i = 0; files[i] != NULL; i++)
+        {
+            try {
+                std::unique_ptr<Msgs> inmsgs = read_msgs(files[i], AOF);
+                Msg& msg = *(*inmsgs)[0];
+                normalise_datetime(msg);
 
-    dba_record query;
-    CHECKED(dba_record_create(&query));
-    msg_vector msgs1;
-    CHECKED(dba_db_export(db, query, msgs_collector, &msgs1));
-    gen_ensure_equals(msgs1.size(), 2u);
+                db->remove_all();
+                db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
-    clear_datetime_attrs(msgs[0]->msgs[0]);
-    clear_datetime_attrs(msgs[1]->msgs[0]);
+                // Explicitly set the rep_memo variable that is added during export
+                msg.set_rep_memo(Msg::repmemo_from_type(msg.type));
 
-    #if 0
-    fprintf(stderr, "msgs[0]\n");
-    dba_msg_print(msgs[0]->msgs[0], stderr);
-    fprintf(stderr, "msgs[1]\n");
-    dba_msg_print(msgs[1]->msgs[0], stderr);
-    fprintf(stderr, "msgs1[0]\n");
-    dba_msg_print(msgs1[0]->msgs[0], stderr);
-    fprintf(stderr, "msgs1[1]\n");
-    dba_msg_print(msgs1[1]->msgs[0], stderr);
-    #endif
+                // db->dump(stderr);
 
-    #if 0
-    // Compare the two dba_msg
-    int diffs = 0;
-    dba_msg_diff(msgs[0]->msgs[0], msgs1[0]->msgs[0], &diffs, stderr);
-    if (diffs != 0) track_different_msgs(msgs[0], msgs1[0], "aof-reexported1");
-    gen_ensure_equals(diffs, 0);
+                query.clear();
+                query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg.type));
 
-    diffs = 0;
-    dba_msg_diff(msgs[1]->msgs[0], msgs1[1]->msgs[0], &diffs, stderr);
-    if (diffs != 0) track_different_msgs(msgs[1], msgs1[1], "aof-reexported2");
-    gen_ensure_equals(diffs, 0);
-    #endif
+                MsgCollector msgs;
+                db->export_msgs(query, msgs);
+                ensure_equals(msgs.size(), 1u);
+                ensure(msgs[0] != NULL);
 
-    dba_rawmsg rmsg;
-    CHECKED(dba_marshal_encode(msgs[0], BUFR, &rmsg));
-    dba_rawmsg_delete(rmsg);
-    CHECKED(dba_marshal_encode(msgs[1], BUFR, &rmsg));
-    dba_rawmsg_delete(rmsg);
-    CHECKED(dba_marshal_encode(msgs1[0], BUFR, &rmsg));
-    dba_rawmsg_delete(rmsg);
-    CHECKED(dba_marshal_encode(msgs1[1], BUFR, &rmsg));
-    dba_rawmsg_delete(rmsg);
+                wassert(actual(diff_msg(msg, *msgs[0], "bufr")) == 0);
+            } catch (std::exception& e) {
+                throw tut::failure(string("[") + files[i] + "] " + e.what());
+            }
+        }
+    }),
+    Test("multi", [](Fixture& f) {
+        // Check that multiple messages are correctly identified during export
+        auto& db = f.db;
+        Record query;
 
+        // msg1 has latitude 33.88
+        // msg2 has latitude 46.22
+        std::unique_ptr<Msgs> msgs1 = read_msgs("bufr/obs0-1.22.bufr", BUFR);
+        std::unique_ptr<Msgs> msgs2 = read_msgs("bufr/obs0-3.504.bufr", BUFR);
+        Msg& msg1 = *(*msgs1)[0];
+        Msg& msg2 = *(*msgs2)[0];
 
-    dba_record_delete(query);
-}
+        normalise_datetime(msg1);
+        normalise_datetime(msg2);
 
-// Check a case when two messages imported get mangled and export exports
-// different messages
-template<> template<>
-void to::test<8>()
-{
-    use_db();
+        db->remove_all();
+        db->import_msg(msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+        db->import_msg(msg2, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
-    msg_vector msgs;
-    const char* fname = "bufr/synotemp.bufr";
+        // Explicitly set the rep_memo variable that is added during export
+        msg1.set_rep_memo(Msg::repmemo_from_type(msg1.type));
+        msg2.set_rep_memo(Msg::repmemo_from_type(msg2.type));
 
-    CHECKED(read_file(BUFR, fname, msgs));
+        query.clear();
+        query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg1.type));
 
-    CHECKED(dba_db_reset(db, NULL));
+        // Warning: this test used to fail with older versions of MySQL.
+        // See http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=397597
+        MsgCollector msgs;
+        db->export_msgs(query, msgs);
+        ensure_equals(msgs.size(), 2u);
+        ensure(msgs[0] != NULL);
+        ensure(msgs[1] != NULL);
 
-    for (msg_vector::const_iterator i = msgs.begin(); i != msgs.end(); i++)
-        CHECKED(dba_import_msgs(db, *i, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA));
+        // Compare the two dba_msg
+        wassert(actual(diff_msg(msg1, *msgs[0], "synop1")) == 0);
+        wassert(actual(diff_msg(msg2, *msgs[1], "synop2")) == 0);
+    }),
+    Test("auto_repinfo", [](Fixture& f) {
+        // Check automatic repinfo allocation
+        auto& db = f.db;
+        Record query;
+        std::unique_ptr<Msgs> msgs = read_msgs("bufr/generic-new-repmemo.bufr", BUFR);
+        Msg& msg = *(*msgs)[0];
 
-    dba_record query;
-    CHECKED(dba_record_create(&query));
-    msg_vector msgs1;
-    CHECKED(dba_db_export(db, query, msgs_collector, &msgs1));
-    gen_ensure_equals(msgs1.size(), 2u);
+        db->remove_all();
+        db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
-    //clear_datetime_attrs(msgs[0]->msgs[0]);
-    //clear_datetime_attrs(msgs[1]->msgs[0]);
+        query.clear();
+        query.set(DBA_KEY_REP_MEMO, "enrico");
 
-    #if 0
-    fprintf(stderr, "msgs[0]\n");
-    dba_msg_print(msgs[0]->msgs[0], stderr);
-    fprintf(stderr, "msgs[1]\n");
-    dba_msg_print(msgs[1]->msgs[0], stderr);
-    fprintf(stderr, "msgs1[0]\n");
-    dba_msg_print(msgs1[0]->msgs[0], stderr);
-    fprintf(stderr, "msgs1[1]\n");
-    dba_msg_print(msgs1[1]->msgs[0], stderr);
-    #endif
+        MsgCollector outmsgs;
+        db->export_msgs(query, outmsgs);
+        wassert(actual(outmsgs.size()) == 1u);
+        ensure(outmsgs[0] != NULL);
 
-    // Explicitly set rep_memo so that the messages later match
-    CHECKED(dba_msg_set_rep_memo(msgs[0]->msgs[0], rep_memo_from_msg(msgs[0]->msgs[0]), -1));
-    CHECKED(dba_msg_set_rep_memo(msgs[1]->msgs[0], rep_memo_from_msg(msgs[1]->msgs[0]), -1));
+        // Compare the two dba_msg
+        wassert(actual(diff_msg(msg, *outmsgs[0], "enrico")) == 0);
+    }),
+    Test("station_only", [](Fixture& f) {
+        // Check that a message that only contains station variables does get imported
+        auto& db = f.db;
+        Record query;
+        std::unique_ptr<Msgs> msgs = read_msgs("bufr/generic-onlystation.bufr", BUFR);
+        Msg& msg = *(*msgs)[0];
 
-    // Compare the two dba_msg
-    int diffs = 0;
-    dba_msg_diff(msgs[0]->msgs[0], msgs1[1]->msgs[0], &diffs, stderr);
-    if (diffs != 0) track_different_msgs(msgs[0], msgs1[1], "synotemp-reexported1");
-    gen_ensure_equals(diffs, 0);
+        db->remove_all();
+        db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
-    diffs = 0;
-    dba_msg_diff(msgs[1]->msgs[0], msgs1[0]->msgs[0], &diffs, stderr);
-    if (diffs != 0) track_different_msgs(msgs[1], msgs1[0], "synotemp-reexported2");
-    gen_ensure_equals(diffs, 0);
+        query.clear();
+        std::unique_ptr<db::Cursor> cur = db->query_stations(query);
+        wassert(actual(cur->remaining()) == 1);
+        wassert(actual(cur->next()).istrue());
 
-    //dba_rawmsg rmsg;
-    //CHECKED(dba_marshal_encode(msgs[0], BUFR, &rmsg));
-    //dba_rawmsg_delete(rmsg);
-    //CHECKED(dba_marshal_encode(msgs[1], BUFR, &rmsg));
-    //dba_rawmsg_delete(rmsg);
-    //CHECKED(dba_marshal_encode(msgs1[0], BUFR, &rmsg));
-    //dba_rawmsg_delete(rmsg);
-    //CHECKED(dba_marshal_encode(msgs1[1], BUFR, &rmsg));
-    //dba_rawmsg_delete(rmsg);
+        Record result;
+        cur->to_record(result);
 
+        const std::vector<wreport::Var*>& vars = result.vars();
+        wassert(actual(vars.size()) == 5);
+        wassert(actual(varcode_format(vars[0]->code())) == "B01019");
+        wassert(actual(vars[0]->format()) == "My beautifull station");
+        wassert(actual(varcode_format(vars[1]->code())) == "B01194");
+        wassert(actual(vars[1]->format()) == "generic");
+        wassert(actual(varcode_format(vars[2]->code())) == "B05001");
+        wassert(actual(vars[2]->format()) == "45.00000");
+        wassert(actual(varcode_format(vars[3]->code())) == "B06001");
+        wassert(actual(vars[3]->format()) == "10.00000");
+        wassert(actual(varcode_format(vars[4]->code())) == "B07030");
+        wassert(actual(vars[4]->format()) == "22.3");
+    }),
+    Test("import_dirty", [](Fixture& f) {
+        // Try importing into a dirty database, no attributes involved
+        auto& db = f.db;
+        Record query;
+        auto add_common = [](Msg& msg) {
+            msg.type = MSG_SYNOP;
+            msg.set_rep_memo("synop");
+            msg.set_latitude(45.4);
+            msg.set_longitude(11.2);
+            msg.set_year(2015);
+            msg.set_month(4);
+            msg.set_day(25);
+            msg.set_hour(12);
+            msg.set_minute(30);
+            msg.set_second(45);
+        };
 
-    dba_record_delete(query);
-}
-#endif
+        // Build test messages
+        Msg first;
+        add_common(first);
+        first.set_block(1);               // Station variable
+        first.set_station(2);             // Station variable
+        first.set_temp_2m(280.1);         // Data variable
+        first.set_wet_temp_2m(275.8);     // Data variable
 
-}
+        Msg second;
+        add_common(second);
+        second.set_block(5);              // Station variable, different value
+        second.set_station(2);            // Station variable, same value
+        second.set_height_station(101.0); // Station variable, new value
+        second.set_temp_2m(281.1);        // Data variable, different value
+        second.set_wet_temp_2m(275.8);    // Data variable, same value
+        second.set_humidity(55.6);        // Data variable, new value
 
-namespace {
+        // Import the first message
+        db->remove_all();
+        db->import_msg(first, NULL, DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE);
 
-tut::tg db_import_mem_tg("db_import_mem", MEM);
+        // Export and check
+        MsgCollector export_first;
+        export_first.from_db(*db, "rep_memo=synop");
+        wassert(actual(export_first.size()) == 1);
+        wassert(actual(diff_msg(first, *export_first[0], "first")) == 0);
+
+        // Import the second message
+        db->import_msg(second, NULL, DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE);
+
+        // Export and check
+        MsgCollector export_second;
+        export_second.from_db(*db, "rep_memo=synop");
+        wassert(actual(export_second.size()) == 1);
+        wassert(actual(diff_msg(second, *export_second[0], "second")) == 0);
+    }),
+};
+
+test_group tg1("db_import_mem", nullptr, db::MEM, tests);
+test_group tg2("db_import_v6_sqlite", "SQLITE", db::V6, tests);
 #ifdef HAVE_ODBC
-tut::tg db_import_v5_tg("db_import_v5", V5);
-tut::tg db_import_v6_tg("db_import_v6", V6);
+test_group tg3("db_import_v5_odbc", "ODBC", db::V5, tests);
+test_group tg4("db_import_v6_odbc", "ODBC", db::V6, tests);
+#endif
+#ifdef HAVE_LIBPQ
+test_group tg6("db_import_v6_postgresql", "POSTGRESQL", db::V6, tests);
+#endif
+#ifdef HAVE_MYSQL
+test_group tg8("db_import_v6_mysql", "MYSQL", db::V6, tests);
 #endif
 
 }
