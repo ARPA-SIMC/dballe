@@ -265,6 +265,12 @@ public:
 
     operator PGconn*() { return db; }
 
+    /**
+     * Connect to PostgreSQL using a connection URI
+     *
+     * The syntax is described at:
+     * http://www.postgresql.org/docs/9.4/static/libpq-connect.html#AEN41094
+     */
     void open_url(const std::string& connection_string);
     void open_test();
 

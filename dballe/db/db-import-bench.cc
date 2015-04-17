@@ -61,7 +61,7 @@ struct B : bench::DBBenchmark
         : bench::DBBenchmark::DBBenchmark(name),
           synop(this, "synop"), temp(this, "temp"), flight(this, "airplane")
     {
-        repetitions = 5;
+        repetitions = 10;
     }
 
     void setup_main()

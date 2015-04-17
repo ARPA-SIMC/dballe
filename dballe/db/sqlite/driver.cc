@@ -255,8 +255,8 @@ void Driver::create_tables_v6()
     conn.exec(R"(
         CREATE TABLE data (
            id          INTEGER PRIMARY KEY,
-           id_station  INTEGER NOT NULL,
-           id_report   INTEGER NOT NULL,
+           id_station  INTEGER NOT NULL REFERENCES station (id) ON DELETE CASCADE,
+           id_report   INTEGER NOT NULL REFERENCES repinfo (id) ON DELETE CASCADE,
            id_lev_tr   INTEGER NOT NULL,
            datetime    TEXT NOT NULL,
            id_var      INTEGER NOT NULL,
@@ -268,7 +268,7 @@ void Driver::create_tables_v6()
     )");
     conn.exec(R"(
         CREATE TABLE attr (
-           id_data     INTEGER NOT NULL,
+           id_data     INTEGER NOT NULL REFERENCES data (id) ON DELETE CASCADE,
            type        INTEGER NOT NULL,
            value       VARCHAR(255) NOT NULL,
            UNIQUE (id_data, type)

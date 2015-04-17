@@ -105,22 +105,14 @@ void SQLiteDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode 
 void SQLiteDataV6::remove(const v6::QueryBuilder& qb)
 {
     auto stmd = conn.sqlitestatement("DELETE FROM data WHERE id=?");
-    auto stma = conn.sqlitestatement("DELETE FROM attr WHERE id_data=?");
     auto stm = conn.sqlitestatement(qb.sql_query);
     if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
 
     // Iterate all the data_id results, deleting the related data and attributes
     stm->execute([&]() {
-        // Get the list of data to delete
-        int out_id_data = stm->column_int(0);
-
         // Compile the DELETE query for the data
-        stmd->bind_val(1, out_id_data);
+        stmd->bind_val(1, stm->column_int(0));
         stmd->execute();
-
-        // Compile the DELETE query for the attributes
-        stma->bind_val(1, out_id_data);
-        stma->execute();
     });
 }
 

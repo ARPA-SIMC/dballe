@@ -118,6 +118,8 @@ void SQLiteConnection::init_after_connect()
     // autocommit is off by default when inside a transaction
     // set_autocommit(false);
 
+    exec("PRAGMA foreign_keys = ON");
+
     if (getenv("DBA_INSECURE_SQLITE") != NULL)
     {
         exec("PRAGMA synchronous = OFF");
