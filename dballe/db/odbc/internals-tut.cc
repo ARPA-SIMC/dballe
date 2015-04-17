@@ -30,14 +30,14 @@ using namespace std;
 
 namespace tut {
 
-struct db_internals_shar : public dballe::tests::db_test
+struct db_odbc_internals_shar : public dballe::tests::db_test
 {
-    db_internals_shar() : dballe::tests::db_test(db::V5)
+    db_odbc_internals_shar() : dballe::tests::db_test(db::V5)
     {
         if (!has_db()) return;
     }
 
-	~db_internals_shar()
+	~db_odbc_internals_shar()
 	{
 	}
 
@@ -61,7 +61,7 @@ struct db_internals_shar : public dballe::tests::db_test
         c.exec("CREATE TABLE dballe_test (val INTEGER NOT NULL)");
     }
 };
-TESTGRP(db_internals);
+TESTGRP(db_odbc_internals);
 
 // Test querying int values
 template<> template<>
