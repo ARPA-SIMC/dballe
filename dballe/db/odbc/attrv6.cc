@@ -34,99 +34,18 @@ namespace db {
 namespace odbc {
 
 ODBCAttrV6::ODBCAttrV6(ODBCConnection& conn)
-    : conn(conn), sstm(0), istm(0), rstm(0)
+    : conn(conn), sstm(0)
 {
-    const char* select_query =
-        "SELECT type, value FROM attr WHERE id_data=?";
-    const char* insert_query =
-        "INSERT INTO attr (id_data, type, value)"
-        " VALUES(?, ?, ?)";
-    const char* replace_query_mysql =
-        "INSERT INTO attr (id_data, type, value)"
-        " VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE value=VALUES(value)";
-    const char* replace_query_sqlite =
-        "INSERT OR REPLACE INTO attr (id_data, type, value)"
-        " VALUES(?, ?, ?)";
-    const char* replace_query_oracle =
-        "MERGE INTO attr USING"
-        " (SELECT ? as data, ? as t, ? as val FROM dual)"
-        " ON (id_data=data AND type=t)"
-        " WHEN MATCHED THEN UPDATE SET value=val"
-        " WHEN NOT MATCHED THEN"
-        "  INSERT (id_data, type, value) VALUES (data, t, val)";
-    const char* replace_query_postgres =
-        "UPDATE attr SET value=? WHERE id_data=? AND type=?";
-
     // Create the statement for select
-    sstm = conn.odbcstatement(select_query).release();
+    sstm = conn.odbcstatement("SELECT type, value FROM attr WHERE id_data=?").release();
     sstm->bind_in(1, id_data);
     sstm->bind_out(1, type);
     sstm->bind_out(2, value, sizeof(value));
-
-    // Create the statement for insert
-    istm = conn.odbcstatement(insert_query).release();
-    istm->bind_in(1, id_data);
-    istm->bind_in(2, type);
-    istm->bind_in(3, value, value_ind);
-
-    // Create the statement for replace
-    switch (conn.server_type)
-    {
-        case ServerType::MYSQL: rstm = conn.odbcstatement(replace_query_mysql).release(); break;
-        case ServerType::SQLITE: rstm = conn.odbcstatement(replace_query_sqlite).release(); break;
-        case ServerType::ORACLE: rstm = conn.odbcstatement(replace_query_oracle).release(); break;
-        case ServerType::POSTGRES: rstm = conn.odbcstatement(replace_query_postgres).release(); break;
-        default: rstm = conn.odbcstatement(replace_query_mysql).release(); break;
-    }
-    if (conn.server_type == ServerType::POSTGRES)
-    {
-        rstm->bind_in(1, value, value_ind);
-        rstm->bind_in(2, id_data);
-        rstm->bind_in(3, type);
-    } else {
-        rstm->bind_in(1, id_data);
-        rstm->bind_in(2, type);
-        rstm->bind_in(3, value, value_ind);
-    }
 }
 
 ODBCAttrV6::~ODBCAttrV6()
 {
     if (sstm) delete sstm;
-    if (istm) delete istm;
-    if (rstm) delete rstm;
-}
-
-void ODBCAttrV6::set_value(const char* qvalue)
-{
-    if (qvalue == NULL)
-    {
-        value[0] = 0;
-        value_ind = SQL_NULL_DATA;
-    } else {
-        int len = strlen(qvalue);
-        if (len > 255) len = 255;
-        memcpy(value, qvalue, len);
-        value[len] = 0;
-        value_ind = len;
-    }
-}
-
-void ODBCAttrV6::impl_add(int id_data, sql::AttributeList& attrs)
-{
-    this->id_data = id_data;
-    for (auto& i : attrs)
-    {
-        type = i.first;
-        set_value(i.second);
-
-        if (conn.server_type == ServerType::POSTGRES)
-        {
-            if (rstm->execute_and_close() == SQL_NO_DATA)
-                istm->execute_and_close();
-        } else
-            rstm->execute_and_close();
-    }
 }
 
 void ODBCAttrV6::read(int id_data, function<void(unique_ptr<Var>)> dest)

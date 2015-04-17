@@ -115,7 +115,10 @@ typedef test_group::Test Test;
 
 std::vector<Test> tests {
     Test("insert", [](Fixture& f) {
+        using namespace dballe::db::sql;
         auto& at = *f.attr;
+
+        auto t = f.conn->transaction();
 
         Var var1(varinfo(WR_VAR(0, 12, 101)), 280.0);
         var1.seta(ap_newvar(WR_VAR(0, 33, 7), 50));
@@ -123,17 +126,51 @@ std::vector<Test> tests {
         Var var2(varinfo(WR_VAR(0, 12, 101)), 280.0);
         var2.seta(ap_newvar(WR_VAR(0, 33, 7), 75));
 
-        // Insert a datum
-        at.add(1, var1);
+        // Insert two attributes
+        {
+            bulk::InsertAttrsV6 attrs;
+            attrs.add_all(var1, 1);
+            at.insert(*t, attrs, AttrV6::ERROR);
+            wassert(actual(attrs.size()) == 1);
+            wassert(actual(attrs[0].needs_insert()).isfalse());
+            wassert(actual(attrs[0].inserted()).istrue());
+            wassert(actual(attrs[0].needs_update()).isfalse());
+            wassert(actual(attrs[0].updated()).isfalse());
+        }
+        {
+            bulk::InsertAttrsV6 attrs;
+            attrs.add_all(var2, 2);
+            at.insert(*t, attrs, AttrV6::ERROR);
+            wassert(actual(attrs.size()) == 1);
+            wassert(actual(attrs[0].needs_insert()).isfalse());
+            wassert(actual(attrs[0].inserted()).istrue());
+            wassert(actual(attrs[0].needs_update()).isfalse());
+            wassert(actual(attrs[0].updated()).isfalse());
+        }
 
-        // Insert another datum
-        at.add(2, var2);
+        // Reinsert the first attribute: it should work, doing no insert/update queries
+        {
+            bulk::InsertAttrsV6 attrs;
+            attrs.add_all(var1, 1);
+            at.insert(*t, attrs, AttrV6::IGNORE);
+            wassert(actual(attrs.size()) == 1);
+            wassert(actual(attrs[0].needs_insert()).isfalse());
+            wassert(actual(attrs[0].inserted()).isfalse());
+            wassert(actual(attrs[0].needs_update()).isfalse());
+            wassert(actual(attrs[0].updated()).isfalse());
+        }
 
-        // Reinsert the same datum: it should work, doing no insert/update queries
-        at.add(1, var1);
-
-        // Reinsert the other same datum: it should work, doing no insert/update queries
-        at.add(2, var2);
+        // Reinsert the second attribute: it should work, doing no insert/update queries
+        {
+            bulk::InsertAttrsV6 attrs;
+            attrs.add_all(var2, 2);
+            at.insert(*t, attrs, AttrV6::UPDATE);
+            wassert(actual(attrs.size()) == 1);
+            wassert(actual(attrs[0].needs_insert()).isfalse());
+            wassert(actual(attrs[0].inserted()).isfalse());
+            wassert(actual(attrs[0].needs_update()).isfalse());
+            wassert(actual(attrs[0].updated()).isfalse());
+        }
 
         // Load the attributes for the first variable
         {
@@ -150,8 +187,27 @@ std::vector<Test> tests {
         }
 
         // Update both values
-        at.add(1, var2);
-        at.add(2, var1);
+        {
+            bulk::InsertAttrsV6 attrs;
+            attrs.add_all(var2, 1);
+            at.insert(*t, attrs, AttrV6::UPDATE);
+            wassert(actual(attrs.size()) == 1);
+            wassert(actual(attrs[0].needs_insert()).isfalse());
+            wassert(actual(attrs[0].inserted()).isfalse());
+            wassert(actual(attrs[0].needs_update()).isfalse());
+            wassert(actual(attrs[0].updated()).istrue());
+        }
+        {
+            bulk::InsertAttrsV6 attrs;
+            attrs.add_all(var1, 2);
+            at.insert(*t, attrs, AttrV6::UPDATE);
+            wassert(actual(attrs.size()) == 1);
+            wassert(actual(attrs[0].needs_insert()).isfalse());
+            wassert(actual(attrs[0].inserted()).isfalse());
+            wassert(actual(attrs[0].needs_update()).isfalse());
+            wassert(actual(attrs[0].updated()).istrue());
+        }
+        // Load the attributes again to verify that they changed
         {
             Var var(f.query(1, 1));
             wassert(actual(var.next_attr()->code()) == WR_VAR(0, 33, 7));

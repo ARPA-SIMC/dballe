@@ -40,10 +40,6 @@ protected:
 
     /** Precompiled select statement */
     ODBCStatement* sstm;
-    /** Precompiled insert statement */
-    ODBCStatement* istm;
-    /** Precompiled replace statement */
-    ODBCStatement* rstm;
 
     /** id_data SQL parameter */
     int id_data;
@@ -53,16 +49,6 @@ protected:
     char value[255];
     /** attribute value indicator */
     SQLLEN value_ind;
-
-    /**
-     * Set the value input field from a string
-     *
-     * @param value
-     *   The value to copy into ins
-     */
-    void set_value(const char* value);
-
-    void impl_add(int id_data, sql::AttributeList& attrs) override;
 
 public:
     ODBCAttrV6(ODBCConnection& conn);

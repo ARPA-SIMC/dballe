@@ -106,20 +106,6 @@ void MySQLAttrV6::insert(Transaction& t, sql::bulk::InsertAttrsV6& attrs, Update
     }
 }
 
-void MySQLAttrV6::impl_add(int id_data, sql::AttributeList& attrs)
-{
-    Querybuf q;
-    q.append("INSERT INTO attr (id_data, type, value) VALUES ");
-    q.start_list(",");
-    for (auto& i : attrs)
-    {
-        string escaped_value = conn.escape(i.second);
-        q.append_listf("(%d, %d, '%s')", id_data, i.first, escaped_value.c_str());
-    }
-    q.append(" ON DUPLICATE KEY UPDATE value=VALUES(value)");
-    conn.exec_no_data(q);
-}
-
 void MySQLAttrV6::read(int id_data, function<void(unique_ptr<Var>)> dest)
 {
     Querybuf q;

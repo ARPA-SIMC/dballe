@@ -33,34 +33,15 @@ namespace sqlite {
 SQLiteAttrV6::SQLiteAttrV6(SQLiteConnection& conn)
     : conn(conn)
 {
-    const char* select_query =
-        "SELECT type, value FROM attr WHERE id_data=?";
-    const char* replace_query =
-        "INSERT OR REPLACE INTO attr (id_data, type, value)"
-        " VALUES(?, ?, ?)";
-
-    // Create the statement for select
-    sstm = conn.sqlitestatement(select_query).release();
-
-    // Create the statement for replace
-    rstm = conn.sqlitestatement(replace_query).release();
+    // Precompile the statement for select
+    sstm = conn.sqlitestatement("SELECT type, value FROM attr WHERE id_data=?").release();
 }
 
 SQLiteAttrV6::~SQLiteAttrV6()
 {
     delete sstm;
-    delete rstm;
-}
-
-void SQLiteAttrV6::impl_add(int id_data, sql::AttributeList& attrs)
-{
-    for (auto& i : attrs)
-    {
-        rstm->bind_val(1, id_data);
-        rstm->bind_val(2, i.first);
-        rstm->bind_val(3, i.second);
-        rstm->execute();
-    }
+    delete istm;
+    delete ustm;
 }
 
 void SQLiteAttrV6::read(int id_data, function<void(unique_ptr<Var>)> dest)
@@ -109,12 +90,12 @@ void SQLiteAttrV6::insert(Transaction& t, sql::bulk::InsertAttrsV6& attrs, Updat
         case UPDATE:
             if (todo.do_update)
             {
-                auto update_stm = conn.sqlitestatement("UPDATE attr SET value=? WHERE id_data=? AND type=?");
+                if (!ustm) ustm = conn.sqlitestatement("UPDATE attr SET value=? WHERE id_data=? AND type=?").release();
                 for (auto& v: attrs)
                 {
                     if (!v.needs_update()) continue;
-                    update_stm->bind(v.attr->value(), v.id_data, v.attr->code());
-                    update_stm->execute();
+                    ustm->bind(v.attr->value(), v.id_data, v.attr->code());
+                    ustm->execute();
                     v.set_updated();
                 }
             }
@@ -128,12 +109,12 @@ void SQLiteAttrV6::insert(Transaction& t, sql::bulk::InsertAttrsV6& attrs, Updat
 
     if (todo.do_insert)
     {
-        auto insert = conn.sqlitestatement("INSERT INTO attr (id_data, type, value) VALUES (?, ?, ?)");
+        if (!istm) istm = conn.sqlitestatement("INSERT INTO attr (id_data, type, value) VALUES (?, ?, ?)").release();
         for (auto& v: attrs)
         {
             if (!v.needs_insert()) continue;
-            insert->bind(v.id_data, v.attr->code(), v.attr->value());
-            insert->execute();
+            istm->bind(v.id_data, v.attr->code(), v.attr->value());
+            istm->execute();
             v.set_inserted();
         }
     }

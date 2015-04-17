@@ -45,15 +45,6 @@ struct InsertAttrsV6;
  */
 struct AttrV6
 {
-protected:
-    /**
-     * Add all the attributes in attrs as attributes of the variable id_data.
-     *
-     * Existing attributes are replaced if they are also found in var, but are
-     * not deleted if they are not found in var.
-     */
-    virtual void impl_add(int id_data, AttributeList& attrs) = 0;
-
 public:
     enum UpdateMode {
         UPDATE,
@@ -63,22 +54,11 @@ public:
 
     virtual ~AttrV6();
 
+    /// Insert all attributes of the given variable
+    void insert_attributes(Transaction& t, int id_data, const wreport::Var& var, UpdateMode update_mode=UPDATE);
+
     /// Bulk attribute insert
-    virtual void insert(Transaction& t, sql::bulk::InsertAttrsV6& vars, UpdateMode update_mode=UPDATE);
-
-    /**
-     * Add all the variables in attrs as attributes of id_data.
-     *
-     * Existing attributes are replaced but not deleted.
-     */
-    void add(int id_data, const Record& attrs);
-
-    /**
-     * Add all the attributes of var as attributes of id_data.
-     *
-     * Existing attributes are replaced but not deleted.
-     */
-    void add(int id_data, const wreport::Var& var);
+    virtual void insert(Transaction& t, sql::bulk::InsertAttrsV6& vars, UpdateMode update_mode=UPDATE) = 0;
 
     /**
      * Load from the database all the attributes for var

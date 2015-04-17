@@ -38,8 +38,6 @@ protected:
     /** DB connection. */
     PostgreSQLConnection& conn;
 
-    void impl_add(int id_data, sql::AttributeList& attrs) override;
-
 public:
     PostgreSQLAttrV6(PostgreSQLConnection& conn);
     PostgreSQLAttrV6(const PostgreSQLAttrV6&) = delete;

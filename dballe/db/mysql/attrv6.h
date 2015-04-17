@@ -38,8 +38,6 @@ protected:
     /** DB connection. */
     MySQLConnection& conn;
 
-    void impl_add(int id_data, sql::AttributeList& attrs) override;
-
 public:
     MySQLAttrV6(MySQLConnection& conn);
     MySQLAttrV6(const MySQLAttrV6&) = delete;

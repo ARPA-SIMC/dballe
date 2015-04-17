@@ -38,12 +38,12 @@ protected:
     /** DB connection. */
     SQLiteConnection& conn;
 
-    /** Precompiled select statement */
+    /// Precompiled select statement
     SQLiteStatement* sstm = nullptr;
-    /** Precompiled replace statement */
-    SQLiteStatement* rstm = nullptr;
-
-    void impl_add(int id_data, sql::AttributeList& attrs) override;
+    /// Precompiled insert statement
+    SQLiteStatement* istm = nullptr;
+    /// Precompiled update statement
+    SQLiteStatement* ustm = nullptr;
 
 public:
     SQLiteAttrV6(SQLiteConnection& conn);

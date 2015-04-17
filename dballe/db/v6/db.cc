@@ -334,12 +334,17 @@ void DB::attr_insert(wreport::Varcode id_var, const Record& attrs)
 void DB::attr_insert(int id_data, wreport::Varcode id_var, const Record& attrs)
 {
     sql::AttrV6& a = attr();
+    sql::bulk::InsertAttrsV6 iattrs;
+    for (vector<Var*>::const_iterator i = attrs.vars().begin(); i != attrs.vars().end(); ++i)
+        if ((*i)->value() != NULL)
+            iattrs.add(*i, id_data);
+    if (iattrs.empty()) return;
 
     // Begin the transaction
     auto t = conn->transaction();
 
-    /* Insert all found variables */
-    a.add(id_data, attrs);
+    // Insert all the attributes we found
+    a.insert(*t, iattrs, sql::AttrV6::UPDATE);
 
     t->commit();
 }

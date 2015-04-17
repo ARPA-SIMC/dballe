@@ -34,37 +34,22 @@ namespace sql {
 
 AttrV6::~AttrV6() {}
 
-void AttrV6::add(int id_data, const Record& attrs)
+void AttrV6::insert_attributes(Transaction& t, int id_data, const wreport::Var& var, UpdateMode update_mode)
 {
-    sql::AttributeList alist;
-    for (vector<Var*>::const_iterator i = attrs.vars().begin(); i != attrs.vars().end(); ++i)
-        if ((*i)->value() != NULL)
-            alist.add((*i)->code(), (*i)->value());
-    if (alist.empty()) return;
-    impl_add(id_data, alist);
+    bulk::InsertAttrsV6 attrs;
+    attrs.add_all(var, id_data);
+    if (attrs.empty()) return;
+    insert(t, attrs, update_mode);
 }
 
-void AttrV6::add(int id_data, const wreport::Var& var)
-{
-    sql::AttributeList alist;
-    for (const Var* attr = var.next_attr(); attr != NULL; attr = attr->next_attr())
-        if (attr->value() != NULL)
-            alist.add(attr->code(), attr->value());
-    if (alist.empty()) return;
-    impl_add(id_data, alist);
-}
-
-void AttrV6::insert(Transaction& t, sql::bulk::InsertAttrsV6& vars, UpdateMode update_mode)
-{
-    throw error_unimplemented("attribute bulk insert not implemented on this backend");
-}
 
 namespace bulk {
 
 void InsertAttrsV6::add_all(const wreport::Var& var, int id_data)
 {
     for (const Var* attr = var.next_attr(); attr != NULL; attr = attr->next_attr())
-        emplace_back(attr, id_data);
+        if (attr->value() != NULL)
+            emplace_back(attr, id_data);
 }
 
 AnnotateAttrsV6::AnnotateAttrsV6(InsertAttrsV6& attrs)
