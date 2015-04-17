@@ -121,7 +121,7 @@ std::vector<Test> tests {
             db.insert(insert, false, false);
             ensure(false);
         } catch (wreport::error& e) {
-            wassert(actual(e.what()).matches("refusing to overwrite existing data|cannot replace an existing value"));
+            wassert(actual(e.what()).matches("refusing to overwrite existing data|cannot replace an existing value|Duplicate entry"));
         }
     }),
     Test("insert_twice", [](Fixture& f) {
@@ -141,7 +141,7 @@ std::vector<Test> tests {
             db.insert(insert, false, true);
             ensure(false);
         } catch (wreport::error& e) {
-            wassert(actual(e.what()).matches("refusing to overwrite existing data|cannot replace an existing value"));
+            wassert(actual(e.what()).matches("refusing to overwrite existing data|cannot replace an existing value|Duplicate entry"));
         }
     }),
     Test("query_station", [](Fixture& f) {

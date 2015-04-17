@@ -143,6 +143,83 @@ void ODBCAttrV6::read(int id_data, function<void(unique_ptr<Var>)> dest)
     sstm->close_cursor();
 }
 
+void ODBCAttrV6::insert(Transaction& t, sql::bulk::InsertAttrsV6& attrs, UpdateMode update_mode)
+{
+    Querybuf select_query;
+    select_query.append("SELECT id_data, type, value FROM attr WHERE id_data IN (");
+    select_query.start_list(",");
+    int last_data_id = -1;
+    for (const auto& a: attrs)
+    {
+        if (a.id_data == last_data_id) continue;
+        select_query.append_listf("%d", a.id_data);
+        last_data_id = a.id_data;
+    }
+    select_query.append(") ORDER BY id_data, type");
+
+    // Get the current status of variables for this context
+    auto sstm = conn.odbcstatement(select_query);
+
+    int id_data;
+    int id_var;
+    char value[255];
+    sstm->bind_out(1, id_data);
+    sstm->bind_out(2, id_var);
+    sstm->bind_out(3, value, 255);
+
+    // Scan the result in parallel with the variable list, annotating changed
+    // items with their data ID
+    sql::bulk::AnnotateAttrsV6 todo(attrs);
+    sstm->execute();
+    while (sstm->fetch())
+        todo.annotate(id_data, id_var, value);
+    todo.annotate_end();
+
+    // We now have a todo-list
+
+    switch (update_mode)
+    {
+        case UPDATE:
+            if (todo.do_update)
+            {
+                auto update_stm = conn.odbcstatement("UPDATE attr SET value=? WHERE id_data=? AND type=?");
+                wreport::Varcode code;
+                update_stm->bind_in(3, code);
+                for (auto& a: attrs)
+                {
+                    if (!a.needs_update()) continue;
+                    update_stm->bind_in(1, a.attr->value());
+                    update_stm->bind_in(2, a.id_data);
+                    code = a.attr->code();
+                    update_stm->execute_and_close();
+                    a.set_updated();
+                }
+            }
+            break;
+        case IGNORE:
+            break;
+        case ERROR:
+            if (todo.do_update)
+                throw error_consistency("refusing to overwrite existing data");
+    }
+
+    if (todo.do_insert)
+    {
+        auto insert = conn.odbcstatement("INSERT INTO attr (id_data, type, value) VALUES (?, ?, ?)");
+        wreport::Varcode varcode;
+        insert->bind_in(2, varcode);
+        for (auto& a: attrs)
+        {
+            if (!a.needs_insert()) continue;
+            insert->bind_in(1, a.id_data);
+            varcode = a.attr->code();
+            insert->bind_in(3, a.attr->value());
+            insert->execute_and_close();
+            a.set_inserted();
+        }
+    }
+}
+
 void ODBCAttrV6::dump(FILE* out)
 {
     int id_data;

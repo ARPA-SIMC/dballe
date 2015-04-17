@@ -68,6 +68,8 @@ public:
     ODBCAttrV6(ODBCConnection& conn);
     ~ODBCAttrV6();
 
+    void insert(Transaction& t, sql::bulk::InsertAttrsV6& vars, UpdateMode update_mode=UPDATE) override;
+
     /**
      * Load from the database all the attributes for var
      *
