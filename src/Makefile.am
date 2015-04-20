@@ -20,7 +20,3 @@ dbadb_SOURCES = dbadb.cc
 dbadb_LDFLAGS = $(DBALLELIBS) $(WREPORT_LIBS) -lpopt 
 dbadb_DEPENDENCIES = $(DBALLELIBS)
 
-EXTRA_DIST = bench/bench.h \
-             bench/3928-viaza-20130624-180728.csv \
-             bench/3932-viaza-20130625-105958.csv
-
