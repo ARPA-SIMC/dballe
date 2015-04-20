@@ -62,7 +62,7 @@ int64_t encode_int64_t(int64_t arg);
 /// Argument list for PQexecParams built at compile time
 template<typename... ARGS> struct Params
 {
-    int count = sizeof...(ARGS);
+    static const int count = sizeof...(ARGS);
     const char* args[sizeof...(ARGS)];
     int lengths[sizeof...(ARGS)];
     int formats[sizeof...(ARGS)];
