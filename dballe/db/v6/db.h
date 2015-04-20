@@ -203,14 +203,6 @@ public:
      */
     int rep_cod_from_memo(const char* memo);
 
-    /**
-     * Get the report id from this record.
-     *
-     * If rep_memo is specified instead, the corresponding report id is queried in
-     * the database and set as "rep_cod" in the record.
-     */
-    int get_rep_cod(const Query& rec);
-
     /*
      * Lookup, insert or replace data in station taking the values from
      * rec.

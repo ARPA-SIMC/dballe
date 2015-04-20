@@ -165,15 +165,6 @@ std::map<std::string, int> DB::get_repinfo_priorities()
     return repinfo().get_priorities();
 }
 
-int DB::get_rep_cod(const Query& rec)
-{
-    sql::Repinfo& ri = repinfo();
-    if (const char* memo = rec.key_peek_value(DBA_KEY_REP_MEMO))
-        return ri.get_id(memo);
-    else
-        throw error_notfound("input record has neither rep_cod nor rep_memo");
-}
-
 int DB::rep_cod_from_memo(const char* memo)
 {
     return repinfo().obtain_id(memo);
@@ -225,6 +216,7 @@ int DB::obtain_lev_tr(const Query& rec)
 
 void DB::insert(const Query& rec, bool can_replace, bool station_can_add)
 {
+    sql::Repinfo& ri = repinfo();
     sql::DataV6& d = data();
 
     /* Check for the existance of non-lev_tr data, otherwise it's all
@@ -239,7 +231,10 @@ void DB::insert(const Query& rec, bool can_replace, bool station_can_add)
     // Insert the station data, and get the ID
     vars.id_station = obtain_station(rec, station_can_add);
     // Get the ID of the report
-    vars.id_report = get_rep_cod(rec);
+    if (const char* memo = rec.key_peek_value(DBA_KEY_REP_MEMO))
+        vars.id_report = ri.obtain_id(memo);
+    else
+        throw error_notfound("input record has neither rep_cod nor rep_memo");
     // Set the date from the record contents
     vars.datetime = rec.get_datetime();
 
