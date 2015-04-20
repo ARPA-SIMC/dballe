@@ -206,6 +206,26 @@ std::vector<Test> tests {
         api.setc("var", "B12101");
         wassert(actual(api.voglioquesto()) == 1);
     }),
+    Test("insert_auto_repmemo", [](Fixture& f) {
+        // Check that an unknown rep_memo is correctly handled on insert
+        fortran::DbAPI api(*f.db, "write", "write", "write");
+
+        // Insert a record with a rep_memo that is not in the database
+        api.setc("rep_memo", "insert_auto_repmemo");
+        api.setd("lat", 45.6);
+        api.setd("lon", 11.2);
+        api.setlevel(1, MISSING_INT, MISSING_INT, MISSING_INT);
+        api.settimerange(254, MISSING_INT, MISSING_INT);
+        api.setdate(2015, 4, 25, 12, 30, 45);
+        api.setd("B12101", 286.4);
+        api.prendilo();
+
+        // Query it back
+        api.unsetall();
+        api.setc("rep_memo", "insert_auto_repmemo");
+        wassert(actual(api.voglioquesto()) == 1);
+        wassert(actual(api.dammelo()) == "B12101");
+    }),
     Test("undefined_level2", [](Fixture& f) {
         // Test handling of values with undefined leveltype2 and l2
         fortran::DbAPI api(*f.db, "write", "write", "write");
