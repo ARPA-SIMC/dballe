@@ -22,7 +22,6 @@
 #include "internals.h"
 #include "dballe/core/vasprintf.h"
 #include "dballe/db/querybuf.h"
-#include <regex>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
@@ -65,6 +64,139 @@ void error_mysql::throwf(MYSQL* db, const char* fmt, ...)
 
 namespace mysql {
 
+struct URLParser
+{
+    const std::string& url;
+    ConnectInfo& dest;
+
+    URLParser(const std::string& url, ConnectInfo& dest) : url(url), dest(dest) {}
+
+    void trace(const char* name, std::string::size_type beg, std::string::size_type end) const
+    {
+        //fprintf(stderr, "TRACE %s: %s %zd--%zd: %.*s\n", url.c_str(), name, beg, end, (int)(end - beg), url.c_str() + beg);
+    }
+
+    // Return a substring of url between positions [beg, end)
+    std::string cut(std::string::size_type beg, std::string::size_type end)
+    {
+        trace("cut", beg, end);
+        return url.substr(beg, end - beg);
+    }
+
+    void parse()
+    {
+        trace(" *** parse", 0, url.size());
+        if (url == "mysql:" || url == "mysql://" || url == "mysql:///")
+            return;
+
+        if (url.substr(0, 8) != "mysql://")
+            error_consistency::throwf("MySQL connect URL '%s' does not start with mysql://", url.c_str());
+
+        size_t hostport_end = url.find('/', 8);
+        if (hostport_end == string::npos)
+            error_consistency::throwf("MySQL connect URL '%s' does not end the host:port part with a slash", url.c_str());
+
+        parse_hostport(8, hostport_end);
+
+        size_t qstring_start = url.find('?', hostport_end + 1);
+        if (qstring_start == string::npos)
+        {
+            if (hostport_end + 1 < url.size())
+            {
+                dest.has_dbname = true;
+                dest.dbname = cut(hostport_end + 1, url.size());
+            }
+        } else {
+            if (hostport_end + 1 < qstring_start)
+            {
+                dest.has_dbname = true;
+                dest.dbname = cut(hostport_end + 1, qstring_start);
+            }
+            parse_qstring(qstring_start, url.size());
+        }
+    }
+
+
+#if 0
+    string buf(url + 7);
+    size_t pos = buf.find('@');
+    if (pos == string::npos)
+    {
+        return connect(buf.c_str(), "", ""); // odbc://dsn
+    }
+    // Split the string at '@'
+    string userpass = buf.substr(0, pos);
+    string dsn = buf.substr(pos + 1);
+
+    pos = userpass.find(':');
+    if (pos == string::npos)
+    {
+        return connect(dsn.c_str(), userpass.c_str(), ""); // odbc://user@dsn
+    }
+
+    string user = userpass.substr(0, pos);
+    string pass = userpass.substr(pos + 1);
+
+    connect(dsn.c_str(), user.c_str(), pass.c_str()); // odbc://user:pass@dsn
+#endif
+
+    // Parse host:port part of the URL
+    void parse_hostport(std::string::size_type beg, std::string::size_type end)
+    {
+        trace("parse_hostport", beg, end);
+        size_t port = url.find(':', beg);
+        if (port == string::npos)
+            dest.host = cut(beg, end);
+        else
+        {
+            dest.host = cut(beg, port);
+            dest.port = stoul(cut(port + 1, end));
+        }
+    }
+
+    void parse_qstring(std::string::size_type beg, std::string::size_type end)
+    {
+        trace("parse_qstring", beg, end);
+        while (true)
+        {
+            // Skip leading ? or &
+            ++beg;
+
+            size_t next = url.find('&', beg);
+            if (next == string::npos)
+            {
+                // Last element
+                parse_qstring_keyval(beg, end);
+                break;
+            } else {
+                parse_qstring_keyval(beg, next);
+                beg = next;
+            }
+        }
+    }
+
+    void parse_qstring_keyval(std::string::size_type beg, std::string::size_type end)
+    {
+        trace("parse_qstring_keyval", beg, end);
+        size_t assign = url.find('=', beg);
+        if (assign == string::npos)
+            handle_keyval(cut(beg, end), string());
+        else
+            handle_keyval(cut(beg, assign), cut(assign + 1, end));
+    }
+
+    void handle_keyval(const std::string& key, const std::string& val)
+    {
+        if (key == "user")
+            dest.user = val;
+        else if (key == "password")
+        {
+            dest.has_passwd = true;
+            dest.passwd = val;
+        }
+    }
+};
+
 void ConnectInfo::reset()
 {
     host.clear();
@@ -82,44 +214,8 @@ void ConnectInfo::parse_url(const std::string& url)
     // mysql://[host][:port]/[database][?propertyName1][=propertyValue1][&propertyName2][=propertyValue2]...
     reset();
 
-    if (url == "mysql:" || url == "mysql://" || url == "mysql:///")
-        return;
-
-    regex re_remote(R"(^mysql://([^:/]+)?(:\d+)?/([^?]+)?(\?.+)?$)", regex_constants::ECMAScript);
-    smatch res;
-    if (!regex_match(url, res, re_remote))
-        throw error_consistency("cannot parse MySQL connect URL '" + url + "'");
-
-    // Host
-    if (res[1].matched)
-        host = res[1].str();
-    // Port
-    if (res[2].matched)
-        port = stoul(res[2].str().substr(1));
-    // DB name
-    if (res[3].matched)
-    {
-        has_dbname = true;
-        dbname = res[3].str();
-    }
-    // Query string
-    if (res[4].matched)
-    {
-        // ?arg[=val]&arg[=val]...
-        regex re_qstring(R"([?&]([^=]+)(=[^&]+)?)", regex_constants::ECMAScript);
-        string qstring = res[4].str();
-        for (auto i = sregex_iterator(qstring.begin(), qstring.end(), re_qstring); i != sregex_iterator(); ++i)
-        {
-            smatch match = *i;
-            if (match[1].str() == "user")
-                user = match[2].str().substr(1);
-            else if (match[1].str() == "password")
-            {
-                has_passwd = true;
-                passwd = match[2].str().substr(1);
-            }
-        }
-    }
+    URLParser parser(url, *this);
+    parser.parse();
 }
 
 std::string ConnectInfo::to_url() const
