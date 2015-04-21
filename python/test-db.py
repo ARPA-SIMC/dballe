@@ -117,11 +117,12 @@ class DballeTest(unittest.TestCase):
 
     def testQuerySummary(self):
         query = dballe.Record()
+        query["query"] = "details"
         cur = self.db.query_summary(query)
         res = dict()
         for result in cur:
             res[(result["ana_id"], result["rep_memo"], result["level"], result["trange"], result["var"])] = (
-                result["datemin"], result["datemax"], result["limit"])
+                result["datemin"], result["datemax"], result["context_id"])
         self.assertEqual(res[(1, "synop", (10, 11, 15, 22), (20, 111, 222), 'B01011')], (dt.datetime(1945, 4, 25, 8, 0), dt.datetime(1945, 4, 25, 8, 0), 1))
         self.assertEqual(res[(1, "synop", (10, 11, 15, 22), (20, 111, 222), 'B01012')], (dt.datetime(1945, 4, 25, 8, 0), dt.datetime(1945, 4, 25, 8, 0), 1))
 
