@@ -181,30 +181,6 @@ class AnaIndex(ListIndex):
         def shortName(self):
                 return "AnaIndex["+str(len(self))+"]"
 
-class NetworkIndexEntry(tuple):
-        """
-        NetworkIndex entry, with various data about a single station.
-
-        It is a tuple of 2 values:
-         * network code
-         * network name
-        """
-        def __new__(self, rep_memo=None):
-            """
-            Create an index entry. The rep_memo can be given explitly, or
-            a dballe.Record can be passed and data will be fetched from
-            it.
-            """
-            if isinstance(rep_memo, (str, unicode)):
-                return tuple.__new__(self, (rep_memo,))
-            else:
-                rec = rep_memo
-                return tuple.__new__(self, (rec["rep_memo"],))
-        def __str__(self):
-                return self[1]
-        def __repr__(self):
-                return "NetworkIndexEntry" + tuple.__repr__(self)
-
 class NetworkIndex(ListIndex):
         """
         Index for networks, as they come out of the database.
@@ -217,7 +193,7 @@ class NetworkIndex(ListIndex):
         def _indexKey(self, rec):
                 return rec["rep_memo"]
         def _indexData(self, rec):
-                return NetworkIndexEntry(rec)
+                return rec["rep_memo"]
         def _splitInit(self, el):
                 return el[0], el
         def shortName(self):

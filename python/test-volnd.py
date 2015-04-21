@@ -160,7 +160,7 @@ class TestRead(unittest.TestCase):
         self.assertEquals(data.dims[0][3], (4, 20., 25., None))
         self.assertEquals(data.dims[0][4], (5, 30., 15., None))
         self.assertEquals(data.dims[0][5], (6, 30., 25., None))
-        self.assertEquals(set(data.dims[1]), set((("temp",), ("synop",))))
+        self.assertEquals(set(data.dims[1]), set(("temp", "synop")))
 
     def testAnaTrangeNetwork(self):
         # 3 dimensions: ana, timerange, network
@@ -188,7 +188,7 @@ class TestRead(unittest.TestCase):
         self.assertEquals(data.dims[0][4], (5, 30., 15., None))
         self.assertEquals(data.dims[0][5], (6, 30., 25., None))
         self.assertEquals(data.dims[1][0], (0, None, None))
-        self.assertEquals(set(data.dims[2]), set((("temp",), ("synop",))))
+        self.assertEquals(set(data.dims[2]), set(("temp", "synop")))
 
         data = vars["B13011"]
         self.assertEquals(data.name, "B13011")
@@ -209,7 +209,7 @@ class TestRead(unittest.TestCase):
         self.assertEquals(data.dims[0][5], (6, 30., 25., None))
         self.assertEquals(data.dims[1][0], (4, -43200, 0))
         self.assertEquals(data.dims[1][1], (4, -21600, 0))
-        self.assertEquals(set(data.dims[2]), set((("temp",), ("synop",))))
+        self.assertEquals(set(data.dims[2]), set(("temp", "synop")))
 
         self.assertEquals(vars["B10004"].dims[0], vars["B13011"].dims[0])
         self.assertNotEquals(vars["B10004"].dims[1], vars["B13011"].dims[1])
@@ -236,7 +236,7 @@ class TestRead(unittest.TestCase):
             # Find what is the network dimension where we have the attributes
             netidx = -1
             for idx, n in enumerate(data.dims[1]):
-                if n[0] == net:
+                if n == net:
                     netidx = idx
                     break
             self.assertNotEquals(netidx, -1)
@@ -269,7 +269,7 @@ class TestRead(unittest.TestCase):
         # Find the temp index
         netidx = -1
         for idx, n in enumerate(data.dims[1]):
-            if n[0] == "temp":
+            if n == "temp":
                 netidx = idx
                 break
         self.assertNotEquals(netidx, -1)

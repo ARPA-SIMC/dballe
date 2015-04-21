@@ -290,11 +290,10 @@ document (volnd.DateTimeIndex)
 document (volnd.IntervalIndex)
 
 print """
-The data objects used by ``AnaIndex`` and ``NetworkIndex`` are:
+The data object used by ``AnaIndex`` is:
 """
 
 document (volnd.AnaIndexEntry)
-document (volnd.NetworkIndexEntry)
 
 print """
 The extraction is done using the dballe.volnd.read function:
