@@ -1,17 +1,57 @@
 #!/usr/bin/python
+# coding: utf-8
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+import dballe
+import csv
+import sys
 
 """
 Export data from DB-All.e into CSV format
 """
 
-import dballe
-import csv
-
 def intormiss(x):
+    """
+    Format an integer to a string, returning '-' if the integer is None.
+    """
     if x is None:
         return "-"
     else:
         return "%d" % x
+
+class UnicodeCSVWriter(object):
+    """
+    Hack to work around the csv module being unable to handle unicode rows in
+    input, and unicode files in output
+    """
+
+    class UnicodeFdWrapper(object):
+        """
+        Wrap an output file descriptor into something that accepts utf8 byte
+        strings and forwards unicode
+        """
+        def __init__(self, outfd):
+            self.outfd = outfd
+
+        def write(self, bytestr):
+            self.outfd.write(bytestr.decode("utf-8"))
+
+    def __init__(self, outfd, *writer_args, **writer_kw):
+        self.writer = csv.writer(self.UnicodeFdWrapper(outfd), *writer_args, **writer_kw)
+
+    def encode_field(self, val):
+        encode = getattr(val, "encode", None)
+        if encode is not None:
+            return encode("utf-8")
+        else:
+            return val
+
+    def writerow(self, row):
+        enc = self.encode_field
+        self.writer.writerow([enc(row) for s in row])
+
 
 class Exporter:
     def __init__(self, db):
@@ -21,7 +61,7 @@ class Exporter:
         self.anaData = {}
         self.attrData = {}
 
-    def getpaval (self, x, var):
+    def getpaval(self, x, var):
         id = x["ana_id"]
         data = self.anaData[id]
         #print "***********", id, av, data
@@ -30,14 +70,14 @@ class Exporter:
         else:
             return ""
 
-    def getattrval (self, x, v):
+    def getattrval(self, x, v):
         data = self.attrData["%d,%s"%(x["context_id"],x["var"])]
         if v in data:
             return data.var(v).format()
         else:
             return ""
 
-    def computeColumns(self, filter):
+    def compute_columns(self, filter):
         title = ""
         cols = []
 
@@ -137,18 +177,18 @@ class Exporter:
         if len(levels) == 1:
             title = title + "Level: %s." % (levels.pop())
         elif len(levels) > 1:
-            cols.append(["Level1", lambda x: intormiss(x["leveltype1"])])
-            cols.append(["L1", lambda x: intormiss(x["l1"])])
-            cols.append(["Level2", lambda x: intormiss(x["leveltype2"])])
-            cols.append(["L2", lambda x: intormiss(x["l2"])])
+            cols.append(["Level1", lambda x: intormiss(x["level"][0])])
+            cols.append(["L1", lambda x: intormiss(x["level"][1])])
+            cols.append(["Level2", lambda x: intormiss(x["level"][2])])
+            cols.append(["L2", lambda x: intormiss(x["level"][3])])
 
         # Time range
         if len(tranges) == 1:
             title = title + "Time range: %s." % (tranges.pop())
         elif len(tranges) > 1:
-            cols.append(["Time range", lambda x: intormiss(x["pindicator"])])
-            cols.append(["P1", lambda x: intormiss(x["p1"])])
-            cols.append(["P2", lambda x: intormiss(x["p2"])])
+            cols.append(["Time range", lambda x: intormiss(x["trange"][0])])
+            cols.append(["P1", lambda x: intormiss(x["trange"][1])])
+            cols.append(["P2", lambda x: intormiss(x["trange"][2])])
 
         # Variables
         for v in sorted(vars):
@@ -175,19 +215,19 @@ class Exporter:
         self.title = title
         self.cols = cols
 
-    def output(self, filter, fd):
+    def output(self, query, fd):
         """
-        Perform a DB-All.e query using the given filter and output the results
+        Perform a DB-All.e query using the given query and output the results
         in CSV format on the given file object
         """
         #writer = csv.writer(fd, dialect="excel")
-        writer = csv.writer(fd)
+        writer = UnicodeCSVWriter(fd)
 
-        self.computeColumns(filter)
+        self.compute_columns(query)
 
         # Don't query an empty result set
         if len(self.cols) == 0:
-            sys.stderr.write("Warning: result is empty.\n")
+            print("Warning: result is empty.", file=sys.stderr)
             return
 
         # Print the title if we have it
@@ -199,18 +239,16 @@ class Exporter:
         # Print the column titles
         writer.writerow([x[0] for x in self.cols])
 
-        for result in self.db.query_data(filter):
+        for rec in self.db.query_data(query):
             fields = []
             for c in self.cols:
-                fields.append(c[1](result))
+                fields.append(c[1](rec))
             writer.writerow(fields)
 
-def export(db, query, file):
+def export(db, query, fd):
     """
-    Perform a DB-All.e query using the given db and query filter, and output
+    Perform a DB-All.e query using the given db and query query, and output
     the results in CSV format on the given file object
     """
     e = Exporter(db)
-    e.output(query, file)
-
-# vim:set ts=4 sw=4 expandtab:
+    e.output(query, fd)
