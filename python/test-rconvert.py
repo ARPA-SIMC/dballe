@@ -13,8 +13,10 @@ import unittest
 
 class TestR(unittest.TestCase):
     def setUp(self):
+        from testlib import fill_volnd
         numpy.seterr(divide="raise", over="raise", under="raise", invalid="raise")
         self.db = dballe.DB.connect_test()
+        fill_volnd(self.db)
 
         #def f(x,y,z):
         #	return (x+1)*100+(y+1)*10+(z+1)
@@ -48,7 +50,7 @@ class TestR(unittest.TestCase):
         #query.setd("lonmin", -10.)
         #query.setd("lonmax", 40.)
         query["var"] = "B13011"
-        vars = volnd.read(db.query_data(query), (volnd.AnaIndex(),volnd.DateTimeIndex()), checkConflicts=False)
+        vars = volnd.read(self.db.query_data(query), (volnd.AnaIndex(),volnd.DateTimeIndex()), checkConflicts=False)
         rconvert.volnd_save_to_r(vars, "/tmp/pippo")
 
 if __name__ == "__main__":

@@ -1,5 +1,9 @@
-# Failed experiment: the __dict__ of MaskedArray is a dictproxy instance that
-# is read-only
+#!/usr/bin/python
+# coding: utf-8
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 import volnd
 import os
 import itertools
@@ -9,6 +13,9 @@ if os.environ.get("DBALLE_BUILDING_DOCS", "") != 'true':
     #import Numeric as numeric
     import rpy2.robjects as robjects
     import rpy2.rinterface as rinterface
+
+# Failed experiment: the __dict__ of MaskedArray is a dictproxy instance that
+# is read-only
 
 #dballe.volnd.Data.__dict__['as_r'] = new.instancemethod(fun, None, dballe.volnd.Data)
 

@@ -27,10 +27,10 @@ This example code extracts temperatures in a station by datetime matrix::
         # Information about what values correspond to an index in the various
         # directions can be accessed in data.dims, which contains one list per
         # dimension with all the information corresponding to every index.
-        print "Ana dimension is", len(data.dims[0]), "items long"
-        print "Datetime dimension is", len(data.dims[1]), "items long"
-        print "First 10 stations along the Ana dimension:", data.dims[0][:10]
-        print "First 10 datetimes along the DateTime dimension:", data.dims[1][:10]
+        print("Ana dimension is", len(data.dims[0]), "items long")
+        print("Datetime dimension is", len(data.dims[1]), "items long")
+        print("First 10 stations along the Ana dimension:", data.dims[0][:10])
+        print("First 10 datetimes along the DateTime dimension:", data.dims[1][:10])
 """
 
 
