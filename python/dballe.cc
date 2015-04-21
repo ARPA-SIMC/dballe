@@ -68,10 +68,21 @@ static PyObject* dballe_var(PyTypeObject *type, PyObject *args)
             if (v == NULL)
                 return NULL;
             return (PyObject*)var_create(dballe::varinfo(resolve_varcode(var_name)), v);
+        } else if (PyUnicode_Check(val)) {
+            PyObject *utf8 = PyUnicode_AsUTF8String(val);
+            const char* v = PyString_AsString(utf8);
+            if (v == NULL)
+            {
+                Py_DECREF(utf8);
+                return NULL;
+            }
+            PyObject* res = (PyObject*)var_create(dballe::varinfo(resolve_varcode(var_name)), v);
+            Py_DECREF(utf8);
+            return res;
         } else if (val == Py_None) {
             return (PyObject*)var_create(dballe::varinfo(resolve_varcode(var_name)));
         } else {
-            PyErr_SetString(PyExc_TypeError, "Expected int, float, str or None");
+            PyErr_SetString(PyExc_TypeError, "Expected int, float, str, unicode, or None");
             return NULL;
         }
     } else

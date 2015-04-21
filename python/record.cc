@@ -649,10 +649,20 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
         if (v == NULL)
             return -1;
         self->rec.set(varname, v);
+    } else if (PyUnicode_Check(val)) {
+        PyObject *utf8 = PyUnicode_AsUTF8String(val);
+        const char* v = PyString_AsString(utf8);
+        if (v == NULL)
+        {
+            Py_DECREF(utf8);
+            return -1;
+        }
+        self->rec.set(varname, v);
+        Py_DECREF(utf8);
     } else if (val == Py_None) {
         self->rec.unset(varname);
     } else {
-        PyErr_SetString(PyExc_TypeError, "Expected int, float, str or None");
+        PyErr_SetString(PyExc_TypeError, "Expected int, float, str, unicode, or None");
         return -1;
     }
     return 0;
