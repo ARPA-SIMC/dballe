@@ -28,6 +28,7 @@
 #include "dballe/core/file.h"
 #include "dballe/msg/msgs.h"
 #include "dballe/msg/codec.h"
+#include <algorithm>
 
 using namespace std;
 using namespace dballe;
@@ -270,12 +271,10 @@ static PyObject* dpy_DB_query_attrs(dpy_DB* self, PyObject* args, PyObject* kw)
 
     try {
         self->db->query_attrs(reference_id, varcode, [&](unique_ptr<Var> var) {
-            for (auto code: codes)
-                if (code == var->code())
-                {
-                    self->attr_rec->rec.add(move(var));
-                    break;
-                }
+            if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
+                return;
+
+            self->attr_rec->rec.add(move(var));
         });
         Py_INCREF(self->attr_rec);
         return (PyObject*)self->attr_rec;

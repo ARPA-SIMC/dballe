@@ -730,7 +730,7 @@ static PySequenceMethods dpy_Record_sequence = {
     (objobjproc)dpy_Record_contains, // sq_contains
 };
 static PyMappingMethods dpy_Record_mapping = {
-    0,                                 // __len__
+    (lenfunc)dpy_Record_len,           // __len__
     (binaryfunc)dpy_Record_getitem,    // __getitem__
     (objobjargproc)dpy_Record_setitem, // __setitem__
 };
