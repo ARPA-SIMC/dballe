@@ -24,6 +24,7 @@
 #include "record.h"
 #include "db.h"
 #include "common.h"
+#include <algorithm>
 
 using namespace std;
 using namespace dballe;
@@ -51,14 +52,12 @@ static PyObject* dpy_Cursor_query_attrs(dpy_Cursor* self, PyObject* args, PyObje
     if (!db_read_attrlist(attrs, codes))
         return NULL;
 
+    self->db->attr_rec->rec.clear();
     try {
         self->cur->query_attrs([&](unique_ptr<Var> var) {
-            for (auto code: codes)
-                if (code == var->code())
-                {
-                    self->db->attr_rec->rec.add(move(var));
-                    break;
-                }
+            if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
+                return;
+            self->db->attr_rec->rec.add(move(var));
         });
         Py_INCREF(self->db->attr_rec);
         return (PyObject*)self->db->attr_rec;

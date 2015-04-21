@@ -269,11 +269,11 @@ static PyObject* dpy_DB_query_attrs(dpy_DB* self, PyObject* args, PyObject* kw)
     if (!db_read_attrlist(attrs, codes))
         return NULL;
 
+    self->attr_rec->rec.clear();
     try {
         self->db->query_attrs(reference_id, varcode, [&](unique_ptr<Var> var) {
             if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
                 return;
-
             self->attr_rec->rec.add(move(var));
         });
         Py_INCREF(self->attr_rec);

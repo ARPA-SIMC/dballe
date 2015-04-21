@@ -47,6 +47,7 @@ class DballeTest(unittest.TestCase):
                 self.assert_("B01011" not in result)
                 count = count + 1
         self.assertEqual(count, 1)
+
     def testQueryData(self):
         expected = {}
         expected["B01011"] = "Hey Hey!!";
@@ -64,6 +65,7 @@ class DballeTest(unittest.TestCase):
             self.assertEqual(var.enq(), expected[var.code])
             del expected[var.code]
             count += 1
+
     def testQueryAttrs(self):
         data = self.db.query_attrs("B01011", self.attr_ref)
         self.assertEqual(len(data), 2)
