@@ -7,4 +7,6 @@ class TestCSV(unittest.TestCase):
 	def testNothing(self):
 		pass
 
-unittest.main()
+if __name__ == "__main__":
+    from testlib import main
+    main("test_csv")

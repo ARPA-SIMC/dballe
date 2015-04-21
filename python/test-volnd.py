@@ -1,6 +1,9 @@
 #!/usr/bin/python
-# -*- coding: UTF-8 -*-
-
+# coding: utf-8
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 import dballe
 from volnd import *
 import unittest, random, sys
@@ -8,10 +11,7 @@ from datetime import *
 import numpy
 import numpy.ma as ma
 
-db = dballe.DB.connect_test()
-
 class TestTddiv(unittest.TestCase):
-
 #       def tons(td):
 #               return td.days * 86400000000 + td.seconds * 1000000 + td.microseconds
 	def dtest(self, td1, td2):
@@ -62,11 +62,10 @@ class TestTddiv(unittest.TestCase):
 class TestRead(unittest.TestCase):
     def setUp(self):
         # We want a predictable dataset
+        self.db = dballe.DB.connect_test()
         random.seed(1)
         rattr = random.Random()
         rattr.seed(1)
-
-        self.db = db
 
         # Wipe the test database
         self.db.reset()
@@ -433,8 +432,8 @@ class TestRead(unittest.TestCase):
         self.assertEquals(anas["B01001"].dims[0], vars["B13011"].dims[0])
 
 if __name__ == "__main__":
-    db.connect_test();
-    unittest.main()
+    from testlib import main
+    main("test_volnd")
 
 # This is already automatically done
 #if len(sys.argv) == 1:

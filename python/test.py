@@ -1,5 +1,9 @@
 #!/usr/bin/python
-
+# coding: utf-8
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 import dballe
 #from dballe import *
 import datetime as dt
@@ -596,4 +600,5 @@ class DescribeTest(unittest.TestCase):
 #            dballe.Trange(i, dballe.MISSING_INT, dballe.MISSING_INT).describe()
 
 if __name__ == "__main__":
-        unittest.main()
+    from testlib import main
+    main("test")

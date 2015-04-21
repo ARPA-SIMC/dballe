@@ -1,5 +1,9 @@
 #!/usr/bin/python
-
+# coding: utf-8
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 import dballe
 import datetime as dt
 import unittest
@@ -133,4 +137,5 @@ class DballeTest(unittest.TestCase):
         self.db.attr_remove("B01011", self.attr_ref, ("B33007",))
 
 if __name__ == "__main__":
-        unittest.main()
+    from testlib import main
+    main("test_db")
