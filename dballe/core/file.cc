@@ -108,21 +108,43 @@ public:
 
 unique_ptr<File> File::create(Encoding type, const std::string& name, const char* mode)
 {
-	fd_tracker fdt;
+    FILE* fp;
+    bool close_on_exit;
 
 	/* Open the file */
-	if (name == "(stdin)")
-		fdt.track(stdin, false);
-	else if (name == "(stdout)")
-		fdt.track(stdout, false);
-	else if (name == "(stderr)")
-		fdt.track(stderr, false);
-	else
-	{
-		fdt.track(fopen(name.c_str(), mode), true);
-		if (fdt.fd == NULL)
+    if (name == "(stdin)")
+    {
+        fp = stdin;
+        close_on_exit = false;
+    }
+    else if (name == "(stdout)")
+    {
+        fp = stdout;
+        close_on_exit = false;
+    }
+    else if (name == "(stderr)")
+    {
+        fp = stderr;
+        close_on_exit = false;
+    }
+    else
+    {
+        fp = fopen(name.c_str(), mode);
+        close_on_exit = true;
+        if (fp == NULL)
 			error_system::throwf("opening %s with mode '%s'", name.c_str(), mode);
-	}
+    }
+
+    return File::create(type, fp, close_on_exit, name);
+}
+
+unique_ptr<File> File::create(Encoding type, FILE* file, bool close_on_exit, const std::string& name) {
+	fd_tracker fdt;
+
+    if (file == stdin || file == stdout || file == stderr)
+		fdt.track(file, false);
+	else
+		fdt.track(file, close_on_exit);
 
 	/* Attempt auto-detect if needed */
 	if (type == -1)

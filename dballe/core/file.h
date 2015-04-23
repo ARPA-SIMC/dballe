@@ -128,7 +128,23 @@ public:
 	 */
 	static std::unique_ptr<File> create(Encoding type, const std::string& name, const char* mode);
 
-
+	/**
+	 * Create a dba_file structure.
+	 *
+	 * @param type
+	 *   The type of data contained in the file.  If -1 is passed, then
+	 *   create will attempt to autodetect the file type from its first
+	 *   byte.
+	 * @param file
+	 *   The fopen'ed file descriptor of the file to access.
+     * @param close_on_exit
+     *   true if the file must be automatically closed
+     * @param name
+     *   A logical name of the file to access.
+	 * @returns
+	 *   The newly allocated File, that needs to be deleted by the caller.
+	 */
+    static std::unique_ptr<File> create(Encoding type, FILE* file, bool close_on_exit, const std::string& name="(fp)");
     /**
      * Resolve the location of a test data file
      *
