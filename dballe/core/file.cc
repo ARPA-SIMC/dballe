@@ -138,43 +138,44 @@ unique_ptr<File> File::create(Encoding type, const std::string& name, const char
     return File::create(type, fp, close_on_exit, name);
 }
 
-unique_ptr<File> File::create(Encoding type, FILE* file, bool close_on_exit, const std::string& name) {
-	fd_tracker fdt;
+unique_ptr<File> File::create(Encoding type, FILE* file, bool close_on_exit, const std::string& name)
+{
+    fd_tracker fdt;
 
     if (file == stdin || file == stdout || file == stderr)
-		fdt.track(file, false);
-	else
-		fdt.track(file, close_on_exit);
+        fdt.track(file, false);
+    else
+        fdt.track(file, close_on_exit);
 
-	/* Attempt auto-detect if needed */
-	if (type == -1)
-	{
-		int c = getc(fdt.fd);
-		if (c == EOF)
-		{
-			// In case of EOF, pick any type that will handle EOF gracefully.
-			c = 'B';
-		} else if (ungetc(c, fdt.fd) == EOF)
-			error_system::throwf("putting the first byte of %s back into the input stream", name.c_str());
-		
-		switch (c)
-		{
-			case 'B': type = BUFR; break;
-			case 'C': type = CREX; break;
-			case 0: type = AOF; break;
-			case 0x38: type = AOF; break;
-			default:
-				throw error_notfound("could not detect the encoding of " + name);
-		}
-	}
+    // Attempt auto-detect if needed
+    if (type == -1)
+    {
+        int c = getc(fdt.fd);
+        if (c == EOF)
+        {
+            // In case of EOF, pick any type that will handle EOF gracefully.
+            c = 'B';
+        } else if (ungetc(c, fdt.fd) == EOF)
+            error_system::throwf("putting the first byte of %s back into the input stream", name.c_str());
 
-	switch (type)
-	{
-		case BUFR: return unique_ptr<File>(new BufrFile(name, fdt.release(), fdt.close_on_exit));
-		case CREX: return unique_ptr<File>(new CrexFile(name, fdt.release(), fdt.close_on_exit));
-		case AOF: return unique_ptr<File>(new AofFile(name, fdt.release(), fdt.close_on_exit));
-	}
-	error_consistency::throwf("requested unknown %d file type", (int)type);
+        switch (c)
+        {
+            case 'B': type = BUFR; break;
+            case 'C': type = CREX; break;
+            case 0: type = AOF; break;
+            case 0x38: type = AOF; break;
+            default:
+                throw error_notfound("could not detect the encoding of " + name);
+        }
+    }
+
+    switch (type)
+    {
+        case BUFR: return unique_ptr<File>(new BufrFile(name, fdt.release(), fdt.close_on_exit));
+        case CREX: return unique_ptr<File>(new CrexFile(name, fdt.release(), fdt.close_on_exit));
+        case AOF: return unique_ptr<File>(new AofFile(name, fdt.release(), fdt.close_on_exit));
+    }
+    error_consistency::throwf("requested unknown %d file type", (int)type);
 }
 
 File::~File()

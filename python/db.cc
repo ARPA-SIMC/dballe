@@ -455,7 +455,7 @@ static PyMethodDef dpy_DB_methods[] = {
         "Reset the database, removing all existing Db-All.e tables and re-creating them empty." },
     {"insert",            (PyCFunction)dpy_DB_insert, METH_VARARGS | METH_KEYWORDS,
         "Insert a record in the database" },
-    {"load",        (PyCFunction)dpy_DB_load, METH_VARARGS,
+    {"load",              (PyCFunction)dpy_DB_load, METH_VARARGS,
         "Load a file object in the database" },
     {"remove",            (PyCFunction)dpy_DB_remove, METH_VARARGS,
         "Remove records from the database" },
