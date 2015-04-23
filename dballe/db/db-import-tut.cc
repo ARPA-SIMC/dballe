@@ -276,6 +276,21 @@ std::vector<Test> tests {
         wassert(actual(varcode_format(vars[4]->code())) == "B07030");
         wassert(actual(vars[4]->format()) == "22.3");
     }),
+    Test("station_only_no_vars", [](Fixture& f) {
+        // Check that a message that only contains station variables does get imported
+        auto& db = f.db;
+        Record query;
+        std::unique_ptr<Msgs> msgs = read_msgs("bufr/arpa-station.bufr", BUFR);
+        Msg& msg = *(*msgs)[0];
+
+        db->remove_all();
+        try {
+            db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+            wassert(actual(false).istrue());
+        } catch (error_notfound& e) {
+            // ok.
+        }
+    }),
     Test("import_dirty", [](Fixture& f) {
         // Try importing into a dirty database, no attributes involved
         auto& db = f.db;
