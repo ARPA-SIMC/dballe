@@ -29,6 +29,7 @@
 #include "dballe/msg/msgs.h"
 #include "dballe/msg/codec.h"
 #include <algorithm>
+#include <wreport/bulletin.h>
 
 using namespace std;
 using namespace dballe;
@@ -161,6 +162,35 @@ static PyObject* dpy_DB_insert(dpy_DB* self, PyObject* args, PyObject* kw)
         return raise_std_exception(se);
     }
 }
+
+static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args)
+{
+    PyObject* fileobj = 0;
+    FILE* file = 0;
+    char* name = 0;
+    if (!PyArg_ParseTuple(args, "O!", &PyFile_Type, &fileobj))
+        return NULL;
+
+    file = PyFile_AsFile(fileobj);
+    name = PyString_AsString(PyFile_Name(fileobj));
+
+    try {
+        std::unique_ptr<File> f = File::create((Encoding)-1, file, false, name);
+        std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->type());
+        f->foreach([&](const Rawmsg& raw) {
+            Msgs msgs;
+            imp->from_rawmsg(raw, msgs);
+            self->db->import_msgs(msgs, NULL, 0);
+            return true;
+        });
+        Py_RETURN_NONE;
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+}
+
 
 static PyObject* dpy_DB_remove(dpy_DB* self, PyObject* args)
 {
@@ -425,6 +455,8 @@ static PyMethodDef dpy_DB_methods[] = {
         "Reset the database, removing all existing Db-All.e tables and re-creating them empty." },
     {"insert",            (PyCFunction)dpy_DB_insert, METH_VARARGS | METH_KEYWORDS,
         "Insert a record in the database" },
+    {"load",        (PyCFunction)dpy_DB_load, METH_VARARGS,
+        "Load a file object in the database" },
     {"remove",            (PyCFunction)dpy_DB_remove, METH_VARARGS,
         "Remove records from the database" },
     {"vacuum",            (PyCFunction)dpy_DB_vacuum, METH_NOARGS,
