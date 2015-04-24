@@ -243,6 +243,9 @@ struct TestCodec
     msg::Exporter::Options output_opts;
     int expected_subsets = 1;
     int expected_min_vars = 1;
+    int expected_type = MISSING_INT;
+    int expected_subtype = MISSING_INT;
+    int expected_localsubtype = MISSING_INT;
     MessageTweakers after_reimport_import;
     MessageTweakers after_reimport_reimport;
     MessageTweakers after_convert_import;

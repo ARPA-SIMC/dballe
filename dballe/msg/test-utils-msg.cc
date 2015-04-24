@@ -731,6 +731,13 @@ void TestCodec::run_reimport(WIBBLE_TEST_LOCPRM)
         dballe::tests::dump("reexported", exported.raw);
         throw;
     }
+
+    if (expected_type != MISSING_INT)
+        wassert(actual(final.bulletin->type) == expected_type);
+    if (expected_subtype != MISSING_INT)
+        wassert(actual(final.bulletin->subtype) == expected_subtype);
+    if (expected_localsubtype != MISSING_INT)
+        wassert(actual(final.bulletin->localsubtype) == expected_localsubtype);
 }
 
 void TestCodec::run_convert(WIBBLE_TEST_LOCPRM, const std::string& tplname)

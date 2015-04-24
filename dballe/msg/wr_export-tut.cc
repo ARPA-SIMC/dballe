@@ -418,37 +418,49 @@ std::vector<Test> tests {
         run_test(test1, do_ecmwf, "synop");
     }),
     Test("old_synop2", [](Fixture& f) {
-        BufrReimportTest test("bufr/obs0-1.11188.bufr");
-        run_test(test, do_ecmwf, "synop");
+        dballe::tests::TestCodec test("bufr/obs0-1.11188.bufr");
+        test.expected_subsets = 1;
+        test.expected_min_vars = 10;
+        TEST_reimport(test);
+        TEST_convert(test, "synop-ecmwf");
     }),
     Test("old_synop3", [](Fixture& f) {
-        BufrReimportTest test("bufr/obs0-3.504.bufr");
-        run_test(test, do_ecmwf, "synop");
+        dballe::tests::TestCodec test("bufr/obs0-3.504.bufr");
+        test.expected_subsets = 1;
+        test.expected_min_vars = 10;
+        TEST_reimport(test);
+        TEST_convert(test, "synop-ecmwf");
     }),
     // Re-export test for new style synops
     Test("new_synop1", [](Fixture& f) {
-        BufrReimportTest test("bufr/synop-cloudbelow.bufr");
-        test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
-        run_test(test, do_wmo, "synop");
-        ensure_equals(test.exported->type, 0);
-        ensure_equals(test.exported->subtype, 1);
-        ensure_equals(test.exported->localsubtype, 255);
+        dballe::tests::TestCodec test("bufr/synop-cloudbelow.bufr");
+        test.expected_subsets = 22;
+        test.expected_min_vars = 10;
+        test.expected_type = 0;
+        test.expected_subtype = 1;
+        test.expected_localsubtype = 255;
+        TEST_reimport(test);
+        TEST_convert(test, "synop-wmo");
     }),
     Test("new_synop2", [](Fixture& f) {
-        BufrReimportTest test("bufr/synop-evapo.bufr");
-        test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
-        run_test(test, do_wmo, "synop");
-        ensure_equals(test.exported->type, 0);
-        ensure_equals(test.exported->subtype, 2);
-        ensure_equals(test.exported->localsubtype, 255);
+        dballe::tests::TestCodec test("bufr/synop-evapo.bufr");
+        test.expected_subsets = 14;
+        test.expected_min_vars = 10;
+        test.expected_type = 0;
+        test.expected_subtype = 2;
+        test.expected_localsubtype = 255;
+        TEST_reimport(test);
+        TEST_convert(test, "synop-wmo");
     }),
     Test("new_synop3", [](Fixture& f) {
-        BufrReimportTest test("bufr/synop-groundtemp.bufr");
-        test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
-        run_test(test, do_wmo, "synop");
-        ensure_equals(test.exported->type, 0);
-        ensure_equals(test.exported->subtype, 1);
-        ensure_equals(test.exported->localsubtype, 255);
+        dballe::tests::TestCodec test("bufr/synop-groundtemp.bufr");
+        test.expected_subsets = 26;
+        test.expected_min_vars = 10;
+        test.expected_type = 0;
+        test.expected_subtype = 1;
+        test.expected_localsubtype = 255;
+        TEST_reimport(test);
+        TEST_convert(test, "synop-wmo");
     }),
     Test("new_synop4", [](Fixture& f) {
         BufrReimportTest test("bufr/synop-longname.bufr");
@@ -460,12 +472,14 @@ std::vector<Test> tests {
         ensure_equals(test.exported->localsubtype, 255);
     }),
     Test("new_synop5", [](Fixture& f) {
-        BufrReimportTest test("bufr/synop-oddgust.bufr");
-        test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
-        run_test(test, do_wmo, "synop");
-        ensure_equals(test.exported->type, 0);
-        ensure_equals(test.exported->subtype, 0);
-        ensure_equals(test.exported->localsubtype, 255);
+        dballe::tests::TestCodec test("bufr/synop-oddgust.bufr");
+        test.expected_subsets = 26;
+        test.expected_min_vars = 10;
+        test.expected_type = 0;
+        test.expected_subtype = 0;
+        test.expected_localsubtype = 255;
+        TEST_reimport(test);
+        TEST_convert(test, "synop-wmo");
     }),
     Test("new_synop6", [](Fixture& f) {
         BufrReimportTest test("bufr/synop-oddprec.bufr");
@@ -477,28 +491,34 @@ std::vector<Test> tests {
         ensure_equals(test.exported->localsubtype, 255);
     }),
     Test("new_synop7", [](Fixture& f) {
-        BufrReimportTest test("bufr/synop-strayvs.bufr");
-        test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
-        run_test(test, do_wmo, "synop");
-        ensure_equals(test.exported->type, 0);
-        ensure_equals(test.exported->subtype, 1);
-        ensure_equals(test.exported->localsubtype, 255);
+        dballe::tests::TestCodec test("bufr/synop-strayvs.bufr");
+        test.expected_subsets = 1;
+        test.expected_min_vars = 10;
+        test.expected_type = 0;
+        test.expected_subtype = 1;
+        test.expected_localsubtype = 255;
+        TEST_reimport(test);
+        TEST_convert(test, "synop-wmo");
     }),
     Test("new_synop8", [](Fixture& f) {
-        BufrReimportTest test("bufr/synop-sunshine.bufr");
-        test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
-        run_test(test, do_wmo, "synop");
-        ensure_equals(test.exported->type, 0);
-        ensure_equals(test.exported->subtype, 1);
-        ensure_equals(test.exported->localsubtype, 255);
+        dballe::tests::TestCodec test("bufr/synop-sunshine.bufr");
+        test.expected_subsets = 26;
+        test.expected_min_vars = 10;
+        test.expected_type = 0;
+        test.expected_subtype = 1;
+        test.expected_localsubtype = 255;
+        TEST_reimport(test);
+        TEST_convert(test, "synop-wmo");
     }),
     Test("new_synop9", [](Fixture& f) {
-        BufrReimportTest test("bufr/synop-gtscosmo.bufr");
-        test.wmo_tweaks.push_back(new RemoveSynopWMOOnlyVars());
-        run_test(test, do_wmo, "synop");
-        ensure_equals(test.exported->type, 0);
-        ensure_equals(test.exported->subtype, 2);
-        ensure_equals(test.exported->localsubtype, 255);
+        dballe::tests::TestCodec test("bufr/synop-gtscosmo.bufr");
+        test.expected_subsets = 1;
+        test.expected_min_vars = 10;
+        test.expected_type = 0;
+        test.expected_subtype = 2;
+        test.expected_localsubtype = 255;
+        TEST_reimport(test);
+        TEST_convert(test, "synop-wmo");
     }),
     Test("new_synop10", [](Fixture& f) {
         // Test import/export of GTS synop with radiation information
@@ -536,18 +556,19 @@ std::vector<Test> tests {
     }),
     // Re-export test for old style temps
     Test("old_temp1", [](Fixture& f) {
-        BufrReimportTest test("bufr/obs2-101.16.bufr");
-        test.ecmwf_tweaks.push_back(new RemoveTempWMOOnlyVars());
-        run_test(test, do_ecmwf, "temp");
+        dballe::tests::TestCodec test("bufr/obs2-101.16.bufr");
+        wruntest(test.run_reimport);
+        wruntest(test.run_convert, "temp-ecmwf");
     }),
     Test("old_temp2", [](Fixture& f) {
-        BufrReimportTest test("bufr/obs2-102.1.bufr");
-        test.ecmwf_tweaks.push_back(new RemoveTempWMOOnlyVars());
-        run_test(test, do_ecmwf, "temp");
+        dballe::tests::TestCodec test("bufr/obs2-102.1.bufr");
+        wruntest(test.run_reimport);
+        wruntest(test.run_convert, "temp-ecmwf");
     }),
     Test("old_temp3", [](Fixture& f) {
-        BufrReimportTest test("bufr/obs2-91.2.bufr");
-        run_test(test, do_ecmwf, "pilot");
+        dballe::tests::TestCodec test("bufr/obs2-91.2.bufr");
+        wruntest(test.run_reimport);
+        wruntest(test.run_convert, "pilot-ecmwf");
     }),
     Test("old_temp4", [](Fixture& f) {
         BufrReimportTest test("bufr/temp-bad3.bufr");
@@ -556,17 +577,15 @@ std::vector<Test> tests {
     }),
     Test("old_temp5", [](Fixture& f) {
         // This has some sounding groups with undefined VSS
-        BufrReimportTest test("bufr/temp-bad5.bufr");
-        run_test(test, do_ecmwf, "temp");
+        dballe::tests::TestCodec test("bufr/temp-bad5.bufr");
+        wruntest(test.run_reimport);
+        wruntest(test.run_convert, "temp-ecmwf");
     }),
     Test("old_temp6", [](Fixture& f) {
         // This has some sounding groups with undefined VSS, and an unusual template
-        BufrReimportTest test("bufr/test-temp1.bufr");
-        test.ecmwf_tweaks.push_back(new RemoveOddTempTemplateOnlyVars());
-        run_test(test, do_ecmwf, "temp");
-        //test.wmo_tweaks.push_back(new RemoveOddTempTemplateOnlyVars());
-        //test.tweaks.push_back(new StripQCAttrs());
-        //run_test(test, do_wmo, "temp");
+        dballe::tests::TestCodec test("bufr/test-temp1.bufr");
+        wruntest(test.run_reimport);
+        wruntest(test.run_convert, "temp-ecmwf");
     }),
     Test("old_temp7", [](Fixture& f) {
         // This has an unusual template
@@ -593,29 +612,34 @@ std::vector<Test> tests {
         ensure_equals(test.exported->localsubtype, 255);
     }),
     Test("new_temp2", [](Fixture& f) {
-        BufrReimportTest test("bufr/temp-gts2.bufr");
-        test.wmo_tweaks.push_back(new RemoveTempWMOOnlyVars());
-        run_test(test, do_wmo, "temp");
-        ensure_equals(test.exported->type, 2);
-        ensure_equals(test.exported->subtype, 4);
-        ensure_equals(test.exported->localsubtype, 255);
+        dballe::tests::TestCodec test("bufr/temp-gts2.bufr");
+        test.expected_subsets = 6;
+        test.expected_min_vars = 10;
+        test.expected_type = 2;
+        test.expected_subtype = 4;
+        test.expected_localsubtype = 255;
+        TEST_reimport(test);
+        TEST_convert(test, "temp-wmo");
     }),
     Test("new_temp3", [](Fixture& f) {
-        BufrReimportTest test("bufr/temp-gts3.bufr");
-        test.wmo_tweaks.push_back(new RemoveTempWMOOnlyVars());
-        run_test(test, do_wmo, "temp");
-        ensure_equals(test.exported->type, 2);
-        ensure_equals(test.exported->subtype, 4);
-        ensure_equals(test.exported->localsubtype, 255);
+        dballe::tests::TestCodec test("bufr/temp-gts3.bufr");
+        test.expected_subsets = 1;
+        test.expected_min_vars = 10;
+        test.expected_type = 2;
+        test.expected_subtype = 4;
+        test.expected_localsubtype = 255;
+        TEST_reimport(test);
+        TEST_convert(test, "temp-wmo");
     }),
     Test("new_temp4", [](Fixture& f) {
-        BufrReimportTest test("bufr/temp-gtscosmo.bufr");
-        //test.verbose = true;
-        test.wmo_tweaks.push_back(new RemoveTempWMOOnlyVars());
-        run_test(test, do_wmo, "temp");
-        ensure_equals(test.exported->type, 2);
-        ensure_equals(test.exported->subtype, 4);
-        ensure_equals(test.exported->localsubtype, 255);
+        dballe::tests::TestCodec test("bufr/temp-gtscosmo.bufr");
+        test.expected_subsets = 1;
+        test.expected_min_vars = 10;
+        test.expected_type = 2;
+        test.expected_subtype = 4;
+        test.expected_localsubtype = 255;
+        TEST_reimport(test);
+        TEST_convert(test, "temp-wmo");
     }),
     Test("new_temp5", [](Fixture& f) {
 #warning This is importer with height above ground levels, but exported with pressure levels
