@@ -376,15 +376,13 @@ tut_test_SOURCES = \
 	db/sqlite/internals-tut.cc \
 	db/db-basic-tut.cc \
 	db/db-misc-tut.cc \
-	db/db-station-query-tut.cc \
-	db/db-data-query-tut.cc \
-	db/db-summary-query-tut.cc \
+	db/db-query-station-tut.cc \
+	db/db-query-data-tut.cc \
+	db/db-query-summary-tut.cc \
 	db/db-import-tut.cc \
 	db/db-export-tut.cc \
 	db/mem/repinfo-tut.cc \
 	db/mem/cursor-tut.cc \
-	db/mem/db-tut.cc \
-	db/v6/db-tut.cc \
 	db/summary-tut.cc \
 	simple/msgapi-tut.cc \
 	cmdline/dbadb-tut.cc \
@@ -407,8 +405,7 @@ tut_test_SOURCES += \
 	db/sql/datav5-tut.cc \
 	db/sql/attrv5-tut.cc \
 	db/odbc/internals-tut.cc \
-	db/v5/tests/context.cc \
-	db/v5/tests/db.cc
+	db/v5/tests/context.cc
 endif
 
 tut_test_LDADD = \

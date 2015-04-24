@@ -199,17 +199,17 @@ std::vector<Test> tests {
     }),
 };
 
-test_group tg1("db_station_query_mem", nullptr, db::MEM, tests);
-test_group tg2("db_station_query_v6_sqlite", "SQLITE", db::V6, tests);
+test_group tg1("db_query_station_mem", nullptr, db::MEM, tests);
+test_group tg2("db_query_station_v6_sqlite", "SQLITE", db::V6, tests);
 #ifdef HAVE_ODBC
-test_group tg3("db_station_query_v5_odbc", "ODBC", db::V5, tests);
-test_group tg4("db_station_query_v6_odbc", "ODBC", db::V6, tests);
+test_group tg3("db_query_station_v5_odbc", "ODBC", db::V5, tests);
+test_group tg4("db_query_station_v6_odbc", "ODBC", db::V6, tests);
 #endif
 #ifdef HAVE_LIBPQ
-test_group tg6("db_station_query_v6_postgresql", "POSTGRESQL", db::V6, tests);
+test_group tg6("db_query_station_v6_postgresql", "POSTGRESQL", db::V6, tests);
 #endif
 #ifdef HAVE_MYSQL
-test_group tg8("db_station_query_v6_mysql", "MYSQL", db::V6, tests);
+test_group tg8("db_query_station_v6_mysql", "MYSQL", db::V6, tests);
 #endif
 
 }
