@@ -326,34 +326,6 @@ struct db_test_group : public dballe::tests::test_group<T>
 };
 
 
-struct db_test
-{
-    // DB handle
-    std::unique_ptr<DB> db;
-    db::Format orig_format;
-
-    void disappear();
-    bool has_db() const { return db.get() != NULL; }
-    void use_db();
-    void use_db(db::Format format, bool reset=true);
-
-    db::v5::DB& v5();
-    db::v6::DB& v6();
-
-    db_test();
-    db_test(db::Format format);
-    ~db_test();
-
-    template<typename FIXTURE>
-    void populate(WIBBLE_TEST_LOCPRM)
-    {
-        FIXTURE fixture;
-        wruntest(populate_database, fixture);
-    }
-
-    void populate_database(WIBBLE_TEST_LOCPRM, const TestFixture& fixture);
-};
-
 struct ActualCursor : public wibble::tests::Actual<dballe::db::Cursor&>
 {
     ActualCursor(dballe::db::Cursor& actual) : wibble::tests::Actual<dballe::db::Cursor&>(actual) {}
