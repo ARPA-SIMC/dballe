@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ using namespace std;
 
 namespace {
 
-struct Fixture : public dballe::tests::DBFixture 
+struct Fixture : public dballe::tests::DBFixture
 {
     TestStation ds_st_navile;
 

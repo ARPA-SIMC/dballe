@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ using namespace std;
 
 namespace {
 
-struct db_tests_query : public db_test
+struct Fixture : public dballe::tests::DBFixture
 {
     dballe::tests::TestStation st1;
     dballe::tests::TestStation st2;
@@ -39,7 +39,7 @@ struct db_tests_query : public db_test
     const int some;
     const int all;
 
-    db_tests_query()
+    Fixture()
         : some(db->format() == MEM ? 2 : 1), all(db->format() == MEM ? 4 : 2)
 #warning FIXME: change after testing if we can move to report-in-station behaviour or not
     {
@@ -61,6 +61,11 @@ struct db_tests_query : public db_test
         st2.info["metar"].set("station", 4);
         st2.info["metar"].set("B07030", 110.0); // height
 
+        insert_stations();
+    }
+
+    void insert_stations()
+    {
         dballe::tests::TestRecord rec1;
         rec1.station = st1;
         rec1.data.set(DBA_KEY_REP_MEMO, "metar");
@@ -81,121 +86,130 @@ struct db_tests_query : public db_test
         wruntest(rec1.insert, *db, true);
         wruntest(rec2.insert, *db, true);
     }
+
+    void reset()
+    {
+        dballe::tests::DBFixture::reset();
+        insert_stations();
+    }
 };
 
-}
+typedef dballe::tests::db_test_group<Fixture> test_group;
+typedef test_group::Test Test;
 
-namespace tut {
+#define TRY_QUERY(qstring, expected_count) wassert(actual(*f.db).try_data_query(qstring, expected_count))
 
-using namespace dballe::tests;
-typedef db_tg<db_tests_query> tg;
-typedef tg::object to;
-
-#define TRY_QUERY(qstring, expected_count) wassert(actual(db).try_data_query(qstring, expected_count))
-
-template<> template<> void to::test<1>()
-{
-    wassert(actual(db).try_station_query("ana_id=1", 1));
-    wassert(actual(db).try_station_query("ana_id=2", 1));
-}
-
-template<> template<> void to::test<2>()
-{
-    wassert(actual(db).try_station_query("lat=12.00000", 0));
-    wassert(actual(db).try_station_query("lat=12.34560", some));
-    wassert(actual(db).try_station_query("lat=23.45670", some));
-    wassert(actual(db).try_station_query("latmin=12.00000", all));
-    wassert(actual(db).try_station_query("latmin=12.34560", all));
-    wassert(actual(db).try_station_query("latmin=12.34570", some));
-    wassert(actual(db).try_station_query("latmin=23.45670", some));
-    wassert(actual(db).try_station_query("latmin=23.45680", 0));
-    wassert(actual(db).try_station_query("latmax=12.00000", 0));
-    wassert(actual(db).try_station_query("latmax=12.34560", some));
-    wassert(actual(db).try_station_query("latmax=12.34570", some));
-    wassert(actual(db).try_station_query("latmax=23.45670", all));
-    wassert(actual(db).try_station_query("latmax=23.45680", all));
-    wassert(actual(db).try_station_query("lon=76.00000", 0));
-    wassert(actual(db).try_station_query("lon=76.54320", some));
-    wassert(actual(db).try_station_query("lon=65.43210", some));
-    wassert(actual(db).try_station_query("lonmin=10., lonmax=20.", 0));
-    wassert(actual(db).try_station_query("lonmin=76.54320, lonmax=76.54320", some));
-    wassert(actual(db).try_station_query("lonmin=76.54320, lonmax=77.", some));
-    wassert(actual(db).try_station_query("lonmin=76.54330, lonmax=77.", 0));
-    wassert(actual(db).try_station_query("lonmin=60., lonmax=77.", all));
-    wassert(actual(db).try_station_query("lonmin=77., lonmax=76.54310", some));
-    wassert(actual(db).try_station_query("lonmin=77., lonmax=76.54320", all));
-    wassert(actual(db).try_station_query("lonmin=77., lonmax=-10", 0));
-}
-
-template<> template<> void to::test<3>()
-{
-    wassert(actual(db).try_station_query("mobile=0", all));
-    wassert(actual(db).try_station_query("mobile=1", 0));
-}
-
-template<> template<> void to::test<4>()
-{
-    // FIXME: add some mobile stations to the test fixture to test ident
-}
-
-template<> template<> void to::test<5>()
-{
-    unsigned int some = 1;
-    // memdb has one station entry per network
-    if (dynamic_cast<db::mem::DB*>(db.get()))
-        some = 2;
-
-    wassert(actual(db).try_station_query("B01001=1", some));
-    wassert(actual(db).try_station_query("B01001=2", 0));
-    wassert(actual(db).try_station_query("B01001=3", some));
-    wassert(actual(db).try_station_query("B01001=4", 0));
-    wassert(actual(db).try_station_query("B01002=1", 0));
-    wassert(actual(db).try_station_query("B01002=2", some));
-    wassert(actual(db).try_station_query("B01002=3", 0));
-    wassert(actual(db).try_station_query("B01002=4", some));
-}
-
-template<> template<> void to::test<6>()
-{
-    wassert(actual(db).try_station_query("ana_filter=block=1", some));
-    wassert(actual(db).try_station_query("ana_filter=block=2", 0));
-    wassert(actual(db).try_station_query("ana_filter=block=3", some));
-    wassert(actual(db).try_station_query("ana_filter=block>=1", all));
-    wassert(actual(db).try_station_query("ana_filter=B07030=42", 1));
-    wassert(actual(db).try_station_query("ana_filter=B07030=50", 1));
-    wassert(actual(db).try_station_query("ana_filter=B07030=100", 1));
-    wassert(actual(db).try_station_query("ana_filter=B07030=110", 1));
-    wassert(actual(db).try_station_query("ana_filter=B07030=120", 0));
-    wassert(actual(db).try_station_query("ana_filter=B07030>50", some));
+std::vector<Test> tests {
+    Test("query_ana_id", [](Fixture& f) {
+        auto& db = *f.db;
+        wassert(actual(db).try_station_query("ana_id=1", 1));
+        wassert(actual(db).try_station_query("ana_id=2", 1));
+    }),
+    Test("query_lat_lon", [](Fixture& f) {
+        auto& db = *f.db;
+        const auto some = f.some;
+        const auto all = f.all;
+        wassert(actual(db).try_station_query("lat=12.00000", 0));
+        wassert(actual(db).try_station_query("lat=12.34560", some));
+        wassert(actual(db).try_station_query("lat=23.45670", some));
+        wassert(actual(db).try_station_query("latmin=12.00000", all));
+        wassert(actual(db).try_station_query("latmin=12.34560", all));
+        wassert(actual(db).try_station_query("latmin=12.34570", some));
+        wassert(actual(db).try_station_query("latmin=23.45670", some));
+        wassert(actual(db).try_station_query("latmin=23.45680", 0));
+        wassert(actual(db).try_station_query("latmax=12.00000", 0));
+        wassert(actual(db).try_station_query("latmax=12.34560", some));
+        wassert(actual(db).try_station_query("latmax=12.34570", some));
+        wassert(actual(db).try_station_query("latmax=23.45670", all));
+        wassert(actual(db).try_station_query("latmax=23.45680", all));
+        wassert(actual(db).try_station_query("lon=76.00000", 0));
+        wassert(actual(db).try_station_query("lon=76.54320", some));
+        wassert(actual(db).try_station_query("lon=65.43210", some));
+        wassert(actual(db).try_station_query("lonmin=10., lonmax=20.", 0));
+        wassert(actual(db).try_station_query("lonmin=76.54320, lonmax=76.54320", some));
+        wassert(actual(db).try_station_query("lonmin=76.54320, lonmax=77.", some));
+        wassert(actual(db).try_station_query("lonmin=76.54330, lonmax=77.", 0));
+        wassert(actual(db).try_station_query("lonmin=60., lonmax=77.", all));
+        wassert(actual(db).try_station_query("lonmin=77., lonmax=76.54310", some));
+        wassert(actual(db).try_station_query("lonmin=77., lonmax=76.54320", all));
+        wassert(actual(db).try_station_query("lonmin=77., lonmax=-10", 0));
+    }),
+    Test("query_mobile", [](Fixture& f) {
+        auto& db = *f.db;
+        const auto some = f.some;
+        const auto all = f.all;
+        wassert(actual(db).try_station_query("mobile=0", all));
+        wassert(actual(db).try_station_query("mobile=1", 0));
+    }),
+    Test("query_ident", [](Fixture& f) {
+        // FIXME: add some mobile stations to the test fixture to test ident
+    }),
+    Test("query_block_station", [](Fixture& f) {
+        auto& db = *f.db;
+        const auto some = f.some;
+        const auto all = f.all;
+        wassert(actual(db).try_station_query("B01001=1", some));
+        wassert(actual(db).try_station_query("B01001=2", 0));
+        wassert(actual(db).try_station_query("B01001=3", some));
+        wassert(actual(db).try_station_query("B01001=4", 0));
+        wassert(actual(db).try_station_query("B01002=1", 0));
+        wassert(actual(db).try_station_query("B01002=2", some));
+        wassert(actual(db).try_station_query("B01002=3", 0));
+        wassert(actual(db).try_station_query("B01002=4", some));
+    }),
+    Test("query_mobile", [](Fixture& f) {
+        auto& db = *f.db;
+        const auto some = f.some;
+        const auto all = f.all;
+    }),
+    Test("query_ana_filter", [](Fixture& f) {
+        auto& db = *f.db;
+        const auto some = f.some;
+        const auto all = f.all;
+        wassert(actual(db).try_station_query("ana_filter=block=1", some));
+        wassert(actual(db).try_station_query("ana_filter=block=2", 0));
+        wassert(actual(db).try_station_query("ana_filter=block=3", some));
+        wassert(actual(db).try_station_query("ana_filter=block>=1", all));
+        wassert(actual(db).try_station_query("ana_filter=B07030=42", 1));
+        wassert(actual(db).try_station_query("ana_filter=B07030=50", 1));
+        wassert(actual(db).try_station_query("ana_filter=B07030=100", 1));
+        wassert(actual(db).try_station_query("ana_filter=B07030=110", 1));
+        wassert(actual(db).try_station_query("ana_filter=B07030=120", 0));
+        wassert(actual(db).try_station_query("ana_filter=B07030>50", some));
 #warning FIXME: change after testing if we can move to report-in-station behaviour or not
-    if (db->format() == MEM)
-        wassert(actual(db).try_station_query("ana_filter=B07030>=50", 3));
-    else
-        wassert(actual(db).try_station_query("ana_filter=B07030>=50", 2));
-    wassert(actual(db).try_station_query("ana_filter=50<=B07030<=100", 2));
-}
-
-template<> template<> void to::test<7>()
-{
-    wassert(actual(db).try_station_query("var=B12101", 2));
-    wassert(actual(db).try_station_query("var=B12103", 1));
-    wassert(actual(db).try_station_query("varlist=B12101", 2));
-    wassert(actual(db).try_station_query("varlist=B12103", 1));
+        if (db.format() == MEM)
+            wassert(actual(db).try_station_query("ana_filter=B07030>=50", 3));
+        else
+            wassert(actual(db).try_station_query("ana_filter=B07030>=50", 2));
+        wassert(actual(db).try_station_query("ana_filter=50<=B07030<=100", 2));
+    }),
+    Test("query_var", [](Fixture& f) {
+        auto& db = *f.db;
+        const auto some = f.some;
+        const auto all = f.all;
+        wassert(actual(db).try_station_query("var=B12101", 2));
+        wassert(actual(db).try_station_query("var=B12103", 1));
+        wassert(actual(db).try_station_query("varlist=B12101", 2));
+        wassert(actual(db).try_station_query("varlist=B12103", 1));
 #warning FIXME: change after testing if we can move to report-in-station behaviour or not
-    if (db->format() == MEM)
-        wassert(actual(db).try_station_query("varlist=B12101,B12103", 3));
-    else
-        wassert(actual(db).try_station_query("varlist=B12101,B12103", 2));
-}
+        if (db.format() == MEM)
+            wassert(actual(db).try_station_query("varlist=B12101,B12103", 3));
+        else
+            wassert(actual(db).try_station_query("varlist=B12101,B12103", 2));
+    }),
+};
 
-}
-
-namespace {
-
-tut::tg db_tests_query_mem_tg("db_station_query_mem", MEM);
+test_group tg1("db_station_query_mem", nullptr, db::MEM, tests);
+test_group tg2("db_station_query_v6_sqlite", "SQLITE", db::V6, tests);
 #ifdef HAVE_ODBC
-tut::tg db_tests_query_v5_tg("db_station_query_v5", V5);
-tut::tg db_tests_query_v6_tg("db_station_query_v6", V6);
+test_group tg3("db_station_query_v5_odbc", "ODBC", db::V5, tests);
+test_group tg4("db_station_query_v6_odbc", "ODBC", db::V6, tests);
+#endif
+#ifdef HAVE_LIBPQ
+test_group tg6("db_station_query_v6_postgresql", "POSTGRESQL", db::V6, tests);
+#endif
+#ifdef HAVE_MYSQL
+test_group tg8("db_station_query_v6_mysql", "MYSQL", db::V6, tests);
 #endif
 
 }
