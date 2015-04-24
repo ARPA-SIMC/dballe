@@ -227,6 +227,14 @@ void ODBCConnection::connect_file(const std::string& fname)
     driver_connect(buf.c_str());
 }
 
+void ODBCConnection::connect_test()
+{
+    const char* envurl = getenv("DBA_DB_ODBC");
+    if (envurl == NULL)
+        throw error_consistency("DBA_DB_ODBC not defined");
+    return connect_url(envurl);
+}
+
 void ODBCConnection::driver_connect(const char* config)
 {
     /* Connect to the DSN */

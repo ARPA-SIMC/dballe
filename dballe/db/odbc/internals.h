@@ -110,6 +110,7 @@ public:
     void connect(const char* dsn, const char* user, const char* password);
     void connect_url(const char* url);
     void connect_file(const std::string& fname);
+    void connect_test();
     void driver_connect(const char* config);
     std::string driver_name();
     std::string driver_version();
