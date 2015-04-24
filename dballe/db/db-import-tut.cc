@@ -290,6 +290,48 @@ std::vector<Test> tests {
         } catch (error_notfound& e) {
             // ok.
         }
+
+        // Redo it with manually generated messages, this should not get imported
+        {
+            db->remove_all();
+            Msg msg;
+            msg.type = MSG_GENERIC;
+            msg.set_rep_memo("synop");
+            msg.set_latitude(44.53000);
+            msg.set_longitude(11.30000);
+            try {
+                db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+                wassert(actual(false).istrue());
+            } catch (error_notfound& e) {
+                // ok.
+            }
+        }
+
+        // Same but with a datetime set. This should not get imported, but it
+        // currently does because of a bug. I need to preserve the bug until
+        // the software that relies on it has been migrated to use standard
+        // DB-All.e features.
+        {
+            db->remove_all();
+            Msg msg;
+            msg.type = MSG_GENERIC;
+            msg.set_rep_memo("synop");
+            msg.set_latitude(44.53000);
+            msg.set_longitude(11.30000);
+            msg.set_year(1000);
+            msg.set_month(1);
+            msg.set_day(1);
+            msg.set_hour(0);
+            msg.set_minute(0);
+            msg.set_second(0);
+#warning TODO: fix this test to give an error once we do not need to support this bug anymore
+            //try {
+                db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+                //wassert(actual(false).istrue());
+            //} catch (error_notfound& e) {
+                // ok.
+            //}
+        }
     }),
     Test("import_dirty", [](Fixture& f) {
         // Try importing into a dirty database, no attributes involved

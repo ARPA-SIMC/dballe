@@ -20,6 +20,9 @@
 #include "config.h"
 #include "db/test-utils-db.h"
 #include "db/mem/db.h"
+#include "db/v5/db.h"
+#include "db/v6/db.h"
+#include "db/sql/station.h"
 
 using namespace dballe;
 using namespace dballe::db;
@@ -136,9 +139,7 @@ std::vector<Test> tests {
     }),
     Test("query_mobile", [](Fixture& f) {
         auto& db = *f.db;
-        const auto some = f.some;
-        const auto all = f.all;
-        wassert(actual(db).try_station_query("mobile=0", all));
+        wassert(actual(db).try_station_query("mobile=0", f.all));
         wassert(actual(db).try_station_query("mobile=1", 0));
     }),
     Test("query_ident", [](Fixture& f) {
@@ -146,36 +147,30 @@ std::vector<Test> tests {
     }),
     Test("query_block_station", [](Fixture& f) {
         auto& db = *f.db;
-        const auto some = f.some;
-        const auto all = f.all;
-        wassert(actual(db).try_station_query("B01001=1", some));
+        wassert(actual(db).try_station_query("B01001=1", f.some));
         wassert(actual(db).try_station_query("B01001=2", 0));
-        wassert(actual(db).try_station_query("B01001=3", some));
+        wassert(actual(db).try_station_query("B01001=3", f.some));
         wassert(actual(db).try_station_query("B01001=4", 0));
         wassert(actual(db).try_station_query("B01002=1", 0));
-        wassert(actual(db).try_station_query("B01002=2", some));
+        wassert(actual(db).try_station_query("B01002=2", f.some));
         wassert(actual(db).try_station_query("B01002=3", 0));
-        wassert(actual(db).try_station_query("B01002=4", some));
+        wassert(actual(db).try_station_query("B01002=4", f.some));
     }),
     Test("query_mobile", [](Fixture& f) {
         auto& db = *f.db;
-        const auto some = f.some;
-        const auto all = f.all;
     }),
     Test("query_ana_filter", [](Fixture& f) {
         auto& db = *f.db;
-        const auto some = f.some;
-        const auto all = f.all;
-        wassert(actual(db).try_station_query("ana_filter=block=1", some));
+        wassert(actual(db).try_station_query("ana_filter=block=1", f.some));
         wassert(actual(db).try_station_query("ana_filter=block=2", 0));
-        wassert(actual(db).try_station_query("ana_filter=block=3", some));
-        wassert(actual(db).try_station_query("ana_filter=block>=1", all));
+        wassert(actual(db).try_station_query("ana_filter=block=3", f.some));
+        wassert(actual(db).try_station_query("ana_filter=block>=1", f.all));
         wassert(actual(db).try_station_query("ana_filter=B07030=42", 1));
         wassert(actual(db).try_station_query("ana_filter=B07030=50", 1));
         wassert(actual(db).try_station_query("ana_filter=B07030=100", 1));
         wassert(actual(db).try_station_query("ana_filter=B07030=110", 1));
         wassert(actual(db).try_station_query("ana_filter=B07030=120", 0));
-        wassert(actual(db).try_station_query("ana_filter=B07030>50", some));
+        wassert(actual(db).try_station_query("ana_filter=B07030>50", f.some));
 #warning FIXME: change after testing if we can move to report-in-station behaviour or not
         if (db.format() == MEM)
             wassert(actual(db).try_station_query("ana_filter=B07030>=50", 3));
@@ -185,8 +180,6 @@ std::vector<Test> tests {
     }),
     Test("query_var", [](Fixture& f) {
         auto& db = *f.db;
-        const auto some = f.some;
-        const auto all = f.all;
         wassert(actual(db).try_station_query("var=B12101", 2));
         wassert(actual(db).try_station_query("var=B12103", 1));
         wassert(actual(db).try_station_query("varlist=B12101", 2));
@@ -196,6 +189,40 @@ std::vector<Test> tests {
             wassert(actual(db).try_station_query("varlist=B12101,B12103", 3));
         else
             wassert(actual(db).try_station_query("varlist=B12101,B12103", 2));
+    }),
+    Test("stations_without_data", [](Fixture& f) {
+        auto& db = *f.db;
+
+        // Manually insert an orphan station
+        switch (db.format())
+        {
+            case MEM:
+                if (auto d = dynamic_cast<mem::DB*>(f.db))
+                    d->memdb.stations.obtain_fixed(Coord(11.0, 45.0), "synop");
+                break;
+            case V5:
+                if (auto d = dynamic_cast<v5::DB*>(f.db))
+                    d->station().obtain_id(1100000, 4500000);
+                break;
+            case V6:
+                if (auto d = dynamic_cast<v6::DB*>(f.db))
+                    d->station().obtain_id(1100000, 4500000);
+                break;
+            case MESSAGES:
+                throw error_unimplemented("testing stations_without_data on MESSAGES database");
+        }
+
+        // Query stations and make sure that they do not appear. They should
+        // not appear, but they currently do because of a bug. I need to
+        // preserve the bug until the software that relies on it has been
+        // migrated to use standard DB-All.e features.
+        Query query;
+        query.set("lat", 11.0);
+        query.set("lon", 45.0);
+        auto cur = db.query_stations(query);
+#warning TODO: fix this test to give an error once we do not need to support this bug anymore
+        //wassert(actual(cur->remaining()) == 0);
+        wassert(actual(cur->remaining()) == 1);
     }),
 };
 
