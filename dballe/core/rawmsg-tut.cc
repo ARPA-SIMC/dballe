@@ -51,5 +51,3 @@ std::vector<Test> tests {
 test_group newtg("core_rawmsg", tests);
 
 }
-
-/* vim:set ts=4 sw=4: */

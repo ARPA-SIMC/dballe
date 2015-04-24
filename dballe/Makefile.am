@@ -301,8 +301,7 @@ EXTRA_DIST += \
 	msg/wr_importers/base.h \
 	msg/aof_importers/common.h \
 	msg/filter.cc \
-	msg/wr_importers/sat.cc \
-	msg/tests/wr_export.h
+	msg/wr_importers/sat.cc
 
 #
 # Unit testing
@@ -359,10 +358,9 @@ tut_test_SOURCES = \
 	msg/codec-tut.cc \
 	msg/msg-tut.cc \
 	msg/msgs-tut.cc \
+	msg/wr_export-tut.cc \
 	msg/tests/aof_codec.cc \
 	msg/tests/wr_import.cc \
-	msg/tests/wr_export.cc \
-	msg/tests/wr_export2.cc \
 	msg/tests/wr_codec.cc \
 	msg/tests/wr_codec_generic.cc \
 	db/test-utils-db.cc \
