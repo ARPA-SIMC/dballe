@@ -648,6 +648,10 @@ bool db_load_filelike(DB* db, PyObject* obj)
         Py_DECREF(read_args);
         return false;
     }
+    if (!PyObject_TypeCheck(data, &PyString_Type)) {
+        PyErr_SetString(PyExc_ValueError, "read() function must return a string object");
+        return false;
+    }
     PyString_AsStringAndSize(data, &buf, &len);
     FILE* f = fmemopen(buf, len, "r");
     filerepr = PyObject_Repr(obj);
