@@ -55,6 +55,10 @@ bool db_read_attrlist(PyObject* attrs, db::AttrList& codes);
 
 void register_db(PyObject* m);
 
+bool db_load_fileobj(DB* db, PyObject* obj);
+
+bool db_load_filelike(DB* db, PyObject* obj);
+
 }
 }
 

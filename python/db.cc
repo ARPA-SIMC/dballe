@@ -165,25 +165,22 @@ static PyObject* dpy_DB_insert(dpy_DB* self, PyObject* args, PyObject* kw)
 
 static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args)
 {
-    PyObject* fileobj = 0;
-    FILE* file = 0;
-    char* name = 0;
-    if (!PyArg_ParseTuple(args, "O!", &PyFile_Type, &fileobj))
+    PyObject* obj;
+    bool (*f)(DB*, PyObject*) = NULL;
+
+    if (!PyArg_ParseTuple(args, "O", &obj))
         return NULL;
 
-    file = PyFile_AsFile(fileobj);
-    name = PyString_AsString(PyFile_Name(fileobj));
+    if (PyFile_Check(obj))
+        f = db_load_fileobj;
+    else if (PyObject_HasAttrString(obj, "read"))
+        f = db_load_filelike;
 
     try {
-        std::unique_ptr<File> f = File::create((Encoding)-1, file, false, name);
-        std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->type());
-        f->foreach([&](const Rawmsg& raw) {
-            Msgs msgs;
-            imp->from_rawmsg(raw, msgs);
-            self->db->import_msgs(msgs, NULL, 0);
-            return true;
-        });
-        Py_RETURN_NONE;
+        if (f(self->db, obj))
+            Py_RETURN_NONE;
+        else
+            return NULL;
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -620,6 +617,64 @@ void register_db(PyObject* m)
 
     Py_INCREF(&dpy_DB_Type);
     PyModule_AddObject(m, "DB", (PyObject*)&dpy_DB_Type);
+}
+
+void db_load_file(DB* db, FILE* file, bool close_on_exit, const std::string& name)
+{
+    std::unique_ptr<File> f = File::create((Encoding)-1, file, close_on_exit, name);
+    std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->type());
+    f->foreach([&](const Rawmsg& raw) {
+        Msgs msgs;
+        imp->from_rawmsg(raw, msgs);
+        db->import_msgs(msgs, NULL, 0);
+        return true;
+    });
+}
+
+bool db_load_filelike(DB* db, PyObject* obj)
+{
+    PyObject *read_meth;
+    PyObject* read_args;
+    PyObject* data;
+    PyObject* filerepr;
+    char* buf;
+    Py_ssize_t len;
+
+    read_meth = PyObject_GetAttrString(obj, "read");
+    read_args = Py_BuildValue("()");
+    data = PyObject_Call(read_meth, read_args, NULL);
+    if (!data) {
+        Py_DECREF(read_meth);
+        Py_DECREF(read_args);
+        return false;
+    }
+    PyString_AsStringAndSize(data, &buf, &len);
+    FILE* f = fmemopen(buf, len, "r");
+    filerepr = PyObject_Repr(obj);
+    std::string name = PyString_AsString(filerepr);
+
+    try {
+        db_load_file(db, f, true, name);
+    } catch (...) {
+        Py_DECREF(read_meth);
+        Py_DECREF(read_args);
+        Py_DECREF(data);
+        Py_DECREF(filerepr);
+        throw;
+    }
+    Py_DECREF(read_meth);
+    Py_DECREF(read_args);
+    Py_DECREF(data);
+    Py_DECREF(filerepr);
+    return true;
+}
+
+bool db_load_fileobj(DB* db, PyObject* obj)
+{
+    FILE* f = PyFile_AsFile(obj);
+    std::string name = PyString_AsString(PyFile_Name(obj));
+    db_load_file(db, f, false, name);
+    return true;
 }
 
 }
