@@ -1,0 +1,161 @@
+2015-04-27:
+ - Record SQLite:
+   db_query_parse.main: 5 runs, user: 9.46s (100.0%), sys: 0.36s (100.0%), total: 9.82s (100.0%)
+   db_query_parse.station: 5 runs, user: 0.15s (1.6%), sys: 0.00s (0.0%), total: 0.15s (1.5%)
+   db_query_parse.sdata: 5 runs, user: 1.99s (21.0%), sys: 0.09s (25.0%), total: 2.08s (21.2%)
+   db_query_parse.data: 5 runs, user: 7.32s (77.4%), sys: 0.27s (75.0%), total: 7.59s (77.3%)
+   db_import.main: 10 runs, user: 0.60s (100.0%), sys: 0.03s (100.0%), total: 0.63s (100.0%)
+   db_import.synop: 10 runs, user: 0.39s (65.0%), sys: 0.01s (33.3%), total: 0.40s (63.5%)
+   db_import.temp: 10 runs, user: 0.19s (31.7%), sys: 0.02s (66.7%), total: 0.21s (33.3%)
+   db_import.airplane: 10 runs, user: 0.02s (3.3%), sys: 0.00s (0.0%), total: 0.02s (3.2%)
+ - Query SQLite:
+   db_query_parse.main: 5 runs, user: 9.09s (100.0%), sys: 0.37s (100.0%), total: 9.46s (100.0%)
+   db_query_parse.station: 5 runs, user: 0.14s (1.5%), sys: 0.02s (5.4%), total: 0.16s (1.7%)
+   db_query_parse.sdata: 5 runs, user: 1.88s (20.7%), sys: 0.09s (24.3%), total: 1.97s (20.8%)
+   db_query_parse.data: 5 runs, user: 7.07s (77.8%), sys: 0.26s (70.3%), total: 7.33s (77.5%)
+   db_import.main: 10 runs, user: 0.60s (100.0%), sys: 0.04s (100.0%), total: 0.64s (100.0%)
+   db_import.synop: 10 runs, user: 0.38s (63.3%), sys: 0.03s (75.0%), total: 0.41s (64.1%)
+   db_import.temp: 10 runs, user: 0.21s (35.0%), sys: 0.01s (25.0%), total: 0.22s (34.4%)
+   db_import.airplane: 10 runs, user: 0.01s (1.7%), sys: 0.00s (0.0%), total: 0.01s (1.6%)
+ - Record MEMDB:
+   db_query_parse.main: 5 runs, user: 0.15s (100.0%), sys: 0.01s (100.0%), total: 0.16s (100.0%)
+   db_query_parse.station: 5 runs, user: 0.00s (0.0%), sys: 0.01s (100.0%), total: 0.01s (6.2%)
+   db_query_parse.sdata: 5 runs, user: 0.02s (13.3%), sys: 0.00s (0.0%), total: 0.02s (12.5%)
+   db_query_parse.data: 5 runs, user: 0.13s (86.7%), sys: 0.00s (0.0%), total: 0.13s (81.2%)
+   db_import.main: 10 runs, user: 0.09s (100.0%), sys: 0.00s (-nan%), total: 0.09s (100.0%)
+   db_import.synop: 10 runs, user: 0.05s (55.6%), sys: 0.00s (-nan%), total: 0.05s (55.6%)
+   db_import.temp: 10 runs, user: 0.04s (44.4%), sys: 0.00s (-nan%), total: 0.04s (44.4%)
+   db_import.airplane: 10 runs, user: 0.00s (0.0%), sys: 0.00s (-nan%), total: 0.00s (0.0%)
+ - Query MEMDB:
+   db_query_parse.main: 5 runs, user: 0.13s (100.0%), sys: 0.00s (-nan%), total: 0.13s (100.0%)
+   db_query_parse.station: 5 runs, user: 0.01s (7.7%), sys: 0.00s (-nan%), total: 0.01s (7.7%)
+   db_query_parse.sdata: 5 runs, user: 0.02s (15.4%), sys: 0.00s (-nan%), total: 0.02s (15.4%)
+   db_query_parse.data: 5 runs, user: 0.10s (76.9%), sys: 0.00s (-nan%), total: 0.10s (76.9%)
+   db_import.main: 10 runs, user: 0.07s (100.0%), sys: 0.00s (-nan%), total: 0.07s (100.0%)
+   db_import.synop: 10 runs, user: 0.03s (42.9%), sys: 0.00s (-nan%), total: 0.03s (42.9%)
+   db_import.temp: 10 runs, user: 0.04s (57.1%), sys: 0.00s (-nan%), total: 0.04s (57.1%)
+   db_import.airplane: 10 runs, user: 0.00s (0.0%), sys: 0.00s (-nan%), total: 0.00s (0.0%)
+ - Record PostgreSQL:
+   db_query_parse.main: 5 runs, user: 3.92s (100.0%), sys: 0.88s (100.0%), total: 4.80s (100.0%)
+   db_query_parse.station: 5 runs, user: 0.07s (1.8%), sys: 0.00s (0.0%), total: 0.07s (1.5%)
+   db_query_parse.sdata: 5 runs, user: 0.82s (20.9%), sys: 0.18s (20.5%), total: 1.00s (20.8%)
+   db_query_parse.data: 5 runs, user: 3.03s (77.3%), sys: 0.70s (79.5%), total: 3.73s (77.7%)
+   db_import.main: 10 runs, user: 0.74s (100.0%), sys: 0.41s (100.0%), total: 1.15s (100.0%)
+   db_import.synop: 10 runs, user: 0.52s (70.3%), sys: 0.27s (65.9%), total: 0.79s (68.7%)
+   db_import.temp: 10 runs, user: 0.19s (25.7%), sys: 0.13s (31.7%), total: 0.32s (27.8%)
+   db_import.airplane: 10 runs, user: 0.03s (4.1%), sys: 0.01s (2.4%), total: 0.04s (3.5%)
+   Query PostgreSQL:
+   db_query_parse.main: 5 runs, user: 3.65s (100.0%), sys: 0.75s (100.0%), total: 4.40s (100.0%)
+   db_query_parse.station: 5 runs, user: 0.06s (1.6%), sys: 0.04s (5.3%), total: 0.10s (2.3%)
+   db_query_parse.sdata: 5 runs, user: 0.73s (20.0%), sys: 0.14s (18.7%), total: 0.87s (19.8%)
+   db_query_parse.data: 5 runs, user: 2.86s (78.4%), sys: 0.57s (76.0%), total: 3.43s (78.0%)
+   db_import.main: 10 runs, user: 0.68s (100.0%), sys: 0.46s (100.0%), total: 1.14s (100.0%)
+   db_import.synop: 10 runs, user: 0.46s (67.6%), sys: 0.34s (73.9%), total: 0.80s (70.2%)
+   db_import.temp: 10 runs, user: 0.20s (29.4%), sys: 0.12s (26.1%), total: 0.32s (28.1%)
+   db_import.airplane: 10 runs, user: 0.02s (2.9%), sys: 0.00s (0.0%), total: 0.02s (1.8%)
+   Record MySQL:
+   db_query_parse.main: 5 runs, user: 2.76s (100.0%), sys: 0.60s (100.0%), total: 3.36s (100.0%)
+   db_query_parse.station: 5 runs, user: 0.05s (1.8%), sys: 0.03s (5.0%), total: 0.08s (2.4%)
+   db_query_parse.sdata: 5 runs, user: 0.54s (19.6%), sys: 0.15s (25.0%), total: 0.69s (20.5%)
+   db_query_parse.data: 5 runs, user: 2.17s (78.6%), sys: 0.42s (70.0%), total: 2.59s (77.1%)
+   db_import.main: 10 runs, user: 1.60s (100.0%), sys: 0.90s (100.0%), total: 2.50s (100.0%)
+   db_import.synop: 10 runs, user: 0.96s (60.0%), sys: 0.58s (64.4%), total: 1.54s (61.6%)
+   db_import.temp: 10 runs, user: 0.57s (35.6%), sys: 0.30s (33.3%), total: 0.87s (34.8%)
+   db_import.airplane: 10 runs, user: 0.07s (4.4%), sys: 0.02s (2.2%), total: 0.09s (3.6%)
+   Query MySQL:
+   db_query_parse.main: 5 runs, user: 2.56s (100.0%), sys: 0.59s (100.0%), total: 3.15s (100.0%)
+   db_query_parse.station: 5 runs, user: 0.06s (2.3%), sys: 0.02s (3.4%), total: 0.08s (2.5%)
+   db_query_parse.sdata: 5 runs, user: 0.51s (19.9%), sys: 0.14s (23.7%), total: 0.65s (20.6%)
+   db_query_parse.data: 5 runs, user: 1.99s (77.7%), sys: 0.43s (72.9%), total: 2.42s (76.8%)
+   db_import.main: 10 runs, user: 1.47s (100.0%), sys: 1.07s (100.0%), total: 2.54s (100.0%)
+   db_import.synop: 10 runs, user: 0.94s (63.9%), sys: 0.68s (63.6%), total: 1.62s (63.8%)
+   db_import.temp: 10 runs, user: 0.48s (32.7%), sys: 0.37s (34.6%), total: 0.85s (33.5%)
+   db_import.airplane: 10 runs, user: 0.05s (3.4%), sys: 0.02s (1.9%), total: 0.07s (2.8%)
+
+2015-04-17:
+ - postgres: benchmark db_import_v6
+    - initial:
+      db_import.main: 5 runs, user: 1.33s (100.0%), sys: 1.11s (100.0%), total: 2.44s (100.0%)
+      db_import.synop: 5 runs, user: 0.99s (74.4%), sys: 0.87s (78.4%), total: 1.86s (76.2%)
+      db_import.temp: 5 runs, user: 0.32s (24.1%), sys: 0.22s (19.8%), total: 0.54s (22.1%)
+      db_import.airplane: 5 runs, user: 0.02s (1.5%), sys: 0.02s (1.8%), total: 0.04s (1.6%)
+    - std::string -> const char*
+      db_import.main: 5 runs, user: 1.27s (100.0%), sys: 1.03s (100.0%), total: 2.30s (100.0%)
+      db_import.synop: 5 runs, user: 0.98s (77.2%), sys: 0.80s (77.7%), total: 1.78s (77.4%)
+      db_import.temp: 5 runs, user: 0.27s (21.3%), sys: 0.22s (21.4%), total: 0.49s (21.3%)
+      db_import.airplane: 5 runs, user: 0.02s (1.6%), sys: 0.01s (1.0%), total: 0.03s (1.3%)
+    - station attrs via bulk insert
+      db_import.main: 5 runs, user: 1.25s (100.0%), sys: 1.04s (100.0%), total: 2.29s (100.0%)
+      db_import.synop: 5 runs, user: 0.94s (75.2%), sys: 0.78s (75.0%), total: 1.72s (75.1%)
+      db_import.temp: 5 runs, user: 0.30s (24.0%), sys: 0.25s (24.0%), total: 0.55s (24.0%)
+      db_import.airplane: 5 runs, user: 0.01s (0.8%), sys: 0.01s (1.0%), total: 0.02s (0.9%)
+    - data via bulk insert
+      db_import.main: 5 runs, user: 0.53s (100.0%), sys: 0.40s (100.0%), total: 0.93s (100.0%)
+      db_import.synop: 5 runs, user: 0.41s (77.4%), sys: 0.37s (92.5%), total: 0.78s (83.9%)
+      db_import.temp: 5 runs, user: 0.11s (20.8%), sys: 0.02s (5.0%), total: 0.13s (14.0%)
+      db_import.airplane: 5 runs, user: 0.01s (1.9%), sys: 0.01s (2.5%), total: 0.02s (2.2%)
+    - data via bulk insert, refactored with AnnotateV6
+      db_import.main: 5 runs, user: 0.50s (100.0%), sys: 0.39s (100.0%), total: 0.89s (100.0%)
+      db_import.synop: 5 runs, user: 0.43s (86.0%), sys: 0.33s (84.6%), total: 0.76s (85.4%)
+      db_import.temp: 5 runs, user: 0.07s (14.0%), sys: 0.06s (15.4%), total: 0.13s (14.6%)
+      db_import.airplane: 5 runs, user: 0.00s (0.0%), sys: 0.00s (0.0%), total: 0.00s (0.0%)
+    - attrs via bulk insert
+      db_import.main: 5 runs, user: 0.33s (100.0%), sys: 0.20s (100.0%), total: 0.53s (100.0%)
+      db_import.synop: 5 runs, user: 0.24s (72.7%), sys: 0.14s (70.0%), total: 0.38s (71.7%)
+      db_import.temp: 5 runs, user: 0.09s (27.3%), sys: 0.04s (20.0%), total: 0.13s (24.5%)
+      db_import.airplane: 5 runs, user: 0.00s (0.0%), sys: 0.02s (10.0%), total: 0.02s (3.8%)
+ - sqlite: benchmark db_import_v6
+    - initial:
+      db_import.main: 5 runs, user: 0.28s (100.0%), sys: 0.01s (100.0%), total: 0.29s (100.0%)
+      db_import.synop: 5 runs, user: 0.17s (60.7%), sys: 0.01s (100.0%), total: 0.18s (62.1%)
+      db_import.temp: 5 runs, user: 0.11s (39.3%), sys: 0.00s (0.0%), total: 0.11s (37.9%)
+      db_import.airplane: 5 runs, user: 0.00s (0.0%), sys: 0.00s (0.0%), total: 0.00s (0.0%)
+    - after for-auto& and const char* fixes
+      db_import.main: 5 runs, user: 0.27s (100.0%), sys: 0.02s (100.0%), total: 0.29s (100.0%)
+      db_import.synop: 5 runs, user: 0.17s (63.0%), sys: 0.01s (50.0%), total: 0.18s (62.1%)
+      db_import.temp: 5 runs, user: 0.10s (37.0%), sys: 0.01s (50.0%), total: 0.11s (37.9%)
+      db_import.airplane: 5 runs, user: 0.00s (0.0%), sys: 0.00s (0.0%), total: 0.00s (0.0%)
+    - data via bulk insert
+      db_import.main: 5 runs, user: 0.29s (100.0%), sys: 0.04s (100.0%), total: 0.33s (100.0%)
+      db_import.synop: 5 runs, user: 0.18s (62.1%), sys: 0.03s (75.0%), total: 0.21s (63.6%)
+      db_import.temp: 5 runs, user: 0.10s (34.5%), sys: 0.01s (25.0%), total: 0.11s (33.3%)
+      db_import.airplane: 5 runs, user: 0.01s (3.4%), sys: 0.00s (0.0%), total: 0.01s (3.0%)
+       - no change: we operate locally, sqlite has safe upsert, there is no
+         point bundling inserts and updates to save in latency, so nothing
+         really changes.
+    - attr via bulk insert
+      db_import.main: 5 runs, user: 0.37s (100.0%), sys: 0.02s (100.0%), total: 0.39s (100.0%)
+      db_import.synop: 5 runs, user: 0.24s (64.9%), sys: 0.01s (50.0%), total: 0.25s (64.1%)
+      db_import.temp: 5 runs, user: 0.12s (32.4%), sys: 0.00s (0.0%), total: 0.12s (30.8%)
+      db_import.airplane: 5 runs, user: 0.01s (2.7%), sys: 0.01s (50.0%), total: 0.02s (5.1%)
+ - odbc-mysql: benchmark db_import_v6
+    - initial:
+      db_import.main: 5 runs, user: 1.34s (100.0%), sys: 0.80s (100.0%), total: 2.14s (100.0%)
+      db_import.synop: 5 runs, user: 0.82s (61.2%), sys: 0.47s (58.8%), total: 1.29s (60.3%)
+      db_import.temp: 5 runs, user: 0.49s (36.6%), sys: 0.32s (40.0%), total: 0.81s (37.9%)
+      db_import.airplane: 5 runs, user: 0.03s (2.2%), sys: 0.01s (1.2%), total: 0.04s (1.9%)
+    - data via bulk insert
+      db_import.main: 5 runs, user: 1.29s (100.0%), sys: 0.85s (100.0%), total: 2.14s (100.0%)
+      db_import.synop: 5 runs, user: 0.77s (59.7%), sys: 0.51s (60.0%), total: 1.28s (59.8%)
+      db_import.temp: 5 runs, user: 0.51s (39.5%), sys: 0.31s (36.5%), total: 0.82s (38.3%)
+      db_import.airplane: 5 runs, user: 0.01s (0.8%), sys: 0.03s (3.5%), total: 0.04s (1.9%)
+       - no change: mysql has upsert (of dubious safety), and odbc does not
+         allow to bundle inserts and updates to save in latency, so nothing
+         really changes.
+ - mysql:
+    - bulk:
+      db_import.main: 5 runs, user: 0.68s (100.0%), sys: 0.60s (100.0%), total: 1.28s (100.0%)
+      db_import.synop: 5 runs, user: 0.39s (57.4%), sys: 0.42s (70.0%), total: 0.81s (63.3%)
+      db_import.temp: 5 runs, user: 0.26s (38.2%), sys: 0.18s (30.0%), total: 0.44s (34.4%)
+      db_import.airplane: 5 runs, user: 0.03s (4.4%), sys: 0.00s (0.0%), total: 0.03s (2.3%)
+    - non-bulk:
+      db_import.main: 5 runs, user: 0.66s (100.0%), sys: 0.64s (100.0%), total: 1.30s (100.0%)
+      db_import.synop: 5 runs, user: 0.37s (56.1%), sys: 0.42s (65.6%), total: 0.79s (60.8%)
+      db_import.temp: 5 runs, user: 0.28s (42.4%), sys: 0.20s (31.2%), total: 0.48s (36.9%)
+      db_import.airplane: 5 runs, user: 0.01s (1.5%), sys: 0.02s (3.1%), total: 0.03s (2.3%)
+    - bulk attrs:
+      db_import.main: 5 runs, user: 0.71s (100.0%), sys: 0.57s (100.0%), total: 1.28s (100.0%)
+      db_import.synop: 5 runs, user: 0.45s (63.4%), sys: 0.35s (61.4%), total: 0.80s (62.5%)
+      db_import.temp: 5 runs, user: 0.26s (36.6%), sys: 0.21s (36.8%), total: 0.47s (36.7%)
+      db_import.airplane: 5 runs, user: 0.00s (0.0%), sys: 0.01s (1.8%), total: 0.01s (0.8%)
+
