@@ -433,6 +433,24 @@ void Query::set_from_formatted(dba_keyword key, const char* val)
     setd(key, strtod(val, NULL));
 }
 
+void Query::set_from_test_string(const std::string& s)
+{
+    if (s.empty()) return;
+    size_t cur = 0;
+    while (true)
+    {
+        size_t next = s.find(", ", cur);
+        if (next == string::npos)
+        {
+            set_from_string(s.substr(cur).c_str());
+            break;
+        } else {
+            set_from_string(s.substr(cur, next - cur).c_str());
+            cur = next + 2;
+        }
+    }
+}
+
 namespace {
 
 bool removed_or_changed(int val, int other)

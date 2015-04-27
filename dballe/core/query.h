@@ -127,6 +127,15 @@ struct Query
     void set_from_formatted(dba_keyword key, const char* val);
 
     /**
+     * Set a record from a ", "-separated string of assignments.
+     *
+     * The implementation is not efficient and the method is not safe for any
+     * input, since ", " could appear in a station identifier. It is however
+     * useful to quickly create test queries for unit testing.
+     */
+    void set_from_test_string(const std::string& s);
+
+    /**
      * Return true if this query matches a subset of the given query.
      *
      * In other words, it returns true if this query is the same as \a other,
