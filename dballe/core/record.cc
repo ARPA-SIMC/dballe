@@ -813,6 +813,24 @@ void Record::set_from_string(const char* name, const char* val)
         var(resolve_varcode_safe(name)).set_from_formatted(val);
 }
 
+void Record::set_from_test_string(const std::string& s)
+{
+    if (s.empty()) return;
+    size_t cur = 0;
+    while (true)
+    {
+        size_t next = s.find(", ", cur);
+        if (next == string::npos)
+        {
+            set_from_string(s.substr(cur).c_str());
+            break;
+        } else {
+            set_from_string(s.substr(cur, next - cur).c_str());
+            cur = next + 2;
+        }
+    }
+}
+
 std::string Record::to_string() const
 {
     std::stringstream s;

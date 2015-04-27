@@ -434,6 +434,15 @@ public:
     /// Same as set_from_string(str) but takes already split key and val
     void set_from_string(const char* key, const char* val);
 
+     /**
+     * Set a record from a ", "-separated string of assignments.
+     *
+     * The implementation is not efficient and the method is not safe for any
+     * input, since ", " could appear in a station identifier. It is however
+     * useful to quickly create test queries for unit testing.
+     */
+    void set_from_test_string(const std::string& s);
+
     /**
      * Encode in a one-liner of comma-separated assignments
      */
