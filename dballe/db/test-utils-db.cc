@@ -211,7 +211,7 @@ void TestCursorDataMatch::check(WIBBLE_TEST_LOCPRM) const
 TestDBTryDataQuery::TestDBTryDataQuery(DB& db, const std::string& query, unsigned expected)
     : db(db), expected(expected)
 {
-    set_record_from_string(this->query, query);
+    set_query_from_string(this->query, query);
 }
 void TestDBTryDataQuery::check(WIBBLE_TEST_LOCPRM) const
 {
@@ -227,8 +227,8 @@ void TestDBTryDataQuery::check(WIBBLE_TEST_LOCPRM) const
 void TestDBTryStationQuery::check(WIBBLE_TEST_LOCPRM) const
 {
     // Build the query
-    Record query;
-    set_record_from_string(query, this->query);
+    Query query;
+    set_query_from_string(query, this->query);
 
     // Run the query
     unique_ptr<db::Cursor> cur = db.query_stations(query);
@@ -242,8 +242,8 @@ void TestDBTryStationQuery::check(WIBBLE_TEST_LOCPRM) const
 void TestDBTrySummaryQuery::check(WIBBLE_TEST_LOCPRM) const
 {
     // Build the query
-    Record query;
-    set_record_from_string(query, this->query);
+    Query query;
+    set_query_from_string(query, this->query);
 
     // Run the query
     unique_ptr<db::Cursor> cur = db.query_summary(query);

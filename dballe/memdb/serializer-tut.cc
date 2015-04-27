@@ -67,9 +67,9 @@ template<> template<> void to::test<1>()
     {
         Memdb memdb;
 
-        memdb.insert(Coord(45, 11), string(), "synop", Level(1), Trange::instant(), Datetime(2013, 12, 15), var_1);
+        memdb.insert(Coords(45, 11), string(), "synop", Level(1), Trange::instant(), Datetime(2013, 12, 15), var_1);
         memdb.stationvalues.insert(*memdb.stations[0], var_st_1);
-        memdb.insert(Coord(45, 12), "LH1234", "airep", Level(1), Trange::instant(), Datetime(2013, 12, 16), var_2);
+        memdb.insert(Coords(45, 12), "LH1234", "airep", Level(1), Trange::instant(), Datetime(2013, 12, 16), var_2);
         memdb.stationvalues.insert(*memdb.stations[1], var_st_2);
 
         serialize::CSVWriter serializer(testdir);
@@ -83,11 +83,11 @@ template<> template<> void to::test<1>()
         serialize::CSVReader reader(testdir, memdb);
         reader.read();
         wassert(actual(memdb.stations.element_count()) == 2);
-        wassert(actual(memdb.stations[0]->coords) == Coord(45, 11));
+        wassert(actual(memdb.stations[0]->coords) == Coords(45, 11));
         wassert(actual(memdb.stations[0]->mobile).isfalse());
         wassert(actual(memdb.stations[0]->ident) == "");
         wassert(actual(memdb.stations[0]->report) == "synop");
-        wassert(actual(memdb.stations[1]->coords) == Coord(45, 12));
+        wassert(actual(memdb.stations[1]->coords) == Coords(45, 12));
         wassert(actual(memdb.stations[1]->mobile).istrue());
         wassert(actual(memdb.stations[1]->ident) == "LH1234");
         wassert(actual(memdb.stations[1]->report) == "airep");
@@ -143,7 +143,7 @@ template<> template<> void to::test<3>()
 
     {
         Memdb memdb;
-        memdb.insert(Coord(45, 11), str_ident, str_report, Level(1), Trange::instant(), Datetime(2013, 12, 15), var_1);
+        memdb.insert(Coords(45, 11), str_ident, str_report, Level(1), Trange::instant(), Datetime(2013, 12, 15), var_1);
         memdb.stationvalues.insert(*memdb.stations[0], var_st_1);
 
         serialize::CSVWriter serializer(testdir);
@@ -156,7 +156,7 @@ template<> template<> void to::test<3>()
         serialize::CSVReader reader(testdir, memdb);
         reader.read();
         wassert(actual(memdb.stations.element_count()) == 1);
-        wassert(actual(memdb.stations[0]->coords) == Coord(45, 11));
+        wassert(actual(memdb.stations[0]->coords) == Coords(45, 11));
         wassert(actual(memdb.stations[0]->mobile).istrue());
         wassert(actual(memdb.stations[0]->ident) == str_ident);
         wassert(actual(memdb.stations[0]->report) == str_report);

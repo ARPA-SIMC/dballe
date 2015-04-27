@@ -1,7 +1,7 @@
 /*
  * dballe/mem/db - Archive for point-based meteorological data, in-memory db
  *
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -139,7 +139,7 @@ public:
      *   If true, then it is allowed to add new station records to the database.
      *   Otherwise, data can be added only by reusing existing ones.
      */
-    void insert(const Query& rec, bool can_replace, bool station_can_add);
+    void insert(const Record& rec, bool can_replace, bool station_can_add);
 
     int last_station_id() const;
 

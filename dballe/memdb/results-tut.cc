@@ -37,7 +37,7 @@ struct memdb_query_shar
     {
         // 10 stations in a line from latitude 40.0 to 50.0
         for (unsigned i = 0; i < 10; ++i)
-            pos[i] = stations.obtain_fixed(Coord(40.0 + i, 11.0), "synop");
+            pos[i] = stations.obtain_fixed(Coords(40.0 + i, 11.0), "synop");
     }
 };
 

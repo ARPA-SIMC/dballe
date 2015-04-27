@@ -398,11 +398,6 @@ void PostgreSQLConnection::drop_settings()
     drop_table_if_exists("dballe_settings");
 }
 
-void PostgreSQLConnection::add_datetime(Querybuf& qb, const int* dt) const
-{
-    qb.appendf("'%04d-%02d-%02d %02d:%02d:%02d'", dt[0], dt[1], dt[2], dt[3], dt[4], dt[5]);
-}
-
 int PostgreSQLConnection::changes()
 {
     throw error_unimplemented("changes");

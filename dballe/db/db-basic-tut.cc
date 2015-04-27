@@ -70,7 +70,7 @@ std::vector<Test> tests {
         // Test remove_all
         auto& db = *f.db;
         db.remove_all();
-        Record query;
+        Query query;
         std::unique_ptr<db::Cursor> cur = db.query_data(query);
         wassert(actual(cur->remaining()) == 0);
 

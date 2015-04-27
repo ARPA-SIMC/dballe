@@ -211,11 +211,11 @@ struct TestCursorDataMatch
 struct TestDBTryDataQuery
 {
     DB& db;
-    Record query;
+    Query query;
     unsigned expected;
 
     TestDBTryDataQuery(DB& db, const std::string& query, unsigned expected);
-    TestDBTryDataQuery(DB& db, const Record& query, unsigned expected) : db(db), query(query), expected(expected) {}
+    TestDBTryDataQuery(DB& db, const Query& query, unsigned expected) : db(db), query(query), expected(expected) {}
 
     void check(WIBBLE_TEST_LOCPRM) const;
 };
@@ -345,7 +345,7 @@ struct ActualDB : public wibble::tests::Actual<dballe::DB&>
     ActualDB(dballe::DB& actual) : wibble::tests::Actual<dballe::DB&>(actual) {}
 
     TestDBTryDataQuery try_data_query(const std::string& query, unsigned expected) { return TestDBTryDataQuery(this->actual, query, expected); }
-    TestDBTryDataQuery try_data_query(const Record& query, unsigned expected) { return TestDBTryDataQuery(this->actual, query, expected); }
+    TestDBTryDataQuery try_data_query(const Query& query, unsigned expected) { return TestDBTryDataQuery(this->actual, query, expected); }
     TestDBTryStationQuery try_station_query(const std::string& query, unsigned expected) { return TestDBTryStationQuery(this->actual, query, expected); }
     TestDBTrySummaryQuery try_summary_query(const std::string& query, unsigned expected, TestDBTrySummaryQuery::result_checker checker=nullptr) { return TestDBTrySummaryQuery(this->actual, query, expected, checker); }
 };

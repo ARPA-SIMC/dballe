@@ -1,8 +1,30 @@
+/*
+ * memdb/value - In memory representation of a variable with metadata and
+ *               attributes
+ *
+ * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ *
+ * Author: Enrico Zini <enrico@enricozini.com>
+ */
 #include "value.h"
 #include "station.h"
 #include "levtr.h"
 #include "dballe/core/stlutils.h"
 #include "dballe/core/record.h"
+#include "dballe/core/query.h"
 #include "dballe/core/varmatch.h"
 #include "results.h"
 #include <iomanip>
@@ -171,12 +193,12 @@ struct MatchDateMinMax : public Match<Value>
 
 }
 
-void Values::query(const Record& rec, Results<Station>& stations, Results<LevTr>& levtrs, Results<Value>& res) const
+void Values::query(const Query& q, Results<Station>& stations, Results<LevTr>& levtrs, Results<Value>& res) const
 {
-    if (const char* data_id = rec.key_peek_value(DBA_KEY_CONTEXT_ID))
+    if (q.data_id != MISSING_INT)
     {
-        trace_query("Found data_id %s\n", data_id);
-        size_t pos = strtoul(data_id, 0, 10);
+        trace_query("Found data_id %d\n", q.data_id);
+        size_t pos = q.data_id;
         if (pos >= 0 && pos < values.size() && values[pos])
         {
             trace_query(" intersect with %zu\n", pos);
@@ -218,14 +240,14 @@ void Values::query(const Record& rec, Results<Station>& stations, Results<LevTr>
         res.add_union(lookup_by_levtr.release_sequences());
     }
 
-    int mind[6], maxd[6];
-    rec.parse_date_extremes(mind, maxd);
-    if (mind[0] != MISSING_INT || maxd[0] != MISSING_INT)
+    Datetime mind = q.datetime_min.lower_bound();
+    Datetime maxd = q.datetime_max.upper_bound();
+    if (!mind.is_missing() || !maxd.is_missing())
     {
         unique_ptr< stl::Sequences<size_t> > sequences(new stl::Sequences<size_t>);
-        if (mind[0] == maxd[0] && mind[1] == maxd[1] && mind[2] == maxd[2])
+        if (mind.date == maxd.date)
         {
-            Date d(mind);
+            const Date& d = mind.date;
             const set<size_t>* s = by_date.search(d);
             trace_query("Found exact date %04d-%02d-%02d\n", d.year, d.month, d.day);
             if (!s)
@@ -240,7 +262,7 @@ void Values::query(const Record& rec, Results<Station>& stations, Results<LevTr>
             } else {
                 res.add_set(*s);
             }
-            if (mind[3] == maxd[3] && mind[4] == maxd[4] && mind[5] == maxd[5])
+            if (mind.time == maxd.time)
                 res.add(new MatchDateExact(mind));
             else
                 res.add(new MatchDateMinMax(mind, maxd));
@@ -249,21 +271,21 @@ void Values::query(const Record& rec, Results<Station>& stations, Results<LevTr>
             unique_ptr< stl::Sequences<size_t> > sequences;
             unique_ptr< Match<Value> > extra_match;
 
-            if (maxd[0] == MISSING_INT) {
-                Date d(mind);
-                sequences = by_date.search_from(mind, found);
+            if (maxd.is_missing()) {
+                const Date& d = mind.date;
+                sequences = by_date.search_from(d, found);
                 extra_match.reset(new MatchDateMin(mind));
                 trace_query("Found date min %04d-%02d-%02d\n", d.year, d.month, d.day);
-            } else if (mind[0] == MISSING_INT) {
+            } else if (mind.is_missing()) {
                 // FIXME: we need to add 1 second to maxd, as it is right extreme excluded
-                Date d(maxd);
+                const Date& d = maxd.date;
                 sequences = by_date.search_to(d, found);
                 extra_match.reset(new MatchDateMax(maxd));
                 trace_query("Found date max %04d-%02d-%02d\n", d.year, d.month, d.day);
             } else {
                 // FIXME: we need to add 1 second to maxd, as it is right extreme excluded
-                Date dmin(mind);
-                Date dmax(maxd);
+                const Date& dmin = mind.date;
+                const Date& dmax = maxd.date;
                 sequences = by_date.search_between(dmin, dmax, found);
                 extra_match.reset(new MatchDateMinMax(mind, maxd));
                 trace_query("Found date range %04d-%02d-%02d to %04d-%02d-%02d\n",
@@ -286,29 +308,30 @@ void Values::query(const Record& rec, Results<Station>& stations, Results<LevTr>
         }
     }
 
-    if (const char* val = rec.key_peek_value(DBA_KEY_VAR))
+    switch (q.varcodes.size())
     {
-        trace_query("Found varcode=%s\n", val);
-        res.add(new match::Varcode<Value>(descriptor_code(val)));
+        case 0: break;
+        case 1:
+            trace_query("Found varcode=%01d%02d%03d\n",
+                    WR_VAR_F(*q.varcodes.begin()),
+                    WR_VAR_X(*q.varcodes.begin()),
+                    WR_VAR_Y(*q.varcodes.begin()));
+            res.add(new match::Varcode<Value>(*q.varcodes.begin()));
+        default:
+            res.add(new match::Varcodes<Value>(q.varcodes));
+            break;
     }
 
-    if (const char* val = rec.key_peek_value(DBA_KEY_VARLIST))
+    if (!q.data_filter.empty())
     {
-        set<Varcode> codes;
-        resolve_varlist_safe(val, codes);
-        res.add(new match::Varcodes<Value>(codes));
+        trace_query("Found data_filter=%s\n", q.data_filter.c_str());
+        res.add(new match::DataFilter<Value>(q.data_filter));
     }
 
-    if (const char* val = rec.key_peek_value(DBA_KEY_DATA_FILTER))
+    if (!q.attr_filter.empty())
     {
-        trace_query("Found data_filter=%s\n", val);
-        res.add(new match::DataFilter<Value>(val));
-    }
-
-    if (const char* val = rec.key_peek_value(DBA_KEY_ATTR_FILTER))
-    {
-        trace_query("Found attr_filter=%s\n", val);
-        res.add(new match::AttrFilter<Value>(val));
+        trace_query("Found attr_filter=%s\n", q.attr_filter.c_str());
+        res.add(new match::AttrFilter<Value>(q.attr_filter));
     }
 
     //trace_query("Strategy activated, %zu results\n", res.size());

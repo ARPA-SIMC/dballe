@@ -85,7 +85,7 @@ typedef test_group::Test Test;
 std::vector<Test> tests {
     Test("crex", [](Fixture& f) {
         auto& db = f.db;
-        Record query;
+        Query query;
         // Test import/export with all CREX samples
         const char** files = dballe::tests::crex_files;
         set<string> blacklist;
@@ -107,7 +107,7 @@ std::vector<Test> tests {
                 msg.set_rep_memo(Msg::repmemo_from_type(msg.type));
 
                 query.clear();
-                query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg.type));
+                query.rep_memo = Msg::repmemo_from_type(msg.type);
 
                 MsgCollector msgs;
                 db->export_msgs(query, msgs);
@@ -123,7 +123,7 @@ std::vector<Test> tests {
     Test("bufr", [](Fixture& f) {
         // Test import/export with all BUFR samples
         auto& db = f.db;
-        Record query;
+        Query query;
         const char** files = dballe::tests::bufr_files;
         for (int i = 0; files[i] != NULL; i++)
         {
@@ -136,7 +136,7 @@ std::vector<Test> tests {
                 db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
                 query.clear();
-                query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg.type));
+                query.rep_memo = Msg::repmemo_from_type(msg.type);
 
                 MsgCollector msgs;
                 db->export_msgs(query, msgs);
@@ -155,7 +155,7 @@ std::vector<Test> tests {
     Test("aof", [](Fixture& f) {
         // Test import/export with all AOF samples
         auto& db = f.db;
-        Record query;
+        Query query;
         const char** files = dballe::tests::aof_files;
         for (int i = 0; files[i] != NULL; i++)
         {
@@ -173,7 +173,7 @@ std::vector<Test> tests {
                 // db->dump(stderr);
 
                 query.clear();
-                query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg.type));
+                query.rep_memo = Msg::repmemo_from_type(msg.type);
 
                 MsgCollector msgs;
                 db->export_msgs(query, msgs);
@@ -189,7 +189,7 @@ std::vector<Test> tests {
     Test("multi", [](Fixture& f) {
         // Check that multiple messages are correctly identified during export
         auto& db = f.db;
-        Record query;
+        Query query;
 
         // msg1 has latitude 33.88
         // msg2 has latitude 46.22
@@ -210,7 +210,7 @@ std::vector<Test> tests {
         msg2.set_rep_memo(Msg::repmemo_from_type(msg2.type));
 
         query.clear();
-        query.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg1.type));
+        query.rep_memo = Msg::repmemo_from_type(msg1.type);
 
         // Warning: this test used to fail with older versions of MySQL.
         // See http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=397597
@@ -227,7 +227,7 @@ std::vector<Test> tests {
     Test("auto_repinfo", [](Fixture& f) {
         // Check automatic repinfo allocation
         auto& db = f.db;
-        Record query;
+        Query query;
         std::unique_ptr<Msgs> msgs = read_msgs("bufr/generic-new-repmemo.bufr", BUFR);
         Msg& msg = *(*msgs)[0];
 
@@ -235,7 +235,7 @@ std::vector<Test> tests {
         db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
         query.clear();
-        query.set(DBA_KEY_REP_MEMO, "enrico");
+        query.rep_memo = "enrico";
 
         MsgCollector outmsgs;
         db->export_msgs(query, outmsgs);
@@ -248,7 +248,7 @@ std::vector<Test> tests {
     Test("station_only", [](Fixture& f) {
         // Check that a message that only contains station variables does get imported
         auto& db = f.db;
-        Record query;
+        Query query;
         std::unique_ptr<Msgs> msgs = read_msgs("bufr/generic-onlystation.bufr", BUFR);
         Msg& msg = *(*msgs)[0];
 

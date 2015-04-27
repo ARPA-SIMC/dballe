@@ -46,14 +46,14 @@ void to::test<1>()
     using namespace dballe::db::mem::cursor;
 
     Memdb memdb;
-    size_t v0 = memdb.insert(Coord(11, 45), "", "synop", Level(1), Trange(254), Datetime(2013, 11, 1, 12), newvar(WR_VAR(0, 12, 101), 15.0));
-    size_t vr = memdb.insert(Coord(11, 45), "", "temp", Level(1), Trange(254), Datetime(2013, 11, 1, 12), newvar(WR_VAR(0, 12, 101), 15.0));
-    size_t vm = memdb.insert(Coord(11, 45), "LH1234", "synop", Level(1), Trange(254), Datetime(2013, 11, 1, 12), newvar(WR_VAR(0, 12, 101), 15.0));
-    size_t vc = memdb.insert(Coord(11, 46), "", "synop", Level(1), Trange(254), Datetime(2013, 11, 1, 12), newvar(WR_VAR(0, 12, 101), 15.0));
-    size_t vd = memdb.insert(Coord(11, 45), "", "synop", Level(1), Trange(254), Datetime(2013, 11, 1, 13), newvar(WR_VAR(0, 12, 101), 15.0));
-    size_t vl = memdb.insert(Coord(11, 45), "", "synop", Level(2), Trange(254), Datetime(2013, 11, 1, 12), newvar(WR_VAR(0, 12, 101), 15.0));
-    size_t vt = memdb.insert(Coord(11, 45), "", "synop", Level(1), Trange(255), Datetime(2013, 11, 1, 12), newvar(WR_VAR(0, 12, 101), 15.0));
-    size_t vv = memdb.insert(Coord(11, 45), "", "synop", Level(1), Trange(254), Datetime(2013, 11, 1, 12), newvar(WR_VAR(0, 12, 102), 15.0));
+    size_t v0 = memdb.insert(Coords(11, 45), "", "synop", Level(1), Trange(254), Datetime(2013, 11, 1, 12), newvar(WR_VAR(0, 12, 101), 15.0));
+    size_t vr = memdb.insert(Coords(11, 45), "", "temp", Level(1), Trange(254), Datetime(2013, 11, 1, 12), newvar(WR_VAR(0, 12, 101), 15.0));
+    size_t vm = memdb.insert(Coords(11, 45), "LH1234", "synop", Level(1), Trange(254), Datetime(2013, 11, 1, 12), newvar(WR_VAR(0, 12, 101), 15.0));
+    size_t vc = memdb.insert(Coords(11, 46), "", "synop", Level(1), Trange(254), Datetime(2013, 11, 1, 12), newvar(WR_VAR(0, 12, 101), 15.0));
+    size_t vd = memdb.insert(Coords(11, 45), "", "synop", Level(1), Trange(254), Datetime(2013, 11, 1, 13), newvar(WR_VAR(0, 12, 101), 15.0));
+    size_t vl = memdb.insert(Coords(11, 45), "", "synop", Level(2), Trange(254), Datetime(2013, 11, 1, 12), newvar(WR_VAR(0, 12, 101), 15.0));
+    size_t vt = memdb.insert(Coords(11, 45), "", "synop", Level(1), Trange(255), Datetime(2013, 11, 1, 12), newvar(WR_VAR(0, 12, 101), 15.0));
+    size_t vv = memdb.insert(Coords(11, 45), "", "synop", Level(1), Trange(254), Datetime(2013, 11, 1, 12), newvar(WR_VAR(0, 12, 102), 15.0));
 
     DataBestKey k0(memdb.values, v0);
     DataBestKey km(memdb.values, vm);

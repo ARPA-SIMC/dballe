@@ -229,8 +229,6 @@ public:
     /// Count the number of rows modified by the last query that was run
     //int changes();
 
-    void add_datetime(Querybuf& qb, const int* dt) const override;
-
 #if 0
     /// Wrap sqlite3_exec, without a callback
     void wrap_sqlite3_exec(const std::string& query);

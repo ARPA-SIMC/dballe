@@ -1,7 +1,7 @@
 /*
  * dballe/matcher - Local query match infrastructure
  *
- * Copyright (C) 2009--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2009--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,9 +20,10 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/core/matcher.h>
-#include <dballe/core/defs.h>
-#include <dballe/core/record.h>
+#include "dballe/core/matcher.h"
+#include "dballe/core/defs.h"
+#include "dballe/core/record.h"
+#include "dballe/core/query.h"
 #include <cmath>
 
 using namespace std;
@@ -42,11 +43,11 @@ matcher::Result Matched::match_station_wmo(int, int) const
 {
     return matcher::MATCH_NA;
 }
-matcher::Result Matched::match_date(const int*, const int*) const
+matcher::Result Matched::match_date(const Datetime&, const Datetime&) const
 {
     return matcher::MATCH_NA;
 }
-matcher::Result Matched::match_coords(int, int, int, int) const
+matcher::Result Matched::match_coords(const Coords& cmin, const Coords& cmax) const
 {
     return matcher::MATCH_NA;
 }
@@ -186,16 +187,12 @@ struct WMOMatcher : public Matcher
 
 struct DateMatcher : public Matcher
 {
-    int datemin[6];
-    int datemax[6];
+    Datetime dtmin;
+    Datetime dtmax;
 
-    DateMatcher(const int minvalues[6], const int maxvalues[6])
+    DateMatcher(const Datetime& dtmin, const Datetime& dtmax)
+        : dtmin(dtmin), dtmax(dtmax)
     {
-        for (int i = 0; i < 6; ++i)
-        {
-            datemin[i] = minvalues[i];
-            datemax[i] = maxvalues[i];
-        }
     }
 
     /// Return true if v1 == v2
@@ -209,59 +206,43 @@ struct DateMatcher : public Matcher
 
     virtual Result match(const Matched& v) const
     {
-        return v.match_date(datemin, datemax) == MATCH_YES ? MATCH_YES : MATCH_NO;
+        return v.match_date(dtmin, dtmax) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
 
     virtual void to_record(Record& query) const
     {
-        if (datemin[0] != MISSING_INT && datemax[0] != MISSING_INT && eq(datemin, datemax))
+        if (dtmin == dtmax)
         {
-            query.set(DBA_KEY_YEAR, datemin[0]);
-            query.set(DBA_KEY_MONTH, datemin[1]);
-            query.set(DBA_KEY_DAY, datemin[2]);
-            query.set(DBA_KEY_HOUR, datemin[3]);
-            query.set(DBA_KEY_MIN, datemin[4]);
-            query.set(DBA_KEY_SEC, datemin[5]);
+            if (!dtmin.is_missing())
+                query.set(dtmin);
         } else {
-            if (datemin[0] != MISSING_INT) {
-                query.set(DBA_KEY_YEARMIN, datemin[0]);
-                query.set(DBA_KEY_MONTHMIN, datemin[1]);
-                query.set(DBA_KEY_DAYMIN, datemin[2]);
-                query.set(DBA_KEY_HOURMIN, datemin[3]);
-                query.set(DBA_KEY_MINUMIN, datemin[4]);
-                query.set(DBA_KEY_SECMIN, datemin[5]);
-            }
-            if (datemax[0] != MISSING_INT) {
-                query.set(DBA_KEY_YEARMAX, datemax[0]);
-                query.set(DBA_KEY_MONTHMAX, datemax[1]);
-                query.set(DBA_KEY_DAYMAX, datemax[2]);
-                query.set(DBA_KEY_HOURMAX, datemax[3]);
-                query.set(DBA_KEY_MINUMAX, datemax[4]);
-                query.set(DBA_KEY_SECMAX, datemax[5]);
-            }
+            if (!dtmin.is_missing())
+                query.setmin(dtmin);
+            if (!dtmax.is_missing())
+                query.setmax(dtmax);
         }
     }
 };
 
 struct CoordMatcher : public Matcher
 {
-    int latmin, latmax;
-    int lonmin, lonmax;
+    Coords cmin;
+    Coords cmax;
 
-    CoordMatcher(int latmin, int latmax, int lonmin, int lonmax)
-        : latmin(latmin), latmax(latmax), lonmin(lonmin), lonmax(lonmax) {}
+    CoordMatcher(const Coords& cmin, const Coords& cmax)
+        : cmin(cmin), cmax(cmax) {}
 
     virtual Result match(const Matched& v) const
     {
-        return v.match_coords(latmin, latmax, lonmin, lonmax) == MATCH_YES ? MATCH_YES : MATCH_NO;
+        return v.match_coords(cmin, cmax) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
 
     virtual void to_record(Record& query) const
     {
-        if (latmin != MISSING_INT) query.set(DBA_KEY_LATMIN, latmin);
-        if (latmax != MISSING_INT) query.set(DBA_KEY_LATMAX, latmax);
-        if (lonmin != MISSING_INT) query.set(DBA_KEY_LONMIN, lonmin);
-        if (lonmax != MISSING_INT) query.set(DBA_KEY_LONMAX, lonmax);
+        if (cmin.lat != MISSING_INT) query.set(DBA_KEY_LATMIN, cmin.lat);
+        if (cmax.lat != MISSING_INT) query.set(DBA_KEY_LATMAX, cmax.lat);
+        if (cmin.lon != MISSING_INT) query.set(DBA_KEY_LONMIN, cmin.lon);
+        if (cmax.lon != MISSING_INT) query.set(DBA_KEY_LONMAX, cmax.lon);
     }
 };
 
@@ -330,37 +311,37 @@ static bool parse_lat_extremes(const Record& query, int* rlatmin, int* rlatmax, 
     return true;
 }
 
-std::unique_ptr<Matcher> Matcher::create(const Record& query)
+std::unique_ptr<Matcher> Matcher::create(const Query& query)
 {
     using namespace matcher;
 
     std::unique_ptr<And> res(new And);
 
-    if (const Var* var = query.var_peek(WR_VAR(0, 33, 195)))
-        res->exprs.push_back(new VarIDMatcher(var->enqi()));
+    if (query.data_id != MISSING_INT)
+        res->exprs.push_back(new VarIDMatcher(query.data_id));
 
-    if (const Var* var = query.key_peek(DBA_KEY_ANA_ID))
-        res->exprs.push_back(new AnaIDMatcher(var->enqi()));
+    if (query.ana_id != MISSING_INT)
+        res->exprs.push_back(new AnaIDMatcher(query.ana_id));
 
-    if (const Var* block = query.var_peek(WR_VAR(0, 1, 1)))
+    if (query.block != MISSING_INT)
     {
-        if (const Var* station = query.var_peek(WR_VAR(0, 1, 2)))
-            res->exprs.push_back(new WMOMatcher(block->enqi(), station->enqi()));
+        if (query.station != MISSING_INT)
+            res->exprs.push_back(new WMOMatcher(query.block, query.station));
         else
-            res->exprs.push_back(new WMOMatcher(block->enqi()));
+            res->exprs.push_back(new WMOMatcher(query.block));
     }
 
-    int minvalues[6], maxvalues[6];
-    query.parse_date_extremes(minvalues, maxvalues);
-    if (minvalues[0] != MISSING_INT || maxvalues[0] != MISSING_INT)
-        res->exprs.push_back(new DateMatcher(minvalues, maxvalues));
+    Datetime dtmin = query.datetime_min.lower_bound();
+    Datetime dtmax = query.datetime_max.upper_bound();
+    if (!dtmin.is_missing() || !dtmax.is_missing())
+        res->exprs.push_back(new DateMatcher(dtmin, dtmax));
 
-    int latmin = 0, latmax = 0, lonmin = 0, lonmax = 0;
-    if (parse_lat_extremes(query, &latmin, &latmax, &lonmin, &lonmax))
-        res->exprs.push_back(new CoordMatcher(latmin, latmax, lonmin, lonmax));
+    if (query.coords_min.lat != MISSING_INT || query.coords_min.lon != MISSING_INT
+     || query.coords_max.lat != MISSING_INT || query.coords_max.lon != MISSING_INT)
+        res->exprs.push_back(new CoordMatcher(query.coords_min, query.coords_max));
 
-    if (const char* rete = query.key_peek_value(DBA_KEY_REP_MEMO))
-        res->exprs.push_back(new ReteMatcher(rete));
+    if (!query.rep_memo.empty())
+        res->exprs.push_back(new ReteMatcher(query.rep_memo));
 
     return unique_ptr<Matcher>(res.release());
 }

@@ -2,7 +2,7 @@
  * memdb/value - In memory representation of a variable with metadata and
  *               attributes
  *
- * Copyright (C) 2013--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
  *
  * Author: Enrico Zini <enrico@enricozini.com>
  */
-
 #ifndef DBA_MEMDB_VALUE_H
 #define DBA_MEMDB_VALUE_H
 
@@ -33,6 +32,7 @@
 
 namespace dballe {
 struct Record;
+struct Query;
 
 namespace memdb {
 template<typename T> struct Results;
@@ -85,7 +85,7 @@ public:
     void erase(size_t idx);
 
     /// Query values returning the IDs
-    void query(const Record& rec, Results<Station>& stations, Results<LevTr>& levtrs, Results<Value>& res) const;
+    void query(const Query& q, Results<Station>& stations, Results<LevTr>& levtrs, Results<Value>& res) const;
 
     void dump(FILE* out) const;
 };

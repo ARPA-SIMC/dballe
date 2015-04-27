@@ -19,6 +19,7 @@
 
 #include "cmdline.h"
 #include <dballe/core/record.h>
+#include <dballe/core/query.h>
 #include "dballe/core/vasprintf.h"
 #include <dballe/msg/wr_codec.h>
 #include <dballe/core/verbose.h>
@@ -528,7 +529,7 @@ int Command::main(int argc, const char* argv[])
     return 1;
 }
 
-unsigned dba_cmdline_get_query(poptContext optCon, Record& query)
+unsigned dba_cmdline_get_query(poptContext optCon, Query& query)
 {
     unsigned res;
     const char* queryparm;

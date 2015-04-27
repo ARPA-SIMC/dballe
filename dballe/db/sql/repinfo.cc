@@ -26,6 +26,7 @@
 #include "dballe/db/sqlite/internals.h"
 //#include "dballe/db/sqlite/repinfo.h"
 #include "dballe/core/record.h"
+#include "dballe/core/query.h"
 #include "dballe/core/csv.h"
 #include <wreport/error.h>
 #include <algorithm>
@@ -125,19 +126,14 @@ int Repinfo::obtain_id(const char* memo)
     return memo_idx[pos].id;
 }
 
-std::vector<int> Repinfo::ids_by_prio(const Record& rec)
+std::vector<int> Repinfo::ids_by_prio(const Query& q)
 {
-    int prio = rec.get(DBA_KEY_PRIORITY, MISSING_INT);
-    int priomin = rec.get(DBA_KEY_PRIOMIN, MISSING_INT);
-    int priomax = rec.get(DBA_KEY_PRIOMAX, MISSING_INT);
-
     vector<int> res;
     for (std::vector<repinfo::Cache>::const_iterator i = cache.begin();
             i != cache.end(); ++i)
     {
-        if (prio != MISSING_INT && i->prio != prio) continue;
-        if (priomin != MISSING_INT && i->prio < priomin) continue;
-        if (priomax != MISSING_INT && i->prio > priomax) continue;
+        if (q.prio_min != MISSING_INT && i->prio < q.prio_min) continue;
+        if (q.prio_max != MISSING_INT && i->prio > q.prio_max) continue;
         res.push_back(i->id);
     }
 

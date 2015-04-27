@@ -58,82 +58,21 @@ summary::Support Summary::supports(const Query& query) const
 {
     using namespace summary;
 
-    // If query removed or changed a filter, then it can select more data than this summary knows about
-    bool has_removed_or_changed = !this->query.iter_keys([&](dba_keyword key, const wreport::Var& val) {
-        // Ignore changes in datetime and data-related filters
-        if ((key >= DBA_KEY_YEAR && key <= DBA_KEY_SECMIN)
-            || (key >= DBA_KEY_ANA_FILTER || key <= DBA_KEY_ATTR_FILTER)
-            || key == DBA_KEY_QUERY)
-            return true;
-        // Check for deletions
-        const char* new_val = query.key_peek_value(key);
-        if (!new_val) return false;
-        // If anything else has changed, report it
-        if (strcmp(val.value(), new_val) != 0)
-            return false;
-        return true;
-    });
-    if (has_removed_or_changed)
+    // If query is not just a restricted version of our query, then it can
+    // select more data than this summary knows about.
+    if (!query.is_subquery(this->query))
         return Support::UNSUPPORTED;
-/*
-    // If query added a filter, then we can only give an approximate match
-    bool has_added = !query.iter_keys([&](dba_keyword key, const wreport::Var& val) {
-        qDebug() << "supports() HA" << key;
-        return this->query.contains(key);
-    });
-    qDebug() << "supports() has_added" << has_added;
-    */
 
     // Now we know that query has either more fields than this->query or changes
     // in datetime or data-related filters
     Support res = Support::EXACT;
 
-    // Check differences in the value/attr based query filters
-    for (const auto& k: { DBA_KEY_ANA_FILTER, DBA_KEY_DATA_FILTER, DBA_KEY_ATTR_FILTER })
-    {
-        // If query has introduced a filter, then this filter can only give approximate results
-        const char* our_filter = this->query.key_peek_value(k);
-        const char* new_filter = query.key_peek_value(k);
-
-        if (our_filter)
-        {
-            if (new_filter)
-            {
-                // If they are different, query can return more values than we know of
-                if (strcmp(our_filter, new_filter) != 0)
-                    return Support::UNSUPPORTED;
-                // If they are the same, then nothing has changed
-            } else {
-                // Filter has been removed
-                // (this is caught in the diff above, but I repeat the branch here
-                // to avoid leaving loose ends in the code)
-                return Support::UNSUPPORTED;
-            }
-        } else {
-            if (new_filter)
-            {
-                // If the query introduced a new filter, then we can only return approximate results
-                res = Support::OVERESTIMATED;
-            } else {
-                ; // Nothing to do: both queries do not contain this filter
-            }
-        }
-    }
-
-    Datetime new_min;
-    Datetime new_max;
-    query.parse_date_extremes(new_min, new_max);
-
-    Datetime our_min;
-    Datetime our_max;
-    this->query.parse_date_extremes(our_min, our_max);
-
-    // datetime extremes should be the same, or query should have more restrictive extremes
-    if (Datetime::range_equals(our_min, our_max, new_min, new_max))
-    {
-        ; // No change in datetime, good
-    }
-    else if (Datetime::range_contains(our_min, our_max, new_min, new_max))
+    // Check if the query has more restrictive datetime extremes
+    Datetime new_min = query.datetime_min.lower_bound();
+    Datetime new_max = query.datetime_max.upper_bound();
+    Datetime our_min = this->query.datetime_min.lower_bound();
+    Datetime our_max = this->query.datetime_max.upper_bound();
+    if (new_min != our_min || new_max != our_max)
     {
         if (count == MISSING_INT)
         {
@@ -141,7 +80,7 @@ summary::Support Summary::supports(const Query& query) const
             // this point say anything better than "this summary may
             // overestimate the query"
             res = Support::OVERESTIMATED;
-        } else if (res == Support::EXACT) {
+        } else {
             // The query introduced further restrictions, check with the actual entries what we can do
             for (const auto& e: summary)
             {
@@ -159,10 +98,6 @@ summary::Support Summary::supports(const Query& query) const
                 }
             }
         }
-    }
-    else
-    {
-        return Support::UNSUPPORTED;
     }
 
     return res;

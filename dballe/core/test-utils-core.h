@@ -22,6 +22,7 @@
 #include <wreport/tests.h>
 
 #include <dballe/core/record.h>
+#include <dballe/core/query.h>
 #include <dballe/core/rawmsg.h>
 #include <dballe/core/file.h>
 
@@ -276,6 +277,8 @@ struct ActualRecord : public wibble::tests::Actual<const dballe::Record&>
 // Set a record from a ", "-separated string of assignments
 void set_record_from_string(Record& rec, const std::string& s);
 Record record_from_string(const std::string& s);
+void set_query_from_string(Query& q, const std::string& s);
+Query query_from_string(const std::string& s);
 
 }
 }

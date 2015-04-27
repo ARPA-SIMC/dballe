@@ -198,7 +198,7 @@ std::vector<Test> tests {
         {
             case MEM:
                 if (auto d = dynamic_cast<mem::DB*>(f.db))
-                    d->memdb.stations.obtain_fixed(Coord(11.0, 45.0), "synop");
+                    d->memdb.stations.obtain_fixed(Coords(11.0, 45.0), "synop");
                 break;
             case V5:
                 if (auto d = dynamic_cast<v5::DB*>(f.db))
@@ -217,8 +217,7 @@ std::vector<Test> tests {
         // preserve the bug until the software that relies on it has been
         // migrated to use standard DB-All.e features.
         Query query;
-        query.set("lat", 11.0);
-        query.set("lon", 45.0);
+        query.coords_min = query.coords_max = Coords(11.0, 45.0);
         auto cur = db.query_stations(query);
 #warning TODO: fix this test to give an error once we do not need to support this bug anymore
         //wassert(actual(cur->remaining()) == 0);

@@ -32,29 +32,29 @@ using namespace std;
 
 namespace {
 
-static inline Record query_exact(const Datetime& dt)
+static inline Query query_exact(const Datetime& dt)
 {
-    Record query;
-    query.set(dt);
+    Query query;
+    query.datetime_min = query.datetime_max = dt;
     return query;
 }
-static inline Record query_min(const Datetime& dt)
+static inline Query query_min(const Datetime& dt)
 {
-    Record query;
-    query.setmin(dt);
+    Query query;
+    query.datetime_min = dt;
     return query;
 }
-static inline Record query_max(const Datetime& dt)
+static inline Query query_max(const Datetime& dt)
 {
-    Record query;
-    query.setmax(dt);
+    Query query;
+    query.datetime_max = dt;
     return query;
 }
-static inline Record query_minmax(const Datetime& min, const Datetime& max)
+static inline Query query_minmax(const Datetime& min, const Datetime& max)
 {
-    Record query;
-    query.setmin(min);
-    query.setmax(max);
+    Query query;
+    query.datetime_min = min;
+    query.datetime_max = max;
     return query;
 }
 
@@ -118,8 +118,8 @@ std::vector<Test> tests {
     Test("ana_context", [](Fixture& f) {
         wruntest(f.populate<OldDballeTestFixture>);
         // Query data in station context
-        Record query;
-        query.set_ana_context();
+        Query query;
+        query.query_station_vars = true;
         unique_ptr<db::Cursor> cur = f.db->query_data(query);
         ensure_equals(cur->remaining(), 5);
     }),
@@ -219,8 +219,12 @@ std::vector<Test> tests {
         TRY_QUERY("lonmin=77., lonmax=76.54330", 4);
         TRY_QUERY("lonmin=77., lonmax=76.54320", 4);
         TRY_QUERY("lonmin=77., lonmax=-10", 0);
-        TRY_QUERY("lonmin=0., lonmax=360.", 4);
-        TRY_QUERY("lonmin=-180., lonmax=180.", 4);
+        // Since Query has been introduced, longitude values are normalized so
+        // 360 is the same as 0, and -180 is the same as 180
+        //TRY_QUERY("lonmin=0., lonmax=360.", 4);
+        TRY_QUERY("lonmin=0., lonmax=360.", 0);
+        //TRY_QUERY("lonmin=-180., lonmax=180.", 4);
+        TRY_QUERY("lonmin=-180., lonmax=180.", 0);
     }),
     Test("mobile", [](Fixture& f) {
         wruntest(f.populate<OldDballeTestFixture>);
@@ -289,8 +293,8 @@ std::vector<Test> tests {
         wruntest(f.populate<OldDballeTestFixture>);
         // get a valid data id
         Query q;
-        q.set("var", "B01011");
-        Query res;
+        q.varcodes.insert(WR_VAR(0, 1, 11));
+        Record res;
         auto cur = f.db->query_data(q);
         while (cur->next())
             cur->to_record(res);

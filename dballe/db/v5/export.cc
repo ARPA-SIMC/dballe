@@ -1,7 +1,7 @@
 /*
  * db/export - Export Msg data from the database
  *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,11 +22,10 @@
 #include "db.h"
 #include "cursor.h"
 #include "dballe/db/odbc/internals.h"
-#include "dballe/db/modifiers.h"
 #include "dballe/db/sql/station.h"
 #include "dballe/db/sql/attrv5.h"
-
-#include <dballe/msg/msg.h>
+#include "dballe/msg/msg.h"
+#include "dballe/core/query.h"
 
 #include <memory>
 #include <cstring>
@@ -56,7 +55,7 @@ static inline int sqltimecmp(const SQL_TIMESTAMP_STRUCT* a, const SQL_TIMESTAMP_
 	return memcmp(a, b, sizeof(SQL_TIMESTAMP_STRUCT));
 }
 
-void DB::export_msgs(const Record& rec, MsgConsumer& consumer)
+void DB::export_msgs(const Query& rec, MsgConsumer& consumer)
 {
     sql::AttrV5& at = attr();
 

@@ -22,7 +22,7 @@
 #ifndef DBALLE_DB_SUMMARY_H
 #define DBALLE_DB_SUMMARY_H
 
-#include <dballe/core/record.h>
+#include <dballe/core/query.h>
 #include <dballe/db/db.h>
 #include <vector>
 #include <set>

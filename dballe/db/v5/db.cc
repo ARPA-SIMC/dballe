@@ -1,7 +1,7 @@
 /*
- * dballe/db - Archive for point-based meteorological data
+ * dballe/v5/db - Archive for point-based meteorological data
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@
 
 #include "db.h"
 #include "config.h"
-#include "dballe/db/modifiers.h"
 #include "dballe/db/sql/driver.h"
 #include "dballe/db/sql/repinfo.h"
 #include "dballe/db/sql/station.h"
@@ -32,9 +31,9 @@
 #include "dballe/db/odbc/internals.h"
 #endif
 #include "cursor.h"
-
-#include <dballe/core/record.h>
-#include <dballe/core/defs.h>
+#include "dballe/core/record.h"
+#include "dballe/core/query.h"
+#include "dballe/core/defs.h"
 
 #include <cstring>
 #include <cstdlib>
@@ -310,7 +309,7 @@ std::map<std::string, int> DB::get_repinfo_priorities()
     return repinfo().get_priorities();
 }
 
-int DB::get_rep_cod(const Query& rec)
+int DB::get_rep_cod(const Record& rec)
 {
     sql::Repinfo& ri = repinfo();
     if (const char* memo = rec.key_peek_value(DBA_KEY_REP_MEMO))
@@ -379,7 +378,7 @@ static inline int normalon(int lon)
     return ((lon + 18000000) % 36000000) - 18000000;
 }
 
-int DB::obtain_station(const Query& rec, bool can_add)
+int DB::obtain_station(const Record& rec, bool can_add)
 {
     // Look if the record already knows the ID
     if (const char* val = rec.key_peek_value(DBA_KEY_ANA_ID))
@@ -409,7 +408,7 @@ int DB::obtain_station(const Query& rec, bool can_add)
         return s.get_id(lat, lon, ident);
 }
 
-int DB::obtain_context(const Query& rec)
+int DB::obtain_context(const Record& rec)
 {
     // Look if the record already knows the ID
     if (const char* val = rec.key_peek_value(DBA_KEY_CONTEXT_ID))
@@ -462,7 +461,7 @@ int DB::obtain_context(const Query& rec)
     return id;
 }
 
-void DB::insert(const Query& rec, bool can_replace, bool station_can_add)
+void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
 {
     sql::DataV5& d = data();
 
@@ -503,7 +502,7 @@ int DB::last_station_id() const
     return _last_station_id;
 }
 
-void DB::remove(const Query& rec)
+void DB::remove(const Query& query)
 {
     ODBCConnection* c = dynamic_cast<ODBCConnection*>(conn);
     if (!c) throw error_unimplemented("v5 remove only works on ODBC connectors");
@@ -522,7 +521,7 @@ void DB::remove(const Query& rec)
     stma->bind_in(2, cur.out_varcode);
 
     // Get the list of data to delete
-    cur.query(rec,
+    cur.query(query,
             DBA_DB_WANT_CONTEXT_ID | DBA_DB_WANT_VAR_NAME,
             DBA_DB_MODIFIER_UNSORTED | DBA_DB_MODIFIER_STREAM);
 

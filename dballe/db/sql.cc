@@ -40,6 +40,13 @@ namespace db {
 
 Connection::~Connection() {}
 
+void Connection::add_datetime(Querybuf& qb, const Datetime& dt) const
+{
+    qb.appendf("'%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu'",
+            dt.date.year, dt.date.month, dt.date.day,
+            dt.time.hour, dt.time.minute, dt.time.second);
+}
+
 std::unique_ptr<Connection> Connection::create_from_url(const std::string& url)
 {
     return create_from_url(url.c_str());

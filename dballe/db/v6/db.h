@@ -217,7 +217,7 @@ public:
      * @returns
      *   The station ID
      */
-    int obtain_station(const Query& rec, bool can_add=true);
+    int obtain_station(const Record& rec, bool can_add=true);
 
     /*
      * Lookup, insert or replace data in station taking the values from
@@ -230,7 +230,7 @@ public:
      * @returns
      *   The lev_tr ID
      */
-    int obtain_lev_tr(const Query& rec);
+    int obtain_lev_tr(const Record& rec);
 
     /**
      * Insert a record into the database
@@ -246,7 +246,7 @@ public:
      *   If true, then it is allowed to add new station records to the database.
      *   Otherwise, data can be added only by reusing existing ones.
      */
-    void insert(const Query& rec, bool can_replace, bool station_can_add);
+    void insert(const Record& rec, bool can_replace, bool station_can_add);
 
     int last_station_id() const;
 

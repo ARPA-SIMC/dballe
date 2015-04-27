@@ -453,8 +453,6 @@ public:
     /// Count the number of rows modified by the last query that was run
     int changes();
 
-    void add_datetime(Querybuf& qb, const int* dt) const override;
-
     /// Wrap PQexec
     void pqexec(const std::string& query);
     /**

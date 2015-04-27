@@ -114,6 +114,21 @@ void Querybuf::append_varlist(const std::string& varlist)
     }
 }
 
+void Querybuf::append_varlist(const std::set<wreport::Varcode>& varlist)
+{
+    bool first = true;
+    for (const auto& v : varlist)
+    {
+        if (first)
+        {
+            appendf("%d", (int)v);
+            first = false;
+        }
+        else
+            appendf(",%d", (int)v);
+    }
+}
+
 }
 
 /* vim:set ts=4 sw=4: */

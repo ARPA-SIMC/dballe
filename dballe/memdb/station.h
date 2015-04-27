@@ -1,7 +1,7 @@
 /*
  * memdb/station - In memory representation of stations
  *
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@
 
 namespace dballe {
 struct Record;
+struct Query;
 struct Msg;
 
 namespace msg {
@@ -43,19 +44,19 @@ template<typename T> struct Results;
 struct Station
 {
     size_t id;
-    Coord coords;
+    Coords coords;
     bool mobile;
     std::string ident;
     std::string report;
 
     // Fixed station
-    Station(size_t id, const Coord& coords, const std::string& report)
+    Station(size_t id, const Coords& coords, const std::string& report)
         : id(id), coords(coords), mobile(false), report(report) {}
     Station(size_t id, double lat, double lon, const std::string& report)
         : id(id), coords(lat, lon), mobile(false), report(report) {}
 
     // Mobile station
-    Station(size_t id, const Coord& coords, const std::string& ident, const std::string& report)
+    Station(size_t id, const Coords& coords, const std::string& ident, const std::string& report)
         : id(id), coords(coords), mobile(true), ident(ident), report(report) {}
     Station(size_t id, double lat, double lon, const std::string& ident, const std::string& report)
         : id(id), coords(lat, lon), mobile(true), ident(ident), report(report) {}
@@ -87,16 +88,16 @@ public:
     void clear();
 
     /// Get a fixed Station record
-    size_t obtain_fixed(const Coord& coords, const std::string& report, bool create=true);
+    size_t obtain_fixed(const Coords& coords, const std::string& report, bool create=true);
 
     /// Get a mobile Station record
-    size_t obtain_mobile(const Coord& coords, const std::string& ident, const std::string& report, bool create=true);
+    size_t obtain_mobile(const Coords& coords, const std::string& ident, const std::string& report, bool create=true);
 
     /// Get a fixed or mobile Station record depending on the data in rec
     size_t obtain(const Record& rec, bool create=true);
 
     /// Query stations returning the IDs
-    void query(const Record& rec, Results<Station>& res) const;
+    void query(const Query& q, Results<Station>& res) const;
 
     void dump(FILE* out) const;
 };

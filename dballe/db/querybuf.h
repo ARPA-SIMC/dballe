@@ -27,7 +27,9 @@
  * Implementation of an efficient string buffer for composing database queries
  */
 
+#include <wreport/varinfo.h>
 #include <string>
+#include <set>
 
 namespace dballe {
 
@@ -89,10 +91,13 @@ struct Querybuf : public std::string
 	void append_listf(const char* fmt, ...) __attribute__((format(printf, 2, 3)));
 
     /**
-     * Append a comma-separated list of varcodes parsed from a varlist=B12101,B12013
-     * query parameter
+     * Append a comma-separated list of integer varcodes parsed from a
+     * varlist=B12101,B12013 query parameter
      */
     void append_varlist(const std::string& varlist);
+
+    /// Append a comma-separated list of integer varcodes
+    void append_varlist(const std::set<wreport::Varcode>& varlist);
 };
 
 } // namespace dballe

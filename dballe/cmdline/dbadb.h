@@ -21,7 +21,7 @@
 #define DBALLE_CMDLINE_DBADB_H
 
 #include <dballe/core/file.h>
-#include <dballe/core/record.h>
+#include <dballe/core/query.h>
 #include <dballe/cmdline/processor.h>
 #include <list>
 #include <cstdio>
@@ -60,13 +60,13 @@ public:
     Dbadb(DB& db) : db(db) {}
 
     /// Query data in the database and output results as arbitrary human readable text
-    int do_dump(const Record& query, FILE* out);
+    int do_dump(const Query& query, FILE* out);
 
     /// Query stations in the database and output results as arbitrary human readable text
-    int do_stations(const Record& query, FILE* out);
+    int do_stations(const Query& query, FILE* out);
 
     /// Export messages and dump their contents to the given file descriptor
-    int do_export_dump(const Record& query, FILE* out);
+    int do_export_dump(const Query& query, FILE* out);
 
     /// Import the given files
     int do_import(const std::list<std::string>& fnames, Reader& reader, int import_flags=0, const char* forced_repmemo=NULL);
@@ -75,7 +75,7 @@ public:
     int do_import(const std::string& fname, Reader& reader, int import_flags=0, const char* forced_repmemo=NULL);
 
     /// Export messages writing them to the givne file
-    int do_export(const Record& query, File& file, const char* output_template=NULL, const char* forced_repmemo=NULL);
+    int do_export(const Query& query, File& file, const char* output_template=NULL, const char* forced_repmemo=NULL);
 };
 
 

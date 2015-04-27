@@ -25,6 +25,7 @@
 #include <dballe/msg/context.h>
 #include <dballe/msg/aof_codec.h>
 #include <dballe/core/record.h>
+#include <dballe/core/query.h>
 #include <dballe/core/file.h>
 #include <dballe/core/aoffile.h>
 #include <dballe/core/matcher.h>
@@ -601,7 +602,7 @@ struct Scan : public cmdline::Subcommand
         /* Throw away the command name */
         poptGetArg(optCon);
 
-        Record query;
+        Query query;
         if (dba_cmdline_get_query(optCon, query) > 0)
             reader.filter.matcher_from_record(query);
         Summarise s;
@@ -635,7 +636,7 @@ struct HeadCmd : public cmdline::Subcommand
         /* Throw away the command name */
         poptGetArg(optCon);
 
-        Record query;
+        Query query;
         if (dba_cmdline_get_query(optCon, query) > 0)
             reader.filter.matcher_from_record(query);
 
@@ -702,7 +703,7 @@ struct Dump : public cmdline::Subcommand
         poptGetArg(optCon);
         if (op_precise_import) reader.import_opts.simplified = false;
 
-        Record query;
+        Query query;
         if (dba_cmdline_get_query(optCon, query) > 0)
             reader.filter.matcher_from_record(query);
 
@@ -736,7 +737,7 @@ struct Cat : public cmdline::Subcommand
         /* Throw away the command name */
         poptGetArg(optCon);
 
-        Record query;
+        Query query;
         if (dba_cmdline_get_query(optCon, query) > 0)
             reader.filter.matcher_from_record(query);
 
@@ -940,7 +941,7 @@ struct Convert : public cmdline::Subcommand
             return 0;
         }
 
-        Record query;
+        Query query;
         if (dba_cmdline_get_query(optCon, query) > 0)
             reader.filter.matcher_from_record(query);
 

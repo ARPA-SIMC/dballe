@@ -1,5 +1,5 @@
 /*
- * db/cursor - manage select queries
+ * db/v5/cursor - manage select queries
  *
  * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -22,15 +22,15 @@
 #include "cursor.h"
 #include "db.h"
 #include "dballe/db/odbc/internals.h"
-#include "dballe/db/modifiers.h"
 #include "dballe/db/sql/repinfo.h"
 #include "dballe/db/sql/station.h"
 
 #include <wreport/var.h>
-#include <dballe/core/defs.h>
-#include <dballe/core/aliases.h>
-#include <dballe/core/record.h>
-#include <dballe/db/querybuf.h>
+#include "dballe/core/defs.h"
+#include "dballe/core/aliases.h"
+#include "dballe/core/record.h"
+#include "dballe/core/query.h"
+#include "dballe/db/querybuf.h"
 
 #include <sql.h>
 #include <cstring>
@@ -144,7 +144,7 @@ struct QueryBuilder
           accept_from_ana_context(false), has_orderby(false) {}
 
     /// Initialise query modifiers from the 'query' parameter in \a rec
-    void init_modifiers(const Record& rec);
+    void init_modifiers(const Query& rec);
 
     /**
      * Add one or more fields to the ORDER BY part of sql_query.
@@ -170,22 +170,22 @@ struct QueryBuilder
     void make_from();
 
     /// Add an int field to the WHERE part of the query, binding it as an input parameter
-    void add_int(const Record& rec, int& in, dba_keyword key, const char* sql, int needed_from);
+    void add_int(int val, int& in, const char* sql, int needed_from);
 
     /// Build the WHERE part of the query, and bind the input parameters
-    void make_where(const Record& rec);
+    void make_where(const Query& rec);
 
     /// Add repinfo-related WHERE clauses on column \a colname to \a buf from \a query
-    void add_repinfo_where(Querybuf& buf, const Record& query, const char* colname);
+    void add_repinfo_where(Querybuf& buf, const Query& query, const char* colname);
 
     /// Build the big data query
-    void build_query(const Record& rec);
+    void build_query(const Query& rec);
 
     /// Build the query with just SELECT COUNT(*)
-    void build_count_query(const Record& rec);
+    void build_count_query(const Query& rec);
 
     /// Build the query with just a select for date extremes
-    void build_date_extremes_query(const Record& rec);
+    void build_date_extremes_query(const Query& rec);
 };
 
 } // anonymous namespace
@@ -217,7 +217,7 @@ int Cursor::attr_reference_id() const
     return out_context_id;
 }
 
-int Cursor::query(const Record& rec, unsigned int qwanted, unsigned int qmodifiers)
+int Cursor::query(const Query& rec, unsigned int qwanted, unsigned int qmodifiers)
 {
     if (db.conn->server_type == ServerType::ORACLE && !(qmodifiers & DBA_DB_MODIFIER_STREAM))
     {
@@ -269,7 +269,7 @@ int Cursor::query(const Record& rec, unsigned int qwanted, unsigned int qmodifie
     return count;
 }
 
-void Cursor::query_datetime_extremes(const Record& query, Record& result)
+void Cursor::query_datetime_extremes(const Query& query, Record& result)
 {
     reset();
 
@@ -338,7 +338,7 @@ void Cursor::query_datetime_extremes(const Record& query, Record& result)
     stm->close_cursor();
 }
 
-int Cursor::getcount(const Record& rec, unsigned int qwanted, unsigned int qmodifiers)
+int Cursor::getcount(const Query& rec, unsigned int qwanted, unsigned int qmodifiers)
 {
     /* Reset the cursor to start a new query */
     reset();
@@ -570,13 +570,9 @@ void Cursor::add_station_info(Record& rec)
     db.station().add_station_vars(out_ana_id, rec);
 }
 
-void QueryBuilder::build_query(const Record& rec)
+void QueryBuilder::build_query(const Query& q)
 {
-    int limit = -1;
-    if (const Var* var = rec.key_peek(DBA_KEY_LIMIT))
-        limit = var->enqi();
-
-    if (limit != -1 && db.conn->server_type == ServerType::ORACLE && (modifiers & DBA_DB_MODIFIER_BEST))
+    if (q.limit != MISSING_INT && db.conn->server_type == ServerType::ORACLE && (modifiers & DBA_DB_MODIFIER_BEST))
         throw error_unimplemented("best-value queries with result limit are not implemented for Oracle");
 
     sql_query.append("SELECT ");
@@ -586,7 +582,7 @@ void QueryBuilder::build_query(const Record& rec)
         sql_query.append("straight_join ");
 
     /* Prepare WHERE part and see what needs to be available in the FROM part */
-    make_where(rec);
+    make_where(q);
 
     /* Prepare SELECT Part and see what needs to be available in the FROM part.
      * We do this after creating the WHERE part, so that we can add
@@ -609,7 +605,7 @@ void QueryBuilder::build_query(const Record& rec)
     /* Append ORDER BY as needed */
     if (!(modifiers & DBA_DB_MODIFIER_UNSORTED))
     {
-        if (limit != -1 && db.conn->server_type == ServerType::ORACLE)
+        if (q.limit != MISSING_INT && db.conn->server_type == ServerType::ORACLE)
             throw error_unimplemented("sorted queries with result limit are not implemented for Oracle");
 
         if (modifiers & DBA_DB_MODIFIER_BEST) {
@@ -641,18 +637,18 @@ void QueryBuilder::build_query(const Record& rec)
     }
 
     /* Append LIMIT if requested */
-    if (limit != -1)
+    if (q.limit != MISSING_INT)
     {
         if (db.conn->server_type == ServerType::ORACLE)
         {
-            sql_query.appendf(" AND rownum <= %d", limit);
+            sql_query.appendf(" AND rownum <= %d", q.limit);
         } else {
-            sql_query.appendf(" LIMIT %d", limit);
+            sql_query.appendf(" LIMIT %d", q.limit);
         }
     }
 }
 
-void QueryBuilder::build_count_query(const Record& rec)
+void QueryBuilder::build_count_query(const Query& rec)
 {
     init_modifiers(rec);
 
@@ -683,7 +679,7 @@ void QueryBuilder::build_count_query(const Record& rec)
     }
 }
 
-void QueryBuilder::build_date_extremes_query(const Record& rec)
+void QueryBuilder::build_date_extremes_query(const Query& rec)
 {
     init_modifiers(rec);
 
@@ -732,9 +728,9 @@ void QueryBuilder::make_from()
     }
 }
 
-void QueryBuilder::init_modifiers(const Record& rec)
+void QueryBuilder::init_modifiers(const Query& q)
 {
-    modifiers |= parse_modifiers(rec);
+    modifiers |= q.get_modifiers();
 }
 
 void QueryBuilder::add_to_orderby(const char* fields)
@@ -987,11 +983,10 @@ void QueryBuilder::make_select()
     }
 }
 
-void QueryBuilder::add_int(const Record& rec, int& in, dba_keyword key, const char* sql, int needed_from)
+void QueryBuilder::add_int(int val, int& in, const char* sql, int needed_from)
 {
-    const Var* var = rec.key_peek(key);
-    if (!var || !var->isset()) return;
-    in = var->enqi();
+    if (val == MISSING_INT) return;
+    in = val;
     //TRACE("found %s: adding %s. val is %d\n", info(key)->desc, sql, *out);
     sql_where.append_list(sql);
     stm.bind_in(input_seq++, in);
@@ -1141,69 +1136,55 @@ Varinfo decode_data_filter(const char* filter, const char** op, const char** val
 /*
  * Create the WHERE part of the query
  */
-void QueryBuilder::make_where(const Record& rec)
+void QueryBuilder::make_where(const Query& q)
 {
     //DBA_RUN_OR_RETURN(dba_db_need_repinfo(cur->db));
     sql_where.start_list(" AND ");
 
 //  fprintf(stderr, "A1 '%s'\n", dba_querybuf_get(sql_where));
 
-    add_int(rec, sel_ana_id, DBA_KEY_ANA_ID, "pa.id=?", DBA_DB_FROM_PA);
-    add_int(rec, sel_latmin, DBA_KEY_LAT, "pa.lat=?", DBA_DB_FROM_PA);
-    add_int(rec, sel_latmin, DBA_KEY_LATMIN, "pa.lat>=?", DBA_DB_FROM_PA);
-    add_int(rec, sel_latmax, DBA_KEY_LATMAX, "pa.lat<=?", DBA_DB_FROM_PA);
-    if (const char* val = rec.key_peek_value(DBA_KEY_LON))
+    add_int(q.ana_id, sel_ana_id, "pa.id=?", DBA_DB_FROM_PA);
+    add_int(q.coords_min.lat, sel_latmin, "pa.lat=?", DBA_DB_FROM_PA);
+    add_int(q.coords_max.lat, sel_latmax, "pa.lat<=?", DBA_DB_FROM_PA);
+    if (q.coords_min.lon != MISSING_INT || q.coords_max.lon != MISSING_INT)
     {
-        sql_where.append_listf("pa.lon=%d", normalon(strtol(val, 0, 10)));
-        from_wanted |= DBA_DB_FROM_PA;
-    }
-    if (rec.key_peek_value(DBA_KEY_LONMIN) && rec.key_peek_value(DBA_KEY_LONMAX))
-    {
-        int lonmin = rec.key(DBA_KEY_LONMIN).enqi();
-        int lonmax = rec.key(DBA_KEY_LONMAX).enqi();
-        if (lonmin == lonmax)
+        if (q.coords_min.lon == MISSING_INT)
+            throw error_consistency("'lonmax' query parameter was specified without 'lonmin'");
+        if (q.coords_max.lon == MISSING_INT)
+            throw error_consistency("'lonmin' query parameter was specified without 'lonmax'");
+
+        if (q.coords_min.lon == q.coords_max.lon)
         {
-            sql_where.append_listf("pa.lon=%d", normalon(lonmin));
+            sql_where.append_listf("pa.lon=%d", q.coords_min.lon);
             from_wanted |= DBA_DB_FROM_PA;
-        } else {
-            lonmin = normalon(lonmin);
-            lonmax = normalon(lonmax);
-            if (lonmin < lonmax)
-            {
-                sql_where.append_listf("pa.lon>=%d AND pa.lon<=%d", lonmin, lonmax);
-                from_wanted |= DBA_DB_FROM_PA;
-            } else if (lonmin > lonmax) {
-                sql_where.append_listf("((pa.lon>=%d AND pa.lon<=18000000) OR (pa.lon>=-18000000 AND pa.lon<=%d))", lonmin, lonmax);
-                from_wanted |= DBA_DB_FROM_PA;
-            }
-            // If after being normalised min and max are the same, we
-            // assume that one wants "any longitude", as is the case with
-            // lonmin=0 lonmax=360 or lonmin=-180 lonmax=180
+        } else if (q.coords_min.lon < q.coords_max.lon) {
+            sql_where.append_listf("pa.lon>=%d AND pa.lon<=%d", q.coords_min.lon, q.coords_max.lon);
+            from_wanted |= DBA_DB_FROM_PA;
+        } else if (q.coords_min.lon > q.coords_max.lon) {
+            sql_where.append_listf("((pa.lon>=%d AND pa.lon<=18000000) OR (pa.lon>=-18000000 AND pa.lon<=%d))",
+                    q.coords_min.lon, q.coords_max.lon);
+            from_wanted |= DBA_DB_FROM_PA;
         }
-    } else if (rec.key_peek_value(DBA_KEY_LONMIN) != NULL) {
-        throw error_consistency("'lonmin' query parameter was specified without 'lonmax'");
-    } else if (rec.key_peek_value(DBA_KEY_LONMAX) != NULL) {
-        throw error_consistency("'lonmax' query parameter was specified without 'lonmin'");
     }
 
 //  fprintf(stderr, "A2 '%s'\n", dba_querybuf_get(sql_where));
 
-    if (const char* val = rec.key_peek_value(DBA_KEY_MOBILE))
+    if (q.mobile != MISSING_INT)
     {
-        if (val[0] == '0')
+        if (q.mobile)
         {
-            sql_where.append_list("pa.ident IS NULL");
-            TRACE("found fixed/mobile: adding AND pa.ident IS NULL.\n");
-        } else {
             sql_where.append_list("NOT (pa.ident IS NULL)");
             TRACE("found fixed/mobile: adding AND NOT (pa.ident IS NULL)\n");
+        } else {
+            sql_where.append_list("pa.ident IS NULL");
+            TRACE("found fixed/mobile: adding AND pa.ident IS NULL.\n");
         }
         from_wanted |= DBA_DB_FROM_PA;
     }
 
-    if (const char* val = rec.key_peek_value(DBA_KEY_IDENT))
+    if (q.has_ident)
     {
-        strncpy(sel_ident, val, 64);
+        strncpy(sel_ident, q.ident.c_str(), 64);
         sel_ident[63] = 0;
         sql_where.append_list("pa.ident=?");
         TRACE("found ident: adding AND pa.ident = ?.  val is %s\n", sel_ident);
@@ -1213,20 +1194,20 @@ void QueryBuilder::make_where(const Record& rec)
 
     /* Set the time extremes */
     {
-        int minvalues[6], maxvalues[6];
-        rec.parse_date_extremes(minvalues, maxvalues);
-
-        if (minvalues[0] != MISSING_INT || maxvalues[0] != MISSING_INT)
+        if (!q.datetime_min.is_missing() || !q.datetime_max.is_missing())
         {
-            if (memcmp(minvalues, maxvalues, 6 * sizeof(int)) == 0)
+            Datetime dtmin = q.datetime_min.lower_bound();
+            Datetime dtmax = q.datetime_max.upper_bound();
+
+            if (dtmin == dtmax)
             {
                 /* Add constraint on the exact date interval */
-                sel_dtmin.year = minvalues[0];
-                sel_dtmin.month = minvalues[1];
-                sel_dtmin.day = minvalues[2];
-                sel_dtmin.hour = minvalues[3];
-                sel_dtmin.minute = minvalues[4];
-                sel_dtmin.second = minvalues[5];
+                sel_dtmin.year = dtmin.date.year;
+                sel_dtmin.month = dtmin.date.month;
+                sel_dtmin.day = dtmin.date.day;
+                sel_dtmin.hour = dtmin.time.hour;
+                sel_dtmin.minute = dtmin.time.minute;
+                sel_dtmin.second = dtmin.time.second;
                 sel_dtmin.fraction = 0;
                 sql_where.append_list("c.datetime=?");
                 TRACE("found exact time: adding AND c.datetime=?. val is %04d-%02d-%02d %02d:%02d:%02d\n",
@@ -1236,15 +1217,15 @@ void QueryBuilder::make_where(const Record& rec)
             }
             else
             {
-                if (minvalues[0] != MISSING_INT)
+                if (!dtmin.is_missing())
                 {
                     /* Add constraint on the minimum date interval */
-                    sel_dtmin.year = minvalues[0];
-                    sel_dtmin.month = minvalues[1];
-                    sel_dtmin.day = minvalues[2];
-                    sel_dtmin.hour = minvalues[3];
-                    sel_dtmin.minute = minvalues[4];
-                    sel_dtmin.second = minvalues[5];
+                    sel_dtmin.year = dtmin.date.year;
+                    sel_dtmin.month = dtmin.date.month;
+                    sel_dtmin.day = dtmin.date.day;
+                    sel_dtmin.hour = dtmin.time.hour;
+                    sel_dtmin.minute = dtmin.time.minute;
+                    sel_dtmin.second = dtmin.time.second;
                     sel_dtmin.fraction = 0;
                     sql_where.append_list("c.datetime>=?");
                     TRACE("found min time: adding AND c.datetime>=?. val is %04d-%02d-%02d %02d:%02d:%02d\n",
@@ -1252,14 +1233,14 @@ void QueryBuilder::make_where(const Record& rec)
                     stm.bind_in(input_seq++, sel_dtmin);
                     from_wanted |= DBA_DB_FROM_C;
                 }
-                if (maxvalues[0] != MISSING_INT)
+                if (!dtmax.is_missing())
                 {
-                    sel_dtmax.year = maxvalues[0];
-                    sel_dtmax.month = maxvalues[1];
-                    sel_dtmax.day = maxvalues[2];
-                    sel_dtmax.hour = maxvalues[3];
-                    sel_dtmax.minute = maxvalues[4];
-                    sel_dtmax.second = maxvalues[5];
+                    sel_dtmax.year = dtmax.date.year;
+                    sel_dtmax.month = dtmax.date.month;
+                    sel_dtmax.day = dtmax.date.day;
+                    sel_dtmax.hour = dtmax.time.hour;
+                    sel_dtmax.minute = dtmax.time.minute;
+                    sel_dtmax.second = dtmax.time.second;
                     sel_dtmax.fraction = 0;
                     sql_where.append_list("c.datetime<=?");
                     TRACE("found max time: adding AND c.datetime<=?. val is %04d-%02d-%02d %02d:%02d:%02d\n",
@@ -1270,9 +1251,7 @@ void QueryBuilder::make_where(const Record& rec)
             }
         }
 
-        if (rec.key_peek_value(DBA_KEY_CONTEXT_ID) != NULL ||
-            minvalues[0] == 1000 || maxvalues[0] == 1000)
-            accept_from_ana_context = 1;
+        accept_from_ana_context = q.query_station_vars;
 
         if (modifiers & DBA_DB_MODIFIER_NOANAEXTRA)
             accept_from_ana_context = 0;
@@ -1280,18 +1259,18 @@ void QueryBuilder::make_where(const Record& rec)
 
 //  fprintf(stderr, "A3 '%s'\n", dba_querybuf_get(sql_where));
 
-    add_int(rec, sel_ltype1, DBA_KEY_LEVELTYPE1, "c.ltype1=?", DBA_DB_FROM_C);
-    add_int(rec, sel_l1, DBA_KEY_L1, "c.l1=?", DBA_DB_FROM_C);
-    add_int(rec, sel_ltype2, DBA_KEY_LEVELTYPE2, "c.ltype2=?", DBA_DB_FROM_C);
-    add_int(rec, sel_l2, DBA_KEY_L2, "c.l2=?", DBA_DB_FROM_C);
-    add_int(rec, sel_pind, DBA_KEY_PINDICATOR, "c.ptype=?", DBA_DB_FROM_C);
-    add_int(rec, sel_p1, DBA_KEY_P1, "c.p1=?", DBA_DB_FROM_C);
-    add_int(rec, sel_p2, DBA_KEY_P2, "c.p2=?", DBA_DB_FROM_C);
-    add_int(rec, sel_context_id, DBA_KEY_CONTEXT_ID, "c.id = ?", DBA_DB_FROM_C);
+    add_int(q.level.ltype1, sel_ltype1, "c.ltype1=?", DBA_DB_FROM_C);
+    add_int(q.level.l1,     sel_l1,     "c.l1=?", DBA_DB_FROM_C);
+    add_int(q.level.ltype2, sel_ltype2, "c.ltype2=?", DBA_DB_FROM_C);
+    add_int(q.level.l2,     sel_l2,     "c.l2=?", DBA_DB_FROM_C);
+    add_int(q.trange.pind, sel_pind, "c.ptype=?", DBA_DB_FROM_C);
+    add_int(q.trange.p1,   sel_p1,   "c.p1=?", DBA_DB_FROM_C);
+    add_int(q.trange.p2,   sel_p2,   "c.p2=?", DBA_DB_FROM_C);
+    add_int(q.data_id, sel_context_id, "c.id=?", DBA_DB_FROM_C);
 
-    if (const char* val = rec.key_peek_value(DBA_KEY_REP_MEMO))
+    if (!q.rep_memo.empty())
     {
-        int src_val = db.repinfo().get_id(val);
+        int src_val = db.repinfo().get_id(q.rep_memo.c_str());
         sel_rep_cod = src_val;
         sql_where.append_list("c.id_report=?");
         TRACE("found rep_memo %s: adding AND c.id_report = ?. val is %d\n", val, (int)sel_rep_cod);
@@ -1299,41 +1278,40 @@ void QueryBuilder::make_where(const Record& rec)
         from_wanted |= DBA_DB_FROM_C;
     }
 
-    if (const char* val = rec.key_peek_value(DBA_KEY_VAR))
+    switch (q.varcodes.size())
     {
-        Varcode code = resolve_varcode_safe(val);
-        sql_where.append_listf("d.id_var=%d", (int)code);
-        TRACE("found b: adding AND d.id_var=%d %s\n", (int)code, val);
-        from_wanted |= DBA_DB_FROM_D;
-    }
-    if (const char* val = rec.key_peek_value(DBA_KEY_VARLIST))
-    {
-        sql_where.append_list("d.id_var IN (");
-        sql_where.append_varlist(val);
-        sql_where.append(")");
-        TRACE("found blist: adding AND d.id_var IN (%s)\n", val);
-        from_wanted |= DBA_DB_FROM_D;
+        case 0: break;
+        case 1:
+            sql_where.append_listf("d.id_var=%d", (int)*q.varcodes.begin());
+            TRACE("found b: adding AND d.id_var=%d %s\n", (int)code, val);
+            from_wanted |= DBA_DB_FROM_D;
+            break;
+        default:
+            sql_where.append_list("d.id_var IN (");
+            sql_where.append_varlist(q.varcodes);
+            sql_where.append(")");
+            TRACE("found blist: adding AND d.id_var IN (%s)\n", val);
+            from_wanted |= DBA_DB_FROM_D;
+            break;
     }
 
-    add_repinfo_where(sql_where, rec, "ri");
+    add_repinfo_where(sql_where, q, "ri");
 
-    if (const char* val = rec.var_peek_value(WR_VAR(0, 1, 1)))
+    if (q.block != MISSING_INT)
     {
-        sql_where.append_list("dblo.value=");
-        sql_where.append(val);
+        sql_where.append_listf("dblo.value=%d", q.block);
         from_wanted |= DBA_DB_FROM_DBLO;
     }
-    if (const char* val = rec.var_peek_value(WR_VAR(0, 1, 2)))
+    if (q.station != MISSING_INT)
     {
-        sql_where.append_list("dsta.value=");
-        sql_where.append(val);
+        sql_where.append_listf("dsta.value=%d", q.station);
         from_wanted |= DBA_DB_FROM_DSTA;
     }
 
-    if (const char* val = rec.key_peek_value(DBA_KEY_ANA_FILTER))
+    if (!q.ana_filter.empty())
     {
         const char *op, *value, *value1;
-        Varinfo info = decode_data_filter(val, &op, &value, &value1);
+        Varinfo info = decode_data_filter(q.ana_filter.c_str(), &op, &value, &value1);
         sql_where.append_list("dana.id_var=");
         if (value1 == NULL)
             sql_where.appendf("%d AND dana.value%s%s", info->var, op, value);
@@ -1342,10 +1320,10 @@ void QueryBuilder::make_where(const Record& rec)
         from_wanted |= DBA_DB_FROM_DANA;
     }
 
-    if (const char* val = rec.key_peek_value(DBA_KEY_DATA_FILTER))
+    if (!q.data_filter.empty())
     {
         const char *op, *value, *value1;
-        Varinfo info = decode_data_filter(val, &op, &value, &value1);
+        Varinfo info = decode_data_filter(q.data_filter.c_str(), &op, &value, &value1);
         sql_where.append_listf("d.id_var=%d", (int)info->var);
         if (value1 == NULL)
             sql_where.append_listf("d.value%s%s", op, value);
@@ -1354,10 +1332,10 @@ void QueryBuilder::make_where(const Record& rec)
         from_wanted |= DBA_DB_FROM_D;
     }
 
-    if (const char* val = rec.key_peek_value(DBA_KEY_ATTR_FILTER))
+    if (!q.attr_filter.empty())
     {
         const char *op, *value, *value1;
-        Varinfo info = decode_data_filter(val, &op, &value, &value1);
+        Varinfo info = decode_data_filter(q.attr_filter.c_str(), &op, &value, &value1);
         sql_where.append_list("adf.type=");
         if (value[0] == '\'')
             if (value1 == NULL)
@@ -1380,27 +1358,30 @@ void QueryBuilder::make_where(const Record& rec)
         sql_where.append(
             " AND ri.prio=(SELECT MAX(sri.prio) FROM repinfo sri JOIN context sc ON sri.id=sc.id_report JOIN data sd ON sc.id=sd.id_context WHERE ");
         sql_where.start_list(" AND ");
-        add_repinfo_where(sql_where, rec, "sri");
+        add_repinfo_where(sql_where, q, "sri");
         sql_where.append_list(
             "sc.id_ana=c.id_ana AND sc.ltype1=c.ltype1 AND sc.l1=c.l1 AND sc.ltype2=c.ltype2 AND sc.l2=c.l2 AND sc.ptype=c.ptype AND sc.p1=c.p1 AND sc.p2=c.p2 AND sc.datetime=c.datetime AND sd.id_var=d.id_var) ");
     }
 }
 
 
-void QueryBuilder::add_repinfo_where(Querybuf& buf, const Record& rec, const char* colname)
+void QueryBuilder::add_repinfo_where(Querybuf& buf, const Query& q, const char* colname)
 {
     const char* val;
-#define ADD_INT(key, sql, needed) do { \
-    if ((val = rec.key_peek_value(key)) != NULL) { \
-        int ival = strtol(val, 0, 10); \
+#define ADD_INT(val, sql, needed) do { \
+    if (val != MISSING_INT) { \
         /*TRACE("found %s: adding %s. val is %d\n", info(key)->desc, sql, *out);*/ \
-        buf.append_listf(sql, colname, ival); \
+        buf.append_listf(sql, colname, val); \
         from_wanted |= needed; \
     } } while (0)
     
-    ADD_INT(DBA_KEY_PRIORITY, "%s.prio=%d", DBA_DB_FROM_RI);
-    ADD_INT(DBA_KEY_PRIOMIN, "%s.prio>=%d", DBA_DB_FROM_RI);
-    ADD_INT(DBA_KEY_PRIOMAX, "%s.prio<=%d", DBA_DB_FROM_RI);
+    if (q.prio_min == q.prio_max)
+        ADD_INT(q.prio_min, "%s.prio=%d", DBA_DB_FROM_RI);
+    else
+    {
+        ADD_INT(q.prio_min, "%s.prio>=%d", DBA_DB_FROM_RI);
+        ADD_INT(q.prio_max, "%s.prio<=%d", DBA_DB_FROM_RI);
+    }
 #undef ADD_INT
 }
 

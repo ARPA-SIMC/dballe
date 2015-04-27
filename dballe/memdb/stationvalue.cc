@@ -1,7 +1,7 @@
 /*
  * memdb/stationvalue - In memory representation of station values
  *
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 #include "station.h"
 #include "results.h"
 #include "dballe/core/record.h"
+#include "dballe/core/query.h"
 #include "dballe/msg/context.h"
 #include <cstring>
 #include <sstream>
@@ -128,7 +129,7 @@ void StationValues::fill_msg(const Station& station, msg::Context& ctx) const
     }
 }
 
-void StationValues::query(const Record& rec, Results<Station>& stations, Results<StationValue>& res) const
+void StationValues::query(const Query& q, Results<Station>& stations, Results<StationValue>& res) const
 {
     if (!stations.is_select_all())
     {
@@ -145,32 +146,31 @@ void StationValues::query(const Record& rec, Results<Station>& stations, Results
         res.add_union(lookup_by_station.release_sequences());
     }
 
-    if (const char* val = rec.key_peek_value(DBA_KEY_VAR))
+    switch (q.varcodes.size())
     {
-        trace_query("Found varcode=%s\n", val);
-        res.add(new match::Varcode<StationValue>(descriptor_code(val)));
+        case 0: break;
+        case 1:
+            trace_query("Found varcode=%01d%02d%03d\n",
+                    WR_VAR_F(*q.varcodes.begin()),
+                    WR_VAR_X(*q.varcodes.begin()),
+                    WR_VAR_Y(*q.varcodes.begin()));
+            res.add(new match::Varcode<StationValue>(*q.varcodes.begin()));
+            break;
+        default:
+            res.add(new match::Varcodes<StationValue>(q.varcodes));
+            break;
     }
 
-    if (const char* val = rec.key_peek_value(DBA_KEY_VARLIST))
+    if (!q.data_filter.empty())
     {
-        set<Varcode> codes;
-        size_t pos;
-        size_t len;
-        for (pos = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
-            codes.insert(WR_STRING_TO_VAR(val + pos + 1));
-        res.add(new match::Varcodes<StationValue>(codes));
+        trace_query("Found data_filter=%s\n", q.data_filter.c_str());
+        res.add(new match::DataFilter<StationValue>(q.data_filter));
     }
 
-    if (const char* val = rec.key_peek_value(DBA_KEY_DATA_FILTER))
+    if (!q.attr_filter.empty())
     {
-        trace_query("Found data_filter=%s\n", val);
-        res.add(new match::DataFilter<StationValue>(val));
-    }
-
-    if (const char* val = rec.key_peek_value(DBA_KEY_ATTR_FILTER))
-    {
-        trace_query("Found attr_filter=%s\n", val);
-        res.add(new match::AttrFilter<StationValue>(val));
+        trace_query("Found attr_filter=%s\n", q.attr_filter.c_str());
+        res.add(new match::AttrFilter<StationValue>(q.attr_filter));
     }
 }
 

@@ -1,7 +1,7 @@
 /*
  * db/v6/cursor - manage select queries
  *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,15 +22,15 @@
 #include "cursor.h"
 #include "qbuilder.h"
 #include "db.h"
-#include "dballe/db/modifiers.h"
 #include "dballe/db/sql/repinfo.h"
 #include "dballe/db/sql/station.h"
 #include "dballe/db/sql/levtr.h"
 #include "dballe/db/sql/datav6.h"
 
-#include <wreport/var.h>
-#include <dballe/core/defs.h>
-#include <dballe/core/record.h>
+#include "wreport/var.h"
+#include "dballe/core/defs.h"
+#include "dballe/core/record.h"
+#include "dballe/core/query.h"
 
 #include <cstdio>
 #include <cstring>
@@ -192,11 +192,11 @@ void Cursor::add_station_info(Record& rec)
     db.station().add_station_vars(results[cur].out_ana_id, rec);
 }
 
-unique_ptr<Cursor> Cursor::run_station_query(DB& db, const Query& query)
+unique_ptr<Cursor> Cursor::run_station_query(DB& db, const Query& q)
 {
-    unsigned int modifiers = parse_modifiers(query) | DBA_DB_MODIFIER_ANAEXTRA | DBA_DB_MODIFIER_DISTINCT;
+    unsigned int modifiers = q.get_modifiers() | DBA_DB_MODIFIER_ANAEXTRA | DBA_DB_MODIFIER_DISTINCT;
 
-    StationQueryBuilder qb(db, query, modifiers);
+    StationQueryBuilder qb(db, q, modifiers);
     qb.build();
 
     unique_ptr<Cursor> res(new CursorStations(db, modifiers));
@@ -204,10 +204,10 @@ unique_ptr<Cursor> Cursor::run_station_query(DB& db, const Query& query)
     return res;
 }
 
-unique_ptr<Cursor> Cursor::run_data_query(DB& db, const Query& query)
+unique_ptr<Cursor> Cursor::run_data_query(DB& db, const Query& q)
 {
-    unsigned int modifiers = parse_modifiers(query);
-    DataQueryBuilder qb(db, query, modifiers);
+    unsigned int modifiers = q.get_modifiers();
+    DataQueryBuilder qb(db, q, modifiers);
     qb.build();
 
     unique_ptr<Cursor> res;
@@ -221,13 +221,13 @@ unique_ptr<Cursor> Cursor::run_data_query(DB& db, const Query& query)
     return res;
 }
 
-unique_ptr<Cursor> Cursor::run_summary_query(DB& db, const Query& query)
+unique_ptr<Cursor> Cursor::run_summary_query(DB& db, const Query& q)
 {
-    unsigned int modifiers = parse_modifiers(query);
+    unsigned int modifiers = q.get_modifiers();
     if (modifiers & DBA_DB_MODIFIER_BEST)
         throw error_consistency("cannot use query=best on summary queries");
 
-    SummaryQueryBuilder qb(db, query, modifiers);
+    SummaryQueryBuilder qb(db, q, modifiers);
     qb.build();
 
     unique_ptr<Cursor> res(new CursorSummary(db, modifiers));
@@ -235,13 +235,13 @@ unique_ptr<Cursor> Cursor::run_summary_query(DB& db, const Query& query)
     return res;
 }
 
-void Cursor::run_delete_query(DB& db, const Query& query)
+void Cursor::run_delete_query(DB& db, const Query& q)
 {
-    unsigned int modifiers = parse_modifiers(query);
+    unsigned int modifiers = q.get_modifiers();
     if (modifiers & DBA_DB_MODIFIER_BEST)
         throw error_consistency("cannot use query=best on summary queries");
 
-    IdQueryBuilder qb(db, query, modifiers);
+    IdQueryBuilder qb(db, q, modifiers);
     qb.build();
 
     db.data().remove(qb);
@@ -374,7 +374,7 @@ unsigned CursorSummary::test_iterate(FILE* dump)
             to_record(r);
             fprintf(dump, "%02d %s %03d %s %04d-%02d-%02d %02d:%02d:%02d  %04d-%02d-%02d %02d:%02d:%02d  %d\n",
                     r.get(DBA_KEY_ANA_ID, -1),
-                    r.get(DBA_KEY_REP_MEMO, -1),
+                    r.get(DBA_KEY_REP_MEMO, ""),
                     (int)results[cur].out_id_ltr,
                     r.get(DBA_KEY_VAR, ""),
                     r.get(DBA_KEY_YEARMIN, 0), r.get(DBA_KEY_MONTHMIN, 0), r.get(DBA_KEY_DAYMIN, 0),

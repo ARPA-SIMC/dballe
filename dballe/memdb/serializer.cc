@@ -273,7 +273,7 @@ void CSVStationsInfile::read()
             error_consistency::throwf("%s:%zd: expected 6 columns, got %zd",
                     pathname.c_str(), lineno + 1, cols.size());
         }
-        Coord coords(as_int(1), as_int(2));
+        Coords coords(as_int(1), as_int(2));
         size_t new_id;
         if (cols[3] == "0")
             new_id = values.obtain_fixed(coords, cols[5]);

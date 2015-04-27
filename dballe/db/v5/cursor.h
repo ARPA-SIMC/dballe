@@ -1,7 +1,7 @@
 /*
  * db/cursor - manage select queries
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@
 
 namespace dballe {
 struct Record;
+struct Query;
 
 namespace db {
 struct ODBCStatement;
@@ -111,10 +112,10 @@ struct Cursor : public dballe::db::Cursor
      * @return
      *   The count of items in the results
      */
-    int query(const Record& query, unsigned int wanted, unsigned int modifiers);
+    int query(const Query& query, unsigned int wanted, unsigned int modifiers);
 
     // See DB::query_date_extremes
-    void query_datetime_extremes(const Record& query, Record& result);
+    void query_datetime_extremes(const Query& query, Record& result);
 
     /**
      * Get the number of rows still to be fetched
@@ -179,7 +180,7 @@ protected:
      * insert/delete/update queries run between the count and the select will
      * change the size of the result set.
      */
-    int getcount(const Record& query, unsigned int wanted, unsigned int modifiers);
+    int getcount(const Query& query, unsigned int wanted, unsigned int modifiers);
 };
 
 } // namespace v5

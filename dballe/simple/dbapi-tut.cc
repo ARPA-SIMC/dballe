@@ -92,15 +92,13 @@ std::vector<Test> tests {
         fortran::DbAPI api(*f.db, "write", "write", "write");
         f.populate_variables(api);
 
-        int reference_id;
-
         // Query a variable
         api.setc("var", "B12101");
         ensure_equals(api.voglioquesto(), 1);
         api.dammelo();
 
         // Store its context info to access attributes of this variable later
-        reference_id = api.enqi("context_id");
+        int reference_id = api.enqi("context_id");
 
         // Check that the context id that we get points to the right variable
         api.unsetall();

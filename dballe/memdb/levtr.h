@@ -1,7 +1,7 @@
 /*
  * memdb/ltr - In memory representation of level-timerange metadata
  *
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@
 
 namespace dballe {
 struct Record;
+struct Query;
 
 namespace memdb {
 template<typename T> struct Results;
@@ -78,7 +79,7 @@ public:
     size_t obtain(const Record& rec);
 
     /// Query levtrs returning the IDs
-    void query(const Record& rec, Results<LevTr>& res) const;
+    void query(const Query& q, Results<LevTr>& res) const;
 
     void dump(FILE* out) const;
 };

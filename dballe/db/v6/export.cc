@@ -22,13 +22,13 @@
 #include "db.h"
 #include "cursor.h"
 #include "qbuilder.h"
-#include "dballe/db/modifiers.h"
 #include "dballe/db/sql/repinfo.h"
 #include "dballe/db/sql/station.h"
 #include "dballe/db/sql/levtr.h"
 #include "dballe/db/sql/attrv6.h"
-#include <dballe/msg/msg.h>
-#include <dballe/msg/context.h>
+#include "dballe/msg/msg.h"
+#include "dballe/msg/context.h"
+#include "dballe/core/query.h"
 #include <memory>
 #include <cstring>
 #include <iostream>

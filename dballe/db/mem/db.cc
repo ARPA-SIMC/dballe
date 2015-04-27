@@ -1,7 +1,7 @@
 /*
  * dballe/mem/db - Archive for point-based meteorological data, in-memory db
  *
- * Copyright (C) 2013--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,11 +21,11 @@
 
 #include "db.h"
 #include "cursor.h"
-#include "dballe/db/modifiers.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
 #include "dballe/core/varmatch.h"
 #include "dballe/core/record.h"
+#include "dballe/core/query.h"
 #include "dballe/core/defs.h"
 #include "dballe/memdb/results.h"
 #include "dballe/memdb/serializer.h"
@@ -86,7 +86,7 @@ std::map<std::string, int> DB::get_repinfo_priorities()
     return repinfo.get_priorities();
 }
 
-void DB::insert(const Query& rec, bool can_replace, bool station_can_add)
+void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
 {
     // Obtain the station
     m_last_station_id = memdb.stations.obtain(rec, station_can_add);
@@ -171,43 +171,22 @@ struct MatchRepinfo : public Match<Station>
 
 }
 
-void DB::raw_query_stations(const Query& rec, memdb::Results<memdb::Station>& res)
+void DB::raw_query_stations(const Query& q, memdb::Results<memdb::Station>& res)
 {
     // Build a matcher for queries by priority
-    int prio = rec.get(DBA_KEY_PRIORITY, MISSING_INT);
-    int priomin = rec.get(DBA_KEY_PRIOMIN, MISSING_INT);
-    int priomax = rec.get(DBA_KEY_PRIOMAX, MISSING_INT);
-    if (prio != MISSING_INT || priomin != MISSING_INT || priomax != MISSING_INT)
+    const int& priomin = q.prio_min;
+    const int& priomax = q.prio_max;
+    if (priomin != MISSING_INT || priomax != MISSING_INT)
     {
-        // If priomax == priomin and prio is unset, use exact prio instead of
+        // If priomax == priomin, use exact prio instead of
         // min-max bounds
-        if (prio == MISSING_INT && priomax == priomin)
+        if (priomax == priomin)
         {
-            prio = priomin;
-            priomax = priomin = MISSING_INT;
-        }
-
-        if (prio != MISSING_INT)
-        {
-            // Deal with impossible prio/priomin/priomax combinations
-            if (priomin != MISSING_INT && prio < priomin)
-            {
-                res.set_to_empty();
-                return;
-            }
-            if (priomax != MISSING_INT && prio > priomax)
-            {
-                res.set_to_empty();
-                return;
-            }
-
-            // We can now ignore priomin and priomax
-
             std::map<std::string, int> prios = get_repinfo_priorities();
             unique_ptr<MatchRepinfo> m(new MatchRepinfo);
             for (std::map<std::string, int>::const_iterator i = prios.begin();
                     i != prios.end(); ++i)
-                if (i->second == prio)
+                if (i->second == priomin)
                     m->report_whitelist.insert(i->first);
             res.add(m.release());
         } else {
@@ -233,67 +212,63 @@ void DB::raw_query_stations(const Query& rec, memdb::Results<memdb::Station>& re
         }
     }
 
-    if (const char* val = rec.key_peek_value(DBA_KEY_ANA_FILTER))
+    if (!q.ana_filter.empty())
     {
-        res.add(new MatchAnaFilter(memdb.stationvalues, val));
+        res.add(new MatchAnaFilter(memdb.stationvalues, q.ana_filter));
         trace_query("Found ana filter %s\n", val);
     }
-    if (const char* val = rec.var_peek_value(WR_VAR(0, 1, 1)))
+    if (q.block != MISSING_INT)
     {
-        string query("B01001=");
-        query += val;
+        char query[100];
+        snprintf(query, 100, "B01001=%d", q.block);
         res.add(new MatchAnaFilter(memdb.stationvalues, query));
-        trace_query("Found block filter %s\n", query.c_str());
+        trace_query("Found block filter %s\n", query);
     }
-    if (const char* val = rec.var_peek_value(WR_VAR(0, 1, 2)))
+    if (q.station != MISSING_INT)
     {
-        string query("B01002=");
-        query += val;
+        char query[100];
+        snprintf(query, 100, "B01002=%d", q.station);
         res.add(new MatchAnaFilter(memdb.stationvalues, query));
-        trace_query("Found station filter %s\n", query.c_str());
+        trace_query("Found station filter %s\n", query);
     }
 
-    memdb.stations.query(rec, res);
+    memdb.stations.query(q, res);
 }
 
 
-void DB::raw_query_station_data(const Query& rec, memdb::Results<memdb::StationValue>& res)
+void DB::raw_query_station_data(const Query& q, memdb::Results<memdb::StationValue>& res)
 {
     // Get a list of stations we can match
     Results<Station> res_st(memdb.stations);
 
-    raw_query_stations(rec, res_st);
+    raw_query_stations(q, res_st);
 
-    memdb.stationvalues.query(rec, res_st, res);
+    memdb.stationvalues.query(q, res_st, res);
 }
 
-void DB::raw_query_data(const Query& rec, memdb::Results<memdb::Value>& res)
+void DB::raw_query_data(const Query& q, memdb::Results<memdb::Value>& res)
 {
     // Get a list of stations we can match
     Results<Station> res_st(memdb.stations);
-    raw_query_stations(rec, res_st);
+    raw_query_stations(q, res_st);
 
     // Get a list of stations we can match
     Results<LevTr> res_tr(memdb.levtrs);
-    memdb.levtrs.query(rec, res_tr);
+    memdb.levtrs.query(q, res_tr);
 
     // Query variables
-    memdb.values.query(rec, res_st, res_tr, res);
+    memdb.values.query(q, res_st, res_tr, res);
 }
 
-std::unique_ptr<db::Cursor> DB::query_stations(const Query& query)
+std::unique_ptr<db::Cursor> DB::query_stations(const Query& q)
 {
-    unsigned int modifiers = parse_modifiers(query);
+    unsigned int modifiers = q.get_modifiers();
     Results<Station> res(memdb.stations);
 
     // Build var/varlist special-cased filter for station queries
-    const char* filter_var = query.key_peek_value(DBA_KEY_VAR);
-    const char* filter_varlist = query.key_peek_value(DBA_KEY_VARLIST);
-    if (filter_var || filter_varlist)
+    if (!q.varcodes.empty())
     {
-        set<Varcode> varcodes;
-        if (filter_var) varcodes.insert(resolve_varcode_safe(filter_var));
-        if (filter_varlist) resolve_varlist_safe(filter_varlist, varcodes);
+        const set<Varcode>& varcodes = q.varcodes;
 
         // Iterate all the possible values, taking note of the stations for
         // variables whose varcodes are in 'varcodes'
@@ -314,15 +289,14 @@ std::unique_ptr<db::Cursor> DB::query_stations(const Query& query)
         res.add_set(move(id_whitelist));
     }
 
-    raw_query_stations(query, res);
+    raw_query_stations(q, res);
     return Cursor::createStations(*this, modifiers, res);
 }
 
-std::unique_ptr<db::Cursor> DB::query_data(const Query& query)
+std::unique_ptr<db::Cursor> DB::query_data(const Query& q)
 {
-    unsigned int modifiers = parse_modifiers(query);
-    bool query_station_vars = query.is_ana_context();
-    if (query_station_vars)
+    unsigned int modifiers = q.get_modifiers();
+    if (q.query_station_vars)
     {
         if (modifiers & DBA_DB_MODIFIER_BEST)
         {
@@ -330,12 +304,12 @@ std::unique_ptr<db::Cursor> DB::query_data(const Query& query)
 #warning TODO
         } else {
             Results<StationValue> res(memdb.stationvalues);
-            raw_query_station_data(query, res);
+            raw_query_station_data(q, res);
             return Cursor::createStationData(*this, modifiers, res);
         }
     } else {
         Results<Value> res(memdb.values);
-        raw_query_data(query, res);
+        raw_query_data(q, res);
         if (modifiers & DBA_DB_MODIFIER_BEST)
         {
             return Cursor::createDataBest(*this, modifiers, res);
@@ -345,17 +319,16 @@ std::unique_ptr<db::Cursor> DB::query_data(const Query& query)
     }
 }
 
-std::unique_ptr<db::Cursor> DB::query_summary(const Query& query)
+std::unique_ptr<db::Cursor> DB::query_summary(const Query& q)
 {
-    unsigned int modifiers = parse_modifiers(query);
-    bool query_station_vars = query.is_ana_context();
-    if (query_station_vars)
+    unsigned int modifiers = q.get_modifiers();
+    if (q.query_station_vars)
     {
         throw error_unimplemented("summary query of station vars");
 #warning TODO
     } else {
         Results<Value> res(memdb.values);
-        raw_query_data(query, res);
+        raw_query_data(q, res);
         return Cursor::createSummary(*this, modifiers, res);
     }
 }

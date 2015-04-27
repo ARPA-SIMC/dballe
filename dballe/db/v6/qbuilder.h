@@ -67,8 +67,8 @@ struct QueryBuilder
     // SummaryQuery
     bool select_summary_details = false; // id_data, datetime, datetimemax
 
-    /// Record with the query
-    const Record& rec;
+    /// Query object
+    const Query& query;
 
     /** Dynamically generated SQL query */
     Querybuf sql_query;
@@ -86,7 +86,7 @@ struct QueryBuilder
     bool query_station_vars;
 
 
-    QueryBuilder(DB& db, const Record& rec, unsigned int modifiers);
+    QueryBuilder(DB& db, const Query& query, unsigned int modifiers);
     virtual ~QueryBuilder() {}
 
     void build();
@@ -108,8 +108,8 @@ protected:
 
 struct StationQueryBuilder : public QueryBuilder
 {
-    StationQueryBuilder(DB& db, const Record& rec, unsigned int modifiers)
-        : QueryBuilder(db, rec, modifiers) {}
+    StationQueryBuilder(DB& db, const Query& query, unsigned int modifiers)
+        : QueryBuilder(db, query, modifiers) {}
 
     virtual void build_select();
     virtual bool build_where();
@@ -120,7 +120,7 @@ struct DataQueryBuilder : public QueryBuilder
 {
     int query_data_id;
 
-    DataQueryBuilder(DB& db, const Record& rec, unsigned int modifiers);
+    DataQueryBuilder(DB& db, const Query& query, unsigned int modifiers);
 
     virtual void build_select();
     virtual bool build_where();
@@ -129,8 +129,8 @@ struct DataQueryBuilder : public QueryBuilder
 
 struct IdQueryBuilder : public DataQueryBuilder
 {
-    IdQueryBuilder(DB& db, const Record& rec, unsigned int modifiers)
-        : DataQueryBuilder(db, rec, modifiers) {}
+    IdQueryBuilder(DB& db, const Query& query, unsigned int modifiers)
+        : DataQueryBuilder(db, query, modifiers) {}
 
     virtual void build_select();
     virtual void build_order_by();
@@ -138,8 +138,8 @@ struct IdQueryBuilder : public DataQueryBuilder
 
 struct SummaryQueryBuilder : public DataQueryBuilder
 {
-    SummaryQueryBuilder(DB& db, const Record& rec, unsigned int modifiers)
-        : DataQueryBuilder(db, rec, modifiers) {}
+    SummaryQueryBuilder(DB& db, const Query& query, unsigned int modifiers)
+        : DataQueryBuilder(db, query, modifiers) {}
 
     virtual void build_select();
     virtual void build_order_by();

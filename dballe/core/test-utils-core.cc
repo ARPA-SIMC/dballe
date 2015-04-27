@@ -336,6 +336,20 @@ Record record_from_string(const std::string& s)
     return res;
 }
 
+void set_query_from_string(Query& q, const std::string& s)
+{
+    str::Split splitter(", ", s);
+    for (str::Split::const_iterator i = splitter.begin(); i != splitter.end(); ++i)
+        q.set_from_string(i->c_str());
+}
+
+Query query_from_string(const std::string& s)
+{
+    Query res;
+    set_query_from_string(res, s);
+    return res;
+}
+
 }
 }
 

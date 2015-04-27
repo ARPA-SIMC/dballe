@@ -109,7 +109,7 @@ std::vector<Test> tests {
         wassert(actual(stack.top().data_count()) == 4);
 
         // Query the stack
-        query.clear(); query.set("rep_memo", "synop");
+        query.clear(); query.rep_memo = "synop";
         Support res = stack.query(query, true, [](const Entry& e) { return e.rep_memo == "synop"; });
         wassert(actual(res) == EXACT);
 
@@ -117,7 +117,7 @@ std::vector<Test> tests {
         wassert(actual(stack.top().data_count()) == 2);
 
         // Query further
-        query.clear(); query.set("rep_memo", "synop"); query.set("var", "B01011");
+        query.clear(); query.rep_memo = "synop"; query.varcodes.insert(WR_VAR(0, 1, 11));
         res = stack.query(query, true, [](const Entry& e) { return e.rep_memo == "synop" && e.varcode == WR_VAR(0, 1, 11); });
         wassert(actual(res) == EXACT);
 
@@ -125,7 +125,7 @@ std::vector<Test> tests {
         wassert(actual(stack.top().data_count()) == 1);
 
         // Query the same var but a different rep_memo
-        query.clear(); query.set("rep_memo", "metar"); query.set("var", "B01011");
+        query.clear(); query.rep_memo = "metar"; query.varcodes.insert(WR_VAR(0, 1, 11));
         res = stack.query(query, true, [](const Entry& e) { return e.rep_memo == "metar" && e.varcode == WR_VAR(0, 1, 11); });
         wassert(actual(res) == EXACT);
 

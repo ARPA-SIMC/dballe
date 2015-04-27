@@ -105,7 +105,7 @@ void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool wi
         throw error_consistency("cannot import into the database a message without station information");
 
     // Coordinates
-    Coord coord;
+    Coords coord;
     if (const Var* var = l_ana->find_by_id(DBA_MSG_LATITUDE))
         coord.lat = var->enqi();
     else
@@ -192,7 +192,7 @@ void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool wi
 }
 
 size_t Memdb::insert(
-        const Coord& coords, const std::string& ident, const std::string& report,
+        const Coords& coords, const std::string& ident, const std::string& report,
         const Level& level, const Trange& trange, const Datetime& datetime,
         std::unique_ptr<wreport::Var> var)
 {
@@ -210,7 +210,7 @@ size_t Memdb::insert(
 }
 
 size_t Memdb::insert(
-        const Coord& coords, const std::string& ident, const std::string& report,
+        const Coords& coords, const std::string& ident, const std::string& report,
         const Level& level, const Trange& trange, const Datetime& datetime,
         const Var& var)
 {

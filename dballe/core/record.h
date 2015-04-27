@@ -274,6 +274,12 @@ public:
     /// Add/replace a variable in this record
     void add(std::unique_ptr<wreport::Var> var);
 
+    /// Get the integer value of a key, throwing if missing
+    int enqi(dba_keyword parameter) const;
+
+    /// Get the integer value of a key, returning the default if missing
+    int enqi(dba_keyword parameter, int def) const;
+
 	/// Shortcuts
 	// @{
 	const wreport::Var& get(dba_keyword parameter) const { return key(parameter); }
@@ -342,7 +348,7 @@ public:
     void set_datetimemin(const int (&val)[6]);
     void set_datetimemax(const int (&val)[6]);
     void set_datetime(int ye, int mo=1, int da=1, int ho=0, int mi=0, int se=0);
-    void set(const Coord& c);
+    void set(const Coords& c);
 
 	/**
 	 * Set the date, level and timerange values to match the anagraphical context.
@@ -495,7 +501,7 @@ public:
 	static dba_keyword keyword_byname_len(const char* tag, int len);
 };
 
-typedef Record Query;
+//typedef Record Query;
 
 #if 0
 /**

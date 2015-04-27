@@ -64,7 +64,7 @@ template<> template<> void to::test<2>()
 
     {
         Results<LevTr> res(values);
-        values.query(record_from_string("leveltype1=1"), res);
+        values.query(query_from_string("leveltype1=1"), res);
         vector<const LevTr*> items = get_results(res);
         wassert(actual(items.size()) == 1);
         wassert(actual(items[0]->level) == Level(1));
@@ -72,7 +72,7 @@ template<> template<> void to::test<2>()
 
     {
         Results<LevTr> res(values);
-        values.query(record_from_string("leveltype2=2"), res);
+        values.query(query_from_string("leveltype2=2"), res);
         vector<const LevTr*> items = get_results(res);
         wassert(actual(items.size()) == 1);
         wassert(actual(items[0]->level) == Level::cloud(2, 3));
@@ -80,7 +80,7 @@ template<> template<> void to::test<2>()
 
     {
         Results<LevTr> res(values);
-        values.query(record_from_string("l2=3"), res);
+        values.query(query_from_string("l2=3"), res);
         vector<const LevTr*> items = get_results(res);
         wassert(actual(items.size()) == 1);
         wassert(actual(items[0]->level) == Level::cloud(2, 3));
@@ -88,7 +88,7 @@ template<> template<> void to::test<2>()
 
     {
         Results<LevTr> res(values);
-        values.query(record_from_string("pindicator=1"), res);
+        values.query(query_from_string("pindicator=1"), res);
         vector<const LevTr*> items = get_results(res);
         wassert(actual(items.size()) == 1);
         wassert(actual(items[0]->level) == Level::cloud(2, 3));
@@ -96,7 +96,7 @@ template<> template<> void to::test<2>()
 
     {
         Results<LevTr> res(values);
-        values.query(record_from_string("p1=2"), res);
+        values.query(query_from_string("p1=2"), res);
         vector<const LevTr*> items = get_results(res);
         wassert(actual(items.size()) == 1);
         wassert(actual(items[0]->level) == Level::cloud(2, 3));
@@ -104,7 +104,7 @@ template<> template<> void to::test<2>()
 
     {
         Results<LevTr> res(values);
-        values.query(record_from_string("p2=3"), res);
+        values.query(query_from_string("p2=3"), res);
         vector<const LevTr*> items = get_results(res);
         wassert(actual(items.size()) == 1);
         wassert(actual(items[0]->level) == Level::cloud(2, 3));

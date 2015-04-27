@@ -255,6 +255,38 @@ bool Datetime::range_disjoint(
     return false;
 }
 
+Datetime Datetime::lower_bound() const
+{
+    Datetime res;
+
+    if (is_missing()) return res;
+
+    res.date.year = date.year;
+    res.date.month = date.month == 0xff ? 1 : date.month;
+    res.date.day = date.day == 0xff ? 1 : date.day;
+    res.time.hour = time.hour == 0xff ? 0 : time.hour;
+    res.time.minute = time.minute == 0xff ? 0 : time.minute;
+    res.time.second = time.second == 0xff ? 0 : time.second;
+
+    return res;
+}
+
+Datetime Datetime::upper_bound() const
+{
+    Datetime res;
+
+    if (is_missing()) return res;
+
+    res.date.year = date.year;
+    res.date.month = date.month == 0xff ? 12 : date.month;
+    res.date.day = date.day == 0xff ? Date::days_in_month(res.date.year, res.date.month) : date.day;
+    res.time.hour = time.hour == 0xff ? 23 : time.hour;
+    res.time.minute = time.minute == 0xff ? 59 : time.minute;
+    res.time.second = time.second == 0xff ? 59 : time.second;
+
+    return res;
+}
+
 namespace {
 std::string fmtf( const char* f, ... )
 {
@@ -484,32 +516,37 @@ std::string Trange::describe() const
 }
 
 
-int Coord::normalon(int lon)
+int Coords::normalon(int lon)
 {
     return ((lon + 18000000) % 36000000) - 18000000;
 }
 
-double Coord::fnormalon(double lon)
+double Coords::fnormalon(double lon)
 {
     return fmod(lon + 180.0, 360.0) - 180.0;
 }
 
-Coord::Coord(int lat, int lon)
+Coords::Coords(int lat, int lon)
     : lat(lat),
       lon(normalon(lon))
 {
 }
 
-Coord::Coord(double lat, double lon)
+Coords::Coords(double lat, double lon)
     : lat(lround(lat * 100000)),
       lon(normalon(lround(lon * 100000)))
 {
 }
 
-double Coord::dlat() const { return (double)lat/100000.0; }
-double Coord::dlon() const { return (double)lon/100000.0; }
+double Coords::dlat() const { return (double)lat/100000.0; }
+double Coords::dlon() const { return (double)lon/100000.0; }
 
-std::ostream& operator<<(std::ostream& out, const Coord& c)
+void Coords::set_lat(int new_lat) { lat = new_lat; }
+void Coords::set_lon(int new_lon) { lon = normalon(new_lon); }
+void Coords::set_lat(double new_lat) { lat = lround(new_lat * 100000); }
+void Coords::set_lon(double new_lon) { lon = normalon(lround(new_lon * 100000)); }
+
+std::ostream& operator<<(std::ostream& out, const Coords& c)
 {
     out << "(" << setprecision(5) << c.dlat()
         << "," << setprecision(5) << c.dlon()

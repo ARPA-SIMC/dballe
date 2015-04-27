@@ -70,7 +70,7 @@ std::vector<Test> tests {
         ds.set_var("temp_2m", 16.5, 50);
         wruntest(ds.insert, db);
 
-        Record query;
+        Query query;
 
         // Query and verify the station data
         {
@@ -150,7 +150,7 @@ std::vector<Test> tests {
         OldDballeTestFixture oldf;
         wruntest(f.populate_database, oldf);
 
-        Record query;
+        Query query;
 
         // Iterate the station database
         unique_ptr<db::Cursor> cur = db.query_stations(query);
@@ -206,7 +206,7 @@ std::vector<Test> tests {
         //      return;
 
         // Prepare a query
-        Record query;
+        Query query;
         query.set(DBA_KEY_LATMIN, 1000000);
         query.set(DBA_KEY_QUERY, "best");
 
@@ -244,7 +244,7 @@ std::vector<Test> tests {
         wruntest(f.populate_database, oldf);
 
         // 4 items to begin with
-        Record query;
+        Query query;
         unique_ptr<db::Cursor> cur = db.query_data(query);
         ensure_equals(cur->remaining(), 4);
         cur->discard_rest();
@@ -301,7 +301,8 @@ std::vector<Test> tests {
     Test("query_datetime", [](Fixture& f) {
         // Test datetime queries
         auto& db = *f.db;
-        Record insert, query, result;
+        Query query;
+        Record insert, result;
 
         /* Prepare test data */
         Record base, a, b;
@@ -541,7 +542,8 @@ std::vector<Test> tests {
         OldDballeTestFixture oldf;
         wruntest(f.populate_database, oldf);
 
-        Record query, result;
+        Query query;
+        Record result;
         query.set(DBA_KEY_LATMIN, 1000000);
         unique_ptr<db::Cursor> cur = db.query_data(query);
 
@@ -613,7 +615,7 @@ std::vector<Test> tests {
         OldDballeTestFixture oldf;
         wruntest(f.populate_database, oldf);
 
-        Record query;
+        Query query;
         query.set(DBA_KEY_REP_MEMO, "synop");
 
         unique_ptr<db::Cursor> cur = db.query_stations(query);
@@ -645,7 +647,7 @@ std::vector<Test> tests {
         db.attr_insert(WR_VAR(0, 1, 11), qc);
 
         // Query back the B01011 variable to read the attr reference id
-        Record query;
+        Query query;
         query.set(DBA_KEY_VAR, "B01011");
         unique_ptr<db::Cursor> cur = db.query_data(query);
         ensure_equals(cur->remaining(), 1);
@@ -678,7 +680,7 @@ std::vector<Test> tests {
         // Insert a data record
         wruntest(oldf.dataset0.insert, db);
 
-        Record query;
+        Query query;
         query.set(DBA_KEY_LATMIN, 10.0);
         query.set(DBA_KEY_LATMAX, 15.0);
         query.set(DBA_KEY_LONMIN, 70.0);
@@ -694,7 +696,7 @@ std::vector<Test> tests {
         OldDballeTestFixture oldf;
         wruntest(f.populate_database, oldf);
 
-        Record query;
+        Query query;
         query.set(DBA_KEY_REP_MEMO, "metar");
         query.set(DBA_KEY_VAR, "B01011");
         unique_ptr<db::Cursor> cur = db.query_data(query);
@@ -771,7 +773,7 @@ std::vector<Test> tests {
         OldDballeTestFixture oldf;
         wruntest(f.populate_database, oldf);
 
-        Record rec;
+        Query rec;
         rec.set(DBA_KEY_YEAR, 1000);
         rec.set(DBA_KEY_MONTH, 1);
         rec.set(DBA_KEY_DAY, 1);
@@ -797,7 +799,7 @@ std::vector<Test> tests {
         }
 
         // Query all with best
-        Record rec;
+        Query rec;
         rec.set(DBA_KEY_VAR,   "B12101");
         rec.set(DBA_KEY_QUERY, "best");
         unique_ptr<db::Cursor> cur = db.query_data(rec);
@@ -826,7 +828,7 @@ std::vector<Test> tests {
         wruntest(f.populate_database, oldf);
 
         // All DB
-        Record query;
+        Query query;
         query.set(DBA_KEY_LEVELTYPE1, 103);
         query.set(DBA_KEY_L1, 2000);
         db.query_stations(query);
@@ -858,19 +860,13 @@ std::vector<Test> tests {
         attrs.set(WR_VAR(0, 33, 7), 50);
         wruntest(dataset.insert, db);
 
-        Record q;
-        q.set(DBA_KEY_LAT, 12.34560);
-        q.set(DBA_KEY_LON, 76.54320);
-        q.set(DBA_KEY_YEAR, 1945);
-        q.set(DBA_KEY_MONTH, 4);
-        q.set(DBA_KEY_DAY, 25);
-        q.set(DBA_KEY_HOUR, 8);
-        q.set(DBA_KEY_MIN, 0);
-        q.set(DBA_KEY_SEC, 0);
-        q.set(DBA_KEY_REP_MEMO, "synop");
-        q.set(Level(10, 11, 15, 22));
-        q.set(Trange(20, 111, 122));
-        q.set(DBA_KEY_VAR, "B01012");
+        Query q;
+        q.coords_min = q.coords_max = Coords(12.34560, 76.54320);
+        q.datetime_min = q.datetime_max = Datetime(1945, 4, 25, 8, 0, 0);
+        q.rep_memo = "synop";
+        q.level = Level(10, 11, 15, 22);
+        q.trange = Trange(20, 111, 122);
+        q.varcodes.insert(WR_VAR(0, 1, 12));
 
         // Query the initial value
         unique_ptr<db::Cursor> cur = db.query_data(q);
@@ -890,10 +886,9 @@ std::vector<Test> tests {
         update.set(DBA_KEY_ANA_ID, ana_id);
         update.set(DBA_KEY_REP_MEMO, "synop");
         int dt[6];
-        q.get_datetime(dt);
-        update.set_datetime(dt);
-        update.set(q.get_level());
-        update.set(q.get_trange());
+        update.set(q.datetime_min);
+        update.set(q.level);
+        update.set(q.trange);
         var.seti(200);
         update.set(var);
         db.insert(update, true, false);
@@ -916,7 +911,8 @@ std::vector<Test> tests {
         wruntest(f.populate_database, oldf);
 
         // Prepare a query
-        Record query, result;
+        Query query;
+        Record result;
         query.set(DBA_KEY_LATMIN, 10.0);
 
         // Make the query
@@ -961,8 +957,8 @@ std::vector<Test> tests {
         wruntest(f.ds_st_navile.insert, db, true);
 
         // Query station data and ensure there is only one info (height)
-        Record query;
-        query.set_ana_context();
+        Query query;
+        query.query_station_vars = true;
         unique_ptr<db::Cursor> cur = db.query_data(query);
         wassert(actual(cur->remaining()) == 1);
         cur->next();
@@ -978,8 +974,8 @@ std::vector<Test> tests {
         wruntest(ds_st_navile_metar.insert, db, true);
 
         // Query station data and ensure there is only one info (height)
-        Record query;
-        query.set_ana_context();
+        Query query;
+        query.query_station_vars = true;
         unique_ptr<db::Cursor> cur = db.query_data(query);
         wassert(actual(cur->remaining()) == 2);
 
@@ -1010,7 +1006,7 @@ std::vector<Test> tests {
         wruntest(dataset.insert, db, true);
 
         // Query it back
-        Record query;
+        Query query;
         query.set(DBA_KEY_LEVELTYPE1, 44);
         query.set(DBA_KEY_L1, 55);
 
@@ -1041,7 +1037,7 @@ std::vector<Test> tests {
         wruntest(f.populate_database, oldf);
 
         // Query with undef leveltype2 and l2
-        Record query;
+        Query query;
         query.set(DBA_KEY_LEVELTYPE1, 10);
         query.set(DBA_KEY_L1, 11);
 
@@ -1055,7 +1051,7 @@ std::vector<Test> tests {
         OldDballeTestFixture oldf;
         wruntest(f.populate_database, oldf);
 
-        Record query;
+        Query query;
         query.set(DBA_KEY_ATTR_FILTER, "B12001");
 
         try {
@@ -1099,10 +1095,10 @@ std::vector<Test> tests {
 
         // Query with querybest only
         {
-            Record query;
+            Query query;
             query.set(DBA_KEY_QUERY, "best");
-            query.set_datetime(2009, 11, 11, 0, 0, 0);
-            query.set(DBA_KEY_VAR, "B12101");
+            query.datetime_min = query.datetime_max = Datetime(2009, 11, 11, 0, 0, 0);
+            query.varcodes.insert(WR_VAR(0, 12, 101));
             unique_ptr<db::Cursor> cur = db.query_data(query);
 
             ensure_equals(cur->remaining(), 1);
@@ -1119,11 +1115,11 @@ std::vector<Test> tests {
 
         // Query with querybest and priomax
         {
-            Record query;
+            Query query;
             query.set(DBA_KEY_PRIOMAX, 100);
             query.set(DBA_KEY_QUERY, "best");
-            query.set_datetime(2009, 11, 11, 0, 0, 0);
-            query.set(DBA_KEY_VAR, "B12101");
+            query.datetime_min = query.datetime_max = Datetime(2009, 11, 11, 0, 0, 0);
+            query.varcodes.insert(WR_VAR(0, 12, 101));
             unique_ptr<db::Cursor> cur = db.query_data(query);
             ensure_equals(cur->remaining(), 1);
 
@@ -1144,8 +1140,8 @@ std::vector<Test> tests {
         wruntest(f.populate_database, oldf);
 
         Record res;
-        Record rec;
-        unique_ptr<db::Cursor> cur = db.query_data(rec);
+        Query query;
+        unique_ptr<db::Cursor> cur = db.query_data(query);
         while (cur->next())
         {
             cur->to_record(res);

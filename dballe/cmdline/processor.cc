@@ -170,7 +170,7 @@ void Filter::matcher_reset()
     }
 }
 
-void Filter::matcher_from_record(const Record& query)
+void Filter::matcher_from_record(const Query& query)
 {
     if (matcher)
     {

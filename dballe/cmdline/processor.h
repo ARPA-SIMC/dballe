@@ -33,6 +33,7 @@ struct Bulletin;
 }
 
 namespace dballe {
+struct Query;
 struct Rawmsg;
 struct Msgs;
 struct Matcher;
@@ -138,7 +139,7 @@ struct Filter
     void matcher_reset();
 
     /// Initialise the matcher from a record
-    void matcher_from_record(const Record& query);
+    void matcher_from_record(const Query& query);
 
     bool match_index(int idx) const;
     bool match_common(const Rawmsg& rmsg, const Msgs* msgs) const;

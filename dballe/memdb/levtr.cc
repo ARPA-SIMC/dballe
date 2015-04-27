@@ -1,7 +1,7 @@
 /*
  * memdb/levtr - In memory representation of level-timerange metadata
  *
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 #include "levtr.h"
 #include "results.h"
 #include "dballe/core/record.h"
+#include "dballe/core/query.h"
 #include "dballe/core/stlutils.h"
 #include <sstream>
 #include <iostream>
@@ -93,9 +94,9 @@ struct MatchTrange : public Match<LevTr>
 };
 }
 
-void LevTrs::query(const Record& rec, Results<LevTr>& res) const
+void LevTrs::query(const Query& q, Results<LevTr>& res) const
 {
-    Level level = rec.get_level();
+    const Level& level = q.level;
     if (level != Level())
     {
         if (level.ltype1 != MISSING_INT)
@@ -115,7 +116,7 @@ void LevTrs::query(const Record& rec, Results<LevTr>& res) const
         res.add(new MatchLevel(level));
     }
 
-    Trange trange = rec.get_trange();
+    const Trange& trange = q.trange;
     if (trange != Trange())
     {
         if (trange.pind != MISSING_INT)

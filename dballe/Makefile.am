@@ -56,6 +56,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/aoffile.h \
 	core/csv.h \
 	core/record.h \
+	core/query.h \
 	core/structbuf.h \
 	core/matcher.h \
 	core/match-wreport.h \
@@ -86,7 +87,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	msg/aof_codec.h \
 	msg/wr_codec.h \
 	msg/wr_exporters/common.h \
-	db/modifiers.h \
 	db/defs.h \
 	db/db.h \
 	db/mem/repinfo.h \
@@ -171,6 +171,7 @@ libdballe_la_SOURCES = \
 	core/csv.cc \
 	core/record_keyword.cc \
 	core/record.cc \
+	core/query.cc \
 	core/structbuf.cc \
 	core/matcher.cc \
 	core/match-wreport.cc \
@@ -218,7 +219,6 @@ libdballe_la_SOURCES = \
 	msg/wr_exporters/flight.cc \
 	msg/wr_exporters/generic.cc \
 	msg/wr_exporters/pollution.cc \
-	db/modifiers.cc \
 	db/db.cc \
 	db/querybuf.cc \
 	db/sql.cc \
@@ -327,6 +327,7 @@ dist_noinst_HEADERS = \
 
 tut_test_SOURCES = \
 	core/tests/tut-main.cpp \
+	core/test-utils-core.cc \
 	core/aliases-tut.cc \
 	core/stlutils-tut.cc \
 	core/defs-tut.cc \
@@ -334,12 +335,12 @@ tut_test_SOURCES = \
 	core/rawmsg-tut.cc \
 	core/file-tut.cc \
 	core/record-tut.cc \
+	core/query-tut.cc \
 	core/structbuf-tut.cc \
 	core/csv-tut.cc \
 	core/matcher-tut.cc \
 	core/match-wreport-tut.cc \
 	core/varmatch-tut.cc \
-	core/test-utils-core.cc \
 	memdb/tests.cc \
 	memdb/valuestorage-tut.cc \
 	memdb/index-tut.cc \
@@ -364,7 +365,6 @@ tut_test_SOURCES = \
 	msg/tests/wr_codec.cc \
 	msg/tests/wr_codec_generic.cc \
 	db/test-utils-db.cc \
-	db/modifiers-tut.cc \
 	db/querybuf-tut.cc \
 	db/sql/repinfo-tut.cc \
 	db/sql/station-tut.cc \

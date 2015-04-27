@@ -27,7 +27,6 @@
 #include "dballe/db/sql/levtr.h"
 #include "dballe/db/sql/datav6.h"
 #include "dballe/db/sql/attrv6.h"
-#include "dballe/db/modifiers.h"
 #include "dballe/db/querybuf.h"
 #include "cursor.h"
 
@@ -176,7 +175,7 @@ static inline int normalon(int lon)
     return ((lon + 18000000) % 36000000) - 18000000;
 }
 
-int DB::obtain_station(const Query& rec, bool can_add)
+int DB::obtain_station(const Record& rec, bool can_add)
 {
     // Look if the record already knows the ID
     if (const char* val = rec.key_peek_value(DBA_KEY_ANA_ID))
@@ -206,7 +205,7 @@ int DB::obtain_station(const Query& rec, bool can_add)
         return s.get_id(lat, lon, ident);
 }
 
-int DB::obtain_lev_tr(const Query& rec)
+int DB::obtain_lev_tr(const Record& rec)
 {
     if (rec.is_ana_context())
         return -1;
@@ -214,7 +213,7 @@ int DB::obtain_lev_tr(const Query& rec)
     return lev_tr().obtain_id(rec);
 }
 
-void DB::insert(const Query& rec, bool can_replace, bool station_can_add)
+void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
 {
     sql::Repinfo& ri = repinfo();
     sql::DataV6& d = data();

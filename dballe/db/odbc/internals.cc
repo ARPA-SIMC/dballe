@@ -565,9 +565,11 @@ void ODBCConnection::drop_settings()
     drop_table_if_exists("dballe_settings");
 }
 
-void ODBCConnection::add_datetime(Querybuf& qb, const int* dt) const
+void ODBCConnection::add_datetime(Querybuf& qb, const Datetime& dt) const
 {
-    qb.appendf("{ts '%04d-%02d-%02d %02d:%02d:%02d'}", dt[0], dt[1], dt[2], dt[3], dt[4], dt[5]);
+    qb.appendf("{ts '%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu'}",
+            dt.date.year, dt.date.month, dt.date.day,
+            dt.time.hour, dt.time.minute, dt.time.second);
 }
 
 ODBCStatement::ODBCStatement(ODBCConnection& conn)

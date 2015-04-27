@@ -39,7 +39,7 @@
 
 namespace dballe {
 struct Record;
-typedef Record Query;
+struct Query;
 struct Msg;
 struct Msgs;
 struct MsgConsumer;
@@ -295,7 +295,7 @@ public:
      *   data for a station that does not yet exists in the database, it will
      *   be created.
      */
-    virtual void insert(const Query& rec, bool can_replace, bool station_can_add) = 0;
+    virtual void insert(const Record& rec, bool can_replace, bool station_can_add) = 0;
 
     /**
      * Return the station id for the last data that was inserted.

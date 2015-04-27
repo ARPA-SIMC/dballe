@@ -119,7 +119,7 @@ struct MsgDumper : public MsgConsumer
 }
 
 /// Query data in the database and output results as arbitrary human readable text
-int Dbadb::do_dump(const Record& query, FILE* out)
+int Dbadb::do_dump(const Query& query, FILE* out)
 {
     unique_ptr<db::Cursor> cursor = db.query_data(query);
 
@@ -135,7 +135,7 @@ int Dbadb::do_dump(const Record& query, FILE* out)
 }
 
 /// Query stations in the database and output results as arbitrary human readable text
-int Dbadb::do_stations(const Record& query, FILE* out)
+int Dbadb::do_stations(const Query& query, FILE* out)
 {
     unique_ptr<db::Cursor> cursor = db.query_stations(query);
 
@@ -150,7 +150,7 @@ int Dbadb::do_stations(const Record& query, FILE* out)
     return 0;
 }
 
-int Dbadb::do_export_dump(const Record& query, FILE* out)
+int Dbadb::do_export_dump(const Query& query, FILE* out)
 {
     MsgDumper dumper(out);
     db.export_msgs(query, dumper);
@@ -173,7 +173,7 @@ int Dbadb::do_import(const std::string& fname, Reader& reader, int import_flags,
     return do_import(fnames, reader, import_flags, forced_repmemo);
 }
 
-int Dbadb::do_export(const Record& query, File& file, const char* output_template, const char* forced_repmemo)
+int Dbadb::do_export(const Query& query, File& file, const char* output_template, const char* forced_repmemo)
 {
     msg::Exporter::Options opts;
     if (output_template && output_template[0] != 0)

@@ -35,6 +35,7 @@
 
 namespace dballe {
 struct Record;
+struct Query;
 
 namespace db {
 struct Connection;
@@ -139,7 +140,7 @@ struct Repinfo
     /**
      * Return a vector of IDs matching the priority constraints in the given record.
      */
-    std::vector<int> ids_by_prio(const Record& rec);
+    std::vector<int> ids_by_prio(const Query& rec);
 
     /**
      * Get the id of a repinfo entry given its name.

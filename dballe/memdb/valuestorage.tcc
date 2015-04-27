@@ -42,6 +42,7 @@ void ValueStorage<T>::clear()
     for (typename std::vector<T*>::iterator i = values.begin(); i != values.end(); ++i)
         delete *i;
     values.clear();
+    empty_slots.clear();
 }
 
 template<typename T>

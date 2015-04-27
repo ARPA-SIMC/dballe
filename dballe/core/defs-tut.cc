@@ -70,11 +70,11 @@ void to::test<3>()
 	ensure_equals(Trange(3, 194400, 43200).describe(), "Minimum over 12h at forecast time 2d 6h");
 }
 
-// Test Coord
+// Test Coords
 template<> template<>
 void to::test<4>()
 {
-    wassert(actual(Coord(44.0, 11.0)) == Coord(44.0, 360.0+11.0));
+    wassert(actual(Coords(44.0, 11.0)) == Coords(44.0, 360.0+11.0));
 }
 
 // Test Date and Datetime

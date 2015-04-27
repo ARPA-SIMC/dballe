@@ -1,7 +1,7 @@
 /*
  * db/mem/cursor - iterate results of queries on mem databases
  *
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@
 
 #include "cursor.h"
 #include "db.h"
-#include "dballe/db/modifiers.h"
 #include "dballe/core/record.h"
+#include "dballe/core/query.h"
 #include <queue>
 #include <stack>
 #include <sstream>

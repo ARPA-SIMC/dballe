@@ -438,7 +438,7 @@ void to::test<9>()
 template<> template<>
 void to::test<10>()
 {
-    Query rec;
+    Record rec;
 
     Datetime dtmin, dtmax;
 

@@ -1,7 +1,7 @@
 /*
  * memdb/stationvalue - In memory representation of station values
  *
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@
 
 namespace dballe {
 struct Record;
+struct Query;
 
 namespace msg {
 struct Context;
@@ -90,7 +91,7 @@ public:
     void fill_msg(const Station& station, msg::Context& ctx) const;
 
     /// Query values for the given stations
-    void query(const Record& rec, Results<Station>& stations, Results<StationValue>& res) const;
+    void query(const Query& q, Results<Station>& stations, Results<StationValue>& res) const;
 
     void dump(FILE* out) const;
 };

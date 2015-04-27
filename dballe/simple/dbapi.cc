@@ -19,6 +19,7 @@
 
 #include "dbapi.h"
 #include "dballe/core/file.h"
+#include "dballe/core/query.h"
 #include "dballe/db/db.h"
 #include "dballe/msg/msgs.h"
 #include "dballe/msg/codec.h"
@@ -155,7 +156,9 @@ int DbAPI::quantesono()
         delete ana_cur;
         ana_cur = 0;
     }
-    ana_cur = db.query_stations(input).release();
+    Query query;
+    query.set_from_record(input);
+    ana_cur = db.query_stations(query).release();
     attr_state = ATTR_REFERENCE;
     attr_reference_id = missing_int;
 
@@ -185,7 +188,9 @@ int DbAPI::voglioquesto()
         delete query_cur;
         query_cur = NULL;
     }
-    query_cur = db.query_data(input).release();
+    Query query;
+    query.set_from_record(input);
+    query_cur = db.query_data(query).release();
     attr_state = ATTR_REFERENCE;
     attr_reference_id = missing_int;
 
@@ -250,7 +255,9 @@ void DbAPI::dimenticami()
     if (! (perms & PERM_DATA_WRITE))
         throw error_consistency("dimenticami must be called with the database open in data write mode");
 
-    db.remove(input);
+    Query query;
+    query.set_from_record(input);
+    db.remove(query);
     attr_state = ATTR_REFERENCE;
     attr_reference_id = missing_int;
 }
@@ -440,10 +447,10 @@ void DbAPI::messages_write_next(const char* template_name)
     Exporter exporter(*(output_file->output), options);
 
     // Do the export with the current filter
-    db.export_msgs(input, exporter);
+    Query query;
+    query.set_from_record(input);
+    db.export_msgs(query, exporter);
 }
 
 }
 }
-
-/* vim:set ts=4 sw=4: */

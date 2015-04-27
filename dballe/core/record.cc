@@ -417,6 +417,18 @@ const wreport::Var& Record::var(wreport::Varcode code) const
 	return *res;
 }
 
+int Record::enqi(dba_keyword parameter) const
+{
+    return key(parameter).enqi();
+}
+
+int Record::enqi(dba_keyword parameter, int def) const
+{
+    const Var* res = key_peek(parameter);
+    if (!res) return def;
+    return res->enq(def);
+}
+
 Var& Record::key(dba_keyword parameter)
 {
 	if (keydata[parameter] == NULL)
@@ -764,7 +776,7 @@ void Record::set_datetime(int ye, int mo, int da, int ho, int mi, int se)
     set(DBA_KEY_SEC,   se);
 }
 
-void Record::set(const Coord& c)
+void Record::set(const Coords& c)
 {
     set(DBA_KEY_LAT, c.lat);
     set(DBA_KEY_LON, c.lon);

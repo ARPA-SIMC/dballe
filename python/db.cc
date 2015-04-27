@@ -26,6 +26,7 @@
 #include "common.h"
 #include "dballe/core/defs.h"
 #include "dballe/core/file.h"
+#include "dballe/core/query.h"
 #include "dballe/msg/msgs.h"
 #include "dballe/msg/codec.h"
 #include <algorithm>
@@ -195,8 +196,12 @@ static PyObject* dpy_DB_remove(dpy_DB* self, PyObject* args)
     if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
         return NULL;
 
+    // TODO: if it is a dict, turn it directly into a Query?
+
     try {
-        self->db->remove(record->rec);
+        Query query;
+        query.set_from_record(record->rec);
+        self->db->remove(query);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -238,8 +243,12 @@ static PyObject* dpy_DB_query_stations(dpy_DB* self, PyObject* args)
     if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
         return NULL;
 
+    // TODO: if it is a dict, turn it directly into a Query?
+
     try {
-        std::unique_ptr<db::Cursor> res = self->db->query_stations(record->rec);
+        Query query;
+        query.set_from_record(record->rec);
+        std::unique_ptr<db::Cursor> res = self->db->query_stations(query);
         return (PyObject*)cursor_create(self, move(res));
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -254,8 +263,12 @@ static PyObject* dpy_DB_query_data(dpy_DB* self, PyObject* args)
     if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
         return NULL;
 
+    // TODO: if it is a dict, turn it directly into a Query?
+
     try {
-        std::unique_ptr<db::Cursor> res = self->db->query_data(record->rec);
+        Query query;
+        query.set_from_record(record->rec);
+        std::unique_ptr<db::Cursor> res = self->db->query_data(query);
         return (PyObject*)cursor_create(self, move(res));
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -270,8 +283,12 @@ static PyObject* dpy_DB_query_summary(dpy_DB* self, PyObject* args)
     if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
         return NULL;
 
+    // TODO: if it is a dict, turn it directly into a Query?
+
     try {
-        std::unique_ptr<db::Cursor> res = self->db->query_summary(record->rec);
+        Query query;
+        query.set_from_record(record->rec);
+        std::unique_ptr<db::Cursor> res = self->db->query_summary(query);
         return (PyObject*)cursor_create(self, move(res));
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -426,7 +443,9 @@ static PyObject* dpy_DB_export_to_file(dpy_DB* self, PyObject* args, PyObject* k
     try {
         std::unique_ptr<File> out = File::create(encoding, filename, "wb");
         ExportConsumer msg_writer(*out, as_generic ? "generic" : NULL);
-        self->db->export_msgs(query->rec, msg_writer);
+        Query q;
+        q.set_from_record(query->rec);
+        self->db->export_msgs(q, msg_writer);
         Py_RETURN_NONE;
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);

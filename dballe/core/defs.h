@@ -164,30 +164,35 @@ struct Trange
 std::ostream& operator<<(std::ostream& out, const Trange& l);
 
 /// Coordinates
-struct Coord
+struct Coords
 {
     /// Latitude multiplied by 100000 (5 significant digits preserved)
-    int lat;
+    int lat = MISSING_INT;
     /// Longitude normalised from -180.0 to 180.0 and multiplied by 100000 (5
     /// significant digits preserved) 
-    int lon;
+    int lon = MISSING_INT;
 
-    Coord() {}
-    Coord(int lat, int lon);
-    Coord(double lat, double lon);
+    Coords() {}
+    Coords(int lat, int lon);
+    Coords(double lat, double lon);
+
+    void set_lat(int lat);
+    void set_lon(int lat);
+    void set_lat(double lat);
+    void set_lon(double lat);
 
     double dlat() const;
     double dlon() const;
 
-    bool operator<(const Coord& o) const { return compare(o) < 0; }
-    bool operator>(const Coord& o) const { return compare(o) > 0; }
+    bool operator<(const Coords& o) const { return compare(o) < 0; }
+    bool operator>(const Coords& o) const { return compare(o) > 0; }
 
-    bool operator==(const Coord& c) const
+    bool operator==(const Coords& c) const
     {
         return lat == c.lat && lon == c.lon;
     }
 
-    bool operator!=(const Coord& c) const
+    bool operator!=(const Coords& c) const
     {
         return lat != c.lat || lon != c.lon;
     }
@@ -198,7 +203,7 @@ struct Coord
      * @return
      *   -1 if *this < o, 0 if *this == o, 1 if *this > o
      */
-    int compare(const Coord& o) const
+    int compare(const Coords& o) const
     {
         if (int res = lat - o.lat) return res;
         return lon - o.lon;
@@ -209,7 +214,7 @@ struct Coord
     static double fnormalon(double lon);
 };
 
-std::ostream& operator<<(std::ostream& out, const Coord& c);
+std::ostream& operator<<(std::ostream& out, const Coords& c);
 
 // Simple date structure
 struct Date
@@ -329,6 +334,18 @@ struct Datetime
         : date(year, month, day), time(hour, minute, second) {}
     Datetime(const int* val) : date(val), time(val+3) {}
 
+    /**
+     * Return a new datetime, same as this one but with missing fields filled
+     * with the lowest valid values
+     */
+    Datetime lower_bound() const;
+
+    /**
+     * Return a new datetime, same as this one but with missing fields filled
+     * with the highest valid values
+     */
+    Datetime upper_bound() const;
+
     /// Check if this datetime is the missing value
     bool is_missing() const { return date.is_missing(); }
 
@@ -372,7 +389,6 @@ struct Datetime
     static bool range_disjoint(
             const Datetime& begin1, const Datetime& until1,
             const Datetime& begin2, const Datetime& until2);
-
 };
 
 std::ostream& operator<<(std::ostream& out, const Datetime& dt);

@@ -1,7 +1,7 @@
 /*
  * dballe/v5/db - Archive for point-based meteorological data, db layout version 5
  *
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -190,7 +190,7 @@ public:
 	 * If rep_memo is specified instead, the corresponding report id is queried in
 	 * the database and set as "rep_cod" in the record.
 	 */
-	int get_rep_cod(const Query& rec);
+	int get_rep_cod(const Record& rec);
 
 	/*
 	 * Lookup, insert or replace data in station taking the values from
@@ -206,7 +206,7 @@ public:
 	 * @returns
 	 *   The station ID
 	 */
-	int obtain_station(const Query& rec, bool can_add=true);
+	int obtain_station(const Record& rec, bool can_add=true);
 
 	/*
 	 * Lookup, insert or replace data in station taking the values from
@@ -219,9 +219,9 @@ public:
 	 * @returns
 	 *   The context ID
 	 */
-	int obtain_context(const Query& rec);
+	int obtain_context(const Record& rec);
 
-    void insert(const Query& rec, bool can_replace, bool station_can_add);
+    void insert(const Record& rec, bool can_replace, bool station_can_add);
 
     int last_station_id() const;
 

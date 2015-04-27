@@ -114,8 +114,8 @@ std::vector<Test> tests {
     }),
     Test("query_station_vars", [](Fixture& f) {
         auto& db = *f.db;
-        Record query;
-        query.set_ana_context();
+        Query query;
+        query.query_station_vars = true;
         unique_ptr<db::Cursor> cur = db.query_summary(query);
         ensure_equals(cur->test_iterate(), 8);
     }),
@@ -259,7 +259,7 @@ std::vector<Test> tests {
         vector<int> context_ids;
         // And an invalid one
         int sum = 1;
-        Record query;
+        Query query;
         unique_ptr<db::Cursor> cur = db.query_data(query);
         while (cur->next())
         {

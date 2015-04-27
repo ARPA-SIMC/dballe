@@ -1,7 +1,7 @@
 /*
  * dballe/matcher - Local query match infrastructure
  *
- * Copyright (C) 2009--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2009--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,10 +23,12 @@
 #ifndef DBALLE_CORE_MATCHER_H
 #define DBALLE_CORE_MATCHER_H
 
+#include <dballe/core/defs.h>
 #include <memory>
 
 namespace dballe {
 struct Record;
+struct Query;
 
 namespace matcher {
 
@@ -76,7 +78,7 @@ struct Matched
      * min and max are arrays of 6 ints (from year to second), and either of
      * them can have -1 as the first element to indicate an open bound.
      */
-    virtual matcher::Result match_date(const int* min, const int* max) const;
+    virtual matcher::Result match_date(const Datetime& min, const Datetime& max) const;
 
     /**
      * Match coordinates, with bounds in 1/100000 of degree
@@ -84,7 +86,7 @@ struct Matched
      * Any value can be set to MISSING_INT if not applicable or to represent an
      * open bound
      */
-    virtual matcher::Result match_coords(int latmin, int latmax, int lonmin, int lonmax) const;
+    virtual matcher::Result match_coords(const Coords& cmin, const Coords& cmax) const;
 
     /**
      * Match rep_memo
@@ -117,7 +119,7 @@ struct Matcher
     virtual matcher::Result match(const Matched& item) const = 0;
     virtual void to_record(dballe::Record& query) const = 0;
 
-    static std::unique_ptr<Matcher> create(const dballe::Record& query);
+    static std::unique_ptr<Matcher> create(const dballe::Query& query);
 };
 
 }
