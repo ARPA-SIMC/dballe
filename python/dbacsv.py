@@ -50,7 +50,7 @@ class UnicodeCSVWriter(object):
 
     def writerow(self, row):
         enc = self.encode_field
-        self.writer.writerow([enc(row) for s in row])
+        self.writer.writerow([enc(s) for s in row])
 
 
 class Exporter:
