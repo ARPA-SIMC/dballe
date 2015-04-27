@@ -424,6 +424,7 @@ dist_noinst_HEADERS += \
 
 bench_run_SOURCES = \
 	benchmark/bench.cc \
+	db/db-query-parse-bench.cc \
 	db/db-import-bench.cc \
 	benchmark/bench-main.cc
 bench_run_LDADD = \
