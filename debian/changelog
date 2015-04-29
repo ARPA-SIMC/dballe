@@ -5,6 +5,7 @@ dballe (7.1-1) UNRELEASED; urgency=medium
      - implemented handling of temperature change information in synop messages
      - deal with SYNOP messages which do not transmit the pressure of the
        standard level
+     - removed support for V5 database formats.
 
  -- Enrico Zini <enrico@enricozini.org>  Tue, 31 Mar 2015 14:47:14 +0200
 
