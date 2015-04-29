@@ -174,6 +174,8 @@ static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args)
 
     if (PyFile_Check(obj))
         f = db_load_fileobj;
+    else if (PyObject_HasAttrString(obj, "fileno"))
+        f = db_load_fileno;
     else if (PyObject_HasAttrString(obj, "read"))
         f = db_load_filelike;
     else
@@ -697,6 +699,50 @@ bool db_load_filelike(DB* db, PyObject* obj)
     Py_DECREF(read_args);
     Py_DECREF(data);
     Py_DECREF(filerepr);
+    return true;
+}
+
+bool db_load_fileno(DB* db, PyObject* obj)
+{
+    PyObject* fileno_meth;
+    PyObject* fileno_args;
+    PyObject* fileno_repr;
+    PyObject* fileno_value;
+    int fileno;
+
+    fileno_meth = PyObject_GetAttrString(obj, "fileno");
+    fileno_args = Py_BuildValue("()");
+    fileno_value = PyObject_Call(fileno_meth, fileno_args, NULL);
+    if (!fileno_value) {
+        Py_DECREF(fileno_meth);
+        Py_DECREF(fileno_args);
+        return false;
+    }
+    if (!PyObject_TypeCheck(fileno_value, &PyInt_Type)) {
+        PyErr_SetString(PyExc_ValueError, "fileno() function must return an integer");
+        Py_DECREF(fileno_meth);
+        Py_DECREF(fileno_args);
+        Py_DECREF(fileno_value);
+        return false;
+    }
+    fileno_repr = PyObject_Repr(obj);
+    std::string name = PyString_AsString(fileno_repr);
+    fileno = dup(PyInt_AsLong(fileno_value));
+
+    FILE* f = fdopen(fileno, "r");
+    try {
+        db_load_file(db, f, true, name);
+    } catch (...) {
+        Py_DECREF(fileno_meth);
+        Py_DECREF(fileno_args);
+        Py_DECREF(fileno_value);
+        Py_DECREF(fileno_repr);
+        throw;
+    }
+    Py_DECREF(fileno_meth);
+    Py_DECREF(fileno_args);
+    Py_DECREF(fileno_value);
+    Py_DECREF(fileno_repr);
     return true;
 }
 

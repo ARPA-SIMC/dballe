@@ -59,6 +59,8 @@ bool db_load_fileobj(DB* db, PyObject* obj);
 
 bool db_load_filelike(DB* db, PyObject* obj);
 
+bool db_load_fileno(DB* db, PyObject* obj);
+
 }
 }
 
