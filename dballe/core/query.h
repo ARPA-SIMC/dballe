@@ -58,6 +58,21 @@ namespace dballe {
 
 struct Query
 {
+    static const uint32_t WANT_MISSING_IDENT =  (1 << 0);
+    static const uint32_t WANT_MISSING_LTYPE1 = (1 << 1);
+    static const uint32_t WANT_MISSING_L1 =     (1 << 2);
+    static const uint32_t WANT_MISSING_LTYPE2 = (1 << 3);
+    static const uint32_t WANT_MISSING_L2 =     (1 << 4);
+    static const uint32_t WANT_MISSING_PIND =   (1 << 5);
+    static const uint32_t WANT_MISSING_P1 =     (1 << 6);
+    static const uint32_t WANT_MISSING_P2 =     (1 << 7);
+
+    /**
+     * Set a bit a 1 with WANT_MISSING_* constants to specify that the query
+     * wants results in which the corresponding field is set to a missing
+     * value.
+     */
+    uint32_t want_missing = 0;
     int ana_id = MISSING_INT;
     int prio_min = MISSING_INT;
     int prio_max = MISSING_INT;
