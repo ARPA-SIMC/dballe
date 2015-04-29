@@ -25,6 +25,7 @@
 #include "dballe/core/record.h"
 #include "dballe/core/query.h"
 #include <cmath>
+#include <iostream>
 
 using namespace std;
 using namespace wreport;
@@ -56,23 +57,10 @@ matcher::Result Matched::match_rep_memo(const char* memo) const
     return matcher::MATCH_NA;
 }
 
-/// Return true if v1 < v2
-static bool lt(const int* v1, const int* v2)
+matcher::Result Matched::date_in_range(const Datetime& date, const Datetime& min, const Datetime& max)
 {
-    for (int i = 0; i < 5; ++i)
-    {
-        if (v1[i] < v2[i])
-            return true;
-        if (v1[i] > v2[i])
-            return false;
-    }
-    return v1[5] < v2[5];
-}
-
-matcher::Result Matched::date_in_range(const int* date, const int* min, const int* max)
-{
-    if (min[0] != MISSING_INT && lt(date, min)) return matcher::MATCH_NO;
-    if (max[1] != MISSING_INT && lt(max, date)) return matcher::MATCH_NO;
+    if (!min.is_missing() && date < min) return matcher::MATCH_NO;
+    if (!max.is_missing() && date > max) return matcher::MATCH_NO;
     return matcher::MATCH_YES;
 }
 
@@ -81,6 +69,17 @@ matcher::Result Matched::int_in_range(int val, int min, int max)
     if (min != MISSING_INT && val < min) return matcher::MATCH_NO;
     if (max != MISSING_INT && max < val) return matcher::MATCH_NO;
     return matcher::MATCH_YES;
+}
+
+matcher::Result Matched::lon_in_range(int val, int min, int max)
+{
+    if (min == MISSING_INT && max == MISSING_INT) return matcher::MATCH_YES;
+    if (min == MISSING_INT || max == MISSING_INT)
+        throw error_consistency("both minimum and maximum values must be set when matching longitudes");
+    if (min < max)
+        return (val >= min && val <= max) ? matcher::MATCH_YES : matcher::MATCH_NO;
+    else
+        return ((val >= min && val <= 18000000) || (val >= -18000000 && val <= max)) ? matcher::MATCH_YES : matcher::MATCH_NO;
 }
 
 namespace matcher {

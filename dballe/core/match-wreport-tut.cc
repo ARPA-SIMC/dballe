@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2010--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,6 +56,13 @@ struct match_wreport_shar {
         b.load_tables();
         return b;
     }
+
+    std::unique_ptr<Matcher> get_matcher(const char* q)
+    {
+        Query query;
+        query.set_from_test_string(q);
+        return Matcher::create(query);
+    }
 };
 TESTGRP(match_wreport);
 
@@ -63,9 +70,7 @@ TESTGRP(match_wreport);
 template<> template<>
 void to::test<1>()
 {
-    Record matcher;
-    matcher.set("data_id", 1);
-    std::unique_ptr<Matcher> m = Matcher::create(matcher);
+    auto m = get_matcher("context_id=1");
 
     Subset s(Vartable::get("dballe"));
     ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -81,9 +86,7 @@ void to::test<1>()
 template<> template<>
 void to::test<2>()
 {
-    Record matcher;
-    matcher.set("ana_id", 1);
-    std::unique_ptr<Matcher> m = Matcher::create(matcher);
+    auto m = get_matcher("ana_id=1");
 
     Subset s(Vartable::get("dballe"));
     ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -100,9 +103,7 @@ template<> template<>
 void to::test<3>()
 {
     {
-        Record matcher;
-        matcher.set("block", 11);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("block=11");
 
         Subset s(Vartable::get("dballe"));
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -118,10 +119,7 @@ void to::test<3>()
     }
 
     {
-        Record matcher;
-        matcher.set("block", 11);
-        matcher.set("station", 222);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("block=11, station=222");
 
         Subset s(Vartable::get("dballe"));
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -151,9 +149,7 @@ template<> template<>
 void to::test<4>()
 {
     {
-        Record matcher;
-        matcher.set("yearmin", 2000);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("yearmin=2000");
 
         Subset s(Vartable::get("dballe"));
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -165,9 +161,7 @@ void to::test<4>()
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_YES);
     }
     {
-        Record matcher;
-        matcher.set("yearmax", 2000);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("yearmax=2000");
 
         Subset s(Vartable::get("dballe"));
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -179,10 +173,7 @@ void to::test<4>()
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_YES);
     }
     {
-        Record matcher;
-        matcher.set("yearmin", 2000);
-        matcher.set("yearmax", 2010);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("yearmin=2000, yearmax=2010");
 
         Subset s(Vartable::get("dballe"));
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -209,9 +200,7 @@ template<> template<>
 void to::test<5>()
 {
     {
-        Record matcher;
-        matcher.set("latmin", 4500000);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("latmin=45.00");
 
         Subset s(Vartable::get("dballe"));
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -225,9 +214,7 @@ void to::test<5>()
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_YES);
     }
     {
-        Record matcher;
-        matcher.set("latmax", 4500000);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("latmax=45.00");
 
         Subset s(Vartable::get("dballe"));
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -241,9 +228,7 @@ void to::test<5>()
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_YES);
     }
     {
-        Record matcher;
-        matcher.set("lonmin", 1100000);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("lonmin=11.00, lonmax=180.0");
 
         Subset s(Vartable::get("dballe"));
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -257,9 +242,7 @@ void to::test<5>()
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_YES);
     }
     {
-        Record matcher;
-        matcher.set("lonmax", 1100000);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("lonmin=-180, lonmax=11.0");
 
         Subset s(Vartable::get("dballe"));
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -273,12 +256,7 @@ void to::test<5>()
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_YES);
     }
     {
-        Record matcher;
-        matcher.set("latmin", 4500000);
-        matcher.set("latmax", 4600000);
-        matcher.set("lonmin", 1000000);
-        matcher.set("lonmax", 1200000);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("latmin=45.0, latmax=46.0, lonmin=10.0, lonmax=12.0");
 
         Subset s(Vartable::get("dballe"));
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -298,9 +276,7 @@ void to::test<5>()
 template<> template<>
 void to::test<6>()
 {
-    Record matcher;
-    matcher.set(DBA_KEY_REP_MEMO, "synop");
-    std::unique_ptr<Matcher> m = Matcher::create(matcher);
+    auto m = get_matcher("rep_memo=synop");
 
     Subset s(Vartable::get("dballe"));
     ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
@@ -316,8 +292,8 @@ void to::test<6>()
 template<> template<>
 void to::test<7>()
 {
-    Record matcher;
-    std::unique_ptr<Matcher> m = Matcher::create(matcher);
+    Query query;
+    std::unique_ptr<Matcher> m = Matcher::create(query);
 
     Subset s(Vartable::get("dballe"));
     ensure(m->match(MatchedSubset(s)) == matcher::MATCH_YES);
@@ -327,9 +303,7 @@ void to::test<7>()
 template<> template<>
 void to::test<8>()
 {
-    Record matcher;
-    matcher.set("data_id", 1);
-    std::unique_ptr<Matcher> m = Matcher::create(matcher);
+    auto m = get_matcher("context_id=1");
 
     BufrBulletin& b = init();
     ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -345,9 +319,7 @@ void to::test<8>()
 template<> template<>
 void to::test<9>()
 {
-    Record matcher;
-    matcher.set("ana_id", 1);
-    std::unique_ptr<Matcher> m = Matcher::create(matcher);
+    auto m = get_matcher("ana_id=1");
 
     BufrBulletin& b = init();
     ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -364,9 +336,7 @@ template<> template<>
 void to::test<10>()
 {
     {
-        Record matcher;
-        matcher.set("block", 11);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("block=11");
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -382,10 +352,7 @@ void to::test<10>()
     }
 
     {
-        Record matcher;
-        matcher.set("block", 11);
-        matcher.set("station", 222);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("block=11, station=222");
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -411,10 +378,7 @@ void to::test<10>()
 
     // Valid block and station must be in the same subset
     {
-        Record matcher;
-        matcher.set("block", 11);
-        matcher.set("station", 222);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("block=11, station=222");
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -433,9 +397,7 @@ template<> template<>
 void to::test<11>()
 {
     {
-        Record matcher;
-        matcher.set("yearmin", 2000);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("yearmin=2000");
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -447,9 +409,7 @@ void to::test<11>()
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_YES);
     }
     {
-        Record matcher;
-        matcher.set("yearmax", 2000);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("yearmax=2000");
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -461,10 +421,7 @@ void to::test<11>()
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_YES);
     }
     {
-        Record matcher;
-        matcher.set("yearmin", 2000);
-        matcher.set("yearmax", 2010);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("yearmin=2000, yearmax=2010");
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -491,9 +448,7 @@ template<> template<>
 void to::test<12>()
 {
     {
-        Record matcher;
-        matcher.set("latmin", 4500000);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("latmin=45.0");
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -507,9 +462,7 @@ void to::test<12>()
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_YES);
     }
     {
-        Record matcher;
-        matcher.set("latmax", 4500000);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("latmax=45.0");
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -523,9 +476,7 @@ void to::test<12>()
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_YES);
     }
     {
-        Record matcher;
-        matcher.set("lonmin", 1100000);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("lonmin=11.00, lonmax=180.0");
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -539,9 +490,7 @@ void to::test<12>()
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_YES);
     }
     {
-        Record matcher;
-        matcher.set("lonmax", 1100000);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("lonmin=-180, lonmax=11.0");
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -555,12 +504,7 @@ void to::test<12>()
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_YES);
     }
     {
-        Record matcher;
-        matcher.set("latmin", 4500000);
-        matcher.set("latmax", 4600000);
-        matcher.set("lonmin", 1000000);
-        matcher.set("lonmax", 1200000);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("latmin=45.0, latmax=46.0, lonmin=10.0, lonmax=12.0");
 
         BufrBulletin& b = init();
         ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -580,9 +524,7 @@ void to::test<12>()
 template<> template<>
 void to::test<13>()
 {
-    Record matcher;
-    matcher.set(DBA_KEY_REP_MEMO, "synop");
-    std::unique_ptr<Matcher> m = Matcher::create(matcher);
+    auto m = get_matcher("rep_memo=synop");
 
     BufrBulletin& b = init();
     ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
@@ -598,13 +540,11 @@ void to::test<13>()
 template<> template<>
 void to::test<14>()
 {
-    Record matcher;
-    std::unique_ptr<Matcher> m = Matcher::create(matcher);
+    Query query;
+    std::unique_ptr<Matcher> m = Matcher::create(query);
 
     BufrBulletin& b = init();
     ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_YES);
 }
 
 }
-
-// vim:set ts=4 sw=4:

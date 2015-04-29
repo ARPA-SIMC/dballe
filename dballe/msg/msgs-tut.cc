@@ -45,6 +45,13 @@ struct msgs_shar
         unique_ptr<Msg> msg(new Msg);
         m.acquire(move(msg));
     }
+
+    std::unique_ptr<Matcher> get_matcher(const char* q)
+    {
+        Query query;
+        query.set_from_test_string(q);
+        return Matcher::create(query);
+    }
 };
 TESTGRP(msgs);
 
@@ -52,9 +59,7 @@ TESTGRP(msgs);
 template<> template<>
 void to::test<1>()
 {
-    Record matcher;
-    matcher.set("data_id", 1);
-    std::unique_ptr<Matcher> m = Matcher::create(matcher);
+    auto m = get_matcher("context_id=1");
 
     Msgs matched; init(matched);
     ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -72,9 +77,7 @@ void to::test<1>()
 template<> template<>
 void to::test<2>()
 {
-    Record matcher;
-    matcher.set("ana_id", 1);
-    std::unique_ptr<Matcher> m = Matcher::create(matcher);
+    auto m = get_matcher("ana_id=1");
 
     Msgs matched; init(matched);
     ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -91,9 +94,7 @@ template<> template<>
 void to::test<3>()
 {
     {
-        Record matcher;
-        matcher.set("block", 11);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("block=11");
 
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -109,10 +110,7 @@ void to::test<3>()
     }
 
     {
-        Record matcher;
-        matcher.set("block", 11);
-        matcher.set("station", 222);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("block=11, station=222");
 
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -139,9 +137,7 @@ template<> template<>
 void to::test<4>()
 {
     {
-        Record matcher;
-        matcher.set("yearmin", 2000);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("yearmin=2000");
 
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -153,9 +149,7 @@ void to::test<4>()
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_YES);
     }
     {
-        Record matcher;
-        matcher.set("yearmax", 2000);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("yearmax=2000");
 
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -167,10 +161,7 @@ void to::test<4>()
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_YES);
     }
     {
-        Record matcher;
-        matcher.set("yearmin", 2000);
-        matcher.set("yearmax", 2010);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("yearmin=2000, yearmax=2010");
 
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -197,9 +188,7 @@ template<> template<>
 void to::test<5>()
 {
     {
-        Record matcher;
-        matcher.set("latmin", 45.0);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("latmin=45.00");
 
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -213,9 +202,7 @@ void to::test<5>()
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_YES);
     }
     {
-        Record matcher;
-        matcher.set("latmax", 45.0);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("latmax=45.00");
 
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -229,9 +216,7 @@ void to::test<5>()
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_YES);
     }
     {
-        Record matcher;
-        matcher.set("lonmin", 45.0);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("lonmin=45.00, lonmax=180.0");
 
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -245,9 +230,7 @@ void to::test<5>()
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_YES);
     }
     {
-        Record matcher;
-        matcher.set("lonmax", 45.0);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("lonmin=-180, lonmax=45.0");
 
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -261,12 +244,7 @@ void to::test<5>()
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_YES);
     }
     {
-        Record matcher;
-        matcher.set("latmin", 45.0);
-        matcher.set("latmax", 46.0);
-        matcher.set("lonmin", 10.0);
-        matcher.set("lonmax", 12.0);
-        std::unique_ptr<Matcher> m = Matcher::create(matcher);
+        auto m = get_matcher("latmin=45.0, latmax=46.0, lonmin=10.0, lonmax=12.0");
 
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -286,9 +264,7 @@ void to::test<5>()
 template<> template<>
 void to::test<6>()
 {
-    Record matcher;
-    matcher.set(DBA_KEY_REP_MEMO, "synop");
-    std::unique_ptr<Matcher> m = Matcher::create(matcher);
+    auto m = get_matcher("rep_memo=synop");
 
     Msgs matched; init(matched);
     ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
@@ -304,8 +280,8 @@ void to::test<6>()
 template<> template<>
 void to::test<7>()
 {
-    Record matcher;
-    std::unique_ptr<Matcher> m = Matcher::create(matcher);
+    Query query;
+    std::unique_ptr<Matcher> m = Matcher::create(query);
 
     Msgs matched; init(matched);
     ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_YES);

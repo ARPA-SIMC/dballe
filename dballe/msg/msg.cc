@@ -758,19 +758,15 @@ void Msg::sounding_unpack_levels(Msg& dst) const
 }
 #endif
 
-void Msg::parse_date(int* values) const
+Datetime Msg::get_datetime() const
 {
     const msg::Context* c = find_station_context();
-    if (!c)
-    {
-        for (int i = 0; i < 6; ++i)
-            values[i] = -1;
-        return;
-    }
+    if (!c) return Datetime();
 
     int macros[] = { DBA_MSG_YEAR, DBA_MSG_MONTH, DBA_MSG_DAY, DBA_MSG_HOUR, DBA_MSG_MINUTE, DBA_MSG_SECOND };
     const char* names[] = { "year", "month", "day", "hour", "minute", "second" };
 
+    int values[6];
     for (int i = 0; i < 6; i++)
     {
         const wreport::Var* v = c->find_by_id(macros[i]);
@@ -788,14 +784,17 @@ void Msg::parse_date(int* values) const
 
     /* If one of the extremes has been selected, fill in the blanks */
 
+    Datetime dt;
     if (values[0] != -1)
     {
-        values[1] = values[1] != -1 ? values[1] : 1;
-        values[2] = values[2] != -1 ? values[2] : 1;
-        values[3] = values[3] != -1 ? values[3] : 0;
-        values[4] = values[4] != -1 ? values[4] : 0;
-        values[5] = values[5] != -1 ? values[5] : 0;
+        dt.date.year = values[0];
+        dt.date.month = values[1] != -1 ? values[1] : 1;
+        dt.date.day = values[2] != -1 ? values[2] : 1;
+        dt.time.hour = values[3] != -1 ? values[3] : 0;
+        dt.time.minute = values[4] != -1 ? values[4] : 0;
+        dt.time.second = values[5] != -1 ? values[5] : 0;
     }
+    return dt;
 }
 
 MatchedMsg::MatchedMsg(const Msg& m)
@@ -851,29 +850,28 @@ matcher::Result MatchedMsg::match_station_wmo(int block, int station) const
     return matcher::MATCH_NA;
 }
 
-matcher::Result MatchedMsg::match_date(const int* min, const int* max) const
+matcher::Result MatchedMsg::match_date(const Datetime& min, const Datetime& max) const
 {
-    int date[6];
-    m.parse_date(date);
-    if (date[0] == -1) return matcher::MATCH_NA;
-    return Matched::date_in_range(date, min, max);
+    Datetime dt = m.get_datetime().lower_bound();
+    if (dt.is_missing()) return matcher::MATCH_NA;
+    return Matched::date_in_range(dt, min, max);
 }
 
-matcher::Result MatchedMsg::match_coords(int latmin, int latmax, int lonmin, int lonmax) const
+matcher::Result MatchedMsg::match_coords(const Coords& min, const Coords& max) const
 {
     const msg::Context* c = m.find_station_context();
     if (!c) return matcher::MATCH_NA;
 
     matcher::Result r1 = matcher::MATCH_NA;
     if (const wreport::Var* var = c->find_by_id(DBA_MSG_LATITUDE))
-        r1 = Matched::int_in_range(var->enqi(), latmin, latmax);
-    else if (latmin == MISSING_INT && latmax == MISSING_INT)
+        r1 = Matched::int_in_range(var->enqi(), min.lat, max.lat);
+    else if (min.lat == MISSING_INT && max.lat == MISSING_INT)
         r1 = matcher::MATCH_YES;
 
     matcher::Result r2 = matcher::MATCH_NA;
     if (const wreport::Var* var = c->find_by_id(DBA_MSG_LONGITUDE))
-        r2 = Matched::int_in_range(var->enqi(), lonmin, lonmax);
-    else if (lonmin == MISSING_INT && lonmax == MISSING_INT)
+        r2 = Matched::lon_in_range(var->enqi(), min.lon, max.lon);
+    else if (min.lon == MISSING_INT && max.lon == MISSING_INT)
         r2 = matcher::MATCH_YES;
 
     if (r1 == matcher::MATCH_YES && r2 == matcher::MATCH_YES)
@@ -894,60 +892,4 @@ matcher::Result MatchedMsg::match_rep_memo(const char* memo) const
         return matcher::MATCH_NA;
 }
 
-#if 0
-
-static dba_err dba_msg_add_context(dba_msg msg, dba_msg_context ctx)
-{
-    dba_err err;
-    dba_msg_context copy = NULL;
-    DBA_RUN_OR_RETURN(dba_msg_context_copy(ctx, &copy));
-    DBA_RUN_OR_GOTO(fail, dba_msg_add_context_nocopy(msg, copy));
-    return dba_error_ok();
-
-fail:
-    if (copy)
-        dba_msg_context_delete(copy);
-    return err;
 }
-
-dba_err dba_msg_set_nocopy_by_id(dba_msg msg, dba_var var, int id)
-{
-    dba_msg_var v = &dba_msg_vartable[id];
-    return dba_msg_set_nocopy(msg, var, v->ltype1, v->l1, v->ltype2, v->l2, v->pind, v->p1, v->p2);
-}
-
-dba_err dba_msg_set_by_id(dba_msg msg, dba_var var, int id)
-{
-    dba_msg_var v = &dba_msg_vartable[id];
-    dba_err err;
-    dba_var copy = NULL;
-
-    /* Make a copy of the variable, to give it to dba_msg_add_nocopy */
-    DBA_RUN_OR_RETURN(dba_var_create_local(v->code, &copy));
-    /* Use copy_val to ensure we get the variable code we want */
-    DBA_RUN_OR_GOTO(fail, dba_var_copy_val(copy, var));
-
-    DBA_RUN_OR_GOTO(fail, dba_msg_set_nocopy(msg, copy, v->ltype1, v->l1, v->ltype2, v->l2, v->pind, v->p1, v->p2));
-
-    return dba_error_ok();
-
-fail:
-    if (copy != NULL)
-        dba_var_delete(copy);
-    return err;
-}
-
-
-
-dba_msg_type dba_msg_get_type(dba_msg msg)
-{
-    return msg->type;
-}
-
-
-
-#endif
-
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */

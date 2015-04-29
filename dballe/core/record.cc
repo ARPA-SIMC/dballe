@@ -674,36 +674,46 @@ void Record::set_datetimemax(const int (&val)[6])
 
 Datetime Record::get_datetime() const
 {
-    return Datetime(
-        get(DBA_KEY_YEAR).enqi(),
-        get(DBA_KEY_MONTH, 1),
-        get(DBA_KEY_DAY, 1),
-        get(DBA_KEY_HOUR, 0),
-        get(DBA_KEY_MIN, 0),
-        get(DBA_KEY_SEC, 0));
+    if (const Var* var = key_peek(DBA_KEY_YEAR))
+        return Datetime(
+            var->enqi(),
+            get(DBA_KEY_MONTH, 1),
+            get(DBA_KEY_DAY, 1),
+            get(DBA_KEY_HOUR, 0),
+            get(DBA_KEY_MIN, 0),
+            get(DBA_KEY_SEC, 0));
+    else
+        return Datetime();
 }
 
 Datetime Record::get_datetimemin() const
 {
-    return Datetime(
-        get(DBA_KEY_YEARMIN).enqi(),
-        get(DBA_KEY_MONTHMIN, 1),
-        get(DBA_KEY_DAYMIN, 1),
-        get(DBA_KEY_HOURMIN, 0),
-        get(DBA_KEY_MINUMIN, 0),
-        get(DBA_KEY_SECMIN, 0));
+    if (const Var* var = key_peek(DBA_KEY_YEARMIN))
+        return Datetime(
+            var->enqi(),
+            get(DBA_KEY_MONTHMIN, 1),
+            get(DBA_KEY_DAYMIN, 1),
+            get(DBA_KEY_HOURMIN, 0),
+            get(DBA_KEY_MINUMIN, 0),
+            get(DBA_KEY_SECMIN, 0));
+    else
+        return Datetime();
 }
 
 Datetime Record::get_datetimemax() const
 {
-    int year = get(DBA_KEY_YEARMAX).enqi();
-    int month = get(DBA_KEY_MONTHMAX, 12);
-    int day = get(DBA_KEY_DAYMAX, 0);
-    if (day == 0) day = Date::days_in_month(year, month);
-    return Datetime(year, month, day,
-        get(DBA_KEY_HOURMAX, 23),
-        get(DBA_KEY_MINUMAX, 59),
-        get(DBA_KEY_SECMAX, 59));
+    if (const Var* var = key_peek(DBA_KEY_YEARMAX))
+    {
+        int year = var->enqi();
+        int month = get(DBA_KEY_MONTHMAX, 12);
+        int day = get(DBA_KEY_DAYMAX, 0);
+        if (day == 0) day = Date::days_in_month(year, month);
+        return Datetime(year, month, day,
+            get(DBA_KEY_HOURMAX, 23),
+            get(DBA_KEY_MINUMAX, 59),
+            get(DBA_KEY_SECMAX, 59));
+    } else
+        return Datetime();
 }
 
 void Record::unset_datetime()
@@ -1110,26 +1120,25 @@ matcher::Result MatchedRecord::match_station_wmo(int block, int station) const
     return matcher::MATCH_NA;
 }
 
-matcher::Result MatchedRecord::match_date(const int* min, const int* max) const
+matcher::Result MatchedRecord::match_date(const Datetime& min, const Datetime& max) const
 {
-    int date[6];
-    r.parse_date(date);
-    if (date[0] == MISSING_INT) return matcher::MATCH_NA;
-    return Matched::date_in_range(date, min, max);
+    Datetime dt = r.get_datetime().lower_bound();
+    if (dt.is_missing()) return matcher::MATCH_NA;
+    return Matched::date_in_range(dt, min, max);
 }
 
-matcher::Result MatchedRecord::match_coords(int latmin, int latmax, int lonmin, int lonmax) const
+matcher::Result MatchedRecord::match_coords(const Coords& min, const Coords& max) const
 {
     matcher::Result r1 = matcher::MATCH_NA;
     if (const wreport::Var* var = r.key_peek(DBA_KEY_LAT))
-        r1 = Matched::int_in_range(var->enqi(), latmin, latmax);
-    else if (latmin == MISSING_INT && latmax == MISSING_INT)
+        r1 = Matched::int_in_range(var->enqi(), min.lat, max.lat);
+    else if (min.lat == MISSING_INT && max.lat == MISSING_INT)
         r1 = matcher::MATCH_YES;
 
     matcher::Result r2 = matcher::MATCH_NA;
     if (const wreport::Var* var = r.key_peek(DBA_KEY_LON))
-        r2 = Matched::int_in_range(var->enqi(), lonmin, lonmax);
-    else if (lonmin == MISSING_INT && lonmax == MISSING_INT)
+        r2 = Matched::lon_in_range(var->enqi(), min.lon, max.lon);
+    else if (min.lon == MISSING_INT && max.lon == MISSING_INT)
         r2 = matcher::MATCH_YES;
 
     if (r1 == matcher::MATCH_YES && r2 == matcher::MATCH_YES)

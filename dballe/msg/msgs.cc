@@ -171,7 +171,7 @@ matcher::Result MatchedMsgs::match_station_wmo(int block, int station) const
     return matcher::MATCH_NA;
 }
 
-matcher::Result MatchedMsgs::match_date(const int* min, const int* max) const
+matcher::Result MatchedMsgs::match_date(const Datetime& min, const Datetime& max) const
 {
     for (Msgs::const_iterator i = m.begin(); i != m.end(); ++i)
         if (MatchedMsg(**i).match_date(min, max) == matcher::MATCH_YES)
@@ -179,10 +179,10 @@ matcher::Result MatchedMsgs::match_date(const int* min, const int* max) const
     return matcher::MATCH_NA;
 }
 
-matcher::Result MatchedMsgs::match_coords(int latmin, int latmax, int lonmin, int lonmax) const
+matcher::Result MatchedMsgs::match_coords(const Coords& min, const Coords& max) const
 {
     for (Msgs::const_iterator i = m.begin(); i != m.end(); ++i)
-        if (MatchedMsg(**i).match_coords(latmin, latmax, lonmin, lonmax) == matcher::MATCH_YES)
+        if (MatchedMsg(**i).match_coords(min, max) == matcher::MATCH_YES)
             return matcher::MATCH_YES;
     return matcher::MATCH_NA;
 }
@@ -195,6 +195,4 @@ matcher::Result MatchedMsgs::match_rep_memo(const char* memo) const
     return matcher::MATCH_NA;
 }
 
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
+}

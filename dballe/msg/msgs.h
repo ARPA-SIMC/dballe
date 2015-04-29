@@ -125,12 +125,12 @@ struct MatchedMsgs : public Matched
     MatchedMsgs(const Msgs& m);
     ~MatchedMsgs();
 
-    virtual matcher::Result match_var_id(int val) const;
-    virtual matcher::Result match_station_id(int val) const;
-    virtual matcher::Result match_station_wmo(int block, int station=-1) const;
-    virtual matcher::Result match_date(const int* min, const int* max) const;
-    virtual matcher::Result match_coords(int latmin, int latmax, int lonmin, int lonmax) const;
-    virtual matcher::Result match_rep_memo(const char* memo) const;
+    matcher::Result match_var_id(int val) const override;
+    matcher::Result match_station_id(int val) const override;
+    matcher::Result match_station_wmo(int block, int station=-1) const override;
+    matcher::Result match_date(const Datetime& min, const Datetime& max) const override;
+    matcher::Result match_coords(const Coords& min, const Coords& max) const override;
+    matcher::Result match_rep_memo(const char* memo) const override;
 };
 
 }

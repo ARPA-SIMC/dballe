@@ -101,7 +101,7 @@ struct Matched
      * It correctly deals with min and max having the first element set to -1
      * to signify an open bound.
      */
-    static matcher::Result date_in_range(const int* date, const int* min, const int* max);
+    static matcher::Result date_in_range(const Datetime& date, const Datetime& min, const Datetime& max);
 
     /**
      * Match if min <= val <= max
@@ -110,6 +110,11 @@ struct Matched
      * bound.
      */
     static matcher::Result int_in_range(int val, int min, int max);
+
+    /**
+     * Match if val is contained inside the given longitude range
+     */
+    static matcher::Result lon_in_range(int val, int min, int max);
 };
 
 struct Matcher

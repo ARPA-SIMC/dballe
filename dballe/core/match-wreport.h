@@ -1,7 +1,7 @@
 /*
  * dballe/match-wreport - Matched implementation for wreport bulletins
  *
- * Copyright (C) 2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2010--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,16 +48,15 @@ struct MatchedSubset : public Matched
      * Return YES if the subset contains at least one var with the given B33195
      * attribute; else return NA.
      */
-    virtual matcher::Result match_var_id(int val) const;
-
-    virtual matcher::Result match_station_id(int val) const;
-    virtual matcher::Result match_station_wmo(int block, int station=-1) const;
-    virtual matcher::Result match_date(const int* min, const int* max) const;
-    virtual matcher::Result match_coords(int latmin, int latmax, int lonmin, int lonmax) const;
-    virtual matcher::Result match_rep_memo(const char* memo) const;
+    matcher::Result match_var_id(int val) const override;
+    matcher::Result match_station_id(int val) const override;
+    matcher::Result match_station_wmo(int block, int station=-1) const override;
+    matcher::Result match_date(const Datetime& min, const Datetime& max) const override;
+    matcher::Result match_coords(const Coords& min, const Coords& max) const override;
+    matcher::Result match_rep_memo(const char* memo) const override;
 
 protected:
-    int date[6];
+    Datetime date;
     int lat, lon;
     const wreport::Var* var_ana_id;
     const wreport::Var* var_block;
@@ -75,12 +74,12 @@ struct MatchedBulletin : public Matched
     MatchedBulletin(const wreport::Bulletin& r);
     ~MatchedBulletin();
 
-    virtual matcher::Result match_var_id(int val) const;
-    virtual matcher::Result match_station_id(int val) const;
-    virtual matcher::Result match_station_wmo(int block, int station=-1) const;
-    virtual matcher::Result match_date(const int* min, const int* max) const;
-    virtual matcher::Result match_coords(int latmin, int latmax, int lonmin, int lonmax) const;
-    virtual matcher::Result match_rep_memo(const char* memo) const;
+    matcher::Result match_var_id(int val) const override;
+    matcher::Result match_station_id(int val) const override;
+    matcher::Result match_station_wmo(int block, int station=-1) const override;
+    matcher::Result match_date(const Datetime& min, const Datetime& max) const override;
+    matcher::Result match_coords(const Coords& min, const Coords& max) const override;
+    matcher::Result match_rep_memo(const char* memo) const override;
 
 protected:
     const MatchedSubset** subsets;

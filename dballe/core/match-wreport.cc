@@ -35,9 +35,6 @@ MatchedSubset::MatchedSubset(const Subset& r)
     : r(r), lat(MISSING_INT), lon(MISSING_INT),
       var_ana_id(0), var_block(0), var_station(0), var_rep_memo(0)
 {
-    for (int i = 0; i < 6; ++i)
-        date[i] = -1;
-
     // Scan message taking note of significant values
     for (Subset::const_iterator i = r.begin(); i != r.end(); ++i)
     {
@@ -47,13 +44,13 @@ MatchedSubset::MatchedSubset(const Subset& r)
             case WR_VAR(0,  1,   2): var_station = &*i; break;
             case WR_VAR(0,  1, 192): var_ana_id = &*i; break;
             case WR_VAR(0,  1, 194): var_rep_memo = &*i; break;
-            case WR_VAR(0,  4,   1): date[0] = i->enq(-1); break;
-            case WR_VAR(0,  4,   2): date[1] = i->enq(-1); break;
-            case WR_VAR(0,  4,   3): date[2] = i->enq(-1); break;
-            case WR_VAR(0,  4,   4): date[3] = i->enq(-1); break;
-            case WR_VAR(0,  4,   5): date[4] = i->enq(-1); break;
-            case WR_VAR(0,  4,   6): date[5] = i->enq(-1); break;
-            case WR_VAR(0,  4,   7): date[5] = (int)rint(i->enq(-1.0)); break;
+            case WR_VAR(0,  4,   1): date.date.year = i->enq(-1); break;
+            case WR_VAR(0,  4,   2): date.date.month = i->enq(-1); break;
+            case WR_VAR(0,  4,   3): date.date.day = i->enq(-1); break;
+            case WR_VAR(0,  4,   4): date.time.hour = i->enq(-1); break;
+            case WR_VAR(0,  4,   5): date.time.minute = i->enq(-1); break;
+            case WR_VAR(0,  4,   6): date.time.second = i->enq(-1); break;
+            case WR_VAR(0,  4,   7): date.time.second = (int)rint(i->enq(-1.0)); break;
             case WR_VAR(0,  5,   1):
             case WR_VAR(0,  5,   2): if (i->isset()) lat = i->enqd() * 100000; break;
             case WR_VAR(0,  6,   1):
@@ -62,14 +59,7 @@ MatchedSubset::MatchedSubset(const Subset& r)
     }
 
     // Fill in missing date bits
-    if (date[0] != -1)
-    {
-        date[1] = date[1] != -1 ? date[1] : 1;
-        date[2] = date[2] != -1 ? date[2] : 1;
-        date[3] = date[3] != -1 ? date[3] : 0;
-        date[4] = date[4] != -1 ? date[4] : 0;
-        date[5] = date[5] != -1 ? date[5] : 0;
-    }
+    date = date.lower_bound();
 }
 
 MatchedSubset::~MatchedSubset()
@@ -106,24 +96,24 @@ matcher::Result MatchedSubset::match_station_wmo(int block, int station) const
     return matcher::MATCH_YES;
 }
 
-matcher::Result MatchedSubset::match_date(const int* min, const int* max) const
+matcher::Result MatchedSubset::match_date(const Datetime& min, const Datetime& max) const
 {
-    if (date[0] == -1) return matcher::MATCH_NA;
+    if (date.is_missing()) return matcher::MATCH_NA;
     return Matched::date_in_range(date, min, max);
 }
 
-matcher::Result MatchedSubset::match_coords(int latmin, int latmax, int lonmin, int lonmax) const
+matcher::Result MatchedSubset::match_coords(const Coords& min, const Coords& max) const
 {
     matcher::Result r1 = matcher::MATCH_NA;
     if (lat != MISSING_INT)
-        r1 = Matched::int_in_range(lat, latmin, latmax);
-    else if (latmin == MISSING_INT && latmax == MISSING_INT)
+        r1 = Matched::int_in_range(lat, min.lat, max.lat);
+    else if (min.lat == MISSING_INT && max.lat == MISSING_INT)
         r1 = matcher::MATCH_YES;
 
     matcher::Result r2 = matcher::MATCH_NA;
     if (lon != MISSING_INT)
-        r2 = Matched::int_in_range(lon, lonmin, lonmax);
-    else if (lonmin == MISSING_INT && lonmax == MISSING_INT)
+        r2 = Matched::lon_in_range(lon, min.lon, max.lon);
+    else if (min.lon == MISSING_INT && max.lon == MISSING_INT)
         r2 = matcher::MATCH_YES;
 
     if (r1 == matcher::MATCH_YES && r2 == matcher::MATCH_YES)
@@ -180,7 +170,7 @@ matcher::Result MatchedBulletin::match_station_wmo(int block, int station) const
     return matcher::MATCH_NA;
 }
 
-matcher::Result MatchedBulletin::match_date(const int* min, const int* max) const
+matcher::Result MatchedBulletin::match_date(const Datetime& min, const Datetime& max) const
 {
     for (unsigned i = 0; i < r.subsets.size(); ++i)
         if (subsets[i]->match_date(min, max) == matcher::MATCH_YES)
@@ -188,10 +178,10 @@ matcher::Result MatchedBulletin::match_date(const int* min, const int* max) cons
     return matcher::MATCH_NA;
 }
 
-matcher::Result MatchedBulletin::match_coords(int latmin, int latmax, int lonmin, int lonmax) const
+matcher::Result MatchedBulletin::match_coords(const Coords& min, const Coords& max) const
 {
     for (unsigned i = 0; i < r.subsets.size(); ++i)
-        if (subsets[i]->match_coords(latmin, latmax, lonmin, lonmax) == matcher::MATCH_YES)
+        if (subsets[i]->match_coords(min, max) == matcher::MATCH_YES)
             return matcher::MATCH_YES;
     return matcher::MATCH_NA;
 }

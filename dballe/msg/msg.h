@@ -1,7 +1,7 @@
 /*
  * dballe/msg - Hold an interpreted weather bulletin
  *
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -406,7 +406,7 @@ public:
      *   An array of 6 integers that will be filled with the minimum year, month,
      *   day, hour, minute and seconds.
      */
-    void parse_date(int* values) const;
+    Datetime get_datetime() const;
 
     /**
      * Read data from a CSV input.
@@ -491,57 +491,14 @@ struct MatchedMsg : public Matched
     MatchedMsg(const Msg& r);
     ~MatchedMsg();
 
-    virtual matcher::Result match_var_id(int val) const;
-    virtual matcher::Result match_station_id(int val) const;
-    virtual matcher::Result match_station_wmo(int block, int station=-1) const;
-    virtual matcher::Result match_date(const int* min, const int* max) const;
-    virtual matcher::Result match_coords(int latmin, int latmax, int lonmin, int lonmax) const;
-    virtual matcher::Result match_rep_memo(const char* memo) const;
+    matcher::Result match_var_id(int val) const override;
+    matcher::Result match_station_id(int val) const override;
+    matcher::Result match_station_wmo(int block, int station=-1) const override;
+    matcher::Result match_date(const Datetime& min, const Datetime& max) const override;
+    matcher::Result match_coords(const Coords& min, const Coords& max) const override;
+    matcher::Result match_rep_memo(const char* memo) const override;
 };
-
-#if 0
-/**
- * Add or replace a value in the dba_msg
- *
- * @param msg
- *   The message to operate on
- * @param var
- *   The dba_var with the value to set, that will be copied into the dba_msg.
- * @param id
- *   Shortcut ID of the value to set (see @ref vars.h)
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_msg_set_by_id(dba_msg msg, dba_var var, int id);
-
-/**
- * Add or replace a value in the dba_msg, taking ownership of the source
- * variable witout copying it.
- *
- * @param msg
- *   The message to operate on
- * @param var
- *   The dba_var with the value to set.  This dba_msg will take ownership of
- *   memory management.
- * @param id
- *   Shortcut ID of the value to set (see @ref vars.h)
- * @return
- *   The error indicator for the function (See @ref error.h)
- */
-dba_err dba_msg_set_nocopy_by_id(dba_msg msg, dba_var var, int id);
-
-/**
- * Get the source of the data
- *
- * @param msg
- *   The dba_msg to query
- * @return
- *   The query source type
- */
-dba_msg_type dba_msg_get_type(dba_msg msg);
-#endif
 
 }
 
-// vim:set ts=4 sw=4:
 #endif
