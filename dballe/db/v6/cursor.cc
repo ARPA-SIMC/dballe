@@ -194,7 +194,7 @@ void Cursor::add_station_info(Record& rec)
 
 unique_ptr<Cursor> Cursor::run_station_query(DB& db, const Query& q)
 {
-    unsigned int modifiers = q.get_modifiers() | DBA_DB_MODIFIER_ANAEXTRA | DBA_DB_MODIFIER_DISTINCT;
+    unsigned int modifiers = q.get_modifiers() | DBA_DB_MODIFIER_ANAEXTRA;
 
     StationQueryBuilder qb(db, q, modifiers);
     qb.build();

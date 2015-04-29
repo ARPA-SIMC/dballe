@@ -757,11 +757,11 @@ unsigned Query::parse_modifiers(const char* s)
             case 6:
                 /* "bigana": optimize with date first */
                 if (strncmp(s, "bigana", 6) == 0)
-                    modifiers |= DBA_DB_MODIFIER_BIGANA;
+                    ; // Not used anymore
                 else if (strncmp(s, "nosort", 6) == 0)
                     modifiers |= DBA_DB_MODIFIER_UNSORTED;
                 else if (strncmp(s, "stream", 6) == 0)
-                    modifiers |= DBA_DB_MODIFIER_STREAM;
+                    ; // Not used anymore
                 else
                     got = 0;
                 break;
