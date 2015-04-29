@@ -139,6 +139,48 @@ class DballeTest(unittest.TestCase):
         #db.attrRemove(1, "B01011", [ "B33007" ])
         self.db.attr_remove("B01011", self.attr_ref, ("B33007",))
 
+    def testLoadFile(self):
+        import os
+        with open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "r") as fp:
+            self.db.reset()
+            self.db.load(fp)
+            self.assertTrue(self.db.query_data(dballe.Record()).remaining > 0)
+
+    def testLoadFileLike(self):
+        import os
+        from StringIO import StringIO
+        with open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "r") as fp:
+            s = StringIO(fp.read())
+            self.db.reset()
+            self.db.load(s)
+            self.assertTrue(self.db.query_data(dballe.Record()).remaining > 0)
+
+    def testLoadFileno(self):
+        import os
+
+        class F():
+            def __init__(self, path):
+                self.path = path
+
+            def read(*args):
+                raise AttributeError()
+
+            def fileno(self):
+                return self.fp.fileno()
+
+            def __enter__(self):
+                self.fp = open(self.path, "r")
+                return self
+
+            def __exit__(self, type, value, traceback):
+                self.fp.close()
+
+        with F(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr") as f:
+            self.db.reset()
+            self.db.load(f)
+            self.assertTrue(self.db.query_data(dballe.Record()).remaining > 0)
+
+
 if __name__ == "__main__":
     from testlib import main
     main("test_db")
