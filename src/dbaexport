@@ -112,6 +112,8 @@ if __name__ == "__main__":
             with get_outfd(args, text=True) as fd:
                 dballe.dbacsv.export(db, query, fd)
         elif args.format == "gnur":
+            if not args.outfile:
+                raise CommandError("cannot export R data to standard output: please use --outfile")
             import dballe.rconvert
             import dballe.volnd
             idx = (dballe.volnd.AnaIndex(), \
@@ -120,8 +122,7 @@ if __name__ == "__main__":
                 dballe.volnd.TimeRangeIndex(), \
                 dballe.volnd.NetworkIndex())
             res = dballe.volnd.read(db.query_data(query), idx)
-            with get_outfd(args, text=True) as fd:
-                dballe.rconvert.volnd_save_to_r(res, fd)
+            dballe.rconvert.volnd_save_to_r(res, args.outfile)
         elif args.format == "bufr":
             if not args.outfile: raise CommandError("BUFR output requires --outfile")
             db.export_to_file(query, "BUFR", args.outfile, generic=args.generic)
