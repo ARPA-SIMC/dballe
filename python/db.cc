@@ -176,6 +176,11 @@ static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args)
         f = db_load_fileobj;
     else if (PyObject_HasAttrString(obj, "read"))
         f = db_load_filelike;
+    else
+    {
+        PyErr_SetString(PyExc_ValueError, "Argument must be a file or file-like object");
+        return NULL;
+    }
 
     try {
         if (f(self->db, obj))
