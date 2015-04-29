@@ -98,9 +98,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/sql/repinfo.h \
 	db/sql/station.h \
 	db/sql/levtr.h \
-	db/sql/datav5.h \
 	db/sql/datav6.h \
-	db/sql/attrv5.h \
 	db/sql/attrv6.h \
 	db/sql/driver.h \
 	db/sqlite/internals.h \
@@ -148,14 +146,9 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/odbc/repinfo.h \
 	db/odbc/station.h \
 	db/odbc/levtr.h \
-	db/odbc/datav5.h \
 	db/odbc/datav6.h \
-	db/odbc/attrv5.h \
 	db/odbc/attrv6.h \
-	db/odbc/driver.h \
-	db/v5/context.h \
-	db/v5/cursor.h \
-	db/v5/db.h
+	db/odbc/driver.h
 endif
 
 lib_LTLIBRARIES = libdballe.la
@@ -225,9 +218,7 @@ libdballe_la_SOURCES = \
 	db/sql/repinfo.cc \
 	db/sql/station.cc \
 	db/sql/levtr.cc \
-	db/sql/datav5.cc \
 	db/sql/datav6.cc \
-	db/sql/attrv5.cc \
 	db/sql/attrv6.cc \
 	db/sql/driver.cc \
 	db/sqlite/internals.cc \
@@ -280,16 +271,9 @@ libdballe_la_SOURCES += \
 	db/odbc/repinfo.cc \
 	db/odbc/station.cc \
 	db/odbc/levtr.cc \
-	db/odbc/datav5.cc \
 	db/odbc/datav6.cc \
-	db/odbc/attrv5.cc \
 	db/odbc/attrv6.cc \
-	db/odbc/driver.cc \
-	db/v5/context.cc \
-	db/v5/cursor.cc \
-	db/v5/db.cc \
-	db/v5/import.cc \
-	db/v5/export.cc
+	db/odbc/driver.cc
 endif
 
 libdballe_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(common_libs)
@@ -400,10 +384,7 @@ tut_test_SOURCES += \
 endif
 if HAVE_ODBC
 tut_test_SOURCES += \
-	db/sql/datav5-tut.cc \
-	db/sql/attrv5-tut.cc \
-	db/odbc/internals-tut.cc \
-	db/v5/tests/context.cc
+	db/odbc/internals-tut.cc
 endif
 
 tut_test_LDADD = \

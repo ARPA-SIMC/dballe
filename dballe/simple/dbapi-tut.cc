@@ -20,6 +20,7 @@
 #include "config.h"
 #include "db/test-utils-db.h"
 #include "dbapi.h"
+#include "config.h"
 
 using namespace std;
 using namespace dballe;
@@ -676,7 +677,6 @@ std::vector<Test> tests {
 test_group tg1("dbapi_mem", nullptr, db::MEM, tests);
 test_group tg2("dbapi_v6_sqlite", "SQLITE", db::V6, tests);
 #ifdef HAVE_ODBC
-test_group tg3("dbapi_v5_odbc", "ODBC", db::V5, tests);
 test_group tg4("dbapi_v6_odbc", "ODBC", db::V6, tests);
 #endif
 #ifdef HAVE_LIBPQ

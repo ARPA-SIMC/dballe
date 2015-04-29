@@ -45,7 +45,7 @@ namespace mysql {
 /**
  * Precompiled queries to manipulate the station table
  */
-class MySQLStationV5 : public sql::Station
+class MySQLStationBase : public sql::Station
 {
 protected:
     /**
@@ -60,11 +60,11 @@ protected:
     void read_station_vars(const std::string& query, std::function<void(std::unique_ptr<wreport::Var>)> dest);
 
 public:
-    MySQLStationV5(MySQLConnection& conn);
-    ~MySQLStationV5();
-    MySQLStationV5(const MySQLStationV5&) = delete;
-    MySQLStationV5(const MySQLStationV5&&) = delete;
-    MySQLStationV5& operator=(const MySQLStationV5&) = delete;
+    MySQLStationBase(MySQLConnection& conn);
+    ~MySQLStationBase();
+    MySQLStationBase(const MySQLStationBase&) = delete;
+    MySQLStationBase(const MySQLStationBase&&) = delete;
+    MySQLStationBase& operator=(const MySQLStationBase&) = delete;
 
     /**
      * Get the station ID given latitude, longitude and mobile identifier.
@@ -95,7 +95,7 @@ public:
     void dump(FILE* out) override;
 };
 
-class MySQLStationV6 : public MySQLStationV5
+class MySQLStationV6 : public MySQLStationBase
 {
 public:
     MySQLStationV6(MySQLConnection& conn);

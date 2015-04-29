@@ -36,7 +36,7 @@ namespace dballe {
 namespace db {
 namespace odbc {
 
-ODBCStationV5::ODBCStationV5(ODBCConnection& conn)
+ODBCStationBase::ODBCStationBase(ODBCConnection& conn)
     : conn(conn), seq_station(0), sfstm(0), smstm(0), sstm(0), istm(0), ustm(0), dstm(0)
 {
     const char* select_fixed_query =
@@ -104,7 +104,7 @@ ODBCStationV5::ODBCStationV5(ODBCConnection& conn)
     dstm->bind_in(1, id);
 }
 
-ODBCStationV5::~ODBCStationV5()
+ODBCStationBase::~ODBCStationBase()
 {
     if (sfstm) delete sfstm;
     if (smstm) delete smstm;
@@ -115,7 +115,7 @@ ODBCStationV5::~ODBCStationV5()
     if (seq_station) delete seq_station;
 }
 
-void ODBCStationV5::set_ident(const char* val)
+void ODBCStationBase::set_ident(const char* val)
 {
     if (val)
     {
@@ -130,7 +130,7 @@ void ODBCStationV5::set_ident(const char* val)
     }
 }
 
-int ODBCStationV5::get_id(int lat, int lon, const char* ident)
+int ODBCStationBase::get_id(int lat, int lon, const char* ident)
 {
     this->lat = lat;
     this->lon = lon;
@@ -143,7 +143,7 @@ int ODBCStationV5::get_id(int lat, int lon, const char* ident)
     throw error_notfound("station not found in the database");
 }
 
-void ODBCStationV5::get_data(int qid)
+void ODBCStationBase::get_data(int qid)
 {
     id = qid;
     sstm->execute();
@@ -153,7 +153,7 @@ void ODBCStationV5::get_data(int qid)
         ident[0] = 0;
 }
 
-int ODBCStationV5::obtain_id(int lat, int lon, const char* ident, bool* inserted)
+int ODBCStationBase::obtain_id(int lat, int lon, const char* ident, bool* inserted)
 {
     this->lat = lat;
     this->lon = lon;
@@ -177,17 +177,17 @@ int ODBCStationV5::obtain_id(int lat, int lon, const char* ident, bool* inserted
         return conn.get_last_insert_id();
 }
 
-void ODBCStationV5::update()
+void ODBCStationBase::update()
 {
     ustm->execute_and_close();
 }
 
-void ODBCStationV5::remove()
+void ODBCStationBase::remove()
 {
     dstm->execute_and_close();
 }
 
-void ODBCStationV5::get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+void ODBCStationBase::get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     // Perform the query
     static const char query[] =
@@ -252,7 +252,7 @@ void ODBCStationV5::get_station_vars(int id_station, int id_report, std::functio
     }
 }
 
-void ODBCStationV5::dump(FILE* out)
+void ODBCStationBase::dump(FILE* out)
 {
     int id;
     int lat;
@@ -277,7 +277,7 @@ void ODBCStationV5::dump(FILE* out)
     stm->close_cursor();
 }
 
-void ODBCStationV5::impl_add_station_vars(const char* query, int id_station, Record& rec)
+void ODBCStationBase::impl_add_station_vars(const char* query, int id_station, Record& rec)
 {
     Varcode last_code = 0;
     unsigned short st_out_code;
@@ -304,7 +304,7 @@ void ODBCStationV5::impl_add_station_vars(const char* query, int id_station, Rec
     }
 }
 
-void ODBCStationV5::add_station_vars(int id_station, Record& rec)
+void ODBCStationBase::add_station_vars(int id_station, Record& rec)
 {
     /* Extra variables to add:
      *
@@ -327,7 +327,7 @@ void ODBCStationV5::add_station_vars(int id_station, Record& rec)
 
 
 ODBCStationV6::ODBCStationV6(ODBCConnection& conn)
-    : ODBCStationV5(conn) {}
+    : ODBCStationBase(conn) {}
 
 void ODBCStationV6::get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {

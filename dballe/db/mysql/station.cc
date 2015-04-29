@@ -34,16 +34,16 @@ namespace dballe {
 namespace db {
 namespace mysql {
 
-MySQLStationV5::MySQLStationV5(MySQLConnection& conn)
+MySQLStationBase::MySQLStationBase(MySQLConnection& conn)
     : conn(conn)
 {
 }
 
-MySQLStationV5::~MySQLStationV5()
+MySQLStationBase::~MySQLStationBase()
 {
 }
 
-bool MySQLStationV5::maybe_get_id(int lat, int lon, const char* ident, int* id)
+bool MySQLStationBase::maybe_get_id(int lat, int lon, const char* ident, int* id)
 {
     Querybuf qb;
     MySQLStatement* s;
@@ -68,7 +68,7 @@ bool MySQLStationV5::maybe_get_id(int lat, int lon, const char* ident, int* id)
     }
 }
 
-int MySQLStationV5::get_id(int lat, int lon, const char* ident)
+int MySQLStationBase::get_id(int lat, int lon, const char* ident)
 {
     int id;
     if (maybe_get_id(lat, lon, ident, &id))
@@ -76,7 +76,7 @@ int MySQLStationV5::get_id(int lat, int lon, const char* ident)
     throw error_notfound("station not found in the database");
 }
 
-int MySQLStationV5::obtain_id(int lat, int lon, const char* ident, bool* inserted)
+int MySQLStationBase::obtain_id(int lat, int lon, const char* ident, bool* inserted)
 {
     // Try select first
     int id;
@@ -137,7 +137,7 @@ int MySQLStationV5::obtain_id(int lat, int lon, const char* ident, bool* inserte
 #endif
 }
 
-void MySQLStationV5::read_station_vars(const std::string& query, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+void MySQLStationBase::read_station_vars(const std::string& query, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     // Retrieve results
     Varcode last_varcode = 0;
@@ -175,7 +175,7 @@ void MySQLStationV5::read_station_vars(const std::string& query, std::function<v
     }
 }
 
-void MySQLStationV5::get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+void MySQLStationBase::get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     // Perform the query
     Querybuf query;
@@ -191,7 +191,7 @@ void MySQLStationV5::get_station_vars(int id_station, int id_report, std::functi
     read_station_vars(query, dest);
 }
 
-void MySQLStationV5::dump(FILE* out)
+void MySQLStationBase::dump(FILE* out)
 {
     int count = 0;
     fprintf(out, "dump of table station:\n");
@@ -211,7 +211,7 @@ void MySQLStationV5::dump(FILE* out)
     fprintf(out, "%d element%s in table station\n", count, count != 1 ? "s" : "");
 }
 
-void MySQLStationV5::add_station_vars(int id_station, Record& rec)
+void MySQLStationBase::add_station_vars(int id_station, Record& rec)
 {
     /* Extra variables to add:
      *
@@ -242,7 +242,7 @@ void MySQLStationV5::add_station_vars(int id_station, Record& rec)
 }
 
 MySQLStationV6::MySQLStationV6(MySQLConnection& conn)
-    : MySQLStationV5(conn) {}
+    : MySQLStationBase(conn) {}
 
 void MySQLStationV6::get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {

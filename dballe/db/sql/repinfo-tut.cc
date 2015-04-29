@@ -19,7 +19,6 @@
 
 #include "config.h"
 #include "db/test-utils-db.h"
-#include "db/v5/db.h"
 #include "db/v6/db.h"
 #include "db/sql.h"
 #include "db/sql/driver.h"
@@ -50,9 +49,7 @@ struct Fixture : dballe::tests::DriverFixture
 
         switch (format)
         {
-            case V5:
-                repinfo = driver->create_repinfov5();
-                break;
+            case V5: throw error_unimplemented("v5 db is not supported");
             case V6:
                 repinfo = driver->create_repinfov6();
                 break;
@@ -146,18 +143,14 @@ std::vector<Test> tests {
     }),
 };
 
-test_group tg1("db_sql_repinfo_v5_sqlite", "SQLITE", db::V5, tests);
 test_group tg2("db_sql_repinfo_v6_sqlite", "SQLITE", db::V6, tests);
 #ifdef HAVE_ODBC
-test_group tg3("db_sql_repinfo_v5_odbc", "ODBC", db::V5, tests);
 test_group tg4("db_sql_repinfo_v6_odbc", "ODBC", db::V6, tests);
 #endif
 #ifdef HAVE_LIBPQ
-test_group tg5("db_sql_repinfo_v5_postgresql", "POSTGRESQL", db::V5, tests);
 test_group tg6("db_sql_repinfo_v6_postgresql", "POSTGRESQL", db::V6, tests);
 #endif
 #ifdef HAVE_MYSQL
-test_group tg7("db_sql_repinfo_v5_mysql", "MYSQL", db::V5, tests);
 test_group tg8("db_sql_repinfo_v6_mysql", "MYSQL", db::V6, tests);
 #endif
 

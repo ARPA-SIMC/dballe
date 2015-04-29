@@ -18,7 +18,6 @@
  */
 
 #include "db/test-utils-db.h"
-#include "db/v5/db.h"
 #include "db/v6/db.h"
 #include "db/sql.h"
 #include "db/sql/station.h"
@@ -48,9 +47,7 @@ struct Fixture : dballe::tests::DriverFixture
 
         switch (format)
         {
-            case db::V5:
-                station = driver->create_stationv5();
-                break;
+            case db::V5: throw error_unimplemented("v5 db is not supported");
             case db::V6:
                 station = driver->create_stationv6();
                 break;
@@ -95,18 +92,14 @@ std::vector<Test> tests {
     }),
 };
 
-test_group tg1("db_sql_station_v5_sqlite", "SQLITE", db::V5, tests);
 test_group tg2("db_sql_station_v6_sqlite", "SQLITE", db::V6, tests);
 #ifdef HAVE_ODBC
-test_group tg3("db_sql_station_v5_odbc", "ODBC", db::V5, tests);
 test_group tg4("db_sql_station_v6_odbc", "ODBC", db::V6, tests);
 #endif
 #ifdef HAVE_LIBPQ
-test_group tg5("db_sql_station_v5_postgresql", "POSTGRESQL", db::V5, tests);
 test_group tg6("db_sql_station_v6_postgresql", "POSTGRESQL", db::V6, tests);
 #endif
 #ifdef HAVE_MYSQL
-test_group tg7("db_sql_station_v5_mysql", "MYSQL", db::V5, tests);
 test_group tg8("db_sql_station_v6_mysql", "MYSQL", db::V6, tests);
 #endif
 

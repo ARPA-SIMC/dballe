@@ -18,7 +18,6 @@
  */
 
 #include "db/test-utils-db.h"
-#include "db/v5/db.h"
 #include <wibble/string.h>
 #include "config.h"
 
@@ -301,16 +300,9 @@ std::vector<Test> tests {
         char valid_query[100];
         snprintf(valid_query, 100, "context_id=%d", res.key(DBA_KEY_CONTEXT_ID).enqi());
 
-        if (dynamic_cast<db::v5::DB*>(f.db))
-        {
-            // context ID queries
-            TRY_QUERY(valid_query, 5);
-            TRY_QUERY("context_id=1234567", 0);
-        } else {
-            // context ID queries
-            TRY_QUERY(valid_query, 1);
-            TRY_QUERY("context_id=1234567", 0);
-        }
+        // context ID queries
+        TRY_QUERY(valid_query, 1);
+        TRY_QUERY("context_id=1234567", 0);
     }),
     Test("datetime1", [](Fixture& f) {
         // Check datetime queries, with data that only differs by its hour
@@ -385,7 +377,6 @@ std::vector<Test> tests {
 test_group tg1("db_query_data_mem", nullptr, db::MEM, tests);
 test_group tg2("db_query_data_v6_sqlite", "SQLITE", db::V6, tests);
 #ifdef HAVE_ODBC
-test_group tg3("db_query_data_v5_odbc", "ODBC", db::V5, tests);
 test_group tg4("db_query_data_v6_odbc", "ODBC", db::V6, tests);
 #endif
 #ifdef HAVE_LIBPQ

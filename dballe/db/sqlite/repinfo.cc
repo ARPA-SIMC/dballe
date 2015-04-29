@@ -1,7 +1,7 @@
 /*
- * db/v5/repinfo - repinfo table management
+ * db/sqlite/repinfo - repinfo table management
  *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,17 +30,17 @@ namespace dballe {
 namespace db {
 namespace sqlite {
 
-SQLiteRepinfoV5::SQLiteRepinfoV5(SQLiteConnection& conn)
+SQLiteRepinfoBase::SQLiteRepinfoBase(SQLiteConnection& conn)
     : Repinfo(conn), conn(conn)
 {
     read_cache();
 }
 
-SQLiteRepinfoV5::~SQLiteRepinfoV5()
+SQLiteRepinfoBase::~SQLiteRepinfoBase()
 {
 }
 
-void SQLiteRepinfoV5::read_cache()
+void SQLiteRepinfoBase::read_cache()
 {
     cache.clear();
     memo_idx.clear();
@@ -64,7 +64,7 @@ void SQLiteRepinfoV5::read_cache()
     rebuild_memo_idx();
 }
 
-void SQLiteRepinfoV5::insert_auto_entry(const char* memo)
+void SQLiteRepinfoBase::insert_auto_entry(const char* memo)
 {
     auto stm = conn.sqlitestatement("SELECT MAX(id) FROM repinfo");
     unsigned id;
@@ -89,7 +89,7 @@ void SQLiteRepinfoV5::insert_auto_entry(const char* memo)
     stm->execute();
 }
 
-int SQLiteRepinfoV5::id_use_count(unsigned id, const char* name)
+int SQLiteRepinfoBase::id_use_count(unsigned id, const char* name)
 {
     unsigned count = 0;
     auto stm = conn.sqlitestatement("SELECT COUNT(1) FROM context WHERE id_report=?");
@@ -100,14 +100,14 @@ int SQLiteRepinfoV5::id_use_count(unsigned id, const char* name)
     return count;
 }
 
-void SQLiteRepinfoV5::delete_entry(unsigned id)
+void SQLiteRepinfoBase::delete_entry(unsigned id)
 {
     auto stm = conn.sqlitestatement("DELETE FROM repinfo WHERE id=?");
     stm->bind(id);
     stm->execute();
 }
 
-void SQLiteRepinfoV5::update_entry(const sql::repinfo::Cache& entry)
+void SQLiteRepinfoBase::update_entry(const sql::repinfo::Cache& entry)
 {
     auto stm = conn.sqlitestatement(R"(
         UPDATE repinfo set memo=?, description=?, prio=?, descriptor=?, tablea=?
@@ -123,7 +123,7 @@ void SQLiteRepinfoV5::update_entry(const sql::repinfo::Cache& entry)
     stm->execute();
 }
 
-void SQLiteRepinfoV5::insert_entry(const sql::repinfo::Cache& entry)
+void SQLiteRepinfoBase::insert_entry(const sql::repinfo::Cache& entry)
 {
     auto stm = conn.sqlitestatement(R"(
         INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)
@@ -139,7 +139,7 @@ void SQLiteRepinfoV5::insert_entry(const sql::repinfo::Cache& entry)
     stm->execute();
 }
 
-void SQLiteRepinfoV5::dump(FILE* out)
+void SQLiteRepinfoBase::dump(FILE* out)
 {
     fprintf(out, "dump of table repinfo:\n");
     fprintf(out, "   id   memo   description  prio   desc  tablea\n");
@@ -163,7 +163,7 @@ void SQLiteRepinfoV5::dump(FILE* out)
     fprintf(out, "%d element%s in table repinfo\n", count, count != 1 ? "s" : "");
 }
 
-SQLiteRepinfoV6::SQLiteRepinfoV6(SQLiteConnection& conn) : SQLiteRepinfoV5(conn) {}
+SQLiteRepinfoV6::SQLiteRepinfoV6(SQLiteConnection& conn) : SQLiteRepinfoBase(conn) {}
 
 int SQLiteRepinfoV6::id_use_count(unsigned id, const char* name)
 {

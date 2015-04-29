@@ -45,19 +45,9 @@ Driver::~Driver()
 {
 }
 
-std::unique_ptr<sql::Repinfo> Driver::create_repinfov5()
-{
-    return unique_ptr<sql::Repinfo>(new MySQLRepinfoV5(conn));
-}
-
 std::unique_ptr<sql::Repinfo> Driver::create_repinfov6()
 {
     return unique_ptr<sql::Repinfo>(new MySQLRepinfoV6(conn));
-}
-
-std::unique_ptr<sql::Station> Driver::create_stationv5()
-{
-    return unique_ptr<sql::Station>(new MySQLStationV5(conn));
 }
 
 std::unique_ptr<sql::Station> Driver::create_stationv6()
@@ -70,19 +60,9 @@ std::unique_ptr<sql::LevTr> Driver::create_levtrv6()
     return unique_ptr<sql::LevTr>(new MySQLLevTrV6(conn));
 }
 
-std::unique_ptr<sql::DataV5> Driver::create_datav5()
-{
-    throw error_unimplemented("datav5 not implemented for MySQL");
-}
-
 std::unique_ptr<sql::DataV6> Driver::create_datav6()
 {
     return unique_ptr<sql::DataV6>(new MySQLDataV6(conn));
-}
-
-std::unique_ptr<sql::AttrV5> Driver::create_attrv5()
-{
-    throw error_unimplemented("attrv5 not implemented for MySQL");
 }
 
 std::unique_ptr<sql::AttrV6> Driver::create_attrv6()
@@ -149,71 +129,6 @@ void Driver::run_built_query_v6(
     });
 }
 
-void Driver::create_tables_v5()
-{
-    conn.exec_no_data(R"(
-        CREATE TABLE station (
-           id         INTEGER auto_increment PRIMARY KEY,
-           lat        INTEGER NOT NULL,
-           lon        INTEGER NOT NULL,
-           ident      CHAR(64),
-           UNIQUE INDEX(lat, lon, ident(8)),
-           INDEX(lon)
-        ) ENGINE=InnoDB;
-    )");
-    conn.exec_no_data(R"(
-        CREATE TABLE repinfo (
-           id           SMALLINT PRIMARY KEY,
-           memo         VARCHAR(20) NOT NULL,
-           description  VARCHAR(255) NOT NULL,
-           prio         INTEGER NOT NULL,
-           descriptor   CHAR(6) NOT NULL,
-           tablea       INTEGER NOT NULL,
-           UNIQUE INDEX (prio),
-           UNIQUE INDEX (memo)
-        ) ENGINE=InnoDB;
-    )");
-    conn.exec_no_data(R"(
-        CREATE TABLE context (
-           id          INTEGER auto_increment PRIMARY KEY,
-           id_ana      INTEGER NOT NULL,
-           id_report   SMALLINT NOT NULL,
-           datetime    DATETIME NOT NULL,
-           ltype1      INTEGER NOT NULL,
-           l1          INTEGER NOT NULL,
-           ltype2      INTEGER NOT NULL,
-           l2          INTEGER NOT NULL,
-           ptype       INTEGER NOT NULL,
-           p1          INTEGER NOT NULL,
-           p2          INTEGER NOT NULL,
-           UNIQUE INDEX (id_ana, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2, id_report),
-           INDEX (id_ana),
-           INDEX (id_report),
-           INDEX (datetime),
-           INDEX (ltype1, l1, ltype2, l2),
-           INDEX (ptype, p1, p2)
-       ) ENGINE=InnoDB;
-    )");
-    conn.exec_no_data(R"(
-        CREATE TABLE data (
-           id_context  INTEGER NOT NULL,
-           id_var      SMALLINT NOT NULL,
-           value       VARCHAR(255) NOT NULL,
-           INDEX (id_context),
-           UNIQUE INDEX(id_var, id_context)
-       ) ENGINE=InnoDB;
-    )");
-    conn.exec_no_data(R"(
-        CREATE TABLE attr (
-           id_context  INTEGER NOT NULL,
-           id_var      SMALLINT NOT NULL,
-           type        SMALLINT NOT NULL,
-           value       VARCHAR(255) NOT NULL,
-           INDEX (id_context, id_var),
-           UNIQUE INDEX (id_context, id_var, type)
-       ) ENGINE=InnoDB;
-    )");
-}
 void Driver::create_tables_v6()
 {
     conn.exec_no_data(R"(
@@ -274,15 +189,6 @@ void Driver::create_tables_v6()
        ) ENGINE=InnoDB;
     )");
 }
-void Driver::delete_tables_v5()
-{
-    conn.drop_table_if_exists("attr");
-    conn.drop_table_if_exists("data");
-    conn.drop_table_if_exists("context");
-    conn.drop_table_if_exists("repinfo");
-    conn.drop_table_if_exists("station");
-    conn.drop_settings();
-}
 void Driver::delete_tables_v6()
 {
     conn.drop_table_if_exists("attr");
@@ -291,11 +197,6 @@ void Driver::delete_tables_v6()
     conn.drop_table_if_exists("repinfo");
     conn.drop_table_if_exists("station");
     conn.drop_settings();
-}
-void Driver::vacuum_v5()
-{
-    conn.exec_no_data("DELETE c FROM context c LEFT JOIN data d ON d.id_context = c.id WHERE d.id_context IS NULL");
-    conn.exec_no_data("DELETE p FROM station p LEFT JOIN context c ON c.id_ana = p.id WHERE c.id is NULL");
 }
 void Driver::vacuum_v6()
 {

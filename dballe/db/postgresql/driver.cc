@@ -44,19 +44,9 @@ Driver::~Driver()
 {
 }
 
-std::unique_ptr<sql::Repinfo> Driver::create_repinfov5()
-{
-    return unique_ptr<sql::Repinfo>(new PostgreSQLRepinfoV5(conn));
-}
-
 std::unique_ptr<sql::Repinfo> Driver::create_repinfov6()
 {
     return unique_ptr<sql::Repinfo>(new PostgreSQLRepinfoV6(conn));
-}
-
-std::unique_ptr<sql::Station> Driver::create_stationv5()
-{
-    return unique_ptr<sql::Station>(new PostgreSQLStationV5(conn));
 }
 
 std::unique_ptr<sql::Station> Driver::create_stationv6()
@@ -69,19 +59,9 @@ std::unique_ptr<sql::LevTr> Driver::create_levtrv6()
     return unique_ptr<sql::LevTr>(new PostgreSQLLevTrV6(conn));
 }
 
-std::unique_ptr<sql::DataV5> Driver::create_datav5()
-{
-    throw error_unimplemented("datav5 not implemented for PostgreSQL");
-}
-
 std::unique_ptr<sql::DataV6> Driver::create_datav6()
 {
     return unique_ptr<sql::DataV6>(new PostgreSQLDataV6(conn));
-}
-
-std::unique_ptr<sql::AttrV5> Driver::create_attrv5()
-{
-    throw error_unimplemented("attrv5 not implemented for PostgreSQL");
 }
 
 std::unique_ptr<sql::AttrV6> Driver::create_attrv6()
@@ -212,71 +192,6 @@ void Driver::run_built_query_v6(
     }
 }
 
-void Driver::create_tables_v5()
-{
-    conn.exec_no_data(R"(
-        CREATE TABLE station (
-           id         SERIAL PRIMARY KEY,
-           lat        INTEGER NOT NULL,
-           lon        INTEGER NOT NULL,
-           ident      VARCHAR(64)
-        );
-    )");
-    conn.exec_no_data("CREATE UNIQUE INDEX pa_uniq ON station(lat, lon, ident);");
-    conn.exec_no_data("CREATE INDEX pa_lon ON station(lon);");
-    conn.exec_no_data(R"(
-        CREATE TABLE repinfo (
-           id           INTEGER PRIMARY KEY,
-           memo         VARCHAR(30) NOT NULL,
-           description  VARCHAR(255) NOT NULL,
-           prio         INTEGER NOT NULL,
-           descriptor   CHAR(6) NOT NULL,
-           tablea       INTEGER NOT NULL
-        );
-    )");
-    conn.exec_no_data("CREATE UNIQUE INDEX ri_memo_uniq ON repinfo(memo);");
-    conn.exec_no_data("CREATE UNIQUE INDEX ri_prio_uniq ON repinfo(prio);");
-    conn.exec_no_data(R"(
-        CREATE TABLE context (
-           id          INTEGER PRIMARY KEY,
-           id_ana      INTEGER NOT NULL,
-           id_report   INTEGER NOT NULL,
-           datetime    TIMESTAMP NOT NULL,
-           ltype1      INTEGER NOT NULL,
-           l1          INTEGER NOT NULL,
-           ltype2      INTEGER NOT NULL,
-           l2          INTEGER NOT NULL,
-           ptype       INTEGER NOT NULL,
-           p1          INTEGER NOT NULL,
-           p2          INTEGER NOT NULL
-        );
-    )");
-    conn.exec_no_data("CREATE UNIQUE INDEX context_uniq ON context(id_ana, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2, id_report);");
-    conn.exec_no_data("CREATE INDEX co_ana ON context(id_ana);");
-    conn.exec_no_data("CREATE INDEX co_report ON context(id_report);");
-    conn.exec_no_data("CREATE INDEX co_dt ON context(datetime);");
-    conn.exec_no_data("CREATE INDEX co_lt ON context(ltype1, l1, ltype2, l2);");
-    conn.exec_no_data("CREATE INDEX co_pt ON context(ptype, p1, p2);");
-    conn.exec_no_data(R"(
-        CREATE TABLE data (
-           id_context  INTEGER NOT NULL,
-           id_var      INTEGER NOT NULL,
-           value       VARCHAR(255) NOT NULL
-        );
-    )");
-    conn.exec_no_data("CREATE UNIQUE INDEX data_uniq ON data(id_var, id_context);");
-    conn.exec_no_data("CREATE INDEX da_co ON data(id_context);");
-    conn.exec_no_data(R"(
-        CREATE TABLE attr (
-           id_context  INTEGER NOT NULL,
-           id_var      INTEGER NOT NULL,
-           type        INTEGER NOT NULL,
-           value       VARCHAR(255) NOT NULL
-        );
-    )");
-    conn.exec_no_data("CREATE UNIQUE INDEX attr_uniq ON attr(id_context, id_var, type);");
-    conn.exec_no_data("CREATE INDEX at_da ON attr(id_context, id_var);");
-}
 void Driver::create_tables_v6()
 {
     conn.exec_no_data(R"(
@@ -354,15 +269,6 @@ void Driver::create_tables_v6()
     "CREATE AGGREGATE anyval ( basetype=anyelement, sfunc='identity', stype='anyelement' )",*/
     conn.set_setting("version", "V6");
 }
-void Driver::delete_tables_v5()
-{
-    conn.drop_table_if_exists("attr");
-    conn.drop_table_if_exists("data");
-    conn.drop_table_if_exists("context");
-    conn.drop_table_if_exists("repinfo");
-    conn.drop_table_if_exists("station");
-    conn.drop_settings();
-}
 void Driver::delete_tables_v6()
 {
     conn.drop_table_if_exists("attr");
@@ -371,25 +277,6 @@ void Driver::delete_tables_v6()
     conn.drop_table_if_exists("repinfo");
     conn.drop_table_if_exists("station");
     conn.drop_settings();
-}
-void Driver::vacuum_v5()
-{
-    conn.exec_no_data(R"(
-        DELETE FROM context
-              WHERE id IN (
-                      SELECT c.id
-                        FROM context c
-                   LEFT JOIN data d ON d.id_context = c.id
-                       WHERE d.id_context IS NULL)
-    )");
-    conn.exec_no_data(R"(
-        DELETE FROM station
-              WHERE id IN (
-                      SELECT p.id
-                        FROM station p
-                   LEFT JOIN context c ON c.id_ana = p.id
-                       WHERE c.id IS NULL)
-    )");
 }
 void Driver::vacuum_v6()
 {

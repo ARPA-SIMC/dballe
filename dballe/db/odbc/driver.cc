@@ -22,9 +22,7 @@
 #include "repinfo.h"
 #include "station.h"
 #include "levtr.h"
-#include "datav5.h"
 #include "datav6.h"
-#include "attrv5.h"
 #include "attrv6.h"
 #include "dballe/db/v6/qbuilder.h"
 #include <sqltypes.h>
@@ -48,19 +46,9 @@ Driver::~Driver()
 {
 }
 
-std::unique_ptr<sql::Repinfo> Driver::create_repinfov5()
-{
-    return unique_ptr<sql::Repinfo>(new ODBCRepinfoV5(conn));
-}
-
 std::unique_ptr<sql::Repinfo> Driver::create_repinfov6()
 {
     return unique_ptr<sql::Repinfo>(new ODBCRepinfoV6(conn));
-}
-
-std::unique_ptr<sql::Station> Driver::create_stationv5()
-{
-    return unique_ptr<sql::Station>(new ODBCStationV5(conn));
 }
 
 std::unique_ptr<sql::Station> Driver::create_stationv6()
@@ -73,19 +61,9 @@ std::unique_ptr<sql::LevTr> Driver::create_levtrv6()
     return unique_ptr<sql::LevTr>(new ODBCLevTrV6(conn));
 }
 
-std::unique_ptr<sql::DataV5> Driver::create_datav5()
-{
-    return unique_ptr<sql::DataV5>(new ODBCDataV5(conn));
-}
-
 std::unique_ptr<sql::DataV6> Driver::create_datav6()
 {
     return unique_ptr<sql::DataV6>(new ODBCDataV6(conn));
-}
-
-std::unique_ptr<sql::AttrV5> Driver::create_attrv5()
-{
-    return unique_ptr<sql::AttrV5>(new ODBCAttrV5(conn));
 }
 
 std::unique_ptr<sql::AttrV6> Driver::create_attrv6()
@@ -172,145 +150,6 @@ void Driver::run_built_query_v6(
     stm->close_cursor();
 }
 
-void Driver::create_tables_v5()
-{
-    switch (conn.server_type)
-    {
-        case ServerType::MYSQL:
-            conn.exec(R"(
-                CREATE TABLE station (
-                   id         INTEGER auto_increment PRIMARY KEY,
-                   lat        INTEGER NOT NULL,
-                   lon        INTEGER NOT NULL,
-                   ident      CHAR(64),
-                   UNIQUE INDEX(lat, lon, ident(8)),
-                   INDEX(lon)
-                ) ENGINE=InnoDB;
-            )");
-            conn.exec(R"(
-                CREATE TABLE repinfo (
-                   id           SMALLINT PRIMARY KEY,
-                   memo         VARCHAR(20) NOT NULL,
-                   description  VARCHAR(255) NOT NULL,
-                   prio         INTEGER NOT NULL,
-                   descriptor   CHAR(6) NOT NULL,
-                   tablea       INTEGER NOT NULL,
-                   UNIQUE INDEX (prio),
-                   UNIQUE INDEX (memo)
-                ) ENGINE=InnoDB;
-            )");
-            conn.exec(R"(
-                CREATE TABLE context (
-                   id          INTEGER auto_increment PRIMARY KEY,
-                   id_ana      INTEGER NOT NULL,
-                   id_report   SMALLINT NOT NULL,
-                   datetime    DATETIME NOT NULL,
-                   ltype1      INTEGER NOT NULL,
-                   l1          INTEGER NOT NULL,
-                   ltype2      INTEGER NOT NULL,
-                   l2          INTEGER NOT NULL,
-                   ptype       INTEGER NOT NULL,
-                   p1          INTEGER NOT NULL,
-                   p2          INTEGER NOT NULL,
-                   UNIQUE INDEX (id_ana, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2, id_report),
-                   INDEX (id_ana),
-                   INDEX (id_report),
-                   INDEX (datetime),
-                   INDEX (ltype1, l1, ltype2, l2),
-                   INDEX (ptype, p1, p2)
-               ) ENGINE=InnoDB;
-            )");
-            conn.exec(R"(
-                CREATE TABLE data (
-                   id_context  INTEGER NOT NULL,
-                   id_var      SMALLINT NOT NULL,
-                   value       VARCHAR(255) NOT NULL,
-                   INDEX (id_context),
-                   UNIQUE INDEX(id_var, id_context)
-               ) ENGINE=InnoDB;
-            )");
-            conn.exec(R"(
-                CREATE TABLE attr (
-                   id_context  INTEGER NOT NULL,
-                   id_var      SMALLINT NOT NULL,
-                   type        SMALLINT NOT NULL,
-                   value       VARCHAR(255) NOT NULL,
-                   INDEX (id_context, id_var),
-                   UNIQUE INDEX (id_context, id_var, type)
-               ) ENGINE=InnoDB;
-            )");
-            break;
-        case ServerType::ORACLE:
-            conn.exec(R"(
-                CREATE TABLE station (
-                   id         INTEGER PRIMARY KEY,
-                   lat        INTEGER NOT NULL,
-                   lon        INTEGER NOT NULL,
-                   ident      VARCHAR2(64),
-                   UNIQUE (lat, lon, ident)
-                );
-                CREATE INDEX pa_lon ON station(lon);
-                CREATE SEQUENCE seq_station;
-            )");
-            conn.exec(R"(
-                CREATE TABLE repinfo (
-                   id           INTEGER PRIMARY KEY,
-                   memo         VARCHAR2(30) NOT NULL,
-                   description  VARCHAR2(255) NOT NULL,
-                   prio         INTEGER NOT NULL,
-                   descriptor   CHAR(6) NOT NULL,
-                   tablea       INTEGER NOT NULL,
-                   UNIQUE (prio),
-                   UNIQUE (memo)
-                )
-            )");
-            conn.exec(R"(
-                CREATE TABLE context (
-                   id          INTEGER PRIMARY KEY,
-                   id_ana      INTEGER NOT NULL,
-                   id_report   INTEGER NOT NULL,
-                   datetime    DATE NOT NULL,
-                   ltype1      INTEGER NOT NULL,
-                   l1          INTEGER NOT NULL,
-                   ltype2      INTEGER NOT NULL,
-                   l2          INTEGER NOT NULL,
-                   ptype       INTEGER NOT NULL,
-                   p1          INTEGER NOT NULL,
-                   p2          INTEGER NOT NULL,
-                   UNIQUE (id_ana, datetime, ltype1, l1, ltype2, l2, ptype, p1, p2, id_report)
-                );
-                CREATE INDEX co_ana ON context(id_ana);
-                CREATE INDEX co_report ON context(id_report);
-                CREATE INDEX co_dt ON context(datetime);
-                CREATE INDEX co_lt ON context(ltype1, l1, ltype2, l2);
-                CREATE INDEX co_pt ON context(ptype, p1, p2);
-                CREATE SEQUENCE seq_context;
-            )");
-            conn.exec(R"(
-                CREATE TABLE data (
-                   id_context  INTEGER NOT NULL,
-                   id_var      INTEGER NOT NULL,
-                   value       VARCHAR2(255) NOT NULL,
-                   UNIQUE (id_var, id_context)
-                );
-                CREATE INDEX da_co ON data(id_context);
-            )");
-            conn.exec(R"(
-                CREATE TABLE attr (
-                   id_context  INTEGER NOT NULL,
-                   id_var      INTEGER NOT NULL,
-                   type        INTEGER NOT NULL,
-                   value       VARCHAR2(255) NOT NULL,
-                   UNIQUE (id_context, id_var, type)
-                );
-                CREATE INDEX at_da ON attr(id_context, id_var);
-            )");
-            break;
-        default:
-            throw error_unimplemented("ODBC connection is only supported for MySQL and Oracle");
-    }
-    conn.set_setting("version", "V5");
-}
 void Driver::create_tables_v6()
 {
     switch (conn.server_type)
@@ -442,17 +281,6 @@ void Driver::create_tables_v6()
     }
     conn.set_setting("version", "V6");
 }
-void Driver::delete_tables_v5()
-{
-    conn.drop_sequence_if_exists("seq_context"); // Oracle only
-    conn.drop_sequence_if_exists("seq_station"); // Oracle only
-    conn.drop_table_if_exists("attr");
-    conn.drop_table_if_exists("data");
-    conn.drop_table_if_exists("context");
-    conn.drop_table_if_exists("repinfo");
-    conn.drop_table_if_exists("station");
-    conn.drop_settings();
-}
 void Driver::delete_tables_v6()
 {
     conn.drop_sequence_if_exists("seq_lev_tr");  // Oracle only
@@ -463,34 +291,6 @@ void Driver::delete_tables_v6()
     conn.drop_table_if_exists("repinfo");
     conn.drop_table_if_exists("station");
     conn.drop_settings();
-}
-void Driver::vacuum_v5()
-{
-    switch (conn.server_type)
-    {
-        case ServerType::MYSQL:
-            conn.exec("DELETE c FROM context c LEFT JOIN data d ON d.id_context = c.id WHERE d.id_context IS NULL");
-            conn.exec("DELETE p FROM station p LEFT JOIN context c ON c.id_ana = p.id WHERE c.id is NULL");
-            break;
-        default:
-            conn.exec(R"(
-                DELETE FROM context
-                      WHERE id IN (
-                              SELECT c.id
-                                FROM context c
-                           LEFT JOIN data d ON d.id_context = c.id
-                               WHERE d.id_context IS NULL)
-            )");
-            conn.exec(R"(
-                DELETE FROM station
-                      WHERE id IN (
-                              SELECT p.id
-                                FROM station p
-                           LEFT JOIN context c ON c.id_ana = p.id
-                               WHERE c.id IS NULL)
-            )");
-            break;
-    }
 }
 void Driver::vacuum_v6()
 {

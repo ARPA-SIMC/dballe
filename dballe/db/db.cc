@@ -22,7 +22,6 @@
 #include "config.h"
 #include "db.h"
 #include "sql.h"
-#include "v5/db.h"
 #include "v6/db.h"
 #include "mem/db.h"
 #include "sqlite/internals.h"
@@ -102,7 +101,7 @@ unique_ptr<DB> DB::create(unique_ptr<Connection> conn)
         found = false;// Some other key exists, but the version has not been set
     else
         error_consistency::throwf("unsupported database version: '%s'", version.c_str());
-   
+
     // If it failed, try looking at the existing table structure
     if (!found)
     {
@@ -116,19 +115,7 @@ unique_ptr<DB> DB::create(unique_ptr<Connection> conn)
 
     switch (format)
     {
-        case V5:
-#ifdef HAVE_ODBC
-            if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(conn.get()))
-            {
-                conn.release();
-                unique_ptr<ODBCConnection> oc(c);
-                return unique_ptr<DB>(new v5::DB(move(oc)));
-            } else {
-                throw error_consistency("cannot open a v5 DB with a non-ODBC connector; for example, cannot open a v5 database in a SQLite file or PostgreSQL database");
-            }
-#else
-            throw error_unimplemented("ODBC support is not available");
-#endif
+        case V5: throw error_unimplemented("V5 format is not supported anymore by this version of DB-All.e");
         case V6: return unique_ptr<DB>(new v6::DB(unique_ptr<Connection>(conn.release())));
         default: error_consistency::throwf("requested unknown format %d", (int)format);
     }

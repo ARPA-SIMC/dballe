@@ -30,9 +30,6 @@ struct Connection;
 namespace sql {
 struct Driver;
 }
-namespace v5 {
-class DB;
-}
 namespace v6 {
 class DB;
 }

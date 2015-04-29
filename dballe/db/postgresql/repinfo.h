@@ -44,7 +44,7 @@ namespace postgresql {
 /**
  * Fast cached access to the repinfo table
  */
-struct PostgreSQLRepinfoV5 : public sql::Repinfo
+struct PostgreSQLRepinfoBase : public sql::Repinfo
 {
     /**
      * DB connection. The pointer is assumed always valid during the
@@ -52,11 +52,11 @@ struct PostgreSQLRepinfoV5 : public sql::Repinfo
      */
     PostgreSQLConnection& conn;
 
-    PostgreSQLRepinfoV5(PostgreSQLConnection& conn);
-    PostgreSQLRepinfoV5(const PostgreSQLRepinfoV5&) = delete;
-    PostgreSQLRepinfoV5(const PostgreSQLRepinfoV5&&) = delete;
-    virtual ~PostgreSQLRepinfoV5();
-    PostgreSQLRepinfoV5& operator=(const PostgreSQLRepinfoV5&) = delete;
+    PostgreSQLRepinfoBase(PostgreSQLConnection& conn);
+    PostgreSQLRepinfoBase(const PostgreSQLRepinfoBase&) = delete;
+    PostgreSQLRepinfoBase(const PostgreSQLRepinfoBase&&) = delete;
+    virtual ~PostgreSQLRepinfoBase();
+    PostgreSQLRepinfoBase& operator=(const PostgreSQLRepinfoBase&) = delete;
 
     void dump(FILE* out) override;
 
@@ -70,7 +70,7 @@ protected:
     void insert_auto_entry(const char* memo) override;
 };
 
-struct PostgreSQLRepinfoV6 : public PostgreSQLRepinfoV5
+struct PostgreSQLRepinfoV6 : public PostgreSQLRepinfoBase
 {
     PostgreSQLRepinfoV6(PostgreSQLConnection& conn);
 

@@ -209,7 +209,6 @@ std::vector<Test> tests {
 test_group tg1("db_export_mem", nullptr, db::MEM, tests);
 test_group tg2("db_export_v6_sqlite", "SQLITE", db::V6, tests);
 #ifdef HAVE_ODBC
-test_group tg3("db_export_v5_odbc", "ODBC", db::V5, tests);
 test_group tg4("db_export_v6_odbc", "ODBC", db::V6, tests);
 #endif
 #ifdef HAVE_LIBPQ

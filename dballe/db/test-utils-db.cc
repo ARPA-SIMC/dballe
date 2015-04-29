@@ -19,9 +19,6 @@
 
 #include "config.h"
 #include "test-utils-db.h"
-#ifdef HAVE_ODBC
-#include "dballe/db/v5/db.h"
-#endif
 #include "dballe/db/v6/db.h"
 #include "dballe/db/sql.h"
 #include "dballe/db/sql/driver.h"

@@ -31,17 +31,17 @@ namespace dballe {
 namespace db {
 namespace mysql {
 
-MySQLRepinfoV5::MySQLRepinfoV5(MySQLConnection& conn)
+MySQLRepinfoBase::MySQLRepinfoBase(MySQLConnection& conn)
     : Repinfo(conn), conn(conn)
 {
     read_cache();
 }
 
-MySQLRepinfoV5::~MySQLRepinfoV5()
+MySQLRepinfoBase::~MySQLRepinfoBase()
 {
 }
 
-void MySQLRepinfoV5::read_cache()
+void MySQLRepinfoBase::read_cache()
 {
     cache.clear();
     memo_idx.clear();
@@ -61,7 +61,7 @@ void MySQLRepinfoV5::read_cache()
     rebuild_memo_idx();
 }
 
-void MySQLRepinfoV5::insert_auto_entry(const char* memo)
+void MySQLRepinfoBase::insert_auto_entry(const char* memo)
 {
     auto res = conn.exec_store("SELECT MAX(id) FROM repinfo");
     unsigned id = res.expect_one_result().as_unsigned(0);
@@ -82,7 +82,7 @@ void MySQLRepinfoV5::insert_auto_entry(const char* memo)
     conn.exec_no_data(iq);
 }
 
-int MySQLRepinfoV5::id_use_count(unsigned id, const char* name)
+int MySQLRepinfoBase::id_use_count(unsigned id, const char* name)
 {
     Querybuf q;
     q.appendf("SELECT COUNT(1) FROM context WHERE id_report=%u", id);
@@ -90,14 +90,14 @@ int MySQLRepinfoV5::id_use_count(unsigned id, const char* name)
     return res.expect_one_result().as_unsigned(0);
 }
 
-void MySQLRepinfoV5::delete_entry(unsigned id)
+void MySQLRepinfoBase::delete_entry(unsigned id)
 {
     Querybuf q;
     q.appendf("DELETE FROM repinfo WHERE id=%u", id);
     conn.exec_no_data(q);
 }
 
-void MySQLRepinfoV5::update_entry(const sql::repinfo::Cache& entry)
+void MySQLRepinfoBase::update_entry(const sql::repinfo::Cache& entry)
 {
     Querybuf q;
     string escaped_memo = conn.escape(entry.new_memo);
@@ -115,7 +115,7 @@ void MySQLRepinfoV5::update_entry(const sql::repinfo::Cache& entry)
     conn.exec_no_data(q);
 }
 
-void MySQLRepinfoV5::insert_entry(const sql::repinfo::Cache& entry)
+void MySQLRepinfoBase::insert_entry(const sql::repinfo::Cache& entry)
 {
     Querybuf q;
     string escaped_memo = conn.escape(entry.new_memo);
@@ -133,7 +133,7 @@ void MySQLRepinfoV5::insert_entry(const sql::repinfo::Cache& entry)
     conn.exec_no_data(q);
 }
 
-void MySQLRepinfoV5::dump(FILE* out)
+void MySQLRepinfoBase::dump(FILE* out)
 {
     fprintf(out, "dump of table repinfo:\n");
     fprintf(out, "   id   memo   description  prio   desc  tablea\n");
@@ -153,7 +153,7 @@ void MySQLRepinfoV5::dump(FILE* out)
     fprintf(out, "%d element%s in table repinfo\n", count, count != 1 ? "s" : "");
 }
 
-MySQLRepinfoV6::MySQLRepinfoV6(MySQLConnection& conn) : MySQLRepinfoV5(conn) {}
+MySQLRepinfoV6::MySQLRepinfoV6(MySQLConnection& conn) : MySQLRepinfoBase(conn) {}
 
 int MySQLRepinfoV6::id_use_count(unsigned id, const char* name)
 {

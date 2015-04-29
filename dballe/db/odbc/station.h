@@ -42,7 +42,7 @@ namespace odbc {
 /**
  * Precompiled queries to manipulate the station table
  */
-class ODBCStationV5 : public sql::Station
+class ODBCStationBase : public sql::Station
 {
 protected:
     /**
@@ -106,11 +106,11 @@ protected:
     void impl_add_station_vars(const char* query, int id_station, Record& rec);
 
 public:
-    ODBCStationV5(ODBCConnection& conn);
-    ~ODBCStationV5();
-    ODBCStationV5(const ODBCStationV5&) = delete;
-    ODBCStationV5(const ODBCStationV5&&) = delete;
-    ODBCStationV5& operator=(const ODBCStationV5&) = delete;
+    ODBCStationBase(ODBCConnection& conn);
+    ~ODBCStationBase();
+    ODBCStationBase(const ODBCStationBase&) = delete;
+    ODBCStationBase(const ODBCStationBase&&) = delete;
+    ODBCStationBase& operator=(const ODBCStationBase&) = delete;
 
     /**
      * Get the station ID given latitude, longitude and mobile identifier.
@@ -142,7 +142,7 @@ public:
 };
 
 
-class ODBCStationV6 : public ODBCStationV5
+class ODBCStationV6 : public ODBCStationBase
 {
 public:
     ODBCStationV6(ODBCConnection& conn);

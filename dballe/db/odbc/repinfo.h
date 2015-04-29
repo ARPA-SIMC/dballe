@@ -44,7 +44,7 @@ namespace odbc {
 /**
  * Fast cached access to the repinfo table
  */
-struct ODBCRepinfoV5 : public sql::Repinfo
+struct ODBCRepinfoBase : public sql::Repinfo
 {
     /**
      * DB connection. The pointer is assumed always valid during the
@@ -52,11 +52,11 @@ struct ODBCRepinfoV5 : public sql::Repinfo
      */
     ODBCConnection& conn;
 
-    ODBCRepinfoV5(ODBCConnection& conn);
-    ODBCRepinfoV5(const ODBCRepinfoV5&) = delete;
-    ODBCRepinfoV5(const ODBCRepinfoV5&&) = delete;
-    virtual ~ODBCRepinfoV5();
-    ODBCRepinfoV5& operator=(const ODBCRepinfoV5&) = delete;
+    ODBCRepinfoBase(ODBCConnection& conn);
+    ODBCRepinfoBase(const ODBCRepinfoBase&) = delete;
+    ODBCRepinfoBase(const ODBCRepinfoBase&&) = delete;
+    virtual ~ODBCRepinfoBase();
+    ODBCRepinfoBase& operator=(const ODBCRepinfoBase&) = delete;
 
     void dump(FILE* out) override;
 
@@ -70,7 +70,7 @@ protected:
     void insert_auto_entry(const char* memo) override;
 };
 
-struct ODBCRepinfoV6 : public ODBCRepinfoV5
+struct ODBCRepinfoV6 : public ODBCRepinfoBase
 {
     ODBCRepinfoV6(ODBCConnection& conn);
 

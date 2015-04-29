@@ -33,7 +33,7 @@ namespace dballe {
 namespace db {
 namespace sqlite {
 
-SQLiteStationV5::SQLiteStationV5(SQLiteConnection& conn)
+SQLiteStationBase::SQLiteStationBase(SQLiteConnection& conn)
     : conn(conn)
 {
     const char* select_fixed_query =
@@ -54,14 +54,14 @@ SQLiteStationV5::SQLiteStationV5(SQLiteConnection& conn)
     istm = conn.sqlitestatement(insert_query).release();
 }
 
-SQLiteStationV5::~SQLiteStationV5()
+SQLiteStationBase::~SQLiteStationBase()
 {
     delete sfstm;
     delete smstm;
     delete istm;
 }
 
-bool SQLiteStationV5::maybe_get_id(int lat, int lon, const char* ident, int* id)
+bool SQLiteStationBase::maybe_get_id(int lat, int lon, const char* ident, int* id)
 {
     SQLiteStatement* s;
     if (ident)
@@ -83,7 +83,7 @@ bool SQLiteStationV5::maybe_get_id(int lat, int lon, const char* ident, int* id)
     return found;
 }
 
-int SQLiteStationV5::get_id(int lat, int lon, const char* ident)
+int SQLiteStationBase::get_id(int lat, int lon, const char* ident)
 {
     int id;
     if (maybe_get_id(lat, lon, ident, &id))
@@ -91,7 +91,7 @@ int SQLiteStationV5::get_id(int lat, int lon, const char* ident)
     throw error_notfound("station not found in the database");
 }
 
-int SQLiteStationV5::obtain_id(int lat, int lon, const char* ident, bool* inserted)
+int SQLiteStationBase::obtain_id(int lat, int lon, const char* ident, bool* inserted)
 {
     int id;
     if (maybe_get_id(lat, lon, ident, &id))
@@ -112,7 +112,7 @@ int SQLiteStationV5::obtain_id(int lat, int lon, const char* ident, bool* insert
     return conn.get_last_insert_id();
 }
 
-void SQLiteStationV5::read_station_vars(SQLiteStatement& stm, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+void SQLiteStationBase::read_station_vars(SQLiteStatement& stm, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     // Retrieve results
     Varcode last_varcode = 0;
@@ -149,7 +149,7 @@ void SQLiteStationV5::read_station_vars(SQLiteStatement& stm, std::function<void
     }
 }
 
-void SQLiteStationV5::get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+void SQLiteStationBase::get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     // Perform the query
     static const char query[] =
@@ -167,7 +167,7 @@ void SQLiteStationV5::get_station_vars(int id_station, int id_report, std::funct
     read_station_vars(*stm, dest);
 }
 
-void SQLiteStationV5::dump(FILE* out)
+void SQLiteStationBase::dump(FILE* out)
 {
     int count = 0;
     fprintf(out, "dump of table station:\n");
@@ -187,7 +187,7 @@ void SQLiteStationV5::dump(FILE* out)
     fprintf(out, "%d element%s in table station\n", count, count != 1 ? "s" : "");
 }
 
-void SQLiteStationV5::add_station_vars(int id_station, Record& rec)
+void SQLiteStationBase::add_station_vars(int id_station, Record& rec)
 {
     /* Extra variables to add:
      *
@@ -220,7 +220,7 @@ void SQLiteStationV5::add_station_vars(int id_station, Record& rec)
 }
 
 SQLiteStationV6::SQLiteStationV6(SQLiteConnection& conn)
-    : SQLiteStationV5(conn) {}
+    : SQLiteStationBase(conn) {}
 
 void SQLiteStationV6::get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {

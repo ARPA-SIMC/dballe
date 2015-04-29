@@ -1,5 +1,5 @@
 /*
- * db/station - station table management
+ * db/postgresql/station - station table management
  *
  * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -37,9 +37,9 @@ StationBase::StationBase(PostgreSQLConnection& conn)
     : conn(conn)
 {
     // Precompile our statements
-    conn.prepare("v5_station_select_fixed", "SELECT id FROM station WHERE lat=$1::int4 AND lon=$2::int4 AND ident IS NULL");
-    conn.prepare("v5_station_select_mobile", "SELECT id FROM station WHERE lat=$1::int4 AND lon=$2::int4 AND ident=$3::text");
-    conn.prepare("v5_station_insert", "INSERT INTO station (id, lat, lon, ident) VALUES (DEFAULT, $1::int4, $2::int4, $3::text) RETURNING id");
+    conn.prepare("v6_station_select_fixed", "SELECT id FROM station WHERE lat=$1::int4 AND lon=$2::int4 AND ident IS NULL");
+    conn.prepare("v6_station_select_mobile", "SELECT id FROM station WHERE lat=$1::int4 AND lon=$2::int4 AND ident=$3::text");
+    conn.prepare("v6_station_insert", "INSERT INTO station (id, lat, lon, ident) VALUES (DEFAULT, $1::int4, $2::int4, $3::text) RETURNING id");
 }
 
 StationBase::~StationBase()
@@ -52,9 +52,9 @@ bool StationBase::maybe_get_id(int lat, int lon, const char* ident, int* id)
 
     Result res;
     if (ident)
-        res = move(conn.exec_prepared("v5_station_select_mobile", lat, lon, ident));
+        res = move(conn.exec_prepared("v6_station_select_mobile", lat, lon, ident));
     else
-        res = move(conn.exec_prepared("v5_station_select_fixed", lat, lon));
+        res = move(conn.exec_prepared("v6_station_select_fixed", lat, lon));
 
     unsigned rows = res.rowcount();
     switch (rows)
@@ -87,7 +87,7 @@ int StationBase::obtain_id(int lat, int lon, const char* ident, bool* inserted)
     }
 
     // If no station was found, insert a new one
-    Result res(conn.exec_prepared_one_row("v5_station_insert", lat, lon, ident));
+    Result res(conn.exec_prepared_one_row("v6_station_insert", lat, lon, ident));
     if (inserted) *inserted = true;
     return res.get_int4(0, 0);
 }
@@ -97,7 +97,7 @@ void StationBase::get_station_vars(int id_station, int id_report, std::function<
     // Perform the query
     using namespace postgresql;
     TRACE("fill_ana_layer Performing query: %s with idst %d idrep %d\n", query, id_station, id_report);
-    Result res(conn.exec_prepared("v5_station_get_station_vars", id_station, id_report));
+    Result res(conn.exec_prepared("v6_station_get_station_vars", id_station, id_report));
 
     // Retrieve results
     Varcode last_varcode = 0;
@@ -138,7 +138,7 @@ void StationBase::get_station_vars(int id_station, int id_report, std::function<
 void StationBase::add_station_vars(int id_station, Record& rec)
 {
     using namespace postgresql;
-    Result res(conn.exec_prepared("v5_station_add_station_vars", id_station));
+    Result res(conn.exec_prepared("v6_station_add_station_vars", id_station));
     for (unsigned row = 0; row < res.rowcount(); ++row)
         rec.var(res.get_int4(row, 0)).setc(res.get_string(row, 1));
 }
@@ -165,41 +165,10 @@ void StationBase::dump(FILE* out)
 }
 
 
-PostgreSQLStationV5::PostgreSQLStationV5(PostgreSQLConnection& conn)
-    : StationBase(conn)
-{
-    conn.prepare("v5_station_get_station_vars", R"(
-        SELECT d.id_var, d.value, a.type, a.value
-         FROM context c, data d
-         LEFT JOIN attr a ON a.id_context = d.id_context AND a.id_var = d.id_var
-        WHERE d.id_context = c.id AND c.id_ana = $1::int4 AND c.id_report = $2::int4
-          AND c.datetime = TIMESTAMP '1000-01-01 00:00:00+00'
-        ORDER BY d.id_var, a.type
-    )");
-    conn.prepare("v5_station_add_station_vars", R"(
-        SELECT d.id_var, d.value
-          FROM context c, data d, repinfo ri
-         WHERE c.id = d.id_context AND ri.id = c.id_report AND c.id_ana = $1::int4
-           AND c.datetime=TIMESTAMP '1000-01-01 00:00:00+00'
-         AND ri.prio=(
-          SELECT MAX(sri.prio) FROM repinfo sri
-            JOIN context sc ON sri.id=sc.id_report
-            JOIN data sd ON sc.id=sd.id_context
-          WHERE sc.id_ana=c.id_ana
-            AND sc.ltype1=c.ltype1 AND sc.l1=c.l1 AND sc.ltype2=c.ltype2 AND sc.l2=c.l2
-            AND sc.ptype=c.ptype AND sc.p1=c.p1 AND sc.p2=c.p2
-            AND sc.datetime=c.datetime AND sd.id_var=d.id_var)
-    )");
-}
-PostgreSQLStationV5::~PostgreSQLStationV5()
-{
-}
-
-
 PostgreSQLStationV6::PostgreSQLStationV6(PostgreSQLConnection& conn)
     : StationBase(conn)
 {
-    conn.prepare("v5_station_get_station_vars", R"(
+    conn.prepare("v6_station_get_station_vars", R"(
         SELECT d.id_var, d.value, a.type, a.value
           FROM data d
           LEFT JOIN attr a ON a.id_data = d.id
@@ -207,7 +176,7 @@ PostgreSQLStationV6::PostgreSQLStationV6(PostgreSQLConnection& conn)
            AND d.id_lev_tr = -1
          ORDER BY d.id_var, a.type
     )");
-    conn.prepare("v5_station_add_station_vars", R"(
+    conn.prepare("v6_station_add_station_vars", R"(
         SELECT d.id_var, d.value
           FROM data d, repinfo ri
          WHERE d.id_lev_tr = -1 AND ri.id = d.id_report AND d.id_station = $1::int4

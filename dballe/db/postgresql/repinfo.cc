@@ -31,17 +31,17 @@ namespace dballe {
 namespace db {
 namespace postgresql {
 
-PostgreSQLRepinfoV5::PostgreSQLRepinfoV5(PostgreSQLConnection& conn)
+PostgreSQLRepinfoBase::PostgreSQLRepinfoBase(PostgreSQLConnection& conn)
     : Repinfo(conn), conn(conn)
 {
     read_cache();
 }
 
-PostgreSQLRepinfoV5::~PostgreSQLRepinfoV5()
+PostgreSQLRepinfoBase::~PostgreSQLRepinfoBase()
 {
 }
 
-void PostgreSQLRepinfoV5::read_cache()
+void PostgreSQLRepinfoBase::read_cache()
 {
     cache.clear();
     memo_idx.clear();
@@ -63,7 +63,7 @@ void PostgreSQLRepinfoV5::read_cache()
     rebuild_memo_idx();
 }
 
-void PostgreSQLRepinfoV5::insert_auto_entry(const char* memo)
+void PostgreSQLRepinfoBase::insert_auto_entry(const char* memo)
 {
     unsigned id = conn.exec_one_row("SELECT MAX(id) FROM repinfo").get_int4(0, 0);
     int prio = conn.exec_one_row("SELECT MAX(prio) FROM repinfo").get_int4(0, 0);
@@ -79,19 +79,19 @@ void PostgreSQLRepinfoV5::insert_auto_entry(const char* memo)
     conn.exec_no_data(query, memo);
 }
 
-int PostgreSQLRepinfoV5::id_use_count(unsigned id, const char* name)
+int PostgreSQLRepinfoBase::id_use_count(unsigned id, const char* name)
 {
     Querybuf query(500);
     query.appendf("SELECT COUNT(1) FROM context WHERE id_report=%u", id);
     return conn.exec_one_row(query).get_int4(0, 0);
 }
 
-void PostgreSQLRepinfoV5::delete_entry(unsigned id)
+void PostgreSQLRepinfoBase::delete_entry(unsigned id)
 {
     conn.exec_no_data("DELETE FROM repinfo WHERE id=$1::int4", (int32_t)id);
 }
 
-void PostgreSQLRepinfoV5::update_entry(const sql::repinfo::Cache& entry)
+void PostgreSQLRepinfoBase::update_entry(const sql::repinfo::Cache& entry)
 {
     conn.exec_no_data(R"(
         UPDATE repinfo SET memo=$2::text, description=$3::text, prio=$4::int4, descriptor=$5::text, tablea=$6::int4
@@ -104,7 +104,7 @@ void PostgreSQLRepinfoV5::update_entry(const sql::repinfo::Cache& entry)
         (int32_t)entry.new_tablea);
 }
 
-void PostgreSQLRepinfoV5::insert_entry(const sql::repinfo::Cache& entry)
+void PostgreSQLRepinfoBase::insert_entry(const sql::repinfo::Cache& entry)
 {
     conn.exec_no_data(R"(
         INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)
@@ -117,7 +117,7 @@ void PostgreSQLRepinfoV5::insert_entry(const sql::repinfo::Cache& entry)
         (int32_t)entry.new_tablea);
 }
 
-void PostgreSQLRepinfoV5::dump(FILE* out)
+void PostgreSQLRepinfoBase::dump(FILE* out)
 {
     fprintf(out, "dump of table repinfo:\n");
     fprintf(out, "   id   memo   description  prio   desc  tablea\n");
@@ -141,7 +141,7 @@ void PostgreSQLRepinfoV5::dump(FILE* out)
     fprintf(out, "%d element%s in table repinfo\n", count, count != 1 ? "s" : "");
 }
 
-PostgreSQLRepinfoV6::PostgreSQLRepinfoV6(PostgreSQLConnection& conn) : PostgreSQLRepinfoV5(conn) {}
+PostgreSQLRepinfoV6::PostgreSQLRepinfoV6(PostgreSQLConnection& conn) : PostgreSQLRepinfoBase(conn) {}
 
 int PostgreSQLRepinfoV6::id_use_count(unsigned id, const char* name)
 {

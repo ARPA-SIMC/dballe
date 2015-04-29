@@ -49,9 +49,7 @@ namespace sql {
 struct Repinfo;
 struct Station;
 struct LevTr;
-struct DataV5;
 struct DataV6;
-struct AttrV5;
 struct AttrV6;
 
 /// Query results from SQL output
@@ -92,13 +90,7 @@ public:
     virtual void exec_no_data(const std::string& query) = 0;
 
     /// Precompiled queries to manipulate the repinfo table
-    virtual std::unique_ptr<sql::Repinfo> create_repinfov5() = 0;
-
-    /// Precompiled queries to manipulate the repinfo table
     virtual std::unique_ptr<sql::Repinfo> create_repinfov6() = 0;
-
-    /// Precompiled queries to manipulate the station table
-    virtual std::unique_ptr<sql::Station> create_stationv5() = 0;
 
     /// Precompiled queries to manipulate the station table
     virtual std::unique_ptr<sql::Station> create_stationv6() = 0;
@@ -107,13 +99,7 @@ public:
     virtual std::unique_ptr<sql::LevTr> create_levtrv6() = 0;
 
     /// Precompiled queries to manipulate the data table
-    virtual std::unique_ptr<sql::DataV5> create_datav5() = 0;
-
-    /// Precompiled queries to manipulate the data table
     virtual std::unique_ptr<sql::DataV6> create_datav6() = 0;
-
-    /// Precompiled queries to manipulate the attr table
-    virtual std::unique_ptr<sql::AttrV5> create_attrv5() = 0;
 
     /// Precompiled queries to manipulate the attr table
     virtual std::unique_ptr<sql::AttrV6> create_attrv6() = 0;
@@ -131,17 +117,11 @@ public:
     /// Create all missing tables for a DB with the given format
     void create_tables(db::Format format);
 
-    /// Create all missing tables for V5 databases
-    virtual void create_tables_v5() = 0;
-
     /// Create all missing tables for V6 databases
     virtual void create_tables_v6() = 0;
 
     /// Delete all existing tables for a DB with the given format
     void delete_tables(db::Format format);
-
-    /// Delete all existing tables for V5 databases
-    virtual void delete_tables_v5() = 0;
 
     /// Delete all existing tables for V6 databases
     virtual void delete_tables_v6() = 0;
@@ -149,14 +129,8 @@ public:
     /// Empty all tables for a DB with the given format
     void remove_all(db::Format format);
 
-    /// Empty all tables for V5 databases, assuming that they exist, without touching the repinfo table
-    virtual void remove_all_v5();
-
-    /// Empty all tables for V5 databases, assuming that they exist, without touching the repinfo table
+    /// Empty all tables for V6 databases, assuming that they exist, without touching the repinfo table
     virtual void remove_all_v6();
-
-    /// Perform database cleanup/maintenance on v5 databases
-    virtual void vacuum_v5() = 0;
 
     /// Perform database cleanup/maintenance on v6 databases
     virtual void vacuum_v6() = 0;

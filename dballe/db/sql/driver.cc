@@ -76,7 +76,7 @@ void Driver::create_tables(db::Format format)
 {
     switch (format)
     {
-        case V5: create_tables_v5(); break;
+        case V5: throw error_unimplemented("database version V5 is not supported anymore");
         case V6: create_tables_v6(); break;
         default: throw wreport::error_consistency("cannot create tables on the given DB format");
     }
@@ -86,7 +86,7 @@ void Driver::delete_tables(db::Format format)
 {
     switch (format)
     {
-        case V5: delete_tables_v5(); break;
+        case V5: throw error_unimplemented("database version V5 is not supported anymore");
         case V6: delete_tables_v6(); break;
         default: throw wreport::error_consistency("cannot delete tables on the given DB format");
     }
@@ -96,19 +96,12 @@ void Driver::remove_all(db::Format format)
 {
     switch (format)
     {
-        case V5: remove_all_v5(); break;
+        case V5: throw error_unimplemented("database version V5 is not supported anymore");
         case V6: remove_all_v6(); break;
         default: throw wreport::error_consistency("cannot empty a database with the given format");
     }
 }
 
-void Driver::remove_all_v5()
-{
-    exec_no_data("DELETE FROM attr");
-    exec_no_data("DELETE FROM data");
-    exec_no_data("DELETE FROM context");
-    exec_no_data("DELETE FROM station");
-}
 void Driver::remove_all_v6()
 {
     exec_no_data("DELETE FROM attr");

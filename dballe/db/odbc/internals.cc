@@ -372,21 +372,15 @@ std::unique_ptr<Transaction> ODBCConnection::transaction()
 std::unique_ptr<ODBCStatement> ODBCConnection::odbcstatement(const std::string& query)
 {
     unique_ptr<ODBCStatement> res(new ODBCStatement(*this));
-    res->dbv5_set_cursor_forward_only();
+    res->set_cursor_forward_only();
     res->prepare(query);
-    return res;
-}
-
-std::unique_ptr<ODBCStatement> ODBCConnection::dbv5_odbcstatement()
-{
-    unique_ptr<ODBCStatement> res(new ODBCStatement(*this));
     return res;
 }
 
 void ODBCConnection::exec(const std::string& query)
 {
     ODBCStatement stm(*this);
-    stm.dbv5_exec_direct_and_close(query.c_str());
+    stm.exec_direct_and_close(query.data(), query.size());
 }
 
 #define DBA_ODBC_MISSING_TABLE_POSTGRES "42P01"
@@ -771,7 +765,7 @@ size_t ODBCStatement::rowcount()
     return res;
 }
 
-void ODBCStatement::dbv5_set_cursor_forward_only()
+void ODBCStatement::set_cursor_forward_only()
 {
     int sqlres = SQLSetStmtAttr(stm, SQL_ATTR_CURSOR_TYPE,
         (SQLPOINTER)SQL_CURSOR_FORWARD_ONLY, SQL_IS_INTEGER);
@@ -849,36 +843,6 @@ int ODBCStatement::execute()
     return sqlres;
 }
 
-int ODBCStatement::dbv5_exec_direct(const char* query)
-{
-#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
-    debug_query = query;
-#endif
-    // Casting out 'const' because ODBC API is not const-conscious
-    int sqlres = SQLExecDirect(stm, (SQLCHAR*)query, SQL_NTS);
-    if (is_error(sqlres))
-        error_odbc::throwf(SQL_HANDLE_STMT, stm, "executing query \"%s\"", query);
-#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
-    debug_reached_completion = false;
-#endif
-    return sqlres;
-}
-
-int ODBCStatement::dbv5_exec_direct(const char* query, int qlen)
-{
-#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
-    debug_query = string(query, qlen);
-#endif
-    // Casting out 'const' because ODBC API is not const-conscious
-    int sqlres = SQLExecDirect(stm, (SQLCHAR*)query, qlen);
-    if (is_error(sqlres))
-        error_odbc::throwf(SQL_HANDLE_STMT, stm, "executing query \"%.*s\"", qlen, query);
-#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
-    debug_reached_completion = false;
-#endif
-    return sqlres;
-}
-
 void ODBCStatement::close_cursor_if_needed()
 {
     /*
@@ -914,23 +878,7 @@ int ODBCStatement::execute_and_close()
     return sqlres;
 }
 
-int ODBCStatement::dbv5_exec_direct_and_close(const char* query)
-{
-#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
-    debug_query = query;
-#endif
-    // Casting out 'const' because ODBC API is not const-conscious
-    int sqlres = SQLExecDirect(stm, (SQLCHAR*)query, SQL_NTS);
-    if (is_error(sqlres))
-        error_odbc::throwf(SQL_HANDLE_STMT, stm, "executing query \"%s\"", query);
-#ifdef DEBUG_WARN_OPEN_TRANSACTIONS
-    debug_reached_completion = false;
-#endif
-    close_cursor_if_needed();
-    return sqlres;
-}
-
-int ODBCStatement::dbv5_exec_direct_and_close(const char* query, int qlen)
+int ODBCStatement::exec_direct_and_close(const char* query, int qlen)
 {
 #ifdef DEBUG_WARN_OPEN_TRANSACTIONS
     debug_query = string(query, qlen);

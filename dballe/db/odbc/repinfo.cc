@@ -1,7 +1,7 @@
 /*
- * db/v5/repinfo - repinfo table management
+ * db/odbc/repinfo - repinfo table management
  *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,17 +31,17 @@ namespace dballe {
 namespace db {
 namespace odbc {
 
-ODBCRepinfoV5::ODBCRepinfoV5(ODBCConnection& conn)
+ODBCRepinfoBase::ODBCRepinfoBase(ODBCConnection& conn)
     : Repinfo(conn), conn(conn)
 {
     read_cache();
 }
 
-ODBCRepinfoV5::~ODBCRepinfoV5()
+ODBCRepinfoBase::~ODBCRepinfoBase()
 {
 }
 
-void ODBCRepinfoV5::read_cache()
+void ODBCRepinfoBase::read_cache()
 {
     auto stm = conn.odbcstatement("SELECT id, memo, description, prio, descriptor, tablea FROM repinfo ORDER BY id");
 
@@ -72,7 +72,7 @@ void ODBCRepinfoV5::read_cache()
     rebuild_memo_idx();
 }
 
-void ODBCRepinfoV5::insert_auto_entry(const char* memo)
+void ODBCRepinfoBase::insert_auto_entry(const char* memo)
 {
     auto stm = conn.odbcstatement("SELECT MAX(id) FROM repinfo");
     unsigned id;
@@ -124,7 +124,7 @@ static void commit_cache_item(struct _dba_db_repinfo_cache* item)
 #endif
 
 
-int ODBCRepinfoV5::id_use_count(unsigned id, const char* name)
+int ODBCRepinfoBase::id_use_count(unsigned id, const char* name)
 {
     unsigned dbid = id;
     unsigned count;
@@ -137,14 +137,14 @@ int ODBCRepinfoV5::id_use_count(unsigned id, const char* name)
     return count;
 }
 
-void ODBCRepinfoV5::delete_entry(unsigned id)
+void ODBCRepinfoBase::delete_entry(unsigned id)
 {
     auto stm = conn.odbcstatement("DELETE FROM repinfo WHERE id=?");
     stm->bind_in(1, id);
     stm->execute_and_close();
 }
 
-void ODBCRepinfoV5::update_entry(const sql::repinfo::Cache& entry)
+void ODBCRepinfoBase::update_entry(const sql::repinfo::Cache& entry)
 {
     auto stm = conn.odbcstatement(R"(
         UPDATE repinfo set memo=?, description=?, prio=?, descriptor=?, tablea=?
@@ -159,7 +159,7 @@ void ODBCRepinfoV5::update_entry(const sql::repinfo::Cache& entry)
     stm->execute_and_close();
 }
 
-void ODBCRepinfoV5::insert_entry(const sql::repinfo::Cache& entry)
+void ODBCRepinfoBase::insert_entry(const sql::repinfo::Cache& entry)
 {
     auto stm = conn.odbcstatement(R"(
         INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)
@@ -175,7 +175,7 @@ void ODBCRepinfoV5::insert_entry(const sql::repinfo::Cache& entry)
     stm->execute_and_close();
 }
 
-void ODBCRepinfoV5::dump(FILE* out)
+void ODBCRepinfoBase::dump(FILE* out)
 {
     unsigned id;
     char memo[20]; SQLLEN memo_ind;
@@ -211,7 +211,7 @@ void ODBCRepinfoV5::dump(FILE* out)
 }
 
 
-ODBCRepinfoV6::ODBCRepinfoV6(ODBCConnection& conn) : ODBCRepinfoV5(conn) {}
+ODBCRepinfoV6::ODBCRepinfoV6(ODBCConnection& conn) : ODBCRepinfoBase(conn) {}
 
 int ODBCRepinfoV6::id_use_count(unsigned id, const char* name)
 {

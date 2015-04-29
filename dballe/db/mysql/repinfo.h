@@ -38,7 +38,7 @@ namespace mysql {
 /**
  * Fast cached access to the repinfo table
  */
-struct MySQLRepinfoV5 : public sql::Repinfo
+struct MySQLRepinfoBase : public sql::Repinfo
 {
     /**
      * DB connection. The pointer is assumed always valid during the
@@ -46,11 +46,11 @@ struct MySQLRepinfoV5 : public sql::Repinfo
      */
     MySQLConnection& conn;
 
-    MySQLRepinfoV5(MySQLConnection& conn);
-    MySQLRepinfoV5(const MySQLRepinfoV5&) = delete;
-    MySQLRepinfoV5(const MySQLRepinfoV5&&) = delete;
-    virtual ~MySQLRepinfoV5();
-    MySQLRepinfoV5& operator=(const MySQLRepinfoV5&) = delete;
+    MySQLRepinfoBase(MySQLConnection& conn);
+    MySQLRepinfoBase(const MySQLRepinfoBase&) = delete;
+    MySQLRepinfoBase(const MySQLRepinfoBase&&) = delete;
+    virtual ~MySQLRepinfoBase();
+    MySQLRepinfoBase& operator=(const MySQLRepinfoBase&) = delete;
 
     void dump(FILE* out) override;
 
@@ -63,7 +63,7 @@ protected:
     void insert_auto_entry(const char* memo) override;
 };
 
-struct MySQLRepinfoV6 : public MySQLRepinfoV5
+struct MySQLRepinfoV6 : public MySQLRepinfoBase
 {
     MySQLRepinfoV6(MySQLConnection& conn);
 

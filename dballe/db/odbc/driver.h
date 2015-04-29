@@ -36,21 +36,14 @@ struct Driver : public sql::Driver
     Driver(ODBCConnection& conn);
     virtual ~Driver();
 
-    std::unique_ptr<sql::Repinfo> create_repinfov5() override;
     std::unique_ptr<sql::Repinfo> create_repinfov6() override;
-    std::unique_ptr<sql::Station> create_stationv5() override;
     std::unique_ptr<sql::Station> create_stationv6() override;
     std::unique_ptr<sql::LevTr> create_levtrv6() override;
-    std::unique_ptr<sql::DataV5> create_datav5() override;
     std::unique_ptr<sql::DataV6> create_datav6() override;
-    std::unique_ptr<sql::AttrV5> create_attrv5() override;
     std::unique_ptr<sql::AttrV6> create_attrv6() override;
     void run_built_query_v6(const v6::QueryBuilder& qb, std::function<void(sql::SQLRecordV6& rec)> dest) override;
-    void create_tables_v5() override;
     void create_tables_v6() override;
-    void delete_tables_v5() override;
     void delete_tables_v6() override;
-    void vacuum_v5() override;
     void vacuum_v6() override;
     void exec_no_data(const std::string& query) override;
 };

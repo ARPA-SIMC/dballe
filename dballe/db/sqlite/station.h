@@ -1,7 +1,7 @@
 /*
  * db/station - station table management
  *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_SQLITE_V5_STATION_H
-#define DBALLE_DB_SQLITE_V5_STATION_H
+#ifndef DBALLE_DB_SQLITE_STATION_H
+#define DBALLE_DB_SQLITE_STATION_H
 
 /** @file
  * @ingroup db
@@ -46,7 +46,7 @@ namespace sqlite {
 /**
  * Precompiled queries to manipulate the station table
  */
-class SQLiteStationV5 : public sql::Station
+class SQLiteStationBase : public sql::Station
 {
 protected:
     /**
@@ -68,11 +68,11 @@ protected:
     void read_station_vars(SQLiteStatement& stm, std::function<void(std::unique_ptr<wreport::Var>)> dest);
 
 public:
-    SQLiteStationV5(SQLiteConnection& conn);
-    ~SQLiteStationV5();
-    SQLiteStationV5(const SQLiteStationV5&) = delete;
-    SQLiteStationV5(const SQLiteStationV5&&) = delete;
-    SQLiteStationV5& operator=(const SQLiteStationV5&) = delete;
+    SQLiteStationBase(SQLiteConnection& conn);
+    ~SQLiteStationBase();
+    SQLiteStationBase(const SQLiteStationBase&) = delete;
+    SQLiteStationBase(const SQLiteStationBase&&) = delete;
+    SQLiteStationBase& operator=(const SQLiteStationBase&) = delete;
 
     /**
      * Get the station ID given latitude, longitude and mobile identifier.
@@ -103,7 +103,7 @@ public:
     void dump(FILE* out) override;
 };
 
-class SQLiteStationV6 : public SQLiteStationV5
+class SQLiteStationV6 : public SQLiteStationBase
 {
 public:
     SQLiteStationV6(SQLiteConnection& conn);

@@ -22,6 +22,7 @@
 #include "cmdline/dbadb.h"
 #include "core/arrayfile.h"
 #include "msg/codec.h"
+#include "config.h"
 
 using namespace dballe;
 using namespace dballe::cmdline;
@@ -91,7 +92,6 @@ std::vector<Test> tests {
 test_group tg1("cmdline_dbadb_mem", nullptr, db::MEM, tests);
 test_group tg2("cmdline_dbadb_v6_sqlite", "SQLITE", db::V6, tests);
 #ifdef HAVE_ODBC
-test_group tg3("cmdline_dbadb_v5_odbc", "ODBC", db::V5, tests);
 test_group tg4("cmdline_dbadb_v6_odbc", "ODBC", db::V6, tests);
 #endif
 #ifdef HAVE_LIBPQ

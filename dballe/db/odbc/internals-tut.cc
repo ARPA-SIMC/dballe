@@ -19,7 +19,6 @@
 
 #include "db/test-utils-db.h"
 #include "db/odbc/internals.h"
-#include "db/v5/db.h"
 #include <sql.h>
 
 using namespace dballe;

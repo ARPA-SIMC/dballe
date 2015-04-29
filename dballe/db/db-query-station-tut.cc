@@ -20,7 +20,6 @@
 #include "config.h"
 #include "db/test-utils-db.h"
 #include "db/mem/db.h"
-#include "db/v5/db.h"
 #include "db/v6/db.h"
 #include "db/sql/station.h"
 
@@ -200,16 +199,12 @@ std::vector<Test> tests {
                 if (auto d = dynamic_cast<mem::DB*>(f.db))
                     d->memdb.stations.obtain_fixed(Coords(11.0, 45.0), "synop");
                 break;
-            case V5:
-                if (auto d = dynamic_cast<v5::DB*>(f.db))
-                    d->station().obtain_id(1100000, 4500000);
-                break;
             case V6:
                 if (auto d = dynamic_cast<v6::DB*>(f.db))
                     d->station().obtain_id(1100000, 4500000);
                 break;
-            case MESSAGES:
-                throw error_unimplemented("testing stations_without_data on MESSAGES database");
+            case V5: throw error_unimplemented("v5 db is not supported");
+            case MESSAGES: throw error_unimplemented("testing stations_without_data on MESSAGES database");
         }
 
         // Query stations and make sure that they do not appear. They should
@@ -228,7 +223,6 @@ std::vector<Test> tests {
 test_group tg1("db_query_station_mem", nullptr, db::MEM, tests);
 test_group tg2("db_query_station_v6_sqlite", "SQLITE", db::V6, tests);
 #ifdef HAVE_ODBC
-test_group tg3("db_query_station_v5_odbc", "ODBC", db::V5, tests);
 test_group tg4("db_query_station_v6_odbc", "ODBC", db::V6, tests);
 #endif
 #ifdef HAVE_LIBPQ

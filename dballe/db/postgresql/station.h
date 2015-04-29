@@ -1,5 +1,5 @@
 /*
- * db/station - station table management
+ * db/postgresql/station - station table management
  *
  * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#ifndef DBALLE_DB_POSTGRESQL_V5_STATION_H
-#define DBALLE_DB_POSTGRESQL_V5_STATION_H
+#ifndef DBALLE_DB_POSTGRESQL_V6_STATION_H
+#define DBALLE_DB_POSTGRESQL_V6_STATION_H
 
 /** @file
  * @ingroup db
@@ -89,16 +89,6 @@ public:
      * Dump the entire contents of the table to an output stream
      */
     void dump(FILE* out) override;
-};
-
-/**
- * Precompiled queries to manipulate the station table
- */
-class PostgreSQLStationV5 : public postgresql::StationBase
-{
-public:
-    PostgreSQLStationV5(PostgreSQLConnection& conn);
-    ~PostgreSQLStationV5();
 };
 
 class PostgreSQLStationV6 : public postgresql::StationBase

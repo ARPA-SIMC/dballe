@@ -121,7 +121,6 @@ public:
 
     std::unique_ptr<Transaction> transaction() override;
     std::unique_ptr<ODBCStatement> odbcstatement(const std::string& query);
-    std::unique_ptr<ODBCStatement> dbv5_odbcstatement();
 
     /// Check if the database contains a table
     bool has_table(const std::string& name) override;
@@ -214,17 +213,11 @@ struct ODBCStatement
 
     /// @return SQLExecute's result
     int execute();
-    /// @return SQLExecute's result
-    int dbv5_exec_direct(const char* query);
-    /// @return SQLExecute's result
-    int dbv5_exec_direct(const char* query, int qlen);
 
     /// @return SQLExecute's result
     int execute_and_close();
     /// @return SQLExecute's result
-    int dbv5_exec_direct_and_close(const char* query);
-    /// @return SQLExecute's result
-    int dbv5_exec_direct_and_close(const char* query, int qlen);
+    int exec_direct_and_close(const char* query, int qlen);
 
     void execute_ignoring_results();
 
@@ -242,7 +235,7 @@ struct ODBCStatement
     /// Row count for insert, delete and other non-select operations
     size_t rowcount();
 
-    void dbv5_set_cursor_forward_only();
+    void set_cursor_forward_only();
     void set_cursor_static();
 
 protected:
