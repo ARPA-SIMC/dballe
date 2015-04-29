@@ -673,6 +673,9 @@ bool db_load_filelike(DB* db, PyObject* obj)
         return false;
     }
     if (!PyObject_TypeCheck(data, &PyString_Type)) {
+        Py_DECREF(read_meth);
+        Py_DECREF(read_args);
+        Py_DECREF(data);
         PyErr_SetString(PyExc_ValueError, "read() function must return a string object");
         return false;
     }
