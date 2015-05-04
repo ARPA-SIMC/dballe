@@ -207,22 +207,28 @@ static PyObject* dpy_Record_vars(dpy_Record* self)
     PyObject* result = PyTuple_New(vars.size());
     if (!result) return NULL;
 
-    for (size_t i = 0; i < vars.size(); ++i)
-    {
-        PyObject* v = (PyObject*)var_create(*vars[i]);
-        if (!v)
+    try {
+        for (size_t i = 0; i < vars.size(); ++i)
         {
-            Py_DECREF(result);
-            return NULL;
-        }
+            PyObject* v = (PyObject*)var_create(*vars[i]);
+            if (!v)
+            {
+                Py_DECREF(result);
+                return NULL;
+            }
 
-        if (!PyTuple_SetItem(result, i, v) == -1)
-        {
-            Py_DECREF(result);
-            return NULL;
+            if (!PyTuple_SetItem(result, i, v) == -1)
+            {
+                Py_DECREF(result);
+                return NULL;
+            }
         }
+        return result;
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
     }
-    return result;
 }
 
 static PyObject* dpy_Record_key(dpy_Record* self, PyObject* args)

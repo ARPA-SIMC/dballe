@@ -44,7 +44,7 @@ static PyObject* dballe_varinfo(PyTypeObject *type, PyObject *args, PyObject *kw
     return (PyObject*)varinfo_create(dballe::varinfo(resolve_varcode(var_name)));
 }
 
-static PyObject* dballe_var(PyTypeObject *type, PyObject *args)
+static PyObject* dballe_var_uncaught(PyTypeObject *type, PyObject *args)
 {
     const char* var_name;
     PyObject* val = 0;
@@ -87,6 +87,17 @@ static PyObject* dballe_var(PyTypeObject *type, PyObject *args)
         }
     } else
         return (PyObject*)var_create(dballe::varinfo(resolve_varcode(var_name)));
+}
+
+static PyObject* dballe_var(PyTypeObject *type, PyObject *args)
+{
+    try {
+        return dballe_var_uncaught(type, args);
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
 }
 
 #define get_int_or_missing(intvar, ovar) \
