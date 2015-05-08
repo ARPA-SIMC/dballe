@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,24 +25,14 @@ using namespace wreport;
 using namespace dballe;
 using namespace std;
 
-namespace tut {
+namespace {
 
-struct db_querybuf_shar
-{
-        db_querybuf_shar()
-        {
-        }
+typedef dballe::tests::test_group<> test_group;
+typedef test_group::Test Test;
+typedef test_group::Fixture Fixture;
 
-        ~db_querybuf_shar()
-        {
-        }
-};
-TESTGRP(db_querybuf);
-
-/* Test querybuf */
-template<> template<>
-void to::test<1>()
-{
+std::vector<Test> tests {
+    Test("append", [](Fixture& f) {
         Querybuf buf(10);
 
         // A new querybuf contains the empty string
@@ -72,17 +62,14 @@ void to::test<1>()
         buf.append_list("2");
         buf.append_listf("%d", 3);
         ensure_equals(buf, "1, 2, 3");
-}
+    }),
+    Test("varlist", [](Fixture& f) {
+        Querybuf buf(50);
+        buf.append_varlist("B12101,B12103,block");
+        wassert(actual((string)buf) == "3173,3175,257");
+    }),
+};
 
-/* Test querybuf */
-template<> template<>
-void to::test<2>()
-{
-    Querybuf buf(50);
-    buf.append_varlist("B12101,B12103,block");
-    wassert(actual((string)buf) == "3173,3175,257");
-}
+test_group tg("db_querybuf", tests);
 
 }
-
-/* vim:set ts=4 sw=4: */
