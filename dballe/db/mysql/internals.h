@@ -152,6 +152,9 @@ protected:
 protected:
     void init_after_connect();
 
+    // See https://dev.mysql.com/doc/refman/5.0/en/mysql-real-connect.html
+    void open(const mysql::ConnectInfo& info);
+
 public:
     MySQLConnection();
     MySQLConnection(const MySQLConnection&) = delete;
@@ -162,8 +165,6 @@ public:
 
     operator MYSQL*() { return db; }
 
-    // See https://dev.mysql.com/doc/refman/5.0/en/mysql-real-connect.html
-    void open(const mysql::ConnectInfo& info);
     // See http://dev.mysql.com/doc/connector-j/en/connector-j-reference-configuration-properties.html
     void open_url(const std::string& url);
     void open_test();

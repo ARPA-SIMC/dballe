@@ -90,6 +90,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	msg/wr_exporters/common.h \
 	db/defs.h \
 	db/db.h \
+	db/trace.h \
 	db/mem/repinfo.h \
 	db/mem/cursor.h \
 	db/mem/db.h \
@@ -215,6 +216,7 @@ libdballe_la_SOURCES = \
 	msg/wr_exporters/generic.cc \
 	msg/wr_exporters/pollution.cc \
 	db/db.cc \
+	db/trace.cc \
 	db/querybuf.cc \
 	db/sql.cc \
 	db/sql/repinfo.cc \
@@ -353,6 +355,7 @@ tut_test_SOURCES = \
 	msg/tests/wr_codec_generic.cc \
 	db/test-utils-db.cc \
 	db/querybuf-tut.cc \
+	db/trace-tut.cc \
 	db/sql/repinfo-tut.cc \
 	db/sql/station-tut.cc \
 	db/sql/levtr-tut.cc \

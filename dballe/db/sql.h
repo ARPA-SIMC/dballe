@@ -68,6 +68,9 @@ enum class ServerType
 
 class Connection
 {
+protected:
+    std::string url;
+
 public:
     /**
      * Type of SQL server we are connected to.
@@ -78,6 +81,8 @@ public:
     ServerType server_type;
 
     virtual ~Connection();
+
+    const std::string& get_url() const { return url; }
 
     /**
      * Begin a transaction.

@@ -251,7 +251,7 @@ public:
      *   If repinfo_file is NULL, then the default of /etc/dballe/repinfo.csv is
      *   used.
      */
-    virtual void reset(const char* repinfo_file = 0) = 0;
+    virtual void reset(const char* repinfo_file=0) = 0;
 
     /**
      * Update the repinfo table in the database, with the data found in the given

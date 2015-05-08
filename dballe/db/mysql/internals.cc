@@ -299,6 +299,7 @@ void MySQLConnection::open(const mysql::ConnectInfo& info)
 void MySQLConnection::open_url(const std::string& url)
 {
     using namespace mysql;
+    this->url = url;
     ConnectInfo info;
     info.parse_url(url);
     open(info);

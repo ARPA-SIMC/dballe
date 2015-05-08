@@ -83,6 +83,7 @@ static inline int sqltimecmp(const SQL_TIMESTAMP_STRUCT* a, const SQL_TIMESTAMP_
 
 void DB::export_msgs(const Query& query, MsgConsumer& consumer)
 {
+    auto tr = trace.trace_export_msgs(query);
     sql::Repinfo& ri = repinfo();
     sql::AttrV6& at = attr();
     sql::LevTrCache& ltrc = lev_tr_cache();
@@ -209,8 +210,9 @@ void DB::export_msgs(const Query& query, MsgConsumer& consumer)
             consumer(move(msg));
     }
 
-    /* Useful for Oracle to end the session */
+    // Useful for Oracle to end the session
     t->commit();
+    tr->done();
 }
 
 }

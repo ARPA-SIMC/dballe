@@ -171,6 +171,11 @@ ODBCConnection::~ODBCConnection()
 
 void ODBCConnection::connect(const char* dsn, const char* user, const char* password)
 {
+    url = "odbc://";
+    url += user;
+    if (password) url += ":****";
+    url += "@";
+    url += dsn;
     /* Connect to the DSN */
     int sqlres = SQLConnect(od_conn,
                 (SQLCHAR*)dsn, SQL_NTS,
@@ -183,6 +188,7 @@ void ODBCConnection::connect(const char* dsn, const char* user, const char* pass
 
 void ODBCConnection::connect_url(const char* url)
 {
+    this->url = url;
     string buf(url + 7);
     size_t pos = buf.find('@');
     if (pos == string::npos)
@@ -205,6 +211,7 @@ void ODBCConnection::connect_url(const char* url)
     connect(dsn.c_str(), user.c_str(), pass.c_str()); // odbc://user:pass@dsn
 }
 
+#if 0
 void ODBCConnection::connect_file(const std::string& fname)
 {
     // Access sqlite file directly
@@ -226,6 +233,7 @@ void ODBCConnection::connect_file(const std::string& fname)
     }
     driver_connect(buf.c_str());
 }
+#endif
 
 void ODBCConnection::connect_test()
 {

@@ -23,6 +23,7 @@
 #define DBA_DB_V6_H
 
 #include <dballe/db/db.h>
+#include <dballe/db/trace.h>
 #include <wreport/varinfo.h>
 #include <string>
 #include <vector>
@@ -88,6 +89,8 @@ class DB : public dballe::DB
 public:
     /// Database connection
     db::Connection* conn;
+    /// Database query tracing
+    Trace trace;
 
 protected:
     /// Store information about the database ID of a variable

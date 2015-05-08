@@ -86,6 +86,7 @@ SQLiteConnection::~SQLiteConnection()
 
 void SQLiteConnection::open_file(const std::string& pathname, int flags)
 {
+    url = "sqlite://" + pathname;
     int res = sqlite3_open_v2(pathname.c_str(), &db, flags, nullptr);
     if (res != SQLITE_OK)
     {
@@ -104,11 +105,13 @@ void SQLiteConnection::open_file(const std::string& pathname, int flags)
 
 void SQLiteConnection::open_memory(int flags)
 {
+    url = "sqlite://:memory:";
     open_file(":memory:", flags);
 }
 
 void SQLiteConnection::open_private_file(int flags)
 {
+    url = "sqlite://";
     open_file("", flags);
 }
 

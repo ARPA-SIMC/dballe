@@ -214,6 +214,7 @@ PostgreSQLConnection::~PostgreSQLConnection()
 
 void PostgreSQLConnection::open_url(const std::string& connection_string)
 {
+    url = connection_string;
     db = PQconnectdb(connection_string.c_str());
     if (PQstatus(db) != CONNECTION_OK)
         throw error_postgresql(db, "opening " + connection_string);

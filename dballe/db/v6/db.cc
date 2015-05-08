@@ -56,8 +56,12 @@ DB::DB(unique_ptr<Connection> conn)
 {
     init_after_connect();
 
+    auto tr = trace.trace_connect(this->conn->get_url());
+
     /* Set the connection timeout */
     /* SQLSetConnectAttr(pc.od_conn, SQL_LOGIN_TIMEOUT, (SQLPOINTER *)5, 0); */
+
+    tr->done();
 }
 
 DB::~DB()
@@ -144,12 +148,14 @@ void DB::disappear()
 
 void DB::reset(const char* repinfo_file)
 {
+    auto tr = trace.trace_reset(repinfo_file);
     disappear();
     m_driver->create_tables_v6();
 
     // Populate the tables with values
     int added, deleted, updated;
     update_repinfo(repinfo_file, &added, &deleted, &updated);
+    tr->done();
 }
 
 void DB::update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated)
@@ -266,42 +272,57 @@ int DB::last_station_id() const
 
 void DB::remove(const Query& query)
 {
+    auto tr = trace.trace_remove(query);
     auto t = conn->transaction();
     Cursor::run_delete_query(*this, query);
     t->commit();
+    tr->done();
 }
 
 void DB::remove_all()
 {
+    auto tr = trace.trace_remove_all();
     auto t = conn->transaction();
     driver().remove_all_v6();
     if (m_lev_tr_cache)
         m_lev_tr_cache->invalidate();
     t->commit();
+    tr->done();
 }
 
 void DB::vacuum()
 {
+    auto tr = trace.trace_vacuum();
     auto t = conn->transaction();
     driver().vacuum_v6();
     if (m_lev_tr_cache)
         m_lev_tr_cache->invalidate();
     t->commit();
+    tr->done();
 }
 
 std::unique_ptr<db::Cursor> DB::query_stations(const Query& query)
 {
-    return Cursor::run_station_query(*this, query);
+    auto tr = trace.trace_query_stations(query);
+    auto res = Cursor::run_station_query(*this, query);
+    tr->done();
+    return move(res);
 }
 
 std::unique_ptr<db::Cursor> DB::query_data(const Query& query)
 {
-    return Cursor::run_data_query(*this, query);
+    auto tr = trace.trace_query_data(query);
+    auto res = Cursor::run_data_query(*this, query);
+    tr->done();
+    return move(res);
 }
 
 std::unique_ptr<db::Cursor> DB::query_summary(const Query& query)
 {
-    return Cursor::run_summary_query(*this, query);
+    auto tr = trace.trace_query_summary(query);
+    auto res = Cursor::run_summary_query(*this, query);
+    tr->done();
+    return move(res);
 }
 
 void DB::query_attrs(int id_data, wreport::Varcode id_var,
