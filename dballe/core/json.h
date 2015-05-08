@@ -23,6 +23,8 @@
 #ifndef DBALLE_CORE_JSON_H
 #define DBALLE_CORE_JSON_H
 
+#include <wreport/varinfo.h>
+#include <dballe/core/defs.h>
 #include <vector>
 #include <string>
 
@@ -60,6 +62,12 @@ public:
     JSONWriter(std::string& out);
     ~JSONWriter();
 
+    /**
+     * Reset the serializer state, to cancel the current output and prepare for
+     * a new one
+     */
+    void reset();
+
     void start_list();
     void end_list();
 
@@ -72,12 +80,21 @@ public:
     void add_double(double val);
     void add_cstring(const char* val);
     void add_string(const std::string& val);
+    void add_level(const Level& val);
+    void add_trange(const Trange& val);
+    void add_datetime(const Datetime& val);
+    void add_coords(const Coords& val);
 
     void add(const std::string& val) { add_string(val); }
     void add(const char* val) { add_cstring(val); }
     void add(double val) { add_double(val); }
     void add(int val) { add_int(val); }
+    void add(wreport::Varcode val) { add_int(val); }
     void add(bool val) { add_bool(val); }
+    void add(const Level& val) { add_level(val); }
+    void add(const Trange& val) { add_trange(val); }
+    void add(const Datetime& val) { add_datetime(val); }
+    void add(const Coords& val) { add_coords(val); }
 
     // Shortcut to add a mapping, which also ensures that the key is a string
     template<typename T>
@@ -85,6 +102,15 @@ public:
     {
         add_cstring(a);
         add(b);
+    }
+
+    template<typename T>
+    void add_list(const T& val)
+    {
+        start_list();
+        for (const auto& i : val)
+            add(i);
+        end_list();
     }
 };
 

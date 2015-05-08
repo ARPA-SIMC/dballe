@@ -43,6 +43,8 @@
 
 namespace dballe {
 
+struct JSONWriter;
+
 struct Query
 {
     static const uint32_t WANT_MISSING_IDENT =  (1 << 0);
@@ -147,6 +149,9 @@ struct Query
 
     /// Print the query contents to stderr
     void print(FILE* out) const;
+
+    /// Send the contents to a JSONWriter
+    void serialize(JSONWriter& out) const;
 
     /**
      * Parse the query=* modifiers specification inside the record, returning the

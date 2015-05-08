@@ -20,6 +20,7 @@
  */
 #include "query.h"
 #include "var.h"
+#include "json.h"
 #include <sstream>
 #include <cmath>
 #include <cstring>
@@ -724,6 +725,50 @@ void Query::print(FILE* out) const
 {
     Printer printer(*this, out);
     printer.print();
+}
+
+void Query::serialize(JSONWriter& out) const
+{
+    if (ana_id != MISSING_INT) out.add("ana_id", ana_id);
+    if (prio_min != MISSING_INT) out.add("prio_min", prio_min);
+    if (prio_max != MISSING_INT) out.add("prio_max", prio_max);
+    if (!rep_memo.empty()) out.add("rep_memo", rep_memo);
+    if (mobile != MISSING_INT) out.add("mobile", mobile);
+    if (has_ident) out.add("ident", ident);
+    if (coords_min == coords_max)
+    {
+        if (!coords_min.is_missing()) out.add("coords", coords_min);
+    } else {
+        if (!coords_min.is_missing()) out.add("coords_min", coords_min);
+        if (!coords_max.is_missing()) out.add("coords_max", coords_min);
+    }
+    if (coords_min.lat != MISSING_INT) out.add("latmin", coords_min.lat);
+    if (coords_min.lon != MISSING_INT) out.add("lonmin", coords_min.lon);
+    if (coords_max.lat != MISSING_INT) out.add("latmax", coords_max.lat);
+    if (coords_max.lon != MISSING_INT) out.add("lonmax", coords_max.lon);
+    if (datetime_min == datetime_max)
+    {
+        if (!datetime_min.is_missing()) out.add("datetime", datetime_min);
+    } else {
+        if (!datetime_min.is_missing()) out.add("datetime_min", datetime_min);
+        if (!datetime_max.is_missing()) out.add("datetime_max", datetime_min);
+    }
+    if (!level.is_missing()) out.add("level", level);
+    if (!trange.is_missing()) out.add("trange", trange);
+    if (!varcodes.empty())
+    {
+        out.add("varcodes");
+        out.add_list(varcodes);
+    }
+    if (!query.empty()) out.add("query", query);
+    if (!ana_filter.empty()) out.add("ana_filter", ana_filter);
+    if (!data_filter.empty()) out.add("data_filter", data_filter);
+    if (!attr_filter.empty()) out.add("attr_filter", attr_filter);
+    if (limit != MISSING_INT) out.add("limit", limit);
+    if (block != MISSING_INT) out.add("block", block);
+    if (station != MISSING_INT) out.add("station", station);
+    if (data_id != MISSING_INT) out.add("data_id", data_id);
+    out.add("query_station_vars", query_station_vars);
 }
 
 unsigned Query::parse_modifiers(const Record& rec)

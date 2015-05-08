@@ -31,6 +31,11 @@ namespace dballe {
 JSONWriter::JSONWriter(std::string& out) : out(out) {}
 JSONWriter::~JSONWriter() {}
 
+void JSONWriter::reset()
+{
+    stack.clear();
+}
+
 void JSONWriter::val_head()
 {
     if (!stack.empty())
@@ -102,6 +107,50 @@ void JSONWriter::add_cstring(const char* val)
 void JSONWriter::add_string(const std::string& val)
 {
     add_cstring(val.c_str());
+}
+
+void JSONWriter::add_level(const Level& val)
+{
+    start_list();
+    if (val.ltype1 != MISSING_INT) add(val.ltype1); else add_null();
+    if (val.l1 != MISSING_INT) add(val.l1); else add_null();
+    if (val.ltype2 != MISSING_INT) add(val.ltype2); else add_null();
+    if (val.l2 != MISSING_INT) add(val.l2); else add_null();
+    end_list();
+}
+
+void JSONWriter::add_trange(const Trange& val)
+{
+    start_list();
+    if (val.pind != MISSING_INT) add(val.pind); else add_null();
+    if (val.p1 != MISSING_INT) add(val.p1); else add_null();
+    if (val.p2 != MISSING_INT) add(val.p2); else add_null();
+    end_list();
+}
+
+void JSONWriter::add_coords(const Coords& val)
+{
+    start_list();
+    if (val.lat != MISSING_INT) add(val.lat); else add_null();
+    if (val.lon != MISSING_INT) add(val.lon); else add_null();
+    end_list();
+}
+
+void JSONWriter::add_datetime(const Datetime& val)
+{
+    if (val.is_missing())
+        add_null();
+    else
+    {
+        start_list();
+        if (val.date.year != MISSING_INT) add(val.date.year); else add_null();
+        if (val.date.month != MISSING_INT) add(val.date.month); else add_null();
+        if (val.date.day != MISSING_INT) add(val.date.day); else add_null();
+        if (val.time.hour != MISSING_INT) add(val.time.hour); else add_null();
+        if (val.time.minute != MISSING_INT) add(val.time.minute); else add_null();
+        if (val.time.second != MISSING_INT) add(val.time.second); else add_null();
+        end_list();
+    }
 }
 
 void JSONWriter::start_list()
