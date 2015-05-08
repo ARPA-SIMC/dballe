@@ -66,6 +66,8 @@ struct Level
         : ltype1(ltype1), l1(l1), ltype2(ltype2), l2(l2) {}
     Level(const char* ltype1, const char* l1=NULL, const char* ltype2=NULL, const char* l2=NULL);
 
+    bool is_missing() const { return ltype1 == MISSING_INT && l1 == MISSING_INT && ltype2 == MISSING_INT && l2 == MISSING_INT; }
+
     bool operator==(const Level& l) const
     {
         return ltype1 == l.ltype1 && l1 == l.l1
@@ -123,6 +125,8 @@ struct Trange
         : pind(pind), p1(p1), p2(p2) {}
     Trange(const char* pind, const char* p1=NULL, const char* p2=NULL);
 
+    bool is_missing() const { return pind == MISSING_INT && p1 == MISSING_INT && p2 == MISSING_INT; }
+
     bool operator==(const Trange& tr) const
     {
         return pind == tr.pind && p1 == tr.p1 && p2 == tr.p2;
@@ -175,6 +179,8 @@ struct Coords
     Coords() {}
     Coords(int lat, int lon);
     Coords(double lat, double lon);
+
+    bool is_missing() const { return lat == MISSING_INT && lon == MISSING_INT; }
 
     void set_lat(int lat);
     void set_lon(int lat);
