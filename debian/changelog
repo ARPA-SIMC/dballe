@@ -8,6 +8,8 @@ dballe (7.1-1) UNRELEASED; urgency=medium
      - implemented native PostgreSQL connection
      - implemented native MySQL connection
      - removed support for V5 database formats.
+     - if DBA_LOGDIR is set, it creates a log file in that directory with a
+       JSON trace of all significant usage of the library
 
  -- Enrico Zini <enrico@enricozini.org>  Tue, 31 Mar 2015 14:47:14 +0200
 
