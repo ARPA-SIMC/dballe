@@ -72,12 +72,19 @@ class Exporter:
 
     def getattrval(self, x, v):
         data = self.attrData["%d,%s"%(x["context_id"],x["var"])]
-        if v in data:
-            return data.var(v).format()
-        else:
+        val = data.get(v, None)
+        if val is None:
             return ""
+        else:
+            return val
 
     def compute_columns(self, filter):
+        """
+        Compute what columns need to be in the output CSV.
+
+        It queries DB-All.e once; another query will be needed later to output
+        data.
+        """
         title = ""
         cols = []
 
@@ -132,16 +139,19 @@ class Exporter:
             vars.add(d["var"])
 
             # Attributes
-            attributes = self.db.query_attrs(d["var"], d["context_id"])
-            self.attrData["%d,%s"%(d["context_id"], d["var"])] = attributes
-            for code in attributes:
-                v = attributes.var(code)
+            attributes = {}
+            for v in self.db.query_attrs(d["var"], d["context_id"]).vars():
+                code = v.code
                 val = v.format("");
-                if code in attrs:
-                    if attrs[code] != val:
-                        attrs[code] = None
-                else:
+                attributes[code] = val
+
+                oldval = attrs.get(code, None)
+                if oldval is None:
                     attrs[code] = val
+                elif oldval != val:
+                    attrs[code] = None
+
+            self.attrData["%d,%s"%(d["context_id"], d["var"])] = attributes
 
         # Now that we have detailed info, compute the columns
 
@@ -208,7 +218,7 @@ class Exporter:
             if attrs[v] == None:
                 # Dirty workaround to compensate Python's lack of proper
                 # anonymous functions: see http://www.jnetworld.com/python.htm
-                cols.append(["Attr "+v, lambda a, v=v: self.getattrval(a, v)])
+                cols.append(["Attr "+v, lambda rec, v=v: self.getattrval(rec, v)])
             else:
                 title = title + "Attr %s: %s. " % (v, attrs[v])
 

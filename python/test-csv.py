@@ -64,8 +64,8 @@ class TestCSV(unittest.TestCase):
         dbacsv.export(self.db, query, out)
 
         lines = out.getvalue().splitlines()
-        self.assertEquals(lines[1], "1005-01-01 01:01:00,270.96,98")
-        self.assertEquals(lines[2], "1005-01-01 01:01:01,271.96,100")
+        self.assertEquals(lines[2], "1005-01-01 01:01:00,270.96,98")
+        self.assertEquals(lines[3], "1005-01-01 01:01:01,271.96,100")
 
 
 if __name__ == "__main__":
