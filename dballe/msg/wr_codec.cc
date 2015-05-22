@@ -43,7 +43,7 @@ bool BufrImporter::foreach_decoded(const Rawmsg& msg, std::function<bool(std::un
 {
     unique_ptr<BufrBulletin> bulletin(BufrBulletin::create());
     bulletin->decode(msg);
-    foreach_decoded_bulletin(*bulletin, dest);
+    return foreach_decoded_bulletin(*bulletin, dest);
 }
 
 CrexImporter::CrexImporter(const Options& opts)
@@ -54,7 +54,7 @@ bool CrexImporter::foreach_decoded(const Rawmsg& msg, std::function<bool(std::un
 {
     unique_ptr<CrexBulletin> bulletin(CrexBulletin::create());
     bulletin->decode(msg);
-    foreach_decoded_bulletin(*bulletin, dest);
+    return foreach_decoded_bulletin(*bulletin, dest);
 }
 
 void WRImporter::from_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const
