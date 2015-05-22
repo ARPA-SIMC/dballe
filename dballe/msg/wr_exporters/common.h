@@ -53,17 +53,7 @@ public:
 
     int get_hour();
 
-    void add_year_to_minute();
-    void add_latlon_coarse();
-    void add_latlon_high();
-    void add_station_name(wreport::Varcode code);
-    void add_station_height();
     void add_ecmwf_synop_head();
-    void add_ship_head();
-    // SYNOP Fixed surface station identification, time, horizontal and
-    // vertical coordinates
-    void add_D01090();
-    void add_D01093();
 };
 
 class CommonSynopExporter : public ExporterModule

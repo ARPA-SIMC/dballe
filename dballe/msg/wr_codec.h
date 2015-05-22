@@ -139,24 +139,32 @@ protected:
     void do_station_name(wreport::Varcode dstcode) const;
 
     void do_ecmwf_past_wtr() const;
+    void do_station_height() const;
+    // WMO block and station numbers
     void do_D01001() const;
     void do_D01004() const;
+    // Date (year, month, day)
     void do_D01011() const;
-    int do_D01012() const;  // Return the number of hours
+    // Time (hour and minute), return the hour
+    int do_D01012() const;
+    // Time (hour, minute, second)
     void do_D01013() const;
+    // Latitude and longitude, high accuracy
     void do_D01021() const;
     void do_D01022() const;
+    // Latitude and longitude, coarse accuracy
+    void do_D01023() const;
 
 public:
     const Exporter::Options& opts;
     const Msgs& msgs;
-    const Msg* msg;     // Msg being read
-    const msg::Context* c_station;
-    const msg::Context* c_gnd_instant;
-    wreport::Subset* subset; // Subset being written
+    const Msg* msg = 0;     // Msg being read
+    const msg::Context* c_station = 0;
+    const msg::Context* c_gnd_instant = 0;
+    wreport::Subset* subset = 0; // Subset being written
 
     Template(const Exporter::Options& opts, const Msgs& msgs)
-        : opts(opts), msgs(msgs), msg(0), subset(0) {}
+        : opts(opts), msgs(msgs) {}
     virtual ~Template() {}
 
     virtual const char* name() const = 0;

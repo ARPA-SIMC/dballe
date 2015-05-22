@@ -106,80 +106,11 @@ int ExporterModule::get_hour()
     return v_hour ? v_hour->enqi() : MISSING_INT;
 }
 
-void ExporterModule::add_year_to_minute()
-{
-    add(WR_VAR(0,  4,  1), c_ana);
-    add(WR_VAR(0,  4,  2), c_ana);
-    add(WR_VAR(0,  4,  3), c_ana);
-    add(WR_VAR(0,  4,  4), c_ana);
-    add(WR_VAR(0,  4,  5), c_ana);
-}
-
-void ExporterModule::add_latlon_coarse()
-{
-    add(WR_VAR(0,  5,  2), c_ana, DBA_MSG_LATITUDE);
-    add(WR_VAR(0,  6,  2), c_ana, DBA_MSG_LONGITUDE);
-}
-
-void ExporterModule::add_latlon_high()
-{
-    add(WR_VAR(0,  5,  1), c_ana, DBA_MSG_LATITUDE);
-    add(WR_VAR(0,  6,  1), c_ana, DBA_MSG_LONGITUDE);
-}
-
-void ExporterModule::add_station_height()
-{
-    add(WR_VAR(0,  7, 30), c_ana);
-    add(WR_VAR(0,  7, 31), c_ana);
-}
-
-void ExporterModule::add_station_name(wreport::Varcode code)
-{
-    // Append an undefined station name
-    subset->store_variable_undef(code);
-
-    if (!c_ana) return;
-
-    if (const wreport::Var* var = c_ana->find_by_id(DBA_MSG_ST_NAME))
-    {
-        // Add the value with truncation
-        if (var->value())
-            (*subset)[subset->size() - 1].setc_truncate(var->value());
-    }
-}
-
-void ExporterModule::add_D01090()
-{
-    add(WR_VAR(0,  1,  1), c_ana);
-    add(WR_VAR(0,  1,  2), c_ana);
-    add_station_name(WR_VAR(0,  1, 15));
-    add(WR_VAR(0,  2,  1), c_ana);
-    add_year_to_minute();
-    add_latlon_high();
-    add_station_height();
-}
-
 void ExporterModule::add_ecmwf_synop_head()
 {
     add(WR_VAR(0,  1,  1), c_ana);
     add(WR_VAR(0,  1,  2), c_ana);
     add(WR_VAR(0,  2,  1), c_ana);
-}
-
-void ExporterModule::add_ship_head()
-{
-    add(WR_VAR(0,  1, 11), c_ana);
-    add(WR_VAR(0,  1, 12), c_surface_instant);
-    add(WR_VAR(0,  1, 13), c_surface_instant);
-    add(WR_VAR(0,  2,  1), c_ana);
-}
-
-void ExporterModule::add_D01093()
-{
-    add_ship_head();
-    add_year_to_minute();
-    add_latlon_coarse();
-    add_station_height();
 }
 
 void CommonSynopExporter::init(wreport::Subset& subset)

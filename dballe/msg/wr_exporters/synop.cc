@@ -207,7 +207,7 @@ struct SynopECMWF : public Synop
         synop.add_ecmwf_synop_head();
         do_D01011();
         do_D01012();
-        synop.add_latlon_high();
+        do_D01021();
         /* 10 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT_STATION);
     }
 };
@@ -403,6 +403,20 @@ struct SynopWMO : public Synop
         cur_bulletin = &bulletin;
     }
 
+    // SYNOP Fixed surface station identification, time, horizontal and
+    // vertical coordinates
+    void do_D01090()
+    {
+        add(WR_VAR(0,  1,  1), c_station);
+        add(WR_VAR(0,  1,  2), c_station);
+        do_station_name(WR_VAR(0,  1, 15));
+        add(WR_VAR(0,  2,  1), c_station);
+        do_D01011();
+        do_D01012();
+        do_D01021();
+        do_station_height();
+    }
+
     // D02036  Clouds with bases below station level
     void do_D02036(const Msg& msg, wreport::Subset& subset)
     {
@@ -550,7 +564,7 @@ struct SynopWMO : public Synop
 
         // Fixed surface station identification, time, horizontal and vertical
         // coordinates
-        synop.add_D01090();
+        do_D01090();
 
         // D02031  Pressure data
         synop.add_D02031();

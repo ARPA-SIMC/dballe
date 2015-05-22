@@ -81,6 +81,23 @@ struct ShipBase : public Template
                 i != msg.data.end(); ++i)
             synop.scan_context(**i);
     }
+
+    void do_D01093()
+    {
+        do_ship_head();
+        do_D01011();
+        do_D01012();
+        do_D01023();
+        do_station_height();
+    }
+
+    void do_ship_head()
+    {
+        add(WR_VAR(0,  1, 11), c_station);
+        add(WR_VAR(0,  1, 12), c_gnd_instant);
+        add(WR_VAR(0,  1, 13), c_gnd_instant);
+        add(WR_VAR(0,  2,  1), c_station);
+    }
 };
 
 struct ShipECMWFBase : public ShipBase
@@ -108,13 +125,13 @@ struct ShipECMWFBase : public ShipBase
         bulletin.datadesc.push_back(WR_VAR(0, 10, 197));
         if (!is_crex)
         {
-                bulletin.datadesc.push_back(WR_VAR(2, 22,   0));
-                bulletin.datadesc.push_back(WR_VAR(1,  1,  34));
-                bulletin.datadesc.push_back(WR_VAR(0, 31,  31));
-                bulletin.datadesc.push_back(WR_VAR(0,  1,  31));
-                bulletin.datadesc.push_back(WR_VAR(0,  1,  32));
-                bulletin.datadesc.push_back(WR_VAR(1,  1,  34));
-                bulletin.datadesc.push_back(WR_VAR(0, 33,   7));
+            bulletin.datadesc.push_back(WR_VAR(2, 22,   0));
+            bulletin.datadesc.push_back(WR_VAR(1,  1,  34));
+            bulletin.datadesc.push_back(WR_VAR(0, 31,  31));
+            bulletin.datadesc.push_back(WR_VAR(0,  1,  31));
+            bulletin.datadesc.push_back(WR_VAR(0,  1,  32));
+            bulletin.datadesc.push_back(WR_VAR(1,  1,  34));
+            bulletin.datadesc.push_back(WR_VAR(0, 33,   7));
         }
     }
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
@@ -131,10 +148,10 @@ struct ShipECMWFBase : public ShipBase
                 c_wind = c;
         }
 
-        synop.add_ship_head();
+        do_ship_head();
         do_D01011();
         do_D01012();
-        synop.add_latlon_coarse();
+        do_D01023();
         /* 11 */ add(WR_VAR(0, 10,  4), DBA_MSG_PRESS);
         /* 12 */ add(WR_VAR(0, 10, 51), DBA_MSG_PRESS_MSL);
         /* 13 */ add(WR_VAR(0, 10, 61), DBA_MSG_PRESS_3H);
@@ -302,10 +319,10 @@ struct ShipECMWFSecondRecord : public ShipBase
     {
         ShipBase::to_subset(msg, subset);
 
-        synop.add_ship_head();
+        do_ship_head();
         do_D01011();
         do_D01012();
-        synop.add_latlon_coarse();
+        do_D01023();
 
         // TODO
         subset.store_variable_undef(WR_VAR(0, 12,  15)); // MINIMUM TEMPERATURE AT 2M, PAST 12 HOURS
@@ -380,7 +397,7 @@ struct ShipWMO : public ShipBase
 
         // Ship identification, movement, date/time, horizontal and vertical
         // coordinates
-        synop.add_D01093();
+        do_D01093();
 
         // Pressure data
         synop.add_D02001();

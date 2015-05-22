@@ -428,6 +428,12 @@ void Template::do_ecmwf_past_wtr() const
     }
 }
 
+void Template::do_station_height() const
+{
+    add(WR_VAR(0,  7, 30), c_station);
+    add(WR_VAR(0,  7, 31), c_station);
+}
+
 void Template::do_D01001() const
 {
     add(WR_VAR(0,  1,  1), c_station, DBA_MSG_BLOCK);
@@ -474,10 +480,12 @@ void Template::do_D01022() const
     add(WR_VAR(0,  7,  1), c_station, DBA_MSG_HEIGHT_STATION);
 }
 
-} // namespace wr
+void Template::do_D01023() const
+{
+    add(WR_VAR(0,  5,  2), c_station, DBA_MSG_LATITUDE);
+    add(WR_VAR(0,  6,  2), c_station, DBA_MSG_LONGITUDE);
+}
 
-
-} // namespace msg
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
+}
+}
+}
