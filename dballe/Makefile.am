@@ -348,11 +348,11 @@ tut_test_SOURCES = \
 	msg/codec-tut.cc \
 	msg/msg-tut.cc \
 	msg/msgs-tut.cc \
+	msg/wr_codec_generic-tut.cc \
 	msg/wr_export-tut.cc \
 	msg/tests/aof_codec.cc \
 	msg/tests/wr_import.cc \
 	msg/tests/wr_codec.cc \
-	msg/tests/wr_codec_generic.cc \
 	db/test-utils-db.cc \
 	db/querybuf-tut.cc \
 	db/trace-tut.cc \
