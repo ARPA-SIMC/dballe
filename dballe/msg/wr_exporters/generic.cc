@@ -63,6 +63,34 @@ struct Generic : public Template
             subset->store_variable_undef(code);
     }
 
+    void add_var_and_attrs(const Var& var)
+    {
+        // Store the variable
+        subset->store_variable(var.code(), var);
+
+        // Store the attributes
+        for (const Var* attr = var.next_attr(); attr != NULL; attr = attr->next_attr())
+        {
+            if (WR_VAR_X(attr->code()) != 33)
+                // Skip non-B33yyy attributes, as they won't be decoded properly
+                if (WR_VAR_X(attr->code()) != 33)
+                    continue;
+                    //error_consistency::throwf("attempt to encode attribute B%02d%03d which is not B33YYY",
+                    //        WR_VAR_X(attr->code()), WR_VAR_Y(attr->code()));
+            subset->store_variable(attr->code(), *attr);
+        }
+    }
+
+    void add_datetime_var(Varcode code, bool has_default, int def)
+    {
+        if (const Var* var = find_station_var(code))
+            add_var_and_attrs(*var);
+        else if (has_default)
+            subset->store_variable_i(code, def);
+        else
+            subset->store_variable_undef(code);
+    }
+
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
         Template::setupBulletin(bulletin);
@@ -99,18 +127,25 @@ struct Generic : public Template
         Level lev;
         Trange tr;
 
-        // Do the report type first
+        // Report type
         if (repmemo)
             subset.store_variable(repmemo->code(), *repmemo);
         else if (msg.type != MSG_GENERIC) // It is generic by default, no need to repeat it
             subset.store_variable_c(WR_VAR(0, 1, 194), Msg::repmemo_from_type(msg.type));
+        else
+            subset.store_variable_undef(WR_VAR(0, 1, 194));
+
+        // Datetime
+        add_datetime_var(WR_VAR(0, 4, 1), !msg.datetime().is_missing(), msg.datetime().date.year);
+        add_datetime_var(WR_VAR(0, 4, 2), !msg.datetime().is_missing(), msg.datetime().date.month);
+        add_datetime_var(WR_VAR(0, 4, 3), !msg.datetime().is_missing(), msg.datetime().date.day);
+        add_datetime_var(WR_VAR(0, 4, 4), !msg.datetime().is_missing(), msg.datetime().time.hour);
+        add_datetime_var(WR_VAR(0, 4, 5), !msg.datetime().is_missing(), msg.datetime().time.minute);
+        add_datetime_var(WR_VAR(0, 4, 6), !msg.datetime().is_missing(), msg.datetime().time.second);
 
         // Then the station context
         if (const msg::Context* ctx = msg.find_station_context())
         {
-            // Datetime
-            do_D01011();
-            do_D01013();
             for (size_t j = 0; j < ctx->data.size(); ++j)
             {
                 const Var& var = *(ctx->data[j]);
@@ -131,16 +166,7 @@ struct Generic : public Template
                 }
 
                 // Store the variable
-                subset.store_variable(var.code(), var);
-
-                // Store the attributes
-                for (const Var* attr = var.next_attr(); attr != NULL; attr = attr->next_attr())
-                {
-                    if (WR_VAR_X(attr->code()) != 33)
-                        error_consistency::throwf("attempt to encode attribute B%02d%03d which is not B33YYY",
-                                WR_VAR_X(attr->code()), WR_VAR_Y(attr->code()));
-                    subset.store_variable(attr->code(), *attr);
-                }
+                add_var_and_attrs(var);
             }
         }
 
@@ -215,18 +241,7 @@ struct Generic : public Template
                 }
 
                 // Store the variable
-                subset.store_variable(var.code(), var);
-
-                // Store the attributes
-                for (const Var* attr = var.next_attr(); attr != NULL; attr = attr->next_attr())
-                {
-                    // Skip non-B33yyy attributes, as they won't be decoded properly
-                    if (WR_VAR_X(attr->code()) != 33)
-                        continue;
-                        //error_consistency::throwf("attempt to encode attribute B%02d%03d which is not B33YYY",
-                        //        WR_VAR_X(attr->code()), WR_VAR_Y(attr->code()));
-                    subset.store_variable(attr->code(), *attr);
-                }
+                add_var_and_attrs(var);
             }
         }
 

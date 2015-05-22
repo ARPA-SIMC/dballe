@@ -143,6 +143,10 @@ std::vector<Test> tests {
         Rawmsg raw;
         exporter->to_rawmsg(msgs, raw);
 
+        FILE* out = fopen("/tmp/zaza.bufr", "wb");
+        fwrite(raw.data(), raw.size(), 1, out);
+        fclose(out);
+
         /* Parse it back */
         Msgs msgs1;
         importer->from_rawmsg(raw, msgs1);

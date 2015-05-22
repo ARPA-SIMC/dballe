@@ -138,6 +138,9 @@ protected:
     // Set station name, truncating it if it's too long
     void do_station_name(wreport::Varcode dstcode) const;
 
+    /// Find a variable in c_station, or nullptr if not found
+    const wreport::Var* find_station_var(wreport::Varcode code) const;
+
     void do_ecmwf_past_wtr() const;
     void do_station_height() const;
     // WMO block and station numbers
