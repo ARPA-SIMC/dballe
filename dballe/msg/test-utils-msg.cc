@@ -531,6 +531,7 @@ void TruncStName::tweak(Msgs& msgs)
                 {
                     char buf[21];
                     strncpy(buf, val, 20);
+                    buf[19] = '>';
                     buf[20] = 0;
                     c->set(Var(orig->info(), buf));
                 }
@@ -722,6 +723,7 @@ void TestCodec::run_reimport(WIBBLE_TEST_LOCPRM)
     wrunchecked(final.read_from_raw(exported.raw, input_opts));
 
     // Run tweaks
+    after_reimport_reimport.apply(orig.msgs);
     after_reimport_reimport.apply(final.msgs);
 
     try {
@@ -781,7 +783,7 @@ void TestCodec::run_convert(WIBBLE_TEST_LOCPRM, const std::string& tplname)
     }
 
     // Run tweaks
-    after_convert_reimport_on_orig.apply(orig.msgs);
+    after_convert_reimport.apply(orig.msgs);
     after_convert_reimport.apply(final.msgs);
 
     try {

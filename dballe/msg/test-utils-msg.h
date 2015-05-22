@@ -128,6 +128,8 @@ struct StripVars : public MessageTweaker
 {
     std::vector<wreport::Varcode> codes;
 
+    StripVars() {}
+    StripVars(std::initializer_list<wreport::Varcode> codes) : codes(codes) {}
     void tweak(Msgs& msgs);
     virtual std::string desc() const { return "StripVars"; }
 };
@@ -256,7 +258,6 @@ struct TestCodec
     MessageTweakers after_reimport_import;
     MessageTweakers after_reimport_reimport;
     MessageTweakers after_convert_import;
-    MessageTweakers after_convert_reimport_on_orig;
     MessageTweakers after_convert_reimport;
 
     void do_compare(WIBBLE_TEST_LOCPRM, const TestMessage& msg1, const TestMessage& msg2);
