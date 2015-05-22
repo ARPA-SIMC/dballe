@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2012  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -492,11 +492,8 @@ struct TempEcmwfLand : public TempBase
         /*  1 */ add(WR_VAR(0,  1,  2), DBA_MSG_STATION);
         /*  2 */ add(WR_VAR(0,  2, 11), DBA_MSG_SONDE_TYPE);
         /*  3 */ add(WR_VAR(0,  2, 12), DBA_MSG_SONDE_METHOD);
-        /*  4 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
-        /*  5 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
-        /*  6 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
-        /*  7 */ add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
-        /*  8 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
+        do_D01011();
+        do_D01012();
         /*  9 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
         /* 10 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
         /* 11 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT_STATION);
@@ -578,11 +575,8 @@ struct TempEcmwfShip : public TempBase
         /*  2 */ add(WR_VAR(0,  1, 13), DBA_MSG_ST_SPEED);
         /*  3 */ add(WR_VAR(0,  2, 11), DBA_MSG_SONDE_TYPE);
         /*  4 */ add(WR_VAR(0,  2, 12), DBA_MSG_SONDE_METHOD);
-        /*  5 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
-        /*  6 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
-        /*  7 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
-        /*  8 */ add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
-        /*  9 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
+        do_D01011();
+        do_D01012();
         /* 10 */ add(WR_VAR(0,  5,  2), DBA_MSG_LATITUDE);
         /* 11 */ add(WR_VAR(0,  6,  2), DBA_MSG_LONGITUDE);
         /* 12 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT_STATION);
@@ -677,12 +671,8 @@ struct PilotWMO : public TempBase
 
         // Date/time of launch
         add(WR_VAR(0,  8, 21), 18); // Launch time
-        add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
-        add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
-        add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
-        add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
-        add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
-        add(WR_VAR(0,  4,  6), DBA_MSG_SECOND);
+        do_D01011();
+        do_D01013();
 
         // Horizontal and vertical coordinates of launch site
         add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
@@ -808,11 +798,8 @@ struct PilotEcmwf : public TempBase
         /*  1 */ add(WR_VAR(0,  1,  2), DBA_MSG_STATION);
         /*  2 */ add(WR_VAR(0,  2, 11), DBA_MSG_SONDE_TYPE);
         /*  3 */ add(WR_VAR(0,  2, 12), DBA_MSG_SONDE_METHOD);
-        /*  4 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
-        /*  5 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
-        /*  6 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
-        /*  7 */ add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
-        /*  8 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
+        do_D01011();
+        do_D01012();
         /*  9 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
         /* 10 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
         /* 11 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT_STATION);

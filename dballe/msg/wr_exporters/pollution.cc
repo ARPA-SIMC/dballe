@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -222,12 +222,8 @@ struct Pollution : public Template
         /*  4 */ add(WR_VAR(0,  1, 215), DBA_MSG_POLL_SOURCE);
         /*  5 */ add(WR_VAR(0,  1, 216), DBA_MSG_POLL_ATYPE);
         /*  6 */ add(WR_VAR(0,  1, 217), DBA_MSG_POLL_TTYPE);
-        /*  7 */ add(WR_VAR(0,  4,   1), DBA_MSG_YEAR);
-        /*  8 */ add(WR_VAR(0,  4,   2), DBA_MSG_MONTH);
-        /*  9 */ add(WR_VAR(0,  4,   3), DBA_MSG_DAY);
-        /* 10 */ add(WR_VAR(0,  4,   4), DBA_MSG_HOUR);
-        /* 11 */ add(WR_VAR(0,  4,   5), DBA_MSG_MINUTE);
-        /* 12 */ add(WR_VAR(0,  4,   6), DBA_MSG_SECOND);
+        do_D01011();
+        do_D01013();
         /* 13 */ add(WR_VAR(0,  5,   1), DBA_MSG_LATITUDE);
         /* 14 */ add(WR_VAR(0,  6,   1), DBA_MSG_LONGITUDE);
         /* 15 */ add(WR_VAR(0,  7,  30), DBA_MSG_HEIGHT_STATION);

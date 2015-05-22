@@ -136,7 +136,7 @@ protected:
     void add(wreport::Varcode code, wreport::Varcode srccode, const Level& level, const Trange& trange) const;
     void add(wreport::Varcode code, const wreport::Var* var) const;
     // Set station name, truncating it if it's too long
-    void add_st_name(wreport::Varcode dstcode, const msg::Context* ctx) const;
+    void do_station_name(wreport::Varcode dstcode) const;
 
     void do_ecmwf_past_wtr() const;
     void do_D01001() const;

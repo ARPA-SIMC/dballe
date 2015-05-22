@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -180,11 +180,8 @@ struct Airep : public FlightBase
 
         /*  0 */ add(WR_VAR(0,  1,  6), DBA_MSG_IDENT);
         /*  1 */ add(WR_VAR(0,  2, 61));
-        /*  2 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
-        /*  3 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
-        /*  4 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
-        /*  5 */ add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
-        /*  6 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
+        do_D01011();
+        do_D01012();
         /*  7 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
         /*  8 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
         /*  9 */ add(WR_VAR(0,  8,  4));
@@ -284,12 +281,8 @@ struct AmdarWMO : public FlightBase
         /*  3 */ add(WR_VAR(0,  1, 23));
         /*  4 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
         /*  5 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
-        /*  6 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
-        /*  7 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
-        /*  8 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
-        /*  9 */ add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
-        /* 10 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
-        /* 11 */ add(WR_VAR(0,  4,  6), DBA_MSG_SECOND);
+        do_D01011();
+        do_D01013();
         /* 12 */
         if (const wreport::Var* v = flight_ctx->find(WR_VAR(0,  7, 30)))
             add(WR_VAR(0,  7, 10), v);
@@ -396,11 +389,8 @@ struct Acars : public FlightBase
         /*  6 */ add(WR_VAR(0,  2, 70));
         /*  7 */ add(WR_VAR(0,  2, 63));
         /*  8 */ add(WR_VAR(0,  2,  1));
-        /*  9 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
-        /* 10 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
-        /* 11 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
-        /* 12 */ add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
-        /* 13 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
+        do_D01011();
+        do_D01012();
         /* 14 */ add(WR_VAR(0,  5,  2), DBA_MSG_LATITUDE);
         /* 15 */ add(WR_VAR(0,  6,  2), DBA_MSG_LONGITUDE);
         /* 16 */ add(WR_VAR(0,  8,  4));

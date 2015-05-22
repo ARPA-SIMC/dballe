@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -205,7 +205,8 @@ struct SynopECMWF : public Synop
     {
         Synop::to_subset(msg, subset);
         synop.add_ecmwf_synop_head();
-        synop.add_year_to_minute();
+        do_D01011();
+        do_D01012();
         synop.add_latlon_high();
         /* 10 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT_STATION);
     }

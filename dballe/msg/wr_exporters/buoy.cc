@@ -110,11 +110,8 @@ struct Buoy : public Template
         /*  1 */ add(WR_VAR(0,  1, 12), DBA_MSG_ST_DIR);
         /*  2 */ add(WR_VAR(0,  1, 13), DBA_MSG_ST_SPEED);
         /*  3 */ add(WR_VAR(0,  2,  1), DBA_MSG_ST_TYPE);
-        /*  4 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
-        /*  5 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
-        /*  6 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
-        /*  7 */ add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
-        /*  8 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
+        do_D01011();
+        do_D01012();
         /*  9 */ add(WR_VAR(0,  5,  2), DBA_MSG_LATITUDE);
         /* 10 */ add(WR_VAR(0,  6,  2), DBA_MSG_LONGITUDE);
         /* 11 */ add(WR_VAR(0, 10,  4), DBA_MSG_PRESS);

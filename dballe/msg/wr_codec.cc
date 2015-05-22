@@ -397,11 +397,11 @@ void Template::add(wreport::Varcode code, const wreport::Var* var) const
         subset->store_variable_undef(code);
 }
 
-void Template::add_st_name(wreport::Varcode dstcode, const msg::Context* ctx) const
+void Template::do_station_name(wreport::Varcode dstcode) const
 {
-    if (!ctx)
+    if (!c_station)
         subset->store_variable_undef(dstcode);
-    else if (const wreport::Var* var = ctx->find_by_id(DBA_MSG_ST_NAME))
+    else if (const wreport::Var* var = c_station->find_by_id(DBA_MSG_ST_NAME))
     {
         Varinfo info = subset->btable->query(dstcode);
         Var name(info);
@@ -437,7 +437,7 @@ void Template::do_D01001() const
 void Template::do_D01004() const
 {
     do_D01001();
-    add_st_name(WR_VAR(0, 1, 15), c_station);
+    do_station_name(WR_VAR(0, 1, 15));
     add(WR_VAR(0,  2,  1), c_station, DBA_MSG_ST_TYPE);
 }
 

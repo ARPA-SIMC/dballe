@@ -132,7 +132,8 @@ struct ShipECMWFBase : public ShipBase
         }
 
         synop.add_ship_head();
-        synop.add_year_to_minute();
+        do_D01011();
+        do_D01012();
         synop.add_latlon_coarse();
         /* 11 */ add(WR_VAR(0, 10,  4), DBA_MSG_PRESS);
         /* 12 */ add(WR_VAR(0, 10, 51), DBA_MSG_PRESS_MSL);
@@ -302,7 +303,8 @@ struct ShipECMWFSecondRecord : public ShipBase
         ShipBase::to_subset(msg, subset);
 
         synop.add_ship_head();
-        synop.add_year_to_minute();
+        do_D01011();
+        do_D01012();
         synop.add_latlon_coarse();
 
         // TODO

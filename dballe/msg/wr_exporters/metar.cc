@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -93,11 +93,8 @@ struct Metar : public Template
 
         /*  0 */ add(WR_VAR(0,  1, 63), DBA_MSG_ST_NAME_ICAO);
         /*  1 */ add(WR_VAR(0,  2,  1), DBA_MSG_ST_TYPE);
-        /*  2 */ add(WR_VAR(0,  4,  1), DBA_MSG_YEAR);
-        /*  3 */ add(WR_VAR(0,  4,  2), DBA_MSG_MONTH);
-        /*  4 */ add(WR_VAR(0,  4,  3), DBA_MSG_DAY);
-        /*  5 */ add(WR_VAR(0,  4,  4), DBA_MSG_HOUR);
-        /*  6 */ add(WR_VAR(0,  4,  5), DBA_MSG_MINUTE);
+        do_D01011();
+        do_D01012();
         /*  7 */ add(WR_VAR(0,  5,  2), DBA_MSG_LATITUDE);
         /*  8 */ add(WR_VAR(0,  6,  2), DBA_MSG_LONGITUDE);
         /*  9 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT_STATION);
