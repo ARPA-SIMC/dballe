@@ -318,10 +318,10 @@ void Query::unset(dba_keyword key)
         case DBA_KEY_IDENT: has_ident = false; ident.clear(); break;
         case DBA_KEY_LAT: coords_min.set_lat(MISSING_INT); coords_max.set_lat(MISSING_INT); break;
         case DBA_KEY_LON: coords_min.set_lon(MISSING_INT); coords_max.set_lon(MISSING_INT); break;
-        case DBA_KEY_LATMAX: coords_max.set_lat(MISSING_INT); break;
-        case DBA_KEY_LATMIN: coords_min.set_lat(MISSING_INT); break;
-        case DBA_KEY_LONMAX: coords_max.set_lon(MISSING_INT); break;
-        case DBA_KEY_LONMIN: coords_min.set_lon(MISSING_INT); break;
+        case DBA_KEY_LATMAX: coords_max.lat = MISSING_INT; break;
+        case DBA_KEY_LATMIN: coords_min.lat = MISSING_INT; break;
+        case DBA_KEY_LONMAX: coords_max.lon = MISSING_INT; break;
+        case DBA_KEY_LONMIN: coords_min.lon = MISSING_INT; break;
         case DBA_KEY_YEAR: datetime_min.date.year = datetime_max.date.year = 0xffff; break;
         case DBA_KEY_MONTH: datetime_min.date.month = datetime_max.date.month = 0xff; break;
         case DBA_KEY_DAY: datetime_min.date.day = datetime_max.date.day = 0xff; break;
@@ -599,6 +599,137 @@ bool Query::is_subquery(const Query& other) const
     // This switches the query domain entirely, so if it changed, we are not a subquery
     if (query_station_vars != other.query_station_vars) return false;
     return true;
+}
+
+namespace {
+
+struct VarGen
+{
+    std::function<void(dba_keyword, unique_ptr<Var>)>& dest;
+
+    VarGen(std::function<void(dba_keyword, unique_ptr<Var>)>& dest)
+        : dest(dest) {}
+
+    template<typename T>
+    void gen(dba_keyword key, const T& val)
+    {
+        Varinfo info = Record::keyword_info(key);
+        dest(key, unique_ptr<Var>(new Var(info, val)));
+    };
+
+    void gen(dba_keyword key, const std::string& val)
+    {
+        Varinfo info = Record::keyword_info(key);
+        dest(key, unique_ptr<Var>(new Var(info, val.c_str())));
+    };
+};
+
+}
+
+void Query::to_vars(std::function<void(dba_keyword, unique_ptr<Var>)> dest) const
+{
+    VarGen vargen(dest);
+
+    if (ana_id != MISSING_INT) vargen.gen(DBA_KEY_ANA_ID, ana_id);
+    if (prio_min != prio_max)
+    {
+        if (prio_min != MISSING_INT)
+            vargen.gen(DBA_KEY_PRIORITY, prio_min);
+    } else {
+        if (prio_min != MISSING_INT)
+            vargen.gen(DBA_KEY_PRIOMIN, prio_min);
+        if (prio_max != MISSING_INT)
+            vargen.gen(DBA_KEY_PRIOMAX, prio_max);
+    }
+    if (!rep_memo.empty())
+        vargen.gen(DBA_KEY_REP_MEMO, rep_memo);
+    if (mobile != MISSING_INT)
+        vargen.gen(DBA_KEY_MOBILE, mobile);
+    if (has_ident)
+        vargen.gen(DBA_KEY_IDENT, ident);
+    if (coords_min.lat == coords_max.lat)
+    {
+        if (coords_min.lat != MISSING_INT) vargen.gen(DBA_KEY_LAT, coords_min.lat);
+    } else {
+        if (coords_min.lat != MISSING_INT) vargen.gen(DBA_KEY_LATMIN, coords_min.lat);
+        if (coords_max.lat != MISSING_INT) vargen.gen(DBA_KEY_LATMAX, coords_max.lat);
+    }
+    if (coords_min.lon == coords_max.lon)
+    {
+        if (coords_min.lon != MISSING_INT) vargen.gen(DBA_KEY_LON, coords_min.lon);
+    } else {
+        if (coords_min.lon != MISSING_INT) vargen.gen(DBA_KEY_LONMIN, coords_min.lon);
+        if (coords_max.lon != MISSING_INT) vargen.gen(DBA_KEY_LONMAX, coords_max.lon);
+    }
+
+    if (datetime_min == datetime_max)
+    {
+        if (!datetime_min.is_missing())
+        {
+            vargen.gen(DBA_KEY_YEAR, datetime_min.date.year);
+            vargen.gen(DBA_KEY_MONTH, datetime_min.date.month);
+            vargen.gen(DBA_KEY_DAY, datetime_min.date.day);
+            vargen.gen(DBA_KEY_HOUR, datetime_min.time.hour);
+            vargen.gen(DBA_KEY_MIN, datetime_min.time.minute);
+            vargen.gen(DBA_KEY_SEC, datetime_min.time.second);
+        }
+    } else {
+        if (!datetime_min.is_missing())
+        {
+            vargen.gen(DBA_KEY_YEARMIN, datetime_min.date.year);
+            vargen.gen(DBA_KEY_MONTHMIN, datetime_min.date.month);
+            vargen.gen(DBA_KEY_DAYMIN, datetime_min.date.day);
+            vargen.gen(DBA_KEY_HOURMIN, datetime_min.time.hour);
+            vargen.gen(DBA_KEY_MINUMIN, datetime_min.time.minute);
+            vargen.gen(DBA_KEY_SECMIN, datetime_min.time.second);
+        }
+        if (!datetime_max.is_missing())
+        {
+            vargen.gen(DBA_KEY_YEARMAX, datetime_max.date.year);
+            vargen.gen(DBA_KEY_MONTHMAX, datetime_max.date.month);
+            vargen.gen(DBA_KEY_DAYMAX, datetime_max.date.day);
+            vargen.gen(DBA_KEY_HOURMAX, datetime_max.time.hour);
+            vargen.gen(DBA_KEY_MINUMAX, datetime_max.time.minute);
+            vargen.gen(DBA_KEY_SECMAX, datetime_max.time.second);
+        }
+    }
+    if (level.ltype1 != MISSING_INT) vargen.gen(DBA_KEY_LEVELTYPE1, level.ltype1);
+    if (level.l1 != MISSING_INT) vargen.gen(DBA_KEY_L1, level.l1);
+    if (level.ltype2 != MISSING_INT) vargen.gen(DBA_KEY_LEVELTYPE2, level.ltype2);
+    if (level.l2 != MISSING_INT) vargen.gen(DBA_KEY_L2, level.l2);
+    if (trange.pind != MISSING_INT) vargen.gen(DBA_KEY_PINDICATOR, trange.pind);
+    if (trange.p1 != MISSING_INT) vargen.gen(DBA_KEY_P1, trange.p1);
+    if (trange.p2 != MISSING_INT) vargen.gen(DBA_KEY_P2, trange.p2);
+    switch (varcodes.size())
+    {
+         case 0:
+             break;
+         case 1:
+             vargen.gen(DBA_KEY_VAR, format_code(*varcodes.begin()));
+             break;
+         default: {
+             string codes;
+             for (const auto& code: varcodes)
+             {
+                 if (codes.empty())
+                     codes = format_code(code);
+                 else
+                 {
+                     codes += ",";
+                     codes += format_code(code);
+                 }
+             }
+             vargen.gen(DBA_KEY_VARLIST, codes);
+             break;
+         }
+    }
+    if (!query.empty()) vargen.gen(DBA_KEY_QUERY, query);
+    if (!ana_filter.empty()) vargen.gen(DBA_KEY_ANA_FILTER, ana_filter);
+    if (!data_filter.empty()) vargen.gen(DBA_KEY_DATA_FILTER, data_filter);
+    if (!attr_filter.empty()) vargen.gen(DBA_KEY_ATTR_FILTER, attr_filter);
+    if (limit != MISSING_INT) vargen.gen(DBA_KEY_LIMIT, limit);
+    // block and station cannot be represented with dba_keyword
+    if (data_id != MISSING_INT) vargen.gen(DBA_KEY_CONTEXT_ID, data_id);
 }
 
 namespace {

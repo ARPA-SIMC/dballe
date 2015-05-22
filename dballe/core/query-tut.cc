@@ -23,6 +23,7 @@
 using namespace std;
 using namespace wibble::tests;
 using namespace dballe;
+using namespace wreport;
 
 namespace {
 
@@ -364,6 +365,28 @@ std::vector<Test> tests {
     Test("modifiers", [](Fixture& f) {
         wassert(actual(Query::parse_modifiers("best")) == DBA_DB_MODIFIER_BEST);
         wassert(actual(Query::parse_modifiers("details")) == DBA_DB_MODIFIER_SUMMARY_DETAILS);
+    }),
+    Test("to_vars", [](Fixture& f) {
+        auto to_vars = [](const std::string& test_string) -> std::string {
+            std::string res;
+            Query q;
+            q.set_from_test_string(test_string);
+            q.to_vars([&](dba_keyword key, unique_ptr<Var> var) {
+                if (!res.empty()) res += ", ";
+                res += Record::keyword_name(key);
+                res += "=";
+                res += var->format("");
+            });
+            return res;
+        };
+
+        wassert(actual(to_vars("")) == "");
+        wassert(actual(to_vars("latmin=45.0")) == "latmin=45.00000");
+        wassert(actual(to_vars("latmin=45.0, latmax=46.0")) == "latmin=45.00000, latmax=46.00000");
+        wassert(actual(to_vars("latmin=45.0, latmax=46.0, lonmin=11.0")) == "latmin=45.00000, latmax=46.00000, lonmin=11.00000");
+        wassert(actual(to_vars("latmin=45.0, latmax=46.0, lonmin=11.0, lonmax=11.5")) == "latmin=45.00000, latmax=46.00000, lonmin=11.00000, lonmax=11.50000");
+
+        
     }),
 };
 

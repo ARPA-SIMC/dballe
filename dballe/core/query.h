@@ -147,6 +147,12 @@ struct Query
      */
     bool is_subquery(const Query& other) const;
 
+    /**
+     * Generate a sequence of dba_keyword and unique_ptr<Var> for all contents
+     * of the query that can be represented in a record.
+     */
+    void to_vars(std::function<void(dba_keyword, std::unique_ptr<wreport::Var>)> dest) const;
+
     /// Print the query contents to stderr
     void print(FILE* out) const;
 
