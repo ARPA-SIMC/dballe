@@ -51,14 +51,17 @@ void Importer::import(const wreport::Subset& subset, Msg& msg)
     init();
     run();
     if (datetime.date.year == 0xffff)
-        throw error_consistency("no year information found in message to import");
-    if (datetime.date.month == 0xff)
-        throw error_consistency("no month information found in message to import");
-    if (datetime.date.day == 0xff)
-        throw error_consistency("no day information found in message to import");
-    if (datetime.time.hour == 0xff)
-        throw error_consistency("no hour information found in message to import");
-    msg.set_datetime(datetime.lower_bound());
+        msg.set_datetime(Datetime());
+    else
+    {
+        if (datetime.date.month == 0xff)
+            throw error_consistency("no month information found in message to import");
+        if (datetime.date.day == 0xff)
+            throw error_consistency("no day information found in message to import");
+        if (datetime.time.hour == 0xff)
+            throw error_consistency("no hour information found in message to import");
+        msg.set_datetime(datetime.lower_bound());
+    }
 }
 
 std::unique_ptr<Importer> Importer::createSat(const msg::Importer::Options&) { throw error_unimplemented("WB sat Importers"); }
