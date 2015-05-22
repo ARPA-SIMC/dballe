@@ -62,19 +62,16 @@ unsigned diff_msg(Msg& first, Msg& second, const char* tag)
 
 static void normalise_datetime(Msg& msg)
 {
-    // Strip datetime attrs
-    static int vars[] = { DBA_MSG_YEAR, DBA_MSG_MONTH, DBA_MSG_DAY, DBA_MSG_HOUR, DBA_MSG_MINUTE, DBA_MSG_SECOND };
-    for (unsigned i = 0; i < 6; ++i)
-    {
-        Var* v = msg.edit_by_id(vars[i]);
-        if (!v) continue;
-        v->clear_attrs();
-    }
+    msg::Context* ctx = msg.edit_context(Level::ana(), Trange::ana());
+    if (!ctx) return;
 
-    // Add a second of 0 if missing, since db export will always add
-    // seconds
-    if (!msg.get_second_var())
-        msg.set_second(0, -1);
+    // Strip datetime variables
+    ctx->remove(WR_VAR(0, 4, 1));
+    ctx->remove(WR_VAR(0, 4, 2));
+    ctx->remove(WR_VAR(0, 4, 3));
+    ctx->remove(WR_VAR(0, 4, 4));
+    ctx->remove(WR_VAR(0, 4, 5));
+    ctx->remove(WR_VAR(0, 4, 6));
 }
 
 
@@ -133,7 +130,7 @@ std::vector<Test> tests {
                 normalise_datetime(msg);
 
                 db->remove_all();
-                db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+                wrunchecked(db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA));
 
                 query.clear();
                 query.rep_memo = Msg::repmemo_from_type(msg.type);
@@ -318,12 +315,7 @@ std::vector<Test> tests {
             msg.set_rep_memo("synop");
             msg.set_latitude(44.53000);
             msg.set_longitude(11.30000);
-            msg.set_year(1000);
-            msg.set_month(1);
-            msg.set_day(1);
-            msg.set_hour(0);
-            msg.set_minute(0);
-            msg.set_second(0);
+            msg.set_datetime(Datetime(1000, 1, 1, 0, 0, 0));
 #warning TODO: fix this test to give an error once we do not need to support this bug anymore
             //try {
                 db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
@@ -342,12 +334,7 @@ std::vector<Test> tests {
             msg.set_rep_memo("synop");
             msg.set_latitude(45.4);
             msg.set_longitude(11.2);
-            msg.set_year(2015);
-            msg.set_month(4);
-            msg.set_day(25);
-            msg.set_hour(12);
-            msg.set_minute(30);
-            msg.set_second(45);
+            msg.set_datetime(Datetime(2015, 4, 25, 12, 30, 45));
         };
 
         // Build test messages

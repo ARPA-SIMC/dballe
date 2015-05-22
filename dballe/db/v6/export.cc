@@ -149,6 +149,10 @@ void DB::export_msgs(const Query& query, MsgConsumer& consumer)
 
             // Start writing a new message
             msg.reset(new Msg);
+
+            // Fill in datetime
+            msg->set_datetime(sqlrec.out_datetime);
+
             msg::Context& c_st = msg->obtain_station_context();
 
             // Update station layer cache if needed
@@ -167,14 +171,6 @@ void DB::export_msgs(const Query& query, MsgConsumer& consumer)
             c_st.seti(WR_VAR(0, 6, 1), sqlrec.out_lon);
             if (sqlrec.out_ident_size != -1)
                 c_st.set_ident(sqlrec.out_ident);
-
-            // Fill in datetime
-            c_st.set_year(sqlrec.out_datetime.date.year);
-            c_st.set_month(sqlrec.out_datetime.date.month);
-            c_st.set_day(sqlrec.out_datetime.date.day);
-            c_st.set_hour(sqlrec.out_datetime.time.hour);
-            c_st.set_minute(sqlrec.out_datetime.time.minute);
-            c_st.set_second(sqlrec.out_datetime.time.second);
 
             // Fill in station information
             station_cache.to_context(c_st);

@@ -83,6 +83,7 @@ struct ReimportTest
           do_ignore_context_attrs(false), do_round_geopotential(false), verbose(false)
     {
         ecmwf_tweaks.push_back(new StripQCAttrs());
+        ecmwf_tweaks.push_back(new StripDatetimeVars());
         wmo_tweaks.push_back(new RoundLegacyVars());
     }
     ~ReimportTest()

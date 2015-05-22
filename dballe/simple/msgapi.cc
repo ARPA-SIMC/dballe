@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -380,18 +380,30 @@ void MsgAPI::prendilo()
 		wmsg->set_latitude(var->enqd());
 	if (const Var* var = input.key_peek(DBA_KEY_LON))
 		wmsg->set_longitude(var->enqd());
-	if (const Var* var = input.key_peek(DBA_KEY_YEAR))
-		wmsg->set_year(var->enqi());
-	if (const Var* var = input.key_peek(DBA_KEY_MONTH))
-		wmsg->set_month(var->enqi());
-	if (const Var* var = input.key_peek(DBA_KEY_DAY))
-		wmsg->set_day(var->enqi());
-	if (const Var* var = input.key_peek(DBA_KEY_HOUR))
-		wmsg->set_hour(var->enqi());
-	if (const Var* var = input.key_peek(DBA_KEY_MIN))
-		wmsg->set_minute(var->enqi());
-	if (const Var* var = input.key_peek(DBA_KEY_SEC))
-		wmsg->set_second(var->enqi());
+
+    Datetime datetime;
+    if (const Var* var = input.key_peek(DBA_KEY_YEAR))
+        datetime.date.year = var->enqi();
+    if (const Var* var = input.key_peek(DBA_KEY_MONTH))
+        datetime.date.month = var->enqi();
+    if (const Var* var = input.key_peek(DBA_KEY_DAY))
+        datetime.date.day = var->enqi();
+    if (const Var* var = input.key_peek(DBA_KEY_HOUR))
+        datetime.time.hour = var->enqi();
+    if (const Var* var = input.key_peek(DBA_KEY_MIN))
+        datetime.time.minute = var->enqi();
+    if (const Var* var = input.key_peek(DBA_KEY_SEC))
+        datetime.time.second = var->enqi();
+
+    if (datetime.date.year == 0xffff)
+        throw error_consistency("no year information found in message to import");
+    if (datetime.date.month == 0xff)
+        throw error_consistency("no month information found in message to import");
+    if (datetime.date.day == 0xff)
+        throw error_consistency("no day information found in message to import");
+    if (datetime.time.hour == 0xff)
+        throw error_consistency("no hour information found in message to import");
+    wmsg->set_datetime(datetime.lower_bound());
 
 	const vector<Var*>& in_vars = input.vars();
 	flushVars();

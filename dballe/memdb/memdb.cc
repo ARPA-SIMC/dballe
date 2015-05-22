@@ -1,7 +1,7 @@
 /*
  * memdb/memdb - In-memory indexed storage of DB-All.e data
  *
- * Copyright (C) 2013--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -156,18 +156,8 @@ void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool wi
     // Fill up the common context information for the rest of the data
 
     // Date and time
-    const Var* year = l_ana->find_by_id(DBA_MSG_YEAR);
-    const Var* month = l_ana->find_by_id(DBA_MSG_MONTH);
-    const Var* day = l_ana->find_by_id(DBA_MSG_DAY);
-    const Var* hour = l_ana->find_by_id(DBA_MSG_HOUR);
-    const Var* min = l_ana->find_by_id(DBA_MSG_MINUTE);
-    const Var* sec = l_ana->find_by_id(DBA_MSG_SECOND);
-
-    if (year == NULL || month == NULL || day == NULL || hour == NULL || min == NULL)
+    if (msg.datetime().is_missing())
         throw error_notfound("date/time informations not found (or incomplete) in message to insert");
-
-    Datetime dt(year->enqi(), month->enqi(), day->enqi(),
-                hour->enqi(), min->enqi(), sec ? sec->enqi() : 0);
 
     // Insert the rest of the data
     for (size_t i = 0; i < msg.data.size(); ++i)
@@ -186,7 +176,7 @@ void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool wi
             if (not var.isset()) continue;
 
             unique_ptr<Var> newvar(new Var(var, with_attrs));
-            values.insert(station, levtr, dt, std::move(newvar), replace);
+            values.insert(station, levtr, msg.datetime(), std::move(newvar), replace);
         }
     }
 }

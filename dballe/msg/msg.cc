@@ -71,7 +71,7 @@ Msg::~Msg()
 }
 
 Msg::Msg(const Msg& m)
-    : type(m.type)
+    : m_datetime(m.m_datetime), type(m.type)
 {
     // Reserve space for the new contexts
     data.reserve(m.data.size());
@@ -87,6 +87,7 @@ Msg& Msg::operator=(const Msg& m)
     // Manage a = a
     if (this == &m) return *this;
 
+    m_datetime = m.m_datetime;
     type = m.type;
 
     // Delete existing vars
@@ -241,29 +242,18 @@ namespace {
 
 struct VarContext
 {
+    const Msg& msg;
     // Extract datetime, lat, lon
     const Var* lat;
     const Var* lon;
-    const Var* year;
-    const Var* month;
-    const Var* day;
-    const Var* hour;
-    const Var* minute;
-    const Var* second;
     const Var* memo;
     const char* rep_memo;
 
-    VarContext(const Msg& m)
+    VarContext(const Msg& m) : msg(m)
     {
         // Extract datetime, lat, lon
         lat = m.get_latitude_var();
         lon = m.get_longitude_var();
-        year = m.get_year_var();
-        month = m.get_month_var();
-        day = m.get_day_var();
-        hour = m.get_hour_var();
-        minute = m.get_minute_var();
-        second = m.get_second_var();
         memo = m.get_rep_memo_var();
         if (memo)
             rep_memo = memo->enqc();
@@ -291,12 +281,7 @@ struct VarContext
         if (c.level != Level::ana())
         {
             // Datetime
-            out << setfill('0') << setw(4) << (year ? year->enq(0) : 0) << "-";
-            out << setfill('0') << setw(2) << (month ? month->enq(0) : 0) << "-";
-            out << setfill('0') << setw(2) << (day ? day->enq(0) : 0) << " ";
-            out << setfill('0') << setw(2) << (hour ? hour->enq(0) : 0) << ":";
-            out << setfill('0') << setw(2) << (minute ? minute->enq(0) : 0) << ":";
-            out << setfill('0') << setw(2) << (second ? second->enq(0) : 0) << ",";
+            out << msg.datetime().date << ' ' << msg.datetime().time << ',';
 
             // Level
             c.level.format(out, "");
@@ -374,7 +359,7 @@ bool Msg::from_csv(CSVReader& in)
             set_longitude(strtod(old_lon.c_str(), NULL));
             set_rep_memo(old_rep.c_str());
             if (!old_date.empty())
-                set_date(old_date.c_str());
+                set_datetime(Datetime::from_iso8601(old_date.c_str()));
             type = type_from_repmemo(old_rep.c_str());
             first = false;
         } else if (old_lon != in.cols[0] || old_lat != in.cols[1] || old_rep != in.cols[2]) {
@@ -387,7 +372,7 @@ bool Msg::from_csv(CSVReader& in)
             {
                 // previous lines were station information, next line is data
                 old_date = in.cols[3];
-                set_date(old_date.c_str());
+                set_datetime(Datetime::from_iso8601(old_date.c_str()));
             }
             else if (in.cols[3].empty())
                 // previous lines were data, next line is station information
@@ -594,19 +579,6 @@ void Msg::setc(Varcode code, const char* val, int conf, const Level& lev, const 
     set(std::move(var), lev, tr);
 }
 
-void Msg::set_date(const char* date)
-{
-    int ye, mo, da, ho, mi, se;
-    if (sscanf(date, "%04d-%02d-%02d %02d:%02d:%02d", &ye, &mo, &da, &ho, &mi, &se) != 6)
-        error_consistency::throwf("cannot parse date/time string \"%s\"", date);
-    set_year(ye);
-    set_month(mo);
-    set_day(da);
-    set_hour(ho);
-    set_minute(mi);
-    set_second(se);
-}
-
 MsgType Msg::type_from_repmemo(const char* repmemo)
 {
     if (repmemo == NULL || repmemo[0] == 0) return MSG_GENERIC;
@@ -758,45 +730,6 @@ void Msg::sounding_unpack_levels(Msg& dst) const
 }
 #endif
 
-Datetime Msg::get_datetime() const
-{
-    const msg::Context* c = find_station_context();
-    if (!c) return Datetime();
-
-    int macros[] = { DBA_MSG_YEAR, DBA_MSG_MONTH, DBA_MSG_DAY, DBA_MSG_HOUR, DBA_MSG_MINUTE, DBA_MSG_SECOND };
-    const char* names[] = { "year", "month", "day", "hour", "minute", "second" };
-
-    int values[6];
-    for (int i = 0; i < 6; i++)
-    {
-        const wreport::Var* v = c->find_by_id(macros[i]);
-        if (v)
-            values[i] = v->enq(-1);
-        else
-            values[i] = -1;
-
-        if (i > 0 && (values[i-1] == -1 && values[i] != -1))
-            error_consistency::throwf("%s is unset but %s is set",
-                    names[i-1], names[i]);
-    }
-
-    /* Now values is either 6 times -1, 6 values, or X values followed by 6-X times -1 */
-
-    /* If one of the extremes has been selected, fill in the blanks */
-
-    Datetime dt;
-    if (values[0] != -1)
-    {
-        dt.date.year = values[0];
-        dt.date.month = values[1] != -1 ? values[1] : 1;
-        dt.date.day = values[2] != -1 ? values[2] : 1;
-        dt.time.hour = values[3] != -1 ? values[3] : 0;
-        dt.time.minute = values[4] != -1 ? values[4] : 0;
-        dt.time.second = values[5] != -1 ? values[5] : 0;
-    }
-    return dt;
-}
-
 MatchedMsg::MatchedMsg(const Msg& m)
     : m(m)
 {
@@ -852,7 +785,7 @@ matcher::Result MatchedMsg::match_station_wmo(int block, int station) const
 
 matcher::Result MatchedMsg::match_date(const Datetime& min, const Datetime& max) const
 {
-    Datetime dt = m.get_datetime().lower_bound();
+    Datetime dt = m.datetime();
     if (dt.is_missing()) return matcher::MATCH_NA;
     return Matched::date_in_range(dt, min, max);
 }

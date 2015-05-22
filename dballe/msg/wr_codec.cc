@@ -282,45 +282,13 @@ void Template::setupBulletin(wreport::Bulletin& bulletin)
     // Get reference time from first msg in the set
     // If not found, use current time.
     const Msg& msg = *msgs[0];
-    bool has_date = true;
-    if (const Var* v = msg.get_year_var())
-        bulletin.rep_year = v->enqi();
-    else
-        has_date = false;
-    if (const Var* v = msg.get_month_var())
-        bulletin.rep_month = v->enqi();
-    else
-        has_date = false;
-    if (const Var* v = msg.get_day_var())
-        bulletin.rep_day = v->enqi();
-    else
-        has_date = false;
-    if (const Var* v = msg.get_hour_var())
-        bulletin.rep_hour = v->enqi();
-    else
-        bulletin.rep_hour = 0;
-    if (const Var* v = msg.get_minute_var())
-        bulletin.rep_minute = v->enqi();
-    else
-        bulletin.rep_minute = 0;
-    if (const Var* v = msg.get_second_var())
-        bulletin.rep_second = v->enqi();
-    else
-        bulletin.rep_second = 0;
+    bulletin.rep_year = msg.datetime().date.year;
+    bulletin.rep_month = msg.datetime().date.month;
+    bulletin.rep_day = msg.datetime().date.day;
+    bulletin.rep_hour = msg.datetime().time.hour;
+    bulletin.rep_minute = msg.datetime().time.minute;
+    bulletin.rep_second = msg.datetime().time.second;
     bulletin.master_table_number = 0;
-    if (!has_date)
-    {
-        // use today
-        time_t tnow = time(NULL);
-        struct tm now;
-        gmtime_r(&tnow, &now);
-        bulletin.rep_year = now.tm_year + 1900;
-        bulletin.rep_month = now.tm_mon + 1;
-        bulletin.rep_day = now.tm_mday;
-        bulletin.rep_hour = now.tm_hour;
-        bulletin.rep_minute = now.tm_min;
-        bulletin.rep_second = now.tm_sec;
-    }
 
     if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
     {
@@ -415,9 +383,8 @@ void Template::do_station_name(wreport::Varcode dstcode) const
 
 void Template::do_ecmwf_past_wtr() const
 {
-    int hour = 0;
-    if (const Var* var = msg->get_hour_var())
-        hour = var->enqi();
+    int hour = msg->datetime().time.hour == 0xff ? 0 : msg->datetime().time.hour;
+
     if (hour % 6 == 0)
     {
         add(WR_VAR(0, 20,  4), DBA_MSG_PAST_WTR1_6H);
@@ -449,23 +416,73 @@ void Template::do_D01004() const
 
 void Template::do_D01011() const
 {
-    add(WR_VAR(0,  4,  1), c_station, DBA_MSG_YEAR);
-    add(WR_VAR(0,  4,  2), c_station, DBA_MSG_MONTH);
-    add(WR_VAR(0,  4,  3), c_station, DBA_MSG_DAY);
+    if (!c_station)
+    {
+        subset->store_variable_undef(WR_VAR(0, 4, 1));
+        subset->store_variable_undef(WR_VAR(0, 4, 2));
+        subset->store_variable_undef(WR_VAR(0, 4, 3));
+    } else {
+        // Year
+        if (const Var* var = c_station->find(WR_VAR(0, 4, 1)))
+            subset->store_variable(WR_VAR(0, 4, 1), *var);
+        else 
+            subset->store_variable_i(WR_VAR(0, 4, 1), msg->datetime().date.year);
+
+        // Month
+        if (const Var* var = c_station->find(WR_VAR(0, 4, 2)))
+            subset->store_variable(WR_VAR(0, 4, 2), *var);
+        else
+            subset->store_variable_i(WR_VAR(0, 4, 2), msg->datetime().date.month);
+
+        // Day
+        if (const Var* var = c_station->find(WR_VAR(0, 4, 3)))
+            subset->store_variable(WR_VAR(0, 4, 3), *var);
+        else
+            subset->store_variable_i(WR_VAR(0, 4, 3), msg->datetime().date.day);
+    }
 }
 
 int Template::do_D01012() const
 {
-    const Var* v_hour = c_station ? c_station->find_by_id(DBA_MSG_HOUR) : NULL;
-    add(WR_VAR(0,  4,  4), v_hour);
-    add(WR_VAR(0,  4,  5), c_station, DBA_MSG_MINUTE);
-    return v_hour ? v_hour->enqi() : MISSING_INT;
+    if (!c_station)
+    {
+        subset->store_variable_undef(WR_VAR(0, 4, 4));
+        subset->store_variable_undef(WR_VAR(0, 4, 5));
+        return MISSING_INT;
+    } else {
+        int res = MISSING_INT;
+
+        // Hour
+        if (const Var* var = c_station->find(WR_VAR(0, 4, 4)))
+        {
+            subset->store_variable(WR_VAR(0, 4, 4), *var);
+            res = var->enqi();
+        }
+        else
+        {
+            subset->store_variable_i(WR_VAR(0, 4, 4), msg->datetime().time.hour);
+            res = msg->datetime().time.hour;
+        }
+
+        // Minute
+        if (const Var* var = c_station->find(WR_VAR(0, 4, 5)))
+            subset->store_variable(WR_VAR(0, 4, 5), *var);
+        else
+            subset->store_variable_i(WR_VAR(0, 4, 5), msg->datetime().time.minute);
+
+        return res;
+    }
 }
 
 void Template::do_D01013() const
 {
     do_D01012();
-    add(WR_VAR(0,  4,  6), c_station, DBA_MSG_SECOND);
+
+    // Second
+    if (const Var* var = c_station->find(WR_VAR(0, 4, 6)))
+        subset->store_variable(WR_VAR(0, 4, 6), *var);
+    else
+        subset->store_variable_i(WR_VAR(0, 4, 6), msg->datetime().time.second);
 }
 
 void Template::do_D01021() const

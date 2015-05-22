@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2010--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -142,10 +142,10 @@ void to::test<4>()
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
 
-        matched[0]->set_year(1999);
+        matched[0]->set_datetime(Datetime(1999));
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
 
-        matched[0]->set_year(2000);
+        matched[0]->set_datetime(Datetime(2000));
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_YES);
     }
     {
@@ -154,10 +154,10 @@ void to::test<4>()
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
 
-        matched[0]->set_year(2001);
+        matched[0]->set_datetime(Datetime(2001));
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
 
-        matched[0]->set_year(2000);
+        matched[0]->set_datetime(Datetime(2000));
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_YES);
     }
     {
@@ -166,19 +166,19 @@ void to::test<4>()
         Msgs matched; init(matched);
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
 
-        matched[0]->set_year(1999);
+        matched[0]->set_datetime(Datetime(1999));
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
 
-        matched[0]->set_year(2011);
+        matched[0]->set_datetime(Datetime(2011));
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
 
-        matched[0]->set_year(2000);
+        matched[0]->set_datetime(Datetime(2000));
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_YES);
 
-        matched[0]->set_year(2005);
+        matched[0]->set_datetime(Datetime(2005));
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_YES);
 
-        matched[0]->set_year(2010);
+        matched[0]->set_datetime(Datetime(2010));
         ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_YES);
     }
 }
@@ -309,7 +309,7 @@ void to::test<8>()
     {
         Msg& m = **i;
         m.set_rep_memo("synop");
-        m.set_second(0);
+        //m.set_second(0);
     }
 
     notes::Collect c(cerr);

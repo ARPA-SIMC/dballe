@@ -74,7 +74,7 @@ struct ShipBase : public Template
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
         Template::to_subset(msg, subset);
-        synop.init(subset);
+        synop.init(msg, subset);
 
         // Scan message finding context for the data that follow
         for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();

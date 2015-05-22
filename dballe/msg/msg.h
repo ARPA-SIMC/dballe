@@ -124,8 +124,11 @@ protected:
      */
     int find_index(const Level& lev, const Trange& tr) const;
 
+    /// Reference time for all the data
+    Datetime m_datetime;
+
 public:
-    /** Source of the data */
+    /// Source of the data
     MsgType type;
 
     /** Context in the message */
@@ -141,6 +144,9 @@ public:
 
     Msg(const Msg& m);
     Msg& operator=(const Msg& m);
+
+    const Datetime& datetime() const { return m_datetime; }
+    void set_datetime(const Datetime& dt) { m_datetime = dt; }
 
     /// Remove all information from Msg
     void clear();
@@ -364,9 +370,6 @@ public:
      */
     void setc(wreport::Varcode code, const char* val, int conf, const Level& lev, const Trange& tr);
 
-    /// Set the date from a string in the format "YYYY-MM-DD HH:MM:SS"
-    void set_date(const char* date);
-
     /**
      * Copy to dest all the variable in this message that match \a filter
      * TODO: to be implemented
@@ -395,18 +398,6 @@ public:
      */
     void sounding_unpack_levels(Msg& dst) const;
 #endif
-
-    /**
-     * Parse the date set in the Msg.
-     *
-     * This function will examine the values year, month, day, hour, min and
-     * sec, and will compute the lower bound of the datetime they represent.
-     *
-     * @retval values
-     *   An array of 6 integers that will be filled with the minimum year, month,
-     *   day, hour, minute and seconds.
-     */
-    Datetime get_datetime() const;
 
     /**
      * Read data from a CSV input.

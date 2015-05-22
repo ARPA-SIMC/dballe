@@ -42,8 +42,9 @@ static int override_trange(const Var* var, int orig)
     return orig;
 }
 
-void ExporterModule::init(wreport::Subset& subset)
+void ExporterModule::init(const Msg& msg, wreport::Subset& subset)
 {
+    this->msg = &msg;
     this->subset = &subset;
     c_surface_instant = 0;
     c_ana = 0;
@@ -99,13 +100,6 @@ void ExporterModule::add(wreport::Varcode code, const wreport::Var* var) const
         subset->store_variable_undef(code);
 }
 
-int ExporterModule::get_hour()
-{
-    if (!c_ana) return MISSING_INT;
-    const Var* v_hour = c_ana->find_by_id(DBA_MSG_HOUR);
-    return v_hour ? v_hour->enqi() : MISSING_INT;
-}
-
 void ExporterModule::add_ecmwf_synop_head()
 {
     add(WR_VAR(0,  1,  1), c_ana);
@@ -113,9 +107,9 @@ void ExporterModule::add_ecmwf_synop_head()
     add(WR_VAR(0,  2,  1), c_ana);
 }
 
-void CommonSynopExporter::init(wreport::Subset& subset)
+void CommonSynopExporter::init(const Msg& msg, wreport::Subset& subset)
 {
-    ExporterModule::init(subset);
+    ExporterModule::init(msg, subset);
     c_geopotential = 0;
     c_thermo = 0;
     c_tmax = 0;
@@ -732,7 +726,7 @@ void CommonSynopExporter::add_D02038()
     add(WR_VAR(0, 20,  3), c_surface_instant);
     if (c_past_wtr)
     {
-        int hour = get_hour();
+        int hour = msg->datetime().time.hour;
         // Look for a p2 override in the attributes
         const Var* v = c_past_wtr->find(WR_VAR(0, 20, 4));
         if (!v) v = c_past_wtr->find(WR_VAR(0, 20, 5));

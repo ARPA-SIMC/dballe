@@ -139,19 +139,9 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
     vars.id_report = id_report;
 
     // Date and time
-    {
-        const Var* year = l_ana->find_by_id(DBA_MSG_YEAR);
-        const Var* month = l_ana->find_by_id(DBA_MSG_MONTH);
-        const Var* day = l_ana->find_by_id(DBA_MSG_DAY);
-        const Var* hour = l_ana->find_by_id(DBA_MSG_HOUR);
-        const Var* min = l_ana->find_by_id(DBA_MSG_MINUTE);
-        const Var* sec = l_ana->find_by_id(DBA_MSG_SECOND);
-
-        if (year == NULL || month == NULL || day == NULL || hour == NULL || min == NULL)
-            throw error_notfound("date/time informations not found (or incomplete) in message to insert");
-
-        vars.datetime = Datetime(year->enqi(), month->enqi(), day->enqi(), hour->enqi(), min->enqi(), sec ? sec->enqi() : 0);
-    }
+    if (msg.datetime().is_missing())
+        throw error_notfound("date/time informations not found (or incomplete) in message to insert");
+    vars.datetime = msg.datetime();
 
     // Fill the bulk insert with the rest of the data
     for (size_t i = 0; i < msg.data.size(); ++i)

@@ -43,6 +43,23 @@ static const Level lev_std_wind(103, 10*1000);
 static const Trange tr_std_wind(200, 0, 600);
 static const Trange tr_std_wind_max10m(205, 0, 600);
 
+void Importer::import(const wreport::Subset& subset, Msg& msg)
+{
+    this->subset = &subset;
+    this->msg = &msg;
+    datetime = Datetime();
+    init();
+    run();
+    if (datetime.date.year == 0xffff)
+        throw error_consistency("no year information found in message to import");
+    if (datetime.date.month == 0xff)
+        throw error_consistency("no month information found in message to import");
+    if (datetime.date.day == 0xff)
+        throw error_consistency("no day information found in message to import");
+    if (datetime.time.hour == 0xff)
+        throw error_consistency("no hour information found in message to import");
+    msg.set_datetime(datetime.lower_bound());
+}
 
 std::unique_ptr<Importer> Importer::createSat(const msg::Importer::Options&) { throw error_unimplemented("WB sat Importers"); }
 
@@ -61,12 +78,36 @@ void WMOImporter::import_var(const Var& var)
 		case WR_VAR(0,  1, 63): msg->set_st_name_icao_var(var); break;
 		case WR_VAR(0,  2,  1): msg->set_st_type_var(var); break;
 		case WR_VAR(0,  1, 15): msg->set_st_name_var(var); break;
-		case WR_VAR(0,  4,  1): msg->set_year_var(var); break;
-		case WR_VAR(0,  4,  2): msg->set_month_var(var); break;
-		case WR_VAR(0,  4,  3): msg->set_day_var(var); break;
-		case WR_VAR(0,  4,  4): msg->set_hour_var(var); break;
-		case WR_VAR(0,  4,  5): msg->set_minute_var(var); break;
-		case WR_VAR(0,  4,  6): msg->set_second_var(var); break;
+        case WR_VAR(0,  4,  1):
+            datetime.date.year = var.enqi();
+            if (var.next_attr())
+                msg->set(var, WR_VAR(0, 4, 1), Level::ana(), Trange::ana());
+            break;
+        case WR_VAR(0,  4,  2):
+            datetime.date.month = var.enqi();
+            if (var.next_attr())
+                msg->set(var, WR_VAR(0, 4, 2), Level::ana(), Trange::ana());
+            break;
+        case WR_VAR(0,  4,  3):
+            datetime.date.day = var.enqi();
+            if (var.next_attr())
+                msg->set(var, WR_VAR(0, 4, 3), Level::ana(), Trange::ana());
+            break;
+        case WR_VAR(0,  4,  4):
+            datetime.time.hour = var.enqi();
+            if (var.next_attr())
+                msg->set(var, WR_VAR(0, 4, 4), Level::ana(), Trange::ana());
+            break;
+        case WR_VAR(0,  4,  5):
+            datetime.time.minute = var.enqi();
+            if (var.next_attr())
+                msg->set(var, WR_VAR(0, 4, 5), Level::ana(), Trange::ana());
+            break;
+        case WR_VAR(0,  4,  6):
+            datetime.time.second = var.enqi();
+            if (var.next_attr())
+                msg->set(var, WR_VAR(0, 4, 6), Level::ana(), Trange::ana());
+            break;
 		case WR_VAR(0,  5,  1):
 		case WR_VAR(0,  5,  2): msg->set_latitude_var(var); break;
 		case WR_VAR(0,  6,  1):

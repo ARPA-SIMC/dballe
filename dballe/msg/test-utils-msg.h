@@ -132,6 +132,13 @@ struct StripVars : public MessageTweaker
     virtual std::string desc() const { return "StripVars"; }
 };
 
+// Strip datetime variables in the station context
+struct StripDatetimeVars : public StripVars
+{
+    StripDatetimeVars();
+    virtual std::string desc() const { return "StripDatetimeVars"; }
+};
+
 // Round variables to account for a passage through legacy vars
 struct RoundLegacyVars : public MessageTweaker
 {

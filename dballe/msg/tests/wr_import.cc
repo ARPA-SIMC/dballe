@@ -27,6 +27,7 @@
 
 using namespace dballe;
 using namespace wreport;
+using namespace wibble::tests;
 using namespace std;
 
 namespace tut {
@@ -124,7 +125,7 @@ void to::test<3>()
     ensure_equals(msg.type, MSG_SYNOP);
 
     IS(block, 10); IS(station, 837); IS(st_type, 1);
-    IS(year, 2004); IS(month, 11); IS(day, 30); IS(hour, 12); IS(minute, 0);
+    wassert(actual(msg.datetime()) == Datetime(2004, 11, 30, 12, 0));
     IS(latitude, 48.22); IS(longitude, 9.92);
     IS(height_station, 550.0); UN(height_baro);
     IS(press, 94340.0); IS(press_msl, 100940.0); IS(press_tend, 7.0);
@@ -148,7 +149,7 @@ void to::test<4>()
     ensure_equals(msg.type, MSG_SYNOP);
 
     IS(block, 60); IS(station, 150); IS(st_type, 1);
-    IS(year, 2004); IS(month, 11); IS(day, 30); IS(hour, 12); IS(minute, 0);
+    wassert(actual(msg.datetime()) == Datetime(2004, 11, 30, 12, 0));
     IS(latitude, 33.88); IS(longitude, -5.53);
     IS(height_station, 560.0); UN(height_baro);
     IS(press, 94190.0); IS(press_msl, 100540.0); IS(press_3h, -180.0); IS(press_tend, 8.0);
@@ -176,7 +177,7 @@ void to::test<5>()
     // msg.print(stderr);
 
     IS(block, 11); IS(station, 406); IS(st_type, 1);
-    IS(year, 2009); IS(month, 12); IS(day, 3); IS(hour, 15); IS(minute, 0);
+    wassert(actual(msg.datetime()) == Datetime(2009, 12, 3, 15, 0));
     IS(latitude, 50.07361); IS(longitude, 12.40333);
     IS(height_station, 483.0); IS(height_baro, 490.0);
     IS(press, 95090.0); IS(press_msl, 101060.0); IS(press_3h, -110.0); IS(press_tend, 6.0);
@@ -206,7 +207,7 @@ void to::test<6>()
     // msg.print(stderr);
 
     IS(block, 11); IS(station, 406); IS(st_type, 1);
-    IS(year, 2009); IS(month, 12); IS(day, 3); IS(hour, 15); IS(minute, 0);
+    wassert(actual(msg.datetime()) == Datetime(2009, 12, 3, 15, 0));
     IS(latitude, 50.07361); IS(longitude, 12.40333);
     IS(height_station, 483.0); IS(height_baro, 490.0);
     IS2(WR_VAR(0, 10,  4), Level(102, 490000), Trange::instant(), 95090.0); // press

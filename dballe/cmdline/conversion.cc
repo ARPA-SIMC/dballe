@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,9 +73,7 @@ static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const Msgs
             // BC01-SYNOP
             // Get the hour from the first message
             // Default to 1 to simulate an odd observation time
-            int hour = 1;
-            if (const wreport::Var* v = msgs[0]->get_hour_var())
-                hour = v->enq(1);
+            int hour = msgs[0]->datetime().is_missing() ? 1 : msgs[0]->datetime().time.hour;
 
             if ((hour % 6) == 0)
                 // 002 at main synoptic times 00, 06, 12, 18 UTC,

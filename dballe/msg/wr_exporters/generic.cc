@@ -106,15 +106,29 @@ struct Generic : public Template
             subset.store_variable_c(WR_VAR(0, 1, 194), Msg::repmemo_from_type(msg.type));
 
         // Then the station context
-        subset.store_variable_i(WR_VAR(0, 7, 192), 257);
         if (const msg::Context* ctx = msg.find_station_context())
+        {
+            // Datetime
+            do_D01011();
+            do_D01013();
             for (size_t j = 0; j < ctx->data.size(); ++j)
             {
                 const Var& var = *(ctx->data[j]);
 
-                // Do not add rep_memo twice
-                if (var.code() == WR_VAR(0, 1, 194))
-                    continue;
+                // Do not add rep_memo and datetime twice
+                switch (var.code())
+                {
+                    case WR_VAR(0, 1, 194):
+                    case WR_VAR(0, 4, 1):
+                    case WR_VAR(0, 4, 2):
+                    case WR_VAR(0, 4, 3):
+                    case WR_VAR(0, 4, 4):
+                    case WR_VAR(0, 4, 5):
+                    case WR_VAR(0, 4, 6):
+                        continue;
+                    default:
+                        break;
+                }
 
                 // Store the variable
                 subset.store_variable(var.code(), var);
@@ -128,6 +142,7 @@ struct Generic : public Template
                     subset.store_variable(attr->code(), *attr);
                 }
             }
+        }
 
         // Then do the other contexts
         for (size_t i = 0; i < msg.data.size(); ++i)

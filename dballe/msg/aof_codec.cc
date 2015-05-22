@@ -218,11 +218,18 @@ int AOFImporter::parse_lat_lon_datetime(const uint32_t* obs, Msg& msg)
     /* 12 Exact time of observation */
     parse_obs_datetime(obs, &datetime);
 
-    msg.set_year(datetime.tm_year + 1900, get_conf6((OBS(19) >> 12) & 0x3f));
-    msg.set_month(datetime.tm_mon + 1, get_conf6((OBS(19) >> 12) & 0x3f));
-    msg.set_day(datetime.tm_mday, get_conf6((OBS(19) >> 12) & 0x3f));
-    msg.set_hour(datetime.tm_hour, get_conf6((OBS(19) >> 18) & 0x3f));
-    msg.set_minute(datetime.tm_min, get_conf6((OBS(19) >> 18) & 0x3f));
+    msg.set_datetime(Datetime(
+        datetime.tm_year + 1900,
+        datetime.tm_mon + 1,
+        datetime.tm_mday,
+        datetime.tm_hour,
+        datetime.tm_min,
+        0));
+    msg.seti(WR_VAR(0, 4, 1), datetime.tm_year + 1900, get_conf6((OBS(19) >> 12) & 0x3f), Level::ana(), Trange::ana());
+    msg.seti(WR_VAR(0, 4, 2), datetime.tm_mon + 1, get_conf6((OBS(19) >> 12) & 0x3f), Level::ana(), Trange::ana());
+    msg.seti(WR_VAR(0, 4, 3), datetime.tm_mday, get_conf6((OBS(19) >> 12) & 0x3f), Level::ana(), Trange::ana());
+    msg.seti(WR_VAR(0, 4, 4), datetime.tm_hour, get_conf6((OBS(19) >> 18) & 0x3f), Level::ana(), Trange::ana());
+    msg.seti(WR_VAR(0, 4, 5), datetime.tm_min, get_conf6((OBS(19) >> 18) & 0x3f), Level::ana(), Trange::ana());
 
     return datetime.tm_hour;
 }

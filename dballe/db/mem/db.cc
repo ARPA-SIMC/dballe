@@ -463,19 +463,14 @@ void DB::export_msgs(const Query& query, MsgConsumer& cons)
             // Start writing a new message
             msg.reset(new Msg);
 
+            // Fill datetime
+            msg->set_datetime(val->datetime);
+
             // Fill station info
             msg::Context& c_st = val->station.fill_msg(*msg);
 
             // Fill station vars
             memdb.stationvalues.fill_msg(val->station, c_st);
-
-            // Fill datetime
-            c_st.set_year(val->datetime.date.year);
-            c_st.set_month(val->datetime.date.month);
-            c_st.set_day(val->datetime.date.day);
-            c_st.set_hour(val->datetime.time.hour);
-            c_st.set_minute(val->datetime.time.minute);
-            c_st.set_second(val->datetime.time.second);
 
             // Update last value seen info
             old_val = val;

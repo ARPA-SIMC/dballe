@@ -37,35 +37,44 @@ protected:
     Level lev;
     Trange tr;
 
+    /// Import an undefined value
+    void import_defined(const Var& var);
+    /// Import a defined value, which can be a variable or context
+    void import_undef(const Var& var);
+    /// Import a defined value, with the context being properly set
     void import_var(const Var& var);
-    void import_var_undef(const Var& var);
 
 public:
     GenericImporter(const msg::Importer::Options& opts) : Importer(opts) {}
     virtual ~GenericImporter() {}
 
-    virtual void init()
+    void init() override
     {
         Importer::init();
         lev = Level();
         tr = Trange();
     }
 
-    virtual void run()
+    void run() override
     {
         for (size_t pos = 0; pos < subset->size(); ++pos)
         {
                 const Var& var = (*subset)[pos];
+                // Skip non-variable entries
                 if (WR_VAR_F(var.code()) != 0) continue;
+                // Special processing for undefined variables
                 if (var.value() == NULL)
                 {
-                    /* Also skip attributes if there are some following */
+                    // Also skip attributes of undefined variables if there are
+                    // some following
                     for ( ; pos + 1 < subset->size() &&
                             WR_VAR_X((*subset)[pos + 1].code()) == 33; ++pos)
                         ;
-                    import_var_undef(var);
+                    import_undef(var);
                     continue;
                 }
+                // A variable with a value: add attributes to it if any are
+                // found
                 if (pos + 1 < subset->size() &&
                         WR_VAR_X((*subset)[pos + 1].code()) == 33)
                 {
@@ -73,13 +82,13 @@ public:
                     for ( ; pos + 1 < subset->size() &&
                             WR_VAR_X((*subset)[pos + 1].code()) == 33; ++pos)
                         copy.seta((*subset)[pos + 1]);
-                    import_var(copy);
+                    import_defined(copy);
                 } else
-                    import_var(var);
+                    import_defined(var);
         }
     }
 
-    MsgType scanType(const Bulletin&) const
+    MsgType scanType(const Bulletin&) const override
     {
         return MSG_GENERIC;
     }
@@ -90,7 +99,7 @@ std::unique_ptr<Importer> Importer::createGeneric(const msg::Importer::Options& 
     return unique_ptr<Importer>(new GenericImporter(opts));
 }
 
-void GenericImporter::import_var_undef(const Var& var)
+void GenericImporter::import_undef(const Var& var)
 {
     switch (var.code())
     {
@@ -104,7 +113,7 @@ void GenericImporter::import_var_undef(const Var& var)
     }
 }
 
-void GenericImporter::import_var(const Var& var)
+void GenericImporter::import_defined(const Var& var)
 {
     switch (var.code())
     {
@@ -120,6 +129,23 @@ void GenericImporter::import_var(const Var& var)
             msg->type = Msg::type_from_repmemo(var.value());
             msg->set_rep_memo(var.value(), -1);
             break;
+        default:
+            import_var(var);
+            break;
+    }
+}
+
+void GenericImporter::import_var(const Var& var)
+{
+    // Adjust station info level for pre-dballe-5.0 generics
+    if (lev.ltype1 == 257)
+    {
+        lev = Level::ana();
+        tr = Trange::ana();
+    }
+
+    switch (var.code())
+    {
         // Legacy variable conversions
         case WR_VAR(0, 8, 1): {
             unique_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), convert_BUFR08001_to_BUFR08042(var.enqi())));
@@ -127,12 +153,40 @@ void GenericImporter::import_var(const Var& var)
             msg->set(move(nvar), lev, tr);
             break;
         }
+        // Datetime entries that may have attributes to store
+        case WR_VAR(0,  4,  1):
+            datetime.date.year = var.enqi();
+            if (var.next_attr())
+                msg->set(var, WR_VAR(0, 4, 1), Level::ana(), Trange::ana());
+            break;
+        case WR_VAR(0,  4,  2):
+            datetime.date.month = var.enqi();
+            if (var.next_attr())
+                msg->set(var, WR_VAR(0, 4, 2), Level::ana(), Trange::ana());
+            break;
+        case WR_VAR(0,  4,  3):
+            datetime.date.day = var.enqi();
+            if (var.next_attr())
+                msg->set(var, WR_VAR(0, 4, 3), Level::ana(), Trange::ana());
+            break;
+        case WR_VAR(0,  4,  4):
+            datetime.time.hour = var.enqi();
+            if (var.next_attr())
+                msg->set(var, WR_VAR(0, 4, 4), Level::ana(), Trange::ana());
+            break;
+        case WR_VAR(0,  4,  5):
+            datetime.time.minute = var.enqi();
+            if (var.next_attr())
+                msg->set(var, WR_VAR(0, 4, 5), Level::ana(), Trange::ana());
+            break;
+        case WR_VAR(0,  4,  6):
+            datetime.time.second = var.enqi();
+            if (var.next_attr())
+                msg->set(var, WR_VAR(0, 4, 6), Level::ana(), Trange::ana());
+            break;
+        // Anything else
         default:
-            // Adjust station info level for pre-dballe-5.0 generics
-            if (lev.ltype1 == 257)
-                msg->set(var, map_code_to_dballe(var.code()), Level::ana(), Trange());
-            else
-                msg->set(var, map_code_to_dballe(var.code()), lev, tr);
+            msg->set(var, map_code_to_dballe(var.code()), lev, tr);
             break;
     }
 }

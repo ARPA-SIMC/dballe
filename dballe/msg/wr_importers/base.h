@@ -42,6 +42,7 @@ protected:
     const msg::Importer::Options& opts;
     const wreport::Subset* subset;
     Msg* msg;
+    Datetime datetime;
 
     virtual void init() {}
     virtual void run() = 0;
@@ -52,13 +53,7 @@ public:
 
     virtual MsgType scanType(const wreport::Bulletin& bulletin) const = 0;
 
-    void import(const wreport::Subset& subset, Msg& msg)
-    {
-	    this->subset = &subset;
-	    this->msg = &msg;
-	    init();
-	    run();
-    }
+    void import(const wreport::Subset& subset, Msg& msg);
 
     static std::unique_ptr<Importer> createSynop(const msg::Importer::Options&);
     static std::unique_ptr<Importer> createShip(const msg::Importer::Options&);

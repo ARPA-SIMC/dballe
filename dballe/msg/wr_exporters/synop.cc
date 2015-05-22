@@ -132,7 +132,7 @@ struct Synop : public Template
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
         Template::to_subset(msg, subset);
-        synop.init(subset);
+        synop.init(msg, subset);
         scan_levels();
     }
 };
@@ -551,7 +551,7 @@ struct SynopWMO : public Synop
 
         // Set subtype based on hour. If we have heterogeneous subsets, keep
         // the lowest of the constraints
-        int hour = synop.get_hour();
+        int hour = msg.datetime().time.hour;
         if ((hour % 6) == 0)
             // 002 at main synoptic times 00, 06, 12, 18 UTC,
             cur_bulletin->subtype = cur_bulletin->subtype == 255 ? 2 : cur_bulletin->subtype;

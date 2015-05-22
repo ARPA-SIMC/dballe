@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -371,10 +371,10 @@ void to::test<7>()
         Msg matched;
         ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
 
-        matched.set_year(1999);
+        matched.set_datetime(Datetime(1999));
         ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
 
-        matched.set_year(2000);
+        matched.set_datetime(Datetime(2000));
         ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
     }
     {
@@ -383,10 +383,10 @@ void to::test<7>()
         Msg matched;
         ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
 
-        matched.set_year(2001);
+        matched.set_datetime(Datetime(2001));
         ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
 
-        matched.set_year(2000);
+        matched.set_datetime(Datetime(2000));
         ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
     }
     {
@@ -395,19 +395,19 @@ void to::test<7>()
         Msg matched;
         ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
 
-        matched.set_year(1999);
+        matched.set_datetime(Datetime(1999));
         ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
 
-        matched.set_year(2011);
+        matched.set_datetime(Datetime(2011));
         ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
 
-        matched.set_year(2000);
+        matched.set_datetime(Datetime(2000));
         ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
 
-        matched.set_year(2005);
+        matched.set_datetime(Datetime(2005));
         ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
 
-        matched.set_year(2010);
+        matched.set_datetime(Datetime(2010));
         ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
     }
 }
@@ -525,12 +525,7 @@ void to::test<11>()
     //msg->type = MSG_SYNOP;
 
     // Fill in the dba_msg
-    msg.set_year(2011);
-    msg.set_month(5);
-    msg.set_day(3);
-    msg.set_hour(12);
-    msg.set_minute(30);
-    msg.set_second(45);
+    msg.set_datetime(Datetime(2011, 5, 3, 12, 30, 45));
     msg.set_latitude(45.0);
     msg.set_longitude(11.0);
     msg.set_temp_2m(273.0, 75);

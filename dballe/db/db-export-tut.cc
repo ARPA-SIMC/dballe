@@ -119,44 +119,28 @@ std::vector<Test> tests {
         ensure_var_equals(want_var(*msgs[0], DBA_MSG_LATITUDE), 12.34560);
         ensure_var_equals(want_var(*msgs[0], DBA_MSG_LONGITUDE), 76.54321);
         ensure_msg_undef(*msgs[0], DBA_MSG_IDENT);
-        ensure_var_equals(want_var(*msgs[0], DBA_MSG_YEAR), 1945);
-        ensure_var_equals(want_var(*msgs[0], DBA_MSG_MONTH), 4);
-        ensure_var_equals(want_var(*msgs[0], DBA_MSG_DAY), 25);
-        ensure_var_equals(want_var(*msgs[0], DBA_MSG_HOUR), 8);
-        ensure_var_equals(want_var(*msgs[0], DBA_MSG_MINUTE), 0);
+        wassert(actual(msgs[0]->datetime()) == Datetime(1945, 4, 25, 8, 0, 0));
         ensure_var_equals(want_var(*msgs[0], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)), 500);
 
         ensure_equals(msgs[1]->type, MSG_SYNOP);
         ensure_var_equals(want_var(*msgs[1], DBA_MSG_LATITUDE), 12.34560);
         ensure_var_equals(want_var(*msgs[1], DBA_MSG_LONGITUDE), 76.54321);
         ensure_msg_undef(*msgs[1], DBA_MSG_IDENT);
-        ensure_var_equals(want_var(*msgs[1], DBA_MSG_YEAR), 1945);
-        ensure_var_equals(want_var(*msgs[1], DBA_MSG_MONTH), 4);
-        ensure_var_equals(want_var(*msgs[1], DBA_MSG_DAY), 26);
-        ensure_var_equals(want_var(*msgs[1], DBA_MSG_HOUR), 8);
-        ensure_var_equals(want_var(*msgs[1], DBA_MSG_MINUTE), 0);
+        wassert(actual(msgs[1]->datetime()) == Datetime(1945, 4, 26, 8, 0, 0));
         ensure_var_equals(want_var(*msgs[1], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)), 400);
 
         ensure_equals(msgs[2]->type, MSG_SYNOP);
         ensure_var_equals(want_var(*msgs[2], DBA_MSG_LATITUDE), 12.34560);
         ensure_var_equals(want_var(*msgs[2], DBA_MSG_LONGITUDE), 76.54321);
         ensure_var_equals(want_var(*msgs[2], DBA_MSG_IDENT), "ciao");
-        ensure_var_equals(want_var(*msgs[2], DBA_MSG_YEAR), 1945);
-        ensure_var_equals(want_var(*msgs[2], DBA_MSG_MONTH), 4);
-        ensure_var_equals(want_var(*msgs[2], DBA_MSG_DAY), 26);
-        ensure_var_equals(want_var(*msgs[2], DBA_MSG_HOUR), 8);
-        ensure_var_equals(want_var(*msgs[2], DBA_MSG_MINUTE), 0);
+        wassert(actual(msgs[2]->datetime()) == Datetime(1945, 4, 26, 8, 0, 0));
         ensure_var_equals(want_var(*msgs[2], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)), 300);
 
         ensure_equals(msgs[3]->type, MSG_METAR);
         ensure_var_equals(want_var(*msgs[3], DBA_MSG_LATITUDE), 12.34560);
         ensure_var_equals(want_var(*msgs[3], DBA_MSG_LONGITUDE), 76.54321);
         ensure_var_equals(want_var(*msgs[3], DBA_MSG_IDENT), "ciao");
-        ensure_var_equals(want_var(*msgs[3], DBA_MSG_YEAR), 1945);
-        ensure_var_equals(want_var(*msgs[3], DBA_MSG_MONTH), 4);
-        ensure_var_equals(want_var(*msgs[3], DBA_MSG_DAY), 26);
-        ensure_var_equals(want_var(*msgs[3], DBA_MSG_HOUR), 8);
-        ensure_var_equals(want_var(*msgs[3], DBA_MSG_MINUTE), 0);
+        wassert(actual(msgs[3]->datetime()) == Datetime(1945, 4, 26, 8, 0, 0));
         ensure_var_equals(want_var(*msgs[3], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)), 200);
     }),
     Test("export", [](Fixture& f) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -126,11 +126,12 @@ void to::test<2>()
 	msg->set_data_relay(		3,		45);
 	msg->set_flight_roll(	3,		45);
 	msg->set_latlon_spec(	3,		45);
-	msg->set_year(			3,		45);
-	msg->set_month(			3,		45);
-	msg->set_day(			3,		45);
-	msg->set_hour(			3,		45);
-	msg->set_minute(			3,		45);
+    msg->set_datetime(Datetime(3, 3, 3, 3, 3, 0));
+    msg->seti(WR_VAR(0, 4, 1), 3, 45, Level::ana(), Trange::ana());
+    msg->seti(WR_VAR(0, 4, 2), 3, 45, Level::ana(), Trange::ana());
+    msg->seti(WR_VAR(0, 4, 3), 3, 45, Level::ana(), Trange::ana());
+    msg->seti(WR_VAR(0, 4, 4), 3, 45, Level::ana(), Trange::ana());
+    msg->seti(WR_VAR(0, 4, 5), 3, 45, Level::ana(), Trange::ana());
 	msg->set_latitude(		3,		45);
 	msg->set_longitude(		3,		45);
 	msg->set_height_station(3,		45);
@@ -244,14 +245,10 @@ void to::test<4>()
     unique_ptr<Msg> msg(new Msg);
     msg->type = MSG_GENERIC;
 
-	/* Set some metadata */
-	msg->set_year(2006);
-	msg->set_month(1);
-	msg->set_day(19);
-	msg->set_hour(14);
-	msg->set_minute(50);
-	msg->set_latitude(50.0);
-	msg->set_longitude(12.0);
+    // Set some metadata
+    msg->set_datetime(Datetime(2006, 1, 19, 14, 50));
+    msg->set_latitude(50.0);
+    msg->set_longitude(12.0);
 
     /* Create a variable to add to the message */
     unique_ptr<Var> var = newvar(WR_VAR(0, 12, 101), 270.15);

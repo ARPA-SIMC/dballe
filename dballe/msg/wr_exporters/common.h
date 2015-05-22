@@ -39,8 +39,9 @@ class ExporterModule
 protected:
     // Subset being written
     wreport::Subset* subset;
-    const msg::Context* c_ana;
-    const msg::Context* c_surface_instant;
+    const Msg* msg = 0;
+    const msg::Context* c_ana = 0;
+    const msg::Context* c_surface_instant = 0;
 
     void add(wreport::Varcode code, const msg::Context* ctx, int shortcut) const;
     void add(wreport::Varcode code, const msg::Context* ctx, wreport::Varcode srccode) const;
@@ -48,10 +49,8 @@ protected:
     void add(wreport::Varcode code, const wreport::Var* var) const;
 
 public:
-    void init(wreport::Subset& subset);
+    void init(const Msg& msg, wreport::Subset& subset);
     void scan_context(const msg::Context& c);
-
-    int get_hour();
 
     void add_ecmwf_synop_head();
 };
@@ -85,7 +84,7 @@ public:
     const wreport::Var* v_ptend;
     const wreport::Var* v_geopotential;
 
-    void init(wreport::Subset& subset);
+    void init(const Msg& msg, wreport::Subset& subset);
     void scan_context(const msg::Context& c);
 
     // Pressure data

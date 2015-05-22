@@ -375,6 +375,16 @@ void StripVars::tweak(Msgs& msgs)
     }
 }
 
+StripDatetimeVars::StripDatetimeVars()
+{
+    codes.push_back(WR_VAR(0, 4, 1));
+    codes.push_back(WR_VAR(0, 4, 2));
+    codes.push_back(WR_VAR(0, 4, 3));
+    codes.push_back(WR_VAR(0, 4, 4));
+    codes.push_back(WR_VAR(0, 4, 5));
+    codes.push_back(WR_VAR(0, 4, 6));
+}
+
 RoundLegacyVars::RoundLegacyVars() : table(NULL)
 {
     table = Vartable::get("B0000000000000014000");
@@ -649,6 +659,7 @@ TestCodec::TestCodec(const std::string& fname, Encoding type)
 void TestCodec::configure_ecmwf_to_wmo_tweaks()
 {
     after_convert_import.add(new tweaks::StripQCAttrs);
+    after_convert_import.add(new tweaks::StripDatetimeVars);
 }
 
 void TestCodec::do_compare(WIBBLE_TEST_LOCPRM, const TestMessage& msg1, const TestMessage& msg2)
@@ -703,24 +714,12 @@ void TestCodec::run_reimport(WIBBLE_TEST_LOCPRM)
     // Export
     if (verbose) cerr << "Exporting with options '" << output_opts.to_string() << "'" << endl;
     TestMessage exported(type, "exported");
-    try {
-        exported.read_from_msgs(orig.msgs, output_opts);
-    } catch (std::exception& e) {
-        //dballe::tests::dump("bul1", *exported);
-        //balle::tests::dump("msg1", *msgs1);
-        throw tut::failure(wibble_test_location.msg(string("cannot export: ") + e.what()));
-    }
+    wrunchecked(exported.read_from_msgs(orig.msgs, output_opts));
 
     // Import again
     if (verbose) cerr << "Reimporting with options '" << input_opts.to_string() << "'" << endl;
     TestMessage final(type, "final");
-    try {
-        final.read_from_raw(exported.raw, input_opts);
-    } catch (std::exception& e) {
-        //dballe::tests::dump("msg1", *msgs1);
-        //dballe::tests::dump("msg", rawmsg);
-        throw tut::failure(wibble_test_location.msg(string("importing from exported rawmsg: ") + e.what()));
-    }
+    wrunchecked(final.read_from_raw(exported.raw, input_opts));
 
     // Run tweaks
     after_reimport_reimport.apply(final.msgs);
