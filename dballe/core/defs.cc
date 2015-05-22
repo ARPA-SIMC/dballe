@@ -1,7 +1,7 @@
 /*
  * msg/defs - Common definitions
  *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -220,6 +220,17 @@ bool Datetime::operator>(const Datetime& dt) const
     if (date < dt.date) return false;
     if (date > dt.date) return true;
     return time > dt.time;
+}
+
+Datetime Datetime::from_iso8601(const char* str)
+{
+    int ye, mo, da, ho, mi, se;
+    char sep;
+    if (sscanf(str, "%04d-%02d-%02d%c%02d:%02d:%02d", &ye, &mo, &da, &sep, &ho, &mi, &se) != 7)
+        error_consistency::throwf("cannot parse date/time string \"%s\"", str);
+    if (sep != 'T' && sep != ' ')
+        error_consistency::throwf("invalid iso8601 separator '%c' in datetime string \"%s\"", sep, str);
+    return Datetime(ye, mo, da, ho, mi, se);
 }
 
 bool Datetime::range_equals(

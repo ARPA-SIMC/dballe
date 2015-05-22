@@ -1,7 +1,7 @@
 /*
  * msg/defs - Common definitions
  *
- * Copyright (C) 2010--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ * Copyright (C) 2010--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -395,6 +395,13 @@ struct Datetime
     static bool range_disjoint(
             const Datetime& begin1, const Datetime& until1,
             const Datetime& begin2, const Datetime& until2);
+
+    /**
+     * Parse an ISO8601 datetime string.
+     *
+     * Both 'T' and ' ' are allowed as separators.
+     */
+    static Datetime from_iso8601(const char* str);
 };
 
 std::ostream& operator<<(std::ostream& out, const Datetime& dt);
