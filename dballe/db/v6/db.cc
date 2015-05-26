@@ -258,8 +258,7 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
 
     // Read the IDs from the results
     for (const auto& v: vars)
-        if (v.inserted())
-            last_insert_varids.push_back(VarID(v.var->code(), v.id_data));
+        last_insert_varids.push_back(VarID(v.var->code(), v.id_data));
     t->commit();
 
     _last_station_id = vars.id_station;

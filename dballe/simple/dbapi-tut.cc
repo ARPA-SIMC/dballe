@@ -660,9 +660,8 @@ std::vector<Test> tests {
         // wassert(actual(diffs) == 0);
     }),
     Test("segfault1", [](Fixture& f) {
-        // Reproduce a segfault
-        unique_ptr<DB> db0(DB::connect_from_url("mem:"));
-        fortran::DbAPI dbapi0(*db0, "write", "write", "write");
+        // Reproduce a segfault with mem:
+        fortran::DbAPI dbapi0(*f.db, "write", "write", "write");
         dbapi0.seti("lat", 4500000);
         dbapi0.seti("lon", 1300000);
         dbapi0.setc("rep_memo", "generic");
@@ -670,6 +669,38 @@ std::vector<Test> tests {
         dbapi0.setc("B12102", "26312");
         dbapi0.prendilo();
         dbapi0.setc("*B33194", "50");
+        dbapi0.critica();
+    }),
+    Test("attr_insert", [](Fixture& f) {
+        // Reproduce a problem with attribute insert when inserting a variable
+        // that already exists in the database
+        fortran::DbAPI pre(*f.db, "write", "write", "write");
+        pre.unsetall();
+        pre.seti("lat", 4452128);
+        pre.seti("lon", 1199127);
+        pre.unset("ident");
+        pre.unset("mobile");
+        pre.setc("rep_memo", "locali");
+        pre.setdate(2014, 8, 1, 0, 0, 0);
+        pre.setlevel(103, 2000, 2147483647, 2147483647);
+        pre.settimerange(254, 0, 0);
+        pre.setd("B12101", 273.149994);
+        pre.prendilo();
+
+        fortran::DbAPI dbapi0(*f.db, "write", "write", "write");
+        dbapi0.unsetall();
+        dbapi0.seti("lat", 4452128);
+        dbapi0.seti("lon", 1199127);
+        dbapi0.unset("ident");
+        dbapi0.unset("mobile");
+        dbapi0.setc("rep_memo", "locali");
+        dbapi0.setdate(2014, 8, 1, 0, 0, 0);
+        dbapi0.setlevel(103, 2000, 2147483647, 2147483647);
+        dbapi0.settimerange(254, 0, 0);
+        dbapi0.setd("B12101", 273.149994);
+        dbapi0.prendilo();
+        dbapi0.seti("*B33192", 0);
+        dbapi0.setc("*var_related", "B12101");
         dbapi0.critica();
     }),
 };
