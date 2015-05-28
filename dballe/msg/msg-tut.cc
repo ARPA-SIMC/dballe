@@ -87,12 +87,12 @@ void to::test<2>()
 	//msg->type = MSG_SYNOP;
 
 	// Fill in the dba_msg
-	msg.seti(WR_VAR(0, 4, 1), 2008,   -1, Level::ana(), Trange::ana());
-	msg.seti(WR_VAR(0, 4, 2),    5,   -1, Level::ana(), Trange::ana());
-	msg.seti(WR_VAR(0, 4, 3),    7,   -1, Level::ana(), Trange::ana());
+	msg.seti(WR_VAR(0, 4, 1), 2008,   -1, Level(), Trange());
+	msg.seti(WR_VAR(0, 4, 2),    5,   -1, Level(), Trange());
+	msg.seti(WR_VAR(0, 4, 3),    7,   -1, Level(), Trange());
 	// ...
-	msg.setd(WR_VAR(0, 5, 1),   45.0, -1, Level::ana(), Trange::ana());
-	msg.setd(WR_VAR(0, 6, 1),   11.0, -1, Level::ana(), Trange::ana());
+	msg.setd(WR_VAR(0, 5, 1),   45.0, -1, Level(), Trange());
+	msg.setd(WR_VAR(0, 6, 1),   11.0, -1, Level(), Trange());
 	// ...
 	msg.setd(WR_VAR(0,12, 101),  273.0, 75, Level(102, 2000), Trange::instant());
 
@@ -290,10 +290,10 @@ void to::test<5>()
     Msg matched;
     ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
 
-    matched.seti(WR_VAR(0, 1, 192), 2, -1, Level::ana(), Trange::ana());
+    matched.seti(WR_VAR(0, 1, 192), 2, -1, Level(), Trange());
     ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
 
-    matched.seti(WR_VAR(0, 1, 192), 1, -1, Level::ana(), Trange::ana());
+    matched.seti(WR_VAR(0, 1, 192), 1, -1, Level(), Trange());
     ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
 }
 

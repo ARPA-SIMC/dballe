@@ -82,7 +82,7 @@ Context& Context::operator=(const Context& src)
 
 bool Context::is_station() const
 {
-    return level == Level::ana() && trange == Trange::ana();
+    return level == Level() && trange == Trange();
 }
 
 int Context::compare(const Context& ctx) const

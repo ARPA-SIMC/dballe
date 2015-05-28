@@ -163,7 +163,7 @@ void DB::export_msgs(const dballe::Query& query, MsgConsumer& consumer)
         TRACE("Inserting var B%02d%03d (%s)\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()), var->value());
         if (sqlrec.out_id_ltr == -1)
         {
-            msg->set(move(var), Level::ana(), Trange::ana());
+            msg->set(move(var), Level(), Trange());
         } else {
             msg::Context* ctx = ltrc.to_msg(sqlrec.out_id_ltr, *msg);
             if (ctx)

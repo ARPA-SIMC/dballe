@@ -218,7 +218,7 @@ public:
      */
     msg::Context& obtain_context(const Level& lev, const Trange& tr);
 
-    /// Shortcut to obtain_context(Level::ana(), Trange::ana());
+    /// Shortcut to obtain_context(Level(), Trange());
     msg::Context& obtain_station_context();
 
     /**

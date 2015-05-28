@@ -313,7 +313,7 @@ void Template::to_subset(const Msg& msg, wreport::Subset& subset)
 {
     this->msg = &msg;
     this->subset = &subset;
-    this->c_station = msg.find_context(Level::ana(), Trange::ana());
+    this->c_station = msg.find_context(Level(), Trange());
     this->c_gnd_instant = msg.find_context(Level(1), Trange::instant());
 }
 

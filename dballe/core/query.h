@@ -78,6 +78,11 @@ struct Query : public dballe::Query
     void set_datetime_exact(const Datetime& dt) override;
     void set_datetime_bounds(const Datetime& dtmin, const Datetime& dtmax) override;
 
+    Level get_level() const override { return level; }
+    void set_level(const Level& level) override { this->level = level; }
+    Trange get_trange() const override { return trange; }
+    void set_trange(const Trange& trange) override { this->trange = trange; }
+
     void clear() override;
 
     void seti_keyword(dba_keyword key, int val);

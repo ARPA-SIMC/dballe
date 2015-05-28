@@ -43,6 +43,18 @@ struct Query
      */
     virtual void set_datetime_bounds(const Datetime& dtmin, const Datetime& dtmax) = 0;
 
+    /// Get the level to be matched
+    virtual Level get_level() const = 0;
+
+    /// Set the level to be matched
+    virtual void set_level(const Level& level) = 0;
+
+    /// Get the time range to be matched
+    virtual Trange get_trange() const = 0;
+
+    /// Set the level to be matched
+    virtual void set_trange(const Trange& trange) = 0;
+
     /// Clear the contents of the query, making it match all data
     virtual void clear() = 0;
 

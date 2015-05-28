@@ -123,11 +123,11 @@ std::vector<Test> tests {
         msg->set_flight_roll(	3,		45);
         msg->set_latlon_spec(	3,		45);
         msg->set_datetime(Datetime(3, 3, 3, 3, 3, 0));
-        msg->seti(WR_VAR(0, 4, 1), 3, 45, Level::ana(), Trange::ana());
-        msg->seti(WR_VAR(0, 4, 2), 3, 45, Level::ana(), Trange::ana());
-        msg->seti(WR_VAR(0, 4, 3), 3, 45, Level::ana(), Trange::ana());
-        msg->seti(WR_VAR(0, 4, 4), 3, 45, Level::ana(), Trange::ana());
-        msg->seti(WR_VAR(0, 4, 5), 3, 45, Level::ana(), Trange::ana());
+        msg->seti(WR_VAR(0, 4, 1), 3, 45, Level(), Trange());
+        msg->seti(WR_VAR(0, 4, 2), 3, 45, Level(), Trange());
+        msg->seti(WR_VAR(0, 4, 3), 3, 45, Level(), Trange());
+        msg->seti(WR_VAR(0, 4, 4), 3, 45, Level(), Trange());
+        msg->seti(WR_VAR(0, 4, 5), 3, 45, Level(), Trange());
         msg->set_latitude(		3,		45);
         msg->set_longitude(		3,		45);
         msg->set_height_station(3,		45);

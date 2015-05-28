@@ -84,32 +84,32 @@ void WMOImporter::import_var(const Var& var)
         case WR_VAR(0,  4,  1):
             datetime.year = var.enqi();
             if (var.next_attr())
-                msg->set(var, WR_VAR(0, 4, 1), Level::ana(), Trange::ana());
+                msg->set(var, WR_VAR(0, 4, 1), Level(), Trange());
             break;
         case WR_VAR(0,  4,  2):
             datetime.month = var.enqi();
             if (var.next_attr())
-                msg->set(var, WR_VAR(0, 4, 2), Level::ana(), Trange::ana());
+                msg->set(var, WR_VAR(0, 4, 2), Level(), Trange());
             break;
         case WR_VAR(0,  4,  3):
             datetime.day = var.enqi();
             if (var.next_attr())
-                msg->set(var, WR_VAR(0, 4, 3), Level::ana(), Trange::ana());
+                msg->set(var, WR_VAR(0, 4, 3), Level(), Trange());
             break;
         case WR_VAR(0,  4,  4):
             datetime.hour = var.enqi();
             if (var.next_attr())
-                msg->set(var, WR_VAR(0, 4, 4), Level::ana(), Trange::ana());
+                msg->set(var, WR_VAR(0, 4, 4), Level(), Trange());
             break;
         case WR_VAR(0,  4,  5):
             datetime.minute = var.enqi();
             if (var.next_attr())
-                msg->set(var, WR_VAR(0, 4, 5), Level::ana(), Trange::ana());
+                msg->set(var, WR_VAR(0, 4, 5), Level(), Trange());
             break;
         case WR_VAR(0,  4,  6):
             datetime.second = var.enqi();
             if (var.next_attr())
-                msg->set(var, WR_VAR(0, 4, 6), Level::ana(), Trange::ana());
+                msg->set(var, WR_VAR(0, 4, 6), Level(), Trange());
             break;
 		case WR_VAR(0,  5,  1):
 		case WR_VAR(0,  5,  2): msg->set_latitude_var(var); break;
@@ -549,7 +549,7 @@ void ContextChooser::set_water_temperature(const wreport::Var& var)
 
 void ContextChooser::set_swell_waves(const wreport::Var& var)
 {
-    msg->set(var, var.code(), Level::waves(261, level.swell_wave_group), Trange::instant());
+    msg->set(var, var.code(), Level(264, MISSING_INT, 261, level.swell_wave_group), Trange::instant());
 }
 
 SynopBaseImporter::SynopBaseImporter(const msg::Importer::Options& opts)

@@ -100,7 +100,7 @@ void Memdb::insert_or_replace(const Record& rec)
 
 void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool with_attrs, const char* force_report)
 {
-    const msg::Context* l_ana = msg.find_context(Level::ana(), Trange());
+    const msg::Context* l_ana = msg.find_context(Level(), Trange());
     if (!l_ana)
         throw error_consistency("cannot import into the database a message without station information");
 
@@ -163,7 +163,7 @@ void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool wi
     for (size_t i = 0; i < msg.data.size(); ++i)
     {
         const msg::Context& ctx = *msg.data[i];
-        bool is_ana_level = ctx.level == Level::ana() && ctx.trange == Trange();
+        bool is_ana_level = ctx.level == Level() && ctx.trange == Trange();
         // Skip the station info level
         if (is_ana_level) continue;
 

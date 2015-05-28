@@ -143,7 +143,7 @@ const msg::Context* Msg::find_context(const Level& lev, const Trange& tr) const
 
 const msg::Context* Msg::find_station_context() const
 {
-    return find_context(Level::ana(), Trange::ana());
+    return find_context(Level(), Trange());
 }
 
 msg::Context* Msg::edit_context(const Level& lev, const Trange& tr)
@@ -156,7 +156,7 @@ msg::Context* Msg::edit_context(const Level& lev, const Trange& tr)
 
 msg::Context& Msg::obtain_station_context()
 {
-    return obtain_context(Level::ana(), Trange::ana());
+    return obtain_context(Level(), Trange());
 }
 
 msg::Context& Msg::obtain_context(const Level& lev, const Trange& tr)
@@ -278,18 +278,18 @@ struct VarContext
         // Report type
         out << rep_memo << ",";
 
-        if (c.level != Level::ana())
+        if (c.level != Level())
         {
             // Datetime
-            msg.datetime().to_iso8601(out, ' ');
+            msg.datetime().to_stream_iso8601(out, ' ');
             out << ',';
 
             // Level
-            c.level.format(out, "");
+            c.level.to_stream(out, "");
             out << ",";
 
             // Time range
-            c.trange.format(out, "");
+            c.trange.to_stream(out, "");
             out << ",";
         } else
             out << ",,,,,,,,";
@@ -332,6 +332,25 @@ void Msg::to_csv(std::ostream& out) const
 void Msg::csv_header(std::ostream& out)
 {
     out << "Longitude,Latitude,Report,Date,Level1,L1,Level2,L2,Time range,P1,P2,Varcode,Value" << endl;
+}
+
+namespace {
+// Convert a string to an integer value, returning MISSING_INT if the string is
+// empty or "-"
+int str_to_int(const char* str)
+{
+    if (str == NULL || str[0] == 0 || strcmp(str, "-") == 0)
+        return MISSING_INT;
+    else
+        return strtol(str, NULL, 10);
+}
+int str_to_int(const std::string& str)
+{
+    if (str.empty() || str == "-")
+        return MISSING_INT;
+    else
+        return stoi(str);
+}
 }
 
 bool Msg::from_csv(CSVReader& in)
@@ -387,11 +406,11 @@ bool Msg::from_csv(CSVReader& in)
         // out << "Longitude,Latitude,Report,Date,Level1,L1,Level2,L2,Time range,P1,P2,Varcode,Value" << endl;
 
         // Acquire the data
-        Level lev(in.cols[4].c_str(), in.cols[5].c_str(), in.cols[6].c_str(), in.cols[7].c_str());
+        Level lev(str_to_int(in.cols[4]), str_to_int(in.cols[5]), str_to_int(in.cols[6]), str_to_int(in.cols[7]));
         if (in.cols[3].empty())
             // If we have station info, set level accordingly
-            lev = Level::ana();
-        Trange tr(in.cols[8].c_str(), in.cols[9].c_str(), in.cols[10].c_str());
+            lev = Level();
+        Trange tr(str_to_int(in.cols[8]), str_to_int(in.cols[9]), str_to_int(in.cols[10]));
 
         // Parse variable code
         if (in.cols[11].size() == 13)
@@ -754,7 +773,7 @@ matcher::Result MatchedMsg::match_var_id(int val) const
 
 matcher::Result MatchedMsg::match_station_id(int val) const
 {
-    if (const wreport::Var* var = m.find(WR_VAR(0, 1, 192), Level::ana(), Trange::ana()))
+    if (const wreport::Var* var = m.find(WR_VAR(0, 1, 192), Level(), Trange()))
     {
         return var->enqi() == val ? matcher::MATCH_YES : matcher::MATCH_NO;
     } else

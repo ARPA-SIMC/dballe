@@ -140,8 +140,8 @@ void GenericImporter::import_var(const Var& var)
     // Adjust station info level for pre-dballe-5.0 generics
     if (lev.ltype1 == 257)
     {
-        lev = Level::ana();
-        tr = Trange::ana();
+        lev = Level();
+        tr = Trange();
     }
 
     switch (var.code())
@@ -157,32 +157,32 @@ void GenericImporter::import_var(const Var& var)
         case WR_VAR(0,  4,  1):
             datetime.year = var.enqi();
             if (var.next_attr())
-                msg->set(var, WR_VAR(0, 4, 1), Level::ana(), Trange::ana());
+                msg->set(var, WR_VAR(0, 4, 1), Level(), Trange());
             break;
         case WR_VAR(0,  4,  2):
             datetime.month = var.enqi();
             if (var.next_attr())
-                msg->set(var, WR_VAR(0, 4, 2), Level::ana(), Trange::ana());
+                msg->set(var, WR_VAR(0, 4, 2), Level(), Trange());
             break;
         case WR_VAR(0,  4,  3):
             datetime.day = var.enqi();
             if (var.next_attr())
-                msg->set(var, WR_VAR(0, 4, 3), Level::ana(), Trange::ana());
+                msg->set(var, WR_VAR(0, 4, 3), Level(), Trange());
             break;
         case WR_VAR(0,  4,  4):
             datetime.hour = var.enqi();
             if (var.next_attr())
-                msg->set(var, WR_VAR(0, 4, 4), Level::ana(), Trange::ana());
+                msg->set(var, WR_VAR(0, 4, 4), Level(), Trange());
             break;
         case WR_VAR(0,  4,  5):
             datetime.minute = var.enqi();
             if (var.next_attr())
-                msg->set(var, WR_VAR(0, 4, 5), Level::ana(), Trange::ana());
+                msg->set(var, WR_VAR(0, 4, 5), Level(), Trange());
             break;
         case WR_VAR(0,  4,  6):
             datetime.second = var.enqi();
             if (var.next_attr())
-                msg->set(var, WR_VAR(0, 4, 6), Level::ana(), Trange::ana());
+                msg->set(var, WR_VAR(0, 4, 6), Level(), Trange());
             break;
         // Anything else
         default:

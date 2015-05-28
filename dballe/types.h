@@ -6,8 +6,14 @@
  */
 
 #include <iosfwd>
+#include <limits.h>
 
 namespace dballe {
+
+/**
+ * Value to use for missing parts of level and time range values
+ */
+static const int MISSING_INT = INT_MAX;
 
 /// Calendar date
 struct Date
@@ -35,6 +41,11 @@ struct Date
 
     /// Copy the date to an array of 3 integers
     void to_array(int* vals) const;
+
+    /**
+     * Write the date to an output stream in ISO8601 date format.
+     */
+    void to_stream_iso8601(std::ostream& out) const;
 
     /**
      * Generic comparison
@@ -76,6 +87,12 @@ struct Time
 
     /// Copy the time to an array of 3 integers
     void to_array(int* vals) const;
+
+    /**
+     * Write the time to an output stream in ISO8601 extended format
+     * (hh:mm:ss).
+     */
+    void to_stream_iso8601(std::ostream& out) const;
 
     /**
      * Generic comparison
@@ -153,7 +170,7 @@ struct Datetime
      * @param sep the separator character between date and time
      * @param tz the timezone string to use at the end of the datetime
      */
-    void to_iso8601(std::ostream& out, char sep='T', const char* tz="") const;
+    void to_stream_iso8601(std::ostream& out, char sep='T', const char* tz="") const;
 
     /**
      * Generic comparison
@@ -193,6 +210,96 @@ struct Datetime
      * Both 'T' and ' ' are allowed as separators.
      */
     static Datetime from_iso8601(const char* str);
+};
+
+
+/// Vertical level or layer
+struct Level
+{
+    /// Type of the level or the first layer. See @ref level_table.
+    int ltype1;
+    /// L1 value of the level or the first layer. See @ref level_table.
+    int l1;
+    /// Type of the the second layer. See @ref level_table.
+    int ltype2;
+    /// L2 value of the second layer. See @ref level_table.
+    int l2;
+
+    Level(int ltype1=MISSING_INT, int l1=MISSING_INT, int ltype2=MISSING_INT, int l2=MISSING_INT)
+        : ltype1(ltype1), l1(l1), ltype2(ltype2), l2(l2) {}
+
+    /// Check if this level is fully set to the missing value
+    bool is_missing() const;
+
+    bool operator==(const Level& l) const;
+    bool operator!=(const Level& l) const;
+    bool operator<(const Level& l) const;
+    bool operator>(const Level& l) const;
+
+    /**
+     * Generic comparison
+     *
+     * Returns a negative number if *this < other
+     * Returns zero if *this == other
+     * Returns a positive number if *this > other
+     */
+    int compare(const Level& l) const;
+
+    /**
+     * Return a string description of this level
+     */
+    std::string describe() const;
+
+    /// Format to an output stream
+    void to_stream(std::ostream& out, const char* undef="-") const;
+
+    /// Create a cloud special level. See @ref level_table.
+    static Level cloud(int ltype2=MISSING_INT, int l2=MISSING_INT);
+};
+
+
+/**
+ * Information on how a value has been sampled or computed with regards to time.
+ */
+struct Trange
+{
+    /// Time range type indicator.  See @ref trange_table.
+    int pind;
+    /// Time range P1 indicator.  See @ref trange_table.
+    int p1;
+    /// Time range P2 indicator.  See @ref trange_table.
+    int p2;
+
+    Trange(int pind=MISSING_INT, int p1=MISSING_INT, int p2=MISSING_INT)
+        : pind(pind), p1(p1), p2(p2) {}
+
+    /// Check if this level is fully set to the missing value
+    bool is_missing() const;
+
+    /**
+     * Generic comparison
+     *
+     * Returns a negative number if *this < other
+     * Returns zero if *this == other
+     * Returns a positive number if *this > other
+     */
+    int compare(const Trange& t) const;
+
+    bool operator==(const Trange& tr) const;
+    bool operator!=(const Trange& tr) const;
+    bool operator<(const Trange& t) const;
+    bool operator>(const Trange& t) const;
+
+    /**
+     * Return a string description of this time range
+     */
+    std::string describe() const;
+
+    /// Format to an output stream
+    void to_stream(std::ostream& out, const char* undef="-") const;
+
+    /// Time range for instant values
+    static Trange instant();
 };
 
 

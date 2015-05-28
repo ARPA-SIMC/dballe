@@ -80,10 +80,10 @@ void to::test<2>()
     Msgs matched; init(matched);
     ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
 
-    matched[0]->seti(WR_VAR(0, 1, 192), 2, -1, Level::ana(), Trange::ana());
+    matched[0]->seti(WR_VAR(0, 1, 192), 2, -1, Level(), Trange());
     ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_NO);
 
-    matched[0]->seti(WR_VAR(0, 1, 192), 1, -1, Level::ana(), Trange::ana());
+    matched[0]->seti(WR_VAR(0, 1, 192), 1, -1, Level(), Trange());
     ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_YES);
 }
 

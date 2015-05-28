@@ -60,7 +60,7 @@ unsigned diff_msg(Msg& first, Msg& second, const char* tag)
 
 static void normalise_datetime(Msg& msg)
 {
-    msg::Context* ctx = msg.edit_context(Level::ana(), Trange::ana());
+    msg::Context* ctx = msg.edit_context(Level(), Trange());
     if (!ctx) return;
 
     // Strip datetime variables

@@ -525,7 +525,7 @@ void TruncStName::tweak(Msgs& msgs)
     for (Msgs::iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
     {
         Msg& m = **mi;
-        if (msg::Context* c = m.edit_context(Level::ana(), Trange::ana()))
+        if (msg::Context* c = m.edit_context(Level(), Trange()))
             if (const Var* orig = c->find(WR_VAR(0, 1, 19)))
                 if (const char* val = orig->value())
                 {
