@@ -163,14 +163,7 @@ void TestCursorDataContext::check(WIBBLE_TEST_LOCPRM) const
     wassert(actual(cur.get_rep_memo()) == ds.data.get(DBA_KEY_REP_MEMO, ""));
     wassert(actual(cur.get_level()) == ds.data.get_level());
     wassert(actual(cur.get_trange()) == ds.data.get_trange());
-    int dt[6];
-    cur.get_datetime(dt);
-    wassert(actual(dt[0]) == ds.data.get(DBA_KEY_YEAR, MISSING_INT));
-    wassert(actual(dt[1]) == ds.data.get(DBA_KEY_MONTH, MISSING_INT));
-    wassert(actual(dt[2]) == ds.data.get(DBA_KEY_DAY, MISSING_INT));
-    wassert(actual(dt[3]) == ds.data.get(DBA_KEY_HOUR, MISSING_INT));
-    wassert(actual(dt[4]) == ds.data.get(DBA_KEY_MIN, MISSING_INT));
-    wassert(actual(dt[5]) == ds.data.get(DBA_KEY_SEC, MISSING_INT));
+    wassert(actual(cur.get_datetime()) == ds.data.get_datetime());
 
     Record a;
     cur.to_record(a);

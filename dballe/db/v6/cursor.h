@@ -108,7 +108,7 @@ struct Cursor : public db::Cursor
     const char* get_rep_memo() const override;
     Level get_level() const override;
     Trange get_trange() const override;
-    void get_datetime(int (&dt)[6]) const override;
+    Datetime get_datetime() const override;
     wreport::Varcode get_varcode() const override;
     wreport::Var get_var() const override;
 

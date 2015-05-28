@@ -112,7 +112,7 @@ public:
     virtual Trange get_trange() const = 0;
 
     /// Get the datetime
-    virtual void get_datetime(int (&dt)[6]) const = 0;
+    virtual Datetime get_datetime() const = 0;
 
     /// Get the variable code
     virtual wreport::Varcode get_varcode() const = 0;

@@ -69,10 +69,10 @@ protected:
 public:
     virtual ~Cursor();
 
-    virtual dballe::DB& get_db() const;
+    dballe::DB& get_db() const override;
 
     /// Get the number of rows still to be fetched
-    int remaining() const;
+    int remaining() const override;
 
     /**
      * Get a new item from the results of a query
@@ -80,28 +80,28 @@ public:
      * @returns
      *   true if a new record has been read, false if there is no more data to read
      */
-    virtual bool next() = 0;
+    bool next() override = 0;
 
     /// Discard the results that have not been read yet
-    virtual void discard_rest() = 0;
+    void discard_rest() override = 0;
 
     /**
      * Query attributes for the current variable
      */
     void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
 
-    virtual int get_station_id() const;
-    virtual double get_lat() const;
-    virtual double get_lon() const;
-    virtual const char* get_ident(const char* def=0) const;
-    virtual const char* get_rep_memo() const;
-    virtual Level get_level() const;
-    virtual Trange get_trange() const;
-    virtual void get_datetime(int (&dt)[6]) const;
-    virtual wreport::Varcode get_varcode() const;
-    virtual wreport::Var get_var() const;
+    int get_station_id() const override;
+    double get_lat() const override;
+    double get_lon() const override;
+    const char* get_ident(const char* def=0) const override;
+    const char* get_rep_memo() const override;
+    Level get_level() const override;
+    Trange get_trange() const override;
+    Datetime get_datetime() const override;
+    wreport::Varcode get_varcode() const override;
+    wreport::Var get_var() const override;
 
-    virtual int attr_reference_id() const;
+    int attr_reference_id() const override;
 
 #if 0
     /**

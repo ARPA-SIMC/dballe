@@ -91,9 +91,9 @@ Trange Cursor::get_trange() const
         return Trange();
     return db.lev_tr_cache().to_trange(results[cur].out_id_ltr);
 }
-void Cursor::get_datetime(int (&dt)[6]) const
+Datetime Cursor::get_datetime() const
 {
-    results[cur].out_datetime.to_array(dt);
+    return results[cur].out_datetime;
 }
 wreport::Varcode Cursor::get_varcode() const { return (wreport::Varcode)results[cur].out_varcode; }
 wreport::Var Cursor::get_var() const

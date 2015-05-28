@@ -123,23 +123,13 @@ Trange Cursor::get_trange() const
     else
         return Trange();
 }
-void Cursor::get_datetime(int (&dt)[6]) const
+Datetime Cursor::get_datetime() const
 {
     if (cur_value)
     {
-        dt[0] = cur_value->datetime.year;
-        dt[1] = cur_value->datetime.month;
-        dt[2] = cur_value->datetime.day;
-        dt[3] = cur_value->datetime.hour;
-        dt[4] = cur_value->datetime.minute;
-        dt[5] = cur_value->datetime.second;
+        return cur_value->datetime;
     } else {
-        dt[0] = 1000;
-        dt[1] = 1;
-        dt[2] = 1;
-        dt[3] = 0;
-        dt[4] = 0;
-        dt[5] = 0;
+        return Datetime();
     }
 }
 wreport::Varcode Cursor::get_varcode() const
