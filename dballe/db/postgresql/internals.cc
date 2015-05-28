@@ -49,9 +49,9 @@ int64_t encode_int64_t(int64_t arg)
 
 int64_t encode_datetime(const Datetime& arg)
 {
-    int64_t encoded = arg.date.to_julian() - EPOCH_JDATE;
+    int64_t encoded = arg.to_julian() - EPOCH_JDATE;
     encoded *= 86400;
-    encoded += arg.time.hour * 3600 + arg.time.minute * 60 + arg.time.second;
+    encoded += arg.hour * 3600 + arg.minute * 60 + arg.second;
     encoded *= 1000000;
     return (int64_t)htobe64(encoded);
 }
@@ -138,13 +138,13 @@ Datetime Result::get_timestamp(unsigned row, unsigned col) const
     }
 
     // Decode time
-    dt.time.hour = time / 3600;
-    dt.time.minute = (time / 60) % 60;
-    dt.time.second = time % 60;
+    dt.hour = time / 3600;
+    dt.minute = (time / 60) % 60;
+    dt.second = time % 60;
 
     // Decode date
     jdate += EPOCH_JDATE;
-    dt.date.from_julian(jdate);
+    dt.from_julian(jdate);
 
     return dt;
 }

@@ -124,7 +124,15 @@ protected:
      */
     int find_index(const Level& lev, const Trange& tr) const;
 
-    /// Reference time for all the data
+    /// Sensor network of origin of the Msg contents
+    std::string m_network;
+    /// Reference coordinates for the Msg contents
+    Coords m_coords;
+    /// Whether the contents originator has an identifier
+    bool m_has_ident = false;
+    /// Identifier of the contents originator, if m_has_ident is true
+    std::string m_ident;
+    /// Reference time for the Msg contents
     Datetime m_datetime;
 
 public:

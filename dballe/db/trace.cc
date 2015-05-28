@@ -64,7 +64,7 @@ void TraceOp::add_query(const Query& query)
 {
     if (!trace) return;
     trace->writer.add("query");
-    query.serialize(trace->writer);
+    core::Query::downcast(query).serialize(trace->writer);
 }
 
 Trace::Trace()

@@ -1,24 +1,3 @@
-/*
- * db/v6/cursor - manage select queries
- *
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "cursor.h"
 #include "qbuilder.h"
 #include "db.h"
@@ -192,7 +171,7 @@ void Cursor::add_station_info(Record& rec)
     db.station().add_station_vars(results[cur].out_ana_id, rec);
 }
 
-unique_ptr<Cursor> Cursor::run_station_query(DB& db, const Query& q)
+unique_ptr<Cursor> Cursor::run_station_query(DB& db, const core::Query& q)
 {
     unsigned int modifiers = q.get_modifiers() | DBA_DB_MODIFIER_ANAEXTRA;
 
@@ -204,7 +183,7 @@ unique_ptr<Cursor> Cursor::run_station_query(DB& db, const Query& q)
     return res;
 }
 
-unique_ptr<Cursor> Cursor::run_data_query(DB& db, const Query& q)
+unique_ptr<Cursor> Cursor::run_data_query(DB& db, const core::Query& q)
 {
     unsigned int modifiers = q.get_modifiers();
     DataQueryBuilder qb(db, q, modifiers);
@@ -221,7 +200,7 @@ unique_ptr<Cursor> Cursor::run_data_query(DB& db, const Query& q)
     return res;
 }
 
-unique_ptr<Cursor> Cursor::run_summary_query(DB& db, const Query& q)
+unique_ptr<Cursor> Cursor::run_summary_query(DB& db, const core::Query& q)
 {
     unsigned int modifiers = q.get_modifiers();
     if (modifiers & DBA_DB_MODIFIER_BEST)
@@ -235,7 +214,7 @@ unique_ptr<Cursor> Cursor::run_summary_query(DB& db, const Query& q)
     return res;
 }
 
-void Cursor::run_delete_query(DB& db, const Query& q)
+void Cursor::run_delete_query(DB& db, const core::Query& q)
 {
     unsigned int modifiers = q.get_modifiers();
     if (modifiers & DBA_DB_MODIFIER_BEST)

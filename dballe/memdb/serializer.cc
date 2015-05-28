@@ -192,8 +192,8 @@ void CSVWriter::write(const Memdb& memdb)
         out_value.add_value_withmissing(v.levtr.trange.p2);
         char buf[20];
         snprintf(buf, 20, "%04d-%02d-%02d %02d:%02d:%02d",
-                v.datetime.date.year, v.datetime.date.month, v.datetime.date.day,
-                v.datetime.time.hour, v.datetime.time.minute, v.datetime.time.second);
+                v.datetime.year, v.datetime.month, v.datetime.day,
+                v.datetime.hour, v.datetime.minute, v.datetime.second);
         out_value.add_value_raw(buf);
         out_value.add_value(v.var->code());
         out_value.add_var_value(*v.var);

@@ -37,6 +37,10 @@ namespace dballe {
 struct Record;
 struct Query;
 
+namespace core {
+struct Query;
+}
+
 namespace cmdline {
 
 struct Subcommand
@@ -129,7 +133,7 @@ Encoding dba_cmdline_stringToMsgType(const char* type);
  *
  * @return the number of key=value pairs found
  */
-unsigned dba_cmdline_get_query(poptContext optCon, Query& query);
+unsigned dba_cmdline_get_query(poptContext optCon, core::Query& query);
 
 /**
  * List available output templates

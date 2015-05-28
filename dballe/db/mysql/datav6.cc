@@ -32,8 +32,8 @@ void MySQLDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode u
          WHERE id_station=%d AND id_report=%d AND datetime='%04d-%02d-%02d %02d:%02d:%02d'
          ORDER BY id_lev_tr, id_var
     )", vars.id_station, vars.id_report,
-        vars.datetime.date.year, vars.datetime.date.month, vars.datetime.date.day,
-        vars.datetime.time.hour, vars.datetime.time.minute, vars.datetime.time.second);
+        vars.datetime.year, vars.datetime.month, vars.datetime.day,
+        vars.datetime.hour, vars.datetime.minute, vars.datetime.second);
     // Scan the result in parallel with the variable list, annotating changed
     // items with their data ID
     sql::bulk::AnnotateVarsV6 todo(vars);
@@ -84,8 +84,8 @@ void MySQLDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode u
                 INSERT INTO data (id_station, id_report, id_lev_tr, datetime, id_var, value)
                      VALUES (%d, %d, %d, '%04d-%02d-%02d %02d:%02d:%02d', %d, '%s')
             )", vars.id_station, vars.id_report, v.id_levtr,
-                vars.datetime.date.year, vars.datetime.date.month, vars.datetime.date.day,
-                vars.datetime.time.hour, vars.datetime.time.minute, vars.datetime.time.second,
+                vars.datetime.year, vars.datetime.month, vars.datetime.day,
+                vars.datetime.hour, vars.datetime.minute, vars.datetime.second,
                 v.var->code(), escaped_value.c_str());
             conn.exec_no_data(insert);
             v.id_data = conn.get_last_insert_id();

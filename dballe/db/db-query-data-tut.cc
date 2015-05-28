@@ -31,27 +31,27 @@ using namespace std;
 
 namespace {
 
-static inline Query query_exact(const Datetime& dt)
+static inline core::Query query_exact(const Datetime& dt)
 {
-    Query query;
+    core::Query query;
     query.datetime_min = query.datetime_max = dt;
     return query;
 }
-static inline Query query_min(const Datetime& dt)
+static inline core::Query query_min(const Datetime& dt)
 {
-    Query query;
+    core::Query query;
     query.datetime_min = dt;
     return query;
 }
-static inline Query query_max(const Datetime& dt)
+static inline core::Query query_max(const Datetime& dt)
 {
-    Query query;
+    core::Query query;
     query.datetime_max = dt;
     return query;
 }
-static inline Query query_minmax(const Datetime& min, const Datetime& max)
+static inline core::Query query_minmax(const Datetime& min, const Datetime& max)
 {
-    Query query;
+    core::Query query;
     query.datetime_min = min;
     query.datetime_max = max;
     return query;
@@ -117,7 +117,7 @@ std::vector<Test> tests {
     Test("ana_context", [](Fixture& f) {
         wruntest(f.populate<OldDballeTestFixture>);
         // Query data in station context
-        Query query;
+        core::Query query;
         query.query_station_vars = true;
         unique_ptr<db::Cursor> cur = f.db->query_data(query);
         ensure_equals(cur->remaining(), 5);
@@ -291,7 +291,7 @@ std::vector<Test> tests {
     Test("context_id", [](Fixture& f) {
         wruntest(f.populate<OldDballeTestFixture>);
         // get a valid data id
-        Query q;
+        core::Query q;
         q.varcodes.insert(WR_VAR(0, 1, 11));
         Record res;
         auto cur = f.db->query_data(q);

@@ -122,8 +122,8 @@ void PostgreSQLDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateM
                 throw error_postgresql(conn, string("escaping string '") + v.var->value() + "'");
             dq.append_listf("(DEFAULT, %d, %d, %d, '%04d-%02d-%02d %02d:%02d:%02d', %d, %s)",
                     vars.id_station, vars.id_report, v.id_levtr,
-                    vars.datetime.date.year, vars.datetime.date.month, vars.datetime.date.day,
-                    vars.datetime.time.hour, vars.datetime.time.minute, vars.datetime.time.second,
+                    vars.datetime.year, vars.datetime.month, vars.datetime.day,
+                    vars.datetime.hour, vars.datetime.minute, vars.datetime.second,
                     (int)v.var->code(), escaped_val);
             PQfreemem(escaped_val);
         }

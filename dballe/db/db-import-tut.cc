@@ -46,9 +46,7 @@ struct MsgCollector : public vector<Msg*>, public MsgConsumer
 
     void from_db(DB& db, const char* query)
     {
-        Query q;
-        q.set_from_string(query);
-        db.export_msgs(q, *this);
+        db.export_msgs(*dballe::tests::query_from_string(query), *this);
     }
 };
 
@@ -82,7 +80,7 @@ typedef test_group::Test Test;
 std::vector<Test> tests {
     Test("crex", [](Fixture& f) {
         auto& db = f.db;
-        Query query;
+        core::Query query;
         // Test import/export with all CREX samples
         const char** files = dballe::tests::crex_files;
         set<string> blacklist;
@@ -120,7 +118,7 @@ std::vector<Test> tests {
     Test("bufr", [](Fixture& f) {
         // Test import/export with all BUFR samples
         auto& db = f.db;
-        Query query;
+        core::Query query;
         const char** files = dballe::tests::bufr_files;
         for (int i = 0; files[i] != NULL; i++)
         {
@@ -152,7 +150,7 @@ std::vector<Test> tests {
     Test("aof", [](Fixture& f) {
         // Test import/export with all AOF samples
         auto& db = f.db;
-        Query query;
+        core::Query query;
         const char** files = dballe::tests::aof_files;
         for (int i = 0; files[i] != NULL; i++)
         {
@@ -186,7 +184,7 @@ std::vector<Test> tests {
     Test("multi", [](Fixture& f) {
         // Check that multiple messages are correctly identified during export
         auto& db = f.db;
-        Query query;
+        core::Query query;
 
         // msg1 has latitude 33.88
         // msg2 has latitude 46.22
@@ -224,7 +222,7 @@ std::vector<Test> tests {
     Test("auto_repinfo", [](Fixture& f) {
         // Check automatic repinfo allocation
         auto& db = f.db;
-        Query query;
+        core::Query query;
         std::unique_ptr<Msgs> msgs = read_msgs("bufr/generic-new-repmemo.bufr", BUFR);
         Msg& msg = *(*msgs)[0];
 
@@ -245,15 +243,13 @@ std::vector<Test> tests {
     Test("station_only", [](Fixture& f) {
         // Check that a message that only contains station variables does get imported
         auto& db = f.db;
-        Query query;
         std::unique_ptr<Msgs> msgs = read_msgs("bufr/generic-onlystation.bufr", BUFR);
         Msg& msg = *(*msgs)[0];
 
         db->remove_all();
         db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
-        query.clear();
-        std::unique_ptr<db::Cursor> cur = db->query_stations(query);
+        std::unique_ptr<db::Cursor> cur = db->query_stations(core::Query());
         wassert(actual(cur->remaining()) == 1);
         wassert(actual(cur->next()).istrue());
 

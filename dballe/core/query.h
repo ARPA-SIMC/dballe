@@ -1,26 +1,7 @@
-/*
- * dballe/core/query - Represent a filter for DB-All.e data
- *
- * Copyright (C) 2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
 #ifndef DBALLE_CORE_QUERY_H
 #define DBALLE_CORE_QUERY_H
 
+#include <dballe/query.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/record.h>
 #include <wreport/varinfo.h>
@@ -42,10 +23,12 @@
 #define DBA_DB_MODIFIER_SUMMARY_DETAILS (1 << 8)
 
 namespace dballe {
+namespace core {
 
 struct JSONWriter;
 
-struct Query
+/// Standard dballe::Query implementation
+struct Query : public dballe::Query
 {
     static const uint32_t WANT_MISSING_IDENT =  (1 << 0);
     static const uint32_t WANT_MISSING_LTYPE1 = (1 << 1);
@@ -89,19 +72,22 @@ struct Query
 
     unsigned get_modifiers() const;
 
-    void clear();
+    void get_datetime_bounds(Datetime& dtmin, Datetime& dtmax) const override;
 
-    void seti(dba_keyword key, int val);
-    void setd(dba_keyword key, double val);
-    void setc(dba_keyword key, const char* val);
-    void setc(dba_keyword key, const std::string& val);
+    void clear() override;
 
-    void set(dba_keyword key, int val) { seti(key, val); }
-    void set(dba_keyword key, double val) { setd(key, val); }
-    void set(dba_keyword key, const char* val) { setc(key, val); }
-    void set(dba_keyword key, const std::string& val) { setc(key, val); }
+    void seti_keyword(dba_keyword key, int val);
+    void setd_keyword(dba_keyword key, double val);
+    void setc_keyword(dba_keyword key, const char* val);
+    void sets_keyword(dba_keyword key, const std::string& val);
+    void unset_keyword(dba_keyword key);
 
-    void unset(dba_keyword key);
+    void seti(const char* key, int val) override;
+    void setd(const char* key, double val) override;
+    void setc(const char* key, const char* val) override;
+    void sets(const char* key, const std::string& val) override;
+
+    void unset(const char* key) override;
 
     /// Set the query values from the contents of a Record
     void set_from_record(const Record& rec);
@@ -145,16 +131,16 @@ struct Query
      * In other words, it returns true if this query is the same as \a other,
      * plus zero or more extra fields set, or zero or more ranges narrowed.
      */
-    bool is_subquery(const Query& other) const;
+    bool is_subquery(const dballe::Query& other) const override;
 
     /**
      * Generate a sequence of dba_keyword and unique_ptr<Var> for all contents
      * of the query that can be represented in a record.
      */
-    void to_vars(std::function<void(dba_keyword, std::unique_ptr<wreport::Var>)> dest) const;
+    void to_vars(std::function<void(const char*, std::unique_ptr<wreport::Var>&&)> dest) const override;
 
     /// Print the query contents to stderr
-    void print(FILE* out) const;
+    void print(FILE* out) const override;
 
     /// Send the contents to a JSONWriter
     void serialize(JSONWriter& out) const;
@@ -170,8 +156,15 @@ struct Query
      * flags.
      */
     static unsigned parse_modifiers(const char* str);
+
+    /**
+     * Return a reference to query downcasted as core::Query.
+     *
+     * Throws an exception if query is not a core::Query.
+     */
+    static const Query& downcast(const dballe::Query& query);
 };
 
 }
-
+}
 #endif

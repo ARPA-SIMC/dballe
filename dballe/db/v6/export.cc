@@ -1,24 +1,3 @@
-/*
- * db/v6/export - Export Msg data from the database
- *
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "db.h"
 #include "cursor.h"
 #include "qbuilder.h"
@@ -81,7 +60,7 @@ static inline int sqltimecmp(const SQL_TIMESTAMP_STRUCT* a, const SQL_TIMESTAMP_
     return memcmp(a, b, sizeof(SQL_TIMESTAMP_STRUCT));
 }
 
-void DB::export_msgs(const Query& query, MsgConsumer& consumer)
+void DB::export_msgs(const dballe::Query& query, MsgConsumer& consumer)
 {
     auto tr = trace.trace_export_msgs(query);
     sql::Repinfo& ri = repinfo();
@@ -94,7 +73,7 @@ void DB::export_msgs(const Query& query, MsgConsumer& consumer)
     auto t = conn->transaction();
 
     // The big export query
-    DataQueryBuilder qb(*this, query, DBA_DB_MODIFIER_SORT_FOR_EXPORT);
+    DataQueryBuilder qb(*this, core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT);
     qb.build();
 
     // Current context information used to detect context changes

@@ -38,8 +38,8 @@ std::vector<Test> tests {
         // Test building a summary and checking if it supports queries
         wruntest(f.populate<OldDballeTestFixture>);
 
-        Query query;
-        query.set(DBA_KEY_QUERY, "details");
+        core::Query query;
+        query.set("query", "details");
         Summary s(query);
         wassert(actual(s.is_valid()).isfalse());
 
@@ -61,30 +61,23 @@ std::vector<Test> tests {
         // Check what it can support
 
         // An existing station is ok: we know we have it
-        query.clear(); query.set_from_string("ana_id=1");
-        wassert(actual(s.supports(query)) == summary::Support::EXACT);
+        wassert(actual(s.supports(*query_from_string("ana_id=1"))) == summary::Support::EXACT);
 
         // A non-existing station is also ok: we know we don't have it
-        query.clear(); query.set_from_string("ana_id=2");
-        wassert(actual(s.supports(query)) == summary::Support::EXACT);
+        wassert(actual(s.supports(*query_from_string("ana_id=2"))) == summary::Support::EXACT);
 
-        query.clear(); query.set_from_string("ana_id=1, leveltype=10");
-        wassert(actual(s.supports(query)) == summary::Support::EXACT);
+        wassert(actual(s.supports(*query_from_string("ana_id=1, leveltype1=10"))) == summary::Support::EXACT);
 
-        query.clear(); query.set_from_string("ana_id=1, leveltype=10, pindicator=20");
-        wassert(actual(s.supports(query)) == summary::Support::EXACT);
+        wassert(actual(s.supports(*query_from_string("ana_id=1, leveltype1=10, pindicator=20"))) == summary::Support::EXACT);
 
-        query.clear(); query.set_from_string("ana_id=1, leveltype=10, pindicator=20");
-        wassert(actual(s.supports(query)) == summary::Support::EXACT);
+        wassert(actual(s.supports(*query_from_string("ana_id=1, leveltype1=10, pindicator=20"))) == summary::Support::EXACT);
 
         // Still exact, because the query matches the entire summary
-        query.clear(); query.set_from_string("yearmin=1945");
-        wassert(actual(s.supports(query)) == summary::Support::EXACT);
+        wassert(actual(s.supports(*query_from_string("yearmin=1945"))) == summary::Support::EXACT);
 
         // Still exact, because although the query partially matches the summary,
         // each summary entry is entier included completely or excluded completely
-        query.clear(); query.set_from_string("yearmin=1945, monthmin=4, daymin=25, hourmin=8, yearmax=1945, monthmax=4, daymax=25, hourmax=8, minumax=10");
-        wassert(actual(s.supports(query)) == summary::Support::EXACT);
+        wassert(actual(s.supports(*query_from_string("yearmin=1945, monthmin=4, daymin=25, hourmin=8, yearmax=1945, monthmax=4, daymax=25, hourmax=8, minumax=10"))) == summary::Support::EXACT);
     }),
     Test("summary_stack", [](Fixture& f) {
         // Test summary::Stack
@@ -92,15 +85,15 @@ std::vector<Test> tests {
 
         wruntest(f.populate<OldDballeTestFixture>);
 
-        Query query;
-        query.set(DBA_KEY_QUERY, "details");
+        core::Query query;
+        query.set("query", "details");
         Summary s(query);
         wassert(actual(s.is_valid()).isfalse());
 
         Stack stack;
 
         // Build the whole db summary
-        Summary& general = stack.push(Query());
+        Summary& general = stack.push(core::Query());
         auto cur = f.db->query_summary(query);
         while (cur->next())
             general.add_summary(*cur, true);

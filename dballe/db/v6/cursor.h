@@ -19,12 +19,6 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-/** @file
- * @ingroup db
- *
- * Functions used to manage a general DB-ALLe query
- */
-
 #ifndef DBA_DB_V6_CURSOR_H
 #define DBA_DB_V6_CURSOR_H
 
@@ -39,6 +33,10 @@
 namespace dballe {
 struct DB;
 struct Record;
+
+namespace core {
+struct Query;
+}
 
 namespace db {
 struct Connection;
@@ -123,10 +121,10 @@ struct Cursor : public db::Cursor
      */
     unsigned test_iterate(FILE* dump=0) override = 0;
 
-    static std::unique_ptr<Cursor> run_station_query(DB& db, const Query& query);
-    static std::unique_ptr<Cursor> run_data_query(DB& db, const Query& query);
-    static std::unique_ptr<Cursor> run_summary_query(DB& db, const Query& query);
-    static void run_delete_query(DB& db, const Query& query);
+    static std::unique_ptr<Cursor> run_station_query(DB& db, const core::Query& query);
+    static std::unique_ptr<Cursor> run_data_query(DB& db, const core::Query& query);
+    static std::unique_ptr<Cursor> run_summary_query(DB& db, const core::Query& query);
+    static void run_delete_query(DB& db, const core::Query& query);
 
 protected:
     /// Run the query in qb and fill results with its output

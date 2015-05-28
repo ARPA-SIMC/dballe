@@ -551,7 +551,7 @@ struct SynopWMO : public Synop
 
         // Set subtype based on hour. If we have heterogeneous subsets, keep
         // the lowest of the constraints
-        int hour = msg.datetime().time.hour;
+        int hour = msg.datetime().hour;
         if ((hour % 6) == 0)
             // 002 at main synoptic times 00, 06, 12, 18 UTC,
             cur_bulletin->subtype = cur_bulletin->subtype == 255 ? 2 : cur_bulletin->subtype;

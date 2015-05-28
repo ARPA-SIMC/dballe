@@ -31,8 +31,8 @@ void ODBCDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode up
          WHERE id_station=%d AND id_report=%d AND datetime={ts '%04d-%02d-%02d %02d:%02d:%02d'}
          ORDER BY id_lev_tr, id_var
     )", vars.id_station, vars.id_report,
-        vars.datetime.date.year, vars.datetime.date.month, vars.datetime.date.day,
-        vars.datetime.time.hour, vars.datetime.time.minute, vars.datetime.time.second);
+        vars.datetime.year, vars.datetime.month, vars.datetime.day,
+        vars.datetime.hour, vars.datetime.minute, vars.datetime.second);
 
     // Get the current status of variables for this context
     auto stm = conn.odbcstatement(select_query);
@@ -86,8 +86,8 @@ void ODBCDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode up
             INSERT INTO data (id_station, id_report, id_lev_tr, datetime, id_var, value)
                  VALUES (%d, %d, ?, '%04d-%02d-%02d %02d:%02d:%02d', ?, ?)
         )", vars.id_station, vars.id_report,
-            vars.datetime.date.year, vars.datetime.date.month, vars.datetime.date.day,
-            vars.datetime.time.hour, vars.datetime.time.minute, vars.datetime.time.second);
+            vars.datetime.year, vars.datetime.month, vars.datetime.day,
+            vars.datetime.hour, vars.datetime.minute, vars.datetime.second);
         auto insert = conn.odbcstatement(dq);
         int varcode;
         insert->bind_in(2, varcode);

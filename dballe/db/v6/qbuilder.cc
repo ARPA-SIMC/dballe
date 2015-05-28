@@ -1,24 +1,3 @@
-/*
- * db/v6/qbuilder - build SQL queries for V6 databases
- *
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "qbuilder.h"
 #include "dballe/core/defs.h"
 #include "dballe/core/aliases.h"
@@ -185,12 +164,12 @@ static Varinfo decode_data_filter(const std::string& filter, const char** op, co
 
 struct Constraints
 {
-    const Query& query;
+    const core::Query& query;
     const char* tbl;
     Querybuf& q;
     bool found;
 
-    Constraints(const Query& query, const char* tbl, Querybuf& q)
+    Constraints(const core::Query& query, const char* tbl, Querybuf& q)
         : query(query), tbl(tbl), q(q), found(false) {}
 
 #if 0
@@ -269,14 +248,14 @@ struct Constraints
     }
 };
 
-QueryBuilder::QueryBuilder(DB& db, const Query& query, unsigned int modifiers)
+QueryBuilder::QueryBuilder(DB& db, const core::Query& query, unsigned int modifiers)
     : conn(*db.conn), db(db), query(query), sql_query(2048), sql_from(1024), sql_where(1024),
       modifiers(modifiers), query_station_vars(false)
 {
     query_station_vars = query.query_station_vars;
 }
 
-DataQueryBuilder::DataQueryBuilder(DB& db, const Query& query, unsigned int modifiers)
+DataQueryBuilder::DataQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers)
     : QueryBuilder(db, query, modifiers)
 {
     query_data_id = query.data_id;

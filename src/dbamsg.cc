@@ -602,7 +602,7 @@ struct Scan : public cmdline::Subcommand
         /* Throw away the command name */
         poptGetArg(optCon);
 
-        Query query;
+        core::Query query;
         if (dba_cmdline_get_query(optCon, query) > 0)
             reader.filter.matcher_from_record(query);
         Summarise s;
@@ -636,7 +636,7 @@ struct HeadCmd : public cmdline::Subcommand
         /* Throw away the command name */
         poptGetArg(optCon);
 
-        Query query;
+        core::Query query;
         if (dba_cmdline_get_query(optCon, query) > 0)
             reader.filter.matcher_from_record(query);
 
@@ -703,7 +703,7 @@ struct Dump : public cmdline::Subcommand
         poptGetArg(optCon);
         if (op_precise_import) reader.import_opts.simplified = false;
 
-        Query query;
+        core::Query query;
         if (dba_cmdline_get_query(optCon, query) > 0)
             reader.filter.matcher_from_record(query);
 
@@ -737,7 +737,7 @@ struct Cat : public cmdline::Subcommand
         /* Throw away the command name */
         poptGetArg(optCon);
 
-        Query query;
+        core::Query query;
         if (dba_cmdline_get_query(optCon, query) > 0)
             reader.filter.matcher_from_record(query);
 
@@ -941,7 +941,7 @@ struct Convert : public cmdline::Subcommand
             return 0;
         }
 
-        Query query;
+        core::Query query;
         if (dba_cmdline_get_query(optCon, query) > 0)
             reader.filter.matcher_from_record(query);
 

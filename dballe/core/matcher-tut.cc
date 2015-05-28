@@ -34,9 +34,7 @@ namespace tut {
 struct matcher_shar {
     std::unique_ptr<Matcher> get_matcher(const char* q)
     {
-        Query query;
-        query.set_from_test_string(q);
-        return Matcher::create(query);
+        return Matcher::create(*dballe::tests::query_from_string(q));
     }
 };
 TESTGRP(matcher);
@@ -251,9 +249,9 @@ void to::test<5>()
 template<> template<>
 void to::test<6>()
 {
-    Query query;
-    query.set(DBA_KEY_REP_MEMO, "synop");
-    std::unique_ptr<Matcher> m = Matcher::create(query);
+    auto query = Query::create();
+    query->set("rep_memo", "synop");
+    std::unique_ptr<Matcher> m = Matcher::create(*query);
 
     Record matched;
     ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
@@ -269,8 +267,8 @@ void to::test<6>()
 template<> template<>
 void to::test<7>()
 {
-    Query query;
-    std::unique_ptr<Matcher> m = Matcher::create(query);
+    auto query = Query::create();
+    std::unique_ptr<Matcher> m = Matcher::create(*query);
 
     Record matched;
     ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);

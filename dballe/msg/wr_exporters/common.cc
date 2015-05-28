@@ -726,7 +726,7 @@ void CommonSynopExporter::add_D02038()
     add(WR_VAR(0, 20,  3), c_surface_instant);
     if (c_past_wtr)
     {
-        int hour = msg->datetime().time.hour;
+        int hour = msg->datetime().hour;
         // Look for a p2 override in the attributes
         const Var* v = c_past_wtr->find(WR_VAR(0, 20, 4));
         if (!v) v = c_past_wtr->find(WR_VAR(0, 20, 5));

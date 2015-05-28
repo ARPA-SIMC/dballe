@@ -1,23 +1,3 @@
-/*
- * dballe/core/query - Represent a filter for DB-All.e data
- *
- * Copyright (C) 2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
 #include "query.h"
 #include "var.h"
 #include "json.h"
@@ -29,10 +9,25 @@ using namespace wreport;
 using namespace std;
 
 namespace dballe {
+namespace core {
+
+const Query& Query::downcast(const dballe::Query& query)
+{
+    const Query* ptr = dynamic_cast<const Query*>(&query);
+    if (!ptr)
+        throw error_consistency("Query given is not a core::query");
+    return *ptr;
+}
 
 unsigned Query::get_modifiers() const
 {
     return parse_modifiers(query.c_str());
+}
+
+void Query::get_datetime_bounds(Datetime& dtmin, Datetime& dtmax) const
+{
+    dtmin = datetime_min.lower_bound();
+    dtmax = datetime_max.upper_bound();
 }
 
 void Query::clear()
@@ -62,7 +57,47 @@ void Query::clear()
     query_station_vars = false;
 }
 
-void Query::seti(dba_keyword key, int val)
+void Query::seti(const char* key, int val)
+{
+    dba_keyword k = Record::keyword_byname(key);
+    if (k == DBA_KEY_ERROR)
+        error_notfound::throwf("unknown key %s", key);
+    return seti_keyword(k, val);
+}
+
+void Query::setd(const char* key, double val)
+{
+    dba_keyword k = Record::keyword_byname(key);
+    if (k == DBA_KEY_ERROR)
+        error_notfound::throwf("unknown key %s", key);
+    return setd_keyword(k, val);
+}
+
+void Query::setc(const char* key, const char* val)
+{
+    dba_keyword k = Record::keyword_byname(key);
+    if (k == DBA_KEY_ERROR)
+        error_notfound::throwf("unknown key %s", key);
+    return setc_keyword(k, val);
+}
+
+void Query::sets(const char* key, const std::string& val)
+{
+    dba_keyword k = Record::keyword_byname(key);
+    if (k == DBA_KEY_ERROR)
+        error_notfound::throwf("unknown key %s", key);
+    return sets_keyword(k, val);
+}
+
+void Query::unset(const char* key)
+{
+    dba_keyword k = Record::keyword_byname(key);
+    if (k == DBA_KEY_ERROR)
+        error_notfound::throwf("unknown key %s", key);
+    return unset_keyword(k);
+}
+
+void Query::seti_keyword(dba_keyword key, int val)
 {
     switch (key)
     {
@@ -77,24 +112,24 @@ void Query::seti(dba_keyword key, int val)
         case DBA_KEY_LATMIN: coords_min.set_lat(val); break;
         case DBA_KEY_LONMAX: coords_max.set_lon(val); break;
         case DBA_KEY_LONMIN: coords_min.set_lon(val); break;
-        case DBA_KEY_YEAR: datetime_min.date.year = datetime_max.date.year = val; break;
-        case DBA_KEY_MONTH: datetime_min.date.month = datetime_max.date.month = val; break;
-        case DBA_KEY_DAY: datetime_min.date.day = datetime_max.date.day = val; break;
-        case DBA_KEY_HOUR: datetime_min.time.hour = datetime_max.time.hour = val; break;
-        case DBA_KEY_MIN: datetime_min.time.minute = datetime_max.time.minute = val; break;
-        case DBA_KEY_SEC: datetime_min.time.second = datetime_max.time.second = val; break;
-        case DBA_KEY_YEARMAX: datetime_max.date.year = val; break;
-        case DBA_KEY_YEARMIN: datetime_min.date.year = val; break;
-        case DBA_KEY_MONTHMAX: datetime_max.date.month = val; break;
-        case DBA_KEY_MONTHMIN: datetime_min.date.month = val; break;
-        case DBA_KEY_DAYMAX: datetime_max.date.day = val; break;
-        case DBA_KEY_DAYMIN: datetime_min.date.day = val; break;
-        case DBA_KEY_HOURMAX: datetime_max.time.hour = val; break;
-        case DBA_KEY_HOURMIN: datetime_min.time.hour = val; break;
-        case DBA_KEY_MINUMAX: datetime_max.time.minute = val; break;
-        case DBA_KEY_MINUMIN: datetime_min.time.minute = val; break;
-        case DBA_KEY_SECMAX: datetime_max.time.second = val; break;
-        case DBA_KEY_SECMIN: datetime_min.time.second = val; break;
+        case DBA_KEY_YEAR: datetime_min.year = datetime_max.year = val; break;
+        case DBA_KEY_MONTH: datetime_min.month = datetime_max.month = val; break;
+        case DBA_KEY_DAY: datetime_min.day = datetime_max.day = val; break;
+        case DBA_KEY_HOUR: datetime_min.hour = datetime_max.hour = val; break;
+        case DBA_KEY_MIN: datetime_min.minute = datetime_max.minute = val; break;
+        case DBA_KEY_SEC: datetime_min.second = datetime_max.second = val; break;
+        case DBA_KEY_YEARMAX: datetime_max.year = val; break;
+        case DBA_KEY_YEARMIN: datetime_min.year = val; break;
+        case DBA_KEY_MONTHMAX: datetime_max.month = val; break;
+        case DBA_KEY_MONTHMIN: datetime_min.month = val; break;
+        case DBA_KEY_DAYMAX: datetime_max.day = val; break;
+        case DBA_KEY_DAYMIN: datetime_min.day = val; break;
+        case DBA_KEY_HOURMAX: datetime_max.hour = val; break;
+        case DBA_KEY_HOURMIN: datetime_min.hour = val; break;
+        case DBA_KEY_MINUMAX: datetime_max.minute = val; break;
+        case DBA_KEY_MINUMIN: datetime_min.minute = val; break;
+        case DBA_KEY_SECMAX: datetime_max.second = val; break;
+        case DBA_KEY_SECMIN: datetime_min.second = val; break;
         case DBA_KEY_LEVELTYPE1: level.ltype1 = val; break;
         case DBA_KEY_L1: level.l1 = val; break;
         case DBA_KEY_LEVELTYPE2: level.ltype2 = val; break;
@@ -122,7 +157,7 @@ void Query::seti(dba_keyword key, int val)
     }
 }
 
-void Query::setd(dba_keyword key, double val)
+void Query::setd_keyword(dba_keyword key, double val)
 {
     switch (key)
     {
@@ -137,24 +172,24 @@ void Query::setd(dba_keyword key, double val)
         case DBA_KEY_LATMIN: coords_min.set_lat(val); break;
         case DBA_KEY_LONMAX: coords_max.set_lon(val); break;
         case DBA_KEY_LONMIN: coords_min.set_lon(val); break;
-        case DBA_KEY_YEAR: datetime_min.date.year = datetime_max.date.year = lround(val); break;
-        case DBA_KEY_MONTH: datetime_min.date.month = datetime_max.date.month = lround(val); break;
-        case DBA_KEY_DAY: datetime_min.date.day = datetime_max.date.day = lround(val); break;
-        case DBA_KEY_HOUR: datetime_min.time.hour = datetime_max.time.hour = lround(val); break;
-        case DBA_KEY_MIN: datetime_min.time.minute = datetime_max.time.minute = lround(val); break;
-        case DBA_KEY_SEC: datetime_min.time.second = datetime_max.time.second = lround(val); break;
-        case DBA_KEY_YEARMAX: datetime_max.date.year = lround(val); break;
-        case DBA_KEY_YEARMIN: datetime_min.date.year = lround(val); break;
-        case DBA_KEY_MONTHMAX: datetime_max.date.month = lround(val); break;
-        case DBA_KEY_MONTHMIN: datetime_min.date.month = lround(val); break;
-        case DBA_KEY_DAYMAX: datetime_max.date.day = lround(val); break;
-        case DBA_KEY_DAYMIN: datetime_min.date.day = lround(val); break;
-        case DBA_KEY_HOURMAX: datetime_max.time.hour = lround(val); break;
-        case DBA_KEY_HOURMIN: datetime_min.time.hour = lround(val); break;
-        case DBA_KEY_MINUMAX: datetime_max.time.minute = lround(val); break;
-        case DBA_KEY_MINUMIN: datetime_min.time.minute = lround(val); break;
-        case DBA_KEY_SECMAX: datetime_max.time.second = lround(val); break;
-        case DBA_KEY_SECMIN: datetime_min.time.second = lround(val); break;
+        case DBA_KEY_YEAR: datetime_min.year = datetime_max.year = lround(val); break;
+        case DBA_KEY_MONTH: datetime_min.month = datetime_max.month = lround(val); break;
+        case DBA_KEY_DAY: datetime_min.day = datetime_max.day = lround(val); break;
+        case DBA_KEY_HOUR: datetime_min.hour = datetime_max.hour = lround(val); break;
+        case DBA_KEY_MIN: datetime_min.minute = datetime_max.minute = lround(val); break;
+        case DBA_KEY_SEC: datetime_min.second = datetime_max.second = lround(val); break;
+        case DBA_KEY_YEARMAX: datetime_max.year = lround(val); break;
+        case DBA_KEY_YEARMIN: datetime_min.year = lround(val); break;
+        case DBA_KEY_MONTHMAX: datetime_max.month = lround(val); break;
+        case DBA_KEY_MONTHMIN: datetime_min.month = lround(val); break;
+        case DBA_KEY_DAYMAX: datetime_max.day = lround(val); break;
+        case DBA_KEY_DAYMIN: datetime_min.day = lround(val); break;
+        case DBA_KEY_HOURMAX: datetime_max.hour = lround(val); break;
+        case DBA_KEY_HOURMIN: datetime_min.hour = lround(val); break;
+        case DBA_KEY_MINUMAX: datetime_max.minute = lround(val); break;
+        case DBA_KEY_MINUMIN: datetime_min.minute = lround(val); break;
+        case DBA_KEY_SECMAX: datetime_max.second = lround(val); break;
+        case DBA_KEY_SECMIN: datetime_min.second = lround(val); break;
         case DBA_KEY_LEVELTYPE1: level.ltype1 = lround(val); break;
         case DBA_KEY_L1: level.l1 = lround(val); break;
         case DBA_KEY_LEVELTYPE2: level.ltype2 = lround(val); break;
@@ -179,7 +214,7 @@ void Query::setd(dba_keyword key, double val)
     }
 }
 
-void Query::setc(dba_keyword key, const char* val)
+void Query::setc_keyword(dba_keyword key, const char* val)
 {
     switch (key)
     {
@@ -196,24 +231,24 @@ void Query::setc(dba_keyword key, const char* val)
         case DBA_KEY_LATMIN: coords_min.set_lat((int)strtol(val, 0, 10)); break;
         case DBA_KEY_LONMAX: coords_max.set_lon((int)strtol(val, 0, 10)); break;
         case DBA_KEY_LONMIN: coords_min.set_lon((int)strtol(val, 0, 10)); break;
-        case DBA_KEY_YEAR: datetime_min.date.year = datetime_max.date.year = strtol(val, 0, 10); break;
-        case DBA_KEY_MONTH: datetime_min.date.month = datetime_max.date.month = strtol(val, 0, 10); break;
-        case DBA_KEY_DAY: datetime_min.date.day = datetime_max.date.day = strtol(val, 0, 10); break;
-        case DBA_KEY_HOUR: datetime_min.time.hour = datetime_max.time.hour = strtol(val, 0, 10); break;
-        case DBA_KEY_MIN: datetime_min.time.minute = datetime_max.time.minute = strtol(val, 0, 10); break;
-        case DBA_KEY_SEC: datetime_min.time.second = datetime_max.time.second = strtol(val, 0, 10); break;
-        case DBA_KEY_YEARMAX: datetime_max.date.year = strtol(val, 0, 10); break;
-        case DBA_KEY_YEARMIN: datetime_min.date.year = strtol(val, 0, 10); break;
-        case DBA_KEY_MONTHMAX: datetime_max.date.month = strtol(val, 0, 10); break;
-        case DBA_KEY_MONTHMIN: datetime_min.date.month = strtol(val, 0, 10); break;
-        case DBA_KEY_DAYMAX: datetime_max.date.day = strtol(val, 0, 10); break;
-        case DBA_KEY_DAYMIN: datetime_min.date.day = strtol(val, 0, 10); break;
-        case DBA_KEY_HOURMAX: datetime_max.time.hour = strtol(val, 0, 10); break;
-        case DBA_KEY_HOURMIN: datetime_min.time.hour = strtol(val, 0, 10); break;
-        case DBA_KEY_MINUMAX: datetime_max.time.minute = strtol(val, 0, 10); break;
-        case DBA_KEY_MINUMIN: datetime_min.time.minute = strtol(val, 0, 10); break;
-        case DBA_KEY_SECMAX: datetime_max.time.second = strtol(val, 0, 10); break;
-        case DBA_KEY_SECMIN: datetime_min.time.second = strtol(val, 0, 10); break;
+        case DBA_KEY_YEAR: datetime_min.year = datetime_max.year = strtol(val, 0, 10); break;
+        case DBA_KEY_MONTH: datetime_min.month = datetime_max.month = strtol(val, 0, 10); break;
+        case DBA_KEY_DAY: datetime_min.day = datetime_max.day = strtol(val, 0, 10); break;
+        case DBA_KEY_HOUR: datetime_min.hour = datetime_max.hour = strtol(val, 0, 10); break;
+        case DBA_KEY_MIN: datetime_min.minute = datetime_max.minute = strtol(val, 0, 10); break;
+        case DBA_KEY_SEC: datetime_min.second = datetime_max.second = strtol(val, 0, 10); break;
+        case DBA_KEY_YEARMAX: datetime_max.year = strtol(val, 0, 10); break;
+        case DBA_KEY_YEARMIN: datetime_min.year = strtol(val, 0, 10); break;
+        case DBA_KEY_MONTHMAX: datetime_max.month = strtol(val, 0, 10); break;
+        case DBA_KEY_MONTHMIN: datetime_min.month = strtol(val, 0, 10); break;
+        case DBA_KEY_DAYMAX: datetime_max.day = strtol(val, 0, 10); break;
+        case DBA_KEY_DAYMIN: datetime_min.day = strtol(val, 0, 10); break;
+        case DBA_KEY_HOURMAX: datetime_max.hour = strtol(val, 0, 10); break;
+        case DBA_KEY_HOURMIN: datetime_min.hour = strtol(val, 0, 10); break;
+        case DBA_KEY_MINUMAX: datetime_max.minute = strtol(val, 0, 10); break;
+        case DBA_KEY_MINUMIN: datetime_min.minute = strtol(val, 0, 10); break;
+        case DBA_KEY_SECMAX: datetime_max.second = strtol(val, 0, 10); break;
+        case DBA_KEY_SECMIN: datetime_min.second = strtol(val, 0, 10); break;
         case DBA_KEY_LEVELTYPE1: level.ltype1 = strtol(val, 0, 10); break;
         case DBA_KEY_L1: level.l1 = strtol(val, 0, 10); break;
         case DBA_KEY_LEVELTYPE2: level.ltype2 = strtol(val, 0, 10); break;
@@ -242,7 +277,7 @@ void Query::setc(dba_keyword key, const char* val)
     }
 }
 
-void Query::setc(dba_keyword key, const std::string& val)
+void Query::sets_keyword(dba_keyword key, const std::string& val)
 {
     switch (key)
     {
@@ -259,24 +294,24 @@ void Query::setc(dba_keyword key, const std::string& val)
         case DBA_KEY_LATMIN: coords_min.set_lat(stoi(val)); break;
         case DBA_KEY_LONMAX: coords_max.set_lon(stoi(val)); break;
         case DBA_KEY_LONMIN: coords_min.set_lon(stoi(val)); break;
-        case DBA_KEY_YEAR: datetime_min.date.year = datetime_max.date.year = stoi(val); break;
-        case DBA_KEY_MONTH: datetime_min.date.month = datetime_max.date.month = stoi(val); break;
-        case DBA_KEY_DAY: datetime_min.date.day = datetime_max.date.day = stoi(val); break;
-        case DBA_KEY_HOUR: datetime_min.time.hour = datetime_max.time.hour = stoi(val); break;
-        case DBA_KEY_MIN: datetime_min.time.minute = datetime_max.time.minute = stoi(val); break;
-        case DBA_KEY_SEC: datetime_min.time.second = datetime_max.time.second = stoi(val); break;
-        case DBA_KEY_YEARMAX: datetime_max.date.year = stoi(val); break;
-        case DBA_KEY_YEARMIN: datetime_min.date.year = stoi(val); break;
-        case DBA_KEY_MONTHMAX: datetime_max.date.month = stoi(val); break;
-        case DBA_KEY_MONTHMIN: datetime_min.date.month = stoi(val); break;
-        case DBA_KEY_DAYMAX: datetime_max.date.day = stoi(val); break;
-        case DBA_KEY_DAYMIN: datetime_min.date.day = stoi(val); break;
-        case DBA_KEY_HOURMAX: datetime_max.time.hour = stoi(val); break;
-        case DBA_KEY_HOURMIN: datetime_min.time.hour = stoi(val); break;
-        case DBA_KEY_MINUMAX: datetime_max.time.minute = stoi(val); break;
-        case DBA_KEY_MINUMIN: datetime_min.time.minute = stoi(val); break;
-        case DBA_KEY_SECMAX: datetime_max.time.second = stoi(val); break;
-        case DBA_KEY_SECMIN: datetime_min.time.second = stoi(val); break;
+        case DBA_KEY_YEAR: datetime_min.year = datetime_max.year = stoi(val); break;
+        case DBA_KEY_MONTH: datetime_min.month = datetime_max.month = stoi(val); break;
+        case DBA_KEY_DAY: datetime_min.day = datetime_max.day = stoi(val); break;
+        case DBA_KEY_HOUR: datetime_min.hour = datetime_max.hour = stoi(val); break;
+        case DBA_KEY_MIN: datetime_min.minute = datetime_max.minute = stoi(val); break;
+        case DBA_KEY_SEC: datetime_min.second = datetime_max.second = stoi(val); break;
+        case DBA_KEY_YEARMAX: datetime_max.year = stoi(val); break;
+        case DBA_KEY_YEARMIN: datetime_min.year = stoi(val); break;
+        case DBA_KEY_MONTHMAX: datetime_max.month = stoi(val); break;
+        case DBA_KEY_MONTHMIN: datetime_min.month = stoi(val); break;
+        case DBA_KEY_DAYMAX: datetime_max.day = stoi(val); break;
+        case DBA_KEY_DAYMIN: datetime_min.day = stoi(val); break;
+        case DBA_KEY_HOURMAX: datetime_max.hour = stoi(val); break;
+        case DBA_KEY_HOURMIN: datetime_min.hour = stoi(val); break;
+        case DBA_KEY_MINUMAX: datetime_max.minute = stoi(val); break;
+        case DBA_KEY_MINUMIN: datetime_min.minute = stoi(val); break;
+        case DBA_KEY_SECMAX: datetime_max.second = stoi(val); break;
+        case DBA_KEY_SECMIN: datetime_min.second = stoi(val); break;
         case DBA_KEY_LEVELTYPE1: level.ltype1 = stoi(val); break;
         case DBA_KEY_L1: level.l1 = stoi(val); break;
         case DBA_KEY_LEVELTYPE2: level.ltype2 = stoi(val); break;
@@ -305,7 +340,7 @@ void Query::setc(dba_keyword key, const std::string& val)
     }
 }
 
-void Query::unset(dba_keyword key)
+void Query::unset_keyword(dba_keyword key)
 {
     switch (key)
     {
@@ -322,24 +357,24 @@ void Query::unset(dba_keyword key)
         case DBA_KEY_LATMIN: coords_min.lat = MISSING_INT; break;
         case DBA_KEY_LONMAX: coords_max.lon = MISSING_INT; break;
         case DBA_KEY_LONMIN: coords_min.lon = MISSING_INT; break;
-        case DBA_KEY_YEAR: datetime_min.date.year = datetime_max.date.year = 0xffff; break;
-        case DBA_KEY_MONTH: datetime_min.date.month = datetime_max.date.month = 0xff; break;
-        case DBA_KEY_DAY: datetime_min.date.day = datetime_max.date.day = 0xff; break;
-        case DBA_KEY_HOUR: datetime_min.time.hour = datetime_max.time.hour = 0xff; break;
-        case DBA_KEY_MIN: datetime_min.time.minute = datetime_max.time.minute = 0xff; break;
-        case DBA_KEY_SEC: datetime_min.time.second = datetime_max.time.second = 0xff; break;
-        case DBA_KEY_YEARMAX: datetime_max.date.year = 0xffff; break;
-        case DBA_KEY_YEARMIN: datetime_min.date.year = 0xffff; break;
-        case DBA_KEY_MONTHMAX: datetime_max.date.month = 0xff; break;
-        case DBA_KEY_MONTHMIN: datetime_min.date.month = 0xff; break;
-        case DBA_KEY_DAYMAX: datetime_max.date.day = 0xff; break;
-        case DBA_KEY_DAYMIN: datetime_min.date.day = 0xff; break;
-        case DBA_KEY_HOURMAX: datetime_max.time.hour = 0xff; break;
-        case DBA_KEY_HOURMIN: datetime_min.time.hour = 0xff; break;
-        case DBA_KEY_MINUMAX: datetime_max.time.minute = 0xff; break;
-        case DBA_KEY_MINUMIN: datetime_min.time.minute = 0xff; break;
-        case DBA_KEY_SECMAX: datetime_max.time.second = 0xff; break;
-        case DBA_KEY_SECMIN: datetime_min.time.second = 0xff; break;
+        case DBA_KEY_YEAR: datetime_min.year = datetime_max.year = 0xffff; break;
+        case DBA_KEY_MONTH: datetime_min.month = datetime_max.month = 0xff; break;
+        case DBA_KEY_DAY: datetime_min.day = datetime_max.day = 0xff; break;
+        case DBA_KEY_HOUR: datetime_min.hour = datetime_max.hour = 0xff; break;
+        case DBA_KEY_MIN: datetime_min.minute = datetime_max.minute = 0xff; break;
+        case DBA_KEY_SEC: datetime_min.second = datetime_max.second = 0xff; break;
+        case DBA_KEY_YEARMAX: datetime_max.year = 0xffff; break;
+        case DBA_KEY_YEARMIN: datetime_min.year = 0xffff; break;
+        case DBA_KEY_MONTHMAX: datetime_max.month = 0xff; break;
+        case DBA_KEY_MONTHMIN: datetime_min.month = 0xff; break;
+        case DBA_KEY_DAYMAX: datetime_max.day = 0xff; break;
+        case DBA_KEY_DAYMIN: datetime_min.day = 0xff; break;
+        case DBA_KEY_HOURMAX: datetime_max.hour = 0xff; break;
+        case DBA_KEY_HOURMIN: datetime_min.hour = 0xff; break;
+        case DBA_KEY_MINUMAX: datetime_max.minute = 0xff; break;
+        case DBA_KEY_MINUMIN: datetime_min.minute = 0xff; break;
+        case DBA_KEY_SECMAX: datetime_max.second = 0xff; break;
+        case DBA_KEY_SECMIN: datetime_min.second = 0xff; break;
         case DBA_KEY_LEVELTYPE1: level.ltype1 = MISSING_INT; break;
         case DBA_KEY_L1: level.l1 = MISSING_INT; break;
         case DBA_KEY_LEVELTYPE2: level.ltype2 = MISSING_INT; break;
@@ -367,7 +402,7 @@ void Query::set_from_record(const Record& rec)
     // Set keys
     rec.iter_keys([&](dba_keyword key, const wreport::Var& var) {
         if (var.value())
-            setc(key, var.value());
+            setc_keyword(key, var.value());
         return true;
     });
 
@@ -416,7 +451,7 @@ void Query::set_from_formatted(dba_keyword key, const char* val)
     // NULL or empty string, unset()
     if (val == NULL || val[0] == 0)
     {
-        unset(key);
+        unset_keyword(key);
         return;
     }
 
@@ -426,12 +461,12 @@ void Query::set_from_formatted(dba_keyword key, const char* val)
     // If we're a string, it's easy
     if (i->is_string())
     {
-        setc(key, val);
+        setc_keyword(key, val);
         return;
     }
 
     // Else use strtod
-    setd(key, strtod(val, NULL));
+    setd_keyword(key, strtod(val, NULL));
 }
 
 void Query::set_from_test_string(const std::string& s)
@@ -559,8 +594,10 @@ bool is_subrange(const Coords& sub1, const Coords& sub2, const Coords& sup1, con
 
 }
 
-bool Query::is_subquery(const Query& other) const
+bool Query::is_subquery(const dballe::Query& other_gen) const
 {
+    const Query& other = downcast(other_gen);
+
     if (removed_or_changed(ana_id, other.ana_id)) return false;
     if (!is_subrange(prio_min, prio_max, other.prio_min, other.prio_max)) return false;
     if (removed_or_changed(rep_memo, other.rep_memo)) return false;
@@ -605,28 +642,28 @@ namespace {
 
 struct VarGen
 {
-    std::function<void(dba_keyword, unique_ptr<Var>)>& dest;
+    std::function<void(const char*, unique_ptr<Var>&&)>& dest;
 
-    VarGen(std::function<void(dba_keyword, unique_ptr<Var>)>& dest)
+    VarGen(std::function<void(const char*, unique_ptr<Var>&&)>& dest)
         : dest(dest) {}
 
     template<typename T>
     void gen(dba_keyword key, const T& val)
     {
         Varinfo info = Record::keyword_info(key);
-        dest(key, unique_ptr<Var>(new Var(info, val)));
+        dest(Record::keyword_name(key), unique_ptr<Var>(new Var(info, val)));
     };
 
     void gen(dba_keyword key, const std::string& val)
     {
         Varinfo info = Record::keyword_info(key);
-        dest(key, unique_ptr<Var>(new Var(info, val.c_str())));
+        dest(Record::keyword_name(key), unique_ptr<Var>(new Var(info, val.c_str())));
     };
 };
 
 }
 
-void Query::to_vars(std::function<void(dba_keyword, unique_ptr<Var>)> dest) const
+void Query::to_vars(std::function<void(const char*, unique_ptr<Var>&&)> dest) const
 {
     VarGen vargen(dest);
 
@@ -666,31 +703,31 @@ void Query::to_vars(std::function<void(dba_keyword, unique_ptr<Var>)> dest) cons
     {
         if (!datetime_min.is_missing())
         {
-            vargen.gen(DBA_KEY_YEAR, datetime_min.date.year);
-            vargen.gen(DBA_KEY_MONTH, datetime_min.date.month);
-            vargen.gen(DBA_KEY_DAY, datetime_min.date.day);
-            vargen.gen(DBA_KEY_HOUR, datetime_min.time.hour);
-            vargen.gen(DBA_KEY_MIN, datetime_min.time.minute);
-            vargen.gen(DBA_KEY_SEC, datetime_min.time.second);
+            vargen.gen(DBA_KEY_YEAR, datetime_min.year);
+            vargen.gen(DBA_KEY_MONTH, datetime_min.month);
+            vargen.gen(DBA_KEY_DAY, datetime_min.day);
+            vargen.gen(DBA_KEY_HOUR, datetime_min.hour);
+            vargen.gen(DBA_KEY_MIN, datetime_min.minute);
+            vargen.gen(DBA_KEY_SEC, datetime_min.second);
         }
     } else {
         if (!datetime_min.is_missing())
         {
-            vargen.gen(DBA_KEY_YEARMIN, datetime_min.date.year);
-            vargen.gen(DBA_KEY_MONTHMIN, datetime_min.date.month);
-            vargen.gen(DBA_KEY_DAYMIN, datetime_min.date.day);
-            vargen.gen(DBA_KEY_HOURMIN, datetime_min.time.hour);
-            vargen.gen(DBA_KEY_MINUMIN, datetime_min.time.minute);
-            vargen.gen(DBA_KEY_SECMIN, datetime_min.time.second);
+            vargen.gen(DBA_KEY_YEARMIN, datetime_min.year);
+            vargen.gen(DBA_KEY_MONTHMIN, datetime_min.month);
+            vargen.gen(DBA_KEY_DAYMIN, datetime_min.day);
+            vargen.gen(DBA_KEY_HOURMIN, datetime_min.hour);
+            vargen.gen(DBA_KEY_MINUMIN, datetime_min.minute);
+            vargen.gen(DBA_KEY_SECMIN, datetime_min.second);
         }
         if (!datetime_max.is_missing())
         {
-            vargen.gen(DBA_KEY_YEARMAX, datetime_max.date.year);
-            vargen.gen(DBA_KEY_MONTHMAX, datetime_max.date.month);
-            vargen.gen(DBA_KEY_DAYMAX, datetime_max.date.day);
-            vargen.gen(DBA_KEY_HOURMAX, datetime_max.time.hour);
-            vargen.gen(DBA_KEY_MINUMAX, datetime_max.time.minute);
-            vargen.gen(DBA_KEY_SECMAX, datetime_max.time.second);
+            vargen.gen(DBA_KEY_YEARMAX, datetime_max.year);
+            vargen.gen(DBA_KEY_MONTHMAX, datetime_max.month);
+            vargen.gen(DBA_KEY_DAYMAX, datetime_max.day);
+            vargen.gen(DBA_KEY_HOURMAX, datetime_max.hour);
+            vargen.gen(DBA_KEY_MINUMAX, datetime_max.minute);
+            vargen.gen(DBA_KEY_SECMAX, datetime_max.second);
         }
     }
     if (level.ltype1 != MISSING_INT) vargen.gen(DBA_KEY_LEVELTYPE1, level.ltype1);
@@ -781,8 +818,8 @@ struct Printer
         if (!first) fputs(", ", out);
         fprintf(out, "%s=%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu",
                 name,
-                dt.date.year, dt.date.month, dt.date.day,
-                dt.time.hour, dt.time.minute, dt.time.second);
+                dt.year, dt.month, dt.day,
+                dt.hour, dt.minute, dt.second);
         first = false;
     }
 
@@ -965,5 +1002,5 @@ unsigned Query::parse_modifiers(const char* s)
     return modifiers;
 }
 
-
+}
 }

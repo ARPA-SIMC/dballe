@@ -48,9 +48,7 @@ struct msgs_shar
 
     std::unique_ptr<Matcher> get_matcher(const char* q)
     {
-        Query query;
-        query.set_from_test_string(q);
-        return Matcher::create(query);
+        return Matcher::create(dballe::tests::core_query_from_string(q));
     }
 };
 TESTGRP(msgs);
@@ -280,8 +278,7 @@ void to::test<6>()
 template<> template<>
 void to::test<7>()
 {
-    Query query;
-    std::unique_ptr<Matcher> m = Matcher::create(query);
+    std::unique_ptr<Matcher> m = Matcher::create(core::Query());
 
     Msgs matched; init(matched);
     ensure(m->match(MatchedMsgs(matched)) == matcher::MATCH_YES);

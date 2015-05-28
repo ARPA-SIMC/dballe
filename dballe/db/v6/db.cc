@@ -29,10 +29,9 @@
 #include "dballe/db/sql/attrv6.h"
 #include "dballe/db/querybuf.h"
 #include "cursor.h"
-
+#include <dballe/core/query.h>
 #include <dballe/core/record.h>
 #include <dballe/core/defs.h>
-
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
@@ -273,7 +272,7 @@ void DB::remove(const Query& query)
 {
     auto tr = trace.trace_remove(query);
     auto t = conn->transaction();
-    Cursor::run_delete_query(*this, query);
+    Cursor::run_delete_query(*this, core::Query::downcast(query));
     t->commit();
     tr->done();
 }
@@ -303,7 +302,7 @@ void DB::vacuum()
 std::unique_ptr<db::Cursor> DB::query_stations(const Query& query)
 {
     auto tr = trace.trace_query_stations(query);
-    auto res = Cursor::run_station_query(*this, query);
+    auto res = Cursor::run_station_query(*this, core::Query::downcast(query));
     tr->done();
     return move(res);
 }
@@ -311,7 +310,7 @@ std::unique_ptr<db::Cursor> DB::query_stations(const Query& query)
 std::unique_ptr<db::Cursor> DB::query_data(const Query& query)
 {
     auto tr = trace.trace_query_data(query);
-    auto res = Cursor::run_data_query(*this, query);
+    auto res = Cursor::run_data_query(*this, core::Query::downcast(query));
     tr->done();
     return move(res);
 }
@@ -319,7 +318,7 @@ std::unique_ptr<db::Cursor> DB::query_data(const Query& query)
 std::unique_ptr<db::Cursor> DB::query_summary(const Query& query)
 {
     auto tr = trace.trace_query_summary(query);
-    auto res = Cursor::run_summary_query(*this, query);
+    auto res = Cursor::run_summary_query(*this, core::Query::downcast(query));
     tr->done();
     return move(res);
 }

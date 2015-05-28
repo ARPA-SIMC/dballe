@@ -127,12 +127,12 @@ void Cursor::get_datetime(int (&dt)[6]) const
 {
     if (cur_value)
     {
-        dt[0] = cur_value->datetime.date.year;
-        dt[1] = cur_value->datetime.date.month;
-        dt[2] = cur_value->datetime.date.day;
-        dt[3] = cur_value->datetime.time.hour;
-        dt[4] = cur_value->datetime.time.minute;
-        dt[5] = cur_value->datetime.time.second;
+        dt[0] = cur_value->datetime.year;
+        dt[1] = cur_value->datetime.month;
+        dt[2] = cur_value->datetime.day;
+        dt[3] = cur_value->datetime.hour;
+        dt[4] = cur_value->datetime.minute;
+        dt[5] = cur_value->datetime.second;
     } else {
         dt[0] = 1000;
         dt[1] = 1;

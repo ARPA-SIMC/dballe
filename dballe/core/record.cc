@@ -748,32 +748,32 @@ void Record::unset_datetimemax()
 
 void Record::set(const Datetime& dt)
 {
-    set(DBA_KEY_YEAR,  (int)dt.date.year);
-    set(DBA_KEY_MONTH, (int)dt.date.month);
-    set(DBA_KEY_DAY,   (int)dt.date.day);
-    set(DBA_KEY_HOUR,  (int)dt.time.hour);
-    set(DBA_KEY_MIN,   (int)dt.time.minute);
-    set(DBA_KEY_SEC,   (int)dt.time.second);
+    set(DBA_KEY_YEAR,  (int)dt.year);
+    set(DBA_KEY_MONTH, (int)dt.month);
+    set(DBA_KEY_DAY,   (int)dt.day);
+    set(DBA_KEY_HOUR,  (int)dt.hour);
+    set(DBA_KEY_MIN,   (int)dt.minute);
+    set(DBA_KEY_SEC,   (int)dt.second);
 }
 
 void Record::setmin(const Datetime& dt)
 {
-    set(DBA_KEY_YEARMIN,  (int)dt.date.year);
-    set(DBA_KEY_MONTHMIN, (int)dt.date.month);
-    set(DBA_KEY_DAYMIN,   (int)dt.date.day);
-    set(DBA_KEY_HOURMIN,  (int)dt.time.hour);
-    set(DBA_KEY_MINUMIN,  (int)dt.time.minute);
-    set(DBA_KEY_SECMIN,   (int)dt.time.second);
+    set(DBA_KEY_YEARMIN,  (int)dt.year);
+    set(DBA_KEY_MONTHMIN, (int)dt.month);
+    set(DBA_KEY_DAYMIN,   (int)dt.day);
+    set(DBA_KEY_HOURMIN,  (int)dt.hour);
+    set(DBA_KEY_MINUMIN,  (int)dt.minute);
+    set(DBA_KEY_SECMIN,   (int)dt.second);
 }
 
 void Record::setmax(const Datetime& dt)
 {
-    set(DBA_KEY_YEARMAX,  (int)dt.date.year);
-    set(DBA_KEY_MONTHMAX, (int)dt.date.month);
-    set(DBA_KEY_DAYMAX,   (int)dt.date.day);
-    set(DBA_KEY_HOURMAX,  (int)dt.time.hour);
-    set(DBA_KEY_MINUMAX,  (int)dt.time.minute);
-    set(DBA_KEY_SECMAX,   (int)dt.time.second);
+    set(DBA_KEY_YEARMAX,  (int)dt.year);
+    set(DBA_KEY_MONTHMAX, (int)dt.month);
+    set(DBA_KEY_DAYMAX,   (int)dt.day);
+    set(DBA_KEY_HOURMAX,  (int)dt.hour);
+    set(DBA_KEY_MINUMAX,  (int)dt.minute);
+    set(DBA_KEY_SECMAX,   (int)dt.second);
 }
 
 void Record::set_datetime(int ye, int mo, int da, int ho, int mi, int se)

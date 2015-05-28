@@ -1,24 +1,3 @@
-/*
- * memdb/value - In memory representation of a variable with metadata and
- *               attributes
- *
- * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
 #include "value.h"
 #include "station.h"
 #include "levtr.h"
@@ -68,7 +47,7 @@ size_t Values::insert(
         const Datetime& datetime, std::unique_ptr<Var> var, bool replace)
 {
     stl::SetIntersection<size_t> res;
-    if (by_station.search(&station, res) && by_levtr.search(&levtr, res) && by_date.search(datetime.date, res))
+    if (by_station.search(&station, res) && by_levtr.search(&levtr, res) && by_date.search(datetime.date(), res))
         for (stl::SetIntersection<size_t>::const_iterator i = res.begin(); i != res.end(); ++i)
         {
             Value* v = (*this)[*i];
@@ -86,7 +65,7 @@ size_t Values::insert(
     // Index it
     by_station[&station].insert(pos);
     by_levtr[&levtr].insert(pos);
-    by_date[datetime.date].insert(pos);
+    by_date[datetime.date()].insert(pos);
     // And return it
     return pos;
 }
@@ -96,7 +75,7 @@ size_t Values::insert(
         const Datetime& datetime, const Var& var, bool replace)
 {
     stl::SetIntersection<size_t> res;
-    if (by_station.search(&station, res) && by_levtr.search(&levtr, res) && by_date.search(datetime.date, res))
+    if (by_station.search(&station, res) && by_levtr.search(&levtr, res) && by_date.search(datetime.date(), res))
         for (stl::SetIntersection<size_t>::const_iterator i = res.begin(); i != res.end(); ++i)
         {
             Value* v = (*this)[*i];
@@ -115,7 +94,7 @@ size_t Values::insert(
     // Index it
     by_station[&station].insert(pos);
     by_levtr[&levtr].insert(pos);
-    by_date[datetime.date].insert(pos);
+    by_date[datetime.date()].insert(pos);
     // And return it
     return pos;
 }
@@ -123,7 +102,7 @@ size_t Values::insert(
 bool Values::remove(const Station& station, const LevTr& levtr, const Datetime& datetime, Varcode code)
 {
     stl::SetIntersection<size_t> res;
-    if (!by_station.search(&station, res) || !by_levtr.search(&levtr, res) || !by_date.search(datetime.date, res))
+    if (!by_station.search(&station, res) || !by_levtr.search(&levtr, res) || !by_date.search(datetime.date(), res))
         return false;
 
     for (stl::SetIntersection<size_t>::const_iterator i = res.begin(); i != res.end(); ++i)
@@ -133,7 +112,7 @@ bool Values::remove(const Station& station, const LevTr& levtr, const Datetime& 
         {
             by_station[&station].erase(*i);
             by_levtr[&levtr].erase(*i);
-            by_date[datetime.date].erase(*i);
+            by_date[datetime.date()].erase(*i);
             value_remove(*i);
             return true;
         }
@@ -146,7 +125,7 @@ void Values::erase(size_t idx)
     const Value& val = *(*this)[idx];
     by_station[&val.station].erase(idx);
     by_levtr[&val.levtr].erase(idx);
-    by_date[val.datetime.date].erase(idx);
+    by_date[val.datetime.date()].erase(idx);
     value_remove(idx);
 }
 
@@ -193,7 +172,7 @@ struct MatchDateMinMax : public Match<Value>
 
 }
 
-void Values::query(const Query& q, Results<Station>& stations, Results<LevTr>& levtrs, Results<Value>& res) const
+void Values::query(const core::Query& q, Results<Station>& stations, Results<LevTr>& levtrs, Results<Value>& res) const
 {
     if (q.data_id != MISSING_INT)
     {
@@ -245,9 +224,9 @@ void Values::query(const Query& q, Results<Station>& stations, Results<LevTr>& l
     if (!mind.is_missing() || !maxd.is_missing())
     {
         unique_ptr< stl::Sequences<size_t> > sequences(new stl::Sequences<size_t>);
-        if (mind.date == maxd.date)
+        if (mind.date() == maxd.date())
         {
-            const Date& d = mind.date;
+            Date d = mind.date();
             const set<size_t>* s = by_date.search(d);
             trace_query("Found exact date %04d-%02d-%02d\n", d.year, d.month, d.day);
             if (!s)
@@ -262,7 +241,7 @@ void Values::query(const Query& q, Results<Station>& stations, Results<LevTr>& l
             } else {
                 res.add_set(*s);
             }
-            if (mind.time == maxd.time)
+            if (mind.time() == maxd.time())
                 res.add(new MatchDateExact(mind));
             else
                 res.add(new MatchDateMinMax(mind, maxd));
@@ -272,20 +251,20 @@ void Values::query(const Query& q, Results<Station>& stations, Results<LevTr>& l
             unique_ptr< Match<Value> > extra_match;
 
             if (maxd.is_missing()) {
-                const Date& d = mind.date;
+                Date d = mind.date();
                 sequences = by_date.search_from(d, found);
                 extra_match.reset(new MatchDateMin(mind));
                 trace_query("Found date min %04d-%02d-%02d\n", d.year, d.month, d.day);
             } else if (mind.is_missing()) {
                 // FIXME: we need to add 1 second to maxd, as it is right extreme excluded
-                const Date& d = maxd.date;
+                Date d = maxd.date();
                 sequences = by_date.search_to(d, found);
                 extra_match.reset(new MatchDateMax(maxd));
                 trace_query("Found date max %04d-%02d-%02d\n", d.year, d.month, d.day);
             } else {
                 // FIXME: we need to add 1 second to maxd, as it is right extreme excluded
-                const Date& dmin = mind.date;
-                const Date& dmax = maxd.date;
+                Date dmin = mind.date();
+                Date dmax = maxd.date();
                 sequences = by_date.search_between(dmin, dmax, found);
                 extra_match.reset(new MatchDateMinMax(mind, maxd));
                 trace_query("Found date range %04d-%02d-%02d to %04d-%02d-%02d\n",

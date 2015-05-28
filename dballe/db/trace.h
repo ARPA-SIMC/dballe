@@ -52,7 +52,7 @@ protected:
     std::string json_buf;
 
     // JSON serializer
-    JSONWriter writer;
+    core::JSONWriter writer;
 
     // Output file name
     std::string out_fname;

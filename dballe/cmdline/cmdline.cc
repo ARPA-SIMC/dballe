@@ -529,7 +529,7 @@ int Command::main(int argc, const char* argv[])
     return 1;
 }
 
-unsigned dba_cmdline_get_query(poptContext optCon, Query& query)
+unsigned dba_cmdline_get_query(poptContext optCon, core::Query& query)
 {
     unsigned res;
     const char* queryparm;

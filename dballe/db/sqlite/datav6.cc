@@ -88,8 +88,8 @@ void SQLiteDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode 
             INSERT INTO data (id_station, id_report, id_lev_tr, datetime, id_var, value)
                  VALUES (%d, %d, ?, '%04d-%02d-%02d %02d:%02d:%02d', ?, ?)
         )", vars.id_station, vars.id_report,
-            vars.datetime.date.year, vars.datetime.date.month, vars.datetime.date.day,
-            vars.datetime.time.hour, vars.datetime.time.minute, vars.datetime.time.second);
+            vars.datetime.year, vars.datetime.month, vars.datetime.day,
+            vars.datetime.hour, vars.datetime.minute, vars.datetime.second);
         auto insert = conn.sqlitestatement(dq);
         for (auto& v: vars)
         {

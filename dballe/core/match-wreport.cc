@@ -44,13 +44,13 @@ MatchedSubset::MatchedSubset(const Subset& r)
             case WR_VAR(0,  1,   2): var_station = &*i; break;
             case WR_VAR(0,  1, 192): var_ana_id = &*i; break;
             case WR_VAR(0,  1, 194): var_rep_memo = &*i; break;
-            case WR_VAR(0,  4,   1): date.date.year = i->enq(-1); break;
-            case WR_VAR(0,  4,   2): date.date.month = i->enq(-1); break;
-            case WR_VAR(0,  4,   3): date.date.day = i->enq(-1); break;
-            case WR_VAR(0,  4,   4): date.time.hour = i->enq(-1); break;
-            case WR_VAR(0,  4,   5): date.time.minute = i->enq(-1); break;
-            case WR_VAR(0,  4,   6): date.time.second = i->enq(-1); break;
-            case WR_VAR(0,  4,   7): date.time.second = (int)rint(i->enq(-1.0)); break;
+            case WR_VAR(0,  4,   1): date.year = i->enq(-1); break;
+            case WR_VAR(0,  4,   2): date.month = i->enq(-1); break;
+            case WR_VAR(0,  4,   3): date.day = i->enq(-1); break;
+            case WR_VAR(0,  4,   4): date.hour = i->enq(-1); break;
+            case WR_VAR(0,  4,   5): date.minute = i->enq(-1); break;
+            case WR_VAR(0,  4,   6): date.second = i->enq(-1); break;
+            case WR_VAR(0,  4,   7): date.second = (int)rint(i->enq(-1.0)); break;
             case WR_VAR(0,  5,   1):
             case WR_VAR(0,  5,   2): if (i->isset()) lat = i->enqd() * 100000; break;
             case WR_VAR(0,  6,   1):

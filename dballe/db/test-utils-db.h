@@ -208,11 +208,11 @@ struct TestCursorDataMatch
 struct TestDBTryDataQuery
 {
     DB& db;
-    Query query;
+    core::Query query;
     unsigned expected;
 
     TestDBTryDataQuery(DB& db, const std::string& query, unsigned expected);
-    TestDBTryDataQuery(DB& db, const Query& query, unsigned expected) : db(db), query(query), expected(expected) {}
+    TestDBTryDataQuery(DB& db, const Query& query, unsigned expected) : db(db), query(core::Query::downcast(query)), expected(expected) {}
 
     void check(WIBBLE_TEST_LOCPRM) const;
 };

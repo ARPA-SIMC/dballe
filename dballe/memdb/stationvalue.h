@@ -1,24 +1,3 @@
-/*
- * memdb/stationvalue - In memory representation of station values
- *
- * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #ifndef DBA_MEMDB_STATIONVALUE_H
 #define DBA_MEMDB_STATIONVALUE_H
 
@@ -30,7 +9,10 @@
 
 namespace dballe {
 struct Record;
+
+namespace core {
 struct Query;
+}
 
 namespace msg {
 struct Context;
@@ -41,7 +23,7 @@ template<typename T> struct Results;
 
 struct Station;
 
-/// Station information
+/// Value describing one property of a station
 struct StationValue : public ValueBase
 {
     const Station& station;
@@ -55,7 +37,7 @@ private:
     StationValue& operator=(const StationValue&);
 };
 
-/// Storage and index for station information
+/// Storage and index for station values
 class StationValues : public ValueStorage<StationValue>
 {
 protected:
@@ -91,7 +73,7 @@ public:
     void fill_msg(const Station& station, msg::Context& ctx) const;
 
     /// Query values for the given stations
-    void query(const Query& q, Results<Station>& stations, Results<StationValue>& res) const;
+    void query(const core::Query& q, Results<Station>& stations, Results<StationValue>& res) const;
 
     void dump(FILE* out) const;
 };

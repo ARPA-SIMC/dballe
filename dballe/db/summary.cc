@@ -1,25 +1,5 @@
-/*
- * db/summary - High level code for working with DB-All.e DB summaries
- *
- * Copyright (C) 2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "summary.h"
+#include "dballe/core/query.h"
 #include <cstring>
 
 using namespace std;
@@ -27,7 +7,6 @@ using namespace dballe;
 
 namespace dballe {
 namespace db {
-
 namespace summary {
 
 Entry::Entry(dballe::db::Cursor &cur, bool want_details)
@@ -50,7 +29,7 @@ Entry::Entry(dballe::db::Cursor &cur, bool want_details)
 }
 
 Summary::Summary(const Query& query)
-    : query(query)
+    : query(core::Query::downcast(query))
 {
 }
 
@@ -63,15 +42,19 @@ summary::Support Summary::supports(const Query& query) const
     if (!query.is_subquery(this->query))
         return Support::UNSUPPORTED;
 
+    
+
     // Now we know that query has either more fields than this->query or changes
     // in datetime or data-related filters
     Support res = Support::EXACT;
 
     // Check if the query has more restrictive datetime extremes
-    Datetime new_min = query.datetime_min.lower_bound();
-    Datetime new_max = query.datetime_max.upper_bound();
-    Datetime our_min = this->query.datetime_min.lower_bound();
-    Datetime our_max = this->query.datetime_max.upper_bound();
+    Datetime new_min;
+    Datetime new_max;
+    query.get_datetime_bounds(new_min, new_max);
+    Datetime our_min;
+    Datetime our_max;
+    this->query.get_datetime_bounds(our_min, our_max);
     if (new_min != our_min || new_max != our_max)
     {
         if (count == MISSING_INT)

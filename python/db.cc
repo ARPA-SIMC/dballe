@@ -206,7 +206,7 @@ static PyObject* dpy_DB_remove(dpy_DB* self, PyObject* args)
     // TODO: if it is a dict, turn it directly into a Query?
 
     try {
-        Query query;
+        core::Query query;
         query.set_from_record(record->rec);
         self->db->remove(query);
     } catch (wreport::error& e) {
@@ -253,7 +253,7 @@ static PyObject* dpy_DB_query_stations(dpy_DB* self, PyObject* args)
     // TODO: if it is a dict, turn it directly into a Query?
 
     try {
-        Query query;
+        core::Query query;
         query.set_from_record(record->rec);
         std::unique_ptr<db::Cursor> res = self->db->query_stations(query);
         return (PyObject*)cursor_create(self, move(res));
@@ -273,7 +273,7 @@ static PyObject* dpy_DB_query_data(dpy_DB* self, PyObject* args)
     // TODO: if it is a dict, turn it directly into a Query?
 
     try {
-        Query query;
+        core::Query query;
         query.set_from_record(record->rec);
         std::unique_ptr<db::Cursor> res = self->db->query_data(query);
         return (PyObject*)cursor_create(self, move(res));
@@ -293,7 +293,7 @@ static PyObject* dpy_DB_query_summary(dpy_DB* self, PyObject* args)
     // TODO: if it is a dict, turn it directly into a Query?
 
     try {
-        Query query;
+        core::Query query;
         query.set_from_record(record->rec);
         std::unique_ptr<db::Cursor> res = self->db->query_summary(query);
         return (PyObject*)cursor_create(self, move(res));
@@ -450,7 +450,7 @@ static PyObject* dpy_DB_export_to_file(dpy_DB* self, PyObject* args, PyObject* k
     try {
         std::unique_ptr<File> out = File::create(encoding, filename, "wb");
         ExportConsumer msg_writer(*out, as_generic ? "generic" : NULL);
-        Query q;
+        core::Query q;
         q.set_from_record(query->rec);
         self->db->export_msgs(q, msg_writer);
         Py_RETURN_NONE;

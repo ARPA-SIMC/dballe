@@ -336,18 +336,19 @@ Record record_from_string(const std::string& s)
     return res;
 }
 
-void set_query_from_string(Query& q, const std::string& s)
+std::unique_ptr<Query> query_from_string(const std::string& s)
 {
-    str::Split splitter(", ", s);
-    for (str::Split::const_iterator i = splitter.begin(); i != splitter.end(); ++i)
-        q.set_from_string(i->c_str());
+    core::Query* q;
+    unique_ptr<Query> res(q = new core::Query);
+    q->set_from_test_string(s);
+    return res;
 }
 
-Query query_from_string(const std::string& s)
+core::Query core_query_from_string(const std::string& s)
 {
-    Query res;
-    set_query_from_string(res, s);
-    return res;
+    core::Query q;
+    q.set_from_test_string(s);
+    return q;
 }
 
 }

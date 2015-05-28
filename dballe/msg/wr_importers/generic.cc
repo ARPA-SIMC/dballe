@@ -155,32 +155,32 @@ void GenericImporter::import_var(const Var& var)
         }
         // Datetime entries that may have attributes to store
         case WR_VAR(0,  4,  1):
-            datetime.date.year = var.enqi();
+            datetime.year = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 1), Level::ana(), Trange::ana());
             break;
         case WR_VAR(0,  4,  2):
-            datetime.date.month = var.enqi();
+            datetime.month = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 2), Level::ana(), Trange::ana());
             break;
         case WR_VAR(0,  4,  3):
-            datetime.date.day = var.enqi();
+            datetime.day = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 3), Level::ana(), Trange::ana());
             break;
         case WR_VAR(0,  4,  4):
-            datetime.time.hour = var.enqi();
+            datetime.hour = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 4), Level::ana(), Trange::ana());
             break;
         case WR_VAR(0,  4,  5):
-            datetime.time.minute = var.enqi();
+            datetime.minute = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 5), Level::ana(), Trange::ana());
             break;
         case WR_VAR(0,  4,  6):
-            datetime.time.second = var.enqi();
+            datetime.second = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 6), Level::ana(), Trange::ana());
             break;
@@ -191,8 +191,6 @@ void GenericImporter::import_var(const Var& var)
     }
 }
 
-} // namespace wbimporter
-} // namespace msg
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
+}
+}
+}

@@ -70,24 +70,23 @@ std::vector<Test> tests {
         // Test remove_all
         auto& db = *f.db;
         db.remove_all();
-        Query query;
-        std::unique_ptr<db::Cursor> cur = db.query_data(query);
+        std::unique_ptr<db::Cursor> cur = db.query_data(core::Query());
         wassert(actual(cur->remaining()) == 0);
 
         // Check that it is idempotent
         db.remove_all();
-        cur = db.query_data(query);
+        cur = db.query_data(core::Query());
         wassert(actual(cur->remaining()) == 0);
 
         // Insert something
         wruntest(f.populate<OldDballeTestFixture>);
 
-        cur = db.query_data(query);
+        cur = db.query_data(core::Query());
         wassert(actual(cur->remaining()) == 4);
 
         db.remove_all();
 
-        cur = db.query_data(query);
+        cur = db.query_data(core::Query());
         wassert(actual(cur->remaining()) == 0);
     }),
     Test("stationdata", [](Fixture& f) {
@@ -121,8 +120,7 @@ std::vector<Test> tests {
         db.insert(rec, true, true);
 
         // Query back all the data
-        Query query;
-        auto cur = db.query_stations(query);
+        auto cur = db.query_stations(core::Query());
 
         // Check results
         Record result;
@@ -152,10 +150,9 @@ std::vector<Test> tests {
             wassert(actual(cur->next()).isfalse());
         }
 
-        query.clear();
         Msgs msgs;
         msg::AcquireMessages amsg(msgs);
-        db.export_msgs(query, amsg);
+        db.export_msgs(core::Query(), amsg);
         wassert(actual(msgs.size()) == 2);
 
         //msgs.print(stderr);

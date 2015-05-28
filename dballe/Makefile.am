@@ -44,6 +44,8 @@ EXTRA_PROGRAMS =
 dballeincludedir = $(includedir)/dballe
 
 nobase_dist_dballeinclude_HEADERS = \
+	types.h \
+	query.h \
 	core/aliases.h \
 	core/verbose.h \
 	core/stlutils.h \
@@ -155,6 +157,8 @@ endif
 
 lib_LTLIBRARIES = libdballe.la
 libdballe_la_SOURCES = \
+	types.cc \
+	query.cc \
 	core/verbose.cc \
 	core/aliases.cc \
 	core/aliases-reverse.cc \
@@ -316,6 +320,8 @@ dist_noinst_HEADERS = \
 tut_test_SOURCES = \
 	core/tests/tut-main.cpp \
 	core/test-utils-core.cc \
+	types-tut.cc \
+	query-tut.cc \
 	core/aliases-tut.cc \
 	core/stlutils-tut.cc \
 	core/defs-tut.cc \

@@ -136,12 +136,12 @@ struct Generic : public Template
             subset.store_variable_undef(WR_VAR(0, 1, 194));
 
         // Datetime
-        add_datetime_var(WR_VAR(0, 4, 1), !msg.datetime().is_missing(), msg.datetime().date.year);
-        add_datetime_var(WR_VAR(0, 4, 2), !msg.datetime().is_missing(), msg.datetime().date.month);
-        add_datetime_var(WR_VAR(0, 4, 3), !msg.datetime().is_missing(), msg.datetime().date.day);
-        add_datetime_var(WR_VAR(0, 4, 4), !msg.datetime().is_missing(), msg.datetime().time.hour);
-        add_datetime_var(WR_VAR(0, 4, 5), !msg.datetime().is_missing(), msg.datetime().time.minute);
-        add_datetime_var(WR_VAR(0, 4, 6), !msg.datetime().is_missing(), msg.datetime().time.second);
+        add_datetime_var(WR_VAR(0, 4, 1), !msg.datetime().is_missing(), msg.datetime().year);
+        add_datetime_var(WR_VAR(0, 4, 2), !msg.datetime().is_missing(), msg.datetime().month);
+        add_datetime_var(WR_VAR(0, 4, 3), !msg.datetime().is_missing(), msg.datetime().day);
+        add_datetime_var(WR_VAR(0, 4, 4), !msg.datetime().is_missing(), msg.datetime().hour);
+        add_datetime_var(WR_VAR(0, 4, 5), !msg.datetime().is_missing(), msg.datetime().minute);
+        add_datetime_var(WR_VAR(0, 4, 6), !msg.datetime().is_missing(), msg.datetime().second);
 
         // Then the station context
         if (const msg::Context* ctx = msg.find_station_context())

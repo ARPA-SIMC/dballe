@@ -208,7 +208,7 @@ void TestCursorDataMatch::check(WIBBLE_TEST_LOCPRM) const
 TestDBTryDataQuery::TestDBTryDataQuery(DB& db, const std::string& query, unsigned expected)
     : db(db), expected(expected)
 {
-    set_query_from_string(this->query, query);
+    this->query.set_from_test_string(query);
 }
 void TestDBTryDataQuery::check(WIBBLE_TEST_LOCPRM) const
 {
@@ -223,12 +223,8 @@ void TestDBTryDataQuery::check(WIBBLE_TEST_LOCPRM) const
 
 void TestDBTryStationQuery::check(WIBBLE_TEST_LOCPRM) const
 {
-    // Build the query
-    Query query;
-    set_query_from_string(query, this->query);
-
     // Run the query
-    unique_ptr<db::Cursor> cur = db.query_stations(query);
+    unique_ptr<db::Cursor> cur = db.query_stations(core_query_from_string(query));
 
     // Check the number of results
     wassert(actual(cur->remaining()) == expected);
@@ -238,12 +234,8 @@ void TestDBTryStationQuery::check(WIBBLE_TEST_LOCPRM) const
 
 void TestDBTrySummaryQuery::check(WIBBLE_TEST_LOCPRM) const
 {
-    // Build the query
-    Query query;
-    set_query_from_string(query, this->query);
-
     // Run the query
-    unique_ptr<db::Cursor> cur = db.query_summary(query);
+    unique_ptr<db::Cursor> cur = db.query_summary(core_query_from_string(query));
 
     // Check the number of results
     // query_summary counts results in advance only optionally

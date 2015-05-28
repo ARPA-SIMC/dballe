@@ -1,24 +1,3 @@
-/*
- * dballe/mem/db - Archive for point-based meteorological data, in-memory db
- *
- * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "db.h"
 #include "cursor.h"
 #include "dballe/msg/msg.h"
@@ -123,7 +102,7 @@ int DB::last_station_id() const
 void DB::remove(const Query& query)
 {
     Results<Value> res(memdb.values);
-    raw_query_data(query, res);
+    raw_query_data(core::Query::downcast(query), res);
     memdb.remove(res);
 }
 
@@ -171,7 +150,7 @@ struct MatchRepinfo : public Match<Station>
 
 }
 
-void DB::raw_query_stations(const Query& q, memdb::Results<memdb::Station>& res)
+void DB::raw_query_stations(const core::Query& q, memdb::Results<memdb::Station>& res)
 {
     // Build a matcher for queries by priority
     const int& priomin = q.prio_min;
@@ -236,7 +215,7 @@ void DB::raw_query_stations(const Query& q, memdb::Results<memdb::Station>& res)
 }
 
 
-void DB::raw_query_station_data(const Query& q, memdb::Results<memdb::StationValue>& res)
+void DB::raw_query_station_data(const core::Query& q, memdb::Results<memdb::StationValue>& res)
 {
     // Get a list of stations we can match
     Results<Station> res_st(memdb.stations);
@@ -246,7 +225,7 @@ void DB::raw_query_station_data(const Query& q, memdb::Results<memdb::StationVal
     memdb.stationvalues.query(q, res_st, res);
 }
 
-void DB::raw_query_data(const Query& q, memdb::Results<memdb::Value>& res)
+void DB::raw_query_data(const core::Query& q, memdb::Results<memdb::Value>& res)
 {
     // Get a list of stations we can match
     Results<Station> res_st(memdb.stations);
@@ -260,8 +239,9 @@ void DB::raw_query_data(const Query& q, memdb::Results<memdb::Value>& res)
     memdb.values.query(q, res_st, res_tr, res);
 }
 
-std::unique_ptr<db::Cursor> DB::query_stations(const Query& q)
+std::unique_ptr<db::Cursor> DB::query_stations(const Query& query)
 {
+    const core::Query& q = core::Query::downcast(query);
     unsigned int modifiers = q.get_modifiers();
     Results<Station> res(memdb.stations);
 
@@ -293,8 +273,9 @@ std::unique_ptr<db::Cursor> DB::query_stations(const Query& q)
     return Cursor::createStations(*this, modifiers, res);
 }
 
-std::unique_ptr<db::Cursor> DB::query_data(const Query& q)
+std::unique_ptr<db::Cursor> DB::query_data(const Query& query)
 {
+    const core::Query& q = core::Query::downcast(query);
     unsigned int modifiers = q.get_modifiers();
     if (q.query_station_vars)
     {
@@ -319,8 +300,9 @@ std::unique_ptr<db::Cursor> DB::query_data(const Query& q)
     }
 }
 
-std::unique_ptr<db::Cursor> DB::query_summary(const Query& q)
+std::unique_ptr<db::Cursor> DB::query_summary(const Query& query)
 {
+    const core::Query& q = core::Query::downcast(query);
     unsigned int modifiers = q.get_modifiers();
     if (q.query_station_vars)
     {
@@ -412,8 +394,9 @@ struct CompareForExport
 
 }
 
-void DB::export_msgs(const Query& query, MsgConsumer& cons)
+void DB::export_msgs(const Query& query_gen, MsgConsumer& cons)
 {
+    const core::Query& query = core::Query::downcast(query_gen);
     Results<Value> res(memdb.values);
     raw_query_data(query, res);
 

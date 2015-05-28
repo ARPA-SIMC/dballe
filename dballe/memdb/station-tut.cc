@@ -85,7 +85,7 @@ void to::test<2>()
     Stations stations;
     size_t pos = stations.obtain_fixed(Coords(44.0, 11.0), "synop");
 
-    Query query;
+    core::Query query;
 
     {
         query.ana_id = pos;
@@ -124,12 +124,8 @@ void to::test<3>()
     size_t pos = stations.obtain_fixed(Coords(44.0, 11.0), "synop");
     stations.obtain_fixed(Coords(45.0, 12.0), "synop");
 
-    Query query;
-    query.set(DBA_KEY_LAT, 44.0);
-    query.set(DBA_KEY_LON, 11.0);
-
     Results<Station> res(stations);
-    stations.query(query, res);
+    stations.query(core_query_from_string("lat=44.0, lon=11.0"), res);
 
     vector<const Station*> items = get_results(res);
     wassert(actual(items.size()) == 1);
@@ -144,9 +140,8 @@ void to::test<4>()
     size_t pos1 = stations.obtain_fixed(Coords(44.0, 11.0), "synop");
     size_t pos2 = stations.obtain_fixed(Coords(45.0, 12.0), "synop");
 
-    Query query;
     Results<Station> res(stations);
-    stations.query(query, res);
+    stations.query(core::Query(), res);
 
     wassert(actual(res.is_select_all()).istrue());
     wassert(actual(res.is_empty()).isfalse());
@@ -161,11 +156,8 @@ void to::test<5>()
     size_t pos2 = stations.obtain_fixed(Coords(45.0, 11.0), "synop");
     size_t pos3 = stations.obtain_fixed(Coords(46.0, 11.0), "synop");
 
-    Query query;
-    query.set(DBA_KEY_LATMIN, 45.0);
-
     Results<Station> res(stations);
-    stations.query(query, res);
+    stations.query(core_query_from_string("latmin=45.0"), res);
 
     vector<const Station*> items = get_results(res);
     wassert(actual(items.size()) == 2);

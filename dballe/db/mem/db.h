@@ -1,24 +1,3 @@
-/*
- * dballe/mem/db - Archive for point-based meteorological data, in-memory db
- *
- * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #ifndef DBA_DB_MEM_H
 #define DBA_DB_MEM_H
 
@@ -30,12 +9,6 @@
 #include <vector>
 #include <memory>
 
-/** @file
- * @ingroup db
- *
- * Functions used to connect to DB-All.e and insert, query and delete data.
- */
-
 namespace dballe {
 struct Msg;
 struct Msgs;
@@ -45,9 +18,7 @@ namespace db {
 
 namespace mem {
 
-/**
- * DB-ALLe database connection
- */
+/// DB-ALLe database, in-memory db implementation
 class DB : public dballe::DB
 {
 public:
@@ -74,22 +45,22 @@ protected:
     std::vector<VarID> last_insert_varids;
 
     /// Query stations, returning a list of station IDs
-    void raw_query_stations(const Query& rec, memdb::Results<memdb::Station>& res);
+    void raw_query_stations(const core::Query& rec, memdb::Results<memdb::Station>& res);
 
     /// Query station data, returning a list of Value IDs
-    void raw_query_station_data(const Query& rec, memdb::Results<memdb::StationValue>& res);
+    void raw_query_station_data(const core::Query& rec, memdb::Results<memdb::StationValue>& res);
 
     /// Query data, returning a list of Value IDs
-    void raw_query_data(const Query& rec, memdb::Results<memdb::Value>& res);
+    void raw_query_data(const core::Query& rec, memdb::Results<memdb::Value>& res);
     
 public:
     DB();
     DB(const std::string& arg);
     virtual ~DB();
 
-    db::Format format() const { return MEM; }
+    db::Format format() const override { return MEM; }
 
-    void disappear();
+    void disappear() override ;
 
     /**
      * Reset the database, removing all existing DBALLE tables and re-creating them
@@ -102,7 +73,7 @@ public:
      *   If repinfo_file is NULL, then the default of /etc/dballe/repinfo.csv is
      *   used.
      */
-    void reset(const char* repinfo_file = 0);
+    void reset(const char* repinfo_file = 0) override;
 
     /**
      * Update the repinfo table in the database, with the data found in the given
@@ -121,9 +92,9 @@ public:
      * @retval updated
      *   The number of repinfo entryes that have been updated
      */
-    void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated);
+    void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated) override;
 
-    std::map<std::string, int> get_repinfo_priorities();
+    std::map<std::string, int> get_repinfo_priorities() override;
 
     /**
      * Insert a record into the database
@@ -139,9 +110,9 @@ public:
      *   If true, then it is allowed to add new station records to the database.
      *   Otherwise, data can be added only by reusing existing ones.
      */
-    void insert(const Record& rec, bool can_replace, bool station_can_add);
+    void insert(const Record& rec, bool can_replace, bool station_can_add) override;
 
-    int last_station_id() const;
+    int last_station_id() const override;
 
     /**
      * Remove data from the database
@@ -150,9 +121,9 @@ public:
      *   The record with the query data (see technical specifications, par. 1.6.4
      *   "parameter output/input") to select the items to be deleted
      */
-    void remove(const Query& rec);
+    void remove(const Query& rec) override;
 
-    void remove_all();
+    void remove_all() override;
 
     /**
      * Remove orphan values from the database.
@@ -163,7 +134,7 @@ public:
      *
      * Depending on database size, this routine can take a few minutes to execute.
      */
-    void vacuum();
+    void vacuum() override;
 
     /**
      * Start a query on the station archive
@@ -173,7 +144,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    std::unique_ptr<db::Cursor> query_stations(const Query& query);
+    std::unique_ptr<db::Cursor> query_stations(const Query& query) override;
 
     /**
      * Query the database.
@@ -187,9 +158,9 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    std::unique_ptr<db::Cursor> query_data(const Query& rec);
+    std::unique_ptr<db::Cursor> query_data(const Query& rec) override;
 
-    std::unique_ptr<db::Cursor> query_summary(const Query& rec);
+    std::unique_ptr<db::Cursor> query_summary(const Query& rec) override;
 
     /**
      * Query attributes
@@ -209,8 +180,8 @@ public:
     void query_attrs(int reference_id, wreport::Varcode id_var,
             std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
 
-    void attr_insert(wreport::Varcode id_var, const Record& attrs);
-    void attr_insert(int id_data, wreport::Varcode id_var, const Record& attrs);
+    void attr_insert(wreport::Varcode id_var, const Record& attrs) override;
+    void attr_insert(int id_data, wreport::Varcode id_var, const Record& attrs) override;
 
     /**
      * Delete QC data for the variable `var' in record `rec' (coming from a previous
@@ -224,7 +195,7 @@ public:
      *   Array of WMO codes of the attributes to delete.  If empty, all attributes
      *   associated to id_data will be deleted.
      */
-    void attr_remove(int id_data, wreport::Varcode id_var, const db::AttrList& qcs);
+    void attr_remove(int id_data, wreport::Varcode id_var, const db::AttrList& qcs) override;
 
     /**
      * Import a Msg message into the DB-All.e database
@@ -240,7 +211,7 @@ public:
      *   Customise different aspects of the import process.  It is a bitmask of the
      *   various DBA_IMPORT_* macros.
      */
-    void import_msg(const Msg& msg, const char* repmemo, int flags);
+    void import_msg(const Msg& msg, const char* repmemo, int flags) override;
 
     /**
      * Perform the query in `query', and return the results as a NULL-terminated
@@ -251,19 +222,17 @@ public:
      * @param cons
      *   The MsgsConsumer that will handle the resulting messages
      */
-    void export_msgs(const Query& query, MsgConsumer& cons);
+    void export_msgs(const Query& query, MsgConsumer& cons) override;
 
     /**
      * Dump the entire contents of the database to an output stream
      */
-    void dump(FILE* out);
+    void dump(FILE* out) override;
 
     friend class dballe::DB;
 };
 
-} // namespace v6
-} // namespace db
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
+}
+}
+}
 #endif

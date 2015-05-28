@@ -101,10 +101,8 @@ std::vector<Test> tests {
 
         // Put some data in the database and check that it gets exported properly
         // Query back the data
-        Query query;
-
         MsgCollector msgs;
-        db->export_msgs(query, msgs);
+        db->export_msgs(core::Query(), msgs);
         ensure_equals(msgs.size(), 4u);
 
         if (msgs[2]->type == MSG_METAR)
@@ -176,9 +174,8 @@ std::vector<Test> tests {
         db->insert(in, false, true);
 
         // Query back the data
-        Query query;
         MsgCollector msgs;
-        db->export_msgs(query, msgs);
+        db->export_msgs(core::Query(), msgs);
         ensure_equals(msgs.size(), 1u);
 
         ensure_equals(msgs[0]->type, MSG_SYNOP);

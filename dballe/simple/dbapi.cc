@@ -156,7 +156,7 @@ int DbAPI::quantesono()
         delete ana_cur;
         ana_cur = 0;
     }
-    Query query;
+    core::Query query;
     query.set_from_record(input);
     ana_cur = db.query_stations(query).release();
     attr_state = ATTR_REFERENCE;
@@ -188,7 +188,7 @@ int DbAPI::voglioquesto()
         delete query_cur;
         query_cur = NULL;
     }
-    Query query;
+    core::Query query;
     query.set_from_record(input);
     query_cur = db.query_data(query).release();
     attr_state = ATTR_REFERENCE;
@@ -255,7 +255,7 @@ void DbAPI::dimenticami()
     if (! (perms & PERM_DATA_WRITE))
         throw error_consistency("dimenticami must be called with the database open in data write mode");
 
-    Query query;
+    core::Query query;
     query.set_from_record(input);
     db.remove(query);
     attr_state = ATTR_REFERENCE;
@@ -447,7 +447,7 @@ void DbAPI::messages_write_next(const char* template_name)
     Exporter exporter(*(output_file->output), options);
 
     // Do the export with the current filter
-    Query query;
+    core::Query query;
     query.set_from_record(input);
     db.export_msgs(query, exporter);
 }

@@ -304,12 +304,8 @@ Datetime SQLiteStatement::column_datetime(int col)
     Datetime res;
     string dt = column_string(col);
     sscanf(dt.c_str(), "%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu",
-            &res.date.year,
-            &res.date.month,
-            &res.date.day,
-            &res.time.hour,
-            &res.time.minute,
-            &res.time.second);
+            &res.year, &res.month, &res.day,
+            &res.hour, &res.minute, &res.second);
     return res;
 }
 
@@ -411,8 +407,8 @@ void SQLiteStatement::bind_val(int idx, const Datetime& val)
 {
     char* buf;
     int size = asprintf(&buf, "%04d-%02d-%02d %02d:%02d:%02d",
-            val.date.year, val.date.month, val.date.day,
-            val.time.hour, val.time.minute, val.time.second);
+            val.year, val.month, val.day,
+            val.hour, val.minute, val.second);
     if (sqlite3_bind_text(stm, idx, buf, size, free) != SQLITE_OK)
         throw error_sqlite(conn, "cannot bind a text (from Datetime) input column");
 }

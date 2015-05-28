@@ -1,22 +1,3 @@
-/*
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "msg/test-utils-msg.h"
 #include "core/csv.h"
 #include "msg/msgs.h"
@@ -42,9 +23,7 @@ struct msg_shar
 
     std::unique_ptr<Matcher> get_matcher(const char* q)
     {
-        Query query;
-        query.set_from_test_string(q);
-        return Matcher::create(query);
+        return Matcher::create(dballe::tests::core_query_from_string(q));
     }
 };
 TESTGRP(msg);
@@ -509,8 +488,7 @@ void to::test<9>()
 template<> template<>
 void to::test<10>()
 {
-    Query query;
-    std::unique_ptr<Matcher> m = Matcher::create(query);
+    std::unique_ptr<Matcher> m = Matcher::create(core::Query());
 
     Msg matched;
     ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);

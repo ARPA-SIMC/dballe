@@ -241,12 +241,8 @@ Datetime Row::as_datetime(int col) const
 {
     Datetime res;
     sscanf(as_cstring(col), "%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu",
-            &res.date.year,
-            &res.date.month,
-            &res.date.day,
-            &res.time.hour,
-            &res.time.minute,
-            &res.time.second);
+            &res.year, &res.month, &res.day,
+            &res.hour, &res.minute, &res.second);
     return res;
 }
 

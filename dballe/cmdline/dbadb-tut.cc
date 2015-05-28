@@ -66,7 +66,7 @@ std::vector<Test> tests {
         ensure_equals(dbadb.do_import(dballe::tests::datafile("bufr/obs0-1.22.bufr"), reader), 0);
 
         // Export forcing report as temp
-        Query query;
+        core::Query query;
         ArrayFile file(BUFR);
         ensure_equals(dbadb.do_export(query, file, "generic", "ship"), 0);
 

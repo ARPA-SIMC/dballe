@@ -570,8 +570,8 @@ void ODBCConnection::drop_settings()
 void ODBCConnection::add_datetime(Querybuf& qb, const Datetime& dt) const
 {
     qb.appendf("{ts '%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu'}",
-            dt.date.year, dt.date.month, dt.date.day,
-            dt.time.hour, dt.time.minute, dt.time.second);
+            dt.year, dt.month, dt.day,
+            dt.hour, dt.minute, dt.second);
 }
 
 ODBCStatement::ODBCStatement(ODBCConnection& conn)

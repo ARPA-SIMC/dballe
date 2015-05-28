@@ -282,12 +282,12 @@ void Template::setupBulletin(wreport::Bulletin& bulletin)
     // Get reference time from first msg in the set
     // If not found, use current time.
     const Msg& msg = *msgs[0];
-    bulletin.rep_year = msg.datetime().date.year;
-    bulletin.rep_month = msg.datetime().date.month;
-    bulletin.rep_day = msg.datetime().date.day;
-    bulletin.rep_hour = msg.datetime().time.hour;
-    bulletin.rep_minute = msg.datetime().time.minute;
-    bulletin.rep_second = msg.datetime().time.second;
+    bulletin.rep_year = msg.datetime().year;
+    bulletin.rep_month = msg.datetime().month;
+    bulletin.rep_day = msg.datetime().day;
+    bulletin.rep_hour = msg.datetime().hour;
+    bulletin.rep_minute = msg.datetime().minute;
+    bulletin.rep_second = msg.datetime().second;
     bulletin.master_table_number = 0;
 
     if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
@@ -389,7 +389,7 @@ void Template::do_station_name(wreport::Varcode dstcode) const
 
 void Template::do_ecmwf_past_wtr() const
 {
-    int hour = msg->datetime().time.hour == 0xff ? 0 : msg->datetime().time.hour;
+    int hour = msg->datetime().hour == 0xff ? 0 : msg->datetime().hour;
 
     if (hour % 6 == 0)
     {
@@ -426,7 +426,7 @@ void Template::do_D01011() const
     if (const Var* var = find_station_var(WR_VAR(0, 4, 1)))
         subset->store_variable(WR_VAR(0, 4, 1), *var);
     else if (!msg->datetime().is_missing())
-        subset->store_variable_i(WR_VAR(0, 4, 1), msg->datetime().date.year);
+        subset->store_variable_i(WR_VAR(0, 4, 1), msg->datetime().year);
     else
         subset->store_variable_undef(WR_VAR(0, 4, 1));
 
@@ -434,7 +434,7 @@ void Template::do_D01011() const
     if (const Var* var = find_station_var(WR_VAR(0, 4, 2)))
         subset->store_variable(WR_VAR(0, 4, 2), *var);
     else if (!msg->datetime().is_missing())
-        subset->store_variable_i(WR_VAR(0, 4, 2), msg->datetime().date.month);
+        subset->store_variable_i(WR_VAR(0, 4, 2), msg->datetime().month);
     else
         subset->store_variable_undef(WR_VAR(0, 4, 2));
 
@@ -442,7 +442,7 @@ void Template::do_D01011() const
     if (const Var* var = find_station_var(WR_VAR(0, 4, 3)))
         subset->store_variable(WR_VAR(0, 4, 3), *var);
     else if (!msg->datetime().is_missing())
-        subset->store_variable_i(WR_VAR(0, 4, 3), msg->datetime().date.day);
+        subset->store_variable_i(WR_VAR(0, 4, 3), msg->datetime().day);
     else
         subset->store_variable_undef(WR_VAR(0, 4, 3));
 }
@@ -459,8 +459,8 @@ int Template::do_D01012() const
     }
     else if (!msg->datetime().is_missing())
     {
-        subset->store_variable_i(WR_VAR(0, 4, 4), msg->datetime().time.hour);
-        res = msg->datetime().time.hour;
+        subset->store_variable_i(WR_VAR(0, 4, 4), msg->datetime().hour);
+        res = msg->datetime().hour;
     }
     else
         subset->store_variable_undef(WR_VAR(0, 4, 4));
@@ -469,7 +469,7 @@ int Template::do_D01012() const
     if (const Var* var = find_station_var(WR_VAR(0, 4, 5)))
         subset->store_variable(WR_VAR(0, 4, 5), *var);
     else if (!msg->datetime().is_missing())
-        subset->store_variable_i(WR_VAR(0, 4, 5), msg->datetime().time.minute);
+        subset->store_variable_i(WR_VAR(0, 4, 5), msg->datetime().minute);
     else
         subset->store_variable_undef(WR_VAR(0, 4, 5));
 
@@ -484,7 +484,7 @@ void Template::do_D01013() const
     if (const Var* var = find_station_var(WR_VAR(0, 4, 6)))
         subset->store_variable(WR_VAR(0, 4, 6), *var);
     else if (!msg->datetime().is_missing())
-        subset->store_variable_i(WR_VAR(0, 4, 6), msg->datetime().time.second);
+        subset->store_variable_i(WR_VAR(0, 4, 6), msg->datetime().second);
     else
         subset->store_variable_undef(WR_VAR(0, 4, 6));
 }

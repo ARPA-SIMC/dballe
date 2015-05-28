@@ -1,25 +1,3 @@
-/*
- * json - JSON writer
- *
- * Copyright (C) 2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "json.h"
 #include <cctype>
 #include <cmath>
@@ -27,6 +5,7 @@
 using namespace std;
 
 namespace dballe {
+namespace core {
 
 JSONWriter::JSONWriter(std::string& out) : out(out) {}
 JSONWriter::~JSONWriter() {}
@@ -143,12 +122,12 @@ void JSONWriter::add_datetime(const Datetime& val)
     else
     {
         start_list();
-        if (val.date.year != MISSING_INT) add(val.date.year); else add_null();
-        if (val.date.month != MISSING_INT) add(val.date.month); else add_null();
-        if (val.date.day != MISSING_INT) add(val.date.day); else add_null();
-        if (val.time.hour != MISSING_INT) add(val.time.hour); else add_null();
-        if (val.time.minute != MISSING_INT) add(val.time.minute); else add_null();
-        if (val.time.second != MISSING_INT) add(val.time.second); else add_null();
+        if (val.year != MISSING_INT) add(val.year); else add_null();
+        if (val.month != MISSING_INT) add(val.month); else add_null();
+        if (val.day != MISSING_INT) add(val.day); else add_null();
+        if (val.hour != MISSING_INT) add(val.hour); else add_null();
+        if (val.minute != MISSING_INT) add(val.minute); else add_null();
+        if (val.second != MISSING_INT) add(val.second); else add_null();
         end_list();
     }
 }
@@ -179,4 +158,5 @@ void JSONWriter::end_mapping()
     stack.pop_back();
 }
 
+}
 }

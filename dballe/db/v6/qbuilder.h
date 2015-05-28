@@ -1,30 +1,3 @@
-/*
- * db/v6/qbuilder - build SQL queries for V6 databases
- *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
-/** @file
- * @ingroup db
- *
- * Functions used to manage a general DB-ALLe query
- */
-
 #ifndef DBA_DB_V6_QBUILDER_H
 #define DBA_DB_V6_QBUILDER_H
 
@@ -39,6 +12,7 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
+/// Build SQL queries for V6 databases
 struct QueryBuilder
 {
     Connection& conn;
@@ -68,7 +42,7 @@ struct QueryBuilder
     bool select_summary_details = false; // id_data, datetime, datetimemax
 
     /// Query object
-    const Query& query;
+    const core::Query& query;
 
     /** Dynamically generated SQL query */
     Querybuf sql_query;
@@ -86,7 +60,7 @@ struct QueryBuilder
     bool query_station_vars;
 
 
-    QueryBuilder(DB& db, const Query& query, unsigned int modifiers);
+    QueryBuilder(DB& db, const core::Query& query, unsigned int modifiers);
     virtual ~QueryBuilder() {}
 
     void build();
@@ -108,7 +82,7 @@ protected:
 
 struct StationQueryBuilder : public QueryBuilder
 {
-    StationQueryBuilder(DB& db, const Query& query, unsigned int modifiers)
+    StationQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers)
         : QueryBuilder(db, query, modifiers) {}
 
     virtual void build_select();
@@ -120,7 +94,7 @@ struct DataQueryBuilder : public QueryBuilder
 {
     int query_data_id;
 
-    DataQueryBuilder(DB& db, const Query& query, unsigned int modifiers);
+    DataQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers);
 
     virtual void build_select();
     virtual bool build_where();
@@ -129,7 +103,7 @@ struct DataQueryBuilder : public QueryBuilder
 
 struct IdQueryBuilder : public DataQueryBuilder
 {
-    IdQueryBuilder(DB& db, const Query& query, unsigned int modifiers)
+    IdQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers)
         : DataQueryBuilder(db, query, modifiers) {}
 
     virtual void build_select();
@@ -138,7 +112,7 @@ struct IdQueryBuilder : public DataQueryBuilder
 
 struct SummaryQueryBuilder : public DataQueryBuilder
 {
-    SummaryQueryBuilder(DB& db, const Query& query, unsigned int modifiers)
+    SummaryQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers)
         : DataQueryBuilder(db, query, modifiers) {}
 
     virtual void build_select();

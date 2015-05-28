@@ -59,9 +59,7 @@ struct match_wreport_shar {
 
     std::unique_ptr<Matcher> get_matcher(const char* q)
     {
-        Query query;
-        query.set_from_test_string(q);
-        return Matcher::create(query);
+        return Matcher::create(*dballe::tests::query_from_string(q));
     }
 };
 TESTGRP(match_wreport);
@@ -292,8 +290,7 @@ void to::test<6>()
 template<> template<>
 void to::test<7>()
 {
-    Query query;
-    std::unique_ptr<Matcher> m = Matcher::create(query);
+    std::unique_ptr<Matcher> m = Matcher::create(*Query::create());
 
     Subset s(Vartable::get("dballe"));
     ensure(m->match(MatchedSubset(s)) == matcher::MATCH_YES);
@@ -540,8 +537,7 @@ void to::test<13>()
 template<> template<>
 void to::test<14>()
 {
-    Query query;
-    std::unique_ptr<Matcher> m = Matcher::create(query);
+    std::unique_ptr<Matcher> m = Matcher::create(*Query::create());
 
     BufrBulletin& b = init();
     ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_YES);

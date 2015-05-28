@@ -281,7 +281,8 @@ struct VarContext
         if (c.level != Level::ana())
         {
             // Datetime
-            out << msg.datetime().date << ' ' << msg.datetime().time << ',';
+            msg.datetime().to_iso8601(out, ' ');
+            out << ',';
 
             // Level
             c.level.format(out, "");

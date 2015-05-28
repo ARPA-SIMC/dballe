@@ -50,15 +50,15 @@ void Importer::import(const wreport::Subset& subset, Msg& msg)
     datetime = Datetime();
     init();
     run();
-    if (datetime.date.year == 0xffff)
+    if (datetime.year == 0xffff)
         msg.set_datetime(Datetime());
     else
     {
-        if (datetime.date.month == 0xff)
+        if (datetime.month == 0xff)
             throw error_consistency("no month information found in message to import");
-        if (datetime.date.day == 0xff)
+        if (datetime.day == 0xff)
             throw error_consistency("no day information found in message to import");
-        if (datetime.time.hour == 0xff)
+        if (datetime.hour == 0xff)
             throw error_consistency("no hour information found in message to import");
         msg.set_datetime(datetime.lower_bound());
     }
@@ -82,32 +82,32 @@ void WMOImporter::import_var(const Var& var)
 		case WR_VAR(0,  2,  1): msg->set_st_type_var(var); break;
 		case WR_VAR(0,  1, 15): msg->set_st_name_var(var); break;
         case WR_VAR(0,  4,  1):
-            datetime.date.year = var.enqi();
+            datetime.year = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 1), Level::ana(), Trange::ana());
             break;
         case WR_VAR(0,  4,  2):
-            datetime.date.month = var.enqi();
+            datetime.month = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 2), Level::ana(), Trange::ana());
             break;
         case WR_VAR(0,  4,  3):
-            datetime.date.day = var.enqi();
+            datetime.day = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 3), Level::ana(), Trange::ana());
             break;
         case WR_VAR(0,  4,  4):
-            datetime.time.hour = var.enqi();
+            datetime.hour = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 4), Level::ana(), Trange::ana());
             break;
         case WR_VAR(0,  4,  5):
-            datetime.time.minute = var.enqi();
+            datetime.minute = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 5), Level::ana(), Trange::ana());
             break;
         case WR_VAR(0,  4,  6):
-            datetime.time.second = var.enqi();
+            datetime.second = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 6), Level::ana(), Trange::ana());
             break;

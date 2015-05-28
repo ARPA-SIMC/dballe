@@ -383,25 +383,25 @@ void MsgAPI::prendilo()
 
     Datetime datetime;
     if (const Var* var = input.key_peek(DBA_KEY_YEAR))
-        datetime.date.year = var->enqi();
+        datetime.year = var->enqi();
     if (const Var* var = input.key_peek(DBA_KEY_MONTH))
-        datetime.date.month = var->enqi();
+        datetime.month = var->enqi();
     if (const Var* var = input.key_peek(DBA_KEY_DAY))
-        datetime.date.day = var->enqi();
+        datetime.day = var->enqi();
     if (const Var* var = input.key_peek(DBA_KEY_HOUR))
-        datetime.time.hour = var->enqi();
+        datetime.hour = var->enqi();
     if (const Var* var = input.key_peek(DBA_KEY_MIN))
-        datetime.time.minute = var->enqi();
+        datetime.minute = var->enqi();
     if (const Var* var = input.key_peek(DBA_KEY_SEC))
-        datetime.time.second = var->enqi();
+        datetime.second = var->enqi();
 
-    if (datetime.date.year == 0xffff)
+    if (datetime.year == 0xffff)
         throw error_consistency("no year information found in message to import");
-    if (datetime.date.month == 0xff)
+    if (datetime.month == 0xff)
         throw error_consistency("no month information found in message to import");
-    if (datetime.date.day == 0xff)
+    if (datetime.day == 0xff)
         throw error_consistency("no day information found in message to import");
-    if (datetime.time.hour == 0xff)
+    if (datetime.hour == 0xff)
         throw error_consistency("no hour information found in message to import");
     wmsg->set_datetime(datetime.lower_bound());
 

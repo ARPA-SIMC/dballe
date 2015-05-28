@@ -138,7 +138,7 @@ struct DumpCmd : public DatabaseCmd
         poptGetArg(optCon);
 
         /* Create the query */
-        Query query;
+        core::Query query;
         dba_cmdline_get_query(optCon, query);
 
         unique_ptr<DB> db = connect();
@@ -167,7 +167,7 @@ struct StationsCmd : public DatabaseCmd
         poptGetArg(optCon);
 
         /* Create the query */
-        Query query;
+        core::Query query;
         dba_cmdline_get_query(optCon, query);
 
         unique_ptr<DB> db = connect();
@@ -303,7 +303,7 @@ struct ImportCmd : public DatabaseCmd
         poptGetArg(optCon);
 
         // Configure the reader
-        Query query;
+        core::Query query;
         if (dba_cmdline_get_query(optCon, query) > 0)
             reader.filter.matcher_from_record(query);
         reader.import_opts.simplified = !op_precise_import;
@@ -366,7 +366,7 @@ struct ExportCmd : public DatabaseCmd
         }
 
         // Reat the query from command line
-        Query query;
+        core::Query query;
         dba_cmdline_get_query(optCon, query);
 
         unique_ptr<DB> db = connect();
@@ -405,7 +405,7 @@ struct DeleteCmd : public DatabaseCmd
             dba_cmdline_error(optCon, "you need to specify some query parameters");
 
         /* Add the query data from commandline */
-        Query query;
+        core::Query query;
         dba_cmdline_get_query(optCon, query);
 
         unique_ptr<DB> db = connect();

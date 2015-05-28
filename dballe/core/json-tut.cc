@@ -35,14 +35,14 @@ std::vector<Test> tests {
     Test("null", [](Fixture& f) {
         // null value
         string out;
-        JSONWriter writer(out);
+        core::JSONWriter writer(out);
         writer.add_null();
         wassert(actual(out) == "null");
     }),
     Test("bool", [](Fixture& f) {
         // bool value
         string out;
-        JSONWriter writer(out);
+        core::JSONWriter writer(out);
 
         writer.add(true);
         wassert(actual(out) == "true");
@@ -54,7 +54,7 @@ std::vector<Test> tests {
     Test("int", [](Fixture& f) {
         // int value
         string out;
-        JSONWriter writer(out);
+        core::JSONWriter writer(out);
 
         writer.add(1);
         wassert(actual(out) == "1");
@@ -66,7 +66,7 @@ std::vector<Test> tests {
     Test("double", [](Fixture& f) {
         // double value
         string out;
-        JSONWriter writer(out);
+        core::JSONWriter writer(out);
         writer.add(1.1);
         wassert(actual(out) == "1.100000");
 
@@ -85,7 +85,7 @@ std::vector<Test> tests {
     Test("string", [](Fixture& f) {
         // string value
         string out;
-        JSONWriter writer(out);
+        core::JSONWriter writer(out);
         writer.add("");
         wassert(actual(out) == "\"\"");
 
@@ -100,7 +100,7 @@ std::vector<Test> tests {
     Test("list", [](Fixture& f) {
         // list value
         string out;
-        JSONWriter writer(out);
+        core::JSONWriter writer(out);
         writer.start_list();
         writer.add("");
         writer.add(1);
@@ -111,7 +111,7 @@ std::vector<Test> tests {
     Test("mapping", [](Fixture& f) {
         // mapping value
         string out;
-        JSONWriter writer(out);
+        core::JSONWriter writer(out);
         writer.start_mapping();
         writer.add("", 1);
         writer.add("antani", 1.0);

@@ -114,7 +114,7 @@ std::vector<Test> tests {
     }),
     Test("query_station_vars", [](Fixture& f) {
         auto& db = *f.db;
-        Query query;
+        core::Query query;
         query.query_station_vars = true;
         unique_ptr<db::Cursor> cur = db.query_summary(query);
         ensure_equals(cur->test_iterate(), 8);
@@ -205,7 +205,7 @@ std::vector<Test> tests {
         wassert(actual(db).try_summary_query("mobile=1", 0));
     }),
     Test("query_ident", [](Fixture& f) {
-        auto& db = *f.db;
+        //auto& db = *f.db;
         // TODO: add mobile stations to the fixture so we can query ident
     }),
     Test("query_timerange", [](Fixture& f) {
@@ -259,8 +259,7 @@ std::vector<Test> tests {
         vector<int> context_ids;
         // And an invalid one
         int sum = 1;
-        Query query;
-        unique_ptr<db::Cursor> cur = db.query_data(query);
+        unique_ptr<db::Cursor> cur = db.query_data(core::Query());
         while (cur->next())
         {
             context_ids.push_back(cur->attr_reference_id());
