@@ -70,9 +70,13 @@ struct Query : public dballe::Query
     bool query_station_vars = false;
     // DBA_KEY_VAR_RELATED	= 46,
 
+    std::unique_ptr<dballe::Query> clone() const override;
+
     unsigned get_modifiers() const;
 
     void get_datetime_bounds(Datetime& dtmin, Datetime& dtmax) const override;
+    void set_datetime_exact(const Datetime& dt) override;
+    void set_datetime_bounds(const Datetime& dtmin, const Datetime& dtmax) override;
 
     void clear() override;
 
@@ -80,12 +84,14 @@ struct Query : public dballe::Query
     void setd_keyword(dba_keyword key, double val);
     void setc_keyword(dba_keyword key, const char* val);
     void sets_keyword(dba_keyword key, const std::string& val);
+    void setf_keyword(dba_keyword key, const char* val);
     void unset_keyword(dba_keyword key);
 
     void seti(const char* key, int val) override;
     void setd(const char* key, double val) override;
     void setc(const char* key, const char* val) override;
     void sets(const char* key, const std::string& val) override;
+    void setf(const char* key, const char* val) override;
 
     void unset(const char* key) override;
 
@@ -109,12 +115,6 @@ struct Query : public dballe::Query
      *   The error indicator for the function.
      */
     void set_from_string(const char* str);
-
-    /// Same as set_from_string(str) but takes already split key and val
-    void set_from_string(const char* key, const char* val);
-
-    /// Same as setc, but parse val in the same way as Var::set_from_formatted
-    void set_from_formatted(dba_keyword key, const char* val);
 
     /**
      * Set a record from a ", "-separated string of assignments.

@@ -11,6 +11,11 @@ using namespace std;
 namespace dballe {
 namespace core {
 
+std::unique_ptr<dballe::Query> Query::clone() const
+{
+    return unique_ptr<Query>(new Query(*this));
+}
+
 const Query& Query::downcast(const dballe::Query& query)
 {
     const Query* ptr = dynamic_cast<const Query*>(&query);
@@ -28,6 +33,18 @@ void Query::get_datetime_bounds(Datetime& dtmin, Datetime& dtmax) const
 {
     dtmin = datetime_min.lower_bound();
     dtmax = datetime_max.upper_bound();
+}
+
+void Query::set_datetime_exact(const Datetime& dt)
+{
+    datetime_min = dt.lower_bound();
+    datetime_max = dt.upper_bound();
+}
+
+void Query::set_datetime_bounds(const Datetime& dtmin, const Datetime& dtmax)
+{
+    datetime_min = dtmin.lower_bound();
+    datetime_max = dtmax.upper_bound();
 }
 
 void Query::clear()
@@ -60,34 +77,88 @@ void Query::clear()
 void Query::seti(const char* key, int val)
 {
     dba_keyword k = Record::keyword_byname(key);
-    if (k == DBA_KEY_ERROR)
-        error_notfound::throwf("unknown key %s", key);
-    return seti_keyword(k, val);
+    if (k != DBA_KEY_ERROR)
+        seti_keyword(k, val);
+    else
+    {
+        Varcode code = resolve_varcode_safe(key);
+        switch (code)
+        {
+            case WR_VAR(0, 1, 1): block = val; break;
+            case WR_VAR(0, 1, 2): station = val; break;
+            default: error_consistency::throwf("cannot set query field %s to %d", key, val);
+        }
+    }
 }
 
 void Query::setd(const char* key, double val)
 {
     dba_keyword k = Record::keyword_byname(key);
-    if (k == DBA_KEY_ERROR)
-        error_notfound::throwf("unknown key %s", key);
-    return setd_keyword(k, val);
+    if (k != DBA_KEY_ERROR)
+        setd_keyword(k, val);
+    else
+    {
+        Varcode code = resolve_varcode_safe(key);
+        switch (code)
+        {
+            case WR_VAR(0, 1, 1): block = lround(val); break;
+            case WR_VAR(0, 1, 2): station = lround(val); break;
+            default: error_consistency::throwf("cannot set query field %s to %f", key, val);
+        }
+    }
 }
 
 void Query::setc(const char* key, const char* val)
 {
     dba_keyword k = Record::keyword_byname(key);
-    if (k == DBA_KEY_ERROR)
-        error_notfound::throwf("unknown key %s", key);
-    return setc_keyword(k, val);
+    if (k != DBA_KEY_ERROR)
+        setc_keyword(k, val);
+    else
+    {
+        Varcode code = resolve_varcode_safe(key);
+        switch (code)
+        {
+            case WR_VAR(0, 1, 1): block = strtol(val, 0, 10); break;
+            case WR_VAR(0, 1, 2): station = strtol(val, 0, 10); break;
+            default: error_consistency::throwf("cannot set query field %s to %s", key, val);
+        }
+    }
 }
 
 void Query::sets(const char* key, const std::string& val)
 {
     dba_keyword k = Record::keyword_byname(key);
-    if (k == DBA_KEY_ERROR)
-        error_notfound::throwf("unknown key %s", key);
-    return sets_keyword(k, val);
+    if (k != DBA_KEY_ERROR)
+        sets_keyword(k, val);
+    else
+    {
+        Varcode code = resolve_varcode_safe(key);
+        switch (code)
+        {
+            case WR_VAR(0, 1, 1): block = stoi(val); break;
+            case WR_VAR(0, 1, 2): station = stoi(val); break;
+            default: error_consistency::throwf("cannot set query field %s to %s", key, val.c_str());
+        }
+    }
 }
+
+void Query::setf(const char* key, const char* val)
+{
+    dba_keyword k = Record::keyword_byname(key);
+    if (k != DBA_KEY_ERROR)
+        setf_keyword(k, val);
+    else
+    {
+        Varcode code = resolve_varcode_safe(key);
+        switch (code)
+        {
+            case WR_VAR(0, 1, 1): block = strtol(val, 0, 10); break;
+            case WR_VAR(0, 1, 2): station = strtol(val, 0, 10); break;
+            default: error_consistency::throwf("cannot set query field %s to %s", key, val);
+        }
+    }
+}
+
 
 void Query::unset(const char* key)
 {
@@ -340,6 +411,29 @@ void Query::sets_keyword(dba_keyword key, const std::string& val)
     }
 }
 
+void Query::setf_keyword(dba_keyword key, const char* val)
+{
+    // NULL or empty string, unset()
+    if (val == NULL || val[0] == 0)
+    {
+        unset_keyword(key);
+        return;
+    }
+
+    // Get the Varinfo for this key
+    Varinfo i = Record::keyword_info(key);
+
+    // If we're a string, it's easy
+    if (i->is_string())
+    {
+        setc_keyword(key, val);
+        return;
+    }
+
+    // Else use strtod
+    setd_keyword(key, strtod(val, NULL));
+}
+
 void Query::unset_keyword(dba_keyword key)
 {
     switch (key)
@@ -425,48 +519,7 @@ void Query::set_from_string(const char* str)
     if (!s) error_consistency::throwf("there should be an = between the name and the value in '%s'", str);
 
     string key(str, s - str);
-    set_from_string(key.c_str(), s + 1);
-}
-
-void Query::set_from_string(const char* name, const char* val)
-{
-    dba_keyword key = Record::keyword_byname(name);
-
-    if (key != DBA_KEY_ERROR)
-        set_from_formatted(key, val);
-    else
-    {
-        Varcode code = resolve_varcode_safe(name);
-        switch (code)
-        {
-            case WR_VAR(0, 1, 1): block = strtol(val, 0, 10); break;
-            case WR_VAR(0, 1, 2): station = strtol(val, 0, 10); break;
-            default: error_consistency::throwf("cannot set query field %s to %s", name, val);
-        }
-    }
-}
-
-void Query::set_from_formatted(dba_keyword key, const char* val)
-{
-    // NULL or empty string, unset()
-    if (val == NULL || val[0] == 0)
-    {
-        unset_keyword(key);
-        return;
-    }
-
-    // Get the Varinfo for this key
-    Varinfo i = Record::keyword_info(key);
-
-    // If we're a string, it's easy
-    if (i->is_string())
-    {
-        setc_keyword(key, val);
-        return;
-    }
-
-    // Else use strtod
-    setd_keyword(key, strtod(val, NULL));
+    setf(key.c_str(), s + 1);
 }
 
 void Query::set_from_test_string(const std::string& s)
@@ -765,7 +818,8 @@ void Query::to_vars(std::function<void(const char*, unique_ptr<Var>&&)> dest) co
     if (!data_filter.empty()) vargen.gen(DBA_KEY_DATA_FILTER, data_filter);
     if (!attr_filter.empty()) vargen.gen(DBA_KEY_ATTR_FILTER, attr_filter);
     if (limit != MISSING_INT) vargen.gen(DBA_KEY_LIMIT, limit);
-    // block and station cannot be represented with dba_keyword
+    if (block != MISSING_INT) dest("block", newvar(WR_VAR(0, 1, 1), block));
+    if (station != MISSING_INT) dest("station", newvar(WR_VAR(0, 1, 2), station));
     if (data_id != MISSING_INT) vargen.gen(DBA_KEY_CONTEXT_ID, data_id);
 }
 

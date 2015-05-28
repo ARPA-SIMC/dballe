@@ -13,6 +13,19 @@ typedef test_group::Test Test;
 typedef test_group::Fixture Fixture;
 
 std::vector<Test> tests {
+    Test("clone", [](Fixture& f) {
+        auto q = Query::create();
+        Datetime dt;
+        dt.year = 2015; dt.month = 5;
+        q->set_datetime_exact(dt);
+
+        auto q1 = q->clone();
+        Datetime dtmin;
+        Datetime dtmax;
+        q1->get_datetime_bounds(dtmin, dtmax);
+        wassert(actual(dtmin) == Datetime(2015, 5, 1, 0, 0, 0));
+        wassert(actual(dtmax) == Datetime(2015, 5, 31, 23, 59, 59));
+    }),
     Test("date", [](Fixture& f) {
         wassert(actual(Date(2013, 1, 1)) < Date(2014, 1, 1));
         wassert(actual(Date(2013, 1, 1)) < Date(2013, 2, 1));
