@@ -53,30 +53,147 @@ class UnicodeCSVWriter(object):
         self.writer.writerow([enc(s) for s in row])
 
 
+class Column(object):
+    def __init__(self):
+        self.values = set()
+    def is_single_val(self):
+        return len(self.values) == 1
+    def column_labels(self):
+        return [self.LABEL]
+    def title(self):
+        return "{} {}".format(self.LABEL, next(iter(self.values)))
+
+class ColumnStation(Column):
+    def __init__(self, stations):
+        super(ColumnStation, self).__init__()
+        self.stations = stations
+        self.idents = set()
+    def add(self, row):
+        self.values.add(row["ana_id"])
+        ident = row.get("ident", None)
+        if ident is not None: self.idents.add(ident)
+    def title(self):
+        id = next(iter(self.values))
+        lat, lon, ident = self.stations[id]
+        if ident is None:
+            return "Fixed station, lat {}, lon {}".format(lat, lon)
+        else:
+            return "Mobile station {}, lat {}, lon {}".format(ident, lat, lon)
+    def column_labels(self):
+        res = ["Station", "Latitude", "Longitude"]
+        if self.idents: res.append("Ident")
+        return res
+    def column_data(self, rec):
+        id = rec["ana_id"]
+        lat, lon, ident = self.stations[id]
+        res = [id, lat, lon]
+        if self.idents:
+            res.append(ident or "")
+        return res
+
+class ColumnNetwork(Column):
+    LABEL = "Network"
+    def add(self, row):
+        self.values.add(row["rep_memo"])
+    def column_data(self, rec):
+        return [rec["rep_memo"]]
+
+class ColumnDatetime(Column):
+    LABEL = "Datetime"
+    def add(self, row):
+        self.values.add(row["date"])
+    def title(self):
+        return str(next(iter(self.values)))
+    def column_data(self, rec):
+        return [rec["date"]]
+
+class ColumnLevel(Column):
+    def add(self, row):
+        self.values.add(",".join([intormiss(x) for x in row["level"]]))
+    def title(self):
+        return "Level {}".format(next(iter(self.values)))
+    def column_labels(self):
+        return ["Level1", "L1", "Level2", "L2"]
+    def column_data(self, rec):
+        lev = rec["level"]
+        return [
+            intormiss(lev[0]),
+            intormiss(lev[1]),
+            intormiss(lev[2]),
+            intormiss(lev[3])
+        ]
+
+class ColumnTrange(Column):
+    def add(self, row):
+        self.values.add(",".join([intormiss(x) for x in row["trange"]]))
+    def title(self):
+        return "Time range {}".format(next(iter(self.values)))
+    def column_labels(self):
+        return ["Time range", "P1", "P2"]
+    def column_data(self, rec):
+        tr = rec["trange"]
+        return [
+            intormiss(tr[0]),
+            intormiss(tr[1]),
+            intormiss(tr[2])
+        ]
+
+class ColumnVar(Column):
+    LABEL = "Variable"
+    def add(self, row):
+        self.values.add(row["var"])
+    def column_data(self, rec):
+        return [rec.var().code]
+
+class ColumnValue(Column):
+    LABEL = "Value"
+    def add(self, row):
+        self.values.add(row.var().format(""))
+    def column_data(self, rec):
+        return [rec.var().format("")]
+
+class ColumnStationData(Column):
+    def __init__(self, varcode, station_data):
+        super(ColumnStationData, self).__init__()
+        self.varcode = varcode
+        self.station_data = station_data
+    def add(self, row):
+        self.values.add(row[self.varcode])
+    def column_labels(self):
+        return ["Station {}".format(self.varcode)]
+    def column_data(self, rec):
+        id = rec["ana_id"]
+        data = self.station_data[id]
+        var = data.get(self.varcode, None)
+        if var is None:
+            return [""]
+        else:
+            return [var.format("")]
+
+class ColumnAttribute(Column):
+    def __init__(self, varcode, attributes):
+        super(ColumnAttribute, self).__init__()
+        self.varcode = varcode
+        self.attributes = attributes
+    def add(self, var):
+        self.values.add(var.format(""))
+    def column_labels(self):
+        return ["Attr {}".format(self.varcode)]
+    def column_data(self, rec):
+        data = self.attributes["{},{}".format(rec["context_id"], rec["var"])]
+        var = data.get(self.varcode, None)
+        if var is None:
+            return [""]
+        else:
+            return [var.format("")]
+
 class Exporter:
     def __init__(self, db):
         self.db = db
         self.title = ""
         self.cols = []
-        self.anaData = {}
-        self.attrData = {}
-
-    def getpaval(self, x, var):
-        id = x["ana_id"]
-        data = self.anaData[id]
-        #print "***********", id, av, data
-        if data.has_key(var):
-            return data[var].format("")
-        else:
-            return ""
-
-    def getattrval(self, x, v):
-        data = self.attrData["%d,%s"%(x["context_id"],x["var"])]
-        val = data.get(v, None)
-        if val is None:
-            return ""
-        else:
-            return val
+        self.station_data = {}
+        self.attributes = {}
 
     def compute_columns(self, filter):
         """
@@ -85,145 +202,76 @@ class Exporter:
         It queries DB-All.e once; another query will be needed later to output
         data.
         """
-        title = ""
-        cols = []
+        # Station data indexed by station id
+        stations = {}
 
         # Do one pass over the result set to compute the columns
-        stations = {}
-        idents = set()
-        anaVars = {}
-        reps = set()
-        dates = set()
-        levels = set()
-        tranges = set()
-        vars = set()
-        attrs = {}
-        for d in self.db.query_data(filter):
-            # Add columns about the station
-            id = d["ana_id"]
-            stations[id] = [d["lat"], d["lon"], d.get("ident", None)]
-            idents.add(d.get("ident", None))
+        columns = [
+            ColumnStation(stations),
+            ColumnNetwork(),
+            ColumnDatetime(),
+            ColumnLevel(),
+            ColumnTrange(),
+            ColumnVar(),
+            ColumnValue(),
+        ]
+        station_var_cols = {}
+        attribute_cols = {}
+        rowcount = 0
+        for row in self.db.query_data(filter):
+            rowcount += 1
+            # Let the columns examine this row
+            for c in columns:
+                c.add(row)
 
-            # Get info about the pseudoana extra data
-            if id not in self.anaData:
+            # Index station data by ana_id
+            id = row["ana_id"]
+            stations[id] = [row["lat"], row["lon"], row.get("ident", None)]
+
+            # Load station variables for this station
+            if id not in self.station_data:
                 query = dballe.Record(ana_id=id)
                 query.set_station_context()
                 items = {}
                 for record in self.db.query_data(query):
                     v = record.var()
                     items[v.code] = v
-                    val = v.get()
-                    if v.code in anaVars:
-                        if anaVars[v.code] != val:
-                            anaVars[v.code] = None
-                    else:
-                        anaVars[v.code] = val
-                    #print id, v, items[v].format('none')
-                self.anaData[id] = items
+                    col = station_var_cols.get(v.code, None)
+                    if col is None:
+                        station_var_cols[v.code] = col = ColumnStationData(v.code, self.station_data)
+                    col.add(record)
+                self.station_data[id] = items
 
-            # Add columns about the context
-
-            # Repcod
-            reps.add(d["rep_memo"])
-
-            # Date
-            dates.add(d["date"])
-
-            # Level layer
-            levels.add(",".join([intormiss(x) for x in d["level"]]))
-
-            # Time range
-            tranges.add(",".join([intormiss(x) for x in d["trange"]]))
-
-            # Variables
-            vars.add(d["var"])
-
-            # Attributes
+            # Load attributes
             attributes = {}
-            for v in self.db.query_attrs(d["var"], d["context_id"]).vars():
+            for v in self.db.query_attrs(row["var"], row["context_id"]).vars():
                 code = v.code
-                val = v.format("");
-                attributes[code] = val
-
-                oldval = attrs.get(code, None)
-                if oldval is None:
-                    attrs[code] = val
-                elif oldval != val:
-                    attrs[code] = None
-
-            self.attrData["%d,%s"%(d["context_id"], d["var"])] = attributes
+                attributes[code] = v
+                col = attribute_cols.get(code, None)
+                if col is None:
+                    attribute_cols[code] = col = ColumnAttribute(code, self.attributes)
+                col.add(v)
+            self.attributes["{},{}".format(row["context_id"], row["var"])] = attributes
+        self.rowcount = rowcount
 
         # Now that we have detailed info, compute the columns
 
-        if len(stations) == 1:
-            # Get the data on the station
-            for i in stations.itervalues():
-                data = i
-                break;
-            if data[2] == None:
-                title = title + "Fixed station, lat %f, lon %f. " % (data[0], data[1])
+        # Build a list of all candidate columns
+        all_columns = []
+        all_columns.extend(columns)
+        for k, v in sorted(station_var_cols.items()):
+            all_columns.append(v)
+        for k, v in sorted(attribute_cols.items()):
+            all_columns.append(v)
+
+        # Dispatch them between title and csv body
+        self.title_columns = []
+        self.csv_columns = []
+        for col in all_columns:
+            if col.is_single_val():
+                self.title_columns.append(col)
             else:
-                title = title + "Mobile station %s, lat %f, lon %f. " % (data[2], data[0], data[1])
-        else:
-            cols.append(["Station", lambda x: x["ana_id"]])
-            cols.append(["Latitude", lambda x: x["lat"]])
-            cols.append(["Longitude", lambda x: x["lon"]])
-            if len(idents) > 1:
-                cols.append(["Ident", lambda x: x.get("ident", None) or ""])
-
-        # Repcod
-        if len(reps) == 1:
-            title = title + "Report: %s." % reps.pop()
-        elif len(reps) > 1:
-            cols.append(["Report", lambda x: x["rep_memo"]])
-
-        # Date
-        if len(dates) == 1:
-            title = title + "Date: %s." % (dates.pop())
-        elif len(dates) > 1:
-            cols.append(["Date", lambda x: x["date"]])
-
-        # Level layer
-        if len(levels) == 1:
-            title = title + "Level: %s." % (levels.pop())
-        elif len(levels) > 1:
-            cols.append(["Level1", lambda x: intormiss(x["level"][0])])
-            cols.append(["L1", lambda x: intormiss(x["level"][1])])
-            cols.append(["Level2", lambda x: intormiss(x["level"][2])])
-            cols.append(["L2", lambda x: intormiss(x["level"][3])])
-
-        # Time range
-        if len(tranges) == 1:
-            title = title + "Time range: %s." % (tranges.pop())
-        elif len(tranges) > 1:
-            cols.append(["Time range", lambda x: intormiss(x["trange"][0])])
-            cols.append(["P1", lambda x: intormiss(x["trange"][1])])
-            cols.append(["P2", lambda x: intormiss(x["trange"][2])])
-
-        # Variables
-        for v in sorted(vars):
-            cols.append([v, lambda x, v=v: x.var(v).format("")])
-
-        # Column for special station ana data
-        for av in sorted(anaVars.keys()):
-            if anaVars[av] == None:
-                # Dirty workaround to compensate Python's lack of proper
-                # anonymous functions: see http://www.jnetworld.com/python.htm
-                cols.append(["Ana "+av, lambda a, av=av: self.getpaval(a, av)])
-            else:
-                title = title + "Ana %s: %s. " % (av, anaVars[av])
-
-        # Attributes
-        for v in sorted(attrs.keys()):
-            if attrs[v] == None:
-                # Dirty workaround to compensate Python's lack of proper
-                # anonymous functions: see http://www.jnetworld.com/python.htm
-                cols.append(["Attr "+v, lambda rec, v=v: self.getattrval(rec, v)])
-            else:
-                title = title + "Attr %s: %s. " % (v, attrs[v])
-
-        self.title = title
-        self.cols = cols
+                self.csv_columns.append(col)
 
     def output(self, query, fd):
         """
@@ -236,24 +284,29 @@ class Exporter:
         self.compute_columns(query)
 
         # Don't query an empty result set
-        if len(self.cols) == 0:
-            print("Warning: result is empty.", file=sys.stderr)
+        if self.rowcount == 0:
+            print("Result is empty.", file=sys.stderr)
             return
 
+        row_headers = []
+        for c in self.csv_columns:
+            row_headers.extend(c.column_labels())
+
         # Print the title if we have it
-        if len(self.title) > 0:
-            row = ["" for x in range(len(self.cols))]
-            row[0] = self.title
+        if self.title_columns:
+            title = "; ".join(c.title() for c in self.title_columns)
+            row = ["" for x in row_headers]
+            row[0] = title
             writer.writerow(row)
 
-        # Print the column titles
-        writer.writerow([x[0] for x in self.cols])
+        # Print the column headers
+        writer.writerow(row_headers)
 
         for rec in self.db.query_data(query):
-            fields = []
-            for c in self.cols:
-                fields.append(c[1](rec))
-            writer.writerow(fields)
+            row = []
+            for c in self.csv_columns:
+                row.extend(c.column_data(rec))
+            writer.writerow(row)
 
 def export(db, query, fd):
     """
