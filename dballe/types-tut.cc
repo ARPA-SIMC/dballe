@@ -67,6 +67,36 @@ std::vector<Test> tests {
         wassert(actual(d.month) == 4);
         wassert(actual(d.day) == 25);
     }),
+    Test("level_descs", [](Fixture& f) {
+        // Try to get descriptions for all the layers
+        for (int i = 0; i < 261; ++i)
+        {
+            Level(i).describe();
+            Level(i, 0).describe();
+            Level(i, MISSING_INT, i, MISSING_INT).describe();
+            Level(i, 0, i, 0).describe();
+        }
+    }),
+    Test("trange_descs", [](Fixture& f) {
+        // Try to get descriptions for all the time ranges
+        for (int i = 0; i < 256; ++i)
+        {
+            Trange(i).describe();
+            Trange(i, 0).describe();
+            Trange(i, 0, 0).describe();
+        }
+    }),
+    Test("known_descs", [](Fixture& f) {
+        // Verify some well-known descriptions
+        wassert(actual(Level().describe()) == "Information about the station that generated the data");
+        wassert(actual(Level(103, 2000).describe()) == "2.000m above ground");
+        wassert(actual(Level(103, 2000, 103, 4000).describe()) ==
+                "Layer from [2.000m above ground] to [4.000m above ground]");
+        wassert(actual(Trange(254, 86400).describe()) ==
+                "Forecast at t+1d, instantaneous value");
+        wassert(actual(Trange(2, 0, 43200).describe()) == "Maximum over 12h at forecast time 0");
+        wassert(actual(Trange(3, 194400, 43200).describe()) == "Minimum over 12h at forecast time 2d 6h");
+    }),
 };
 
 test_group newtg("dballe_types", tests);
