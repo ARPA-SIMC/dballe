@@ -431,7 +431,7 @@ std::string fmtf( const char* f, ... )
 }
 }
 
-static std::string describe_level(int ltype, int l1)
+static std::string describe_level(int ltype, int val)
 {
     switch (ltype)
     {
@@ -442,25 +442,25 @@ static std::string describe_level(int ltype, int l1)
         case 5:   return "Level of adiabatic condensation lifted from the surface";
         case 6:   return "Maximum wind level";
         case 7:   return "Tropopause";
-        case 8:   if (l1 == 0)
+        case 8:   if (val == 0)
                   return "Nominal top of atmosphere";
               else
-                  return fmtf("Nominal top of atmosphere, channel %d", l1);
+                  return fmtf("Nominal top of atmosphere, channel %d", val);
         case 9:   return "Sea bottom";
-        case 20:  return fmtf("Isothermal level, %.1fK", (double)l1/10);
-        case 100: return fmtf("Isobaric surface, %.2fhPa", (double)l1/100);
+        case 20:  return fmtf("Isothermal level, %.1fK", (double)val/10);
+        case 100: return fmtf("Isobaric surface, %.2fhPa", (double)val/100);
         case 101: return "Mean sea level";
-        case 102: return fmtf("%.3fm above mean sea level", (double)l1/1000);
-        case 103: return fmtf("%.3fm above ground", (double)l1/1000);
-        case 104: return fmtf("Sigma level %.5f", (double)l1/10000);
-        case 105: return fmtf("Hybrid level %d", l1);
-        case 106: return fmtf("%.3fm below land surface", (double)l1/1000);
-        case 107: return fmtf("Isentropic (theta) level, potential temperature %.1fK", (double)l1/10);
-        case 108: return fmtf("Pressure difference %.2fhPa from ground to level", (double)l1/100);
-        case 109: return fmtf("Potential vorticity surface %.3f 10-6 K m2 kg-1 s-1", (double)l1/1000);
-        case 111: return fmtf("ETA* level %.5f", (double)l1/10000);
-        case 117: return fmtf("Mixed layer depth %.3fm", (double)l1/1000);
-        case 160: return fmtf("%.3fm below sea level", (double)l1/1000);
+        case 102: return fmtf("%.3fm above mean sea level", (double)val/1000);
+        case 103: return fmtf("%.3fm above ground", (double)val/1000);
+        case 104: return fmtf("Sigma level %.5f", (double)val/10000);
+        case 105: return fmtf("Hybrid level %d", val);
+        case 106: return fmtf("%.3fm below land surface", (double)val/1000);
+        case 107: return fmtf("Isentropic (theta) level, potential temperature %.1fK", (double)val/10);
+        case 108: return fmtf("Pressure difference %.2fhPa from ground to level", (double)val/100);
+        case 109: return fmtf("Potential vorticity surface %.3f 10-6 K m2 kg-1 s-1", (double)val/1000);
+        case 111: return fmtf("ETA* level %.5f", (double)val/10000);
+        case 117: return fmtf("Mixed layer depth %.3fm", (double)val/1000);
+        case 160: return fmtf("%.3fm below sea level", (double)val/1000);
         case 200: return "Entire atmosphere (considered as a single layer)";
         case 201: return "Entire ocean (considered as a single layer)";
         case 204: return "Highest tropospheric freezing level";
@@ -480,7 +480,7 @@ static std::string describe_level(int ltype, int l1)
         case 232: return "High cloud bottom level";
         case 233: return "High cloud top level";
         case 234: return "High cloud layer";
-        case 235: return fmtf("Ocean Isotherm Level, %.1fK", (double)l1/10); break;
+        case 235: return fmtf("Ocean Isotherm Level, %.1fK", (double)val/10); break;
         case 240: return "Ocean Mixed Layer";
         case 242: return "Convective cloud bottom level";
         case 243: return "Convective cloud top level";
@@ -497,29 +497,29 @@ static std::string describe_level(int ltype, int l1)
         case 255: return "Missing";
         case 256: return "Clouds";
         case 258:
-            switch (l1) {
+            switch (val) {
                 case 0: return "General cloud group";
                 case 1: return "CL";
                 case 2: return "CM";
                 case 3: return "CH";
-                default: return fmtf("%d %d", ltype, l1);
+                default: return fmtf("%d %d", ltype, val);
             }
             break;
-        case 259: return fmtf("Cloud group %d", l1);
-        case 260: return fmtf("Cloud drift group %d", l1);
-        case 261: return fmtf("Cloud elevation group %d", l1);
+        case 259: return fmtf("Cloud group %d", val);
+        case 260: return fmtf("Cloud drift group %d", val);
+        case 261: return fmtf("Cloud elevation group %d", val);
         case 262: return "Direction and elevation of clouds";
         case MISSING_INT: return "Information about the station that generated the data";
-        default:    return fmtf("%d %d", ltype, l1); break;
+        default:    return fmtf("%d %d", ltype, val); break;
     }
 }
 
 std::string Level::describe() const
 {
-    if (ltype2 == MISSING_INT || l2 == MISSING_INT)
+    if (ltype2 == MISSING_INT)
         return describe_level(ltype1, l1);
 
-    if (ltype1 == 256)
+    if (ltype1 == 256 || ltype1 == 264)
     {
         string lev1 = describe_level(ltype1, l1);
         string lev2 = describe_level(ltype2, l2);
