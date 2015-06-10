@@ -379,6 +379,100 @@ Datetime Datetime::from_iso8601(const char* str)
 }
 
 /*
+ * DatetimeRange
+ */
+
+
+DatetimeRange::DatetimeRange(
+            int yemin, int momin, int damin, int homin, int mimin, int semin,
+            int yemax, int momax, int damax, int homax, int mimax, int semax)
+{
+    set(yemin, momin, damin, homin, mimin, semin, yemax, momax, damax, homax, mimax, semax);
+}
+
+bool DatetimeRange::is_missing() const
+{
+    return min.is_missing() && max.is_missing();
+}
+
+bool DatetimeRange::operator==(const DatetimeRange& dtr) const
+{
+    return min == dtr.min && max == dtr.max;
+}
+
+bool DatetimeRange::operator!=(const DatetimeRange& dtr) const
+{
+    return min != dtr.min || max != dtr.max;
+}
+
+void DatetimeRange::merge(const DatetimeRange& range)
+{
+    if (!min.is_missing() && (range.min.is_missing() || range.min < min))
+        min = range.min;
+
+    if (!max.is_missing() && (range.max.is_missing() || range.max > max))
+        max = range.max;
+}
+
+void DatetimeRange::set(const Datetime& min, const Datetime& max)
+{
+    this->min = min;
+    this->max = max;
+}
+
+void DatetimeRange::set(
+        int yemin, int momin, int damin, int homin, int mimin, int semin,
+        int yemax, int momax, int damax, int homax, int mimax, int semax)
+{
+    if (yemin == MISSING_INT)
+        min = Datetime();
+    else
+        min = Datetime::lower_bound(yemin, momin, damin, homin, mimin, semin);
+
+    if (yemax == MISSING_INT)
+        max = Datetime();
+    else
+        max = Datetime::upper_bound(yemax, momax, damax, homax, mimax, semax);
+}
+
+bool DatetimeRange::contains(const Datetime& dt) const
+{
+    if (min.is_missing())
+        if (max.is_missing())
+            return true;
+        else
+            return dt <= max;
+    else
+        if (max.is_missing())
+            return dt >= min;
+        else
+            return min <= dt && dt <= max;
+}
+
+bool DatetimeRange::contains(const DatetimeRange& dtr) const
+{
+    if (!min.is_missing() && (dtr.min.is_missing() || dtr.min < min))
+        return false;
+
+    if (!max.is_missing() && (dtr.max.is_missing() || dtr.max > max))
+        return false;
+
+    return true;
+}
+
+bool DatetimeRange::is_disjoint(const DatetimeRange& dtr) const
+{
+    if (!max.is_missing() && !dtr.min.is_missing() && max < dtr.min)
+        return true;
+
+    if (!dtr.max.is_missing() && !min.is_missing() && dtr.max < min)
+        return true;
+
+    return false;
+}
+
+
+/*
  * Coordinate utilities
  */
 

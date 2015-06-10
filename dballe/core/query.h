@@ -73,9 +73,8 @@ struct Query : public dballe::Query
 
     unsigned get_modifiers() const;
 
-    void get_datetime_bounds(Datetime& dtmin, Datetime& dtmax) const override;
-    void set_datetime_exact(const Datetime& dt) override;
-    void set_datetime_bounds(const Datetime& dtmin, const Datetime& dtmax) override;
+    DatetimeRange get_datetimerange() const override { return datetime; }
+    void set_datetimerange(const DatetimeRange& dt) override { datetime = dt; }
     LatRange get_latrange() const override { return latrange; }
     void set_latrange(const LatRange& lr) override { latrange = lr; }
     LonRange get_lonrange() const override { return lonrange; }

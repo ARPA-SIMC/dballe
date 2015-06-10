@@ -18,34 +18,11 @@ struct Query
     /// Set the query values from the contents of a Record
     virtual void set_from_record(const dballe::Record& rec) = 0;
 
-    /**
-     * Get the Datetime bounds set in this query.
-     *
-     * dtmin and dtmax could be set to missing if the query has no minimum or
-     * maximum bound.
-     * dtmin and dtmax could both be set to the same value if the query matches
-     * an exact datetime.
-     */
-    virtual void get_datetime_bounds(Datetime& dtmin, Datetime& dtmax) const = 0;
+    /// Get the Datetime bounds set in this query
+    virtual DatetimeRange get_datetimerange() const = 0;
 
-    /**
-     * Set this query to match the given datetime.
-     *
-     * If part of dt are unset, the query will match a range from the minimum
-     * and maximum possible values of dt.
-     */
-    virtual void set_datetime_exact(const Datetime& dt) = 0;
-
-    /**
-     * Set this query to match the given datetime interval.
-     *
-     * The exact interval will go from dtmin.lower_bound() to
-     * dtmax.upper_bound() inclusive.
-     *
-     * If dtmin, dtmax, or both, are unset, then the interval is considered
-     * open on the corresponding side.
-     */
-    virtual void set_datetime_bounds(const Datetime& dtmin, const Datetime& dtmax) = 0;
+    /// Set the Datetime range for this query
+    virtual void set_datetimerange(const DatetimeRange& dt) = 0;
 
     /// Get the range of latitudes to be matched
     virtual LatRange get_latrange() const = 0;

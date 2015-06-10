@@ -24,60 +24,6 @@ typedef enum {
 const char* encoding_name(Encoding enc);
 Encoding parse_encoding(const std::string& s);
 
-/**
- * Range of datetimes
- *
- * A missing extreme in the range means an open ended range.
- */
-struct DatetimeRange
-{
-    Datetime min;
-    Datetime max;
-
-    DatetimeRange() = default;
-    DatetimeRange(const Datetime& dt)
-        : min(dt), max(dt) {}
-    DatetimeRange(const Datetime& min, const Datetime& max)
-        : min(min), max(max) {}
-    DatetimeRange(
-            int yemin, int momin, int damin, int homin, int mimin, int semin,
-            int yemax, int momax, int damax, int homax, int mimax, int semax)
-    {
-        set(yemin, momin, damin, homin, mimin, semin, yemax, momax, damax, homax, mimax, semax);
-    }
-
-    bool is_missing() const
-    {
-        return min.is_missing() && max.is_missing();
-    }
-
-    bool operator==(const DatetimeRange& dtr) const
-    {
-        return min == dtr.min && max == dtr.max;
-    }
-
-    bool operator!=(const DatetimeRange& dtr) const
-    {
-        return min != dtr.min || max != dtr.max;
-    }
-
-    void set(const Datetime& dt);
-    void set(const Datetime& min, const Datetime& max);
-    void set(int yemin, int momin, int damin, int homin, int mimin, int semin,
-             int yemax, int momax, int damax, int homax, int mimax, int semax);
-
-    void merge(const DatetimeRange& range);
-
-    /// Check if a Datetime is inside this range
-    bool contains(const Datetime& dt) const;
-
-    /// Check if a range is inside this range (extremes included)
-    bool contains(const DatetimeRange& dtr) const;
-
-    /// Check if the two ranges are completely disjoint
-    bool is_disjoint(const DatetimeRange& dtr) const;
-};
-
 /// Coordinates
 struct Coords
 {

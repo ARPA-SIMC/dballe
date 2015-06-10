@@ -30,22 +30,6 @@ unsigned Query::get_modifiers() const
     return parse_modifiers(query.c_str());
 }
 
-void Query::get_datetime_bounds(Datetime& dtmin, Datetime& dtmax) const
-{
-    dtmin = datetime.min;
-    dtmax = datetime.max;
-}
-
-void Query::set_datetime_exact(const Datetime& dt)
-{
-    datetime = DatetimeRange(dt);
-}
-
-void Query::set_datetime_bounds(const Datetime& dtmin, const Datetime& dtmax)
-{
-    datetime = DatetimeRange(dtmin, dtmax);
-}
-
 void Query::clear()
 {
     ana_id = MISSING_INT;

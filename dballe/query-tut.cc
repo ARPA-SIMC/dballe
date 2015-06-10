@@ -15,22 +15,13 @@ typedef test_group::Fixture Fixture;
 std::vector<Test> tests {
     Test("clone", [](Fixture& f) {
         auto q = Query::create();
-        q->set_datetime_bounds(
-                Datetime::lower_bound(2015, 5, MISSING_INT, MISSING_INT, MISSING_INT, MISSING_INT),
-                Datetime::upper_bound(2015, 5, MISSING_INT, MISSING_INT, MISSING_INT, MISSING_INT));
+        q->set_datetimerange(DatetimeRange(
+                2015, 5, MISSING_INT, MISSING_INT, MISSING_INT, MISSING_INT,
+                2015, 5, MISSING_INT, MISSING_INT, MISSING_INT, MISSING_INT));
 
         auto q1 = q->clone();
-        Datetime dtmin;
-        Datetime dtmax;
-        q1->get_datetime_bounds(dtmin, dtmax);
-        wassert(actual(dtmin) == Datetime(2015, 5, 1, 0, 0, 0));
-        wassert(actual(dtmax) == Datetime(2015, 5, 31, 23, 59, 59));
-    }),
-    Test("date", [](Fixture& f) {
-        wassert(actual(Date(2013, 1, 1)) < Date(2014, 1, 1));
-        wassert(actual(Date(2013, 1, 1)) < Date(2013, 2, 1));
-        wassert(actual(Date(2013, 1, 1)) < Date(2013, 1, 2));
-        wassert(actual(Date(1945, 4, 25)) != Date(1945, 4, 26));
+        wassert(actual(q1->get_datetimerange().min) == Datetime(2015, 5, 1, 0, 0, 0));
+        wassert(actual(q1->get_datetimerange().max) == Datetime(2015, 5, 31, 23, 59, 59));
     }),
     Test("to_vars", [](Fixture& f) {
         auto to_vars = [](const std::string& test_string) -> std::string {

@@ -216,6 +216,67 @@ struct Datetime
 
 
 /**
+ * Range of datetimes.
+ *
+ * The range includes the extremes. A missing extreme in the range means an
+ * open ended range.
+ */
+struct DatetimeRange
+{
+    /// Lower bound of the range
+    Datetime min;
+    /// Upper bound of the range
+    Datetime max;
+
+    DatetimeRange() = default;
+    DatetimeRange(const Datetime& dt) : min(dt), max(dt) {}
+    DatetimeRange(const Datetime& min, const Datetime& max) : min(min), max(max) {}
+    DatetimeRange(
+            int yemin, int momin, int damin, int homin, int mimin, int semin,
+            int yemax, int momax, int damax, int homax, int mimax, int semax);
+
+    /// Check if this range is open on both sides
+    bool is_missing() const;
+
+    bool operator==(const DatetimeRange& dtr) const;
+    bool operator!=(const DatetimeRange& dtr) const;
+
+    /// Set the extremes
+    void set(const Datetime& min, const Datetime& max);
+
+    /**
+     * Set the extremes from broken down components.
+     *
+     * If yemin or yemax are MISSING_INT, they are taken as an open ended range
+     * boundary.
+     *
+     * If any other *min values are MISSING_INT, they are filled with the
+     * lowest possible valid value they can have.
+     *
+     * If any other *max values are MISSING_INT, they are filled with the
+     * highest possible valid value they can have.
+     */
+    void set(int yemin, int momin, int damin, int homin, int mimin, int semin,
+             int yemax, int momax, int damax, int homax, int mimax, int semax);
+
+    /**
+     * Merge \a range into this one, resulting in the smallest range that
+     * contains both.
+     */
+    void merge(const DatetimeRange& range);
+
+    /// Check if a Datetime is inside this range
+    bool contains(const Datetime& dt) const;
+
+    /// Check if a range is inside this range (extremes included)
+    bool contains(const DatetimeRange& dtr) const;
+
+    /// Check if the two ranges are completely disjoint
+    bool is_disjoint(const DatetimeRange& dtr) const;
+};
+
+
+/**
  * Range of latitudes.
  *
  * When given as an integer, a latitude value is intended in 1/100000 of a
