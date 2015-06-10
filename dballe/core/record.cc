@@ -963,13 +963,6 @@ void dba_record_diff(dba_record rec1, dba_record rec2, int* diffs, FILE* out)
 }
 #endif
 
-void Record::parse_date_extremes(Datetime& dtmin, Datetime& dtmax) const
-{
-    DatetimeRange dtr = get_datetimerange();
-    dtmin = dtr.min;
-    dtmax = dtr.max;
-}
-
 MatchedRecord::MatchedRecord(const Record& r)
     : r(r)
 {

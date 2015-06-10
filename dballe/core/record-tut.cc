@@ -228,28 +228,28 @@ std::vector<Test> tests {
         // Test querying extremes by Datetime
         core::Record rec;
 
-        Datetime dtmin, dtmax;
+        DatetimeRange dtr;
 
-        wrunchecked(rec.parse_date_extremes(dtmin, dtmax));
-        wassert(actual(dtmin.is_missing()).istrue());
-        wassert(actual(dtmax.is_missing()).istrue());
+        wrunchecked(dtr = rec.get_datetimerange());
+        wassert(actual(dtr.min.is_missing()).istrue());
+        wassert(actual(dtr.max.is_missing()).istrue());
 
         static const int NA = MISSING_INT;
 
         wrunchecked(rec.set(DatetimeRange(2010, 1, 1, 0, 0, 0, NA, NA, NA, NA, NA, NA)));
-        wrunchecked(rec.parse_date_extremes(dtmin, dtmax));
-        wassert(actual(dtmin) == Datetime(2010, 1, 1, 0, 0, 0));
-        wassert(actual(dtmax.is_missing()).istrue());
+        wrunchecked(dtr = rec.get_datetimerange());
+        wassert(actual(dtr.min) == Datetime(2010, 1, 1, 0, 0, 0));
+        wassert(actual(dtr.max.is_missing()).istrue());
 
         wrunchecked(rec.set(DatetimeRange(NA, NA, NA, NA, NA, NA, 2011, 2, 3, 4, 5, 6)));
-        wrunchecked(rec.parse_date_extremes(dtmin, dtmax));
-        wassert(actual(dtmin.is_missing()).istrue());
-        wassert(actual(dtmax) == Datetime(2011, 2, 3, 4, 5, 6));
+        wrunchecked(dtr = rec.get_datetimerange());
+        wassert(actual(dtr.min.is_missing()).istrue());
+        wassert(actual(dtr.max) == Datetime(2011, 2, 3, 4, 5, 6));
 
         wrunchecked(rec.set(DatetimeRange(2010, 1, 1, 0, 0, 0, 2011, 2, 3, 4, 5, 6)));
-        wrunchecked(rec.parse_date_extremes(dtmin, dtmax));
-        wassert(actual(dtmin) == Datetime(2010, 1, 1, 0, 0, 0));
-        wassert(actual(dtmax) == Datetime(2011, 2, 3, 4, 5, 6));
+        wrunchecked(dtr = rec.get_datetimerange());
+        wassert(actual(dtr.min) == Datetime(2010, 1, 1, 0, 0, 0));
+        wassert(actual(dtr.max) == Datetime(2011, 2, 3, 4, 5, 6));
     }),
 };
 

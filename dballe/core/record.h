@@ -239,9 +239,6 @@ public:
     /// Return the varcode-sorted vector with the variables
     const std::vector<wreport::Var*>& vars() const;
 
-    // Same as parse_date_extremes(int*, int*) but it fills Datetime objects
-    void parse_date_extremes(Datetime& dtmin, Datetime& dtmax) const;
-
 	/**
 	 * Set a value in the record according to an assignment encoded in a string.
 	 *
@@ -313,24 +310,6 @@ public:
 	static dba_keyword keyword_byname_len(const char* tag, int len);
 };
 
-//typedef Record Query;
-
-#if 0
-/**
- * Print the difference between two records to an output stream.
- * If there is no difference, it does not print anything.
- *
- * @param rec1
- *   The first record to compare
- * @param rec2
- *   The second record to compare
- * @retval diffs
- *   Incremented by 1 if the variables differ
- * @param out
- *   The output stream to use for printing
- */
-void dba_record_diff(dba_record rec1, dba_record rec2, int* diffs, FILE* out);
-#endif
 
 struct MatchedRecord : public Matched
 {
