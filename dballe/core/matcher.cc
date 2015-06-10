@@ -1,8 +1,8 @@
 #include "matcher.h"
 #include "defs.h"
-#include "record.h"
 #include "query.h"
 #include <cmath>
+#include <vector>
 #include <iostream>
 
 using namespace std;
@@ -170,7 +170,7 @@ struct DateMatcher : public Matcher
 
     virtual void to_record(Record& rec) const
     {
-        core::Record::downcast(rec).set_datetimerange(range);
+        rec.set_datetimerange(range);
     }
 };
 
@@ -189,8 +189,8 @@ struct CoordMatcher : public Matcher
 
     virtual void to_record(Record& rec) const
     {
-        core::Record::downcast(rec).set_latrange(latrange);
-        core::Record::downcast(rec).set_lonrange(lonrange);
+        rec.set_latrange(latrange);
+        rec.set_lonrange(lonrange);
     }
 };
 

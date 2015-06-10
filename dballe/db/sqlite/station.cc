@@ -1,7 +1,7 @@
 #include "station.h"
 #include "dballe/db/sqlite/internals.h"
+#include "dballe/record.h"
 #include "dballe/core/var.h"
-#include "dballe/core/record.h"
 #include <wreport/var.h>
 
 using namespace wreport;
@@ -180,7 +180,6 @@ void SQLiteStationBase::add_station_vars(int id_station, Record& rec)
             AND sd.id_var=d.id_var)
     )";
 
-    auto& r = core::Record::downcast(rec);
     auto stm = conn.sqlitestatement(query);
     stm->bind(id_station);
     stm->execute([&]() {
