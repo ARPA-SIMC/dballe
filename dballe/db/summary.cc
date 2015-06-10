@@ -22,7 +22,7 @@ Entry::Entry(dballe::db::Cursor &cur, bool want_details)
         core::Record rec;
         cur.to_record(rec);
         count = rec["context_id"].enqi();
-        dtrange = DatetimeRange(rec.get_datetimemin(), rec.get_datetimemax());
+        dtrange = rec.get_datetimerange();
     }
 }
 

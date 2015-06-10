@@ -174,6 +174,7 @@ public:
     void sets(const char* key, const std::string& val) override;
     void setf(const char* key, const char* val) override;
     void set_datetime(const Datetime& dt) override;
+    void set_datetimerange(const DatetimeRange& range) override;
     void set_latrange(const LatRange& lr) override;
     void set_lonrange(const LonRange& lr) override;
     void set_level(const Level& lev) override;
@@ -222,17 +223,14 @@ public:
 	 */
 	void set_to_difference(const Record& source1, const Record& source2);
 
+    /// Compose a Level out of the leveltype1...l2 values
     Level get_level() const;
+    /// Compose a Trange out of the pindicator...p2 values
     Trange get_trange() const;
+    /// Compose a Datetime out of the year...sec values
     Datetime get_datetime() const;
-    Datetime get_datetimemin() const;
-    Datetime get_datetimemax() const;
-    void setmin(const Datetime& dt);
-    void setmax(const Datetime& dt);
-    void set_datetimerange(const DatetimeRange& range);
-    void unset_datetime();
-    void unset_datetimemin();
-    void unset_datetimemax();
+    /// Compose a DatetimeRange out of the yearmin...secmax values
+    DatetimeRange get_datetimerange() const;
     void set_coords(const Coords& c);
 
 	/**

@@ -317,8 +317,7 @@ void CursorSummary::to_record(Record& rec)
     if (modifiers & DBA_DB_MODIFIER_SUMMARY_DETAILS)
     {
         rec.seti("context_id", results[cur].out_id_data);
-        core::Record::downcast(rec).setmin(results[cur].out_datetime);
-        core::Record::downcast(rec).setmax(results[cur].out_datetimemax);
+        rec.set(DatetimeRange(results[cur].out_datetime, results[cur].out_datetimemax));
     }
 
     /*

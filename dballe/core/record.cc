@@ -185,6 +185,144 @@ void Record::set_datetime(const Datetime& dt)
     key_unset(DBA_KEY_SECMAX);
 }
 
+void Record::set_datetimerange(const DatetimeRange& range)
+{
+    if (range.is_missing())
+    {
+        key_unset(DBA_KEY_YEAR);
+        key_unset(DBA_KEY_MONTH);
+        key_unset(DBA_KEY_DAY);
+        key_unset(DBA_KEY_HOUR);
+        key_unset(DBA_KEY_MIN);
+        key_unset(DBA_KEY_SEC);
+        key_unset(DBA_KEY_YEARMIN);
+        key_unset(DBA_KEY_MONTHMIN);
+        key_unset(DBA_KEY_DAYMIN);
+        key_unset(DBA_KEY_HOURMIN);
+        key_unset(DBA_KEY_MINUMIN);
+        key_unset(DBA_KEY_SECMIN);
+        key_unset(DBA_KEY_YEARMAX);
+        key_unset(DBA_KEY_MONTHMAX);
+        key_unset(DBA_KEY_DAYMAX);
+        key_unset(DBA_KEY_HOURMAX);
+        key_unset(DBA_KEY_MINUMAX);
+        key_unset(DBA_KEY_SECMAX);
+    } else if (range.min == range.max) {
+        set(range.min);
+    } else if (range.min.is_missing()) {
+        key_unset(DBA_KEY_YEAR);
+        key_unset(DBA_KEY_MONTH);
+        key_unset(DBA_KEY_DAY);
+        key_unset(DBA_KEY_HOUR);
+        key_unset(DBA_KEY_MIN);
+        key_unset(DBA_KEY_SEC);
+        key_unset(DBA_KEY_YEARMIN);
+        key_unset(DBA_KEY_MONTHMIN);
+        key_unset(DBA_KEY_DAYMIN);
+        key_unset(DBA_KEY_HOURMIN);
+        key_unset(DBA_KEY_MINUMIN);
+        key_unset(DBA_KEY_SECMIN);
+        seti("yearmax", range.max.year);
+        seti("monthmax", range.max.month);
+        seti("daymax", range.max.day);
+        seti("hourmax", range.max.hour);
+        seti("minumax", range.max.minute);
+        seti("secmax", range.max.second);
+    } else if (range.max.is_missing()) {
+        key_unset(DBA_KEY_YEAR);
+        key_unset(DBA_KEY_MONTH);
+        key_unset(DBA_KEY_DAY);
+        key_unset(DBA_KEY_HOUR);
+        key_unset(DBA_KEY_MIN);
+        key_unset(DBA_KEY_SEC);
+        seti("yearmin", range.min.year);
+        seti("monthmin", range.min.month);
+        seti("daymin", range.min.day);
+        seti("hourmin", range.min.hour);
+        seti("minumin", range.min.minute);
+        seti("secmin", range.min.second);
+        key_unset(DBA_KEY_YEARMAX);
+        key_unset(DBA_KEY_MONTHMAX);
+        key_unset(DBA_KEY_DAYMAX);
+        key_unset(DBA_KEY_HOURMAX);
+        key_unset(DBA_KEY_MINUMAX);
+        key_unset(DBA_KEY_SECMAX);
+    } else {
+        if (range.min.year == range.max.year)
+        {
+            seti("year", range.min.year);
+            key_unset(DBA_KEY_YEARMIN);
+            key_unset(DBA_KEY_YEARMAX);
+        }
+        else
+        {
+            key_unset(DBA_KEY_YEAR);
+            seti("yearmin", range.min.year);
+            seti("yearmax", range.max.year);
+        }
+        if (range.min.month == range.max.month)
+        {
+            seti("month", range.min.month);
+            key_unset(DBA_KEY_MONTHMIN);
+            key_unset(DBA_KEY_MONTHMAX);
+        }
+        else
+        {
+            key_unset(DBA_KEY_MONTH);
+            seti("monthmin", range.min.month);
+            seti("monthmax", range.max.month);
+        }
+        if (range.min.day == range.max.day)
+        {
+            seti("day", range.min.day);
+            key_unset(DBA_KEY_DAYMIN);
+            key_unset(DBA_KEY_DAYMAX);
+        }
+        else
+        {
+            key_unset(DBA_KEY_DAY);
+            seti("daymin", range.min.day);
+            seti("daymax", range.max.day);
+        }
+        if (range.min.hour == range.max.hour)
+        {
+            seti("hour", range.min.hour);
+            key_unset(DBA_KEY_HOURMIN);
+            key_unset(DBA_KEY_HOURMAX);
+        }
+        else
+        {
+            key_unset(DBA_KEY_HOUR);
+            seti("hourmin", range.min.hour);
+            seti("hourmax", range.max.hour);
+        }
+        if (range.min.minute == range.max.minute)
+        {
+            seti("min", range.min.minute);
+            key_unset(DBA_KEY_MINUMIN);
+            key_unset(DBA_KEY_MINUMAX);
+        }
+        else
+        {
+            key_unset(DBA_KEY_MIN);
+            seti("minumin", range.min.minute);
+            seti("minumax", range.max.minute);
+        }
+        if (range.min.second == range.max.second)
+        {
+            seti("sec", range.min.second);
+            key_unset(DBA_KEY_SECMIN);
+            key_unset(DBA_KEY_SECMAX);
+        }
+        else
+        {
+            key_unset(DBA_KEY_SEC);
+            seti("secmin", range.min.second);
+            seti("secmax", range.max.second);
+        }
+    }
+}
+
 void Record::set_level(const Level& lev)
 {
     if (lev.ltype1 == MISSING_INT)
@@ -684,184 +822,35 @@ Datetime Record::get_datetime() const
         return Datetime();
 }
 
-Datetime Record::get_datetimemin() const
+DatetimeRange Record::get_datetimerange() const
 {
-    if (const Var* var = key_peek(DBA_KEY_YEARMIN))
-        return Datetime(
-            var->enqi(),
-            enq("monthmin", 1),
-            enq("daymin", 1),
-            enq("hourmin", 0),
-            enq("minumin", 0),
-            enq("secmin", 0));
-    else
-        return Datetime();
-}
-
-Datetime Record::get_datetimemax() const
-{
-    if (const Var* var = key_peek(DBA_KEY_YEARMAX))
-    {
-        int year = var->enqi();
-        int month = enq("monthmax", 12);
-        int day = enq("daymax", 0);
-        if (day == 0) day = Date::days_in_month(year, month);
-        return Datetime(year, month, day,
-            enq("hourmax", 23),
-            enq("minumax", 59),
-            enq("secmax", 59));
-    } else
-        return Datetime();
-}
-
-void Record::unset_datetime()
-{
-    key_unset(DBA_KEY_YEAR);
-    key_unset(DBA_KEY_MONTH);
-    key_unset(DBA_KEY_DAY);
-    key_unset(DBA_KEY_HOUR);
-    key_unset(DBA_KEY_MIN);
-    key_unset(DBA_KEY_SEC);
-}
-
-void Record::unset_datetimemin()
-{
-    key_unset(DBA_KEY_YEARMIN);
-    key_unset(DBA_KEY_MONTHMIN);
-    key_unset(DBA_KEY_DAYMIN);
-    key_unset(DBA_KEY_HOURMIN);
-    key_unset(DBA_KEY_MINUMIN);
-    key_unset(DBA_KEY_SECMIN);
-}
-
-void Record::unset_datetimemax()
-{
-    key_unset(DBA_KEY_YEARMAX);
-    key_unset(DBA_KEY_MONTHMAX);
-    key_unset(DBA_KEY_DAYMAX);
-    key_unset(DBA_KEY_HOURMAX);
-    key_unset(DBA_KEY_MINUMAX);
-    key_unset(DBA_KEY_SECMAX);
-}
-
-void Record::set_datetimerange(const DatetimeRange& range)
-{
-    if (range.is_missing())
-    {
-        key_unset(DBA_KEY_YEAR);
-        key_unset(DBA_KEY_MONTH);
-        key_unset(DBA_KEY_DAY);
-        key_unset(DBA_KEY_HOUR);
-        key_unset(DBA_KEY_MIN);
-        key_unset(DBA_KEY_SEC);
-        key_unset(DBA_KEY_YEARMIN);
-        key_unset(DBA_KEY_MONTHMIN);
-        key_unset(DBA_KEY_DAYMIN);
-        key_unset(DBA_KEY_HOURMIN);
-        key_unset(DBA_KEY_MINUMIN);
-        key_unset(DBA_KEY_SECMIN);
-        key_unset(DBA_KEY_YEARMAX);
-        key_unset(DBA_KEY_MONTHMAX);
-        key_unset(DBA_KEY_DAYMAX);
-        key_unset(DBA_KEY_HOURMAX);
-        key_unset(DBA_KEY_MINUMAX);
-        key_unset(DBA_KEY_SECMAX);
-    } else if (range.min == range.max) {
-        set(range.min);
-    } else {
-        if (range.min.year == range.max.year)
-        {
-            seti("year", range.min.year);
-            key_unset(DBA_KEY_YEARMIN);
-            key_unset(DBA_KEY_YEARMAX);
-        }
-        else
-        {
-            key_unset(DBA_KEY_YEAR);
-            seti("yearmin", range.min.year);
-            seti("yearmax", range.max.year);
-        }
-        if (range.min.month == range.max.month)
-        {
-            seti("month", range.min.month);
-            key_unset(DBA_KEY_MONTHMIN);
-            key_unset(DBA_KEY_MONTHMAX);
-        }
-        else
-        {
-            key_unset(DBA_KEY_MONTH);
-            seti("monthmin", range.min.month);
-            seti("monthmax", range.max.month);
-        }
-        if (range.min.day == range.max.day)
-        {
-            seti("day", range.min.day);
-            key_unset(DBA_KEY_DAYMIN);
-            key_unset(DBA_KEY_DAYMAX);
-        }
-        else
-        {
-            key_unset(DBA_KEY_DAY);
-            seti("daymin", range.min.day);
-            seti("daymax", range.max.day);
-        }
-        if (range.min.hour == range.max.hour)
-        {
-            seti("hour", range.min.hour);
-            key_unset(DBA_KEY_HOURMIN);
-            key_unset(DBA_KEY_HOURMAX);
-        }
-        else
-        {
-            key_unset(DBA_KEY_HOUR);
-            seti("hourmin", range.min.hour);
-            seti("hourmax", range.max.hour);
-        }
-        if (range.min.minute == range.max.minute)
-        {
-            seti("min", range.min.minute);
-            key_unset(DBA_KEY_MINUMIN);
-            key_unset(DBA_KEY_MINUMAX);
-        }
-        else
-        {
-            key_unset(DBA_KEY_MIN);
-            seti("minumin", range.min.minute);
-            seti("minumax", range.max.minute);
-        }
-        if (range.min.second == range.max.second)
-        {
-            seti("sec", range.min.second);
-            key_unset(DBA_KEY_SECMIN);
-            key_unset(DBA_KEY_SECMAX);
-        }
-        else
-        {
-            key_unset(DBA_KEY_SEC);
-            seti("secmin", range.min.second);
-            seti("secmax", range.max.second);
-        }
-    }
-}
-
-void Record::setmin(const Datetime& dt)
-{
-    seti("yearmin",  (int)dt.year);
-    seti("monthmin", (int)dt.month);
-    seti("daymin",   (int)dt.day);
-    seti("hourmin",  (int)dt.hour);
-    seti("minumin",  (int)dt.minute);
-    seti("secmin",   (int)dt.second);
-}
-
-void Record::setmax(const Datetime& dt)
-{
-    seti("yearmax",  (int)dt.year);
-    seti("monthmax", (int)dt.month);
-    seti("daymax",   (int)dt.day);
-    seti("hourmax",  (int)dt.hour);
-    seti("minumax",  (int)dt.minute);
-    seti("secmax",   (int)dt.second);
+    // fetch all values involved in the computation
+    int ye = enq("year", MISSING_INT);
+    int mo = enq("month", MISSING_INT);
+    int da = enq("day", MISSING_INT);
+    int ho = enq("hour", MISSING_INT);
+    int mi = enq("min", MISSING_INT);
+    int se = enq("sec", MISSING_INT);
+    int yemin = enq("yearmin", MISSING_INT);
+    int momin = enq("monthmin", MISSING_INT);
+    int damin = enq("daymin", MISSING_INT);
+    int homin = enq("hourmin", MISSING_INT);
+    int mimin = enq("minumin", MISSING_INT);
+    int semin = enq("secmin", MISSING_INT);
+    int yemax = enq("yearmax", MISSING_INT);
+    int momax = enq("monthmax", MISSING_INT);
+    int damax = enq("daymax", MISSING_INT);
+    int homax = enq("hourmax", MISSING_INT);
+    int mimax = enq("minumax", MISSING_INT);
+    int semax = enq("secmax", MISSING_INT);
+    // give absolute values priority over ranges
+    if (ye != MISSING_INT) yemin = yemax = ye;
+    if (mo != MISSING_INT) momin = momax = mo;
+    if (da != MISSING_INT) damin = damax = da;
+    if (ho != MISSING_INT) homin = homax = ho;
+    if (mi != MISSING_INT) mimin = mimax = mi;
+    if (se != MISSING_INT) semin = semax = se;
+    return DatetimeRange(yemin, momin, damin, homin, mimin, semin, yemax, momax, damax, homax, mimax, semax);
 }
 
 void Record::set_coords(const Coords& c)
@@ -1100,36 +1089,9 @@ void Record::parse_date_extremes(int* minvalues, int* maxvalues) const
             maxvalues[i] = MISSING_INT;
 }
 
-/* Buf must be at least 25 bytes long; values must be at least 6 ints long */
 void Record::parse_date_extremes(Datetime& dtmin, Datetime& dtmax) const
 {
-    // fetch all values involved in the computation
-    int ye = enq("year", MISSING_INT);
-    int mo = enq("month", MISSING_INT);
-    int da = enq("day", MISSING_INT);
-    int ho = enq("hour", MISSING_INT);
-    int mi = enq("min", MISSING_INT);
-    int se = enq("sec", MISSING_INT);
-    int yemin = enq("yearmin", MISSING_INT);
-    int momin = enq("monthmin", MISSING_INT);
-    int damin = enq("daymin", MISSING_INT);
-    int homin = enq("hourmin", MISSING_INT);
-    int mimin = enq("minumin", MISSING_INT);
-    int semin = enq("secmin", MISSING_INT);
-    int yemax = enq("yearmax", MISSING_INT);
-    int momax = enq("monthmax", MISSING_INT);
-    int damax = enq("daymax", MISSING_INT);
-    int homax = enq("hourmax", MISSING_INT);
-    int mimax = enq("minumax", MISSING_INT);
-    int semax = enq("secmax", MISSING_INT);
-    // give absolute values priority over ranges
-    if (ye != MISSING_INT) yemin = yemax = ye;
-    if (mo != MISSING_INT) momin = momax = mo;
-    if (da != MISSING_INT) damin = damax = da;
-    if (ho != MISSING_INT) homin = homax = ho;
-    if (mi != MISSING_INT) mimin = mimax = mi;
-    if (se != MISSING_INT) semin = semax = se;
-    DatetimeRange dtr(yemin, momin, damin, homin, mimin, semin, yemax, momax, damax, homax, mimax, semax);
+    DatetimeRange dtr = get_datetimerange();
     dtmin = dtr.min;
     dtmax = dtr.max;
 }

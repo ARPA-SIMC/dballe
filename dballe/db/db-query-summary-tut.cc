@@ -120,8 +120,9 @@ std::vector<Test> tests {
         auto check_details = [&](WIBBLE_TEST_LOCPRM, const vector<core::Record>& res) {
             wruntest(check_base, res);
             wassert(actual(res[0].enq("context_id", MISSING_INT)) == 2);
-            wassert(actual(res[0].get_datetimemin()) == Datetime(1945, 4, 25, 8));
-            wassert(actual(res[0].get_datetimemax()) == Datetime(1945, 4, 26, 8));
+            DatetimeRange dtr = res[0].get_datetimerange();
+            wassert(actual(dtr.min) == Datetime(1945, 4, 25, 8));
+            wassert(actual(dtr.max) == Datetime(1945, 4, 26, 8));
         };
         wassert(actual(db).try_summary_query("yearmin=1945", 4, check_nodetails));
         wassert(actual(db).try_summary_query("yearmin=1945, query=details", 4, check_details));

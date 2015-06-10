@@ -230,17 +230,24 @@ std::vector<Test> tests {
 
         Datetime dtmin, dtmax;
 
-        rec.parse_date_extremes(dtmin, dtmax);
+        wrunchecked(rec.parse_date_extremes(dtmin, dtmax));
         wassert(actual(dtmin.is_missing()).istrue());
         wassert(actual(dtmax.is_missing()).istrue());
 
-        rec.setmin(Datetime(2010, 1, 1, 0, 0, 0));
-        rec.parse_date_extremes(dtmin, dtmax);
+        static const int NA = MISSING_INT;
+
+        wrunchecked(rec.set(DatetimeRange(2010, 1, 1, 0, 0, 0, NA, NA, NA, NA, NA, NA)));
+        wrunchecked(rec.parse_date_extremes(dtmin, dtmax));
         wassert(actual(dtmin) == Datetime(2010, 1, 1, 0, 0, 0));
         wassert(actual(dtmax.is_missing()).istrue());
 
-        rec.setmax(Datetime(2011, 2, 3, 4, 5, 6));
-        rec.parse_date_extremes(dtmin, dtmax);
+        wrunchecked(rec.set(DatetimeRange(NA, NA, NA, NA, NA, NA, 2011, 2, 3, 4, 5, 6)));
+        wrunchecked(rec.parse_date_extremes(dtmin, dtmax));
+        wassert(actual(dtmin.is_missing()).istrue());
+        wassert(actual(dtmax) == Datetime(2011, 2, 3, 4, 5, 6));
+
+        wrunchecked(rec.set(DatetimeRange(2010, 1, 1, 0, 0, 0, 2011, 2, 3, 4, 5, 6)));
+        wrunchecked(rec.parse_date_extremes(dtmin, dtmax));
         wassert(actual(dtmin) == Datetime(2010, 1, 1, 0, 0, 0));
         wassert(actual(dtmax) == Datetime(2011, 2, 3, 4, 5, 6));
     }),
