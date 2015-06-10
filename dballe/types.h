@@ -317,6 +317,12 @@ struct LatRange
     /// Return true if the LatRange matches any latitude
     bool is_missing() const;
 
+    /// Get the lower extreme as double
+    double dmin() const;
+
+    /// Get the upper extreme as double
+    double dmax() const;
+
     /// Get the extremes as double
     void get(double& min, double& max) const;
 
@@ -375,6 +381,12 @@ struct LonRange
 
     /// Return true if the LonRange matches any longitude
     bool is_missing() const;
+
+    /// Get the lower extreme as double, or -180.0 if missing
+    double dmin() const;
+
+    /// Get the upper extreme as double, or 180.0 if missing
+    double dmax() const;
 
     /**
      * Get the extremes in degrees.

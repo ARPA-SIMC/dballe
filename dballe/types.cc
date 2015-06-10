@@ -511,6 +511,9 @@ bool LatRange::operator!=(const LatRange& lr) const
 
 bool LatRange::is_missing() const { return imin == IMIN && imax == IMAX; }
 
+double LatRange::dmin() const { return ll_from_int(imin); }
+double LatRange::dmax() const { return ll_from_int(imax); }
+
 void LatRange::get(double& min, double& max) const
 {
     min = ll_from_int(imin);
@@ -575,6 +578,9 @@ bool LonRange::is_missing() const
 {
     return imin == MISSING_INT || imax == MISSING_INT;
 }
+
+double LonRange::dmin() const { return imin == MISSING_INT ? -180.0 : ll_from_int(imin); }
+double LonRange::dmax() const { return imax == MISSING_INT ?  180.0 : ll_from_int(imax); }
 
 void LonRange::get(double& min, double& max) const
 {

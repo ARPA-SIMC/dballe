@@ -92,6 +92,8 @@ std::vector<Test> tests {
         wassert(actual(lr.is_missing()).istrue());
         wassert(actual(lr.imin) == LatRange::IMIN);
         wassert(actual(lr.imax) == LatRange::IMAX);
+        wassert(actual(lr.dmin()) == LatRange::DMIN);
+        wassert(actual(lr.dmax()) == LatRange::DMAX);
         lr.get(dmin, dmax);
         wassert(actual(dmin) == LatRange::DMIN);
         wassert(actual(dmax) == LatRange::DMAX);
@@ -128,6 +130,8 @@ std::vector<Test> tests {
         wassert(actual(lr.is_missing()).istrue());
         wassert(actual(lr.imin) == MISSING_INT);
         wassert(actual(lr.imax) == MISSING_INT);
+        wassert(actual(lr.dmin()) == -180.0);
+        wassert(actual(lr.dmax()) ==  180.0);
         lr.get(dmin, dmax);
         wassert(actual(dmin) == -180.0);
         wassert(actual(dmax) == 180.0);
