@@ -1,5 +1,6 @@
 #include "core/test-utils-core.h"
 #include "record.h"
+#include <algorithm>
 
 using namespace std;
 using namespace wibble::tests;
@@ -13,6 +14,19 @@ typedef test_group::Fixture Fixture;
 
 std::vector<Test> tests {
     Test("record", [](Fixture& f) {
+    }),
+    Test("to_vars", [](Fixture& f) {
+        auto rec = Record::create();
+        rec->set("lat", 44.5);
+        rec->set("B12101", 290.4);
+        vector<string> res;
+        rec->to_vars([&](const char* key, std::unique_ptr<wreport::Var>&& var) {
+            res.push_back(string(key) + "=" + var->format());
+        });
+        sort(res.begin(), res.end());
+        wassert(actual(res.size()) == 2);
+        wassert(actual(res[0]) == "B12101=290.40");
+        wassert(actual(res[1]) == "lat=44.50000");
     }),
     Test("metadata", [](Fixture& f) {
         wreport::Varinfo info = Record::key_info("rep_memo");

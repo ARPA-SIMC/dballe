@@ -179,6 +179,7 @@ public:
     const wreport::Var* get(const char* key) const override;
     void add(const dballe::Record& source) override;
     bool contains(const dballe::Record& subset) const override;
+    void to_vars(std::function<void(const char*, std::unique_ptr<wreport::Var>&&)> dest) const override;
     void print(FILE* out) const override;
 
     /**

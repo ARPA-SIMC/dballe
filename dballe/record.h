@@ -141,6 +141,12 @@ struct Record
      */
     virtual bool contains(const Record& subset) const = 0;
 
+    /**
+     * Generate a sequence of key names and unique_ptr<Var> for all the
+     * contents of the record
+     */
+    virtual void to_vars(std::function<void(const char*, std::unique_ptr<wreport::Var>&&)> dest) const = 0;
+
     /// Print the contents of this record to the given stream
     virtual void print(FILE* out) const = 0;
 
