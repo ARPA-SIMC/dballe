@@ -3,8 +3,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <wreport/error.h>
 #include "dballe/core/vasprintf.h"
-#include "dballe/core/record.h"
 #include <math.h>
 #include <ostream>
 #include <iomanip>
@@ -174,7 +174,8 @@ bool LatRange::contains(double lat) const
 }
 
 LonRange::LonRange(int min, int max)
-    : imin(Coords::normalon(min)), imax(Coords::normalon(max))
+    : imin(min == MISSING_INT ? MISSING_INT : Coords::normalon(min)),
+      imax(max == MISSING_INT ? MISSING_INT : Coords::normalon(max))
 {
     if (min != max && imin == imax)
         imin = imax = MISSING_INT;
@@ -206,12 +207,11 @@ void LonRange::get(double& min, double& max) const
 
 void LonRange::set(int min, int max)
 {
-    bool differ = min != max;
-    imin = Coords::normalon(min);
-    imax = Coords::normalon(max);
+    imin = min == MISSING_INT ? MISSING_INT : Coords::normalon(min);
+    imax = max == MISSING_INT ? MISSING_INT : Coords::normalon(max);
     // Catch cases like min=0 max=360, that would match anything, and set them
     // to missing range match
-    if (differ && imin == imax)
+    if (min != max && imin == imax)
         imin = imax = MISSING_INT;
 }
 

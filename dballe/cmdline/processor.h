@@ -21,7 +21,6 @@
 #define PROCESSOR_H
 
 #include <dballe/core/rawmsg.h>
-#include <dballe/core/record.h>
 #include <dballe/core/file.h>
 #include <dballe/msg/codec.h>
 #include <stdexcept>

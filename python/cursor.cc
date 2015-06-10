@@ -57,7 +57,7 @@ static PyObject* dpy_Cursor_query_attrs(dpy_Cursor* self, PyObject* args, PyObje
         self->cur->query_attrs([&](unique_ptr<Var> var) {
             if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
                 return;
-            self->db->attr_rec->rec.add(move(var));
+            self->db->attr_rec->rec.set(move(var));
         });
         Py_INCREF(self->db->attr_rec);
         return (PyObject*)self->db->attr_rec;

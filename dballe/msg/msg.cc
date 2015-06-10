@@ -810,21 +810,21 @@ matcher::Result MatchedMsg::match_date(const Datetime& min, const Datetime& max)
     return Matched::date_in_range(dt, min, max);
 }
 
-matcher::Result MatchedMsg::match_coords(const Coords& min, const Coords& max) const
+matcher::Result MatchedMsg::match_coords(const LatRange& latrange, const LonRange& lonrange) const
 {
     const msg::Context* c = m.find_station_context();
     if (!c) return matcher::MATCH_NA;
 
     matcher::Result r1 = matcher::MATCH_NA;
     if (const wreport::Var* var = c->find_by_id(DBA_MSG_LATITUDE))
-        r1 = Matched::int_in_range(var->enqi(), min.lat, max.lat);
-    else if (min.lat == MISSING_INT && max.lat == MISSING_INT)
+        r1 = latrange.contains(var->enqi()) ? matcher::MATCH_YES : matcher::MATCH_NO;
+    else if (latrange.is_missing())
         r1 = matcher::MATCH_YES;
 
     matcher::Result r2 = matcher::MATCH_NA;
     if (const wreport::Var* var = c->find_by_id(DBA_MSG_LONGITUDE))
-        r2 = Matched::lon_in_range(var->enqi(), min.lon, max.lon);
-    else if (min.lon == MISSING_INT && max.lon == MISSING_INT)
+        r2 = lonrange.contains(var->enqi()) ? matcher::MATCH_YES : matcher::MATCH_NO;
+    else if (lonrange.is_missing())
         r2 = matcher::MATCH_YES;
 
     if (r1 == matcher::MATCH_YES && r2 == matcher::MATCH_YES)

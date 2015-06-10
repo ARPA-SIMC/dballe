@@ -1,22 +1,3 @@
-/*
- * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "db/test-utils-db.h"
 #include <wibble/string.h>
 #include "config.h"
@@ -68,11 +49,11 @@ struct DateHourFixture : public TestFixture
         for (unsigned i = 0; i < 2; ++i)
         {
             records[i].station = st;
-            records[i].data.set(DBA_KEY_REP_MEMO, "synop");
+            records[i].data.set("rep_memo", "synop");
             records[i].data.set(Level(10, 11, 15, 22));
             records[i].data.set(Trange(20, 111, 122));
-            records[i].data.set_datetime(2013, 10, 30, 11 + i);
-            records[i].data.set(WR_VAR(0, 12, 101), 11.5 + i);
+            records[i].data.set(Datetime(2013, 10, 30, 11 + i));
+            records[i].data.set("B12101", 11.5 + i);
         }
     }
 };
@@ -88,11 +69,11 @@ struct DateDayFixture : public TestFixture
         for (unsigned i = 0; i < 2; ++i)
         {
             records[i].station = st;
-            records[i].data.set(DBA_KEY_REP_MEMO, "synop");
+            records[i].data.set("rep_memo", "synop");
             records[i].data.set(Level(10, 11, 15, 22));
             records[i].data.set(Trange(20, 111, 122));
-            records[i].data.set_datetime(2013, 10, 23 + i);
-            records[i].data.set(WR_VAR(0, 12, 101), 23.5 + i);
+            records[i].data.set(Datetime(2013, 10, 23 + i));
+            records[i].data.set("B12101", 23.5 + i);
         }
     }
 };
@@ -293,12 +274,12 @@ std::vector<Test> tests {
         // get a valid data id
         core::Query q;
         q.varcodes.insert(WR_VAR(0, 1, 11));
-        Record res;
+        core::Record res;
         auto cur = f.db->query_data(q);
         while (cur->next())
             cur->to_record(res);
         char valid_query[100];
-        snprintf(valid_query, 100, "context_id=%d", res.key(DBA_KEY_CONTEXT_ID).enqi());
+        snprintf(valid_query, 100, "context_id=%d", res.enq("context_id", MISSING_INT));
 
         // context ID queries
         TRY_QUERY(valid_query, 1);

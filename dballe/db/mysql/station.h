@@ -99,8 +99,6 @@ class MySQLStationV6 : public MySQLStationBase
 {
 public:
     MySQLStationV6(MySQLConnection& conn);
-    void get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
-    void add_station_vars(int id_station, Record& rec) override;
 };
 
 }

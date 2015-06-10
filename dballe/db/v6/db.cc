@@ -1,24 +1,3 @@
-/*
- * dballe/v6/db - Archive for point-based meteorological data, db layout version 6
- *
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "db.h"
 #include "dballe/db/sql.h"
 #include "dballe/db/sql/driver.h"
@@ -29,9 +8,9 @@
 #include "dballe/db/sql/attrv6.h"
 #include "dballe/db/querybuf.h"
 #include "cursor.h"
-#include <dballe/core/query.h>
-#include <dballe/core/record.h>
-#include <dballe/core/defs.h>
+#include "dballe/core/query.h"
+#include "dballe/core/record.h"
+#include "dballe/core/defs.h"
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
@@ -183,25 +162,28 @@ static inline int normalon(int lon)
 int DB::obtain_station(const Record& rec, bool can_add)
 {
     // Look if the record already knows the ID
-    if (const char* val = rec.key_peek_value(DBA_KEY_ANA_ID))
-        return strtol(val, 0, 10);
+    if (const Var* val = rec.get("ana_id"))
+        if (val->isset())
+            return val->enqi();
 
     sql::Station& s = station();
 
     // Look for the key data in the record
     int lat;
-    if (const Var* var = rec.key_peek(DBA_KEY_LAT))
+    if (const Var* var = rec.get("lat"))
         lat = var->enqi();
     else
         throw error_notfound("no latitude in record when trying to insert a station in the database");
 
     int lon;
-    if (const Var* var = rec.key_peek(DBA_KEY_LON))
+    if (const Var* var = rec.get("lon"))
         lon = normalon(var->enqi());
     else
         throw error_notfound("no longitude in record when trying to insert a station in the database");
 
-    const char* ident = rec.key_peek_value(DBA_KEY_IDENT);
+    const char* ident = nullptr;
+    if (const Var* var = rec.get("ident"))
+        ident = var->value();
 
     // Get the ID for the station
     if (can_add)
@@ -212,7 +194,7 @@ int DB::obtain_station(const Record& rec, bool can_add)
 
 int DB::obtain_lev_tr(const Record& rec)
 {
-    if (rec.is_ana_context())
+    if (core::Record::downcast(rec).is_ana_context())
         return -1;
 
     return lev_tr().obtain_id(rec);
@@ -222,11 +204,12 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
 {
     sql::Repinfo& ri = repinfo();
     sql::DataV6& d = data();
+    const auto& r = core::Record::downcast(rec);
 
     /* Check for the existance of non-lev_tr data, otherwise it's all
      * useless.  Not inserting data is fine in case of setlev_trana */
     const char* s_year;
-    if (rec.vars().empty() && !(((s_year = rec.key_peek_value(DBA_KEY_YEAR)) != NULL) && strcmp(s_year, "1000") == 0))
+    if (r.vars().empty() && !(((s_year = r.key_peek_value(core::DBA_KEY_YEAR)) != NULL) && strcmp(s_year, "1000") == 0))
         throw error_notfound("no variables found in input record");
 
     auto t = conn->transaction();
@@ -235,12 +218,12 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
     // Insert the station data, and get the ID
     vars.id_station = obtain_station(rec, station_can_add);
     // Get the ID of the report
-    if (const char* memo = rec.key_peek_value(DBA_KEY_REP_MEMO))
+    if (const char* memo = r.key_peek_value(core::DBA_KEY_REP_MEMO))
         vars.id_report = ri.obtain_id(memo);
     else
         throw error_notfound("input record has neither rep_cod nor rep_memo");
     // Set the date from the record contents
-    vars.datetime = rec.get_datetime();
+    vars.datetime = r.get_datetime();
 
     // Insert the lev_tr data, and get the ID
     int id_levtr = obtain_lev_tr(rec);
@@ -249,7 +232,7 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
     last_insert_varids.clear();
 
     // Add all the variables we find
-    for (vector<Var*>::const_iterator i = rec.vars().begin(); i != rec.vars().end(); ++i)
+    for (vector<Var*>::const_iterator i = r.vars().begin(); i != r.vars().end(); ++i)
         vars.add(*i, id_levtr);
 
     // Do the insert
@@ -348,9 +331,10 @@ void DB::attr_insert(int id_data, wreport::Varcode id_var, const Record& attrs)
 {
     sql::AttrV6& a = attr();
     sql::bulk::InsertAttrsV6 iattrs;
-    for (vector<Var*>::const_iterator i = attrs.vars().begin(); i != attrs.vars().end(); ++i)
-        if ((*i)->value() != NULL)
-            iattrs.add(*i, id_data);
+    const auto& vars = core::Record::downcast(attrs).vars();
+    for (const auto& i : vars)
+        if (i->value() != NULL)
+            iattrs.add(i, id_data);
     if (iattrs.empty()) return;
 
     // Begin the transaction

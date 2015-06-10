@@ -56,6 +56,9 @@ wreport::Varcode resolve_varcode_safe(const std::string& name);
 /// Resolve a comma-separated varcode list performing careful validation, inserting results in \a out
 void resolve_varlist_safe(const std::string& varlist, std::set<wreport::Varcode>& out);
 
+/// Resolve a comma-separated varcode list performing careful validation, calling \a dest on each result
+void resolve_varlist_safe(const std::string& varlist, std::function<void(wreport::Varcode)> out);
+
 /// Create a new Var, from the local B table, with undefined value
 static inline wreport::Var var(wreport::Varcode code) { return wreport::Var(varinfo(code)); }
 

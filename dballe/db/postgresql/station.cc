@@ -1,24 +1,3 @@
-/*
- * db/postgresql/station - station table management
- *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "station.h"
 #include "dballe/db/postgresql/internals.h"
 #include "dballe/core/var.h"
@@ -139,8 +118,9 @@ void StationBase::add_station_vars(int id_station, Record& rec)
 {
     using namespace postgresql;
     Result res(conn.exec_prepared("v6_station_add_station_vars", id_station));
+    auto& r = core::Record::downcast(rec);
     for (unsigned row = 0; row < res.rowcount(); ++row)
-        rec.var(res.get_int4(row, 0)).setc(res.get_string(row, 1));
+        r.obtain((Varcode)res.get_int4(row, 0)).setc(res.get_string(row, 1));
 }
 
 void StationBase::dump(FILE* out)

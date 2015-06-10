@@ -1,7 +1,7 @@
-#include "dballe/core/matcher.h"
-#include "dballe/core/defs.h"
-#include "dballe/core/record.h"
-#include "dballe/core/query.h"
+#include "matcher.h"
+#include "defs.h"
+#include "record.h"
+#include "query.h"
 #include <cmath>
 #include <iostream>
 
@@ -26,7 +26,7 @@ matcher::Result Matched::match_date(const Datetime&, const Datetime&) const
 {
     return matcher::MATCH_NA;
 }
-matcher::Result Matched::match_coords(const Coords& cmin, const Coords& cmax) const
+matcher::Result Matched::match_coords(const LatRange&, const LonRange&) const
 {
     return matcher::MATCH_NA;
 }
@@ -100,11 +100,11 @@ struct And : public Matcher
         return res;
     }
 
-    virtual void to_record(dballe::Record& query) const
+    virtual void to_record(dballe::Record& rec) const
     {
         for (std::vector<const Matcher*>::const_iterator i = exprs.begin();
                 i != exprs.end(); ++i)
-            (*i)->to_record(query);
+            (*i)->to_record(rec);
     }
 };
 
@@ -119,9 +119,9 @@ struct VarIDMatcher : public Matcher
     {
         return v.match_var_id(var_id) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
-    virtual void to_record(Record& query) const
+    virtual void to_record(Record& rec) const
     {
-        query.set(WR_VAR(0, 33, 195), var_id);
+        rec.set("B33195", var_id);
     }
 };
 
@@ -136,9 +136,9 @@ struct AnaIDMatcher : public Matcher
     {
         return v.match_station_id(ana_id) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
-    virtual void to_record(Record& query) const
+    virtual void to_record(Record& rec) const
     {
-        query.set(DBA_KEY_ANA_ID, ana_id);
+        rec.set("ana_id", ana_id);
     }
 };
 
@@ -153,11 +153,13 @@ struct WMOMatcher : public Matcher
     {
         return v.match_station_wmo(block, station) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
-    virtual void to_record(Record& query) const
+    virtual void to_record(Record& rec) const
     {
-        query.set(WR_VAR(0, 1, 1), block);
+        rec.set("block", block);
         if (station != -1)
-            query.set(WR_VAR(0, 1, 2), station);
+            rec.set("station", station);
+        else
+            rec.unset("station");
     }
 };
 
@@ -186,40 +188,38 @@ struct DateMatcher : public Matcher
         return v.match_date(dtmin, dtmax) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
 
-    virtual void to_record(Record& query) const
+    virtual void to_record(Record& rec) const
     {
         if (dtmin == dtmax)
         {
             if (!dtmin.is_missing())
-                query.set(dtmin);
+                rec.set(dtmin);
         } else {
             if (!dtmin.is_missing())
-                query.setmin(dtmin);
+                core::Record::downcast(rec).setmin(dtmin);
             if (!dtmax.is_missing())
-                query.setmax(dtmax);
+                core::Record::downcast(rec).setmax(dtmax);
         }
     }
 };
 
 struct CoordMatcher : public Matcher
 {
-    Coords cmin;
-    Coords cmax;
+    LatRange latrange;
+    LonRange lonrange;
 
-    CoordMatcher(const Coords& cmin, const Coords& cmax)
-        : cmin(cmin), cmax(cmax) {}
+    CoordMatcher(const LatRange& latrange, const LonRange& lonrange)
+        : latrange(latrange), lonrange(lonrange) {}
 
     virtual Result match(const Matched& v) const
     {
-        return v.match_coords(cmin, cmax) == MATCH_YES ? MATCH_YES : MATCH_NO;
+        return v.match_coords(latrange, lonrange) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
 
-    virtual void to_record(Record& query) const
+    virtual void to_record(Record& rec) const
     {
-        if (cmin.lat != MISSING_INT) query.set(DBA_KEY_LATMIN, cmin.lat);
-        if (cmax.lat != MISSING_INT) query.set(DBA_KEY_LATMAX, cmax.lat);
-        if (cmin.lon != MISSING_INT) query.set(DBA_KEY_LONMIN, cmin.lon);
-        if (cmax.lon != MISSING_INT) query.set(DBA_KEY_LONMAX, cmax.lon);
+        core::Record::downcast(rec).set_latrange(latrange);
+        core::Record::downcast(rec).set_lonrange(lonrange);
     }
 };
 
@@ -241,51 +241,12 @@ struct ReteMatcher : public Matcher
     {
         return v.match_rep_memo(rete.c_str()) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
-    virtual void to_record(Record& query) const
+    virtual void to_record(Record& rec) const
     {
-        query.set(DBA_KEY_REP_MEMO, rete.c_str());
+        rec.set("rep_memo", rete.c_str());
     }
 };
 
-}
-
-static inline int int_or_missing(const Record& query, dba_keyword key)
-{
-    if (const Var* var = query.key_peek(key))
-        return var->enqi();
-    else
-        return MISSING_INT;
-}
-
-// Returns false if no date filter was found at all
-// Limits are degrees * 100000
-static bool parse_lat_extremes(const Record& query, int* rlatmin, int* rlatmax, int* rlonmin, int* rlonmax)
-{
-    int lat = int_or_missing(query, DBA_KEY_LAT);
-    if (lat != MISSING_INT)
-    {
-        *rlatmin = lat;
-        *rlatmax = lat;
-    } else {
-        *rlatmin = int_or_missing(query, DBA_KEY_LATMIN);
-        *rlatmax = int_or_missing(query, DBA_KEY_LATMAX);
-    }
-
-    int lon = int_or_missing(query, DBA_KEY_LON);
-    if (lon != MISSING_INT)
-    {
-        *rlonmin = lon;
-        *rlonmax = lon;
-    } else {
-        *rlonmin = int_or_missing(query, DBA_KEY_LONMIN);
-        *rlonmax = int_or_missing(query, DBA_KEY_LONMAX);
-    }
-
-    if (*rlatmin == MISSING_INT && *rlatmax == MISSING_INT
-     && *rlonmin == MISSING_INT && *rlonmax == MISSING_INT)
-        return false;
-
-    return true;
 }
 
 std::unique_ptr<Matcher> Matcher::create(const dballe::Query& query_gen)
@@ -316,7 +277,11 @@ std::unique_ptr<Matcher> Matcher::create(const dballe::Query& query_gen)
 
     if (query.coords_min.lat != MISSING_INT || query.coords_min.lon != MISSING_INT
      || query.coords_max.lat != MISSING_INT || query.coords_max.lon != MISSING_INT)
-        res->exprs.push_back(new CoordMatcher(query.coords_min, query.coords_max));
+        res->exprs.push_back(new CoordMatcher(
+                    LatRange(
+                        query.coords_min.lat == MISSING_INT ? LatRange::IMIN : query.coords_min.lat,
+                        query.coords_max.lat == MISSING_INT ? LatRange::IMAX : query.coords_max.lat),
+                    LonRange(query.coords_min.lon, query.coords_max.lon)));
 
     if (!query.rep_memo.empty())
         res->exprs.push_back(new ReteMatcher(query.rep_memo));
@@ -325,5 +290,3 @@ std::unique_ptr<Matcher> Matcher::create(const dballe::Query& query_gen)
 }
 
 }
-
-/* vim:set syntax=cpp ts=4 sw=4 si: */

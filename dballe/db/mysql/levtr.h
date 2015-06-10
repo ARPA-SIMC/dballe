@@ -66,12 +66,6 @@ public:
      */
     int obtain_id(const Level& lev, const Trange& tr) override;
 
-    /**
-     * Return the ID for the given Record, adding it to the database if it does
-     * not already exist
-     */
-    int obtain_id(const Record& rec) override;
-
     const DBRow* read(int id) override;
     void read_all(std::function<void(const DBRow&)> dest) override;
 

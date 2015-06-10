@@ -20,7 +20,7 @@
 #include <dballe/cmdline/dbadb.h>
 #include <dballe/cmdline/processor.h>
 #include <dballe/cmdline/cmdline.h>
-#include <dballe/core/record.h>
+#include <dballe/record.h>
 #include <dballe/core/file.h>
 #include <dballe/msg/msg.h>
 #include <dballe/msg/msgs.h>

@@ -62,18 +62,18 @@ void to::test<1>()
     wassert(actual(&stm1) == &stm);
 
     // Check again, looking up records
-    Record sfrec;
-    sfrec.set(DBA_KEY_LAT, 44.0);
-    sfrec.set(DBA_KEY_LON, 11.0);
-    sfrec.set(DBA_KEY_REP_MEMO, "synop");
+    core::Record sfrec;
+    sfrec.set("lat", 44.0);
+    sfrec.set("lon", 11.0);
+    sfrec.set("rep_memo", "synop");
     const Station& stf2 = *stations[stations.obtain(sfrec)];
     wassert(actual(&stf2) == &stf);
 
-    Record smrec;
-    smrec.set(DBA_KEY_LAT, 44.0);
-    smrec.set(DBA_KEY_LON, 11.0);
-    smrec.set(DBA_KEY_IDENT, "LH1234");
-    smrec.set(DBA_KEY_REP_MEMO, "airep");
+    core::Record smrec;
+    smrec.set("lat", 44.0);
+    smrec.set("lon", 11.0);
+    smrec.set("ident", "LH1234");
+    smrec.set("rep_memo", "airep");
     const Station& stm2 = *stations[stations.obtain(smrec)];
     wassert(actual(&stm2) == &stm);
 }

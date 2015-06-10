@@ -1,22 +1,3 @@
-/*
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "config.h"
 #include "db/test-utils-db.h"
 #include "msg/msgs.h"
@@ -253,7 +234,7 @@ std::vector<Test> tests {
         wassert(actual(cur->remaining()) == 1);
         wassert(actual(cur->next()).istrue());
 
-        Record result;
+        core::Record result;
         cur->to_record(result);
 
         const std::vector<wreport::Var*>& vars = result.vars();
@@ -272,7 +253,7 @@ std::vector<Test> tests {
     Test("station_only_no_vars", [](Fixture& f) {
         // Check that a message that only contains station variables does get imported
         auto& db = f.db;
-        Record query;
+        core::Record query;
         std::unique_ptr<Msgs> msgs = read_msgs("bufr/arpa-station.bufr", BUFR);
         Msg& msg = *(*msgs)[0];
 
@@ -324,7 +305,7 @@ std::vector<Test> tests {
     Test("import_dirty", [](Fixture& f) {
         // Try importing into a dirty database, no attributes involved
         auto& db = f.db;
-        Record query;
+        core::Record query;
         auto add_common = [](Msg& msg) {
             msg.type = MSG_SYNOP;
             msg.set_rep_memo("synop");

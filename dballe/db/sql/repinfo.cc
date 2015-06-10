@@ -4,7 +4,7 @@
 //#include "dballe/db/odbc/repinfo.h"
 #include "dballe/db/sqlite/internals.h"
 //#include "dballe/db/sqlite/repinfo.h"
-#include "dballe/core/record.h"
+#include "dballe/record.h"
 #include "dballe/core/query.h"
 #include "dballe/core/csv.h"
 #include <wreport/error.h>
@@ -39,11 +39,11 @@ void Repinfo::to_record(int id, Record& rec)
     const repinfo::Cache* c = get_by_id(id);
     if (c)
     {
-        rec.key(DBA_KEY_REP_MEMO).setc(c->memo.c_str());
-        rec.key(DBA_KEY_PRIORITY).seti(c->prio);
+        rec.setc("rep_memo", c->memo.c_str());
+        rec.seti("priority", c->prio);
     } else {
-        rec.key(DBA_KEY_REP_MEMO).unset();
-        rec.key(DBA_KEY_PRIORITY).unset();
+        rec.unset("rep_memo");
+        rec.unset("priority");
     }
 }
 

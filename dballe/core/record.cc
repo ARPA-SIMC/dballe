@@ -1,24 +1,3 @@
-/*
- * dballe/record - groups of related variables
- *
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "record.h"
 #include "var.h"
 #include "aliases.h"
@@ -37,6 +16,7 @@ using namespace wreport;
 using namespace std;
 
 namespace dballe {
+namespace core {
 
 /*
  * Size of the keyword table.  It should be the number of items in
@@ -78,6 +58,231 @@ Record::Record(const Record& rec)
 Record::~Record()
 {
 	clear();
+}
+
+unique_ptr<dballe::Record> Record::clone() const
+{
+    return unique_ptr<dballe::Record>(new Record(*this));
+}
+
+const Record& Record::downcast(const dballe::Record& record)
+{
+    const Record* ptr = dynamic_cast<const Record*>(&record);
+    if (!ptr)
+        throw error_consistency("record given is not a core::Record");
+    return *ptr;
+}
+
+Record& Record::downcast(dballe::Record& record)
+{
+    Record* ptr = dynamic_cast<Record*>(&record);
+    if (!ptr)
+        throw error_consistency("record given is not a core::Record");
+    return *ptr;
+}
+
+wreport::Var& Record::obtain(const char* name)
+{
+    Varcode code = 0;
+    if (name[0] != 'B' && (code = varcode_alias_resolve(name)) == 0)
+    {
+        dba_keyword param = keyword_byname(name);
+        if (param == DBA_KEY_ERROR)
+            error_notfound::throwf("looking for misspelled parameter \"%s\"", name);
+        return obtain(param);
+    } else {
+        if (code == 0)
+            code = WR_STRING_TO_VAR(name + 1);
+        return obtain(code);
+    }
+}
+
+wreport::Var& Record::obtain(dba_keyword key)
+{
+    if (keydata[key] == NULL)
+        keydata[key] = new Var(keyword_info(key));
+    return *keydata[key];
+}
+
+wreport::Var& Record::obtain(wreport::Varcode key)
+{
+    int pos = find_item(key);
+    if (pos == -1)
+    {
+        // Insertion sort the new variable
+
+        // Enlarge the buffer
+        m_vars.resize(m_vars.size() + 1);
+
+        /* Insertionsort.  Crude, but our datasets should be too small for an
+         * RB-Tree to be worth it */
+        for (pos = m_vars.size() - 1; pos > 0; --pos)
+            if (m_vars[pos - 1]->code() > key)
+                m_vars[pos] = m_vars[pos - 1];
+            else
+                break;
+        m_vars[pos] = newvar(key).release();
+    }
+    return *m_vars[pos];
+}
+
+void Record::seti(const char* key, int val)
+{
+    if (val == MISSING_INT)
+        unset(key);
+    else
+        obtain(key).seti(val);
+}
+void Record::setd(const char* key, double val)
+{
+    obtain(key).setd(val);
+}
+void Record::setc(const char* key, const char* val)
+{
+    if (!val)
+        unset(key);
+    else
+        obtain(key).setc(val);
+}
+void Record::sets(const char* key, const std::string& val)
+{
+    obtain(key).setc(val.c_str());
+}
+void Record::setf(const char* key, const char* val)
+{
+    obtain(key).set_from_formatted(val);
+}
+
+void Record::set_datetime(const Datetime& dt)
+{
+    if (dt.is_missing())
+    {
+        unset("year");
+        unset("month");
+        unset("day");
+        unset("hour");
+        unset("min");
+        unset("sec");
+    } else {
+        seti("year",  (int)dt.year);
+        seti("month", (int)dt.month);
+        seti("day",   (int)dt.day);
+        seti("hour",  (int)dt.hour);
+        seti("min",   (int)dt.minute);
+        seti("sec",   (int)dt.second);
+    }
+}
+
+void Record::set_level(const Level& lev)
+{
+    if (lev.ltype1 == MISSING_INT)
+        unset("leveltype1");
+    else
+        seti("leveltype1", lev.ltype1);
+
+    if (lev.l1 == MISSING_INT)
+        unset("l1");
+    else
+        seti("l1", lev.l1);
+
+    if (lev.ltype2 == MISSING_INT)
+        unset("leveltype2");
+    else
+        seti("leveltype2", lev.ltype2);
+
+    if (lev.l2 == MISSING_INT)
+        unset("l2");
+    else
+        seti("l2", lev.l2);
+}
+
+void Record::set_trange(const Trange& tr)
+{
+    if (tr.pind == MISSING_INT)
+        unset("pindicator");
+    else
+        seti("pindicator", tr.pind);
+
+    if (tr.p1 == MISSING_INT)
+        unset("p1");
+    else
+        seti("p1", tr.p1);
+
+    if (tr.p2 == MISSING_INT)
+        unset("p2");
+    else
+        seti("p2", tr.p2);
+}
+
+void Record::set_var(const wreport::Var& var)
+{
+    if (var.value())
+        obtain(var.code()).copy_val(var);
+    else
+        var_unset(var.code());
+}
+
+void Record::set_var_acquire(std::unique_ptr<wreport::Var>&& var)
+{
+    int pos = find_item(var->code());
+    if (pos == -1)
+    {
+        // Insertion sort the new variable
+
+        // Enlarge the buffer
+        m_vars.resize(m_vars.size() + 1);
+
+        /* Insertionsort.  Crude, but our datasets should be too small for an
+         * RB-Tree to be worth it */
+        for (pos = m_vars.size() - 1; pos > 0; --pos)
+            if (m_vars[pos - 1]->code() > var->code())
+                m_vars[pos] = m_vars[pos - 1];
+            else
+                break;
+    } else
+        delete m_vars[pos];
+    m_vars[pos] = var.release();
+}
+
+void Record::set_latrange(const LatRange& lr)
+{
+    if (lr.is_missing())
+    {
+        unset("lat");
+        unset("latmin");
+        unset("latmax");
+    } else if (lr.imin == lr.imax) {
+        seti("lat", lr.imin);
+        unset("latmin");
+        unset("latmax");
+    } else {
+        unset("lat");
+        seti("latmin", lr.imin);
+        seti("latmax", lr.imax);
+    }
+}
+
+void Record::set_lonrange(const LonRange& lr)
+{
+    if (lr.is_missing())
+    {
+        unset("lon");
+        unset("lonmin");
+        unset("lonmax");
+    } else if (lr.imin == lr.imax) {
+        seti("lon", lr.imin);
+        unset("lonmin");
+        unset("lonmax");
+    } else {
+        unset("lon");
+        seti("lonmin", lr.imin);
+        seti("lonmax", lr.imax);
+    }
+}
+
+const wreport::Var* Record::get(const char* key) const
+{
+    return peek(key);
 }
 
 Record& Record::operator=(const Record& rec)
@@ -400,110 +605,6 @@ const char* Record::peek_value(const char* name) const
 	return var->value();
 }
 
-const wreport::Var& Record::key(dba_keyword parameter) const
-{
-	const Var* res = key_peek(parameter);
-	if (!res)
-		error_notfound::throwf("Parameter %s not found in record", keyword_name(parameter));
-	return *res;
-}
-
-const wreport::Var& Record::var(wreport::Varcode code) const
-{
-	const Var* res = var_peek(code);
-	if (!res)
-		error_notfound::throwf("Variable %01d%02d%03d not found in record",
-				WR_VAR_F(code), WR_VAR_X(code), WR_VAR_Y(code));
-	return *res;
-}
-
-int Record::enqi(dba_keyword parameter) const
-{
-    return key(parameter).enqi();
-}
-
-int Record::enqi(dba_keyword parameter, int def) const
-{
-    const Var* res = key_peek(parameter);
-    if (!res) return def;
-    return res->enq(def);
-}
-
-Var& Record::key(dba_keyword parameter)
-{
-	if (keydata[parameter] == NULL)
-		keydata[parameter] = new Var(keyword_info(parameter));
-	return *keydata[parameter];
-}
-
-Var& Record::var(wreport::Varcode code)
-{
-	int pos = find_item(code);
-	if (pos == -1)
-	{
-		// Insertion sort the new variable
-
-		// Enlarge the buffer
-		m_vars.resize(m_vars.size() + 1);
-
-		/* Insertionsort.  Crude, but our datasets should be too small for an
-		 * RB-Tree to be worth it */
-		for (pos = m_vars.size() - 1; pos > 0; --pos)
-		    if (m_vars[pos - 1]->code() > code)
-			m_vars[pos] = m_vars[pos - 1];
-		    else
-			break;
-		m_vars[pos] = newvar(code).release();
-	}
-	return *m_vars[pos];
-}
-
-void Record::add(std::unique_ptr<wreport::Var> var)
-{
-    int pos = find_item(var->code());
-    if (pos == -1)
-    {
-        // Insertion sort the new variable
-
-        // Enlarge the buffer
-        m_vars.resize(m_vars.size() + 1);
-
-        /* Insertionsort.  Crude, but our datasets should be too small for an
-         * RB-Tree to be worth it */
-        for (pos = m_vars.size() - 1; pos > 0; --pos)
-            if (m_vars[pos - 1]->code() > var->code())
-                m_vars[pos] = m_vars[pos - 1];
-            else
-                break;
-    } else
-        delete m_vars[pos];
-    m_vars[pos] = var.release();
-}
-
-const wreport::Var& Record::get(const char* name) const
-{
-	const Var* var = peek(name);
-	if (var == NULL)
-		error_notfound::throwf("\"%s\" not found in record", name);
-	return *var;
-}
-
-wreport::Var& Record::get(const char* name)
-{
-	Varcode code = 0;
-	if (name[0] != 'B' && (code = varcode_alias_resolve(name)) == 0)
-	{
-		dba_keyword param = keyword_byname(name);
-		if (param == DBA_KEY_ERROR)
-			error_notfound::throwf("looking for misspelled parameter \"%s\"", name);
-		return key(param);
-	} else {
-		if (code == 0)
-			code = WR_STRING_TO_VAR(name + 1);
-		return var(code);
-	}
-}
-
 void Record::key_unset(dba_keyword parameter)
 {
 	if (keydata[parameter] != NULL)
@@ -554,122 +655,21 @@ const std::vector<wreport::Var*>& Record::vars() const
 	return m_vars;
 }
 
-void Record::set(const Level& lev)
-{
-    if (lev.ltype1 == MISSING_INT)
-        unset(DBA_KEY_LEVELTYPE1);
-    else
-        set(DBA_KEY_LEVELTYPE1, lev.ltype1);
-
-    if (lev.l1 == MISSING_INT)
-        unset(DBA_KEY_L1);
-    else
-        set(DBA_KEY_L1, lev.l1);
-
-    if (lev.ltype2 == MISSING_INT)
-        unset(DBA_KEY_LEVELTYPE2);
-    else
-        set(DBA_KEY_LEVELTYPE2, lev.ltype2);
-
-    if (lev.l2 == MISSING_INT)
-        unset(DBA_KEY_L2);
-    else
-        set(DBA_KEY_L2, lev.l2);
-}
-
-void Record::set(const Trange& tr)
-{
-    if (tr.pind == MISSING_INT)
-        unset(DBA_KEY_PINDICATOR);
-    else
-        set(DBA_KEY_PINDICATOR, tr.pind);
-
-    if (tr.p1 == MISSING_INT)
-        unset(DBA_KEY_P1);
-    else
-        set(DBA_KEY_P1, tr.p1);
-
-    if (tr.p2 == MISSING_INT)
-        unset(DBA_KEY_P2);
-    else
-        set(DBA_KEY_P2, tr.p2);
-}
-
 Level Record::get_level() const
 {
     return Level(
-            get(DBA_KEY_LEVELTYPE1, MISSING_INT),
-            get(DBA_KEY_L1, MISSING_INT),
-            get(DBA_KEY_LEVELTYPE2, MISSING_INT),
-            get(DBA_KEY_L2, MISSING_INT));
+            enq("leveltype1", MISSING_INT),
+            enq("l1",         MISSING_INT),
+            enq("leveltype2", MISSING_INT),
+            enq("l2",         MISSING_INT));
 }
 
 Trange Record::get_trange() const
 {
     return Trange(
-            get(DBA_KEY_PINDICATOR, MISSING_INT),
-            get(DBA_KEY_P1, MISSING_INT),
-            get(DBA_KEY_P2, MISSING_INT));
-}
-
-void Record::get_datetime(int (&val)[6]) const
-{
-    val[0] = get(DBA_KEY_YEAR, MISSING_INT);
-    val[1] = get(DBA_KEY_MONTH, MISSING_INT);
-    val[2] = get(DBA_KEY_DAY, MISSING_INT);
-    val[3] = get(DBA_KEY_HOUR, MISSING_INT);
-    val[4] = get(DBA_KEY_MIN, MISSING_INT);
-    val[5] = get(DBA_KEY_SEC, MISSING_INT);
-}
-
-void Record::get_datetimemin(int (&val)[6]) const
-{
-    val[0] = get(DBA_KEY_YEARMIN, MISSING_INT);
-    val[1] = get(DBA_KEY_MONTHMIN, MISSING_INT);
-    val[2] = get(DBA_KEY_DAYMIN, MISSING_INT);
-    val[3] = get(DBA_KEY_HOURMIN, MISSING_INT);
-    val[4] = get(DBA_KEY_MINUMIN, MISSING_INT);
-    val[5] = get(DBA_KEY_SECMIN, MISSING_INT);
-}
-
-void Record::get_datetimemax(int (&val)[6]) const
-{
-    val[0] = get(DBA_KEY_YEARMAX, MISSING_INT);
-    val[1] = get(DBA_KEY_MONTHMAX, MISSING_INT);
-    val[2] = get(DBA_KEY_DAYMAX, MISSING_INT);
-    val[3] = get(DBA_KEY_HOURMAX, MISSING_INT);
-    val[4] = get(DBA_KEY_MINUMAX, MISSING_INT);
-    val[5] = get(DBA_KEY_SECMAX, MISSING_INT);
-}
-
-void Record::set_datetime(const int (&val)[6])
-{
-    if (val[0] == MISSING_INT) unset(DBA_KEY_YEAR);  else set(DBA_KEY_YEAR,  val[0]);
-    if (val[1] == MISSING_INT) unset(DBA_KEY_MONTH); else set(DBA_KEY_MONTH, val[1]);
-    if (val[2] == MISSING_INT) unset(DBA_KEY_DAY);   else set(DBA_KEY_DAY,   val[2]);
-    if (val[3] == MISSING_INT) unset(DBA_KEY_HOUR);  else set(DBA_KEY_HOUR,  val[3]);
-    if (val[4] == MISSING_INT) unset(DBA_KEY_MIN);   else set(DBA_KEY_MIN,   val[4]);
-    if (val[5] == MISSING_INT) unset(DBA_KEY_SEC);   else set(DBA_KEY_SEC,   val[5]);
-}
-
-void Record::set_datetimemin(const int (&val)[6])
-{
-    if (val[0] == MISSING_INT) unset(DBA_KEY_YEARMIN);  else set(DBA_KEY_YEARMIN,  val[0]);
-    if (val[1] == MISSING_INT) unset(DBA_KEY_MONTHMIN); else set(DBA_KEY_MONTHMIN, val[1]);
-    if (val[2] == MISSING_INT) unset(DBA_KEY_DAYMIN);   else set(DBA_KEY_DAYMIN,   val[2]);
-    if (val[3] == MISSING_INT) unset(DBA_KEY_HOURMIN);  else set(DBA_KEY_HOURMIN,  val[3]);
-    if (val[4] == MISSING_INT) unset(DBA_KEY_MINUMIN);  else set(DBA_KEY_MINUMIN,  val[4]);
-    if (val[5] == MISSING_INT) unset(DBA_KEY_SECMIN);   else set(DBA_KEY_SECMIN,   val[5]);
-}
-
-void Record::set_datetimemax(const int (&val)[6])
-{
-    if (val[0] == MISSING_INT) unset(DBA_KEY_YEARMAX);  else set(DBA_KEY_YEARMAX,  val[0]);
-    if (val[1] == MISSING_INT) unset(DBA_KEY_MONTHMAX); else set(DBA_KEY_MONTHMAX, val[1]);
-    if (val[2] == MISSING_INT) unset(DBA_KEY_DAYMAX);   else set(DBA_KEY_DAYMAX,   val[2]);
-    if (val[3] == MISSING_INT) unset(DBA_KEY_HOURMAX);  else set(DBA_KEY_HOURMAX,  val[3]);
-    if (val[4] == MISSING_INT) unset(DBA_KEY_MINUMAX);  else set(DBA_KEY_MINUMAX,  val[4]);
-    if (val[5] == MISSING_INT) unset(DBA_KEY_SECMAX);   else set(DBA_KEY_SECMAX,   val[5]);
+            enq("pindicator", MISSING_INT),
+            enq("p1",         MISSING_INT),
+            enq("p2",         MISSING_INT));
 }
 
 Datetime Record::get_datetime() const
@@ -677,11 +677,11 @@ Datetime Record::get_datetime() const
     if (const Var* var = key_peek(DBA_KEY_YEAR))
         return Datetime(
             var->enqi(),
-            get(DBA_KEY_MONTH, 1),
-            get(DBA_KEY_DAY, 1),
-            get(DBA_KEY_HOUR, 0),
-            get(DBA_KEY_MIN, 0),
-            get(DBA_KEY_SEC, 0));
+            enq("month", 1),
+            enq("day", 1),
+            enq("hour", 0),
+            enq("min", 0),
+            enq("sec", 0));
     else
         return Datetime();
 }
@@ -691,11 +691,11 @@ Datetime Record::get_datetimemin() const
     if (const Var* var = key_peek(DBA_KEY_YEARMIN))
         return Datetime(
             var->enqi(),
-            get(DBA_KEY_MONTHMIN, 1),
-            get(DBA_KEY_DAYMIN, 1),
-            get(DBA_KEY_HOURMIN, 0),
-            get(DBA_KEY_MINUMIN, 0),
-            get(DBA_KEY_SECMIN, 0));
+            enq("monthmin", 1),
+            enq("daymin", 1),
+            enq("hourmin", 0),
+            enq("minumin", 0),
+            enq("secmin", 0));
     else
         return Datetime();
 }
@@ -705,113 +705,93 @@ Datetime Record::get_datetimemax() const
     if (const Var* var = key_peek(DBA_KEY_YEARMAX))
     {
         int year = var->enqi();
-        int month = get(DBA_KEY_MONTHMAX, 12);
-        int day = get(DBA_KEY_DAYMAX, 0);
+        int month = enq("monthmax", 12);
+        int day = enq("daymax", 0);
         if (day == 0) day = Date::days_in_month(year, month);
         return Datetime(year, month, day,
-            get(DBA_KEY_HOURMAX, 23),
-            get(DBA_KEY_MINUMAX, 59),
-            get(DBA_KEY_SECMAX, 59));
+            enq("hourmax", 23),
+            enq("minumax", 59),
+            enq("secmax", 59));
     } else
         return Datetime();
 }
 
 void Record::unset_datetime()
 {
-    unset(DBA_KEY_YEAR);
-    unset(DBA_KEY_MONTH);
-    unset(DBA_KEY_DAY);
-    unset(DBA_KEY_HOUR);
-    unset(DBA_KEY_MIN);
-    unset(DBA_KEY_SEC);
+    key_unset(DBA_KEY_YEAR);
+    key_unset(DBA_KEY_MONTH);
+    key_unset(DBA_KEY_DAY);
+    key_unset(DBA_KEY_HOUR);
+    key_unset(DBA_KEY_MIN);
+    key_unset(DBA_KEY_SEC);
 }
 
 void Record::unset_datetimemin()
 {
-    unset(DBA_KEY_YEARMIN);
-    unset(DBA_KEY_MONTHMIN);
-    unset(DBA_KEY_DAYMIN);
-    unset(DBA_KEY_HOURMIN);
-    unset(DBA_KEY_MINUMIN);
-    unset(DBA_KEY_SECMIN);
+    key_unset(DBA_KEY_YEARMIN);
+    key_unset(DBA_KEY_MONTHMIN);
+    key_unset(DBA_KEY_DAYMIN);
+    key_unset(DBA_KEY_HOURMIN);
+    key_unset(DBA_KEY_MINUMIN);
+    key_unset(DBA_KEY_SECMIN);
 }
 
 void Record::unset_datetimemax()
 {
-    unset(DBA_KEY_YEARMAX);
-    unset(DBA_KEY_MONTHMAX);
-    unset(DBA_KEY_DAYMAX);
-    unset(DBA_KEY_HOURMAX);
-    unset(DBA_KEY_MINUMAX);
-    unset(DBA_KEY_SECMAX);
-}
-
-void Record::set(const Datetime& dt)
-{
-    set(DBA_KEY_YEAR,  (int)dt.year);
-    set(DBA_KEY_MONTH, (int)dt.month);
-    set(DBA_KEY_DAY,   (int)dt.day);
-    set(DBA_KEY_HOUR,  (int)dt.hour);
-    set(DBA_KEY_MIN,   (int)dt.minute);
-    set(DBA_KEY_SEC,   (int)dt.second);
+    key_unset(DBA_KEY_YEARMAX);
+    key_unset(DBA_KEY_MONTHMAX);
+    key_unset(DBA_KEY_DAYMAX);
+    key_unset(DBA_KEY_HOURMAX);
+    key_unset(DBA_KEY_MINUMAX);
+    key_unset(DBA_KEY_SECMAX);
 }
 
 void Record::setmin(const Datetime& dt)
 {
-    set(DBA_KEY_YEARMIN,  (int)dt.year);
-    set(DBA_KEY_MONTHMIN, (int)dt.month);
-    set(DBA_KEY_DAYMIN,   (int)dt.day);
-    set(DBA_KEY_HOURMIN,  (int)dt.hour);
-    set(DBA_KEY_MINUMIN,  (int)dt.minute);
-    set(DBA_KEY_SECMIN,   (int)dt.second);
+    seti("yearmin",  (int)dt.year);
+    seti("monthmin", (int)dt.month);
+    seti("daymin",   (int)dt.day);
+    seti("hourmin",  (int)dt.hour);
+    seti("minumin",  (int)dt.minute);
+    seti("secmin",   (int)dt.second);
 }
 
 void Record::setmax(const Datetime& dt)
 {
-    set(DBA_KEY_YEARMAX,  (int)dt.year);
-    set(DBA_KEY_MONTHMAX, (int)dt.month);
-    set(DBA_KEY_DAYMAX,   (int)dt.day);
-    set(DBA_KEY_HOURMAX,  (int)dt.hour);
-    set(DBA_KEY_MINUMAX,  (int)dt.minute);
-    set(DBA_KEY_SECMAX,   (int)dt.second);
+    seti("yearmax",  (int)dt.year);
+    seti("monthmax", (int)dt.month);
+    seti("daymax",   (int)dt.day);
+    seti("hourmax",  (int)dt.hour);
+    seti("minumax",  (int)dt.minute);
+    seti("secmax",   (int)dt.second);
 }
 
-void Record::set_datetime(int ye, int mo, int da, int ho, int mi, int se)
+void Record::set_coords(const Coords& c)
 {
-    set(DBA_KEY_YEAR,  ye);
-    set(DBA_KEY_MONTH, mo);
-    set(DBA_KEY_DAY,   da);
-    set(DBA_KEY_HOUR,  ho);
-    set(DBA_KEY_MIN,   mi);
-    set(DBA_KEY_SEC,   se);
-}
-
-void Record::set(const Coords& c)
-{
-    set(DBA_KEY_LAT, c.lat);
-    set(DBA_KEY_LON, c.lon);
+    seti("lat", c.lat);
+    seti("lon", c.lon);
 }
 
 void Record::set_ana_context()
 {
-	key(DBA_KEY_YEAR).seti(1000);
-	key(DBA_KEY_MONTH).seti(1);
-	key(DBA_KEY_DAY).seti(1);
-	key(DBA_KEY_HOUR).seti(0);
-	key(DBA_KEY_MIN).seti(0);
-	key(DBA_KEY_SEC).seti(0);
-	unset(DBA_KEY_LEVELTYPE1);
-	unset(DBA_KEY_L1);
-	unset(DBA_KEY_LEVELTYPE2);
-	unset(DBA_KEY_L2);
-	unset(DBA_KEY_PINDICATOR);
-	unset(DBA_KEY_P1);
-	unset(DBA_KEY_P2);
+    seti("year", 1000);
+    seti("month", 1);
+    seti("day", 1);
+    seti("hour", 0);
+    seti("min", 0);
+    seti("sec", 0);
+    key_unset(DBA_KEY_LEVELTYPE1);
+    key_unset(DBA_KEY_L1);
+    key_unset(DBA_KEY_LEVELTYPE2);
+    key_unset(DBA_KEY_L2);
+    key_unset(DBA_KEY_PINDICATOR);
+    key_unset(DBA_KEY_P1);
+    key_unset(DBA_KEY_P2);
 }
 
 bool Record::is_ana_context() const
 {
-    return get(DBA_KEY_YEAR, MISSING_INT) == 1000;
+    return enq("year", MISSING_INT) == 1000;
 }
 
 void Record::set_from_string(const char* str)
@@ -822,17 +802,7 @@ void Record::set_from_string(const char* str)
     if (!s) error_consistency::throwf("there should be an = between the name and the value in '%s'", str);
 
     string key(str, s - str);
-    set_from_string(key.c_str(), s + 1);
-}
-
-void Record::set_from_string(const char* name, const char* val)
-{
-    dba_keyword k = Record::keyword_byname(name);
-
-    if (k != DBA_KEY_ERROR)
-        key(k).set_from_formatted(val);
-    else
-        var(resolve_varcode_safe(name)).set_from_formatted(val);
+    setf(key.c_str(), s + 1);
 }
 
 void Record::set_from_test_string(const std::string& s)
@@ -1127,18 +1097,18 @@ matcher::Result MatchedRecord::match_date(const Datetime& min, const Datetime& m
     return Matched::date_in_range(dt, min, max);
 }
 
-matcher::Result MatchedRecord::match_coords(const Coords& min, const Coords& max) const
+matcher::Result MatchedRecord::match_coords(const LatRange& latrange, const LonRange& lonrange) const
 {
     matcher::Result r1 = matcher::MATCH_NA;
     if (const wreport::Var* var = r.key_peek(DBA_KEY_LAT))
-        r1 = Matched::int_in_range(var->enqi(), min.lat, max.lat);
-    else if (min.lat == MISSING_INT && max.lat == MISSING_INT)
+        r1 = latrange.contains(var->enqi()) ? matcher::MATCH_YES : matcher::MATCH_NO;
+    else if (latrange.is_missing())
         r1 = matcher::MATCH_YES;
 
     matcher::Result r2 = matcher::MATCH_NA;
     if (const wreport::Var* var = r.key_peek(DBA_KEY_LON))
-        r2 = Matched::lon_in_range(var->enqi(), min.lon, max.lon);
-    else if (min.lon == MISSING_INT && max.lon == MISSING_INT)
+        r2 = lonrange.contains(var->enqi()) ? matcher::MATCH_YES : matcher::MATCH_NO;
+    else if (lonrange.is_missing())
         r2 = matcher::MATCH_YES;
 
     if (r1 == matcher::MATCH_YES && r2 == matcher::MATCH_YES)
@@ -1158,5 +1128,4 @@ matcher::Result MatchedRecord::match_rep_memo(const char* memo) const
 }
 
 }
-
-/* vim:set ts=4 sw=4: */
+}

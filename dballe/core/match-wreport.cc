@@ -1,24 +1,3 @@
-/*
- * dballe/match-wreport - Matched implementation for wreport bulletins
- *
- * Copyright (C) 2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include <dballe/core/match-wreport.h>
 #include <dballe/core/defs.h>
 #include <wreport/subset.h>
@@ -102,18 +81,18 @@ matcher::Result MatchedSubset::match_date(const Datetime& min, const Datetime& m
     return Matched::date_in_range(date, min, max);
 }
 
-matcher::Result MatchedSubset::match_coords(const Coords& min, const Coords& max) const
+matcher::Result MatchedSubset::match_coords(const LatRange& latrange, const LonRange& lonrange) const
 {
     matcher::Result r1 = matcher::MATCH_NA;
     if (lat != MISSING_INT)
-        r1 = Matched::int_in_range(lat, min.lat, max.lat);
-    else if (min.lat == MISSING_INT && max.lat == MISSING_INT)
+        r1 = latrange.contains(lat) ? matcher::MATCH_YES : matcher::MATCH_NO;
+    else if (latrange.is_missing())
         r1 = matcher::MATCH_YES;
 
     matcher::Result r2 = matcher::MATCH_NA;
     if (lon != MISSING_INT)
-        r2 = Matched::lon_in_range(lon, min.lon, max.lon);
-    else if (min.lon == MISSING_INT && max.lon == MISSING_INT)
+        r2 = lonrange.contains(lon) ? matcher::MATCH_YES : matcher::MATCH_NO;
+    else if (lonrange.is_missing())
         r2 = matcher::MATCH_YES;
 
     if (r1 == matcher::MATCH_YES && r2 == matcher::MATCH_YES)
@@ -178,10 +157,10 @@ matcher::Result MatchedBulletin::match_date(const Datetime& min, const Datetime&
     return matcher::MATCH_NA;
 }
 
-matcher::Result MatchedBulletin::match_coords(const Coords& min, const Coords& max) const
+matcher::Result MatchedBulletin::match_coords(const LatRange& latrange, const LonRange& lonrange) const
 {
     for (unsigned i = 0; i < r.subsets.size(); ++i)
-        if (subsets[i]->match_coords(min, max) == matcher::MATCH_YES)
+        if (subsets[i]->match_coords(latrange, lonrange) == matcher::MATCH_YES)
             return matcher::MATCH_YES;
     return matcher::MATCH_NA;
 }
@@ -195,5 +174,3 @@ matcher::Result MatchedBulletin::match_rep_memo(const char* memo) const
 }
 
 }
-
-/* vim:set ts=4 sw=4: */

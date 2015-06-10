@@ -1,6 +1,5 @@
 #include "levtr.h"
 #include "results.h"
-#include "dballe/core/record.h"
 #include "dballe/core/query.h"
 #include "dballe/core/stlutils.h"
 #include <sstream>
@@ -40,7 +39,8 @@ size_t LevTrs::obtain(const Level& level, const Trange& trange)
 
 size_t LevTrs::obtain(const Record& rec)
 {
-    return obtain(rec.get_level(), rec.get_trange());
+    const auto& r = core::Record::downcast(rec);
+    return obtain(r.get_level(), r.get_trange());
 }
 
 namespace {

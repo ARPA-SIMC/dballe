@@ -210,7 +210,8 @@ const char* DbAPI::dammelo()
     if (query_cur->next())
     {
         query_cur->to_record(output);
-        const char* varstr = output.key_peek_value(DBA_KEY_VAR);
+        // We bypass checks, since it comes from to_record that always sets "var"
+        const char* varstr = output.get("var")->value();
 
         // Remember the varcode and reference ID for the next attribute
         // operations
@@ -276,7 +277,7 @@ int DbAPI::voglioancora()
     if (arr.empty())
     {
         dest = [&](unique_ptr<Var> var) {
-            qcoutput.add(move(var));
+            qcoutput.set(move(var));
             ++qc_count;
         };
     } else {
@@ -284,7 +285,7 @@ int DbAPI::voglioancora()
             for (auto code: arr)
                 if (code == var->code())
                 {
-                    qcoutput.add(move(var));
+                    qcoutput.set(move(var));
                     ++qc_count;
                     break;
                 }

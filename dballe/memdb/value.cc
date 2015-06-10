@@ -2,7 +2,7 @@
 #include "station.h"
 #include "levtr.h"
 #include "dballe/core/stlutils.h"
-#include "dballe/core/record.h"
+#include "dballe/record.h"
 #include "dballe/core/query.h"
 #include "dballe/core/varmatch.h"
 #include "results.h"

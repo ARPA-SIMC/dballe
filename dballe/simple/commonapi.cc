@@ -1,27 +1,3 @@
-/*
- * fortran/commonapi - Common parts of all Fortran API implementations
- *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
-//#define _GNU_SOURCE
-/* _GNU_SOURCE is defined to have asprintf */
-
 #include "commonapi.h"
 #include <dballe/core/aliases.h>
 #include <dballe/core/var.h>
@@ -115,7 +91,7 @@ void CommonAPIImplementation::test_input_to_output()
 int CommonAPIImplementation::enqi(const char* param)
 {
     Record& rec = choose_output_record(param);
-    if (const Var* var = rec.peek(param))
+    if (const Var* var = rec.get(param))
     {
         if (!var->isset()) return missing_int;
         return var->enqi();
@@ -127,7 +103,7 @@ int CommonAPIImplementation::enqi(const char* param)
 signed char CommonAPIImplementation::enqb(const char* param)
 {
     Record& rec = choose_output_record(param);
-    if (const Var* var = rec.peek(param))
+    if (const Var* var = rec.get(param))
     {
         if (!var->isset()) return missing_byte;
         int value = var->enqi();
@@ -138,13 +114,12 @@ signed char CommonAPIImplementation::enqb(const char* param)
     }
     else
         return missing_byte;
-
 }
 
 float CommonAPIImplementation::enqr(const char* param)
 {
     Record& rec = choose_output_record(param);
-    if (const Var* var = rec.peek(param))
+    if (const Var* var = rec.get(param))
     {
         if (!var->isset()) return missing_float;
         double value = var->enqd();
@@ -160,7 +135,7 @@ float CommonAPIImplementation::enqr(const char* param)
 double CommonAPIImplementation::enqd(const char* param)
 {
     Record& rec = choose_output_record(param);
-    if (const Var* var = rec.peek(param))
+    if (const Var* var = rec.get(param))
     {
         if (!var->isset()) return missing_double;
         return var->enqd();
@@ -170,8 +145,10 @@ double CommonAPIImplementation::enqd(const char* param)
 
 const char* CommonAPIImplementation::enqc(const char* param)
 {
-	Record& rec = choose_output_record(param);
-	return rec.peek_value(param);
+    Record& rec = choose_output_record(param);
+    if (const Var* var = rec.get(param))
+        return var->value();
+    return nullptr;
 }
 
 void CommonAPIImplementation::seti(const char* param, int value)
@@ -183,10 +160,10 @@ void CommonAPIImplementation::seti(const char* param, int value)
             attr_state = ATTR_REFERENCE;
             attr_reference_id = value;
         } else {
-            qcinput.set(param + 1, value);
+            qcinput.seti(param + 1, value);
         }
     } else
-        input.set(param, value);
+        input.seti(param, value);
 }
 
 void CommonAPIImplementation::setb(const char* param, signed char value)
@@ -213,10 +190,10 @@ void CommonAPIImplementation::setc(const char* param, const char* value)
         {
             attr_varid = resolve_varcode(value);
         } else {
-            qcinput.set(param + 1, value);
+            qcinput.setc(param + 1, value);
         }
     } else
-        input.set(param, value);
+        input.setc(param, value);
 }
 
 void CommonAPIImplementation::setcontextana()
@@ -224,18 +201,7 @@ void CommonAPIImplementation::setcontextana()
 	input.set_ana_context();
 }
 
-static inline void enqi_or_missing(int& out, Record& rec, dba_keyword key)
-{
-	if (const Var* var = rec.key_peek(key))
-		if (var->value())
-			out = var->enqi();
-		else
-			out = API::missing_int;
-	else
-		out = API::missing_int;
-}
-
-static inline void seti_or_missing(Record& rec, dba_keyword key, int val)
+static inline void seti_or_missing(Record& rec, const char* key, int val)
 {
 	if (val == API::missing_int)
 		rec.unset(key);
@@ -245,73 +211,72 @@ static inline void seti_or_missing(Record& rec, dba_keyword key, int val)
 
 void CommonAPIImplementation::enqlevel(int& ltype1, int& l1, int& ltype2, int& l2)
 {
-	enqi_or_missing(ltype1, output, DBA_KEY_LEVELTYPE1);
-	enqi_or_missing(l1, output, DBA_KEY_L1);
-	enqi_or_missing(ltype2, output, DBA_KEY_LEVELTYPE2);
-	enqi_or_missing(l2, output, DBA_KEY_L2);
+    ltype1 = output.enq("leveltype1", API::missing_int);
+    l1 = output.enq("l1", API::missing_int);
+    ltype2 = output.enq("leveltype2", API::missing_int);
+    l2 = output.enq("l2", API::missing_int);
 }
 
 void CommonAPIImplementation::setlevel(int ltype1, int l1, int ltype2, int l2)
 {
-	seti_or_missing(input, DBA_KEY_LEVELTYPE1, ltype1);
-	seti_or_missing(input, DBA_KEY_L1, l1);
-	seti_or_missing(input, DBA_KEY_LEVELTYPE2, ltype2);
-	seti_or_missing(input, DBA_KEY_L2, l2);
+    seti_or_missing(input, "leveltype1", ltype1);
+    seti_or_missing(input, "l1", l1);
+    seti_or_missing(input, "leveltype2", ltype2);
+    seti_or_missing(input, "l2", l2);
 }
 
 void CommonAPIImplementation::enqtimerange(int& ptype, int& p1, int& p2)
 {
-	enqi_or_missing(ptype, output, DBA_KEY_PINDICATOR);
-	enqi_or_missing(p1, output, DBA_KEY_P1);
-	enqi_or_missing(p2, output, DBA_KEY_P2);
+    ptype = output.enq("pindicator", API::missing_int);
+    p1 = output.enq("p1", API::missing_int);
+    p2 = output.enq("p2", API::missing_int);
 }
 
 void CommonAPIImplementation::settimerange(int ptype, int p1, int p2)
 {
-	seti_or_missing(input, DBA_KEY_PINDICATOR, ptype);
-	seti_or_missing(input, DBA_KEY_P1, p1);
-	seti_or_missing(input, DBA_KEY_P2, p2);
+    seti_or_missing(input, "pindicator", ptype);
+    seti_or_missing(input, "p1", p1);
+    seti_or_missing(input, "p2", p2);
 }
 
 void CommonAPIImplementation::enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec)
 {
-	enqi_or_missing(year, output, DBA_KEY_YEAR);
-	enqi_or_missing(month, output, DBA_KEY_MONTH);
-	enqi_or_missing(day, output, DBA_KEY_DAY);
-	enqi_or_missing(hour, output, DBA_KEY_HOUR);
-	enqi_or_missing(min, output, DBA_KEY_MIN);
-	enqi_or_missing(sec, output, DBA_KEY_SEC);
+    year = output.enq("year", API::missing_int);
+    month = output.enq("month", API::missing_int);
+    day = output.enq("day", API::missing_int);
+    hour = output.enq("hour", API::missing_int);
+    min = output.enq("min", API::missing_int);
+    sec = output.enq("sec", API::missing_int);
 }
 
 void CommonAPIImplementation::setdate(int year, int month, int day, int hour, int min, int sec)
 {
-	seti_or_missing(input, DBA_KEY_YEAR, year);
-	seti_or_missing(input, DBA_KEY_MONTH, month);
-	seti_or_missing(input, DBA_KEY_DAY, day);
-	seti_or_missing(input, DBA_KEY_HOUR, hour);
-	seti_or_missing(input, DBA_KEY_MIN, min);
-	seti_or_missing(input, DBA_KEY_SEC, sec);
+    seti_or_missing(input, "year", year);
+    seti_or_missing(input, "month", month);
+    seti_or_missing(input, "day", day);
+    seti_or_missing(input, "hour", hour);
+    seti_or_missing(input, "min", min);
+    seti_or_missing(input, "sec", sec);
 }
 
 void CommonAPIImplementation::setdatemin(int year, int month, int day, int hour, int min, int sec)
 {
-	input.set(DBA_KEY_YEARMIN, year);
-	input.set(DBA_KEY_MONTHMIN, month);
-	input.set(DBA_KEY_DAYMIN, day);
-	input.set(DBA_KEY_HOURMIN, hour);
-	input.set(DBA_KEY_MINUMIN, min);
-	input.set(DBA_KEY_SECMIN, sec);
+    seti_or_missing(input, "yearmin", year);
+    seti_or_missing(input, "monthmin", month);
+    seti_or_missing(input, "daymin", day);
+    seti_or_missing(input, "hourmin", hour);
+    seti_or_missing(input, "minumin", min);
+    seti_or_missing(input, "secmin", sec);
 }
 
 void CommonAPIImplementation::setdatemax(int year, int month, int day, int hour, int min, int sec)
 {
-
-	input.set(DBA_KEY_YEARMAX, year);
-	input.set(DBA_KEY_MONTHMAX, month);
-	input.set(DBA_KEY_DAYMAX, day);
-	input.set(DBA_KEY_HOURMAX, hour);
-	input.set(DBA_KEY_MINUMAX, min);
-	input.set(DBA_KEY_SECMAX, sec);
+    seti_or_missing(input, "yearmax", year);
+    seti_or_missing(input, "monthmax", month);
+    seti_or_missing(input, "daymax", day);
+    seti_or_missing(input, "hourmax", hour);
+    seti_or_missing(input, "minumax", min);
+    seti_or_missing(input, "secmax", sec);
 }
 
 void CommonAPIImplementation::unset(const char* param)
@@ -378,31 +343,33 @@ const char* CommonAPIImplementation::ancora()
 
 void CommonAPIImplementation::read_qc_list(vector<Varcode>& res_arr) const
 {
-	res_arr.clear();
-	if (const char* val = qcinput.key_peek_value(DBA_KEY_VAR))
-	{
-		/* Get only the QC values in *varlist */
-		if (*val != '*')
-			throw error_consistency("QC values must start with '*'");
-		
-		res_arr.push_back(WR_STRING_TO_VAR(val + 2));
-	}
-	else if (const char* val = qcinput.key_peek_value(DBA_KEY_VARLIST))
-	{
-		/* Get only the QC values in *varlist */
-		size_t pos;
-		size_t len;
+    res_arr.clear();
+    if (const Var* var = qcinput.get("var"))
+        if (const char* val = var->value())
+        {
+            /* Get only the QC values in *varlist */
+            if (*val != '*')
+                throw error_consistency("QC values must start with '*'");
 
-		for (pos = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
-		{
-			if (*(val+pos) != '*')
-				throw error_consistency("QC value names must start with '*'");
-			res_arr.push_back(WR_STRING_TO_VAR(val + pos + 2));
-		}
-	}
+            res_arr.push_back(resolve_varcode_safe(val + 1));
+            return;
+        }
+
+    if (const Var* var = qcinput.get("varlist"))
+        if (const char* val = var->value())
+        {
+            /* Get only the QC values in *varlist */
+            size_t pos;
+            size_t len;
+
+            for (pos = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
+            {
+                if (*(val + pos) != '*')
+                    throw error_consistency("QC value names must start with '*'");
+                res_arr.push_back(resolve_varcode_safe(val + pos + 1));
+            }
+        }
 }
 
 }
 }
-
-/* vim:set ts=4 sw=4: */

@@ -1,22 +1,3 @@
-/*
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include <dballe/msg/test-utils-msg.h>
 #include <dballe/db/db.h>
 #include <dballe/db/sql/driver.h>
@@ -75,7 +56,7 @@ struct TestStation
     double lon;
     std::string ident;
     /// Station information variables for each network
-    std::map<std::string, Record> info;
+    std::map<std::string, core::Record> info;
 
     /// Set our lat, lon and indent into the given record
     void set_latlonident_into(Record& rec) const;
@@ -87,7 +68,7 @@ struct TestStation
      * @param db
      *   Database used to read priority information
      */
-    Record merged_info_with_highest_prio(DB& db) const;
+    core::Record merged_info_with_highest_prio(DB& db) const;
 
     /**
      * Insert the station and its info in the database.
@@ -103,15 +84,15 @@ struct TestRecord
 {
     TestStation station;
     /// Measured variables context, measured variables
-    Record data;
+    core::Record data;
     /// Attributes on measured variables
-    std::map<wreport::Varcode, Record> attrs;
+    std::map<wreport::Varcode, core::Record> attrs;
     /// ana_id of this station after inserting it
     int ana_id;
 
     /// Set a value as identified by the Msg ID, with its level, timerange and
     /// varcode, at the given date and with an optional confidence %
-    void set_var(const char* msgvarname, float val, int conf=-1);
+    void set_var(const char* msgvarname, double val, int conf=-1);
 
     void insert(WIBBLE_TEST_LOCPRM, DB& db, bool can_replace=false);
 };
@@ -232,7 +213,7 @@ struct TestDBTryStationQuery
 /// Check cursor data context anda variable after a query_data
 struct TestDBTrySummaryQuery
 {
-    typedef std::function<void(wibble::tests::Location, const std::vector<Record>&)> result_checker;
+    typedef std::function<void(wibble::tests::Location, const std::vector<core::Record>&)> result_checker;
     DB& db;
     std::string query;
     unsigned expected;
@@ -347,8 +328,8 @@ struct ActualDB : public wibble::tests::Actual<dballe::DB&>
     TestDBTrySummaryQuery try_summary_query(const std::string& query, unsigned expected, TestDBTrySummaryQuery::result_checker checker=nullptr) { return TestDBTrySummaryQuery(this->actual, query, expected, checker); }
 };
 
-} // namespace tests
-} // namespace dballe
+}
+}
 
 namespace wibble {
 namespace tests {
@@ -360,5 +341,3 @@ inline dballe::tests::ActualDB actual(std::unique_ptr<dballe::DB>& actual) { ret
 
 }
 }
-
-// vim:set ts=4 sw=4:

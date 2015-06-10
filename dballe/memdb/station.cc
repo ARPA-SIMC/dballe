@@ -1,6 +1,6 @@
 #include "station.h"
 #include "results.h"
-#include "dballe/core/record.h"
+#include "dballe/record.h"
 #include "dballe/core/query.h"
 #include "dballe/core/stlutils.h"
 #include "dballe/msg/msg.h"
@@ -93,7 +93,7 @@ size_t Stations::obtain_mobile(const Coords& coords, const std::string& ident, c
 size_t Stations::obtain(const Record& rec, bool create)
 {
     // Shortcut by ana_id
-    if (const Var* var = rec.key_peek(DBA_KEY_ANA_ID))
+    if (const Var* var = rec.get("ana_id"))
     {
         size_t res = var->enqi();
         if (res > values.size() || !values[res])
@@ -103,23 +103,25 @@ size_t Stations::obtain(const Record& rec, bool create)
 
     // Lookup by lat, lon and ident
     int s_lat;
-    if (const Var* var = rec.key_peek(DBA_KEY_LAT))
+    if (const Var* var = rec.get("lat"))
         s_lat = var->enqi();
     else
         throw error_notfound("record with no latitude, looking up a memdb Station");
 
     int s_lon;
-    if (const Var* var = rec.key_peek(DBA_KEY_LON))
+    if (const Var* var = rec.get("lon"))
         s_lon = var->enqi();
     else
         throw error_notfound("record with no longitude, looking up a memdb Station");
 
-    const char* s_ident = rec.key_peek_value(DBA_KEY_IDENT);
+    const char* s_ident = nullptr;
+    if (const Var* var = rec.get("ident"))
+        s_ident = var->value();
 
-    const char* s_report;
-    if (const char* memo = rec.key_peek_value(DBA_KEY_REP_MEMO))
-        s_report = memo;
-    else
+    const char* s_report = nullptr;
+    if (const Var* var = rec.get("rep_memo"))
+        s_report = var->value();
+    if (!s_report)
         throw error_notfound("record with no rep_memo, looking up a memdb Station");
 
     if (s_ident)

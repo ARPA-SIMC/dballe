@@ -1,24 +1,3 @@
-/*
- * db/station - station table management
- *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "station.h"
 #include "dballe/db/odbc/internals.h"
 #include "dballe/core/var.h"
@@ -291,6 +270,7 @@ void ODBCStationBase::impl_add_station_vars(const char* query, int id_station, R
     stm->execute();
 
     // Get the results and save them in the record
+    auto& r = core::Record::downcast(rec);
     while (stm->fetch())
     {
         // If we have already set the value of a variable skip it: since we get
@@ -300,7 +280,7 @@ void ODBCStationBase::impl_add_station_vars(const char* query, int id_station, R
             continue;
 
         last_code = st_out_code;
-        rec.var(st_out_code).setc(st_out_val);
+        r.obtain((Varcode)st_out_code).setc(st_out_val);
     }
 }
 

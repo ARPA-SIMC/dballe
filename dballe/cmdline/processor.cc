@@ -22,7 +22,6 @@
 #include <wreport/bulletin.h>
 #include <dballe/core/file.h>
 #include <dballe/core/csv.h>
-#include <dballe/core/record.h>
 #include <dballe/core/match-wreport.h>
 #include <dballe/msg/aof_codec.h>
 #include <dballe/msg/msgs.h>

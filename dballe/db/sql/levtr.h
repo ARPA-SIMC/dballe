@@ -77,7 +77,7 @@ struct LevTr
      * Return the ID for the given Record, adding it to the database if it does
      * not already exist
      */
-    virtual int obtain_id(const Record& rec) = 0;
+    virtual int obtain_id(const Record& rec);
 
     /// Read the LevTr data for an id, returns nullptr if not found
     virtual const DBRow* read(int id) = 0;

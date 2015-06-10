@@ -18,9 +18,9 @@ Entry::Entry(dballe::db::Cursor &cur, bool want_details)
     varcode = cur.get_varcode();
     if (want_details)
     {
-        Record rec;
+        core::Record rec;
         cur.to_record(rec);
-        count = rec[DBA_KEY_CONTEXT_ID].enqi();
+        count = rec["context_id"].enqi();
         datemin = rec.get_datetimemin();
         datemax = rec.get_datetimemax();
     }

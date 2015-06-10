@@ -1,26 +1,7 @@
-/*
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "config.h"
 #include "db/test-utils-db.h"
 #include "db/db.h"
-#include "core/record.h"
+#include "dballe/record.h"
 
 using namespace dballe;
 using namespace dballe::db;
@@ -63,24 +44,24 @@ struct Fixture : public dballe::tests::DBFixture
 
         TestRecord ds0;
         ds0.station = st1;
-        ds0.data.set_datetime(1945, 4, 25, 8, 0);
+        ds0.data.set(Datetime(1945, 4, 25, 8, 0));
         ds0.data.set(Level(1, 2, 0, 3));
         ds0.data.set(Trange(4, 5, 6));
-        ds0.data.set(DBA_KEY_REP_MEMO, "synop");
-        ds0.data.set(WR_VAR(0, 1, 12), 500);
+        ds0.data.set("rep_memo", "synop");
+        ds0.data.set("B01012", 500);
 
         TestRecord ds1(ds0);
-        ds1.data.set_datetime(1945, 4, 26, 8, 0);
-        ds1.data.set(WR_VAR(0, 1, 12), 400);
+        ds1.data.set(Datetime(1945, 4, 26, 8, 0));
+        ds1.data.set("B01012", 400);
 
         TestRecord ds2(ds1);
         ds2.station = st2;
-        ds2.data.set(WR_VAR(0, 1, 12), 300);
+        ds2.data.set("B01012", 300);
 
         TestRecord ds3(ds2);
         ds3.station = st2;
-        ds3.data.set(DBA_KEY_REP_MEMO, "metar");
-        ds3.data.set(WR_VAR(0, 1, 12), 200);
+        ds3.data.set("rep_memo", "metar");
+        ds3.data.set("B01012", 200);
 
         wruntest(ds0.insert, *db, false);
         wruntest(ds1.insert, *db, false);
@@ -146,31 +127,23 @@ std::vector<Test> tests {
         auto& db = f.db;
 
         // Import some data in the station extra information context
-        Record in;
-        in.set(DBA_KEY_LAT, 45.0);
-        in.set(DBA_KEY_LON, 11.0);
-        in.set(DBA_KEY_REP_MEMO, "synop");
+        core::Record in;
+        in.set("lat", 45.0);
+        in.set("lon", 11.0);
+        in.set("rep_memo", "synop");
         in.set_ana_context();
-        in.set(WR_VAR(0, 1, 1), 10);
+        in.set("B01001", 10);
         db->insert(in, false, true);
 
         // Import one real datum
         in.clear();
-        in.set(DBA_KEY_LAT, 45.0);
-        in.set(DBA_KEY_LON, 11.0);
-        in.set(DBA_KEY_REP_MEMO, "synop");
-        in.set(DBA_KEY_YEAR, 2000);
-        in.set(DBA_KEY_MONTH, 1);
-        in.set(DBA_KEY_DAY, 1);
-        in.set(DBA_KEY_HOUR, 0);
-        in.set(DBA_KEY_MIN, 0);
-        in.set(DBA_KEY_SEC, 0);
-        in.set(DBA_KEY_LEVELTYPE1, 103);
-        in.set(DBA_KEY_L1, 2000);
-        in.set(DBA_KEY_PINDICATOR, 254);
-        in.set(DBA_KEY_P1, 0);
-        in.set(DBA_KEY_P2, 0);
-        in.set(WR_VAR(0, 12, 101), 290.0);
+        in.set("lat", 45.0);
+        in.set("lon", 11.0);
+        in.set("rep_memo", "synop");
+        in.set(Datetime(2000, 1, 1, 0, 0, 0));
+        in.set(Level(103, 2000));
+        in.set(Trange(254, 0, 0));
+        in.set("B12101", 290.0);
         db->insert(in, false, true);
 
         // Query back the data

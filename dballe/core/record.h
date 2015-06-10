@@ -1,38 +1,19 @@
-/*
- * dballe/record - groups of related variables
- *
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
-#ifndef DBA_RECORD_H
-#define DBA_RECORD_H
+#ifndef DBALLE_CORE_RECORD_H
+#define DBALLE_CORE_RECORD_H
 
 /** @file
  * @ingroup core
  * Implement a storage object for a group of related observation data
  */
 
+#include <dballe/record.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/var.h>
 #include <dballe/core/matcher.h>
 #include <vector>
 
 namespace dballe {
+namespace core {
 
 /**
  * Keyword used to quickly access context and query information from a record.
@@ -99,7 +80,7 @@ std::ostream& operator<<(std::ostream& o, dba_keyword k);
  * includes anagraphical informations, physical location of the observation in
  * time and space, and all the observed variables.
  */
-class Record
+class Record : public dballe::Record
 {
 protected:
 	/* The storage for the core keyword data */
@@ -120,10 +101,18 @@ protected:
 	/// Remove an item by wreport::Varcode
 	void remove_item(wreport::Varcode code);
 
+    /// Return true if the given parameter is set in this record
+    bool contains(dba_keyword parameter) const throw();
+
+    /// Return true if the given variable is set in this record
+    bool contains(wreport::Varcode parameter) const throw();
+
 public:
 	Record();
 	Record(const Record& rec);
 	~Record();
+
+    std::unique_ptr<dballe::Record> clone() const override;
 
 	Record& operator=(const Record& rec);
 
@@ -135,6 +124,33 @@ public:
 
 	/// Remove all variables from the record, leaving the keywords intact
 	void clear_vars();
+
+    void seti(const char* key, int val) override;
+    void setd(const char* key, double val) override;
+    void setc(const char* key, const char* val) override;
+    void sets(const char* key, const std::string& val) override;
+    void setf(const char* key, const char* val) override;
+    void set_datetime(const Datetime& dt) override;
+    void set_level(const Level& lev) override;
+    void set_trange(const Trange& tr) override;
+    void set_var(const wreport::Var& var) override;
+    void set_var_acquire(std::unique_ptr<wreport::Var>&& var) override;
+    void unset(const char* name) override;
+    const wreport::Var* get(const char* key) const override;
+
+    /**
+     * Return a reference to query downcasted as core::Query.
+     *
+     * Throws an exception if query is not a core::Query.
+     */
+    static const Record& downcast(const dballe::Record& query);
+
+    /**
+     * Return a reference to query downcasted as core::Query.
+     *
+     * Throws an exception if query is not a core::Query.
+     */
+    static Record& downcast(dballe::Record& query);
 
 	/**
 	 * Copy all data from the record source into dest.  At the end of the function,
@@ -152,16 +168,6 @@ public:
 	 * with the same value
 	 */
 	bool contains(const Record& subset) const;
-
-    /**
-     * Return true if the given parameter is set in this record
-     */
-    bool contains(dba_keyword parameter) const throw();
-
-    /**
-     * Return true if the given variable is set in this record
-     */
-    bool contains(wreport::Varcode parameter) const throw();
 
     /// Return true if some level attribute is set in this record
     bool contains_level() const throw();
@@ -251,65 +257,15 @@ public:
 	/// Shortcut for var_peek_value
 	const char* peek_value(wreport::Varcode code) const throw () { return var_peek_value(code); }
 
-	/**
-	 * Return the Var for a key, throwing an error it if it missing
-	 */
-	const wreport::Var& key(dba_keyword parameter) const;
+    /// Return the Var for a key, creating it if it is missing
+    wreport::Var& obtain(const char* key);
 
-	/**
-	 * Return the Var for a variable, throwing an error it if it missing
-	 */
-	const wreport::Var& var(wreport::Varcode code) const;
+    /// Return the Var for a key, creating it if it is missing
+    wreport::Var& obtain(dba_keyword key);
 
-	/**
-	 * Return the Var for a key, creating it if it missing
-	 */
-	wreport::Var& key(dba_keyword parameter);
+    /// Return the Var for a variable, creating it if it is missing
+    wreport::Var& obtain(wreport::Varcode code);
 
-	/**
-	 * Return the Var for a variable, creating it if it missing
-	 */
-	wreport::Var& var(wreport::Varcode code);
-
-    /// Add/replace a variable in this record
-    void add(std::unique_ptr<wreport::Var> var);
-
-    /// Get the integer value of a key, throwing if missing
-    int enqi(dba_keyword parameter) const;
-
-    /// Get the integer value of a key, returning the default if missing
-    int enqi(dba_keyword parameter, int def) const;
-
-	/// Shortcuts
-	// @{
-	const wreport::Var& get(dba_keyword parameter) const { return key(parameter); }
-	const wreport::Var& get(wreport::Varcode code) const { return var(code); }
-	const wreport::Var& get(const char* name) const;
-	wreport::Var& get(dba_keyword parameter) { return key(parameter); }
-	wreport::Var& get(wreport::Varcode code) { return var(code); }
-	wreport::Var& get(const char* name);
-	template<typename K, typename T>
-	T get(K name, T default_value) const
-	{
-		if (const wreport::Var* v = peek(name))
-			return v->enq(default_value);
-		else
-			return default_value;
-	}
-	const wreport::Var& operator[](dba_keyword parameter) const { return key(parameter); }
-	const wreport::Var& operator[](wreport::Varcode code) const { return var(code); }
-	const wreport::Var& operator[](const char* name) const { return get(name); }
-	wreport::Var& operator[](dba_keyword parameter) { return key(parameter); }
-	wreport::Var& operator[](wreport::Varcode code) { return var(code); }
-	wreport::Var& operator[](const char* name) { return get(name); }
-	template<typename P, typename V>
-	void set(const P& field, const V& val) { get(field).set(val); }
-	void set(const wreport::Var& var) { get(var.code()).copy_val(var); }
-	void set(const Level& lev);
-	void set(const Trange& tr);
-	void unset(dba_keyword parameter) { key_unset(parameter); }
-	void unset(wreport::Varcode code) { var_unset(code); }
-	void unset(const char* name);
     template<typename K>
     void copy(const Record& rec, K parameter)
     {
@@ -328,27 +284,20 @@ public:
         if (!mine or !theirs) return false;
         return *mine == *theirs;
     }
-	// @}
 
-	Level get_level() const;
-	Trange get_trange() const;
+    Level get_level() const;
+    Trange get_trange() const;
     Datetime get_datetime() const;
     Datetime get_datetimemin() const;
     Datetime get_datetimemax() const;
-    void set(const Datetime& dt);
     void setmin(const Datetime& dt);
     void setmax(const Datetime& dt);
     void unset_datetime();
     void unset_datetimemin();
     void unset_datetimemax();
-    void get_datetime(int (&val)[6]) const;
-    void get_datetimemin(int (&val)[6]) const;
-    void get_datetimemax(int (&val)[6]) const;
-    void set_datetime(const int (&val)[6]);
-    void set_datetimemin(const int (&val)[6]);
-    void set_datetimemax(const int (&val)[6]);
-    void set_datetime(int ye, int mo=1, int da=1, int ho=0, int mi=0, int se=0);
-    void set(const Coords& c);
+    void set_coords(const Coords& c);
+    void set_latrange(const LatRange& lr);
+    void set_lonrange(const LonRange& lr);
 
 	/**
 	 * Set the date, level and timerange values to match the anagraphical context.
@@ -436,9 +385,6 @@ public:
 	 *   The error indicator for the function.
 	 */
 	void set_from_string(const char* str);
-
-    /// Same as set_from_string(str) but takes already split key and val
-    void set_from_string(const char* key, const char* val);
 
      /**
      * Set a record from a ", "-separated string of assignments.
@@ -531,11 +477,10 @@ struct MatchedRecord : public Matched
     matcher::Result match_station_id(int val) const override;
     matcher::Result match_station_wmo(int block, int station=-1) const override;
     matcher::Result match_date(const Datetime& min, const Datetime& max) const override;
-    matcher::Result match_coords(const Coords& min, const Coords& max) const override;
+    matcher::Result match_coords(const LatRange& latrange, const LonRange& lonrange) const override;
     matcher::Result match_rep_memo(const char* memo) const override;
 };
 
 }
-
-/* vim:set ts=4 sw=4: */
+}
 #endif

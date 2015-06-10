@@ -1,28 +1,7 @@
-/*
- * db/v6/lev_tr - lev_tr table management
- *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "levtr.h"
 #include "dballe/db/odbc/internals.h"
+#include "dballe/record.h"
 #include "dballe/core/defs.h"
-#include "dballe/core/record.h"
 #include "dballe/msg/msg.h"
 #include <map>
 #include <sstream>
@@ -140,31 +119,31 @@ int ODBCLevTrV6::obtain_id(const Level& lev, const Trange& tr)
 
 int ODBCLevTrV6::obtain_id(const Record& rec)
 {
-    if (const Var* var = rec.key_peek(DBA_KEY_LEVELTYPE1))
+    if (const Var* var = rec.get("leveltype1"))
         working_row.ltype1 = var->enqi();
     else
         working_row.ltype1 = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_L1))
+    if (const Var* var = rec.get("l1"))
         working_row.l1 = var->enqi();
     else
         working_row.l1 = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_LEVELTYPE2))
+    if (const Var* var = rec.get("leveltype2"))
         working_row.ltype2 = var->enqi();
     else
         working_row.ltype2 = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_L2))
+    if (const Var* var = rec.get("l2"))
         working_row.l2 = var->enqi();
     else
         working_row.l2 = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_PINDICATOR))
+    if (const Var* var = rec.get("pindicator"))
         working_row.pind = var->enqi();
     else
         working_row.pind = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_P1))
+    if (const Var* var = rec.get("p1"))
         working_row.p1 = var->enqi();
     else
         working_row.p1 = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_P2))
+    if (const Var* var = rec.get("p2"))
         working_row.p2 = var->enqi();
     else
         working_row.p2 = MISSING_INT;

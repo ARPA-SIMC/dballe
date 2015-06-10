@@ -1,24 +1,3 @@
-/*
- * db/levtr - level-timerange table implementation
- *
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "levtr.h"
 #include "dballe/core/record.h"
 #include "dballe/msg/msg.h"
@@ -34,6 +13,12 @@ namespace sql {
 
 LevTr::~LevTr() {}
 
+int LevTr::obtain_id(const Record& rec)
+{
+    const auto& r = core::Record::downcast(rec);
+    return obtain_id(r.get_level(), r.get_trange());
+}
+
 
 LevTrCache::~LevTrCache() {}
 
@@ -41,64 +26,16 @@ struct MapLevTrCache : public LevTrCache
 {
     struct Item
     {
-        int ltype1;
-        int l1;
-        int ltype2;
-        int l2;
-        int pind;
-        int p1;
-        int p2;
+        Level level;
+        Trange trange;
         Item(const LevTr::DBRow& o)
-            : ltype1(o.ltype1), l1(o.l1),
-              ltype2(o.ltype2), l2(o.l2),
-              pind(o.pind), p1(o.p1), p2(o.p2) {}
+            : level(o.ltype1, o.l1, o.ltype2, o.l2),
+              trange(o.pind, o.p1, o.p2) {}
 
         void to_record(Record& rec) const
         {
-            if (ltype1 == MISSING_INT)
-                rec.unset(DBA_KEY_LEVELTYPE1);
-            else
-                rec.set(DBA_KEY_LEVELTYPE1, ltype1);
-
-            if (l1 == MISSING_INT)
-                rec.unset(DBA_KEY_L1);
-            else
-                rec.set(DBA_KEY_L1, l1);
-
-            if (ltype2 == MISSING_INT)
-                rec.unset(DBA_KEY_LEVELTYPE2);
-            else
-                rec.set(DBA_KEY_LEVELTYPE2, ltype2);
-
-            if (l2 == MISSING_INT)
-                rec.unset(DBA_KEY_L2);
-            else
-                rec.set(DBA_KEY_L2, l2);
-
-            if (pind == MISSING_INT)
-                rec.unset(DBA_KEY_PINDICATOR);
-            else
-                rec.set(DBA_KEY_PINDICATOR, pind);
-
-            if (p1 == MISSING_INT)
-                rec.unset(DBA_KEY_P1);
-            else
-                rec.set(DBA_KEY_P1, p1);
-
-            if (p2 == MISSING_INT)
-                rec.unset(DBA_KEY_P2);
-            else
-                rec.set(DBA_KEY_P2, p2);
-        }
-
-        Level lev() const
-        {
-            return Level(ltype1, l1, ltype2, l2);
-        }
-
-        Trange tr() const
-        {
-            return Trange(pind, p1, p2);
+            rec.set(level);
+            rec.set(trange);
         }
     };
 
@@ -143,21 +80,21 @@ struct MapLevTrCache : public LevTrCache
     {
         const Item* i = get(id);
         if (!i) return Level();
-        return i->lev();
+        return i->level;
     }
 
     Trange to_trange(int id) const
     {
         const Item* i = get(id);
         if (!i) return Trange();
-        return i->tr();
+        return i->trange;
     }
 
     msg::Context* to_msg(int id, Msg& msg)
     {
         const Item* i = get(id);
         if (!i) return 0;
-        msg::Context& res = msg.obtain_context(i->lev(), i->tr());
+        msg::Context& res = msg.obtain_context(i->level, i->trange);
         return &res;
     }
 
@@ -172,9 +109,9 @@ struct MapLevTrCache : public LevTrCache
         for (map<int, Item>::const_iterator i = cache.begin(); i != cache.end(); ++i)
         {
             stringstream str;
-            str << i->second.lev();
+            str << i->second.level;
             str << " ";
-            str << i->second.tr();
+            str << i->second.trange;
             fprintf(out, "  %d: %s\n", i->first, str.str().c_str());
         }
     }

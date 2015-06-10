@@ -27,6 +27,7 @@
 
 using namespace std;
 using namespace dballe;
+using namespace dballe::core;
 using namespace wibble::tests;
 
 namespace tut {
@@ -45,7 +46,7 @@ void to::test<1>()
 {
     auto m = get_matcher("context_id=1");
 
-    Record matched;
+    core::Record matched;
     ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
 
     matched.set("data_id", 2);
@@ -61,7 +62,7 @@ void to::test<2>()
 {
     auto m = get_matcher("ana_id=1");
 
-    Record matched;
+    core::Record matched;
     ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
 
     matched.set("ana_id", 2);
@@ -78,7 +79,7 @@ void to::test<3>()
     {
         auto m = get_matcher("block=11");
 
-        Record matched;
+        core::Record matched;
         ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
 
         matched.set("block", 1);
@@ -94,7 +95,7 @@ void to::test<3>()
     {
         auto m = get_matcher("block=11, station=222");
 
-        Record matched;
+        core::Record matched;
         ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
 
         matched.set("block", 1);
@@ -124,7 +125,7 @@ void to::test<4>()
     {
         auto m = get_matcher("yearmin=2000");
 
-        Record matched;
+        core::Record matched;
         wassert(actual(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
         matched.set("year", 1999);
@@ -136,7 +137,7 @@ void to::test<4>()
     {
         auto m = get_matcher("yearmax=2000");
 
-        Record matched;
+        core::Record matched;
         ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
 
         matched.set("year", 2001);
@@ -148,7 +149,7 @@ void to::test<4>()
     {
         auto m = get_matcher("yearmin=2000, yearmax=2010");
 
-        Record matched;
+        core::Record matched;
         ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
 
         matched.set("year", 1999);
@@ -175,21 +176,21 @@ void to::test<5>()
     {
         auto m = get_matcher("latmin=45.00");
 
-        Record matched;
+        core::Record matched;
         ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
 
-        matched.set(DBA_KEY_LAT, 4300000);
+        matched.set("lat", 43.0);
         ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
 
-        matched.set(DBA_KEY_LAT, 4500000);
+        matched.set("lat", 45.0);
         ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
-        matched.set(DBA_KEY_LAT, 4600000);
+        matched.set("lat", 46.0);
         ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
     }
     {
         auto m = get_matcher("latmax=45.00");
 
-        Record matched;
+        core::Record matched;
         ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
 
         matched.set("lat", 4600000);
@@ -203,7 +204,7 @@ void to::test<5>()
     {
         auto m = get_matcher("lonmin=45.00, lonmax=180.0");
 
-        Record matched;
+        core::Record matched;
         wassert(actual(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
         matched.set("lon", 4300000);
@@ -217,7 +218,7 @@ void to::test<5>()
     {
         auto m = get_matcher("lonmin=-180, lonmax=45.0");
 
-        Record matched;
+        core::Record matched;
         ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
 
         matched.set("lon", 4600000);
@@ -231,7 +232,7 @@ void to::test<5>()
     {
         auto m = get_matcher("latmin=45.0, latmax=46.0, lonmin=10.0, lonmax=12.0");
 
-        Record matched;
+        core::Record matched;
         ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
 
         matched.set("lat", 4550000);
@@ -249,17 +250,17 @@ void to::test<5>()
 template<> template<>
 void to::test<6>()
 {
-    auto query = Query::create();
+    auto query = dballe::Query::create();
     query->set("rep_memo", "synop");
     std::unique_ptr<Matcher> m = Matcher::create(*query);
 
-    Record matched;
+    core::Record matched;
     ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
 
-    matched.set(DBA_KEY_REP_MEMO, "temp");
+    matched.set("rep_memo", "temp");
     ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);
 
-    matched.set(DBA_KEY_REP_MEMO, "synop");
+    matched.set("rep_memo", "synop");
     ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
 }
 
@@ -267,10 +268,10 @@ void to::test<6>()
 template<> template<>
 void to::test<7>()
 {
-    auto query = Query::create();
+    auto query = dballe::Query::create();
     std::unique_ptr<Matcher> m = Matcher::create(*query);
 
-    Record matched;
+    core::Record matched;
     ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_YES);
 }
 

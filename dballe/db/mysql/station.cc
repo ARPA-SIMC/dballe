@@ -181,10 +181,10 @@ void MySQLStationBase::get_station_vars(int id_station, int id_report, std::func
     Querybuf query;
     query.appendf(R"(
         SELECT d.id_var, d.value, a.type, a.value
-          FROM context c, data d
-          LEFT JOIN attr a ON a.id_context = d.id_context AND a.id_var = d.id_var
-         WHERE d.id_context = c.id AND c.id_ana = %d AND c.id_report = %d
-           AND c.datetime = '1000-01-01 00:00:00.000'
+          FROM data d
+          LEFT JOIN attr a ON a.id_data = d.id
+         WHERE d.id_station=%d AND d.id_report=%d
+           AND d.id_lev_tr = -1
          ORDER BY d.id_var, a.type
     )", id_station, id_report);
     TRACE("fill_ana_layer Performing query: %s with idst %d idrep %d\n", query.c_str(), id_station, id_report);
@@ -213,55 +213,6 @@ void MySQLStationBase::dump(FILE* out)
 
 void MySQLStationBase::add_station_vars(int id_station, Record& rec)
 {
-    /* Extra variables to add:
-     *
-     * HEIGHT,      B07001  1793
-     * HEIGHT_BARO, B07031  1823
-     * ST_NAME,     B01019   275
-     * BLOCK,       B01001   257
-     * STATION,     B01002   258
-    */
-    Querybuf query;
-    query.appendf(R"(
-        SELECT d.id_var, d.value
-          FROM context c, data d, repinfo ri
-         WHERE c.id = d.id_context AND ri.id = c.id_report AND c.id_ana=%d
-           AND c.datetime='1000-01-01 00:00:00.000'
-         AND ri.prio=(
-          SELECT MAX(sri.prio) FROM repinfo sri
-            JOIN context sc ON sri.id=sc.id_report
-            JOIN data sd ON sc.id=sd.id_context
-          WHERE sc.id_ana=c.id_ana
-            AND sc.ltype1=c.ltype1 AND sc.l1=c.l1 AND sc.ltype2=c.ltype2 AND sc.l2=c.l2
-            AND sc.ptype=c.ptype AND sc.p1=c.p1 AND sc.p2=c.p2
-            AND sc.datetime=c.datetime AND sd.id_var=d.id_var)
-    )", id_station);
-    auto res = conn.exec_store(query);
-    while (auto row = res.fetch())
-        rec.var(row.as_int(0)).setc(row.as_cstring(1));
-}
-
-MySQLStationV6::MySQLStationV6(MySQLConnection& conn)
-    : MySQLStationBase(conn) {}
-
-void MySQLStationV6::get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest)
-{
-    // Perform the query
-    Querybuf query;
-    query.appendf(R"(
-        SELECT d.id_var, d.value, a.type, a.value
-          FROM data d
-          LEFT JOIN attr a ON a.id_data = d.id
-         WHERE d.id_station=%d AND d.id_report=%d
-           AND d.id_lev_tr = -1
-         ORDER BY d.id_var, a.type
-    )", id_station, id_report);
-    TRACE("fill_ana_layer Performing query: %s with idst %d idrep %d\n", query.c_str(), id_station, id_report);
-    read_station_vars(query, dest);
-}
-
-void MySQLStationV6::add_station_vars(int id_station, Record& rec)
-{
     Querybuf query;
     query.appendf(R"(
         SELECT d.id_var, d.value
@@ -273,10 +224,14 @@ void MySQLStationV6::add_station_vars(int id_station, Record& rec)
           WHERE sd.id_station=d.id_station AND sd.id_lev_tr = -1
             AND sd.id_var=d.id_var)
     )", id_station);
+    auto& r = core::Record::downcast(rec);
     auto res = conn.exec_store(query);
     while (auto row = res.fetch())
-        rec.var(row.as_int(0)).setc(row.as_cstring(1));
+        r.obtain((Varcode)row.as_int(0)).setc(row.as_cstring(1));
 }
+
+MySQLStationV6::MySQLStationV6(MySQLConnection& conn)
+    : MySQLStationBase(conn) {}
 
 }
 }

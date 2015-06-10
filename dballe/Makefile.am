@@ -45,6 +45,7 @@ dballeincludedir = $(includedir)/dballe
 
 nobase_dist_dballeinclude_HEADERS = \
 	types.h \
+	record.h \
 	query.h \
 	core/aliases.h \
 	core/verbose.h \
@@ -158,6 +159,7 @@ endif
 lib_LTLIBRARIES = libdballe.la
 libdballe_la_SOURCES = \
 	types.cc \
+	record.cc \
 	query.cc \
 	core/verbose.cc \
 	core/aliases.cc \
@@ -321,6 +323,7 @@ tut_test_SOURCES = \
 	core/tests/tut-main.cpp \
 	core/test-utils-core.cc \
 	types-tut.cc \
+	record-tut.cc \
 	query-tut.cc \
 	core/aliases-tut.cc \
 	core/stlutils-tut.cc \

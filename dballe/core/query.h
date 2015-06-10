@@ -101,7 +101,7 @@ struct Query : public dballe::Query
     void unset(const char* key) override;
 
     /// Set the query values from the contents of a Record
-    void set_from_record(const Record& rec);
+    void set_from_record(const dballe::Record& rec);
 
     /**
      * Set a value in the record according to an assignment encoded in a string.
@@ -154,7 +154,7 @@ struct Query : public dballe::Query
      * Parse the query=* modifiers specification inside the record, returning the
      * ORed flags
      */
-    static unsigned parse_modifiers(const Record& rec);
+    static unsigned parse_modifiers(const dballe::Record& rec);
 
     /**
      * Parse the modifiers specification given a query=* string, returning the ORed

@@ -1,24 +1,3 @@
-/*
- * db/mem/cursor - iterate results of queries on mem databases
- *
- * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "cursor.h"
 #include "db.h"
 #include "dballe/core/record.h"
@@ -149,18 +128,18 @@ wreport::Var Cursor::get_var() const
 
 void Cursor::to_record_station(Record& rec)
 {
-    rec.set(DBA_KEY_ANA_ID, (int)cur_station->id);
-    rec.set(cur_station->coords);
+    rec.set("ana_id", (int)cur_station->id);
+    core::Record::downcast(rec).set_coords(cur_station->coords);
     if (cur_station->mobile)
     {
-        rec.set(DBA_KEY_IDENT, cur_station->ident);
-        rec.key(DBA_KEY_MOBILE).seti(1);
+        rec.set("ident", cur_station->ident);
+        rec.set("mobile", 1);
     } else {
-        rec.key_unset(DBA_KEY_IDENT);
-        rec.key(DBA_KEY_MOBILE).seti(0);
+        rec.unset("ident");
+        rec.set("mobile", 0);
     }
-    rec.set(DBA_KEY_REP_MEMO, cur_station->report);
-    rec.set(DBA_KEY_PRIORITY, db.repinfo.get_prio(cur_station->report));
+    rec.set("rep_memo", cur_station->report);
+    rec.set("priority", db.repinfo.get_prio(cur_station->report));
 }
 
 void Cursor::to_record_levtr(Record& rec)
@@ -174,7 +153,7 @@ void Cursor::to_record_varcode(Record& rec)
     wreport::Varcode code = cur_var->code();
     char bname[7];
     snprintf(bname, 7, "B%02d%03d", WR_VAR_X(code), WR_VAR_Y(code));
-    rec.key(DBA_KEY_VAR).setc(bname);
+    rec.setc("var", bname);
 }
 
 void Cursor::to_record_value(Record& rec)
@@ -501,9 +480,9 @@ struct CursorDataBase : public CursorSorted<QUEUE>
     void to_record(Record& rec)
     {
         this->to_record_station(rec);
-        rec.clear_vars();
+        core::Record::downcast(rec).clear_vars();
         this->to_record_value(rec);
-        rec.key(DBA_KEY_CONTEXT_ID).seti(this->cur_idx);
+        rec.seti("context_id", this->cur_idx);
         if (this->modifiers & DBA_DB_MODIFIER_ANAEXTRA)
             this->add_station_info(rec);
     }

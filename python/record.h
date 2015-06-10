@@ -28,7 +28,7 @@ extern "C" {
 
 typedef struct {
     PyObject_HEAD
-    dballe::Record rec;
+    dballe::core::Record rec;
 } dpy_Record;
 
 PyAPI_DATA(PyTypeObject) dpy_Record_Type;

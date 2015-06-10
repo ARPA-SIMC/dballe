@@ -21,7 +21,7 @@
 
 #include <wreport/tests.h>
 
-#include <dballe/core/record.h>
+#include <dballe/record.h>
 #include <dballe/core/query.h>
 #include <dballe/core/rawmsg.h>
 #include <dballe/core/file.h>
@@ -235,15 +235,14 @@ std::unique_ptr<Rawmsg> _read_rawmsg(const wibble::tests::Location& loc, const c
 #define inner_read_rawmsg(filename, type) dballe::tests::_read_rawmsg(wibble::tests::Location(loc, __FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
 
 /// Check that actual and expected have the same vars
-template<typename K>
 struct TestRecordValEqual
 {
     const dballe::Record& actual;
     const dballe::Record& expected;
-    K name;
+    const char* name;
     bool with_missing_int;
 
-    TestRecordValEqual(const dballe::Record& actual, const dballe::Record& expected, const K& name, bool with_missing_int=false)
+    TestRecordValEqual(const dballe::Record& actual, const dballe::Record& expected, const char* name, bool with_missing_int=false)
         : actual(actual), expected(expected), name(name), with_missing_int(with_missing_int) {}
 
     void check(WIBBLE_TEST_LOCPRM) const;
@@ -264,19 +263,17 @@ struct ActualRecord : public wibble::tests::Actual<const dballe::Record&>
 {
     ActualRecord(const dballe::Record& actual) : wibble::tests::Actual<const dballe::Record&>(actual) {}
 
-    template<typename K>
-    TestRecordValEqual<K> equals(const Record& expected, const K& name) { return TestRecordValEqual<K>(this->actual, expected, name); }
-    template<typename K>
-    TestRecordValEqual<K> equals_with_missing_int(const Record& expected, const K& name)
+    TestRecordValEqual equals(const Record& expected, const char* name) { return TestRecordValEqual(this->actual, expected, name); }
+    TestRecordValEqual equals_with_missing_int(const Record& expected, const char* name)
     {
-        return TestRecordValEqual<K>(this->actual, expected, name, true);
+        return TestRecordValEqual(this->actual, expected, name, true);
     }
     TestRecordVarsEqual vars_equal(const Record& expected) { return TestRecordVarsEqual(this->actual, expected); }
 };
 
 // Set a record from a ", "-separated string of assignments
 void set_record_from_string(Record& rec, const std::string& s);
-Record record_from_string(const std::string& s);
+std::unique_ptr<Record> record_from_string(const std::string& s);
 std::unique_ptr<Query> query_from_string(const std::string& s);
 core::Query core_query_from_string(const std::string& s);
 

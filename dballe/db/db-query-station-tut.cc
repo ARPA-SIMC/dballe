@@ -1,22 +1,3 @@
-/*
- * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "config.h"
 #include "db/test-utils-db.h"
 #include "db/mem/db.h"
@@ -70,20 +51,20 @@ struct Fixture : public dballe::tests::DBFixture
     {
         dballe::tests::TestRecord rec1;
         rec1.station = st1;
-        rec1.data.set(DBA_KEY_REP_MEMO, "metar");
-        rec1.data.set_datetime(1945, 4, 25, 8);
+        rec1.data.set("rep_memo", "metar");
+        rec1.data.set(Datetime(1945, 4, 25, 8));
         rec1.data.set(Level(10, 11, 15, 22));
         rec1.data.set(Trange(20, 111, 122));
-        rec1.data.set(WR_VAR(0, 12, 101), 290.0);
+        rec1.data.set("B12101", 290.0);
 
         dballe::tests::TestRecord rec2;
         rec2.station = st2;
-        rec2.data.set(DBA_KEY_REP_MEMO, "metar");
-        rec2.data.set_datetime(1945, 4, 25, 8);
+        rec2.data.set("rep_memo", "metar");
+        rec2.data.set(Datetime(1945, 4, 25, 8));
         rec2.data.set(Level(10, 11, 15, 22));
         rec2.data.set(Trange(20, 111, 122));
-        rec2.data.set(WR_VAR(0, 12, 101), 300.0);
-        rec2.data.set(WR_VAR(0, 12, 103), 298.0);
+        rec2.data.set("B12101", 300.0);
+        rec2.data.set("B12103", 298.0);
 
         wruntest(rec1.insert, *db, true);
         wruntest(rec2.insert, *db, true);
@@ -233,4 +214,3 @@ test_group tg8("db_query_station_v6_mysql", "MYSQL", db::V6, tests);
 #endif
 
 }
-

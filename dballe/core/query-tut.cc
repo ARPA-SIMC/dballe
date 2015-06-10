@@ -138,6 +138,7 @@ void test_set_datetime(WIBBLE_TEST_LOCPRM, core::Query& q,
 
 std::vector<Test> tests {
     Test("seti", [](Fixture& f) {
+        using namespace dballe::core;
         core::Query q;
 
         wruntest(test_set_prio, q, 1, 2, 3);
@@ -188,6 +189,7 @@ std::vector<Test> tests {
     }),
 
     Test("setd", [](Fixture& f) {
+        using namespace dballe::core;
         core::Query q;
 
         wruntest(test_set_prio, q, 1.0, 1.5, 3.4);
@@ -230,6 +232,7 @@ std::vector<Test> tests {
     }),
 
     Test("setc_cstring", [](Fixture& f) {
+        using namespace dballe::core;
         core::Query q;
 
         wruntest(test_set_prio, q, "1", "2", "3");
@@ -294,6 +297,7 @@ std::vector<Test> tests {
         wassert(actual(q.attr_filter) == "B33007>50");
     }),
     Test("setc_string", [](Fixture& f) {
+        using namespace dballe::core;
         core::Query q;
 
         // Force setting to a string

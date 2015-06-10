@@ -157,26 +157,26 @@ void MsgAPI::elencamele()
 	const msg::Context* ctx = msg->find_context(Level(), Trange());
 	if (!ctx) return;
 
-	output.set_ana_context();
-	output.set(DBA_KEY_MOBILE, 0);
-	output.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg->type));
+    output.set_ana_context();
+    output.set("mobile", 0);
+    output.set("rep_memo", Msg::repmemo_from_type(msg->type));
 
-	for (size_t l = 0; l < ctx->data.size(); ++l)
-	{
-		const Var& var = *(ctx->data[l]);
-		switch (var.code())
-		{
-			case WR_VAR(0, 5,   1): output.set(DBA_KEY_LAT, var); break;
-			case WR_VAR(0, 6,   1): output.set(DBA_KEY_LON, var); break;
-			case WR_VAR(0, 1,  11):
-				output.set(DBA_KEY_IDENT, var);
-				output.set(DBA_KEY_MOBILE, 1);
-				break;
-			case WR_VAR(0, 1, 192): output.set(DBA_KEY_ANA_ID, var); break;
-			case WR_VAR(0, 1, 194): output.set(DBA_KEY_REP_MEMO, var); break;
-			default: output.set(var); break;
-		}
-	}
+    for (size_t l = 0; l < ctx->data.size(); ++l)
+    {
+        const Var& var = *(ctx->data[l]);
+        switch (var.code())
+        {
+            case WR_VAR(0, 5,   1): output.set("lat", var.enqd()); break;
+            case WR_VAR(0, 6,   1): output.set("lon", var.enqd()); break;
+            case WR_VAR(0, 1,  11):
+                output.set("ident", var.enqc());
+                output.set("mobile", 1);
+                break;
+            case WR_VAR(0, 1, 192): output.set("ana_id", var.enqi()); break;
+            case WR_VAR(0, 1, 194): output.set("rep_memo", var.enqc()); break;
+            default: output.set(var); break;
+        }
+    }
 }
 
 bool MsgAPI::incrementMsgIters()
@@ -262,56 +262,53 @@ const char* MsgAPI::dammelo()
 	if (!incrementMsgIters())
 		return 0;
 
-	// Set metainfo from msg ana layer
-	if (const msg::Context* ctx = msg->find_context(Level(), Trange()))
-	{
-		output.set(DBA_KEY_MOBILE, 0);
-		output.set(DBA_KEY_REP_MEMO, Msg::repmemo_from_type(msg->type));
+    output.set(msg->datetime());
 
-		for (size_t l = 0; l < ctx->data.size(); ++l)
-		{
-			const Var& var = *(ctx->data[l]);
-			switch (var.code())
-			{
-				case WR_VAR(0, 5,   1): output.set(DBA_KEY_LAT, var); break;
-				case WR_VAR(0, 6,   1): output.set(DBA_KEY_LON, var); break;
-				case WR_VAR(0, 4,   1): output.set(DBA_KEY_YEAR, var); break;
-				case WR_VAR(0, 4,   2): output.set(DBA_KEY_MONTH, var); break;
-				case WR_VAR(0, 4,   3): output.set(DBA_KEY_DAY, var); break;
-				case WR_VAR(0, 4,   4): output.set(DBA_KEY_HOUR, var); break;
-				case WR_VAR(0, 4,   5): output.set(DBA_KEY_MIN, var); break;
-				case WR_VAR(0, 4,   6): output.set(DBA_KEY_SEC, var); break;
-				case WR_VAR(0, 1,  11):
-					output.set(DBA_KEY_IDENT, var);
-					output.set(DBA_KEY_MOBILE, 1);
-					break;
-				case WR_VAR(0, 1, 192): output.set(DBA_KEY_ANA_ID, var); break;
-				case WR_VAR(0, 1, 194): output.set(DBA_KEY_REP_MEMO, var); break;
-				default: output.set(var); break;
-			}
-		}
-	}
+    // Set metainfo from msg ana layer
+    if (const msg::Context* ctx = msg->find_context(Level(), Trange()))
+    {
+        output.set("mobile", 0);
+        output.set("rep_memo", Msg::repmemo_from_type(msg->type));
 
-	msg::Context* ctx = msg->data[iter_ctx];
-	output.set(DBA_KEY_LEVELTYPE1, ctx->level.ltype1);
-	output.set(DBA_KEY_L1, ctx->level.l1);
-	output.set(DBA_KEY_LEVELTYPE2, ctx->level.ltype2);
-	output.set(DBA_KEY_L2, ctx->level.l2);
-	output.set(DBA_KEY_PINDICATOR, ctx->trange.pind);
-	output.set(DBA_KEY_P1, ctx->trange.p1);
-	output.set(DBA_KEY_P2, ctx->trange.p2);
+        for (size_t l = 0; l < ctx->data.size(); ++l)
+        {
+            const Var& var = *(ctx->data[l]);
+            switch (var.code())
+            {
+                case WR_VAR(0, 5,   1): output.set("lat", var.enqd()); break;
+                case WR_VAR(0, 6,   1): output.set("lon", var.enqd()); break;
+                case WR_VAR(0, 4,   1): output.seti("year", var.enqi()); break;
+                case WR_VAR(0, 4,   2): output.seti("month", var.enqi()); break;
+                case WR_VAR(0, 4,   3): output.seti("day", var.enqi()); break;
+                case WR_VAR(0, 4,   4): output.seti("hour", var.enqi()); break;
+                case WR_VAR(0, 4,   5): output.seti("min", var.enqi()); break;
+                case WR_VAR(0, 4,   6): output.seti("sec", var.enqi()); break;
+                case WR_VAR(0, 1,  11):
+                    output.set("ident", var.enqc());
+                    output.set("mobile", 1);
+                    break;
+                case WR_VAR(0, 1, 192): output.set("ana_id", var.enqi()); break;
+                case WR_VAR(0, 1, 194): output.set("rep_memo", var.enqc()); break;
+                default: output.set(var); break;
+            }
+        }
+    }
 
-	const Var& var = *ctx->data[iter_var];
+    msg::Context* ctx = msg->data[iter_ctx];
+    output.set(ctx->level);
+    output.set(ctx->trange);
 
-	char vname[10];
-	Varcode code = var.code();
-	snprintf(vname, 10, "B%02d%03d", WR_VAR_X(code), WR_VAR_Y(code));
-	output.set(DBA_KEY_VAR, vname);
-	output.set(var);
+    const Var& var = *ctx->data[iter_var];
 
-	// Return the pointer to the copy inside the output record. We cannot
-	// return vname as it is in the local stack
-	return output.key_peek_value(DBA_KEY_VAR);
+    char vname[10];
+    Varcode code = var.code();
+    snprintf(vname, 10, "B%02d%03d", WR_VAR_X(code), WR_VAR_Y(code));
+    output.set("var", vname);
+    output.set(var);
+
+    // Return the pointer to the copy inside the output record. We cannot
+    // return vname as it is in the local stack
+    return output.get("var")->value();
 }
 
 void MsgAPI::flushVars()
@@ -366,33 +363,34 @@ void MsgAPI::prendilo()
 	if (!msgs) msgs = new Msgs;
 	if (!wmsg) wmsg = new Msg;
 
-	// Store record metainfo
-	if (const char* sval = input.key_peek_value(DBA_KEY_REP_MEMO))
-	{
-		wmsg->set_rep_memo(sval);
-		wmsg->type = Msg::type_from_repmemo(sval);
-	}
-	if (const Var* var = input.key_peek(DBA_KEY_ANA_ID))
-		wmsg->seti(WR_VAR(0, 1, 192), var->enqi(), -1, Level(), Trange());
-	if (const Var* var = input.key_peek(DBA_KEY_IDENT))
-		wmsg->set_ident(var->enqc());
-	if (const Var* var = input.key_peek(DBA_KEY_LAT))
-		wmsg->set_latitude(var->enqd());
-	if (const Var* var = input.key_peek(DBA_KEY_LON))
-		wmsg->set_longitude(var->enqd());
+    // Store record metainfo
+    if (const Var* var = input.get("rep_memo"))
+        if (const char* val = var->value())
+        {
+            wmsg->set_rep_memo(val);
+            wmsg->type = Msg::type_from_repmemo(val);
+        }
+    if (const Var* var = input.get("ana_id"))
+        wmsg->seti(WR_VAR(0, 1, 192), var->enqi(), -1, Level(), Trange());
+    if (const Var* var = input.get("ident"))
+        wmsg->set_ident(var->enqc());
+    if (const Var* var = input.get("lat"))
+        wmsg->set_latitude(var->enqd());
+    if (const Var* var = input.get("lon"))
+        wmsg->set_longitude(var->enqd());
 
     Datetime datetime;
-    if (const Var* var = input.key_peek(DBA_KEY_YEAR))
+    if (const Var* var = input.get("year"))
         datetime.year = var->enqi();
-    if (const Var* var = input.key_peek(DBA_KEY_MONTH))
+    if (const Var* var = input.get("month"))
         datetime.month = var->enqi();
-    if (const Var* var = input.key_peek(DBA_KEY_DAY))
+    if (const Var* var = input.get("day"))
         datetime.day = var->enqi();
-    if (const Var* var = input.key_peek(DBA_KEY_HOUR))
+    if (const Var* var = input.get("hour"))
         datetime.hour = var->enqi();
-    if (const Var* var = input.key_peek(DBA_KEY_MIN))
+    if (const Var* var = input.get("min"))
         datetime.minute = var->enqi();
-    if (const Var* var = input.key_peek(DBA_KEY_SEC))
+    if (const Var* var = input.get("sec"))
         datetime.second = var->enqi();
 
     if (datetime.year == 0xffff)
@@ -409,48 +407,49 @@ void MsgAPI::prendilo()
 	flushVars();
 	assert(vars.empty());
 
-	vars_level.ltype1 = input.get(DBA_KEY_LEVELTYPE1, MISSING_INT);
-	vars_level.l1 = input.get(DBA_KEY_L1, MISSING_INT);
-	vars_level.ltype2 = input.get(DBA_KEY_LEVELTYPE2, MISSING_INT);
-	vars_level.l2 = input.get(DBA_KEY_L2, MISSING_INT);
-	vars_trange.pind = input.get(DBA_KEY_PINDICATOR, MISSING_INT);
-	vars_trange.p1 = input.get(DBA_KEY_P1, MISSING_INT);
-	vars_trange.p2 = input.get(DBA_KEY_P2, MISSING_INT);
-	
+    vars_level.ltype1 = input.enq("leveltype1", MISSING_INT);
+    vars_level.l1 = input.enq("l1", MISSING_INT);
+    vars_level.ltype2 = input.enq("leveltype2", MISSING_INT);
+    vars_level.l2 = input.enq("l2", MISSING_INT);
+    vars_trange.pind = input.enq("pindicator", MISSING_INT);
+    vars_trange.p1 = input.enq("p1", MISSING_INT);
+    vars_trange.p2 = input.enq("p2", MISSING_INT);
+
 	for (vector<Var*>::const_iterator v = in_vars.begin(); v != in_vars.end(); ++v)
 		vars.push_back(new Var(**v));
 	input.clear_vars();
 
-	if (const char* query = input.key_peek_value(DBA_KEY_QUERY))
-	{
-		if (strcasecmp(query, "subset") == 0)
-		{
-			flushSubset();
-		} else if (strncasecmp(query, "message", 7) == 0) {
-			// Check that message is followed by spaces or end of string
-			const char* s = query + 7;
-			if (*s != 0 && !isblank(*s))
-				error_consistency::throwf("Query type \"%s\" is not among the supported values", query);
-			// Skip the spaces after message
-			while (*s != 0 && isblank(*s))
-				++s;
+    if (const Var* var = input.get("query"))
+        if (const char* query = var->value())
+        {
+            if (strcasecmp(query, "subset") == 0)
+            {
+                flushSubset();
+            } else if (strncasecmp(query, "message", 7) == 0) {
+                // Check that message is followed by spaces or end of string
+                const char* s = query + 7;
+                if (*s != 0 && !isblank(*s))
+                    error_consistency::throwf("Query type \"%s\" is not among the supported values", query);
+                // Skip the spaces after message
+                while (*s != 0 && isblank(*s))
+                    ++s;
 
-			// Set or reset the exporter template
-			if (exporter_template != s)
-			{
-				// If it has changed, we need to recreate the exporter
-				delete exporter;
-				exporter = 0;
-				exporter_template = s;
-			}
+                // Set or reset the exporter template
+                if (exporter_template != s)
+                {
+                    // If it has changed, we need to recreate the exporter
+                    delete exporter;
+                    exporter = 0;
+                    exporter_template = s;
+                }
 
-			flushMessage();
-		} else
-			error_consistency::throwf("Query type \"%s\" is not among the supported values", query);
+                flushMessage();
+            } else
+                error_consistency::throwf("Query type \"%s\" is not among the supported values", query);
 
-		// Uset query after using it: it needs to be explicitly set every time
-		input.unset(DBA_KEY_QUERY);
-	}
+            // Uset query after using it: it needs to be explicitly set every time
+            input.unset("query");
+        }
 }
 
 void MsgAPI::dimenticami()

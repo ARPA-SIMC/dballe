@@ -103,16 +103,16 @@ wreport::Var Cursor::get_var() const
 
 void Cursor::to_record_pseudoana(Record& rec)
 {
-    rec.key(DBA_KEY_ANA_ID).seti(results[cur].out_ana_id);
-    rec.key(DBA_KEY_LAT).seti(results[cur].out_lat);
-    rec.key(DBA_KEY_LON).seti(results[cur].out_lon);
+    rec.seti("ana_id", results[cur].out_ana_id);
+    rec.seti("lat", results[cur].out_lat);
+    rec.seti("lon", results[cur].out_lon);
     if (results[cur].out_ident_size != -1 && results[cur].out_ident[0] != 0)
     {
-        rec.key(DBA_KEY_IDENT).setc(results[cur].out_ident);
-        rec.key(DBA_KEY_MOBILE).seti(1);
+        rec.setc("ident", results[cur].out_ident);
+        rec.seti("mobile", 1);
     } else {
-        rec.key_unset(DBA_KEY_IDENT);
-        rec.key(DBA_KEY_MOBILE).seti(0);
+        rec.unset("ident");
+        rec.seti("mobile", 0);
     }
 }
 
@@ -127,13 +127,13 @@ void Cursor::to_record_ltr(Record& rec)
         db.lev_tr_cache().to_rec(results[cur].out_id_ltr, rec);
     else
     {
-        rec.key(DBA_KEY_LEVELTYPE1).unset();
-        rec.key(DBA_KEY_L1).unset();
-        rec.key(DBA_KEY_LEVELTYPE2).unset();
-        rec.key(DBA_KEY_L2).unset();
-        rec.key(DBA_KEY_PINDICATOR).unset();
-        rec.key(DBA_KEY_P1).unset();
-        rec.key(DBA_KEY_P2).unset();
+        rec.unset("leveltype1");
+        rec.unset("l1");
+        rec.unset("leveltype2");
+        rec.unset("l2");
+        rec.unset("pindicator");
+        rec.unset("p1");
+        rec.unset("p2");
     }
 }
 
@@ -148,7 +148,7 @@ void Cursor::to_record_varcode(Record& rec)
     snprintf(bname, 7, "B%02d%03d",
             WR_VAR_X(results[cur].out_varcode),
             WR_VAR_Y(results[cur].out_varcode));
-    rec.key(DBA_KEY_VAR).setc(bname);
+    rec.setc("var", bname);
 }
 
 void Cursor::query_attrs(function<void(unique_ptr<Var>)> dest)
@@ -245,7 +245,7 @@ void CursorStations::to_record(Record& rec)
 
 unsigned CursorStations::test_iterate(FILE* dump)
 {
-    Record r;
+    core::Record r;
     unsigned count;
     for (count = 0; next(); ++count)
     {
@@ -253,10 +253,10 @@ unsigned CursorStations::test_iterate(FILE* dump)
         {
             to_record(r);
             fprintf(dump, "%02d %02.4f %02.4f %-10s\n",
-                    r.get(DBA_KEY_ANA_ID, -1),
-                    r.get(DBA_KEY_LAT, 0.0),
-                    r.get(DBA_KEY_LON, 0.0),
-                    r.get(DBA_KEY_IDENT, ""));
+                    r.enq("ana_id", -1),
+                    r.enq("lat", 0.0),
+                    r.enq("lon", 0.0),
+                    r.enq("ident", ""));
         }
     }
     return count;
@@ -269,15 +269,16 @@ void CursorData::to_record(Record& rec)
     to_record_pseudoana(rec);
     to_record_repinfo(rec);
     if (results[cur].out_id_ltr == -1)
-        rec.unset(DBA_KEY_CONTEXT_ID);
+        rec.unset("context_id");
     else
-        rec.key(DBA_KEY_CONTEXT_ID).seti(results[cur].out_id_data);
+        rec.seti("context_id", results[cur].out_id_data);
     to_record_varcode(rec);
     to_record_ltr(rec);
     to_record_datetime(rec);
 
-    rec.clear_vars();
-    rec.var(results[cur].out_varcode).setc(results[cur].out_value);
+    auto& r = core::Record::downcast(rec);
+    r.clear_vars();
+    r.obtain(results[cur].out_varcode).setc(results[cur].out_value);
 
     if (modifiers & DBA_DB_MODIFIER_ANAEXTRA)
         add_station_info(rec);
@@ -285,7 +286,7 @@ void CursorData::to_record(Record& rec)
 
 unsigned CursorData::test_iterate(FILE* dump)
 {
-    Record r;
+    core::Record r;
     unsigned count;
     for (count = 0; next(); ++count)
     {
@@ -315,9 +316,9 @@ void CursorSummary::to_record(Record& rec)
 
     if (modifiers & DBA_DB_MODIFIER_SUMMARY_DETAILS)
     {
-        rec.key(DBA_KEY_CONTEXT_ID).seti(results[cur].out_id_data);
-        rec.setmin(results[cur].out_datetime);
-        rec.setmax(results[cur].out_datetimemax);
+        rec.seti("context_id", results[cur].out_id_data);
+        core::Record::downcast(rec).setmin(results[cur].out_datetime);
+        core::Record::downcast(rec).setmax(results[cur].out_datetimemax);
     }
 
     /*
@@ -344,7 +345,7 @@ void CursorSummary::to_record(Record& rec)
 
 unsigned CursorSummary::test_iterate(FILE* dump)
 {
-    Record r;
+    core::Record r;
     unsigned count;
     for (count = 0; next(); ++count)
     {
@@ -352,15 +353,15 @@ unsigned CursorSummary::test_iterate(FILE* dump)
         {
             to_record(r);
             fprintf(dump, "%02d %s %03d %s %04d-%02d-%02d %02d:%02d:%02d  %04d-%02d-%02d %02d:%02d:%02d  %d\n",
-                    r.get(DBA_KEY_ANA_ID, -1),
-                    r.get(DBA_KEY_REP_MEMO, ""),
+                    r.enq("ana_id", -1),
+                    r.enq("rep_memo", ""),
                     (int)results[cur].out_id_ltr,
-                    r.get(DBA_KEY_VAR, ""),
-                    r.get(DBA_KEY_YEARMIN, 0), r.get(DBA_KEY_MONTHMIN, 0), r.get(DBA_KEY_DAYMIN, 0),
-                    r.get(DBA_KEY_HOURMIN, 0), r.get(DBA_KEY_MINUMIN, 0), r.get(DBA_KEY_SECMIN, 0),
-                    r.get(DBA_KEY_YEARMAX, 0), r.get(DBA_KEY_MONTHMAX, 0), r.get(DBA_KEY_DAYMAX, 0),
-                    r.get(DBA_KEY_HOURMAX, 0), r.get(DBA_KEY_MINUMAX, 0), r.get(DBA_KEY_SECMAX, 0),
-                    r.get(DBA_KEY_LIMIT, -1));
+                    r.enq("var", ""),
+                    r.enq("yearmin", 0), r.enq("monthmin", 0), r.enq("daymin", 0),
+                    r.enq("hourmin", 0), r.enq("minumin", 0), r.enq("secmin", 0),
+                    r.enq("yearmax", 0), r.enq("monthmax", 0), r.enq("daymax", 0),
+                    r.enq("hourmax", 0), r.enq("minumax", 0), r.enq("secmax", 0),
+                    r.enq("limit", -1));
         }
     }
     return count;
@@ -373,15 +374,16 @@ void CursorBest::to_record(Record& rec)
     to_record_pseudoana(rec);
     to_record_repinfo(rec);
     if (results[cur].out_id_ltr == -1)
-        rec.unset(DBA_KEY_CONTEXT_ID);
+        rec.unset("context_id");
     else
-        rec.key(DBA_KEY_CONTEXT_ID).seti(results[cur].out_id_data);
+        rec.seti("context_id", results[cur].out_id_data);
     to_record_varcode(rec);
     to_record_ltr(rec);
     to_record_datetime(rec);
 
-    rec.clear_vars();
-    rec.var(results[cur].out_varcode).setc(results[cur].out_value);
+    auto& r = core::Record::downcast(rec);
+    r.clear_vars();
+    r.obtain(results[cur].out_varcode).setc(results[cur].out_value);
 
     if (modifiers & DBA_DB_MODIFIER_ANAEXTRA)
         add_station_info(rec);
@@ -389,7 +391,7 @@ void CursorBest::to_record(Record& rec)
 
 unsigned CursorBest::test_iterate(FILE* dump)
 {
-    Record r;
+    core::Record r;
     unsigned count;
     for (count = 0; next(); ++count)
     {

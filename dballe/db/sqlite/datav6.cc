@@ -2,7 +2,7 @@
 #include "dballe/db/sql.h"
 #include "dballe/db/querybuf.h"
 #include "dballe/db/v6/qbuilder.h"
-#include "dballe/core/record.h"
+#include "dballe/record.h"
 #include <algorithm>
 #include <cstring>
 

@@ -1,24 +1,3 @@
-/*
- * memdb/memdb - In-memory indexed storage of DB-All.e data
- *
- * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "memdb.h"
 #include "results.h"
 #include "dballe/core/record.h"
@@ -83,17 +62,18 @@ void Memdb::clear()
 void Memdb::insert_or_replace(const Record& rec)
 {
     const Station& station = *stations[stations.obtain(rec)];
-    if (rec.is_ana_context())
+    const auto& r = core::Record::downcast(rec);
+    if (r.is_ana_context())
     {
         // Insert all the variables we find
-        for (vector<Var*>::const_iterator i = rec.vars().begin(); i != rec.vars().end(); ++i)
+        for (vector<Var*>::const_iterator i = r.vars().begin(); i != r.vars().end(); ++i)
             stationvalues.insert(station, **i);
     } else {
         const LevTr& levtr = *levtrs[levtrs.obtain(rec)];
-        Datetime datetime = rec.get_datetime();
+        Datetime datetime = r.get_datetime();
 
         // Insert all the variables we find
-        for (vector<Var*>::const_iterator i = rec.vars().begin(); i != rec.vars().end(); ++i)
+        for (vector<Var*>::const_iterator i = r.vars().begin(); i != r.vars().end(); ++i)
             values.insert(station, levtr, datetime, **i);
     }
 }

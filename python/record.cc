@@ -32,11 +32,11 @@ using namespace wreport;
 
 extern "C" {
 
-static dba_keyword date_keys[6] = { DBA_KEY_YEAR, DBA_KEY_MONTH, DBA_KEY_DAY, DBA_KEY_HOUR, DBA_KEY_MIN, DBA_KEY_SEC };
-static dba_keyword datemin_keys[6] = { DBA_KEY_YEARMIN, DBA_KEY_MONTHMIN, DBA_KEY_DAYMIN, DBA_KEY_HOURMIN, DBA_KEY_MINUMIN, DBA_KEY_SECMIN };
-static dba_keyword datemax_keys[6] = { DBA_KEY_YEARMAX, DBA_KEY_MONTHMAX, DBA_KEY_DAYMAX, DBA_KEY_HOURMAX, DBA_KEY_MINUMAX, DBA_KEY_SECMAX };
-static dba_keyword level_keys[4] = { DBA_KEY_LEVELTYPE1, DBA_KEY_L1, DBA_KEY_LEVELTYPE2, DBA_KEY_L2 };
-static dba_keyword trange_keys[3] = { DBA_KEY_PINDICATOR, DBA_KEY_P1, DBA_KEY_P2 };
+static const char* date_keys[6] = { "year", "month", "day", "hour", "min", "sec" };
+static const char* datemin_keys[6] = { "yearmin", "monthmin", "daymin", "hourmin", "minumin", "secmin" };
+static const char* datemax_keys[6] = { "yearmax", "monthmax", "daymax", "hourmax", "minumax", "secmax" };
+static const char* level_keys[4] = { "leveltype1", "l1", "leveltype2", "l2" };
+static const char* trange_keys[3] = { "pindicator", "p1", "p2" };
 
 /*
  * Record iterator
@@ -144,7 +144,7 @@ static PyObject* dpy_Record_copy(dpy_Record* self)
     dpy_Record* result = PyObject_New(dpy_Record, &dpy_Record_Type);
     if (!result) return NULL;
     result = (dpy_Record*)PyObject_Init((PyObject*)result, &dpy_Record_Type);
-    new (&result->rec) Record(self->rec);
+    new (&result->rec) core::Record(self->rec);
     return (PyObject*)result;
 }
 
@@ -184,15 +184,10 @@ static PyObject* dpy_Record_var(dpy_Record* self, PyObject* args, PyObject* kw)
         return NULL;
 
     try {
-        wreport::Varcode code;
         if (name == NULL)
-        {
-            const char* scode = self->rec.get(DBA_KEY_VAR).enqc();
-            code = WR_STRING_TO_VAR(scode + 1);
-        } else
-            code = resolve_varcode(name);
+            name = self->rec["var"].enqc();
 
-        return (PyObject*)var_create(self->rec.get(code));
+        return (PyObject*)var_create(self->rec[name]);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -239,8 +234,7 @@ static PyObject* dpy_Record_key(dpy_Record* self, PyObject* args)
         return NULL;
 
     try {
-        dba_keyword key = Record::keyword_byname(name);
-        return (PyObject*)var_create(self->rec.get(key));
+        return (PyObject*)var_create(self->rec[name]);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -370,7 +364,7 @@ static PyMethodDef dpy_Record_methods[] = {
 static int dpy_Record_init(dpy_Record* self, PyObject* args, PyObject* kw)
 {
     // Construct on preallocated memory
-    new (&self->rec) dballe::Record;
+    new (&self->rec) dballe::core::Record;
 
     if (kw)
     {
@@ -420,7 +414,7 @@ static PyObject* dpy_Record_repr(dpy_Record* self)
     return PyString_FromString("Record object");
 }
 
-static PyObject* rec_to_datetime(dpy_Record* self, dba_keyword* keys)
+static PyObject* rec_to_datetime(dpy_Record* self, const char** keys)
 {
     try {
         int y = self->rec[keys[0]].enqi();
@@ -429,7 +423,7 @@ static PyObject* rec_to_datetime(dpy_Record* self, dba_keyword* keys)
         int ho = self->rec[keys[3]].enqi();
         int mi = self->rec[keys[4]].enqi();
         // Second is optional, defaulting to 0
-        int se = self->rec.get(keys[5], 0);
+        int se = self->rec.enq(keys[5], 0);
         return PyDateTime_FromDateAndTime(y, m, d, ho, mi, se, 0);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -438,7 +432,7 @@ static PyObject* rec_to_datetime(dpy_Record* self, dba_keyword* keys)
     }
 }
 
-static int datetime_to_rec(dpy_Record* self, PyObject* dt, dba_keyword* keys)
+static int datetime_to_rec(dpy_Record* self, PyObject* dt, const char** keys)
 {
     if (dt == NULL || dt == Py_None)
     {
@@ -460,7 +454,7 @@ static int datetime_to_rec(dpy_Record* self, PyObject* dt, dba_keyword* keys)
     return 0;
 }
 
-static PyObject* rec_keys_to_tuple(dpy_Record* self, dba_keyword* keys, unsigned len)
+static PyObject* rec_keys_to_tuple(dpy_Record* self, const char** keys, unsigned len)
 {
     PyObject* res = PyTuple_New(len);
     if (!res) return NULL;
@@ -500,7 +494,7 @@ static PyObject* rec_to_level(dpy_Record* self)
     return rec_keys_to_tuple(self, level_keys, 4);
 }
 
-static int rec_tuple_to_keys(dpy_Record* self, PyObject* val, dba_keyword* keys, unsigned len)
+static int rec_tuple_to_keys(dpy_Record* self, PyObject* val, const char** keys, unsigned len)
 {
     if (val == NULL || val == Py_None)
     {
@@ -674,18 +668,18 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
     return 0;
 }
 
-static int all_keys_set(const Record& rec, dba_keyword* keys, unsigned len)
+static int all_keys_set(const Record& rec, const char** keys, unsigned len)
 {
     for (unsigned i = 0; i < len; ++i)
-        if (rec.peek_value(keys[i]) == NULL)
+        if (!rec.isset(keys[i]))
             return 0;
     return 1;
 }
 
-static int any_key_set(const Record& rec, dba_keyword* keys, unsigned len)
+static int any_key_set(const Record& rec, const char** keys, unsigned len)
 {
     for (unsigned i = 0; i < len; ++i)
-        if (rec.peek_value(keys[i]) != NULL)
+        if (rec.isset(keys[i]))
             return 1;
     return 0;
 }

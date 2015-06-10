@@ -1,25 +1,5 @@
-/*
- * core/test-utils-core - Test utility functions for the core module
- *
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
-#include "dballe/core/test-utils-core.h"
+#include "test-utils-core.h"
+#include "record.h"
 #include <wibble/string.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -257,15 +237,10 @@ unique_ptr<Rawmsg> _read_rawmsg(const wibble::tests::Location& loc, const char* 
 	}
 }
 
-static std::string format_name(dba_keyword k) { return Record::keyword_name(k); }
-static std::string format_name(wreport::Varcode c) { return format_code(c); }
-static std::string format_name(const char* c) { return c; }
-
-template<typename K>
-void TestRecordValEqual<K>::check(WIBBLE_TEST_LOCPRM) const
+void TestRecordValEqual::check(WIBBLE_TEST_LOCPRM) const
 {
-    const wreport::Var* evar = expected.peek(name);
-    const wreport::Var* avar = actual.peek(name);
+    const wreport::Var* evar = expected.get(name);
+    const wreport::Var* avar = actual.get(name);
 
     if (with_missing_int && evar && evar->enq(MISSING_INT) == MISSING_INT)
         evar = NULL;
@@ -276,7 +251,7 @@ void TestRecordValEqual<K>::check(WIBBLE_TEST_LOCPRM) const
     if (!evar || !avar || evar->code() != avar->code() || !evar->value_equals(*avar))
     {
         std::stringstream ss;
-        ss << "records differ on " << format_name(name) << ": ";
+        ss << "records differ on " << name << ": ";
         if (!evar)
             ss << "it is expected unset";
         else
@@ -289,17 +264,16 @@ void TestRecordValEqual<K>::check(WIBBLE_TEST_LOCPRM) const
         wibble_test_location.fail_test(ss.str());
     }
 }
-template class TestRecordValEqual<dba_keyword>;
-template class TestRecordValEqual<wreport::Varcode>;
-template class TestRecordValEqual<const char*>;
 
 void TestRecordVarsEqual::check(WIBBLE_TEST_LOCPRM) const
 {
     WIBBLE_TEST_INFO(locinfo);
-    locinfo() << "Expected: " << expected.to_string() << " actual: " << actual.to_string();
+    const auto& exp = core::Record::downcast(expected);
+    const auto& act = core::Record::downcast(actual);
+    locinfo() << "Expected: " << exp.to_string() << " actual: " << act.to_string();
 
-    const vector<Var*>& vars1 = actual.vars();
-    const vector<Var*>& vars2 = expected.vars();
+    const vector<Var*>& vars1 = act.vars();
+    const vector<Var*>& vars2 = exp.vars();
 
     if (vars1.size() != vars2.size())
     {
@@ -324,19 +298,20 @@ void TestRecordVarsEqual::check(WIBBLE_TEST_LOCPRM) const
 
 void set_record_from_string(Record& rec, const std::string& s)
 {
+    auto& r = core::Record::downcast(rec);
     str::Split splitter(", ", s);
     for (str::Split::const_iterator i = splitter.begin(); i != splitter.end(); ++i)
-        rec.set_from_string(i->c_str());
+        r.set_from_string(i->c_str());
 }
 
-Record record_from_string(const std::string& s)
+unique_ptr<Record> record_from_string(const std::string& s)
 {
-    Record res;
-    set_record_from_string(res, s);
-    return res;
+    auto res = Record::create();
+    set_record_from_string(*res, s);
+    return move(res);
 }
 
-std::unique_ptr<Query> query_from_string(const std::string& s)
+unique_ptr<Query> query_from_string(const std::string& s)
 {
     core::Query* q;
     unique_ptr<Query> res(q = new core::Query);
@@ -353,5 +328,3 @@ core::Query core_query_from_string(const std::string& s)
 
 }
 }
-
-// vim:set ts=4 sw=4:

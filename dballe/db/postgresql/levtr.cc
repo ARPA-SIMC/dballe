@@ -1,28 +1,6 @@
-/*
- * db/v6/lev_tr - lev_tr table management
- *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "levtr.h"
 #include "dballe/db/postgresql/internals.h"
 #include "dballe/core/defs.h"
-#include "dballe/core/record.h"
 #include "dballe/msg/msg.h"
 #include <map>
 #include <sstream>
@@ -95,43 +73,6 @@ int PostgreSQLLevTrV6::obtain_id(const Level& lev, const Trange& tr)
 
     return conn.exec_prepared_one_row("v6_levtr_insert",
             lev.ltype1, lev.l1, lev.ltype2, lev.l2, tr.pind, tr.p1, tr.p2).get_int4(0, 0);
-}
-
-int PostgreSQLLevTrV6::obtain_id(const Record& rec)
-{
-    Level lev;
-    if (const Var* var = rec.key_peek(DBA_KEY_LEVELTYPE1))
-        lev.ltype1 = var->enqi();
-    else
-        lev.ltype1 = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_L1))
-        lev.l1 = var->enqi();
-    else
-        lev.l1 = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_LEVELTYPE2))
-        lev.ltype2 = var->enqi();
-    else
-        lev.ltype2 = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_L2))
-        lev.l2 = var->enqi();
-    else
-        lev.l2 = MISSING_INT;
-
-    Trange tr;
-    if (const Var* var = rec.key_peek(DBA_KEY_PINDICATOR))
-        tr.pind = var->enqi();
-    else
-        tr.pind = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_P1))
-        tr.p1 = var->enqi();
-    else
-        tr.p1 = MISSING_INT;
-    if (const Var* var = rec.key_peek(DBA_KEY_P2))
-        tr.p2 = var->enqi();
-    else
-        tr.p2 = MISSING_INT;
-
-    return obtain_id(lev, tr);
 }
 
 const sql::LevTr::DBRow* PostgreSQLLevTrV6::read(int id)

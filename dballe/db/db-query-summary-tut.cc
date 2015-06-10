@@ -1,22 +1,3 @@
-/*
- * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "config.h"
 #include "db/test-utils-db.h"
 #include <wibble/string.h>
@@ -62,36 +43,36 @@ struct Fixture : public dballe::tests::DBFixture
 
         dballe::tests::TestRecord rec1;
         rec1.station = st1;
-        rec1.data.set(DBA_KEY_REP_MEMO, "metar");
-        rec1.data.set_datetime(1945, 4, 25, 8);
+        rec1.data.set("rep_memo", "metar");
+        rec1.data.set(Datetime(1945, 4, 25, 8));
         rec1.data.set(Level(10, 11, 15, 22));
         rec1.data.set(Trange(20, 111, 122));
-        rec1.data.set(WR_VAR(0, 12, 101), 290.0);
-        rec1.data.set(WR_VAR(0, 12, 103), 280.0);
+        rec1.data.set("B12101", 290.0);
+        rec1.data.set("B12103", 280.0);
         wruntest(rec1.insert, *db, true);
         st1_id = db->last_station_id();
 
         rec1.data.clear_vars();
-        rec1.data.set_datetime(1945, 4, 26, 8);
-        rec1.data.set(WR_VAR(0, 12, 101), 291.0);
-        rec1.data.set(WR_VAR(0, 12, 103), 281.0);
+        rec1.data.set(Datetime(1945, 4, 26, 8));
+        rec1.data.set("B12101", 291.0);
+        rec1.data.set("B12103", 281.0);
         wruntest(rec1.insert, *db, true);
 
         dballe::tests::TestRecord rec2;
         rec2.station = st2;
-        rec2.data.set(DBA_KEY_REP_MEMO, "metar");
-        rec2.data.set_datetime(1945, 4, 25, 8);
+        rec2.data.set("rep_memo", "metar");
+        rec2.data.set(Datetime(1945, 4, 25, 8));
         rec2.data.set(Level(10, 11, 15, 22));
         rec2.data.set(Trange(20, 111, 122));
-        rec2.data.set(WR_VAR(0, 12, 101), 300.0);
-        rec2.data.set(WR_VAR(0, 12, 103), 290.0);
+        rec2.data.set("B12101", 300.0);
+        rec2.data.set("B12103", 290.0);
         wruntest(rec2.insert, *db, true);
         st2_id = db->last_station_id();
 
         rec2.data.clear_vars();
-        rec2.data.set_datetime(1945, 4, 26, 8);
-        rec2.data.set(WR_VAR(0, 12, 101), 301.0);
-        rec2.data.set(WR_VAR(0, 12, 103), 291.0);
+        rec2.data.set(Datetime(1945, 4, 26, 8));
+        rec2.data.set("B12101", 301.0);
+        rec2.data.set("B12103", 291.0);
         wruntest(rec2.insert, *db, true);
     }
 
@@ -123,22 +104,22 @@ std::vector<Test> tests {
         auto& db = *f.db;
         wassert(actual(db).try_summary_query("year=1001", 0));
         wassert(actual(db).try_summary_query("yearmin=1999", 0));
-        auto check_base = [](WIBBLE_TEST_LOCPRM, const vector<Record>& res) {
-            wassert(actual(res[0][DBA_KEY_LAT].enqi()) == 1234560);
-            wassert(actual(res[0][DBA_KEY_LON].enqi()) == 7654320);
+        auto check_base = [](WIBBLE_TEST_LOCPRM, const vector<core::Record>& res) {
+            wassert(actual(res[0].enq("lat", MISSING_INT)) == 1234560);
+            wassert(actual(res[0].enq("lon", MISSING_INT)) == 7654320);
             wassert(actual(res[0].get_level()) == Level(10, 11, 15, 22));
             wassert(actual(res[0].get_trange()) == Trange(20, 111, 122));
-            wassert(actual(res[0][DBA_KEY_VAR].enqc()) == "B12101");
+            wassert(actual(res[0].enq("var", "")) == "B12101");
         };
-        auto check_nodetails = [&](WIBBLE_TEST_LOCPRM, const vector<Record>& res) {
+        auto check_nodetails = [&](WIBBLE_TEST_LOCPRM, const vector<core::Record>& res) {
             wruntest(check_base, res);
-            wassert(actual(res[0].contains(DBA_KEY_CONTEXT_ID)).isfalse());
-            wassert(actual(res[0].contains(DBA_KEY_YEARMIN)).isfalse());
-            wassert(actual(res[0].contains(DBA_KEY_YEARMAX)).isfalse());
+            wassert(actual(res[0].isset("context_id")).isfalse());
+            wassert(actual(res[0].isset("yearmin")).isfalse());
+            wassert(actual(res[0].isset("yearmax")).isfalse());
         };
-        auto check_details = [&](WIBBLE_TEST_LOCPRM, const vector<Record>& res) {
+        auto check_details = [&](WIBBLE_TEST_LOCPRM, const vector<core::Record>& res) {
             wruntest(check_base, res);
-            wassert(actual(res[0][DBA_KEY_CONTEXT_ID].enqi()) == 2);
+            wassert(actual(res[0].enq("context_id", MISSING_INT)) == 2);
             wassert(actual(res[0].get_datetimemin()) == Datetime(1945, 4, 25, 8));
             wassert(actual(res[0].get_datetimemax()) == Datetime(1945, 4, 26, 8));
         };

@@ -1,22 +1,3 @@
-/*
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "config.h"
 #include "db/test-utils-db.h"
 #include "db/querybuf.h"
@@ -41,15 +22,15 @@ struct Fixture : public dballe::tests::DBFixture
     {
         ds_st_navile.lat = 44.5008;
         ds_st_navile.lon = 11.3288;
-        ds_st_navile.info["synop"].set(WR_VAR(0, 7, 30), 78); // Height
+        ds_st_navile.info["synop"].set("B07030", 78); // Height
     }
 };
 
 template<typename OBJ, typename ...Args>
-unsigned run_query_attrs(OBJ& db, Record& dest, Args... args)
+unsigned run_query_attrs(OBJ& db, core::Record& dest, Args... args)
 {
     unsigned count = 0;
-    db.query_attrs(args..., [&](unique_ptr<Var> var) { dest.add(move(var)); ++count; });
+    db.query_attrs(args..., [&](unique_ptr<Var> var) { dest.set(move(var)); ++count; });
     return count;
 }
 
@@ -65,8 +46,8 @@ std::vector<Test> tests {
         // Insert some data
         dballe::tests::TestRecord ds;
         ds.station = f.ds_st_navile;
-        ds.data.set(DBA_KEY_REP_MEMO, "synop");
-        ds.data.set_datetime(2013, 10, 16, 10);
+        ds.data.set("rep_memo", "synop");
+        ds.data.set(Datetime(2013, 10, 16, 10));
         ds.set_var("temp_2m", 16.5, 50);
         wruntest(ds.insert, db);
 
@@ -96,7 +77,7 @@ std::vector<Test> tests {
         OldDballeTestFixture oldf;
 
         // Prepare a valid record to insert
-        Record insert(oldf.dataset0.data);
+        core::Record insert(oldf.dataset0.data);
         wrunchecked(oldf.dataset0.station.set_latlonident_into(insert));
 
         // Check if adding a nonexisting station when not allowed causes an error
@@ -114,7 +95,7 @@ std::vector<Test> tests {
         // Check if duplicate updates are allowed by insert
         wrunchecked(db.insert(insert, true, false));
         // Check if overwrites are trapped by insert_new
-        insert.set(WR_VAR(0, 1, 11), "DB-All.e?");
+        insert.set("B01011", "DB-All.e?");
         try {
             db.insert(insert, false, false);
             ensure(false);
@@ -128,13 +109,13 @@ std::vector<Test> tests {
         OldDballeTestFixture oldf;
 
         // Prepare a valid record to insert
-        Record insert(oldf.dataset0.data);
+        core::Record insert(oldf.dataset0.data);
         wrunchecked(oldf.dataset0.station.set_latlonident_into(insert));
 
         // Insert the record twice
         wrunchecked(db.insert(insert, false, true));
         // This should fail, refusing to replace station info
-        insert.set(WR_VAR(0, 1, 11), "DB-All.e?");
+        insert.set("B01011", "DB-All.e?");
         try {
             db.insert(insert, false, true);
             ensure(false);
@@ -294,14 +275,14 @@ std::vector<Test> tests {
         // Test datetime queries
         auto& db = *f.db;
         core::Query query;
-        Record insert, result;
+        core::Record insert, result;
 
         /* Prepare test data */
-        Record base, a, b;
+        core::Record base, a, b;
 
-        base.set(DBA_KEY_LAT, 12.0);
-        base.set(DBA_KEY_LON, 48.0);
-        base.set(DBA_KEY_MOBILE, 0);
+        base.set("lat", 12.0);
+        base.set("lon", 48.0);
+        base.set("mobile", 0);
 
         /*
            base.set(DBA_KEY_HEIGHT, 42);
@@ -311,25 +292,12 @@ std::vector<Test> tests {
            base.set(DBA_KEY_NAME, "Cippo Lippo");
            */
 
-        base.set(DBA_KEY_LEVELTYPE1, 1);
-        base.set(DBA_KEY_L1, 0);
-        base.set(DBA_KEY_LEVELTYPE2, 1);
-        base.set(DBA_KEY_L2, 0);
-        base.set(DBA_KEY_PINDICATOR, 1);
-        base.set(DBA_KEY_P1, 0);
-        base.set(DBA_KEY_P2, 0);
-
-        base.set(DBA_KEY_REP_MEMO, "synop");
-        base.set(DBA_KEY_PRIORITY, 101);
-
-        base.set(WR_VAR(0, 1, 12), 500);
-
-        base.set(DBA_KEY_YEAR, 2006);
-        base.set(DBA_KEY_MONTH, 5);
-        base.set(DBA_KEY_DAY, 15);
-        base.set(DBA_KEY_HOUR, 12);
-        base.set(DBA_KEY_MIN, 30);
-        base.set(DBA_KEY_SEC, 0);
+        base.set(Level(1, 0, 1, 0));
+        base.set(Trange(1, 0, 0));
+        base.set("rep_memo", "synop");
+        base.set("priority", 101);
+        base.set("B01012", 500);
+        base.set(Datetime(2006, 5, 15, 12, 30, 0));
 
 #define WANTRESULT(ab) do { \
         unique_ptr<db::Cursor> cur = db.query_data(query); \
@@ -347,13 +315,13 @@ std::vector<Test> tests {
 
         insert.clear();
         a = base;
-        a.set(DBA_KEY_YEAR, 2005);
+        a.set("year", 2005);
         insert.add(a);
         db.insert(insert, false, true);
 
         insert.clear();
         b = base;
-        b.set(DBA_KEY_YEAR, 2006);
+        b.set("year", 2006);
         insert.add(b);
         db.insert(insert, false, false);
 
@@ -376,14 +344,14 @@ std::vector<Test> tests {
         insert.clear();
         a = base;
         a.set("year", 2006);
-        a.set(DBA_KEY_MONTH, 4);
+        a.set("month", 4);
         insert.add(a);
         db.insert(insert, false, true);
 
         insert.clear();
         b = base;
         b.set("year", 2006);
-        b.set(DBA_KEY_MONTH, 5);
+        b.set("month", 5);
         insert.add(b);
         db.insert(insert, false, false);
 
@@ -535,7 +503,7 @@ std::vector<Test> tests {
         wruntest(f.populate_database, oldf);
 
         core::Query query;
-        Record result;
+        core::Record result;
         query.set("latmin", 1000000);
         unique_ptr<db::Cursor> cur = db.query_data(query);
 
@@ -556,10 +524,10 @@ std::vector<Test> tests {
         ensure(found);
 
         // Insert new attributes about this report
-        Record qc;
-        qc.set(WR_VAR(0, 33, 2), 2);
-        qc.set(WR_VAR(0, 33, 3), 5);
-        qc.set(WR_VAR(0, 33, 5), 33);
+        core::Record qc;
+        qc.set("B33002", 2);
+        qc.set("B33003", 5);
+        qc.set("B33005", 33);
         db.attr_insert(context_id, WR_VAR(0, 1, 11), qc);
 
         // Query back the data
@@ -621,17 +589,17 @@ std::vector<Test> tests {
         // Insert a data record
         wruntest(oldf.dataset0.insert, db);
 
-        Record qc;
-        qc.set(WR_VAR(0,  1,  7),  1);
-        qc.set(WR_VAR(0,  2, 48),  2);
-        qc.set(WR_VAR(0,  5, 40),  3);
-        qc.set(WR_VAR(0,  5, 41),  4);
-        qc.set(WR_VAR(0,  5, 43),  5);
-        qc.set(WR_VAR(0, 33, 32),  6);
-        qc.set(WR_VAR(0,  7, 24),  7);
-        qc.set(WR_VAR(0,  5, 21),  8);
-        qc.set(WR_VAR(0,  7, 25),  9);
-        qc.set(WR_VAR(0,  5, 22), 10);
+        core::Record qc;
+        qc.set("B01007",  1);
+        qc.set("B02048",  2);
+        qc.set("B05040",  3);
+        qc.set("B05041",  4);
+        qc.set("B05043",  5);
+        qc.set("B33032",  6);
+        qc.set("B07024",  7);
+        qc.set("B05021",  8);
+        qc.set("B07025",  9);
+        qc.set("B05022", 10);
 
         db.attr_insert(WR_VAR(0, 1, 11), qc);
 
@@ -686,9 +654,9 @@ std::vector<Test> tests {
         cur->discard_rest();
 
         // Insert new attributes about this report
-        Record qc;
-        qc.set(WR_VAR(0, 1, 1), 50);
-        qc.set(WR_VAR(0, 1, 8), "50");
+        core::Record qc;
+        qc.set("B01001", 50);
+        qc.set("B01008", "50");
         db.attr_insert(context_id, WR_VAR(0, 1, 11), qc);
 
         // Try queries filtered by numeric attributes
@@ -787,13 +755,13 @@ std::vector<Test> tests {
     }),
     Test("fd_leaks", [](Fixture& f) {
         // Test connect leaks
-        Record insert;
+        core::Record insert;
         insert.set_ana_context();
-        insert.set(DBA_KEY_LAT, 12.34560);
-        insert.set(DBA_KEY_LON, 76.54320);
-        insert.set(DBA_KEY_MOBILE, 0);
-        insert.set(DBA_KEY_REP_MEMO, "synop");
-        insert.set(WR_VAR(0, 7, 30), 42.0); // Height
+        insert.set("lat", 12.34560);
+        insert.set("lon", 76.54320);
+        insert.set("mobile", 0);
+        insert.set("rep_memo", "synop");
+        insert.set("B07030", 42.0); // Height
 
         // Assume a max open file limit of 1100
         for (unsigned i = 0; i < 1100; ++i)
@@ -808,8 +776,8 @@ std::vector<Test> tests {
         OldDballeTestFixture oldf;
 
         dballe::tests::TestRecord dataset = oldf.dataset0;
-        Record& attrs = dataset.attrs[WR_VAR(0, 1, 12)];
-        attrs.set(WR_VAR(0, 33, 7), 50);
+        core::Record& attrs = dataset.attrs[WR_VAR(0, 1, 12)];
+        attrs.set("B33007", 50);
         wruntest(dataset.insert, db);
 
         core::Query q;
@@ -829,14 +797,14 @@ std::vector<Test> tests {
         ensure_equals(var.enqi(), 300);
 
         // Query the attributes and check that they are there
-        Record qattrs;
+        core::Record qattrs;
         wassert(actual(run_query_attrs(*cur, qattrs)) == 1);
-        ensure_equals(qattrs.get(WR_VAR(0, 33, 7), MISSING_INT), 50);
+        wassert(actual(qattrs.enq("B33007", MISSING_INT)) == 50);
 
         // Update it
-        Record update;
-        update.set(DBA_KEY_ANA_ID, ana_id);
-        update.set(DBA_KEY_REP_MEMO, "synop");
+        core::Record update;
+        update.set("ana_id", ana_id);
+        update.set("rep_memo", "synop");
         int dt[6];
         update.set(q.datetime_min);
         update.set(q.level);
@@ -854,7 +822,7 @@ std::vector<Test> tests {
 
         qattrs.clear();
         wassert(actual(run_query_attrs(*cur, qattrs)) == 1);
-        ensure_equals(qattrs.get(WR_VAR(0, 33, 7), MISSING_INT), 50);
+        wassert(actual(qattrs.enq("B33007", MISSING_INT)) == 50);
     }),
     Test("query_stepbystep", [](Fixture& f) {
         auto& db = *f.db;
@@ -872,7 +840,7 @@ std::vector<Test> tests {
         // results should match what was inserted
         wassert(actual(cur).data_matches(oldf.dataset0));
         // just call to_record now, to check if in the next call old variables are removed
-        Record result;
+        core::Record result;
         cur->to_record(result);
 
         ensure(cur->next());
@@ -944,13 +912,10 @@ std::vector<Test> tests {
 
         // Insert with undef leveltype2 and l2
         dballe::tests::TestRecord dataset = oldf.dataset0;
-        dataset.data.unset(WR_VAR(0, 1, 11));
-        dataset.data.set(DBA_KEY_LEVELTYPE1, 44);
-        dataset.data.set(DBA_KEY_L1, 55);
-        dataset.data.unset(DBA_KEY_LEVELTYPE2);
-        dataset.data.unset(DBA_KEY_L2);
-        dataset.data.unset(DBA_KEY_P1);
-        dataset.data.unset(DBA_KEY_P2);
+        dataset.data.unset("B01011");
+        dataset.data.set(Level(44, 55));
+        dataset.data.unset("p1");
+        dataset.data.unset("p2");
         wruntest(dataset.insert, db, true);
 
         // Query it back
@@ -958,19 +923,10 @@ std::vector<Test> tests {
         ensure_equals(cur->remaining(), 1);
 
         ensure(cur->next());
-        Record result;
+        core::Record result;
         cur->to_record(result);
-
-        ensure(result.key_peek(DBA_KEY_LEVELTYPE1) != NULL);
-        ensure_equals(result[DBA_KEY_LEVELTYPE1].enqi(), 44);
-        ensure(result.key_peek(DBA_KEY_L1) != NULL);
-        ensure_equals(result[DBA_KEY_L1].enqi(), 55);
-        ensure(result.key_peek(DBA_KEY_LEVELTYPE2) == NULL);
-        ensure(result.key_peek(DBA_KEY_L2) == NULL);
-        ensure(result.key_peek(DBA_KEY_PINDICATOR) != NULL);
-        ensure_equals(result[DBA_KEY_PINDICATOR].enqi(), 20);
-        ensure(result.key_peek(DBA_KEY_P1) == NULL);
-        ensure(result.key_peek(DBA_KEY_P2) == NULL);
+        wassert(actual(result.get_level()) == Level(44, 55));
+        wassert(actual(result.get_trange()) == Trange(20));
 
         ensure(!cur->next());
     }),
@@ -1002,12 +958,12 @@ std::vector<Test> tests {
         auto& db = *f.db;
 
         // Prepare the common parts of some data
-        Record insert;
-        insert.set(DBA_KEY_LAT, 1.0);
-        insert.set(DBA_KEY_LON, 1.0);
+        core::Record insert;
+        insert.set("lat", 1.0);
+        insert.set("lon", 1.0);
         insert.set(Level(1, 0));
         insert.set(Trange(254, 0, 0));
-        insert.set_datetime(2009, 11, 11, 0, 0, 0);
+        insert.set(Datetime(2009, 11, 11, 0, 0, 0));
 
         //  1,synop,synop,101,oss,0
         //  2,metar,metar,81,oss,0
@@ -1025,8 +981,8 @@ std::vector<Test> tests {
         static const char* rep_memos[] = { "synop", "metar", "temp", "pilot", "buoy", "ship", "tempship", "airep", "amdar", "acars", "pollution", "satellite", "generic", NULL };
         for (const char** i = rep_memos; *i; ++i)
         {
-            insert.set(DBA_KEY_REP_MEMO, *i);
-            insert.set(WR_VAR(0, 12, 101), (int)(i - rep_memos));
+            insert.set("rep_memo", *i);
+            insert.set("B12101", (int)(i - rep_memos));
             db.insert(insert, false, true);
         }
 
@@ -1041,11 +997,11 @@ std::vector<Test> tests {
             ensure_equals(cur->remaining(), 1);
 
             ensure(cur->next());
-            Record result;
+            core::Record result;
             cur->to_record(result);
 
-            ensure(result.key_peek(DBA_KEY_REP_MEMO) != NULL);
-            wassert(actual(result[DBA_KEY_REP_MEMO].enqc()) == "generic");
+            ensure(result.get("rep_memo") != NULL);
+            wassert(actual(result.enq("rep_memo", "")) == "generic");
 
             cur->discard_rest();
         }
@@ -1061,11 +1017,11 @@ std::vector<Test> tests {
             ensure_equals(cur->remaining(), 1);
 
             ensure(cur->next());
-            Record result;
+            core::Record result;
             cur->to_record(result);
 
-            ensure(result.key_peek(DBA_KEY_REP_MEMO) != NULL);
-            wassert(actual(result[DBA_KEY_REP_MEMO].enqc()) == "tempship");
+            ensure(result.get("rep_memo") != NULL);
+            wassert(actual(result.enq("rep_memo", "")) == "tempship");
 
             cur->discard_rest();
         }
@@ -1076,12 +1032,12 @@ std::vector<Test> tests {
         OldDballeTestFixture oldf;
         wruntest(f.populate_database, oldf);
 
-        Record res;
+        core::Record res;
         unique_ptr<db::Cursor> cur = db.query_data(core::Query());
         while (cur->next())
         {
             cur->to_record(res);
-            ensure(res.key_peek_value(DBA_KEY_REP_MEMO) != 0);
+            wassert(actual(res["rep_memo"].isset()).istrue());
         }
     }),
 };

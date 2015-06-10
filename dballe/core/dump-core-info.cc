@@ -34,11 +34,13 @@ using namespace std;
 
 int do_keywords()
 {
+    using namespace dballe::core;
+
     for (int i = 0; i < DBA_KEY_COUNT; ++i)
     {
-        wreport::Varinfo info = Record::keyword_info((dba_keyword)i);
+        wreport::Varinfo info = core::Record::keyword_info((dba_keyword)i);
         printf("%s,%s,%d,%d,%s\n",
-            Record::keyword_name((dba_keyword)i),
+            core::Record::keyword_name((dba_keyword)i),
             info->unit,
             info->len,
             info->scale,

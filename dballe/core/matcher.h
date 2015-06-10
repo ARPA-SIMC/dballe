@@ -64,7 +64,7 @@ struct Matched
      * Any value can be set to MISSING_INT if not applicable or to represent an
      * open bound
      */
-    virtual matcher::Result match_coords(const Coords& cmin, const Coords& cmax) const;
+    virtual matcher::Result match_coords(const LatRange& latrange, const LonRange& lonrange) const;
 
     /**
      * Match rep_memo

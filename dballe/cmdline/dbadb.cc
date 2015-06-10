@@ -123,7 +123,7 @@ int Dbadb::do_dump(const Query& query, FILE* out)
 {
     unique_ptr<db::Cursor> cursor = db.query_data(query);
 
-    Record res;
+    core::Record res;
     for (unsigned i = 0; cursor->next(); ++i)
     {
         cursor->to_record(res);
@@ -139,7 +139,7 @@ int Dbadb::do_stations(const Query& query, FILE* out)
 {
     unique_ptr<db::Cursor> cursor = db.query_stations(query);
 
-    Record res;
+    core::Record res;
     for (unsigned i = 0; cursor->next(); ++i)
     {
         cursor->to_record(res);

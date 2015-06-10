@@ -20,7 +20,7 @@ const Query& Query::downcast(const dballe::Query& query)
 {
     const Query* ptr = dynamic_cast<const Query*>(&query);
     if (!ptr)
-        throw error_consistency("Query given is not a core::query");
+        throw error_consistency("query given is not a core::Query");
     return *ptr;
 }
 
@@ -491,24 +491,25 @@ void Query::unset_keyword(dba_keyword key)
     }
 }
 
-void Query::set_from_record(const Record& rec)
+void Query::set_from_record(const dballe::Record& rec)
 {
+    const auto& r = core::Record::downcast(rec);
     // Set keys
-    rec.iter_keys([&](dba_keyword key, const wreport::Var& var) {
+    r.iter_keys([&](dba_keyword key, const wreport::Var& var) {
         if (var.value())
             setc_keyword(key, var.value());
         return true;
     });
 
     // Set block and station, if present
-    for (const auto& v : rec.vars())
+    for (const auto& v : r.vars())
         switch (v->code())
         {
             case WR_VAR(0, 1, 1): if (v->isset()) block = v->enqi(); break;
             case WR_VAR(0, 1, 2): if (v->isset()) station = v->enqi(); break;
         }
 
-    query_station_vars = rec.is_ana_context();
+    query_station_vars = r.is_ana_context();
 }
 
 void Query::set_from_string(const char* str)
@@ -993,12 +994,13 @@ void Query::serialize(JSONWriter& out) const
     out.add("query_station_vars", query_station_vars);
 }
 
-unsigned Query::parse_modifiers(const Record& rec)
+unsigned Query::parse_modifiers(const dballe::Record& rec)
 {
     /* Decode query modifiers */
-    const char* val = rec.key_peek_value(DBA_KEY_QUERY);
-    if (!val) return 0;
-    return parse_modifiers(val);
+    const Var* var = rec.get("query");
+    if (!var) return 0;
+    if (!var->isset()) return 0;
+    return parse_modifiers(var->value());
 }
 
 unsigned Query::parse_modifiers(const char* s)

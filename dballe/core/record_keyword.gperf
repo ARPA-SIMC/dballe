@@ -37,6 +37,7 @@
 using namespace wreport;
 
 namespace dballe {
+namespace core {
 %}
 
 struct tagdef { const char* tag; dba_keyword index; };
@@ -258,5 +259,4 @@ dba_err dba_record_keyword_selftest()
 */
 
 }
-
-/* vim:set ts=4 sw=4: */
+}

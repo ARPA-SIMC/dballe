@@ -1,24 +1,3 @@
-/*
- * db/station - station table management
- *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "station.h"
 #include "dballe/db/sqlite/internals.h"
 #include "dballe/core/var.h"
@@ -212,10 +191,11 @@ void SQLiteStationBase::add_station_vars(int id_station, Record& rec)
             AND sc.datetime=c.datetime AND sd.id_var=d.id_var)
     )";
 
+    auto& r = core::Record::downcast(rec);
     auto stm = conn.sqlitestatement(query);
     stm->bind(id_station);
     stm->execute([&]() {
-        rec.var(stm->column_int(0)).setc(stm->column_string(1));
+        r.obtain((wreport::Varcode)stm->column_int(0)).setc(stm->column_string(1));
     });
 }
 
@@ -254,10 +234,11 @@ void SQLiteStationV6::add_station_vars(int id_station, Record& rec)
             AND sd.id_var=d.id_var)
     )";
 
+    auto& r = core::Record::downcast(rec);
     auto stm = conn.sqlitestatement(query);
     stm->bind(id_station);
     stm->execute([&]() {
-        rec.var(stm->column_int(0)).setc(stm->column_string(1));
+        r.obtain((Varcode)stm->column_int(0)).setc(stm->column_string(1));
     });
 }
 
