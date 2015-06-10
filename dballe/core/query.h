@@ -135,6 +135,13 @@ struct Query : public dballe::Query
      * Throws an exception if query is not a core::Query.
      */
     static const Query& downcast(const dballe::Query& query);
+
+    /**
+     * Return a reference to query downcasted as core::Query.
+     *
+     * Throws an exception if query is not a core::Query.
+     */
+    static Query& downcast(dballe::Query& query);
 };
 
 }

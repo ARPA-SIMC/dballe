@@ -25,6 +25,14 @@ const Query& Query::downcast(const dballe::Query& query)
     return *ptr;
 }
 
+Query& Query::downcast(dballe::Query& query)
+{
+    Query* ptr = dynamic_cast<Query*>(&query);
+    if (!ptr)
+        throw error_consistency("query given is not a core::Query");
+    return *ptr;
+}
+
 unsigned Query::get_modifiers() const
 {
     return parse_modifiers(query.c_str());
