@@ -275,13 +275,8 @@ std::unique_ptr<Matcher> Matcher::create(const dballe::Query& query_gen)
     if (!dtmin.is_missing() || !dtmax.is_missing())
         res->exprs.push_back(new DateMatcher(dtmin, dtmax));
 
-    if (query.coords_min.lat != MISSING_INT || query.coords_min.lon != MISSING_INT
-     || query.coords_max.lat != MISSING_INT || query.coords_max.lon != MISSING_INT)
-        res->exprs.push_back(new CoordMatcher(
-                    LatRange(
-                        query.coords_min.lat == MISSING_INT ? LatRange::IMIN : query.coords_min.lat,
-                        query.coords_max.lat == MISSING_INT ? LatRange::IMAX : query.coords_max.lat),
-                    LonRange(query.coords_min.lon, query.coords_max.lon)));
+    if (!query.latrange.is_missing() || !query.lonrange.is_missing())
+        res->exprs.push_back(new CoordMatcher(query.latrange, query.lonrange));
 
     if (!query.rep_memo.empty())
         res->exprs.push_back(new ReteMatcher(query.rep_memo));

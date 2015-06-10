@@ -143,42 +143,15 @@ struct MatchMobile : public Match<Station>
     }
 };
 
-struct MatchLonExact : public Match<Station>
+struct MatchLon : public Match<Station>
 {
-    int lon;
+    LonRange range;
 
-    MatchLonExact(int lon) : lon(Coords::normalon(lon)) {}
+    MatchLon(const LonRange& range) : range(range) {}
 
     virtual bool operator()(const Station& val) const
     {
-        return val.coords.lon == lon;
-    }
-};
-
-struct MatchLonInside : public Match<Station>
-{
-    int lonmin;
-    int lonmax;
-
-    MatchLonInside(int lonmin, int lonmax) : lonmin(lonmin), lonmax(lonmax) {}
-
-    virtual bool operator()(const Station& val) const
-    {
-        return val.coords.lon >= lonmin && val.coords.lon <= lonmax;
-    }
-};
-
-struct MatchLonOutside : public Match<Station>
-{
-    int lonmin;
-    int lonmax;
-
-    MatchLonOutside(int lonmin, int lonmax) : lonmin(lonmin), lonmax(lonmax) {}
-
-    virtual bool operator()(const Station& val) const
-    {
-        return ((val.coords.lon >= lonmin and val.coords.lon <= 18000000)
-             or (val.coords.lon >= -18000000 and val.coords.lon <= lonmax));
+        return range.contains(val.coords.lon);
     }
 };
 
@@ -193,40 +166,6 @@ struct MatchReport : public Match<Station>
         return val.report == report;
     }
 };
-
-unique_ptr< Match<Station> > build_lon_filter(const core::Query& q)
-{
-    typedef unique_ptr< Match<Station> > RES;
-    if (q.coords_min.lon != MISSING_INT && q.coords_max.lon != MISSING_INT)
-    {
-        if (q.coords_min.lon == q.coords_max.lon)
-        {
-            trace_query("Found lon %d, using MatchLonExact\n", q.coords_min.lon);
-            return RES(new MatchLonExact(q.coords_min.lon));
-        } else {
-            const int& lonmin = q.coords_min.lon;
-            const int& lonmax = q.coords_max.lon;
-            if (lonmin < lonmax)
-            {
-                trace_query("Found lonmin=%d, lonmax=%d, using MatchLonInside\n", lonmin, lonmax);
-                return RES(new MatchLonInside(lonmin, lonmax));
-            }
-            else if (lonmin > lonmax)
-            {
-                trace_query("Found lonmin=%d, lonmax=%d, using MatchLonOutside\n", lonmin, lonmax);
-                return RES(new MatchLonOutside(lonmin, lonmax));
-            }
-            // If after being normalised min and max are the same, we
-            // assume that one wants "any longitude", as is the case with
-            // lonmin=0 lonmax=360 or lonmin=-180 lonmax=180
-        }
-    } else if (q.coords_min.lon != MISSING_INT) {
-        throw error_consistency("'lonmin' query parameter was specified without 'lonmax'");
-    } else if (q.coords_max.lon != MISSING_INT) {
-        throw error_consistency("'lonmax' query parameter was specified without 'lonmin'");
-    }
-    return RES(nullptr);
-}
 
 }
 
@@ -247,9 +186,8 @@ void Stations::query(const core::Query& q, Results<Station>& res) const
         }
     }
 
-    unique_ptr< Match<Station> > lon_filter(build_lon_filter(q));
-    if (lon_filter.get())
-        res.add(lon_filter.release());
+    if (!q.lonrange.is_missing())
+        res.add(new MatchLon(q.lonrange));
 
     if (q.mobile != MISSING_INT)
     {
@@ -258,9 +196,7 @@ void Stations::query(const core::Query& q, Results<Station>& res) const
     }
 
     // Lookup latitude query parameters
-    const int& latmin = q.coords_min.lat;
-    const int& latmax = q.coords_max.lat;
-    if (latmin != MISSING_INT || latmax != MISSING_INT)
+    if (!q.latrange.is_missing())
     {
         // In this cose, we can assume that if we match the whole index, then
         // we match every station.
@@ -268,9 +204,11 @@ void Stations::query(const core::Query& q, Results<Station>& res) const
         // We can do this only because the index covers all the items: that is,
         // there are no stations without a latitude. We cannot do this, for
         // example, with the ident index.
+        const int& latmin = q.latrange.imin;
+        const int& latmax = q.latrange.imax;
         trace_query("Found latmin=%d, latmax=%d\n", latmin, latmax);
 
-        if (latmin != MISSING_INT && latmax != MISSING_INT)
+        if (latmin != LatRange::IMIN && latmax != LatRange::IMAX)
         {
             bool found;
             unique_ptr< stl::Sequences<size_t> > sequences(by_lat.search_between(latmin, latmax + 1, found));
@@ -284,7 +222,7 @@ void Stations::query(const core::Query& q, Results<Station>& res) const
                 res.add_union(std::move(sequences));
             else
                 trace_query(" latmin-latmax range covers the whole index: no point in adding a filter\n");
-        } else if (latmin != MISSING_INT) {
+        } else if (latmin != LatRange::IMIN) {
             bool found;
             unique_ptr< stl::Sequences<size_t> > sequences(by_lat.search_from(latmin, found));
             if (!found)
@@ -297,7 +235,7 @@ void Stations::query(const core::Query& q, Results<Station>& res) const
                 res.add_union(std::move(sequences));
             else
                 trace_query(" latmin matches beginning of index: no point in adding a filter\n");
-        } else if (latmax != MISSING_INT) {
+        } else if (latmax != LatRange::IMAX) {
             bool found;
             unique_ptr< stl::Sequences<size_t> > sequences(by_lat.search_to(latmax + 1, found));
             if (!found)

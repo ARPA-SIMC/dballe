@@ -1,5 +1,6 @@
 #include "summary.h"
 #include "dballe/core/query.h"
+#include "dballe/core/record.h"
 #include <cstring>
 
 using namespace std;

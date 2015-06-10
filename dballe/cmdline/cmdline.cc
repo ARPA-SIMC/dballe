@@ -1,6 +1,7 @@
 #include "cmdline.h"
 #include <dballe/record.h>
 #include <dballe/core/query.h>
+#include <dballe/core/record.h>
 #include "dballe/core/vasprintf.h"
 #include <dballe/msg/wr_codec.h>
 #include <dballe/core/verbose.h>
@@ -510,8 +511,9 @@ int Command::main(int argc, const char* argv[])
     return 1;
 }
 
-unsigned dba_cmdline_get_query(poptContext optCon, core::Query& query)
+unsigned dba_cmdline_get_query(poptContext optCon, Query& query)
 {
+    core::Record rec;
     unsigned res;
     const char* queryparm;
     for (res = 0; (queryparm = poptPeekArg(optCon)) != NULL; ++res)
@@ -523,8 +525,9 @@ unsigned dba_cmdline_get_query(poptContext optCon, core::Query& query)
         /* Mark as processed */
         poptGetArg(optCon);
 
-        query.set_from_string(queryparm);
+        rec.set_from_string(queryparm);
     }
+    query.set_from_record(rec);
     return res;
 }
 

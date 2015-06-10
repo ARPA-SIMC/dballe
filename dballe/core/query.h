@@ -3,7 +3,7 @@
 
 #include <dballe/query.h>
 #include <dballe/core/defs.h>
-#include <dballe/core/record.h>
+#include <dballe/record.h>
 #include <wreport/varinfo.h>
 #include <set>
 
@@ -52,8 +52,8 @@ struct Query : public dballe::Query
     int mobile = MISSING_INT;
     bool has_ident = false;
     std::string ident;
-    Coords coords_min;
-    Coords coords_max;
+    LatRange latrange;
+    LonRange lonrange;
     Datetime datetime_min;
     Datetime datetime_max;
     Level level;
@@ -85,41 +85,7 @@ struct Query : public dballe::Query
 
     void clear() override;
 
-    void seti_keyword(dba_keyword key, int val);
-    void setd_keyword(dba_keyword key, double val);
-    void setc_keyword(dba_keyword key, const char* val);
-    void sets_keyword(dba_keyword key, const std::string& val);
-    void setf_keyword(dba_keyword key, const char* val);
-    void unset_keyword(dba_keyword key);
-
-    void seti(const char* key, int val) override;
-    void setd(const char* key, double val) override;
-    void setc(const char* key, const char* val) override;
-    void sets(const char* key, const std::string& val) override;
-    void setf(const char* key, const char* val) override;
-
-    void unset(const char* key) override;
-
-    /// Set the query values from the contents of a Record
-    void set_from_record(const dballe::Record& rec);
-
-    /**
-     * Set a value in the record according to an assignment encoded in a string.
-     *
-     * String can use keywords, aliases and varcodes.  Examples: ana_id=3,
-     * name=Bologna, B12012=32.4
-     *
-     * In case of numeric parameter, a hyphen ("-") means MISSING_INT (e.g.,
-     * `leveltype2=-`).
-     *
-     * @param rec
-     *   The record where the value is to be set.
-     * @param str
-     *   The string containing the assignment.
-     * @return
-     *   The error indicator for the function.
-     */
-    void set_from_string(const char* str);
+    void set_from_record(const dballe::Record& rec) override;
 
     /**
      * Set a record from a ", "-separated string of assignments.

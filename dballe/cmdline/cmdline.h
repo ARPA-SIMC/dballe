@@ -133,7 +133,7 @@ Encoding dba_cmdline_stringToMsgType(const char* type);
  *
  * @return the number of key=value pairs found
  */
-unsigned dba_cmdline_get_query(poptContext optCon, core::Query& query);
+unsigned dba_cmdline_get_query(poptContext optCon, Query& query);
 
 /**
  * List available output templates

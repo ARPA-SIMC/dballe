@@ -88,7 +88,7 @@ wreport::Var& Record::obtain(const char* name)
     {
         dba_keyword param = keyword_byname(name);
         if (param == DBA_KEY_ERROR)
-            error_notfound::throwf("looking for misspelled parameter \"%s\"", name);
+            error_notfound::throwf("invalid parameter \"%s\"", name);
         return obtain(param);
     } else {
         if (code == 0)
@@ -287,7 +287,7 @@ const wreport::Var* Record::get(const char* key) const
     {
         dba_keyword param = keyword_byname(key);
         if (param == DBA_KEY_ERROR)
-            error_notfound::throwf("looking for misspelled parameter \"%s\"", key);
+            error_notfound::throwf("invalid parameter \"%s\"", key);
         return key_peek(param);
     } else {
         if (code == 0)
@@ -616,7 +616,7 @@ void Record::unset(const char* name)
 	{
 		dba_keyword param = keyword_byname(name);
 		if (param == DBA_KEY_ERROR)
-			error_notfound::throwf("looking for misspelled parameter \"%s\"", name);
+			error_notfound::throwf("invalid parameter \"%s\"", name);
 		return key_unset(param);
 	} else {
 		if (code == 0)

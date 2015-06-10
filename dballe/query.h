@@ -8,11 +8,15 @@
 #include <memory>
 
 namespace dballe {
+struct Record;
 
 /// Query used to filter DB-All.e data
 struct Query
 {
     virtual ~Query() {}
+
+    /// Set the query values from the contents of a Record
+    virtual void set_from_record(const dballe::Record& rec) = 0;
 
     /**
      * Get the Datetime bounds set in this query.
@@ -57,57 +61,6 @@ struct Query
 
     /// Clear the contents of the query, making it match all data
     virtual void clear() = 0;
-
-    /**
-     * Set a key to an integer value.
-     *
-     * If the key that is being set has a decimal component (like lat and lon),
-     * the integer value represents the units of maximum precision of the
-     * field. For example, using seti to set lat to 4500000 is the same as
-     * setting it to 45.0.
-     */
-    virtual void seti(const char* key, int val) = 0;
-
-    /**
-     * Set a key to a double value.
-     */
-    virtual void setd(const char* key, double val) = 0;
-
-    /**
-     * Set a key to a string value.
-     *
-     * If the key that is being set has a decimal component (like lat and lon),
-     * the string is converted to an integer value representing the units of
-     * maximum precision of the field. For example, using seti to set lat to
-     * "4500000" is the same as setting it to 45.0.
-     */
-    virtual void setc(const char* key, const char* val) = 0;
-
-    /**
-     * Set a key to a string value.
-     *
-     * If the key that is being set has a decimal component (like lat and lon),
-     * the string is converted to an integer value representing the units of
-     * maximum precision of the field. For example, using seti to set lat to
-     * "4500000" is the same as setting it to 45.0.
-     */
-    virtual void sets(const char* key, const std::string& val) = 0;
-
-    /**
-     * Set a key to a string value.
-     *
-     * Contrarily to setc, the string is parsed according to the natural
-     * representation for the given key. For example, if lat is set to "45",
-     * then it gets the value 45.0.
-     */
-    virtual void setf(const char* key, const char* val) = 0;
-
-    void set(const char* key, int val) { seti(key, val); }
-    void set(const char* key, double val) { setd(key, val); }
-    void set(const char* key, const char* val) { setc(key, val); }
-    void set(const char* key, const std::string& val) { sets(key, val); }
-
-    virtual void unset(const char* key) = 0;
 
     /**
      * Return true if this query matches a subset of the given query.

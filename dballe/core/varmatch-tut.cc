@@ -18,6 +18,7 @@
  */
 
 #include "test-utils-core.h"
+#include "var.h"
 #include "varmatch.h"
 
 using namespace dballe;

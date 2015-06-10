@@ -173,12 +173,14 @@ bool LatRange::contains(double lat) const
     return ilat >= imin && ilat <= imax;
 }
 
-LonRange::LonRange(int min, int max)
-    : imin(min == MISSING_INT ? MISSING_INT : Coords::normalon(min)),
-      imax(max == MISSING_INT ? MISSING_INT : Coords::normalon(max))
+bool LatRange::contains(const LatRange& lr) const
 {
-    if (min != max && imin == imax)
-        imin = imax = MISSING_INT;
+    return imin <= lr.imin && lr.imax <= imax;
+}
+
+LonRange::LonRange(int min, int max)
+{
+    set(min, max);
 }
 
 LonRange::LonRange(double min, double max)
@@ -207,6 +209,8 @@ void LonRange::get(double& min, double& max) const
 
 void LonRange::set(int min, int max)
 {
+    if ((min != MISSING_INT || max != MISSING_INT) && (min == MISSING_INT || max == MISSING_INT))
+        error_consistency::throwf("cannot set longitude range to an open ended range");
     imin = min == MISSING_INT ? MISSING_INT : Coords::normalon(min);
     imax = max == MISSING_INT ? MISSING_INT : Coords::normalon(max);
     // Catch cases like min=0 max=360, that would match anything, and set them
@@ -238,6 +242,36 @@ bool LonRange::contains(int lon) const
 bool LonRange::contains(double lon) const
 {
     return contains(ll_to_int(lon));
+}
+
+bool LonRange::contains(const LonRange& lr) const
+{
+    if (is_missing()) return true;
+    if (lr.is_missing()) return false;
+
+    // Longitude ranges can match outside or inside the interval
+    if (imin < imax)
+    {
+        // we match inside the interval
+        if (lr.imin < lr.imax)
+        {
+            // lr matches inside the interval
+            return imin <= lr.imin && lr.imax <= imax;
+        } else {
+            // lr matches outside the interval
+            return false;
+        }
+    } else {
+        // we match outside the interval
+        if (lr.imin < lr.imax)
+        {
+            // lr matches inside the interval
+            return lr.imax <= imin || lr.imin >= imax;
+        } else {
+            // lr matches outside the interval
+            return lr.imin <= imin || lr.imax >= imax;
+        }
+    }
 }
 
 }

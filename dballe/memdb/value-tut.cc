@@ -18,6 +18,7 @@
  */
 
 #include "memdb/tests.h"
+#include "dballe/core/var.h"
 #include "value.h"
 #include "station.h"
 #include "levtr.h"

@@ -1,4 +1,5 @@
 #include <dballe/msg/test-utils-msg.h>
+#include <dballe/core/record.h>
 #include <dballe/db/db.h>
 #include <dballe/db/sql/driver.h>
 

@@ -2,6 +2,7 @@
 #include "dballe/core/defs.h"
 #include "dballe/core/aliases.h"
 #include "dballe/core/query.h"
+#include "dballe/core/var.h"
 #include "dballe/db/sql/repinfo.h"
 #include <wreport/var.h>
 #include <regex.h>
@@ -185,50 +186,30 @@ struct Constraints
 
     void add_lat()
     {
-        if (query.coords_min.lat == query.coords_max.lat)
-        {
-            if (query.coords_min.lat == MISSING_INT)
-                return;
-            q.append_listf("%s.lat=%d", tbl, query.coords_min.lat);
-            found = true;
-        } else {
-            if (query.coords_min.lat != MISSING_INT)
-            {
-                q.append_listf("%s.lat>=%d", tbl, query.coords_min.lat);
-                found = true;
-            }
-            if (query.coords_max.lat != MISSING_INT)
-            {
-                q.append_listf("%s.lat<=%d", tbl, query.coords_max.lat);
-                found = true;
-            }
+        if (query.latrange.is_missing()) return;
+        if (query.latrange.imin == query.latrange.imax)
+            q.append_listf("%s.lat=%d", tbl, query.latrange.imin);
+        else {
+            if (query.latrange.imin != LatRange::IMIN)
+                q.append_listf("%s.lat>=%d", tbl, query.latrange.imin);
+            if (query.latrange.imax != LatRange::IMAX)
+                q.append_listf("%s.lat<=%d", tbl, query.latrange.imax);
         }
+        found = true;
     }
 
     void add_lon()
     {
-        if (query.coords_min.lon == query.coords_max.lon)
-        {
-            if (query.coords_min.lon == MISSING_INT)
-                return;
-            q.append_listf("%s.lon=%d", tbl, query.coords_min.lon);
-            found = true;
-        } else {
-            if (query.coords_min.lon == MISSING_INT)
-                throw error_consistency("'lonmin' query parameter was specified without 'lonmax'");
-            if (query.coords_max.lon == MISSING_INT)
-                throw error_consistency("'lonmax' query parameter was specified without 'lonmin'");
+        if (query.lonrange.is_missing()) return;
 
-            if (query.coords_min.lon < query.coords_max.lon)
-            {
-                q.append_listf("%s.lon>=%d AND %s.lon<=%d", tbl, query.coords_min.lon, tbl, query.coords_max.lon);
-                found = true;
-            } else {
-                q.append_listf("((%s.lon>=%d AND %s.lon<=18000000) OR (%s.lon>=-18000000 AND %s.lon<=%d))",
-                        tbl, query.coords_min.lon, tbl, tbl, tbl, query.coords_max.lon);
-                found = true;
-            }
-        }
+        if (query.lonrange.imin == query.lonrange.imax)
+            q.append_listf("%s.lon=%d", tbl, query.lonrange.imin);
+        else if (query.lonrange.imin < query.lonrange.imax)
+            q.append_listf("%s.lon>=%d AND %s.lon<=%d", tbl, query.lonrange.imin, tbl, query.lonrange.imax);
+        else
+            q.append_listf("((%s.lon>=%d AND %s.lon<=18000000) OR (%s.lon>=-18000000 AND %s.lon<=%d))",
+                    tbl, query.lonrange.imin, tbl, tbl, tbl, query.lonrange.imax);
+        found = true;
     }
 
     void add_mobile()

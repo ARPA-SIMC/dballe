@@ -250,9 +250,7 @@ void to::test<5>()
 template<> template<>
 void to::test<6>()
 {
-    auto query = dballe::Query::create();
-    query->set("rep_memo", "synop");
-    std::unique_ptr<Matcher> m = Matcher::create(*query);
+    auto m = get_matcher("rep_memo=synop");
 
     core::Record matched;
     ensure(m->match(MatchedRecord(matched)) == matcher::MATCH_NO);

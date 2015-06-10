@@ -49,7 +49,7 @@ std::vector<Test> tests {
         wassert(actual(to_vars("")) == "");
         wassert(actual(to_vars("latmin=45.0")) == "latmin=45.00000");
         wassert(actual(to_vars("latmin=45.0, latmax=46.0")) == "latmin=45.00000, latmax=46.00000");
-        wassert(actual(to_vars("latmin=45.0, latmax=46.0, lonmin=11.0")) == "latmin=45.00000, latmax=46.00000, lonmin=11.00000");
+        wassert(actual(to_vars("latmin=45.0, latmax=46.0, lon=11.0")) == "latmin=45.00000, latmax=46.00000, lon=11.00000");
         wassert(actual(to_vars("latmin=45.0, latmax=46.0, lonmin=11.0, lonmax=11.5")) == "latmin=45.00000, latmax=46.00000, lonmin=11.00000, lonmax=11.50000");
     }),
 };

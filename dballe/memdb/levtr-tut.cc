@@ -1,4 +1,5 @@
 #include "memdb/tests.h"
+#include "dballe/core/record.h"
 #include "levtr.h"
 #include "results.h"
 

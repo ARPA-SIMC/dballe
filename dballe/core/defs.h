@@ -127,8 +127,14 @@ struct LatRange
     void set(int min, int max);
     void set(double min, double max);
 
+    /// Check if a point is inside this range (extremes included)
     bool contains(int lat) const;
+
+    /// Check if a point is inside this range (extremes included)
     bool contains(double lat) const;
+
+    /// Check if a range is inside this range (extremes included)
+    bool contains(const LatRange& lr) const;
 };
 
 
@@ -177,8 +183,14 @@ struct LonRange
     void set(int min, int max);
     void set(double min, double max);
 
+    /// Check if a point is inside this range (extremes included)
     bool contains(int lon) const;
+
+    /// Check if a point is inside this range (extremes included)
     bool contains(double lon) const;
+
+    /// Check if a range is inside this range (extremes included)
+    bool contains(const LonRange& lr) const;
 };
 
 

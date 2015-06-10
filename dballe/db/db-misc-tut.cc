@@ -184,8 +184,8 @@ std::vector<Test> tests {
 
         // Prepare a query
         core::Query query;
-        query.set("latmin", 1000000);
-        query.set("query", "best");
+        query.latrange = LatRange(1000000, LatRange::IMAX);
+        query.query = "best";
 
         // Make the query
         unique_ptr<db::Cursor> cur = db.query_data(query);
@@ -238,7 +238,7 @@ std::vector<Test> tests {
 
         // Did it remove the right ones?
         query.clear();
-        query.set("latmin", 1000000);
+        query.latrange = LatRange(10.0, LatRange::DMAX);
         cur = db.query_data(query);
         ensure_equals(cur->remaining(), 2);
         ensure(cur->next());
@@ -326,15 +326,15 @@ std::vector<Test> tests {
         db.insert(insert, false, false);
 
         query.clear();
-        query.set("yearmin", 2006);
+        query.set_from_test_string("yearmin=2006");
         WANTRESULT(b);
 
         query.clear();
-        query.set("yearmax", 2005);
+        query.set_from_test_string("yearmax=2005");
         WANTRESULT(a);
 
         query.clear();
-        query.set("year", 2006);
+        query.set_from_test_string("year=2006");
         WANTRESULT(b);
 
 
@@ -356,18 +356,15 @@ std::vector<Test> tests {
         db.insert(insert, false, false);
 
         query.clear();
-        query.set("year", 2006);
-        query.set("monthmin", 5);
+        query.set_from_test_string("year=2006, monthmin=5");
         WANTRESULT(b);
 
         query.clear();
-        query.set("year", 2006);
-        query.set("monthmax", 4);
+        query.set_from_test_string("year=2006, monthmax=4");
         WANTRESULT(a);
 
         query.clear();
-        query.set("year", 2006);
-        query.set("month", 5);
+        query.set_from_test_string("year=2006, month=5");
         WANTRESULT(b);
 
         /* Day */
@@ -390,21 +387,15 @@ std::vector<Test> tests {
         db.insert(insert, false, false);
 
         query.clear();
-        query.set("year", 2006);
-        query.set("month", 5);
-        query.set("daymin", 3);
+        query.set_from_test_string("year=2006, month=5, daymin=3");
         WANTRESULT(b);
 
         query.clear();
-        query.set("year", 2006);
-        query.set("month", 5);
-        query.set("daymax", 2);
+        query.set_from_test_string("year=2006, month=5, daymax=2");
         WANTRESULT(a);
 
         query.clear();
-        query.set("year", 2006);
-        query.set("month", 5);
-        query.set("day", 3);
+        query.set_from_test_string("year=2006, month=5, day=3");
         WANTRESULT(b);
 
         /* Hour */
@@ -429,24 +420,15 @@ std::vector<Test> tests {
         db.insert(insert, false, false);
 
         query.clear();
-        query.set("year", 2006);
-        query.set("month", 5);
-        query.set("day", 3);
-        query.set("hourmin", 13);
+        query.set_from_test_string("year=2006, month=5, day=3, hourmin=13");
         WANTRESULT(b);
 
         query.clear();
-        query.set("year", 2006);
-        query.set("month", 5);
-        query.set("day", 3);
-        query.set("hourmax", 12);
+        query.set_from_test_string("year=2006, month=5, day=3, hourmax=12");
         WANTRESULT(a);
 
         query.clear();
-        query.set("year", 2006);
-        query.set("month", 5);
-        query.set("day", 3);
-        query.set("hour", 13);
+        query.set_from_test_string("year=2006, month=5, day=3, hour=13");
         WANTRESULT(b);
 
         /* Minute */
@@ -473,27 +455,15 @@ std::vector<Test> tests {
         db.insert(insert, false, false);
 
         query.clear();
-        query.set("year", 2006);
-        query.set("month", 5);
-        query.set("day", 3);
-        query.set("hour", 12);
-        query.set("minumin", 30);
+        query.set_from_test_string("year=2006, month=5, day=3, hour=12, minumin=30");
         WANTRESULT(b);
 
         query.clear();
-        query.set("year", 2006);
-        query.set("month", 5);
-        query.set("day", 3);
-        query.set("hour", 12);
-        query.set("minumax", 29);
+        query.set_from_test_string("year=2006, month=5, day=3, hour=12, minumax=29");
         WANTRESULT(a);
 
         query.clear();
-        query.set("year", 2006);
-        query.set("month", 5);
-        query.set("day", 3);
-        query.set("hour", 12);
-        query.set("min", 30);
+        query.set_from_test_string("year=2006, month=5, day=3, hour=12, min=30");
         WANTRESULT(b);
     }),
     Test("attrs", [](Fixture& f) {
@@ -504,7 +474,7 @@ std::vector<Test> tests {
 
         core::Query query;
         core::Record result;
-        query.set("latmin", 1000000);
+        query.latrange.set(1000000, LatRange::IMAX);
         unique_ptr<db::Cursor> cur = db.query_data(query);
 
         // Move the cursor to B01011
@@ -781,7 +751,8 @@ std::vector<Test> tests {
         wruntest(dataset.insert, db);
 
         core::Query q;
-        q.coords_min = q.coords_max = Coords(12.34560, 76.54320);
+        q.latrange.set(12.34560, 12.34560);
+        q.lonrange.set(76.54320, 76.54320);
         q.datetime_min = q.datetime_max = Datetime(1945, 4, 25, 8, 0, 0);
         q.rep_memo = "synop";
         q.level = Level(10, 11, 15, 22);
@@ -989,7 +960,7 @@ std::vector<Test> tests {
         // Query with querybest only
         {
             core::Query query;
-            query.set("query", "best");
+            query.query = "best";
             query.datetime_min = query.datetime_max = Datetime(2009, 11, 11, 0, 0, 0);
             query.varcodes.insert(WR_VAR(0, 12, 101));
             unique_ptr<db::Cursor> cur = db.query_data(query);
@@ -1009,8 +980,8 @@ std::vector<Test> tests {
         // Query with querybest and priomax
         {
             core::Query query;
-            query.set("priomax", 100);
-            query.set("query", "best");
+            query.prio_max = 100;
+            query.query = "best";
             query.datetime_min = query.datetime_max = Datetime(2009, 11, 11, 0, 0, 0);
             query.varcodes.insert(WR_VAR(0, 12, 101));
             unique_ptr<db::Cursor> cur = db.query_data(query);

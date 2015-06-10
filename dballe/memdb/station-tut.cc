@@ -19,6 +19,7 @@
 
 #include "memdb/tests.h"
 #include "dballe/core/query.h"
+#include "dballe/core/record.h"
 #include "station.h"
 #include "results.h"
 

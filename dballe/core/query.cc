@@ -1,6 +1,7 @@
 #include "query.h"
 #include "var.h"
 #include "json.h"
+#include "record.h"
 #include <sstream>
 #include <cmath>
 #include <cstring>
@@ -56,8 +57,8 @@ void Query::clear()
     mobile = MISSING_INT;
     has_ident = false;
     ident.clear();
-    coords_min = Coords();
-    coords_max = Coords();
+    latrange = LatRange();
+    lonrange = LonRange();
     datetime_min = Datetime();
     datetime_max = Datetime();
     level = Level();
@@ -74,470 +75,141 @@ void Query::clear()
     query_station_vars = false;
 }
 
-void Query::seti(const char* key, int val)
-{
-    dba_keyword k = Record::keyword_byname(key);
-    if (k != DBA_KEY_ERROR)
-        seti_keyword(k, val);
-    else
-    {
-        Varcode code = resolve_varcode_safe(key);
-        switch (code)
-        {
-            case WR_VAR(0, 1, 1): block = val; break;
-            case WR_VAR(0, 1, 2): station = val; break;
-            default: error_consistency::throwf("cannot set query field %s to %d", key, val);
-        }
-    }
-}
-
-void Query::setd(const char* key, double val)
-{
-    dba_keyword k = Record::keyword_byname(key);
-    if (k != DBA_KEY_ERROR)
-        setd_keyword(k, val);
-    else
-    {
-        Varcode code = resolve_varcode_safe(key);
-        switch (code)
-        {
-            case WR_VAR(0, 1, 1): block = lround(val); break;
-            case WR_VAR(0, 1, 2): station = lround(val); break;
-            default: error_consistency::throwf("cannot set query field %s to %f", key, val);
-        }
-    }
-}
-
-void Query::setc(const char* key, const char* val)
-{
-    dba_keyword k = Record::keyword_byname(key);
-    if (k != DBA_KEY_ERROR)
-        setc_keyword(k, val);
-    else
-    {
-        Varcode code = resolve_varcode_safe(key);
-        switch (code)
-        {
-            case WR_VAR(0, 1, 1): block = strtol(val, 0, 10); break;
-            case WR_VAR(0, 1, 2): station = strtol(val, 0, 10); break;
-            default: error_consistency::throwf("cannot set query field %s to %s", key, val);
-        }
-    }
-}
-
-void Query::sets(const char* key, const std::string& val)
-{
-    dba_keyword k = Record::keyword_byname(key);
-    if (k != DBA_KEY_ERROR)
-        sets_keyword(k, val);
-    else
-    {
-        Varcode code = resolve_varcode_safe(key);
-        switch (code)
-        {
-            case WR_VAR(0, 1, 1): block = stoi(val); break;
-            case WR_VAR(0, 1, 2): station = stoi(val); break;
-            default: error_consistency::throwf("cannot set query field %s to %s", key, val.c_str());
-        }
-    }
-}
-
-void Query::setf(const char* key, const char* val)
-{
-    dba_keyword k = Record::keyword_byname(key);
-    if (k != DBA_KEY_ERROR)
-        setf_keyword(k, val);
-    else
-    {
-        Varcode code = resolve_varcode_safe(key);
-        switch (code)
-        {
-            case WR_VAR(0, 1, 1): block = strtol(val, 0, 10); break;
-            case WR_VAR(0, 1, 2): station = strtol(val, 0, 10); break;
-            default: error_consistency::throwf("cannot set query field %s to %s", key, val);
-        }
-    }
-}
-
-
-void Query::unset(const char* key)
-{
-    dba_keyword k = Record::keyword_byname(key);
-    if (k == DBA_KEY_ERROR)
-        error_notfound::throwf("unknown key %s", key);
-    return unset_keyword(k);
-}
-
-void Query::seti_keyword(dba_keyword key, int val)
-{
-    switch (key)
-    {
-        case DBA_KEY_PRIORITY: prio_min = prio_max = val; break;
-        case DBA_KEY_PRIOMAX: prio_max = val; break;
-        case DBA_KEY_PRIOMIN: prio_min = val; break;
-        case DBA_KEY_ANA_ID: ana_id = val; break;
-        case DBA_KEY_MOBILE: mobile = val; break;
-        case DBA_KEY_LAT: coords_min.set_lat(val); coords_max.set_lat(val); break;
-        case DBA_KEY_LON: coords_min.set_lon(val); coords_max.set_lon(val); break;
-        case DBA_KEY_LATMAX: coords_max.set_lat(val); break;
-        case DBA_KEY_LATMIN: coords_min.set_lat(val); break;
-        case DBA_KEY_LONMAX: coords_max.set_lon(val); break;
-        case DBA_KEY_LONMIN: coords_min.set_lon(val); break;
-        case DBA_KEY_YEAR: datetime_min.year = datetime_max.year = val; break;
-        case DBA_KEY_MONTH: datetime_min.month = datetime_max.month = val; break;
-        case DBA_KEY_DAY: datetime_min.day = datetime_max.day = val; break;
-        case DBA_KEY_HOUR: datetime_min.hour = datetime_max.hour = val; break;
-        case DBA_KEY_MIN: datetime_min.minute = datetime_max.minute = val; break;
-        case DBA_KEY_SEC: datetime_min.second = datetime_max.second = val; break;
-        case DBA_KEY_YEARMAX: datetime_max.year = val; break;
-        case DBA_KEY_YEARMIN: datetime_min.year = val; break;
-        case DBA_KEY_MONTHMAX: datetime_max.month = val; break;
-        case DBA_KEY_MONTHMIN: datetime_min.month = val; break;
-        case DBA_KEY_DAYMAX: datetime_max.day = val; break;
-        case DBA_KEY_DAYMIN: datetime_min.day = val; break;
-        case DBA_KEY_HOURMAX: datetime_max.hour = val; break;
-        case DBA_KEY_HOURMIN: datetime_min.hour = val; break;
-        case DBA_KEY_MINUMAX: datetime_max.minute = val; break;
-        case DBA_KEY_MINUMIN: datetime_min.minute = val; break;
-        case DBA_KEY_SECMAX: datetime_max.second = val; break;
-        case DBA_KEY_SECMIN: datetime_min.second = val; break;
-        case DBA_KEY_LEVELTYPE1: level.ltype1 = val; break;
-        case DBA_KEY_L1: level.l1 = val; break;
-        case DBA_KEY_LEVELTYPE2: level.ltype2 = val; break;
-        case DBA_KEY_L2: level.l2 = val; break;
-        case DBA_KEY_PINDICATOR: trange.pind = val; break;
-        case DBA_KEY_P1: trange.p1 = val; break;
-        case DBA_KEY_P2: trange.p2 = val; break;
-        case DBA_KEY_VAR:
-        case DBA_KEY_VARLIST:
-             varcodes.clear();
-             varcodes.insert((Varcode)val);
-             break;
-        case DBA_KEY_CONTEXT_ID: data_id = val; break;
-        case DBA_KEY_LIMIT: limit = val; break;
-        case DBA_KEY_ERROR:
-        case DBA_KEY_REP_MEMO:
-        case DBA_KEY_IDENT:
-        case DBA_KEY_QUERY:
-        case DBA_KEY_ANA_FILTER:
-        case DBA_KEY_DATA_FILTER:
-        case DBA_KEY_ATTR_FILTER:
-        case DBA_KEY_VAR_RELATED:
-        case DBA_KEY_COUNT:
-            error_consistency::throwf("cannot set key %s to integer value %d", Record::keyword_name(key), val);
-    }
-}
-
-void Query::setd_keyword(dba_keyword key, double val)
-{
-    switch (key)
-    {
-        case DBA_KEY_PRIORITY: prio_min = prio_max = lround(val); break;
-        case DBA_KEY_PRIOMAX: prio_max = lround(val); break;
-        case DBA_KEY_PRIOMIN: prio_min = lround(val); break;
-        case DBA_KEY_ANA_ID: ana_id = lround(val); break;
-        case DBA_KEY_MOBILE: mobile = lround(val); break;
-        case DBA_KEY_LAT: coords_min.set_lat(val); coords_max.set_lat(val); break;
-        case DBA_KEY_LON: coords_min.set_lon(val); coords_max.set_lon(val); break;
-        case DBA_KEY_LATMAX: coords_max.set_lat(val); break;
-        case DBA_KEY_LATMIN: coords_min.set_lat(val); break;
-        case DBA_KEY_LONMAX: coords_max.set_lon(val); break;
-        case DBA_KEY_LONMIN: coords_min.set_lon(val); break;
-        case DBA_KEY_YEAR: datetime_min.year = datetime_max.year = lround(val); break;
-        case DBA_KEY_MONTH: datetime_min.month = datetime_max.month = lround(val); break;
-        case DBA_KEY_DAY: datetime_min.day = datetime_max.day = lround(val); break;
-        case DBA_KEY_HOUR: datetime_min.hour = datetime_max.hour = lround(val); break;
-        case DBA_KEY_MIN: datetime_min.minute = datetime_max.minute = lround(val); break;
-        case DBA_KEY_SEC: datetime_min.second = datetime_max.second = lround(val); break;
-        case DBA_KEY_YEARMAX: datetime_max.year = lround(val); break;
-        case DBA_KEY_YEARMIN: datetime_min.year = lround(val); break;
-        case DBA_KEY_MONTHMAX: datetime_max.month = lround(val); break;
-        case DBA_KEY_MONTHMIN: datetime_min.month = lround(val); break;
-        case DBA_KEY_DAYMAX: datetime_max.day = lround(val); break;
-        case DBA_KEY_DAYMIN: datetime_min.day = lround(val); break;
-        case DBA_KEY_HOURMAX: datetime_max.hour = lround(val); break;
-        case DBA_KEY_HOURMIN: datetime_min.hour = lround(val); break;
-        case DBA_KEY_MINUMAX: datetime_max.minute = lround(val); break;
-        case DBA_KEY_MINUMIN: datetime_min.minute = lround(val); break;
-        case DBA_KEY_SECMAX: datetime_max.second = lround(val); break;
-        case DBA_KEY_SECMIN: datetime_min.second = lround(val); break;
-        case DBA_KEY_LEVELTYPE1: level.ltype1 = lround(val); break;
-        case DBA_KEY_L1: level.l1 = lround(val); break;
-        case DBA_KEY_LEVELTYPE2: level.ltype2 = lround(val); break;
-        case DBA_KEY_L2: level.l2 = lround(val); break;
-        case DBA_KEY_PINDICATOR: trange.pind = lround(val); break;
-        case DBA_KEY_P1: trange.p1 = lround(val); break;
-        case DBA_KEY_P2: trange.p2 = lround(val); break;
-        case DBA_KEY_CONTEXT_ID: data_id = lround(val); break;
-        case DBA_KEY_LIMIT: limit = lround(val); break;
-        case DBA_KEY_ERROR:
-        case DBA_KEY_REP_MEMO:
-        case DBA_KEY_IDENT:
-        case DBA_KEY_VAR:
-        case DBA_KEY_VARLIST:
-        case DBA_KEY_QUERY:
-        case DBA_KEY_ANA_FILTER:
-        case DBA_KEY_DATA_FILTER:
-        case DBA_KEY_ATTR_FILTER:
-        case DBA_KEY_VAR_RELATED:
-        case DBA_KEY_COUNT:
-            error_consistency::throwf("cannot set key %s to floating point value %f", Record::keyword_name(key), val);
-    }
-}
-
-void Query::setc_keyword(dba_keyword key, const char* val)
-{
-    switch (key)
-    {
-        case DBA_KEY_PRIORITY: prio_min = prio_max = strtol(val, 0, 10); break;
-        case DBA_KEY_PRIOMAX: prio_max = strtol(val, 0, 10); break;
-        case DBA_KEY_PRIOMIN: prio_min = strtol(val, 0, 10); break;
-        case DBA_KEY_REP_MEMO: rep_memo = val; break;
-        case DBA_KEY_ANA_ID: ana_id = strtol(val, 0, 10); break;
-        case DBA_KEY_MOBILE: mobile = strtol(val, 0, 10); break;
-        case DBA_KEY_IDENT: has_ident = true; ident = val; break;
-        case DBA_KEY_LAT: { int lat = strtol(val, 0, 10); coords_min.set_lat(lat); coords_max.set_lat(lat); } break;
-        case DBA_KEY_LON: { int lon = strtol(val, 0, 10); coords_min.set_lon(lon); coords_max.set_lon(lon); } break;
-        case DBA_KEY_LATMAX: coords_max.set_lat((int)strtol(val, 0, 10)); break;
-        case DBA_KEY_LATMIN: coords_min.set_lat((int)strtol(val, 0, 10)); break;
-        case DBA_KEY_LONMAX: coords_max.set_lon((int)strtol(val, 0, 10)); break;
-        case DBA_KEY_LONMIN: coords_min.set_lon((int)strtol(val, 0, 10)); break;
-        case DBA_KEY_YEAR: datetime_min.year = datetime_max.year = strtol(val, 0, 10); break;
-        case DBA_KEY_MONTH: datetime_min.month = datetime_max.month = strtol(val, 0, 10); break;
-        case DBA_KEY_DAY: datetime_min.day = datetime_max.day = strtol(val, 0, 10); break;
-        case DBA_KEY_HOUR: datetime_min.hour = datetime_max.hour = strtol(val, 0, 10); break;
-        case DBA_KEY_MIN: datetime_min.minute = datetime_max.minute = strtol(val, 0, 10); break;
-        case DBA_KEY_SEC: datetime_min.second = datetime_max.second = strtol(val, 0, 10); break;
-        case DBA_KEY_YEARMAX: datetime_max.year = strtol(val, 0, 10); break;
-        case DBA_KEY_YEARMIN: datetime_min.year = strtol(val, 0, 10); break;
-        case DBA_KEY_MONTHMAX: datetime_max.month = strtol(val, 0, 10); break;
-        case DBA_KEY_MONTHMIN: datetime_min.month = strtol(val, 0, 10); break;
-        case DBA_KEY_DAYMAX: datetime_max.day = strtol(val, 0, 10); break;
-        case DBA_KEY_DAYMIN: datetime_min.day = strtol(val, 0, 10); break;
-        case DBA_KEY_HOURMAX: datetime_max.hour = strtol(val, 0, 10); break;
-        case DBA_KEY_HOURMIN: datetime_min.hour = strtol(val, 0, 10); break;
-        case DBA_KEY_MINUMAX: datetime_max.minute = strtol(val, 0, 10); break;
-        case DBA_KEY_MINUMIN: datetime_min.minute = strtol(val, 0, 10); break;
-        case DBA_KEY_SECMAX: datetime_max.second = strtol(val, 0, 10); break;
-        case DBA_KEY_SECMIN: datetime_min.second = strtol(val, 0, 10); break;
-        case DBA_KEY_LEVELTYPE1: level.ltype1 = strtol(val, 0, 10); break;
-        case DBA_KEY_L1: level.l1 = strtol(val, 0, 10); break;
-        case DBA_KEY_LEVELTYPE2: level.ltype2 = strtol(val, 0, 10); break;
-        case DBA_KEY_L2: level.l2 = strtol(val, 0, 10); break;
-        case DBA_KEY_PINDICATOR: trange.pind = strtol(val, 0, 10); break;
-        case DBA_KEY_P1: trange.p1 = strtol(val, 0, 10); break;
-        case DBA_KEY_P2: trange.p2 = strtol(val, 0, 10); break;
-        case DBA_KEY_VAR:
-            varcodes.clear();
-            varcodes.insert(resolve_varcode_safe(val));
-            break;
-        case DBA_KEY_VARLIST:
-            varcodes.clear();
-            resolve_varlist_safe(val, varcodes);
-            break;
-        case DBA_KEY_CONTEXT_ID: data_id = strtol(val, 0, 10); break;
-        case DBA_KEY_QUERY: query = val; break;
-        case DBA_KEY_ANA_FILTER: ana_filter = val; break;
-        case DBA_KEY_DATA_FILTER: data_filter = val; break;
-        case DBA_KEY_ATTR_FILTER: attr_filter = val; break;
-        case DBA_KEY_LIMIT: limit = strtol(val, 0, 10); break;
-        case DBA_KEY_ERROR:
-        case DBA_KEY_VAR_RELATED:
-        case DBA_KEY_COUNT:
-            error_consistency::throwf("cannot set key %s to string value %s", Record::keyword_name(key), val);
-    }
-}
-
-void Query::sets_keyword(dba_keyword key, const std::string& val)
-{
-    switch (key)
-    {
-        case DBA_KEY_PRIORITY: prio_min = prio_max = stoi(val); break;
-        case DBA_KEY_PRIOMAX: prio_max = stoi(val); break;
-        case DBA_KEY_PRIOMIN: prio_min = stoi(val); break;
-        case DBA_KEY_REP_MEMO: rep_memo = val; break;
-        case DBA_KEY_ANA_ID: ana_id = stoi(val); break;
-        case DBA_KEY_MOBILE: mobile = stoi(val); break;
-        case DBA_KEY_IDENT: has_ident = true; ident = val; break;
-        case DBA_KEY_LAT: { int lat = stoi(val); coords_min.set_lat(lat); coords_max.set_lat(lat); }; break;
-        case DBA_KEY_LON: { int lon = stoi(val); coords_min.set_lon(lon); coords_max.set_lon(lon); }; break;
-        case DBA_KEY_LATMAX: coords_max.set_lat(stoi(val)); break;
-        case DBA_KEY_LATMIN: coords_min.set_lat(stoi(val)); break;
-        case DBA_KEY_LONMAX: coords_max.set_lon(stoi(val)); break;
-        case DBA_KEY_LONMIN: coords_min.set_lon(stoi(val)); break;
-        case DBA_KEY_YEAR: datetime_min.year = datetime_max.year = stoi(val); break;
-        case DBA_KEY_MONTH: datetime_min.month = datetime_max.month = stoi(val); break;
-        case DBA_KEY_DAY: datetime_min.day = datetime_max.day = stoi(val); break;
-        case DBA_KEY_HOUR: datetime_min.hour = datetime_max.hour = stoi(val); break;
-        case DBA_KEY_MIN: datetime_min.minute = datetime_max.minute = stoi(val); break;
-        case DBA_KEY_SEC: datetime_min.second = datetime_max.second = stoi(val); break;
-        case DBA_KEY_YEARMAX: datetime_max.year = stoi(val); break;
-        case DBA_KEY_YEARMIN: datetime_min.year = stoi(val); break;
-        case DBA_KEY_MONTHMAX: datetime_max.month = stoi(val); break;
-        case DBA_KEY_MONTHMIN: datetime_min.month = stoi(val); break;
-        case DBA_KEY_DAYMAX: datetime_max.day = stoi(val); break;
-        case DBA_KEY_DAYMIN: datetime_min.day = stoi(val); break;
-        case DBA_KEY_HOURMAX: datetime_max.hour = stoi(val); break;
-        case DBA_KEY_HOURMIN: datetime_min.hour = stoi(val); break;
-        case DBA_KEY_MINUMAX: datetime_max.minute = stoi(val); break;
-        case DBA_KEY_MINUMIN: datetime_min.minute = stoi(val); break;
-        case DBA_KEY_SECMAX: datetime_max.second = stoi(val); break;
-        case DBA_KEY_SECMIN: datetime_min.second = stoi(val); break;
-        case DBA_KEY_LEVELTYPE1: level.ltype1 = stoi(val); break;
-        case DBA_KEY_L1: level.l1 = stoi(val); break;
-        case DBA_KEY_LEVELTYPE2: level.ltype2 = stoi(val); break;
-        case DBA_KEY_L2: level.l2 = stoi(val); break;
-        case DBA_KEY_PINDICATOR: trange.pind = stoi(val); break;
-        case DBA_KEY_P1: trange.p1 = stoi(val); break;
-        case DBA_KEY_P2: trange.p2 = stoi(val); break;
-        case DBA_KEY_VAR:
-            varcodes.clear();
-            varcodes.insert(resolve_varcode_safe(val));
-            break;
-        case DBA_KEY_VARLIST:
-            varcodes.clear();
-            resolve_varlist_safe(val, varcodes);
-            break;
-        case DBA_KEY_CONTEXT_ID: data_id = stoi(val); break;
-        case DBA_KEY_QUERY: query = val; break;
-        case DBA_KEY_ANA_FILTER: ana_filter = val; break;
-        case DBA_KEY_DATA_FILTER: data_filter = val; break;
-        case DBA_KEY_ATTR_FILTER: attr_filter = val; break;
-        case DBA_KEY_LIMIT: limit = stoi(val); break;
-        case DBA_KEY_ERROR:
-        case DBA_KEY_VAR_RELATED:
-        case DBA_KEY_COUNT:
-            error_consistency::throwf("cannot set key %s to string value %s", Record::keyword_name(key), val.c_str());
-    }
-}
-
-void Query::setf_keyword(dba_keyword key, const char* val)
-{
-    // NULL or empty string, unset()
-    if (val == NULL || val[0] == 0)
-    {
-        unset_keyword(key);
-        return;
-    }
-
-    // Get the Varinfo for this key
-    Varinfo i = Record::keyword_info(key);
-
-    // If we're a string, it's easy
-    if (i->is_string())
-    {
-        setc_keyword(key, val);
-        return;
-    }
-
-    // Else use strtod
-    setd_keyword(key, strtod(val, NULL));
-}
-
-void Query::unset_keyword(dba_keyword key)
-{
-    switch (key)
-    {
-        case DBA_KEY_PRIORITY: prio_min = prio_max = MISSING_INT; break;
-        case DBA_KEY_PRIOMAX: prio_max = MISSING_INT; break;
-        case DBA_KEY_PRIOMIN: prio_min = MISSING_INT; break;
-        case DBA_KEY_REP_MEMO: rep_memo.clear(); break;
-        case DBA_KEY_ANA_ID: ana_id = MISSING_INT; break;
-        case DBA_KEY_MOBILE: mobile = MISSING_INT; break;
-        case DBA_KEY_IDENT: has_ident = false; ident.clear(); break;
-        case DBA_KEY_LAT: coords_min.set_lat(MISSING_INT); coords_max.set_lat(MISSING_INT); break;
-        case DBA_KEY_LON: coords_min.set_lon(MISSING_INT); coords_max.set_lon(MISSING_INT); break;
-        case DBA_KEY_LATMAX: coords_max.lat = MISSING_INT; break;
-        case DBA_KEY_LATMIN: coords_min.lat = MISSING_INT; break;
-        case DBA_KEY_LONMAX: coords_max.lon = MISSING_INT; break;
-        case DBA_KEY_LONMIN: coords_min.lon = MISSING_INT; break;
-        case DBA_KEY_YEAR: datetime_min.year = datetime_max.year = 0xffff; break;
-        case DBA_KEY_MONTH: datetime_min.month = datetime_max.month = 0xff; break;
-        case DBA_KEY_DAY: datetime_min.day = datetime_max.day = 0xff; break;
-        case DBA_KEY_HOUR: datetime_min.hour = datetime_max.hour = 0xff; break;
-        case DBA_KEY_MIN: datetime_min.minute = datetime_max.minute = 0xff; break;
-        case DBA_KEY_SEC: datetime_min.second = datetime_max.second = 0xff; break;
-        case DBA_KEY_YEARMAX: datetime_max.year = 0xffff; break;
-        case DBA_KEY_YEARMIN: datetime_min.year = 0xffff; break;
-        case DBA_KEY_MONTHMAX: datetime_max.month = 0xff; break;
-        case DBA_KEY_MONTHMIN: datetime_min.month = 0xff; break;
-        case DBA_KEY_DAYMAX: datetime_max.day = 0xff; break;
-        case DBA_KEY_DAYMIN: datetime_min.day = 0xff; break;
-        case DBA_KEY_HOURMAX: datetime_max.hour = 0xff; break;
-        case DBA_KEY_HOURMIN: datetime_min.hour = 0xff; break;
-        case DBA_KEY_MINUMAX: datetime_max.minute = 0xff; break;
-        case DBA_KEY_MINUMIN: datetime_min.minute = 0xff; break;
-        case DBA_KEY_SECMAX: datetime_max.second = 0xff; break;
-        case DBA_KEY_SECMIN: datetime_min.second = 0xff; break;
-        case DBA_KEY_LEVELTYPE1: level.ltype1 = MISSING_INT; break;
-        case DBA_KEY_L1: level.l1 = MISSING_INT; break;
-        case DBA_KEY_LEVELTYPE2: level.ltype2 = MISSING_INT; break;
-        case DBA_KEY_L2: level.l2 = MISSING_INT; break;
-        case DBA_KEY_PINDICATOR: trange.pind = MISSING_INT; break;
-        case DBA_KEY_P1: trange.p1 = MISSING_INT; break;
-        case DBA_KEY_P2: trange.p2 = MISSING_INT; break;
-        case DBA_KEY_VAR: varcodes.clear(); break;
-        case DBA_KEY_VARLIST: varcodes.clear(); break;
-        case DBA_KEY_CONTEXT_ID: data_id = MISSING_INT; break;
-        case DBA_KEY_QUERY: query.clear(); break;
-        case DBA_KEY_ANA_FILTER: ana_filter.clear(); break;
-        case DBA_KEY_DATA_FILTER: data_filter.clear(); break;
-        case DBA_KEY_ATTR_FILTER: attr_filter.clear(); break;
-        case DBA_KEY_LIMIT: limit = MISSING_INT; break;
-        case DBA_KEY_ERROR:
-        case DBA_KEY_VAR_RELATED:
-        case DBA_KEY_COUNT:
-            error_consistency::throwf("cannot unset key %s", Record::keyword_name(key));
-    }
-}
-
 void Query::set_from_record(const dballe::Record& rec)
 {
     const auto& r = core::Record::downcast(rec);
-    // Set keys
-    r.iter_keys([&](dba_keyword key, const wreport::Var& var) {
-        if (var.value())
-            setc_keyword(key, var.value());
-        return true;
-    });
 
-    // Set block and station, if present
-    for (const auto& v : r.vars())
-        switch (v->code())
-        {
-            case WR_VAR(0, 1, 1): if (v->isset()) block = v->enqi(); break;
-            case WR_VAR(0, 1, 2): if (v->isset()) station = v->enqi(); break;
-        }
-
+    want_missing = 0;
+    // Ana ID
+    ana_id = rec.enq("ana_id", MISSING_INT);
+    // Priority
+    int i = rec.enq("priority", MISSING_INT);
+    if (i != MISSING_INT)
+        prio_min = prio_max = i;
+    else
+    {
+        prio_min = rec.enq("priomin", MISSING_INT);
+        prio_max = rec.enq("priomax", MISSING_INT);
+    }
+    // Network
+    rep_memo = rec.enq("rep_memo", "");
+    // Mobile
+    mobile = rec.enq("mobile", MISSING_INT);
+    // Ident
+    if (const Var* var = rec.get("ident"))
+    {
+        has_ident = true;
+        ident = var->enqc();
+    } else {
+        has_ident = false;
+        ident.clear();
+    }
+    // Latitude
+    i = rec.enq("lat", MISSING_INT);
+    if (i != MISSING_INT)
+        latrange.set(i, i);
+    else
+    {
+        int imin = rec.enq("latmin", MISSING_INT);
+        int imax = rec.enq("latmax", MISSING_INT);
+        latrange.set(
+                imin == MISSING_INT ? LatRange::IMIN : imin,
+                imax == MISSING_INT ? LatRange::IMAX : imax);
+    }
+    // Longitude
+    i = rec.enq("lon", MISSING_INT);
+    if (i != MISSING_INT)
+        lonrange.set(i, i);
+    else
+        lonrange.set(rec.enq("lonmin", MISSING_INT), rec.enq("lonmax", MISSING_INT));
+    // Datetime
+    int ye = rec.enq("year", MISSING_INT);
+    int mo = rec.enq("month", MISSING_INT);
+    int da = rec.enq("day", MISSING_INT);
+    int ho = rec.enq("hour", MISSING_INT);
+    int mi = rec.enq("min", MISSING_INT);
+    int se = rec.enq("sec", MISSING_INT);
+    int yemin = rec.enq("yearmin", MISSING_INT);
+    int momin = rec.enq("monthmin", MISSING_INT);
+    int damin = rec.enq("daymin", MISSING_INT);
+    int homin = rec.enq("hourmin", MISSING_INT);
+    int mimin = rec.enq("minumin", MISSING_INT);
+    int semin = rec.enq("secmin", MISSING_INT);
+    int yemax = rec.enq("yearmax", MISSING_INT);
+    int momax = rec.enq("monthmax", MISSING_INT);
+    int damax = rec.enq("daymax", MISSING_INT);
+    int homax = rec.enq("hourmax", MISSING_INT);
+    int mimax = rec.enq("minumax", MISSING_INT);
+    int semax = rec.enq("secmax", MISSING_INT);
+    // give absolute values priority over ranges
+    if (ye != MISSING_INT) yemin = yemax = ye;
+    if (mo != MISSING_INT) momin = momax = mo;
+    if (da != MISSING_INT) damin = damax = da;
+    if (ho != MISSING_INT) homin = homax = ho;
+    if (mi != MISSING_INT) mimin = mimax = mi;
+    if (se != MISSING_INT) semin = semax = se;
+    if (yemin == MISSING_INT)
+        datetime_min = Datetime();
+    else
+    {
+        datetime_min = Datetime(yemin,
+                momin == MISSING_INT ? 0xff : momin,
+                damin == MISSING_INT ? 0xff : damin,
+                homin == MISSING_INT ? 0xff : homin,
+                mimin == MISSING_INT ? 0xff : mimin,
+                semin == MISSING_INT ? 0xff : semin).lower_bound();
+        if (datetime_min.day > Date::days_in_month(datetime_min.year, datetime_min.month))
+            datetime_min.day = Date::days_in_month(datetime_min.year, datetime_min.month);
+    }
+    if (yemax == MISSING_INT)
+        datetime_max = Datetime();
+    else
+    {
+        datetime_max = Datetime(yemax,
+                momax == MISSING_INT ? 0xff : momax,
+                damax == MISSING_INT ? 0xff : damax,
+                homax == MISSING_INT ? 0xff : homax,
+                mimax == MISSING_INT ? 0xff : mimax,
+                semax == MISSING_INT ? 0xff : semax).upper_bound();
+        if (datetime_max.day > Date::days_in_month(datetime_max.year, datetime_max.month))
+            datetime_max.day = Date::days_in_month(datetime_max.year, datetime_max.month);
+    }
+    // Level
+    level = r.get_level();
+    // Trange
+    trange = r.get_trange();
+    // Varcodes
+    varcodes.clear();
+    if (const Var* var = rec.get("var"))
+        varcodes.insert(resolve_varcode_safe(var->enq("")));
+    else if (const Var* var = rec.get("varlist"))
+        resolve_varlist_safe(var->enq(""), varcodes);
+    // Query
+    query = rec.enq("query", "");
+    // Filters
+    ana_filter = rec.enq("ana_filter", "");
+    data_filter = rec.enq("data_filter", "");
+    attr_filter = rec.enq("attr_filter", "");
+    // Limit
+    limit = rec.enq("limit", MISSING_INT);
+    // WMO block/station
+    block = rec.enq("block", MISSING_INT);
+    station = rec.enq("station", MISSING_INT);
+    // Data ID
+    data_id = rec.enq("context_id", MISSING_INT);
+    // Whether we query station vars
     query_station_vars = r.is_ana_context();
-}
-
-void Query::set_from_string(const char* str)
-{
-    // Split the input as name=val
-    const char* s = strchr(str, '=');
-
-    if (!s) error_consistency::throwf("there should be an = between the name and the value in '%s'", str);
-
-    string key(str, s - str);
-    setf(key.c_str(), s + 1);
 }
 
 void Query::set_from_test_string(const std::string& s)
 {
-    if (s.empty()) return;
-    size_t cur = 0;
-    while (true)
+    if (s.empty())
+        clear();
+    else
     {
-        size_t next = s.find(", ", cur);
-        if (next == string::npos)
-        {
-            set_from_string(s.substr(cur).c_str());
-            break;
-        } else {
-            set_from_string(s.substr(cur, next - cur).c_str());
-            cur = next + 2;
-        }
+        core::Record rec;
+        rec.set_from_test_string(s);
+        set_from_record(rec);
     }
 }
 
@@ -608,44 +280,6 @@ bool is_subrange(const Datetime& sub1, const Datetime& sub2, const Datetime& sup
     return true;
 }
 
-// Return true if sub1--sub2 is contained in sup1--sup2, or is the same
-bool is_subrange(const Coords& sub1, const Coords& sub2, const Coords& sup1, const Coords& sup2)
-{
-    // Check latitude first
-    if (!is_subrange(sub1.lat, sub2.lat, sup1.lat, sup2.lat)) return false;
-
-    // Both longitude extremes must be either missing or defined
-    if (sup1.lon == MISSING_INT && sup2.lon == MISSING_INT) return true;
-    if (sub1.lon == MISSING_INT && sub2.lon == MISSING_INT) return false;
-    if (sup1.lon == MISSING_INT || sup2.lon == MISSING_INT
-     || sub1.lon == MISSING_INT || sub2.lon == MISSING_INT)
-        throw error_consistency("queries cannot contain an open ended longitude range");
-
-    // Longitude ranges can match outside or inside the interval
-    if (sup1.lon < sup2.lon)
-    {
-        // sup matches inside the interval
-        if (sub1.lon < sub2.lon)
-        {
-            // sub matches inside the interval
-            return sub1.lon >= sup1.lon && sub2.lon <= sup2.lon;
-        } else {
-            // sub matches outside the interval
-            return false;
-        }
-    } else {
-        // sup matches outside the interval
-        if (sub1.lon < sub2.lon)
-        {
-            // sub matches inside the interval
-            return sub2.lon <= sup1.lon || sub1.lon >= sup2.lon;
-        } else {
-            // sub matches outside the interval
-            return sub1.lon <= sup1.lon || sub2.lon >= sup2.lon;
-        }
-    }
-}
-
 }
 
 bool Query::is_subquery(const dballe::Query& other_gen) const
@@ -658,7 +292,8 @@ bool Query::is_subquery(const dballe::Query& other_gen) const
     if (removed_or_changed(mobile, other.mobile)) return false;
     if (other.has_ident && !has_ident) return false;
     if (other.has_ident && has_ident && other.ident != ident) return false;
-    if (!is_subrange(coords_min, coords_max, other.coords_min, other.coords_max)) return false;
+    if (!other.latrange.contains(latrange)) return false;
+    if (!other.lonrange.contains(lonrange)) return false;
     if (!is_subrange(datetime_min.lower_bound(), datetime_max.upper_bound(),
                 other.datetime_min.lower_bound(), other.datetime_max.upper_bound())) return false;
     if (removed_or_changed(level.ltype1, other.level.ltype1)) return false;
@@ -677,7 +312,7 @@ bool Query::is_subquery(const dballe::Query& other_gen) const
     if (mods != omods)
     {
         // The only relevant bits is query=best, all the rest we can safely ignore
-        if (mods & DBA_DB_MODIFIER_BEST != omods & DBA_DB_MODIFIER_BEST) return false;
+        if ((mods & DBA_DB_MODIFIER_BEST) != (omods & DBA_DB_MODIFIER_BEST)) return false;
     }
     if (removed_or_changed(ana_filter, other.ana_filter)) return false;
     if (removed_or_changed(data_filter, other.data_filter)) return false;
@@ -738,21 +373,26 @@ void Query::to_vars(std::function<void(const char*, unique_ptr<Var>&&)> dest) co
         vargen.gen(DBA_KEY_MOBILE, mobile);
     if (has_ident)
         vargen.gen(DBA_KEY_IDENT, ident);
-    if (coords_min.lat == coords_max.lat)
+    if (!latrange.is_missing())
     {
-        if (coords_min.lat != MISSING_INT) vargen.gen(DBA_KEY_LAT, coords_min.lat);
-    } else {
-        if (coords_min.lat != MISSING_INT) vargen.gen(DBA_KEY_LATMIN, coords_min.lat);
-        if (coords_max.lat != MISSING_INT) vargen.gen(DBA_KEY_LATMAX, coords_max.lat);
+        if (latrange.imin == latrange.imax)
+            vargen.gen(DBA_KEY_LAT, latrange.imin);
+        else
+        {
+            if (latrange.imin != LatRange::IMIN) vargen.gen(DBA_KEY_LATMIN, latrange.imin);
+            if (latrange.imax != LatRange::IMAX) vargen.gen(DBA_KEY_LATMAX, latrange.imax);
+        }
     }
-    if (coords_min.lon == coords_max.lon)
+    if (!lonrange.is_missing())
     {
-        if (coords_min.lon != MISSING_INT) vargen.gen(DBA_KEY_LON, coords_min.lon);
-    } else {
-        if (coords_min.lon != MISSING_INT) vargen.gen(DBA_KEY_LONMIN, coords_min.lon);
-        if (coords_max.lon != MISSING_INT) vargen.gen(DBA_KEY_LONMAX, coords_max.lon);
+        if (lonrange.imin == lonrange.imax)
+            vargen.gen(DBA_KEY_LON, lonrange.imin);
+        else
+        {
+            vargen.gen(DBA_KEY_LONMIN, lonrange.imin);
+            vargen.gen(DBA_KEY_LONMAX, lonrange.imax);
+        }
     }
-
     if (datetime_min == datetime_max)
     {
         if (!datetime_min.is_missing())
@@ -850,21 +490,33 @@ struct Printer
         first = false;
     }
 
-    void print_coords(const char* suffix, const Coords& coords)
+    void print_latrange(const LatRange& latrange)
     {
-        if (coords.lat != MISSING_INT)
+        if (latrange.is_missing()) return;
+        double dmin, dmax;
+        latrange.get(dmin, dmax);
+        if (dmin != LatRange::DMIN)
         {
             if (!first) fputs(", ", out);
-            fprintf(out, "lat%s=%.5f", suffix, coords.dlat());
+            fprintf(out, "latmin=%.5f", dmin);
             first = false;
         }
+        if (dmax != LatRange::DMAX)
+        {
+            if (!first) fputs(", ", out);
+            fprintf(out, "latmax=%.5f", dmax);
+            first = false;
+        }
+    }
 
-        if (coords.lon != MISSING_INT)
-        {
-            if (!first) fputs(", ", out);
-            fprintf(out, "lon%s=%.5f", suffix, coords.dlon());
-            first = false;
-        }
+    void print_lonrange(const LonRange& lonrange)
+    {
+        if (lonrange.is_missing()) return;
+        double dmin, dmax;
+        lonrange.get(dmin, dmax);
+        if (!first) fputs(", ", out);
+        fprintf(out, "lonmin=%.5f, lonmax=%.5f", dmin, dmax);
+        first = false;
     }
 
     void print_datetime(const char* name, const Datetime& dt)
@@ -922,8 +574,8 @@ struct Printer
         print_str("rep_memo", !q.rep_memo.empty(), q.rep_memo);
         print_int("mobile", q.mobile);
         print_str("ident", q.has_ident, q.ident);
-        print_coords("min", q.coords_min);
-        print_coords("max", q.coords_max);
+        print_latrange(q.latrange);
+        print_lonrange(q.lonrange);
         print_datetime("datetime_min", q.datetime_min);
         print_datetime("datetime_max", q.datetime_max);
         print_level("level", q.level);
@@ -958,17 +610,16 @@ void Query::serialize(JSONWriter& out) const
     if (!rep_memo.empty()) out.add("rep_memo", rep_memo);
     if (mobile != MISSING_INT) out.add("mobile", mobile);
     if (has_ident) out.add("ident", ident);
-    if (coords_min == coords_max)
+    if (!latrange.is_missing())
     {
-        if (!coords_min.is_missing()) out.add("coords", coords_min);
-    } else {
-        if (!coords_min.is_missing()) out.add("coords_min", coords_min);
-        if (!coords_max.is_missing()) out.add("coords_max", coords_min);
+        if (latrange.imin != LatRange::IMIN) out.add("latmin", latrange.imin);
+        if (latrange.imax != LatRange::IMAX) out.add("latmax", latrange.imax);
     }
-    if (coords_min.lat != MISSING_INT) out.add("latmin", coords_min.lat);
-    if (coords_min.lon != MISSING_INT) out.add("lonmin", coords_min.lon);
-    if (coords_max.lat != MISSING_INT) out.add("latmax", coords_max.lat);
-    if (coords_max.lon != MISSING_INT) out.add("lonmax", coords_max.lon);
+    if (!lonrange.is_missing())
+    {
+        out.add("lonmin", lonrange.imin);
+        out.add("lonmax", lonrange.imax);
+    }
     if (datetime_min == datetime_max)
     {
         if (!datetime_min.is_missing()) out.add("datetime", datetime_min);

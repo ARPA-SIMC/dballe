@@ -193,7 +193,8 @@ std::vector<Test> tests {
         // preserve the bug until the software that relies on it has been
         // migrated to use standard DB-All.e features.
         core::Query query;
-        query.coords_min = query.coords_max = Coords(11.0, 45.0);
+        query.latrange.set(11.0, 11.0);
+        query.lonrange.set(45.0, 45.0);
         auto cur = db.query_stations(query);
 #warning TODO: fix this test to give an error once we do not need to support this bug anymore
         //wassert(actual(cur->remaining()) == 0);

@@ -1,6 +1,7 @@
 #include "levtr.h"
 #include "results.h"
 #include "dballe/core/query.h"
+#include "dballe/core/record.h"
 #include "dballe/core/stlutils.h"
 #include <sstream>
 #include <iostream>

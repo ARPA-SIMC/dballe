@@ -199,12 +199,8 @@ std::vector<Test> tests {
         TRY_QUERY("lonmin=77., lonmax=76.54330", 4);
         TRY_QUERY("lonmin=77., lonmax=76.54320", 4);
         TRY_QUERY("lonmin=77., lonmax=-10", 0);
-        // Since Query has been introduced, longitude values are normalized so
-        // 360 is the same as 0, and -180 is the same as 180
-        //TRY_QUERY("lonmin=0., lonmax=360.", 4);
-        TRY_QUERY("lonmin=0., lonmax=360.", 0);
-        //TRY_QUERY("lonmin=-180., lonmax=180.", 4);
-        TRY_QUERY("lonmin=-180., lonmax=180.", 0);
+        TRY_QUERY("lonmin=0., lonmax=360.", 4);
+        TRY_QUERY("lonmin=-180., lonmax=180.", 4);
     }),
     Test("mobile", [](Fixture& f) {
         wruntest(f.populate<OldDballeTestFixture>);
