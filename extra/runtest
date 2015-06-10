@@ -1,4 +1,6 @@
-#!/bin/sh -e
+#!/bin/bash
+
+set -e
 
 # Limit to 1G of virtual memory
 ulimit -v 1000000
@@ -34,19 +36,27 @@ trap cleanup EXIT
 # Try to debug the libtool executable, if present
 DIR=`dirname $CMD`
 BASE=`basename $CMD`
-if [ ! -z "$DEBUGGER" ] && [ -x $DIR/.libs/lt-$BASE ]
+if [ ! -z "$DEBUGGER" ]
 then
-	echo "Running $DEBUGGER $DIR/.libs/lt-$BASE $ARGS"
+    if [ -x $DIR/.libs/lt-$BASE ]
+    then
+        CMD="$DIR/.libs/lt-$BASE"
+    elif [ "${BASE##*.}" = "py" ]
+    then
+        CMD="python $CMD"
+    fi
+
+	echo "Running $DEBUGGER $CMD $ARGS"
 	RES=0
-	if ! $DEBUGGER $DIR/.libs/lt-$BASE $ARGS
+	if ! $DEBUGGER $CMD $ARGS
 	then
 		RES=$?
 		echo "Failed with result $RES"
 	fi
 else
-	echo "Running $DEBUGGER $CMD $ARGS"
+	echo "Running $CMD $ARGS"
 	RES=0
-	if ! $DEBUGGER $CMD $ARGS
+	if ! $CMD $ARGS
 	then
 		RES=$?
 		echo "Failed with result $RES"
