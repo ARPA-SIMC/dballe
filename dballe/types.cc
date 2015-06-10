@@ -34,7 +34,7 @@ Date::Date(int ye, int mo, int da)
         if (da == MISSING_INT || da < 1)
             da = 1;
         else
-            day = min(da, days_in_month(ye, mo));
+            da = min(da, days_in_month(ye, mo));
 
         year = ye;
         month = mo;
