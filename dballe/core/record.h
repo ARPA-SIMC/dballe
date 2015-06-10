@@ -107,6 +107,24 @@ protected:
     /// Return true if the given variable is set in this record
     bool contains(wreport::Varcode parameter) const throw();
 
+    /**
+     * Look at the value of a parameter
+     *
+     * @return
+     *   A const pointer to the internal variable, or NULL if the variable has not
+     *   been found.
+     */
+    const wreport::Var* key_peek(dba_keyword parameter) const throw ();
+
+    /**
+     * Look at the value of a variable
+     *
+     * @return
+     *   A const pointer to the internal variable, or NULL if the variable has not
+     *   been found.
+     */
+    const wreport::Var* var_peek(wreport::Varcode code) const throw ();
+
 public:
 	Record();
 	Record(const Record& rec);
@@ -191,72 +209,6 @@ public:
 	 */
 	void set_to_difference(const Record& source1, const Record& source2);
 
-	/**
-	 * Look at the value of a parameter
-	 *
-	 * @return
-	 *   A const pointer to the internal variable, or NULL if the variable has not
-	 *   been found.
-	 */
-	const wreport::Var* key_peek(dba_keyword parameter) const throw ();
-
-	/**
-	 * Look at the value of a variable
-	 *
-	 * @return
-	 *   A const pointer to the internal variable, or NULL if the variable has not
-	 *   been found.
-	 */
-	const wreport::Var* var_peek(wreport::Varcode code) const throw ();
-
-	/**
-	 * Get the variable for an item
-	 *
-	 * @param name
-	 *   The name of the item to get the value for
-	 */
-	const wreport::Var* peek(const char* name) const;
-
-	/// Shortcut for key_peek
-	const wreport::Var* peek(dba_keyword parameter) const throw () { return key_peek(parameter); }
-
-	/// Shortcut for var_peek
-	const wreport::Var* peek(wreport::Varcode code) const throw () { return var_peek(code); }
-
-	/**
-	 * Look at the raw value of a keyword in the record, without raising errors.
-	 *
-	 * @param parameter
-	 *   The keyword to get the value for.
-	 * @return
-	 *   The raw string value, or NULL if the keyword has no value.
-	 */
-	const char* key_peek_value(dba_keyword parameter) const throw ();
-
-	/**
-	 * Look at the raw value of a variable in the record, without raising errors.
-	 *
-	 * @param code
-	 *   The variable to get the value for.  See @ref vartable.h
-	 * @return
-	 *   The raw string value, or NULL if the variable has no value.
-	 */
-	const char* var_peek_value(wreport::Varcode code) const throw ();
-
-	/**
-	 * Get the string value for an item
-	 *
-	 * @param name
-	 *   The name of the item to get the value for
-	 */
-	const char* peek_value(const char* name) const;
-
-	/// Shortcut for key_peek_value
-	const char* peek_value(dba_keyword parameter) const throw () { return key_peek_value(parameter); }
-
-	/// Shortcut for var_peek_value
-	const char* peek_value(wreport::Varcode code) const throw () { return var_peek_value(code); }
-
     /// Return the Var for a key, creating it if it is missing
     wreport::Var& obtain(const char* key);
 
@@ -266,6 +218,7 @@ public:
     /// Return the Var for a variable, creating it if it is missing
     wreport::Var& obtain(wreport::Varcode code);
 
+#if 0
     template<typename K>
     void copy(const Record& rec, K parameter)
     {
@@ -284,6 +237,7 @@ public:
         if (!mine or !theirs) return false;
         return *mine == *theirs;
     }
+#endif
 
     Level get_level() const;
     Trange get_trange() const;
@@ -367,6 +321,16 @@ public:
 	 *   day, hour, minute and seconds.
 	 */
 	void parse_date(int* values) const;
+
+    /**
+     * Look at the raw value of a keyword in the record, without raising errors.
+     *
+     * @param parameter
+     *   The keyword to get the value for.
+     * @return
+     *   The raw string value, or NULL if the keyword has no value.
+     */
+    const char* key_peek_value(dba_keyword parameter) const throw ();
 
 	/**
 	 * Set a value in the record according to an assignment encoded in a string.

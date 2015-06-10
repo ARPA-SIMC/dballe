@@ -282,7 +282,18 @@ void Record::set_lonrange(const LonRange& lr)
 
 const wreport::Var* Record::get(const char* key) const
 {
-    return peek(key);
+    Varcode code = 0;
+    if (key[0] != 'B' && (code = varcode_alias_resolve(key)) == 0)
+    {
+        dba_keyword param = keyword_byname(key);
+        if (param == DBA_KEY_ERROR)
+            error_notfound::throwf("looking for misspelled parameter \"%s\"", key);
+        return key_peek(param);
+    } else {
+        if (code == 0)
+            code = WR_STRING_TO_VAR(key + 1);
+        return var_peek(code);
+    }
 }
 
 Record& Record::operator=(const Record& rec)
@@ -570,39 +581,10 @@ const Var* Record::var_peek(Varcode code) const throw ()
 	return m_vars[pos];
 }
 
-const wreport::Var* Record::peek(const char* name) const
-{
-	Varcode code = 0;
-	if (name[0] != 'B' && (code = varcode_alias_resolve(name)) == 0)
-	{
-		dba_keyword param = keyword_byname(name);
-		if (param == DBA_KEY_ERROR)
-			error_notfound::throwf("looking for misspelled parameter \"%s\"", name);
-		return key_peek(param);
-	} else {
-		if (code == 0)
-			code = WR_STRING_TO_VAR(name + 1);
-		return var_peek(code);
-	}
-}
-
 const char* Record::key_peek_value(dba_keyword parameter) const throw ()
 {
 	const Var* res = key_peek(parameter);
 	return res ? res->value() : NULL;
-}
-
-const char* Record::var_peek_value(Varcode code) const throw ()
-{
-	const Var* res = var_peek(code);
-	return res ? res->value() : NULL;
-}
-
-const char* Record::peek_value(const char* name) const
-{
-	const Var* var = peek(name);
-	if (var == NULL) return NULL;
-	return var->value();
 }
 
 void Record::key_unset(dba_keyword parameter)
@@ -1054,7 +1036,7 @@ MatchedRecord::~MatchedRecord()
 
 matcher::Result MatchedRecord::match_var_id(int val) const
 {
-    if (const wreport::Var* var = r.var_peek(WR_VAR(0, 33, 195)))
+    if (const wreport::Var* var = r.get("B33195"))
     {
         return var->enqi() == val ? matcher::MATCH_YES : matcher::MATCH_NO;
     } else
@@ -1063,7 +1045,7 @@ matcher::Result MatchedRecord::match_var_id(int val) const
 
 matcher::Result MatchedRecord::match_station_id(int val) const
 {
-    if (const wreport::Var* var = r.key_peek(DBA_KEY_ANA_ID))
+    if (const wreport::Var* var = r.get("ana_id"))
     {
         return var->enqi() == val ? matcher::MATCH_YES : matcher::MATCH_NO;
     } else
@@ -1072,7 +1054,7 @@ matcher::Result MatchedRecord::match_station_id(int val) const
 
 matcher::Result MatchedRecord::match_station_wmo(int block, int station) const
 {
-    if (const wreport::Var* var = r.var_peek(WR_VAR(0, 1, 1)))
+    if (const wreport::Var* var = r.get("B01001"))
     {
         // Match block
         if (var->enqi() != block) return matcher::MATCH_NO;
@@ -1081,7 +1063,7 @@ matcher::Result MatchedRecord::match_station_wmo(int block, int station) const
         if (station == -1) return matcher::MATCH_YES;
 
         // Match station
-        if (const wreport::Var* var = r.var_peek(WR_VAR(0, 1, 2)))
+        if (const wreport::Var* var = r.get("B01002"))
         {
             if (var->enqi() != station) return matcher::MATCH_NO;
             return matcher::MATCH_YES;
@@ -1100,13 +1082,13 @@ matcher::Result MatchedRecord::match_date(const Datetime& min, const Datetime& m
 matcher::Result MatchedRecord::match_coords(const LatRange& latrange, const LonRange& lonrange) const
 {
     matcher::Result r1 = matcher::MATCH_NA;
-    if (const wreport::Var* var = r.key_peek(DBA_KEY_LAT))
+    if (const wreport::Var* var = r.get("lat"))
         r1 = latrange.contains(var->enqi()) ? matcher::MATCH_YES : matcher::MATCH_NO;
     else if (latrange.is_missing())
         r1 = matcher::MATCH_YES;
 
     matcher::Result r2 = matcher::MATCH_NA;
-    if (const wreport::Var* var = r.key_peek(DBA_KEY_LON))
+    if (const wreport::Var* var = r.get("lon"))
         r2 = lonrange.contains(var->enqi()) ? matcher::MATCH_YES : matcher::MATCH_NO;
     else if (lonrange.is_missing())
         r2 = matcher::MATCH_YES;
@@ -1120,11 +1102,10 @@ matcher::Result MatchedRecord::match_coords(const LatRange& latrange, const LonR
 
 matcher::Result MatchedRecord::match_rep_memo(const char* memo) const
 {
-    if (const char* var = r.key_peek_value(DBA_KEY_REP_MEMO))
-    {
-        return strcmp(memo, var) == 0 ? matcher::MATCH_YES : matcher::MATCH_NO;
-    } else
-        return matcher::MATCH_NA;
+    if (const Var* var = r.get("rep_memo"))
+        if (const char* val = var->value())
+            return strcmp(memo, val) == 0 ? matcher::MATCH_YES : matcher::MATCH_NO;
+    return matcher::MATCH_NA;
 }
 
 }

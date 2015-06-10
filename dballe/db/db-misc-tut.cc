@@ -534,15 +534,15 @@ std::vector<Test> tests {
         qc.clear();
         wassert(actual(run_query_attrs(db, qc, context_id, WR_VAR(0, 1, 11))) == 3);
 
-        const Var* attr = qc.var_peek(WR_VAR(0, 33, 2));
+        const Var* attr = qc.get("B33002");
         ensure(attr != NULL);
         ensure_equals(attr->enqi(), 2);
 
-        attr = qc.var_peek(WR_VAR(0, 33, 3));
+        attr = qc.get("B33003");
         ensure(attr != NULL);
         ensure_equals(attr->enqi(), 5);
 
-        attr = qc.var_peek(WR_VAR(0, 33, 5));
+        attr = qc.get("B33005");
         ensure(attr != NULL);
         ensure_equals(attr->enqi(), 33);
 
@@ -562,9 +562,9 @@ std::vector<Test> tests {
         qc.clear();
         wassert(actual(run_query_attrs(db, qc, context_id, WR_VAR(0, 1, 11))) == 1);
 
-        ensure(qc.var_peek(WR_VAR(0, 33, 2)) == NULL);
-        ensure(qc.var_peek(WR_VAR(0, 33, 5)) == NULL);
-        attr = qc.var_peek(WR_VAR(0, 33, 3));
+        ensure(qc.get("B33002") == nullptr);
+        ensure(qc.get("B33005") == nullptr);
+        attr = qc.get("B33003");
         ensure(attr != NULL);
         ensure_equals(attr->enqi(), 5);
         /*dba_error_remove_callback(DBA_ERR_NONE, crash, 0);*/

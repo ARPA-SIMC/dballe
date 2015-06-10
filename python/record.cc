@@ -462,18 +462,13 @@ static PyObject* rec_keys_to_tuple(dpy_Record* self, const char** keys, unsigned
     try {
         for (unsigned i = 0; i < len; ++i)
         {
-            if (self->rec.peek_value(keys[i]))
+            const Var* var = self->rec.get(keys[i]);
+            if (var && var->isset())
             {
-                int iv = self->rec[keys[i]].enqi();
-                if (iv == MISSING_INT)
-                {
-                    Py_INCREF(Py_None);
-                    PyTuple_SET_ITEM(res, i, Py_None);
-                } else {
-                    PyObject* v = PyInt_FromLong(iv);
-                    if (!v) return NULL; // FIXME: deallocate res
-                    PyTuple_SET_ITEM(res, i, v);
-                }
+                int iv = var->enqi();
+                PyObject* v = PyInt_FromLong(iv);
+                if (!v) return NULL; // FIXME: deallocate res
+                PyTuple_SET_ITEM(res, i, v);
             } else {
                 Py_INCREF(Py_None);
                 PyTuple_SET_ITEM(res, i, Py_None);
@@ -582,7 +577,7 @@ static PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key)
             break;
     }
 
-    const Var* var = self->rec.peek(varname);
+    const Var* var = self->rec.get(varname);
     if (var == NULL)
     {
         PyErr_SetString(PyExc_KeyError, varname);
@@ -716,7 +711,7 @@ static int dpy_Record_contains(dpy_Record* self, PyObject *value)
             break;
     }
 
-    return self->rec.peek_value(varname) == NULL ? 0 : 1;
+    return self->rec.isset(varname) ? 1 : 0;
 }
 
 static PySequenceMethods dpy_Record_sequence = {
