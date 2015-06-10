@@ -15,7 +15,7 @@ namespace {
 static inline core::Query query_exact(const Datetime& dt)
 {
     core::Query query;
-    query.datetime = DatetimeRange(dt);
+    query.datetime = DatetimeRange(dt, dt);
     return query;
 }
 static inline core::Query query_min(const Datetime& dt)

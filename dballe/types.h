@@ -229,7 +229,6 @@ struct DatetimeRange
     Datetime max;
 
     DatetimeRange() = default;
-    DatetimeRange(const Datetime& dt) : min(dt), max(dt) {}
     DatetimeRange(const Datetime& min, const Datetime& max) : min(min), max(max) {}
     DatetimeRange(
             int yemin, int momin, int damin, int homin, int mimin, int semin,
