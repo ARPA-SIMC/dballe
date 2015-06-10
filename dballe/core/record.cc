@@ -694,35 +694,6 @@ bool Record::contains(const dballe::Record& rec) const
 	return true;
 }
 
-bool Record::contains(dba_keyword parameter) const throw()
-{
-    const Var* res = key_peek(parameter);
-    return res ? res->value() != NULL : false;
-}
-
-bool Record::contains(wreport::Varcode parameter) const throw()
-{
-    const Var* res = var_peek(parameter);
-    return res ? res->value() != NULL : false;
-}
-
-bool Record::contains_level() const throw ()
-{
-    return contains(DBA_KEY_LEVELTYPE1) || contains(DBA_KEY_L1)
-        || contains(DBA_KEY_LEVELTYPE2) || contains(DBA_KEY_L2);
-}
-
-bool Record::contains_trange() const throw ()
-{
-    return contains(DBA_KEY_PINDICATOR) || contains(DBA_KEY_P1) || contains(DBA_KEY_P2);
-}
-
-bool Record::contains_datetime() const throw ()
-{
-    return contains(DBA_KEY_YEAR) || contains(DBA_KEY_MONTH) || contains(DBA_KEY_DAY)
-        || contains(DBA_KEY_HOUR) || contains(DBA_KEY_MIN) || contains(DBA_KEY_SEC);
-}
-
 const Var* Record::key_peek(dba_keyword parameter) const throw ()
 {
 	return keydata[parameter];
@@ -733,12 +704,6 @@ const Var* Record::var_peek(Varcode code) const throw ()
 	int pos = find_item(code);
 	if (pos == -1) return NULL;
 	return m_vars[pos];
-}
-
-const char* Record::key_peek_value(dba_keyword parameter) const throw ()
-{
-	const Var* res = key_peek(parameter);
-	return res ? res->value() : NULL;
 }
 
 void Record::key_unset(dba_keyword parameter)
@@ -997,97 +962,6 @@ void dba_record_diff(dba_record rec1, dba_record rec2, int* diffs, FILE* out)
 	}
 }
 #endif
-
-static inline int peek_int(const Record& rec, dba_keyword key)
-{
-    const char* s = rec.key_peek_value(key);
-    return s != NULL ? strtol(s, 0, 10) : MISSING_INT;
-}
-
-static inline int min_with_undef(int v1, int v2)
-{
-    if (v1 == MISSING_INT)
-        return v2;
-    if (v2 == MISSING_INT)
-        return v1;
-    return v1 < v2 ? v1 : v2;
-}
-
-static inline int max_with_undef(int v1, int v2)
-{
-	if (v1 == MISSING_INT)
-		return v2;
-	if (v2 == MISSING_INT)
-		return v1;
-	return v1 > v2 ? v1 : v2;
-}
-
-static inline int max_days(int y, int m)
-{
-	int days[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-	if (m != 2)
-		return days[m - 1];
-	else
-		return (y % 4 == 0 && (y % 100 != 0 || y % 400 == 0)) ? 29 : 28;
-}
-
-/* Buf must be at least 25 bytes long; values must be at least 6 ints long */
-void Record::parse_date_extremes(int* minvalues, int* maxvalues) const
-{
-	dba_keyword names[] = { DBA_KEY_YEAR, DBA_KEY_MONTH, DBA_KEY_DAY, DBA_KEY_HOUR, DBA_KEY_MIN, DBA_KEY_SEC };
-	dba_keyword min_names[] = { DBA_KEY_YEARMIN, DBA_KEY_MONTHMIN, DBA_KEY_DAYMIN, DBA_KEY_HOURMIN, DBA_KEY_MINUMIN, DBA_KEY_SECMIN };
-	dba_keyword max_names[] = { DBA_KEY_YEARMAX, DBA_KEY_MONTHMAX, DBA_KEY_DAYMAX, DBA_KEY_HOURMAX, DBA_KEY_MINUMAX, DBA_KEY_SECMAX };
-	int i;
-
-	/* Get the year */
-
-	for (i = 0; i < 6; i++)
-	{
-		int val = peek_int(*this, names[i]);
-		int min = peek_int(*this, min_names[i]);
-		int max = peek_int(*this, max_names[i]);
-
-		minvalues[i] = max_with_undef(val, min);
-		maxvalues[i] = min_with_undef(val, max);
-
-        if (i > 0 &&
-           ((minvalues[i - 1] == MISSING_INT && minvalues[i] != MISSING_INT) ||
-            (maxvalues[i - 1] == MISSING_INT && maxvalues[i] != MISSING_INT)))
-		{
-			Varinfo key1 = keyword_info(names[i - 1]);
-			Varinfo key2 = keyword_info(names[i]);
-
-			error_consistency::throwf("%s extremes are unset but %s extremes are set",
-					key1->desc, key2->desc);
-		}
-	}
-
-	/* Now values is either 6 times MISSING_INT, 6 values, or X values followed by 6-X times MISSING_INT */
-
-	/* If one of the extremes has been selected, fill in the blanks */
-
-    if (minvalues[0] != MISSING_INT)
-    {
-        minvalues[1] = minvalues[1] != MISSING_INT ? minvalues[1] : 1;
-        minvalues[2] = minvalues[2] != MISSING_INT ? minvalues[2] : 1;
-        minvalues[3] = minvalues[3] != MISSING_INT ? minvalues[3] : 0;
-        minvalues[4] = minvalues[4] != MISSING_INT ? minvalues[4] : 0;
-        minvalues[5] = minvalues[5] != MISSING_INT ? minvalues[5] : 0;
-    } else
-        for (unsigned i = 1; i < 6; ++i)
-            minvalues[i] = MISSING_INT;
-
-    if (maxvalues[0] != MISSING_INT)
-    {
-        maxvalues[1] = maxvalues[1] != MISSING_INT ? maxvalues[1] : 12;
-        maxvalues[2] = maxvalues[2] != MISSING_INT ? maxvalues[2] : max_days(maxvalues[0], maxvalues[1]);
-        maxvalues[3] = maxvalues[3] != MISSING_INT ? maxvalues[3] : 23;
-        maxvalues[4] = maxvalues[4] != MISSING_INT ? maxvalues[4] : 59;
-        maxvalues[5] = maxvalues[5] != MISSING_INT ? maxvalues[5] : 59;
-    } else
-        for (unsigned i = 1; i < 6; ++i)
-            maxvalues[i] = MISSING_INT;
-}
 
 void Record::parse_date_extremes(Datetime& dtmin, Datetime& dtmax) const
 {

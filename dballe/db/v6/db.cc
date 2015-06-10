@@ -209,7 +209,7 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
     /* Check for the existance of non-lev_tr data, otherwise it's all
      * useless.  Not inserting data is fine in case of setlev_trana */
     const char* s_year;
-    if (r.vars().empty() && !(((s_year = r.key_peek_value(core::DBA_KEY_YEAR)) != NULL) && strcmp(s_year, "1000") == 0))
+    if (r.vars().empty() && !(r.is_ana_context()))
         throw error_notfound("no variables found in input record");
 
     auto t = conn->transaction();
@@ -218,8 +218,8 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
     // Insert the station data, and get the ID
     vars.id_station = obtain_station(rec, station_can_add);
     // Get the ID of the report
-    if (const char* memo = r.key_peek_value(core::DBA_KEY_REP_MEMO))
-        vars.id_report = ri.obtain_id(memo);
+    if (const Var* memo = rec.get("rep_memo"))
+        vars.id_report = ri.obtain_id(memo->enqc());
     else
         throw error_notfound("input record has neither rep_cod nor rep_memo");
     // Set the date from the record contents

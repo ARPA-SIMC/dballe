@@ -1,25 +1,4 @@
-/*
- * python/record - DB-All.e Record python bindings
- *
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
 #include <Python.h>
-#include <datetime.h>
 #include <dballe/core/defs.h>
 #include "record.h"
 #include "common.h"
@@ -279,33 +258,16 @@ static PyObject* dpy_Record_update(dpy_Record* self, PyObject *args, PyObject *k
 
 static PyObject* dpy_Record_date_extremes(dpy_Record* self)
 {
-    int minvals[6];
-    int maxvals[6];
-    self->rec.parse_date_extremes(minvals, maxvals);
+    DatetimeRange dtr = self->rec.get_datetimerange();
 
-    PyObject* dt_min;
-    PyObject* dt_max;
+    PyObject* dt_min = datetime_to_python(dtr.min);
+    PyObject* dt_max = datetime_to_python(dtr.max);
 
-    if (minvals[0] != MISSING_INT)
+    if (!dt_min || !dt_max)
     {
-        dt_min = PyDateTime_FromDateAndTime(
-                minvals[0], minvals[1], minvals[2],
-                minvals[3], minvals[4], minvals[5], 0);
-        if (!dt_min) return NULL;
-    } else {
-        dt_min = Py_None;
-        Py_INCREF(dt_min);
-    }
-
-    if (maxvals[0] != MISSING_INT)
-    {
-        dt_max = PyDateTime_FromDateAndTime(
-                maxvals[0], maxvals[1], maxvals[2],
-                maxvals[3], maxvals[4], maxvals[5], 0);
-        if (!dt_max) return NULL; // FIXME: deallocate dt_min
-    } else {
-        dt_max = Py_None;
-        Py_INCREF(dt_max);
+        Py_XDECREF(dt_min);
+        Py_XDECREF(dt_max);
+        return NULL;
     }
 
     return Py_BuildValue("(NN)", dt_min, dt_max);
@@ -414,46 +376,6 @@ static PyObject* dpy_Record_repr(dpy_Record* self)
     return PyString_FromString("Record object");
 }
 
-static PyObject* rec_to_datetime(dpy_Record* self, const char** keys)
-{
-    try {
-        int y = self->rec[keys[0]].enqi();
-        int m = self->rec[keys[1]].enqi();
-        int d = self->rec[keys[2]].enqi();
-        int ho = self->rec[keys[3]].enqi();
-        int mi = self->rec[keys[4]].enqi();
-        // Second is optional, defaulting to 0
-        int se = self->rec.enq(keys[5], 0);
-        return PyDateTime_FromDateAndTime(y, m, d, ho, mi, se, 0);
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
-}
-
-static int datetime_to_rec(dpy_Record* self, PyObject* dt, const char** keys)
-{
-    if (dt == NULL || dt == Py_None)
-    {
-        for (unsigned i = 0; i < 6; ++i)
-            self->rec.unset(keys[i]);
-    } else {
-        if (!PyDateTime_Check(dt))
-        {
-            PyErr_SetString(PyExc_TypeError, "value must be an instance of datetime.datetime");
-            return -1;
-        }
-        self->rec.set(keys[0], PyDateTime_GET_YEAR((PyDateTime_DateTime*)dt));
-        self->rec.set(keys[1], PyDateTime_GET_MONTH((PyDateTime_DateTime*)dt));
-        self->rec.set(keys[2], PyDateTime_GET_DAY((PyDateTime_DateTime*)dt));
-        self->rec.set(keys[3], PyDateTime_DATE_GET_HOUR((PyDateTime_DateTime*)dt));
-        self->rec.set(keys[4], PyDateTime_DATE_GET_MINUTE((PyDateTime_DateTime*)dt));
-        self->rec.set(keys[5], PyDateTime_DATE_GET_SECOND((PyDateTime_DateTime*)dt));
-    }
-    return 0;
-}
-
 static PyObject* rec_keys_to_tuple(dpy_Record* self, const char** keys, unsigned len)
 {
     PyObject* res = PyTuple_New(len);
@@ -560,11 +482,11 @@ static PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key)
         case 'd':
             if (strcmp(varname, "date") == 0)
             {
-                return rec_to_datetime(self, date_keys);
+                return datetime_to_python(self->rec.get_datetime());
             } else if (strcmp(varname, "datemin") == 0) {
-                return rec_to_datetime(self, datemin_keys);
+                return datetime_to_python(self->rec.get_datetimerange().min);
             } else if (strcmp(varname, "datemax") == 0) {
-                return rec_to_datetime(self, datemax_keys);
+                return datetime_to_python(self->rec.get_datetimerange().max);
             }
             break;
         case 'l':
@@ -606,11 +528,20 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
         case 'd':
             if (strcmp(varname, "date") == 0)
             {
-                return datetime_to_rec(self, val, date_keys);
+                Datetime dt;
+                if (int res = datetime_from_python(val, dt)) return res;
+                self->rec.set(dt);
+                return 0;
             } else if (strcmp(varname, "datemin") == 0) {
-                return datetime_to_rec(self, val, datemin_keys);
+                DatetimeRange dtr = self->rec.get_datetimerange();
+                if (int res = datetime_from_python(val, dtr.min)) return res;
+                self->rec.set(dtr);
+                return 0;
             } else if (strcmp(varname, "datemax") == 0) {
-                return datetime_to_rec(self, val, datemax_keys);
+                DatetimeRange dtr = self->rec.get_datetimerange();
+                if (int res = datetime_from_python(val, dtr.max)) return res;
+                self->rec.set(dtr);
+                return 0;
             }
             break;
         case 'l':
@@ -663,14 +594,6 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
     return 0;
 }
 
-static int all_keys_set(const Record& rec, const char** keys, unsigned len)
-{
-    for (unsigned i = 0; i < len; ++i)
-        if (!rec.isset(keys[i]))
-            return 0;
-    return 1;
-}
-
 static int any_key_set(const Record& rec, const char** keys, unsigned len)
 {
     for (unsigned i = 0; i < len; ++i)
@@ -695,11 +618,11 @@ static int dpy_Record_contains(dpy_Record* self, PyObject *value)
             // We don't bother checking the seconds, since they default to 0 if
             // missing
             if (strcmp(varname, "date") == 0)
-                return all_keys_set(self->rec, date_keys, 5);
+                return !self->rec.get_datetime().is_missing();
             else if (strcmp(varname, "datemin") == 0)
-                return all_keys_set(self->rec, datemin_keys, 5);
+                return !self->rec.get_datetimerange().min.is_missing();
             else if (strcmp(varname, "datemax") == 0)
-                return all_keys_set(self->rec, datemax_keys, 5);
+                return !self->rec.get_datetimerange().max.is_missing();
             break;
         case 'l':
             if (strcmp(varname, "level") == 0)
@@ -825,7 +748,7 @@ dpy_Record* record_create()
 
 void register_record(PyObject* m)
 {
-    PyDateTime_IMPORT;
+    common_init();
 
     dpy_Record_Type.tp_new = PyType_GenericNew;
     if (PyType_Ready(&dpy_Record_Type) < 0)

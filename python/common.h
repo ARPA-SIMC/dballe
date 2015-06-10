@@ -1,27 +1,8 @@
-/*
- * python/common - Common functions for DB-All.e python bindings
- *
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
 #ifndef DBALLE_PYTHON_COMMON_H
 #define DBALLE_PYTHON_COMMON_H
 
 #include <Python.h>
+#include <dballe/types.h>
 #include <wreport/error.h>
 #include <wreport/varinfo.h>
 
@@ -90,8 +71,21 @@ PyObject* raise_wreport_exception(const wreport::error& e);
  */
 PyObject* raise_std_exception(const std::exception& e);
 
+/**
+ * Convert a Datetime to a python datetime object.
+ */
+PyObject* datetime_to_python(const Datetime& dt);
+
+/// Convert a python datetime object to a Datetime
+int datetime_from_python(PyObject* dt, Datetime& out);
+
+/**
+ * Initialize the python bits to use used by the common functions.
+ *
+ * This can be called multiple times and will execute only once.
+ */
+void common_init();
 
 }
 }
-
 #endif

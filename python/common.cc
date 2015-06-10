@@ -1,24 +1,6 @@
-/*
- * python/common - Common functions for DB-All.e python bindings
- *
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
 #include "common.h"
+#include <Python.h>
+#include <datetime.h>
 
 using namespace wreport;
 
@@ -83,6 +65,9 @@ PyObject* raise_wreport_exception(const wreport::error& e)
         case WR_ERR_DOMAIN:      // Value outside acceptable domain
             PyErr_SetString(PyExc_OverflowError, e.what());
             return NULL;
+        default:
+            PyErr_Format(PyExc_SystemError, "unhandled exception with code %d: %s", e.code(), e.what());
+            return NULL;
     }
 }
 
@@ -90,6 +75,58 @@ PyObject* raise_std_exception(const std::exception& e)
 {
     PyErr_SetString(PyExc_RuntimeError, e.what());
     return NULL;
+}
+
+PyObject* datetime_to_python(const Datetime& dt)
+{
+    if (dt.is_missing())
+    {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    return PyDateTime_FromDateAndTime(
+            dt.year, dt.month,  dt.day,
+            dt.hour, dt.minute, dt.second, 0);
+}
+
+int datetime_from_python(PyObject* dt, Datetime& out)
+{
+    if (dt == NULL || dt == Py_None)
+    {
+        out = Datetime();
+        return 0;
+    }
+
+    if (!PyDateTime_Check(dt))
+    {
+        PyErr_SetString(PyExc_TypeError, "value must be an instance of datetime.datetime");
+        return -1;
+    }
+
+    out = Datetime(
+        PyDateTime_GET_YEAR((PyDateTime_DateTime*)dt),
+        PyDateTime_GET_MONTH((PyDateTime_DateTime*)dt),
+        PyDateTime_GET_DAY((PyDateTime_DateTime*)dt),
+        PyDateTime_DATE_GET_HOUR((PyDateTime_DateTime*)dt),
+        PyDateTime_DATE_GET_MINUTE((PyDateTime_DateTime*)dt),
+        PyDateTime_DATE_GET_SECOND((PyDateTime_DateTime*)dt));
+    return 0;
+}
+
+void common_init()
+{
+    /*
+     * PyDateTimeAPI, that is used by all the PyDate* and PyTime* macros, is
+     * defined as a static variable defaulting to NULL, and it needs to be
+     * initialized on each and every C file where it is used.
+     *
+     * Therefore, we need to have a common_init() to call from all
+     * initialization functions. *sigh*
+     */
+    if (PyDateTimeAPI)
+        return;
+    PyDateTime_IMPORT;
 }
 
 }

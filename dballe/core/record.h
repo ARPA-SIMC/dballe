@@ -101,12 +101,6 @@ protected:
 	/// Remove an item by wreport::Varcode
 	void remove_item(wreport::Varcode code);
 
-    /// Return true if the given parameter is set in this record
-    bool contains(dba_keyword parameter) const throw();
-
-    /// Return true if the given variable is set in this record
-    bool contains(wreport::Varcode parameter) const throw();
-
     /**
      * Look at the value of a parameter
      *
@@ -201,15 +195,6 @@ public:
      */
     static Record& downcast(dballe::Record& query);
 
-    /// Return true if some level attribute is set in this record
-    bool contains_level() const throw();
-
-    /// Return true if some time range attribute is set in this record
-    bool contains_trange() const throw();
-
-    /// Return true if some datetime information is set in this record
-    bool contains_datetime() const throw();
-
 	/**
 	 * Set the record to contain only those fields that change source1 into source2.
 	 *
@@ -254,35 +239,8 @@ public:
     /// Return the varcode-sorted vector with the variables
     const std::vector<wreport::Var*>& vars() const;
 
-	/**
-	 * Parse the date extremes set in Record.
-	 *
-	 * This function will examine the values yearmin, monthmin, daymin, hourmin,
-	 * minumin, secmin, yearmax, monthmax, daymax, hourmax, minumax, secmax, year,
-	 * month, day, hour, min and sec, and will compute the two datetime extremes
-	 * that bound the interval they represent.
-	 *
-	 * @retval minvalues
-	 *   An array of 6 integers that will be filled with the minimum year, month,
-	 *   day, hour, minute and seconds.
-	 * @retval maxvalues
-	 *   An array of 6 integers that will be filled with the maximum year, month,
-	 *   day, hour, minute and seconds.
-	 */
-	void parse_date_extremes(int* minvalues, int* maxvalues) const;
-
     // Same as parse_date_extremes(int*, int*) but it fills Datetime objects
     void parse_date_extremes(Datetime& dtmin, Datetime& dtmax) const;
-
-    /**
-     * Look at the raw value of a keyword in the record, without raising errors.
-     *
-     * @param parameter
-     *   The keyword to get the value for.
-     * @return
-     *   The raw string value, or NULL if the keyword has no value.
-     */
-    const char* key_peek_value(dba_keyword parameter) const throw ();
 
 	/**
 	 * Set a value in the record according to an assignment encoded in a string.

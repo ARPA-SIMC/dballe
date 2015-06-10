@@ -1,7 +1,7 @@
 #ifndef DBALLE_CORE_MATCHER_H
 #define DBALLE_CORE_MATCHER_H
 
-#include <dballe/core/defs.h>
+#include <dballe/types.h>
 #include <memory>
 
 namespace dballe {
