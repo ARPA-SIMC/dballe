@@ -156,12 +156,10 @@ public:
 	bool operator==(const Record& rec) const;
 	bool operator!=(const Record& rec) const { return !operator==(rec); }
 
-	/// Remove all data from the record
-	void clear();
-
 	/// Remove all variables from the record, leaving the keywords intact
 	void clear_vars();
 
+    void clear() override;
     void seti(const char* key, int val) override;
     void setd(const char* key, double val) override;
     void setc(const char* key, const char* val) override;

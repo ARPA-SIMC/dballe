@@ -23,6 +23,9 @@ struct Record
     /// Create a new Record
     static std::unique_ptr<Record> create();
 
+    /// Remove all contents from the record
+    virtual void clear() = 0;
+
     /**
      * Set a key to an integer value.
      *
