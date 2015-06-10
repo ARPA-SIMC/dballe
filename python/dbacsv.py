@@ -156,9 +156,18 @@ class ColumnStationData(Column):
     def __init__(self, varcode, station_data):
         super(ColumnStationData, self).__init__()
         self.varcode = varcode
+        # { Station id: { varcode: value } }
         self.station_data = station_data
     def add(self, row):
         self.values.add(row[self.varcode])
+    def title(self):
+        data = next(iter(self.station_data.itervalues()))
+        var = data.get(self.varcode, None)
+        if var is None:
+            value = ""
+        else:
+            value = var.format("")
+        return "Station {}: {}".format(self.varcode, value)
     def column_labels(self):
         return ["Station {}".format(self.varcode)]
     def column_data(self, rec):
@@ -174,9 +183,18 @@ class ColumnAttribute(Column):
     def __init__(self, varcode, attributes):
         super(ColumnAttribute, self).__init__()
         self.varcode = varcode
+        # { "context_id,varcode": { varcode: value } }
         self.attributes = attributes
     def add(self, var):
         self.values.add(var.format(""))
+    def title(self):
+        data = next(iter(self.attributes.itervalues()))
+        var = data.get(self.varcode, None)
+        if var is None:
+            value = ""
+        else:
+            value = var.format("")
+        return "Attr {}: {}".format(self.varcode, value)
     def column_labels(self):
         return ["Attr {}".format(self.varcode)]
     def column_data(self, rec):
@@ -192,7 +210,9 @@ class Exporter:
         self.db = db
         self.title = ""
         self.cols = []
+        # { Station id: { varcode: value } }
         self.station_data = {}
+        # { "context_id,varcode": { varcode: value } }
         self.attributes = {}
 
     def compute_columns(self, filter):

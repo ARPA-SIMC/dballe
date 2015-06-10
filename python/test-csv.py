@@ -16,7 +16,7 @@ class TestCSV(unittest.TestCase):
         self.db = dballe.DB.connect_test()
         fill_volnd(self.db)
 
-    def testNothing(self):
+    def testExport(self):
         query = dballe.Record()
         #query["rep_memo"] = "synop"
         out = io.StringIO()
@@ -24,11 +24,11 @@ class TestCSV(unittest.TestCase):
 
         lines = out.getvalue().splitlines()
         self.assertEquals(lines[0],
-                          "Ana B01001: 12. Ana B01002: 123. Ana B01019: Test of long station name. ,,,,,,,,,,,,,,,")
+                          "Station B01001: 12; Station B01002: 123; Station B01019: Test of long station name,,,,,,,,,,,,,,,")
         self.assertEquals(lines[1],
-                          "Station,Latitude,Longitude,Report,Date,Level1,L1,Level2,L2,Time range,P1,P2,B10004,B13011,Attr B33007,Attr B33040")
+                          "Station,Latitude,Longitude,Network,Datetime,Level1,L1,Level2,L2,Time range,P1,P2,Variable,Value,Attr B33007,Attr B33040")
         self.assertEquals(lines[2],
-                          "1,10.0,15.0,synop,2007-01-01 00:00:00,1,-,-,-,0,-,-,73810,,35,")
+                          "1,10.0,15.0,synop,2007-01-01 00:00:00,1,-,-,-,0,-,-,B10004,73810,80,")
 
     def testAttrs(self):
         self.db.reset()
