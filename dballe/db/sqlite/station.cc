@@ -131,13 +131,14 @@ void SQLiteStationBase::read_station_vars(SQLiteStatement& stm, std::function<vo
 void SQLiteStationBase::get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     // Perform the query
-    static const char query[] =
-        "SELECT d.id_var, d.value, a.type, a.value"
-        "  FROM context c, data d"
-        "  LEFT JOIN attr a ON a.id_context = d.id_context AND a.id_var = d.id_var"
-        " WHERE d.id_context = c.id AND c.id_ana = ? AND c.id_report = ?"
-        "   AND c.datetime = {ts '1000-01-01 00:00:00.000'}"
-        " ORDER BY d.id_var, a.type";
+    static const char query[] = R"(
+        SELECT d.id_var, d.value, a.type, a.value
+          FROM data d
+          LEFT JOIN attr a ON a.id_data = d.id
+         WHERE d.id_station=? AND d.id_report=?
+           AND d.id_lev_tr = -1
+         ORDER BY d.id_var, a.type
+    )";
 
     auto stm = conn.sqlitestatement(query);
     stm->bind(id_station, id_report);
@@ -168,61 +169,6 @@ void SQLiteStationBase::dump(FILE* out)
 
 void SQLiteStationBase::add_station_vars(int id_station, Record& rec)
 {
-    /* Extra variables to add:
-     *
-     * HEIGHT,      B07001  1793
-     * HEIGHT_BARO, B07031  1823
-     * ST_NAME,     B01019   275
-     * BLOCK,       B01001   257
-     * STATION,     B01002   258
-    */
-    const char* query = R"(
-        SELECT d.id_var, d.value
-          FROM context c, data d, repinfo ri
-         WHERE c.id = d.id_context AND ri.id = c.id_report AND c.id_ana=?
-           AND c.datetime='1000-01-01 00:00:00.000'
-         AND ri.prio=(
-          SELECT MAX(sri.prio) FROM repinfo sri
-            JOIN context sc ON sri.id=sc.id_report
-            JOIN data sd ON sc.id=sd.id_context
-          WHERE sc.id_ana=c.id_ana
-            AND sc.ltype1=c.ltype1 AND sc.l1=c.l1 AND sc.ltype2=c.ltype2 AND sc.l2=c.l2
-            AND sc.ptype=c.ptype AND sc.p1=c.p1 AND sc.p2=c.p2
-            AND sc.datetime=c.datetime AND sd.id_var=d.id_var)
-    )";
-
-    auto& r = core::Record::downcast(rec);
-    auto stm = conn.sqlitestatement(query);
-    stm->bind(id_station);
-    stm->execute([&]() {
-        r.obtain((wreport::Varcode)stm->column_int(0)).setc(stm->column_string(1));
-    });
-}
-
-SQLiteStationV6::SQLiteStationV6(SQLiteConnection& conn)
-    : SQLiteStationBase(conn) {}
-
-void SQLiteStationV6::get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest)
-{
-    // Perform the query
-    static const char query[] = R"(
-        SELECT d.id_var, d.value, a.type, a.value
-          FROM data d
-          LEFT JOIN attr a ON a.id_data = d.id
-         WHERE d.id_station=? AND d.id_report=?
-           AND d.id_lev_tr = -1
-         ORDER BY d.id_var, a.type
-    )";
-
-    auto stm = conn.sqlitestatement(query);
-    stm->bind(id_station, id_report);
-    TRACE("fill_ana_layer Performing query: %s with idst %d idrep %d\n", query, id_station, id_report);
-
-    read_station_vars(*stm, dest);
-}
-
-void SQLiteStationV6::add_station_vars(int id_station, Record& rec)
-{
     const char* query = R"(
         SELECT d.id_var, d.value
           FROM data d, repinfo ri
@@ -238,9 +184,12 @@ void SQLiteStationV6::add_station_vars(int id_station, Record& rec)
     auto stm = conn.sqlitestatement(query);
     stm->bind(id_station);
     stm->execute([&]() {
-        r.obtain((Varcode)stm->column_int(0)).setc(stm->column_string(1));
+        rec.set(newvar((wreport::Varcode)stm->column_int(0), stm->column_string(1)));
     });
 }
+
+SQLiteStationV6::SQLiteStationV6(SQLiteConnection& conn)
+    : SQLiteStationBase(conn) {}
 
 }
 }

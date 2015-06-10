@@ -270,7 +270,6 @@ void ODBCStationBase::impl_add_station_vars(const char* query, int id_station, R
     stm->execute();
 
     // Get the results and save them in the record
-    auto& r = core::Record::downcast(rec);
     while (stm->fetch())
     {
         // If we have already set the value of a variable skip it: since we get
@@ -280,7 +279,7 @@ void ODBCStationBase::impl_add_station_vars(const char* query, int id_station, R
             continue;
 
         last_code = st_out_code;
-        r.obtain((Varcode)st_out_code).setc(st_out_val);
+        rec.set(newvar((Varcode)st_out_code, st_out_val));
     }
 }
 

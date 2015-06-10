@@ -112,7 +112,7 @@ void TestRecord::set_var(const char* msgvarname, double val, int conf)
     const MsgVarShortcut& v = shortcutTable[msgvarid];
     data.set(Level(v.ltype1, v.l1, v.ltype2, v.l2));
     data.set(Trange(v.pind, v.p1, v.p2));
-    data.obtain(v.code).setd(val);
+    data.set(newvar(v.code, val));
     if (conf != -1)
         attrs[v.code].set("B33007", conf);
 }

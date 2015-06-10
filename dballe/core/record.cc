@@ -415,8 +415,10 @@ void Record::remove_item(Varcode code)
 	m_vars.erase(m_vars.begin() + pos);
 }
 
-void Record::add(const Record& source)
+void Record::add(const dballe::Record& rec)
 {
+    const auto& source = downcast(rec);
+
 	// Add the keyword table
 	for (int i = 0; i < KEYWORD_TABLE_SIZE; i++)
 	{
@@ -503,8 +505,10 @@ void Record::set_to_difference(const Record& source1, const Record& source2)
 		m_vars.push_back(new Var(**s2));
 }
 
-bool Record::contains(const Record& subset) const
+bool Record::contains(const dballe::Record& rec) const
 {
+    const auto& subset = downcast(rec);
+
 	// Compare the keyword tables
 	for (int i = 0; i < KEYWORD_TABLE_SIZE; ++i)
 	{
@@ -992,37 +996,6 @@ void Record::parse_date_extremes(Datetime& dtmin, Datetime& dtmax) const
     parse_date_extremes(raw_min, raw_max);
     dtmin.from_array(raw_min);
     dtmax.from_array(raw_max);
-}
-
-void Record::parse_date(int* values) const
-{
-    dba_keyword names[] = { DBA_KEY_YEAR, DBA_KEY_MONTH, DBA_KEY_DAY, DBA_KEY_HOUR, DBA_KEY_MIN, DBA_KEY_SEC };
-    for (int i = 0; i < 6; i++)
-    {
-        values[i] = peek_int(*this, names[i]);
-
-        if (i > 0 && (values[i-1] == MISSING_INT && values[i] != MISSING_INT))
-        {
-            Varinfo key1 = keyword_info(names[i - 1]);
-            Varinfo key2 = keyword_info(names[i]);
-
-            error_consistency::throwf("%s is unset but %s is set",
-                    key1->desc, key2->desc);
-        }
-    }
-
-    /* Now values is either 6 times MISSING_INT, 6 values, or X values followed by 6-X times MISSING_INT */
-
-    /* If one of the extremes has been selected, fill in the blanks */
-
-    if (values[0] != MISSING_INT)
-    {
-        values[1] = values[1] != MISSING_INT ? values[1] : 1;
-        values[2] = values[2] != MISSING_INT ? values[2] : 1;
-        values[3] = values[3] != MISSING_INT ? values[3] : 0;
-        values[4] = values[4] != MISSING_INT ? values[4] : 0;
-        values[5] = values[5] != MISSING_INT ? values[5] : 0;
-    }
 }
 
 MatchedRecord::MatchedRecord(const Record& r)

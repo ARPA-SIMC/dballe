@@ -125,6 +125,31 @@ protected:
      */
     const wreport::Var* var_peek(wreport::Varcode code) const throw ();
 
+    /**
+     * Remove a parameter from the record.
+     *
+     * @param parameter
+     *   The parameter to remove.
+     */
+    void key_unset(dba_keyword parameter);
+
+    /**
+     * Remove a parameter from the record.
+     *
+     * @param code
+     *   The variable to remove.  See @ref vartable.h
+     */
+    void var_unset(wreport::Varcode code);
+
+    /// Return the Var for a key, creating it if it is missing
+    wreport::Var& obtain(const char* key);
+
+    /// Return the Var for a key, creating it if it is missing
+    wreport::Var& obtain(dba_keyword key);
+
+    /// Return the Var for a variable, creating it if it is missing
+    wreport::Var& obtain(wreport::Varcode code);
+
 public:
 	Record();
 	Record(const Record& rec);
@@ -155,6 +180,9 @@ public:
     void set_var_acquire(std::unique_ptr<wreport::Var>&& var) override;
     void unset(const char* name) override;
     const wreport::Var* get(const char* key) const override;
+    void add(const dballe::Record& source) override;
+    bool contains(const dballe::Record& subset) const override;
+    void print(FILE* out) const override;
 
     /**
      * Return a reference to query downcasted as core::Query.
@@ -169,23 +197,6 @@ public:
      * Throws an exception if query is not a core::Query.
      */
     static Record& downcast(dballe::Record& query);
-
-	/**
-	 * Copy all data from the record source into dest.  At the end of the function,
-	 * dest will contain its previous values, plus the values in source.  If a
-	 * value is present both in source and in dest, the one in dest will be
-	 * overwritten.
-	 *
-	 * @param source
-	 *   The record to copy data from.
-	 */
-	void add(const Record& source);
-
-	/**
-	 * Return true if all elements of \a subset are present in this record,
-	 * with the same value
-	 */
-	bool contains(const Record& subset) const;
 
     /// Return true if some level attribute is set in this record
     bool contains_level() const throw();
@@ -208,36 +219,6 @@ public:
 	 *   The new record that has changes over source1.
 	 */
 	void set_to_difference(const Record& source1, const Record& source2);
-
-    /// Return the Var for a key, creating it if it is missing
-    wreport::Var& obtain(const char* key);
-
-    /// Return the Var for a key, creating it if it is missing
-    wreport::Var& obtain(dba_keyword key);
-
-    /// Return the Var for a variable, creating it if it is missing
-    wreport::Var& obtain(wreport::Varcode code);
-
-#if 0
-    template<typename K>
-    void copy(const Record& rec, K parameter)
-    {
-        const wreport::Var* val = rec.peek(parameter);
-        if (!val)
-            unset(parameter);
-        else
-            set(parameter, *val);
-    }
-    template<typename K>
-    bool contains(const Record& rec, K parameter)
-    {
-        const wreport::Var* mine = peek(parameter);
-        const wreport::Var* theirs = rec.peek(parameter);
-        if (!mine and !theirs) return true;
-        if (!mine or !theirs) return false;
-        return *mine == *theirs;
-    }
-#endif
 
     Level get_level() const;
     Trange get_trange() const;
@@ -275,22 +256,6 @@ public:
     const std::vector<wreport::Var*>& vars() const;
 
 	/**
-	 * Remove a parameter from the record.
-	 *
-	 * @param parameter
-	 *   The parameter to remove.
-	 */
-	void key_unset(dba_keyword parameter);
-
-	/**
-	 * Remove a parameter from the record.
-	 *
-	 * @param code
-	 *   The variable to remove.  See @ref vartable.h
-	 */
-	void var_unset(wreport::Varcode code);
-
-	/**
 	 * Parse the date extremes set in Record.
 	 *
 	 * This function will examine the values yearmin, monthmin, daymin, hourmin,
@@ -309,18 +274,6 @@ public:
 
     // Same as parse_date_extremes(int*, int*) but it fills Datetime objects
     void parse_date_extremes(Datetime& dtmin, Datetime& dtmax) const;
-
-	/**
-	 * Parse the date set in the Record.
-	 *
-     * This function will examine the values year, month, day, hour, min and
-     * sec, and will compute the lower bound of the datetime they represent.
-	 *
-	 * @retval values
-	 *   An array of 6 integers that will be filled with the minimum year, month,
-	 *   day, hour, minute and seconds.
-	 */
-	void parse_date(int* values) const;
 
     /**
      * Look at the raw value of a keyword in the record, without raising errors.
@@ -363,14 +316,6 @@ public:
      * Encode in a one-liner of comma-separated assignments
      */
     std::string to_string() const;
-
-	/**
-	 * Print the contents of this record to the given file descriptor
-	 *
-	 * @param out
-	 *   The output file descriptor
-	 */
-	void print(FILE* out) const;
 
 	/**
 	 * Return the name of a dba_keyword

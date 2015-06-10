@@ -278,7 +278,7 @@ void CursorData::to_record(Record& rec)
 
     auto& r = core::Record::downcast(rec);
     r.clear_vars();
-    r.obtain(results[cur].out_varcode).setc(results[cur].out_value);
+    r.set(newvar(results[cur].out_varcode, results[cur].out_value));
 
     if (modifiers & DBA_DB_MODIFIER_ANAEXTRA)
         add_station_info(rec);
@@ -383,7 +383,7 @@ void CursorBest::to_record(Record& rec)
 
     auto& r = core::Record::downcast(rec);
     r.clear_vars();
-    r.obtain(results[cur].out_varcode).setc(results[cur].out_value);
+    r.set(newvar(results[cur].out_varcode, results[cur].out_value));
 
     if (modifiers & DBA_DB_MODIFIER_ANAEXTRA)
         add_station_info(rec);

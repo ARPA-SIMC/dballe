@@ -118,9 +118,8 @@ void StationBase::add_station_vars(int id_station, Record& rec)
 {
     using namespace postgresql;
     Result res(conn.exec_prepared("v6_station_add_station_vars", id_station));
-    auto& r = core::Record::downcast(rec);
     for (unsigned row = 0; row < res.rowcount(); ++row)
-        r.obtain((Varcode)res.get_int4(row, 0)).setc(res.get_string(row, 1));
+        rec.set(newvar((Varcode)res.get_int4(row, 0), res.get_string(row, 1)));
 }
 
 void StationBase::dump(FILE* out)

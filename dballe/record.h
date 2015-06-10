@@ -116,6 +116,26 @@ struct Record
     }
 
     /**
+     * Copy all data from the record source into dest.  At the end of the function,
+     * dest will contain its previous values, plus the values in source.  If a
+     * value is present both in source and in dest, the one in dest will be
+     * overwritten.
+     *
+     * @param source
+     *   The record to copy data from.
+     */
+    virtual void add(const Record& source) = 0;
+
+    /**
+     * Return true if all elements of \a subset are present in this record,
+     * with the same value
+     */
+    virtual bool contains(const Record& subset) const = 0;
+
+    /// Print the contents of this record to the given stream
+    virtual void print(FILE* out) const = 0;
+
+    /**
      * Return informations about a key
      *
      * @return

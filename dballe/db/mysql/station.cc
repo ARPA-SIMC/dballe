@@ -224,10 +224,9 @@ void MySQLStationBase::add_station_vars(int id_station, Record& rec)
           WHERE sd.id_station=d.id_station AND sd.id_lev_tr = -1
             AND sd.id_var=d.id_var)
     )", id_station);
-    auto& r = core::Record::downcast(rec);
     auto res = conn.exec_store(query);
     while (auto row = res.fetch())
-        r.obtain((Varcode)row.as_int(0)).setc(row.as_cstring(1));
+        rec.set(newvar((Varcode)row.as_int(0), row.as_cstring(1)));
 }
 
 MySQLStationV6::MySQLStationV6(MySQLConnection& conn)

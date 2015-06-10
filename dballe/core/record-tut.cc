@@ -68,8 +68,8 @@ std::vector<Test> tests {
         rec.set("lat", 1234567);
         rec.set("lon", 76.54321);
         rec.set("yearmin", "1976");
-        rec.obtain(WR_VAR(0, 20, 1)).setc("456");
-        rec.obtain(WR_VAR(0, 20, 3)).setc("456");
+        rec.set("B20001", "456");
+        rec.set("B20003", "456");
 
         // Check that they now exist
         ensure(rec.get("ana_id") != NULL);
@@ -130,8 +130,8 @@ std::vector<Test> tests {
         rec.set("lat", 1234567);
         rec.set("lon", 76.54321);
         rec.set("yearmin", "1976");
-        rec.obtain(WR_VAR(0, 20, 1)).setc("456");
-        rec.obtain(WR_VAR(0, 20, 3)).setc("456");
+        rec.set("B20001", "456");
+        rec.set("B20003", "456");
 
         core::Record rec1;
         rec1 = rec;
@@ -155,7 +155,7 @@ std::vector<Test> tests {
         rec1 = rec;
         ensure(rec == rec1);
         ensure(rec1 == rec);
-        rec1.obtain(WR_VAR(0, 20, 1)).setc("45");
+        rec1.set("B20001", "45");
         ensure(rec != rec1);
         ensure(rec1 != rec);
 
