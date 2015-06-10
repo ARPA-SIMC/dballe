@@ -521,10 +521,10 @@ bool QueryBuilder::add_dt_where(const char* tbl)
     if (query.query_station_vars) return false;
 
     bool found = false;
-    Datetime dtmin = query.datetime_min.lower_bound();
-    Datetime dtmax = query.datetime_max.upper_bound();
-    if (!dtmin.is_missing() || !dtmax.is_missing())
+    if (!query.datetime.is_missing())
     {
+        Datetime dtmin = query.datetime.min;
+        Datetime dtmax = query.datetime.max;
         if (dtmin == dtmax)
         {
             // Add constraint on the exact date interval

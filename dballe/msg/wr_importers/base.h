@@ -42,9 +42,9 @@ protected:
     const msg::Importer::Options& opts;
     const wreport::Subset* subset;
     Msg* msg;
-    Datetime datetime;
+    int ye, mo, da, ho, mi, se;
 
-    virtual void init() {}
+    virtual void init();
     virtual void run() = 0;
 
 public:

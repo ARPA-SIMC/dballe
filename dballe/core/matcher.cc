@@ -22,7 +22,7 @@ matcher::Result Matched::match_station_wmo(int, int) const
 {
     return matcher::MATCH_NA;
 }
-matcher::Result Matched::match_date(const Datetime&, const Datetime&) const
+matcher::Result Matched::match_datetime(const DatetimeRange&) const
 {
     return matcher::MATCH_NA;
 }
@@ -33,13 +33,6 @@ matcher::Result Matched::match_coords(const LatRange&, const LonRange&) const
 matcher::Result Matched::match_rep_memo(const char* memo) const
 {
     return matcher::MATCH_NA;
-}
-
-matcher::Result Matched::date_in_range(const Datetime& date, const Datetime& min, const Datetime& max)
-{
-    if (!min.is_missing() && date < min) return matcher::MATCH_NO;
-    if (!max.is_missing() && date > max) return matcher::MATCH_NO;
-    return matcher::MATCH_YES;
 }
 
 matcher::Result Matched::int_in_range(int val, int min, int max)
@@ -166,40 +159,18 @@ struct WMOMatcher : public Matcher
 
 struct DateMatcher : public Matcher
 {
-    Datetime dtmin;
-    Datetime dtmax;
+    DatetimeRange range;
 
-    DateMatcher(const Datetime& dtmin, const Datetime& dtmax)
-        : dtmin(dtmin), dtmax(dtmax)
-    {
-    }
-
-    /// Return true if v1 == v2
-    bool eq(const int* v1, const int* v2) const
-    {
-        for (int i = 0; i < 6; ++i)
-            if (v1[i] != v2[i])
-                return false;
-        return true;
-    }
+    DateMatcher(const DatetimeRange& range) : range(range) {}
 
     virtual Result match(const Matched& v) const
     {
-        return v.match_date(dtmin, dtmax) == MATCH_YES ? MATCH_YES : MATCH_NO;
+        return v.match_datetime(range) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
 
     virtual void to_record(Record& rec) const
     {
-        if (dtmin == dtmax)
-        {
-            if (!dtmin.is_missing())
-                rec.set(dtmin);
-        } else {
-            if (!dtmin.is_missing())
-                core::Record::downcast(rec).setmin(dtmin);
-            if (!dtmax.is_missing())
-                core::Record::downcast(rec).setmax(dtmax);
-        }
+        core::Record::downcast(rec).set_datetimerange(range);
     }
 };
 
@@ -270,10 +241,8 @@ std::unique_ptr<Matcher> Matcher::create(const dballe::Query& query_gen)
             res->exprs.push_back(new WMOMatcher(query.block));
     }
 
-    Datetime dtmin = query.datetime_min.lower_bound();
-    Datetime dtmax = query.datetime_max.upper_bound();
-    if (!dtmin.is_missing() || !dtmax.is_missing())
-        res->exprs.push_back(new DateMatcher(dtmin, dtmax));
+    if (!query.datetime.is_missing())
+        res->exprs.push_back(new DateMatcher(query.datetime));
 
     if (!query.latrange.is_missing() || !query.lonrange.is_missing())
         res->exprs.push_back(new CoordMatcher(query.latrange, query.lonrange));

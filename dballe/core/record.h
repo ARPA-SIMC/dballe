@@ -174,6 +174,8 @@ public:
     void sets(const char* key, const std::string& val) override;
     void setf(const char* key, const char* val) override;
     void set_datetime(const Datetime& dt) override;
+    void set_latrange(const LatRange& lr) override;
+    void set_lonrange(const LonRange& lr) override;
     void set_level(const Level& lev) override;
     void set_trange(const Trange& tr) override;
     void set_var(const wreport::Var& var) override;
@@ -227,12 +229,11 @@ public:
     Datetime get_datetimemax() const;
     void setmin(const Datetime& dt);
     void setmax(const Datetime& dt);
+    void set_datetimerange(const DatetimeRange& range);
     void unset_datetime();
     void unset_datetimemin();
     void unset_datetimemax();
     void set_coords(const Coords& c);
-    void set_latrange(const LatRange& lr);
-    void set_lonrange(const LonRange& lr);
 
 	/**
 	 * Set the date, level and timerange values to match the anagraphical context.
@@ -385,7 +386,7 @@ struct MatchedRecord : public Matched
     matcher::Result match_var_id(int val) const override;
     matcher::Result match_station_id(int val) const override;
     matcher::Result match_station_wmo(int block, int station=-1) const override;
-    matcher::Result match_date(const Datetime& min, const Datetime& max) const override;
+    matcher::Result match_datetime(const DatetimeRange& range) const override;
     matcher::Result match_coords(const LatRange& latrange, const LonRange& lonrange) const override;
     matcher::Result match_rep_memo(const char* memo) const override;
 };

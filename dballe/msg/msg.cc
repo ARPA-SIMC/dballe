@@ -803,11 +803,11 @@ matcher::Result MatchedMsg::match_station_wmo(int block, int station) const
     return matcher::MATCH_NA;
 }
 
-matcher::Result MatchedMsg::match_date(const Datetime& min, const Datetime& max) const
+matcher::Result MatchedMsg::match_datetime(const DatetimeRange& range) const
 {
     Datetime dt = m.datetime();
     if (dt.is_missing()) return matcher::MATCH_NA;
-    return Matched::date_in_range(dt, min, max);
+    return range.contains(dt) ? matcher::MATCH_YES : matcher::MATCH_NO;
 }
 
 matcher::Result MatchedMsg::match_coords(const LatRange& latrange, const LonRange& lonrange) const

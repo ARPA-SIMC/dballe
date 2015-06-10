@@ -22,8 +22,7 @@ Entry::Entry(dballe::db::Cursor &cur, bool want_details)
         core::Record rec;
         cur.to_record(rec);
         count = rec["context_id"].enqi();
-        datemin = rec.get_datetimemin();
-        datemax = rec.get_datetimemax();
+        dtrange = DatetimeRange(rec.get_datetimemin(), rec.get_datetimemax());
     }
 }
 
@@ -43,20 +42,15 @@ summary::Support Summary::supports(const Query& query) const
     if (!query.is_subquery(this->query))
         return Support::UNSUPPORTED;
 
-    
-
     // Now we know that query has either more fields than this->query or changes
     // in datetime or data-related filters
     Support res = Support::EXACT;
 
+    const DatetimeRange& new_range = core::Query::downcast(query).datetime;
+    const DatetimeRange& old_range = core::Query::downcast(this->query).datetime;
+
     // Check if the query has more restrictive datetime extremes
-    Datetime new_min;
-    Datetime new_max;
-    query.get_datetime_bounds(new_min, new_max);
-    Datetime our_min;
-    Datetime our_max;
-    this->query.get_datetime_bounds(our_min, our_max);
-    if (new_min != our_min || new_max != our_max)
+    if (old_range != new_range)
     {
         if (count == MISSING_INT)
         {
@@ -68,9 +62,9 @@ summary::Support Summary::supports(const Query& query) const
             // The query introduced further restrictions, check with the actual entries what we can do
             for (const auto& e: summary)
             {
-                if (Datetime::range_contains(new_min, new_max, e.datemin, e.datemax))
+                if (new_range.contains(e.dtrange))
                     ; // If the query entirely contains this summary entry, we can still match it exactly
-                else if (Datetime::range_disjoint(new_min, new_max, e.datemin, e.datemax))
+                else if (new_range.is_disjoint(e.dtrange))
                     // If the query is completely outside of this entry, we can still match exactly
                     ;
                 else
@@ -99,12 +93,10 @@ void Summary::aggregate(const summary::Entry &val)
     {
         if (count == MISSING_INT)
         {
-            dtmin = val.datemin;
-            dtmax = val.datemax;
+            dtrange = val.dtrange;
             count = val.count;
         } else {
-            if (val.datemin < dtmin) dtmin = val.datemin;
-            if (val.datemax > dtmax) dtmax = val.datemax;
+            dtrange.merge(val.dtrange);
             count += val.count;
         }
     }

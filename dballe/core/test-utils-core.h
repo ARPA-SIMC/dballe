@@ -146,7 +146,7 @@ struct test_group : public tut::group_base
     tut::test_result run_test(int n) override
     {
         --n; // From 1-based to 0-based
-        if (n < 0 || n >= tests.size())
+        if (n < 0 || (size_t)n >= tests.size())
             throw tut::beyond_last_test();
 
         if (!test_can_run(name, tests[n].name))

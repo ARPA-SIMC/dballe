@@ -31,115 +31,33 @@ typedef test_group::Test Test;
 typedef test_group::Fixture Fixture;
 
 std::vector<Test> tests {
+    Test("datetimerange", [](Fixture& f) {
+        Datetime missing;
+        Datetime dt_2010(2010, 1, 1, 0, 0, 0);
+        Datetime dt_2011(2011, 1, 1, 0, 0, 0);
+        Datetime dt_2012(2012, 1, 1, 0, 0, 0);
+        Datetime dt_2013(2013, 1, 1, 0, 0, 0);
+
+        // Test equality
+        wassert(actual(DatetimeRange(missing, missing) == DatetimeRange(missing, missing)).istrue());
+        wassert(actual(DatetimeRange(dt_2010, dt_2011) == DatetimeRange(dt_2010, dt_2011)).istrue());
+        wassert(actual(DatetimeRange(dt_2010, missing) == DatetimeRange(missing, missing)).isfalse());
+        wassert(actual(DatetimeRange(missing, dt_2010) == DatetimeRange(missing, missing)).isfalse());
+        wassert(actual(DatetimeRange(missing, missing) == DatetimeRange(dt_2010, missing)).isfalse());
+        wassert(actual(DatetimeRange(missing, missing) == DatetimeRange(missing, dt_2010)).isfalse());
+        wassert(actual(DatetimeRange(dt_2010, dt_2011) == DatetimeRange(dt_2012, dt_2013)).isfalse());
+
+        // Test contains
+        wassert(actual(DatetimeRange(missing, missing).contains(DatetimeRange(missing, missing))).istrue());
+        wassert(actual(DatetimeRange(dt_2010, dt_2011).contains(DatetimeRange(dt_2010, dt_2011))).istrue());
+        wassert(actual(DatetimeRange(missing, missing).contains(DatetimeRange(dt_2011, dt_2012))).istrue());
+        wassert(actual(DatetimeRange(dt_2011, dt_2012).contains(DatetimeRange(missing, missing))).isfalse());
+        wassert(actual(DatetimeRange(dt_2010, dt_2013).contains(DatetimeRange(dt_2011, dt_2012))).istrue());
+        wassert(actual(DatetimeRange(dt_2010, dt_2012).contains(DatetimeRange(dt_2011, dt_2013))).isfalse());
+        wassert(actual(DatetimeRange(missing, dt_2010).contains(DatetimeRange(dt_2011, missing))).isfalse());
+    }),
     Test("coords", [](Fixture& f) {
         wassert(actual(Coords(44.0, 11.0)) == Coords(44.0, 360.0+11.0));
-    }),
-    Test("latrange", [](Fixture& f) {
-        double dmin, dmax;
-        LatRange lr;
-        wassert(actual(lr.is_missing()).istrue());
-        wassert(actual(lr.imin) == LatRange::IMIN);
-        wassert(actual(lr.imax) == LatRange::IMAX);
-        lr.get(dmin, dmax);
-        wassert(actual(dmin) == LatRange::DMIN);
-        wassert(actual(dmax) == LatRange::DMAX);
-        wassert(actual(lr.contains(0)).istrue());
-
-        lr = LatRange(40.0, 50.0);
-        wassert(actual(lr.is_missing()).isfalse());
-        wassert(actual(lr.imin) == 4000000);
-        wassert(actual(lr.imax) == 5000000);
-        lr.get(dmin, dmax);
-        wassert(actual(dmin) == 40.0);
-        wassert(actual(dmax) == 50.0);
-        wassert(actual(lr.contains(39.9)).isfalse());
-        wassert(actual(lr.contains(40.0)).istrue());
-        wassert(actual(lr.contains(45.0)).istrue());
-        wassert(actual(lr.contains(50.0)).istrue());
-        wassert(actual(lr.contains(50.1)).isfalse());
-        wassert(actual(lr.contains(4500000)).istrue());
-        wassert(actual(lr.contains(5500000)).isfalse());
-
-        lr.set(-10.0, 10.0);
-        wassert(actual(lr.imin) == -1000000);
-        wassert(actual(lr.imax) == 1000000);
-        wassert(actual(lr) == LatRange(-10.0, 10.0));
-
-        lr.set(4000000, 5000000);
-        wassert(actual(lr.imin) == 4000000);
-        wassert(actual(lr.imax) == 5000000);
-        wassert(actual(lr) == LatRange(40.0, 50.0));
-    }),
-    Test("lonrange", [](Fixture& f) {
-        double dmin, dmax;
-        LonRange lr;
-        wassert(actual(lr.is_missing()).istrue());
-        wassert(actual(lr.imin) == MISSING_INT);
-        wassert(actual(lr.imax) == MISSING_INT);
-        lr.get(dmin, dmax);
-        wassert(actual(dmin) == -180.0);
-        wassert(actual(dmax) == 180.0);
-        wassert(actual(lr.contains(0)).istrue());
-
-        lr = LonRange(-18000000, 18000000);
-        wassert(actual(lr.is_missing()).istrue());
-        wassert(actual(lr.imin) == MISSING_INT);
-        wassert(actual(lr.imax) == MISSING_INT);
-
-        lr = LonRange(-180.0, 180.0);
-        wassert(actual(lr.is_missing()).istrue());
-        wassert(actual(lr.imin) == MISSING_INT);
-        wassert(actual(lr.imax) == MISSING_INT);
-
-        lr.set(-18000000, 18000000);
-        wassert(actual(lr.is_missing()).istrue());
-        wassert(actual(lr.imin) == MISSING_INT);
-        wassert(actual(lr.imax) == MISSING_INT);
-
-        lr.set(-180.0, 180.0);
-        wassert(actual(lr.is_missing()).istrue());
-        wassert(actual(lr.imin) == MISSING_INT);
-        wassert(actual(lr.imax) == MISSING_INT);
-
-        lr = LonRange(40.0, 50.0);
-        wassert(actual(lr.is_missing()).isfalse());
-        wassert(actual(lr.imin) == 4000000);
-        wassert(actual(lr.imax) == 5000000);
-        lr.get(dmin, dmax);
-        wassert(actual(dmin) == 40.0);
-        wassert(actual(dmax) == 50.0);
-        wassert(actual(lr.contains(39.9)).isfalse());
-        wassert(actual(lr.contains(40.0)).istrue());
-        wassert(actual(lr.contains(45.0)).istrue());
-        wassert(actual(lr.contains(50.0)).istrue());
-        wassert(actual(lr.contains(50.1)).isfalse());
-        wassert(actual(lr.contains(4500000)).istrue());
-        wassert(actual(lr.contains(5500000)).isfalse());
-
-        lr = LonRange(50.0, 40.0);
-        wassert(actual(lr.is_missing()).isfalse());
-        wassert(actual(lr.imin) == 5000000);
-        wassert(actual(lr.imax) == 4000000);
-        lr.get(dmin, dmax);
-        wassert(actual(dmin) == 50.0);
-        wassert(actual(dmax) == 40.0);
-        wassert(actual(lr.contains(39.9)).istrue());
-        wassert(actual(lr.contains(40.0)).istrue());
-        wassert(actual(lr.contains(45.0)).isfalse());
-        wassert(actual(lr.contains(50.0)).istrue());
-        wassert(actual(lr.contains(50.1)).istrue());
-        wassert(actual(lr.contains(4500000)).isfalse());
-        wassert(actual(lr.contains(5500000)).istrue());
-
-        lr.set(-10.0, 10.0);
-        wassert(actual(lr.imin) == -1000000);
-        wassert(actual(lr.imax) == 1000000);
-        wassert(actual(lr) == LonRange(-10.0, 10.0));
-
-        lr.set(350.0, 360.0);
-        wassert(actual(lr.imin) == -1000000);
-        wassert(actual(lr.imax) == 0);
-        wassert(actual(lr) == LonRange(-10.0, 0.0));
     }),
 };
 

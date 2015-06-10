@@ -32,20 +32,18 @@ unsigned Query::get_modifiers() const
 
 void Query::get_datetime_bounds(Datetime& dtmin, Datetime& dtmax) const
 {
-    dtmin = datetime_min.lower_bound();
-    dtmax = datetime_max.upper_bound();
+    dtmin = datetime.min;
+    dtmax = datetime.max;
 }
 
 void Query::set_datetime_exact(const Datetime& dt)
 {
-    datetime_min = dt.lower_bound();
-    datetime_max = dt.upper_bound();
+    datetime = DatetimeRange(dt);
 }
 
 void Query::set_datetime_bounds(const Datetime& dtmin, const Datetime& dtmax)
 {
-    datetime_min = dtmin.lower_bound();
-    datetime_max = dtmax.upper_bound();
+    datetime = DatetimeRange(dtmin, dtmax);
 }
 
 void Query::clear()
@@ -59,8 +57,7 @@ void Query::clear()
     ident.clear();
     latrange = LatRange();
     lonrange = LonRange();
-    datetime_min = Datetime();
-    datetime_max = Datetime();
+    datetime = DatetimeRange();
     level = Level();
     trange = Trange();
     varcodes.clear();
@@ -123,6 +120,7 @@ void Query::set_from_record(const dballe::Record& rec)
     else
         lonrange.set(rec.enq("lonmin", MISSING_INT), rec.enq("lonmax", MISSING_INT));
     // Datetime
+    // fetch all values involved in the computation
     int ye = rec.enq("year", MISSING_INT);
     int mo = rec.enq("month", MISSING_INT);
     int da = rec.enq("day", MISSING_INT);
@@ -148,32 +146,7 @@ void Query::set_from_record(const dballe::Record& rec)
     if (ho != MISSING_INT) homin = homax = ho;
     if (mi != MISSING_INT) mimin = mimax = mi;
     if (se != MISSING_INT) semin = semax = se;
-    if (yemin == MISSING_INT)
-        datetime_min = Datetime();
-    else
-    {
-        datetime_min = Datetime(yemin,
-                momin == MISSING_INT ? 0xff : momin,
-                damin == MISSING_INT ? 0xff : damin,
-                homin == MISSING_INT ? 0xff : homin,
-                mimin == MISSING_INT ? 0xff : mimin,
-                semin == MISSING_INT ? 0xff : semin).lower_bound();
-        if (datetime_min.day > Date::days_in_month(datetime_min.year, datetime_min.month))
-            datetime_min.day = Date::days_in_month(datetime_min.year, datetime_min.month);
-    }
-    if (yemax == MISSING_INT)
-        datetime_max = Datetime();
-    else
-    {
-        datetime_max = Datetime(yemax,
-                momax == MISSING_INT ? 0xff : momax,
-                damax == MISSING_INT ? 0xff : damax,
-                homax == MISSING_INT ? 0xff : homax,
-                mimax == MISSING_INT ? 0xff : mimax,
-                semax == MISSING_INT ? 0xff : semax).upper_bound();
-        if (datetime_max.day > Date::days_in_month(datetime_max.year, datetime_max.month))
-            datetime_max.day = Date::days_in_month(datetime_max.year, datetime_max.month);
-    }
+    datetime = DatetimeRange(yemin, momin, damin, homin, mimin, semin, yemax, momax, damax, homax, mimax, semax);
     // Level
     level = r.get_level();
     // Trange
@@ -294,8 +267,7 @@ bool Query::is_subquery(const dballe::Query& other_gen) const
     if (other.has_ident && has_ident && other.ident != ident) return false;
     if (!other.latrange.contains(latrange)) return false;
     if (!other.lonrange.contains(lonrange)) return false;
-    if (!is_subrange(datetime_min.lower_bound(), datetime_max.upper_bound(),
-                other.datetime_min.lower_bound(), other.datetime_max.upper_bound())) return false;
+    if (!other.datetime.contains(datetime)) return false;
     if (removed_or_changed(level.ltype1, other.level.ltype1)) return false;
     if (removed_or_changed(level.l1, other.level.l1)) return false;
     if (removed_or_changed(level.ltype2, other.level.ltype2)) return false;
@@ -393,35 +365,35 @@ void Query::to_vars(std::function<void(const char*, unique_ptr<Var>&&)> dest) co
             vargen.gen(DBA_KEY_LONMAX, lonrange.imax);
         }
     }
-    if (datetime_min == datetime_max)
+    if (datetime.min == datetime.max)
     {
-        if (!datetime_min.is_missing())
+        if (!datetime.min.is_missing())
         {
-            vargen.gen(DBA_KEY_YEAR, datetime_min.year);
-            vargen.gen(DBA_KEY_MONTH, datetime_min.month);
-            vargen.gen(DBA_KEY_DAY, datetime_min.day);
-            vargen.gen(DBA_KEY_HOUR, datetime_min.hour);
-            vargen.gen(DBA_KEY_MIN, datetime_min.minute);
-            vargen.gen(DBA_KEY_SEC, datetime_min.second);
+            vargen.gen(DBA_KEY_YEAR, datetime.min.year);
+            vargen.gen(DBA_KEY_MONTH, datetime.min.month);
+            vargen.gen(DBA_KEY_DAY, datetime.min.day);
+            vargen.gen(DBA_KEY_HOUR, datetime.min.hour);
+            vargen.gen(DBA_KEY_MIN, datetime.min.minute);
+            vargen.gen(DBA_KEY_SEC, datetime.min.second);
         }
     } else {
-        if (!datetime_min.is_missing())
+        if (!datetime.min.is_missing())
         {
-            vargen.gen(DBA_KEY_YEARMIN, datetime_min.year);
-            vargen.gen(DBA_KEY_MONTHMIN, datetime_min.month);
-            vargen.gen(DBA_KEY_DAYMIN, datetime_min.day);
-            vargen.gen(DBA_KEY_HOURMIN, datetime_min.hour);
-            vargen.gen(DBA_KEY_MINUMIN, datetime_min.minute);
-            vargen.gen(DBA_KEY_SECMIN, datetime_min.second);
+            vargen.gen(DBA_KEY_YEARMIN, datetime.min.year);
+            vargen.gen(DBA_KEY_MONTHMIN, datetime.min.month);
+            vargen.gen(DBA_KEY_DAYMIN, datetime.min.day);
+            vargen.gen(DBA_KEY_HOURMIN, datetime.min.hour);
+            vargen.gen(DBA_KEY_MINUMIN, datetime.min.minute);
+            vargen.gen(DBA_KEY_SECMIN, datetime.min.second);
         }
-        if (!datetime_max.is_missing())
+        if (!datetime.max.is_missing())
         {
-            vargen.gen(DBA_KEY_YEARMAX, datetime_max.year);
-            vargen.gen(DBA_KEY_MONTHMAX, datetime_max.month);
-            vargen.gen(DBA_KEY_DAYMAX, datetime_max.day);
-            vargen.gen(DBA_KEY_HOURMAX, datetime_max.hour);
-            vargen.gen(DBA_KEY_MINUMAX, datetime_max.minute);
-            vargen.gen(DBA_KEY_SECMAX, datetime_max.second);
+            vargen.gen(DBA_KEY_YEARMAX, datetime.max.year);
+            vargen.gen(DBA_KEY_MONTHMAX, datetime.max.month);
+            vargen.gen(DBA_KEY_DAYMAX, datetime.max.day);
+            vargen.gen(DBA_KEY_HOURMAX, datetime.max.hour);
+            vargen.gen(DBA_KEY_MINUMAX, datetime.max.minute);
+            vargen.gen(DBA_KEY_SECMAX, datetime.max.second);
         }
     }
     if (level.ltype1 != MISSING_INT) vargen.gen(DBA_KEY_LEVELTYPE1, level.ltype1);
@@ -519,14 +491,28 @@ struct Printer
         first = false;
     }
 
-    void print_datetime(const char* name, const Datetime& dt)
+    void print_datetimerange(const DatetimeRange& dtr)
     {
-        if (dt.is_missing()) return;
+        if (dtr.is_missing()) return;
         if (!first) fputs(", ", out);
-        fprintf(out, "%s=%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu",
-                name,
-                dt.year, dt.month, dt.day,
-                dt.hour, dt.minute, dt.second);
+        if (dtr.min == dtr.max)
+            fprintf(out, "datetime=%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu",
+                    dtr.max.year, dtr.max.month, dtr.max.day,
+                    dtr.max.hour, dtr.max.minute, dtr.max.second);
+        else if (dtr.min.is_missing())
+            fprintf(out, "datetime<=%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu",
+                    dtr.max.year, dtr.max.month, dtr.max.day,
+                    dtr.max.hour, dtr.max.minute, dtr.max.second);
+        else if (dtr.max.is_missing())
+            fprintf(out, "datetime>=%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu",
+                    dtr.min.year, dtr.min.month, dtr.min.day,
+                    dtr.min.hour, dtr.min.minute, dtr.min.second);
+        else
+            fprintf(out, "datetime=%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu to %04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu",
+                    dtr.min.year, dtr.min.month, dtr.min.day,
+                    dtr.min.hour, dtr.min.minute, dtr.min.second,
+                    dtr.max.year, dtr.max.month, dtr.max.day,
+                    dtr.max.hour, dtr.max.minute, dtr.max.second);
         first = false;
     }
 
@@ -576,8 +562,7 @@ struct Printer
         print_str("ident", q.has_ident, q.ident);
         print_latrange(q.latrange);
         print_lonrange(q.lonrange);
-        print_datetime("datetime_min", q.datetime_min);
-        print_datetime("datetime_max", q.datetime_max);
+        print_datetimerange(q.datetime);
         print_level("level", q.level);
         print_trange("trange", q.trange);
         print_varcodes("varcodes", q.varcodes);
@@ -620,12 +605,12 @@ void Query::serialize(JSONWriter& out) const
         out.add("lonmin", lonrange.imin);
         out.add("lonmax", lonrange.imax);
     }
-    if (datetime_min == datetime_max)
+    if (datetime.min == datetime.max)
     {
-        if (!datetime_min.is_missing()) out.add("datetime", datetime_min);
+        if (!datetime.min.is_missing()) out.add("datetime", datetime.min);
     } else {
-        if (!datetime_min.is_missing()) out.add("datetime_min", datetime_min);
-        if (!datetime_max.is_missing()) out.add("datetime_max", datetime_min);
+        if (!datetime.min.is_missing()) out.add("datetime_min", datetime.min);
+        if (!datetime.max.is_missing()) out.add("datetime_max", datetime.max);
     }
     if (!level.is_missing()) out.add("level", level);
     if (!trange.is_missing()) out.add("trange", trange);

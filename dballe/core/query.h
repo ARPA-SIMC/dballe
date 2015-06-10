@@ -54,8 +54,7 @@ struct Query : public dballe::Query
     std::string ident;
     LatRange latrange;
     LonRange lonrange;
-    Datetime datetime_min;
-    Datetime datetime_max;
+    DatetimeRange datetime;
     Level level;
     Trange trange;
     std::set<wreport::Varcode> varcodes;
@@ -77,7 +76,10 @@ struct Query : public dballe::Query
     void get_datetime_bounds(Datetime& dtmin, Datetime& dtmax) const override;
     void set_datetime_exact(const Datetime& dt) override;
     void set_datetime_bounds(const Datetime& dtmin, const Datetime& dtmax) override;
-
+    LatRange get_latrange() const override { return latrange; }
+    void set_latrange(const LatRange& lr) override { latrange = lr; }
+    LonRange get_lonrange() const override { return lonrange; }
+    void set_lonrange(const LonRange& lr) override { lonrange = lr; }
     Level get_level() const override { return level; }
     void set_level(const Level& level) override { this->level = level; }
     Trange get_trange() const override { return trange; }

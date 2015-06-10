@@ -171,10 +171,10 @@ matcher::Result MatchedMsgs::match_station_wmo(int block, int station) const
     return matcher::MATCH_NA;
 }
 
-matcher::Result MatchedMsgs::match_date(const Datetime& min, const Datetime& max) const
+matcher::Result MatchedMsgs::match_datetime(const DatetimeRange& range) const
 {
     for (Msgs::const_iterator i = m.begin(); i != m.end(); ++i)
-        if (MatchedMsg(**i).match_date(min, max) == matcher::MATCH_YES)
+        if (MatchedMsg(**i).match_datetime(range) == matcher::MATCH_YES)
             return matcher::MATCH_YES;
     return matcher::MATCH_NA;
 }

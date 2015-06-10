@@ -32,8 +32,7 @@ struct Entry
     dballe::Level level;
     dballe::Trange trange;
     wreport::Varcode varcode;
-    dballe::Datetime datemin;
-    dballe::Datetime datemax;
+    dballe::DatetimeRange dtrange;
     int count = MISSING_INT;
 
     Entry(db::Cursor& cur, bool want_details);
@@ -67,18 +66,16 @@ public:
     std::set<dballe::Trange> all_tranges;
     std::set<wreport::Varcode> all_varcodes;
 
-    // Last known minimum datetime for the data that we have
-    dballe::Datetime dtmin;
-    // Last known maximum datetime for the data that we have
-    dballe::Datetime dtmax;
+    // Last known datetime range for the data that we have
+    dballe::DatetimeRange dtrange;
     // Last known count for the data that we have
     unsigned count = MISSING_INT;
 
     /// Return true if the summary has been filled with data
     bool is_valid() const { return valid; }
 
-    const Datetime& datetime_min() const { return dtmin; }
-    const Datetime& datetime_max() const { return dtmax; }
+    const Datetime& datetime_min() const { return dtrange.min; }
+    const Datetime& datetime_max() const { return dtrange.max; }
     unsigned data_count() const { return count; }
 
     /**

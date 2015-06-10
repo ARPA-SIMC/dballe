@@ -24,9 +24,59 @@ typedef enum {
 const char* encoding_name(Encoding enc);
 Encoding parse_encoding(const std::string& s);
 
-std::ostream& operator<<(std::ostream& out, const Level& l);
+/**
+ * Range of datetimes
+ *
+ * A missing extreme in the range means an open ended range.
+ */
+struct DatetimeRange
+{
+    Datetime min;
+    Datetime max;
 
-std::ostream& operator<<(std::ostream& out, const Trange& l);
+    DatetimeRange() = default;
+    DatetimeRange(const Datetime& dt)
+        : min(dt), max(dt) {}
+    DatetimeRange(const Datetime& min, const Datetime& max)
+        : min(min), max(max) {}
+    DatetimeRange(
+            int yemin, int momin, int damin, int homin, int mimin, int semin,
+            int yemax, int momax, int damax, int homax, int mimax, int semax)
+    {
+        set(yemin, momin, damin, homin, mimin, semin, yemax, momax, damax, homax, mimax, semax);
+    }
+
+    bool is_missing() const
+    {
+        return min.is_missing() && max.is_missing();
+    }
+
+    bool operator==(const DatetimeRange& dtr) const
+    {
+        return min == dtr.min && max == dtr.max;
+    }
+
+    bool operator!=(const DatetimeRange& dtr) const
+    {
+        return min != dtr.min || max != dtr.max;
+    }
+
+    void set(const Datetime& dt);
+    void set(const Datetime& min, const Datetime& max);
+    void set(int yemin, int momin, int damin, int homin, int mimin, int semin,
+             int yemax, int momax, int damax, int homax, int mimax, int semax);
+
+    void merge(const DatetimeRange& range);
+
+    /// Check if a Datetime is inside this range
+    bool contains(const Datetime& dt) const;
+
+    /// Check if a range is inside this range (extremes included)
+    bool contains(const DatetimeRange& dtr) const;
+
+    /// Check if the two ranges are completely disjoint
+    bool is_disjoint(const DatetimeRange& dtr) const;
+};
 
 /// Coordinates
 struct Coords
@@ -82,124 +132,15 @@ struct Coords
 };
 
 
-/**
- * Range of latitudes.
- *
- * When given as an integer, a latitude value is intended in 1/100000 of a
- * degree, which is the maximum resolution supported by DB-All.e.
- *
- * When given as a double a latitude value is intended to be in degrees.
- *
- * Values are matched between imin and imax, both extremes are considered part
- * of the range.
- *
- * Invariant: imin <= imax.
- */
-struct LatRange
-{
-    static const int IMIN = -9000000;
-    static const int IMAX = 9000000;
-    static constexpr double DMIN = -90.0;
-    static constexpr double DMAX = 90.0;
-
-    /// Minimum latitude
-    int imin = IMIN;
-    /// Maximum latitude
-    int imax = IMAX;
-
-    LatRange() = default;
-    LatRange(int min, int max) : imin(min), imax(max) {}
-    LatRange(double min, double max);
-
-    bool operator==(const LatRange& lr) const
-    {
-        return imin == lr.imin && imax == lr.imax;
-    }
-
-    bool operator!=(const LatRange& lr) const
-    {
-        return imin != lr.imin || imax != lr.imax;
-    }
-
-    bool is_missing() const;
-
-    void get(double& min, double& max) const;
-    void set(int min, int max);
-    void set(double min, double max);
-
-    /// Check if a point is inside this range (extremes included)
-    bool contains(int lat) const;
-
-    /// Check if a point is inside this range (extremes included)
-    bool contains(double lat) const;
-
-    /// Check if a range is inside this range (extremes included)
-    bool contains(const LatRange& lr) const;
-};
-
-
-/**
- * Range of longitudes.
- *
- * When given as an integer, a longitude value is intended in 1/100000 of a
- * degree, which is the maximum resolution supported by DB-All.e.
- *
- * When given as a double a longitude value is intended to be in degrees.
- *
- * Longitude values are normalized between -180.0 and 180.0. The range is the
- * angle that goes from imin to imax. Both extremes are considered part of the
- * range.
- *
- * A range that matches any longitude has both imin and imax set to
- * MISSING_INT.
- *
- * Invariant: if imin == MISSING_INT, then imax == MISSING_INT. An open-ended
- * longitude range makes no sense, since longitudes move alongide a closed
- * circle.
- */
-struct LonRange
-{
-    int imin = MISSING_INT;
-    int imax = MISSING_INT;
-
-    LonRange() = default;
-    LonRange(int min, int max);
-    LonRange(double min, double max);
-
-    bool operator==(const LonRange& lr) const
-    {
-        return imin == lr.imin && imax == lr.imax;
-    }
-
-    bool operator!=(const LonRange& lr) const
-    {
-        return imin != lr.imin || imax != lr.imax;
-    }
-
-    bool is_missing() const;
-
-    /// If is_missing, returns -180.0, 180.0
-    void get(double& min, double& max) const;
-    void set(int min, int max);
-    void set(double min, double max);
-
-    /// Check if a point is inside this range (extremes included)
-    bool contains(int lon) const;
-
-    /// Check if a point is inside this range (extremes included)
-    bool contains(double lon) const;
-
-    /// Check if a range is inside this range (extremes included)
-    bool contains(const LonRange& lr) const;
-};
-
-
 std::ostream& operator<<(std::ostream& out, const Coords& c);
 std::ostream& operator<<(std::ostream& out, const Date& dt);
 std::ostream& operator<<(std::ostream& out, const Time& t);
 std::ostream& operator<<(std::ostream& out, const Datetime& dt);
+std::ostream& operator<<(std::ostream& out, const DatetimeRange& dtr);
 std::ostream& operator<<(std::ostream& out, const LatRange& lr);
 std::ostream& operator<<(std::ostream& out, const LonRange& lr);
+std::ostream& operator<<(std::ostream& out, const Level& l);
+std::ostream& operator<<(std::ostream& out, const Trange& l);
 
 }
 

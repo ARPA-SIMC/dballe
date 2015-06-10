@@ -69,6 +69,10 @@ struct Record
 
     /// Set year, month, day, hour, min, sec
     virtual void set_datetime(const Datetime& dt) = 0;
+    /// Set latmin, latmax
+    virtual void set_latrange(const LatRange& lr) = 0;
+    /// Set lonmin, lonmax
+    virtual void set_lonrange(const LonRange& lr) = 0;
     /// Set leveltype1, l1, leveltype2, l2
     virtual void set_level(const Level& lev) = 0;
     /// Set pindicator, p1, p2
@@ -83,6 +87,8 @@ struct Record
     void set(const char* key, const char* val) { setc(key, val); }
     void set(const char* key, const std::string& val) { sets(key, val); }
     void set(const Datetime& dt) { set_datetime(dt); }
+    void set(const LatRange& lr) { set_latrange(lr); }
+    void set(const LonRange& lr) { set_lonrange(lr); }
     void set(const Level& lev) { set_level(lev); }
     void set(const Trange& tr) { set_trange(tr); }
     void set(const wreport::Var& var) { set_var(var); }

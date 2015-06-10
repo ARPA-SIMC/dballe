@@ -2,6 +2,7 @@
 #include <wreport/error.h>
 #include <ostream>
 #include <iomanip>
+#include <cmath>
 #include <cstdarg>
 
 using namespace wreport;
@@ -13,21 +14,35 @@ namespace dballe {
  * Date
  */
 
+Date::Date()
+    : year(0xffff), month(0xff), day(0xff)
+{
+}
+
+Date::Date(int ye, int mo, int da)
+{
+    if (ye == MISSING_INT)
+    {
+        year = 0xffff;
+        month = day = 0xff;
+    } else {
+        if (mo == MISSING_INT || mo < 1)
+            mo = 1;
+        else if (mo > 12)
+            mo = 12;
+
+        if (da == MISSING_INT || da < 1)
+            da = 1;
+        else
+            day = min(da, days_in_month(ye, mo));
+
+        year = ye;
+        month = mo;
+        day = da;
+    }
+}
+
 bool Date::is_missing() const { return year == 0xffff; }
-
-void Date::from_array(const int* vals)
-{
-    year = vals[0];
-    month = vals[1];
-    day = vals[2];
-}
-
-void Date::to_array(int* vals) const
-{
-    vals[0] = (unsigned)year;
-    vals[1] = (unsigned)month;
-    vals[2] = (unsigned)day;
-}
 
 int Date::compare(const Date& o) const
 {
@@ -41,9 +56,11 @@ int Date::to_julian() const
     return calendar_to_julian(year, month, day);
 }
 
-void Date::from_julian(int jday)
+Date Date::from_julian(int jday)
 {
-    julian_to_calendar(jday, year, month, day);
+    Date res;
+    julian_to_calendar(jday, res.year, res.month, res.day);
+    return res;
 }
 
 int Date::calendar_to_julian(int year, int month, int day)
@@ -151,21 +168,34 @@ void Date::to_stream_iso8601(std::ostream& out) const
  * Time
  */
 
+Time::Time()
+    : hour(0xff), minute(0xff), second(0xff)
+{
+}
+
+Time::Time(int ho, int mi, int se)
+{
+    if (ho == MISSING_INT || ho < 0)
+        ho = 0;
+    else if (ho > 23)
+        ho = 23;
+
+    if (mi == MISSING_INT || mi < 0)
+        mi = 0;
+    else if(mi > 59)
+        mi = 59;
+
+    if (se == MISSING_INT || se < 0)
+        se = 0;
+    else if (se > 59)
+        se = 59;
+
+    hour = ho;
+    minute = mi;
+    second = se;
+}
+
 bool Time::is_missing() const { return hour == 0xff; }
-
-void Time::from_array(const int* vals)
-{
-    hour = vals[0];
-    minute = vals[1];
-    second = vals[2];
-}
-
-void Time::to_array(int* vals) const
-{
-    vals[0] = (unsigned)hour;
-    vals[1] = (unsigned)minute;
-    vals[2] = (unsigned)second;
-}
 
 int Time::compare(const Time& o) const
 {
@@ -213,6 +243,81 @@ void Time::to_stream_iso8601(std::ostream& out) const
  * Datetime
  */
 
+Datetime::Datetime()
+    : year(0xffff), month(0xff), day(0xff), hour(0xff), minute(0xff), second(0xff)
+{
+}
+
+Datetime::Datetime(const Date& date, const Time& time)
+        : year(date.year), month(date.month), day(date.day),
+          hour(time.hour), minute(time.minute), second(time.second) {}
+
+Datetime::Datetime(int ye, int mo, int da, int ho, int mi, int se)
+{
+    if (ye == MISSING_INT)
+    {
+        year = 0xffff;
+        month = day = hour = minute = second = 0xff;
+    } else {
+        if (mo == MISSING_INT || mo < 1)
+            mo = 1;
+        else if (mo > 12)
+            mo = 12;
+
+        if (da == MISSING_INT || da < 1)
+            da = 1;
+        else
+            da = min(da, Date::days_in_month(ye, mo));
+
+        if (ho == MISSING_INT || ho < 0)
+            ho = 0;
+        else if (ho > 23)
+            ho = 23;
+
+        if (mi == MISSING_INT || mi < 0)
+            mi = 0;
+        else if(mi > 59)
+            mi = 59;
+
+        if (se == MISSING_INT || se < 0)
+            se = 0;
+        else if (se > 59)
+            se = 59;
+
+        year = ye;
+        month = mo;
+        day = da;
+        hour = ho;
+        minute = mi;
+        second = se;
+    }
+}
+
+Datetime Datetime::from_julian(int jday, int ho, int mi, int se)
+{
+    return Datetime(Date::from_julian(jday), Time(ho, mi, se));
+}
+
+Datetime Datetime::lower_bound(int ye, int mo, int da, int ho, int mi, int se)
+{
+    if (mo == MISSING_INT) mo = 1;
+    if (da == MISSING_INT) da = 1;
+    if (ho == MISSING_INT) ho = 0;
+    if (mi == MISSING_INT) mi = 0;
+    if (se == MISSING_INT) se = 0;
+    return Datetime(ye, mo, da, ho, mi, se);
+}
+
+Datetime Datetime::upper_bound(int ye, int mo, int da, int ho, int mi, int se)
+{
+    if (mo == MISSING_INT) mo = 12;
+    if (da == MISSING_INT) da = Date::days_in_month(ye, mo);
+    if (ho == MISSING_INT) ho = 23;
+    if (mi == MISSING_INT) mi = 59;
+    if (se == MISSING_INT) se = 59;
+    return Datetime(ye, mo, da, ho, mi, se);
+}
+
 Date Datetime::date() const { return Date(year, month, day); }
 
 Time Datetime::time() const { return Time(hour, minute, second); }
@@ -222,31 +327,6 @@ bool Datetime::is_missing() const { return year == 0xffff; }
 int Datetime::to_julian() const
 {
     return Date::calendar_to_julian(year, month, day);
-}
-
-void Datetime::from_julian(int jday)
-{
-    Date::julian_to_calendar(jday, year, month, day);
-}
-
-void Datetime::from_array(const int* vals)
-{
-    year = vals[0];
-    month = vals[1];
-    day = vals[2];
-    hour = vals[3];
-    minute = vals[4];
-    second = vals[5];
-}
-
-void Datetime::to_array(int* vals) const
-{
-    vals[0] = (unsigned)year;
-    vals[1] = (unsigned)month;
-    vals[2] = (unsigned)day;
-    vals[3] = (unsigned)hour;
-    vals[4] = (unsigned)minute;
-    vals[5] = (unsigned)second;
 }
 
 void Datetime::to_stream_iso8601(std::ostream& out, char sep, const char* tz) const
@@ -282,35 +362,10 @@ bool Datetime::operator!=(const Datetime& dt) const
         || hour != dt.hour || minute != dt.minute || second != dt.second;
 }
 
-bool Datetime::operator<(const Datetime& dt) const
-{
-    if (year < dt.year) return true;
-    if (year > dt.year) return false;
-    if (month < dt.month) return true;
-    if (month > dt.month) return false;
-    if (day < dt.day) return true;
-    if (day > dt.day) return false;
-    if (hour < dt.hour) return true;
-    if (hour > dt.hour) return false;
-    if (minute < dt.minute) return true;
-    if (minute > dt.minute) return false;
-    return second < dt.second;
-}
-
-bool Datetime::operator>(const Datetime& dt) const
-{
-    if (year < dt.year) return false;
-    if (year > dt.year) return true;
-    if (month < dt.month) return false;
-    if (month > dt.month) return true;
-    if (day < dt.day) return false;
-    if (day > dt.day) return true;
-    if (hour < dt.hour) return false;
-    if (hour > dt.hour) return true;
-    if (minute < dt.minute) return false;
-    if (minute > dt.minute) return true;
-    return second > dt.second;
-}
+bool Datetime::operator<(const Datetime& dt) const { return compare(dt) < 0; }
+bool Datetime::operator>(const Datetime& dt) const { return compare(dt) > 0; }
+bool Datetime::operator<=(const Datetime& dt) const { return compare(dt) <= 0; }
+bool Datetime::operator>=(const Datetime& dt) const { return compare(dt) >= 0; }
 
 Datetime Datetime::from_iso8601(const char* str)
 {
@@ -323,70 +378,189 @@ Datetime Datetime::from_iso8601(const char* str)
     return Datetime(ye, mo, da, ho, mi, se);
 }
 
-bool Datetime::range_equals(
-        const Datetime& begin1, const Datetime& until1,
-        const Datetime& begin2, const Datetime& until2)
+/*
+ * Coordinate utilities
+ */
+
+namespace {
+
+inline int ll_to_int(double ll) { return lround(ll * 100000.0); }
+inline double ll_from_int(int ll) { return (double)ll / 100000.0; }
+inline int normalon(int lon)
 {
-    return begin1 == begin2 && until1 == until2;
+    return ((lon + 18000000) % 36000000) - 18000000;
 }
 
-bool Datetime::range_contains(
-        const Datetime& begin1, const Datetime& until1,
-        const Datetime& begin2, const Datetime& until2)
-{
-    if (!begin1.is_missing() && (begin2.is_missing() || begin2 < begin1))
-        return false;
-
-    if (!until1.is_missing() && (until2.is_missing() || until2 > until1))
-        return false;
-
-    return true;
 }
 
-bool Datetime::range_disjoint(
-        const Datetime& begin1, const Datetime& until1,
-        const Datetime& begin2, const Datetime& until2)
+/*
+ * LatRange
+ */
+
+LatRange::LatRange(int min, int max) : imin(min), imax(max) {}
+
+LatRange::LatRange(double min, double max)
+    : imin(ll_to_int(min)),
+      imax(ll_to_int(max))
 {
-    if (!until1.is_missing() && !begin2.is_missing() && until1 < until2)
-        return true;
-
-    if (!until2.is_missing() && !begin1.is_missing() && until2 < until1)
-        return true;
-
-    return false;
 }
 
-Datetime Datetime::lower_bound() const
+bool LatRange::operator==(const LatRange& lr) const
 {
-    Datetime res;
-
-    if (is_missing()) return res;
-
-    res.year = year;
-    res.month = month == 0xff ? 1 : month;
-    res.day = day == 0xff ? 1 : day;
-    res.hour = hour == 0xff ? 0 : hour;
-    res.minute = minute == 0xff ? 0 : minute;
-    res.second = second == 0xff ? 0 : second;
-
-    return res;
+    return imin == lr.imin && imax == lr.imax;
 }
 
-Datetime Datetime::upper_bound() const
+bool LatRange::operator!=(const LatRange& lr) const
 {
-    Datetime res;
-
-    if (is_missing()) return res;
-
-    res.year = year;
-    res.month = month == 0xff ? 12 : month;
-    res.day = day == 0xff ? Date::days_in_month(res.year, res.month) : day;
-    res.hour = hour == 0xff ? 23 : hour;
-    res.minute = minute == 0xff ? 59 : minute;
-    res.second = second == 0xff ? 59 : second;
-
-    return res;
+    return imin != lr.imin || imax != lr.imax;
 }
+
+bool LatRange::is_missing() const { return imin == IMIN && imax == IMAX; }
+
+void LatRange::get(double& min, double& max) const
+{
+    min = ll_from_int(imin);
+    max = ll_from_int(imax);
+}
+
+void LatRange::set(int min, int max)
+{
+    imin = min;
+    imax = max;
+}
+
+void LatRange::set(double min, double max)
+{
+    imin = ll_to_int(min);
+    imax = ll_to_int(max);
+}
+
+bool LatRange::contains(int lat) const
+{
+    return lat >= imin && lat <= imax;
+}
+
+bool LatRange::contains(double lat) const
+{
+    int ilat = ll_to_int(lat);
+    return ilat >= imin && ilat <= imax;
+}
+
+bool LatRange::contains(const LatRange& lr) const
+{
+    return imin <= lr.imin && lr.imax <= imax;
+}
+
+/*
+ * LonRange
+ */
+
+LonRange::LonRange(int min, int max)
+{
+    set(min, max);
+}
+
+LonRange::LonRange(double min, double max)
+    : imin(normalon(ll_to_int(min))), imax(normalon(ll_to_int(max)))
+{
+    if (min != max && imin == imax)
+        imin = imax = MISSING_INT;
+}
+
+bool LonRange::operator==(const LonRange& lr) const
+{
+    return imin == lr.imin && imax == lr.imax;
+}
+
+bool LonRange::operator!=(const LonRange& lr) const
+{
+    return imin != lr.imin || imax != lr.imax;
+}
+
+bool LonRange::is_missing() const
+{
+    return imin == MISSING_INT || imax == MISSING_INT;
+}
+
+void LonRange::get(double& min, double& max) const
+{
+    if (is_missing())
+    {
+        min = -180.0;
+        max = 180.0;
+    } else {
+        min = ll_from_int(imin);
+        max = ll_from_int(imax);
+    }
+}
+
+void LonRange::set(int min, int max)
+{
+    if ((min != MISSING_INT || max != MISSING_INT) && (min == MISSING_INT || max == MISSING_INT))
+        error_consistency::throwf("cannot set longitude range to an open ended range");
+    imin = min == MISSING_INT ? MISSING_INT : normalon(min);
+    imax = max == MISSING_INT ? MISSING_INT : normalon(max);
+    // Catch cases like min=0 max=360, that would match anything, and set them
+    // to missing range match
+    if (min != max && imin == imax)
+        imin = imax = MISSING_INT;
+}
+
+void LonRange::set(double min, double max)
+{
+    set(ll_to_int(min), ll_to_int(max));
+}
+
+bool LonRange::contains(int lon) const
+{
+    if (imin == imax)
+    {
+        if (imin == MISSING_INT)
+            return true;
+        return lon == imin;
+    } else if (imin < imax) {
+        return lon >= imin && lon <= imax;
+    } else {
+        return ((lon >= imin and lon <= 18000000)
+             or (lon >= -18000000 and lon <= imax));
+    }
+}
+
+bool LonRange::contains(double lon) const
+{
+    return contains(ll_to_int(lon));
+}
+
+bool LonRange::contains(const LonRange& lr) const
+{
+    if (is_missing()) return true;
+    if (lr.is_missing()) return false;
+
+    // Longitude ranges can match outside or inside the interval
+    if (imin < imax)
+    {
+        // we match inside the interval
+        if (lr.imin < lr.imax)
+        {
+            // lr matches inside the interval
+            return imin <= lr.imin && lr.imax <= imax;
+        } else {
+            // lr matches outside the interval
+            return false;
+        }
+    } else {
+        // we match outside the interval
+        if (lr.imin < lr.imax)
+        {
+            // lr matches inside the interval
+            return lr.imax <= imin || lr.imin >= imax;
+        } else {
+            // lr matches outside the interval
+            return lr.imin <= imin || lr.imax >= imax;
+        }
+    }
+}
+
 
 /*
  * Level

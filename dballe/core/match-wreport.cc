@@ -14,6 +14,8 @@ MatchedSubset::MatchedSubset(const Subset& r)
     : r(r), lat(MISSING_INT), lon(MISSING_INT),
       var_ana_id(0), var_block(0), var_station(0), var_rep_memo(0)
 {
+    int ye = MISSING_INT, mo = MISSING_INT, da = MISSING_INT, ho = MISSING_INT, mi = MISSING_INT, se = MISSING_INT;
+
     // Scan message taking note of significant values
     for (Subset::const_iterator i = r.begin(); i != r.end(); ++i)
     {
@@ -23,13 +25,13 @@ MatchedSubset::MatchedSubset(const Subset& r)
             case WR_VAR(0,  1,   2): var_station = &*i; break;
             case WR_VAR(0,  1, 192): var_ana_id = &*i; break;
             case WR_VAR(0,  1, 194): var_rep_memo = &*i; break;
-            case WR_VAR(0,  4,   1): date.year = i->enq(-1); break;
-            case WR_VAR(0,  4,   2): date.month = i->enq(-1); break;
-            case WR_VAR(0,  4,   3): date.day = i->enq(-1); break;
-            case WR_VAR(0,  4,   4): date.hour = i->enq(-1); break;
-            case WR_VAR(0,  4,   5): date.minute = i->enq(-1); break;
-            case WR_VAR(0,  4,   6): date.second = i->enq(-1); break;
-            case WR_VAR(0,  4,   7): date.second = (int)rint(i->enq(-1.0)); break;
+            case WR_VAR(0,  4,   1): ye = i->enq(MISSING_INT); break;
+            case WR_VAR(0,  4,   2): mo = i->enq(MISSING_INT); break;
+            case WR_VAR(0,  4,   3): da = i->enq(MISSING_INT); break;
+            case WR_VAR(0,  4,   4): ho = i->enq(MISSING_INT); break;
+            case WR_VAR(0,  4,   5): mi = i->enq(MISSING_INT); break;
+            case WR_VAR(0,  4,   6): se = i->enq(MISSING_INT); break;
+            case WR_VAR(0,  4,   7): se = i->isset() ? lround(i->enqd()) : MISSING_INT; break;
             case WR_VAR(0,  5,   1):
             case WR_VAR(0,  5,   2): if (i->isset()) lat = i->enqd() * 100000; break;
             case WR_VAR(0,  6,   1):
@@ -38,7 +40,7 @@ MatchedSubset::MatchedSubset(const Subset& r)
     }
 
     // Fill in missing date bits
-    date = date.lower_bound();
+    date = Datetime(ye, mo, da, ho, mi, se);
 }
 
 MatchedSubset::~MatchedSubset()
@@ -75,10 +77,10 @@ matcher::Result MatchedSubset::match_station_wmo(int block, int station) const
     return matcher::MATCH_YES;
 }
 
-matcher::Result MatchedSubset::match_date(const Datetime& min, const Datetime& max) const
+matcher::Result MatchedSubset::match_datetime(const DatetimeRange& range) const
 {
     if (date.is_missing()) return matcher::MATCH_NA;
-    return Matched::date_in_range(date, min, max);
+    return range.contains(date) ? matcher::MATCH_YES : matcher::MATCH_NO;
 }
 
 matcher::Result MatchedSubset::match_coords(const LatRange& latrange, const LonRange& lonrange) const
@@ -149,10 +151,10 @@ matcher::Result MatchedBulletin::match_station_wmo(int block, int station) const
     return matcher::MATCH_NA;
 }
 
-matcher::Result MatchedBulletin::match_date(const Datetime& min, const Datetime& max) const
+matcher::Result MatchedBulletin::match_datetime(const DatetimeRange& range) const
 {
     for (unsigned i = 0; i < r.subsets.size(); ++i)
-        if (subsets[i]->match_date(min, max) == matcher::MATCH_YES)
+        if (subsets[i]->match_datetime(range) == matcher::MATCH_YES)
             return matcher::MATCH_YES;
     return matcher::MATCH_NA;
 }

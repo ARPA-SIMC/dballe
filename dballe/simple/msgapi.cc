@@ -379,29 +379,22 @@ void MsgAPI::prendilo()
     if (const Var* var = input.get("lon"))
         wmsg->set_longitude(var->enqd());
 
-    Datetime datetime;
-    if (const Var* var = input.get("year"))
-        datetime.year = var->enqi();
-    if (const Var* var = input.get("month"))
-        datetime.month = var->enqi();
-    if (const Var* var = input.get("day"))
-        datetime.day = var->enqi();
-    if (const Var* var = input.get("hour"))
-        datetime.hour = var->enqi();
-    if (const Var* var = input.get("min"))
-        datetime.minute = var->enqi();
-    if (const Var* var = input.get("sec"))
-        datetime.second = var->enqi();
+    int ye = input.enq("year", MISSING_INT);
+    int mo = input.enq("month", MISSING_INT);
+    int da = input.enq("day", MISSING_INT);
+    int ho = input.enq("hour", MISSING_INT);
+    int mi = input.enq("min", MISSING_INT);
+    int se = input.enq("sec", MISSING_INT);
 
-    if (datetime.year == 0xffff)
+    if (ye == MISSING_INT)
         throw error_consistency("no year information found in message to import");
-    if (datetime.month == 0xff)
+    if (mo == MISSING_INT)
         throw error_consistency("no month information found in message to import");
-    if (datetime.day == 0xff)
+    if (da == MISSING_INT)
         throw error_consistency("no day information found in message to import");
-    if (datetime.hour == 0xff)
+    if (ho == MISSING_INT)
         throw error_consistency("no hour information found in message to import");
-    wmsg->set_datetime(datetime.lower_bound());
+    wmsg->set_datetime(Datetime(ye, mo, da, ho, mi, se));
 
 	const vector<Var*>& in_vars = input.vars();
 	flushVars();

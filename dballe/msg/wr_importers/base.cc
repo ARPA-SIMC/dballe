@@ -43,24 +43,28 @@ static const Level lev_std_wind(103, 10*1000);
 static const Trange tr_std_wind(200, 0, 600);
 static const Trange tr_std_wind_max10m(205, 0, 600);
 
+void Importer::init()
+{
+    ye = mo = da = ho = mi = se = MISSING_INT;
+}
+
 void Importer::import(const wreport::Subset& subset, Msg& msg)
 {
     this->subset = &subset;
     this->msg = &msg;
-    datetime = Datetime();
     init();
     run();
-    if (datetime.year == 0xffff)
+    if (ye == MISSING_INT)
         msg.set_datetime(Datetime());
     else
     {
-        if (datetime.month == 0xff)
+        if (mo == MISSING_INT)
             throw error_consistency("no month information found in message to import");
-        if (datetime.day == 0xff)
+        if (da == MISSING_INT)
             throw error_consistency("no day information found in message to import");
-        if (datetime.hour == 0xff)
+        if (ho == MISSING_INT)
             throw error_consistency("no hour information found in message to import");
-        msg.set_datetime(datetime.lower_bound());
+        msg.set_datetime(Datetime(ye, mo, da, ho, mi, se));
     }
 }
 
@@ -82,32 +86,32 @@ void WMOImporter::import_var(const Var& var)
 		case WR_VAR(0,  2,  1): msg->set_st_type_var(var); break;
 		case WR_VAR(0,  1, 15): msg->set_st_name_var(var); break;
         case WR_VAR(0,  4,  1):
-            datetime.year = var.enqi();
+            ye = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 1), Level(), Trange());
             break;
         case WR_VAR(0,  4,  2):
-            datetime.month = var.enqi();
+            mo = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 2), Level(), Trange());
             break;
         case WR_VAR(0,  4,  3):
-            datetime.day = var.enqi();
+            da = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 3), Level(), Trange());
             break;
         case WR_VAR(0,  4,  4):
-            datetime.hour = var.enqi();
+            ho = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 4), Level(), Trange());
             break;
         case WR_VAR(0,  4,  5):
-            datetime.minute = var.enqi();
+            mi = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 5), Level(), Trange());
             break;
         case WR_VAR(0,  4,  6):
-            datetime.second = var.enqi();
+            se = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 6), Level(), Trange());
             break;

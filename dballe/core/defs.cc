@@ -53,6 +53,79 @@ std::ostream& operator<<(std::ostream& out, const Trange& l)
     return out;
 }
 
+void DatetimeRange::merge(const DatetimeRange& range)
+{
+    if (!min.is_missing() && (range.min.is_missing() || range.min < min))
+        min = range.min;
+
+    if (!max.is_missing() && (range.max.is_missing() || range.max > max))
+        max = range.max;
+}
+
+void DatetimeRange::set(const Datetime& dt)
+{
+    min = dt;
+    max = dt;
+}
+
+void DatetimeRange::set(const Datetime& min, const Datetime& max)
+{
+    this->min = min;
+    this->max = max;
+}
+
+void DatetimeRange::set(
+        int yemin, int momin, int damin, int homin, int mimin, int semin,
+        int yemax, int momax, int damax, int homax, int mimax, int semax)
+{
+    if (yemin == MISSING_INT)
+        min = Datetime();
+    else
+        min = Datetime::lower_bound(yemin, momin, damin, homin, mimin, semin);
+
+    if (yemax == MISSING_INT)
+        max = Datetime();
+    else
+        max = Datetime::upper_bound(yemax, momax, damax, homax, mimax, semax);
+}
+
+bool DatetimeRange::contains(const Datetime& dt) const
+{
+    if (min.is_missing())
+        if (max.is_missing())
+            return true;
+        else
+            return dt <= max;
+    else
+        if (max.is_missing())
+            return dt >= min;
+        else
+            return min <= dt && dt <= max;
+}
+
+bool DatetimeRange::contains(const DatetimeRange& dtr) const
+{
+    if (!min.is_missing() && (dtr.min.is_missing() || dtr.min < min))
+        return false;
+
+    if (!max.is_missing() && (dtr.max.is_missing() || dtr.max > max))
+        return false;
+
+    return true;
+}
+
+bool DatetimeRange::is_disjoint(const DatetimeRange& dtr) const
+{
+    if (!max.is_missing() && !dtr.min.is_missing() && max < dtr.min)
+        return true;
+
+    if (!dtr.max.is_missing() && !min.is_missing() && dtr.max < min)
+        return true;
+
+    return false;
+}
+
+
 namespace {
 
 inline int ll_to_int(double ll) { return lround(ll * 100000.0); }
@@ -116,6 +189,21 @@ std::ostream& operator<<(std::ostream& out, const Datetime& dt)
     return out;
 }
 
+std::ostream& operator<<(std::ostream& out, const DatetimeRange& dtr)
+{
+    if (dtr.min == dtr.max)
+        dtr.min.to_stream_iso8601(out);
+    else
+    {
+        out << "(";
+        dtr.min.to_stream_iso8601(out);
+        out << " to ";
+        dtr.max.to_stream_iso8601(out);
+        out << ")";
+    }
+    return out;
+}
+
 std::ostream& operator<<(std::ostream& out, const LatRange& lr)
 {
     double dmin, dmax;
@@ -134,144 +222,6 @@ std::ostream& operator<<(std::ostream& out, const LonRange& lr)
         << " to " << setprecision(5) << dmax
         << ")";
     return out;
-}
-
-LatRange::LatRange(double min, double max)
-    : imin(ll_to_int(min)),
-      imax(ll_to_int(max))
-{
-}
-
-bool LatRange::is_missing() const { return imin == IMIN && imax == IMAX; }
-
-void LatRange::get(double& min, double& max) const
-{
-    min = ll_from_int(imin);
-    max = ll_from_int(imax);
-}
-
-void LatRange::set(int min, int max)
-{
-    imin = min;
-    imax = max;
-}
-
-void LatRange::set(double min, double max)
-{
-    imin = ll_to_int(min);
-    imax = ll_to_int(max);
-}
-
-bool LatRange::contains(int lat) const
-{
-    return lat >= imin && lat <= imax;
-}
-
-bool LatRange::contains(double lat) const
-{
-    int ilat = ll_to_int(lat);
-    return ilat >= imin && ilat <= imax;
-}
-
-bool LatRange::contains(const LatRange& lr) const
-{
-    return imin <= lr.imin && lr.imax <= imax;
-}
-
-LonRange::LonRange(int min, int max)
-{
-    set(min, max);
-}
-
-LonRange::LonRange(double min, double max)
-    : imin(Coords::normalon(ll_to_int(min))), imax(Coords::normalon(ll_to_int(max)))
-{
-    if (min != max && imin == imax)
-        imin = imax = MISSING_INT;
-}
-
-bool LonRange::is_missing() const
-{
-    return imin == MISSING_INT || imax == MISSING_INT;
-}
-
-void LonRange::get(double& min, double& max) const
-{
-    if (is_missing())
-    {
-        min = -180.0;
-        max = 180.0;
-    } else {
-        min = ll_from_int(imin);
-        max = ll_from_int(imax);
-    }
-}
-
-void LonRange::set(int min, int max)
-{
-    if ((min != MISSING_INT || max != MISSING_INT) && (min == MISSING_INT || max == MISSING_INT))
-        error_consistency::throwf("cannot set longitude range to an open ended range");
-    imin = min == MISSING_INT ? MISSING_INT : Coords::normalon(min);
-    imax = max == MISSING_INT ? MISSING_INT : Coords::normalon(max);
-    // Catch cases like min=0 max=360, that would match anything, and set them
-    // to missing range match
-    if (min != max && imin == imax)
-        imin = imax = MISSING_INT;
-}
-
-void LonRange::set(double min, double max)
-{
-    set(ll_to_int(min), ll_to_int(max));
-}
-
-bool LonRange::contains(int lon) const
-{
-    if (imin == imax)
-    {
-        if (imin == MISSING_INT)
-            return true;
-        return lon == imin;
-    } else if (imin < imax) {
-        return lon >= imin && lon <= imax;
-    } else {
-        return ((lon >= imin and lon <= 18000000)
-             or (lon >= -18000000 and lon <= imax));
-    }
-}
-
-bool LonRange::contains(double lon) const
-{
-    return contains(ll_to_int(lon));
-}
-
-bool LonRange::contains(const LonRange& lr) const
-{
-    if (is_missing()) return true;
-    if (lr.is_missing()) return false;
-
-    // Longitude ranges can match outside or inside the interval
-    if (imin < imax)
-    {
-        // we match inside the interval
-        if (lr.imin < lr.imax)
-        {
-            // lr matches inside the interval
-            return imin <= lr.imin && lr.imax <= imax;
-        } else {
-            // lr matches outside the interval
-            return false;
-        }
-    } else {
-        // we match outside the interval
-        if (lr.imin < lr.imax)
-        {
-            // lr matches inside the interval
-            return lr.imax <= imin || lr.imin >= imax;
-        } else {
-            // lr matches outside the interval
-            return lr.imin <= imin || lr.imax >= imax;
-        }
-    }
 }
 
 }

@@ -227,7 +227,7 @@ std::vector<Test> tests {
         cur->discard_rest();
 
         query.clear();
-        query.datetime_min = Datetime(1945, 4, 25, 8, 10);
+        query.datetime = DatetimeRange(Datetime(1945, 4, 25, 8, 10), Datetime());
         db.remove(query);
 
         // 2 remaining after remove
@@ -674,7 +674,7 @@ std::vector<Test> tests {
         wruntest(f.populate_database, oldf);
 
         core::Query q;
-        q.datetime_min = q.datetime_max = Datetime(1000, 1, 1, 0, 0, 0);
+        q.datetime = DatetimeRange(Datetime(1000, 1, 1, 0, 0, 0));
         q.query = "best";
         unique_ptr<db::Cursor> cur = db.query_data(q);
         while (cur->next())
@@ -753,7 +753,7 @@ std::vector<Test> tests {
         core::Query q;
         q.latrange.set(12.34560, 12.34560);
         q.lonrange.set(76.54320, 76.54320);
-        q.datetime_min = q.datetime_max = Datetime(1945, 4, 25, 8, 0, 0);
+        q.datetime = DatetimeRange(Datetime(1945, 4, 25, 8, 0, 0));
         q.rep_memo = "synop";
         q.level = Level(10, 11, 15, 22);
         q.trange = Trange(20, 111, 122);
@@ -777,7 +777,7 @@ std::vector<Test> tests {
         update.set("ana_id", ana_id);
         update.set("rep_memo", "synop");
         int dt[6];
-        update.set(q.datetime_min);
+        update.set(q.datetime.min);
         update.set(q.level);
         update.set(q.trange);
         var.seti(200);
@@ -961,7 +961,7 @@ std::vector<Test> tests {
         {
             core::Query query;
             query.query = "best";
-            query.datetime_min = query.datetime_max = Datetime(2009, 11, 11, 0, 0, 0);
+            query.datetime = DatetimeRange(Datetime(2009, 11, 11, 0, 0, 0));
             query.varcodes.insert(WR_VAR(0, 12, 101));
             unique_ptr<db::Cursor> cur = db.query_data(query);
 
@@ -982,7 +982,7 @@ std::vector<Test> tests {
             core::Query query;
             query.prio_max = 100;
             query.query = "best";
-            query.datetime_min = query.datetime_max = Datetime(2009, 11, 11, 0, 0, 0);
+            query.datetime = DatetimeRange(Datetime(2009, 11, 11, 0, 0, 0));
             query.varcodes.insert(WR_VAR(0, 12, 101));
             unique_ptr<db::Cursor> cur = db.query_data(query);
             ensure_equals(cur->remaining(), 1);

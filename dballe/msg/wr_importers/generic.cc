@@ -155,32 +155,32 @@ void GenericImporter::import_var(const Var& var)
         }
         // Datetime entries that may have attributes to store
         case WR_VAR(0,  4,  1):
-            datetime.year = var.enqi();
+            ye = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 1), Level(), Trange());
             break;
         case WR_VAR(0,  4,  2):
-            datetime.month = var.enqi();
+            mo = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 2), Level(), Trange());
             break;
         case WR_VAR(0,  4,  3):
-            datetime.day = var.enqi();
+            da = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 3), Level(), Trange());
             break;
         case WR_VAR(0,  4,  4):
-            datetime.hour = var.enqi();
+            ho = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 4), Level(), Trange());
             break;
         case WR_VAR(0,  4,  5):
-            datetime.minute = var.enqi();
+            mi = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 5), Level(), Trange());
             break;
         case WR_VAR(0,  4,  6):
-            datetime.second = var.enqi();
+            se = var.enqi();
             if (var.next_attr())
                 msg->set(var, WR_VAR(0, 4, 6), Level(), Trange());
             break;

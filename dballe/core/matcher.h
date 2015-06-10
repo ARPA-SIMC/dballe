@@ -50,13 +50,8 @@ struct Matched
      */
     virtual matcher::Result match_station_wmo(int block, int station=-1) const;
 
-    /**
-     * Match date
-     *
-     * min and max are arrays of 6 ints (from year to second), and either of
-     * them can have -1 as the first element to indicate an open bound.
-     */
-    virtual matcher::Result match_date(const Datetime& min, const Datetime& max) const;
+    /// Match datetime
+    virtual matcher::Result match_datetime(const DatetimeRange& range) const;
 
     /**
      * Match coordinates, with bounds in 1/100000 of degree
@@ -72,14 +67,6 @@ struct Matched
      * the memo value that is passed is always lowercase
      */
     virtual matcher::Result match_rep_memo(const char* memo) const;
-
-    /**
-     * Match if min <= date <= max
-     *
-     * It correctly deals with min and max having the first element set to -1
-     * to signify an open bound.
-     */
-    static matcher::Result date_in_range(const Datetime& date, const Datetime& min, const Datetime& max);
 
     /**
      * Match if min <= val <= max

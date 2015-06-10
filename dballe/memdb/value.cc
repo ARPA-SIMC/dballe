@@ -219,10 +219,10 @@ void Values::query(const core::Query& q, Results<Station>& stations, Results<Lev
         res.add_union(lookup_by_levtr.release_sequences());
     }
 
-    Datetime mind = q.datetime_min.lower_bound();
-    Datetime maxd = q.datetime_max.upper_bound();
-    if (!mind.is_missing() || !maxd.is_missing())
+    if (!q.datetime.is_missing())
     {
+        const Datetime& mind = q.datetime.min;
+        const Datetime& maxd = q.datetime.max;
         unique_ptr< stl::Sequences<size_t> > sequences(new stl::Sequences<size_t>);
         if (mind.date() == maxd.date())
         {

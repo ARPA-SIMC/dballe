@@ -26,8 +26,7 @@ std::vector<Test> tests {
         wassert(actual(q.ident) == "");
         wassert(actual(q.latrange) == LatRange());
         wassert(actual(q.lonrange) == LonRange());
-        wassert(actual(q.datetime_min) == Datetime());
-        wassert(actual(q.datetime_max) == Datetime());
+        wassert(actual(q.datetime) == DatetimeRange());
         wassert(actual(q.level) == Level());
         wassert(actual(q.trange) == Trange());
         wassert(actual(q.varcodes.size()) == 0);
@@ -73,8 +72,7 @@ std::vector<Test> tests {
         wassert(actual(q.ident) == "bar");
         wassert(actual(q.latrange) == LatRange(44.123, 44.123));
         wassert(actual(q.lonrange) == LonRange(11.123, 11.123));
-        wassert(actual(q.datetime_min) == Datetime(2000, 1, 2, 12, 30, 45));
-        wassert(actual(q.datetime_max) == Datetime(2000, 1, 2, 12, 30, 45));
+        wassert(actual(q.datetime) == DatetimeRange(2000, 1, 2, 12, 30, 45, 2000, 1, 2, 12, 30, 45));
         wassert(actual(q.level) == Level(10, 11, 12, 13));
         wassert(actual(q.trange) == Trange(20, 21, 22));
         wassert(actual(q.varcodes.size()) == 1);
@@ -160,28 +158,23 @@ std::vector<Test> tests {
     Test("datetime", [](Fixture& f) {
         core::Query q;
         q.set_from_test_string("year=2015");
-        wassert(actual(q.datetime_min) == Datetime(2015,  1,  1,  0 , 0,  0));
-        wassert(actual(q.datetime_max) == Datetime(2015, 12, 31, 23, 59, 59));
+        wassert(actual(q.datetime) == DatetimeRange(2015,  1,  1,  0 , 0,  0, 2015, 12, 31, 23, 59, 59));
 
         q.clear();
         q.set_from_test_string("year=2015, monthmin=1, monthmax=2");
-        wassert(actual(q.datetime_min) == Datetime(2015,  1,  1,  0 , 0,  0));
-        wassert(actual(q.datetime_max) == Datetime(2015,  2, 28, 23, 59, 59));
+        wassert(actual(q.datetime) == DatetimeRange(2015,  1,  1,  0 , 0,  0, 2015,  2, 28, 23, 59, 59));
 
         q.clear();
         q.set_from_test_string("year=2015, monthmin=2, day=30");
-        wassert(actual(q.datetime_min) == Datetime(2015,  2, 28,  0 , 0,  0));
-        wassert(actual(q.datetime_max) == Datetime(2015, 12, 30, 23, 59, 59));
+        wassert(actual(q.datetime) == DatetimeRange(2015,  2, 28,  0 , 0,  0, 2015, 12, 30, 23, 59, 59));
 
         q.clear();
         q.set_from_test_string("yearmin=2000, yearmax=2012, month=2, min=30");
-        wassert(actual(q.datetime_min) == Datetime(2000,  2,  1,  0, 30,  0));
-        wassert(actual(q.datetime_max) == Datetime(2012,  2, 29, 23, 30, 59));
+        wassert(actual(q.datetime) == DatetimeRange(2000,  2,  1,  0, 30,  0, 2012,  2, 29, 23, 30, 59));
 
         q.clear();
         q.set_from_test_string("yearmin=2010, yearmax=2012, year=2000, month=2, min=30");
-        wassert(actual(q.datetime_min) == Datetime(2000,  2,  1,  0, 30,  0));
-        wassert(actual(q.datetime_max) == Datetime(2000,  2, 29, 23, 30, 59));
+        wassert(actual(q.datetime) == DatetimeRange(2000,  2,  1,  0, 30,  0, 2000,  2, 29, 23, 30, 59));
     }),
     Test("varlist", [](Fixture& f) {
         core::Query q;

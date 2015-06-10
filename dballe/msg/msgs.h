@@ -128,7 +128,7 @@ struct MatchedMsgs : public Matched
     matcher::Result match_var_id(int val) const override;
     matcher::Result match_station_id(int val) const override;
     matcher::Result match_station_wmo(int block, int station=-1) const override;
-    matcher::Result match_date(const Datetime& min, const Datetime& max) const override;
+    matcher::Result match_datetime(const DatetimeRange& range) const override;
     matcher::Result match_coords(const LatRange& latrange, const LonRange& lonrange) const override;
     matcher::Result match_rep_memo(const char* memo) const override;
 };

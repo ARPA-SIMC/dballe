@@ -47,6 +47,18 @@ struct Query
      */
     virtual void set_datetime_bounds(const Datetime& dtmin, const Datetime& dtmax) = 0;
 
+    /// Get the range of latitudes to be matched
+    virtual LatRange get_latrange() const = 0;
+
+    /// Set the range of latitudes to be matched
+    virtual void set_latrange(const LatRange& latrange) = 0;
+
+    /// Get the range of longitudes to be matched
+    virtual LonRange get_lonrange() const = 0;
+
+    /// Set the range of longitudes to be matched
+    virtual void set_lonrange(const LonRange& lonrange) = 0;
+
     /// Get the level to be matched
     virtual Level get_level() const = 0;
 

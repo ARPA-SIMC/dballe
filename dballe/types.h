@@ -15,32 +15,41 @@ namespace dballe {
  */
 static const int MISSING_INT = INT_MAX;
 
-/// Calendar date
+/**
+ * Calendar date.
+ *
+ * If year is 0xffff, then all the date is considered missing. Else, all fields
+ * must be set.
+ */
 struct Date
 {
-    unsigned short year = 0xffff;
-    unsigned char month = 0xff;
-    unsigned char day = 0xff;
+    unsigned short year;
+    unsigned char month;
+    unsigned char day;
 
-    Date() = default;
-    Date(unsigned short year, unsigned char month=1, unsigned char day=1)
-        : year(year), month(month), day(day) {}
+    /// Construct a missing date
+    Date();
+
+    /**
+     * Construct from broken down values.
+     *
+     * Missing values will be replaced with lower bounds.
+     *
+     * Invalid values will be constrained within the nearest valid boundary.
+     */
+    Date(int ye, int mo=1, int da=1);
+
+    /// Copy constructor
     Date(const Date& d) = default;
+
+    /// Create a date from a Julian day
+    static Date from_julian(int jday);
 
     /// Check if this date is the missing value
     bool is_missing() const;
 
     /// Convert the date to Julian day
     int to_julian() const;
-
-    /// Set the date from a Julian day
-    void from_julian(int jday);
-
-    /// Set the date from an array of 3 integers
-    void from_array(const int* vals);
-
-    /// Copy the date to an array of 3 integers
-    void to_array(int* vals) const;
 
     /**
      * Write the date to an output stream in ISO8601 date format.
@@ -67,26 +76,34 @@ struct Date
 };
 
 
-/// Time of the day
+/**
+ * Time of the day.
+ *
+ * If hour is 0xff, then all the time is considered missing. Else, all fields
+ * must be set.
+ */
 struct Time
 {
-    unsigned char hour = 0xff;
-    unsigned char minute = 0xff;
-    unsigned char second = 0xff;
+    unsigned char hour;
+    unsigned char minute;
+    unsigned char second;
 
-    Time() = default;
-    Time(unsigned char hour, unsigned char minute=0, unsigned char second=0)
-        : hour(hour), minute(minute), second(second) {}
-    Time(const Time& d) = default;
+    /// Construct a missing time
+    Time();
+
+    /**
+     * Construct from broken down values.
+     *
+     * Missing values will be replaced with lower bounds.
+     *
+     * Invalid values will be constrained within the nearest valid boundary.
+     */
+    Time(int ho, int mi=0, int se=0);
+
+    Time(const Time& t) = default;
 
     /// Check if this time is the missing value
     bool is_missing() const;
-
-    /// Set the time from an array of 3 integers
-    void from_array(const int* vals);
-
-    /// Copy the time to an array of 3 integers
-    void to_array(int* vals) const;
 
     /**
      * Write the time to an output stream in ISO8601 extended format
@@ -110,24 +127,48 @@ struct Time
 };
 
 
-/// Date and time
+/**
+ * Date and time
+ *
+ * If year is 0xffff, then all the datetime is considered missing. Else, all
+ * fields must be set.
+ */
 struct Datetime
 {
-    unsigned short year = 0xffff;
-    unsigned char month = 0xff;
-    unsigned char day = 0xff;
-    unsigned char hour = 0xff;
-    unsigned char minute = 0xff;
-    unsigned char second = 0xff;
+    unsigned short year;
+    unsigned char month;
+    unsigned char day;
+    unsigned char hour;
+    unsigned char minute;
+    unsigned char second;
 
-    Datetime() = default;
-    Datetime(const Date& date, const Time& time)
-        : year(date.year), month(date.month), day(date.day),
-          hour(time.hour), minute(time.minute), second(time.second) {}
-    Datetime(unsigned short year, unsigned char month=1, unsigned char day=1,
-             unsigned char hour=0, unsigned char minute=0, unsigned char second=0)
-        : year(year), month(month), day(day),
-          hour(hour), minute(minute), second(second) {}
+    /// Construct a missing datetime
+    Datetime();
+    Datetime(const Date& date, const Time& time);
+
+    /**
+     * Construct from broken down values.
+     *
+     * Missing values will be replaced with lower bounds.
+     *
+     * Invalid values will be constrained within the nearest valid boundary.
+     */
+    Datetime(int ye, int mo=1, int da=1, int ho=0, int mi=0, int se=0);
+
+    /// Set the date from a Julian day
+    static Datetime from_julian(int jday, int ho=0, int mi=0, int se=0);
+
+    /**
+     * Return a Datetime filling the parts set to MISSING_INT with their lowest
+     * possible values
+     */
+    static Datetime lower_bound(int ye, int mo, int da, int ho, int mi, int se);
+
+    /**
+     * Return a Datetime filling the parts set to MISSING_INT with their
+     * highest possible values
+     */
+    static Datetime upper_bound(int ye, int mo, int da, int ho, int mi, int se);
 
     /// Return a Date with this date
     Date date() const;
@@ -135,34 +176,11 @@ struct Datetime
     /// Return a Time with this time
     Time time() const;
 
-    /**
-     * Return a new datetime, same as this one but with missing fields filled
-     * with the lowest valid values. If the datetime is missing, it returns a
-     * missing datetime.
-     */
-    Datetime lower_bound() const;
-
-    /**
-     * Return a new datetime, same as this one but with missing fields filled
-     * with the highest valid values. If the datetime is missing, it returns a
-     * missing datetime.
-     */
-    Datetime upper_bound() const;
-
     /// Check if this datetime is the missing value
     bool is_missing() const;
 
     /// Convert the date to Julian day
     int to_julian() const;
-
-    /// Set the date from a Julian day
-    void from_julian(int jday);
-
-    /// Set the time from an array of 6 integers
-    void from_array(const int* vals);
-
-    /// Copy the time to an array of 6 integers
-    void to_array(int* vals) const;
 
     /**
      * Write the datetime to an output stream in ISO8601 combined format.
@@ -185,24 +203,8 @@ struct Datetime
     bool operator!=(const Datetime& dt) const;
     bool operator<(const Datetime& dt) const;
     bool operator>(const Datetime& dt) const;
-
-    /// Check if the two ranges are the same
-    static bool range_equals(
-            const Datetime& begin1, const Datetime& until1,
-            const Datetime& begin2, const Datetime& until2);
-
-    /**
-     * Checks if the interval [begin1, end1] contains [begin2, end2] or if the
-     * two intervals are the same
-     */
-    static bool range_contains(
-            const Datetime& begin1, const Datetime& until1,
-            const Datetime& begin2, const Datetime& until2);
-
-    /// Check if the two ranges are completely disjoint
-    static bool range_disjoint(
-            const Datetime& begin1, const Datetime& until1,
-            const Datetime& begin2, const Datetime& until2);
+    bool operator<=(const Datetime& dt) const;
+    bool operator>=(const Datetime& dt) const;
 
     /**
      * Parse an ISO8601 datetime string.
@@ -210,6 +212,131 @@ struct Datetime
      * Both 'T' and ' ' are allowed as separators.
      */
     static Datetime from_iso8601(const char* str);
+};
+
+
+/**
+ * Range of latitudes.
+ *
+ * When given as an integer, a latitude value is intended in 1/100000 of a
+ * degree, which is the maximum resolution supported by DB-All.e.
+ *
+ * When given as a double a latitude value is intended to be in degrees.
+ *
+ * Values are matched between imin and imax, both extremes are considered part
+ * of the range.
+ *
+ * Invariant: imin <= imax.
+ */
+struct LatRange
+{
+    /// Minimum possible integer value
+    static const int IMIN = -9000000;
+    /// Maximum possible integer value
+    static const int IMAX = 9000000;
+    /// Minimum possible double value
+    static constexpr double DMIN = -90.0;
+    /// Maximum possible double value
+    static constexpr double DMAX = 90.0;
+
+    /// Minimum latitude
+    int imin = IMIN;
+    /// Maximum latitude
+    int imax = IMAX;
+
+    /// Construct a LatRange matching any latitude
+    LatRange() = default;
+    /// Construct a LatRange given integer extremes
+    LatRange(int min, int max);
+    /// Construct a LatRange given extremes in degrees
+    LatRange(double min, double max);
+
+    bool operator==(const LatRange& lr) const;
+    bool operator!=(const LatRange& lr) const;
+
+    /// Return true if the LatRange matches any latitude
+    bool is_missing() const;
+
+    /// Get the extremes as double
+    void get(double& min, double& max) const;
+
+    /// Set the extremes as integers
+    void set(int min, int max);
+
+    /// Set the extremes in degrees
+    void set(double min, double max);
+
+    /// Check if a point is inside this range (extremes included)
+    bool contains(int lat) const;
+
+    /// Check if a point is inside this range (extremes included)
+    bool contains(double lat) const;
+
+    /// Check if a range is inside this range (extremes included)
+    bool contains(const LatRange& lr) const;
+};
+
+
+/**
+ * Range of longitudes.
+ *
+ * When given as an integer, a longitude value is intended in 1/100000 of a
+ * degree, which is the maximum resolution supported by DB-All.e.
+ *
+ * When given as a double a longitude value is intended to be in degrees.
+ *
+ * Longitude values are normalized between -180.0 and 180.0. The range is the
+ * angle that goes from imin to imax. Both extremes are considered part of the
+ * range.
+ *
+ * A range that matches any longitude has both imin and imax set to
+ * MISSING_INT.
+ *
+ * Invariant: if imin == MISSING_INT, then imax == MISSING_INT. An open-ended
+ * longitude range makes no sense, since longitudes move alongide a closed
+ * circle.
+ */
+struct LonRange
+{
+    /// Initial point of the longitude range
+    int imin = MISSING_INT;
+    /// Final point of the longitude range
+    int imax = MISSING_INT;
+
+    /// Construct a range that matches any longitude
+    LonRange() = default;
+    /// Construct a range given integer extremes
+    LonRange(int min, int max);
+    /// Construct a range given extremes in degrees
+    LonRange(double min, double max);
+
+    bool operator==(const LonRange& lr) const;
+    bool operator!=(const LonRange& lr) const;
+
+    /// Return true if the LonRange matches any longitude
+    bool is_missing() const;
+
+    /**
+     * Get the extremes in degrees.
+     *
+     * If is_missing() == true, it returns the values -180.0 and 180.0
+     */
+    void get(double& min, double& max) const;
+
+    /// Set the extremes as integers
+    void set(int min, int max);
+
+    /// Set the extremes in degrees
+    void set(double min, double max);
+
+    /// Check if a point is inside this range (extremes included)
+    bool contains(int lon) const;
+
+    /// Check if a point is inside this range (extremes included)
+    bool contains(double lon) const;
+
+    /// Check if a range is inside this range (extremes included)
+    bool contains(const LonRange& lr) const;
 };
 
 
@@ -301,6 +428,7 @@ struct Trange
     /// Time range for instant values
     static Trange instant();
 };
+
 
 
 }

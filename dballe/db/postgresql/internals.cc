@@ -120,7 +120,6 @@ uint64_t Result::get_int8(unsigned row, unsigned col) const
 Datetime Result::get_timestamp(unsigned row, unsigned col) const
 {
     // Adapter from http://libpqtypes.esilo.com/browse_source.html?file=datetime.c
-    Datetime dt;
 
     // Decode from big endian
     int64_t decoded = be64toh(*(uint64_t*)PQgetvalue(res, row, col));
@@ -137,16 +136,15 @@ Datetime Result::get_timestamp(unsigned row, unsigned col) const
         jdate -= 1;
     }
 
-    // Decode time
-    dt.hour = time / 3600;
-    dt.minute = (time / 60) % 60;
-    dt.second = time % 60;
-
     // Decode date
     jdate += EPOCH_JDATE;
-    dt.from_julian(jdate);
 
-    return dt;
+    // Decode time
+    return Datetime::from_julian(
+            jdate,
+            time / 3600,
+            (time / 60) % 60,
+            time % 60);
 }
 
 }

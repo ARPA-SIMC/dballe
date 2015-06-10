@@ -15,9 +15,9 @@ typedef test_group::Fixture Fixture;
 std::vector<Test> tests {
     Test("clone", [](Fixture& f) {
         auto q = Query::create();
-        Datetime dt;
-        dt.year = 2015; dt.month = 5;
-        q->set_datetime_exact(dt);
+        q->set_datetime_bounds(
+                Datetime::lower_bound(2015, 5, MISSING_INT, MISSING_INT, MISSING_INT, MISSING_INT),
+                Datetime::upper_bound(2015, 5, MISSING_INT, MISSING_INT, MISSING_INT, MISSING_INT));
 
         auto q1 = q->clone();
         Datetime dtmin;
