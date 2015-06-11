@@ -252,10 +252,10 @@ void Stations::query(const core::Query& q, Results<Station>& res) const
     }
 
     // Lookup ident
-    if (q.has_ident)
+    if (!q.ident.is_missing())
     {
-        trace_query("Found ident=%s\n", q.ident.c_str());
-        Index<std::string>::const_iterator iident = by_ident.find(q.ident);
+        trace_query("Found ident=%s\n", q.ident.get());
+        Index<std::string>::const_iterator iident = by_ident.find(q.ident.get());
         if (iident == by_ident.end())
         {
             trace_query(" ident not found in index: setting empty result set\n");

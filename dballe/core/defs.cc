@@ -91,6 +91,70 @@ void Coords::set_lon(int new_lon) { lon = normalon(new_lon); }
 void Coords::set_lat(double new_lat) { lat = ll_to_int(new_lat); }
 void Coords::set_lon(double new_lon) { lon = normalon(ll_to_int(new_lon)); }
 
+
+
+Ident::Ident(const char* value) : value(value ? strdup(value) : nullptr) {}
+Ident::Ident(const Ident& o) : value(o.value ? strdup(o.value) : nullptr) {}
+Ident::Ident(Ident&& o) : value(o.value) { o.value = nullptr; }
+Ident::~Ident() { free(value); }
+Ident& Ident::operator=(const Ident& o)
+{
+    if (value == o.value) return *this;
+    free(value);
+    value = o.value ? strdup(o.value) : nullptr;
+    return *this;
+}
+Ident& Ident::operator=(Ident&& o)
+{
+    if (value == o.value) return *this;
+    free(value);
+    if (o.value)
+    {
+        value = strdup(o.value);
+        o.value = nullptr;
+    } else
+        value = nullptr;
+    return *this;
+}
+Ident& Ident::operator=(const char* o)
+{
+    if (value) free(value);
+    value = o ? strdup(o) : nullptr;
+    return *this;
+
+}
+Ident& Ident::operator=(const std::string& o)
+{
+    if (value) free(value);
+    value = strndup(o.c_str(), o.size());
+    return *this;
+}
+void Ident::clear()
+{
+    free(value);
+    value = 0;
+}
+int Ident::compare(const Ident& o) const
+{
+    if (!value && !o.value) return 0;
+    if (!value && o.value) return -1;
+    if (value && !o.value) return 1;
+    return strcmp(value, o.value);
+}
+int Ident::compare(const char* o) const
+{
+    if (!value && !o) return 0;
+    if (!value && o) return -1;
+    if (value && !o) return 1;
+    return strcmp(value, o);
+}
+int Ident::compare(const std::string& o) const
+{
+    if (!value) return -1;
+    return strcmp(value, o.c_str());
+}
+
+
 std::ostream& operator<<(std::ostream& out, const Coords& c)
 {
     out << "(" << setprecision(5) << c.dlat()
@@ -149,6 +213,15 @@ std::ostream& operator<<(std::ostream& out, const LonRange& lr)
     out << "(" << setprecision(5) << dmin
         << " to " << setprecision(5) << dmax
         << ")";
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const Ident& i)
+{
+    if (i.is_missing())
+        out << "(null)";
+    else
+        out << (const char*)i;
     return out;
 }
 

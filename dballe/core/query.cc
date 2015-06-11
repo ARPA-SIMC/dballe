@@ -45,7 +45,6 @@ void Query::clear()
     prio_max = MISSING_INT;
     rep_memo.clear();
     mobile = MISSING_INT;
-    has_ident = false;
     ident.clear();
     latrange = LatRange();
     lonrange = LonRange();
@@ -85,13 +84,9 @@ void Query::set_from_record(const dballe::Record& rec)
     mobile = rec.enq("mobile", MISSING_INT);
     // Ident
     if (const Var* var = rec.get("ident"))
-    {
-        has_ident = true;
         ident = var->enqc();
-    } else {
-        has_ident = false;
+    else
         ident.clear();
-    }
     // Latitude
     i = rec.enq("lat", MISSING_INT);
     if (i != MISSING_INT)
@@ -179,12 +174,21 @@ namespace {
 
 bool removed_or_changed(int val, int other)
 {
-    return other != val && other != MISSING_INT;
+    // if (val == other) return false; // Not changed
+    // if (val != MISSING_INT && other == MISSING_INT) return false; // Added filter
+    // if (val == MISSING_INT && other != MISSING_INT) return true; // Removed filter
+    // if (val != other) return true; // Changed
+    return !(other == val || other == MISSING_INT);
+}
+
+bool removed_or_changed(const Ident& val, const Ident& other)
+{
+    return !(other == val || other.is_missing());
 }
 
 bool removed_or_changed(const std::string& val, const std::string& other)
 {
-    return other != val && !other.empty();
+    return !(other == val || other.empty());
 }
 
 // Return true if sub is a subset of sup, or the same as sup
@@ -252,8 +256,7 @@ bool Query::is_subquery(const dballe::Query& other_gen) const
     if (!is_subrange(prio_min, prio_max, other.prio_min, other.prio_max)) return false;
     if (removed_or_changed(rep_memo, other.rep_memo)) return false;
     if (removed_or_changed(mobile, other.mobile)) return false;
-    if (other.has_ident && !has_ident) return false;
-    if (other.has_ident && has_ident && other.ident != ident) return false;
+    if (removed_or_changed(ident, other.ident)) return false;
     if (!other.latrange.contains(latrange)) return false;
     if (!other.lonrange.contains(lonrange)) return false;
     if (!other.datetime.contains(datetime)) return false;
@@ -330,7 +333,7 @@ void Query::foreach_key(std::function<void(const char*, unique_ptr<Var>&&)> dest
         vargen.gen(DBA_KEY_REP_MEMO, rep_memo);
     if (mobile != MISSING_INT)
         vargen.gen(DBA_KEY_MOBILE, mobile);
-    if (has_ident)
+    if (!ident.is_missing())
         vargen.gen(DBA_KEY_IDENT, ident);
     if (!latrange.is_missing())
     {
@@ -449,6 +452,14 @@ struct Printer
         first = false;
     }
 
+    void print_ident(const Ident& val)
+    {
+        if (val.is_missing()) return;
+        if (!first) fputs(", ", out);
+        fprintf(out, "ident=%s", val.get());
+        first = false;
+    }
+
     void print_latrange(const LatRange& latrange)
     {
         if (latrange.is_missing()) return;
@@ -546,7 +557,7 @@ struct Printer
         print_int("prio_max", q.prio_max);
         print_str("rep_memo", !q.rep_memo.empty(), q.rep_memo);
         print_int("mobile", q.mobile);
-        print_str("ident", q.has_ident, q.ident);
+        print_ident(q.ident);
         print_latrange(q.latrange);
         print_lonrange(q.lonrange);
         print_datetimerange(q.datetime);
@@ -580,7 +591,7 @@ void Query::serialize(JSONWriter& out) const
     if (prio_max != MISSING_INT) out.add("prio_max", prio_max);
     if (!rep_memo.empty()) out.add("rep_memo", rep_memo);
     if (mobile != MISSING_INT) out.add("mobile", mobile);
-    if (has_ident) out.add("ident", ident);
+    if (!ident.is_missing()) out.add("ident", ident);
     if (!latrange.is_missing())
     {
         if (latrange.imin != LatRange::IMIN) out.add("latmin", latrange.imin);

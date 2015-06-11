@@ -446,7 +446,7 @@ bool QueryBuilder::add_pa_where(const char* tbl)
     c.add_lat();
     c.add_lon();
     c.add_mobile();
-    if (query.has_ident)
+    if (!query.ident.is_missing())
     {
         if (false) {
             // This is only here to move the other optional bits into else ifs
@@ -455,19 +455,19 @@ bool QueryBuilder::add_pa_where(const char* tbl)
 #if HAVE_LIBPQ
         } else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(&conn)) {
             sql_where.append_listf("%s.ident=$1::text", tbl);
-            bind_in_ident = query.ident.c_str();
-            TRACE("found ident: adding AND %s.ident=$1::text.  val is %s\n", tbl, query.ident());
+            bind_in_ident = query.ident.get();
+            TRACE("found ident: adding AND %s.ident=$1::text.  val is %s\n", tbl, query.ident.get());
 #endif
 #if HAVE_MYSQL
         } else if (MySQLConnection* c = dynamic_cast<MySQLConnection*>(&conn)) {
-            string escaped = c->escape(query.ident);
+            string escaped = c->escape(query.ident.get());
             sql_where.append_listf("%s.ident='%s'", tbl, escaped.c_str());
-            TRACE("found ident: adding AND %s.ident='%s'.  val is %s\n", tbl, escape.c_str(), query.ident());
+            TRACE("found ident: adding AND %s.ident='%s'.  val is %s\n", tbl, escape.c_str(), query.ident.get());
 #endif
         } else {
             sql_where.append_listf("%s.ident=?", tbl);
-            bind_in_ident = query.ident.c_str();
-            TRACE("found ident: adding AND %s.ident = ?.  val is %s\n", tbl, query.ident());
+            bind_in_ident = query.ident.get();
+            TRACE("found ident: adding AND %s.ident = ?.  val is %s\n", tbl, query.ident.get());
         }
         c.found = true;
     }

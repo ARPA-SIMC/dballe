@@ -50,8 +50,7 @@ struct Query : public dballe::Query
     int prio_max = MISSING_INT;
     std::string rep_memo;
     int mobile = MISSING_INT;
-    bool has_ident = false;
-    std::string ident;
+    Ident ident;
     LatRange latrange;
     LonRange lonrange;
     DatetimeRange datetime;

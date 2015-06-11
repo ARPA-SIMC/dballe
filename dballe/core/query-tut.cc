@@ -22,8 +22,7 @@ std::vector<Test> tests {
         wassert(actual(q.prio_max) == MISSING_INT);
         wassert(actual(q.rep_memo) == "");
         wassert(actual(q.mobile) == MISSING_INT);
-        wassert(actual(q.has_ident).isfalse());
-        wassert(actual(q.ident) == "");
+        wassert(actual(q.ident.is_missing()).istrue());
         wassert(actual(q.latrange) == LatRange());
         wassert(actual(q.lonrange) == LonRange());
         wassert(actual(q.datetime) == DatetimeRange());
@@ -68,8 +67,8 @@ std::vector<Test> tests {
         wassert(actual(q.prio_max) == 1);
         wassert(actual(q.rep_memo) == "foo");
         wassert(actual(q.mobile) == 0);
-        wassert(actual(q.has_ident).istrue());
-        wassert(actual(q.ident) == "bar");
+        wassert(actual(q.ident.is_missing()).isfalse());
+        wassert(actual(q.ident.get()) == "bar");
         wassert(actual(q.latrange) == LatRange(44.123, 44.123));
         wassert(actual(q.lonrange) == LonRange(11.123, 11.123));
         wassert(actual(q.datetime) == DatetimeRange(2000, 1, 2, 12, 30, 45, 2000, 1, 2, 12, 30, 45));
