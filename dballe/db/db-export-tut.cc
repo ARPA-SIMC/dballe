@@ -128,10 +128,10 @@ std::vector<Test> tests {
 
         // Import some data in the station extra information context
         core::Record in;
+        // do not set datetime, level, trange, to insert a station variable
         in.set("lat", 45.0);
         in.set("lon", 11.0);
         in.set("rep_memo", "synop");
-        in.set_ana_context();
         in.set("B01001", 10);
         db->insert(in, false, true);
 

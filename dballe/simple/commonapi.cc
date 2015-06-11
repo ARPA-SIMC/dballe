@@ -198,15 +198,10 @@ void CommonAPIImplementation::setc(const char* param, const char* value)
 
 void CommonAPIImplementation::setcontextana()
 {
-	input.set_ana_context();
-}
-
-static inline void seti_or_missing(Record& rec, const char* key, int val)
-{
-	if (val == API::missing_int)
-		rec.unset(key);
-	else
-		rec.set(key, val);
+    input.set_datetime(Datetime());
+    input.set_level(Level());
+    input.set_trange(Trange());
+    station_context = true;
 }
 
 void CommonAPIImplementation::enqlevel(int& ltype1, int& l1, int& ltype2, int& l2)
@@ -219,10 +214,10 @@ void CommonAPIImplementation::enqlevel(int& ltype1, int& l1, int& ltype2, int& l
 
 void CommonAPIImplementation::setlevel(int ltype1, int l1, int ltype2, int l2)
 {
-    seti_or_missing(input, "leveltype1", ltype1);
-    seti_or_missing(input, "l1", l1);
-    seti_or_missing(input, "leveltype2", ltype2);
-    seti_or_missing(input, "l2", l2);
+    Level level(ltype1, l1, ltype2, l2);
+    if (!level.is_missing())
+        station_context = false;
+    input.set_level(level);
 }
 
 void CommonAPIImplementation::enqtimerange(int& ptype, int& p1, int& p2)
@@ -234,9 +229,10 @@ void CommonAPIImplementation::enqtimerange(int& ptype, int& p1, int& p2)
 
 void CommonAPIImplementation::settimerange(int ptype, int p1, int p2)
 {
-    seti_or_missing(input, "pindicator", ptype);
-    seti_or_missing(input, "p1", p1);
-    seti_or_missing(input, "p2", p2);
+    Trange trange(ptype, p1, p2);
+    if (!trange.is_missing())
+        station_context = false;
+    input.set_trange(trange);
 }
 
 void CommonAPIImplementation::enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec)
@@ -251,32 +247,28 @@ void CommonAPIImplementation::enqdate(int& year, int& month, int& day, int& hour
 
 void CommonAPIImplementation::setdate(int year, int month, int day, int hour, int min, int sec)
 {
-    seti_or_missing(input, "year", year);
-    seti_or_missing(input, "month", month);
-    seti_or_missing(input, "day", day);
-    seti_or_missing(input, "hour", hour);
-    seti_or_missing(input, "min", min);
-    seti_or_missing(input, "sec", sec);
+    Datetime dt(year, month, day, hour, min, sec);
+    if (!dt.is_missing())
+        station_context = false;
+    input.set_datetime(dt);
 }
 
 void CommonAPIImplementation::setdatemin(int year, int month, int day, int hour, int min, int sec)
 {
-    seti_or_missing(input, "yearmin", year);
-    seti_or_missing(input, "monthmin", month);
-    seti_or_missing(input, "daymin", day);
-    seti_or_missing(input, "hourmin", hour);
-    seti_or_missing(input, "minumin", min);
-    seti_or_missing(input, "secmin", sec);
+    DatetimeRange dtr = input.get_datetimerange();
+    dtr.min = Datetime(year, month, day, hour, min, sec);
+    if (!dtr.min.is_missing())
+        station_context = true;
+    input.set_datetimerange(dtr);
 }
 
 void CommonAPIImplementation::setdatemax(int year, int month, int day, int hour, int min, int sec)
 {
-    seti_or_missing(input, "yearmax", year);
-    seti_or_missing(input, "monthmax", month);
-    seti_or_missing(input, "daymax", day);
-    seti_or_missing(input, "hourmax", hour);
-    seti_or_missing(input, "minumax", min);
-    seti_or_missing(input, "secmax", sec);
+    DatetimeRange dtr = input.get_datetimerange();
+    dtr.max = Datetime(year, month, day, hour, min, sec);
+    if (!dtr.max.is_missing())
+        station_context = true;
+    input.set_datetimerange(dtr);
 }
 
 void CommonAPIImplementation::unset(const char* param)
@@ -289,6 +281,7 @@ void CommonAPIImplementation::unsetall()
 {
     qcinput.clear();
     input.clear();
+    station_context = false;
 }
 
 void CommonAPIImplementation::unsetb()

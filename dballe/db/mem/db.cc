@@ -74,7 +74,8 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
     // Obtain values
     last_insert_varids.clear();
     const auto& r = core::Record::downcast(rec);
-    if (r.is_ana_context())
+    Datetime datetime = r.get_datetime();
+    if (datetime.is_missing())
     {
         // Insert all the variables we find
         for (vector<Var*>::const_iterator i = r.vars().begin(); i != r.vars().end(); ++i)
@@ -84,7 +85,6 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
         }
     } else {
         const LevTr& levtr = *memdb.levtrs[memdb.levtrs.obtain(rec)];
-        Datetime datetime = r.get_datetime();
 
         // Insert all the variables we find
         for (vector<Var*>::const_iterator i = r.vars().begin(); i != r.vars().end(); ++i)

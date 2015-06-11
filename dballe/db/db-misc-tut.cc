@@ -726,7 +726,7 @@ std::vector<Test> tests {
     Test("fd_leaks", [](Fixture& f) {
         // Test connect leaks
         core::Record insert;
-        insert.set_ana_context();
+        // Set station data
         insert.set("lat", 12.34560);
         insert.set("lon", 76.54320);
         insert.set("mobile", 0);

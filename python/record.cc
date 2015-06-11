@@ -1,8 +1,10 @@
 #include <Python.h>
+#include <dballe/core/record.h>
 #include <dballe/core/defs.h>
 #include "record.h"
 #include "common.h"
 #include "var.h"
+#include <vector>
 
 using namespace std;
 using namespace dballe;
@@ -11,9 +13,6 @@ using namespace wreport;
 
 extern "C" {
 
-static const char* date_keys[6] = { "year", "month", "day", "hour", "min", "sec" };
-static const char* datemin_keys[6] = { "yearmin", "monthmin", "daymin", "hourmin", "minumin", "secmin" };
-static const char* datemax_keys[6] = { "yearmax", "monthmax", "daymax", "hourmax", "minumax", "secmax" };
 static const char* level_keys[4] = { "leveltype1", "l1", "leveltype2", "l2" };
 static const char* trange_keys[3] = { "pindicator", "p1", "p2" };
 
@@ -41,7 +40,7 @@ static PyObject* dpy_RecordIter_iter(dpy_RecordIter* self)
 
 static PyObject* dpy_RecordIter_iternext(dpy_RecordIter* self)
 {
-    if (self->iter == self->rec->rec.vars().end())
+    if (self->iter == core::Record::downcast(*self->rec->rec).vars().end())
     {
         PyErr_SetNone(PyExc_StopIteration);
         return NULL;
@@ -123,13 +122,14 @@ static PyObject* dpy_Record_copy(dpy_Record* self)
     dpy_Record* result = PyObject_New(dpy_Record, &dpy_Record_Type);
     if (!result) return NULL;
     result = (dpy_Record*)PyObject_Init((PyObject*)result, &dpy_Record_Type);
-    new (&result->rec) core::Record(self->rec);
+    result->rec = self->rec->clone().release();
+    result->station_context = self->station_context;
     return (PyObject*)result;
 }
 
 static PyObject* dpy_Record_keys(dpy_Record* self)
 {
-    const std::vector<wreport::Var*>& vars = self->rec.vars();
+    const std::vector<wreport::Var*>& vars = core::Record::downcast(*self->rec).vars();
 
     PyObject* result = PyTuple_New(vars.size());
     if (!result) return NULL;
@@ -164,9 +164,9 @@ static PyObject* dpy_Record_var(dpy_Record* self, PyObject* args, PyObject* kw)
 
     try {
         if (name == NULL)
-            name = self->rec["var"].enqc();
+            name = self->rec->enq("var", "");
 
-        return (PyObject*)var_create(self->rec[name]);
+        return (PyObject*)var_create((*self->rec)[name]);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -176,7 +176,7 @@ static PyObject* dpy_Record_var(dpy_Record* self, PyObject* args, PyObject* kw)
 
 static PyObject* dpy_Record_vars(dpy_Record* self)
 {
-    const std::vector<wreport::Var*>& vars = self->rec.vars();
+    const std::vector<wreport::Var*>& vars = core::Record::downcast(*self->rec).vars();
 
     PyObject* result = PyTuple_New(vars.size());
     if (!result) return NULL;
@@ -213,7 +213,7 @@ static PyObject* dpy_Record_key(dpy_Record* self, PyObject* args)
         return NULL;
 
     try {
-        return (PyObject*)var_create(self->rec[name]);
+        return (PyObject*)var_create((*self->rec)[name]);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -258,7 +258,7 @@ static PyObject* dpy_Record_update(dpy_Record* self, PyObject *args, PyObject *k
 
 static PyObject* dpy_Record_date_extremes(dpy_Record* self)
 {
-    DatetimeRange dtr = self->rec.get_datetimerange();
+    DatetimeRange dtr = core::Record::downcast(*self->rec).get_datetimerange();
 
     PyObject* dt_min = datetime_to_python(dtr.min);
     PyObject* dt_max = datetime_to_python(dtr.max);
@@ -275,19 +275,23 @@ static PyObject* dpy_Record_date_extremes(dpy_Record* self)
 
 static PyObject* dpy_Record_set_station_context(dpy_Record* self)
 {
-    self->rec.set_ana_context();
+    self->rec->set_datetime(Datetime());
+    self->rec->set_level(Level());
+    self->rec->set_trange(Trange());
+    self->station_context = true;
     Py_RETURN_NONE;
 }
 
 static PyObject* dpy_Record_clear(dpy_Record* self)
 {
-    self->rec.clear();
+    self->rec->clear();
+    self->station_context = false;
     Py_RETURN_NONE;
 }
 
 static PyObject* dpy_Record_clear_vars(dpy_Record* self)
 {
-    self->rec.clear_vars();
+    core::Record::downcast(*self->rec).clear_vars();
     Py_RETURN_NONE;
 }
 
@@ -298,7 +302,8 @@ static PyObject* dpy_Record_set_from_string(dpy_Record* self, PyObject *args)
         return NULL;
 
     try {
-        self->rec.set_from_string(str);
+        core::Record::downcast(*self->rec).set_from_string(str);
+        self->station_context = false;
         Py_RETURN_NONE;
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -326,7 +331,8 @@ static PyMethodDef dpy_Record_methods[] = {
 static int dpy_Record_init(dpy_Record* self, PyObject* args, PyObject* kw)
 {
     // Construct on preallocated memory
-    new (&self->rec) dballe::core::Record;
+    self->rec = Record::create().release();
+    self->station_context = false;
 
     if (kw)
     {
@@ -343,8 +349,8 @@ static int dpy_Record_init(dpy_Record* self, PyObject* args, PyObject* kw)
 
 static void dpy_Record_dealloc(dpy_Record* self)
 {
-    // Explicitly call destructor
-    self->rec.~Record();
+    delete self->rec;
+    self->rec = 0;
 }
 
 static PyObject* dpy_Record_str(dpy_Record* self)
@@ -384,7 +390,7 @@ static PyObject* rec_keys_to_tuple(dpy_Record* self, const char** keys, unsigned
     try {
         for (unsigned i = 0; i < len; ++i)
         {
-            const Var* var = self->rec.get(keys[i]);
+            const Var* var = self->rec->get(keys[i]);
             if (var && var->isset())
             {
                 int iv = var->enqi();
@@ -416,7 +422,7 @@ static int rec_tuple_to_keys(dpy_Record* self, PyObject* val, const char** keys,
     if (val == NULL || val == Py_None)
     {
         for (unsigned i = 0; i < len; ++i)
-            self->rec.unset(keys[i]);
+            self->rec->unset(keys[i]);
     } else {
         if (!PySequence_Check(val))
         {
@@ -439,16 +445,16 @@ static int rec_tuple_to_keys(dpy_Record* self, PyObject* val, const char** keys,
                 if (v == NULL) return -1;
                 if (v == Py_None)
                 {
-                    self->rec.unset(keys[i]);
+                    self->rec->unset(keys[i]);
                     Py_DECREF(v);
                 } else {
                     int vi = PyInt_AsLong(v);
                     Py_DECREF(v);
                     if (vi == -1 && PyErr_Occurred()) return -1;
-                    self->rec.set(keys[i], vi);
+                    self->rec->set(keys[i], vi);
                 }
             } else
-                self->rec.unset(keys[i]);
+                self->rec->unset(keys[i]);
         }
     }
     return 0;
@@ -482,24 +488,43 @@ static PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key)
         case 'd':
             if (strcmp(varname, "date") == 0)
             {
-                return datetime_to_python(self->rec.get_datetime());
+                auto dt = core::Record::downcast(*self->rec).get_datetime();
+                if (!dt.is_missing()) return datetime_to_python(dt);
+                PyErr_SetString(PyExc_KeyError, varname);
+                return NULL;
             } else if (strcmp(varname, "datemin") == 0) {
-                return datetime_to_python(self->rec.get_datetimerange().min);
+                auto dt = core::Record::downcast(*self->rec).get_datetimerange().min;
+                if (!dt.is_missing()) return datetime_to_python(dt);
+                PyErr_SetString(PyExc_KeyError, varname);
+                return NULL;
             } else if (strcmp(varname, "datemax") == 0) {
-                return datetime_to_python(self->rec.get_datetimerange().max);
+                auto dt = core::Record::downcast(*self->rec).get_datetimerange().max;
+                if (!dt.is_missing()) return datetime_to_python(dt);
+                PyErr_SetString(PyExc_KeyError, varname);
+                return NULL;
             }
             break;
         case 'l':
             if (strcmp(varname, "level") == 0)
-                return rec_to_level(self);
+            {
+                auto lev = core::Record::downcast(*self->rec).get_level();
+                if (!lev.is_missing()) return level_to_python(lev);
+                PyErr_SetString(PyExc_KeyError, varname);
+                return NULL;
+            }
             break;
         case 't':
             if (strcmp(varname, "trange") == 0 || strcmp(varname, "timerange") == 0)
-                return rec_to_trange(self);
+            {
+                auto tr = core::Record::downcast(*self->rec).get_trange();
+                if (!tr.is_missing()) return trange_to_python(tr);
+                PyErr_SetString(PyExc_KeyError, varname);
+                return NULL;
+            }
             break;
     }
 
-    const Var* var = self->rec.get(varname);
+    const Var* var = self->rec->get(varname);
     if (var == NULL)
     {
         PyErr_SetString(PyExc_KeyError, varname);
@@ -530,32 +555,41 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
             {
                 Datetime dt;
                 if (int res = datetime_from_python(val, dt)) return res;
-                self->rec.set(dt);
+                self->rec->set(dt);
+                self->station_context = false;
                 return 0;
             } else if (strcmp(varname, "datemin") == 0) {
-                DatetimeRange dtr = self->rec.get_datetimerange();
+                DatetimeRange dtr = core::Record::downcast(*self->rec).get_datetimerange();
                 if (int res = datetime_from_python(val, dtr.min)) return res;
-                self->rec.set(dtr);
+                self->rec->set(dtr);
+                self->station_context = false;
                 return 0;
             } else if (strcmp(varname, "datemax") == 0) {
-                DatetimeRange dtr = self->rec.get_datetimerange();
+                DatetimeRange dtr = core::Record::downcast(*self->rec).get_datetimerange();
                 if (int res = datetime_from_python(val, dtr.max)) return res;
-                self->rec.set(dtr);
+                self->rec->set(dtr);
+                self->station_context = false;
                 return 0;
             }
             break;
         case 'l':
             if (strcmp(varname, "level") == 0)
+            {
+                self->station_context = false;
                 return level_to_rec(self, val);
+            }
         case 't':
             if (strcmp(varname, "trange") == 0 || strcmp(varname, "timerange") == 0)
+            {
+                self->station_context = false;
                 return trange_to_rec(self, val);
+            }
     }
 
     if (val == NULL)
     {
         // del rec[val]
-        self->rec.unset(varname);
+        self->rec->unset(varname);
         return 0;
     }
 
@@ -564,17 +598,17 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
         double v = PyFloat_AsDouble(val);
         if (v == -1.0 && PyErr_Occurred())
             return -1;
-        self->rec.set(varname, v);
+        self->rec->set(varname, v);
     } else if (PyInt_Check(val)) {
         long v = PyInt_AsLong(val);
         if (v == -1 && PyErr_Occurred())
             return -1;
-        self->rec.set(varname, (int)v);
+        self->rec->set(varname, (int)v);
     } else if (PyString_Check(val)) {
         const char* v = PyString_AsString(val);
         if (v == NULL)
             return -1;
-        self->rec.set(varname, v);
+        self->rec->set(varname, v);
     } else if (PyUnicode_Check(val)) {
         PyObject *utf8 = PyUnicode_AsUTF8String(val);
         const char* v = PyString_AsString(utf8);
@@ -583,10 +617,10 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
             Py_DECREF(utf8);
             return -1;
         }
-        self->rec.set(varname, v);
+        self->rec->set(varname, v);
         Py_DECREF(utf8);
     } else if (val == Py_None) {
-        self->rec.unset(varname);
+        self->rec->unset(varname);
     } else {
         PyErr_SetString(PyExc_TypeError, "Expected int, float, str, unicode, or None");
         return -1;
@@ -604,7 +638,7 @@ static int any_key_set(const Record& rec, const char** keys, unsigned len)
 
 static int dpy_Record_len(dpy_Record* self)
 {
-    return self->rec.vars().size();
+    return core::Record::downcast(*self->rec).vars().size();
 }
 static int dpy_Record_contains(dpy_Record* self, PyObject *value)
 {
@@ -618,23 +652,23 @@ static int dpy_Record_contains(dpy_Record* self, PyObject *value)
             // We don't bother checking the seconds, since they default to 0 if
             // missing
             if (strcmp(varname, "date") == 0)
-                return !self->rec.get_datetime().is_missing();
+                return !core::Record::downcast(*self->rec).get_datetime().is_missing();
             else if (strcmp(varname, "datemin") == 0)
-                return !self->rec.get_datetimerange().min.is_missing();
+                return !core::Record::downcast(*self->rec).get_datetimerange().min.is_missing();
             else if (strcmp(varname, "datemax") == 0)
-                return !self->rec.get_datetimerange().max.is_missing();
+                return !core::Record::downcast(*self->rec).get_datetimerange().max.is_missing();
             break;
         case 'l':
             if (strcmp(varname, "level") == 0)
-                return any_key_set(self->rec, level_keys, 4);
+                return any_key_set(*self->rec, level_keys, 4);
             break;
         case 't':
             if (strcmp(varname, "trange") == 0 || strcmp(varname, "timerange") == 0)
-                return any_key_set(self->rec, trange_keys, 3);
+                return any_key_set(*self->rec, trange_keys, 3);
             break;
     }
 
-    return self->rec.isset(varname) ? 1 : 0;
+    return self->rec->isset(varname) ? 1 : 0;
 }
 
 static PySequenceMethods dpy_Record_sequence = {
@@ -661,7 +695,7 @@ static PyObject* dpy_Record_iter(dpy_Record* self)
     result = (dpy_RecordIter*)PyObject_Init((PyObject*)result, &dpy_RecordIter_Type);
     Py_INCREF(self);
     result->rec = self;
-    result->iter = self->rec.vars().begin();
+    result->iter = core::Record::downcast(*self->rec).vars().begin();
     return (PyObject*)result;
 }
 
@@ -677,15 +711,14 @@ static PyObject* dpy_Record_richcompare(dpy_Record* a, dpy_Record* b, int op)
 
     int cmp;
     switch (op) {
-        case Py_LT: cmp = cmp <  0; break;
-        case Py_LE: cmp = cmp <= 0; break;
-        case Py_EQ: cmp = a->rec == b->rec; break;
-        case Py_NE: cmp = a->rec != b->rec; break;
-        case Py_GT: cmp = cmp >  0; break;
-        case Py_GE: cmp = cmp >= 0; break;
+        case Py_EQ: cmp = *a->rec == *b->rec; break;
+        case Py_NE: cmp = *a->rec != *b->rec; break;
         default:
+            // https://www.python.org/dev/peps/pep-0207/
+            // If the function cannot compare the particular combination of objects, it
+            // should return a new reference to Py_NotImplemented.
             result = Py_NotImplemented;
-        goto out;
+            goto out;
     }
     result = cmp ? Py_True : Py_False;
 

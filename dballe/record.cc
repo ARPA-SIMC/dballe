@@ -22,6 +22,9 @@ const Var& Record::operator[](const char* key) const
     return *res;
 }
 
+bool Record::operator==(const Record& rec) const { return equals(rec); }
+bool Record::operator!=(const Record& rec) const { return !equals(rec); }
+
 bool Record::isset(const char* key) const
 {
     const Var* res = get(key);

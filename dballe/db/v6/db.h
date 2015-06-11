@@ -222,19 +222,6 @@ public:
      */
     int obtain_station(const Record& rec, bool can_add=true);
 
-    /*
-     * Lookup, insert or replace data in station taking the values from
-     * rec.
-     *
-     * If rec did not contain context_id, it will be set by this function.
-     *
-     * @param rec
-     *   The record with the lev_tr information
-     * @returns
-     *   The lev_tr ID
-     */
-    int obtain_lev_tr(const Record& rec);
-
     /**
      * Insert a record into the database
      *

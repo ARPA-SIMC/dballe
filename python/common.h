@@ -71,13 +71,23 @@ PyObject* raise_wreport_exception(const wreport::error& e);
  */
 PyObject* raise_std_exception(const std::exception& e);
 
-/**
- * Convert a Datetime to a python datetime object.
- */
+/// Convert a Datetime to a python datetime object
 PyObject* datetime_to_python(const Datetime& dt);
 
 /// Convert a python datetime object to a Datetime
 int datetime_from_python(PyObject* dt, Datetime& out);
+
+/// Convert a Level to a python 4-tuple
+PyObject* level_to_python(const Level& lev);
+
+/// Convert a 4-tuple to a Level
+int level_from_python(PyObject* o, Level& out);
+
+/// Convert a Trange to a python 3-tuple
+PyObject* trange_to_python(const Trange& tr);
+
+/// Convert a 3-tuple to a Trange
+int trange_from_python(PyObject* o, Trange& out);
 
 /**
  * Initialize the python bits to use used by the common functions.

@@ -192,24 +192,18 @@ int DB::obtain_station(const Record& rec, bool can_add)
         return s.get_id(lat, lon, ident);
 }
 
-int DB::obtain_lev_tr(const Record& rec)
-{
-    if (core::Record::downcast(rec).is_ana_context())
-        return -1;
-
-    return lev_tr().obtain_id(rec);
-}
-
 void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
 {
     sql::Repinfo& ri = repinfo();
     sql::DataV6& d = data();
     const auto& r = core::Record::downcast(rec);
 
+    Datetime datetime = r.get_datetime();
+
     /* Check for the existance of non-lev_tr data, otherwise it's all
      * useless.  Not inserting data is fine in case of setlev_trana */
     const char* s_year;
-    if (r.vars().empty() && !(r.is_ana_context()))
+    if (r.vars().empty() && !datetime.is_missing())
         throw error_notfound("no variables found in input record");
 
     auto t = conn->transaction();
@@ -222,11 +216,19 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
         vars.id_report = ri.obtain_id(memo->enqc());
     else
         throw error_notfound("input record has neither rep_cod nor rep_memo");
-    // Set the date from the record contents
-    vars.datetime = r.get_datetime();
 
-    // Insert the lev_tr data, and get the ID
-    int id_levtr = obtain_lev_tr(rec);
+    int id_levtr;
+    if (datetime.is_missing())
+    {
+        // Hardcoded values for station variables
+        vars.datetime = Datetime(1000, 1, 1, 0, 0, 0);
+        id_levtr = -1;
+    } else {
+        // Set the date from the record contents
+        vars.datetime = datetime;
+        // Insert the lev_tr data, and get the ID
+        id_levtr = lev_tr().obtain_id(rec);
+    }
 
     // Reset the variable ID store
     last_insert_varids.clear();

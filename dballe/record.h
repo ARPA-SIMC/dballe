@@ -109,6 +109,15 @@ struct Record
     /// Check if a value is set
     virtual bool isset(const char* key) const;
 
+    /// Check if two records are the same
+    virtual bool equals(const Record& rec) const = 0;
+
+    /// Check if two records are the same
+    bool operator==(const Record& rec) const;
+
+    /// Check if two records differ
+    bool operator!=(const Record& rec) const;
+
     /// Get a value, if set, or throw an exception if not
     const wreport::Var& operator[](const char* key) const;
 

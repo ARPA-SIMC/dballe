@@ -2,13 +2,17 @@
 #define DBALLE_PYTHON_RECORD_H
 
 #include <Python.h>
-#include <dballe/core/record.h>
+
+namespace dballe {
+struct Record;
+}
 
 extern "C" {
 
 typedef struct {
     PyObject_HEAD
-    dballe::core::Record rec;
+    dballe::Record* rec;
+    bool station_context;
 } dpy_Record;
 
 PyAPI_DATA(PyTypeObject) dpy_Record_Type;

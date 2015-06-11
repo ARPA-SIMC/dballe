@@ -476,8 +476,10 @@ Record& Record::operator=(const Record& rec)
 	return *this;
 }
 
-bool Record::operator==(const Record& rec) const
+bool Record::equals(const dballe::Record& other) const
 {
+    const auto& rec = downcast(other);
+
 	// Compare the keywords
 	for (int i = 0; i < KEYWORD_TABLE_SIZE; i++)
 	{
@@ -840,28 +842,6 @@ void Record::set_coords(const Coords& c)
 {
     seti("lat", c.lat);
     seti("lon", c.lon);
-}
-
-void Record::set_ana_context()
-{
-    seti("year", 1000);
-    seti("month", 1);
-    seti("day", 1);
-    seti("hour", 0);
-    seti("min", 0);
-    seti("sec", 0);
-    key_unset(DBA_KEY_LEVELTYPE1);
-    key_unset(DBA_KEY_L1);
-    key_unset(DBA_KEY_LEVELTYPE2);
-    key_unset(DBA_KEY_L2);
-    key_unset(DBA_KEY_PINDICATOR);
-    key_unset(DBA_KEY_P1);
-    key_unset(DBA_KEY_P2);
-}
-
-bool Record::is_ana_context() const
-{
-    return enq("year", MISSING_INT) == 1000;
 }
 
 void Record::set_from_string(const char* str)

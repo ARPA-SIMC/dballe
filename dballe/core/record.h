@@ -153,9 +153,6 @@ public:
 
 	Record& operator=(const Record& rec);
 
-	bool operator==(const Record& rec) const;
-	bool operator!=(const Record& rec) const { return !operator==(rec); }
-
 	/// Remove all variables from the record, leaving the keywords intact
 	void clear_vars();
 
@@ -177,6 +174,7 @@ public:
     const wreport::Var* get(const char* key) const override;
     void add(const dballe::Record& source) override;
     bool contains(const dballe::Record& subset) const override;
+    bool equals(const dballe::Record& rec) const override;
     void to_vars(std::function<void(const char*, std::unique_ptr<wreport::Var>&&)> dest) const override;
     void print(FILE* out) const override;
 
@@ -216,14 +214,6 @@ public:
     /// Compose a DatetimeRange out of the yearmin...secmax values
     DatetimeRange get_datetimerange() const;
     void set_coords(const Coords& c);
-
-	/**
-	 * Set the date, level and timerange values to match the anagraphical context.
-	 */
-	void set_ana_context();
-
-    /// Check if this record is set to the ana context
-    bool is_ana_context() const;
 
     /**
      * Iterate all keys in the record, calling f on them.

@@ -36,6 +36,7 @@ protected:
 
 	int perms;
     core::Record input;
+    bool station_context = false;
     core::Record output;
     core::Record qcinput;
     core::Record qcoutput;

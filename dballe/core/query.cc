@@ -162,8 +162,6 @@ void Query::set_from_record(const dballe::Record& rec)
     station = rec.enq("station", MISSING_INT);
     // Data ID
     data_id = rec.enq("context_id", MISSING_INT);
-    // Whether we query station vars
-    query_station_vars = r.is_ana_context();
 }
 
 void Query::set_from_test_string(const std::string& s)

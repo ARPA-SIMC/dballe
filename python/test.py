@@ -182,7 +182,10 @@ class RecordTest(unittest.TestCase):
         self.assertEqual(self.r.get(key="block"), 1)
         self.assertEqual(self.r.get(key="ana_id", default="ciao"), "ciao")
         self.assertEqual(self.r.get("ana_id", default="ciao"), "ciao")
-        self.assertEqual(self.r.get("datemin", None), None)
+        # date, datemin, datemax, now, when queried, are treated like a single
+        # range. Querying them will likely be deprecated soon.
+        self.assertEqual(self.r.get("datemin", None), dt.datetime(2007, 2, 1, 1, 2, 3))
+        self.assertEqual(self.r.get("datemax", None), dt.datetime(2007, 2, 1, 1, 2, 3))
 
     def testVar(self):
         self.assertEqual(self.r.var().code, "B12101")
@@ -241,16 +244,17 @@ class RecordTest(unittest.TestCase):
         r = self.r.copy()
         r["datemin"] = dt.datetime(2005, 3, 4, 5, 6, 7)
         r["datemax"] = dt.datetime(2004, 4, 5, 6, 7, 8)
-        self.assertEqual(r["date"], dt.datetime(2007, 2, 1, 1, 2, 3))
+        with self.assertRaises(KeyError):
+            r["date"]
         self.assertEqual(r["datemin"], dt.datetime(2005, 3, 4, 5, 6, 7))
         self.assertEqual(r["datemax"], dt.datetime(2004, 4, 5, 6, 7, 8))
         self.assertEqual(r["level"], (105, 2, None, None))
         self.assertEqual(r["timerange"], (2, 3, 4))
-        self.assertEqual("date" in r, True)
-        self.assertEqual("datemin" in r, True)
-        self.assertEqual("datemax" in r, True)
-        self.assertEqual("level" in r, True)
-        self.assertEqual("timerange" in r, True)
+        self.assertNotIn("date", r)
+        self.assertIn("datemin", r)
+        self.assertIn("datemax", r)
+        self.assertIn("level", r)
+        self.assertIn("timerange", r)
         del(r["date"])
         del(r["datemin"])
         del(r["datemax"])
@@ -360,6 +364,9 @@ class RecordTest(unittest.TestCase):
         self.assertRaises(KeyError, rec.__getitem__, "year")
         self.assertRaises(KeyError, rec.__getitem__, "B01001")
         self.assertRaises(KeyError, rec.__getitem__, "date")
+        self.assertRaises(KeyError, rec.__getitem__, "level")
+        self.assertRaises(KeyError, rec.__getitem__, "trange")
+        self.assertRaises(KeyError, rec.__getitem__, "timerange")
 
         rec["date"] = None
         self.assertEqual(rec.get("date", None), None)
@@ -488,11 +495,14 @@ class RecordTest(unittest.TestCase):
         self.assertEquals(a["level"], (1, 2, 3, 4))
         self.assertEquals(a["trange"], (1, 2, 3))
         a["level"] = None
-        self.assertEquals(a["level"], (None, None, None, None))
+        with self.assertRaises(KeyError):
+            a["level"]
         self.assertEquals(a["trange"], (1, 2, 3))
         a["trange"] = None
-        self.assertEquals(a["level"], (None, None, None, None))
-        self.assertEquals(a["trange"], (None, None, None))
+        with self.assertRaises(KeyError):
+            a["level"]
+        with self.assertRaises(KeyError):
+            a["trange"]
 
 class DescribeTest(unittest.TestCase):
     def testLevel(self):

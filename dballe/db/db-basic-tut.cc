@@ -92,7 +92,9 @@ std::vector<Test> tests {
         db.insert(rec, true, true);
 
         // Insert station names in both networks
-        rec.set_ana_context();
+        rec.set_datetime(Datetime());
+        rec.set_level(Level());
+        rec.set_trange(Trange());
         rec.set("rep_memo", "synop");
         rec.set("B01019", "Camse");
         db.insert(rec, true, true);

@@ -134,7 +134,7 @@ static PyObject* dpy_DB_insert(dpy_DB* self, PyObject* args, PyObject* kw)
         return NULL;
 
     try {
-        self->db->insert(record->rec, can_replace, station_can_add);
+        self->db->insert(*record->rec, can_replace, station_can_add);
         Py_RETURN_NONE;
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -186,7 +186,9 @@ static PyObject* dpy_DB_remove(dpy_DB* self, PyObject* args)
 
     try {
         core::Query query;
-        query.set_from_record(record->rec);
+        query.set_from_record(*record->rec);
+        if (record->station_context)
+            query.query_station_vars = true;
         self->db->remove(query);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -233,7 +235,7 @@ static PyObject* dpy_DB_query_stations(dpy_DB* self, PyObject* args)
 
     try {
         core::Query query;
-        query.set_from_record(record->rec);
+        query.set_from_record(*record->rec);
         std::unique_ptr<db::Cursor> res = self->db->query_stations(query);
         return (PyObject*)cursor_create(self, move(res));
     } catch (wreport::error& e) {
@@ -253,7 +255,9 @@ static PyObject* dpy_DB_query_data(dpy_DB* self, PyObject* args)
 
     try {
         core::Query query;
-        query.set_from_record(record->rec);
+        query.set_from_record(*record->rec);
+        if (record->station_context)
+            query.query_station_vars = true;
         std::unique_ptr<db::Cursor> res = self->db->query_data(query);
         return (PyObject*)cursor_create(self, move(res));
     } catch (wreport::error& e) {
@@ -273,7 +277,9 @@ static PyObject* dpy_DB_query_summary(dpy_DB* self, PyObject* args)
 
     try {
         core::Query query;
-        query.set_from_record(record->rec);
+        query.set_from_record(*record->rec);
+        if (record->station_context)
+            query.query_station_vars = true;
         std::unique_ptr<db::Cursor> res = self->db->query_summary(query);
         return (PyObject*)cursor_create(self, move(res));
     } catch (wreport::error& e) {
@@ -299,12 +305,12 @@ static PyObject* dpy_DB_query_attrs(dpy_DB* self, PyObject* args, PyObject* kw)
     if (!db_read_attrlist(attrs, codes))
         return NULL;
 
-    self->attr_rec->rec.clear();
+    self->attr_rec->rec->clear();
     try {
         self->db->query_attrs(reference_id, varcode, [&](unique_ptr<Var> var) {
             if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
                 return;
-            self->attr_rec->rec.set(move(var));
+            self->attr_rec->rec->set(move(var));
         });
         Py_INCREF(self->attr_rec);
         return (PyObject*)self->attr_rec;
@@ -329,9 +335,9 @@ static PyObject* dpy_DB_attr_insert(dpy_DB* self, PyObject* args, PyObject* kw)
 
     try {
         if (reference_id == -1)
-            self->db->attr_insert(resolve_varcode(varname), record->rec);
+            self->db->attr_insert(resolve_varcode(varname), *record->rec);
         else
-            self->db->attr_insert(reference_id, resolve_varcode(varname), record->rec);
+            self->db->attr_insert(reference_id, resolve_varcode(varname), *record->rec);
         Py_RETURN_NONE;
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -430,7 +436,9 @@ static PyObject* dpy_DB_export_to_file(dpy_DB* self, PyObject* args, PyObject* k
         std::unique_ptr<File> out = File::create(encoding, filename, "wb");
         ExportConsumer msg_writer(*out, as_generic ? "generic" : NULL);
         core::Query q;
-        q.set_from_record(query->rec);
+        q.set_from_record(*query->rec);
+        if (query->station_context)
+            q.query_station_vars = true;
         self->db->export_msgs(q, msg_writer);
         Py_RETURN_NONE;
     } catch (wreport::error& e) {

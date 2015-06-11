@@ -67,16 +67,16 @@ void TestStation::insert(WIBBLE_TEST_LOCPRM, DB& db, bool can_replace)
 {
     for (const auto& i: info)
     {
-        if (!i.second.vars().empty())
-        {
-            WIBBLE_TEST_INFO(locinfo);
-            core::Record insert(i.second);
-            set_latlonident_into(insert);
-            insert.set("rep_memo", i.first);
-            insert.set_ana_context();
-            locinfo() << insert.to_string();
-            wrunchecked(db.insert(insert, can_replace, true));
-        }
+        WIBBLE_TEST_INFO(locinfo);
+        if (i.second.vars().empty()) continue;
+        core::Record insert(i.second);
+        set_latlonident_into(insert);
+        insert.set("rep_memo", i.first);
+        insert.set_datetime(Datetime());
+        insert.set_level(Level());
+        insert.set_trange(Trange());
+        locinfo() << insert.to_string();
+        wrunchecked(db.insert(insert, can_replace, true));
     }
 }
 
