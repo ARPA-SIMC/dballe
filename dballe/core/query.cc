@@ -311,7 +311,7 @@ struct VarGen
 
 }
 
-void Query::to_vars(std::function<void(const char*, unique_ptr<Var>&&)> dest) const
+void Query::foreach_key(std::function<void(const char*, unique_ptr<Var>&&)> dest) const
 {
     VarGen vargen(dest);
 

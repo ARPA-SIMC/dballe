@@ -175,7 +175,8 @@ public:
     void add(const dballe::Record& source) override;
     bool contains(const dballe::Record& subset) const override;
     bool equals(const dballe::Record& rec) const override;
-    void to_vars(std::function<void(const char*, std::unique_ptr<wreport::Var>&&)> dest) const override;
+    void foreach_key_ref(std::function<void(const char*, const wreport::Var&)> dest) const override;
+    void foreach_key_copy(std::function<void(const char*, std::unique_ptr<wreport::Var>&&)> dest) const override;
     void print(FILE* out) const override;
 
     /**

@@ -15,12 +15,12 @@ typedef test_group::Fixture Fixture;
 std::vector<Test> tests {
     Test("record", [](Fixture& f) {
     }),
-    Test("to_vars", [](Fixture& f) {
+    Test("foreach_key", [](Fixture& f) {
         auto rec = Record::create();
         rec->set("lat", 44.5);
         rec->set("B12101", 290.4);
         vector<string> res;
-        rec->to_vars([&](const char* key, std::unique_ptr<wreport::Var>&& var) {
+        rec->foreach_key([&](const char* key, std::unique_ptr<wreport::Var>&& var) {
             res.push_back(string(key) + "=" + var->format());
         });
         sort(res.begin(), res.end());

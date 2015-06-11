@@ -742,7 +742,25 @@ void Record::unset(const char* name)
 	}
 }
 
-void Record::to_vars(std::function<void(const char*, std::unique_ptr<wreport::Var>&&)> dest) const
+void Record::foreach_key_ref(std::function<void(const char*, const wreport::Var&)> dest) const
+{
+    // Generate keys
+    for (unsigned i = 0; i < KEYWORD_TABLE_SIZE; ++i)
+    {
+        if (keydata[i] == NULL) continue;
+        if (!keydata[i]->isset()) continue;
+        dest(keyword_name((dba_keyword)i), *keydata[i]);
+    }
+    // Generate variables
+    string varcode;
+    for (const auto& i: m_vars)
+    {
+        varcode = format_code(i->code());
+        dest(varcode.c_str(), *i);
+    }
+}
+
+void Record::foreach_key_copy(std::function<void(const char*, std::unique_ptr<wreport::Var>&&)> dest) const
 {
     // Generate keys
     for (unsigned i = 0; i < KEYWORD_TABLE_SIZE; ++i)

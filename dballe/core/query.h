@@ -108,7 +108,7 @@ struct Query : public dballe::Query
      * Generate a sequence of dba_keyword and unique_ptr<Var> for all contents
      * of the query that can be represented in a record.
      */
-    void to_vars(std::function<void(const char*, std::unique_ptr<wreport::Var>&&)> dest) const override;
+    void foreach_key(std::function<void(const char*, std::unique_ptr<wreport::Var>&&)> dest) const override;
 
     /// Print the query contents to stderr
     void print(FILE* out) const override;

@@ -63,7 +63,7 @@ struct Query
      * Generate a sequence of key names and unique_ptr<Var> for all the
      * contents of the query
      */
-    virtual void to_vars(std::function<void(const char*, std::unique_ptr<wreport::Var>&&)> dest) const = 0;
+    virtual void foreach_key(std::function<void(const char*, std::unique_ptr<wreport::Var>&&)> dest) const = 0;
 
     /// Print the query contents to stderr
     virtual void print(FILE* out) const = 0;

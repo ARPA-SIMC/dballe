@@ -23,12 +23,12 @@ std::vector<Test> tests {
         wassert(actual(q1->get_datetimerange().min) == Datetime(2015, 5, 1, 0, 0, 0));
         wassert(actual(q1->get_datetimerange().max) == Datetime(2015, 5, 31, 23, 59, 59));
     }),
-    Test("to_vars", [](Fixture& f) {
-        auto to_vars = [](const std::string& test_string) -> std::string {
+    Test("foreach_key", [](Fixture& f) {
+        auto foreach_key = [](const std::string& test_string) -> std::string {
             std::string res;
             core::Query q;
             q.set_from_test_string(test_string);
-            q.to_vars([&](const char* key, unique_ptr<Var>&& var) {
+            q.foreach_key([&](const char* key, unique_ptr<Var>&& var) {
                 if (!res.empty()) res += ", ";
                 res += key;
                 res += "=";
@@ -37,11 +37,11 @@ std::vector<Test> tests {
             return res;
         };
 
-        wassert(actual(to_vars("")) == "");
-        wassert(actual(to_vars("latmin=45.0")) == "latmin=45.00000");
-        wassert(actual(to_vars("latmin=45.0, latmax=46.0")) == "latmin=45.00000, latmax=46.00000");
-        wassert(actual(to_vars("latmin=45.0, latmax=46.0, lon=11.0")) == "latmin=45.00000, latmax=46.00000, lon=11.00000");
-        wassert(actual(to_vars("latmin=45.0, latmax=46.0, lonmin=11.0, lonmax=11.5")) == "latmin=45.00000, latmax=46.00000, lonmin=11.00000, lonmax=11.50000");
+        wassert(actual(foreach_key("")) == "");
+        wassert(actual(foreach_key("latmin=45.0")) == "latmin=45.00000");
+        wassert(actual(foreach_key("latmin=45.0, latmax=46.0")) == "latmin=45.00000, latmax=46.00000");
+        wassert(actual(foreach_key("latmin=45.0, latmax=46.0, lon=11.0")) == "latmin=45.00000, latmax=46.00000, lon=11.00000");
+        wassert(actual(foreach_key("latmin=45.0, latmax=46.0, lonmin=11.0, lonmax=11.5")) == "latmin=45.00000, latmax=46.00000, lonmin=11.00000, lonmax=11.50000");
     }),
 };
 
