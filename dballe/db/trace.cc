@@ -155,6 +155,14 @@ Trace::Tracer Trace::trace_reset(const char* repinfo_file)
     return res;
 }
 
+Trace::Tracer Trace::trace_remove_station_data(const Query& query)
+{
+    if (!out) return Tracer(new TraceOp());
+    Tracer res(new TraceOp(*this, "remove_station_data"));
+    res->add_query(query);
+    return res;
+}
+
 Trace::Tracer Trace::trace_remove(const Query& query)
 {
     if (!out) return Tracer(new TraceOp());
@@ -179,6 +187,14 @@ Trace::Tracer Trace::trace_query_stations(const Query& query)
 {
     if (!out) return Tracer(new TraceOp());
     Tracer res(new TraceOp(*this, "query_stations"));
+    res->add_query(query);
+    return res;
+}
+
+Trace::Tracer Trace::trace_query_station_data(const Query& query)
+{
+    if (!out) return Tracer(new TraceOp());
+    Tracer res(new TraceOp(*this, "query_station_data"));
     res->add_query(query);
     return res;
 }

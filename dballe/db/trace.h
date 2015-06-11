@@ -78,10 +78,12 @@ public:
 
     Tracer trace_connect(const std::string& url);
     Tracer trace_reset(const char* repinfo_file=0);
-    Tracer trace_remove(const Query& rec);
+    Tracer trace_remove_station_data(const Query& query);
+    Tracer trace_remove(const Query& query);
     Tracer trace_remove_all();
     Tracer trace_vacuum();
     Tracer trace_query_stations(const Query& query);
+    Tracer trace_query_station_data(const Query& query);
     Tracer trace_query_data(const Query& query);
     Tracer trace_query_summary(const Query& query);
     Tracer trace_export_msgs(const Query& query);

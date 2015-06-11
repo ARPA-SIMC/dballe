@@ -61,7 +61,6 @@ void Query::clear()
     block = MISSING_INT;
     station = MISSING_INT;
     data_id = MISSING_INT;
-    query_station_vars = false;
 }
 
 void Query::set_from_record(const dballe::Record& rec)
@@ -284,8 +283,6 @@ bool Query::is_subquery(const dballe::Query& other_gen) const
     if (removed_or_changed(block, other.block)) return false;
     if (removed_or_changed(station, other.station)) return false;
     if (removed_or_changed(data_id, other.data_id)) return false;
-    // This switches the query domain entirely, so if it changed, we are not a subquery
-    if (query_station_vars != other.query_station_vars) return false;
     return true;
 }
 
@@ -564,7 +561,6 @@ struct Printer
         print_int("block", q.block);
         print_int("station", q.station);
         print_int("data_id", q.data_id);
-        print_int("query_station_vars", q.query_station_vars ? 1 : MISSING_INT);
         putc('\n', out);
     }
 };
@@ -617,7 +613,6 @@ void Query::serialize(JSONWriter& out) const
     if (block != MISSING_INT) out.add("block", block);
     if (station != MISSING_INT) out.add("station", station);
     if (data_id != MISSING_INT) out.add("data_id", data_id);
-    out.add("query_station_vars", query_station_vars);
 }
 
 unsigned Query::parse_modifiers(const dballe::Record& rec)

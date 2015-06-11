@@ -122,9 +122,10 @@ struct Cursor : public db::Cursor
     unsigned test_iterate(FILE* dump=0) override = 0;
 
     static std::unique_ptr<Cursor> run_station_query(DB& db, const core::Query& query);
+    static std::unique_ptr<Cursor> run_station_data_query(DB& db, const core::Query& query);
     static std::unique_ptr<Cursor> run_data_query(DB& db, const core::Query& query);
     static std::unique_ptr<Cursor> run_summary_query(DB& db, const core::Query& query);
-    static void run_delete_query(DB& db, const core::Query& query);
+    static void run_delete_query(DB& db, const core::Query& query, bool station_vars);
 
 protected:
     /// Run the query in qb and fill results with its output

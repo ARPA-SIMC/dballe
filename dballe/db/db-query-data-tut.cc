@@ -98,8 +98,7 @@ std::vector<Test> tests {
         wruntest(f.populate<OldDballeTestFixture>);
         // Query data in station context
         core::Query query;
-        query.query_station_vars = true;
-        unique_ptr<db::Cursor> cur = f.db->query_data(query);
+        unique_ptr<db::Cursor> cur = f.db->query_station_data(query);
         ensure_equals(cur->remaining(), 5);
     }),
     Test("year", [](Fixture& f) {

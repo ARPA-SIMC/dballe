@@ -96,6 +96,7 @@ struct Memdb
             const Level& level, const Trange& trange, const Datetime& datetime,
             const wreport::Var& var);
 
+    void remove(memdb::Results<memdb::StationValue>& query);
     void remove(memdb::Results<memdb::Value>& query);
 
     void dump(FILE* out) const;

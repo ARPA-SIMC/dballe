@@ -229,15 +229,14 @@ struct Constraints
     }
 };
 
-QueryBuilder::QueryBuilder(DB& db, const core::Query& query, unsigned int modifiers)
+QueryBuilder::QueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars)
     : conn(*db.conn), db(db), query(query), sql_query(2048), sql_from(1024), sql_where(1024),
-      modifiers(modifiers), query_station_vars(false)
+      modifiers(modifiers), query_station_vars(query_station_vars)
 {
-    query_station_vars = query.query_station_vars;
 }
 
-DataQueryBuilder::DataQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers)
-    : QueryBuilder(db, query, modifiers)
+DataQueryBuilder::DataQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars)
+    : QueryBuilder(db, query, modifiers, query_station_vars)
 {
     query_data_id = query.data_id;
 }
@@ -518,7 +517,7 @@ bool QueryBuilder::add_pa_where(const char* tbl)
 
 bool QueryBuilder::add_dt_where(const char* tbl)
 {
-    if (query.query_station_vars) return false;
+    if (query_station_vars) return false;
 
     bool found = false;
     if (!query.datetime.is_missing())

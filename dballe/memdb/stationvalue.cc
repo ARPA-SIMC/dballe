@@ -85,6 +85,13 @@ bool StationValues::remove(const Station& station, Varcode code)
     return false;
 }
 
+void StationValues::erase(size_t idx)
+{
+    const StationValue& val = *(*this)[idx];
+    by_station[&val.station].erase(idx);
+    value_remove(idx);
+}
+
 void StationValues::fill_record(const Station& station, Record& rec) const
 {
     const set<size_t>* res = by_station.search(&station);

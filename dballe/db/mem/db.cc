@@ -100,6 +100,13 @@ int DB::last_station_id() const
     return m_last_station_id;
 }
 
+void DB::remove_station_data(const Query& query)
+{
+    Results<StationValue> res(memdb.stationvalues);
+    raw_query_station_data(core::Query::downcast(query), res);
+    memdb.remove(res);
+}
+
 void DB::remove(const Query& query)
 {
     Results<Value> res(memdb.values);
@@ -274,30 +281,32 @@ std::unique_ptr<db::Cursor> DB::query_stations(const Query& query)
     return Cursor::createStations(*this, modifiers, res);
 }
 
+std::unique_ptr<db::Cursor> DB::query_station_data(const Query& query)
+{
+    const core::Query& q = core::Query::downcast(query);
+    unsigned int modifiers = q.get_modifiers();
+    if (modifiers & DBA_DB_MODIFIER_BEST)
+    {
+        throw error_unimplemented("best queries of station vars");
+#warning TODO
+    } else {
+        Results<StationValue> res(memdb.stationvalues);
+        raw_query_station_data(q, res);
+        return Cursor::createStationData(*this, modifiers, res);
+    }
+}
+
 std::unique_ptr<db::Cursor> DB::query_data(const Query& query)
 {
     const core::Query& q = core::Query::downcast(query);
     unsigned int modifiers = q.get_modifiers();
-    if (q.query_station_vars)
+    Results<Value> res(memdb.values);
+    raw_query_data(q, res);
+    if (modifiers & DBA_DB_MODIFIER_BEST)
     {
-        if (modifiers & DBA_DB_MODIFIER_BEST)
-        {
-            throw error_unimplemented("best queries of station vars");
-#warning TODO
-        } else {
-            Results<StationValue> res(memdb.stationvalues);
-            raw_query_station_data(q, res);
-            return Cursor::createStationData(*this, modifiers, res);
-        }
+        return Cursor::createDataBest(*this, modifiers, res);
     } else {
-        Results<Value> res(memdb.values);
-        raw_query_data(q, res);
-        if (modifiers & DBA_DB_MODIFIER_BEST)
-        {
-            return Cursor::createDataBest(*this, modifiers, res);
-        } else {
-            return Cursor::createData(*this, modifiers, res);
-        }
+        return Cursor::createData(*this, modifiers, res);
     }
 }
 
@@ -305,15 +314,9 @@ std::unique_ptr<db::Cursor> DB::query_summary(const Query& query)
 {
     const core::Query& q = core::Query::downcast(query);
     unsigned int modifiers = q.get_modifiers();
-    if (q.query_station_vars)
-    {
-        throw error_unimplemented("summary query of station vars");
-#warning TODO
-    } else {
-        Results<Value> res(memdb.values);
-        raw_query_data(q, res);
-        return Cursor::createSummary(*this, modifiers, res);
-    }
+    Results<Value> res(memdb.values);
+    raw_query_data(q, res);
+    return Cursor::createSummary(*this, modifiers, res);
 }
 
 void DB::query_attrs(int id_data, wreport::Varcode id_var,

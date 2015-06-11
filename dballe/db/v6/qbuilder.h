@@ -59,7 +59,7 @@ struct QueryBuilder
     bool query_station_vars;
 
 
-    QueryBuilder(DB& db, const core::Query& query, unsigned int modifiers);
+    QueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars);
     virtual ~QueryBuilder() {}
 
     void build();
@@ -82,7 +82,7 @@ protected:
 struct StationQueryBuilder : public QueryBuilder
 {
     StationQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers)
-        : QueryBuilder(db, query, modifiers) {}
+        : QueryBuilder(db, query, modifiers, false) {}
 
     virtual void build_select();
     virtual bool build_where();
@@ -93,7 +93,7 @@ struct DataQueryBuilder : public QueryBuilder
 {
     int query_data_id;
 
-    DataQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers);
+    DataQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars);
 
     virtual void build_select();
     virtual bool build_where();
@@ -102,8 +102,8 @@ struct DataQueryBuilder : public QueryBuilder
 
 struct IdQueryBuilder : public DataQueryBuilder
 {
-    IdQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers)
-        : DataQueryBuilder(db, query, modifiers) {}
+    IdQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars)
+        : DataQueryBuilder(db, query, modifiers, query_station_vars) {}
 
     virtual void build_select();
     virtual void build_order_by();
@@ -111,8 +111,8 @@ struct IdQueryBuilder : public DataQueryBuilder
 
 struct SummaryQueryBuilder : public DataQueryBuilder
 {
-    SummaryQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers)
-        : DataQueryBuilder(db, query, modifiers) {}
+    SummaryQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars)
+        : DataQueryBuilder(db, query, modifiers, query_station_vars) {}
 
     virtual void build_select();
     virtual void build_order_by();

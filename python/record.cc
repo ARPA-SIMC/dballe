@@ -278,6 +278,8 @@ static PyObject* dpy_Record_date_extremes(dpy_Record* self)
 
 static PyObject* dpy_Record_set_station_context(dpy_Record* self)
 {
+    if (PyErr_WarnEx(PyExc_DeprecationWarning, "Record.set_station_context is deprecated in favour of using DB.query_station_data", 1))
+        return NULL;
     self->rec->set_datetime(Datetime());
     self->rec->set_level(Level());
     self->rec->set_trange(Trange());

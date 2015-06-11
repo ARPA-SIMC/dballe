@@ -176,6 +176,27 @@ static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args)
 }
 
 
+static PyObject* dpy_DB_remove_station_data(dpy_DB* self, PyObject* args)
+{
+    dpy_Record* record;
+    if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
+        return NULL;
+
+    // TODO: if it is a dict, turn it directly into a Query?
+
+    try {
+        core::Query query;
+        query.set_from_record(*record->rec);
+        self->db->remove_station_data(query);
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+
+    Py_RETURN_NONE;
+}
+
 static PyObject* dpy_DB_remove(dpy_DB* self, PyObject* args)
 {
     dpy_Record* record;
@@ -188,8 +209,12 @@ static PyObject* dpy_DB_remove(dpy_DB* self, PyObject* args)
         core::Query query;
         query.set_from_record(*record->rec);
         if (record->station_context)
-            query.query_station_vars = true;
-        self->db->remove(query);
+        {
+            if (PyErr_WarnEx(PyExc_DeprecationWarning, "DB.remove after Record.set_station_context is deprecated in favour of using DB.remove_station_data", 1))
+                return NULL;
+            self->db->remove_station_data(query);
+        } else
+            self->db->remove(query);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -256,9 +281,34 @@ static PyObject* dpy_DB_query_data(dpy_DB* self, PyObject* args)
     try {
         core::Query query;
         query.set_from_record(*record->rec);
+        std::unique_ptr<db::Cursor> res;
         if (record->station_context)
-            query.query_station_vars = true;
-        std::unique_ptr<db::Cursor> res = self->db->query_data(query);
+        {
+            if (PyErr_WarnEx(PyExc_DeprecationWarning, "DB.query_data after Record.set_station_context is deprecated in favour of using DB.query_station_data", 1))
+                return NULL;
+            res = self->db->query_station_data(query);
+        } else
+            res = self->db->query_data(query);
+        return (PyObject*)cursor_create(self, move(res));
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+}
+
+static PyObject* dpy_DB_query_station_data(dpy_DB* self, PyObject* args)
+{
+    dpy_Record* record;
+    if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
+        return NULL;
+
+    // TODO: if it is a dict, turn it directly into a Query?
+
+    try {
+        core::Query query;
+        query.set_from_record(*record->rec);
+        std::unique_ptr<db::Cursor> res = self->db->query_station_data(query);
         return (PyObject*)cursor_create(self, move(res));
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -278,8 +328,6 @@ static PyObject* dpy_DB_query_summary(dpy_DB* self, PyObject* args)
     try {
         core::Query query;
         query.set_from_record(*record->rec);
-        if (record->station_context)
-            query.query_station_vars = true;
         std::unique_ptr<db::Cursor> res = self->db->query_summary(query);
         return (PyObject*)cursor_create(self, move(res));
     } catch (wreport::error& e) {
@@ -437,8 +485,6 @@ static PyObject* dpy_DB_export_to_file(dpy_DB* self, PyObject* args, PyObject* k
         ExportConsumer msg_writer(*out, as_generic ? "generic" : NULL);
         core::Query q;
         q.set_from_record(*query->rec);
-        if (query->station_context)
-            q.query_station_vars = true;
         self->db->export_msgs(q, msg_writer);
         Py_RETURN_NONE;
     } catch (wreport::error& e) {
@@ -467,12 +513,16 @@ static PyMethodDef dpy_DB_methods[] = {
         "Insert a record in the database" },
     {"load",              (PyCFunction)dpy_DB_load, METH_VARARGS,
         "Load a file object in the database" },
+    {"remove_station_data", (PyCFunction)dpy_DB_remove_station_data, METH_VARARGS,
+        "Remove station variables from the database" },
     {"remove",            (PyCFunction)dpy_DB_remove, METH_VARARGS,
-        "Remove records from the database" },
+        "Remove variables from the database" },
     {"vacuum",            (PyCFunction)dpy_DB_vacuum, METH_NOARGS,
         "Perform database cleanup operations" },
     {"query_stations",    (PyCFunction)dpy_DB_query_stations, METH_VARARGS,
         "Query the station archive in the database; returns a Cursor" },
+    {"query_station_data", (PyCFunction)dpy_DB_query_station_data, METH_VARARGS,
+        "Query the station variables in the database; returns a Cursor" },
     {"query_data",        (PyCFunction)dpy_DB_query_data, METH_VARARGS,
         "Query the variables in the database; returns a Cursor" },
     {"query_summary",     (PyCFunction)dpy_DB_query_summary, METH_VARARGS,

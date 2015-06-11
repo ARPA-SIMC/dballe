@@ -188,9 +188,13 @@ size_t Memdb::insert(
     return insert(coords, ident, report, level, trange, datetime, std::move(newvar));
 }
 
+void Memdb::remove(Results<StationValue>& res)
+{
+    res.copy_indices_to(stl::eraser(stationvalues));
+}
+
 void Memdb::remove(Results<Value>& res)
 {
-#warning TODO: check if ana context, in which case remove from station index
     res.copy_indices_to(stl::eraser(values));
 }
 

@@ -73,7 +73,7 @@ void DB::export_msgs(const dballe::Query& query, MsgConsumer& consumer)
     auto t = conn->transaction();
 
     // The big export query
-    DataQueryBuilder qb(*this, core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT);
+    DataQueryBuilder qb(*this, core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT, false);
     qb.build();
 
     // Current context information used to detect context changes

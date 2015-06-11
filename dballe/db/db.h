@@ -309,6 +309,15 @@ public:
      *   The record with the query data (see technical specifications, par. 1.6.4
      *   "parameter output/input") to select the items to be deleted
      */
+    virtual void remove_station_data(const Query& query) = 0;
+
+    /**
+     * Remove data from the database
+     *
+     * @param rec
+     *   The record with the query data (see technical specifications, par. 1.6.4
+     *   "parameter output/input") to select the items to be deleted
+     */
     virtual void remove(const Query& rec) = 0;
 
     /**
@@ -346,6 +355,20 @@ public:
     virtual std::unique_ptr<db::Cursor> query_stations(const Query& query) = 0;
 
     /**
+     * Query the station variables in the database.
+     *
+     * When multiple values per variable are present, the results will be presented
+     * in increasing order of priority.
+     *
+     * @param query
+     *   The record with the query data (see technical specifications, par. 1.6.4
+     *   "parameter output/input")
+     * @return
+     *   The cursor to use to iterate over the results
+     */
+    virtual std::unique_ptr<db::Cursor> query_station_data(const Query& query) = 0;
+
+    /**
      * Query the database.
      *
      * When multiple values per variable are present, the results will be presented
@@ -357,7 +380,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<db::Cursor> query_data(const Query& rec) = 0;
+    virtual std::unique_ptr<db::Cursor> query_data(const Query& query) = 0;
 
     /**
      * Query a summary of what the result would be for a query.
@@ -371,7 +394,7 @@ public:
      *   provided, so it only gives all the available combinations of data
      *   contexts.
      */
-    virtual std::unique_ptr<db::Cursor> query_summary(const Query& rec) = 0;
+    virtual std::unique_ptr<db::Cursor> query_summary(const Query& query) = 0;
 
     /**
      * Query attributes

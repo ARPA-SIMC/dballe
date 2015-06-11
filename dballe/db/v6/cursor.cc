@@ -183,10 +183,27 @@ unique_ptr<Cursor> Cursor::run_station_query(DB& db, const core::Query& q)
     return res;
 }
 
+unique_ptr<Cursor> Cursor::run_station_data_query(DB& db, const core::Query& q)
+{
+    unsigned int modifiers = q.get_modifiers();
+    DataQueryBuilder qb(db, q, modifiers, true);
+    qb.build();
+
+    unique_ptr<Cursor> res;
+    if (modifiers & DBA_DB_MODIFIER_BEST)
+    {
+        res.reset(new CursorBest(db, modifiers));
+    } else {
+        res.reset(new CursorData(db, modifiers));
+    }
+    res->load(qb);
+    return res;
+}
+
 unique_ptr<Cursor> Cursor::run_data_query(DB& db, const core::Query& q)
 {
     unsigned int modifiers = q.get_modifiers();
-    DataQueryBuilder qb(db, q, modifiers);
+    DataQueryBuilder qb(db, q, modifiers, false);
     qb.build();
 
     unique_ptr<Cursor> res;
@@ -206,7 +223,7 @@ unique_ptr<Cursor> Cursor::run_summary_query(DB& db, const core::Query& q)
     if (modifiers & DBA_DB_MODIFIER_BEST)
         throw error_consistency("cannot use query=best on summary queries");
 
-    SummaryQueryBuilder qb(db, q, modifiers);
+    SummaryQueryBuilder qb(db, q, modifiers, false);
     qb.build();
 
     unique_ptr<Cursor> res(new CursorSummary(db, modifiers));
@@ -214,13 +231,13 @@ unique_ptr<Cursor> Cursor::run_summary_query(DB& db, const core::Query& q)
     return res;
 }
 
-void Cursor::run_delete_query(DB& db, const core::Query& q)
+void Cursor::run_delete_query(DB& db, const core::Query& q, bool station_vars)
 {
     unsigned int modifiers = q.get_modifiers();
     if (modifiers & DBA_DB_MODIFIER_BEST)
         throw error_consistency("cannot use query=best on summary queries");
 
-    IdQueryBuilder qb(db, q, modifiers);
+    IdQueryBuilder qb(db, q, modifiers, station_vars);
     qb.build();
 
     db.data().remove(qb);

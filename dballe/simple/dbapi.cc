@@ -171,8 +171,10 @@ int DbAPI::voglioquesto()
     }
     core::Query query;
     query.set_from_record(input);
-    if (station_context) query.query_station_vars = true;
-    query_cur = db.query_data(query).release();
+    if (station_context)
+        query_cur = db.query_station_data(query).release();
+    else
+        query_cur = db.query_data(query).release();
     attr_state = ATTR_REFERENCE;
     attr_reference_id = missing_int;
 
@@ -240,8 +242,10 @@ void DbAPI::dimenticami()
 
     core::Query query;
     query.set_from_record(input);
-    if (station_context) query.query_station_vars = true;
-    db.remove(query);
+    if (station_context)
+        db.remove_station_data(query);
+    else
+        db.remove(query);
     attr_state = ATTR_REFERENCE;
     attr_reference_id = missing_int;
 }

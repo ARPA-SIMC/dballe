@@ -66,6 +66,9 @@ public:
      */
     bool remove(const Station& station, wreport::Varcode code);
 
+    /// Removes a value, by index
+    void erase(size_t idx);
+
     /// Fill a record with all the variables for this station
     void fill_record(const Station& station, Record& rec) const;
 

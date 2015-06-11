@@ -93,6 +93,8 @@ std::vector<Test> tests {
         wassert(actual(db).try_summary_query(str::fmtf("ana_id=%d", f.st2_id), 2));
         wassert(actual(db).try_summary_query(str::fmtf("ana_id=%d", (f.st1_id + f.st2_id) * 2), 0));
     }),
+#if 0
+    // TODO: summary of station vars is not supported at the moment, waiting for a use case for it
     Test("query_station_vars", [](Fixture& f) {
         auto& db = *f.db;
         core::Query query;
@@ -100,6 +102,7 @@ std::vector<Test> tests {
         unique_ptr<db::Cursor> cur = db.query_summary(query);
         ensure_equals(cur->test_iterate(), 8);
     }),
+#endif
     Test("query_year", [](Fixture& f) {
         auto& db = *f.db;
         wassert(actual(db).try_summary_query("year=1001", 0));

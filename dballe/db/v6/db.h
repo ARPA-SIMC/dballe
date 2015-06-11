@@ -240,15 +240,8 @@ public:
 
     int last_station_id() const;
 
-    /**
-     * Remove data from the database
-     *
-     * @param rec
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input") to select the items to be deleted
-     */
-    void remove(const Query& rec);
-
+    void remove_station_data(const Query& query) override;
+    void remove(const Query& query);
     void remove_all();
 
     /**
@@ -262,31 +255,10 @@ public:
      */
     void vacuum();
 
-    /**
-     * Start a query on the station archive
-     *
-     * @param query
-     *   The record with the query data (see @ref dba_record_keywords)
-     * @return
-     *   The cursor to use to iterate over the results
-     */
     std::unique_ptr<db::Cursor> query_stations(const Query& query);
-
-    /**
-     * Query the database.
-     *
-     * When multiple values per variable are present, the results will be presented
-     * in increasing order of priority.
-     *
-     * @param query
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input")
-     * @return
-     *   The cursor to use to iterate over the results
-     */
-    std::unique_ptr<db::Cursor> query_data(const Query& rec);
-
-    std::unique_ptr<db::Cursor> query_summary(const Query& rec);
+    std::unique_ptr<db::Cursor> query_station_data(const Query& query) override;
+    std::unique_ptr<db::Cursor> query_data(const Query& query);
+    std::unique_ptr<db::Cursor> query_summary(const Query& query);
 
     /**
      * Query attributes

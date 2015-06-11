@@ -845,8 +845,7 @@ std::vector<Test> tests {
 
         // Query station data and ensure there is only one info (height)
         core::Query query;
-        query.query_station_vars = true;
-        unique_ptr<db::Cursor> cur = db.query_data(query);
+        unique_ptr<db::Cursor> cur = db.query_station_data(query);
         wassert(actual(cur->remaining()) == 1);
         cur->next();
         wassert(actual(cur).station_vars_match(f.ds_st_navile));
@@ -862,8 +861,7 @@ std::vector<Test> tests {
 
         // Query station data and ensure there is only one info (height)
         core::Query query;
-        query.query_station_vars = true;
-        unique_ptr<db::Cursor> cur = db.query_data(query);
+        unique_ptr<db::Cursor> cur = db.query_station_data(query);
         wassert(actual(cur->remaining()) == 2);
 
         // Ensure that the network info is preserved

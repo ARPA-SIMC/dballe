@@ -253,11 +253,20 @@ int DB::last_station_id() const
     return _last_station_id;
 }
 
+void DB::remove_station_data(const Query& query)
+{
+    auto tr = trace.trace_remove_station_data(query);
+    auto t = conn->transaction();
+    Cursor::run_delete_query(*this, core::Query::downcast(query), true);
+    t->commit();
+    tr->done();
+}
+
 void DB::remove(const Query& query)
 {
     auto tr = trace.trace_remove(query);
     auto t = conn->transaction();
-    Cursor::run_delete_query(*this, core::Query::downcast(query));
+    Cursor::run_delete_query(*this, core::Query::downcast(query), false);
     t->commit();
     tr->done();
 }
@@ -288,6 +297,14 @@ std::unique_ptr<db::Cursor> DB::query_stations(const Query& query)
 {
     auto tr = trace.trace_query_stations(query);
     auto res = Cursor::run_station_query(*this, core::Query::downcast(query));
+    tr->done();
+    return move(res);
+}
+
+std::unique_ptr<db::Cursor> DB::query_station_data(const Query& query)
+{
+    auto tr = trace.trace_query_station_data(query);
+    auto res = Cursor::run_station_data_query(*this, core::Query::downcast(query));
     tr->done();
     return move(res);
 }
