@@ -33,14 +33,6 @@ Encoding parse_encoding(const std::string& s)
     error_notfound::throwf("unsupported encoding '%s'", s.c_str());
 }
 
-static int str_to_val(const char* str)
-{
-    if (str == NULL || str[0] == 0 || strcmp(str, "-") == 0)
-        return MISSING_INT;
-    else
-        return strtol(str, NULL, 10);
-}
-
 std::ostream& operator<<(std::ostream& out, const Level& l)
 {
     l.to_stream(out);
@@ -152,6 +144,11 @@ int Ident::compare(const std::string& o) const
 {
     if (!value) return -1;
     return strcmp(value, o.c_str());
+}
+Ident::operator std::string() const
+{
+    if (!value) throw error_consistency("ident is not set");
+    return std::string(value);
 }
 
 

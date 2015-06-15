@@ -61,7 +61,7 @@ void Memdb::clear()
 
 void Memdb::insert_or_replace(const Record& rec)
 {
-    const Station& station = *stations[stations.obtain(rec)];
+    const memdb::Station& station = *stations[stations.obtain(rec)];
     const auto& r = core::Record::downcast(rec);
     Datetime datetime = r.get_datetime();
     if (datetime.is_missing())
@@ -116,7 +116,7 @@ void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool wi
         station_id = stations.obtain_fixed(coord, report, true);
     }
 
-    const Station& station = *stations[station_id];
+    const memdb::Station& station = *stations[station_id];
 
     if (with_station_info || stationvalues.has_variables_for(station))
     {
@@ -171,7 +171,7 @@ size_t Memdb::insert(
         id_station = stations.obtain_fixed(coords, report, true);
     else
         id_station = stations.obtain_mobile(coords, ident, report, true);
-    const Station& station = *stations[id_station];
+    const memdb::Station& station = *stations[id_station];
 
     size_t id_levtr = levtrs.obtain(level, trange);
     const LevTr& levtr = *levtrs[id_levtr];

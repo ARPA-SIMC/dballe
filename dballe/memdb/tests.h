@@ -45,7 +45,7 @@ static inline std::vector<const T*> _get_results(WIBBLE_TEST_LOCPRM, memdb::Resu
     return items;
 }
 
-#define get_results(res) _get_results(wibble_test_location.nest(wibble_test_location_info, __FILE__, __LINE__, "get_results(" #res ")"), res)
+#define get_results(res) dballe::tests::_get_results(wibble_test_location.nest(wibble_test_location_info, __FILE__, __LINE__, "get_results(" #res ")"), res)
 
 /*
 std::vector<const memdb::Value*> _get_data_results(WIBBLE_TEST_LOCPRM, const Memdb& memdb, const Record& query);

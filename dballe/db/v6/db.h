@@ -63,6 +63,9 @@ namespace dballe {
 struct Msg;
 struct Msgs;
 struct MsgConsumer;
+struct Station;
+struct StationValues;
+struct DataValues;
 
 namespace db {
 struct Connection;
@@ -133,6 +136,23 @@ protected:
     void init_after_connect();
 
     DB(std::unique_ptr<Connection> conn);
+
+    /*
+     * Lookup, insert or replace data in station taking the values from
+     * rec.
+     *
+     * If rec did not contain ana_id, it will be set by this function.
+     *
+     * @param rec
+     *   The record with the station information
+     * @param can_add
+     *   If true we can insert new stations in the database, if false we
+     *   only look up existing records and raise an exception if missing
+     * @returns
+     *   The station ID
+     */
+    int obtain_station(const Record& rec, bool can_add=true);
+    int obtain_station(const Station& st, bool can_add=true);
 
 public:
     virtual ~DB();
@@ -206,37 +226,8 @@ public:
      */
     int rep_cod_from_memo(const char* memo);
 
-    /*
-     * Lookup, insert or replace data in station taking the values from
-     * rec.
-     *
-     * If rec did not contain ana_id, it will be set by this function.
-     *
-     * @param rec
-     *   The record with the station information
-     * @param can_add
-     *   If true we can insert new stations in the database, if false we
-     *   only look up existing records and raise an exception if missing
-     * @returns
-     *   The station ID
-     */
-    int obtain_station(const Record& rec, bool can_add=true);
-
-    /**
-     * Insert a record into the database
-     *
-     * In a record with the same phisical situation already exists, the function
-     * fails.
-     *
-     * @param rec
-     *   The record to insert.
-     * @param can_replace
-     *   If true, then existing data can be rewritten, else data can only be added.
-     * @param station_can_add
-     *   If true, then it is allowed to add new station records to the database.
-     *   Otherwise, data can be added only by reusing existing ones.
-     */
     void insert(const Record& rec, bool can_replace, bool station_can_add);
+    void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add) override;
 
     int last_station_id() const;
 

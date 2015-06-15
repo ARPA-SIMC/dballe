@@ -1,24 +1,3 @@
-/*
- * dballe/db - Archive for point-based meteorological data
- *
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #ifndef DBALLE_DB_H
 #define DBALLE_DB_H
 
@@ -40,6 +19,8 @@
 namespace dballe {
 struct Record;
 struct Query;
+struct StationValues;
+struct DataValues;
 struct Msg;
 struct Msgs;
 struct MsgConsumer;
@@ -296,6 +277,23 @@ public:
      *   be created.
      */
     virtual void insert(const Record& rec, bool can_replace, bool station_can_add) = 0;
+
+    /**
+     * Insert station values into the database
+     *
+     * The IDs of all variables that were inserted will be stored in vals.
+     *
+     * @param vals
+     *   The values to insert.
+     * @param can_replace
+     *   If true, then existing data can be rewritten, else data can only be added.
+     * @param station_can_add
+     *   If false, it will not create a missing station record, and only data
+     *   for existing stations can be added. If true, then if we are inserting
+     *   data for a station that does not yet exists in the database, it will
+     *   be created.
+     */
+    virtual void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add) = 0;
 
     /**
      * Return the station id for the last data that was inserted.

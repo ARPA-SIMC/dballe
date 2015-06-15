@@ -5,6 +5,7 @@
 #include "dballe/core/varmatch.h"
 #include "dballe/core/record.h"
 #include "dballe/core/query.h"
+#include "dballe/core/values.h"
 #include "dballe/core/defs.h"
 #include "dballe/memdb/results.h"
 #include "dballe/memdb/serializer.h"
@@ -69,7 +70,7 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
 {
     // Obtain the station
     m_last_station_id = memdb.stations.obtain(rec, station_can_add);
-    const Station& station = *memdb.stations[m_last_station_id];
+    const memdb::Station& station = *memdb.stations[m_last_station_id];
 
     // Obtain values
     last_insert_varids.clear();
@@ -92,6 +93,22 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
             size_t pos = memdb.values.insert(station, levtr, datetime, **i, can_replace);
             last_insert_varids.push_back(VarID((*i)->code(), false, pos));
         }
+    }
+}
+
+void DB::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
+{
+    // Obtain the station
+    m_last_station_id = memdb.stations.obtain(vals.info, station_can_add);
+    const memdb::Station& station = *memdb.stations[m_last_station_id];
+
+    // Obtain values
+    last_insert_varids.clear();
+    // Insert all the variables we find
+    for (auto& i: vals.values)
+    {
+        i.second.data_id = memdb.stationvalues.insert(station, *i.second.var, can_replace);
+        last_insert_varids.push_back(VarID(i.first, true, i.second.data_id));
     }
 }
 
@@ -125,18 +142,18 @@ void DB::vacuum()
 }
 
 namespace {
-struct MatchAnaFilter : public Match<Station>
+struct MatchAnaFilter : public Match<memdb::Station>
 {
-    const StationValues& stationvalues;
+    const memdb::StationValues& stationvalues;
     Varmatch* match;
 
-    MatchAnaFilter(const StationValues& stationvalues, const std::string& expr)
+    MatchAnaFilter(const memdb::StationValues& stationvalues, const std::string& expr)
         : stationvalues(stationvalues), match(Varmatch::parse(expr).release()) {}
     ~MatchAnaFilter() { delete match; }
 
-    virtual bool operator()(const Station& val) const
+    bool operator()(const memdb::Station& val) const override
     {
-        const StationValue* sv = stationvalues.get(val, match->code);
+        const memdb::StationValue* sv = stationvalues.get(val, match->code);
         if (!sv) return false;
         return (*match)(*(sv->var));
     }
@@ -146,11 +163,11 @@ private:
     MatchAnaFilter& operator=(const MatchAnaFilter&);
 };
 
-struct MatchRepinfo : public Match<Station>
+struct MatchRepinfo : public Match<memdb::Station>
 {
     std::set<std::string> report_whitelist;
 
-    virtual bool operator()(const Station& val) const
+    bool operator()(const memdb::Station& val) const override
     {
         return report_whitelist.find(val.report) != report_whitelist.end();
     }
@@ -226,7 +243,7 @@ void DB::raw_query_stations(const core::Query& q, memdb::Results<memdb::Station>
 void DB::raw_query_station_data(const core::Query& q, memdb::Results<memdb::StationValue>& res)
 {
     // Get a list of stations we can match
-    Results<Station> res_st(memdb.stations);
+    Results<memdb::Station> res_st(memdb.stations);
 
     raw_query_stations(q, res_st);
 
@@ -236,7 +253,7 @@ void DB::raw_query_station_data(const core::Query& q, memdb::Results<memdb::Stat
 void DB::raw_query_data(const core::Query& q, memdb::Results<memdb::Value>& res)
 {
     // Get a list of stations we can match
-    Results<Station> res_st(memdb.stations);
+    Results<memdb::Station> res_st(memdb.stations);
     raw_query_stations(q, res_st);
 
     // Get a list of stations we can match
@@ -251,7 +268,7 @@ std::unique_ptr<db::Cursor> DB::query_stations(const Query& query)
 {
     const core::Query& q = core::Query::downcast(query);
     unsigned int modifiers = q.get_modifiers();
-    Results<Station> res(memdb.stations);
+    Results<memdb::Station> res(memdb.stations);
 
     // Build var/varlist special-cased filter for station queries
     if (!q.varcodes.empty())

@@ -16,14 +16,14 @@ namespace mem {
 
 namespace cursor {
 
-const Value& DataBestKey::value() const { return *values[idx]; }
+const memdb::Value& DataBestKey::value() const { return *values[idx]; }
 
 bool DataBestKey::operator<(const DataBestKey& o) const
 {
     // Normal sort here, but we ignore report so that two values which only
     // differ in report are considered the same
-    const Value& vx = value();
-    const Value& vy = o.value();
+    const memdb::Value& vx = value();
+    const memdb::Value& vy = o.value();
 
     if (int res = vx.station.coords.compare(vy.station.coords)) return res < 0;
     if (vx.station.ident < vy.station.ident) return true;
@@ -41,7 +41,7 @@ bool DataBestKey::operator<(const DataBestKey& o) const
 
 std::ostream& operator<<(std::ostream& out, const DataBestKey& k)
 {
-    const Value& v = k.value();
+    const memdb::Value& v = k.value();
 
     out << v.station.coords
         << "." << v.station.ident
@@ -177,7 +177,7 @@ struct StationVarInserter
 
     StationVarInserter(Record& rec) : rec(rec) {}
 
-    void insert(const StationValue* val)
+    void insert(const memdb::StationValue* val)
     {
         rec.set(*val->var);
     }
@@ -192,9 +192,9 @@ void Cursor::add_station_info(Record& rec)
 
 namespace {
 
-struct StationResultQueue : public stack<const Station*>
+struct StationResultQueue : public stack<const memdb::Station*>
 {
-    StationResultQueue(DB&, Results<Station>& res)
+    StationResultQueue(DB&, Results<memdb::Station>& res)
     {
         res.copy_valptrs_to(stl::pusher(*this));
     }
@@ -204,7 +204,7 @@ struct CompareStationValueResult
 {
     // Return an inverse comparison, so that the priority queue gives us the
     // smallest items first
-    bool operator() (StationValue* x, StationValue* y) const
+    bool operator() (memdb::StationValue* x, memdb::StationValue* y) const
     {
         if (int res = x->station.coords.compare(y->station.coords)) return res > 0;
         if (x->station.ident < y->station.ident) return false;
@@ -215,9 +215,9 @@ struct CompareStationValueResult
 };
 
 // TODO: order by code and report
-struct StationValueResultQueue : public priority_queue<StationValue*, vector<StationValue*>, CompareStationValueResult>
+struct StationValueResultQueue : public priority_queue<memdb::StationValue*, vector<memdb::StationValue*>, CompareStationValueResult>
 {
-    StationValueResultQueue(DB&, Results<StationValue>& res)
+    StationValueResultQueue(DB&, Results<memdb::StationValue>& res)
     {
         res.copy_valptrs_to(stl::pusher(*this));
     }
@@ -225,16 +225,16 @@ struct StationValueResultQueue : public priority_queue<StationValue*, vector<Sta
 
 struct CompareData
 {
-    const ValueStorage<Value>& values;
+    const ValueStorage<memdb::Value>& values;
 
-    CompareData(const ValueStorage<Value>& values) : values(values) {}
+    CompareData(const ValueStorage<memdb::Value>& values) : values(values) {}
 
     // Return an inverse comparison, so that the priority queue gives us the
     // smallest items first
     bool operator() (size_t x, size_t y) const
     {
-        const Value& vx = *values[x];
-        const Value& vy = *values[y];
+        const memdb::Value& vx = *values[x];
+        const memdb::Value& vy = *values[y];
 
         if (int res = vx.station.coords.compare(vy.station.coords)) return res > 0;
         if (vx.station.ident < vy.station.ident) return false;
@@ -252,7 +252,7 @@ struct CompareData
 
 struct DataResultQueue : public priority_queue<size_t, vector<size_t>, CompareData>
 {
-    DataResultQueue(DB&, Results<Value>& res)
+    DataResultQueue(DB&, Results<memdb::Value>& res)
         : priority_queue<size_t, vector<size_t>, CompareData>(CompareData(res.values))
     {
         res.copy_indices_to(stl::pusher(*this));
@@ -261,10 +261,10 @@ struct DataResultQueue : public priority_queue<size_t, vector<size_t>, CompareDa
 
 struct DataBestResultQueue : public map<cursor::DataBestKey, size_t>
 {
-    const ValueStorage<Value>& values;
+    const ValueStorage<memdb::Value>& values;
     std::map<std::string, int> prios;
 
-    DataBestResultQueue(DB& db, Results<Value>& res)
+    DataBestResultQueue(DB& db, Results<memdb::Value>& res)
         : values(res.values), prios(db.get_repinfo_priorities())
     {
         res.copy_indices_to(stl::pusher(*this));
@@ -274,8 +274,8 @@ struct DataBestResultQueue : public map<cursor::DataBestKey, size_t>
     {
         for (const_iterator i = begin(); i != end(); ++i)
         {
-            const Value& k = i->first.value();
-            const Value& v = *values[i->second];
+            const memdb::Value& k = i->first.value();
+            const memdb::Value& v = *values[i->second];
 
             stringstream buf;
             buf << k.station.coords
@@ -301,8 +301,8 @@ struct DataBestResultQueue : public map<cursor::DataBestKey, size_t>
             insert(make_pair(cursor::DataBestKey(values, val), val));
         else
         {
-            const Value& vx = *values[i->second];
-            const Value& vy = *values[val];
+            const memdb::Value& vx = *values[i->second];
+            const memdb::Value& vy = *values[val];
             if (prios[vx.station.report] < prios[vy.station.report])
                 i->second = val;
         }
@@ -361,7 +361,7 @@ struct CursorSorted : public Cursor
 
 struct CursorStations : public CursorSorted<StationResultQueue>
 {
-    CursorStations(mem::DB& db, unsigned modifiers, Results<Station>& res)
+    CursorStations(mem::DB& db, unsigned modifiers, Results<memdb::Station>& res)
         : CursorSorted<StationResultQueue>(db, modifiers, res)
     {
     }
@@ -399,7 +399,7 @@ struct CursorStations : public CursorSorted<StationResultQueue>
 
 struct CursorStationData : public CursorSorted<StationValueResultQueue>
 {
-    CursorStationData(mem::DB& db, unsigned modifiers, Results<StationValue>& res)
+    CursorStationData(mem::DB& db, unsigned modifiers, Results<memdb::StationValue>& res)
         : CursorSorted<StationValueResultQueue>(db, modifiers, res)
     {
     }
@@ -441,10 +441,10 @@ struct CursorStationData : public CursorSorted<StationValueResultQueue>
 template<typename QUEUE>
 struct CursorDataBase : public CursorSorted<QUEUE>
 {
-    const ValueStorage<Value>& values;
+    const ValueStorage<memdb::Value>& values;
     size_t cur_idx;
 
-    CursorDataBase(mem::DB& db, unsigned modifiers, Results<Value>& res)
+    CursorDataBase(mem::DB& db, unsigned modifiers, Results<memdb::Value>& res)
         : CursorSorted<QUEUE>(db, modifiers, res), values(res.values)
     {
     }
@@ -495,7 +495,7 @@ struct CursorDataBase : public CursorSorted<QUEUE>
 
 struct CursorData : public CursorDataBase<DataResultQueue>
 {
-    CursorData(mem::DB& db, unsigned modifiers, Results<Value>& res)
+    CursorData(mem::DB& db, unsigned modifiers, Results<memdb::Value>& res)
         : CursorDataBase<DataResultQueue>(db, modifiers, res)
     {
     }
@@ -503,7 +503,7 @@ struct CursorData : public CursorDataBase<DataResultQueue>
 
 struct CursorDataBest : public CursorDataBase<DataBestResultQueue>
 {
-    CursorDataBest(mem::DB& db, unsigned modifiers, Results<Value>& res)
+    CursorDataBest(mem::DB& db, unsigned modifiers, Results<memdb::Value>& res)
         : CursorDataBase<DataBestResultQueue>(db, modifiers, res)
     {
     }
@@ -516,7 +516,7 @@ struct CursorSummary : public Cursor
     memdb::Summary::const_iterator iter_end;
     bool first;
 
-    CursorSummary(mem::DB& db, unsigned modifiers, Results<Value>& res)
+    CursorSummary(mem::DB& db, unsigned modifiers, Results<memdb::Value>& res)
         : Cursor(db, modifiers), first(true)
     {
         memdb::Summarizer summarizer(values);
@@ -576,27 +576,27 @@ struct CursorSummary : public Cursor
     }
 };
 
-unique_ptr<db::Cursor> Cursor::createStations(mem::DB& db, unsigned modifiers, Results<Station>& res)
+unique_ptr<db::Cursor> Cursor::createStations(mem::DB& db, unsigned modifiers, Results<memdb::Station>& res)
 {
     return unique_ptr<db::Cursor>(new CursorStations(db, modifiers, res));
 }
 
-unique_ptr<db::Cursor> Cursor::createStationData(mem::DB& db, unsigned modifiers, Results<StationValue>& res)
+unique_ptr<db::Cursor> Cursor::createStationData(mem::DB& db, unsigned modifiers, Results<memdb::StationValue>& res)
 {
     return unique_ptr<db::Cursor>(new CursorStationData(db, modifiers, res));
 }
 
-unique_ptr<db::Cursor> Cursor::createData(mem::DB& db, unsigned modifiers, Results<Value>& res)
+unique_ptr<db::Cursor> Cursor::createData(mem::DB& db, unsigned modifiers, Results<memdb::Value>& res)
 {
     return unique_ptr<db::Cursor>(new CursorData(db, modifiers, res));
 }
 
-unique_ptr<db::Cursor> Cursor::createDataBest(mem::DB& db, unsigned modifiers, Results<Value>& res)
+unique_ptr<db::Cursor> Cursor::createDataBest(mem::DB& db, unsigned modifiers, Results<memdb::Value>& res)
 {
     return unique_ptr<db::Cursor>(new CursorDataBest(db, modifiers, res));
 }
 
-unique_ptr<db::Cursor> Cursor::createSummary(mem::DB& db, unsigned modifiers, Results<Value>& res)
+unique_ptr<db::Cursor> Cursor::createSummary(mem::DB& db, unsigned modifiers, Results<memdb::Value>& res)
 {
     return unique_ptr<db::Cursor>(new CursorSummary(db, modifiers, res));
 }

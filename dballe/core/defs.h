@@ -111,6 +111,7 @@ public:
     bool is_missing() const { return value == nullptr; }
 
     operator const char*() const { return value; }
+    operator std::string() const;
 };
 
 std::ostream& operator<<(std::ostream& out, const Coords& c);
@@ -126,5 +127,4 @@ std::ostream& operator<<(std::ostream& out, const Ident& i);
 
 }
 
-// vim:set ts=4 sw=4:
 #endif

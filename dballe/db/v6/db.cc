@@ -10,7 +10,8 @@
 #include "cursor.h"
 #include "dballe/core/query.h"
 #include "dballe/core/record.h"
-#include "dballe/core/defs.h"
+#include "dballe/core/values.h"
+#include "dballe/types.h"
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
@@ -159,6 +160,21 @@ static inline int normalon(int lon)
     return ((lon + 18000000) % 36000000) - 18000000;
 }
 
+int DB::obtain_station(const Station& st, bool can_add)
+{
+    // Look if the record already knows the ID
+    if (st.ana_id != MISSING_INT)
+        return st.ana_id;
+
+    sql::Station& s = station();
+
+    // Get the ID for the station
+    if (can_add)
+        return s.obtain_id(st.coords.lat, st.coords.lon, st.ident.get());
+    else
+        return s.get_id(st.coords.lat, st.coords.lon, st.ident.get());
+}
+
 int DB::obtain_station(const Record& rec, bool can_add)
 {
     // Look if the record already knows the ID
@@ -202,7 +218,6 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
 
     /* Check for the existance of non-lev_tr data, otherwise it's all
      * useless.  Not inserting data is fine in case of setlev_trana */
-    const char* s_year;
     if (r.vars().empty() && !datetime.is_missing())
         throw error_notfound("no variables found in input record");
 
@@ -243,6 +258,40 @@ void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
     // Read the IDs from the results
     for (const auto& v: vars)
         last_insert_varids.push_back(VarID(v.var->code(), v.id_data));
+    t->commit();
+
+    _last_station_id = vars.id_station;
+}
+
+void DB::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
+{
+    sql::Repinfo& ri = repinfo();
+    sql::DataV6& d = data();
+
+    auto t = conn->transaction();
+
+    sql::bulk::InsertV6 vars;
+    // Insert the station data, and get the ID
+    vars.id_station = obtain_station(vals.info, station_can_add);
+    // Get the ID of the report
+    vars.id_report = ri.obtain_id(vals.info.report.c_str());
+
+    // Hardcoded values for station variables
+    vars.datetime = Datetime(1000, 1, 1, 0, 0, 0);
+
+    // Reset the variable ID store
+    last_insert_varids.clear();
+
+    // Add all the variables we find
+    for (auto& i: vals.values)
+        vars.add(i.second.var, -1);
+
+    // Do the insert
+    d.insert(*t, vars, can_replace ? sql::DataV6::UPDATE : sql::DataV6::ERROR);
+
+    // Read the IDs from the results
+    for (const auto& v: vars)
+        vals.values.add_data_id(v.var->code(), v.id_data);
     t->commit();
 
     _last_station_id = vars.id_station;

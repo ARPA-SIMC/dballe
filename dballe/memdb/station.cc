@@ -3,6 +3,7 @@
 #include "dballe/record.h"
 #include "dballe/core/query.h"
 #include "dballe/core/stlutils.h"
+#include "dballe/core/values.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
 #include <algorithm>
@@ -128,6 +129,22 @@ size_t Stations::obtain(const Record& rec, bool create)
         return obtain_mobile(Coords(s_lat, s_lon), s_ident, s_report, create);
     else
         return obtain_fixed(Coords(s_lat, s_lon), s_report, create);
+}
+
+size_t Stations::obtain(const dballe::Station& st, bool create)
+{
+    // Shortcut by ana_id
+    if (st.ana_id != MISSING_INT)
+    {
+        if (st.ana_id > values.size() || !values[st.ana_id])
+            error_notfound::throwf("ana_id %d is invalid", st.ana_id);
+        return st.ana_id;
+    }
+
+    if (st.ident.is_missing())
+        return obtain_fixed(st.coords, st.report, create);
+    else
+        return obtain_mobile(st.coords, st.ident, st.report, create);
 }
 
 namespace {

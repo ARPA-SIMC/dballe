@@ -1,22 +1,3 @@
-/*
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "memdb/tests.h"
 #include "dballe/core/var.h"
 #include "value.h"
@@ -24,44 +5,44 @@
 #include "levtr.h"
 
 using namespace dballe;
-using namespace dballe::memdb;
 using namespace wibble::tests;
 using namespace std;
 
-namespace tut {
+namespace {
 
-struct memdb_value_shar
-{
+typedef dballe::tests::test_group<> test_group;
+typedef test_group::Test Test;
+typedef test_group::Fixture Fixture;
+
+std::vector<Test> tests {
+    Test("basic", [](Fixture& f) {
+        memdb::Stations stations;
+        const memdb::Station& stf = *stations[stations.obtain_fixed(Coords(44.0, 11.0), "synop")];
+
+        memdb::LevTrs levtrs;
+        const memdb::LevTr& levtr = *levtrs[levtrs.obtain(Level(1), Trange::instant())];
+
+        Datetime datetime(2013, 10, 30, 23);
+
+        // Insert a station value and check that all data is there
+        memdb::Values values;
+        const memdb::Value& v = *values[values.insert(stf, levtr, datetime, newvar(WR_VAR(0, 12, 101), 28.5))];
+        wassert(actual(&v.station) == &stf);
+        wassert(actual(&v.levtr) == &levtr);
+        wassert(actual(v.datetime) == datetime);
+        wassert(actual(v.var->code()) == WR_VAR(0, 12, 101));
+        wassert(actual(v.var->enqd()) == 28.5);
+
+        // Replacing a value should reuse an existing one
+        const memdb::Value& v1 = *values[values.insert(stf, levtr, datetime, newvar(WR_VAR(0, 12, 101), 29.5))];
+        wassert(actual(&v1.station) == &stf);
+        wassert(actual(&v1.levtr) == &levtr);
+        wassert(actual(v1.datetime) == datetime);
+        wassert(actual(v1.var->code()) == WR_VAR(0, 12, 101));
+        wassert(actual(v1.var->enqd()) == 29.5);
+    }),
 };
 
-TESTGRP(memdb_value);
-
-template<> template<> void to::test<1>()
-{
-    Stations stations;
-    const Station& stf = *stations[stations.obtain_fixed(Coords(44.0, 11.0), "synop")];
-
-    LevTrs levtrs;
-    const LevTr& levtr = *levtrs[levtrs.obtain(Level(1), Trange::instant())];
-
-    Datetime datetime(2013, 10, 30, 23);
-
-    // Insert a station value and check that all data is there
-    Values values;
-    const Value& v = *values[values.insert(stf, levtr, datetime, newvar(WR_VAR(0, 12, 101), 28.5))];
-    wassert(actual(&v.station) == &stf);
-    wassert(actual(&v.levtr) == &levtr);
-    wassert(actual(v.datetime) == datetime);
-    wassert(actual(v.var->code()) == WR_VAR(0, 12, 101));
-    wassert(actual(v.var->enqd()) == 28.5);
-
-    // Replacing a value should reuse an existing one
-    const Value& v1 = *values[values.insert(stf, levtr, datetime, newvar(WR_VAR(0, 12, 101), 29.5))];
-    wassert(actual(&v1.station) == &stf);
-    wassert(actual(&v1.levtr) == &levtr);
-    wassert(actual(v1.datetime) == datetime);
-    wassert(actual(v1.var->code()) == WR_VAR(0, 12, 101));
-    wassert(actual(v1.var->enqd()) == 29.5);
-}
+test_group newtg("memdb_value", tests);
 
 }

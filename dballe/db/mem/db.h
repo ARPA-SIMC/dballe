@@ -96,21 +96,8 @@ public:
 
     std::map<std::string, int> get_repinfo_priorities() override;
 
-    /**
-     * Insert a record into the database
-     *
-     * In a record with the same phisical situation already exists, the function
-     * fails.
-     *
-     * @param rec
-     *   The record to insert.
-     * @param can_replace
-     *   If true, then existing data can be rewritten, else data can only be added.
-     * @param station_can_add
-     *   If true, then it is allowed to add new station records to the database.
-     *   Otherwise, data can be added only by reusing existing ones.
-     */
     void insert(const Record& rec, bool can_replace, bool station_can_add) override;
+    void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add) override;
 
     int last_station_id() const override;
 

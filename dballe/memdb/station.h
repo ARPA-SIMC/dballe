@@ -10,6 +10,7 @@
 namespace dballe {
 struct Record;
 struct Msg;
+struct Station;
 
 namespace core {
 struct Query;
@@ -77,6 +78,9 @@ public:
 
     /// Get a fixed or mobile Station record depending on the data in rec
     size_t obtain(const Record& rec, bool create=true);
+
+    /// Get a fixed or mobile Station record depending on the data in rec
+    size_t obtain(const dballe::Station& st, bool create=true);
 
     /// Query stations returning the IDs
     void query(const core::Query& q, Results<Station>& res) const;

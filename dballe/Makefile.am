@@ -53,6 +53,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/stlutils.tcc \
 	core/defs.h \
 	core/var.h \
+	core/values.h \
 	core/rawmsg.h \
 	core/file.h \
 	core/arrayfile.h \
@@ -166,6 +167,7 @@ libdballe_la_SOURCES = \
 	core/aliases-reverse.cc \
 	core/defs.cc \
 	core/var.cc \
+	core/values.cc \
 	core/file.cc \
 	core/arrayfile.cc \
 	core/aoffile.cc \
@@ -329,6 +331,7 @@ tut_test_SOURCES = \
 	core/stlutils-tut.cc \
 	core/defs-tut.cc \
 	core/var-tut.cc \
+	core/values-tut.cc \
 	core/rawmsg-tut.cc \
 	core/file-tut.cc \
 	core/record-tut.cc \

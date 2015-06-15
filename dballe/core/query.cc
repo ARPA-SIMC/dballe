@@ -591,7 +591,7 @@ void Query::serialize(JSONWriter& out) const
     if (prio_max != MISSING_INT) out.add("prio_max", prio_max);
     if (!rep_memo.empty()) out.add("rep_memo", rep_memo);
     if (mobile != MISSING_INT) out.add("mobile", mobile);
-    if (!ident.is_missing()) out.add("ident", ident);
+    if (!ident.is_missing()) out.add("ident", ident.get());
     if (!latrange.is_missing())
     {
         if (latrange.imin != LatRange::IMIN) out.add("latmin", latrange.imin);
