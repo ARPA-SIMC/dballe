@@ -139,8 +139,7 @@ public:
     void query_attrs(int reference_id, wreport::Varcode id_var,
             std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
 
-    void attr_insert(wreport::Varcode id_var, const Record& attrs) override;
-    void attr_insert(int id_data, wreport::Varcode id_var, const Record& attrs) override;
+    void attr_insert(wreport::Varcode id_var, const Values& attrs) override;
     void attr_insert(int id_data, wreport::Varcode id_var, const Values& attrs) override;
 
     /**

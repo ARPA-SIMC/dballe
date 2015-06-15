@@ -175,39 +175,6 @@ int DB::obtain_station(const Station& st, bool can_add)
         return s.get_id(st.coords.lat, st.coords.lon, st.ident.get());
 }
 
-int DB::obtain_station(const Record& rec, bool can_add)
-{
-    // Look if the record already knows the ID
-    if (const Var* val = rec.get("ana_id"))
-        if (val->isset())
-            return val->enqi();
-
-    sql::Station& s = station();
-
-    // Look for the key data in the record
-    int lat;
-    if (const Var* var = rec.get("lat"))
-        lat = var->enqi();
-    else
-        throw error_notfound("no latitude in record when trying to insert a station in the database");
-
-    int lon;
-    if (const Var* var = rec.get("lon"))
-        lon = normalon(var->enqi());
-    else
-        throw error_notfound("no longitude in record when trying to insert a station in the database");
-
-    const char* ident = nullptr;
-    if (const Var* var = rec.get("ident"))
-        ident = var->value();
-
-    // Get the ID for the station
-    if (can_add)
-        return s.obtain_id(lat, lon, ident);
-    else
-        return s.get_id(lat, lon, ident);
-}
-
 void DB::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
 {
     sql::Repinfo& ri = repinfo();
@@ -373,7 +340,7 @@ void DB::query_attrs(int id_data, wreport::Varcode id_var,
     a.read(id_data, dest);
 }
 
-void DB::attr_insert(wreport::Varcode id_var, const Record& attrs)
+void DB::attr_insert(wreport::Varcode id_var, const Values& attrs)
 {
     // Find the data id for id_var
     for (vector<VarID>::const_iterator i = last_insert_varids.begin();
@@ -384,25 +351,6 @@ void DB::attr_insert(wreport::Varcode id_var, const Record& attrs)
             return;
         }
     error_notfound::throwf("variable B%02d%03d was not involved in the last insert operation", WR_VAR_X(id_var), WR_VAR_Y(id_var));
-}
-
-void DB::attr_insert(int id_data, wreport::Varcode id_var, const Record& attrs)
-{
-    sql::AttrV6& a = attr();
-    sql::bulk::InsertAttrsV6 iattrs;
-    const auto& vars = core::Record::downcast(attrs).vars();
-    for (const auto& i : vars)
-        if (i->value() != NULL)
-            iattrs.add(i, id_data);
-    if (iattrs.empty()) return;
-
-    // Begin the transaction
-    auto t = conn->transaction();
-
-    // Insert all the attributes we found
-    a.insert(*t, iattrs, sql::AttrV6::UPDATE);
-
-    t->commit();
 }
 
 void DB::attr_insert(int id_data, wreport::Varcode, const Values& attrs)

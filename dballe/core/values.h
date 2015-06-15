@@ -111,6 +111,7 @@ struct Values : protected std::map<wreport::Varcode, values::Value>
     iterator end() { return std::map<wreport::Varcode, values::Value>::end(); }
     size_t size() const { return std::map<wreport::Varcode, values::Value>::size(); }
     bool empty() const { return std::map<wreport::Varcode, values::Value>::empty(); }
+    void clear() { return std::map<wreport::Varcode, values::Value>::clear(); }
     bool operator==(const Values& o) const;
 
     const values::Value& operator[](wreport::Varcode code) const;

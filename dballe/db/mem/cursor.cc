@@ -366,7 +366,7 @@ struct CursorStations : public CursorSorted<StationResultQueue>
     {
     }
 
-    virtual void attr_insert(const Record& attrs)
+    virtual void attr_insert(const Values& attrs)
     {
         // Attributes for stations do not make any sense
         throw error_unimplemented("CursorStations::attr_insert");
@@ -409,7 +409,7 @@ struct CursorStationData : public CursorSorted<StationValueResultQueue>
         queue.top()->query_attrs(dest);
     }
 
-    virtual void attr_insert(const Record& attrs)
+    virtual void attr_insert(const Values& attrs)
     {
         queue.top()->attr_insert(attrs);
     }
@@ -449,7 +449,7 @@ struct CursorDataBase : public CursorSorted<QUEUE>
     {
     }
 
-    virtual void attr_insert(const Record& attrs)
+    virtual void attr_insert(const Values& attrs)
     {
         this->values[this->cur_idx]->attr_insert(attrs);
     }
@@ -530,7 +530,7 @@ struct CursorSummary : public Cursor
         count = values.size();
     }
 
-    virtual void attr_insert(const Record& attrs)
+    virtual void attr_insert(const Values& attrs)
     {
         throw error_unimplemented("CursorSummary::attr_insert");
     }

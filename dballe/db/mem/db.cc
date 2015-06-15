@@ -331,7 +331,7 @@ void DB::query_attrs(int id_data, wreport::Varcode id_var,
     memdb.values[id_data]->query_attrs(dest);
 }
 
-void DB::attr_insert(wreport::Varcode id_var, const Record& attrs)
+void DB::attr_insert(wreport::Varcode id_var, const Values& attrs)
 {
     // Find the data id for id_var
     for (vector<VarID>::const_iterator i = last_insert_varids.begin();
@@ -358,11 +358,6 @@ static ValueBase* get_value(Memdb& memdb, int id_data, wreport::Varcode id_var)
     if (!v || v->var->code() != id_var) v = memdb.stationvalues.get_checked(id_data);
     if (!v || v->var->code() != id_var) error_notfound::throwf("variable B%02d%03d not found at context id %d", WR_VAR_X(id_var), WR_VAR_Y(id_var), id_data);
     return v;
-}
-
-void DB::attr_insert(int id_data, wreport::Varcode id_var, const Record& attrs)
-{
-    get_value(memdb, id_data, id_var)->attr_insert(attrs);
 }
 
 void DB::attr_insert(int id_data, wreport::Varcode id_var, const Values& attrs)

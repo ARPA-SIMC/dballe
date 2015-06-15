@@ -156,7 +156,7 @@ void Cursor::query_attrs(function<void(unique_ptr<Var>&&)> dest)
     db.query_attrs(results[cur].out_id_data, results[cur].out_varcode, dest);
 }
 
-void Cursor::attr_insert(const dballe::Record& attrs)
+void Cursor::attr_insert(const Values& attrs)
 {
     db.attr_insert(results[cur].out_id_data, results[cur].out_varcode, attrs);
 }

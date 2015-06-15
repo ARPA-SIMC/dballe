@@ -322,7 +322,10 @@ void DbAPI::critica()
         case ATTR_REFERENCE:
             if (attr_reference_id == missing_int || attr_varid == 0)
                 throw error_consistency("critica was not called after a dammelo or prendilo, or was called with an invalid *context_id or *var_related");
-            db.attr_insert(attr_reference_id, attr_varid, qcinput);
+            {
+                Values attrs(qcinput);
+                db.attr_insert(attr_reference_id, attr_varid, attrs);
+            }
             break;
         case ATTR_DAMMELO:
             query_cur->attr_insert(qcinput);

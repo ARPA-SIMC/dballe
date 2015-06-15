@@ -33,7 +33,7 @@ struct Fixture : public dballe::tests::DBFixture
 };
 
 template<typename OBJ, typename ...Args>
-unsigned run_query_attrs(OBJ& db, core::Record& dest, Args... args)
+unsigned run_query_attrs(OBJ& db, Values& dest, Args... args)
 {
     unsigned count = 0;
     db.query_attrs(args..., [&](unique_ptr<Var> var) { dest.set(move(var)); ++count; });
@@ -397,7 +397,7 @@ std::vector<Test> tests {
         ensure(found);
 
         // Insert new attributes about this report
-        core::Record qc;
+        Values qc;
         qc.set("B33002", 2);
         qc.set("B33003", 5);
         qc.set("B33005", 33);
@@ -407,17 +407,17 @@ std::vector<Test> tests {
         qc.clear();
         wassert(actual(run_query_attrs(db, qc, context_id, WR_VAR(0, 1, 11))) == 3);
 
-        const Var* attr = qc.get("B33002");
+        const auto* attr = qc.get("B33002");
         ensure(attr != NULL);
-        ensure_equals(attr->enqi(), 2);
+        ensure_equals(attr->var->enqi(), 2);
 
         attr = qc.get("B33003");
         ensure(attr != NULL);
-        ensure_equals(attr->enqi(), 5);
+        ensure_equals(attr->var->enqi(), 5);
 
         attr = qc.get("B33005");
         ensure(attr != NULL);
-        ensure_equals(attr->enqi(), 33);
+        ensure_equals(attr->var->enqi(), 33);
 
         // Delete a couple of items
         vector<Varcode> codes;
@@ -439,7 +439,7 @@ std::vector<Test> tests {
         ensure(qc.get("B33005") == nullptr);
         attr = qc.get("B33003");
         ensure(attr != NULL);
-        ensure_equals(attr->enqi(), 5);
+        ensure_equals(attr->var->enqi(), 5);
         /*dba_error_remove_callback(DBA_ERR_NONE, crash, 0);*/
     }),
     Test("query_station", [](Fixture& f) {
@@ -462,7 +462,7 @@ std::vector<Test> tests {
         // Insert a data record
         db.insert_data(oldf.data["synop"], true, true);
 
-        core::Record qc;
+        Values qc;
         qc.set("B01007",  1);
         qc.set("B02048",  2);
         qc.set("B05040",  3);
@@ -473,7 +473,6 @@ std::vector<Test> tests {
         qc.set("B05021",  8);
         qc.set("B07025",  9);
         qc.set("B05022", 10);
-
         db.attr_insert(WR_VAR(0, 1, 11), qc);
 
         // Query back the B01011 variable to read the attr reference id
@@ -487,18 +486,17 @@ std::vector<Test> tests {
         wassert(actual(run_query_attrs(db, qc, attr_id, WR_VAR(0, 1, 11))) == 10);
 
         // Check that all the attributes come out
-        const vector<Var*> vars = qc.vars();
-        ensure_equals(vars.size(), 10);
-        ensure_varcode_equals(vars[0]->code(), WR_VAR(0,   1,  7)); ensure_var_equals(*vars[0],  1);
-        ensure_varcode_equals(vars[1]->code(), WR_VAR(0,   2, 48)); ensure_var_equals(*vars[1],  2);
-        ensure_varcode_equals(vars[2]->code(), WR_VAR(0,   5, 21)); ensure_var_equals(*vars[2],  8);
-        ensure_varcode_equals(vars[3]->code(), WR_VAR(0,   5, 22)); ensure_var_equals(*vars[3], 10);
-        ensure_varcode_equals(vars[4]->code(), WR_VAR(0,   5, 40)); ensure_var_equals(*vars[4],  3);
-        ensure_varcode_equals(vars[5]->code(), WR_VAR(0,   5, 41)); ensure_var_equals(*vars[5],  4);
-        ensure_varcode_equals(vars[6]->code(), WR_VAR(0,   5, 43)); ensure_var_equals(*vars[6],  5);
-        ensure_varcode_equals(vars[7]->code(), WR_VAR(0,   7, 24)); ensure_var_equals(*vars[7],  7);
-        ensure_varcode_equals(vars[8]->code(), WR_VAR(0,   7, 25)); ensure_var_equals(*vars[8],  9);
-        ensure_varcode_equals(vars[9]->code(), WR_VAR(0,  33, 32)); ensure_var_equals(*vars[9],  6);
+        ensure_equals(qc.size(), 10);
+        ensure_varcode_equals(qc["B01007"].var->code(), WR_VAR(0,   1,  7)); ensure_var_equals(*qc["B01007"].var,  1);
+        ensure_varcode_equals(qc["B02048"].var->code(), WR_VAR(0,   2, 48)); ensure_var_equals(*qc["B02048"].var,  2);
+        ensure_varcode_equals(qc["B05021"].var->code(), WR_VAR(0,   5, 21)); ensure_var_equals(*qc["B05021"].var,  8);
+        ensure_varcode_equals(qc["B05022"].var->code(), WR_VAR(0,   5, 22)); ensure_var_equals(*qc["B05022"].var, 10);
+        ensure_varcode_equals(qc["B05040"].var->code(), WR_VAR(0,   5, 40)); ensure_var_equals(*qc["B05040"].var,  3);
+        ensure_varcode_equals(qc["B05041"].var->code(), WR_VAR(0,   5, 41)); ensure_var_equals(*qc["B05041"].var,  4);
+        ensure_varcode_equals(qc["B05043"].var->code(), WR_VAR(0,   5, 43)); ensure_var_equals(*qc["B05043"].var,  5);
+        ensure_varcode_equals(qc["B07024"].var->code(), WR_VAR(0,   7, 24)); ensure_var_equals(*qc["B07024"].var,  7);
+        ensure_varcode_equals(qc["B07025"].var->code(), WR_VAR(0,   7, 25)); ensure_var_equals(*qc["B07025"].var,  9);
+        ensure_varcode_equals(qc["B33032"].var->code(), WR_VAR(0,  33, 32)); ensure_var_equals(*qc["B33032"].var,  6);
     }),
     Test("longitude_wrap", [](Fixture& f) {
         // Test longitude wrapping around
@@ -527,7 +525,7 @@ std::vector<Test> tests {
         cur->discard_rest();
 
         // Insert new attributes about this report
-        core::Record qc;
+        Values qc;
         qc.set("B01001", 50);
         qc.set("B01008", "50");
         db.attr_insert(context_id, WR_VAR(0, 1, 11), qc);
@@ -671,9 +669,9 @@ std::vector<Test> tests {
         wassert(actual(var.enqi()) == 300);
 
         // Query the attributes and check that they are there
-        core::Record qattrs;
+        Values qattrs;
         wassert(actual(run_query_attrs(*cur, qattrs)) == 1);
-        wassert(actual(qattrs.enq("B33007", MISSING_INT)) == 50);
+        wassert(actual(qattrs["B33007"].var->enq(MISSING_INT)) == 50);
 
         // Update it
         DataValues update;
@@ -694,7 +692,7 @@ std::vector<Test> tests {
 
         qattrs.clear();
         wassert(actual(run_query_attrs(*cur, qattrs)) == 1);
-        wassert(actual(qattrs.enq("B33007", MISSING_INT)) == 50);
+        wassert(actual(qattrs["B33007"].var->enq(MISSING_INT)) == 50);
     }),
     Test("query_stepbystep", [](Fixture& f) {
         auto& db = *f.db;

@@ -117,9 +117,9 @@ public:
      * Insert/overwrite new attributes for the current variable
      *
      * @param attrs
-     *   The record with the attributes to be added
+     *   The attributes to be added
      */
-    virtual void attr_insert(const Record& attrs) = 0;
+    virtual void attr_insert(const Values& attrs) = 0;
 
     /**
      * Delete attributes for the current variable
@@ -416,11 +416,11 @@ public:
      * @param id_var
      *   The varcode of the variable related to the attributes to add.  See @ref vartable.h
      * @param attrs
-     *   The record with the attributes to be added
+     *   The attributes to be added
      * @param can_replace
      *   If true, then existing data can be rewritten, else data can only be added.
      */
-    virtual void attr_insert(wreport::Varcode id_var, const Record& attrs) = 0;
+    virtual void attr_insert(wreport::Varcode id_var, const Values& attrs) = 0;
 
     /**
      * Insert new attributes into the database.
@@ -430,11 +430,10 @@ public:
      * @param id_var
      *   The varcode of the variable related to the attributes to add.  See @ref vartable.h
      * @param attrs
-     *   The record with the attributes to be added
+     *   The attributes to be added
      * @param can_replace
      *   If true, then existing data can be rewritten, else data can only be added.
      */
-    virtual void attr_insert(int reference_id, wreport::Varcode id_var, const Record& attrs) = 0;
     virtual void attr_insert(int reference_id, wreport::Varcode id_var, const Values& attrs) = 0;
 
     /**
