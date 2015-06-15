@@ -96,8 +96,8 @@ public:
 
     std::map<std::string, int> get_repinfo_priorities() override;
 
-    void insert(const Record& rec, bool can_replace, bool station_can_add) override;
     void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add) override;
+    void insert_data(DataValues& vals, bool can_replace, bool station_can_add) override;
 
     int last_station_id() const override;
 

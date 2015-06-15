@@ -276,7 +276,7 @@ public:
      *   data for a station that does not yet exists in the database, it will
      *   be created.
      */
-    virtual void insert(const Record& rec, bool can_replace, bool station_can_add) = 0;
+    virtual void insert(const Record& rec, bool can_replace, bool station_can_add);
 
     /**
      * Insert station values into the database
@@ -294,6 +294,23 @@ public:
      *   be created.
      */
     virtual void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add) = 0;
+
+    /**
+     * Insert data values into the database
+     *
+     * The IDs of all variables that were inserted will be stored in vals.
+     *
+     * @param vals
+     *   The values to insert.
+     * @param can_replace
+     *   If true, then existing data can be rewritten, else data can only be added.
+     * @param station_can_add
+     *   If false, it will not create a missing station record, and only data
+     *   for existing stations can be added. If true, then if we are inserting
+     *   data for a station that does not yet exists in the database, it will
+     *   be created.
+     */
+    virtual void insert_data(DataValues& vals, bool can_replace, bool station_can_add) = 0;
 
     /**
      * Return the station id for the last data that was inserted.

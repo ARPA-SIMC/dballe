@@ -226,8 +226,8 @@ public:
      */
     int rep_cod_from_memo(const char* memo);
 
-    void insert(const Record& rec, bool can_replace, bool station_can_add);
     void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add) override;
+    void insert_data(DataValues& vals, bool can_replace, bool station_can_add) override;
 
     int last_station_id() const;
 

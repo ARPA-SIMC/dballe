@@ -208,61 +208,6 @@ int DB::obtain_station(const Record& rec, bool can_add)
         return s.get_id(lat, lon, ident);
 }
 
-void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
-{
-    sql::Repinfo& ri = repinfo();
-    sql::DataV6& d = data();
-    const auto& r = core::Record::downcast(rec);
-
-    Datetime datetime = r.get_datetime();
-
-    /* Check for the existance of non-lev_tr data, otherwise it's all
-     * useless.  Not inserting data is fine in case of setlev_trana */
-    if (r.vars().empty() && !datetime.is_missing())
-        throw error_notfound("no variables found in input record");
-
-    auto t = conn->transaction();
-
-    sql::bulk::InsertV6 vars;
-    // Insert the station data, and get the ID
-    vars.id_station = obtain_station(rec, station_can_add);
-    // Get the ID of the report
-    if (const Var* memo = rec.get("rep_memo"))
-        vars.id_report = ri.obtain_id(memo->enqc());
-    else
-        throw error_notfound("input record has neither rep_cod nor rep_memo");
-
-    int id_levtr;
-    if (datetime.is_missing())
-    {
-        // Hardcoded values for station variables
-        vars.datetime = Datetime(1000, 1, 1, 0, 0, 0);
-        id_levtr = -1;
-    } else {
-        // Set the date from the record contents
-        vars.datetime = datetime;
-        // Insert the lev_tr data, and get the ID
-        id_levtr = lev_tr().obtain_id(rec);
-    }
-
-    // Reset the variable ID store
-    last_insert_varids.clear();
-
-    // Add all the variables we find
-    for (vector<Var*>::const_iterator i = r.vars().begin(); i != r.vars().end(); ++i)
-        vars.add(*i, id_levtr);
-
-    // Do the insert
-    d.insert(*t, vars, can_replace ? sql::DataV6::UPDATE : sql::DataV6::ERROR);
-
-    // Read the IDs from the results
-    for (const auto& v: vars)
-        last_insert_varids.push_back(VarID(v.var->code(), v.id_data));
-    t->commit();
-
-    _last_station_id = vars.id_station;
-}
-
 void DB::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
 {
     sql::Repinfo& ri = repinfo();
@@ -291,7 +236,53 @@ void DB::insert_station_data(StationValues& vals, bool can_replace, bool station
 
     // Read the IDs from the results
     for (const auto& v: vars)
+    {
+        last_insert_varids.push_back(VarID(v.var->code(), v.id_data));
         vals.values.add_data_id(v.var->code(), v.id_data);
+    }
+    t->commit();
+
+    _last_station_id = vars.id_station;
+}
+
+void DB::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
+{
+    /* Check for the existance of non-lev_tr data, otherwise it's all
+     * useless.  Not inserting data is fine in case of setlev_trana */
+    if (vals.values.empty())
+        throw error_notfound("no variables found in input record");
+
+    sql::Repinfo& ri = repinfo();
+    sql::DataV6& d = data();
+
+    auto t = conn->transaction();
+
+    sql::bulk::InsertV6 vars;
+    // Insert the station data, and get the ID
+    vars.id_station = obtain_station(vals.info, station_can_add);
+    // Get the ID of the report
+    vars.id_report = ri.obtain_id(vals.info.report.c_str());
+    // Set the date from the record contents
+    vars.datetime = vals.info.datetime;
+    // Insert the lev_tr data, and get the ID
+    int id_levtr = lev_tr().obtain_id(vals.info.level, vals.info.trange);
+
+    // Reset the variable ID store
+    last_insert_varids.clear();
+
+    // Add all the variables we find
+    for (auto& i: vals.values)
+        vars.add(i.second.var, id_levtr);
+
+    // Do the insert
+    d.insert(*t, vars, can_replace ? sql::DataV6::UPDATE : sql::DataV6::ERROR);
+
+    // Read the IDs from the results
+    for (const auto& v: vars)
+    {
+        last_insert_varids.push_back(VarID(v.var->code(), v.id_data));
+        vals.values.add_data_id(v.var->code(), v.id_data);
+    }
     t->commit();
 
     _last_station_id = vars.id_station;

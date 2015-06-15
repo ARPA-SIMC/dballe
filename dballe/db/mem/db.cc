@@ -66,49 +66,38 @@ std::map<std::string, int> DB::get_repinfo_priorities()
     return repinfo.get_priorities();
 }
 
-void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
-{
-    // Obtain the station
-    m_last_station_id = memdb.stations.obtain(rec, station_can_add);
-    const memdb::Station& station = *memdb.stations[m_last_station_id];
-
-    // Obtain values
-    last_insert_varids.clear();
-    const auto& r = core::Record::downcast(rec);
-    Datetime datetime = r.get_datetime();
-    if (datetime.is_missing())
-    {
-        // Insert all the variables we find
-        for (vector<Var*>::const_iterator i = r.vars().begin(); i != r.vars().end(); ++i)
-        {
-            size_t pos = memdb.stationvalues.insert(station, **i, can_replace);
-            last_insert_varids.push_back(VarID((*i)->code(), true, pos));
-        }
-    } else {
-        const LevTr& levtr = *memdb.levtrs[memdb.levtrs.obtain(rec)];
-
-        // Insert all the variables we find
-        for (vector<Var*>::const_iterator i = r.vars().begin(); i != r.vars().end(); ++i)
-        {
-            size_t pos = memdb.values.insert(station, levtr, datetime, **i, can_replace);
-            last_insert_varids.push_back(VarID((*i)->code(), false, pos));
-        }
-    }
-}
-
 void DB::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
 {
     // Obtain the station
     m_last_station_id = memdb.stations.obtain(vals.info, station_can_add);
     const memdb::Station& station = *memdb.stations[m_last_station_id];
 
-    // Obtain values
     last_insert_varids.clear();
     // Insert all the variables we find
     for (auto& i: vals.values)
     {
         i.second.data_id = memdb.stationvalues.insert(station, *i.second.var, can_replace);
         last_insert_varids.push_back(VarID(i.first, true, i.second.data_id));
+    }
+}
+
+void DB::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
+{
+    // Obtain the station
+    m_last_station_id = memdb.stations.obtain(vals.info, station_can_add);
+    const memdb::Station& station = *memdb.stations[m_last_station_id];
+
+    // Obtain the levtr
+    const LevTr& levtr = *memdb.levtrs[memdb.levtrs.obtain(vals.info.level, vals.info.trange)];
+
+    // Obtain values
+    last_insert_varids.clear();
+
+    // Insert all the variables we find
+    for (auto& i: vals.values)
+    {
+        i.second.data_id = memdb.values.insert(station, levtr, vals.info.datetime, *i.second.var, can_replace);
+        last_insert_varids.push_back(VarID(i.first, false, i.second.data_id));
     }
 }
 

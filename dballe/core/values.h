@@ -14,6 +14,8 @@ struct Station
     int ana_id = MISSING_INT;
     Coords coords;
     Ident ident;
+
+    void from_record(const Record& rec);
 };
 
 struct Sampling : public Station
@@ -21,6 +23,8 @@ struct Sampling : public Station
     Datetime datetime;
     Level level;
     Trange trange;
+
+    void from_record(const Record& rec);
 };
 
 namespace values {
@@ -31,6 +35,7 @@ struct Value
 
     Value(const Value&) = delete;
     Value(Value&& o) : data_id(o.data_id), var(o.var) { o.var = nullptr; }
+    Value(const wreport::Var& var) : var(new wreport::Var(var)) {}
     Value(std::unique_ptr<wreport::Var>&& var)
         : var(var.release()) {}
     ~Value() { delete var; }
@@ -56,22 +61,29 @@ struct Values : protected std::map<wreport::Varcode, values::Value>
     const_iterator end() const { return std::map<wreport::Varcode, values::Value>::end(); }
     iterator begin() { return std::map<wreport::Varcode, values::Value>::begin(); }
     iterator end() { return std::map<wreport::Varcode, values::Value>::end(); }
+    size_t size() const { return std::map<wreport::Varcode, values::Value>::size(); }
+    bool empty() const { return std::map<wreport::Varcode, values::Value>::empty(); }
 
     void set(const wreport::Var&);
     void set(std::unique_ptr<wreport::Var>&&);
     void add_data_id(wreport::Varcode code, int data_id);
+    void from_record(const Record& rec);
 };
 
 struct StationValues
 {
     Station info;
     Values values;
+
+    void from_record(const Record& rec);
 };
 
 struct DataValues
 {
     Sampling info;
     Values values;
+
+    void from_record(const Record& rec);
 };
 
 }
