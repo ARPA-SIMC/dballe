@@ -40,7 +40,7 @@ MatchedSubset::MatchedSubset(const Subset& r)
     }
 
     // Fill in missing date bits
-    date = Datetime(ye, mo, da, ho, mi, se);
+    date = Datetime::lower_bound(ye, mo, da, ho, mi, se);
 }
 
 MatchedSubset::~MatchedSubset()

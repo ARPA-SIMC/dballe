@@ -26,20 +26,19 @@ Date::Date(int ye, int mo, int da)
         year = 0xffff;
         month = day = 0xff;
     } else {
-        if (mo == MISSING_INT || mo < 1)
-            mo = 1;
-        else if (mo > 12)
-            mo = 12;
-
-        if (da == MISSING_INT || da < 1)
-            da = 1;
-        else
-            da = min(da, days_in_month(ye, mo));
-
+        Date::validate(ye, mo, da);
         year = ye;
         month = mo;
         day = da;
     }
+}
+
+void Date::validate(int ye, int mo, int da)
+{
+    if (mo == MISSING_INT || mo < 1 || mo > 12)
+        error_consistency::throwf("month %d is not between 1 and 12", mo);
+    if (da == MISSING_INT || da < 1 || da > days_in_month(ye, mo))
+        error_consistency::throwf("day %d is not between 1 and %d", da, days_in_month(ye, mo));
 }
 
 bool Date::is_missing() const { return year == 0xffff; }
@@ -175,24 +174,26 @@ Time::Time()
 
 Time::Time(int ho, int mi, int se)
 {
-    if (ho == MISSING_INT || ho < 0)
-        ho = 0;
-    else if (ho > 23)
-        ho = 23;
-
-    if (mi == MISSING_INT || mi < 0)
-        mi = 0;
-    else if(mi > 59)
-        mi = 59;
-
-    if (se == MISSING_INT || se < 0)
-        se = 0;
-    else if (se > 59)
-        se = 59;
-
+    Time::validate(ho, mi, se);
     hour = ho;
     minute = mi;
     second = se;
+}
+
+void Time::validate(int ho, int mi, int se)
+{
+    if (ho == MISSING_INT || ho < 0 || ho > 23)
+        error_consistency::throwf("hour %d is not between 1 and 23", ho);
+    if (mi == MISSING_INT || mi < 0 || mi > 59)
+        error_consistency::throwf("minute %d is not between 1 and 59", mi);
+    if (ho == 23 && mi == 59)
+    {
+        if (se == MISSING_INT || se < 0 || se > 60)
+            error_consistency::throwf("second %d is not between 1 and 60", se);
+    } else {
+        if (se == MISSING_INT || se < 0 || se > 59)
+            error_consistency::throwf("second %d is not between 1 and 59", se);
+    }
 }
 
 bool Time::is_missing() const { return hour == 0xff; }
@@ -259,37 +260,36 @@ Datetime::Datetime(int ye, int mo, int da, int ho, int mi, int se)
         year = 0xffff;
         month = day = hour = minute = second = 0xff;
     } else {
-        if (mo == MISSING_INT || mo < 1)
-            mo = 1;
-        else if (mo > 12)
-            mo = 12;
-
-        if (da == MISSING_INT || da < 1)
-            da = 1;
-        else
-            da = min(da, Date::days_in_month(ye, mo));
-
-        if (ho == MISSING_INT || ho < 0)
-            ho = 0;
-        else if (ho > 23)
-            ho = 23;
-
-        if (mi == MISSING_INT || mi < 0)
-            mi = 0;
-        else if(mi > 59)
-            mi = 59;
-
-        if (se == MISSING_INT || se < 0)
-            se = 0;
-        else if (se > 59)
-            se = 59;
-
+        Datetime::validate(ye, mo, da, ho, mi, se);
         year = ye;
         month = mo;
         day = da;
         hour = ho;
         minute = mi;
         second = se;
+    }
+}
+
+void Datetime::validate(int ye, int mo, int da, int ho, int mi, int se)
+{
+    Date::validate(ye, mo, da);
+    Time::validate(ho, mi, se);
+}
+
+void Datetime::normalise_h24(int& ye, int& mo, int& da, int& ho, int& mi, int& se)
+{
+    if (ho != 24 || mi != 0 || se != 0) return;
+    ho = 0;
+    ++da;
+    if (da > Date::days_in_month(ye, mo))
+    {
+        da = 1;
+        ++mo;
+        if (mo > 12)
+        {
+            mo = 1;
+            ++ye;
+        }
     }
 }
 
@@ -318,9 +318,9 @@ Datetime Datetime::upper_bound(int ye, int mo, int da, int ho, int mi, int se)
     return Datetime(ye, mo, da, ho, mi, se);
 }
 
-Date Datetime::date() const { return Date(year, month, day); }
+Date Datetime::date() const { return is_missing() ? Date() : Date(year, month, day); }
 
-Time Datetime::time() const { return Time(hour, minute, second); }
+Time Datetime::time() const { return is_missing() ? Time() : Time(hour, minute, second); }
 
 bool Datetime::is_missing() const { return year == 0xffff; }
 

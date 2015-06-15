@@ -13,11 +13,7 @@ typedef test_group::Fixture Fixture;
 
 std::vector<Test> tests {
     Test("date", [](Fixture& f) {
-        // Constructor boundary checks
-        wassert(actual(Date(2015, 0, 0)) == Date(2015, 1, 1));
-        wassert(actual(Date(2015, 15, 100)) == Date(2015, 12, 31));
-        wassert(actual(Date(2004, 2, 30)) == Date(2004, 2, 29));
-
+        wassert(actual(Date(2015, 1, 1)) == Date(2015, 1, 1));
         wassert(actual(Date(2013, 1, 1)) < Date(2014, 1, 1));
         wassert(actual(Date(2013, 1, 1)) < Date(2013, 2, 1));
         wassert(actual(Date(2013, 1, 1)) < Date(2013, 1, 2));
@@ -26,9 +22,7 @@ std::vector<Test> tests {
     Test("time", [](Fixture& f) {
         // Constructor boundary checks
         wassert(actual(Time( 0, 0, 0)) == Time(0, 0, 0));
-        wassert(actual(Time(24, 0, 0)) == Time(23, 0, 0));
-        wassert(actual(Time(99, 99, 99)) == Time(23, 59, 59));
-
+        wassert(actual(Time(23, 59, 60)) == Time(23, 59, 60));
         wassert(actual(Time(13, 1,  1)) <  Time(14, 1,  1));
         wassert(actual(Time(13, 1,  1)) <  Time(13, 2,  1));
         wassert(actual(Time(13, 1,  1)) <  Time(13, 1,  2));
@@ -36,12 +30,7 @@ std::vector<Test> tests {
     }),
     Test("datetime", [](Fixture& f) {
         // Constructor boundary checks
-        wassert(actual(Datetime(2015,  0,  0,  0,  0,  0)) == Datetime(2015,  1,  1,  0,  0,  0));
-        wassert(actual(Datetime(2015, 15, 99, 99, 99, 99)) == Datetime(2015, 12, 31, 23, 59, 59));
-        wassert(actual(Datetime(2004,  2, 30,  0,  0,  0)) == Datetime(2004,  2, 29,  0,  0,  0));
-        wassert(actual(Datetime(2015,  6, 10,  0,  0,  0)) == Datetime(2015,  6, 10,  0,  0,  0));
-        wassert(actual(Datetime(2015,  6, 10, 24,  0,  0)) == Datetime(2015,  6, 10, 23,  0,  0));
-        wassert(actual(Datetime(2015,  6, 10, 99, 99, 99)) == Datetime(2015,  6, 10, 23, 59, 59));
+        wassert(actual(Datetime(2015,  1,  1,  0,  0,  0)) == Datetime(2015,  1,  1,  0,  0,  0));
 
         wassert(actual(Datetime(2013, 1, 1, 0, 0, 0)) < Datetime(2014, 1, 1, 0, 0, 0));
         wassert(actual(Datetime(2013, 1, 1, 0, 0, 0)) < Datetime(2013, 2, 1, 0, 0, 0));

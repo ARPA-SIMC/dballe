@@ -33,9 +33,8 @@ struct Date
     /**
      * Construct from broken down values.
      *
-     * Missing values will be replaced with lower bounds.
-     *
-     * Invalid values will be constrained within the nearest valid boundary.
+     * A year of MISSING_INT constructs a missing Date. In any other case,
+     * arguments are validated with Date::validate().
      */
     Date(int ye, int mo=1, int da=1);
 
@@ -70,8 +69,13 @@ struct Date
     bool operator==(const Date& dt) const;
     bool operator!=(const Date& dt) const;
 
+    /// Raise an exception if the three values do not represent a valid date
+    static void validate(int ye, int mo, int da);
+    /// Return the number of days in the given month
     static int days_in_month(int year, int month);
+    /// Convert a calendar date into a Julian day
     static int calendar_to_julian(int year, int month, int day);
+    /// Convert a Julian day into a calendar date
     static void julian_to_calendar(int jday, unsigned short& year, unsigned char& month, unsigned char& day);
 };
 
@@ -94,9 +98,8 @@ struct Time
     /**
      * Construct from broken down values.
      *
-     * Missing values will be replaced with lower bounds.
-     *
-     * Invalid values will be constrained within the nearest valid boundary.
+     * A hour of MISSING_INT constructs a missing Time. In any other case,
+     * arguments are validated with Time::validate().
      */
     Time(int ho, int mi=0, int se=0);
 
@@ -124,6 +127,14 @@ struct Time
     bool operator>(const Time& dt) const;
     bool operator==(const Time& dt) const;
     bool operator!=(const Time& dt) const;
+
+    /**
+     * Raise an exception if the three values do not represent a valid time.
+     *
+     * A value of 23:59:60 is allowed to accomodate for times during leap
+     * seconds.
+     */
+    static void validate(int ho, int mi, int se);
 };
 
 
@@ -149,9 +160,8 @@ struct Datetime
     /**
      * Construct from broken down values.
      *
-     * Missing values will be replaced with lower bounds.
-     *
-     * Invalid values will be constrained within the nearest valid boundary.
+     * A year of MISSING_INT constructs a missing Datetime. In any other case,
+     * arguments are validated with Datetime::validate().
      */
     Datetime(int ye, int mo=1, int da=1, int ho=0, int mi=0, int se=0);
 
@@ -212,6 +222,22 @@ struct Datetime
      * Both 'T' and ' ' are allowed as separators.
      */
     static Datetime from_iso8601(const char* str);
+
+    /**
+     * Raise an exception if the three values do not represent a valid
+     * date/time.
+     *
+     * A value of 23:59:60 is allowed to accomodate for times during leap
+     * seconds, but no effort is made to check if there has been a leap second
+     * on the given date.
+     */
+    static void validate(int ye, int mo, int da, int ho, int mi, int se);
+
+    /**
+     * Convert a datetime with an hour of 24:00:00 to hour 00:00:00 of the
+     * following day.
+     */
+    static void normalise_h24(int& ye, int& mo, int& da, int& ho, int& mi, int& se);
 };
 
 

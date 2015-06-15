@@ -11,13 +11,13 @@
 #include <dballe/core/aoffile.h>
 #include <dballe/core/matcher.h>
 #include <dballe/core/csv.h>
+#include <dballe/core/var.h>
 #include <wreport/bulletin.h>
 #include <wreport/subset.h>
 #include <wreport/notes.h>
 #include <dballe/cmdline/cmdline.h>
 #include <dballe/cmdline/processor.h>
 #include <dballe/cmdline/conversion.h>
-
 #include <iostream>
 #include <iomanip>
 #include <cstdlib>

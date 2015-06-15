@@ -164,8 +164,8 @@ std::vector<Test> tests {
         wassert(actual(q.datetime) == DatetimeRange(2015,  1,  1,  0 , 0,  0, 2015,  2, 28, 23, 59, 59));
 
         q.clear();
-        q.set_from_test_string("year=2015, monthmin=2, day=30");
-        wassert(actual(q.datetime) == DatetimeRange(2015,  2, 28,  0 , 0,  0, 2015, 12, 30, 23, 59, 59));
+        q.set_from_test_string("year=2015, monthmin=2, day=28");
+        wassert(actual(q.datetime) == DatetimeRange(2015,  2, 28,  0 , 0,  0, 2015, 12, 28, 23, 59, 59));
 
         q.clear();
         q.set_from_test_string("yearmin=2000, yearmax=2012, month=2, min=30");

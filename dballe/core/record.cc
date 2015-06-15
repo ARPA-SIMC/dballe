@@ -814,7 +814,7 @@ Trange Record::get_trange() const
 Datetime Record::get_datetime() const
 {
     if (const Var* var = key_peek(DBA_KEY_YEAR))
-        return Datetime(
+        return Datetime::lower_bound(
             var->enqi(),
             enq("month", MISSING_INT),
             enq("day", MISSING_INT),

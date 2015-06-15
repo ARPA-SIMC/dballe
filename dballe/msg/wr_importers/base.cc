@@ -65,6 +65,13 @@ void Importer::import(const wreport::Subset& subset, Msg& msg)
             throw error_consistency("no day information found in message to import");
         if (ho == MISSING_INT)
             throw error_consistency("no hour information found in message to import");
+        if (mi == MISSING_INT)
+            throw error_consistency("no minute information found in message to import");
+        if (se == MISSING_INT)
+            se = 0;
+        // Accept an hour of 24:00:00 and move it to 00:00:00 of the following
+        // day
+        Datetime::normalise_h24(ye, mo, da, ho, mi, se);
         msg.set_datetime(Datetime(ye, mo, da, ho, mi, se));
     }
 }
