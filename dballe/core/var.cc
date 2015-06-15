@@ -37,6 +37,13 @@ wreport::Varinfo varinfo(wreport::Varcode code)
 	return local->query(code);
 }
 
+wreport::Varinfo varinfo(const char* code)
+{
+    if (local == NULL)
+        local = Vartable::get("dballe");
+    return local->query(resolve_varcode_safe(code));
+}
+
 void format_code(wreport::Varcode code, char* buf)
 {
     // Format variable code

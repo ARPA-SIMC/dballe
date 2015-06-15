@@ -268,12 +268,13 @@ void TestRecordValEqual::check(WIBBLE_TEST_LOCPRM) const
 void TestRecordVarsEqual::check(WIBBLE_TEST_LOCPRM) const
 {
     WIBBLE_TEST_INFO(locinfo);
-    const auto& exp = core::Record::downcast(expected);
     const auto& act = core::Record::downcast(actual);
-    locinfo() << "Expected: " << exp.to_string() << " actual: " << act.to_string();
+    locinfo() << "Expected: " /* << expected.to_string() */ << " actual: " << act.to_string();
 
     const vector<Var*>& vars1 = act.vars();
-    const vector<Var*>& vars2 = exp.vars();
+    vector<Var*> vars2;
+    for (const auto& i : expected)
+        vars2.push_back(i.second.var);
 
     if (vars1.size() != vars2.size())
     {

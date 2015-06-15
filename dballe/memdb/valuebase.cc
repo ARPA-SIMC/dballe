@@ -1,5 +1,6 @@
 #include "valuebase.h"
 #include "dballe/core/record.h"
+#include "dballe/core/values.h"
 #include <algorithm>
 
 using namespace wreport;
@@ -35,6 +36,12 @@ void ValueBase::attr_insert(const Record& attrs)
     const auto& vars = core::Record::downcast(attrs).vars();
     for (vector<Var*>::const_iterator i = vars.begin(); i != vars.end(); ++i)
         var->seta(**i);
+}
+
+void ValueBase::attr_insert(const Values& attrs)
+{
+    for (const auto& i: attrs)
+        var->seta(*i.second.var);
 }
 
 void ValueBase::attr_remove(const std::vector<wreport::Varcode>& qcs)

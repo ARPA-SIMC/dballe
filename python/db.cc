@@ -6,6 +6,7 @@
 #include "dballe/core/defs.h"
 #include "dballe/core/file.h"
 #include "dballe/core/query.h"
+#include "dballe/core/values.h"
 #include "dballe/msg/msgs.h"
 #include "dballe/msg/codec.h"
 #include <algorithm>
@@ -134,7 +135,16 @@ static PyObject* dpy_DB_insert(dpy_DB* self, PyObject* args, PyObject* kw)
         return NULL;
 
     try {
-        self->db->insert(*record->rec, can_replace, station_can_add);
+        if (record->station_context)
+        {
+            StationValues vals(*record->rec);
+            self->db->insert_station_data(vals, can_replace, station_can_add);
+        }
+        else
+        {
+            DataValues vals(*record->rec);
+            self->db->insert_data(vals, can_replace, station_can_add);
+        }
         Py_RETURN_NONE;
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);

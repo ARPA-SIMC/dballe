@@ -151,7 +151,7 @@ void Cursor::to_record_varcode(Record& rec)
     rec.setc("var", bname);
 }
 
-void Cursor::query_attrs(function<void(unique_ptr<Var>)> dest)
+void Cursor::query_attrs(function<void(unique_ptr<Var>&&)> dest)
 {
     db.query_attrs(results[cur].out_id_data, results[cur].out_varcode, dest);
 }

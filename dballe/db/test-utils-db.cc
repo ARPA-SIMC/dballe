@@ -31,7 +31,8 @@ OverrideTestDBFormat::~OverrideTestDBFormat()
     DB::set_default_format(old_format);
 }
 
-void TestStation::set_latlonident_into(Record& rec) const
+#if 0
+void StationValues::set_latlonident_into(Record& rec) const
 {
     rec.set("lat", lat);
     rec.set("lon", lon);
@@ -116,61 +117,67 @@ void TestRecord::set_var(const char* msgvarname, double val, int conf)
     if (conf != -1)
         attrs[v.code].set("B33007", conf);
 }
+#endif
 
 void TestCursorStationKeys::check(WIBBLE_TEST_LOCPRM) const
 {
-    wassert(actual(cur.get_lat()) == ds.lat);
-    wassert(actual(cur.get_lon()) == ds.lon);
-    wassert(actual(cur.get_ident()) == ds.ident);
+    wassert(actual(cur.get_lat()) == expected.coords.dlat());
+    wassert(actual(cur.get_lon()) == expected.coords.dlon());
+    if (expected.ident.is_missing())
+        wassert(actual(cur.get_ident() == nullptr).istrue());
+    else
+        wassert(actual(cur.get_ident()) == expected.ident);
+#warning Restore report checks once all DBs return rep_memo for station queries
+    //wassert(actual(cur.get_rep_memo()) == expected.report);
 }
 
 void TestCursorStationVars::check(WIBBLE_TEST_LOCPRM) const
 {
-    wassert(actual(cur).station_keys_match(ds));
-
-    core::Record expected = ds.merged_info_with_highest_prio(cur.get_db());
+    wassert(actual(cur).station_keys_match(expected.info));
 
     auto rec = Record::create();
     cur.to_record(*rec);
-    wassert(actual(*rec).vars_equal(expected));
+    wassert(actual(*rec).vars_equal(expected.values));
 }
 
 void TestCursorDataContext::check(WIBBLE_TEST_LOCPRM) const
 {
-    wassert(actual(cur).station_keys_match(ds.station));
-    wassert(actual(cur.get_rep_memo()) == ds.data.enq("rep_memo", ""));
-    wassert(actual(cur.get_level()) == ds.data.get_level());
-    wassert(actual(cur.get_trange()) == ds.data.get_trange());
-    wassert(actual(cur.get_datetime()) == ds.data.get_datetime());
+    wassert(actual(cur).station_keys_match(ds.info));
+    wassert(actual(cur.get_rep_memo()) == ds.info.report);
+    wassert(actual(cur.get_level()) == ds.info.level);
+    wassert(actual(cur.get_trange()) == ds.info.trange);
+    wassert(actual(cur.get_datetime()) == ds.info.datetime);
 
     auto rec = Record::create();
     cur.to_record(*rec);
-    wassert(actual(*rec).equals(ds.data, "rep_memo"));
-    wassert(actual(*rec).equals_with_missing_int(ds.data, "leveltype1"));
-    wassert(actual(*rec).equals_with_missing_int(ds.data, "l1"));
-    wassert(actual(*rec).equals_with_missing_int(ds.data, "leveltype2"));
-    wassert(actual(*rec).equals_with_missing_int(ds.data, "l2"));
-    wassert(actual(*rec).equals_with_missing_int(ds.data, "pindicator"));
-    wassert(actual(*rec).equals_with_missing_int(ds.data, "p1"));
-    wassert(actual(*rec).equals_with_missing_int(ds.data, "p2"));
-    wassert(actual(*rec).equals(ds.data, "year"));
-    wassert(actual(*rec).equals(ds.data, "month"));
-    wassert(actual(*rec).equals(ds.data, "day"));
-    wassert(actual(*rec).equals(ds.data, "hour"));
-    wassert(actual(*rec).equals(ds.data, "min"));
-    wassert(actual(*rec).equals(ds.data, "sec"));
+    wassert(actual(rec->enq("rep_memo", "")) == ds.info.report);
+    wassert(actual(rec->enq("leveltype1", MISSING_INT)) == ds.info.level.ltype1);
+    wassert(actual(rec->enq("l1", MISSING_INT))         == ds.info.level.l1);
+    wassert(actual(rec->enq("leveltype2", MISSING_INT)) == ds.info.level.ltype2);
+    wassert(actual(rec->enq("l2", MISSING_INT))         == ds.info.level.l2);
+    wassert(actual(rec->enq("pindicator", MISSING_INT)) == ds.info.trange.pind);
+    wassert(actual(rec->enq("p1", MISSING_INT))         == ds.info.trange.p1);
+    wassert(actual(rec->enq("p2", MISSING_INT))         == ds.info.trange.p2);
+    wassert(actual(rec->enq("year", MISSING_INT))  == ds.info.datetime.year);
+    wassert(actual(rec->enq("month", MISSING_INT)) == ds.info.datetime.month);
+    wassert(actual(rec->enq("day", MISSING_INT))   == ds.info.datetime.day);
+    wassert(actual(rec->enq("hour", MISSING_INT))  == ds.info.datetime.hour);
+    wassert(actual(rec->enq("min", MISSING_INT))   == ds.info.datetime.minute);
+    wassert(actual(rec->enq("sec", MISSING_INT))   == ds.info.datetime.second);
 }
 
 void TestCursorDataVar::check(WIBBLE_TEST_LOCPRM) const
 {
-    string scode = format_code(code);
-    const Var* orig_var = ds.data.get(scode.c_str());
-    wassert(actual(orig_var).istrue());
-    wassert(actual(cur.get_varcode()) == code);
-    wassert(actual(cur.get_var()) == *orig_var);
+    wassert(actual(cur.get_varcode()) == expected.code());
+    wassert(actual(cur.get_var()) == expected);
     auto rec = Record::create();
-    cur.to_record(*rec);
-    wassert(actual(*rec).equals(ds.data, scode.c_str()));
+    wrunchecked(cur.to_record(*rec));
+    const Var* actvar = nullptr;
+    for (const auto& i: core::Record::downcast(*rec).vars())
+        if (i->code() == expected.code())
+            actvar = i;
+    wassert(actual(actvar).istrue());
+    wassert(actual(actvar->value_equals(expected)).istrue());
 }
 
 void TestCursorDataMatch::check(WIBBLE_TEST_LOCPRM) const
@@ -320,44 +327,45 @@ std::unique_ptr<DB> DBFixture::create_db()
 }
 
 
-void DBFixture::populate_database(WIBBLE_TEST_LOCPRM, const TestFixture& fixture)
+void DBFixture::populate_database(WIBBLE_TEST_LOCPRM, TestFixture& fixture)
 {
     wruntest(fixture.populate_db, *db);
 }
 
 
-void TestFixture::populate_db(WIBBLE_TEST_LOCPRM, DB& db) const
+void TestFixture::populate_db(WIBBLE_TEST_LOCPRM, DB& db)
 {
-    for (size_t i = 0; i < records_count; ++i)
-        wruntest(records[i].insert, db, true);
+    for (auto& vals: stations)
+        wrunchecked(db.insert_station_data(vals.second, true, true));
+    for (auto& vals: data)
+        wrunchecked(db.insert_data(vals.second, true, true));
 }
 
 OldDballeTestFixture::OldDballeTestFixture()
-    : TestFixture(2), dataset0(records[0]), dataset1(records[1])
 {
-    ds_st_oldtests.lat = 12.34560;
-    ds_st_oldtests.lon = 76.54320;
-    ds_st_oldtests.info["synop"].set("B07030", 42);     // Height
-    ds_st_oldtests.info["synop"].set("B07031", 234);    // Heightbaro
-    ds_st_oldtests.info["synop"].set("B01001", 1);      // Block
-    ds_st_oldtests.info["synop"].set("B01002", 52);     // Station
-    ds_st_oldtests.info["synop"].set("B01019", "Cippo Lippo");  // Name
+    stations["synop"].info.coords = Coords(12.34560, 76.54320);
+    stations["synop"].info.report = "synop";
+    stations["synop"].values.set("B07030", 42);     // Height
+    stations["synop"].values.set("B07031", 234);    // Heightbaro
+    stations["synop"].values.set("B01001", 1);      // Block
+    stations["synop"].values.set("B01002", 52);     // Station
+    stations["synop"].values.set("B01019", "Cippo Lippo");  // Name
+    stations["metar"] = stations["synop"];
+    stations["metar"].info.report = "metar";
 
-    dataset0.station = ds_st_oldtests;
-    dataset0.data.set("rep_memo", "synop");
-    dataset0.data.set(Level(10, 11, 15, 22));
-    dataset0.data.set(Trange(20, 111, 122));
-    dataset0.data.set(Datetime(1945, 4, 25, 8));
+    data["synop"].info = stations["synop"].info;
+    data["synop"].info.level = Level(10, 11, 15, 22);
+    data["synop"].info.trange = Trange(20, 111, 122);
+    data["synop"].info.datetime = Datetime(1945, 4, 25, 8);
+    data["synop"].values.set("B01011", "DB-All.e!");
+    data["synop"].values.set("B01012", 300);
 
-    dataset1 = dataset0;
-    dataset1.data.set("rep_memo", "metar");
-    dataset1.data.set("min", 30);
-    dataset1.data.set("p2", 123);
-
-    dataset0.data.set("B01011", "DB-All.e!");
-    dataset0.data.set("B01012", 300);
-    dataset1.data.set("B01011", "Arpa-Sim!");
-    dataset1.data.set("B01012", 400);
+    data["metar"].info = stations["metar"].info;
+    data["metar"].info.level = Level(10, 11, 15, 22);
+    data["metar"].info.trange = Trange(20, 111, 123);
+    data["metar"].info.datetime = Datetime(1945, 4, 25, 8, 30);
+    data["metar"].values.set("B01011", "Arpa-Sim!");
+    data["metar"].values.set("B01012", 400);
 }
 
 }

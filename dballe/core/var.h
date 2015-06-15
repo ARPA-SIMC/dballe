@@ -42,6 +42,9 @@ namespace dballe {
 /// Return a Varinfo entry from the local B table
 wreport::Varinfo varinfo(wreport::Varcode code);
 
+/// Return a Varinfo entry from the local B table
+wreport::Varinfo varinfo(const char* code);
+
 /**
  * Resolve a varcode name to a varcode proper.
  */
@@ -73,18 +76,18 @@ static inline std::unique_ptr<wreport::Var> newvar(const wreport::Var& var)
     return std::unique_ptr<wreport::Var>(new wreport::Var(var));
 }
 
-
 /// Create a new Var, from the local B table, with undefined value
-static inline std::unique_ptr<wreport::Var> newvar(wreport::Varcode code)
+template<typename C>
+static inline std::unique_ptr<wreport::Var> newvar(C code)
 {
-	return std::unique_ptr<wreport::Var>(new wreport::Var(varinfo(code)));
+    return std::unique_ptr<wreport::Var>(new wreport::Var(varinfo(code)));
 }
 
 /// Create a new Var, from the local B table, with value
-template<typename T>
-std::unique_ptr<wreport::Var> newvar(wreport::Varcode code, const T& val)
+template<typename C, typename T>
+std::unique_ptr<wreport::Var> newvar(C code, const T& val)
 {
-	return std::unique_ptr<wreport::Var>(new wreport::Var(varinfo(code), val));
+    return std::unique_ptr<wreport::Var>(new wreport::Var(varinfo(code), val));
 }
 
 /// Create a new Var, from the local B table, with undefined value

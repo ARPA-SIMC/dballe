@@ -159,21 +159,4 @@ const char* DB::default_repinfo_file()
     return repinfo_file;
 }
 
-void DB::insert(const Record& rec, bool can_replace, bool station_can_add)
-{
-    // Obtain values
-    const auto& r = core::Record::downcast(rec);
-    Datetime datetime = r.get_datetime();
-    if (datetime.is_missing())
-    {
-        StationValues sv;
-        sv.from_record(rec);
-        insert_station_data(sv, can_replace, station_can_add);
-    } else {
-        DataValues dv;
-        dv.from_record(rec);
-        insert_data(dv, can_replace, station_can_add);
-    }
-}
-
 }

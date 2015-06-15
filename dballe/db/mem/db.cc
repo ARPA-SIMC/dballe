@@ -69,7 +69,7 @@ std::map<std::string, int> DB::get_repinfo_priorities()
 void DB::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
 {
     // Obtain the station
-    m_last_station_id = memdb.stations.obtain(vals.info, station_can_add);
+    vals.info.ana_id = m_last_station_id = memdb.stations.obtain(vals.info, station_can_add);
     const memdb::Station& station = *memdb.stations[m_last_station_id];
 
     last_insert_varids.clear();
@@ -84,7 +84,7 @@ void DB::insert_station_data(StationValues& vals, bool can_replace, bool station
 void DB::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
 {
     // Obtain the station
-    m_last_station_id = memdb.stations.obtain(vals.info, station_can_add);
+    vals.info.ana_id = m_last_station_id = memdb.stations.obtain(vals.info, station_can_add);
     const memdb::Station& station = *memdb.stations[m_last_station_id];
 
     // Obtain the levtr
@@ -326,7 +326,7 @@ std::unique_ptr<db::Cursor> DB::query_summary(const Query& query)
 }
 
 void DB::query_attrs(int id_data, wreport::Varcode id_var,
-        std::function<void(std::unique_ptr<wreport::Var>)> dest)
+        std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
 {
     memdb.values[id_data]->query_attrs(dest);
 }
@@ -361,6 +361,11 @@ static ValueBase* get_value(Memdb& memdb, int id_data, wreport::Varcode id_var)
 }
 
 void DB::attr_insert(int id_data, wreport::Varcode id_var, const Record& attrs)
+{
+    get_value(memdb, id_data, id_var)->attr_insert(attrs);
+}
+
+void DB::attr_insert(int id_data, wreport::Varcode id_var, const Values& attrs)
 {
     get_value(memdb, id_data, id_var)->attr_insert(attrs);
 }

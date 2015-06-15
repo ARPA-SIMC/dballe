@@ -1,6 +1,7 @@
 #include "dbapi.h"
 #include "dballe/core/file.h"
 #include "dballe/core/query.h"
+#include "dballe/core/values.h"
 #include "dballe/db/db.h"
 #include "dballe/msg/msgs.h"
 #include "dballe/msg/codec.h"
@@ -219,7 +220,16 @@ void DbAPI::prendilo()
         throw error_consistency(
             "idba_prendilo cannot be called with the database open in data readonly mode");
 
-    db.insert(input, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
+    if (station_context)
+    {
+        StationValues sv;
+        sv.from_record(input);
+        db.insert_station_data(sv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
+    } else {
+        DataValues dv;
+        dv.from_record(input);
+        db.insert_data(dv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
+    }
 
     // Mark the attr reference id as invalid, so that a critica() will call
     // attr_insert without the reference id
@@ -259,16 +269,16 @@ int DbAPI::voglioancora()
     std::vector<wreport::Varcode> arr;
     read_qc_list(arr);
 
-    function<void(unique_ptr<Var>)> dest;
+    function<void(unique_ptr<Var>&&)> dest;
 
     if (arr.empty())
     {
-        dest = [&](unique_ptr<Var> var) {
+        dest = [&](unique_ptr<Var>&& var) {
             qcoutput.set(move(var));
             ++qc_count;
         };
     } else {
-        dest = [&](unique_ptr<Var> var) {
+        dest = [&](unique_ptr<Var>&& var) {
             for (auto code: arr)
                 if (code == var->code())
                 {

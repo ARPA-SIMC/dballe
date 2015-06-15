@@ -23,6 +23,7 @@
 
 #include <dballe/record.h>
 #include <dballe/core/query.h>
+#include <dballe/core/values.h>
 #include <dballe/core/rawmsg.h>
 #include <dballe/core/file.h>
 
@@ -252,9 +253,10 @@ struct TestRecordValEqual
 struct TestRecordVarsEqual
 {
     const dballe::Record& actual;
-    const dballe::Record& expected;
+    dballe::Values expected;
 
     TestRecordVarsEqual(const dballe::Record& actual, const dballe::Record& expected) : actual(actual), expected(expected) {}
+    TestRecordVarsEqual(const dballe::Record& actual, const dballe::Values& expected) : actual(actual), expected(expected) {}
 
     void check(WIBBLE_TEST_LOCPRM) const;
 };
@@ -269,6 +271,7 @@ struct ActualRecord : public wibble::tests::Actual<const dballe::Record&>
         return TestRecordValEqual(this->actual, expected, name, true);
     }
     TestRecordVarsEqual vars_equal(const Record& expected) { return TestRecordVarsEqual(this->actual, expected); }
+    TestRecordVarsEqual vars_equal(const Values& expected) { return TestRecordVarsEqual(this->actual, expected); }
 };
 
 // Set a record from a ", "-separated string of assignments

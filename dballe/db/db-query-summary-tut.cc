@@ -12,68 +12,65 @@ using namespace std;
 
 namespace {
 
+struct DBData : public TestFixture
+{
+    DBData()
+    {
+        stations["st1_synop"].info.coords = Coords(12.34560, 76.54320);
+        stations["st1_synop"].info.report = "synop";
+        stations["st1_synop"].values.set(newvar("B07030", 42.0)); // height
+        stations["st1_metar"].info = stations["st1_synop"].info;
+        stations["st1_metar"].info.report = "metar";
+        stations["st1_metar"].values.set(newvar("block", 1));
+        stations["st1_metar"].values.set(newvar("station", 2));
+        stations["st1_metar"].values.set(newvar("B07030", 50.0)); // height
+        stations["st2_temp"].info.coords = Coords(23.45670, 65.43210);
+        stations["st2_temp"].info.report = "temp";
+        stations["st2_temp"].values.set(newvar("B07030", 100.0)); // height
+        stations["st2_metar"].info = stations["st2_temp"].info;
+        stations["st2_metar"].info.report = "metar";
+        stations["st2_metar"].values.set(newvar("block", 3));
+        stations["st2_metar"].values.set(newvar("station", 4));
+        stations["st2_metar"].values.set(newvar("B07030", 110.0)); // height
+        data["rec1a"].info = stations["st1_metar"].info;
+        data["rec1a"].info.datetime = Datetime(1945, 4, 25, 8);
+        data["rec1a"].info.level = Level(10, 11, 15, 22);
+        data["rec1a"].info.trange = Trange(20, 111, 122);
+        data["rec1a"].values.set("B12101", 290.0);
+        data["rec1a"].values.set("B12103", 280.0);
+        data["rec1b"] = data["rec1a"];
+        data["rec1b"].info.datetime = Datetime(1945, 4, 26, 8);
+        data["rec1b"].values.set("B12101", 291.0);
+        data["rec1b"].values.set("B12103", 281.0);
+        data["rec2a"].info = stations["st2_metar"].info;
+        data["rec2a"].info.datetime = Datetime(1945, 4, 25, 8);
+        data["rec2a"].info.level = Level(10, 11, 15, 22);
+        data["rec2a"].info.trange = Trange(20, 111, 122);
+        data["rec2a"].values.set("B12101", 300.0);
+        data["rec2a"].values.set("B12103", 298.0);
+        data["rec2b"] = data["rec2a"];
+        data["rec2b"].info.datetime = Datetime(1945, 4, 26, 8);
+        data["rec2b"].values.set("B12101", 301.0);
+        data["rec2b"].values.set("B12103", 291.0);
+    }
+};
+
 struct Fixture : public dballe::tests::DBFixture
 {
-    dballe::tests::TestStation st1;
-    dballe::tests::TestStation st2;
     int st1_id;
     int st2_id;
 
     Fixture()
     {
-        st1.lat = 12.34560;
-        st1.lon = 76.54320;
-        st1.info["synop"].set("B07030", 42.0); // height
-        st1.info["metar"].set("B07030", 50.0); // height
-        st1.info["metar"].set("block", 1);
-        st1.info["metar"].set("station", 2);
-
-        st2.lat = 23.45670;
-        st2.lon = 65.43210;
-        st2.info["temp"].set("B07030", 100.0); // height
-        st2.info["metar"].set("B07030", 110.0); // height
-        st2.info["metar"].set("block", 3);
-        st2.info["metar"].set("station", 4);
-
         insert_data();
     }
 
     void insert_data()
     {
-
-        dballe::tests::TestRecord rec1;
-        rec1.station = st1;
-        rec1.data.set("rep_memo", "metar");
-        rec1.data.set(Datetime(1945, 4, 25, 8));
-        rec1.data.set(Level(10, 11, 15, 22));
-        rec1.data.set(Trange(20, 111, 122));
-        rec1.data.set("B12101", 290.0);
-        rec1.data.set("B12103", 280.0);
-        wruntest(rec1.insert, *db, true);
-        st1_id = db->last_station_id();
-
-        rec1.data.clear_vars();
-        rec1.data.set(Datetime(1945, 4, 26, 8));
-        rec1.data.set("B12101", 291.0);
-        rec1.data.set("B12103", 281.0);
-        wruntest(rec1.insert, *db, true);
-
-        dballe::tests::TestRecord rec2;
-        rec2.station = st2;
-        rec2.data.set("rep_memo", "metar");
-        rec2.data.set(Datetime(1945, 4, 25, 8));
-        rec2.data.set(Level(10, 11, 15, 22));
-        rec2.data.set(Trange(20, 111, 122));
-        rec2.data.set("B12101", 300.0);
-        rec2.data.set("B12103", 290.0);
-        wruntest(rec2.insert, *db, true);
-        st2_id = db->last_station_id();
-
-        rec2.data.clear_vars();
-        rec2.data.set(Datetime(1945, 4, 26, 8));
-        rec2.data.set("B12101", 301.0);
-        rec2.data.set("B12103", 291.0);
-        wruntest(rec2.insert, *db, true);
+        DBData dbdata;
+        wruntest(populate_database, dbdata);
+        st1_id = dbdata.stations["st1_metar"].info.ana_id;
+        st2_id = dbdata.stations["st2_metar"].info.ana_id;
     }
 
     void reset()

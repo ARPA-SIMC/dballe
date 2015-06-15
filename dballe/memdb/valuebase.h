@@ -27,6 +27,7 @@
 #include <memory>
 
 namespace dballe {
+struct Values;
 struct Record;
 
 namespace memdb {
@@ -43,6 +44,7 @@ struct ValueBase
     void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest) const;
 
     void attr_insert(const Record& attrs);
+    void attr_insert(const Values& attrs);
     void attr_remove(const std::vector<wreport::Varcode>& qcs);
 
     /// Replace the variable with the given one

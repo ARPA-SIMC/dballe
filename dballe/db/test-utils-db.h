@@ -1,5 +1,6 @@
 #include <dballe/msg/test-utils-msg.h>
 #include <dballe/core/record.h>
+#include <dballe/core/values.h>
 #include <dballe/db/db.h>
 #include <dballe/db/sql/driver.h>
 
@@ -50,6 +51,7 @@ struct db_tg : public tut::test_group<T>
     }
 };
 
+#if 0
 /// Fixture data about a station
 struct TestStation
 {
@@ -83,7 +85,7 @@ struct TestStation
 /// Fixture data about measured variables
 struct TestRecord
 {
-    TestStation station;
+    StationValues station;
     /// Measured variables context, measured variables
     core::Record data;
     /// Attributes on measured variables
@@ -97,22 +99,18 @@ struct TestRecord
 
     void insert(WIBBLE_TEST_LOCPRM, DB& db, bool can_replace=false);
 };
+#endif
 
 /// Base for all database initialization data fixtures
 struct TestFixture
 {
-    TestRecord* records;
-    size_t records_count;
+    std::map<std::string, StationValues> stations;
+    std::map<std::string, DataValues> data;
 
-    TestFixture(size_t records_count)
-        : records(new TestRecord[records_count]),
-          records_count(records_count) {}
-    virtual ~TestFixture()
-    {
-        if (records) delete[] records;
-    }
+    TestFixture() {}
+    virtual ~TestFixture() {}
 
-    virtual void populate_db(WIBBLE_TEST_LOCPRM, DB& db) const;
+    virtual void populate_db(WIBBLE_TEST_LOCPRM, DB& db);
 
 private:
     TestFixture(const TestFixture&);
@@ -122,10 +120,6 @@ private:
 /// Test fixture used by old DB-All.e db tests
 struct OldDballeTestFixture : public TestFixture
 {
-    TestStation ds_st_oldtests;
-    TestRecord& dataset0;
-    TestRecord& dataset1;
-
     OldDballeTestFixture();
 };
 
@@ -133,9 +127,9 @@ struct OldDballeTestFixture : public TestFixture
 struct TestCursorStationKeys
 {
     db::Cursor& cur;
-    const TestStation& ds;
+    Station expected;
 
-    TestCursorStationKeys(db::Cursor& cur, const TestStation& ds) : cur(cur), ds(ds) {}
+    TestCursorStationKeys(db::Cursor& cur, const Station& expected) : cur(cur), expected(expected) {}
 
     void check(WIBBLE_TEST_LOCPRM) const;
 };
@@ -144,9 +138,9 @@ struct TestCursorStationKeys
 struct TestCursorStationVars
 {
     db::Cursor& cur;
-    const TestStation& ds;
+    StationValues expected;
 
-    TestCursorStationVars(db::Cursor& cur, const TestStation& ds) : cur(cur), ds(ds) {}
+    TestCursorStationVars(db::Cursor& cur, const StationValues& expected) : cur(cur), expected(expected) {}
 
     void check(WIBBLE_TEST_LOCPRM) const;
 };
@@ -155,9 +149,9 @@ struct TestCursorStationVars
 struct TestCursorDataContext
 {
     db::Cursor& cur;
-    const TestRecord& ds;
+    const DataValues& ds;
 
-    TestCursorDataContext(db::Cursor& cur, const TestRecord& ds) : cur(cur), ds(ds) {}
+    TestCursorDataContext(db::Cursor& cur, const DataValues& ds) : cur(cur), ds(ds) {}
 
     void check(WIBBLE_TEST_LOCPRM) const;
 };
@@ -166,10 +160,12 @@ struct TestCursorDataContext
 struct TestCursorDataVar
 {
     db::Cursor& cur;
-    const TestRecord& ds;
-    wreport::Varcode code;
+    wreport::Var expected;
 
-    TestCursorDataVar(db::Cursor& cur, const TestRecord& ds, wreport::Varcode code) : cur(cur), ds(ds), code(code) {}
+    TestCursorDataVar(db::Cursor& cur, const StationValues& expected, wreport::Varcode code) : cur(cur), expected(*expected.values[code].var) {}
+    TestCursorDataVar(db::Cursor& cur, const DataValues& expected, wreport::Varcode code) : cur(cur), expected(*expected.values[code].var) {}
+    TestCursorDataVar(db::Cursor& cur, const Values& expected, wreport::Varcode code) : cur(cur), expected(*expected[code].var) {}
+    TestCursorDataVar(db::Cursor& cur, const wreport::Var& expected) : cur(cur), expected(expected) {}
 
     void check(WIBBLE_TEST_LOCPRM) const;
 };
@@ -178,10 +174,10 @@ struct TestCursorDataVar
 struct TestCursorDataMatch
 {
     db::Cursor& cur;
-    const TestRecord& ds;
+    const DataValues& ds;
     wreport::Varcode code;
 
-    TestCursorDataMatch(db::Cursor& cur, const TestRecord& ds, wreport::Varcode code) : cur(cur), ds(ds), code(code) {}
+    TestCursorDataMatch(db::Cursor& cur, const DataValues& ds, wreport::Varcode code) : cur(cur), ds(ds), code(code) {}
 
     void check(WIBBLE_TEST_LOCPRM) const;
 };
@@ -282,7 +278,7 @@ struct DBFixture
         wruntest(populate_database, fixture);
     }
 
-    void populate_database(WIBBLE_TEST_LOCPRM, const TestFixture& fixture);
+    void populate_database(WIBBLE_TEST_LOCPRM, TestFixture& fixture);
 };
 
 template<typename T=DBFixture>
@@ -309,14 +305,15 @@ struct ActualCursor : public wibble::tests::Actual<dballe::db::Cursor&>
 {
     ActualCursor(dballe::db::Cursor& actual) : wibble::tests::Actual<dballe::db::Cursor&>(actual) {}
 
-    TestCursorStationKeys station_keys_match(const TestStation& ds) { return TestCursorStationKeys(this->actual, ds); }
-    TestCursorStationVars station_vars_match(const TestStation& ds) { return TestCursorStationVars(this->actual, ds); }
-    TestCursorStationVars station_vars_match(const TestRecord& ds) { return TestCursorStationVars(this->actual, ds.station); }
-    TestCursorDataContext data_context_matches(const TestRecord& ds) { return TestCursorDataContext(this->actual, ds); }
-    TestCursorDataVar data_var_matches(const TestRecord& ds) { return TestCursorDataVar(this->actual, ds, this->actual.get_varcode()); }
-    TestCursorDataVar data_var_matches(const TestRecord& ds, wreport::Varcode code) { return TestCursorDataVar(this->actual, ds, code); }
-    TestCursorDataMatch data_matches(const TestRecord& ds) { return TestCursorDataMatch(this->actual, ds, this->actual.get_varcode()); }
-    TestCursorDataMatch data_matches(const TestRecord& ds, wreport::Varcode code) { return TestCursorDataMatch(this->actual, ds, code); }
+    TestCursorStationKeys station_keys_match(const Station& expected) { return TestCursorStationKeys(this->actual, expected); }
+    TestCursorStationVars station_vars_match(const StationValues& expected) { return TestCursorStationVars(this->actual, expected); }
+    TestCursorDataContext data_context_matches(const DataValues& expected) { return TestCursorDataContext(this->actual, expected); }
+    TestCursorDataVar data_var_matches(const DataValues& expected) { return TestCursorDataVar(this->actual, expected, this->actual.get_varcode()); }
+    TestCursorDataVar data_var_matches(const wreport::Var& expected) { return TestCursorDataVar(this->actual, expected); }
+    template<typename T>
+    TestCursorDataVar data_var_matches(const T& expected, wreport::Varcode code) { return TestCursorDataVar(this->actual, expected, code); }
+    TestCursorDataMatch data_matches(const DataValues& ds) { return TestCursorDataMatch(this->actual, ds, this->actual.get_varcode()); }
+    TestCursorDataMatch data_matches(const DataValues& ds, wreport::Varcode code) { return TestCursorDataMatch(this->actual, ds, code); }
 };
 
 struct ActualDB : public wibble::tests::Actual<dballe::DB&>

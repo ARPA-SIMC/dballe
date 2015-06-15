@@ -16,13 +16,19 @@ namespace {
 
 struct Fixture : public dballe::tests::DBFixture
 {
-    TestStation ds_st_navile;
+    StationValues ds_st_navile;
 
     Fixture()
     {
-        ds_st_navile.lat = 44.5008;
-        ds_st_navile.lon = 11.3288;
-        ds_st_navile.info["synop"].set("B07030", 78); // Height
+        ds_st_navile.info.coords = Coords(44.5008, 11.3288);
+        ds_st_navile.info.report = "synop";
+        ds_st_navile.values.set("B07030", 78); // Height
+    }
+
+    void reset()
+    {
+        dballe::tests::DBFixture::reset();
+        ds_st_navile.clear_ids();
     }
 };
 
@@ -44,19 +50,22 @@ std::vector<Test> tests {
         auto& db = *f.db;
 
         // Insert some data
-        dballe::tests::TestRecord ds;
-        ds.station = f.ds_st_navile;
-        ds.data.set("rep_memo", "synop");
-        ds.data.set(Datetime(2013, 10, 16, 10));
-        ds.set_var("temp_2m", 16.5, 50);
-        wruntest(ds.insert, db);
+        wrunchecked(db.insert_station_data(f.ds_st_navile, true, true));
+        DataValues vals;
+        vals.info = f.ds_st_navile.info;
+        vals.info.datetime = Datetime(2013, 10, 16, 10);
+        vals.values.set(WR_VAR(0, 12, 101), 16.5);
+        wrunchecked(db.insert_data(vals, true, true));
+        Values attrs;
+        attrs.set("B33007", 50);
+        wrunchecked(db.attr_insert(vals.values[WR_VAR(0, 12, 101)].data_id, WR_VAR(0, 12, 101), attrs));
 
         // Query and verify the station data
         {
             unique_ptr<db::Cursor> cur = db.query_stations(core::Query());
             wassert(actual(cur->remaining()) == 1);
             cur->next();
-            wassert(actual(cur).station_vars_match(ds));
+            wassert(actual(cur).station_vars_match(f.ds_st_navile));
         }
 
         // Query and verify the measured data
@@ -64,40 +73,52 @@ std::vector<Test> tests {
             unique_ptr<db::Cursor> cur = db.query_data(core::Query());
             wassert(actual(cur->remaining()) == 1);
             cur->next();
-            wassert(actual(cur).data_context_matches(ds));
-            wassert(actual(cur).data_var_matches(ds, WR_VAR(0, 12, 101)));
+            wassert(actual(cur).data_context_matches(vals));
+            wassert(actual(cur).data_var_matches(vals, WR_VAR(0, 12, 101)));
         }
 
         // Query and verify attributes
-        // TODO
+        {
+            int count = 0;
+            unique_ptr<Var> attr;
+            wrunchecked(db.query_attrs(vals.values[WR_VAR(0, 12, 101)].data_id, WR_VAR(0, 12, 101), [&](std::unique_ptr<wreport::Var>&& var) {
+                ++count;
+                attr = move(var);
+            }));
+            wassert(actual(count) == 1);
+            wassert(actual(attr->code()) == WR_VAR(0, 33, 7));
+            wassert(actual(attr->enq(MISSING_INT)) == 50);
+        }
     }),
     Test("insert_perms", [](Fixture& f) {
         // Test insert
         auto& db = *f.db;
         OldDballeTestFixture oldf;
 
-        // Prepare a valid record to insert
-        core::Record insert(oldf.dataset0.data);
-        wrunchecked(oldf.dataset0.station.set_latlonident_into(insert));
-
         // Check if adding a nonexisting station when not allowed causes an error
         try {
-            db.insert(insert, false, false);
+            db.insert_data(oldf.data["synop"], false, false);
             ensure(false);
         } catch (error_consistency& e) {
             wassert(actual(e.what()).contains("insert a station entry when it is forbidden"));
         } catch (error_notfound& e) {
             wassert(actual(e.what()).contains("station not found"));
         }
+        wassert(actual(oldf.data["synop"].info.ana_id) == MISSING_INT);
+        wassert(actual(oldf.data["synop"].values["B01011"].data_id) == MISSING_INT);
+        wassert(actual(oldf.data["synop"].values["B01012"].data_id) == MISSING_INT);
+        oldf.data["synop"].clear_ids();
 
         // Insert the record
-        wrunchecked(db.insert(insert, false, true));
+        wrunchecked(db.insert_data(oldf.data["synop"], false, true));
+        oldf.data["synop"].clear_ids();
         // Check if duplicate updates are allowed by insert
-        wrunchecked(db.insert(insert, true, false));
+        wrunchecked(db.insert_data(oldf.data["synop"], true, false));
+        oldf.data["synop"].clear_ids();
         // Check if overwrites are trapped by insert_new
-        insert.set("B01011", "DB-All.e?");
+        oldf.data["synop"].values.set("B01011", "DB-All.e?");
         try {
-            db.insert(insert, false, false);
+            db.insert_data(oldf.data["synop"], false, false);
             ensure(false);
         } catch (wreport::error& e) {
             wassert(actual(e.what()).matches("refusing to overwrite existing data|cannot replace an existing value|Duplicate entry"));
@@ -108,16 +129,12 @@ std::vector<Test> tests {
         auto& db = *f.db;
         OldDballeTestFixture oldf;
 
-        // Prepare a valid record to insert
-        core::Record insert(oldf.dataset0.data);
-        wrunchecked(oldf.dataset0.station.set_latlonident_into(insert));
-
         // Insert the record twice
-        wrunchecked(db.insert(insert, false, true));
+        wrunchecked(db.insert_data(oldf.data["synop"], false, true));
         // This should fail, refusing to replace station info
-        insert.set("B01011", "DB-All.e?");
+        oldf.data["synop"].values.set("B01011", "DB-All.e?");
         try {
-            db.insert(insert, false, true);
+            db.insert_data(oldf.data["synop"], false, true);
             ensure(false);
         } catch (wreport::error& e) {
             wassert(actual(e.what()).matches("refusing to overwrite existing data|cannot replace an existing value|Duplicate entry"));
@@ -137,24 +154,19 @@ std::vector<Test> tests {
             // Memdb has one station entry per (lat, lon, ident, network)
             wassert(actual(cur->remaining()) == 2);
 
-            // There should be an item
-            wassert(actual(cur->next()).istrue());
-            wassert(actual(cur->get_lat()) == 12.34560);
-            wassert(actual(cur->get_lon()) == 76.54320);
-            wassert(actual(cur->get_rep_memo()) == "metar");
-            wassert(actual((void*)cur->get_ident()) == (void*)0);
-
-            // Check that the result matches
-            wassert(actual(cur).station_keys_match(oldf.dataset0.station));
-
             wassert(actual(cur->next()).istrue());
             wassert(actual(cur->get_lat()) == 12.34560);
             wassert(actual(cur->get_lon()) == 76.54320);
             wassert(actual(cur->get_rep_memo()) == "synop");
             wassert(actual((void*)cur->get_ident()) == (void*)0);
+            wassert(actual(cur).station_keys_match(oldf.stations["synop"].info));
 
-            // Check that the result matches
-            wassert(actual(cur).station_keys_match(oldf.dataset0.station));
+            wassert(actual(cur->next()).istrue());
+            wassert(actual(cur->get_lat()) == 12.34560);
+            wassert(actual(cur->get_lon()) == 76.54320);
+            wassert(actual(cur->get_rep_memo()) == "metar");
+            wassert(actual((void*)cur->get_ident()) == (void*)0);
+            wassert(actual(cur).station_keys_match(oldf.stations["metar"].info));
         } else {
             // V5 and V6 have one station entry (lat, lon, ident)
             wassert(actual(cur->remaining()) == 1);
@@ -166,7 +178,7 @@ std::vector<Test> tests {
             wassert(actual((void*)cur->get_ident()) == (void*)0);
 
             // Check that the result matches
-            wassert(actual(cur).station_keys_match(oldf.dataset0.station));
+            wassert(actual(cur).station_keys_match(oldf.stations["metar"].info));
 
             // There should be only one item
         }
@@ -242,7 +254,7 @@ std::vector<Test> tests {
         cur = db.query_data(query);
         ensure_equals(cur->remaining(), 2);
         ensure(cur->next());
-        wassert(actual(cur).data_context_matches(oldf.dataset0));
+        wassert(actual(cur).data_context_matches(oldf.data["synop"]));
 
         Varcode last_code = 0;
         for (unsigned i = 0; i < 2; ++i)
@@ -256,7 +268,7 @@ std::vector<Test> tests {
             {
                 case WR_VAR(0, 1, 11):
                 case WR_VAR(0, 1, 12):
-                    wassert(actual(cur).data_var_matches(oldf.dataset0, last_code));
+                    wassert(actual(cur).data_var_matches(oldf.data["synop"], last_code));
                     break;
                 default:
                     ensure(false);
@@ -274,197 +286,88 @@ std::vector<Test> tests {
     Test("query_datetime", [](Fixture& f) {
         // Test datetime queries
         auto& db = *f.db;
-        core::Query query;
-        core::Record insert, result;
 
         /* Prepare test data */
-        core::Record base, a, b;
+        DataValues base;
+        base.info.coords = Coords(12.0, 48.0);
+        base.info.report = "synop";
+        base.info.level = Level(1, 0, 1, 0);
+        base.info.trange = Trange(1, 0, 0);
+        base.values.set("B01012", 500);
 
-        base.set("lat", 12.0);
-        base.set("lon", 48.0);
-        base.set("mobile", 0);
-
-        /*
-           base.set(DBA_KEY_HEIGHT, 42);
-           base.set(DBA_KEY_HEIGHTBARO, 234);
-           base.set(DBA_KEY_BLOCK, 1);
-           base.set(DBA_KEY_STATION, 52);
-           base.set(DBA_KEY_NAME, "Cippo Lippo");
-           */
-
-        base.set(Level(1, 0, 1, 0));
-        base.set(Trange(1, 0, 0));
-        base.set("rep_memo", "synop");
-        base.set("priority", 101);
-        base.set("B01012", 500);
-        base.set(Datetime(2006, 5, 15, 12, 30, 0));
-
-#define WANTRESULT(ab) do { \
-        unique_ptr<db::Cursor> cur = db.query_data(query); \
-        ensure_equals(cur->remaining(), 1); \
-        ensure(cur->next()); \
+#define WANTRESULT(querystr, ab) do { \
+        core::Record result; \
+        unique_ptr<db::Cursor> cur = db.query_data(*dballe::tests::query_from_string(querystr)); \
+        wassert(actual(cur->remaining()) == 1); \
+        wassert(actual(cur->next()).istrue()); \
         cur->to_record(result); \
-        ensure_equals(cur->remaining(), 0); \
+        wassert(actual(cur->remaining()) == 0); \
         ensure_varcode_equals(result.vars()[0]->code(), WR_VAR(0, 1, 12)); \
-        ensure(result.contains(ab)); \
+        ensure(cur->get_datetime() == ab.info.datetime); \
         cur->discard_rest(); \
     } while(0)
 
+        DataValues a, b;
+
         /* Year */
         db.reset();
-
-        insert.clear();
         a = base;
-        a.set("year", 2005);
-        insert.add(a);
-        db.insert(insert, false, true);
-
-        insert.clear();
+        a.info.datetime = Datetime(2005);
+        db.insert_data(a, false, true);
         b = base;
-        b.set("year", 2006);
-        insert.add(b);
-        db.insert(insert, false, false);
-
-        query.clear();
-        query.set_from_test_string("yearmin=2006");
-        WANTRESULT(b);
-
-        query.clear();
-        query.set_from_test_string("yearmax=2005");
-        WANTRESULT(a);
-
-        query.clear();
-        query.set_from_test_string("year=2006");
-        WANTRESULT(b);
-
+        b.info.datetime = Datetime(2006);
+        db.insert_data(b, false, false);
+        WANTRESULT("yearmin=2006", b);
+        WANTRESULT("yearmax=2005", a);
+        WANTRESULT("year=2006", b);
 
         /* Month */
         db.reset();
-
-        insert.clear();
         a = base;
-        a.set("year", 2006);
-        a.set("month", 4);
-        insert.add(a);
-        db.insert(insert, false, true);
-
-        insert.clear();
+        a.info.datetime = Datetime(2006, 4);
+        db.insert_data(a, false, true);
         b = base;
-        b.set("year", 2006);
-        b.set("month", 5);
-        insert.add(b);
-        db.insert(insert, false, false);
-
-        query.clear();
-        query.set_from_test_string("year=2006, monthmin=5");
-        WANTRESULT(b);
-
-        query.clear();
-        query.set_from_test_string("year=2006, monthmax=4");
-        WANTRESULT(a);
-
-        query.clear();
-        query.set_from_test_string("year=2006, month=5");
-        WANTRESULT(b);
+        b.info.datetime = Datetime(2006, 5);
+        db.insert_data(b, false, false);
+        WANTRESULT("year=2006, monthmin=5", b);
+        WANTRESULT("year=2006, monthmax=4", a);
+        WANTRESULT("year=2006, month=5", b);
 
         /* Day */
         db.reset();
-
-        insert.clear();
         a = base;
-        a.set("year", 2006);
-        a.set("month", 5);
-        a.set("day", 2);
-        insert.add(a);
-        db.insert(insert, false, true);
-
-        insert.clear();
+        a.info.datetime = Datetime(2006, 5, 2);
+        db.insert_data(a, false, true);
         b = base;
-        b.set("year", 2006);
-        b.set("month", 5);
-        b.set("day", 3);
-        insert.add(b);
-        db.insert(insert, false, false);
-
-        query.clear();
-        query.set_from_test_string("year=2006, month=5, daymin=3");
-        WANTRESULT(b);
-
-        query.clear();
-        query.set_from_test_string("year=2006, month=5, daymax=2");
-        WANTRESULT(a);
-
-        query.clear();
-        query.set_from_test_string("year=2006, month=5, day=3");
-        WANTRESULT(b);
+        b.info.datetime = Datetime(2006, 5, 3);
+        db.insert_data(b, false, false);
+        WANTRESULT("year=2006, month=5, daymin=3", b);
+        WANTRESULT("year=2006, month=5, daymax=2", a);
+        WANTRESULT("year=2006, month=5, day=3", b);
 
         /* Hour */
         db.reset();
-
-        insert.clear();
         a = base;
-        a.set("year", 2006);
-        a.set("month", 5);
-        a.set("day", 3);
-        a.set("hour", 12);
-        insert.add(a);
-        db.insert(insert, false, true);
-
-        insert.clear();
+        a.info.datetime = Datetime(2006, 5, 3, 12);
+        db.insert_data(a, false, true);
         b = base;
-        b.set("year", 2006);
-        b.set("month", 5);
-        b.set("day", 3);
-        b.set("hour", 13);
-        insert.add(b);
-        db.insert(insert, false, false);
-
-        query.clear();
-        query.set_from_test_string("year=2006, month=5, day=3, hourmin=13");
-        WANTRESULT(b);
-
-        query.clear();
-        query.set_from_test_string("year=2006, month=5, day=3, hourmax=12");
-        WANTRESULT(a);
-
-        query.clear();
-        query.set_from_test_string("year=2006, month=5, day=3, hour=13");
-        WANTRESULT(b);
+        b.info.datetime = Datetime(2006, 5, 3, 13);
+        db.insert_data(b, false, false);
+        WANTRESULT("year=2006, month=5, day=3, hourmin=13", b);
+        WANTRESULT("year=2006, month=5, day=3, hourmax=12", a);
+        WANTRESULT("year=2006, month=5, day=3, hour=13", b);
 
         /* Minute */
         db.reset();
-
-        insert.clear();
         a = base;
-        a.set("year", 2006);
-        a.set("month", 5);
-        a.set("day", 3);
-        a.set("hour", 12);
-        a.set("min", 29);
-        insert.add(a);
-        db.insert(insert, false, true);
-
-        insert.clear();
+        a.info.datetime = Datetime(2006, 5, 3, 12, 29);
+        db.insert_data(a, false, true);
         b = base;
-        b.set("year", 2006);
-        b.set("month", 5);
-        b.set("day", 3);
-        b.set("hour", 12);
-        b.set("min", 30);
-        insert.add(b);
-        db.insert(insert, false, false);
-
-        query.clear();
-        query.set_from_test_string("year=2006, month=5, day=3, hour=12, minumin=30");
-        WANTRESULT(b);
-
-        query.clear();
-        query.set_from_test_string("year=2006, month=5, day=3, hour=12, minumax=29");
-        WANTRESULT(a);
-
-        query.clear();
-        query.set_from_test_string("year=2006, month=5, day=3, hour=12, min=30");
-        WANTRESULT(b);
+        b.info.datetime = Datetime(2006, 5, 3, 12, 30);
+        db.insert_data(b, false, false);
+        WANTRESULT("year=2006, month=5, day=3, hour=12, minumin=30", b);
+        WANTRESULT("year=2006, month=5, day=3, hour=12, minumax=29", a);
+        WANTRESULT("year=2006, month=5, day=3, hour=12, min=30", b);
     }),
     Test("attrs", [](Fixture& f) {
         // Test QC
@@ -557,7 +460,7 @@ std::vector<Test> tests {
         OldDballeTestFixture oldf;
 
         // Insert a data record
-        wruntest(oldf.dataset0.insert, db);
+        db.insert_data(oldf.data["synop"], true, true);
 
         core::Record qc;
         qc.set("B01007",  1);
@@ -603,7 +506,7 @@ std::vector<Test> tests {
         OldDballeTestFixture oldf;
 
         // Insert a data record
-        wruntest(oldf.dataset0.insert, db);
+        db.insert_data(oldf.data["synop"], true, true);
 
         unique_ptr<db::Cursor> cur = db.query_data(*query_from_string("latmin=10.0, latmax=15.0, lonmin=70.0, lonmax=-160.0"));
         ensure_equals(cur->remaining(), 2);
@@ -725,19 +628,18 @@ std::vector<Test> tests {
     }),
     Test("fd_leaks", [](Fixture& f) {
         // Test connect leaks
-        core::Record insert;
+        StationValues vals;
         // Set station data
-        insert.set("lat", 12.34560);
-        insert.set("lon", 76.54320);
-        insert.set("mobile", 0);
-        insert.set("rep_memo", "synop");
-        insert.set("B07030", 42.0); // Height
+        vals.info.coords = Coords(12.34560, 76.54320);
+        vals.info.report = "synop";
+        vals.values.set("B07030", 42.0); // Height
 
         // Assume a max open file limit of 1100
         for (unsigned i = 0; i < 1100; ++i)
         {
             std::unique_ptr<DB> db = f.create_db();
-            wrunchecked(db->insert(insert, true, true));
+            vals.clear_ids();
+            wrunchecked(db->insert_station_data(vals, true, true));
         }
     }),
     Test("update", [](Fixture& f) {
@@ -745,10 +647,11 @@ std::vector<Test> tests {
         // Test value update
         OldDballeTestFixture oldf;
 
-        dballe::tests::TestRecord dataset = oldf.dataset0;
-        core::Record& attrs = dataset.attrs[WR_VAR(0, 1, 12)];
+        DataValues dataset = oldf.data["synop"];
+        db.insert_data(dataset, true, true);
+        Values attrs;
         attrs.set("B33007", 50);
-        wruntest(dataset.insert, db);
+        db.attr_insert(dataset.values["B01012"].data_id, WR_VAR(0, 1, 12), attrs);
 
         core::Query q;
         q.latrange.set(12.34560, 12.34560);
@@ -761,11 +664,11 @@ std::vector<Test> tests {
 
         // Query the initial value
         unique_ptr<db::Cursor> cur = db.query_data(q);
-        ensure_equals(cur->remaining(), 1);
+        wassert(actual(cur->remaining()) == 1);
         cur->next();
         int ana_id = cur->get_station_id();
         wreport::Var var = cur->get_var();
-        ensure_equals(var.enqi(), 300);
+        wassert(actual(var.enqi()) == 300);
 
         // Query the attributes and check that they are there
         core::Record qattrs;
@@ -773,23 +676,21 @@ std::vector<Test> tests {
         wassert(actual(qattrs.enq("B33007", MISSING_INT)) == 50);
 
         // Update it
-        core::Record update;
-        update.set("ana_id", ana_id);
-        update.set("rep_memo", "synop");
-        int dt[6];
-        update.set(q.datetime.min);
-        update.set(q.level);
-        update.set(q.trange);
-        var.seti(200);
-        update.set(var);
-        db.insert(update, true, false);
+        DataValues update;
+        update.info.ana_id = ana_id;
+        update.info.report = "synop";
+        update.info.datetime = q.datetime.min;
+        update.info.level = q.level;
+        update.info.trange = q.trange;
+        update.values.set(var.code(), 200);
+        db.insert_data(update, true, false);
 
         // Query again
         cur = db.query_data(q);
-        ensure_equals(cur->remaining(), 1);
+        wassert(actual(cur->remaining()) == 1);
         cur->next();
         var = cur->get_var();
-        ensure_equals(var.enqi(), 200);
+        wassert(actual(var.enqi()) == 200);
 
         qattrs.clear();
         wassert(actual(run_query_attrs(*cur, qattrs)) == 1);
@@ -803,20 +704,20 @@ std::vector<Test> tests {
 
         // Make the query
         unique_ptr<db::Cursor> cur = db.query_data(*query_from_string("latmin=10.0"));
-        ensure_equals(cur->remaining(), 4);
+        wassert(actual(cur->remaining()) == 4);
 
-        ensure(cur->next());
+        wassert(actual(cur->next()).istrue());
         // remaining() should decrement
-        ensure_equals(cur->remaining(), 3);
+        wassert(actual(cur->remaining()) == 3);
         // results should match what was inserted
-        wassert(actual(cur).data_matches(oldf.dataset0));
+        wassert(actual(cur).data_matches(oldf.data["synop"]));
         // just call to_record now, to check if in the next call old variables are removed
         core::Record result;
         cur->to_record(result);
 
         ensure(cur->next());
-        ensure_equals(cur->remaining(), 2);
-        wassert(actual(cur).data_matches(oldf.dataset0));
+        wassert(actual(cur->remaining()) == 2);
+        wassert(actual(cur).data_matches(oldf.data["synop"]));
 
         // Variables from the previous to_record should be removed
         cur->to_record(result);
@@ -824,15 +725,15 @@ std::vector<Test> tests {
 
 
         ensure(cur->next());
-        ensure_equals(cur->remaining(), 1);
-        wassert(actual(cur).data_matches(oldf.dataset1));
+        wassert(actual(cur->remaining()) == 1);
+        wassert(actual(cur).data_matches(oldf.data["metar"]));
 
         ensure(cur->next());
-        ensure_equals(cur->remaining(), 0);
-        wassert(actual(cur).data_matches(oldf.dataset1));
+        wassert(actual(cur->remaining()) == 0);
+        wassert(actual(cur).data_matches(oldf.data["metar"]));
 
         // Now there should not be anything anymore
-        ensure_equals(cur->remaining(), 0);
+        wassert(actual(cur->remaining()) == 0);
         ensure(!cur->next());
     }),
     Test("insert_stationinfo_twice", [](Fixture& f) {
@@ -840,8 +741,8 @@ std::vector<Test> tests {
         auto& db = *f.db;
 
         //wassert(actual(f.db).empty());
-        wruntest(f.ds_st_navile.insert, db, true);
-        wruntest(f.ds_st_navile.insert, db, true);
+        db.insert_station_data(f.ds_st_navile, true, true);
+        db.insert_station_data(f.ds_st_navile, true, true);
 
         // Query station data and ensure there is only one info (height)
         core::Query query;
@@ -853,11 +754,10 @@ std::vector<Test> tests {
     Test("insert_stationinfo_twice1", [](Fixture& f) {
         // Test double insert of station info
         auto& db = *f.db;
-        dballe::tests::TestStation ds_st_navile_metar(f.ds_st_navile);
-        ds_st_navile_metar.info["metar"] = ds_st_navile_metar.info["synop"];
-        ds_st_navile_metar.info.erase("synop");
-        wruntest(f.ds_st_navile.insert, db, true);
-        wruntest(ds_st_navile_metar.insert, db, true);
+        StationValues ds_st_navile_metar(f.ds_st_navile);
+        ds_st_navile_metar.info.report = "metar";
+        db.insert_station_data(f.ds_st_navile, true, true);
+        db.insert_station_data(ds_st_navile_metar, true, true);
 
         // Query station data and ensure there is only one info (height)
         core::Query query;
@@ -880,12 +780,12 @@ std::vector<Test> tests {
         OldDballeTestFixture oldf;
 
         // Insert with undef leveltype2 and l2
-        dballe::tests::TestRecord dataset = oldf.dataset0;
-        dataset.data.unset("B01011");
-        dataset.data.set(Level(44, 55));
-        dataset.data.unset("p1");
-        dataset.data.unset("p2");
-        wruntest(dataset.insert, db, true);
+        DataValues dataset;
+        dataset.info = oldf.data["synop"].info;
+        dataset.info.level = Level(44, 55);
+        dataset.info.trange = Trange(20);
+        dataset.values.set("B01012", 300);
+        db.insert_data(dataset, true, true);
 
         // Query it back
         unique_ptr<db::Cursor> cur = db.query_data(*query_from_string("leveltype1=44, l1=55"));
@@ -927,12 +827,11 @@ std::vector<Test> tests {
         auto& db = *f.db;
 
         // Prepare the common parts of some data
-        core::Record insert;
-        insert.set("lat", 1.0);
-        insert.set("lon", 1.0);
-        insert.set(Level(1, 0));
-        insert.set(Trange(254, 0, 0));
-        insert.set(Datetime(2009, 11, 11, 0, 0, 0));
+        DataValues insert;
+        insert.info.coords = Coords(1.0, 1.0);
+        insert.info.level = Level(1, 0);
+        insert.info.trange = Trange(254, 0, 0);
+        insert.info.datetime = Datetime(2009, 11, 11, 0, 0, 0);
 
         //  1,synop,synop,101,oss,0
         //  2,metar,metar,81,oss,0
@@ -950,9 +849,10 @@ std::vector<Test> tests {
         static const char* rep_memos[] = { "synop", "metar", "temp", "pilot", "buoy", "ship", "tempship", "airep", "amdar", "acars", "pollution", "satellite", "generic", NULL };
         for (const char** i = rep_memos; *i; ++i)
         {
-            insert.set("rep_memo", *i);
-            insert.set("B12101", (int)(i - rep_memos));
-            db.insert(insert, false, true);
+            insert.clear_ids();
+            insert.info.report = *i;
+            insert.values.set("B12101", (int)(i - rep_memos));
+            db.insert_data(insert, false, true);
         }
 
         // Query with querybest only

@@ -39,41 +39,37 @@ static inline core::Query query_minmax(const Datetime& min, const Datetime& max)
 
 struct DateHourFixture : public TestFixture
 {
-    DateHourFixture() : TestFixture(2)
+    DateHourFixture()
     {
-        TestStation st;
-        st.lat = 12.34560;
-        st.lon = 76.54320;
-
-        for (unsigned i = 0; i < 2; ++i)
-        {
-            records[i].station = st;
-            records[i].data.set("rep_memo", "synop");
-            records[i].data.set(Level(10, 11, 15, 22));
-            records[i].data.set(Trange(20, 111, 122));
-            records[i].data.set(Datetime(2013, 10, 30, 11 + i));
-            records[i].data.set("B12101", 11.5 + i);
-        }
+        DataValues d;
+        d.info.coords = Coords(12.34560, 76.54320);
+        d.info.report = "synop";
+        d.info.level = Level(10, 11, 15, 22);
+        d.info.trange = Trange(20, 111, 122);
+        data["1"] = d;
+        data["1"].info.datetime = Datetime(2013, 10, 30, 11);
+        data["1"].values.set("B12101", 11.5);
+        data["2"] = d;
+        data["2"].info.datetime = Datetime(2013, 10, 30, 12);
+        data["2"].values.set("B12101", 12.5);
     }
 };
 
 struct DateDayFixture : public TestFixture
 {
-    DateDayFixture() : TestFixture(2)
+    DateDayFixture()
     {
-        TestStation st;
-        st.lat = 12.34560;
-        st.lon = 76.54320;
-
-        for (unsigned i = 0; i < 2; ++i)
-        {
-            records[i].station = st;
-            records[i].data.set("rep_memo", "synop");
-            records[i].data.set(Level(10, 11, 15, 22));
-            records[i].data.set(Trange(20, 111, 122));
-            records[i].data.set(Datetime(2013, 10, 23 + i));
-            records[i].data.set("B12101", 23.5 + i);
-        }
+        DataValues d;
+        d.info.coords = Coords(12.34560, 76.54320);
+        d.info.report = "synop";
+        d.info.level = Level(10, 11, 15, 22);
+        d.info.trange = Trange(20, 111, 122);
+        data["1"] = d;
+        data["1"].info.datetime = Datetime(2013, 10, 23);
+        data["1"].values.set("B12101", 23.5);
+        data["2"] = d;
+        data["2"].info.datetime = Datetime(2013, 10, 24);
+        data["2"].values.set("B12101", 24.5);
     }
 };
 
@@ -89,9 +85,9 @@ std::vector<Test> tests {
         wruntest(f.populate_database, oldf);
 #warning FIXME: change after testing if we can move to report-in-station behaviour or not
         if (f.db->format() == MEM)
-            TRY_QUERY(str::fmtf("ana_id=%d", oldf.dataset0.ana_id), 2);
+            TRY_QUERY(str::fmtf("ana_id=%d", oldf.data["synop"].info.ana_id), 2);
         else
-            TRY_QUERY(str::fmtf("ana_id=%d", oldf.dataset0.ana_id), 4);
+            TRY_QUERY(str::fmtf("ana_id=%d", oldf.data["synop"].info.ana_id), 4);
         TRY_QUERY("ana_id=4242", 0);
     }),
     Test("ana_context", [](Fixture& f) {
@@ -99,7 +95,7 @@ std::vector<Test> tests {
         // Query data in station context
         core::Query query;
         unique_ptr<db::Cursor> cur = f.db->query_station_data(query);
-        ensure_equals(cur->remaining(), 5);
+        wassert(actual(cur->remaining()) == 10);
     }),
     Test("year", [](Fixture& f) {
         wruntest(f.populate<OldDballeTestFixture>);
@@ -142,7 +138,7 @@ std::vector<Test> tests {
     Test("block_station", [](Fixture& f) {
         wruntest(f.populate<OldDballeTestFixture>);
 #warning FIXME: change after testing if we can move to report-in-station behaviour or not
-        const int all = (f.db->format() == MEM ? 2 : 4);
+        const int all = (f.db->format() == MEM ? 4 : 4);
         // Block and station queries
         TRY_QUERY("B01001=1", all);
         TRY_QUERY("B01001=2", 0);
@@ -151,7 +147,7 @@ std::vector<Test> tests {
     }),
     Test("ana_filter", [](Fixture& f) {
 #warning FIXME: change after testing if we can move to report-in-station behaviour or not
-        const int all = (f.db->format() == MEM ? 2 : 4);
+        const int all = (f.db->format() == MEM ? 4 : 4);
         wruntest(f.populate<OldDballeTestFixture>);
         // ana_filter queries
         TRY_QUERY("ana_filter=block=1", all);

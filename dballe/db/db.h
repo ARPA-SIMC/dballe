@@ -19,6 +19,7 @@
 namespace dballe {
 struct Record;
 struct Query;
+struct Values;
 struct StationValues;
 struct DataValues;
 struct Msg;
@@ -110,7 +111,7 @@ public:
     /**
      * Query attributes for the current variable
      */
-    virtual void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
+    virtual void query_attrs(std::function<void(std::unique_ptr<wreport::Var>&&)> dest) = 0;
 
     /**
      * Insert/overwrite new attributes for the current variable
@@ -258,30 +259,12 @@ public:
      */
     virtual std::map<std::string, int> get_repinfo_priorities() = 0;
 
-    /**
-     * Insert a record into the database
-     *
-     * The reference IDs of all variables that were inserted will be stored in
-     * memory until the next insert operation. To insert attributes related to
-     * one of the variables just inserted, just call attr_insert() without the
-     * reference_id parameter.
-     *
-     * @param rec
-     *   The record to insert.
-     * @param can_replace
-     *   If true, then existing data can be rewritten, else data can only be added.
-     * @param station_can_add
-     *   If false, it will not create a missing station record, and only data
-     *   for existing stations can be added. If true, then if we are inserting
-     *   data for a station that does not yet exists in the database, it will
-     *   be created.
-     */
-    virtual void insert(const Record& rec, bool can_replace, bool station_can_add);
-
+public:
     /**
      * Insert station values into the database
      *
-     * The IDs of all variables that were inserted will be stored in vals.
+     * The IDs of the station andl all variables that were inserted will be
+     * stored in vals.
      *
      * @param vals
      *   The values to insert.
@@ -298,7 +281,8 @@ public:
     /**
      * Insert data values into the database
      *
-     * The IDs of all variables that were inserted will be stored in vals.
+     * The IDs of the station andl all variables that were inserted will be
+     * stored in vals.
      *
      * @param vals
      *   The values to insert.
@@ -424,7 +408,7 @@ public:
      *   Number of attributes returned in attrs
      */
     virtual void query_attrs(int reference_id, wreport::Varcode id_var,
-            std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
+            std::function<void(std::unique_ptr<wreport::Var>)>&& dest) = 0;
 
     /**
      * Insert new attributes into the database, reusing the reference IDs stored by the last insert.
@@ -451,6 +435,7 @@ public:
      *   If true, then existing data can be rewritten, else data can only be added.
      */
     virtual void attr_insert(int reference_id, wreport::Varcode id_var, const Record& attrs) = 0;
+    virtual void attr_insert(int reference_id, wreport::Varcode id_var, const Values& attrs) = 0;
 
     /**
      * Delete QC data for the variable `var' in record `rec' (coming from a previous

@@ -217,7 +217,7 @@ void DB::insert_station_data(StationValues& vals, bool can_replace, bool station
 
     sql::bulk::InsertV6 vars;
     // Insert the station data, and get the ID
-    vars.id_station = obtain_station(vals.info, station_can_add);
+    vars.id_station = vals.info.ana_id = obtain_station(vals.info, station_can_add);
     // Get the ID of the report
     vars.id_report = ri.obtain_id(vals.info.report.c_str());
 
@@ -259,7 +259,7 @@ void DB::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
 
     sql::bulk::InsertV6 vars;
     // Insert the station data, and get the ID
-    vars.id_station = obtain_station(vals.info, station_can_add);
+    vars.id_station = vals.info.ana_id = obtain_station(vals.info, station_can_add);
     // Get the ID of the report
     vars.id_report = ri.obtain_id(vals.info.report.c_str());
     // Set the date from the record contents
@@ -366,7 +366,7 @@ std::unique_ptr<db::Cursor> DB::query_summary(const Query& query)
 }
 
 void DB::query_attrs(int id_data, wreport::Varcode id_var,
-        std::function<void(std::unique_ptr<wreport::Var>)> dest)
+        std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
 {
     // Create the query
     sql::AttrV6& a = attr();
@@ -394,6 +394,23 @@ void DB::attr_insert(int id_data, wreport::Varcode id_var, const Record& attrs)
     for (const auto& i : vars)
         if (i->value() != NULL)
             iattrs.add(i, id_data);
+    if (iattrs.empty()) return;
+
+    // Begin the transaction
+    auto t = conn->transaction();
+
+    // Insert all the attributes we found
+    a.insert(*t, iattrs, sql::AttrV6::UPDATE);
+
+    t->commit();
+}
+
+void DB::attr_insert(int id_data, wreport::Varcode, const Values& attrs)
+{
+    sql::AttrV6& a = attr();
+    sql::bulk::InsertAttrsV6 iattrs;
+    for (const auto& i : attrs)
+        iattrs.add(i.second.var, id_data);
     if (iattrs.empty()) return;
 
     // Begin the transaction

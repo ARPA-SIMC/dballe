@@ -88,7 +88,7 @@ public:
     /**
      * Query attributes for the current variable
      */
-    void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
+    void query_attrs(std::function<void(std::unique_ptr<wreport::Var>&&)> dest) override;
 
     int get_station_id() const override;
     double get_lat() const override;

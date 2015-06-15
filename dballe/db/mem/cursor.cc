@@ -164,7 +164,7 @@ void Cursor::to_record_value(Record& rec)
     rec.set(*cur_var);
 }
 
-void Cursor::query_attrs(function<void(unique_ptr<Var>)> dest)
+void Cursor::query_attrs(function<void(unique_ptr<Var>&&)> dest)
 {
     // Default implementation for cursors for which this does not make any sense
 }
@@ -404,7 +404,7 @@ struct CursorStationData : public CursorSorted<StationValueResultQueue>
     {
     }
 
-    void query_attrs(function<void(unique_ptr<Var>)> dest) override
+    void query_attrs(function<void(unique_ptr<Var>&&)> dest) override
     {
         queue.top()->query_attrs(dest);
     }
@@ -487,7 +487,7 @@ struct CursorDataBase : public CursorSorted<QUEUE>
             this->add_station_info(rec);
     }
 
-    void query_attrs(function<void(unique_ptr<Var>)> dest) override
+    void query_attrs(function<void(unique_ptr<Var>&&)> dest) override
     {
         this->cur_value->query_attrs(dest);
     }

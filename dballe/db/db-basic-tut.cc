@@ -75,32 +75,31 @@ std::vector<Test> tests {
         auto& db = *f.db;
         db.reset();
 
-        core::Record rec;
-
-        rec.set("lat", 12.077);
-        rec.set("lon", 44.600);
-
         // Insert two values in two networks
-        rec.set(Level(103, 2000));
-        rec.set(Trange::instant());
-        rec.set(Datetime(2014, 1, 1, 0, 0, 0));
-        rec.set("rep_memo", "synop");
-        rec.set("B12101", 273.15);
-        db.insert(rec, true, true);
-        rec.set("rep_memo", "temp");
-        rec.set("B12101", 274.15);
-        db.insert(rec, true, true);
+        DataValues vals;
+        vals.info.coords = Coords(12.077, 44.600);
+        vals.info.report = "synop";
+        vals.info.level = Level(103, 2000);
+        vals.info.trange = Trange::instant();
+        vals.info.datetime = Datetime(2014, 1, 1, 0, 0, 0);
+        vals.values.set("B12101", 273.15);
+        db.insert_data(vals, true, true);
+        vals.clear_ids();
+        vals.info.report = "temp";
+        vals.values.set("B12101", 274.15);
+        db.insert_data(vals, true, true);
 
         // Insert station names in both networks
-        rec.set_datetime(Datetime());
-        rec.set_level(Level());
-        rec.set_trange(Trange());
-        rec.set("rep_memo", "synop");
-        rec.set("B01019", "Camse");
-        db.insert(rec, true, true);
-        rec.set("rep_memo", "temp");
-        rec.set("B01019", "Esmac");
-        db.insert(rec, true, true);
+        StationValues svals_camse;
+        svals_camse.info.coords = vals.info.coords;
+        svals_camse.info.report = "synop";
+        svals_camse.values.set("B01019", "Camse");
+        db.insert_station_data(svals_camse, true, true);
+        StationValues svals_esmac;
+        svals_esmac.info.coords = vals.info.coords;
+        svals_esmac.info.report = "temp";
+        svals_esmac.values.set("B01019", "Esmac");
+        db.insert_station_data(svals_esmac, true, true);
 
         // Query back all the data
         auto cur = db.query_stations(core::Query());
@@ -112,13 +111,13 @@ std::vector<Test> tests {
             // For mem databases, we get one record per (station, network)
             // combination
             wassert(actual(cur->next()).istrue());
-            wassert(actual(cur->get_station_id()) == 1);
+            wassert(actual(cur->get_station_id()) == svals_esmac.info.ana_id);
             wassert(actual(cur->get_rep_memo()) == "temp");
             cur->to_record(result);
             wassert(actual(result["B01019"].value()) == "Esmac");
 
             wassert(actual(cur->next()).istrue());
-            wassert(actual(cur->get_station_id()) == 0);
+            wassert(actual(cur->get_station_id()) == svals_camse.info.ana_id);
             wassert(actual(cur->get_rep_memo()) == "synop");
             cur->to_record(result);
             wassert(actual(result["B01019"].value()) == "Camse");
@@ -152,16 +151,15 @@ std::vector<Test> tests {
         auto& db = *f.db;
 
         // Insert a mobile station
-        core::Record rec;
-        rec.set_from_string("rep_memo=synop");
-        rec.set_from_string("lat=44.10");
-        rec.set_from_string("lon=11.50");
-        rec.set_from_string("ident=foo");
-        rec.set(Level(1));
-        rec.set(Trange::instant());
-        rec.set(Datetime(2015, 4, 25, 12, 30, 45));
-        rec.set("B12101", 295.1);
-        db.insert(rec, true, true);
+        DataValues vals;
+        vals.info.report = "synop";
+        vals.info.coords = Coords(44.10, 11.50);
+        vals.info.ident = "foo";
+        vals.info.level = Level(1);
+        vals.info.trange = Trange::instant();
+        vals.info.datetime = Datetime(2015, 4, 25, 12, 30, 45);
+        vals.values.set("B12101", 295.1);
+        db.insert_data(vals, true, true);
 
         wassert(actual(db).try_station_query("ident=foo", 1));
         wassert(actual(db).try_station_query("ident=bar", 0));
