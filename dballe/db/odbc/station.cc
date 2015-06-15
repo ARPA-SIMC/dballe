@@ -1,7 +1,7 @@
 #include "station.h"
 #include "dballe/db/odbc/internals.h"
 #include "dballe/core/var.h"
-#include "dballe/core/record.h"
+#include "dballe/record.h"
 #include <wreport/var.h>
 #include <sqltypes.h>
 #include <cstring>

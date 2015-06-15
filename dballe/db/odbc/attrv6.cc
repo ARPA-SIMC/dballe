@@ -20,7 +20,7 @@
  */
 #include "attrv6.h"
 #include "dballe/db/sql/internals.h"
-#include "dballe/core/var.h"
+#include "dballe/var.h"
 #include <memory>
 #include <sqltypes.h>
 #include <sql.h>

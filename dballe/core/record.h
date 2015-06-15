@@ -8,7 +8,7 @@
 
 #include <dballe/record.h>
 #include <dballe/core/defs.h>
-#include <dballe/core/var.h>
+#include <dballe/var.h>
 #include <dballe/core/matcher.h>
 #include <vector>
 

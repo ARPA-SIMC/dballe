@@ -48,7 +48,7 @@ std::ostream& operator<<(std::ostream& out, const DataBestKey& k)
         << ":" << v.levtr.level
         << ":" << v.levtr.trange
         << ":" << v.datetime
-        << ":" << format_code(v.var->code());
+        << ":" << varcode_format(v.var->code());
     return out;
 }
 

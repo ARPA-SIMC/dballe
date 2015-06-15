@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 #include "varmatch.h"
-#include "dballe/core/var.h"
+#include "dballe/var.h"
 #include <functional>
 #include <cstdlib>
 #include <iostream>
@@ -132,7 +132,7 @@ std::unique_ptr<Varmatch> Varmatch::parse(const std::string& filter)
         size_t sep2_end = filter.find_first_not_of("<=>", sep2_begin);
         if (sep2_end == string::npos)
             error_consistency::throwf("cannot find end of second operator in filter '%s'", filter.c_str());
-        Varcode code = resolve_varcode_safe(filter.substr(sep1_end, sep2_begin - sep1_end).c_str());
+        Varcode code = resolve_varcode(filter.substr(sep1_end, sep2_begin - sep1_end).c_str());
         Varinfo info = varinfo(code);
         string min = filter.substr(0, sep1_begin);
         string max = filter.substr(sep2_end);
@@ -147,7 +147,7 @@ std::unique_ptr<Varmatch> Varmatch::parse(const std::string& filter)
         }
     } else {
         // B12345<=>val
-        Varcode code = resolve_varcode_safe(filter.substr(0, sep1_begin).c_str());
+        Varcode code = resolve_varcode(filter.substr(0, sep1_begin).c_str());
         Varinfo info = varinfo(code);
         string op = filter.substr(sep1_begin, sep1_end - sep1_begin);
 

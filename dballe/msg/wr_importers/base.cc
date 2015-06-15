@@ -21,6 +21,7 @@
 
 #include "base.h"
 #include "msg/msgs.h"
+#include "core/var.h"
 #include <wreport/bulletin.h>
 #include <cstdlib>
 #include <iostream>

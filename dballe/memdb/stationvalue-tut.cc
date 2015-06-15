@@ -1,4 +1,4 @@
-#include <dballe/core/var.h>
+#include "dballe/var.h"
 #include "memdb/tests.h"
 #include "stationvalue.h"
 #include "station.h"

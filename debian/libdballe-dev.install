@@ -1,6 +1,7 @@
-usr/include/dballe/record.h
 usr/include/dballe/query.h
+usr/include/dballe/record.h
 usr/include/dballe/types.h
+usr/include/dballe/var.h
 usr/include/dballe/core
 usr/include/dballe/msg
 usr/include/dballe/db

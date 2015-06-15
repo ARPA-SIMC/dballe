@@ -21,7 +21,7 @@
 #include "memdb.h"
 #include "serializer.h"
 #include "core/defs.h"
-#include "core/var.h"
+#include "dballe/var.h"
 #include <wibble/sys/fs.h>
 
 using namespace dballe;

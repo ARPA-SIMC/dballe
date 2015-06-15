@@ -755,7 +755,7 @@ void Record::foreach_key_ref(std::function<void(const char*, const wreport::Var&
     string varcode;
     for (const auto& i: m_vars)
     {
-        varcode = format_code(i->code());
+        varcode = varcode_format(i->code());
         dest(varcode.c_str(), *i);
     }
 }
@@ -773,7 +773,7 @@ void Record::foreach_key_copy(std::function<void(const char*, std::unique_ptr<wr
     string varcode;
     for (const auto& i: m_vars)
     {
-        varcode = format_code(i->code());
+        varcode = varcode_format(i->code());
         dest(varcode.c_str(), move(newvar(*i)));
     }
 }

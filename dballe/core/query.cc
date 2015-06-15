@@ -140,9 +140,9 @@ void Query::set_from_record(const dballe::Record& rec)
     // Varcodes
     varcodes.clear();
     if (const Var* var = rec.get("var"))
-        varcodes.insert(resolve_varcode_safe(var->enq("")));
+        varcodes.insert(resolve_varcode(var->enq("")));
     else if (const Var* var = rec.get("varlist"))
-        resolve_varlist_safe(var->enq(""), varcodes);
+        resolve_varlist(var->enq(""), varcodes);
     // Query
     query = rec.enq("query", "");
     // Filters
@@ -398,18 +398,18 @@ void Query::foreach_key(std::function<void(const char*, unique_ptr<Var>&&)> dest
          case 0:
              break;
          case 1:
-             vargen.gen(DBA_KEY_VAR, format_code(*varcodes.begin()));
+             vargen.gen(DBA_KEY_VAR, varcode_format(*varcodes.begin()));
              break;
          default: {
              string codes;
              for (const auto& code: varcodes)
              {
                  if (codes.empty())
-                     codes = format_code(code);
+                     codes = varcode_format(code);
                  else
                  {
                      codes += ",";
-                     codes += format_code(code);
+                     codes += varcode_format(code);
                  }
              }
              vargen.gen(DBA_KEY_VARLIST, codes);

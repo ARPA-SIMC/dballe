@@ -17,7 +17,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/core/var.h>
+#include "dballe/var.h"
 #include "memdb/tests.h"
 #include "valuebase.h"
 

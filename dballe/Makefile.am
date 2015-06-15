@@ -47,6 +47,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	types.h \
 	record.h \
 	query.h \
+	var.h \
 	core/aliases.h \
 	core/verbose.h \
 	core/stlutils.h \
@@ -162,6 +163,7 @@ libdballe_la_SOURCES = \
 	types.cc \
 	record.cc \
 	query.cc \
+	var.cc \
 	core/verbose.cc \
 	core/aliases.cc \
 	core/aliases-reverse.cc \
@@ -327,6 +329,7 @@ tut_test_SOURCES = \
 	types-tut.cc \
 	record-tut.cc \
 	query-tut.cc \
+	var-tut.cc \
 	core/aliases-tut.cc \
 	core/stlutils-tut.cc \
 	core/defs-tut.cc \

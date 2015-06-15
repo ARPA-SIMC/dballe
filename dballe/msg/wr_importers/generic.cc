@@ -18,7 +18,7 @@
  */
 
 #include "base.h"
-#include <dballe/core/var.h>
+#include "dballe/core/var.h"
 #include <wreport/bulletin.h>
 #include <wreport/subset.h>
 #include <wreport/conv.h>

@@ -26,7 +26,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include "dballe/core/vasprintf.h"
-#include "dballe/core/var.h"
+#include "dballe/var.h"
 
 using namespace std;
 using namespace wreport;
@@ -101,9 +101,9 @@ void Querybuf::append_varlist(const std::string& varlist)
         size_t end = varlist.find(',', pos);
         Varcode code;
         if (end == string::npos)
-            code = resolve_varcode_safe(varlist.substr(pos));
+            code = resolve_varcode(varlist.substr(pos));
         else
-            code = resolve_varcode_safe(varlist.substr(pos, end - pos));
+            code = resolve_varcode(varlist.substr(pos, end - pos));
         if (pos == 0)
             appendf("%d", code);
         else

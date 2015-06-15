@@ -1,7 +1,7 @@
 #include "station.h"
 #include "dballe/db/postgresql/internals.h"
 #include "dballe/core/var.h"
-#include "dballe/core/record.h"
+#include "dballe/record.h"
 #include <wreport/var.h>
 
 using namespace wreport;

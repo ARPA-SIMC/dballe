@@ -28,7 +28,7 @@
  * Sorted storage for all the dba_msg_datum present on one level.
  */
 
-#include <dballe/core/var.h>
+#include <dballe/var.h>
 #include <dballe/core/defs.h>
 #include <vector>
 #include <memory>

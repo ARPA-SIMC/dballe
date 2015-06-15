@@ -20,29 +20,12 @@
  */
 
 #include "var.h"
-#include "aliases.h"
 #include <wreport/vartable.h>
 
 using namespace wreport;
 using namespace std;
 
 namespace dballe {
-
-const Vartable* local = NULL;
-
-wreport::Varinfo varinfo(wreport::Varcode code)
-{
-	if (local == NULL)
-		local = Vartable::get("dballe");
-	return local->query(code);
-}
-
-wreport::Varinfo varinfo(const char* code)
-{
-    if (local == NULL)
-        local = Vartable::get("dballe");
-    return local->query(resolve_varcode_safe(code));
-}
 
 void format_code(wreport::Varcode code, char* buf)
 {
@@ -59,64 +42,7 @@ void format_code(wreport::Varcode code, char* buf)
     snprintf(buf, 7, "%c%02d%03d", type, WR_VAR_X(code), WR_VAR_Y(code));
 }
 
-std::string format_code(wreport::Varcode code)
-{
-    char buf[8];
-    format_code(code, buf);
-    return buf;
-}
-
-wreport::Varcode resolve_varcode(const char* name)
-{
-    wreport::Varcode res = 0;
-    if ((res = varcode_alias_resolve(name)) == 0)
-        res = descriptor_code(name);
-    return res;
-}
-
-wreport::Varcode resolve_varcode_safe(const char* name)
-{
-    if (!name)
-        throw error_consistency("cannot parse a Varcode out of a NULL");
-    if (!name[0])
-        throw error_consistency("cannot parse a Varcode out of an empty string");
-
-    // Try looking up among aliases
-    Varcode res = varcode_alias_resolve(name);
-    if (res) return res;
-
-    if (name[0] != 'B')
-        error_consistency::throwf("cannot parse a Varcode out of '%s'", name);
-
-    // Ensure that B is followed by 5 integers
-    for (unsigned i = 1; i < 6; ++i)
-        if (name[i] and !isdigit(name[i]))
-            error_consistency::throwf("cannot parse a Varcode out of '%s'", name);
-
-    return WR_STRING_TO_VAR(name + 1);
-}
-
-wreport::Varcode resolve_varcode_safe(const std::string& name)
-{
-    if (name.empty())
-        throw error_consistency("cannot parse a Varcode out of an empty string");
-
-    // Try looking up among aliases
-    Varcode res = varcode_alias_resolve(name);
-    if (res) return res;
-
-    if (name[0] != 'B')
-        error_consistency::throwf("cannot parse a Varcode out of '%s'", name.c_str());
-
-    // Ensure that B is followed by 5 integers
-    for (unsigned i = 1; i < 6; ++i)
-        if (name[i] and !isdigit(name[i]))
-            error_consistency::throwf("cannot parse a Varcode out of '%s'", name.c_str());
-
-    return WR_STRING_TO_VAR(name.data() + 1);
-}
-
-void resolve_varlist_safe(const std::string& varlist, std::function<void(wreport::Varcode)> dest)
+void resolve_varlist(const std::string& varlist, std::function<void(wreport::Varcode)> dest)
 {
     if (varlist.empty())
         throw error_consistency("cannot parse a Varcode list out of an empty string");
@@ -127,18 +53,18 @@ void resolve_varlist_safe(const std::string& varlist, std::function<void(wreport
         size_t end = varlist.find(',', beg);
         if (end == string::npos)
         {
-            dest(resolve_varcode_safe(varlist.substr(beg)));
+            dest(resolve_varcode(varlist.substr(beg)));
             break;
         } else {
-            dest(resolve_varcode_safe(varlist.substr(beg, end-beg)));
+            dest(resolve_varcode(varlist.substr(beg, end-beg)));
         }
         beg = end + 1;
     }
 }
 
-void resolve_varlist_safe(const std::string& varlist, std::set<wreport::Varcode>& out)
+void resolve_varlist(const std::string& varlist, std::set<wreport::Varcode>& out)
 {
-    resolve_varlist_safe(varlist, [&](wreport::Varcode code) { out.insert(code); });
+    resolve_varlist(varlist, [&](wreport::Varcode code) { out.insert(code); });
 }
 
 wreport::Varcode map_code_to_dballe(wreport::Varcode code)

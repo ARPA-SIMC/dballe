@@ -2,7 +2,7 @@
 #include "dballe/core/defs.h"
 #include "dballe/core/aliases.h"
 #include "dballe/core/query.h"
-#include "dballe/core/var.h"
+#include "dballe/var.h"
 #include "dballe/db/sql/repinfo.h"
 #include <wreport/var.h>
 #include <regex.h>

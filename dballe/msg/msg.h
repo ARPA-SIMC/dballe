@@ -64,7 +64,7 @@
  * the values that are used more commonly.
  */
 
-#include <dballe/core/var.h>
+#include <dballe/var.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/matcher.h>
 #include <dballe/msg/vars.h>

@@ -21,7 +21,7 @@
 #include "vartable.h"
 #include "varinfo.h"
 #include "common.h"
-#include "dballe/core/var.h"
+#include "dballe/var.h"
 #include <wreport/vartable.h>
 
 using namespace dballe;

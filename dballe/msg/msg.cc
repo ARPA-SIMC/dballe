@@ -22,6 +22,7 @@
 #include "msg.h"
 #include "context.h"
 #include "dballe/msg/vars.h"
+#include "dballe/core/var.h"
 #include <dballe/core/csv.h>
 #include <wreport/codetables.h>
 #include <wreport/notes.h>
@@ -313,7 +314,7 @@ void Msg::to_csv(std::ostream& out) const
 
             vc.print(out, c);
 
-            out << format_code(v.code()) << ","; // B code
+            out << varcode_format(v.code()) << ","; // B code
             csv_output_quoted_string(out, v.format(""));
             out << endl;
 
@@ -321,7 +322,7 @@ void Msg::to_csv(std::ostream& out) const
             for (const Var* a = v.next_attr(); a != NULL; a = a->next_attr())
             {
                 vc.print(out, c);
-                out << format_code(v.code()) << "." << format_code(a->code()) << ","; // B code
+                out << varcode_format(v.code()) << "." << varcode_format(a->code()) << ","; // B code
                 csv_output_quoted_string(out, a->format(""));
                 out << endl;
             }

@@ -37,14 +37,14 @@ void to::test<1>()
 {
     {
         set<Varcode> codes;
-        resolve_varlist_safe("B12101", codes);
+        resolve_varlist("B12101", codes);
         wassert(actual(codes.size()) == 1);
         wassert(actual(*codes.begin()) == WR_VAR(0, 12, 101));
     }
 
     {
         set<Varcode> codes;
-        resolve_varlist_safe("B12101,B12103", codes);
+        resolve_varlist("B12101,B12103", codes);
         wassert(actual(codes.size()) == 2);
         set<Varcode>::const_iterator i = codes.begin();
         wassert(actual(*i) == WR_VAR(0, 12, 101));

@@ -115,11 +115,11 @@ struct Values : protected std::map<wreport::Varcode, values::Value>
     bool operator==(const Values& o) const;
 
     const values::Value& operator[](wreport::Varcode code) const;
-    const values::Value& operator[](const char* code) const { return operator[](resolve_varcode_safe(code)); }
-    const values::Value& operator[](const std::string& code) const { return operator[](resolve_varcode_safe(code)); }
+    const values::Value& operator[](const char* code) const { return operator[](resolve_varcode(code)); }
+    const values::Value& operator[](const std::string& code) const { return operator[](resolve_varcode(code)); }
     const values::Value* get(wreport::Varcode code) const;
-    const values::Value* get(const char* code) const { return get(resolve_varcode_safe(code)); }
-    const values::Value* get(const std::string& code) const { return get(resolve_varcode_safe(code)); }
+    const values::Value* get(const char* code) const { return get(resolve_varcode(code)); }
+    const values::Value* get(const std::string& code) const { return get(resolve_varcode(code)); }
     void set(const wreport::Var&);
     void set(std::unique_ptr<wreport::Var>&&);
     template<typename C, typename T> void set(C code, const T& val) { this->set(newvar(code, val)); }

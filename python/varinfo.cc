@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 #include "varinfo.h"
-#include "dballe/core/var.h"
+#include "dballe/var.h"
 #include "common.h"
 
 using namespace dballe;

@@ -1,6 +1,6 @@
 #include "record.h"
 #include "core/record.h"
-#include "core/var.h"
+#include "var.h"
 
 using namespace wreport;
 using namespace std;
@@ -39,7 +39,7 @@ wreport::Varinfo Record::key_info(const char* key)
     dba_keyword k = core::Record::keyword_byname(key);
     if (k != DBA_KEY_ERROR)
         return core::Record::keyword_info(k);
-    return varinfo(resolve_varcode_safe(key));
+    return varinfo(resolve_varcode(key));
 }
 
 wreport::Varinfo Record::key_info(const std::string& key)
@@ -48,7 +48,7 @@ wreport::Varinfo Record::key_info(const std::string& key)
     dba_keyword k = core::Record::keyword_byname_len(key.data(), key.size());
     if (k != DBA_KEY_ERROR)
         return core::Record::keyword_info(k);
-    return varinfo(resolve_varcode_safe(key));
+    return varinfo(resolve_varcode(key));
 }
 
 }

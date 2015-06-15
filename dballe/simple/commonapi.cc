@@ -1,7 +1,6 @@
 #include "commonapi.h"
-#include <dballe/core/aliases.h>
-#include <dballe/core/var.h>
-#include <dballe/core/defs.h>
+#include "dballe/var.h"
+#include "dballe/types.h"
 #include <stdio.h>	// snprintf
 #include <limits>
 #include <cstdlib>
@@ -344,7 +343,7 @@ void CommonAPIImplementation::read_qc_list(vector<Varcode>& res_arr) const
             if (*val != '*')
                 throw error_consistency("QC values must start with '*'");
 
-            res_arr.push_back(resolve_varcode_safe(val + 1));
+            res_arr.push_back(resolve_varcode(val + 1));
             return;
         }
 
@@ -359,7 +358,7 @@ void CommonAPIImplementation::read_qc_list(vector<Varcode>& res_arr) const
             {
                 if (*(val + pos) != '*')
                     throw error_consistency("QC value names must start with '*'");
-                res_arr.push_back(resolve_varcode_safe(val + pos + 1));
+                res_arr.push_back(resolve_varcode(val + pos + 1));
             }
         }
 }

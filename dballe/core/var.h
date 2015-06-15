@@ -27,10 +27,7 @@
  * Implement ::dba_var, an encapsulation of a measured variable.
  */
 
-
-#include <wreport/var.h>
-#include <memory>
-#include <string>
+#include <dballe/var.h>
 #include <set>
 
 namespace dballe {
@@ -39,56 +36,11 @@ namespace dballe {
  * Convenience functions to quickly create variables from the local B table
  */
 
-/// Return a Varinfo entry from the local B table
-wreport::Varinfo varinfo(wreport::Varcode code);
-
-/// Return a Varinfo entry from the local B table
-wreport::Varinfo varinfo(const char* code);
-
-/**
- * Resolve a varcode name to a varcode proper.
- */
-wreport::Varcode resolve_varcode(const char* name);
-
-/// Resolve a varcode name to a varcode proper, performing careful validation
-wreport::Varcode resolve_varcode_safe(const char* name);
-
-/// Resolve a varcode name to a varcode proper, performing careful validation
-wreport::Varcode resolve_varcode_safe(const std::string& name);
-
 /// Resolve a comma-separated varcode list performing careful validation, inserting results in \a out
-void resolve_varlist_safe(const std::string& varlist, std::set<wreport::Varcode>& out);
+void resolve_varlist(const std::string& varlist, std::set<wreport::Varcode>& out);
 
 /// Resolve a comma-separated varcode list performing careful validation, calling \a dest on each result
-void resolve_varlist_safe(const std::string& varlist, std::function<void(wreport::Varcode)> out);
-
-/// Create a new Var, from the local B table, with undefined value
-static inline wreport::Var var(wreport::Varcode code) { return wreport::Var(varinfo(code)); }
-
-/// Create a new Var, from the local B table, with value
-template<typename T>
-wreport::Var var(wreport::Varcode code, const T& val) { return wreport::Var(varinfo(code), val); }
-
-
-/// Create a new Var, as a copy of an existing variable
-static inline std::unique_ptr<wreport::Var> newvar(const wreport::Var& var)
-{
-    return std::unique_ptr<wreport::Var>(new wreport::Var(var));
-}
-
-/// Create a new Var, from the local B table, with undefined value
-template<typename C>
-static inline std::unique_ptr<wreport::Var> newvar(C code)
-{
-    return std::unique_ptr<wreport::Var>(new wreport::Var(varinfo(code)));
-}
-
-/// Create a new Var, from the local B table, with value
-template<typename C, typename T>
-std::unique_ptr<wreport::Var> newvar(C code, const T& val)
-{
-    return std::unique_ptr<wreport::Var>(new wreport::Var(varinfo(code), val));
-}
+void resolve_varlist(const std::string& varlist, std::function<void(wreport::Varcode)> out);
 
 /// Create a new Var, from the local B table, with undefined value
 static inline std::auto_ptr<wreport::Var> ap_newvar(wreport::Varcode code)
@@ -118,9 +70,6 @@ std::unique_ptr<wreport::Var> var_copy_without_unset_attrs(const wreport::Var& v
  * The string will be written to buf, which must be at least 7 bytes long
  */
 void format_code(wreport::Varcode code, char* buf);
-
-/// Format the code to its string representation
-std::string format_code(wreport::Varcode code);
 
 /// Return \a code, or its DB-All.e equivalent
 wreport::Varcode map_code_to_dballe(wreport::Varcode code);

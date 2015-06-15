@@ -21,7 +21,7 @@
 #include "attrv6.h"
 #include "dballe/db/sql/internals.h"
 #include "dballe/db/querybuf.h"
-#include "dballe/core/var.h"
+#include "dballe/var.h"
 #include <cstring>
 
 using namespace std;
