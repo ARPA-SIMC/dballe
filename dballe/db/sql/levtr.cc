@@ -13,13 +13,6 @@ namespace sql {
 
 LevTr::~LevTr() {}
 
-int LevTr::obtain_id(const Record& rec)
-{
-    const auto& r = core::Record::downcast(rec);
-    return obtain_id(r.get_level(), r.get_trange());
-}
-
-
 LevTrCache::~LevTrCache() {}
 
 struct MapLevTrCache : public LevTrCache

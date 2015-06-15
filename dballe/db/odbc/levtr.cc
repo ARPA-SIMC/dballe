@@ -117,44 +117,6 @@ int ODBCLevTrV6::obtain_id(const Level& lev, const Trange& tr)
     return insert();
 }
 
-int ODBCLevTrV6::obtain_id(const Record& rec)
-{
-    if (const Var* var = rec.get("leveltype1"))
-        working_row.ltype1 = var->enqi();
-    else
-        working_row.ltype1 = MISSING_INT;
-    if (const Var* var = rec.get("l1"))
-        working_row.l1 = var->enqi();
-    else
-        working_row.l1 = MISSING_INT;
-    if (const Var* var = rec.get("leveltype2"))
-        working_row.ltype2 = var->enqi();
-    else
-        working_row.ltype2 = MISSING_INT;
-    if (const Var* var = rec.get("l2"))
-        working_row.l2 = var->enqi();
-    else
-        working_row.l2 = MISSING_INT;
-    if (const Var* var = rec.get("pindicator"))
-        working_row.pind = var->enqi();
-    else
-        working_row.pind = MISSING_INT;
-    if (const Var* var = rec.get("p1"))
-        working_row.p1 = var->enqi();
-    else
-        working_row.p1 = MISSING_INT;
-    if (const Var* var = rec.get("p2"))
-        working_row.p2 = var->enqi();
-    else
-        working_row.p2 = MISSING_INT;
-
-    // Check for an existing lev_tr with these data
-    int id = get_id();
-    // If there is an existing record, use its ID and don't do an INSERT
-    if (id != -1) return id;
-    return insert();
-}
-
 int ODBCLevTrV6::insert()
 {
     istm->execute_and_close();
