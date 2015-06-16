@@ -18,7 +18,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "test-utils-lua.h"
+#include "tests-lua.h"
 #include <stdexcept>
 #include <ostream>
 

@@ -1,5 +1,5 @@
 #include "config.h"
-#include "db/test-utils-db.h"
+#include "db/tests.h"
 #include "msg/msgs.h"
 #include "msg/context.h"
 #include <wreport/notes.h>
@@ -72,8 +72,8 @@ std::vector<Test> tests {
         {
             if (blacklist.find(files[i]) != blacklist.end()) continue;
             try {
-                std::unique_ptr<Msgs> inmsgs = read_msgs(files[i], CREX);
-                Msg& msg = *(*inmsgs)[0];
+                Msgs inmsgs = read_msgs(files[i], File::CREX);
+                Msg& msg = *inmsgs[0];
                 normalise_datetime(msg);
 
                 db->remove_all();
@@ -104,8 +104,8 @@ std::vector<Test> tests {
         for (int i = 0; files[i] != NULL; i++)
         {
             try {
-                std::unique_ptr<Msgs> inmsgs = read_msgs(files[i], BUFR);
-                Msg& msg = *(*inmsgs)[0];
+                Msgs inmsgs = read_msgs(files[i], File::BUFR);
+                Msg& msg = *inmsgs[0];
                 normalise_datetime(msg);
 
                 db->remove_all();
@@ -136,8 +136,8 @@ std::vector<Test> tests {
         for (int i = 0; files[i] != NULL; i++)
         {
             try {
-                std::unique_ptr<Msgs> inmsgs = read_msgs(files[i], AOF);
-                Msg& msg = *(*inmsgs)[0];
+                Msgs inmsgs = read_msgs(files[i], File::AOF);
+                Msg& msg = *inmsgs[0];
                 normalise_datetime(msg);
 
                 db->remove_all();
@@ -169,10 +169,10 @@ std::vector<Test> tests {
 
         // msg1 has latitude 33.88
         // msg2 has latitude 46.22
-        std::unique_ptr<Msgs> msgs1 = read_msgs("bufr/obs0-1.22.bufr", BUFR);
-        std::unique_ptr<Msgs> msgs2 = read_msgs("bufr/obs0-3.504.bufr", BUFR);
-        Msg& msg1 = *(*msgs1)[0];
-        Msg& msg2 = *(*msgs2)[0];
+        Msgs msgs1 = read_msgs("bufr/obs0-1.22.bufr", File::BUFR);
+        Msgs msgs2 = read_msgs("bufr/obs0-3.504.bufr", File::BUFR);
+        Msg& msg1 = *msgs1[0];
+        Msg& msg2 = *msgs2[0];
 
         normalise_datetime(msg1);
         normalise_datetime(msg2);
@@ -204,8 +204,8 @@ std::vector<Test> tests {
         // Check automatic repinfo allocation
         auto& db = f.db;
         core::Query query;
-        std::unique_ptr<Msgs> msgs = read_msgs("bufr/generic-new-repmemo.bufr", BUFR);
-        Msg& msg = *(*msgs)[0];
+        Msgs msgs = read_msgs("bufr/generic-new-repmemo.bufr", File::BUFR);
+        Msg& msg = *msgs[0];
 
         db->remove_all();
         db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
@@ -224,8 +224,8 @@ std::vector<Test> tests {
     Test("station_only", [](Fixture& f) {
         // Check that a message that only contains station variables does get imported
         auto& db = f.db;
-        std::unique_ptr<Msgs> msgs = read_msgs("bufr/generic-onlystation.bufr", BUFR);
-        Msg& msg = *(*msgs)[0];
+        Msgs msgs = read_msgs("bufr/generic-onlystation.bufr", File::BUFR);
+        Msg& msg = *msgs[0];
 
         db->remove_all();
         db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
@@ -254,8 +254,8 @@ std::vector<Test> tests {
         // Check that a message that only contains station variables does get imported
         auto& db = f.db;
         core::Record query;
-        std::unique_ptr<Msgs> msgs = read_msgs("bufr/arpa-station.bufr", BUFR);
-        Msg& msg = *(*msgs)[0];
+        Msgs msgs = read_msgs("bufr/arpa-station.bufr", File::BUFR);
+        Msg& msg = *msgs[0];
 
         db->remove_all();
         try {

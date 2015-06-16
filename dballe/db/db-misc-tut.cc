@@ -1,5 +1,5 @@
 #include "config.h"
-#include "db/test-utils-db.h"
+#include "db/tests.h"
 #include "db/querybuf.h"
 #include "db/mem/db.h"
 #include <wibble/string.h>
@@ -590,8 +590,8 @@ std::vector<Test> tests {
         const char** files = dballe::tests::bufr_files;
         for (int i = 0; files[i] != NULL; i++)
         {
-            std::unique_ptr<Msgs> inmsgs = read_msgs(files[i], BUFR);
-            Msg& msg = *(*inmsgs)[0];
+            Msgs inmsgs = read_msgs(files[i], File::BUFR);
+            Msg& msg = *inmsgs[0];
             wrunchecked(db.import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE));
         }
 

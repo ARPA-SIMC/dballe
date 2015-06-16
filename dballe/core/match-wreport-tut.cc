@@ -1,4 +1,4 @@
-#include "test-utils-core.h"
+#include "tests.h"
 #include "match-wreport.h"
 #include "var.h"
 #include <wreport/subset.h>

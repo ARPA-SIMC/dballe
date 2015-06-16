@@ -17,7 +17,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "msg/test-utils-msg.h"
+#include "msg/tests.h"
 #include "msg/wr_codec.h"
 #include "msg/msgs.h"
 #include "msg/context.h"
@@ -74,14 +74,14 @@ void to::test<1>()
     for (int i = 0; files[i] != NULL; i++)
     {
         try {
-            unique_ptr<Msgs> msgs = read_msgs(files[i], BUFR);
-            ensure(msgs->size() > 0);
+            Msgs msgs = read_msgs(files[i], File::BUFR);
+            ensure(msgs.size() > 0);
         } catch (std::exception& e) {
             cerr << "Failing bulletin:";
             try {
-                std::unique_ptr<Rawmsg> raw = read_rawmsg(files[i], BUFR);
+                BinaryMessage raw = read_rawmsg(files[i], File::BUFR);
                 unique_ptr<Bulletin> bulletin(BufrBulletin::create());
-                bulletin->decode(*raw);
+                bulletin->decode(raw.data);
                 bulletin->print(stderr);
             } catch (std::exception& e1) {
                 cerr << "Cannot display failing bulletin: " << e1.what() << endl;
@@ -100,14 +100,14 @@ void to::test<2>()
     for (int i = 0; files[i] != NULL; i++)
     {
         try {
-            unique_ptr<Msgs> msgs = read_msgs(files[i], CREX);
-            ensure(msgs->size() > 0);
+            Msgs msgs = read_msgs(files[i], File::CREX);
+            ensure(msgs.size() > 0);
         } catch (std::exception& e) {
             cerr << "Failing bulletin:";
             try {
-                std::unique_ptr<Rawmsg> raw = read_rawmsg(files[i], CREX);
+                BinaryMessage raw = read_rawmsg(files[i], File::CREX);
                 unique_ptr<Bulletin> bulletin(CrexBulletin::create());
-                bulletin->decode(*raw);
+                bulletin->decode(raw.data);
                 bulletin->print(stderr);
             } catch (std::exception& e1) {
                 cerr << "Cannot display failing bulletin: " << e1.what() << endl;
@@ -120,8 +120,8 @@ void to::test<2>()
 template<> template<>
 void to::test<3>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("crex/test-synop0.crex", CREX);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("crex/test-synop0.crex", File::CREX);
+    const Msg& msg = *(msgs)[0];
     ensure_equals(msg.type, MSG_SYNOP);
 
     IS(block, 10); IS(station, 837); IS(st_type, 1);
@@ -144,8 +144,8 @@ void to::test<3>()
 template<> template<>
 void to::test<4>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/obs0-1.22.bufr", BUFR);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/obs0-1.22.bufr", File::BUFR);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_SYNOP);
 
     IS(block, 60); IS(station, 150); IS(st_type, 1);
@@ -170,8 +170,8 @@ void to::test<5>()
 {
     msg::Importer::Options opts;
     opts.simplified = true;
-    unique_ptr<Msgs> msgs = read_msgs_opts("bufr/synop-cloudbelow.bufr", BUFR, opts);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs_opts("bufr/synop-cloudbelow.bufr", File::BUFR, opts);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_SYNOP);
 
     // msg.print(stderr);
@@ -200,8 +200,8 @@ void to::test<6>()
 {
     msg::Importer::Options opts;
     opts.simplified = false;
-    unique_ptr<Msgs> msgs = read_msgs_opts("bufr/synop-cloudbelow.bufr", BUFR, opts);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs_opts("bufr/synop-cloudbelow.bufr", File::BUFR, opts);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_SYNOP);
 
     // msg.print(stderr);
@@ -235,8 +235,8 @@ void to::test<6>()
 template<> template<>
 void to::test<7>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/temp-2-255.bufr", BUFR);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/temp-2-255.bufr", File::BUFR);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_TEMP);
 
     // No negative pressure layers please
@@ -246,9 +246,9 @@ void to::test<7>()
 template<> template<>
 void to::test<8>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/synop-longname.bufr", BUFR);
-    ensure_equals(msgs->size(), 7u);
-    const Msg& msg = *(*msgs)[2];
+    Msgs msgs = read_msgs("bufr/synop-longname.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 7u);
+    const Msg& msg = *msgs[2];
     ensure_equals(msg.type, MSG_SYNOP);
 
     // Check that the long station name has been correctly truncated on import
@@ -260,36 +260,36 @@ void to::test<8>()
 template<> template<>
 void to::test<9>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/temp-bad1.bufr", BUFR);
-    ensure_equals(msgs->size(), 1u);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/temp-bad1.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 1u);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_TEMP);
 }
 
 template<> template<>
 void to::test<10>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/temp-bad2.bufr", BUFR);
-    ensure_equals(msgs->size(), 1u);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/temp-bad2.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 1u);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_TEMP);
 }
 
 template<> template<>
 void to::test<11>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/temp-bad3.bufr", BUFR);
-    ensure_equals(msgs->size(), 1u);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/temp-bad3.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 1u);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_TEMP);
 }
 
 template<> template<>
 void to::test<12>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/temp-bad4.bufr", BUFR);
-    ensure_equals(msgs->size(), 1u);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/temp-bad4.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 1u);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_TEMP);
 }
 
@@ -297,9 +297,9 @@ void to::test<12>()
 template<> template<>
 void to::test<13>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/obs4-142.1.bufr", BUFR);
-    ensure_equals(msgs->size(), 1u);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/obs4-142.1.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 1u);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_AIREP);
     IS(ident, "ACA872");
 }
@@ -308,9 +308,9 @@ void to::test<13>()
 template<> template<>
 void to::test<14>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/obs4-144.4.bufr", BUFR);
-    ensure_equals(msgs->size(), 1u);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/obs4-144.4.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 1u);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_AMDAR);
     IS(ident, "EU4444");
 }
@@ -319,9 +319,9 @@ void to::test<14>()
 template<> template<>
 void to::test<15>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/obs4-145.4.bufr", BUFR);
-    ensure_equals(msgs->size(), 1u);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/obs4-145.4.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 1u);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_ACARS);
     IS(ident, "JBNYR3RA");
 }
@@ -330,9 +330,9 @@ void to::test<15>()
 template<> template<>
 void to::test<16>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/gts-acars1.bufr", BUFR);
-    ensure_equals(msgs->size(), 1u);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/gts-acars1.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 1u);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_ACARS);
     IS(ident, "EU5331");
 }
@@ -341,9 +341,9 @@ void to::test<16>()
 template<> template<>
 void to::test<17>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/gts-acars2.bufr", BUFR);
-    ensure_equals(msgs->size(), 1u);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/gts-acars2.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 1u);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_ACARS);
     IS(ident, "FJCYR4RA");
 }
@@ -352,9 +352,9 @@ void to::test<17>()
 template<> template<>
 void to::test<18>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/gts-acars-uk1.bufr", BUFR);
-    ensure_equals(msgs->size(), 1u);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/gts-acars-uk1.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 1u);
+    const Msg& msg = *msgs[0];
     // This contains the same data as an AMDAR and has undefined subtype and
     // localsubtype, so it gets identified as an AMDAR
     ensure_equals(msg.type, MSG_AMDAR);
@@ -365,9 +365,9 @@ void to::test<18>()
 template<> template<>
 void to::test<19>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/gts-acars-us1.bufr", BUFR);
-    ensure_equals(msgs->size(), 1u);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/gts-acars-us1.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 1u);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_ACARS);
     IS(ident, "FJCYR4RA");
 }
@@ -376,9 +376,9 @@ void to::test<19>()
 template<> template<>
 void to::test<20>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/gts-amdar1.bufr", BUFR);
-    ensure_equals(msgs->size(), 1u);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/gts-amdar1.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 1u);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_AMDAR);
     IS(ident, "EU0274");
 }
@@ -387,9 +387,9 @@ void to::test<20>()
 template<> template<>
 void to::test<21>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/gts-amdar2.bufr", BUFR);
-    ensure_equals(msgs->size(), 1u);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/gts-amdar2.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 1u);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_AMDAR);
     IS(ident, "EU7866");
 }
@@ -402,10 +402,9 @@ void to::test<22>()
     try
     {
         // Read and interpretate the message
-        std::unique_ptr<Rawmsg> raw = read_rawmsg("bufr/interpreted-range.bufr", BUFR);
-        std::unique_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
-        std::unique_ptr<Msgs> msgs(new Msgs);
-        importer->from_rawmsg(*raw, *msgs);
+        BinaryMessage raw = read_rawmsg("bufr/interpreted-range.bufr", File::BUFR);
+        std::unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR);
+        Msgs msgs = importer->from_binary(raw);
         ensure(false);
     } catch (wreport::error_domain& e) {
         //cerr << e.code() << "--" << e.what() << endl;
@@ -413,9 +412,9 @@ void to::test<22>()
 
     {
         wreport::options::LocalOverride<bool> o(wreport::options::var_silent_domain_errors, true);
-        unique_ptr<Msgs> msgs = read_msgs("bufr/interpreted-range.bufr", BUFR);
-        ensure_equals(msgs->size(), 1u);
-        const Msg& msg = *(*msgs)[0];
+        Msgs msgs = read_msgs("bufr/interpreted-range.bufr", File::BUFR);
+        ensure_equals(msgs.size(), 1u);
+        const Msg& msg = *msgs[0];
         ensure_equals(msg.type, MSG_SHIP);
         IS(ident, "DBBC");
     }
@@ -425,9 +424,9 @@ void to::test<22>()
 template<> template<>
 void to::test<23>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/pilot-gts1.bufr", BUFR);
-    ensure_equals(msgs->size(), 1u);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/pilot-gts1.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 1u);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_PILOT);
 }
 
@@ -435,9 +434,9 @@ void to::test<23>()
 template<> template<>
 void to::test<24>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/pilot-gts2.bufr", BUFR);
-    ensure_equals(msgs->size(), 1u);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/pilot-gts2.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 1u);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_PILOT);
 }
 
@@ -446,9 +445,9 @@ template<> template<>
 void to::test<25>()
 {
     // FIXME: this still fails
-    unique_ptr<Msgs> msgs = read_msgs("bufr/temp-tsig-2.bufr", BUFR);
-    ensure_equals(msgs->size(), 1u);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/temp-tsig-2.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 1u);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_TEMP);
 }
 
@@ -456,9 +455,9 @@ void to::test<25>()
 template<> template<>
 void to::test<26>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/pilot-gts3.bufr", BUFR);
-    ensure_equals(msgs->size(), 1u);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/pilot-gts3.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 1u);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_PILOT);
 }
 
@@ -466,18 +465,18 @@ void to::test<26>()
 template<> template<>
 void to::test<27>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/pilot-gts4.bufr", BUFR);
-    ensure_equals(msgs->size(), 1u);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/pilot-gts4.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 1u);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_PILOT);
 }
 
 template<> template<>
 void to::test<28>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/vad.bufr", BUFR);
-    ensure_equals(msgs->size(), 1u);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/vad.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 1u);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_TEMP);
 }
 
@@ -485,317 +484,10 @@ void to::test<28>()
 template<> template<>
 void to::test<29>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/temp-windprof1.bufr", BUFR);
-    ensure_equals(msgs->size(), 1u);
-    const Msg& msg = *(*msgs)[0];
+    Msgs msgs = read_msgs("bufr/temp-windprof1.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 1u);
+    const Msg& msg = *msgs[0];
     ensure_equals(msg.type, MSG_TEMP);
 }
 
-#if 0
-/* Check that a BUFR from a synop high-level station correctly reports isobaric
- * surface and geopotential */
-template<> template<>
-void to::test<13>()
-{
-    dba_msgs msgs = read_test_msg("bufr/obs0-1.11188.bufr", BUFR);
-    dba_msg src = msgs->msgs[0];
-    dba_var var;
-
-    //gen_ensure((var = dba_msg_get_isobaric_surface_var(src)) != NULL);
-    //gen_ensure(dba_var_value(var) != NULL);
-    gen_ensure((var = dba_msg_get_geopotential_var(src)) != NULL);
-    gen_ensure(dba_var_value(var) != NULL);
-
-    dba_msgs_delete(msgs);
 }
-
-/* Test import of environment BUFR4 messages */
-template<> template<>
-void to::test<5>()
-{
-    dba_msgs msgs = read_test_msg("bufr/ed4.bufr", BUFR);
-    dba_msg src = msgs->msgs[0];
-    dba_var var;
-    double val;
-
-    gen_ensure((var = dba_msg_find(src, DBA_VAR(0, 15, 193), 103, 3000, 0, 0, 0, -3600, 3600)) != NULL);
-    gen_ensure(dba_var_value(var) != NULL);
-    CHECKED(dba_var_enqd(var, &val));
-    gen_ensure_equals(val, 2700000e-14);
-
-    dba_msgs_delete(msgs);
-}
-
-/* Test import of WMO GTS synop messages */
-template<> template<>
-void to::test<6>()
-{
-    dba_msgs msgs = read_test_msg("bufr/ed4-compr-string.bufr", BUFR);
-    dba_msg msg = msgs->msgs[0];
-    dba_var var;
-    double val;
-
-    gen_ensure_equals(msg->type, MSG_SYNOP);
-
-    //gen_ensure((var = dba_msg_find(src, DBA_VAR(0, 15, 193), 103, 3000, 0, 0, 0, -3600, 3600)) != NULL);
-    //gen_ensure(dba_var_value(var) != NULL);
-    //CHECKED(dba_var_enqd(var, &val));
-    //gen_ensure_equals(val, 2700000e-14);
-
-    dba_msgs_delete(msgs);
-}
-
-/* Test import of WMO GTS synop messages */
-template<> template<>
-void to::test<7>()
-{
-    dba_msgs msgs = read_test_msg("bufr/synop-cloudbelow.bufr", BUFR);
-    dba_msg msg = msgs->msgs[0];
-    dba_var var;
-    double val;
-
-    gen_ensure_equals(msg->type, MSG_SYNOP);
-
-    //gen_ensure((var = dba_msg_find(src, DBA_VAR(0, 15, 193), 103, 3000, 0, 0, 0, -3600, 3600)) != NULL);
-    //gen_ensure(dba_var_value(var) != NULL);
-    //CHECKED(dba_var_enqd(var, &val));
-    //gen_ensure_equals(val, 2700000e-14);
-
-    dba_msgs_delete(msgs);
-}
-
-/* Test import of WMO GTS synop messages */
-template<> template<>
-void to::test<8>()
-{
-    dba_msgs msgs = read_test_msg("bufr/synop-groundtemp.bufr", BUFR);
-    dba_msg msg = msgs->msgs[0];
-    dba_var var;
-    double val;
-
-    gen_ensure_equals(msg->type, MSG_SYNOP);
-
-    //gen_ensure((var = dba_msg_find(src, DBA_VAR(0, 15, 193), 103, 3000, 0, 0, 0, -3600, 3600)) != NULL);
-    //gen_ensure(dba_var_value(var) != NULL);
-    //CHECKED(dba_var_enqd(var, &val));
-    //gen_ensure_equals(val, 2700000e-14);
-
-    dba_msgs_delete(msgs);
-}
-
-/* Test import of WMO GTS synop messages */
-template<> template<>
-void to::test<9>()
-{
-    dba_msgs msgs = read_test_msg("bufr/synop-sunshine.bufr", BUFR);
-    dba_msg msg = msgs->msgs[0];
-    dba_var var;
-    double val;
-
-    gen_ensure_equals(msg->type, MSG_SYNOP);
-
-    // Check the context information for the wind data
-    gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 1), 103, 10000, 0, 0, 0, 0, 600)) != NULL);
-    CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 140);
-    gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 41), 103, 10000, 0, 0, 205, 0, 600)) != NULL);
-    CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 15.4);
-    gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 41), 103, 10000, 0, 0, 205, 0, 10800)) != NULL);
-    CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 15.4);
-
-    dba_msgs_delete(msgs);
-}
-
-/* Test import of a WMO GTS synop message with a stray vertical significance */
-template<> template<>
-void to::test<10>()
-{
-    dba_msgs msgs = read_test_msg("bufr/synop-strayvs.bufr", BUFR);
-    dba_msg msg = msgs->msgs[0];
-    dba_var var;
-    double val;
-
-    gen_ensure_equals(msg->type, MSG_SYNOP);
-
-    //gen_ensure((var = dba_msg_find(src, DBA_VAR(0, 15, 193), 103, 3000, 0, 0, 0, -3600, 3600)) != NULL);
-    //gen_ensure(dba_var_value(var) != NULL);
-    //CHECKED(dba_var_enqd(var, &val));
-    //gen_ensure_equals(val, 2700000e-14);
-
-    dba_msgs_delete(msgs);
-}
-
-/* Test import of WMO GTS synop messages */
-template<> template<>
-void to::test<11>()
-{
-    dba_msgs msgs = read_test_msg("bufr/synop-evapo.bufr", BUFR);
-    dba_msg msg = msgs->msgs[0];
-    dba_var var;
-    double val;
-
-    gen_ensure_equals(msg->type, MSG_SYNOP);
-    gen_ensure_equals(msgs->len, 14);
-
-    msg = msgs->msgs[4];
-    gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 13, 33), 1, 0, 0, 0, 1, -86400, 86400)) != NULL);
-    CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 0.8);
-
-    dba_msgs_delete(msgs);
-}
-
-/* Test import of WMO GTS synop messages */
-template<> template<>
-void to::test<12>()
-{
-    dba_msgs msgs = read_test_msg("bufr/synop-oddprec.bufr", BUFR);
-    dba_msg msg = msgs->msgs[0];
-    dba_var var;
-    double val;
-
-    gen_ensure_equals(msg->type, MSG_SYNOP);
-    gen_ensure_equals(msgs->len, 1);
-
-    //msg = msgs->msgs[4];
-    //gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 13, 33), 1, 0, 0, 0, 1, -86400, 86400)) != NULL);
-    //CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 0.8);
-
-    dba_msgs_delete(msgs);
-}
-
-/* Test import of WMO GTS synop messages */
-template<> template<>
-void to::test<13>()
-{
-    dba_msgs msgs = read_test_msg("bufr/synop-oddgust.bufr", BUFR);
-    dba_msg msg = msgs->msgs[0];
-    dba_var var;
-    double val;
-
-    gen_ensure_equals(msg->type, MSG_SYNOP);
-    gen_ensure_equals(msgs->len, 26);
-
-    //msg = msgs->msgs[4];
-    //gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 13, 33), 1, 0, 0, 0, 1, -86400, 86400)) != NULL);
-    //CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 0.8);
-
-    dba_msgs_delete(msgs);
-}
-
-/* Test import of WMO GTS temp messages */
-template<> template<>
-void to::test<14>()
-{
-    dba_msgs msgs = read_test_msg("bufr/temp-gts1.bufr", BUFR);
-    dba_msg msg = msgs->msgs[0];
-    dba_var var;
-    double val;
-
-    gen_ensure_equals(msg->type, MSG_TEMP);
-    gen_ensure_equals(msgs->len, 1);
-
-    // Ensure we decoded all the sounding levels
-    int pres_lev_count = 0;
-    for (int i = 0; i < msg->data_count; ++i)
-        if (msg->data[i]->ltype1 == 100)
-            ++pres_lev_count;
-    gen_ensure_equals(pres_lev_count, 56);
-
-    // Ensure we got the wind shear section
-    gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 61), 100, 35560, 0, 0, 254, 0, 0)) != NULL);
-    CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 13.1);
-    gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 11, 62), 100, 35560, 0, 0, 254, 0, 0)) != NULL);
-    CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 5.6);
-
-    // Ensure the extended vertical significances are put in the right
-    // level, since they appear before the pressure context
-    gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 8, 42), 100, 100000, 0, 0, 254, 0, 0)) != NULL);
-    CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 65536);
-
-    dba_msgs_delete(msgs);
-}
-
-/* Test import of WMO GTS temp messages */
-template<> template<>
-void to::test<15>()
-{
-    dba_msgs msgs = read_test_msg("bufr/temp-gts2.bufr", BUFR);
-    dba_msg msg = msgs->msgs[0];
-    dba_var var;
-    double val;
-
-    gen_ensure_equals(msg->type, MSG_TEMP);
-    gen_ensure_equals(msgs->len, 6);
-
-    // Ensure we decoded all the sounding levels
-    int pres_lev_count = 0;
-    for (int i = 0; i < msg->data_count; ++i)
-        if (msg->data[i]->ltype1 == 100)
-            ++pres_lev_count;
-    gen_ensure_equals(pres_lev_count, 45);
-
-
-    //msg = msgs->msgs[4];
-    //gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 13, 33), 1, 0, 0, 0, 1, -86400, 86400)) != NULL);
-    //CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 0.8);
-
-    dba_msgs_delete(msgs);
-}
-
-/* Test import of WMO GTS temp messages */
-template<> template<>
-void to::test<16>()
-{
-    dba_msgs msgs = read_test_msg("bufr/temp-gts3.bufr", BUFR);
-    dba_msg msg = msgs->msgs[0];
-    dba_var var;
-    double val;
-
-    gen_ensure_equals(msg->type, MSG_TEMP);
-    gen_ensure_equals(msgs->len, 1);
-
-    // Ensure we decoded all the sounding levels
-    int pres_lev_count = 0;
-    for (int i = 0; i < msg->data_count; ++i)
-        if (msg->data[i]->ltype1 == 100)
-            ++pres_lev_count;
-    gen_ensure_equals(pres_lev_count, 26);
-
-    //msg = msgs->msgs[4];
-    //gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 13, 33), 1, 0, 0, 0, 1, -86400, 86400)) != NULL);
-    //CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 0.8);
-
-    dba_msgs_delete(msgs);
-}
-
-/* Test import of WMO GTS temp messages */
-template<> template<>
-void to::test<17>()
-{
-    dba_msgs msgs = read_test_msg("bufr/temp-gtscosmo.bufr", BUFR);
-    dba_msg msg = msgs->msgs[0];
-    dba_var var;
-    double val;
-
-    gen_ensure_equals(msg->type, MSG_TEMP);
-    gen_ensure_equals(msgs->len, 1);
-
-    // Ensure we decoded all the sounding levels
-    int pres_lev_count = 0;
-    for (int i = 0; i < msg->data_count; ++i)
-        if (msg->data[i]->ltype1 == 100)
-            ++pres_lev_count;
-    gen_ensure_equals(pres_lev_count, 26);
-
-    //msg = msgs->msgs[4];
-    //gen_ensure((var = dba_msg_find(msg, DBA_VAR(0, 13, 33), 1, 0, 0, 0, 1, -86400, 86400)) != NULL);
-    //CHECKED(dba_var_enqd(var, &val)); gen_ensure_equals(val, 0.8);
-
-    dba_msgs_delete(msgs);
-}
-
-/* TODO: add entries for more of the sample messages, taking data from another decoder */
-#endif
-
-}
-
-/* vim:set ts=4 sw=4: */

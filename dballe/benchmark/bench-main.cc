@@ -18,8 +18,7 @@
  */
 
 #include "benchmark/bench.h"
-#include <dballe/core/file.h>
-#include <dballe/core/rawmsg.h>
+#include <dballe/file.h>
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/codec.h>
 #include <dballe/db/db.h>

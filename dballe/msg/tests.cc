@@ -17,7 +17,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "test-utils-msg.h"
+#include "tests.h"
 #include "codec.h"
 #include <dballe/core/csv.h>
 #include <dballe/msg/context.h>
@@ -130,26 +130,24 @@ const char* aof_files[] = {
 	NULL,
 };
 
-unique_ptr<Msgs> _read_msgs(const wibble::tests::Location& loc, const char* filename, Encoding type, const msg::Importer::Options& opts)
+Msgs _read_msgs(const wibble::tests::Location& loc, const char* filename, File::Encoding type, const msg::Importer::Options& opts)
 {
     try {
-        std::unique_ptr<Rawmsg> raw = read_rawmsg(filename, type);
+        BinaryMessage raw = read_rawmsg(filename, type);
         std::unique_ptr<msg::Importer> importer = msg::Importer::create(type, opts);
-        std::unique_ptr<Msgs> msgs(new Msgs);
-        importer->from_rawmsg(*raw, *msgs);
-        return msgs;
+        return importer->from_binary(raw);
     } catch (std::exception& e) {
         throw tut::failure(loc.msg(string("cannot read ") + filename + ": " + e.what()));
     }
 }
 
-std::unique_ptr<Msgs> _read_msgs_csv(const Location& loc, const char* filename)
+Msgs _read_msgs_csv(const Location& loc, const char* filename)
 {
     std::string fname = datafile(filename);
     CSVReader reader(fname);
 
-    unique_ptr<Msgs> msgs(new Msgs);
-    if (!msgs->from_csv(reader))
+    Msgs msgs;
+    if (!msgs.from_csv(reader))
     {
         std::stringstream ss;
         ss << "cannot find the start of CSV message in " << fname;
@@ -161,9 +159,9 @@ std::unique_ptr<Msgs> _read_msgs_csv(const Location& loc, const char* filename)
 void _export_msgs(const Location& loc, const Msgs& in, Bulletin& out, const std::string& tag, const dballe::msg::Exporter::Options& opts)
 {
     try {
-        Encoding type = BUFR;
+        File::Encoding type = File::BUFR;
         if (string(out.encoding_name()) == "CREX")
-            type = CREX;
+            type = File::CREX;
         std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(type, opts));
         exporter->to_bulletin(in, out);
     } catch (std::exception& e) {
@@ -271,11 +269,11 @@ void dump(const std::string& tag, const Bulletin& bul, const std::string& desc)
     cerr << desc << " saved in " << fname << " and " << fname1 << endl;
 }
 
-void dump(const std::string& tag, const Rawmsg& msg, const std::string& desc)
+void dump(const std::string& tag, const BinaryMessage& msg, const std::string& desc)
 {
     string fname = "/tmp/" + tag + ".raw";
     FILE* out = fopen(fname.c_str(), "w");
-    fwrite(msg.data(), msg.size(), 1, out);
+    fwrite(msg.data.data(), msg.data.size(), 1, out);
     fclose(out);
     cerr << desc << " saved in " << fname << endl;
 }
@@ -612,13 +610,13 @@ void RemoveContext::tweak(Msgs& msgs)
 
 }
 
-TestMessage::TestMessage(Encoding type, const std::string& name)
-    : name(name), type(type), bulletin(0)
+TestMessage::TestMessage(File::Encoding type, const std::string& name)
+    : name(name), type(type), raw(type), bulletin(0)
 {
     switch (type)
     {
-        case BUFR: bulletin = BufrBulletin::create().release(); break;
-        case CREX: bulletin = CrexBulletin::create().release(); break;
+        case File::BUFR: bulletin = BufrBulletin::create().release(); break;
+        case File::CREX: bulletin = CrexBulletin::create().release(); break;
         default: throw wreport::error_unimplemented("Unsupported message type");
     }
 }
@@ -630,29 +628,27 @@ TestMessage::~TestMessage()
 
 void TestMessage::read_from_file(const std::string& fname, const msg::Importer::Options& input_opts)
 {
-    unique_ptr<Rawmsg> src = read_rawmsg(fname.c_str(), type);
-    read_from_raw(*src, input_opts);
+    read_from_raw(read_rawmsg(fname.c_str(), type), input_opts);
 }
 
-void TestMessage::read_from_raw(const Rawmsg& msg, const msg::Importer::Options& input_opts)
+void TestMessage::read_from_raw(const BinaryMessage& msg, const msg::Importer::Options& input_opts)
 {
     std::unique_ptr<msg::Importer> importer(msg::Importer::create(type, input_opts));
     raw = msg;
-    bulletin->decode(raw);
-    importer->from_rawmsg(raw, msgs);
+    bulletin->decode(raw.data);
+    msgs = importer->from_binary(raw);
 }
 
 void TestMessage::read_from_msgs(const Msgs& _msgs, const msg::Exporter::Options& export_opts)
 {
     // Export
     std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(type, export_opts));
-
     msgs = _msgs;
     exporter->to_bulletin(msgs, *bulletin);
-    bulletin->encode(raw);
+    bulletin->encode(raw.data);
 }
 
-TestCodec::TestCodec(const std::string& fname, Encoding type)
+TestCodec::TestCodec(const std::string& fname, File::Encoding type)
     : fname(fname), type(type)
 {
 }

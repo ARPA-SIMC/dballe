@@ -13,18 +13,6 @@
 namespace dballe {
 
 /**
- * Supported encodings
- */
-typedef enum {
-	BUFR = 0,
-	CREX = 1,
-	AOF = 2,
-} Encoding;
-
-const char* encoding_name(Encoding enc);
-Encoding parse_encoding(const std::string& s);
-
-/**
  * A station identifier, that can be any string (including the empty string) or
  * a missing value.
  */

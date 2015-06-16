@@ -1,24 +1,5 @@
-/*
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
-#ifndef DBA_CMDLINE_H
-#define DBA_CMDLINE_H
+#ifndef DBALLE_CMDLINE_CMDLINE_H
+#define DBALLE_CMDLINE_CMDLINE_H
 
 /** @file
  * @ingroup dballe
@@ -26,7 +7,7 @@
  */
 
 #include <wreport/error.h>
-#include <dballe/core/rawmsg.h>
+#include <dballe/file.h>
 #include <popt.h>
 #include <memory>
 #include <vector>
@@ -126,7 +107,7 @@ void dba_cmdline_error(poptContext optCon, const char* fmt, ...) __attribute__ (
 /**
  * Return the ::dba_encoding that corresponds to the name in the string
  */
-Encoding dba_cmdline_stringToMsgType(const char* type);
+File::Encoding string_to_encoding(const char* type);
 
 /**
  * Get a DB-ALLe query from commandline parameters in the form key=value
@@ -143,8 +124,6 @@ void list_templates();
 /// Read all the command line arguments and return them as a list
 std::list<std::string> get_filenames(poptContext optCon);
 
-} // namespace cmdline
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
+}
+}
 #endif

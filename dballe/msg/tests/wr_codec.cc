@@ -17,7 +17,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "msg/test-utils-msg.h"
+#include "msg/tests.h"
 #include "msg/wr_codec.h"
 #include "msg/msgs.h"
 #include "msg/context.h"

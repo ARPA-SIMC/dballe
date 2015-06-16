@@ -18,7 +18,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "test-utils-core.h"
+#include "tests.h"
 #include "matcher.h"
 #include "record.h"
 

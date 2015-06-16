@@ -20,7 +20,6 @@
  */
 
 #include "aoffile.h"
-#include "rawmsg.h"
 #include <wreport/error.h>
 #include <cstdlib>
 #include <cstring>
@@ -31,43 +30,47 @@ using namespace wreport;
 using namespace std;
 
 namespace dballe {
+namespace core {
 
 AofFile::AofFile(const std::string& name, FILE* fd, bool close_on_exit)
 	: File(name, fd, close_on_exit) {}
 
 AofFile::~AofFile() {}
 
-bool AofFile::read(Rawmsg& msg)
+BinaryMessage AofFile::read()
 {
-	msg.clear();
-	msg.file = m_name;
-	msg.encoding = AOF;
+    BinaryMessage res(AOF);
+    res.pathname = m_name;
 
-	/* If we are at the beginning of the file, then skip the file header */
-	if (ftell(fd) == 0)
-		read_header();
+    res.offset = ftello(fd);
 
-	msg.offset = ftell(fd);
+    // If we are at the beginning of the file, skip the file header
+    if (res.offset == 0)
+    {
+        read_header();
+        res.offset = ftello(fd);
+    }
 
-	/* Read the Observation Header */
-	read_record(msg);
-	if (msg.empty())
-		return false;
+    // Read the Observation Header
+    read_record(res.data);
+    if (res.data.empty())
+        return BinaryMessage(AOF);
 
-	const uint32_t* rec = (const uint32_t*)msg.data();
-	if (rec[1] != 4)
-		error_parse::throwf(name().c_str(), ftell(fd),
-				"value '01 length of preliminary record' should be 4, either big or little endian (it is %d (%08x) instead)", rec[1], rec[1]);
+    const uint32_t* rec = (const uint32_t*)res.data.data();
+    if (rec[1] != 4)
+        error_parse::throwf(m_name.c_str(), ftell(fd),
+                "value '01 length of preliminary record' should be 4, either big or little endian (it is %d (%08x) instead)", rec[1], rec[1]);
 
-	return true;
+    res.index = idx++;
+    return res;
 }
 
-void AofFile::write(const Rawmsg& msg)
+void AofFile::write(const std::string& msg)
 {
-	long pos = ftell(fd);
+    off_t pos = ftello(fd);
 
 	if (pos == -1 && errno != ESPIPE)
-		error_system::throwf("reading current position in output file %s", name().c_str());
+		error_system::throwf("cannot read the current position in output file %s", m_name.c_str());
 
 	/* If it's a non-seekable file, we use idx to see if we're at the beginning */
 	if (pos == -1 && errno == ESPIPE && idx == 0)
@@ -76,8 +79,8 @@ void AofFile::write(const Rawmsg& msg)
 	/* If we are at the beginning of the file, write a dummy header */
 	if (pos == 0)
 		write_dummy_header();
-	
-	write_record(msg);
+
+    write_record(msg);
 }
 
 bool AofFile::read_record(std::string& res)
@@ -92,7 +95,7 @@ bool AofFile::read_record(std::string& res)
 		{
 			return false;
 		}
-		error_system::throwf("reading a record-length first word in %s", name().c_str());
+		error_system::throwf("reading a record-length first word in %s", m_name.c_str());
 	}
 
 	if ((len_word & 0xFF000000) != 0)
@@ -102,7 +105,7 @@ bool AofFile::read_record(std::string& res)
 	}
 
 	if (len_word % 4 != 0)
-		error_parse::throwf(name().c_str(), ftell(fd), "length of record (%d) is not a multiple of 4", len_word);
+		error_parse::throwf(m_name.c_str(), ftell(fd), "length of record (%d) is not a multiple of 4", len_word);
 
 	// Allocate space
 	res.resize(len_word);
@@ -111,12 +114,12 @@ bool AofFile::read_record(std::string& res)
 	uint32_t* buf = (uint32_t*)res.data();
 	if (fread(buf, len_word, 1, fd) == 0)
 	{
-		error_system::throwf("reading a %d-bytes record from %s", len_word, name().c_str());
+		error_system::throwf("reading a %d-bytes record from %s", len_word, m_name.c_str());
 	}
 
 	// Read the last Fortran length of record word
 	if (fread(&len_word1, 4, 1, fd) == 0)
-		error_system::throwf("reading a record-length last word in %s", name().c_str());
+		error_system::throwf("reading a record-length last word in %s", m_name.c_str());
 
 	// Swap words if needed
 	if (swapwords)
@@ -127,7 +130,7 @@ bool AofFile::read_record(std::string& res)
 	}
 
 	if (len_word != len_word1)
-		throw error_parse(name().c_str(), ftell(fd), "initial length of record is different than the final length of record");
+		throw error_parse(m_name.c_str(), ftell(fd), "initial length of record is different than the final length of record");
 
 	return true;
 }
@@ -173,7 +176,7 @@ void AofFile::write_word(uint32_t word)
 		case INVALID: throw error_consistency("trying to write a word without knowing its endianness");
 	}
 	if (fwrite(&oword, sizeof(uint32_t), 1, fd) != 1)
-		error_system::throwf("writing 4 bytes on %s", name().c_str());
+		error_system::throwf("writing 4 bytes on %s", m_name.c_str());
 }
 
 void AofFile::write_record(const std::string& res)
@@ -203,27 +206,27 @@ void AofFile::read_header()
 
 	/* Read the First Data Record */
 	if (!read_record(buf))
-		throw error_parse(name().c_str(), ftell(fd),
+		throw error_parse(m_name.c_str(), ftell(fd),
 				"AOF file is empty or does not contain AOF data");
 
 	if (buf.size() / sizeof(uint32_t) != 14)
-		error_parse::throwf(name().c_str(), ftell(fd),
+		error_parse::throwf(m_name.c_str(), ftell(fd),
 				"FDR contains %zd octets instead of 14", buf.size());
 
 	uint32_t* fdr = (uint32_t*)buf.data();
 
 	/* Consistency checks */
 	if (fdr[0] != 14)
-		error_parse::throwf(name().c_str(), ftell(fd),
+		error_parse::throwf(m_name.c_str(), ftell(fd),
 				"first word of FDR is %d instead of 14", fdr[0]);
 
 	/* Read Data Descriptor Record */
 	if (!read_record(buf))
-		error_parse::throwf(name().c_str(), ftell(fd),
+		error_parse::throwf(m_name.c_str(), ftell(fd),
 				"AOF file is truncated after First Data Record");
 
 	if (buf.size() / sizeof(uint32_t) != 17)
-		error_parse::throwf(name().c_str(), ftell(fd),
+		error_parse::throwf(m_name.c_str(), ftell(fd),
 				"DDR contains %zd octets instead of 17", buf.size());
 
 	// uint32_t* ddr = (uint32_t*)buf.data();
@@ -312,7 +315,7 @@ void AofFile::fix_header()
 	while (read_record(buf))
 	{
 		if (buf.size() < 11)
-			error_parse::throwf(name().c_str(), pos, "observation record is too short (%zd bytes)", buf.size());
+			error_parse::throwf(m_name.c_str(), pos, "observation record is too short (%zd bytes)", buf.size());
 
 		const uint32_t* rec = (const uint32_t*)buf.data();
 
@@ -330,11 +333,11 @@ void AofFile::fix_header()
 
 	/* Check if we need to swap bytes to match the header encoding */
 	if (fseek(fd, 0, SEEK_SET) == -1)
-		error_system::throwf("trying to seek to start of file %s", name().c_str());
+		error_system::throwf("trying to seek to start of file %s", m_name.c_str());
 
 	uint32_t endianness_test;
 	if (fread(&endianness_test, 4, 1, fd) == 0)
-		error_system::throwf("reading the first word of file %s", name().c_str());
+		error_system::throwf("reading the first word of file %s", m_name.c_str());
 
 	if ((endianness_test & 0xFF000000) != 0)
 	{
@@ -344,17 +347,16 @@ void AofFile::fix_header()
 
 	/* Write start of observation period */
 	if (fseek(fd, 14 + 10, SEEK_SET) == -1)
-		error_system::throwf("trying to seek in file %s", name().c_str());
+		error_system::throwf("trying to seek in file %s", m_name.c_str());
 	if (fwrite(&start, sizeof(uint32_t), 1, fd) != 1)
-		error_system::throwf("rewriting 4 bytes on %s", name().c_str());
+		error_system::throwf("rewriting 4 bytes on %s", m_name.c_str());
 
 	/* Write end of observation period */
 	if (fseek(fd, 14 + 12, SEEK_SET) == -1)
-		error_system::throwf("trying to seek in file %s", name().c_str());
+		error_system::throwf("trying to seek in file %s", m_name.c_str());
 	if (fwrite(&end, sizeof(uint32_t), 1, fd) != 1)
-		error_system::throwf("rewriting 4 bytes on %s", name().c_str());
+		error_system::throwf("rewriting 4 bytes on %s", m_name.c_str());
 }
 
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
+}
+}

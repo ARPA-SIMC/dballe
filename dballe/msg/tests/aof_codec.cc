@@ -17,7 +17,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "msg/test-utils-msg.h"
+#include "msg/tests.h"
 #include "msg/aof_codec.h"
 #include "msg/msgs.h"
 #include "msg/context.h"
@@ -53,11 +53,10 @@ void to::test<1>()
 	for (size_t i = 0; files[i] != NULL; i++)
 	{
         try {
-            std::unique_ptr<Rawmsg> raw = read_rawmsg(files[i], AOF);
+            BinaryMessage raw = read_rawmsg(files[i], File::AOF);
 
             /* Parse it */
-            Msgs msgs;
-            importer.from_rawmsg(*raw, msgs);
+            Msgs msgs = importer.from_binary(raw);
             ensure(!msgs.empty());
         } catch (std::exception& e) {
             throw tut::failure(string("[") + files[i] + "] " + e.what());
@@ -311,16 +310,16 @@ void to::test<2>()
 	for (size_t i = 0; !files[i].empty(); i++)
 	{
         try {
-            unique_ptr<Msgs> amsgs = read_msgs((files[i] + ".aof").c_str(), AOF);
-            unique_ptr<Msgs> bmsgs = read_msgs((files[i] + ".bufr").c_str(), BUFR);
-            normalise_encoding_quirks(*amsgs, *bmsgs);
+            Msgs amsgs = read_msgs((files[i] + ".aof").c_str(), File::AOF);
+            Msgs bmsgs = read_msgs((files[i] + ".bufr").c_str(), File::BUFR);
+            normalise_encoding_quirks(amsgs, bmsgs);
 
             // Compare the two dba_msg
             notes::Collect c(cerr);
-            int diffs = amsgs->diff(*bmsgs);
+            int diffs = amsgs.diff(bmsgs);
             if (diffs)
             {
-                dballe::tests::track_different_msgs(*amsgs, *bmsgs, "aof");
+                dballe::tests::track_different_msgs(amsgs, bmsgs, "aof");
             }
             ensure_equals(diffs, 0);
         } catch (std::exception& e) {
@@ -333,32 +332,31 @@ void to::test<2>()
 template<> template<>
 void to::test<3>()
 {
-    std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(BUFR));
-    std::unique_ptr<msg::Importer> importer(msg::Importer::create(BUFR));
+    std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(File::BUFR));
+    std::unique_ptr<msg::Importer> importer(msg::Importer::create(File::BUFR));
 	const char** files = dballe::tests::aof_files;
 	// Note: missingclouds and brokenamdar were not in the original file list before it got unified
 	for (size_t i = 0; files[i] != NULL; i++)
 	{
         try {
             // Read
-            unique_ptr<Msgs> amsgs = read_msgs(files[i], AOF);
+            Msgs amsgs = read_msgs(files[i], File::AOF);
 
             // Reencode to BUFR
-            Rawmsg raw;
-            exporter->to_rawmsg(*amsgs, raw);
+            BinaryMessage raw(File::BUFR);
+            raw.data = exporter->to_binary(amsgs);
 
             // Decode again
-            Msgs bmsgs;
-            importer->from_rawmsg(raw, bmsgs);
+            Msgs bmsgs = importer->from_binary(raw);
 
-            normalise_encoding_quirks(*amsgs, bmsgs);
+            normalise_encoding_quirks(amsgs, bmsgs);
 
             // Compare the two dba_msg
             notes::Collect c(cerr);
-            int diffs = amsgs->diff(bmsgs);
+            int diffs = amsgs.diff(bmsgs);
             if (diffs) 
             {
-                dballe::tests::track_different_msgs(*amsgs, bmsgs, "aof-bufr");
+                dballe::tests::track_different_msgs(amsgs, bmsgs, "aof-bufr");
                 dballe::tests::dump("aof-bufr", raw, "AOF reencoded to BUFR");
             }
             ensure_equals(diffs, 0);
@@ -441,13 +439,13 @@ void to::test<5>()
 	for (size_t i = 0; files[i] != NULL; i++)
 	{
         try {
-            unique_ptr<Msgs> amsgs1 = read_msgs(string(prefix + "27" + files[i]).c_str(), AOF);
-            unique_ptr<Msgs> amsgs2 = read_msgs(string(prefix + "28" + files[i]).c_str(), AOF);
+            Msgs amsgs1 = read_msgs(string(prefix + "27" + files[i]).c_str(), File::AOF);
+            Msgs amsgs2 = read_msgs(string(prefix + "28" + files[i]).c_str(), File::AOF);
 
             // Compare the two dba_msg
             notes::Collect c(cerr);
-            int diffs = amsgs1->diff(*amsgs2);
-            if (diffs) dballe::tests::track_different_msgs(*amsgs1, *amsgs2, "aof-2728");
+            int diffs = amsgs1.diff(amsgs2);
+            if (diffs) dballe::tests::track_different_msgs(amsgs1, amsgs2, "aof-2728");
             ensure_equals(diffs, 0);
         } catch (std::exception& e) {
             throw tut::failure(prefix + "2x" + files[i] + ": " + e.what());
@@ -460,23 +458,23 @@ void to::test<5>()
 template<> template<>
 void to::test<6>()
 {
-	unique_ptr<Msgs> msgs = read_msgs("aof/missing-cloud-h.aof", AOF);
-	ensure_equals(msgs->size(), 1);
+    Msgs msgs = read_msgs("aof/missing-cloud-h.aof", File::AOF);
+    ensure_equals(msgs.size(), 1);
 
-	const Msg& msg = *(*msgs)[0];
-	ensure(msg.get_cloud_h1_var() == NULL);
+    const Msg& msg = *msgs[0];
+    ensure(msg.get_cloud_h1_var() == NULL);
 }
 
 // Verify decoding of confidence intervals in optional ship group
 template<> template<>
 void to::test<7>()
 {
-	unique_ptr<Msgs> msgs = read_msgs("aof/confship.aof", AOF);
-	ensure_equals(msgs->size(), 1);
+    Msgs msgs = read_msgs("aof/confship.aof", File::AOF);
+    ensure_equals(msgs.size(), 1);
 
-	const Msg& msg = *(*msgs)[0];
-	const Var* var = msg.get_st_dir_var();
-	ensure(var != NULL);
+    const Msg& msg = *msgs[0];
+    const Var* var = msg.get_st_dir_var();
+    ensure(var != NULL);
 
 	const Var* attr = var->enqa(WR_VAR(0, 33, 7));
 	ensure(attr != NULL);
@@ -484,56 +482,4 @@ void to::test<7>()
 	ensure_equals(attr->enqi(), 51);
 }
 
-#if 0
-	CHECKED(dba_aof_decoder_start(decoder, "test-aof-01"));
-	while (1)
-	{
-		/* Read all the records */
-		dba_err err = dba_aof_decoder_next(decoder, rec);
-		if (err == WR_ERROR && dba_error_get_code() == WR_ERR_NOTFOUND)
-			break;
-		if (err) print_dba_error();
-		fail_unless(err == WR_OK);
-		//dump_rec(rec);
-	}
-		
-	CHECKED(dba_aof_decoder_start(decoder, "test-aof-02"));
-	while (1)
-	{
-		/* Read all the records */
-		dba_err err = dba_aof_decoder_next(decoder, rec);
-		if (err == WR_ERROR && dba_error_get_code() == WR_ERR_NOTFOUND)
-			break;
-		if (err) print_dba_error();
-		fail_unless(err == WR_OK);
-	}
-
-	CHECKED(dba_aof_decoder_start(decoder, "test-aof-03"));
-	while (1)
-	{
-		/* Read all the records */
-		dba_err err = dba_aof_decoder_next(decoder, rec);
-		if (err == WR_ERROR && dba_error_get_code() == WR_ERR_NOTFOUND)
-			break;
-		if (err) print_dba_error();
-		fail_unless(err == WR_OK);
-	}
-
-	CHECKED(dba_aof_decoder_start(decoder, "test-aof-04"));
-	while (1)
-	{
-		/* Read all the records */
-		dba_err err = dba_aof_decoder_next(decoder, rec);
-		if (err == WR_ERROR && dba_error_get_code() == WR_ERR_NOTFOUND)
-			break;
-		if (err) print_dba_error();
-		fail_unless(err == WR_OK);
-	}
-
-
-	dba_record_delete(rec);
-#endif
-
 }
-
-/* vim:set ts=4 sw=4: */

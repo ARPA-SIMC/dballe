@@ -23,7 +23,6 @@
 #include "aof_codec.h"
 #include "wr_codec.h"
 #include "msgs.h"
-#include <dballe/core/rawmsg.h>
 #include <wreport/error.h>
 #include <wreport/bulletin.h>
 
@@ -67,23 +66,25 @@ Importer::~Importer()
 {
 }
 
-void Importer::from_rawmsg(const Rawmsg& msg, Msgs& msgs) const
+Msgs Importer::from_binary(const BinaryMessage& msg) const
 {
-    foreach_decoded(msg, [&](unique_ptr<Msg> m) { msgs.acquire(move(m)); return true; });
+    Msgs res;
+    foreach_decoded(msg, [&](unique_ptr<Msg> m) { res.acquire(move(m)); return true; });
+    return res;
 }
 
-std::unique_ptr<Importer> Importer::create(Encoding type, const Options& opts)
+std::unique_ptr<Importer> Importer::create(File::Encoding type, const Options& opts)
 {
     switch (type)
     {
-        case BUFR:
+        case File::BUFR:
             return unique_ptr<Importer>(new BufrImporter(opts));
-        case CREX:
+        case File::CREX:
             return unique_ptr<Importer>(new CrexImporter(opts));
-        case AOF:
+        case File::AOF:
             return unique_ptr<Importer>(new AOFImporter(opts));
         default:
-            error_unimplemented::throwf("%s importer is not implemented yet", encoding_name(type));
+            error_unimplemented::throwf("%s importer is not implemented yet", File::encoding_name(type));
     }
 }
 
@@ -140,18 +141,18 @@ std::unique_ptr<wreport::Bulletin> Exporter::make_bulletin() const
     return std::unique_ptr<wreport::Bulletin>(nullptr);
 }
 
-std::unique_ptr<Exporter> Exporter::create(Encoding type, const Options& opts)
+std::unique_ptr<Exporter> Exporter::create(File::Encoding type, const Options& opts)
 {
     switch (type)
     {
-        case BUFR:
+        case File::BUFR:
             return unique_ptr<Exporter>(new BufrExporter(opts));
-        case CREX:
+        case File::CREX:
             return unique_ptr<Exporter>(new CrexExporter(opts));
-        case AOF:
+        case File::AOF:
             //return unique_ptr<Exporter>(new AOFExporter(opts));
         default:
-            error_unimplemented::throwf("%s exporter is not implemented yet", encoding_name(type));
+            error_unimplemented::throwf("%s exporter is not implemented yet", File::encoding_name(type));
     }
 }
 

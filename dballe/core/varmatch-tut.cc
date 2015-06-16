@@ -17,7 +17,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "test-utils-core.h"
+#include "tests.h"
 #include "var.h"
 #include "varmatch.h"
 

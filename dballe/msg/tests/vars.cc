@@ -19,7 +19,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "msg/test-utils-msg.h"
+#include "msg/tests.h"
 #include "core/defs.h"
 #include "msg/vars.h"
 

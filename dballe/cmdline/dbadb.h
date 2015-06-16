@@ -20,7 +20,7 @@
 #ifndef DBALLE_CMDLINE_DBADB_H
 #define DBALLE_CMDLINE_DBADB_H
 
-#include <dballe/core/file.h>
+#include <dballe/file.h>
 #include <dballe/core/query.h>
 #include <dballe/cmdline/processor.h>
 #include <list>

@@ -17,7 +17,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/core/test-utils-core.h>
+#include <dballe/core/tests.h>
 #include "msgapi.h"
 
 using namespace std;
@@ -56,12 +56,12 @@ template<> template<>
 void to::test<2>()
 {
     // Concatenate a broken BUFR with a good one
-    std::unique_ptr<Rawmsg> rm1(read_rawmsg("bufr/interpreted-range.bufr", BUFR));
-    std::unique_ptr<Rawmsg> rm2(read_rawmsg("bufr/temp-gts1.bufr", BUFR));
+    BinaryMessage rm1(read_rawmsg("bufr/interpreted-range.bufr", File::BUFR));
+    BinaryMessage rm2(read_rawmsg("bufr/temp-gts1.bufr", File::BUFR));
 
     // Broken + good
     {
-        string concat = *rm1 + *rm2;
+        string concat = rm1.data + rm2.data;
         FILE* out = fopen("test-simple-concat.bufr", "w");
         fwrite(concat.data(), concat.size(), 1, out);
         fclose(out);
@@ -81,7 +81,7 @@ void to::test<2>()
 
     // Good + broken + good
     {
-        string concat = *rm2 + *rm1 + *rm2;
+        string concat = rm2.data + rm1.data + rm2.data;
         FILE* out = fopen("test-simple-concat.bufr", "w");
         fwrite(concat.data(), concat.size(), 1, out);
         fclose(out);
@@ -101,7 +101,7 @@ void to::test<2>()
 
     // Good + broken + broken + good
     {
-        string concat = *rm2 + *rm1 + *rm1 + *rm2;
+        string concat = rm2.data + rm1.data + rm1.data + rm2.data;
         FILE* out = fopen("test-simple-concat.bufr", "w");
         fwrite(concat.data(), concat.size(), 1, out);
         fclose(out);

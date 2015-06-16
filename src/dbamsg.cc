@@ -6,8 +6,8 @@
 #include <dballe/msg/context.h>
 #include <dballe/msg/aof_codec.h>
 #include <dballe/record.h>
+#include <dballe/file.h>
 #include <dballe/core/query.h>
-#include <dballe/core/file.h>
 #include <dballe/core/aoffile.h>
 #include <dballe/core/matcher.h>
 #include <dballe/core/csv.h>
@@ -82,53 +82,44 @@ static int count_nonnulls(const Subset& raw)
 	return count;
 }
 
-static void dump_bufr_header(const Rawmsg& rmsg, const BufrBulletin& braw)
+static void dump_common_header(const BinaryMessage& rmsg, const Bulletin& braw)
 {
-	printf("Message %d\n", rmsg.index);
-	printf("Size: %zd\n", rmsg.size());
-	printf("Edition: %d\n", braw.edition);
-	printf("Master table number: %d\n", braw.master_table_number);
-	printf("Centre: %d:%d\n", braw.centre, braw.subcentre);
-	printf("Category: %d:%d:%d\n", braw.type, braw.subtype, braw.localsubtype);
-	printf("Datetime: %04d-%02d-%02d %02d:%02d:%02d\n",
-			braw.rep_year, braw.rep_month, braw.rep_day,
-			braw.rep_hour, braw.rep_minute, braw.rep_second);
-	printf("Tables: %d:%d\n", braw.master_table, braw.local_table);
-	printf("Table: %s\n", braw.btable ? braw.btable->id().c_str() : "(none)");
-	printf("Compression: %s\n", braw.compression ? "yes" : "no");
-	printf("Update sequence number: %d\n", braw.update_sequence_number);
-	printf("Optional section length: %d\n", braw.optional_section_length);
-	printf("Subsets: %zd\n\n", braw.subsets.size());
-
-	// Copy data descriptor section
-	//for (bufrex_opcode i = orig->datadesc; i != NULL; i = i->next)
-		//DBA_RUN_OR_GOTO(cleanup, bufrex_msg_append_datadesc(msg, i->val));
+    printf("Message %d\n", rmsg.index);
+    printf("Size: %zd\n", rmsg.data.size());
+    printf("Edition: %d\n", braw.edition);
+    printf("Master table number: %d\n", braw.master_table_number);
+    printf("Category: %d:%d:%d\n", braw.type, braw.subtype, braw.localsubtype);
+    printf("Datetime: %04d-%02d-%02d %02d:%02d:%02d\n",
+            braw.rep_year, braw.rep_month, braw.rep_day,
+            braw.rep_hour, braw.rep_minute, braw.rep_second);
+    printf("Table: %s\n", braw.btable ? braw.btable->id().c_str() : "(none)");
 }
 
-static void dump_crex_header(const Rawmsg& rmsg, const CrexBulletin& braw)
+static void dump_bufr_header(const BinaryMessage& rmsg, const BufrBulletin& braw)
 {
-	printf("Message %d\n", rmsg.index);
-	printf("Size: %zd\n", rmsg.size());
-	printf("Edition: %d\n", braw.edition);
-	printf("Master table number: %d\n", braw.master_table_number);
-	printf("Category: %d:%d:%d\n", braw.type, braw.subtype, braw.localsubtype);
-	printf("Datetime: %04d-%02d-%02d %02d:%02d:%02d\n",
-			braw.rep_year, braw.rep_month, braw.rep_day,
-			braw.rep_hour, braw.rep_minute, braw.rep_second);
-	printf("Table version: %d\n", braw.table);
-	printf("Table: %s\n", braw.btable ? braw.btable->id().c_str() : "(none)");
-	printf("Check digit: %s\n\n", braw.has_check_digit ? "yes" : "no");
+    dump_common_header(rmsg, braw);
+    printf("Centre: %d:%d\n", braw.centre, braw.subcentre);
+    printf("Tables: %d:%d\n", braw.master_table, braw.local_table);
+    printf("Compression: %s\n", braw.compression ? "yes" : "no");
+    printf("Update sequence number: %d\n", braw.update_sequence_number);
+    printf("Optional section length: %d\n", braw.optional_section_length);
+    printf("Subsets: %zd\n\n", braw.subsets.size());
 }
 
-static void dump_aof_header(const Rawmsg& rmsg)
+static void dump_crex_header(const BinaryMessage& rmsg, const CrexBulletin& braw)
 {
-	int category, subcategory;
-	msg::AOFImporter::get_category(rmsg, &category, &subcategory);
-	/* DBA_RUN_OR_RETURN(bufrex_message_get_vars(msg, &vars, &count)); */
+    dump_common_header(rmsg, braw);
+    printf("Table version: %d\n", braw.table);
+    printf("Check digit: %s\n\n", braw.has_check_digit ? "yes" : "no");
+}
 
-	printf("Message %d\n", rmsg.index);
-	printf("Size: %zd\n", rmsg.size());
-	printf("Category: %d:%d\n\n", category, subcategory);
+static void dump_aof_header(const BinaryMessage& rmsg)
+{
+    int category, subcategory;
+    msg::AOFImporter::get_category(rmsg, &category, &subcategory);
+    printf("Message %d\n", rmsg.index);
+    printf("Size: %zd\n", rmsg.data.size());
+    printf("Category: %d:%d\n\n", category, subcategory);
 }
 
 static void print_bufr_header(const BufrBulletin& braw)
@@ -158,7 +149,7 @@ static void print_crex_header(const CrexBulletin& braw)
 		printf(" %d/%zd", count_nonnulls(braw.subsets[i]), braw.subsets[i].size());
 }
 
-static void print_aof_header(const Rawmsg& rmsg)
+static void print_aof_header(const BinaryMessage& rmsg)
 {
     int category, subcategory;
     msg::AOFImporter::get_category(rmsg, &category, &subcategory);
@@ -171,19 +162,19 @@ static void print_item_header(const Item& item)
 
     if (item.rmsg)
     {
-        printf(" %s message: %zd bytes", encoding_name(item.rmsg->encoding), item.rmsg->size());
+        printf(" %s message: %zd bytes", File::encoding_name(item.rmsg->encoding), item.rmsg->data.size());
 
         switch (item.rmsg->encoding)
         {
-            case BUFR:
+            case File::BUFR:
                 if (item.bulletin != NULL)
                     print_bufr_header(*dynamic_cast<const BufrBulletin*>(item.bulletin));
                 break;
-            case CREX:
+            case File::CREX:
                 if (item.bulletin != NULL)
                     print_crex_header(*dynamic_cast<const CrexBulletin*>(item.bulletin));
                 break;
-            case AOF:
+            case File::AOF:
                 print_aof_header(*item.rmsg);
                 break;
         }
@@ -227,15 +218,15 @@ struct Head : public cmdline::Action
         if (!item.rmsg) return false;
         switch (item.rmsg->encoding)
         {
-            case BUFR:
+            case File::BUFR:
                 if (item.bulletin == NULL) return true;
                 dump_bufr_header(*item.rmsg, *dynamic_cast<const BufrBulletin*>(item.bulletin)); puts(".");
                 break;
-            case CREX:
+            case File::CREX:
                 if (item.bulletin == NULL) return true;
                 dump_crex_header(*item.rmsg, *dynamic_cast<const CrexBulletin*>(item.bulletin)); puts(".");
                 break;
-            case AOF:
+            case File::AOF:
                 dump_aof_header(*item.rmsg);
                 break;
         }
@@ -298,8 +289,8 @@ struct CSVBulletin : public cmdline::Action
         }
         switch (item.rmsg->encoding)
         {
-            case BUFR:
-            case CREX:
+            case File::BUFR:
+            case File::CREX:
             {
                 if (item.bulletin == NULL) return false;
                 cout << "edition," << item.bulletin->edition << endl;
@@ -389,7 +380,7 @@ struct DumpMessage : public cmdline::Action
         puts(":");
         switch (item.rmsg->encoding)
         {
-            case BUFR:
+            case File::BUFR:
                 {
                     if (item.bulletin == NULL) return true;
                     const BufrBulletin& b = *dynamic_cast<const BufrBulletin*>(item.bulletin);
@@ -398,7 +389,7 @@ struct DumpMessage : public cmdline::Action
                     print_subsets(*item.bulletin);
                     break;
                 }
-            case CREX:
+            case File::CREX:
                 {
                     if (item.bulletin == NULL) return true;
                     const CrexBulletin& b = *dynamic_cast<const CrexBulletin*>(item.bulletin);
@@ -407,7 +398,7 @@ struct DumpMessage : public cmdline::Action
                     print_subsets(*item.bulletin);
                     break;
                 }
-            case AOF:
+            case File::AOF:
                 msg::AOFImporter::dump(*item.rmsg, stdout);
                 break;
         }
@@ -553,7 +544,7 @@ struct WriteRaw : public cmdline::Action
     {
         if (!item.rmsg) return false;
         if (!file) file = File::create(item.rmsg->encoding, "(stdout)", "w").release();
-        file->write(*item.rmsg);
+        file->write(item.rmsg->data);
         return true;
     }
 };
@@ -729,9 +720,9 @@ struct Cat : public cmdline::Subcommand
     }
 };
 
-struct StoreMessages : public cmdline::Action, public vector<Rawmsg>
+struct StoreMessages : public cmdline::Action, public vector<BinaryMessage>
 {
-	virtual void operator()(const Rawmsg& rmsg, const wreport::Bulletin*, const Msgs*)
+	virtual void operator()(const BinaryMessage& rmsg, const wreport::Bulletin*, const Msgs*)
 	{
 		push_back(rmsg);
 	}
@@ -928,8 +919,6 @@ struct Convert : public cmdline::Subcommand
 
         if (op_precise_import) reader.import_opts.simplified = false;
 
-        Encoding outtype = dba_cmdline_stringToMsgType(op_output_type);
-
         if (op_report[0] != 0)
             conv.dest_rep_memo = op_report;
         else
@@ -943,8 +932,12 @@ struct Convert : public cmdline::Subcommand
 
         conv.bufr2netcdf_categories = op_bufr2netcdf_categories != 0;
 
-        conv.file = File::create(outtype, op_output_file, "w").release();
-        conv.exporter = msg::Exporter::create(outtype, opts).release();
+        if (strcmp(op_output_type, "auto") == 0)
+            conv.file = File::create(op_output_file, "w").release();
+        else
+            conv.file = File::create(string_to_encoding(op_output_type), op_output_file, "w").release();
+
+        conv.exporter = msg::Exporter::create(conv.file->encoding(), opts).release();
 
         reader.read(get_filenames(optCon), conv);
 
@@ -990,31 +983,35 @@ struct Compare : public cmdline::Subcommand
         if (file2_name == NULL)
             file2_name = "(stdin)";
 
-        Encoding in_type = dba_cmdline_stringToMsgType(reader.input_type);
-        Encoding out_type = dba_cmdline_stringToMsgType(op_output_type);
-        File* file1 = File::create(in_type, file1_name, "r").release();
-        File* file2 = File::create(out_type, file2_name, "r").release();
-        std::unique_ptr<msg::Importer> importer = msg::Importer::create(in_type);
-        std::unique_ptr<msg::Exporter> exporter = msg::Exporter::create(out_type);
+        unique_ptr<File> file1;
+        unique_ptr<File> file2;
+        if (strcmp(reader.input_type, "auto") == 0)
+            file1 = File::create(file1_name, "r");
+        else
+            file1 = File::create(string_to_encoding(reader.input_type), file1_name, "r");
+        if (strcmp(op_output_type, "auto") == 0)
+            file2 = File::create(file2_name, "r");
+        else
+            file2 = File::create(string_to_encoding(op_output_type), file2_name, "r");
+        std::unique_ptr<msg::Importer> importer1 = msg::Importer::create(file1->encoding());
+        std::unique_ptr<msg::Importer> importer2 = msg::Importer::create(file2->encoding());
         size_t idx = 0;
         for ( ; ; ++idx)
         {
             ++idx;
 
-            Rawmsg msg1;
-            Rawmsg msg2;
-            bool found1 = file1->read(msg1);
-            bool found2 = file2->read(msg2);
+            BinaryMessage msg1 = file1->read();
+            BinaryMessage msg2 = file2->read();
+            bool found1 = msg1;
+            bool found2 = msg2;
 
             if (found1 != found2)
                 throw error_consistency("The files contain a different number of messages");
             if (!found1 && !found2)
                 break;
 
-            Msgs msgs1;
-            Msgs msgs2;
-            importer->from_rawmsg(msg1, msgs1);
-            importer->from_rawmsg(msg2, msgs2);
+            Msgs msgs1 = importer1->from_binary(msg1);
+            Msgs msgs2 = importer2->from_binary(msg2);
 
             notes::Collect c(cerr);
             int diffs = msgs1.diff(msgs2);
@@ -1044,8 +1041,8 @@ struct FixAOF : public cmdline::Subcommand
         int count = 0;
         while (const char* filename = poptGetArg(optCon))
         {
-            unique_ptr<File> file = File::create(AOF, filename, "rb+");
-            AofFile* aoffile = dynamic_cast<AofFile*>(file.get());
+            unique_ptr<File> file = File::create(File::AOF, filename, "rb+");
+            core::AofFile* aoffile = dynamic_cast<core::AofFile*>(file.get());
             aoffile->fix_header();
             ++count;
         }

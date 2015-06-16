@@ -17,7 +17,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 #include "dballe/db/bench.h"
-#include "dballe/core/file.h"
+#include "dballe/file.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/codec.h"
 

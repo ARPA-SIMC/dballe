@@ -33,8 +33,9 @@
 #include <stdint.h>
 
 namespace dballe {
+namespace core {
 
-class AofFile : public dballe::File
+class AofFile : public dballe::core::File
 {
 protected:
     /**
@@ -74,11 +75,9 @@ public:
     AofFile(const std::string& name, FILE* fd, bool close_on_exit=true);
     virtual ~AofFile();
 
-    virtual Encoding type() const throw () { return AOF; }
-
-    bool read(Rawmsg& msg);
-    void write(const Rawmsg& msg);
-
+    virtual Encoding encoding() const override { return AOF; }
+    BinaryMessage read() override;
+    void write(const std::string& msg) override;
 
     /**
      * Read the file header, perform some consistency checks then discard the
@@ -95,7 +94,6 @@ public:
     void fix_header();
 };
 
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
+}
+}
 #endif

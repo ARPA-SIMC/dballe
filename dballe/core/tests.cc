@@ -1,4 +1,4 @@
-#include "test-utils-core.h"
+#include "tests.h"
 #include "record.h"
 #include <wibble/string.h>
 #include <unistd.h>
@@ -214,7 +214,7 @@ std::string datafile(const std::string& fname)
 	return testdatadir + "/" + fname;
 }
 
-unique_ptr<File> _open_test_data(const wibble::tests::Location& loc, const char* filename, Encoding type)
+unique_ptr<File> _open_test_data(const wibble::tests::Location& loc, const char* filename, File::Encoding type)
 {
 	try {
 		return unique_ptr<File>(File::create(type, datafile(filename), "r"));
@@ -223,18 +223,16 @@ unique_ptr<File> _open_test_data(const wibble::tests::Location& loc, const char*
 	}
 }
 
-unique_ptr<Rawmsg> _read_rawmsg(const wibble::tests::Location& loc, const char* filename, Encoding type)
+BinaryMessage _read_rawmsg(const wibble::tests::Location& loc, const char* filename, File::Encoding type)
 {
-	try {
-		unique_ptr<File> f = _open_test_data(loc, filename, type);
-		unique_ptr<Rawmsg> res(new Rawmsg);
-
-		inner_ensure(f->read(*res));
-
-		return res;
-	} catch (wreport::error& e) {
-		throw tut::failure(loc.msg(e.what()));
-	}
+    try {
+        unique_ptr<File> f = _open_test_data(loc, filename, type);
+        BinaryMessage res = f->read();
+        inner_ensure(res);
+        return res;
+    } catch (wreport::error& e) {
+        throw tut::failure(loc.msg(e.what()));
+    }
 }
 
 void TestRecordValEqual::check(WIBBLE_TEST_LOCPRM) const

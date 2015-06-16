@@ -43,6 +43,11 @@ Msgs::Msgs(const Msgs& msgs)
         push_back(new Msg(**i));
 }
 
+Msgs::Msgs(Msgs&& msgs)
+    : std::vector<Msg*>(move(msgs))
+{
+}
+
 Msgs::~Msgs()
 {
 	for (iterator i = begin(); i != end(); ++i)
@@ -57,6 +62,16 @@ Msgs& Msgs::operator=(const Msgs& msgs)
         reserve(msgs.size());
         for (const_iterator i = msgs.begin(); i != msgs.end(); ++i)
             push_back(new Msg(**i));
+    }
+    return *this;
+}
+
+Msgs& Msgs::operator=(Msgs&& msgs)
+{
+    if (this != &msgs)
+    {
+        clear();
+        std::vector<Msg*>::operator=(move(msgs));
     }
     return *this;
 }

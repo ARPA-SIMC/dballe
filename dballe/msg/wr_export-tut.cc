@@ -17,7 +17,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "msg/test-utils-msg.h"
+#include "msg/tests.h"
 #include "msg/wr_codec.h"
 #include "msg/msgs.h"
 #include "msg/context.h"
@@ -47,9 +47,9 @@ struct ReimportTest
     typedef dballe::tests::MessageTweaker Tweaker;
 
     string fname;
-    Encoding type;
-    unique_ptr<Msgs> msgs1;
-    unique_ptr<Msgs> msgs2;
+    File::Encoding type;
+    Msgs msgs1;
+    Msgs msgs2;
     unique_ptr<Bulletin> exported;
     msg::Importer::Options input_opts;
     msg::Exporter::Options output_opts;
@@ -78,7 +78,7 @@ struct ReimportTest
         wmo_tweaks.clear();
     }
 
-    ReimportTest(const std::string& fname, Encoding type=BUFR)
+    ReimportTest(const std::string& fname, File::Encoding type=File::BUFR)
         : fname(fname), type(type), do_ecmwf_tweaks(false), do_wmo_tweaks(false),
           do_ignore_context_attrs(false), do_round_geopotential(false), verbose(false)
     {
@@ -100,25 +100,25 @@ struct ReimportTest
         // Import
         if (verbose) cerr << "Importing " << fname << " " << input_opts.to_string() << endl;
         msgs1 = inner_read_msgs_opts(fname.c_str(), type, input_opts);
-        inner_ensure(msgs1->size() > 0);
+        inner_ensure(msgs1.size() > 0);
 
         // Run tweaks
         for (typename vector<Tweaker*>::iterator i = tweaks.begin(); i != tweaks.end(); ++i)
         {
             if (verbose) cerr << "Running tweak " << (*i)->desc() << endl;
-            (*i)->tweak(*msgs1);
+            (*i)->tweak(msgs1);
         }
         if (do_ecmwf_tweaks)
             for (typename vector<Tweaker*>::iterator i = ecmwf_tweaks.begin(); i != ecmwf_tweaks.end(); ++i)
             {
                 if (verbose) cerr << "Running ecmwf tweak " << (*i)->desc() << endl;
-                (*i)->tweak(*msgs1);
+                (*i)->tweak(msgs1);
             }
         if (do_wmo_tweaks)
             for (typename vector<Tweaker*>::iterator i = wmo_tweaks.begin(); i != wmo_tweaks.end(); ++i)
             {
                 if (verbose) cerr << "Running wmo tweak " << (*i)->desc() << endl;
-                (*i)->tweak(*msgs1);
+                (*i)->tweak(msgs1);
             }
 
         // Export
@@ -130,36 +130,36 @@ struct ReimportTest
                 output_opts.template_name.clear();
             if (verbose) cerr << "Exporting " << output_opts.to_string() << endl;
             std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
-            exporter->to_bulletin(*msgs1, *exported);
+            exporter->to_bulletin(msgs1, *exported);
         } catch (std::exception& e) {
             dballe::tests::dump("bul1", *exported);
-            dballe::tests::dump("msg1", *msgs1);
+            dballe::tests::dump("msg1", msgs1);
             throw tut::failure(loc.msg(string("exporting to bulletin (first template): ") + e.what()));
         }
 
         // Encode
-        Rawmsg rawmsg;
+        BinaryMessage rawmsg(type);
         try {
-            exported->encode(rawmsg);
+            exported->encode(rawmsg.data);
             //exporter->to_rawmsg(*msgs1, rawmsg);
         } catch (std::exception& e) {
             dballe::tests::dump("bul1", *exported);
-            dballe::tests::dump("msg1", *msgs1);
+            dballe::tests::dump("msg1", msgs1);
             throw tut::failure(loc.msg(string("encoding to rawmsg (first template): ") + e.what()));
         }
 
         // Import again
         if (verbose) cerr << "Reimporting " << input_opts.to_string() << endl;
-        msgs2.reset(new Msgs);
+        msgs2.clear();
         try {
-            importer->from_rawmsg(rawmsg, *msgs2);
+            msgs2 = importer->from_binary(rawmsg);
         } catch (std::exception& e) {
-            dballe::tests::dump("msg1", *msgs1);
+            dballe::tests::dump("msg1", msgs1);
             dballe::tests::dump("msg", rawmsg);
             throw tut::failure(loc.msg(string("importing from rawmsg (first template): ") + e.what()));
         }
 
-        unique_ptr<Msgs> msgs3;
+        Msgs msgs3;
         if (tname2)
         {
             // Export
@@ -168,31 +168,30 @@ struct ReimportTest
                 output_opts.template_name = tname2;
                 if (verbose) cerr << "Reexporting " << output_opts.to_string() << endl;
                 std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
-                exporter->to_bulletin(*msgs2, *bulletin);
+                exporter->to_bulletin(msgs2, *bulletin);
             } catch (std::exception& e) {
                 dballe::tests::dump("bul2", *bulletin);
-                dballe::tests::dump("msg2", *msgs1);
+                dballe::tests::dump("msg2", msgs1);
                 throw tut::failure(loc.msg(string("exporting to bulletin (second template): ") + e.what()));
             }
 
             // Encode
-            rawmsg.clear();
+            rawmsg = BinaryMessage(type);
             try {
-                bulletin->encode(rawmsg);
+                bulletin->encode(rawmsg.data);
                 //exporter->to_rawmsg(*msgs1, rawmsg);
             } catch (std::exception& e) {
                 dballe::tests::dump("bul2", *bulletin);
-                dballe::tests::dump("msg2", *msgs1);
+                dballe::tests::dump("msg2", msgs1);
                 throw tut::failure(loc.msg(string("encoding to rawmsg (second template): ") + e.what()));
             }
 
             // Import again
-            msgs3.reset(new Msgs);
             try {
                 if (verbose) cerr << "Reimporting " << input_opts.to_string() << endl;
-                importer->from_rawmsg(rawmsg, *msgs3);
+                msgs3 = importer->from_binary(rawmsg);
             } catch (std::exception& e) {
-                dballe::tests::dump("msg2", *msgs2);
+                dballe::tests::dump("msg2", msgs2);
                 dballe::tests::dump("raw2", rawmsg);
                 throw tut::failure(loc.msg(string("importing from rawmsg (first template): ") + e.what()));
             }
@@ -207,25 +206,25 @@ struct ReimportTest
         if (do_ignore_context_attrs)
         {
             StripContextAttrs sca;
-            sca.tweak(*msgs1);
+            sca.tweak(msgs1);
         }
         if (do_round_geopotential)
         {
             RoundGeopotential rg;
-            rg.tweak(*msgs1);
-            rg.tweak(*msgs3);
+            rg.tweak(msgs1);
+            rg.tweak(msgs3);
         }
 
         // Compare
         stringstream str;
         notes::Collect c(str);
-        int diffs = msgs1->diff(*msgs3);
+        int diffs = msgs1.diff(msgs3);
         if (diffs)
         {
-            dballe::tests::dump("msg1", *msgs1);
-            if (msgs2.get())
-                dballe::tests::dump("msg2", *msgs2);
-            dballe::tests::dump("msg3", *msgs3);
+            dballe::tests::dump("msg1", msgs1);
+            //if (msgs2.get())
+                //dballe::tests::dump("msg2", msgs2);
+            dballe::tests::dump("msg3", msgs3);
             dballe::tests::dump("msg", rawmsg);
             dballe::tests::dump("diffs", str.str(), "details of differences");
             throw tut::failure(loc.msg(str::fmtf("found %d differences", diffs)));
@@ -316,20 +315,20 @@ std::vector<Test> tests {
         for (i = 0; files[i] != NULL; i++)
         {
             try {
-                unique_ptr<Msgs> msgs = read_msgs(files[i], BUFR);
-                ensure(msgs->size() > 0);
+                Msgs msgs = read_msgs(files[i], File::BUFR);
+                ensure(msgs.size() > 0);
 
                 std::unique_ptr<msg::Exporter> exporter;
 
-                exporter = msg::Exporter::create(BUFR/*, const Options& opts=Options()*/);
+                exporter = msg::Exporter::create(File::BUFR/*, const Options& opts=Options()*/);
                 unique_ptr<Bulletin> bbulletin(BufrBulletin::create());
-                exporter->to_bulletin(*msgs, *bbulletin);
+                exporter->to_bulletin(msgs, *bbulletin);
 
                 if (bl_crex.find(files[i]) == bl_crex.end())
                 {
-                    exporter = msg::Exporter::create(CREX/*, const Options& opts=Options()*/);
+                    exporter = msg::Exporter::create(File::CREX/*, const Options& opts=Options()*/);
                     unique_ptr<Bulletin> cbulletin(CrexBulletin::create());
-                    exporter->to_bulletin(*msgs, *cbulletin);
+                    exporter->to_bulletin(msgs, *cbulletin);
                 }
             } catch (std::exception& e) {
                 fails.push_back(string(files[i]) + ": " + e.what());
@@ -347,16 +346,16 @@ std::vector<Test> tests {
         for (i = 0; files[i] != NULL; i++)
         {
             try {
-                unique_ptr<Msgs> msgs = read_msgs(files[i], CREX);
-                ensure(msgs->size() > 0);
+                Msgs msgs = read_msgs(files[i], File::CREX);
+                ensure(msgs.size() > 0);
 
-                std::unique_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR/*, const Options& opts=Options()*/);
+                std::unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR/*, const Options& opts=Options()*/);
                 unique_ptr<Bulletin> bbulletin(BufrBulletin::create());
-                exporter->to_bulletin(*msgs, *bbulletin);
+                exporter->to_bulletin(msgs, *bbulletin);
 
-                exporter = msg::Exporter::create(CREX/*, const Options& opts=Options()*/);
+                exporter = msg::Exporter::create(File::CREX/*, const Options& opts=Options()*/);
                 unique_ptr<Bulletin> cbulletin(CrexBulletin::create());
-                exporter->to_bulletin(*msgs, *cbulletin);
+                exporter->to_bulletin(msgs, *cbulletin);
             } catch (std::exception& e) {
                 fails.push_back(string(files[i]) + ": " + e.what());
             }
@@ -366,44 +365,42 @@ std::vector<Test> tests {
     }),
     Test("reproduce_temp", [](Fixture& f) {
         // Export a well known TEMP which used to fail
-        unique_ptr<Msgs> msgs = read_msgs_csv("csv/temp1.csv");
-        ensure(msgs->size() > 0);
+        Msgs msgs = read_msgs_csv("csv/temp1.csv");
+        ensure(msgs.size() > 0);
 
         // Replace with packed levels because comparison later happens against
         // packed levels
         {
             unique_ptr<Msg> msg(new Msg);
-            msg->sounding_pack_levels(*(*msgs)[0]);
-            msgs.reset(new Msgs);
-            msgs->acquire(move(msg));
+            msg->sounding_pack_levels(*msgs[0]);
+            msgs.clear();
+            msgs.acquire(move(msg));
         }
 
         // Export to BUFR
-        std::unique_ptr<msg::Exporter> bufr_exporter(msg::Exporter::create(BUFR/*, const Options& opts=Options()*/));
+        std::unique_ptr<msg::Exporter> bufr_exporter(msg::Exporter::create(File::BUFR/*, const Options& opts=Options()*/));
         unique_ptr<Bulletin> bbulletin(BufrBulletin::create());
-        bufr_exporter->to_bulletin(*msgs, *bbulletin);
+        bufr_exporter->to_bulletin(msgs, *bbulletin);
 
         // Import and check the differences
         {
-            std::unique_ptr<msg::Importer> bufr_importer(msg::Importer::create(BUFR/*, const Options& opts=Options()*/));
-            Msgs msgs1;
-            bufr_importer->from_bulletin(*bbulletin, msgs1);
+            std::unique_ptr<msg::Importer> bufr_importer(msg::Importer::create(File::BUFR/*, const Options& opts=Options()*/));
+            Msgs msgs1 = wcallchecked(bufr_importer->from_bulletin(*bbulletin));
             notes::Collect c(cerr);
-            ensure_equals(msgs->diff(msgs1), 0);
+            ensure_equals(msgs.diff(msgs1), 0);
         }
 
         // Export to CREX
-        std::unique_ptr<msg::Exporter> crex_exporter(msg::Exporter::create(CREX/*, const Options& opts=Options()*/));
+        std::unique_ptr<msg::Exporter> crex_exporter(msg::Exporter::create(File::CREX/*, const Options& opts=Options()*/));
         unique_ptr<Bulletin> cbulletin(CrexBulletin::create());
-        crex_exporter->to_bulletin(*msgs, *cbulletin);
+        crex_exporter->to_bulletin(msgs, *cbulletin);
 
         // Import and check the differences
         {
-            std::unique_ptr<msg::Importer> crex_importer(msg::Importer::create(CREX/*, const Options& opts=Options()*/));
-            Msgs msgs1;
-            crex_importer->from_bulletin(*cbulletin, msgs1);
+            std::unique_ptr<msg::Importer> crex_importer(msg::Importer::create(File::CREX/*, const Options& opts=Options()*/));
+            Msgs msgs1 = wcallchecked(crex_importer->from_bulletin(*cbulletin));
             notes::Collect c(cerr);
-            ensure_equals(msgs->diff(msgs1), 0);
+            ensure_equals(msgs.diff(msgs1), 0);
         }
     }),
     // Re-export tests for old style synops
@@ -776,33 +773,32 @@ std::vector<Test> tests {
         vector<string> fails;
         int i;
         std::unique_ptr<msg::Exporter> exporter;
-        exporter = msg::Exporter::create(BUFR/*, const Options& opts=Options()*/);
-        std::unique_ptr<msg::Importer> importer = msg::Importer::create(BUFR/*, opts*/);
+        exporter = msg::Exporter::create(File::BUFR/*, const Options& opts=Options()*/);
+        std::unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR/*, opts*/);
 
         for (i = 0; files[i] != NULL; i++)
         {
             if (blacklist.find(files[i]) != blacklist.end()) continue;
             try {
                 // Import
-                unique_ptr<Msgs> msgs = read_msgs(files[i], BUFR);
-                ensure(msgs->size() > 0);
+                Msgs msgs = read_msgs(files[i], File::BUFR);
+                ensure(msgs.size() > 0);
 
                 // Export
                 unique_ptr<Bulletin> bbulletin(BufrBulletin::create());
-                exporter->to_bulletin(*msgs, *bbulletin);
+                exporter->to_bulletin(msgs, *bbulletin);
 
                 // Import again
-                Msgs msgs1;
-                importer->from_bulletin(*bbulletin, msgs1);
+                Msgs msgs1 = importer->from_bulletin(*bbulletin);
 
                 // Compare
                 notes::Collect c(cerr);
-                int diffs = msgs->diff(msgs1);
+                int diffs = msgs.diff(msgs1);
                 if (diffs)
                 {
                     FILE* out1 = fopen("/tmp/msg1.txt", "w");
                     FILE* out2 = fopen("/tmp/msg2.txt", "w");
-                    msgs->print(out1);
+                    msgs.print(out1);
                     msgs1.print(out2);
                     fclose(out1);
                     fclose(out2);
@@ -835,35 +831,34 @@ std::vector<Test> tests {
         vector<string> fails;
         int i;
         std::unique_ptr<msg::Exporter> exporter;
-        exporter = msg::Exporter::create(BUFR/*, const Options& opts=Options()*/);
+        exporter = msg::Exporter::create(File::BUFR/*, const Options& opts=Options()*/);
         msg::Importer::Options import_opts;
         import_opts.simplified = false;
-        std::unique_ptr<msg::Importer> importer = msg::Importer::create(BUFR, import_opts);
+        std::unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR, import_opts);
 
         for (i = 0; files[i] != NULL; i++)
         {
             if (blacklist.find(files[i]) != blacklist.end()) continue;
             try {
                 // Import
-                unique_ptr<Msgs> msgs = read_msgs_opts(files[i], BUFR, import_opts);
-                ensure(msgs->size() > 0);
+                Msgs msgs = read_msgs_opts(files[i], File::BUFR, import_opts);
+                ensure(msgs.size() > 0);
 
                 // Export
                 unique_ptr<Bulletin> bbulletin(BufrBulletin::create());
-                exporter->to_bulletin(*msgs, *bbulletin);
+                exporter->to_bulletin(msgs, *bbulletin);
 
                 // Import again
-                Msgs msgs1;
-                importer->from_bulletin(*bbulletin, msgs1);
+                Msgs msgs1 = importer->from_bulletin(*bbulletin);
 
                 // Compare
                 stringstream str;
                 notes::Collect c(str);
-                int diffs = msgs->diff(msgs1);
+                int diffs = msgs.diff(msgs1);
                 if (diffs)
                 {
                     string tag = str::basename(files[i]);
-                    dballe::tests::dump("dballe-orig-" + tag, *msgs, "original message");
+                    dballe::tests::dump("dballe-orig-" + tag, msgs, "original message");
                     dballe::tests::dump("dballe-reenc-" + tag, *bbulletin, "reencoded message");
                     dballe::tests::dump("dballe-reenc-" + tag, msgs1, "decoded reencoded message");
                     dballe::tests::dump("dballe-diffs-" + tag, str.str(), "differences");
@@ -879,11 +874,11 @@ std::vector<Test> tests {
     // Old PILOT
     Test("old_pilot1", [](Fixture& f) {
         // Test that pilot subtype is set correctly
-        std::unique_ptr<Msgs> msgs = read_msgs("bufr/obs2-91.2.bufr", BUFR);
+        Msgs msgs = read_msgs("bufr/obs2-91.2.bufr", File::BUFR);
         unique_ptr<Bulletin> bulletin(BufrBulletin::create());
         msg::Exporter::Options opts;
         opts.template_name = "pilot-wmo";
-        test_export_msgs(*msgs, *bulletin, "pilotwmo", opts);
+        test_export_msgs(msgs, *bulletin, "pilotwmo", opts);
         ensure_equals(bulletin->type, 2);
         ensure_equals(bulletin->subtype, 1);
         ensure_equals(bulletin->localsubtype, 255);
@@ -939,9 +934,9 @@ std::vector<Test> tests {
     }),
     Test("new_pilot4", [](Fixture& f) {
         // Test for a bug where geopotential levels became pressure levels
-        unique_ptr<Msgs> msgs1 = read_msgs("bufr/pilot-ecmwf-geopotential.bufr", BUFR);
-        ensure_equals(msgs1->size(), 1);
-        Msg& msg1 = *(*msgs1)[0];
+        Msgs msgs1 = read_msgs("bufr/pilot-ecmwf-geopotential.bufr", File::BUFR);
+        ensure_equals(msgs1.size(), 1);
+        Msg& msg1 = *msgs1[0];
 
         // Geopotential levels are converted to height above msl
         const msg::Context* c = msg1.find_context(Level(102, 900), Trange(254, 0, 0));
@@ -952,12 +947,11 @@ std::vector<Test> tests {
         output_opts.template_name = "pilot-wmo";
         //if (verbose) cerr << "Exporting " << output_opts.to_string() << endl;
         std::unique_ptr<BufrBulletin> bulletin = BufrBulletin::create();
-        test_export_msgs(*msgs1, *bulletin, "towmo", output_opts);
+        test_export_msgs(msgs1, *bulletin, "towmo", output_opts);
 
         // Import again
-        Msgs msgs2;
-        std::unique_ptr<msg::Importer> imp = msg::Importer::create(BUFR);
-        imp->from_bulletin(*bulletin, msgs2);
+        std::unique_ptr<msg::Importer> imp = msg::Importer::create(File::BUFR);
+        Msgs msgs2 = imp->from_bulletin(*bulletin);
         ensure_equals(msgs2.size(), 1);
         Msg& msg2 = *msgs2[0];
 
@@ -966,31 +960,30 @@ std::vector<Test> tests {
     }),
     Test("new_pilot5", [](Fixture& f) {
         // Test for a range error in one specific BUFR
-        unique_ptr<Msgs> msgs1 = read_msgs("bufr/temp-2-255.bufr", BUFR);
-        ensure_equals(msgs1->size(), 1);
-        Msg& msg1 = *(*msgs1)[0];
+        Msgs msgs1 = read_msgs("bufr/temp-2-255.bufr", File::BUFR);
+        ensure_equals(msgs1.size(), 1);
+        Msg& msg1 = *msgs1[0];
 
         // Convert to CREX
         msg::Exporter::Options output_opts;
         output_opts.template_name = "temp-wmo";
         std::unique_ptr<CrexBulletin> bulletin = CrexBulletin::create();
-        test_export_msgs(*msgs1, *bulletin, "tocrex", output_opts);
+        test_export_msgs(msgs1, *bulletin, "tocrex", output_opts);
 
         // Import again
-        Msgs msgs2;
-        std::unique_ptr<msg::Importer> imp = msg::Importer::create(BUFR);
-        imp->from_bulletin(*bulletin, msgs2);
+        std::unique_ptr<msg::Importer> imp = msg::Importer::create(File::BUFR);
+        Msgs msgs2 = wcallchecked(imp->from_bulletin(*bulletin));
         ensure_equals(msgs2.size(), 1);
         Msg& msg2 = *msgs2[0];
     }),
     // Old SHIP
     Test("old_ship1", [](Fixture& f) {
         // Test that temp ship subtype is set correctly
-        std::unique_ptr<Msgs> msgs = read_msgs("bufr/obs2-102.1.bufr", BUFR);
+        Msgs msgs = read_msgs("bufr/obs2-102.1.bufr", File::BUFR);
         unique_ptr<Bulletin> bulletin(BufrBulletin::create());
         msg::Exporter::Options opts;
         opts.template_name = "temp-wmo";
-        test_export_msgs(*msgs, *bulletin, "tempship", opts);
+        test_export_msgs(msgs, *bulletin, "tempship", opts);
         ensure_equals(bulletin->type, 2);
         ensure_equals(bulletin->subtype, 5);
         ensure_equals(bulletin->localsubtype, 255);

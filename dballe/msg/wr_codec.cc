@@ -39,10 +39,10 @@ BufrImporter::BufrImporter(const Options& opts)
     : WRImporter(opts) {}
 BufrImporter::~BufrImporter() {}
 
-bool BufrImporter::foreach_decoded(const Rawmsg& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const
+bool BufrImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const
 {
     unique_ptr<BufrBulletin> bulletin(BufrBulletin::create());
-    bulletin->decode(msg);
+    bulletin->decode(msg.data);
     return foreach_decoded_bulletin(*bulletin, dest);
 }
 
@@ -50,16 +50,18 @@ CrexImporter::CrexImporter(const Options& opts)
     : WRImporter(opts) {}
 CrexImporter::~CrexImporter() {}
 
-bool CrexImporter::foreach_decoded(const Rawmsg& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const
+bool CrexImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const
 {
     unique_ptr<CrexBulletin> bulletin(CrexBulletin::create());
-    bulletin->decode(msg);
+    bulletin->decode(msg.data);
     return foreach_decoded_bulletin(*bulletin, dest);
 }
 
-void WRImporter::from_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const
+Msgs WRImporter::from_bulletin(const wreport::Bulletin& msg) const
 {
-    foreach_decoded_bulletin(msg, [&](unique_ptr<Msg> m) { msgs.acquire(move(m)); return true; });
+    Msgs res;
+    foreach_decoded_bulletin(msg, [&](unique_ptr<Msg> m) { res.acquire(move(m)); return true; });
+    return res;
 }
 
 bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const
@@ -132,11 +134,13 @@ std::unique_ptr<wreport::Bulletin> BufrExporter::make_bulletin() const
     return std::unique_ptr<wreport::Bulletin>(BufrBulletin::create().release());
 }
 
-void BufrExporter::to_rawmsg(const Msgs& msgs, Rawmsg& msg) const
+std::string BufrExporter::to_binary(const Msgs& msgs) const
 {
     unique_ptr<BufrBulletin> bulletin(BufrBulletin::create());
     to_bulletin(msgs, *bulletin);
-    bulletin->encode(msg);
+    string res;
+    bulletin->encode(res);
+    return res;
 }
 
 CrexExporter::CrexExporter(const Options& opts)
@@ -148,11 +152,13 @@ std::unique_ptr<wreport::Bulletin> CrexExporter::make_bulletin() const
     return std::unique_ptr<wreport::Bulletin>(CrexBulletin::create().release());
 }
 
-void CrexExporter::to_rawmsg(const Msgs& msgs, Rawmsg& msg) const
+std::string CrexExporter::to_binary(const Msgs& msgs) const
 {
     unique_ptr<CrexBulletin> bulletin(CrexBulletin::create());
     to_bulletin(msgs, *bulletin);
-    bulletin->encode(msg);
+    string res;
+    bulletin->encode(res);
+    return res;
 }
 
 namespace {

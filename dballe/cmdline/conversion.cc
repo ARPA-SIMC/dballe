@@ -1,26 +1,7 @@
-/*
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "conversion.h"
 #include "processor.h"
 
-#include <dballe/core/file.h>
+#include <dballe/file.h>
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/context.h>
 #include <dballe/msg/codec.h>
@@ -39,24 +20,24 @@ Converter::~Converter()
     if (exporter) delete exporter;
 }
 
-void Converter::process_bufrex_msg(const Rawmsg& orig, const Bulletin& msg)
+void Converter::process_bufrex_msg(const BinaryMessage& orig, const Bulletin& msg)
 {
-    Rawmsg raw;
+    string raw;
     try {
         msg.encode(raw);
     } catch (std::exception& e) {
-        throw ProcessingException(orig.file, orig.index, e);
+        throw ProcessingException(orig.pathname, orig.index, e);
     }
     file->write(raw);
 }
 
-void Converter::process_dba_msg(const Rawmsg& orig, const Msgs& msgs)
+void Converter::process_dba_msg(const BinaryMessage& orig, const Msgs& msgs)
 {
-    Rawmsg raw;
+    string raw;
     try {
-        exporter->to_rawmsg(msgs, raw);
+        raw = exporter->to_binary(msgs);
     } catch (std::exception& e) {
-        throw ProcessingException(orig.file, orig.index, e);
+        throw ProcessingException(orig.pathname, orig.index, e);
     }
     file->write(raw);
 }
@@ -189,9 +170,9 @@ static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, co
 }
 
 
-void Converter::process_dba_msg_from_bulletin(const Rawmsg& orig, const Bulletin& bulletin, const Msgs& msgs)
+void Converter::process_dba_msg_from_bulletin(const BinaryMessage& orig, const Bulletin& bulletin, const Msgs& msgs)
 {
-    Rawmsg raw;
+    string raw;
     try {
         unique_ptr<Bulletin> b1(exporter->make_bulletin());
         exporter->to_bulletin(msgs, *b1);
@@ -207,7 +188,7 @@ void Converter::process_dba_msg_from_bulletin(const Rawmsg& orig, const Bulletin
 
         b1->encode(raw);
     } catch (std::exception& e) {
-        throw ProcessingException(orig.file, orig.index, e);
+        throw ProcessingException(orig.pathname, orig.index, e);
     }
     file->write(raw);
 }
@@ -241,8 +222,8 @@ bool Converter::operator()(const cmdline::Item& item)
         }
 
         // Same encoding
-        if ((file->type() == BUFR && string(item.bulletin->encoding_name()) == "CREX")
-                || (file->type() == CREX && string(item.bulletin->encoding_name()) == "BUFR"))
+        if ((file->encoding() == File::BUFR && string(item.bulletin->encoding_name()) == "CREX")
+                || (file->encoding() == File::CREX && string(item.bulletin->encoding_name()) == "BUFR"))
         {
             fprintf(stderr, "encoding change not yet supported for low-level bufrex recoding\n");
             return false;

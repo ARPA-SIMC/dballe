@@ -24,7 +24,7 @@
 #include "aof_codec.h"
 #include "aof_importers/common.h"
 #include "msg.h"
-#include <dballe/core/file.h>
+#include <dballe/file.h>
 #include <dballe/msg/msgs.h>
 #include <wreport/conv.h>
 
@@ -43,14 +43,14 @@ AOFImporter::AOFImporter(const Options& opts)
     : Importer(opts) {}
 AOFImporter::~AOFImporter() {}
 
-bool AOFImporter::foreach_decoded(const Rawmsg& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const
+bool AOFImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const
 {
     /* char id[10]; */
     TRACE("aof_message_decode\n");
 
     /* Access the raw data in a more comfortable form */
-    const uint32_t* obs = (const uint32_t*)msg.data();
-    int obs_len = msg.size() / sizeof(uint32_t);
+    const uint32_t* obs = (const uint32_t*)msg.data.data();
+    int obs_len = msg.data.size() / sizeof(uint32_t);
 
     TRACE("05 grid box number: %d\n", OBS(5));
     TRACE("obs type: %d, %d\n", OBS(6), OBS(7));
@@ -80,7 +80,7 @@ bool AOFImporter::foreach_decoded(const Rawmsg& msg, std::function<bool(std::uni
         case 6: read_pilot(obs, obs_len, *out); break;
         case 7: read_satem(obs, obs_len, *out); break;
         default:
-            error_parse::throwf(msg.file.c_str(), msg.offset,
+            error_parse::throwf(msg.pathname.c_str(), msg.offset,
                     "cannot handle AOF observation type %d subtype %d",
                     OBS(5), OBS(6));
     }
@@ -88,30 +88,30 @@ bool AOFImporter::foreach_decoded(const Rawmsg& msg, std::function<bool(std::uni
     return dest(std::move(out));
 }
 
-void AOFImporter::from_bulletin(const wreport::Bulletin&, Msgs&) const
+Msgs AOFImporter::from_bulletin(const wreport::Bulletin&) const
 {
     throw error_unimplemented("AOF importer cannot import from wreport::Bulletin");
 }
 
-void AOFImporter::get_category(const Rawmsg& msg, int* category, int* subcategory)
+void AOFImporter::get_category(const BinaryMessage& msg, int* category, int* subcategory)
 {
     /* Access the raw data in a more comfortable form */
-    const uint32_t* obs = (const uint32_t*)msg.data();
-    int obs_len = msg.size() / sizeof(uint32_t);
+    const uint32_t* obs = (const uint32_t*)msg.data.data();
+    int obs_len = msg.data.size() / sizeof(uint32_t);
 
     if (obs_len < 7)
-        throw error_parse(msg.file.c_str(), msg.offset,
+        throw error_parse(msg.pathname.c_str(), msg.offset,
                 "the buffer is too short to contain an AOF message");
 
     *category = obs[5];
     *subcategory = obs[6];
 }
 
-void AOFImporter::dump(const Rawmsg& msg, FILE* out)
+void AOFImporter::dump(const BinaryMessage& msg, FILE* out)
 {
     /* Access the raw data in a more comfortable form */
-    const uint32_t* obs = (const uint32_t*)msg.data();
-    int obs_len = msg.size() / sizeof(uint32_t);
+    const uint32_t* obs = (const uint32_t*)msg.data.data();
+    int obs_len = msg.data.size() / sizeof(uint32_t);
 
     for (int i = 0; i < obs_len; i++)
         if (obs[i] == 0x7fffffff)

@@ -1,4 +1,4 @@
-#include "db/test-utils-db.h"
+#include "db/tests.h"
 #include <wibble/string.h>
 #include "config.h"
 

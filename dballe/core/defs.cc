@@ -14,25 +14,6 @@ using namespace wreport;
 
 namespace dballe {
 
-const char* encoding_name(Encoding enc)
-{
-	switch (enc)
-	{
-		case BUFR: return "BUFR";
-		case CREX: return "CREX";
-		case AOF: return "AOF";
-		default: return "(unknown)";
-	}
-}
-
-Encoding parse_encoding(const std::string& s)
-{
-    if (s == "BUFR") return BUFR;
-    if (s == "CREX") return CREX;
-    if (s == "AOF") return AOF;
-    error_notfound::throwf("unsupported encoding '%s'", s.c_str());
-}
-
 std::ostream& operator<<(std::ostream& out, const Level& l)
 {
     l.to_stream(out);

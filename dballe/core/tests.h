@@ -20,19 +20,25 @@
  */
 
 #include <wreport/tests.h>
-
+#include <dballe/file.h>
 #include <dballe/record.h>
 #include <dballe/core/query.h>
 #include <dballe/core/values.h>
-#include <dballe/core/rawmsg.h>
-#include <dballe/core/file.h>
-
 #include <cstdlib>
 #include <climits>
 #include <string>
 #include <vector>
 #include <iostream>
 #include <memory>
+
+#define wcallchecked(func) \
+    [&]() { try { \
+        return func; \
+    } catch (tut::failure) { \
+        throw; \
+    } catch (std::exception& e) { \
+        wibble_test_location.fail_test(wibble_test_location_info, __FILE__, __LINE__, #func, e.what()); \
+    } }()
 
 namespace dballe {
 namespace tests {
@@ -227,11 +233,11 @@ static inline bool rnd(double prob)
 /// Return the pathname of a test file
 std::string datafile(const std::string& fname);
 
-std::unique_ptr<File> _open_test_data(const wibble::tests::Location& loc, const char* filename, Encoding type);
+std::unique_ptr<File> _open_test_data(const wibble::tests::Location& loc, const char* filename, File::Encoding type);
 #define open_test_data(filename, type) dballe::tests::_open_test_data(wibble::tests::Location(__FILE__, __LINE__, "open " #filename " " #type), (filename), (type))
 #define inner_open_test_data(filename, type) dballe::tests::_open_test_data(wibble::tests::Location(loc, __FILE__, __LINE__, #filename " " #type), (filename), (type))
 
-std::unique_ptr<Rawmsg> _read_rawmsg(const wibble::tests::Location& loc, const char* filename, Encoding type);
+BinaryMessage _read_rawmsg(const wibble::tests::Location& loc, const char* filename, File::Encoding type);
 #define read_rawmsg(filename, type) dballe::tests::_read_rawmsg(wibble::tests::Location(__FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
 #define inner_read_rawmsg(filename, type) dballe::tests::_read_rawmsg(wibble::tests::Location(loc, __FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
 

@@ -19,7 +19,7 @@
 #ifndef DBA_MEMDB_TESTS_H
 #define DBA_MEMDB_TESTS_H
 
-#include <dballe/core/test-utils-core.h>
+#include <dballe/core/tests.h>
 #include <dballe/memdb/results.h>
 #include <vector>
 #include <iterator>

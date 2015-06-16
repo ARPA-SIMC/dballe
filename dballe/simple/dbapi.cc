@@ -1,5 +1,5 @@
 #include "dbapi.h"
-#include "dballe/core/file.h"
+#include "dballe/file.h"
 #include "dballe/core/query.h"
 #include "dballe/core/values.h"
 #include "dballe/db/db.h"
@@ -21,7 +21,7 @@ struct InputFile
     unsigned current_msg_idx;
     int import_flags;
 
-    InputFile(const char* fname, Encoding format, bool simplified)
+    InputFile(const char* fname, File::Encoding format, bool simplified)
         : input(0), importer(0), current_msg_idx(0), import_flags(0)
     {
         msg::Importer::Options importer_options;
@@ -43,13 +43,13 @@ struct InputFile
         else
         {
             // Read data
-            Rawmsg rmsg;
-            if (!input->read(rmsg))
+            BinaryMessage rmsg = input->read();
+            if (!rmsg)
                 return false;
 
             // Parse and interpret data
             current_msg.clear();
-            importer->from_rawmsg(rmsg, current_msg);
+            current_msg = importer->from_binary(rmsg);
 
             // Move to the first message
             current_msg_idx = 0;
@@ -68,7 +68,7 @@ struct OutputFile
 {
     File* output;
 
-    OutputFile(const char* fname, const char* mode, Encoding format)
+    OutputFile(const char* fname, const char* mode, File::Encoding format)
         : output(0)
     {
         output = File::create(format, fname, mode).release();
@@ -366,7 +366,7 @@ void DbAPI::scusa()
     qcinput.clear();
 }
 
-void DbAPI::messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified)
+void DbAPI::messages_open_input(const char* filename, const char* mode, File::Encoding format, bool simplified)
 {
     // Consistency checks
     if (strchr(mode, 'r') == NULL)
@@ -391,7 +391,7 @@ void DbAPI::messages_open_input(const char* filename, const char* mode, Encoding
         input_file->import_flags |= DBA_IMPORT_OVERWRITE;
 }
 
-void DbAPI::messages_open_output(const char* filename, const char* mode, Encoding format)
+void DbAPI::messages_open_output(const char* filename, const char* mode, File::Encoding format)
 {
     if (strchr(mode, 'w') == NULL && strchr(mode, 'a') == NULL)
         throw error_consistency("output files should be open with 'w' or 'a' mode");
@@ -425,7 +425,7 @@ struct Exporter : public MsgConsumer
     msg::Exporter* exporter;
 
     Exporter(File& out, msg::Exporter::Options& options)
-        : out(out), exporter(msg::Exporter::create(out.type(), options).release())
+        : out(out), exporter(msg::Exporter::create(out.encoding(), options).release())
     {
     }
 
@@ -433,9 +433,7 @@ struct Exporter : public MsgConsumer
     {
         Msgs msgs;
         msgs.acquire(move(msg));
-        Rawmsg rmsg;
-        exporter->to_rawmsg(msgs, rmsg);
-        out.write(rmsg);
+        out.write(exporter->to_binary(msgs));
     }
 };
 }

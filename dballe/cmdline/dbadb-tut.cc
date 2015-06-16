@@ -18,7 +18,7 @@
  */
 
 #include "config.h"
-#include "db/test-utils-db.h"
+#include "db/tests.h"
 #include "cmdline/dbadb.h"
 #include "core/arrayfile.h"
 #include "msg/codec.h"
@@ -67,15 +67,14 @@ std::vector<Test> tests {
 
         // Export forcing report as temp
         core::Query query;
-        ArrayFile file(BUFR);
+        core::ArrayFile file(File::BUFR);
         ensure_equals(dbadb.do_export(query, file, "generic", "ship"), 0);
 
         ensure_equals(file.msgs.size(), 1u);
 
         // Decode results
-        auto importer = msg::Importer::create(BUFR);
-        Msgs msgs;
-        importer->from_rawmsg(file.msgs[0], msgs);
+        auto importer = msg::Importer::create(File::BUFR);
+        Msgs msgs = importer->from_binary(file.msgs[0]);
         ensure_equals(msgs.size(), 1u);
 
         // Ensure they're ships

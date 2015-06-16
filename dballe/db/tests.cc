@@ -1,5 +1,5 @@
 #include "config.h"
-#include "test-utils-db.h"
+#include "tests.h"
 #include "dballe/db/v6/db.h"
 #include "dballe/db/sql.h"
 #include "dballe/db/sql/driver.h"

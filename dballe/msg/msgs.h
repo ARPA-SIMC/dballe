@@ -39,9 +39,11 @@ struct Msgs : public std::vector<Msg*>
 {
     Msgs();
     Msgs(const Msgs& msgs);
+    Msgs(Msgs&& msgs);
     ~Msgs();
 
     Msgs& operator=(const Msgs& msgs);
+    Msgs& operator=(Msgs&& msgs);
 
     /**
      * Append a copy of the message to the array.

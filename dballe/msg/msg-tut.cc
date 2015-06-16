@@ -1,4 +1,4 @@
-#include "msg/test-utils-msg.h"
+#include "msg/tests.h"
 #include "core/csv.h"
 #include "msg/msgs.h"
 #include "msg/msg.h"

@@ -18,7 +18,7 @@
  */
 
 #include "config.h"
-#include "db/test-utils-db.h"
+#include "db/tests.h"
 #include "dbapi.h"
 #include "config.h"
 
@@ -299,7 +299,7 @@ std::vector<Test> tests {
         {
             fortran::DbAPI api(*f.db, "read", "read", "read");
             try {
-                api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+                api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
             } catch (std::exception& e) {
                 wassert(actual(e.what()).contains("must be called on a session with writable"));
             }
@@ -307,7 +307,7 @@ std::vector<Test> tests {
         {
             fortran::DbAPI api(*f.db, "write", "read", "read");
             try {
-                api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+                api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
             } catch (std::exception& e) {
                 wassert(actual(e.what()).contains("must be called on a session with writable"));
             }
@@ -315,32 +315,32 @@ std::vector<Test> tests {
         {
             fortran::DbAPI api(*f.db, "read", "add", "read");
             try {
-                api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+                api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
             } catch (std::exception& e) {
                 wassert(actual(e.what()).contains("must be called on a session with writable"));
             }
         }
         {
             fortran::DbAPI api(*f.db, "write", "add", "read");
-            api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+            api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
         }
         {
             fortran::DbAPI api(*f.db, "write", "write", "read");
-            api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+            api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
         }
         {
             fortran::DbAPI api(*f.db, "write", "add", "write");
-            api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+            api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
         }
         {
             fortran::DbAPI api(*f.db, "write", "write", "write");
-            api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+            api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
         }
     }),
     Test("messages_read_messages", [](Fixture& f) {
         // 2 messages, 1 subset each
         fortran::DbAPI api(*f.db, "write", "write", "write");
-        api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", BUFR);
+        api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
 
         // At the beginning, the DB is empty
         wassert(actual(api.voglioquesto()) == 0);
@@ -362,7 +362,7 @@ std::vector<Test> tests {
     Test("messages_read_subsets", [](Fixture& f) {
         // 1 message, 6 subsets
         fortran::DbAPI api(*f.db, "write", "write", "write");
-        api.messages_open_input(dballe::tests::datafile("bufr/temp-gts2.bufr").c_str(), "r", BUFR);
+        api.messages_open_input(dballe::tests::datafile("bufr/temp-gts2.bufr").c_str(), "r", File::BUFR);
 
         // At the beginning, the DB is empty
         wassert(actual(api.voglioquesto()) == 0);
@@ -395,7 +395,7 @@ std::vector<Test> tests {
     Test("messages_read_messages_subsets", [](Fixture& f) {
         // 2 messages, 2 subsets each
         fortran::DbAPI api(*f.db, "write", "write", "write");
-        api.messages_open_input(dballe::tests::datafile("bufr/db-messages1.bufr").c_str(), "r", BUFR);
+        api.messages_open_input(dballe::tests::datafile("bufr/db-messages1.bufr").c_str(), "r", File::BUFR);
 
         // At the beginning, the DB is empty
         wassert(actual(api.voglioquesto()) == 0);
@@ -434,7 +434,7 @@ std::vector<Test> tests {
         // Write one message
         {
             fortran::DbAPI api(*f.db, "write", "write", "write");
-            api.messages_open_output("test.bufr", "wb", BUFR);
+            api.messages_open_output("test.bufr", "wb", File::BUFR);
 
             api.setd("lat", 44.5);
             api.setd("lon", 11.5);
@@ -458,7 +458,7 @@ std::vector<Test> tests {
         // Read it back
         {
             fortran::DbAPI api(*f.db, "write", "write", "write");
-            api.messages_open_input("test.bufr", "rb", BUFR);
+            api.messages_open_input("test.bufr", "rb", File::BUFR);
 
             wassert(actual(api.messages_read_next()).istrue());
             wassert(actual(api.voglioquesto()) == 2);
@@ -474,7 +474,7 @@ std::vector<Test> tests {
         // Reproduce an issue reported by Paolo
         // 2 messages, 2 subsets each
         fortran::DbAPI api(*f.db, "write", "write", "write");
-        api.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140312.bufr").c_str(), "r", BUFR);
+        api.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140312.bufr").c_str(), "r", File::BUFR);
         wassert(actual(api.messages_read_next()) == 1);
         api.unsetall();
         api.setcontextana();
@@ -488,7 +488,7 @@ std::vector<Test> tests {
         // Reproduce an issue reported by Paolo
         // 2 messages, 2 subsets each
         fortran::DbAPI api(*f.db, "write", "write", "write");
-        api.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140326.bufr").c_str(), "r", BUFR);
+        api.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140326.bufr").c_str(), "r", File::BUFR);
         wassert(actual(api.messages_read_next()) == 1);
         api.unsetall();
         api.setcontextana();
@@ -636,8 +636,8 @@ std::vector<Test> tests {
             fortran::DbAPI dbapi0(*f.db, "write", "write", "write");
             dbapi0.scopa();
             // Copy a message using the API
-            dbapi0.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140403.bufr").c_str(), "r", BUFR);
-            dbapi0.messages_open_output("test.bufr", "w", BUFR);
+            dbapi0.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140403.bufr").c_str(), "r", File::BUFR);
+            dbapi0.messages_open_output("test.bufr", "w", File::BUFR);
             wassert(actual(dbapi0.messages_read_next()) == 1);
             //dbapi0.setcontextana();
             dbapi0.messages_write_next("generic");
@@ -653,8 +653,8 @@ std::vector<Test> tests {
         // values
 
         // // Compare the two messages
-        // std::unique_ptr<Msgs> msgs1 = read_msgs("bufr/generic-bug20140403.bufr", BUFR);
-        // std::unique_ptr<Msgs> msgs2 = read_msgs("./test.bufr", BUFR);
+        // std::unique_ptr<Msgs> msgs1 = read_msgs("bufr/generic-bug20140403.bufr", File::BUFR);
+        // std::unique_ptr<Msgs> msgs2 = read_msgs("./test.bufr", File::BUFR);
         // unsigned diffs = msgs1->diff(*msgs2);
         // if (diffs) dballe::tests::track_different_msgs(*msgs1, *msgs2, "apicopy");
         // wassert(actual(diffs) == 0);

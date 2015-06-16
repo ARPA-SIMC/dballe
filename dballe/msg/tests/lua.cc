@@ -17,8 +17,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "msg/test-utils-msg.h"
-#include "msg/test-utils-lua.h"
+#include "msg/tests.h"
+#include "msg/tests-lua.h"
 #include "msg/msg.h"
 
 using namespace dballe;
@@ -44,10 +44,10 @@ TESTGRP(lua);
 template<> template<>
 void to::test<1>()
 {
-	// Get a test message
-	unique_ptr<Msgs> msgs = read_msgs("bufr/obs0-1.22.bufr", BUFR);
-	ensure_equals(msgs->size(), 1u);
-	Msg& msg = *(*msgs)[0];
+    // Get a test message
+    Msgs msgs = read_msgs("bufr/obs0-1.22.bufr", File::BUFR);
+    ensure_equals(msgs.size(), 1u);
+    Msg& msg = *msgs[0];
 
     dballe::tests::Lua test(
 		"function test() \n"

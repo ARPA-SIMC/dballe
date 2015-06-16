@@ -97,11 +97,9 @@ struct MsgWriter : public MsgConsumer
             msg->type = Msg::type_from_repmemo(forced_rep_memo);
             msg->set_rep_memo(forced_rep_memo);
         }
-        Rawmsg raw;
         Msgs msgs;
         msgs.acquire(move(msg));
-        exporter->to_rawmsg(msgs, raw);
-        file.write(raw);
+        file.write(exporter->to_binary(msgs));
     }
 };
 
@@ -182,7 +180,7 @@ int Dbadb::do_export(const Query& query, File& file, const char* output_template
     MsgWriter writer(file);
     if (forced_repmemo)
         writer.forced_rep_memo = dbadb::parse_op_report(db, forced_repmemo);
-    writer.exporter = msg::Exporter::create(file.type(), opts).release();
+    writer.exporter = msg::Exporter::create(file.encoding(), opts).release();
 
     db.export_msgs(query, writer);
     return 0;
@@ -190,5 +188,3 @@ int Dbadb::do_export(const Query& query, File& file, const char* output_template
 
 }
 }
-
-/* vim:set ts=4 sw=4: */

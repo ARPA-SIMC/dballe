@@ -18,7 +18,7 @@
  */
 
 #include "config.h"
-#include "db/test-utils-db.h"
+#include "db/tests.h"
 #include "db/v6/db.h"
 #include "db/sql.h"
 #include "db/sql/driver.h"

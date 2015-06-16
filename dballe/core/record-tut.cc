@@ -1,4 +1,4 @@
-#include "core/test-utils-core.h"
+#include "core/tests.h"
 #include "core/record.h"
 
 using namespace wibble::tests;

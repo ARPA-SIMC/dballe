@@ -1,5 +1,5 @@
 #include "config.h"
-#include "db/test-utils-db.h"
+#include "db/tests.h"
 #include "db/db.h"
 #include "dballe/record.h"
 

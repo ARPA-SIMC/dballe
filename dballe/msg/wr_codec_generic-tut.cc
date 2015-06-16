@@ -17,7 +17,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "msg/test-utils-msg.h"
+#include "msg/tests.h"
 #include "msg/wr_codec.h"
 #include <wreport/notes.h>
 #include <wreport/bulletin.h>
@@ -36,21 +36,20 @@ typedef test_group::Fixture Fixture;
 std::vector<Test> tests {
     Test("empty", [](Fixture& f) {
         // Try encoding and decoding an empty generic message
-        unique_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
-        unique_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR);
+        unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR);
+        unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR);
 
         Msgs msgs;
         msgs.acquire(unique_ptr<Msg>(new Msg));
 
-        /* Export msg as a generic message */
-        Rawmsg raw;
-        wrunchecked(exporter->to_rawmsg(msgs, raw));
+        // Export msg as a generic message
+        BinaryMessage raw(File::BUFR);
+        raw.data = wcallchecked(exporter->to_binary(msgs));
 
-        /* Parse it back */
-        Msgs msgs1;
-        wrunchecked(importer->from_rawmsg(raw, msgs1));
+        // Parse it back
+        Msgs msgs1 = wcallchecked(importer->from_binary(raw));
 
-        /* Check that the data are the same */
+        // Check that the data are the same
         notes::Collect c(cerr);
         int diffs = msgs.diff(msgs1);
         if (diffs) dballe::tests::track_different_msgs(msgs, msgs1, "genericempty");
@@ -58,8 +57,8 @@ std::vector<Test> tests {
     }),
     Test("known", [](Fixture& f) {
         // Try encoding and decoding a generic message
-        unique_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
-        unique_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR);
+        unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR);
+        unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR);
 
         unique_ptr<Msg> msg(new Msg);
 
@@ -140,16 +139,15 @@ std::vector<Test> tests {
         msgs.acquire(move(msg));
 
         /* Export msg as a generic message */
-        Rawmsg raw;
-        exporter->to_rawmsg(msgs, raw);
+        BinaryMessage raw(File::BUFR);
+        raw.data = wcallchecked(exporter->to_binary(msgs));
 
-        FILE* out = fopen("/tmp/zaza.bufr", "wb");
-        fwrite(raw.data(), raw.size(), 1, out);
-        fclose(out);
+        //FILE* out = fopen("/tmp/zaza.bufr", "wb");
+        //fwrite(raw.data.data(), raw.data.size(), 1, out);
+        //fclose(out);
 
         /* Parse it back */
-        Msgs msgs1;
-        importer->from_rawmsg(raw, msgs1);
+        Msgs msgs1 = wcallchecked(importer->from_binary(raw));
 
         /* Check that the data are the same */
         notes::Collect c(cerr);
@@ -159,8 +157,8 @@ std::vector<Test> tests {
     }),
     Test("attrs", [](Fixture& f) {
         // Check that attributes are properly exported
-        unique_ptr<msg::Importer> importer = msg::Importer::create(BUFR);
-        unique_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR);
+        unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR);
+        unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR);
 
         /* Create a new message */
         unique_ptr<Msg> msg(new Msg);
@@ -195,15 +193,14 @@ std::vector<Test> tests {
         Msgs msgs;
         msgs.acquire(move(msg));
 
-        /* Encode the message */
-        Rawmsg raw;
-        exporter->to_rawmsg(msgs, raw);
+        // Encode the message
+        BinaryMessage raw(File::BUFR);
+        raw.data = wcallchecked(exporter->to_binary(msgs));
 
-        /* Decode the message */
-        Msgs msgs1;
-        importer->from_rawmsg(raw, msgs1);
+        // Decode the message
+        Msgs msgs1 = wcallchecked(importer->from_binary(raw));
 
-        /* Check that the data are the same */
+        // Check that the data are the same
         notes::Collect c(cerr);
         int diffs = msgs.diff(msgs1);
         if (diffs) dballe::tests::track_different_msgs(msgs, msgs1, "genericattr");
@@ -213,17 +210,17 @@ std::vector<Test> tests {
         // Test a bug in which B01194 ([SIM] Report mnemonic) appears twice
 
         // Import a synop message
-        unique_ptr<Msgs> msgs = read_msgs("bufr/obs0-1.22.bufr", BUFR);
-        ensure(msgs->size() > 0);
+        Msgs msgs = read_msgs("bufr/obs0-1.22.bufr", File::BUFR);
+        ensure(msgs.size() > 0);
 
         // Convert it to generic, with a 'ship' rep_memo
-        (*msgs)[0]->type = MSG_GENERIC;
-        (*msgs)[0]->set_rep_memo("ship");
+        msgs[0]->type = MSG_GENERIC;
+        msgs[0]->set_rep_memo("ship");
 
         // Export it
-        unique_ptr<msg::Exporter> exporter = msg::Exporter::create(BUFR);
+        unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR);
         unique_ptr<Bulletin> bulletin(BufrBulletin::create());
-        exporter->to_bulletin(*msgs, *bulletin);
+        exporter->to_bulletin(msgs, *bulletin);
 
         // Ensure that B01194 only appears once
         ensure_equals(bulletin->subsets.size(), 1u);

@@ -1,4 +1,4 @@
-#include <dballe/msg/test-utils-msg.h>
+#include <dballe/msg/tests.h>
 #include <dballe/core/record.h>
 #include <dballe/core/values.h>
 #include <dballe/db/db.h>

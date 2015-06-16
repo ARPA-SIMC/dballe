@@ -1,27 +1,8 @@
 #ifndef FDBA_SIMPLE_H
 #define FDBA_SIMPLE_H
 
-/*
- * fortran/simple - Interface for Fortran API implementations
- *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-#include <dballe/core/defs.h>
+#include <dballe/file.h>
+#include <dballe/types.h>
 
 namespace dballe {
 namespace fortran {
@@ -617,7 +598,7 @@ struct API
      *   An argument for configuring the Importers::Options used to create the
      *   importer for this file.
      */
-    virtual void messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified=true) = 0;
+    virtual void messages_open_input(const char* filename, const char* mode, File::Encoding format, bool simplified=true) = 0;
 
     /**
      * Open a BUFR/CREX/AOF file for writing.
@@ -631,7 +612,7 @@ struct API
      * @param encoding
      *   The file encoding
      */
-    virtual void messages_open_output(const char* filename, const char* mode, Encoding format) = 0;
+    virtual void messages_open_output(const char* filename, const char* mode, File::Encoding format) = 0;
 
     /**
      * Read the next message and import it in the database.

@@ -1,6 +1,6 @@
 #include "msgapi.h"
 #include <wreport/var.h>
-#include <dballe/core/file.h>
+#include <dballe/file.h>
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/msg.h>
 #include <dballe/msg/context.h>
@@ -25,24 +25,20 @@ MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
 	} else if (strchr(mode, 'w') != NULL || strchr(mode, 'a') != NULL) {
 		set_permissions("write", "add", "write");
 	}
-	Encoding etype = (Encoding)-1;
-	if (strcasecmp(type, "BUFR") == 0)
-		etype = BUFR;
-	else if (strcasecmp(type, "CREX") == 0)
-		etype = CREX;
-	else if (strcasecmp(type, "AOF") == 0)
-		etype = AOF;
-	else if (strcasecmp(type, "AUTO") == 0)
-		etype = (Encoding)-1;
-	else
-		error_consistency::throwf("\"%s\" is not one of the supported message types", type);
 
-	file = File::create(etype, fname, mode).release();
+    if (strcasecmp(type, "BUFR") == 0)
+        file = File::create(File::BUFR, fname, mode).release();
+    else if (strcasecmp(type, "CREX") == 0)
+        file = File::create(File::CREX, fname, mode).release();
+    else if (strcasecmp(type, "AOF") == 0)
+        file = File::create(File::AOF, fname, mode).release();
+    else if (strcasecmp(type, "AUTO") == 0)
+        file = File::create(fname, mode).release();
+    else
+        error_consistency::throwf("\"%s\" is not one of the supported message types", type);
 
-	if (strchr(mode, 'r') != NULL)
-	{
-		importer = msg::Importer::create(etype).release();
-	}
+    if (strchr(mode, 'r') != NULL)
+        importer = msg::Importer::create(file->encoding()).release();
 }
 
 MsgAPI::~MsgAPI()
@@ -89,15 +85,14 @@ bool MsgAPI::readNextMessage()
 		msgs = 0;
 	}
 
-	Rawmsg raw;
-	if (file->read(raw))
-	{
+    if (BinaryMessage raw = file->read())
+    {
         unique_ptr<Msgs> new_msgs(new Msgs);
-        importer->from_rawmsg(raw, *new_msgs);
+        *new_msgs = importer->from_binary(raw);
         msgs = new_msgs.release();
         state &= ~STATE_BLANK;
-		return true;
-	}
+        return true;
+    }
 
     state &= ~STATE_BLANK;
 	state |= STATE_EOF;
@@ -318,21 +313,19 @@ void MsgAPI::flushSubset()
 
 void MsgAPI::flushMessage()
 {
-	if (msgs)
-	{
-		flushSubset();
-		Rawmsg raw;
-		if (exporter == 0)
-		{
-			msg::Exporter::Options opts;
-			opts.template_name = exporter_template;
-			exporter = msg::Exporter::create(file->type(), opts).release();
-		}
-		exporter->to_rawmsg(*msgs, raw);
-		file->write(raw);
-		delete msgs;
-		msgs = 0;
-	}
+    if (msgs)
+    {
+        flushSubset();
+        if (exporter == 0)
+        {
+            msg::Exporter::Options opts;
+            opts.template_name = exporter_template;
+            exporter = msg::Exporter::create(file->encoding(), opts).release();
+        }
+        file->write(exporter->to_binary(*msgs));
+        delete msgs;
+        msgs = 0;
+    }
 }
 
 void MsgAPI::prendilo()
@@ -477,12 +470,12 @@ void MsgAPI::scusa()
 	throw error_consistency("scusa does not make sense when writing messages");
 }
 
-void MsgAPI::messages_open_input(const char* filename, const char* mode, Encoding format, bool)
+void MsgAPI::messages_open_input(const char* filename, const char* mode, File::Encoding format, bool)
 {
     throw error_unimplemented("MsgAPI::messages_open_input");
 }
 
-void MsgAPI::messages_open_output(const char* filename, const char* mode, Encoding format)
+void MsgAPI::messages_open_output(const char* filename, const char* mode, File::Encoding format)
 {
     throw error_unimplemented("MsgAPI::messages_open_output");
 }

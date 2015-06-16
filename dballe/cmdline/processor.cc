@@ -20,7 +20,7 @@
 #include "processor.h"
 
 #include <wreport/bulletin.h>
-#include <dballe/core/file.h>
+#include <dballe/file.h>
 #include <dballe/core/csv.h>
 #include <dballe/core/match-wreport.h>
 #include <dballe/msg/aof_codec.h>
@@ -49,10 +49,10 @@ void ProcessingException::initmsg(const std::string& fname, unsigned index, cons
     free(c);
 }
 
-static void print_parse_error(const Rawmsg& msg, error& e)
+static void print_parse_error(const BinaryMessage& msg, error& e)
 {
     fprintf(stderr, "Cannot parse %s message #%d: %s at offset %ld.\n",
-            encoding_name(msg.encoding), msg.index, e.what(), msg.offset);
+            File::encoding_name(msg.encoding), msg.index, e.what(), msg.offset);
 }
 
 
@@ -93,27 +93,27 @@ void Item::decode(msg::Importer& imp, bool print_errors)
     // First step: decode raw message to bulletin
     switch (rmsg->encoding)
     {
-        case BUFR:
+        case File::BUFR:
             bulletin = BufrBulletin::create().release();
             try {
-                bulletin->decode(*rmsg, rmsg->file.c_str(), rmsg->offset);
+                bulletin->decode(rmsg->data, rmsg->pathname.c_str(), rmsg->offset);
             } catch (error& e) {
                 if (print_errors) print_parse_error(*rmsg, e);
                 delete bulletin;
                 bulletin = 0;
             }
             break;
-        case CREX:
+        case File::CREX:
             bulletin = CrexBulletin::create().release();
             try {
-                bulletin->decode(*rmsg, rmsg->file.c_str(), rmsg->offset);
+                bulletin->decode(rmsg->data, rmsg->pathname.c_str(), rmsg->offset);
             } catch (error& e) {
                 if (print_errors) print_parse_error(*rmsg, e);
                 delete bulletin;
                 bulletin = 0;
             }
             break;
-        case AOF:
+        case File::AOF:
             // Nothing to do for AOF
             break;
     }
@@ -121,13 +121,13 @@ void Item::decode(msg::Importer& imp, bool print_errors)
     // Second step: decode to msgs
     switch (rmsg->encoding)
     {
-        case BUFR:
-        case CREX:
+        case File::BUFR:
+        case File::CREX:
             if (bulletin)
             {
                 msgs = new Msgs;
                 try {
-                    imp.from_bulletin(*bulletin, *msgs);
+                    *msgs = imp.from_bulletin(*bulletin);
                 } catch (error& e) {
                     if (print_errors) print_parse_error(*rmsg, e);
                     delete msgs;
@@ -135,10 +135,10 @@ void Item::decode(msg::Importer& imp, bool print_errors)
                 }
             }
             break;
-        case AOF:
+        case File::AOF:
             msgs = new Msgs;
             try {
-                imp.from_rawmsg(*rmsg, *msgs);
+                *msgs = imp.from_binary(*rmsg);
             } catch (error& e) {
                 if (print_errors) print_parse_error(*rmsg, e);
                 delete msgs;
@@ -208,7 +208,7 @@ bool Filter::match_index(int idx) const
 	return false;
 }
 
-bool Filter::match_common(const Rawmsg&, const Msgs* msgs) const
+bool Filter::match_common(const BinaryMessage&, const Msgs* msgs) const
 {
     if (msgs == NULL && parsable)
         return false;
@@ -217,7 +217,7 @@ bool Filter::match_common(const Rawmsg&, const Msgs* msgs) const
     return true;
 }
 
-bool Filter::match_bufrex(const Rawmsg& rmsg, const Bulletin* rm, const Msgs* msgs) const
+bool Filter::match_bufrex(const BinaryMessage& rmsg, const Bulletin* rm, const Msgs* msgs) const
 {
     if (!match_common(rmsg, msgs))
         return false;
@@ -245,14 +245,14 @@ bool Filter::match_bufrex(const Rawmsg& rmsg, const Bulletin* rm, const Msgs* ms
     return true;
 }
 
-bool Filter::match_bufr(const Rawmsg& rmsg, const Bulletin* rm, const Msgs* msgs) const
+bool Filter::match_bufr(const BinaryMessage& rmsg, const Bulletin* rm, const Msgs* msgs) const
 {
     if (!match_bufrex(rmsg, rm, msgs))
         return false;
     return true;
 }
 
-bool Filter::match_crex(const Rawmsg& rmsg, const Bulletin* rm, const Msgs* msgs) const
+bool Filter::match_crex(const BinaryMessage& rmsg, const Bulletin* rm, const Msgs* msgs) const
 {
     if (!match_bufrex(rmsg, rm, msgs))
         return false;
@@ -272,7 +272,7 @@ bool Filter::match_crex(const Rawmsg& rmsg, const Bulletin* rm, const Msgs* msgs
 #endif
 }
 
-bool Filter::match_aof(const Rawmsg& rmsg, const Msgs* msgs) const
+bool Filter::match_aof(const BinaryMessage& rmsg, const Msgs* msgs) const
 {
     int category, subcategory;
     msg::AOFImporter::get_category(rmsg, &category, &subcategory);
@@ -307,9 +307,9 @@ bool Filter::match_item(const Item& item) const
     {
         switch (item.rmsg->encoding)
         {
-            case BUFR: return match_bufr(*item.rmsg, item.bulletin, item.msgs);
-            case CREX: return match_crex(*item.rmsg, item.bulletin, item.msgs);
-            case AOF: return match_aof(*item.rmsg, item.msgs);
+            case File::BUFR: return match_bufr(*item.rmsg, item.bulletin, item.msgs);
+            case File::CREX: return match_crex(*item.rmsg, item.bulletin, item.msgs);
+            case File::AOF: return match_aof(*item.rmsg, item.msgs);
             default: return false;
         }
     } else if (item.msgs)
@@ -326,10 +326,10 @@ Reader::Reader()
 void Reader::read_csv(const std::list<std::string>& fnames, Action& action)
 {
     // This cannot be implemented in dballe::File at the moment, since
-    // dballe::File reads dballe::Rawmsg strings, and here we read dballe::Msgs
-    // directly. We could split the input into several Rawmsg strings, but that
+    // dballe::File reads dballe::BinaryMessage strings, and here we read dballe::Msgs
+    // directly. We could split the input into several BinaryMessage strings, but that
     // would mean parsing the CSV twice: once to detect the message boundaries
-    // and once to parse the Rawmsg strings.
+    // and once to parse the BinaryMessage strings.
     Item item;
     unique_ptr<CSVReader> csvin;
 
@@ -372,12 +372,7 @@ void Reader::read_csv(const std::list<std::string>& fnames, Action& action)
 
 void Reader::read_file(const std::list<std::string>& fnames, Action& action)
 {
-    Item item;
-    item.rmsg = new Rawmsg;
-
     bool print_errors = !filter.unparsable;
-    Encoding intype = dba_cmdline_stringToMsgType(input_type);
-
     std::unique_ptr<File> fail_file;
 
     list<string>::const_iterator name = fnames.begin();
@@ -385,19 +380,33 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
     {
         unique_ptr<File> file;
 
-        if (name != fnames.end())
+        if (strcmp(input_type, "auto") == 0)
         {
-            file = File::create(intype, *name, "r");
-            ++name;
+            if (name != fnames.end())
+            {
+                file = File::create(*name, "r");
+                ++name;
+            } else {
+                file = File::create(stdin, false, "standard input");
+            }
         } else {
-            file = File::create(intype, "(stdin)", "r");
+            File::Encoding intype = string_to_encoding(input_type);
+            if (name != fnames.end())
+            {
+                file = File::create(intype, *name, "r");
+                ++name;
+            } else {
+                file = File::create(intype, stdin, false, "standard input");
+            }
         }
 
-        std::unique_ptr<msg::Importer> imp = msg::Importer::create(file->type(), import_opts);
 
-        while (file->read(*item.rmsg))
+        std::unique_ptr<msg::Importer> imp = msg::Importer::create(file->encoding(), import_opts);
+        while (BinaryMessage bm = file->read())
         {
-            ++item.idx;
+            Item item;
+            item.rmsg = new BinaryMessage(bm);
+            item.idx = bm.index;
             bool processed = false;
 
             try {
@@ -407,7 +416,6 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
                 if (!filter.match_index(item.idx))
                     continue;
 
-                item.rmsg->index = item.idx;
                 item.decode(*imp, print_errors);
 
                 //process_input(*file, rmsg, grepdata, action);
@@ -424,7 +432,7 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
                     fprintf(stderr, "%s\n", pe.what());
             } catch (std::exception& e) {
                 if (verbose)
-                    fprintf(stderr, "%s:#%d: %s\n", file->name().c_str(), item.idx, e.what());
+                    fprintf(stderr, "%s:#%d: %s\n", file->pathname().c_str(), item.idx, e.what());
                 throw;
             }
 
@@ -432,8 +440,8 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
             if (!processed && fail_file_name)
             {
                 if (!fail_file.get())
-                    fail_file = File::create(intype, fail_file_name, "ab");
-                fail_file->write(*item.rmsg);
+                    fail_file = File::create(file->encoding(), fail_file_name, "ab");
+                fail_file->write(item.rmsg->data);
             }
         }
     } while (name != fnames.end());

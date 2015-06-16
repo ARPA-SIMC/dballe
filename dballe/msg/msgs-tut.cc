@@ -17,7 +17,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "msg/test-utils-msg.h"
+#include "msg/tests.h"
 #include "core/csv.h"
 #include "msg/msgs.h"
 #include "msg/msg.h"
@@ -288,11 +288,11 @@ void to::test<7>()
 template<> template<>
 void to::test<8>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/synop-evapo.bufr", BUFR);
+    Msgs msgs = read_msgs("bufr/synop-evapo.bufr", File::BUFR);
 
     // Serialise to CSV
     stringstream str;
-    msgs->to_csv(str);
+    msgs.to_csv(str);
 
     // Read back
     Msgs msgs1;
@@ -302,7 +302,7 @@ void to::test<8>()
     msgs1.from_csv(in);
 
     // Normalise before compare
-    for (Msgs::iterator i = msgs->begin(); i != msgs->end(); ++i)
+    for (Msgs::iterator i = msgs.begin(); i != msgs.end(); ++i)
     {
         Msg& m = **i;
         m.set_rep_memo("synop");
@@ -310,17 +310,17 @@ void to::test<8>()
     }
 
     notes::Collect c(cerr);
-    ensure_equals(msgs->diff(msgs1), 0u);
+    ensure_equals(msgs.diff(msgs1), 0u);
 }
 
 // Test copy
 template<> template<>
 void to::test<9>()
 {
-    unique_ptr<Msgs> msgs = read_msgs("bufr/synop-evapo.bufr", BUFR);
-    Msgs msgs1(*msgs);
+    Msgs msgs = read_msgs("bufr/synop-evapo.bufr", File::BUFR);
+    Msgs msgs1(msgs);
     Msgs msgs2;
-    msgs2 = *msgs;
+    msgs2 = msgs;
     msgs1 = msgs1;
 }
 

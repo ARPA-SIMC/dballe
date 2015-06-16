@@ -44,6 +44,7 @@ EXTRA_PROGRAMS =
 dballeincludedir = $(includedir)/dballe
 
 nobase_dist_dballeinclude_HEADERS = \
+	file.h \
 	types.h \
 	record.h \
 	query.h \
@@ -55,7 +56,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/defs.h \
 	core/var.h \
 	core/values.h \
-	core/rawmsg.h \
 	core/file.h \
 	core/arrayfile.h \
 	core/aoffile.h \
@@ -160,6 +160,7 @@ endif
 
 lib_LTLIBRARIES = libdballe.la
 libdballe_la_SOURCES = \
+	file.cc \
 	types.cc \
 	record.cc \
 	query.cc \
@@ -317,15 +318,16 @@ check-local:
 #CXXFLAGS += -O0
 
 dist_noinst_HEADERS = \
-	core/test-utils-core.h \
+	core/tests.h \
 	memdb/tests.h \
-	msg/test-utils-msg.h \
-	msg/test-utils-lua.h \
-	db/test-utils-db.h
+	msg/tests.h \
+	msg/tests-lua.h \
+	db/tests.h
 
 tut_test_SOURCES = \
 	core/tests/tut-main.cpp \
-	core/test-utils-core.cc \
+	core/tests.cc \
+	file-tut.cc \
 	types-tut.cc \
 	record-tut.cc \
 	query-tut.cc \
@@ -335,7 +337,6 @@ tut_test_SOURCES = \
 	core/defs-tut.cc \
 	core/var-tut.cc \
 	core/values-tut.cc \
-	core/rawmsg-tut.cc \
 	core/file-tut.cc \
 	core/record-tut.cc \
 	core/query-tut.cc \
@@ -357,7 +358,7 @@ tut_test_SOURCES = \
 	memdb/value-tut.cc \
 	memdb/memdb-tut.cc \
 	memdb/serializer-tut.cc \
-	msg/test-utils-msg.cc \
+	msg/tests.cc \
 	msg/tests/vars.cc \
 	msg/tests/context.cc \
 	msg/codec-tut.cc \
@@ -368,7 +369,7 @@ tut_test_SOURCES = \
 	msg/tests/aof_codec.cc \
 	msg/tests/wr_import.cc \
 	msg/tests/wr_codec.cc \
-	db/test-utils-db.cc \
+	db/tests.cc \
 	db/querybuf-tut.cc \
 	db/trace-tut.cc \
 	db/sql/repinfo-tut.cc \
@@ -393,7 +394,7 @@ tut_test_SOURCES = \
 if LUA
 tut_test_SOURCES += \
 	msg/tests/lua.cc \
-	msg/test-utils-lua.cc
+	msg/tests-lua.cc
 endif
 if HAVE_LIBPQ
 tut_test_SOURCES += \

@@ -17,7 +17,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "dballe/core/test-utils-core.h"
+#include "dballe/core/tests.h"
 #include "stlutils.h"
 
 using namespace dballe;

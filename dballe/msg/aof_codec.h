@@ -89,12 +89,9 @@ public:
     AOFImporter(const Options& opts=Options());
     virtual ~AOFImporter();
 
-    bool foreach_decoded(const Rawmsg& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const override;
+    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const override;
 
-    /**
-     * Import a decoded BUFR/CREX message
-     */
-    virtual void from_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const;
+    Msgs from_bulletin(const wreport::Bulletin& msg) const override;
 
     /**
      * Get category and subcategory of an AOF message
@@ -106,7 +103,7 @@ public:
      * @retval subcategory
      *   The AOF subcategory of the message
      */
-    static void get_category(const Rawmsg& msg, int* category, int* subcategory);
+    static void get_category(const BinaryMessage& msg, int* category, int* subcategory);
 
     /**
      * Print the contents of the AOF message
@@ -116,7 +113,7 @@ public:
      * @param out
      *   The stream to use to print the message
      */
-    static void dump(const Rawmsg& msg, FILE* out);
+    static void dump(const BinaryMessage& msg, FILE* out);
 };
 
 } // namespace msg

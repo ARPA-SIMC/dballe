@@ -3,8 +3,8 @@
 #include "record.h"
 #include "cursor.h"
 #include "common.h"
-#include "dballe/core/defs.h"
-#include "dballe/core/file.h"
+#include "dballe/types.h"
+#include "dballe/file.h"
 #include "dballe/core/query.h"
 #include "dballe/core/values.h"
 #include "dballe/msg/msgs.h"
@@ -446,12 +446,12 @@ struct ExportConsumer : public MsgConsumer
         : out(out), exporter(0)
     {
         if (template_name == NULL)
-            exporter = msg::Exporter::create(out.type()).release();
+            exporter = msg::Exporter::create(out.encoding()).release();
         else
         {
             msg::Exporter::Options opts;
             opts.template_name = "generic";
-            exporter = msg::Exporter::create(out.type(), opts).release();
+            exporter = msg::Exporter::create(out.encoding(), opts).release();
         }
     }
     ~ExportConsumer()
@@ -460,11 +460,9 @@ struct ExportConsumer : public MsgConsumer
     }
     void operator()(std::unique_ptr<Msg> msg)
     {
-        Rawmsg raw;
         Msgs msgs;
         msgs.acquire(move(msg));
-        exporter->to_rawmsg(msgs, raw);
-        out.write(raw);
+        out.write(exporter->to_binary(msgs));
     }
 };
 }
@@ -479,11 +477,11 @@ static PyObject* dpy_DB_export_to_file(dpy_DB* self, PyObject* args, PyObject* k
     if (!PyArg_ParseTupleAndKeywords(args, kw, "O!ss|i", const_cast<char**>(kwlist), &dpy_Record_Type, &query, &format, &filename, &as_generic))
         return NULL;
 
-    Encoding encoding = BUFR;
+    File::Encoding encoding = File::BUFR;
     if (strcmp(format, "BUFR") == 0)
-        encoding = BUFR;
+        encoding = File::BUFR;
     else if (strcmp(format, "CREX") == 0)
-        encoding = CREX;
+        encoding = File::CREX;
     else
     {
         PyErr_SetString(PyExc_ValueError, "encoding must be one of BUFR or CREX");
@@ -694,11 +692,10 @@ void register_db(PyObject* m)
 
 void db_load_file(DB* db, FILE* file, bool close_on_exit, const std::string& name)
 {
-    std::unique_ptr<File> f = File::create((Encoding)-1, file, close_on_exit, name);
-    std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->type());
-    f->foreach([&](const Rawmsg& raw) {
-        Msgs msgs;
-        imp->from_rawmsg(raw, msgs);
+    std::unique_ptr<File> f = File::create(file, close_on_exit, name);
+    std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->encoding());
+    f->foreach([&](const BinaryMessage& raw) {
+        Msgs msgs = imp->from_binary(raw);
         db->import_msgs(msgs, NULL, 0);
         return true;
     });

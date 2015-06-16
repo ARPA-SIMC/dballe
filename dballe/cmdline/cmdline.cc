@@ -213,23 +213,19 @@ void dba_cmdline_error(poptContext optCon, const char* fmt, ...)
     exit(1);
 }
 
-Encoding dba_cmdline_stringToMsgType(const char* type)
+File::Encoding string_to_encoding(const char* type)
 {
     if (strcmp(type, "bufr") == 0 || strcmp(type, "b") == 0)
     {
-        return BUFR;
+        return File::BUFR;
     }
     else if (strcmp(type, "crex") == 0 || strcmp(type, "c") == 0)
     {
-        return CREX;
+        return File::CREX;
     }
     else if (strcmp(type, "aof") == 0 || strcmp(type, "a") == 0)
     {
-        return AOF;
-    }
-    else if (strcmp(type, "auto") == 0)
-    {
-        return (Encoding)-1;
+        return File::AOF;
     }
     else
         error_cmdline::throwf("'%s' is not a valid format type", type);

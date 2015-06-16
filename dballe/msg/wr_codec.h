@@ -47,7 +47,7 @@ public:
     /**
      * Import a decoded BUFR/CREX message
      */
-    void from_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const;
+    Msgs from_bulletin(const wreport::Bulletin& msg) const override;
 
     /**
      * Decode a message from its decoded bulletin, calling \a dest on each
@@ -70,7 +70,7 @@ public:
     BufrImporter(const Options& opts=Options());
     virtual ~BufrImporter();
 
-    bool foreach_decoded(const Rawmsg& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const override;
+    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const override;
 };
 
 class CrexImporter : public WRImporter
@@ -79,7 +79,7 @@ public:
     CrexImporter(const Options& opts=Options());
     virtual ~CrexImporter();
 
-    bool foreach_decoded(const Rawmsg& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const override;
+    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const override;
 };
 
 
@@ -105,7 +105,7 @@ public:
     BufrExporter(const Options& opts=Options());
     virtual ~BufrExporter();
 
-    virtual void to_rawmsg(const Msgs& msgs, Rawmsg& msg) const;
+    virtual std::string to_binary(const Msgs& msgs) const;
     virtual std::unique_ptr<wreport::Bulletin> make_bulletin() const;
 };
 
@@ -115,7 +115,7 @@ public:
     CrexExporter(const Options& opts=Options());
     virtual ~CrexExporter();
 
-    virtual void to_rawmsg(const Msgs& msgs, Rawmsg& msg) const;
+    virtual std::string to_binary(const Msgs& msgs) const;
     virtual std::unique_ptr<wreport::Bulletin> make_bulletin() const;
 };
 

@@ -17,7 +17,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "db/test-utils-db.h"
+#include "db/tests.h"
 #include "db/mem/db.h"
 #include "db/mem/repinfo.h"
 

@@ -1,27 +1,6 @@
-/*
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
+#ifndef DBALLE_CMDLINE_PROCESSOR_H
+#define DBALLE_CMDLINE_PROCESSOR_H
 
-#ifndef PROCESSOR_H
-#define PROCESSOR_H
-
-#include <dballe/core/rawmsg.h>
-#include <dballe/core/file.h>
 #include <dballe/msg/codec.h>
 #include <stdexcept>
 #include <list>
@@ -33,7 +12,7 @@ struct Bulletin;
 
 namespace dballe {
 struct Query;
-struct Rawmsg;
+struct BinaryMessage;
 struct Msgs;
 struct Matcher;
 
@@ -100,7 +79,7 @@ protected:
 struct Item
 {
     unsigned idx;
-    Rawmsg* rmsg;
+    BinaryMessage* rmsg;
     wreport::Bulletin* bulletin;
     Msgs* msgs;
 
@@ -141,12 +120,12 @@ struct Filter
     void matcher_from_record(const Query& query);
 
     bool match_index(int idx) const;
-    bool match_common(const Rawmsg& rmsg, const Msgs* msgs) const;
+    bool match_common(const BinaryMessage& rmsg, const Msgs* msgs) const;
     bool match_msgs(const Msgs& msgs) const;
-    bool match_bufrex(const Rawmsg& rmsg, const wreport::Bulletin* rm, const Msgs* msgs) const;
-    bool match_bufr(const Rawmsg& rmsg, const wreport::Bulletin* rm, const Msgs* msgs) const;
-    bool match_crex(const Rawmsg& rmsg, const wreport::Bulletin* rm, const Msgs* msgs) const;
-    bool match_aof(const Rawmsg& rmsg, const Msgs* msgs) const;
+    bool match_bufrex(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const Msgs* msgs) const;
+    bool match_bufr(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const Msgs* msgs) const;
+    bool match_crex(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const Msgs* msgs) const;
+    bool match_aof(const BinaryMessage& rmsg, const Msgs* msgs) const;
     bool match_item(const Item& item) const;
 };
 
@@ -168,7 +147,6 @@ public:
     void read(const std::list<std::string>& fnames, Action& action);
 };
 
-} // namespace cmdline
-} // namespace dballe
-
+}
+}
 #endif

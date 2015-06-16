@@ -1810,7 +1810,7 @@ F77_INTEGER_FUNCTION(idba_messages_open_input)(
     try {
         HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_messages_open_input(c_filename, c_mode, c_format, *simplified));
-        h.api->messages_open_input(c_filename, c_mode, parse_encoding(c_format), *simplified);
+        h.api->messages_open_input(c_filename, c_mode, File::parse_encoding(c_format), *simplified);
 
         return fortran::success();
     } catch (error& e) {
@@ -1841,7 +1841,7 @@ F77_INTEGER_FUNCTION(idba_messages_open_output)(
     try {
         HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_messages_open_output(c_filename, c_mode, c_format));
-        h.api->messages_open_output(c_filename, c_mode, parse_encoding(c_format));
+        h.api->messages_open_output(c_filename, c_mode, File::parse_encoding(c_format));
 
         return fortran::success();
     } catch (error& e) {

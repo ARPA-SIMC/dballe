@@ -22,8 +22,7 @@
 #ifndef DBA_MSG_CODEC_H
 #define DBA_MSG_CODEC_H
 
-#include <dballe/core/rawmsg.h>
-#include <dballe/core/defs.h>
+#include <dballe/file.h>
 #include <memory>
 #include <string>
 #include <stdio.h>
@@ -38,7 +37,6 @@ struct Bulletin;
 }
 
 namespace dballe {
-struct Rawmsg;
 struct Msgs;
 struct Msg;
 
@@ -90,7 +88,7 @@ public:
      * @retval msgs
      *   The resulting ::dba_msg
      */
-    void from_rawmsg(const Rawmsg& msg, Msgs& msgs) const;
+    Msgs from_binary(const BinaryMessage& msg) const;
 
     /**
      * Decode a message from its raw encoded representation, calling \a dest on
@@ -104,16 +102,16 @@ public:
      *   The function that consumes the decoded messages.
      * @returns true if it got to the end of decoding, false if dest returned false.
      */
-    virtual bool foreach_decoded(const Rawmsg& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const = 0;
+    virtual bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const = 0;
 
     /**
      * Import a decoded BUFR/CREX message
      */
-    virtual void from_bulletin(const wreport::Bulletin& msg, Msgs& msgs) const = 0;
+    virtual Msgs from_bulletin(const wreport::Bulletin& msg) const = 0;
 
 
     /// Instantiate the right importer for the given type
-    static std::unique_ptr<Importer> create(Encoding type, const Options& opts=Options());
+    static std::unique_ptr<Importer> create(File::Encoding type, const Options& opts=Options());
 };
 
 /**
@@ -161,9 +159,9 @@ public:
      * @param msgs
      *   Message to encode
      * @retval rmsg
-     *   The resulting Rawmsg
+     *   The resulting BinaryMessage
      */
-    virtual void to_rawmsg(const Msgs& msgs, Rawmsg& msg) const = 0;
+    virtual std::string to_binary(const Msgs& msgs) const = 0;
 
     /**
      * Export to a Bulletin
@@ -180,7 +178,7 @@ public:
 
 
     /// Instantiate the right importer for the given type
-    static std::unique_ptr<Exporter> create(Encoding type, const Options& opts=Options());
+    static std::unique_ptr<Exporter> create(File::Encoding type, const Options& opts=Options());
 };
 
 } // namespace msg

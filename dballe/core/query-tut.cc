@@ -1,4 +1,4 @@
-#include "core/test-utils-core.h"
+#include "core/tests.h"
 #include "core/query.h"
 #include "core/record.h"
 #include <stdexcept>

@@ -17,7 +17,7 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include <dballe/core/test-utils-core.h>
+#include <dballe/core/tests.h>
 #include <dballe/msg/msgs.h>
 #include <dballe/msg/codec.h>
 #if 0
@@ -39,13 +39,13 @@ namespace tests {
 
 typedef wibble::tests::Location Location;
 
-std::unique_ptr<Msgs> _read_msgs(const Location& loc, const char* filename, Encoding type, const dballe::msg::Importer::Options& opts=dballe::msg::Importer::Options());
+Msgs _read_msgs(const Location& loc, const char* filename, File::Encoding type, const dballe::msg::Importer::Options& opts=dballe::msg::Importer::Options());
 #define read_msgs(filename, type) dballe::tests::_read_msgs(wibble::tests::Location(__FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
 #define inner_read_msgs(filename, type) dballe::tests::_read_msgs(wibble::tests::Location(loc, __FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
 #define read_msgs_opts(filename, type, opts) dballe::tests::_read_msgs(wibble::tests::Location(__FILE__, __LINE__, "load " #filename " " #type), (filename), (type), (opts))
 #define inner_read_msgs_opts(filename, type, opts) dballe::tests::_read_msgs(wibble::tests::Location(loc, __FILE__, __LINE__, "load " #filename " " #type), (filename), (type), (opts))
 
-std::unique_ptr<Msgs> _read_msgs_csv(const Location& loc, const char* filename);
+Msgs _read_msgs_csv(const Location& loc, const char* filename);
 #define read_msgs_csv(filename) dballe::tests::_read_msgs_csv(wibble::tests::Location(__FILE__, __LINE__, "load csv " #filename), (filename))
 #define inner_read_msgs_csv(filename) dballe::tests::_read_msgs_csv(wibble::tests::Location(loc, __FILE__, __LINE__, "load csv " #filename), (filename))
 
@@ -71,7 +71,7 @@ const wreport::Var& _want_var(const Location& loc, const Msg& msg, wreport::Varc
 void dump(const std::string& tag, const Msg& msg, const std::string& desc="message");
 void dump(const std::string& tag, const Msgs& msgs, const std::string& desc="message");
 void dump(const std::string& tag, const wreport::Bulletin& bul, const std::string& desc="message");
-void dump(const std::string& tag, const Rawmsg& msg, const std::string& desc="message");
+void dump(const std::string& tag, const BinaryMessage& msg, const std::string& desc="message");
 void dump(const std::string& tag, const std::string& str, const std::string& desc="message");
 
 struct MessageTweaker
@@ -227,26 +227,26 @@ struct RemoveContext : public MessageTweaker
 struct TestMessage
 {
     const std::string& name;
-    Encoding type;
-    Rawmsg raw;
+    File::Encoding type;
+    BinaryMessage raw;
     wreport::Bulletin* bulletin;
     Msgs msgs;
 
-    TestMessage(Encoding type, const std::string& name);
+    TestMessage(File::Encoding type, const std::string& name);
     ~TestMessage();
 
     /// Create a bulletin for the current encoding
     std::unique_ptr<wreport::Bulletin> create_bulletin();
 
     void read_from_file(const std::string& fname, const msg::Importer::Options& input_opts);
-    void read_from_raw(const Rawmsg& msg, const msg::Importer::Options& input_opts);
+    void read_from_raw(const BinaryMessage& msg, const msg::Importer::Options& input_opts);
     void read_from_msgs(const Msgs& msgs, const msg::Exporter::Options& export_opts);
 };
 
 struct TestCodec
 {
     std::string fname;
-    Encoding type;
+    File::Encoding type;
     bool verbose = false;
     msg::Importer::Options input_opts;
     msg::Exporter::Options output_opts;
@@ -262,7 +262,7 @@ struct TestCodec
 
     void do_compare(WIBBLE_TEST_LOCPRM, const TestMessage& msg1, const TestMessage& msg2);
 
-    TestCodec(const std::string& fname, Encoding type=BUFR);
+    TestCodec(const std::string& fname, File::Encoding type=File::BUFR);
 
     void configure_ecmwf_to_wmo_tweaks();
 

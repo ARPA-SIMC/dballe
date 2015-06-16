@@ -1,4 +1,4 @@
-#include "core/test-utils-core.h"
+#include "core/tests.h"
 #include "types.h"
 
 using namespace std;
