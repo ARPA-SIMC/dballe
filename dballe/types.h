@@ -315,15 +315,16 @@ struct DatetimeRange
 struct Coords
 {
     /// Latitude in 1/100000 of a degree (5 significant digits preserved)
-    int lat = MISSING_INT;
+    int lat;
+
     /**
      * Longitude in 1/100000 of a degree (5 significant digits preserved) and
      * normalised between -180.0 and 180.0.
      */
-    int lon = MISSING_INT;
+    int lon;
 
     /// Construct a missing Coords
-    Coords() {}
+    Coords();
     /// Construct a coords from integers in 1/100000 of a degree
     Coords(int lat, int lon);
     /// Construct a coords from values in degrees

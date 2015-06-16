@@ -492,6 +492,8 @@ inline int normalon(int lon)
  * Coords
  */
 
+Coords::Coords() : lat(MISSING_INT), lon(MISSING_INT) {}
+
 Coords::Coords(int lat, int lon)
 {
     set(lat, lon);
