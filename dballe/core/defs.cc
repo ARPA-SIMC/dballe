@@ -45,46 +45,6 @@ std::ostream& operator<<(std::ostream& out, const Trange& l)
     return out;
 }
 
-
-namespace {
-
-inline int ll_to_int(double ll) { return lround(ll * 100000.0); }
-inline double ll_from_int(int ll) { return (double)ll / 100000.0; }
-
-}
-
-int Coords::normalon(int lon)
-{
-    return ((lon + 18000000) % 36000000) - 18000000;
-}
-
-double Coords::fnormalon(double lon)
-{
-    return fmod(lon + 180.0, 360.0) - 180.0;
-}
-
-Coords::Coords(int lat, int lon)
-    : lat(lat),
-      lon(normalon(lon))
-{
-}
-
-Coords::Coords(double lat, double lon)
-    : lat(ll_to_int(lat)),
-      lon(normalon(ll_to_int(lon)))
-{
-}
-
-double Coords::dlat() const { return ll_from_int(lat); }
-double Coords::dlon() const { return ll_from_int(lon); }
-
-void Coords::set_lat(int new_lat) { lat = new_lat; }
-void Coords::set_lon(int new_lon) { lon = normalon(new_lon); }
-void Coords::set_lat(double new_lat) { lat = ll_to_int(new_lat); }
-void Coords::set_lon(double new_lon) { lon = normalon(ll_to_int(new_lon)); }
-
-
-
 Ident::Ident(const char* value) : value(value ? strdup(value) : nullptr) {}
 Ident::Ident(const Ident& o) : value(o.value ? strdup(o.value) : nullptr) {}
 Ident::Ident(Ident&& o) : value(o.value) { o.value = nullptr; }

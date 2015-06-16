@@ -302,6 +302,70 @@ struct DatetimeRange
 
 
 /**
+ * Coordinates
+ *
+ * When given as an integer, a latitude/longitude value is intended in 1/100000
+ * of a degree, which is the maximum resolution supported by DB-All.e.
+ *
+ * When given as a double a latitude/longitude value is intended to be in
+ * degrees.
+ *
+ * Longitude values are normalized between -180.0 and 180.0.
+ */
+struct Coords
+{
+    /// Latitude in 1/100000 of a degree (5 significant digits preserved)
+    int lat = MISSING_INT;
+    /**
+     * Longitude in 1/100000 of a degree (5 significant digits preserved) and
+     * normalised between -180.0 and 180.0.
+     */
+    int lon = MISSING_INT;
+
+    /// Construct a missing Coords
+    Coords() {}
+    /// Construct a coords from integers in 1/100000 of a degree
+    Coords(int lat, int lon);
+    /// Construct a coords from values in degrees
+    Coords(double lat, double lon);
+
+    /// Check if these coordinates are undefined
+    bool is_missing() const;
+
+    /// Set from integers in 1/100000 of a degree
+    void set(int lat, int lon);
+
+    /// Set from values in degrees
+    void set(double lat, double lon);
+
+    /// Get the latitude in degrees
+    double dlat() const;
+
+    /// Get the longitude in degrees
+    double dlon() const;
+
+    /**
+     * Compare two Coords strutures, for use in sorting.
+     *
+     * Sorting happens by latitude first, then by longitude. It is implemented
+     * mainly for the purpose of being able to use Coords as a key in a sorted
+     * container.
+     *
+     * @return
+     *   -1 if *this < o, 0 if *this == o, 1 if *this > o
+     */
+    int compare(const Coords& o) const;
+
+    bool operator==(const Coords& dt) const;
+    bool operator!=(const Coords& dt) const;
+    bool operator<(const Coords& dt) const;
+    bool operator>(const Coords& dt) const;
+    bool operator<=(const Coords& dt) const;
+    bool operator>=(const Coords& dt) const;
+};
+
+
+/**
  * Range of latitudes.
  *
  * When given as an integer, a latitude value is intended in 1/100000 of a

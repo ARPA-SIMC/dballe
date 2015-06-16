@@ -23,12 +23,6 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
-// Normalise longitude values to the [-180..180[ interval
-static inline int normalon(int lon)
-{
-    return ((lon + 18000000) % 36000000) - 18000000;
-}
-
 static Varcode parse_varcode(const char* str, regmatch_t pos)
 {
     Varcode res;

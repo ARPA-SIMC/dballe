@@ -154,12 +154,6 @@ int DB::rep_cod_from_memo(const char* memo)
     return repinfo().obtain_id(memo);
 }
 
-// Normalise longitude values to the [-180..180[ interval
-static inline int normalon(int lon)
-{
-    return ((lon + 18000000) % 36000000) - 18000000;
-}
-
 int DB::obtain_station(const Station& st, bool can_add)
 {
     // Look if the record already knows the ID

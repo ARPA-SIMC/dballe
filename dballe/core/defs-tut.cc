@@ -31,9 +31,6 @@ typedef test_group::Test Test;
 typedef test_group::Fixture Fixture;
 
 std::vector<Test> tests {
-    Test("coords", [](Fixture& f) {
-        wassert(actual(Coords(44.0, 11.0)) == Coords(44.0, 360.0+11.0));
-    }),
     Test("ident", [](Fixture& f) {
         wassert(actual(Ident()) == Ident());
         wassert(actual(Ident("foo")) == Ident("foo"));

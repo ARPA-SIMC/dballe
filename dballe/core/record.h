@@ -164,6 +164,7 @@ public:
     void setf(const char* key, const char* val) override;
     void set_datetime(const Datetime& dt) override;
     void set_datetimerange(const DatetimeRange& range) override;
+    void set_coords(const Coords& c) override;
     void set_latrange(const LatRange& lr) override;
     void set_lonrange(const LonRange& lr) override;
     void set_level(const Level& lev) override;
@@ -214,7 +215,6 @@ public:
     Datetime get_datetime() const;
     /// Compose a DatetimeRange out of the yearmin...secmax values
     DatetimeRange get_datetimerange() const;
-    void set_coords(const Coords& c);
 
     /**
      * Iterate all keys in the record, calling f on them.

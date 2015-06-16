@@ -75,6 +75,9 @@ std::vector<Test> tests {
         wassert(actual(DatetimeRange(dt_2010, dt_2012).contains(DatetimeRange(dt_2011, dt_2013))).isfalse());
         wassert(actual(DatetimeRange(missing, dt_2010).contains(DatetimeRange(dt_2011, missing))).isfalse());
     }),
+    Test("coords", [](Fixture& f) {
+        wassert(actual(Coords(44.0, 11.0)) == Coords(44.0, 360.0+11.0));
+    }),
     Test("latrange", [](Fixture& f) {
         double dmin, dmax;
         LatRange lr;

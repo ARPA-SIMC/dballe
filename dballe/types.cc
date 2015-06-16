@@ -487,6 +487,61 @@ inline int normalon(int lon)
 
 }
 
+
+/*
+ * Coords
+ */
+
+Coords::Coords(int lat, int lon)
+{
+    set(lat, lon);
+}
+
+Coords::Coords(double lat, double lon)
+    : lat(ll_to_int(lat)),
+      lon(normalon(ll_to_int(lon)))
+{
+}
+
+bool Coords::is_missing() const
+{
+    return lat == MISSING_INT && lon == MISSING_INT;
+}
+
+void Coords::set(int lat, int lon)
+{
+    if (lat == MISSING_INT || lon == MISSING_INT)
+        this->lat = this->lon = MISSING_INT;
+    else
+    {
+        this->lat = lat;
+        this->lon = normalon(lon);
+    }
+}
+
+void Coords::set(double lat, double lon)
+{
+    this->lat = ll_to_int(lat);
+    this->lon = normalon(ll_to_int(lon));
+}
+
+double Coords::dlat() const { return ll_from_int(lat); }
+double Coords::dlon() const { return ll_from_int(lon); }
+
+int Coords::compare(const Coords& o) const
+{
+    if (int res = lat - o.lat) return res;
+    return lon - o.lon;
+}
+
+bool Coords::operator==(const Coords& c) const { return lat == c.lat && lon == c.lon; }
+bool Coords::operator!=(const Coords& c) const { return lat != c.lat || lon != c.lon; }
+bool Coords::operator<(const Coords& o) const { return compare(o) < 0; }
+bool Coords::operator>(const Coords& o) const { return compare(o) > 0; }
+bool Coords::operator<=(const Coords& o) const { return compare(o) <= 0; }
+bool Coords::operator>=(const Coords& o) const { return compare(o) >= 0; }
+
+
 /*
  * LatRange
  */
