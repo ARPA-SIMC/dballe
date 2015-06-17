@@ -471,15 +471,6 @@ public:
 };
 
 /**
- * Consumer interface used to stream messages as they are produced
- */
-struct MsgConsumer
-{
-    virtual ~MsgConsumer() {}
-    virtual void operator()(std::unique_ptr<Msg>) = 0;
-};
-
-/**
  * Match adapter for Msg
  */
 struct MatchedMsg : public Matched

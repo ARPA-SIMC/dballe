@@ -430,13 +430,6 @@ static PyObject* dpy_DB_attr_remove(dpy_DB* self, PyObject* args, PyObject* kw)
     }
 }
 
-    /*
-    virtual void import_msg(const Msg& msg, const char* repmemo, int flags) = 0;
-    virtual void import_msgs(const Msgs& msgs, const char* repmemo, int flags) = 0;
-    virtual void export_msgs(const Record& query, MsgConsumer& cons) = 0;
-    virtual void dump(FILE* out) = 0;
-    */
-
 static PyObject* dpy_DB_export_to_file(dpy_DB* self, PyObject* args, PyObject* kw)
 {
     static const char* kwlist[] = { "query", "format", "filename", "generic", NULL };
