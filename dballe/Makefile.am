@@ -360,8 +360,8 @@ tut_test_SOURCES = \
 	memdb/memdb-tut.cc \
 	memdb/serializer-tut.cc \
 	msg/tests.cc \
-	msg/tests/vars.cc \
-	msg/tests/context.cc \
+	msg/vars-tut.cc \
+	msg/context-tut.cc \
 	msg/codec-tut.cc \
 	msg/msg-tut.cc \
 	msg/wr_codec_generic-tut.cc \
