@@ -1,10 +1,10 @@
 #include "conversion.h"
 #include "processor.h"
-
-#include <dballe/file.h>
-#include <dballe/msg/msgs.h>
-#include <dballe/msg/context.h>
-#include <dballe/msg/codec.h>
+#include "dballe/file.h"
+#include "dballe/message.h"
+#include "dballe/msg/msg.h"
+#include "dballe/msg/context.h"
+#include "dballe/msg/codec.h"
 
 #include <wreport/bulletin.h>
 
@@ -31,7 +31,7 @@ void Converter::process_bufrex_msg(const BinaryMessage& orig, const Bulletin& ms
     file->write(raw);
 }
 
-void Converter::process_dba_msg(const BinaryMessage& orig, const Msgs& msgs)
+void Converter::process_dba_msg(const BinaryMessage& orig, const Messages& msgs)
 {
     string raw;
     try {
@@ -43,7 +43,7 @@ void Converter::process_dba_msg(const BinaryMessage& orig, const Msgs& msgs)
 }
 
 // Recompute type and subtype according to WMO international values
-static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const Msgs& msgs)
+static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const Messages& msgs)
 {
     b.type = orig.type;
     b.localsubtype = 255;
@@ -54,7 +54,7 @@ static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const Msgs
             // BC01-SYNOP
             // Get the hour from the first message
             // Default to 1 to simulate an odd observation time
-            int hour = msgs[0]->datetime().is_missing() ? 1 : msgs[0]->datetime().hour;
+            int hour = msgs[0].get_datetime().is_missing() ? 1 : msgs[0].get_datetime().hour;
 
             if ((hour % 6) == 0)
                 // 002 at main synoptic times 00, 06, 12, 18 UTC,
@@ -76,7 +76,7 @@ static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const Msgs
         case 2:
             // BC20-PILOT
             // BC25-TEMP
-            switch (msgs[0]->type)
+            switch (Msg::downcast(msgs[0]).type)
             {
                 // 001 for PILOT data,
                 case MSG_PILOT:
@@ -99,7 +99,7 @@ static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const Msgs
         // Missing data from this onwards
         case 3: b.subtype = 0; break;
         case 4:
-            switch (msgs[0]->type)
+            switch (Msg::downcast(msgs[0]).type)
             {
                 case MSG_AIREP: b.subtype = 1; break;
                 default: b.subtype = 0; break;
@@ -121,7 +121,7 @@ static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const Msgs
 
 // Compute local subtype to tell bufr2netcdf output files apart using
 // lokal-specific categorisation
-static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, const Msgs& msgs)
+static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, const Messages& msgs)
 {
     switch (orig.type)
     {
@@ -132,7 +132,7 @@ static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, co
             // 13 for fixed stations
             // 14 for mobile stations
             b.localsubtype = 13;
-            if (const wreport::Var* v = msgs[0]->get_ident_var())
+            if (const wreport::Var* v = Msg::downcast(msgs[0]).get_ident_var())
                 if (v->isset())
                     b.localsubtype = 14;
             break;
@@ -142,9 +142,10 @@ static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, co
                 // 4 for z-level pilots
                 // 5 for p-level pilots
                 // Arbitrary default to z-level pilots
+                const Msg& msg = Msg::downcast(msgs[0]);
                 b.localsubtype = 4;
-                for (std::vector<msg::Context*>::const_iterator i = msgs[0]->data.begin();
-                        i != msgs[0]->data.end(); ++i)
+                for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
+                        i != msg.data.end(); ++i)
                 {
                     switch ((*i)->level.ltype1)
                     {
@@ -159,7 +160,7 @@ static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, co
             }
             break;
         case 4:
-            switch (msgs[0]->type)
+            switch (Msg::downcast(msgs[0]).type)
             {
                 case MSG_AMDAR: b.localsubtype = 8; break;
                 case MSG_ACARS: b.localsubtype = 9; break;
@@ -170,7 +171,7 @@ static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, co
 }
 
 
-void Converter::process_dba_msg_from_bulletin(const BinaryMessage& orig, const Bulletin& bulletin, const Msgs& msgs)
+void Converter::process_dba_msg_from_bulletin(const BinaryMessage& orig, const Bulletin& bulletin, const Messages& msgs)
 {
     string raw;
     try {
@@ -240,7 +241,7 @@ bool Converter::operator()(const cmdline::Item& item)
         // Force message type (will also influence choice of template later)
         MsgType type = Msg::type_from_repmemo(dest_rep_memo);
         for (size_t i = 0; i < item.msgs->size(); ++i)
-            (*item.msgs)[i]->type = type;
+            Msg::downcast((*item.msgs)[i]).type = type;
     }
 
     if (item.bulletin and dest_rep_memo == NULL)

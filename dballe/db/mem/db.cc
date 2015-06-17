@@ -377,9 +377,9 @@ void DB::dump(FILE* out)
     memdb.dump(out);
 }
 
-void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
+void DB::import_msg(const Message& msg, const char* repmemo, int flags)
 {
-    memdb.insert(msg,
+    memdb.insert(Msg::downcast(msg),
             flags | DBA_IMPORT_OVERWRITE,
             flags | DBA_IMPORT_FULL_PSEUDOANA,
             flags | DBA_IMPORT_ATTRS,
@@ -404,7 +404,7 @@ struct CompareForExport
 
 }
 
-void DB::export_msgs(const Query& query_gen, MsgConsumer& cons)
+bool DB::export_msgs(const Query& query_gen, std::function<bool(std::unique_ptr<Message>&&)> dest)
 {
     const core::Query& query = core::Query::downcast(query_gen);
     Results<Value> res(memdb.values);
@@ -448,9 +448,11 @@ void DB::export_msgs(const Query& query_gen, MsgConsumer& cons)
                 {
                     unique_ptr<Msg> copy(new Msg);
                     msg->sounding_pack_levels(*copy);
-                    cons(move(copy));
+                    if (!dest(move(copy)))
+                        return false;
                 } else
-                    cons(move(msg));
+                    if (!dest(move(msg)))
+                        return false;
             }
 
             // Start writing a new message
@@ -481,10 +483,13 @@ void DB::export_msgs(const Query& query_gen, MsgConsumer& cons)
         {
             unique_ptr<Msg> copy(new Msg);
             msg->sounding_pack_levels(*copy);
-            cons(move(copy));
+            if (!dest(move(copy)))
+                return false;
         } else
-            cons(move(msg));
+            if (!dest(move(msg)))
+                return false;
     }
+    return true;
 }
 
 }

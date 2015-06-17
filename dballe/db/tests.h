@@ -20,6 +20,9 @@ class DB;
 
 namespace tests {
 
+Messages messages_from_db(DB& db, const dballe::Query& query);
+Messages messages_from_db(DB& db, const char* query);
+
 struct OverrideTestDBFormat
 {
     dballe::db::Format old_format;

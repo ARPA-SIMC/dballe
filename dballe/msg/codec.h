@@ -1,28 +1,8 @@
-/*
- * msg/codec - General codec options
- *
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #ifndef DBA_MSG_CODEC_H
 #define DBA_MSG_CODEC_H
 
 #include <dballe/file.h>
+#include <dballe/message.h>
 #include <memory>
 #include <string>
 #include <stdio.h>
@@ -37,8 +17,8 @@ struct Bulletin;
 }
 
 namespace dballe {
-struct Msgs;
-struct Msg;
+struct Messages;
+struct Message;
 
 namespace msg {
 
@@ -88,11 +68,11 @@ public:
      * @retval msgs
      *   The resulting ::dba_msg
      */
-    Msgs from_binary(const BinaryMessage& msg) const;
+    Messages from_binary(const BinaryMessage& msg) const;
 
     /**
      * Decode a message from its raw encoded representation, calling \a dest on
-     * each resulting Msg.
+     * each resulting Message.
      *
      * Return false from \a dest to stop decoding.
      *
@@ -102,12 +82,12 @@ public:
      *   The function that consumes the decoded messages.
      * @returns true if it got to the end of decoding, false if dest returned false.
      */
-    virtual bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const = 0;
+    virtual bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const = 0;
 
     /**
      * Import a decoded BUFR/CREX message
      */
-    virtual Msgs from_bulletin(const wreport::Bulletin& msg) const = 0;
+    virtual Messages from_bulletin(const wreport::Bulletin& msg) const = 0;
 
 
     /// Instantiate the right importer for the given type
@@ -161,12 +141,12 @@ public:
      * @retval rmsg
      *   The resulting BinaryMessage
      */
-    virtual std::string to_binary(const Msgs& msgs) const = 0;
+    virtual std::string to_binary(const Messages& msgs) const = 0;
 
     /**
      * Export to a Bulletin
      */
-    virtual void to_bulletin(const Msgs& msgs, wreport::Bulletin& msg) const = 0;
+    virtual void to_bulletin(const Messages& msgs, wreport::Bulletin& msg) const = 0;
 
     /**
      * Create a bulletin that works with this exporter.
@@ -181,8 +161,7 @@ public:
     static std::unique_ptr<Exporter> create(File::Encoding type, const Options& opts=Options());
 };
 
-} // namespace msg
-} // namespace dballe
+}
+}
 
-/* vim:set ts=4 sw=4: */
 #endif

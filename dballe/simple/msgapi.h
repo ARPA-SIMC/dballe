@@ -29,7 +29,7 @@ struct Var;
 
 namespace dballe {
 struct File;
-struct Msgs;
+struct Messages;
 struct Msg;
 
 namespace msg {
@@ -60,8 +60,8 @@ protected:
 	msg::Exporter* exporter;
 	/// Template selected for exporter (empty if auto detect)
 	std::string exporter_template;
-	/// Message being written
-	Msgs* msgs;
+    /// Message being written
+    Messages* msgs;
 	/// Message subset being written
 	Msg* wmsg;
 	/// Last variables written with prendilo

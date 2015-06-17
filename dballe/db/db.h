@@ -22,9 +22,8 @@ struct Query;
 struct Values;
 struct StationValues;
 struct DataValues;
-struct Msg;
-struct Msgs;
-struct MsgConsumer;
+struct Message;
+struct Messages;
 struct DB;
 
 namespace db {
@@ -451,12 +450,12 @@ public:
     virtual void attr_remove(int reference_id, wreport::Varcode id_var, const db::AttrList& qcs) = 0;
 
     /**
-     * Import a Msg message into the DB-All.e database
+     * Import a Message into the DB-All.e database
      *
      * @param db
      *   The DB-All.e database to write the data into
      * @param msg
-     *   The Msg containing the data to import
+     *   The Message containing the data to import
      * @param repmemo
      *   Report mnemonic to which imported data belong.  If NULL is passed, then it
      *   will be chosen automatically based on the message type.
@@ -464,15 +463,15 @@ public:
      *   Customise different aspects of the import process.  It is a bitmask of the
      *   various DBA_IMPORT_* macros.
      */
-    virtual void import_msg(const Msg& msg, const char* repmemo, int flags) = 0;
+    virtual void import_msg(const Message& msg, const char* repmemo, int flags) = 0;
 
     /**
-     * Import Msgs messages into the DB-All.e database
+     * Import Messages into the DB-All.e database
      *
      * @param db
      *   The DB-All.e database to write the data into
      * @param msgs
-     *   The Msgs containing the data to import
+     *   The Messages containing the data to import
      * @param repmemo
      *   Report mnemonic to which imported data belong.  If NULL is passed, then it
      *   will be chosen automatically based on the message type.
@@ -480,18 +479,21 @@ public:
      *   Customise different aspects of the import process.  It is a bitmask of the
      *   various DBA_IMPORT_* macros.
      */
-    virtual void import_msgs(const Msgs& msgs, const char* repmemo, int flags);
+    virtual void import_msgs(const Messages& msgs, const char* repmemo, int flags);
 
     /**
-     * Perform the query in `query', and return the results as a NULL-terminated
-     * array of dba_msg.
+     * Perform the query in `query', and send the results to dest.
+     *
+     * Return false from dest to interrupt the query.
      *
      * @param query
      *   The query to perform
-     * @param cons
-     *   The MsgsConsumer that will handle the resulting messages
+     * @param dest
+     *   The function that will handle the resulting messages
+     * @returns true if the query reached its end, false if it got interrupted
+     *   because dest returned false.
      */
-    virtual void export_msgs(const Query& query, MsgConsumer& cons) = 0;
+    virtual bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) = 0;
 
     /**
      * Dump the entire contents of the database to an output stream

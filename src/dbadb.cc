@@ -3,8 +3,8 @@
 #include <dballe/cmdline/cmdline.h>
 #include <dballe/record.h>
 #include <dballe/file.h>
+#include <dballe/message.h>
 #include <dballe/msg/msg.h>
-#include <dballe/msg/msgs.h>
 #include <dballe/msg/codec.h>
 #include <dballe/db/db.h>
 #include <wreport/error.h>

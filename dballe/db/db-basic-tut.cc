@@ -1,4 +1,5 @@
 #include "config.h"
+#include "msg/msg.h"
 #include "db/tests.h"
 #include "db/mem/db.h"
 
@@ -132,19 +133,18 @@ std::vector<Test> tests {
             wassert(actual(cur->next()).isfalse());
         }
 
-        Msgs msgs;
-        msg::AcquireMessages amsg(msgs);
-        db.export_msgs(core::Query(), amsg);
+        Messages msgs;
+        db.export_msgs(core::Query(), [&](unique_ptr<Message>&& msg) { msgs.append(move(msg)); return true; });
         wassert(actual(msgs.size()) == 2);
 
         //msgs.print(stderr);
 
-        wassert(actual(msgs[0]->get_rep_memo_var()->enqc()) == "synop");
-        wassert(actual(msgs[0]->get_st_name_var()->enqc()) == "Camse");
-        wassert(actual(msgs[0]->get_temp_2m_var()->enqd()) == 273.15);
-        wassert(actual(msgs[1]->get_rep_memo_var()->enqc()) == "temp");
-        wassert(actual(msgs[1]->get_st_name_var()->enqc()) == "Esmac");
-        wassert(actual(msgs[1]->get_temp_2m_var()->enqd()) == 274.15);
+        wassert(actual(Msg::downcast(msgs[0]).get_rep_memo_var()->enqc()) == "synop");
+        wassert(actual(Msg::downcast(msgs[0]).get_st_name_var()->enqc()) == "Camse");
+        wassert(actual(Msg::downcast(msgs[0]).get_temp_2m_var()->enqd()) == 273.15);
+        wassert(actual(Msg::downcast(msgs[1]).get_rep_memo_var()->enqc()) == "temp");
+        wassert(actual(Msg::downcast(msgs[1]).get_st_name_var()->enqc()) == "Esmac");
+        wassert(actual(Msg::downcast(msgs[1]).get_temp_2m_var()->enqd()) == 274.15);
     }),
     Test("query_ident", [](Fixture& f) {
         // Try querying by ident

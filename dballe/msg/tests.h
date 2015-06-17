@@ -18,7 +18,7 @@
  */
 
 #include <dballe/core/tests.h>
-#include <dballe/msg/msgs.h>
+#include <dballe/message.h>
 #include <dballe/msg/codec.h>
 #if 0
 #include <dballe/msg/bufrex_codec.h>
@@ -39,37 +39,37 @@ namespace tests {
 
 typedef wibble::tests::Location Location;
 
-Msgs _read_msgs(const Location& loc, const char* filename, File::Encoding type, const dballe::msg::Importer::Options& opts=dballe::msg::Importer::Options());
+Messages _read_msgs(const Location& loc, const char* filename, File::Encoding type, const dballe::msg::Importer::Options& opts=dballe::msg::Importer::Options());
 #define read_msgs(filename, type) dballe::tests::_read_msgs(wibble::tests::Location(__FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
 #define inner_read_msgs(filename, type) dballe::tests::_read_msgs(wibble::tests::Location(loc, __FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
 #define read_msgs_opts(filename, type, opts) dballe::tests::_read_msgs(wibble::tests::Location(__FILE__, __LINE__, "load " #filename " " #type), (filename), (type), (opts))
 #define inner_read_msgs_opts(filename, type, opts) dballe::tests::_read_msgs(wibble::tests::Location(loc, __FILE__, __LINE__, "load " #filename " " #type), (filename), (type), (opts))
 
-Msgs _read_msgs_csv(const Location& loc, const char* filename);
+Messages _read_msgs_csv(const Location& loc, const char* filename);
 #define read_msgs_csv(filename) dballe::tests::_read_msgs_csv(wibble::tests::Location(__FILE__, __LINE__, "load csv " #filename), (filename))
 #define inner_read_msgs_csv(filename) dballe::tests::_read_msgs_csv(wibble::tests::Location(loc, __FILE__, __LINE__, "load csv " #filename), (filename))
 
-void _export_msgs(const Location& loc, const Msgs& in, wreport::Bulletin& out, const std::string& tag, const dballe::msg::Exporter::Options& opts=dballe::msg::Exporter::Options());
+void _export_msgs(const Location& loc, const Messages& in, wreport::Bulletin& out, const std::string& tag, const dballe::msg::Exporter::Options& opts=dballe::msg::Exporter::Options());
 #define test_export_msgs(...) dballe::tests::_export_msgs(wibble::tests::Location(__FILE__, __LINE__, "export"), __VA_ARGS__)
 #define test_inner_export_msgs(...) dballe::tests::_export_msgs(wibble::tests::Location(loc, __FILE__, __LINE__, "export"), __VA_ARGS__)
 
-void track_different_msgs(const Msg& msg1, const Msg& msg2, const std::string& prefix);
-void track_different_msgs(const Msgs& msgs1, const Msgs& msgs2, const std::string& prefix);
+void track_different_msgs(const Message& msg1, const Message& msg2, const std::string& prefix);
+void track_different_msgs(const Messages& msgs1, const Messages& msgs2, const std::string& prefix);
 
 extern const char* bufr_files[];
 extern const char* crex_files[];
 extern const char* aof_files[];
 
-void _ensure_msg_undef(const Location& loc, const Msg& msg, int shortcut);
+void _ensure_msg_undef(const Location& loc, const Message& msg, int shortcut);
 #define ensure_msg_undef(msg, id) dballe::tests::_ensure_msg_undef(wibble::tests::Location(__FILE__, __LINE__, #msg " has undefined " #id), (msg), (id))
 #define inner_ensure_msg_undef(msg, id) dballe::tests::_ensure_msg_undef(wibble::tests::Location(loc, __FILE__, __LINE__, #msg " has undefined " #id), (msg), (id))
 
-const wreport::Var& _want_var(const Location& loc, const Msg& msg, int shortcut);
-const wreport::Var& _want_var(const Location& loc, const Msg& msg, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr);
+const wreport::Var& _want_var(const Location& loc, const Message& msg, int shortcut);
+const wreport::Var& _want_var(const Location& loc, const Message& msg, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr);
 #define want_var(msg, ...) dballe::tests::_want_var(wibble::tests::Location(__FILE__, __LINE__, #msg " needs to have var " #__VA_ARGS__), (msg), __VA_ARGS__)
 
-void dump(const std::string& tag, const Msg& msg, const std::string& desc="message");
-void dump(const std::string& tag, const Msgs& msgs, const std::string& desc="message");
+void dump(const std::string& tag, const Message& msg, const std::string& desc="message");
+void dump(const std::string& tag, const Messages& msgs, const std::string& desc="message");
 void dump(const std::string& tag, const wreport::Bulletin& bul, const std::string& desc="message");
 void dump(const std::string& tag, const BinaryMessage& msg, const std::string& desc="message");
 void dump(const std::string& tag, const std::string& str, const std::string& desc="message");
@@ -77,7 +77,7 @@ void dump(const std::string& tag, const std::string& str, const std::string& des
 struct MessageTweaker
 {
     virtual ~MessageTweaker() {}
-    virtual void tweak(Msgs&) {}
+    virtual void tweak(Messages&) {}
     virtual std::string desc() const = 0;
 };
 
@@ -88,21 +88,21 @@ struct MessageTweakers
     ~MessageTweakers();
     // Takes ownership of memory management
     void add(MessageTweaker* tweak);
-    void apply(Msgs& msgs);
+    void apply(Messages& msgs);
 };
 
 namespace tweaks {
 
-// Strip attributes from all variables in a Msgs
+// Strip attributes from all variables in a Messages
 struct StripAttrs : public MessageTweaker
 {
     std::vector<wreport::Varcode> codes;
 
-    void tweak(Msgs& msgs);
+    void tweak(Messages& msgs);
     virtual std::string desc() const { return "StripAttrs"; }
 };
 
-// Strip attributes from all variables in a Msgs
+// Strip attributes from all variables in a Messages
 struct StripQCAttrs : public StripAttrs
 {
     StripQCAttrs();
@@ -112,11 +112,11 @@ struct StripQCAttrs : public StripAttrs
 // Strip attributes with substituted values
 struct StripSubstituteAttrs : public MessageTweaker
 {
-    void tweak(Msgs& msgs);
+    void tweak(Messages& msgs);
     virtual std::string desc() const { return "StripSubstituteAttrs"; }
 };
 
-// Strip context attributes from all variables in a Msgs
+// Strip context attributes from all variables in a Messages
 struct StripContextAttrs : public StripAttrs
 {
     StripContextAttrs();
@@ -130,7 +130,7 @@ struct StripVars : public MessageTweaker
 
     StripVars() {}
     StripVars(std::initializer_list<wreport::Varcode> codes) : codes(codes) {}
-    void tweak(Msgs& msgs);
+    void tweak(Messages& msgs);
     virtual std::string desc() const { return "StripVars"; }
 };
 
@@ -146,21 +146,21 @@ struct RoundLegacyVars : public MessageTweaker
 {
     const wreport::Vartable* table;
     RoundLegacyVars();
-    void tweak(Msgs& msgs);
+    void tweak(Messages& msgs);
     virtual std::string desc() const { return "RoundLegacyVars"; }
 };
 
 // Remove synop vars present in WMO templates but not in ECMWF templates
 struct RemoveSynopWMOOnlyVars : public MessageTweaker
 {
-    void tweak(Msgs& msgs);
+    void tweak(Messages& msgs);
     virtual std::string desc() const { return "RemoveSynopWMOOnlyVars"; }
 };
 
 // Remove temp vars present in WMO templates but not in ECMWF templates
 struct RemoveTempWMOOnlyVars : public MessageTweaker
 {
-    void tweak(Msgs& msgs);
+    void tweak(Messages& msgs);
     virtual std::string desc() const { return "RemoveTempWMOOnlyVars"; }
 };
 
@@ -176,14 +176,14 @@ struct RemoveOddTempTemplateOnlyVars : public StripVars
 // cannot be encoded in ECMWF templates
 struct RemoveSynopWMOOddprec : public MessageTweaker
 {
-    void tweak(Msgs& msgs);
+    void tweak(Messages& msgs);
     virtual std::string desc() const { return "RemoveSynopWMOOddprec"; }
 };
 
 // Truncate station name to its canonical length
 struct TruncStName : public MessageTweaker
 {
-    void tweak(Msgs& msgs);
+    void tweak(Messages& msgs);
     virtual std::string desc() const { return "TruncStName"; }
 };
 
@@ -192,7 +192,7 @@ struct RoundGeopotential : public MessageTweaker
 {
     const wreport::Vartable* table;
     RoundGeopotential();
-    void tweak(Msgs& msgs);
+    void tweak(Messages& msgs);
     virtual std::string desc() const { return "RoundGeopotential"; }
 };
 
@@ -201,14 +201,14 @@ struct HeightToGeopotential : public MessageTweaker
 {
     const wreport::Vartable* table;
     HeightToGeopotential();
-    void tweak(Msgs& msgs);
+    void tweak(Messages& msgs);
     virtual std::string desc() const { return "HeightToGeopotential"; }
 };
 
 // Round vertical sounding significance with a B08042->B08001->B08042 round trip
 struct RoundVSS : public MessageTweaker
 {
-    void tweak(Msgs& msgs);
+    void tweak(Messages& msgs);
     virtual std::string desc() const { return "RoundVSS"; }
 };
 
@@ -218,7 +218,7 @@ struct RemoveContext : public MessageTweaker
     Level lev;
     Trange tr;
     RemoveContext(const Level& lev, const Trange& tr);
-    void tweak(Msgs& msgs);
+    void tweak(Messages& msgs);
     virtual std::string desc() const { return "RemoveContext"; }
 };
 
@@ -230,7 +230,7 @@ struct TestMessage
     File::Encoding type;
     BinaryMessage raw;
     wreport::Bulletin* bulletin;
-    Msgs msgs;
+    Messages msgs;
 
     TestMessage(File::Encoding type, const std::string& name);
     ~TestMessage();
@@ -240,7 +240,7 @@ struct TestMessage
 
     void read_from_file(const std::string& fname, const msg::Importer::Options& input_opts);
     void read_from_raw(const BinaryMessage& msg, const msg::Importer::Options& input_opts);
-    void read_from_msgs(const Msgs& msgs, const msg::Exporter::Options& export_opts);
+    void read_from_msgs(const Messages& msgs, const msg::Exporter::Options& export_opts);
 };
 
 struct TestCodec

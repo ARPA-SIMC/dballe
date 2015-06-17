@@ -20,7 +20,6 @@
 #include "common.h"
 #include "msg/wr_codec.h"
 #include <wreport/bulletin.h>
-#include "msg/msgs.h"
 #include "msg/context.h"
 
 #warning TODO: remove when done
@@ -63,7 +62,7 @@ struct Synop : public Template
     const msg::Context* c_radiation24;
     const msg::Context* c_tchange;
 
-    Synop(const Exporter::Options& opts, const Msgs& msgs)
+    Synop(const Exporter::Options& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
     void scan_levels()
@@ -143,7 +142,7 @@ struct SynopECMWF : public Synop
     bool is_crex;
     Varcode prec_code;
 
-    SynopECMWF(const Exporter::Options& opts, const Msgs& msgs)
+    SynopECMWF(const Exporter::Options& opts, const Messages& msgs)
         : Synop(opts, msgs) {}
 
     virtual const char* name() const { return SYNOP_ECMWF_NAME; }
@@ -180,9 +179,9 @@ struct SynopECMWF : public Synop
 
         // Use the best kind of precipitation found in the message to encode
         prec_code = 0;
-        for (Msgs::const_iterator mi = msgs.begin(); prec_code == 0 && mi != msgs.end(); ++mi)
+        for (Messages::const_iterator mi = msgs.begin(); prec_code == 0 && mi != msgs.end(); ++mi)
         {
-            const Msg& msg = **mi;
+            const Msg& msg = Msg::downcast(*mi);
             if (msg.get_tot_prec24_var() != NULL)
                 prec_code = WR_VAR(0, 13, 23);
             else if (msg.get_tot_prec12_var() != NULL)
@@ -214,7 +213,7 @@ struct SynopECMWF : public Synop
 
 struct SynopECMWFLand : public SynopECMWF
 {
-    SynopECMWFLand(const Exporter::Options& opts, const Msgs& msgs)
+    SynopECMWFLand(const Exporter::Options& opts, const Messages& msgs)
         : SynopECMWF(opts, msgs) {}
 
     virtual const char* name() const { return SYNOP_ECMWF_LAND_NAME; }
@@ -291,7 +290,7 @@ struct SynopECMWFLand : public SynopECMWF
 
 struct SynopECMWFLandHigh : public SynopECMWF
 {
-    SynopECMWFLandHigh(const Exporter::Options& opts, const Msgs& msgs)
+    SynopECMWFLandHigh(const Exporter::Options& opts, const Messages& msgs)
         : SynopECMWF(opts, msgs) {}
 
     virtual const char* name() const { return SYNOP_ECMWF_LAND_HIGH_NAME; }
@@ -358,7 +357,7 @@ struct SynopECMWFLandHigh : public SynopECMWF
 // Same as SynopECMWFLandHigh but just with a different local subtype
 struct SynopECMWFAuto : public SynopECMWFLand
 {
-    SynopECMWFAuto(const Exporter::Options& opts, const Msgs& msgs)
+    SynopECMWFAuto(const Exporter::Options& opts, const Messages& msgs)
         : SynopECMWFLand(opts, msgs) {}
 
     virtual const char* name() const { return SYNOP_ECMWF_AUTO_NAME; }
@@ -379,7 +378,7 @@ struct SynopWMO : public Synop
     // we process its subsets
     Bulletin* cur_bulletin;
 
-    SynopWMO(const Exporter::Options& opts, const Msgs& msgs)
+    SynopWMO(const Exporter::Options& opts, const Messages& msgs)
         : Synop(opts, msgs), cur_bulletin(0) {}
 
     virtual const char* name() const { return SYNOP_WMO_NAME; }
@@ -499,7 +498,7 @@ struct SynopWMO : public Synop
     {
         add(WR_VAR(0, 20,  62), DBA_MSG_STATE_GROUND);
         add(WR_VAR(0, 13,  13), DBA_MSG_TOT_SNOW);
-        if (const Var* var = msg.find(WR_VAR(0, 12, 121), Level(1), Trange(3, 0, 43200)))
+        if (const Var* var = msg.get(WR_VAR(0, 12, 121), Level(1), Trange(3, 0, 43200)))
             subset.store_variable(WR_VAR(0, 12, 113), *var);
         else
             subset.store_variable_undef(WR_VAR(0, 12, 113));
@@ -551,7 +550,7 @@ struct SynopWMO : public Synop
 
         // Set subtype based on hour. If we have heterogeneous subsets, keep
         // the lowest of the constraints
-        int hour = msg.datetime().hour;
+        int hour = msg.get_datetime().hour;
         if ((hour % 6) == 0)
             // 002 at main synoptic times 00, 06, 12, 18 UTC,
             cur_bulletin->subtype = cur_bulletin->subtype == 255 ? 2 : cur_bulletin->subtype;
@@ -667,7 +666,7 @@ struct SynopWMOFactory : public virtual TemplateFactory
 {
     SynopWMOFactory() { name = SYNOP_WMO_NAME; description = SYNOP_WMO_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         // Scan msgs and pick the right one
         return unique_ptr<Template>(new SynopWMO(opts, msgs));
@@ -678,7 +677,7 @@ struct SynopECMWFLandFactory : public virtual TemplateFactory
 {
     SynopECMWFLandFactory() { name = SYNOP_ECMWF_LAND_NAME; description = SYNOP_ECMWF_LAND_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new SynopECMWFLand(opts, msgs));
     }
@@ -688,7 +687,7 @@ struct SynopECMWFLandHighFactory : public virtual TemplateFactory
 {
     SynopECMWFLandHighFactory() { name = SYNOP_ECMWF_LAND_HIGH_NAME; description = SYNOP_ECMWF_LAND_HIGH_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new SynopECMWFLandHigh(opts, msgs));
     }
@@ -698,7 +697,7 @@ struct SynopECMWFAutoFactory : public virtual TemplateFactory
 {
     SynopECMWFAutoFactory() { name = SYNOP_ECMWF_AUTO_NAME; description = SYNOP_ECMWF_AUTO_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new SynopECMWFAuto(opts, msgs));
     }
@@ -708,9 +707,9 @@ struct SynopECMWFFactory : public virtual TemplateFactory
 {
     SynopECMWFFactory() { name = SYNOP_ECMWF_NAME; description = SYNOP_ECMWF_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
-        const Msg& msg = *msgs[0];
+        const Msg& msg = Msg::downcast(msgs[0]);
         const Var* var = msg.get_st_type_var();
         if (var != NULL && var->enqi() == 0)
             return unique_ptr<Template>(new SynopECMWFAuto(opts, msgs));
@@ -730,9 +729,9 @@ struct SynopFactory : public SynopECMWFFactory, SynopWMOFactory
 {
     SynopFactory() { name = SYNOP_NAME; description = SYNOP_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
-        const Msg& msg = *msgs[0];
+        const Msg& msg = Msg::downcast(msgs[0]);
         const Var* var = msg.get_st_name_var();
         if (var)
             return SynopWMOFactory::make(opts, msgs);

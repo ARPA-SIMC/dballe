@@ -1,4 +1,5 @@
 usr/include/dballe/file.h
+usr/include/dballe/message.h
 usr/include/dballe/query.h
 usr/include/dballe/record.h
 usr/include/dballe/types.h

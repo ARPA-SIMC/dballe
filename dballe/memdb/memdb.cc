@@ -136,7 +136,7 @@ void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool wi
     // Fill up the common context information for the rest of the data
 
     // Date and time
-    if (msg.datetime().is_missing())
+    if (msg.get_datetime().is_missing())
         throw error_notfound("date/time informations not found (or incomplete) in message to insert");
 
     // Insert the rest of the data
@@ -156,7 +156,7 @@ void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool wi
             if (not var.isset()) continue;
 
             unique_ptr<Var> newvar(new Var(var, with_attrs));
-            values.insert(station, levtr, msg.datetime(), std::move(newvar), replace);
+            values.insert(station, levtr, msg.get_datetime(), std::move(newvar), replace);
         }
     }
 }

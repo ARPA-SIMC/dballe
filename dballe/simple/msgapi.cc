@@ -1,10 +1,10 @@
 #include "msgapi.h"
 #include <wreport/var.h>
-#include <dballe/file.h>
-#include <dballe/msg/msgs.h>
-#include <dballe/msg/msg.h>
-#include <dballe/msg/context.h>
-#include <dballe/msg/codec.h>
+#include "dballe/file.h"
+#include "dballe/message.h"
+#include "dballe/msg/msg.h"
+#include "dballe/msg/context.h"
+#include "dballe/msg/codec.h"
 #include <cstring>
 #include <cassert>
 
@@ -60,10 +60,10 @@ MsgAPI::~MsgAPI()
 
 Msg* MsgAPI::curmsg()
 {
-	if (msgs && curmsgidx < msgs->size())
-		return (*msgs)[curmsgidx];
-	else
-		return NULL;
+    if (msgs && curmsgidx < msgs->size())
+        return &Msg::downcast((*msgs)[curmsgidx]);
+    else
+        return nullptr;
 }
 
 bool MsgAPI::readNextMessage()
@@ -87,7 +87,7 @@ bool MsgAPI::readNextMessage()
 
     if (BinaryMessage raw = file->read())
     {
-        unique_ptr<Msgs> new_msgs(new Msgs);
+        unique_ptr<Messages> new_msgs(new Messages);
         *new_msgs = importer->from_binary(raw);
         msgs = new_msgs.release();
         state &= ~STATE_BLANK;
@@ -237,7 +237,7 @@ const char* MsgAPI::dammelo()
 	if (!incrementMsgIters())
 		return 0;
 
-    output.set(msg->datetime());
+    output.set(msg->get_datetime());
 
     // Set metainfo from msg ana layer
     if (const msg::Context* ctx = msg->find_context(Level(), Trange()))
@@ -302,13 +302,13 @@ void MsgAPI::flushVars()
 
 void MsgAPI::flushSubset()
 {
-	if (wmsg)
-	{
-		flushVars();
-		unique_ptr<Msg> awmsg(wmsg);
-		wmsg = 0;
-		msgs->acquire(move(awmsg));
-	}
+    if (wmsg)
+    {
+        flushVars();
+        unique_ptr<Message> awmsg(wmsg);
+        wmsg = 0;
+        msgs->append(move(awmsg));
+    }
 }
 
 void MsgAPI::flushMessage()
@@ -333,8 +333,8 @@ void MsgAPI::prendilo()
 	if (perms & PERM_DATA_RO)
 		error_consistency("prendilo cannot be called with the file open in read mode");
 
-	if (!msgs) msgs = new Msgs;
-	if (!wmsg) wmsg = new Msg;
+    if (!msgs) msgs = new Messages;
+    if (!wmsg) wmsg = new Msg;
 
     // Store record metainfo
     if (const Var* var = input.get("rep_memo"))

@@ -18,9 +18,9 @@
  */
 
 #include "msg/wr_codec.h"
-#include <wreport/bulletin.h>
-#include "msg/msgs.h"
+#include "msg/msg.h"
 #include "msg/context.h"
+#include <wreport/bulletin.h>
 #include <cstdlib>
 
 using namespace wreport;
@@ -39,7 +39,7 @@ struct Metar : public Template
 {
     bool is_crex;
 
-    Metar(const Exporter::Options& opts, const Msgs& msgs)
+    Metar(const Exporter::Options& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
     virtual const char* name() const { return METAR_NAME; }
@@ -129,7 +129,7 @@ struct MetarFactory : public TemplateFactory
 {
     MetarFactory() { name = METAR_NAME; description = METAR_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new Metar(opts, msgs));
     }

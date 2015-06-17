@@ -20,7 +20,7 @@
  */
 
 #include "wr_codec.h"
-#include "msgs.h"
+#include "msg.h"
 #include "context.h"
 #include <wreport/bulletin.h>
 #include "wr_importers/base.h"
@@ -39,7 +39,7 @@ BufrImporter::BufrImporter(const Options& opts)
     : WRImporter(opts) {}
 BufrImporter::~BufrImporter() {}
 
-bool BufrImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const
+bool BufrImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const
 {
     unique_ptr<BufrBulletin> bulletin(BufrBulletin::create());
     bulletin->decode(msg.data);
@@ -50,21 +50,21 @@ CrexImporter::CrexImporter(const Options& opts)
     : WRImporter(opts) {}
 CrexImporter::~CrexImporter() {}
 
-bool CrexImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const
+bool CrexImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const
 {
     unique_ptr<CrexBulletin> bulletin(CrexBulletin::create());
     bulletin->decode(msg.data);
     return foreach_decoded_bulletin(*bulletin, dest);
 }
 
-Msgs WRImporter::from_bulletin(const wreport::Bulletin& msg) const
+Messages WRImporter::from_bulletin(const wreport::Bulletin& msg) const
 {
-    Msgs res;
-    foreach_decoded_bulletin(msg, [&](unique_ptr<Msg> m) { res.acquire(move(m)); return true; });
+    Messages res;
+    foreach_decoded_bulletin(msg, [&](unique_ptr<Message>&& m) { res.append(move(m)); return true; });
     return res;
 }
 
-bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const
+bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const
 {
     // Infer the right importer. See Common Code Table C-13
     std::unique_ptr<wr::Importer> importer;
@@ -134,7 +134,7 @@ std::unique_ptr<wreport::Bulletin> BufrExporter::make_bulletin() const
     return std::unique_ptr<wreport::Bulletin>(BufrBulletin::create().release());
 }
 
-std::string BufrExporter::to_binary(const Msgs& msgs) const
+std::string BufrExporter::to_binary(const Messages& msgs) const
 {
     unique_ptr<BufrBulletin> bulletin(BufrBulletin::create());
     to_bulletin(msgs, *bulletin);
@@ -152,7 +152,7 @@ std::unique_ptr<wreport::Bulletin> CrexExporter::make_bulletin() const
     return std::unique_ptr<wreport::Bulletin>(CrexBulletin::create().release());
 }
 
-std::string CrexExporter::to_binary(const Msgs& msgs) const
+std::string CrexExporter::to_binary(const Messages& msgs) const
 {
     unique_ptr<CrexBulletin> bulletin(CrexBulletin::create());
     to_bulletin(msgs, *bulletin);
@@ -175,7 +175,7 @@ const char* infer_from_message(const Msg& msg)
 
 }
 
-void WRExporter::to_bulletin(const Msgs& msgs, wreport::Bulletin& bulletin) const
+void WRExporter::to_bulletin(const Messages& msgs, wreport::Bulletin& bulletin) const
 {
     if (msgs.empty())
         throw error_consistency("trying to export an empty message set");
@@ -183,7 +183,7 @@ void WRExporter::to_bulletin(const Msgs& msgs, wreport::Bulletin& bulletin) cons
     // Select initial template name
     string tpl = opts.template_name;
     if (tpl.empty())
-        tpl = infer_from_message(*msgs[0]);
+        tpl = infer_from_message(Msg::downcast(msgs[0]));
 
     // Get template factory
     const wr::TemplateFactory& fac = wr::TemplateRegistry::get(tpl);
@@ -208,9 +208,9 @@ struct WMOFactory : public TemplateFactory
 {
     WMOFactory() { name = "wmo"; description = "WMO style templates (autodetect)"; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
-        const Msg& msg = *msgs[0];
+        const Msg& msg = Msg::downcast(msgs[0]);
         string tpl;
         switch (msg.type)
         {
@@ -279,7 +279,7 @@ void Template::to_bulletin(wreport::Bulletin& bulletin)
     for (unsigned i = 0; i < msgs.size(); ++i)
     {
         Subset& s = bulletin.obtain_subset(i);
-        to_subset(*msgs[i], s);
+        to_subset(Msg::downcast(msgs[i]), s);
     }
 }
 
@@ -287,13 +287,13 @@ void Template::setupBulletin(wreport::Bulletin& bulletin)
 {
     // Get reference time from first msg in the set
     // If not found, use current time.
-    const Msg& msg = *msgs[0];
-    bulletin.rep_year = msg.datetime().year;
-    bulletin.rep_month = msg.datetime().month;
-    bulletin.rep_day = msg.datetime().day;
-    bulletin.rep_hour = msg.datetime().hour;
-    bulletin.rep_minute = msg.datetime().minute;
-    bulletin.rep_second = msg.datetime().second;
+    Datetime dt = msgs[0].get_datetime();
+    bulletin.rep_year = dt.year;
+    bulletin.rep_month = dt.month;
+    bulletin.rep_day = dt.day;
+    bulletin.rep_hour = dt.hour;
+    bulletin.rep_minute = dt.minute;
+    bulletin.rep_second = dt.second;
     bulletin.master_table_number = 0;
 
     if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
@@ -360,7 +360,7 @@ void Template::add(Varcode code, int shortcut) const
 
 void Template::add(Varcode code, Varcode srccode, const Level& level, const Trange& trange) const
 {
-    add(code, msg->find(srccode, level, trange));
+    add(code, msg->get(srccode, level, trange));
 }
 
 void Template::add(wreport::Varcode code, const wreport::Var* var) const
@@ -395,7 +395,7 @@ void Template::do_station_name(wreport::Varcode dstcode) const
 
 void Template::do_ecmwf_past_wtr() const
 {
-    int hour = msg->datetime().hour == 0xff ? 0 : msg->datetime().hour;
+    int hour = msg->get_datetime().hour == 0xff ? 0 : msg->get_datetime().hour;
 
     if (hour % 6 == 0)
     {
@@ -431,24 +431,24 @@ void Template::do_D01011() const
     // Year
     if (const Var* var = find_station_var(WR_VAR(0, 4, 1)))
         subset->store_variable(WR_VAR(0, 4, 1), *var);
-    else if (!msg->datetime().is_missing())
-        subset->store_variable_i(WR_VAR(0, 4, 1), msg->datetime().year);
+    else if (!msg->get_datetime().is_missing())
+        subset->store_variable_i(WR_VAR(0, 4, 1), msg->get_datetime().year);
     else
         subset->store_variable_undef(WR_VAR(0, 4, 1));
 
     // Month
     if (const Var* var = find_station_var(WR_VAR(0, 4, 2)))
         subset->store_variable(WR_VAR(0, 4, 2), *var);
-    else if (!msg->datetime().is_missing())
-        subset->store_variable_i(WR_VAR(0, 4, 2), msg->datetime().month);
+    else if (!msg->get_datetime().is_missing())
+        subset->store_variable_i(WR_VAR(0, 4, 2), msg->get_datetime().month);
     else
         subset->store_variable_undef(WR_VAR(0, 4, 2));
 
     // Day
     if (const Var* var = find_station_var(WR_VAR(0, 4, 3)))
         subset->store_variable(WR_VAR(0, 4, 3), *var);
-    else if (!msg->datetime().is_missing())
-        subset->store_variable_i(WR_VAR(0, 4, 3), msg->datetime().day);
+    else if (!msg->get_datetime().is_missing())
+        subset->store_variable_i(WR_VAR(0, 4, 3), msg->get_datetime().day);
     else
         subset->store_variable_undef(WR_VAR(0, 4, 3));
 }
@@ -463,10 +463,10 @@ int Template::do_D01012() const
         subset->store_variable(WR_VAR(0, 4, 4), *var);
         res = var->enqi();
     }
-    else if (!msg->datetime().is_missing())
+    else if (!msg->get_datetime().is_missing())
     {
-        subset->store_variable_i(WR_VAR(0, 4, 4), msg->datetime().hour);
-        res = msg->datetime().hour;
+        subset->store_variable_i(WR_VAR(0, 4, 4), msg->get_datetime().hour);
+        res = msg->get_datetime().hour;
     }
     else
         subset->store_variable_undef(WR_VAR(0, 4, 4));
@@ -474,8 +474,8 @@ int Template::do_D01012() const
     // Minute
     if (const Var* var = find_station_var(WR_VAR(0, 4, 5)))
         subset->store_variable(WR_VAR(0, 4, 5), *var);
-    else if (!msg->datetime().is_missing())
-        subset->store_variable_i(WR_VAR(0, 4, 5), msg->datetime().minute);
+    else if (!msg->get_datetime().is_missing())
+        subset->store_variable_i(WR_VAR(0, 4, 5), msg->get_datetime().minute);
     else
         subset->store_variable_undef(WR_VAR(0, 4, 5));
 
@@ -489,8 +489,8 @@ void Template::do_D01013() const
     // Second
     if (const Var* var = find_station_var(WR_VAR(0, 4, 6)))
         subset->store_variable(WR_VAR(0, 4, 6), *var);
-    else if (!msg->datetime().is_missing())
-        subset->store_variable_i(WR_VAR(0, 4, 6), msg->datetime().second);
+    else if (!msg->get_datetime().is_missing())
+        subset->store_variable_i(WR_VAR(0, 4, 6), msg->get_datetime().second);
     else
         subset->store_variable_undef(WR_VAR(0, 4, 6));
 }

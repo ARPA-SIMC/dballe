@@ -17,10 +17,10 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "msg/tests.h"
-#include "msg/aof_codec.h"
-#include "msg/msgs.h"
-#include "msg/context.h"
+#include "tests.h"
+#include "aof_codec.h"
+#include "msg.h"
+#include "context.h"
 #include <wreport/codetables.h>
 #include <wreport/notes.h>
 #include <math.h>
@@ -56,7 +56,7 @@ void to::test<1>()
             BinaryMessage raw = read_rawmsg(files[i], File::AOF);
 
             /* Parse it */
-            Msgs msgs = importer.from_binary(raw);
+            Messages msgs = importer.from_binary(raw);
             ensure(!msgs.empty());
         } catch (std::exception& e) {
             throw tut::failure(string("[") + files[i] + "] " + e.what());
@@ -64,12 +64,15 @@ void to::test<1>()
 	}
 }
 
-void strip_attributes(Msgs& msgs)
+void strip_attributes(Messages& msgs)
 {
-	for (Msgs::iterator i = msgs.begin(); i != msgs.end(); ++i)
-		for (vector<msg::Context*>::iterator j = (*i)->data.begin(); j != (*i)->data.end(); ++j)
+    for (auto& i: msgs)
+    {
+        Msg& msg = Msg::downcast(i);
+        for (vector<msg::Context*>::iterator j = msg.data.begin(); j != msg.data.end(); ++j)
             for (vector<Var*>::iterator k = (*j)->data.begin(); k != (*j)->data.end(); ++k)
                 (*k)->clear_attrs();
+    }
 }
 
 void propagate_if_missing(int varid, const Msg& src, Msg& dst)
@@ -79,14 +82,14 @@ void propagate_if_missing(int varid, const Msg& src, Msg& dst)
     dst.set_by_id(*var, varid);
 }
 
-void normalise_encoding_quirks(Msgs& amsgs, Msgs& bmsgs)
+void normalise_encoding_quirks(Messages& amsgs, Messages& bmsgs)
 {
     size_t len = amsgs.size();
     if (len == 0) return;
     if (bmsgs.size() == 0) return;
 
     // Message-wide tweaks
-    if (amsgs[0]->type == MSG_PILOT)
+    if (Msg::downcast(amsgs[0]).type == MSG_PILOT)
     {
         dballe::tests::tweaks::StripVars stripper;
         stripper.codes.push_back(WR_VAR(0, 11, 61));
@@ -98,8 +101,8 @@ void normalise_encoding_quirks(Msgs& amsgs, Msgs& bmsgs)
 	if (len > bmsgs.size()) len = bmsgs.size();
 	for (size_t msgidx = 0; msgidx < len; ++msgidx)
 	{
-		Msg& amsg = *amsgs[msgidx];
-		Msg& bmsg = *bmsgs[msgidx];
+        Msg& amsg = Msg::downcast(amsgs[msgidx]);
+        Msg& bmsg = Msg::downcast(bmsgs[msgidx]);
 
 		for (size_t i = 0; i < bmsg.data.size(); ++i)
 		{
@@ -310,8 +313,8 @@ void to::test<2>()
 	for (size_t i = 0; !files[i].empty(); i++)
 	{
         try {
-            Msgs amsgs = read_msgs((files[i] + ".aof").c_str(), File::AOF);
-            Msgs bmsgs = read_msgs((files[i] + ".bufr").c_str(), File::BUFR);
+            Messages amsgs = read_msgs((files[i] + ".aof").c_str(), File::AOF);
+            Messages bmsgs = read_msgs((files[i] + ".bufr").c_str(), File::BUFR);
             normalise_encoding_quirks(amsgs, bmsgs);
 
             // Compare the two dba_msg
@@ -340,14 +343,14 @@ void to::test<3>()
 	{
         try {
             // Read
-            Msgs amsgs = read_msgs(files[i], File::AOF);
+            Messages amsgs = read_msgs(files[i], File::AOF);
 
             // Reencode to BUFR
             BinaryMessage raw(File::BUFR);
             raw.data = exporter->to_binary(amsgs);
 
             // Decode again
-            Msgs bmsgs = importer->from_binary(raw);
+            Messages bmsgs = importer->from_binary(raw);
 
             normalise_encoding_quirks(amsgs, bmsgs);
 
@@ -439,8 +442,8 @@ void to::test<5>()
 	for (size_t i = 0; files[i] != NULL; i++)
 	{
         try {
-            Msgs amsgs1 = read_msgs(string(prefix + "27" + files[i]).c_str(), File::AOF);
-            Msgs amsgs2 = read_msgs(string(prefix + "28" + files[i]).c_str(), File::AOF);
+            Messages amsgs1 = read_msgs(string(prefix + "27" + files[i]).c_str(), File::AOF);
+            Messages amsgs2 = read_msgs(string(prefix + "28" + files[i]).c_str(), File::AOF);
 
             // Compare the two dba_msg
             notes::Collect c(cerr);
@@ -458,10 +461,10 @@ void to::test<5>()
 template<> template<>
 void to::test<6>()
 {
-    Msgs msgs = read_msgs("aof/missing-cloud-h.aof", File::AOF);
+    Messages msgs = read_msgs("aof/missing-cloud-h.aof", File::AOF);
     ensure_equals(msgs.size(), 1);
 
-    const Msg& msg = *msgs[0];
+    const Msg& msg = Msg::downcast(msgs[0]);
     ensure(msg.get_cloud_h1_var() == NULL);
 }
 
@@ -469,10 +472,10 @@ void to::test<6>()
 template<> template<>
 void to::test<7>()
 {
-    Msgs msgs = read_msgs("aof/confship.aof", File::AOF);
+    Messages msgs = read_msgs("aof/confship.aof", File::AOF);
     ensure_equals(msgs.size(), 1);
 
-    const Msg& msg = *msgs[0];
+    const Msg& msg = Msg::downcast(msgs[0]);
     const Var* var = msg.get_st_dir_var();
     ensure(var != NULL);
 

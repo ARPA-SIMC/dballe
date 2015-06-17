@@ -1,9 +1,10 @@
 #include "dbapi.h"
 #include "dballe/file.h"
+#include "dballe/message.h"
 #include "dballe/core/query.h"
 #include "dballe/core/values.h"
 #include "dballe/db/db.h"
-#include "dballe/msg/msgs.h"
+#include "dballe/msg/msg.h"
 #include "dballe/msg/codec.h"
 #include <cstring>
 
@@ -17,7 +18,7 @@ struct InputFile
 {
     File* input;
     msg::Importer* importer;
-    Msgs current_msg;
+    Messages current_msg;
     unsigned current_msg_idx;
     int import_flags;
 
@@ -58,9 +59,9 @@ struct InputFile
         return true;
     }
 
-    const Msg& msg() const
+    const Message& msg() const
     {
-        return *current_msg[current_msg_idx];
+        return current_msg[current_msg_idx];
     }
 };
 
@@ -138,9 +139,8 @@ int DbAPI::quantesono()
         delete ana_cur;
         ana_cur = 0;
     }
-    core::Query query;
-    query.set_from_record(input);
-    ana_cur = db.query_stations(query).release();
+    auto query = Query::from_record(input);
+    ana_cur = db.query_stations(*query).release();
     attr_state = ATTR_REFERENCE;
     attr_reference_id = missing_int;
 
@@ -170,12 +170,11 @@ int DbAPI::voglioquesto()
         delete query_cur;
         query_cur = NULL;
     }
-    core::Query query;
-    query.set_from_record(input);
+    auto query = Query::from_record(input);
     if (station_context)
-        query_cur = db.query_station_data(query).release();
+        query_cur = db.query_station_data(*query).release();
     else
-        query_cur = db.query_data(query).release();
+        query_cur = db.query_data(*query).release();
     attr_state = ATTR_REFERENCE;
     attr_reference_id = missing_int;
 
@@ -250,12 +249,11 @@ void DbAPI::dimenticami()
     if (! (perms & PERM_DATA_WRITE))
         throw error_consistency("dimenticami must be called with the database open in data write mode");
 
-    core::Query query;
-    query.set_from_record(input);
+    auto query = Query::from_record(input);
     if (station_context)
-        db.remove_station_data(query);
+        db.remove_station_data(*query);
     else
-        db.remove(query);
+        db.remove(*query);
     attr_state = ATTR_REFERENCE;
     attr_reference_id = missing_int;
 }
@@ -418,37 +416,22 @@ bool DbAPI::messages_read_next()
     return true;
 }
 
-namespace {
-struct Exporter : public MsgConsumer
-{
-    File& out;
-    msg::Exporter* exporter;
-
-    Exporter(File& out, msg::Exporter::Options& options)
-        : out(out), exporter(msg::Exporter::create(out.encoding(), options).release())
-    {
-    }
-
-    void operator()(std::unique_ptr<Msg> msg)
-    {
-        Msgs msgs;
-        msgs.acquire(move(msg));
-        out.write(exporter->to_binary(msgs));
-    }
-};
-}
-
 void DbAPI::messages_write_next(const char* template_name)
 {
     // Build an exporter for this template
     msg::Exporter::Options options;
     if (template_name) options.template_name = template_name;
-    Exporter exporter(*(output_file->output), options);
+    File& out = *(output_file->output);
+    auto exporter = msg::Exporter::create(out.encoding(), options);
 
     // Do the export with the current filter
-    core::Query query;
-    query.set_from_record(input);
-    db.export_msgs(query, exporter);
+    auto query = Query::from_record(input);
+    db.export_msgs(*query, [&](unique_ptr<Message>&& msg) {
+        Messages msgs;
+        msgs.append(move(msg));
+        out.write(exporter->to_binary(msgs));
+        return true;
+    });
 }
 
 }

@@ -22,7 +22,6 @@
 #include "codec.h"
 #include "aof_codec.h"
 #include "wr_codec.h"
-#include "msgs.h"
 #include <wreport/error.h>
 #include <wreport/bulletin.h>
 
@@ -66,10 +65,10 @@ Importer::~Importer()
 {
 }
 
-Msgs Importer::from_binary(const BinaryMessage& msg) const
+Messages Importer::from_binary(const BinaryMessage& msg) const
 {
-    Msgs res;
-    foreach_decoded(msg, [&](unique_ptr<Msg> m) { res.acquire(move(m)); return true; });
+    Messages res;
+    foreach_decoded(msg, [&](unique_ptr<Message>&& m) { res.append(move(m)); return true; });
     return res;
 }
 

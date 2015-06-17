@@ -7,7 +7,7 @@
 #include "dballe/file.h"
 #include "dballe/core/query.h"
 #include "dballe/core/values.h"
-#include "dballe/msg/msgs.h"
+#include "dballe/message.h"
 #include "dballe/msg/codec.h"
 #include <algorithm>
 #include <wreport/bulletin.h>
@@ -437,36 +437,6 @@ static PyObject* dpy_DB_attr_remove(dpy_DB* self, PyObject* args, PyObject* kw)
     virtual void dump(FILE* out) = 0;
     */
 
-namespace {
-struct ExportConsumer : public MsgConsumer
-{
-    File& out;
-    msg::Exporter* exporter;
-    ExportConsumer(File& out, const char* template_name=NULL)
-        : out(out), exporter(0)
-    {
-        if (template_name == NULL)
-            exporter = msg::Exporter::create(out.encoding()).release();
-        else
-        {
-            msg::Exporter::Options opts;
-            opts.template_name = "generic";
-            exporter = msg::Exporter::create(out.encoding(), opts).release();
-        }
-    }
-    ~ExportConsumer()
-    {
-        if (exporter) delete exporter;
-    }
-    void operator()(std::unique_ptr<Msg> msg)
-    {
-        Msgs msgs;
-        msgs.acquire(move(msg));
-        out.write(exporter->to_binary(msgs));
-    }
-};
-}
-
 static PyObject* dpy_DB_export_to_file(dpy_DB* self, PyObject* args, PyObject* kw)
 {
     static const char* kwlist[] = { "query", "format", "filename", "generic", NULL };
@@ -490,10 +460,18 @@ static PyObject* dpy_DB_export_to_file(dpy_DB* self, PyObject* args, PyObject* k
 
     try {
         std::unique_ptr<File> out = File::create(encoding, filename, "wb");
-        ExportConsumer msg_writer(*out, as_generic ? "generic" : NULL);
-        core::Query q;
-        q.set_from_record(*query->rec);
-        self->db->export_msgs(q, msg_writer);
+        msg::Exporter::Options opts;
+        if (as_generic)
+            opts.template_name = "generic";
+        auto exporter = msg::Exporter::create(out->encoding(), opts);
+        auto q = Query::create();
+        q->set_from_record(*query->rec);
+        self->db->export_msgs(*q, [&](unique_ptr<Message>&& msg) {
+            Messages msgs;
+            msgs.append(move(msg));
+            out->write(exporter->to_binary(msgs));
+            return true;
+        });
         Py_RETURN_NONE;
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -695,7 +673,7 @@ void db_load_file(DB* db, FILE* file, bool close_on_exit, const std::string& nam
     std::unique_ptr<File> f = File::create(file, close_on_exit, name);
     std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->encoding());
     f->foreach([&](const BinaryMessage& raw) {
-        Msgs msgs = imp->from_binary(raw);
+        Messages msgs = imp->from_binary(raw);
         db->import_msgs(msgs, NULL, 0);
         return true;
     });

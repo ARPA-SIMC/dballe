@@ -2,6 +2,7 @@
 #include "db/tests.h"
 #include "db/db.h"
 #include "dballe/record.h"
+#include "msg/msg.h"
 
 using namespace dballe;
 using namespace dballe::db;
@@ -10,19 +11,6 @@ using namespace wibble::tests;
 using namespace std;
 
 namespace {
-
-struct MsgCollector : public vector<Msg*>, public MsgConsumer
-{
-    ~MsgCollector()
-    {
-        for (iterator i = begin(); i != end(); ++i)
-            delete *i;
-    }
-    void operator()(unique_ptr<Msg> msg) override
-    {
-        push_back(msg.release());
-    }
-};
 
 struct DBData : public dballe::tests::TestFixture
 {
@@ -75,9 +63,12 @@ std::vector<Test> tests {
 
         // Put some data in the database and check that it gets exported properly
         // Query back the data
-        MsgCollector msgs;
-        db->export_msgs(core::Query(), msgs);
-        ensure_equals(msgs.size(), 4u);
+        Messages messages = dballe::tests::messages_from_db(*db, core::Query());
+        ensure_equals(messages.size(), 4u);
+
+        Msg* msgs[4];
+        for (unsigned i = 0; i < 4; ++i)
+            msgs[i] = &Msg::downcast(messages[i]);
 
         if (msgs[2]->type == MSG_METAR)
         {
@@ -91,28 +82,28 @@ std::vector<Test> tests {
         ensure_var_equals(want_var(*msgs[0], DBA_MSG_LATITUDE), 12.34560);
         ensure_var_equals(want_var(*msgs[0], DBA_MSG_LONGITUDE), 76.54321);
         ensure_msg_undef(*msgs[0], DBA_MSG_IDENT);
-        wassert(actual(msgs[0]->datetime()) == Datetime(1945, 4, 25, 8, 0, 0));
+        wassert(actual(msgs[0]->get_datetime()) == Datetime(1945, 4, 25, 8, 0, 0));
         ensure_var_equals(want_var(*msgs[0], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)), 500);
 
         ensure_equals(msgs[1]->type, MSG_SYNOP);
         ensure_var_equals(want_var(*msgs[1], DBA_MSG_LATITUDE), 12.34560);
         ensure_var_equals(want_var(*msgs[1], DBA_MSG_LONGITUDE), 76.54321);
         ensure_msg_undef(*msgs[1], DBA_MSG_IDENT);
-        wassert(actual(msgs[1]->datetime()) == Datetime(1945, 4, 26, 8, 0, 0));
+        wassert(actual(msgs[1]->get_datetime()) == Datetime(1945, 4, 26, 8, 0, 0));
         ensure_var_equals(want_var(*msgs[1], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)), 400);
 
         ensure_equals(msgs[2]->type, MSG_SYNOP);
         ensure_var_equals(want_var(*msgs[2], DBA_MSG_LATITUDE), 12.34560);
         ensure_var_equals(want_var(*msgs[2], DBA_MSG_LONGITUDE), 76.54321);
         ensure_var_equals(want_var(*msgs[2], DBA_MSG_IDENT), "ciao");
-        wassert(actual(msgs[2]->datetime()) == Datetime(1945, 4, 26, 8, 0, 0));
+        wassert(actual(msgs[2]->get_datetime()) == Datetime(1945, 4, 26, 8, 0, 0));
         ensure_var_equals(want_var(*msgs[2], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)), 300);
 
         ensure_equals(msgs[3]->type, MSG_METAR);
         ensure_var_equals(want_var(*msgs[3], DBA_MSG_LATITUDE), 12.34560);
         ensure_var_equals(want_var(*msgs[3], DBA_MSG_LONGITUDE), 76.54321);
         ensure_var_equals(want_var(*msgs[3], DBA_MSG_IDENT), "ciao");
-        wassert(actual(msgs[3]->datetime()) == Datetime(1945, 4, 26, 8, 0, 0));
+        wassert(actual(msgs[3]->get_datetime()) == Datetime(1945, 4, 26, 8, 0, 0));
         ensure_var_equals(want_var(*msgs[3], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)), 200);
     }),
     Test("export", [](Fixture& f) {
@@ -137,16 +128,16 @@ std::vector<Test> tests {
         db->insert_data(dv, false, true);
 
         // Query back the data
-        MsgCollector msgs;
-        db->export_msgs(core::Query(), msgs);
+        Messages msgs = dballe::tests::messages_from_db(*db, core::Query());
         ensure_equals(msgs.size(), 1u);
+        Msg& msg = Msg::downcast(msgs[0]);
 
-        ensure_equals(msgs[0]->type, MSG_SYNOP);
-        ensure_var_equals(want_var(*msgs[0], DBA_MSG_LATITUDE), 45.0);
-        ensure_var_equals(want_var(*msgs[0], DBA_MSG_LONGITUDE), 11.0);
-        ensure_msg_undef(*msgs[0], DBA_MSG_IDENT);
-        ensure_var_equals(want_var(*msgs[0], DBA_MSG_BLOCK), 10);
-        ensure_var_equals(want_var(*msgs[0], DBA_MSG_TEMP_2M), 290.0);
+        ensure_equals(msg.type, MSG_SYNOP);
+        ensure_var_equals(want_var(msg, DBA_MSG_LATITUDE), 45.0);
+        ensure_var_equals(want_var(msg, DBA_MSG_LONGITUDE), 11.0);
+        ensure_msg_undef(msg, DBA_MSG_IDENT);
+        ensure_var_equals(want_var(msg, DBA_MSG_BLOCK), 10);
+        ensure_var_equals(want_var(msg, DBA_MSG_TEMP_2M), 290.0);
     }),
 };
 

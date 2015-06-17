@@ -24,8 +24,8 @@
 #include "aof_codec.h"
 #include "aof_importers/common.h"
 #include "msg.h"
-#include <dballe/file.h>
-#include <dballe/msg/msgs.h>
+#include "dballe/file.h"
+#include "dballe/message.h"
 #include <wreport/conv.h>
 
 #include <cstdlib>
@@ -43,7 +43,7 @@ AOFImporter::AOFImporter(const Options& opts)
     : Importer(opts) {}
 AOFImporter::~AOFImporter() {}
 
-bool AOFImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const
+bool AOFImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const
 {
     /* char id[10]; */
     TRACE("aof_message_decode\n");
@@ -85,10 +85,10 @@ bool AOFImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(s
                     OBS(5), OBS(6));
     }
 
-    return dest(std::move(out));
+    return dest(unique_ptr<Message>(out.release()));
 }
 
-Msgs AOFImporter::from_bulletin(const wreport::Bulletin&) const
+Messages AOFImporter::from_bulletin(const wreport::Bulletin&) const
 {
     throw error_unimplemented("AOF importer cannot import from wreport::Bulletin");
 }

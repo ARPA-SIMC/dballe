@@ -23,7 +23,6 @@
 #define DBALLE_MSG_WR_CODEC_H
 
 #include <dballe/msg/codec.h>
-#include <dballe/msg/msg.h>
 #include <wreport/varinfo.h>
 #include <stdint.h>
 #include <map>
@@ -38,6 +37,7 @@ namespace dballe {
 struct Msg;
 
 namespace msg {
+struct Context;
 
 class WRImporter : public Importer
 {
@@ -47,7 +47,7 @@ public:
     /**
      * Import a decoded BUFR/CREX message
      */
-    Msgs from_bulletin(const wreport::Bulletin& msg) const override;
+    Messages from_bulletin(const wreport::Bulletin& msg) const override;
 
     /**
      * Decode a message from its decoded bulletin, calling \a dest on each
@@ -61,7 +61,7 @@ public:
      *   The function that consumes the decoded messages.
      * @returns true if it got to the end of decoding, false if dest returned false.
      */
-    bool foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const;
+    bool foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const;
 };
 
 class BufrImporter : public WRImporter
@@ -70,7 +70,7 @@ public:
     BufrImporter(const Options& opts=Options());
     virtual ~BufrImporter();
 
-    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const override;
+    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const override;
 };
 
 class CrexImporter : public WRImporter
@@ -79,7 +79,7 @@ public:
     CrexImporter(const Options& opts=Options());
     virtual ~CrexImporter();
 
-    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Msg>)> dest) const override;
+    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const override;
 };
 
 
@@ -91,12 +91,12 @@ public:
     /**
      * Import a decoded BUFR/CREX message
      */
-    virtual void to_bulletin(const Msgs& msgs, wreport::Bulletin& msg) const;
+    virtual void to_bulletin(const Messages& msgs, wreport::Bulletin& msg) const;
 
     /**
      * Infer a template name from the message contents
      */
-    std::string infer_template(const Msgs& msgs) const;
+    std::string infer_template(const Messages& msgs) const;
 };
 
 class BufrExporter : public WRExporter
@@ -105,7 +105,7 @@ public:
     BufrExporter(const Options& opts=Options());
     virtual ~BufrExporter();
 
-    virtual std::string to_binary(const Msgs& msgs) const;
+    virtual std::string to_binary(const Messages& msgs) const;
     virtual std::unique_ptr<wreport::Bulletin> make_bulletin() const;
 };
 
@@ -115,7 +115,7 @@ public:
     CrexExporter(const Options& opts=Options());
     virtual ~CrexExporter();
 
-    virtual std::string to_binary(const Msgs& msgs) const;
+    virtual std::string to_binary(const Messages& msgs) const;
     virtual std::unique_ptr<wreport::Bulletin> make_bulletin() const;
 };
 
@@ -160,13 +160,13 @@ protected:
 
 public:
     const Exporter::Options& opts;
-    const Msgs& msgs;
+    const Messages& msgs;
     const Msg* msg = 0;     // Msg being read
     const msg::Context* c_station = 0;
     const msg::Context* c_gnd_instant = 0;
     wreport::Subset* subset = 0; // Subset being written
 
-    Template(const Exporter::Options& opts, const Msgs& msgs)
+    Template(const Exporter::Options& opts, const Messages& msgs)
         : opts(opts), msgs(msgs) {}
     virtual ~Template() {}
 
@@ -181,7 +181,7 @@ struct TemplateFactory
     std::string description;
 
     virtual ~TemplateFactory() {}
-    virtual std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const = 0;
+    virtual std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const = 0;
 };
 
 struct TemplateRegistry : public std::map<std::string, const TemplateFactory*>

@@ -18,12 +18,12 @@
  */
 
 #include "msg/wr_codec.h"
+#include "msg/msg.h"
+#include "msg/context.h"
 #include <wreport/bulletin.h>
 #include <wreport/conv.h>
 #include <wreport/codetables.h>
 #include <wreport/notes.h>
-#include "msg/msgs.h"
-#include "msg/context.h"
 
 using namespace wreport;
 using namespace std;
@@ -70,7 +70,7 @@ struct TempBase : public Template
 {
     bool is_crex;
 
-    TempBase(const Exporter::Options& opts, const Msgs& msgs)
+    TempBase(const Exporter::Options& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
     /// Count the number of sounding levels
@@ -156,9 +156,9 @@ struct TempBase : public Template
 
         // Scan to see what we are dealing with
         bulletin.localsubtype = 101;
-        for (Msgs::const_iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
+        for (const auto& mi: msgs)
         {
-            const Msg& msg = **mi;
+            const Msg& msg = Msg::downcast(mi);
             if (msg.type == MSG_PILOT)
             {
                 bulletin.localsubtype = 91;
@@ -210,7 +210,7 @@ struct TempBase : public Template
 
 struct TempWMO : public TempBase
 {
-    TempWMO(const Exporter::Options& opts, const Msgs& msgs)
+    TempWMO(const Exporter::Options& opts, const Messages& msgs)
         : TempBase(opts, msgs) {}
 
     virtual const char* name() const { return TEMP_WMO_NAME; }
@@ -223,9 +223,9 @@ struct TempWMO : public TempBase
         bulletin.type = 2;
         bulletin.subtype = 4;
         bulletin.localsubtype = 255;
-        for (Msgs::const_iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
+        for (const auto& mi : msgs)
         {
-            const Msg& msg = **mi;
+            const Msg& msg = Msg::downcast(mi);
             if (msg.type == MSG_TEMP_SHIP)
             {
                 bulletin.subtype = 5;
@@ -365,7 +365,7 @@ struct TempWMO : public TempBase
 
 struct TempRadar : public TempBase
 {
-    TempRadar(const Exporter::Options& opts, const Msgs& msgs)
+    TempRadar(const Exporter::Options& opts, const Messages& msgs)
         : TempBase(opts, msgs) {}
 
     virtual const char* name() const { return TEMP_RADAR_NAME; }
@@ -456,7 +456,7 @@ struct TempRadar : public TempBase
 
 struct TempEcmwfLand : public TempBase
 {
-    TempEcmwfLand(const Exporter::Options& opts, const Msgs& msgs)
+    TempEcmwfLand(const Exporter::Options& opts, const Messages& msgs)
         : TempBase(opts, msgs) {}
 
     virtual const char* name() const { return TEMP_ECMWF_LAND_NAME; }
@@ -523,7 +523,7 @@ struct TempEcmwfLand : public TempBase
 
 struct TempEcmwfShip : public TempBase
 {
-    TempEcmwfShip(const Exporter::Options& opts, const Msgs& msgs)
+    TempEcmwfShip(const Exporter::Options& opts, const Messages& msgs)
         : TempBase(opts, msgs) {}
 
     virtual const char* name() const { return TEMP_ECMWF_SHIP_NAME; }
@@ -608,7 +608,7 @@ struct PilotWMO : public TempBase
 {
     bool pressure_levs;
 
-    PilotWMO(const Exporter::Options& opts, const Msgs& msgs)
+    PilotWMO(const Exporter::Options& opts, const Messages& msgs)
         : TempBase(opts, msgs) {}
 
     virtual const char* name() const { return PILOT_WMO_NAME; }
@@ -620,9 +620,9 @@ struct PilotWMO : public TempBase
         unsigned has_press = 0;
         unsigned has_height = 0;
 
-        for (Msgs::const_iterator mi = msgs.begin(); mi != msgs.end(); ++mi)
+        for (const auto& mi: msgs)
         {
-            const Msg& msg = **mi;
+            const Msg& msg = Msg::downcast(mi);
             for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
                     i != msg.data.end(); ++i)
             {
@@ -750,7 +750,7 @@ struct PilotWMO : public TempBase
 
 struct PilotEcmwf : public TempBase
 {
-    PilotEcmwf(const Exporter::Options& opts, const Msgs& msgs)
+    PilotEcmwf(const Exporter::Options& opts, const Messages& msgs)
         : TempBase(opts, msgs) {}
 
     virtual const char* name() const { return PILOT_ECMWF_NAME; }
@@ -879,7 +879,7 @@ struct TempWMOFactory : public virtual TemplateFactory
 {
     TempWMOFactory() { name = TEMP_WMO_NAME; description = TEMP_WMO_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new TempWMO(opts, msgs));
     }
@@ -888,7 +888,7 @@ struct TempEcmwfLandFactory : public virtual TemplateFactory
 {
     TempEcmwfLandFactory() { name = TEMP_ECMWF_LAND_NAME; description = TEMP_ECMWF_LAND_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new TempEcmwfLand(opts, msgs));
     }
@@ -897,7 +897,7 @@ struct TempEcmwfShipFactory : public virtual TemplateFactory
 {
     TempEcmwfShipFactory() { name = TEMP_ECMWF_SHIP_NAME; description = TEMP_ECMWF_SHIP_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new TempEcmwfShip(opts, msgs));
     }
@@ -906,9 +906,9 @@ struct TempEcmwfFactory : public virtual TemplateFactory
 {
     TempEcmwfFactory() { name = TEMP_ECMWF_NAME; description = TEMP_ECMWF_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
-        if (msgs.empty() || msgs[0]->type != MSG_TEMP_SHIP)
+        if (msgs.empty() || Msg::downcast(msgs[0]).type != MSG_TEMP_SHIP)
             return unique_ptr<Template>(new TempEcmwfLand(opts, msgs));
         else
             return unique_ptr<Template>(new TempEcmwfShip(opts, msgs));
@@ -918,7 +918,7 @@ struct TempShipFactory : public virtual TemplateFactory
 {
     TempShipFactory() { name = TEMP_SHIP_NAME; description = TEMP_SHIP_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new TempEcmwfShip(opts, msgs));
     }
@@ -927,7 +927,7 @@ struct TempRadarFactory : public virtual TemplateFactory
 {
     TempRadarFactory() { name = TEMP_RADAR_NAME; description = TEMP_RADAR_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new TempRadar(opts, msgs));
     }
@@ -936,12 +936,12 @@ struct TempFactory : public TempEcmwfFactory, public TempWMOFactory, public Temp
 {
     TempFactory() { name = TEMP_NAME; description = TEMP_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
-        const Msg& msg = *msgs[0];
+        const Msg& msg = Msg::downcast(msgs[0]);
 
         // Get the type of equipment used
-        if (const wreport::Var* var = msg.find(WR_VAR(0, 2, 3), Level(1), Trange::instant()))
+        if (const wreport::Var* var = msg.get(WR_VAR(0, 2, 3), Level(1), Trange::instant()))
             // Is it a Radar?
             if (var->enq(0) == 3)
                 return TempRadarFactory::make(opts, msgs);
@@ -960,7 +960,7 @@ struct PilotWMOFactory : public virtual TemplateFactory
 {
     PilotWMOFactory() { name = PILOT_WMO_NAME; description = PILOT_WMO_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new PilotWMO(opts, msgs));
     }
@@ -969,7 +969,7 @@ struct PilotEcmwfFactory : public virtual TemplateFactory
 {
     PilotEcmwfFactory() { name = PILOT_ECMWF_NAME; description = PILOT_ECMWF_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new PilotEcmwf(opts, msgs));
     }
@@ -978,9 +978,9 @@ struct PilotFactory : public virtual PilotEcmwfFactory, PilotWMOFactory
 {
     PilotFactory() { name = PILOT_NAME; description = PILOT_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
-        const Msg& msg = *msgs[0];
+        const Msg& msg = Msg::downcast(msgs[0]);
         const Var* var = msg.get_sonde_tracking_var();
         // Try with another one in case the first was just unset
         if (!var) var = msg.get_meas_equip_type_var();

@@ -22,6 +22,7 @@
 #include "cmdline/dbadb.h"
 #include "core/arrayfile.h"
 #include "msg/codec.h"
+#include "msg/msg.h"
 #include "config.h"
 
 using namespace dballe;
@@ -74,14 +75,15 @@ std::vector<Test> tests {
 
         // Decode results
         auto importer = msg::Importer::create(File::BUFR);
-        Msgs msgs = importer->from_binary(file.msgs[0]);
+        Messages msgs = importer->from_binary(file.msgs[0]);
         ensure_equals(msgs.size(), 1u);
+        Msg& msg = Msg::downcast(msgs[0]);
 
         // Ensure they're ships
-        ensure_equals(msgs[0]->type, MSG_SHIP);
+        ensure_equals(msg.type, MSG_SHIP);
 
         // Check 001194 [SIM] Report mnemonic(CCITTIA5), too
-        const Var* var = msgs[0]->get_rep_memo_var();
+        const Var* var = msg.get_rep_memo_var();
         ensure(var != 0);
         ensure(var->enqc() != 0);
         ensure_equals(var->enq<std::string>(), "ship");

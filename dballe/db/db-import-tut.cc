@@ -1,6 +1,6 @@
 #include "config.h"
 #include "db/tests.h"
-#include "msg/msgs.h"
+#include "msg/msg.h"
 #include "msg/context.h"
 #include <wreport/notes.h>
 #include <set>
@@ -13,25 +13,7 @@ using namespace std;
 
 namespace {
 
-struct MsgCollector : public vector<Msg*>, public MsgConsumer
-{
-    ~MsgCollector()
-    {
-        for (iterator i = begin(); i != end(); ++i)
-            delete *i;
-    }
-    void operator()(unique_ptr<Msg> msg) override
-    {
-        push_back(msg.release());
-    }
-
-    void from_db(DB& db, const char* query)
-    {
-        db.export_msgs(*dballe::tests::query_from_string(query), *this);
-    }
-};
-
-unsigned diff_msg(Msg& first, Msg& second, const char* tag)
+unsigned diff_msg(Message& first, Message& second, const char* tag)
 {
     notes::Collect c(cerr);
     int diffs = first.diff(second);
@@ -72,8 +54,8 @@ std::vector<Test> tests {
         {
             if (blacklist.find(files[i]) != blacklist.end()) continue;
             try {
-                Msgs inmsgs = read_msgs(files[i], File::CREX);
-                Msg& msg = *inmsgs[0];
+                Messages inmsgs = read_msgs(files[i], File::CREX);
+                Msg& msg = Msg::downcast(inmsgs[0]);
                 normalise_datetime(msg);
 
                 db->remove_all();
@@ -85,12 +67,9 @@ std::vector<Test> tests {
                 query.clear();
                 query.rep_memo = Msg::repmemo_from_type(msg.type);
 
-                MsgCollector msgs;
-                db->export_msgs(query, msgs);
+                Messages msgs = wcallchecked(dballe::tests::messages_from_db(*db, query));
                 ensure_equals(msgs.size(), 1u);
-                ensure(msgs[0] != NULL);
-
-                wassert(actual(diff_msg(msg, *msgs[0], "crex")) == 0);
+                wassert(actual(diff_msg(msg, msgs[0], "crex")) == 0);
             } catch (std::exception& e) {
                 throw tut::failure(string("[") + files[i] + "] " + e.what());
             }
@@ -104,8 +83,8 @@ std::vector<Test> tests {
         for (int i = 0; files[i] != NULL; i++)
         {
             try {
-                Msgs inmsgs = read_msgs(files[i], File::BUFR);
-                Msg& msg = *inmsgs[0];
+                Messages inmsgs = read_msgs(files[i], File::BUFR);
+                Msg& msg = Msg::downcast(inmsgs[0]);
                 normalise_datetime(msg);
 
                 db->remove_all();
@@ -114,15 +93,13 @@ std::vector<Test> tests {
                 query.clear();
                 query.rep_memo = Msg::repmemo_from_type(msg.type);
 
-                MsgCollector msgs;
-                db->export_msgs(query, msgs);
+                Messages msgs = dballe::tests::messages_from_db(*db, query);
                 ensure_equals(msgs.size(), 1u);
-                ensure(msgs[0] != NULL);
 
                 // Explicitly set the rep_memo variable that is added during export
                 msg.set_rep_memo(Msg::repmemo_from_type(msg.type));
 
-                wassert(actual(diff_msg(msg, *msgs[0], "bufr")) == 0);
+                wassert(actual(diff_msg(msg, msgs[0], "bufr")) == 0);
             } catch (std::exception& e) {
                 throw tut::failure(string("[") + files[i] + "] " + e.what());
             }
@@ -136,8 +113,8 @@ std::vector<Test> tests {
         for (int i = 0; files[i] != NULL; i++)
         {
             try {
-                Msgs inmsgs = read_msgs(files[i], File::AOF);
-                Msg& msg = *inmsgs[0];
+                Messages inmsgs = read_msgs(files[i], File::AOF);
+                Msg& msg = Msg::downcast(inmsgs[0]);
                 normalise_datetime(msg);
 
                 db->remove_all();
@@ -151,12 +128,9 @@ std::vector<Test> tests {
                 query.clear();
                 query.rep_memo = Msg::repmemo_from_type(msg.type);
 
-                MsgCollector msgs;
-                db->export_msgs(query, msgs);
+                Messages msgs = dballe::tests::messages_from_db(*db, query);
                 ensure_equals(msgs.size(), 1u);
-                ensure(msgs[0] != NULL);
-
-                wassert(actual(diff_msg(msg, *msgs[0], "bufr")) == 0);
+                wassert(actual(diff_msg(msg, msgs[0], "bufr")) == 0);
             } catch (std::exception& e) {
                 throw tut::failure(string("[") + files[i] + "] " + e.what());
             }
@@ -169,10 +143,10 @@ std::vector<Test> tests {
 
         // msg1 has latitude 33.88
         // msg2 has latitude 46.22
-        Msgs msgs1 = read_msgs("bufr/obs0-1.22.bufr", File::BUFR);
-        Msgs msgs2 = read_msgs("bufr/obs0-3.504.bufr", File::BUFR);
-        Msg& msg1 = *msgs1[0];
-        Msg& msg2 = *msgs2[0];
+        Messages msgs1 = read_msgs("bufr/obs0-1.22.bufr", File::BUFR);
+        Messages msgs2 = read_msgs("bufr/obs0-3.504.bufr", File::BUFR);
+        Msg& msg1 = Msg::downcast(msgs1[0]);
+        Msg& msg2 = Msg::downcast(msgs2[0]);
 
         normalise_datetime(msg1);
         normalise_datetime(msg2);
@@ -190,22 +164,19 @@ std::vector<Test> tests {
 
         // Warning: this test used to fail with older versions of MySQL.
         // See http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=397597
-        MsgCollector msgs;
-        db->export_msgs(query, msgs);
+        Messages msgs = dballe::tests::messages_from_db(*db, query);
         ensure_equals(msgs.size(), 2u);
-        ensure(msgs[0] != NULL);
-        ensure(msgs[1] != NULL);
 
         // Compare the two dba_msg
-        wassert(actual(diff_msg(msg1, *msgs[0], "synop1")) == 0);
-        wassert(actual(diff_msg(msg2, *msgs[1], "synop2")) == 0);
+        wassert(actual(diff_msg(msg1, msgs[0], "synop1")) == 0);
+        wassert(actual(diff_msg(msg2, msgs[1], "synop2")) == 0);
     }),
     Test("auto_repinfo", [](Fixture& f) {
         // Check automatic repinfo allocation
         auto& db = f.db;
         core::Query query;
-        Msgs msgs = read_msgs("bufr/generic-new-repmemo.bufr", File::BUFR);
-        Msg& msg = *msgs[0];
+        Messages msgs = read_msgs("bufr/generic-new-repmemo.bufr", File::BUFR);
+        Msg& msg = Msg::downcast(msgs[0]);
 
         db->remove_all();
         db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
@@ -213,22 +184,18 @@ std::vector<Test> tests {
         query.clear();
         query.rep_memo = "enrico";
 
-        MsgCollector outmsgs;
-        db->export_msgs(query, outmsgs);
+        Messages outmsgs = dballe::tests::messages_from_db(*db, query);
         wassert(actual(outmsgs.size()) == 1u);
-        ensure(outmsgs[0] != NULL);
-
         // Compare the two dba_msg
-        wassert(actual(diff_msg(msg, *outmsgs[0], "enrico")) == 0);
+        wassert(actual(diff_msg(msg, outmsgs[0], "enrico")) == 0);
     }),
     Test("station_only", [](Fixture& f) {
         // Check that a message that only contains station variables does get imported
         auto& db = f.db;
-        Msgs msgs = read_msgs("bufr/generic-onlystation.bufr", File::BUFR);
-        Msg& msg = *msgs[0];
+        Messages msgs = read_msgs("bufr/generic-onlystation.bufr", File::BUFR);
 
         db->remove_all();
-        db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+        db->import_msg(msgs[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
         std::unique_ptr<db::Cursor> cur = db->query_stations(core::Query());
         wassert(actual(cur->remaining()) == 1);
@@ -254,12 +221,10 @@ std::vector<Test> tests {
         // Check that a message that only contains station variables does get imported
         auto& db = f.db;
         core::Record query;
-        Msgs msgs = read_msgs("bufr/arpa-station.bufr", File::BUFR);
-        Msg& msg = *msgs[0];
-
+        Messages msgs = read_msgs("bufr/arpa-station.bufr", File::BUFR);
         db->remove_all();
         try {
-            db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+            db->import_msg(msgs[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
             wassert(actual(false).istrue());
         } catch (error_notfound& e) {
             // ok.
@@ -336,19 +301,17 @@ std::vector<Test> tests {
         db->import_msg(first, NULL, DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE);
 
         // Export and check
-        MsgCollector export_first;
-        export_first.from_db(*db, "rep_memo=synop");
+        Messages export_first = dballe::tests::messages_from_db(*db, "rep_memo=synop");
         wassert(actual(export_first.size()) == 1);
-        wassert(actual(diff_msg(first, *export_first[0], "first")) == 0);
+        wassert(actual(diff_msg(first, export_first[0], "first")) == 0);
 
         // Import the second message
         db->import_msg(second, NULL, DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE);
 
         // Export and check
-        MsgCollector export_second;
-        export_second.from_db(*db, "rep_memo=synop");
+        Messages export_second = dballe::tests::messages_from_db(*db, "rep_memo=synop");
         wassert(actual(export_second.size()) == 1);
-        wassert(actual(diff_msg(second, *export_second[0], "second")) == 0);
+        wassert(actual(diff_msg(second, export_second[0], "second")) == 0);
     }),
 };
 

@@ -28,12 +28,12 @@ SONDE_TRACKING, int,    B02014,       1,     -, -, -,  254,      0,     0, Track
 BLOCK,          int,    B01001,       -,     -, -, -,    -,      -,     -, WMO block number
 STATION,        int,    B01002,       -,     -, -, -,    -,      -,     -, WMO station number
 IDENT,          str,    B01011,       -,     -, -, -,    -,      -,     -, Mobile station identifier
-#YEAR,           int,    B04001,       -,     -, -, -,    -,      -,     -, Year of the observation
-#MONTH,          int,    B04002,       -,     -, -, -,    -,      -,     -, Month of the observation
-#DAY,            int,    B04003,       -,     -, -, -,    -,      -,     -, Day of the observation
-#HOUR,           int,    B04004,       -,     -, -, -,    -,      -,     -, Hour of the observation
-#MINUTE,         int,    B04005,       -,     -, -, -,    -,      -,     -, Minute of the observation
-#SECOND,         int,    B04006,       -,     -, -, -,    -,      -,     -, Second of the observation
+YEAR,           int,    B04001,       -,     -, -, -,    -,      -,     -, Year of the observation
+MONTH,          int,    B04002,       -,     -, -, -,    -,      -,     -, Month of the observation
+DAY,            int,    B04003,       -,     -, -, -,    -,      -,     -, Day of the observation
+HOUR,           int,    B04004,       -,     -, -, -,    -,      -,     -, Hour of the observation
+MINUTE,         int,    B04005,       -,     -, -, -,    -,      -,     -, Minute of the observation
+SECOND,         int,    B04006,       -,     -, -, -,    -,      -,     -, Second of the observation
 LATITUDE,       num,    B05001,       -,     -, -, -,    -,      -,     -, Latitude of the station
 LONGITUDE,      num,    B06001,       -,     -, -, -,    -,      -,     -, Longiture of the station
 HEIGHT_STATION, num,    B07030,       -,     -, -, -,    -,      -,     -, Height of station

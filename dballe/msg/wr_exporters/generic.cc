@@ -18,9 +18,9 @@
  */
 
 #include "msg/wr_codec.h"
-#include <wreport/bulletin.h>
-#include "msg/msgs.h"
+#include "msg/msg.h"
 #include "msg/context.h"
+#include <wreport/bulletin.h>
 #include <cstdlib>
 
 using namespace wreport;
@@ -39,7 +39,7 @@ struct Generic : public Template
 {
     Bulletin* bulletin;
 
-    Generic(const Exporter::Options& opts, const Msgs& msgs)
+    Generic(const Exporter::Options& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
     virtual const char* name() const { return GENERIC_NAME; }
@@ -56,7 +56,7 @@ struct Generic : public Template
 
     void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
     {
-        const Var* var = msg->find(srccode, level, trange);
+        const Var* var = msg->get(srccode, level, trange);
         if (var)
             subset->store_variable(code, *var);
         else
@@ -136,12 +136,13 @@ struct Generic : public Template
             subset.store_variable_undef(WR_VAR(0, 1, 194));
 
         // Datetime
-        add_datetime_var(WR_VAR(0, 4, 1), !msg.datetime().is_missing(), msg.datetime().year);
-        add_datetime_var(WR_VAR(0, 4, 2), !msg.datetime().is_missing(), msg.datetime().month);
-        add_datetime_var(WR_VAR(0, 4, 3), !msg.datetime().is_missing(), msg.datetime().day);
-        add_datetime_var(WR_VAR(0, 4, 4), !msg.datetime().is_missing(), msg.datetime().hour);
-        add_datetime_var(WR_VAR(0, 4, 5), !msg.datetime().is_missing(), msg.datetime().minute);
-        add_datetime_var(WR_VAR(0, 4, 6), !msg.datetime().is_missing(), msg.datetime().second);
+        Datetime dt = msg.get_datetime();
+        add_datetime_var(WR_VAR(0, 4, 1), !dt.is_missing(), dt.year);
+        add_datetime_var(WR_VAR(0, 4, 2), !dt.is_missing(), dt.month);
+        add_datetime_var(WR_VAR(0, 4, 3), !dt.is_missing(), dt.day);
+        add_datetime_var(WR_VAR(0, 4, 4), !dt.is_missing(), dt.hour);
+        add_datetime_var(WR_VAR(0, 4, 5), !dt.is_missing(), dt.minute);
+        add_datetime_var(WR_VAR(0, 4, 6), !dt.is_missing(), dt.second);
 
         // Then the station context
         if (const msg::Context* ctx = msg.find_station_context())
@@ -256,7 +257,7 @@ struct GenericFactory : public TemplateFactory
 {
     GenericFactory() { name = GENERIC_NAME; description = GENERIC_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new Generic(opts, msgs));
     }

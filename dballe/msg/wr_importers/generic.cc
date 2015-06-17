@@ -154,36 +154,12 @@ void GenericImporter::import_var(const Var& var)
             break;
         }
         // Datetime entries that may have attributes to store
-        case WR_VAR(0,  4,  1):
-            ye = var.enqi();
-            if (var.next_attr())
-                msg->set(var, WR_VAR(0, 4, 1), Level(), Trange());
-            break;
-        case WR_VAR(0,  4,  2):
-            mo = var.enqi();
-            if (var.next_attr())
-                msg->set(var, WR_VAR(0, 4, 2), Level(), Trange());
-            break;
-        case WR_VAR(0,  4,  3):
-            da = var.enqi();
-            if (var.next_attr())
-                msg->set(var, WR_VAR(0, 4, 3), Level(), Trange());
-            break;
-        case WR_VAR(0,  4,  4):
-            ho = var.enqi();
-            if (var.next_attr())
-                msg->set(var, WR_VAR(0, 4, 4), Level(), Trange());
-            break;
-        case WR_VAR(0,  4,  5):
-            mi = var.enqi();
-            if (var.next_attr())
-                msg->set(var, WR_VAR(0, 4, 5), Level(), Trange());
-            break;
-        case WR_VAR(0,  4,  6):
-            se = var.enqi();
-            if (var.next_attr())
-                msg->set(var, WR_VAR(0, 4, 6), Level(), Trange());
-            break;
+        case WR_VAR(0,  4,  1): ye = var.enqi(); if (var.next_attr()) msg->set_year_var(var); break;
+        case WR_VAR(0,  4,  2): mo = var.enqi(); if (var.next_attr()) msg->set_month_var(var); break;
+        case WR_VAR(0,  4,  3): da = var.enqi(); if (var.next_attr()) msg->set_day_var(var); break;
+        case WR_VAR(0,  4,  4): ho = var.enqi(); if (var.next_attr()) msg->set_hour_var(var); break;
+        case WR_VAR(0,  4,  5): mi = var.enqi(); if (var.next_attr()) msg->set_minute_var(var); break;
+        case WR_VAR(0,  4,  6): se = var.enqi(); if (var.next_attr()) msg->set_second_var(var); break;
         // Anything else
         default:
             msg->set(var, map_code_to_dballe(var.code()), lev, tr);

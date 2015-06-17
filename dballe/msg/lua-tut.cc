@@ -17,9 +17,9 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "msg/tests.h"
-#include "msg/tests-lua.h"
-#include "msg/msg.h"
+#include "tests.h"
+#include "tests-lua.h"
+#include "msg.h"
 
 using namespace dballe;
 using namespace wreport;
@@ -45,9 +45,9 @@ template<> template<>
 void to::test<1>()
 {
     // Get a test message
-    Msgs msgs = read_msgs("bufr/obs0-1.22.bufr", File::BUFR);
+    Messages msgs = read_msgs("bufr/obs0-1.22.bufr", File::BUFR);
     ensure_equals(msgs.size(), 1u);
-    Msg& msg = *msgs[0];
+    Msg& msg = Msg::downcast(msgs[0]);
 
     dballe::tests::Lua test(
 		"function test() \n"

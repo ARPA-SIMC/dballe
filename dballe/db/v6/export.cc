@@ -60,7 +60,7 @@ static inline int sqltimecmp(const SQL_TIMESTAMP_STRUCT* a, const SQL_TIMESTAMP_
     return memcmp(a, b, sizeof(SQL_TIMESTAMP_STRUCT));
 }
 
-void DB::export_msgs(const dballe::Query& query, MsgConsumer& consumer)
+bool DB::export_msgs(const dballe::Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest)
 {
     auto tr = trace.trace_export_msgs(query);
     sql::Repinfo& ri = repinfo();
@@ -121,9 +121,11 @@ void DB::export_msgs(const dballe::Query& query, MsgConsumer& consumer)
                     unique_ptr<Msg> copy(new Msg);
                     msg->sounding_pack_levels(*copy);
                     /* DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_reverse_levels(msg)); */
-                    consumer(move(copy));
+                    if (!dest(move(copy)))
+                        return false;
                 } else
-                    consumer(move(msg));
+                    if (!dest(move(msg)))
+                        return false;
             }
 
             // Start writing a new message
@@ -179,15 +181,18 @@ void DB::export_msgs(const dballe::Query& query, MsgConsumer& consumer)
             unique_ptr<Msg> copy(new Msg);
             msg->sounding_pack_levels(*copy);
             /* DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_reverse_levels(msg)); */
-            consumer(move(copy));
+            if (!dest(move(copy)))
+                return false;
             msg.release();
         } else
-            consumer(move(msg));
+            if (!dest(move(msg)))
+                return false;
     }
 
     // Useful for Oracle to end the session
     t->commit();
     tr->done();
+    return true;
 }
 
 }

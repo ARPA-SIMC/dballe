@@ -7,7 +7,7 @@
 #ifdef HAVE_ODBC
 #include "odbc/internals.h"
 #endif
-#include "dballe/msg/msgs.h"
+#include "dballe/message.h"
 #include "dballe/core/record.h"
 #include "dballe/core/values.h"
 #include <wreport/error.h>
@@ -45,10 +45,10 @@ DB::~DB()
 {
 }
 
-void DB::import_msgs(const Msgs& msgs, const char* repmemo, int flags)
+void DB::import_msgs(const Messages& msgs, const char* repmemo, int flags)
 {
-    for (Msgs::const_iterator i = msgs.begin(); i != msgs.end(); ++i)
-        import_msg(**i, repmemo, flags);
+    for (const auto& i: msgs)
+        import_msg(i, repmemo, flags);
 }
 
 Format DB::get_default_format() { return default_format; }

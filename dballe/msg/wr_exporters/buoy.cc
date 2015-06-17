@@ -17,9 +17,9 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
+#include "msg/msg.h"
 #include "msg/wr_codec.h"
 #include <wreport/bulletin.h>
-#include "msg/msgs.h"
 #include <cstdlib>
 
 using namespace wreport;
@@ -38,7 +38,7 @@ struct Buoy : public Template
 {
     bool is_crex;
 
-    Buoy(const Exporter::Options& opts, const Msgs& msgs)
+    Buoy(const Exporter::Options& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
     virtual const char* name() const { return BUOY_NAME; }
@@ -55,7 +55,7 @@ struct Buoy : public Template
 
     void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
     {
-        const Var* var = msg->find(srccode, level, trange);
+        const Var* var = msg->get(srccode, level, trange);
         if (var)
             subset->store_variable(code, *var);
         else
@@ -154,7 +154,7 @@ struct BuoyFactory : public TemplateFactory
 {
     BuoyFactory() { name = BUOY_NAME; description = BUOY_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new Buoy(opts, msgs));
     }

@@ -20,12 +20,13 @@
 #include "processor.h"
 
 #include <wreport/bulletin.h>
-#include <dballe/file.h>
-#include <dballe/core/csv.h>
-#include <dballe/core/match-wreport.h>
-#include <dballe/msg/aof_codec.h>
-#include <dballe/msg/msgs.h>
-#include <dballe/cmdline/cmdline.h>
+#include "dballe/file.h"
+#include "dballe/message.h"
+#include "dballe/msg/msg.h"
+#include "dballe/core/csv.h"
+#include "dballe/core/match-wreport.h"
+#include "dballe/msg/aof_codec.h"
+#include "dballe/cmdline/cmdline.h"
 #include "dballe/core/vasprintf.h"
 
 #include <cstring>
@@ -68,7 +69,7 @@ Item::~Item()
     if (rmsg) delete rmsg;
 }
 
-void Item::set_msgs(Msgs* new_msgs)
+void Item::set_msgs(Messages* new_msgs)
 {
     if (msgs) delete msgs;
     msgs = new_msgs;
@@ -125,7 +126,7 @@ void Item::decode(msg::Importer& imp, bool print_errors)
         case File::CREX:
             if (bulletin)
             {
-                msgs = new Msgs;
+                msgs = new Messages;
                 try {
                     *msgs = imp.from_bulletin(*bulletin);
                 } catch (error& e) {
@@ -136,7 +137,7 @@ void Item::decode(msg::Importer& imp, bool print_errors)
             }
             break;
         case File::AOF:
-            msgs = new Msgs;
+            msgs = new Messages;
             try {
                 *msgs = imp.from_binary(*rmsg);
             } catch (error& e) {
@@ -208,7 +209,7 @@ bool Filter::match_index(int idx) const
 	return false;
 }
 
-bool Filter::match_common(const BinaryMessage&, const Msgs* msgs) const
+bool Filter::match_common(const BinaryMessage&, const Messages* msgs) const
 {
     if (msgs == NULL && parsable)
         return false;
@@ -217,7 +218,7 @@ bool Filter::match_common(const BinaryMessage&, const Msgs* msgs) const
     return true;
 }
 
-bool Filter::match_bufrex(const BinaryMessage& rmsg, const Bulletin* rm, const Msgs* msgs) const
+bool Filter::match_bufrex(const BinaryMessage& rmsg, const Bulletin* rm, const Messages* msgs) const
 {
     if (!match_common(rmsg, msgs))
         return false;
@@ -245,14 +246,14 @@ bool Filter::match_bufrex(const BinaryMessage& rmsg, const Bulletin* rm, const M
     return true;
 }
 
-bool Filter::match_bufr(const BinaryMessage& rmsg, const Bulletin* rm, const Msgs* msgs) const
+bool Filter::match_bufr(const BinaryMessage& rmsg, const Bulletin* rm, const Messages* msgs) const
 {
     if (!match_bufrex(rmsg, rm, msgs))
         return false;
     return true;
 }
 
-bool Filter::match_crex(const BinaryMessage& rmsg, const Bulletin* rm, const Msgs* msgs) const
+bool Filter::match_crex(const BinaryMessage& rmsg, const Bulletin* rm, const Messages* msgs) const
 {
     if (!match_bufrex(rmsg, rm, msgs))
         return false;
@@ -272,7 +273,7 @@ bool Filter::match_crex(const BinaryMessage& rmsg, const Bulletin* rm, const Msg
 #endif
 }
 
-bool Filter::match_aof(const BinaryMessage& rmsg, const Msgs* msgs) const
+bool Filter::match_aof(const BinaryMessage& rmsg, const Messages* msgs) const
 {
     int category, subcategory;
     msg::AOFImporter::get_category(rmsg, &category, &subcategory);
@@ -293,9 +294,9 @@ bool Filter::match_aof(const BinaryMessage& rmsg, const Msgs* msgs) const
     return true;
 }
 
-bool Filter::match_msgs(const Msgs& msgs) const
+bool Filter::match_msgs(const Messages& msgs) const
 {
-    if (matcher && matcher->match(MatchedMsgs(msgs)) != matcher::MATCH_YES)
+    if (matcher && matcher->match(MatchedMessages(msgs)) != matcher::MATCH_YES)
         return false;
 
     return true;
@@ -326,7 +327,7 @@ Reader::Reader()
 void Reader::read_csv(const std::list<std::string>& fnames, Action& action)
 {
     // This cannot be implemented in dballe::File at the moment, since
-    // dballe::File reads dballe::BinaryMessage strings, and here we read dballe::Msgs
+    // dballe::File reads dballe::BinaryMessage strings, and here we read dballe::Messages
     // directly. We could split the input into several BinaryMessage strings, but that
     // would mean parsing the CSV twice: once to detect the message boundaries
     // and once to parse the BinaryMessage strings.
@@ -358,8 +359,8 @@ void Reader::read_csv(const std::list<std::string>& fnames, Action& action)
                 continue;
 
             // We want it: move it to the item
-            unique_ptr<Msgs> msgs(new Msgs);
-            msgs->acquire(move(msg));
+            unique_ptr<Messages> msgs(new Messages);
+            msgs->append(move(msg));
             item.set_msgs(msgs.release());
 
             if (!filter.match_item(item))

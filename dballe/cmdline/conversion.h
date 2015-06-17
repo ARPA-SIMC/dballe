@@ -46,15 +46,15 @@ protected:
 
     /**
      * Perform conversion of decoded data, auto-inferring
-     * type/subtype/localsubtype from the Msgs contents
+     * type/subtype/localsubtype from the Messages contents
      */
-    void process_dba_msg(const BinaryMessage& orig, const Msgs& msgs);
+    void process_dba_msg(const BinaryMessage& orig, const Messages& msgs);
 
     /**
      * Perform conversion of decded data, using the original bulletin for
      * type/subtype/localsubtype information
      */
-    void process_dba_msg_from_bulletin(const BinaryMessage& orig, const wreport::Bulletin& bulletin, const Msgs& msgs);
+    void process_dba_msg_from_bulletin(const BinaryMessage& orig, const wreport::Bulletin& bulletin, const Messages& msgs);
 };
 
 }

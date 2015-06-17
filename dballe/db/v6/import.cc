@@ -26,10 +26,8 @@
 #include "dballe/db/sql/levtr.h"
 #include "dballe/db/sql/datav6.h"
 #include "dballe/db/sql/attrv6.h"
-
-#include <dballe/msg/msgs.h>
-#include <dballe/msg/msg.h>
-#include <dballe/msg/context.h>
+#include "dballe/msg/msg.h"
+#include "dballe/msg/context.h"
 
 using namespace wreport;
 
@@ -37,8 +35,9 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
-void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
+void DB::import_msg(const Message& message, const char* repmemo, int flags)
 {
+    const Msg& msg = Msg::downcast(message);
     const msg::Context* l_ana = msg.find_context(Level(), Trange());
 	if (!l_ana)
 		throw error_consistency("cannot import into the database a message without station information");
@@ -139,9 +138,9 @@ void DB::import_msg(const Msg& msg, const char* repmemo, int flags)
     vars.id_report = id_report;
 
     // Date and time
-    if (msg.datetime().is_missing())
+    if (msg.get_datetime().is_missing())
         throw error_notfound("date/time informations not found (or incomplete) in message to insert");
-    vars.datetime = msg.datetime();
+    vars.datetime = msg.get_datetime();
 
     // Fill the bulk insert with the rest of the data
     for (size_t i = 0; i < msg.data.size(); ++i)

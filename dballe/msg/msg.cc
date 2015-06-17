@@ -39,6 +39,48 @@ using namespace std;
 
 namespace dballe {
 
+namespace msg {
+
+Messages messages_from_csv(CSVReader& in)
+{
+    Messages res;
+    string old_rep;
+    bool first = true;
+    while (true)
+    {
+        // Seek to beginning, skipping empty lines
+        if (!in.move_to_data())
+            return res;
+
+        if (in.cols.size() != 13)
+            error_consistency::throwf("cannot parse CSV line has %zd fields instead of 13", in.cols.size());
+        if (first)
+        {
+            // If we are the first run, initialse old_* markers with the contents of this line
+            old_rep = in.cols[2];
+            first = false;
+        } else if (old_rep != in.cols[2])
+            // If Report changes, we are done
+            break;
+
+        unique_ptr<Msg> msg(new Msg);
+        bool has_next = msg->from_csv(in);
+        res.append(std::move(msg));
+        if (!has_next)
+            break;
+    }
+    return res;
+}
+
+void messages_to_csv(const Messages& msgs, std::ostream& out)
+{
+    for (const auto& i: msgs)
+        Msg::downcast(i).to_csv(out);
+}
+
+}
+
+
 const char* msg_type_name(MsgType type)
 {
     switch (type)
@@ -107,6 +149,27 @@ Msg& Msg::operator=(const Msg& m)
     return *this;
 }
 
+const Msg& Msg::downcast(const Message& o)
+{
+    const Msg* ptr = dynamic_cast<const Msg*>(&o);
+    if (!ptr)
+        throw error_consistency("Message given is not a Msg");
+    return *ptr;
+}
+
+Msg& Msg::downcast(Message& o)
+{
+    Msg* ptr = dynamic_cast<Msg*>(&o);
+    if (!ptr)
+        throw error_consistency("Message given is not a Msg");
+    return *ptr;
+}
+
+std::unique_ptr<Message> Msg::clone() const
+{
+    return unique_ptr<Message>(new Msg(*this));
+}
+
 void Msg::clear()
 {
     type = MSG_GENERIC;
@@ -173,7 +236,7 @@ msg::Context& Msg::obtain_context(const Level& lev, const Trange& tr)
     return *data[pos];
 }
 
-void Msg::add_context(unique_ptr<msg::Context> ctx)
+void Msg::add_context(unique_ptr<msg::Context>&& ctx)
 {
     // Enlarge the data
     data.resize(data.size() + 1);
@@ -207,7 +270,7 @@ bool Msg::remove_context(const Level& lev, const Trange& tr)
     return true;
 }
 
-const Var* Msg::find(Varcode code, const Level& lev, const Trange& tr) const
+const Var* Msg::get(Varcode code, const Level& lev, const Trange& tr) const
 {
     const msg::Context* ctx = find_context(lev, tr);
     if (ctx == NULL) return NULL;
@@ -224,7 +287,7 @@ wreport::Var* Msg::edit(wreport::Varcode code, const Level& lev, const Trange& t
 const Var* Msg::find_by_id(int id) const
 {
     const MsgVarShortcut& v = shortcutTable[id];
-    return find(v.code, Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2));
+    return get(v.code, Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2));
 }
 
 const msg::Context* Msg::find_context_by_id(int id) const
@@ -282,7 +345,7 @@ struct VarContext
         if (c.level != Level())
         {
             // Datetime
-            msg.datetime().to_stream_iso8601(out, ' ');
+            msg.get_datetime().to_stream_iso8601(out, ' ');
             out << ',';
 
             // Level
@@ -502,8 +565,10 @@ static void context_summary(const msg::Context& c, ostream& out)
     out << "c(" << c.level << ", " << c.trange << ")";
 }
 
-unsigned Msg::diff(const Msg& msg) const
+unsigned Msg::diff(const Message& o) const
 {
+    const Msg& msg = downcast(o);
+
     unsigned diffs = 0;
     if (type != msg.type)
     {
@@ -570,7 +635,7 @@ void Msg::set(const Var& var, Varcode code, const Level& lev, const Trange& tr)
     set(var_copy_without_unset_attrs(var, code), lev, tr);
 }
 
-void Msg::set(std::unique_ptr<Var> var, const Level& lev, const Trange& tr)
+void Msg::set(std::unique_ptr<Var>&& var, const Level& lev, const Trange& tr)
 {
     msg::Context& ctx = obtain_context(lev, tr);
     ctx.set(std::move(var));
@@ -774,7 +839,7 @@ matcher::Result MatchedMsg::match_var_id(int val) const
 
 matcher::Result MatchedMsg::match_station_id(int val) const
 {
-    if (const wreport::Var* var = m.find(WR_VAR(0, 1, 192), Level(), Trange()))
+    if (const wreport::Var* var = m.get(WR_VAR(0, 1, 192), Level(), Trange()))
     {
         return var->enqi() == val ? matcher::MATCH_YES : matcher::MATCH_NO;
     } else
@@ -806,7 +871,7 @@ matcher::Result MatchedMsg::match_station_wmo(int block, int station) const
 
 matcher::Result MatchedMsg::match_datetime(const DatetimeRange& range) const
 {
-    Datetime dt = m.datetime();
+    Datetime dt = m.get_datetime();
     if (dt.is_missing()) return matcher::MATCH_NA;
     return range.contains(dt) ? matcher::MATCH_YES : matcher::MATCH_NO;
 }
@@ -846,4 +911,60 @@ matcher::Result MatchedMsg::match_rep_memo(const char* memo) const
         return matcher::MATCH_NA;
 }
 
+
+MatchedMessages::MatchedMessages(const Messages& m)
+    : m(m)
+{
+}
+MatchedMessages::~MatchedMessages()
+{
+}
+
+matcher::Result MatchedMessages::match_var_id(int val) const
+{
+    for (const auto& i: m)
+        if (MatchedMsg(Msg::downcast(i)).match_var_id(val) == matcher::MATCH_YES)
+            return matcher::MATCH_YES;
+    return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedMessages::match_station_id(int val) const
+{
+    for (const auto& i: m)
+        if (MatchedMsg(Msg::downcast(i)).match_station_id(val) == matcher::MATCH_YES)
+            return matcher::MATCH_YES;
+    return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedMessages::match_station_wmo(int block, int station) const
+{
+    for (const auto& i: m)
+        if (MatchedMsg(Msg::downcast(i)).match_station_wmo(block, station) == matcher::MATCH_YES)
+            return matcher::MATCH_YES;
+    return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedMessages::match_datetime(const DatetimeRange& range) const
+{
+    for (const auto& i: m)
+        if (MatchedMsg(Msg::downcast(i)).match_datetime(range) == matcher::MATCH_YES)
+            return matcher::MATCH_YES;
+    return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedMessages::match_coords(const LatRange& latrange, const LonRange& lonrange) const
+{
+    for (const auto& i: m)
+        if (MatchedMsg(Msg::downcast(i)).match_coords(latrange, lonrange) == matcher::MATCH_YES)
+            return matcher::MATCH_YES;
+    return matcher::MATCH_NA;
+}
+
+matcher::Result MatchedMessages::match_rep_memo(const char* memo) const
+{
+    for (const auto& i: m)
+        if (MatchedMsg(Msg::downcast(i)).match_rep_memo(memo) == matcher::MATCH_YES)
+            return matcher::MATCH_YES;
+    return matcher::MATCH_NA;
+}
 }

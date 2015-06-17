@@ -18,9 +18,9 @@
  */
 
 #include "msg/wr_codec.h"
-#include <wreport/bulletin.h>
-#include "msg/msgs.h"
+#include "msg/msg.h"
 #include "msg/context.h"
+#include <wreport/bulletin.h>
 #include <cstdlib>
 #include <cmath>
 
@@ -64,7 +64,7 @@ static double intexp10(unsigned x)
 
 struct Pollution : public Template
 {
-    Pollution(const Exporter::Options& opts, const Msgs& msgs)
+    Pollution(const Exporter::Options& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
     virtual const char* name() const { return POLLUTION_NAME; }
@@ -81,7 +81,7 @@ struct Pollution : public Template
 
     void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
     {
-        const Var* var = msg->find(srccode, level, trange);
+        const Var* var = msg->get(srccode, level, trange);
         if (var)
             subset->store_variable(code, *var);
         else
@@ -257,7 +257,7 @@ struct PollutionFactory : public TemplateFactory
 {
     PollutionFactory() { name = POLLUTION_NAME; description = POLLUTION_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new Pollution(opts, msgs));
     }

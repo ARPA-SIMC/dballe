@@ -590,9 +590,8 @@ std::vector<Test> tests {
         const char** files = dballe::tests::bufr_files;
         for (int i = 0; files[i] != NULL; i++)
         {
-            Msgs inmsgs = read_msgs(files[i], File::BUFR);
-            Msg& msg = *inmsgs[0];
-            wrunchecked(db.import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE));
+            Messages inmsgs = read_msgs(files[i], File::BUFR);
+            wrunchecked(db.import_msg(inmsgs[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE));
         }
 
         // Query all with best

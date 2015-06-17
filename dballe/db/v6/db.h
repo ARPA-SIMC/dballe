@@ -60,9 +60,6 @@
 #define DBA_DB_WANT_CONTEXT_ID  (1 << 9)
 
 namespace dballe {
-struct Msg;
-struct Msgs;
-struct MsgConsumer;
 struct Station;
 struct StationValues;
 struct DataValues;
@@ -285,32 +282,8 @@ public:
      */
     void attr_remove(int id_data, wreport::Varcode id_var, const db::AttrList& qcs);
 
-    /**
-     * Import a Msg message into the DB-All.e database
-     *
-     * @param db
-     *   The DB-All.e database to write the data into
-     * @param msg
-     *   The Msg containing the data to import
-     * @param repmemo
-     *   Report mnemonic to which imported data belong.  If NULL is passed, then it
-     *   will be chosen automatically based on the message type.
-     * @param flags
-     *   Customise different aspects of the import process.  It is a bitmask of the
-     *   various DBA_IMPORT_* macros.
-     */
-    void import_msg(const Msg& msg, const char* repmemo, int flags);
-
-    /**
-     * Perform the query in `query', and return the results as a NULL-terminated
-     * array of dba_msg.
-     *
-     * @param query
-     *   The query to perform
-     * @param cons
-     *   The MsgsConsumer that will handle the resulting messages
-     */
-    void export_msgs(const Query& query, MsgConsumer& cons);
+    void import_msg(const Message& msg, const char* repmemo, int flags) override;
+    bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) override;
 
     /**
      * Dump the entire contents of the database to an output stream

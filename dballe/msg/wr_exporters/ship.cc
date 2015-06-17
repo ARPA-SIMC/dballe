@@ -20,7 +20,6 @@
 #include "common.h"
 #include "msg/wr_codec.h"
 #include <wreport/bulletin.h>
-#include "msg/msgs.h"
 #include "msg/context.h"
 
 using namespace wreport;
@@ -59,7 +58,7 @@ struct ShipBase : public Template
     CommonSynopExporter synop;
     bool is_crex;
 
-    ShipBase(const Exporter::Options& opts, const Msgs& msgs)
+    ShipBase(const Exporter::Options& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
@@ -102,7 +101,7 @@ struct ShipBase : public Template
 
 struct ShipECMWFBase : public ShipBase
 {
-    ShipECMWFBase(const Exporter::Options& opts, const Msgs& msgs)
+    ShipECMWFBase(const Exporter::Options& opts, const Messages& msgs)
         : ShipBase(opts, msgs) {}
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
@@ -192,7 +191,7 @@ struct ShipECMWFBase : public ShipBase
 
 struct ShipAbbr : public ShipECMWFBase
 {
-    ShipAbbr(const Exporter::Options& opts, const Msgs& msgs)
+    ShipAbbr(const Exporter::Options& opts, const Messages& msgs)
         : ShipECMWFBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_ABBR_NAME; }
@@ -209,7 +208,7 @@ struct ShipAbbr : public ShipECMWFBase
 
 struct ShipPlain : public ShipECMWFBase
 {
-    ShipPlain(const Exporter::Options& opts, const Msgs& msgs)
+    ShipPlain(const Exporter::Options& opts, const Messages& msgs)
         : ShipECMWFBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_PLAIN_NAME; }
@@ -226,7 +225,7 @@ struct ShipPlain : public ShipECMWFBase
 
 struct ShipAuto : public ShipECMWFBase
 {
-    ShipAuto(const Exporter::Options& opts, const Msgs& msgs)
+    ShipAuto(const Exporter::Options& opts, const Messages& msgs)
         : ShipECMWFBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_AUTO_NAME; }
@@ -243,7 +242,7 @@ struct ShipAuto : public ShipECMWFBase
 
 struct ShipReduced : public ShipECMWFBase
 {
-    ShipReduced(const Exporter::Options& opts, const Msgs& msgs)
+    ShipReduced(const Exporter::Options& opts, const Messages& msgs)
         : ShipECMWFBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_REDUCED_NAME; }
@@ -260,7 +259,7 @@ struct ShipReduced : public ShipECMWFBase
 
 struct ShipECMWFSecondRecord : public ShipBase
 {
-    ShipECMWFSecondRecord(const Exporter::Options& opts, const Msgs& msgs)
+    ShipECMWFSecondRecord(const Exporter::Options& opts, const Messages& msgs)
         : ShipBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_ECMWF_SECOND_NAME; }
@@ -359,7 +358,7 @@ struct ShipWMO : public ShipBase
 {
     bool is_crex;
 
-    ShipWMO(const Exporter::Options& opts, const Msgs& msgs)
+    ShipWMO(const Exporter::Options& opts, const Messages& msgs)
         : ShipBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_WMO_NAME; }
@@ -439,14 +438,14 @@ struct ShipFactory : public TemplateFactory
 {
     ShipFactory() { name = SHIP_NAME; description = SHIP_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         // Scan msgs and pick the right one
         bool maybe_wmo = true;
         bool maybe_plain = true;
         bool maybe_auto = true;
         bool maybe_second = true;
-        const Msg& msg = *msgs[0];
+        const Msg& msg = Msg::downcast(msgs[0]);
         for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
                 i != msg.data.end(); ++i)
         {
@@ -492,7 +491,7 @@ struct ShipPlainFactory : public TemplateFactory
 {
     ShipPlainFactory() { name = SHIP_PLAIN_NAME; description = SHIP_PLAIN_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new ShipPlain(opts, msgs));
     }
@@ -501,7 +500,7 @@ struct ShipECMWFSecondRecordFactory : public TemplateFactory
 {
     ShipECMWFSecondRecordFactory() { name = SHIP_ECMWF_SECOND_NAME; description = SHIP_ECMWF_SECOND_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new ShipECMWFSecondRecord(opts, msgs));
     }
@@ -510,7 +509,7 @@ struct ShipAbbrFactory : public TemplateFactory
 {
     ShipAbbrFactory() { name = SHIP_ABBR_NAME; description = SHIP_ABBR_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new ShipAbbr(opts, msgs));
     }
@@ -519,7 +518,7 @@ struct ShipAutoFactory : public TemplateFactory
 {
     ShipAutoFactory() { name = SHIP_AUTO_NAME; description = SHIP_AUTO_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new ShipAuto(opts, msgs));
     }
@@ -528,7 +527,7 @@ struct ShipReducedFactory : public TemplateFactory
 {
     ShipReducedFactory() { name = SHIP_REDUCED_NAME; description = SHIP_REDUCED_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new ShipReduced(opts, msgs));
     }
@@ -537,7 +536,7 @@ struct ShipWMOFactory : public TemplateFactory
 {
     ShipWMOFactory() { name = SHIP_WMO_NAME; description = SHIP_WMO_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new ShipWMO(opts, msgs));
     }

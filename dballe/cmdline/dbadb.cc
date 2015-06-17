@@ -18,8 +18,9 @@
  */
 
 #include "dbadb.h"
-#include <dballe/msg/msgs.h>
-#include <dballe/db/db.h>
+#include "dballe/message.h"
+#include "dballe/msg/msg.h"
+#include "dballe/db/db.h"
 
 #include <cstdlib>
 
@@ -66,7 +67,7 @@ bool Importer::operator()(const Item& item)
     }
     for (size_t i = 0; i < item.msgs->size(); ++i)
     {
-        Msg& msg = *(*item.msgs)[i];
+        Msg& msg = Msg::downcast((*item.msgs)[i]);
         if (forced_repmemo == NULL && msg.type == MSG_GENERIC)
             /* Put generic messages in the generic report by default */
             db.import_msg(msg, NULL, import_flags);
@@ -76,43 +77,6 @@ bool Importer::operator()(const Item& item)
     return true;
 }
 
-
-struct MsgWriter : public MsgConsumer
-{
-    File& file;
-    msg::Exporter* exporter;
-    const char* forced_rep_memo;
-
-    MsgWriter(File& file) : file(file), exporter(0), forced_rep_memo(0) {}
-    ~MsgWriter()
-    {
-        if (exporter) delete exporter;
-    }
-
-    virtual void operator()(std::unique_ptr<Msg> msg)
-    {
-        /* Override the message type if the user asks for it */
-        if (forced_rep_memo != NULL)
-        {
-            msg->type = Msg::type_from_repmemo(forced_rep_memo);
-            msg->set_rep_memo(forced_rep_memo);
-        }
-        Msgs msgs;
-        msgs.acquire(move(msg));
-        file.write(exporter->to_binary(msgs));
-    }
-};
-
-struct MsgDumper : public MsgConsumer
-{
-    FILE* out;
-    MsgDumper(FILE* out=stdout) : out(out) {}
-
-    virtual void operator()(std::unique_ptr<Msg> msg)
-    {
-        msg->print(out);
-    }
-};
 
 }
 
@@ -150,8 +114,10 @@ int Dbadb::do_stations(const Query& query, FILE* out)
 
 int Dbadb::do_export_dump(const Query& query, FILE* out)
 {
-    MsgDumper dumper(out);
-    db.export_msgs(query, dumper);
+    db.export_msgs(query, [&](unique_ptr<Message>&& msg) {
+        msg->print(out);
+        return true;
+    });
     return 0;
 }
 
@@ -177,12 +143,23 @@ int Dbadb::do_export(const Query& query, File& file, const char* output_template
     if (output_template && output_template[0] != 0)
         opts.template_name = output_template;
 
-    MsgWriter writer(file);
     if (forced_repmemo)
-        writer.forced_rep_memo = dbadb::parse_op_report(db, forced_repmemo);
-    writer.exporter = msg::Exporter::create(file.encoding(), opts).release();
+        forced_repmemo = dbadb::parse_op_report(db, forced_repmemo);
+    auto exporter = msg::Exporter::create(file.encoding(), opts);
 
-    db.export_msgs(query, writer);
+    db.export_msgs(query, [&](unique_ptr<Message>&& msg) {
+        /* Override the message type if the user asks for it */
+        if (forced_repmemo != NULL)
+        {
+            Msg& m = Msg::downcast(*msg);
+            m.type = Msg::type_from_repmemo(forced_repmemo);
+            m.set_rep_memo(forced_repmemo);
+        }
+        Messages msgs;
+        msgs.append(move(msg));
+        file.write(exporter->to_binary(msgs));
+        return true;
+    });
     return 0;
 }
 

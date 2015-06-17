@@ -18,9 +18,9 @@
  */
 
 #include "msg/wr_codec.h"
-#include <wreport/bulletin.h>
-#include "msg/msgs.h"
+#include "msg/msg.h"
 #include "msg/context.h"
+#include <wreport/bulletin.h>
 
 using namespace wreport;
 using namespace std;
@@ -61,7 +61,7 @@ struct FlightBase : public Template
     bool is_crex;
     const msg::Context* flight_ctx;
 
-    FlightBase(const Exporter::Options& opts, const Msgs& msgs)
+    FlightBase(const Exporter::Options& opts, const Messages& msgs)
         : Template(opts, msgs), flight_ctx(0) {}
 
     void add(wreport::Varcode code, const wreport::Var* var) const
@@ -146,7 +146,7 @@ struct FlightBase : public Template
 
 struct Airep : public FlightBase
 {
-    Airep(const Exporter::Options& opts, const Msgs& msgs)
+    Airep(const Exporter::Options& opts, const Messages& msgs)
         : FlightBase(opts, msgs) {}
 
     virtual const char* name() const { return AIREP_NAME; }
@@ -211,7 +211,7 @@ struct Airep : public FlightBase
 
 struct Amdar : public Airep
 {
-    Amdar(const Exporter::Options& opts, const Msgs& msgs)
+    Amdar(const Exporter::Options& opts, const Messages& msgs)
         : Airep(opts, msgs) {}
 
     virtual const char* name() const { return AMDAR_NAME; }
@@ -226,7 +226,7 @@ struct Amdar : public Airep
 
 struct AmdarWMO : public FlightBase
 {
-    AmdarWMO(const Exporter::Options& opts, const Msgs& msgs)
+    AmdarWMO(const Exporter::Options& opts, const Messages& msgs)
         : FlightBase(opts, msgs) {}
 
     virtual const char* name() const { return AMDAR_WMO_NAME; }
@@ -325,7 +325,7 @@ struct AmdarWMO : public FlightBase
 
 struct Acars : public FlightBase
 {
-    Acars(const Exporter::Options& opts, const Msgs& msgs)
+    Acars(const Exporter::Options& opts, const Messages& msgs)
         : FlightBase(opts, msgs) {}
 
     virtual const char* name() const { return ACARS_NAME; }
@@ -423,7 +423,7 @@ struct Acars : public FlightBase
 
 struct AcarsWMO : public AmdarWMO
 {
-    AcarsWMO(const Exporter::Options& opts, const Msgs& msgs)
+    AcarsWMO(const Exporter::Options& opts, const Messages& msgs)
         : AmdarWMO(opts, msgs) {}
 
     virtual const char* name() const { return ACARS_WMO_NAME; }
@@ -442,7 +442,7 @@ struct AirepFactory : public TemplateFactory
 {
     AirepFactory() { name = AIREP_NAME; description = AIREP_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new Airep(opts, msgs));
     }
@@ -451,7 +451,7 @@ struct AirepEcmwfFactory : public TemplateFactory
 {
     AirepEcmwfFactory() { name = AIREP_ECMWF_NAME; description = AIREP_ECMWF_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new Airep(opts, msgs));
     }
@@ -460,7 +460,7 @@ struct AmdarFactory : public TemplateFactory
 {
     AmdarFactory() { name = AMDAR_NAME; description = AMDAR_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new Amdar(opts, msgs));
     }
@@ -469,7 +469,7 @@ struct AmdarEcmwfFactory : public TemplateFactory
 {
     AmdarEcmwfFactory() { name = AMDAR_ECMWF_NAME; description = AMDAR_ECMWF_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new Amdar(opts, msgs));
     }
@@ -478,7 +478,7 @@ struct AmdarWMOFactory : public TemplateFactory
 {
     AmdarWMOFactory() { name = AMDAR_WMO_NAME; description = AMDAR_WMO_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new AmdarWMO(opts, msgs));
     }
@@ -487,7 +487,7 @@ struct AcarsFactory : public TemplateFactory
 {
     AcarsFactory() { name = ACARS_NAME; description = ACARS_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new Acars(opts, msgs));
     }
@@ -496,7 +496,7 @@ struct AcarsEcmwfFactory : public TemplateFactory
 {
     AcarsEcmwfFactory() { name = ACARS_ECMWF_NAME; description = ACARS_ECMWF_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new Acars(opts, msgs));
     }
@@ -505,7 +505,7 @@ struct AcarsWMOFactory : public TemplateFactory
 {
     AcarsWMOFactory() { name = ACARS_WMO_NAME; description = ACARS_WMO_DESC; }
 
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Msgs& msgs) const
+    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
     {
         return unique_ptr<Template>(new AcarsWMO(opts, msgs));
     }

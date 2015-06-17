@@ -17,8 +17,9 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "msg/tests.h"
-#include "msg/wr_codec.h"
+#include "tests.h"
+#include "wr_codec.h"
+#include "msg.h"
 #include <wreport/notes.h>
 #include <wreport/bulletin.h>
 
@@ -39,15 +40,15 @@ std::vector<Test> tests {
         unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR);
         unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR);
 
-        Msgs msgs;
-        msgs.acquire(unique_ptr<Msg>(new Msg));
+        Messages msgs;
+        msgs.append(unique_ptr<Message>(new Msg));
 
         // Export msg as a generic message
         BinaryMessage raw(File::BUFR);
         raw.data = wcallchecked(exporter->to_binary(msgs));
 
         // Parse it back
-        Msgs msgs1 = wcallchecked(importer->from_binary(raw));
+        Messages msgs1 = wcallchecked(importer->from_binary(raw));
 
         // Check that the data are the same
         notes::Collect c(cerr);
@@ -135,8 +136,8 @@ std::vector<Test> tests {
         msg->set_timesig(		3,		45);
         //CHECKED(dba_msg_set_flight_press(	msg, 3,		45));
 
-        Msgs msgs;
-        msgs.acquire(move(msg));
+        Messages msgs;
+        msgs.append(move(msg));
 
         /* Export msg as a generic message */
         BinaryMessage raw(File::BUFR);
@@ -147,7 +148,7 @@ std::vector<Test> tests {
         //fclose(out);
 
         /* Parse it back */
-        Msgs msgs1 = wcallchecked(importer->from_binary(raw));
+        Messages msgs1 = wcallchecked(importer->from_binary(raw));
 
         /* Check that the data are the same */
         notes::Collect c(cerr);
@@ -190,15 +191,15 @@ std::vector<Test> tests {
         /* Add the variable to the message */
         msg->set(move(var), Level(1), Trange::instant());
 
-        Msgs msgs;
-        msgs.acquire(move(msg));
+        Messages msgs;
+        msgs.append(move(msg));
 
         // Encode the message
         BinaryMessage raw(File::BUFR);
         raw.data = wcallchecked(exporter->to_binary(msgs));
 
         // Decode the message
-        Msgs msgs1 = wcallchecked(importer->from_binary(raw));
+        Messages msgs1 = wcallchecked(importer->from_binary(raw));
 
         // Check that the data are the same
         notes::Collect c(cerr);
@@ -210,12 +211,12 @@ std::vector<Test> tests {
         // Test a bug in which B01194 ([SIM] Report mnemonic) appears twice
 
         // Import a synop message
-        Msgs msgs = read_msgs("bufr/obs0-1.22.bufr", File::BUFR);
+        Messages msgs = read_msgs("bufr/obs0-1.22.bufr", File::BUFR);
         ensure(msgs.size() > 0);
 
         // Convert it to generic, with a 'ship' rep_memo
-        msgs[0]->type = MSG_GENERIC;
-        msgs[0]->set_rep_memo("ship");
+        Msg::downcast(msgs[0]).type = MSG_GENERIC;
+        Msg::downcast(msgs[0]).set_rep_memo("ship");
 
         // Export it
         unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR);

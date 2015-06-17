@@ -17,10 +17,10 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "msg/tests.h"
-#include "msg/wr_codec.h"
-#include "msg/msgs.h"
-#include "msg/context.h"
+#include "tests.h"
+#include "wr_codec.h"
+#include "msg.h"
+#include "context.h"
 #include <wreport/bulletin.h>
 #include <wreport/conv.h>
 #include <wreport/notes.h>
@@ -48,8 +48,8 @@ struct ReimportTest
 
     string fname;
     File::Encoding type;
-    Msgs msgs1;
-    Msgs msgs2;
+    Messages msgs1;
+    Messages msgs2;
     unique_ptr<Bulletin> exported;
     msg::Importer::Options input_opts;
     msg::Exporter::Options output_opts;
@@ -159,7 +159,7 @@ struct ReimportTest
             throw tut::failure(loc.msg(string("importing from rawmsg (first template): ") + e.what()));
         }
 
-        Msgs msgs3;
+        Messages msgs3;
         if (tname2)
         {
             // Export
@@ -315,7 +315,7 @@ std::vector<Test> tests {
         for (i = 0; files[i] != NULL; i++)
         {
             try {
-                Msgs msgs = read_msgs(files[i], File::BUFR);
+                Messages msgs = read_msgs(files[i], File::BUFR);
                 ensure(msgs.size() > 0);
 
                 std::unique_ptr<msg::Exporter> exporter;
@@ -346,7 +346,7 @@ std::vector<Test> tests {
         for (i = 0; files[i] != NULL; i++)
         {
             try {
-                Msgs msgs = read_msgs(files[i], File::CREX);
+                Messages msgs = read_msgs(files[i], File::CREX);
                 ensure(msgs.size() > 0);
 
                 std::unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR/*, const Options& opts=Options()*/);
@@ -365,16 +365,16 @@ std::vector<Test> tests {
     }),
     Test("reproduce_temp", [](Fixture& f) {
         // Export a well known TEMP which used to fail
-        Msgs msgs = read_msgs_csv("csv/temp1.csv");
+        Messages msgs = read_msgs_csv("csv/temp1.csv");
         ensure(msgs.size() > 0);
 
         // Replace with packed levels because comparison later happens against
         // packed levels
         {
             unique_ptr<Msg> msg(new Msg);
-            msg->sounding_pack_levels(*msgs[0]);
+            msg->sounding_pack_levels(Msg::downcast(msgs[0]));
             msgs.clear();
-            msgs.acquire(move(msg));
+            msgs.append(move(msg));
         }
 
         // Export to BUFR
@@ -385,7 +385,7 @@ std::vector<Test> tests {
         // Import and check the differences
         {
             std::unique_ptr<msg::Importer> bufr_importer(msg::Importer::create(File::BUFR/*, const Options& opts=Options()*/));
-            Msgs msgs1 = wcallchecked(bufr_importer->from_bulletin(*bbulletin));
+            Messages msgs1 = wcallchecked(bufr_importer->from_bulletin(*bbulletin));
             notes::Collect c(cerr);
             ensure_equals(msgs.diff(msgs1), 0);
         }
@@ -398,7 +398,7 @@ std::vector<Test> tests {
         // Import and check the differences
         {
             std::unique_ptr<msg::Importer> crex_importer(msg::Importer::create(File::CREX/*, const Options& opts=Options()*/));
-            Msgs msgs1 = wcallchecked(crex_importer->from_bulletin(*cbulletin));
+            Messages msgs1 = wcallchecked(crex_importer->from_bulletin(*cbulletin));
             notes::Collect c(cerr);
             ensure_equals(msgs.diff(msgs1), 0);
         }
@@ -781,7 +781,7 @@ std::vector<Test> tests {
             if (blacklist.find(files[i]) != blacklist.end()) continue;
             try {
                 // Import
-                Msgs msgs = read_msgs(files[i], File::BUFR);
+                Messages msgs = read_msgs(files[i], File::BUFR);
                 ensure(msgs.size() > 0);
 
                 // Export
@@ -789,7 +789,7 @@ std::vector<Test> tests {
                 exporter->to_bulletin(msgs, *bbulletin);
 
                 // Import again
-                Msgs msgs1 = importer->from_bulletin(*bbulletin);
+                Messages msgs1 = importer->from_bulletin(*bbulletin);
 
                 // Compare
                 notes::Collect c(cerr);
@@ -841,7 +841,7 @@ std::vector<Test> tests {
             if (blacklist.find(files[i]) != blacklist.end()) continue;
             try {
                 // Import
-                Msgs msgs = read_msgs_opts(files[i], File::BUFR, import_opts);
+                Messages msgs = read_msgs_opts(files[i], File::BUFR, import_opts);
                 ensure(msgs.size() > 0);
 
                 // Export
@@ -849,7 +849,7 @@ std::vector<Test> tests {
                 exporter->to_bulletin(msgs, *bbulletin);
 
                 // Import again
-                Msgs msgs1 = importer->from_bulletin(*bbulletin);
+                Messages msgs1 = importer->from_bulletin(*bbulletin);
 
                 // Compare
                 stringstream str;
@@ -874,7 +874,7 @@ std::vector<Test> tests {
     // Old PILOT
     Test("old_pilot1", [](Fixture& f) {
         // Test that pilot subtype is set correctly
-        Msgs msgs = read_msgs("bufr/obs2-91.2.bufr", File::BUFR);
+        Messages msgs = read_msgs("bufr/obs2-91.2.bufr", File::BUFR);
         unique_ptr<Bulletin> bulletin(BufrBulletin::create());
         msg::Exporter::Options opts;
         opts.template_name = "pilot-wmo";
@@ -934,9 +934,9 @@ std::vector<Test> tests {
     }),
     Test("new_pilot4", [](Fixture& f) {
         // Test for a bug where geopotential levels became pressure levels
-        Msgs msgs1 = read_msgs("bufr/pilot-ecmwf-geopotential.bufr", File::BUFR);
+        Messages msgs1 = read_msgs("bufr/pilot-ecmwf-geopotential.bufr", File::BUFR);
         ensure_equals(msgs1.size(), 1);
-        Msg& msg1 = *msgs1[0];
+        Msg& msg1 = Msg::downcast(msgs1[0]);
 
         // Geopotential levels are converted to height above msl
         const msg::Context* c = msg1.find_context(Level(102, 900), Trange(254, 0, 0));
@@ -951,18 +951,18 @@ std::vector<Test> tests {
 
         // Import again
         std::unique_ptr<msg::Importer> imp = msg::Importer::create(File::BUFR);
-        Msgs msgs2 = imp->from_bulletin(*bulletin);
+        Messages msgs2 = imp->from_bulletin(*bulletin);
         ensure_equals(msgs2.size(), 1);
-        Msg& msg2 = *msgs2[0];
+        Msg& msg2 = Msg::downcast(msgs2[0]);
 
         // Ensure we didn't get pressure levels
         ensure(msg2.find_context(Level(100, 900), Trange(254, 0, 0)) == NULL);
     }),
     Test("new_pilot5", [](Fixture& f) {
         // Test for a range error in one specific BUFR
-        Msgs msgs1 = read_msgs("bufr/temp-2-255.bufr", File::BUFR);
+        Messages msgs1 = read_msgs("bufr/temp-2-255.bufr", File::BUFR);
         ensure_equals(msgs1.size(), 1);
-        Msg& msg1 = *msgs1[0];
+        Msg& msg1 = Msg::downcast(msgs1[0]);
 
         // Convert to CREX
         msg::Exporter::Options output_opts;
@@ -972,14 +972,14 @@ std::vector<Test> tests {
 
         // Import again
         std::unique_ptr<msg::Importer> imp = msg::Importer::create(File::BUFR);
-        Msgs msgs2 = wcallchecked(imp->from_bulletin(*bulletin));
+        Messages msgs2 = wcallchecked(imp->from_bulletin(*bulletin));
         ensure_equals(msgs2.size(), 1);
-        Msg& msg2 = *msgs2[0];
+        Msg& msg2 = Msg::downcast(msgs2[0]);
     }),
     // Old SHIP
     Test("old_ship1", [](Fixture& f) {
         // Test that temp ship subtype is set correctly
-        Msgs msgs = read_msgs("bufr/obs2-102.1.bufr", File::BUFR);
+        Messages msgs = read_msgs("bufr/obs2-102.1.bufr", File::BUFR);
         unique_ptr<Bulletin> bulletin(BufrBulletin::create());
         msg::Exporter::Options opts;
         opts.template_name = "temp-wmo";

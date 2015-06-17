@@ -13,7 +13,6 @@ struct Bulletin;
 namespace dballe {
 struct Query;
 struct BinaryMessage;
-struct Msgs;
 struct Matcher;
 
 namespace cmdline {
@@ -81,7 +80,7 @@ struct Item
     unsigned idx;
     BinaryMessage* rmsg;
     wreport::Bulletin* bulletin;
-    Msgs* msgs;
+    Messages* msgs;
 
     Item();
     ~Item();
@@ -90,7 +89,7 @@ struct Item
     void decode(msg::Importer& imp, bool print_errors=false);
 
     /// Set the value of msgs, possibly replacing the previous one
-    void set_msgs(Msgs* new_msgs);
+    void set_msgs(Messages* new_msgs);
 };
 
 struct Action
@@ -120,12 +119,12 @@ struct Filter
     void matcher_from_record(const Query& query);
 
     bool match_index(int idx) const;
-    bool match_common(const BinaryMessage& rmsg, const Msgs* msgs) const;
-    bool match_msgs(const Msgs& msgs) const;
-    bool match_bufrex(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const Msgs* msgs) const;
-    bool match_bufr(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const Msgs* msgs) const;
-    bool match_crex(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const Msgs* msgs) const;
-    bool match_aof(const BinaryMessage& rmsg, const Msgs* msgs) const;
+    bool match_common(const BinaryMessage& rmsg, const Messages* msgs) const;
+    bool match_msgs(const Messages& msgs) const;
+    bool match_bufrex(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const Messages* msgs) const;
+    bool match_bufr(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const Messages* msgs) const;
+    bool match_crex(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const Messages* msgs) const;
+    bool match_aof(const BinaryMessage& rmsg, const Messages* msgs) const;
     bool match_item(const Item& item) const;
 };
 

@@ -64,6 +64,7 @@
  * the values that are used more commonly.
  */
 
+#include <dballe/message.h>
 #include <dballe/var.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/matcher.h>
@@ -82,6 +83,19 @@ struct CSVReader;
 
 namespace msg {
 struct Context;
+
+/**
+ * Read data from a CSV input.
+ *
+ * Reading stops when Report changes.
+ */
+Messages messages_from_csv(CSVReader& in);
+
+/**
+ * Output in CSV format
+ */
+void messages_to_csv(const Messages& msgs, std::ostream& out);
+
 }
 
 /**
@@ -116,7 +130,7 @@ const char* msg_type_name(MsgType type);
 /**
  * Storage for related physical data
  */
-class Msg
+class Msg : public Message
 {
 protected:
     /**
@@ -128,10 +142,8 @@ protected:
     std::string m_network;
     /// Reference coordinates for the Msg contents
     Coords m_coords;
-    /// Whether the contents originator has an identifier
-    bool m_has_ident = false;
-    /// Identifier of the contents originator, if m_has_ident is true
-    std::string m_ident;
+    /// Identifier of the contents originator
+    Ident m_ident;
     /// Reference time for the Msg contents
     Datetime m_datetime;
 
@@ -153,7 +165,29 @@ public:
     Msg(const Msg& m);
     Msg& operator=(const Msg& m);
 
-    const Datetime& datetime() const { return m_datetime; }
+    /**
+     * Return a reference to \a o downcasted as a Msg.
+     *
+     * Throws an exception if \a o is not a Msg.
+     */
+    static const Msg& downcast(const Message& o);
+
+    /**
+     * Return a reference to \a o downcasted as a Msg.
+     *
+     * Throws an exception if \a o is not a Msg.
+     */
+    static Msg& downcast(Message& o);
+
+
+    std::unique_ptr<Message> clone() const override;
+    Datetime get_datetime() const override { return m_datetime; }
+
+    const wreport::Var* get(wreport::Varcode code, const Level& lev, const Trange& tr) const override;
+
+    void print(FILE* out) const override;
+    unsigned diff(const Message& msg) const override;
+
     void set_datetime(const Datetime& dt) { m_datetime = dt; }
 
     /// Remove all information from Msg
@@ -164,7 +198,7 @@ public:
      *
      * Note: if the context already exists, an exception is thrown
      */
-    void add_context(std::unique_ptr<msg::Context> ctx);
+    void add_context(std::unique_ptr<msg::Context>&& ctx);
 
     /**
      * Remove a context from the message
@@ -220,20 +254,6 @@ public:
 
     /// Shortcut to obtain_context(Level(), Trange());
     msg::Context& obtain_station_context();
-
-    /**
-     * Find a variable given its description
-     *
-     * @param code
-     *   The ::dba_varcode of the variable to query. See @ref vartable.h
-     * @param lev
-     *   The Level to query
-     * @param tr
-     *   The Trange to query
-     * @return
-     *   The variable found, or NULL if it was not found.
-     */
-    const wreport::Var* find(wreport::Varcode code, const Level& lev, const Trange& tr) const;
 
     /**
      * Find a variable given its description
@@ -322,7 +342,7 @@ public:
      * @param tr
      *   The Trange of the value
      */
-    void set(std::unique_ptr<wreport::Var> var, const Level& lev, const Trange& tr);
+    void set(std::unique_ptr<wreport::Var>&& var, const Level& lev, const Trange& tr);
 
     /**
      * Add or replace an integer value in the dba_msg
@@ -425,27 +445,6 @@ public:
     static void csv_header(std::ostream& out);
 
     /**
-     * Dump all the contents of the message to the given stream
-     *
-     * @param out
-     *   The stream to dump the contents of the dba_msg to.
-     */
-    void print(FILE* out) const;
-
-    /**
-     * Compute the differences between two Msg
-     *
-     * Details of the differences found will be formatted using the notes
-     * system (@see notes.h).
-     *
-     * @param msg
-     *   Message to compare this one to
-     * @returns
-     *   The number of differences found
-     */
-    unsigned diff(const Msg& msg) const;
-
-    /**
      * Get the message source type corresponding to the given report code
      */
     static MsgType type_from_repmemo(const char* repmemo);
@@ -498,6 +497,23 @@ struct MatchedMsg : public Matched
     matcher::Result match_rep_memo(const char* memo) const override;
 };
 
-}
+/**
+ * Match adapter for Messages
+ */
+struct MatchedMessages : public Matched
+{
+    const Messages& m;
 
+    MatchedMessages(const Messages& m);
+    ~MatchedMessages();
+
+    matcher::Result match_var_id(int val) const override;
+    matcher::Result match_station_id(int val) const override;
+    matcher::Result match_station_wmo(int block, int station=-1) const override;
+    matcher::Result match_datetime(const DatetimeRange& range) const override;
+    matcher::Result match_coords(const LatRange& latrange, const LonRange& lonrange) const override;
+    matcher::Result match_rep_memo(const char* memo) const override;
+};
+
+}
 #endif

@@ -45,6 +45,7 @@ dballeincludedir = $(includedir)/dballe
 
 nobase_dist_dballeinclude_HEADERS = \
 	file.h \
+	message.h \
 	types.h \
 	record.h \
 	query.h \
@@ -88,7 +89,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	msg/msg.h \
 	msg/msg-extravars.h \
 	msg/context-extravars.h \
-	msg/msgs.h \
 	msg/repinfo.h \
 	msg/aof_codec.h \
 	msg/wr_codec.h \
@@ -161,6 +161,7 @@ endif
 lib_LTLIBRARIES = libdballe.la
 libdballe_la_SOURCES = \
 	file.cc \
+	message.cc \
 	types.cc \
 	record.cc \
 	query.cc \
@@ -198,7 +199,6 @@ libdballe_la_SOURCES = \
 	msg/vars.cc \
 	msg/context.cc \
 	msg/msg.cc \
-	msg/msgs.cc \
 	msg/msg-lua.cc \
 	msg/codec.cc \
 	msg/aof_codec.cc \
@@ -328,6 +328,7 @@ tut_test_SOURCES = \
 	core/tests/tut-main.cpp \
 	core/tests.cc \
 	file-tut.cc \
+	message-tut.cc \
 	types-tut.cc \
 	record-tut.cc \
 	query-tut.cc \
@@ -363,12 +364,11 @@ tut_test_SOURCES = \
 	msg/tests/context.cc \
 	msg/codec-tut.cc \
 	msg/msg-tut.cc \
-	msg/msgs-tut.cc \
 	msg/wr_codec_generic-tut.cc \
+	msg/wr_codec-tut.cc \
+	msg/wr_import-tut.cc \
 	msg/wr_export-tut.cc \
-	msg/tests/aof_codec.cc \
-	msg/tests/wr_import.cc \
-	msg/tests/wr_codec.cc \
+	msg/aof_codec-tut.cc \
 	db/tests.cc \
 	db/querybuf-tut.cc \
 	db/trace-tut.cc \
@@ -393,7 +393,7 @@ tut_test_SOURCES = \
 	simple/dbapi-tut.cc
 if LUA
 tut_test_SOURCES += \
-	msg/tests/lua.cc \
+	msg/lua-tut.cc \
 	msg/tests-lua.cc
 endif
 if HAVE_LIBPQ

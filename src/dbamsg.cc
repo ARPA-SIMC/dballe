@@ -1,23 +1,23 @@
 /* For %zd */
 #define _ISOC99_SOURCE
 
-#include <dballe/msg/msg.h>
-#include <dballe/msg/msgs.h>
-#include <dballe/msg/context.h>
-#include <dballe/msg/aof_codec.h>
-#include <dballe/record.h>
-#include <dballe/file.h>
-#include <dballe/core/query.h>
-#include <dballe/core/aoffile.h>
-#include <dballe/core/matcher.h>
-#include <dballe/core/csv.h>
-#include <dballe/core/var.h>
+#include "dballe/message.h"
+#include "dballe/msg/msg.h"
+#include "dballe/msg/context.h"
+#include "dballe/msg/aof_codec.h"
+#include "dballe/record.h"
+#include "dballe/file.h"
+#include "dballe/core/query.h"
+#include "dballe/core/aoffile.h"
+#include "dballe/core/matcher.h"
+#include "dballe/core/csv.h"
+#include "dballe/core/var.h"
+#include "dballe/cmdline/cmdline.h"
+#include "dballe/cmdline/processor.h"
+#include "dballe/cmdline/conversion.h"
 #include <wreport/bulletin.h>
 #include <wreport/subset.h>
 #include <wreport/notes.h>
-#include <dballe/cmdline/cmdline.h>
-#include <dballe/cmdline/processor.h>
-#include <dballe/cmdline/conversion.h>
 #include <iostream>
 #include <iomanip>
 #include <cstdlib>
@@ -182,9 +182,9 @@ static void print_item_header(const Item& item)
         printf(" message: %zd subsets:", item.msgs->size());
         string old_type;
         unsigned count = 0;
-        for (Msgs::const_iterator i = item.msgs->begin(); i != item.msgs->end(); ++i)
+        for (const auto& i: *item.msgs)
         {
-            Msg& m = **i;
+            const Msg& m = Msg::downcast(i);
             string new_type = msg_type_name(m.type);
             if (old_type.empty())
             {
@@ -349,10 +349,8 @@ struct CSVMsgs : public cmdline::Action
             first = false;
         }
 
-        for (Msgs::const_iterator mi = item.msgs->begin(); mi != item.msgs->end(); ++mi)
-        {
-            (*mi)->to_csv(cout);
-        }
+        for (const auto& mi: *item.msgs)
+            Msg::downcast(mi).to_csv(cout);
         return true;
     }
 };
@@ -414,7 +412,7 @@ struct DumpCooked : public cmdline::Action
         for (size_t i = 0; i < item.msgs->size(); ++i)
         {
             printf("#%d[%zd] ", item.idx, i);
-            (*item.msgs)[i]->print(stdout);
+            (*item.msgs)[i].print(stdout);
         }
         return true;
     }
@@ -722,7 +720,7 @@ struct Cat : public cmdline::Subcommand
 
 struct StoreMessages : public cmdline::Action, public vector<BinaryMessage>
 {
-	virtual void operator()(const BinaryMessage& rmsg, const wreport::Bulletin*, const Msgs*)
+	virtual void operator()(const BinaryMessage& rmsg, const wreport::Bulletin*, const Messages*)
 	{
 		push_back(rmsg);
 	}
@@ -1010,8 +1008,8 @@ struct Compare : public cmdline::Subcommand
             if (!found1 && !found2)
                 break;
 
-            Msgs msgs1 = importer1->from_binary(msg1);
-            Msgs msgs2 = importer2->from_binary(msg2);
+            Messages msgs1 = importer1->from_binary(msg1);
+            Messages msgs2 = importer2->from_binary(msg2);
 
             notes::Collect c(cerr);
             int diffs = msgs1.diff(msgs2);

@@ -31,6 +31,26 @@ OverrideTestDBFormat::~OverrideTestDBFormat()
     DB::set_default_format(old_format);
 }
 
+Messages messages_from_db(DB& db, const dballe::Query& query)
+{
+    Messages res;
+    db.export_msgs(query, [&](unique_ptr<Message>&& msg) {
+        res.append(move(msg));
+        return true;
+    });
+    return res;
+}
+
+Messages messages_from_db(DB& db, const char* query)
+{
+    Messages res;
+    db.export_msgs(*dballe::tests::query_from_string(query), [&](unique_ptr<Message>&& msg) {
+        res.append(move(msg));
+        return true;
+    });
+    return res;
+}
+
 #if 0
 void StationValues::set_latlonident_into(Record& rec) const
 {

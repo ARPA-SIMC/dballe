@@ -181,16 +181,16 @@ public:
     void print(FILE* out) const override;
 
     /**
-     * Return a reference to query downcasted as core::Query.
+     * Return a reference to record downcasted as core::Record.
      *
-     * Throws an exception if query is not a core::Query.
+     * Throws an exception if record is not a core::Record.
      */
     static const Record& downcast(const dballe::Record& query);
 
     /**
-     * Return a reference to query downcasted as core::Query.
+     * Return a reference to record downcasted as core::Record.
      *
-     * Throws an exception if query is not a core::Query.
+     * Throws an exception if record is not a core::Record.
      */
     static Record& downcast(dballe::Record& query);
 
