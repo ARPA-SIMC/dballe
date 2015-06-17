@@ -6,7 +6,7 @@ using namespace wreport;
 
 namespace dballe {
 
-void Station::from_record(const Record& rec)
+void Station::set_from_record(const Record& rec)
 {
     if (const Var* var = rec.get("ana_id"))
     {
@@ -44,9 +44,9 @@ void Station::from_record(const Record& rec)
     }
 }
 
-void Sampling::from_record(const Record& rec)
+void Sampling::set_from_record(const Record& rec)
 {
-    Station::from_record(rec);
+    Station::set_from_record(rec);
     const auto& r = core::Record::downcast(rec);
     datetime = r.get_datetime();
     if (datetime.is_missing()) throw error_notfound("record has no date and time information set");
@@ -76,7 +76,7 @@ void Values::add_data_id(wreport::Varcode code, int data_id)
     i->second.data_id = data_id;
 }
 
-void Values::from_record(const Record& rec)
+void Values::set_from_record(const Record& rec)
 {
     const auto& r = core::Record::downcast(rec);
     for (const auto& i: r.vars())
@@ -119,16 +119,16 @@ const values::Value* Values::get(wreport::Varcode code) const
     return &i->second;
 }
 
-void StationValues::from_record(const Record& rec)
+void StationValues::set_from_record(const Record& rec)
 {
-    info.from_record(rec);
-    values.from_record(rec);
+    info.set_from_record(rec);
+    values.set_from_record(rec);
 }
 
-void DataValues::from_record(const Record& rec)
+void DataValues::set_from_record(const Record& rec)
 {
-    info.from_record(rec);
-    values.from_record(rec);
+    info.set_from_record(rec);
+    values.set_from_record(rec);
 }
 
 }

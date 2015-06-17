@@ -17,9 +17,9 @@ struct Station
     Ident ident;
 
     Station() = default;
-    Station(const dballe::Record& rec) { from_record(rec); }
+    Station(const dballe::Record& rec) { set_from_record(rec); }
     void clear_ids() { ana_id = MISSING_INT; }
-    void from_record(const Record& rec);
+    void set_from_record(const Record& rec);
     bool operator==(const Station& o) const
     {
         return report == o.report && ana_id == o.ana_id && coords == o.coords && ident == o.ident;
@@ -33,8 +33,8 @@ struct Sampling : public Station
     Trange trange;
 
     Sampling() = default;
-    Sampling(const dballe::Record& rec) { from_record(rec); }
-    void from_record(const Record& rec);
+    Sampling(const dballe::Record& rec) { set_from_record(rec); }
+    void set_from_record(const Record& rec);
     Sampling& operator=(const Sampling&) = default;
     Sampling& operator=(const Station& st) {
         Station::operator=(st);
@@ -101,7 +101,7 @@ struct Value
 struct Values : protected std::map<wreport::Varcode, values::Value>
 {
     Values() = default;
-    Values(const dballe::Record& rec) { from_record(rec); }
+    Values(const dballe::Record& rec) { set_from_record(rec); }
 
     typedef std::map<wreport::Varcode, values::Value>::const_iterator const_iterator;
     typedef std::map<wreport::Varcode, values::Value>::iterator iterator;
@@ -124,7 +124,7 @@ struct Values : protected std::map<wreport::Varcode, values::Value>
     void set(std::unique_ptr<wreport::Var>&&);
     template<typename C, typename T> void set(C code, const T& val) { this->set(newvar(code, val)); }
     void add_data_id(wreport::Varcode code, int data_id);
-    void from_record(const Record& rec);
+    void set_from_record(const Record& rec);
     void clear_ids()
     {
         for (auto& i : *this)
@@ -139,7 +139,7 @@ struct StationValues
 
     StationValues() = default;
     StationValues(const dballe::Record& rec) : info(rec), values(rec) {}
-    void from_record(const Record& rec);
+    void set_from_record(const Record& rec);
     bool operator==(const StationValues& o) const
     {
         return info == o.info && values == o.values;
@@ -158,7 +158,7 @@ struct DataValues
 
     DataValues() = default;
     DataValues(const dballe::Record& rec) : info(rec), values(rec) {}
-    void from_record(const Record& rec);
+    void set_from_record(const Record& rec);
     bool operator==(const DataValues& o) const
     {
         return info == o.info && values == o.values;

@@ -73,6 +73,9 @@ struct Query
 
     /// Create a new Query
     static std::unique_ptr<Query> create();
+
+    /// Create a new Query
+    static std::unique_ptr<Query> from_record(const Record& rec);
 };
 
 }

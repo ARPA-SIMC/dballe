@@ -221,12 +221,10 @@ void DbAPI::prendilo()
 
     if (station_context)
     {
-        StationValues sv;
-        sv.from_record(input);
+        StationValues sv(input);
         db.insert_station_data(sv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
     } else {
-        DataValues dv;
-        dv.from_record(input);
+        DataValues dv(input);
         db.insert_data(dv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
     }
 
