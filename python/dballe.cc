@@ -10,6 +10,13 @@
 #include "dballe/types.h"
 #include "dballe/var.h"
 
+#if PY_MAJOR_VERSION >= 3
+    #define PyInt_FromLong PyLong_FromLong
+    #define PyInt_AsLong PyLong_AsLong
+    #define PyInt_Check PyLong_Check
+    #define Py_TPFLAGS_HAVE_ITER 0
+#endif
+
 using namespace std;
 using namespace dballe;
 using namespace dballe::python;
@@ -43,22 +50,18 @@ static PyObject* dballe_var_uncaught(PyTypeObject *type, PyObject *args)
             if (v == -1 && PyErr_Occurred())
                 return NULL;
             return (PyObject*)var_create(dballe::varinfo(resolve_varcode(var_name)), (int)v);
-        } else if (PyString_Check(val)) {
-            const char* v = PyString_AsString(val);
-            if (v == NULL)
+        } else if (
+                PyUnicode_Check(val)
+#if PY_MAJOR_VERSION >= 3
+                || PyBytes_Check(val)
+#else
+                || PyString_Check(val)
+#endif
+                ) {
+            string v;
+            if (string_from_python(val, v))
                 return NULL;
-            return (PyObject*)var_create(dballe::varinfo(resolve_varcode(var_name)), v);
-        } else if (PyUnicode_Check(val)) {
-            PyObject *utf8 = PyUnicode_AsUTF8String(val);
-            const char* v = PyString_AsString(utf8);
-            if (v == NULL)
-            {
-                Py_DECREF(utf8);
-                return NULL;
-            }
-            PyObject* res = (PyObject*)var_create(dballe::varinfo(resolve_varcode(var_name)), v);
-            Py_DECREF(utf8);
-            return res;
+            return (PyObject*)var_create(dballe::varinfo(resolve_varcode(var_name)), v.c_str());
         } else if (val == Py_None) {
             return (PyObject*)var_create(dballe::varinfo(resolve_varcode(var_name)));
         } else {
@@ -108,7 +111,7 @@ static PyObject* dballe_describe_level(PyTypeObject *type, PyObject *args, PyObj
 
     Level lev(ltype1, l1, ltype2, l2);
     string desc = lev.describe();
-    return PyString_FromString(desc.c_str());
+    return PyUnicode_FromString(desc.c_str());
 }
 
 static PyObject* dballe_describe_trange(PyTypeObject *type, PyObject *args, PyObject* kw)
@@ -126,7 +129,7 @@ static PyObject* dballe_describe_trange(PyTypeObject *type, PyObject *args, PyOb
 
     Trange tr(pind, p1, p2);
     string desc = tr.describe();
-    return PyString_FromString(desc.c_str());
+    return PyUnicode_FromString(desc.c_str());
 }
 
 static PyMethodDef dballe_methods[] = {
@@ -137,14 +140,37 @@ static PyMethodDef dballe_methods[] = {
     { NULL }
 };
 
+#if PY_MAJOR_VERSION >= 3
+static PyModuleDef dballe_module = {
+    PyModuleDef_HEAD_INIT,
+    "_dballe",       /* m_name */
+    "DB-All.e Python interface.",  /* m_doc */
+    -1,             /* m_size */
+    dballe_methods, /* m_methods */
+    NULL,           /* m_reload */
+    NULL,           /* m_traverse */
+    NULL,           /* m_clear */
+    NULL,           /* m_free */
+
+};
+#endif
+
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit__dballe(void)
+#else
 PyMODINIT_FUNC init_dballe(void)
+#endif
 {
     using namespace dballe::python;
 
     PyObject* m;
 
+#if PY_MAJOR_VERSION >= 3
+    m = PyModule_Create(&dballe_module);
+#else
     m = Py_InitModule3("_dballe", dballe_methods,
             "DB-All.e Python interface.");
+#endif
 
     register_vartable(m);
     register_varinfo(m);
@@ -152,6 +178,10 @@ PyMODINIT_FUNC init_dballe(void)
     register_record(m);
     register_db(m);
     register_cursor(m);
+
+#if PY_MAJOR_VERSION >= 3
+    return m;
+#endif
 }
 
 }

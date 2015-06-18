@@ -12,6 +12,14 @@
 #include <algorithm>
 #include <wreport/bulletin.h>
 
+#if PY_MAJOR_VERSION >= 3
+    #define PyInt_FromLong PyLong_FromLong
+    #define PyInt_AsLong PyLong_AsLong
+    #define PyInt_Check PyLong_Check
+    #define PyInt_Type PyLong_Type
+    #define Py_TPFLAGS_HAVE_ITER 0
+#endif
+
 using namespace std;
 using namespace dballe;
 using namespace dballe::python;
@@ -161,9 +169,7 @@ static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args)
     if (!PyArg_ParseTuple(args, "O", &obj))
         return NULL;
 
-    if (PyFile_Check(obj))
-        f = db_load_fileobj;
-    else if (PyObject_HasAttrString(obj, "fileno"))
+    if (PyObject_HasAttrString(obj, "fileno"))
         f = db_load_fileno;
     else if (PyObject_HasAttrString(obj, "read"))
         f = db_load_filelike;
@@ -535,9 +541,9 @@ static PyObject* dpy_DB_str(dpy_DB* self)
 {
     /*
     std::string f = self->var.format("None");
-    return PyString_FromString(f.c_str());
+    return PyUnicode_FromString(f.c_str());
     */
-    return PyString_FromString("DB");
+    return PyUnicode_FromString("DB");
 }
 
 static PyObject* dpy_DB_repr(dpy_DB* self)
@@ -555,14 +561,13 @@ static PyObject* dpy_DB_repr(dpy_DB* self)
         res += self->var.format("None");
         res += ")";
     }
-    return PyString_FromString(res.c_str());
+    return PyUnicode_FromString(res.c_str());
     */
-    return PyString_FromString("DB object");
+    return PyUnicode_FromString("DB object");
 }
 
 PyTypeObject dpy_DB_Type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         // ob_size
+    PyVarObject_HEAD_INIT(NULL, 0)
     "dballe.DB",               // tp_name
     sizeof(dpy_DB),            // tp_basicsize
     0,                         // tp_itemsize
@@ -617,8 +622,9 @@ bool db_read_attrlist(PyObject* attrs, db::AttrList& codes)
     try {
         while (PyObject* iter_item = PyIter_Next(iter)) {
             OwnedPyObject item(iter_item);
-            const char* name = PyString_AsString(item);
-            if (!name) return false;
+            string name;
+            if (string_from_python(item, name))
+                return false;
             codes.push_back(resolve_varcode(name));
         }
         return true;
@@ -689,31 +695,41 @@ bool db_load_filelike(DB* db, PyObject* obj)
         Py_DECREF(read_args);
         return false;
     }
+    Py_DECREF(read_meth);
+    Py_DECREF(read_args);
+#if PY_MAJOR_VERSION >= 3
+    if (!PyObject_TypeCheck(data, &PyBytes_Type)) {
+        Py_DECREF(data);
+        PyErr_SetString(PyExc_ValueError, "read() function must return a bytes object");
+        return false;
+    }
+    PyBytes_AsStringAndSize(data, &buf, &len);
+#else
     if (!PyObject_TypeCheck(data, &PyString_Type)) {
-        Py_DECREF(read_meth);
-        Py_DECREF(read_args);
         Py_DECREF(data);
         PyErr_SetString(PyExc_ValueError, "read() function must return a string object");
         return false;
     }
     PyString_AsStringAndSize(data, &buf, &len);
+#endif
     FILE* f = fmemopen(buf, len, "r");
     filerepr = PyObject_Repr(obj);
-    std::string name = PyString_AsString(filerepr);
+    std::string name;
+    if (string_from_python(filerepr, name))
+    {
+        Py_DECREF(data);
+        Py_DECREF(filerepr);
+        return false;
+    }
+    Py_DECREF(filerepr);
 
     try {
         db_load_file(db, f, true, name);
     } catch (...) {
-        Py_DECREF(read_meth);
-        Py_DECREF(read_args);
         Py_DECREF(data);
-        Py_DECREF(filerepr);
         throw;
     }
-    Py_DECREF(read_meth);
-    Py_DECREF(read_args);
     Py_DECREF(data);
-    Py_DECREF(filerepr);
     return true;
 }
 
@@ -725,6 +741,7 @@ bool db_load_fileno(DB* db, PyObject* obj)
     PyObject* fileno_value;
     int fileno;
 
+    // fileno_value = obj.fileno()
     fileno_meth = PyObject_GetAttrString(obj, "fileno");
     fileno_args = Py_BuildValue("()");
     fileno_value = PyObject_Call(fileno_meth, fileno_args, NULL);
@@ -733,39 +750,34 @@ bool db_load_fileno(DB* db, PyObject* obj)
         Py_DECREF(fileno_args);
         return false;
     }
+    Py_DECREF(fileno_meth);
+    Py_DECREF(fileno_args);
+
+    // fileno = int(fileno_value)
     if (!PyObject_TypeCheck(fileno_value, &PyInt_Type)) {
         PyErr_SetString(PyExc_ValueError, "fileno() function must return an integer");
-        Py_DECREF(fileno_meth);
-        Py_DECREF(fileno_args);
         Py_DECREF(fileno_value);
         return false;
     }
+    fileno = PyInt_AsLong(fileno_value);
+    Py_DECREF(fileno_value);
+
+    // name = repr(obj)
     fileno_repr = PyObject_Repr(obj);
-    std::string name = PyString_AsString(fileno_repr);
-    fileno = dup(PyInt_AsLong(fileno_value));
+    std::string name;
+    if (string_from_python(fileno_repr, name))
+    {
+        Py_DECREF(fileno_repr);
+        return false;
+    }
+    Py_DECREF(fileno_repr);
+
+    // Duplicate the file descriptor because both python and libc will want to
+    // close it
+    fileno = dup(fileno);
 
     FILE* f = fdopen(fileno, "r");
-    try {
-        db_load_file(db, f, true, name);
-    } catch (...) {
-        Py_DECREF(fileno_meth);
-        Py_DECREF(fileno_args);
-        Py_DECREF(fileno_value);
-        Py_DECREF(fileno_repr);
-        throw;
-    }
-    Py_DECREF(fileno_meth);
-    Py_DECREF(fileno_args);
-    Py_DECREF(fileno_value);
-    Py_DECREF(fileno_repr);
-    return true;
-}
-
-bool db_load_fileobj(DB* db, PyObject* obj)
-{
-    FILE* f = PyFile_AsFile(obj);
-    std::string name = PyString_AsString(PyFile_Name(obj));
-    db_load_file(db, f, false, name);
+    db_load_file(db, f, true, name);
     return true;
 }
 

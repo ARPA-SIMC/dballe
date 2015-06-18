@@ -2,6 +2,11 @@
 #include <Python.h>
 #include <datetime.h>
 
+#if PY_MAJOR_VERSION >= 3
+    #define PyInt_FromLong PyLong_FromLong
+    #define PyInt_AsLong PyLong_AsLong
+#endif
+
 using namespace wreport;
 
 namespace dballe {
@@ -16,7 +21,7 @@ PyObject* format_varcode(wreport::Varcode code)
             WR_VAR_F(code) == 2 ? 'C' :
             WR_VAR_F(code) == 3 ? 'D' : '?',
             WR_VAR_X(code), WR_VAR_Y(code));
-    return PyString_FromString(buf);
+    return PyUnicode_FromString(buf);
 }
 
 PyObject* raise_wreport_exception(const wreport::error& e)
@@ -294,6 +299,46 @@ int trange_from_python(PyObject* o, Trange& out)
     if (int err = dballe_int_from_python(PyTuple_GET_ITEM(o, 2), res.p2)) return err;
     out = res;
     return 0;
+}
+
+int string_from_python(PyObject* o, std::string& out)
+{
+#if PY_MAJOR_VERSION >= 3
+    if (PyBytes_Check(o)) {
+        const char* v = PyBytes_AsString(o);
+        if (v == NULL) return -1;
+        out = v;
+        return 0;
+    }
+#else
+    if (PyString_Check(o)) {
+        const char* v = PyString_AsString(o);
+        if (v == NULL) return -1;
+        out = v;
+        return 0;
+    }
+#endif
+    if (PyUnicode_Check(o)) {
+#if PY_MAJOR_VERSION >= 3
+        const char* v = PyUnicode_AsUTF8(o);
+        if (v == NULL) return -1;
+        out = v;
+        return 0;
+#else
+        PyObject *utf8 = PyUnicode_AsUTF8String(o);
+        const char* v = PyString_AsString(utf8);
+        if (v == NULL)
+        {
+            Py_DECREF(utf8);
+            return -1;
+        }
+        out = v;
+        Py_DECREF(utf8);
+        return 0;
+#endif
+    }
+    PyErr_SetString(PyExc_TypeError, "value must be an instance of str, bytes or unicode");
+    return -1;
 }
 
 void common_init()

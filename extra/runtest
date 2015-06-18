@@ -6,6 +6,7 @@ set -e
 ulimit -v 1000000
 
 TOP_SRCDIR=`pwd`/`dirname $0`/..
+PYTHON=${PYTHON:-python}
 
 CMD=`pwd`/"$1"
 
@@ -25,7 +26,14 @@ touch test.sqlite
 
 ## Clean up the test environment at exit unless asked otherwise
 cleanup() {
-	test -z "$PRESERVE" && rm -rf "$TESTDIR"
+    if [ ! -z "$PAUSE" ]
+    then
+        echo "Post-test inspection requested."
+        echo "Exit this shell to cleanup the test environment."
+        bash
+    fi
+
+    test -z "$PRESERVE" && rm -rf "$TESTDIR"
 }
 trap cleanup EXIT
 
@@ -36,14 +44,15 @@ trap cleanup EXIT
 # Try to debug the libtool executable, if present
 DIR=`dirname $CMD`
 BASE=`basename $CMD`
+if [ "${BASE##*.}" = "py" ]
+then
+    CMD="$PYTHON  -W ignore::DeprecationWarning $CMD"
+fi
 if [ ! -z "$DEBUGGER" ]
 then
     if [ -x $DIR/.libs/lt-$BASE ]
     then
         CMD="$DIR/.libs/lt-$BASE"
-    elif [ "${BASE##*.}" = "py" ]
-    then
-        CMD="python $CMD"
     fi
 
 	echo "Running $DEBUGGER $CMD $ARGS"
@@ -63,12 +72,5 @@ else
 	fi
 fi
 
-
-if [ ! -z "$PAUSE" ]
-then
-	echo "Post-test inspection requested."
-	echo "Exit this shell to cleanup the test environment."
-	bash
-fi
 
 exit $RES

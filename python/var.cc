@@ -1,26 +1,11 @@
-/*
- * python/var - DB-All.e Var python bindings
- *
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
 #include "var.h"
 #include "common.h"
 #include "varinfo.h"
+
+#if PY_MAJOR_VERSION >= 3
+    #define PyInt_FromLong PyLong_FromLong
+    #define PyInt_AsLong PyLong_AsLong
+#endif
 
 using namespace std;
 using namespace dballe::python;
@@ -71,7 +56,7 @@ static PyObject* dpy_Var_enqd(dpy_Var* self)
 static PyObject* dpy_Var_enqc(dpy_Var* self)
 {
     try {
-        return PyString_FromString(self->var.enqc());
+        return PyUnicode_FromString(self->var.enqc());
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -106,7 +91,7 @@ static PyObject* dpy_Var_format(dpy_Var* self, PyObject* args, PyObject* kw)
     if (!PyArg_ParseTupleAndKeywords(args, kw, "|s", kwlist, &def))
         return NULL;
     std::string f = self->var.format(def);
-    return PyString_FromString(f.c_str());
+    return PyUnicode_FromString(f.c_str());
 }
 
 static PyMethodDef dpy_Var_methods[] = {
@@ -136,7 +121,7 @@ static void dpy_Var_dealloc(dpy_Var* self)
 static PyObject* dpy_Var_str(dpy_Var* self)
 {
     std::string f = self->var.format("None");
-    return PyString_FromString(f.c_str());
+    return PyUnicode_FromString(f.c_str());
 }
 
 static PyObject* dpy_Var_repr(dpy_Var* self)
@@ -153,7 +138,7 @@ static PyObject* dpy_Var_repr(dpy_Var* self)
         res += self->var.format("None");
         res += ")";
     }
-    return PyString_FromString(res.c_str());
+    return PyUnicode_FromString(res.c_str());
 }
 
 static int compare_values(const Var& a, const Var& b)
@@ -220,8 +205,7 @@ out:
 }
 
 PyTypeObject dpy_Var_Type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         // ob_size
+    PyVarObject_HEAD_INIT(NULL, 0)
     "dballe.Var",              // tp_name
     sizeof(dpy_Var),           // tp_basicsize
     0,                         // tp_itemsize
@@ -270,7 +254,7 @@ PyObject* var_value_to_python(const wreport::Var& v)
 {
     try {
         if (v.info()->is_string())
-            return PyString_FromString(v.enqc());
+            return PyUnicode_FromString(v.enqc());
         else if (v.info()->scale == 0)
             return PyInt_FromLong(v.enqi());
         else

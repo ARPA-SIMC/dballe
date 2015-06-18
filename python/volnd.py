@@ -38,6 +38,10 @@ This example code extracts temperatures in a station by datetime matrix::
 #       ana_id?)
 # TODO: leggere i dati di anagrafica
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 import dballe
 from collections import namedtuple
 from datetime import *
@@ -246,13 +250,13 @@ def tddivmod1(td1, td2):
         if td2 > td1:
                 return 0, td1
         if td2 == 0:
-                raise ZeroDivisionError, "Dividing by a 0 time delta"
+                raise ZeroDivisionError("Dividing by a 0 time delta")
         mults = (86400, 1000000, 1)
         n1 = (td1.days, td1.seconds, td1.microseconds)
         n2 = (td2.days, td2.seconds, td2.microseconds)
         d = 0
         q = 0
-        for i in xrange(3):
+        for i in range(3):
                 d += n1[i]
                 if d != 0:
                         if n2[i] == 0:
@@ -355,8 +359,8 @@ class IntervalIndex(Index):
         def __len__(self):
                 return self._size
         def __iter__(self):
-                for i in xrange(self._size):
-                        yield self._start + self._step * i
+                for i in range(self._size):
+                    yield self._start + self._step * i
         def __str__(self):
                 return self.shortName() + ": " + ", ".join(self)
         def shortName(self):
@@ -513,13 +517,13 @@ class Data:
                                 if not self._checkConflicts or a[pos] == None:
                                         a[pos] = val
                                 else:
-                                        raise IndexError, "Got more than one value for " + self.name + " at position " + str(pos)
+                                        raise IndexError("Got more than one value for " + self.name + " at position " + str(pos))
                 else:
                         if self.info.scale == 0:
                                 a = self._instantiateIntMatrix()
                         else:
-                                a = numpy.empty(map(len, self.dims), dtype=float)
-                        mask = numpy.ones(map(len, self.dims), dtype=bool)
+                                a = numpy.empty([len(x) for x in self.dims], dtype=float)
+                        mask = numpy.ones([len(x) for x in self.dims], dtype=bool)
 
                         # Fill the array with all the values, at the given indexes
                         for pos, val in self.vals:
@@ -527,7 +531,7 @@ class Data:
                                         a[pos] = val
                                         mask[pos] = False
                                 else:
-                                        raise IndexError, "Got more than one value for " + self.name + " at position " + str(pos)
+                                        raise IndexError("Got more than one value for " + self.name + " at position " + str(pos))
                         a = ma.array(a, mask=mask)
 
                 # Replace the intermediate data with the results
@@ -536,7 +540,7 @@ class Data:
                 # Finalise all the attributes as well
                 #print "volnd finalise fill"
                 invalid = []
-                for key, d in self.attrs.iteritems():
+                for key, d in self.attrs.items():
                         if not d.finalise():
                                 invalid.append(key)
                 # Delete empty attributes
@@ -608,7 +612,7 @@ def read(cursor, dims, filter=None, checkConflicts=True, attributes=None):
         # Now that we have collected all the values, create the arrays
         #print "volnd finalise"
         invalid = []
-        for k, var in vars.iteritems():
+        for k, var in vars.items():
                 if not var.finalise():
                         invalid.append(k)
         for k in invalid:

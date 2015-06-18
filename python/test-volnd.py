@@ -296,7 +296,7 @@ class TestRead(unittest.TestCase):
         query['var'] = 'B13011'
         vars = read(self.db.query_data(query), indexes, \
                         checkConflicts=False)
-        self.assertEquals(vars.keys(), ["B13011"])
+        self.assertItemsEqual(vars.keys(), ["B13011"])
         self.assertEquals(len(vars["B13011"].dims[1]), 1)
         self.assertEquals(vars["B13011"].dims[0][0], (4, -21600, 0))
 

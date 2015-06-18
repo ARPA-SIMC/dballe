@@ -38,7 +38,7 @@ dballe: _dballe.so
 	ln -s . dballe
 
 python-dballe.rst: doc-dballe $(pkgpython_PYTHON) dballe
-	$(srcdir)/doc-dballe > $@ || (rm -f $@; false)
+	$(PYTHON) $(srcdir)/doc-dballe > $@ || (rm -f $@; false)
 
 python-dballe.html: python-dballe.rst
 	rst2html $< > $@ || (rm -f $@; false)
@@ -61,7 +61,7 @@ AM_CPPFLAGS = -I/usr/include/python$(PYTHON_VERSION) -I$(top_srcdir)
 
 check-local:
 	for test in $(dballe_python_tests); do \
-		$(TESTS_ENVIRONMENT) $$test ; \
+		PYTHON="$(PYTHON)" $(TESTS_ENVIRONMENT) $$test ; \
 	done
 
 CLEANFILES = python-dballe.rst python-dballe.html

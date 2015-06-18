@@ -1,26 +1,11 @@
-/*
- * python/varinfo - DB-All.e Varinfo python bindings
- *
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
 #include "varinfo.h"
 #include "dballe/var.h"
 #include "common.h"
+
+#if PY_MAJOR_VERSION >= 3
+    #define PyInt_FromLong PyLong_FromLong
+    #define PyInt_AsLong PyLong_AsLong
+#endif
 
 using namespace dballe;
 using namespace dballe::python;
@@ -42,8 +27,8 @@ static PyObject* dpy_Varinfo_is_string(dpy_Varinfo *self, void* closure)
 static PyObject* dpy_Varinfo_var(dpy_Varinfo *self, void* closure) { return format_varcode(self->info->var); }
 static PyObject* dpy_Varinfo_len(dpy_Varinfo* self, void* closure) { return PyInt_FromLong(self->info->len); }
 static PyObject* dpy_Varinfo_bit_len(dpy_Varinfo* self, void* closure) { return PyInt_FromLong(self->info->bit_len); }
-static PyObject* dpy_Varinfo_unit(dpy_Varinfo* self, void* closure) { return PyString_FromString(self->info->unit); }
-static PyObject* dpy_Varinfo_desc(dpy_Varinfo* self, void* closure) { return PyString_FromString(self->info->desc); }
+static PyObject* dpy_Varinfo_unit(dpy_Varinfo* self, void* closure) { return PyUnicode_FromString(self->info->unit); }
+static PyObject* dpy_Varinfo_desc(dpy_Varinfo* self, void* closure) { return PyUnicode_FromString(self->info->desc); }
 static PyObject* dpy_Varinfo_scale(dpy_Varinfo* self, void* closure) { return PyInt_FromLong(self->info->scale); }
 static PyObject* dpy_Varinfo_ref(dpy_Varinfo* self, void* closure) { return PyInt_FromLong(self->info->ref); }
 static PyObject* dpy_Varinfo_bit_ref(dpy_Varinfo* self, void* closure) { return PyInt_FromLong(self->info->bit_ref); }
@@ -92,13 +77,12 @@ static PyObject* dpy_Varinfo_repr(dpy_Varinfo* self)
             WR_VAR_F(code) == 2 ? 'C' :
             WR_VAR_F(code) == 3 ? 'D' : '?',
             WR_VAR_X(code), WR_VAR_Y(code));
-    return PyString_FromString(buf);
+    return PyUnicode_FromString(buf);
 }
 
 
 static PyTypeObject dpy_Varinfo_Type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         // ob_size
+    PyVarObject_HEAD_INIT(NULL, 0)
     "dballe.Varinfo",         // tp_name
     sizeof(dpy_Varinfo),  // tp_basicsize
     0,                         // tp_itemsize

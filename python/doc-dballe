@@ -1,4 +1,9 @@
 #!/usr/bin/python
+# coding: utf-8
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import os
 os.environ["DBALLE_BUILDING_DOCS"]="true"
@@ -121,7 +126,7 @@ def document_members(cls):
         print_indented(4, inspect.getdoc(m))
 
 
-print """===================================
+print("""===================================
 README for DB-All.e Python bindings
 ===================================
 
@@ -135,11 +140,11 @@ The DB-All.e API
 ================
 
 The 'dballe' module has a few global methods:
-"""
+""")
 
 document_members(dballe)
 
-print """
+print("""
 and several classes, documented in their own sections.
 
 dballe.Var
@@ -151,11 +156,11 @@ To create a Var, use the method dballe.var.
 
 Its members are:
 
-"""
+""")
 
 document_members(dballe.Var)
 
-print """
+print("""
 
 Examples:
 
@@ -172,11 +177,11 @@ a Varinfo holds all possible information about a variable, such as its
 measurement unit, description and number of significant digits.
 
 Its members are:
-"""
+""")
 
 document_members(dballe.Varinfo)
 
-print """
+print("""
 dballe.Record
 -------------
 
@@ -187,11 +192,11 @@ documentation.
 A Record is used to make queries to the database, and read results.
 
 Its members are:
-"""
+""")
 
 document_members(dballe.Record)
 
-print """
+print("""
 When creating a new record, keyword arguments can be passed and they are set as
 if Record.update(\*\*kwargs) had been called.
 
@@ -231,11 +236,11 @@ dballe.DB
 a DB is used to access the database.
 
 Its members are:
-"""
+""")
 
 document_members(dballe.DB)
 
-print """
+print("""
 
 Examples:
 
@@ -269,20 +274,20 @@ dballe.Cursor
 
 a Cursor is the result of database queries. It is generally not used explicitly
 and just iterated, but it does have a few members:
-"""
+""")
 
 document_members(dballe.Cursor)
 
-print """
+print("""
 The volnd API
 =============
-"""
+""")
 
 document(volnd)
 
-print """
+print("""
 This is the list of dimensions supported by dballe.volnd:
-"""
+""")
 
 document (volnd.AnaIndex)
 document (volnd.NetworkIndex)
@@ -291,32 +296,32 @@ document (volnd.TimeRangeIndex)
 document (volnd.DateTimeIndex)
 document (volnd.IntervalIndex)
 
-print """
+print("""
 The data object used by ``AnaIndex`` is:
-"""
+""")
 
 document (volnd.AnaIndexEntry)
 
-print """
+print("""
 The extraction is done using the dballe.volnd.read function:
-"""
+""")
 
 document (volnd.read)
 
-print """
+print("""
 The result of dballe.volnd.read is a dict mapping output variable names to a
 dballe.volnd.Data object with the results.  All the Data objects share their
 indexes unless the *xxx*-Index definitions have been created with
 ``shared=False``.
 
 This is the dballe.volnd.Data class documentation:
-"""
+""")
 
 document (volnd.Data)
 
-print """
+print("""
 The methods of dballe.volnd.Data are:
-"""
+""")
 
 document_members(volnd.Data)
 

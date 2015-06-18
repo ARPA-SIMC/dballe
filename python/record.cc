@@ -6,6 +6,13 @@
 #include "var.h"
 #include <vector>
 
+#if PY_MAJOR_VERSION >= 3
+    #define PyInt_FromLong PyLong_FromLong
+    #define PyInt_AsLong PyLong_AsLong
+    #define PyInt_Check PyLong_Check
+    #define Py_TPFLAGS_HAVE_ITER 0
+#endif
+
 using namespace std;
 using namespace dballe;
 using namespace dballe::python;
@@ -51,8 +58,7 @@ static PyObject* dpy_RecordIter_iternext(dpy_RecordIter* self)
 }
 
 PyTypeObject dpy_RecordIter_Type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         // ob_size
+    PyVarObject_HEAD_INIT(NULL, 0)
     "dballe.RecordIter",           // tp_name
     sizeof(dpy_RecordIter),        // tp_basicsize
     0,                         // tp_itemsize
@@ -364,7 +370,7 @@ static PyObject* dpy_Record_str(dpy_Record* self)
     std::string f = self->var.format("None");
     return PyString_FromString(f.c_str());
     */
-    return PyString_FromString("Record");
+    return PyUnicode_FromString("Record");
 }
 
 static PyObject* dpy_Record_repr(dpy_Record* self)
@@ -384,13 +390,13 @@ static PyObject* dpy_Record_repr(dpy_Record* self)
     }
     return PyString_FromString(res.c_str());
     */
-    return PyString_FromString("Record object");
+    return PyUnicode_FromString("Record object");
 }
 
 static PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key)
 {
-    const char* varname = PyString_AsString(key);
-    if (varname == NULL)
+    string varname;
+    if (string_from_python(key, varname))
         return NULL;
 
     // Just look at the first character to see if we need to check for python
@@ -398,62 +404,62 @@ static PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key)
     switch (varname[0])
     {
         case 'd':
-            if (strcmp(varname, "date") == 0)
+            if (varname == "date")
             {
                 if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
                     return NULL;
                 auto dt = core::Record::downcast(*self->rec).get_datetime();
                 if (!dt.is_missing()) return datetime_to_python(dt);
-                PyErr_SetString(PyExc_KeyError, varname);
+                PyErr_SetString(PyExc_KeyError, varname.c_str());
                 return NULL;
-            } else if (strcmp(varname, "datemin") == 0) {
+            } else if (varname == "datemin") {
                 if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
                     return NULL;
                 auto dt = core::Record::downcast(*self->rec).get_datetimerange().min;
                 if (!dt.is_missing()) return datetime_to_python(dt);
-                PyErr_SetString(PyExc_KeyError, varname);
+                PyErr_SetString(PyExc_KeyError, varname.c_str());
                 return NULL;
-            } else if (strcmp(varname, "datemax") == 0) {
+            } else if (varname == "datemax") {
                 auto dt = core::Record::downcast(*self->rec).get_datetimerange().max;
                 if (!dt.is_missing()) return datetime_to_python(dt);
-                PyErr_SetString(PyExc_KeyError, varname);
+                PyErr_SetString(PyExc_KeyError, varname.c_str());
                 return NULL;
             }
             break;
         case 'l':
-            if (strcmp(varname, "level") == 0)
+            if (varname == "level")
             {
                 if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
                     return NULL;
                 auto lev = core::Record::downcast(*self->rec).get_level();
                 if (!lev.is_missing()) return level_to_python(lev);
-                PyErr_SetString(PyExc_KeyError, varname);
+                PyErr_SetString(PyExc_KeyError, varname.c_str());
                 return NULL;
             }
             break;
         case 't':
-            if (strcmp(varname, "trange") == 0 || strcmp(varname, "timerange") == 0)
+            if (varname == "trange" || varname == "timerange")
             {
                 if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
                     return NULL;
                 auto tr = core::Record::downcast(*self->rec).get_trange();
                 if (!tr.is_missing()) return trange_to_python(tr);
-                PyErr_SetString(PyExc_KeyError, varname);
+                PyErr_SetString(PyExc_KeyError, varname.c_str());
                 return NULL;
             }
             break;
     }
 
-    const Var* var = self->rec->get(varname);
+    const Var* var = self->rec->get(varname.c_str());
     if (var == NULL)
     {
-        PyErr_SetString(PyExc_KeyError, varname);
+        PyErr_SetString(PyExc_KeyError, varname.c_str());
         return NULL;
     }
 
     if (!var->isset())
     {
-        PyErr_SetString(PyExc_KeyError, varname);
+        PyErr_SetString(PyExc_KeyError, varname.c_str());
         return NULL;
     }
 
@@ -462,8 +468,8 @@ static PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key)
 
 static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
 {
-    const char* varname = PyString_AsString(key);
-    if (varname == NULL)
+    string varname;
+    if (string_from_python(key, varname))
         return -1;
 
     // Just look at the first character to see if we need to check for python
@@ -471,7 +477,7 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
     switch (varname[0])
     {
         case 'd':
-            if (strcmp(varname, "date") == 0)
+            if (varname == "date")
             {
                 if (int res = PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
                     return res;
@@ -480,7 +486,7 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
                 self->rec->set(dt);
                 self->station_context = false;
                 return 0;
-            } else if (strcmp(varname, "datemin") == 0) {
+            } else if (varname == "datemin") {
                 if (int res = PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
                     return res;
                 DatetimeRange dtr = core::Record::downcast(*self->rec).get_datetimerange();
@@ -488,7 +494,7 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
                 self->rec->set(dtr);
                 self->station_context = false;
                 return 0;
-            } else if (strcmp(varname, "datemax") == 0) {
+            } else if (varname == "datemax") {
                 if (int res = PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
                     return res;
                 DatetimeRange dtr = core::Record::downcast(*self->rec).get_datetimerange();
@@ -499,7 +505,7 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
             }
             break;
         case 'l':
-            if (strcmp(varname, "level") == 0)
+            if (varname == "level")
             {
                 if (int res = PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
                     return res;
@@ -511,7 +517,7 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
                 return 0;
             }
         case 't':
-            if (strcmp(varname, "trange") == 0 || strcmp(varname, "timerange") == 0)
+            if (varname == "trange" || varname == "timerange")
             {
                 if (int res = PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
                     return res;
@@ -527,7 +533,7 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
     if (val == NULL)
     {
         // del rec[val]
-        self->rec->unset(varname);
+        self->rec->unset(varname.c_str());
         return 0;
     }
 
@@ -536,29 +542,26 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
         double v = PyFloat_AsDouble(val);
         if (v == -1.0 && PyErr_Occurred())
             return -1;
-        self->rec->set(varname, v);
+        self->rec->set(varname.c_str(), v);
     } else if (PyInt_Check(val)) {
         long v = PyInt_AsLong(val);
         if (v == -1 && PyErr_Occurred())
             return -1;
-        self->rec->set(varname, (int)v);
-    } else if (PyString_Check(val)) {
-        const char* v = PyString_AsString(val);
-        if (v == NULL)
+        self->rec->set(varname.c_str(), (int)v);
+    } else if (
+            PyUnicode_Check(val)
+#if PY_MAJOR_VERSION >= 3
+            || PyBytes_Check(val)
+#else
+            || PyString_Check(val)
+#endif
+            ) {
+        string value;
+        if (string_from_python(val, value))
             return -1;
-        self->rec->set(varname, v);
-    } else if (PyUnicode_Check(val)) {
-        PyObject *utf8 = PyUnicode_AsUTF8String(val);
-        const char* v = PyString_AsString(utf8);
-        if (v == NULL)
-        {
-            Py_DECREF(utf8);
-            return -1;
-        }
-        self->rec->set(varname, v);
-        Py_DECREF(utf8);
+        self->rec->set(varname.c_str(), value.c_str());
     } else if (val == Py_None) {
-        self->rec->unset(varname);
+        self->rec->unset(varname.c_str());
     } else {
         PyErr_SetString(PyExc_TypeError, "Expected int, float, str, unicode, or None");
         return -1;
@@ -580,8 +583,8 @@ static int dpy_Record_len(dpy_Record* self)
 }
 static int dpy_Record_contains(dpy_Record* self, PyObject *value)
 {
-    const char* varname = PyString_AsString(value);
-    if (varname == NULL)
+    string varname;
+    if (string_from_python(value, varname))
         return -1;
 
     switch (varname[0])
@@ -589,24 +592,24 @@ static int dpy_Record_contains(dpy_Record* self, PyObject *value)
         case 'd':
             // We don't bother checking the seconds, since they default to 0 if
             // missing
-            if (strcmp(varname, "date") == 0)
+            if (varname == "date")
                 return !core::Record::downcast(*self->rec).get_datetime().is_missing();
-            else if (strcmp(varname, "datemin") == 0)
+            else if (varname == "datemin")
                 return !core::Record::downcast(*self->rec).get_datetimerange().min.is_missing();
-            else if (strcmp(varname, "datemax") == 0)
+            else if (varname == "datemax")
                 return !core::Record::downcast(*self->rec).get_datetimerange().max.is_missing();
             break;
         case 'l':
-            if (strcmp(varname, "level") == 0)
+            if (varname == "level")
                 return any_key_set(*self->rec, level_keys, 4);
             break;
         case 't':
-            if (strcmp(varname, "trange") == 0 || strcmp(varname, "timerange") == 0)
+            if (varname == "trange" || varname == "timerange")
                 return any_key_set(*self->rec, trange_keys, 3);
             break;
     }
 
-    return self->rec->isset(varname) ? 1 : 0;
+    return self->rec->isset(varname.c_str()) ? 1 : 0;
 }
 
 static PySequenceMethods dpy_Record_sequence = {
@@ -666,8 +669,7 @@ out:
 }
 
 PyTypeObject dpy_Record_Type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         // ob_size
+    PyVarObject_HEAD_INIT(NULL, 0)
     "dballe.Record",           // tp_name
     sizeof(dpy_Record),        // tp_basicsize
     0,                         // tp_itemsize

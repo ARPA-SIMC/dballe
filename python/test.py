@@ -5,7 +5,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import dballe
-#from dballe import *
+from six import string_types
 import datetime as dt
 import unittest
 
@@ -139,7 +139,7 @@ class VarTest(unittest.TestCase):
         self.assertEqual(type(var.enq()), float)
         self.assertEqual(var.enq(), 1.12345)
         var = dballe.var("B01019", "ciao")
-        self.assertEqual(type(var.enq()), str)
+        self.assertIsInstance(var.enq(), string_types)
         self.assertEqual(var.enq(), "ciao")
     def testGet(self):
         var = dballe.var("B01001")

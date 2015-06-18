@@ -5,6 +5,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import dballe
+import os
+import io
 import datetime as dt
 import unittest
 
@@ -92,7 +94,7 @@ class DballeTest(unittest.TestCase):
         # Query a variable
         query = dballe.Record(var="B01011")
         cur = self.db.query_data(query);
-        data = cur.next()
+        data = next(cur)
         self.failUnless(data)
 
         attrs = cur.query_attrs()
@@ -140,17 +142,14 @@ class DballeTest(unittest.TestCase):
         self.db.attr_remove("B01011", self.attr_ref, ("B33007",))
 
     def testLoadFile(self):
-        import os
-        with open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "r") as fp:
+        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "rb") as fp:
             self.db.reset()
             self.db.load(fp)
             self.assertTrue(self.db.query_data(dballe.Record()).remaining > 0)
 
     def testLoadFileLike(self):
-        import os
-        from StringIO import StringIO
-        with open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "r") as fp:
-            s = StringIO(fp.read())
+        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "rb") as fp:
+            s = io.BytesIO(fp.read())
             self.db.reset()
             self.db.load(s)
             self.assertTrue(self.db.query_data(dballe.Record()).remaining > 0)

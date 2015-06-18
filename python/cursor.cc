@@ -6,6 +6,14 @@
 #include "common.h"
 #include <algorithm>
 
+#if PY_MAJOR_VERSION >= 3
+    #define PyInt_FromLong PyLong_FromLong
+    #define PyInt_AsLong PyLong_AsLong
+    #define PyInt_Check PyLong_Check
+    #define PyInt_Type PyLong_Type
+    #define Py_TPFLAGS_HAVE_ITER 0
+#endif
+
 using namespace std;
 using namespace dballe;
 using namespace dballe::python;
@@ -93,9 +101,9 @@ static PyObject* dpy_Cursor_str(dpy_Cursor* self)
 {
     /*
     std::string f = self->var.format("None");
-    return PyString_FromString(f.c_str());
+    return PyUnicode_FromString(f.c_str());
     */
-    return PyString_FromString("Cursor");
+    return PyUnicode_FromString("Cursor");
 }
 
 static PyObject* dpy_Cursor_repr(dpy_Cursor* self)
@@ -113,14 +121,13 @@ static PyObject* dpy_Cursor_repr(dpy_Cursor* self)
         res += self->var.format("None");
         res += ")";
     }
-    return PyString_FromString(res.c_str());
+    return PyUnicode_FromString(res.c_str());
     */
-    return PyString_FromString("Cursor object");
+    return PyUnicode_FromString("Cursor object");
 }
 
 PyTypeObject dpy_Cursor_Type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         // ob_size
+    PyVarObject_HEAD_INIT(NULL, 0)
     "dballe.Cursor",           // tp_name
     sizeof(dpy_Cursor),        // tp_basicsize
     0,                         // tp_itemsize

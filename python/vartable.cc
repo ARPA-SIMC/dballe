@@ -1,29 +1,10 @@
-/*
- * python/vartable - DB-All.e Vartable python bindings
- *
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
 #include "vartable.h"
 #include "varinfo.h"
 #include "common.h"
 #include "dballe/var.h"
 #include <wreport/vartable.h>
 
+using namespace std;
 using namespace dballe;
 using namespace dballe::python;
 using namespace wreport;
@@ -47,7 +28,7 @@ static PyMethodDef dpy_Vartable_methods[] = {
 static PyObject* dpy_Vartable_id(dpy_Vartable* self, void* closure)
 {
     if (self->table)
-        return PyString_FromString(self->table->id().c_str());
+        return PyUnicode_FromString(self->table->id().c_str());
     else
         Py_RETURN_NONE;
 }
@@ -60,17 +41,17 @@ static PyGetSetDef dpy_Vartable_getsetters[] = {
 static PyObject* dpy_Vartable_str(dpy_Vartable* self)
 {
     if (self->table)
-        return PyString_FromString(self->table->id().c_str());
+        return PyUnicode_FromString(self->table->id().c_str());
     else
-        return PyString_FromString("<empty>");
+        return PyUnicode_FromString("<empty>");
 }
 
 static PyObject* dpy_Vartable_repr(dpy_Vartable* self)
 {
     if (self->table)
-        return PyString_FromFormat("Vartable('%s')", self->table->id().c_str());
+        return PyUnicode_FromFormat("Vartable('%s')", self->table->id().c_str());
     else
-        return PyString_FromString("Vartable()");
+        return PyUnicode_FromString("Vartable()");
 }
 
 static int dpy_Vartable_len(dpy_Vartable* self)
@@ -111,12 +92,12 @@ static PyObject* dpy_Vartable_getitem(dpy_Vartable* self, PyObject* key)
         if (i == -1 && PyErr_Occurred())
             return NULL;
         if (i < 0)
-            i += PyString_GET_SIZE(self);
+            i += self->table->size();
         return dpy_Vartable_item(self, i);
     }
 
-    const char* varname = PyString_AsString(key);
-    if (varname == NULL)
+    string varname;
+    if (string_from_python(key, varname))
         return NULL;
 
     try {
@@ -132,8 +113,8 @@ static int dpy_Vartable_contains(dpy_Vartable* self, PyObject *value)
 {
     if (!self->table) return 0;
 
-    const char* varname = PyString_AsString(value);
-    if (varname == NULL)
+    string varname;
+    if (string_from_python(value, varname))
         return -1;
     return self->table->contains(resolve_varcode(varname)) ? 1 : 0;
 }
@@ -156,8 +137,7 @@ static PyMappingMethods dpy_Vartable_mapping = {
 };
 
 static PyTypeObject dpy_Vartable_Type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         // ob_size
+    PyVarObject_HEAD_INIT(NULL, 0)
     "dballe.Vartable",         // tp_name
     sizeof(dpy_Vartable),  // tp_basicsize
     0,                         // tp_itemsize
@@ -216,7 +196,6 @@ static PyObject* dpy_Vartable_get(PyTypeObject *type, PyObject *args, PyObject *
 
 static PyObject* dpy_Vartable_query(dpy_Vartable *self, PyObject *args, PyObject *kw)
 {
-    dpy_Varinfo* result = 0;
     const char* varname = 0;
     if (!self->table)
     {

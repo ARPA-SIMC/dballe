@@ -9,7 +9,8 @@ Build-Depends: debhelper (>= 9), dh-python, dh-autoreconf,
   libcnf-dev, gfortran | g77,
   libtut-dev, libwibble-dev,
   doxygen-latex, ghostscript,
-  python-all-dev, python-docutils, python-numpy
+  python-all-dev, python3-all-dev, python-docutils, python-numpy, python3-numpy,
+  python-six, python3-six
 Standards-Version: 3.9.6.0
 Homepage: http://www.arpa.emr.it/dettaglio_documento.asp?id=514&idlivello=64
 Vcs-Svn: https://svn.smr.arpa.emr.it/dballe/dballe/trunk
@@ -95,6 +96,19 @@ Depends: dballe-common, ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
 Recommends: python-numpy
 Suggests: python-rpy2
 XB-Python-Version: ${python:Versions}
+Provides: ${python:Provides}
+Description: DB-ALL.e Python library for weather research
+ DB-All.e is a fast on-disk database where meteorological observed and
+ forecast data can be stored, searched, retrieved and updated.
+ .
+ These are the Python bindings.
+
+Package: python3-dballe
+Section: python
+Architecture: any
+Depends: dballe-common, ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
+Recommends: python3-numpy
+Suggests: python3-rpy2
 Provides: ${python:Provides}
 Description: DB-ALL.e Python library for weather research
  DB-All.e is a fast on-disk database where meteorological observed and

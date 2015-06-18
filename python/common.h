@@ -89,6 +89,9 @@ PyObject* trange_to_python(const Trange& tr);
 /// Convert a 3-tuple to a Trange
 int trange_from_python(PyObject* o, Trange& out);
 
+/// Convert a python string, bytes or unicode to an utf8 string
+int string_from_python(PyObject* o, std::string& out);
+
 /**
  * Initialize the python bits to use used by the common functions.
  *
