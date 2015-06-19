@@ -83,6 +83,7 @@ class Index(list):
     def __init__(self, shared=True, frozen=False):
         self._shared = shared
         self._frozen = frozen
+
     def freeze(self):
         """
         Set the index as frozen: indexing elements not already in the
@@ -100,7 +101,7 @@ class Index(list):
         else:
             return self.__class__()
 
-class ListIndex(Index, list):
+class ListIndex(Index):
     def __init__(self, shared=True, frozen=False, start=None):
         super(ListIndex, self).__init__(shared, frozen)
         self._map = {}
