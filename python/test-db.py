@@ -179,6 +179,19 @@ class DballeTest(unittest.TestCase):
             self.db.load(f)
             self.assertTrue(self.db.query_data(dballe.Record()).remaining > 0)
 
+    def testQueryVolnd(self):
+        from testlib import fill_volnd
+        self.db.reset()
+        fill_volnd(self.db)
+        query = dballe.Record()
+        query["var"] = "B10004"
+        query["date"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
+        reports = []
+        for cur in self.db.query_data(query):
+            reports.append(cur["rep_memo"])
+        s = "synop"
+        t = "temp"
+        self.assertEqual(reports, [s, t, s, t, s, t, s, s, t, s, t])
 
 if __name__ == "__main__":
     from testlib import main

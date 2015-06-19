@@ -328,6 +328,8 @@ static PyObject* dpy_DB_query_data(dpy_DB* self, PyObject* args)
 
     // TODO: if it is a dict, turn it directly into a Query?
 
+    //self->db->dump(stderr);
+
     try {
         core::Query query;
         query.set_from_record(*record->rec);

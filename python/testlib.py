@@ -20,15 +20,26 @@ def main(testname):
     argv = [sys.argv[0]] + args[1:]
     unittest.main(argv=argv)
 
+def not_so_random(seed):
+    """
+    Predictable random number generator, independent from python versions
+    """
+    # see https://en.wikipedia.org/wiki/Linear_congruential_generator
+    m = 2**31
+    a = 1103515245
+    c = 12345
+    while True:
+        seed = (a * seed + c) % m
+        yield float(seed) / float(m)
+
+
 def fill_volnd(db):
-    import random
     import dballe
     import datetime
 
     # We want a predictable dataset
-    random.seed(1)
-    rattr = random.Random()
-    rattr.seed(1)
+    rdata = not_so_random(1)
+    rattr = not_so_random(2)
 
     # Wipe the test database
     db.reset()
@@ -53,16 +64,15 @@ def fill_volnd(db):
         return dtrange(
                 datetime.datetime(2007, 1, 1, 0, 0, 0),
                 datetime.datetime(2007, 1, 7, 0, 0, 0),
-                datetime.timedelta(0, x*3600, 0))
+                datetime.timedelta(0, x * 3600, 0))
 
     def maybe_insert(rec, aname):
-        if random.random() <= 0.9:
-            #print repr(rec)
-            db.insert(rec, False, True)
-            attrs.clear()
-            attrs[aname] = rattr.random() * 100.
-            for code in rec:
-                db.attr_insert(code, attrs)
+        if next(rdata) > 0.9: return
+        db.insert(rec, False, True)
+        attrs.clear()
+        attrs[aname] = next(rattr) * 100.
+        for code in rec:
+            db.attr_insert(code, attrs)
 
     # Enter some sample data
     for net, lat, lon in contexts():
@@ -79,7 +89,7 @@ def fill_volnd(db):
         rec["trange"] = (4, -21600, 0)
         for dt in everyxhours(6):
             rec["date"] = dt
-            rec["B13011"] = random.random()*10.
+            rec["B13011"] = next(rdata) * 10.
             maybe_insert(rec, aname)
 
         # 12 hours precipitations at different times
@@ -87,7 +97,7 @@ def fill_volnd(db):
         rec["trange"] = (4, -43200, 0)
         for dt in everyxhours(12):
             rec["date"] = dt
-            rec["B13011"] = random.random()*10.
+            rec["B13011"] = next(rdata) * 10.
             maybe_insert(rec, aname)
 
         # Randomly measured
@@ -97,8 +107,8 @@ def fill_volnd(db):
         rec["level"] = (3, 2)
         rec["trange"] = (4, -21600, 0)
         for dt in everyxhours(6):
-            rec["date"] = (dt + datetime.timedelta(0, random.randint(-600, 600)))
-            rec["B13011"] = random.random()*10.
+            rec["date"] = (dt + datetime.timedelta(0, - 600 + int(next(rdata) * 1200)))
+            rec["B13011"] = next(rdata) * 10.
             maybe_insert(rec, aname)
         del rec["B13011"]
 
@@ -107,7 +117,7 @@ def fill_volnd(db):
         rec["trange"] = (0,)
         for dt in everyxhours(12):
             rec["date"] = dt
-            rec["B10004"] = float(random.randint(70000, 105000))
+            rec["B10004"] = float(70000 + next(rdata) * 35000)
             maybe_insert(rec, aname)
         del rec["B10004"]
 

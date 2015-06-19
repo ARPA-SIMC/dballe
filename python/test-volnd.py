@@ -63,6 +63,11 @@ class TestTddiv(unittest.TestCase):
         #       self.dtest(td1, td2)
 
 class TestRead(unittest.TestCase):
+    def __init__(self, *args, **kw):
+        super(TestRead, self).__init__(*args, **kw)
+        if not hasattr(self, "assertCountEqual"):
+            self.assertCountEqual = self.assertItemsEqual
+
     def setUp(self):
         from testlib import fill_volnd
         self.db = dballe.DB.connect_test()
@@ -146,7 +151,7 @@ class TestRead(unittest.TestCase):
         query["date"] = datetime(2007, 1, 1, 0, 0, 0)
         vars = read(self.db.query_data(query), (AnaIndex(), NetworkIndex()))
         self.assertEquals(len(vars), 1)
-        self.assertEquals(vars.keys(), ["B10004"])
+        self.assertCountEqual(vars.keys(), ["B10004"])
         data = vars["B10004"]
         self.assertEquals(data.name, "B10004")
         self.assertEquals(len(data.attrs), 0)
@@ -156,7 +161,7 @@ class TestRead(unittest.TestCase):
         self.assertEquals(data.vals.size, 12)
         self.assertEquals(data.vals.shape, (6, 2))
         self.assertEquals(sum(data.vals.mask.flat), 1)
-        self.assertEquals(ma.average(data.vals), 86890)
+        self.assertEquals(round(ma.average(data.vals)), 83185)
         self.assertEquals(data.dims[0][0], (1, 10., 15., None))
         self.assertEquals(data.dims[0][1], (2, 10., 25., None))
         self.assertEquals(data.dims[0][2], (3, 20., 15., None))
@@ -183,7 +188,7 @@ class TestRead(unittest.TestCase):
         self.assertEquals(data.vals.size, 12)
         self.assertEquals(data.vals.shape, (6, 1, 2))
         self.assertEquals(sum(data.vals.mask.flat), 1)
-        self.assertEquals(ma.average(data.vals), 86890)
+        self.assertEquals(round(ma.average(data.vals)), 83185)
         self.assertEquals(data.dims[0][0], (1, 10., 15., None))
         self.assertEquals(data.dims[0][1], (2, 10., 25., None))
         self.assertEquals(data.dims[0][2], (3, 20., 15., None))
@@ -202,8 +207,8 @@ class TestRead(unittest.TestCase):
         self.assertEquals(len(data.dims[2]), 2)
         self.assertEquals(data.vals.size, 24)
         self.assertEquals(data.vals.shape, (6, 2, 2))
-        self.assertEquals(sum(data.vals.mask.flat), 3)
-        self.assertAlmostEquals(ma.average(data.vals), 4.033333, 6)
+        self.assertEquals(sum(data.vals.mask.flat), 0)
+        self.assertAlmostEquals(ma.average(data.vals), 5.325, 6)
         self.assertEquals(data.dims[0][0], (1, 10., 15., None))
         self.assertEquals(data.dims[0][1], (2, 10., 25., None))
         self.assertEquals(data.dims[0][2], (3, 20., 15., None))
@@ -226,10 +231,10 @@ class TestRead(unittest.TestCase):
         query["date"] = datetime(2007, 1, 1, 0, 0, 0)
         vars = read(self.db.query_data(query), (AnaIndex(), NetworkIndex()), attributes=True)
         self.assertEquals(len(vars), 1)
-        self.assertEquals(vars.keys(), ["B10004"])
+        self.assertCountEqual(vars.keys(), ["B10004"])
         data = vars["B10004"]
         self.assertEquals(len(data.attrs), 2)
-        self.assertEquals(sorted(data.attrs.keys()), ['B33007', 'B33040'])
+        self.assertCountEqual(sorted(data.attrs.keys()), ['B33007', 'B33040'])
 
         for net, a in ('synop', 'B33007'), ('temp', 'B33040'):
             self.assertEquals(data.dims, data.attrs[a].dims)
@@ -248,8 +253,8 @@ class TestRead(unittest.TestCase):
             self.assertEquals([x for x in data.attrs[a].vals.mask[:,1-netidx].flat], [True]*len(data.attrs[a].vals.mask[:,1-netidx].flat))
             # Same attrs as values in this network
             self.assertEquals([x for x in data.vals.mask[:,netidx].flat], [x for x in data.attrs[a].vals.mask[:,netidx].flat])
-        self.assertEquals(ma.average(data.attrs['B33007'].vals), 53.5)
-        self.assertEquals(ma.average(data.attrs['B33040'].vals), 36.8)
+        self.assertEquals(round(ma.average(data.attrs['B33007'].vals)), 32)
+        self.assertEquals(round(ma.average(data.attrs['B33040'].vals)), 54)
 
     def testSomeAttrs(self):
         # Same export as testAnaNetwork, but check that the
@@ -259,10 +264,10 @@ class TestRead(unittest.TestCase):
         query["date"] = datetime(2007, 1, 1, 0, 0, 0)
         vars = read(self.db.query_data(query), (AnaIndex(), NetworkIndex()), attributes=('B33040',))
         self.assertEquals(len(vars), 1)
-        self.assertEquals(vars.keys(), ["B10004"])
+        self.assertCountEqual(vars.keys(), ["B10004"])
         data = vars["B10004"]
         self.assertEquals(len(data.attrs), 1)
-        self.assertEquals(data.attrs.keys(), ['B33040'])
+        self.assertCountEqual(data.attrs.keys(), ['B33040'])
 
         a = data.attrs['B33040']
         self.assertEquals(data.dims, a.dims)
@@ -280,7 +285,7 @@ class TestRead(unittest.TestCase):
         # Only compare the values on the temp index
         self.assertEquals([x for x in a.vals.mask[:,1-netidx].flat], [True]*len(a.vals.mask[:,1-netidx].flat))
         self.assertEquals([x for x in data.vals.mask[:,netidx].flat], [x for x in a.vals.mask[:,netidx].flat])
-        self.assertEquals(ma.average(a.vals), 36.8)
+        self.assertEquals(round(ma.average(a.vals)), 54)
 
     def testEmptyExport(self):
         query = dballe.Record()
@@ -299,7 +304,7 @@ class TestRead(unittest.TestCase):
         query['var'] = 'B13011'
         vars = read(self.db.query_data(query), indexes, \
                         checkConflicts=False)
-        self.assertItemsEqual(vars.keys(), ["B13011"])
+        self.assertCountEqual(vars.keys(), ["B13011"])
         self.assertEquals(len(vars["B13011"].dims[1]), 1)
         self.assertEquals(vars["B13011"].dims[0][0], (4, -21600, 0))
 
