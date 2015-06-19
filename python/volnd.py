@@ -45,6 +45,7 @@ from __future__ import unicode_literals
 import dballe
 from collections import namedtuple
 from datetime import *
+import sys
 
 
 #
@@ -246,45 +247,48 @@ class DateTimeIndex(ListIndex):
                 return "DateTimeIndex["+str(len(self))+"]"
 
 def tddivmod1(td1, td2):
-        "Division and quotient between time deltas"
+    "Division and quotient between time deltas"
+    if sys.version_info[0] >= 3:
+        return td1 // td2, td1 % td2
+    else:
         if td2 > td1:
-                return 0, td1
+            return 0, td1
         if td2 == 0:
-                raise ZeroDivisionError("Dividing by a 0 time delta")
+            raise ZeroDivisionError("Dividing by a 0 time delta")
         mults = (86400, 1000000, 1)
         n1 = (td1.days, td1.seconds, td1.microseconds)
         n2 = (td2.days, td2.seconds, td2.microseconds)
         d = 0
         q = 0
         for i in range(3):
-                d += n1[i]
-                if d != 0:
-                        if n2[i] == 0:
-                                d *= mults[i]
-                        else:
-                                q = d / n2[i]
-                                break
+            d += n1[i]
+            if d != 0:
+                if n2[i] == 0:
+                    d *= mults[i]
                 else:
-                        if n2[i] == 0:
-                                pass
-                        else:
-                                break
+                    q = d / n2[i]
+                    break
+            else:
+                if n2[i] == 0:
+                    pass
+                else:
+                    break
         t = td2 * q
         if t > td1:
-                q = q - 1
-                return q, td1 - td2 * q
+            q = q - 1
+            return q, td1 - td2 * q
         else:
-                return q, td1 - t
+            return q, td1 - t
 
 def tddivmod2(td1, td2):
-        """
-        Division and quotient between time deltas
-        (alternate implementation using longs)
-        """
-        std1 = td1.days*(3600*24*1000000) + td1.seconds*1000000 + td1.microseconds
-        std2 = td2.days*(3600*24*1000000) + td2.seconds*1000000 + td2.microseconds
-        q = std1 / std2
-        return q, td1 - (td2 * q)
+    """
+    Division and quotient between time deltas
+    (alternate implementation using longs)
+    """
+    std1 = td1.days*(3600*24*1000000) + td1.seconds*1000000 + td1.microseconds
+    std2 = td2.days*(3600*24*1000000) + td2.seconds*1000000 + td2.microseconds
+    q = std1 // std2
+    return q, td1 - (td2 * q)
 
 # Choose which implementation to use
 tddivmod = tddivmod2

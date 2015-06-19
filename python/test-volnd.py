@@ -14,50 +14,50 @@ import numpy.ma as ma
 class TestTddiv(unittest.TestCase):
 #       def tons(td):
 #               return td.days * 86400000000 + td.seconds * 1000000 + td.microseconds
-	def dtest(self, td1, td2):
-		self.assertEquals(tddivmod1(td1, td2), tddivmod2(td1, td2))
-		q, r = tddivmod1(td1, td2)
-		self.assertEquals(td2 * q + r, td1)
+    def dtest(self, td1, td2):
+        self.assertEquals(tddivmod1(td1, td2), tddivmod2(td1, td2))
+        q, r = tddivmod1(td1, td2)
+        self.assertEquals(td2 * q + r, td1)
 
-	def testtddiv(self):
-		#self.assertEquals(tddivmod(timedelta(10, 0, 0), timedelta(2, 0, 0)), (5, timedelta(0)))
-		#self.assertEquals(tddivmod(timedelta(10, 0, 1), timedelta(2, 0, 0)), (5, timedelta(0, 0, 1)))
-		#self.assertEquals(tddivmod(timedelta(10, 0, 1), timedelta(3, 0, 0)), (3, timedelta(1, 0, 1)))
-		#self.assertEquals(tddivmod(timedelta(10, 6, 18), timedelta(5, 3, 9)), (2, timedelta(0)))
-		#self.assertEquals(tddivmod(timedelta(3, 4, 5), timedelta(1, 3, 10)), (2, timedelta(0, 86397, 999985)))
-		#self.assertEquals(tddivmod(timedelta(0, 4, 5), timedelta(0, 3, 10)), (1, timedelta(0, 0, 999995)))
-		#self.assertEquals(tddivmod(timedelta(2, 40, 10), timedelta(0, 0, 5)), (34568000002, timedelta(0)))
+    def testtddiv(self):
+        #self.assertEquals(tddivmod(timedelta(10, 0, 0), timedelta(2, 0, 0)), (5, timedelta(0)))
+        #self.assertEquals(tddivmod(timedelta(10, 0, 1), timedelta(2, 0, 0)), (5, timedelta(0, 0, 1)))
+        #self.assertEquals(tddivmod(timedelta(10, 0, 1), timedelta(3, 0, 0)), (3, timedelta(1, 0, 1)))
+        #self.assertEquals(tddivmod(timedelta(10, 6, 18), timedelta(5, 3, 9)), (2, timedelta(0)))
+        #self.assertEquals(tddivmod(timedelta(3, 4, 5), timedelta(1, 3, 10)), (2, timedelta(0, 86397, 999985)))
+        #self.assertEquals(tddivmod(timedelta(0, 4, 5), timedelta(0, 3, 10)), (1, timedelta(0, 0, 999995)))
+        #self.assertEquals(tddivmod(timedelta(2, 40, 10), timedelta(0, 0, 5)), (34568000002, timedelta(0)))
 
-		self.dtest(timedelta(10, 0, 0), timedelta(2, 0, 0))
-		self.dtest(timedelta(10, 0, 1), timedelta(2, 0, 0))
-		self.dtest(timedelta(10, 0, 1), timedelta(3, 0, 0))
-		self.dtest(timedelta(10, 6, 18), timedelta(5, 3, 9))
-		self.dtest(timedelta(3, 4, 5), timedelta(1, 3, 10))
-		self.dtest(timedelta(0, 4, 5), timedelta(0, 3, 10))
-		self.dtest(timedelta(2, 40, 10), timedelta(0, 0, 5))
+        self.dtest(timedelta(10, 0, 0), timedelta(2, 0, 0))
+        self.dtest(timedelta(10, 0, 1), timedelta(2, 0, 0))
+        self.dtest(timedelta(10, 0, 1), timedelta(3, 0, 0))
+        self.dtest(timedelta(10, 6, 18), timedelta(5, 3, 9))
+        self.dtest(timedelta(3, 4, 5), timedelta(1, 3, 10))
+        self.dtest(timedelta(0, 4, 5), timedelta(0, 3, 10))
+        self.dtest(timedelta(2, 40, 10), timedelta(0, 0, 5))
 
-		# Re-enable when Debian bug #48872 has been fixed
-		#self.dtest(timedelta(999999999, 86399, 999999), timedelta(0, 0, 2))
+        # Re-enable when Debian bug #48872 has been fixed
+        #self.dtest(timedelta(999999999, 86399, 999999), timedelta(0, 0, 2))
 
-		random.seed(1)
-		for i in xrange(100):
-			td1 = timedelta(random.randint(0, 999999999), random.randint(0, 86400), random.randint(0, 1000000))
-			td2 = timedelta(random.randint(0, 999999999), random.randint(0, 86400), random.randint(0, 1000000))
-			self.dtest(td1, td2)
+        random.seed(1)
+        for i in range(100):
+            td1 = timedelta(random.randint(0, 999999999), random.randint(0, 86400), random.randint(0, 1000000))
+            td2 = timedelta(random.randint(0, 999999999), random.randint(0, 86400), random.randint(0, 1000000))
+            self.dtest(td1, td2)
 
-		# Re-enable when Debian bug #48872 has been fixed
-		#for i in xrange(100):
-		#       td1 = timedelta(random.randint(0, 999999999), random.randint(0, 86400), random.randint(0, 1000000))
-		#       td2 = timedelta(0, random.randint(0, 86400), random.randint(0, 1000000))
-		#       self.dtest(td1, td2)
-		#for i in xrange(100):
-		#       td1 = timedelta(random.randint(0, 999999999), random.randint(0, 86400), random.randint(0, 1000000))
-		#       td2 = timedelta(0, 0, random.randint(0, 1000000))
-		#       self.dtest(td1, td2)
-		#for i in xrange(100):
-		#       td1 = timedelta(0, random.randint(0, 86400), random.randint(0, 1000000))
-		#       td2 = timedelta(0, 0, random.randint(0, 1000000))
-		#       self.dtest(td1, td2)
+        # Re-enable when Debian bug #48872 has been fixed
+        #for i in xrange(100):
+        #       td1 = timedelta(random.randint(0, 999999999), random.randint(0, 86400), random.randint(0, 1000000))
+        #       td2 = timedelta(0, random.randint(0, 86400), random.randint(0, 1000000))
+        #       self.dtest(td1, td2)
+        #for i in xrange(100):
+        #       td1 = timedelta(random.randint(0, 999999999), random.randint(0, 86400), random.randint(0, 1000000))
+        #       td2 = timedelta(0, 0, random.randint(0, 1000000))
+        #       self.dtest(td1, td2)
+        #for i in xrange(100):
+        #       td1 = timedelta(0, random.randint(0, 86400), random.randint(0, 1000000))
+        #       td2 = timedelta(0, 0, random.randint(0, 1000000))
+        #       self.dtest(td1, td2)
 
 class TestRead(unittest.TestCase):
     def setUp(self):
