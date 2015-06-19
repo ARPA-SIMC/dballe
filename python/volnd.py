@@ -79,7 +79,7 @@ if os.environ.get("DBALLE_BUILDING_DOCS", "") != 'true':
 
 class SkipDatum(Exception): pass
 
-class Index(list):
+class Index(object):
     def __init__(self, shared=True, frozen=False):
         self._shared = shared
         self._frozen = frozen
@@ -102,7 +102,7 @@ class Index(list):
         else:
             return self.__class__()
 
-class ListIndex(Index):
+class ListIndex(Index, list):
     def __init__(self, shared=True, frozen=False, start=None):
         super(ListIndex, self).__init__(shared, frozen)
         self._map = {}
