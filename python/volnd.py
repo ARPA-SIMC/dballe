@@ -80,6 +80,15 @@ if os.environ.get("DBALLE_BUILDING_DOCS", "") != 'true':
 class SkipDatum(Exception): pass
 
 class Index(object):
+    """
+    Base class for all volnd indices.
+
+    An Index describes each entry along one dimension of a volnd volume. There
+    is an entry in the index for each point along that axis, and each entry can
+    be an arbitrary structure with details.
+
+    Index objects can be shared between homogeneous volumes.
+    """
     def __init__(self, shared=True, frozen=False):
         self._shared = shared
         self._frozen = frozen
@@ -103,22 +112,35 @@ class Index(object):
             return self.__class__()
 
 class ListIndex(Index, list):
+    """
+    Indexes records along an axis.
+
+    Each index entry is an arbitrary details structure extracted from records.
+    All records at a given index position will have the same details.
+    """
     def __init__(self, shared=True, frozen=False, start=None):
         super(ListIndex, self).__init__(shared, frozen)
+        # Maps indexing keys to list positions
+        # A key is a short, unique version of the details. Details can be
+        # thought as verbose, useful versions of keys.
         self._map = {}
         if start:
             for el in start:
                 id, val = self._splitInit(el)
                 self._map[id] = len(self)
                 self.append(val)
+
     def __str__(self):
-        return self.shortName() + ": " + list.__str__(self)
-    def _indexKey(self, rec):
+        return self.short_name() + ": " + list.__str__(self)
+
+    def key_from_record(self, rec):
         "Extract the indexing key from the record"
         return None
-    def _indexData(self, rec):
+
+    def details_from_record(self, rec):
         "Extract the full data information from the record"
         return None
+
     def _splitInit(self, el):
         """
         Extract the indexing key and full data information from one of
@@ -126,16 +148,23 @@ class ListIndex(Index, list):
         preinit an index
         """
         return el, el
+
     def approve(self, rec):
-        key = self._indexKey(rec)
-        return not self._frozen or key in self._map
-    def getIndex(self, rec):
-        key = self._indexKey(rec)
-        pos = self._map.get(key, -1)
-        if pos == -1:
-            pos = len(self)
-            self._map[key] = pos
-            self.append(self._indexData(rec))
+        """
+        Return true if the record can be placed along this index
+        """
+        if not self._frozen: return True
+        return self.key_from_record(rec) in self._map
+
+    def index_record(self, rec):
+        """
+        Return an integer index along this axis for the given record
+        """
+        key = self.key_from_record(rec)
+        pos = self._map.get(key, None)
+        if pos is None:
+            self._map[key] = pos = len(self)
+            self.append(self.details_from_record(rec))
         return pos
 
 class AnaIndexEntry(namedtuple("AnaIndexEntry", ("id", "lat", "lon", "ident"))):
@@ -173,13 +202,16 @@ class AnaIndex(ListIndex):
     The index saves all stations as AnaIndexEntry tuples, in the same order
     as they come out of the database.
     """
-    def _indexKey(self, rec):
+    def key_from_record(self, rec):
         return rec["ana_id"]
-    def _indexData(self, rec):
+
+    def details_from_record(self, rec):
         return AnaIndexEntry.from_record(rec)
+
     def _splitInit(self, el):
         return el[0], el
-    def shortName(self):
+
+    def short_name(self):
         return "AnaIndex["+str(len(self))+"]"
 
 class NetworkIndex(ListIndex):
@@ -191,13 +223,16 @@ class NetworkIndex(ListIndex):
     The index saves all networks as NetworkIndexEntry tuples, in the same
     order as they come out of the database.
     """
-    def _indexKey(self, rec):
+    def key_from_record(self, rec):
         return rec["rep_memo"]
-    def _indexData(self, rec):
+
+    def details_from_record(self, rec):
         return rec["rep_memo"]
+
     def _splitInit(self, el):
         return el[0], el
-    def shortName(self):
+
+    def short_name(self):
         return "NetworkIndex["+str(len(self))+"]"
 
 class LevelIndex(ListIndex):
@@ -209,11 +244,13 @@ class LevelIndex(ListIndex):
     The index saves all levels as dballe.Level tuples, in the same order
     as they come out of the database.
     """
-    def _indexKey(self, rec):
+    def key_from_record(self, rec):
         return rec["level"]
-    def _indexData(self, rec):
+
+    def details_from_record(self, rec):
         return rec["level"]
-    def shortName(self):
+
+    def short_name(self):
         return "LevelIndex["+str(len(self))+"]"
 
 class TimeRangeIndex(ListIndex):
@@ -225,11 +262,13 @@ class TimeRangeIndex(ListIndex):
     The index saves all time ranges as dballe.TimeRange tuples, in the same
     order as they come out of the database.
     """
-    def _indexKey(self, rec):
+    def key_from_record(self, rec):
         return rec["trange"]
-    def _indexData(self, rec):
+
+    def details_from_record(self, rec):
         return rec["trange"]
-    def shortName(self):
+
+    def short_name(self):
         return "TimeRangeIndex["+str(len(self))+"]"
 
 class DateTimeIndex(ListIndex):
@@ -241,11 +280,13 @@ class DateTimeIndex(ListIndex):
     The index saves all datetime values as datetime.datetime objects, in
     the same order as they come out of the database.
     """
-    def _indexKey(self, rec):
+    def key_from_record(self, rec):
         return rec["date"]
-    def _indexData(self, rec):
+
+    def details_from_record(self, rec):
         return rec["date"]
-    def shortName(self):
+
+    def short_name(self):
         return "DateTimeIndex["+str(len(self))+"]"
 
 def tddivmod1(td1, td2):
@@ -355,7 +396,7 @@ class IntervalIndex(Index):
             return False
         return True
 
-    def getIndex(self, rec):
+    def index_record(self, rec):
         t = rec["date"]
         # With integer division we get both the position and the skew
         pos, skew = tddivmod(t - self._start, self._step)
@@ -371,8 +412,8 @@ class IntervalIndex(Index):
         for i in range(self._size):
             yield self._start + self._step * i
     def __str__(self):
-        return self.shortName() + ": " + ", ".join(self)
-    def shortName(self):
+        return self.short_name() + ": " + ", ".join(self)
+    def short_name(self):
         return "IntervalIndex["+str(self._size)+"]"
     def copy(self):
         if self._shared:
@@ -424,14 +465,10 @@ class Data:
 
         You need to call finalise() before the values can be used.
         """
-        accepted = True
-        for dim in self.dims:
-            if not dim.approve(rec):
-                accepted = False
-                break
+        accepted = all(dim.approve(rec) for dim in self.dims)
         if accepted:
             # Obtain the index for every dimension
-            pos = tuple([dim.getIndex(rec) for dim in self.dims])
+            pos = tuple([dim.index_record(rec) for dim in self.dims])
 
             # Save the value with its indexes
             self.vals.append( (pos, rec[self.name]) )
@@ -558,10 +595,10 @@ class Data:
         return True
 
     def __str__(self):
-        return "Data("+", ".join(map(lambda x: x.shortName(), self.dims))+"):"+str(self.vals)
+        return "Data("+", ".join(map(lambda x: x.short_name(), self.dims))+"):"+str(self.vals)
 
     def __repr__(self):
-        return "Data("+", ".join(map(lambda x: x.shortName(), self.dims))+"):"+self.vals.__repr__()
+        return "Data("+", ".join(map(lambda x: x.short_name(), self.dims))+"):"+self.vals.__repr__()
 
 
 def read(cursor, dims, filter=None, checkConflicts=True, attributes=None):
