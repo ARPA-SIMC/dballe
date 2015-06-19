@@ -516,19 +516,18 @@ class Data:
             # numbers and we know the exact number of bits
             # used for encoding
             bits = self.info.bit_len
-            #print self.info, bits
             if bits <= 8:
                 #print 'uint8'
-                a = numpy.empty(map(len, self.dims), dtype='uint8')
+                a = numpy.empty([len(d) for d in self.dims], dtype='uint8')
             elif bits <= 16:
                 #print 'uint16'
-                a = numpy.empty(map(len, self.dims), dtype='uint16')
+                a = numpy.empty([len(d) for d in self.dims], dtype='uint16')
             elif bits <= 32:
                 #print 'uint32'
-                a = numpy.empty(map(len, self.dims), dtype='uint32')
+                a = numpy.empty([len(d) for d in self.dims], dtype='uint32')
             else:
                 #print 'uint64'
-                a = numpy.empty(map(len, self.dims), dtype='uint64')
+                a = numpy.empty([len(d) for d in self.dims], dtype='uint64')
         else:
             # We have a bit_ref, so we can have negative
             # values or we can have positive values bigger
@@ -540,15 +539,15 @@ class Data:
             #print self.info, range
             if range < 256:
                 #print 'int8'
-                a = numpy.empty(map(len, self.dims), dtype='int8')
+                a = numpy.empty([len(d) for d in self.dims], dtype='int8')
             elif range < 65536:
                 #print 'int16'
-                a = numpy.empty(map(len, self.dims), dtype='int16')
+                a = numpy.empty([len(d) for d in self.dims], dtype='int16')
             elif range <= 4294967296:
                 #print 'int32'
-                a = numpy.empty(map(len, self.dims), dtype='int32')
+                a = numpy.empty([len(d) for d in self.dims], dtype='int32')
             else:
-                a = numpy.empty(map(len, self.dims), dtype=int)
+                a = numpy.empty([len(d) for d in self.dims], dtype=int)
         return a
 
     def finalise(self):
@@ -600,10 +599,10 @@ class Data:
         return True
 
     def __str__(self):
-        return "Data("+", ".join(map(lambda x: x.short_name(), self.dims))+"):"+str(self.vals)
+        return "Data("+", ".join(x.short_name() for x in self.dims)+"):"+str(self.vals)
 
     def __repr__(self):
-        return "Data("+", ".join(map(lambda x: x.short_name(), self.dims))+"):"+self.vals.__repr__()
+        return "Data("+", ".join(x.short_name() for x in self.dims)+"):"+self.vals.__repr__()
 
 
 def read(cursor, dims, filter=None, checkConflicts=True, attributes=None):
@@ -641,7 +640,7 @@ def read(cursor, dims, filter=None, checkConflicts=True, attributes=None):
         # need to be shared and creating new indexes for the individual
         # ones
         if varname not in vars:
-            var = Data(varname, map(lambda x: x.copy(), dims), checkConflicts)
+            var = Data(varname, [x.copy() for x in dims], checkConflicts)
             vars[varname] = var
         else:
             var = vars[varname]
