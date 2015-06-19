@@ -102,7 +102,7 @@ class Index(list):
 
 class ListIndex(Index, list):
     def __init__(self, shared=True, frozen=False, start=None):
-        Index.__init__(self, shared, frozen)
+        super(ListIndex, self).__init__(shared, frozen)
         self._map = {}
         if start:
             for el in start:
@@ -325,7 +325,7 @@ class IntervalIndex(Index):
         tolerance is a timedelta specifying how much skew a datum is
             allowed to have from a sampling moment
         """
-        Index.__init__(self, *args, **kwargs)
+        super(IntervalIndex, self).__init__(*args, **kwargs)
         self._start = start
         self._step = step
         self._end = end
