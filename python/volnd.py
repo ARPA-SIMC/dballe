@@ -248,37 +248,34 @@ class DateTimeIndex(ListIndex):
 
 def tddivmod1(td1, td2):
     "Division and quotient between time deltas"
-    if sys.version_info[0] >= 3:
-        return td1 // td2, td1 % td2
-    else:
-        if td2 > td1:
-            return 0, td1
-        if td2 == 0:
-            raise ZeroDivisionError("Dividing by a 0 time delta")
-        mults = (86400, 1000000, 1)
-        n1 = (td1.days, td1.seconds, td1.microseconds)
-        n2 = (td2.days, td2.seconds, td2.microseconds)
-        d = 0
-        q = 0
-        for i in range(3):
-            d += n1[i]
-            if d != 0:
-                if n2[i] == 0:
-                    d *= mults[i]
-                else:
-                    q = d / n2[i]
-                    break
+    if td2 > td1:
+        return 0, td1
+    if td2 == 0:
+        raise ZeroDivisionError("Dividing by a 0 time delta")
+    mults = (86400, 1000000, 1)
+    n1 = (td1.days, td1.seconds, td1.microseconds)
+    n2 = (td2.days, td2.seconds, td2.microseconds)
+    d = 0
+    q = 0
+    for i in range(3):
+        d += n1[i]
+        if d != 0:
+            if n2[i] == 0:
+                d *= mults[i]
             else:
-                if n2[i] == 0:
-                    pass
-                else:
-                    break
-        t = td2 * q
-        if t > td1:
-            q = q - 1
-            return q, td1 - td2 * q
+                q = d // n2[i]
+                break
         else:
-            return q, td1 - t
+            if n2[i] == 0:
+                pass
+            else:
+                break
+    t = td2 * q
+    if t > td1:
+        q = q - 1
+        return q, td1 - td2 * q
+    else:
+        return q, td1 - t
 
 def tddivmod2(td1, td2):
     """
@@ -291,7 +288,13 @@ def tddivmod2(td1, td2):
     return q, td1 - (td2 * q)
 
 # Choose which implementation to use
-tddivmod = tddivmod2
+if sys.version_info[0] >= 3:
+    def tddivmod3(td1, td2):
+        return td1 // td2, td1 % td2
+    tddivmod = tddivmod3
+else:
+    tddivmod3 = None
+    tddivmod = tddivmod2
 
 class IntervalIndex(Index):
         """

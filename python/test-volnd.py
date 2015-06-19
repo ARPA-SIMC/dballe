@@ -19,6 +19,9 @@ class TestTddiv(unittest.TestCase):
         q, r = tddivmod1(td1, td2)
         self.assertEquals(td2 * q + r, td1)
 
+        if tddivmod3 is not None:
+            self.assertEquals(tddivmod1(td1, td2), tddivmod3(td1, td2))
+
     def testtddiv(self):
         #self.assertEquals(tddivmod(timedelta(10, 0, 0), timedelta(2, 0, 0)), (5, timedelta(0)))
         #self.assertEquals(tddivmod(timedelta(10, 0, 1), timedelta(2, 0, 0)), (5, timedelta(0, 0, 1)))
