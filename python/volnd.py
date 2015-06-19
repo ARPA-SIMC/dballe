@@ -90,7 +90,8 @@ class Index(list):
         index will raise a SkipDatum exception
         """
         self._frozen = True
-    def another(self):
+
+    def copy(self):
         """
         Return another version of this index: it can be a reference to
         the exact same index if shared=True; otherwise it's a new,
@@ -373,7 +374,7 @@ class IntervalIndex(Index):
         return self.shortName() + ": " + ", ".join(self)
     def shortName(self):
         return "IntervalIndex["+str(self._size)+"]"
-    def another(self):
+    def copy(self):
         if self._shared:
             return self
         else:
@@ -598,7 +599,7 @@ def read(cursor, dims, filter=None, checkConflicts=True, attributes=None):
         # need to be shared and creating new indexes for the individual
         # ones
         if varname not in vars:
-            var = Data(varname, map(lambda x: x.another(), dims), checkConflicts)
+            var = Data(varname, map(lambda x: x.copy(), dims), checkConflicts)
             vars[varname] = var
         else:
             var = vars[varname]
