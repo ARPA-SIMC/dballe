@@ -44,7 +44,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import dballe
 from collections import namedtuple
-from datetime import *
+import datetime
 import sys
 
 
@@ -333,7 +333,7 @@ class IntervalIndex(Index):
             self._size = (end-start)/step
         else:
             self._size = 0
-        self._tolerance = timedelta(0)
+        self._tolerance = datetime.timedelta(0)
 
     def approve(self, rec):
         t = rec["date"]
