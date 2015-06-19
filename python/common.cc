@@ -5,6 +5,7 @@
 #if PY_MAJOR_VERSION >= 3
     #define PyInt_FromLong PyLong_FromLong
     #define PyInt_AsLong PyLong_AsLong
+    #define PyInt_Type PyLong_Type
 #endif
 
 using namespace wreport;
@@ -339,6 +340,71 @@ int string_from_python(PyObject* o, std::string& out)
     }
     PyErr_SetString(PyExc_TypeError, "value must be an instance of str, bytes or unicode");
     return -1;
+}
+
+int file_get_fileno(PyObject* o)
+{
+    // fileno_value = obj.fileno()
+    pyo_unique_ptr fileno_meth(PyObject_GetAttrString(o, "fileno"));
+    if (!fileno_meth) return -1;
+    pyo_unique_ptr fileno_args(Py_BuildValue("()"));
+    if (!fileno_args) return -1;
+    PyObject* fileno_value = PyObject_Call(fileno_meth, fileno_args, NULL);
+    if (!fileno_value)
+    {
+        if (PyErr_ExceptionMatches(PyExc_AttributeError) || PyErr_ExceptionMatches(PyExc_IOError))
+            PyErr_Clear();
+        return -1;
+    }
+
+    // fileno = int(fileno_value)
+    if (!PyObject_TypeCheck(fileno_value, &PyInt_Type)) {
+        PyErr_SetString(PyExc_ValueError, "fileno() function must return an integer");
+        return -1;
+    }
+
+    return PyInt_AsLong(fileno_value);
+}
+
+PyObject* file_get_data(PyObject* o, char*&buf, Py_ssize_t& len)
+{
+    // Use read() instead
+    pyo_unique_ptr read_meth(PyObject_GetAttrString(o, "read"));
+    pyo_unique_ptr read_args(Py_BuildValue("()"));
+    pyo_unique_ptr data(PyObject_Call(read_meth, read_args, NULL));
+    if (!data) return nullptr;
+
+#if PY_MAJOR_VERSION >= 3
+    if (!PyObject_TypeCheck(data, &PyBytes_Type)) {
+        PyErr_SetString(PyExc_ValueError, "read() function must return a bytes object");
+        return nullptr;
+    }
+    if (PyBytes_AsStringAndSize(data, &buf, &len))
+        return nullptr;
+#else
+    if (!PyObject_TypeCheck(data, &PyString_Type)) {
+        Py_DECREF(data);
+        PyErr_SetString(PyExc_ValueError, "read() function must return a string object");
+        return nullptr;
+    }
+    if (PyString_AsStringAndSize(data, &buf, &len))
+        return nullptr;
+#endif
+
+    return data.release();
+}
+
+
+int object_repr(PyObject* o, std::string& out)
+{
+    pyo_unique_ptr fileno_repr(PyObject_Repr(o));
+    if (!fileno_repr) return -1;
+
+    std::string name;
+    if (string_from_python(fileno_repr, name))
+        return -1;
+
+    return 0;
 }
 
 void common_init()

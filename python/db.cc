@@ -161,29 +161,63 @@ static PyObject* dpy_DB_insert(dpy_DB* self, PyObject* args, PyObject* kw)
     }
 }
 
+static void db_load_file(DB* db, FILE* file, bool close_on_exit, const std::string& name)
+{
+    std::unique_ptr<File> f = File::create(file, close_on_exit, name);
+    std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->encoding());
+    f->foreach([&](const BinaryMessage& raw) {
+        Messages msgs = imp->from_binary(raw);
+        db->import_msgs(msgs, NULL, 0);
+        return true;
+    });
+}
+
 static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args)
 {
     PyObject* obj;
-    bool (*f)(DB*, PyObject*) = NULL;
-
     if (!PyArg_ParseTuple(args, "O", &obj))
         return NULL;
 
-    if (PyObject_HasAttrString(obj, "fileno"))
-        f = db_load_fileno;
-    else if (PyObject_HasAttrString(obj, "read"))
-        f = db_load_filelike;
-    else
-    {
-        PyErr_SetString(PyExc_ValueError, "Argument must be a file or file-like object");
-        return NULL;
-    }
+    string repr;
+    if (object_repr(obj, repr))
+        return nullptr;
 
     try {
-        if (f(self->db, obj))
-            Py_RETURN_NONE;
-        else
-            return NULL;
+        int fileno = file_get_fileno(obj);
+        if (fileno == -1)
+        {
+            if (PyErr_Occurred()) return nullptr;
+
+            char* buf;
+            Py_ssize_t len;
+            pyo_unique_ptr data = file_get_data(obj, buf, len);
+            if (!data) return nullptr;
+
+            FILE* f = fmemopen(buf, len, "r");
+            if (!f) return nullptr;
+            db_load_file(self->db, f, true, repr);
+            return Py_None;
+        } else {
+            // Duplicate the file descriptor because both python and libc will want to
+            // close it
+            fileno = dup(fileno);
+            if (fileno == -1)
+            {
+                PyErr_Format(PyExc_OSError, "cannot dup() the file handle from %s", repr.c_str());
+                return nullptr;
+            }
+
+            FILE* f = fdopen(fileno, "rb");
+            if (f == nullptr)
+            {
+                close(fileno);
+                PyErr_Format(PyExc_OSError, "cannot fdopen() the dup()ed file handle from %s", repr.c_str());
+                return nullptr;
+            }
+
+            db_load_file(self->db, f, true, repr);
+            return Py_None;
+        }
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -616,12 +650,12 @@ bool db_read_attrlist(PyObject* attrs, db::AttrList& codes)
 {
     if (!attrs) return true;
 
-    OwnedPyObject iter(PyObject_GetIter(attrs));
+    pyo_unique_ptr iter(PyObject_GetIter(attrs));
     if (iter == NULL) return false;
 
     try {
         while (PyObject* iter_item = PyIter_Next(iter)) {
-            OwnedPyObject item(iter_item);
+            pyo_unique_ptr item(iter_item);
             string name;
             if (string_from_python(item, name))
                 return false;
@@ -665,120 +699,6 @@ void register_db(PyObject* m)
 
     Py_INCREF(&dpy_DB_Type);
     PyModule_AddObject(m, "DB", (PyObject*)&dpy_DB_Type);
-}
-
-void db_load_file(DB* db, FILE* file, bool close_on_exit, const std::string& name)
-{
-    std::unique_ptr<File> f = File::create(file, close_on_exit, name);
-    std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->encoding());
-    f->foreach([&](const BinaryMessage& raw) {
-        Messages msgs = imp->from_binary(raw);
-        db->import_msgs(msgs, NULL, 0);
-        return true;
-    });
-}
-
-bool db_load_filelike(DB* db, PyObject* obj)
-{
-    PyObject *read_meth;
-    PyObject* read_args;
-    PyObject* data;
-    PyObject* filerepr;
-    char* buf;
-    Py_ssize_t len;
-
-    read_meth = PyObject_GetAttrString(obj, "read");
-    read_args = Py_BuildValue("()");
-    data = PyObject_Call(read_meth, read_args, NULL);
-    if (!data) {
-        Py_DECREF(read_meth);
-        Py_DECREF(read_args);
-        return false;
-    }
-    Py_DECREF(read_meth);
-    Py_DECREF(read_args);
-#if PY_MAJOR_VERSION >= 3
-    if (!PyObject_TypeCheck(data, &PyBytes_Type)) {
-        Py_DECREF(data);
-        PyErr_SetString(PyExc_ValueError, "read() function must return a bytes object");
-        return false;
-    }
-    PyBytes_AsStringAndSize(data, &buf, &len);
-#else
-    if (!PyObject_TypeCheck(data, &PyString_Type)) {
-        Py_DECREF(data);
-        PyErr_SetString(PyExc_ValueError, "read() function must return a string object");
-        return false;
-    }
-    PyString_AsStringAndSize(data, &buf, &len);
-#endif
-    FILE* f = fmemopen(buf, len, "r");
-    filerepr = PyObject_Repr(obj);
-    std::string name;
-    if (string_from_python(filerepr, name))
-    {
-        Py_DECREF(data);
-        Py_DECREF(filerepr);
-        return false;
-    }
-    Py_DECREF(filerepr);
-
-    try {
-        db_load_file(db, f, true, name);
-    } catch (...) {
-        Py_DECREF(data);
-        throw;
-    }
-    Py_DECREF(data);
-    return true;
-}
-
-bool db_load_fileno(DB* db, PyObject* obj)
-{
-    PyObject* fileno_meth;
-    PyObject* fileno_args;
-    PyObject* fileno_repr;
-    PyObject* fileno_value;
-    int fileno;
-
-    // fileno_value = obj.fileno()
-    fileno_meth = PyObject_GetAttrString(obj, "fileno");
-    fileno_args = Py_BuildValue("()");
-    fileno_value = PyObject_Call(fileno_meth, fileno_args, NULL);
-    if (!fileno_value) {
-        Py_DECREF(fileno_meth);
-        Py_DECREF(fileno_args);
-        return false;
-    }
-    Py_DECREF(fileno_meth);
-    Py_DECREF(fileno_args);
-
-    // fileno = int(fileno_value)
-    if (!PyObject_TypeCheck(fileno_value, &PyInt_Type)) {
-        PyErr_SetString(PyExc_ValueError, "fileno() function must return an integer");
-        Py_DECREF(fileno_value);
-        return false;
-    }
-    fileno = PyInt_AsLong(fileno_value);
-    Py_DECREF(fileno_value);
-
-    // name = repr(obj)
-    fileno_repr = PyObject_Repr(obj);
-    std::string name;
-    if (string_from_python(fileno_repr, name))
-    {
-        Py_DECREF(fileno_repr);
-        return false;
-    }
-    Py_DECREF(fileno_repr);
-
-    // Duplicate the file descriptor because both python and libc will want to
-    // close it
-    fileno = dup(fileno);
-
-    FILE* f = fdopen(fileno, "r");
-    db_load_file(db, f, true, name);
-    return true;
 }
 
 }
