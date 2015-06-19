@@ -289,6 +289,7 @@ class DateTimeIndex(ListIndex):
     def short_name(self):
         return "DateTimeIndex["+str(len(self))+"]"
 
+
 def tddivmod1(td1, td2):
     "Division and quotient between time deltas"
     if td2 > td1:
@@ -339,11 +340,14 @@ else:
     tddivmod3 = None
     tddivmod = tddivmod2
 
+
 class IntervalIndex(Index):
     """
-    Index by fixed time intervals: index points are at fixed time
-    intervals, and data is acquired in one point only if it is within a
-    given tolerance from the interval.
+    Index into equally spaced points in time, starting at ``start``, with a
+    point every ``step`` time.
+
+    Index points are at fixed time intervals, and data is acquired in one point
+    only if it is within a given tolerance from the interval.
 
     The constructor syntax is: ``IntervalIndex(start, step, tolerance=0, end=None, shared=True, frozen=False)``.
 
@@ -361,7 +365,7 @@ class IntervalIndex(Index):
     of the time interval of the index.  If omitted, the index will end at
     the latest accepted datum coming out of the database.
     """
-    def __init__(self, start, step, tolerance = 0, end=None, *args, **kwargs):
+    def __init__(self, start, step, tolerance=0, end=None, *args, **kwargs):
         """
         start is a datetime with the starting moment
         step is a timedelta with the interval between times
@@ -401,20 +405,24 @@ class IntervalIndex(Index):
         # With integer division we get both the position and the skew
         pos, skew = tddivmod(t - self._start, self._step)
         if skew > self._step / 2:
-                pos += 1
+            pos += 1
         if pos >= self._size:
-                self._size = pos + 1
+            self._size = pos + 1
         return pos
 
     def __len__(self):
         return self._size
+
     def __iter__(self):
         for i in range(self._size):
             yield self._start + self._step * i
+
     def __str__(self):
         return self.short_name() + ": " + ", ".join(self)
+
     def short_name(self):
         return "IntervalIndex["+str(self._size)+"]"
+
     def copy(self):
         if self._shared:
             return self
@@ -468,7 +476,7 @@ class Data:
         accepted = all(dim.approve(rec) for dim in self.dims)
         if accepted:
             # Obtain the index for every dimension
-            pos = tuple([dim.index_record(rec) for dim in self.dims])
+            pos = tuple(dim.index_record(rec) for dim in self.dims)
 
             # Save the value with its indexes
             self.vals.append( (pos, rec[self.name]) )
@@ -549,21 +557,19 @@ class Data:
         values collected so far.
         """
         # If one of the dimensions is empty, we don't have any valid data
-        for i in self.dims:
-            if len(i) == 0:
-                return False
+        if any(len(d) == 0 for d in self.dims):
+            return False
 
         # Create the data array, with all values set as missing
         #print "volnd finalise instantiate"
         if self.info.is_string:
             #print self.info, "string"
-            a = numpy.empty(map(len, self.dims), dtype=object)
+            a = numpy.empty([len(x) for x in self.dims], dtype=object)
             # Fill the array with all the values, at the given indexes
             for pos, val in self.vals:
-                if not self._checkConflicts or a[pos] == None:
-                    a[pos] = val
-                else:
+                if self._checkConflicts and a[pos] is not None:
                     raise IndexError("Got more than one value for " + self.name + " at position " + str(pos))
+                a[pos] = val
         else:
             if self.info.scale == 0:
                 a = self._instantiateIntMatrix()
@@ -573,11 +579,10 @@ class Data:
 
             # Fill the array with all the values, at the given indexes
             for pos, val in self.vals:
-                if not self._checkConflicts or mask[pos] == True:
-                    a[pos] = val
-                    mask[pos] = False
-                else:
+                if self._checkConflicts and not mask[pos]:
                     raise IndexError("Got more than one value for " + self.name + " at position " + str(pos))
+                a[pos] = val
+                mask[pos] = False
             a = ma.array(a, mask=mask)
 
         # Replace the intermediate data with the results
