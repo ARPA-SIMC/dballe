@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 import dballe
 from volnd import *
 import unittest, random, sys
-from datetime import *
+import datetime
 import numpy
 import numpy.ma as ma
 
@@ -23,43 +23,43 @@ class TestTddiv(unittest.TestCase):
             self.assertEquals(tddivmod1(td1, td2), tddivmod3(td1, td2))
 
     def testtddiv(self):
-        #self.assertEquals(tddivmod(timedelta(10, 0, 0), timedelta(2, 0, 0)), (5, timedelta(0)))
-        #self.assertEquals(tddivmod(timedelta(10, 0, 1), timedelta(2, 0, 0)), (5, timedelta(0, 0, 1)))
-        #self.assertEquals(tddivmod(timedelta(10, 0, 1), timedelta(3, 0, 0)), (3, timedelta(1, 0, 1)))
-        #self.assertEquals(tddivmod(timedelta(10, 6, 18), timedelta(5, 3, 9)), (2, timedelta(0)))
-        #self.assertEquals(tddivmod(timedelta(3, 4, 5), timedelta(1, 3, 10)), (2, timedelta(0, 86397, 999985)))
-        #self.assertEquals(tddivmod(timedelta(0, 4, 5), timedelta(0, 3, 10)), (1, timedelta(0, 0, 999995)))
-        #self.assertEquals(tddivmod(timedelta(2, 40, 10), timedelta(0, 0, 5)), (34568000002, timedelta(0)))
+        #self.assertEquals(tddivmod(datetime.timedelta(10, 0, 0), datetime.timedelta(2, 0, 0)), (5, datetime.timedelta(0)))
+        #self.assertEquals(tddivmod(datetime.timedelta(10, 0, 1), datetime.timedelta(2, 0, 0)), (5, datetime.timedelta(0, 0, 1)))
+        #self.assertEquals(tddivmod(datetime.timedelta(10, 0, 1), datetime.timedelta(3, 0, 0)), (3, datetime.timedelta(1, 0, 1)))
+        #self.assertEquals(tddivmod(datetime.timedelta(10, 6, 18), datetime.timedelta(5, 3, 9)), (2, datetime.timedelta(0)))
+        #self.assertEquals(tddivmod(datetime.timedelta(3, 4, 5), datetime.timedelta(1, 3, 10)), (2, datetime.timedelta(0, 86397, 999985)))
+        #self.assertEquals(tddivmod(datetime.timedelta(0, 4, 5), datetime.timedelta(0, 3, 10)), (1, datetime.timedelta(0, 0, 999995)))
+        #self.assertEquals(tddivmod(datetime.timedelta(2, 40, 10), datetime.timedelta(0, 0, 5)), (34568000002, datetime.timedelta(0)))
 
-        self.dtest(timedelta(10, 0, 0), timedelta(2, 0, 0))
-        self.dtest(timedelta(10, 0, 1), timedelta(2, 0, 0))
-        self.dtest(timedelta(10, 0, 1), timedelta(3, 0, 0))
-        self.dtest(timedelta(10, 6, 18), timedelta(5, 3, 9))
-        self.dtest(timedelta(3, 4, 5), timedelta(1, 3, 10))
-        self.dtest(timedelta(0, 4, 5), timedelta(0, 3, 10))
-        self.dtest(timedelta(2, 40, 10), timedelta(0, 0, 5))
+        self.dtest(datetime.timedelta(10, 0, 0), datetime.timedelta(2, 0, 0))
+        self.dtest(datetime.timedelta(10, 0, 1), datetime.timedelta(2, 0, 0))
+        self.dtest(datetime.timedelta(10, 0, 1), datetime.timedelta(3, 0, 0))
+        self.dtest(datetime.timedelta(10, 6, 18), datetime.timedelta(5, 3, 9))
+        self.dtest(datetime.timedelta(3, 4, 5), datetime.timedelta(1, 3, 10))
+        self.dtest(datetime.timedelta(0, 4, 5), datetime.timedelta(0, 3, 10))
+        self.dtest(datetime.timedelta(2, 40, 10), datetime.timedelta(0, 0, 5))
 
         # Re-enable when Debian bug #48872 has been fixed
-        #self.dtest(timedelta(999999999, 86399, 999999), timedelta(0, 0, 2))
+        #self.dtest(datetime.timedelta(999999999, 86399, 999999), datetime.timedelta(0, 0, 2))
 
         random.seed(1)
         for i in range(100):
-            td1 = timedelta(random.randint(0, 999999999), random.randint(0, 86400), random.randint(0, 1000000))
-            td2 = timedelta(random.randint(0, 999999999), random.randint(0, 86400), random.randint(0, 1000000))
+            td1 = datetime.timedelta(random.randint(0, 999999999), random.randint(0, 86400), random.randint(0, 1000000))
+            td2 = datetime.timedelta(random.randint(0, 999999999), random.randint(0, 86400), random.randint(0, 1000000))
             self.dtest(td1, td2)
 
         # Re-enable when Debian bug #48872 has been fixed
         #for i in xrange(100):
-        #       td1 = timedelta(random.randint(0, 999999999), random.randint(0, 86400), random.randint(0, 1000000))
-        #       td2 = timedelta(0, random.randint(0, 86400), random.randint(0, 1000000))
+        #       td1 = datetime.timedelta(random.randint(0, 999999999), random.randint(0, 86400), random.randint(0, 1000000))
+        #       td2 = datetime.timedelta(0, random.randint(0, 86400), random.randint(0, 1000000))
         #       self.dtest(td1, td2)
         #for i in xrange(100):
-        #       td1 = timedelta(random.randint(0, 999999999), random.randint(0, 86400), random.randint(0, 1000000))
-        #       td2 = timedelta(0, 0, random.randint(0, 1000000))
+        #       td1 = datetime.timedelta(random.randint(0, 999999999), random.randint(0, 86400), random.randint(0, 1000000))
+        #       td2 = datetime.timedelta(0, 0, random.randint(0, 1000000))
         #       self.dtest(td1, td2)
         #for i in xrange(100):
-        #       td1 = timedelta(0, random.randint(0, 86400), random.randint(0, 1000000))
-        #       td2 = timedelta(0, 0, random.randint(0, 1000000))
+        #       td1 = datetime.timedelta(0, random.randint(0, 86400), random.randint(0, 1000000))
+        #       td2 = datetime.timedelta(0, 0, random.randint(0, 1000000))
         #       self.dtest(td1, td2)
 
 class TestRead(unittest.TestCase):
@@ -80,14 +80,14 @@ class TestRead(unittest.TestCase):
     def testIndexFind(self):
         # Ana in one dimension, network in the other
         query = dballe.Record(ana_id=1, var="B13011", rep_memo="synop")
-        query["date"] = datetime(2007, 1, 1, 0, 0, 0)
+        query["date"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
         vars = read(self.db.query_data(query), (AnaIndex(), TimeRangeIndex()))
         self.assertEquals(vars["B13011"].dims[1].index((4, -21600, 0)), 1)
 
     def testFilter(self):
         # Ana in one dimension, network in the other
         query = dballe.Record(ana_id=1, var="B13011", rep_memo="synop")
-        query["date"] = datetime(2007, 1, 1, 0, 0, 0)
+        query["date"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
         vars = read(self.db.query_data(query), \
                 (AnaIndex(), TimeRangeIndex()), \
                 filter=lambda rec: rec["timerange"] == (4, -21600, 0))
@@ -109,7 +109,7 @@ class TestRead(unittest.TestCase):
     def testConflicts(self):
         # Ana in one dimension, network in the other
         query = dballe.Record(ana_id=1, var="B13011")
-        query["date"] = datetime(2007, 1, 1, 0, 0, 0)
+        query["date"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
         # Here conflicting values are overwritten
         vars = read(self.db.query_data(query), (AnaIndex(), ), checkConflicts=False)
         self.assertEquals(type(vars), dict)
@@ -148,7 +148,7 @@ class TestRead(unittest.TestCase):
         # Ana in one dimension, network in the other
         query = dballe.Record()
         query["var"] = "B10004"
-        query["date"] = datetime(2007, 1, 1, 0, 0, 0)
+        query["date"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
         vars = read(self.db.query_data(query), (AnaIndex(), NetworkIndex()))
         self.assertEquals(len(vars), 1)
         self.assertCountEqual(vars.keys(), ["B10004"])
@@ -173,7 +173,7 @@ class TestRead(unittest.TestCase):
     def testAnaTrangeNetwork(self):
         # 3 dimensions: ana, timerange, network
         # 2 variables
-        query = dballe.Record(date=datetime(2007, 1, 1, 0, 0, 0))
+        query = dballe.Record(date=datetime.datetime(2007, 1, 1, 0, 0, 0))
         vars = read(self.db.query_data(query), (AnaIndex(), TimeRangeIndex(shared=False), NetworkIndex()))
         self.assertEquals(len(vars), 2)
         self.assertEquals(sorted(vars.keys()), ["B10004", "B13011"])
@@ -228,7 +228,7 @@ class TestRead(unittest.TestCase):
         # attributes are synchronised
         query = dballe.Record()
         query["var"] = "B10004"
-        query["date"] = datetime(2007, 1, 1, 0, 0, 0)
+        query["date"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
         vars = read(self.db.query_data(query), (AnaIndex(), NetworkIndex()), attributes=True)
         self.assertEquals(len(vars), 1)
         self.assertCountEqual(vars.keys(), ["B10004"])
@@ -261,7 +261,7 @@ class TestRead(unittest.TestCase):
         # attributes are synchronised
         query = dballe.Record()
         query["var"] = "B10004"
-        query["date"] = datetime(2007, 1, 1, 0, 0, 0)
+        query["date"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
         vars = read(self.db.query_data(query), (AnaIndex(), NetworkIndex()), attributes=('B33040',))
         self.assertEquals(len(vars), 1)
         self.assertCountEqual(vars.keys(), ["B10004"])
@@ -370,7 +370,7 @@ if __name__ == "__main__":
 ##vars = read(db.query(query), (AnaIndex(),DateTimeIndex()))
 #
 #query.set("rep_memo", "temp")
-#vars = read(db.query(query), (AnaIndex(),IntervalIndex(datetime(2007,01,11,11,24), timedelta(0, 120), timedelta(0, 60))))
+#vars = read(db.query(query), (AnaIndex(),IntervalIndex(datetime.datetime(2007,01,11,11,24), datetime.timedelta(0, 120), datetime.timedelta(0, 60))))
 #
 #print vars
 ##print vars['B12001'].dims[0][:20]
