@@ -295,7 +295,7 @@ void Template::setupBulletin(wreport::Bulletin& bulletin)
         // Take from opts
         b->centre = opts.centre != MISSING_INT ? opts.centre : 255;
         b->subcentre = opts.subcentre != MISSING_INT ? opts.subcentre : 255;
-        b->master_table = 14;
+        b->master_table = 17;
         b->local_table = 0;
         b->compression = 0;
         b->update_sequence_number = 0;
