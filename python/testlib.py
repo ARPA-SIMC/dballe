@@ -68,7 +68,7 @@ def fill_volnd(db):
 
     def maybe_insert(rec, aname):
         if next(rdata) > 0.9: return
-        db.insert(rec, False, True)
+        db.insert_data(rec, False, True)
         attrs.clear()
         attrs[aname] = next(rattr) * 100.
         for code in rec:
@@ -89,7 +89,7 @@ def fill_volnd(db):
         rec["level"] = (1,)
         rec["trange"] = (4, -21600, 0)
         for dt in everyxhours(6):
-            rec["date"] = dt
+            rec["datetime"] = dt
             rec["B13011"] = next(rdata) * 10.
             maybe_insert(rec, aname)
 
@@ -97,7 +97,7 @@ def fill_volnd(db):
         rec["level"] = (1,)
         rec["trange"] = (4, -43200, 0)
         for dt in everyxhours(12):
-            rec["date"] = dt
+            rec["datetime"] = dt
             rec["B13011"] = next(rdata) * 10.
             maybe_insert(rec, aname)
 
@@ -108,7 +108,7 @@ def fill_volnd(db):
         rec["level"] = (3, 2)
         rec["trange"] = (4, -21600, 0)
         for dt in everyxhours(6):
-            rec["date"] = (dt + datetime.timedelta(0, - 600 + int(next(rdata) * 1200)))
+            rec["datetime"] = (dt + datetime.timedelta(0, - 600 + int(next(rdata) * 1200)))
             rec["B13011"] = next(rdata) * 10.
             maybe_insert(rec, aname)
         del rec["B13011"]
@@ -117,7 +117,7 @@ def fill_volnd(db):
         rec["level"] = (1,)
         rec["trange"] = (0,)
         for dt in everyxhours(12):
-            rec["date"] = dt
+            rec["datetime"] = dt
             rec["B10004"] = float(70000 + next(rdata) * 35000)
             maybe_insert(rec, aname)
         del rec["B10004"]
@@ -126,5 +126,4 @@ def fill_volnd(db):
     # pseudoana export and mixed data types
     rec.clear()
     rec.update(ana_id=1, B01001=12, B01002=123, B01019="Test of long station name", rep_memo="synop")
-    rec.set_station_context()
-    db.insert(rec, False, True)
+    db.insert_station_data(rec, False, True)

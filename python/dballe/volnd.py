@@ -46,6 +46,7 @@ import dballe
 from collections import namedtuple
 import datetime
 import sys
+import warnings
 
 
 #
@@ -251,10 +252,13 @@ class LevelIndex(ListIndex):
     as they come out of the database.
     """
     def key_from_record(self, rec):
-        return rec["level"]
+        # Suppress deprecation warnings until we have something better
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            return rec["level"]
 
     def details_from_record(self, rec):
-        return rec["level"]
+        return self.key_from_record(rec)
 
     def short_name(self):
         return "LevelIndex["+str(len(self))+"]"
@@ -269,10 +273,13 @@ class TimeRangeIndex(ListIndex):
     order as they come out of the database.
     """
     def key_from_record(self, rec):
-        return rec["trange"]
+        # Suppress deprecation warnings until we have something better
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            return rec["trange"]
 
     def details_from_record(self, rec):
-        return rec["trange"]
+        return self.key_from_record(rec)
 
     def short_name(self):
         return "TimeRangeIndex["+str(len(self))+"]"
@@ -287,10 +294,13 @@ class DateTimeIndex(ListIndex):
     the same order as they come out of the database.
     """
     def key_from_record(self, rec):
-        return rec["date"]
+        # Suppress deprecation warnings until we have something better
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            return rec["date"]
 
     def details_from_record(self, rec):
-        return rec["date"]
+        return self.key_from_record(rec)
 
     def short_name(self):
         return "DateTimeIndex["+str(len(self))+"]"
