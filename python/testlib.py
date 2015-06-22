@@ -72,6 +72,7 @@ def fill_volnd(db):
         attrs.clear()
         attrs[aname] = next(rattr) * 100.
         for code in rec:
+            if not code.startswith("B"): continue
             db.attr_insert(code, attrs)
 
     # Enter some sample data

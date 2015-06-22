@@ -35,6 +35,8 @@ static PyGetSetDef dpy_DB_getsetters[] = {
 
 static PyObject* dpy_DB_connect(PyTypeObject *type, PyObject *args, PyObject* kw)
 {
+    if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use DB.connect_from_url instead of DB.connect", 1))
+        return NULL;
     static const char* kwlist[] = { "dsn", "user", "password", NULL };
     const char* dsn;
     const char* user = "";
@@ -139,6 +141,8 @@ static PyObject* dpy_DB_insert(dpy_DB* self, PyObject* args, PyObject* kw)
     dpy_Record* record;
     int can_replace = 0;
     int station_can_add = 0;
+    if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use DB.insert_station_data or DB.insert_data instead of DB.insert", 1))
+        return NULL;
     if (!PyArg_ParseTupleAndKeywords(args, kw, "O!|ii", const_cast<char**>(kwlist), &dpy_Record_Type, &record, &can_replace, &station_can_add))
         return NULL;
 
@@ -154,11 +158,39 @@ static PyObject* dpy_DB_insert(dpy_DB* self, PyObject* args, PyObject* kw)
             self->db->insert_data(vals, can_replace, station_can_add);
         }
         Py_RETURN_NONE;
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+static PyObject* dpy_DB_insert_station_data(dpy_DB* self, PyObject* args, PyObject* kw)
+{
+    static const char* kwlist[] = { "record", "can_replace", "can_add_stations", NULL };
+    dpy_Record* record;
+    int can_replace = 0;
+    int station_can_add = 0;
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "O!|ii", const_cast<char**>(kwlist), &dpy_Record_Type, &record, &can_replace, &station_can_add))
+        return NULL;
+
+    try {
+        StationValues vals(*record->rec);
+        self->db->insert_station_data(vals, can_replace, station_can_add);
+        Py_RETURN_NONE;
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+static PyObject* dpy_DB_insert_data(dpy_DB* self, PyObject* args, PyObject* kw)
+{
+    static const char* kwlist[] = { "record", "can_replace", "can_add_stations", NULL };
+    dpy_Record* record;
+    int can_replace = 0;
+    int station_can_add = 0;
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "O!|ii", const_cast<char**>(kwlist), &dpy_Record_Type, &record, &can_replace, &station_can_add))
+        return NULL;
+
+    try {
+        DataValues vals(*record->rec);
+        self->db->insert_data(vals, can_replace, station_can_add);
+        Py_RETURN_NONE;
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static void db_load_file(DB* db, FILE* file, bool close_on_exit, const std::string& name)
@@ -519,7 +551,7 @@ static PyObject* dpy_DB_export_to_file(dpy_DB* self, PyObject* args, PyObject* k
 
 static PyMethodDef dpy_DB_methods[] = {
     {"connect",           (PyCFunction)dpy_DB_connect, METH_VARARGS | METH_KEYWORDS | METH_CLASS,
-        "Create a DB connecting to an ODBC source" },
+        "(deprecated) Create a DB connecting to an ODBC source" },
     {"connect_from_file", (PyCFunction)dpy_DB_connect_from_file, METH_VARARGS | METH_CLASS,
         "Create a DB connecting to a SQLite file" },
     {"connect_from_url",  (PyCFunction)dpy_DB_connect_from_url, METH_VARARGS | METH_CLASS,
@@ -533,7 +565,11 @@ static PyMethodDef dpy_DB_methods[] = {
     {"reset",             (PyCFunction)dpy_DB_reset, METH_VARARGS,
         "Reset the database, removing all existing Db-All.e tables and re-creating them empty." },
     {"insert",            (PyCFunction)dpy_DB_insert, METH_VARARGS | METH_KEYWORDS,
-        "Insert a record in the database" },
+        "(deprecated)Insert a record in the database" },
+    {"insert_station_data", (PyCFunction)dpy_DB_insert, METH_VARARGS | METH_KEYWORDS,
+        "Insert station values in the database" },
+    {"insert_data",       (PyCFunction)dpy_DB_insert, METH_VARARGS | METH_KEYWORDS,
+        "Insert data values in the database" },
     {"load",              (PyCFunction)dpy_DB_load, METH_VARARGS,
         "Load a file object in the database" },
     {"remove_station_data", (PyCFunction)dpy_DB_remove_station_data, METH_VARARGS,
@@ -687,7 +723,6 @@ dpy_DB* db_create(std::unique_ptr<DB> db)
         return NULL;
     }
 
-    result = (dpy_DB*)PyObject_Init((PyObject*)result, &dpy_DB_Type);
     result->db = db.release();
     result->attr_rec = attr_rec;
     return result;

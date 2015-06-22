@@ -12,6 +12,8 @@ import unittest
 
 class DballeTest(unittest.TestCase):
     def setUp(self):
+        if not hasattr(self, "assertCountEqual"):
+            self.assertCountEqual = self.assertItemsEqual
         self.db = dballe.DB.connect_test()
         self.db.connect_test();
         self.db.reset()
@@ -62,7 +64,7 @@ class DballeTest(unittest.TestCase):
         count = 0
         for result in cur:
             self.assertEqual(cur.remaining, 2-count-1)
-            var = result.var()
+            var = result.var(result["var"])
             assert var.code in expected
             self.assertEqual(var.enq(), expected[var.code])
             del expected[var.code]
@@ -70,7 +72,7 @@ class DballeTest(unittest.TestCase):
 
     def testQueryAttrs(self):
         data = self.db.query_attrs("B01011", self.attr_ref)
-        self.assertEqual(len(data), 2)
+        self.assertCountEqual(data.keys(), ["B33007", "B33036"])
 
         expected = {}
         expected["B33007"] = 50
@@ -87,7 +89,7 @@ class DballeTest(unittest.TestCase):
     def testQuerySomeAttrs(self):
         # Try limiting the set of wanted attributes
         data = self.db.query_attrs("B01011", self.attr_ref, ("B33036",))
-        self.assertEqual(len(data), 1)
+        self.assertCountEqual(data.keys(), ["B33036"])
         self.assertEqual(data.vars(), (dballe.var("B33036", 75),))
 
     def testQueryCursorAttrs(self):
