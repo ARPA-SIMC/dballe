@@ -566,9 +566,9 @@ static PyMethodDef dpy_DB_methods[] = {
         "Reset the database, removing all existing Db-All.e tables and re-creating them empty." },
     {"insert",            (PyCFunction)dpy_DB_insert, METH_VARARGS | METH_KEYWORDS,
         "(deprecated)Insert a record in the database" },
-    {"insert_station_data", (PyCFunction)dpy_DB_insert, METH_VARARGS | METH_KEYWORDS,
+    {"insert_station_data", (PyCFunction)dpy_DB_insert_station_data, METH_VARARGS | METH_KEYWORDS,
         "Insert station values in the database" },
-    {"insert_data",       (PyCFunction)dpy_DB_insert, METH_VARARGS | METH_KEYWORDS,
+    {"insert_data",       (PyCFunction)dpy_DB_insert_data, METH_VARARGS | METH_KEYWORDS,
         "Insert data values in the database" },
     {"load",              (PyCFunction)dpy_DB_load, METH_VARARGS,
         "Load a file object in the database" },
@@ -691,7 +691,7 @@ bool db_read_attrlist(PyObject* attrs, db::AttrList& codes)
     if (!attrs) return true;
 
     pyo_unique_ptr iter(PyObject_GetIter(attrs));
-    if (iter == NULL) return false;
+    if (!iter) return false;
 
     try {
         while (PyObject* iter_item = PyIter_Next(iter)) {
