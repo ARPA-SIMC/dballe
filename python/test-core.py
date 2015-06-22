@@ -37,14 +37,11 @@ class Varinfo(unittest.TestCase):
 
 class Vartable(unittest.TestCase):
     def testEmpty(self):
-        table = dballe.Vartable()
-        self.assertEqual(table.id, None)
-        self.assertEqual(str(table), "<empty>")
-        self.assertEqual(repr(table), "Vartable()")
-        self.assertRaises(KeyError, table.query, "B01001")
+        with self.assertRaises(TypeError):
+            dballe.Vartable()
 
     def testCreate(self):
-        table = dballe.Vartable.get("dballe")
+        table = dballe.Vartable("dballe")
         self.assertEqual(table.id, "dballe")
         self.assertEqual(str(table), "dballe")
         self.assertEqual(repr(table), "Vartable('dballe')")
@@ -126,6 +123,7 @@ class Var(unittest.TestCase):
         var = dballe.var("B01001")
         self.assertEqual(str(var), "None")
         self.assertEqual(repr(var), "Var('B01001', None)")
+        self.assertEqual(var.format(), "")
         self.assertEqual(var.format("foo"), "foo")
 
         var = dballe.var("B05001", 12.4)

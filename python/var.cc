@@ -13,7 +13,10 @@ using namespace wreport;
 
 extern "C" {
 
-static PyObject* dpy_Var_code(dpy_Var* self, void* closure) { return format_varcode(self->var.code()); }
+static PyObject* dpy_Var_code(dpy_Var* self, void* closure)
+{
+    return format_varcode(self->var.code());
+}
 static PyObject* dpy_Var_isset(dpy_Var* self, void* closure) {
     if (self->var.isset())
         Py_RETURN_TRUE;
@@ -35,33 +38,21 @@ static PyObject* dpy_Var_enqi(dpy_Var* self)
 {
     try {
         return PyInt_FromLong(self->var.enqi());
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_Var_enqd(dpy_Var* self)
 {
     try {
         return PyFloat_FromDouble(self->var.enqd());
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_Var_enqc(dpy_Var* self)
 {
     try {
         return PyUnicode_FromString(self->var.enqc());
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_Var_enq(dpy_Var* self)
@@ -99,8 +90,8 @@ static PyMethodDef dpy_Var_methods[] = {
     {"enqd", (PyCFunction)dpy_Var_enqd, METH_NOARGS, "get the value of the variable, as a float" },
     {"enqc", (PyCFunction)dpy_Var_enqc, METH_NOARGS, "get the value of the variable, as a str" },
     {"enq", (PyCFunction)dpy_Var_enq, METH_NOARGS, "get the value of the variable, as int, float or str according the variable definition" },
-    {"get", (PyCFunction)dpy_Var_get, METH_VARARGS, "get the value of the variable, with a default if it is unset" },
-    {"format", (PyCFunction)dpy_Var_format, METH_VARARGS, "format the value of the variable to a string" },
+    {"get", (PyCFunction)dpy_Var_get, METH_VARARGS | METH_KEYWORDS, "get the value of the variable, with a default if it is unset" },
+    {"format", (PyCFunction)dpy_Var_format, METH_VARARGS | METH_KEYWORDS, "format the value of the variable to a string" },
     {NULL}
 };
 
@@ -225,7 +216,21 @@ PyTypeObject dpy_Var_Type = {
     0,                         // tp_setattro
     0,                         // tp_as_buffer
     Py_TPFLAGS_DEFAULT,        // tp_flags
-    "DB-All.e Variable",       // tp_doc
+    R"(
+        Var holds a measured value, which can be integer, float or string, and
+        a `dballe.Varinfo`_ with all available information (description, unit,
+        precision, ...) related to it.
+
+        Var objects cannot be created directly, and need to be instantiated via
+        a `dballe.Vartable`_ object. To create a Var using the default DB-All.e
+        vartable, use the method `dballe.var()`_.
+
+        Examples::
+
+            v = dballe.var("B12101", 32.5)
+            # v.info returns detailed informations about the variable in a Varinfo object.
+            print("%s: %s %s %s" % (v.code, str(v), v.info.unit, v.info.desc))
+    )",                        // tp_doc
     0,                         // tp_traverse
     0,                         // tp_clear
     (richcmpfunc)dpy_Var_richcompare, // tp_richcompare
@@ -270,7 +275,6 @@ dpy_Var* var_create(const wreport::Varinfo& v)
 {
     dpy_Var* result = PyObject_New(dpy_Var, &dpy_Var_Type);
     if (!result) return NULL;
-    result = (dpy_Var*)PyObject_Init((PyObject*)result, &dpy_Var_Type);
     new (&result->var) Var(v);
     return result;
 }
@@ -279,7 +283,6 @@ dpy_Var* var_create(const wreport::Varinfo& v, int val)
 {
     dpy_Var* result = PyObject_New(dpy_Var, &dpy_Var_Type);
     if (!result) return NULL;
-    result = (dpy_Var*)PyObject_Init((PyObject*)result, &dpy_Var_Type);
     new (&result->var) Var(v, val);
     return result;
 }
@@ -288,7 +291,6 @@ dpy_Var* var_create(const wreport::Varinfo& v, double val)
 {
     dpy_Var* result = PyObject_New(dpy_Var, &dpy_Var_Type);
     if (!result) return NULL;
-    result = (dpy_Var*)PyObject_Init((PyObject*)result, &dpy_Var_Type);
     new (&result->var) Var(v, val);
     return result;
 }
@@ -297,7 +299,6 @@ dpy_Var* var_create(const wreport::Varinfo& v, const char* val)
 {
     dpy_Var* result = PyObject_New(dpy_Var, &dpy_Var_Type);
     if (!result) return NULL;
-    result = (dpy_Var*)PyObject_Init((PyObject*)result, &dpy_Var_Type);
     new (&result->var) Var(v, val);
     return result;
 }
@@ -306,7 +307,6 @@ dpy_Var* var_create(const wreport::Var& v)
 {
     dpy_Var* result = PyObject_New(dpy_Var, &dpy_Var_Type);
     if (!result) return NULL;
-    result = (dpy_Var*)PyObject_Init((PyObject*)result, &dpy_Var_Type);
     new (&result->var) Var(v);
     return result;
 }

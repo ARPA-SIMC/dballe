@@ -125,6 +125,11 @@ def document_members(cls):
 
     # Document vars and get/setters
     for fullname, name, m in member_vars:
+        print(".. _{}.{}:".format(cls.__name__, name))
+    for fullname, name, m in member_funcs:
+        print(".. _{}.{}():".format(cls.__name__, name))
+    print()
+    for fullname, name, m in member_vars:
         print_indented(2, name)
         print_indented(4, inspect.getdoc(m))
 
@@ -160,41 +165,10 @@ document_members(dballe)
 
 print("""
 and several classes, documented in their own sections.
-
-dballe.Var
-----------
-
-a Var holds a measured value and all available information related to it.
-
-To create a Var, use the method dballe.var.
-
-Its members are:
-
 """)
 
-document_members(dballe.Var)
-
-print("""
-
-Examples:
-
-::
-
-    v = dballe.var("B12101", 32.5)
-    # v.info returns detailed informations about the variable in a Varinfo object.
-    print "%s: %s %s %s" % (v.code, str(v), v.info.unit, v.info.desc)
-
-dballe.Varinfo
---------------
-
-a Varinfo holds all possible information about a variable, such as its
-measurement unit, description and number of significant digits.
-
-Its members are:
-""")
-
-document_members(dballe.Varinfo)
-
+document_class(dballe.Var)
+document_class(dballe.Varinfo)
 document_class(dballe.Vartable)
 
 print("""

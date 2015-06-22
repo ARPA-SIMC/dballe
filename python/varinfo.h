@@ -28,6 +28,12 @@ typedef struct {
     wreport::Varinfo info;
 } dpy_Varinfo;
 
+PyAPI_DATA(PyTypeObject) dpy_Varinfo_Type;
+
+#define dpy_Varinfo_Check(ob) \
+    (Py_TYPE(ob) == &dpy_Varinfo_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), &dpy_Varinfo_Type))
+
 }
 
 namespace dballe {

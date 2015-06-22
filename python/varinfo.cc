@@ -81,7 +81,7 @@ static PyObject* dpy_Varinfo_repr(dpy_Varinfo* self)
 }
 
 
-static PyTypeObject dpy_Varinfo_Type = {
+PyTypeObject dpy_Varinfo_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "dballe.Varinfo",         // tp_name
     sizeof(dpy_Varinfo),  // tp_basicsize
@@ -102,7 +102,14 @@ static PyTypeObject dpy_Varinfo_Type = {
     0,                         // tp_setattro
     0,                         // tp_as_buffer
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, // tp_flags
-    "DB-All.e Varinfo object", // tp_doc
+    R"(
+    Varinfo object holds all possible information about a variable, such as its
+    measurement unit, description and number of significant digits.
+
+    Varinfo objects cannot be instantiated directly, but then can be created
+    from `dballe.Vartable`_ objects, or using the `dballe.varinfo()`_ function.
+    function.
+    )",                        // tp_doc
     0,                         // tp_traverse
     0,                         // tp_clear
     0,                         // tp_richcompare
@@ -131,7 +138,6 @@ dpy_Varinfo* varinfo_create(const Varinfo& v)
 {
     dpy_Varinfo* result = PyObject_New(dpy_Varinfo, &dpy_Varinfo_Type);
     if (!result) return NULL;
-    result = (dpy_Varinfo*)PyObject_Init((PyObject*)result, &dpy_Varinfo_Type);
     new (&result->info) Varinfo(v);
     return result;
 }
