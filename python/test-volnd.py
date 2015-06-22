@@ -352,31 +352,3 @@ class TestRead(unittest.TestCase):
 if __name__ == "__main__":
     from testlib import main
     main("test_volnd")
-
-# This is already automatically done
-#if len(sys.argv) == 1:
-#	unittest.main()
-#else:
-#	suite = unittest.TestLoader().loadTestsFromNames(
-#			map(lambda x: __name__ + '.' + x, sys.argv[1:]))
-#	unittest.TextTestRunner().run(suite)
-
-
-
-#query = dballe.Record()
-##query.set("var", "B12001")
-##vars = readv7d(db.query(query), (AnaIndex,NetworkIndex))
-##vars = readv7d(db.query(query), (AnaIndex,LevelIndex))
-##vars = read(db.query(query), (AnaIndex(),DateTimeIndex()))
-#
-#query.set("rep_memo", "temp")
-#vars = read(db.query(query), (AnaIndex(),IntervalIndex(datetime.datetime(2007,01,11,11,24), datetime.timedelta(0, 120), datetime.timedelta(0, 60))))
-#
-#print vars
-##print vars['B12001'].dims[0][:20]
-##print vars['B12001'].dims[1][:20]
-#
-##print "Lat:", res[0][:10]
-##print "Lon:", res[1][:10]
-##print "Id :", res[2][:10]
-
