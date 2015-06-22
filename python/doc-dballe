@@ -77,6 +77,18 @@ c_argspecs = {
     "Cursor.query_attrs": "(attrs=None)",
 }
 
+def document_class(cls):
+    name = cls.__name__
+    print()
+    print("dballe.{}".format(name))
+    print("-" * (len(name) + 7))
+    print()
+    print(inspect.getdoc(cls))
+    print()
+    print("Members")
+    print("```````")
+    document_members(cls)
+
 def document(obj):
     if obj.__doc__ == None: return
 
@@ -180,6 +192,8 @@ Its members are:
 """)
 
 document_members(dballe.Varinfo)
+
+document_class(dballe.Vartable)
 
 print("""
 dballe.Record

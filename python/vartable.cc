@@ -11,26 +11,30 @@ using namespace wreport;
 
 extern "C" {
 
-typedef struct {
-    PyObject_HEAD
-    const wreport::Vartable* table;
-} dpy_Vartable;
-
 static PyObject* dpy_Vartable_get(PyTypeObject *type, PyObject *args, PyObject *kw);
 static PyObject* dpy_Vartable_query(dpy_Vartable *self, PyObject *args, PyObject *kw);
 
 static PyMethodDef dpy_Vartable_methods[] = {
-    {"get",   (PyCFunction)dpy_Vartable_get, METH_VARARGS | METH_CLASS, "Create a Vartable for the table with the given name" },
     {"query", (PyCFunction)dpy_Vartable_query, METH_VARARGS, "Query the table, returning a Varinfo object or raising an exception" },
     {NULL}
 };
 
+static int dpy_Vartable_init(dpy_Vartable* self, PyObject* args, PyObject* kw)
+{
+    const char* table_name = 0;
+    if (!PyArg_ParseTuple(args, "s", &table_name))
+        return -1;
+
+    try {
+        // Make it point to the table we want
+        self->table = wreport::Vartable::get(table_name);
+        return 0;
+    } DBALLE_CATCH_RETURN_INT
+}
+
 static PyObject* dpy_Vartable_id(dpy_Vartable* self, void* closure)
 {
-    if (self->table)
-        return PyUnicode_FromString(self->table->id().c_str());
-    else
-        Py_RETURN_NONE;
+    return PyUnicode_FromString(self->table->id().c_str());
 }
 
 static PyGetSetDef dpy_Vartable_getsetters[] = {
@@ -40,35 +44,21 @@ static PyGetSetDef dpy_Vartable_getsetters[] = {
 
 static PyObject* dpy_Vartable_str(dpy_Vartable* self)
 {
-    if (self->table)
-        return PyUnicode_FromString(self->table->id().c_str());
-    else
-        return PyUnicode_FromString("<empty>");
+    return PyUnicode_FromString(self->table->id().c_str());
 }
 
 static PyObject* dpy_Vartable_repr(dpy_Vartable* self)
 {
-    if (self->table)
-        return PyUnicode_FromFormat("Vartable('%s')", self->table->id().c_str());
-    else
-        return PyUnicode_FromString("Vartable()");
+    return PyUnicode_FromFormat("Vartable('%s')", self->table->id().c_str());
 }
 
 static int dpy_Vartable_len(dpy_Vartable* self)
 {
-    if (self->table)
-        return self->table->size();
-    else
-        return 0;
+    return self->table->size();
 }
 
 static PyObject* dpy_Vartable_item(dpy_Vartable* self, Py_ssize_t i)
 {
-    if (!self->table)
-    {
-        PyErr_SetString(PyExc_IndexError, "table is empty");
-        return NULL;
-    }
     // We can cast to size_t: since we provide sq_length, i is supposed to
     // always be positive
     if ((size_t)i >= self->table->size())
@@ -76,17 +66,13 @@ static PyObject* dpy_Vartable_item(dpy_Vartable* self, Py_ssize_t i)
         PyErr_SetString(PyExc_IndexError, "table index out of range");
         return NULL;
     }
-    return (PyObject*)varinfo_create(Varinfo((*self->table)[i]));
+    try {
+        return (PyObject*)varinfo_create(Varinfo((*self->table)[i]));
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_Vartable_getitem(dpy_Vartable* self, PyObject* key)
 {
-    if (!self->table)
-    {
-        PyErr_SetString(PyExc_KeyError, "table is empty");
-        return NULL;
-    }
-
     if (PyIndex_Check(key)) {
         Py_ssize_t i = PyNumber_AsSsize_t(key, PyExc_IndexError);
         if (i == -1 && PyErr_Occurred())
@@ -102,21 +88,17 @@ static PyObject* dpy_Vartable_getitem(dpy_Vartable* self, PyObject* key)
 
     try {
         return (PyObject*)varinfo_create(self->table->query(resolve_varcode(varname)));
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static int dpy_Vartable_contains(dpy_Vartable* self, PyObject *value)
 {
-    if (!self->table) return 0;
-
     string varname;
     if (string_from_python(value, varname))
         return -1;
-    return self->table->contains(resolve_varcode(varname)) ? 1 : 0;
+    try {
+        return self->table->contains(resolve_varcode(varname)) ? 1 : 0;
+    } DBALLE_CATCH_RETURN_INT
 }
 
 static PySequenceMethods dpy_Vartable_sequence = {
@@ -136,7 +118,7 @@ static PyMappingMethods dpy_Vartable_mapping = {
     0,                // __setitem__
 };
 
-static PyTypeObject dpy_Vartable_Type = {
+PyTypeObject dpy_Vartable_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "dballe.Vartable",         // tp_name
     sizeof(dpy_Vartable),  // tp_basicsize
@@ -157,7 +139,19 @@ static PyTypeObject dpy_Vartable_Type = {
     0,                         // tp_setattro
     0,                         // tp_as_buffer
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, // tp_flags
-    "DB-All.e Vartable object", // tp_doc
+    R"(
+        Collection of Varinfo objects indexed by WMO BUFR/CREX table B code.
+
+        A Vartable is instantiated by the name (without extension) of the table
+        file installed in wreport's data directory (normally,
+        ``/usr/share/wreport/``)::
+
+            table = dballe.Vartable("B0000000000000023000")
+            print(table["B12101"].desc)
+
+            for i in table:
+                print(i.code, i.desc)
+    )", // tp_doc
     0,                         // tp_traverse
     0,                         // tp_clear
     0,                         // tp_richcompare
@@ -172,27 +166,10 @@ static PyTypeObject dpy_Vartable_Type = {
     0,                         // tp_descr_get
     0,                         // tp_descr_set
     0,                         // tp_dictoffset
-    0,                         // tp_init
+    (initproc)dpy_Vartable_init, // tp_init
     0,                         // tp_alloc
     0,                         // tp_new
 };
-
-static PyObject* dpy_Vartable_get(PyTypeObject *type, PyObject *args, PyObject *kw)
-{
-    dpy_Vartable* result = 0;
-    const char* table_name = 0;
-
-    if (!PyArg_ParseTuple(args, "s", &table_name))
-        return NULL;
-
-    // Create a new Vartable
-    result = (dpy_Vartable*)PyObject_CallObject((PyObject*)&dpy_Vartable_Type, NULL);
-
-    // Make it point to the table we want
-    result->table = wreport::Vartable::get(table_name);
-
-    return (PyObject*)result;
-}
 
 static PyObject* dpy_Vartable_query(dpy_Vartable *self, PyObject *args, PyObject *kw)
 {
@@ -206,11 +183,7 @@ static PyObject* dpy_Vartable_query(dpy_Vartable *self, PyObject *args, PyObject
         return NULL;
     try {
         return (PyObject*)varinfo_create(self->table->query(resolve_varcode(varname)));
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 }
