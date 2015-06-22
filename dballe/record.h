@@ -26,6 +26,9 @@ struct Record
     /// Remove all contents from the record
     virtual void clear() = 0;
 
+    /// Remove all Bxxyyy keys from the record, leaving the rest intact
+    virtual void clear_vars() = 0;
+
     /**
      * Set a key to an integer value.
      *

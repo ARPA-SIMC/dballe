@@ -480,7 +480,7 @@ struct CursorDataBase : public CursorSorted<QUEUE>
     void to_record(Record& rec)
     {
         this->to_record_station(rec);
-        core::Record::downcast(rec).clear_vars();
+        rec.clear_vars();
         this->to_record_value(rec);
         rec.seti("context_id", this->cur_idx);
         if (this->modifiers & DBA_DB_MODIFIER_ANAEXTRA)

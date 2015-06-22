@@ -108,6 +108,9 @@ PyObject* datetime_to_python(const Datetime& dt);
 /// Convert a python datetime object to a Datetime
 int datetime_from_python(PyObject* dt, Datetime& out);
 
+/// Convert a sequence of two python datetime objects to a DatetimeRange
+int datetimerange_from_python(PyObject* dt, DatetimeRange& out);
+
 /// Convert a Level to a python 4-tuple
 PyObject* level_to_python(const Level& lev);
 

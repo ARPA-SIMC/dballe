@@ -131,6 +131,24 @@ int datetime_from_python(PyObject* dt, Datetime& out)
     return 0;
 }
 
+int datetimerange_from_python(PyObject* val, DatetimeRange& out)
+{
+    if (PySequence_Size(val) != 2)
+    {
+        PyErr_SetString(PyExc_TypeError, "Expected a 2-tuple of datetime() objects");
+        return -1;
+    }
+    pyo_unique_ptr dtmin(PySequence_GetItem(val, 0));
+    pyo_unique_ptr dtmax(PySequence_GetItem(val, 1));
+
+    if (datetime_from_python(dtmin, out.min))
+        return -1;
+    if (datetime_from_python(dtmax, out.max))
+        return -1;
+
+    return 0;
+}
+
 namespace {
 
 /// Convert an integer to Python, returning None if it is MISSING_INT

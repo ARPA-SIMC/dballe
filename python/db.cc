@@ -196,6 +196,7 @@ static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args)
             FILE* f = fmemopen(buf, len, "r");
             if (!f) return nullptr;
             db_load_file(self->db, f, true, repr);
+            Py_INCREF(Py_None);
             return Py_None;
         } else {
             // Duplicate the file descriptor because both python and libc will want to
@@ -216,6 +217,7 @@ static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args)
             }
 
             db_load_file(self->db, f, true, repr);
+            Py_INCREF(Py_None);
             return Py_None;
         }
     } catch (wreport::error& e) {

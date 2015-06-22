@@ -293,8 +293,7 @@ void CursorData::to_record(Record& rec)
     to_record_ltr(rec);
     to_record_datetime(rec);
 
-    auto& r = core::Record::downcast(rec);
-    r.clear_vars();
+    rec.clear_vars();
     rec.set(newvar(results[cur].out_varcode, results[cur].out_value));
 
     if (modifiers & DBA_DB_MODIFIER_ANAEXTRA)
@@ -397,8 +396,7 @@ void CursorBest::to_record(Record& rec)
     to_record_ltr(rec);
     to_record_datetime(rec);
 
-    auto& r = core::Record::downcast(rec);
-    r.clear_vars();
+    rec.clear_vars();
     rec.set(newvar(results[cur].out_varcode, results[cur].out_value));
 
     if (modifiers & DBA_DB_MODIFIER_ANAEXTRA)

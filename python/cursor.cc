@@ -176,7 +176,7 @@ dpy_Cursor* cursor_create(dpy_DB* db, std::unique_ptr<db::Cursor> cur)
 {
     dpy_Cursor* result = PyObject_New(dpy_Cursor, &dpy_Cursor_Type);
     if (!result) return NULL;
-    result = (dpy_Cursor*)PyObject_Init((PyObject*)result, &dpy_Cursor_Type);
+    //result = (dpy_Cursor*)PyObject_Init((PyObject*)result, &dpy_Cursor_Type);
     Py_INCREF(db);
     result->db = db;
     result->cur = cur.release();

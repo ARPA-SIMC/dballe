@@ -153,10 +153,8 @@ public:
 
 	Record& operator=(const Record& rec);
 
-	/// Remove all variables from the record, leaving the keywords intact
-	void clear_vars();
-
     void clear() override;
+    void clear_vars() override;
     void seti(const char* key, int val) override;
     void setd(const char* key, double val) override;
     void setc(const char* key, const char* val) override;

@@ -5,12 +5,13 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import dballe
-from six import string_types
 import datetime as dt
 import unittest
 
 class RecordTest(unittest.TestCase):
     def setUp(self):
+        if not hasattr(self, "assertCountEqual"):
+            self.assertCountEqual = self.assertItemsEqual
         self.r = dballe.Record()
         self.r["block"] = 1
         self.r["station"] = 123
@@ -37,9 +38,9 @@ class RecordTest(unittest.TestCase):
         self.assertEqual(self.r.get("datemax", None), dt.datetime(2007, 2, 1, 1, 2, 3))
 
     def testVar(self):
-        self.assertEqual(self.r.var().code, "B12101")
+        with self.assertRaises(TypeError):
+            self.r.var()
         self.assertEqual(self.r.var("B12101").code, "B12101")
-        self.assertEqual(self.r.var(code="B12101").code, "B12101")
 
     def testKey(self):
         self.assertEqual(self.r.key("lon").code, "B00000")
@@ -122,8 +123,13 @@ class RecordTest(unittest.TestCase):
 
     def testKeys(self):
         res = self.r.keys();
-        self.assertEqual(len(res), len(self.knownvars))
-        self.assertEqual(sorted(res), sorted(self.knownvars))
+        self.assertCountEqual(res, [
+            "lat", "lon",
+            "year", "month", "day", "hour", "min", "sec",
+            "leveltype1", "l1",
+            "pindicator", "p1", "p2",
+            "var",
+            "B12101", "B01002", "B01001"])
 
     def testVars(self):
         r = dballe.Record()
@@ -141,9 +147,7 @@ class RecordTest(unittest.TestCase):
         r["B33036"] = 75
         r["B12101"] = 273.15
         res = []
-        print("ZA")
         ri = iter(r)
-        print(ri)
         res.append(next(ri))
         res.append(next(ri))
         self.assertEqual(res, ["B12101", "B33036"])
@@ -365,111 +369,7 @@ class RecordTest(unittest.TestCase):
         with self.assertRaises(KeyError):
             a["trange"]
 
-class DescribeTest(unittest.TestCase):
-    def testLevel(self):
-        self.assertIn("surface", dballe.describe_level(1))
-
-    def testTrange(self):
-        self.assertIn("Accumulation", dballe.describe_trange(1))
-
-#class BulletinTest(unittest.TestCase):
-#    def testBUFRCreation(self):
-#        # Generate a synop message
-#        msg = dballe.BufrBulletin()
-#        msg.entre = 98
-#        msg.subcentre = 0
-#        msg.master_table = 14
-#        msg.local_table = 0
-#        msg.type = 0
-#        msg.subtype = 255
-#        msg.localsubtype = 1
-#        msg.edition = 4
-#        msg.rep_year = 2004
-#        msg.rep_month = 11
-#        msg.rep_day = 30
-#        msg.rep_hour = 12
-#        msg.rep_minute = 0
-#        msg.rep_second = 0
-#        msg.datadesc_append("D07005")
-#        msg.datadesc_append("B13011")
-#        msg.datadesc_append("B13013")
-#        self.assertRaises(Exception, msg.obtain_subset, 0)
-#        msg.load_tables()
-#        subset = msg.obtain_subset(0)
-#        subset.store_variable_i("B01001", 60)
-#        subset.store_variable_i("B01002", 150)
-#        subset.store_variable_i("B02001", 1)
-#        subset.store_variable_i("B04001", 2004)
-#        subset.store_variable_i("B04002", 11)
-#        subset.store_variable_i("B04003", 30)
-#        subset.store_variable_i("B04004", 12)
-#        subset.store_variable_i("B04005", 0)
-#        subset.store_variable_d("B05001", 33.88000)
-#        subset.store_variable_d("B06001", -5.53000)
-#        subset.store_variable_d("B07001", 560)
-#        subset.store_variable_d("B10004", 94190)
-#        subset.store_variable_d("B10051", 100540)
-#        subset.store_variable_d("B10061", -180)
-#        subset.store_variable_i("B10063", 8)
-#        subset.store_variable_d("B11011", 80)
-#        subset.store_variable_d("B11012", 4.0)
-#        subset.store_variable_d("B12004", 289.2)
-#        subset.store_variable_d("B12006", 285.7)
-#        subset.store_variable_undef("B13003")
-#        subset.store_variable_d("B20001", 8000)
-#        subset.store_variable_i("B20003", 2)
-#        subset.store_variable_i("B20004", 6)
-#        subset.store_variable_i("B20005", 2)
-#        subset.store_variable_d("B20010", 100)
-#        subset.store_variable_i("B08002", 1)
-#        subset.store_variable_d("B20011", 8)
-#        subset.store_variable_d("B20013", 250)
-#        subset.store_variable_i("B20012", 39)
-#        subset.store_variable_i("B20012", 61)
-#        subset.store_variable_i("B20012", 60)
-#        subset.store_variable_i("B08002", 1)
-#        subset.store_variable_i("B20011", 2)
-#        subset.store_variable_i("B20012", 8)
-#        subset.store_variable_d("B20013", 320)
-#        subset.store_variable_i("B08002", 2)
-#        subset.store_variable_i("B20011", 5)
-#        subset.store_variable_i("B20012", 8)
-#        subset.store_variable_d("B20013", 620)
-#        subset.store_variable_i("B08002", 3)
-#        subset.store_variable_i("B20011", 2)
-#        subset.store_variable_i("B20012", 9)
-#        subset.store_variable_d("B20013", 920)
-#        subset.store_variable_undef("B08002")
-#        subset.store_variable_undef("B20011")
-#        subset.store_variable_undef("B20012")
-#        subset.store_variable_undef("B20013")
-#        subset.store_variable_d("B13011", 0.5)
-#        subset.store_variable_undef("B13013")
-#        buf = msg.encode()
-#        assert len(buf) > 8
-#        self.assertEqual(buf[:4], "BUFR")
-#        self.assertEqual(buf[-4:], "7777")
-#
-#        msg.subsets_clear()
-#        self.assertEqual(msg.subsets_size(), 0)
-#
-##class MsgTest(unittest.TestCase):
-##    def testBUFRCreation(self):
-##        msg = Msg()
-##        msg.setd("B12101", 289.2, 100, 1, 0, 0, 0, 0, 0, 0)
-##        buf = msg.encodeBUFR(0, 0, 0)
-##        assert len(buf) > 8
-##        self.assertEqual(buf[:4], "BUFR")
-##        self.assertEqual(buf[-4:], "7777")
-#
-#class FormatterTest(unittest.TestCase):
-#    def testFormatter(self):
-#        for i in range(258):
-#            dballe.Level(i, dballe.MISSING_INT).describe()
-#            dballe.Level(i, dballe.MISSING_INT, i, dballe.MISSING_INT).describe()
-#        for i in range(256):
-#            dballe.Trange(i, dballe.MISSING_INT, dballe.MISSING_INT).describe()
 
 if __name__ == "__main__":
     from testlib import main
-    main("test")
+    main("test_record")

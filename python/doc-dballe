@@ -170,56 +170,9 @@ and several classes, documented in their own sections.
 document_class(dballe.Var)
 document_class(dballe.Varinfo)
 document_class(dballe.Vartable)
+document_class(dballe.Record)
 
 print("""
-dballe.Record
--------------
-
-a Record holds one or more Var variables, together with a range of metadata
-key=value pairs. The available metadata pairs are documented in the Fortran API
-documentation.
-
-A Record is used to make queries to the database, and read results.
-
-Its members are:
-""")
-
-document_members(dballe.Record)
-
-print("""
-When creating a new record, keyword arguments can be passed and they are set as
-if Record.update(\*\*kwargs) had been called.
-
-There are 6 extra keys available in the Python API, which can be used as
-shortcuts to get and set many values in one shot:
-
- date
-   a datetime.datetime()
- datemin
-   a datetime.datetime()
- datemax
-   a datetime.datetime()
- level
-   a tuple of integers
- trange
-   a tuple of integers
- timerange
-   a tuple of integers
-
-Examples:
-
-::
-
-    rec = Record(lat=44.05, lon=11.03, B12101=22.1)
-
-    # Metadata and variables can be accessed via normal lookup
-    print rec["lat"], rec["B12101"]
-
-    # Iterating a record iterates on variable codes, but not metadata
-    for code in rec:
-        print code, rec.get(code, "undefined"), rec.var(code).info.desc
-
-
 dballe.DB
 ---------
 
