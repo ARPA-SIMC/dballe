@@ -5,7 +5,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import dballe
-from volnd import *
+from dballe.volnd import *
 import unittest, random, sys
 import datetime
 import numpy

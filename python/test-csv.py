@@ -5,7 +5,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import dballe
-import dbacsv
+from dballe import dbacsv
 import datetime
 import unittest
 import io

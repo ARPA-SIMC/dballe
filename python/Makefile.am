@@ -8,11 +8,11 @@ dballe_python_tests = test-core.py test.py test-db.py test-volnd.py test-rconver
 
 # TESTS = $(dballe_python_tests)
 
-pkgpython_PYTHON = dbacsv.py rconvert.py __init__.py volnd.py
+pkgpython_PYTHON = dballe/dbacsv.py dballe/rconvert.py dballe/__init__.py dballe/volnd.py
 
-pyexec_LTLIBRARIES = _dballe.la
+pyexec_LTLIBRARIES = dballe/_dballe.la
 
-_dballe_la_SOURCES = \
+dballe__dballe_la_SOURCES = \
     common.cc \
     vartable.cc \
     varinfo.cc \
@@ -21,9 +21,9 @@ _dballe_la_SOURCES = \
     dballe.cc \
     db.cc \
     cursor.cc
-_dballe_la_CPPFLAGS = $(PYTHON_CFLAGS)
-_dballe_la_LDFLAGS = -module -avoid-version -export-symbols-regex init_dballe
-_dballe_la_LIBADD = ../dballe/libdballe.la
+dballe__dballe_la_CPPFLAGS = $(PYTHON_CFLAGS)
+dballe__dballe_la_LDFLAGS = -module -avoid-version -export-symbols-regex init_dballe
+dballe__dballe_la_LIBADD = ../dballe/libdballe.la
 
 doc_DATA = python-dballe.rst
 
@@ -31,20 +31,17 @@ if HAVE_RST2HTML
 doc_DATA += python-dballe.html
 endif
 
-_dballe.so: _dballe.la
+dballe/_dballe.so: dballe/_dballe.la
 	ln -fs .libs/_dballe.so $@
 
-dballe: _dballe.so
-	ln -s . dballe
-
-python-dballe.rst: doc-dballe $(pkgpython_PYTHON) dballe
+python-dballe.rst: doc-dballe $(pkgpython_PYTHON) dballe/_dballe.so
 	$(PYTHON) $(srcdir)/doc-dballe > $@ || (rm -f $@; false)
 
 python-dballe.html: python-dballe.rst
 	rst2html $< > $@ || (rm -f $@; false)
 
 clean-local:
-	rm -f *.pyc dballe.so dballe
+	rm -f *.pyc dballe/*.pyc dballe/_dballe.so
 
 EXTRA_DIST = \
     doc-dballe \
@@ -59,7 +56,7 @@ EXTRA_DIST = \
 
 AM_CPPFLAGS = -I/usr/include/python$(PYTHON_VERSION) -I$(top_srcdir)
 
-check-local:
+check-local: dballe/_dballe.so
 	for test in $(dballe_python_tests); do \
 		PYTHON="$(PYTHON)" $(TESTS_ENVIRONMENT) $$test ; \
 	done

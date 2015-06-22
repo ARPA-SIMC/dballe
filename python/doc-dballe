@@ -16,8 +16,8 @@ except ImportError:
 import sys
 import inspect
 import dballe
-import volnd
-import rconvert
+import dballe.volnd
+import dballe.rconvert
 
 def print_indented(spaces, *args):
     "Print a string, indented by the given number of spaces"
@@ -113,7 +113,9 @@ def document_members(cls):
         fullname = cls.__name__ + "." + name
         if inspect.isroutine(m) and (inspect.isfunction(m) or fullname in c_argspecs):
             member_funcs.append((fullname, name, m))
-        elif inspect.isclass(m):
+        elif inspect.isclass(m) or inspect.ismodule(m):
+            pass
+        elif m.__class__.__name__ == "_Feature":
             pass
         else:
             member_vars.append((fullname, name, m))
@@ -297,30 +299,30 @@ The volnd API
 =============
 """)
 
-document(volnd)
+document(dballe.volnd)
 
 print("""
 This is the list of dimensions supported by dballe.volnd:
 """)
 
-document (volnd.AnaIndex)
-document (volnd.NetworkIndex)
-document (volnd.LevelIndex)
-document (volnd.TimeRangeIndex)
-document (volnd.DateTimeIndex)
-document (volnd.IntervalIndex)
+document (dballe.volnd.AnaIndex)
+document (dballe.volnd.NetworkIndex)
+document (dballe.volnd.LevelIndex)
+document (dballe.volnd.TimeRangeIndex)
+document (dballe.volnd.DateTimeIndex)
+document (dballe.volnd.IntervalIndex)
 
 print("""
 The data object used by ``AnaIndex`` is:
 """)
 
-document (volnd.AnaIndexEntry)
+document (dballe.volnd.AnaIndexEntry)
 
 print("""
 The extraction is done using the dballe.volnd.read function:
 """)
 
-document (volnd.read)
+document (dballe.volnd.read)
 
 print("""
 The result of dballe.volnd.read is a dict mapping output variable names to a
@@ -331,11 +333,11 @@ indexes unless the *xxx*-Index definitions have been created with
 This is the dballe.volnd.Data class documentation:
 """)
 
-document (volnd.Data)
+document (dballe.volnd.Data)
 
 print("""
 The methods of dballe.volnd.Data are:
 """)
 
-document_members(volnd.Data)
+document_members(dballe.volnd.Data)
 

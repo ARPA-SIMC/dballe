@@ -5,9 +5,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import dballe
-import volnd
-#import rpy, MA, numpy, rconvert
-import numpy, rconvert, rpy2
+from dballe import volnd, rconvert
+import numpy, rpy2
 from datetime import *
 import unittest
 
