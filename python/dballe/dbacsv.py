@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import dballe
 import csv
 import sys
+import warnings
 
 """
 Export data from DB-All.e into CSV format
@@ -101,21 +102,33 @@ class ColumnNetwork(Column):
 class ColumnDatetime(Column):
     LABEL = "Datetime"
     def add(self, row):
-        self.values.add(row["date"])
+        # Suppress deprecation warnings until we have something better
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            self.values.add(row["date"])
     def title(self):
         return str(next(iter(self.values)))
     def column_data(self, rec):
-        return [rec["date"]]
+        # Suppress deprecation warnings until we have something better
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            return [rec["date"]]
 
 class ColumnLevel(Column):
     def add(self, row):
-        self.values.add(",".join([intormiss(x) for x in row["level"]]))
+        # Suppress deprecation warnings until we have something better
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            self.values.add(",".join([intormiss(x) for x in row["level"]]))
     def title(self):
         return "Level {}".format(next(iter(self.values)))
     def column_labels(self):
         return ["Level1", "L1", "Level2", "L2"]
     def column_data(self, rec):
-        lev = rec["level"]
+        # Suppress deprecation warnings until we have something better
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            lev = rec["level"]
         return [
             intormiss(lev[0]),
             intormiss(lev[1]),
@@ -125,13 +138,19 @@ class ColumnLevel(Column):
 
 class ColumnTrange(Column):
     def add(self, row):
-        self.values.add(",".join([intormiss(x) for x in row["trange"]]))
+        # Suppress deprecation warnings until we have something better
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            self.values.add(",".join([intormiss(x) for x in row["trange"]]))
     def title(self):
         return "Time range {}".format(next(iter(self.values)))
     def column_labels(self):
         return ["Time range", "P1", "P2"]
     def column_data(self, rec):
-        tr = rec["trange"]
+        # Suppress deprecation warnings until we have something better
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            tr = rec["trange"]
         return [
             intormiss(tr[0]),
             intormiss(tr[1]),
@@ -143,14 +162,14 @@ class ColumnVar(Column):
     def add(self, row):
         self.values.add(row["var"])
     def column_data(self, rec):
-        return [rec.var().code]
+        return [rec["var"]]
 
 class ColumnValue(Column):
     LABEL = "Value"
     def add(self, row):
-        self.values.add(row.var().format(""))
+        self.values.add(row.var(row["var"]).format(""))
     def column_data(self, rec):
-        return [rec.var().format("")]
+        return [rec.var(rec["var"]).format("")]
 
 class ColumnStationData(Column):
     def __init__(self, varcode, station_data):
@@ -161,7 +180,7 @@ class ColumnStationData(Column):
     def add(self, row):
         self.values.add(row[self.varcode])
     def title(self):
-        data = next(iter(self.station_data.itervalues()))
+        data = next(iter(self.station_data.values()))
         var = data.get(self.varcode, None)
         if var is None:
             value = ""
@@ -251,10 +270,9 @@ class Exporter:
             # Load station variables for this station
             if id not in self.station_data:
                 query = dballe.Record(ana_id=id)
-                query.set_station_context()
                 items = {}
-                for record in self.db.query_data(query):
-                    v = record.var()
+                for record in self.db.query_station_data(query):
+                    v = record.var(record["var"])
                     items[v.code] = v
                     col = station_var_cols.get(v.code, None)
                     if col is None:
@@ -264,7 +282,7 @@ class Exporter:
 
             # Load attributes
             attributes = {}
-            for v in self.db.query_attrs(row["var"], row["context_id"]).vars():
+            for key, v in self.db.query_attrs(row["var"], row["context_id"]).varitems():
                 code = v.code
                 attributes[code] = v
                 col = attribute_cols.get(code, None)
@@ -298,8 +316,10 @@ class Exporter:
         Perform a DB-All.e query using the given query and output the results
         in CSV format on the given file object
         """
-        #writer = csv.writer(fd, dialect="excel")
-        writer = UnicodeCSVWriter(fd)
+        if sys.version_info[0] >= 3:
+            writer = csv.writer(fd, dialect="excel")
+        else:
+            writer = UnicodeCSVWriter(fd)
 
         self.compute_columns(query)
 
