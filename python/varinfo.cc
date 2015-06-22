@@ -20,9 +20,9 @@ static PyMethodDef dpy_Varinfo_methods[] = {
 static PyObject* dpy_Varinfo_is_string(dpy_Varinfo *self, void* closure)
 {
     if (self->info->is_string())
-        return Py_True;
+        Py_RETURN_TRUE;
     else
-        return Py_False;
+        Py_RETURN_FALSE;
 }
 static PyObject* dpy_Varinfo_var(dpy_Varinfo *self, void* closure) { return format_varcode(self->info->var); }
 static PyObject* dpy_Varinfo_len(dpy_Varinfo* self, void* closure) { return PyInt_FromLong(self->info->len); }
