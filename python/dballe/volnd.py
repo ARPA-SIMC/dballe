@@ -76,6 +76,12 @@ if os.environ.get("DBALLE_BUILDING_DOCS", "") != 'true':
     import numpy
     import numpy.ma as ma
 
+# Alternative hack to run without numpy's C code
+#from . import tinynumpy as numpy
+#class ma:
+#    @classmethod
+#    def array(cls, a, *args, **kw):
+#        return a
 
 class SkipDatum(Exception): pass
 
@@ -511,6 +517,7 @@ class Data:
             data.vals.append((self._lastPos, rec[code]))
 
     def _instantiateIntMatrix(self):
+        shape = tuple(len(d) for d in self.dims)
         if self.info.bit_ref == 0:
             # bit_ref is 0, so we are handling unsigned
             # numbers and we know the exact number of bits
@@ -518,16 +525,16 @@ class Data:
             bits = self.info.bit_len
             if bits <= 8:
                 #print 'uint8'
-                a = numpy.empty([len(d) for d in self.dims], dtype='uint8')
+                a = numpy.empty(shape, dtype='uint8')
             elif bits <= 16:
                 #print 'uint16'
-                a = numpy.empty([len(d) for d in self.dims], dtype='uint16')
+                a = numpy.empty(shape, dtype='uint16')
             elif bits <= 32:
                 #print 'uint32'
-                a = numpy.empty([len(d) for d in self.dims], dtype='uint32')
+                a = numpy.empty(shape, dtype='uint32')
             else:
                 #print 'uint64'
-                a = numpy.empty([len(d) for d in self.dims], dtype='uint64')
+                a = numpy.empty(shape, dtype='uint64')
         else:
             # We have a bit_ref, so we can have negative
             # values or we can have positive values bigger
@@ -539,15 +546,15 @@ class Data:
             #print self.info, range
             if range < 256:
                 #print 'int8'
-                a = numpy.empty([len(d) for d in self.dims], dtype='int8')
+                a = numpy.empty(shape, dtype='int8')
             elif range < 65536:
                 #print 'int16'
-                a = numpy.empty([len(d) for d in self.dims], dtype='int16')
+                a = numpy.empty(shape, dtype='int16')
             elif range <= 4294967296:
                 #print 'int32'
-                a = numpy.empty([len(d) for d in self.dims], dtype='int32')
+                a = numpy.empty(shape, dtype='int32')
             else:
-                a = numpy.empty([len(d) for d in self.dims], dtype=int)
+                a = numpy.empty(shape, dtype=int)
         return a
 
     def finalise(self):
@@ -559,11 +566,13 @@ class Data:
         if any(len(d) == 0 for d in self.dims):
             return False
 
+        shape = tuple(len(x) for x in self.dims)
+
         # Create the data array, with all values set as missing
         #print "volnd finalise instantiate"
         if self.info.is_string:
             #print self.info, "string"
-            a = numpy.empty([len(x) for x in self.dims], dtype=object)
+            a = numpy.empty(shape, dtype=object)
             # Fill the array with all the values, at the given indexes
             for pos, val in self.vals:
                 if self._checkConflicts and a[pos] is not None:
@@ -573,8 +582,8 @@ class Data:
             if self.info.scale == 0:
                 a = self._instantiateIntMatrix()
             else:
-                a = numpy.empty([len(x) for x in self.dims], dtype=float)
-            mask = numpy.ones([len(x) for x in self.dims], dtype=bool)
+                a = numpy.empty(shape, dtype=numpy.float64)
+            mask = numpy.ones(shape, dtype=numpy.bool)
 
             # Fill the array with all the values, at the given indexes
             for pos, val in self.vals:
