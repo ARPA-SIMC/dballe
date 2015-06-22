@@ -9,6 +9,7 @@ import os
 import io
 import datetime
 import unittest
+import warnings
 
 class DballeTest(unittest.TestCase):
     def setUp(self):
@@ -21,13 +22,13 @@ class DballeTest(unittest.TestCase):
         data = dballe.Record(
                 lat=12.34560, lon=76.54320,
                 mobile=0,
-                date=datetime.datetime(1945, 4, 25, 8, 0, 0),
+                datetime=datetime.datetime(1945, 4, 25, 8, 0, 0),
                 level=(10, 11, 15, 22),
                 trange=(20,111,222),
                 rep_memo="synop",
                 B01011="Hey Hey!!",
                 B01012=500)
-        self.db.insert(data, False, True)
+        self.db.insert_data(data, False, True)
 
         data.clear()
         data["B33007"] = 50
@@ -48,7 +49,7 @@ class DballeTest(unittest.TestCase):
         for result in cur:
                 self.assertEqual(result["lat"], 12.34560)
                 self.assertEqual(result["lon"], 76.54320)
-                self.assert_("B01011" not in result)
+                self.assertNotIn("B01011", result)
                 count = count + 1
         self.assertEqual(count, 1)
 
@@ -90,14 +91,14 @@ class DballeTest(unittest.TestCase):
         # Try limiting the set of wanted attributes
         data = self.db.query_attrs("B01011", self.attr_ref, ("B33036",))
         self.assertCountEqual(data.keys(), ["B33036"])
-        self.assertEqual(data.vars(), (dballe.var("B33036", 75),))
+        self.assertEqual(data.items(), [("B33036", 75)])
 
     def testQueryCursorAttrs(self):
         # Query a variable
         query = dballe.Record(var="B01011")
         cur = self.db.query_data(query);
         data = next(cur)
-        self.failUnless(data)
+        self.assertTrue(data)
 
         attrs = cur.query_attrs()
 
@@ -127,8 +128,10 @@ class DballeTest(unittest.TestCase):
         cur = self.db.query_summary(query)
         res = dict()
         for result in cur:
-            res[(result["ana_id"], result["rep_memo"], result["level"], result["trange"], result["var"])] = (
-                result["datemin"], result["datemax"], result["context_id"])
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", DeprecationWarning)
+                res[(result["ana_id"], result["rep_memo"], result["level"], result["trange"], result["var"])] = (
+                    result["datemin"], result["datemax"], result["context_id"])
         self.assertEqual(res[(1, "synop", (10, 11, 15, 22), (20, 111, 222), 'B01011')], (datetime.datetime(1945, 4, 25, 8, 0), datetime.datetime(1945, 4, 25, 8, 0), 1))
         self.assertEqual(res[(1, "synop", (10, 11, 15, 22), (20, 111, 222), 'B01012')], (datetime.datetime(1945, 4, 25, 8, 0), datetime.datetime(1945, 4, 25, 8, 0), 1))
 
@@ -187,7 +190,7 @@ class DballeTest(unittest.TestCase):
         fill_volnd(self.db)
         query = dballe.Record()
         query["var"] = "B10004"
-        query["date"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
+        query["datetime"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
         reports = []
         for cur in self.db.query_data(query):
             reports.append(cur["rep_memo"])
