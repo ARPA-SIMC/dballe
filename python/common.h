@@ -56,6 +56,9 @@ public:
  */
 PyObject* format_varcode(wreport::Varcode code);
 
+/// Given a wreport exception, set the Python error indicator appropriately.
+void set_wreport_exception(const wreport::error& e);
+
 /**
  * Given a wreport exception, set the Python error indicator appropriately.
  *
@@ -69,6 +72,9 @@ PyObject* format_varcode(wreport::Varcode code);
  */
 PyObject* raise_wreport_exception(const wreport::error& e);
 
+/// Given a generic exception, set the Python error indicator appropriately.
+void set_std_exception(const std::exception& e);
+
 /**
  * Given a generic exception, set the Python error indicator appropriately.
  *
@@ -81,6 +87,20 @@ PyObject* raise_wreport_exception(const wreport::error& e);
  *   }
  */
 PyObject* raise_std_exception(const std::exception& e);
+
+#define DBALLE_CATCH_RETURN_PYO \
+      catch (wreport::error& e) { \
+        set_wreport_exception(e); return nullptr; \
+    } catch (std::exception& se) { \
+        set_std_exception(se); return nullptr; \
+    }
+
+#define DBALLE_CATCH_RETURN_INT \
+      catch (wreport::error& e) { \
+        set_wreport_exception(e); return -1; \
+    } catch (std::exception& se) { \
+        set_std_exception(se); return -1; \
+    }
 
 /// Convert a Datetime to a python datetime object
 PyObject* datetime_to_python(const Datetime& dt);
