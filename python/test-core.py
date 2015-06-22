@@ -28,8 +28,8 @@ class Varinfo(unittest.TestCase):
 
     def testStringification(self):
         info = dballe.varinfo("B01001")
-        self.assert_(str(info).startswith("B01001"))
-        self.assert_(repr(info).startswith("Varinfo('B01001"))
+        self.assertTrue(str(info).startswith("B01001"))
+        self.assertTrue(repr(info).startswith("Varinfo('B01001"))
 
     def testFromAlias(self):
         info = dballe.varinfo("t")
@@ -81,7 +81,7 @@ class Vartable(unittest.TestCase):
                 selected = entry
             count += 1
         self.assertGreater(count, 100)
-        self.assertEquals(count, len(table))
+        self.assertEqual(count, len(table))
         self.assertIsNotNone(selected)
 
 
@@ -147,7 +147,7 @@ class Var(unittest.TestCase):
         var = dballe.var("B01001", 1)
         self.assertIs(var.get(), 1)
         var = dballe.var("B05001", 1.12345)
-        self.assertEquals(var.get(), 1.12345)
+        self.assertEqual(var.get(), 1.12345)
         var = dballe.var("B01019", "ciao")
         self.assertEqual(var.get(), "ciao")
     def testEq(self):

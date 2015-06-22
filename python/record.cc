@@ -51,7 +51,7 @@ static PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key)
         switch (varname[0])
         {
             case 'd':
-                if (varname == "date")
+                if (varname == "datetime" || varname == "date")
                 {
                     if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
                         return NULL;

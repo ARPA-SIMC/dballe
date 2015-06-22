@@ -46,7 +46,7 @@ DIR=`dirname $CMD`
 BASE=`basename $CMD`
 if [ "${BASE##*.}" = "py" ]
 then
-    CMD="$PYTHON  -W ignore::DeprecationWarning $CMD"
+    CMD="$PYTHON $CMD"
 fi
 if [ ! -z "$DEBUGGER" ]
 then
