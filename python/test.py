@@ -136,6 +136,18 @@ class RecordTest(unittest.TestCase):
         self.assertEqual(len(res), len(self.knownvars))
         self.assertEqual(sorted(x.enq() for x in res), sorted(self.knownvarvals))
 
+    def testIter(self):
+        r = dballe.Record()
+        r["B33036"] = 75
+        r["B12101"] = 273.15
+        res = []
+        print("ZA")
+        ri = iter(r)
+        print(ri)
+        res.append(next(ri))
+        res.append(next(ri))
+        self.assertEqual(res, ["B12101", "B33036"])
+
     def testSetDict(self):
         r = dballe.Record()
         r.update(ana_id=1, lat=12.34567, ident="ciao")
