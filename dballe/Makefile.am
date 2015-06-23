@@ -89,7 +89,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	msg/msg.h \
 	msg/msg-extravars.h \
 	msg/context-extravars.h \
-	msg/repinfo.h \
 	msg/aof_codec.h \
 	msg/wr_codec.h \
 	msg/wr_exporters/common.h \
@@ -195,7 +194,6 @@ libdballe_la_SOURCES = \
 	memdb/value.cc \
 	memdb/memdb.cc \
 	memdb/serializer.cc \
-	msg/repinfo.cc \
 	msg/vars.cc \
 	msg/context.cc \
 	msg/msg.cc \
