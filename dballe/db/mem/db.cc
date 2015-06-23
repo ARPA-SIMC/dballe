@@ -253,7 +253,7 @@ void DB::raw_query_data(const core::Query& q, memdb::Results<memdb::Value>& res)
     memdb.values.query(q, res_st, res_tr, res);
 }
 
-std::unique_ptr<db::Cursor> DB::query_stations(const Query& query)
+std::unique_ptr<db::CursorStation> DB::query_stations(const Query& query)
 {
     const core::Query& q = core::Query::downcast(query);
     unsigned int modifiers = q.get_modifiers();
@@ -284,10 +284,10 @@ std::unique_ptr<db::Cursor> DB::query_stations(const Query& query)
     }
 
     raw_query_stations(q, res);
-    return Cursor::createStations(*this, modifiers, res);
+    return cursor::createStations(*this, modifiers, res);
 }
 
-std::unique_ptr<db::Cursor> DB::query_station_data(const Query& query)
+std::unique_ptr<db::CursorStationData> DB::query_station_data(const Query& query)
 {
     const core::Query& q = core::Query::downcast(query);
     unsigned int modifiers = q.get_modifiers();
@@ -298,11 +298,11 @@ std::unique_ptr<db::Cursor> DB::query_station_data(const Query& query)
     } else {
         Results<StationValue> res(memdb.stationvalues);
         raw_query_station_data(q, res);
-        return Cursor::createStationData(*this, modifiers, res);
+        return cursor::createStationData(*this, modifiers, res);
     }
 }
 
-std::unique_ptr<db::Cursor> DB::query_data(const Query& query)
+std::unique_ptr<db::CursorData> DB::query_data(const Query& query)
 {
     const core::Query& q = core::Query::downcast(query);
     unsigned int modifiers = q.get_modifiers();
@@ -310,19 +310,19 @@ std::unique_ptr<db::Cursor> DB::query_data(const Query& query)
     raw_query_data(q, res);
     if (modifiers & DBA_DB_MODIFIER_BEST)
     {
-        return Cursor::createDataBest(*this, modifiers, res);
+        return cursor::createDataBest(*this, modifiers, res);
     } else {
-        return Cursor::createData(*this, modifiers, res);
+        return cursor::createData(*this, modifiers, res);
     }
 }
 
-std::unique_ptr<db::Cursor> DB::query_summary(const Query& query)
+std::unique_ptr<db::CursorSummary> DB::query_summary(const Query& query)
 {
     const core::Query& q = core::Query::downcast(query);
     unsigned int modifiers = q.get_modifiers();
     Results<Value> res(memdb.values);
     raw_query_data(q, res);
-    return Cursor::createSummary(*this, modifiers, res);
+    return cursor::createSummary(*this, modifiers, res);
 }
 
 void DB::query_attrs(int id_data, wreport::Varcode id_var,

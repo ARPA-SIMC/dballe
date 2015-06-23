@@ -35,9 +35,9 @@ struct ODBCConnection;
  */
 typedef std::vector<wreport::Varcode> AttrList;
 
-class Cursor
+/// Common interface for all kinds of cursors
+struct Cursor
 {
-public:
     virtual ~Cursor();
 
     /// Get the database that created this cursor
@@ -86,15 +86,22 @@ public:
     /// Get the report name
     virtual const char* get_rep_memo() const = 0;
 
-    /// Get the level
-    virtual Level get_level() const = 0;
+    /**
+     * Iterate the cursor until the end, returning the number of items.
+     *
+     * If dump is a FILE pointer, also dump the cursor values to it
+     */
+    virtual unsigned test_iterate(FILE* dump=0);
+};
 
-    /// Get the level
-    virtual Trange get_trange() const = 0;
+/// Cursor iterating over stations
+struct CursorStation : public Cursor
+{
+};
 
-    /// Get the datetime
-    virtual Datetime get_datetime() const = 0;
-
+/// Common interface for cursors iterating over station or data values
+struct CursorValue : public Cursor
+{
     /// Get the variable code
     virtual wreport::Varcode get_varcode() const = 0;
 
@@ -106,7 +113,47 @@ public:
      * variable for attribute access
      */
     virtual int attr_reference_id() const = 0;
+};
 
+/// Cursor iterating over station data values
+struct CursorStationData : public CursorValue
+{
+};
+
+/// Cursor iterating over data values
+struct CursorData : public CursorValue
+{
+    /// Get the level
+    virtual Level get_level() const = 0;
+
+    /// Get the time range
+    virtual Trange get_trange() const = 0;
+
+    /// Get the datetime
+    virtual Datetime get_datetime() const = 0;
+};
+
+/// Cursor iterating over summary entries
+struct CursorSummary : public Cursor
+{
+    /// Get the level
+    virtual Level get_level() const = 0;
+
+    /// Get the time range
+    virtual Trange get_trange() const = 0;
+
+    /// Get the variable code
+    virtual wreport::Varcode get_varcode() const = 0;
+
+    /// Get the datetime range
+    virtual DatetimeRange get_datetimerange() const = 0;
+
+    /// Get the count of elements
+    virtual size_t get_count() const = 0;
+};
+
+
+#if 0
     /**
      * Query attributes for the current variable
      */
@@ -128,14 +175,7 @@ public:
      *   associated to id_data will be deleted.
      */
     virtual void attr_remove(const AttrList& qcs) = 0;
-
-    /**
-     * Iterate the cursor until the end, returning the number of items.
-     *
-     * If dump is a FILE pointer, also dump the cursor values to it
-     */
-    virtual unsigned test_iterate(FILE* dump=0);
-};
+#endif
 
 }
 
@@ -350,7 +390,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<db::Cursor> query_stations(const Query& query) = 0;
+    virtual std::unique_ptr<db::CursorStation> query_stations(const Query& query) = 0;
 
     /**
      * Query the station variables in the database.
@@ -364,7 +404,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<db::Cursor> query_station_data(const Query& query) = 0;
+    virtual std::unique_ptr<db::CursorStationData> query_station_data(const Query& query) = 0;
 
     /**
      * Query the database.
@@ -378,7 +418,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<db::Cursor> query_data(const Query& query) = 0;
+    virtual std::unique_ptr<db::CursorData> query_data(const Query& query) = 0;
 
     /**
      * Query a summary of what the result would be for a query.
@@ -392,7 +432,7 @@ public:
      *   provided, so it only gives all the available combinations of data
      *   contexts.
      */
-    virtual std::unique_ptr<db::Cursor> query_summary(const Query& query) = 0;
+    virtual std::unique_ptr<db::CursorSummary> query_summary(const Query& query) = 0;
 
     /**
      * Query attributes

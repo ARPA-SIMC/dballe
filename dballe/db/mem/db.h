@@ -112,10 +112,10 @@ public:
      */
     void vacuum() override;
 
-    std::unique_ptr<db::Cursor> query_stations(const Query& query) override;
-    std::unique_ptr<db::Cursor> query_station_data(const Query& query) override;
-    std::unique_ptr<db::Cursor> query_data(const Query& query) override;
-    std::unique_ptr<db::Cursor> query_summary(const Query& query) override;
+    std::unique_ptr<db::CursorStation> query_stations(const Query& query) override;
+    std::unique_ptr<db::CursorStationData> query_station_data(const Query& query) override;
+    std::unique_ptr<db::CursorData> query_data(const Query& query) override;
+    std::unique_ptr<db::CursorSummary> query_summary(const Query& query) override;
 
     /**
      * Query attributes

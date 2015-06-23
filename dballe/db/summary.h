@@ -35,7 +35,7 @@ struct Entry
     dballe::DatetimeRange dtrange;
     int count = MISSING_INT;
 
-    Entry(db::Cursor& cur, bool want_details);
+    Entry(db::CursorSummary& cur, bool want_details);
 };
 
 }
@@ -85,7 +85,7 @@ public:
     summary::Support supports(const Query& query) const;
 
     /// Add an entry to the summary taken from the current status of \a cur
-    void add_summary(db::Cursor& cur, bool with_details);
+    void add_summary(db::CursorSummary& cur, bool with_details);
 
     /// Add a copy of an existing entry
     void add_entry(const summary::Entry& entry);

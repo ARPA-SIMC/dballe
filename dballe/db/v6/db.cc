@@ -258,7 +258,7 @@ void DB::remove_station_data(const Query& query)
 {
     auto tr = trace.trace_remove_station_data(query);
     auto t = conn->transaction();
-    Cursor::run_delete_query(*this, core::Query::downcast(query), true);
+    cursor::run_delete_query(*this, core::Query::downcast(query), true);
     t->commit();
     tr->done();
 }
@@ -267,7 +267,7 @@ void DB::remove(const Query& query)
 {
     auto tr = trace.trace_remove(query);
     auto t = conn->transaction();
-    Cursor::run_delete_query(*this, core::Query::downcast(query), false);
+    cursor::run_delete_query(*this, core::Query::downcast(query), false);
     t->commit();
     tr->done();
 }
@@ -294,34 +294,34 @@ void DB::vacuum()
     tr->done();
 }
 
-std::unique_ptr<db::Cursor> DB::query_stations(const Query& query)
+std::unique_ptr<db::CursorStation> DB::query_stations(const Query& query)
 {
     auto tr = trace.trace_query_stations(query);
-    auto res = Cursor::run_station_query(*this, core::Query::downcast(query));
+    auto res = cursor::run_station_query(*this, core::Query::downcast(query));
     tr->done();
     return move(res);
 }
 
-std::unique_ptr<db::Cursor> DB::query_station_data(const Query& query)
+std::unique_ptr<db::CursorStationData> DB::query_station_data(const Query& query)
 {
     auto tr = trace.trace_query_station_data(query);
-    auto res = Cursor::run_station_data_query(*this, core::Query::downcast(query));
+    auto res = cursor::run_station_data_query(*this, core::Query::downcast(query));
     tr->done();
     return move(res);
 }
 
-std::unique_ptr<db::Cursor> DB::query_data(const Query& query)
+std::unique_ptr<db::CursorData> DB::query_data(const Query& query)
 {
     auto tr = trace.trace_query_data(query);
-    auto res = Cursor::run_data_query(*this, core::Query::downcast(query));
+    auto res = cursor::run_data_query(*this, core::Query::downcast(query));
     tr->done();
     return move(res);
 }
 
-std::unique_ptr<db::Cursor> DB::query_summary(const Query& query)
+std::unique_ptr<db::CursorSummary> DB::query_summary(const Query& query)
 {
     auto tr = trace.trace_query_summary(query);
-    auto res = Cursor::run_summary_query(*this, core::Query::downcast(query));
+    auto res = cursor::run_summary_query(*this, core::Query::downcast(query));
     tr->done();
     return move(res);
 }

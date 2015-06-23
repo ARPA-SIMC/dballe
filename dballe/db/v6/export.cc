@@ -1,6 +1,7 @@
 #include "db.h"
 #include "cursor.h"
 #include "qbuilder.h"
+#include "dballe/db/sql/driver.h"
 #include "dballe/db/sql/repinfo.h"
 #include "dballe/db/sql/station.h"
 #include "dballe/db/sql/levtr.h"
@@ -8,6 +9,7 @@
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
 #include "dballe/core/query.h"
+#include "dballe/core/structbuf.h"
 #include <memory>
 #include <cstring>
 #include <iostream>
@@ -53,11 +55,6 @@ struct StationLayerCache : protected std::vector<wreport::Var*>
     }
 };
 
-}
-
-static inline int sqltimecmp(const SQL_TIMESTAMP_STRUCT* a, const SQL_TIMESTAMP_STRUCT* b)
-{
-    return memcmp(a, b, sizeof(SQL_TIMESTAMP_STRUCT));
 }
 
 bool DB::export_msgs(const dballe::Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest)

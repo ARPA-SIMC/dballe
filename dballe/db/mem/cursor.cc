@@ -13,184 +13,171 @@ using namespace dballe::memdb;
 namespace dballe {
 namespace db {
 namespace mem {
-
 namespace cursor {
-
-const memdb::Value& DataBestKey::value() const { return *values[idx]; }
-
-bool DataBestKey::operator<(const DataBestKey& o) const
-{
-    // Normal sort here, but we ignore report so that two values which only
-    // differ in report are considered the same
-    const memdb::Value& vx = value();
-    const memdb::Value& vy = o.value();
-
-    if (int res = vx.station.coords.compare(vy.station.coords)) return res < 0;
-    if (vx.station.ident < vy.station.ident) return true;
-    if (vx.station.ident > vy.station.ident) return false;
-
-    if (int res = vx.datetime.compare(vy.datetime)) return res < 0;
-    if (int res = vx.levtr.level.compare(vy.levtr.level)) return res < 0;
-    if (int res = vx.levtr.trange.compare(vy.levtr.trange)) return res < 0;
-
-    if (int res = vx.var->code() - vy.var->code()) return res < 0;
-
-    // They are the same
-    return false;
-}
-
-std::ostream& operator<<(std::ostream& out, const DataBestKey& k)
-{
-    const memdb::Value& v = k.value();
-
-    out << v.station.coords
-        << "." << v.station.ident
-        << ":" << v.levtr.level
-        << ":" << v.levtr.trange
-        << ":" << v.datetime
-        << ":" << varcode_format(v.var->code());
-    return out;
-}
-
-}
-
-Cursor::Cursor(mem::DB& db, unsigned modifiers)
-    : db(db), modifiers(modifiers), count(0), cur_station(0), cur_value(0), cur_var(0)
-{
-}
-
-Cursor::~Cursor()
-{
-}
-
-dballe::DB& Cursor::get_db() const { return db; }
-
-int Cursor::remaining() const
-{
-    return count;
-}
-
-int Cursor::attr_reference_id() const
-{
-    // Default implementation for cursors for which this does not make any sense
-    return MISSING_INT;
-}
-
-int Cursor::get_station_id() const { return cur_station->id; }
-double Cursor::get_lat() const { return cur_station->coords.dlat(); }
-double Cursor::get_lon() const { return cur_station->coords.dlon(); }
-const char* Cursor::get_ident(const char* def) const
-{
-    if (cur_station->mobile)
-        return cur_station->ident.c_str();
-    else
-        return def;
-}
-const char* Cursor::get_rep_memo() const { return cur_station->report.c_str(); }
-
-Level Cursor::get_level() const
-{
-    if (cur_value)
-        return cur_value->levtr.level;
-    else
-        return Level();
-}
-Trange Cursor::get_trange() const
-{
-    if (cur_value)
-        return cur_value->levtr.trange;
-    else
-        return Trange();
-}
-Datetime Cursor::get_datetime() const
-{
-    if (cur_value)
-    {
-        return cur_value->datetime;
-    } else {
-        return Datetime();
-    }
-}
-wreport::Varcode Cursor::get_varcode() const
-{
-    if (cur_var)
-        return cur_var->code();
-    else
-        return (wreport::Varcode)0;
-}
-wreport::Var Cursor::get_var() const
-{
-    if (cur_var)
-        return Var(*cur_var, false);
-    else
-        throw error_consistency("get_var not supported on this query");
-}
-
-void Cursor::to_record_station(Record& rec)
-{
-    rec.set("ana_id", (int)cur_station->id);
-    core::Record::downcast(rec).set_coords(cur_station->coords);
-    if (cur_station->mobile)
-    {
-        rec.set("ident", cur_station->ident);
-        rec.set("mobile", 1);
-    } else {
-        rec.unset("ident");
-        rec.set("mobile", 0);
-    }
-    rec.set("rep_memo", cur_station->report);
-    rec.set("priority", db.repinfo.get_prio(cur_station->report));
-}
-
-void Cursor::to_record_levtr(Record& rec)
-{
-    rec.set(cur_value->levtr.level);
-    rec.set(cur_value->levtr.trange);
-}
-
-void Cursor::to_record_varcode(Record& rec)
-{
-    wreport::Varcode code = cur_var->code();
-    char bname[7];
-    snprintf(bname, 7, "B%02d%03d", WR_VAR_X(code), WR_VAR_Y(code));
-    rec.setc("var", bname);
-}
-
-void Cursor::to_record_value(Record& rec)
-{
-    to_record_levtr(rec);
-    rec.set(cur_value->datetime);
-    to_record_varcode(rec);
-    rec.set(*cur_var);
-}
-
-void Cursor::query_attrs(function<void(unique_ptr<Var>&&)> dest)
-{
-    // Default implementation for cursors for which this does not make any sense
-}
 
 namespace {
 
-struct StationVarInserter
+/**
+ * Structure used to build and execute a query, and to iterate through the
+ * results
+ */
+template<typename Interface>
+class Base : public Interface
 {
-    Record& rec;
+protected:
+    /// Database to operate on
+    mem::DB& db;
 
-    StationVarInserter(Record& rec) : rec(rec) {}
+    /// Modifier flags to enable special query behaviours
+    const unsigned int modifiers;
 
-    void insert(const memdb::StationValue* val)
+    /// Number of results still to be fetched
+    size_t count = 0;
+
+public:
+    virtual ~Base() {}
+
+    dballe::DB& get_db() const override { return db; }
+    int remaining() const override { return count; }
+
+    /**
+     * Get a new item from the results of a query
+     *
+     * @returns
+     *   true if a new record has been read, false if there is no more data to read
+     */
+    bool next() override = 0;
+
+    /// Discard the results that have not been read yet
+    void discard_rest() override = 0;
+
+#if 0
+    int get_station_id() const override { return cur_station->id; }
+    double get_lat() const override { return cur_station->coords.dlat(); }
+    double get_lon() const override { return cur_station->coords.dlon(); }
+    const char* get_ident(const char* def=0) const override
     {
-        rec.set(*val->var);
+        if (cur_station->mobile)
+            return cur_station->ident.c_str();
+        else
+            return def;
+    }
+    const char* get_rep_memo() const override { return cur_station->report.c_str(); }
+#endif
+
+#if 0
+    /**
+     * Iterate the cursor until the end, returning the number of items.
+     *
+     * If dump is a FILE pointer, also dump the cursor values to it
+     */
+    virtual unsigned test_iterate(FILE* dump=0) = 0;
+#endif
+
+protected:
+    /**
+     * Create a query cursor
+     *
+     * @param wanted
+     *   The values wanted in output
+     * @param modifiers
+     *   Optional modifiers to ask for special query behaviours
+     */
+    Base(mem::DB& db, unsigned modifiers)
+        : db(db), modifiers(modifiers)
+    {
+    }
+
+    void to_record_station(const memdb::Station& st, Record& rec)
+    {
+        rec.set("ana_id", (int)st.id);
+        core::Record::downcast(rec).set_coords(st.coords);
+        if (st.mobile)
+        {
+            rec.set("ident", st.ident);
+            rec.set("mobile", 1);
+        } else {
+            rec.unset("ident");
+            rec.set("mobile", 0);
+        }
+        rec.set("rep_memo", st.report);
+        rec.set("priority", db.repinfo.get_prio(st.report));
+    }
+
+    void to_record_levtr(const memdb::Value& val, Record& rec)
+    {
+        rec.set(val.levtr.level);
+        rec.set(val.levtr.trange);
+    }
+
+    void to_record_varcode(wreport::Varcode code, Record& rec)
+    {
+        char bname[7];
+        snprintf(bname, 7, "B%02d%03d", WR_VAR_X(code), WR_VAR_Y(code));
+        rec.setc("var", bname);
+    }
+
+    void to_record_value(const memdb::Value& val, Record& rec)
+    {
+        to_record_levtr(val, rec);
+        rec.set(val.datetime);
+        to_record_varcode(val.var->code(), rec);
+        rec.set(*val.var);
+    }
+
+    /// Query extra station info and add it to \a rec
+    void add_station_info(const memdb::Station& st, Record& rec)
+    {
+        db.memdb.stationvalues.fill_record(st, rec);
     }
 };
 
-}
-
-void Cursor::add_station_info(Record& rec)
+/**
+ * Implement next() for cursors that can be implemented on top of a sorted
+ * collection offering size(), empty(), pop() and top()
+ */
+template<typename Interface, typename SortedResults>
+struct CursorSorted : public Base<Interface>
 {
-    db.memdb.stationvalues.fill_record(*cur_station, rec);
-}
+    typename SortedResults::value_type cur;
+    SortedResults results;
+    bool first = true;
 
-namespace {
+    bool next() override
+    {
+        if (this->count == 0 || results.empty())
+            return false;
+
+        if (first)
+            first = false;
+        else
+            results.pop();
+
+        --(this->count);
+        if (results.empty())
+            return false;
+
+        this->cur = results.top();
+        return true;
+    }
+
+    void discard_rest() override
+    {
+        // We cannot call results.clear()
+        // FIXME: we can probably get rid of discard_rest() and do proper
+        // review and destructor work. This is only used to flush DB cursors to
+        // avoid shutting down a partial query for some databases. But really,
+        // is it needed at all?
+        this->count = 0;
+    }
+
+    template<typename T>
+    CursorSorted(mem::DB& db, unsigned modifiers, T& res)
+        : Base<Interface>(db, modifiers), results(db, res)
+    {
+        this->count = results.size();
+    }
+};
 
 struct StationResultQueue : public stack<const memdb::Station*>
 {
@@ -200,26 +187,107 @@ struct StationResultQueue : public stack<const memdb::Station*>
     }
 };
 
-struct CompareStationValueResult
+struct MemCursorStations : public CursorSorted<CursorStation, StationResultQueue>
 {
-    // Return an inverse comparison, so that the priority queue gives us the
-    // smallest items first
-    bool operator() (memdb::StationValue* x, memdb::StationValue* y) const
+    MemCursorStations(mem::DB& db, unsigned modifiers, Results<memdb::Station>& res)
+        : CursorSorted(db, modifiers, res)
     {
-        if (int res = x->station.coords.compare(y->station.coords)) return res > 0;
-        if (x->station.ident < y->station.ident) return false;
-        if (x->station.ident > y->station.ident) return true;
-        if (int res = x->var->code() - y->var->code()) return res > 0;
-        return x->station.report > y->station.report;
+    }
+
+    int get_station_id() const override { return cur->id; }
+    double get_lat() const override { return cur->coords.dlat(); }
+    double get_lon() const override { return cur->coords.dlon(); }
+    const char* get_ident(const char* def=0) const override
+    {
+        if (cur->mobile)
+            return cur->ident.c_str();
+        else
+            return def;
+    }
+    const char* get_rep_memo() const override { return cur->report.c_str(); }
+
+    void to_record(Record& rec)
+    {
+        this->to_record_station(*cur, rec);
+        this->add_station_info(*cur, rec);
     }
 };
 
-// TODO: order by code and report
-struct StationValueResultQueue : public priority_queue<memdb::StationValue*, vector<memdb::StationValue*>, CompareStationValueResult>
+struct CompareStationData
+{
+    const ValueStorage<memdb::StationValue>& values;
+
+    CompareStationData(const ValueStorage<memdb::StationValue>& values) : values(values) {}
+
+    // Return an inverse comparison, so that the priority queue gives us the
+    // smallest items first
+    bool operator() (size_t ix, size_t iy) const
+    {
+        const memdb::StationValue& x = *values[ix];
+        const memdb::StationValue& y = *values[iy];
+        if (int res = x.station.coords.compare(y.station.coords)) return res > 0;
+        if (x.station.ident < y.station.ident) return false;
+        if (x.station.ident > y.station.ident) return true;
+        if (int res = x.var->code() - y.var->code()) return res > 0;
+        return x.station.report > y.station.report;
+    }
+};
+
+struct StationValueResultQueue : public priority_queue<size_t, vector<size_t>, CompareStationData>
 {
     StationValueResultQueue(DB&, Results<memdb::StationValue>& res)
+        : priority_queue<size_t, vector<size_t>, CompareStationData>(CompareStationData(res.values))
     {
-        res.copy_valptrs_to(stl::pusher(*this));
+        res.copy_indices_to(stl::pusher(*this));
+    }
+};
+
+struct MemCursorStationData : public CursorSorted<CursorStationData, StationValueResultQueue>
+{
+    const ValueStorage<memdb::StationValue>& values;
+
+    MemCursorStationData(mem::DB& db, unsigned modifiers, Results<memdb::StationValue>& res)
+        : CursorSorted<CursorStationData, StationValueResultQueue>(db, modifiers, res), values(res.values)
+    {
+    }
+
+    int get_station_id() const override { return values[cur]->station.id; }
+    double get_lat() const override { return values[cur]->station.coords.dlat(); }
+    double get_lon() const override { return values[cur]->station.coords.dlon(); }
+    const char* get_ident(const char* def=0) const override
+    {
+        if (values[cur]->station.mobile)
+            return values[cur]->station.ident.c_str();
+        else
+            return def;
+    }
+    const char* get_rep_memo() const override { return values[cur]->station.report.c_str(); }
+    wreport::Varcode get_varcode() const override { return values[this->cur]->var->code(); }
+    wreport::Var get_var() const override { return Var(*values[this->cur]->var, false); }
+    int attr_reference_id() const override { return this->cur; }
+
+#if 0
+    void query_attrs(function<void(unique_ptr<Var>&&)> dest) override
+    {
+        queue.top()->query_attrs(dest);
+    }
+
+    virtual void attr_insert(const Values& attrs)
+    {
+        queue.top()->attr_insert(attrs);
+    }
+
+    virtual void attr_remove(const AttrList& qcs)
+    {
+        queue.top()->attr_remove(qcs);
+    }
+#endif
+
+    void to_record(Record& rec)
+    {
+        to_record_station(values[cur]->station, rec);
+        to_record_varcode(values[cur]->var->code(), rec);
+        rec.set(*values[cur]->var);
     }
 };
 
@@ -259,8 +327,9 @@ struct DataResultQueue : public priority_queue<size_t, vector<size_t>, CompareDa
     }
 };
 
-struct DataBestResultQueue : public map<cursor::DataBestKey, size_t>
+struct DataBestResultQueue : public map<DataBestKey, size_t>
 {
+    typedef size_t value_type;
     const ValueStorage<memdb::Value>& values;
     std::map<std::string, int> prios;
 
@@ -296,9 +365,9 @@ struct DataBestResultQueue : public map<cursor::DataBestKey, size_t>
      */
     void push(size_t val)
     {
-        iterator i = find(cursor::DataBestKey(values, val));
+        iterator i = find(DataBestKey(values, val));
         if (i == end())
-            insert(make_pair(cursor::DataBestKey(values, val), val));
+            insert(make_pair(DataBestKey(values, val), val));
         else
         {
             const memdb::Value& vx = *values[i->second];
@@ -319,205 +388,87 @@ struct DataBestResultQueue : public map<cursor::DataBestKey, size_t>
     }
 };
 
-}
-
-template<typename QUEUE>
-struct CursorSorted : public Cursor
-{
-    QUEUE queue;
-    bool first;
-
-    bool next()
-    {
-        if (count == 0 || queue.empty())
-            return false;
-
-        if (first)
-            first = false;
-        else
-            queue.pop();
-
-        --count;
-        return !queue.empty();
-    }
-
-    void discard_rest()
-    {
-        // We cannot call queue.clear()
-        // FIXME: we can probably get rid of discard_rest() and do proper
-        // review and destructor work. This is only used to flush DB cursors to
-        // avoid shutting down a partial query for some databases. But really,
-        // is it needed at all?
-        count = 0;
-    }
-
-    template<typename T>
-    CursorSorted(mem::DB& db, unsigned modifiers, T& res)
-        : Cursor(db, modifiers), queue(db, res), first(true)
-    {
-        count = queue.size();
-    }
-};
-
-struct CursorStations : public CursorSorted<StationResultQueue>
-{
-    CursorStations(mem::DB& db, unsigned modifiers, Results<memdb::Station>& res)
-        : CursorSorted<StationResultQueue>(db, modifiers, res)
-    {
-    }
-
-    virtual void attr_insert(const Values& attrs)
-    {
-        // Attributes for stations do not make any sense
-        throw error_unimplemented("CursorStations::attr_insert");
-    }
-
-    virtual void attr_remove(const AttrList& qcs)
-    {
-        // Attributes for stations do not make any sense
-        throw error_unimplemented("CursorStations::attr_remove");
-    }
-
-    bool next()
-    {
-        if (CursorSorted<StationResultQueue>::next())
-        {
-            this->cur_station = queue.top();
-            this->cur_value = 0;
-            this->cur_var = 0;
-            return true;
-        }
-        return false;
-    }
-
-    void to_record(Record& rec)
-    {
-        this->to_record_station(rec);
-        this->add_station_info(rec);
-    }
-};
-
-struct CursorStationData : public CursorSorted<StationValueResultQueue>
-{
-    CursorStationData(mem::DB& db, unsigned modifiers, Results<memdb::StationValue>& res)
-        : CursorSorted<StationValueResultQueue>(db, modifiers, res)
-    {
-    }
-
-    void query_attrs(function<void(unique_ptr<Var>&&)> dest) override
-    {
-        queue.top()->query_attrs(dest);
-    }
-
-    virtual void attr_insert(const Values& attrs)
-    {
-        queue.top()->attr_insert(attrs);
-    }
-
-    virtual void attr_remove(const AttrList& qcs)
-    {
-        queue.top()->attr_remove(qcs);
-    }
-
-    bool next()
-    {
-        if (CursorSorted<StationValueResultQueue>::next())
-        {
-            cur_var = queue.top()->var;
-            cur_station = &(queue.top()->station);
-            return true;
-        }
-        return false;
-    }
-
-    void to_record(Record& rec)
-    {
-        to_record_station(rec);
-        to_record_varcode(rec);
-        rec.set(*cur_var);
-    }
-};
-
-template<typename QUEUE>
-struct CursorDataBase : public CursorSorted<QUEUE>
+template<typename Interface, typename QUEUE>
+struct CursorDataBase : public CursorSorted<Interface, QUEUE>
 {
     const ValueStorage<memdb::Value>& values;
-    size_t cur_idx;
 
     CursorDataBase(mem::DB& db, unsigned modifiers, Results<memdb::Value>& res)
-        : CursorSorted<QUEUE>(db, modifiers, res), values(res.values)
+        : CursorSorted<Interface, QUEUE>(db, modifiers, res), values(res.values)
     {
     }
 
-    virtual void attr_insert(const Values& attrs)
+    int get_station_id() const override { return values[this->cur]->station.id; }
+    double get_lat() const override { return values[this->cur]->station.coords.dlat(); }
+    double get_lon() const override { return values[this->cur]->station.coords.dlon(); }
+    const char* get_ident(const char* def=0) const override
+    {
+        if (values[this->cur]->station.mobile)
+            return values[this->cur]->station.ident.c_str();
+        else
+            return def;
+    }
+    const char* get_rep_memo() const override { return values[this->cur]->station.report.c_str(); }
+    Level get_level() const override { return values[this->cur]->levtr.level; }
+    Trange get_trange() const override { return values[this->cur]->levtr.trange; }
+    wreport::Varcode get_varcode() const override { return values[this->cur]->var->code(); }
+    Datetime get_datetime() const override { return values[this->cur]->datetime; }
+    wreport::Var get_var() const override { return Var(*values[this->cur]->var, false); }
+    int attr_reference_id() const override { return this->cur; }
+
+#if 0
+    void attr_insert(const Values& attrs) override
     {
         this->values[this->cur_idx]->attr_insert(attrs);
     }
 
-    virtual void attr_remove(const AttrList& qcs)
+    void attr_remove(const AttrList& qcs) override
     {
         this->values[this->cur_idx]->attr_remove(qcs);
-    }
-
-    int attr_reference_id() const
-    {
-        return cur_idx;
-    }
-
-    bool next()
-    {
-        if (CursorSorted<QUEUE>::next())
-        {
-            this->cur_idx = this->queue.top();
-            this->cur_value = this->values[this->cur_idx];
-            this->cur_var = this->cur_value->var;
-            this->cur_station = &(this->cur_value->station);
-            return true;
-        }
-        return false;
-    }
-
-    void to_record(Record& rec)
-    {
-        this->to_record_station(rec);
-        rec.clear_vars();
-        this->to_record_value(rec);
-        rec.seti("context_id", this->cur_idx);
-        if (this->modifiers & DBA_DB_MODIFIER_ANAEXTRA)
-            this->add_station_info(rec);
     }
 
     void query_attrs(function<void(unique_ptr<Var>&&)> dest) override
     {
         this->cur_value->query_attrs(dest);
     }
+#endif
+
+    void to_record(Record& rec) override
+    {
+        this->to_record_station(values[this->cur]->station, rec);
+        rec.clear_vars();
+        this->to_record_value(*values[this->cur], rec);
+        rec.seti("context_id", this->cur);
+        if (this->modifiers & DBA_DB_MODIFIER_ANAEXTRA)
+            this->add_station_info(values[this->cur]->station, rec);
+    }
 };
 
-struct CursorData : public CursorDataBase<DataResultQueue>
+struct MemCursorData : public CursorDataBase<CursorData, DataResultQueue>
 {
-    CursorData(mem::DB& db, unsigned modifiers, Results<memdb::Value>& res)
-        : CursorDataBase<DataResultQueue>(db, modifiers, res)
+    MemCursorData(mem::DB& db, unsigned modifiers, Results<memdb::Value>& res)
+        : CursorDataBase<CursorData, DataResultQueue>(db, modifiers, res)
     {
     }
 };
 
-struct CursorDataBest : public CursorDataBase<DataBestResultQueue>
+struct MemCursorDataBest : public CursorDataBase<CursorData, DataBestResultQueue>
 {
-    CursorDataBest(mem::DB& db, unsigned modifiers, Results<memdb::Value>& res)
-        : CursorDataBase<DataBestResultQueue>(db, modifiers, res)
+    MemCursorDataBest(mem::DB& db, unsigned modifiers, Results<memdb::Value>& res)
+        : CursorDataBase<CursorData, DataBestResultQueue>(db, modifiers, res)
     {
     }
 };
 
-struct CursorSummary : public Cursor
+struct MemCursorSummary : public Base<CursorSummary>
 {
     memdb::Summary values;
     memdb::Summary::const_iterator iter_cur;
     memdb::Summary::const_iterator iter_end;
     bool first;
 
-    CursorSummary(mem::DB& db, unsigned modifiers, Results<memdb::Value>& res)
-        : Cursor(db, modifiers), first(true)
+    MemCursorSummary(mem::DB& db, unsigned modifiers, Results<memdb::Value>& res)
+        : Base<CursorSummary>(db, modifiers), first(true)
     {
         memdb::Summarizer summarizer(values);
         res.copy_valptrs_to(stl::trivial_inserter(summarizer));
@@ -530,15 +481,22 @@ struct CursorSummary : public Cursor
         count = values.size();
     }
 
-    virtual void attr_insert(const Values& attrs)
+    int get_station_id() const override { return iter_cur->first.sample.station.id; }
+    double get_lat() const override { return iter_cur->first.sample.station.coords.dlat(); }
+    double get_lon() const override { return iter_cur->first.sample.station.coords.dlon(); }
+    const char* get_ident(const char* def=0) const override
     {
-        throw error_unimplemented("CursorSummary::attr_insert");
+        if (iter_cur->first.sample.station.mobile)
+            return iter_cur->first.sample.station.ident.c_str();
+        else
+            return def;
     }
-
-    virtual void attr_remove(const AttrList& qcs)
-    {
-        throw error_unimplemented("CursorSummary::attr_remove");
-    }
+    const char* get_rep_memo() const override { return iter_cur->first.sample.station.report.c_str(); }
+    Level get_level() const override { return iter_cur->first.sample.levtr.level; }
+    Trange get_trange() const override { return iter_cur->first.sample.levtr.trange; }
+    wreport::Varcode get_varcode() const override { return iter_cur->first.sample.var->code(); }
+    DatetimeRange get_datetimerange() const override { return DatetimeRange(iter_cur->second.dtmin, iter_cur->second.dtmax); }
+    size_t get_count() const override { return iter_cur->second.count; }
 
     bool next()
     {
@@ -553,9 +511,11 @@ struct CursorSummary : public Cursor
         --count;
         if (iter_cur != iter_end)
         {
+#if 0
             cur_value = &(iter_cur->first.sample);
             cur_var = cur_value->var;
             cur_station = &(iter_cur->first.sample.station);
+#endif
             return true;
         }
         return false;
@@ -569,40 +529,77 @@ struct CursorSummary : public Cursor
 
     void to_record(Record& rec)
     {
-        to_record_station(rec);
-        to_record_levtr(rec);
-        to_record_varcode(rec);
+        to_record_station(iter_cur->first.sample.station, rec);
+        to_record_levtr(iter_cur->first.sample, rec);
+        to_record_varcode(iter_cur->first.sample.var->code(), rec);
         // TODO: Add stats
     }
 };
 
-unique_ptr<db::Cursor> Cursor::createStations(mem::DB& db, unsigned modifiers, Results<memdb::Station>& res)
-{
-    return unique_ptr<db::Cursor>(new CursorStations(db, modifiers, res));
 }
 
-unique_ptr<db::Cursor> Cursor::createStationData(mem::DB& db, unsigned modifiers, Results<memdb::StationValue>& res)
+unique_ptr<db::CursorStation> createStations(mem::DB& db, unsigned modifiers, Results<memdb::Station>& res)
 {
-    return unique_ptr<db::Cursor>(new CursorStationData(db, modifiers, res));
+    return unique_ptr<db::CursorStation>(new MemCursorStations(db, modifiers, res));
 }
 
-unique_ptr<db::Cursor> Cursor::createData(mem::DB& db, unsigned modifiers, Results<memdb::Value>& res)
+unique_ptr<db::CursorStationData> createStationData(mem::DB& db, unsigned modifiers, Results<memdb::StationValue>& res)
 {
-    return unique_ptr<db::Cursor>(new CursorData(db, modifiers, res));
+    return unique_ptr<db::CursorStationData>(new MemCursorStationData(db, modifiers, res));
 }
 
-unique_ptr<db::Cursor> Cursor::createDataBest(mem::DB& db, unsigned modifiers, Results<memdb::Value>& res)
+unique_ptr<db::CursorData> createData(mem::DB& db, unsigned modifiers, Results<memdb::Value>& res)
 {
-    return unique_ptr<db::Cursor>(new CursorDataBest(db, modifiers, res));
+    return unique_ptr<db::CursorData>(new MemCursorData(db, modifiers, res));
 }
 
-unique_ptr<db::Cursor> Cursor::createSummary(mem::DB& db, unsigned modifiers, Results<memdb::Value>& res)
+unique_ptr<db::CursorData> createDataBest(mem::DB& db, unsigned modifiers, Results<memdb::Value>& res)
 {
-    return unique_ptr<db::Cursor>(new CursorSummary(db, modifiers, res));
+    return unique_ptr<db::CursorData>(new MemCursorDataBest(db, modifiers, res));
+}
+
+unique_ptr<db::CursorSummary> createSummary(mem::DB& db, unsigned modifiers, Results<memdb::Value>& res)
+{
+    return unique_ptr<db::CursorSummary>(new MemCursorSummary(db, modifiers, res));
 }
 
 
+DataBestKey::DataBestKey(const memdb::ValueStorage<memdb::Value>& values, size_t idx)
+    : values(values), idx(idx) {}
 
+bool DataBestKey::operator<(const DataBestKey& o) const
+{
+    // Normal sort here, but we ignore report so that two values which only
+    // differ in report are considered the same
+    const memdb::Value& vx = value();
+    const memdb::Value& vy = o.value();
+
+    if (int res = vx.station.coords.compare(vy.station.coords)) return res < 0;
+    if (vx.station.ident < vy.station.ident) return true;
+    if (vx.station.ident > vy.station.ident) return false;
+
+    if (int res = vx.datetime.compare(vy.datetime)) return res < 0;
+    if (int res = vx.levtr.level.compare(vy.levtr.level)) return res < 0;
+    if (int res = vx.levtr.trange.compare(vy.levtr.trange)) return res < 0;
+
+    if (int res = vx.var->code() - vy.var->code()) return res < 0;
+
+    // They are the same
+    return false;
+}
+
+std::ostream& operator<<(std::ostream& out, const DataBestKey& k)
+{
+    const memdb::Value& v = k.value();
+
+    out << v.station.coords
+        << "." << v.station.ident
+        << ":" << v.levtr.level
+        << ":" << v.levtr.trange
+        << ":" << v.datetime
+        << ":" << varcode_format(v.var->code());
+    return out;
+}
 
 #if 0
 unsigned CursorStations::test_iterate(FILE* dump)
@@ -700,6 +697,7 @@ unsigned CursorSummary::test_iterate(FILE* dump)
 }
 #endif
 
+}
 }
 }
 }

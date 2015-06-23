@@ -96,7 +96,7 @@ std::vector<Test> tests {
         auto& db = *f.db;
         core::Query query;
         query.query_station_vars = true;
-        unique_ptr<db::Cursor> cur = db.query_summary(query);
+        auto cur = db.query_summary(query);
         ensure_equals(cur->test_iterate(), 8);
     }),
 #endif
@@ -241,7 +241,7 @@ std::vector<Test> tests {
         vector<int> context_ids;
         // And an invalid one
         int sum = 1;
-        unique_ptr<db::Cursor> cur = db.query_data(core::Query());
+        auto cur = db.query_data(core::Query());
         while (cur->next())
         {
             context_ids.push_back(cur->attr_reference_id());

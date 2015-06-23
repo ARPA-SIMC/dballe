@@ -311,11 +311,22 @@ struct ActualCursor : public wibble::tests::Actual<dballe::db::Cursor&>
     TestCursorStationKeys station_keys_match(const Station& expected) { return TestCursorStationKeys(this->actual, expected); }
     TestCursorStationVars station_vars_match(const StationValues& expected) { return TestCursorStationVars(this->actual, expected); }
     TestCursorDataContext data_context_matches(const DataValues& expected) { return TestCursorDataContext(this->actual, expected); }
-    TestCursorDataVar data_var_matches(const DataValues& expected) { return TestCursorDataVar(this->actual, expected, this->actual.get_varcode()); }
+    TestCursorDataVar data_var_matches(const DataValues& expected) {
+        if (auto c = dynamic_cast<dballe::db::CursorValue*>(&(this->actual)))
+            return TestCursorDataVar(this->actual, expected, c->get_varcode());
+        else
+            throw wreport::error_consistency("cannot call data_var_matches on this kind of cursor");
+    }
     TestCursorDataVar data_var_matches(const wreport::Var& expected) { return TestCursorDataVar(this->actual, expected); }
     template<typename T>
     TestCursorDataVar data_var_matches(const T& expected, wreport::Varcode code) { return TestCursorDataVar(this->actual, expected, code); }
-    TestCursorDataMatch data_matches(const DataValues& ds) { return TestCursorDataMatch(this->actual, ds, this->actual.get_varcode()); }
+    TestCursorDataMatch data_matches(const DataValues& ds)
+    {
+        if (auto c = dynamic_cast<dballe::db::CursorValue*>(&(this->actual)))
+            return TestCursorDataMatch(this->actual, ds, c->get_varcode());
+        else
+            throw wreport::error_consistency("cannot call data_matches on this kind of cursor");
+    }
     TestCursorDataMatch data_matches(const DataValues& ds, wreport::Varcode code) { return TestCursorDataMatch(this->actual, ds, code); }
 };
 
@@ -336,7 +347,15 @@ namespace wibble {
 namespace tests {
 
 inline dballe::tests::ActualCursor actual(dballe::db::Cursor& actual) { return dballe::tests::ActualCursor(actual); }
+inline dballe::tests::ActualCursor actual(dballe::db::CursorStation& actual) { return dballe::tests::ActualCursor(actual); }
+inline dballe::tests::ActualCursor actual(dballe::db::CursorStationData& actual) { return dballe::tests::ActualCursor(actual); }
+inline dballe::tests::ActualCursor actual(dballe::db::CursorData& actual) { return dballe::tests::ActualCursor(actual); }
+inline dballe::tests::ActualCursor actual(dballe::db::CursorSummary& actual) { return dballe::tests::ActualCursor(actual); }
 inline dballe::tests::ActualCursor actual(std::unique_ptr<dballe::db::Cursor>& actual) { return dballe::tests::ActualCursor(*actual); }
+inline dballe::tests::ActualCursor actual(std::unique_ptr<dballe::db::CursorStation>& actual) { return dballe::tests::ActualCursor(*actual); }
+inline dballe::tests::ActualCursor actual(std::unique_ptr<dballe::db::CursorStationData>& actual) { return dballe::tests::ActualCursor(*actual); }
+inline dballe::tests::ActualCursor actual(std::unique_ptr<dballe::db::CursorData>& actual) { return dballe::tests::ActualCursor(*actual); }
+inline dballe::tests::ActualCursor actual(std::unique_ptr<dballe::db::CursorSummary>& actual) { return dballe::tests::ActualCursor(*actual); }
 inline dballe::tests::ActualDB actual(dballe::DB& actual) { return dballe::tests::ActualDB(actual); }
 inline dballe::tests::ActualDB actual(std::unique_ptr<dballe::DB>& actual) { return dballe::tests::ActualDB(*actual); }
 

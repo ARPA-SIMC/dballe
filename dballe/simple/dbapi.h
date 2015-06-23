@@ -8,7 +8,8 @@ namespace dballe {
 struct DB;
 
 namespace db {
-struct Cursor;
+struct CursorStation;
+struct CursorValue;
 }
 
 namespace fortran {
@@ -20,8 +21,8 @@ class DbAPI : public CommonAPIImplementation
 {
 protected:
     DB& db;
-    db::Cursor* ana_cur;
-    db::Cursor* query_cur;
+    db::CursorStation* ana_cur;
+    db::CursorValue* query_cur;
     InputFile* input_file;
     OutputFile* output_file;
 

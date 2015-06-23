@@ -10,7 +10,7 @@ namespace dballe {
 namespace db {
 namespace summary {
 
-Entry::Entry(dballe::db::Cursor &cur, bool want_details)
+Entry::Entry(dballe::db::CursorSummary& cur, bool want_details)
 {
     ana_id = cur.get_station_id();
     rep_memo = cur.get_rep_memo();
@@ -19,10 +19,8 @@ Entry::Entry(dballe::db::Cursor &cur, bool want_details)
     varcode = cur.get_varcode();
     if (want_details)
     {
-        core::Record rec;
-        cur.to_record(rec);
-        count = rec["context_id"].enqi();
-        dtrange = rec.get_datetimerange();
+        count = cur.get_count();
+        dtrange = cur.get_datetimerange();
     }
 }
 
@@ -104,7 +102,7 @@ void Summary::aggregate(const summary::Entry &val)
     valid = true;
 }
 
-void Summary::add_summary(dballe::db::Cursor &cur, bool with_details)
+void Summary::add_summary(dballe::db::CursorSummary& cur, bool with_details)
 {
     summary.emplace_back(cur, with_details);
     aggregate(summary.back());

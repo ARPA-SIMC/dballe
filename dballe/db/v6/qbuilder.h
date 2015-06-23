@@ -4,7 +4,7 @@
 #include <dballe/db/querybuf.h>
 #include <dballe/db/sql.h>
 #include <dballe/db/v6/db.h>
-#include <dballe/db/v6/cursor.h>
+#include <dballe/core/query.h>
 #include <regex.h>
 
 namespace dballe {

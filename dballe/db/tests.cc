@@ -162,11 +162,14 @@ void TestCursorStationVars::check(WIBBLE_TEST_LOCPRM) const
 
 void TestCursorDataContext::check(WIBBLE_TEST_LOCPRM) const
 {
+    db::CursorData* c = dynamic_cast<db::CursorData*>(&cur);
+    if (!c) wibble_test_location.fail_test("cursor is not an instance of CursorData");
+
     wassert(actual(cur).station_keys_match(ds.info));
-    wassert(actual(cur.get_rep_memo()) == ds.info.report);
-    wassert(actual(cur.get_level()) == ds.info.level);
-    wassert(actual(cur.get_trange()) == ds.info.trange);
-    wassert(actual(cur.get_datetime()) == ds.info.datetime);
+    wassert(actual(c->get_rep_memo()) == ds.info.report);
+    wassert(actual(c->get_level()) == ds.info.level);
+    wassert(actual(c->get_trange()) == ds.info.trange);
+    wassert(actual(c->get_datetime()) == ds.info.datetime);
 
     auto rec = Record::create();
     cur.to_record(*rec);
@@ -188,8 +191,11 @@ void TestCursorDataContext::check(WIBBLE_TEST_LOCPRM) const
 
 void TestCursorDataVar::check(WIBBLE_TEST_LOCPRM) const
 {
-    wassert(actual(cur.get_varcode()) == expected.code());
-    wassert(actual(cur.get_var()) == expected);
+    db::CursorValue* c = dynamic_cast<db::CursorValue*>(&cur);
+    if (!c) wibble_test_location.fail_test("cursor is not an instance of CursorValue");
+
+    wassert(actual(c->get_varcode()) == expected.code());
+    wassert(actual(c->get_var()) == expected);
     auto rec = Record::create();
     wrunchecked(cur.to_record(*rec));
     const Var* actvar = nullptr;

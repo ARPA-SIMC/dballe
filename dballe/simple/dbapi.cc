@@ -295,7 +295,8 @@ int DbAPI::voglioancora()
             db.query_attrs(attr_reference_id, attr_varid, dest);
             break;
         case ATTR_DAMMELO:
-            query_cur->query_attrs(dest);
+            fprintf(stderr, "%d %d\n", query_cur->attr_reference_id(), (int)query_cur->get_varcode());
+            db.query_attrs(query_cur->attr_reference_id(), query_cur->get_varcode(), dest);
             break;
         case ATTR_PRENDILO:
             throw error_consistency("voglioancora cannot be called after a prendilo");
@@ -324,7 +325,7 @@ void DbAPI::critica()
             }
             break;
         case ATTR_DAMMELO:
-            query_cur->attr_insert(qcinput);
+            db.attr_insert(query_cur->attr_reference_id(), query_cur->get_varcode(), qcinput);
             break;
         case ATTR_PRENDILO:
             db.attr_insert(attr_varid, qcinput);
@@ -353,7 +354,7 @@ void DbAPI::scusa()
             db.attr_remove(attr_reference_id, attr_varid, arr);
             break;
         case ATTR_DAMMELO:
-            query_cur->attr_remove(arr);
+            db.attr_remove(query_cur->attr_reference_id(), query_cur->get_varcode(), arr);
             break;
         case ATTR_PRENDILO:
             throw error_consistency("scusa cannot be called after a prendilo");
