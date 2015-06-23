@@ -25,6 +25,21 @@ protected:
     db::CursorValue* query_cur;
     InputFile* input_file;
     OutputFile* output_file;
+    int last_inserted_station_id;
+
+    /// Store information about the database ID of a variable
+    struct VarID
+    {
+        wreport::Varcode code;
+        // True if it is a station value
+        bool station;
+        size_t id;
+        VarID(wreport::Varcode code, bool station, size_t id) : code(code), station(station), id(id) {}
+    };
+
+    /// Store database variable IDs for all last inserted variables
+    std::vector<VarID> last_inserted_varids;
+
 
 public:
     DbAPI(DB& db, const char* anaflag, const char* dataflag, const char* attrflag);

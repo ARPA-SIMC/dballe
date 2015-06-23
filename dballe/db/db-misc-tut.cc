@@ -33,10 +33,10 @@ struct Fixture : public dballe::tests::DBFixture
 };
 
 template<typename ...Args>
-unsigned run_query_attrs(DB& db, Values& dest, Args... args)
+unsigned run_attr_query(DB& db, Values& dest, Args... args)
 {
     unsigned count = 0;
-    db.query_attrs(args..., [&](unique_ptr<Var> var) { dest.set(move(var)); ++count; });
+    db.attr_query(args..., [&](unique_ptr<Var> var) { dest.set(move(var)); ++count; });
     return count;
 }
 
@@ -81,7 +81,7 @@ std::vector<Test> tests {
         {
             int count = 0;
             unique_ptr<Var> attr;
-            wrunchecked(db.query_attrs(vals.values[WR_VAR(0, 12, 101)].data_id, WR_VAR(0, 12, 101), [&](std::unique_ptr<wreport::Var>&& var) {
+            wrunchecked(db.attr_query(vals.values[WR_VAR(0, 12, 101)].data_id, WR_VAR(0, 12, 101), [&](std::unique_ptr<wreport::Var>&& var) {
                 ++count;
                 attr = move(var);
             }));
@@ -405,7 +405,7 @@ std::vector<Test> tests {
 
         // Query back the data
         qc.clear();
-        wassert(actual(run_query_attrs(db, qc, context_id, WR_VAR(0, 1, 11))) == 3);
+        wassert(actual(run_attr_query(db, qc, context_id, WR_VAR(0, 1, 11))) == 3);
 
         const auto* attr = qc.get("B33002");
         ensure(attr != NULL);
@@ -433,7 +433,7 @@ std::vector<Test> tests {
 
         /* Query back the data */
         qc.clear();
-        wassert(actual(run_query_attrs(db, qc, context_id, WR_VAR(0, 1, 11))) == 1);
+        wassert(actual(run_attr_query(db, qc, context_id, WR_VAR(0, 1, 11))) == 1);
 
         ensure(qc.get("B33002") == nullptr);
         ensure(qc.get("B33005") == nullptr);
@@ -473,7 +473,7 @@ std::vector<Test> tests {
         qc.set("B05021",  8);
         qc.set("B07025",  9);
         qc.set("B05022", 10);
-        db.attr_insert(WR_VAR(0, 1, 11), qc);
+        db.attr_insert(oldf.data["synop"].values[WR_VAR(0, 1, 11)].data_id, WR_VAR(0, 1, 11), qc);
 
         // Query back the B01011 variable to read the attr reference id
         auto cur = db.query_data(*query_from_string("var=B01011"));
@@ -483,7 +483,7 @@ std::vector<Test> tests {
         cur->discard_rest();
 
         qc.clear();
-        wassert(actual(run_query_attrs(db, qc, attr_id, WR_VAR(0, 1, 11))) == 10);
+        wassert(actual(run_attr_query(db, qc, attr_id, WR_VAR(0, 1, 11))) == 10);
 
         // Check that all the attributes come out
         ensure_equals(qc.size(), 10);
@@ -669,7 +669,7 @@ std::vector<Test> tests {
 
         // Query the attributes and check that they are there
         Values qattrs;
-        wassert(actual(run_query_attrs(db, qattrs, cur->attr_reference_id(), cur->get_varcode())) == 1);
+        wassert(actual(run_attr_query(db, qattrs, cur->attr_reference_id(), cur->get_varcode())) == 1);
         wassert(actual(qattrs["B33007"].var->enq(MISSING_INT)) == 50);
 
         // Update it
@@ -690,7 +690,7 @@ std::vector<Test> tests {
         wassert(actual(var.enqi()) == 200);
 
         qattrs.clear();
-        wassert(actual(run_query_attrs(db, qattrs, cur->attr_reference_id(), cur->get_varcode())) == 1);
+        wassert(actual(run_attr_query(db, qattrs, cur->attr_reference_id(), cur->get_varcode())) == 1);
         wassert(actual(qattrs["B33007"].var->enq(MISSING_INT)) == 50);
     }),
     Test("query_stepbystep", [](Fixture& f) {

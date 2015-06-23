@@ -336,11 +336,6 @@ public:
     virtual void insert_data(DataValues& vals, bool can_replace, bool station_can_add) = 0;
 
     /**
-     * Return the station id for the last data that was inserted.
-     */
-    virtual int last_station_id() const = 0;
-
-    /**
      * Remove data from the database
      *
      * @param rec
@@ -446,20 +441,8 @@ public:
      * @return
      *   Number of attributes returned in attrs
      */
-    virtual void query_attrs(int reference_id, wreport::Varcode id_var,
+    virtual void attr_query(int reference_id, wreport::Varcode id_var,
             std::function<void(std::unique_ptr<wreport::Var>)>&& dest) = 0;
-
-    /**
-     * Insert new attributes into the database, reusing the reference IDs stored by the last insert.
-     *
-     * @param id_var
-     *   The varcode of the variable related to the attributes to add.  See @ref vartable.h
-     * @param attrs
-     *   The attributes to be added
-     * @param can_replace
-     *   If true, then existing data can be rewritten, else data can only be added.
-     */
-    virtual void attr_insert(wreport::Varcode id_var, const Values& attrs) = 0;
 
     /**
      * Insert new attributes into the database.

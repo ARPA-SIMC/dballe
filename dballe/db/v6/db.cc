@@ -30,8 +30,7 @@ DB::DB(unique_ptr<Connection> conn)
     : conn(conn.release()),
       m_driver(sql::Driver::create(*this->conn).release()),
       m_repinfo(0), m_station(0), m_lev_tr(0), m_lev_tr_cache(0),
-      m_data(0), m_attr(0),
-      _last_station_id(0)
+      m_data(0), m_attr(0)
 {
     init_after_connect();
 
@@ -185,9 +184,6 @@ void DB::insert_station_data(StationValues& vals, bool can_replace, bool station
     // Hardcoded values for station variables
     vars.datetime = Datetime(1000, 1, 1, 0, 0, 0);
 
-    // Reset the variable ID store
-    last_insert_varids.clear();
-
     // Add all the variables we find
     for (auto& i: vals.values)
         vars.add(i.second.var, -1);
@@ -197,13 +193,8 @@ void DB::insert_station_data(StationValues& vals, bool can_replace, bool station
 
     // Read the IDs from the results
     for (const auto& v: vars)
-    {
-        last_insert_varids.push_back(VarID(v.var->code(), v.id_data));
         vals.values.add_data_id(v.var->code(), v.id_data);
-    }
     t->commit();
-
-    _last_station_id = vars.id_station;
 }
 
 void DB::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
@@ -228,9 +219,6 @@ void DB::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
     // Insert the lev_tr data, and get the ID
     int id_levtr = lev_tr().obtain_id(vals.info.level, vals.info.trange);
 
-    // Reset the variable ID store
-    last_insert_varids.clear();
-
     // Add all the variables we find
     for (auto& i: vals.values)
         vars.add(i.second.var, id_levtr);
@@ -240,18 +228,9 @@ void DB::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
 
     // Read the IDs from the results
     for (const auto& v: vars)
-    {
-        last_insert_varids.push_back(VarID(v.var->code(), v.id_data));
         vals.values.add_data_id(v.var->code(), v.id_data);
-    }
+
     t->commit();
-
-    _last_station_id = vars.id_station;
-}
-
-int DB::last_station_id() const
-{
-    return _last_station_id;
 }
 
 void DB::remove_station_data(const Query& query)
@@ -326,25 +305,12 @@ std::unique_ptr<db::CursorSummary> DB::query_summary(const Query& query)
     return move(res);
 }
 
-void DB::query_attrs(int id_data, wreport::Varcode id_var,
+void DB::attr_query(int id_data, wreport::Varcode id_var,
         std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
 {
     // Create the query
     sql::AttrV6& a = attr();
     a.read(id_data, dest);
-}
-
-void DB::attr_insert(wreport::Varcode id_var, const Values& attrs)
-{
-    // Find the data id for id_var
-    for (vector<VarID>::const_iterator i = last_insert_varids.begin();
-            i != last_insert_varids.end(); ++i)
-        if (i->code == id_var)
-        {
-            attr_insert(i->id, id_var, attrs);
-            return;
-        }
-    error_notfound::throwf("variable B%02d%03d was not involved in the last insert operation", WR_VAR_X(id_var), WR_VAR_Y(id_var));
 }
 
 void DB::attr_insert(int id_data, wreport::Varcode, const Values& attrs)

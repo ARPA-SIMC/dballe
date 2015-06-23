@@ -69,41 +69,26 @@ std::map<std::string, int> DB::get_repinfo_priorities()
 void DB::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
 {
     // Obtain the station
-    vals.info.ana_id = m_last_station_id = memdb.stations.obtain(vals.info, station_can_add);
-    const memdb::Station& station = *memdb.stations[m_last_station_id];
+    vals.info.ana_id = memdb.stations.obtain(vals.info, station_can_add);
+    const memdb::Station& station = *memdb.stations[vals.info.ana_id];
 
-    last_insert_varids.clear();
     // Insert all the variables we find
     for (auto& i: vals.values)
-    {
         i.second.data_id = memdb.stationvalues.insert(station, *i.second.var, can_replace);
-        last_insert_varids.push_back(VarID(i.first, true, i.second.data_id));
-    }
 }
 
 void DB::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
 {
     // Obtain the station
-    vals.info.ana_id = m_last_station_id = memdb.stations.obtain(vals.info, station_can_add);
-    const memdb::Station& station = *memdb.stations[m_last_station_id];
+    vals.info.ana_id = memdb.stations.obtain(vals.info, station_can_add);
+    const memdb::Station& station = *memdb.stations[vals.info.ana_id];
 
     // Obtain the levtr
     const LevTr& levtr = *memdb.levtrs[memdb.levtrs.obtain(vals.info.level, vals.info.trange)];
 
-    // Obtain values
-    last_insert_varids.clear();
-
     // Insert all the variables we find
     for (auto& i: vals.values)
-    {
         i.second.data_id = memdb.values.insert(station, levtr, vals.info.datetime, *i.second.var, can_replace);
-        last_insert_varids.push_back(VarID(i.first, false, i.second.data_id));
-    }
-}
-
-int DB::last_station_id() const
-{
-    return m_last_station_id;
 }
 
 void DB::remove_station_data(const Query& query)
@@ -325,26 +310,10 @@ std::unique_ptr<db::CursorSummary> DB::query_summary(const Query& query)
     return cursor::createSummary(*this, modifiers, res);
 }
 
-void DB::query_attrs(int id_data, wreport::Varcode id_var,
+void DB::attr_query(int id_data, wreport::Varcode id_var,
         std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
 {
     memdb.values[id_data]->query_attrs(dest);
-}
-
-void DB::attr_insert(wreport::Varcode id_var, const Values& attrs)
-{
-    // Find the data id for id_var
-    for (vector<VarID>::const_iterator i = last_insert_varids.begin();
-            i != last_insert_varids.end(); ++i)
-        if (i->code == id_var)
-        {
-            if (i->station)
-                memdb.stationvalues[i->id]->attr_insert(attrs);
-            else
-                memdb.values[i->id]->attr_insert(attrs);
-            return;
-        }
-    error_notfound::throwf("variable B%02d%03d was not involved in the last insert operation", WR_VAR_X(id_var), WR_VAR_Y(id_var));
 }
 
 static ValueBase* get_value(Memdb& memdb, int id_data, wreport::Varcode id_var)

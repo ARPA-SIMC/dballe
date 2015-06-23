@@ -93,17 +93,6 @@ public:
     Trace trace;
 
 protected:
-    /// Store information about the database ID of a variable
-    struct VarID
-    {
-        wreport::Varcode code;
-        int id;
-        VarID(wreport::Varcode code, int id) : code(code), id(id) {}
-    };
-
-    /// Store database variable IDs for all last inserted variables
-    std::vector<VarID> last_insert_varids;
-
     /// SQL driver backend
     sql::Driver* m_driver;
 
@@ -127,8 +116,6 @@ protected:
     /** Variable attributes */
     struct sql::AttrV6* m_attr;
     /** @} */
-
-    int _last_station_id;
 
     void init_after_connect();
 
@@ -225,8 +212,6 @@ public:
     void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add) override;
     void insert_data(DataValues& vals, bool can_replace, bool station_can_add) override;
 
-    int last_station_id() const;
-
     void remove_station_data(const Query& query) override;
     void remove(const Query& query);
     void remove_all();
@@ -247,39 +232,9 @@ public:
     std::unique_ptr<db::CursorData> query_data(const Query& query);
     std::unique_ptr<db::CursorSummary> query_summary(const Query& query);
 
-    /**
-     * Query attributes
-     *
-     * @param id_data
-     *   The database id of the data related to the attributes to retrieve
-     * @param id_var
-     *   The varcode of the variable related to the attributes to retrieve.  See @ref vartable.h (ignored)
-     * @param qcs
-     *   The WMO codes of the QC values requested.  If it is empty, then all values
-     *   are returned.
-     * @param dest
-     *   The function that will be called on each attribute retrieved
-     * @return
-     *   Number of attributes returned in attrs
-     */
-    void query_attrs(int reference_id, wreport::Varcode id_var,
+    void attr_query(int reference_id, wreport::Varcode id_var,
             std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
-
-    void attr_insert(wreport::Varcode id_var, const Values& attrs) override;
     void attr_insert(int id_data, wreport::Varcode id_var, const Values& attrs) override;
-
-    /**
-     * Delete QC data for the variable `var' in record `rec' (coming from a previous
-     * dba_query)
-     *
-     * @param id_data
-     *   The database id of the lev_tr related to the attributes to remove
-     * @param id_var
-     *   The varcode of the variable related to the attributes to remove.  See @ref vartable.h (ignored)
-     * @param qcs
-     *   Array of WMO codes of the attributes to delete.  If empty, all attributes
-     *   associated to id_data will be deleted.
-     */
     void attr_remove(int id_data, wreport::Varcode id_var, const db::AttrList& qcs);
 
     void import_msg(const Message& msg, const char* repmemo, int flags) override;
