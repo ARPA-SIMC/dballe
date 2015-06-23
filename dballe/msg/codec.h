@@ -5,7 +5,7 @@
 #include <dballe/message.h>
 #include <memory>
 #include <string>
-#include <stdio.h>
+#include <cstdio>
 
 /** @file
  * @ingroup msg
