@@ -350,27 +350,6 @@ struct Summary : public Base<CursorSummary>
             rec.seti("context_id", results[cur].out_id_data);
             rec.set(DatetimeRange(results[cur].out_datetime, results[cur].out_datetimemax));
         }
-
-        /*
-        // Min datetime
-        rec.key(DBA_KEY_YEARMIN).seti(results[cur].out_datetime.year);
-        rec.key(DBA_KEY_MONTHMIN).seti(results[cur].out_datetime.month);
-        rec.key(DBA_KEY_DAYMIN).seti(results[cur].out_datetime.day);
-        rec.key(DBA_KEY_HOURMIN).seti(results[cur].out_datetime.hour);
-        rec.key(DBA_KEY_MINUMIN).seti(results[cur].out_datetime.minute);
-        rec.key(DBA_KEY_SECMIN).seti(results[cur].out_datetime.second);
-
-        // Max datetime
-        rec.key(DBA_KEY_YEARMAX).seti(out_datetime_max.year);
-        rec.key(DBA_KEY_MONTHMAX).seti(out_datetime_max.month);
-        rec.key(DBA_KEY_DAYMAX).seti(out_datetime_max.day);
-        rec.key(DBA_KEY_HOURMAX).seti(out_datetime_max.hour);
-        rec.key(DBA_KEY_MINUMAX).seti(out_datetime_max.minute);
-        rec.key(DBA_KEY_SECMAX).seti(out_datetime_max.second);
-
-        // Abuse id_data and datetime for count and min(datetime)
-        rec.key(DBA_KEY_LIMIT).seti(results[cur].out_id_data);
-        */
     }
     unsigned test_iterate(FILE* dump=0) override
     {
