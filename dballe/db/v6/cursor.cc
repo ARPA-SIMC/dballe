@@ -240,8 +240,6 @@ struct StationData : public Base<CursorStationData>
         to_record_varcode(rec);
         rec.clear_vars();
         rec.set(newvar(results[cur].out_varcode, results[cur].out_value));
-        if (modifiers & DBA_DB_MODIFIER_ANAEXTRA)
-            add_station_info(rec);
     }
     unsigned test_iterate(FILE* dump=0) override
     {
@@ -288,9 +286,6 @@ struct Data : public Base<CursorData>
 
         rec.clear_vars();
         rec.set(newvar(results[cur].out_varcode, results[cur].out_value));
-
-        if (modifiers & DBA_DB_MODIFIER_ANAEXTRA)
-            add_station_info(rec);
     }
     unsigned test_iterate(FILE* dump=0) override
     {
@@ -431,9 +426,6 @@ struct Best : public Base<CursorData>
 
         rec.clear_vars();
         rec.set(newvar(results[cur].out_varcode, results[cur].out_value));
-
-        if (modifiers & DBA_DB_MODIFIER_ANAEXTRA)
-            add_station_info(rec);
     }
     unsigned test_iterate(FILE* dump=0) override
     {
@@ -500,7 +492,7 @@ struct Best : public Base<CursorData>
 
 unique_ptr<CursorStation> run_station_query(DB& db, const core::Query& q)
 {
-    unsigned int modifiers = q.get_modifiers() | DBA_DB_MODIFIER_ANAEXTRA;
+    unsigned int modifiers = q.get_modifiers();
 
     StationQueryBuilder qb(db, q, modifiers);
     qb.build();

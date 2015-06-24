@@ -425,8 +425,6 @@ struct CursorDataBase : public CursorSorted<Interface, QUEUE>
         rec.clear_vars();
         this->to_record_value(*values[this->cur], rec);
         rec.seti("context_id", this->cur);
-        if (this->modifiers & DBA_DB_MODIFIER_ANAEXTRA)
-            this->add_station_info(values[this->cur]->station, rec);
     }
 };
 

@@ -13,8 +13,6 @@
 /** When values from different reports exist on the same point, only report the
  * one from the report with the highest priority */
 #define DBA_DB_MODIFIER_BEST        (1 << 0)
-/** Remove duplicates in the results */
-#define DBA_DB_MODIFIER_ANAEXTRA    (1 << 3)
 /** Do not bother sorting the results */
 #define DBA_DB_MODIFIER_UNSORTED    (1 << 5)
 /** Sort by report after ana_id, to ease reconstructing messages on export */
