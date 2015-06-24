@@ -305,20 +305,26 @@ std::unique_ptr<db::CursorSummary> DB::query_summary(const Query& query)
     return move(res);
 }
 
-void DB::attr_query(int id_data, wreport::Varcode id_var,
-        std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
+void DB::attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
 {
     // Create the query
     sql::AttrV6& a = attr();
-    a.read(id_data, dest);
+    a.read(data_id, dest);
 }
 
-void DB::attr_insert(int id_data, wreport::Varcode, const Values& attrs)
+void DB::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
+{
+    // Create the query
+    sql::AttrV6& a = attr();
+    a.read(data_id, dest);
+}
+
+void DB::attr_insert_station(int data_id, const Values& attrs)
 {
     sql::AttrV6& a = attr();
     sql::bulk::InsertAttrsV6 iattrs;
     for (const auto& i : attrs)
-        iattrs.add(i.second.var, id_data);
+        iattrs.add(i.second.var, data_id);
     if (iattrs.empty()) return;
 
     // Begin the transaction
@@ -330,15 +336,32 @@ void DB::attr_insert(int id_data, wreport::Varcode, const Values& attrs)
     t->commit();
 }
 
-void DB::attr_remove(int id_data, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs)
+void DB::attr_insert_data(int data_id, const Values& attrs)
+{
+    sql::AttrV6& a = attr();
+    sql::bulk::InsertAttrsV6 iattrs;
+    for (const auto& i : attrs)
+        iattrs.add(i.second.var, data_id);
+    if (iattrs.empty()) return;
+
+    // Begin the transaction
+    auto t = conn->transaction();
+
+    // Insert all the attributes we found
+    a.insert(*t, iattrs, sql::AttrV6::UPDATE);
+
+    t->commit();
+}
+
+void DB::attr_remove_station(int data_id, const db::AttrList& qcs)
 {
     Querybuf query(500);
     if (qcs.empty())
         // Delete all attributes
-        query.appendf("DELETE FROM attr WHERE id_data=%d", id_data);
+        query.appendf("DELETE FROM attr WHERE id_data=%d", data_id);
     else {
         // Delete only the attributes in qcs
-        query.appendf("DELETE FROM attr WHERE id_data=%d AND type IN (", id_data);
+        query.appendf("DELETE FROM attr WHERE id_data=%d AND type IN (", data_id);
         query.start_list(", ");
         for (vector<Varcode>::const_iterator i = qcs.begin(); i != qcs.end(); ++i)
             query.append_listf("%hd", *i);
@@ -346,6 +369,29 @@ void DB::attr_remove(int id_data, wreport::Varcode id_var, const std::vector<wre
     }
     driver().exec_no_data(query);
     // dba_verbose(DBA_VERB_DB_SQL, "Performing query %s for id %d,B%02d%03d\n", query, id_lev_tr, DBA_VAR_X(id_var), DBA_VAR_Y(id_var));
+}
+
+void DB::attr_remove_data(int data_id, const db::AttrList& qcs)
+{
+    Querybuf query(500);
+    if (qcs.empty())
+        // Delete all attributes
+        query.appendf("DELETE FROM attr WHERE id_data=%d", data_id);
+    else {
+        // Delete only the attributes in qcs
+        query.appendf("DELETE FROM attr WHERE id_data=%d AND type IN (", data_id);
+        query.start_list(", ");
+        for (vector<Varcode>::const_iterator i = qcs.begin(); i != qcs.end(); ++i)
+            query.append_listf("%hd", *i);
+        query.append(")");
+    }
+    driver().exec_no_data(query);
+    // dba_verbose(DBA_VERB_DB_SQL, "Performing query %s for id %d,B%02d%03d\n", query, id_lev_tr, DBA_VAR_X(id_var), DBA_VAR_Y(id_var));
+}
+
+bool DB::is_station_variable(int data_id, wreport::Varcode varcode)
+{
+    return false;
 }
 
 void DB::dump(FILE* out)

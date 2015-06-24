@@ -430,47 +430,80 @@ public:
     virtual std::unique_ptr<db::CursorSummary> query_summary(const Query& query) = 0;
 
     /**
-     * Query attributes
+     * Query attributes on a station value
      *
-     * @param reference_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the variable we query
-     * @param id_var
-     *   The varcode of the variable related to the attributes to retrieve.  See @ref vartable.h
+     * @param data_id
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
      * @param dest
-     *   The function that will be called on each resulting attribut
-     * @return
-     *   Number of attributes returned in attrs
+     *   The function that will be called on each resulting attribute
      */
-    virtual void attr_query(int reference_id, wreport::Varcode id_var,
-            std::function<void(std::unique_ptr<wreport::Var>)>&& dest) = 0;
+    virtual void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) = 0;
 
     /**
-     * Insert new attributes into the database.
+     * Query attributes on a data value
      *
-     * @param reference_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the variable we query
-     * @param id_var
-     *   The varcode of the variable related to the attributes to add.  See @ref vartable.h
+     * @param data_id
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     * @param dest
+     *   The function that will be called on each resulting attribute
+     */
+    virtual void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) = 0;
+
+    /**
+     * Insert new attributes on a station value
+     *
+     * @param data_id
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
      * @param attrs
      *   The attributes to be added
-     * @param can_replace
-     *   If true, then existing data can be rewritten, else data can only be added.
      */
-    virtual void attr_insert(int reference_id, wreport::Varcode id_var, const Values& attrs) = 0;
+    virtual void attr_insert_station(int data_id, const Values& attrs) = 0;
 
     /**
-     * Delete QC data for the variable `var' in record `rec' (coming from a previous
-     * dba_query)
+     * Insert new attributes on a data value
      *
-     * @param reference_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the variable we query
-     * @param id_var
-     *   The varcode of the variable related to the attributes to remove.  See @ref vartable.h
+     * @param data_id
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     * @param attrs
+     *   The attributes to be added
+     */
+    virtual void attr_insert_data(int data_id, const Values& attrs) = 0;
+
+    /**
+     * Delete attributes from a station value
+     *
+     * @param data_id
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
      * @param qcs
      *   Array of WMO codes of the attributes to delete.  If empty, all attributes
-     *   associated to id_data will be deleted.
+     *   associated to the value will be deleted.
      */
-    virtual void attr_remove(int reference_id, wreport::Varcode id_var, const db::AttrList& qcs) = 0;
+    virtual void attr_remove_station(int data_id, const db::AttrList& qcs) = 0;
+
+    /**
+     * Delete attributes from a data value
+     *
+     * @param data_id
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     * @param qcs
+     *   Array of WMO codes of the attributes to delete.  If empty, all attributes
+     *   associated to the value will be deleted.
+     */
+    virtual void attr_remove_data(int data_id, const db::AttrList& qcs) = 0;
+
+    /**
+     * Check if this varcode and data_id correspond to a station variable. This
+     * is used only to implement attr_* functions to be used when this
+     * information is not known. A database for which this information is not
+     * relevant (for example, in v6 databases there is a single ID space for
+     * station and data variable) can return any arbitrary value, since later
+     * they will be ignored.
+     *
+     * This should disappear once client APIs start making a distinction
+     * between attributes in station variables and attributes on data
+     * variables.
+     */
+    virtual bool is_station_variable(int data_id, wreport::Varcode varcode) = 0;
 
     /**
      * Import a Message into the DB-All.e database

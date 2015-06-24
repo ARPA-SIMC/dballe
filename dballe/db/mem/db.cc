@@ -310,33 +310,54 @@ std::unique_ptr<db::CursorSummary> DB::query_summary(const Query& query)
     return cursor::createSummary(*this, modifiers, res);
 }
 
-void DB::attr_query(int id_data, wreport::Varcode id_var,
-        std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
+void DB::attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
 {
-    memdb.values[id_data]->query_attrs(dest);
+    ValueBase* v = memdb.stationvalues.get_checked(data_id);
+    if (!v) error_notfound::throwf("no station variable found with data id %d", data_id);
+    v->query_attrs(dest);
 }
-
-static ValueBase* get_value(Memdb& memdb, int id_data, wreport::Varcode id_var)
+void DB::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
+{
+    ValueBase* v = memdb.values.get_checked(data_id);
+    if (!v) error_notfound::throwf("no data variable found with data id %d", data_id);
+    v->query_attrs(dest);
+}
+void DB::attr_insert_station(int data_id, const Values& attrs)
+{
+    ValueBase* v = memdb.stationvalues.get_checked(data_id);
+    if (!v) error_notfound::throwf("no station variable found with data id %d", data_id);
+    v->attr_insert(attrs);
+}
+void DB::attr_insert_data(int data_id, const Values& attrs)
+{
+    ValueBase* v = memdb.values.get_checked(data_id);
+    if (!v) error_notfound::throwf("no data variable found with data id %d", data_id);
+    v->attr_insert(attrs);
+}
+void DB::attr_remove_station(int data_id, const db::AttrList& qcs)
+{
+    ValueBase* v = memdb.stationvalues.get_checked(data_id);
+    if (!v) error_notfound::throwf("no station variable found with data id %d", data_id);
+    v->attr_remove(qcs);
+}
+void DB::attr_remove_data(int data_id, const db::AttrList& qcs)
+{
+    ValueBase* v = memdb.values.get_checked(data_id);
+    if (!v) error_notfound::throwf("no data variable found with data id %d", data_id);
+    v->attr_remove(qcs);
+}
+bool DB::is_station_variable(int data_id, wreport::Varcode varcode)
 {
     // FIXME: this is hackish, and has unexpected results if we have data
     // values and station values with the same id_var and id_data. Giving that
     // measured values are usually different than the station values, the case
     // should be rare enough that we can work around the issue in this way
     // rather than breaking the Fortran API.
-    ValueBase* v = memdb.values.get_checked(id_data);
-    if (!v || v->var->code() != id_var) v = memdb.stationvalues.get_checked(id_data);
-    if (!v || v->var->code() != id_var) error_notfound::throwf("variable B%02d%03d not found at context id %d", WR_VAR_X(id_var), WR_VAR_Y(id_var), id_data);
-    return v;
-}
-
-void DB::attr_insert(int id_data, wreport::Varcode id_var, const Values& attrs)
-{
-    get_value(memdb, id_data, id_var)->attr_insert(attrs);
-}
-
-void DB::attr_remove(int id_data, wreport::Varcode id_var, const std::vector<wreport::Varcode>& qcs)
-{
-    get_value(memdb, id_data, id_var)->attr_remove(qcs);
+    ValueBase* v = memdb.values.get_checked(data_id);
+    if (v && v->var->code() == varcode) return false;
+    v = memdb.stationvalues.get_checked(data_id);
+    if (v && v->var->code() == varcode) return true;
+    error_notfound::throwf("variable B%02d%03d not found at data id %d", WR_VAR_X(varcode), WR_VAR_Y(varcode), data_id);
 }
 
 void DB::dump(FILE* out)

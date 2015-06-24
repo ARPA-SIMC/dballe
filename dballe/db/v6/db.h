@@ -232,10 +232,13 @@ public:
     std::unique_ptr<db::CursorData> query_data(const Query& query);
     std::unique_ptr<db::CursorSummary> query_summary(const Query& query);
 
-    void attr_query(int reference_id, wreport::Varcode id_var,
-            std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
-    void attr_insert(int id_data, wreport::Varcode id_var, const Values& attrs) override;
-    void attr_remove(int id_data, wreport::Varcode id_var, const db::AttrList& qcs);
+    void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
+    void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
+    void attr_insert_station(int data_id, const Values& attrs) override;
+    void attr_insert_data(int data_id, const Values& attrs) override;
+    void attr_remove_station(int data_id, const db::AttrList& qcs) override;
+    void attr_remove_data(int data_id, const db::AttrList& qcs) override;
+    bool is_station_variable(int data_id, wreport::Varcode varcode) override;
 
     void import_msg(const Message& msg, const char* repmemo, int flags) override;
     bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) override;

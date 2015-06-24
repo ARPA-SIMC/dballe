@@ -227,22 +227,12 @@ void DbAPI::prendilo()
         StationValues sv(input);
         db.insert_station_data(sv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
         last_inserted_station_id = sv.info.ana_id;
-        if (sv.values.size() == 1)
-        {
-            attr_reference_id = sv.values.begin()->second.data_id;
-            attr_varid = sv.values.begin()->first;
-        }
         for (const auto& v: sv.values)
             last_inserted_varids.push_back(VarID(v.first, true, v.second.data_id));
     } else {
         DataValues dv(input);
         db.insert_data(dv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
         last_inserted_station_id = dv.info.ana_id;
-        if (dv.values.size() == 1)
-        {
-            attr_reference_id = dv.values.begin()->second.data_id;
-            attr_varid = dv.values.begin()->first;
-        }
         for (const auto& v: dv.values)
             last_inserted_varids.push_back(VarID(v.first, false, v.second.data_id));
     }
@@ -302,11 +292,16 @@ int DbAPI::voglioancora()
         case ATTR_REFERENCE:
             if (attr_reference_id == missing_int || attr_varid == 0)
                 throw error_consistency("voglioancora was not called after a dammelo, or was called with an invalid *context_id or *var_related");
-            db.attr_query(attr_reference_id, attr_varid, dest);
+            if (db.is_station_variable(attr_reference_id, attr_varid))
+                db.attr_query_station(attr_reference_id, dest);
+            else
+                db.attr_query_data(attr_reference_id, dest);
             break;
         case ATTR_DAMMELO:
-            fprintf(stderr, "%d %d\n", query_cur->attr_reference_id(), (int)query_cur->get_varcode());
-            db.attr_query(query_cur->attr_reference_id(), query_cur->get_varcode(), dest);
+            if (dynamic_cast<const db::CursorStationData*>(query_cur))
+                db.attr_query_station(query_cur->attr_reference_id(), dest);
+            else
+                db.attr_query_data(query_cur->attr_reference_id(), dest);
             break;
         case ATTR_PRENDILO:
             throw error_consistency("voglioancora cannot be called after a prendilo");
@@ -331,25 +326,49 @@ void DbAPI::critica()
                 throw error_consistency("critica was not called after a dammelo or prendilo, or was called with an invalid *context_id or *var_related");
             {
                 Values attrs(qcinput);
-                db.attr_insert(attr_reference_id, attr_varid, attrs);
+                if (db.is_station_variable(attr_reference_id, attr_varid))
+                    db.attr_insert_station(attr_reference_id, attrs);
+                else
+                    db.attr_insert_data(attr_reference_id, attrs);
             }
             break;
         case ATTR_DAMMELO:
-            db.attr_insert(query_cur->attr_reference_id(), query_cur->get_varcode(), qcinput);
+            if (dynamic_cast<const db::CursorStationData*>(query_cur))
+                db.attr_insert_station(query_cur->attr_reference_id(), qcinput);
+            else
+                db.attr_insert_data(query_cur->attr_reference_id(), qcinput);
             break;
         case ATTR_PRENDILO:
-            // If we do not have a variable ID ready, look it up from the
-            // results of last prendilo
-            if (attr_reference_id == MISSING_INT)
             {
-                for (const auto& i: last_inserted_varids)
-                    if (i.code == attr_varid)
-                        attr_reference_id = i.id;
+                int data_id = MISSING_INT;
+                bool is_station = false;
+                if (attr_reference_id != MISSING_INT)
+                    error_consistency::throwf("cannot insert attributes for variable %01d%02d%03d: because of an internal inconsistency:"
+                                              " critica is run after a prendilo, but there is an attr_reference_id still being set."
+                                              " Please let the author(s) know.",
+                                              WR_VAR_F(attr_varid), WR_VAR_X(attr_varid), WR_VAR_Y(attr_varid));
+                // Lookup the variable we act on from the results of last prendilo
+                if (last_inserted_varids.size() == 1)
+                {
+                    data_id = last_inserted_varids[0].id;
+                    is_station = last_inserted_varids[0].station;
+                } else {
+                    for (const auto& i: last_inserted_varids)
+                        if (i.code == attr_varid)
+                        {
+                            data_id = i.id;
+                            is_station = i.station;
+                            break;
+                        }
+                    if (data_id == MISSING_INT)
+                        error_consistency::throwf("cannot insert attributes for variable %01d%02d%03d: no data id given or found from last prendilo()",
+                                WR_VAR_F(attr_varid), WR_VAR_X(attr_varid), WR_VAR_Y(attr_varid));
+                }
+                if (is_station)
+                    db.attr_insert_station(data_id, qcinput);
+                else
+                    db.attr_insert_data(data_id, qcinput);
             }
-            if (attr_reference_id == MISSING_INT)
-                error_consistency::throwf("cannot insert attributes for variable %01d%02d%03d: no data id given or found from last prendilo()",
-                        WR_VAR_F(attr_varid), WR_VAR_X(attr_varid), WR_VAR_Y(attr_varid));
-            db.attr_insert(attr_reference_id, attr_varid, qcinput);
             break;
     }
 
@@ -372,10 +391,16 @@ void DbAPI::scusa()
         case ATTR_REFERENCE:
             if (attr_reference_id == missing_int || attr_varid == 0)
                 throw error_consistency("scusa was not called after a dammelo, or was called with an invalid *context_id or *var_related");
-            db.attr_remove(attr_reference_id, attr_varid, arr);
+            if (db.is_station_variable(attr_reference_id, attr_varid))
+                db.attr_remove_station(attr_reference_id, arr);
+            else
+                db.attr_remove_data(attr_reference_id, arr);
             break;
         case ATTR_DAMMELO:
-            db.attr_remove(query_cur->attr_reference_id(), query_cur->get_varcode(), arr);
+            if (dynamic_cast<const db::CursorStationData*>(query_cur))
+                db.attr_remove_station(query_cur->attr_reference_id(), arr);
+            else
+                db.attr_remove_data(query_cur->attr_reference_id(), arr);
             break;
         case ATTR_PRENDILO:
             throw error_consistency("scusa cannot be called after a prendilo");

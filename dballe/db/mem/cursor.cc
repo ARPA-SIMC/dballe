@@ -52,20 +52,6 @@ public:
     void discard_rest() override = 0;
 
 #if 0
-    int get_station_id() const override { return cur_station->id; }
-    double get_lat() const override { return cur_station->coords.dlat(); }
-    double get_lon() const override { return cur_station->coords.dlon(); }
-    const char* get_ident(const char* def=0) const override
-    {
-        if (cur_station->mobile)
-            return cur_station->ident.c_str();
-        else
-            return def;
-    }
-    const char* get_rep_memo() const override { return cur_station->report.c_str(); }
-#endif
-
-#if 0
     /**
      * Iterate the cursor until the end, returning the number of items.
      *
@@ -532,7 +518,11 @@ struct MemCursorSummary : public Base<CursorSummary>
         to_record_station(iter_cur->first.sample.station, rec);
         to_record_levtr(iter_cur->first.sample, rec);
         to_record_varcode(iter_cur->first.sample.var->code(), rec);
-        // TODO: Add stats
+        if (modifiers & DBA_DB_MODIFIER_SUMMARY_DETAILS)
+        {
+            rec.set(get_datetimerange());
+            rec.seti("context_id", get_count());
+        }
     }
 };
 

@@ -667,9 +667,9 @@ std::vector<Test> tests {
         dbapi0.setc("rep_memo", "generic");
         dbapi0.setcontextana();
         dbapi0.setc("B12102", "26312");
-        dbapi0.prendilo();
+        wrunchecked(dbapi0.prendilo());
         dbapi0.setc("*B33194", "50");
-        dbapi0.critica();
+        wrunchecked(dbapi0.critica());
     }),
     Test("attr_insert", [](Fixture& f) {
         // Reproduce a problem with attribute insert when inserting a variable
