@@ -68,12 +68,12 @@ def fill_volnd(db):
 
     def maybe_insert(rec, aname):
         if next(rdata) > 0.9: return
-        db.insert_data(rec, False, True)
+        ids = db.insert_data(rec, False, True)
         attrs.clear()
         attrs[aname] = next(rattr) * 100.
         for code in rec:
             if not code.startswith("B"): continue
-            db.attr_insert(code, attrs)
+            db.attr_insert_data(ids[code], attrs)
 
     # Enter some sample data
     for net, lat, lon in contexts():

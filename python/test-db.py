@@ -28,12 +28,12 @@ class DballeTest(unittest.TestCase):
                 rep_memo="synop",
                 B01011="Hey Hey!!",
                 B01012=500)
-        self.db.insert_data(data, False, True)
+        ids = self.db.insert_data(data, False, True)
 
         data.clear()
         data["B33007"] = 50
         data["B33036"] = 75
-        self.db.attr_insert("B01011", data)
+        self.db.attr_insert_data(ids["B01011"], data)
 
         for rec in self.db.query_data(dballe.Record(var="B01011")):
             self.attr_ref = rec["context_id"]
@@ -72,7 +72,7 @@ class DballeTest(unittest.TestCase):
             count += 1
 
     def testQueryAttrs(self):
-        data = self.db.query_attrs("B01011", self.attr_ref)
+        data = self.db.attr_query_data(self.attr_ref)
         self.assertCountEqual(data.keys(), ["B33007", "B33036"])
 
         expected = {}
@@ -87,12 +87,6 @@ class DballeTest(unittest.TestCase):
             count += 1
         self.assertEqual(count, 2)
 
-    def testQuerySomeAttrs(self):
-        # Try limiting the set of wanted attributes
-        data = self.db.query_attrs("B01011", self.attr_ref, ("B33036",))
-        self.assertCountEqual(data.keys(), ["B33036"])
-        self.assertEqual(data.items(), [("B33036", 75)])
-
     def testQueryCursorAttrs(self):
         # Query a variable
         query = dballe.Record(var="B01011")
@@ -100,7 +94,7 @@ class DballeTest(unittest.TestCase):
         data = next(cur)
         self.assertTrue(data)
 
-        attrs = cur.query_attrs()
+        attrs = cur.attr_query()
 
         expected = {}
         expected["B33007"] = 50
@@ -108,19 +102,12 @@ class DballeTest(unittest.TestCase):
 
         count = 0
         for code in attrs:
-                var = attrs.var(code)
-                assert var.code in expected
-                self.assertEqual(var.enq(), expected[var.code])
-                del expected[var.code]
-                count = count + 1
-        self.assertEqual(count, 2)
-
-        # Try limiting the set of wanted attributes
-        attrs = cur.query_attrs(["B33036"])
-        for code in attrs:
             var = attrs.var(code)
-            self.assertEqual(var.code, "B33036")
-            self.assertEqual(var.enqi(), 75)
+            assert var.code in expected
+            self.assertEqual(var.enq(), expected[var.code])
+            del expected[var.code]
+            count = count + 1
+        self.assertEqual(count, 2)
 
     def testQuerySummary(self):
         query = dballe.Record()
@@ -144,7 +131,7 @@ class DballeTest(unittest.TestCase):
 
     def testAttrRemove(self):
         #db.attrRemove(1, "B01011", [ "B33007" ])
-        self.db.attr_remove("B01011", self.attr_ref, ("B33007",))
+        self.db.attr_remove_data(self.attr_ref, ("B33007",))
 
     def testLoadFile(self):
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "rb") as fp:

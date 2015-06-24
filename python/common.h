@@ -13,18 +13,19 @@ namespace python {
  * unique_ptr-like object that contains PyObject pointers, and that calls
  * Py_DECREF on destruction.
  */
-class pyo_unique_ptr
+template<typename Obj>
+class py_unique_ptr
 {
 protected:
-    PyObject* ptr;
+    Obj* ptr;
 
 public:
-    pyo_unique_ptr(PyObject* o) : ptr(o) {}
-    pyo_unique_ptr(const pyo_unique_ptr&) = delete;
-    pyo_unique_ptr(pyo_unique_ptr&& o) : ptr(o.ptr) { o.ptr = nullptr; }
-    ~pyo_unique_ptr() { Py_XDECREF(ptr); }
-    pyo_unique_ptr& operator=(const pyo_unique_ptr&) = delete;
-    pyo_unique_ptr& operator=(pyo_unique_ptr&& o)
+    py_unique_ptr(Obj* o) : ptr(o) {}
+    py_unique_ptr(const py_unique_ptr&) = delete;
+    py_unique_ptr(py_unique_ptr&& o) : ptr(o.ptr) { o.ptr = nullptr; }
+    ~py_unique_ptr() { Py_XDECREF(ptr); }
+    py_unique_ptr& operator=(const py_unique_ptr&) = delete;
+    py_unique_ptr& operator=(py_unique_ptr&& o)
     {
         if (this == &o) return *this;
         Py_XDECREF(ptr);
@@ -34,22 +35,24 @@ public:
     }
 
     /// Release the reference without calling Py_DECREF
-    PyObject* release()
+    Obj* release()
     {
-        PyObject* res = ptr;
+        Obj* res = ptr;
         ptr = nullptr;
         return res;
     }
 
-    /// Use it as a PyObject
-    operator PyObject*() { return ptr; }
+    /// Use it as a Obj
+    operator Obj*() { return ptr; }
 
     /// Get the pointer (useful for passing to Py_BuildValue)
-    PyObject* get() { return ptr; }
+    Obj* get() { return ptr; }
 
     /// Check if ptr is not nullptr
     operator bool() const { return ptr; }
 };
+
+typedef py_unique_ptr<PyObject> pyo_unique_ptr;
 
 /**
  * Return a python string representing a varcode

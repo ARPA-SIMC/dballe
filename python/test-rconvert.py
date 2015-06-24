@@ -28,7 +28,7 @@ class TestR(unittest.TestCase):
 
     def test_volnd(self):
         # Test from volnd
-        query = dballe.Record(date=datetime(2007, 1, 1, 0, 0, 0))
+        query = dballe.Record(datetime=datetime(2007, 1, 1, 0, 0, 0))
         #query.set("var", "B10004")
         #query.settimerange(dballe.TimeRange(0,0,0))
         vars = volnd.read(self.db.query_data(query), (volnd.AnaIndex(), volnd.NetworkIndex(), volnd.LevelIndex(), volnd.TimeRangeIndex()))

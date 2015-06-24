@@ -33,7 +33,7 @@ def ma_to_rlist(arr):
     ma_data = arr.data.ravel("F")
     ma_mask = arr.mask.ravel("F")
     rlist = []
-    for val, mask in itertools.izip(ma_data, ma_mask):
+    for val, mask in zip(ma_data, ma_mask):
         if mask:
             rlist.append(rinterface.NA_Real)
         else:
@@ -70,7 +70,7 @@ def volnd_data_to_r(data):
 
     dn = []
     for i in data.dims:
-        dn.append(map(str, i))
+        dn.append([str(x) for x in i])
     return ma_to_r(data.vals, dimnames=dn)
 
 def volnd_save_to_r(vars, file):
@@ -80,11 +80,11 @@ def volnd_save_to_r(vars, file):
     rinterface.initr()
 
     tosave = []
-    for k, d in vars.iteritems():
+    for k, d in vars.items():
         #print "s2r", k
         robjects.r.assign(k, volnd_data_to_r(d))
         tosave.append(k)
-        for aname, adata in d.attrs.iteritems():
+        for aname, adata in d.attrs.items():
             robjects.r.assign(k+"."+aname, volnd_data_to_r(adata))
             tosave.append(k+"."+aname)
     tosave = robjects.vectors.StrVector(tosave)

@@ -282,7 +282,7 @@ class Exporter:
 
             # Load attributes
             attributes = {}
-            for key, v in self.db.query_attrs(row["var"], row["context_id"]).varitems():
+            for key, v in self.db.attr_query_data(row["context_id"]).varitems():
                 code = v.code
                 attributes[code] = v
                 col = attribute_cols.get(code, None)

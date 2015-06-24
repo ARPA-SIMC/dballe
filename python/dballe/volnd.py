@@ -507,7 +507,7 @@ class Data:
             self._lastPos = None
             return False
 
-    def appendAttrs(self, rec):
+    def appendAttrs(self, rec, codes=None):
         """
         Collect attributes to append to the record.
 
@@ -516,6 +516,7 @@ class Data:
         if not self._lastPos:
             return
         for code in rec:
+            if codes is not None and code not in codes: continue
             #print "Attr", var.code(), "for", self.name, "at", self._lastPos
             if code in self.attrs:
                 data = self.attrs[code]
@@ -670,12 +671,11 @@ def read(cursor, dims, filter=None, checkConflicts=True, attributes=None):
 
         # Add the attributes
         if attributes != None:
+            arec = cursor.attr_query();
             if attributes == True:
-                arec = cursor.query_attrs([]);
                 var.appendAttrs(arec)
             else:
-                arec = cursor.query_attrs(attributes)
-                var.appendAttrs(arec)
+                var.appendAttrs(arec, attributes)
 
 
     # Now that we have collected all the values, create the arrays

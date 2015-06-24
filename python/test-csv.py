@@ -41,10 +41,10 @@ class TestCSV(unittest.TestCase):
             trange=(254, 0, 0),
             datetime=datetime.datetime(1005, 1, 1, 1, 1, 0),
             B12101=270.96)
-        self.db.insert_data(data, False, True)
+        ids = self.db.insert_data(data, False, True)
         attrs = dballe.Record()
         attrs["B33209"] = 98
-        self.db.attr_insert("B12101", attrs)
+        self.db.attr_insert_data(ids["B12101"], attrs)
 
         data.update(
             rep_memo="synop",
@@ -54,10 +54,10 @@ class TestCSV(unittest.TestCase):
             trange=(254, 0, 0),
             datetime=datetime.datetime(1005, 1, 1, 1, 1, 1),
             B12101=271.96)
-        self.db.insert_data(data, False, True)
+        ids = self.db.insert_data(data, False, True)
         attrs = dballe.Record()
         attrs["B33209"] = 100
-        self.db.attr_insert("B12101", attrs)
+        self.db.attr_insert_data(ids["B12101"], attrs)
 
         query = dballe.Record()
         out = io.StringIO()

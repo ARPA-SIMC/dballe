@@ -25,6 +25,28 @@ using namespace dballe;
 using namespace dballe::python;
 using namespace wreport;
 
+template<typename Vals>
+static PyObject* get_insert_ids(const Vals& vals)
+{
+    pyo_unique_ptr res(PyDict_New());
+
+    pyo_unique_ptr ana_id(PyInt_FromLong(vals.info.ana_id));
+    if (!ana_id) return nullptr;
+    if (PyDict_SetItemString(res, "ana_id", ana_id))
+        return nullptr;
+
+    for (const auto& v: vals.values)
+    {
+        pyo_unique_ptr id(PyInt_FromLong(v.second.data_id));
+        pyo_unique_ptr varcode(format_varcode(v.first));
+
+        if (PyDict_SetItem(res, varcode, id))
+            return nullptr;
+    }
+
+    return res.release();
+}
+
 extern "C" {
 
 static PyGetSetDef dpy_DB_getsetters[] = {
@@ -173,7 +195,7 @@ static PyObject* dpy_DB_insert_station_data(dpy_DB* self, PyObject* args, PyObje
     try {
         StationValues vals(*record->rec);
         self->db->insert_station_data(vals, can_replace, station_can_add);
-        Py_RETURN_NONE;
+        return get_insert_ids(vals);
     } DBALLE_CATCH_RETURN_PYO
 }
 
@@ -189,7 +211,7 @@ static PyObject* dpy_DB_insert_data(dpy_DB* self, PyObject* args, PyObject* kw)
     try {
         DataValues vals(*record->rec);
         self->db->insert_data(vals, can_replace, station_can_add);
-        Py_RETURN_NONE;
+        return get_insert_ids(vals);
     } DBALLE_CATCH_RETURN_PYO
 }
 
@@ -425,6 +447,9 @@ static PyObject* dpy_DB_query_summary(dpy_DB* self, PyObject* args)
 
 static PyObject* dpy_DB_query_attrs(dpy_DB* self, PyObject* args, PyObject* kw)
 {
+    if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use DB.attr_query_station or DB.attr_query_data instead of DB.query_attrs", 1))
+        return NULL;
+
     static const char* kwlist[] = { "varcode", "reference_id", "attrs", NULL };
     int reference_id;
     const char* varname;
@@ -432,31 +457,69 @@ static PyObject* dpy_DB_query_attrs(dpy_DB* self, PyObject* args, PyObject* kw)
     if (!PyArg_ParseTupleAndKeywords(args, kw, "si|O", const_cast<char**>(kwlist), &varname, &reference_id, &attrs))
         return NULL;
 
-    wreport::Varcode varcode = resolve_varcode(varname);
-
     // Read the attribute list, if provided
     db::AttrList codes;
-    if (!db_read_attrlist(attrs, codes))
+    if (db_read_attrlist(attrs, codes))
+        return NULL;
+
+    self->attr_rec->rec->clear();
+
+    try {
+        wreport::Varcode varcode = resolve_varcode(varname);
+        if (self->db->is_station_variable(reference_id, varcode))
+            self->db->attr_query_station(reference_id, [&](unique_ptr<Var>&& var) {
+                if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
+                    return;
+                self->attr_rec->rec->set(move(var));
+            });
+        else
+            self->db->attr_query_data(reference_id, [&](unique_ptr<Var>&& var) {
+                if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
+                    return;
+                self->attr_rec->rec->set(move(var));
+            });
+        Py_INCREF(self->attr_rec);
+        return (PyObject*)self->attr_rec;
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+static PyObject* dpy_DB_attr_query_station(dpy_DB* self, PyObject* args)
+{
+    int reference_id;
+    if (!PyArg_ParseTuple(args, "i", &reference_id))
         return NULL;
 
     self->attr_rec->rec->clear();
     try {
-        self->db->query_attrs(reference_id, varcode, [&](unique_ptr<Var> var) {
-            if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
-                return;
+        self->db->attr_query_station(reference_id, [&](unique_ptr<Var> var) {
             self->attr_rec->rec->set(move(var));
         });
         Py_INCREF(self->attr_rec);
         return (PyObject*)self->attr_rec;
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+static PyObject* dpy_DB_attr_query_data(dpy_DB* self, PyObject* args)
+{
+    int reference_id;
+    if (!PyArg_ParseTuple(args, "i", &reference_id))
+        return NULL;
+
+    self->attr_rec->rec->clear();
+    try {
+        self->db->attr_query_data(reference_id, [&](unique_ptr<Var>&& var) {
+            self->attr_rec->rec->set(move(var));
+        });
+        Py_INCREF(self->attr_rec);
+        return (PyObject*)self->attr_rec;
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_DB_attr_insert(dpy_DB* self, PyObject* args, PyObject* kw)
 {
+    if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use DB.attr_insert_station or DB.attr_insert_data instead of DB.attr_insert", 1))
+        return NULL;
+
     static const char* kwlist[] = { "varcode", "attrs", "reference_id", NULL };
     int reference_id = -1;
     const char* varname;
@@ -467,21 +530,52 @@ static PyObject* dpy_DB_attr_insert(dpy_DB* self, PyObject* args, PyObject* kw)
                 &reference_id))
         return NULL;
 
-    try {
-        if (reference_id == -1)
-            self->db->attr_insert(resolve_varcode(varname), *record->rec);
-        else
-            self->db->attr_insert(reference_id, resolve_varcode(varname), *record->rec);
-        Py_RETURN_NONE;
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
+    if (reference_id == -1)
+    {
+        PyErr_SetString(PyExc_ValueError, "please provide a reference_id argument: implicitly reusing the one from the last insert is not supported anymore");
+        return NULL;
     }
+
+    try {
+        if (self->db->is_station_variable(reference_id, resolve_varcode(varname)))
+            self->db->attr_insert_data(reference_id, *record->rec);
+        else
+            self->db->attr_insert_data(reference_id, *record->rec);
+        Py_RETURN_NONE;
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+static PyObject* dpy_DB_attr_insert_station(dpy_DB* self, PyObject* args)
+{
+    int data_id;
+    dpy_Record* attrs;
+    if (!PyArg_ParseTuple(args, "iO!", &data_id, &dpy_Record_Type, &attrs))
+        return NULL;
+
+    try {
+        self->db->attr_insert_station(data_id, *attrs->rec);
+        Py_RETURN_NONE;
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+static PyObject* dpy_DB_attr_insert_data(dpy_DB* self, PyObject* args)
+{
+    int data_id;
+    dpy_Record* attrs;
+    if (!PyArg_ParseTuple(args, "iO!", &data_id, &dpy_Record_Type, &attrs))
+        return NULL;
+
+    try {
+        self->db->attr_insert_data(data_id, *attrs->rec);
+        Py_RETURN_NONE;
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_DB_attr_remove(dpy_DB* self, PyObject* args, PyObject* kw)
 {
+    if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use DB.attr_remove_station or DB.attr_remove_data instead of DB.attr_remove", 1))
+        return NULL;
+
     static const char* kwlist[] = { "varcode", "reference_id", "attrs", NULL };
     int reference_id;
     const char* varname;
@@ -489,21 +583,54 @@ static PyObject* dpy_DB_attr_remove(dpy_DB* self, PyObject* args, PyObject* kw)
     if (!PyArg_ParseTupleAndKeywords(args, kw, "si|O", const_cast<char**>(kwlist), &varname, &reference_id, &attrs))
         return NULL;
 
-    wreport::Varcode varcode = resolve_varcode(varname);
-
     // Read the attribute list, if provided
     db::AttrList codes;
-    if (!db_read_attrlist(attrs, codes))
+    if (db_read_attrlist(attrs, codes))
         return NULL;
 
     try {
-        self->db->attr_remove(reference_id, varcode, codes);
+        if (self->db->is_station_variable(reference_id, resolve_varcode(varname)))
+            self->db->attr_remove_station(reference_id, codes);
+        else
+            self->db->attr_remove_data(reference_id, codes);
         Py_RETURN_NONE;
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+static PyObject* dpy_DB_attr_remove_station(dpy_DB* self, PyObject* args)
+{
+    int reference_id;
+    PyObject* attrs = 0;
+    if (!PyArg_ParseTuple(args, "i|O", &reference_id, &attrs))
+        return NULL;
+
+    // Read the attribute list, if provided
+    db::AttrList codes;
+    if (db_read_attrlist(attrs, codes))
+        return NULL;
+
+    try {
+        self->db->attr_remove_station(reference_id, codes);
+        Py_RETURN_NONE;
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+static PyObject* dpy_DB_attr_remove_data(dpy_DB* self, PyObject* args)
+{
+    int reference_id;
+    PyObject* attrs = 0;
+    if (!PyArg_ParseTuple(args, "i|O", &reference_id, &attrs))
+        return NULL;
+
+    // Read the attribute list, if provided
+    db::AttrList codes;
+    if (db_read_attrlist(attrs, codes))
+        return NULL;
+
+    try {
+        self->db->attr_remove_data(reference_id, codes);
+        Py_RETURN_NONE;
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_DB_export_to_file(dpy_DB* self, PyObject* args, PyObject* kw)
@@ -586,12 +713,24 @@ static PyMethodDef dpy_DB_methods[] = {
         "Query the variables in the database; returns a Cursor" },
     {"query_summary",     (PyCFunction)dpy_DB_query_summary, METH_VARARGS,
         "Query the summary of the results of a query; returns a Cursor" },
+    {"query_attrs",       (PyCFunction)dpy_DB_query_attrs, METH_VARARGS | METH_KEYWORDS,
+        "Query attributes" },
+    {"attr_query_station", (PyCFunction)dpy_DB_attr_query_station, METH_VARARGS,
+        "Query attributes" },
+    {"attr_query_data",   (PyCFunction)dpy_DB_attr_query_data, METH_VARARGS,
+        "Query attributes" },
     {"attr_insert",       (PyCFunction)dpy_DB_attr_insert, METH_VARARGS | METH_KEYWORDS,
+        "Insert new attributes into the database" },
+    {"attr_insert_station", (PyCFunction)dpy_DB_attr_insert_station, METH_VARARGS,
+        "Insert new attributes into the database" },
+    {"attr_insert_data",  (PyCFunction)dpy_DB_attr_insert_data, METH_VARARGS,
         "Insert new attributes into the database" },
     {"attr_remove",       (PyCFunction)dpy_DB_attr_remove, METH_VARARGS | METH_KEYWORDS,
         "Remove attributes" },
-    {"query_attrs",       (PyCFunction)dpy_DB_query_attrs, METH_VARARGS | METH_KEYWORDS,
-        "Query attributes" },
+    {"attr_remove_station", (PyCFunction)dpy_DB_attr_remove_station, METH_VARARGS,
+        "Remove attributes" },
+    {"attr_remove_data",  (PyCFunction)dpy_DB_attr_remove_data, METH_VARARGS,
+        "Remove attributes" },
     {"export_to_file",    (PyCFunction)dpy_DB_export_to_file, METH_VARARGS | METH_KEYWORDS,
         "Export data matching a query as bulletins to a named file" },
     {NULL}
@@ -686,29 +825,23 @@ PyTypeObject dpy_DB_Type = {
 namespace dballe {
 namespace python {
 
-bool db_read_attrlist(PyObject* attrs, db::AttrList& codes)
+int db_read_attrlist(PyObject* attrs, db::AttrList& codes)
 {
-    if (!attrs) return true;
+    if (!attrs) return 0;
 
     pyo_unique_ptr iter(PyObject_GetIter(attrs));
-    if (!iter) return false;
+    if (!iter) return -1;
 
     try {
         while (PyObject* iter_item = PyIter_Next(iter)) {
             pyo_unique_ptr item(iter_item);
             string name;
             if (string_from_python(item, name))
-                return false;
+                return -1;
             codes.push_back(resolve_varcode(name));
         }
-        return true;
-    } catch (wreport::error& e) {
-        raise_wreport_exception(e);
-        return false;
-    } catch (std::exception& se) {
-        raise_std_exception(se);
-        return false;
-    }
+        return 0;
+    } DBALLE_CATCH_RETURN_INT
 }
 
 dpy_DB* db_create(std::unique_ptr<DB> db)

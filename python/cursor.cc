@@ -30,6 +30,9 @@ static PyGetSetDef dpy_Cursor_getsetters[] = {
 
 static PyObject* dpy_Cursor_query_attrs(dpy_Cursor* self, PyObject* args, PyObject* kw)
 {
+    if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use Cursor.attr_query, DB.attr_query_station or DB.attr_query_data instead of Cursor.query_attrs", 1))
+        return NULL;
+
     static char* kwlist[] = { "attrs", NULL };
     PyObject* attrs = 0;
     if (!PyArg_ParseTupleAndKeywords(args, kw, "|O", kwlist, &attrs))
@@ -37,28 +40,59 @@ static PyObject* dpy_Cursor_query_attrs(dpy_Cursor* self, PyObject* args, PyObje
 
     // Read the attribute list, if provided
     db::AttrList codes;
-    if (!db_read_attrlist(attrs, codes))
+    if (db_read_attrlist(attrs, codes))
         return NULL;
 
     self->db->attr_rec->rec->clear();
     try {
-        self->cur->query_attrs([&](unique_ptr<Var> var) {
-            if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
-                return;
-            self->db->attr_rec->rec->set(move(var));
-        });
+        if (auto c = dynamic_cast<const db::CursorStationData*>(self->cur))
+            c->get_db().attr_query_station(c->attr_reference_id(), [&](unique_ptr<Var>&& var) {
+                if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
+                    return;
+                self->db->attr_rec->rec->set(move(var));
+            });
+        else if (auto c = dynamic_cast<const db::CursorData*>(self->cur))
+            c->get_db().attr_query_data(c->attr_reference_id(), [&](unique_ptr<Var>&& var) {
+                if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
+                    return;
+                self->db->attr_rec->rec->set(move(var));
+            });
+        else
+        {
+            PyErr_SetString(PyExc_ValueError, "the cursor does ont come from DB.query_station_data or DB.query_data");
+            return NULL;
+        }
         Py_INCREF(self->db->attr_rec);
         return (PyObject*)self->db->attr_rec;
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
+static PyObject* dpy_Cursor_attr_query(dpy_Cursor* self)
+{
+    self->db->attr_rec->rec->clear();
+    try {
+        if (auto c = dynamic_cast<const db::CursorStationData*>(self->cur))
+            c->get_db().attr_query_station(c->attr_reference_id(), [&](unique_ptr<Var>&& var) {
+                self->db->attr_rec->rec->set(move(var));
+            });
+        else if (auto c = dynamic_cast<const db::CursorData*>(self->cur))
+            c->get_db().attr_query_data(c->attr_reference_id(), [&](unique_ptr<Var>&& var) {
+                self->db->attr_rec->rec->set(move(var));
+            });
+        else
+        {
+            PyErr_SetString(PyExc_ValueError, "the cursor does ont come from DB.query_station_data or DB.query_data");
+            return NULL;
+        }
+        Py_INCREF(self->db->attr_rec);
+        return (PyObject*)self->db->attr_rec;
+    } DBALLE_CATCH_RETURN_PYO
+}
 
 static PyMethodDef dpy_Cursor_methods[] = {
-    {"query_attrs",       (PyCFunction)dpy_Cursor_query_attrs, METH_VARARGS | METH_KEYWORDS,
+    {"query_attrs",      (PyCFunction)dpy_Cursor_query_attrs, METH_VARARGS | METH_KEYWORDS,
+        "Query attributes for the current variable" },
+    {"attr_query",       (PyCFunction)dpy_Cursor_attr_query, METH_NOARGS,
         "Query attributes for the current variable" },
     {NULL}
 };
