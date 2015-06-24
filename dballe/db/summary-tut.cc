@@ -32,7 +32,10 @@ std::vector<Test> tests {
 
         // Check its contents
         wassert(actual(s.is_valid()).istrue());
-        wassert(actual(s.all_stations.size()) == 1);
+        if (f.db->format() == V6)
+            wassert(actual(s.all_stations.size()) == 1);
+        else
+            wassert(actual(s.all_stations.size()) == 2);
         wassert(actual(s.all_levels.size()) == 1);
         wassert(actual(s.all_tranges.size()) == 2);
         wassert(actual(s.all_varcodes.size()) == 2);
