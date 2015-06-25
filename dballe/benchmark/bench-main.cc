@@ -18,19 +18,11 @@
  */
 
 #include "benchmark/bench.h"
-#include <dballe/file.h>
-#include <dballe/msg/msgs.h>
-#include <dballe/msg/codec.h>
-#include <dballe/db/db.h>
-#include <wreport/bulletin.h>
-#include <wibble/string.h>
 #include <vector>
 #include <iostream>
 #include <config.h>
 
 using namespace std;
-using namespace wibble;
-using namespace wreport;
 using namespace dballe;
 using namespace dballe::bench;
 

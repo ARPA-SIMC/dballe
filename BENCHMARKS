@@ -1,3 +1,41 @@
+2015-06-25:
+ - SQLite:
+   db_query_parse.main: 5 runs, user: 9.21s (100.0%), sys: 0.30s (100.0%), total: 9.51s (100.0%)
+   db_query_parse.station: 5 runs, user: 0.15s (1.6%), sys: 0.01s (3.3%), total: 0.16s (1.7%)
+   db_query_parse.sdata: 5 runs, user: 1.89s (20.5%), sys: 0.08s (26.7%), total: 1.97s (20.7%)
+   db_query_parse.data: 5 runs, user: 7.17s (77.9%), sys: 0.21s (70.0%), total: 7.38s (77.6%)
+   db_import.main: 10 runs, user: 0.59s (100.0%), sys: 0.04s (100.0%), total: 0.63s (100.0%)
+   db_import.synop: 10 runs, user: 0.39s (66.1%), sys: 0.04s (100.0%), total: 0.43s (68.3%)
+   db_import.temp: 10 runs, user: 0.20s (33.9%), sys: 0.00s (0.0%), total: 0.20s (31.7%)
+   db_import.airplane: 10 runs, user: 0.00s (0.0%), sys: 0.00s (0.0%), total: 0.00s (0.0%)
+ - MEMDB
+   db_query_parse.main: 5 runs, user: 0.13s (100.0%), sys: 0.00s (-nan%), total: 0.13s (100.0%)
+   db_query_parse.station: 5 runs, user: 0.00s (0.0%), sys: 0.00s (-nan%), total: 0.00s (0.0%)
+   db_query_parse.sdata: 5 runs, user: 0.03s (23.1%), sys: 0.00s (-nan%), total: 0.03s (23.1%)
+   db_query_parse.data: 5 runs, user: 0.10s (76.9%), sys: 0.00s (-nan%), total: 0.10s (76.9%)
+   db_import.main: 10 runs, user: 0.09s (100.0%), sys: 0.00s (-nan%), total: 0.09s (100.0%)
+   db_import.synop: 10 runs, user: 0.05s (55.6%), sys: 0.00s (-nan%), total: 0.05s (55.6%)
+   db_import.temp: 10 runs, user: 0.03s (33.3%), sys: 0.00s (-nan%), total: 0.03s (33.3%)
+   db_import.airplane: 10 runs, user: 0.01s (11.1%), sys: 0.00s (-nan%), total: 0.01s (11.1%)
+ - PostgreSQL
+   db_query_parse.main: 5 runs, user: 4.98s (100.0%), sys: 0.80s (100.0%), total: 5.78s (100.0%)
+   db_query_parse.station: 5 runs, user: 0.13s (2.6%), sys: 0.02s (2.5%), total: 0.15s (2.6%)
+   db_query_parse.sdata: 5 runs, user: 1.03s (20.7%), sys: 0.14s (17.5%), total: 1.17s (20.2%)
+   db_query_parse.data: 5 runs, user: 3.82s (76.7%), sys: 0.64s (80.0%), total: 4.46s (77.2%)
+   db_import.main: 10 runs, user: 0.80s (100.0%), sys: 0.40s (100.0%), total: 1.20s (100.0%)
+   db_import.synop: 10 runs, user: 0.59s (73.8%), sys: 0.24s (60.0%), total: 0.83s (69.2%)
+   db_import.temp: 10 runs, user: 0.17s (21.2%), sys: 0.15s (37.5%), total: 0.32s (26.7%)
+   db_import.airplane: 10 runs, user: 0.04s (5.0%), sys: 0.01s (2.5%), total: 0.05s (4.2%)
+ - MySQL
+   db_query_parse.main: 5 runs, user: 3.57s (100.0%), sys: 0.57s (100.0%), total: 4.14s (100.0%)
+   db_query_parse.station: 5 runs, user: 0.09s (2.5%), sys: 0.02s (3.5%), total: 0.11s (2.7%)
+   db_query_parse.sdata: 5 runs, user: 0.73s (20.4%), sys: 0.13s (22.8%), total: 0.86s (20.8%)
+   db_query_parse.data: 5 runs, user: 2.75s (77.0%), sys: 0.42s (73.7%), total: 3.17s (76.6%)
+   db_import.main: 10 runs, user: 1.64s (100.0%), sys: 1.15s (100.0%), total: 2.79s (100.0%)
+   db_import.synop: 10 runs, user: 0.97s (59.1%), sys: 0.75s (65.2%), total: 1.72s (61.6%)
+   db_import.temp: 10 runs, user: 0.62s (37.8%), sys: 0.38s (33.0%), total: 1.00s (35.8%)
+   db_import.airplane: 10 runs, user: 0.05s (3.0%), sys: 0.02s (1.7%), total: 0.07s (2.5%)
+
 2015-04-27:
  - Record SQLite:
    db_query_parse.main: 5 runs, user: 9.46s (100.0%), sys: 0.36s (100.0%), total: 9.82s (100.0%)

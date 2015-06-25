@@ -218,9 +218,9 @@ struct Data
 
 struct B : bench::DBBenchmark
 {
-    vector<Query> queries_station;
-    vector<Query> queries_sdata;
-    vector<Query> queries_data;
+    vector<core::Query> queries_station;
+    vector<core::Query> queries_sdata;
+    vector<core::Query> queries_data;
     bench::Task station;
     bench::Task sdata;
     bench::Task data;
@@ -254,7 +254,7 @@ struct B : bench::DBBenchmark
         bench::DBBenchmark::setup_main();
         Data d;
         d.generate({Q_ANA_ID, Q_LATLON, Q_MOBILE, Q_ANAFILTER, Q_BLOCKSTATION}, [&](const std::string& q) {
-            Query query;
+            core::Query query;
             query.set_from_test_string(q);
             queries_station.push_back(query);
         });
@@ -263,7 +263,7 @@ struct B : bench::DBBenchmark
         count = 0;
         d.generate({Q_ANA_ID, Q_LATLON, Q_MOBILE, Q_ANAFILTER, Q_BLOCKSTATION, Q_PRIO, Q_REPMEMO, Q_DATA_ID, Q_DATA_FILTER, Q_ATTR_FILTER}, [&](const std::string& q) {
             if (count++ % 7 != 0) return;
-            Query query;
+            core::Query query;
             query.set_from_test_string(q);
             queries_sdata.push_back(query);
         });
@@ -272,7 +272,7 @@ struct B : bench::DBBenchmark
         count = 0;
         d.generate({Q_ANA_ID, Q_LATLON, Q_MOBILE, Q_ANAFILTER, Q_BLOCKSTATION, Q_PRIO, Q_REPMEMO, Q_VAR, Q_DATETIME, Q_LEVEL, Q_TRANGE, Q_QBEST, Q_DATA_ID, Q_DATA_FILTER, Q_ATTR_FILTER}, [&](const std::string& q) {
             if (count++ % 149 != 0) return;
-            Query query;
+            core::Query query;
             query.set_from_test_string(q);
             queries_data.push_back(query);
         });
