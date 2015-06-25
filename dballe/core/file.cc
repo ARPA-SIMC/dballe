@@ -56,7 +56,6 @@ BinaryMessage BufrFile::read()
     if (BufrBulletin::read(fd, res.data, m_name.c_str(), &res.offset))
     {
         res.pathname = m_name;
-        res.encoding = BUFR;
         res.index = idx++;
         return res;
     }
@@ -74,7 +73,6 @@ BinaryMessage CrexFile::read()
     if (CrexBulletin::read(fd, res.data, m_name.c_str(), &res.offset))
     {
         res.pathname = m_name;
-        res.encoding = BUFR;
         res.index = idx++;
         return res;
     }
