@@ -52,14 +52,14 @@ struct Metar : public Template
         // Use old table for old templates
         if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
         {
-            b->master_table = 13;
+            b->master_table_version_number = 13;
         }
 
         is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
 
-        bulletin.type = 0;
-        bulletin.subtype = 255;
-        bulletin.localsubtype = 140;
+        bulletin.data_category = 0;
+        bulletin.data_subcategory = 255;
+        bulletin.data_subcategory_local = 140;
 
         // Data descriptor section
         bulletin.datadesc.clear();

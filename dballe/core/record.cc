@@ -150,7 +150,7 @@ void Record::sets(const char* key, const std::string& val)
 }
 void Record::setf(const char* key, const char* val)
 {
-    obtain(key).set_from_formatted(val);
+    obtain(key).setf(val);
 }
 
 void Record::set_datetime(const Datetime& dt)
@@ -366,8 +366,8 @@ void Record::set_trange(const Trange& tr)
 
 void Record::set_var(const wreport::Var& var)
 {
-    if (var.value())
-        obtain(var.code()).copy_val(var);
+    if (var.isset())
+        obtain(var.code()).setval(var);
     else
         var_unset(var.code());
 }
@@ -609,27 +609,26 @@ void Record::add(const dballe::Record& rec)
 
 void Record::set_to_difference(const Record& source1, const Record& source2)
 {
-	// Copy the keyword table
-	for (int i = 0; i < KEYWORD_TABLE_SIZE; ++i)
-	{
-		Var* src = NULL;
-		if (source2.keydata[i] != NULL &&
-			(source1.keydata[i] == NULL ||
-			 strcmp(source1.keydata[i]->value(), source2.keydata[i]->value()) != 0))
-			src = source2.keydata[i];
-
-		if (keydata[i] != NULL)
-		{
-			if (src != NULL)
-				*keydata[i] = *src;
-			else
-			{
-				delete keydata[i];
-				keydata[i] = NULL;
-			}
-		} else if (src != NULL)
-			keydata[i] = new Var(*src);
-	}
+    // Copy the keyword table
+    for (unsigned i = 0; i < KEYWORD_TABLE_SIZE; ++i)
+    {
+        if (!source2.keydata[i])
+        {
+            // Has been deleted: skip
+            delete keydata[i];
+            keydata[i] = nullptr;
+        } else if (!source1.keydata[i]) {
+            // Has been added in source2: add
+            *keydata[i] = *source2.keydata[i];
+        } else if (source1.keydata[i] != source2.keydata[i]) {
+            // Has been changed in source2: add
+            *keydata[i] = *source2.keydata[i];
+        } else {
+            // Has not been changed: skip
+            delete keydata[i];
+            keydata[i] = nullptr;
+        }
+    }
 
 	// Copy the variables list
 	clear_vars();
@@ -1057,8 +1056,8 @@ matcher::Result MatchedRecord::match_coords(const LatRange& latrange, const LonR
 matcher::Result MatchedRecord::match_rep_memo(const char* memo) const
 {
     if (const Var* var = r.get("rep_memo"))
-        if (const char* val = var->value())
-            return strcmp(memo, val) == 0 ? matcher::MATCH_YES : matcher::MATCH_NO;
+        if (var->isset())
+            return strcmp(memo, var->enqc()) == 0 ? matcher::MATCH_YES : matcher::MATCH_NO;
     return matcher::MATCH_NA;
 }
 

@@ -100,7 +100,7 @@ void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool wi
     if (force_report != NULL)
         report = force_report;
     else if (const Var* var = msg.get_rep_memo_var())
-        report = var->value();
+        report = var->enqc();
     else
         report = Msg::repmemo_from_type(msg.type);
 
@@ -108,7 +108,7 @@ void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool wi
     if (const Var* var = l_ana->find_by_id(DBA_MSG_IDENT))
     {
         // Mobile station
-        station_id = stations.obtain_mobile(coord, var->value(), report, true);
+        station_id = stations.obtain_mobile(coord, var->enqc(), report, true);
     }
     else
     {
@@ -121,14 +121,21 @@ void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool wi
     if (with_station_info || stationvalues.has_variables_for(station))
     {
         // Insert the rest of the station information
-        for (size_t i = 0; i < l_ana->data.size(); ++i)
+        for (const auto& srcvar : l_ana->data)
         {
-            Varcode code = l_ana->data[i]->code();
+            Varcode code = srcvar->code();
             // Do not import datetime in the station info context
             if (code >= WR_VAR(0, 4, 1) && code <= WR_VAR(0, 4, 6))
                 continue;
 
-            unique_ptr<Var> var(new Var(*l_ana->data[i], with_attrs));
+            unique_ptr<Var> var;
+            if (with_attrs)
+                var.reset(new Var(*srcvar));
+            else
+            {
+                var.reset(new Var(srcvar->info()));
+                var->setval(*srcvar);
+            }
             stationvalues.insert(station, std::move(var), replace);
         }
     }
@@ -150,13 +157,19 @@ void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool wi
         size_t levtr_id = levtrs.obtain(ctx.level, ctx.trange);
         const LevTr& levtr = *levtrs[levtr_id];
 
-        for (size_t j = 0; j < ctx.data.size(); ++j)
+        for (const auto& srcvar : ctx.data)
         {
-            const Var& var = *ctx.data[j];
-            if (not var.isset()) continue;
+            if (not srcvar->isset()) continue;
 
-            unique_ptr<Var> newvar(new Var(var, with_attrs));
-            values.insert(station, levtr, msg.get_datetime(), std::move(newvar), replace);
+            unique_ptr<Var> var;
+            if (with_attrs)
+                var.reset(new Var(*srcvar));
+            else
+            {
+                var.reset(new Var(srcvar->info()));
+                var->setval(*srcvar);
+            }
+            values.insert(station, levtr, msg.get_datetime(), std::move(var), replace);
         }
     }
 }

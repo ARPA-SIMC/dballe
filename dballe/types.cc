@@ -329,17 +329,6 @@ int Datetime::to_julian() const
     return Date::calendar_to_julian(year, month, day);
 }
 
-void Datetime::to_stream_iso8601(std::ostream& out, char sep, const char* tz) const
-{
-    out <<        setw(4) << setfill('0') << year
-        << '-' << setw(2) << setfill('0') << (unsigned)month
-        << '-' << setw(2) << setfill('0') << (unsigned)day
-        << sep << setw(2) << setfill('0') << (unsigned)hour
-        << ':' << setw(2) << setfill('0') << (unsigned)minute
-        << ':' << setw(2) << setfill('0') << (unsigned)second
-        << tz;
-}
-
 int Datetime::compare(const Datetime& o) const
 {
     if (int res = year - o.year) return res;
@@ -376,6 +365,23 @@ Datetime Datetime::from_iso8601(const char* str)
     if (sep != 'T' && sep != ' ')
         error_consistency::throwf("invalid iso8601 separator '%c' in datetime string \"%s\"", sep, str);
     return Datetime(ye, mo, da, ho, mi, se);
+}
+
+void Datetime::to_stream_iso8601(std::ostream& out, char sep, const char* tz) const
+{
+    out <<        setw(4) << setfill('0') << year
+        << '-' << setw(2) << setfill('0') << (unsigned)month
+        << '-' << setw(2) << setfill('0') << (unsigned)day
+        << sep << setw(2) << setfill('0') << (unsigned)hour
+        << ':' << setw(2) << setfill('0') << (unsigned)minute
+        << ':' << setw(2) << setfill('0') << (unsigned)second
+        << tz;
+}
+
+void Datetime::print_iso8601(FILE* out, char sep, const char* end) const
+{
+    fprintf(out, "%04hu-%02hhu-%02hhu%c%hhu:%hhu:%hhu%s",
+            year, month, day, sep, hour, minute, second, end);
 }
 
 /*
@@ -543,6 +549,10 @@ bool Coords::operator>(const Coords& o) const { return compare(o) > 0; }
 bool Coords::operator<=(const Coords& o) const { return compare(o) <= 0; }
 bool Coords::operator>=(const Coords& o) const { return compare(o) >= 0; }
 
+void Coords::print(FILE* out, const char* end) const
+{
+    fprintf(out, "%.5f,%.5f%s", dlat(), dlon(), end);
+}
 
 /*
  * LatRange
@@ -875,6 +885,27 @@ void Level::to_stream(std::ostream& out, const char* undef) const
 
 Level Level::cloud(int ltype2, int l2) { return Level(256, MISSING_INT, ltype2, l2); }
 
+void Level::print(FILE* out, const char* undef, const char* end) const
+{
+    if (ltype1 == MISSING_INT)
+        fprintf(out, "%s,", undef);
+    else
+        fprintf(out, "%d,", ltype1);
+    if (l1 == MISSING_INT)
+        fprintf(out, "%s,", undef);
+    else
+        fprintf(out, "%d,", l1);
+    if (ltype2 == MISSING_INT)
+        fprintf(out, "%s,", undef);
+    else
+        fprintf(out, "%d,", ltype2);
+    if (l2 == MISSING_INT)
+        fprintf(out, "%s,", undef);
+    else
+        fprintf(out, "%d,", l2);
+    fputs(end, out);
+}
+
 
 /*
  * Trange
@@ -997,6 +1028,20 @@ std::string Trange::describe() const
     }
 }
 
-
+void Trange::print(FILE* out, const char* undef, const char* end) const
+{
+    if (pind == MISSING_INT)
+        fprintf(out, "%s,", undef);
+    else
+        fprintf(out, "%d,", pind);
+    if (p1 == MISSING_INT)
+        fprintf(out, "%s,", undef);
+    else
+        fprintf(out, "%d,", p1);
+    if (p2 == MISSING_INT)
+        fprintf(out, "%s,", undef);
+    else
+        fprintf(out, "%d,", p2);
+}
 
 }

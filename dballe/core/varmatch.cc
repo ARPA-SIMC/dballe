@@ -47,12 +47,9 @@ struct BetweenInt : public Varmatch
     bool operator()(const wreport::Var& var) const
     {
         if (!Varmatch::operator()(var)) return false;
-        if (const char* val = var.value())
-        {
-            int ival = strtoul(val, 0, 10);
-            return min <= ival && ival <= max;
-        }
-        return false;
+        if (!var.isset()) return false;
+        int ival = var.enqi();
+        return min <= ival && ival <= max;
     }
 };
 
@@ -64,12 +61,9 @@ struct BetweenString : public Varmatch
     bool operator()(const wreport::Var& var) const
     {
         if (!Varmatch::operator()(var)) return false;
-        if (const char* val = var.value())
-        {
-            string sval(val);
-            return min <= sval && sval <= max;
-        }
-        return false;
+        if (!var.isset()) return false;
+        string sval = var.enqs();
+        return min <= sval && sval <= max;
     }
 };
 
@@ -89,9 +83,8 @@ struct Op : public Varmatch
     bool operator()(const wreport::Var& var) const
     {
         if (!Varmatch::operator()(var)) return false;
-        if (const char* v = var.value())
-            return op(from_raw_var<T>(v), val);
-        return false;
+        if (!var.isset()) return false;
+        return op(var.enq<T>(), val);
     }
 };
 
@@ -137,26 +130,41 @@ std::unique_ptr<Varmatch> Varmatch::parse(const std::string& filter)
         string min = filter.substr(0, sep1_begin);
         string max = filter.substr(sep2_end);
 
-        if (info->is_string())
-            return unique_ptr<Varmatch>(new varmatch::BetweenString(code, min, max));
-        else
+        switch (info->type)
         {
-            int imin = info->encode_int(strtod(min.c_str(), NULL));
-            int imax = info->encode_int(strtod(max.c_str(), NULL));
-            return unique_ptr<Varmatch>(new varmatch::BetweenInt(code, imin, imax));
+            case Vartype::String:
+                return unique_ptr<Varmatch>(new varmatch::BetweenString(code, min, max));
+            case Vartype::Binary:
+                error_consistency::throwf("cannot apply filter '%s' to a binary variable", filter.c_str());
+            case Vartype::Integer:
+            case Vartype::Decimal:
+            {
+                int imin = info->encode_decimal(strtod(min.c_str(), NULL));
+                int imax = info->encode_decimal(strtod(max.c_str(), NULL));
+                return unique_ptr<Varmatch>(new varmatch::BetweenInt(code, imin, imax));
+            }
         }
+        error_consistency::throwf("unsupported variable type %d", (int)info->type);
     } else {
         // B12345<=>val
         Varcode code = resolve_varcode(filter.substr(0, sep1_begin).c_str());
         Varinfo info = varinfo(code);
         string op = filter.substr(sep1_begin, sep1_end - sep1_begin);
 
-        if (info->is_string())
-            return varmatch::make_op(code, op, filter.substr(sep1_end));
-        else {
-            int val = info->encode_int(strtod(filter.substr(sep1_end).c_str(), NULL));
-            return varmatch::make_op(code, op, val);
+        switch (info->type)
+        {
+            case Vartype::String:
+                return varmatch::make_op(code, op, filter.substr(sep1_end));
+            case Vartype::Binary:
+                error_consistency::throwf("cannot apply filter '%s' to a binary variable", filter.c_str());
+            case Vartype::Integer:
+            case Vartype::Decimal:
+            {
+                int val = info->encode_decimal(strtod(filter.substr(sep1_end).c_str(), NULL));
+                return varmatch::make_op(code, op, val);
+            }
         }
+        error_consistency::throwf("unsupported variable type %d", (int)info->type);
     }
 }
 

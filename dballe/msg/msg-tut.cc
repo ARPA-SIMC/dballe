@@ -143,7 +143,7 @@ std::vector<Test> tests {
         ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_NO);
 
         std::unique_ptr<wreport::Var> var = newvar(WR_VAR(0, 12, 103), 18.5);
-        var->seta(ap_newvar(WR_VAR(0, 33, 195), 1));
+        var->seta(newvar(WR_VAR(0, 33, 195), 1));
         matched.set(move(var), Level(1), Trange::instant());
         ensure(m->match(MatchedMsg(matched)) == matcher::MATCH_YES);
     }),
@@ -380,7 +380,7 @@ std::vector<Test> tests {
         ensure(m->match(MatchedMessages(matched)) == matcher::MATCH_NO);
 
         std::unique_ptr<wreport::Var> var = newvar(WR_VAR(0, 12, 103), 18.5);
-        var->seta(ap_newvar(WR_VAR(0, 33, 195), 1));
+        var->seta(newvar(WR_VAR(0, 33, 195), 1));
         Msg::downcast(matched[0]).set(move(var), Level(1), Trange::instant());
         ensure(m->match(MatchedMessages(matched)) == matcher::MATCH_YES);
     }),

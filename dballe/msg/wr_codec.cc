@@ -1,30 +1,9 @@
-/*
- * dballe/wr_codec - BUFR/CREX import and export
- *
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "wr_codec.h"
 #include "msg.h"
 #include "context.h"
-#include <wreport/bulletin.h>
 #include "wr_importers/base.h"
-//#include <dballe/core/verbose.h>
+#include <wreport/bulletin.h>
+#include <wreport/vartable.h>
 
 using namespace wreport;
 using namespace std;
@@ -41,8 +20,7 @@ BufrImporter::~BufrImporter() {}
 
 bool BufrImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const
 {
-    unique_ptr<BufrBulletin> bulletin(BufrBulletin::create());
-    bulletin->decode(msg.data);
+    unique_ptr<BufrBulletin> bulletin(BufrBulletin::decode(msg.data));
     return foreach_decoded_bulletin(*bulletin, dest);
 }
 
@@ -52,8 +30,7 @@ CrexImporter::~CrexImporter() {}
 
 bool CrexImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const
 {
-    unique_ptr<CrexBulletin> bulletin(CrexBulletin::create());
-    bulletin->decode(msg.data);
+    unique_ptr<CrexBulletin> bulletin(CrexBulletin::decode(msg.data));
     return foreach_decoded_bulletin(*bulletin, dest);
 }
 
@@ -68,11 +45,11 @@ bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::fun
 {
     // Infer the right importer. See Common Code Table C-13
     std::unique_ptr<wr::Importer> importer;
-    switch (msg.type)
+    switch (msg.data_category)
     {
         // Surface data - land
         case 0:
-            switch (msg.subtype)
+            switch (msg.data_subcategory)
             {
                 // Routine aeronautical observations (METAR)
                 case 10:
@@ -80,7 +57,7 @@ bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::fun
                     break;
                 default:
                     // Old ECMWF METAR type
-                    if (msg.localsubtype == 140)
+                    if (msg.data_subcategory_local == 140)
                         importer = wr::Importer::createMetar(opts);
                     else
                         importer = wr::Importer::createSynop(opts);
@@ -97,7 +74,7 @@ bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::fun
         case 4: importer = wr::Importer::createFlight(opts); break;
         // Radar data
         case 6:
-            if (msg.subtype == 1)
+            if (msg.data_subcategory == 1)
                 // Doppler wind profiles
                 importer = wr::Importer::createTemp(opts);
             else
@@ -136,11 +113,7 @@ std::unique_ptr<wreport::Bulletin> BufrExporter::make_bulletin() const
 
 std::string BufrExporter::to_binary(const Messages& msgs) const
 {
-    unique_ptr<BufrBulletin> bulletin(BufrBulletin::create());
-    to_bulletin(msgs, *bulletin);
-    string res;
-    bulletin->encode(res);
-    return res;
+    return to_bulletin(msgs)->encode();
 }
 
 CrexExporter::CrexExporter(const Options& opts)
@@ -154,11 +127,7 @@ std::unique_ptr<wreport::Bulletin> CrexExporter::make_bulletin() const
 
 std::string CrexExporter::to_binary(const Messages& msgs) const
 {
-    unique_ptr<CrexBulletin> bulletin(CrexBulletin::create());
-    to_bulletin(msgs, *bulletin);
-    string res;
-    bulletin->encode(res);
-    return res;
+    return to_bulletin(msgs)->encode();
 }
 
 namespace {
@@ -175,7 +144,7 @@ const char* infer_from_message(const Msg& msg)
 
 }
 
-void WRExporter::to_bulletin(const Messages& msgs, wreport::Bulletin& bulletin) const
+unique_ptr<Bulletin> WRExporter::to_bulletin(const Messages& msgs) const
 {
     if (msgs.empty())
         throw error_consistency("trying to export an empty message set");
@@ -189,7 +158,9 @@ void WRExporter::to_bulletin(const Messages& msgs, wreport::Bulletin& bulletin) 
     const wr::TemplateFactory& fac = wr::TemplateRegistry::get(tpl);
     std::unique_ptr<wr::Template> encoder = fac.make(opts, msgs);
     // fprintf(stderr, "Encoding with template %s\n", encoder->name());
-    encoder->to_bulletin(bulletin);
+    auto res = make_bulletin();
+    encoder->to_bulletin(*res);
+    return res;
 }
 
 namespace wr {
@@ -295,23 +266,27 @@ void Template::setupBulletin(wreport::Bulletin& bulletin)
     bulletin.rep_minute = dt.minute;
     bulletin.rep_second = dt.second;
     bulletin.master_table_number = 0;
+    bulletin.originating_centre = opts.centre != MISSING_INT ? opts.centre : 255;
+    bulletin.originating_subcentre = opts.subcentre != MISSING_INT ? opts.subcentre : 255;
+    bulletin.update_sequence_number = 0;
 
     if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
     {
         // Take from opts
-        b->centre = opts.centre != MISSING_INT ? opts.centre : 255;
-        b->subcentre = opts.subcentre != MISSING_INT ? opts.subcentre : 255;
-        b->master_table = 17;
-        b->local_table = 0;
-        b->compression = 0;
-        b->update_sequence_number = 0;
-        b->edition = 4;
+        b->edition_number = 4;
+        b->master_table_version_number = 17;
+        b->master_table_version_number_local = 0;
+        b->compression = false;
     }
     if (CrexBulletin* b = dynamic_cast<CrexBulletin*>(&bulletin))
     {
-        b->table = 3;
-        b->has_check_digit = 0;
-        b->edition = 2;
+        // TODO: change using BUFR tables, when the encoder can encode the full
+        // CREX ed.2 header
+        b->edition_number = 2;
+        b->master_table_version_number = 3;
+        b->master_table_version_number_local = 0;
+        b->master_table_version_number_bufr = 3;
+        b->has_check_digit = false;
     }
 }
 
@@ -383,11 +358,11 @@ void Template::do_station_name(wreport::Varcode dstcode) const
         subset->store_variable_undef(dstcode);
     else if (const wreport::Var* var = c_station->find_by_id(DBA_MSG_ST_NAME))
     {
-        Varinfo info = subset->btable->query(dstcode);
+        Varinfo info = subset->tables->btable->query(dstcode);
         Var name(info);
-        if (var->value())
-            name.setc_truncate(var->value());
-        subset->store_variable(name);
+        if (var->isset())
+            name.setc_truncate(var->enqc());
+        subset->store_variable(move(name));
     }
     else
         subset->store_variable_undef(dstcode);

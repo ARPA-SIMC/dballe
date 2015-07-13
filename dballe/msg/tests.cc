@@ -23,6 +23,8 @@
 #include "context.h"
 #include "msg.h"
 #include <wreport/bulletin.h>
+#include <wreport/vartable.h>
+#include <wreport/tableinfo.h>
 #include <wreport/conv.h>
 #include <wreport/notes.h>
 #include <wibble/string.h>
@@ -157,18 +159,15 @@ Messages _read_msgs_csv(const Location& loc, const char* filename)
     return msgs;
 }
 
-void _export_msgs(const Location& loc, const Messages& in, Bulletin& out, const std::string& tag, const dballe::msg::Exporter::Options& opts)
+unique_ptr<Bulletin> export_msgs(WIBBLE_TEST_LOCPRM, File::Encoding enctype, const Messages& in, const std::string& tag, const dballe::msg::Exporter::Options& opts)
 {
     try {
-        File::Encoding type = File::BUFR;
-        if (string(out.encoding_name()) == "CREX")
-            type = File::CREX;
-        std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(type, opts));
-        exporter->to_bulletin(in, out);
+        std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(enctype, opts));
+        return exporter->to_bulletin(in);
     } catch (std::exception& e) {
         dballe::tests::dump("bul-" + tag, in);
-        dballe::tests::dump("msg-" + tag, out);
-        throw tut::failure(loc.msg("exporting to bulletin (" + tag + "): " + e.what()));
+        //dballe::tests::dump("msg-" + tag, out);
+        wibble_test_location.fail_test("cannot export to bulletin (" + tag + "): " + e.what());
     }
 }
 
@@ -193,33 +192,33 @@ void track_different_msgs(const Messages& msgs1, const Messages& msgs2, const st
 
 void _ensure_msg_undef(const wibble::tests::Location& loc, const Message& msg, int shortcut)
 {
-	const Var* var = Msg::downcast(msg).find_by_id(shortcut);
-	if (var && var->value())
-	{
-		std::stringstream ss;
-		ss << "value is " << var->value() << " instead of being undefined";
-		throw tut::failure(loc.msg(ss.str()));
-	}
+    const Var* var = Msg::downcast(msg).find_by_id(shortcut);
+    if (var && var->isset())
+    {
+        std::stringstream ss;
+        ss << "value is " << var->enqc() << " instead of being undefined";
+        throw tut::failure(loc.msg(ss.str()));
+    }
 }
 
 const Var& _want_var(const Location& loc, const Message& msg, int shortcut)
 {
-	const Var* var = Msg::downcast(msg).find_by_id(shortcut);
-	if (!var)
-		throw tut::failure(loc.msg("value is missing"));
-	if (!var->value())
-		throw tut::failure(loc.msg("value is present but undefined"));
-	return *var;
+    const Var* var = Msg::downcast(msg).find_by_id(shortcut);
+    if (!var)
+        throw tut::failure(loc.msg("value is missing"));
+    if (!var->isset())
+        throw tut::failure(loc.msg("value is present but undefined"));
+    return *var;
 }
 
 const Var& _want_var(const Location& loc, const Message& msg, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr)
 {
     const Var* var = msg.get(code, lev, tr);
-	if (!var)
-		throw tut::failure(loc.msg("value is missing"));
-	if (!var->value())
-		throw tut::failure(loc.msg("value is present but undefined"));
-	return *var;
+    if (!var)
+        throw tut::failure(loc.msg("value is missing"));
+    if (!var->isset())
+        throw tut::failure(loc.msg("value is present but undefined"));
+    return *var;
 }
 
 void dump(const std::string& tag, const Msg& msg, const std::string& desc)
@@ -386,7 +385,7 @@ StripDatetimeVars::StripDatetimeVars()
 
 RoundLegacyVars::RoundLegacyVars() : table(NULL)
 {
-    table = Vartable::get("B0000000000000014000");
+    table = Vartable::get_bufr(BufrTableID(0, 0, 0, 14, 0));
 }
 
 void RoundLegacyVars::tweak(Messages& msgs)
@@ -526,8 +525,9 @@ void TruncStName::tweak(Messages& msgs)
         Msg& m = Msg::downcast(mi);
         if (msg::Context* c = m.edit_context(Level(), Trange()))
             if (const Var* orig = c->find(WR_VAR(0, 1, 19)))
-                if (const char* val = orig->value())
+                if (orig->isset())
                 {
+                    const char* val = orig->enqc();
                     char buf[21];
                     strncpy(buf, val, 20);
                     buf[19] = '>';
@@ -539,7 +539,7 @@ void TruncStName::tweak(Messages& msgs)
 
 RoundGeopotential::RoundGeopotential()
 {
-    table = Vartable::get("B0000000000000014000");
+    table = Vartable::get_bufr(BufrTableID(0, 0, 0, 14, 0));
 }
 void RoundGeopotential::tweak(Messages& msgs)
 {
@@ -565,7 +565,7 @@ void RoundGeopotential::tweak(Messages& msgs)
 
 HeightToGeopotential::HeightToGeopotential()
 {
-    table = Vartable::get("B0000000000000014000");
+    table = Vartable::get_bufr(BufrTableID(0, 0, 0, 14, 0));
 }
 void HeightToGeopotential::tweak(Messages& msgs)
 {
@@ -612,19 +612,13 @@ void RemoveContext::tweak(Messages& msgs)
 }
 
 TestMessage::TestMessage(File::Encoding type, const std::string& name)
-    : name(name), type(type), raw(type), bulletin(0)
+    : name(name), type(type), raw(type)
 {
-    switch (type)
-    {
-        case File::BUFR: bulletin = BufrBulletin::create().release(); break;
-        case File::CREX: bulletin = CrexBulletin::create().release(); break;
-        default: throw wreport::error_unimplemented("Unsupported message type");
-    }
 }
 
 TestMessage::~TestMessage()
 {
-    if (bulletin) delete bulletin;
+    delete bulletin;
 }
 
 void TestMessage::read_from_file(const std::string& fname, const msg::Importer::Options& input_opts)
@@ -636,7 +630,12 @@ void TestMessage::read_from_raw(const BinaryMessage& msg, const msg::Importer::O
 {
     std::unique_ptr<msg::Importer> importer(msg::Importer::create(type, input_opts));
     raw = msg;
-    bulletin->decode(raw.data);
+    switch (type)
+    {
+        case File::BUFR: bulletin = BufrBulletin::decode(raw.data).release(); break;
+        case File::CREX: bulletin = CrexBulletin::decode(raw.data).release(); break;
+        default: throw wreport::error_unimplemented("Unsupported message type");
+    }
     msgs = importer->from_binary(raw);
 }
 
@@ -645,8 +644,9 @@ void TestMessage::read_from_msgs(const Messages& _msgs, const msg::Exporter::Opt
     // Export
     std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(type, export_opts));
     msgs = _msgs;
-    exporter->to_bulletin(msgs, *bulletin);
-    bulletin->encode(raw.data);
+    delete bulletin;
+    bulletin = exporter->to_bulletin(msgs).release();
+    raw.data = bulletin->encode();
 }
 
 TestCodec::TestCodec(const std::string& fname, File::Encoding type)
@@ -731,11 +731,11 @@ void TestCodec::run_reimport(WIBBLE_TEST_LOCPRM)
     }
 
     if (expected_type != MISSING_INT)
-        wassert(actual(final.bulletin->type) == expected_type);
+        wassert(actual(final.bulletin->data_category) == expected_type);
     if (expected_subtype != MISSING_INT)
-        wassert(actual(final.bulletin->subtype) == expected_subtype);
+        wassert(actual(final.bulletin->data_subcategory) == expected_subtype);
     if (expected_localsubtype != MISSING_INT)
-        wassert(actual(final.bulletin->localsubtype) == expected_localsubtype);
+        wassert(actual(final.bulletin->data_subcategory_local) == expected_localsubtype);
 }
 
 void TestCodec::run_convert(WIBBLE_TEST_LOCPRM, const std::string& tplname)

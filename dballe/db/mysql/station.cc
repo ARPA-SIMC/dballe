@@ -143,7 +143,7 @@ void MySQLStationBase::read_station_vars(const std::string& query, std::function
         if (!row.isnull(2))
         {
             TRACE("fill_ana_layer new attribute\n");
-            var->seta(ap_newvar(row.as_int(2), row.as_cstring(3)));
+            var->seta(newvar(row.as_int(2), row.as_cstring(3)));
         }
     }
 

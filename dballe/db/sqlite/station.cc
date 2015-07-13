@@ -117,7 +117,7 @@ void SQLiteStationBase::read_station_vars(SQLiteStatement& stm, std::function<vo
         if (!stm.column_isnull(2))
         {
             TRACE("fill_ana_layer new attribute\n");
-            var->seta(ap_newvar(stm.column_int(2), stm.column_string(3)));
+            var->seta(newvar(stm.column_int(2), stm.column_string(3)));
         }
     });
 

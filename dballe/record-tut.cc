@@ -5,6 +5,7 @@
 using namespace std;
 using namespace wibble::tests;
 using namespace dballe;
+using namespace wreport;
 
 namespace {
 
@@ -30,10 +31,10 @@ std::vector<Test> tests {
     }),
     Test("metadata", [](Fixture& f) {
         wreport::Varinfo info = Record::key_info("rep_memo");
-        wassert(actual(info->is_string()).istrue());
+        wassert(actual(info->type) == Vartype::String);
 
         info = Record::key_info("ana_id");
-        wassert(actual(info->is_string()).isfalse());
+        wassert(actual(info->type) == Vartype::Integer);
     }),
 };
 

@@ -69,14 +69,14 @@ struct Buoy : public Template
         // Use old table for old templates
         if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
         {
-            b->master_table = 13;
+            b->master_table_version_number = 13;
         }
 
         is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
 
-        bulletin.type = 1;
-        bulletin.subtype = 255;
-        bulletin.localsubtype = 21;
+        bulletin.data_category = 1;
+        bulletin.data_subcategory = 255;
+        bulletin.data_subcategory_local = 21;
 
         // Data descriptor section
         bulletin.datadesc.clear();
@@ -100,13 +100,12 @@ struct Buoy : public Template
 
         /*  0 */
         const Var* var = msg.get_ident_var();
-        const char* val = var->value();
-        if (val != NULL)
+        if (var && var->isset())
         {
-                subset.store_variable_i(WR_VAR(0, 1, 5), strtol(val, 0, 10));
-                subset.back().copy_attrs(*var);
+            subset.store_variable_i(WR_VAR(0, 1, 5), strtol(var->enqc(), 0, 10));
+            subset.back().setattrs(*var);
         } else
-                subset.store_variable_undef(WR_VAR(0, 1, 5));
+            subset.store_variable_undef(WR_VAR(0, 1, 5));
         /*  1 */ add(WR_VAR(0,  1, 12), DBA_MSG_ST_DIR);
         /*  2 */ add(WR_VAR(0,  1, 13), DBA_MSG_ST_SPEED);
         /*  3 */ add(WR_VAR(0,  2,  1), DBA_MSG_ST_TYPE);
@@ -174,5 +173,3 @@ static const TemplateFactory* buoy = NULL;
 }
 }
 }
-
-/* vim:set ts=4 sw=4: */

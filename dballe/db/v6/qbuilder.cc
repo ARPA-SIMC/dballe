@@ -43,29 +43,35 @@ static void parse_value(const char* str, regmatch_t pos, Varinfo info, char* val
     /* Parse the value */
     const char* s = str + pos.rm_so;
     int len = pos.rm_eo - pos.rm_so;
-    if (info->is_string())
+    switch (info->type)
     {
-        /* Copy the string, escaping quotes */
-        int i = 0, j = 0;
-
-        value[j++] = '\'';
-        for (; i < len && j < 253; ++i, ++j)
+        case Vartype::String:
         {
-            if (s[i] == '\'')
-                value[j++] = '\\';
-            value[j] = s[i];
+            // Copy the string, escaping quotes
+            int i = 0, j = 0;
+
+            value[j++] = '\'';
+            for (; i < len && j < 253; ++i, ++j)
+            {
+                if (s[i] == '\'')
+                    value[j++] = '\\';
+                value[j] = s[i];
+            }
+            value[j++] = '\'';
+            value[j] = 0;
+            break;
         }
-        value[j++] = '\'';
-        value[j] = 0;
-    }
-    else
-    {
-        double dval;
-        if (sscanf(s, "%lf", &dval) != 1)
-            error_consistency::throwf("value in \"%.*s\" must be a number", len, s);
-        Var tmpvar(info, dval);
-        strncpy(value, tmpvar.value(), 255);
-        value[254] = 0;
+        case Vartype::Binary:
+            throw error_consistency("cannot use a *_filter on a binary variable");
+        case Vartype::Integer:
+        case Vartype::Decimal:
+        {
+            double dval;
+            if (sscanf(s, "%lf", &dval) != 1)
+                error_consistency::throwf("value in \"%.*s\" must be a number", len, s);
+            sprintf(value, "%d", info->encode_decimal(dval));
+            break;
+        }
     }
 }
 
@@ -487,7 +493,7 @@ bool QueryBuilder::add_pa_where(const char* tbl)
 
         sql_where.append_listf("EXISTS(SELECT id FROM data %s_af WHERE %s_af.id_station=%s.id"
                                " AND %s_af.id_lev_tr = -1"
-                               " AND %s_af.id_var=%d", tbl, tbl, tbl, tbl, tbl, info->var);
+                               " AND %s_af.id_var=%d", tbl, tbl, tbl, tbl, tbl, info->code);
 
         if (value[0] == '\'')
             if (value1 == NULL)
@@ -663,7 +669,7 @@ bool QueryBuilder::add_datafilter_where(const char* tbl)
     const char *op, *value, *value1;
     Varinfo info = decode_data_filter(query.data_filter, &op, &value, &value1);
 
-    sql_where.append_listf("%s.id_var=%d", tbl, (int)info->var);
+    sql_where.append_listf("%s.id_var=%d", tbl, (int)info->code);
 
     if (value[0] == '\'')
         if (value1 == NULL)
@@ -689,7 +695,7 @@ bool QueryBuilder::add_attrfilter_where(const char* tbl)
     const char *op, *value, *value1;
     Varinfo info = decode_data_filter(query.attr_filter, &op, &value, &value1);
 
-    sql_from.appendf(" JOIN attr %s_atf ON %s.id=%s_atf.id_data AND %s_atf.type=%d", tbl, tbl, tbl, tbl, info->var);
+    sql_from.appendf(" JOIN attr %s_atf ON %s.id=%s_atf.id_data AND %s_atf.type=%d", tbl, tbl, tbl, tbl, info->code);
     if (value[0] == '\'')
         if (value1 == NULL)
             sql_where.append_listf("%s_atf.value%s%s", tbl, op, value);

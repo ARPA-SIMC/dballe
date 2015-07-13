@@ -22,7 +22,7 @@ void ValueBase::replace(std::unique_ptr<Var> var)
 
 void ValueBase::replace(const Var& var)
 {
-    this->var->copy_val_only(var);
+    this->var->setval(var);
 }
 
 void ValueBase::query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest) const

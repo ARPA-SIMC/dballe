@@ -13,19 +13,19 @@ namespace dballe {
 
 wreport::Varinfo varinfo(wreport::Varcode code)
 {
-    if (!local) local = Vartable::get("dballe");
+    if (!local) local = Vartable::get_bufr("dballe");
     return local->query(code);
 }
 
 wreport::Varinfo varinfo(const char* code)
 {
-    if (!local) local = Vartable::get("dballe");
+    if (!local) local = Vartable::get_bufr("dballe");
     return local->query(resolve_varcode(code));
 }
 
 wreport::Varinfo varinfo(const std::string& code)
 {
-    if (!local) local = Vartable::get("dballe");
+    if (!local) local = Vartable::get_bufr("dballe");
     return local->query(resolve_varcode(code));
 }
 

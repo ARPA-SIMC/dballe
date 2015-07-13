@@ -146,7 +146,12 @@ const char* CommonAPIImplementation::enqc(const char* param)
 {
     Record& rec = choose_output_record(param);
     if (const Var* var = rec.get(param))
-        return var->value();
+    {
+        if (var->isset())
+            return var->enqc();
+        else
+            return nullptr;
+    }
     return nullptr;
 }
 
@@ -306,13 +311,22 @@ const char* CommonAPIImplementation::spiegab(const char* varcode, const char* va
 	Varinfo info = varinfo(WR_STRING_TO_VAR(varcode + 1));
 	Var var(info, value);
 
-	char buf[1024];
-	if (info->is_string())
-		snprintf(buf, 1023, "%s (%s) %s", var.enqc(), info->unit, info->desc);
-	else
-		snprintf(buf, 1023, "%.*f (%s) %s", info->scale > 0 ? info->scale : 0, var.enqd(), info->unit, info->desc);
-	cached_spiega = buf;
-	return cached_spiega.c_str();
+    char buf[1024];
+    switch (info->type)
+    {
+        case Vartype::String:
+            snprintf(buf, 1023, "%s (%s) %s", var.enqc(), info->unit, info->desc);
+            break;
+        case Vartype::Binary:
+            snprintf(buf, 1023, "%s (%s) %s", var.enqc(), info->unit, info->desc);
+            break;
+        case Vartype::Integer:
+        case Vartype::Decimal:
+            snprintf(buf, 1023, "%.*f (%s) %s", info->scale > 0 ? info->scale : 0, var.enqd(), info->unit, info->desc);
+            break;
+    }
+    cached_spiega = buf;
+    return cached_spiega.c_str();
 }
 
 const char* CommonAPIImplementation::ancora()
@@ -337,9 +351,10 @@ void CommonAPIImplementation::read_qc_list(vector<Varcode>& res_arr) const
 {
     res_arr.clear();
     if (const Var* var = qcinput.get("var"))
-        if (const char* val = var->value())
+        if (var->isset())
         {
-            /* Get only the QC values in *varlist */
+            const char* val = var->enqc();
+            // Get only the QC values in *varlist
             if (*val != '*')
                 throw error_consistency("QC values must start with '*'");
 
@@ -348,9 +363,10 @@ void CommonAPIImplementation::read_qc_list(vector<Varcode>& res_arr) const
         }
 
     if (const Var* var = qcinput.get("varlist"))
-        if (const char* val = var->value())
+        if (var->isset())
         {
-            /* Get only the QC values in *varlist */
+            const char* val = var->enqc();
+            // Get only the QC values in *varlist
             size_t pos;
             size_t len;
 

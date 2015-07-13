@@ -64,7 +64,7 @@ struct Index : public std::map< T, std::set<size_t> >
      *
      * Else, returns a Sequences and sets found to true.
      */
-    std::auto_ptr< stl::Sequences<size_t> > search_from(const T& first, bool& found) const;
+    std::unique_ptr< stl::Sequences<size_t> > search_from(const T& first, bool& found) const;
 
     /**
      * Lookup all positions all values before the given one, appending the
@@ -78,7 +78,7 @@ struct Index : public std::map< T, std::set<size_t> >
      *
      * Else, returns a Sequences and sets found to true.
      */
-    std::auto_ptr< stl::Sequences<size_t> > search_to(const T& end, bool& found) const;
+    std::unique_ptr< stl::Sequences<size_t> > search_to(const T& end, bool& found) const;
 
     /**
      * Lookup all positions all values between two extremes (first included,
@@ -92,7 +92,7 @@ struct Index : public std::map< T, std::set<size_t> >
      *
      * Else, returns a Sequences and sets found to true.
      */
-    std::auto_ptr< stl::Sequences<size_t> > search_between(const T& first, const T& end, bool& found) const;
+    std::unique_ptr< stl::Sequences<size_t> > search_between(const T& first, const T& end, bool& found) const;
 
 #if 0
     void query(const const_iterator& begin, const const_iterator& end, const Match<size_t>& filter, BaseResults& res) const;

@@ -75,7 +75,7 @@ void MySQLAttrV6::insert(Transaction& t, sql::bulk::InsertAttrsV6& attrs, Update
                 for (auto& a: attrs)
                 {
                     if (!a.needs_update()) continue;
-                    string escaped_value = conn.escape(a.attr->value());
+                    string escaped_value = conn.escape(a.attr->enqc());
                     Querybuf update;
                     update.appendf("UPDATE attr SET value='%s' WHERE id_data=%d AND type=%d", escaped_value.c_str(), a.id_data, (int)a.attr->code());
                     conn.exec_no_data(update);
@@ -98,7 +98,7 @@ void MySQLAttrV6::insert(Transaction& t, sql::bulk::InsertAttrsV6& attrs, Update
         for (auto& a: attrs)
         {
             if (!a.needs_insert()) continue;
-            string escaped_value = conn.escape(a.attr->value());
+            string escaped_value = conn.escape(a.attr->enqc());
             insert.append_listf("(%d, %d, '%s')", a.id_data, (int)a.attr->code(), escaped_value.c_str());
             a.set_inserted();
         }

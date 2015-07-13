@@ -283,7 +283,7 @@ const char* MsgAPI::dammelo()
 
     // Return the pointer to the copy inside the output record. We cannot
     // return vname as it is in the local stack
-    return output.get("var")->value();
+    return output.get("var")->enqc();
 }
 
 void MsgAPI::flushVars()
@@ -338,8 +338,9 @@ void MsgAPI::prendilo()
 
     // Store record metainfo
     if (const Var* var = input.get("rep_memo"))
-        if (const char* val = var->value())
+        if (var->isset())
         {
+            const char* val = var->enqc();
             wmsg->set_rep_memo(val);
             wmsg->type = Msg::type_from_repmemo(val);
         }
@@ -386,8 +387,9 @@ void MsgAPI::prendilo()
 	input.clear_vars();
 
     if (const Var* var = input.get("query"))
-        if (const char* query = var->value())
+        if (var->isset())
         {
+            const char* query = var->enqc();
             if (strcasecmp(query, "subset") == 0)
             {
                 flushSubset();

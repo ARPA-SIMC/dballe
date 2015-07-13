@@ -220,7 +220,7 @@ void ODBCStationBase::get_station_vars(int id_station, int id_report, std::funct
         if (out_attr_varcode_ind != -1)
         {
             TRACE("fill_ana_layer new attribute\n");
-            var->seta(ap_newvar(out_attr_varcode, out_attr_value));
+            var->seta(newvar(out_attr_varcode, out_attr_value));
         }
     }
 
@@ -364,7 +364,7 @@ void ODBCStationV6::get_station_vars(int id_station, int id_report, std::functio
         if (out_attr_varcode_ind != -1)
         {
             TRACE("fill_ana_layer new attribute\n");
-            var->seta(ap_newvar(out_attr_varcode, out_attr_value));
+            var->seta(newvar(out_attr_varcode, out_attr_value));
         }
     }
 

@@ -92,16 +92,16 @@ struct Pollution : public Template
     {
         Template::setupBulletin(bulletin);
 
-        bulletin.type = 8;
-        bulletin.subtype = 255;
-        bulletin.localsubtype = 171;
+        bulletin.data_category = 8;
+        bulletin.data_subcategory = 255;
+        bulletin.data_subcategory_local = 171;
+        bulletin.originating_centre = 98;
+        bulletin.originating_subcentre = 0;
 
         if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
         {
-            b->centre = 98;
-            b->subcentre = 0;
-            b->master_table = 13;
-            b->local_table = 102;
+            b->master_table_version_number = 13;
+            b->master_table_version_number_local = 102;
         }
 
         // Data descriptor section

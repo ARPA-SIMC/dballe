@@ -4,6 +4,7 @@
 using namespace std;
 using namespace wibble::tests;
 using namespace dballe;
+using namespace wreport;
 
 namespace {
 
@@ -21,6 +22,10 @@ std::vector<Test> tests {
         } catch (std::exception& e) {
             wassert(actual(e.what()).contains("cannot parse"));
         }
+    }),
+    Test("varinfo", [](Fixture& f) {
+        Varinfo i = varinfo(WR_VAR(0, 12, 101));
+        wassert(actual(i->unit) == "K");
     }),
 };
 

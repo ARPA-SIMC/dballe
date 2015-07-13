@@ -76,7 +76,7 @@ public:
             if (WR_VAR_F(var.code()) != 0) continue;
             if (WR_VAR_X(var.code()) < 10)
                 peek_var(var);
-            if (var.value() != NULL)
+            if (var.isset())
                 import_var(var);
         }
     }
@@ -93,12 +93,12 @@ void MetarImporter::peek_var(const Var& var)
 {
     switch (var.code())
     {
-/* Context items */
+        // Context items
         case WR_VAR(0,  7,  6):
-            if (var.value() == NULL)
-                height_sensor = MISSING_SENSOR_H;
-            else
+            if (var.isset())
                 height_sensor = var.enqi();
+            else
+                height_sensor = MISSING_SENSOR_H;
             break;
     }
 }

@@ -43,7 +43,7 @@ public:
 
     MsgType scanType(const Bulletin& bulletin) const
     {
-        switch (bulletin.type)
+        switch (bulletin.data_category)
         {
             case 0: return MSG_SYNOP;
             default: return MSG_GENERIC; break;

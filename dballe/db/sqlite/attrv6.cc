@@ -94,7 +94,9 @@ void SQLiteAttrV6::insert(Transaction& t, sql::bulk::InsertAttrsV6& attrs, Updat
                 for (auto& v: attrs)
                 {
                     if (!v.needs_update()) continue;
-                    ustm->bind(v.attr->value(), v.id_data, v.attr->code());
+                    // Warning: we do not know if v.var is a string, so the result of
+                    // enqc is only valid until another enqc is called
+                    ustm->bind(v.attr->enqc(), v.id_data, v.attr->code());
                     ustm->execute();
                     v.set_updated();
                 }
@@ -113,7 +115,9 @@ void SQLiteAttrV6::insert(Transaction& t, sql::bulk::InsertAttrsV6& attrs, Updat
         for (auto& v: attrs)
         {
             if (!v.needs_insert()) continue;
-            istm->bind(v.id_data, v.attr->code(), v.attr->value());
+            // Warning: we do not know if v.var is a string, so the result of
+            // enqc is only valid until another enqc is called
+            istm->bind(v.id_data, v.attr->code(), v.attr->enqc());
             istm->execute();
             v.set_inserted();
         }

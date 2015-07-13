@@ -67,8 +67,8 @@ struct ShipBase : public Template
 
         is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
 
-        bulletin.type = 1;
-        bulletin.subtype = 255;
+        bulletin.data_category = 1;
+        bulletin.data_subcategory = 255;
     }
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
@@ -111,11 +111,11 @@ struct ShipECMWFBase : public ShipBase
         // Use old table for old templates
         if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
         {
-            b->master_table = 13;
+            b->master_table_version_number = 13;
         }
 
-        bulletin.type = 1;
-        bulletin.subtype = 255;
+        bulletin.data_category = 1;
+        bulletin.data_subcategory = 255;
 
         // Data descriptor section
         bulletin.datadesc.clear();
@@ -200,7 +200,7 @@ struct ShipAbbr : public ShipECMWFBase
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
         ShipECMWFBase::setupBulletin(bulletin);
-        bulletin.localsubtype = 9;
+        bulletin.data_subcategory_local = 9;
 
         bulletin.load_tables();
     }
@@ -217,7 +217,7 @@ struct ShipPlain : public ShipECMWFBase
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
         ShipECMWFBase::setupBulletin(bulletin);
-        bulletin.localsubtype = 11;
+        bulletin.data_subcategory_local = 11;
 
         bulletin.load_tables();
     }
@@ -234,7 +234,7 @@ struct ShipAuto : public ShipECMWFBase
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
         ShipECMWFBase::setupBulletin(bulletin);
-        bulletin.localsubtype = 13;
+        bulletin.data_subcategory_local = 13;
 
         bulletin.load_tables();
     }
@@ -251,7 +251,7 @@ struct ShipReduced : public ShipECMWFBase
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
         ShipECMWFBase::setupBulletin(bulletin);
-        bulletin.localsubtype = 19;
+        bulletin.data_subcategory_local = 19;
 
         bulletin.load_tables();
     }
@@ -272,12 +272,12 @@ struct ShipECMWFSecondRecord : public ShipBase
         // Use old table for old templates
         if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
         {
-            b->master_table = 13;
+            b->master_table_version_number = 13;
         }
 
-        bulletin.type = 1;
-        bulletin.subtype = 255;
-        bulletin.localsubtype = 12;
+        bulletin.data_category = 1;
+        bulletin.data_subcategory = 255;
+        bulletin.data_subcategory_local = 12;
         bulletin.load_tables();
 
         // Data descriptor section
@@ -370,9 +370,9 @@ struct ShipWMO : public ShipBase
 
         is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
 
-        bulletin.type = 1;
-        bulletin.subtype = 0;
-        bulletin.localsubtype = 255;
+        bulletin.data_category = 1;
+        bulletin.data_subcategory = 0;
+        bulletin.data_subcategory_local = 255;
 
         // Data descriptor section
         bulletin.datadesc.clear();

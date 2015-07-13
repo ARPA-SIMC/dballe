@@ -114,10 +114,10 @@ public:
         // Scan the input variables
         for (pos = 0; pos < subset->size(); ++pos)
         {
-                const Var& var = (*subset)[pos];
-                if (WR_VAR_F(var.code()) != 0) continue;
-                if (var.value() != NULL)
-                        import_var(var);
+            const Var& var = (*subset)[pos];
+            if (WR_VAR_F(var.code()) != 0) continue;
+            if (var.isset())
+                import_var(var);
         }
 
         // Create the final pollutant variables by putting all the pieces

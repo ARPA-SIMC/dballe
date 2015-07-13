@@ -102,10 +102,10 @@ struct Query : public dballe::Query
     bool is_subquery(const dballe::Query& other) const override;
 
     /**
-     * Generate a sequence of dba_keyword and unique_ptr<Var> for all contents
+     * Generate a sequence of dba_keyword and Var for all contents
      * of the query that can be represented in a record.
      */
-    void foreach_key(std::function<void(const char*, std::unique_ptr<wreport::Var>&&)> dest) const override;
+    void foreach_key(std::function<void(const char*, wreport::Var&&)> dest) const override;
 
     /// Print the query contents to stderr
     void print(FILE* out) const override;

@@ -93,9 +93,10 @@ void PostgreSQLAttrV6::insert(Transaction& t, sql::bulk::InsertAttrsV6& attrs, U
                 for (auto& a: attrs)
                 {
                     if (!a.needs_update()) continue;
-                    char* escaped_val = PQescapeLiteral(conn, a.attr->value(), strlen(a.attr->value()));
+                    const char* value = a.attr->enqc();
+                    char* escaped_val = PQescapeLiteral(conn, value, strlen(value));
                     if (!escaped_val)
-                        throw error_postgresql(conn, string("escaping string '") + a.attr->value() + "'");
+                        throw error_postgresql(conn, string("escaping string '") + value + "'");
                     dq.append_listf("(%d, %d, %s)", a.id_data, (int)a.attr->code(), escaped_val);
                     PQfreemem(escaped_val);
                     a.set_updated();
@@ -120,9 +121,10 @@ void PostgreSQLAttrV6::insert(Transaction& t, sql::bulk::InsertAttrsV6& attrs, U
         for (auto& a: attrs)
         {
             if (!a.needs_insert()) continue;
-            char* escaped_val = PQescapeLiteral(conn, a.attr->value(), strlen(a.attr->value()));
+            const char* value = a.attr->enqc();
+            char* escaped_val = PQescapeLiteral(conn, value, strlen(value));
             if (!escaped_val)
-                throw error_postgresql(conn, string("escaping string '") + a.attr->value() + "'");
+                throw error_postgresql(conn, string("escaping string '") + value + "'");
             dq.append_listf("(%d, %d, %s)", a.id_data, (int)a.attr->code(), escaped_val);
             PQfreemem(escaped_val);
             a.set_inserted();

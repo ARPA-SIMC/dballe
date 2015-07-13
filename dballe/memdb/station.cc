@@ -115,18 +115,16 @@ size_t Stations::obtain(const Record& rec, bool create)
     else
         throw error_notfound("record with no longitude, looking up a memdb Station");
 
-    const char* s_ident = nullptr;
-    if (const Var* var = rec.get("ident"))
-        s_ident = var->value();
-
     const char* s_report = nullptr;
     if (const Var* var = rec.get("rep_memo"))
-        s_report = var->value();
+        if (var->isset())
+            s_report = var->enqc();
     if (!s_report)
         throw error_notfound("record with no rep_memo, looking up a memdb Station");
 
-    if (s_ident)
-        return obtain_mobile(Coords(s_lat, s_lon), s_ident, s_report, create);
+    const Var* var_ident = rec.get("ident");
+    if (var_ident and var_ident->isset())
+        return obtain_mobile(Coords(s_lat, s_lon), var_ident->enqc(), s_report, create);
     else
         return obtain_fixed(Coords(s_lat, s_lon), s_report, create);
 }

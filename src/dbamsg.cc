@@ -16,6 +16,8 @@
 #include "dballe/cmdline/processor.h"
 #include "dballe/cmdline/conversion.h"
 #include <wreport/bulletin.h>
+#include <wreport/vartable.h>
+#include <wreport/dtable.h>
 #include <wreport/subset.h>
 #include <wreport/notes.h>
 #include <iostream>
@@ -65,6 +67,20 @@ struct poptOption grepTable[] = {
 	POPT_TABLEEND
 };
 
+/// Write CSV output to the given output stream
+struct FileCSV : CSVWriter
+{
+    FILE* out;
+    FileCSV(FILE* out) : out(out) {}
+
+    void flush_row() override
+    {
+        fputs(row.c_str(), out);
+        putc('\n', out);
+        row.clear();
+    }
+};
+
 volatile int flag_bisect_stop = 0;
 void stop_bisect(int sig)
 {
@@ -75,41 +91,46 @@ void stop_bisect(int sig)
 
 static int count_nonnulls(const Subset& raw)
 {
-	unsigned i, count = 0;
-	for (i = 0; i < raw.size(); i++)
-		if (raw[i].value() != NULL)
-			count++;
-	return count;
+    unsigned i, count = 0;
+    for (i = 0; i < raw.size(); i++)
+        if (raw[i].isset())
+            count++;
+    return count;
 }
 
 static void dump_common_header(const BinaryMessage& rmsg, const Bulletin& braw)
 {
     printf("Message %d\n", rmsg.index);
     printf("Size: %zd\n", rmsg.data.size());
-    printf("Edition: %d\n", braw.edition);
-    printf("Master table number: %d\n", braw.master_table_number);
-    printf("Category: %d:%d:%d\n", braw.type, braw.subtype, braw.localsubtype);
-    printf("Datetime: %04d-%02d-%02d %02d:%02d:%02d\n",
+    printf("Master table number: %hhu\n", braw.master_table_number);
+    printf("Origin: %hu:%hu\n", braw.originating_centre, braw.originating_subcentre);
+    printf("Category: %hhu:%hhu:%hhu\n", braw.data_category, braw.data_subcategory, braw.data_subcategory_local);
+    printf("Update sequence number: %hhu\n", braw.update_sequence_number);
+    printf("Datetime: %04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu\n",
             braw.rep_year, braw.rep_month, braw.rep_day,
             braw.rep_hour, braw.rep_minute, braw.rep_second);
-    printf("Table: %s\n", braw.btable ? braw.btable->id().c_str() : "(none)");
+    printf("B Table: %s\n", braw.tables.btable ? braw.tables.btable->pathname().c_str() : "(none)");
+    printf("D Table: %s\n", braw.tables.dtable ? braw.tables.dtable->pathname().c_str() : "(none)");
 }
 
 static void dump_bufr_header(const BinaryMessage& rmsg, const BufrBulletin& braw)
 {
     dump_common_header(rmsg, braw);
-    printf("Centre: %d:%d\n", braw.centre, braw.subcentre);
-    printf("Tables: %d:%d\n", braw.master_table, braw.local_table);
+    printf("BUFR edition: %hhu\n", braw.edition_number);
+    printf("Table version: %hhu:%hhu\n", braw.master_table_version_number, braw.master_table_version_number_local);
     printf("Compression: %s\n", braw.compression ? "yes" : "no");
-    printf("Update sequence number: %d\n", braw.update_sequence_number);
-    printf("Optional section length: %d\n", braw.optional_section_length);
+    printf("Optional section length: %zd\n", braw.optional_section.size());
     printf("Subsets: %zd\n\n", braw.subsets.size());
 }
 
 static void dump_crex_header(const BinaryMessage& rmsg, const CrexBulletin& braw)
 {
     dump_common_header(rmsg, braw);
-    printf("Table version: %d\n", braw.table);
+    printf("CREX edition: %hhu\n", braw.edition_number);
+    printf("Table version: %hhu/%hhu:%hhu\n",
+            braw.master_table_version_number,
+            braw.master_table_version_number_bufr,
+            braw.master_table_version_number_local);
     printf("Check digit: %s\n\n", braw.has_check_digit ? "yes" : "no");
 }
 
@@ -122,31 +143,37 @@ static void dump_aof_header(const BinaryMessage& rmsg)
     printf("Category: %d:%d\n\n", category, subcategory);
 }
 
+static void print_bulletin_header(const Bulletin& braw)
+{
+    printf(", origin %hu:%hu, category %hhu %hhu:%hhu:%hhu",
+            braw.originating_centre, braw.originating_subcentre,
+            braw.master_table_number,
+            braw.data_category, braw.data_subcategory, braw.data_subcategory_local);
+}
+
 static void print_bufr_header(const BufrBulletin& braw)
 {
-	printf(", category %d:%d:%d, table %s, subsets %zd, values:",
-			braw.type, braw.subtype, braw.localsubtype,
-			braw.btable ? braw.btable->id().c_str() : "(none)",
-			braw.subsets.size());
-	for (size_t i = 0; i < braw.subsets.size(); ++i)
-		printf(" %d/%zd", count_nonnulls(braw.subsets[i]), braw.subsets[i].size());
+    print_bulletin_header(braw);
+    printf(", bufr edition %hhu, tables %hhu:%hhu",
+            braw.edition_number,
+            braw.master_table_version_number,
+            braw.master_table_version_number_local);
+    printf(", subsets %zd, values:", braw.subsets.size());
+    for (size_t i = 0; i < braw.subsets.size(); ++i)
+        printf(" %d/%zd", count_nonnulls(braw.subsets[i]), braw.subsets[i].size());
 }
 
 static void print_crex_header(const CrexBulletin& braw)
 {
-	/* DBA_RUN_OR_RETURN(crex_message_has_check_digit(msg, &checkdigit)); */
-
-#if 0
-	printf("#%d CREX message: %d bytes, category %d, subcategory %d, table %s, %scheck digit, %d/%d values",
-			rmsg->index, size, braw->type, braw->subtype, table_id, /*checkdigit ? "" : "no "*/"? ", count_nonnulls(braw), braw->vars_count);
-#endif
-
-	printf(", category %d, subcategory %d, table %s, subsets %zd, values:",
-			braw.type, braw.subtype,
-			braw.btable ? braw.btable->id().c_str() : "(none)",
-			braw.subsets.size());
-	for (size_t i = 0; i < braw.subsets.size(); ++i)
-		printf(" %d/%zd", count_nonnulls(braw.subsets[i]), braw.subsets[i].size());
+    print_bulletin_header(braw);
+    printf(", crex edition %hhu, tables %hhu/%hhu:%hhu",
+            braw.edition_number,
+            braw.master_table_version_number,
+            braw.master_table_version_number_bufr,
+            braw.master_table_version_number_local);
+    printf(", subsets %zd, values:", braw.subsets.size());
+    for (size_t i = 0; i < braw.subsets.size(); ++i)
+        printf(" %d/%zd", count_nonnulls(braw.subsets[i]), braw.subsets[i].size());
 }
 
 static void print_aof_header(const BinaryMessage& rmsg)
@@ -246,21 +273,20 @@ static void dump_dba_vars(const Subset& msg)
 struct CSVBulletin : public cmdline::Action
 {
     bool first;
+    FileCSV out;
 
-    CSVBulletin() : first(true) {}
+    CSVBulletin() : first(true), out(stdout) {}
 
     void print_var(const Var& var, const Var* parent=0)
     {
-        char bcode[10];
+        string code;
         if (parent)
         {
-            format_code(parent->code(), bcode);
-            cout << bcode << ".";
+            code += varcode_format(parent->code());
+            code += ".";
         }
-        format_code(var.code(), bcode);
-        cout << bcode << ",";
-        csv_output_quoted_string(cout, var.format(""));
-        cout << endl;
+        code += varcode_format(var.code());
+        add_keyval(code.c_str(), var.format(""));
     }
 
     void print_subsets(const Bulletin& braw)
@@ -268,7 +294,7 @@ struct CSVBulletin : public cmdline::Action
         for (size_t i = 0; i < braw.subsets.size(); ++i)
         {
             const Subset& s = braw.subsets[i];
-            cout << "subset," << i + 1 << endl;
+            add_keyval("subset", i + 1);
             for (size_t i = 0; i < s.size(); ++i)
             {
                 print_var(s[i]);
@@ -278,54 +304,63 @@ struct CSVBulletin : public cmdline::Action
         }
     }
 
+    void add_keyval(const char* key, unsigned val)
+    {
+        out.add_value(key);
+        out.add_value(val);
+        out.flush_row();
+    }
+
+    void add_keyval(const char* key, const std::string& val)
+    {
+        out.add_value(key);
+        out.add_value(val);
+        out.flush_row();
+    }
+
     virtual bool operator()(const cmdline::Item& item)
     {
         if (!item.rmsg) return false;
         if (first)
         {
             // Column titles
-            cout << "Field,Value" << endl;
+            out.add_value("Field");
+            out.add_value("Value");
+            out.flush_row();
             first = false;
         }
-        switch (item.rmsg->encoding)
+        if (!item.bulletin) return false;
+        const Bulletin& bul = *item.bulletin;
+        add_keyval("master_table_number", bul.master_table_number);
+        add_keyval("data_category", bul.data_category);
+        add_keyval("data_subcategory", bul.data_subcategory);
+        add_keyval("data_subcategory_local", bul.data_subcategory_local);
+        add_keyval("originating_centre", bul.originating_centre);
+        add_keyval("originating_subcentre", bul.originating_subcentre);
+        add_keyval("update_sequence_number", bul.update_sequence_number);
+        char buf[30];
+        snprintf(buf, 29, "%hu-%hhu-%hhu %hhu:%hhu:%hhu",
+                bul.rep_year, bul.rep_month, bul.rep_day,
+                bul.rep_hour, bul.rep_minute, bul.rep_second);
+        add_keyval("representative_time", buf);
+        if (const BufrBulletin* b = dynamic_cast<const BufrBulletin*>(item.bulletin))
         {
-            case File::BUFR:
-            case File::CREX:
-            {
-                if (item.bulletin == NULL) return false;
-                cout << "edition," << item.bulletin->edition << endl;
-                cout << "master_table_number," << item.bulletin->master_table_number << endl;
-                cout << "type," << item.bulletin->type << endl;
-                cout << "subtype," << item.bulletin->subtype << endl;
-                cout << "localsubtype," << item.bulletin->localsubtype << endl;
-                cout << "date,"
-                     << setfill('0') << setw(4) << item.bulletin->rep_year << "-"
-                     << setfill('0') << setw(2) << item.bulletin->rep_month << "-"
-                     << setfill('0') << setw(2) << item.bulletin->rep_day << " "
-                     << setfill('0') << setw(2) << item.bulletin->rep_hour << ":"
-                     << setfill('0') << setw(2) << item.bulletin->rep_minute << ":"
-                     << setfill('0') << setw(2) << item.bulletin->rep_second << ","
-                     << endl;
-                if (const BufrBulletin* b = dynamic_cast<const BufrBulletin*>(item.bulletin))
-                {
-                    cout << "centre," << b->centre << endl;
-                    cout << "subcentre," << b->subcentre << endl;
-                    cout << "master_table," << b->master_table << endl;
-                    cout << "local_table," << b->local_table << endl;
-                    cout << "compression," << b->compression << endl;
-                    cout << "update_sequence_number," << b->update_sequence_number << endl;
-                    cout << "optional_section_length," << b->optional_section_length << endl;
-                    // TODO: how to encode optional section? base64?
-                } else if (const CrexBulletin* b = dynamic_cast<const CrexBulletin*>(item.bulletin)) {
-                    cout << "table," << b->table << endl;
-                    cout << "has_check_digit," << b->has_check_digit << endl;
-                }
-                print_subsets(*item.bulletin);
-                break;
-            }
-            default:
-                throw error_consistency("encoding not supported for CSV dump");
-        }
+            add_keyval("encoding", "bufr");
+            add_keyval("edition_number", b->edition_number);
+            add_keyval("master_table_version_number", b->master_table_version_number);
+            add_keyval("master_table_version_number_local", b->master_table_version_number_local);
+            add_keyval("compression", b->compression ? "true" : "false");
+            add_keyval("optional_section", b->optional_section);
+        } else if (const CrexBulletin* b = dynamic_cast<const CrexBulletin*>(item.bulletin)) {
+            add_keyval("encoding", "crex");
+            add_keyval("edition_number", b->edition_number);
+            add_keyval("master_table_version_number", b->master_table_version_number);
+            add_keyval("master_table_version_number_bufr", b->master_table_version_number_bufr);
+            add_keyval("master_table_version_number_local", b->master_table_version_number_local);
+            add_keyval("has_check_digit", b->has_check_digit ? "true" : "false");
+        } else
+            throw error_consistency("encoding not supported for CSV dump");
+        print_subsets(*item.bulletin);
         return true;
     }
 };
@@ -381,18 +416,12 @@ struct DumpMessage : public cmdline::Action
             case File::BUFR:
                 {
                     if (item.bulletin == NULL) return true;
-                    const BufrBulletin& b = *dynamic_cast<const BufrBulletin*>(item.bulletin);
-                    printf(" Edition %d, mtn %d, origin %d/%d, master table %d, local table %d\n",
-                            b.edition, b.master_table_number, b.centre, b.subcentre, b.master_table, b.local_table);
                     print_subsets(*item.bulletin);
                     break;
                 }
             case File::CREX:
                 {
                     if (item.bulletin == NULL) return true;
-                    const CrexBulletin& b = *dynamic_cast<const CrexBulletin*>(item.bulletin);
-                    printf(" Edition %d, mtn %d, table %d\n",
-                            b.edition, b.master_table_number, b.table);
                     print_subsets(*item.bulletin);
                     break;
                 }
@@ -420,60 +449,67 @@ struct DumpCooked : public cmdline::Action
 
 static void print_var(const Var& var)
 {
-	printf("B%02d%03d", WR_VAR_X(var.code()), WR_VAR_Y(var.code()));
-	if (var.value() != NULL)
-	{
-		if (var.info()->is_string())
-		{
-			printf(" %s\n", var.value());
-		} else {
-			double value = var.enqd();;
-			printf(" %.*f\n", var.info()->scale > 0 ? var.info()->scale : 0, value);
-		}
-	} else
-		printf("\n");
+    string formatted = var.format("");
+    printf("%01d%02d%03d %s\n", WR_VAR_FXY(var.code()), formatted.c_str());
 }
 
 struct DumpText : public cmdline::Action
 {
+    void add_keyval(const char* key, unsigned val)
+    {
+        printf("%s: %u\n", key, val);
+    }
+
+    void add_keyval(const char* key, const std::string& val)
+    {
+        printf("%s: %s\n", key, val.c_str());
+    }
+
     virtual bool operator()(const cmdline::Item& item)
     {
 		if (item.bulletin == NULL)
 			throw error_consistency("source is not a BUFR or CREX message");
-		const BufrBulletin* b = dynamic_cast<const BufrBulletin*>(item.bulletin);
-		if (!b) throw error_consistency("source is not BUFR");
-		printf("Edition: %d\n", b->edition);
-		printf("Type: %d\n", b->type);
-		printf("Subtype: %d\n", b->subtype);
-		printf("Localsubtype: %d\n", b->localsubtype);
-		printf("Centre: %d\n", b->centre);
-		printf("Subcentre: %d\n", b->subcentre);
-		printf("Mastertable: %d\n", b->master_table);
-		printf("Localtable: %d\n", b->local_table);
-		printf("Compression: %d\n", b->compression);
-		printf("Reftime: %04d-%02d-%02d %02d:%02d:%02d\n",
-				b->rep_year, b->rep_month, b->rep_day,
-				b->rep_hour, b->rep_minute, b->rep_second);
-		printf("Descriptors:");
-		for (vector<Varcode>::const_iterator i = b->datadesc.begin();
-				i != b->datadesc.end(); ++i)
-		{
-			char type;
-			switch (WR_VAR_F(*i))
-			{
-				case 0: type = 'B'; break;
-				case 1: type = 'R'; break;
-				case 2: type = 'C'; break;
-				case 3: type = 'D'; break;
-				default: type = '?'; break;
-			}
-			printf(" %c%02d%03d", type, WR_VAR_X(*i), WR_VAR_Y(*i));
-		}
-		printf("\n");
-		for (size_t i = 0; i < b->subsets.size(); ++i)
-		{
-			const Subset& subset = b->subsets[i];
-			printf("Data:\n");
+
+        const Bulletin& bul = *item.bulletin;
+        add_keyval("master_table_number", bul.master_table_number);
+        add_keyval("data_category", bul.data_category);
+        add_keyval("data_subcategory", bul.data_subcategory);
+        add_keyval("data_subcategory_local", bul.data_subcategory_local);
+        add_keyval("originating_centre", bul.originating_centre);
+        add_keyval("originating_subcentre", bul.originating_subcentre);
+        add_keyval("update_sequence_number", bul.update_sequence_number);
+        char buf[30];
+        snprintf(buf, 29, "%hu-%hhu-%hhu %hhu:%hhu:%hhu",
+                bul.rep_year, bul.rep_month, bul.rep_day,
+                bul.rep_hour, bul.rep_minute, bul.rep_second);
+        add_keyval("representative_time", buf);
+        if (const BufrBulletin* b = dynamic_cast<const BufrBulletin*>(item.bulletin))
+        {
+            add_keyval("encoding", "bufr");
+            add_keyval("edition_number", b->edition_number);
+            add_keyval("master_table_version_number", b->master_table_version_number);
+            add_keyval("master_table_version_number_local", b->master_table_version_number_local);
+            add_keyval("compression", b->compression ? "true" : "false");
+            add_keyval("optional_section", b->optional_section);
+        } else if (const CrexBulletin* b = dynamic_cast<const CrexBulletin*>(item.bulletin)) {
+            add_keyval("encoding", "crex");
+            add_keyval("edition_number", b->edition_number);
+            add_keyval("master_table_version_number", b->master_table_version_number);
+            add_keyval("master_table_version_number_bufr", b->master_table_version_number_bufr);
+            add_keyval("master_table_version_number_local", b->master_table_version_number_local);
+            add_keyval("has_check_digit", b->has_check_digit ? "true" : "false");
+        } else
+            throw error_consistency("encoding not supported for CSV dump");
+
+        printf("descriptors:");
+        for (const auto& desc: bul.datadesc)
+            printf(" %01d%02d%03d", WR_VAR_FXY(desc));
+        printf("\n");
+
+        for (size_t i = 0; i < bul.subsets.size(); ++i)
+        {
+            const Subset& subset = bul.subsets[i];
+            printf("subset %zd:\n", i + 1);
 			for (size_t j = 0; j < subset.size(); ++j)
 			{
 				const Var& var = subset[j];

@@ -106,11 +106,9 @@ matcher::Result MatchedSubset::match_coords(const LatRange& latrange, const LonR
 
 matcher::Result MatchedSubset::match_rep_memo(const char* memo) const
 {
-    if (const char* var = var_rep_memo ? var_rep_memo->value() : 0)
-    {
-        return strcmp(memo, var) == 0 ? matcher::MATCH_YES : matcher::MATCH_NO;
-    } else
-        return matcher::MATCH_NA;
+    if (!var_rep_memo) return matcher::MATCH_NA;
+    if (!var_rep_memo->isset()) return matcher::MATCH_NA;
+    return strcmp(memo, var_rep_memo->enqc()) == 0 ? matcher::MATCH_YES : matcher::MATCH_NO;
 }
 
 MatchedBulletin::MatchedBulletin(const wreport::Bulletin& r)

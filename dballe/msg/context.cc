@@ -261,7 +261,7 @@ unsigned Context::diff(const Context& ctx) const
                 ++i1;
                 ++i2;
             } else if (cmp < 0) {
-                if (data[i1]->value() != NULL)
+                if (data[i1]->isset())
                 {
                     context_var_summary(*this, *data[i1], notes::log());
                     notes::log() << " exists only in the first message" << endl;
@@ -269,7 +269,7 @@ unsigned Context::diff(const Context& ctx) const
                 }
                 ++i1;
             } else {
-                if (ctx.data[i2]->value() != NULL)
+                if (ctx.data[i2]->isset())
                 {
                     context_var_summary(ctx, *ctx.data[i2], notes::log());
                     notes::log() << " exists only in the second message" << endl;
@@ -292,7 +292,7 @@ const Var* Context::find_vsig() const
     if (res == NULL) return NULL;
 
     // Ensure it is not undefined
-    if (res->value() == NULL) return NULL;
+    if (!res->isset()) return NULL;
 
     // Finally return it
     return res;
@@ -300,5 +300,3 @@ const Var* Context::find_vsig() const
 
 }
 }
-
-/* vim:set ts=4 sw=4: */

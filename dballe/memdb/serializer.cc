@@ -412,7 +412,7 @@ void CSVInfile::read_attrs(const INFILE& values)
 
         const typename INFILE::value_type& value = values.by_lineno(as_int(0));
         Varcode code = as_varcode(1);
-        value.var->seta(ap_newvar(code, cols[2].c_str()));
+        value.var->seta(newvar(code, cols[2].c_str()));
     }
 }
 

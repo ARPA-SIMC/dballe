@@ -28,11 +28,11 @@ std::vector<Test> tests {
             std::string res;
             core::Query q;
             q.set_from_test_string(test_string);
-            q.foreach_key([&](const char* key, unique_ptr<Var>&& var) {
+            q.foreach_key([&](const char* key, Var&& var) {
                 if (!res.empty()) res += ", ";
                 res += key;
                 res += "=";
-                res += var->format("");
+                res += var.format("");
             });
             return res;
         };

@@ -99,13 +99,13 @@ struct FlightBase : public Template
         // Use old table for old templates
         if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
         {
-            b->master_table = 13;
+            b->master_table_version_number = 13;
         }
 
         is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
 
-        bulletin.type = 4;
-        bulletin.subtype = 255;
+        bulletin.data_category = 4;
+        bulletin.data_subcategory = 255;
     }
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
@@ -155,7 +155,7 @@ struct Airep : public FlightBase
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
         FlightBase::setupBulletin(bulletin);
-        bulletin.localsubtype = 142;
+        bulletin.data_subcategory_local = 142;
 
         // Data descriptor section
         bulletin.datadesc.clear();
@@ -220,7 +220,7 @@ struct Amdar : public Airep
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
         Airep::setupBulletin(bulletin);
-        bulletin.localsubtype = 144;
+        bulletin.data_subcategory_local = 144;
     }
 };
 
@@ -235,8 +235,8 @@ struct AmdarWMO : public FlightBase
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
         FlightBase::setupBulletin(bulletin);
-        bulletin.subtype = 255;
-        bulletin.localsubtype = 144;
+        bulletin.data_subcategory = 255;
+        bulletin.data_subcategory_local = 144;
 
         // Data descriptor section
         bulletin.datadesc.clear();
@@ -335,7 +335,7 @@ struct Acars : public FlightBase
     {
         FlightBase::setupBulletin(bulletin);
 
-        bulletin.localsubtype = 145;
+        bulletin.data_subcategory_local = 145;
 
         // Data descriptor section
         bulletin.datadesc.clear();
@@ -433,8 +433,8 @@ struct AcarsWMO : public AmdarWMO
     {
         AmdarWMO::setupBulletin(bulletin);
 
-        bulletin.subtype = 255;
-        bulletin.localsubtype = 145;
+        bulletin.data_subcategory = 255;
+        bulletin.data_subcategory_local = 145;
     }
 };
 

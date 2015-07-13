@@ -110,7 +110,7 @@ public:
         {
             const Var& var = (*subset)[pos];
             if (WR_VAR_F(var.code()) != 0) continue;
-            if (var.value() != NULL)
+            if (var.isset())
                 import_var(var);
         }
         if (b01008)
@@ -139,7 +139,7 @@ public:
 
     MsgType scanType(const Bulletin& bulletin) const
     {
-        switch (bulletin.localsubtype)
+        switch (bulletin.data_subcategory_local)
         {
             case 142: return MSG_AIREP;
             case 144: return MSG_AMDAR;

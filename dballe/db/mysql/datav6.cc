@@ -58,7 +58,7 @@ void MySQLDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode u
                 for (auto& v: vars)
                 {
                     if (!v.needs_update()) continue;
-                    string escaped_value = conn.escape(v.var->value());
+                    string escaped_value = conn.escape(v.var->enqc());
                     Querybuf update;
                     update.appendf("UPDATE data SET value='%s' WHERE id=%d", escaped_value.c_str(), v.id_data);
                     conn.exec_no_data(update);
@@ -78,7 +78,7 @@ void MySQLDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode u
         for (auto& v: vars)
         {
             if (!v.needs_insert()) continue;
-            string escaped_value = conn.escape(v.var->value());
+            string escaped_value = conn.escape(v.var->enqc());
             Querybuf insert(512);
             insert.appendf(R"(
                 INSERT INTO data (id_station, id_report, id_lev_tr, datetime, id_var, value)

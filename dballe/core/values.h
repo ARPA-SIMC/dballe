@@ -24,6 +24,8 @@ struct Station
     {
         return report == o.report && ana_id == o.ana_id && coords == o.coords && ident == o.ident;
     }
+
+    void print(FILE* out, const char* end="\n") const;
 };
 
 struct Sampling : public Station
@@ -45,6 +47,8 @@ struct Sampling : public Station
     {
         return Station::operator==(o) && datetime == o.datetime && level == o.level && trange == o.trange;
     }
+
+    void print(FILE* out, const char* end="\n") const;
 };
 
 namespace values {
@@ -94,6 +98,7 @@ struct Value
         var = v.release();
     }
 
+    void print(FILE* out) const;
 };
 }
 
@@ -130,6 +135,8 @@ struct Values : protected std::map<wreport::Varcode, values::Value>
         for (auto& i : *this)
             i.second.clear_ids();
     }
+
+    void print(FILE* out) const;
 };
 
 struct StationValues
@@ -149,6 +156,8 @@ struct StationValues
         info.clear_ids();
         values.clear_ids();
     }
+
+    void print(FILE* out) const;
 };
 
 struct DataValues
@@ -168,6 +177,8 @@ struct DataValues
         info.clear_ids();
         values.clear_ids();
     }
+
+    void print(FILE* out) const;
 };
 
 }

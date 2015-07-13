@@ -487,15 +487,14 @@ bool Msg::from_csv(CSVReader& in)
                 error_consistency::throwf("cannot find corresponding variable for attribute %s", in.cols[11].c_str());
 
             Varcode acode = descriptor_code(in.cols[11].substr(7).c_str());
-            auto_ptr<Var> attr(ap_newvar(acode));
-            Varinfo info = attr->info();
-            attr->set_from_formatted(in.cols[12].c_str());
-            var->seta(attr);
+            auto attr = newvar(acode);
+            attr->setf(in.cols[12].c_str());
+            var->seta(move(attr));
         } else if (in.cols[11].size() == 6) {
             // Bxxyyy: variable
             Varcode vcode = descriptor_code(in.cols[11].c_str());
             unique_ptr<Var> var = newvar(vcode);
-            var->set_from_formatted(in.cols[12].c_str());
+            var->setf(in.cols[12].c_str());
             set(std::move(var), lev, tr);
         } else
             error_consistency::throwf("cannot parse variable code %s", in.cols[11].c_str());
@@ -645,7 +644,7 @@ void Msg::seti(Varcode code, int val, int conf, const Level& lev, const Trange& 
 {
     unique_ptr<Var> var(newvar(code, val));
     if (conf != -1)
-        var->seta(ap_newvar(WR_VAR(0, 33, 7), conf));
+        var->seta(newvar(WR_VAR(0, 33, 7), conf));
     set(std::move(var), lev, tr);
 }
 
@@ -653,7 +652,7 @@ void Msg::setd(Varcode code, double val, int conf, const Level& lev, const Trang
 {
     unique_ptr<Var> var(newvar(code, val));
     if (conf != -1)
-        var->seta(ap_newvar(WR_VAR(0, 33, 7), conf));
+        var->seta(newvar(WR_VAR(0, 33, 7), conf));
     set(std::move(var), lev, tr);
 }
 
@@ -661,7 +660,7 @@ void Msg::setc(Varcode code, const char* val, int conf, const Level& lev, const 
 {
     unique_ptr<Var> var(newvar(code, val));
     if (conf != -1)
-        var->seta(ap_newvar(WR_VAR(0, 33, 7), conf));
+        var->seta(newvar(WR_VAR(0, 33, 7), conf));
     set(std::move(var), lev, tr);
 }
 
@@ -904,9 +903,8 @@ matcher::Result MatchedMsg::match_rep_memo(const char* memo) const
 {
     if (const Var* var = m.get_rep_memo_var())
     {
-        const char* val = var->value();
-        if (!val) return matcher::MATCH_NA;
-        return strcmp(memo, val) == 0 ? matcher::MATCH_YES : matcher::MATCH_NO;
+        if (!var->isset()) return matcher::MATCH_NA;
+        return strcmp(memo, var->enqc()) == 0 ? matcher::MATCH_YES : matcher::MATCH_NO;
     } else
         return matcher::MATCH_NA;
 }

@@ -99,7 +99,7 @@ bool AnnotateVarsV6::annotate(int id_data, int id_levtr, Varcode code, const cha
         iter->id_data = id_data;
 
         // If the value is different, we need to update
-        if (strcmp(value, iter->var->value()) != 0)
+        if (strcmp(value, iter->var->enqc()) != 0)
         {
             //fprintf(stderr, "needs_update ");
             iter->set_needs_update();
@@ -143,7 +143,7 @@ void VarV6::dump(FILE* out) const
             id_levtr, id_data, flags,
             WR_VAR_F(var->code()), WR_VAR_X(var->code()), WR_VAR_Y(var->code()),
             (int)(var->code()),
-            var->value());
+            var->isset() ? var->enqc() : "(null)");
 }
 
 void InsertV6::dump(FILE* out) const

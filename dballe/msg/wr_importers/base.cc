@@ -349,12 +349,12 @@ Trange ContextChooser::tr_real(const Trange& standard) const
 void ContextChooser::ib_annotate_level()
 {
     if (level.height_sensor == MISSING_SENSOR_H) return;
-    var->seta(ap_newvar(WR_VAR(0, 7, 32), level.height_sensor));
+    var->seta(newvar(WR_VAR(0, 7, 32), level.height_sensor));
 }
 void ContextChooser::ib_annotate_trange()
 {
     if (trange.time_period == MISSING_INT) return;
-    var->seta(ap_newvar(WR_VAR(0, 4, 194), abs(trange.time_period)));
+    var->seta(newvar(WR_VAR(0, 4, 194), abs(trange.time_period)));
 }
 
 void ContextChooser::ib_level_use_shorcut_and_preserve_rest(const Level& standard)
@@ -487,7 +487,7 @@ void ContextChooser::set_baro_sensor(const Var& var, int shortcut)
     else if (simplified)
     {
         Var var1(var);
-        var1.seta(auto_ptr<Var>(newvar(WR_VAR(0, 7, 31), level.height_baro).release()));
+        var1.seta(newvar(WR_VAR(0, 7, 31), level.height_baro));
         msg->set_by_id(var1, shortcut);
     } else {
         const MsgVarShortcut& v = shortcutTable[shortcut];

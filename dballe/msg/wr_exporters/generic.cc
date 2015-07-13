@@ -95,20 +95,21 @@ struct Generic : public Template
     {
         Template::setupBulletin(bulletin);
 
-        bulletin.type = 255;
-        bulletin.subtype = 255;
-        bulletin.localsubtype = 0;
+        bulletin.data_category = 255;
+        bulletin.data_subcategory = 255;
+        bulletin.data_subcategory_local = 0;
+        bulletin.originating_centre = 200;
+        bulletin.originating_subcentre = 0;
 
         if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
         {
-            b->centre = 200;
-            b->subcentre = 0;
-            b->master_table = 14;
-            b->local_table = 1;
+            b->master_table_version_number = 14;
+            b->master_table_version_number_local = 1;
         }
         if (CrexBulletin* b = dynamic_cast<CrexBulletin*>(&bulletin))
         {
-            b->table = 99;
+            // TODO: change to BUFR-like info when we can encode BUFR table info in Crex
+            b->master_table_version_number = 99;
         }
 
         // The data descriptor section will be generated later, as it depends
@@ -180,7 +181,7 @@ struct Generic : public Template
             for (size_t j = 0; j < ctx.data.size(); ++j)
             {
                 const Var& var = *ctx.data[j];
-                if (var.value() == NULL) continue; // Don't add undef vars
+                if (!var.isset()) continue; // Don't add undef vars
                 if (&var == repmemo) continue; // Don't add rep_memo again
 
                 /* Update the context in the message, if needed */

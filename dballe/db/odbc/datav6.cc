@@ -65,7 +65,7 @@ void ODBCDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode up
                 for (auto& v: vars)
                 {
                     if (!v.needs_update()) continue;
-                    update_stm->bind_in(1, v.var->value());
+                    update_stm->bind_in(1, v.var->enqc());
                     update_stm->bind_in(2, v.id_data);
                     update_stm->execute_and_close();
                     v.set_updated();
@@ -96,7 +96,7 @@ void ODBCDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode up
             if (!v.needs_insert()) continue;
             insert->bind_in(1, v.id_levtr);
             varcode = v.var->code();
-            insert->bind_in(3, v.var->value());
+            insert->bind_in(3, v.var->enqc());
             insert->execute();
             v.id_data = conn.get_last_insert_id();
             v.set_inserted();

@@ -34,23 +34,23 @@ bool Index<T>::search(const T& el, stl::SetIntersection<size_t>& out) const
 }
 
 template<typename T>
-std::auto_ptr< stl::Sequences<size_t> > Index<T>::search_from(const T& first, bool& found) const
+std::unique_ptr< stl::Sequences<size_t> > Index<T>::search_from(const T& first, bool& found) const
 {
-    typedef std::auto_ptr< stl::Sequences<size_t> > RES;
+    typedef std::unique_ptr< stl::Sequences<size_t> > RES;
 
     const_iterator i = this->lower_bound(first);
     if (i == this->begin())
     {
         // Whole index match
         found = true;
-        return RES(0);
+        return RES();
     }
 
     if (i == this->end())
     {
         // No match
         found = false;
-        return RES(0);
+        return RES();
     }
 
     found = true;
@@ -61,23 +61,23 @@ std::auto_ptr< stl::Sequences<size_t> > Index<T>::search_from(const T& first, bo
 }
 
 template<typename T>
-std::auto_ptr< stl::Sequences<size_t> > Index<T>::search_to(const T& end, bool& found) const
+std::unique_ptr< stl::Sequences<size_t> > Index<T>::search_to(const T& end, bool& found) const
 {
-    typedef std::auto_ptr< stl::Sequences<size_t> > RES;
+    typedef std::unique_ptr< stl::Sequences<size_t> > RES;
 
     const_iterator i_end = this->upper_bound(end);
     if (i_end == this->end())
     {
         // Whole index match
         found = true;
-        return RES(0);
+        return RES();
     }
 
     if (i_end == this->begin())
     {
         // No match
         found = false;
-        return RES(0);
+        return RES();
     }
 
     found = true;
@@ -88,15 +88,15 @@ std::auto_ptr< stl::Sequences<size_t> > Index<T>::search_to(const T& end, bool& 
 }
 
 template<typename T>
-std::auto_ptr< stl::Sequences<size_t> > Index<T>::search_between(const T& first, const T& end, bool& found) const
+std::unique_ptr< stl::Sequences<size_t> > Index<T>::search_between(const T& first, const T& end, bool& found) const
 {
-    typedef std::auto_ptr< stl::Sequences<size_t> > RES;
+    typedef std::unique_ptr< stl::Sequences<size_t> > RES;
 
     if (end < first)
     {
         // Impossible match
         found = false;
-        return RES(0);
+        return RES();
     }
 
     const_iterator i = this->lower_bound(first);
@@ -106,14 +106,14 @@ std::auto_ptr< stl::Sequences<size_t> > Index<T>::search_between(const T& first,
     {
         // Whole index match
         found = true;
-        return RES(0);
+        return RES();
     }
 
     if (i == this->end() && i_end == this->begin())
     {
         // No match
         found = false;
-        return RES(0);
+        return RES();
     }
 
     found = true;

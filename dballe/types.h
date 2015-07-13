@@ -193,14 +193,6 @@ struct Datetime
     int to_julian() const;
 
     /**
-     * Write the datetime to an output stream in ISO8601 combined format.
-     *
-     * @param sep the separator character between date and time
-     * @param tz the timezone string to use at the end of the datetime
-     */
-    void to_stream_iso8601(std::ostream& out, char sep='T', const char* tz="") const;
-
-    /**
      * Generic comparison
      *
      * Returns a negative number if *this < other
@@ -215,6 +207,19 @@ struct Datetime
     bool operator>(const Datetime& dt) const;
     bool operator<=(const Datetime& dt) const;
     bool operator>=(const Datetime& dt) const;
+
+    /**
+     * Print to an output stream in ISO8601 combined format.
+     */
+    void print_iso8601(FILE* out, char sep='T', const char* end="\n") const;
+
+    /**
+     * Write the datetime to an output stream in ISO8601 combined format.
+     *
+     * @param sep the separator character between date and time
+     * @param tz the timezone string to use at the end of the datetime
+     */
+    void to_stream_iso8601(std::ostream& out, char sep='T', const char* tz="") const;
 
     /**
      * Parse an ISO8601 datetime string.
@@ -363,6 +368,9 @@ struct Coords
     bool operator>(const Coords& dt) const;
     bool operator<=(const Coords& dt) const;
     bool operator>=(const Coords& dt) const;
+
+    /// Print to an output stream
+    void print(FILE* out, const char* end="\n") const;
 };
 
 
@@ -545,6 +553,9 @@ struct Level
 
     /// Create a cloud special level. See @ref level_table.
     static Level cloud(int ltype2=MISSING_INT, int l2=MISSING_INT);
+
+    /// Print to an output stream
+    void print(FILE* out, const char* undef="-", const char* end="\n") const;
 };
 
 
@@ -590,6 +601,9 @@ struct Trange
 
     /// Time range for instant values
     static Trange instant();
+
+    /// Print to an output stream
+    void print(FILE* out, const char* undef="-", const char* end="\n") const;
 };
 
 

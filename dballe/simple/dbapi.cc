@@ -195,7 +195,7 @@ const char* DbAPI::dammelo()
     {
         query_cur->to_record(output);
         // We bypass checks, since it comes from to_record that always sets "var"
-        const char* varstr = output.get("var")->value();
+        const char* varstr = output.get("var")->enqc();
 
         // Remember the varcode and reference ID for the next attribute
         // operations

@@ -4,6 +4,7 @@
 #include <wreport/conv.h>
 #include <dballe/types.h>
 #include <dballe/var.h>
+#include <dballe/core/csv.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -16,144 +17,139 @@ using namespace std;
 
 int op_verbose = 0;
 
-/**
- * Check that all unit conversions are allowed by dba_uniconv
- *
- * @returns true if all conversions worked, false if some exceptions were thrown
- */
-static bool check_unit_conversions(const char* id)
+/// Write CSV output to the given output stream
+struct FileCSV : CSVWriter
 {
-	const Vartable* othertable = Vartable::get(id);
-	bool res = true;
-	for (Vartable::const_iterator info = othertable->begin();
-			info != othertable->end(); ++info)
-	{
-		Varcode varcode = info->var;
+    FILE* out;
+    FileCSV(FILE* out) : out(out) {}
 
-		/*
-		if (var % 1000 == 0)
-			fprintf(stderr, "Testing %s %d\n", ids[i], var);
-		*/
-
-		if (varcode != 0 && !info->is_string())
-		{
-			try {
-				Varinfo local = varinfo(varcode);
-				convert_units(info->unit, local->unit, 1.0);
-			} catch (std::exception& e) {
-				fprintf(stderr, "Checking conversion for var B%02d%03d: %s",
-						WR_VAR_X(varcode), WR_VAR_Y(varcode), e.what());
-				res = false;
-			}
-		}
-	}
-	return res;
-}
+    void flush_row() override
+    {
+        fputs(row.c_str(), out);
+        putc('\n', out);
+        row.clear();
+    }
+};
 
 
 struct VarinfoPrinter : public cmdline::Subcommand
 {
-    int op_csv;
+    int op_csv = 0;
+    int op_crex = 0;
+    CSVWriter* csv_out = nullptr;
+
+    ~VarinfoPrinter()
+    {
+        delete csv_out;
+    }
+
+    void init() override
+    {
+        if (op_csv) csv_out = new FileCSV(stdout);
+    }
 
     void add_to_optable(std::vector<poptOption>& opts) const override
     {
         Subcommand::add_to_optable(opts);
         opts.push_back(poptOption{ "csv", 'c', POPT_ARG_NONE, (void*)&op_csv, 0, "output variables in CSV format" });
+        opts.push_back(poptOption{ "crex", 0,  POPT_ARG_NONE, (void*)&op_crex, 0, "read CREX entries instead of BUFR" });
     }
 
-    void print_varinfo(const Varinfo& info) const
+    const Vartable* load_vartable(const char* id)
     {
-        if (op_csv)
-            print_varinfo_csv(*info);
+        if (op_crex)
+            return Vartable::load_crex(id);
         else
-            print_varinfo_desc(*info);
+            return Vartable::load_bufr(id);
     }
 
-    static void print_varinfo_desc(const Varinfo& info)
+    void print_varinfo(Varinfo info) const
     {
-        char fmtdesc[100];
+        if (csv_out)
+            print_varinfo_csv(*csv_out, info);
+        else
+            print_varinfo_desc(info);
+    }
 
-        if (info->is_string())
-            snprintf(fmtdesc, 99, "%d characters", info->len);
-        else if (info->scale == 0)
-            snprintf(fmtdesc, 99, "%d digits", info->len);
-        else if (info->scale > 0)
+    static std::string format_decimal(Varinfo info)
+    {
+        string res;
+        if (info->scale > 0)
         {
-            unsigned i = 0;
             if (info->len > info->scale)
-                for ( ; i < info->len - info->scale && i < 99; i++)
-                    fmtdesc[i] = '#';
-            fmtdesc[i++] = '.';
-            for (int j = 0; j < info->scale && i < 99; i++, j++)
-                fmtdesc[i] = '#';
-            fmtdesc[i] = 0;
+                for (unsigned i = 0; i < info->len - info->scale; ++i)
+                    res += '#';
+            res += '.';
+            for (unsigned i = 0; i < info->scale; ++i)
+                res += '#';
         }
         else if (info->scale < 0)
         {
-            unsigned i;
-            for (i = 0; i < info->len && i < 99; i++)
-                fmtdesc[i] = '#';
-            for (int j = 0; j < -info->scale && i < 99; i++, j++)
-                fmtdesc[i] = '0';
-            fmtdesc[i] = 0;
+            for (unsigned i = 0; i < info->len; ++i)
+                res += '#';
+            for (unsigned i = 0; i < -info->scale; ++i)
+                res += '0';
         }
-
-#if 0
-        if (VARINFO_IS_STRING(info))
-            printf("%d%02d%03d %s [%s, %s]\n", WR_VAR_F(info->var), WR_VAR_X(info->var), WR_VAR_Y(info->var),
-                    info->desc,
-                    info->unit,
-                    fmtdesc);
-        else
-            printf("%d%02d%03d %s [%s, %s] %f<=x<=%f\n", WR_VAR_F(info->var), WR_VAR_X(info->var), WR_VAR_Y(info->var),
-                    info->desc,
-                    info->unit,
-                    fmtdesc,
-                    info->dmin,
-                    info->dmax);
-#else
-        printf("%d%02d%03d %s [%s, %s] range (%g -- %g)\n", WR_VAR_F(info->var), WR_VAR_X(info->var), WR_VAR_Y(info->var),
-                info->desc,
-                info->unit,
-                fmtdesc,
-                info->dmin, info->dmax);
-#endif
+        return res;
     }
 
-    static void print_varinfo_csv(const Varinfo& info)
+    static void print_varinfo_desc(Varinfo info)
     {
-        char fmtdesc[100];
-        const char* s;
-
-        if (info->is_string())
-            snprintf(fmtdesc, 99, "%d characters", info->len);
-        else if (info->scale == 0)
-            snprintf(fmtdesc, 99, "%d digits", info->len);
-        else if (info->scale > 0)
+        switch (info->type)
         {
-            unsigned i;
-            for (i = 0; i < info->len - info->scale && i < 99; i++)
-                fmtdesc[i] = '#';
-            fmtdesc[i++] = '.';
-            for (int j = 0; j < info->scale && i < 99; i++, j++)
-                fmtdesc[i] = '#';
-            fmtdesc[i] = 0;
+            case Vartype::String:
+                printf("%d%02d%03d %s [%s, %u characters]\n",
+                        WR_VAR_FXY(info->code), info->desc, info->unit,
+                        info->len);
+                break;
+            case Vartype::Binary:
+                printf("%d%02d%03d %s [%s, %u bits]\n",
+                        WR_VAR_FXY(info->code), info->desc, info->unit,
+                        info->bit_len);
+                break;
+            case Vartype::Integer:
+                printf("%d%02d%03d %s [%s, %u digits] range (%d -- %d)\n",
+                        WR_VAR_FXY(info->code), info->desc, info->unit,
+                        info->len, info->imin, info->imax);
+                break;
+            case Vartype::Decimal:
+                printf("%d%02d%03d %s [%s, %s] range (%g -- %g)\n",
+                        WR_VAR_FXY(info->code), info->desc, info->unit,
+                        format_decimal(info).c_str(), info->dmin, info->dmax);
+                break;
         }
-        else if (info->scale < 0)
-        {
-            unsigned i;
-            for (i = 0; i < info->len && i < 99; i++)
-                fmtdesc[i] = '#';
-            for (int j = 0; j < -info->scale && i < 99; i++, j++)
-                fmtdesc[i] = '0';
-            fmtdesc[i] = 0;
-        }
+    }
 
-        printf("%d%02d%03d,", WR_VAR_F(info->var), WR_VAR_X(info->var), WR_VAR_Y(info->var));
-        for (s = info->desc; *s != 0; ++s)
-            if (*s != ',' && *s != '"')
-                putc(*s, stdout);
-        printf(",%s,%s\n", info->unit, fmtdesc);
+    static void print_varinfo_csv(CSVWriter& out, const Varinfo& info)
+    {
+        out.add_value(varcode_format(info->code));
+        out.add_value(info->desc);
+        out.add_value(info->unit);
+        out.add_value(vartype_format(info->type));
+        switch (info->type)
+        {
+            case Vartype::String:
+                out.add_value(info->len);
+                out.add_value_empty();
+                out.add_value_empty();
+                break;
+            case Vartype::Binary:
+                out.add_value(info->bit_len);
+                out.add_value_empty();
+                out.add_value_empty();
+                break;
+            case Vartype::Integer:
+                out.add_value(info->len);
+                out.add_value(info->imin);
+                out.add_value(info->imax);
+                break;
+            case Vartype::Decimal:
+                out.add_value(format_decimal(info));
+                out.add_value(to_string(info->dmin));
+                out.add_value(to_string(info->dmax));
+                break;
+        }
+        out.flush_row();
     }
 };
 
@@ -180,10 +176,11 @@ struct Cat : public VarinfoPrinter
 
         while (item != NULL)
         {
-            const Vartable* table = Vartable::get(item);
-            for (Vartable::const_iterator info = table->begin();
-                    info != table->end(); ++info)
-                print_varinfo(*info);
+            const Vartable* table = load_vartable(item);
+            table->iterate([&](Varinfo info) {
+                print_varinfo(info);
+                return true;
+            });
             item = poptGetArg(optCon);
         }
 
@@ -202,33 +199,31 @@ struct Grep : public VarinfoPrinter
 
     int main(poptContext optCon) override
     {
-        const Vartable* table;
-        const char* pattern;
-
         /* Throw away the command name */
         poptGetArg(optCon);
 
         if (poptPeekArg(optCon) == NULL)
             dba_cmdline_error(optCon, "there should be at least one B or D item to expand.  Examples are: B01002 or D03001");
-        pattern = poptGetArg(optCon);
 
-        table = Vartable::get("dballe");
-        for (Vartable::const_iterator info = table->begin();
-                info != table->end(); ++info)
-        {
+        const char* pattern = poptGetArg(optCon);
+
+        const Vartable* table = load_vartable("dballe");
+        table->iterate([&](Varinfo info) {
 #if HAVE_STRCASESTR
             if (strcasestr(info->desc, pattern) != NULL)
 #else
 #warning dbatbl grep is case sensite on this sytstem, since strcasestr is not available
             if (strstr(info->desc, pattern) != NULL)
 #endif
-                print_varinfo(*info);
-        }
+                print_varinfo(info);
+            return true;
+        });
 
         return 0;
     }
 };
 
+#if 0
 struct Expand : public cmdline::Subcommand
 {
     const Vartable* btable = NULL;
@@ -289,6 +284,7 @@ struct Expand : public cmdline::Subcommand
         }
     }
 };
+#endif
 
 struct ExpandCode : public cmdline::Subcommand
 {
@@ -323,6 +319,7 @@ struct ExpandCode : public cmdline::Subcommand
     }
 };
 
+#if 0
 static const char* table_type = "b";
 
 struct Index : public cmdline::Subcommand
@@ -339,6 +336,40 @@ struct Index : public cmdline::Subcommand
         Subcommand::add_to_optable(opts);
         opts.push_back({ "type", 't', POPT_ARG_STRING, &table_type, 0,
                 "format of the table to index ('b', 'd', 'conv')", "type" });
+    }
+
+    /**
+     * Check that all unit conversions are allowed by dba_uniconv
+     *
+     * @returns true if all conversions worked, false if some exceptions were thrown
+     */
+    static bool check_unit_conversions(const char* id)
+    {
+        const Vartable* othertable = Vartable::get(id);
+        bool res = true;
+        for (Vartable::const_iterator info = othertable->begin();
+                info != othertable->end(); ++info)
+        {
+            Varcode varcode = info->var;
+
+            /*
+            if (var % 1000 == 0)
+                fprintf(stderr, "Testing %s %d\n", ids[i], var);
+            */
+
+            if (varcode != 0 && !info->is_string())
+            {
+                try {
+                    Varinfo local = varinfo(varcode);
+                    convert_units(info->unit, local->unit, 1.0);
+                } catch (std::exception& e) {
+                    fprintf(stderr, "Checking conversion for var B%02d%03d: %s",
+                            WR_VAR_X(varcode), WR_VAR_Y(varcode), e.what());
+                    res = false;
+                }
+            }
+        }
+        return res;
     }
 
     int main(poptContext optCon) override
@@ -377,6 +408,7 @@ struct Index : public cmdline::Subcommand
         return 0;
     }
 };
+#endif
 
 struct Describe : public cmdline::Subcommand
 {
@@ -441,9 +473,9 @@ int main(int argc, const char* argv[])
 
     dbatbl.add_subcommand(new Cat);
     dbatbl.add_subcommand(new Grep);
-    dbatbl.add_subcommand(new Expand);
+    //dbatbl.add_subcommand(new Expand);
     dbatbl.add_subcommand(new ExpandCode);
-    dbatbl.add_subcommand(new Index);
+    //dbatbl.add_subcommand(new Index);
     dbatbl.add_subcommand(new Describe);
 
     return dbatbl.main(argc, argv);

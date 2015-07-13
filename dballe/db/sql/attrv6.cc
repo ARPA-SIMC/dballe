@@ -26,7 +26,7 @@ namespace bulk {
 void InsertAttrsV6::add_all(const wreport::Var& var, int id_data)
 {
     for (const Var* attr = var.next_attr(); attr != NULL; attr = attr->next_attr())
-        if (attr->value() != NULL)
+        if (attr->isset())
             emplace_back(attr, id_data);
 }
 
@@ -83,7 +83,7 @@ bool AnnotateAttrsV6::annotate(int id_data, Varcode code, const char* value)
         // iter points to an attribute that is also in the DB
 
         // If the value is different, we need to update
-        if (strcmp(value, iter->attr->value()) != 0)
+        if (strcmp(value, iter->attr->enqc()) != 0)
         {
             //fprintf(stderr, "needs_update ");
             iter->set_needs_update();
@@ -126,7 +126,7 @@ void AttrV6::dump(FILE* out) const
     fprintf(out, "flags:%s %01d%02d%03d(%d): %s\n",
             flags, WR_VAR_F(attr->code()), WR_VAR_X(attr->code()), WR_VAR_Y(attr->code()),
             (int)(attr->code()),
-            attr->value());
+            attr->isset() ? attr->enqc() : "(null)");
 }
 
 void InsertAttrsV6::dump(FILE* out) const

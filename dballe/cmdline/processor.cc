@@ -95,9 +95,8 @@ void Item::decode(msg::Importer& imp, bool print_errors)
     switch (rmsg->encoding)
     {
         case File::BUFR:
-            bulletin = BufrBulletin::create().release();
             try {
-                bulletin->decode(rmsg->data, rmsg->pathname.c_str(), rmsg->offset);
+                bulletin = BufrBulletin::decode(rmsg->data, rmsg->pathname.c_str(), rmsg->offset).release();
             } catch (error& e) {
                 if (print_errors) print_parse_error(*rmsg, e);
                 delete bulletin;
@@ -105,9 +104,8 @@ void Item::decode(msg::Importer& imp, bool print_errors)
             }
             break;
         case File::CREX:
-            bulletin = CrexBulletin::create().release();
             try {
-                bulletin->decode(rmsg->data, rmsg->pathname.c_str(), rmsg->offset);
+                bulletin = CrexBulletin::decode(rmsg->data, rmsg->pathname.c_str(), rmsg->offset).release();
             } catch (error& e) {
                 if (print_errors) print_parse_error(*rmsg, e);
                 delete bulletin;
@@ -224,11 +222,11 @@ bool Filter::match_bufrex(const BinaryMessage& rmsg, const Bulletin* rm, const M
         return false;
 
     if (category != -1)
-        if (category != rm->type)
+        if (category != rm->data_category)
             return false;
 
     if (subcategory != -1)
-        if (subcategory != rm->subtype)
+        if (subcategory != rm->data_subcategory)
             return false;
 
     if (matcher)

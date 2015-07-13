@@ -119,8 +119,8 @@ fi
 
 
 dnl Check for wreport
-PKG_CHECK_MODULES(WREPORT,libwreport >= 2.11)
-PKG_CHECK_EXISTS([libwreport-test >= 2.11], [have_wreport_test=yes], [have_wreport_test=no])
+PKG_CHECK_MODULES(WREPORT,libwreport >= 3.0)
+PKG_CHECK_EXISTS([libwreport-test >= 3.0], [have_wreport_test=yes], [have_wreport_test=no])
 
 
 dnl Check for sqlite3

@@ -107,7 +107,7 @@ void ODBCAttrV6::insert(Transaction& t, sql::bulk::InsertAttrsV6& attrs, UpdateM
                 for (auto& a: attrs)
                 {
                     if (!a.needs_update()) continue;
-                    update_stm->bind_in(1, a.attr->value());
+                    update_stm->bind_in(1, a.attr->enqc());
                     update_stm->bind_in(2, a.id_data);
                     code = a.attr->code();
                     update_stm->execute_and_close();
@@ -132,7 +132,7 @@ void ODBCAttrV6::insert(Transaction& t, sql::bulk::InsertAttrsV6& attrs, UpdateM
             if (!a.needs_insert()) continue;
             insert->bind_in(1, a.id_data);
             varcode = a.attr->code();
-            insert->bind_in(3, a.attr->value());
+            insert->bind_in(3, a.attr->enqc());
             insert->execute_and_close();
             a.set_inserted();
         }

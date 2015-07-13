@@ -231,21 +231,6 @@ bool is_subrange(int sub1, int sub2, int sup1, int sup2)
     return true;
 }
 
-// Return true if sub1--sub2 is contained in sup1--sup2, or is the same
-bool is_subrange(const Datetime& sub1, const Datetime& sub2, const Datetime& sup1, const Datetime& sup2)
-{
-    // If sup is the whole domain, sub is contained in it
-    if (sup1.is_missing() && sup2.is_missing()) return true;
-    // If sup is left-open, only check the right bounds
-    if (sup1.is_missing()) return !sub2.is_missing() && !(sub2 > sup2);
-    // If sup is right-open, only check the left bounds
-    if (sup2.is_missing()) return !sub1.is_missing() && !(sub1 < sup1);
-    // sup is bounded both ways
-    if (sub1.is_missing() || sub1 < sup1) return false;
-    if (sub2.is_missing() || sub2 > sup2) return false;
-    return true;
-}
-
 }
 
 bool Query::is_subquery(const dballe::Query& other_gen) const
@@ -293,28 +278,34 @@ namespace {
 
 struct VarGen
 {
-    std::function<void(const char*, unique_ptr<Var>&&)>& dest;
+    std::function<void(const char*, Var&&)>& dest;
 
-    VarGen(std::function<void(const char*, unique_ptr<Var>&&)>& dest)
+    VarGen(std::function<void(const char*, Var&&)>& dest)
         : dest(dest) {}
 
     template<typename T>
     void gen(dba_keyword key, const T& val)
     {
         Varinfo info = Record::keyword_info(key);
-        dest(Record::keyword_name(key), unique_ptr<Var>(new Var(info, val)));
+        dest(Record::keyword_name(key), Var(info, val));
     };
 
     void gen(dba_keyword key, const std::string& val)
     {
         Varinfo info = Record::keyword_info(key);
-        dest(Record::keyword_name(key), unique_ptr<Var>(new Var(info, val.c_str())));
+        dest(Record::keyword_name(key), Var(info, val.c_str()));
+    };
+
+    void gen(dba_keyword key, const Ident& val)
+    {
+        Varinfo info = Record::keyword_info(key);
+        dest(Record::keyword_name(key), Var(info, val.get()));
     };
 };
 
 }
 
-void Query::foreach_key(std::function<void(const char*, unique_ptr<Var>&&)> dest) const
+void Query::foreach_key(std::function<void(const char*, Var&&)> dest) const
 {
     VarGen vargen(dest);
 
@@ -421,8 +412,8 @@ void Query::foreach_key(std::function<void(const char*, unique_ptr<Var>&&)> dest
     if (!data_filter.empty()) vargen.gen(DBA_KEY_DATA_FILTER, data_filter);
     if (!attr_filter.empty()) vargen.gen(DBA_KEY_ATTR_FILTER, attr_filter);
     if (limit != MISSING_INT) vargen.gen(DBA_KEY_LIMIT, limit);
-    if (block != MISSING_INT) dest("block", newvar(WR_VAR(0, 1, 1), block));
-    if (station != MISSING_INT) dest("station", newvar(WR_VAR(0, 1, 2), station));
+    if (block != MISSING_INT) dest("block", Var(varinfo(WR_VAR(0, 1, 1)), block));
+    if (station != MISSING_INT) dest("station", Var(varinfo(WR_VAR(0, 1, 2)), station));
     if (data_id != MISSING_INT) vargen.gen(DBA_KEY_CONTEXT_ID, data_id);
 }
 
@@ -632,7 +623,7 @@ unsigned Query::parse_modifiers(const dballe::Record& rec)
     const Var* var = rec.get("query");
     if (!var) return 0;
     if (!var->isset()) return 0;
-    return parse_modifiers(var->value());
+    return parse_modifiers(var->enqc());
 }
 
 unsigned Query::parse_modifiers(const char* s)

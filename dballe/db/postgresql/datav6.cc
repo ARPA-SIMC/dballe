@@ -89,9 +89,10 @@ void PostgreSQLDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateM
                 for (auto& v: vars)
                 {
                     if (!v.needs_update()) continue;
-                    char* escaped_val = PQescapeLiteral(conn, v.var->value(), strlen(v.var->value()));
+                    const char* value = v.var->enqc();
+                    char* escaped_val = PQescapeLiteral(conn, value, strlen(value));
                     if (!escaped_val)
-                        throw error_postgresql(conn, string("escaping string '") + v.var->value() + "'");
+                        throw error_postgresql(conn, string("escaping string '") + value + "'");
                     dq.append_listf("(%d, %s)", v.id_data, escaped_val);
                     PQfreemem(escaped_val);
                     v.set_updated();
@@ -117,9 +118,10 @@ void PostgreSQLDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateM
         for (auto& v: vars)
         {
             if (!v.needs_insert()) continue;
-            char* escaped_val = PQescapeLiteral(conn, v.var->value(), strlen(v.var->value()));
+            const char* value = v.var->enqc();
+            char* escaped_val = PQescapeLiteral(conn, value, strlen(value));
             if (!escaped_val)
-                throw error_postgresql(conn, string("escaping string '") + v.var->value() + "'");
+                throw error_postgresql(conn, string("escaping string '") + value + "'");
             dq.append_listf("(DEFAULT, %d, %d, %d, '%04d-%02d-%02d %02d:%02d:%02d', %d, %s)",
                     vars.id_station, vars.id_report, v.id_levtr,
                     vars.datetime.year, vars.datetime.month, vars.datetime.day,

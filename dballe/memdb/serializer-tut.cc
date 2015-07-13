@@ -55,13 +55,13 @@ template<> template<> void to::test<1>()
     reset_test_dir();
 
     Var var_st_1(varinfo(WR_VAR(0, 7, 7)), 100.0);
-    var_st_1.seta(ap_newvar(WR_VAR(0, 33, 7), 30));
+    var_st_1.seta(newvar(WR_VAR(0, 33, 7), 30));
     Var var_st_2(varinfo(WR_VAR(0, 7, 7)), 5000.0);
-    var_st_2.seta(ap_newvar(WR_VAR(0, 33, 7), 40));
+    var_st_2.seta(newvar(WR_VAR(0, 33, 7), 40));
     Var var_1(varinfo(WR_VAR(0, 12, 101)), 274.0);
-    var_1.seta(ap_newvar(WR_VAR(0, 33, 7), 50));
+    var_1.seta(newvar(WR_VAR(0, 33, 7), 50));
     Var var_2(varinfo(WR_VAR(0, 12, 101)), 273.0);
-    var_2.seta(ap_newvar(WR_VAR(0, 33, 7), 60));
+    var_2.seta(newvar(WR_VAR(0, 33, 7), 60));
 
     // Create a memdb and write it out
     {
@@ -137,9 +137,9 @@ template<> template<> void to::test<3>()
     const char* str_ident = "\"'\n,";
     const char* str_report = "\n\"',";
     Var var_st_1(varinfo(WR_VAR(0, 1, 19)), "'\"\n,");
-    var_st_1.seta(ap_newvar(WR_VAR(0, 33, 7), 30));
+    var_st_1.seta(newvar(WR_VAR(0, 33, 7), 30));
     Var var_1(varinfo(WR_VAR(0, 12, 101)), 274.0);
-    var_1.seta(ap_newvar(WR_VAR(0, 1, 212), "'\"\n,"));
+    var_1.seta(newvar(WR_VAR(0, 1, 212), "'\"\n,"));
 
     {
         Memdb memdb;

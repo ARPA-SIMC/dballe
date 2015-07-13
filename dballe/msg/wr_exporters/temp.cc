@@ -21,6 +21,7 @@
 #include "msg/msg.h"
 #include "msg/context.h"
 #include <wreport/bulletin.h>
+#include <wreport/vartable.h>
 #include <wreport/conv.h>
 #include <wreport/codetables.h>
 #include <wreport/notes.h>
@@ -122,8 +123,8 @@ struct TempBase : public Template
                     // Deal with 'missing VSS' group markers
                     subset->store_variable_undef(WR_VAR(0, 8, 1));
                 } else {
-                    Var nvar(subset->btable->query(WR_VAR(0, 8, 1)), vssval);
-                    nvar.copy_attrs(*vss);
+                    Var nvar(subset->tables->btable->query(WR_VAR(0, 8, 1)), vssval);
+                    nvar.setattrs(*vss);
                     subset->store_variable(WR_VAR(0, 8, 1), nvar);
                 }
             }
@@ -146,25 +147,25 @@ struct TempBase : public Template
         // Use old table for old templates
         if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
         {
-            b->master_table = 13;
+            b->master_table_version_number = 13;
         }
 
         is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
 
-        bulletin.type = 2;
-        bulletin.subtype = 255;
+        bulletin.data_category = 2;
+        bulletin.data_subcategory = 255;
 
         // Scan to see what we are dealing with
-        bulletin.localsubtype = 101;
+        bulletin.data_subcategory_local = 101;
         for (const auto& mi: msgs)
         {
             const Msg& msg = Msg::downcast(mi);
             if (msg.type == MSG_PILOT)
             {
-                bulletin.localsubtype = 91;
+                bulletin.data_subcategory_local = 91;
                 break;
             } else if (msg.get_ident_var()) {
-                bulletin.localsubtype = 102;
+                bulletin.data_subcategory_local = 102;
                 break;
             } else if (msg.get_block_var()) {
                 break;
@@ -220,15 +221,15 @@ struct TempWMO : public TempBase
     {
         TempBase::setupBulletin(bulletin);
 
-        bulletin.type = 2;
-        bulletin.subtype = 4;
-        bulletin.localsubtype = 255;
+        bulletin.data_category = 2;
+        bulletin.data_subcategory = 4;
+        bulletin.data_subcategory_local = 255;
         for (const auto& mi : msgs)
         {
             const Msg& msg = Msg::downcast(mi);
             if (msg.type == MSG_TEMP_SHIP)
             {
-                bulletin.subtype = 5;
+                bulletin.data_subcategory = 5;
                 break;
             }
         }
@@ -375,9 +376,9 @@ struct TempRadar : public TempBase
     {
         TempBase::setupBulletin(bulletin);
 
-        bulletin.type = 6;
-        bulletin.subtype = 1;
-        bulletin.localsubtype = 255;
+        bulletin.data_category = 6;
+        bulletin.data_subcategory = 1;
+        bulletin.data_subcategory_local = 255;
 
         // Data descriptor section
         bulletin.datadesc.clear();
@@ -645,9 +646,9 @@ struct PilotWMO : public TempBase
     {
         TempBase::setupBulletin(bulletin);
 
-        bulletin.type = 2;
-        bulletin.subtype = 1;
-        bulletin.localsubtype = 255;
+        bulletin.data_category = 2;
+        bulletin.data_subcategory = 1;
+        bulletin.data_subcategory_local = 255;
 
         // Data descriptor section
         bulletin.datadesc.clear();
@@ -826,8 +827,8 @@ struct PilotEcmwf : public TempBase
 
             /* Add vertical sounding significance */
             {
-                Var nvar(subset.btable->query(WR_VAR(0, 8, 1)), convert_BUFR08042_to_BUFR08001(vss->enqi()));
-                nvar.copy_attrs(*vss);
+                Var nvar(subset.tables->btable->query(WR_VAR(0, 8, 1)), convert_BUFR08042_to_BUFR08001(vss->enqi()));
+                nvar.setattrs(*vss);
                 subset.store_variable(WR_VAR(0, 8, 1), nvar);
             }
 

@@ -140,6 +140,9 @@ protected:
 public:
     virtual ~CSVWriter();
 
+    /// Add an empty value to the current row
+    void add_value_empty();
+
     /// Add a value to the current row, without any escaping
     void add_value_raw(const char* str);
 

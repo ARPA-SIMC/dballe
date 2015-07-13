@@ -1,8 +1,10 @@
 #include "tests.h"
 #include "match-wreport.h"
 #include "var.h"
+#include <wreport/vartable.h>
 #include <wreport/subset.h>
 #include <wreport/bulletin.h>
+#include <wreport/tableinfo.h>
 
 #include <sstream>
 #include <iostream>
@@ -15,10 +17,12 @@ namespace tut {
 
 struct match_wreport_shar {
     BufrBulletin* bulletin;
+    Tables tables;
 
     match_wreport_shar()
         : bulletin(0)
     {
+        tables.load_bufr(BufrTableID(0, 0, 0, 24, 0));
     }
     ~match_wreport_shar()
     {
@@ -29,11 +33,11 @@ struct match_wreport_shar {
         if (bulletin) delete bulletin;
         bulletin = BufrBulletin::create().release();
         BufrBulletin& b = *bulletin;
-        b.edition = 4;
-        b.centre = 200;
-        b.subcentre = 0;
-        b.master_table = 14;
-        b.local_table = 0;
+        b.edition_number = 4;
+        b.originating_centre = 200;
+        b.originating_subcentre = 0;
+        b.master_table_version_number = 14;
+        b.master_table_version_number_local = 0;
         b.load_tables();
         return b;
     }
@@ -51,13 +55,13 @@ void to::test<1>()
 {
     auto m = get_matcher("context_id=1");
 
-    Subset s(Vartable::get("dballe"));
+    Subset s(tables);
     ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
 
     s.store_variable_i(WR_VAR(0, 1, 1), 1);
     ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
 
-    s.back().seta(ap_newvar(WR_VAR(0, 33, 195), 1));
+    s.back().seta(newvar(WR_VAR(0, 33, 195), 1));
     ensure(m->match(MatchedSubset(s)) == matcher::MATCH_YES);
 }
 
@@ -67,7 +71,10 @@ void to::test<2>()
 {
     auto m = get_matcher("ana_id=1");
 
-    Subset s(Vartable::get("dballe"));
+    Tables tables;
+    tables.load_bufr(BufrTableID(200, 0, 0, 14, 1));
+
+    Subset s(tables);
     ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
 
     s.store_variable_i(WR_VAR(0, 1, 1), 1);
@@ -84,7 +91,7 @@ void to::test<3>()
     {
         auto m = get_matcher("block=11");
 
-        Subset s(Vartable::get("dballe"));
+        Subset s(tables);
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
 
         s.store_variable_i(WR_VAR(0, 1, 1), 1);
@@ -100,7 +107,7 @@ void to::test<3>()
     {
         auto m = get_matcher("block=11, station=222");
 
-        Subset s(Vartable::get("dballe"));
+        Subset s(tables);
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
 
         s.store_variable_i(WR_VAR(0, 1, 1), 1);
@@ -130,7 +137,7 @@ void to::test<4>()
     {
         auto m = get_matcher("yearmin=2000");
 
-        Subset s(Vartable::get("dballe"));
+        Subset s(tables);
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
 
         s.store_variable_i(WR_VAR(0, 4, 1), 1999);
@@ -142,7 +149,7 @@ void to::test<4>()
     {
         auto m = get_matcher("yearmax=2000");
 
-        Subset s(Vartable::get("dballe"));
+        Subset s(tables);
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
 
         s.store_variable_i(WR_VAR(0, 4, 1), 2001);
@@ -154,7 +161,7 @@ void to::test<4>()
     {
         auto m = get_matcher("yearmin=2000, yearmax=2010");
 
-        Subset s(Vartable::get("dballe"));
+        Subset s(tables);
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
 
         s.store_variable_i(WR_VAR(0, 4, 1), 1999);
@@ -181,7 +188,7 @@ void to::test<5>()
     {
         auto m = get_matcher("latmin=45.00");
 
-        Subset s(Vartable::get("dballe"));
+        Subset s(tables);
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
 
         s.store_variable_d(WR_VAR(0, 5, 1), 43.0);
@@ -195,7 +202,7 @@ void to::test<5>()
     {
         auto m = get_matcher("latmax=45.00");
 
-        Subset s(Vartable::get("dballe"));
+        Subset s(tables);
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
 
         s.store_variable_d(WR_VAR(0, 5, 1), 46.0);
@@ -209,7 +216,7 @@ void to::test<5>()
     {
         auto m = get_matcher("lonmin=11.00, lonmax=180.0");
 
-        Subset s(Vartable::get("dballe"));
+        Subset s(tables);
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
 
         s.store_variable_d(WR_VAR(0, 6, 1), 10.0);
@@ -223,7 +230,7 @@ void to::test<5>()
     {
         auto m = get_matcher("lonmin=-180, lonmax=11.0");
 
-        Subset s(Vartable::get("dballe"));
+        Subset s(tables);
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
 
         s.store_variable_d(WR_VAR(0, 6, 1), 12.0);
@@ -237,7 +244,7 @@ void to::test<5>()
     {
         auto m = get_matcher("latmin=45.0, latmax=46.0, lonmin=10.0, lonmax=12.0");
 
-        Subset s(Vartable::get("dballe"));
+        Subset s(tables);
         ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
 
         s.store_variable_d(WR_VAR(0, 5, 1), 45.5);
@@ -257,7 +264,10 @@ void to::test<6>()
 {
     auto m = get_matcher("rep_memo=synop");
 
-    Subset s(Vartable::get("dballe"));
+    Tables tables;
+    tables.load_bufr(BufrTableID(200, 0, 0, 14, 1));
+
+    Subset s(tables);
     ensure(m->match(MatchedSubset(s)) == matcher::MATCH_NO);
 
     s.store_variable_c(WR_VAR(0, 1, 194), "temp");
@@ -273,7 +283,7 @@ void to::test<7>()
 {
     std::unique_ptr<Matcher> m = Matcher::create(*Query::create());
 
-    Subset s(Vartable::get("dballe"));
+    Subset s(tables);
     ensure(m->match(MatchedSubset(s)) == matcher::MATCH_YES);
 }
 
@@ -289,7 +299,7 @@ void to::test<8>()
     b.obtain_subset(1).store_variable_i(WR_VAR(0, 1, 1), 1);
     ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_NO);
 
-    b.obtain_subset(1).back().seta(ap_newvar(WR_VAR(0, 33, 195), 1));
+    b.obtain_subset(1).back().seta(newvar(WR_VAR(0, 33, 195), 1));
     ensure(m->match(MatchedBulletin(b)) == matcher::MATCH_YES);
 }
 

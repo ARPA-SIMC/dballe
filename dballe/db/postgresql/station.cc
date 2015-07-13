@@ -103,7 +103,7 @@ void StationBase::get_station_vars(int id_station, int id_report, std::function<
         if (!res.is_null(row, 2))
         {
             TRACE("fill_ana_layer new attribute\n");
-            var->seta(ap_newvar(res.get_int4(row, 2), res.get_string(row, 3)));
+            var->seta(newvar(res.get_int4(row, 2), res.get_string(row, 3)));
         }
     };
 

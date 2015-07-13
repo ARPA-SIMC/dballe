@@ -63,7 +63,7 @@ public:
                 // Skip non-variable entries
                 if (WR_VAR_F(var.code()) != 0) continue;
                 // Special processing for undefined variables
-                if (var.value() == NULL)
+                if (!var.isset())
                 {
                     // Also skip attributes of undefined variables if there are
                     // some following
@@ -125,9 +125,13 @@ void GenericImporter::import_defined(const Var& var)
         case WR_VAR(0, 7, 194): lev.l2 = var.enqi(); break;
         case WR_VAR(0, 7, 195): lev.ltype2 = var.enqi(); break;
         case WR_VAR(0, 1, 194):
-            // Set the rep memo if we found it
-            msg->type = Msg::type_from_repmemo(var.value());
-            msg->set_rep_memo(var.value(), -1);
+            if (var.isset())
+            {
+                // Set the rep memo if we found it
+                const char* repmemo = var.enqc();
+                msg->type = Msg::type_from_repmemo(repmemo);
+                msg->set_rep_memo(repmemo, -1);
+            }
             break;
         default:
             import_var(var);
@@ -149,7 +153,7 @@ void GenericImporter::import_var(const Var& var)
         // Legacy variable conversions
         case WR_VAR(0, 8, 1): {
             unique_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), convert_BUFR08001_to_BUFR08042(var.enqi())));
-            nvar->copy_attrs(var);
+            nvar->setattrs(var);
             msg->set(move(nvar), lev, tr);
             break;
         }

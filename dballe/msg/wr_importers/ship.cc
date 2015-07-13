@@ -43,10 +43,10 @@ public:
 
     MsgType scanType(const Bulletin& bulletin) const
     {
-        switch (bulletin.type)
+        switch (bulletin.data_category)
         {
             case 1:
-                switch (bulletin.localsubtype)
+                switch (bulletin.data_subcategory_local)
                 {
                     case 21: return MSG_BUOY;
                     case 9:

@@ -249,7 +249,12 @@ struct MemCursorStationData : public CursorSorted<CursorStationData, StationValu
     }
     const char* get_rep_memo() const override { return values[cur]->station.report.c_str(); }
     wreport::Varcode get_varcode() const override { return values[this->cur]->var->code(); }
-    wreport::Var get_var() const override { return Var(*values[this->cur]->var, false); }
+    wreport::Var get_var() const override
+    {
+        Var res(values[this->cur]->var->info());
+        res.setval(*values[this->cur]->var);
+        return res;
+    }
     int attr_reference_id() const override { return this->cur; }
 
 #if 0
@@ -399,7 +404,12 @@ struct CursorDataBase : public CursorSorted<Interface, QUEUE>
     Trange get_trange() const override { return values[this->cur]->levtr.trange; }
     wreport::Varcode get_varcode() const override { return values[this->cur]->var->code(); }
     Datetime get_datetime() const override { return values[this->cur]->datetime; }
-    wreport::Var get_var() const override { return Var(*values[this->cur]->var, false); }
+    wreport::Var get_var() const override
+    {
+        Var res(values[this->cur]->var->info());
+        res.setval(*values[this->cur]->var);
+        return res;
+    }
     int attr_reference_id() const override { return this->cur; }
 
 #if 0

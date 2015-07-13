@@ -47,17 +47,17 @@ TESTGRP(wr_import);
 #define IS(field, val) do { \
         const Var* var = msg.get_##field##_var(); \
         ensure(((void)#field, var != 0)); \
-        ensure_var_equals(*var, val); \
+        wassert(actual(*var) == val); \
     } while (0)
 #define IS2(code, lev, tr, val) do { \
         const Var* var = msg.get(code, lev, tr); \
         ensure(((void)#code #lev #tr, var != 0)); \
-        ensure_var_equals(*var, val); \
+        wassert(actual(*var) == val); \
     } while (0)
 #define UN(field) do { \
         const Var* var = msg.get_##field##_var(); \
         if (var != 0) \
-            ensure_var_undef(*var); \
+            wassert(actual(*var).is_undef()); \
     } while (0)
 
 // Test plain import of all our BUFR test files
@@ -80,8 +80,7 @@ void to::test<1>()
             cerr << "Failing bulletin:";
             try {
                 BinaryMessage raw = read_rawmsg(files[i], File::BUFR);
-                unique_ptr<Bulletin> bulletin(BufrBulletin::create());
-                bulletin->decode(raw.data);
+                unique_ptr<Bulletin> bulletin(BufrBulletin::decode(raw.data));
                 bulletin->print(stderr);
             } catch (std::exception& e1) {
                 cerr << "Cannot display failing bulletin: " << e1.what() << endl;
@@ -106,8 +105,7 @@ void to::test<2>()
             cerr << "Failing bulletin:";
             try {
                 BinaryMessage raw = read_rawmsg(files[i], File::CREX);
-                unique_ptr<Bulletin> bulletin(CrexBulletin::create());
-                bulletin->decode(raw.data);
+                unique_ptr<Bulletin> bulletin(CrexBulletin::decode(raw.data));
                 bulletin->print(stderr);
             } catch (std::exception& e1) {
                 cerr << "Cannot display failing bulletin: " << e1.what() << endl;
@@ -254,7 +252,7 @@ void to::test<8>()
     // Check that the long station name has been correctly truncated on import
     const Var* var = msg.get_st_name_var();
     ensure(var != NULL);
-    ensure_equals(string(var->enqc()), "Budapest Pestszentlorinc-kulter>");
+    ensure_equals(string(var->enqc()), "Budapest Pestszentlorinc-kulteru");
 }
 
 template<> template<>

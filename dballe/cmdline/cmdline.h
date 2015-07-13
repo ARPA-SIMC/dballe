@@ -35,6 +35,10 @@ struct Subcommand
     virtual ~Subcommand() {}
 
     virtual void add_to_optable(std::vector<poptOption>& opts) const;
+
+    /// Optional initialization before main is called
+    virtual void init();
+
     virtual int main(poptContext) = 0;
 
     /**

@@ -78,7 +78,7 @@ void strip_attributes(Messages& msgs)
 void propagate_if_missing(int varid, const Msg& src, Msg& dst)
 {
     const Var* var = src.find_by_id(varid);
-    if (var == NULL || var->value() == NULL) return;
+    if (var == NULL || !var->isset()) return;
     dst.set_by_id(*var, varid);
 }
 
@@ -117,7 +117,7 @@ void normalise_encoding_quirks(Messages& amsgs, Messages& bmsgs)
 				{
 					if (attr->code() == WR_VAR(0, 33, 7))
 					{
-						if (attr->value() == NULL)
+						if (!attr->isset())
 						{
 							qc_is_undef = 1;
 						}
@@ -161,20 +161,17 @@ void normalise_encoding_quirks(Messages& amsgs, Messages& bmsgs)
 		if ((var = bmsg.edit_by_id(DBA_MSG_FLIGHT_PHASE)) != NULL)
 			var->clear_attrs();
 
-		if ((var = bmsg.edit_by_id(DBA_MSG_CLOUD_CL)) != NULL &&
-				strtoul(var->value(), NULL, 0) == 62 &&
-				amsg.get_cloud_cl_var() == NULL)
-			amsg.set_cloud_cl_var(*var);
+        if ((var = bmsg.edit_by_id(DBA_MSG_CLOUD_CL)) != NULL &&
+                var->enqi() == 62 && amsg.get_cloud_cl_var() == NULL)
+            amsg.set_cloud_cl_var(*var);
 
-		if ((var = bmsg.edit_by_id(DBA_MSG_CLOUD_CM)) != NULL &&
-				strtoul(var->value(), NULL, 0) == 61 &&
-				amsg.get_cloud_cm_var() == NULL)
-			amsg.set_cloud_cm_var(*var);
+        if ((var = bmsg.edit_by_id(DBA_MSG_CLOUD_CM)) != NULL &&
+                var->enqi() == 61 && amsg.get_cloud_cm_var() == NULL)
+            amsg.set_cloud_cm_var(*var);
 
 		if ((var = bmsg.edit_by_id(DBA_MSG_CLOUD_CH)) != NULL &&
-				strtoul(var->value(), NULL, 0) == 60 &&
-				amsg.get_cloud_ch_var() == NULL)
-			amsg.set_cloud_ch_var(*var);
+                var->enqi() == 60 && amsg.get_cloud_ch_var() == NULL)
+            amsg.set_cloud_ch_var(*var);
 
         propagate_if_missing(DBA_MSG_HEIGHT_ANEM, bmsg, amsg);
         propagate_if_missing(DBA_MSG_NAVSYS, bmsg, amsg);

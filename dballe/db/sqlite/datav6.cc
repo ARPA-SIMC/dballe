@@ -32,15 +32,7 @@ SQLiteDataV6::~SQLiteDataV6()
 
 void SQLiteDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode)
 {
-    const char* select_query = R"(
-        SELECT id, id_lev_tr, id_var, value
-          FROM data
-         WHERE id_station=? AND id_report=? AND datetime=?
-         ORDER BY id_lev_tr, id_var
-    )";
-
     // Get the current status of variables for this context
-    //sstm = conn.sqlitestatement(select_query);
     sstm->bind_val(1, vars.id_station);
     sstm->bind_val(2, vars.id_report);
     sstm->bind_val(3, vars.datetime);
@@ -68,7 +60,9 @@ void SQLiteDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode 
                 for (auto& v: vars)
                 {
                     if (!v.needs_update()) continue;
-                    update_stm->bind(v.var->value(), v.id_data);
+                    // Warning: we do not know if v.var is a string, so the result of
+                    // enqc is only valid until another enqc is called
+                    update_stm->bind(v.var->enqc(), v.id_data);
                     update_stm->execute();
                     v.set_updated();
                 }
@@ -94,7 +88,9 @@ void SQLiteDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode 
         for (auto& v: vars)
         {
             if (!v.needs_insert()) continue;
-            insert->bind(v.id_levtr, v.var->code(), v.var->value());
+            // Warning: we do not know if v.var is a string, so the result of
+            // enqc is only valid until another enqc is called
+            insert->bind(v.id_levtr, v.var->code(), v.var->enqc());
             insert->execute();
             v.id_data = conn.get_last_insert_id();
             v.set_inserted();

@@ -74,7 +74,7 @@ void DB::import_msg(const Message& message, const char* repmemo, int flags)
     if (mobile)
     {
         if (const Var* var = l_ana->find_by_id(DBA_MSG_IDENT))
-            ident = var->value();
+            ident = var->enqc();
         else
             throw error_notfound("mobile station identifier not found in data to import");
     }
@@ -89,7 +89,7 @@ void DB::import_msg(const Message& message, const char* repmemo, int flags)
     else {
         // TODO: check if B01194 first
         if (const Var* var = msg.get_rep_memo_var())
-            id_report = rep_cod_from_memo(var->value());
+            id_report = rep_cod_from_memo(var->enqc());
         else
             id_report = rep_cod_from_memo(Msg::repmemo_from_type(msg.type));
     }

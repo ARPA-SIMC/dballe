@@ -55,8 +55,8 @@ template<> template<>
 void to::test<1>()
 {
     Level lev(9, 8, 7, 6);
-    auto_ptr<msg::Context> c1(new msg::Context(lev, Trange(1, 2, 3)));
-    auto_ptr<msg::Context> c2(new msg::Context(lev, Trange(1, 3, 2)));
+    unique_ptr<msg::Context> c1(new msg::Context(lev, Trange(1, 2, 3)));
+    unique_ptr<msg::Context> c2(new msg::Context(lev, Trange(1, 3, 2)));
 
 	ensure_equals(c1->data.size(), 0);
 	ensure_equals(c1->level, lev);
@@ -89,8 +89,8 @@ template<> template<>
 void to::test<2>()
 {
     Trange tr(1, 2, 3);
-    auto_ptr<msg::Context> c1(new msg::Context(Level(1, 2, 3, 4), tr));
-    auto_ptr<msg::Context> c2(new msg::Context(Level(2, 1, 4, 3), tr));
+    unique_ptr<msg::Context> c1(new msg::Context(Level(1, 2, 3, 4), tr));
+    unique_ptr<msg::Context> c2(new msg::Context(Level(2, 1, 4, 3), tr));
 
 	ensure_equals(c1->data.size(), 0);
 	ensure_equals(c1->level, Level(1, 2, 3, 4));
@@ -115,7 +115,7 @@ void to::test<2>()
 template<> template<>
 void to::test<3>()
 {
-	auto_ptr<msg::Context> c(new msg::Context(Level(1, 2, 3, 4), Trange::instant()));
+	unique_ptr<msg::Context> c(new msg::Context(Level(1, 2, 3, 4), Trange::instant()));
 
 	c->set(var(WR_VAR(0, 1, 1)));
 	ensure_equals(c->data.size(), 1);

@@ -146,7 +146,7 @@ public:
     /**
      * Export to a Bulletin
      */
-    virtual void to_bulletin(const Messages& msgs, wreport::Bulletin& msg) const = 0;
+    virtual std::unique_ptr<wreport::Bulletin> to_bulletin(const Messages& msgs) const = 0;
 
     /**
      * Create a bulletin that works with this exporter.

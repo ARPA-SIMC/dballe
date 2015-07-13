@@ -145,7 +145,7 @@ public:
         for (pos = 0; pos < subset->size(); )
         {
             const Var& var = (*subset)[pos];
-            if (WR_VAR_F(var.code()) != 0 || var.value() == NULL)
+            if (WR_VAR_F(var.code()) != 0 || !var.isset())
             {
                 // Ignore non-B variables and variables that are unset
                 ++pos;
@@ -166,39 +166,39 @@ public:
         /* Extract surface data from the surface level */
         if (surface_press != -1)
         {
-                // Pressure is taken from a saved variable referencing to the original
-                // pressure data in the message, to preserve data attributes
-                if (surface_press_var && surface_press_var->value() && msg->get_press_var())
-                        msg->set_press_var(*surface_press_var);
+            // Pressure is taken from a saved variable referencing to the original
+            // pressure data in the message, to preserve data attributes
+            if (surface_press_var && surface_press_var->isset() && msg->get_press_var())
+                msg->set_press_var(*surface_press_var);
 
-                const Context* sfc = msg->find_context(Level(100, surface_press), Trange::instant());
-                if (sfc != NULL)
-                {
-                        const Var* var = sfc->find(WR_VAR(0, 12, 1));
-                        if (var && msg->get_temp_2m_var())
-                                msg->set_temp_2m_var(*var);
+            const Context* sfc = msg->find_context(Level(100, surface_press), Trange::instant());
+            if (sfc != NULL)
+            {
+                const Var* var = sfc->find(WR_VAR(0, 12, 1));
+                if (var && msg->get_temp_2m_var())
+                    msg->set_temp_2m_var(*var);
 
-                        var = sfc->find(WR_VAR(0, 12, 3));
-                        if (var && msg->get_dewpoint_2m_var())
-                                msg->set_dewpoint_2m_var(*var);
+                var = sfc->find(WR_VAR(0, 12, 3));
+                if (var && msg->get_dewpoint_2m_var())
+                    msg->set_dewpoint_2m_var(*var);
 
-                        var = sfc->find(WR_VAR(0, 11, 1));
-                        if (var && !msg->get_wind_dir_var())
-                                msg->set_wind_dir_var(*var);
+                var = sfc->find(WR_VAR(0, 11, 1));
+                if (var && !msg->get_wind_dir_var())
+                    msg->set_wind_dir_var(*var);
 
-                        var = sfc->find(WR_VAR(0, 11, 2));
-                        if (var && !msg->get_wind_speed_var())
-                                msg->set_wind_speed_var(*var);
-                }
+                var = sfc->find(WR_VAR(0, 11, 2));
+                if (var && !msg->get_wind_speed_var())
+                    msg->set_wind_speed_var(*var);
+            }
         }
     }
 
     MsgType scanType(const Bulletin& bulletin) const
     {
-        switch (bulletin.type)
+        switch (bulletin.data_category)
         {
             case 2:
-                switch (bulletin.subtype)
+                switch (bulletin.data_subcategory)
                 {
                     case 1: // 001 for PILOT data,
                     case 2: // 002 for PILOT SHIP data,
@@ -207,7 +207,7 @@ public:
                     case 4: return MSG_TEMP;
                     case 5: return MSG_TEMP_SHIP;
                     case 255:
-                        switch (bulletin.localsubtype)
+                        switch (bulletin.data_subcategory_local)
                         {
                             case 0: {
                                 /* Guess looking at the variables */
@@ -309,7 +309,7 @@ void TempImporter::import_var(const Var& var)
                 if (val != BUFR08042::ALL_MISSING)
                 {
                     unique_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), (int)val));
-                    nvar->copy_attrs(var);
+                    nvar->setattrs(var);
                     msg->set(move(nvar), Level(100, press), Trange::instant());
                 }
             }
@@ -420,7 +420,7 @@ void TempImporter::import_group(unsigned start, unsigned length)
                     else
                     {
                         unique_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), (int)val));
-                        nvar->copy_attrs(var);
+                        nvar->setattrs(var);
                         msg->set(move(nvar), lev, Trange::instant());
                     }
                 }

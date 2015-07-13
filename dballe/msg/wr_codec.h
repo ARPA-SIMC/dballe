@@ -91,7 +91,7 @@ public:
     /**
      * Import a decoded BUFR/CREX message
      */
-    virtual void to_bulletin(const Messages& msgs, wreport::Bulletin& msg) const;
+    std::unique_ptr<wreport::Bulletin> to_bulletin(const Messages& msgs) const override;
 
     /**
      * Infer a template name from the message contents

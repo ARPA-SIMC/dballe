@@ -49,9 +49,9 @@ Messages _read_msgs_csv(const Location& loc, const char* filename);
 #define read_msgs_csv(filename) dballe::tests::_read_msgs_csv(wibble::tests::Location(__FILE__, __LINE__, "load csv " #filename), (filename))
 #define inner_read_msgs_csv(filename) dballe::tests::_read_msgs_csv(wibble::tests::Location(loc, __FILE__, __LINE__, "load csv " #filename), (filename))
 
-void _export_msgs(const Location& loc, const Messages& in, wreport::Bulletin& out, const std::string& tag, const dballe::msg::Exporter::Options& opts=dballe::msg::Exporter::Options());
-#define test_export_msgs(...) dballe::tests::_export_msgs(wibble::tests::Location(__FILE__, __LINE__, "export"), __VA_ARGS__)
-#define test_inner_export_msgs(...) dballe::tests::_export_msgs(wibble::tests::Location(loc, __FILE__, __LINE__, "export"), __VA_ARGS__)
+std::unique_ptr<wreport::Bulletin> export_msgs(WIBBLE_TEST_LOCPRM, File::Encoding enctype, const Messages& in, const std::string& tag, const dballe::msg::Exporter::Options& opts=dballe::msg::Exporter::Options());
+#define test_export_msgs(...) dballe::tests::export_msgs(wibble_test_location.nest(wibble_test_location_info, __FILE__, __LINE__, "export_msgs("#__VA_ARGS__")"), __VA_ARGS__)
+
 
 void track_different_msgs(const Message& msg1, const Message& msg2, const std::string& prefix);
 void track_different_msgs(const Messages& msgs1, const Messages& msgs2, const std::string& prefix);
@@ -229,14 +229,11 @@ struct TestMessage
     const std::string& name;
     File::Encoding type;
     BinaryMessage raw;
-    wreport::Bulletin* bulletin;
+    wreport::Bulletin* bulletin = 0;
     Messages msgs;
 
     TestMessage(File::Encoding type, const std::string& name);
     ~TestMessage();
-
-    /// Create a bulletin for the current encoding
-    std::unique_ptr<wreport::Bulletin> create_bulletin();
 
     void read_from_file(const std::string& fname, const msg::Importer::Options& input_opts);
     void read_from_raw(const BinaryMessage& msg, const msg::Importer::Options& input_opts);

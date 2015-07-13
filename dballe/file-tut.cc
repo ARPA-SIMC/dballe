@@ -39,9 +39,7 @@ std::vector<Test> tests {
         wassert(actual(msg).istrue());
         wassert(actual(msg.data.size()) == 251u);
         wassert(actual(msg.index) == 0);
-        // FIXME: a bug in wreport gives offsets that are off by two. This
-        // needs to be changed to 0 once a fixed wreport is installed.
-        wassert(actual(msg.offset) == 2);
+        wassert(actual(msg.offset) == 0);
     }),
     Test("aof", [](Fixture& f) {
         // AOF Read test

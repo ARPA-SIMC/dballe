@@ -42,19 +42,6 @@ void resolve_varlist(const std::string& varlist, std::set<wreport::Varcode>& out
 /// Resolve a comma-separated varcode list performing careful validation, calling \a dest on each result
 void resolve_varlist(const std::string& varlist, std::function<void(wreport::Varcode)> out);
 
-/// Create a new Var, from the local B table, with undefined value
-static inline std::auto_ptr<wreport::Var> ap_newvar(wreport::Varcode code)
-{
-    return std::auto_ptr<wreport::Var>(new wreport::Var(varinfo(code)));
-}
-
-/// Create a new Var, from the local B table, with value
-template<typename T>
-std::auto_ptr<wreport::Var> ap_newvar(wreport::Varcode code, const T& val)
-{
-    return std::auto_ptr<wreport::Var>(new wreport::Var(varinfo(code), val));
-}
-
 /// Create a new Var, copying \a var and all its attributes except the unset ones
 std::unique_ptr<wreport::Var> var_copy_without_unset_attrs(const wreport::Var& var);
 

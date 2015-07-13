@@ -172,7 +172,7 @@ struct SynopECMWF : public Synop
         // Use old table for old templates
         if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
         {
-            b->master_table = 13;
+            b->master_table_version_number = 13;
         }
 
         is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
@@ -196,9 +196,9 @@ struct SynopECMWF : public Synop
         if (prec_code == 0)
             prec_code = WR_VAR(0, 13, 23);
 
-        bulletin.type = 0;
-        bulletin.subtype = 255;
-        bulletin.localsubtype = 1;
+        bulletin.data_category = 0;
+        bulletin.data_subcategory = 255;
+        bulletin.data_subcategory_local = 1;
     }
     virtual void to_subset(const Msg& msg, wreport::Subset& subset)
     {
@@ -367,7 +367,7 @@ struct SynopECMWFAuto : public SynopECMWFLand
     {
         SynopECMWFLand::setupBulletin(bulletin);
 
-        bulletin.localsubtype = 3;
+        bulletin.data_subcategory_local = 3;
     }
 };
 
@@ -390,9 +390,9 @@ struct SynopWMO : public Synop
 
         is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
 
-        bulletin.type = 0;
-        bulletin.subtype = 255;
-        bulletin.localsubtype = 255;
+        bulletin.data_category = 0;
+        bulletin.data_subcategory = 255;
+        bulletin.data_subcategory_local = 255;
 
         // Data descriptor section
         bulletin.datadesc.clear();
@@ -553,13 +553,13 @@ struct SynopWMO : public Synop
         int hour = msg.get_datetime().hour;
         if ((hour % 6) == 0)
             // 002 at main synoptic times 00, 06, 12, 18 UTC,
-            cur_bulletin->subtype = cur_bulletin->subtype == 255 ? 2 : cur_bulletin->subtype;
+            cur_bulletin->data_subcategory = cur_bulletin->data_subcategory == 255 ? 2 : cur_bulletin->data_subcategory;
         else if ((hour % 3 == 0))
             // 001 at intermediate synoptic times 03, 09, 15, 21 UTC,
-            cur_bulletin->subtype = cur_bulletin->subtype != 0 ? 1 : cur_bulletin->subtype;
+            cur_bulletin->data_subcategory = cur_bulletin->data_subcategory != 0 ? 1 : cur_bulletin->data_subcategory;
         else
             // 000 at observation times 01, 02, 04, 05, 07, 08, 10, 11, 13, 14, 16, 17, 19, 20, 22 and 23 UTC.
-            cur_bulletin->subtype = 0;
+            cur_bulletin->data_subcategory = 0;
 
         // Fixed surface station identification, time, horizontal and vertical
         // coordinates

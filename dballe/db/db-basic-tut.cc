@@ -115,20 +115,20 @@ std::vector<Test> tests {
             wassert(actual(cur->get_station_id()) == svals_esmac.info.ana_id);
             wassert(actual(cur->get_rep_memo()) == "temp");
             cur->to_record(result);
-            wassert(actual(result["B01019"].value()) == "Esmac");
+            wassert(actual(result["B01019"]) == "Esmac");
 
             wassert(actual(cur->next()).istrue());
             wassert(actual(cur->get_station_id()) == svals_camse.info.ana_id);
             wassert(actual(cur->get_rep_memo()) == "synop");
             cur->to_record(result);
-            wassert(actual(result["B01019"].value()) == "Camse");
+            wassert(actual(result["B01019"]) == "Camse");
         } else {
             // For normal databases, we only get one record, with the station
             // values merged keeping values for the best networks
             wassert(actual(cur->next()).istrue());
             wassert(actual(cur->get_station_id()) == 1);
             cur->to_record(result);
-            wassert(actual(result["B01019"].value()) == "Camse");
+            wassert(actual(result["B01019"]) == "Camse");
 
             wassert(actual(cur->next()).isfalse());
         }

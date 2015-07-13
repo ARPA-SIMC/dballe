@@ -121,10 +121,10 @@ std::vector<Test> tests {
         auto t = f.conn->transaction();
 
         Var var1(varinfo(WR_VAR(0, 12, 101)), 280.0);
-        var1.seta(ap_newvar(WR_VAR(0, 33, 7), 50));
+        var1.seta(newvar(WR_VAR(0, 33, 7), 50));
 
         Var var2(varinfo(WR_VAR(0, 12, 101)), 280.0);
-        var2.seta(ap_newvar(WR_VAR(0, 33, 7), 75));
+        var2.seta(newvar(WR_VAR(0, 33, 7), 75));
 
         // Insert two attributes
         {
@@ -176,14 +176,14 @@ std::vector<Test> tests {
         {
             Var var(f.query(1, 1));
             wassert(actual(var.next_attr()->code()) == WR_VAR(0, 33, 7));
-            wassert(actual(var.next_attr()->value()) == "50");
+            wassert(actual(*var.next_attr()) == 50);
         }
 
         // Load the attributes for the second variable
         {
             Var var(f.query(2, 1));
             wassert(actual(var.next_attr()->code()) == WR_VAR(0, 33, 7));
-            wassert(actual(var.next_attr()->value()) == "75");
+            wassert(actual(*var.next_attr()) == 75);
         }
 
         // Update both values
@@ -211,12 +211,12 @@ std::vector<Test> tests {
         {
             Var var(f.query(1, 1));
             wassert(actual(var.next_attr()->code()) == WR_VAR(0, 33, 7));
-            wassert(actual(var.next_attr()->value()) == "75");
+            wassert(actual(*var.next_attr()) == 75);
         }
         {
             Var var(f.query(2, 1));
             wassert(actual(var.next_attr()->code()) == WR_VAR(0, 33, 7));
-            wassert(actual(var.next_attr()->value()) == "50");
+            wassert(actual(*var.next_attr()) == 50);
         }
 
         // TODO: test a mix of update and insert

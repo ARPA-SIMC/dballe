@@ -366,6 +366,12 @@ CSVWriter::~CSVWriter()
 {
 }
 
+void CSVWriter::add_value_empty()
+{
+    if (!row.empty())
+        row += ',';
+}
+
 void CSVWriter::add_value_raw(const char* str)
 {
     if (!row.empty())
@@ -434,18 +440,26 @@ void CSVWriter::add_value(wreport::Varcode val)
 
 void CSVWriter::add_var_value(const wreport::Var& var)
 {
-    const char* val = var.value();
-    if (!val)
+    if (!var.isset())
     {
-        if (!row.empty())
-            row += ',';
+        add_value_empty();
         return;
     }
 
-    if (var.info()->is_string())
-        add_value(val);
-    else
-        add_value_raw(val);
+    switch (var.info()->type)
+    {
+        case Vartype::String:
+            add_value(var.enqc());
+            break;
+        case Vartype::Binary:
+            // Skip binary variables, that cannot really be encoded in CSV
+            add_value_empty();
+            break;
+        case Vartype::Integer:
+        case Vartype::Decimal:
+            add_value(var.enqi());
+            break;
+    }
 }
 
 void CSVWriter::add_value(const char* val)

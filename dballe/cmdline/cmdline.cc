@@ -112,6 +112,8 @@ poptContext Subcommand::make_popt_context(int argc, const char* argv[], vector<p
     return optCon;
 }
 
+void Subcommand::init() {}
+
 
 Command::~Command()
 {
@@ -487,6 +489,7 @@ int Command::main(int argc, const char* argv[])
 
             int res = 0;
             try {
+                action->init();
                 res = action->main(optCon);
             } catch (error_cmdline& e) {
                 fprintf(stderr, "Error parsing commandline: %s\n", e.what());

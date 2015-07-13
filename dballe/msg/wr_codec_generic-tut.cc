@@ -174,9 +174,9 @@ std::vector<Test> tests {
         unique_ptr<Var> var = newvar(WR_VAR(0, 12, 101), 270.15);
 
         /* Add some attributes to the variable */
-        var->seta(ap_newvar(WR_VAR(0, 33, 2), 1));
-        var->seta(ap_newvar(WR_VAR(0, 33, 3), 2));
-        var->seta(ap_newvar(WR_VAR(0, 33, 5), 3));
+        var->seta(newvar(WR_VAR(0, 33, 2), 1));
+        var->seta(newvar(WR_VAR(0, 33, 3), 2));
+        var->seta(newvar(WR_VAR(0, 33, 5), 3));
 
         /* Add the variable to the message */
         msg->set(move(var), Level(1), Trange::instant());
@@ -185,8 +185,8 @@ std::vector<Test> tests {
         var = newvar(WR_VAR(0, 12, 102), 272.0);
 
         /* Add some attributes to the variable */
-        var->seta(ap_newvar(WR_VAR(0, 33, 3), 1));
-        var->seta(ap_newvar(WR_VAR(0, 33, 5), 2));
+        var->seta(newvar(WR_VAR(0, 33, 3), 1));
+        var->seta(newvar(WR_VAR(0, 33, 5), 2));
 
         /* Add the variable to the message */
         msg->set(move(var), Level(1), Trange::instant());
@@ -220,8 +220,7 @@ std::vector<Test> tests {
 
         // Export it
         unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR);
-        unique_ptr<Bulletin> bulletin(BufrBulletin::create());
-        exporter->to_bulletin(msgs, *bulletin);
+        unique_ptr<Bulletin> bulletin = exporter->to_bulletin(msgs);
 
         // Ensure that B01194 only appears once
         ensure_equals(bulletin->subsets.size(), 1u);

@@ -16,7 +16,7 @@ void Station::set_from_record(const Record& rec)
         coords.lat = rec.enq("lon", MISSING_INT);
         ident.clear();
         if (const Var* var = rec.get("ident"))
-            ident = var->value();
+            ident = var->isset() ? var->enqc() : 0;
         report = rec.enq("rep_memo", "");
     } else {
         // If we do not have ana_id, we require at least lat, lon and rep_memo
@@ -34,14 +34,37 @@ void Station::set_from_record(const Record& rec)
 
         ident.clear();
         if (const Var* var = rec.get("ident"))
-            ident = var->value();
+            ident = var->isset() ? var->enqc() : 0;
 
         report.clear();
         if (const Var* var = rec.get("rep_memo"))
-            report = var->value();
-        if (report.empty())
-            throw error_notfound("record has no 'rep_memo' set");
+        {
+            if (var->isset())
+                report = var->enqs();
+            else
+                throw error_notfound("record has no 'rep_memo' set");
+        }
     }
+}
+
+void Station::print(FILE* out, const char* end) const
+{
+    if (ana_id == MISSING_INT)
+        fputs("- ", out);
+    else
+        fprintf(out, "%d,", ana_id);
+
+    if (coords.is_missing())
+        fputs("(-,-) ", out);
+    else
+        coords.print(out, " ");
+
+    if (ident.is_missing())
+        fputs("-", out);
+    else
+        fputs(ident.get(), out);
+
+    fputs(end, out);
 }
 
 void Sampling::set_from_record(const Record& rec)
@@ -54,6 +77,33 @@ void Sampling::set_from_record(const Record& rec)
     if (level.is_missing()) throw error_notfound("record has no level information set");
     trange = r.get_trange();
     if (trange.is_missing()) throw error_notfound("record has no time range information set");
+}
+
+void Sampling::print(FILE* out, const char* end) const
+{
+    Station::print(out, " ");
+
+    if (datetime.is_missing())
+        fputs("xxxx-xx-xx xx:xx:xx ", out);
+    else
+        datetime.print_iso8601(out, ' ', " ");
+
+    level.print(out, "-", " ");
+    trange.print(out, "-", end);
+}
+
+namespace values {
+void Value::print(FILE* out) const
+{
+    if (data_id == MISSING_INT)
+        fputs("-------- ", out);
+    else
+        fprintf(out, "%8d ", data_id);
+    if (!var)
+        fputs("-\n", out);
+    else
+        var->print(out);
+}
 }
 
 bool Values::operator==(const Values& o) const
@@ -119,16 +169,34 @@ const values::Value* Values::get(wreport::Varcode code) const
     return &i->second;
 }
 
+void Values::print(FILE* out) const
+{
+    for (const auto& i: *this)
+        i.second.print(out);
+}
+
 void StationValues::set_from_record(const Record& rec)
 {
     info.set_from_record(rec);
     values.set_from_record(rec);
 }
 
+void StationValues::print(FILE* out) const
+{
+    info.print(out);
+    values.print(out);
+}
+
 void DataValues::set_from_record(const Record& rec)
 {
     info.set_from_record(rec);
     values.set_from_record(rec);
+}
+
+void DataValues::print(FILE* out) const
+{
+    info.print(out);
+    values.print(out);
 }
 
 }

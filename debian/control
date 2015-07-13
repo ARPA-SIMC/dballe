@@ -5,7 +5,7 @@ Maintainer: Enrico Zini <enrico@debian.org>
 Build-Depends: debhelper (>= 9), dh-python, dh-autoreconf,
   autotools-dev, pkg-config,
   libsqlite3-dev,
-  libwreport-dev (>= 2.9), libpopt-dev, unixodbc-dev, gperf, liblua5.1-0-dev,
+  libwreport-dev (>= 3.0), libpopt-dev, unixodbc-dev, gperf, liblua5.1-0-dev,
   libcnf-dev, gfortran | g77,
   libtut-dev, libwibble-dev,
   doxygen-latex, ghostscript,
