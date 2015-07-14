@@ -28,12 +28,6 @@
 using namespace wreport;
 using namespace std;
 
-#define SYNOP_NAME "synop"
-#define SYNOP_DESC "Synop (autodetect)"
-
-#define SYNOP_ECMWF_NAME "synop-ecmwf"
-#define SYNOP_ECMWF_DESC "Synop ECMWF (autodetect) (0.1)"
-
 #define SYNOP_WMO_NAME "synop-wmo"
 #define SYNOP_WMO_DESC "Synop WMO (0.1)"
 
@@ -144,9 +138,6 @@ struct SynopECMWF : public Synop
 
     SynopECMWF(const Exporter::Options& opts, const Messages& msgs)
         : Synop(opts, msgs) {}
-
-    virtual const char* name() const { return SYNOP_ECMWF_NAME; }
-    virtual const char* description() const { return SYNOP_ECMWF_DESC; }
 
     void add_prec()
     {
@@ -662,112 +653,59 @@ struct SynopWMO : public Synop
 };
 
 
-struct SynopWMOFactory : public virtual TemplateFactory
-{
-    SynopWMOFactory() { name = SYNOP_WMO_NAME; description = SYNOP_WMO_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        // Scan msgs and pick the right one
-        return unique_ptr<Template>(new SynopWMO(opts, msgs));
-    }
-};
-
-struct SynopECMWFLandFactory : public virtual TemplateFactory
-{
-    SynopECMWFLandFactory() { name = SYNOP_ECMWF_LAND_NAME; description = SYNOP_ECMWF_LAND_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new SynopECMWFLand(opts, msgs));
-    }
-};
-
-struct SynopECMWFLandHighFactory : public virtual TemplateFactory
-{
-    SynopECMWFLandHighFactory() { name = SYNOP_ECMWF_LAND_HIGH_NAME; description = SYNOP_ECMWF_LAND_HIGH_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new SynopECMWFLandHigh(opts, msgs));
-    }
-};
-
-struct SynopECMWFAutoFactory : public virtual TemplateFactory
-{
-    SynopECMWFAutoFactory() { name = SYNOP_ECMWF_AUTO_NAME; description = SYNOP_ECMWF_AUTO_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new SynopECMWFAuto(opts, msgs));
-    }
-};
-
-struct SynopECMWFFactory : public virtual TemplateFactory
-{
-    SynopECMWFFactory() { name = SYNOP_ECMWF_NAME; description = SYNOP_ECMWF_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        const Msg& msg = Msg::downcast(msgs[0]);
-        const Var* var = msg.get_st_type_var();
-        if (var != NULL && var->enqi() == 0)
-            return unique_ptr<Template>(new SynopECMWFAuto(opts, msgs));
-
-        // If it has a geopotential, it's a land high station
-        for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
-                i != msg.data.end(); ++i)
-            if ((*i)->level.ltype1 == 100)
-                if (const Var* v = (*i)->find(WR_VAR(0, 10, 8)))
-                    return unique_ptr<Template>(new SynopECMWFLandHigh(opts, msgs));
-
-        return unique_ptr<Template>(new SynopECMWFLand(opts, msgs));
-    }
-};
-
-struct SynopFactory : public SynopECMWFFactory, SynopWMOFactory
-{
-    SynopFactory() { name = SYNOP_NAME; description = SYNOP_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        const Msg& msg = Msg::downcast(msgs[0]);
-        const Var* var = msg.get_st_name_var();
-        if (var)
-            return SynopWMOFactory::make(opts, msgs);
-        else
-            return SynopECMWFFactory::make(opts, msgs);
-    }
-};
-
-
 } // anonymous namespace
 
 void register_synop(TemplateRegistry& r)
 {
-static const TemplateFactory* synop = NULL;
-static const TemplateFactory* synopwmo = NULL;
-static const TemplateFactory* synopecmwf = NULL;
-static const TemplateFactory* synopecmwfland = NULL;
-static const TemplateFactory* synopecmwflandhigh = NULL;
-static const TemplateFactory* synopecmwfauto = NULL;
+    r.register_factory(0, "synop", "Synop (autodetect)",
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                const Msg& msg = Msg::downcast(msgs[0]);
+                const Var* var = msg.get_st_name_var();
+                if (var)
+                {
+                    const wr::TemplateFactory& fac = wr::TemplateRegistry::get(SYNOP_WMO_NAME);
+                    return fac.factory(opts, msgs);
+                }
+                else
+                {
+                    const wr::TemplateFactory& fac = wr::TemplateRegistry::get("synop-ecmwf");
+                    return fac.factory(opts, msgs);
+                }
+            });
+    r.register_factory(0, SYNOP_WMO_NAME, SYNOP_WMO_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new SynopWMO(opts, msgs));
+            });
+    r.register_factory(0, "synop-ecmwf", "Synop ECMWF (autodetect) (0.1)",
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                const Msg& msg = Msg::downcast(msgs[0]);
+                const Var* var = msg.get_st_type_var();
+                if (var != NULL && var->enqi() == 0)
+                    return unique_ptr<Template>(new SynopECMWFAuto(opts, msgs));
 
-    if (!synop) synop = new SynopFactory;
-    if (!synopwmo) synopwmo = new SynopWMOFactory;
-    if (!synopecmwf) synopecmwf = new SynopECMWFFactory;
-    if (!synopecmwfland) synopecmwfland = new SynopECMWFLandFactory;
-    if (!synopecmwflandhigh) synopecmwflandhigh = new SynopECMWFLandHighFactory;
-    if (!synopecmwfauto) synopecmwfauto = new SynopECMWFAutoFactory;
+                // If it has a geopotential, it's a land high station
+                for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
+                        i != msg.data.end(); ++i)
+                    if ((*i)->level.ltype1 == 100)
+                        if (const Var* v = (*i)->find(WR_VAR(0, 10, 8)))
+                            return unique_ptr<Template>(new SynopECMWFLandHigh(opts, msgs));
 
-    r.register_factory(synop);
-    r.register_factory(synopwmo);
-    r.register_factory(synopecmwf);
-    r.register_factory(synopecmwfland);
-    r.register_factory(synopecmwflandhigh);
-    r.register_factory(synopecmwfauto);
+                return unique_ptr<Template>(new SynopECMWFLand(opts, msgs));
+            });
+    r.register_factory(0, SYNOP_ECMWF_LAND_NAME, SYNOP_ECMWF_LAND_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new SynopECMWFLand(opts, msgs));
+            });
+    r.register_factory(0, SYNOP_ECMWF_LAND_HIGH_NAME, SYNOP_ECMWF_LAND_HIGH_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new SynopECMWFLandHigh(opts, msgs));
+            });
+    r.register_factory(0, SYNOP_ECMWF_AUTO_NAME, SYNOP_ECMWF_AUTO_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new SynopECMWFAuto(opts, msgs));
+            });
 }
 
 }
 }
 }
-/* vim:set ts=4 sw=4: */

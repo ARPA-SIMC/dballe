@@ -125,25 +125,15 @@ struct Metar : public Template
     }
 };
 
-struct MetarFactory : public TemplateFactory
-{
-    MetarFactory() { name = METAR_NAME; description = METAR_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new Metar(opts, msgs));
-    }
-};
 
 } // anonymous namespace
 
 void register_metar(TemplateRegistry& r)
 {
-static const TemplateFactory* metar = NULL;
-
-    if (!metar) metar = new MetarFactory;
- 
-    r.register_factory(metar);
+    r.register_factory(0, METAR_NAME, METAR_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new Metar(opts, msgs));
+            });
 }
 
 }

@@ -149,25 +149,14 @@ struct Buoy : public Template
     }
 };
 
-struct BuoyFactory : public TemplateFactory
-{
-    BuoyFactory() { name = BUOY_NAME; description = BUOY_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new Buoy(opts, msgs));
-    }
-};
-
 } // anonymous namespace
 
 void register_buoy(TemplateRegistry& r)
 {
-static const TemplateFactory* buoy = NULL;
-
-    if (!buoy) buoy = new BuoyFactory;
-
-    r.register_factory(buoy);
+    r.register_factory(1, BUOY_NAME, BUOY_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new Buoy(opts, msgs));
+            });
 }
 
 }

@@ -156,7 +156,7 @@ unique_ptr<Bulletin> WRExporter::to_bulletin(const Messages& msgs) const
 
     // Get template factory
     const wr::TemplateFactory& fac = wr::TemplateRegistry::get(tpl);
-    std::unique_ptr<wr::Template> encoder = fac.make(opts, msgs);
+    std::unique_ptr<wr::Template> encoder = fac.factory(opts, msgs);
     // fprintf(stderr, "Encoding with template %s\n", encoder->name());
     auto res = make_bulletin();
     encoder->to_bulletin(*res);
@@ -174,40 +174,28 @@ extern void register_flight(TemplateRegistry&);
 extern void register_generic(TemplateRegistry&);
 extern void register_pollution(TemplateRegistry&);
 
-namespace {
-struct WMOFactory : public TemplateFactory
-{
-    WMOFactory() { name = "wmo"; description = "WMO style templates (autodetect)"; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        const Msg& msg = Msg::downcast(msgs[0]);
-        string tpl;
-        switch (msg.type)
-        {
-            case MSG_TEMP_SHIP: tpl = "temp-wmo"; break;
-            default:
-                tpl = msg_type_name(msg.type);
-                tpl += "-wmo";
-                break;
-        }
-        const wr::TemplateFactory& fac = wr::TemplateRegistry::get(tpl);
-        return fac.make(opts, msgs);
-    }
-};
-}
-
 static TemplateRegistry* registry = NULL;
 const TemplateRegistry& TemplateRegistry::get()
 {
-static const TemplateFactory* wmo = NULL;
-
     if (!registry)
     {
         registry = new TemplateRegistry;
 
-        if (!wmo) wmo = new WMOFactory;
-        registry->register_factory(wmo);
+        registry->register_factory(MISSING_INT, "wmo", "WMO style templates (autodetect)",
+                [](const Exporter::Options& opts, const Messages& msgs) {
+                    const Msg& msg = Msg::downcast(msgs[0]);
+                    string tpl;
+                    switch (msg.type)
+                    {
+                        case MSG_TEMP_SHIP: tpl = "temp-wmo"; break;
+                        default:
+                            tpl = msg_type_name(msg.type);
+                            tpl += "-wmo";
+                            break;
+                    }
+                    const wr::TemplateFactory& fac = wr::TemplateRegistry::get(tpl);
+                    return fac.factory(opts, msgs);
+                });
 
         // Populate it
         register_synop(*registry);
@@ -235,12 +223,16 @@ const TemplateFactory& TemplateRegistry::get(const std::string& name)
     TemplateRegistry::const_iterator i = tr.find(name);
     if (i == tr.end())
         error_notfound::throwf("requested export template %s which does not exist", name.c_str());
-    return *(i->second);
+    return i->second;
 }
 
-void TemplateRegistry::register_factory(const TemplateFactory* fac)
+void TemplateRegistry::register_factory(
+        unsigned data_category,
+        const std::string& name,
+        const std::string& desc,
+        TemplateFactory::factory_func fac)
 {
-    insert(make_pair(fac->name, fac));
+    insert(make_pair(name, TemplateFactory(data_category, name, desc, fac)));
 }
 
 void Template::to_bulletin(wreport::Bulletin& bulletin)
@@ -285,7 +277,7 @@ void Template::setupBulletin(wreport::Bulletin& bulletin)
         b->edition_number = 2;
         b->master_table_version_number = 3;
         b->master_table_version_number_local = 0;
-        b->master_table_version_number_bufr = 3;
+        b->master_table_version_number_bufr = 0;
         b->has_check_digit = false;
     }
 }

@@ -254,29 +254,16 @@ struct Generic : public Template
     }
 };
 
-struct GenericFactory : public TemplateFactory
-{
-    GenericFactory() { name = GENERIC_NAME; description = GENERIC_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new Generic(opts, msgs));
-    }
-};
-
 } // anonymous namespace
 
 void register_generic(TemplateRegistry& r)
 {
-static const TemplateFactory* generic = NULL;
-
-    if (!generic) generic = new GenericFactory;
-
-    r.register_factory(generic);
+    r.register_factory(255, GENERIC_NAME, GENERIC_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new Generic(opts, msgs));
+            });
 }
 
 }
 }
 }
-
-/* vim:set ts=4 sw=4: */

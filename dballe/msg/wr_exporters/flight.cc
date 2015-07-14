@@ -438,113 +438,45 @@ struct AcarsWMO : public AmdarWMO
     }
 };
 
-struct AirepFactory : public TemplateFactory
-{
-    AirepFactory() { name = AIREP_NAME; description = AIREP_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new Airep(opts, msgs));
-    }
-};
-struct AirepEcmwfFactory : public TemplateFactory
-{
-    AirepEcmwfFactory() { name = AIREP_ECMWF_NAME; description = AIREP_ECMWF_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new Airep(opts, msgs));
-    }
-};
-struct AmdarFactory : public TemplateFactory
-{
-    AmdarFactory() { name = AMDAR_NAME; description = AMDAR_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new Amdar(opts, msgs));
-    }
-};
-struct AmdarEcmwfFactory : public TemplateFactory
-{
-    AmdarEcmwfFactory() { name = AMDAR_ECMWF_NAME; description = AMDAR_ECMWF_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new Amdar(opts, msgs));
-    }
-};
-struct AmdarWMOFactory : public TemplateFactory
-{
-    AmdarWMOFactory() { name = AMDAR_WMO_NAME; description = AMDAR_WMO_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new AmdarWMO(opts, msgs));
-    }
-};
-struct AcarsFactory : public TemplateFactory
-{
-    AcarsFactory() { name = ACARS_NAME; description = ACARS_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new Acars(opts, msgs));
-    }
-};
-struct AcarsEcmwfFactory : public TemplateFactory
-{
-    AcarsEcmwfFactory() { name = ACARS_ECMWF_NAME; description = ACARS_ECMWF_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new Acars(opts, msgs));
-    }
-};
-struct AcarsWMOFactory : public TemplateFactory
-{
-    AcarsWMOFactory() { name = ACARS_WMO_NAME; description = ACARS_WMO_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new AcarsWMO(opts, msgs));
-    }
-};
 
 } // anonymous namespace
 
 void register_flight(TemplateRegistry& r)
 {
-static const TemplateFactory* airep = NULL;
-static const TemplateFactory* airepecmwf = NULL;
-static const TemplateFactory* amdar = NULL;
-static const TemplateFactory* amdarecmwf = NULL;
-static const TemplateFactory* amdarwmo = NULL;
-static const TemplateFactory* acars = NULL;
-static const TemplateFactory* acarsecmwf = NULL;
-static const TemplateFactory* acarswmo = NULL;
-
-    if (!airep) airep = new AirepFactory;
-    if (!airepecmwf) airepecmwf = new AirepEcmwfFactory;
-    if (!amdar) amdar = new AmdarFactory;
-    if (!amdarecmwf) amdarecmwf = new AmdarEcmwfFactory;
-    if (!amdarwmo) amdarwmo = new AmdarWMOFactory;
-    if (!acars) acars = new AcarsFactory;
-    if (!acarsecmwf) acarsecmwf = new AcarsEcmwfFactory;
-    if (!acarswmo) acarswmo = new AcarsWMOFactory;
-
-    r.register_factory(airep);
-    r.register_factory(airepecmwf);
-    r.register_factory(amdar);
-    r.register_factory(amdarecmwf);
-    r.register_factory(amdarwmo);
-    r.register_factory(acars);
-    r.register_factory(acarsecmwf);
-    r.register_factory(acarswmo);
+    r.register_factory(4, AIREP_NAME, AIREP_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new Airep(opts, msgs));
+            });
+    r.register_factory(4, AIREP_ECMWF_NAME, AIREP_ECMWF_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new Airep(opts, msgs));
+            });
+    r.register_factory(4, AMDAR_NAME, AMDAR_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new Amdar(opts, msgs));
+            });
+    r.register_factory(4, AMDAR_ECMWF_NAME, AMDAR_ECMWF_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new Amdar(opts, msgs));
+            });
+    r.register_factory(4, AMDAR_WMO_NAME, AMDAR_WMO_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new AmdarWMO(opts, msgs));
+            });
+    r.register_factory(4, ACARS_NAME, ACARS_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new Acars(opts, msgs));
+            });
+    r.register_factory(4, ACARS_ECMWF_NAME, ACARS_ECMWF_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new Acars(opts, msgs));
+            });
+    r.register_factory(4, ACARS_WMO_NAME, ACARS_WMO_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new AcarsWMO(opts, msgs));
+            });
 }
 
 }
 }
 }
-
-/* vim:set ts=4 sw=4: */

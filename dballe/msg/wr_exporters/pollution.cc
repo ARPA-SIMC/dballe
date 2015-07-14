@@ -253,29 +253,16 @@ struct Pollution : public Template
     }
 };
 
-struct PollutionFactory : public TemplateFactory
-{
-    PollutionFactory() { name = POLLUTION_NAME; description = POLLUTION_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new Pollution(opts, msgs));
-    }
-};
-
 } // anonymous namespace
 
 void register_pollution(TemplateRegistry& r)
 {
-static const TemplateFactory* pollution = NULL;
-
-    if (!pollution) pollution = new PollutionFactory;
- 
-    r.register_factory(pollution);
+    r.register_factory(8, POLLUTION_NAME, POLLUTION_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new Pollution(opts, msgs));
+            });
 }
 
 }
 }
 }
-
-/* vim:set ts=4 sw=4: */

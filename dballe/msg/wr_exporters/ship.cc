@@ -25,9 +25,6 @@
 using namespace wreport;
 using namespace std;
 
-#define SHIP_NAME "ship"
-#define SHIP_DESC "Synop ship (autodetect)"
-
 #define SHIP_PLAIN_NAME "ship-plain"
 #define SHIP_PLAIN_DESC "Synop ship (normal) (1.11)"
 
@@ -434,145 +431,90 @@ struct ShipWMO : public ShipBase
 };
 
 
-struct ShipFactory : public TemplateFactory
-{
-    ShipFactory() { name = SHIP_NAME; description = SHIP_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        // Scan msgs and pick the right one
-        bool maybe_wmo = true;
-        bool maybe_plain = true;
-        bool maybe_auto = true;
-        bool maybe_second = true;
-        const Msg& msg = Msg::downcast(msgs[0]);
-        for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
-                i != msg.data.end(); ++i)
-        {
-            const msg::Context& c = **i;
-            switch (c.level.ltype1)
-            {
-                case MISSING_INT:
-                    for (std::vector<wreport::Var*>::const_iterator vi = c.data.begin();
-                            vi != c.data.end(); ++vi)
-                    {
-                        switch ((*vi)->code())
-                        {
-                            case WR_VAR(0, 2, 1):
-                                switch ((*vi)->enq(0))
-                                {
-                                    case 0: maybe_plain = false; break;
-                                    case 1: maybe_auto = false; break;
-                                }
-                                break;
-                            case WR_VAR(0, 2, 2):
-                                maybe_plain = maybe_auto = maybe_second = false;
-                                break;
-                        }
-                    }
-                    break;
-                case 264: maybe_plain = maybe_auto = false; break;
-            }
-        }
-        //if (maybe_wmo)
-        //    return unique_ptr<Template>(new ShipWMO(opts, msgs));
-        if (maybe_plain)
-            return unique_ptr<Template>(new ShipPlain(opts, msgs));
-        if (maybe_auto)
-            return unique_ptr<Template>(new ShipAuto(opts, msgs));
-        if (maybe_second)
-            return unique_ptr<Template>(new ShipECMWFSecondRecord(opts, msgs));
-        // Fallback on WMO if we are confused
-        return unique_ptr<Template>(new ShipWMO(opts, msgs));
-    }
-};
-
-struct ShipPlainFactory : public TemplateFactory
-{
-    ShipPlainFactory() { name = SHIP_PLAIN_NAME; description = SHIP_PLAIN_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new ShipPlain(opts, msgs));
-    }
-};
-struct ShipECMWFSecondRecordFactory : public TemplateFactory
-{
-    ShipECMWFSecondRecordFactory() { name = SHIP_ECMWF_SECOND_NAME; description = SHIP_ECMWF_SECOND_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new ShipECMWFSecondRecord(opts, msgs));
-    }
-};
-struct ShipAbbrFactory : public TemplateFactory
-{
-    ShipAbbrFactory() { name = SHIP_ABBR_NAME; description = SHIP_ABBR_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new ShipAbbr(opts, msgs));
-    }
-};
-struct ShipAutoFactory : public TemplateFactory
-{
-    ShipAutoFactory() { name = SHIP_AUTO_NAME; description = SHIP_AUTO_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new ShipAuto(opts, msgs));
-    }
-};
-struct ShipReducedFactory : public TemplateFactory
-{
-    ShipReducedFactory() { name = SHIP_REDUCED_NAME; description = SHIP_REDUCED_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new ShipReduced(opts, msgs));
-    }
-};
-struct ShipWMOFactory : public TemplateFactory
-{
-    ShipWMOFactory() { name = SHIP_WMO_NAME; description = SHIP_WMO_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new ShipWMO(opts, msgs));
-    }
-};
 
 } // anonymous namespace
 
 void register_ship(TemplateRegistry& r)
 {
-static const TemplateFactory* ship = NULL;
-static const TemplateFactory* shipplain = NULL;
-static const TemplateFactory* shipsecond = NULL;
-static const TemplateFactory* shipabbr = NULL;
-static const TemplateFactory* shipauto = NULL;
-static const TemplateFactory* shipreduced = NULL;
-static const TemplateFactory* shipwmo = NULL;
+    r.register_factory(1, "ship", "Synop ship (autodetect)",
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                // Scan msgs and pick the right one
+                bool maybe_wmo = true;
+                bool maybe_plain = true;
+                bool maybe_auto = true;
+                bool maybe_second = true;
+                const Msg& msg = Msg::downcast(msgs[0]);
+                for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
+                        i != msg.data.end(); ++i)
+                {
+                    const msg::Context& c = **i;
+                    switch (c.level.ltype1)
+                    {
+                        case MISSING_INT:
+                            for (std::vector<wreport::Var*>::const_iterator vi = c.data.begin();
+                                    vi != c.data.end(); ++vi)
+                            {
+                                switch ((*vi)->code())
+                                {
+                                    case WR_VAR(0, 2, 1):
+                                        switch ((*vi)->enq(0))
+                                        {
+                                            case 0: maybe_plain = false; break;
+                                            case 1: maybe_auto = false; break;
+                                        }
+                                        break;
+                                    case WR_VAR(0, 2, 2):
+                                        maybe_plain = maybe_auto = maybe_second = false;
+                                        break;
+                                }
+                            }
+                            break;
+                        case 264: maybe_plain = maybe_auto = false; break;
+                    }
+                }
+                //if (maybe_wmo)
+                //    return unique_ptr<Template>(new ShipWMO(opts, msgs));
+                if (maybe_plain)
+                    return unique_ptr<Template>(new ShipPlain(opts, msgs));
+                if (maybe_auto)
+                    return unique_ptr<Template>(new ShipAuto(opts, msgs));
+                if (maybe_second)
+                    return unique_ptr<Template>(new ShipECMWFSecondRecord(opts, msgs));
+                // Fallback on WMO if we are confused
+                return unique_ptr<Template>(new ShipWMO(opts, msgs));
+            });
 
-    if (!ship) ship = new ShipFactory;
-    if (!shipplain) shipplain = new ShipPlainFactory;
-    if (!shipsecond) shipsecond = new ShipECMWFSecondRecordFactory;
-    if (!shipabbr) shipabbr = new ShipAbbrFactory;
-    if (!shipauto) shipauto = new ShipAutoFactory;
-    if (!shipreduced) shipreduced = new ShipReducedFactory;
-    if (!shipwmo) shipwmo = new ShipWMOFactory;
+    r.register_factory(1, SHIP_PLAIN_NAME, SHIP_PLAIN_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new ShipPlain(opts, msgs));
+            });
 
-    r.register_factory(ship);
-    r.register_factory(shipplain);
-    r.register_factory(shipsecond);
-    r.register_factory(shipabbr);
-    r.register_factory(shipauto);
-    r.register_factory(shipreduced);
-    r.register_factory(shipwmo);
+    r.register_factory(1, SHIP_ECMWF_SECOND_NAME, SHIP_ECMWF_SECOND_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new ShipECMWFSecondRecord(opts, msgs));
+            });
+
+    r.register_factory(1, SHIP_ABBR_NAME, SHIP_ABBR_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new ShipAbbr(opts, msgs));
+            });
+
+    r.register_factory(1, SHIP_AUTO_NAME, SHIP_AUTO_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new ShipAuto(opts, msgs));
+            });
+
+    r.register_factory(1, SHIP_REDUCED_NAME, SHIP_REDUCED_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new ShipReduced(opts, msgs));
+            });
+
+    r.register_factory(1, SHIP_WMO_NAME, SHIP_WMO_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new ShipWMO(opts, msgs));
+            });
 }
 
 }
 }
 }
-
-/* vim:set ts=4 sw=4: */

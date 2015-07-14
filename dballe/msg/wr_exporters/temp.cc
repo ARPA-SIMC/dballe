@@ -29,17 +29,8 @@
 using namespace wreport;
 using namespace std;
 
-#define TEMP_NAME "temp"
-#define TEMP_DESC "Temp (autodetect)"
-
-#define TEMP_SHIP_NAME "temp-ship"
-#define TEMP_SHIP_DESC "Temp ship (autodetect)"
-
 #define TEMP_WMO_NAME "temp-wmo"
 #define TEMP_WMO_DESC "Temp WMO (2.101)"
-
-#define TEMP_ECMWF_NAME "temp-ecmwf"
-#define TEMP_ECMWF_DESC "Temp ECMWF (autodetect)"
 
 #define TEMP_ECMWF_LAND_NAME "temp-ecmwf-land"
 #define TEMP_ECMWF_LAND_DESC "Temp ECMWF land (2.101)"
@@ -49,9 +40,6 @@ using namespace std;
 
 #define TEMP_RADAR_NAME "temp-radar"
 #define TEMP_RADAR_DESC "Temp radar doppler wind profile (6.1)"
-
-#define PILOT_NAME "pilot"
-#define PILOT_DESC "pilot (autodetect)"
 
 #define PILOT_WMO_NAME "pilot-wmo"
 #define PILOT_WMO_DESC "Pilot (2.1, 2.2, 2.3)"
@@ -876,162 +864,80 @@ struct PilotEcmwf : public TempBase
 };
 
 
-struct TempWMOFactory : public virtual TemplateFactory
-{
-    TempWMOFactory() { name = TEMP_WMO_NAME; description = TEMP_WMO_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new TempWMO(opts, msgs));
-    }
-};
-struct TempEcmwfLandFactory : public virtual TemplateFactory
-{
-    TempEcmwfLandFactory() { name = TEMP_ECMWF_LAND_NAME; description = TEMP_ECMWF_LAND_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new TempEcmwfLand(opts, msgs));
-    }
-};
-struct TempEcmwfShipFactory : public virtual TemplateFactory
-{
-    TempEcmwfShipFactory() { name = TEMP_ECMWF_SHIP_NAME; description = TEMP_ECMWF_SHIP_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new TempEcmwfShip(opts, msgs));
-    }
-};
-struct TempEcmwfFactory : public virtual TemplateFactory
-{
-    TempEcmwfFactory() { name = TEMP_ECMWF_NAME; description = TEMP_ECMWF_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        if (msgs.empty() || Msg::downcast(msgs[0]).type != MSG_TEMP_SHIP)
-            return unique_ptr<Template>(new TempEcmwfLand(opts, msgs));
-        else
-            return unique_ptr<Template>(new TempEcmwfShip(opts, msgs));
-    }
-};
-struct TempShipFactory : public virtual TemplateFactory
-{
-    TempShipFactory() { name = TEMP_SHIP_NAME; description = TEMP_SHIP_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new TempEcmwfShip(opts, msgs));
-    }
-};
-struct TempRadarFactory : public virtual TemplateFactory
-{
-    TempRadarFactory() { name = TEMP_RADAR_NAME; description = TEMP_RADAR_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new TempRadar(opts, msgs));
-    }
-};
-struct TempFactory : public TempEcmwfFactory, public TempWMOFactory, public TempRadarFactory
-{
-    TempFactory() { name = TEMP_NAME; description = TEMP_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        const Msg& msg = Msg::downcast(msgs[0]);
-
-        // Get the type of equipment used
-        if (const wreport::Var* var = msg.get(WR_VAR(0, 2, 3), Level(1), Trange::instant()))
-            // Is it a Radar?
-            if (var->enq(0) == 3)
-                return TempRadarFactory::make(opts, msgs);
-
-        // ECMWF temps use normal replication which cannot do more than 256 levels
-        if (msg.data.size() > 260)
-            return TempWMOFactory::make(opts, msgs);
-        const Var* var = msg.get_sonde_tracking_var();
-        if (var)
-            return TempWMOFactory::make(opts, msgs);
-        else
-            return TempEcmwfFactory::make(opts, msgs);
-    }
-};
-struct PilotWMOFactory : public virtual TemplateFactory
-{
-    PilotWMOFactory() { name = PILOT_WMO_NAME; description = PILOT_WMO_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new PilotWMO(opts, msgs));
-    }
-};
-struct PilotEcmwfFactory : public virtual TemplateFactory
-{
-    PilotEcmwfFactory() { name = PILOT_ECMWF_NAME; description = PILOT_ECMWF_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        return unique_ptr<Template>(new PilotEcmwf(opts, msgs));
-    }
-};
-struct PilotFactory : public virtual PilotEcmwfFactory, PilotWMOFactory
-{
-    PilotFactory() { name = PILOT_NAME; description = PILOT_DESC; }
-
-    std::unique_ptr<Template> make(const Exporter::Options& opts, const Messages& msgs) const
-    {
-        const Msg& msg = Msg::downcast(msgs[0]);
-        const Var* var = msg.get_sonde_tracking_var();
-        // Try with another one in case the first was just unset
-        if (!var) var = msg.get_meas_equip_type_var();
-        if (var)
-            return PilotWMOFactory::make(opts, msgs);
-        else
-            return PilotEcmwfFactory::make(opts, msgs);
-    }
-};
-
 } // anonymous namespace
 
 void register_temp(TemplateRegistry& r)
 {
-static const TemplateFactory* temp = NULL;
-static const TemplateFactory* tempship = NULL;
-static const TemplateFactory* tempwmo = NULL;
-static const TemplateFactory* tempecmwf = NULL;
-static const TemplateFactory* tempecmwfland = NULL;
-static const TemplateFactory* tempecmwfship = NULL;
-static const TemplateFactory* tempradar = NULL;
-static const TemplateFactory* pilot = NULL;
-static const TemplateFactory* pilotwmo = NULL;
-static const TemplateFactory* pilotecmwf = NULL;
+    r.register_factory(2, "temp", "Temp (autodetect)",
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                const Msg& msg = Msg::downcast(msgs[0]);
 
-    if (!temp) temp = new TempFactory;
-    if (!tempship) tempship = new TempShipFactory;
-    if (!tempwmo) tempwmo = new TempWMOFactory;
-    if (!tempecmwf) tempecmwf = new TempEcmwfFactory;
-    if (!tempecmwfland) tempecmwfland = new TempEcmwfLandFactory;
-    if (!tempecmwfship) tempecmwfship = new TempEcmwfShipFactory;
-    if (!tempradar) tempradar = new TempRadarFactory;
-    if (!pilot) pilot = new PilotFactory;
-    if (!pilotwmo) pilotwmo = new PilotWMOFactory;
-    if (!pilotecmwf) pilotecmwf = new PilotEcmwfFactory;
+                // Get the type of equipment used
+                if (const wreport::Var* var = msg.get(WR_VAR(0, 2, 3), Level(1), Trange::instant()))
+                    // Is it a Radar?
+                    if (var->enq(0) == 3)
+                        return unique_ptr<Template>(new TempRadar(opts, msgs));
 
-    r.register_factory(temp);
-    r.register_factory(tempship);
-    r.register_factory(tempwmo);
-    r.register_factory(tempecmwf);
-    r.register_factory(tempecmwfland);
-    r.register_factory(tempecmwfship);
-    r.register_factory(tempradar);
-    r.register_factory(pilot);
-    r.register_factory(pilotwmo);
-    r.register_factory(pilotecmwf);
+                // ECMWF temps use normal replication which cannot do more than 256 levels
+                if (msg.data.size() > 260)
+                    return unique_ptr<Template>(new TempWMO(opts, msgs));
+                const Var* var = msg.get_sonde_tracking_var();
+                if (var)
+                    return unique_ptr<Template>(new TempWMO(opts, msgs));
+                else
+                {
+                    const wr::TemplateFactory& fac = wr::TemplateRegistry::get("temp-ecmwf");
+                    return fac.factory(opts, msgs);
+                }
+            });
+    r.register_factory(2, "temp-ship", "Temp ship (autodetect)",
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new TempEcmwfShip(opts, msgs));
+            });
+    r.register_factory(2, TEMP_WMO_NAME, TEMP_WMO_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new TempWMO(opts, msgs));
+            });
+    r.register_factory(2, "temp-ecmwf", "Temp ECMWF (autodetect)",
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                if (msgs.empty() || Msg::downcast(msgs[0]).type != MSG_TEMP_SHIP)
+                    return unique_ptr<Template>(new TempEcmwfLand(opts, msgs));
+                else
+                    return unique_ptr<Template>(new TempEcmwfShip(opts, msgs));
+            });
+    r.register_factory(2, TEMP_ECMWF_LAND_NAME, TEMP_ECMWF_LAND_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new TempEcmwfLand(opts, msgs));
+            });
+    r.register_factory(2, TEMP_ECMWF_SHIP_NAME, TEMP_ECMWF_SHIP_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new TempEcmwfShip(opts, msgs));
+            });
+    r.register_factory(6, TEMP_RADAR_NAME, TEMP_RADAR_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new TempRadar(opts, msgs));
+            });
+    r.register_factory(2, PILOT_WMO_NAME, PILOT_WMO_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new PilotWMO(opts, msgs));
+            });
+    r.register_factory(2, PILOT_ECMWF_NAME, PILOT_ECMWF_DESC,
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                return unique_ptr<Template>(new PilotEcmwf(opts, msgs));
+            });
+    r.register_factory(2, "pilot", "pilot (autodetect)",
+            [](const Exporter::Options& opts, const Messages& msgs) {
+                const Msg& msg = Msg::downcast(msgs[0]);
+                const Var* var = msg.get_sonde_tracking_var();
+                // Try with another one in case the first was just unset
+                if (!var) var = msg.get_meas_equip_type_var();
+                if (var)
+                    return unique_ptr<Template>(new PilotWMO(opts, msgs));
+                else
+                    return unique_ptr<Template>(new PilotEcmwf(opts, msgs));
+            });
 }
 
 }
 }
 }
-
-/* vim:set ts=4 sw=4: */
