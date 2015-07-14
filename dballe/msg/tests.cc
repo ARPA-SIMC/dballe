@@ -19,6 +19,7 @@
 
 #include "tests.h"
 #include "codec.h"
+#include "wr_codec.h"
 #include <dballe/core/csv.h>
 #include "context.h"
 #include "msg.h"
@@ -712,6 +713,14 @@ void TestCodec::run_reimport(WIBBLE_TEST_LOCPRM)
     // Export
     if (verbose) cerr << "Exporting with options '" << output_opts.to_string() << "'" << endl;
     TestMessage exported(type, "exported");
+
+    if (!expected_template.empty())
+    {
+        std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
+        msg::WRExporter* exp = dynamic_cast<msg::WRExporter*>(exporter.get());
+        auto tpl = exp->infer_template(orig.msgs);
+        wassert(actual(tpl->name()) == expected_template);
+    }
     wrunchecked(exported.read_from_msgs(orig.msgs, output_opts));
 
     // Import again

@@ -144,11 +144,8 @@ const char* infer_from_message(const Msg& msg)
 
 }
 
-unique_ptr<Bulletin> WRExporter::to_bulletin(const Messages& msgs) const
+unique_ptr<wr::Template> WRExporter::infer_template(const Messages& msgs) const
 {
-    if (msgs.empty())
-        throw error_consistency("trying to export an empty message set");
-
     // Select initial template name
     string tpl = opts.template_name;
     if (tpl.empty())
@@ -156,7 +153,12 @@ unique_ptr<Bulletin> WRExporter::to_bulletin(const Messages& msgs) const
 
     // Get template factory
     const wr::TemplateFactory& fac = wr::TemplateRegistry::get(tpl);
-    std::unique_ptr<wr::Template> encoder = fac.factory(opts, msgs);
+    return fac.factory(opts, msgs);
+}
+
+unique_ptr<Bulletin> WRExporter::to_bulletin(const Messages& msgs) const
+{
+    std::unique_ptr<wr::Template> encoder = infer_template(msgs);
     // fprintf(stderr, "Encoding with template %s\n", encoder->name());
     auto res = make_bulletin();
     encoder->to_bulletin(*res);

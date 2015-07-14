@@ -247,6 +247,7 @@ struct TestCodec
     bool verbose = false;
     msg::Importer::Options input_opts;
     msg::Exporter::Options output_opts;
+    std::string expected_template;
     int expected_subsets = 1;
     int expected_min_vars = 1;
     int expected_type = MISSING_INT;

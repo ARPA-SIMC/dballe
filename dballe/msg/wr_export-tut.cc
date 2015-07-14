@@ -528,6 +528,7 @@ std::vector<Test> tests {
     Test("new_synop11", [](Fixture& f) {
         // Test import/export of GTS synop without pressure of standard level
         dballe::tests::TestCodec test("bufr/synop-rad2.bufr");
+        test.expected_template = "synop-wmo";
         test.expected_min_vars = 50;
         test.verbose = true;
 
@@ -543,12 +544,13 @@ std::vector<Test> tests {
         TEST_convert(test, "synop-wmo");
     }),
     Test("new_synop13", [](Fixture& f) {
-        // Test import/export of GTS synop with temperature change information
+        // FIXME: temp message with data category 0: what do we do with it?
         dballe::tests::TestCodec test("bufr/temp-timesig18.bufr");
         test.expected_min_vars = 50;
+        test.expected_template = "temp-wmo";
 
         wruntest(test.run_reimport);
-        TEST_convert(test, "synop-wmo");
+        TEST_convert(test, "temp-wmo");
     }),
     // Re-export test for old style temps
     Test("old_temp1", [](Fixture& f) {

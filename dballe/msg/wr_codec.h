@@ -61,6 +61,9 @@ public:
     bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const override;
 };
 
+namespace wr {
+class Template;
+}
 
 class WRExporter : public Exporter
 {
@@ -75,7 +78,7 @@ public:
     /**
      * Infer a template name from the message contents
      */
-    std::string infer_template(const Messages& msgs) const;
+    std::unique_ptr<wr::Template> infer_template(const Messages& msgs) const;
 };
 
 class BufrExporter : public WRExporter
