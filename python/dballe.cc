@@ -1,9 +1,7 @@
 #include <Python.h>
+#include <wreport/python/wreport.h>
 #include "config.h"
 #include "common.h"
-#include "vartable.h"
-#include "varinfo.h"
-#include "var.h"
 #include "record.h"
 #include "db.h"
 #include "cursor.h"
@@ -20,6 +18,7 @@
 using namespace std;
 using namespace dballe;
 using namespace dballe::python;
+using namespace wreport;
 
 extern "C" {
 
@@ -28,7 +27,7 @@ static PyObject* dballe_varinfo(PyTypeObject *type, PyObject *args, PyObject *kw
     const char* var_name;
     if (!PyArg_ParseTuple(args, "s", &var_name))
         return NULL;
-    return (PyObject*)varinfo_create(dballe::varinfo(resolve_varcode(var_name)));
+    return (PyObject*)wrpy->varinfo_create(dballe::varinfo(varcode_parse(var_name)));
 }
 
 static PyObject* dballe_var_uncaught(PyTypeObject *type, PyObject *args)
@@ -44,12 +43,12 @@ static PyObject* dballe_var_uncaught(PyTypeObject *type, PyObject *args)
             double v = PyFloat_AsDouble(val);
             if (v == -1.0 && PyErr_Occurred())
                 return NULL;
-            return (PyObject*)var_create(dballe::varinfo(resolve_varcode(var_name)), v);
+            return (PyObject*)wrpy->var_create_d(dballe::varinfo(resolve_varcode(var_name)), v);
         } else if (PyInt_Check(val)) {
             long v = PyInt_AsLong(val);
             if (v == -1 && PyErr_Occurred())
                 return NULL;
-            return (PyObject*)var_create(dballe::varinfo(resolve_varcode(var_name)), (int)v);
+            return (PyObject*)wrpy->var_create_i(dballe::varinfo(resolve_varcode(var_name)), (int)v);
         } else if (
                 PyUnicode_Check(val)
 #if PY_MAJOR_VERSION >= 3
@@ -61,15 +60,15 @@ static PyObject* dballe_var_uncaught(PyTypeObject *type, PyObject *args)
             string v;
             if (string_from_python(val, v))
                 return NULL;
-            return (PyObject*)var_create(dballe::varinfo(resolve_varcode(var_name)), v.c_str());
+            return (PyObject*)wrpy->var_create_c(dballe::varinfo(resolve_varcode(var_name)), v.c_str());
         } else if (val == Py_None) {
-            return (PyObject*)var_create(dballe::varinfo(resolve_varcode(var_name)));
+            return (PyObject*)wrpy->var_create(dballe::varinfo(resolve_varcode(var_name)));
         } else {
             PyErr_SetString(PyExc_TypeError, "Expected int, float, str, unicode, or None");
             return NULL;
         }
     } else
-        return (PyObject*)var_create(dballe::varinfo(resolve_varcode(var_name)));
+        return (PyObject*)wrpy->var_create(dballe::varinfo(resolve_varcode(var_name)));
 }
 
 static PyObject* dballe_var(PyTypeObject *type, PyObject *args)
@@ -172,9 +171,6 @@ PyMODINIT_FUNC init_dballe(void)
             "DB-All.e Python interface.");
 #endif
 
-    register_vartable(m);
-    register_varinfo(m);
-    register_var(m);
     register_record(m);
     register_db(m);
     register_cursor(m);

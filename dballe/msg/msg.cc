@@ -480,19 +480,19 @@ bool Msg::from_csv(CSVReader& in)
         if (in.cols[11].size() == 13)
         {
             // Bxxyyy.Bxxyyy: attribute
-            Varcode vcode = descriptor_code(in.cols[11].substr(0, 6).c_str());
+            Varcode vcode = varcode_parse(in.cols[11].substr(0, 6).c_str());
             // Find master variable
             wreport::Var* var = edit(vcode, lev, tr);
             if (var == NULL)
                 error_consistency::throwf("cannot find corresponding variable for attribute %s", in.cols[11].c_str());
 
-            Varcode acode = descriptor_code(in.cols[11].substr(7).c_str());
+            Varcode acode = varcode_parse(in.cols[11].substr(7).c_str());
             auto attr = newvar(acode);
             attr->setf(in.cols[12].c_str());
             var->seta(move(attr));
         } else if (in.cols[11].size() == 6) {
             // Bxxyyy: variable
-            Varcode vcode = descriptor_code(in.cols[11].c_str());
+            Varcode vcode = varcode_parse(in.cols[11].c_str());
             unique_ptr<Var> var = newvar(vcode);
             var->setf(in.cols[12].c_str());
             set(std::move(var), lev, tr);

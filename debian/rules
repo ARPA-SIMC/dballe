@@ -8,7 +8,6 @@ export RGBDEF=/usr/share/latex2html/styles/rgb.txt
 %:
 	dh --with autoreconf,python2,python3 $@
 
-
 # DEB_PYTHON2_MODULE_PACKAGES := provami
 # 
 # #DEB_MAKE_CHECK_TARGET := check
@@ -18,10 +17,9 @@ export RGBDEF=/usr/share/latex2html/styles/rgb.txt
 # 	rm -f $(CURDIR)/debian/python-dballe/usr/share/pyshared/_dballe.la
 # 	rm -f $(CURDIR)/debian/python-dballe/usr/lib/python?.?/dist-packages/_dballe.la
 
-# Temporarily disabled, I'm afraid of #620104
-#override_dh_fixperms:
-#	dh_fixperms
-#	test -e /usr/bin/dh_buildinfo && dh_buildinfo
+override_dh_fixperms:
+	dh_fixperms
+	test -e /usr/bin/dh_buildinfo && dh_buildinfo
 
 override_dh_auto_install:
 	dh_auto_install

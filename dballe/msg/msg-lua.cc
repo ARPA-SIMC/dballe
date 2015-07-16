@@ -36,7 +36,7 @@ static Varcode dbalua_to_varcode(lua_State* L, int idx)
 	if (str == NULL)
 		return 0;
 	else
-		return descriptor_code(str);
+		return varcode_parse(str);
 }
 
 static int dbalua_msg_type(lua_State *L)

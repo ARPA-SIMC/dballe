@@ -3,11 +3,14 @@
 
 #include <Python.h>
 #include <dballe/types.h>
+#include <wreport/python/wreport.h>
 #include <wreport/error.h>
 #include <wreport/varinfo.h>
 
 namespace dballe {
 namespace python {
+
+extern wrpy_c_api* wrpy;
 
 /**
  * unique_ptr-like object that contains PyObject pointers, and that calls
@@ -156,7 +159,7 @@ PyObject* file_get_data(PyObject* o, char*&buf, Py_ssize_t& len);
  *
  * This can be called multiple times and will execute only once.
  */
-void common_init();
+int common_init();
 
 }
 }

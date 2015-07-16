@@ -13,6 +13,8 @@ using namespace wreport;
 namespace dballe {
 namespace python {
 
+wrpy_c_api* wrpy = 0;
+
 PyObject* format_varcode(wreport::Varcode code)
 {
     char buf[7];
@@ -436,7 +438,7 @@ int object_repr(PyObject* o, std::string& out)
     return 0;
 }
 
-void common_init()
+int common_init()
 {
     /*
      * PyDateTimeAPI, that is used by all the PyDate* and PyTime* macros, is
@@ -446,9 +448,17 @@ void common_init()
      * Therefore, we need to have a common_init() to call from all
      * initialization functions. *sigh*
      */
-    if (PyDateTimeAPI)
-        return;
-    PyDateTime_IMPORT;
+    if (!PyDateTimeAPI)
+        PyDateTime_IMPORT;
+
+    if (!wrpy)
+    {
+        wrpy = (wrpy_c_api*)PyCapsule_Import("_wreport._C_API", 0);
+        if (!wrpy)
+            return -1;
+    }
+
+    return 0;
 }
 
 }

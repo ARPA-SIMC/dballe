@@ -3,7 +3,6 @@
 #include <dballe/core/defs.h>
 #include "record.h"
 #include "common.h"
-#include "var.h"
 #include <vector>
 
 #if PY_MAJOR_VERSION >= 3
@@ -112,7 +111,7 @@ static PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key)
             return NULL;
         }
 
-        return var_value_to_python(*var);
+        return wrpy->var_value_to_python(*var);
     } DBALLE_CATCH_RETURN_PYO
 }
 
@@ -336,7 +335,7 @@ static PyObject* dpy_Record_items(dpy_Record* self)
 
             pyo_unique_ptr py_key(PyUnicode_FromString(key));
             if (!py_key) { fail = true; return; }
-            pyo_unique_ptr py_val(var_value_to_python(val));
+            pyo_unique_ptr py_val(wrpy->var_value_to_python(val));
             if (!py_val) { fail = true; return; }
             pyo_unique_ptr item(PyTuple_Pack(2, py_key.get(), py_val.get()));
             if (!item) { fail = true; return; }
@@ -360,7 +359,7 @@ static PyObject* dpy_Record_varitems(dpy_Record* self)
 
             pyo_unique_ptr py_key(PyUnicode_FromString(key));
             if (!py_key) { fail = true; return; }
-            pyo_unique_ptr py_val((PyObject*)var_create(val));
+            pyo_unique_ptr py_val((PyObject*)wrpy->var_create_copy(val));
             if (!py_val) { fail = true; return; }
             pyo_unique_ptr item(PyTuple_Pack(2, py_key.get(), py_val.get()));
             if (!item) { fail = true; return; }
@@ -379,7 +378,7 @@ static PyObject* dpy_Record_var(dpy_Record* self, PyObject* args)
         return nullptr;
 
     try {
-        return (PyObject*)var_create((*self->rec)[name]);
+        return (PyObject*)wrpy->var_create_copy((*self->rec)[name]);
     } DBALLE_CATCH_RETURN_PYO
 }
 
@@ -392,7 +391,7 @@ static PyObject* dpy_Record_key(dpy_Record* self, PyObject* args)
         return nullptr;
 
     try {
-        return (PyObject*)var_create((*self->rec)[name]);
+        return (PyObject*)wrpy->var_create_copy((*self->rec)[name]);
     } DBALLE_CATCH_RETURN_PYO
 }
 
@@ -447,7 +446,7 @@ static PyObject* dpy_Record_vars(dpy_Record* self)
     try {
         for (size_t i = 0; i < vars.size(); ++i)
         {
-            pyo_unique_ptr v((PyObject*)var_create(*vars[i]));
+            pyo_unique_ptr v((PyObject*)wrpy->var_create_copy(*vars[i]));
             if (!v) return nullptr;
 
             if (PyTuple_SetItem(result, i, v.release()))

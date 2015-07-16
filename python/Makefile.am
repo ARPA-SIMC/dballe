@@ -14,9 +14,6 @@ pyexec_LTLIBRARIES = _dballe.la
 
 _dballe_la_SOURCES = \
     common.cc \
-    vartable.cc \
-    varinfo.cc \
-    var.cc \
     record.cc \
     dballe.cc \
     db.cc \

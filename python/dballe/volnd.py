@@ -581,7 +581,7 @@ class Data:
 
         # Create the data array, with all values set as missing
         #print "volnd finalise instantiate"
-        if self.info.is_string:
+        if self.info.type == "string":
             #print self.info, "string"
             a = numpy.empty(shape, dtype=object)
             # Fill the array with all the values, at the given indexes
@@ -590,7 +590,7 @@ class Data:
                     raise IndexError("Got more than one value for " + self.name + " at position " + str(pos))
                 a[pos] = val
         else:
-            if self.info.scale == 0:
+            if self.info.type == "integer":
                 a = self._instantiateIntMatrix()
             else:
                 a = numpy.empty(shape, dtype=numpy.float64)
