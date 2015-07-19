@@ -200,9 +200,9 @@ int MsgAPI::voglioquesto()
         readNextMessage();
     if (state & STATE_EOF)
         return missing_int;
-	state |= STATE_VOGLIOQUESTO;
-		
-	iter_ctx = iter_var = -1;
+    state |= STATE_VOGLIOQUESTO;
+
+    iter_ctx = iter_var = -1;
 
     Msg* msg = curmsg();
     if (!msg) return missing_int;

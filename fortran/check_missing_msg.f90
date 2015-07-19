@@ -94,6 +94,9 @@
       do while ( n > 0 )
         call idba_voglioquesto (handle,n)
         call ensure_no_error("voglioquesto")
+        if (n == DBA_MVI) then
+          exit
+        end if
       
         do i = 1, n
           call idba_dammelo (handle,btable)
