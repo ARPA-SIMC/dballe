@@ -18,9 +18,8 @@ Vcs-Svn: https://svn.smr.arpa.emr.it/dballe/dballe/trunk
 Package: libdballe-dev
 Section: libdevel
 Architecture: any
-Depends: libdballe7 (= ${binary:Version}), ${misc:Depends}
+Depends: libdballe7 (= ${binary:Version}), libwreport-dev, ${misc:Depends}
 Recommends: pkg-config
-Conflicts: libdballe-core-dev, libdballe-bufrex-dev, libdballe-msg-dev, libdballe-db-dev
 Description: DB-All.e C development library for weather research
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
