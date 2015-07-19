@@ -23,6 +23,7 @@
 
 using namespace dballe;
 using namespace std;
+using namespace wreport;
 
 namespace {
 
@@ -50,9 +51,9 @@ struct MsgCollector : public vector<Message*>
 
 struct B : bench::DBBenchmark
 {
-    bench::Task synop;
-    bench::Task temp;
-    bench::Task flight;
+    benchmark::Task synop;
+    benchmark::Task temp;
+    benchmark::Task flight;
     MsgCollector samples_synop;
     MsgCollector samples_temp;
     MsgCollector samples_flight;

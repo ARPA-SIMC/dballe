@@ -26,6 +26,7 @@
 
 using namespace dballe;
 using namespace std;
+using namespace wreport;
 
 namespace {
 
@@ -221,9 +222,9 @@ struct B : bench::DBBenchmark
     vector<core::Query> queries_station;
     vector<core::Query> queries_sdata;
     vector<core::Query> queries_data;
-    bench::Task station;
-    bench::Task sdata;
-    bench::Task data;
+    benchmark::Task station;
+    benchmark::Task sdata;
+    benchmark::Task data;
 
     B(const std::string& name)
         : bench::DBBenchmark::DBBenchmark(name),

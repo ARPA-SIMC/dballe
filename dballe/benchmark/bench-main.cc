@@ -1,4 +1,4 @@
-#include "benchmark/bench.h"
+#include <wreport/benchmark.h>
 
 int main (int argc, const char* argv[])
 {

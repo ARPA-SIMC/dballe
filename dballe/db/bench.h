@@ -19,15 +19,15 @@
 #ifndef DBALLE_DB_BENCH_UTILS_H
 #define DBALLE_DB_BENCH_UTILS_H
 
-#include <dballe/benchmark/bench.h>
+#include <wreport/benchmark.h>
 #include <dballe/db/db.h>
 
 namespace dballe {
 namespace bench {
 
-struct DBBenchmark : bench::Benchmark
+struct DBBenchmark : wreport::benchmark::Benchmark
 {
-    using bench::Benchmark::Benchmark;
+    using wreport::benchmark::Benchmark::Benchmark;
 
     std::unique_ptr<DB> db;
 
