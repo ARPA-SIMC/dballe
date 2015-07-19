@@ -3,7 +3,7 @@
 
 #include <Python.h>
 #include <dballe/types.h>
-#include <wreport/python/wreport.h>
+#include <wreport/python.h>
 #include <wreport/error.h>
 #include <wreport/varinfo.h>
 

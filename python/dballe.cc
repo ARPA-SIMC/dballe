@@ -1,5 +1,5 @@
 #include <Python.h>
-#include <wreport/python/wreport.h>
+#include <wreport/python.h>
 #include "config.h"
 #include "common.h"
 #include "record.h"
