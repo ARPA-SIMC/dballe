@@ -269,6 +269,20 @@ public:
      */
     wreport::Var* edit(wreport::Varcode code, const Level& lev, const Trange& tr);
 
+    /**
+     * Remove a variable given its description
+     *
+     * @param code
+     *   The ::dba_varcode of the variable to query. See @ref vartable.h
+     * @param lev
+     *   The Level to query
+     * @param tr
+     *   The Trange to query
+     * @returns
+     *   True if the variable was removed, false if it was not found.
+     */
+    bool remove(wreport::Varcode code, const Level& lev, const Trange& tr);
+
     /** 
      * Find a datum given its shortcut ID
      *

@@ -181,7 +181,7 @@ Var* Context::edit(Varcode code)
 bool Context::remove(Varcode code)
 {
     int idx = find_index(code);
-    if (idx == -1) return NULL;
+    if (idx == -1) return false;
     Var* res = data[idx];
     data.erase(data.begin() + idx);
     delete res;

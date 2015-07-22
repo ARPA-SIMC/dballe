@@ -164,7 +164,7 @@ public:
      * @param code
      *   The wreport::Varcode of the variable to query.  See @ref vartable.h
      * @return
-     *   The variable removed, or NULL if it was not found.
+     *   True if the variable was removed, false if it was not found.
      */
     bool remove(wreport::Varcode code);
 

@@ -284,6 +284,16 @@ wreport::Var* Msg::edit(wreport::Varcode code, const Level& lev, const Trange& t
     return ctx->edit(code);
 }
 
+bool Msg::remove(wreport::Varcode code, const Level& lev, const Trange& tr)
+{
+    msg::Context* ctx = edit_context(lev, tr);
+    if (!ctx) return false;
+    if (!ctx->remove(code)) return false;
+    if (ctx->data.empty())
+        remove_context(lev, tr);
+    return true;
+}
+
 const Var* Msg::find_by_id(int id) const
 {
     const MsgVarShortcut& v = shortcutTable[id];
