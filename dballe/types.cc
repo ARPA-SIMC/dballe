@@ -380,7 +380,7 @@ void Datetime::to_stream_iso8601(std::ostream& out, char sep, const char* tz) co
 
 void Datetime::print_iso8601(FILE* out, char sep, const char* end) const
 {
-    fprintf(out, "%04hu-%02hhu-%02hhu%c%hhu:%hhu:%hhu%s",
+    fprintf(out, "%04hu-%02hhu-%02hhu%c%02hhu:%02hhu:%02hhu%s",
             year, month, day, sep, hour, minute, second, end);
 }
 
