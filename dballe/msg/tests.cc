@@ -650,6 +650,32 @@ void TestMessage::read_from_msgs(const Messages& _msgs, const msg::Exporter::Opt
     raw.data = bulletin->encode();
 }
 
+void TestMessage::dump() const
+{
+    string basename = "/tmp/" + name;
+
+    string fname = basename + ".encoded";
+    FILE* out = fopen(fname.c_str(), "w");
+    fwrite(raw.data.data(), raw.data.size(), 1, out);
+    fclose(out);
+    cerr << name << " encoded version saved in " << fname << endl;
+
+    if (bulletin)
+    {
+        fname = basename + ".bulletin";
+        FILE* out = fopen(fname.c_str(), "w");
+        bulletin->print_structured(out);
+        fclose(out);
+        cerr << name << " bulletin saved in " << fname << endl;
+    }
+
+    fname = basename + ".messages";
+    out = fopen(fname.c_str(), "w");
+    msgs.print(out);
+    fclose(out);
+    cerr << name << " interpreted saved in " << fname << endl;
+}
+
 TestCodec::TestCodec(const std::string& fname, File::Encoding type)
     : fname(fname), type(type)
 {
@@ -670,9 +696,8 @@ void TestCodec::do_compare(WIBBLE_TEST_LOCPRM, const TestMessage& msg1, const Te
         int diffs = msg1.msgs.diff(msg2.msgs);
         if (diffs)
         {
-            dballe::tests::dump("msg1", msg1.msgs);
-            dballe::tests::dump("msg2", msg2.msgs);
-            dballe::tests::dump("msg2", msg2.raw);
+            msg1.dump();
+            msg2.dump();
             dballe::tests::dump("diffs", str.str(), "details of differences");
             throw tut::failure(wibble_test_location.msg(str::fmtf("found %d differences", diffs)));
         }
@@ -685,9 +710,8 @@ void TestCodec::do_compare(WIBBLE_TEST_LOCPRM, const TestMessage& msg1, const Te
         if (msg2.bulletin->subsets[0].size() < (unsigned)expected_min_vars)
             throw tut::failure(wibble_test_location.msg(str::fmtf("Number of items in first subset is too small: %zd < %d\n", msg2.bulletin->subsets[0].size(), expected_min_vars)));
     } catch (...) {
-        dballe::tests::dump("bull1", *msg1.bulletin);
-        dballe::tests::dump("bull2", *msg2.bulletin);
-        dballe::tests::dump("msg", msg2.raw);
+        msg1.dump();
+        msg2.dump();
         throw;
     }
 }
@@ -779,9 +803,9 @@ void TestCodec::run_convert(WIBBLE_TEST_LOCPRM, const std::string& tplname)
     }
 
     // Import again
-    TestMessage final(type, "final");
+    TestMessage reimported(type, "reimported");
     try {
-        final.read_from_raw(exported.raw, input_opts);
+        reimported.read_from_raw(exported.raw, input_opts);
     } catch (std::exception& e) {
         //dballe::tests::dump("msg1", *msgs1);
         //dballe::tests::dump("msg", rawmsg);
@@ -790,10 +814,10 @@ void TestCodec::run_convert(WIBBLE_TEST_LOCPRM, const std::string& tplname)
 
     // Run tweaks
     after_convert_reimport.apply(orig.msgs);
-    after_convert_reimport.apply(final.msgs);
+    after_convert_reimport.apply(reimported.msgs);
 
     try {
-        wruntest(do_compare, orig, final);
+        wruntest(do_compare, orig, reimported);
     } catch (...) {
         dballe::tests::dump("converted", exported.raw);
         throw;

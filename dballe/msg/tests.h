@@ -226,7 +226,7 @@ struct RemoveContext : public MessageTweaker
 
 struct TestMessage
 {
-    const std::string& name;
+    std::string name;
     File::Encoding type;
     BinaryMessage raw;
     wreport::Bulletin* bulletin = 0;
@@ -238,6 +238,7 @@ struct TestMessage
     void read_from_file(const std::string& fname, const msg::Importer::Options& input_opts);
     void read_from_raw(const BinaryMessage& msg, const msg::Importer::Options& input_opts);
     void read_from_msgs(const Messages& msgs, const msg::Exporter::Options& export_opts);
+    void dump() const;
 };
 
 struct TestCodec
