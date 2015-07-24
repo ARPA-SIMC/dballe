@@ -488,4 +488,18 @@ void to::test<29>()
     ensure_equals(msg.type, MSG_TEMP);
 }
 
+// Precise import
+template<> template<>
+void to::test<30>()
+{
+    msg::Importer::Options opts;
+    opts.simplified = false;
+    Messages msgs = read_msgs_opts("bufr/gts-synop-linate.bufr", File::BUFR, opts);
+    wassert(actual(msgs.size()) == 1u);
+    const Msg& msg = Msg::downcast(msgs[0]);
+    const Var* v = msg.get(WR_VAR(0, 12, 101), Level(103, 2000), Trange(3, 0, 43200));
+    wassert(actual(v).istrue());
+    wassert(actual(v->enqd()) == 284.75);
+}
+
 }

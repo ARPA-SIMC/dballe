@@ -158,12 +158,12 @@ void TimerangeContext::peek_var(const Var& var, unsigned pos)
             case WR_VAR(0,  4,  4): hour = var.enqi(); break;
             case WR_VAR(0,  4, 24):
                 // Time period in hours
-                if ((int)pos == last_B04024_pos + 1 && var.enqi() != 0)
+                if ((int)pos == last_B04024_pos + 1)
                 {
                     // Cope with the weird idea of using B04024 twice to indicate
                     // beginning and end of a period not ending with the SYNOP
                     // reference time
-                    if (time_period != MISSING_INT)
+                    if (time_period != MISSING_INT && var.enqi() != 0)
                     {
                         time_period -= var.enqd() * 3600;
                         time_period_offset = var.enqd() * 3600;
