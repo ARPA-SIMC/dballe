@@ -43,9 +43,6 @@ clean-local:
 EXTRA_DIST = \
     doc-dballe \
     common.h \
-    vartable.h \
-    varinfo.h \
-    var.h \
     record.h \
     db.h \
     cursor.h \

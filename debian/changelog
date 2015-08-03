@@ -1,3 +1,11 @@
+dballe (7.2-1) UNRELEASED; urgency=medium
+
+  * New upstream release
+     - big refactoring, extracting the beginning of a stable API/ABI
+     - ported to wreport 3
+
+ -- Enrico Zini <enrico@enricozini.org>  Tue, 31 Mar 2015 14:47:14 +0200
+
 dballe (7.1-1) UNRELEASED; urgency=medium
 
   * New upstream release
@@ -10,7 +18,6 @@ dballe (7.1-1) UNRELEASED; urgency=medium
      - removed support for V5 database formats.
      - if DBA_LOGDIR is set, it creates a log file in that directory with a
        JSON trace of all significant usage of the library
-     - ported to wreport 3
 
  -- Enrico Zini <enrico@enricozini.org>  Tue, 31 Mar 2015 14:47:14 +0200
 
