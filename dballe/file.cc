@@ -5,6 +5,7 @@
 #include <wreport/bulletin.h>
 #include <cstring>
 #include <cstdio>
+#include <algorithm>
 
 using namespace std;
 using namespace wreport;
@@ -30,17 +31,17 @@ const char* File::encoding_name(File::Encoding enc)
 
 File::Encoding File::parse_encoding(const char* s)
 {
-    if (strcmp(s, "BUFR") == 0) return BUFR;
-    if (strcmp(s, "CREX") == 0) return CREX;
-    if (strcmp(s, "AOF") == 0) return AOF;
-    error_notfound::throwf("unsupported encoding '%s'", s);
+    std::string str(s);
+    return File::parse_encoding(str);
 }
 
 File::Encoding File::parse_encoding(const std::string& s)
 {
-    if (s == "BUFR") return BUFR;
-    if (s == "CREX") return CREX;
-    if (s == "AOF") return AOF;
+    std::string str;
+    std::transform(s.begin(), s.end(), std::back_inserter(str), ::toupper);
+    if (str == "BUFR") return BUFR;
+    if (str == "CREX") return CREX;
+    if (str == "AOF")  return AOF;
     error_notfound::throwf("unsupported encoding '%s'", s.c_str());
 }
 

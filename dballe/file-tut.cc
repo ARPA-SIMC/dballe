@@ -51,6 +51,18 @@ std::vector<Test> tests {
         wassert(actual(msg.index) == 0);
         wassert(actual(msg.offset) == 140);
     }),
+    Test("parse_encoding", [](Fixture&f) {
+        // Parse encoding test
+        wassert(File::parse_encoding("BUFR") == File::BUFR);
+        wassert(File::parse_encoding("bufr") == File::BUFR);
+        wassert(File::parse_encoding("Bufr") == File::BUFR);
+        wassert(File::parse_encoding("CREX") == File::CREX);
+        wassert(File::parse_encoding("crex") == File::CREX);
+        wassert(File::parse_encoding("CreX") == File::CREX);
+        wassert(File::parse_encoding("AOF") == File::AOF);
+        wassert(File::parse_encoding("aof") == File::AOF);
+        wassert(File::parse_encoding("AoF") == File::AOF);
+    }),
 };
 
 test_group newtg("dballe_file", tests);

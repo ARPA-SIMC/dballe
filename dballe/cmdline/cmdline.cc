@@ -217,20 +217,21 @@ void dba_cmdline_error(poptContext optCon, const char* fmt, ...)
 
 File::Encoding string_to_encoding(const char* type)
 {
-    if (strcmp(type, "bufr") == 0 || strcmp(type, "b") == 0)
-    {
-        return File::BUFR;
+    if (strlen(type) >= 1) {
+        switch (type[0]) {
+            case 'b':
+                return File::BUFR;
+            case 'c':
+                return File::CREX;
+            case 'a':
+                return File::AOF;
+        }
     }
-    else if (strcmp(type, "crex") == 0 || strcmp(type, "c") == 0)
-    {
-        return File::CREX;
+    try {
+        return File::parse_encoding(type);
+    } catch(wreport::error_notfound& e) {
+        error_cmdline::throwf("%s", e.what());
     }
-    else if (strcmp(type, "aof") == 0 || strcmp(type, "a") == 0)
-    {
-        return File::AOF;
-    }
-    else
-        error_cmdline::throwf("'%s' is not a valid format type", type);
 }
 
 void Command::manpage(FILE* out) const
