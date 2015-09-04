@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(dballe, [7.2], [enrico@enricozini.org])
+AC_INIT(dballe, [7.3], [enrico@enricozini.org])
 AC_CONFIG_SRCDIR([configure.ac])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AM_CONFIG_HEADER(config.h)
@@ -264,7 +264,7 @@ dnl
 dnl  6. If any interfaces have been removed since the last public release,
 dnl     then set AGE to 0.
 
-LIBDBALLE_VERSION_INFO="7:0:0"
+LIBDBALLE_VERSION_INFO="7:1:0"
 LIBDBALLEF_VERSION_INFO="4:20:0"
 AC_SUBST(LIBDBALLE_VERSION_INFO)
 AC_SUBST(LIBDBALLEF_VERSION_INFO)
