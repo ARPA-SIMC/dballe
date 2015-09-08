@@ -815,7 +815,7 @@ struct PilotEcmwf : public TempBase
 
             /* Add vertical sounding significance */
             {
-                Var nvar(subset.tables->btable->query(WR_VAR(0, 8, 1)), convert_BUFR08042_to_BUFR08001(vss->enqi()));
+                Var nvar(subset.tables->btable->query(WR_VAR(0, 8, 1)), (int)convert_BUFR08042_to_BUFR08001(vss->enqi()));
                 nvar.setattrs(*vss);
                 subset.store_variable(WR_VAR(0, 8, 1), nvar);
             }

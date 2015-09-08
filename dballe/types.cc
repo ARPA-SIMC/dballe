@@ -558,6 +558,11 @@ void Coords::print(FILE* out, const char* end) const
  * LatRange
  */
 
+constexpr int LatRange::IMIN;
+constexpr int LatRange::IMAX;
+constexpr double LatRange::DMIN;
+constexpr double LatRange::DMAX;
+
 LatRange::LatRange(int min, int max) : imin(min), imax(max) {}
 
 LatRange::LatRange(double min, double max)

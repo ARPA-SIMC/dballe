@@ -120,8 +120,6 @@ fi
 
 dnl Check for wreport
 PKG_CHECK_MODULES(WREPORT,libwreport >= 3.0)
-PKG_CHECK_EXISTS([libwreport-test >= 3.0], [have_wreport_test=yes], [have_wreport_test=no])
-
 
 dnl Check for sqlite3
 PKG_CHECK_MODULES(SQLITE3, sqlite3)
@@ -199,21 +197,6 @@ then
 fi
 AM_CONDITIONAL([LUA], [test x"$have_lua" = x"yes"])
 
-
-dnl Check for wibble
-PKG_CHECK_EXISTS([libwibble], [have_wibble=yes], [have_wibble=no])
-if test x$have_wibble = xyes && test x$have_wreport_test = xyes
-then
-	PKG_CHECK_MODULES(WREPORT_TEST, libwreport-test)
-	PKG_CHECK_MODULES(WIBBLE, libwibble)
-	enable_tests=yes
-else
-	test x$have_wibble = xno && AC_MSG_WARN([libwibble not found, tests will be disabled])
-	test x$have_wreport_test = xno && AC_MSG_WARN([libwreport-test not found, tests will be disabled])
-	enable_tests=no
-fi
-
-
 dnl Check for popt
 AC_CHECK_HEADER(popt.h, AC_DEFINE(HAVE_POPT_H, 1, popt.h has been found),
         AC_MSG_ERROR([*** popt.h not found. Check 'config.log' for more details.])
@@ -290,7 +273,6 @@ AM_CONDITIONAL([HAVE_ODBC], [test x"$have_odbc" = x"yes"])
 AM_CONDITIONAL([DO_DBALLEF], [test x"$enable_dballef" = x"yes"])
 AM_CONDITIONAL([DO_DBALLE_PYTHON], [test x"$enable_dballe_python" = x"yes"])
 AM_CONDITIONAL([DO_DOCS], [test x"$enable_docs" = x"yes"])
-AM_CONDITIONAL([DO_TESTS], [test x"$enable_tests" = x"yes"])
 
 AM_CONDITIONAL([HAVE_LATEX2HTML], [test x$have_latex2html = xyes])
 AM_CONDITIONAL([HAVE_RST2HTML], [test x$have_rst2html = xyes])
@@ -311,11 +293,6 @@ libdballe.pc
 libdballef.pc
 ])
 AC_OUTPUT
-#dballe/bench/Makefile
-#examples/Makefile
-
-dnl tests/Makefile
-dnl doc/Makefile
 
 AC_MSG_NOTICE([
 ===================================================
@@ -326,7 +303,6 @@ AS_HELP_STRING([MySQL:], [$have_mysql])
 AS_HELP_STRING([Fortran:], [$enable_dballef])
 AS_HELP_STRING([Python:], [$enable_dballe_python])
 AS_HELP_STRING([documentation:], [$enable_docs])
-AS_HELP_STRING([tests:], [$enable_tests])
 AS_HELP_STRING([latex2html:], [$have_latex2html])
 AS_HELP_STRING([rst2html:], [$have_rst2html])
 ===================================================])

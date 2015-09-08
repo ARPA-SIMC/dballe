@@ -16,6 +16,9 @@ enum Result {
     MATCH_NA    // Match not applicable to this item
 };
 
+/// Format a Result into a string
+std::string result_format(Result res);
+
 }
 
 /**

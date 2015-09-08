@@ -304,7 +304,7 @@ EXTRA_DIST += \
 # Unit testing
 #
 
-check_PROGRAMS = tut_test
+check_PROGRAMS = test-dballe
 TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 #TESTS = $(check_PROGRAMS)
 
@@ -322,96 +322,94 @@ dist_noinst_HEADERS = \
 	msg/tests-lua.h \
 	db/tests.h
 
-tut_test_SOURCES = \
-	core/tests/tut-main.cpp \
+test_dballe_SOURCES = \
+	tests-main.cpp \
 	core/tests.cc \
-	file-tut.cc \
-	message-tut.cc \
-	types-tut.cc \
-	record-tut.cc \
-	query-tut.cc \
-	var-tut.cc \
-	core/aliases-tut.cc \
-	core/stlutils-tut.cc \
-	core/defs-tut.cc \
-	core/var-tut.cc \
-	core/values-tut.cc \
-	core/file-tut.cc \
-	core/record-tut.cc \
-	core/query-tut.cc \
-	core/structbuf-tut.cc \
-	core/csv-tut.cc \
-	core/matcher-tut.cc \
-	core/match-wreport-tut.cc \
-	core/varmatch-tut.cc \
-	core/json-tut.cc \
+	file-test.cc \
+	message-test.cc \
+	types-test.cc \
+	record-test.cc \
+	query-test.cc \
+	var-test.cc \
+	core/aliases-test.cc \
+	core/stlutils-test.cc \
+	core/defs-test.cc \
+	core/var-test.cc \
+	core/values-test.cc \
+	core/file-test.cc \
+	core/record-test.cc \
+	core/query-test.cc \
+	core/structbuf-test.cc \
+	core/csv-test.cc \
+	core/matcher-test.cc \
+	core/match-wreport-test.cc \
+	core/varmatch-test.cc \
+	core/json-test.cc \
 	memdb/tests.cc \
-	memdb/valuestorage-tut.cc \
-	memdb/index-tut.cc \
-	memdb/match-tut.cc \
-	memdb/results-tut.cc \
-	memdb/station-tut.cc \
-	memdb/valuebase-tut.cc \
-	memdb/stationvalue-tut.cc \
-	memdb/levtr-tut.cc \
-	memdb/value-tut.cc \
-	memdb/memdb-tut.cc \
-	memdb/serializer-tut.cc \
+	memdb/valuestorage-test.cc \
+	memdb/index-test.cc \
+	memdb/match-test.cc \
+	memdb/results-test.cc \
+	memdb/station-test.cc \
+	memdb/valuebase-test.cc \
+	memdb/stationvalue-test.cc \
+	memdb/levtr-test.cc \
+	memdb/value-test.cc \
+	memdb/memdb-test.cc \
+	memdb/serializer-test.cc \
 	msg/tests.cc \
-	msg/vars-tut.cc \
-	msg/context-tut.cc \
-	msg/codec-tut.cc \
-	msg/msg-tut.cc \
-	msg/wr_codec_generic-tut.cc \
-	msg/wr_codec-tut.cc \
-	msg/wr_import-tut.cc \
-	msg/wr_export-tut.cc \
-	msg/aof_codec-tut.cc \
+	msg/vars-test.cc \
+	msg/context-test.cc \
+	msg/codec-test.cc \
+	msg/msg-test.cc \
+	msg/wr_codec_generic-test.cc \
+	msg/wr_codec-test.cc \
+	msg/wr_import-test.cc \
+	msg/wr_export-test.cc \
+	msg/aof_codec-test.cc \
 	db/tests.cc \
-	db/querybuf-tut.cc \
-	db/trace-tut.cc \
-	db/sql/repinfo-tut.cc \
-	db/sql/station-tut.cc \
-	db/sql/levtr-tut.cc \
-	db/sql/datav6-tut.cc \
-	db/sql/attrv6-tut.cc \
-	db/sqlite/internals-tut.cc \
-	db/db-basic-tut.cc \
-	db/db-misc-tut.cc \
-	db/db-query-station-tut.cc \
-	db/db-query-data-tut.cc \
-	db/db-query-summary-tut.cc \
-	db/db-import-tut.cc \
-	db/db-export-tut.cc \
-	db/mem/repinfo-tut.cc \
-	db/mem/cursor-tut.cc \
-	db/summary-tut.cc \
-	simple/msgapi-tut.cc \
-	cmdline/dbadb-tut.cc \
-	simple/dbapi-tut.cc
+	db/querybuf-test.cc \
+	db/trace-test.cc \
+	db/sql/repinfo-test.cc \
+	db/sql/station-test.cc \
+	db/sql/levtr-test.cc \
+	db/sql/datav6-test.cc \
+	db/sql/attrv6-test.cc \
+	db/sqlite/internals-test.cc \
+	db/db-basic-test.cc \
+	db/db-misc-test.cc \
+	db/db-query-station-test.cc \
+	db/db-query-data-test.cc \
+	db/db-query-summary-test.cc \
+	db/db-import-test.cc \
+	db/db-export-test.cc \
+	db/mem/repinfo-test.cc \
+	db/mem/cursor-test.cc \
+	db/summary-test.cc \
+	simple/msgapi-test.cc \
+	cmdline/dbadb-test.cc \
+	simple/dbapi-test.cc
 if LUA
-tut_test_SOURCES += \
-	msg/lua-tut.cc \
+test_dballe_SOURCES += \
+	msg/lua-test.cc \
 	msg/tests-lua.cc
 endif
 if HAVE_LIBPQ
-tut_test_SOURCES += \
-	db/postgresql/internals-tut.cc
+test_dballe_SOURCES += \
+	db/postgresql/internals-test.cc
 endif
 if HAVE_MYSQL
-tut_test_SOURCES += \
-	db/mysql/internals-tut.cc
+test_dballe_SOURCES += \
+	db/mysql/internals-test.cc
 endif
 if HAVE_ODBC
-tut_test_SOURCES += \
-	db/odbc/internals-tut.cc
+test_dballe_SOURCES += \
+	db/odbc/internals-test.cc
 endif
 
-tut_test_LDADD = \
+test_dballe_LDADD = \
 	libdballe.la \
-	$(common_libs) \
-	$(WREPORT_TEST_LIBS) \
-	$(WIBBLE_LIBS)
+	$(common_libs)
 
 #
 # Benchmark

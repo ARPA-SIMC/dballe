@@ -152,7 +152,7 @@ void GenericImporter::import_var(const Var& var)
     {
         // Legacy variable conversions
         case WR_VAR(0, 8, 1): {
-            unique_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), convert_BUFR08001_to_BUFR08042(var.enqi())));
+            unique_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), (int)convert_BUFR08001_to_BUFR08042(var.enqi())));
             nvar->setattrs(var);
             msg->set(move(nvar), lev, tr);
             break;

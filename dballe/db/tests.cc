@@ -1,21 +1,17 @@
-#include "config.h"
 #include "tests.h"
-#include "dballe/db/v6/db.h"
-#include "dballe/db/sql.h"
-#include "dballe/db/sql/driver.h"
+#include "v6/db.h"
+#include "sql.h"
+#include "sql/driver.h"
 #include "dballe/msg/vars.h"
 #include <wreport/error.h>
-#include <wibble/string.h>
 #include <algorithm>
-
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
+#include "config.h"
 
 using namespace wreport;
 using namespace std;
-using namespace wibble;
-using namespace wibble::tests;
 
 namespace dballe {
 namespace tests {
@@ -139,65 +135,65 @@ void TestRecord::set_var(const char* msgvarname, double val, int conf)
 }
 #endif
 
-void TestCursorStationKeys::check(WIBBLE_TEST_LOCPRM) const
+void ActualCursor::station_keys_match(const Station& expected)
 {
-    wassert(actual(cur.get_lat()) == expected.coords.dlat());
-    wassert(actual(cur.get_lon()) == expected.coords.dlon());
+    wassert(actual(_actual.get_lat()) == expected.coords.dlat());
+    wassert(actual(_actual.get_lon()) == expected.coords.dlon());
     if (expected.ident.is_missing())
-        wassert(actual(cur.get_ident() == nullptr).istrue());
+        wassert(actual(_actual.get_ident() == nullptr).istrue());
     else
-        wassert(actual(cur.get_ident()) == expected.ident);
+        wassert(actual(_actual.get_ident()) == (const char*)expected.ident);
 #warning Restore report checks once all DBs return rep_memo for station queries
     //wassert(actual(cur.get_rep_memo()) == expected.report);
 }
 
-void TestCursorStationVars::check(WIBBLE_TEST_LOCPRM) const
+void ActualCursor::station_vars_match(const StationValues& expected)
 {
-    wassert(actual(cur).station_keys_match(expected.info));
+    wassert(actual(_actual).station_keys_match(expected.info));
 
     auto rec = Record::create();
-    cur.to_record(*rec);
+    _actual.to_record(*rec);
     wassert(actual(*rec).vars_equal(expected.values));
 }
 
-void TestCursorDataContext::check(WIBBLE_TEST_LOCPRM) const
+void ActualCursor::data_context_matches(const DataValues& expected)
 {
-    db::CursorData* c = dynamic_cast<db::CursorData*>(&cur);
-    if (!c) wibble_test_location.fail_test("cursor is not an instance of CursorData");
+    db::CursorData* c = dynamic_cast<db::CursorData*>(&_actual);
+    if (!c) throw TestFailed("cursor is not an instance of CursorData");
 
-    wassert(actual(cur).station_keys_match(ds.info));
-    wassert(actual(c->get_rep_memo()) == ds.info.report);
-    wassert(actual(c->get_level()) == ds.info.level);
-    wassert(actual(c->get_trange()) == ds.info.trange);
-    wassert(actual(c->get_datetime()) == ds.info.datetime);
+    wassert(actual(_actual).station_keys_match(expected.info));
+    wassert(actual(c->get_rep_memo()) == expected.info.report);
+    wassert(actual(c->get_level()) == expected.info.level);
+    wassert(actual(c->get_trange()) == expected.info.trange);
+    wassert(actual(c->get_datetime()) == expected.info.datetime);
 
     auto rec = Record::create();
-    cur.to_record(*rec);
-    wassert(actual(rec->enq("rep_memo", "")) == ds.info.report);
-    wassert(actual(rec->enq("leveltype1", MISSING_INT)) == ds.info.level.ltype1);
-    wassert(actual(rec->enq("l1", MISSING_INT))         == ds.info.level.l1);
-    wassert(actual(rec->enq("leveltype2", MISSING_INT)) == ds.info.level.ltype2);
-    wassert(actual(rec->enq("l2", MISSING_INT))         == ds.info.level.l2);
-    wassert(actual(rec->enq("pindicator", MISSING_INT)) == ds.info.trange.pind);
-    wassert(actual(rec->enq("p1", MISSING_INT))         == ds.info.trange.p1);
-    wassert(actual(rec->enq("p2", MISSING_INT))         == ds.info.trange.p2);
-    wassert(actual(rec->enq("year", MISSING_INT))  == ds.info.datetime.year);
-    wassert(actual(rec->enq("month", MISSING_INT)) == ds.info.datetime.month);
-    wassert(actual(rec->enq("day", MISSING_INT))   == ds.info.datetime.day);
-    wassert(actual(rec->enq("hour", MISSING_INT))  == ds.info.datetime.hour);
-    wassert(actual(rec->enq("min", MISSING_INT))   == ds.info.datetime.minute);
-    wassert(actual(rec->enq("sec", MISSING_INT))   == ds.info.datetime.second);
+    _actual.to_record(*rec);
+    wassert(actual(rec->enq("rep_memo", "")) == expected.info.report);
+    wassert(actual(rec->enq("leveltype1", MISSING_INT)) == expected.info.level.ltype1);
+    wassert(actual(rec->enq("l1", MISSING_INT))         == expected.info.level.l1);
+    wassert(actual(rec->enq("leveltype2", MISSING_INT)) == expected.info.level.ltype2);
+    wassert(actual(rec->enq("l2", MISSING_INT))         == expected.info.level.l2);
+    wassert(actual(rec->enq("pindicator", MISSING_INT)) == expected.info.trange.pind);
+    wassert(actual(rec->enq("p1", MISSING_INT))         == expected.info.trange.p1);
+    wassert(actual(rec->enq("p2", MISSING_INT))         == expected.info.trange.p2);
+    wassert(actual(rec->enq("year", MISSING_INT))  == expected.info.datetime.year);
+    wassert(actual(rec->enq("month", MISSING_INT)) == expected.info.datetime.month);
+    wassert(actual(rec->enq("day", MISSING_INT))   == expected.info.datetime.day);
+    wassert(actual(rec->enq("hour", MISSING_INT))  == expected.info.datetime.hour);
+    wassert(actual(rec->enq("min", MISSING_INT))   == expected.info.datetime.minute);
+    wassert(actual(rec->enq("sec", MISSING_INT))   == expected.info.datetime.second);
 }
 
-void TestCursorDataVar::check(WIBBLE_TEST_LOCPRM) const
+void ActualCursor::data_var_matches(const wreport::Var& expected)
 {
-    db::CursorValue* c = dynamic_cast<db::CursorValue*>(&cur);
-    if (!c) wibble_test_location.fail_test("cursor is not an instance of CursorValue");
+    db::CursorValue* c = dynamic_cast<db::CursorValue*>(&_actual);
+    if (!c) throw TestFailed("cursor is not an instance of CursorValue");
 
     wassert(actual(c->get_varcode()) == expected.code());
     wassert(actual(c->get_var()) == expected);
     auto rec = Record::create();
-    wrunchecked(cur.to_record(*rec));
+    wassert(_actual.to_record(*rec));
     const Var* actvar = nullptr;
     for (const auto& i: core::Record::downcast(*rec).vars())
         if (i->code() == expected.code())
@@ -206,21 +202,23 @@ void TestCursorDataVar::check(WIBBLE_TEST_LOCPRM) const
     wassert(actual(actvar->value_equals(expected)).istrue());
 }
 
-void TestCursorDataMatch::check(WIBBLE_TEST_LOCPRM) const
+void ActualCursor::data_matches(const DataValues& ds, wreport::Varcode code)
 {
-    wassert(actual(cur).data_context_matches(ds));
-    wassert(actual(cur).data_var_matches(ds, code));
+    wassert(actual(_actual).data_context_matches(ds));
+    wassert(actual(_actual).data_var_matches(ds, code));
 }
 
-TestDBTryDataQuery::TestDBTryDataQuery(DB& db, const std::string& query, unsigned expected)
-    : db(db), expected(expected)
+void ActualDB::try_data_query(const std::string& query, unsigned expected)
 {
-    this->query.set_from_test_string(query);
+    core::Query q;
+    q.set_from_test_string(query);
+    try_data_query(q, expected);
 }
-void TestDBTryDataQuery::check(WIBBLE_TEST_LOCPRM) const
+
+void ActualDB::try_data_query(const Query& query, unsigned expected)
 {
     // Run the query
-    unique_ptr<db::Cursor> cur = db.query_data(query);
+    unique_ptr<db::Cursor> cur = _actual.query_data(query);
 
     // Check the number of results
     wassert(actual(cur->remaining()) == expected);
@@ -228,10 +226,10 @@ void TestDBTryDataQuery::check(WIBBLE_TEST_LOCPRM) const
     wassert(actual(count) == expected);
 }
 
-void TestDBTryStationQuery::check(WIBBLE_TEST_LOCPRM) const
+void ActualDB::try_station_query(const std::string& query, unsigned expected)
 {
     // Run the query
-    unique_ptr<db::Cursor> cur = db.query_stations(core_query_from_string(query));
+    unique_ptr<db::Cursor> cur = _actual.query_stations(core_query_from_string(query));
 
     // Check the number of results
     wassert(actual(cur->remaining()) == expected);
@@ -239,10 +237,10 @@ void TestDBTryStationQuery::check(WIBBLE_TEST_LOCPRM) const
     wassert(actual(count) == expected);
 }
 
-void TestDBTrySummaryQuery::check(WIBBLE_TEST_LOCPRM) const
+void ActualDB::try_summary_query(const std::string& query, unsigned expected, result_checker check_results)
 {
     // Run the query
-    unique_ptr<db::Cursor> cur = db.query_summary(core_query_from_string(query));
+    unique_ptr<db::Cursor> cur = _actual.query_summary(core_query_from_string(query));
 
     // Check the number of results
     // query_summary counts results in advance only optionally
@@ -275,14 +273,14 @@ void TestDBTrySummaryQuery::check(WIBBLE_TEST_LOCPRM) const
             return false;
         });
 
-        wruntest(check_results, results);
+        wassert(check_results(results));
     }
 }
 
-std::unique_ptr<db::Connection> get_test_connection(const char* backend)
+std::unique_ptr<db::Connection> get_test_connection(const std::string& backend)
 {
     std::string envname = "DBA_DB";
-    if (backend)
+    if (!backend.empty())
     {
         envname = "DBA_DB_";
         envname += backend;
@@ -293,12 +291,10 @@ std::unique_ptr<db::Connection> get_test_connection(const char* backend)
     return db::Connection::create_from_url(envurl);
 }
 
-const char* DriverFixture::backend = nullptr;
-db::Format DriverFixture::format = db::V6;
-
-DriverFixture::DriverFixture()
+DriverFixture::DriverFixture(const char* backend, db::Format format)
+    : backend(backend ? backend : ""), format(format)
 {
-    conn = get_test_connection(backend).release();
+    conn = get_test_connection(this->backend).release();
     driver = db::sql::Driver::create(*conn).release();
     driver->delete_tables(format);
     driver->create_tables(format);
@@ -312,15 +308,14 @@ DriverFixture::~DriverFixture()
     delete conn;
 }
 
-void DriverFixture::reset()
+void DriverFixture::test_setup()
 {
+    Fixture::test_setup();
     driver->remove_all(format);
 }
 
-const char* DBFixture::backend = nullptr;
-db::Format DBFixture::format = db::V6;
-
-DBFixture::DBFixture()
+DBFixture::DBFixture(const char* backend, db::Format format)
+    : backend(backend ? backend : ""), format(format)
 {
     db = create_db().release();
     db->reset();
@@ -331,13 +326,6 @@ DBFixture::~DBFixture()
     if (getenv("PAUSE") == nullptr)
         db->disappear();
     delete db;
-}
-
-void DBFixture::reset()
-{
-    db->remove_all();
-    int added, deleted, updated;
-    db->update_repinfo(nullptr, &added, &deleted, &updated);
 }
 
 std::unique_ptr<DB> DBFixture::create_db()
@@ -352,30 +340,38 @@ std::unique_ptr<DB> DBFixture::create_db()
     }
 }
 
-
-void DBFixture::populate_database(WIBBLE_TEST_LOCPRM, TestFixture& fixture)
+void DBFixture::test_setup()
 {
-    wruntest(fixture.populate_db, *db);
+    Fixture::test_setup();
+    db->remove_all();
+    int added, deleted, updated;
+    db->update_repinfo(nullptr, &added, &deleted, &updated);
+}
+
+void DBFixture::populate_database(TestDataSet& data_set)
+{
+    wassert(data_set.populate_db(*db));
 }
 
 
-void TestFixture::populate_db(WIBBLE_TEST_LOCPRM, DB& db)
+void TestDataSet::populate_db(DB& db)
 {
-    for (auto& vals: stations)
-        wrunchecked(db.insert_station_data(vals.second, true, true));
-    for (auto& vals: data)
-        wrunchecked(db.insert_data(vals.second, true, true));
+    for (auto& d: stations)
+        wassert(db.insert_station_data(d.second, true, true));
+    for (auto& d: data)
+        wassert(db.insert_data(d.second, true, true));
 }
 
-OldDballeTestFixture::OldDballeTestFixture()
+OldDballeTestDataSet::OldDballeTestDataSet()
 {
-    stations["synop"].info.coords = Coords(12.34560, 76.54320);
     stations["synop"].info.report = "synop";
+    stations["synop"].info.coords = Coords(12.34560, 76.54320);
     stations["synop"].values.set("B07030", 42);     // Height
     stations["synop"].values.set("B07031", 234);    // Heightbaro
     stations["synop"].values.set("B01001", 1);      // Block
     stations["synop"].values.set("B01002", 52);     // Station
     stations["synop"].values.set("B01019", "Cippo Lippo");  // Name
+
     stations["metar"] = stations["synop"];
     stations["metar"].info.report = "metar";
 

@@ -32,19 +32,6 @@ using namespace std;
 namespace dballe {
 namespace cmdline {
 
-namespace dbadb {
-
-const char* parse_op_report(DB& db, const char* name)
-{
-    if (name != 0 && name[0] != 0)
-    {
-        return name;
-    } else
-        return NULL;
-}
-
-}
-
 namespace {
 
 struct Importer : public Action
@@ -144,7 +131,7 @@ int Dbadb::do_export(const Query& query, File& file, const char* output_template
         opts.template_name = output_template;
 
     if (forced_repmemo)
-        forced_repmemo = dbadb::parse_op_report(db, forced_repmemo);
+        forced_repmemo = forced_repmemo;
     auto exporter = msg::Exporter::create(file.encoding(), opts);
 
     db.export_msgs(query, [&](unique_ptr<Message>&& msg) {

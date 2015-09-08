@@ -1,13 +1,14 @@
 #include "tests.h"
 #include "record.h"
-#include <wibble/string.h>
+#include "matcher.h"
+#include <wreport/utils/string.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
 #include <fnmatch.h>
 
-using namespace wibble;
 using namespace wreport;
+using namespace dballe::tests;
 using namespace std;
 
 namespace dballe {
@@ -214,28 +215,22 @@ std::string datafile(const std::string& fname)
 	return testdatadir + "/" + fname;
 }
 
-unique_ptr<File> _open_test_data(const wibble::tests::Location& loc, const char* filename, File::Encoding type)
+unique_ptr<File> open_test_data(const char* filename, File::Encoding type)
 {
-	try {
-		return unique_ptr<File>(File::create(type, datafile(filename), "r"));
-	} catch (wreport::error& e) {
-		throw tut::failure(loc.msg(e.what()));
-	}
+    return unique_ptr<File>(File::create(type, datafile(filename), "r"));
 }
 
-BinaryMessage _read_rawmsg(const wibble::tests::Location& loc, const char* filename, File::Encoding type)
+BinaryMessage read_rawmsg(const char* filename, File::Encoding type)
 {
-    try {
-        unique_ptr<File> f = _open_test_data(loc, filename, type);
-        BinaryMessage res = f->read();
-        inner_ensure(res);
-        return res;
-    } catch (wreport::error& e) {
-        throw tut::failure(loc.msg(e.what()));
-    }
+    unique_ptr<File> f = wcallchecked(open_test_data(filename, type));
+    BinaryMessage res = f->read();
+    wassert(actual(res).istrue());
+    return res;
 }
 
-void TestRecordValEqual::check(WIBBLE_TEST_LOCPRM) const
+#if 0
+    void vars_equal(const Record& expected) { return TestRecordVarsEqual(this->actual, expected); }
+void TestRecordValEqual::check() const
 {
     const wreport::Var* evar = expected.get(name);
     const wreport::Var* avar = actual.get(name);
@@ -259,14 +254,15 @@ void TestRecordValEqual::check(WIBBLE_TEST_LOCPRM) const
             ss << "is unset";
         else
             ss << "has " << avar->format();
-        wibble_test_location.fail_test(ss.str());
+        throw TestFailed(ss.str());
     }
 }
+#endif
 
-void TestRecordVarsEqual::check(WIBBLE_TEST_LOCPRM) const
+void ActualRecord::vars_equal(const Values& expected) const
 {
-    WIBBLE_TEST_INFO(locinfo);
-    const auto& act = core::Record::downcast(actual);
+    WREPORT_TEST_INFO(locinfo);
+    const auto& act = core::Record::downcast(_actual);
     locinfo() << "Expected: " /* << expected.to_string() */ << " actual: " << act.to_string();
 
     const vector<Var*>& vars1 = act.vars();
@@ -278,7 +274,7 @@ void TestRecordVarsEqual::check(WIBBLE_TEST_LOCPRM) const
     {
         std::stringstream ss;
         ss << "records have a different number of variables. Expected is " << vars2.size() << " and actual has " << vars1.size();
-        wibble_test_location.fail_test(ss.str());
+        throw TestFailed(ss.str());
     }
 
     for (unsigned i = 0; i < vars1.size(); ++i)
@@ -290,7 +286,7 @@ void TestRecordVarsEqual::check(WIBBLE_TEST_LOCPRM) const
                << varcode_format(vars2[i]->code()) << "=" << vars2[i]->format("")
                << " and actual has "
                << varcode_format(vars1[i]->code()) << "=" << vars1[i]->format("");
-            wibble_test_location.fail_test(ss.str());
+            throw TestFailed(ss.str());
         }
     }
 }
@@ -298,9 +294,9 @@ void TestRecordVarsEqual::check(WIBBLE_TEST_LOCPRM) const
 void set_record_from_string(Record& rec, const std::string& s)
 {
     auto& r = core::Record::downcast(rec);
-    str::Split splitter(", ", s);
-    for (str::Split::const_iterator i = splitter.begin(); i != splitter.end(); ++i)
-        r.set_from_string(i->c_str());
+    str::Split split(s, ", ");
+    for (const auto& i: split)
+        r.set_from_string(i.c_str());
 }
 
 unique_ptr<Record> record_from_string(const std::string& s)
@@ -323,6 +319,22 @@ core::Query core_query_from_string(const std::string& s)
     core::Query q;
     q.set_from_test_string(s);
     return q;
+}
+
+void ActualMatcherResult::operator==(int expected) const
+{
+    if (expected == _actual) return;
+    std::stringstream ss;
+    ss << "actual match result is " << matcher::result_format((matcher::Result)_actual) << " but it should be " << matcher::result_format((matcher::Result)expected);
+    throw TestFailed(ss.str());
+}
+
+void ActualMatcherResult::operator!=(int expected) const
+{
+    if (expected != _actual) return;
+    std::stringstream ss;
+    ss << "actual match result is " << matcher::result_format((matcher::Result)_actual) << " but it should not be";
+    throw TestFailed(ss.str());
 }
 
 }

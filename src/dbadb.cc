@@ -302,7 +302,7 @@ struct ImportCmd : public DatabaseCmd
 
         unique_ptr<DB> db = connect();
 
-        const char* forced_repmemo = dbadb::parse_op_report(*db, op_report);
+        const char* forced_repmemo = op_report;
 
         Dbadb dbadb(*db);
         return dbadb.do_import(get_filenames(optCon), reader, import_flags, forced_repmemo);

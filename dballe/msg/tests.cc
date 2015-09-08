@@ -1,22 +1,3 @@
-/*
- * Copyright (C) 2005--2010  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "tests.h"
 #include "codec.h"
 #include "wr_codec.h"
@@ -28,8 +9,6 @@
 #include <wreport/tableinfo.h>
 #include <wreport/conv.h>
 #include <wreport/notes.h>
-#include <wibble/string.h>
-
 #include <cstring>
 #include <cmath>
 #include <unistd.h>
@@ -37,8 +16,6 @@
 #include <pwd.h>
 #include <fstream>
 
-using namespace wibble;
-using namespace wibble::tests;
 using namespace wreport;
 using namespace std;
 
@@ -134,18 +111,14 @@ const char* aof_files[] = {
 	NULL,
 };
 
-Messages _read_msgs(const wibble::tests::Location& loc, const char* filename, File::Encoding type, const msg::Importer::Options& opts)
+Messages read_msgs(const char* filename, File::Encoding type, const msg::Importer::Options& opts)
 {
-    try {
-        BinaryMessage raw = read_rawmsg(filename, type);
-        std::unique_ptr<msg::Importer> importer = msg::Importer::create(type, opts);
-        return importer->from_binary(raw);
-    } catch (std::exception& e) {
-        throw tut::failure(loc.msg(string("cannot read ") + filename + ": " + e.what()));
-    }
+    BinaryMessage raw = wcallchecked(read_rawmsg(filename, type));
+    std::unique_ptr<msg::Importer> importer = msg::Importer::create(type, opts);
+    return importer->from_binary(raw);
 }
 
-Messages _read_msgs_csv(const Location& loc, const char* filename)
+Messages read_msgs_csv(const char* filename)
 {
     std::string fname = datafile(filename);
     CSVReader reader(fname);
@@ -155,12 +128,12 @@ Messages _read_msgs_csv(const Location& loc, const char* filename)
     {
         std::stringstream ss;
         ss << "cannot find the start of CSV message in " << fname;
-        throw tut::failure(loc.msg(ss.str()));
+        throw TestFailed(ss.str());
     }
     return msgs;
 }
 
-unique_ptr<Bulletin> export_msgs(WIBBLE_TEST_LOCPRM, File::Encoding enctype, const Messages& in, const std::string& tag, const dballe::msg::Exporter::Options& opts)
+unique_ptr<Bulletin> export_msgs(File::Encoding enctype, const Messages& in, const std::string& tag, const dballe::msg::Exporter::Options& opts)
 {
     try {
         std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(enctype, opts));
@@ -168,7 +141,7 @@ unique_ptr<Bulletin> export_msgs(WIBBLE_TEST_LOCPRM, File::Encoding enctype, con
     } catch (std::exception& e) {
         dballe::tests::dump("bul-" + tag, in);
         //dballe::tests::dump("msg-" + tag, out);
-        wibble_test_location.fail_test("cannot export to bulletin (" + tag + "): " + e.what());
+        throw TestFailed("cannot export to bulletin (" + tag + "): " + e.what());
     }
 }
 
@@ -191,34 +164,32 @@ void track_different_msgs(const Messages& msgs1, const Messages& msgs2, const st
     dump(prefix + "2", msgs2, "second message");
 }
 
-void _ensure_msg_undef(const wibble::tests::Location& loc, const Message& msg, int shortcut)
+void ActualMessage::is_undef(int shortcut) const
 {
-    const Var* var = Msg::downcast(msg).find_by_id(shortcut);
-    if (var && var->isset())
-    {
-        std::stringstream ss;
-        ss << "value is " << var->enqc() << " instead of being undefined";
-        throw tut::failure(loc.msg(ss.str()));
-    }
+    const Var* var = Msg::downcast(_actual).find_by_id(shortcut);
+    if (!var || !var->isset()) return;
+    std::stringstream ss;
+    ss << "value is " << var->enqc() << " instead of being undefined";
+    throw TestFailed(ss.str());
 }
 
-const Var& _want_var(const Location& loc, const Message& msg, int shortcut)
+const Var& want_var(const Message& msg, int shortcut)
 {
     const Var* var = Msg::downcast(msg).find_by_id(shortcut);
     if (!var)
-        throw tut::failure(loc.msg("value is missing"));
+        throw TestFailed("value is missing");
     if (!var->isset())
-        throw tut::failure(loc.msg("value is present but undefined"));
+        throw TestFailed("value is present but undefined");
     return *var;
 }
 
-const Var& _want_var(const Location& loc, const Message& msg, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr)
+const Var& want_var(const Message& msg, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr)
 {
     const Var* var = msg.get(code, lev, tr);
     if (!var)
-        throw tut::failure(loc.msg("value is missing"));
+        throw TestFailed("value is missing");
     if (!var->isset())
-        throw tut::failure(loc.msg("value is present but undefined"));
+        throw TestFailed("value is present but undefined");
     return *var;
 }
 
@@ -687,7 +658,7 @@ void TestCodec::configure_ecmwf_to_wmo_tweaks()
     after_convert_import.add(new tweaks::StripDatetimeVars);
 }
 
-void TestCodec::do_compare(WIBBLE_TEST_LOCPRM, const TestMessage& msg1, const TestMessage& msg2)
+void TestCodec::do_compare(const TestMessage& msg1, const TestMessage& msg2)
 {
     // Compare msgs
     {
@@ -699,16 +670,26 @@ void TestCodec::do_compare(WIBBLE_TEST_LOCPRM, const TestMessage& msg1, const Te
             msg1.dump();
             msg2.dump();
             dballe::tests::dump("diffs", str.str(), "details of differences");
-            throw tut::failure(wibble_test_location.msg(str::fmtf("found %d differences", diffs)));
+            std::stringstream ss;
+            ss << "found " << diffs << " differences";
+            throw TestFailed(ss.str());
         }
     }
 
     // Compare bulletins
     try {
         if (msg2.bulletin->subsets.size() != (unsigned)expected_subsets)
-            throw tut::failure(wibble_test_location.msg(str::fmtf("Number of subsets differ from expected: %zd != %d\n", msg2.bulletin->subsets.size(), expected_subsets)));
+        {
+            std::stringstream ss;
+            ss << "Number of subsets differ from expected: " << msg2.bulletin->subsets.size() << " != " << expected_subsets;
+            throw TestFailed(ss.str());
+        }
         if (msg2.bulletin->subsets[0].size() < (unsigned)expected_min_vars)
-            throw tut::failure(wibble_test_location.msg(str::fmtf("Number of items in first subset is too small: %zd < %d\n", msg2.bulletin->subsets[0].size(), expected_min_vars)));
+        {
+            std::stringstream ss;
+            ss << "Number of items in first subset is too small: " << msg2.bulletin->subsets[0].size() << " < " << expected_min_vars;
+            throw TestFailed(ss.str());
+        }
     } catch (...) {
         msg1.dump();
         msg2.dump();
@@ -716,17 +697,15 @@ void TestCodec::do_compare(WIBBLE_TEST_LOCPRM, const TestMessage& msg1, const Te
     }
 }
 
-void TestCodec::run_reimport(WIBBLE_TEST_LOCPRM)
+void TestCodec::run_reimport()
 {
-    if (verbose) cerr << "Running test " << wibble_test_location.locstr() << endl;
-
     // Import
     if (verbose) cerr << "Importing " << fname << " with options '" << input_opts.to_string() << "'" << endl;
     TestMessage orig(type, "orig");
     try {
         orig.read_from_file(fname, input_opts);
     } catch (std::exception& e) {
-        throw tut::failure(wibble_test_location.msg(string("cannot decode ") + fname + ": " + e.what()));
+        throw TestFailed(string("cannot decode ") + fname + ": " + e.what());
     }
 
     wassert(actual(orig.msgs.size()) > 0);
@@ -745,43 +724,41 @@ void TestCodec::run_reimport(WIBBLE_TEST_LOCPRM)
         auto tpl = exp->infer_template(orig.msgs);
         wassert(actual(tpl->name()) == expected_template);
     }
-    wrunchecked(exported.read_from_msgs(orig.msgs, output_opts));
+    wassert(exported.read_from_msgs(orig.msgs, output_opts));
 
     // Import again
     if (verbose) cerr << "Reimporting with options '" << input_opts.to_string() << "'" << endl;
     TestMessage final(type, "final");
-    wrunchecked(final.read_from_raw(exported.raw, input_opts));
+    wassert(final.read_from_raw(exported.raw, input_opts));
 
     // Run tweaks
     after_reimport_reimport.apply(orig.msgs);
     after_reimport_reimport.apply(final.msgs);
 
     try {
-        wruntest(do_compare, orig, final);
+        wassert(do_compare(orig, final));
     } catch (...) {
         dballe::tests::dump("reexported", exported.raw);
         throw;
     }
 
-    if (expected_type != MISSING_INT)
-        wassert(actual(final.bulletin->data_category) == expected_type);
-    if (expected_subtype != MISSING_INT)
-        wassert(actual(final.bulletin->data_subcategory) == expected_subtype);
-    if (expected_localsubtype != MISSING_INT)
-        wassert(actual(final.bulletin->data_subcategory_local) == expected_localsubtype);
+    if (expected_data_category != MISSING_INT)
+        wassert(actual(final.bulletin->data_category) == expected_data_category);
+    if (expected_data_subcategory != MISSING_INT)
+        wassert(actual(final.bulletin->data_subcategory) == expected_data_subcategory);
+    if (expected_data_subcategory_local != MISSING_INT)
+        wassert(actual(final.bulletin->data_subcategory_local) == expected_data_subcategory_local);
 }
 
-void TestCodec::run_convert(WIBBLE_TEST_LOCPRM, const std::string& tplname)
+void TestCodec::run_convert(const std::string& tplname)
 {
-    if (verbose) cerr << "Running test " << wibble_test_location.locstr() << endl;
-
     // Import
     if (verbose) cerr << "Importing " << fname << " with options " << input_opts.to_string() << endl;
     TestMessage orig(type, "orig");
     try {
         orig.read_from_file(fname, input_opts);
     } catch (std::exception& e) {
-        throw tut::failure(wibble_test_location.msg(string("cannot decode ") + fname + ": " + e.what()));
+        throw TestFailed(string("cannot decode ") + fname + ": " + e.what());
     }
 
     wassert(actual(orig.msgs.size()) > 0);
@@ -799,7 +776,7 @@ void TestCodec::run_convert(WIBBLE_TEST_LOCPRM, const std::string& tplname)
     } catch (std::exception& e) {
         //dballe::tests::dump("bul1", *exported);
         //balle::tests::dump("msg1", *msgs1);
-        throw tut::failure(wibble_test_location.msg(string("cannot export: ") + e.what()));
+        throw TestFailed(string("cannot export: ") + e.what());
     }
 
     // Import again
@@ -809,7 +786,7 @@ void TestCodec::run_convert(WIBBLE_TEST_LOCPRM, const std::string& tplname)
     } catch (std::exception& e) {
         //dballe::tests::dump("msg1", *msgs1);
         //dballe::tests::dump("msg", rawmsg);
-        throw tut::failure(wibble_test_location.msg(string("importing from exported rawmsg: ") + e.what()));
+        throw TestFailed(string("importing from exported rawmsg: ") + e.what());
     }
 
     // Run tweaks
@@ -817,7 +794,7 @@ void TestCodec::run_convert(WIBBLE_TEST_LOCPRM, const std::string& tplname)
     after_convert_reimport.apply(reimported.msgs);
 
     try {
-        wruntest(do_compare, orig, reimported);
+        wassert(do_compare(orig, reimported));
     } catch (...) {
         dballe::tests::dump("converted", exported.raw);
         throw;

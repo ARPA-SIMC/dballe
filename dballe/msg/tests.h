@@ -1,33 +1,6 @@
-/*
- * Copyright (C) 2005--2012  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include <dballe/core/tests.h>
 #include <dballe/message.h>
 #include <dballe/msg/codec.h>
-#if 0
-#include <dballe/msg/bufrex_codec.h>
-#include <dballe/msg/file.h>
-#include <dballe/msg/marshal.h>
-
-#include <string>
-#include <iostream>
-#endif
 #include <vector>
 
 namespace wreport {
@@ -37,21 +10,20 @@ struct Vartable;
 namespace dballe {
 namespace tests {
 
-typedef wibble::tests::Location Location;
+Messages read_msgs(const char* filename, File::Encoding type, const dballe::msg::Importer::Options& opts=dballe::msg::Importer::Options());
+Messages read_msgs_csv(const char* filename);
 
-Messages _read_msgs(const Location& loc, const char* filename, File::Encoding type, const dballe::msg::Importer::Options& opts=dballe::msg::Importer::Options());
-#define read_msgs(filename, type) dballe::tests::_read_msgs(wibble::tests::Location(__FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
-#define inner_read_msgs(filename, type) dballe::tests::_read_msgs(wibble::tests::Location(loc, __FILE__, __LINE__, "load " #filename " " #type), (filename), (type))
-#define read_msgs_opts(filename, type, opts) dballe::tests::_read_msgs(wibble::tests::Location(__FILE__, __LINE__, "load " #filename " " #type), (filename), (type), (opts))
-#define inner_read_msgs_opts(filename, type, opts) dballe::tests::_read_msgs(wibble::tests::Location(loc, __FILE__, __LINE__, "load " #filename " " #type), (filename), (type), (opts))
+struct ActualMessage : public Actual<const Message&>
+{
+    using Actual::Actual;
 
-Messages _read_msgs_csv(const Location& loc, const char* filename);
-#define read_msgs_csv(filename) dballe::tests::_read_msgs_csv(wibble::tests::Location(__FILE__, __LINE__, "load csv " #filename), (filename))
-#define inner_read_msgs_csv(filename) dballe::tests::_read_msgs_csv(wibble::tests::Location(loc, __FILE__, __LINE__, "load csv " #filename), (filename))
+    void is_undef(int shortcut) const;
+};
 
-std::unique_ptr<wreport::Bulletin> export_msgs(WIBBLE_TEST_LOCPRM, File::Encoding enctype, const Messages& in, const std::string& tag, const dballe::msg::Exporter::Options& opts=dballe::msg::Exporter::Options());
-#define test_export_msgs(...) dballe::tests::export_msgs(wibble_test_location.nest(wibble_test_location_info, __FILE__, __LINE__, "export_msgs("#__VA_ARGS__")"), __VA_ARGS__)
+inline ActualMessage actual(const Message& message) { return ActualMessage(message); }
 
+std::unique_ptr<wreport::Bulletin> export_msgs(File::Encoding enctype, const Messages& in, const std::string& tag, const dballe::msg::Exporter::Options& opts=dballe::msg::Exporter::Options());
+#define test_export_msgs(...) wcallchecked(export_msgs(__VA_ARGS__))
 
 void track_different_msgs(const Message& msg1, const Message& msg2, const std::string& prefix);
 void track_different_msgs(const Messages& msgs1, const Messages& msgs2, const std::string& prefix);
@@ -60,13 +32,11 @@ extern const char* bufr_files[];
 extern const char* crex_files[];
 extern const char* aof_files[];
 
-void _ensure_msg_undef(const Location& loc, const Message& msg, int shortcut);
-#define ensure_msg_undef(msg, id) dballe::tests::_ensure_msg_undef(wibble::tests::Location(__FILE__, __LINE__, #msg " has undefined " #id), (msg), (id))
-#define inner_ensure_msg_undef(msg, id) dballe::tests::_ensure_msg_undef(wibble::tests::Location(loc, __FILE__, __LINE__, #msg " has undefined " #id), (msg), (id))
+const wreport::Var& want_var(const Message& msg, int shortcut);
+const wreport::Var& want_var(const Message& msg, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr);
 
-const wreport::Var& _want_var(const Location& loc, const Message& msg, int shortcut);
-const wreport::Var& _want_var(const Location& loc, const Message& msg, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr);
-#define want_var(msg, ...) dballe::tests::_want_var(wibble::tests::Location(__FILE__, __LINE__, #msg " needs to have var " #__VA_ARGS__), (msg), __VA_ARGS__)
+inline ActualVar actual(const Message& message, int shortcut) { return ActualVar(want_var(message, shortcut)); }
+inline ActualVar actual(const Message& message, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr) { return ActualVar(want_var(message, code, lev, tr)); }
 
 void dump(const std::string& tag, const Message& msg, const std::string& desc="message");
 void dump(const std::string& tag, const Messages& msgs, const std::string& desc="message");
@@ -251,29 +221,26 @@ struct TestCodec
     std::string expected_template;
     int expected_subsets = 1;
     int expected_min_vars = 1;
-    int expected_type = MISSING_INT;
-    int expected_subtype = MISSING_INT;
-    int expected_localsubtype = MISSING_INT;
+    int expected_data_category = MISSING_INT;
+    int expected_data_subcategory = MISSING_INT;
+    int expected_data_subcategory_local = MISSING_INT;
     MessageTweakers after_reimport_import;
     MessageTweakers after_reimport_reimport;
     MessageTweakers after_convert_import;
     MessageTweakers after_convert_reimport;
 
-    void do_compare(WIBBLE_TEST_LOCPRM, const TestMessage& msg1, const TestMessage& msg2);
+    void do_compare(const TestMessage& msg1, const TestMessage& msg2);
 
     TestCodec(const std::string& fname, File::Encoding type=File::BUFR);
 
     void configure_ecmwf_to_wmo_tweaks();
 
     // "import, export, import again, compare" test
-    void run_reimport(WIBBLE_TEST_LOCPRM);
+    void run_reimport();
 
     // "import, export as different template, import again, compare" test
-    void run_convert(WIBBLE_TEST_LOCPRM, const std::string& tplname);
+    void run_convert(const std::string& tplname);
 };
-
-#define TEST_reimport(obj) obj.run_reimport(wibble::tests::Location(__FILE__, __LINE__, #obj ".run_reimport"))
-#define TEST_convert(obj, tpl) obj.run_convert(wibble::tests::Location(__FILE__, __LINE__, #obj ".run_convert " tpl), tpl)
 
 
 #if 0

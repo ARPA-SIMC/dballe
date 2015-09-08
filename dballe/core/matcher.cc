@@ -55,6 +55,17 @@ matcher::Result Matched::lon_in_range(int val, int min, int max)
 
 namespace matcher {
 
+std::string result_format(Result res)
+{
+    switch (res)
+    {
+        case MATCH_YES: return "yes";
+        case MATCH_NO: return "no";
+        case MATCH_NA: return "n/a";
+    }
+    return "unknown";
+}
+
 struct And : public Matcher
 {
     /**

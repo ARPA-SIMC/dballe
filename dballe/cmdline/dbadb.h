@@ -31,26 +31,6 @@ struct DB;
 
 namespace cmdline {
 
-namespace dbadb {
-
-/**
- * Parse a report name from command line.
- *
- * If \a name is NULL or the empty string, it returns NULL to signal that no
- * value was provided.
- *
- * Raises an exception if \a name is not the empty string and an invalid report
- * name.
- *
- * @param name
- *   String with a report number or name
- * @returns
- *   The validated report name, or NULL if \a name was the empty string.
- */
-const char* parse_op_report(DB& db, const char* name=NULL);
-
-}
-
 class Dbadb
 {
 protected:

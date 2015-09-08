@@ -13,7 +13,7 @@ namespace dballe {
 /**
  * Value to use for missing parts of level and time range values
  */
-static const int MISSING_INT = INT_MAX;
+static constexpr int MISSING_INT = INT_MAX;
 
 /**
  * Calendar date.
@@ -390,9 +390,9 @@ struct Coords
 struct LatRange
 {
     /// Minimum possible integer value
-    static const int IMIN = -9000000;
+    static constexpr int IMIN = -9000000;
     /// Maximum possible integer value
-    static const int IMAX = 9000000;
+    static constexpr int IMAX = 9000000;
     /// Minimum possible double value
     static constexpr double DMIN = -90.0;
     /// Maximum possible double value

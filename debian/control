@@ -7,7 +7,6 @@ Build-Depends: debhelper (>= 9), dh-python, dh-autoreconf,
   libsqlite3-dev,
   libwreport-dev (>= 3.0), libpopt-dev, unixodbc-dev, gperf, liblua5.1-0-dev,
   libcnf-dev, gfortran | g77,
-  libwibble-dev (>= 1.0), libwibble-dev (<< 2.0),
   doxygen-latex, ghostscript,
   python-all-dev, python3-all-dev, python-docutils, python-numpy, python3-numpy,
   python-six, python3-six
