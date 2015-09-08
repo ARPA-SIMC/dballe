@@ -743,11 +743,11 @@ void TestCodec::run_reimport()
     }
 
     if (expected_data_category != MISSING_INT)
-        wassert(actual(final.bulletin->data_category) == expected_data_category);
+        wassert(actual((unsigned)final.bulletin->data_category) == expected_data_category);
     if (expected_data_subcategory != MISSING_INT)
-        wassert(actual(final.bulletin->data_subcategory) == expected_data_subcategory);
+        wassert(actual((unsigned)final.bulletin->data_subcategory) == expected_data_subcategory);
     if (expected_data_subcategory_local != MISSING_INT)
-        wassert(actual(final.bulletin->data_subcategory_local) == expected_data_subcategory_local);
+        wassert(actual((unsigned)final.bulletin->data_subcategory_local) == expected_data_subcategory_local);
 }
 
 void TestCodec::run_convert(const std::string& tplname)

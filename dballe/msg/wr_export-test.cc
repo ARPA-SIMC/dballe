@@ -263,9 +263,10 @@ class Tests : public TestCase
         });
         add_testcodec("synop-rad2.bufr", [](TestCodec& test) {
             // Test import/export of GTS synop without pressure of standard level
+            // FIXME: currently fails
             test.expected_template = "synop-wmo";
             test.expected_min_vars = 50;
-            test.verbose = true;
+            //test.verbose = true;
 
             wassert(test.run_reimport());
             wassert(test.run_convert("synop-wmo"));
@@ -279,6 +280,7 @@ class Tests : public TestCase
         });
         add_testcodec("temp-timesig18.bufr", [](TestCodec& test) {
             // FIXME: temp message with data category 0: what do we do with it?
+            // FIXME: currently fails
             test.expected_min_vars = 50;
             test.expected_template = "temp-wmo";
 
@@ -461,10 +463,12 @@ class Tests : public TestCase
 #endif
         // New style AMDAR
         add_testcodec("gts-amdar1.bufr", [](TestCodec& test) {
+            // FIXME: currently fails
             wassert(test.run_reimport());
             wassert(test.run_convert("amdar-wmo"));
         });
         add_testcodec("gts-amdar2.bufr", [](TestCodec& test) {
+            // FIXME: currently fails
             wassert(test.run_reimport());
             wassert(test.run_convert("amdar-wmo"));
         });
@@ -629,8 +633,8 @@ class Tests : public TestCase
         // New style PILOT
         add_testcodec("pilot-gts1.bufr", [](TestCodec& test) {
             test.expected_data_category = 2;
-            test.expected_data_subcategory = 2;
-            test.expected_data_subcategory_local = 255;
+            test.expected_data_subcategory = 1;
+            test.expected_data_subcategory_local = 211;
 
             wassert(test.run_reimport());
             wassert(test.run_convert("pilot-wmo"));

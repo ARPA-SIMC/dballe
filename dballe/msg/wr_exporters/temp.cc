@@ -430,7 +430,7 @@ struct TempRadar : public TempBase
                 if (const wreport::Var *var = c->find(code))
                 {
                     add(code, var);
-                    add(code, var->enqa(WR_VAR(0, 33,  2)));
+                    add(WR_VAR(0, 33, 2), var->enqa(WR_VAR(0, 33,  2)));
                 } else {
                     subset.store_variable_undef(code);
                     subset.store_variable_undef(WR_VAR(0, 33,   2));
