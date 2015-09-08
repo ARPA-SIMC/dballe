@@ -49,7 +49,7 @@ class Tests : public TestCase
             wassert(actual(msg.index) == 0);
             wassert(actual(msg.offset) == 140);
         });
-        Test("parse_encoding", [](Fixture&f) {
+        add_method("parse_encoding", []() {
             // Parse encoding test
             wassert(File::parse_encoding("BUFR") == File::BUFR);
             wassert(File::parse_encoding("bufr") == File::BUFR);
@@ -60,7 +60,7 @@ class Tests : public TestCase
             wassert(File::parse_encoding("AOF") == File::AOF);
             wassert(File::parse_encoding("aof") == File::AOF);
             wassert(File::parse_encoding("AoF") == File::AOF);
-        }),
+        });
     }
 } test("dballe_file");
 
