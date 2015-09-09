@@ -3,6 +3,7 @@
 #include "core/aoffile.h"
 #include <wreport/error.h>
 #include <wreport/bulletin.h>
+#include <wreport/utils/string.h>
 #include <cstring>
 #include <cstdio>
 #include <algorithm>
@@ -37,8 +38,7 @@ File::Encoding File::parse_encoding(const char* s)
 
 File::Encoding File::parse_encoding(const std::string& s)
 {
-    std::string str;
-    std::transform(s.begin(), s.end(), std::back_inserter(str), ::toupper);
+    std::string str = wreport::str::upper(s);
     if (str == "BUFR") return BUFR;
     if (str == "CREX") return CREX;
     if (str == "AOF")  return AOF;
