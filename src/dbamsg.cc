@@ -321,12 +321,8 @@ struct JSONMsgs : public cmdline::Action
 {
     core::JSONWriter json;
 
-    JSONMsgs() : json(cout) {
-        json.start_list();
-    }
-    ~JSONMsgs() {
-        json.end_list();
-    }
+    JSONMsgs() : json(cout) {}
+    ~JSONMsgs() { cout << flush; }
 
     virtual bool operator()(const cmdline::Item& item)
     {
@@ -381,6 +377,7 @@ struct JSONMsgs : public cmdline::Action
             }
             json.end_list();
             json.end_mapping();
+            json.add_break();
         }
         return true;
     }
