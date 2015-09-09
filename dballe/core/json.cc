@@ -7,7 +7,7 @@ using namespace std;
 namespace dballe {
 namespace core {
 
-JSONWriter::JSONWriter(std::string& out) : out(out) {}
+JSONWriter::JSONWriter(std::ostream& out) : out(out) {}
 JSONWriter::~JSONWriter() {}
 
 void JSONWriter::reset()
@@ -22,10 +22,10 @@ void JSONWriter::val_head()
         switch (stack.back())
         {
             case LIST_FIRST: stack.back() = LIST; break;
-            case LIST: out += ','; break;
+            case LIST: out << ','; break;
             case MAPPING_KEY_FIRST: stack.back() = MAPPING_VAL; break;
-            case MAPPING_KEY: out += ','; stack.back() = MAPPING_VAL; break;
-            case MAPPING_VAL: out += ':'; stack.back() = MAPPING_KEY; break;
+            case MAPPING_KEY: out << ','; stack.back() = MAPPING_VAL; break;
+            case MAPPING_VAL: out << ':'; stack.back() = MAPPING_KEY; break;
         }
     }
 }
@@ -33,19 +33,19 @@ void JSONWriter::val_head()
 void JSONWriter::add_null()
 {
     val_head();
-    out += "null";
+    out << "null";
 }
 
 void JSONWriter::add_bool(bool val)
 {
     val_head();
-    out += val ? "true" : "false";
+    out << val ? "true" : "false";
 }
 
 void JSONWriter::add_int(int val)
 {
     val_head();
-    out += to_string(val);
+    out << to_string(val);
 }
 
 void JSONWriter::add_double(double val)
@@ -56,31 +56,31 @@ void JSONWriter::add_double(double val)
     vfrac = modf(val, &vint);
     if (vfrac == 0.0)
     {
-        out += to_string((int)vint);
-        out += ".0";
+        out << to_string((int)vint);
+        out << ".0";
     }
     else
-        out += to_string(val);
+        out << to_string(val);
 }
 
 void JSONWriter::add_cstring(const char* val)
 {
     val_head();
-    out += '"';
+    out << '"';
     for ( ; *val; ++val)
         switch (*val)
         {
-            case '"': out += "\\\""; break;
-            case '\\': out += "\\\\"; break;
-            case '/': out += "\\/"; break;
-            case '\b': out += "\\b"; break;
-            case '\f': out += "\\f"; break;
-            case '\n': out += "\\n"; break;
-            case '\r': out += "\\r"; break;
-            case '\t': out += "\\t"; break;
-            default: out += *val; break;
+            case '"': out << "\\\""; break;
+            case '\\': out << "\\\\"; break;
+            case '/': out << "\\/"; break;
+            case '\b': out << "\\b"; break;
+            case '\f': out << "\\f"; break;
+            case '\n': out << "\\n"; break;
+            case '\r': out << "\\r"; break;
+            case '\t': out << "\\t"; break;
+            default: out << *val; break;
         }
-    out += '"';
+    out << '"';
 }
 
 void JSONWriter::add_string(const std::string& val)
@@ -135,26 +135,26 @@ void JSONWriter::add_datetime(const Datetime& val)
 void JSONWriter::start_list()
 {
     val_head();
-    out += '[';
+    out << '[';
     stack.push_back(LIST_FIRST);
 }
 
 void JSONWriter::end_list()
 {
-    out += ']';
+    out << ']';
     stack.pop_back();
 }
 
 void JSONWriter::start_mapping()
 {
     val_head();
-    out += '{';
+    out << '{';
     stack.push_back(MAPPING_KEY_FIRST);
 }
 
 void JSONWriter::end_mapping()
 {
-    out += '}';
+    out << '}';
     stack.pop_back();
 }
 
