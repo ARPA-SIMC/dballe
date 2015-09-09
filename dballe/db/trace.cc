@@ -126,15 +126,15 @@ void Trace::read_argv()
 void Trace::output_abort()
 {
     writer.reset();
-    json_buf.clear();
+    json_buf.str("");
 }
 
 void Trace::output_flush()
 {
-    fputs(json_buf.c_str(), out);
+    fputs(json_buf.str().c_str(), out);
     putc('\n', out);
     writer.reset();
-    json_buf.clear();
+    json_buf.str("");
 }
 
 Trace::Tracer Trace::trace_connect(const std::string& url)

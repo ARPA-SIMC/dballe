@@ -25,7 +25,7 @@
 #include <wreport/varinfo.h>
 #include <sys/types.h>
 #include <vector>
-#include <string>
+#include <sstream>
 #include <memory>
 #include <ctime>
 
@@ -49,7 +49,7 @@ protected:
     std::string db_url;
 
     // JSON output buffer, holding one JSON record
-    std::string json_buf;
+    std::stringstream json_buf;
 
     // JSON serializer
     core::JSONWriter writer;
