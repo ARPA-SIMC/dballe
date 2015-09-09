@@ -73,6 +73,9 @@ class Tests : public TestCase
             // A decimal
             bulletin->datadesc.push_back(WR_VAR(0, 1, 14));
             bulletin->obtain_subset(0).store_variable_d(WR_VAR(0, 1, 14), 3.14);
+            // An undefined variable
+            bulletin->datadesc.push_back(WR_VAR(0, 1, 2));
+            bulletin->obtain_subset(0).store_variable_undef(WR_VAR(0, 1, 2));
 
             MemStream out;
 
@@ -87,7 +90,7 @@ class Tests : public TestCase
                 str::Split split(string(out.buf, out.len), "\n");
                 std::copy(split.begin(), split.end(), std::back_inserter(lines));
             }
-            wassert(actual(lines.size()) == 20u);
+            wassert(actual(lines.size()) == 21u);
 
             wassert(actual(lines[ 0]) == R"("Field","Value")");
             wassert(actual(lines[ 1]) == R"("master_table_number",0)");
@@ -108,9 +111,10 @@ class Tests : public TestCase
             wassert(actual(lines[16]) == R"("B01001",14)");
             wassert(actual(lines[17]) == R"("B01006","EZ1234")");
             wassert(actual(lines[18]) == R"("B01014",3.14)");
+            wassert(actual(lines[19]) == R"("B01002",)");
             // Empty line because the last line ends with a newline and
             // str::Split sees it as a trailing empty token
-            wassert(actual(lines[19]) == R"()");
+            wassert(actual(lines[20]) == R"()");
 
             // Write the bulletin out again, to see that titles are not repeated
             writer.output_bulletin(*bulletin);
@@ -122,7 +126,7 @@ class Tests : public TestCase
                 std::copy(split.begin(), split.end(), std::back_inserter(lines));
             }
 
-            wassert(actual(lines.size()) == 38u);
+            wassert(actual(lines.size()) == 40u);
 
             wassert(actual(lines[ 0]) == R"("Field","Value")");
             wassert(actual(lines[ 1]) == R"("master_table_number",0)");
@@ -143,28 +147,30 @@ class Tests : public TestCase
             wassert(actual(lines[16]) == R"("B01001",14)");
             wassert(actual(lines[17]) == R"("B01006","EZ1234")");
             wassert(actual(lines[18]) == R"("B01014",3.14)");
+            wassert(actual(lines[19]) == R"("B01002",)");
 
-            wassert(actual(lines[19]) == R"("master_table_number",0)");
-            wassert(actual(lines[20]) == R"("data_category",0)");
-            wassert(actual(lines[21]) == R"("data_subcategory",1)");
-            wassert(actual(lines[22]) == R"("data_subcategory_local",2)");
-            wassert(actual(lines[23]) == R"("originating_centre",0)");
-            wassert(actual(lines[24]) == R"("originating_subcentre",0)");
-            wassert(actual(lines[25]) == R"("update_sequence_number",0)");
-            wassert(actual(lines[26]) == R"("representative_time","2015-04-25 12:30:45")");
-            wassert(actual(lines[27]) == R"("encoding","bufr")");
-            wassert(actual(lines[28]) == R"("edition_number",4)");
-            wassert(actual(lines[29]) == R"("master_table_version_number",14)");
-            wassert(actual(lines[30]) == R"("master_table_version_number_local",0)");
-            wassert(actual(lines[31]) == R"("compression","false")");
-            wassert(actual(lines[32]) == R"("optional_section",)");
-            wassert(actual(lines[33]) == R"("subset",1)");
-            wassert(actual(lines[34]) == R"("B01001",14)");
-            wassert(actual(lines[35]) == R"("B01006","EZ1234")");
-            wassert(actual(lines[36]) == R"("B01014",3.14)");
+            wassert(actual(lines[20]) == R"("master_table_number",0)");
+            wassert(actual(lines[21]) == R"("data_category",0)");
+            wassert(actual(lines[22]) == R"("data_subcategory",1)");
+            wassert(actual(lines[23]) == R"("data_subcategory_local",2)");
+            wassert(actual(lines[24]) == R"("originating_centre",0)");
+            wassert(actual(lines[25]) == R"("originating_subcentre",0)");
+            wassert(actual(lines[26]) == R"("update_sequence_number",0)");
+            wassert(actual(lines[27]) == R"("representative_time","2015-04-25 12:30:45")");
+            wassert(actual(lines[28]) == R"("encoding","bufr")");
+            wassert(actual(lines[29]) == R"("edition_number",4)");
+            wassert(actual(lines[30]) == R"("master_table_version_number",14)");
+            wassert(actual(lines[31]) == R"("master_table_version_number_local",0)");
+            wassert(actual(lines[32]) == R"("compression","false")");
+            wassert(actual(lines[33]) == R"("optional_section",)");
+            wassert(actual(lines[34]) == R"("subset",1)");
+            wassert(actual(lines[35]) == R"("B01001",14)");
+            wassert(actual(lines[36]) == R"("B01006","EZ1234")");
+            wassert(actual(lines[37]) == R"("B01014",3.14)");
+            wassert(actual(lines[38]) == R"("B01002",)");
             // Empty line because the last line ends with a newline and
             // str::Split sees it as a trailing empty token
-            wassert(actual(lines[37]) == R"()");
+            wassert(actual(lines[39]) == R"()");
         });
     }
 } test("msg_bulletin");

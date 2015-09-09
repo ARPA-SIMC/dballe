@@ -34,15 +34,22 @@ struct Writer : public CSVWriter
             code += ".";
         }
         code += varcode_format(var.code());
-        switch (var.info()->type)
+        if (var.isset())
         {
-            case Vartype::Integer: add_keyval(code.c_str(), var.enqi()); break;
-            case Vartype::Decimal:
-                add_value(code.c_str());
-                add_value_raw(var.format(""));
-                flush_row();
-                break;
-            default: add_keyval(code.c_str(), var.format("")); break;
+            switch (var.info()->type)
+            {
+                case Vartype::Integer: add_keyval(code.c_str(), var.enqi()); break;
+                case Vartype::Decimal:
+                    add_value(code.c_str());
+                    add_value_raw(var.format(""));
+                    flush_row();
+                    break;
+                default: add_keyval(code.c_str(), var.format("")); break;
+            }
+        } else {
+            add_value(code.c_str());
+            add_value_empty();
+            flush_row();
         }
     }
 
