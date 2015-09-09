@@ -34,7 +34,16 @@ struct Writer : public CSVWriter
             code += ".";
         }
         code += varcode_format(var.code());
-        add_keyval(code.c_str(), var.format(""));
+        switch (var.info()->type)
+        {
+            case Vartype::Integer: add_keyval(code.c_str(), var.enqi()); break;
+            case Vartype::Decimal:
+                add_value(code.c_str());
+                add_value_raw(var.format(""));
+                flush_row();
+                break;
+            default: add_keyval(code.c_str(), var.format("")); break;
+        }
     }
 
     void print_subsets(const Bulletin& braw)
@@ -76,7 +85,7 @@ struct Writer : public CSVWriter
         add_keyval("originating_subcentre", bul.originating_subcentre);
         add_keyval("update_sequence_number", bul.update_sequence_number);
         char buf[30];
-        snprintf(buf, 29, "%hu-%hhu-%hhu %hhu:%hhu:%hhu",
+        snprintf(buf, 29, "%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu",
                 bul.rep_year, bul.rep_month, bul.rep_day,
                 bul.rep_hour, bul.rep_minute, bul.rep_second);
         add_keyval("representative_time", buf);

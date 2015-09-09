@@ -84,6 +84,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	memdb/memdb.h \
 	memdb/serializer.h \
 	msg/codec.h \
+	msg/bulletin.h \
 	msg/context.h \
 	msg/vars.h \
 	msg/msg.h \
@@ -194,6 +195,7 @@ libdballe_la_SOURCES = \
 	memdb/value.cc \
 	memdb/memdb.cc \
 	memdb/serializer.cc \
+	msg/bulletin.cc \
 	msg/vars.cc \
 	msg/context.cc \
 	msg/msg.cc \
@@ -358,6 +360,7 @@ test_dballe_SOURCES = \
 	memdb/memdb-test.cc \
 	memdb/serializer-test.cc \
 	msg/tests.cc \
+	msg/bulletin-test.cc \
 	msg/vars-test.cc \
 	msg/context-test.cc \
 	msg/codec-test.cc \
