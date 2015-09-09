@@ -2,6 +2,7 @@
 #define DBALLE_CORE_JSON_H
 
 #include <wreport/varinfo.h>
+#include <wreport/var.h>
 #include <dballe/core/defs.h>
 #include <vector>
 #include <ostream>
@@ -63,6 +64,8 @@ public:
     void add_trange(const Trange& val);
     void add_datetime(const Datetime& val);
     void add_coords(const Coords& val);
+    void add_number(const std::string& val);
+    void add_var(const wreport::Var& val);
 
     void add(const std::string& val) { add_string(val); }
     void add(const char* val) { add_cstring(val); }
@@ -74,6 +77,7 @@ public:
     void add(const Trange& val) { add_trange(val); }
     void add(const Datetime& val) { add_datetime(val); }
     void add(const Coords& val) { add_coords(val); }
+    void add(const wreport::Var& val) { add_var(val); }
 
     // Shortcut to add a mapping, which also ensures that the key is a string
     template<typename T>
