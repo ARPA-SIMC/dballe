@@ -39,7 +39,7 @@ void JSONWriter::add_null()
 void JSONWriter::add_bool(bool val)
 {
     val_head();
-    out << val ? "true" : "false";
+    out << (val ? "true" : "false" );
 }
 
 void JSONWriter::add_int(int val)
