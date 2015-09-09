@@ -66,6 +66,7 @@ public:
     void add_coords(const Coords& val);
     void add_number(const std::string& val);
     void add_var(const wreport::Var& val);
+    void add_break();
 
     void add(const std::string& val) { add_string(val); }
     void add(const char* val) { add_cstring(val); }

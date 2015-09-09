@@ -150,6 +150,10 @@ void JSONWriter::add_var(const wreport::Var& val) {
     }
 }
 
+void JSONWriter::add_break() {
+    out << "\n";
+}
+
 void JSONWriter::start_list()
 {
     val_head();
