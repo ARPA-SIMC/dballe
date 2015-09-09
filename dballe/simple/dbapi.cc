@@ -16,14 +16,20 @@ namespace fortran {
 
 struct InputFile
 {
-    File* input;
-    msg::Importer* importer;
+    File* input = nullptr;
+    msg::Importer* importer = nullptr;
     Messages current_msg;
-    unsigned current_msg_idx;
-    int import_flags;
+    unsigned current_msg_idx = 0;
+    int import_flags = 0;
 
+    InputFile(File::Encoding format, bool simplified)
+    {
+        msg::Importer::Options importer_options;
+        importer_options.simplified = simplified;
+        input = File::create(format, stdin, false, "(stdin)").release();
+        importer = msg::Importer::create(format, importer_options).release();
+    }
     InputFile(const char* fname, File::Encoding format, bool simplified)
-        : input(0), importer(0), current_msg_idx(0), import_flags(0)
     {
         msg::Importer::Options importer_options;
         importer_options.simplified = simplified;
@@ -67,10 +73,13 @@ struct InputFile
 
 struct OutputFile
 {
-    File* output;
+    File* output = nullptr;
 
+    OutputFile(const char* mode, File::Encoding format)
+    {
+        output = File::create(format, stdout, false, "(stdout)").release();
+    }
     OutputFile(const char* fname, const char* mode, File::Encoding format)
-        : output(0)
     {
         output = File::create(format, fname, mode).release();
     }
@@ -425,7 +434,10 @@ void DbAPI::messages_open_input(const char* filename, const char* mode, File::En
     }
 
     // Open new one and set import options
-    input_file = new InputFile(filename, format, simplified);
+    if (*filename)
+        input_file = new InputFile(filename, format, simplified);
+    else
+        input_file = new InputFile(format, simplified);
 
     input_file->import_flags |= DBA_IMPORT_FULL_PSEUDOANA;
     if (perms & PERM_ATTR_WRITE)
@@ -446,7 +458,10 @@ void DbAPI::messages_open_output(const char* filename, const char* mode, File::E
         output_file = 0;
     }
 
-    output_file = new OutputFile(filename, mode, format);
+    if (*filename)
+        output_file = new OutputFile(filename, mode, format);
+    else
+        output_file = new OutputFile(mode, format);
 }
 
 bool DbAPI::messages_read_next()
