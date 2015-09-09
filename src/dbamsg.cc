@@ -5,6 +5,7 @@
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
 #include "dballe/msg/aof_codec.h"
+#include "dballe/msg/bulletin.h"
 #include "dballe/record.h"
 #include "dballe/file.h"
 #include "dballe/core/query.h"
@@ -272,95 +273,15 @@ static void dump_dba_vars(const Subset& msg)
  */
 struct CSVBulletin : public cmdline::Action
 {
-    bool first;
-    FileCSV out;
+    msg::BulletinCSVWriter writer;
 
-    CSVBulletin() : first(true), out(stdout) {}
-
-    void print_var(const Var& var, const Var* parent=0)
-    {
-        string code;
-        if (parent)
-        {
-            code += varcode_format(parent->code());
-            code += ".";
-        }
-        code += varcode_format(var.code());
-        add_keyval(code.c_str(), var.format(""));
-    }
-
-    void print_subsets(const Bulletin& braw)
-    {
-        for (size_t i = 0; i < braw.subsets.size(); ++i)
-        {
-            const Subset& s = braw.subsets[i];
-            add_keyval("subset", i + 1);
-            for (size_t i = 0; i < s.size(); ++i)
-            {
-                print_var(s[i]);
-                for (const Var* a = s[i].next_attr(); a != NULL; a = a->next_attr())
-                    print_var(*a, &(s[i]));
-            }
-        }
-    }
-
-    void add_keyval(const char* key, unsigned val)
-    {
-        out.add_value(key);
-        out.add_value(val);
-        out.flush_row();
-    }
-
-    void add_keyval(const char* key, const std::string& val)
-    {
-        out.add_value(key);
-        out.add_value(val);
-        out.flush_row();
-    }
+    CSVBulletin() : writer(stdout) {}
 
     virtual bool operator()(const cmdline::Item& item)
     {
         if (!item.rmsg) return false;
-        if (first)
-        {
-            // Column titles
-            out.add_value("Field");
-            out.add_value("Value");
-            out.flush_row();
-            first = false;
-        }
         if (!item.bulletin) return false;
-        const Bulletin& bul = *item.bulletin;
-        add_keyval("master_table_number", bul.master_table_number);
-        add_keyval("data_category", bul.data_category);
-        add_keyval("data_subcategory", bul.data_subcategory);
-        add_keyval("data_subcategory_local", bul.data_subcategory_local);
-        add_keyval("originating_centre", bul.originating_centre);
-        add_keyval("originating_subcentre", bul.originating_subcentre);
-        add_keyval("update_sequence_number", bul.update_sequence_number);
-        char buf[30];
-        snprintf(buf, 29, "%hu-%hhu-%hhu %hhu:%hhu:%hhu",
-                bul.rep_year, bul.rep_month, bul.rep_day,
-                bul.rep_hour, bul.rep_minute, bul.rep_second);
-        add_keyval("representative_time", buf);
-        if (const BufrBulletin* b = dynamic_cast<const BufrBulletin*>(item.bulletin))
-        {
-            add_keyval("encoding", "bufr");
-            add_keyval("edition_number", b->edition_number);
-            add_keyval("master_table_version_number", b->master_table_version_number);
-            add_keyval("master_table_version_number_local", b->master_table_version_number_local);
-            add_keyval("compression", b->compression ? "true" : "false");
-            add_keyval("optional_section", b->optional_section);
-        } else if (const CrexBulletin* b = dynamic_cast<const CrexBulletin*>(item.bulletin)) {
-            add_keyval("encoding", "crex");
-            add_keyval("edition_number", b->edition_number);
-            add_keyval("master_table_version_number", b->master_table_version_number);
-            add_keyval("master_table_version_number_bufr", b->master_table_version_number_bufr);
-            add_keyval("master_table_version_number_local", b->master_table_version_number_local);
-            add_keyval("has_check_digit", b->has_check_digit ? "true" : "false");
-        } else
-            throw error_consistency("encoding not supported for CSV dump");
-        print_subsets(*item.bulletin);
+        writer.output_bulletin(*item.bulletin);
         return true;
     }
 };

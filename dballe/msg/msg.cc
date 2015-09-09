@@ -23,7 +23,7 @@
 #include "context.h"
 #include "dballe/msg/vars.h"
 #include "dballe/core/var.h"
-#include <dballe/core/csv.h>
+#include "dballe/core/csv.h"
 #include <wreport/codetables.h>
 #include <wreport/notes.h>
 
