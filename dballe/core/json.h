@@ -4,7 +4,7 @@
 #include <wreport/varinfo.h>
 #include <dballe/core/defs.h>
 #include <vector>
-#include <string>
+#include <ostream>
 
 namespace dballe {
 namespace core {
@@ -28,7 +28,7 @@ protected:
         MAPPING_KEY,
         MAPPING_VAL,
     };
-    std::string& out;
+    std::ostream& out;
     std::vector<State> stack;
 
     /// Append whatever separator is needed (if any) before a new value
@@ -38,7 +38,7 @@ protected:
     void jputs(const char* s);
 
 public:
-    JSONWriter(std::string& out);
+    JSONWriter(std::ostream& out);
     ~JSONWriter();
 
     /**
