@@ -132,6 +132,24 @@ void JSONWriter::add_datetime(const Datetime& val)
     }
 }
 
+void JSONWriter::add_number(const std::string& val) {
+    val_head();
+    out << val;
+}
+
+void JSONWriter::add_var(const wreport::Var& val) {
+    if (val.isset()) {
+        if (val.info()->type == wreport::Vartype::String ||
+            val.info()->type == wreport::Vartype::Binary) {
+            add_string(val.format());
+        } else {
+            add_number(val.format());
+        }
+    } else {
+        add_null();
+    }
+}
+
 void JSONWriter::start_list()
 {
     val_head();
