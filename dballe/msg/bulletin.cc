@@ -2,6 +2,7 @@
 #include "dballe/core/csv.h"
 #include <wreport/bulletin.h>
 #include <wreport/var.h>
+#include <wreport/utils/string.h>
 #include <string>
 
 using namespace std;
@@ -103,7 +104,7 @@ struct Writer : public CSVWriter
             add_keyval("master_table_version_number", b->master_table_version_number);
             add_keyval("master_table_version_number_local", b->master_table_version_number_local);
             add_keyval("compression", b->compression ? "true" : "false");
-            add_keyval("optional_section", b->optional_section);
+            add_keyval("optional_section", str::encode_cstring(b->optional_section));
         } else if (const CrexBulletin* b = dynamic_cast<const CrexBulletin*>(&bul)) {
             add_keyval("encoding", "crex");
             add_keyval("edition_number", b->edition_number);
