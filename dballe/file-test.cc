@@ -51,15 +51,15 @@ class Tests : public TestCase
         });
         add_method("parse_encoding", []() {
             // Parse encoding test
-            wassert(File::parse_encoding("BUFR") == File::BUFR);
-            wassert(File::parse_encoding("bufr") == File::BUFR);
-            wassert(File::parse_encoding("Bufr") == File::BUFR);
-            wassert(File::parse_encoding("CREX") == File::CREX);
-            wassert(File::parse_encoding("crex") == File::CREX);
-            wassert(File::parse_encoding("CreX") == File::CREX);
-            wassert(File::parse_encoding("AOF") == File::AOF);
-            wassert(File::parse_encoding("aof") == File::AOF);
-            wassert(File::parse_encoding("AoF") == File::AOF);
+            wassert(actual(File::parse_encoding("BUFR")) == File::BUFR);
+            wassert(actual(File::parse_encoding("bufr")) == File::BUFR);
+            wassert(actual(File::parse_encoding("Bufr")) == File::BUFR);
+            wassert(actual(File::parse_encoding("CREX")) == File::CREX);
+            wassert(actual(File::parse_encoding("crex")) == File::CREX);
+            wassert(actual(File::parse_encoding("CreX")) == File::CREX);
+            wassert(actual(File::parse_encoding("AOF")) == File::AOF);
+            wassert(actual(File::parse_encoding("aof")) == File::AOF);
+            wassert(actual(File::parse_encoding("AoF")) == File::AOF);
         });
     }
 } test("dballe_file");
