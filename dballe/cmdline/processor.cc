@@ -384,6 +384,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
         enum State {
             MSG,
             MSG_IDENT_KEY,
+            MSG_VERSION_KEY,
             MSG_NETWORK_KEY,
             MSG_LON_KEY,
             MSG_LAT_KEY,
@@ -659,6 +660,8 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                 case MSG:
                     if (val == "ident")
                         state.push(MSG_IDENT_KEY);
+                    else if (val == "version")
+                        state.push(MSG_VERSION_KEY);
                     else if (val == "network")
                         state.push(MSG_NETWORK_KEY);
                     else if (val == "lon")
@@ -674,6 +677,11 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     break;
                 case MSG_IDENT_KEY:
                     msg.set_ident(val.c_str());
+                    state.pop();
+                    break;
+                case MSG_VERSION_KEY:
+                    if (strcmp(val.c_str(), DBALLE_JSON_VERSION) != 0)
+                        throw std::runtime_error("Invalid JSON version " + val);
                     state.pop();
                     break;
                 case MSG_NETWORK_KEY:
