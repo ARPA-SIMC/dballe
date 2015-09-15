@@ -259,7 +259,7 @@ struct ImportCmd : public DatabaseCmd
     {
         DatabaseCmd::add_to_optable(opts);
         opts.push_back({ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
-            "format of the input data ('bufr', 'crex', 'aof', 'csv')", "type" });
+            "format of the input data ('bufr', 'crex', 'aof', 'csv', 'json')", "type" });
         opts.push_back({ "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ "overwrite", 'f', POPT_ARG_NONE, &op_overwrite, 0,

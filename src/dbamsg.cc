@@ -12,6 +12,7 @@
 #include "dballe/core/aoffile.h"
 #include "dballe/core/matcher.h"
 #include "dballe/core/csv.h"
+#include "dballe/core/json.h"
 #include "dballe/core/var.h"
 #include "dballe/cmdline/cmdline.h"
 #include "dballe/cmdline/processor.h"
@@ -30,6 +31,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sstream>
 
 using namespace wreport;
 using namespace dballe;
@@ -39,6 +41,7 @@ using namespace std;
 static int op_dump_interpreted = 0;
 static int op_dump_text = 0;
 static int op_dump_csv = 0;
+static int op_dump_json = 0;
 static int op_dump_dds = 0;
 static int op_dump_structured = 0;
 static int op_precise_import = 0;
@@ -311,6 +314,74 @@ struct CSVMsgs : public cmdline::Action
     }
 };
 
+/**
+ * Print a Msgs in JSON format
+ */
+struct JSONMsgs : public cmdline::Action
+{
+    core::JSONWriter json;
+
+    JSONMsgs() : json(cout) {}
+    ~JSONMsgs() { cout << flush; }
+
+    virtual bool operator()(const cmdline::Item& item)
+    {
+        if (!item.msgs) return false;
+
+        for (const auto& mi: *item.msgs) {
+            const Msg& msg = Msg::downcast(mi);
+            json.start_mapping();
+            json.add("network");
+            json.add(msg.get_rep_memo_var() ? msg.get_rep_memo_var()->enqc() : dballe::Msg::repmemo_from_type(msg.type));
+            json.add("ident");
+            if (msg.get_ident_var() != NULL)
+                json.add(msg.get_ident_var()->enqc());
+            else
+                json.add_null();
+            json.add("lon");
+            json.add_int(msg.get_longitude_var()->enqi());
+            json.add("lat");
+            json.add_int(msg.get_latitude_var()->enqi());
+            json.add("date");
+            std::stringstream ss;
+            msg.get_datetime().to_stream_iso8601(ss, 'T', "Z");
+            json.add(ss.str().c_str());
+            json.add("data");
+            json.start_list();
+            for (const auto& ctx: msg.data) {
+                json.start_mapping();
+                if (not ctx->is_station()) {
+                    json.add("timerange");
+                    json.add(ctx->trange);
+                    json.add("level");
+                    json.add(ctx->level);
+                }
+                json.add("vars");
+                json.start_mapping();
+                for (const auto& var: ctx->data) {
+                    json.add(wreport::varcode_format(var->code()));
+                    json.start_mapping();
+                    json.add("v");
+                    json.add(*var);
+                    json.add("a");
+                    json.start_mapping();
+                    for (const Var* attr = var->next_attr(); attr; attr = attr->next_attr()) {
+                        json.add(wreport::varcode_format(attr->code()));
+                        json.add(*attr);
+                    }
+                    json.end_mapping();
+                    json.end_mapping();
+                }
+                json.end_mapping();
+                json.end_mapping();
+            }
+            json.end_list();
+            json.end_mapping();
+            json.add_break();
+        }
+        return true;
+    }
+};
 
 struct DumpMessage : public cmdline::Action
 {
@@ -597,6 +668,8 @@ struct Dump : public cmdline::Subcommand
             "dump as text that can be processed by dbamsg makebufr", 0 });
         opts.push_back({ "csv", 0, 0, &op_dump_csv, 0,
             "dump in machine readable CSV format", 0 });
+        opts.push_back({ "json", 0, 0, &op_dump_json, 0,
+            "dump in machine readable JSON format", 0 });
         opts.push_back({ "dds", 0, 0, &op_dump_dds, 0,
             "dump structure of data description section", 0 });
         opts.push_back({ "structured", 0, 0, &op_dump_structured, 0,
@@ -615,6 +688,8 @@ struct Dump : public cmdline::Subcommand
             else
                 action.reset(new CSVBulletin);
         }
+        else if (op_dump_json)
+            action.reset(new JSONMsgs);
         else if (op_dump_interpreted)
             action.reset(new DumpCooked);
         else if (op_dump_text)

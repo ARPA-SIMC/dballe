@@ -132,6 +132,7 @@ class Reader
 {
 protected:
     void read_csv(const std::list<std::string>& fnames, Action& action);
+    void read_json(const std::list<std::string>& fnames, Action& action);
     void read_file(const std::list<std::string>& fnames, Action& action);
 
 public:
