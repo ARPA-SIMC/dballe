@@ -8,6 +8,7 @@
 #include <dballe/msg/codec.h>
 #include <dballe/db/db.h>
 #include <wreport/error.h>
+#include <wreport/utils/string.h>
 
 #include <cstdlib>
 #include <cstring>
@@ -302,7 +303,9 @@ struct ImportCmd : public DatabaseCmd
 
         unique_ptr<DB> db = connect();
 
-        const char* forced_repmemo = op_report;
+        const char* forced_repmemo = NULL;
+        if (strcmp(op_report, "") != 0)
+            forced_repmemo = op_report;
 
         Dbadb dbadb(*db);
         return dbadb.do_import(get_filenames(optCon), reader, import_flags, forced_repmemo);
@@ -353,13 +356,17 @@ struct ExportCmd : public DatabaseCmd
         unique_ptr<DB> db = connect();
         Dbadb dbadb(*db);
 
+        const char* forced_repmemo = NULL;
+        if (strcmp(op_report, "") != 0)
+            forced_repmemo = op_report;
+
         if (op_dump)
         {
             return dbadb.do_export_dump(query, stdout);
         } else {
             File::Encoding type = File::parse_encoding(op_output_type);
             unique_ptr<File> file = File::create(type, stdout, false, "w");
-            return dbadb.do_export(query, *file, op_output_template, op_report);
+            return dbadb.do_export(query, *file, op_output_template, forced_repmemo);
         }
     }
 };
