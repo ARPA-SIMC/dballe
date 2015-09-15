@@ -325,7 +325,7 @@ dist_noinst_HEADERS = \
 	db/tests.h
 
 test_dballe_SOURCES = \
-	tests-main.cpp \
+	tests-main.cc \
 	core/tests.cc \
 	file-test.cc \
 	message-test.cc \
