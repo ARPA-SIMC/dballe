@@ -37,7 +37,7 @@ struct Fixture : DriverFixture
         repinfo->update(nullptr, &added, &deleted, &updated);
     }
 
-    void test_setup() override
+    void test_setup()
     {
         DriverFixture::test_setup();
         reset_repinfo();

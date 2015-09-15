@@ -140,7 +140,7 @@ struct DriverFixture : public Fixture
     DriverFixture(const char* backend, db::Format format);
     ~DriverFixture();
 
-    void test_setup() override;
+    void test_setup();
 };
 
 #if 0
@@ -177,7 +177,7 @@ struct DBFixture : public Fixture
     /// Open a new DB with the backend and format specified in this fixture
     std::unique_ptr<DB> create_db();
 
-    void test_setup() override;
+    void test_setup();
 
     template<typename DataSet>
     void populate()

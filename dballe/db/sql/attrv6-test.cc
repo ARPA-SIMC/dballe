@@ -69,7 +69,7 @@ struct Fixture : DriverFixture
         t->commit();
     }
 
-    void test_setup() override
+    void test_setup()
     {
         DriverFixture::test_setup();
         attr = driver->create_attrv6();

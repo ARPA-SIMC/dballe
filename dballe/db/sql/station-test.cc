@@ -33,7 +33,7 @@ struct Fixture : DriverFixture
         }
     }
 
-    void test_setup() override
+    void test_setup()
     {
         DriverFixture::test_setup();
         reset_station();

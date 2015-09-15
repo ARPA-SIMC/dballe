@@ -18,7 +18,7 @@ struct SQLiteFixture : Fixture
         conn.open_memory();
     }
 
-    void test_setup() override
+    void test_setup()
     {
         Fixture::test_setup();
         conn.drop_table_if_exists("dballe_test");

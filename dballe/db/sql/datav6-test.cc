@@ -41,7 +41,7 @@ struct Fixture : DriverFixture
         wassert(actual(lt->obtain_id(Level(2, 3, 1, 4), Trange(5, 6, 7))) == 2);
     }
 
-    void test_setup() override
+    void test_setup()
     {
         DriverFixture::test_setup();
         data = driver->create_datav6();

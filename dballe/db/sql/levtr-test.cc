@@ -24,7 +24,7 @@ struct Fixture : DriverFixture
         levtr = driver->create_levtrv6();
     }
 
-    void test_setup() override
+    void test_setup()
     {
         DriverFixture::test_setup();
         reset_levtr();

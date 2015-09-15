@@ -17,12 +17,11 @@ struct Fixture : public dballe::tests::Fixture
 {
     string testdir = "serializer_test_dir";
 
-    void test_setup() override
+    void test_setup()
     {
         if (sys::isdir(testdir))
             sys::rmtree(testdir);
     }
-
 };
 
 struct Tests : public FixtureTestCase<Fixture>
