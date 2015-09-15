@@ -1,13 +1,13 @@
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
-Version: 6.7
-Release: 4312%{dist}
+Version: 7.4
+Release: 1%{dist}
 License: GPL
 Group: Applications/Meteo
-URL: http://www.arpa.emr.it/dettaglio_documento.asp?id=514&idlivello=64
+URL: https://github.com/ARPA-SIMC/dballe
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-BuildRequires: unixODBC-devel, gperf, cnf-devel, tetex, tetex-latex, doxygen, latex2html, python-docutils, lua-devel, libwreport-devel >= 2.10 , libwibble-devel >= 1.1 , swig , python-devel, popt-devel
+BuildRequires: unixODBC-devel, gperf, cnf-devel, tetex, tetex-latex, doxygen, latex2html, python-docutils, lua-devel, libwreport-devel >= 3.2 , swig , python-devel, popt-devel, postgresql-devel, mariadb-devel
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release} unixODBC sqliteodbc mysql-connector-odbc
 
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
@@ -68,7 +68,7 @@ requires: python-dballe, wxPython, dballe = %{?epoch:%epoch:}%{version}-%{releas
 %package  -n libdballe-devel
 Summary:  DB-ALL.e core C development library
 Group:    Applications/Meteo
-Requires: lib%{name}6 = %{?epoch:%epoch:}%{version}-%{release}, lua-devel
+Requires: lib%{name}7 = %{?epoch:%epoch:}%{version}-%{release}, lua-devel, postgresql-devel mariadb-devel sqlite-devel
 Obsoletes: libdballepp-devel 
 
 %description -n libdballe-devel
@@ -109,13 +109,13 @@ Group: Applications/Meteo
  This is the documentation for the core DB_All.e development library.
 
 
-%package  -n libdballe6
+%package  -n libdballe7
 Summary:   DB-ALL.e core shared library
 Group:    Applications/Meteo
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
 Obsoletes: libdballe5, libdballe4, libdballepp4 
 
-%description -n libdballe6
+%description -n libdballe7
 DB-ALL.e C shared library
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
@@ -187,7 +187,7 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release},rpy,numpy
 
 make
 
-#make check
+make check
 
 %install
 [ "%{buildroot}" != / ] && rm -rf "%{buildroot}"
@@ -204,9 +204,11 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 %{_bindir}/dbadb
 %{_bindir}/dbamsg
 %{_bindir}/dbatbl
+%{_bindir}/dbaexport
 %doc %{_mandir}/man1/dbadb*
 %doc %{_mandir}/man1/dbamsg*
 %doc %{_mandir}/man1/dbatbl*
+%doc %{_mandir}/man1/dbaexport*
 %doc %{_docdir}/dballe/guide.pdf
 %doc %{_docdir}/dballe/guide_html/*
 %doc %{_docdir}/dballe/fortran_api/*
@@ -228,13 +230,14 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 %{_datadir}/wreport/dballe.txt
 %{_datadir}/wreport/repinfo.csv
 
-%files -n libdballe6
+%files -n libdballe7
 %defattr(-,root,root,-)
 %{_libdir}/libdballe.so.*
 
 %files -n libdballe-devel
 %defattr(-,root,root,-)
 %doc %{_docdir}/dballe/libdballe.doxytags
+%{_includedir}/dballe/*.h
 %{_includedir}/dballe/core/*
 %{_includedir}/dballe/msg/*
 %{_includedir}/dballe/db/*
@@ -297,6 +300,30 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 
 
 %changelog
+* Tue Sep 15 2015 Emanuele Di Giacomo <edigiacomo@arpa.emr.it> - 7.4-1%{dist}
+- JSON import/export (issue #5)
+- Fix empty report in import (issue #8)
+- Fix opening stdin and stdout from Fortran bindings (issue #3)
+- Stable CSV header (issue #1)
+- Ported to wreport-3.2
+- Removed wibble dependency
+
+* Fri Sep  4 2015 Emanuele Di Giacomo <edigiacomo@arpa.emr.it> - 7.3-2%{dist}
+- Fixed test
+
+* Fri Sep  4 2015 Emanuele Di Giacomo <edigiacomo@arpa.emr.it> - 7.3-1%{dist}
+- Encoding parser ignore case
+
+* Mon Aug  3 2015 Daniele Branchini <dbranchini@arpa.emr.it> - 7.2-1%{dist}
+- Requires libwreport v3.0
+- Switching to git upstream
+
+* Wed Apr 29 2015 Daniele Branchini <dbranchini@arpa.emr.it> - 7.1-4715%{dist}
+- using spostgresql-devel and mariadb-devel
+
+* Wed Feb  4 2015 Daniele Branchini <dbranchini@arpa.emr.it> - 6.8-4479%{dist}
+- using sqlite-devel instead of unixodbc
+
 * Wed Feb  5 2014 Daniele Branchini <dbranchini@arpa.emr.it> - 6.6-4233%{dist}
 - fixed conversion B07007 (M) <-> B07193 (mm).
 
