@@ -1,5 +1,6 @@
 #include "tests.h"
 #include "json.h"
+#include <sstream>
 
 using namespace std;
 using namespace dballe;
@@ -15,89 +16,89 @@ class Tests : public TestCase
     {
         add_method("null", []() {
             // null value
-            string out;
+            stringstream out;
             core::JSONWriter writer(out);
             writer.add_null();
-            wassert(actual(out) == "null");
+            wassert(actual(out.str()) == "null");
         });
         add_method("bool", []() {
             // bool value
-            string out;
+            stringstream out;
             core::JSONWriter writer(out);
 
             writer.add(true);
-            wassert(actual(out) == "true");
+            wassert(actual(out.str()) == "true");
 
             out.clear();
             writer.add(false);
-            wassert(actual(out) == "false");
+            wassert(actual(out.str()) == "false");
         });
         add_method("int", []() {
             // int value
-            string out;
+            stringstream out;
             core::JSONWriter writer(out);
 
             writer.add(1);
-            wassert(actual(out) == "1");
+            wassert(actual(out.str()) == "1");
 
             out.clear();
             writer.add(-1234567);
-            wassert(actual(out) == "-1234567");
+            wassert(actual(out.str()) == "-1234567");
         });
         add_method("double", []() {
             // double value
-            string out;
+            stringstream out;
             core::JSONWriter writer(out);
             writer.add(1.1);
-            wassert(actual(out) == "1.100000");
+            wassert(actual(out.str()) == "1.100000");
 
             out.clear();
             writer.add(-1.1);
-            wassert(actual(out) == "-1.100000");
+            wassert(actual(out.str()) == "-1.100000");
 
             out.clear();
             writer.add(1.0);
-            wassert(actual(out) == "1.0");
+            wassert(actual(out.str()) == "1.0");
 
             out.clear();
             writer.add(-1.0);
-            wassert(actual(out) == "-1.0");
+            wassert(actual(out.str()) == "-1.0");
         });
         add_method("string", []() {
             // string value
-            string out;
+            stringstream out;
             core::JSONWriter writer(out);
             writer.add("");
-            wassert(actual(out) == "\"\"");
+            wassert(actual(out.str()) == "\"\"");
 
             out.clear();
             writer.add("antani");
-            wassert(actual(out) == "\"antani\"");
+            wassert(actual(out.str()) == "\"antani\"");
 
             out.clear();
             writer.add("\n");
-            wassert(actual(out) == "\"\\n\"");
+            wassert(actual(out.str()) == "\"\\n\"");
         });
         add_method("list", []() {
             // list value
-            string out;
+            stringstream out;
             core::JSONWriter writer(out);
             writer.start_list();
             writer.add("");
             writer.add(1);
             writer.add(1.0);
             writer.end_list();
-            wassert(actual(out) == "[\"\",1,1.0]");
+            wassert(actual(out.str()) == "[\"\",1,1.0]");
         });
         add_method("mapping", []() {
             // mapping value
-            string out;
+            stringstream out;
             core::JSONWriter writer(out);
             writer.start_mapping();
             writer.add("", 1);
             writer.add("antani", 1.0);
             writer.end_mapping();
-            wassert(actual(out) == "{\"\":1,\"antani\":1.0}");
+            wassert(actual(out.str()) == "{\"\":1,\"antani\":1.0}");
         });
     };
 } test("core_json");
