@@ -6,6 +6,8 @@
 #include <list>
 #include <string>
 
+#define DBALLE_JSON_VERSION "0.1"
+
 namespace wreport {
 struct Bulletin;
 }

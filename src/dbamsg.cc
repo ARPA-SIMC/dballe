@@ -331,6 +331,8 @@ struct JSONMsgs : public cmdline::Action
         for (const auto& mi: *item.msgs) {
             const Msg& msg = Msg::downcast(mi);
             json.start_mapping();
+            json.add("version");
+            json.add(DBALLE_JSON_VERSION);
             json.add("network");
             json.add(msg.get_rep_memo_var() ? msg.get_rep_memo_var()->enqc() : dballe::Msg::repmemo_from_type(msg.type));
             json.add("ident");
