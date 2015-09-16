@@ -376,6 +376,9 @@ void Reader::read_csv(const std::list<std::string>& fnames, Action& action)
 void Reader::read_json(const std::list<std::string>& fnames, Action& action)
 {
     struct JSONMsgReader : public core::JSONReader {
+        std::istream* in;
+        bool close_on_exit;
+
         Msg msg;
         std::unique_ptr<msg::Context> ctx;
         std::unique_ptr<wreport::Var> var;
@@ -412,9 +415,35 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
             MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_KEY,
             MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING,
             MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY,
+            MSG_END,
         };
 
         std::stack<State> state;
+
+        JSONMsgReader(std::istream& in) : in(&in), close_on_exit(false) {}
+        JSONMsgReader(const std::string& name) : close_on_exit(true) {
+            in = new ifstream(name);
+        }
+        ~JSONMsgReader() {
+            if (close_on_exit)
+                delete in;
+        }
+
+        void parse_msgs(std::function<void(const Msg&)> cb) {
+            if (in) {
+                while (!in->eof())
+                {
+                    parse(*in);
+                    if (not state.empty() && state.top() == MSG_END) {
+                        state.pop();
+                        cb(msg);
+                    }
+                    msg.clear();
+                }
+            }
+            if (not state.empty())
+                throw std::runtime_error("Incomplete JSON");
+        }
 
         void throw_error_if_empty_state() {
             if (state.empty())
@@ -455,6 +484,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
         virtual void on_start_mapping() {
             if (state.empty())
             {
+                msg.clear();
                 state.push(MSG);
             }
             else
@@ -486,8 +516,11 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
             State s = state.top();
             switch (s) {
                 case MSG:
+                {
                     state.pop();
+                    state.push(MSG_END);
                     break;
+                }
                 case MSG_DATA_LIST_ITEM:
                 {
                     // NOTE: station context could be already created, because
@@ -733,31 +766,30 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
         }
     };
     Item item;
-    for (const std::string& fname: fnames) {
-        std::ifstream infile(fname);
-        std::string line;
-        while (std::getline(infile, line)) {
-            JSONMsgReader jsonreader;
-            std::stringstream in(line);
-            jsonreader.msg.clear();
-            jsonreader.parse(in);
+    std::unique_ptr<JSONMsgReader> jsonreader;
 
-            // Match against index matcher
+    list<string>::const_iterator name = fnames.begin();
+    do {
+        if (name != fnames.end()) {
+            jsonreader.reset(new JSONMsgReader(*name));
+            ++name;
+        } else {
+            jsonreader.reset(new JSONMsgReader(cin));
+        }
+        jsonreader->parse_msgs([&](const Msg& msg) {
             ++item.idx;
             if (!filter.match_index(item.idx))
-                continue;
-
-            // We want it: move it to the item
+                return;
             unique_ptr<Messages> msgs(new Messages);
-            msgs->append(jsonreader.msg);
+            msgs->append(msg);
             item.set_msgs(msgs.release());
 
             if (!filter.match_item(item))
-                continue;
+                return;
 
             action(item);
-        }
-    }
+        });
+    } while (name != fnames.end());
 }
 
 void Reader::read_file(const std::list<std::string>& fnames, Action& action)
