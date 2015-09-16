@@ -1,6 +1,6 @@
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
-Version: 7.4
+Version: 7.5
 Release: 1%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -68,7 +68,7 @@ requires: python-dballe, wxPython, dballe = %{?epoch:%epoch:}%{version}-%{releas
 %package  -n libdballe-devel
 Summary:  DB-ALL.e core C development library
 Group:    Applications/Meteo
-Requires: lib%{name}7 = %{?epoch:%epoch:}%{version}-%{release}, lua-devel, postgresql-devel mariadb-devel sqlite-devel
+Requires: lib%{name}6 = %{?epoch:%epoch:}%{version}-%{release}, lua-devel, postgresql-devel mariadb-devel sqlite-devel
 Obsoletes: libdballepp-devel 
 
 %description -n libdballe-devel
@@ -109,13 +109,13 @@ Group: Applications/Meteo
  This is the documentation for the core DB_All.e development library.
 
 
-%package  -n libdballe7
+%package  -n libdballe6
 Summary:   DB-ALL.e core shared library
 Group:    Applications/Meteo
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
 Obsoletes: libdballe5, libdballe4, libdballepp4 
 
-%description -n libdballe7
+%description -n libdballe6
 DB-ALL.e C shared library
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
@@ -230,7 +230,7 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 %{_datadir}/wreport/dballe.txt
 %{_datadir}/wreport/repinfo.csv
 
-%files -n libdballe7
+%files -n libdballe6
 %defattr(-,root,root,-)
 %{_libdir}/libdballe.so.*
 
@@ -300,6 +300,9 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 
 
 %changelog
+* Wed Sep 16 2015 Emanuele Di Giacomo <edigiacomo@arpa.emr.it> - 7.5-1%{dist}
+- Fixed tests
+
 * Tue Sep 15 2015 Emanuele Di Giacomo <edigiacomo@arpa.emr.it> - 7.4-1%{dist}
 - JSON import/export (issue #5)
 - Fix empty report in import (issue #8)
