@@ -215,9 +215,20 @@ static PyObject* dpy_DB_insert_data(dpy_DB* self, PyObject* args, PyObject* kw)
     } DBALLE_CATCH_RETURN_PYO
 }
 
+static void db_load_file_enc(DB* db, File::Encoding encoding, FILE* file, bool close_on_exit, const std::string& name)
+{
+    std::unique_ptr<File> f = File::create(encoding, file, close_on_exit, name);
+    std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->encoding());
+    f->foreach([&](const BinaryMessage& raw) {
+        Messages msgs = imp->from_binary(raw);
+        db->import_msgs(msgs, NULL, 0);
+        return true;
+    });
+}
+
 static void db_load_file(DB* db, FILE* file, bool close_on_exit, const std::string& name)
 {
-    std::unique_ptr<File> f = File::create(file, close_on_exit, name);
+    std::unique_ptr<File> f = File::create(File::BUFR, file, close_on_exit, name);
     std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->encoding());
     f->foreach([&](const BinaryMessage& raw) {
         Messages msgs = imp->from_binary(raw);
@@ -229,7 +240,8 @@ static void db_load_file(DB* db, FILE* file, bool close_on_exit, const std::stri
 static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args)
 {
     PyObject* obj;
-    if (!PyArg_ParseTuple(args, "O", &obj))
+    const char* encoding = nullptr;
+    if (!PyArg_ParseTuple(args, "O|s", &obj, &encoding))
         return NULL;
 
     string repr;
@@ -249,7 +261,11 @@ static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args)
 
             FILE* f = fmemopen(buf, len, "r");
             if (!f) return nullptr;
-            db_load_file(self->db, f, true, repr);
+            if (encoding)
+            {
+                db_load_file_enc(self->db, File::parse_encoding(encoding), f, true, repr);
+            } else
+                db_load_file(self->db, f, true, repr);
             Py_INCREF(Py_None);
             return Py_None;
         } else {
@@ -270,7 +286,11 @@ static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args)
                 return nullptr;
             }
 
-            db_load_file(self->db, f, true, repr);
+            if (encoding)
+            {
+                db_load_file_enc(self->db, File::parse_encoding(encoding), f, true, repr);
+            } else
+                db_load_file(self->db, f, true, repr);
             Py_INCREF(Py_None);
             return Py_None;
         }
@@ -697,8 +717,13 @@ static PyMethodDef dpy_DB_methods[] = {
         "Insert station values in the database" },
     {"insert_data",       (PyCFunction)dpy_DB_insert_data, METH_VARARGS | METH_KEYWORDS,
         "Insert data values in the database" },
-    {"load",              (PyCFunction)dpy_DB_load, METH_VARARGS,
-        "Load a file object in the database" },
+    {"load",              (PyCFunction)dpy_DB_load, METH_VARARGS, R"(
+        load(fp, encoding=None)
+
+        Load a file object in the database. An encoding can optionally be
+        provided as a string ("BUFR", "CREX", "AOF"). If encoding is None then
+        load will try to autodetect based on the first byte of the file.
+    )" },
     {"remove_station_data", (PyCFunction)dpy_DB_remove_station_data, METH_VARARGS,
         "Remove station variables from the database" },
     {"remove",            (PyCFunction)dpy_DB_remove, METH_VARARGS,
