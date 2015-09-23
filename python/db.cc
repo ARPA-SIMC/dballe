@@ -215,26 +215,32 @@ static PyObject* dpy_DB_insert_data(dpy_DB* self, PyObject* args, PyObject* kw)
     } DBALLE_CATCH_RETURN_PYO
 }
 
-static void db_load_file_enc(DB* db, File::Encoding encoding, FILE* file, bool close_on_exit, const std::string& name)
+static unsigned db_load_file_enc(DB* db, File::Encoding encoding, FILE* file, bool close_on_exit, const std::string& name)
 {
     std::unique_ptr<File> f = File::create(encoding, file, close_on_exit, name);
     std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->encoding());
+    unsigned count = 0;
     f->foreach([&](const BinaryMessage& raw) {
         Messages msgs = imp->from_binary(raw);
         db->import_msgs(msgs, NULL, 0);
+        ++count;
         return true;
     });
+    return count;
 }
 
-static void db_load_file(DB* db, FILE* file, bool close_on_exit, const std::string& name)
+static unsigned db_load_file(DB* db, FILE* file, bool close_on_exit, const std::string& name)
 {
-    std::unique_ptr<File> f = File::create(File::BUFR, file, close_on_exit, name);
+    std::unique_ptr<File> f = File::create(file, close_on_exit, name);
     std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->encoding());
+    unsigned count = 0;
     f->foreach([&](const BinaryMessage& raw) {
         Messages msgs = imp->from_binary(raw);
         db->import_msgs(msgs, NULL, 0);
+        ++count;
         return true;
     });
+    return count;
 }
 
 static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args)
@@ -242,7 +248,7 @@ static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args)
     PyObject* obj;
     const char* encoding = nullptr;
     if (!PyArg_ParseTuple(args, "O|s", &obj, &encoding))
-        return NULL;
+        return nullptr;
 
     string repr;
     if (object_repr(obj, repr))
@@ -261,13 +267,13 @@ static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args)
 
             FILE* f = fmemopen(buf, len, "r");
             if (!f) return nullptr;
+            unsigned count;
             if (encoding)
             {
-                db_load_file_enc(self->db, File::parse_encoding(encoding), f, true, repr);
+                count = db_load_file_enc(self->db, File::parse_encoding(encoding), f, true, repr);
             } else
-                db_load_file(self->db, f, true, repr);
-            Py_INCREF(Py_None);
-            return Py_None;
+                count = db_load_file(self->db, f, true, repr);
+            return PyInt_FromLong(count);
         } else {
             // Duplicate the file descriptor because both python and libc will want to
             // close it
@@ -286,13 +292,13 @@ static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args)
                 return nullptr;
             }
 
+            unsigned count;
             if (encoding)
             {
-                db_load_file_enc(self->db, File::parse_encoding(encoding), f, true, repr);
+                count = db_load_file_enc(self->db, File::parse_encoding(encoding), f, true, repr);
             } else
-                db_load_file(self->db, f, true, repr);
-            Py_INCREF(Py_None);
-            return Py_None;
+                count = db_load_file(self->db, f, true, repr);
+            return PyInt_FromLong(count);
         }
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
