@@ -167,7 +167,7 @@ Common data files for all DB-All.e modules
 %package -n python-dballe
 Summary:  DB-ALL.e Python library
 Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release},rpy,numpy
+Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release},rpy,numpy,python-wreport3
 
 %description -n python-dballe
  DB-ALL.e Python library for weather research
