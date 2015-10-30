@@ -1,4 +1,11 @@
 from setuptools import Extension, setup, command
+import subprocess
+
+
+def pkg_config_flags(options):
+    return [
+        s for s in subprocess.check_output(['pkg-config'] + options + ['libdballe']).decode().strip().split(" ") if s
+    ]
 
 
 dballe_module = Extension(
@@ -7,8 +14,8 @@ dballe_module = Extension(
         "common.cc", "cursor.cc", "dballe.cc", "db.cc", "record.cc",
     ],
     language="c++",
-    extra_compile_args=['-std=c++11'],
-    libraries=['dballe', 'wreport', 'lua', 'm', 'dl', 'sqlite3'],
+    extra_compile_args=pkg_config_flags(["--cflags"]) + ["-std=c++11"],
+    extra_link_args=pkg_config_flags(["--libs"]),
 )
 
 setup(
