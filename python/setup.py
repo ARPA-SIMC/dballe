@@ -2,12 +2,13 @@ from setuptools import Extension, setup, command
 
 
 dballe_module = Extension(
-    'dballe',
+    '_dballe',
     sources=[
         "common.cc", "cursor.cc", "dballe.cc", "db.cc", "record.cc",
     ],
     language="c++",
     extra_compile_args=['-std=c++11'],
+    libraries=['dballe', 'wreport', 'lua', 'm', 'dl', 'sqlite3'],
 )
 
 setup(
