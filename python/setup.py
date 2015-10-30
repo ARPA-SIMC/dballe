@@ -36,4 +36,5 @@ setup(
     include_package_data=True,
     exclude_package_data={},
     ext_modules=[dballe_module],
+    install_requires=['wreport'],
 )
