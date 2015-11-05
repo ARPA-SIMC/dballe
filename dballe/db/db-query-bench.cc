@@ -25,7 +25,7 @@ struct B : bench::DBBenchmark
           by_latlon_dt(this, "by_latlon_dt"),
           by_varcode(this, "by_varcode")
     {
-        repetitions = 10;
+        repetitions = 50;
 
         vars = {
             Var(varinfo(WR_VAR(0, 12, 101)), 280.15),
