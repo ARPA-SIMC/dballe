@@ -193,6 +193,16 @@ class Tests : public FixtureTestCase<Fixture>
             //wassert(actual(cur->remaining()) == 0);
             wassert(actual(cur->remaining()) == 1);
         });
+        add_method("query_ordering", [](Fixture& f) {
+            auto& db = *f.db;
+            auto cur = db.query_stations(core::Query());
+            switch (db.format())
+            {
+                case MEM: wassert(actual(cur->remaining()) == 4); break;
+                case V6: wassert(actual(cur->remaining()) == 2); break;
+                default: error_unimplemented::throwf("cannot run this test on a database of format %d", (int)db.format());
+            }
+        });
     }
 };
 

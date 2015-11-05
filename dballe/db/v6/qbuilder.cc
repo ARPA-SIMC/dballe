@@ -372,6 +372,9 @@ void DataQueryBuilder::build_order_by()
     sql_query.append(", d.datetime");
     if (!query_station_vars)
         sql_query.append(", ltr.ltype1, ltr.l1, ltr.ltype2, ltr.l2, ltr.ptype, ltr.p1, ltr.p2");
+    // TODO: id_report should be at the end, so we get all the variables for a
+    // given report. If this has not been caught so far, are clients actually
+    // relying on ordering? If not, negotiate relaxing of ordering requirements (#19)
     if (!(modifiers & DBA_DB_MODIFIER_SORT_FOR_EXPORT))
         sql_query.append(", d.id_report");
     sql_query.append(", d.id_var");
