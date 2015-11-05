@@ -426,6 +426,7 @@ dist_noinst_HEADERS += \
 bench_run_SOURCES = \
 	db/db-query-parse-bench.cc \
 	db/db-import-bench.cc \
+	db/db-query-bench.cc \
 	benchmark/bench-main.cc
 bench_run_LDADD = \
 	libdballe.la \
