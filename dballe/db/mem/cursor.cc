@@ -303,9 +303,12 @@ struct CompareData
         if (int res = vx.levtr.level.compare(vy.levtr.level)) return res > 0;
         if (int res = vx.levtr.trange.compare(vy.levtr.trange)) return res > 0;
 
+        if (vx.station.report < vy.station.report) return false;
+        if (vx.station.report > vy.station.report) return true;
+
         if (int res = vx.var->code() - vy.var->code()) return res > 0;
 
-        return vx.station.report > vy.station.report;
+        return 0;
     }
 };
 
