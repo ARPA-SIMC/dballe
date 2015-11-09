@@ -62,8 +62,6 @@ struct Query : public dballe::Query
     int limit = MISSING_INT;
     int block = MISSING_INT;
     int station = MISSING_INT;
-    int data_id = MISSING_INT;
-    // DBA_KEY_VAR_RELATED	= 46,
 
     std::unique_ptr<dballe::Query> clone() const override;
 

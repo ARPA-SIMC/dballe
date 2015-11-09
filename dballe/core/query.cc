@@ -59,7 +59,6 @@ void Query::clear()
     limit = MISSING_INT;
     block = MISSING_INT;
     station = MISSING_INT;
-    data_id = MISSING_INT;
 }
 
 void Query::set_from_record(const dballe::Record& rec)
@@ -154,8 +153,6 @@ void Query::set_from_record(const dballe::Record& rec)
     // WMO block/station
     block = rec.enq("block", MISSING_INT);
     station = rec.enq("station", MISSING_INT);
-    // Data ID
-    data_id = rec.enq("context_id", MISSING_INT);
 }
 
 void Query::set_from_test_string(const std::string& s)
@@ -270,7 +267,6 @@ bool Query::is_subquery(const dballe::Query& other_gen) const
     if (other.limit != MISSING_INT && (limit == MISSING_INT || limit > other.limit)) return false;
     if (removed_or_changed(block, other.block)) return false;
     if (removed_or_changed(station, other.station)) return false;
-    if (removed_or_changed(data_id, other.data_id)) return false;
     return true;
 }
 
@@ -414,7 +410,6 @@ void Query::foreach_key(std::function<void(const char*, Var&&)> dest) const
     if (limit != MISSING_INT) vargen.gen(DBA_KEY_LIMIT, limit);
     if (block != MISSING_INT) dest("block", Var(varinfo(WR_VAR(0, 1, 1)), block));
     if (station != MISSING_INT) dest("station", Var(varinfo(WR_VAR(0, 1, 2)), station));
-    if (data_id != MISSING_INT) vargen.gen(DBA_KEY_CONTEXT_ID, data_id);
 }
 
 namespace {
@@ -562,7 +557,6 @@ struct Printer
         print_int("limit", q.limit);
         print_int("block", q.block);
         print_int("station", q.station);
-        print_int("data_id", q.data_id);
         putc('\n', out);
     }
 };
@@ -614,7 +608,6 @@ void Query::serialize(JSONWriter& out) const
     if (limit != MISSING_INT) out.add("limit", limit);
     if (block != MISSING_INT) out.add("block", block);
     if (station != MISSING_INT) out.add("station", station);
-    if (data_id != MISSING_INT) out.add("data_id", data_id);
 }
 
 unsigned Query::parse_modifiers(const dballe::Record& rec)

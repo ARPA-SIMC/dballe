@@ -66,26 +66,6 @@ class Tests : public FixtureTestCase<DBFixture>
             api.dimenticami();
             wassert(actual(api.voglioquesto()) == 0);
         });
-        add_method("query_context_id", [](Fixture& f) {
-            // Check that the context ID we get is correct
-            fortran::DbAPI api(*f.db, "write", "write", "write");
-            populate_variables(api);
-
-            // Query a variable
-            api.setc("var", "B12101");
-            wassert(actual(api.voglioquesto()) == 1);
-            api.dammelo();
-
-            // Store its context info to access attributes of this variable later
-            int reference_id = api.enqi("context_id");
-
-            // Check that the context id that we get points to the right variable
-            api.unsetall();
-            api.seti("context_id", reference_id);
-            wassert(actual(api.voglioquesto()) == 1);
-            wassert(actual(api.dammelo()) == "B12101");
-            wassert(actual(api.enqi("l1")) == 2000);
-        });
         add_method("query_attrs", [](Fixture& f) {
             // Test attrs
             fortran::DbAPI api(*f.db, "write", "write", "write");

@@ -173,21 +173,6 @@ struct MatchDateMinMax : public Match<Value>
 
 void Values::query(const core::Query& q, Results<Station>& stations, Results<LevTr>& levtrs, Results<Value>& res) const
 {
-    if (q.data_id != MISSING_INT)
-    {
-        trace_query("Found data_id %d\n", q.data_id);
-        size_t pos = q.data_id;
-        if (pos >= 0 && pos < values.size() && values[pos])
-        {
-            trace_query(" intersect with %zu\n", pos);
-            res.add_singleton(pos);
-        } else {
-            trace_query(" set to empty result set\n");
-            res.set_to_empty();
-            return;
-        }
-    }
-
     if (!stations.is_select_all())
     {
         trace_query("Adding selected stations to strategy\n");

@@ -38,20 +38,6 @@ class TestSubset : public FixtureTestCase<Fixture>
 
     void register_tests() override
     {
-        // Test var_id matcher
-        add_method("var_id", [](Fixture& f) {
-            auto m = get_matcher("context_id=1");
-
-            Subset s(f.tables);
-            wassert(actual_matcher_result(m->match(MatchedSubset(s))) == matcher::MATCH_NO);
-
-            s.store_variable_i(WR_VAR(0, 1, 1), 1);
-            wassert(actual_matcher_result(m->match(MatchedSubset(s))) == matcher::MATCH_NO);
-
-            s.back().seta(newvar(WR_VAR(0, 33, 195), 1));
-            wassert(actual_matcher_result(m->match(MatchedSubset(s))) == matcher::MATCH_YES);
-        });
-
         // Test station_id matcher
         add_method("station_id", [](Fixture& f) {
             auto m = get_matcher("ana_id=1");
@@ -292,20 +278,6 @@ class TestBulletin : public FixtureTestCase<FixtureBulletin>
 
     void register_tests() override
     {
-        // Test var_id matcher
-        add_method("var_id", [](Fixture& f) {
-            auto m = get_matcher("context_id=1");
-
-            BufrBulletin& b = f.get_bulletin();
-            wassert(actual_matcher_result(m->match(MatchedBulletin(b))) == matcher::MATCH_NO);
-
-            b.obtain_subset(1).store_variable_i(WR_VAR(0, 1, 1), 1);
-            wassert(actual_matcher_result(m->match(MatchedBulletin(b))) == matcher::MATCH_NO);
-
-            b.obtain_subset(1).back().seta(newvar(WR_VAR(0, 33, 195), 1));
-            wassert(actual_matcher_result(m->match(MatchedBulletin(b))) == matcher::MATCH_YES);
-        });
-
         // Test station_id matcher
         add_method("station_id", [](Fixture& f) {
             auto m = get_matcher("ana_id=1");

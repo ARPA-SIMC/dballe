@@ -259,22 +259,6 @@ class Tests : public FixtureTestCase<DBFixture>
             TRY_QUERY("priomax=101", 4);
             TRY_QUERY("priomax=110", 4);
         });
-        add_method("context_id", [](Fixture& f) {
-            wassert(f.populate<OldDballeTestDataSet>());
-            // get a valid data id
-            core::Query q;
-            q.varcodes.insert(WR_VAR(0, 1, 11));
-            core::Record res;
-            auto cur = f.db->query_data(q);
-            while (cur->next())
-                cur->to_record(res);
-            char valid_query[100];
-            snprintf(valid_query, 100, "context_id=%d", res.enq("context_id", MISSING_INT));
-
-            // context ID queries
-            TRY_QUERY(valid_query, 1);
-            TRY_QUERY("context_id=1234567", 0);
-        });
         add_method("datetime1", [](Fixture& f) {
             // Check datetime queries, with data that only differs by its hour
             wassert(f.populate<DateHourDataSet>());

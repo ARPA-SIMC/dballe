@@ -128,21 +128,6 @@ class Tests : public TestCase
             wassert(actual(Msg::type_from_repmemo("")) == MSG_GENERIC);
             wassert(actual(Msg::type_from_repmemo(NULL)) == MSG_GENERIC);
         });
-        add_method("msg_match_varid", []() {
-            // Test var_id matcher
-            auto m = get_matcher("context_id=1");
-
-            Msg matched;
-            wassert(actual_matcher_result(m->match(MatchedMsg(matched))) == matcher::MATCH_NO);
-
-            matched.set(newvar(WR_VAR(0, 12, 101), 21.5), Level(1), Trange::instant());
-            wassert(actual_matcher_result(m->match(MatchedMsg(matched))) == matcher::MATCH_NO);
-
-            std::unique_ptr<wreport::Var> var = newvar(WR_VAR(0, 12, 103), 18.5);
-            var->seta(newvar(WR_VAR(0, 33, 195), 1));
-            matched.set(move(var), Level(1), Trange::instant());
-            wassert(actual_matcher_result(m->match(MatchedMsg(matched))) == matcher::MATCH_YES);
-        });
         add_method("msg_match_stationid", []() {
             // Test station_id matcher
             auto m = get_matcher("ana_id=1");
@@ -364,21 +349,6 @@ class Tests : public TestCase
 
             notes::Collect c(cerr);
             wassert(actual(msg.diff(msg1)) == 0u);
-        });
-        add_method("msgs_match_varid", []() {
-            // Test var_id matcher
-            auto m = get_matcher("context_id=1");
-
-            Messages matched; init(matched);
-            wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
-
-            Msg::downcast(matched[0]).set(newvar(WR_VAR(0, 12, 101), 21.5), Level(1), Trange::instant());
-            wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
-
-            std::unique_ptr<wreport::Var> var = newvar(WR_VAR(0, 12, 103), 18.5);
-            var->seta(newvar(WR_VAR(0, 33, 195), 1));
-            Msg::downcast(matched[0]).set(move(var), Level(1), Trange::instant());
-            wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_YES);
         });
         add_method("msgs_match_stationid", []() {
             // Test station_id matcher

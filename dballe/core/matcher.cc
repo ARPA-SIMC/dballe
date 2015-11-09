@@ -112,23 +112,6 @@ struct And : public Matcher
     }
 };
 
-struct VarIDMatcher : public Matcher
-{
-    // Variable ID to match
-    int var_id;
-
-    VarIDMatcher(int var_id) : var_id(var_id) {}
-
-    virtual Result match(const Matched& v) const
-    {
-        return v.match_var_id(var_id) == MATCH_YES ? MATCH_YES : MATCH_NO;
-    }
-    virtual void to_record(Record& rec) const
-    {
-        rec.set("B33195", var_id);
-    }
-};
-
 struct AnaIDMatcher : public Matcher
 {
     // Station ID to match
@@ -237,9 +220,6 @@ std::unique_ptr<Matcher> Matcher::create(const dballe::Query& query_gen)
     const core::Query& query = core::Query::downcast(query_gen);
 
     std::unique_ptr<And> res(new And);
-
-    if (query.data_id != MISSING_INT)
-        res->exprs.push_back(new VarIDMatcher(query.data_id));
 
     if (query.ana_id != MISSING_INT)
         res->exprs.push_back(new AnaIDMatcher(query.ana_id));

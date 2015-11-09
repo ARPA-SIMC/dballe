@@ -37,7 +37,6 @@ class Tests : public TestCase
             wassert(actual(q.limit) == MISSING_INT);
             wassert(actual(q.block) == MISSING_INT);
             wassert(actual(q.station) == MISSING_INT);
-            wassert(actual(q.data_id) == MISSING_INT);
         });
         add_method("all_set", []() {
             core::Record rec;
@@ -59,7 +58,6 @@ class Tests : public TestCase
             rec.set("limit", 100);
             rec.set("block", 16);
             rec.set("station", 404);
-            rec.set("context_id", 42);
 
             core::Query q;
             q.set_from_record(rec);
@@ -84,7 +82,6 @@ class Tests : public TestCase
             wassert(actual(q.limit) == 100);
             wassert(actual(q.block) == 16);
             wassert(actual(q.station) == 404);
-            wassert(actual(q.data_id) == 42);
         });
         add_method("prio", []() {
             core::Query q;

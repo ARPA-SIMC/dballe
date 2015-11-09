@@ -238,7 +238,6 @@ QueryBuilder::QueryBuilder(DB& db, const core::Query& query, unsigned int modifi
 DataQueryBuilder::DataQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars)
     : QueryBuilder(db, query, modifiers, query_station_vars)
 {
-    query_data_id = query.data_id;
 }
 
 
@@ -330,27 +329,16 @@ void DataQueryBuilder::build_select()
             " FROM station s"
             " JOIN data d ON s.id=d.id_station"
     );
-    if (query_data_id != MISSING_INT)
-        sql_from.append(" LEFT OUTER JOIN lev_tr ltr ON ltr.id=d.id_lev_tr");
-    else if (!query_station_vars)
+    if (!query_station_vars)
         sql_from.append(" JOIN lev_tr ltr ON ltr.id=d.id_lev_tr");
 }
 
 bool DataQueryBuilder::build_where()
 {
-    if (query_data_id != MISSING_INT)
-    {
-        // Skip arbitrary limits on id_lev_tr if data_id is queried, since we
-        // must allow to select either a station or a data value
-
-        //TRACE("found %s: adding %s. val is %d\n", info(key)->desc, sql, *out);
-        sql_where.append_listf("d.id=%d", query_data_id);
-    } else {
-        if (query_station_vars)
-            sql_where.append_list("d.id_lev_tr = -1");
-        else
-            sql_where.append_list("d.id_lev_tr != -1");
-    }
+    if (query_station_vars)
+        sql_where.append_list("d.id_lev_tr = -1");
+    else
+        sql_where.append_list("d.id_lev_tr != -1");
 
     // Add pseudoana-specific where parts
     add_pa_where("s");
@@ -424,9 +412,7 @@ void SummaryQueryBuilder::build_select()
             " FROM station s"
             " JOIN data d ON s.id = d.id_station"
     );
-    if (query_data_id != MISSING_INT)
-        sql_from.append(" LEFT OUTER JOIN lev_tr ltr ON ltr.id=d.id_lev_tr");
-    else if (!query_station_vars)
+    if (!query_station_vars)
         sql_from.append(" JOIN lev_tr ltr ON ltr.id=d.id_lev_tr");
 }
 

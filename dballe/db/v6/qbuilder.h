@@ -91,8 +91,6 @@ struct StationQueryBuilder : public QueryBuilder
 
 struct DataQueryBuilder : public QueryBuilder
 {
-    int query_data_id;
-
     DataQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars);
 
     virtual void build_select();

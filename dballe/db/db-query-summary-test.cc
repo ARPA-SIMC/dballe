@@ -234,28 +234,6 @@ class Tests : public FixtureTestCase<Fixture>
             wassert(actual(db).try_summary_query("priomax=81", 4));
             wassert(actual(db).try_summary_query("priomax=100", 4));
         });
-        add_method("query_context_id", [](Fixture& f) {
-            auto& db = *f.db;
-            // Collect a vector of valid context IDs
-            vector<int> context_ids;
-            // And an invalid one
-            int sum = 1;
-            auto cur = db.query_data(core::Query());
-            while (cur->next())
-            {
-                context_ids.push_back(cur->attr_reference_id());
-                sum += context_ids.back();
-            }
-
-            WREPORT_TEST_INFO(info);
-
-            wassert(actual(db).try_summary_query(parm("context_id", sum), 0));
-            for (vector<int>::const_iterator i = context_ids.begin(); i != context_ids.end(); ++i)
-            {
-                info() << "Context ID " << *i;
-                wassert(actual(db).try_summary_query(parm("context_id", *i), 1));
-            }
-        });
     }
 };
 

@@ -23,20 +23,6 @@ class Tests : public TestCase
 
     void register_tests() override
     {
-        // Test var_id matcher
-        add_method("var_id", []() {
-            auto m = get_matcher("context_id=1");
-
-            core::Record matched;
-            wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
-
-            matched.set("data_id", 2);
-            wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
-
-            matched.set("data_id", 1);
-            wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_YES);
-        });
-
         // Test station_id matcher
         add_method("station_id", []() {
             auto m = get_matcher("ana_id=1");
