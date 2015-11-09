@@ -90,14 +90,14 @@ class Tests : public FixtureTestCase<Fixture>
             wassert(actual(ri.get_id("FIXspnpo")) == 201);
         });
         // Test update from a file with a negative priority
-        add_method("fail", [](Fixture& f) {
+        add_method("fail1", [](Fixture& f) {
             auto& ri = *f.repinfo;
 
             int id = ri.get_id("generic");
             wassert(actual(ri.get_priority(id)) == 1000);
 
             int added, deleted, updated;
-            ri.update((string(getenv("DBA_TESTDATA")) + "/test-repinfo2.csv").c_str(), &added, &deleted, &updated);
+            wassert(ri.update((string(getenv("DBA_TESTDATA")) + "/test-repinfo2.csv").c_str(), &added, &deleted, &updated));
 
             wassert(actual(added) == 3);
             wassert(actual(deleted) == 11);
@@ -106,7 +106,7 @@ class Tests : public FixtureTestCase<Fixture>
             wassert(actual(ri.get_priority(id)) == -5);
         });
         // Test automatic repinfo creation
-        add_method("fail", [](Fixture& f) {
+        add_method("fail2", [](Fixture& f) {
             auto& ri = *f.repinfo;
 
             int id = ri.obtain_id("foobar");

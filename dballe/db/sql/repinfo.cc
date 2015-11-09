@@ -300,6 +300,13 @@ std::vector<repinfo::Cache> Repinfo::read_repinfo_file(const char* deffile)
         }
     }
 
+
+    /*
+    fprintf(stderr, "POST PARSE:\n");
+    for (const auto& e: cache)
+        e.dump(stderr);
+        */
+
     return newitems;
 }
 
@@ -362,6 +369,13 @@ void Cache::make_new()
     new_prio = prio;
     new_descriptor = descriptor;
     new_tablea = tablea;
+}
+
+void Cache::dump(FILE* out) const
+{
+    fprintf(stderr, "%u: %s %s %d %s %u (%s %s %d %s %u)\n",
+            id, memo.c_str(), desc.c_str(), prio, descriptor.c_str(), tablea,
+            new_memo.c_str(), new_desc.c_str(), new_prio, new_descriptor.c_str(), new_tablea);
 }
 
 bool Memoidx::operator<(const Memoidx& val) const

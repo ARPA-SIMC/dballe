@@ -56,6 +56,8 @@ struct Cache
 
     Cache(int id, const std::string& memo, const std::string& desc, int prio, const std::string& descriptor, int tablea);
     void make_new();
+
+    void dump(FILE* out) const;
 };
 
 /** reverse rep_memo -> rep_cod cache entry */

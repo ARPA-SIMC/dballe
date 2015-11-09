@@ -68,7 +68,7 @@ template<typename... ARGS> struct Params
     int formats[sizeof...(ARGS)];
     void* local[sizeof...(ARGS)];
 
-    Params(ARGS... args)
+    Params(const ARGS&... args)
     {
         _add(0, args...);
     }
@@ -91,7 +91,7 @@ protected:
 
     /// Fill in the argument structures
     template<typename... REST>
-    void _add(unsigned pos, std::nullptr_t arg, REST... rest)
+    void _add(unsigned pos, std::nullptr_t arg, const REST&... rest)
     {
         local[pos] = nullptr;
         args[pos] = nullptr;
@@ -102,7 +102,7 @@ protected:
 
     /// Fill in the argument structures
     template<typename... REST>
-    void _add(unsigned pos, int32_t arg, REST... rest)
+    void _add(unsigned pos, int32_t arg, const REST&... rest)
     {
         local[pos] = malloc(sizeof(int32_t));
         *(int32_t*)local[pos] = (int32_t)htonl((uint32_t)arg);
@@ -114,7 +114,7 @@ protected:
 
     /// Fill in the argument structures
     template<typename... REST>
-    void _add(unsigned pos, uint64_t arg, REST... rest)
+    void _add(unsigned pos, uint64_t arg, const REST&... rest)
     {
         local[pos] = malloc(sizeof(int64_t));
         *(int64_t*)local[pos] = encode_int64_t(arg);
@@ -126,7 +126,7 @@ protected:
 
     /// Fill in the argument structures
     template<typename... REST>
-    void _add(unsigned pos, const char* arg, REST... rest)
+    void _add(unsigned pos, const char* arg, const REST&... rest)
     {
         local[pos] = nullptr;
         args[pos] = arg;
@@ -137,7 +137,7 @@ protected:
 
     /// Fill in the argument structures
     template<typename... REST>
-    void _add(unsigned pos, const std::string& arg, REST... rest)
+    void _add(unsigned pos, const std::string& arg, const REST&... rest)
     {
         local[pos] = nullptr;
         args[pos] = arg.data();
@@ -148,7 +148,7 @@ protected:
 
     /// Fill in the argument structures
     template<typename... REST>
-    void _add(unsigned pos, const Datetime& arg, REST... rest)
+    void _add(unsigned pos, const Datetime& arg, const REST&... rest)
     {
         local[pos] = malloc(sizeof(int64_t));
         *(int64_t*)local[pos] = encode_datetime(arg);
