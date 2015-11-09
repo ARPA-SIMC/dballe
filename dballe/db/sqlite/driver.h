@@ -46,6 +46,7 @@ struct Driver : public sql::Driver
     void delete_tables_v6() override;
     void vacuum_v6() override;
     void exec_no_data(const std::string& query) override;
+    void explain(const std::string& query) override;
 };
 
 }

@@ -135,6 +135,9 @@ public:
     /// Perform database cleanup/maintenance on v6 databases
     virtual void vacuum_v6() = 0;
 
+    /// Outputs to stderr an explanation of the given query
+    virtual void explain(const std::string& query);
+
     /// Create a Driver for this connection
     static std::unique_ptr<Driver> create(Connection& conn);
 };

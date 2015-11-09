@@ -469,12 +469,18 @@ struct Best : public Base<CursorData>
 
 }
 
-unique_ptr<CursorStation> run_station_query(DB& db, const core::Query& q)
+unique_ptr<CursorStation> run_station_query(DB& db, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
 
     StationQueryBuilder qb(db, q, modifiers);
     qb.build();
+
+    if (explain)
+    {
+        fprintf(stderr, "EXPLAIN "); q.print(stderr);
+        db.driver().explain(qb.sql_query);
+    }
 
     auto resptr = new Stations(db, modifiers);
     unique_ptr<CursorStation> res(resptr);
@@ -482,11 +488,17 @@ unique_ptr<CursorStation> run_station_query(DB& db, const core::Query& q)
     return res;
 }
 
-unique_ptr<CursorStationData> run_station_data_query(DB& db, const core::Query& q)
+unique_ptr<CursorStationData> run_station_data_query(DB& db, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
     DataQueryBuilder qb(db, q, modifiers, true);
     qb.build();
+
+    if (explain)
+    {
+        fprintf(stderr, "EXPLAIN "); q.print(stderr);
+        db.driver().explain(qb.sql_query);
+    }
 
     unique_ptr<CursorStationData> res;
     if (modifiers & DBA_DB_MODIFIER_BEST)
@@ -503,11 +515,17 @@ unique_ptr<CursorStationData> run_station_data_query(DB& db, const core::Query& 
     return res;
 }
 
-unique_ptr<CursorData> run_data_query(DB& db, const core::Query& q)
+unique_ptr<CursorData> run_data_query(DB& db, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
     DataQueryBuilder qb(db, q, modifiers, false);
     qb.build();
+
+    if (explain)
+    {
+        fprintf(stderr, "EXPLAIN "); q.print(stderr);
+        db.driver().explain(qb.sql_query);
+    }
 
     unique_ptr<CursorData> res;
     if (modifiers & DBA_DB_MODIFIER_BEST)
@@ -523,7 +541,7 @@ unique_ptr<CursorData> run_data_query(DB& db, const core::Query& q)
     return res;
 }
 
-unique_ptr<CursorSummary> run_summary_query(DB& db, const core::Query& q)
+unique_ptr<CursorSummary> run_summary_query(DB& db, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
     if (modifiers & DBA_DB_MODIFIER_BEST)
@@ -532,13 +550,19 @@ unique_ptr<CursorSummary> run_summary_query(DB& db, const core::Query& q)
     SummaryQueryBuilder qb(db, q, modifiers, false);
     qb.build();
 
+    if (explain)
+    {
+        fprintf(stderr, "EXPLAIN "); q.print(stderr);
+        db.driver().explain(qb.sql_query);
+    }
+
     auto resptr = new Summary(db, modifiers);
     unique_ptr<CursorSummary> res(resptr);
     resptr->load(qb);
     return res;
 }
 
-void run_delete_query(DB& db, const core::Query& q, bool station_vars)
+void run_delete_query(DB& db, const core::Query& q, bool station_vars, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
     if (modifiers & DBA_DB_MODIFIER_BEST)
@@ -546,6 +570,12 @@ void run_delete_query(DB& db, const core::Query& q, bool station_vars)
 
     IdQueryBuilder qb(db, q, modifiers, station_vars);
     qb.build();
+
+    if (explain)
+    {
+        fprintf(stderr, "EXPLAIN "); q.print(stderr);
+        db.driver().explain(qb.sql_query);
+    }
 
     db.data().remove(qb);
 }

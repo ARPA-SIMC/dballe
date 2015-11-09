@@ -110,6 +110,11 @@ void Driver::remove_all_v6()
     exec_no_data("DELETE FROM station");
 }
 
+void Driver::explain(const std::string& query)
+{
+    fprintf(stderr, "Explaining query %s is not supported on this db.\n", query.c_str());
+}
+
 std::unique_ptr<Driver> Driver::create(Connection& conn)
 {
     if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(&conn))

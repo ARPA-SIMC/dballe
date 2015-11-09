@@ -91,6 +91,8 @@ public:
     db::Connection* conn;
     /// Database query tracing
     Trace trace;
+    /// True if we print an EXPLAIN trace of all queries to stderr
+    bool explain_queries = false;
 
 protected:
     /// SQL driver backend
