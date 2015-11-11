@@ -29,7 +29,7 @@ class Tests : public TestCase
             writer.add(true);
             wassert(actual(out.str()) == "true");
 
-            out.clear();
+            out.str("");
             writer.add(false);
             wassert(actual(out.str()) == "false");
         });
@@ -41,7 +41,7 @@ class Tests : public TestCase
             writer.add(1);
             wassert(actual(out.str()) == "1");
 
-            out.clear();
+            out.str("");
             writer.add(-1234567);
             wassert(actual(out.str()) == "-1234567");
         });
@@ -52,15 +52,15 @@ class Tests : public TestCase
             writer.add(1.1);
             wassert(actual(out.str()) == "1.100000");
 
-            out.clear();
+            out.str("");
             writer.add(-1.1);
             wassert(actual(out.str()) == "-1.100000");
 
-            out.clear();
+            out.str("");
             writer.add(1.0);
             wassert(actual(out.str()) == "1.0");
 
-            out.clear();
+            out.str("");
             writer.add(-1.0);
             wassert(actual(out.str()) == "-1.0");
         });
@@ -71,11 +71,11 @@ class Tests : public TestCase
             writer.add("");
             wassert(actual(out.str()) == "\"\"");
 
-            out.clear();
+            out.str("");
             writer.add("antani");
             wassert(actual(out.str()) == "\"antani\"");
 
-            out.clear();
+            out.str("");
             writer.add("\n");
             wassert(actual(out.str()) == "\"\\n\"");
         });
