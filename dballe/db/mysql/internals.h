@@ -117,6 +117,7 @@ struct Result
     operator const MYSQL_RES*() const { return res; }
 
     unsigned rowcount() const { return mysql_num_rows(res); }
+    unsigned colcount() const { return mysql_num_fields(res); }
 
     /// Check that the function returned only one row, and return that row.
     Row expect_one_result();
