@@ -301,6 +301,19 @@ void Driver::exec_no_data(const std::string& query)
     conn.exec_no_data(query);
 }
 
+void Driver::explain(const std::string& query)
+{
+    using namespace dballe::db::postgresql;
+
+    string explain_query = "EXPLAIN ";
+    explain_query += query;
+
+    fprintf(stderr, "%s\n", explain_query.c_str());
+    Result res = conn.exec(explain_query);
+    for (unsigned row = 0; row < res.rowcount(); ++row)
+        fprintf(stderr, "  %s\n", res.get_string(row, 0));
+}
+
 }
 }
 }
