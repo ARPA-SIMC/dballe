@@ -281,6 +281,28 @@ class Tests : public FixtureTestCase<DBFixture>
                 }
             }
         });
+        add_method("delete_notfound", [](Fixture& f) {
+            // Test deletion
+            auto& db = *f.db;
+            OldDballeTestDataSet oldf;
+            wassert(f.populate_database(oldf));
+
+            // 4 items to begin with
+            core::Query query;
+            auto cur = db.query_data(query);
+            wassert(actual(cur->remaining()) == 4);
+            cur->discard_rest();
+
+            // Try to remove using a query that matches none
+            query.attr_filter = "B33007<50";
+            db.remove(query);
+
+            // Verify that nothing has been deleted
+            query.clear();
+            cur = db.query_data(query);
+            wassert(actual(cur->remaining()) == 4);
+            cur->discard_rest();
+        });
         add_method("query_datetime", [](Fixture& f) {
             // Test datetime queries
             auto& db = *f.db;

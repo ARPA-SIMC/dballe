@@ -1,3 +1,4 @@
+// Verify that nothing has been deleted
 #include "datav6.h"
 #include "dballe/db/sql.h"
 #include "dballe/db/querybuf.h"
@@ -101,13 +102,18 @@ void MySQLDataV6::remove(const v6::QueryBuilder& qb)
     Querybuf dq(512);
     dq.append("DELETE FROM data WHERE id IN (");
     dq.start_list(",");
+    bool found = false;
     auto res = conn.exec_store(qb.sql_query);
     while (auto row = res.fetch())
+    {
         // Note: if the query gets too long, we can split this in more DELETE
         // runs
         dq.append_list(row.as_cstring(0));
+        found = true;
+    }
     dq.append(")");
-    conn.exec_no_data(dq);
+    if (found)
+        conn.exec_no_data(dq);
 }
 
 void MySQLDataV6::dump(FILE* out)
