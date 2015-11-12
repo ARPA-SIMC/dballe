@@ -1,14 +1,14 @@
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
 Version: 7.6
-Release: 1%{dist}
+Release: 2
 License: GPL
 Group: Applications/Meteo
 URL: https://github.com/ARPA-SIMC/dballe
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildRequires: unixODBC-devel, gperf, cnf-devel, tetex, tetex-latex, doxygen, latex2html, python-docutils, lua-devel, libwreport-devel >= 3.2 , swig , python-devel, popt-devel, postgresql-devel, mariadb-devel
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release} unixODBC sqliteodbc mysql-connector-odbc
+Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, unixODBC, sqliteodbc, mysql-connector-odbc, python-dballe
 
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 %{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
@@ -123,7 +123,7 @@ DB-ALL.e C shared library
  This is the shared library for C programs.
 
 
-%package    -n  libdballef-devel
+%package -n libdballef-devel
 
 Summary:  DB-All.e Fortran development library
 Group:    Applications/Meteo
@@ -137,7 +137,7 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, lua-devel, cn
  database as a smart working area for meteorological software.
 
 
-%package    -n libdballef4
+%package -n libdballef4
 
 Summary:  DB-ALL.e Fortran shared library
 Group:    Applications/Meteo
@@ -150,7 +150,7 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
  This is the shared library for Fortran programs.
 
 
-%package    common
+%package common
 
 Summary:  Common data files for all DB-All.e modules
 Group:    Applications/Meteo
@@ -167,7 +167,7 @@ Common data files for all DB-All.e modules
 %package -n python-dballe
 Summary:  DB-ALL.e Python library
 Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release},rpy,numpy
+Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, rpy, numpy, python-wreport3
 
 %description -n python-dballe
  DB-ALL.e Python library for weather research
@@ -182,7 +182,6 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release},rpy,numpy
 
 %build
 
-### opzioni configure probabilmente obsolete: --disable-rpath   --enable-dballe-msg
 %configure FC=gfortran F90=gfortan F77=gfortran --enable-dballe-db  --enable-dballef --enable-dballe-python --enable-docs
 
 make
@@ -214,15 +213,12 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 %doc %{_docdir}/dballe/fortran_api/*
 %doc %{_docdir}/dballe/libdballef.doxytags
 
-
-%files -n provami
-%defattr(-,root,root,-)
-%{_bindir}/provami
-
-%{python_sitelib}/provami/*
-%doc %{_mandir}/man1/provami*
-%{_datadir}/dballe/icon*.png
-%{_datadir}/dballe/world.dat
+# old version of provami
+%exclude %{_bindir}/provami
+%exclude %{python_sitelib}/provami/*
+%exclude %{_mandir}/man1/provami*
+%exclude %{_datadir}/dballe/icon*.png
+%exclude %{_datadir}/dballe/world.dat
 
 %files common
 %defattr(-,root,root,-)
@@ -300,6 +296,9 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 
 
 %changelog
+* Thu Nov 12 2015 Daniele Branchini <dbranchini@arpa.emr.it> - 7.6-2%{dist}
+- Fix dballe and dballe-python dependencies, excluded old provami files
+
 * Wed Sep 16 2015 Emanuele Di Giacomo <edigiacomo@arpa.emr.it> - 7.6-1%{dist}
 - Fix JSON import from stdin (issue #11)
 
