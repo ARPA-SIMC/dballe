@@ -1,4 +1,4 @@
-README for Data Base All Enhanced version 0.7, still unreleased
+DB-All.e
 ===============================================================
 
 Introduction
@@ -79,9 +79,11 @@ Building DB-All.e
 DB-All.e is already packaged in both .rpm and .deb formats, and that provides
 easy installation for most Linux distributions.
 
-If you want to build and install DB-All.e yourself, you can proceed as in most
-other Unix software::
+If you want to build and install DB-All.e yourself, you'll need to install the
+automake/autoconf/libtool packages then you can proceed as in most other Unix 
+software:
 
+  autoreconf -if
   ./configure
   make
   make install
@@ -170,7 +172,7 @@ Contact and copyright information
 
 The author of DB-ALLe is Enrico Zini <enrico@enricozini.com>
 
-DB-ALLe is Copyright (C) 2005, 2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+DB-ALLe is Copyright (C) 2005-2015 ARPA-SIMC <urpsim@arpa.emr.it>
 
 DB-ALLe is licensed under the terms of the GNU General Public License version
 2.  Please see the file COPYING for details.
@@ -178,14 +180,10 @@ DB-ALLe is licensed under the terms of the GNU General Public License version
 Contact informations for ARPA-SIM:
 
   Agenzia Regionale Prevenzione e Ambiente (ARPA)
-  Servizio Idro-Meteorologico (SIM)
+  Servizio Idro-Meteo-Climatologico (SIMC)
 
   Address: Viale Silvani 6, 40122 Bologna, Italy
   Tel: + 39 051 6497511
   Fax: + 39 051 6497501
-  Email: urpsim@smr.arpa.emr.it
+  Email: urpsim@arpa.emr.it
   Website: http://www.arpa.emr.it/sim/
-
-The latest version of DB-ALLe can be downloaded from:
-
-  http://www.smr.arpa.emr.it/software/DBalle.html
