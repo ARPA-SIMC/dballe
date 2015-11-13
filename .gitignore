@@ -67,7 +67,6 @@ Makefile
 /fortran/mkmsg-sca
 /fortran/tut_test
 /fortran/genattr
-/provami/provami/Paths.py
 /tables/dballe.tex
 /tables/B0000000000200014001.txt
 /tables/B000000002001400.txt
@@ -89,7 +88,6 @@ Makefile
 /debian/libdballe6/
 /debian/libdballef-dev/
 /debian/libdballef4/
-/debian/provami/
 /debian/python-dballe/
 /debian/tmp/
 /python/python-dballe.html

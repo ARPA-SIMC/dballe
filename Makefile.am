@@ -10,7 +10,7 @@ if DO_DOCS
 SUBDIRS += doc
 endif
 if DO_DBALLE_PYTHON
-SUBDIRS += python provami
+SUBDIRS += python
 endif
 SUBDIRS += .
 #examples 
@@ -42,7 +42,7 @@ EXTRA_DIST = autogen.sh \
 	     libdballe.pc.in libdballef.pc.in \
 	     $(conf_DATA) get_line_no run-check.conf.example \
 	     run-check run-local run-bench show_code_notes \
-	     TODO.provami UPGRADE-5.x \
+	     UPGRADE-5.x \
 	     dbaexport.1
 
 CLEANFILES = dbatbl.1 dbamsg.1 dbadb.1

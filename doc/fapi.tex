@@ -1590,8 +1590,6 @@ Specifying DSN, user and password:
   {\tt ierr = idba\_presentati(dbhandle, "dsn", "username", "password")}
 \item[with dbadb]
   {\tt dbadb \-\-dsn=dsn \-\-user=username \-\-pass=password}
-\item[with provami]
-  {\tt provami \-\-dsn=dsn \-\-user=username \-\-pass=password}
 \end{description}
 
 Via URL:
@@ -1602,7 +1600,7 @@ Via URL:
 \item[with dbadb]
   {\tt dbadb \-\-dsn="odbc://username:password@dsn" \dots}
 \item[with provami]
-  {\tt provami \-\-dsn="odbc://username:password@dsn"}
+  {\tt provami "odbc://username:password@dsn"}
 \end{description}
 
 Via an environment variable:

@@ -288,7 +288,6 @@ python/Makefile
 doc/Makefile
 doc/libdballe.dox
 doc/libdballef.dox
-provami/Makefile
 libdballe.pc
 libdballef.pc
 ])

@@ -8,8 +8,6 @@ export RGBDEF=/usr/share/latex2html/styles/rgb.txt
 %:
 	dh --with autoreconf,python2,python3 $@
 
-# DEB_PYTHON2_MODULE_PACKAGES := provami
-# 
 # #DEB_MAKE_CHECK_TARGET := check
 # 
 # # From http://wiki.debian.org/DebianPython/NewPolicy
