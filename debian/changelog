@@ -1,4 +1,4 @@
-dballe (7.2-1) unstable; urgency=medium
+dballe (7.6-1) unstable; urgency=medium
 
   * New upstream release
      - big refactoring, extracting the beginning of a stable API/ABI
