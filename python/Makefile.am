@@ -39,7 +39,7 @@ python-dballe.html: python-dballe.rst
 
 clean-local:
 	rm -f *.pyc dballe/*.pyc _dballe.so
-	rm -r __pycache__ dballe/__pycache__
+	rm -rf __pycache__ dballe/__pycache__
 
 EXTRA_DIST = \
     doc-dballe \
