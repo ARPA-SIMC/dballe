@@ -11,8 +11,8 @@ Build-Depends: debhelper (>= 9), dh-python, dh-autoreconf,
   python-all-dev, python3-all-dev, python-docutils, python-numpy, python3-numpy,
   python-six, python3-six
 Standards-Version: 3.9.6.0
-Homepage: http://www.arpa.emr.it/dettaglio_documento.asp?id=514&idlivello=64
-Vcs-Svn: https://svn.smr.arpa.emr.it/dballe/dballe/trunk
+Homepage: https://github.com/ARPA-SIMC/dballe
+Vcs-Git: https://github.com/ARPA-SIMC/dballe
 
 Package: libdballe-dev
 Section: libdevel

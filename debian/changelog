@@ -1,10 +1,12 @@
-dballe (7.2-1) UNRELEASED; urgency=medium
+dballe (7.2-1) unstable; urgency=medium
 
   * New upstream release
      - big refactoring, extracting the beginning of a stable API/ABI
      - ported to wreport 3
+     - removed internal provami, now a separate package:
+       https://github.com/ARPA-SIMC/provami
 
- -- Enrico Zini <enrico@enricozini.org>  Tue, 31 Mar 2015 14:47:14 +0200
+ -- Enrico Zini <enrico@debian.org>  Mon, 23 Nov 2015 12:07:50 +0100
 
 dballe (7.1-1) UNRELEASED; urgency=medium
 
