@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 
 VERSION=$(shell debian/vercheck)
+RELEASE_PACKAGE=dballe
 
 # Work around to latex2html bug #368693
 export RGBDEF=/usr/share/latex2html/styles/rgb.txt
@@ -40,4 +41,9 @@ vercheck:
 	debian/vercheck > /dev/null
 
 debsrc: vercheck
+	if [ ! -f ../$(RELEASE_PACKAGE)_$(VERSION).orig.tar.gz ]; then \
+		test -f Makefile || ./configure; \
+		make dist; \
+		mv $(RELEASE_PACKAGE)-$(VERSION).tar.gz ../$(RELEASE_PACKAGE)_$(VERSION).orig.tar.gz; \
+	fi
 	gbp buildpackage -S -us -uc
