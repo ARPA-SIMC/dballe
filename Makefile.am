@@ -37,12 +37,13 @@ dbaexport.1: src/dbaexport
 
 BUILT_SOURCES = dbaexport.1
 
-EXTRA_DIST = autogen.sh \
+EXTRA_DIST = LICENSE BENCHMARKS ODBC-TRACE-HOWTO autogen.sh \
 	     libdballe.m4 libdballef.m4 \
 	     libdballe.pc.in libdballef.pc.in \
 	     $(conf_DATA) get_line_no run-check.conf.example \
 	     run-check run-local run-bench show_code_notes \
 	     UPGRADE-5.x \
-	     dbaexport.1
+	     dbaexport.1 \
+             fedora/SPECS/dballe.spec
 
 CLEANFILES = dbatbl.1 dbamsg.1 dbadb.1

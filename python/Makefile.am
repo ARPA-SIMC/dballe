@@ -47,6 +47,7 @@ EXTRA_DIST = \
     record.h \
     db.h \
     cursor.h \
+    testlib.py \
     $(dballe_python_tests)
 
 AM_CPPFLAGS = -I/usr/include/python$(PYTHON_VERSION) -I$(top_srcdir)
