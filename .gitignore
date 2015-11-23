@@ -52,6 +52,7 @@ Makefile
 /dballe/msg/tranges.dox
 /dballe/msg/tranges.tex
 /dballe/test-dballe
+/dballe/bench-run
 /dballe/dump-core-info
 /fortran/check_attrs
 /fortran/check_fdballe

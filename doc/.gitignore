@@ -6,7 +6,8 @@
 *.aux
 *.blg
 c_api/
-fortran_api/
-xml/
-libdballe.dox
-libdballef.dox
+/fortran_api/
+/xml/
+/libdballe.dox
+/libdballef.dox
+/doxygen_sqlite3.db
