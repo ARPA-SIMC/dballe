@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-guidesources = guide.tex intro.tex install.tex maintainance.tex troubleshooting.tex local.bib db.dia db.eps
+guidesources = guide.tex intro.tex install.tex maintainance.tex troubleshooting.tex local.bib
 fapisources = fapi.tex ../dballe/core/record_keyword.tex ../dballe/msg/ltypes.tex ../dballe/msg/tranges.tex
 
 cdoxdeps = libdballe.dox \
@@ -94,6 +94,8 @@ guide_html/index.html: $(guidesources)
 guide.dvi: $(guidesources)
 
 fapi.dvi: $(fapisources)
+
+BUILT_SOURCES = libdballe.dox
 
 EXTRA_DIST = libdballe.dox $(guidesources) fapi.tex doxy2swig.py add_templates_to_manpage introduzione.odt
 
