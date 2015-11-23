@@ -95,9 +95,7 @@ guide.dvi: $(guidesources)
 
 fapi.dvi: $(fapisources)
 
-BUILT_SOURCES = libdballe.dox
-
-EXTRA_DIST = libdballe.dox $(guidesources) fapi.tex doxy2swig.py add_templates_to_manpage introduzione.odt
+EXTRA_DIST = $(guidesources) fapi.tex doxy2swig.py add_templates_to_manpage introduzione.odt
 
 CLEANFILES = libdballe.doxytags libdballef.doxytags {guide,fapi}.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg}
 
@@ -107,3 +105,4 @@ clean-local:
 	rm -rf guide_html
 	rm -rf fapi_html
 	rm -f libwreport.doxytags
+	rm -f doxygen_sqlite3.db
