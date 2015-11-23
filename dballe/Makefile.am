@@ -418,7 +418,7 @@ test_dballe_LDADD = \
 # Benchmark
 #
 
-EXTRA_PROGRAMS += bench-run
+noinst_PROGRAMS += bench-run
 
 dist_noinst_HEADERS += \
 	db/bench.h
