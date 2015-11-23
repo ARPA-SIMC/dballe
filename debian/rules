@@ -40,4 +40,4 @@ vercheck:
 	debian/vercheck > /dev/null
 
 debsrc: vercheck
-	git-buildpackage -S -us -uc
+	gbp buildpackage -S -us -uc
