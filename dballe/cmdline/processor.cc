@@ -582,7 +582,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     state.pop();
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_KEY:
-                    var->set(MISSING_INT);
+                    var->unset();
                     ctx->set(*var);
                     state.pop();
                     break;
