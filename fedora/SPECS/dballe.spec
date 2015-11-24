@@ -1,7 +1,7 @@
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
-Version: 7.6
-Release: 2
+Version: 7.7
+Release: 1
 License: GPL
 Group: Applications/Meteo
 URL: https://github.com/ARPA-SIMC/dballe
@@ -52,18 +52,6 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, unixODBC, sql
     from soundings and airplanes.
   * Report information is preserved. It can work based on physical
     parameters or on report types.
-
-
-%package  -n provami
-Summary: Graphical interface to DB-All.e databases
-Group: Applications/Meteo
-requires: python-dballe, wxPython, dballe = %{?epoch:%epoch:}%{version}-%{release} ,rpy, numpy
-
-%description -n provami
- provami is a GUI application to visualise and navigate DB-All.e databases.
- It also allows to perform simple editing tasks, and to graphically select and
- export data subsets.
-
 
 %package  -n libdballe-devel
 Summary:  DB-ALL.e core C development library
@@ -213,13 +201,6 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 %doc %{_docdir}/dballe/fortran_api/*
 %doc %{_docdir}/dballe/libdballef.doxytags
 
-# old version of provami
-%exclude %{_bindir}/provami
-%exclude %{python_sitelib}/provami/*
-%exclude %{_mandir}/man1/provami*
-%exclude %{_datadir}/dballe/icon*.png
-%exclude %{_datadir}/dballe/world.dat
-
 %files common
 %defattr(-,root,root,-)
 %{_datadir}/wreport/[BD]*
@@ -296,6 +277,10 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 
 
 %changelog
+* Tue Nov 24 2015 Daniele Branchini <dbranchini@arpa.emr.it> - 7.7-1%{dist}
+- virtualenv/pip support
+- closed #13, #22
+
 * Thu Nov 12 2015 Daniele Branchini <dbranchini@arpa.emr.it> - 7.6-2%{dist}
 - Fix dballe and dballe-python dependencies, excluded old provami files
 
