@@ -1,7 +1,7 @@
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
 Version: 7.7
-Release: 1
+Release: 2
 License: GPL
 Group: Applications/Meteo
 URL: https://github.com/ARPA-SIMC/dballe
@@ -9,6 +9,7 @@ Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildRequires: unixODBC-devel, gperf, cnf-devel, tetex, tetex-latex, doxygen, latex2html, python-docutils, lua-devel, libwreport-devel >= 3.2 , swig , python-devel, popt-devel, postgresql-devel, mariadb-devel
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, unixODBC, sqliteodbc, mysql-connector-odbc, python-dballe
+Obsoletes: provami <= 7.6
 
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 %{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
@@ -277,6 +278,9 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 
 
 %changelog
+* Tue Nov 24 2015 Daniele Branchini <dbranchini@arpa.emr.it> - 7.7-2%{dist}
+- managing provami messy legacy
+
 * Tue Nov 24 2015 Daniele Branchini <dbranchini@arpa.emr.it> - 7.7-1%{dist}
 - virtualenv/pip support
 - closed #13, #22
