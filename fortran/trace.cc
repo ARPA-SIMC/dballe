@@ -106,8 +106,12 @@ void log_result(int res)
 
 void log_result(const char* res)
 {
-    string arg = c_escape(res);
-    fprintf(trace_file, "wassert(actual(sres) == \"%s\");\n", arg.c_str());
+    if (res)
+    {
+        string arg = c_escape(res);
+        fprintf(trace_file, "wassert(actual(sres) == \"%s\");\n", arg.c_str());
+    } else
+        fprintf(trace_file, "wassert(actual(sres) == null);\n");
 }
 
 void SessionTracer::log_preparati(int dbahandle, int handle, const char* anaflag, const char* dataflag, const char* attrflag)
