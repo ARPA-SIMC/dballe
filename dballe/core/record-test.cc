@@ -183,6 +183,10 @@ class Tests : public TestCase
             wassert(actual(rec.enq("leveltype2", 0)) == 0);
             wassert(actual(rec.enq("l2", 0)) == 0);
             wassert(actual(rec.get_level()) == Level(9, 8));
+
+            rec.set("leveltype1", 1);
+            rec.set("l1", "-");
+            wassert(actual(rec.get_level()) == Level(1));
         });
         add_method("get_set_trange", []() {
             core::Record rec;
