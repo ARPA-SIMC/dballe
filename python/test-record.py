@@ -182,10 +182,12 @@ class RecordTest(unittest.TestCase):
             r.set_from_string("lat=12.34567")
             r.set_from_string("ident=ciao")
             r.set_from_string("B12101=32.5")
+            r.set_from_string("l1=-")
             self.assertEqual(r["ana_id"], 1)
             self.assertEqual(r["ident"], "ciao")
             self.assertEqual(r["lat"], 12.34567)
             self.assertEqual(r["B12101"], 32.5)
+            self.assertEqual(r["l1"], None)
 
     def testRecord(self):
         # Check basic set/get and variable iteration
