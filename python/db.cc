@@ -11,6 +11,7 @@
 #include "dballe/msg/codec.h"
 #include <algorithm>
 #include <wreport/bulletin.h>
+#include "config.h"
 
 #if PY_MAJOR_VERSION >= 3
     #define PyInt_FromLong PyLong_FromLong

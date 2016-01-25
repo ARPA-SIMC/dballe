@@ -3,6 +3,9 @@
 DBALLELIBS =  ../dballe/libdballe.la
 
 AM_CPPFLAGS = -I$(top_srcdir) $(WREPORT_CFLAGS) $(LUA_CFLAGS)
+if FILE_OFFSET_BITS_64
+AM_CPPFLAGS += -D_FILE_OFFSET_BITS=64
+endif
 
 bin_PROGRAMS = dbatbl dbamsg
 dist_bin_SCRIPTS = dbatbl_makeb dbaexport

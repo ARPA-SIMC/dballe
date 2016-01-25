@@ -5,6 +5,7 @@
 #include "db.h"
 #include "common.h"
 #include <algorithm>
+#include "config.h"
 
 #if PY_MAJOR_VERSION >= 3
     #define PyInt_FromLong PyLong_FromLong

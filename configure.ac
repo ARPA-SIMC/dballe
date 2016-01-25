@@ -3,7 +3,7 @@ dnl Process this file with autoconf to produce a configure script.
 AC_INIT(dballe, [7.7], [enrico@enricozini.org])
 AC_CONFIG_SRCDIR([configure.ac])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADER(config.h)
 AC_CONFIG_MACRO_DIR([m4])
 
 dnl Use libtool
@@ -55,6 +55,16 @@ AM_PROG_CC_STDC
 
 dnl Needed by subdir-objects
 AM_PROG_CC_C_O
+
+AC_SYS_LARGEFILE
+
+dnl See http://www.gossamer-threads.com/lists/xen/devel/275132
+FILE_OFFSET_BITS_64=
+if test $ac_cv_sys_file_offset_bits = 64
+then
+    FILE_OFFSET_BITS_64=yes
+fi
+AM_CONDITIONAL([FILE_OFFSET_BITS_64], [test x"$FILE_OFFSET_BITS_64" = x"yes"])
 
 dnl We want to invoke pkg-config directly
 PKG_PROG_PKG_CONFIG

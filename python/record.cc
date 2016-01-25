@@ -4,6 +4,7 @@
 #include "record.h"
 #include "common.h"
 #include <vector>
+#include "config.h"
 
 #if PY_MAJOR_VERSION >= 3
     #define PyInt_FromLong PyLong_FromLong

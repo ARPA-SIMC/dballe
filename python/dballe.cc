@@ -6,6 +6,7 @@
 #include "cursor.h"
 #include "dballe/types.h"
 #include "dballe/var.h"
+#include "config.h"
 
 #if PY_MAJOR_VERSION >= 3
     #define PyInt_FromLong PyLong_FromLong
