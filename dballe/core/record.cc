@@ -143,23 +143,7 @@ void Record::setc(const char* key, const char* val)
         unset(key);
     else
     {
-        // FIXME: describe here what this is for: so far, this is only the
-        // request that came in in issue #29
-        auto& var = obtain(key);
-        switch (var.info()->type)
-        {
-            case Vartype::String:
-            case Vartype::Binary:
-                var.setc(val);
-                break;
-            case Vartype::Decimal:
-            case Vartype::Integer:
-                if (strcmp(val, "-") == 0)
-                    unset(key);
-                else
-                    var.setc(val);
-                break;
-        }
+        obtain(key).setc(val);
     }
 }
 void Record::sets(const char* key, const std::string& val)
@@ -168,7 +152,22 @@ void Record::sets(const char* key, const std::string& val)
 }
 void Record::setf(const char* key, const char* val)
 {
-    obtain(key).setf(val);
+    // See https://github.com/ARPA-SIMC/dballe/issues/29
+    auto& var = obtain(key);
+    switch (var.info()->type)
+    {
+        case Vartype::String:
+        case Vartype::Binary:
+            var.setf(val);
+            break;
+        case Vartype::Decimal:
+        case Vartype::Integer:
+            if (strcmp(val, "-") == 0)
+                unset(key);
+            else
+                var.setf(val);
+            break;
+    }
 }
 
 void Record::set_datetime(const Datetime& dt)

@@ -70,6 +70,9 @@ struct Record
      * Contrarily to setc, the string is parsed according to the natural
      * representation for the given key. For example, if lat is set to "45",
      * then it gets the value 45.0.
+     *
+     * Also, if a Decimal or Integer value is assigned "-", it is unset
+     * instead.
      */
     virtual void setf(const char* key, const char* val) = 0;
 
