@@ -1,11 +1,12 @@
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
 Version: 7.7
-Release: 2
+Release: 3
 License: GPL
 Group: Applications/Meteo
 URL: https://github.com/ARPA-SIMC/dballe
-Source0: %{name}-%{version}.tar.gz
+#Source0: %{name}-%{version}.tar.gz
+Source0: https://github.com/arpa-simc/%{name}/archive/v%{version}-%{release}.tar.gz#/%{name}-%{version}-%{release}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildRequires: unixODBC-devel, gperf, cnf-devel, tetex, tetex-latex, doxygen, latex2html, python-docutils, lua-devel, libwreport-devel >= 3.2 , swig , python-devel, popt-devel, postgresql-devel, mariadb-devel
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, unixODBC, sqliteodbc, mysql-connector-odbc, python-dballe
@@ -167,9 +168,11 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, rpy, numpy, p
 
 
 %prep
-%setup -q 
+%setup -q -n %{name}-%{version}-%{release}
 
 %build
+
+autoreconf -ifv
 
 %configure FC=gfortran F90=gfortan F77=gfortran --enable-dballe-db  --enable-dballef --enable-dballe-python --enable-docs
 
