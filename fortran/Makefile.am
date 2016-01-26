@@ -76,6 +76,10 @@ check_messages_SOURCES = $(dbtestlib) check_messages.f90
 check_messages_LDADD = ./libdballef.la -lcnf -lpopt
 check_messages_FCFLAGS = -g
 
+check_messages_stdinstdout_SOURCES = $(dbtestlib) check_messages_stdinstdout.f90
+check_messages_stdinstdout_LDADD = ./libdballef.la -lcnf -lpopt
+check_messages_stdinstdout_FCFLAGS = -g
+
 check_multiplehandler_SOURCES = $(dbtestlib) check_multiplehandler.f90
 check_multiplehandler_LDADD = ./libdballef.la -lcnf -lpopt
 check_multiplehandler_FCFLAGS = -g
@@ -99,7 +103,7 @@ genattr_SOURCES = genattr.f90
 genattr_LDADD = ../fortran/libdballef.la -lcnf -lpopt
 genattr_FCFLAGS = -g 
 
-noinst_PROGRAMS += dump_dballe
+noinst_PROGRAMS += dump_dballe check_messages_stdinstdout
 
 dump_dballe_SOURCES = dump_dballe.f90
 dump_dballe_LDADD = ../fortran/libdballef.la -lcnf -lpopt
