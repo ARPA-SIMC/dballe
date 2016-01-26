@@ -12,14 +12,14 @@ namespace dballe {
 namespace core {
 
 File::File(const std::string& name, FILE* fd, bool close_on_exit)
-	: m_name(name), fd(fd), close_on_exit(close_on_exit), idx(0)
+    : m_name(name), fd(fd), close_on_exit(close_on_exit), idx(0)
 {
 }
 
 File::~File()
 {
-	if (fd && close_on_exit)
-		fclose(fd);
+    if (fd && close_on_exit)
+        fclose(fd);
 }
 
 bool File::foreach(std::function<bool(const BinaryMessage&)> dest)

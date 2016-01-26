@@ -2,6 +2,10 @@
 #include "db/tests.h"
 #include "dbapi.h"
 #include "config.h"
+#include "msgapi.h"
+#include <wreport/utils/sys.h>
+#include <sys/fcntl.h>
+#include <unistd.h>
 
 using namespace std;
 using namespace dballe;
@@ -9,6 +13,27 @@ using namespace dballe::db;
 using namespace dballe::tests;
 
 namespace {
+
+struct TempBind
+{
+    int fd;
+    int old_val;
+
+    TempBind(int fd, int new_fd)
+        : fd(fd)
+    {
+        // Connect stdin to an input file
+        old_val = dup(fd);
+        wassert(actual(old_val) != -1);
+        wassert(actual(dup2(new_fd, fd)) != -1);
+    }
+
+    ~TempBind()
+    {
+        wassert(actual(dup2(old_val, fd)) != -1);
+    }
+};
+
 
 void populate_variables(fortran::DbAPI& api)
 {
@@ -317,6 +342,33 @@ class Tests : public FixtureTestCase<DBFixture>
             wassert(actual(api.messages_read_next()).isfalse());
             wassert(actual(api.voglioquesto()) == 0);
         });
+        add_method("messages_read_messages_stdin", [](Fixture& f) {
+            fortran::DbAPI api(*f.db, "write", "write", "write");
+
+            // Connect stdin to an input file
+            wreport::sys::File in(tests::datafile("bufr/synotemp.bufr"), O_RDONLY);
+            TempBind tb(0, in);
+
+            // 2 messages, 1 subset each
+            api.messages_open_input("", "r", File::BUFR);
+
+            // At the beginning, the DB is empty
+            wassert(actual(api.voglioquesto()) == 0);
+
+            // First message
+            wassert(actual(api.messages_read_next()).istrue());
+            wassert(actual(api.voglioquesto()) == 88);
+
+            // Second message
+            api.remove_all();
+            wassert(actual(api.messages_read_next()).istrue());
+            wassert(actual(api.voglioquesto()) == 9);
+
+            // End of messages
+            api.remove_all();
+            wassert(actual(api.messages_read_next()).isfalse());
+            wassert(actual(api.voglioquesto()) == 0);
+        });
         add_method("messages_read_subsets", [](Fixture& f) {
             // 1 message, 6 subsets
             fortran::DbAPI api(*f.db, "write", "write", "write");
@@ -411,6 +463,54 @@ class Tests : public FixtureTestCase<DBFixture>
 
                 api.unsetall();
                 api.messages_write_next("wmo");
+            }
+
+            // Read it back
+            {
+                fortran::DbAPI api(*f.db, "write", "write", "write");
+                api.messages_open_input("test.bufr", "rb", File::BUFR);
+
+                wassert(actual(api.messages_read_next()).istrue());
+                wassert(actual(api.voglioquesto()) == 2);
+                wassert(actual(api.dammelo()) == "B12101");
+                wassert(actual(api.enqd("B12101")) == 21.5);
+                wassert(actual(api.dammelo()) == "B11002");
+                wassert(actual(api.enqd("B11002")) == 2.4);
+
+                wassert(actual(api.messages_read_next()).isfalse());
+            }
+        });
+        add_method("messages_write_stdout", [](Fixture& f) {
+            // Write one message
+            {
+                // Connect stdout to an output file
+                wreport::sys::File out("test.bufr", O_WRONLY | O_CREAT | O_TRUNC);
+                TempBind tb(1, out);
+
+                {
+                    fortran::DbAPI api(*f.db, "write", "write", "write");
+                    api.messages_open_output("", "wb", File::BUFR);
+
+                    api.setd("lat", 44.5);
+                    api.setd("lon", 11.5);
+                    api.setc("rep_memo", "synop");
+                    api.settimerange(254, 0, 0);
+                    api.setdate(2013, 4, 25, 12, 0, 0);
+                    // Instant temperature, 2 meters above ground
+                    api.setlevel(103, 2000, MISSING_INT, MISSING_INT);
+                    api.setd("B12101", 21.5);
+                    api.prendilo();
+                    // Instant wind speed, 10 meters above ground
+                    api.unsetb();
+                    api.setlevel(103, 10000, MISSING_INT, MISSING_INT);
+                    api.setd("B11002", 2.4);
+                    api.prendilo();
+
+                    api.unsetall();
+                    api.messages_write_next("wmo");
+
+                    fflush(stdout);
+                }
             }
 
             // Read it back
