@@ -143,6 +143,8 @@ void Record::setc(const char* key, const char* val)
         unset(key);
     else
     {
+        // FIXME: describe here what this is for: so far, this is only the
+        // request that came in in issue #29
         auto& var = obtain(key);
         switch (var.info()->type)
         {
