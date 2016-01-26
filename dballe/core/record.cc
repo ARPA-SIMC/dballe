@@ -142,7 +142,23 @@ void Record::setc(const char* key, const char* val)
     if (!val)
         unset(key);
     else
-        obtain(key).setc(val);
+    {
+        auto& var = obtain(key);
+        switch (var.info()->type)
+        {
+            case Vartype::String:
+            case Vartype::Binary:
+                var.setc(val);
+                break;
+            case Vartype::Decimal:
+            case Vartype::Integer:
+                if (strcmp(val, "-") == 0)
+                    unset(key);
+                else
+                    var.setc(val);
+                break;
+        }
+    }
 }
 void Record::sets(const char* key, const std::string& val)
 {
