@@ -34,7 +34,7 @@ check_PROGRAMS = check_missing_msg
 
 #TESTS = $(check_PROGRAMS)
 testlib = test.f90
-dbtestlib = dbtest.f90 $(testlib)
+dbtestlib = $(testlib) dbtest.f90
 
 CXXFLAGS += -O0
 
