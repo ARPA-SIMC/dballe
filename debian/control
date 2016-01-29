@@ -94,8 +94,6 @@ Architecture: any
 Depends: dballe-common, python-wreport, ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
 Recommends: python-numpy
 Suggests: python-rpy2
-XB-Python-Version: ${python:Versions}
-Provides: ${python:Provides}
 Description: DB-ALL.e Python library for weather research
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
@@ -105,10 +103,9 @@ Description: DB-ALL.e Python library for weather research
 Package: python3-dballe
 Section: python
 Architecture: any
-Depends: dballe-common, python3-wreport, ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
+Depends: dballe-common, python3-wreport, ${shlibs:Depends}, ${misc:Depends}, ${python3:Depends}
 Recommends: python3-numpy
 Suggests: python3-rpy2
-Provides: ${python:Provides}
 Description: DB-ALL.e Python library for weather research
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.

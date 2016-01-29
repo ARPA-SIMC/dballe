@@ -1,3 +1,16 @@
+dballe (7.7-1) unstable; urgency=medium
+
+  [ Scott Kitterman ]
+  * Change python:Depends to python3:Depends for python3-dballe so that
+    correct binary depends are generated
+  * Remove obsolete python packaging features from debian/control
+
+  [ Enrico Zini ]
+  * New upstream version
+  * Applied Scott's patch. Closes: #810062
+
+ -- Enrico Zini <enrico@debian.org>  Fri, 29 Jan 2016 10:25:17 +0100
+
 dballe (7.6-1) unstable; urgency=medium
 
   * New upstream release
