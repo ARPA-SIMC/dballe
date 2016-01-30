@@ -33,8 +33,7 @@ TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 check_PROGRAMS = check_missing_msg
 
 #TESTS = $(check_PROGRAMS)
-testlib = test.f90
-dbtestlib = $(testlib) dbtest.f90
+dbtestlib = test.f90 dbtest.f90
 
 CXXFLAGS += -O0
 
@@ -111,7 +110,7 @@ dump_dballe_FCFLAGS = -g
 
 EXTRA_DIST = fortran.dox check-utils.h error.h trace.h
 
-CLEANFILES = test.mod dbtest.mod
+CLEANFILES = *.mod
 
 check-local:
 	for test in $(check_PROGRAMS); do \
