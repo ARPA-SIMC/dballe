@@ -48,7 +48,7 @@ static int op_precise_import = 0;
 static int op_bufr2netcdf_categories = 0;
 static const char* op_output_type = "bufr";
 static const char* op_output_template = "";
-static const char* op_output_file = "(stdout)";
+static const char* op_output_file = NULL;
 static const char* op_report = "";
 static const char* op_bisect_cmd = NULL;
 int op_verbose = 0;
@@ -964,10 +964,17 @@ struct Convert : public cmdline::Subcommand
 
         conv.bufr2netcdf_categories = op_bufr2netcdf_categories != 0;
 
-        if (strcmp(op_output_type, "auto") == 0)
-            conv.file = File::create(op_output_file, "w").release();
-        else
-            conv.file = File::create(string_to_encoding(op_output_type), op_output_file, "w").release();
+        if (strcmp(op_output_type, "auto") == 0) {
+            if (op_output_file == NULL)
+                conv.file = File::create(stdout, false, "stdout").release();
+            else
+                conv.file = File::create(op_output_file, "w").release();
+        } else {
+            if (op_output_file == NULL)
+                conv.file = File::create(string_to_encoding(op_output_type), stdout, false, "stdout").release();
+            else
+                conv.file = File::create(string_to_encoding(op_output_type), op_output_file, "w").release();
+        }
 
         conv.exporter = msg::Exporter::create(conv.file->encoding(), opts).release();
 
