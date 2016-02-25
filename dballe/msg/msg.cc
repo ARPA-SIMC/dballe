@@ -339,13 +339,13 @@ struct VarContext
     {
         // Longitude
         if (lon)
-            out << setprecision(5) << lon->enqd() << ",";
+	    out << fixed << setprecision(5) << lon->enqd() << ",";
         else
             out << ",";
 
         // Latitude
         if (lat)
-            out << setprecision(5) << lat->enqd() << ",";
+	    out << fixed << setprecision(5) << lat->enqd() << ",";
         else
             out << ",";
 
