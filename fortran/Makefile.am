@@ -37,7 +37,7 @@ dbtestlib = test.f90 dbtest.f90
 
 CXXFLAGS += -O0
 
-check_missing_msg_SOURCES = $(testlib) check_missing_msg.f90
+check_missing_msg_SOURCES = $(dbtestlib) check_missing_msg.f90
 check_missing_msg_LDADD = ./libdballef.la -lcnf -lpopt
 check_missing_msg_FCFLAGS = -g
 
