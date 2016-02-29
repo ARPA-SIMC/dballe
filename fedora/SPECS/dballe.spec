@@ -174,7 +174,7 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, rpy, numpy, p
 
 autoreconf -ifv
 
-%configure FC=gfortran F90=gfortan F77=gfortran --enable-dballe-db  --enable-dballef --enable-dballe-python --enable-docs
+%configure FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs
 
 make
 
