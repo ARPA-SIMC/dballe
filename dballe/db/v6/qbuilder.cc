@@ -310,6 +310,15 @@ bool StationQueryBuilder::build_where()
             break;
     }
 
+    if (!query.rep_memo.empty())
+    {
+        int src_val = db.repinfo().get_id(query.rep_memo.c_str());
+        sql_where.append_listf(
+                "EXISTS(SELECT id FROM data s_repmemo WHERE s_repmemo.id_station=s.id AND s_repmemo.id_report=%d)", src_val);
+        TRACE("found rep_memo %s: adding AND EXISTS(SELECT id FROM data s_repmemo WHERE s_repmemo.id_station=s.id AND s_repmemo.id_report=%d)\n", query.rep_memo.c_str(), src_val);
+        has_where = true;
+    }
+
     return has_where;
 }
 
@@ -617,7 +626,7 @@ bool QueryBuilder::add_varcode_where(const char* tbl)
 bool QueryBuilder::add_repinfo_where(const char* tbl)
 {
     bool found = false;
- 
+
     if (query.prio_min != MISSING_INT || query.prio_max != MISSING_INT)
     {
         // Filter the repinfo cache and build a IN query
