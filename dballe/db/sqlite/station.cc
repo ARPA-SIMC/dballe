@@ -99,7 +99,7 @@ void SQLiteStationBase::read_station_vars(SQLiteStatement& stm, std::function<vo
 
     stm.execute([&]() {
         Varcode code = stm.column_int(0);
-        TRACE("fill_ana_layer Got B%02ld%03ld %s\n", WR_VAR_X(code), WR_VAR_Y(code), out_value);
+        TRACE("fill_ana_layer Got B%02ld%03ld %s\n", WR_VAR_X(code), WR_VAR_Y(code), stm.column_string(3));
 
         // First process the variable, possibly inserting the old one in the message
         if (last_varcode != code)

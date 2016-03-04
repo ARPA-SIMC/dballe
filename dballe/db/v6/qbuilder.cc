@@ -451,7 +451,7 @@ bool QueryBuilder::add_pa_where(const char* tbl)
         } else if (MySQLConnection* c = dynamic_cast<MySQLConnection*>(&conn)) {
             string escaped = c->escape(query.ident.get());
             sql_where.append_listf("%s.ident='%s'", tbl, escaped.c_str());
-            TRACE("found ident: adding AND %s.ident='%s'.  val is %s\n", tbl, escape.c_str(), query.ident.get());
+            TRACE("found ident: adding AND %s.ident='%s'.  val is %s\n", tbl, escaped.c_str(), query.ident.get());
 #endif
         } else {
             sql_where.append_listf("%s.ident=?", tbl);
@@ -518,8 +518,8 @@ bool QueryBuilder::add_dt_where(const char* tbl)
             // Add constraint on the exact date interval
             sql_where.append_listf("%s.datetime=", tbl);
             conn.add_datetime(sql_where, dtmin);
-            TRACE("found exact time: adding AND %s.datetime={ts '%04d-%02d-%02d %02d:%02d:%02d.000'}\n",
-                    tbl, minvalues[0], minvalues[1], minvalues[2], minvalues[3], minvalues[4], minvalues[5]);
+            TRACE("found exact time: adding AND %s.datetime=%04hu-%02hhu-%02hhu%c%02hhu:%02hhu:%02hhu\n",
+                    tbl, dtmin.year, dtmin.month, dtmin.day, dtmin.hour, dtmin.minute, dtmin.second);
             found = true;
         }
         else
@@ -529,16 +529,16 @@ bool QueryBuilder::add_dt_where(const char* tbl)
                 // Add constraint on the minimum date interval
                 sql_where.append_listf("%s.datetime>=", tbl);
                 conn.add_datetime(sql_where, dtmin);
-                TRACE("found min time: adding AND %s.datetime>={ts '%04d-%02d-%02d %02d:%02d:%02d.000'}\n",
-                    tbl, minvalues[0], minvalues[1], minvalues[2], minvalues[3], minvalues[4], minvalues[5]);
+                TRACE("found min time: adding AND %s.datetime>=%04hu-%02hhu-%02hhu%c%02hhu:%02hhu:%02hhu\n",
+                    tbl, dtmin.year, dtmin.month, dtmin.day, dtmin.hour, dtmin.minute, dtmin.second);
                 found = true;
             }
             if (!dtmax.is_missing())
             {
                 sql_where.append_listf("%s.datetime<=", tbl);
                 conn.add_datetime(sql_where, dtmax);
-                TRACE("found max time: adding AND %s.datetime<={ts '%04d-%02d-%02d %02d:%02d:%02d.000'}\n",
-                        tbl, maxvalues[0], maxvalues[1], maxvalues[2], maxvalues[3], maxvalues[4], maxvalues[5]);
+                TRACE("found max time: adding AND %s.datetime<=%04hu-%02hhu-%02hhu%c%02hhu:%02hhu:%02hhu\n",
+                    tbl, dtmax.year, dtmax.month, dtmax.day, dtmax.hour, dtmax.minute, dtmax.second);
                 found = true;
             }
         }
@@ -606,7 +606,7 @@ bool QueryBuilder::add_varcode_where(const char* tbl)
             sql_where.append_listf("%s.id_var IN (", tbl);
             sql_where.append_varlist(query.varcodes);
             sql_where.append(")");
-            TRACE("found blist: adding AND %s.id_var IN (%s)\n", tbl, val);
+            TRACE("found blist: adding AND %s.id_var IN (...%zd items...)\n", tbl, query.varcodes.size());
             found = true;
             break;
     }
@@ -644,7 +644,7 @@ bool QueryBuilder::add_repinfo_where(const char* tbl)
     {
         int src_val = db.repinfo().get_id(query.rep_memo.c_str());
         sql_where.append_listf("%s.id_report=%d", tbl, src_val);
-        TRACE("found rep_memo %s: adding AND %s.id_report=%d\n", val, tbl, (int)src_val);
+        TRACE("found rep_memo %s: adding AND %s.id_report=%d\n", query.rep_memo.c_str(), tbl, (int)src_val);
         found = true;
     }
 

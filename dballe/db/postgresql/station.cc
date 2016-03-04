@@ -75,7 +75,7 @@ void StationBase::get_station_vars(int id_station, int id_report, std::function<
 {
     // Perform the query
     using namespace postgresql;
-    TRACE("fill_ana_layer Performing query: %s with idst %d idrep %d\n", query, id_station, id_report);
+    TRACE("fill_ana_layer Performing query v6_station_get_station_vars with idst %d idrep %d\n", id_station, id_report);
     Result res(conn.exec_prepared("v6_station_get_station_vars", id_station, id_report));
 
     // Retrieve results
@@ -85,7 +85,7 @@ void StationBase::get_station_vars(int id_station, int id_report, std::function<
     for (unsigned row = 0; row < res.rowcount(); ++row)
     {
         Varcode code = res.get_int4(row, 0);
-        TRACE("fill_ana_layer Got B%02ld%03ld %s\n", WR_VAR_X(code), WR_VAR_Y(code), out_value);
+        TRACE("fill_ana_layer Got %01d%02ld%03ld %s\n", WR_VAR_FXY(code), res.get_string(row, 1));
 
         // First process the variable, possibly inserting the old one in the message
         if (last_varcode != code)

@@ -125,7 +125,7 @@ void MySQLStationBase::read_station_vars(const std::string& query, std::function
     while (auto row = res.fetch())
     {
         Varcode code = row.as_int(0);
-        TRACE("fill_ana_layer Got B%02ld%03ld %s\n", WR_VAR_X(code), WR_VAR_Y(code), out_value);
+        TRACE("fill_ana_layer Got %01d%02ld%03ld %s\n", WR_VAR_FXY(code), row.as_cstring(1));
 
         // First process the variable, possibly inserting the old one in the message
         if (last_varcode != code)

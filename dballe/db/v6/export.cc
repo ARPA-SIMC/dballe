@@ -159,7 +159,7 @@ bool DB::export_msgs(const dballe::Query& query, std::function<bool(std::unique_
             last_rep_cod = sqlrec.out_rep_cod;
         }
 
-        TRACE("Inserting var B%02d%03d (%s)\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()), var->value());
+        TRACE("Inserting var %01d%02d%03d (%s)\n", WR_VAR_FXY(var->code()), var->enqc());
         if (sqlrec.out_id_ltr == -1)
         {
             msg->set(move(var), Level(), Trange());
