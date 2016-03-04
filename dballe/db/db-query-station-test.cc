@@ -203,6 +203,12 @@ class Tests : public FixtureTestCase<Fixture>
                 default: error_unimplemented::throwf("cannot run this test on a database of format %d", (int)db.format());
             }
         });
+        add_method("query_rep_memo", [](Fixture& f) {
+            // https://github.com/ARPA-SIMC/dballe/issues/35
+            auto& db = *f.db;
+            wassert(actual(db).try_station_query("rep_memo=synop", 1));
+            wassert(actual(db).try_station_query("rep_memo=metar", 2));
+        });
     }
 };
 
