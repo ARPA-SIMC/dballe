@@ -4,7 +4,7 @@ doc_DATA =
 
 noinst_DATA =
 
-EXTRA_DIST = mkaliasdoc mkkeydoc
+EXTRA_DIST = mksnippet
 
 CLEANFILES =
 
@@ -25,11 +25,11 @@ cppdeps += ../dballe/main-core.dox
 cppdeps += ../dballe/main-msg.dox
 cppdeps += ../dballe/main-db.dox
 
-record_keyword.dox: $(top_builddir)/dballe/dump-core-info mkkeydoc
-	$(top_builddir)/dballe/dump-core-info keywords | $(top_srcdir)/doc/mkkeydoc dox > $@ || rm $@
+record_keyword.dox: $(top_builddir)/dballe/dump-core-info mksnippet
+	$(top_builddir)/dballe/dump-core-info keywords | $(top_srcdir)/doc/mksnippet key dox > $@ || rm $@
 
-aliases.dox: $(top_srcdir)/dballe/core/aliases.gperf mkaliasdoc
-	$(top_builddir)/doc/mkaliasdoc dox < $< > $@ || rm $@
+aliases.dox: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
+	$(top_builddir)/doc/mksnippet alias dox < $< > $@ || rm $@
 
 libdballe.doxytags: $(cppdeps)
 	doxygen $<
@@ -56,11 +56,11 @@ libdballef.doxytags: $(fortrandeps)
 fapi_reference.md: $(top_srcdir)/doc/make_fortran_reference libdballef.doxytags
 	$< > $@ fortran_xml || rm $@
 
-fapi_parms.md: $(top_builddir)/dballe/dump-core-info mkkeydoc
-	$(top_builddir)/dballe/dump-core-info keywords | $(top_srcdir)/doc/mkkeydoc md > $@ || rm $@
+fapi_parms.md: $(top_builddir)/dballe/dump-core-info mksnippet
+	$(top_builddir)/dballe/dump-core-info keywords | $(top_srcdir)/doc/mksnippet key md > $@ || rm $@
 
-fapi_aliases.md: $(top_srcdir)/dballe/core/aliases.gperf mkaliasdoc
-	$(top_builddir)/doc/mkaliasdoc md < $< > $@ || rm $@
+fapi_aliases.md: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
+	$(top_builddir)/doc/mksnippet alias md < $< > $@ || rm $@
 
 
 doc_DATA += $(fapisources)
@@ -98,5 +98,38 @@ CLEANFILES += doxygen_sqlite3.db
 clean-local:
 	rm -rf {c,fortran}_api
 	rm -rf {c,fortran}_xml
+
+
+
+
+
+
+
+
+
+
+
+
+
+# msg
+
+noinst_DATA += msg/ltypes.dox msg/ltypes.tex msg/tranges.dox msg/tranges.tex
+
+msg/ltypes.dox: msg/ltypes.txt msg/mklevels
+	$(srcdir)/msg/mklevels dox < $< > $@
+
+msg/ltypes.tex: msg/ltypes.txt msg/mklevels
+	$(srcdir)/msg/mklevels tex < $< > $@
+
+msg/tranges.dox: msg/mktranges
+	$(srcdir)/msg/mktranges dox < $< > $@
+
+msg/tranges.tex: msg/mktranges
+	$(srcdir)/msg/mktranges tex < $< > $@
+
+EXTRA_DIST += msg/wr_exporters/exporters.dox msg/ltypes.txt msg/mklevels msg/mktranges
+
+CLEANFILES += msg/ltypes.dox msg/ltypes.tex msg/tranges.dox msg/tranges.tex
+
 
 endif

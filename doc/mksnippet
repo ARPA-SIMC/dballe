@@ -1,0 +1,302 @@
+#!/usr/bin/python3
+
+import textwrap
+import argparse
+import sys
+import os
+import re
+from collections import OrderedDict
+from itertools import zip_longest
+import logging
+
+log = logging.getLogger()
+
+class TextTable:
+    def __init__(self, colsizes, titles):
+        self.colsizes = colsizes
+        self.titles = titles
+        self.wrappers = [textwrap.TextWrapper(width=x) for x in colsizes]
+
+    def print_row(self, vals):
+        wrapped_vals = [wrapper.wrap(val) for wrapper, val in zip(self.wrappers, vals)]
+        for cols in zip_longest(*wrapped_vals, fillvalue=""):
+            row = []
+            for sz, val in zip(self.colsizes, cols):
+                row.append(val.ljust(sz))
+            print(" ".join(row))
+
+    def print_head(self):
+        self.print_row(self.titles)
+        self.print_row(["-" * x for x in self.colsizes])
+
+
+class MdTable:
+    def __init__(self, colsizes, titles):
+        self.colsizes = colsizes
+        self.titles = titles
+
+    def print_row(self, vals):
+        row = []
+        for sz, val in zip(self.colsizes, vals):
+            row.append(val.ljust(sz))
+        print("|", " | ".join(row), "|")
+
+    def print_head(self):
+        self.print_row(self.titles)
+        self.print_row(["-" * x for x in self.colsizes])
+
+
+class Keywords:
+    def __init__(self):
+        # The values are:
+        #   required/optional/ignored on insert
+        #   required/optional/ignored on query
+        #   present/absent            on results
+        #   comment about the field  [optional value]
+        self.comments = OrderedDict((
+            ("priority", [ "ignored", "optional", "present",
+                        "Every type of report has an associated priority that controls "
+                        "which data are first returned when there is more than one in the "
+                        "same physical space.  It can be changed by editing "
+                        "/etc/dballe/repinfo.csv"]),
+            ("priomax",  [ "ignored", "optional", "absent" ]),
+            ("priomin",  [ "ignored", "optional", "absent" ]),
+            ("rep_memo", [ "required", "optional", "present" ]),
+            ("ana_id",   [ "optional", "optional", "present",
+                        "Internal DB-ALLe ID referring to a pseudoana entry, used as "
+                        "a shortcut reference instead of specifying the full data" ]),
+            ("block",    [ "optional", "optional", "present" ]),
+            ("station",  [ "optional", "optional", "present" ]),
+            ("mobile",   [ "required", "optional", "present",
+                        "Set to 1 if the station is mobile, such as a ship or a flight; else 0"]),
+            ("ident",    [ "required if mobile=1", "optional", "present if mobile=1" ]),
+            ("name",     [ "optional", "optional", "present" ]),
+            ("lat",      [ "required", "optional", "present", "on insert, it has priority over ana_id" ]),
+            ("lon",      [ "required", "optional", "present", "on insert, it has priority over ana_id" ]),
+            ("latmax",   [ "ignored", "optional", "absent" ]),
+            ("latmin",   [ "ignored", "optional", "absent" ]),
+            ("lonmax",   [ "ignored", "optional", "absent" ]),
+            ("lonmin",   [ "ignored", "optional", "absent" ]),
+            ("height",   [ "optional", "optional", "present" ]),
+            ("heightbaro", [ "optional", "optional", "present" ]),
+            ("year_ident", [ "required if mobile=1", "optional", "present if mobile=1",
+                            "Only needed when the station is mobile"]),
+            ("month_ident", [ "required if mobile=1", "optional", "present if mobile=1",
+                            "Only needed when the station is mobile"]),
+            ("day_ident", [ "required if mobile=1", "optional", "present if mobile=1",
+                        "Only needed when the station is mobile"]),
+            ("hour_ident", [ "required if mobile=1", "optional", "present if mobile=1",
+                            "Only needed when the station is mobile"]),
+            ("min_ident", [ "required if mobile=1", "optional", "present if mobile=1",
+                        "Only needed when the station is mobile"]),
+        #   "datetime", [ "ignored", "ignored", "present",
+        #                     "Convenience parameter: after a query it contains the datetime informations ",
+        #             " all in a single string"],
+            ("year",     [ "required", "optional", "present" ]),
+            ("month",    [ "required", "optional", "present" ]),
+            ("day",      [ "required", "optional", "present" ]),
+            ("hour",     [ "required", "optional", "present" ]),
+            ("min",      [ "required", "optional", "present" ]),
+            ("sec",      [ "required", "optional", "present" ]),
+            ("yearmax",  [ "ignored", "optional", "absent" ]),
+            ("yearmin",  [ "ignored", "optional", "absent" ]),
+            ("monthmax", [ "ignored", "optional", "absent" ]),
+            ("monthmin", [ "ignored", "optional", "absent" ]),
+            ("daymax",   [ "ignored", "optional", "absent" ]),
+            ("daymin",   [ "ignored", "optional", "absent" ]),
+            ("hourmax",  [ "ignored", "optional", "absent" ]),
+            ("hourmin",  [ "ignored", "optional", "absent" ]),
+            ("minumax",  [ "ignored", "optional", "absent" ]),
+            ("minumin",  [ "ignored", "optional", "absent" ]),
+            ("secmax",   [ "ignored", "optional", "absent" ]),
+            ("secmin",   [ "ignored", "optional", "absent" ]),
+            ("leveltype", [ "required", "optional", "present" ]),
+            ("l1",       [ "required", "optional", "present" ]),
+            ("l2",       [ "required", "optional", "present" ]),
+            ("pindicator",   [ "required", "optional", "present" ]),
+            ("p1",       [ "required", "optional", "present" ]),
+            ("p2",       [ "required", "optional", "present" ]),
+            ("var",      [ "ignored", "optional", "present, indicates the name of the last variable returned" ]),
+            ("varlist",  [ "ignored", "optional", "absent",
+                    "Comma-separated list of variable codes wanted on output" ]),
+            ("query",    [ "ignored", "optional", "absent",
+                    "Comma-separated list of query modifiers.  Can have one of: "
+                    "'best', 'bigana', 'nosort', 'stream'.  "
+                    "Examples: 'best', 'nosort,stream'" ]),
+            ("ana_filter",   [ "ignored", "optional", "absent",
+                    "Restricts the results to only those stations which "
+                    "have a pseudoana value that matches the filter. "
+                    "Examples: 'height>=1000', 'B02001=1', '1000<=height<=2000" ]),
+            ("data_filter",  [ "ignored", "optional", "absent",
+                    "Restricts the results to only the variables of the given type, which "
+                    "have a value that matches the filter. "
+                    "Examples: 't<260', 'B22021>2', '10<=B22021<=20'" ]),
+            ("attr_filter",  [ "ignored", "optional", "absent",
+                    "Restricts the results to only those data which "
+                    "have an attribute that matches the filter. "
+                    "Examples: 'conf>70', 'B33197=0', '25<=conf<=50'" ]),
+            ("limit",    [ "ignored", "optional", "absent",
+                    "Maximum number of results to return" ]),
+        ))
+
+    def read(self):
+        self.data = []
+        for line in sys.stdin:
+            line = line.strip()
+            res = line.split(",")
+            res[2] = int(res[2])
+            res[3] = int(res[3])
+            self.data.append(res)
+
+    def mkformat(self, unit, sz, dec):
+        if  "CHARACTER" in unit or "CODE TABLE" in unit:
+            return "{} chars".format(sz)
+        elif dec == 0:
+            return "{} digits".format(sz)
+        else:
+            return ('#' * (sz - dec)) + '.' + ('#' * dec)
+
+    def print_dox(self):
+        print("""/**@defgroup dba_record_keywords Keywords used by dballe::Record
+@ingroup tables
+
+This table lists the keywords used by dballe::Record.  You can use them to query
+and set data using function such as Record::enq() and Record::set().
+
+Every keyword is listed together with its measure unit, length in characters or
+digits and description.
+
+\\verbatim
+""")
+
+        table = TextTable(
+            colsizes=(13, 9, 13, 53),
+            titles=("Name", "Unit", "Format", "Description")
+        )
+        table.print_head()
+
+        for tag, unit, sz, dec, desc in self.data:
+            fmt = self.mkformat(unit, sz, dec)
+            table.print_row((tag, unit, fmt, desc))
+
+        print()
+        print("\\endverbatim")
+        print("*/")
+
+    def print_md(self):
+        print("# Input/output/query parameters")
+        print()
+
+        table = MdTable(
+            colsizes=(13, 9, 10, 27, 9, 8, 10, 31),
+            titles=("Name", "Unit", "Format", "Description", "On insert", "On query", "On results", "Comment")
+        )
+        table.print_head()
+
+        for tag, unit, sz, dec, desc in self.data:
+            info = self.comments.get(tag, None)
+            if info is None:
+                ins = que = res = com = ""
+            else:
+                ins, que, res, com = info + ([""] * (4 - len(info)))
+
+            fmt = self.mkformat(unit, sz, dec)
+
+            table.print_row((tag, unit, fmt, desc, ins, que, res, com))
+
+
+class Aliases:
+    def read(self):
+        # Skip the declaration section
+        for line in sys.stdin:
+            if line.startswith("%%"): break
+
+        alias_line = re.compile(r"^(?P<name>[^,]+),\s*WR_VAR\((?P<f>\d+),\s*(?P<x>\d+),\s*(?P<y>\d+)\)")
+
+        # Read the data
+        data = []
+        for line in sys.stdin:
+            line = line.strip()
+            if line == "%%": break
+            mo = alias_line.match(line)
+            if not mo: raise RuntimeError("Cannot parse {}".format(repr(line)))
+
+            data.append((
+                mo.group("name"),
+                "B{x:02d}{y:03d}".format(x=int(mo.group("x")), y=int(mo.group("y")))
+            ))
+
+        data.sort()
+
+        self.data = data
+
+    def print_dox(self):
+        print("""/**@defgroup dba_core_aliases Variable aliases
+@ingroup tables
+
+This table lists the aliases that can be used to refer to varcodes.
+
+\\verbatim""")
+
+        table = TextTable(
+            colsizes=(13, 8),
+            titles=("Alias", "Variable"))
+        table.print_head()
+
+        for alias, var in self.data:
+            table.print_row((alias, var))
+
+        print("""\\endverbatim
+*/""")
+
+    def print_md(self):
+        print("""# Varcode aliases
+
+This table lists the aliases that can be used to refer to varcodes.
+""")
+
+        table = MdTable(
+            colsizes=(13, 8),
+            titles=("Alias", "Variable"))
+        table.print_head()
+
+        for alias, var in self.data:
+            table.print_row((alias, var))
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Format dballe data snippets for documentation.")
+    parser.add_argument("intype", help="input type")
+    parser.add_argument("outtype", help="output type")
+    parser.add_argument("-v", "--verbose", action="store_true", help="verbose output")
+    parser.add_argument("--debug", action="store_true", help="verbose output")
+
+    args = parser.parse_args()
+
+    FORMAT = "%(asctime)-15s %(levelname)s %(message)s"
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG, stream=sys.stderr, format=FORMAT)
+    elif args.verbose:
+        logging.basicConfig(level=logging.INFO, stream=sys.stderr, format=FORMAT)
+    else:
+        logging.basicConfig(level=logging.WARN, stream=sys.stderr, format=FORMAT)
+
+    inputs = {
+        "key": Keywords,
+        "alias": Aliases,
+    }
+
+    Proc = inputs.get(args.intype, None)
+    if Proc is None: raise RuntimeError("Input type {} not supported".format(args.intype))
+
+    proc = Proc()
+    proc.read()
+
+    gen = getattr(proc, "print_" + args.outtype, None)
+    if gen is None: raise RuntimeError("Output type {} not supported for input {}".format(args.outtype, args.intype))
+
+    gen()
+
+
+if __name__ == "__main__":
+    main()

@@ -444,29 +444,6 @@ dump_core_info_LDADD = \
 	libdballe.la \
 	$(common_libs)
 
-# core
-
-# msg
-
-noinst_DATA += msg/ltypes.dox msg/ltypes.tex msg/tranges.dox msg/tranges.tex
-
-msg/ltypes.dox: msg/ltypes.txt msg/mklevels
-	$(srcdir)/msg/mklevels dox < $< > $@
-
-msg/ltypes.tex: msg/ltypes.txt msg/mklevels
-	$(srcdir)/msg/mklevels tex < $< > $@
-
-msg/tranges.dox: msg/mktranges
-	$(srcdir)/msg/mktranges dox < $< > $@
-
-msg/tranges.tex: msg/mktranges
-	$(srcdir)/msg/mktranges tex < $< > $@
-
-EXTRA_DIST += msg/wr_exporters/exporters.dox msg/ltypes.txt msg/mklevels msg/mktranges
-
-CLEANFILES += msg/ltypes.dox msg/ltypes.tex msg/tranges.dox msg/tranges.tex
-
-
 # toplevel
 
 EXTRA_DIST += mainpage.dox dballe.dox \

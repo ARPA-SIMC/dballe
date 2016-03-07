@@ -2,7 +2,6 @@
 
 This table lists the aliases that can be used to refer to varcodes.
 
-
 | Alias         | Variable |
 | ------------- | -------- |
 | block         | B01001   |
