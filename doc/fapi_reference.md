@@ -160,8 +160,8 @@ Input/Output routines.
 
 ### Error management routines
 
-#### idba_error_code()
 <a name='idba_error_code'></a>
+#### idba_error_code()
 
 Parameters:
 
@@ -174,8 +174,8 @@ The error code. Please see the documentation of ::dba_err_code for the
 possible values.
 
 
-#### idba_error_message(message)
 <a name='idba_error_message'></a>
+#### idba_error_message(message)
 
 Parameters:
 
@@ -191,8 +191,8 @@ fdba_error_context() and fdba_error_details()
 See dba_error_message()
 
 
-#### idba_error_context(message)
 <a name='idba_error_context'></a>
+#### idba_error_context(message)
 
 Parameters:
 
@@ -207,8 +207,8 @@ This string describes what the code that failed was trying to do.
 See dba_error_context()
 
 
-#### idba_error_details(message)
 <a name='idba_error_details'></a>
+#### idba_error_details(message)
 
 Parameters:
 
@@ -225,8 +225,8 @@ querying the error functions of an underlying module.
 See dba_error_details()
 
 
-#### idba_error_set_callback(code, func, data, handle)
 <a name='idba_error_set_callback'></a>
+#### idba_error_set_callback(code, func, data, handle)
 
 Parameters:
 
@@ -238,8 +238,8 @@ Parameters:
 Set a callback to be invoked when an error of a specific kind happens.
 
 
-#### idba_error_remove_callback(handle)
 <a name='idba_error_remove_callback'></a>
+#### idba_error_remove_callback(handle)
 
 Parameters:
 
@@ -248,8 +248,8 @@ Parameters:
 Remove a previously set callback.
 
 
-#### idba_default_error_handler(debug)
 <a name='idba_default_error_handler'></a>
+#### idba_default_error_handler(debug)
 
 Parameters:
 
@@ -260,8 +260,8 @@ The message is printed only if a non-zero value is supplied as user
 data
 
 
-#### idba_error_handle_tolerating_overflows(debug)
 <a name='idba_error_handle_tolerating_overflows'></a>
+#### idba_error_handle_tolerating_overflows(debug)
 
 Parameters:
 
@@ -274,8 +274,8 @@ In case of overflows it prints a warning and continues execution
 
 ### Session routines
 
-#### idba_presentati(dbahandle, dsn, user, password)
 <a name='idba_presentati'></a>
+#### idba_presentati(dbahandle, dsn, user, password)
 
 Parameters:
 
@@ -289,8 +289,8 @@ This function can be called more than once once to connect to
 different databases at the same time.
 
 
-#### idba_arrivederci(dbahandle)
 <a name='idba_arrivederci'></a>
+#### idba_arrivederci(dbahandle)
 
 Parameters:
 
@@ -299,8 +299,8 @@ Parameters:
 Disconnect from the database.
 
 
-#### idba_preparati(dbahandle, handle, anaflag, dataflag, attrflag)
 <a name='idba_preparati'></a>
+#### idba_preparati(dbahandle, handle, anaflag, dataflag, attrflag)
 
 Parameters:
 
@@ -326,8 +326,8 @@ qcflag=read (when deleting data, their attributes are deleted as
 well).
 
 
-#### idba_messaggi(handle, filename, mode, type)
 <a name='idba_messaggi'></a>
+#### idba_messaggi(handle, filename, mode, type)
 
 Parameters:
 
@@ -337,8 +337,8 @@ Parameters:
 Start working with a message file.
 
 
-#### idba_fatto(handle)
 <a name='idba_fatto'></a>
+#### idba_fatto(handle)
 
 Parameters:
 
@@ -349,8 +349,8 @@ Close a session.
 
 ### Input/output routines
 
-#### idba_seti(handle, parameter, value)
 <a name='idba_seti'></a>
+#### idba_seti(handle, parameter, value)
 
 Parameters:
 
@@ -359,8 +359,8 @@ Parameters:
 Set an integer value in input.
 
 
-#### idba_setb(handle, parameter)
 <a name='idba_setb'></a>
+#### idba_setb(handle, parameter)
 
 Parameters:
 
@@ -369,8 +369,8 @@ Parameters:
 Set a byte value in input.
 
 
-#### idba_setr(handle, parameter, value)
 <a name='idba_setr'></a>
+#### idba_setr(handle, parameter, value)
 
 Parameters:
 
@@ -379,8 +379,8 @@ Parameters:
 Set a real value in input.
 
 
-#### idba_setd(handle, parameter, value)
 <a name='idba_setd'></a>
+#### idba_setd(handle, parameter, value)
 
 Parameters:
 
@@ -389,8 +389,8 @@ Parameters:
 Set a real*8 value in input.
 
 
-#### idba_setc(handle, parameter, value)
 <a name='idba_setc'></a>
+#### idba_setc(handle, parameter, value)
 
 Parameters:
 
@@ -399,8 +399,8 @@ Parameters:
 Set a character value in input.
 
 
-#### idba_enqi(handle, parameter, value)
 <a name='idba_enqi'></a>
+#### idba_enqi(handle, parameter, value)
 
 Parameters:
 
@@ -409,8 +409,8 @@ Parameters:
 Read an integer value from the output.
 
 
-#### idba_enqb(handle, parameter)
 <a name='idba_enqb'></a>
+#### idba_enqb(handle, parameter)
 
 Parameters:
 
@@ -419,8 +419,8 @@ Parameters:
 Read a byte value from the output.
 
 
-#### idba_enqr(handle, parameter, value)
 <a name='idba_enqr'></a>
+#### idba_enqr(handle, parameter, value)
 
 Parameters:
 
@@ -429,8 +429,8 @@ Parameters:
 Read a real value from the output.
 
 
-#### idba_enqd(handle, parameter, value)
 <a name='idba_enqd'></a>
+#### idba_enqd(handle, parameter, value)
 
 Parameters:
 
@@ -439,8 +439,8 @@ Parameters:
 Read a real*8 value from the output.
 
 
-#### idba_enqc(handle, parameter, value)
 <a name='idba_enqc'></a>
+#### idba_enqc(handle, parameter, value)
 
 Parameters:
 
@@ -449,8 +449,8 @@ Parameters:
 Read a character value from the output.
 
 
-#### idba_unset(handle, parameter)
 <a name='idba_unset'></a>
+#### idba_unset(handle, parameter)
 
 Parameters:
 
@@ -459,8 +459,8 @@ Parameters:
 Remove one value from the input.
 
 
-#### idba_unsetb(handle)
 <a name='idba_unsetb'></a>
+#### idba_unsetb(handle)
 
 Parameters:
 
@@ -469,8 +469,8 @@ Parameters:
 Remove all Bxxyyy values from the input.
 
 
-#### idba_unsetall(handle)
 <a name='idba_unsetall'></a>
+#### idba_unsetall(handle)
 
 Parameters:
 
@@ -479,8 +479,8 @@ Parameters:
 Completely clear the input, removing all values.
 
 
-#### idba_setcontextana(handle)
 <a name='idba_setcontextana'></a>
+#### idba_setcontextana(handle)
 
 Parameters:
 
@@ -492,8 +492,8 @@ values instead of normal variables.
 
 ### Input/output shortcuts
 
-#### idba_setlevel(handle, ltype1, l1, ltype2, l2)
 <a name='idba_setlevel'></a>
+#### idba_setlevel(handle, ltype1, l1, ltype2, l2)
 
 Parameters:
 
@@ -502,8 +502,8 @@ Parameters:
 Set all level information.
 
 
-#### idba_settimerange(handle, ptype, p1, p2)
 <a name='idba_settimerange'></a>
+#### idba_settimerange(handle, ptype, p1, p2)
 
 Parameters:
 
@@ -512,8 +512,8 @@ Parameters:
 Set all time range information.
 
 
-#### idba_setdate(handle, year, month, day, hour, min, sec)
 <a name='idba_setdate'></a>
+#### idba_setdate(handle, year, month, day, hour, min, sec)
 
 Parameters:
 
@@ -522,8 +522,8 @@ Parameters:
 Set all date information.
 
 
-#### idba_setdatemin(handle, year, month, day, hour, min, sec)
 <a name='idba_setdatemin'></a>
+#### idba_setdatemin(handle, year, month, day, hour, min, sec)
 
 Parameters:
 
@@ -532,8 +532,8 @@ Parameters:
 Set the minimum date for a query.
 
 
-#### idba_setdatemax(handle, year, month, day, hour, min, sec)
 <a name='idba_setdatemax'></a>
+#### idba_setdatemax(handle, year, month, day, hour, min, sec)
 
 Parameters:
 
@@ -542,8 +542,8 @@ Parameters:
 Set the maximum date for a query.
 
 
-#### idba_enqlevel(handle, ltype1, l1, ltype2, l2)
 <a name='idba_enqlevel'></a>
+#### idba_enqlevel(handle, ltype1, l1, ltype2, l2)
 
 Parameters:
 
@@ -553,8 +553,8 @@ Parameters:
 Read all level information.
 
 
-#### idba_enqtimerange(handle, ptype, p1, p2)
 <a name='idba_enqtimerange'></a>
+#### idba_enqtimerange(handle, ptype, p1, p2)
 
 Parameters:
 
@@ -564,8 +564,8 @@ Parameters:
 Read all time range information.
 
 
-#### idba_enqdate(handle, year, month, day, hour, min, sec)
 <a name='idba_enqdate'></a>
+#### idba_enqdate(handle, year, month, day, hour, min, sec)
 
 Parameters:
 
@@ -577,8 +577,8 @@ Read all date information.
 
 ### Action routines
 
-#### idba_scopa(handle, repinfofile)
 <a name='idba_scopa'></a>
+#### idba_scopa(handle, repinfofile)
 
 Parameters:
 
@@ -590,8 +590,8 @@ information.
 It requires the database to be opened in rewrite mode.
 
 
-#### idba_quantesono(handle, count)
 <a name='idba_quantesono'></a>
+#### idba_quantesono(handle, count)
 
 Parameters:
 
@@ -602,8 +602,8 @@ Query the stations in the database.
 Results are retrieved using idba_elencamele().
 
 
-#### idba_elencamele(handle)
 <a name='idba_elencamele'></a>
+#### idba_elencamele(handle)
 
 Parameters:
 
@@ -618,8 +618,8 @@ If there are no more stations to read, the function will fail with
 DBA_ERR_NOTFOUND.
 
 
-#### idba_voglioquesto(handle, count)
 <a name='idba_voglioquesto'></a>
+#### idba_voglioquesto(handle, count)
 
 Parameters:
 
@@ -631,8 +631,8 @@ Query the data in the database.
 Results are retrieved using idba_dammelo().
 
 
-#### idba_dammelo(handle, parameter)
 <a name='idba_dammelo'></a>
+#### idba_dammelo(handle, parameter)
 
 Parameters:
 
@@ -649,8 +649,8 @@ If there are no more values to read, the function will fail with
 DBA_ERR_NOTFOUND.
 
 
-#### idba_prendilo(handle)
 <a name='idba_prendilo'></a>
+#### idba_prendilo(handle)
 
 Parameters:
 
@@ -669,8 +669,8 @@ in station rewrite mode instead, the station values on input will be
 used to replace all the existing station values.
 
 
-#### idba_dimenticami(handle)
 <a name='idba_dimenticami'></a>
+#### idba_dimenticami(handle)
 
 Parameters:
 
@@ -682,8 +682,8 @@ This function will fail unless the database is open in data rewrite
 mode.
 
 
-#### idba_remove_all(handle)
 <a name='idba_remove_all'></a>
+#### idba_remove_all(handle)
 
 Parameters:
 
@@ -695,8 +695,8 @@ The difference with idba_scopa() is that it preserves the existing
 report information.
 
 
-#### idba_voglioancora(handle, count)
 <a name='idba_voglioancora'></a>
+#### idba_voglioancora(handle, count)
 
 Parameters:
 
@@ -712,8 +712,8 @@ by idba_prendilo()the variable selected by settings *context_id and
 *var_related. Results are retrieved using idba_ancora().
 
 
-#### idba_ancora(handle, parameter)
 <a name='idba_ancora'></a>
+#### idba_ancora(handle, parameter)
 
 Parameters:
 
@@ -724,8 +724,8 @@ Parameters:
 Retrieve one attribute from the result of idba_voglioancora().
 
 
-#### idba_critica(handle)
 <a name='idba_critica'></a>
+#### idba_critica(handle)
 
 Parameters:
 
@@ -750,8 +750,8 @@ mode, and it will refuse to overwrite existing values if the database
 is open in attribute add mode.
 
 
-#### idba_scusa(handle)
 <a name='idba_scusa'></a>
+#### idba_scusa(handle)
 
 Parameters:
 
@@ -769,8 +769,8 @@ with: idba_setc(handle,"*varlist","*B33021,*B33003");
 
 ### Message routines
 
-#### idba_messages_open_input(handle, filename, mode, format, simplified)
 <a name='idba_messages_open_input'></a>
+#### idba_messages_open_input(handle, filename, mode, format, simplified)
 
 Parameters:
 
@@ -782,8 +782,8 @@ Each session can only have one open input file: if one was previously
 open, it is closed before opening the new one.
 
 
-#### idba_messages_open_output(handle, filename, mode, format)
 <a name='idba_messages_open_output'></a>
+#### idba_messages_open_output(handle, filename, mode, format)
 
 Parameters:
 
@@ -795,8 +795,8 @@ Each session can only have one open input file: if one was previously
 open, it is closed before opening the new one.
 
 
-#### idba_messages_read_next(handle, found)
 <a name='idba_messages_read_next'></a>
+#### idba_messages_read_next(handle, found)
 
 Parameters:
 
@@ -809,8 +809,8 @@ Read the next message and import it in the database.
 The access mode of the session controls how data is imported:
 
 
-#### idba_messages_write_next(handle, template_name)
 <a name='idba_messages_write_next'></a>
+#### idba_messages_write_next(handle, template_name)
 
 Parameters:
 
@@ -822,8 +822,8 @@ them to the current message.
 
 ### Pretty-printing routines
 
-#### idba_spiegal(handle, ltype1, l1, ltype2, l2, result)
 <a name='idba_spiegal'></a>
+#### idba_spiegal(handle, ltype1, l1, ltype2, l2, result)
 
 Parameters:
 
@@ -833,8 +833,8 @@ Parameters:
 Format the description of a level given its value.
 
 
-#### idba_spiegat(handle, ptype, p1, p2, result)
 <a name='idba_spiegat'></a>
+#### idba_spiegat(handle, ptype, p1, p2, result)
 
 Parameters:
 
@@ -844,8 +844,8 @@ Parameters:
 Format the description of a time range given its value.
 
 
-#### idba_spiegab(handle, varcode, value, result)
 <a name='idba_spiegab'></a>
+#### idba_spiegab(handle, varcode, value, result)
 
 Parameters:
 

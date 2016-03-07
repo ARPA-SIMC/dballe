@@ -36,7 +36,7 @@ CLEANFILES += libdballe.doxytags libwreport.doxytags
 
 # Fortran API documentation
 
-fapisources = fapi.md fortran-reference.md
+fapisources = fapi.md fapi_concepts.md fapi_walkthrough.md fapi_reference.md
 
 fortrandeps = libdballef.dox \
 	    ../fortran/libdballef.la
@@ -44,7 +44,7 @@ fortrandeps = libdballef.dox \
 libdballef.doxytags: $(fortrandeps)
 	doxygen $<
 
-fortran-reference.md: $(top_srcdir)/doc/make_fortran_reference libdballef.doxytags
+fapi_reference.md: $(top_srcdir)/doc/make_fortran_reference libdballef.doxytags
 	$< > $@ fortran_xml || rm $<
 
 doc_DATA += $(fapisources)

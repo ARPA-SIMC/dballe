@@ -27,7 +27,7 @@ class Argument:
         self.name = [x.text for x in node.iter("parametername")][0]
         self.desc = list(collect_desc([x for x in node.iter("parameterdescription")][0]))
 
-    def print_reference(self):
+    def print_details(self):
         for idx, para in enumerate(self.desc):
             if idx == 0:
                 initial_indent = "* `{a.name}`: ".format(a=self)
@@ -69,15 +69,15 @@ class Function:
     def arg_string(self):
         return ", ".join(self.params)
 
-    def print_reference(self):
+    def print_details(self):
         print()
-        print("#### {f.name}({f.arg_string})".format(f=self))
         print("<a name='{f.name}'></a>".format(f=self))
+        print("#### {f.name}({f.arg_string})".format(f=self))
         print()
         print("Parameters:")
         print()
         for a in self.args:
-            a.print_reference()
+            a.print_details()
         print()
         for d in self.desc:
             for line in textwrap.wrap(d, break_on_hyphens=False):
@@ -106,6 +106,10 @@ class Section:
             if not f.name.startswith("idba_"): continue
             self.functions.append(f)
 
+    def print_links(self):
+        for f in self.functions:
+            print("[{f.name}]: fapi_reference.md#{f.name}".format(f=f))
+
     def print_summary(self):
         print()
         print("### {s.summary}".format(s=self))
@@ -131,12 +135,12 @@ class Section:
         print("""</tbody>
 </table>""")
 
-    def print_reference(self):
+    def print_details(self):
         print()
         print("### {s.summary}".format(s=self))
 
         for f in self.functions:
-            f.print_reference()
+            f.print_details()
 
 
 class API:
@@ -156,6 +160,16 @@ class API:
             if not sec.functions or not sec.summary: continue
             self.sections.append(sec)
 
+    def print_links(self):
+        for s in self.sections:
+            s.print_links()
+
+    def print_reference(self):
+        print("# Fortran API reference")
+        api.print_summary()
+
+        api.print_details()
+
     def print_summary(self):
         print()
         print("## Summary of routines")
@@ -163,17 +177,18 @@ class API:
         for s in self.sections:
             s.print_summary()
 
-    def print_reference(self):
+    def print_details(self):
         print()
         print("## Reference of routines")
 
         for s in self.sections:
-            s.print_reference()
+            s.print_details()
 
 
 def main():
     parser = argparse.ArgumentParser(description="Build fortran API reference markdown documentation.")
     parser.add_argument("xmldir", help="doxygen xml directory")
+    parser.add_argument("--links", action="store_true", help="print link shortcuts to the functions in the reference")
     parser.add_argument("-v", "--verbose", action="store_true", help="verbose output")
     parser.add_argument("--debug", action="store_true", help="verbose output")
 
@@ -188,11 +203,11 @@ def main():
         logging.basicConfig(level=logging.WARN, stream=sys.stderr, format=FORMAT)
 
     api = API(args)
+    if args.links:
+        api.print_links()
+    else:
+        api.print_reference()
 
-    print("# Fortran API reference")
-    api.print_summary()
-
-    api.print_reference()
 
 
 if __name__ == "__main__":
