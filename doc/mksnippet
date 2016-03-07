@@ -205,6 +205,21 @@ digits and description.
 
             table.print_row((tag, unit, fmt, desc, ins, que, res, com))
 
+        print()
+        print("## Input parameters for attribute-related action routines")
+        print()
+
+        table = MdTable(
+            colsizes=(13, 9, 10, 27, 9, 8, 10, 31),
+            titles=("Name", "Unit", "Format", "Description", "On insert", "On query", "On results", "Comment")
+        )
+        table.print_head()
+        table.print_row(("`*Bxxyyy`", "depends", "depends", "Value of the attribute", "required", "ignored", "present", ""))
+        table.print_row(("`*var`", "Character", "7 chars", "Acoderibute queried", "ignored", "optional", "present, indicates the name of the last attribute returned", ""))
+        table.print_row(("`*varlist`", "Character", "255 chars", "List of attributes to query", "ignored", "optional", "absent", "Comma-separated list of attribute B codes wanted on output"))
+        table.print_row(("`*var_related`", "Character", "6 chars", "Variable related to the attribute to query", "required", "required", "absent", "It is automatically set by `idba_dammelo` and `idba_prendilo` (when `idba_prendilo` inserts a single variable)"))
+        table.print_row(("`*context_id`", "Numeric", "10 digits", "Context ID of the variable related to the attribute to query", "required", "required", "absent", "It is automatically set by `idba_dammelo` and `idba_prendilo`"))
+
 
 class Aliases:
     def read(self):

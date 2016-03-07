@@ -49,3 +49,13 @@
 | attr_filter   | CCITTIA5  | 255 digits | Filter on data attributes   | ignored   | optional | absent     | Restricts the results to only those data which have an attribute that matches the filter. Examples: 'conf>70', 'B33197=0', '25<=conf<=50' |
 | limit         | NUMBER    | 10 digits  | Maximum number of results to return | ignored   | optional | absent     | Maximum number of results to return |
 | var_related   | CCITTIA5  | 6 digits   | Variable related to attribute queried |           |          |            |                                 |
+
+## Input parameters for attribute-related action routines
+
+| Name          | Unit      | Format     | Description                 | On insert | On query | On results | Comment                         |
+| ------------- | --------- | ---------- | --------------------------- | --------- | -------- | ---------- | ------------------------------- |
+| `*Bxxyyy`     | depends   | depends    | Value of the attribute      | required  | ignored  | present    |                                 |
+| `*var`        | Character | 7 chars    | Acoderibute queried         | ignored   | optional | present, indicates the name of the last attribute returned |                                 |
+| `*varlist`    | Character | 255 chars  | List of attributes to query | ignored   | optional | absent     | Comma-separated list of attribute B codes wanted on output |
+| `*var_related` | Character | 6 chars    | Variable related to the attribute to query | required  | required | absent     | It is automatically set by `idba_dammelo` and `idba_prendilo` (when `idba_prendilo` inserts a single variable) |
+| `*context_id` | Numeric   | 10 digits  | Context ID of the variable related to the attribute to query | required  | required | absent     | It is automatically set by `idba_dammelo` and `idba_prendilo` |
