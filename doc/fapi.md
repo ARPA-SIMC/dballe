@@ -28,16 +28,16 @@ to long explanations whenever it makes sense.
   API.
 * [API function reference](fapi_reference.md), the complete reference to every
   function.
+* [Input/output/query parameters](fapi_parms.md), a table with all input,
+  output and query parameters that are not B table entries.
+* [Varcode aliases](fapi_aliases.md), aliases that can be used in input
+  routines instead of B table codes.
+* [Connection methods](fapi_connect.md), documents the various ways that can be
+  used to connect to a DB-All.e database.
 
 # Appendix
 
 ## Input and output parameters
-
-### For data-related action routines
-
-<a name="parmtable"></a>
-
-\input{../dballe/core/record_keyword.tex}
 
 ### For attribute-related action routines
 
@@ -59,7 +59,7 @@ to long explanations whenever it makes sense.
     <td><code>*Bxxyyy</code></td>
     <td>depends</td>
     <td>depends</td>
-    <td>Value of the acoderibute</td>
+    <td>Value of the attribute</td>
     <td>required</td>
     <td>ignored</td>
     <td>present</td>
@@ -72,24 +72,24 @@ to long explanations whenever it makes sense.
     <td>Acoderibute queried</td>
     <td>ignored</td>
     <td>optional</td>
-    <td>present, indicates the name of the last acoderibute returned</td>
+    <td>present, indicates the name of the last attribute returned</td>
     <td> </td>
   </tr>
   <tr>
     <td><code>*varlist</code></td>
     <td>Character</td>
     <td>255 chars</td>
-    <td>List of acodeributes to query</td>
+    <td>List of attributes to query</td>
     <td>ignored</td>
     <td>optional</td>
     <td>absent</td>
-    <td>Comma-separated list of acoderibute B codes wanted on output</td>
+    <td>Comma-separated list of attribute B codes wanted on output</td>
   </tr>
   <tr>
     <td><code>*var_related</code></td>
     <td>Character</td>
     <td>6 chars</td>
-    <td>Variable related to the acoderibute to query</td>
+    <td>Variable related to the attribute to query</td>
     <td>required</td>
     <td>required</td>
     <td>absent</td>
@@ -99,7 +99,7 @@ to long explanations whenever it makes sense.
     <td><code>*context_id</code></td>
     <td>Numeric</td>
     <td>10 digits</td>
-    <td>Context ID of the variable related to the acoderibute to query</td>
+    <td>Context ID of the variable related to the attribute to query</td>
     <td>required</td>
     <td>required</td>
     <td>absent</td>
@@ -125,99 +125,3 @@ to long explanations whenever it makes sense.
 <a name="btable"></a>
 
 \input{../tables/dballe.tex}
-
-# Variable aliases
-<a name="aliastable"></a>
-
-\input{../dballe/core/aliases.tex}
-
-# Database connection methods
-<a name="dburls"></a>
-
-Instead of the usual DSN, user and password triplet it is possible to connect
-to the database using an URL-like syntax.
-
-## Connecting via ODBC
-
-### Specifying DSN, user and password explicitly
-
-Fortran:
-```fortran
-ierr = idba_presentati(dbhandle, "dsn", "username", "password") 
-```
-
-dbadb:
-```sh
-dbadb --dsn=dsn --user=username --pass=password
-```
-
-### Specifying DSN, user and password via URL
-
-Fortran:
-```fortran
-ierr = idba_presentati(dbhandle, "odbc://username:password@dsn", DBA_MVC, DBA_MVC)
-```
-
-dbadb:
-```sh
-dbadb --dsn="odbc://username:password@dsn" …
-```
-
-provami:
-```sh
-provami "odbc://username:password@dsn"
-```
-
-### Specifying DSN, user and password via an environment variable
-
-```sh
-# Export the environment variable
-export DBA_DB="odbc://username:password@dsn"
-```
-
-Fortran:
-```fortran
-ierr = idba_presentati(dbhandle, DBA_MVC, DBA_MVC, DBA_MVC)
-```
-
-dbadb:
-```sh
-dbadb …
-```
-
-provami:
-```sh
-provami
-```
-
-## Using a SQLite file directly
-
-```sh
-export DBA_DB="sqlite:temp.sqlite"
-dbadb --wipe-first import data.bufr
-# ...run something here that processes the data...
-dbadb export > processed-data.bufr
-rm temp.sqlite
-```
-
-## Via URL
-
-Fortran:
-```fortran
-ierr = idba_presentati(dbhandle, "sqlite:file.sqlite", DBA_MVC, DBA_MVC)
-```
-
-dbadb:
-```sh
-dbadb --dsn="sqlite:file.sqlite" dots
-```
-
-provami:
-```
-provami --dsn="sqlite:file.sqlite"
-```
-
-# Summary of routines
-
-This appendix contains some reference tables for the functions in the Fortran
-API.

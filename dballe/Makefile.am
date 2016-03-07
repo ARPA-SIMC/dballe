@@ -1,7 +1,8 @@
 ## Process this file with automake to produce Makefile.in
 
-EXTRA_DIST=
-CLEANFILES=
+EXTRA_DIST =
+CLEANFILES =
+noinst_DATA =
 
 AM_CPPFLAGS = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) -I$(top_builddir) $(WREPORT_CFLAGS) $(LIBPQ_CFLAGS) $(SQLITE3_CFLAGS) $(MYSQL_CFLAGS) $(LUA_CFLAGS)
 if FILE_OFFSET_BITS_64
@@ -20,10 +21,7 @@ core/record_keyword.cc: core/record_keyword.gperf
 core/aliases.cc: core/aliases.gperf
 	if ! gperf < $< > $@; then rm $@; /bin/false; fi
 
-core/aliases-reverse.cc: core/aliases.gperf core/mkaliasdoc
-	$(srcdir)/core/mkaliasdoc revsolver < $< > $@
-
-BUILT_SOURCES = core/record_keyword.cc core/aliases.cc core/aliases-reverse.cc
+BUILT_SOURCES = core/record_keyword.cc core/aliases.cc
 EXTRA_DIST += core/aliases.gperf core/aliases.cc core/record_keyword.gperf core/record_keyword.cc
 
 
@@ -171,7 +169,6 @@ libdballe_la_SOURCES = \
 	var.cc \
 	core/verbose.cc \
 	core/aliases.cc \
-	core/aliases-reverse.cc \
 	core/defs.cc \
 	core/var.cc \
 	core/values.cc \
@@ -448,34 +445,6 @@ dump_core_info_LDADD = \
 	$(common_libs)
 
 # core
-
-noinst_DATA = core/record_keyword.dox core/record_keyword.rst core/record_keyword.tex core/aliases.dox core/aliases.tex
-
-core/record_keyword.rst: core/record_keyword.gperf core/mkkeydoc dump-core-info
-	./dump-core-info keywords | $(srcdir)/core/mkkeydoc rst > $@
-
-core/record_keyword.dox: core/record_keyword.gperf core/mkkeydoc dump-core-info
-	./dump-core-info keywords | $(srcdir)/core/mkkeydoc dox > $@
-
-core/record_keyword.tex: core/record_keyword.gperf core/mkkeydoc dump-core-info
-	./dump-core-info keywords | $(srcdir)/core/mkkeydoc tex > $@
-
-core/aliases.dox: core/aliases.gperf core/mkaliasdoc
-	$(srcdir)/core/mkaliasdoc dox < $< > $@
-
-core/aliases.tex: core/aliases.gperf core/mkaliasdoc
-	$(srcdir)/core/mkaliasdoc tex < $< > $@
-
-EXTRA_DIST += core/mkaliasdoc core/mkkeydoc
-
-CLEANFILES += \
-	core/aliases.dox \
-	core/aliases.tex \
-	core/record_keyword.dox \
-	core/record_keyword.dox \
-	core/record_keyword.rst \
-	core/record_keyword.tex
-
 
 # msg
 

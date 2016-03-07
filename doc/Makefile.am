@@ -4,7 +4,7 @@ doc_DATA =
 
 noinst_DATA =
 
-EXTRA_DIST =
+EXTRA_DIST = mkaliasdoc mkkeydoc
 
 CLEANFILES =
 
@@ -16,12 +16,20 @@ cppdeps = libdballe.dox \
 	  ../dballe/libdballe.la \
 	  ../dballe/msg/ltypes.dox \
 	  ../dballe/msg/tranges.dox \
+	  record_keyword.dox \
+	  aliases.dox \
 	  libwreport.doxytags
 
 cppdeps += ../dballe/main-core.dox
 #mainpages += ../dballe/main-bufrex.dox
 cppdeps += ../dballe/main-msg.dox
 cppdeps += ../dballe/main-db.dox
+
+record_keyword.dox: $(top_builddir)/dballe/dump-core-info mkkeydoc
+	$(top_builddir)/dballe/dump-core-info keywords | $(top_srcdir)/doc/mkkeydoc dox > $@ || rm $@
+
+aliases.dox: $(top_srcdir)/dballe/core/aliases.gperf mkaliasdoc
+	$(top_builddir)/doc/mkaliasdoc dox < $< > $@ || rm $@
 
 libdballe.doxytags: $(cppdeps)
 	doxygen $<
@@ -31,12 +39,13 @@ libwreport.doxytags: /usr/share/doc/libwreport-dev/libwreport.doxytags.gz
 
 doc_DATA += libdballe.doxytags
 
-CLEANFILES += libdballe.doxytags libwreport.doxytags
+CLEANFILES += libdballe.doxytags libwreport.doxytags record_keyword.dox aliases.dox
 
 
 # Fortran API documentation
 
-fapisources = fapi.md fapi_concepts.md fapi_walkthrough.md fapi_reference.md
+fapisources = fapi.md fapi_concepts.md fapi_walkthrough.md fapi_reference.md \
+              fapi_parms.md fapi_aliases.md fapi_connect.md
 
 fortrandeps = libdballef.dox \
 	    ../fortran/libdballef.la
@@ -45,7 +54,14 @@ libdballef.doxytags: $(fortrandeps)
 	doxygen $<
 
 fapi_reference.md: $(top_srcdir)/doc/make_fortran_reference libdballef.doxytags
-	$< > $@ fortran_xml || rm $<
+	$< > $@ fortran_xml || rm $@
+
+fapi_parms.md: $(top_builddir)/dballe/dump-core-info mkkeydoc
+	$(top_builddir)/dballe/dump-core-info keywords | $(top_srcdir)/doc/mkkeydoc md > $@ || rm $@
+
+fapi_aliases.md: $(top_srcdir)/dballe/core/aliases.gperf mkaliasdoc
+	$(top_builddir)/doc/mkaliasdoc md < $< > $@ || rm $@
+
 
 doc_DATA += $(fapisources)
 

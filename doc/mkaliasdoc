@@ -1,0 +1,116 @@
+#!/usr/bin/python3
+
+import textwrap
+import argparse
+import sys
+import os
+import re
+from collections import OrderedDict
+from itertools import zip_longest
+import logging
+
+log = logging.getLogger()
+
+def read_data():
+    # Skip the declaration section
+    for line in sys.stdin:
+        if line.startswith("%%"): break
+
+    alias_line = re.compile(r"^(?P<name>[^,]+),\s*WR_VAR\((?P<f>\d+),\s*(?P<x>\d+),\s*(?P<y>\d+)\)")
+
+    # Read the data
+    data = []
+    for line in sys.stdin:
+        line = line.strip()
+        if line == "%%": break
+        mo = alias_line.match(line)
+        if not mo: raise RuntimeError("Cannot parse {}".format(repr(line)))
+
+        data.append((
+            mo.group("name"),
+            "B{x:02d}{y:03d}".format(x=int(mo.group("x")), y=int(mo.group("y")))
+        ))
+
+    data.sort()
+
+    return data
+
+def print_doxygen(data):
+    print("""/**@defgroup dba_core_aliases Variable aliases
+@ingroup tables
+
+This table lists the aliases that can be used to refer to varcodes.
+
+\\verbatim""")
+
+
+    colsizes = (13, 6)
+    titles = ("Alias", "Variable")
+
+    row = []
+    for sz, title in zip(colsizes, titles):
+        row.append(title.ljust(sz))
+    print(" ".join(row))
+
+    for alias, var in data:
+        row = []
+        for sz, val in zip(colsizes, (alias, var)):
+            row.append(val.ljust(sz))
+        print(" ".join(row))
+
+    print("""\\endverbatim
+*/""")
+
+def print_markdown(data):
+    print("""# Varcode aliases
+
+This table lists the aliases that can be used to refer to varcodes.
+
+""")
+
+    colsizes = (13, 8)
+    titles = ("Alias", "Variable")
+
+    row = []
+    for sz, title in zip(colsizes, titles):
+        row.append(title.ljust(sz))
+    print("|", " | ".join(row), "|")
+
+    row = []
+    for sz in colsizes:
+        row.append("-" * sz)
+    print("|", " | ".join(row), "|")
+
+    for alias, var in data:
+        row = []
+        for sz, val in zip(colsizes, (alias, var)):
+            row.append(val.ljust(sz))
+        print("|", " | ".join(row), "|")
+
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Format dballe keywords for documentation.")
+    parser.add_argument("outtype", help="output type")
+    parser.add_argument("-v", "--verbose", action="store_true", help="verbose output")
+    parser.add_argument("--debug", action="store_true", help="verbose output")
+
+    args = parser.parse_args()
+
+    FORMAT = "%(asctime)-15s %(levelname)s %(message)s"
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG, stream=sys.stderr, format=FORMAT)
+    elif args.verbose:
+        logging.basicConfig(level=logging.INFO, stream=sys.stderr, format=FORMAT)
+    else:
+        logging.basicConfig(level=logging.WARN, stream=sys.stderr, format=FORMAT)
+
+    data = read_data()
+
+    if args.outtype == "dox":
+        print_doxygen(data)
+    elif args.outtype == "md":
+        print_markdown(data)
+
+if __name__ == "__main__":
+    main()

@@ -162,7 +162,7 @@ This code will open a connection with DB-All.e, then it will start a session:
 You call [idba_presentati][] to connect to the databse. The parameters are
 the usual ODBC triplet of DSN, username and password.
 There are alternative ways of invoking [idba_presentati][]: see [Database
-URLs](#dburls) for details.
+URLs](fapi_connect.md) for details.
 
 You can call [idba_preparati][] many times and get more handles.  This allows
 to perform many operations on the database at the same time.
@@ -353,14 +353,14 @@ to:
 
 There are three different kinds of parameter names one can use:
 
-* [DB-All.e parameters](#parmtable), that have a special meaning to
+* [DB-All.e parameters](fapi_parms.md), that have a special meaning to
   DB-All.e: for example they can be part of the coordinate system, or
   space/time extremes to use to query the database.  They are indicated simply
   with their name (for example, `"lat"` or `"yearmin"`).
 * [WMO table B variables](#btable), represent all possible sorts of
   observed data, and are indicated in the form `Bxxyyy`, where `xxyyy` are the
   X and Y values from the WMO table B.
-* [Variable aliases](#aliastable) that are short, easy to remember names which
+* [Variable aliases](fapi_aliases.md) that are short, easy to remember names which
   can be used instead of frequently used WMO B variables.
 
 ## Queries and observed data
@@ -400,7 +400,7 @@ For example:
 ## Querying the database
 
 Queries are made by giving one or more extremes of space, time, level or time
-range.  See [the parameter table](#parmtable) for a list of all available query
+range.  See [the parameter table](fapi_parms.md) for a list of all available query
 parameters, in the column "On query input".
 
 ## Querying the station values

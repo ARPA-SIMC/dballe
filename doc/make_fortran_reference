@@ -166,9 +166,8 @@ class API:
 
     def print_reference(self):
         print("# Fortran API reference")
-        api.print_summary()
-
-        api.print_details()
+        self.print_summary()
+        self.print_details()
 
     def print_summary(self):
         print()
