@@ -264,6 +264,78 @@ This table lists the aliases that can be used to refer to varcodes.
             table.print_row((alias, var))
 
 
+class Levels:
+    def read(self):
+        re_split = re.compile(r"\t+")
+        # Read the data
+        self.data = []
+        for line in sys.stdin:
+            line = line.strip()
+            l = re_split.split(line)
+            if len(l) < 3:
+                l += [""] * (3 - len(l))
+            elif len(l) > 3:
+                raise RuntimeError("line {} has too many fields".format(repr(l)))
+            self.data.append(l)
+
+    def print_dox(self):
+        print("""/**@defgroup level_table Level type values
+@ingroup tables
+
+This table lists the possible values for leveltype1 or
+leveltype2 and the interpretation of the corresponding numerical
+value l1 or l2.  Leveltype values in the range 0-255 can
+be used for defining either a single level (leveltype1) or a surface
+delimiting a layer (leveltype1 and leveltype2) with any meaningful
+combination of leveltypes; values of leveltype >255 have a special use
+for encoding cloud values in SYNOP reports and they do not strictly
+define physical surfaces.
+
+The idea is borrowed from the GRIB edition 2 fixed surface
+concept and the values for leveltype coincide with the GRIB standard
+where possible.
+
+\\verbatim
+""")
+        table = TextTable(
+            colsizes=(11, 38, 27),
+            titles=("Level Type", "Meaning", "Unit/contents of l1/l2")
+        )
+        table.print_head()
+
+        for type, desc, li in self.data:
+            table.print_row((type, desc, li))
+
+        print("""\\endverbatim
+*/""")
+
+
+    def print_md(self):
+        print("""# Level type values
+
+This table lists the possible values for leveltype1 or
+leveltype2 and the interpretation of the corresponding numerical
+value l1 or l2.  Leveltype values in the range 0-255 can
+be used for defining either a single level (leveltype1) or a surface
+delimiting a layer (leveltype1 and leveltype2) with any meaningful
+combination of leveltypes; values of leveltype >255 have a special use
+for encoding cloud values in SYNOP reports and they do not strictly
+define physical surfaces.
+
+The idea is borrowed from the GRIB edition 2 fixed surface
+concept and the values for leveltype coincide with the GRIB standard
+where possible.
+""")
+        table = MdTable(
+            colsizes=(11, 38, 27),
+            titles=("Level Type", "Meaning", "Unit/contents of l1/l2")
+        )
+        table.print_head()
+
+        for type, desc, li in self.data:
+            table.print_row((type, desc, li))
+
+
 def main():
     parser = argparse.ArgumentParser(description="Format dballe data snippets for documentation.")
     parser.add_argument("intype", help="input type")
@@ -284,6 +356,7 @@ def main():
     inputs = {
         "key": Keywords,
         "alias": Aliases,
+        "levels": Levels,
     }
 
     Proc = inputs.get(args.intype, None)

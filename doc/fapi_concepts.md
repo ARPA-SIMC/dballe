@@ -83,7 +83,7 @@ numerical value (`l1`).
 A layer is defined univocally by its two bounding levels (`leveltype1`,
 `l1`, `leveltype2`, `l2`). 
 
-See [the levels table](#sec_levels) for a description of the level types and
+See [the levels table](fapi_levels.md) for a description of the level types and
 associated level values.
 
 <a name="trange"></a>

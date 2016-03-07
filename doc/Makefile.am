@@ -14,10 +14,10 @@ if DO_DOCS
 
 cppdeps = libdballe.dox \
 	  ../dballe/libdballe.la \
-	  ../dballe/msg/ltypes.dox \
-	  ../dballe/msg/tranges.dox \
 	  record_keyword.dox \
 	  aliases.dox \
+	  ltypes.dox \
+	  tranges.dox \
 	  libwreport.doxytags
 
 cppdeps += ../dballe/main-core.dox
@@ -31,6 +31,9 @@ record_keyword.dox: $(top_builddir)/dballe/dump-core-info mksnippet
 aliases.dox: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
 	$(top_builddir)/doc/mksnippet alias dox < $< > $@ || rm $@
 
+ltypes.dox: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
+	$(top_builddir)/doc/mksnippet levels dox < $< > $@ || rm $@
+
 libdballe.doxytags: $(cppdeps)
 	doxygen $<
 
@@ -39,13 +42,13 @@ libwreport.doxytags: /usr/share/doc/libwreport-dev/libwreport.doxytags.gz
 
 doc_DATA += libdballe.doxytags
 
-CLEANFILES += libdballe.doxytags libwreport.doxytags record_keyword.dox aliases.dox
+CLEANFILES += libdballe.doxytags libwreport.doxytags record_keyword.dox aliases.dox ltypes.dox tranges.dox
 
 
 # Fortran API documentation
 
 fapisources = fapi.md fapi_concepts.md fapi_walkthrough.md fapi_reference.md \
-              fapi_parms.md fapi_aliases.md fapi_connect.md
+              fapi_parms.md fapi_aliases.md fapi_connect.md fapi_ltypes.md
 
 fortrandeps = libdballef.dox \
 	    ../fortran/libdballef.la
@@ -61,6 +64,9 @@ fapi_parms.md: $(top_builddir)/dballe/dump-core-info mksnippet
 
 fapi_aliases.md: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
 	$(top_builddir)/doc/mksnippet alias md < $< > $@ || rm $@
+
+fapi_ltypes.md: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
+	$(top_builddir)/doc/mksnippet levels md < $< > $@ || rm $@
 
 
 doc_DATA += $(fapisources)
@@ -111,25 +117,10 @@ clean-local:
 
 
 
-# msg
-
-noinst_DATA += msg/ltypes.dox msg/ltypes.tex msg/tranges.dox msg/tranges.tex
-
-msg/ltypes.dox: msg/ltypes.txt msg/mklevels
-	$(srcdir)/msg/mklevels dox < $< > $@
-
-msg/ltypes.tex: msg/ltypes.txt msg/mklevels
-	$(srcdir)/msg/mklevels tex < $< > $@
-
 msg/tranges.dox: msg/mktranges
 	$(srcdir)/msg/mktranges dox < $< > $@
 
 msg/tranges.tex: msg/mktranges
 	$(srcdir)/msg/mktranges tex < $< > $@
-
-EXTRA_DIST += msg/wr_exporters/exporters.dox msg/ltypes.txt msg/mklevels msg/mktranges
-
-CLEANFILES += msg/ltypes.dox msg/ltypes.tex msg/tranges.dox msg/tranges.tex
-
 
 endif

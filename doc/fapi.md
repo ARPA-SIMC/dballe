@@ -34,6 +34,9 @@ to long explanations whenever it makes sense.
   routines instead of B table codes.
 * [Connection methods](fapi_connect.md), documents the various ways that can be
   used to connect to a DB-All.e database.
+* [Level types](fapi_ltypes.md), description of values that define vertical
+  levels and layers.
+
 
 # Appendix
 
@@ -108,13 +111,6 @@ to long explanations whenever it makes sense.
 </tbody>
 </table>
 
-
-## Values for level/layer and time range
-
-### Level/layer
-<a name="levels"></a>
-
-\input{../dballe/msg/ltypes.tex}
 
 ### Time range
 <a name="tranges"></a>

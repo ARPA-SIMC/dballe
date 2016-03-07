@@ -15,7 +15,7 @@
 101	Mean Sea Level
 102	Specific Altitude Above Mean Sea Level	mm
 103	Specified Height Level Above Ground	mm
-104	Sigma Level	       	     		1/10000
+104	Sigma Level				1/10000
 105	Hybrid Level
 106	Depth Below Land Surface		mm
 107	Isentropic (theta) Level		K/10
