@@ -1,24 +1,5 @@
-/*
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 /** @file
- * @ingroup fortranfull
+ * @ingroup fortran
  * Error inspection functions for Dballe.
  *
  * These funtions closely wrap the Dballe functions in dba_error.h
@@ -107,13 +88,15 @@ int success()
 
 using namespace dballe;
 
+/**@name Error management routines
+ *
+ * @{
+ */
+
 extern "C" {
 
-// FDBA_HANDLE_BODY(errcb, MAX_CALLBACKS, "Error handling callbacks")
-
-
 /**
- * Return the error code for the last error that happened
+ * Return the error code for the last function that was called.
  *
  * See @ref dba_error_code()
  *
@@ -127,7 +110,7 @@ F77_INTEGER_FUNCTION(idba_error_code)()
 }
 
 /**
- * Return the error message for the last error that happened.
+ * Return the error message for the last function that was called.
  *
  * The error message is just a description of the error code.  To see more
  * details of the specific condition that caused the error, use
@@ -146,7 +129,8 @@ F77_SUBROUTINE(idba_error_message)(CHARACTER(message) TRAIL(message))
 }
 
 /**
- * Return a string describing the context in which the error happened.
+ * Return a string describing the error context description for the last
+ * function that was called.
  *
  * This string describes what the code that failed was trying to do.
  *
@@ -163,7 +147,8 @@ F77_SUBROUTINE(idba_error_context)(CHARACTER(message) TRAIL(message))
 }
 
 /**
- * Return a string with additional details about the error.
+ * Return a string with additional details about the error for the last
+ * function that was called.
  *
  * This string contains additional details about the error in case the code was
  * able to get extra informations about it, for example by querying the error
@@ -188,7 +173,7 @@ F77_SUBROUTINE(idba_error_details)(CHARACTER(message) TRAIL(message))
  *   The error code (See @ref ::dba_err_code) of the error that triggers this
  *   callback.  If DBA_ERR_NONE is used, then the callback is invoked on all
  *   errors.
- * @param func
+ * @param[in] func
  *   The function to be called.
  * @param data
  *   An arbitrary integer data that is passed verbatim to the callback function
@@ -221,7 +206,7 @@ F77_INTEGER_FUNCTION(idba_error_set_callback)(
 }
 
 /**
- * Remove a callback set previously.
+ * Remove a previously set callback.
  *
  * @param handle
  *   The handle previously returned by idba_error_set_callback
@@ -237,7 +222,7 @@ F77_INTEGER_FUNCTION(idba_error_remove_callback)(INTEGER(handle))
 }
 
 /**
- * Default callback that prints a message and exits.
+ * Predefined error callback that prints a message and exits.
  *
  * The message is printed only if a non-zero value is supplied as user data
  */
@@ -248,15 +233,10 @@ F77_INTEGER_FUNCTION(idba_default_error_handler)(INTEGER(debug))
 		fprintf(stderr, "DB-All.e error %d: %s\n", last_err_code, last_err_msg);
 	exit(1);
 }
-F77_INTEGER_FUNCTION(idba_default_error_handle)(INTEGER(debug))
-{
-	GENPTR_INTEGER(debug)
-	if (*debug)
-		fprintf(stderr, "DB-All.e error %d: %s\n", last_err_code, last_err_msg);
-	exit(1);
-}
+
 /**
- * Default callback that prints a message and exists, except in case of overflows.
+ * Predefined error callback that prints a message and exists, except in case
+ * of overflow errors.
  *
  * In case of overflows it prints a warning and continues execution
  */
@@ -271,5 +251,7 @@ F77_INTEGER_FUNCTION(idba_error_handle_tolerating_overflows)(INTEGER(debug))
 	}
 	return 0;
 }
+
+/// @}
 
 }

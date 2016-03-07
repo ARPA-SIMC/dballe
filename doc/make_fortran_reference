@@ -1,0 +1,199 @@
+#!/usr/bin/python3
+
+import xml.etree.ElementTree as ET
+import textwrap
+import argparse
+import sys
+import os
+import logging
+
+log = logging.getLogger()
+
+
+def collect_text(node):
+    return "".join(x for x in node.itertext() if x and not x.isspace()).strip()
+
+def collect_desc(node):
+    for para in node.iterfind("para"):
+        if para.find("parameterlist"): continue
+        yield collect_text(para)
+
+class Argument:
+    """
+    Parameter built from a <parameterlist> element
+    """
+    def __init__(self, node):
+        self.kind = node.attrib["kind"]
+        self.name = [x.text for x in node.iter("parametername")][0]
+        self.desc = list(collect_desc([x for x in node.iter("parameterdescription")][0]))
+
+    def print_reference(self):
+        for idx, para in enumerate(self.desc):
+            if idx == 0:
+                initial_indent = "* `{a.name}`: ".format(a=self)
+            else:
+                initial_indent = "  "
+            lines = textwrap.wrap(para, initial_indent=initial_indent, subsequent_indent="  ", break_on_hyphens=False)
+            for l in lines:
+                print(l)
+
+
+class Function:
+    """
+    Function built from a <memberdef> element
+    """
+    def __init__(self, node):
+        self.name = node.find("name").text
+        log.debug("Found function %s", self.name)
+        self.summary = collect_text(node.find("briefdescription"))
+        self.params = []
+        for n in node.iter("param"):
+            type = n.find("type").text
+            if type == "SUBROUTINE(func)":
+                self.params.append("func")
+            else:
+                self.params.append(n.find("declname").text)
+
+        self.desc = [self.summary]
+        ddesc_node = node.find("detaileddescription")
+        self.collect_desc(ddesc_node)
+
+        self.args = []
+        for n in node.iter("parameterlist"):
+            self.args.append(Argument(n))
+
+    def collect_desc(self, node):
+        self.desc.extend(collect_desc(node))
+
+    @property
+    def arg_string(self):
+        return ", ".join(self.params)
+
+    def print_reference(self):
+        print()
+        print("#### {f.name}({f.arg_string})".format(f=self))
+        print("<a name='{f.name}'></a>".format(f=self))
+        print()
+        print("Parameters:")
+        print()
+        for a in self.args:
+            a.print_reference()
+        print()
+        for d in self.desc:
+            for line in textwrap.wrap(d, break_on_hyphens=False):
+                print(line)
+            print()
+
+
+class Section:
+    def __init__(self, tree):
+        self.functions = []
+
+        bdesc_node = tree.find("header")
+        if bdesc_node is not None:
+            self.summary = bdesc_node.text
+        else:
+            self.summary = None
+        log.debug("Found section %s", self.summary)
+        ddesc_node = tree.find("description")
+        self.desc = []
+        if ddesc_node:
+            self.desc.extend(collect_desc(ddesc_node))
+
+        for node in tree.iter("memberdef"):
+            if node.attrib["kind"] != "function": continue
+            f = Function(node)
+            if not f.name.startswith("idba_"): continue
+            self.functions.append(f)
+
+    def print_summary(self):
+        print()
+        print("### {s.summary}".format(s=self))
+        print()
+
+        for d in self.desc:
+            for line in textwrap.wrap(d, break_on_hyphens=False):
+                print(line)
+            print()
+
+        print("""<table class="table">
+<thead>
+<tr>
+    <th>Name</th>
+    <th>Description</th>
+</th>
+</thead>
+<tbody>""")
+
+        for f in self.functions:
+            print("<tr><td><code><a href='#{f.name}'>{f.name}({f.arg_string})</a></code></td><td>{f.summary}</td></tr>".format(f=f))
+
+        print("""</tbody>
+</table>""")
+
+    def print_reference(self):
+        print()
+        print("### {s.summary}".format(s=self))
+
+        for f in self.functions:
+            f.print_reference()
+
+
+class API:
+    def __init__(self, args):
+        self.sections = []
+        self.load_file(os.path.join(args.xmldir, "error_8cc.xml"))
+        self.load_file(os.path.join(args.xmldir, "binding_8cc.xml"))
+
+    def load_file(self, pathname):
+        log.info("Loading file %s", pathname)
+        with open(pathname) as fd:
+            etree = ET.fromstring(fd.read())
+
+        for node in etree.iter("sectiondef"):
+            if node.attrib["kind"] not in ("define", "user-defined", "func"): continue
+            sec = Section(node)
+            if not sec.functions or not sec.summary: continue
+            self.sections.append(sec)
+
+    def print_summary(self):
+        print()
+        print("## Summary of routines")
+
+        for s in self.sections:
+            s.print_summary()
+
+    def print_reference(self):
+        print()
+        print("## Reference of routines")
+
+        for s in self.sections:
+            s.print_reference()
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Build fortran API reference markdown documentation.")
+    parser.add_argument("xmldir", help="doxygen xml directory")
+    parser.add_argument("-v", "--verbose", action="store_true", help="verbose output")
+    parser.add_argument("--debug", action="store_true", help="verbose output")
+
+    args = parser.parse_args()
+
+    FORMAT = "%(asctime)-15s %(levelname)s %(message)s"
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG, stream=sys.stderr, format=FORMAT)
+    elif args.verbose:
+        logging.basicConfig(level=logging.INFO, stream=sys.stderr, format=FORMAT)
+    else:
+        logging.basicConfig(level=logging.WARN, stream=sys.stderr, format=FORMAT)
+
+    api = API(args)
+
+    print("# Fortran API reference")
+    api.print_summary()
+
+    api.print_reference()
+
+
+if __name__ == "__main__":
+    main()

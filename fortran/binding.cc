@@ -1,29 +1,10 @@
-/*
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "config.h"
 #include "dballe/core/verbose.h"
 #include "dballe/simple/msgapi.h"
 #include "dballe/simple/dbapi.h"
 #include "dballe/db/db.h"
 
-#include <cstring>	// memset
+#include <cstring>  // memset
 #include <limits.h>
 #include <float.h>
 #include "handles.h"
@@ -62,80 +43,16 @@ using namespace wreport;
 
 static inline void tofortran(int& val)
 {
-	if (val == fortran::API::missing_int)
-		val = MISSING_INT;
+    if (val == fortran::API::missing_int)
+        val = MISSING_INT;
 }
 static inline int fromfortran(int val)
 {
-	return val == MISSING_INT ? fortran::API::missing_int : val;
+    return val == MISSING_INT ? fortran::API::missing_int : val;
 }
 
-/** @defgroup fortransimple Simplified interface for Dballe
- * @ingroup fortran
- *
- * This module provides a simplified fortran API to Dballe.  The interface is
- * simplified by providing functions with fewer parameters than their
- * counterparts in the full interface, and the omitted parameters are replaced
- * by useful defaults.
- *
- * The resulting interface is optimized for the common usage, making it faster
- * and less error prone.  However, when creating complicated code with more
- * parallel reads and writes, it may be useful to use the functions in
- * ::fortranfull instead, because all parameters are explicit and their precise
- * semantics is always evident.
- *
- * This is a sample code for a query session with the simplified interface:
- * \code
- *   call idba_presentati(dba, "myDSN", "mariorossi", "CippoLippo")
- *   call idba_preparati(dba, handle, "read", "read", "read")
- *   call idba_setr(handle, "latmin", 30.)
- *   call idba_setr(handle, "latmax", 50.)
- *   call idba_setr(handle, "lonmin", 10.)
- *   call idba_setr(handle, "lonmax", 20.)
- *   call idba_voglioquesto(handle, count)
- *   do i=1,count
- *      call idba_dammelo(handle, param)
- *      call idba_enqd(handle, param, ...)
- *      call idba_enqi(handle, ...)
- *      call idba_enqr(handle, ...)
- *      call idba_enqd(handle, ...)
- *      call idba_enqc(handle, ...)
- *      call idba_voglioancora(handle, countancora)
- *      do ii=1,count
- *         call idba_ancora(handle, param)
- *         call idba_enqi(handle, param)
- *      enddo
- *   enddo
- *   call idba_fatto(handle)
- *   call idba_arrivederci(dba)
- * \endcode
- *
- * This is a sample code for a data insert session with the simplified interface:
- * \code
- *   call idba_presentati(dba, "myDSN", "mariorossi", "CippoLippo")
- *   call idba_preparati(dba, handle, "read", "add", "write")
- *   call idba_scopa(handle, "")
- *   call idba_setr(handle, "lat", 30.)
- *   call idba_setr(handle, "lon", 10.)
- *   call idba_seti(handle, .....)
- *   call idba_seti(handle, "B12011", 5)
- *   call idba_seti(handle, "B12012", 10)
- *   call idba_prendilo(handle)
- *   call idba_setc(handle, "*var", "B12012")
- *   call idba_seti(handle, "*B33101", 50)
- *   call idba_seti(handle, "*B33102", 75)
- *   call idba_critica(handle)
- *   call idba_setc(handle, "*var", "B12011")
- *   call idba_seti(handle, "*B33101", 50)
- *   call idba_seti(handle, "*B33102", 75)
- *   call idba_critica(handle)
- *   call idba_fatto(handle)
- *   call idba_arrivederci(dba)
- * \endcode
- */
-
 /** @file
- * @ingroup fortransimple
+ * @ingroup fortran
  * Simplified interface for Dballe.
  *
  * Every function returns an error indicator, which is 0 if no error happened,
@@ -188,48 +105,41 @@ using namespace std;
 
 struct HSession : public fortran::HBase
 {
-	DB* db;
+    DB* db;
 
-	void start()
-	{
-		fortran::HBase::start();
-		db = 0;
-	}
+    void start()
+    {
+        fortran::HBase::start();
+        db = 0;
+    }
 
-	void stop()
-	{
+    void stop()
+    {
         if (db) delete db;
-		fortran::HBase::stop();
-	}
+        fortran::HBase::stop();
+    }
 };
 
 struct fortran::Handler<HSession, MAX_SESSION> hsess;
 
 struct HSimple : public fortran::HBase
 {
-	fortran::API* api;
+    fortran::API* api;
     fortran::SessionTracer trace;
 
-	void start()
-	{
-		fortran::HBase::start();
-		api = 0;
-	}
-	void stop()
-	{
-		if (api) delete api;
-		fortran::HBase::stop();
-	}
+    void start()
+    {
+        fortran::HBase::start();
+        api = 0;
+    }
+    void stop()
+    {
+        if (api) delete api;
+        fortran::HBase::stop();
+    }
 };
 
 struct fortran::Handler<HSimple, MAX_SIMPLE> hsimp;
-
-// FDBA_HANDLE_BODY(simple, MAX_SIMPLE, "Dballe simple sessions")
-// FDBA_HANDLE_BODY(session, MAX_SESSION, "Dballe sessions")
-
-//#define STATE (simples.get(*handle))
-//#define SESSION (sessions.get(simples.get(*handle).session))
-//FDBA_HANDLE(session, FDBA_HANDLE(simple, *handle).session).session)
 
 static int usage_refcount = 0;
 
@@ -245,17 +155,24 @@ static void lib_init()
     hsess.init("DB-All.e database sessions", "MAX_CALLBACKS");
     hsimp.init("DB-All.e work sessions", "MAX_SIMPLE");
 
-	++usage_refcount;
+    ++usage_refcount;
 }
 
 extern "C" {
 
+/**@name Session routines
+ * @anchor idba_enq
+ *
+ * These routines are used to begin and end working sessions with DB-All.e.
+ * @{
+ */
+
 /**
- * Start working with a DBALLE database.
+ * Connect to the database
  *
  * This function can be called more than once once to connect to different
  * databases at the same time.
- * 
+ *
  * @param dsn
  *   The ODBC DSN of the database to use
  * @param user
@@ -269,45 +186,45 @@ extern "C" {
  *   The error indication for the function.
  */
 F77_INTEGER_FUNCTION(idba_presentati)(
-		INTEGER(dbahandle),
-		CHARACTER(dsn),
-		CHARACTER(user),
-		CHARACTER(password)
-		TRAIL(dsn)
-		TRAIL(user)
-		TRAIL(password))
+        INTEGER(dbahandle),
+        CHARACTER(dsn),
+        CHARACTER(user),
+        CHARACTER(password)
+        TRAIL(dsn)
+        TRAIL(user)
+        TRAIL(password))
 {
-	GENPTR_INTEGER(dbahandle)
-	GENPTR_CHARACTER(dsn)
-	GENPTR_CHARACTER(user)
-	GENPTR_CHARACTER(password)
-	const char* chosen_dsn;
-	char s_dsn[256];
-	char s_user[20];
-	char s_password[20];
+    GENPTR_INTEGER(dbahandle)
+    GENPTR_CHARACTER(dsn)
+    GENPTR_CHARACTER(user)
+    GENPTR_CHARACTER(password)
+    const char* chosen_dsn;
+    char s_dsn[256];
+    char s_user[20];
+    char s_password[20];
 
-	try {
-		/* Import input string parameters */
-		cnfImpn(dsn, dsn_length, 255, s_dsn); s_dsn[255] = 0;
-		cnfImpn(user, user_length, 19, s_user); s_user[19] = 0;
-		cnfImpn(password, password_length, 19, s_password); s_password[19] = 0;
+    try {
+        /* Import input string parameters */
+        cnfImpn(dsn, dsn_length, 255, s_dsn); s_dsn[255] = 0;
+        cnfImpn(user, user_length, 19, s_user); s_user[19] = 0;
+        cnfImpn(password, password_length, 19, s_password); s_password[19] = 0;
 
-		/* Initialize the library if needed */
-		lib_init();
+        /* Initialize the library if needed */
+        lib_init();
 
-		/* Allocate and initialize a new handle */
-		*dbahandle = hsess.request();
-		HSession& hs = hsess.get(*dbahandle);
+        /* Allocate and initialize a new handle */
+        *dbahandle = hsess.request();
+        HSession& hs = hsess.get(*dbahandle);
 
-		/* Open the DBALLE session */
+        /* Open the DB-All.e session */
 
-		/* If dsn is missing, look in the environment */
-		if (s_dsn[0] == 0)
-		{
-			chosen_dsn = getenv("DBA_DB");
-			if (chosen_dsn == NULL) chosen_dsn = "";
-		} else
-			chosen_dsn = s_dsn;
+        /* If dsn is missing, look in the environment */
+        if (s_dsn[0] == 0)
+        {
+            chosen_dsn = getenv("DBA_DB");
+            if (chosen_dsn == NULL) chosen_dsn = "";
+        } else
+            chosen_dsn = s_dsn;
 
         /* If dsn looks like a url, treat it accordingly */
         if (DB::is_url(chosen_dsn))
@@ -321,47 +238,47 @@ F77_INTEGER_FUNCTION(idba_presentati)(
             hs.db = DB::connect(chosen_dsn, s_user, s_password).release();
         }
 
-		/* Open the database session */
-		return fortran::success();
-	} catch (error& e) {
+        /* Open the database session */
+        return fortran::success();
+    } catch (error& e) {
         hsess.release(*dbahandle);
-		return fortran::error(e);
-	}
+        return fortran::error(e);
+    }
 }
 
 /**
- * Stop working with a DBALLE database
+ * Disconnect from the database.
  *
  * @param dbahandle
  *   The database handle to close.
  */
 F77_SUBROUTINE(idba_arrivederci)(INTEGER(dbahandle))
 {
-	GENPTR_INTEGER(dbahandle)
+    GENPTR_INTEGER(dbahandle)
 
     IF_TRACING(fortran::log_arrivederci(*dbahandle));
 
     // try {
         hsess.release(*dbahandle);
 
-		/*
-		dba_shutdown does not exist anymore, but I keep this code commented out
-		here as a placeholder if in the future we'll need to hook actions when the
-		usage refcount goes to 0
+        /*
+        dba_shutdown does not exist anymore, but I keep this code commented out
+        here as a placeholder if in the future we'll need to hook actions when the
+        usage refcount goes to 0
 
-		if (--usage_refcount == 0)
-			dba_shutdown();
-		*/
+        if (--usage_refcount == 0)
+            dba_shutdown();
+        */
 
-	// 	return fortran::success();
-	// } catch (error& e) {
-	// 	return fortran::error(e);
-	// }
+    //  return fortran::success();
+    // } catch (error& e) {
+    //  return fortran::error(e);
+    // }
 }
 
 
 /**
- * Starts a session with dballe.
+ * Open a new session.
  *
  * You can call idba_preparati() many times and get more handles.  This allows
  * to perform many operations on the database at the same time.
@@ -398,50 +315,50 @@ F77_SUBROUTINE(idba_arrivederci)(INTEGER(dbahandle))
  *   The error indication for the function.
  */
 F77_INTEGER_FUNCTION(idba_preparati)(
-		INTEGER(dbahandle),
-		INTEGER(handle),
-		CHARACTER(anaflag),
-		CHARACTER(dataflag),
-		CHARACTER(attrflag)
-		TRAIL(anaflag)
-		TRAIL(dataflag)
-		TRAIL(attrflag))
+        INTEGER(dbahandle),
+        INTEGER(handle),
+        CHARACTER(anaflag),
+        CHARACTER(dataflag),
+        CHARACTER(attrflag)
+        TRAIL(anaflag)
+        TRAIL(dataflag)
+        TRAIL(attrflag))
 {
-	GENPTR_INTEGER(dbahandle)
-	GENPTR_INTEGER(handle)
-	GENPTR_CHARACTER(anaflag)
-	GENPTR_CHARACTER(dataflag)
-	GENPTR_CHARACTER(attrflag)
-	char c_anaflag[10];
-	char c_dataflag[10];
-	char c_attrflag[10];
-	cnfImpn(anaflag, anaflag_length,  10, c_anaflag);
-	cnfImpn(dataflag, dataflag_length,  10, c_dataflag);
-	cnfImpn(attrflag, attrflag_length,  10, c_attrflag);
+    GENPTR_INTEGER(dbahandle)
+    GENPTR_INTEGER(handle)
+    GENPTR_CHARACTER(anaflag)
+    GENPTR_CHARACTER(dataflag)
+    GENPTR_CHARACTER(attrflag)
+    char c_anaflag[10];
+    char c_dataflag[10];
+    char c_attrflag[10];
+    cnfImpn(anaflag, anaflag_length,  10, c_anaflag);
+    cnfImpn(dataflag, dataflag_length,  10, c_dataflag);
+    cnfImpn(attrflag, attrflag_length,  10, c_attrflag);
 
-	try {
-		/* Check here to warn users of the introduction of idba_presentati */
-		/*
-		if (session == NULL)
-			return dba_error_consistency("idba_presentati should be called before idba_preparati");
-		*/
+    try {
+        /* Check here to warn users of the introduction of idba_presentati */
+        /*
+        if (session == NULL)
+            return dba_error_consistency("idba_presentati should be called before idba_preparati");
+        */
 
-		/* Allocate and initialize a new handle */
-		*handle = hsimp.request();
-		HSession& hs = hsess.get(*dbahandle);
-		HSimple& h = hsimp.get(*handle);
+        /* Allocate and initialize a new handle */
+        *handle = hsimp.request();
+        HSession& hs = hsess.get(*dbahandle);
+        HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_preparati(*dbahandle, *handle, c_anaflag, c_dataflag, c_attrflag));
-		h.api = new fortran::DbAPI(*hs.db, c_anaflag, c_dataflag, c_attrflag);
+        h.api = new fortran::DbAPI(*hs.db, c_anaflag, c_dataflag, c_attrflag);
 
-		return fortran::success();
-	} catch (error& e) {
-		hsimp.release(*handle);
-		return fortran::error(e);
-	}
+        return fortran::success();
+    } catch (error& e) {
+        hsimp.release(*handle);
+        return fortran::error(e);
+    }
 }
 
 /**
- * Access a file with weather messages
+ * Start working with a message file.
  *
  * @retval handle
  *   The session handle returned by the function
@@ -465,321 +382,78 @@ F77_INTEGER_FUNCTION(idba_preparati)(
  *   The error indication for the function.
  */
 F77_INTEGER_FUNCTION(idba_messaggi)(
-		INTEGER(handle),
-		CHARACTER(filename),
-		CHARACTER(mode),
-		CHARACTER(type)
-		TRAIL(filename)
-		TRAIL(mode)
-		TRAIL(type))
+        INTEGER(handle),
+        CHARACTER(filename),
+        CHARACTER(mode),
+        CHARACTER(type)
+        TRAIL(filename)
+        TRAIL(mode)
+        TRAIL(type))
 {
-	GENPTR_INTEGER(handle)
-	GENPTR_CHARACTER(filename)
-	GENPTR_CHARACTER(mode)
-	GENPTR_CHARACTER(type)
-	char c_filename[512];
-	char c_mode[10];
-	char c_type[10];
+    GENPTR_INTEGER(handle)
+    GENPTR_CHARACTER(filename)
+    GENPTR_CHARACTER(mode)
+    GENPTR_CHARACTER(type)
+    char c_filename[512];
+    char c_mode[10];
+    char c_type[10];
 
-	cnfImpn(filename, filename_length,  512, c_filename);
-	cnfImpn(mode, mode_length,  10, c_mode);
-	cnfImpn(type, type_length,  10, c_type);
+    cnfImpn(filename, filename_length,  512, c_filename);
+    cnfImpn(mode, mode_length,  10, c_mode);
+    cnfImpn(type, type_length,  10, c_type);
 
-	try {
-		lib_init();
+    try {
+        lib_init();
 
-		*handle = hsimp.request();
-		//HSession& hs = hsess.get(*dbahandle);
-		HSimple& h = hsimp.get(*handle);
+        *handle = hsimp.request();
+        //HSession& hs = hsess.get(*dbahandle);
+        HSimple& h = hsimp.get(*handle);
 
         IF_TRACING(h.trace.log_messaggi(*handle, c_filename, c_mode, c_type));
 
-		h.api = new fortran::MsgAPI(c_filename, c_mode, c_type);
+        h.api = new fortran::MsgAPI(c_filename, c_mode, c_type);
 
-		return fortran::success();
-	} catch (error& e) {
-		hsimp.release(*handle);
-		return fortran::error(e);
-	}
+        return fortran::success();
+    } catch (error& e) {
+        hsimp.release(*handle);
+        return fortran::error(e);
+    }
 }
 
 
 /**
- * Ends a session with DBALLE
+ * Close a session.
  *
  * @param handle
  *   Handle to the session to be closed.
  */
 F77_INTEGER_FUNCTION(idba_fatto)(INTEGER(handle))
 {
-	GENPTR_INTEGER(handle)
+    GENPTR_INTEGER(handle)
 
     try {
         HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_fatto());
-		hsimp.release(*handle);
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
-}
-
-/**
- * Reset the database contents, loading default report informations from a file.
- *
- * It only works in rewrite mode.
- *
- * @param handle
- *   Handle to a DBALLE session
- * @param repinfofile
- *   CSV file with the default report informations.  See dba_reset()
- *   documentation for the format of the file.
- * @return
- *   The error indicator for the function
- */
-F77_INTEGER_FUNCTION(idba_scopa)(INTEGER(handle), CHARACTER(repinfofile) TRAIL(repinfofile))
-{
-	GENPTR_INTEGER(handle)
-	GENPTR_CHARACTER(repinfofile)
-	char fname[PATH_MAX];
-
-	cnfImpn(repinfofile, repinfofile_length,  PATH_MAX, fname); fname[PATH_MAX - 1] = 0;
-
-	try {
-        HSimple& h = hsimp.get(*handle);
-        if (fname[0] == 0)
-        {
-            IF_TRACING(h.trace.log_scopa());
-            h.api->scopa(0);
-        } else {
-            IF_TRACING(h.trace.log_scopa(fname));
-            h.api->scopa(fname);
-        }
-
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
-}
-
-/**@name idba_enq*
- * @anchor idba_enq
- * Functions used to read the output values of the DBALLE action routines
- * @{
- */
-
-/**
- * Read one integer value from the output record
- * 
- * @param handle
- *   Handle to a DBALLE session
- * @param parameter
- *   Parameter to query.  It can be the code of a WMO variable prefixed by \c
- *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
- *   (such as \c "*B01023") or a keyword among the ones defined in \ref
- *   dba_record_keywords
- * @param value
- *   Where the value will be returned
- * @return
- *   The error indicator for the function
- */
-F77_INTEGER_FUNCTION(idba_enqi)(
-		INTEGER(handle),
-		CHARACTER(parameter),
-		INTEGER(value)
-		TRAIL(parameter))
-{
-	GENPTR_INTEGER(handle)
-	GENPTR_CHARACTER(parameter)
-	GENPTR_INTEGER(value)
-	char parm[20];
-	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
-
-	try {
-		HSimple& h = hsimp.get(*handle);
-		*value = h.api->enqi(parm);
-		tofortran(*value);
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
-}
-
-/**
- * Read one byte value from the output record
- * 
- * @param handle
- *   Handle to a DBALLE session
- * @param parameter
- *   Parameter to query.  It can be the code of a WMO variable prefixed by \c
- *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
- *   (such as \c "*B01023") or a keyword among the ones defined in \ref
- *   dba_record_keywords
- * @param value
- *   Where the value will be returned
- * @return
- *   The error indicator for the function
- */
-F77_INTEGER_FUNCTION(idba_enqb)(
-		INTEGER(handle),
-		CHARACTER(parameter),
-		BYTE(value)
-		TRAIL(parameter))
-{
-	GENPTR_INTEGER(handle)
-	GENPTR_CHARACTER(parameter)
-	GENPTR_BYTE(value)
-	char parm[20];
-	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
-
-	try {
-		HSimple& h = hsimp.get(*handle);
-		*value = h.api->enqb(parm);
-		if (*value == fortran::API::missing_byte)
-			*value = MISSING_BYTE;
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
-}
-
-
-/**
- * Read one real value from the output record
- * 
- * @param handle
- *   Handle to a DBALLE session
- * @param parameter
- *   Parameter to query.  It can be the code of a WMO variable prefixed by \c
- *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
- *   (such as \c "*B01023") or a keyword among the ones defined in \ref
- *   dba_record_keywords
- * @param value
- *   Where the value will be returned
- * @return
- *   The error indicator for the function
- */
-F77_INTEGER_FUNCTION(idba_enqr)(
-		INTEGER(handle),
-		CHARACTER(parameter),
-		REAL(value)
-		TRAIL(parameter))
-{
-	GENPTR_INTEGER(handle)
-	GENPTR_CHARACTER(parameter)
-	GENPTR_REAL(value)
-	char parm[20];
-	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
-
-	try {
-		HSimple& h = hsimp.get(*handle);
-		*value = h.api->enqr(parm);
-		if (*value == fortran::API::missing_float)
-			*value = MISSING_REAL;
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
-}
-
-/**
- * Read one real*8 value from the output record
- * 
- * @param handle
- *   Handle to a DBALLE session
- * @param parameter
- *   Parameter to query.  It can be the code of a WMO variable prefixed by \c
- *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
- *   (such as \c "*B01023") or a keyword among the ones defined in \ref
- *   dba_record_keywords
- * @param value
- *   Where the value will be returned
- * @return
- *   The error indicator for the function
- */
-F77_INTEGER_FUNCTION(idba_enqd)(
-		INTEGER(handle),
-		CHARACTER(parameter),
-		DOUBLE(value)
-		TRAIL(parameter))
-{
-	GENPTR_INTEGER(handle)
-	GENPTR_CHARACTER(parameter)
-	GENPTR_DOUBLE(value)
-	char parm[20];
-	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
-
-	try {
-		HSimple& h = hsimp.get(*handle);
-		*value = h.api->enqd(parm);
-		if (*value == fortran::API::missing_double)
-			*value = MISSING_DOUBLE;
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
-}
-
-/**
- * Read one character value from the output record
- * 
- * @param handle
- *   Handle to a DBALLE session
- * @param parameter
- *   Parameter to query.  It can be the code of a WMO variable prefixed by \c
- *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
- *   (such as \c "*B01023") or a keyword among the ones defined in \ref
- *   dba_record_keywords
- * @param value
- *   Where the value will be returned
- * @return
- *   The error indicator for the function
- */
-F77_INTEGER_FUNCTION(idba_enqc)(
-		INTEGER(handle),
-		CHARACTER(parameter),
-		CHARACTER(value)
-		TRAIL(parameter)
-		TRAIL(value))
-{
-	GENPTR_INTEGER(handle)
-	GENPTR_CHARACTER(parameter)
-	GENPTR_CHARACTER(value)
-	char parm[20];
-	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
-
-	try {
-		HSimple& h = hsimp.get(*handle);
-		const char* v = h.api->enqc(parm);
-		if (!v)
-		{
-			if (value_length > 0)
-			{
-				// The missing string value has been defined as a
-				// null byte plus blank padding.
-				value[0] = 0;
-				memset(value+1, ' ', value_length - 1);
-			}
-		} else
-			cnfExprt(v, value, value_length);
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+        hsimp.release(*handle);
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /*@}*/
 
-/**@name idba_set*
- * @anchor idba_set
- * Functions used to read the input values for the DBALLE action routines
- *@{*/
+
+/**@name Input/output routines
+ * These routines are used to set the input and read the output of action routines.
+ * @{
+ */
 
 /**
- * Set one integer value into the input record
- * 
+ * Set an integer value in input
+ *
  * @param handle
- *   Handle to a DBALLE session
+ *   Handle to a DB-All.e session
  * @param parameter
  *   Parameter to set.  It can be the code of a WMO variable prefixed by \c
  *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
@@ -791,41 +465,41 @@ F77_INTEGER_FUNCTION(idba_enqc)(
  *   The error indicator for the function
  */
 F77_INTEGER_FUNCTION(idba_seti)(
-		INTEGER(handle),
-		CHARACTER(parameter),
-		INTEGER(value)
-		TRAIL(parameter))
+        INTEGER(handle),
+        CHARACTER(parameter),
+        INTEGER(value)
+        TRAIL(parameter))
 {
-	GENPTR_INTEGER(handle)
-	GENPTR_CHARACTER(parameter)
-	GENPTR_INTEGER(value)
-	char parm[20];
-	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
+    GENPTR_INTEGER(handle)
+    GENPTR_CHARACTER(parameter)
+    GENPTR_INTEGER(value)
+    char parm[20];
+    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
-	try {
-		HSimple& h = hsimp.get(*handle);
-		if (*value == MISSING_INT)
-		{
-			TRACEMISSING("int");
+    try {
+        HSimple& h = hsimp.get(*handle);
+        if (*value == MISSING_INT)
+        {
+            TRACEMISSING("int");
             IF_TRACING(h.trace.log_unset(parm));
-			h.api->unset(parm);
-		}
-		else
+            h.api->unset(parm);
+        }
+        else
         {
             IF_TRACING(h.trace.log_set(parm, *value));
-			h.api->seti(parm, *value);
+            h.api->seti(parm, *value);
         }
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /**
- * Set one byte value into the input record
- * 
+ * Set a byte value in input
+ *
  * @param handle
- *   Handle to a DBALLE session
+ *   Handle to a DB-All.e session
  * @param parameter
  *   Parameter to set.  It can be the code of a WMO variable prefixed by \c
  *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
@@ -837,42 +511,42 @@ F77_INTEGER_FUNCTION(idba_seti)(
  *   The error indicator for the function
  */
 F77_INTEGER_FUNCTION(idba_setb)(
-		INTEGER(handle),
-		CHARACTER(parameter),
-		BYTE(value)
-		TRAIL(parameter))
+        INTEGER(handle),
+        CHARACTER(parameter),
+        BYTE(value)
+        TRAIL(parameter))
 {
-	GENPTR_INTEGER(handle)
-	GENPTR_CHARACTER(parameter)
-	GENPTR_BYTE(value)
-	char parm[20];
-	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
+    GENPTR_INTEGER(handle)
+    GENPTR_CHARACTER(parameter)
+    GENPTR_BYTE(value)
+    char parm[20];
+    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
-	try {
-		HSimple& h = hsimp.get(*handle);
-		if (*value == MISSING_BYTE)
-		{
-			TRACEMISSING("byte");
+    try {
+        HSimple& h = hsimp.get(*handle);
+        if (*value == MISSING_BYTE)
+        {
+            TRACEMISSING("byte");
             IF_TRACING(h.trace.log_unset(parm));
-			h.api->unset(parm);
-		}
-		else
+            h.api->unset(parm);
+        }
+        else
         {
             IF_TRACING(h.trace.log_set(parm, *value));
-			h.api->setb(parm, *value);
+            h.api->setb(parm, *value);
         }
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 
 /**
- * Set one real value into the input record
- * 
+ * Set a real value in input
+ *
  * @param handle
- *   Handle to a DBALLE session
+ *   Handle to a DB-All.e session
  * @param parameter
  *   Parameter to set.  It can be the code of a WMO variable prefixed by \c
  *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
@@ -884,41 +558,41 @@ F77_INTEGER_FUNCTION(idba_setb)(
  *   The error indicator for the function
  */
 F77_INTEGER_FUNCTION(idba_setr)(
-		INTEGER(handle),
-		CHARACTER(parameter),
-		REAL(value)
-		TRAIL(parameter))
+        INTEGER(handle),
+        CHARACTER(parameter),
+        REAL(value)
+        TRAIL(parameter))
 {
-	GENPTR_INTEGER(handle)
-	GENPTR_CHARACTER(parameter)
-	GENPTR_REAL(value)
-	char parm[20];
-	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
+    GENPTR_INTEGER(handle)
+    GENPTR_CHARACTER(parameter)
+    GENPTR_REAL(value)
+    char parm[20];
+    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
-	try {
-		HSimple& h = hsimp.get(*handle);
-		if (*value == MISSING_REAL)
-		{
-			TRACEMISSING("real");
+    try {
+        HSimple& h = hsimp.get(*handle);
+        if (*value == MISSING_REAL)
+        {
+            TRACEMISSING("real");
             IF_TRACING(h.trace.log_unset(parm));
-			h.api->unset(parm);
-		}
-		else
+            h.api->unset(parm);
+        }
+        else
         {
             IF_TRACING(h.trace.log_set(parm, *value));
-			h.api->setr(parm, *value);
+            h.api->setr(parm, *value);
         }
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /**
- * Set one real*8 value into the input record
- * 
+ * Set a `real*8` value in input
+ *
  * @param handle
- *   Handle to a DBALLE session
+ *   Handle to a DB-All.e session
  * @param parameter
  *   Parameter to set.  It can be the code of a WMO variable prefixed by \c
  *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
@@ -930,41 +604,41 @@ F77_INTEGER_FUNCTION(idba_setr)(
  *   The error indicator for the function
  */
 F77_INTEGER_FUNCTION(idba_setd)(
-		INTEGER(handle),
-		CHARACTER(parameter),
-		DOUBLE(value)
-		TRAIL(parameter))
+        INTEGER(handle),
+        CHARACTER(parameter),
+        DOUBLE(value)
+        TRAIL(parameter))
 {
-	GENPTR_INTEGER(handle)
-	GENPTR_CHARACTER(parameter)
-	GENPTR_DOUBLE(value)
-	char parm[20];
-	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
+    GENPTR_INTEGER(handle)
+    GENPTR_CHARACTER(parameter)
+    GENPTR_DOUBLE(value)
+    char parm[20];
+    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
-	try {
-		HSimple& h = hsimp.get(*handle);
-		if (*value == MISSING_DOUBLE)
-		{
-			TRACEMISSING("double");
+    try {
+        HSimple& h = hsimp.get(*handle);
+        if (*value == MISSING_DOUBLE)
+        {
+            TRACEMISSING("double");
             IF_TRACING(h.trace.log_unset(parm));
-			h.api->unset(parm);
-		}
-		else
+            h.api->unset(parm);
+        }
+        else
         {
             IF_TRACING(h.trace.log_set(parm, *value));
-			h.api->setd(parm, *value);
+            h.api->setd(parm, *value);
         }
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /**
- * Set one character value into the input record
+ * Set a character value in input
  * 
  * @param handle
- *   Handle to a DBALLE session
+ *   Handle to a DB-All.e session
  * @param parameter
  *   Parameter to set.  It can be the code of a WMO variable prefixed by \c
  *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
@@ -976,422 +650,244 @@ F77_INTEGER_FUNCTION(idba_setd)(
  *   The error indicator for the function
  */
 F77_INTEGER_FUNCTION(idba_setc)(
-		INTEGER(handle),
-		CHARACTER(parameter),
-		CHARACTER(value)
-		TRAIL(parameter)
-		TRAIL(value))
+        INTEGER(handle),
+        CHARACTER(parameter),
+        CHARACTER(value)
+        TRAIL(parameter)
+        TRAIL(value))
 {
-	GENPTR_INTEGER(handle)
-	GENPTR_CHARACTER(parameter)
-	GENPTR_CHARACTER(value)
-	char parm[20];
-	char val[255];
-	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
-	cnfImpn(value, value_length, 254, val); val[254] = 0;
+    GENPTR_INTEGER(handle)
+    GENPTR_CHARACTER(parameter)
+    GENPTR_CHARACTER(value)
+    char parm[20];
+    char val[255];
+    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
+    cnfImpn(value, value_length, 254, val); val[254] = 0;
 
-	try {
-		HSimple& h = hsimp.get(*handle);
-		if (val[0] == 0)
-		{
-			TRACEMISSING("char");
+    try {
+        HSimple& h = hsimp.get(*handle);
+        if (val[0] == 0)
+        {
+            TRACEMISSING("char");
             IF_TRACING(h.trace.log_unset(parm));
-			h.api->unset(parm);
-		}
-		else
+            h.api->unset(parm);
+        }
+        else
         {
             IF_TRACING(h.trace.log_set(parm, val));
-			h.api->setc(parm, val);
+            h.api->setc(parm, val);
         }
 
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /**
- * Shortcut function to set query parameters to the anagraphical context
- * 
+ * Read an integer value from the output
+ *
  * @param handle
- *   Handle to a DBALLE session
+ *   Handle to a DB-All.e session
+ * @param parameter
+ *   Parameter to query.  It can be the code of a WMO variable prefixed by \c
+ *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
+ *   (such as \c "*B01023") or a keyword among the ones defined in \ref
+ *   dba_record_keywords
+ * @param value
+ *   Where the value will be returned
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_setcontextana)(
-		INTEGER(handle))
+F77_INTEGER_FUNCTION(idba_enqi)(
+        INTEGER(handle),
+        CHARACTER(parameter),
+        INTEGER(value)
+        TRAIL(parameter))
 {
-	GENPTR_INTEGER(handle)
-	try {
-		HSimple& h = hsimp.get(*handle);
-		IF_TRACING(h.trace.log_func("setcontextana"));
-		h.api->setcontextana();
+    GENPTR_INTEGER(handle)
+    GENPTR_CHARACTER(parameter)
+    GENPTR_INTEGER(value)
+    char parm[20];
+    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+    try {
+        HSimple& h = hsimp.get(*handle);
+        *value = h.api->enqi(parm);
+        tofortran(*value);
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /**
- * Shortcut function to read level data.
+ * Read a byte value from the output
  * 
  * @param handle
- *   Handle to a DBALLE session
- * @retval ltype
- *   Level type from the output record
- * @retval l1
- *   L1 from the output record
- * @retval l2
- *   L2 from the output record
+ *   Handle to a DB-All.e session
+ * @param parameter
+ *   Parameter to query.  It can be the code of a WMO variable prefixed by \c
+ *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
+ *   (such as \c "*B01023") or a keyword among the ones defined in \ref
+ *   dba_record_keywords
+ * @param value
+ *   Where the value will be returned
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_enqlevel)(
-		INTEGER(handle),
-		INTEGER(ltype1),
-		INTEGER(l1),
-		INTEGER(ltype2),
-		INTEGER(l2))
+F77_INTEGER_FUNCTION(idba_enqb)(
+        INTEGER(handle),
+        CHARACTER(parameter),
+        BYTE(value)
+        TRAIL(parameter))
 {
-	GENPTR_INTEGER(handle)
-	GENPTR_INTEGER(ltype1)
-	GENPTR_INTEGER(l1)
-	GENPTR_INTEGER(ltype2)
-	GENPTR_INTEGER(l2)
-	try {
-		HSimple& h = hsimp.get(*handle);
-		h.api->enqlevel(*ltype1, *l1, *ltype2, *l2);
-		tofortran(*ltype1); tofortran(*l1);
-		tofortran(*ltype2); tofortran(*l2);
+    GENPTR_INTEGER(handle)
+    GENPTR_CHARACTER(parameter)
+    GENPTR_BYTE(value)
+    char parm[20];
+    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+    try {
+        HSimple& h = hsimp.get(*handle);
+        *value = h.api->enqb(parm);
+        if (*value == fortran::API::missing_byte)
+            *value = MISSING_BYTE;
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /**
- * Shortcut function to set level data.
- * 
+ * Read a real value from the output
+ *
  * @param handle
- *   Handle to a DBALLE session
- * @param ltype
- *   Level type to set in the input record
- * @param l1
- *   L1 to set in the input record
- * @param l2
- *   L2 to set in the input record
+ *   Handle to a DB-All.e session
+ * @param parameter
+ *   Parameter to query.  It can be the code of a WMO variable prefixed by \c
+ *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
+ *   (such as \c "*B01023") or a keyword among the ones defined in \ref
+ *   dba_record_keywords
+ * @param value
+ *   Where the value will be returned
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_setlevel)(
-		INTEGER(handle),
-		INTEGER(ltype1),
-		INTEGER(l1),
-		INTEGER(ltype2),
-		INTEGER(l2))
+F77_INTEGER_FUNCTION(idba_enqr)(
+        INTEGER(handle),
+        CHARACTER(parameter),
+        REAL(value)
+        TRAIL(parameter))
 {
-	GENPTR_INTEGER(handle)
-	GENPTR_INTEGER(ltype1)
-	GENPTR_INTEGER(l1)
-	GENPTR_INTEGER(ltype2)
-	GENPTR_INTEGER(l2)
-	try {
-		HSimple& h = hsimp.get(*handle);
-        IF_TRACING(h.trace.log_setlevel(
-                fromfortran(*ltype1), fromfortran(*l1),
-                fromfortran(*ltype2), fromfortran(*l2)));
-		h.api->setlevel(
-			fromfortran(*ltype1), fromfortran(*l1),
-			fromfortran(*ltype2), fromfortran(*l2));
+    GENPTR_INTEGER(handle)
+    GENPTR_CHARACTER(parameter)
+    GENPTR_REAL(value)
+    char parm[20];
+    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+    try {
+        HSimple& h = hsimp.get(*handle);
+        *value = h.api->enqr(parm);
+        if (*value == fortran::API::missing_float)
+            *value = MISSING_REAL;
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /**
- * Shortcut function to read time range data.
+ * Read a `real*8` value from the output
  * 
  * @param handle
- *   Handle to a DBALLE session
- * @retval ptype
- *   P indicator from the output record
- * @retval p1
- *   P1 from the output record
- * @retval p2
- *   P2 from the output record
+ *   Handle to a DB-All.e session
+ * @param parameter
+ *   Parameter to query.  It can be the code of a WMO variable prefixed by \c
+ *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
+ *   (such as \c "*B01023") or a keyword among the ones defined in \ref
+ *   dba_record_keywords
+ * @param value
+ *   Where the value will be returned
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_enqtimerange)(
-		INTEGER(handle),
-		INTEGER(ptype),
-		INTEGER(p1),
-		INTEGER(p2))
+F77_INTEGER_FUNCTION(idba_enqd)(
+        INTEGER(handle),
+        CHARACTER(parameter),
+        DOUBLE(value)
+        TRAIL(parameter))
 {
-	GENPTR_INTEGER(handle)
-	GENPTR_INTEGER(ptype)
-	GENPTR_INTEGER(p1)
-	GENPTR_INTEGER(p2)
-	try {
-		HSimple& h = hsimp.get(*handle);
-		h.api->enqtimerange(*ptype, *p1, *p2);
-		tofortran(*ptype); tofortran(*p1); tofortran(*p2);
+    GENPTR_INTEGER(handle)
+    GENPTR_CHARACTER(parameter)
+    GENPTR_DOUBLE(value)
+    char parm[20];
+    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+    try {
+        HSimple& h = hsimp.get(*handle);
+        *value = h.api->enqd(parm);
+        if (*value == fortran::API::missing_double)
+            *value = MISSING_DOUBLE;
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /**
- * Shortcut function to set time range data.
- * 
+ * Read a character value from the output
+ *
  * @param handle
- *   Handle to a DBALLE session
- * @param ptype
- *   P indicator to set in the input record
- * @param p1
- *   P1 to set in the input record
- * @param p2
- *   P2 to set in the input record
+ *   Handle to a DB-All.e session
+ * @param parameter
+ *   Parameter to query.  It can be the code of a WMO variable prefixed by \c
+ *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
+ *   (such as \c "*B01023") or a keyword among the ones defined in \ref
+ *   dba_record_keywords
+ * @param value
+ *   Where the value will be returned
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_settimerange)(
-		INTEGER(handle),
-		INTEGER(ptype),
-		INTEGER(p1),
-		INTEGER(p2))
+F77_INTEGER_FUNCTION(idba_enqc)(
+        INTEGER(handle),
+        CHARACTER(parameter),
+        CHARACTER(value)
+        TRAIL(parameter)
+        TRAIL(value))
 {
-	GENPTR_INTEGER(handle)
-	GENPTR_INTEGER(ptype)
-	GENPTR_INTEGER(p1)
-	GENPTR_INTEGER(p2)
-	try {
-		HSimple& h = hsimp.get(*handle);
-        IF_TRACING(h.trace.log_settimerange(fromfortran(*ptype), fromfortran(*p1), fromfortran(*p2)));
-		h.api->settimerange(
-			fromfortran(*ptype), fromfortran(*p1), fromfortran(*p2));
+    GENPTR_INTEGER(handle)
+    GENPTR_CHARACTER(parameter)
+    GENPTR_CHARACTER(value)
+    char parm[20];
+    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+    try {
+        HSimple& h = hsimp.get(*handle);
+        const char* v = h.api->enqc(parm);
+        if (!v)
+        {
+            if (value_length > 0)
+            {
+                // The missing string value has been defined as a
+                // null byte plus blank padding.
+                value[0] = 0;
+                memset(value+1, ' ', value_length - 1);
+            }
+        } else
+            cnfExprt(v, value, value_length);
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /**
- * Shortcut function to read date information.
- * 
+ * Remove one value from the input
+ *
  * @param handle
- *   Handle to a DBALLE session
- * @retval year
- *   Year from the output record
- * @retval month
- *   Month the output record
- * @retval day
- *   Day the output record
- * @retval hour
- *   Hour the output record
- * @retval min
- *   Minute the output record
- * @retval sec
- *   Second the output record
- * @return
- *   The error indicator for the function
- */
-F77_INTEGER_FUNCTION(idba_enqdate)(
-		INTEGER(handle),
-		INTEGER(year),
-		INTEGER(month),
-		INTEGER(day),
-		INTEGER(hour),
-		INTEGER(min),
-		INTEGER(sec))
-{
-	GENPTR_INTEGER(handle)
-	GENPTR_INTEGER(year)
-	GENPTR_INTEGER(month)
-	GENPTR_INTEGER(day)
-	GENPTR_INTEGER(hour)
-	GENPTR_INTEGER(min)
-	GENPTR_INTEGER(sec)
-	try {
-		HSimple& h = hsimp.get(*handle);
-		h.api->enqdate(*year, *month, *day, *hour, *min, *sec);
-		tofortran(*year), tofortran(*month), tofortran(*day);
-		tofortran(*hour), tofortran(*min), tofortran(*sec);
-
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
-}
-
-/**
- * Shortcut function to set date information.
- * 
- * @param handle
- *   Handle to a DBALLE session
- * @param year
- *   Year to set in the input record
- * @param month
- *   Month to set in the input
- * @param day
- *   Day to set in the input
- * @param hour
- *   Hour to set in the input
- * @param min
- *   Minute to set in the input
- * @param sec
- *   Second to set in the input
- * @return
- *   The error indicator for the function
- */
-F77_INTEGER_FUNCTION(idba_setdate)(
-		INTEGER(handle),
-		INTEGER(year),
-		INTEGER(month),
-		INTEGER(day),
-		INTEGER(hour),
-		INTEGER(min),
-		INTEGER(sec))
-{
-	GENPTR_INTEGER(handle)
-	GENPTR_INTEGER(year)
-	GENPTR_INTEGER(month)
-	GENPTR_INTEGER(day)
-	GENPTR_INTEGER(hour)
-	GENPTR_INTEGER(min)
-	GENPTR_INTEGER(sec)
-	try {
-		HSimple& h = hsimp.get(*handle);
-        IF_TRACING(h.trace.log_setdate(
-                fromfortran(*year), fromfortran(*month), fromfortran(*day),
-                fromfortran(*hour), fromfortran(*min), fromfortran(*sec)));
-
-		h.api->setdate(
-			fromfortran(*year), fromfortran(*month), fromfortran(*day),
-			fromfortran(*hour), fromfortran(*min), fromfortran(*sec));
-
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
-}
-
-/**
- * Shortcut function to set minimum date for a query.
- * 
- * @param handle
- *   Handle to a DBALLE session
- * @param year
- *   Minimum year to set in the query
- * @param month
- *   Minimum month to set in the query
- * @param day
- *   Minimum day to set in the query
- * @param hour
- *   Minimum hour to set in the query
- * @param min
- *   Minimum minute to set in the query
- * @param sec
- *   Minimum second to set in the query
- * @return
- *   The error indicator for the function
- */
-F77_INTEGER_FUNCTION(idba_setdatemin)(
-		INTEGER(handle),
-		INTEGER(year),
-		INTEGER(month),
-		INTEGER(day),
-		INTEGER(hour),
-		INTEGER(min),
-		INTEGER(sec))
-{
-	GENPTR_INTEGER(handle)
-	GENPTR_INTEGER(year)
-	GENPTR_INTEGER(month)
-	GENPTR_INTEGER(day)
-	GENPTR_INTEGER(hour)
-	GENPTR_INTEGER(min)
-	GENPTR_INTEGER(sec)
-	try {
-		HSimple& h = hsimp.get(*handle);
-        IF_TRACING(h.trace.log_setdate(
-                fromfortran(*year), fromfortran(*month), fromfortran(*day),
-                fromfortran(*hour), fromfortran(*min), fromfortran(*sec), "min"));
-		h.api->setdatemin(
-			fromfortran(*year), fromfortran(*month), fromfortran(*day),
-			fromfortran(*hour), fromfortran(*min), fromfortran(*sec));
-
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
-}
-
-/**
- * Shortcut function to set maximum date for a query.
- * 
- * @param handle
- *   Handle to a DBALLE session
- * @param year
- *   Maximum year to set in the query
- * @param month
- *   Maximum month to set in the query
- * @param day
- *   Maximum day to set in the query
- * @param hour
- *   Maximum hour to set in the query
- * @param min
- *   Maximum minute to set in the query
- * @param sec
- *   Maximum second to set in the query
- * @return
- *   The error indicator for the function
- */
-F77_INTEGER_FUNCTION(idba_setdatemax)(
-		INTEGER(handle),
-		INTEGER(year),
-		INTEGER(month),
-		INTEGER(day),
-		INTEGER(hour),
-		INTEGER(min),
-		INTEGER(sec))
-{
-	GENPTR_INTEGER(handle)
-	GENPTR_INTEGER(year)
-	GENPTR_INTEGER(month)
-	GENPTR_INTEGER(day)
-	GENPTR_INTEGER(hour)
-	GENPTR_INTEGER(min)
-	GENPTR_INTEGER(sec)
-	try {
-		HSimple& h = hsimp.get(*handle);
-        IF_TRACING(h.trace.log_setdate(
-                fromfortran(*year), fromfortran(*month), fromfortran(*day),
-                fromfortran(*hour), fromfortran(*min), fromfortran(*sec), "max"));
-		h.api->setdatemax(
-			fromfortran(*year), fromfortran(*month), fromfortran(*day),
-			fromfortran(*hour), fromfortran(*min), fromfortran(*sec));
-
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
-}
-
-/*@}*/
-
-/**
- * Remove one parameter from the input record
- * 
- * @param handle
- *   Handle to a DBALLE session
+ *   Handle to a DB-All.e session
  * @param parameter
  *   Parameter to remove.  It can be the code of a WMO variable prefixed by \c
  *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
@@ -1401,32 +897,32 @@ F77_INTEGER_FUNCTION(idba_setdatemax)(
  *   The error indicator for the function
  */
 F77_INTEGER_FUNCTION(idba_unset)(
-		INTEGER(handle),
-		CHARACTER(parameter)
-		TRAIL(parameter))
+        INTEGER(handle),
+        CHARACTER(parameter)
+        TRAIL(parameter))
 {
-	GENPTR_INTEGER(handle)
-	GENPTR_CHARACTER(parameter)
-	GENPTR_INTEGER(err)
-	char parm[20];
-	cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
+    GENPTR_INTEGER(handle)
+    GENPTR_CHARACTER(parameter)
+    GENPTR_INTEGER(err)
+    char parm[20];
+    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
 
-	try {
-		HSimple& h = hsimp.get(*handle);
+    try {
+        HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_unset(parm));
-		h.api->unset(parm);
+        h.api->unset(parm);
 
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /**
- * Remove all B* parameters from the input record
+ * Remove all Bxxyyy values from the input
  * 
  * @param handle
- *   Handle to a DBALLE session
+ *   Handle to a DB-All.e session
  */
 F77_INTEGER_FUNCTION(idba_unsetb)(
         INTEGER(handle))
@@ -1444,10 +940,10 @@ F77_INTEGER_FUNCTION(idba_unsetb)(
 }
 
 /**
- * Remove all parameters from the input record
+ * Completely clear the input, removing all values.
  *
  * @param handle
- *   Handle to a DBALLE session
+ *   Handle to a DB-All.e session
  */
 F77_INTEGER_FUNCTION(idba_unsetall)(
         INTEGER(handle))
@@ -1465,326 +961,825 @@ F77_INTEGER_FUNCTION(idba_unsetall)(
 }
 
 /**
- * Count the number of elements in the anagraphical storage, and start a new
- * anagraphical query.
+ * Signal that the input values that are set are related to station values
+ * instead of normal variables.
  *
- * Resulting anagraphical data can be retrieved with idba_elencamele()
+ * @param handle
+ *   Handle to a DB-All.e session
+ * @return
+ *   The error indicator for the function
+ */
+F77_INTEGER_FUNCTION(idba_setcontextana)(
+        INTEGER(handle))
+{
+    GENPTR_INTEGER(handle)
+    try {
+        HSimple& h = hsimp.get(*handle);
+        IF_TRACING(h.trace.log_func("setcontextana"));
+        h.api->setcontextana();
+
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
+}
+
+
+/// @}
+
+
+/**@name Input/output shortcuts
+ *
+ * The following routines are shortcuts for common combinations of Input/Output routines.
+ * @{
+ */
+
+/**
+ * Set all level information.
+ *
+ * @param handle
+ *   Handle to a DB-All.e session
+ * @param ltype1
+ *   Level type to set in the input record
+ * @param l1
+ *   L1 to set in the input record
+ * @param ltype2
+ *   Level type to set in the input record
+ * @param l2
+ *   L2 to set in the input record
+ * @return
+ *   The error indicator for the function
+ */
+F77_INTEGER_FUNCTION(idba_setlevel)(
+        INTEGER(handle),
+        INTEGER(ltype1),
+        INTEGER(l1),
+        INTEGER(ltype2),
+        INTEGER(l2))
+{
+    GENPTR_INTEGER(handle)
+    GENPTR_INTEGER(ltype1)
+    GENPTR_INTEGER(l1)
+    GENPTR_INTEGER(ltype2)
+    GENPTR_INTEGER(l2)
+    try {
+        HSimple& h = hsimp.get(*handle);
+        IF_TRACING(h.trace.log_setlevel(
+                fromfortran(*ltype1), fromfortran(*l1),
+                fromfortran(*ltype2), fromfortran(*l2)));
+        h.api->setlevel(
+            fromfortran(*ltype1), fromfortran(*l1),
+            fromfortran(*ltype2), fromfortran(*l2));
+
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
+}
+
+/**
+ * Set all time range information.
  * 
  * @param handle
- *   Handle to a DBALLE session
+ *   Handle to a DB-All.e session
+ * @param ptype
+ *   P indicator to set in the input record
+ * @param p1
+ *   P1 to set in the input record
+ * @param p2
+ *   P2 to set in the input record
+ * @return
+ *   The error indicator for the function
+ */
+F77_INTEGER_FUNCTION(idba_settimerange)(
+        INTEGER(handle),
+        INTEGER(ptype),
+        INTEGER(p1),
+        INTEGER(p2))
+{
+    GENPTR_INTEGER(handle)
+    GENPTR_INTEGER(ptype)
+    GENPTR_INTEGER(p1)
+    GENPTR_INTEGER(p2)
+    try {
+        HSimple& h = hsimp.get(*handle);
+        IF_TRACING(h.trace.log_settimerange(fromfortran(*ptype), fromfortran(*p1), fromfortran(*p2)));
+        h.api->settimerange(
+            fromfortran(*ptype), fromfortran(*p1), fromfortran(*p2));
+
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
+}
+
+/**
+ * Set all date information.
+ *
+ * @param handle
+ *   Handle to a DB-All.e session
+ * @param year
+ *   Year to set in the input record
+ * @param month
+ *   Month to set in the input
+ * @param day
+ *   Day to set in the input
+ * @param hour
+ *   Hour to set in the input
+ * @param min
+ *   Minute to set in the input
+ * @param sec
+ *   Second to set in the input
+ * @return
+ *   The error indicator for the function
+ */
+F77_INTEGER_FUNCTION(idba_setdate)(
+        INTEGER(handle),
+        INTEGER(year),
+        INTEGER(month),
+        INTEGER(day),
+        INTEGER(hour),
+        INTEGER(min),
+        INTEGER(sec))
+{
+    GENPTR_INTEGER(handle)
+    GENPTR_INTEGER(year)
+    GENPTR_INTEGER(month)
+    GENPTR_INTEGER(day)
+    GENPTR_INTEGER(hour)
+    GENPTR_INTEGER(min)
+    GENPTR_INTEGER(sec)
+    try {
+        HSimple& h = hsimp.get(*handle);
+        IF_TRACING(h.trace.log_setdate(
+                fromfortran(*year), fromfortran(*month), fromfortran(*day),
+                fromfortran(*hour), fromfortran(*min), fromfortran(*sec)));
+
+        h.api->setdate(
+            fromfortran(*year), fromfortran(*month), fromfortran(*day),
+            fromfortran(*hour), fromfortran(*min), fromfortran(*sec));
+
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
+}
+
+/**
+ * Set the minimum date for a query.
+ * 
+ * @param handle
+ *   Handle to a DB-All.e session
+ * @param year
+ *   Minimum year to set in the query
+ * @param month
+ *   Minimum month to set in the query
+ * @param day
+ *   Minimum day to set in the query
+ * @param hour
+ *   Minimum hour to set in the query
+ * @param min
+ *   Minimum minute to set in the query
+ * @param sec
+ *   Minimum second to set in the query
+ * @return
+ *   The error indicator for the function
+ */
+F77_INTEGER_FUNCTION(idba_setdatemin)(
+        INTEGER(handle),
+        INTEGER(year),
+        INTEGER(month),
+        INTEGER(day),
+        INTEGER(hour),
+        INTEGER(min),
+        INTEGER(sec))
+{
+    GENPTR_INTEGER(handle)
+    GENPTR_INTEGER(year)
+    GENPTR_INTEGER(month)
+    GENPTR_INTEGER(day)
+    GENPTR_INTEGER(hour)
+    GENPTR_INTEGER(min)
+    GENPTR_INTEGER(sec)
+    try {
+        HSimple& h = hsimp.get(*handle);
+        IF_TRACING(h.trace.log_setdate(
+                fromfortran(*year), fromfortran(*month), fromfortran(*day),
+                fromfortran(*hour), fromfortran(*min), fromfortran(*sec), "min"));
+        h.api->setdatemin(
+            fromfortran(*year), fromfortran(*month), fromfortran(*day),
+            fromfortran(*hour), fromfortran(*min), fromfortran(*sec));
+
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
+}
+
+/**
+ * Set the maximum date for a query.
+ *   Handle to a DB-All.e session
+ * @param year
+ *   Maximum year to set in the query
+ * @param month
+ *   Maximum month to set in the query
+ * @param day
+ *   Maximum day to set in the query
+ * @param hour
+ *   Maximum hour to set in the query
+ * @param min
+ *   Maximum minute to set in the query
+ * @param sec
+ *   Maximum second to set in the query
+ * @return
+ *   The error indicator for the function
+ */
+F77_INTEGER_FUNCTION(idba_setdatemax)(
+        INTEGER(handle),
+        INTEGER(year),
+        INTEGER(month),
+        INTEGER(day),
+        INTEGER(hour),
+        INTEGER(min),
+        INTEGER(sec))
+{
+    GENPTR_INTEGER(handle)
+    GENPTR_INTEGER(year)
+    GENPTR_INTEGER(month)
+    GENPTR_INTEGER(day)
+    GENPTR_INTEGER(hour)
+    GENPTR_INTEGER(min)
+    GENPTR_INTEGER(sec)
+    try {
+        HSimple& h = hsimp.get(*handle);
+        IF_TRACING(h.trace.log_setdate(
+                fromfortran(*year), fromfortran(*month), fromfortran(*day),
+                fromfortran(*hour), fromfortran(*min), fromfortran(*sec), "max"));
+        h.api->setdatemax(
+            fromfortran(*year), fromfortran(*month), fromfortran(*day),
+            fromfortran(*hour), fromfortran(*min), fromfortran(*sec));
+
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
+}
+
+/**
+ * Read all level information.
+ *
+ * @param handle
+ *   Handle to a DB-All.e session
+ * @retval ltype
+ *   Level type from the output record
+ * @retval l1
+ *   L1 from the output record
+ * @retval l2
+ *   L2 from the output record
+ * @return
+ *   The error indicator for the function
+ */
+F77_INTEGER_FUNCTION(idba_enqlevel)(
+        INTEGER(handle),
+        INTEGER(ltype1),
+        INTEGER(l1),
+        INTEGER(ltype2),
+        INTEGER(l2))
+{
+    GENPTR_INTEGER(handle)
+    GENPTR_INTEGER(ltype1)
+    GENPTR_INTEGER(l1)
+    GENPTR_INTEGER(ltype2)
+    GENPTR_INTEGER(l2)
+    try {
+        HSimple& h = hsimp.get(*handle);
+        h.api->enqlevel(*ltype1, *l1, *ltype2, *l2);
+        tofortran(*ltype1); tofortran(*l1);
+        tofortran(*ltype2); tofortran(*l2);
+
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
+}
+
+/**
+ * Read all time range information.
+ *
+ * @param handle
+ *   Handle to a DB-All.e session
+ * @retval ptype
+ *   P indicator from the output record
+ * @retval p1
+ *   P1 from the output record
+ * @retval p2
+ *   P2 from the output record
+ * @return
+ *   The error indicator for the function
+ */
+F77_INTEGER_FUNCTION(idba_enqtimerange)(
+        INTEGER(handle),
+        INTEGER(ptype),
+        INTEGER(p1),
+        INTEGER(p2))
+{
+    GENPTR_INTEGER(handle)
+    GENPTR_INTEGER(ptype)
+    GENPTR_INTEGER(p1)
+    GENPTR_INTEGER(p2)
+    try {
+        HSimple& h = hsimp.get(*handle);
+        h.api->enqtimerange(*ptype, *p1, *p2);
+        tofortran(*ptype); tofortran(*p1); tofortran(*p2);
+
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
+}
+
+/**
+ * Read all date information.
+ *
+ * @param handle
+ *   Handle to a DB-All.e session
+ * @retval year
+ *   Year from the output record
+ * @retval month
+ *   Month the output record
+ * @retval day
+ *   Day the output record
+ * @retval hour
+ *   Hour the output record
+ * @retval min
+ *   Minute the output record
+ * @retval sec
+ *   Second the output record
+ * @return
+ *   The error indicator for the function
+ */
+F77_INTEGER_FUNCTION(idba_enqdate)(
+        INTEGER(handle),
+        INTEGER(year),
+        INTEGER(month),
+        INTEGER(day),
+        INTEGER(hour),
+        INTEGER(min),
+        INTEGER(sec))
+{
+    GENPTR_INTEGER(handle)
+    GENPTR_INTEGER(year)
+    GENPTR_INTEGER(month)
+    GENPTR_INTEGER(day)
+    GENPTR_INTEGER(hour)
+    GENPTR_INTEGER(min)
+    GENPTR_INTEGER(sec)
+    try {
+        HSimple& h = hsimp.get(*handle);
+        h.api->enqdate(*year, *month, *day, *hour, *min, *sec);
+        tofortran(*year), tofortran(*month), tofortran(*day);
+        tofortran(*hour), tofortran(*min), tofortran(*sec);
+
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
+}
+
+
+/*@}*/
+
+
+/**@name Action routines
+ * @{
+ */
+
+/**
+ * Reinitialize the database, removing all data and loading report information.
+ *
+ * It requires the database to be opened in rewrite mode.
+ *
+ * @param handle
+ *   Handle to a DB-All.e session
+ * @param repinfofile
+ *   CSV file with the default report informations.  See dba_reset()
+ *   documentation for the format of the file.
+ * @return
+ *   The error indicator for the function
+ */
+F77_INTEGER_FUNCTION(idba_scopa)(INTEGER(handle), CHARACTER(repinfofile) TRAIL(repinfofile))
+{
+    GENPTR_INTEGER(handle)
+    GENPTR_CHARACTER(repinfofile)
+    char fname[PATH_MAX];
+
+    cnfImpn(repinfofile, repinfofile_length,  PATH_MAX, fname); fname[PATH_MAX - 1] = 0;
+
+    try {
+        HSimple& h = hsimp.get(*handle);
+        if (fname[0] == 0)
+        {
+            IF_TRACING(h.trace.log_scopa());
+            h.api->scopa(0);
+        } else {
+            IF_TRACING(h.trace.log_scopa(fname));
+            h.api->scopa(fname);
+        }
+
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
+}
+
+/**
+ * Query the stations in the database.
+ *
+ * Results are retrieved using idba_elencamele().
+ *
+ * @param handle
+ *   Handle to a DB-All.e session
  * @param count
  *   The count of elements
  * @return
  *   The error indicator for the function
  */
 F77_INTEGER_FUNCTION(idba_quantesono)(
-		INTEGER(handle),
-		INTEGER(count))
+        INTEGER(handle),
+        INTEGER(count))
 {
-	GENPTR_INTEGER(handle)
-	GENPTR_INTEGER(count)
+    GENPTR_INTEGER(handle)
+    GENPTR_INTEGER(count)
 
-	try {
-		HSimple& h = hsimp.get(*handle);
-		IF_TRACING(h.trace.log_quantesono());
-		*count = h.api->quantesono();
+    try {
+        HSimple& h = hsimp.get(*handle);
+        IF_TRACING(h.trace.log_quantesono());
+        *count = h.api->quantesono();
         IF_TRACING(fortran::log_result(*count));
 
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /**
- * Iterate through the anagraphical data.
+ * Retrieve the data about one station.
  *
- * Every invocation of this function will return a new anagraphical data, or
- * fill fail with code DBA_ERR_NOTFOUND when there are no more anagraphical
- * data available.
- * 
+ * After invocation, the output record is filled with information about the
+ * station and its station values.
+ *
+ * If there are no more stations to read, the function will fail with
+ * DBA_ERR_NOTFOUND.
+ *
  * @param handle
- *   Handle to a DBALLE session
+ *   Handle to a DB-All.e session
  * @return
  *   The error indicator for the function
  */
 F77_INTEGER_FUNCTION(idba_elencamele)(INTEGER(handle))
 {
-	GENPTR_INTEGER(handle)
+    GENPTR_INTEGER(handle)
 
-	try {
-		HSimple& h = hsimp.get(*handle);
-		IF_TRACING(h.trace.log_func("elencamele"));
-		h.api->elencamele();
+    try {
+        HSimple& h = hsimp.get(*handle);
+        IF_TRACING(h.trace.log_func("elencamele"));
+        h.api->elencamele();
 
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /**
- * Submit a query to the database.
+ * Query the data in the database.
  *
- * The query results can be accessed with calls to idba_dammelo.
+ * Results are retrieved using idba_dammelo().
  *
  * @param handle
- *   Handle to a DBALLE session
+ *   Handle to a DB-All.e session
  * @retval count
  *   Number of values returned by the function
  * @return
  *   The error indicator for the function
  */
 F77_INTEGER_FUNCTION(idba_voglioquesto)(
-		INTEGER(handle),
-		INTEGER(count))
+        INTEGER(handle),
+        INTEGER(count))
 {
-	GENPTR_INTEGER(handle)
-	GENPTR_INTEGER(count)
+    GENPTR_INTEGER(handle)
+    GENPTR_INTEGER(count)
 
-	try {
-		HSimple& h = hsimp.get(*handle);
+    try {
+        HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_voglioquesto());
         *count = h.api->voglioquesto();
         IF_TRACING(fortran::log_result(*count));
 
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /**
- * Iterate through the query results data.
+ * Retrieve the data about one value.
  *
- * Every invocation of this function will return a new result, or fill fail
- * with code DBA_ERR_NOTFOUND when there are no more results available.
- * 
+ * After invocation, the output record is filled with information about the
+ * value.
+ *
+ * If there are no more values to read, the function will fail with
+ * DBA_ERR_NOTFOUND.
+ *
  * @param handle
- *   Handle to a DBALLE session
+ *   Handle to a DB-All.e session
  * @retval parameter
  *   Contains the ID of the parameter retrieved by this fetch
  * @return
  *   The error indicator for the function
  */
 F77_INTEGER_FUNCTION(idba_dammelo)(
-		INTEGER(handle),
-		CHARACTER(parameter)
-		TRAIL(parameter))
+        INTEGER(handle),
+        CHARACTER(parameter)
+        TRAIL(parameter))
 {
-	GENPTR_INTEGER(handle)
-	GENPTR_CHARACTER(parameter)
+    GENPTR_INTEGER(handle)
+    GENPTR_CHARACTER(parameter)
 
-	try {
-		HSimple& h = hsimp.get(*handle);
+    try {
+        HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_dammelo());
         const char* res = h.api->dammelo();
         IF_TRACING(fortran::log_result(res));
-		if (!res)
-			cnfExprt("", parameter, parameter_length);
-		else
-			cnfExprt(res, parameter, parameter_length);
+        if (!res)
+            cnfExprt("", parameter, parameter_length);
+        else
+            cnfExprt(res, parameter, parameter_length);
 
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /**
- * Insert a new item in the database.
+ * Insert a new value in the database.
  *
  * This function will fail if the database is open in data readonly mode, and
  * it will refuse to overwrite existing values if the database is open in data
  * add mode.
  *
- * If the database is open in pseudoana reuse mode, the pseudoana values
- * provided on input will be used to create a pseudoana record if it is
- * missing, but will be ignored if it is already present.  If it is open in
- * pseudoana rewrite mode instead, the pseudoana values on input will be used
- * to replace all the existing pseudoana values.
+ * If the database is open in station reuse mode, the station values provided
+ * on input will be used to create a station record if it is missing, but will
+ * be ignored if it is already present.  If it is open in station rewrite mode
+ * instead, the station values on input will be used to replace all the
+ * existing station values.
  *
  * @param handle
- *   Handle to a DBALLE session
+ *   Handle to a DB-All.e session
  * @return
  *   The error indicator for the function
  */
 F77_INTEGER_FUNCTION(idba_prendilo)(
-		INTEGER(handle))
+        INTEGER(handle))
 {
-	GENPTR_INTEGER(handle)
-	try {
+    GENPTR_INTEGER(handle)
+    try {
         HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_func("prendilo"));
         h.api->prendilo();
 
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /**
- * Remove all selected items from the database.
+ * Remove from the database all values that match the query.
  *
  * This function will fail unless the database is open in data rewrite mode.
  *
  * @param handle
- *   Handle to a DBALLE session
+ *   Handle to a DB-All.e session
  * @return
  *   The error indicator for the function
  */
 F77_INTEGER_FUNCTION(idba_dimenticami)(
-		INTEGER(handle))
+        INTEGER(handle))
 {
-	GENPTR_INTEGER(handle)
-	try {
+    GENPTR_INTEGER(handle)
+    try {
         HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_func("dimenticami"));
         h.api->dimenticami();
 
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
-/**@name QC functions
- * @anchor qc
- * Functions used to manipulate QC data.
+/**
+ * Remove all values from the database.
  *
- * All these functions require some context data about the variable, which is
- * automatically available when the variable just came as the result of an
- * idba_dammelo() or has just been inserted with an idba_prendilo().
- *@{
+ * The difference with idba_scopa() is that it preserves the existing report
+ * information.
+ *
+ * @param handle
+ *   Handle to a DB-All.e session
+ * @return
+ *   The error indicator for the function
  */
+F77_INTEGER_FUNCTION(idba_remove_all)(
+        INTEGER(handle))
+{
+    GENPTR_INTEGER(handle)
 
+    try {
+        HSimple& h = hsimp.get(*handle);
+        IF_TRACING(h.trace.log_func("remove_all"));
+        h.api->remove_all();
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
+}
+
+
+/**
+ * Query attributes about a variable.
+ *
+ * The variable queried is either:
+ *
+ * @li the last variable returned by `idba_dammelo()`
+ * @li the last variable inserted by `idba_prendilo()`
+ * @li the variable selected by settings `*context_id` and `*var_related`.
+ *
+ * Results are retrieved using idba_ancora().
+ *
+ * @param handle
+ *   Handle to a DB-All.e session
+ * @retval count
+ *   Number of values returned by the function
+ * @return
+ *   The error indicator for the function
+ */
 F77_INTEGER_FUNCTION(idba_voglioancora)(INTEGER(handle), INTEGER(count))
 {
-	GENPTR_INTEGER(handle)
-	GENPTR_INTEGER(count)
-	try {
-		HSimple& h = hsimp.get(*handle);
+    GENPTR_INTEGER(handle)
+    GENPTR_INTEGER(count)
+    try {
+        HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_voglioancora());
         *count = h.api->voglioancora();
         IF_TRACING(fortran::log_result(*count));
 
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /**
- * Retrieve QC informations from the last variable returned by idba_dammelo().
+ * Retrieve one attribute from the result of idba_voglioancora().
  *
  * @param handle
- *   Handle to a DBALLE session
+ *   Handle to a DB-All.e session
  * @retval parameter
  *   Contains the ID of the parameter retrieved by this fetch
  * @return
  *   The error indicator for the function
  */
 F77_INTEGER_FUNCTION(idba_ancora)(
-		INTEGER(handle),
-		CHARACTER(parameter)
-		TRAIL(parameter))
+        INTEGER(handle),
+        CHARACTER(parameter)
+        TRAIL(parameter))
 {
-	GENPTR_INTEGER(handle)
-	GENPTR_CHARACTER(parameter)
+    GENPTR_INTEGER(handle)
+    GENPTR_CHARACTER(parameter)
 
-	try {
-		HSimple& h = hsimp.get(*handle);
+    try {
+        HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_ancora());
         const char* res = h.api->ancora();
         IF_TRACING(fortran::log_result(res));
-		if (!res)
-			cnfExprt("", parameter, parameter_length);
-		else
-			cnfExprt(res, parameter, parameter_length);
+        if (!res)
+            cnfExprt("", parameter, parameter_length);
+        else
+            cnfExprt(res, parameter, parameter_length);
 
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /**
- * Insert new QC informations for a variable of the current record.
+ * Insert new attributes for a variable.
  *
- * QC informations inserted are all those set by the functions idba_seti(),
- * idba_setc(), idba_setr(), idba_setd(), using an asterisk in front of the
- * variable name.
+ * The variable is either:
  *
- * Contrarily to idba_prendilo(), this function resets all the QC informations
- * (but only the QC informations) previously set in input, so the values to be
- * inserted need to be explicitly set every time.
+ * @li the last variable returned by `idba_dammelo()`
+ * @li the last variable inserted by `idba_prendilo()`
+ * @li the variable selected by settings `*context_id` and `*var_related`.
  *
- * This function will fail if the database is open in QC readonly mode, and it
- * will refuse to overwrite existing values if the database is open in QC add
- * mode.
+ * The attributes that will be inserted are all those set by the functions
+ * idba_seti(), idba_setc(), idba_setr(), idba_setd(), using an asterisk in
+ * front of the variable name.
  *
- * The variable referred by the QC informations can be specified in three ways:
- * 
- * \li by variable code, using ::idba_setc(handle, "*var", "Bxxyyy")
- * \li by variable id, using ::idba_seti(handle, "*data_id", id)
- * \li unspecified, will use the last variable returned by ::idba_dammelo
+ * Contrarily to idba_prendilo(), this function resets all the attribute
+ * information (and only attribute information) previously set in input, so the
+ * values to be inserted need to be explicitly set every time.
+ *
+ * This function will fail if the database is open in attribute readonly mode,
+ * and it will refuse to overwrite existing values if the database is open in
+ * attribute add mode.
  *
  * @param handle
- *   Handle to a DBALLE session
+ *   Handle to a DB-All.e session
  * @return
  *   The error indicator for the function
  */
 F77_INTEGER_FUNCTION(idba_critica)(
-		INTEGER(handle))
+        INTEGER(handle))
 {
-	GENPTR_INTEGER(handle)
+    GENPTR_INTEGER(handle)
 
-	try {
-		HSimple& h = hsimp.get(*handle);
+    try {
+        HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_func("critica"));
-		h.api->critica();
+        h.api->critica();
 
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /**
- * Remove QC informations for a variable of the current record.
+ * Remove attribute information for a variable.
  *
- * The QC informations to be removed are set with:
+ * The variable is either:
+ *
+ * @li the last variable returned by `idba_dammelo()`
+ * @li the last variable inserted by `idba_prendilo()`
+ * @li the variable selected by settings `*context_id` and `*var_related`.
+ *
+ * The attribute informations to be removed are selected with:
  * \code
  *   idba_setc(handle, "*varlist", "*B33021,*B33003");
  * \endcode
  *
- * The variable referred by the QC informations can be specified in three ways:
- * 
- * \li by variable code, using ::idba_setc(handle, "*var", "Bxxyyy")
- * \li by variable id, using ::idba_seti(handle, "*data_id", id)
- * \li unspecified, will use the last variable returned by ::idba_dammelo
- *
  * @param handle
- *   Handle to a DBALLE session
+ *   Handle to a DB-All.e session
  * @return
  *   The error indicator for the function
  */
 F77_INTEGER_FUNCTION(idba_scusa)(INTEGER(handle))
 {
-	GENPTR_INTEGER(handle)
+    GENPTR_INTEGER(handle)
 
-	try {
-		HSimple& h = hsimp.get(*handle);
+    try {
+        HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_func("scusa"));
-		h.api->scusa();
+        h.api->scusa();
 
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
+/// @}
+
+
+/**@name Message routines
+ * @{
+ */
+
+/**
+ * Open a BUFR, CREX, or AOF file for reading.
+ *
+ * Each session can only have one open input file: if one was previously open,
+ * it is closed before opening the new one.
+ *
+ * @param handle
+ *   Handle to a DB-All.e session
+ * @param filename
+ *   The file name
+ * @param mode
+ *   The opening mode. See the mode parameter of libc's fopen() call for details.
+ * @param format
+ *   The file format ("BUFR", "CREX", or "AOF")
+ * @param simplified
+ *   true if the file is imported in simplified mode, false if it is imported
+ *   in precise mode. This controls approximating levels and time ranges to
+ *   standard values.
+ * @return
+ *   The error indication for the function.
+ */
 F77_INTEGER_FUNCTION(idba_messages_open_input)(
         INTEGER(handle),
         CHARACTER(filename),
@@ -1818,6 +1813,23 @@ F77_INTEGER_FUNCTION(idba_messages_open_input)(
     }
 }
 
+/**
+ * Open a BUFR, CREX, or AOF file for writing.
+ *
+ * Each session can only have one open input file: if one was previously open,
+ * it is closed before opening the new one.
+ *
+ * @param handle
+ *   Handle to a DB-All.e session
+ * @param filename
+ *   The file name
+ * @param mode
+ *   The opening mode. See the mode parameter of libc's fopen() call for details.
+ * @param format
+ *   The file format ("BUFR", "CREX", or "AOF")
+ * @return
+ *   The error indication for the function.
+ */
 F77_INTEGER_FUNCTION(idba_messages_open_output)(
         INTEGER(handle),
         CHARACTER(filename),
@@ -1849,6 +1861,23 @@ F77_INTEGER_FUNCTION(idba_messages_open_output)(
     }
 }
 
+/**
+ * Read the next message and import it in the database.
+ *
+ * The access mode of the session controls how data is imported:
+ *
+ * @li station and data mode cannot be "read".
+ * @li if data mode is "add", existing data will not be overwritten.
+ * @li if attribute mode is "read", attributes will not be imported.
+ *
+ * @param handle
+ *   Handle to a DB-All.e session
+ * @retval found
+ *   True if a message has been imported, false if we are at the end of the
+ *   input file.
+ * @return
+ *   The error indication for the function.
+ */
 F77_INTEGER_FUNCTION(idba_messages_read_next)(INTEGER(handle), LOGICAL(found))
 {
     GENPTR_INTEGER(handle)
@@ -1865,6 +1894,18 @@ F77_INTEGER_FUNCTION(idba_messages_read_next)(INTEGER(handle), LOGICAL(found))
     }
 }
 
+/**
+ * Export the data from the database that match the current query and add them
+ * to the current message.
+ *
+ * @param handle
+ *   Handle to a DB-All.e session
+ * @param template_name
+ *   The template name used to decide the layout of variables in the messages
+ *   that are exported.
+ * @return
+ *   The error indication for the function.
+ */
 F77_INTEGER_FUNCTION(idba_messages_write_next)(INTEGER(handle), CHARACTER(template_name) TRAIL(template_name))
 {
     GENPTR_INTEGER(handle)
@@ -1882,120 +1923,159 @@ F77_INTEGER_FUNCTION(idba_messages_write_next)(INTEGER(handle), CHARACTER(templa
     }
 }
 
-F77_INTEGER_FUNCTION(idba_remove_all)(
-        INTEGER(handle))
+
+/// @}
+
+
+/**@name Pretty-printing routines
+ * @{
+ */
+
+/**
+ * Format the description of a level given its value.
+ *
+ * @param handle
+ *   Handle to a DB-All.e session
+ * @param ltype1
+ *   Level type to set in the input record
+ * @param l1
+ *   L1 to set in the input record
+ * @param ltype2
+ *   Level type to set in the input record
+ * @param l2
+ *   L2 to set in the input record
+ * @retval result
+ *   The string with the description of the level.
+ * @return
+ *   The error indication for the function.
+ */
+F77_INTEGER_FUNCTION(idba_spiegal)(
+        INTEGER(handle),
+        INTEGER(ltype1),
+        INTEGER(l1),
+        INTEGER(ltype2),
+        INTEGER(l2),
+        CHARACTER(result)
+        TRAIL(result))
 {
     GENPTR_INTEGER(handle)
+    GENPTR_INTEGER(ltype1)
+    GENPTR_INTEGER(l1)
+    GENPTR_INTEGER(ltype2)
+    GENPTR_INTEGER(l2)
+    GENPTR_CHARACTER(result)
 
     try {
         HSimple& h = hsimp.get(*handle);
-        IF_TRACING(h.trace.log_func("remove_all"));
-        h.api->remove_all();
+        const char* res = h.api->spiegal(*ltype1, *l1, *ltype2, *l2);
+        cnfExprt(res, result, result_length);
+
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
     }
 }
 
-F77_INTEGER_FUNCTION(idba_spiegal)(
-		INTEGER(handle),
-		INTEGER(ltype1),
-		INTEGER(l1),
-		INTEGER(ltype2),
-		INTEGER(l2),
-		CHARACTER(result)
-		TRAIL(result))
-{
-	GENPTR_INTEGER(handle)
-	GENPTR_INTEGER(ltype1)
-	GENPTR_INTEGER(l1)
-	GENPTR_INTEGER(ltype2)
-	GENPTR_INTEGER(l2)
-	GENPTR_CHARACTER(result)
-
-	try {
-		HSimple& h = hsimp.get(*handle);
-		const char* res = h.api->spiegal(*ltype1, *l1, *ltype2, *l2);
-		cnfExprt(res, result, result_length);
-
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
-}
-
+/**
+ * Format the description of a time range given its value.
+ *
+ * @param handle
+ *   Handle to a DB-All.e session
+ * @param ptype
+ *   P indicator to set in the input record
+ * @param p1
+ *   P1 to set in the input record
+ * @param p2
+ *   P2 to set in the input record
+ * @retval result
+ *   The string with the description of the time range.
+ * @return
+ *   The error indication for the function.
+ */
 F77_INTEGER_FUNCTION(idba_spiegat)(
-		INTEGER(handle),
-		INTEGER(ptype),
-		INTEGER(p1),
-		INTEGER(p2),
-		CHARACTER(result)
-		TRAIL(result))
+        INTEGER(handle),
+        INTEGER(ptype),
+        INTEGER(p1),
+        INTEGER(p2),
+        CHARACTER(result)
+        TRAIL(result))
 {
-	GENPTR_INTEGER(handle)
-	GENPTR_INTEGER(ptype)
-	GENPTR_INTEGER(p1)
-	GENPTR_INTEGER(p2)
-	GENPTR_CHARACTER(result)
+    GENPTR_INTEGER(handle)
+    GENPTR_INTEGER(ptype)
+    GENPTR_INTEGER(p1)
+    GENPTR_INTEGER(p2)
+    GENPTR_CHARACTER(result)
 
-	try {
-		HSimple& h = hsimp.get(*handle);
-		const char* res = h.api->spiegat(*ptype, *p1, *p2);
-		cnfExprt(res, result, result_length);
+    try {
+        HSimple& h = hsimp.get(*handle);
+        const char* res = h.api->spiegat(*ptype, *p1, *p2);
+        cnfExprt(res, result, result_length);
 
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
+/**
+ * Format the description of a variable given its varcode and its value.
+ *
+ * @param handle
+ *   Handle to a DB-All.e session
+ * @param varcode
+ *   B table code of the variable ("Bxxyyy")
+ * @param value
+ *   Value of the variable, as read with idba_enqc()
+ * @retval result
+ *   The string with the description of the time range.
+ * @return
+ *   The error indication for the function.
+ */
 F77_INTEGER_FUNCTION(idba_spiegab)(
-		INTEGER(handle),
-		CHARACTER(varcode),
-		CHARACTER(value),
-		CHARACTER(result)
-		TRAIL(varcode)
-		TRAIL(value)
-		TRAIL(result))
+        INTEGER(handle),
+        CHARACTER(varcode),
+        CHARACTER(value),
+        CHARACTER(result)
+        TRAIL(varcode)
+        TRAIL(value)
+        TRAIL(result))
 {
-	GENPTR_INTEGER(handle)
-	GENPTR_CHARACTER(varcode)
-	GENPTR_CHARACTER(value)
-	GENPTR_CHARACTER(result)
-	char s_varcode[10];
-	char s_value[300];
-	cnfImpn(varcode, varcode_length, 9, s_varcode); s_varcode[9] = 0;
-	cnfImpn(value, value_length, 299, s_value); s_value[299] = 0;
+    GENPTR_INTEGER(handle)
+    GENPTR_CHARACTER(varcode)
+    GENPTR_CHARACTER(value)
+    GENPTR_CHARACTER(result)
+    char s_varcode[10];
+    char s_value[300];
+    cnfImpn(varcode, varcode_length, 9, s_varcode); s_varcode[9] = 0;
+    cnfImpn(value, value_length, 299, s_value); s_value[299] = 0;
 
-	try {
-		HSimple& h = hsimp.get(*handle);
-		const char* res = h.api->spiegab(s_varcode, s_value);
-		cnfExprt(res, result, result_length);
+    try {
+        HSimple& h = hsimp.get(*handle);
+        const char* res = h.api->spiegab(s_varcode, s_value);
+        cnfExprt(res, result, result_length);
 
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
-}
-
-F77_INTEGER_FUNCTION(idba_test_input_to_output)(
-		INTEGER(handle))
-{
-	GENPTR_INTEGER(handle)
-
-	try {
-		HSimple& h = hsimp.get(*handle);
-		h.api->test_input_to_output();
-
-		return fortran::success();
-	} catch (error& e) {
-		return fortran::error(e);
-	}
-}
-
-
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
 }
 
 /*@}*/
 
-/* vim:set ts=4 sw=4: */
+F77_INTEGER_FUNCTION(idba_test_input_to_output)(
+        INTEGER(handle))
+{
+    GENPTR_INTEGER(handle)
+
+    try {
+        HSimple& h = hsimp.get(*handle);
+        h.api->test_input_to_output();
+
+        return fortran::success();
+    } catch (error& e) {
+        return fortran::error(e);
+    }
+}
+
+
+}

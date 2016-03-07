@@ -1,108 +1,86 @@
 ## Process this file with automake to produce Makefile.in
 
-guidesources = guide.tex intro.tex install.tex maintainance.tex troubleshooting.tex local.bib
-fapisources = fapi.tex ../dballe/core/record_keyword.tex ../dballe/msg/ltypes.tex ../dballe/msg/tranges.tex
-
-cdoxdeps = libdballe.dox \
-	  ../dballe/libdballe.la \
-	  ../dballe/msg/ltypes.dox \
-	  ../dballe/msg/tranges.dox
-
-fortrandoxdeps = libdballef.dox \
-	    ../fortran/libdballef.la
-
-LATEX2HTML = latex2html -local_icons
-
 doc_DATA =
+
 noinst_DATA =
 
+EXTRA_DIST =
+
+CLEANFILES =
+
 if DO_DOCS
-doc_DATA += libdballe.doxytags guide.pdf
-noinst_DATA += c_api/index.html
-if DO_DBALLEF
-doc_DATA += fapi.pdf libdballef.doxytags
-noinst_DATA += fortran_api/index.html
-endif
-if HAVE_LATEX2HTML
-noinst_DATA += \
-	fapi_html/index.html \
-	guide_html/index.html
-endif
-endif
 
-install-data-local:
-	for pkg in c fortran; do \
-		test -d $${pkg}_api && \
-		$(mkinstalldirs) $(DESTDIR)$(docdir)/$${pkg}_api && \
-		find $${pkg}_api -type f -exec $(INSTALL_DATA) '{}' $(DESTDIR)$(docdir)/$${pkg}_api/ \; ; \
-	done || true
-	for pkg in fapi_html guide_html; do \
-		test -d $$pkg && \
-		$(mkinstalldirs) $(DESTDIR)$(docdir)/$$pkg && \
-		find $$pkg -type f -exec $(INSTALL_DATA) '{}' $(DESTDIR)$(docdir)/$$pkg/ \; ; \
-	done || true
+# C++ API documentation
 
-uninstall-local:
-	for pkg in c fortran; do \
-		rm -rf $(DESTDIR)$(docdir)/$${pkg}_api; \
-	done || true
+cppdeps = libdballe.dox \
+	  ../dballe/libdballe.la \
+	  ../dballe/msg/ltypes.dox \
+	  ../dballe/msg/tranges.dox \
+	  libwreport.doxytags
 
-mainpages = ../dballe/main-core.dox
+cppdeps += ../dballe/main-core.dox
 #mainpages += ../dballe/main-bufrex.dox
-mainpages += ../dballe/main-msg.dox
-mainpages += ../dballe/main-db.dox
+cppdeps += ../dballe/main-msg.dox
+cppdeps += ../dballe/main-db.dox
 
-TEXINPUTS="$(srcdir)"
+libdballe.doxytags: $(cppdeps)
+	doxygen $<
 
 libwreport.doxytags: /usr/share/doc/libwreport-dev/libwreport.doxytags.gz
 	zcat $< > $@
 
-libdballe.doxytags c_api/index.html xml/index.xml: $(cdoxdeps) $(mainpages)
+doc_DATA += libdballe.doxytags
+
+CLEANFILES += libdballe.doxytags libwreport.doxytags
+
+
+# Fortran API documentation
+
+fapisources = fapi.md fortran-reference.md
+
+fortrandeps = libdballef.dox \
+	    ../fortran/libdballef.la
+
+libdballef.doxytags: $(fortrandeps)
 	doxygen $<
 
-libdballef.doxytags fortran_api/index.html: $(fortrandoxdeps)
-	doxygen $<
+fortran-reference.md: $(top_srcdir)/doc/make_fortran_reference libdballef.doxytags
+	$< > $@ fortran_xml || rm $<
 
-fapi_html/index.html: $(fapisources)
-	$(LATEX2HTML) -dir fapi_html -split 1 -mkdir $<
+doc_DATA += $(fapisources)
 
-guide_html/index.html: $(guidesources)
-	$(LATEX2HTML) -dir guide_html -split 1 -mkdir $<
+CLEANFILES += libdballef.doxytags
 
-#fapi-quick.html: fapi-quick.rst ../dballe/core/dba_record_keyword.rst
-#fapi-quick.html: fapi-quick.rst
-#	rst2html < $< > $@
+EXTRA_DIST += $(fapisources) make_fortran_reference
 
-%.ps: %.dvi
-	TEXINPUTS="$(TEXINPUTS):" dvips $< -o
 
-%.pdf: %.tex
-	pdflatex --shell-escape $<
+# Install guide
 
-%.aux: %.tex
-	TEXINPUTS="$(TEXINPUTS):" latex $<
+#guidesources = guide.tex intro.tex install.tex maintainance.tex troubleshooting.tex local.bib
 
-%.bbl: %.aux
-	BIBINPUTS="$(TEXINPUTS):" bibtex `basename $< .aux`
 
-%.dvi: %.tex %.aux %.bbl
-	TEXINPUTS="$(TEXINPUTS):" latex $<
-	BIBINPUTS="$(TEXINPUTS):" bibtex `basename $< .tex`
-	TEXINPUTS="$(TEXINPUTS):" latex $<
+# make install machinery
 
-# Additional dependencies for guide.dvi
-guide.dvi: $(guidesources)
+install-data-local:
+	test -d c_api && \
+		$(mkinstalldirs) $(DESTDIR)$(docdir)/c_api && \
+		find c_api -type f -exec $(INSTALL_DATA) '{}' $(DESTDIR)$(docdir)/c_api/ \; ; \
+	done || true
 
-fapi.dvi: $(fapisources)
+uninstall-local:
+	rm -rf $(DESTDIR)$(docdir)/c_api
 
-EXTRA_DIST = $(guidesources) fapi.tex doxy2swig.py add_templates_to_manpage introduzione.odt
 
-CLEANFILES = libdballe.doxytags libdballef.doxytags {guide,fapi}.{ps,pdf,dvi,aux,bbl,idx,log,toc,blg}
+#guide_html/index.html: $(guidesources)
+#	$(LATEX2HTML) -dir guide_html -split 1 -mkdir $<
+
+
+EXTRA_DIST += doxy2swig.py add_templates_to_manpage introduzione.odt
+
+CLEANFILES += doxygen_sqlite3.db
 
 clean-local:
 	rm -rf {c,fortran}_api
-	rm -rf xml
-	rm -rf guide_html
-	rm -rf fapi_html
-	rm -f libwreport.doxytags
-	rm -f doxygen_sqlite3.db
+	rm -rf {c,fortran}_xml
+
+endif

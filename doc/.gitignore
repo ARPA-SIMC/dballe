@@ -1,13 +1,7 @@
-*.idx
-*.dvi
-*.log
-*.pdf
-*.toc
-*.aux
-*.blg
-c_api/
+/c_api/
+/c_xml/
 /fortran_api/
-/xml/
+/fortran_xml/
 /libdballe.dox
 /libdballef.dox
 /doxygen_sqlite3.db
