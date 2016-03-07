@@ -452,5 +452,3 @@ EXTRA_DIST += mainpage.dox dballe.dox \
 	main-msg.dox \
     msg/wr_exporters/exporters.dox \
 	msg/ltypes.txt 
-
-

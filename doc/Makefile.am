@@ -34,6 +34,9 @@ aliases.dox: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
 ltypes.dox: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
 	$(top_builddir)/doc/mksnippet levels dox < $< > $@ || rm $@
 
+tranges.dox: mksnippet
+	$(top_builddir)/doc/mksnippet tranges dox > $@ || rm $@
+
 libdballe.doxytags: $(cppdeps)
 	doxygen $<
 
@@ -48,7 +51,8 @@ CLEANFILES += libdballe.doxytags libwreport.doxytags record_keyword.dox aliases.
 # Fortran API documentation
 
 fapisources = fapi.md fapi_concepts.md fapi_walkthrough.md fapi_reference.md \
-              fapi_parms.md fapi_aliases.md fapi_connect.md fapi_ltypes.md
+			  fapi_parms.md fapi_aliases.md fapi_connect.md fapi_ltypes.md \
+              fapi_tranges.md
 
 fortrandeps = libdballef.dox \
 	    ../fortran/libdballef.la
@@ -67,6 +71,9 @@ fapi_aliases.md: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
 
 fapi_ltypes.md: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
 	$(top_builddir)/doc/mksnippet levels md < $< > $@ || rm $@
+
+fapi_tranges.md: mksnippet
+	$(top_builddir)/doc/mksnippet tranges md > $@ || rm $@
 
 
 doc_DATA += $(fapisources)
@@ -104,23 +111,4 @@ CLEANFILES += doxygen_sqlite3.db
 clean-local:
 	rm -rf {c,fortran}_api
 	rm -rf {c,fortran}_xml
-
-
-
-
-
-
-
-
-
-
-
-
-
-msg/tranges.dox: msg/mktranges
-	$(srcdir)/msg/mktranges dox < $< > $@
-
-msg/tranges.tex: msg/mktranges
-	$(srcdir)/msg/mktranges tex < $< > $@
-
 endif

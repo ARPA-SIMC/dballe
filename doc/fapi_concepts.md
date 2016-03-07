@@ -94,7 +94,8 @@ datum refers: it can be, for example, a value measured in a specific instant,
 or a cumulated or averaged value over an interval of time.
 
 The time range is defined by a table code (`pindicator`) and two
-numerical values (`p1` and `p2`, see \ref{tranges}).
+numerical values (`p1` and `p2`). For their meaning, see [the Time ranges
+table](fapi_tranges.md).
 
 <a name="varcode"></a>
 ### Variable code (varcode)

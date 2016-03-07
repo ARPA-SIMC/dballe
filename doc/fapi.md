@@ -36,6 +36,8 @@ to long explanations whenever it makes sense.
   used to connect to a DB-All.e database.
 * [Level types](fapi_ltypes.md), description of values that define vertical
   levels and layers.
+* [Time ranges](fapi_tranges.md), descriptions of values that define time
+  ranges.
 
 
 # Appendix
@@ -111,11 +113,6 @@ to long explanations whenever it makes sense.
 </tbody>
 </table>
 
-
-### Time range
-<a name="tranges"></a>
-
-\input{../dballe/msg/tranges.tex}
 
 # Contents of the local B table
 <a name="btable"></a>
