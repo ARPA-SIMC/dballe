@@ -51,8 +51,8 @@ CLEANFILES += libdballe.doxytags libwreport.doxytags record_keyword.dox aliases.
 # Fortran API documentation
 
 fapisources = fapi.md fapi_concepts.md fapi_walkthrough.md fapi_reference.md \
-			  fapi_parms.md fapi_aliases.md fapi_connect.md fapi_ltypes.md \
-              fapi_tranges.md
+	      fapi_parms.md fapi_aliases.md fapi_connect.md fapi_ltypes.md \
+	      fapi_tranges.md fapi_btable.md
 
 fortrandeps = libdballef.dox \
 	    ../fortran/libdballef.la
@@ -74,6 +74,9 @@ fapi_ltypes.md: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
 
 fapi_tranges.md: mksnippet
 	$(top_builddir)/doc/mksnippet tranges md > $@ || rm $@
+
+fapi_btable.md: ../tables/dballe.txt mksnippet
+	$(top_builddir)/doc/mksnippet btable md < $< > $@ || rm $@
 
 
 doc_DATA += $(fapisources)

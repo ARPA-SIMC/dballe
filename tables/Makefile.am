@@ -13,11 +13,6 @@ bufrdtables = D000000002001200.txt \
 
 table_DATA = repinfo.csv dballe.txt $(crexbtables) $(crexdtables) $(bufrbtables) $(bufrdtables)
 
-noinst_DATA = dballe.tex
-
-dballe.tex: dballe.txt mkbdoc
-	$(srcdir)/mkbdoc tex < $< > $@ 
-
 B000000002001400.txt: dballe.txt
 	cut -b 1-119 < $< > $@
 
@@ -30,7 +25,4 @@ B990204.txt: dballe.txt
 B000299.txt: dballe.txt
 	cp $< $@
 
-EXTRA_DIST = $(table_DATA) mkbdoc
-
-distclean-local:
-	rm -f dballe.tex
+EXTRA_DIST = $(table_DATA)

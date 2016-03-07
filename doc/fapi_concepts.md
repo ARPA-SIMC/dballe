@@ -102,7 +102,7 @@ table](fapi_tranges.md).
 
 A code from a local variation of BUFR/CREX Table B that describes the nature of
 the variable, such as what it measures and the units used for measuring. It is
-identified by a [*local B table descriptor*](#sec_btable).
+identified by a [*local B table descriptor*](fapi_btable.md).
 
 <a name="value"></a>
 ### Value

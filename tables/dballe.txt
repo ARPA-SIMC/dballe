@@ -203,16 +203,16 @@
  013228 [SIM] Piezometric level                                          M                          3            0  18 M                         3          6
  013229 [SIM] Density of snow                                            KG/M**3                    1            0  14 KG/M**3                   1          5
  013230 [SIM] Convective Available Potential Energy (CAPE)               J/KG                       1            0  17 J/KG                      1          5
- 014002 Long-wave radiation, integrated over period specified            J M-2                     -3       -65536  17 J M-2                    -3         5
- 014004 Short-wave radiation, integrated over period specified           J M-2                     -3       -65536  17 J M-2                    -3         5
+ 014002 Long-wave radiation, integrated over period specified            J M-2                     -3       -65536  17 J M-2                    -3          5
+ 014004 Short-wave radiation, integrated over period specified           J M-2                     -3       -65536  17 J M-2                    -3          5
  014016 NET RADIATION                                                    J/M**2                    -4       -16384  15 J/M**2                   -4          5
  014017 INSTANTANEOUS LONG-WAVE RADIATION (incoming)                     W/M**2                     0        -2048  12 W/M**2                    0          4
  014018 INSTANTANEOUS SHORT-WAVE RADIATION (incoming)                    W/M**2                     0        -2048  12 W/M**2                   -3          4
  014019 SURFACE ALBEDO                                                   %                          0            0   7 %                         0          3
  014021 GLOBAL SOLAR RADIATION, INTEGRATED OVER PERIOD SPECIFIED         J/M**2                    -4            0  15 J/M**2                   -4          5
- 014028 Global solar radiation (high accuracy), integrated over period s J M-2                     -2            0  20 J M-2                    -2         6
- 014029 Diffuse solar radiation (high accuracy), integrated over period  J M-2                     -2            0  20 J M-2                    -2         6
- 014030 Direct solar radiation (high accuracy), integrated over period s J M-2                     -2            0  20 J M-2                    -2         6
+ 014028 Global solar radiation (high accuracy), integrated over period s J M-2                     -2            0  20 J M-2                    -2          6
+ 014029 Diffuse solar radiation (high accuracy), integrated over period  J M-2                     -2            0  20 J M-2                    -2          6
+ 014030 Direct solar radiation (high accuracy), integrated over period s J M-2                     -2            0  20 J M-2                    -2          6
  014031 TOTAL SUNSHINE                                                   MINUTE                     0            0  11 MINUTE                    0          4
  014192 [SIM] Instantenous sensible heat flux                            W/m**2                     0        -1024  11 W/M**2                    0          4
  014193 [SIM] Instantenous latent heat flux                              W/m**2                     0        -1024  11 W/M**2                    0          4
@@ -286,14 +286,14 @@
  020017 CLOUD TOP DESCRIPTION                                            CODE TABLE 20017           0            0   4 CODE TABLE 20017          0          2 
  020019 SIGNIFICANT PRESENT OR FORECAST WEATHER                          CCITTIA5                   0            0  72 CHARACTER                 0          9
  020021 TYPE OF PRECIPITATION                                            FLAG TABLE 20021           0            0  30 FLAG TABLE 20021          0         10
- 020031 ICE DEPOSIT (THICKNESS)                                          M                          2            0   7 M                         2         3              
- 020032 RATE OF ICE ACCRETION                                            CODE TABLE 20032           0            0   3 CODE TABLE 20032          0         1              
- 020033 CAUSE OF ICE ACCRETION                                           FLAG TABLE 20033           0            0   4 FLAG TABLE 20033          0         2              
- 020034 SEA ICE CONCENTRATION                                            CODE TABLE 20034           0            0   5 CODE TABLE 20034          0         2              
- 020035 AMOUNT AND TYPE OF ICE                                           CODE TABLE 20035           0            0   4 CODE TABLE 20035          0         2              
- 020036 ICE SITUATION                                                    CODE TABLE 20036           0            0   5 CODE TABLE 20036          0         2              
- 020037 ICE DEVELOPMENT                                                  CODE TABLE 20037           0            0   5 CODE TABLE 20037          0         2              
- 020038 BEARING OF ICE EDGE (SEE NOTE 3)                                 DEGREE TRUE                0            0  12 DEGREE TRUE               0         3              
+ 020031 ICE DEPOSIT (THICKNESS)                                          M                          2            0   7 M                         2          3
+ 020032 RATE OF ICE ACCRETION                                            CODE TABLE 20032           0            0   3 CODE TABLE 20032          0          1
+ 020033 CAUSE OF ICE ACCRETION                                           FLAG TABLE 20033           0            0   4 FLAG TABLE 20033          0          2
+ 020034 SEA ICE CONCENTRATION                                            CODE TABLE 20034           0            0   5 CODE TABLE 20034          0          2
+ 020035 AMOUNT AND TYPE OF ICE                                           CODE TABLE 20035           0            0   4 CODE TABLE 20035          0          2
+ 020036 ICE SITUATION                                                    CODE TABLE 20036           0            0   5 CODE TABLE 20036          0          2
+ 020037 ICE DEVELOPMENT                                                  CODE TABLE 20037           0            0   5 CODE TABLE 20037          0          2
+ 020038 BEARING OF ICE EDGE (SEE NOTE 3)                                 DEGREE TRUE                0            0  12 DEGREE TRUE               0          3
  020042 AIRFRAME ICING PRESENT                                           CODE TABLE 20042           0            0   2 CODE TABLE 20042          0          1
  020043 PEAK LIQUID WATER CONTENT                                        KG/M**3                    4            0   7 KG/M**3                   4          2
  020044 AVERAGE LIQUID WATER CONTENT                                     KG/M**3                    4            0   7 KG/M**3                   4          2
@@ -311,17 +311,17 @@
  020201 [SIM] Presence of water-spout                                    BOOLEAN                    0            0   1 BOOLEAN                   0          1
  020202 [SIM] State of the ground with snow                              CODE TABLE                 0            0   5 CODE TABLE                0          2
  022001 DIRECTION OF WAVES                                               DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
- 022002 DIRECTION OF WIND WAVES                                          DEGREE TRUE                0            0   9 DEGREE TRUE               0         3              
- 022003 DIRECTION OF SWELL WAVES                                         DEGREE TRUE                0            0   9 DEGREE TRUE               0         3              
- 022004 DIRECTION OF CURRENT                                             DEGREE TRUE                0            0   9 DEGREE TRUE               0         3
+ 022002 DIRECTION OF WIND WAVES                                          DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
+ 022003 DIRECTION OF SWELL WAVES                                         DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
+ 022004 DIRECTION OF CURRENT                                             DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  022011 PERIOD OF WAVES                                                  S                          0            0   6 S                         0          2
  022012 PERIOD OF WIND WAVES                                             S                          0            0   6 S                         0          2
- 022013 PERIOD OF SWELL WAVES                                            S                          0            0   6 S                         0         2              
+ 022013 PERIOD OF SWELL WAVES                                            S                          0            0   6 S                         0          2
  022021 HEIGHT OF WAVES                                                  M                          1            0  10 M                         1          4
  022022 HEIGHT OF WIND WAVES                                             M                          1            0  10 M                         1          4
- 022023 HEIGHT OF SWELL WAVES                                            M                          1            0  10 M                         1         4              
+ 022023 HEIGHT OF SWELL WAVES                                            M                          1            0  10 M                         1          4
  022031 SPEED OF CURRENT                                                 M/S                        2            0  13 M/S                       2          4
- 022032 SPEED OF SEA SURFACE CURRENT                                     M/S                        2            0  13 M/S                       2         4              
+ 022032 SPEED OF SEA SURFACE CURRENT                                     M/S                        2            0  13 M/S                       2          4
  022037 Tidal elevation with respect to national land datum              M                          3       -10000  15 M                         3          5
  022038 Tidal elevation with respect to local chart datum                M                          3       -10000  15 M                         3          5
  022042 SEA/WATER TEMPERATURE                                            K                          1            0  12 K                         1          4

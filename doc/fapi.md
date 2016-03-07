@@ -38,6 +38,7 @@ to long explanations whenever it makes sense.
   levels and layers.
 * [Time ranges](fapi_tranges.md), descriptions of values that define time
   ranges.
+* [Local B table](fapi_btable.md), contents of the local B table.
 
 
 # Appendix
@@ -112,9 +113,3 @@ to long explanations whenever it makes sense.
    </tr>
 </tbody>
 </table>
-
-
-# Contents of the local B table
-<a name="btable"></a>
-
-\input{../tables/dballe.tex}

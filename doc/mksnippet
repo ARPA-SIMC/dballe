@@ -45,6 +45,15 @@ class MdTable:
         self.print_row(self.titles)
         self.print_row(["-" * x for x in self.colsizes])
 
+def mkformat(unit, sz, dec):
+    if  "CHARACTER" in unit or "CODE TABLE" in unit:
+        return "{} chars".format(sz)
+    elif dec == 0:
+        return "{} digits".format(sz)
+    elif dec > 0:
+        return ('#' * (sz - dec)) + '.' + ('#' * dec)
+    else:
+        return ('#' * sz) + ('0' * (-dec));
 
 class Keywords:
     def __init__(self):
@@ -148,14 +157,6 @@ class Keywords:
             res[3] = int(res[3])
             self.data.append(res)
 
-    def mkformat(self, unit, sz, dec):
-        if  "CHARACTER" in unit or "CODE TABLE" in unit:
-            return "{} chars".format(sz)
-        elif dec == 0:
-            return "{} digits".format(sz)
-        else:
-            return ('#' * (sz - dec)) + '.' + ('#' * dec)
-
     def print_dox(self):
         print("""/**@defgroup dba_record_keywords Keywords used by dballe::Record
 @ingroup tables
@@ -176,7 +177,7 @@ digits and description.
         table.print_head()
 
         for tag, unit, sz, dec, desc in self.data:
-            fmt = self.mkformat(unit, sz, dec)
+            fmt = mkformat(unit, sz, dec)
             table.print_row((tag, unit, fmt, desc))
 
         print()
@@ -200,7 +201,7 @@ digits and description.
             else:
                 ins, que, res, com = info + ([""] * (4 - len(info)))
 
-            fmt = self.mkformat(unit, sz, dec)
+            fmt = mkformat(unit, sz, dec)
 
             table.print_row((tag, unit, fmt, desc, ins, que, res, com))
 
@@ -416,6 +417,68 @@ time range:
             print('* **{}** {}'.format(d[0], re_newlines.sub(d[1], "\n")))
 
 
+class Btable:
+    def read(self):
+        import struct
+        reader = struct.Struct("x 6s x 64s x 24s x 3s x 12s x 3s x 24s x 3s x 10s")
+
+        self.data = []
+        for lineno, line in enumerate(sys.stdin.buffer, 1):
+            print(lineno, len(line))
+            self.data.append(tuple(x.decode("utf-8") for x in reader.unpack(line[:158])))
+
+    def print_dox(self):
+        print("""/**@defgroup local_b_table Local B table
+@ingroup tables
+
+This table lists all the entries of the local B table.  You can use them to
+provide context information for a measured value.
+
+Every entry is listed together with its measure unit, length in characters or
+digits and description.
+
+\\verbatim
+""")
+
+        table = TextTable(
+            colsizes=(6, 66, 18, 14),
+            titles=("Code", "Description", "Unit", "Format")
+        )
+        table.print_head()
+
+        for info in self.data:
+            code, desc, unit, dec, sz = info[0], info[1], info[6], int(info[7]), int(info[8])
+            fmt = mkformat(unit, sz, dec)
+            unit = re.sub("CHARACTER", "Character", unit)
+            unit = re.sub("(NUMERIC|NUMBER)", "Numeric", unit)
+            table.print_row((code, desc, unit, fmt))
+        print("""\\endverbatim
+*/""")
+
+    def print_md(self):
+        print("""# Local B table
+
+This table lists all the entries of the local B table.  You can use them to
+provide context information for a measured value.
+
+Every entry is listed together with its measure unit, length in characters or
+digits and description.
+""")
+
+        table = MdTable(
+            colsizes=(6, 66, 18, 14),
+            titles=("Code", "Description", "Unit", "Format")
+        )
+        table.print_head()
+
+        for info in self.data:
+            code, desc, unit, dec, sz = info[0], info[1], info[6], int(info[7]), int(info[8])
+            fmt = mkformat(unit, sz, dec)
+            unit = re.sub("CHARACTER", "Character", unit)
+            unit = re.sub("(NUMERIC|NUMBER)", "Numeric", unit)
+            table.print_row((code, desc, unit, fmt))
+
+
 def main():
     parser = argparse.ArgumentParser(description="Format dballe data snippets for documentation.")
     parser.add_argument("intype", help="input type")
@@ -438,6 +501,7 @@ def main():
         "alias": Aliases,
         "levels": Levels,
         "tranges": Tranges,
+        "btable": Btable,
     }
 
     Proc = inputs.get(args.intype, None)
