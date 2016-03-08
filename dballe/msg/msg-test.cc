@@ -338,12 +338,12 @@ class Tests : public TestCase
             msg.set_st_name("antani");
             msg.set_rep_memo("temp");
 
-            stringstream str;
-            msg.to_csv(str);
+            MemoryCSVWriter csv;
+            msg.to_csv(csv);
 
             Msg msg1;
-            str.seekg(0);
-            CSVReader in(str);
+            csv.buf.seekg(0);
+            CSVReader in(csv.buf);
             wassert(actual(in.next()).istrue());
             msg1.from_csv(in);
 
@@ -550,12 +550,12 @@ class Tests : public TestCase
             Messages msgs = read_msgs("bufr/synop-evapo.bufr", File::BUFR);
 
             // Serialise to CSV
-            stringstream str;
-            msg::messages_to_csv(msgs, str);
+            MemoryCSVWriter csv;
+            msg::messages_to_csv(msgs, csv);
 
             // Read back
-            str.seekg(0);
-            CSVReader in(str);
+            csv.buf.seekg(0);
+            CSVReader in(csv.buf);
             wassert(actual(in.next()).istrue());
             Messages msgs1 = msg::messages_from_csv(in);
 

@@ -404,9 +404,9 @@ void Datetime::to_stream_iso8601(std::ostream& out, char sep, const char* tz) co
         << tz;
 }
 
-void Datetime::print_iso8601(FILE* out, char sep, const char* end) const
+int Datetime::print_iso8601(FILE* out, char sep, const char* end) const
 {
-    fprintf(out, "%04hu-%02hhu-%02hhu%c%02hhu:%02hhu:%02hhu%s",
+    return fprintf(out, "%04hu-%02hhu-%02hhu%c%02hhu:%02hhu:%02hhu%s",
             year, month, day, sep, hour, minute, second, end);
 }
 
@@ -588,9 +588,9 @@ bool Coords::operator>(const Coords& o) const { return compare(o) > 0; }
 bool Coords::operator<=(const Coords& o) const { return compare(o) <= 0; }
 bool Coords::operator>=(const Coords& o) const { return compare(o) >= 0; }
 
-void Coords::print(FILE* out, const char* end) const
+int Coords::print(FILE* out, const char* end) const
 {
-    fprintf(out, "%.5f,%.5f%s", dlat(), dlon(), end);
+    return fprintf(out, "%.5f,%.5f%s", dlat(), dlon(), end);
 }
 
 /*
@@ -937,25 +937,27 @@ void Level::to_csv(CSVWriter& out) const
 
 Level Level::cloud(int ltype2, int l2) { return Level(256, MISSING_INT, ltype2, l2); }
 
-void Level::print(FILE* out, const char* undef, const char* end) const
+int Level::print(FILE* out, const char* undef, const char* end) const
 {
+    int res = 0;
     if (ltype1 == MISSING_INT)
-        fprintf(out, "%s,", undef);
+        res += fprintf(out, "%s,", undef);
     else
-        fprintf(out, "%d,", ltype1);
+        res += fprintf(out, "%d,", ltype1);
     if (l1 == MISSING_INT)
-        fprintf(out, "%s,", undef);
+        res += fprintf(out, "%s,", undef);
     else
-        fprintf(out, "%d,", l1);
+        res += fprintf(out, "%d,", l1);
     if (ltype2 == MISSING_INT)
-        fprintf(out, "%s,", undef);
+        res += fprintf(out, "%s,", undef);
     else
-        fprintf(out, "%d,", ltype2);
+        res += fprintf(out, "%d,", ltype2);
     if (l2 == MISSING_INT)
-        fprintf(out, "%s,", undef);
+        res += fprintf(out, "%s,", undef);
     else
-        fprintf(out, "%d,", l2);
-    fputs(end, out);
+        res += fprintf(out, "%d,", l2);
+    res += fprintf(out, "%s", end);
+    return res;
 }
 
 
@@ -1087,20 +1089,23 @@ std::string Trange::describe() const
     }
 }
 
-void Trange::print(FILE* out, const char* undef, const char* end) const
+int Trange::print(FILE* out, const char* undef, const char* end) const
 {
+    int res = 0;
     if (pind == MISSING_INT)
-        fprintf(out, "%s,", undef);
+        res += fprintf(out, "%s,", undef);
     else
-        fprintf(out, "%d,", pind);
+        res += fprintf(out, "%d,", pind);
     if (p1 == MISSING_INT)
-        fprintf(out, "%s,", undef);
+        res += fprintf(out, "%s,", undef);
     else
-        fprintf(out, "%d,", p1);
+        res += fprintf(out, "%d,", p1);
     if (p2 == MISSING_INT)
-        fprintf(out, "%s,", undef);
+        res += fprintf(out, "%s,", undef);
     else
-        fprintf(out, "%d,", p2);
+        res += fprintf(out, "%d,", p2);
+    res += fprintf(out, "%s", end);
+    return res;
 }
 
 }

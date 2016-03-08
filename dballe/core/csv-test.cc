@@ -9,16 +9,6 @@ using namespace dballe::tests;
 
 namespace {
 
-class TestCSVWriter : public CSVWriter
-{
-public:
-    stringstream buf;
-    virtual void flush_row()
-    {
-        buf << row;
-    }
-};
-
 class Tests : public TestCase
 {
     using TestCase::TestCase;
@@ -192,7 +182,7 @@ class Tests : public TestCase
 
         // Test write/read cycles
         add_method("writer", []() {
-            TestCSVWriter out;
+            MemoryCSVWriter out;
             out.add_value(1);
             out.add_value("\"");
             out.add_value("'");

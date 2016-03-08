@@ -504,9 +504,8 @@ struct Printer
     {
         if (l == Level()) return;
         if (!first) fputs(", ", out);
-        stringstream buf;
-        buf << l;
-        fprintf(out, "%s=%s", name, buf.str().c_str());
+        fprintf(out, "%s=", name);
+        l.print(out, "-", "");
         first = false;
     }
 
@@ -514,9 +513,8 @@ struct Printer
     {
         if (t == Trange()) return;
         if (!first) fputs(", ", out);
-        stringstream buf;
-        buf << t;
-        fprintf(out, "%s=%s", name, buf.str().c_str());
+        fprintf(out, "%s=", name);
+        t.print(out, "-", "");
         first = false;
     }
 

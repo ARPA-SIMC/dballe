@@ -126,16 +126,10 @@ void SQLiteLevTrV6::dump(FILE* out)
     auto stm = conn.sqlitestatement("SELECT id, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr ORDER BY ID");
     stm->execute([&]() {
         fprintf(out, " %4d ", stm->column_int(0));
-        {
-            stringstream str;
-            str << to_level(*stm, 1);
-            fprintf(out, "%-20s ", str.str().c_str());
-        }
-        {
-            stringstream str;
-            str << to_trange(*stm, 5);
-            fprintf(out, "%-10s\n", str.str().c_str());
-        }
+        int written = to_level(*stm, 1).print(out);
+        while (written++ < 21) putc(' ', out);
+        written = to_trange(*stm, 5).print(out);
+        while (written++ < 11) putc(' ', out);
         ++count;
     });
     fprintf(out, "%d element%s in table lev_tr\n", count, count != 1 ? "s" : "");

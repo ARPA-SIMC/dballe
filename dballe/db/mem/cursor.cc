@@ -339,17 +339,13 @@ struct DataBestResultQueue : public map<DataBestKey, size_t>
         {
             const memdb::Value& k = i->first.value();
             const memdb::Value& v = *values[i->second];
-
-            stringstream buf;
-            buf << k.station.coords
-                << "\t" << k.station.ident
-                << "\t" << k.levtr.level
-                << "\t" << k.levtr.trange
-                << "\t" << k.datetime
-                << ": " << v.station.report
-                << "\t";
-            v.var->print_without_attrs(buf);
-            fputs(buf.str().c_str(), out);
+            k.station.coords.print(out, "\t");
+            fprintf(out, "%s\t", k.station.ident.c_str());
+            k.levtr.level.print(out, "-", "\t");
+            k.levtr.trange.print(out, "-", "\t");
+            k.datetime.print_iso8601(out, ' ', ": ");
+            fprintf(out, "%s\t", v.station.report.c_str());
+            v.var->print_without_attrs(out);
         }
     }
 
@@ -587,19 +583,6 @@ bool DataBestKey::operator<(const DataBestKey& o) const
 
     // They are the same
     return false;
-}
-
-std::ostream& operator<<(std::ostream& out, const DataBestKey& k)
-{
-    const memdb::Value& v = k.value();
-
-    out << v.station.coords
-        << "." << v.station.ident
-        << ":" << v.levtr.level
-        << ":" << v.levtr.trange
-        << ":" << v.datetime
-        << ":" << varcode_format(v.var->code());
-    return out;
 }
 
 #if 0

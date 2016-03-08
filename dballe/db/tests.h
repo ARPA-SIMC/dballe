@@ -3,6 +3,7 @@
 #include <dballe/core/values.h>
 #include <dballe/db/db.h>
 #include <dballe/db/sql/driver.h>
+#include <dballe/db/ostream.h>
 
 namespace dballe {
 struct DB;

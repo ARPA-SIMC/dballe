@@ -185,16 +185,10 @@ void ODBCLevTrV6::dump(FILE* out)
     for (count = 0; stm->fetch(); ++count)
     {
         fprintf(out, " %4d ", (int)id);
-        {
-            stringstream str;
-            str << Level(ltype1, l1, ltype2, l2);
-            fprintf(out, "%-20s ", str.str().c_str());
-        }
-        {
-            stringstream str;
-            str << Trange(pind, p1, p2);
-            fprintf(out, "%-10s\n", str.str().c_str());
-        }
+        int written = Level(ltype1, l1, ltype2, l2).print(out);
+        while (written++ < 21) putc(' ', out);
+        written = Trange(pind, p1, p2).print(out);
+        while (written++ < 11) putc(' ', out);
     }
     fprintf(out, "%d element%s in table lev_tr\n", count, count != 1 ? "s" : "");
 }

@@ -49,17 +49,5 @@ public:
     operator std::string() const;
 };
 
-std::ostream& operator<<(std::ostream& out, const Coords& c);
-std::ostream& operator<<(std::ostream& out, const Date& dt);
-std::ostream& operator<<(std::ostream& out, const Time& t);
-std::ostream& operator<<(std::ostream& out, const Datetime& dt);
-std::ostream& operator<<(std::ostream& out, const DatetimeRange& dtr);
-std::ostream& operator<<(std::ostream& out, const LatRange& lr);
-std::ostream& operator<<(std::ostream& out, const LonRange& lr);
-std::ostream& operator<<(std::ostream& out, const Level& l);
-std::ostream& operator<<(std::ostream& out, const Trange& l);
-std::ostream& operator<<(std::ostream& out, const Ident& i);
-
 }
-
 #endif

@@ -121,16 +121,10 @@ void PostgreSQLLevTrV6::dump(FILE* out)
     for (unsigned row = 0; row < res.rowcount(); ++row)
     {
         fprintf(out, " %4d ", res.get_int4(row, 0));
-        {
-            stringstream str;
-            str << to_level(res, row, 1);
-            fprintf(out, "%-20s ", str.str().c_str());
-        }
-        {
-            stringstream str;
-            str << to_trange(res, row, 5);
-            fprintf(out, "%-10s\n", str.str().c_str());
-        }
+        int written = to_level(res, row, 1).print(out);
+        while (written++ < 21) putc(' ', out);
+        written = to_trange(res, row, 5).print(out);
+        while (written++ < 11) putc(' ', out);
         ++count;
     }
     fprintf(out, "%d element%s in table lev_tr\n", count, count != 1 ? "s" : "");

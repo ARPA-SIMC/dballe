@@ -49,7 +49,6 @@ struct DataBestKey
     const memdb::Value& value() const { return *values[idx]; }
     bool operator<(const DataBestKey& o) const;
 };
-std::ostream& operator<<(std::ostream& out, const DataBestKey& k);
 
 }
 

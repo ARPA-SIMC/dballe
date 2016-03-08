@@ -70,6 +70,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/varmatch.h \
 	core/trace.h \
 	core/json.h \
+	core/ostream.h \
 	memdb/valuestorage.h \
 	memdb/valuestorage.tcc \
 	memdb/index.h \
@@ -120,6 +121,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/v6/cursor.h \
 	db/v6/qbuilder.h \
 	db/summary.h \
+	db/ostream.h \
 	cmdline/cmdline.h \
 	cmdline/conversion.h \
 	cmdline/processor.h \
@@ -184,6 +186,7 @@ libdballe_la_SOURCES = \
 	core/match-wreport.cc \
 	core/varmatch.cc \
 	core/json.cc \
+	core/ostream.cc \
 	memdb/station.cc \
 	memdb/valuebase.cc \
 	memdb/stationvalue.cc \
@@ -252,6 +255,7 @@ libdballe_la_SOURCES = \
 	db/v6/import.cc \
 	db/v6/export.cc \
 	db/summary.cc \
+	db/ostream.cc \
 	cmdline/cmdline.cc \
 	cmdline/processor.cc \
 	cmdline/conversion.cc \

@@ -184,15 +184,15 @@ void PostgreSQLDataV6::dump(FILE* out)
         else
             snprintf(ltr, 20, "%04d", id_lev_tr);
 
-        stringstream dtstr;
-        dtstr << datetime;
-        fprintf(out, " %4d %4d %3d %s %s %01d%02d%03d",
+        fprintf(out, " %4d %4d %3d %s ",
                 res.get_int4(row, 0),
                 res.get_int4(row, 1),
                 res.get_int4(row, 2),
-                ltr,
-                dtstr.str().c_str(),
-                WR_VAR_F(code), WR_VAR_X(code), WR_VAR_Y(code));
+                ltr);
+
+        stringstream dtstr;
+        datetime.print_iso8601(out, ' ', " ");
+        fprintf(out, "%01d%02d%03d", WR_VAR_FXY(code));
         if (res.is_null(row, 6))
             fprintf(out, "\n");
         else

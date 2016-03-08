@@ -62,10 +62,10 @@ void SQLRecordV6::dump(FILE* out)
     else
         fprintf(out, "%.*s, ", out_ident_size, out_ident);
     fprintf(out, "rc: %d %d, ltr %d, did %d, ", out_rep_cod, priority, out_id_ltr, out_id_data);
-    stringstream s;
-    s << "dt: " << out_datetime << " " << out_datetimemax << ", ";
-    fputs(s.str().c_str(), out);
-    fprintf(out, "%d%02d%03d %s\n", WR_VAR_F(out_varcode), WR_VAR_X(out_varcode), WR_VAR_Y(out_varcode), out_value);
+    fprintf(out, "dt: ");
+    out_datetime.print_iso8601(out, ' ', " ");
+    out_datetimemax.print_iso8601(out, ' ', ", ");
+    fprintf(out, "%d%02d%03d %s\n", WR_VAR_FXY(out_varcode), out_value);
 }
 
 Driver::~Driver()

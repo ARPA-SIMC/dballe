@@ -101,11 +101,9 @@ struct MapLevTrCache : public LevTrCache
         fprintf(out, "%zd elements in level/timerange cache:\n", cache.size());
         for (map<int, Item>::const_iterator i = cache.begin(); i != cache.end(); ++i)
         {
-            stringstream str;
-            str << i->second.level;
-            str << " ";
-            str << i->second.trange;
-            fprintf(out, "  %d: %s\n", i->first, str.str().c_str());
+            fprintf(out, "  %d: ", i->first);
+            i->second.level.print(out, "-", " ");
+            i->second.trange.print(out, "-", "\n");
         }
     }
 };

@@ -222,7 +222,7 @@ struct Datetime
     /**
      * Print to an output stream in ISO8601 combined format.
      */
-    void print_iso8601(FILE* out, char sep='T', const char* end="\n") const;
+    int print_iso8601(FILE* out, char sep='T', const char* end="\n") const;
 
     /**
      * Write the datetime to an output stream in ISO8601 combined format.
@@ -386,7 +386,7 @@ struct Coords
     bool operator>=(const Coords& dt) const;
 
     /// Print to an output stream
-    void print(FILE* out, const char* end="\n") const;
+    int print(FILE* out, const char* end="\n") const;
 };
 
 
@@ -576,7 +576,7 @@ struct Level
     static Level cloud(int ltype2=MISSING_INT, int l2=MISSING_INT);
 
     /// Print to an output stream
-    void print(FILE* out, const char* undef="-", const char* end="\n") const;
+    int print(FILE* out, const char* undef="-", const char* end="\n") const;
 };
 
 
@@ -629,7 +629,7 @@ struct Trange
     static Trange instant();
 
     /// Print to an output stream
-    void print(FILE* out, const char* undef="-", const char* end="\n") const;
+    int print(FILE* out, const char* undef="-", const char* end="\n") const;
 };
 
 

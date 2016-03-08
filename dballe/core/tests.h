@@ -4,10 +4,13 @@
 #include <dballe/core/query.h>
 #include <dballe/core/values.h>
 #include <dballe/core/defs.h>
+#include <dballe/core/csv.h>
+#include <dballe/core/ostream.h>
 #include <cstdlib>
 #include <climits>
 #include <string>
 #include <vector>
+#include <sstream>
 #include <iostream>
 #include <memory>
 
@@ -60,6 +63,18 @@ std::string datafile(const std::string& fname);
 std::unique_ptr<File> open_test_data(const char* filename, File::Encoding type);
 
 BinaryMessage read_rawmsg(const char* filename, File::Encoding type);
+
+class MemoryCSVWriter : public CSVWriter
+{
+public:
+    std::stringstream buf;
+
+    void flush_row() override
+    {
+        buf << row << std::endl;
+        row.clear();
+    }
+};
 
 #if 0
 /// Check that actual and expected have the same vars

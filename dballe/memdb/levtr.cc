@@ -123,11 +123,9 @@ void LevTrs::dump(FILE* out) const
     {
         if (values[pos])
         {
-            stringstream buf;
-            buf << values[pos]->level
-                << "\t" << values[pos]->trange;
-
-            fprintf(out, " %4zu: %s\n", pos, buf.str().c_str());
+            fprintf(out, " %4zu: ", pos);
+            values[pos]->level.print(out, "-", "\t");
+            values[pos]->trange.print(out, "-", "\n");
         } else
             fprintf(out, " %4zu: (empty)\n", pos);
     }

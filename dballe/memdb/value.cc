@@ -23,14 +23,11 @@ Value::~Value()
 
 void Value::dump(FILE* out) const
 {
-    stringstream buf;
-    buf << station.id
-        << "\t" << levtr.level
-        << "\t" << levtr.trange
-        << "\t" << datetime
-        << "\t";
-    var->print_without_attrs(buf);
-    fputs(buf.str().c_str(), out);
+    fprintf(out, "%zd\t", station.id);
+    levtr.level.print(out, "-", "\t");
+    levtr.trange.print(out, "-", "\t");
+    datetime.print_iso8601(out, ' ', "\t");
+    var->print_without_attrs(out);
 }
 
 void Values::clear()

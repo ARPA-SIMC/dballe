@@ -119,16 +119,10 @@ void MySQLLevTrV6::dump(FILE* out)
     while (auto row = res.fetch())
     {
         fprintf(out, " %4d ", row.as_int(0));
-        {
-            stringstream str;
-            str << to_level(row, 1);
-            fprintf(out, "%-20s ", str.str().c_str());
-        }
-        {
-            stringstream str;
-            str << to_trange(row, 5);
-            fprintf(out, "%-10s\n", str.str().c_str());
-        }
+        int written = to_level(row, 1).print(out);
+        while (written++ < 21) putc(' ', out);
+        written = to_trange(row, 5).print(out);
+        while (written++ < 11) putc(' ', out);
         ++count;
     }
     fprintf(out, "%d element%s in table lev_tr\n", count, count != 1 ? "s" : "");
