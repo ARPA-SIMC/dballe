@@ -109,7 +109,7 @@ void dba_cmdline_print_dba_error();
 void dba_cmdline_error(poptContext optCon, const char* fmt, ...) __attribute__ ((noreturn));
 
 /**
- * Return the ::dba_encoding that corresponds to the name in the string
+ * Return the File::Encoding that corresponds to the name in the string
  */
 File::Encoding string_to_encoding(const char* type);
 

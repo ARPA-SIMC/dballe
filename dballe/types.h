@@ -585,11 +585,11 @@ struct Level
  */
 struct Trange
 {
-    /// Time range type indicator.  See @ref trange_table.
+    /// Time range type indicator.
     int pind;
-    /// Time range P1 indicator.  See @ref trange_table.
+    /// Time range P1 indicator.
     int p1;
-    /// Time range P2 indicator.  See @ref trange_table.
+    /// Time range P2 indicator.
     int p2;
 
     Trange(int pind=MISSING_INT, int p1=MISSING_INT, int p2=MISSING_INT)

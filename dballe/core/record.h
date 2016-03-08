@@ -69,7 +69,7 @@ enum _dba_keyword {
 	DBA_KEY_VAR_RELATED	= 46,
 	DBA_KEY_COUNT		= 47,
 };
-/** @copydoc ::_dba_keyword */
+/** @copydoc _dba_keyword */
 typedef enum _dba_keyword dba_keyword;
 
 std::ostream& operator<<(std::ostream& o, dba_keyword k);
