@@ -1,4 +1,5 @@
 #include "types.h"
+#include "core/csv.h"
 #include <wreport/error.h>
 #include <ostream>
 #include <iomanip>
@@ -162,6 +163,19 @@ void Date::to_stream_iso8601(std::ostream& out) const
         << '-' << setw(2) << setfill('0') << (unsigned)day;
 }
 
+void Date::to_csv_iso8601(CSVWriter& out) const
+{
+    if (is_missing())
+        out.add_value_empty();
+    else
+    {
+        char buf[16];
+        snprintf(buf, 16, "%04hu-%02hhu-%02hhu", year, month, day);
+        out.add_value(buf);
+    }
+}
+
+
 
 /*
  * Time
@@ -238,6 +252,18 @@ void Time::to_stream_iso8601(std::ostream& out) const
     out <<        setw(2) << setfill('0') << (unsigned)hour
         << ':' << setw(2) << setfill('0') << (unsigned)minute
         << ':' << setw(2) << setfill('0') << (unsigned)second;
+}
+
+void Time::to_csv_iso8601(CSVWriter& out) const
+{
+    if (is_missing())
+        out.add_value_empty();
+    else
+    {
+        char buf[16];
+        snprintf(buf, 16, "%02hhu:%02hhu:%02hhu", hour, minute, second);
+        out.add_value(buf);
+    }
 }
 
 /*
@@ -382,6 +408,19 @@ void Datetime::print_iso8601(FILE* out, char sep, const char* end) const
 {
     fprintf(out, "%04hu-%02hhu-%02hhu%c%02hhu:%02hhu:%02hhu%s",
             year, month, day, sep, hour, minute, second, end);
+}
+
+void Datetime::to_csv_iso8601(CSVWriter& out, char sep, const char* tz) const
+{
+    if (is_missing())
+        out.add_value_empty();
+    else
+    {
+        char buf[32];
+        snprintf(buf, 32, "%04hu-%02hhu-%02hhu%c%02hhu:%02hhu:%02hhu%s",
+                year, month, day, sep, hour, minute, second, tz);
+        out.add_value(buf);
+    }
 }
 
 /*
@@ -888,6 +927,14 @@ void Level::to_stream(std::ostream& out, const char* undef) const
     if (l2 == MISSING_INT) out << undef; else out << l2;
 }
 
+void Level::to_csv(CSVWriter& out) const
+{
+    if (ltype1 == MISSING_INT) out.add_value_empty(); else out.add_value(ltype1);
+    if (l1 == MISSING_INT) out.add_value_empty(); else out.add_value(l1);
+    if (ltype2 == MISSING_INT) out.add_value_empty(); else out.add_value(ltype2);
+    if (l2 == MISSING_INT) out.add_value_empty(); else out.add_value(l2);
+}
+
 Level Level::cloud(int ltype2, int l2) { return Level(256, MISSING_INT, ltype2, l2); }
 
 void Level::print(FILE* out, const char* undef, const char* end) const
@@ -946,6 +993,13 @@ void Trange::to_stream(std::ostream& out, const char* undef) const
     if (p1 == MISSING_INT) out << undef; else out << p1;
     out << ",";
     if (p2 == MISSING_INT) out << undef; else out << p2;
+}
+
+void Trange::to_csv(CSVWriter& out) const
+{
+    if (pind == MISSING_INT) out.add_value_empty(); else out.add_value(pind);
+    if (p1 == MISSING_INT) out.add_value_empty(); else out.add_value(p1);
+    if (p2 == MISSING_INT) out.add_value_empty(); else out.add_value(p2);
 }
 
 Trange Trange::instant() { return Trange(254, 0, 0); }

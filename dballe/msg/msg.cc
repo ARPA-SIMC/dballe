@@ -1,24 +1,3 @@
-/*
- * dballe/msg - Hold an interpreted weather bulletin
- *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "msg.h"
 #include "context.h"
 #include "dballe/msg/vars.h"
@@ -72,7 +51,7 @@ Messages messages_from_csv(CSVReader& in)
     return res;
 }
 
-void messages_to_csv(const Messages& msgs, std::ostream& out)
+void messages_to_csv(const Messages& msgs, CSVWriter& out)
 {
     for (const auto& i: msgs)
         Msg::downcast(i).to_csv(out);
@@ -335,44 +314,43 @@ struct VarContext
             rep_memo = Msg::repmemo_from_type(m.type);
     }
 
-    void print(ostream& out, msg::Context& c)
+    void print(CSVWriter& out, msg::Context& c)
     {
         // Longitude
         if (lon)
-            out << fixed << setprecision(5) << lon->enqd() << ",";
+            out.add_var_value_formatted(*lon);
         else
-            out << ",";
+            out.add_value_empty();
 
         // Latitude
         if (lat)
-            out << fixed << setprecision(5) << lat->enqd() << ",";
+            out.add_var_value_formatted(*lat);
         else
-            out << ",";
+            out.add_value_empty();
 
         // Report type
-        out << rep_memo << ",";
+        out.add_value(rep_memo);
 
         if (c.level != Level())
         {
             // Datetime
-            msg.get_datetime().to_stream_iso8601(out, ' ');
-            out << ',';
+            msg.get_datetime().to_csv_iso8601(out, ' ');
 
             // Level
-            c.level.to_stream(out, "");
-            out << ",";
+            c.level.to_csv(out);
 
             // Time range
-            c.trange.to_stream(out, "");
-            out << ",";
-        } else
-            out << ",,,,,,,,";
+            c.trange.to_csv(out);
+        } else {
+            for (int i = 0; i < 8; ++i)
+                out.add_value_empty();
+        }
     }
 };
 
 }
 
-void Msg::to_csv(std::ostream& out) const
+void Msg::to_csv(CSVWriter& out) const
 {
     VarContext vc(*this);
 
@@ -387,25 +365,38 @@ void Msg::to_csv(std::ostream& out) const
 
             vc.print(out, c);
 
-            out << varcode_format(v.code()) << ","; // B code
-            csv_output_quoted_string(out, v.format(""));
-            out << endl;
+            out.add_value(v.code()); // B code
+            out.add_var_value_formatted(v);
+            out.flush_row();
 
             // Add attribute columns
             for (const Var* a = v.next_attr(); a != NULL; a = a->next_attr())
             {
                 vc.print(out, c);
-                out << varcode_format(v.code()) << "." << varcode_format(a->code()) << ","; // B code
-                csv_output_quoted_string(out, a->format(""));
-                out << endl;
+                out.add_value(varcode_format(v.code()) + "." + varcode_format(a->code())); // B code
+                out.add_var_value_formatted(*a);
+                out.flush_row();
             }
         }
     }
 }
 
-void Msg::csv_header(std::ostream& out)
+void Msg::csv_header(CSVWriter& out)
 {
-    out << "Longitude,Latitude,Report,Date,Level1,L1,Level2,L2,Time range,P1,P2,Varcode,Value" << endl;
+    out.add_value("longitude");
+    out.add_value("latitude");
+    out.add_value("report");
+    out.add_value("date");
+    out.add_value("level");
+    out.add_value("l");
+    out.add_value("level");
+    out.add_value("l");
+    out.add_value("time rang");
+    out.add_value("p");
+    out.add_value("p");
+    out.add_value("varcod");
+    out.add_value("value");
+    out.flush_row();
 }
 
 namespace {

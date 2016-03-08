@@ -292,11 +292,13 @@ struct CSVBulletin : public cmdline::Action
 /**
  * Print a Msgs in CSV format
  */
+
 struct CSVMsgs : public cmdline::Action
 {
     bool first;
+    FileCSV writer;
 
-    CSVMsgs() : first(true) {}
+    CSVMsgs() : first(true), writer(stdout) {}
 
     virtual bool operator()(const cmdline::Item& item)
     {
@@ -304,12 +306,12 @@ struct CSVMsgs : public cmdline::Action
 
         if (first)
         {
-            Msg::csv_header(cout);
+            Msg::csv_header(writer);
             first = false;
         }
 
         for (const auto& mi: *item.msgs)
-            Msg::downcast(mi).to_csv(cout);
+            Msg::downcast(mi).to_csv(writer);
         return true;
     }
 };

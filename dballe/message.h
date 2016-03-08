@@ -21,6 +21,9 @@ namespace dballe {
  *
  * Each variable is annotated with its vertical level/layer information, and
  * its time range / statistical information.
+ *
+ * The representation in Message is as connected as possible to physics rather
+ * than to observations.
  */
 struct Message
 {

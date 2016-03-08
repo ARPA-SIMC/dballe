@@ -161,14 +161,14 @@ void CSVWriter::write(const Memdb& memdb)
         out_stationvalue.add_value(lineno);
         out_stationvalue.add_value(station_id_map[v.station.id]);
         out_stationvalue.add_value(v.var->code());
-        out_stationvalue.add_var_value(*v.var);
+        out_stationvalue.add_var_value_raw(*v.var);
         out_stationvalue.flush_row();
 
         for (const Var* a = v.var->next_attr(); a != NULL; a = a->next_attr())
         {
             out_stationvalue_attr.add_value(lineno);
             out_stationvalue_attr.add_value(a->code());
-            out_stationvalue_attr.add_var_value(*a);
+            out_stationvalue_attr.add_var_value_raw(*a);
             out_stationvalue_attr.flush_row();
         }
 
@@ -196,14 +196,14 @@ void CSVWriter::write(const Memdb& memdb)
                 v.datetime.hour, v.datetime.minute, v.datetime.second);
         out_value.add_value_raw(buf);
         out_value.add_value(v.var->code());
-        out_value.add_var_value(*v.var);
+        out_value.add_var_value_raw(*v.var);
         out_value.flush_row();
 
         for (const Var* a = v.var->next_attr(); a != NULL; a = a->next_attr())
         {
             out_value_attr.add_value(lineno);
             out_value_attr.add_value(a->code());
-            out_value_attr.add_var_value(*a);
+            out_value_attr.add_var_value_raw(*a);
             out_value_attr.flush_row();
         }
 

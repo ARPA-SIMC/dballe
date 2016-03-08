@@ -9,6 +9,7 @@
 #include <limits.h>
 
 namespace dballe {
+struct CSVWriter;
 
 /**
  * Value to use for missing parts of level and time range values
@@ -54,6 +55,11 @@ struct Date
      * Write the date to an output stream in ISO8601 date format.
      */
     void to_stream_iso8601(std::ostream& out) const;
+
+    /**
+     * Write the date as a CSV field in ISO8601 date format.
+     */
+    void to_csv_iso8601(CSVWriter& out) const;
 
     /**
      * Generic comparison
@@ -113,6 +119,11 @@ struct Time
      * (hh:mm:ss).
      */
     void to_stream_iso8601(std::ostream& out) const;
+
+    /**
+     * Write the time as a CSV field in ISO8601 date format.
+     */
+    void to_csv_iso8601(CSVWriter& out) const;
 
     /**
      * Generic comparison
@@ -220,6 +231,11 @@ struct Datetime
      * @param tz the timezone string to use at the end of the datetime
      */
     void to_stream_iso8601(std::ostream& out, char sep='T', const char* tz="") const;
+
+    /**
+     * Write the datetime as a CSV field in ISO8601 date format.
+     */
+    void to_csv_iso8601(CSVWriter& out, char sep='T', const char* tz="") const;
 
     /**
      * Parse an ISO8601 datetime string.
@@ -551,6 +567,11 @@ struct Level
     /// Format to an output stream
     void to_stream(std::ostream& out, const char* undef="-") const;
 
+    /**
+     * Write the datetime to a CSV writer as 4 fields
+     */
+    void to_csv(CSVWriter& out) const;
+
     /// Create a cloud special level. See @ref level_table.
     static Level cloud(int ltype2=MISSING_INT, int l2=MISSING_INT);
 
@@ -598,6 +619,11 @@ struct Trange
 
     /// Format to an output stream
     void to_stream(std::ostream& out, const char* undef="-") const;
+
+    /**
+     * Write the datetime to a CSV writer as 3 fields
+     */
+    void to_csv(CSVWriter& out) const;
 
     /// Time range for instant values
     static Trange instant();

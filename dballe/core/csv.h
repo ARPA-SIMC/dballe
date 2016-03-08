@@ -132,6 +132,11 @@ public:
  */
 void csv_output_quoted_string(std::ostream& out, const std::string& str);
 
+/**
+ * Output a string value, quoted if needed according to CSV rules
+ */
+void csv_output_quoted_string(FILE* out, const std::string& str);
+
 class CSVWriter
 {
 protected:
@@ -161,11 +166,14 @@ public:
     /// Add an int value to the current row
     void add_value(uint64_t val);
 
-    /// Add an int value to the current row
+    /// Add a formatted varcode to the current row
     void add_value(wreport::Varcode val);
 
-    /// Add a variable value
-    void add_var_value(const wreport::Var& val);
+    /// Add a variable value, in its raw integer form
+    void add_var_value_raw(const wreport::Var& val);
+
+    /// Add a variable value, formatted
+    void add_var_value_formatted(const wreport::Var& val);
 
     /// Add a string to the current row
     void add_value(const char* val);
@@ -179,6 +187,4 @@ public:
 
 
 }
-
-/* vim:set ts=4 sw=4: */
 #endif

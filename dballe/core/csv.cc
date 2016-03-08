@@ -299,6 +299,22 @@ void csv_output_quoted_string(ostream& out, const std::string& str)
         out << str;
 }
 
+void csv_output_quoted_string(FILE* out, const std::string& str)
+{
+    if (str.find_first_of("\",") != string::npos)
+    {
+        putc('"', out);
+        for (string::const_iterator i = str.begin(); i != str.end(); ++i)
+        {
+            if (*i == '"')
+                putc('"', out);
+            putc(*i, out);
+        }
+        putc('"', out);
+    } else
+        fputs(str.c_str(), out);
+}
+
 namespace {
 
 // FormatInt by Victor Zverovich
@@ -438,7 +454,7 @@ void CSVWriter::add_value(wreport::Varcode val)
     row.append(fmt.c_str());
 }
 
-void CSVWriter::add_var_value(const wreport::Var& var)
+void CSVWriter::add_var_value_raw(const wreport::Var& var)
 {
     if (!var.isset())
     {
@@ -458,6 +474,32 @@ void CSVWriter::add_var_value(const wreport::Var& var)
         case Vartype::Integer:
         case Vartype::Decimal:
             add_value(var.enqi());
+            break;
+    }
+}
+
+void CSVWriter::add_var_value_formatted(const wreport::Var& var)
+{
+    if (!var.isset())
+    {
+        add_value_empty();
+        return;
+    }
+
+    switch (var.info()->type)
+    {
+        case Vartype::String:
+            add_value(var.enqc());
+            break;
+        case Vartype::Binary:
+            // Skip binary variables, that cannot really be encoded in CSV
+            add_value_empty();
+            break;
+        case Vartype::Integer:
+            add_value(var.enqi());
+            break;
+        case Vartype::Decimal:
+            add_value_raw(var.format(""));
             break;
     }
 }
