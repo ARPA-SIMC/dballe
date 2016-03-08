@@ -381,16 +381,6 @@ struct ShipWMO : public ShipBase
     {
         ShipBase::to_subset(msg, subset);
 
-        // Look for significant levels
-        const msg::Context* c_wind = NULL;
-        for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
-                i != msg.data.end(); ++i)
-        {
-            const msg::Context* c = *i;
-            if (c->find(WR_VAR(0, 11, 1)) || c->find(WR_VAR(0, 11, 2)))
-                c_wind = c;
-        }
-
         // Ship identification, movement, date/time, horizontal and vertical
         // coordinates
         do_D01093();
@@ -439,7 +429,6 @@ void register_ship(TemplateRegistry& r)
     r.register_factory(1, "ship", "Synop ship (autodetect)",
             [](const Exporter::Options& opts, const Messages& msgs) {
                 // Scan msgs and pick the right one
-                bool maybe_wmo = true;
                 bool maybe_plain = true;
                 bool maybe_auto = true;
                 bool maybe_second = true;

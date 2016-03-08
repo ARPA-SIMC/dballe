@@ -278,8 +278,7 @@ std::unique_ptr<db::CursorStationData> DB::query_station_data(const Query& query
     unsigned int modifiers = q.get_modifiers();
     if (modifiers & DBA_DB_MODIFIER_BEST)
     {
-        throw error_unimplemented("best queries of station vars");
-#warning TODO
+        throw error_unimplemented("query=best on station vars not implemented for memdb");
     } else {
         Results<StationValue> res(memdb.stationvalues);
         raw_query_station_data(q, res);

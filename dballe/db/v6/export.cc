@@ -101,7 +101,7 @@ bool DB::export_msgs(const dballe::Query& query, std::function<bool(std::unique_
         unique_ptr<Var> var(newvar(sqlrec.out_varcode, sqlrec.out_value));
 
         /* Load the attributes from the database */
-        at.read(sqlrec.out_id_data, [&](unique_ptr<Var> attr) { var->seta(auto_ptr<Var>(attr.release())); });
+        at.read(sqlrec.out_id_data, [&](unique_ptr<Var> attr) { var->seta(move(attr)); });
 
         /* See if we have the start of a new message */
         if (sqlrec.out_ana_id != last_ana_id

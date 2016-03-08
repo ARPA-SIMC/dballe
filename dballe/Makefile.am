@@ -295,6 +295,7 @@ libdballe_la_SOURCES += \
 	db/odbc/driver.cc
 endif
 
+libdballe_la_CPPFLAGS = $(AM_CPPFLAGS) -Werror
 libdballe_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(common_libs)
 
 # filter.cc and sat.cc are here for now until I manage to turn them into a working system

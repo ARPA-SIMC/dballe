@@ -451,7 +451,7 @@ bool QueryBuilder::add_pa_where(const char* tbl)
             // that can be compiled out
             ;
 #if HAVE_LIBPQ
-        } else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(&conn)) {
+        } else if (dynamic_cast<PostgreSQLConnection*>(&conn)) {
             sql_where.append_listf("%s.ident=$1::text", tbl);
             bind_in_ident = query.ident.get();
             TRACE("found ident: adding AND %s.ident=$1::text.  val is %s\n", tbl, query.ident.get());

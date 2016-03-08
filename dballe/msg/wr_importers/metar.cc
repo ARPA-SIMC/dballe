@@ -46,7 +46,7 @@ protected:
         else if (opts.simplified)
         {
             Var var1(var);
-            var1.seta(auto_ptr<Var>(newvar(WR_VAR(0, 7, 32), height_sensor).release()));
+            var1.seta(newvar(WR_VAR(0, 7, 32), height_sensor));
             msg->set(var1, code, defaultLevel, trange);
         } else
             msg->set(var, code, Level(103, height_sensor * 1000), trange);

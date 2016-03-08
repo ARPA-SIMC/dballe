@@ -76,18 +76,18 @@ struct VarinfoPrinter : public cmdline::Subcommand
         string res;
         if (info->scale > 0)
         {
-            if (info->len > info->scale)
+            if (info->len > (unsigned)info->scale)
                 for (unsigned i = 0; i < info->len - info->scale; ++i)
                     res += '#';
             res += '.';
-            for (unsigned i = 0; i < info->scale; ++i)
+            for (unsigned i = 0; i < (unsigned)info->scale; ++i)
                 res += '#';
         }
         else if (info->scale < 0)
         {
             for (unsigned i = 0; i < info->len; ++i)
                 res += '#';
-            for (unsigned i = 0; i < -info->scale; ++i)
+            for (unsigned i = 0; i < (unsigned)-info->scale; ++i)
                 res += '0';
         }
         return res;

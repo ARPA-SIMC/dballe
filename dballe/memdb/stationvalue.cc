@@ -75,7 +75,7 @@ bool StationValues::remove(const Station& station, Varcode code)
         for (set<size_t>::const_iterator i = res->begin(); i != res->end(); ++i)
         {
             const StationValue* s = (*this)[*i];
-            if (s && !s->var->code() == code)
+            if (s && s->var->code() == code)
             {
                 by_station[&station].erase(*i);
                 value_remove(*i);

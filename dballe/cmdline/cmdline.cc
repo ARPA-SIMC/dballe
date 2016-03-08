@@ -241,8 +241,8 @@ void Command::manpage(FILE* out) const
     char* uself;
     time_t curtime = time(NULL);
     struct tm* loctime = localtime(&curtime);
-    int i, op;
-    
+    int i;
+
     /* Remove libtool cruft from program name if present */
     if (strncmp(self, "lt-", 3) == 0) self += 3;
     uself = strdup(self);

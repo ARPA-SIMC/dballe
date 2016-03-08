@@ -55,7 +55,7 @@ void write_buffer(int fd, void* buf, size_t size)
     ssize_t res = ::write(fd, buf, size);
     if (res == -1)
         throw error_system("cannot write to temporary file");
-    if (res < size)
+    if ((size_t)res < size)
         throw error_consistency("write to temporary file was interrupted");
 }
 

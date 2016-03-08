@@ -433,7 +433,7 @@ void ContextChooser::set_gen_sensor(const Var& var, Varcode code, const Level& d
     else if (simplified)
     {
         Var var1(var);
-        var1.seta(auto_ptr<Var>(newvar(WR_VAR(0, 7, 32), level.height_sensor).release()));
+        var1.seta(newvar(WR_VAR(0, 7, 32), level.height_sensor));
         msg->set(var1, code, defaultLevel, trange);
     } else
         msg->set(var, code, Level(103, level.height_sensor * 1000), trange);

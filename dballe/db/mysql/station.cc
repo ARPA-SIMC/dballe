@@ -25,7 +25,6 @@ MySQLStationBase::~MySQLStationBase()
 bool MySQLStationBase::maybe_get_id(int lat, int lon, const char* ident, int* id)
 {
     Querybuf qb;
-    MySQLStatement* s;
     if (ident)
     {
         string escaped_ident = conn.escape(ident);

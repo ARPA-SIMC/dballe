@@ -134,7 +134,7 @@ size_t Stations::obtain(const dballe::Station& st, bool create)
     // Shortcut by ana_id
     if (st.ana_id != MISSING_INT)
     {
-        if (st.ana_id > values.size() || !values[st.ana_id])
+        if ((unsigned)st.ana_id > values.size() || !values[st.ana_id])
             error_notfound::throwf("ana_id %d is invalid", st.ana_id);
         return st.ana_id;
     }

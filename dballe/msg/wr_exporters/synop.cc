@@ -22,9 +22,6 @@
 #include <wreport/bulletin.h>
 #include "msg/context.h"
 
-#warning TODO: remove when done
-#include <iostream>
-
 using namespace wreport;
 using namespace std;
 
@@ -687,7 +684,7 @@ void register_synop(TemplateRegistry& r)
                 for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
                         i != msg.data.end(); ++i)
                     if ((*i)->level.ltype1 == 100)
-                        if (const Var* v = (*i)->find(WR_VAR(0, 10, 8)))
+                        if ((*i)->find(WR_VAR(0, 10, 8)))
                             return unique_ptr<Template>(new SynopECMWFLandHigh(opts, msgs));
 
                 return unique_ptr<Template>(new SynopECMWFLand(opts, msgs));

@@ -402,13 +402,6 @@ void Msg::csv_header(CSVWriter& out)
 namespace {
 // Convert a string to an integer value, returning MISSING_INT if the string is
 // empty or "-"
-int str_to_int(const char* str)
-{
-    if (str == NULL || str[0] == 0 || strcmp(str, "-") == 0)
-        return MISSING_INT;
-    else
-        return strtol(str, NULL, 10);
-}
 int str_to_int(const std::string& str)
 {
     if (str.empty() || str == "-")
