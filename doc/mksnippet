@@ -439,7 +439,6 @@ class Btable:
 
         self.data = []
         for lineno, line in enumerate(sys.stdin.buffer, 1):
-            print(lineno, len(line))
             self.data.append(tuple(x.decode("utf-8") for x in reader.unpack(line[:158])))
 
     def print_dox(self):
