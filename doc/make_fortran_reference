@@ -9,6 +9,141 @@ import logging
 
 log = logging.getLogger()
 
+class Markdown:
+    """
+    Markdown output writer
+    """
+    def __init__(self, out):
+        self.out = out
+
+    def print(self, *args, **kw):
+        print(*args, file=self.out, **kw)
+
+    def title(self, text, level=1):
+        self.print("{} {}".format("#" * level, text))
+        self.print()
+
+    def anchor(self, key):
+        self.print("<a name='{key}'></a>".format(key=key))
+
+    def link_target(self, key, link):
+        self.print("[{key}]: {link}".format(key=key, link=link))
+
+    def def_list(self, items):
+        for head, root in items:
+            for idx, node in enumerate(root):
+                if idx == 0:
+                    initial_indent = "* {head}: ".format(head=head)
+                else:
+                    initial_indent = "  "
+                    self.print()
+                self.node(node, initial_indent=initial_indent, subsequent_indent="  ")
+        self.print()
+
+    def node(self, node, **wrap_kw):
+        if node.tag == "para":
+            self.node_para(node, **wrap_kw)
+        else:
+            log.warn("Unknown node to print: %s", node.tag)
+
+    def node_para(self, node, **wrap_kw):
+        content = []
+        if node.text:
+            content.append(node.text)
+
+        for el in node:
+            if el.tag == "computeroutput":
+                content.append("`{}`".format(el.text))
+                if el.tail: content.append(el.tail)
+            elif el.tag == "ref":
+                content.append(el.text)
+                if el.tail: content.append(el.tail)
+            elif el.tag == "anchor":
+                if el.tail: content.append(el.tail)
+            elif el.tag == "itemizedlist":
+                # Flush the current content
+                content = "".join(content).strip()
+                if content:
+                    for line in textwrap.wrap(content, break_on_hyphens=False, **wrap_kw):
+                        self.print(line)
+                content = []
+
+                self.print()
+                self.node_list(el, **wrap_kw)
+                self.print()
+
+                if el.tail: content.append(el.tail)
+            elif el.tag == "programlisting":
+                # Flush the current content
+                content = "".join(content).strip()
+                if content:
+                    for line in textwrap.wrap(content, break_on_hyphens=False, **wrap_kw):
+                        self.print(line)
+                content = []
+
+                self.print()
+                self.node_programlisting(el, **wrap_kw)
+                self.print()
+
+                if el.tail: content.append(el.tail)
+            elif el.tag in ("parameterlist", "simplesect"):
+                continue
+            else:
+                log.warn("Invalid tag inside para: %s", el.tag)
+
+        content = "".join(content).strip()
+        if content:
+            for line in textwrap.wrap(content, break_on_hyphens=False, **wrap_kw):
+                self.print(line)
+
+    def node_list(self, node, **wrap_kw):
+        if "initial_indent" in wrap_kw or "subsequent_indent" in wrap_kw:
+            log.warn("Nested lists are not supported")
+            return
+
+        for el in node:
+            if el.tag != "listitem":
+                log.warn("Found unsupported %s inside itemizedlist", el.type)
+                continue
+            for n in el:
+                self.node(n, initial_indent="* ", subsequent_indent="  ")
+
+    def node_programlisting(self, node, **wrap_kw):
+        if "initial_indent" in wrap_kw or "subsequent_indent" in wrap_kw:
+            log.warn("Code insite lists is not supported")
+            return
+
+        def harvest_codeline(node):
+            content = []
+            if node.text:
+                content.append(node.text)
+            for n in node:
+                if n.tag == "sp":
+                    content.append(" ")
+                content.extend(harvest_codeline(n))
+                if n.tail:
+                    content.append(n.tail)
+            return content
+
+        self.print()
+        self.print("```fortran")
+        for node_line in node:
+            if node_line.tag != "codeline":
+                log.warn("Found unsupported %s inside programlisting", node_line.tag)
+                continue
+            content = harvest_codeline(node_line)
+            self.print("".join(content))
+        self.print("```")
+        self.print()
+
+    def para(self, text, **wrap_kw):
+        for line in textwrap.wrap(text, break_on_hyphens=False, **wrap_kw):
+            self.print(line)
+        self.print()
+
+    def raw(self, text):
+        self.print(text)
+
 
 def collect_text(node):
     return "".join(x for x in node.itertext() if x and not x.isspace()).strip()
@@ -23,19 +158,8 @@ class Argument:
     Parameter built from a <parameterlist> element
     """
     def __init__(self, node):
-        self.kind = node.attrib["kind"]
-        self.name = [x.text for x in node.iter("parametername")][0]
-        self.desc = list(collect_desc([x for x in node.iter("parameterdescription")][0]))
-
-    def print_details(self):
-        for idx, para in enumerate(self.desc):
-            if idx == 0:
-                initial_indent = "* `{a.name}`: ".format(a=self)
-            else:
-                initial_indent = "  "
-            lines = textwrap.wrap(para, initial_indent=initial_indent, subsequent_indent="  ", break_on_hyphens=False)
-            for l in lines:
-                print(l)
+        self.name = node.find(".//parametername").text
+        self.desc_node = node.find(".//parameterdescription")
 
 
 class Function:
@@ -54,35 +178,42 @@ class Function:
             else:
                 self.params.append(n.find("declname").text)
 
-        self.desc = [self.summary]
-        ddesc_node = node.find("detaileddescription")
-        self.collect_desc(ddesc_node)
+        self.desc_node = node.find("detaileddescription")
 
         self.args = []
-        for n in node.iter("parameterlist"):
-            self.args.append(Argument(n))
+        for paramlist_node in node.findall(".//parameterlist"):
+            if paramlist_node.attrib["kind"] in ("param", "retval"):
+                for n in paramlist_node.findall("parameteritem"):
+                    self.args.append(Argument(n))
 
-    def collect_desc(self, node):
-        self.desc.extend(collect_desc(node))
+
+        self.retval_desc = node.find(".//simplesect[@kind='return']")
 
     @property
     def arg_string(self):
         return ", ".join(self.params)
 
-    def print_details(self):
-        print()
-        print("<a name='{f.name}'></a>".format(f=self))
-        print("#### {f.name}({f.arg_string})".format(f=self))
-        print()
-        print("Parameters:")
-        print()
-        for a in self.args:
-            a.print_details()
-        print()
-        for d in self.desc:
-            for line in textwrap.wrap(d, break_on_hyphens=False):
-                print(line)
-            print()
+    def print_details(self, md):
+        md.anchor(self.name)
+        md.title("{f.name}({f.arg_string})".format(f=self), level=4)
+
+        if self.args:
+            md.para("Parameters:")
+            dl = []
+            for a in self.args:
+                dl.append(
+                    ("`{a.name}`".format(a=a), a.desc_node)
+                )
+            md.def_list(dl)
+
+        if self.retval_desc:
+            md.para("Return value:")
+            for n in self.retval_desc:
+                md.node(n)
+
+        md.para(self.summary)
+        for node in self.desc_node:
+            md.node(node)
 
 
 class Section:
@@ -95,10 +226,9 @@ class Section:
         else:
             self.summary = None
         log.debug("Found section %s", self.summary)
-        ddesc_node = tree.find("description")
-        self.desc = []
-        if ddesc_node:
-            self.desc.extend(collect_desc(ddesc_node))
+        self.desc_node = tree.find("description")
+        if self.desc_node is None:
+            log.warn("Section \"%s\" has no description", self.summary)
 
         for node in tree.iter("memberdef"):
             if node.attrib["kind"] != "function": continue
@@ -106,21 +236,19 @@ class Section:
             if not f.name.startswith("idba_"): continue
             self.functions.append(f)
 
-    def print_links(self):
+    def print_links(self, md):
         for f in self.functions:
-            print("[{f.name}]: fapi_reference.md#{f.name}".format(f=f))
+            md.link_target(f.name, "fapi_reference.md#{f.name}".format(f=f))
 
-    def print_summary(self):
-        print()
-        print("### {s.summary}".format(s=self))
-        print()
+    def print_summary(self, md):
+        md.title(self.summary, level=3)
 
-        for d in self.desc:
-            for line in textwrap.wrap(d, break_on_hyphens=False):
-                print(line)
-            print()
+        if self.desc_node:
+            for node in self.desc_node:
+                log.debug("%s SUMMARY %s", self.summary, node.tag)
+                md.node(node)
 
-        print("""<table class="table">
+        md.raw("""<table class="table">
 <thead>
 <tr>
     <th>Name</th>
@@ -130,17 +258,17 @@ class Section:
 <tbody>""")
 
         for f in self.functions:
-            print("<tr><td><code><a href='#{f.name}'>{f.name}({f.arg_string})</a></code></td><td>{f.summary}</td></tr>".format(f=f))
+            md.raw("<tr><td><code><a href='#{f.name}'>{f.name}({f.arg_string})</a></code></td><td>{f.summary}</td></tr>".format(f=f))
 
-        print("""</tbody>
-</table>""")
+        md.raw("""</tbody>
+</table>
+""")
 
-    def print_details(self):
-        print()
-        print("### {s.summary}".format(s=self))
+    def print_details(self, md):
+        md.title(self.summary, level=3)
 
         for f in self.functions:
-            f.print_details()
+            f.print_details(md)
 
 
 class API:
@@ -160,28 +288,26 @@ class API:
             if not sec.functions or not sec.summary: continue
             self.sections.append(sec)
 
-    def print_links(self):
+    def print_links(self, md):
         for s in self.sections:
             s.print_links()
 
-    def print_reference(self):
-        print("# Fortran API reference")
-        self.print_summary()
-        self.print_details()
+    def print_reference(self, md):
+        md.title("Fortran API reference", 1)
+        self.print_summary(md)
+        self.print_details(md)
 
-    def print_summary(self):
-        print()
-        print("## Summary of routines")
-
-        for s in self.sections:
-            s.print_summary()
-
-    def print_details(self):
-        print()
-        print("## Reference of routines")
+    def print_summary(self, md):
+        md.title("Summary of routines", 2)
 
         for s in self.sections:
-            s.print_details()
+            s.print_summary(md)
+
+    def print_details(self, md):
+        md.title("Reference of routines", 2)
+
+        for s in self.sections:
+            s.print_details(md)
 
 
 def main():
@@ -202,10 +328,11 @@ def main():
         logging.basicConfig(level=logging.WARN, stream=sys.stderr, format=FORMAT)
 
     api = API(args)
+    md = Markdown(sys.stdout)
     if args.links:
-        api.print_links()
+        api.print_links(md)
     else:
-        api.print_reference()
+        api.print_reference(md)
 
 
 

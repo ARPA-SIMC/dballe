@@ -27,7 +27,6 @@
 
 These routines are used to begin and end working sessions with
 DB-All.e.
-
 <table class="table">
 <thead>
 <tr>
@@ -48,7 +47,6 @@ DB-All.e.
 
 These routines are used to set the input and read the output of action
 routines.
-
 <table class="table">
 <thead>
 <tr>
@@ -78,7 +76,6 @@ routines.
 
 The following routines are shortcuts for common combinations of
 Input/Output routines.
-
 <table class="table">
 <thead>
 <tr>
@@ -163,17 +160,13 @@ Input/Output routines.
 <a name='idba_error_code'></a>
 #### idba_error_code()
 
-Parameters:
-
-
-Return the error code for the last function that was called.
-
-See dba_error_code()
+Return value:
 
 The error code. Please see the documentation of ::dba_err_code for the
 possible values.
+Return the error code for the last function that was called.
 
-
+See dba_error_code()
 <a name='idba_error_message'></a>
 #### idba_error_message(message)
 
@@ -187,10 +180,7 @@ Return the error message for the last function that was called.
 The error message is just a description of the error code. To see more
 details of the specific condition that caused the error, use
 fdba_error_context() and fdba_error_details()
-
 See dba_error_message()
-
-
 <a name='idba_error_context'></a>
 #### idba_error_context(message)
 
@@ -203,10 +193,7 @@ Return a string describing the error context description for the last
 function that was called.
 
 This string describes what the code that failed was trying to do.
-
 See dba_error_context()
-
-
 <a name='idba_error_details'></a>
 #### idba_error_details(message)
 
@@ -221,10 +208,7 @@ function that was called.
 This string contains additional details about the error in case the
 code was able to get extra informations about it, for example by
 querying the error functions of an underlying module.
-
 See dba_error_details()
-
-
 <a name='idba_error_set_callback'></a>
 #### idba_error_set_callback(code, func, data, handle)
 
@@ -233,10 +217,15 @@ Parameters:
 * `code`: The error code (See ::dba_err_code) of the error that
   triggers this callback. If DBA_ERR_NONE is used, then the callback
   is invoked on all errors.
+* `func`: The function to be called.
+* `data`: An arbitrary integer data that is passed verbatim to the
+  callback function when invoked.
 * `handle`: A handle that can be used to remove the callback
 
-Set a callback to be invoked when an error of a specific kind happens.
+Return value:
 
+The error indicator for the function
+Set a callback to be invoked when an error of a specific kind happens.
 
 <a name='idba_error_remove_callback'></a>
 #### idba_error_remove_callback(handle)
@@ -245,33 +234,25 @@ Parameters:
 
 * `handle`: The handle previously returned by idba_error_set_callback
 
-Remove a previously set callback.
+Return value:
 
+The error indicator for the function
+Remove a previously set callback.
 
 <a name='idba_default_error_handler'></a>
 #### idba_default_error_handler(debug)
-
-Parameters:
-
 
 Predefined error callback that prints a message and exits.
 
 The message is printed only if a non-zero value is supplied as user
 data
-
-
 <a name='idba_error_handle_tolerating_overflows'></a>
 #### idba_error_handle_tolerating_overflows(debug)
-
-Parameters:
-
 
 Predefined error callback that prints a message and exists, except in
 case of overflow errors.
 
 In case of overflows it prints a warning and continues execution
-
-
 ### Session routines
 
 <a name='idba_presentati'></a>
@@ -280,15 +261,18 @@ In case of overflows it prints a warning and continues execution
 Parameters:
 
 * `dsn`: The ODBC DSN of the database to use
+* `user`: The username used to connect to the database
+* `password`: The username used to connect to the database
 * `dbahandle`: The database handle that can be passed to
   idba_preparati to work with the database.
 
+Return value:
+
+The error indication for the function.
 Connect to the database.
 
 This function can be called more than once once to connect to
 different databases at the same time.
-
-
 <a name='idba_arrivederci'></a>
 #### idba_arrivederci(dbahandle)
 
@@ -298,34 +282,53 @@ Parameters:
 
 Disconnect from the database.
 
-
 <a name='idba_preparati'></a>
 #### idba_preparati(dbahandle, handle, anaflag, dataflag, attrflag)
 
 Parameters:
 
 * `dbahandle`: The main DB-ALLe connection handle
-* `handle`: The session handle returned by the function
-* `anaflag`: Controls access to pseudoana records and can have these
-  values: "read" pseudoana records cannot be inserted. "write" it is
-  possible to insert and delete pseudoana records.
+* `handle`: The session handle created by the function
+* `anaflag`: station values access level
+* `dataflag`: data values access level
+* `attrflag`: attribute access level
 
+Return value:
+
+The error indication for the function.
 Open a new session.
 
 You can call idba_preparati() many times and get more handles. This
 allows to perform many operations on the database at the same time.
-
 idba_preparati() has three extra parameters that can be used to limit
 write operations on the database, as a limited protection against
-programming errors.
+programming errors:
+`anaflag` controls access to station value records and can have these
+values:
+
+* `"read"` pseudoana records cannot be inserted.
+* `"write"` it is possible to insert and delete pseudoana records.
+
+`dataflag` controls access to observed data and can have these values:
+
+* `"read"` data cannot be modified in any way.
+* `"add"` data can be added to the database, but existing data cannot
+  be modified. Deletions are disabled. This is used to insert new data
+  in the database while preserving the data that was already present
+  in it.
+* `"write"` data can freely be added, overwritten and deleted.
+
+`attrflag` controls access to data attributes and can have these
+values:
+
+* `"read"` attributes cannot be modified in any way.
+* `"write"` attributes can freely be added, overwritten and deleted.
 
 Note that some combinations of parameters are illegal, such as
 anaflag=read and dataflag=add (when adding a new data, it's sometimes
 necessary to insert new pseudoana records), or dataflag=rewrite and
-qcflag=read (when deleting data, their attributes are deleted as
+attrflag=read (when deleting data, their attributes are deleted as
 well).
-
-
 <a name='idba_messaggi'></a>
 #### idba_messaggi(handle, filename, mode, type)
 
@@ -333,9 +336,18 @@ Parameters:
 
 * `handle`: The session handle returned by the function
 * `filename`: Name of the file to open
+* `mode`: File open mode. It can be `"r"` for read, `"w"` for write
+  (the old file is deleted), `"a"` for append
+* `type`: Format of the data in the file. It can be: `"BUFR"`,
+  `"CREX"`, `"AOF"` (read only), `"AUTO"` (autodetect, read only)
+* `force_report`: if 0, nothing happens; otherwise, choose the output
+  message template using this report type instead of the one in the
+  message
 
+Return value:
+
+The error indication for the function.
 Start working with a message file.
-
 
 <a name='idba_fatto'></a>
 #### idba_fatto(handle)
@@ -346,7 +358,6 @@ Parameters:
 
 Close a session.
 
-
 ### Input/output routines
 
 <a name='idba_seti'></a>
@@ -355,9 +366,16 @@ Close a session.
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `parameter`: Parameter to set. It can be the code of a WMO variable
+  prefixed by `"B"` (such as `"B01023"`); the code of a QC value
+  prefixed by `"*B"` (such as `"*B01023"`) or a keyword among the ones
+  defined in dba_record_keywords
+* `value`: The value to assign to the parameter
 
+Return value:
+
+The error indicator for the function
 Set an integer value in input.
-
 
 <a name='idba_setb'></a>
 #### idba_setb(handle, parameter)
@@ -365,9 +383,16 @@ Set an integer value in input.
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `parameter`: Parameter to set. It can be the code of a WMO variable
+  prefixed by `"B"` (such as `"B01023"`); the code of a QC value
+  prefixed by `"*B"` (such as `"*B01023"`) or a keyword among the ones
+  defined in dba_record_keywords
+* `value`: The value to assign to the parameter
 
+Return value:
+
+The error indicator for the function
 Set a byte value in input.
-
 
 <a name='idba_setr'></a>
 #### idba_setr(handle, parameter, value)
@@ -375,9 +400,16 @@ Set a byte value in input.
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `parameter`: Parameter to set. It can be the code of a WMO variable
+  prefixed by `"B"` (such as `"B01023"`); the code of a QC value
+  prefixed by `"*B"` (such as `"*B01023"`) or a keyword among the ones
+  defined in (fapi_parms.md)[fapi_parms.md]
+* `value`: The value to assign to the parameter
 
+Return value:
+
+The error indicator for the function
 Set a real value in input.
-
 
 <a name='idba_setd'></a>
 #### idba_setd(handle, parameter, value)
@@ -385,9 +417,16 @@ Set a real value in input.
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `parameter`: Parameter to set. It can be the code of a WMO variable
+  prefixed by `"B"` (such as `"B01023"`); the code of a QC value
+  prefixed by `"*B"` (such as `"*B01023"`) or a keyword among the ones
+  defined in dba_record_keywords
+* `value`: The value to assign to the parameter
 
+Return value:
+
+The error indicator for the function
 Set a real*8 value in input.
-
 
 <a name='idba_setc'></a>
 #### idba_setc(handle, parameter, value)
@@ -395,9 +434,16 @@ Set a real*8 value in input.
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `parameter`: Parameter to set. It can be the code of a WMO variable
+  prefixed by `"B"` (such as `"B01023"`); the code of a QC value
+  prefixed by `"*B"` (such as `"*B01023"`) or a keyword among the ones
+  defined in dba_record_keywords
+* `value`: The value to assign to the parameter
 
+Return value:
+
+The error indicator for the function
 Set a character value in input.
-
 
 <a name='idba_enqi'></a>
 #### idba_enqi(handle, parameter, value)
@@ -405,9 +451,16 @@ Set a character value in input.
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `parameter`: Parameter to query. It can be the code of a WMO
+  variable prefixed by `"B"` (such as `"B01023"`); the code of a QC
+  value prefixed by `"*B"` (such as `"*B01023"`) or a keyword among
+  the ones defined in dba_record_keywords
+* `value`: Where the value will be returned
 
+Return value:
+
+The error indicator for the function
 Read an integer value from the output.
-
 
 <a name='idba_enqb'></a>
 #### idba_enqb(handle, parameter)
@@ -415,9 +468,16 @@ Read an integer value from the output.
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `parameter`: Parameter to query. It can be the code of a WMO
+  variable prefixed by `"B"` (such as `"B01023"`); the code of a QC
+  value prefixed by `"*B"` (such as `"*B01023"`) or a keyword among
+  the ones defined in dba_record_keywords
+* `value`: Where the value will be returned
 
+Return value:
+
+The error indicator for the function
 Read a byte value from the output.
-
 
 <a name='idba_enqr'></a>
 #### idba_enqr(handle, parameter, value)
@@ -425,9 +485,16 @@ Read a byte value from the output.
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `parameter`: Parameter to query. It can be the code of a WMO
+  variable prefixed by `"B"` (such as `"B01023"`); the code of a QC
+  value prefixed by `"*B"` (such as `"*B01023"`) or a keyword among
+  the ones defined in dba_record_keywords
+* `value`: Where the value will be returned
 
+Return value:
+
+The error indicator for the function
 Read a real value from the output.
-
 
 <a name='idba_enqd'></a>
 #### idba_enqd(handle, parameter, value)
@@ -435,9 +502,16 @@ Read a real value from the output.
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `parameter`: Parameter to query. It can be the code of a WMO
+  variable prefixed by `"B"` (such as `"B01023"`); the code of a QC
+  value prefixed by `"*B"` (such as `"*B01023"`) or a keyword among
+  the ones defined in dba_record_keywords
+* `value`: Where the value will be returned
 
+Return value:
+
+The error indicator for the function
 Read a real*8 value from the output.
-
 
 <a name='idba_enqc'></a>
 #### idba_enqc(handle, parameter, value)
@@ -445,9 +519,16 @@ Read a real*8 value from the output.
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `parameter`: Parameter to query. It can be the code of a WMO
+  variable prefixed by `"B"` (such as `"B01023"`); the code of a QC
+  value prefixed by `"*B"` (such as `"*B01023"`) or a keyword among
+  the ones defined in dba_record_keywords
+* `value`: Where the value will be returned
 
+Return value:
+
+The error indicator for the function
 Read a character value from the output.
-
 
 <a name='idba_unset'></a>
 #### idba_unset(handle, parameter)
@@ -455,9 +536,15 @@ Read a character value from the output.
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `parameter`: Parameter to remove. It can be the code of a WMO
+  variable prefixed by `"B"` (such as `"B01023"`); the code of a QC
+  value prefixed by `"*B"` (such as `"*B01023"`) or a keyword among
+  the ones defined in dba_record_keywords
 
+Return value:
+
+The error indicator for the function
 Remove one value from the input.
-
 
 <a name='idba_unsetb'></a>
 #### idba_unsetb(handle)
@@ -468,7 +555,6 @@ Parameters:
 
 Remove all Bxxyyy values from the input.
 
-
 <a name='idba_unsetall'></a>
 #### idba_unsetall(handle)
 
@@ -478,7 +564,6 @@ Parameters:
 
 Completely clear the input, removing all values.
 
-
 <a name='idba_setcontextana'></a>
 #### idba_setcontextana(handle)
 
@@ -486,9 +571,11 @@ Parameters:
 
 * `handle`: Handle to a DB-All.e session
 
+Return value:
+
+The error indicator for the function
 Signal that the input values that are set are related to station
 values instead of normal variables.
-
 
 ### Input/output shortcuts
 
@@ -498,9 +585,15 @@ values instead of normal variables.
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `ltype1`: Level type to set in the input record
+* `l1`: L1 to set in the input record
+* `ltype2`: Level type to set in the input record
+* `l2`: L2 to set in the input record
 
+Return value:
+
+The error indicator for the function
 Set all level information.
-
 
 <a name='idba_settimerange'></a>
 #### idba_settimerange(handle, ptype, p1, p2)
@@ -508,9 +601,14 @@ Set all level information.
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `ptype`: P indicator to set in the input record
+* `p1`: P1 to set in the input record
+* `p2`: P2 to set in the input record
 
+Return value:
+
+The error indicator for the function
 Set all time range information.
-
 
 <a name='idba_setdate'></a>
 #### idba_setdate(handle, year, month, day, hour, min, sec)
@@ -518,9 +616,17 @@ Set all time range information.
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `year`: Year to set in the input record
+* `month`: Month to set in the input
+* `day`: Day to set in the input
+* `hour`: Hour to set in the input
+* `min`: Minute to set in the input
+* `sec`: Second to set in the input
 
+Return value:
+
+The error indicator for the function
 Set all date information.
-
 
 <a name='idba_setdatemin'></a>
 #### idba_setdatemin(handle, year, month, day, hour, min, sec)
@@ -528,9 +634,17 @@ Set all date information.
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `year`: Minimum year to set in the query
+* `month`: Minimum month to set in the query
+* `day`: Minimum day to set in the query
+* `hour`: Minimum hour to set in the query
+* `min`: Minimum minute to set in the query
+* `sec`: Minimum second to set in the query
 
+Return value:
+
+The error indicator for the function
 Set the minimum date for a query.
-
 
 <a name='idba_setdatemax'></a>
 #### idba_setdatemax(handle, year, month, day, hour, min, sec)
@@ -538,10 +652,18 @@ Set the minimum date for a query.
 Parameters:
 
 * `year`: Maximum year to set in the query
+* `month`: Maximum month to set in the query
+* `day`: Maximum day to set in the query
+* `hour`: Maximum hour to set in the query
+* `min`: Maximum minute to set in the query
+* `sec`: Maximum second to set in the query
 
+Return value:
+
+The error indicator for the function
 Set the maximum date for a query.
 
-
+Handle to a DB-All.e session
 <a name='idba_enqlevel'></a>
 #### idba_enqlevel(handle, ltype1, l1, ltype2, l2)
 
@@ -549,9 +671,13 @@ Parameters:
 
 * `handle`: Handle to a DB-All.e session
 * `ltype`: Level type from the output record
+* `l1`: L1 from the output record
+* `l2`: L2 from the output record
 
+Return value:
+
+The error indicator for the function
 Read all level information.
-
 
 <a name='idba_enqtimerange'></a>
 #### idba_enqtimerange(handle, ptype, p1, p2)
@@ -560,9 +686,13 @@ Parameters:
 
 * `handle`: Handle to a DB-All.e session
 * `ptype`: P indicator from the output record
+* `p1`: P1 from the output record
+* `p2`: P2 from the output record
 
+Return value:
+
+The error indicator for the function
 Read all time range information.
-
 
 <a name='idba_enqdate'></a>
 #### idba_enqdate(handle, year, month, day, hour, min, sec)
@@ -571,9 +701,16 @@ Parameters:
 
 * `handle`: Handle to a DB-All.e session
 * `year`: Year from the output record
+* `month`: Month the output record
+* `day`: Day the output record
+* `hour`: Hour the output record
+* `min`: Minute the output record
+* `sec`: Second the output record
 
+Return value:
+
+The error indicator for the function
 Read all date information.
-
 
 ### Action routines
 
@@ -583,25 +720,30 @@ Read all date information.
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `repinfofile`: CSV file with the default report informations. See
+  dba_reset() documentation for the format of the file.
 
+Return value:
+
+The error indicator for the function
 Reinitialize the database, removing all data and loading report
 information.
 
 It requires the database to be opened in rewrite mode.
-
-
 <a name='idba_quantesono'></a>
 #### idba_quantesono(handle, count)
 
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `count`: The count of elements
 
+Return value:
+
+The error indicator for the function
 Query the stations in the database.
 
 Results are retrieved using idba_elencamele().
-
-
 <a name='idba_elencamele'></a>
 #### idba_elencamele(handle)
 
@@ -609,15 +751,15 @@ Parameters:
 
 * `handle`: Handle to a DB-All.e session
 
+Return value:
+
+The error indicator for the function
 Retrieve the data about one station.
 
 After invocation, the output record is filled with information about
 the station and its station values.
-
 If there are no more stations to read, the function will fail with
 DBA_ERR_NOTFOUND.
-
-
 <a name='idba_voglioquesto'></a>
 #### idba_voglioquesto(handle, count)
 
@@ -626,11 +768,12 @@ Parameters:
 * `handle`: Handle to a DB-All.e session
 * `count`: Number of values returned by the function
 
+Return value:
+
+The error indicator for the function
 Query the data in the database.
 
 Results are retrieved using idba_dammelo().
-
-
 <a name='idba_dammelo'></a>
 #### idba_dammelo(handle, parameter)
 
@@ -640,15 +783,15 @@ Parameters:
 * `parameter`: Contains the ID of the parameter retrieved by this
   fetch
 
+Return value:
+
+The error indicator for the function
 Retrieve the data about one value.
 
 After invocation, the output record is filled with information about
 the value.
-
 If there are no more values to read, the function will fail with
 DBA_ERR_NOTFOUND.
-
-
 <a name='idba_prendilo'></a>
 #### idba_prendilo(handle)
 
@@ -656,19 +799,19 @@ Parameters:
 
 * `handle`: Handle to a DB-All.e session
 
+Return value:
+
+The error indicator for the function
 Insert a new value in the database.
 
 This function will fail if the database is open in data readonly mode,
 and it will refuse to overwrite existing values if the database is
 open in data add mode.
-
 If the database is open in station reuse mode, the station values
 provided on input will be used to create a station record if it is
 missing, but will be ignored if it is already present. If it is open
 in station rewrite mode instead, the station values on input will be
 used to replace all the existing station values.
-
-
 <a name='idba_dimenticami'></a>
 #### idba_dimenticami(handle)
 
@@ -676,12 +819,13 @@ Parameters:
 
 * `handle`: Handle to a DB-All.e session
 
+Return value:
+
+The error indicator for the function
 Remove from the database all values that match the query.
 
 This function will fail unless the database is open in data rewrite
 mode.
-
-
 <a name='idba_remove_all'></a>
 #### idba_remove_all(handle)
 
@@ -689,12 +833,13 @@ Parameters:
 
 * `handle`: Handle to a DB-All.e session
 
+Return value:
+
+The error indicator for the function
 Remove all values from the database.
 
 The difference with idba_scopa() is that it preserves the existing
 report information.
-
-
 <a name='idba_voglioancora'></a>
 #### idba_voglioancora(handle, count)
 
@@ -703,15 +848,18 @@ Parameters:
 * `handle`: Handle to a DB-All.e session
 * `count`: Number of values returned by the function
 
+Return value:
+
+The error indicator for the function
 Query attributes about a variable.
 
 The variable queried is either:
 
-the last variable returned by idba_dammelo()the last variable inserted
-by idba_prendilo()the variable selected by settings *context_id and
-*var_related. Results are retrieved using idba_ancora().
+* the last variable returned by `None`
+* the last variable inserted by `None`
+* the variable selected by settings `*context_id` and `*var_related`.
 
-
+Results are retrieved using idba_ancora().
 <a name='idba_ancora'></a>
 #### idba_ancora(handle, parameter)
 
@@ -721,8 +869,10 @@ Parameters:
 * `parameter`: Contains the ID of the parameter retrieved by this
   fetch
 
-Retrieve one attribute from the result of idba_voglioancora().
+Return value:
 
+The error indicator for the function
+Retrieve one attribute from the result of idba_voglioancora().
 
 <a name='idba_critica'></a>
 #### idba_critica(handle)
@@ -731,25 +881,26 @@ Parameters:
 
 * `handle`: Handle to a DB-All.e session
 
+Return value:
+
+The error indicator for the function
 Insert new attributes for a variable.
 
 The variable is either:
 
-the last variable returned by idba_dammelo()the last variable inserted
-by idba_prendilo()the variable selected by settings *context_id and
-*var_related. The attributes that will be inserted are all those set
-by the functions idba_seti(), idba_setc(), idba_setr(), idba_setd(),
-using an asterisk in front of the variable name.
+* the last variable returned by `None`
+* the last variable inserted by `None`
+* the variable selected by settings `*context_id` and `*var_related`.
 
+The attributes that will be inserted are all those set by the
+functions idba_seti(), idba_setc(), idba_setr(), idba_setd(), using an
+asterisk in front of the variable name.
 Contrarily to idba_prendilo(), this function resets all the attribute
 information (and only attribute information) previously set in input,
 so the values to be inserted need to be explicitly set every time.
-
 This function will fail if the database is open in attribute readonly
 mode, and it will refuse to overwrite existing values if the database
 is open in attribute add mode.
-
-
 <a name='idba_scusa'></a>
 #### idba_scusa(handle)
 
@@ -757,14 +908,23 @@ Parameters:
 
 * `handle`: Handle to a DB-All.e session
 
+Return value:
+
+The error indicator for the function
 Remove attribute information for a variable.
 
 The variable is either:
 
-the last variable returned by idba_dammelo()the last variable inserted
-by idba_prendilo()the variable selected by settings *context_id and
-*var_related. The attribute informations to be removed are selected
-with: idba_setc(handle,"*varlist","*B33021,*B33003");
+* the last variable returned by `None`
+* the last variable inserted by `None`
+* the variable selected by settings `*context_id` and `*var_related`.
+
+The attribute informations to be removed are selected with:
+
+
+```fortran
+idba_setc(handle, "*varlist", "*B33021,*B33003");
+```
 
 
 ### Message routines
@@ -775,26 +935,39 @@ with: idba_setc(handle,"*varlist","*B33021,*B33003");
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `filename`: The file name
+* `mode`: The opening mode. See the mode parameter of libc's fopen()
+  call for details.
+* `format`: The file format ("BUFR", "CREX", or "AOF")
+* `simplified`: true if the file is imported in simplified mode, false
+  if it is imported in precise mode. This controls approximating
+  levels and time ranges to standard values.
 
+Return value:
+
+The error indication for the function.
 Open a BUFR, CREX, or AOF file for reading.
 
 Each session can only have one open input file: if one was previously
 open, it is closed before opening the new one.
-
-
 <a name='idba_messages_open_output'></a>
 #### idba_messages_open_output(handle, filename, mode, format)
 
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `filename`: The file name
+* `mode`: The opening mode. See the mode parameter of libc's fopen()
+  call for details.
+* `format`: The file format ("BUFR", "CREX", or "AOF")
 
+Return value:
+
+The error indication for the function.
 Open a BUFR, CREX, or AOF file for writing.
 
 Each session can only have one open input file: if one was previously
 open, it is closed before opening the new one.
-
-
 <a name='idba_messages_read_next'></a>
 #### idba_messages_read_next(handle, found)
 
@@ -804,10 +977,16 @@ Parameters:
 * `found`: True if a message has been imported, false if we are at the
   end of the input file.
 
+Return value:
+
+The error indication for the function.
 Read the next message and import it in the database.
 
 The access mode of the session controls how data is imported:
 
+* station and data mode cannot be "read".
+* if data mode is "add", existing data will not be overwritten.
+* if attribute mode is "read", attributes will not be imported.
 
 <a name='idba_messages_write_next'></a>
 #### idba_messages_write_next(handle, template_name)
@@ -815,10 +994,14 @@ The access mode of the session controls how data is imported:
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `template_name`: The template name used to decide the layout of
+  variables in the messages that are exported.
 
+Return value:
+
+The error indication for the function.
 Export the data from the database that match the current query and add
 them to the current message.
-
 
 ### Pretty-printing routines
 
@@ -828,10 +1011,16 @@ them to the current message.
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `ltype1`: Level type to set in the input record
+* `l1`: L1 to set in the input record
+* `ltype2`: Level type to set in the input record
+* `l2`: L2 to set in the input record
 * `result`: The string with the description of the level.
 
-Format the description of a level given its value.
+Return value:
 
+The error indication for the function.
+Format the description of a level given its value.
 
 <a name='idba_spiegat'></a>
 #### idba_spiegat(handle, ptype, p1, p2, result)
@@ -839,10 +1028,15 @@ Format the description of a level given its value.
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `ptype`: P indicator to set in the input record
+* `p1`: P1 to set in the input record
+* `p2`: P2 to set in the input record
 * `result`: The string with the description of the time range.
 
-Format the description of a time range given its value.
+Return value:
 
+The error indication for the function.
+Format the description of a time range given its value.
 
 <a name='idba_spiegab'></a>
 #### idba_spiegab(handle, varcode, value, result)
@@ -850,7 +1044,12 @@ Format the description of a time range given its value.
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
+* `varcode`: B table code of the variable (`"Bxxyyy"`)
+* `value`: Value of the variable, as read with idba_enqc()
 * `result`: The string with the description of the time range.
 
+Return value:
+
+The error indication for the function.
 Format the description of a variable given its varcode and its value.
 

@@ -251,32 +251,38 @@ F77_SUBROUTINE(idba_arrivederci)(INTEGER(dbahandle))
  *
  * idba_preparati() has three extra parameters that can be used to limit
  * write operations on the database, as a limited protection against
- * programming errors.
+ * programming errors:
+ *
+ * `anaflag` controls access to station value records and can have these values:
+ *
+ * \li \c "read" pseudoana records cannot be inserted.
+ * \li \c "write" it is possible to insert and delete pseudoana records.
+ *
+ * `dataflag` controls access to observed data and can have these values:
+ *
+ * \li \c "read" data cannot be modified in any way.
+ * \li \c "add" data can be added to the database, but existing data cannot be
+ * modified.  Deletions are disabled.  This is used to insert new data in the
+ * database while preserving the data that was already present in it.
+ * \li \c "write" data can freely be added, overwritten and deleted.
+ *
+ * `attrflag` controls access to data attributes and can have these values:
+ *
+ * \li \c "read" attributes cannot be modified in any way.
+ * \li \c "write" attributes can freely be added, overwritten and deleted.
  *
  * Note that some combinations of parameters are illegal, such as anaflag=read
  * and dataflag=add (when adding a new data, it's sometimes necessary to insert
- * new pseudoana records), or dataflag=rewrite and qcflag=read (when deleting
+ * new pseudoana records), or dataflag=rewrite and attrflag=read (when deleting
  * data, their attributes are deleted as well).
  *
  * @param dbahandle
  *   The main DB-ALLe connection handle
  * @retval handle
- *   The session handle returned by the function
- * @param anaflag
- *   Controls access to station value records and can have these values:
- *   \li \c "read" pseudoana records cannot be inserted.
- *   \li \c "write" it is possible to insert and delete pseudoana records.
- * @param dataflag
- *   Controls access to observed data and can have these values:
- *    \li \c "read" data cannot be modified in any way.
- *    \li \c "add" data can be added to the database, but existing data cannot be
- *    modified.  Deletions are disabled.  This is used to insert new data in the
- *    database while preserving the data that was already present in it.
- *    \li \c "write" data can freely be added, overwritten and deleted.
- * @param qcflag
- *    Controls access to data attributes and can have these values:
- *    \li \c "read" attributes cannot be modified in any way.
- *    \li \c "write" attributes can freely be added, overwritten and deleted.
+ *   The session handle created by the function
+ * @param anaflag station values access level
+ * @param dataflag data values access level
+ * @param attrflag attribute access level
  * @return
  *   The error indication for the function.
  */
@@ -331,16 +337,11 @@ F77_INTEGER_FUNCTION(idba_preparati)(
  * @param filename
  *   Name of the file to open
  * @param mode
- *   File open mode.  It can be:
- *   \li \c r for read
- *   \li \c w for write (the old file is deleted)
- *   \li \c a for append
+ *   File open mode.  It can be `"r"` for read, `"w"` for write (the old file
+ *   is deleted), `"a"` for append
  * @param type
- *   Format of the data in the file.  It can be:
- *   \li \c "BUFR"
- *   \li \c "CREX"
- *   \li \c "AOF" (read only)
- *   \li \c "AUTO" (autodetect, read only)
+ *   Format of the data in the file.  It can be: `"BUFR"`, `"CREX"`, `"AOF"`
+ *   (read only), `"AUTO"` (autodetect, read only)
  * @param force_report
  *   if 0, nothing happens; otherwise, choose the output message template
  *   using this report type instead of the one in the message
