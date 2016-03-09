@@ -54,6 +54,30 @@ void Importer::import(const wreport::Subset& subset, Msg& msg)
     this->msg = &msg;
     init();
     run();
+
+    // Postprocess extracting rep_memo information
+    const Var* rep_memo = msg.get_rep_memo_var();
+    if (rep_memo)
+        msg.set_rep_memo(rep_memo->enqc());
+    else
+        msg.set_rep_memo(std::string());
+
+    // Postprocess extracting coordinate information
+    const Var* lat = msg.get_latitude_var();
+    const Var* lon = msg.get_longitude_var();
+    if (lat && lon)
+        msg.set_coords(Coords(lat->enqd(), lon->enqd()));
+    else
+        msg.set_coords(Coords());
+
+    // Postprocess extracting ident information
+    const Var* ident = msg.get_ident_var();
+    if (ident)
+        msg.set_ident(Ident(ident->enqc()));
+    else
+        msg.set_ident(Ident());
+
+    // Postprocess extracting datetime information
     if (ye == MISSING_INT)
         msg.set_datetime(Datetime());
     else

@@ -501,14 +501,17 @@ bool Msg::from_csv(CSVReader& in)
 
 void Msg::print(FILE* out) const
 {
-    fprintf(out, "%s message ", msg_type_name(type));
+    fprintf(out, "%s message, rep_memo: %s, ", msg_type_name(type), m_rep_memo.c_str());
+    m_coords.print(out, ", ");
+    fprintf(out, "ident: %s, dt: ", m_ident.is_missing() ? "" : (const char*)m_ident);
+    m_datetime.print_iso8601(out, 'T', ", ");
 
     if (data.empty())
     {
         fprintf(stderr, "(empty)\n");
         return;
     }
-    fprintf(out, "with %zd contexts:\n", data.size());
+    fprintf(out, "%zd contexts:\n", data.size());
 
     switch (type)
     {
@@ -543,12 +546,20 @@ void Msg::print(FILE* out) const
                     if (vs & BUFR08042::SURFACE) fprintf(out, " surface");
                     fprintf(out, ") ");
                 }
-                (*i)->print(out);
+                if ((*i)->is_station())
+                    (*i)->print(out);
+                else
+                    (*i)->print(out);
             }
             break;
         default:
-            for (vector<msg::Context*>::const_iterator i = data.begin(); i != data.end(); ++i)
-                (*i)->print(out);
+            for (const auto& i: data)
+            {
+                if (i->is_station())
+                    i->print(out);
+                else
+                    i->print(out);
+            }
             break;
     }
 }

@@ -76,7 +76,7 @@ protected:
     int find_index(const Level& lev, const Trange& tr) const;
 
     /// Sensor network of origin of the Msg contents
-    std::string m_network;
+    std::string m_rep_memo;
     /// Reference coordinates for the Msg contents
     Coords m_coords;
     /// Identifier of the contents originator
@@ -125,6 +125,9 @@ public:
     void print(FILE* out) const override;
     unsigned diff(const Message& msg) const override;
 
+    void set_rep_memo(const std::string& r) { m_rep_memo = r; }
+    void set_coords(const Coords& c) { m_coords = c; }
+    void set_ident(const Ident& i) { m_ident = i; }
     void set_datetime(const Datetime& dt) { m_datetime = dt; }
 
     /// Remove all information from Msg

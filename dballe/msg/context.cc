@@ -175,13 +175,13 @@ const Var* Context::find_by_id(int id) const
 
 void Context::print(FILE* out) const
 {
-    stringstream header;
-    header << "Level " << level << "  tr " << trange;
-    fprintf(out, "%s ", header.str().c_str());
+    fprintf(out, "Level ");
+    level.print(out, "-", " tr ");
+    trange.print(out, "-", " ");
 
     if (data.size() > 0)
     {
-        fprintf(out, " %zd vars:\n", data.size());
+        fprintf(out, "%zd vars:\n", data.size());
         for (vector<Var*>::const_iterator i = data.begin(); i != data.end(); ++i)
             (*i)->print(out);
     } else
