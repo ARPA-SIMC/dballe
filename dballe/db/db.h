@@ -212,10 +212,10 @@ public:
 
     /**
      * Create from an url-like specification, that can be:
-     * 
-     * @l sqlite:[//]foo.sqlite
-     * @l odbc://[user[:pass]@]dsn
-     * @l test:[//]
+     *
+     * @li sqlite:[//]foo.sqlite
+     * @li odbc://[user[:pass]@]dsn
+     * @li test:[//]
      *
      * @param url
      *   The url-like connection descriptor
@@ -338,7 +338,7 @@ public:
     /**
      * Remove data from the database
      *
-     * @param rec
+     * @param query
      *   The record with the query data (see technical specifications, par. 1.6.4
      *   "parameter output/input") to select the items to be deleted
      */
@@ -508,8 +508,6 @@ public:
     /**
      * Import a Message into the DB-All.e database
      *
-     * @param db
-     *   The DB-All.e database to write the data into
      * @param msg
      *   The Message containing the data to import
      * @param repmemo
@@ -524,8 +522,6 @@ public:
     /**
      * Import Messages into the DB-All.e database
      *
-     * @param db
-     *   The DB-All.e database to write the data into
      * @param msgs
      *   The Messages containing the data to import
      * @param repmemo

@@ -41,6 +41,8 @@ protected:
      *
      * @param orig
      *   Original BinaryMessage used for its source information, to report errors
+     * @param msg
+     *   Decoded wreport::Bulletin to to convert
      */
     void process_bufrex_msg(const BinaryMessage& orig, const wreport::Bulletin& msg);
 

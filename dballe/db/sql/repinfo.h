@@ -102,8 +102,6 @@ struct Repinfo
      * Update the report type information in the database using the data from the
      * given file.
      *
-     * @param ri
-     *   dba_db_repinfo used to update the database
      * @param deffile
      *   Pathname of the file to use for the update.  The NULL value is accepted
      *   and means to use the default configure repinfo.csv file.

@@ -58,42 +58,8 @@ static inline int fromfortran(int val)
  * Every function returns an error indicator, which is 0 if no error happened,
  * or 1 if there has been an error.
  *
- * When an error happens, the functions in fdba_error.c can be used
+ * When an error happens, the functions in error.c can be used
  * to get detailed informations about it.
- *
- * \par Internals of the simplified interface
- *
- * Behind the handle returned by idba_preparati() there are a set of variables
- * that are used as implicit parameters:
- *
- * \li \c query ::dba_record, used to set the parameters of the query made by idba_voglioquesto()
- * \li \c work ::dba_record, used by idba_dammelo() to return the parameters 
- * \li \c qc ::dba_record, used to manipulate qc data.  Every time the \ref idba_enq or \ref idba_set functions are used with a variable name starting with an asterisk, they will manipulate the \c qc record instead of the others.
- * \li \c ana ::dba_cursor, used to iterate on the results of idba_quantesono()
- * \li \c query ::dba_cursor, used to iterate on the results of idba_voglioquesto()
- *
- * The simplified interface has two possible states: \c QUERY and \c RESULT.
- * Then the interface is in the \c QUERY state, the \ref idba_enq and \ref
- * idba_set functions operate in the \c query ::dba_record, to set and check the
- * parameters of a query.  idba_voglioquesto() reads the parameters from the \c
- * query ::dba_record and switches the state to \c RESULT, and further calls to
- * idba_dammelo() will put the query results in the \c work ::dba_record, to be read by
- * the \ref idba_enq functions.
- *
- * In the \c RESULT state, the \ref idba_enq and \ref idba_set functions
- * operate on the \c work ::dba_record, to inspect the results of the queries.  A
- * call to idba_ricominciamo() terminates the current query and goes back to
- * the \c QUERY state, resetting the contents of all the ::dba_record of the interface.
- *
- * idba_prendilo() inserts in the database the data coming from the \c
- * QUERY ::dba_record if invoked in the \c query state, or the data coming from the
- * \c RESULT ::dba_record if invoked in the \c result state.  This is done
- * because inserting new values in the database should be independent from the
- * state.
- *
- * \ref qc functions instead always operate on the \c qc ::dba_record, which is
- * accessed with the \ref idba_enq and \ref idba_set functions by prefixing the
- * parameter name with an asterisk.
  */
 
 /* Handles to give to Fortran */
@@ -297,7 +263,7 @@ F77_SUBROUTINE(idba_arrivederci)(INTEGER(dbahandle))
  * @retval handle
  *   The session handle returned by the function
  * @param anaflag
- *   Controls access to pseudoana records and can have these values:
+ *   Controls access to station value records and can have these values:
  *   \li \c "read" pseudoana records cannot be inserted.
  *   \li \c "write" it is possible to insert and delete pseudoana records.
  * @param dataflag
@@ -550,8 +516,8 @@ F77_INTEGER_FUNCTION(idba_setb)(
  * @param parameter
  *   Parameter to set.  It can be the code of a WMO variable prefixed by \c
  *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
- *   (such as \c "*B01023") or a keyword among the ones defined in \ref
- *   dba_record_keywords
+ *   (such as \c "*B01023") or a keyword among the ones defined in
+ *   (fapi_parms.md)[fapi_parms.md]
  * @param value
  *   The value to assign to the parameter
  * @return
@@ -2023,7 +1989,7 @@ F77_INTEGER_FUNCTION(idba_spiegat)(
  * @param handle
  *   Handle to a DB-All.e session
  * @param varcode
- *   B table code of the variable ("Bxxyyy")
+ *   B table code of the variable (`"Bxxyyy"`)
  * @param value
  *   Value of the variable, as read with idba_enqc()
  * @retval result

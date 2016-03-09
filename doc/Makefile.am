@@ -20,11 +20,6 @@ cppdeps = libdballe.dox \
 	  tranges.dox \
 	  libwreport.doxytags
 
-cppdeps += ../dballe/main-core.dox
-#mainpages += ../dballe/main-bufrex.dox
-cppdeps += ../dballe/main-msg.dox
-cppdeps += ../dballe/main-db.dox
-
 record_keyword.dox: $(top_builddir)/dballe/dump-core-info mksnippet
 	$(top_builddir)/dballe/dump-core-info keywords | $(top_srcdir)/doc/mksnippet key dox > $@ || rm $@
 

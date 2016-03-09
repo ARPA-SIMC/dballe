@@ -1,24 +1,3 @@
-/*
- * db/station - station table management
- *
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #ifndef DBALLE_DB_ODBC_STATION_H
 #define DBALLE_DB_ODBC_STATION_H
 
@@ -77,32 +56,10 @@ protected:
     /** Mobile station identifier indicator */
     SQLLEN ident_ind;
 
-    /**
-     * Set the mobile station identifier input value for this ::dba_db_station
-     *
-     * @param ident
-     *   Value to use for ident.  NULL can be used to unset ident.
-     */
     void set_ident(const char* ident);
-
-    /**
-     * Get station information given a station ID
-     *
-     * @param id
-     *   ID of the station to query
-     */
     void get_data(int id);
-
-    /**
-     * Update the information about a station entry
-     */
     void update();
-
-    /**
-     * Remove a station record
-     */
     void remove();
-
     void impl_add_station_vars(const char* query, int id_station, Record& rec);
 
 public:
@@ -112,32 +69,10 @@ public:
     ODBCStationBase(const ODBCStationBase&&) = delete;
     ODBCStationBase& operator=(const ODBCStationBase&) = delete;
 
-    /**
-     * Get the station ID given latitude, longitude and mobile identifier.
-     *
-     * It throws an exception if it does not exist.
-     *
-     * @return
-     *   Resulting ID of the station
-     */
     int get_id(int lat, int lon, const char* ident=NULL) override;
-
-    /**
-     * Get the station ID given latitude, longitude and mobile identifier.
-     *
-     * It creates the station record if it does not exist.
-     *
-     * @return
-     *   Resulting ID of the station
-     */
     int obtain_id(int lat, int lon, const char* ident=NULL, bool* inserted=NULL) override;
-
     void get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
     void add_station_vars(int id_station, Record& rec) override;
-
-    /**
-     * Dump the entire contents of the table to an output stream
-     */
     void dump(FILE* out) override;
 };
 

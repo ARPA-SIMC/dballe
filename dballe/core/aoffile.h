@@ -63,6 +63,8 @@ protected:
      * @param words
      *   The data to be written, as an array of 32bit words that will be
      *   byteswapped for endianness if needed
+     * @param wordcount
+     *   Number of words to write
      */
     void write_record(const uint32_t* words, size_t wordcount);
 

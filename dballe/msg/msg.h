@@ -196,7 +196,7 @@ public:
      * Find a variable given its description
      *
      * @param code
-     *   The ::dba_varcode of the variable to query. See @ref vartable.h
+     *   The wreport::Varcode of the variable to query.
      * @param lev
      *   The Level to query
      * @param tr
@@ -210,7 +210,7 @@ public:
      * Remove a variable given its description
      *
      * @param code
-     *   The ::dba_varcode of the variable to query. See @ref vartable.h
+     *   The wreport::Varcode of the variable to query.
      * @param lev
      *   The Level to query
      * @param tr
@@ -223,10 +223,8 @@ public:
     /** 
      * Find a datum given its shortcut ID
      *
-     * @param msg
-     *   The message to query
      * @param id
-     *   Shortcut ID of the value to set (see @ref vars.h)
+     *   Shortcut ID of the value to set.
      * @return
      *   The value found, or NULL if it was not found.
      */
@@ -235,8 +233,6 @@ public:
     /** 
      * Find a contexts given level and timerange found in a shortcut ID
      *
-     * @param msg
-     *   The message to query
      * @param id
      *   Shortcut ID with the level information to use
      * @return
@@ -247,10 +243,8 @@ public:
     /** 
      * Find a datum given its shortcut ID
      *
-     * @param msg
-     *   The message to query
      * @param id
-     *   Shortcut ID of the value to set (see @ref vars.h)
+     *   Shortcut ID of the value to set.
      * @return
      *   The value found, or NULL if it was not found.
      */
@@ -285,7 +279,7 @@ public:
      * Add or replace a value, taking ownership of the source variable without
      * copying it.
      *
-     * @param msg
+     * @param var
      *   The Var with the value to set.  This Msg will take ownership of memory
      *   management.
      * @param lev

@@ -227,6 +227,7 @@ struct Datetime
     /**
      * Write the datetime to an output stream in ISO8601 combined format.
      *
+     * @param out the output stream
      * @param sep the separator character between date and time
      * @param tz the timezone string to use at the end of the datetime
      */

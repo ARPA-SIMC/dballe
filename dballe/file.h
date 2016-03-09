@@ -58,7 +58,7 @@ struct File
     /**
      * Open a file from the filesystem, autodetecting the encoding type.
      *
-     * @param name
+     * @param pathname
      *   The pathname of the file to access.
      * @param mode
      *   The opening mode of the file, as used by fopen.
@@ -72,7 +72,7 @@ struct File
      *
      * @param type
      *   The type of data contained in the file.
-     * @param name
+     * @param pathname
      *   The pathname of the file to access.
      * @param mode
      *   The opening mode of the file, as used by fopen.

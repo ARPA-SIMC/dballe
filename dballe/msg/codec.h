@@ -63,10 +63,10 @@ public:
     /**
      * Decode a message from its raw encoded representation
      *
-     * @param rmsg
+     * @param msg
      *   Encoded message
      * @retval msgs
-     *   The resulting ::dba_msg
+     *   The resulting Messages
      */
     Messages from_binary(const BinaryMessage& msg) const;
 
@@ -76,7 +76,7 @@ public:
      *
      * Return false from \a dest to stop decoding.
      *
-     * @param rmsg
+     * @param msg
      *   Encoded message.
      * @retval dest
      *   The function that consumes the decoded messages.

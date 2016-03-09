@@ -18,7 +18,7 @@ namespace core {
 /**
  * Keyword used to quickly access context and query information from a record.
  */
-enum _dba_keyword {
+typedef enum {
 	DBA_KEY_ERROR		= -1,
 	DBA_KEY_PRIORITY	=  0,
 	DBA_KEY_PRIOMAX		=  1,
@@ -68,9 +68,7 @@ enum _dba_keyword {
 	DBA_KEY_LIMIT		= 45,
 	DBA_KEY_VAR_RELATED	= 46,
 	DBA_KEY_COUNT		= 47,
-};
-/** @copydoc _dba_keyword */
-typedef enum _dba_keyword dba_keyword;
+} dba_keyword;
 
 std::ostream& operator<<(std::ostream& o, dba_keyword k);
 
@@ -227,23 +225,19 @@ public:
     /// Return the varcode-sorted vector with the variables
     const std::vector<wreport::Var*>& vars() const;
 
-	/**
-	 * Set a value in the record according to an assignment encoded in a string.
-	 *
-	 * String can use keywords, aliases and varcodes.  Examples: ana_id=3,
-	 * name=Bologna, B12012=32.4
-	 *
+    /**
+     * Set a value in the record according to an assignment encoded in a string.
+     *
+     * String can use keywords, aliases and varcodes.  Examples: ana_id=3,
+     * name=Bologna, B12012=32.4
+     *
      * In case of numeric parameter, a hyphen ("-") means MISSING_INT (e.g.,
      * `leveltype2=-`).
      *
-	 * @param rec
-	 *   The record where the value is to be set.
-	 * @param str
-	 *   The string containing the assignment.
-	 * @return
-	 *   The error indicator for the function.
-	 */
-	void set_from_string(const char* str);
+     * @param str
+     *   The string containing the assignment.
+     */
+    void set_from_string(const char* str);
 
      /**
      * Set a record from a ", "-separated string of assignments.

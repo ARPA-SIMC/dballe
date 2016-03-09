@@ -8,7 +8,4 @@ Procedure to add a new exporter:
 \li Copy an existing one and adapt it
 \li Add an external declaration for its registration function to the top of base.c
 
-<b>Module dependencies</b>
-\ref core
-
 */

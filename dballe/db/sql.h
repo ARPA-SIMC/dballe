@@ -55,8 +55,10 @@ namespace db {
 class Transaction;
 class Statement;
 
-/**
+/** @enum ServerType
  * Supported SQL servers.
+ *
+ * @cond WORKAROUND
  */
 enum class ServerType
 {
@@ -65,6 +67,7 @@ enum class ServerType
     ORACLE,
     POSTGRES,
 };
+/// @endcond
 
 class Connection
 {

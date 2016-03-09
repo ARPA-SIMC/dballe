@@ -29,15 +29,15 @@ public:
     Messages from_bulletin(const wreport::Bulletin& msg) const override;
 
     /**
-     * Decode a message from its decoded bulletin, calling \a dest on each
-     * resulting Msg.
+     * Build Message objects a decoded bulletin, calling \a dest on each
+     * resulting Message.
      *
      * Return false from \a dest to stop decoding.
      *
-     * @param rmsg
-     *   Encoded message.
+     * @param msg
+     *   Decoded bulletin.
      * @retval dest
-     *   The function that consumes the decoded messages.
+     *   The function that consumes the interpreted messages.
      * @returns true if it got to the end of decoding, false if dest returned false.
      */
     bool foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const;

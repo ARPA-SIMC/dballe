@@ -1,9 +1,0 @@
-/** @defgroup dballe Main dballe module
-
-Collection of high-level functions for using the DB-ALLe library.
-
-<b>Module dependencies:</b>
-
-\li all other modules
-
-*/

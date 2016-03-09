@@ -451,9 +451,5 @@ dump_core_info_LDADD = \
 
 # toplevel
 
-EXTRA_DIST += mainpage.dox dballe.dox \
-	main-core.dox \
-	main-db.dox \
-	main-msg.dox \
-    msg/wr_exporters/exporters.dox \
+EXTRA_DIST += msg/wr_exporters/exporters.dox \
 	msg/ltypes.txt 

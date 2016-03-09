@@ -36,8 +36,6 @@ struct ProcessingException : public std::exception
      * @param filename Input file being processed
      * @param index Index of the data being processed in the input file
      * @param msg Error message
-     * @param original (optional) original exception that was caught from the
-     *        underlying subsystem
      */
     ProcessingException(
             const std::string& filename,
@@ -47,6 +45,14 @@ struct ProcessingException : public std::exception
         initmsg(filename, index, msg.c_str());
     }
 
+    /**
+     * Create a new exception
+     *
+     * @param filename Input file being processed
+     * @param index Index of the data being processed in the input file
+     * @param original (optional) original exception that was caught from the
+     *        underlying subsystem
+     */
     ProcessingException(
             const std::string& filename,
             unsigned index,
@@ -55,6 +61,15 @@ struct ProcessingException : public std::exception
         initmsg(filename, index, original.what());
     }
 
+    /**
+     * Create a new exception
+     *
+     * @param filename Input file being processed
+     * @param index Index of the data being processed in the input file
+     * @param msg Error message
+     * @param original (optional) original exception that was caught from the
+     *        underlying subsystem
+     */
     ProcessingException(
             const std::string& filename,
             unsigned index,

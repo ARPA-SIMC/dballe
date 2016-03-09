@@ -79,16 +79,15 @@ struct Querybuf : public std::string
 	 */
 	void append_list(const char* str);
 
-	/**
-	 * Append a formatted string to the querybuf, as part of a list.
-	 *
-	 * This function will prepend str with the current list separator, unless it is
-	 * the first item added to the list.
-	 *
-	 * @param str
-	 *   The string to append
-	 */
-	void append_listf(const char* fmt, ...) __attribute__((format(printf, 2, 3)));
+    /**
+     * Append a formatted string to the querybuf, as part of a list.
+     *
+     * This function will prepend str with the current list separator, unless it is
+     * the first item added to the list.
+     *
+     * @param fmt printf-style format string.
+     */
+    void append_listf(const char* fmt, ...) __attribute__((format(printf, 2, 3)));
 
     /**
      * Append a comma-separated list of integer varcodes parsed from a

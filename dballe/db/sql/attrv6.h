@@ -63,10 +63,11 @@ public:
     /**
      * Load from the database all the attributes for var
      *
-     * @param var
-     *   wreport::Var to which the resulting attributes will be added
-     * @return
-     *   The error indicator for the function (See @ref error.h)
+     * @param id_data
+     *   ID of the data row for the value of which we will read attributes
+     * @param dest
+     *   Function that will be called to consume the attrbutes as they are
+     *   loaded.
      */
     virtual void read(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
 

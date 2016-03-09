@@ -46,20 +46,7 @@ public:
     ~MySQLAttrV6();
 
     void insert(Transaction& t, sql::bulk::InsertAttrsV6& vars, UpdateMode update_mode=UPDATE) override;
-
-    /**
-     * Load from the database all the attributes for var
-     *
-     * @param var
-     *   wreport::Var to which the resulting attributes will be added
-     * @return
-     *   The error indicator for the function (See @ref error.h)
-     */
     void read(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
-
-    /**
-     * Dump the entire contents of the table to an output stream
-     */
     void dump(FILE* out) override;
 };
 
