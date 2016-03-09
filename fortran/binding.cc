@@ -342,9 +342,6 @@ F77_INTEGER_FUNCTION(idba_preparati)(
  * @param type
  *   Format of the data in the file.  It can be: `"BUFR"`, `"CREX"`, `"AOF"`
  *   (read only), `"AUTO"` (autodetect, read only)
- * @param force_report
- *   if 0, nothing happens; otherwise, choose the output message template
- *   using this report type instead of the one in the message
  * @return
  *   The error indication for the function.
  */
@@ -1136,6 +1133,8 @@ F77_INTEGER_FUNCTION(idba_setdatemin)(
 
 /**
  * Set the maximum date for a query.
+ *
+ * @param handle
  *   Handle to a DB-All.e session
  * @param year
  *   Maximum year to set in the query
@@ -1188,10 +1187,12 @@ F77_INTEGER_FUNCTION(idba_setdatemax)(
  *
  * @param handle
  *   Handle to a DB-All.e session
- * @retval ltype
- *   Level type from the output record
+ * @retval ltype1
+ *   Type of the first level from the output record
  * @retval l1
  *   L1 from the output record
+ * @retval ltype2
+ *   Type of the second level from the output record
  * @retval l2
  *   L2 from the output record
  * @return

@@ -228,8 +228,8 @@ class Section:
             self.summary = None
         log.debug("Found section %s", self.summary)
         self.desc_node = tree.find("description")
-        if self.desc_node is None:
-            log.warn("Section \"%s\" has no description", self.summary)
+        #if self.desc_node is None:
+            #log.warn("Section \"%s\" has no description", self.summary)
 
         for node in tree.iter("memberdef"):
             if node.attrib["kind"] != "function": continue

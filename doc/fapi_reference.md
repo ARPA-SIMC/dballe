@@ -354,9 +354,6 @@ Parameters:
   (the old file is deleted), `"a"` for append
 * `type`: Format of the data in the file. It can be: `"BUFR"`,
   `"CREX"`, `"AOF"` (read only), `"AUTO"` (autodetect, read only)
-* `force_report`: if 0, nothing happens; otherwise, choose the output
-  message template using this report type instead of the one in the
-  message
 
 Return value:
 
@@ -665,6 +662,7 @@ Set the minimum date for a query.
 
 Parameters:
 
+* `handle`: Handle to a DB-All.e session
 * `year`: Maximum year to set in the query
 * `month`: Maximum month to set in the query
 * `day`: Maximum day to set in the query
@@ -677,15 +675,15 @@ Return value:
 The error indicator for the function
 Set the maximum date for a query.
 
-Handle to a DB-All.e session
 <a name='idba_enqlevel'></a>
 #### idba_enqlevel(handle, ltype1, l1, ltype2, l2)
 
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
-* `ltype`: Level type from the output record
+* `ltype1`: Type of the first level from the output record
 * `l1`: L1 from the output record
+* `ltype2`: Type of the second level from the output record
 * `l2`: L2 from the output record
 
 Return value:
