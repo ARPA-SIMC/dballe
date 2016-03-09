@@ -424,8 +424,7 @@ F77_INTEGER_FUNCTION(idba_fatto)(INTEGER(handle))
  * @param parameter
  *   Parameter to set.  It can be the code of a WMO variable prefixed by \c
  *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
- *   (such as \c "*B01023") or a keyword among the ones defined in \ref
- *   dba_record_keywords
+ *   (such as \c "*B01023") or a keyword among the ones defined in fapi_parms.md
  * @param value
  *   The value to assign to the parameter
  * @return
@@ -470,8 +469,7 @@ F77_INTEGER_FUNCTION(idba_seti)(
  * @param parameter
  *   Parameter to set.  It can be the code of a WMO variable prefixed by \c
  *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
- *   (such as \c "*B01023") or a keyword among the ones defined in \ref
- *   dba_record_keywords
+ *   (such as \c "*B01023") or a keyword among the ones defined in fapi_parms.md
  * @param value
  *   The value to assign to the parameter
  * @return
@@ -518,7 +516,7 @@ F77_INTEGER_FUNCTION(idba_setb)(
  *   Parameter to set.  It can be the code of a WMO variable prefixed by \c
  *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
  *   (such as \c "*B01023") or a keyword among the ones defined in
- *   (fapi_parms.md)[fapi_parms.md]
+ *   fapi_parms.md
  * @param value
  *   The value to assign to the parameter
  * @return
@@ -563,8 +561,7 @@ F77_INTEGER_FUNCTION(idba_setr)(
  * @param parameter
  *   Parameter to set.  It can be the code of a WMO variable prefixed by \c
  *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
- *   (such as \c "*B01023") or a keyword among the ones defined in \ref
- *   dba_record_keywords
+ *   (such as \c "*B01023") or a keyword among the ones defined in fapi_parms.md
  * @param value
  *   The value to assign to the parameter
  * @return
@@ -609,8 +606,7 @@ F77_INTEGER_FUNCTION(idba_setd)(
  * @param parameter
  *   Parameter to set.  It can be the code of a WMO variable prefixed by \c
  *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
- *   (such as \c "*B01023") or a keyword among the ones defined in \ref
- *   dba_record_keywords
+ *   (such as \c "*B01023") or a keyword among the ones defined in fapi_parms.md
  * @param value
  *   The value to assign to the parameter
  * @return
@@ -659,8 +655,7 @@ F77_INTEGER_FUNCTION(idba_setc)(
  * @param parameter
  *   Parameter to query.  It can be the code of a WMO variable prefixed by \c
  *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
- *   (such as \c "*B01023") or a keyword among the ones defined in \ref
- *   dba_record_keywords
+ *   (such as \c "*B01023") or a keyword among the ones defined in fapi_parms.md
  * @param value
  *   Where the value will be returned
  * @return
@@ -696,8 +691,7 @@ F77_INTEGER_FUNCTION(idba_enqi)(
  * @param parameter
  *   Parameter to query.  It can be the code of a WMO variable prefixed by \c
  *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
- *   (such as \c "*B01023") or a keyword among the ones defined in \ref
- *   dba_record_keywords
+ *   (such as \c "*B01023") or a keyword among the ones defined in fapi_parms.md
  * @param value
  *   Where the value will be returned
  * @return
@@ -734,8 +728,7 @@ F77_INTEGER_FUNCTION(idba_enqb)(
  * @param parameter
  *   Parameter to query.  It can be the code of a WMO variable prefixed by \c
  *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
- *   (such as \c "*B01023") or a keyword among the ones defined in \ref
- *   dba_record_keywords
+ *   (such as \c "*B01023") or a keyword among the ones defined in fapi_parms.md
  * @param value
  *   Where the value will be returned
  * @return
@@ -772,8 +765,7 @@ F77_INTEGER_FUNCTION(idba_enqr)(
  * @param parameter
  *   Parameter to query.  It can be the code of a WMO variable prefixed by \c
  *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
- *   (such as \c "*B01023") or a keyword among the ones defined in \ref
- *   dba_record_keywords
+ *   (such as \c "*B01023") or a keyword among the ones defined in fapi_parms.md
  * @param value
  *   Where the value will be returned
  * @return
@@ -809,9 +801,9 @@ F77_INTEGER_FUNCTION(idba_enqd)(
  *   Handle to a DB-All.e session
  * @param parameter
  *   Parameter to query.  It can be the code of a WMO variable prefixed by \c
- *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
- *   (such as \c "*B01023") or a keyword among the ones defined in \ref
- *   dba_record_keywords
+ *   "B" (such as \c "B01023"); the code of an attribute prefixed by \c "*B"
+ *   (such as \c "*B01023") or a keyword among the ones defined in
+ *   fapi_parms.md
  * @param value
  *   Where the value will be returned
  * @return
@@ -858,8 +850,7 @@ F77_INTEGER_FUNCTION(idba_enqc)(
  * @param parameter
  *   Parameter to remove.  It can be the code of a WMO variable prefixed by \c
  *   "B" (such as \c "B01023"); the code of a QC value prefixed by \c "*B"
- *   (such as \c "*B01023") or a keyword among the ones defined in \ref
- *   dba_record_keywords
+ *   (such as \c "*B01023") or a keyword among the ones defined in fapi_parms.md
  * @return
  *   The error indicator for the function
  */

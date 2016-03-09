@@ -1,8 +1,6 @@
 /** @file
  * @ingroup fortran
  * Error inspection functions for Dballe.
- *
- * These funtions closely wrap the Dballe functions in dba_error.h
  */
 
 #include "handles.h"
@@ -98,15 +96,29 @@ extern "C" {
 /**
  * Return the error code for the last function that was called.
  *
- * See @ref dba_error_code()
+ * This is a list of known codes:
+ *
+ * @li 0: No error
+ * @li 1: Item not found
+ * @li 2: Wrong variable type
+ * @li 3: Cannot allocate memory
+ * @li 4: ODBC error
+ * @li 5: Handle management error
+ * @li 6: Buffer is too short to fit data
+ * @li 7: Error reported by the system
+ * @li 8: Consistency check failed
+ * @li 9: Parse error
+ * @li 10: Write error
+ * @li 11: Regular expression error
+ * @li 12: Feature not implemented
+ * @li 13: Value outside acceptable domain
  *
  * @return
- *   The error code.  Please see the documentation of ::dba_err_code for the
- *   possible values.
+ *   The error code.
  */
 F77_INTEGER_FUNCTION(idba_error_code)()
 {
-	return last_err_code;
+    return last_err_code;
 }
 
 /**
@@ -114,12 +126,10 @@ F77_INTEGER_FUNCTION(idba_error_code)()
  *
  * The error message is just a description of the error code.  To see more
  * details of the specific condition that caused the error, use
- * fdba_error_context() and fdba_error_details()
- *
- * See @ref dba_error_message()
+ * idba_error_context() and idba_error_details()
  *
  * @param message
- *   The string holding the error messag.  If the string is not long enough, it
+ *   The string holding the error message.  If the string is not long enough, it
  *   will be truncated.
  */
 F77_SUBROUTINE(idba_error_message)(CHARACTER(message) TRAIL(message))
@@ -133,8 +143,6 @@ F77_SUBROUTINE(idba_error_message)(CHARACTER(message) TRAIL(message))
  * function that was called.
  *
  * This string describes what the code that failed was trying to do.
- *
- * See @ref dba_error_context()
  *
  * @param message
  *   The string holding the error context.  If the string is not long enough,
@@ -154,8 +162,6 @@ F77_SUBROUTINE(idba_error_context)(CHARACTER(message) TRAIL(message))
  * able to get extra informations about it, for example by querying the error
  * functions of an underlying module.
  *
- * See @ref dba_error_details()
- *
  * @param message
  *   The string holding the error details.  If the string is not long enough,
  *   it will be truncated.
@@ -170,9 +176,8 @@ F77_SUBROUTINE(idba_error_details)(CHARACTER(message) TRAIL(message))
  * Set a callback to be invoked when an error of a specific kind happens.
  *
  * @param code
- *   The error code (See @ref ::dba_err_code) of the error that triggers this
- *   callback.  If DBA_ERR_NONE is used, then the callback is invoked on all
- *   errors.
+ *   The error code of the error that triggers this callback.  If DBA_ERR_NONE
+ *   is used, then the callback is invoked on all errors.
  * @param[in] func
  *   The function to be called.
  * @param data

@@ -5,6 +5,7 @@ import textwrap
 import argparse
 import sys
 import os
+import re
 import logging
 
 log = logging.getLogger()
@@ -51,6 +52,17 @@ class Markdown:
         if node.text:
             content.append(node.text)
 
+        def flush_content():
+            nonlocal content
+            # Flush the current content
+            text = "".join(content).strip()
+            if text:
+                text = re.sub("fapi_parms.md", "[fapi_parms.md](fapi_parms.md)", text)
+                text = re.sub(r"idba_([a-z_]+)(\(\))?", r"[idba_\1()](#idba_\1)", text)
+                for line in textwrap.wrap(text, break_on_hyphens=False, **wrap_kw):
+                    self.print(line)
+            content = []
+
         for el in node:
             if el.tag == "computeroutput":
                 content.append("`{}`".format(el.text))
@@ -62,11 +74,7 @@ class Markdown:
                 if el.tail: content.append(el.tail)
             elif el.tag == "itemizedlist":
                 # Flush the current content
-                content = "".join(content).strip()
-                if content:
-                    for line in textwrap.wrap(content, break_on_hyphens=False, **wrap_kw):
-                        self.print(line)
-                content = []
+                flush_content()
 
                 self.print()
                 self.node_list(el, **wrap_kw)
@@ -75,11 +83,7 @@ class Markdown:
                 if el.tail: content.append(el.tail)
             elif el.tag == "programlisting":
                 # Flush the current content
-                content = "".join(content).strip()
-                if content:
-                    for line in textwrap.wrap(content, break_on_hyphens=False, **wrap_kw):
-                        self.print(line)
-                content = []
+                flush_content()
 
                 self.print()
                 self.node_programlisting(el, **wrap_kw)
@@ -91,10 +95,7 @@ class Markdown:
             else:
                 log.warn("Invalid tag inside para: %s", el.tag)
 
-        content = "".join(content).strip()
-        if content:
-            for line in textwrap.wrap(content, break_on_hyphens=False, **wrap_kw):
-                self.print(line)
+        flush_content()
 
     def node_list(self, node, **wrap_kw):
         if "initial_indent" in wrap_kw or "subsequent_indent" in wrap_kw:

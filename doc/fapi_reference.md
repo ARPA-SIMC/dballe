@@ -162,25 +162,40 @@ Input/Output routines.
 
 Return value:
 
-The error code. Please see the documentation of ::dba_err_code for the
-possible values.
+The error code.
 Return the error code for the last function that was called.
 
-See dba_error_code()
+This is a list of known codes:
+
+* 0: No error
+* 1: Item not found
+* 2: Wrong variable type
+* 3: Cannot allocate memory
+* 4: ODBC error
+* 5: Handle management error
+* 6: Buffer is too short to fit data
+* 7: Error reported by the system
+* 8: Consistency check failed
+* 9: Parse error
+* 10: Write error
+* 11: Regular expression error
+* 12: Feature not implemented
+* 13: Value outside acceptable domain
+
 <a name='idba_error_message'></a>
 #### idba_error_message(message)
 
 Parameters:
 
-* `message`: The string holding the error messag. If the string is not
-  long enough, it will be truncated.
+* `message`: The string holding the error message. If the string is
+  not long enough, it will be truncated.
 
 Return the error message for the last function that was called.
 
 The error message is just a description of the error code. To see more
 details of the specific condition that caused the error, use
-fdba_error_context() and fdba_error_details()
-See dba_error_message()
+[idba_error_context()](#idba_error_context) and
+[idba_error_details()](#idba_error_details)
 <a name='idba_error_context'></a>
 #### idba_error_context(message)
 
@@ -193,7 +208,6 @@ Return a string describing the error context description for the last
 function that was called.
 
 This string describes what the code that failed was trying to do.
-See dba_error_context()
 <a name='idba_error_details'></a>
 #### idba_error_details(message)
 
@@ -208,15 +222,13 @@ function that was called.
 This string contains additional details about the error in case the
 code was able to get extra informations about it, for example by
 querying the error functions of an underlying module.
-See dba_error_details()
 <a name='idba_error_set_callback'></a>
 #### idba_error_set_callback(code, func, data, handle)
 
 Parameters:
 
-* `code`: The error code (See ::dba_err_code) of the error that
-  triggers this callback. If DBA_ERR_NONE is used, then the callback
-  is invoked on all errors.
+* `code`: The error code of the error that triggers this callback. If
+  DBA_ERR_NONE is used, then the callback is invoked on all errors.
 * `func`: The function to be called.
 * `data`: An arbitrary integer data that is passed verbatim to the
   callback function when invoked.
@@ -232,7 +244,8 @@ Set a callback to be invoked when an error of a specific kind happens.
 
 Parameters:
 
-* `handle`: The handle previously returned by idba_error_set_callback
+* `handle`: The handle previously returned by
+  [idba_error_set_callback()](#idba_error_set_callback)
 
 Return value:
 
@@ -264,7 +277,7 @@ Parameters:
 * `user`: The username used to connect to the database
 * `password`: The username used to connect to the database
 * `dbahandle`: The database handle that can be passed to
-  idba_preparati to work with the database.
+  [idba_preparati()](#idba_preparati) to work with the database.
 
 Return value:
 
@@ -298,11 +311,12 @@ Return value:
 The error indication for the function.
 Open a new session.
 
-You can call idba_preparati() many times and get more handles. This
-allows to perform many operations on the database at the same time.
-idba_preparati() has three extra parameters that can be used to limit
-write operations on the database, as a limited protection against
-programming errors:
+You can call [idba_preparati()](#idba_preparati) many times and get
+more handles. This allows to perform many operations on the database
+at the same time.
+[idba_preparati()](#idba_preparati) has three extra parameters that
+can be used to limit write operations on the database, as a limited
+protection against programming errors:
 `anaflag` controls access to station value records and can have these
 values:
 
@@ -369,7 +383,7 @@ Parameters:
 * `parameter`: Parameter to set. It can be the code of a WMO variable
   prefixed by `"B"` (such as `"B01023"`); the code of a QC value
   prefixed by `"*B"` (such as `"*B01023"`) or a keyword among the ones
-  defined in dba_record_keywords
+  defined in [fapi_parms.md](fapi_parms.md)
 * `value`: The value to assign to the parameter
 
 Return value:
@@ -386,7 +400,7 @@ Parameters:
 * `parameter`: Parameter to set. It can be the code of a WMO variable
   prefixed by `"B"` (such as `"B01023"`); the code of a QC value
   prefixed by `"*B"` (such as `"*B01023"`) or a keyword among the ones
-  defined in dba_record_keywords
+  defined in [fapi_parms.md](fapi_parms.md)
 * `value`: The value to assign to the parameter
 
 Return value:
@@ -403,7 +417,7 @@ Parameters:
 * `parameter`: Parameter to set. It can be the code of a WMO variable
   prefixed by `"B"` (such as `"B01023"`); the code of a QC value
   prefixed by `"*B"` (such as `"*B01023"`) or a keyword among the ones
-  defined in (fapi_parms.md)[fapi_parms.md]
+  defined in [fapi_parms.md](fapi_parms.md)
 * `value`: The value to assign to the parameter
 
 Return value:
@@ -420,7 +434,7 @@ Parameters:
 * `parameter`: Parameter to set. It can be the code of a WMO variable
   prefixed by `"B"` (such as `"B01023"`); the code of a QC value
   prefixed by `"*B"` (such as `"*B01023"`) or a keyword among the ones
-  defined in dba_record_keywords
+  defined in [fapi_parms.md](fapi_parms.md)
 * `value`: The value to assign to the parameter
 
 Return value:
@@ -437,7 +451,7 @@ Parameters:
 * `parameter`: Parameter to set. It can be the code of a WMO variable
   prefixed by `"B"` (such as `"B01023"`); the code of a QC value
   prefixed by `"*B"` (such as `"*B01023"`) or a keyword among the ones
-  defined in dba_record_keywords
+  defined in [fapi_parms.md](fapi_parms.md)
 * `value`: The value to assign to the parameter
 
 Return value:
@@ -454,7 +468,7 @@ Parameters:
 * `parameter`: Parameter to query. It can be the code of a WMO
   variable prefixed by `"B"` (such as `"B01023"`); the code of a QC
   value prefixed by `"*B"` (such as `"*B01023"`) or a keyword among
-  the ones defined in dba_record_keywords
+  the ones defined in [fapi_parms.md](fapi_parms.md)
 * `value`: Where the value will be returned
 
 Return value:
@@ -471,7 +485,7 @@ Parameters:
 * `parameter`: Parameter to query. It can be the code of a WMO
   variable prefixed by `"B"` (such as `"B01023"`); the code of a QC
   value prefixed by `"*B"` (such as `"*B01023"`) or a keyword among
-  the ones defined in dba_record_keywords
+  the ones defined in [fapi_parms.md](fapi_parms.md)
 * `value`: Where the value will be returned
 
 Return value:
@@ -488,7 +502,7 @@ Parameters:
 * `parameter`: Parameter to query. It can be the code of a WMO
   variable prefixed by `"B"` (such as `"B01023"`); the code of a QC
   value prefixed by `"*B"` (such as `"*B01023"`) or a keyword among
-  the ones defined in dba_record_keywords
+  the ones defined in [fapi_parms.md](fapi_parms.md)
 * `value`: Where the value will be returned
 
 Return value:
@@ -505,7 +519,7 @@ Parameters:
 * `parameter`: Parameter to query. It can be the code of a WMO
   variable prefixed by `"B"` (such as `"B01023"`); the code of a QC
   value prefixed by `"*B"` (such as `"*B01023"`) or a keyword among
-  the ones defined in dba_record_keywords
+  the ones defined in [fapi_parms.md](fapi_parms.md)
 * `value`: Where the value will be returned
 
 Return value:
@@ -520,9 +534,9 @@ Parameters:
 
 * `handle`: Handle to a DB-All.e session
 * `parameter`: Parameter to query. It can be the code of a WMO
-  variable prefixed by `"B"` (such as `"B01023"`); the code of a QC
-  value prefixed by `"*B"` (such as `"*B01023"`) or a keyword among
-  the ones defined in dba_record_keywords
+  variable prefixed by `"B"` (such as `"B01023"`); the code of an
+  attribute prefixed by `"*B"` (such as `"*B01023"`) or a keyword
+  among the ones defined in [fapi_parms.md](fapi_parms.md)
 * `value`: Where the value will be returned
 
 Return value:
@@ -539,7 +553,7 @@ Parameters:
 * `parameter`: Parameter to remove. It can be the code of a WMO
   variable prefixed by `"B"` (such as `"B01023"`); the code of a QC
   value prefixed by `"*B"` (such as `"*B01023"`) or a keyword among
-  the ones defined in dba_record_keywords
+  the ones defined in [fapi_parms.md](fapi_parms.md)
 
 Return value:
 
@@ -743,7 +757,7 @@ Return value:
 The error indicator for the function
 Query the stations in the database.
 
-Results are retrieved using idba_elencamele().
+Results are retrieved using [idba_elencamele()](#idba_elencamele).
 <a name='idba_elencamele'></a>
 #### idba_elencamele(handle)
 
@@ -773,7 +787,7 @@ Return value:
 The error indicator for the function
 Query the data in the database.
 
-Results are retrieved using idba_dammelo().
+Results are retrieved using [idba_dammelo()](#idba_dammelo).
 <a name='idba_dammelo'></a>
 #### idba_dammelo(handle, parameter)
 
@@ -838,8 +852,8 @@ Return value:
 The error indicator for the function
 Remove all values from the database.
 
-The difference with idba_scopa() is that it preserves the existing
-report information.
+The difference with [idba_scopa()](#idba_scopa) is that it preserves
+the existing report information.
 <a name='idba_voglioancora'></a>
 #### idba_voglioancora(handle, count)
 
@@ -859,7 +873,7 @@ The variable queried is either:
 * the last variable inserted by `None`
 * the variable selected by settings `*context_id` and `*var_related`.
 
-Results are retrieved using idba_ancora().
+Results are retrieved using [idba_ancora()](#idba_ancora).
 <a name='idba_ancora'></a>
 #### idba_ancora(handle, parameter)
 
@@ -893,11 +907,13 @@ The variable is either:
 * the variable selected by settings `*context_id` and `*var_related`.
 
 The attributes that will be inserted are all those set by the
-functions idba_seti(), idba_setc(), idba_setr(), idba_setd(), using an
+functions [idba_seti()](#idba_seti), [idba_setc()](#idba_setc),
+[idba_setr()](#idba_setr), [idba_setd()](#idba_setd), using an
 asterisk in front of the variable name.
-Contrarily to idba_prendilo(), this function resets all the attribute
-information (and only attribute information) previously set in input,
-so the values to be inserted need to be explicitly set every time.
+Contrarily to [idba_prendilo()](#idba_prendilo), this function resets
+all the attribute information (and only attribute information)
+previously set in input, so the values to be inserted need to be
+explicitly set every time.
 This function will fail if the database is open in attribute readonly
 mode, and it will refuse to overwrite existing values if the database
 is open in attribute add mode.
@@ -1045,7 +1061,8 @@ Parameters:
 
 * `handle`: Handle to a DB-All.e session
 * `varcode`: B table code of the variable (`"Bxxyyy"`)
-* `value`: Value of the variable, as read with idba_enqc()
+* `value`: Value of the variable, as read with
+  [idba_enqc()](#idba_enqc)
 * `result`: The string with the description of the time range.
 
 Return value:
