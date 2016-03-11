@@ -11,6 +11,7 @@ import datetime
 class Benchmark:
     def __init__(self):
         self.env = dict(os.environ)
+        self.now = datetime.datetime.utcnow()
         self.db = None
 
     def read_conffile(self, fd):
@@ -54,9 +55,8 @@ class Benchmark:
     def run(self):
         self.env["ARGS"] = self.db
         csvout = subprocess.check_output(["../extra/runtest", "bench-run"], env=self.env, cwd="dballe", universal_newlines=True)
-        now = datetime.datetime.utcnow()
         shasum = subprocess.check_output(["git", "rev-parse", "HEAD"], universal_newlines=True).strip()
-        ts = now.strftime("%Y%m%d%H%M%S")
+        ts = self.now.strftime("%Y%m%d%H%M%S")
         fname = os.path.join("bench", "_".join((ts, self.db, shasum)) + ".csv")
         with open(fname, "wt") as fd:
             # Skip the Running... printed at the beginning by runtest
