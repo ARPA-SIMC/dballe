@@ -29,6 +29,7 @@
  */
 
 #include <dballe/db/sql/station.h>
+#include <dballe/sql/fwd.h>
 #include <functional>
 #include <memory>
 
@@ -38,8 +39,6 @@ struct Var;
 
 namespace dballe {
 namespace db {
-struct MySQLConnection;
-
 namespace mysql {
 
 /**
@@ -51,7 +50,7 @@ protected:
     /**
      * DB connection.
      */
-    MySQLConnection& conn;
+    dballe::sql::MySQLConnection& conn;
 
     /// Lookup the ID of a station, returning true if it was found, false if not
     bool maybe_get_id(int lat, int lon, const char* ident, int* id);
@@ -60,7 +59,7 @@ protected:
     void read_station_vars(const std::string& query, std::function<void(std::unique_ptr<wreport::Var>)> dest);
 
 public:
-    MySQLStationBase(MySQLConnection& conn);
+    MySQLStationBase(dballe::sql::MySQLConnection& conn);
     ~MySQLStationBase();
     MySQLStationBase(const MySQLStationBase&) = delete;
     MySQLStationBase(const MySQLStationBase&&) = delete;
@@ -98,7 +97,7 @@ public:
 class MySQLStationV6 : public MySQLStationBase
 {
 public:
-    MySQLStationV6(MySQLConnection& conn);
+    MySQLStationV6(dballe::sql::MySQLConnection& conn);
 };
 
 }

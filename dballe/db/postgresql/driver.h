@@ -24,16 +24,19 @@
 #include <dballe/db/sql/driver.h>
 
 namespace dballe {
-namespace db {
-struct PostgreSQLConnection;
 
+namespace sql {
+struct PostgreSQLConnection;
+}
+
+namespace db {
 namespace postgresql {
 
 struct Driver : public sql::Driver
 {
-    PostgreSQLConnection& conn;
+    dballe::sql::PostgreSQLConnection& conn;
 
-    Driver(PostgreSQLConnection& conn);
+    Driver(dballe::sql::PostgreSQLConnection& conn);
     virtual ~Driver();
 
     std::unique_ptr<sql::Repinfo> create_repinfov6() override;

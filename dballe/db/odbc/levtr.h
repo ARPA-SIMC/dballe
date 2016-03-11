@@ -30,7 +30,7 @@
 
 #include <dballe/db/db.h>
 #include <dballe/db/sql/levtr.h>
-#include <dballe/db/odbc/internals.h>
+#include <dballe/sql/fwd.h>
 #include <cstdio>
 #include <memory>
 
@@ -43,9 +43,6 @@ struct Context;
 }
 
 namespace db {
-struct Connection;
-struct Statement;
-
 namespace odbc {
 struct DB;
 
@@ -58,19 +55,19 @@ protected:
     /**
      * DB connection.
      */
-    ODBCConnection& conn;
+    dballe::sql::ODBCConnection& conn;
 
     /// lev_tr ID sequence, for databases that need it
-    db::Sequence* seq_lev_tr = nullptr;
+    dballe::sql::Sequence* seq_lev_tr = nullptr;
 
     /** Precompiled select statement */
-    ODBCStatement* sstm = nullptr;
+    dballe::sql::ODBCStatement* sstm = nullptr;
     /** Precompiled select data statement */
-    ODBCStatement* sdstm = nullptr;
+    dballe::sql::ODBCStatement* sdstm = nullptr;
     /** Precompiled insert statement */
-    ODBCStatement* istm = nullptr;
+    dballe::sql::ODBCStatement* istm = nullptr;
     /** Precompiled delete statement */
-    ODBCStatement* dstm = nullptr;
+    dballe::sql::ODBCStatement* dstm = nullptr;
 
     DBRow working_row;
 
@@ -96,7 +93,7 @@ protected:
     void remove();
 
 public:
-    ODBCLevTrV6(ODBCConnection& conn);
+    ODBCLevTrV6(dballe::sql::ODBCConnection& conn);
     ODBCLevTrV6(const LevTr&) = delete;
     ODBCLevTrV6(const LevTr&&) = delete;
     ODBCLevTrV6& operator=(const ODBCLevTrV6&) = delete;

@@ -29,6 +29,7 @@
  */
 
 #include <dballe/db/sql/repinfo.h>
+#include <dballe/sql/fwd.h>
 #include <vector>
 #include <string>
 #include <map>
@@ -37,8 +38,6 @@ namespace dballe {
 struct Record;
 
 namespace db {
-struct ODBCConnection;
-
 namespace odbc {
 
 /**
@@ -50,9 +49,9 @@ struct ODBCRepinfoBase : public sql::Repinfo
      * DB connection. The pointer is assumed always valid during the
      * lifetime of the object
      */
-    ODBCConnection& conn;
+    dballe::sql::ODBCConnection& conn;
 
-    ODBCRepinfoBase(ODBCConnection& conn);
+    ODBCRepinfoBase(dballe::sql::ODBCConnection& conn);
     ODBCRepinfoBase(const ODBCRepinfoBase&) = delete;
     ODBCRepinfoBase(const ODBCRepinfoBase&&) = delete;
     virtual ~ODBCRepinfoBase();
@@ -72,7 +71,7 @@ protected:
 
 struct ODBCRepinfoV6 : public ODBCRepinfoBase
 {
-    ODBCRepinfoV6(ODBCConnection& conn);
+    ODBCRepinfoV6(dballe::sql::ODBCConnection& conn);
 
 protected:
     int id_use_count(unsigned id, const char* name) override;

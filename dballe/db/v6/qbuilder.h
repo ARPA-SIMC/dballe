@@ -1,8 +1,7 @@
 #ifndef DBA_DB_V6_QBUILDER_H
 #define DBA_DB_V6_QBUILDER_H
 
-#include <dballe/db/querybuf.h>
-#include <dballe/db/sql.h>
+#include <dballe/sql/querybuf.h>
 #include <dballe/db/v6/db.h>
 #include <dballe/core/query.h>
 #include <regex.h>
@@ -14,7 +13,7 @@ namespace v6 {
 /// Build SQL queries for V6 databases
 struct QueryBuilder
 {
-    Connection& conn;
+    dballe::sql::Connection& conn;
 
     /** Database to operate on */
     DB& db;
@@ -44,13 +43,13 @@ struct QueryBuilder
     const core::Query& query;
 
     /** Dynamically generated SQL query */
-    Querybuf sql_query;
+    dballe::sql::Querybuf sql_query;
 
     /// FROM part of the SQL query
-    Querybuf sql_from;
+    dballe::sql::Querybuf sql_from;
 
     /// WHERE part of the SQL query
-    Querybuf sql_where;
+    dballe::sql::Querybuf sql_where;
 
     /// Modifier flags to enable special query behaviours
     const unsigned int modifiers;

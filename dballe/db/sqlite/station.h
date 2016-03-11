@@ -38,9 +38,6 @@ struct Var;
 
 namespace dballe {
 namespace db {
-struct SQLiteConnection;
-struct SQLiteStatement;
-
 namespace sqlite {
 
 /**
@@ -52,23 +49,23 @@ protected:
     /**
      * DB connection.
      */
-    SQLiteConnection& conn;
+    dballe::sql::SQLiteConnection& conn;
 
     /** Precompiled select fixed station query */
-    SQLiteStatement* sfstm = nullptr;
+    dballe::sql::SQLiteStatement* sfstm = nullptr;
     /** Precompiled select mobile station query */
-    SQLiteStatement* smstm = nullptr;
+    dballe::sql::SQLiteStatement* smstm = nullptr;
     /** Precompiled insert query */
-    SQLiteStatement* istm = nullptr;
+    dballe::sql::SQLiteStatement* istm = nullptr;
 
     /// Lookup the ID of a station, returning true if it was found, false if not
     bool maybe_get_id(int lat, int lon, const char* ident, int* id);
 
     /// Run stm, read its output and generate variables to send to dest
-    void read_station_vars(SQLiteStatement& stm, std::function<void(std::unique_ptr<wreport::Var>)> dest);
+    void read_station_vars(dballe::sql::SQLiteStatement& stm, std::function<void(std::unique_ptr<wreport::Var>)> dest);
 
 public:
-    SQLiteStationBase(SQLiteConnection& conn);
+    SQLiteStationBase(dballe::sql::SQLiteConnection& conn);
     ~SQLiteStationBase();
     SQLiteStationBase(const SQLiteStationBase&) = delete;
     SQLiteStationBase(const SQLiteStationBase&&) = delete;
@@ -106,7 +103,7 @@ public:
 class SQLiteStationV6 : public SQLiteStationBase
 {
 public:
-    SQLiteStationV6(SQLiteConnection& conn);
+    SQLiteStationV6(dballe::sql::SQLiteConnection& conn);
 };
 
 }

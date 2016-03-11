@@ -1,27 +1,7 @@
-/*
- * db/mysql/internals - Implementation infrastructure for the MySQL DB connection
- *
- * Copyright (C) 2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
-#include "internals.h"
+#include "sql/mysql.h"
+#include "sql/querybuf.h"
+#include "dballe/types.h"
 #include "dballe/core/vasprintf.h"
-#include "dballe/db/querybuf.h"
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
@@ -31,7 +11,7 @@ using namespace std;
 using namespace wreport;
 
 namespace dballe {
-namespace db {
+namespace sql {
 
 error_mysql::error_mysql(MYSQL* db, const std::string& msg)
 {
@@ -294,7 +274,7 @@ void MySQLConnection::open(const mysql::ConnectInfo& info)
 
 void MySQLConnection::open_url(const std::string& url)
 {
-    using namespace mysql;
+    using namespace dballe::sql::mysql;
     this->url = url;
     ConnectInfo info;
     info.parse_url(url);
@@ -343,7 +323,7 @@ std::string MySQLConnection::escape(const std::string& str)
 
 void MySQLConnection::exec_no_data_nothrow(const char* query) noexcept
 {
-    using namespace mysql;
+    using namespace dballe::sql::mysql;
 
     if (mysql_query(db, query))
     {
@@ -369,7 +349,7 @@ void MySQLConnection::exec_no_data_nothrow(const char* query) noexcept
 
 void MySQLConnection::exec_no_data(const char* query)
 {
-    using namespace mysql;
+    using namespace dballe::sql::mysql;
 
     if (mysql_query(db, query))
         error_mysql::throwf(db, "cannot execute '%s'", query);
@@ -384,7 +364,7 @@ void MySQLConnection::exec_no_data(const char* query)
 
 void MySQLConnection::exec_no_data(const std::string& query)
 {
-    using namespace mysql;
+    using namespace dballe::sql::mysql;
 
     if (mysql_real_query(db, query.data(), query.size()))
         error_mysql::throwf(db, "cannot execute '%s'", query.c_str());
@@ -399,7 +379,7 @@ void MySQLConnection::exec_no_data(const std::string& query)
 
 mysql::Result MySQLConnection::exec_store(const char* query)
 {
-    using namespace mysql;
+    using namespace dballe::sql::mysql;
 
     if (mysql_query(db, query))
         error_mysql::throwf(db, "cannot execute '%s'", query);
@@ -414,7 +394,7 @@ mysql::Result MySQLConnection::exec_store(const char* query)
 
 mysql::Result MySQLConnection::exec_store(const std::string& query)
 {
-    using namespace mysql;
+    using namespace dballe::sql::mysql;
 
     if (mysql_real_query(db, query.data(), query.size()))
         error_mysql::throwf(db, "cannot execute '%s'", query.c_str());
@@ -429,7 +409,7 @@ mysql::Result MySQLConnection::exec_store(const std::string& query)
 
 void MySQLConnection::exec_use(const char* query, std::function<void(const mysql::Row&)> dest)
 {
-    using namespace mysql;
+    using namespace dballe::sql::mysql;
 
     if (mysql_query(db, query))
         error_mysql::throwf(db, "cannot execute '%s'", query);
@@ -446,7 +426,7 @@ void MySQLConnection::exec_use(const char* query, std::function<void(const mysql
 
 void MySQLConnection::exec_use(const std::string& query, std::function<void(const mysql::Row&)> dest)
 {
-    using namespace mysql;
+    using namespace dballe::sql::mysql;
 
     if (mysql_real_query(db, query.data(), query.size()))
         error_mysql::throwf(db, "cannot execute '%s'", query.c_str());
@@ -463,7 +443,7 @@ void MySQLConnection::exec_use(const std::string& query, std::function<void(cons
 
 void MySQLConnection::send_result(mysql::Result&& res, std::function<void(const mysql::Row&)> dest)
 {
-    using namespace mysql;
+    using namespace dballe::sql::mysql;
 
     while (Row row = res.fetch())
     {
@@ -545,7 +525,7 @@ int MySQLConnection::get_last_insert_id()
 
 bool MySQLConnection::has_table(const std::string& name)
 {
-    using namespace mysql;
+    using namespace dballe::sql::mysql;
     string query = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='" + name + "'";
     Result res(exec_store(query));
     Row row = res.expect_one_result();
@@ -554,7 +534,7 @@ bool MySQLConnection::has_table(const std::string& name)
 
 std::string MySQLConnection::get_setting(const std::string& key)
 {
-    using namespace mysql;
+    using namespace dballe::sql::mysql;
     if (!has_table("dballe_settings"))
         return string();
 

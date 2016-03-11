@@ -23,6 +23,7 @@
 #define DBALLE_DB_SQLITE_REPINFO_H
 
 #include <dballe/db/sql/repinfo.h>
+#include <dballe/sql/fwd.h>
 #include <vector>
 #include <string>
 #include <map>
@@ -31,8 +32,6 @@ namespace dballe {
 struct Record;
 
 namespace db {
-struct SQLiteConnection;
-
 namespace sqlite {
 
 /**
@@ -44,9 +43,9 @@ struct SQLiteRepinfoBase : public sql::Repinfo
      * DB connection. The pointer is assumed always valid during the
      * lifetime of the object
      */
-    SQLiteConnection& conn;
+    dballe::sql::SQLiteConnection& conn;
 
-    SQLiteRepinfoBase(SQLiteConnection& conn);
+    SQLiteRepinfoBase(dballe::sql::SQLiteConnection& conn);
     SQLiteRepinfoBase(const SQLiteRepinfoBase&) = delete;
     SQLiteRepinfoBase(const SQLiteRepinfoBase&&) = delete;
     virtual ~SQLiteRepinfoBase();
@@ -66,7 +65,7 @@ protected:
 
 struct SQLiteRepinfoV6 : public SQLiteRepinfoBase
 {
-    SQLiteRepinfoV6(SQLiteConnection& conn);
+    SQLiteRepinfoV6(dballe::sql::SQLiteConnection& conn);
 
 protected:
     int id_use_count(unsigned id, const char* name) override;

@@ -7,6 +7,7 @@
  * Repinfo table management used by the db module.
  */
 
+#include <dballe/sql/fwd.h>
 #include <memory>
 #include <map>
 #include <string>
@@ -20,8 +21,6 @@ struct Query;
 }
 
 namespace db {
-struct Connection;
-
 namespace sql {
 
 namespace repinfo {
@@ -76,9 +75,9 @@ struct Memoidx
 /// Fast cached access to the repinfo table
 struct Repinfo
 {
-    Connection& conn;
+    dballe::sql::Connection& conn;
 
-    Repinfo(Connection& conn);
+    Repinfo(dballe::sql::Connection& conn);
     virtual ~Repinfo() {}
 
     //static std::unique_ptr<Repinfo> create(Connection& conn);

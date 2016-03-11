@@ -23,6 +23,7 @@
 #define DBALLE_DB_MYSQL_REPINFO_H
 
 #include <dballe/db/sql/repinfo.h>
+#include <dballe/sql/fwd.h>
 #include <vector>
 #include <string>
 #include <map>
@@ -31,8 +32,6 @@ namespace dballe {
 struct Record;
 
 namespace db {
-struct MySQLConnection;
-
 namespace mysql {
 
 /**
@@ -44,9 +43,9 @@ struct MySQLRepinfoBase : public sql::Repinfo
      * DB connection. The pointer is assumed always valid during the
      * lifetime of the object
      */
-    MySQLConnection& conn;
+    dballe::sql::MySQLConnection& conn;
 
-    MySQLRepinfoBase(MySQLConnection& conn);
+    MySQLRepinfoBase(dballe::sql::MySQLConnection& conn);
     MySQLRepinfoBase(const MySQLRepinfoBase&) = delete;
     MySQLRepinfoBase(const MySQLRepinfoBase&&) = delete;
     virtual ~MySQLRepinfoBase();
@@ -65,7 +64,7 @@ protected:
 
 struct MySQLRepinfoV6 : public MySQLRepinfoBase
 {
-    MySQLRepinfoV6(MySQLConnection& conn);
+    MySQLRepinfoV6(dballe::sql::MySQLConnection& conn);
 
 protected:
     int id_use_count(unsigned id, const char* name) override;

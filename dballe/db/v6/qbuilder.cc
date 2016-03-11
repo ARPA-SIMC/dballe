@@ -10,14 +10,16 @@
 #include <cstdlib>
 #include "config.h"
 #ifdef HAVE_LIBPQ
-#include "dballe/db/postgresql/internals.h"
+#include "dballe/sql/postgresql.h"
 #endif
 #ifdef HAVE_MYSQL
-#include "dballe/db/mysql/internals.h"
+#include "dballe/sql/mysql.h"
 #endif
 
 using namespace std;
 using namespace wreport;
+using dballe::sql::Querybuf;
+using dballe::sql::ServerType;
 
 namespace dballe {
 namespace db {
@@ -451,13 +453,13 @@ bool QueryBuilder::add_pa_where(const char* tbl)
             // that can be compiled out
             ;
 #if HAVE_LIBPQ
-        } else if (dynamic_cast<PostgreSQLConnection*>(&conn)) {
+        } else if (dynamic_cast<dballe::sql::PostgreSQLConnection*>(&conn)) {
             sql_where.append_listf("%s.ident=$1::text", tbl);
             bind_in_ident = query.ident.get();
             TRACE("found ident: adding AND %s.ident=$1::text.  val is %s\n", tbl, query.ident.get());
 #endif
 #if HAVE_MYSQL
-        } else if (MySQLConnection* c = dynamic_cast<MySQLConnection*>(&conn)) {
+        } else if (dballe::sql::MySQLConnection* c = dynamic_cast<dballe::sql::MySQLConnection*>(&conn)) {
             string escaped = c->escape(query.ident.get());
             sql_where.append_listf("%s.ident='%s'", tbl, escaped.c_str());
             TRACE("found ident: adding AND %s.ident='%s'.  val is %s\n", tbl, escaped.c_str(), query.ident.get());

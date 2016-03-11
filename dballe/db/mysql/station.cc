@@ -1,6 +1,6 @@
 #include "station.h"
-#include "dballe/db/mysql/internals.h"
-#include "dballe/db/querybuf.h"
+#include "dballe/sql/mysql.h"
+#include "dballe/sql/querybuf.h"
 #include "dballe/core/var.h"
 #include "dballe/record.h"
 #include <wreport/var.h>
@@ -8,6 +8,8 @@
 using namespace wreport;
 using namespace dballe::db;
 using namespace std;
+using dballe::sql::MySQLConnection;
+using dballe::sql::Querybuf;
 
 namespace dballe {
 namespace db {

@@ -2,6 +2,7 @@
 #include <dballe/core/record.h>
 #include <dballe/core/values.h>
 #include <dballe/db/db.h>
+#include <dballe/sql/fwd.h>
 #include <dballe/db/sql/driver.h>
 #include <dballe/db/ostream.h>
 
@@ -9,7 +10,6 @@ namespace dballe {
 struct DB;
 
 namespace db {
-struct Connection;
 
 namespace sql {
 struct Driver;
@@ -127,7 +127,7 @@ struct OldDballeTestDataSet : public TestDataSet
     OldDballeTestDataSet();
 };
 
-std::unique_ptr<db::Connection> get_test_connection(const std::string& backend);
+std::unique_ptr<dballe::sql::Connection> get_test_connection(const std::string& backend);
 
 /// Test fixture for SQL backend drivers
 struct DriverFixture : public Fixture
@@ -135,7 +135,7 @@ struct DriverFixture : public Fixture
     std::string backend;
     db::Format format;
 
-    db::Connection* conn = nullptr;
+    dballe::sql::Connection* conn = nullptr;
     db::sql::Driver* driver = nullptr;
 
     DriverFixture(const char* backend, db::Format format);

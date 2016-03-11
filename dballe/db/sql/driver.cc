@@ -1,39 +1,18 @@
-/*
- * db/sql/runqueryv6 - db-independent support for specific v6 queries
- *
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "driver.h"
 #include "config.h"
 #include "dballe/db/sqlite/driver.h"
-#include "dballe/db/sqlite/internals.h"
+#include "dballe/sql/sqlite.h"
 #ifdef HAVE_LIBPQ
 #include "dballe/db/postgresql/driver.h"
-#include "dballe/db/postgresql/internals.h"
+#include "dballe/sql/postgresql.h"
 #endif
 #ifdef HAVE_MYSQL
 #include "dballe/db/mysql/driver.h"
-#include "dballe/db/mysql/internals.h"
+#include "dballe/sql/mysql.h"
 #endif
 #ifdef HAVE_ODBC
 #include "dballe/db/odbc/driver.h"
-#include "dballe/db/odbc/internals.h"
+#include "dballe/sql/odbc.h"
 #endif
 #include <cstring>
 #include <sstream>
@@ -115,8 +94,10 @@ void Driver::explain(const std::string& query)
     fprintf(stderr, "Explaining query %s is not supported on this db.\n", query.c_str());
 }
 
-std::unique_ptr<Driver> Driver::create(Connection& conn)
+std::unique_ptr<Driver> Driver::create(dballe::sql::Connection& conn)
 {
+    using namespace dballe::sql;
+
     if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(&conn))
         return unique_ptr<Driver>(new sqlite::Driver(*c));
 #ifdef HAVE_ODBC

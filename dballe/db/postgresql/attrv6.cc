@@ -1,31 +1,15 @@
-/*
- * db/postgresql/attrv6 - attribute table management
- *
- * Copyright (C) 2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
 #include "attrv6.h"
-#include "dballe/db/sql/internals.h"
-#include "dballe/db/querybuf.h"
+#include "dballe/sql/postgresql.h"
+#include "dballe/sql/querybuf.h"
 #include "dballe/var.h"
 #include <cstring>
 
 using namespace std;
 using namespace wreport;
+using dballe::sql::PostgreSQLConnection;
+using dballe::sql::Transaction;
+using dballe::sql::Querybuf;
+using dballe::sql::error_postgresql;
 
 namespace dballe {
 namespace db {
@@ -54,6 +38,7 @@ PostgreSQLAttrV6::~PostgreSQLAttrV6()
 
 void PostgreSQLAttrV6::insert(Transaction& t, sql::bulk::InsertAttrsV6& attrs, UpdateMode update_mode)
 {
+    using namespace dballe::sql::postgresql;
     Querybuf select_query;
     select_query.append("SELECT id_data, type, value FROM attr WHERE id_data IN (");
     select_query.start_list(",");
@@ -138,7 +123,7 @@ void PostgreSQLAttrV6::insert(Transaction& t, sql::bulk::InsertAttrsV6& attrs, U
 
 void PostgreSQLAttrV6::read(int id_data, function<void(unique_ptr<Var>)> dest)
 {
-    using namespace postgresql;
+    using namespace dballe::sql::postgresql;
     Result res = conn.exec_prepared("attrv6_select", id_data);
     for (unsigned row = 0; row < res.rowcount(); ++row)
     {

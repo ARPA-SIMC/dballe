@@ -1,37 +1,12 @@
-/*
- * db/odbc/internals - Implementation infrastructure for the ODBC DB connection
- *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
-#ifndef DBALLE_DB_ODBC_INTERNALS_H
-#define DBALLE_DB_ODBC_INTERNALS_H
-
 /** @file
- * @ingroup db
- *
- * Database functions and data structures used by the db module, but not
- * exported as official API.
+ * ODBC DB connector
  */
+#ifndef DBALLE_SQL_ODBC_H
+#define DBALLE_SQL_ODBC_H
 
-#include <dballe/db/db.h>
-#include <dballe/db/sql.h>
-#include <dballe/db/querybuf.h>
+#include <dballe/core/error.h>
+#include <dballe/sql/sql.h>
+#include <dballe/sql/querybuf.h>
 #include <sqltypes.h>
 #include <list>
 
@@ -39,7 +14,7 @@
 #define DBA_DB_QUIRK_NO_ROWCOUNT_IN_DIAG (1 << 0)
 
 namespace dballe {
-namespace db {
+namespace sql {
 struct ODBCStatement;
 
 // Define this to get warnings when a Statement is closed but its data have not
@@ -49,7 +24,7 @@ struct ODBCStatement;
 /**
  * Report an ODBC error, using informations from the ODBC diagnostic record
  */
-struct error_odbc : public db::error
+struct error_odbc : public error_db
 {
     std::string msg;
 
@@ -60,9 +35,7 @@ struct error_odbc : public db::error
     error_odbc(SQLSMALLINT handleType, SQLHANDLE handle, const std::string& msg);
     ~error_odbc() throw () {}
 
-    wreport::ErrorCode code() const throw () { return wreport::WR_ERR_ODBC; }
-
-    virtual const char* what() const throw () { return msg.c_str(); }
+    const char* what() const noexcept override { return msg.c_str(); }
 
     static void throwf(SQLSMALLINT handleType, SQLHANDLE handle, const char* fmt, ...) WREPORT_THROWF_ATTRS(3, 4);
 };

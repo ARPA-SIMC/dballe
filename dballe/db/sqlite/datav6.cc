@@ -1,13 +1,17 @@
 #include "datav6.h"
-#include "dballe/db/sql.h"
-#include "dballe/db/querybuf.h"
 #include "dballe/db/v6/qbuilder.h"
+#include "dballe/sql/sqlite.h"
+#include "dballe/sql/querybuf.h"
 #include "dballe/record.h"
 #include <algorithm>
 #include <cstring>
 
 using namespace wreport;
 using namespace std;
+using dballe::sql::SQLiteConnection;
+using dballe::sql::SQLiteStatement;
+using dballe::sql::Transaction;
+using dballe::sql::Querybuf;
 
 namespace dballe {
 namespace db {

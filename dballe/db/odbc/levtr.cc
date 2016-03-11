@@ -1,5 +1,5 @@
 #include "levtr.h"
-#include "dballe/db/odbc/internals.h"
+#include "dballe/sql/odbc.h"
 #include "dballe/record.h"
 #include "dballe/core/defs.h"
 #include "dballe/msg/msg.h"
@@ -11,6 +11,9 @@
 
 using namespace wreport;
 using namespace std;
+using dballe::sql::ODBCConnection;
+using dballe::sql::ODBCStatement;
+using dballe::sql::ServerType;
 
 namespace dballe {
 namespace db {
@@ -35,7 +38,7 @@ ODBCLevTrV6::ODBCLevTrV6(ODBCConnection& conn)
     {
         case ServerType::ORACLE:
             insert_query = "INSERT INTO lev_tr VALUES (seq_lev_tr.NextVal, ?, ?, ?, ?, ?, ?, ?)";
-            seq_lev_tr = new Sequence(conn, "seq_lev_tr");
+            seq_lev_tr = new dballe::sql::Sequence(conn, "seq_lev_tr");
             break;
         default: break;
     }

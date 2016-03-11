@@ -1,34 +1,15 @@
-/*
- * db/sql - Generic infrastructure for talking with SQL databases
- *
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-#include "sql.h"
+#include "sql/sql.h"
+#include "dballe/types.h"
 #include "config.h"
-#include "sqlite/internals.h"
+#include "sql/sqlite.h"
 #ifdef HAVE_ODBC
-#include "odbc/internals.h"
+#include "sql/odbc.h"
 #endif
 #ifdef HAVE_LIBPQ
-#include "postgresql/internals.h"
+#include "sql/postgresql.h"
 #endif
 #ifdef HAVE_MYSQL
-#include "mysql/internals.h"
+#include "sql/mysql.h"
 #endif
 #include <cstring>
 
@@ -36,7 +17,7 @@ using namespace std;
 using namespace wreport;
 
 namespace dballe {
-namespace db {
+namespace sql {
 
 Connection::~Connection() {}
 

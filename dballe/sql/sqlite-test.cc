@@ -1,9 +1,9 @@
 #include "core/tests.h"
-#include "internals.h"
+#include "sql/sqlite.h"
 
 using namespace std;
 using namespace dballe;
-using namespace dballe::db;
+using namespace dballe::sql;
 using namespace dballe::tests;
 using namespace wreport;
 

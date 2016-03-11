@@ -1,5 +1,5 @@
 #include "station.h"
-#include "dballe/db/sqlite/internals.h"
+#include "dballe/sql/sqlite.h"
 #include "dballe/record.h"
 #include "dballe/core/var.h"
 #include <wreport/var.h>
@@ -7,6 +7,8 @@
 using namespace wreport;
 using namespace dballe::db;
 using namespace std;
+using dballe::sql::SQLiteConnection;
+using dballe::sql::SQLiteStatement;
 
 namespace dballe {
 namespace db {

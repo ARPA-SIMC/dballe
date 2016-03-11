@@ -29,7 +29,7 @@
  */
 
 #include <dballe/db/sql/datav6.h>
-#include <dballe/db/postgresql/internals.h>
+#include <dballe/sql/fwd.h>
 
 namespace dballe {
 struct Record;
@@ -45,16 +45,16 @@ class PostgreSQLDataV6 : public sql::DataV6
 {
 protected:
     /** DB connection. */
-    PostgreSQLConnection& conn;
+    dballe::sql::PostgreSQLConnection& conn;
 
 public:
-    PostgreSQLDataV6(PostgreSQLConnection& conn);
+    PostgreSQLDataV6(dballe::sql::PostgreSQLConnection& conn);
     PostgreSQLDataV6(const PostgreSQLDataV6&) = delete;
     PostgreSQLDataV6(const PostgreSQLDataV6&&) = delete;
     PostgreSQLDataV6& operator=(const PostgreSQLDataV6&) = delete;
     ~PostgreSQLDataV6();
 
-    void insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode=UPDATE) override;
+    void insert(dballe::sql::Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode=UPDATE) override;
     void remove(const v6::QueryBuilder& qb) override;
     void dump(FILE* out) override;
 };

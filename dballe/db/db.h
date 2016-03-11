@@ -3,6 +3,7 @@
 
 #include <dballe/core/defs.h>
 #include <dballe/db/defs.h>
+#include <dballe/sql/fwd.h>
 #include <wreport/varinfo.h>
 #include <wreport/var.h>
 #include <vector>
@@ -27,8 +28,6 @@ struct Messages;
 struct DB;
 
 namespace db {
-struct Connection;
-struct ODBCConnection;
 
 /**
  * Simple typedef to make typing easier
@@ -238,7 +237,7 @@ public:
     /**
      * Create a database from an open Connection
      */
-    static std::unique_ptr<DB> create(std::unique_ptr<db::Connection> conn);
+    static std::unique_ptr<DB> create(std::unique_ptr<sql::Connection> conn);
 
     /**
      * Return TRUE if the string looks like a DB URL

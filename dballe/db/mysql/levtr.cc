@@ -1,6 +1,7 @@
 #include "levtr.h"
 #include "dballe/core/defs.h"
-#include "dballe/db/querybuf.h"
+#include "dballe/sql/mysql.h"
+#include "dballe/sql/querybuf.h"
 #include "dballe/msg/msg.h"
 #include <map>
 #include <sstream>
@@ -10,6 +11,9 @@
 
 using namespace wreport;
 using namespace std;
+using dballe::sql::MySQLConnection;
+using dballe::sql::Querybuf;
+using dballe::sql::mysql::Row;
 
 namespace dballe {
 namespace db {
@@ -17,7 +21,7 @@ namespace mysql {
 
 namespace {
 
-Level to_level(mysql::Row& row, int first_id=0)
+Level to_level(Row& row, int first_id=0)
 {
     return Level(
             row.as_int(first_id),
@@ -26,7 +30,7 @@ Level to_level(mysql::Row& row, int first_id=0)
             row.as_int(first_id + 3));
 }
 
-Trange to_trange(mysql::Row& row, int first_id=0)
+Trange to_trange(Row& row, int first_id=0)
 {
     return Trange(
             row.as_int(first_id),

@@ -1,5 +1,5 @@
 #include "levtr.h"
-#include "dballe/db/postgresql/internals.h"
+#include "dballe/sql/postgresql.h"
 #include "dballe/core/defs.h"
 #include "dballe/msg/msg.h"
 #include <map>
@@ -10,6 +10,7 @@
 
 using namespace wreport;
 using namespace std;
+using dballe::sql::PostgreSQLConnection;
 
 namespace dballe {
 namespace db {
@@ -17,7 +18,7 @@ namespace postgresql {
 
 namespace {
 
-Level to_level(const postgresql::Result& res, unsigned row, int first_id)
+Level to_level(const dballe::sql::postgresql::Result& res, unsigned row, int first_id)
 {
     return Level(
             res.get_int4(row, first_id),
@@ -26,7 +27,7 @@ Level to_level(const postgresql::Result& res, unsigned row, int first_id)
             res.get_int4(row, first_id + 3));
 }
 
-Trange to_trange(const postgresql::Result& res, unsigned row, int first_id)
+Trange to_trange(const dballe::sql::postgresql::Result& res, unsigned row, int first_id)
 {
     return Trange(
             res.get_int4(row, first_id),
@@ -58,7 +59,7 @@ PostgreSQLLevTrV6::~PostgreSQLLevTrV6()
 
 int PostgreSQLLevTrV6::obtain_id(const Level& lev, const Trange& tr)
 {
-    using namespace postgresql;
+    using namespace dballe::sql::postgresql;
     Result res = conn.exec_prepared("v6_levtr_select_id",
             lev.ltype1, lev.l1, lev.ltype2, lev.l2, tr.pind, tr.p1, tr.p2);
     switch (res.rowcount())

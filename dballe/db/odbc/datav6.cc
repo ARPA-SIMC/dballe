@@ -1,5 +1,5 @@
 #include "datav6.h"
-#include "dballe/db/sql.h"
+#include "dballe/sql/odbc.h"
 #include "dballe/db/v6/qbuilder.h"
 #include "dballe/record.h"
 #include <algorithm>
@@ -8,6 +8,10 @@
 #include <sql.h>
 
 using namespace wreport;
+using dballe::sql::ODBCConnection;
+using dballe::sql::ODBCStatement;
+using dballe::sql::Transaction;
+using dballe::sql::Querybuf;
 
 namespace dballe {
 namespace db {

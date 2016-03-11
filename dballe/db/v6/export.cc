@@ -1,6 +1,7 @@
 #include "db.h"
 #include "cursor.h"
 #include "qbuilder.h"
+#include "dballe/sql/sql.h"
 #include "dballe/db/sql/driver.h"
 #include "dballe/db/sql/repinfo.h"
 #include "dballe/db/sql/station.h"
@@ -16,6 +17,7 @@
 
 using namespace wreport;
 using namespace std;
+using dballe::sql::Connection;
 
 namespace dballe {
 namespace db {

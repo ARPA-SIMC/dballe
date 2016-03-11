@@ -1,40 +1,21 @@
-/*
- * db/mysql/internals - Implementation infrastructure for the MySQL DB connection
- *
- * Copyright (C) 2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
+/** @file
+ * MySQL DB connector
  */
+#ifndef DBALLE_SQL_MYSQL_H
+#define DBALLE_SQL_MYSQL_H
 
-#ifndef DBALLE_DB_MYSQL_INTERNALS_H
-#define DBALLE_DB_MYSQL_INTERNALS_H
-
-#include <dballe/db/db.h>
-#include <dballe/db/sql.h>
+#include <dballe/sql/sql.h>
 #include <cstdlib>
 #include <mysql.h>
 
 namespace dballe {
-namespace db {
+namespace sql {
 struct MySQLStatement;
 
 /**
  * Report a MySQL error
  */
-struct error_mysql : public db::error
+struct error_mysql : public error_db
 {
     std::string msg;
 
@@ -46,9 +27,7 @@ struct error_mysql : public db::error
     error_mysql(const std::string& dbmsg, const std::string& msg);
     ~error_mysql() throw () {}
 
-    wreport::ErrorCode code() const throw () { return wreport::WR_ERR_ODBC; }
-
-    virtual const char* what() const throw () { return msg.c_str(); }
+    const char* what() const noexcept override { return msg.c_str(); }
 
     static void throwf(MYSQL* db, const char* fmt, ...) WREPORT_THROWF_ATTRS(2, 3);
 };
@@ -227,135 +206,7 @@ public:
      * If not supported, an exception is thrown.
      */
     int get_last_insert_id();
-
-    /// Count the number of rows modified by the last query that was run
-    //int changes();
-
-#if 0
-    /// Wrap sqlite3_exec, without a callback
-    void wrap_sqlite3_exec(const std::string& query);
-    void wrap_sqlite3_exec_nothrow(const std::string& query) noexcept;
-#endif
 };
-
-#if 0
-/// MySQL statement
-struct MySQLStatement
-{
-    MySQLConnection& conn;
-    sqlite3_stmt *stm = nullptr;
-
-    MySQLStatement(MySQLConnection& conn, const std::string& query);
-    MySQLStatement(const MySQLStatement&) = delete;
-    MySQLStatement(const MySQLStatement&&) = delete;
-    ~MySQLStatement();
-    MySQLStatement& operator=(const MySQLStatement&) = delete;
-
-    /**
-     * Bind all the arguments in a single invocation.
-     *
-     * Note that the parameter positions are used as bind column numbers, so
-     * calling this function twice will re-bind columns instead of adding new
-     * ones.
-     */
-    template<typename... Args> void bind(const Args& ...args)
-    {
-        bindn<sizeof...(args)>(args...);
-    }
-
-    void bind_null_val(int idx);
-    void bind_val(int idx, int val);
-    void bind_val(int idx, unsigned val);
-    void bind_val(int idx, unsigned short val);
-    void bind_val(int idx, const Datetime& val);
-    void bind_val(int idx, const char* val); // Warning: SQLITE_STATIC is used
-    void bind_val(int idx, const std::string& val); // Warning: SQLITE_STATIC is used
-
-    /// Run the query, ignoring all results
-    void execute();
-
-    /**
-     * Run the query, calling on_row for every row in the result.
-     *
-     * At the end of the function, the statement is reset, even in case an
-     * exception is thrown.
-     */
-    void execute(std::function<void()> on_row);
-
-    /**
-     * Run the query, raising an error if there is more than one row in the
-     * result
-     */
-    void execute_one(std::function<void()> on_row);
-
-    /// Read the int value of a column in the result set (0-based)
-    int column_int(int col) { return sqlite3_column_int(stm, col); }
-
-    /// Read the int value of a column in the result set (0-based)
-    sqlite3_int64 column_int64(int col) { return sqlite3_column_int64(stm, col); }
-
-    /// Read the double value of a column in the result set (0-based)
-    double column_double(int col) { return sqlite3_column_double(stm, col); }
-
-    /// Read the string value of a column in the result set (0-based)
-    const char* column_string(int col) { return (const char*)sqlite3_column_text(stm, col); }
-
-    /// Read the string value of a column and parse it as a Datetime
-    Datetime column_datetime(int col);
-
-    /// Check if a column has a NULL value (0-based)
-    bool column_isnull(int col) { return sqlite3_column_type(stm, col) == SQLITE_NULL; }
-
-    void wrap_sqlite3_reset();
-    void wrap_sqlite3_reset_nothrow() noexcept;
-    /**
-     * Get the current error message, reset the statement and throw
-     * error_sqlite
-     */
-    [[noreturn]] void reset_and_throw(const std::string& errmsg);
-
-    operator sqlite3_stmt*() { return stm; }
-#if 0
-    /// @return SQLExecute's result
-    int execute();
-    /// @return SQLExecute's result
-    int exec_direct(const char* query);
-    /// @return SQLExecute's result
-    int exec_direct(const char* query, int qlen);
-
-    /// @return SQLExecute's result
-    int execute_and_close();
-    /// @return SQLExecute's result
-    int exec_direct_and_close(const char* query);
-    /// @return SQLExecute's result
-    int exec_direct_and_close(const char* query, int qlen);
-
-    /**
-     * @return the number of columns in the result set (or 0 if the statement
-     * did not return columns)
-     */
-    int columns_count();
-    bool fetch();
-    bool fetch_expecting_one();
-    void close_cursor();
-    void close_cursor_if_needed();
-    /// Row count for select operations
-    size_t select_rowcount();
-    /// Row count for insert, delete and other non-select operations
-    size_t rowcount();
-#endif
-
-private:
-    // Implementation of variadic bind: terminating condition
-    template<size_t total> void bindn() {}
-    // Implementation of variadic bind: recursive iteration over the parameter pack
-    template<size_t total, typename ...Args, typename T> void bindn(const T& first, const Args& ...args)
-    {
-        bind_val(total - sizeof...(args), first);
-        bindn<total>(args...);
-    }
-};
-#endif
 
 }
 }

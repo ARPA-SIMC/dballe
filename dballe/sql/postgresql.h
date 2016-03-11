@@ -1,39 +1,20 @@
-/*
- * db/sqlite/internals - Implementation infrastructure for the PostgreSQL DB connection
- *
- * Copyright (C) 2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
+/** @file
+ * PostgreSQL DB connector
  */
+#ifndef DBALLE_SQL_POSTGRESQL_H
+#define DBALLE_SQL_POSTGRESQL_H
 
-#ifndef DBALLE_DB_POSTGRESQL_INTERNALS_H
-#define DBALLE_DB_POSTGRESQL_INTERNALS_H
-
-#include <dballe/db/db.h>
-#include <dballe/db/sql.h>
+#include <dballe/sql/sql.h>
 #include <libpq-fe.h>
 #include <arpa/inet.h>
 
 namespace dballe {
-namespace db {
+namespace sql {
 
 /**
  * Report an PostgreSQL error
  */
-struct error_postgresql : public db::error
+struct error_postgresql : public error_db
 {
     std::string msg;
 
@@ -46,9 +27,7 @@ struct error_postgresql : public db::error
     error_postgresql(const std::string& dbmsg, const std::string& msg);
     ~error_postgresql() throw () {}
 
-    wreport::ErrorCode code() const throw () { return wreport::WR_ERR_ODBC; }
-
-    virtual const char* what() const throw () { return msg.c_str(); }
+    const char* what() const noexcept override { return msg.c_str(); }
 
     static void throwf(PGconn* db, const char* fmt, ...) WREPORT_THROWF_ATTRS(2, 3);
     static void throwf(PGresult* db, const char* fmt, ...) WREPORT_THROWF_ATTRS(2, 3);

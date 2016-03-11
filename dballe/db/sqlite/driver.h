@@ -22,18 +22,17 @@
 #define DBALLE_DB_SQLITE_DRIVER_H
 
 #include <dballe/db/sql/driver.h>
+#include <dballe/sql/fwd.h>
 
 namespace dballe {
 namespace db {
-struct SQLiteConnection;
-
 namespace sqlite {
 
 struct Driver : public sql::Driver
 {
-    SQLiteConnection& conn;
+    dballe::sql::SQLiteConnection& conn;
 
-    Driver(SQLiteConnection& conn);
+    Driver(dballe::sql::SQLiteConnection& conn);
     virtual ~Driver();
 
     std::unique_ptr<sql::Repinfo> create_repinfov6() override;

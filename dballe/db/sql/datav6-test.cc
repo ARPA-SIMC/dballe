@@ -1,6 +1,6 @@
 #include "db/tests.h"
 #include "db/v6/db.h"
-#include "db/sql.h"
+#include "sql/sql.h"
 #include "db/sql/repinfo.h"
 #include "db/sql/station.h"
 #include "db/sql/levtr.h"

@@ -25,11 +25,16 @@
 #include "datav6.h"
 #include "attrv6.h"
 #include "dballe/db/v6/qbuilder.h"
+#include "dballe/sql/postgresql.h"
 #include <algorithm>
 #include <cstring>
 
 using namespace std;
 using namespace wreport;
+using dballe::sql::PostgreSQLConnection;
+//using dballe::sql::Transaction;
+//using dballe::sql::Querybuf;
+using dballe::sql::error_postgresql;
 
 namespace dballe {
 namespace db {
@@ -73,7 +78,7 @@ void Driver::run_built_query_v6(
         const v6::QueryBuilder& qb,
         std::function<void(sql::SQLRecordV6& rec)> dest)
 {
-    using namespace dballe::db::postgresql;
+    using namespace dballe::sql::postgresql;
 
     // fprintf(stderr, "QUERY %d %s\n", qb.bind_in_ident, qb.sql_query.c_str());
 
@@ -303,7 +308,7 @@ void Driver::exec_no_data(const std::string& query)
 
 void Driver::explain(const std::string& query)
 {
-    using namespace dballe::db::postgresql;
+    using namespace dballe::sql::postgresql;
 
     string explain_query = "EXPLAIN ";
     explain_query += query;

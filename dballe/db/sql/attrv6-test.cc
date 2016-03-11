@@ -1,6 +1,6 @@
 #include "db/tests.h"
 #include "db/v6/db.h"
-#include "db/sql.h"
+#include "sql/sql.h"
 #include "db/sql/repinfo.h"
 #include "db/sql/station.h"
 #include "db/sql/levtr.h"
@@ -80,7 +80,7 @@ struct Fixture : DriverFixture
     {
         Var res(varinfo(WR_VAR(0, 12, 101)));
         unsigned count = 0;
-        attr->read(id_data, [&](unique_ptr<Var> attr) { res.seta(auto_ptr<Var>(attr.release())); ++count; });
+        attr->read(id_data, [&](unique_ptr<Var> attr) { res.seta(move(attr)); ++count; });
         wassert(actual(count) == expected_attr_count);
         return res;
     }

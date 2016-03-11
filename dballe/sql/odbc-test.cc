@@ -1,9 +1,9 @@
 #include "db/tests.h"
-#include "db/odbc/internals.h"
+#include "sql/odbc.h"
 #include <sql.h>
 
 using namespace dballe;
-using namespace dballe::db;
+using namespace dballe::sql;
 using namespace dballe::tests;
 using namespace wreport;
 using namespace std;

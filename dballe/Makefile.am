@@ -51,6 +51,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	record.h \
 	query.h \
 	var.h \
+	core/error.h \
 	core/aliases.h \
 	core/verbose.h \
 	core/stlutils.h \
@@ -95,14 +96,15 @@ nobase_dist_dballeinclude_HEADERS = \
 	msg/aof_codec.h \
 	msg/wr_codec.h \
 	msg/wr_exporters/common.h \
+	sql/sql.h \
+	sql/querybuf.h \
+	sql/sqlite.h \
 	db/defs.h \
 	db/db.h \
 	db/trace.h \
 	db/mem/repinfo.h \
 	db/mem/cursor.h \
 	db/mem/db.h \
-	db/querybuf.h \
-	db/sql.h \
 	db/sql/internals.h \
 	db/sql/repinfo.h \
 	db/sql/station.h \
@@ -110,7 +112,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/sql/datav6.h \
 	db/sql/attrv6.h \
 	db/sql/driver.h \
-	db/sqlite/internals.h \
 	db/sqlite/repinfo.h \
 	db/sqlite/station.h \
 	db/sqlite/levtr.h \
@@ -132,7 +133,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	simple/msgapi.h
 if HAVE_LIBPQ
 nobase_dist_dballeinclude_HEADERS += \
-	db/postgresql/internals.h \
+	sql/postgresql.h \
 	db/postgresql/repinfo.h \
 	db/postgresql/station.h \
 	db/postgresql/levtr.h \
@@ -142,7 +143,7 @@ nobase_dist_dballeinclude_HEADERS += \
 endif
 if HAVE_MYSQL
 nobase_dist_dballeinclude_HEADERS += \
-	db/mysql/internals.h \
+	sql/mysql.h \
 	db/mysql/repinfo.h \
 	db/mysql/station.h \
 	db/mysql/levtr.h \
@@ -152,7 +153,7 @@ nobase_dist_dballeinclude_HEADERS += \
 endif
 if HAVE_ODBC
 nobase_dist_dballeinclude_HEADERS += \
-	db/odbc/internals.h \
+	sql/odbc.h \
 	db/odbc/repinfo.h \
 	db/odbc/station.h \
 	db/odbc/levtr.h \
@@ -169,6 +170,7 @@ libdballe_la_SOURCES = \
 	record.cc \
 	query.cc \
 	var.cc \
+	core/error.cc \
 	core/verbose.cc \
 	core/aliases.cc \
 	core/defs.cc \
@@ -229,17 +231,17 @@ libdballe_la_SOURCES = \
 	msg/wr_exporters/flight.cc \
 	msg/wr_exporters/generic.cc \
 	msg/wr_exporters/pollution.cc \
+	sql/sql.cc \
+	sql/querybuf.cc \
+	sql/sqlite.cc \
 	db/db.cc \
 	db/trace.cc \
-	db/querybuf.cc \
-	db/sql.cc \
 	db/sql/repinfo.cc \
 	db/sql/station.cc \
 	db/sql/levtr.cc \
 	db/sql/datav6.cc \
 	db/sql/attrv6.cc \
 	db/sql/driver.cc \
-	db/sqlite/internals.cc \
 	db/sqlite/repinfo.cc \
 	db/sqlite/station.cc \
 	db/sqlite/levtr.cc \
@@ -266,7 +268,7 @@ libdballe_la_SOURCES = \
 	simple/dbapi.cc
 if HAVE_LIBPQ
 libdballe_la_SOURCES += \
-	db/postgresql/internals.cc \
+	sql/postgresql.cc \
 	db/postgresql/repinfo.cc \
 	db/postgresql/station.cc \
 	db/postgresql/levtr.cc \
@@ -276,7 +278,7 @@ libdballe_la_SOURCES += \
 endif
 if HAVE_MYSQL
 libdballe_la_SOURCES += \
-	db/mysql/internals.cc \
+	sql/mysql.cc \
 	db/mysql/driver.cc \
 	db/mysql/repinfo.cc \
 	db/mysql/station.cc \
@@ -286,7 +288,7 @@ libdballe_la_SOURCES += \
 endif
 if HAVE_ODBC
 libdballe_la_SOURCES += \
-	db/odbc/internals.cc \
+	sql/odbc.cc \
 	db/odbc/repinfo.cc \
 	db/odbc/station.cc \
 	db/odbc/levtr.cc \
@@ -375,15 +377,15 @@ test_dballe_SOURCES = \
 	msg/wr_import-test.cc \
 	msg/wr_export-test.cc \
 	msg/aof_codec-test.cc \
+	sql/querybuf-test.cc \
+	sql/sqlite-test.cc \
 	db/tests.cc \
-	db/querybuf-test.cc \
 	db/trace-test.cc \
 	db/sql/repinfo-test.cc \
 	db/sql/station-test.cc \
 	db/sql/levtr-test.cc \
 	db/sql/datav6-test.cc \
 	db/sql/attrv6-test.cc \
-	db/sqlite/internals-test.cc \
 	db/db-basic-test.cc \
 	db/db-misc-test.cc \
 	db/db-query-station-test.cc \
@@ -404,15 +406,15 @@ test_dballe_SOURCES += \
 endif
 if HAVE_LIBPQ
 test_dballe_SOURCES += \
-	db/postgresql/internals-test.cc
+	sql/postgresql-test.cc
 endif
 if HAVE_MYSQL
 test_dballe_SOURCES += \
-	db/mysql/internals-test.cc
+	sql/mysql-test.cc
 endif
 if HAVE_ODBC
 test_dballe_SOURCES += \
-	db/odbc/internals-test.cc
+	sql/odbc-test.cc
 endif
 
 test_dballe_LDADD = \

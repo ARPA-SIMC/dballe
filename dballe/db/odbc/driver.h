@@ -22,18 +22,17 @@
 #define DBALLE_DB_ODBC_DRIVER_H
 
 #include <dballe/db/sql/driver.h>
+#include <dballe/sql/fwd.h>
 
 namespace dballe {
 namespace db {
-struct ODBCConnection;
-
 namespace odbc {
 
 struct Driver : public sql::Driver
 {
-    ODBCConnection& conn;
+    dballe::sql::ODBCConnection& conn;
 
-    Driver(ODBCConnection& conn);
+    Driver(dballe::sql::ODBCConnection& conn);
     virtual ~Driver();
 
     std::unique_ptr<sql::Repinfo> create_repinfov6() override;

@@ -1,6 +1,7 @@
 #include "levtr.h"
 #include "dballe/core/defs.h"
 #include "dballe/msg/msg.h"
+#include "dballe/sql/sqlite.h"
 #include <map>
 #include <sstream>
 #include <cstring>
@@ -9,6 +10,8 @@
 
 using namespace wreport;
 using namespace std;
+using dballe::sql::SQLiteConnection;
+using dballe::sql::SQLiteStatement;
 
 namespace dballe {
 namespace db {

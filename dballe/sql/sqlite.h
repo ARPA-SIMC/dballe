@@ -1,39 +1,21 @@
-/*
- * db/sqlite/internals - Implementation infrastructure for the SQLite DB connection
- *
- * Copyright (C) 2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
+/** @file
+ * SQLite DB connector
  */
+#ifndef DBALLE_SQL_SQLITE_H
+#define DBALLE_SQL_SQLITE_H
 
-#ifndef DBALLE_DB_SQLITE_INTERNALS_H
-#define DBALLE_DB_SQLITE_INTERNALS_H
-
-#include <dballe/db/db.h>
-#include <dballe/db/sql.h>
+#include <dballe/core/error.h>
+#include <dballe/sql/sql.h>
 #include <sqlite3.h>
 
 namespace dballe {
-namespace db {
+namespace sql {
 struct SQLiteStatement;
 
 /**
  * Report an SQLite error
  */
-struct error_sqlite : public db::error
+struct error_sqlite : public dballe::error_db
 {
     std::string msg;
 
@@ -43,11 +25,9 @@ struct error_sqlite : public db::error
      */
     error_sqlite(sqlite3* db, const std::string& msg);
     error_sqlite(const std::string& dbmsg, const std::string& msg);
-    ~error_sqlite() throw () {}
+    ~error_sqlite() noexcept {}
 
-    wreport::ErrorCode code() const throw () { return wreport::WR_ERR_ODBC; }
-
-    virtual const char* what() const throw () { return msg.c_str(); }
+    const char* what() const noexcept override { return msg.c_str(); }
 
     static void throwf(sqlite3* db, const char* fmt, ...) WREPORT_THROWF_ATTRS(2, 3);
 };

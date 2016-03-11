@@ -1,6 +1,6 @@
 #include "db/tests.h"
 #include "db/v6/db.h"
-#include "db/sql.h"
+#include "sql/sql.h"
 #include "db/sql/driver.h"
 #include "db/sql/repinfo.h"
 #include "config.h"
@@ -17,7 +17,7 @@ struct Fixture : DriverFixture
 {
     using DriverFixture::DriverFixture;
 
-    unique_ptr<sql::Repinfo> repinfo;
+    unique_ptr<db::sql::Repinfo> repinfo;
 
     void reset_repinfo()
     {

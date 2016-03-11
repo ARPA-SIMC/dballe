@@ -1,10 +1,11 @@
-#include "db/tests.h"
-#include "db/querybuf.h"
+#include "core/tests.h"
+#include "sql/querybuf.h"
 
 using namespace wreport;
 using namespace dballe;
 using namespace dballe::tests;
 using namespace std;
+using dballe::sql::Querybuf;
 
 namespace {
 

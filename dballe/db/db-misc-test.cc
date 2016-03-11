@@ -1,6 +1,5 @@
 #include "config.h"
 #include "db/tests.h"
-#include "db/querybuf.h"
 #include "db/mem/db.h"
 #include <algorithm>
 

@@ -1,5 +1,5 @@
 #include "datav6.h"
-#include "dballe/db/sql.h"
+#include "dballe/sql/postgresql.h"
 #include "dballe/db/v6/qbuilder.h"
 #include "dballe/record.h"
 #include <algorithm>
@@ -8,6 +8,10 @@
 
 using namespace wreport;
 using namespace std;
+using dballe::sql::PostgreSQLConnection;
+using dballe::sql::Transaction;
+using dballe::sql::Querybuf;
+using dballe::sql::error_postgresql;
 
 namespace dballe {
 namespace db {
@@ -49,7 +53,7 @@ PostgreSQLDataV6::~PostgreSQLDataV6()
 
 void PostgreSQLDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode)
 {
-    using namespace postgresql;
+    using namespace dballe::sql::postgresql;
     const char* select_query = R"(
         SELECT id, id_lev_tr, id_var, value
           FROM data

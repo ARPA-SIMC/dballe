@@ -29,7 +29,7 @@
  */
 
 #include <dballe/db/sql/datav6.h>
-#include <dballe/db/sqlite/internals.h>
+#include <dballe/sql/fwd.h>
 
 namespace dballe {
 struct Record;
@@ -45,19 +45,19 @@ class SQLiteDataV6 : public sql::DataV6
 {
 protected:
     /// DB connection
-    SQLiteConnection& conn;
+    dballe::sql::SQLiteConnection& conn;
 
     /// Precompiled select statement to prepare bulk insert
-    SQLiteStatement* sstm = nullptr;
+    dballe::sql::SQLiteStatement* sstm = nullptr;
 
 public:
-    SQLiteDataV6(SQLiteConnection& conn);
+    SQLiteDataV6(dballe::sql::SQLiteConnection& conn);
     SQLiteDataV6(const SQLiteDataV6&) = delete;
     SQLiteDataV6(const SQLiteDataV6&&) = delete;
     SQLiteDataV6& operator=(const SQLiteDataV6&) = delete;
     ~SQLiteDataV6();
 
-    void insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode=UPDATE) override;
+    void insert(dballe::sql::Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode=UPDATE) override;
     void remove(const v6::QueryBuilder& qb) override;
     void dump(FILE* out) override;
 };

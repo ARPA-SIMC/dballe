@@ -24,7 +24,7 @@
 
 #include <dballe/db/db.h>
 #include <dballe/db/sql/levtr.h>
-#include <dballe/db/sqlite/internals.h>
+#include <dballe/sql/fwd.h>
 #include <cstdio>
 #include <memory>
 
@@ -37,9 +37,6 @@ struct Context;
 }
 
 namespace db {
-struct Connection;
-struct Statement;
-
 namespace sqlite {
 struct DB;
 
@@ -52,21 +49,21 @@ protected:
     /**
      * DB connection.
      */
-    SQLiteConnection& conn;
+    dballe::sql::SQLiteConnection& conn;
 
     /** Precompiled select statement */
-    SQLiteStatement* sstm = nullptr;
+    dballe::sql::SQLiteStatement* sstm = nullptr;
     /** Precompiled select data statement */
-    SQLiteStatement* sdstm = nullptr;
+    dballe::sql::SQLiteStatement* sdstm = nullptr;
     /** Precompiled insert statement */
-    SQLiteStatement* istm = nullptr;
+    dballe::sql::SQLiteStatement* istm = nullptr;
     /** Precompiled delete statement */
-    SQLiteStatement* dstm = nullptr;
+    dballe::sql::SQLiteStatement* dstm = nullptr;
 
     DBRow working_row;
 
 public:
-    SQLiteLevTrV6(SQLiteConnection& conn);
+    SQLiteLevTrV6(dballe::sql::SQLiteConnection& conn);
     SQLiteLevTrV6(const LevTr&) = delete;
     SQLiteLevTrV6(const LevTr&&) = delete;
     SQLiteLevTrV6& operator=(const SQLiteLevTrV6&) = delete;

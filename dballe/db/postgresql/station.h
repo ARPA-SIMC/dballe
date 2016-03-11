@@ -29,6 +29,7 @@
  */
 
 #include <dballe/db/sql/station.h>
+#include <dballe/sql/fwd.h>
 #include <functional>
 #include <memory>
 
@@ -38,9 +39,7 @@ struct Var;
 
 namespace dballe {
 namespace db {
-struct PostgreSQLConnection;
 namespace postgresql {
-struct Result;
 
 class StationBase : public sql::Station
 {
@@ -48,7 +47,7 @@ protected:
     /**
      * DB connection.
      */
-    PostgreSQLConnection& conn;
+    dballe::sql::PostgreSQLConnection& conn;
 
     /// Lookup the ID of a station, returning true if it was found, false if not
     bool maybe_get_id(int lat, int lon, const char* ident, int* id);
@@ -58,7 +57,7 @@ protected:
     StationBase& operator=(const StationBase&) = delete;
 
 public:
-    StationBase(PostgreSQLConnection& conn);
+    StationBase(dballe::sql::PostgreSQLConnection& conn);
     ~StationBase();
 
     /**
@@ -94,7 +93,7 @@ public:
 class PostgreSQLStationV6 : public postgresql::StationBase
 {
 public:
-    PostgreSQLStationV6(PostgreSQLConnection& conn);
+    PostgreSQLStationV6(dballe::sql::PostgreSQLConnection& conn);
     ~PostgreSQLStationV6();
 };
 

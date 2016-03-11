@@ -1,12 +1,12 @@
 #include "db.h"
-#include "dballe/db/sql.h"
+#include "dballe/sql/sql.h"
+#include "dballe/sql/querybuf.h"
 #include "dballe/db/sql/driver.h"
 #include "dballe/db/sql/repinfo.h"
 #include "dballe/db/sql/station.h"
 #include "dballe/db/sql/levtr.h"
 #include "dballe/db/sql/datav6.h"
 #include "dballe/db/sql/attrv6.h"
-#include "dballe/db/querybuf.h"
 #include "cursor.h"
 #include "dballe/core/query.h"
 #include "dballe/core/record.h"
@@ -20,6 +20,8 @@
 
 using namespace std;
 using namespace wreport;
+using dballe::sql::Connection;
+using dballe::sql::Querybuf;
 
 namespace dballe {
 namespace db {

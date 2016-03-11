@@ -22,18 +22,17 @@
 #define DBALLE_DB_MYSQL_DRIVER_H
 
 #include <dballe/db/sql/driver.h>
+#include <dballe/sql/fwd.h>
 
 namespace dballe {
 namespace db {
-struct MySQLConnection;
-
 namespace mysql {
 
 struct Driver : public sql::Driver
 {
-    MySQLConnection& conn;
+    dballe::sql::MySQLConnection& conn;
 
-    Driver(MySQLConnection& conn);
+    Driver(dballe::sql::MySQLConnection& conn);
     virtual ~Driver();
 
     std::unique_ptr<sql::Repinfo> create_repinfov6() override;

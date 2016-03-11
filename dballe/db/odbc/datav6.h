@@ -29,7 +29,7 @@
  */
 
 #include <dballe/db/sql/datav6.h>
-#include <dballe/db/odbc/internals.h>
+#include <dballe/sql/fwd.h>
 
 namespace dballe {
 struct Record;
@@ -45,16 +45,16 @@ class ODBCDataV6 : public sql::DataV6
 {
 protected:
     /** DB connection. */
-    ODBCConnection& conn;
+    dballe::sql::ODBCConnection& conn;
 
 public:
-    ODBCDataV6(ODBCConnection& conn);
+    ODBCDataV6(dballe::sql::ODBCConnection& conn);
     ODBCDataV6(const ODBCDataV6&) = delete;
     ODBCDataV6(const ODBCDataV6&&) = delete;
     ODBCDataV6& operator=(const ODBCDataV6&) = delete;
     ~ODBCDataV6();
 
-    void insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode=UPDATE) override;
+    void insert(dballe::sql::Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode=UPDATE) override;
     void remove(const v6::QueryBuilder& qb) override;
     void dump(FILE* out) override;
 };

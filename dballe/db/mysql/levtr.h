@@ -24,7 +24,7 @@
 
 #include <dballe/db/db.h>
 #include <dballe/db/sql/levtr.h>
-#include <dballe/db/mysql/internals.h>
+#include <dballe/sql/fwd.h>
 #include <cstdio>
 #include <memory>
 
@@ -37,8 +37,6 @@ struct Context;
 }
 
 namespace db {
-struct Connection;
-
 namespace mysql {
 struct DB;
 
@@ -49,12 +47,12 @@ struct MySQLLevTrV6 : public sql::LevTr
 {
 protected:
     /// DB connection.
-    MySQLConnection& conn;
+    dballe::sql::MySQLConnection& conn;
 
     DBRow working_row;
 
 public:
-    MySQLLevTrV6(MySQLConnection& conn);
+    MySQLLevTrV6(dballe::sql::MySQLConnection& conn);
     MySQLLevTrV6(const LevTr&) = delete;
     MySQLLevTrV6(const LevTr&&) = delete;
     MySQLLevTrV6& operator=(const MySQLLevTrV6&) = delete;

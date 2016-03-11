@@ -29,7 +29,7 @@
  */
 
 #include <dballe/db/sql/datav6.h>
-#include <dballe/db/mysql/internals.h>
+#include <dballe/sql/fwd.h>
 
 namespace dballe {
 struct Record;
@@ -45,16 +45,16 @@ class MySQLDataV6 : public sql::DataV6
 {
 protected:
     /** DB connection. */
-    MySQLConnection& conn;
+    dballe::sql::MySQLConnection& conn;
 
 public:
-    MySQLDataV6(MySQLConnection& conn);
+    MySQLDataV6(dballe::sql::MySQLConnection& conn);
     MySQLDataV6(const MySQLDataV6&) = delete;
     MySQLDataV6(const MySQLDataV6&&) = delete;
     MySQLDataV6& operator=(const MySQLDataV6&) = delete;
     ~MySQLDataV6();
 
-    void insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode=UPDATE) override;
+    void insert(dballe::sql::Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode=UPDATE) override;
     void remove(const v6::QueryBuilder& qb) override;
     void dump(FILE* out) override;
 };

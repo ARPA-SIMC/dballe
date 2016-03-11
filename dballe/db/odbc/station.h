@@ -2,6 +2,7 @@
 #define DBALLE_DB_ODBC_STATION_H
 
 #include <dballe/db/sql/station.h>
+#include <dballe/sql/fwd.h>
 #include <sqltypes.h>
 #include <functional>
 #include <memory>
@@ -12,10 +13,6 @@ struct Var;
 
 namespace dballe {
 namespace db {
-struct ODBCConnection;
-struct ODBCStatement;
-struct Sequence;
-
 namespace odbc {
 
 /**
@@ -27,23 +24,23 @@ protected:
     /**
      * DB connection.
      */
-    ODBCConnection& conn;
+    dballe::sql::ODBCConnection& conn;
 
     /** Station ID sequence, when the DB requires it */
-    db::Sequence* seq_station;
+    dballe::sql::Sequence* seq_station;
 
     /** Precompiled select fixed station query */
-    ODBCStatement* sfstm;
+    dballe::sql::ODBCStatement* sfstm;
     /** Precompiled select mobile station query */
-    ODBCStatement* smstm;
+    dballe::sql::ODBCStatement* smstm;
     /** Precompiled select data by station id query */
-    ODBCStatement* sstm;
+    dballe::sql::ODBCStatement* sstm;
     /** Precompiled insert query */
-    ODBCStatement* istm;
+    dballe::sql::ODBCStatement* istm;
     /** Precompiled update query */
-    ODBCStatement* ustm;
+    dballe::sql::ODBCStatement* ustm;
     /** Precompiled delete query */
-    ODBCStatement* dstm;
+    dballe::sql::ODBCStatement* dstm;
 
     /** Station ID SQL parameter */
     int id;
@@ -63,7 +60,7 @@ protected:
     void impl_add_station_vars(const char* query, int id_station, Record& rec);
 
 public:
-    ODBCStationBase(ODBCConnection& conn);
+    ODBCStationBase(dballe::sql::ODBCConnection& conn);
     ~ODBCStationBase();
     ODBCStationBase(const ODBCStationBase&) = delete;
     ODBCStationBase(const ODBCStationBase&&) = delete;
@@ -80,7 +77,7 @@ public:
 class ODBCStationV6 : public ODBCStationBase
 {
 public:
-    ODBCStationV6(ODBCConnection& conn);
+    ODBCStationV6(dballe::sql::ODBCConnection& conn);
     void get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
     void add_station_vars(int id_station, Record& rec) override;
 };

@@ -30,6 +30,7 @@
 
 #include <dballe/core/defs.h>
 #include <dballe/db/defs.h>
+#include <dballe/sql/fwd.h>
 #include <wreport/var.h>
 #include <memory>
 #include <functional>
@@ -38,9 +39,6 @@
 
 namespace dballe {
 namespace db {
-struct Connection;
-struct Transaction;
-
 namespace v6 {
 struct QueryBuilder;
 }
@@ -139,7 +137,7 @@ public:
     virtual void explain(const std::string& query);
 
     /// Create a Driver for this connection
-    static std::unique_ptr<Driver> create(Connection& conn);
+    static std::unique_ptr<Driver> create(dballe::sql::Connection& conn);
 };
 
 }

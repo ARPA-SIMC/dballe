@@ -24,7 +24,7 @@
 
 #include <dballe/db/db.h>
 #include <dballe/db/sql/levtr.h>
-#include <dballe/db/postgresql/internals.h>
+#include <dballe/sql/fwd.h>
 #include <cstdio>
 #include <memory>
 
@@ -37,9 +37,6 @@ struct Context;
 }
 
 namespace db {
-struct Connection;
-struct Statement;
-
 namespace postgresql {
 struct DB;
 
@@ -52,12 +49,12 @@ protected:
     /**
      * DB connection.
      */
-    PostgreSQLConnection& conn;
+    dballe::sql::PostgreSQLConnection& conn;
 
     DBRow working_row;
 
 public:
-    PostgreSQLLevTrV6(PostgreSQLConnection& conn);
+    PostgreSQLLevTrV6(dballe::sql::PostgreSQLConnection& conn);
     PostgreSQLLevTrV6(const LevTr&) = delete;
     PostgreSQLLevTrV6(const LevTr&&) = delete;
     PostgreSQLLevTrV6& operator=(const PostgreSQLLevTrV6&) = delete;

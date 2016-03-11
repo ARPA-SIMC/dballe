@@ -2,7 +2,8 @@
 #define DBALLE_DB_ODBC_ATTRV6_H
 
 #include <dballe/db/sql/attrv6.h>
-#include <dballe/db/odbc/internals.h>
+#include <dballe/sql/fwd.h>
+#include <sqltypes.h>
 
 namespace dballe {
 namespace db {
@@ -15,10 +16,10 @@ class ODBCAttrV6 : public sql::AttrV6
 {
 protected:
     /** DB connection. */
-    ODBCConnection& conn;
+    dballe::sql::ODBCConnection& conn;
 
     /** Precompiled select statement */
-    ODBCStatement* sstm;
+    dballe::sql::ODBCStatement* sstm;
 
     /** id_data SQL parameter */
     int id_data;
@@ -30,10 +31,10 @@ protected:
     SQLLEN value_ind;
 
 public:
-    ODBCAttrV6(ODBCConnection& conn);
+    ODBCAttrV6(dballe::sql::ODBCConnection& conn);
     ~ODBCAttrV6();
 
-    void insert(Transaction& t, sql::bulk::InsertAttrsV6& vars, UpdateMode update_mode=UPDATE) override;
+    void insert(dballe::sql::Transaction& t, sql::bulk::InsertAttrsV6& vars, UpdateMode update_mode=UPDATE) override;
     void read(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
     void dump(FILE* out) override;
 

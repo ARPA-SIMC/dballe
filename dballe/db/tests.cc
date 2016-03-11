@@ -2,6 +2,7 @@
 #include "v6/db.h"
 #include "sql.h"
 #include "sql/driver.h"
+#include "dballe/sql/sql.h"
 #include "dballe/msg/vars.h"
 #include <wreport/error.h>
 #include <algorithm>
@@ -277,7 +278,7 @@ void ActualDB::try_summary_query(const std::string& query, unsigned expected, re
     }
 }
 
-std::unique_ptr<db::Connection> get_test_connection(const std::string& backend)
+std::unique_ptr<dballe::sql::Connection> get_test_connection(const std::string& backend)
 {
     std::string envname = "DBA_DB";
     if (!backend.empty())
@@ -288,7 +289,7 @@ std::unique_ptr<db::Connection> get_test_connection(const std::string& backend)
     const char* envurl = getenv(envname.c_str());
     if (envurl == NULL)
         error_consistency::throwf("Environment variable %s is not set", envname.c_str());
-    return db::Connection::create_from_url(envurl);
+    return dballe::sql::Connection::create_from_url(envurl);
 }
 
 DriverFixture::DriverFixture(const char* backend, db::Format format)

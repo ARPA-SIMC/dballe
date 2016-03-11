@@ -29,6 +29,7 @@
  */
 
 #include <dballe/db/sql/repinfo.h>
+#include <dballe/sql/fwd.h>
 #include <vector>
 #include <string>
 #include <map>
@@ -37,8 +38,6 @@ namespace dballe {
 struct Record;
 
 namespace db {
-struct PostgreSQLConnection;
-
 namespace postgresql {
 
 /**
@@ -50,9 +49,9 @@ struct PostgreSQLRepinfoBase : public sql::Repinfo
      * DB connection. The pointer is assumed always valid during the
      * lifetime of the object
      */
-    PostgreSQLConnection& conn;
+    dballe::sql::PostgreSQLConnection& conn;
 
-    PostgreSQLRepinfoBase(PostgreSQLConnection& conn);
+    PostgreSQLRepinfoBase(dballe::sql::PostgreSQLConnection& conn);
     PostgreSQLRepinfoBase(const PostgreSQLRepinfoBase&) = delete;
     PostgreSQLRepinfoBase(const PostgreSQLRepinfoBase&&) = delete;
     virtual ~PostgreSQLRepinfoBase();
@@ -72,7 +71,7 @@ protected:
 
 struct PostgreSQLRepinfoV6 : public PostgreSQLRepinfoBase
 {
-    PostgreSQLRepinfoV6(PostgreSQLConnection& conn);
+    PostgreSQLRepinfoV6(dballe::sql::PostgreSQLConnection& conn);
 
 protected:
     int id_use_count(unsigned id, const char* name) override;

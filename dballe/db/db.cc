@@ -3,9 +3,9 @@
 #include "sql.h"
 #include "v6/db.h"
 #include "mem/db.h"
-#include "sqlite/internals.h"
+#include "sql/sqlite.h"
 #ifdef HAVE_ODBC
-#include "odbc/internals.h"
+#include "sql/odbc.h"
 #endif
 #include "dballe/message.h"
 #include "dballe/core/record.h"
@@ -65,7 +65,7 @@ bool DB::is_url(const char* str)
     return false;
 }
 
-unique_ptr<DB> DB::create(unique_ptr<Connection> conn)
+unique_ptr<DB> DB::create(unique_ptr<sql::Connection> conn)
 {
     // Autodetect format
     Format format = default_format;
@@ -97,7 +97,7 @@ unique_ptr<DB> DB::create(unique_ptr<Connection> conn)
     switch (format)
     {
         case V5: throw error_unimplemented("V5 format is not supported anymore by this version of DB-All.e");
-        case V6: return unique_ptr<DB>(new v6::DB(unique_ptr<Connection>(conn.release())));
+        case V6: return unique_ptr<DB>(new v6::DB(move(conn)));
         default: error_consistency::throwf("requested unknown format %d", (int)format);
     }
 }
@@ -105,7 +105,7 @@ unique_ptr<DB> DB::create(unique_ptr<Connection> conn)
 unique_ptr<DB> DB::connect(const char* dsn, const char* user, const char* password)
 {
 #ifdef HAVE_ODBC
-    unique_ptr<ODBCConnection> conn(new ODBCConnection);
+    unique_ptr<sql::ODBCConnection> conn(new sql::ODBCConnection);
     conn->connect(dsn, user, password);
     return create(move(conn));
 #else
@@ -115,9 +115,9 @@ unique_ptr<DB> DB::connect(const char* dsn, const char* user, const char* passwo
 
 unique_ptr<DB> DB::connect_from_file(const char* pathname)
 {
-    unique_ptr<SQLiteConnection> conn(new SQLiteConnection);
+    unique_ptr<sql::SQLiteConnection> conn(new sql::SQLiteConnection);
     conn->open_file(pathname);
-    return create(unique_ptr<Connection>(conn.release()));
+    return create(unique_ptr<sql::Connection>(conn.release()));
 }
 
 unique_ptr<DB> DB::connect_from_url(const char* url)
@@ -126,7 +126,7 @@ unique_ptr<DB> DB::connect_from_url(const char* url)
     {
         return connect_memory(url + 4);
     } else {
-        unique_ptr<Connection> conn(Connection::create_from_url(url));
+        unique_ptr<sql::Connection> conn(sql::Connection::create_from_url(url));
         return create(move(conn));
     }
 }

@@ -1,5 +1,5 @@
 #include "station.h"
-#include "dballe/db/odbc/internals.h"
+#include "dballe/sql/odbc.h"
 #include "dballe/core/var.h"
 #include "dballe/record.h"
 #include <wreport/var.h>
@@ -10,6 +10,9 @@
 using namespace wreport;
 using namespace dballe::db;
 using namespace std;
+using dballe::sql::ODBCConnection;
+using dballe::sql::ODBCStatement;
+using dballe::sql::ServerType;
 
 namespace dballe {
 namespace db {
@@ -36,7 +39,7 @@ ODBCStationBase::ODBCStationBase(ODBCConnection& conn)
     switch (conn.server_type)
     {
         case ServerType::ORACLE:
-            seq_station = new db::Sequence(conn, "station_id_seq");
+            seq_station = new dballe::sql::Sequence(conn, "station_id_seq");
             insert_query = "INSERT INTO station (id, lat, lon, ident) VALUES (seq_station.NextVal, ?, ?, ?)";
             break;
         case ServerType::POSTGRES:

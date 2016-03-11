@@ -1,5 +1,5 @@
 #include "station.h"
-#include "dballe/db/postgresql/internals.h"
+#include "dballe/sql/postgresql.h"
 #include "dballe/core/var.h"
 #include "dballe/record.h"
 #include <wreport/var.h>
@@ -7,6 +7,7 @@
 using namespace wreport;
 using namespace dballe::db;
 using namespace std;
+using dballe::sql::PostgreSQLConnection;
 
 namespace dballe {
 namespace db {
@@ -27,7 +28,7 @@ StationBase::~StationBase()
 
 bool StationBase::maybe_get_id(int lat, int lon, const char* ident, int* id)
 {
-    using namespace postgresql;
+    using namespace dballe::sql::postgresql;
 
     Result res;
     if (ident)
@@ -57,7 +58,7 @@ int StationBase::get_id(int lat, int lon, const char* ident)
 int StationBase::obtain_id(int lat, int lon, const char* ident, bool* inserted)
 {
     // TODO: lock table
-    using namespace postgresql;
+    using namespace dballe::sql::postgresql;
     int id;
     if (maybe_get_id(lat, lon, ident, &id))
     {
@@ -74,7 +75,7 @@ int StationBase::obtain_id(int lat, int lon, const char* ident, bool* inserted)
 void StationBase::get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     // Perform the query
-    using namespace postgresql;
+    using namespace dballe::sql::postgresql;
     TRACE("fill_ana_layer Performing query v6_station_get_station_vars with idst %d idrep %d\n", id_station, id_report);
     Result res(conn.exec_prepared("v6_station_get_station_vars", id_station, id_report));
 
@@ -116,7 +117,7 @@ void StationBase::get_station_vars(int id_station, int id_report, std::function<
 
 void StationBase::add_station_vars(int id_station, Record& rec)
 {
-    using namespace postgresql;
+    using namespace dballe::sql::postgresql;
     Result res(conn.exec_prepared("v6_station_add_station_vars", id_station));
     for (unsigned row = 0; row < res.rowcount(); ++row)
         rec.set(newvar((Varcode)res.get_int4(row, 0), res.get_string(row, 1)));

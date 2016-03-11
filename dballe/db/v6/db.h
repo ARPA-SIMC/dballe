@@ -64,10 +64,13 @@ struct Station;
 struct StationValues;
 struct DataValues;
 
-namespace db {
+namespace sql {
 struct Connection;
 struct Statement;
 struct Sequence;
+}
+
+namespace db {
 
 namespace sql {
 struct Driver;
@@ -88,7 +91,7 @@ class DB : public dballe::DB
 {
 public:
     /// Database connection
-    db::Connection* conn;
+    dballe::sql::Connection* conn;
     /// Database query tracing
     Trace trace;
     /// True if we print an EXPLAIN trace of all queries to stderr
@@ -121,7 +124,7 @@ protected:
 
     void init_after_connect();
 
-    DB(std::unique_ptr<Connection> conn);
+    DB(std::unique_ptr<dballe::sql::Connection> conn);
 
     /*
      * Lookup, insert or replace data in station taking the values from

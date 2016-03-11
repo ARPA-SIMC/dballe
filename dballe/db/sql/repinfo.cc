@@ -1,9 +1,5 @@
 #include "repinfo.h"
-#include "dballe/db/sql.h"
-#include "dballe/db/odbc/internals.h"
-//#include "dballe/db/odbc/repinfo.h"
-#include "dballe/db/sqlite/internals.h"
-//#include "dballe/db/sqlite/repinfo.h"
+#include "dballe/db/db.h"
 #include "dballe/record.h"
 #include "dballe/core/query.h"
 #include "dballe/core/csv.h"
@@ -17,22 +13,10 @@ namespace dballe {
 namespace db {
 namespace sql {
 
-Repinfo::Repinfo(Connection& conn)
+Repinfo::Repinfo(dballe::sql::Connection& conn)
     : conn(conn)
 {
 }
-
-#if 0
-std::unique_ptr<Repinfo> Repinfo::create(Connection& conn)
-{
-    if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(&conn))
-        return unique_ptr<Repinfo>(new ODBCRepinfo(*c));
-    else if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(&conn))
-        return unique_ptr<Repinfo>(new SQLiteRepinfo(*c));
-    else
-        throw error_unimplemented("v5 DB repinfo not yet implemented for non-ODBC connectors");
-}
-#endif
 
 void Repinfo::to_record(int id, Record& rec)
 {

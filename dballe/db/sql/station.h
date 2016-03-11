@@ -28,6 +28,7 @@
  * Station table management used by the db module.
  */
 
+#include <dballe/sql/fwd.h>
 #include <memory>
 #include <cstdio>
 
@@ -39,8 +40,6 @@ namespace dballe {
 struct Record;
 
 namespace db {
-struct Connection;
-
 namespace sql {
 
 struct Station
