@@ -118,11 +118,12 @@ struct Progress
  */
 struct BasicProgress : Progress
 {
+    std::string prefix;
     FILE* out;
     FILE* err;
     std::string cur_benchmark;
 
-    BasicProgress(FILE* out=stdout, FILE* err=stderr);
+    BasicProgress(const std::string& prefix, FILE* out=stdout, FILE* err=stderr);
 
     void start_benchmark(const Benchmark& b) override;
     void end_benchmark(const Benchmark& b) override;

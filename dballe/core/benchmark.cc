@@ -147,7 +147,7 @@ void Benchmark::print_timings(const std::string& prefix)
         ; // TODO
     for (auto& t: throughput_tasks)
     {
-        fprintf(stdout, "%s%s,%.2f,%d\n", prefix.c_str(), t.task->name.c_str(), t.run_time, t.times_run);
+        fprintf(stdout, "%s%s.%s,%.2f,%d\n", prefix.c_str(), name.c_str(), t.task->name.c_str(), t.run_time, t.times_run);
     }
     /*
     for (auto& t: tasks)
@@ -166,32 +166,32 @@ void Benchmark::print_timings(const std::string& prefix)
     */
 }
 
-BasicProgress::BasicProgress(FILE* out, FILE* err)
-    : out(out), err(err) {}
+BasicProgress::BasicProgress(const std::string& prefix, FILE* out, FILE* err)
+    : prefix(prefix), out(out), err(err) {}
 
 void BasicProgress::start_benchmark(const Benchmark& b)
 {
     cur_benchmark = b.name;
-    fprintf(out, "%s: starting...\n", cur_benchmark.c_str());
+    fprintf(out, "%s%s: starting...\n", prefix.c_str(), cur_benchmark.c_str());
 }
 void BasicProgress::end_benchmark(const Benchmark& b)
 {
-    fprintf(out, "%s: done.\n", b.name.c_str());
+    fprintf(out, "%s%s: done.\n", prefix.c_str(), b.name.c_str());
 }
 
 void BasicProgress::start_timeit(const Timeit& t)
 {
-    fprintf(out, "%s.%s: starting...\n", cur_benchmark.c_str(), t.task->name.c_str());
+    fprintf(out, "%s%s.%s: starting...\n", prefix.c_str(), cur_benchmark.c_str(), t.task->name.c_str());
 }
 
 void BasicProgress::end_timeit(const Timeit& t)
 {
-    fprintf(out, "%s.%s: done.\n", cur_benchmark.c_str(), t.task->name.c_str());
+    fprintf(out, "%s%s.%s: done.\n", prefix.c_str(), cur_benchmark.c_str(), t.task->name.c_str());
 }
 
 void BasicProgress::start_throughput(const Throughput& t)
 {
-    fprintf(out, "%s.%s: ", cur_benchmark.c_str(), t.task->name.c_str());
+    fprintf(out, "%s%s.%s: ", prefix.c_str(), cur_benchmark.c_str(), t.task->name.c_str());
     fflush(out);
 }
 
@@ -202,19 +202,19 @@ void BasicProgress::end_throughput(const Throughput& t)
 
 void BasicProgress::test_failed(const Task& t, std::exception& e)
 {
-    fprintf(err, "%s.%s: failed: %s\n", cur_benchmark.c_str(), t.name.c_str(), e.what());
+    fprintf(err, "%s%s.%s: failed: %s\n", prefix.c_str(), cur_benchmark.c_str(), t.name.c_str(), e.what());
 }
 
 void Registry::basic_run(int argc, const char* argv[])
 {
-    BasicProgress progress(stderr, stderr);
-
     string prefix;
     if (argc > 1)
     {
         prefix = argv[1];
         prefix += '.';
     }
+
+    BasicProgress progress(prefix, stderr, stderr);
 
     // Run all benchmarks
     for (auto& b: get().benchmarks)
