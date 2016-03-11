@@ -5,6 +5,7 @@
 #define DBALLE_SQL_H
 
 #include <dballe/core/error.h>
+#include <dballe/transaction.h>
 #include <dballe/sql/fwd.h>
 #include <string>
 #include <memory>
@@ -114,17 +115,9 @@ public:
  * destruction time the transaction has not been committed or rolled back, a
  * rollback is automatically performed.
  */
-class Transaction
+class Transaction : public dballe::Transaction
 {
 public:
-    virtual ~Transaction() {}
-
-    /// Commit this transaction
-    virtual void commit() = 0;
-
-    /// Roll back this transaction
-    virtual void rollback() = 0;
-
     /// Get an exclusive lock on the given table until the end of the
     /// transaction
     virtual void lock_table(const char* name) = 0;

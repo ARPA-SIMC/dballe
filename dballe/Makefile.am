@@ -50,6 +50,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	types.h \
 	record.h \
 	query.h \
+	transaction.h \
 	var.h \
 	core/error.h \
 	core/aliases.h \

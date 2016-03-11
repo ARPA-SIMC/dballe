@@ -159,4 +159,18 @@ const char* DB::default_repinfo_file()
     return repinfo_file;
 }
 
+void DB::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
+{
+    auto t = transaction();
+    insert_station_data(*t, vals, can_replace, station_can_add);
+    t->commit();
+}
+
+void DB::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
+{
+    auto t = transaction();
+    insert_data(*t, vals, can_replace, station_can_add);
+    t->commit();
+}
+
 }

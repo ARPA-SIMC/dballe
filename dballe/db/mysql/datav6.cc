@@ -10,7 +10,6 @@
 using namespace wreport;
 using namespace std;
 using dballe::sql::MySQLConnection;
-using dballe::sql::Transaction;
 using dballe::sql::Querybuf;
 using dballe::sql::mysql::Row;
 
@@ -27,7 +26,7 @@ MySQLDataV6::~MySQLDataV6()
 {
 }
 
-void MySQLDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode)
+void MySQLDataV6::insert(dballe::sql::Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode)
 {
     // Get the current status of variables for this context
     Querybuf select;

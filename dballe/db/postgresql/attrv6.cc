@@ -7,7 +7,6 @@
 using namespace std;
 using namespace wreport;
 using dballe::sql::PostgreSQLConnection;
-using dballe::sql::Transaction;
 using dballe::sql::Querybuf;
 using dballe::sql::error_postgresql;
 
@@ -36,7 +35,7 @@ PostgreSQLAttrV6::~PostgreSQLAttrV6()
 {
 }
 
-void PostgreSQLAttrV6::insert(Transaction& t, sql::bulk::InsertAttrsV6& attrs, UpdateMode update_mode)
+void PostgreSQLAttrV6::insert(dballe::sql::Transaction& t, sql::bulk::InsertAttrsV6& attrs, UpdateMode update_mode)
 {
     using namespace dballe::sql::postgresql;
     Querybuf select_query;

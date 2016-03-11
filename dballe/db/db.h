@@ -1,6 +1,7 @@
 #ifndef DBALLE_DB_H
 #define DBALLE_DB_H
 
+#include <dballe/transaction.h>
 #include <dballe/core/defs.h>
 #include <dballe/db/defs.h>
 #include <dballe/sql/fwd.h>
@@ -299,6 +300,12 @@ public:
 
 public:
     /**
+     * Begin a transaction on this database, and return a Transaction object
+     * that can be used to commit it.
+     */
+    virtual std::unique_ptr<dballe::Transaction> transaction() = 0;
+
+    /**
      * Insert station values into the database
      *
      * The IDs of the station andl all variables that were inserted will be
@@ -314,7 +321,27 @@ public:
      *   data for a station that does not yet exists in the database, it will
      *   be created.
      */
-    virtual void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add) = 0;
+    void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add);
+
+    /**
+     * Insert station values into the database
+     *
+     * The IDs of the station andl all variables that were inserted will be
+     * stored in vals.
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param vals
+     *   The values to insert.
+     * @param can_replace
+     *   If true, then existing data can be rewritten, else data can only be added.
+     * @param station_can_add
+     *   If false, it will not create a missing station record, and only data
+     *   for existing stations can be added. If true, then if we are inserting
+     *   data for a station that does not yet exists in the database, it will
+     *   be created.
+     */
+    virtual void insert_station_data(dballe::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add) = 0;
 
     /**
      * Insert data values into the database
@@ -332,7 +359,27 @@ public:
      *   data for a station that does not yet exists in the database, it will
      *   be created.
      */
-    virtual void insert_data(DataValues& vals, bool can_replace, bool station_can_add) = 0;
+    void insert_data(DataValues& vals, bool can_replace, bool station_can_add);
+
+    /**
+     * Insert data values into the database
+     *
+     * The IDs of the station andl all variables that were inserted will be
+     * stored in vals.
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param vals
+     *   The values to insert.
+     * @param can_replace
+     *   If true, then existing data can be rewritten, else data can only be added.
+     * @param station_can_add
+     *   If false, it will not create a missing station record, and only data
+     *   for existing stations can be added. If true, then if we are inserting
+     *   data for a station that does not yet exists in the database, it will
+     *   be created.
+     */
+    virtual void insert_data(dballe::Transaction& transaction, DataValues& vals, bool can_replace, bool station_can_add) = 0;
 
     /**
      * Remove data from the database

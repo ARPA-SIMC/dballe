@@ -168,6 +168,8 @@ public:
     /// Access the data table
     sql::AttrV6& attr();
 
+    std::unique_ptr<dballe::Transaction> transaction() override;
+
     void disappear();
 
     /**
@@ -214,8 +216,8 @@ public:
      */
     int rep_cod_from_memo(const char* memo);
 
-    void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add) override;
-    void insert_data(DataValues& vals, bool can_replace, bool station_can_add) override;
+    void insert_station_data(dballe::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add) override;
+    void insert_data(dballe::Transaction& transaction, DataValues& vals, bool can_replace, bool station_can_add) override;
 
     void remove_station_data(const Query& query) override;
     void remove(const Query& query);

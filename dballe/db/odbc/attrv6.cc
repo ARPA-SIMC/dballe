@@ -10,7 +10,6 @@ using namespace std;
 using namespace wreport;
 using dballe::sql::ODBCConnection;
 using dballe::sql::ODBCStatement;
-using dballe::sql::Transaction;
 using dballe::sql::Querybuf;
 
 namespace dballe {
@@ -46,7 +45,7 @@ void ODBCAttrV6::read(int id_data, function<void(unique_ptr<Var>)> dest)
     sstm->close_cursor();
 }
 
-void ODBCAttrV6::insert(Transaction& t, sql::bulk::InsertAttrsV6& attrs, UpdateMode update_mode)
+void ODBCAttrV6::insert(dballe::sql::Transaction& t, sql::bulk::InsertAttrsV6& attrs, UpdateMode update_mode)
 {
     Querybuf select_query;
     select_query.append("SELECT id_data, type, value FROM attr WHERE id_data IN (");

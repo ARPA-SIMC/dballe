@@ -9,7 +9,6 @@
 using namespace wreport;
 using namespace std;
 using dballe::sql::PostgreSQLConnection;
-using dballe::sql::Transaction;
 using dballe::sql::Querybuf;
 using dballe::sql::error_postgresql;
 
@@ -51,7 +50,7 @@ PostgreSQLDataV6::~PostgreSQLDataV6()
 {
 }
 
-void PostgreSQLDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode)
+void PostgreSQLDataV6::insert(dballe::sql::Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode)
 {
     using namespace dballe::sql::postgresql;
     const char* select_query = R"(

@@ -41,7 +41,9 @@ public:
 
     db::Format format() const override { return MEM; }
 
-    void disappear() override ;
+    std::unique_ptr<dballe::Transaction> transaction() override;
+
+    void disappear() override;
 
     /**
      * Reset the database, removing all existing DBALLE tables and re-creating them
@@ -77,8 +79,8 @@ public:
 
     std::map<std::string, int> get_repinfo_priorities() override;
 
-    void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add) override;
-    void insert_data(DataValues& vals, bool can_replace, bool station_can_add) override;
+    void insert_station_data(dballe::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add) override;
+    void insert_data(dballe::Transaction& transaction, DataValues& vals, bool can_replace, bool station_can_add) override;
 
     void remove_station_data(const Query& query) override;
     void remove(const Query& rec) override;

@@ -10,7 +10,6 @@
 using namespace wreport;
 using dballe::sql::ODBCConnection;
 using dballe::sql::ODBCStatement;
-using dballe::sql::Transaction;
 using dballe::sql::Querybuf;
 
 namespace dballe {
@@ -26,7 +25,7 @@ ODBCDataV6::~ODBCDataV6()
 {
 }
 
-void ODBCDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode)
+void ODBCDataV6::insert(dballe::sql::Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode)
 {
     Querybuf select_query(512);
     select_query.appendf(R"(

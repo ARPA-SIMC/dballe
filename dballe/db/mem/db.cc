@@ -45,6 +45,21 @@ DB::~DB()
     }
 }
 
+namespace {
+
+struct NullTransaction : public dballe::Transaction
+{
+    void commit() override {}
+    void rollback() override {}
+};
+
+}
+
+std::unique_ptr<dballe::Transaction> DB::transaction()
+{
+    return unique_ptr<dballe::Transaction>(new NullTransaction());
+}
+
 void DB::disappear()
 {
     memdb.clear();
@@ -66,7 +81,7 @@ std::map<std::string, int> DB::get_repinfo_priorities()
     return repinfo.get_priorities();
 }
 
-void DB::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
+void DB::insert_station_data(dballe::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add)
 {
     // Obtain the station
     vals.info.ana_id = memdb.stations.obtain(vals.info, station_can_add);
@@ -77,7 +92,7 @@ void DB::insert_station_data(StationValues& vals, bool can_replace, bool station
         i.second.data_id = memdb.stationvalues.insert(station, *i.second.var, can_replace);
 }
 
-void DB::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
+void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool can_replace, bool station_can_add)
 {
     // Obtain the station
     vals.info.ana_id = memdb.stations.obtain(vals.info, station_can_add);

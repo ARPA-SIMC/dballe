@@ -15,6 +15,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
+#include <cassert>
 #include <limits.h>
 #include <unistd.h>
 
@@ -110,6 +111,12 @@ void DB::init_after_connect()
 {
 }
 
+std::unique_ptr<dballe::Transaction> DB::transaction()
+{
+    auto res = conn->transaction();
+    return res;
+}
+
 void DB::delete_tables()
 {
     m_driver->delete_tables_v6();
@@ -173,12 +180,10 @@ int DB::obtain_station(const Station& st, bool can_add)
         return s.get_id(st.coords.lat, st.coords.lon, st.ident.get());
 }
 
-void DB::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
+void DB::insert_station_data(dballe::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add)
 {
     sql::Repinfo& ri = repinfo();
     sql::DataV6& d = data();
-
-    auto t = conn->transaction();
 
     sql::bulk::InsertV6 vars;
     // Insert the station data, and get the ID
@@ -194,15 +199,16 @@ void DB::insert_station_data(StationValues& vals, bool can_replace, bool station
         vars.add(i.second.var, -1);
 
     // Do the insert
+    dballe::sql::Transaction* t = dynamic_cast<dballe::sql::Transaction*>(&transaction);
+    assert(t);
     d.insert(*t, vars, can_replace ? sql::DataV6::UPDATE : sql::DataV6::ERROR);
 
     // Read the IDs from the results
     for (const auto& v: vars)
         vals.values.add_data_id(v.var->code(), v.id_data);
-    t->commit();
 }
 
-void DB::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
+void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool can_replace, bool station_can_add)
 {
     /* Check for the existance of non-lev_tr data, otherwise it's all
      * useless.  Not inserting data is fine in case of setlev_trana */
@@ -211,8 +217,6 @@ void DB::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
 
     sql::Repinfo& ri = repinfo();
     sql::DataV6& d = data();
-
-    auto t = conn->transaction();
 
     sql::bulk::InsertV6 vars;
     // Insert the station data, and get the ID
@@ -229,13 +233,13 @@ void DB::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
         vars.add(i.second.var, id_levtr);
 
     // Do the insert
+    dballe::sql::Transaction* t = dynamic_cast<dballe::sql::Transaction*>(&transaction);
+    assert(t);
     d.insert(*t, vars, can_replace ? sql::DataV6::UPDATE : sql::DataV6::ERROR);
 
     // Read the IDs from the results
     for (const auto& v: vars)
         vals.values.add_data_id(v.var->code(), v.id_data);
-
-    t->commit();
 }
 
 void DB::remove_station_data(const Query& query)

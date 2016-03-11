@@ -84,6 +84,7 @@ struct B : benchmark::DBBenchmark
             Var(varinfo(WR_VAR(0, 11,   2)), 3.6),
         };
 
+        auto t = db->transaction();
         for (int latlon = 0; latlon <= 25; ++latlon)
         {
             for (const auto& report: reports)
@@ -106,12 +107,13 @@ struct B : benchmark::DBBenchmark
                             {
                                 vals.values.set(var);
                             }
-                            db->insert_data(vals, false, true);
+                            db->insert_data(*t, vals, false, true);
                         }
                     }
                 }
             }
         }
+        t->commit();
     }
 
     void register_tasks() override

@@ -10,7 +10,6 @@ using namespace wreport;
 using namespace std;
 using dballe::sql::SQLiteConnection;
 using dballe::sql::SQLiteStatement;
-using dballe::sql::Transaction;
 using dballe::sql::Querybuf;
 
 namespace dballe {
@@ -34,7 +33,7 @@ SQLiteDataV6::~SQLiteDataV6()
     if (sstm) delete sstm;
 }
 
-void SQLiteDataV6::insert(Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode)
+void SQLiteDataV6::insert(dballe::sql::Transaction& t, sql::bulk::InsertV6& vars, UpdateMode update_mode)
 {
     // Get the current status of variables for this context
     sstm->bind_val(1, vars.id_station);
