@@ -64,6 +64,7 @@ class Benchmarks:
             plt.plot_date([d[0] for d in data], [d[1] for d in data])
             plt.ylim(ymin=0)
             plt.savefig(os.path.join(destdir, fname), bbox_inches='tight')
+            plt.close("all")
 
 def main():
     parser = argparse.ArgumentParser(description="Plot DB-All.e benchmark results.")
