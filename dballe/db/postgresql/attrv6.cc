@@ -50,8 +50,6 @@ void PostgreSQLAttrV6::insert(dballe::sql::Transaction& t, sql::bulk::InsertAttr
     }
     select_query.append(") ORDER BY id_data, type");
 
-    t.lock_table("attr");
-
     // Get the current status of attributes for these variables
     Result res_current(conn.exec(select_query));
     sql::bulk::AnnotateAttrsV6 todo(attrs);

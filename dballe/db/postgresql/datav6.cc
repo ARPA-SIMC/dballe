@@ -60,8 +60,6 @@ void PostgreSQLDataV6::insert(dballe::sql::Transaction& t, sql::bulk::InsertV6& 
          ORDER BY id_lev_tr, id_var
     )";
 
-    t.lock_table("data");
-
     // Get the current status of variables for this context
     Result existing(conn.exec(select_query, vars.id_station, vars.id_report, vars.datetime));
 
