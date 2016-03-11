@@ -37,8 +37,12 @@ class Benchmarks:
     def plot(self):
         destdir = "bench/out"
         os.makedirs(destdir, exist_ok=True)
+
         self.plot_test_db_over_time(destdir)
 
+        # TODO:
+        #  - for each test, plot all DBs compared over time (logscale?)
+        #  - for each db, plot all tests over time
 
     def plot_test_db_over_time(self, destdir):
         from matplotlib.dates import DayLocator, HourLocator, DateFormatter, drange
