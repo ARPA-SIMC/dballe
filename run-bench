@@ -5,46 +5,88 @@ import os
 import shlex
 import subprocess
 import sys
+import argparse
+import datetime
 
-env = dict(os.environ)
+class Benchmark:
+    def __init__(self):
+        self.env = dict(os.environ)
+        self.db = None
 
-def read_conffile(fd):
-    for line in fd:
-        line = line.strip()
-        if not line or line.startswith("#"): continue
-        if '=' in line:
-            key, val = line.split("=", 1)
-            val = shlex.split(val)[0]
-            if val.startswith("$"):
-                val = env[val[1:]]
-            env[key] = val
+    def read_conffile(self, fd):
+        for line in fd:
+            line = line.strip()
+            if not line or line.startswith("#"): continue
+            if '=' in line:
+                key, val = line.split("=", 1)
+                val = shlex.split(val)[0]
+                if val.startswith("$"):
+                    val = self.env[val[1:]]
+                self.env[key] = val
 
-for conffile in ("./run-check.conf", ".git/run-check.conf"):
-    if not os.path.exists(conffile): continue
-    with open(conffile, "rt") as fd:
-        read_conffile(fd)
+    def select_db(self, name):
+        self.db = name
+        if name in ("pg", "postgresql"):
+            self.db = "postgresql"
+            self.env["DBA_DB"] = self.env["DBA_DB_POSTGRESQL"]
+        elif name == "mysql":
+            self.env["DBA_DB"] = self.env["DBA_DB_MYSQL"]
+        elif name == "sqlite":
+            self.env["DBA_DB"] = self.env["DBA_DB_SQLITE"]
+        elif name == "odbc":
+            self.env["DBA_DB"] = self.env["DBA_DB_ODBC"]
+        elif name == "mem":
+            self.db = "mem"
+            self.env["DBA_DB"] = "mem:"
+        else:
+            raise RuntimeError("unknown database type {}".format(name))
 
-subprocess.check_call(["make", "-C", "dballe"])
-subprocess.check_call(["make", "-C", "dballe", "bench-run"])
+    def add_extra_env(self, assignments):
+        for arg in assignments:
+            if '=' in arg:
+                key, val = arg.split("=", 1)
+                self.env[key] = val
 
-for arg in sys.argv[1:]:
-    if '=' in arg:
-        key, val = arg.split("=", 1)
-        env[key] = val
+    def build(self):
+        subprocess.check_call(["make", "-C", "dballe"])
+        subprocess.check_call(["make", "-C", "dballe", "bench-run"])
 
-os.chdir("dballe")
-os.execve("../extra/runtest", ["../extra/runtest", "bench-run"], env)
+    def run(self):
+        self.env["ARGS"] = self.db
+        csvout = subprocess.check_output(["../extra/runtest", "bench-run"], env=self.env, cwd="dballe", universal_newlines=True)
+        now = datetime.datetime.utcnow()
+        shasum = subprocess.check_output(["git", "rev-parse", "HEAD"], universal_newlines=True).strip()
+        ts = now.strftime("%Y%m%d%H%M%S")
+        fname = os.path.join("bench", "_".join((ts, self.db, shasum)) + ".csv")
+        with open(fname, "wt") as fd:
+            # Skip the Running... printed at the beginning by runtest
+            for line in csvout.splitlines()[1:]:
+                print(line, file=fd)
 
-#if [ -d .svn ]
-#then
-#	SVNID=$(svn info | sed -nre 's/^Revision: //p')
-#elif [ -d .git ]
-#then
-#	SVNID=$(git svn info | sed -nre 's/^Revision: //p')
-#else
-#	echo "No .svn or .git directory found" >&2
-#	exit 1
-#fi
-#
-#cd src
-#eatmydata ../run-local ./benchmark > "bench/$SVNID-`hostname`-`date +%Y%m%d-%H%M%S`.csv"
+def main():
+    parser = argparse.ArgumentParser(description="Preview a markdown file in a browser.")
+    parser.add_argument("env", nargs="*", help="Extra env var assignments")
+    parser.add_argument("-d", "--db", default=None, help="Database to use (pg/postgresql, mysql, sqlite, odbc, mem)")
+    args = parser.parse_args()
+
+    bench = Benchmark()
+    for conffile in ("./run-check.conf", ".git/run-check.conf"):
+        if not os.path.exists(conffile): continue
+        with open(conffile, "rt") as fd:
+            bench.read_conffile(fd)
+
+    bench.add_extra_env(args.env)
+    bench.build()
+
+    if args.db is None:
+        for db in ("pg", "mysql", "sqlite", "odbc", "mem"):
+            print("Running benchmarks for {}...".format(db))
+            bench.select_db(db)
+            bench.run()
+    else:
+        bench.select_db(args.db)
+        bench.run()
+
+
+if __name__ == "__main__":
+    main()

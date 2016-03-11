@@ -428,13 +428,15 @@ test_dballe_LDADD = \
 noinst_PROGRAMS += bench-run
 
 dist_noinst_HEADERS += \
-	db/bench.h
+	core/benchmark.h
+	db/benchmark.h
 
 bench_run_SOURCES = \
+	core/benchmark.cc \
 	db/db-query-parse-bench.cc \
 	db/db-import-bench.cc \
 	db/db-query-bench.cc \
-	benchmark/bench-main.cc
+	bench-main.cc
 bench_run_LDADD = \
 	libdballe.la \
 	$(common_libs)

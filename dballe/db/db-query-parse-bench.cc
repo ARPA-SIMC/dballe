@@ -1,22 +1,4 @@
-/*
- * Copyright (C) 2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-#include "dballe/db/bench.h"
+#include "dballe/db/benchmark.h"
 #include "dballe/file.h"
 #include "dballe/core/query.h"
 #include "dballe/msg/msg.h"
@@ -26,94 +8,51 @@
 
 using namespace dballe;
 using namespace std;
-using namespace wreport;
 
 namespace {
 
-#if 0
-template<typename T>
-struct Samples : public std::map<std::string, std::vector<T>>
+struct Task : public benchmark::DBTask
 {
-    unsigned seed = 0;
+    core::Query query;
 
-    // Return a random number in the domain [min, max)
-    int rnd(int min, int max)
+    Task(const std::string& name, const std::string& query)
+        : benchmark::DBTask(name)
     {
-        int r = rand_r(&seed);
-        return min + (int)((double)(max - min) * r / RAND_MAX);
-    }
-
-    // Add a sample value for a key
-    void add(const std::string& key, const T& sample)
-    {
-        (*this)[key].push_back(sample);
-    }
-
-    // Return a random key
-    const std::string& get_key() const
-    {
-        int r = rnd(0, size());
-        return *(begin() + r);
-    }
-
-    // Return a random value for a key
-    const T& get_val(const std::string& key) const
-    {
-        auto i = find(key);
-        if (i == end())
-            error_consistency::throwf("no samples registered for %s", key.c_str());
-        return i->second[rnd(0, i->second.size())];
+        this->query.set_from_test_string(query);
     }
 };
 
-struct Generator
+struct StationTask : public Task
 {
-    Samples<int> ints;
-    Samples<std::string> strings;
-    Samples<Coords> coords;
-    Samples<Datetime> datetimes;
-    Samples<Level> levels;
-    Samples<Trange> tranges;
+    using Task::Task;
 
-    Generator()
+    void run_once() override
     {
-        ints.add("ana_id", 1);
-        ints.add("ana_id", 2);
-        ints.add("ana_id", 3);
-        ints.add("ana_id", 4);
-        ints.add("ana_id", 5);
-        ints.add("priority", 1);
-        ints.add("priority", 10);
-        ints.add("priority", 100);
+        db->query_stations(query);
     }
-
-    int ana_id = MISSING_INT;
-    int prio_min = MISSING_INT;
-    int prio_max = MISSING_INT;
-    std::string rep_memo;
-    int mobile = MISSING_INT;
-    bool has_ident = false;
-    std::string ident;
-    Coords coords_min;
-    Coords coords_max;
-    Datetime datetime_min;
-    Datetime datetime_max;
-    Level level;
-    Trange trange;
-    std::set<wreport::Varcode> varcodes;
-    std::string query;
-    std::string ana_filter;
-    std::string data_filter;
-    std::string attr_filter;
-    int limit = MISSING_INT;
-    int block = MISSING_INT;
-    int station = MISSING_INT;
-    int data_id = MISSING_INT;
-    bool query_station_vars = false;
-
 };
-#endif
 
+struct StationDataTask : public Task
+{
+    using Task::Task;
+
+    void run_once() override
+    {
+        db->query_station_data(query);
+    }
+};
+
+struct DataTask : public Task
+{
+    using Task::Task;
+
+    void run_once() override
+    {
+        db->query_data(query);
+    }
+};
+
+/*
 struct Data
 {
     vector<vector<string>> data;
@@ -216,84 +155,32 @@ struct Data
         }
     }
 };
+*/
 
-struct B : bench::DBBenchmark
+struct B : benchmark::Benchmark
 {
-    vector<core::Query> queries_station;
-    vector<core::Query> queries_sdata;
-    vector<core::Query> queries_data;
-    benchmark::Task station;
-    benchmark::Task sdata;
-    benchmark::Task data;
+    using Benchmark::Benchmark;
 
-    B(const std::string& name)
-        : bench::DBBenchmark::DBBenchmark(name),
-          station(this, "station"), sdata(this, "sdata"), data(this, "data")
+    void register_tasks() override
     {
-        repetitions = 5;
-    }
+        // d.generate({Q_ANA_ID, Q_LATLON, Q_MOBILE, Q_ANAFILTER, Q_BLOCKSTATION}, [&](const std::string& q) {
+        throughput_tasks.emplace_back(new StationTask("station_ana_id", "ana_id=1"));
+        throughput_tasks.emplace_back(new StationTask("station_coords", "latmin=40, latmax=50, lonmin=10, lonmax=20"));
+        throughput_tasks.emplace_back(new StationTask("station_ident", "ident=test"));
+        throughput_tasks.emplace_back(new StationTask("station_repmemo", "rep_memo=synop"));
 
-    void setup_main()
-    {
-        const int Q_ANA_ID = 0;
-        const int Q_LATLON = 1;
-        const int Q_MOBILE = 2;
-        const int Q_ANAFILTER = 3;
-        const int Q_BLOCKSTATION = 4;
-        const int Q_PRIO = 5;
-        const int Q_REPMEMO = 6;
-        const int Q_VAR = 7;
-        const int Q_DATETIME = 8;
-        const int Q_LEVEL = 9;
-        const int Q_TRANGE = 10;
-        const int Q_QBEST = 11;
-        const int Q_DATA_ID = 12;
-        const int Q_DATA_FILTER = 13;
-        const int Q_ATTR_FILTER = 14;
-        unsigned count = 0;
+        // d.generate({Q_ANA_ID, Q_LATLON, Q_MOBILE, Q_ANAFILTER, Q_BLOCKSTATION, Q_PRIO, Q_REPMEMO, Q_DATA_ID, Q_DATA_FILTER, Q_ATTR_FILTER}, [&](const std::string& q) {
+        throughput_tasks.emplace_back(new StationTask("stationdata_ana_id", "ana_id=1"));
+        throughput_tasks.emplace_back(new StationTask("stationdata_coords", "latmin=40, latmax=50, lonmin=10, lonmax=20"));
+        throughput_tasks.emplace_back(new StationTask("stationdata_ident", "ident=test"));
+        throughput_tasks.emplace_back(new StationTask("stationdata_repmemo", "rep_memo=synop"));
 
-        bench::DBBenchmark::setup_main();
-        Data d;
-        d.generate({Q_ANA_ID, Q_LATLON, Q_MOBILE, Q_ANAFILTER, Q_BLOCKSTATION}, [&](const std::string& q) {
-            core::Query query;
-            query.set_from_test_string(q);
-            queries_station.push_back(query);
-        });
-        //fprintf(stderr, "%zd stations\n", queries_station.size());
-
-        count = 0;
-        d.generate({Q_ANA_ID, Q_LATLON, Q_MOBILE, Q_ANAFILTER, Q_BLOCKSTATION, Q_PRIO, Q_REPMEMO, Q_DATA_ID, Q_DATA_FILTER, Q_ATTR_FILTER}, [&](const std::string& q) {
-            if (count++ % 7 != 0) return;
-            core::Query query;
-            query.set_from_test_string(q);
-            queries_sdata.push_back(query);
-        });
-        //fprintf(stderr, "%zd sdata\n", queries_sdata.size());
-
-        count = 0;
-        d.generate({Q_ANA_ID, Q_LATLON, Q_MOBILE, Q_ANAFILTER, Q_BLOCKSTATION, Q_PRIO, Q_REPMEMO, Q_VAR, Q_DATETIME, Q_LEVEL, Q_TRANGE, Q_QBEST, Q_DATA_ID, Q_DATA_FILTER, Q_ATTR_FILTER}, [&](const std::string& q) {
-            if (count++ % 149 != 0) return;
-            core::Query query;
-            query.set_from_test_string(q);
-            queries_data.push_back(query);
-        });
-        //fprintf(stderr, "%zd data\n", queries_data.size());
-    }
-
-    void main() override
-    {
-        station.collect([&]() {
-            for (auto& q: queries_station)
-                db->query_stations(q);
-        });
-        sdata.collect([&]() {
-            for (auto& q: queries_sdata)
-                db->query_data(q);
-        });
-        data.collect([&]() {
-            for (auto& q: queries_data)
-                db->query_data(q);
-        });
+        // d.generate({Q_ANA_ID, Q_LATLON, Q_MOBILE, Q_ANAFILTER, Q_BLOCKSTATION, Q_PRIO, Q_REPMEMO, Q_VAR, Q_DATETIME, Q_LEVEL, Q_TRANGE, Q_QBEST, Q_DATA_ID, Q_DATA_FILTER, Q_ATTR_FILTER}, [&](const std::string& q) {
+        throughput_tasks.emplace_back(new StationTask("data_ana_id", "ana_id=1"));
+        throughput_tasks.emplace_back(new StationTask("data_coords", "latmin=40, latmax=50, lonmin=10, lonmax=20"));
+        throughput_tasks.emplace_back(new StationTask("data_ident", "ident=test"));
+        throughput_tasks.emplace_back(new StationTask("data_repmemo", "rep_memo=synop"));
+        throughput_tasks.emplace_back(new StationTask("data_datetime", "yearmin=2010, yearmax=2012"));
     }
 } test("db_query_parse");
 

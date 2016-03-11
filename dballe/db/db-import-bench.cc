@@ -1,4 +1,4 @@
-#include "dballe/db/bench.h"
+#include "dballe/db/benchmark.h"
 #include "dballe/core/file.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/codec.h"
@@ -7,73 +7,74 @@ using namespace dballe;
 using namespace std;
 using namespace wreport;
 
+
 namespace {
 
-struct MsgCollector : public vector<Message*>
+struct MessageTask : public benchmark::DBTask
 {
-    ~MsgCollector()
-    {
-        for (iterator i = begin(); i != end(); ++i)
-            delete *i;
-    }
-    void read(File::Encoding type, const std::string& fname)
+    vector<Message*> msgs;
+
+    MessageTask(const std::string& pfx, const std::string& fname)
+        : benchmark::DBTask(pfx + fname)
     {
         dballe::msg::Importer::Options opts;
-        std::unique_ptr<msg::Importer> importer = msg::Importer::create(type, opts);
-        unique_ptr<File> f = core::File::open_test_data_file(type, fname);
+        std::unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR, opts);
+        unique_ptr<File> f = core::File::open_test_data_file(File::BUFR, "bufr/" + fname);
         f->foreach([&](const BinaryMessage& rmsg) {
             importer->foreach_decoded(rmsg, [&](unique_ptr<Message>&& m) {
-                push_back(m.release());
+                msgs.push_back(m.release());
                 return true;
             });
             return true;
         });
     }
+
+    ~MessageTask()
+    {
+        for (auto& i: msgs) delete i;
+    }
 };
 
-struct B : bench::DBBenchmark
+struct CreateTask : public MessageTask
 {
-    benchmark::Task synop;
-    benchmark::Task temp;
-    benchmark::Task flight;
-    MsgCollector samples_synop;
-    MsgCollector samples_temp;
-    MsgCollector samples_flight;
+    using MessageTask::MessageTask;
 
-    B(const std::string& name)
-        : bench::DBBenchmark::DBBenchmark(name),
-          synop(this, "synop"), temp(this, "temp"), flight(this, "airplane")
+    void run_once() override
     {
-        repetitions = 10;
+        db->remove_all();
+        for (auto& m: msgs)
+            db->import_msg(*m, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
     }
+};
 
-    void setup_main()
+struct OverwriteTask : public MessageTask
+{
+    using MessageTask::MessageTask;
+
+    void run_once() override
     {
-        bench::DBBenchmark::setup_main();
+        for (auto& m: msgs)
+            db->import_msg(*m, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+    }
+};
 
+
+struct B : benchmark::Benchmark
+{
+    using Benchmark::Benchmark;
+
+    void register_tasks() override
+    {
         // Read samples
-        for (auto& fn : { "synop-cloudbelow.bufr", "synop-evapo.bufr", "synop-groundtemp.bufr", "synop-gtscosmo.bufr", "synop-longname.bufr" })
-            samples_synop.read(File::BUFR, string("bufr/") + fn);
-        for (auto& fn : { "temp-gts1.bufr", "temp-gts2.bufr", "temp-gts3.bufr", "temp-gtscosmo.bufr", "temp-timesig18.bufr" })
-            samples_temp.read(File::BUFR, string("bufr/") + fn);
-        for (auto& fn : { "gts-acars1.bufr", "gts-acars2.bufr", "gts-acars-us1.bufr", "gts-amdar1.bufr", "gts-amdar2.bufr" })
-            samples_flight.read(File::BUFR, string("bufr/") + fn);
-    }
-
-    void main() override
-    {
-        synop.collect([&]() {
-            for (auto& m: samples_synop)
-                db->import_msg(*m, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
-        });
-        temp.collect([&]() {
-            for (auto& m: samples_temp)
-                db->import_msg(*m, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
-        });
-        flight.collect([&]() {
-            for (auto& m: samples_flight)
-                db->import_msg(*m, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
-        });
+        for (auto& fn : {
+                "synop-cloudbelow.bufr", "synop-evapo.bufr", "synop-groundtemp.bufr", "synop-gtscosmo.bufr", "synop-longname.bufr",
+                "temp-gts1.bufr", "temp-gts2.bufr", "temp-gts3.bufr", "temp-gtscosmo.bufr", "temp-timesig18.bufr",
+                "gts-acars1.bufr", "gts-acars2.bufr", "gts-acars-us1.bufr", "gts-amdar1.bufr", "gts-amdar2.bufr"
+                })
+        {
+            throughput_tasks.emplace_back(new CreateTask("create_", fn));
+            throughput_tasks.emplace_back(new OverwriteTask("overwrite_", fn));
+        }
     }
 } test("db_import");
 
