@@ -7,6 +7,7 @@
 #include "dballe/db/sql/attrv6.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
+#include <cassert>
 
 using namespace wreport;
 using dballe::sql::Connection;
@@ -15,7 +16,7 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
-void DB::import_msg(const Message& message, const char* repmemo, int flags)
+void DB::import_msg(dballe::Transaction& transaction, const Message& message, const char* repmemo, int flags)
 {
     const Msg& msg = Msg::downcast(message);
     const msg::Context* l_ana = msg.find_context(Level(), Trange());
@@ -30,8 +31,8 @@ void DB::import_msg(const Message& message, const char* repmemo, int flags)
     sql::DataV6& dd = data();
     sql::AttrV6& dq = attr();
 
-    // Begin transaction
-    auto t = conn->transaction();
+    dballe::sql::Transaction* t = dynamic_cast<dballe::sql::Transaction*>(&transaction);
+    assert(t);
 
     // Fill up the pseudoana informations needed to fetch an existing ID
 
@@ -163,8 +164,6 @@ void DB::import_msg(const Message& message, const char* repmemo, int flags)
             dq.insert(*t, attrs, sql::AttrV6::UPDATE);
 #endif
     }
-
-    t->commit();
 }
 
 }

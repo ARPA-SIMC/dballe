@@ -82,9 +82,9 @@ public:
     void insert_station_data(dballe::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add) override;
     void insert_data(dballe::Transaction& transaction, DataValues& vals, bool can_replace, bool station_can_add) override;
 
-    void remove_station_data(const Query& query) override;
-    void remove(const Query& rec) override;
-    void remove_all() override;
+    void remove_station_data(dballe::Transaction& transaction, const Query& query) override;
+    void remove(dballe::Transaction& transaction, const Query& rec) override;
+    void remove_all(dballe::Transaction& transaction) override;
 
     /**
      * Remove orphan values from the database.
@@ -104,13 +104,13 @@ public:
 
     void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
     void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
-    void attr_insert_station(int data_id, const Values& attrs) override;
-    void attr_insert_data(int data_id, const Values& attrs) override;
-    void attr_remove_station(int data_id, const db::AttrList& qcs) override;
-    void attr_remove_data(int data_id, const db::AttrList& qcs) override;
+    void attr_insert_station(dballe::Transaction& transaction, int data_id, const Values& attrs) override;
+    void attr_insert_data(dballe::Transaction& transaction, int data_id, const Values& attrs) override;
+    void attr_remove_station(dballe::Transaction& transaction, int data_id, const db::AttrList& qcs) override;
+    void attr_remove_data(dballe::Transaction& transaction, int data_id, const db::AttrList& qcs) override;
     bool is_station_variable(int data_id, wreport::Varcode varcode) override;
 
-    void import_msg(const Message& msg, const char* repmemo, int flags) override;
+    void import_msg(dballe::Transaction& transaction, const Message& msg, const char* repmemo, int flags) override;
     bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) override;
 
     /**

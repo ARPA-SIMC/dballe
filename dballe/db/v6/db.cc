@@ -242,32 +242,26 @@ void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool ca
         vals.values.add_data_id(v.var->code(), v.id_data);
 }
 
-void DB::remove_station_data(const Query& query)
+void DB::remove_station_data(dballe::Transaction& transaction, const Query& query)
 {
     auto tr = trace.trace_remove_station_data(query);
-    auto t = conn->transaction();
     cursor::run_delete_query(*this, core::Query::downcast(query), true, explain_queries);
-    t->commit();
     tr->done();
 }
 
-void DB::remove(const Query& query)
+void DB::remove(dballe::Transaction& transaction, const Query& query)
 {
     auto tr = trace.trace_remove(query);
-    auto t = conn->transaction();
     cursor::run_delete_query(*this, core::Query::downcast(query), false, explain_queries);
-    t->commit();
     tr->done();
 }
 
-void DB::remove_all()
+void DB::remove_all(dballe::Transaction& transaction)
 {
     auto tr = trace.trace_remove_all();
-    auto t = conn->transaction();
     driver().remove_all_v6();
     if (m_lev_tr_cache)
         m_lev_tr_cache->invalidate();
-    t->commit();
     tr->done();
 }
 
@@ -328,7 +322,22 @@ void DB::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport
     a.read(data_id, dest);
 }
 
-void DB::attr_insert_station(int data_id, const Values& attrs)
+void DB::attr_insert_station(dballe::Transaction& transaction, int data_id, const Values& attrs)
+{
+    sql::AttrV6& a = attr();
+    sql::bulk::InsertAttrsV6 iattrs;
+    for (const auto& i : attrs)
+        iattrs.add(i.second.var, data_id);
+    if (iattrs.empty()) return;
+
+    dballe::sql::Transaction* t = dynamic_cast<dballe::sql::Transaction*>(&transaction);
+    assert(t);
+
+    // Insert all the attributes we found
+    a.insert(*t, iattrs, sql::AttrV6::UPDATE);
+}
+
+void DB::attr_insert_data(dballe::Transaction& transaction, int data_id, const Values& attrs)
 {
     sql::AttrV6& a = attr();
     sql::bulk::InsertAttrsV6 iattrs;
@@ -337,32 +346,14 @@ void DB::attr_insert_station(int data_id, const Values& attrs)
     if (iattrs.empty()) return;
 
     // Begin the transaction
-    auto t = conn->transaction();
+    dballe::sql::Transaction* t = dynamic_cast<dballe::sql::Transaction*>(&transaction);
+    assert(t);
 
     // Insert all the attributes we found
     a.insert(*t, iattrs, sql::AttrV6::UPDATE);
-
-    t->commit();
 }
 
-void DB::attr_insert_data(int data_id, const Values& attrs)
-{
-    sql::AttrV6& a = attr();
-    sql::bulk::InsertAttrsV6 iattrs;
-    for (const auto& i : attrs)
-        iattrs.add(i.second.var, data_id);
-    if (iattrs.empty()) return;
-
-    // Begin the transaction
-    auto t = conn->transaction();
-
-    // Insert all the attributes we found
-    a.insert(*t, iattrs, sql::AttrV6::UPDATE);
-
-    t->commit();
-}
-
-void DB::attr_remove_station(int data_id, const db::AttrList& qcs)
+void DB::attr_remove_station(dballe::Transaction& transaction, int data_id, const db::AttrList& qcs)
 {
     Querybuf query(500);
     if (qcs.empty())
@@ -380,7 +371,7 @@ void DB::attr_remove_station(int data_id, const db::AttrList& qcs)
     // dba_verbose(DBA_VERB_DB_SQL, "Performing query %s for id %d,B%02d%03d\n", query, id_lev_tr, DBA_VAR_X(id_var), DBA_VAR_Y(id_var));
 }
 
-void DB::attr_remove_data(int data_id, const db::AttrList& qcs)
+void DB::attr_remove_data(dballe::Transaction& transaction, int data_id, const db::AttrList& qcs)
 {
     Querybuf query(500);
     if (qcs.empty())

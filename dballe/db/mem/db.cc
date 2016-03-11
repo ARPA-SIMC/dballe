@@ -106,21 +106,21 @@ void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool ca
         i.second.data_id = memdb.values.insert(station, levtr, vals.info.datetime, *i.second.var, can_replace);
 }
 
-void DB::remove_station_data(const Query& query)
+void DB::remove_station_data(dballe::Transaction&, const Query& query)
 {
     Results<StationValue> res(memdb.stationvalues);
     raw_query_station_data(core::Query::downcast(query), res);
     memdb.remove(res);
 }
 
-void DB::remove(const Query& query)
+void DB::remove(dballe::Transaction&, const Query& query)
 {
     Results<Value> res(memdb.values);
     raw_query_data(core::Query::downcast(query), res);
     memdb.remove(res);
 }
 
-void DB::remove_all()
+void DB::remove_all(dballe::Transaction&)
 {
     memdb.clear();
 }
@@ -336,25 +336,25 @@ void DB::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport
     if (!v) error_notfound::throwf("no data variable found with data id %d", data_id);
     v->query_attrs(dest);
 }
-void DB::attr_insert_station(int data_id, const Values& attrs)
+void DB::attr_insert_station(dballe::Transaction&, int data_id, const Values& attrs)
 {
     ValueBase* v = memdb.stationvalues.get_checked(data_id);
     if (!v) error_notfound::throwf("no station variable found with data id %d", data_id);
     v->attr_insert(attrs);
 }
-void DB::attr_insert_data(int data_id, const Values& attrs)
+void DB::attr_insert_data(dballe::Transaction&, int data_id, const Values& attrs)
 {
     ValueBase* v = memdb.values.get_checked(data_id);
     if (!v) error_notfound::throwf("no data variable found with data id %d", data_id);
     v->attr_insert(attrs);
 }
-void DB::attr_remove_station(int data_id, const db::AttrList& qcs)
+void DB::attr_remove_station(dballe::Transaction&, int data_id, const db::AttrList& qcs)
 {
     ValueBase* v = memdb.stationvalues.get_checked(data_id);
     if (!v) error_notfound::throwf("no station variable found with data id %d", data_id);
     v->attr_remove(qcs);
 }
-void DB::attr_remove_data(int data_id, const db::AttrList& qcs)
+void DB::attr_remove_data(dballe::Transaction&, int data_id, const db::AttrList& qcs)
 {
     ValueBase* v = memdb.values.get_checked(data_id);
     if (!v) error_notfound::throwf("no data variable found with data id %d", data_id);
@@ -381,7 +381,7 @@ void DB::dump(FILE* out)
     memdb.dump(out);
 }
 
-void DB::import_msg(const Message& msg, const char* repmemo, int flags)
+void DB::import_msg(dballe::Transaction&, const Message& msg, const char* repmemo, int flags)
 {
     memdb.insert(Msg::downcast(msg),
             flags | DBA_IMPORT_OVERWRITE,

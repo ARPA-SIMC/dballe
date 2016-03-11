@@ -45,12 +45,6 @@ DB::~DB()
 {
 }
 
-void DB::import_msgs(const Messages& msgs, const char* repmemo, int flags)
-{
-    for (const auto& i: msgs)
-        import_msg(i, repmemo, flags);
-}
-
 Format DB::get_default_format() { return default_format; }
 void DB::set_default_format(Format format) { default_format = format; }
 
@@ -171,6 +165,75 @@ void DB::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
     auto t = transaction();
     insert_data(*t, vals, can_replace, station_can_add);
     t->commit();
+}
+
+void DB::remove_station_data(const Query& query)
+{
+    auto t = transaction();
+    remove_station_data(*t, query);
+    t->commit();
+}
+
+void DB::remove(const Query& query)
+{
+    auto t = transaction();
+    remove(*t, query);
+    t->commit();
+}
+
+void DB::remove_all()
+{
+    auto t = transaction();
+    remove_all(*t);
+    t->commit();
+}
+
+void DB::attr_insert_station(int data_id, const Values& attrs)
+{
+    auto t = transaction();
+    attr_insert_station(*t, data_id, attrs);
+    t->commit();
+}
+
+void DB::attr_insert_data(int data_id, const Values& attrs)
+{
+    auto t = transaction();
+    attr_insert_data(*t, data_id, attrs);
+    t->commit();
+}
+
+void DB::attr_remove_station(int data_id, const db::AttrList& attrs)
+{
+    auto t = transaction();
+    attr_remove_station(*t, data_id, attrs);
+    t->commit();
+}
+
+void DB::attr_remove_data(int data_id, const db::AttrList& attrs)
+{
+    auto t = transaction();
+    attr_remove_data(*t, data_id, attrs);
+    t->commit();
+}
+
+void DB::import_msg(const Message& msg, const char* repmemo, int flags)
+{
+    auto t = transaction();
+    import_msg(*t, msg, repmemo, flags);
+    t->commit();
+}
+
+void DB::import_msgs(const Messages& msgs, const char* repmemo, int flags)
+{
+    auto t = transaction();
+    import_msgs(*t, msgs, repmemo, flags);
+    t->commit();
+}
+
+void DB::import_msgs(dballe::Transaction& transaction, const Messages& msgs, const char* repmemo, int flags)
+{
+    for (const auto& i: msgs)
+        import_msg(transaction, i, repmemo, flags);
 }
 
 }

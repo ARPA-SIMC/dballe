@@ -152,31 +152,6 @@ struct CursorSummary : public Cursor
     virtual size_t get_count() const = 0;
 };
 
-
-#if 0
-    /**
-     * Query attributes for the current variable
-     */
-    virtual void query_attrs(std::function<void(std::unique_ptr<wreport::Var>&&)> dest) = 0;
-
-    /**
-     * Insert/overwrite new attributes for the current variable
-     *
-     * @param attrs
-     *   The attributes to be added
-     */
-    virtual void attr_insert(const Values& attrs) = 0;
-
-    /**
-     * Delete attributes for the current variable
-     *
-     * @param qcs
-     *   Array of WMO codes of the attributes to delete.  If empty, all attributes
-     *   associated to id_data will be deleted.
-     */
-    virtual void attr_remove(const AttrList& qcs) = 0;
-#endif
-
 }
 
 class DB
@@ -388,7 +363,18 @@ public:
      *   The record with the query data (see technical specifications, par. 1.6.4
      *   "parameter output/input") to select the items to be deleted
      */
-    virtual void remove_station_data(const Query& query) = 0;
+    void remove_station_data(const Query& query);
+
+    /**
+     * Remove data from the database
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param query
+     *   The record with the query data (see technical specifications, par. 1.6.4
+     *   "parameter output/input") to select the items to be deleted
+     */
+    virtual void remove_station_data(dballe::Transaction& transaction, const Query& query) = 0;
 
     /**
      * Remove data from the database
@@ -397,7 +383,18 @@ public:
      *   The record with the query data (see technical specifications, par. 1.6.4
      *   "parameter output/input") to select the items to be deleted
      */
-    virtual void remove(const Query& rec) = 0;
+    void remove(const Query& query);
+
+    /**
+     * Remove data from the database
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param rec
+     *   The record with the query data (see technical specifications, par. 1.6.4
+     *   "parameter output/input") to select the items to be deleted
+     */
+    virtual void remove(dballe::Transaction& transaction, const Query& rec) = 0;
 
     /**
      * Remove all data from the database.
@@ -405,7 +402,18 @@ public:
      * This is faster than remove() with an empty record, and unlike reset() it
      * preserves existing report information.
      */
-    virtual void remove_all() = 0;
+    void remove_all();
+
+    /**
+     * Remove all data from the database.
+     *
+     * This is faster than remove() with an empty record, and unlike reset() it
+     * preserves existing report information.
+     *
+     * @param transaction
+     *   The current active transaction.
+     */
+    virtual void remove_all(dballe::Transaction& transaction) = 0;
 
     /**
      * Perform database cleanup operations.
@@ -503,7 +511,19 @@ public:
      * @param attrs
      *   The attributes to be added
      */
-    virtual void attr_insert_station(int data_id, const Values& attrs) = 0;
+    void attr_insert_station(int data_id, const Values& attrs);
+
+    /**
+     * Insert new attributes on a station value
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param data_id
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     * @param attrs
+     *   The attributes to be added
+     */
+    virtual void attr_insert_station(dballe::Transaction& transaction, int data_id, const Values& attrs) = 0;
 
     /**
      * Insert new attributes on a data value
@@ -513,29 +533,67 @@ public:
      * @param attrs
      *   The attributes to be added
      */
-    virtual void attr_insert_data(int data_id, const Values& attrs) = 0;
+    void attr_insert_data(int data_id, const Values& attrs);
+
+    /**
+     * Insert new attributes on a data value
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param data_id
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     * @param attrs
+     *   The attributes to be added
+     */
+    virtual void attr_insert_data(dballe::Transaction& transaction, int data_id, const Values& attrs) = 0;
 
     /**
      * Delete attributes from a station value
      *
      * @param data_id
      *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
-     * @param qcs
+     * @param attrs
      *   Array of WMO codes of the attributes to delete.  If empty, all attributes
      *   associated to the value will be deleted.
      */
-    virtual void attr_remove_station(int data_id, const db::AttrList& qcs) = 0;
+    void attr_remove_station(int data_id, const db::AttrList& attrs);
+
+    /**
+     * Delete attributes from a station value
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param data_id
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     * @param attrs
+     *   Array of WMO codes of the attributes to delete.  If empty, all attributes
+     *   associated to the value will be deleted.
+     */
+    virtual void attr_remove_station(dballe::Transaction& transaction, int data_id, const db::AttrList& attrs) = 0;
 
     /**
      * Delete attributes from a data value
      *
      * @param data_id
      *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
-     * @param qcs
+     * @param attrs
      *   Array of WMO codes of the attributes to delete.  If empty, all attributes
      *   associated to the value will be deleted.
      */
-    virtual void attr_remove_data(int data_id, const db::AttrList& qcs) = 0;
+    void attr_remove_data(int data_id, const db::AttrList& attrs);
+
+    /**
+     * Delete attributes from a data value
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param data_id
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     * @param attrs
+     *   Array of WMO codes of the attributes to delete.  If empty, all attributes
+     *   associated to the value will be deleted.
+     */
+    virtual void attr_remove_data(dballe::Transaction& transaction, int data_id, const db::AttrList& attrs) = 0;
 
     /**
      * Check if this varcode and data_id correspond to a station variable. This
@@ -563,7 +621,23 @@ public:
      *   Customise different aspects of the import process.  It is a bitmask of the
      *   various DBA_IMPORT_* macros.
      */
-    virtual void import_msg(const Message& msg, const char* repmemo, int flags) = 0;
+    void import_msg(const Message& msg, const char* repmemo, int flags);
+
+    /**
+     * Import a Message into the DB-All.e database
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param msg
+     *   The Message containing the data to import
+     * @param repmemo
+     *   Report mnemonic to which imported data belong.  If NULL is passed, then it
+     *   will be chosen automatically based on the message type.
+     * @param flags
+     *   Customise different aspects of the import process.  It is a bitmask of the
+     *   various DBA_IMPORT_* macros.
+     */
+    virtual void import_msg(dballe::Transaction& transaction, const Message& msg, const char* repmemo, int flags) = 0;
 
     /**
      * Import Messages into the DB-All.e database
@@ -577,7 +651,23 @@ public:
      *   Customise different aspects of the import process.  It is a bitmask of the
      *   various DBA_IMPORT_* macros.
      */
-    virtual void import_msgs(const Messages& msgs, const char* repmemo, int flags);
+    void import_msgs(const Messages& msgs, const char* repmemo, int flags);
+
+    /**
+     * Import Messages into the DB-All.e database
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param msgs
+     *   The Messages containing the data to import
+     * @param repmemo
+     *   Report mnemonic to which imported data belong.  If NULL is passed, then it
+     *   will be chosen automatically based on the message type.
+     * @param flags
+     *   Customise different aspects of the import process.  It is a bitmask of the
+     *   various DBA_IMPORT_* macros.
+     */
+    virtual void import_msgs(dballe::Transaction& transaction, const Messages& msgs, const char* repmemo, int flags);
 
     /**
      * Perform the query in `query', and send the results to dest.
@@ -603,6 +693,4 @@ public:
 };
 
 }
-
-/* vim:set ts=4 sw=4: */
 #endif
