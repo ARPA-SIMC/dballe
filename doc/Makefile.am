@@ -91,8 +91,7 @@ EXTRA_DIST += $(fapisources) make_fortran_reference
 install-data-local:
 	test -d c_api && \
 		$(mkinstalldirs) $(DESTDIR)$(docdir)/c_api && \
-		find c_api -type f -exec $(INSTALL_DATA) '{}' $(DESTDIR)$(docdir)/c_api/ \; ; \
-	done || true
+		find c_api -type f -exec $(INSTALL_DATA) '{}' $(DESTDIR)$(docdir)/c_api/ \;
 
 uninstall-local:
 	rm -rf $(DESTDIR)$(docdir)/c_api
