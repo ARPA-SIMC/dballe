@@ -39,14 +39,23 @@ struct Importer : public Action
     DB& db;
     int import_flags;
     const char* forced_repmemo;
+    unique_ptr<dballe::Transaction> transaction;
 
     Importer(DB& db) : db(db), import_flags(0), forced_repmemo(0) {}
 
     virtual bool operator()(const cmdline::Item& item);
+    void commit()
+    {
+        if (transaction.get())
+            transaction->commit();
+    }
 };
 
 bool Importer::operator()(const Item& item)
 {
+    if (!transaction.get())
+        transaction = db.transaction();
+
     if (item.msgs == NULL)
     {
         fprintf(stderr, "Message #%d cannot be parsed: ignored\n", item.idx);
@@ -57,13 +66,12 @@ bool Importer::operator()(const Item& item)
         Msg& msg = Msg::downcast((*item.msgs)[i]);
         if (forced_repmemo == NULL && msg.type == MSG_GENERIC)
             /* Put generic messages in the generic report by default */
-            db.import_msg(msg, NULL, import_flags);
+            db.import_msg(*transaction, msg, NULL, import_flags);
         else
-            db.import_msg(msg, forced_repmemo, import_flags);
+            db.import_msg(*transaction, msg, forced_repmemo, import_flags);
     }
     return true;
 }
-
 
 }
 
@@ -114,6 +122,7 @@ int Dbadb::do_import(const list<string>& fnames, Reader& reader, int import_flag
     importer.import_flags = import_flags;
     importer.forced_repmemo = forced_repmemo;
     reader.read(fnames, importer);
+    importer.commit();
     return 0;
 }
 
