@@ -16,44 +16,6 @@ namespace tests {
 
 static std::string tag;
 
-bool test_can_run(const std::string& group_name, const std::string& test_name)
-{
-    const char* filter = getenv("FILTER");
-    const char* except = getenv("EXCEPT");
-
-    if (!filter && !except) return true;
-
-    if (filter && fnmatch(filter, group_name.c_str(), 0) == FNM_NOMATCH)
-        return false;
-
-    if (!except || fnmatch(except, group_name.c_str(), 0) == FNM_NOMATCH)
-        return true;
-
-    return false;
-}
-
-/*
-static void _ensureRecordHas(const char* file, int line, dba_record rec, const char* key, int val)
-{
-	int v;
-	INNER_CHECKED(dba_enqi(rec, key, &v));
-	ensure_equals(v, val);
-}
-static void _ensureRecordHas(const char* file, int line, dba_record rec, const char* key, double val)
-{
-	double v;
-	INNER_CHECKED(dba_enqd(rec, key, &v));
-	ensure_equals(v, val);
-}
-static void _ensureRecordHas(const char* file, int line, dba_record rec, const char* key, const char* val)
-{
-	const char* v;
-	INNER_CHECKED(dba_enqc(rec, key, &v));
-	gen_ensure(strcmp(v, val) == 0);
-}
-#define ensureRecordHas(...) _ensureRecordHas(__FILE__, __LINE__, __VA_ARGS__)
-*/
-
 const static Varcode generator_varcodes[] = {
 	WR_VAR(0,  1,   1),
 	WR_VAR(0,  1,   2),

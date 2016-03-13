@@ -19,14 +19,6 @@ namespace tests {
 
 using namespace wreport::tests;
 
-/**
- * Check if a test can be run.
- *
- * This is used to implement extra test filtering features like glob matching
- * on group or test names.
- */
-bool test_can_run(const std::string& group_name, const std::string& test_name);
-
 #if 0
 // Some utility random generator functions
 

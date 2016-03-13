@@ -62,6 +62,7 @@ void trace_init()
 {
     // Init API tracing if requested
     const char* tracefile = getenv("DBALLE_TRACE_FORTRAN");
+    if (!tracefile) tracefile = getenv("DBA_FORTRAN_TRACE");
     if (tracefile)
     {
         trace_file = fopen(tracefile, "at");

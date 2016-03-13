@@ -10,6 +10,14 @@ CLEANFILES =
 
 if DO_DOCS
 
+# Generic documentation
+
+generic_mds = dballe_env.md
+
+doc_DATA += $(generic_mds)
+EXTRA_DIST += $(generic_mds)
+
+
 # C++ API documentation
 
 cppdeps = libdballe.dox \
