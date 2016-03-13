@@ -6,6 +6,7 @@
 
 namespace dballe {
 struct DB;
+struct Transaction;
 
 namespace db {
 struct CursorStation;
@@ -25,6 +26,7 @@ protected:
     db::CursorValue* query_cur;
     InputFile* input_file;
     OutputFile* output_file;
+    dballe::Transaction* transaction = nullptr;
     int last_inserted_station_id;
 
     /// Store information about the database ID of a variable
@@ -40,34 +42,29 @@ protected:
     /// Store database variable IDs for all last inserted variables
     std::vector<VarID> last_inserted_varids;
 
+    void shutdown(bool commit);
 
 public:
     DbAPI(DB& db, const char* anaflag, const char* dataflag, const char* attrflag);
     virtual ~DbAPI();
 
-    virtual int enqi(const char* param);
-
-    virtual void scopa(const char* repinfofile = 0);
-    virtual void remove_all();
-
-    virtual int quantesono();
-    virtual void elencamele();
-
-    virtual int voglioquesto();
-    virtual const char* dammelo();
-
-    virtual void prendilo();
-    virtual void dimenticami();
-
-    virtual int voglioancora();
-
-    virtual void critica();
-    virtual void scusa();
-
-    virtual void messages_open_input(const char* filename, const char* mode, File::Encoding format, bool simplified=true);
-    virtual void messages_open_output(const char* filename, const char* mode, File::Encoding format);
-    virtual bool messages_read_next();
-    virtual void messages_write_next(const char* template_name=0);
+    int enqi(const char* param) override;
+    void scopa(const char* repinfofile=0) override;
+    void remove_all() override;
+    int quantesono() override;
+    void elencamele() override;
+    int voglioquesto() override;
+    const char* dammelo() override;
+    void prendilo() override;
+    void dimenticami() override;
+    int voglioancora() override;
+    void critica() override;
+    void scusa() override;
+    void fatto() override;
+    void messages_open_input(const char* filename, const char* mode, File::Encoding format, bool simplified=true) override;
+    void messages_open_output(const char* filename, const char* mode, File::Encoding format) override;
+    bool messages_read_next() override;
+    void messages_write_next(const char* template_name=0) override;
 };
 
 }

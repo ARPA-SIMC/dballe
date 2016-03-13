@@ -59,7 +59,7 @@ struct StationLayerCache : protected std::vector<wreport::Var*>
 
 }
 
-bool DB::export_msgs(const dballe::Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest)
+bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest)
 {
     auto tr = trace.trace_export_msgs(query);
     sql::Repinfo& ri = repinfo();
@@ -68,8 +68,6 @@ bool DB::export_msgs(const dballe::Query& query, std::function<bool(std::unique_
 
     // Message being built
     unique_ptr<Msg> msg;
-
-    auto t = conn->transaction();
 
     // The big export query
     DataQueryBuilder qb(*this, core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT, false);
@@ -189,7 +187,6 @@ bool DB::export_msgs(const dballe::Query& query, std::function<bool(std::unique_
     }
 
     // Useful for Oracle to end the session
-    t->commit();
     tr->done();
     return true;
 }

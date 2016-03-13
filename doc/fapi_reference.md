@@ -320,7 +320,7 @@ protection against programming errors:
 `anaflag` controls access to station value records and can have these
 values:
 
-* `"read"` pseudoana records cannot be inserted.
+* `"read"` station records cannot be inserted.
 * `"write"` it is possible to insert and delete pseudoana records.
 
 `dataflag` controls access to observed data and can have these values:

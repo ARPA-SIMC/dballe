@@ -408,7 +408,7 @@ struct CompareForExport
 
 }
 
-bool DB::export_msgs(const Query& query_gen, std::function<bool(std::unique_ptr<Message>&&)> dest)
+bool DB::export_msgs(dballe::Transaction& transaction, const Query& query_gen, std::function<bool(std::unique_ptr<Message>&&)> dest)
 {
     const core::Query& query = core::Query::downcast(query_gen);
     Results<Value> res(memdb.values);

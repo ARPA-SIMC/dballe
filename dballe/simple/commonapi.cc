@@ -347,6 +347,10 @@ const char* CommonAPIImplementation::ancora()
 	return parm;
 }
 
+void CommonAPIImplementation::fatto()
+{
+}
+
 void CommonAPIImplementation::read_qc_list(vector<Varcode>& res_arr) const
 {
     res_arr.clear();

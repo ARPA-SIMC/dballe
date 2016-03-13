@@ -94,22 +94,50 @@ DbAPI::DbAPI(DB& db, const char* anaflag, const char* dataflag, const char* attr
     : db(db), ana_cur(0), query_cur(0), input_file(0), output_file(0)
 {
     set_permissions(anaflag, dataflag, attrflag);
+    if (strcmp(anaflag, "read") || strcmp(dataflag, "read") || strcmp(attrflag, "read"))
+        // TODO: remove this and make it a default, once we get the OK from the API consumers
+        if (getenv("DBA_FORTRAN_TRANSACTION") != nullptr)
+            transaction = db.transaction().release();
 }
 
 DbAPI::~DbAPI()
 {
-    if (input_file) delete input_file;
-    if (output_file) delete output_file;
+    shutdown(false);
+}
+
+void DbAPI::shutdown(bool commit)
+{
+    delete input_file;
+    input_file = nullptr;
+
+    delete output_file;
+    output_file = nullptr;
+
     if (ana_cur)
     {
         ana_cur->discard_rest();
         delete ana_cur;
+        ana_cur = nullptr;
     }
+
     if (query_cur)
     {
         query_cur->discard_rest();
         delete query_cur;
+        query_cur = nullptr;
     }
+
+    if (transaction)
+    {
+        if (commit) transaction->commit();
+        delete transaction;
+        transaction = nullptr;
+    }
+}
+
+void DbAPI::fatto()
+{
+    shutdown(true);
 }
 
 int DbAPI::enqi(const char* param)
@@ -125,9 +153,13 @@ void DbAPI::scopa(const char* repinfofile)
     if (!(perms & PERM_DATA_WRITE))
         error_consistency::throwf(
             "scopa must be run with the database open in data write mode");
+    bool has_transaction = transaction != nullptr;
+    delete transaction;
     db.reset(repinfofile);
     attr_state = ATTR_REFERENCE;
     attr_reference_id = missing_int;
+    if (has_transaction)
+        transaction = db.transaction().release();
 }
 
 void DbAPI::remove_all()
@@ -135,7 +167,10 @@ void DbAPI::remove_all()
     if (!(perms & PERM_DATA_WRITE))
         error_consistency::throwf(
             "remove_all must be run with the database open in data write mode");
-    db.remove_all();
+    if (transaction)
+        db.remove_all(*transaction);
+    else
+        db.remove_all();
     attr_state = ATTR_REFERENCE;
     attr_reference_id = missing_int;
 }
@@ -234,13 +269,19 @@ void DbAPI::prendilo()
     if (station_context)
     {
         StationValues sv(input);
-        db.insert_station_data(sv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
+        if (transaction)
+            db.insert_station_data(*transaction, sv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
+        else
+            db.insert_station_data(sv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
         last_inserted_station_id = sv.info.ana_id;
         for (const auto& v: sv.values)
             last_inserted_varids.push_back(VarID(v.first, true, v.second.data_id));
     } else {
         DataValues dv(input);
-        db.insert_data(dv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
+        if (transaction)
+            db.insert_data(*transaction, dv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
+        else
+            db.insert_data(dv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
         last_inserted_station_id = dv.info.ana_id;
         for (const auto& v: dv.values)
             last_inserted_varids.push_back(VarID(v.first, false, v.second.data_id));
@@ -258,9 +299,17 @@ void DbAPI::dimenticami()
 
     auto query = Query::from_record(input);
     if (station_context)
-        db.remove_station_data(*query);
-    else
-        db.remove(*query);
+    {
+        if (transaction)
+            db.remove_station_data(*transaction, *query);
+        else
+            db.remove_station_data(*query);
+    } else {
+        if (transaction)
+            db.remove(*transaction, *query);
+        else
+            db.remove(*query);
+    }
     attr_state = ATTR_REFERENCE;
     attr_reference_id = missing_int;
 }
@@ -336,16 +385,32 @@ void DbAPI::critica()
             {
                 Values attrs(qcinput);
                 if (db.is_station_variable(attr_reference_id, attr_varid))
-                    db.attr_insert_station(attr_reference_id, attrs);
-                else
-                    db.attr_insert_data(attr_reference_id, attrs);
+                {
+                    if (transaction)
+                        db.attr_insert_station(*transaction, attr_reference_id, attrs);
+                    else
+                        db.attr_insert_station(attr_reference_id, attrs);
+                } else {
+                    if (transaction)
+                        db.attr_insert_data(*transaction, attr_reference_id, attrs);
+                    else
+                        db.attr_insert_data(attr_reference_id, attrs);
+                }
             }
             break;
         case ATTR_DAMMELO:
             if (dynamic_cast<const db::CursorStationData*>(query_cur))
-                db.attr_insert_station(query_cur->attr_reference_id(), qcinput);
-            else
-                db.attr_insert_data(query_cur->attr_reference_id(), qcinput);
+            {
+                if (transaction)
+                    db.attr_insert_station(*transaction, query_cur->attr_reference_id(), qcinput);
+                else
+                    db.attr_insert_station(query_cur->attr_reference_id(), qcinput);
+            } else {
+                if (transaction)
+                    db.attr_insert_data(*transaction, query_cur->attr_reference_id(), qcinput);
+                else
+                    db.attr_insert_data(query_cur->attr_reference_id(), qcinput);
+            }
             break;
         case ATTR_PRENDILO:
             {
@@ -374,9 +439,17 @@ void DbAPI::critica()
                                 WR_VAR_F(attr_varid), WR_VAR_X(attr_varid), WR_VAR_Y(attr_varid));
                 }
                 if (is_station)
-                    db.attr_insert_station(data_id, qcinput);
-                else
-                    db.attr_insert_data(data_id, qcinput);
+                {
+                    if (transaction)
+                        db.attr_insert_station(*transaction, data_id, qcinput);
+                    else
+                        db.attr_insert_station(data_id, qcinput);
+                } else {
+                    if (transaction)
+                        db.attr_insert_data(*transaction, data_id, qcinput);
+                    else
+                        db.attr_insert_data(data_id, qcinput);
+                }
             }
             break;
     }
@@ -401,15 +474,31 @@ void DbAPI::scusa()
             if (attr_reference_id == missing_int || attr_varid == 0)
                 throw error_consistency("scusa was not called after a dammelo, or was called with an invalid *context_id or *var_related");
             if (db.is_station_variable(attr_reference_id, attr_varid))
-                db.attr_remove_station(attr_reference_id, arr);
-            else
-                db.attr_remove_data(attr_reference_id, arr);
+            {
+                if (transaction)
+                    db.attr_remove_station(*transaction, attr_reference_id, arr);
+                else
+                    db.attr_remove_station(attr_reference_id, arr);
+            } else {
+                if (transaction)
+                    db.attr_remove_data(*transaction, attr_reference_id, arr);
+                else
+                    db.attr_remove_data(attr_reference_id, arr);
+            }
             break;
         case ATTR_DAMMELO:
             if (dynamic_cast<const db::CursorStationData*>(query_cur))
-                db.attr_remove_station(query_cur->attr_reference_id(), arr);
-            else
-                db.attr_remove_data(query_cur->attr_reference_id(), arr);
+            {
+                if (transaction)
+                    db.attr_remove_station(*transaction, query_cur->attr_reference_id(), arr);
+                else
+                    db.attr_remove_station(query_cur->attr_reference_id(), arr);
+            } else {
+                if (transaction)
+                    db.attr_remove_data(*transaction, query_cur->attr_reference_id(), arr);
+                else
+                    db.attr_remove_data(query_cur->attr_reference_id(), arr);
+            }
             break;
         case ATTR_PRENDILO:
             throw error_consistency("scusa cannot be called after a prendilo");
@@ -471,7 +560,10 @@ bool DbAPI::messages_read_next()
     if (!input_file->next())
         return false;
 
-    db.import_msg(input_file->msg(), NULL, input_file->import_flags);
+    if (transaction)
+        db.import_msg(*transaction, input_file->msg(), NULL, input_file->import_flags);
+    else
+        db.import_msg(input_file->msg(), NULL, input_file->import_flags);
 
     return true;
 }
@@ -486,12 +578,20 @@ void DbAPI::messages_write_next(const char* template_name)
 
     // Do the export with the current filter
     auto query = Query::from_record(input);
-    db.export_msgs(*query, [&](unique_ptr<Message>&& msg) {
-        Messages msgs;
-        msgs.append(move(msg));
-        out.write(exporter->to_binary(msgs));
-        return true;
-    });
+    if (transaction)
+        db.export_msgs(*transaction, *query, [&](unique_ptr<Message>&& msg) {
+            Messages msgs;
+            msgs.append(move(msg));
+            out.write(exporter->to_binary(msgs));
+            return true;
+        });
+    else
+        db.export_msgs(*query, [&](unique_ptr<Message>&& msg) {
+            Messages msgs;
+            msgs.append(move(msg));
+            out.write(exporter->to_binary(msgs));
+            return true;
+        });
 }
 
 }

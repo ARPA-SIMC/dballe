@@ -255,7 +255,7 @@ F77_SUBROUTINE(idba_arrivederci)(INTEGER(dbahandle))
  *
  * `anaflag` controls access to station value records and can have these values:
  *
- * \li \c "read" pseudoana records cannot be inserted.
+ * \li \c "read" station records cannot be inserted.
  * \li \c "write" it is possible to insert and delete pseudoana records.
  *
  * `dataflag` controls access to observed data and can have these values:
@@ -398,6 +398,7 @@ F77_INTEGER_FUNCTION(idba_fatto)(INTEGER(handle))
     try {
         HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_fatto());
+        h.api->fatto();
         hsimp.release(*handle);
         return fortran::success();
     } catch (error& e) {

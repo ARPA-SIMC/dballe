@@ -236,4 +236,12 @@ void DB::import_msgs(dballe::Transaction& transaction, const Messages& msgs, con
         import_msg(transaction, i, repmemo, flags);
 }
 
+bool DB::export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest)
+{
+    auto t = transaction();
+    bool res = export_msgs(*t, query, dest);
+    t->commit();
+    return res;
+}
+
 }

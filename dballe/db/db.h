@@ -681,7 +681,23 @@ public:
      * @returns true if the query reached its end, false if it got interrupted
      *   because dest returned false.
      */
-    virtual bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) = 0;
+    bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest);
+
+    /**
+     * Perform the query in `query', and send the results to dest.
+     *
+     * Return false from dest to interrupt the query.
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param query
+     *   The query to perform
+     * @param dest
+     *   The function that will handle the resulting messages
+     * @returns true if the query reached its end, false if it got interrupted
+     *   because dest returned false.
+     */
+    virtual bool export_msgs(dballe::Transaction& transaction, const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) = 0;
 
     /**
      * Dump the entire contents of the database to an output stream

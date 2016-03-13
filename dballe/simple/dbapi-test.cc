@@ -744,6 +744,7 @@ class Tests : public FixtureTestCase<DBFixture>
             pre.settimerange(254, 0, 0);
             pre.setd("B12101", 273.149994);
             pre.prendilo();
+            pre.fatto();
 
             fortran::DbAPI dbapi0(*f.db, "write", "write", "write");
             dbapi0.unsetall();

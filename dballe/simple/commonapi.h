@@ -76,47 +76,37 @@ protected:
 	void read_qc_list(std::vector<wreport::Varcode>& res_arr) const;
 
 public:
-	CommonAPIImplementation();
-	virtual ~CommonAPIImplementation();
+    CommonAPIImplementation();
+    virtual ~CommonAPIImplementation();
 
-	virtual void test_input_to_output();
-
-	virtual int enqi(const char* param);
-	virtual signed char enqb(const char* param);
-	virtual float enqr(const char* param);
-	virtual double enqd(const char* param);
-	virtual const char* enqc(const char* param);
-
-	virtual void seti(const char* param, int value);
-	virtual void setb(const char* param, signed char value);
-	virtual void setr(const char* param, float value);
-	virtual void setd(const char* param, double value);
-	virtual void setc(const char* param, const char* value);
-
-	virtual void setcontextana();
-
-	virtual void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2);
-	virtual void setlevel(int ltype1, int l1, int ltype2, int l2);
-
-	virtual void enqtimerange(int& ptype, int& p1, int& p2);
-	virtual void settimerange(int ptype, int p1, int p2);
-
-	virtual void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec);
-	virtual void setdate(int year, int month, int day, int hour, int min, int sec);
-
-	virtual void setdatemin(int year, int month, int day, int hour, int min, int sec);
-	virtual void setdatemax(int year, int month, int day, int hour, int min, int sec);
-
-    virtual void unset(const char* param);
-    virtual void unsetall();
-    virtual void unsetb();
-
-	virtual const char* spiegal(int ltype1, int l1, int ltype2, int l2);
-	virtual const char* spiegat(int ptype, int p1, int p2);
-	virtual const char* spiegab(const char* varcode, const char* value);
-
-
-	virtual const char* ancora();
+    void test_input_to_output() override;
+    int enqi(const char* param) override;
+    signed char enqb(const char* param) override;
+    float enqr(const char* param) override;
+    double enqd(const char* param) override;
+    const char* enqc(const char* param) override;
+    void seti(const char* param, int value) override;
+    void setb(const char* param, signed char value) override;
+    void setr(const char* param, float value) override;
+    void setd(const char* param, double value) override;
+    void setc(const char* param, const char* value) override;
+    void setcontextana() override;
+    void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) override;
+    void setlevel(int ltype1, int l1, int ltype2, int l2) override;
+    void enqtimerange(int& ptype, int& p1, int& p2) override;
+    void settimerange(int ptype, int p1, int p2) override;
+    void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec) override;
+    void setdate(int year, int month, int day, int hour, int min, int sec) override;
+    void setdatemin(int year, int month, int day, int hour, int min, int sec) override;
+    void setdatemax(int year, int month, int day, int hour, int min, int sec) override;
+    void unset(const char* param) override;
+    void unsetall() override;
+    void unsetb() override;
+    const char* spiegal(int ltype1, int l1, int ltype2, int l2) override;
+    const char* spiegat(int ptype, int p1, int p2) override;
+    const char* spiegab(const char* varcode, const char* value) override;
+    const char* ancora() override;
+    void fatto() override;
 
     AttrState test_get_attr_state() const { return attr_state; }
 };

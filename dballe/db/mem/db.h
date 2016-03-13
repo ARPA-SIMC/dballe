@@ -111,7 +111,7 @@ public:
     bool is_station_variable(int data_id, wreport::Varcode varcode) override;
 
     void import_msg(dballe::Transaction& transaction, const Message& msg, const char* repmemo, int flags) override;
-    bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) override;
+    bool export_msgs(dballe::Transaction& transaction, const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) override;
 
     /**
      * Dump the entire contents of the database to an output stream
