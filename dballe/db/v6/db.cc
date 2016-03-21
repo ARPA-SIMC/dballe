@@ -114,7 +114,7 @@ void DB::init_after_connect()
 std::unique_ptr<dballe::Transaction> DB::transaction()
 {
     auto res = conn->transaction();
-    return res;
+    return move(res);
 }
 
 void DB::delete_tables()
