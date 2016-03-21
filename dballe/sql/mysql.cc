@@ -1,6 +1,7 @@
 #include "sql/mysql.h"
 #include "sql/querybuf.h"
 #include "dballe/types.h"
+#include <cstring>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
