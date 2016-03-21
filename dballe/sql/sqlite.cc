@@ -4,7 +4,6 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
-#include "dballe/core/vasprintf.h"
 #include <cstdlib>
 
 using namespace std;
@@ -34,17 +33,15 @@ error_sqlite::error_sqlite(const std::string& dbmsg, const std::string& msg)
 
 void error_sqlite::throwf(sqlite3* db, const char* fmt, ...)
 {
+    char buf[512];
+
     // Format the arguments
     va_list ap;
     va_start(ap, fmt);
-    char* cmsg;
-    (void)vasprintf(&cmsg, fmt, ap);
+    vsnprintf(buf, 512, fmt, ap);
     va_end(ap);
 
-    // Convert to string
-    std::string msg(cmsg);
-    free(cmsg);
-    throw error_sqlite(db, msg);
+    throw error_sqlite(db, buf);
 }
 
 SQLiteConnection::SQLiteConnection()
