@@ -3,11 +3,9 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
-#include "dballe/core/vasprintf.h"
 #include "sql/querybuf.h"
 #include <cstdlib>
 #include <arpa/inet.h>
-#define _BSD_SOURCE             /* See feature_test_macros(7) */
 #include <endian.h>
 
 using namespace std;
@@ -152,17 +150,15 @@ error_postgresql::error_postgresql(const std::string& dbmsg, const std::string& 
 
 void error_postgresql::throwf(PGconn* db, const char* fmt, ...)
 {
+    char buf[512];
+
     // Format the arguments
     va_list ap;
     va_start(ap, fmt);
-    char* cmsg;
-    vasprintf(&cmsg, fmt, ap);
+    vsnprintf(buf, 512, fmt, ap);
     va_end(ap);
 
-    // Convert to string
-    std::string msg(cmsg);
-    free(cmsg);
-    throw error_postgresql(db, msg);
+    throw error_postgresql(db, buf);
 }
 
 void error_postgresql::throwf(PGresult* res, const char* fmt, ...)
