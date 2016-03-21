@@ -2,16 +2,14 @@
 #include <dballe/record.h>
 #include <dballe/core/query.h>
 #include <dballe/core/record.h>
-#include "dballe/core/vasprintf.h"
 #include <dballe/msg/wr_codec.h>
 #include <dballe/core/verbose.h>
-
 #include <popt.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <time.h>
+#include <cstring>
+#include <cstdarg>
+#include <cstdlib>
+#include <cctype>
+#include <ctime>
 
 using namespace std;
 
@@ -185,16 +183,13 @@ void dba_cmdline_print_dba_error()
 
 void error_cmdline::throwf(const char* fmt, ...)
 {
+    char buf[512];
     /* Format the arguments */
     va_list ap;
     va_start(ap, fmt);
-    char* cmsg;
-    vasprintf(&cmsg, fmt, ap);
+    vsnprintf(buf, 512, fmt, ap);
     va_end(ap);
-    /* Convert to string */
-    std::string msg(cmsg);
-    free(cmsg);
-    throw error_cmdline(msg);
+    throw error_cmdline(buf);
 }
 
 void dba_cmdline_error(poptContext optCon, const char* fmt, ...)
