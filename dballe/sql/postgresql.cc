@@ -163,17 +163,15 @@ void error_postgresql::throwf(PGconn* db, const char* fmt, ...)
 
 void error_postgresql::throwf(PGresult* res, const char* fmt, ...)
 {
+    char buf[512];
+
     // Format the arguments
     va_list ap;
     va_start(ap, fmt);
-    char* cmsg;
-    vasprintf(&cmsg, fmt, ap);
+    vsnprintf(buf, 512, fmt, ap);
     va_end(ap);
 
-    // Convert to string
-    std::string msg(cmsg);
-    free(cmsg);
-    throw error_postgresql(res, msg);
+    throw error_postgresql(res, buf);
 }
 
 PostgreSQLConnection::PostgreSQLConnection()

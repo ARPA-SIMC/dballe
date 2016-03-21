@@ -8,7 +8,6 @@
 #include <cstdlib>
 #include <limits.h>
 #include <unistd.h>
-#include "dballe/core/vasprintf.h"
 #include "dballe/core/verbose.h"
 #include "dballe/types.h"
 #include "querybuf.h"
@@ -59,17 +58,15 @@ error_odbc::error_odbc(SQLSMALLINT handleType, SQLHANDLE handle, const std::stri
 
 void error_odbc::throwf(SQLSMALLINT handleType, SQLHANDLE handle, const char* fmt, ...)
 {
+    char buf[512];
+
     // Format the arguments
     va_list ap;
     va_start(ap, fmt);
-    char* cmsg;
-    vasprintf(&cmsg, fmt, ap);
+    vsnprintf(buf, 512, fmt, ap);
     va_end(ap);
 
-    // Convert to string
-    std::string msg(cmsg);
-    free(cmsg);
-    throw error_odbc(handleType, handle, msg);
+    throw error_odbc(handleType, handle, buf);
 }
 
 static void verbose_odbc_error(SQLSMALLINT handleType, SQLHANDLE handle, const std::string& msg)

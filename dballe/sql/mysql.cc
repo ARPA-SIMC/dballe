@@ -1,7 +1,6 @@
 #include "sql/mysql.h"
 #include "sql/querybuf.h"
 #include "dballe/types.h"
-#include "dballe/core/vasprintf.h"
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
@@ -29,17 +28,15 @@ error_mysql::error_mysql(const std::string& dbmsg, const std::string& msg)
 
 void error_mysql::throwf(MYSQL* db, const char* fmt, ...)
 {
+    char buf[512];
+
     // Format the arguments
     va_list ap;
     va_start(ap, fmt);
-    char* cmsg;
-    vasprintf(&cmsg, fmt, ap);
+    vsnprintf(buf, 512, fmt, ap);
     va_end(ap);
 
-    // Convert to string
-    std::string msg(cmsg);
-    free(cmsg);
-    throw error_mysql(db, msg);
+    throw error_mysql(db, buf);
 }
 
 namespace mysql {

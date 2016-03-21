@@ -4,7 +4,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <wreport/error.h>
-#include "dballe/core/vasprintf.h"
 #include <math.h>
 #include <ostream>
 #include <iomanip>
