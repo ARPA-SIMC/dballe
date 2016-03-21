@@ -38,7 +38,7 @@ void error_sqlite::throwf(sqlite3* db, const char* fmt, ...)
     va_list ap;
     va_start(ap, fmt);
     char* cmsg;
-    vasprintf(&cmsg, fmt, ap);
+    (void)vasprintf(&cmsg, fmt, ap);
     va_end(ap);
 
     // Convert to string
