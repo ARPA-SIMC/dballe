@@ -12,7 +12,8 @@ std::ostream& operator<<(std::ostream& out, const Coords& c)
         << "(" << setprecision(5) << c.dlat()
         << "," << setprecision(5) << c.dlon()
         << ")"
-        << defaultfloat;
+        << resetiosflags(ios_base::floatfield);
+    //    << defaultfloat;
     return out;
 }
 
@@ -57,7 +58,8 @@ std::ostream& operator<<(std::ostream& out, const LatRange& lr)
         << "(" << setprecision(5) << dmin
         << " to " << setprecision(5) << dmax
         << ")"
-        << defaultfloat;
+        << resetiosflags(ios_base::floatfield);
+    //    << defaultfloat;
     return out;
 }
 
@@ -69,7 +71,8 @@ std::ostream& operator<<(std::ostream& out, const LonRange& lr)
         << "(" << setprecision(5) << dmin
         << " to " << setprecision(5) << dmax
         << ")"
-        << defaultfloat;
+        << resetiosflags(ios_base::floatfield);
+    //    << defaultfloat;
     return out;
 }
 
