@@ -1,10 +1,10 @@
 #include "db.h"
 #include "dballe/sql/sql.h"
-#include "dballe/db/sql/driver.h"
-#include "dballe/db/sql/station.h"
-#include "dballe/db/sql/levtr.h"
-#include "dballe/db/sql/datav6.h"
-#include "dballe/db/sql/attrv6.h"
+#include "dballe/db/v6/driver.h"
+#include "dballe/db/v6/station.h"
+#include "dballe/db/v6/levtr.h"
+#include "dballe/db/v6/datav6.h"
+#include "dballe/db/v6/attrv6.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
 #include <cassert>
@@ -26,10 +26,10 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
 	// Check if the station is mobile
     bool mobile = msg.get_ident_var() != NULL;
 
-    sql::Station& st = station();
-    sql::LevTr& lt = lev_tr();
-    sql::DataV6& dd = data();
-    sql::AttrV6& dq = attr();
+    v6::Station& st = station();
+    v6::LevTr& lt = lev_tr();
+    v6::DataV6& dd = data();
+    v6::AttrV6& dq = attr();
 
     dballe::sql::Transaction* t = dynamic_cast<dballe::sql::Transaction*>(&transaction);
     assert(t);
@@ -78,7 +78,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
     if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || inserted_pseudoana)
     {
         // Prepare a bulk insert
-        sql::bulk::InsertV6 vars;
+        v6::bulk::InsertV6 vars;
         vars.id_station = id_station;
         vars.id_report = id_report;
         vars.datetime = Datetime(1000, 1, 1, 0, 0, 0);
@@ -92,7 +92,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
         }
 
         // Run the bulk insert
-        dd.insert(*t, vars, (flags & DBA_IMPORT_OVERWRITE) ? sql::DataV6::UPDATE : sql::DataV6::IGNORE);
+        dd.insert(*t, vars, (flags & DBA_IMPORT_OVERWRITE) ? v6::DataV6::UPDATE : v6::DataV6::IGNORE);
 
         // Insert the attributes
         if (flags & DBA_IMPORT_ATTRS)
@@ -102,19 +102,19 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
                 if (v.inserted())
                     dq.add(v.id_data, *v.var);
 #else
-            sql::bulk::InsertAttrsV6 attrs;
+            v6::bulk::InsertAttrsV6 attrs;
             for (const auto& v: vars)
             {
                 if (!v.inserted()) continue;
                 attrs.add_all(*v.var, v.id_data);
             }
             if (!attrs.empty())
-                dq.insert(*t, attrs, sql::AttrV6::UPDATE);
+                dq.insert(*t, attrs, v6::AttrV6::UPDATE);
 #endif
         }
     }
 
-    sql::bulk::InsertV6 vars;
+    v6::bulk::InsertV6 vars;
     vars.id_station = id_station;
     vars.id_report = id_report;
 
@@ -144,7 +144,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
     }
 
     // Run the bulk insert
-    dd.insert(*t, vars, (flags & DBA_IMPORT_OVERWRITE) ? sql::DataV6::UPDATE : sql::DataV6::IGNORE);
+    dd.insert(*t, vars, (flags & DBA_IMPORT_OVERWRITE) ? v6::DataV6::UPDATE : v6::DataV6::IGNORE);
 
     // Insert the attributes
     if (flags & DBA_IMPORT_ATTRS)
@@ -154,14 +154,14 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
             if (v.inserted())
                 dq.add(v.id_data, *v.var);
 #else
-        sql::bulk::InsertAttrsV6 attrs;
+        v6::bulk::InsertAttrsV6 attrs;
         for (const auto& v: vars)
         {
             if (!v.inserted()) continue;
             attrs.add_all(*v.var, v.id_data);
         }
         if (!attrs.empty())
-            dq.insert(*t, attrs, sql::AttrV6::UPDATE);
+            dq.insert(*t, attrs, v6::AttrV6::UPDATE);
 #endif
     }
 }

@@ -1,7 +1,6 @@
 #include "tests.h"
 #include "v6/db.h"
 #include "sql.h"
-#include "sql/driver.h"
 #include "dballe/sql/sql.h"
 #include "dballe/msg/vars.h"
 #include <wreport/error.h>
@@ -296,7 +295,7 @@ DriverFixture::DriverFixture(const char* backend, db::Format format)
     : backend(backend ? backend : ""), format(format)
 {
     conn = get_test_connection(this->backend).release();
-    driver = db::sql::Driver::create(*conn).release();
+    driver = db::v6::Driver::create(*conn).release();
     driver->delete_tables(format);
     driver->create_tables(format);
 }

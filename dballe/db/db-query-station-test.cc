@@ -2,7 +2,7 @@
 #include "db/tests.h"
 #include "db/mem/db.h"
 #include "db/v6/db.h"
-#include "db/sql/station.h"
+#include "db/v6/station.h"
 
 using namespace dballe;
 using namespace dballe::db;

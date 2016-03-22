@@ -1,11 +1,11 @@
 #include "cursor.h"
 #include "qbuilder.h"
 #include "db.h"
-#include <dballe/db/sql/driver.h>
-#include "dballe/db/sql/repinfo.h"
-#include "dballe/db/sql/station.h"
-#include "dballe/db/sql/levtr.h"
-#include "dballe/db/sql/datav6.h"
+#include <dballe/db/v6/driver.h>
+#include "dballe/db/v6/repinfo.h"
+#include "dballe/db/v6/station.h"
+#include "dballe/db/v6/levtr.h"
+#include "dballe/db/v6/datav6.h"
 #include "dballe/types.h"
 #include "dballe/record.h"
 #include "dballe/var.h"
@@ -57,7 +57,7 @@ struct Base : public Interface
     const unsigned int modifiers;
 
     /// Results from the query
-    Structbuf<sql::SQLRecordV6> results;
+    Structbuf<v6::SQLRecordV6> results;
 
     /// Current result element being iterated
     int cur = -1;
@@ -126,7 +126,7 @@ struct Base : public Interface
     /// Run the query in qb and fill results with its output
     virtual void load(const QueryBuilder& qb)
     {
-        db.driver().run_built_query_v6(qb, [&](sql::SQLRecordV6& rec) {
+        db.driver().run_built_query_v6(qb, [&](v6::SQLRecordV6& rec) {
             results.append(rec);
         });
         // We are done adding, prepare the structbuf for reading
@@ -430,11 +430,11 @@ struct Best : public Base<CursorData>
 
     void load(const QueryBuilder& qb) override
     {
-        db::sql::Repinfo& ri = db.repinfo();
+        db::v6::Repinfo& ri = db.repinfo();
         bool first = true;
-        sql::SQLRecordV6 best;
+        v6::SQLRecordV6 best;
 
-        db.driver().run_built_query_v6(qb, [&](sql::SQLRecordV6& rec) {
+        db.driver().run_built_query_v6(qb, [&](v6::SQLRecordV6& rec) {
             // Fill priority
             rec.priority = ri.get_priority(rec.out_rep_cod);
 
