@@ -1,5 +1,4 @@
 #include "config.h"
-#include "dballe/core/verbose.h"
 #include "dballe/simple/msgapi.h"
 #include "dballe/simple/dbapi.h"
 #include "dballe/db/db.h"
@@ -113,8 +112,6 @@ static void lib_init()
 {
     if (usage_refcount > 0)
         return;
-
-    dba_verbose_init();
 
     fortran::trace_init();
     fortran::error_init();

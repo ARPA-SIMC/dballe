@@ -1,29 +1,10 @@
-/*
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "base.h"
 #include <wreport/bulletin.h>
 #include <wreport/subset.h>
 #include <wreport/conv.h>
 #include <wreport/codetables.h>
+#include <wreport/notes.h>
 #include <dballe/msg/context.h>
-#include <dballe/core/verbose.h>
 #include <cmath>
 
 // Define to debug the sounding group matching algorithm
@@ -251,7 +232,7 @@ void TempImporter::import_var(const Var& var)
 /* Date/time of launch */
         case WR_VAR(0,  8, 21):
             if (var.enqi() != 18)
-                dba_verbose(DBA_VERB_BUFREX_MSG, "TEMP time significance is %d instead of 18", var.enqi());
+                notes::log() << "TEMP time significance is " << var.enqi() << " instead of 18" << endl;
             break;
 /* Horizontal and vertical coordinates of launch site */
         case WR_VAR(0,  7,  1):

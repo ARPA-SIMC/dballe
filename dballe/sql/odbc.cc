@@ -8,7 +8,7 @@
 #include <cstdlib>
 #include <limits.h>
 #include <unistd.h>
-#include "dballe/core/verbose.h"
+#include <wreport/notes.h>
 #include "dballe/types.h"
 #include "querybuf.h"
 
@@ -79,7 +79,7 @@ static void verbose_odbc_error(SQLSMALLINT handleType, SQLHANDLE handle, const s
     SQLGetDiagRec(handleType, handle, 1, (unsigned char*)stat, &err, (unsigned char*)sqlmsg, strsize, &mlen);
     if (mlen > strsize) mlen = strsize;
 
-    dba_verbose(DBA_VERB_DB_SQL, "%s: %s\n", msg.c_str(), sqlmsg);
+    notes::log() << msg << ": " << sqlmsg << endl;
 }
 
 Environment::Environment()
