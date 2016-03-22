@@ -17,7 +17,7 @@ namespace sqlite {
 /**
  * Fast cached access to the repinfo table
  */
-struct SQLiteRepinfoBase : public v7::Repinfo
+struct SQLiteRepinfoV7 : public v7::Repinfo
 {
     /**
      * DB connection. The pointer is assumed always valid during the
@@ -25,11 +25,11 @@ struct SQLiteRepinfoBase : public v7::Repinfo
      */
     dballe::sql::SQLiteConnection& conn;
 
-    SQLiteRepinfoBase(dballe::sql::SQLiteConnection& conn);
-    SQLiteRepinfoBase(const SQLiteRepinfoBase&) = delete;
-    SQLiteRepinfoBase(const SQLiteRepinfoBase&&) = delete;
-    virtual ~SQLiteRepinfoBase();
-    SQLiteRepinfoBase& operator=(const SQLiteRepinfoBase&) = delete;
+    SQLiteRepinfoV7(dballe::sql::SQLiteConnection& conn);
+    SQLiteRepinfoV7(const SQLiteRepinfoV7&) = delete;
+    SQLiteRepinfoV7(const SQLiteRepinfoV7&&) = delete;
+    virtual ~SQLiteRepinfoV7();
+    SQLiteRepinfoV7& operator=(const SQLiteRepinfoV7&) = delete;
 
     void dump(FILE* out) override;
 
@@ -41,14 +41,6 @@ protected:
     void insert_entry(const v7::repinfo::Cache& entry) override;
     void read_cache() override;
     void insert_auto_entry(const char* memo) override;
-};
-
-struct SQLiteRepinfoV7 : public SQLiteRepinfoBase
-{
-    SQLiteRepinfoV7(dballe::sql::SQLiteConnection& conn);
-
-protected:
-    int id_use_count(unsigned id, const char* name) override;
 };
 
 }

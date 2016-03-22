@@ -2,6 +2,7 @@
 #include "db/v7/db.h"
 #include "sql/sql.h"
 #include "db/v7/driver.h"
+#include "db/v7/repinfo.h"
 #include "db/v7/station.h"
 #include "config.h"
 
@@ -17,21 +18,18 @@ struct Fixture : V7DriverFixture
     using V7DriverFixture::V7DriverFixture;
 
     unique_ptr<db::v7::Station> station;
+    unique_ptr<db::v7::Repinfo> repinfo;
 
     void reset_station()
     {
         if (conn->has_table("station"))
             driver->exec_no_data("DELETE FROM station");
 
-        switch (format)
-        {
-            case db::V5: throw error_unimplemented("v5 db is not supported");
-            case db::V7:
-                station = driver->create_stationv7();
-                break;
-            default:
-                throw error_consistency("cannot test station on the current DB format");
-        }
+        repinfo = driver->create_repinfov7();
+        int added, deleted, updated;
+        repinfo->update(nullptr, &added, &deleted, &updated);
+
+        station = driver->create_stationv7();
     }
 
     void test_setup()
@@ -53,22 +51,22 @@ class Tests : public FixtureTestCase<Fixture>
             bool inserted;
 
             // Insert a mobile station
-            wassert(actual(st.obtain_id(4500000, 1100000, "ciao", &inserted)) == 1);
+            wassert(actual(st.obtain_id(1, 4500000, 1100000, "ciao", &inserted)) == 1);
             wassert(actual(inserted).istrue());
-            wassert(actual(st.obtain_id(4500000, 1100000, "ciao", &inserted)) == 1);
+            wassert(actual(st.obtain_id(1, 4500000, 1100000, "ciao", &inserted)) == 1);
             wassert(actual(inserted).isfalse());
 
             // Insert a fixed station
-            wassert(actual(st.obtain_id(4600000, 1200000, NULL, &inserted)) == 2);
+            wassert(actual(st.obtain_id(1, 4600000, 1200000, NULL, &inserted)) == 2);
             wassert(actual(inserted).istrue());
-            wassert(actual(st.obtain_id(4600000, 1200000, NULL, &inserted)) == 2);
+            wassert(actual(st.obtain_id(1, 4600000, 1200000, NULL, &inserted)) == 2);
             wassert(actual(inserted).isfalse());
 
             // Get the ID of the first station
-            wassert(actual(st.get_id(4500000, 1100000, "ciao")) == 1);
+            wassert(actual(st.get_id(1, 4500000, 1100000, "ciao")) == 1);
 
             // Get the ID of the second station
-            wassert(actual(st.get_id(4600000, 1200000)) == 2);
+            wassert(actual(st.get_id(1, 4600000, 1200000)) == 2);
         });
     }
 };

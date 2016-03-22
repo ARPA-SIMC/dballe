@@ -31,7 +31,7 @@ public:
      * @return
      *   Resulting ID of the station
      */
-    virtual int get_id(int lat, int lon, const char* ident=NULL) = 0;
+    virtual int get_id(int rep, int lat, int lon, const char* ident=NULL) = 0;
 
     /**
      * Get the station ID given latitude, longitude and mobile identifier.
@@ -41,7 +41,7 @@ public:
      * @return
      *   Resulting ID of the station
      */
-    virtual int obtain_id(int lat, int lon, const char* ident=NULL, bool* inserted=NULL) = 0;
+    virtual int obtain_id(int rep, int lat, int lon, const char* ident=NULL, bool* inserted=NULL) = 0;
 
     /**
      * Dump the entire contents of the table to an output stream
@@ -51,7 +51,7 @@ public:
     /**
      * Export station variables
      */
-    virtual void get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
+    virtual void get_station_vars(int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
 
     /**
      * Add all station variables (without attributes) to rec.

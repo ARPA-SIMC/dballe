@@ -84,7 +84,7 @@ class Tests : public FixtureTestCase<DBFixture>
             char query[20];
             snprintf(query, 20, "ana_id=%d", oldf.data["synop"].info.ana_id);
 #warning FIXME: change after testing if we can move to report-in-station behaviour or not
-            if (f.db->format() == MEM)
+            if (f.db->format() != V6)
                 TRY_QUERY(query, 2);
             else
                 TRY_QUERY(query, 4);
@@ -350,6 +350,7 @@ class Tests : public FixtureTestCase<DBFixture>
             core::Record test;
             switch (db.format())
             {
+                case V7:
                 case MEM:
                     // mem: coords, ident, datetime, level, trange, code, report
                     wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals01)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
@@ -361,7 +362,6 @@ class Tests : public FixtureTestCase<DBFixture>
                     wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals02)); // lat=2, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
                     break;
                 case V6:
-                case V7:
                     // V6: ana_id, datetime, level, trange, report, var
                     wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals01)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
                     wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals07)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12103=280.15

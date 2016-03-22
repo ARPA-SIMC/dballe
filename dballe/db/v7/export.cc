@@ -47,11 +47,11 @@ struct StationLayerCache : protected std::vector<wreport::Var*>
             c.set(**i);
     }
 
-    void fill(DB& db, int id_station, int id_report)
+    void fill(DB& db, int id_station)
     {
         reset();
 
-        db.station().get_station_vars(id_station, id_report, [&](std::unique_ptr<wreport::Var> var) {
+        db.station().get_station_vars(id_station, [&](std::unique_ptr<wreport::Var> var) {
             push_back(var.release());
         });
     }
@@ -134,8 +134,8 @@ bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& quer
             msg::Context& c_st = msg->obtain_station_context();
 
             // Update station layer cache if needed
-            if (sqlrec.out_ana_id != last_ana_id || sqlrec.out_rep_cod != last_rep_cod)
-                station_cache.fill(*this, sqlrec.out_ana_id, sqlrec.out_rep_cod);
+            if (sqlrec.out_ana_id != last_ana_id)
+                station_cache.fill(*this, sqlrec.out_ana_id);
 
             // Fill in report information
             {

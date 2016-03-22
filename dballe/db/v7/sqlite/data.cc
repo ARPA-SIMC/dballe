@@ -24,7 +24,7 @@ SQLiteDataV7::SQLiteDataV7(SQLiteConnection& conn)
     sstm = conn.sqlitestatement(R"(
         SELECT id, id_lev_tr, id_var, value
           FROM data
-         WHERE id_station=? AND id_report=? AND datetime=?
+         WHERE id_station=? AND datetime=?
          ORDER BY id_lev_tr, id_var
     )").release();
 }
@@ -38,8 +38,7 @@ void SQLiteDataV7::insert(dballe::sql::Transaction& t, v7::bulk::InsertV7& vars,
 {
     // Get the current status of variables for this context
     sstm->bind_val(1, vars.id_station);
-    sstm->bind_val(2, vars.id_report);
-    sstm->bind_val(3, vars.datetime);
+    sstm->bind_val(2, vars.datetime);
 
     // Scan the result in parallel with the variable list, annotating changed
     // items with their data ID
@@ -83,9 +82,9 @@ void SQLiteDataV7::insert(dballe::sql::Transaction& t, v7::bulk::InsertV7& vars,
     {
         Querybuf dq(512);
         dq.appendf(R"(
-            INSERT INTO data (id_station, id_report, id_lev_tr, datetime, id_var, value)
-                 VALUES (%d, %d, ?, '%04d-%02d-%02d %02d:%02d:%02d', ?, ?)
-        )", vars.id_station, vars.id_report,
+            INSERT INTO data (id_station, id_lev_tr, datetime, id_var, value)
+                 VALUES (%d, ?, '%04d-%02d-%02d %02d:%02d:%02d', ?, ?)
+        )", vars.id_station,
             vars.datetime.year, vars.datetime.month, vars.datetime.day,
             vars.datetime.hour, vars.datetime.minute, vars.datetime.second);
         auto insert = conn.sqlitestatement(dq);
@@ -121,11 +120,11 @@ void SQLiteDataV7::dump(FILE* out)
     int count = 0;
     fprintf(out, "dump of table data:\n");
     fprintf(out, " id   st   rep ltr  datetime              var\n");
-    auto stm = conn.sqlitestatement("SELECT id, id_station, id_report, id_lev_tr, datetime, id_var, value FROM data");
+    auto stm = conn.sqlitestatement("SELECT id, id_station, id_lev_tr, datetime, id_var, value FROM data");
     stm->execute([&]() {
-        int id_lev_tr = stm->column_int(3);
-        const char* datetime = stm->column_string(4);
-        Varcode code = stm->column_int(5);
+        int id_lev_tr = stm->column_int(2);
+        const char* datetime = stm->column_string(3);
+        Varcode code = stm->column_int(4);
 
         char ltr[20];
         if (id_lev_tr == -1)
@@ -133,14 +132,13 @@ void SQLiteDataV7::dump(FILE* out)
         else
             snprintf(ltr, 20, "%04d", id_lev_tr);
 
-        fprintf(out, " %4d %4d %3d %s %s %01d%02d%03d",
+        fprintf(out, " %4d %4d %s %s %01d%02d%03d",
                 stm->column_int(0),
                 stm->column_int(1),
-                stm->column_int(2),
                 ltr,
                 datetime,
                 WR_VAR_F(code), WR_VAR_X(code), WR_VAR_Y(code));
-        if (stm->column_isnull(6))
+        if (stm->column_isnull(5))
             fprintf(out, "\n");
         else
             fprintf(out, " %s\n", stm->column_string(6));

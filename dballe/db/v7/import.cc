@@ -60,9 +60,6 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
             throw error_notfound("mobile station identifier not found in data to import");
     }
 
-    bool inserted_pseudoana = false;
-    int id_station = st.obtain_id(lat, lon, ident, &inserted_pseudoana);
-
     // Report code
     int id_report;
     if (repmemo != NULL)
@@ -74,6 +71,9 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
         else
             id_report = rep_cod_from_memo(Msg::repmemo_from_type(msg.type));
     }
+
+    bool inserted_pseudoana = false;
+    int id_station = st.obtain_id(id_report, lat, lon, ident, &inserted_pseudoana);
 
     if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || inserted_pseudoana)
     {

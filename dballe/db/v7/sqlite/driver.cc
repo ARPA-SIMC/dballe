@@ -70,6 +70,7 @@ void Driver::run_built_query_v7(
         if (qb.select_station)
         {
             rec.out_ana_id = stm->column_int(output_seq++);
+            rec.out_rep_cod = stm->column_int(output_seq++);
             rec.out_lat = stm->column_int(output_seq++);
             rec.out_lon = stm->column_int(output_seq++);
             if (stm->column_isnull(output_seq))
@@ -87,7 +88,6 @@ void Driver::run_built_query_v7(
 
         if (qb.select_varinfo)
         {
-            rec.out_rep_cod = stm->column_int(output_seq++);
             rec.out_id_ltr = stm->column_int(output_seq++);
             rec.out_varcode = stm->column_int(output_seq++);
         }
@@ -119,16 +119,6 @@ void Driver::run_built_query_v7(
 void Driver::create_tables_v7()
 {
     conn.exec(R"(
-        CREATE TABLE station (
-           id         INTEGER PRIMARY KEY,
-           lat        INTEGER NOT NULL,
-           lon        INTEGER NOT NULL,
-           ident      CHAR(64),
-           UNIQUE (lat, lon, ident)
-        );
-        CREATE INDEX pa_lon ON station(lon);
-    )");
-    conn.exec(R"(
         CREATE TABLE repinfo (
            id           INTEGER PRIMARY KEY,
            memo         VARCHAR(30) NOT NULL,
@@ -139,6 +129,18 @@ void Driver::create_tables_v7()
            UNIQUE (prio),
            UNIQUE (memo)
         );
+    )");
+    conn.exec(R"(
+        CREATE TABLE station (
+           id    INTEGER PRIMARY KEY,
+           rep   INTEGER NOT NULL REFERENCES repinfo (id) ON DELETE CASCADE,
+           lat   INTEGER NOT NULL,
+           lon   INTEGER NOT NULL,
+           ident CHAR(64),
+           UNIQUE (rep, lat, lon, ident)
+        );
+        CREATE INDEX pa_rep ON station(rep);
+        CREATE INDEX pa_lon ON station(lon);
     )");
     conn.exec(R"(
         CREATE TABLE lev_tr (
@@ -157,14 +159,12 @@ void Driver::create_tables_v7()
         CREATE TABLE data (
            id          INTEGER PRIMARY KEY,
            id_station  INTEGER NOT NULL REFERENCES station (id) ON DELETE CASCADE,
-           id_report   INTEGER NOT NULL REFERENCES repinfo (id) ON DELETE CASCADE,
            id_lev_tr   INTEGER NOT NULL,
            datetime    TEXT NOT NULL,
            id_var      INTEGER NOT NULL,
            value       VARCHAR(255) NOT NULL,
-           UNIQUE (id_station, datetime, id_lev_tr, id_report, id_var)
+           UNIQUE (id_station, datetime, id_lev_tr, id_var)
         );
-        CREATE INDEX data_report ON data(id_report);
         CREATE INDEX data_lt ON data(id_lev_tr);
     )");
     conn.exec(R"(

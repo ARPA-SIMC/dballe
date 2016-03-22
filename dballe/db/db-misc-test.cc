@@ -146,38 +146,43 @@ class Tests : public FixtureTestCase<DBFixture>
             // Iterate the station database
             auto cur = db.query_stations(core::Query());
 
-            if (dynamic_cast<db::mem::DB*>(f.db))
+            switch (db.format())
             {
-                // Memdb has one station entry per (lat, lon, ident, network)
-                wassert(actual(cur->remaining()) == 2);
+                case V7:
+                case MEM:
+                    // Memdb and V7 have one station entry per (lat, lon, ident, network)
+                    wassert(actual(cur->remaining()) == 2);
 
-                wassert(actual(cur->next()).istrue());
-                wassert(actual(cur->get_lat()) == 12.34560);
-                wassert(actual(cur->get_lon()) == 76.54320);
-                wassert(actual(cur->get_rep_memo()) == "synop");
-                wassert(actual((void*)cur->get_ident()) == (void*)0);
-                wassert(actual(cur).station_keys_match(oldf.stations["synop"].info));
+                    wassert(actual(cur->next()).istrue());
+                    wassert(actual(cur->get_lat()) == 12.34560);
+                    wassert(actual(cur->get_lon()) == 76.54320);
+                    wassert(actual(cur->get_rep_memo()) == "synop");
+                    wassert(actual((void*)cur->get_ident()) == (void*)0);
+                    wassert(actual(cur).station_keys_match(oldf.stations["synop"].info));
 
-                wassert(actual(cur->next()).istrue());
-                wassert(actual(cur->get_lat()) == 12.34560);
-                wassert(actual(cur->get_lon()) == 76.54320);
-                wassert(actual(cur->get_rep_memo()) == "metar");
-                wassert(actual((void*)cur->get_ident()) == (void*)0);
-                wassert(actual(cur).station_keys_match(oldf.stations["metar"].info));
-            } else {
-                // V5 and V6 have one station entry (lat, lon, ident)
-                wassert(actual(cur->remaining()) == 1);
+                    wassert(actual(cur->next()).istrue());
+                    wassert(actual(cur->get_lat()) == 12.34560);
+                    wassert(actual(cur->get_lon()) == 76.54320);
+                    wassert(actual(cur->get_rep_memo()) == "metar");
+                    wassert(actual((void*)cur->get_ident()) == (void*)0);
+                    wassert(actual(cur).station_keys_match(oldf.stations["metar"].info));
+                    break;
+                case V6:
+                    // V5 and V6 have one station entry (lat, lon, ident)
+                    wassert(actual(cur->remaining()) == 1);
 
-                // There should be an item
-                wassert(actual(cur->next()).istrue());
-                wassert(actual(cur->get_lat()) == 12.34560);
-                wassert(actual(cur->get_lon()) == 76.54320);
-                wassert(actual((void*)cur->get_ident()) == (void*)0);
+                    // There should be an item
+                    wassert(actual(cur->next()).istrue());
+                    wassert(actual(cur->get_lat()) == 12.34560);
+                    wassert(actual(cur->get_lon()) == 76.54320);
+                    wassert(actual((void*)cur->get_ident()) == (void*)0);
 
-                // Check that the result matches
-                wassert(actual(cur).station_keys_match(oldf.stations["metar"].info));
+                    // Check that the result matches
+                    wassert(actual(cur).station_keys_match(oldf.stations["metar"].info));
 
-                // There should be only one item
+                    // There should be only one item
+                    break;
+                default: error_unimplemented::throwf("cannot run this test on a database of format %d", (int)db.format());
             }
             wassert(actual(cur->remaining()) == 0);
             wassert(actual(cur->next()).isfalse());

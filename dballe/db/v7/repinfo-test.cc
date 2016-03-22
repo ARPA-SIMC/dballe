@@ -24,15 +24,7 @@ struct Fixture : V7DriverFixture
         if (conn->has_table("repinfo"))
             driver->exec_no_data("DELETE FROM repinfo");
 
-        switch (format)
-        {
-            case V5: throw error_unimplemented("v5 db is not supported");
-            case V7:
-                repinfo = driver->create_repinfov7();
-                break;
-            default:
-                throw error_consistency("cannot test repinfo on the current DB format");
-        }
+        repinfo = driver->create_repinfov7();
         int added, deleted, updated;
         repinfo->update(nullptr, &added, &deleted, &updated);
     }

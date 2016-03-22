@@ -11,17 +11,17 @@ namespace db {
 namespace v7 {
 namespace sqlite {
 
-SQLiteRepinfoBase::SQLiteRepinfoBase(SQLiteConnection& conn)
+SQLiteRepinfoV7::SQLiteRepinfoV7(SQLiteConnection& conn)
     : Repinfo(conn), conn(conn)
 {
     read_cache();
 }
 
-SQLiteRepinfoBase::~SQLiteRepinfoBase()
+SQLiteRepinfoV7::~SQLiteRepinfoV7()
 {
 }
 
-void SQLiteRepinfoBase::read_cache()
+void SQLiteRepinfoV7::read_cache()
 {
     cache.clear();
     memo_idx.clear();
@@ -45,7 +45,7 @@ void SQLiteRepinfoBase::read_cache()
     rebuild_memo_idx();
 }
 
-void SQLiteRepinfoBase::insert_auto_entry(const char* memo)
+void SQLiteRepinfoV7::insert_auto_entry(const char* memo)
 {
     auto stm = conn.sqlitestatement("SELECT MAX(id) FROM repinfo");
     unsigned id;
@@ -70,10 +70,10 @@ void SQLiteRepinfoBase::insert_auto_entry(const char* memo)
     stm->execute();
 }
 
-int SQLiteRepinfoBase::id_use_count(unsigned id, const char* name)
+int SQLiteRepinfoV7::id_use_count(unsigned id, const char* name)
 {
     unsigned count = 0;
-    auto stm = conn.sqlitestatement("SELECT COUNT(1) FROM context WHERE id_report=?");
+    auto stm = conn.sqlitestatement("SELECT COUNT(1) FROM station WHERE rep=?");
     stm->bind(id);
     stm->execute_one([&]() {
         count = stm->column_int(0);
@@ -81,14 +81,14 @@ int SQLiteRepinfoBase::id_use_count(unsigned id, const char* name)
     return count;
 }
 
-void SQLiteRepinfoBase::delete_entry(unsigned id)
+void SQLiteRepinfoV7::delete_entry(unsigned id)
 {
     auto stm = conn.sqlitestatement("DELETE FROM repinfo WHERE id=?");
     stm->bind(id);
     stm->execute();
 }
 
-void SQLiteRepinfoBase::update_entry(const v7::repinfo::Cache& entry)
+void SQLiteRepinfoV7::update_entry(const v7::repinfo::Cache& entry)
 {
     auto stm = conn.sqlitestatement(R"(
         UPDATE repinfo set memo=?, description=?, prio=?, descriptor=?, tablea=?
@@ -104,7 +104,7 @@ void SQLiteRepinfoBase::update_entry(const v7::repinfo::Cache& entry)
     stm->execute();
 }
 
-void SQLiteRepinfoBase::insert_entry(const v7::repinfo::Cache& entry)
+void SQLiteRepinfoV7::insert_entry(const v7::repinfo::Cache& entry)
 {
     auto stm = conn.sqlitestatement(R"(
         INSERT INTO repinfo (id, memo, description, prio, descriptor, tablea)
@@ -120,7 +120,7 @@ void SQLiteRepinfoBase::insert_entry(const v7::repinfo::Cache& entry)
     stm->execute();
 }
 
-void SQLiteRepinfoBase::dump(FILE* out)
+void SQLiteRepinfoV7::dump(FILE* out)
 {
     fprintf(out, "dump of table repinfo:\n");
     fprintf(out, "   id   memo   description  prio   desc  tablea\n");
@@ -142,19 +142,6 @@ void SQLiteRepinfoBase::dump(FILE* out)
         ++count;
     });
     fprintf(out, "%d element%s in table repinfo\n", count, count != 1 ? "s" : "");
-}
-
-SQLiteRepinfoV7::SQLiteRepinfoV7(SQLiteConnection& conn) : SQLiteRepinfoBase(conn) {}
-
-int SQLiteRepinfoV7::id_use_count(unsigned id, const char* name)
-{
-    unsigned count = 0;
-    auto stm = conn.sqlitestatement("SELECT COUNT(1) FROM data WHERE id_report=?");
-    stm->bind(id);
-    stm->execute_one([&]() {
-        count = stm->column_int(0);
-    });
-    return count;
 }
 
 }

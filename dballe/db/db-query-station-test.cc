@@ -58,7 +58,7 @@ struct Fixture : public DBFixture
     const int all;
 
     Fixture(const char* backend, db::Format format)
-        : DBFixture(backend, format), some(format == MEM ? 2 : 1), all(format == MEM ? 4 : 2)
+        : DBFixture(backend, format), some(format != V6 ? 2 : 1), all(format != V6 ? 4 : 2)
 #warning FIXME: change after testing if we can move to report-in-station behaviour or not
     {
     }
@@ -147,7 +147,7 @@ class Tests : public FixtureTestCase<Fixture>
             wassert(actual(db).try_station_query("ana_filter=B07030=120", 0));
             wassert(actual(db).try_station_query("ana_filter=B07030>50", f.some));
 #warning FIXME: change after testing if we can move to report-in-station behaviour or not
-            if (db.format() == MEM)
+            if (db.format() != V6)
                 wassert(actual(db).try_station_query("ana_filter=B07030>=50", 3));
             else
                 wassert(actual(db).try_station_query("ana_filter=B07030>=50", 2));
@@ -181,7 +181,7 @@ class Tests : public FixtureTestCase<Fixture>
                     break;
                 case V7:
                     if (auto d = dynamic_cast<v7::DB*>(f.db))
-                        d->station().obtain_id(1100000, 4500000);
+                        d->station().obtain_id(1, 1100000, 4500000);
                     break;
                 case V5: throw error_unimplemented("v5 db is not supported");
                 case MESSAGES: throw error_unimplemented("testing stations_without_data on MESSAGES database");
@@ -204,9 +204,13 @@ class Tests : public FixtureTestCase<Fixture>
             auto cur = db.query_stations(core::Query());
             switch (db.format())
             {
-                case MEM: wassert(actual(cur->remaining()) == 4); break;
-                case V6: wassert(actual(cur->remaining()) == 2); break;
-                case V7: wassert(actual(cur->remaining()) == 2); break;
+                case V7:
+                case MEM:
+                    wassert(actual(cur->remaining()) == 4);
+                    break;
+                case V6:
+                    wassert(actual(cur->remaining()) == 2);
+                    break;
                 default: error_unimplemented::throwf("cannot run this test on a database of format %d", (int)db.format());
             }
         });

@@ -279,7 +279,7 @@ void QueryBuilder::build()
 
 void StationQueryBuilder::build_select()
 {
-    sql_query.append("SELECT s.id, s.lat, s.lon, s.ident");
+    sql_query.append("SELECT s.id, s.rep, s.lat, s.lon, s.ident");
     sql_from.append(
             " FROM station s"
     );
@@ -315,9 +315,8 @@ bool StationQueryBuilder::build_where()
     if (!query.rep_memo.empty())
     {
         int src_val = db.repinfo().get_id(query.rep_memo.c_str());
-        sql_where.append_listf(
-                "EXISTS(SELECT id FROM data s_repmemo WHERE s_repmemo.id_station=s.id AND s_repmemo.id_report=%d)", src_val);
-        TRACE("found rep_memo %s: adding AND EXISTS(SELECT id FROM data s_repmemo WHERE s_repmemo.id_station=s.id AND s_repmemo.id_report=%d)\n", query.rep_memo.c_str(), src_val);
+        sql_where.append_listf("s.rep=%d", src_val);
+        TRACE("found rep_memo %s: adding AND s.rep=%d)\n", query.rep_memo.c_str(), src_val);
         has_where = true;
     }
 
@@ -331,7 +330,7 @@ void StationQueryBuilder::build_order_by()
 
 void DataQueryBuilder::build_select()
 {
-    sql_query.append("SELECT s.id, s.lat, s.lon, s.ident, d.id_report, d.id_lev_tr, d.id_var, d.id, d.datetime, d.value");
+    sql_query.append("SELECT s.id, s.rep, s.lat, s.lon, s.ident, d.id_lev_tr, d.id_var, d.id, d.datetime, d.value");
     select_station = true;
     select_varinfo = true;
     select_data_id = true;
@@ -356,7 +355,7 @@ bool DataQueryBuilder::build_where()
     add_dt_where("d");
     add_ltr_where("ltr");
     add_varcode_where("d");
-    add_repinfo_where("d");
+    add_repinfo_where("s");
     add_datafilter_where("d");
     add_attrfilter_where("d");
 
@@ -366,16 +365,14 @@ bool DataQueryBuilder::build_where()
 void DataQueryBuilder::build_order_by()
 {
     sql_query.append(" ORDER BY d.id_station");
-    if (modifiers & DBA_DB_MODIFIER_SORT_FOR_EXPORT)
-        sql_query.append(", d.id_report");
     sql_query.append(", d.datetime");
     if (!query_station_vars)
         sql_query.append(", ltr.ltype1, ltr.l1, ltr.ltype2, ltr.l2, ltr.ptype, ltr.p1, ltr.p2");
     // TODO: id_report should be at the end, so we get all the variables for a
     // given report. If this has not been caught so far, are clients actually
     // relying on ordering? If not, negotiate relaxing of ordering requirements (#19)
-    if (!(modifiers & DBA_DB_MODIFIER_SORT_FOR_EXPORT))
-        sql_query.append(", d.id_report");
+    //if (!(modifiers & DBA_DB_MODIFIER_SORT_FOR_EXPORT))
+    //    sql_query.append(", d.id_report");
     sql_query.append(", d.id_var");
 }
 
@@ -403,12 +400,12 @@ void SummaryQueryBuilder::build_select()
     if (modifiers & DBA_DB_MODIFIER_SUMMARY_DETAILS)
     {
         sql_query.append(R"(
-            SELECT s.id, s.lat, s.lon, s.ident, d.id_report, d.id_lev_tr, d.id_var,
+            SELECT s.id, s.rep, s.lat, s.lon, s.ident, d.id_lev_tr, d.id_var,
                    COUNT(1), MIN(d.datetime), MAX(d.datetime)
         )");
         select_summary_details = true;
     } else {
-        sql_query.append("SELECT DISTINCT s.id, s.lat, s.lon, s.ident, d.id_report, d.id_lev_tr, d.id_var");
+        sql_query.append("SELECT DISTINCT s.id, s.rep, s.lat, s.lon, s.ident, d.id_lev_tr, d.id_var");
     }
 
     select_station = true;
@@ -431,7 +428,7 @@ void SummaryQueryBuilder::build_order_by()
 {
     // No ordering required, but we may add a GROUP BY
     if (modifiers & DBA_DB_MODIFIER_SUMMARY_DETAILS)
-        sql_query.append(" GROUP BY s.id, d.id_report, d.id_lev_tr, d.id_var");
+        sql_query.append(" GROUP BY s.id, d.id_lev_tr, d.id_var");
 }
 
 
@@ -638,7 +635,7 @@ bool QueryBuilder::add_repinfo_where(const char* tbl)
             // No repinfo matches, so we just introduce a false value
             sql_where.append_list("1=0");
         } else {
-            sql_where.append_listf("%s.id_report IN (", tbl);
+            sql_where.append_listf("%s.rep IN (", tbl);
             for (std::vector<int>::const_iterator i = ids.begin(); i != ids.end(); ++i)
             {
                 if (i == ids.begin())
@@ -654,8 +651,8 @@ bool QueryBuilder::add_repinfo_where(const char* tbl)
     if (!query.rep_memo.empty())
     {
         int src_val = db.repinfo().get_id(query.rep_memo.c_str());
-        sql_where.append_listf("%s.id_report=%d", tbl, src_val);
-        TRACE("found rep_memo %s: adding AND %s.id_report=%d\n", query.rep_memo.c_str(), tbl, (int)src_val);
+        sql_where.append_listf("%s.rep=%d", tbl, src_val);
+        TRACE("found rep_memo %s: adding AND %s.rep=%d\n", query.rep_memo.c_str(), tbl, (int)src_val);
         found = true;
     }
 

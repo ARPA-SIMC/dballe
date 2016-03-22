@@ -19,12 +19,12 @@ SQLiteStationBase::SQLiteStationBase(SQLiteConnection& conn)
     : conn(conn)
 {
     const char* select_fixed_query =
-        "SELECT id FROM station WHERE lat=? AND lon=? AND ident IS NULL";
+        "SELECT id FROM station WHERE rep=? AND lat=? AND lon=? AND ident IS NULL";
     const char* select_mobile_query =
-        "SELECT id FROM station WHERE lat=? AND lon=? AND ident=?";
+        "SELECT id FROM station WHERE rep=? AND lat=? AND lon=? AND ident=?";
     const char* insert_query =
-        "INSERT INTO station (lat, lon, ident)"
-        " VALUES (?, ?, ?);";
+        "INSERT INTO station (rep, lat, lon, ident)"
+        " VALUES (?, ?, ?, ?);";
 
     // Create the statement for select fixed
     sfstm = conn.sqlitestatement(select_fixed_query).release();
@@ -43,18 +43,20 @@ SQLiteStationBase::~SQLiteStationBase()
     delete istm;
 }
 
-bool SQLiteStationBase::maybe_get_id(int lat, int lon, const char* ident, int* id)
+bool SQLiteStationBase::maybe_get_id(int rep, int lat, int lon, const char* ident, int* id)
 {
     SQLiteStatement* s;
     if (ident)
     {
-        smstm->bind_val(1, lat);
-        smstm->bind_val(2, lon);
-        smstm->bind_val(3, ident);
+        smstm->bind_val(1, rep);
+        smstm->bind_val(2, lat);
+        smstm->bind_val(3, lon);
+        smstm->bind_val(4, ident);
         s = smstm;
     } else {
-        sfstm->bind_val(1, lat);
-        sfstm->bind_val(2, lon);
+        sfstm->bind_val(1, rep);
+        sfstm->bind_val(2, lat);
+        sfstm->bind_val(3, lon);
         s = sfstm;
     }
     bool found = false;
@@ -65,30 +67,31 @@ bool SQLiteStationBase::maybe_get_id(int lat, int lon, const char* ident, int* i
     return found;
 }
 
-int SQLiteStationBase::get_id(int lat, int lon, const char* ident)
+int SQLiteStationBase::get_id(int rep, int lat, int lon, const char* ident)
 {
     int id;
-    if (maybe_get_id(lat, lon, ident, &id))
+    if (maybe_get_id(rep, lat, lon, ident, &id))
         return id;
     throw error_notfound("station not found in the database");
 }
 
-int SQLiteStationBase::obtain_id(int lat, int lon, const char* ident, bool* inserted)
+int SQLiteStationBase::obtain_id(int rep, int lat, int lon, const char* ident, bool* inserted)
 {
     int id;
-    if (maybe_get_id(lat, lon, ident, &id))
+    if (maybe_get_id(rep, lat, lon, ident, &id))
     {
         if (inserted) *inserted = false;
         return id;
     }
 
     // If no station was found, insert a new one
-    istm->bind_val(1, lat);
-    istm->bind_val(2, lon);
+    istm->bind_val(1, rep);
+    istm->bind_val(2, lat);
+    istm->bind_val(3, lon);
     if (ident)
-        istm->bind_val(3, ident);
+        istm->bind_val(4, ident);
     else
-        istm->bind_null_val(3);
+        istm->bind_null_val(4);
     istm->execute();
     if (inserted) *inserted = true;
     return conn.get_last_insert_id();
@@ -131,21 +134,21 @@ void SQLiteStationBase::read_station_vars(SQLiteStatement& stm, std::function<vo
     }
 }
 
-void SQLiteStationBase::get_station_vars(int id_station, int id_report, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+void SQLiteStationBase::get_station_vars(int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     // Perform the query
     static const char query[] = R"(
         SELECT d.id_var, d.value, a.type, a.value
           FROM data d
           LEFT JOIN attr a ON a.id_data = d.id
-         WHERE d.id_station=? AND d.id_report=?
+         WHERE d.id_station=?
            AND d.id_lev_tr = -1
          ORDER BY d.id_var, a.type
     )";
 
     auto stm = conn.sqlitestatement(query);
-    stm->bind(id_station, id_report);
-    TRACE("fill_ana_layer Performing query: %s with idst %d idrep %d\n", query, id_station, id_report);
+    stm->bind(id_station);
+    TRACE("fill_ana_layer Performing query: %s with idst %d\n", query, id_station);
 
     read_station_vars(*stm, dest);
 }
@@ -155,16 +158,17 @@ void SQLiteStationBase::dump(FILE* out)
     int count = 0;
     fprintf(out, "dump of table station:\n");
 
-    auto stm = conn.sqlitestatement("SELECT id, lat, lon, ident FROM station");
+    auto stm = conn.sqlitestatement("SELECT id, rep, lat, lon, ident FROM station");
     stm->execute([&]() {
-        fprintf(out, " %d, %.5f, %.5f",
+        fprintf(out, " %d, %d, %.5f, %.5f",
                 stm->column_int(0),
-                stm->column_int(1) / 100000.0,
-                stm->column_int(2) / 100000.0);
-        if (stm->column_isnull(3))
+                stm->column_int(1),
+                stm->column_int(2) / 100000.0,
+                stm->column_int(3) / 100000.0);
+        if (stm->column_isnull(4))
             putc('\n', out);
         else
-            fprintf(out, ", %s\n", stm->column_string(3));
+            fprintf(out, ", %s\n", stm->column_string(4));
         ++count;
     });
     fprintf(out, "%d element%s in table station\n", count, count != 1 ? "s" : "");
@@ -174,13 +178,8 @@ void SQLiteStationBase::add_station_vars(int id_station, Record& rec)
 {
     const char* query = R"(
         SELECT d.id_var, d.value
-          FROM data d, repinfo ri
-         WHERE d.id_lev_tr = -1 AND ri.id = d.id_report AND d.id_station = ?
-         AND ri.prio=(
-          SELECT MAX(sri.prio) FROM repinfo sri
-            JOIN data sd ON sri.id=sd.id_report
-          WHERE sd.id_station=d.id_station AND sd.id_lev_tr = -1
-            AND sd.id_var=d.id_var)
+          FROM data d
+         WHERE d.id_lev_tr = -1 AND d.id_station = ?
     )";
 
     auto stm = conn.sqlitestatement(query);

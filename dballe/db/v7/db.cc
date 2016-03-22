@@ -171,13 +171,16 @@ int DB::obtain_station(const dballe::Station& st, bool can_add)
     if (st.ana_id != MISSING_INT)
         return st.ana_id;
 
+    v7::Repinfo& ri = repinfo();
+    int rep = ri.obtain_id(st.report.c_str());
+
     v7::Station& s = station();
 
     // Get the ID for the station
     if (can_add)
-        return s.obtain_id(st.coords.lat, st.coords.lon, st.ident.get());
+        return s.obtain_id(rep, st.coords.lat, st.coords.lon, st.ident.get());
     else
-        return s.get_id(st.coords.lat, st.coords.lon, st.ident.get());
+        return s.get_id(rep, st.coords.lat, st.coords.lon, st.ident.get());
 }
 
 void DB::insert_station_data(dballe::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add)
