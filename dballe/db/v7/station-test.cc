@@ -1,8 +1,8 @@
 #include "db/tests.h"
-#include "db/v6/db.h"
+#include "db/v7/db.h"
 #include "sql/sql.h"
-#include "db/v6/station.h"
-#include "db/v6/driver.h"
+#include "db/v7/driver.h"
+#include "db/v7/station.h"
 #include "config.h"
 
 using namespace dballe;
@@ -12,11 +12,11 @@ using namespace std;
 
 namespace {
 
-struct Fixture : DriverFixture
+struct Fixture : V7DriverFixture
 {
-    using DriverFixture::DriverFixture;
+    using V7DriverFixture::V7DriverFixture;
 
-    unique_ptr<db::v6::Station> station;
+    unique_ptr<db::v7::Station> station;
 
     void reset_station()
     {
@@ -26,8 +26,8 @@ struct Fixture : DriverFixture
         switch (format)
         {
             case db::V5: throw error_unimplemented("v5 db is not supported");
-            case db::V6:
-                station = driver->create_stationv6();
+            case db::V7:
+                station = driver->create_stationv7();
                 break;
             default:
                 throw error_consistency("cannot test station on the current DB format");
@@ -36,7 +36,7 @@ struct Fixture : DriverFixture
 
     void test_setup()
     {
-        DriverFixture::test_setup();
+        V7DriverFixture::test_setup();
         reset_station();
     }
 };
@@ -73,15 +73,15 @@ class Tests : public FixtureTestCase<Fixture>
     }
 };
 
-Tests test_sqlite("db_sql_station_v6_sqlite", "SQLITE", db::V6);
+Tests test_sqlite("db_sql_station_v7_sqlite", "SQLITE", db::V7);
 #ifdef HAVE_ODBC
-Tests test_odbc("db_sql_station_v6_odbc", "ODBC", db::V6);
+Tests test_odbc("db_sql_station_v7_odbc", "ODBC", db::V7);
 #endif
 #ifdef HAVE_LIBPQ
-Tests test_psql("db_sql_station_v6_postgresql", "POSTGRESQL", db::V6);
+Tests test_psql("db_sql_station_v7_postgresql", "POSTGRESQL", db::V7);
 #endif
 #ifdef HAVE_MYSQL
-Tests test_mysql("db_sql_station_v6_mysql", "MYSQL", db::V6);
+Tests test_mysql("db_sql_station_v7_mysql", "MYSQL", db::V7);
 #endif
 
 }

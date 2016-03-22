@@ -1,6 +1,8 @@
 #include "tests.h"
 #include "v6/db.h"
-#include "sql.h"
+#include "v7/db.h"
+#include "v6/driver.h"
+#include "v7/driver.h"
 #include "dballe/sql/sql.h"
 #include "dballe/msg/vars.h"
 #include <wreport/error.h>
@@ -309,6 +311,29 @@ DriverFixture::~DriverFixture()
 }
 
 void DriverFixture::test_setup()
+{
+    Fixture::test_setup();
+    driver->remove_all(format);
+}
+
+V7DriverFixture::V7DriverFixture(const char* backend, db::Format format)
+    : backend(backend ? backend : ""), format(format)
+{
+    conn = get_test_connection(this->backend).release();
+    driver = db::v7::Driver::create(*conn).release();
+    driver->delete_tables(format);
+    driver->create_tables(format);
+}
+
+V7DriverFixture::~V7DriverFixture()
+{
+    if (getenv("PAUSE") == nullptr)
+        driver->delete_tables(format);
+    delete driver;
+    delete conn;
+}
+
+void V7DriverFixture::test_setup()
 {
     Fixture::test_setup();
     driver->remove_all(format);

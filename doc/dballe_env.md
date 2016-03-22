@@ -16,6 +16,15 @@ explicitly providing one.
 
 By default, `/usr/share/wreport/repinfo.csv` is used.
 
+## `DBA_DB_FORMAT`
+
+Override the database format to use when creating new databases.
+
+Possible values:
+
+ * `V6`: current stable format (the default)
+ * `V7`: new format still being worked on
+
 ## `DBA_EXPLAIN`
 
 If present in the environment, then on SQL databases `EXPLAIN` is run before

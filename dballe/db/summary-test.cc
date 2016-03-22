@@ -32,10 +32,16 @@ class Tests : public FixtureTestCase<DBFixture>
 
             // Check its contents
             wassert(actual(s.is_valid()).istrue());
-            if (f.db->format() == V6)
-                wassert(actual(s.all_stations.size()) == 1);
-            else
-                wassert(actual(s.all_stations.size()) == 2);
+            switch (f.db->format())
+            {
+                case V6:
+                case V7:
+                    wassert(actual(s.all_stations.size()) == 1);
+                    break;
+                default:
+                    wassert(actual(s.all_stations.size()) == 2);
+                    break;
+            }
             wassert(actual(s.all_levels.size()) == 1);
             wassert(actual(s.all_tranges.size()) == 2);
             wassert(actual(s.all_varcodes.size()) == 2);
@@ -124,5 +130,6 @@ Tests tg6("db_summary_v6_postgresql", "POSTGRESQL", db::V6);
 #ifdef HAVE_MYSQL
 Tests tg8("db_summary_v6_mysql", "MYSQL", db::V6);
 #endif
+Tests tg9("db_summary_v7_sqlite", "SQLITE", db::V7);
 
 }

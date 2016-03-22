@@ -183,5 +183,6 @@ Tests tg6("db_basic_v6_postgresql", "POSTGRESQL", db::V6);
 #ifdef HAVE_MYSQL
 Tests tg8("db_basic_v6_mysql", "MYSQL", db::V6);
 #endif
+Tests tg9("db_basic_v7_sqlite", "SQLITE", db::V7);
 
 }

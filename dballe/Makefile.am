@@ -121,6 +121,22 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/v6/db.h \
 	db/v6/cursor.h \
 	db/v6/qbuilder.h \
+	db/v7/internals.h \
+	db/v7/repinfo.h \
+	db/v7/station.h \
+	db/v7/levtr.h \
+	db/v7/data.h \
+	db/v7/attr.h \
+	db/v7/driver.h \
+	db/v7/sqlite/repinfo.h \
+	db/v7/sqlite/station.h \
+	db/v7/sqlite/levtr.h \
+	db/v7/sqlite/data.h \
+	db/v7/sqlite/attr.h \
+	db/v7/sqlite/driver.h \
+	db/v7/db.h \
+	db/v7/cursor.h \
+	db/v7/qbuilder.h \
 	db/summary.h \
 	db/ostream.h \
 	cmdline/cmdline.h \
@@ -235,6 +251,9 @@ libdballe_la_SOURCES = \
 	sql/sqlite.cc \
 	db/db.cc \
 	db/trace.cc \
+	db/mem/repinfo.cc \
+	db/mem/cursor.cc \
+	db/mem/db.cc \
 	db/v6/repinfo.cc \
 	db/v6/station.cc \
 	db/v6/levtr.cc \
@@ -247,14 +266,28 @@ libdballe_la_SOURCES = \
 	db/v6/sqlite/datav6.cc \
 	db/v6/sqlite/attrv6.cc \
 	db/v6/sqlite/driver.cc \
-	db/mem/repinfo.cc \
-	db/mem/cursor.cc \
-	db/mem/db.cc \
 	db/v6/db.cc \
 	db/v6/cursor.cc \
 	db/v6/qbuilder.cc \
 	db/v6/import.cc \
 	db/v6/export.cc \
+	db/v7/repinfo.cc \
+	db/v7/station.cc \
+	db/v7/levtr.cc \
+	db/v7/data.cc \
+	db/v7/attr.cc \
+	db/v7/driver.cc \
+	db/v7/sqlite/repinfo.cc \
+	db/v7/sqlite/station.cc \
+	db/v7/sqlite/levtr.cc \
+	db/v7/sqlite/data.cc \
+	db/v7/sqlite/attr.cc \
+	db/v7/sqlite/driver.cc \
+	db/v7/db.cc \
+	db/v7/cursor.cc \
+	db/v7/qbuilder.cc \
+	db/v7/import.cc \
+	db/v7/export.cc \
 	db/summary.cc \
 	db/ostream.cc \
 	cmdline/cmdline.cc \
@@ -385,6 +418,11 @@ test_dballe_SOURCES = \
 	db/v6/levtr-test.cc \
 	db/v6/datav6-test.cc \
 	db/v6/attrv6-test.cc \
+	db/v7/repinfo-test.cc \
+	db/v7/station-test.cc \
+	db/v7/levtr-test.cc \
+	db/v7/data-test.cc \
+	db/v7/attr-test.cc \
 	db/db-basic-test.cc \
 	db/db-misc-test.cc \
 	db/db-query-station-test.cc \

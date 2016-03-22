@@ -2,7 +2,9 @@
 #include "db/tests.h"
 #include "db/mem/db.h"
 #include "db/v6/db.h"
+#include "db/v7/db.h"
 #include "db/v6/station.h"
+#include "db/v7/station.h"
 
 using namespace dballe;
 using namespace dballe::db;
@@ -177,6 +179,10 @@ class Tests : public FixtureTestCase<Fixture>
                     if (auto d = dynamic_cast<v6::DB*>(f.db))
                         d->station().obtain_id(1100000, 4500000);
                     break;
+                case V7:
+                    if (auto d = dynamic_cast<v7::DB*>(f.db))
+                        d->station().obtain_id(1100000, 4500000);
+                    break;
                 case V5: throw error_unimplemented("v5 db is not supported");
                 case MESSAGES: throw error_unimplemented("testing stations_without_data on MESSAGES database");
             }
@@ -200,6 +206,7 @@ class Tests : public FixtureTestCase<Fixture>
             {
                 case MEM: wassert(actual(cur->remaining()) == 4); break;
                 case V6: wassert(actual(cur->remaining()) == 2); break;
+                case V7: wassert(actual(cur->remaining()) == 2); break;
                 default: error_unimplemented::throwf("cannot run this test on a database of format %d", (int)db.format());
             }
         });
@@ -223,5 +230,6 @@ Tests tg6("db_query_station_v6_postgresql", "POSTGRESQL", db::V6);
 #ifdef HAVE_MYSQL
 Tests tg8("db_query_station_v6_mysql", "MYSQL", db::V6);
 #endif
+Tests tg9("db_query_station_v7_sqlite", "SQLITE", db::V7);
 
 }

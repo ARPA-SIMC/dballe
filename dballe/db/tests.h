@@ -3,7 +3,6 @@
 #include <dballe/core/values.h>
 #include <dballe/db/db.h>
 #include <dballe/sql/fwd.h>
-#include <dballe/db/v6/driver.h>
 #include <dballe/db/ostream.h>
 
 namespace dballe {
@@ -15,6 +14,12 @@ namespace v6 {
 struct Driver;
 class DB;
 }
+
+namespace v7 {
+struct Driver;
+class DB;
+}
+
 }
 
 namespace tests {
@@ -138,6 +143,21 @@ struct DriverFixture : public Fixture
 
     DriverFixture(const char* backend, db::Format format);
     ~DriverFixture();
+
+    void test_setup();
+};
+
+/// Test fixture for SQL backend drivers
+struct V7DriverFixture : public Fixture
+{
+    std::string backend;
+    db::Format format;
+
+    dballe::sql::Connection* conn = nullptr;
+    db::v7::Driver* driver = nullptr;
+
+    V7DriverFixture(const char* backend, db::Format format);
+    ~V7DriverFixture();
 
     void test_setup();
 };

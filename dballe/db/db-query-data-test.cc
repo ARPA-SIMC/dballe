@@ -361,6 +361,7 @@ class Tests : public FixtureTestCase<DBFixture>
                     wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals02)); // lat=2, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
                     break;
                 case V6:
+                case V7:
                     // V6: ana_id, datetime, level, trange, report, var
                     wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals01)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
                     wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals07)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12103=280.15
@@ -388,5 +389,6 @@ Tests tg6("db_query_data_v6_postgresql", "POSTGRESQL", db::V6);
 #ifdef HAVE_MYSQL
 Tests tg8("db_query_data_v6_mysql", "MYSQL", db::V6);
 #endif
+Tests tg9("db_query_data_v7_sqlite", "SQLITE", db::V7);
 
 }
