@@ -2,6 +2,7 @@
 #include "msg/msg.h"
 #include "db/tests.h"
 #include "db/mem/db.h"
+#include <cstring>
 
 using namespace dballe;
 using namespace dballe::db;
@@ -110,20 +111,34 @@ class Tests : public FixtureTestCase<DBFixture>
             {
                 case MEM:
                 case V7:
+                {
+                    bool have_temp = false;
+                    bool have_synop = false;
+
                     // For mem and v7 databases, we get one record per (station, network)
                     // combination
-                    wassert(actual(cur->next()).istrue());
-                    wassert(actual(cur->get_station_id()) == svals_esmac.info.ana_id);
-                    wassert(actual(cur->get_rep_memo()) == "temp");
-                    cur->to_record(result);
-                    wassert(actual(result["B01019"]) == "Esmac");
+                    for (unsigned i = 0; i < 2; ++i)
+                    {
+                        wassert(actual(cur->next()).istrue());
+                        if (strcmp(cur->get_rep_memo(), "temp") == 0)
+                        {
+                            wassert(actual(cur->get_station_id()) == svals_esmac.info.ana_id);
+                            cur->to_record(result);
+                            wassert(actual(result["B01019"]) == "Esmac");
+                            have_temp = true;
+                        } else if (strcmp(cur->get_rep_memo(), "synop") == 0) {
+                            wassert(actual(cur->get_station_id()) == svals_camse.info.ana_id);
+                            cur->to_record(result);
+                            wassert(actual(result["B01019"]) == "Camse");
+                            have_synop = true;
+                        }
+                    }
+                    wassert(actual(cur->next()).isfalse());
 
-                    wassert(actual(cur->next()).istrue());
-                    wassert(actual(cur->get_station_id()) == svals_camse.info.ana_id);
-                    wassert(actual(cur->get_rep_memo()) == "synop");
-                    cur->to_record(result);
-                    wassert(actual(result["B01019"]) == "Camse");
+                    wassert(actual(have_temp).istrue());
+                    wassert(actual(have_synop).istrue());
                     break;
+                }
                 case V6:
                     // For v6 databases, we only get one record, with the station
                     // values merged keeping values for the best networks

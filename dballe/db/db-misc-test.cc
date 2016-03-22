@@ -2,6 +2,7 @@
 #include "db/tests.h"
 #include "db/mem/db.h"
 #include <algorithm>
+#include <cstring>
 
 using namespace dballe;
 using namespace dballe::db;
@@ -150,23 +151,40 @@ class Tests : public FixtureTestCase<DBFixture>
             {
                 case V7:
                 case MEM:
+                {
+                    bool have_synop = false;
+                    bool have_metar = false;
+
                     // Memdb and V7 have one station entry per (lat, lon, ident, network)
                     wassert(actual(cur->remaining()) == 2);
 
-                    wassert(actual(cur->next()).istrue());
-                    wassert(actual(cur->get_lat()) == 12.34560);
-                    wassert(actual(cur->get_lon()) == 76.54320);
-                    wassert(actual(cur->get_rep_memo()) == "synop");
-                    wassert(actual((void*)cur->get_ident()) == (void*)0);
-                    wassert(actual(cur).station_keys_match(oldf.stations["synop"].info));
+                    for (unsigned i = 0; i < 2; ++i)
+                    {
+                        wassert(actual(cur->next()).istrue());
 
-                    wassert(actual(cur->next()).istrue());
-                    wassert(actual(cur->get_lat()) == 12.34560);
-                    wassert(actual(cur->get_lon()) == 76.54320);
-                    wassert(actual(cur->get_rep_memo()) == "metar");
-                    wassert(actual((void*)cur->get_ident()) == (void*)0);
-                    wassert(actual(cur).station_keys_match(oldf.stations["metar"].info));
+                        if (strcmp(cur->get_rep_memo(), "synop") == 0)
+                        {
+                            wassert(actual(cur->get_lat()) == 12.34560);
+                            wassert(actual(cur->get_lon()) == 76.54320);
+                            wassert(actual((void*)cur->get_ident()) == (void*)0);
+                            wassert(actual(cur).station_keys_match(oldf.stations["synop"].info));
+                            have_synop = true;
+                        }
+
+                        if (strcmp(cur->get_rep_memo(), "metar") == 0)
+                        {
+                            wassert(actual(cur->get_lat()) == 12.34560);
+                            wassert(actual(cur->get_lon()) == 76.54320);
+                            wassert(actual((void*)cur->get_ident()) == (void*)0);
+                            wassert(actual(cur).station_keys_match(oldf.stations["metar"].info));
+                            have_metar = true;
+                        }
+                    }
+
+                    wassert(actual(have_synop).istrue());
+                    wassert(actual(have_metar).istrue());
                     break;
+                }
                 case V6:
                     // V5 and V6 have one station entry (lat, lon, ident)
                     wassert(actual(cur->remaining()) == 1);

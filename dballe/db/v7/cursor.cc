@@ -566,7 +566,7 @@ void run_delete_query(DB& db, const core::Query& q, bool station_vars, bool expl
 {
     unsigned int modifiers = q.get_modifiers();
     if (modifiers & DBA_DB_MODIFIER_BEST)
-        throw error_consistency("cannot use query=best on summary queries");
+        throw error_consistency("cannot use query=best on delete queries");
 
     IdQueryBuilder qb(db, q, modifiers, station_vars);
     qb.build();

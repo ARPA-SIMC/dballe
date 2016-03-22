@@ -28,7 +28,9 @@ namespace v7 {
 
 bool SQLRecordV7::querybest_fields_are_the_same(const SQLRecordV7& r)
 {
-    if (out_ana_id != r.out_ana_id) return false;
+    if (out_lat != r.out_lat) return false;
+    if (out_lon != r.out_lon) return false;
+    if (strcmp(out_ident, r.out_ident) != 0) return false;
     if (out_id_ltr != r.out_id_ltr) return false;
     if (out_datetime != r.out_datetime) return false;
     if (out_varcode != r.out_varcode) return false;

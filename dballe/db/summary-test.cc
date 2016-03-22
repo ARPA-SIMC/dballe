@@ -35,9 +35,9 @@ class Tests : public FixtureTestCase<DBFixture>
             switch (f.db->format())
             {
                 case V6:
-                case V7:
                     wassert(actual(s.all_stations.size()) == 1);
                     break;
+                case V7:
                 default:
                     wassert(actual(s.all_stations.size()) == 2);
                     break;
