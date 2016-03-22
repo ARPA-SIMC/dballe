@@ -465,7 +465,7 @@ test_dballe_LDADD = \
 noinst_PROGRAMS += bench-run
 
 dist_noinst_HEADERS += \
-	core/benchmark.h
+	core/benchmark.h \
 	db/benchmark.h
 
 bench_run_SOURCES = \
