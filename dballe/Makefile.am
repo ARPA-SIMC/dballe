@@ -54,7 +54,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	var.h \
 	core/error.h \
 	core/aliases.h \
-	core/verbose.h \
 	core/stlutils.h \
 	core/stlutils.tcc \
 	core/defs.h \
@@ -172,7 +171,6 @@ libdballe_la_SOURCES = \
 	query.cc \
 	var.cc \
 	core/error.cc \
-	core/verbose.cc \
 	core/aliases.cc \
 	core/defs.cc \
 	core/var.cc \

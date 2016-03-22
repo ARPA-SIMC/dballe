@@ -368,7 +368,6 @@ void DB::attr_remove_station(dballe::Transaction& transaction, int data_id, cons
         query.append(")");
     }
     driver().exec_no_data(query);
-    // dba_verbose(DBA_VERB_DB_SQL, "Performing query %s for id %d,B%02d%03d\n", query, id_lev_tr, DBA_VAR_X(id_var), DBA_VAR_Y(id_var));
 }
 
 void DB::attr_remove_data(dballe::Transaction& transaction, int data_id, const db::AttrList& qcs)
@@ -386,7 +385,6 @@ void DB::attr_remove_data(dballe::Transaction& transaction, int data_id, const d
         query.append(")");
     }
     driver().exec_no_data(query);
-    // dba_verbose(DBA_VERB_DB_SQL, "Performing query %s for id %d,B%02d%03d\n", query, id_lev_tr, DBA_VAR_X(id_var), DBA_VAR_Y(id_var));
 }
 
 bool DB::is_station_variable(int data_id, wreport::Varcode varcode)

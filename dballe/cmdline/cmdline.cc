@@ -3,13 +3,14 @@
 #include <dballe/core/query.h>
 #include <dballe/core/record.h>
 #include <dballe/msg/wr_codec.h>
-#include <dballe/core/verbose.h>
+#include <wreport/notes.h>
 #include <popt.h>
 #include <cstring>
 #include <cstdarg>
 #include <cstdlib>
 #include <cctype>
 #include <ctime>
+#include <iostream>
 
 using namespace std;
 
@@ -415,8 +416,6 @@ int Command::main(int argc, const char* argv[])
 {
     int i;
 
-    dba_verbose_init();
-
     /* Dispatch execution to the handler for the various commands */
     for (i = 1; i < argc; i++)
     {
@@ -479,9 +478,7 @@ int Command::main(int argc, const char* argv[])
             }
 
             if (action->op_verbose)
-            {
-                dba_verbose_set_mask(0xffffffff);
-            }
+                wreport::notes::set_target(cerr);
 
             int res = 0;
             try {
