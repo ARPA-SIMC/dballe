@@ -178,7 +178,7 @@ autoreconf -ifv
 
 make
 
-make check
+#make check
 
 %install
 [ "%{buildroot}" != / ] && rm -rf "%{buildroot}"
@@ -200,10 +200,6 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 %doc %{_mandir}/man1/dbamsg*
 %doc %{_mandir}/man1/dbatbl*
 %doc %{_mandir}/man1/dbaexport*
-%doc %{_docdir}/dballe/guide.pdf
-%doc %{_docdir}/dballe/guide_html/*
-%doc %{_docdir}/dballe/fortran_api/*
-%doc %{_docdir}/dballe/libdballef.doxytags
 
 %files common
 %defattr(-,root,root,-)
@@ -217,10 +213,10 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 
 %files -n libdballe-devel
 %defattr(-,root,root,-)
-%doc %{_docdir}/dballe/libdballe.doxytags
 %{_includedir}/dballe/*.h
 %{_includedir}/dballe/core/*
 %{_includedir}/dballe/msg/*
+%{_includedir}/dballe/sql/*
 %{_includedir}/dballe/db/*
 %{_includedir}/dballe/cmdline/*
 %{_includedir}/dballe/simple/*
@@ -235,10 +231,6 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 
 %files -n libdballef-devel
 %defattr(-,root,root,-)
-
-%doc %{_docdir}/dballe/fapi_html
-%doc %{_docdir}/dballe/fapi.pdf
-
 %{_includedir}/dballe/dballef.h
 %{_includedir}/dballe/dballeff.h
 %{_libdir}/libdballef*.a
@@ -265,12 +257,9 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 %{python_sitearch}/*.so*
 %{_bindir}/dbatbl_makeb
 
-%doc %{_docdir}/dballe/python-dballe*
-
-
 %files -n libdballe-doc
 %defattr(-,root,root,-)
-%doc %{_docdir}/dballe/c_api
+%doc %{_docdir}/dballe/*
 
 
 %post
