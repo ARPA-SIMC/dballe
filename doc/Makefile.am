@@ -43,8 +43,15 @@ tranges.dox: mksnippet
 libdballe.doxytags: $(cppdeps)
 	doxygen $<
 
-libwreport.doxytags: /usr/share/doc/libwreport-dev/libwreport.doxytags.gz
-	zcat $< > $@
+libwreport.doxytags: $(wildcard /usr/share/doc/*wreport*/libwreport.doxytags*)
+	if [ -z "$<" ]; then \
+	        ( echo "/usr/share/doc/*wreport*/libwreport.doxytags* not found" >&2 ; exit 1 ); \
+	elif [ `basename "$<"` = libwreport.doxytags.gz ]; then \
+	        zcat $< > $@ ; \
+	else \
+	        cat $< > $@ ; \
+	fi
+
 
 doc_DATA += libdballe.doxytags
 
