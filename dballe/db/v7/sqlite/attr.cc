@@ -15,11 +15,11 @@ namespace db {
 namespace v7 {
 namespace sqlite {
 
-SQLiteAttr::SQLiteAttr(SQLiteConnection& conn)
-    : conn(conn)
+SQLiteAttr::SQLiteAttr(SQLiteConnection& conn, const std::string& table_name)
+    : conn(conn), table_name(table_name)
 {
     // Precompile the statement for select
-    sstm = conn.sqlitestatement("SELECT type, value FROM attr WHERE id_data=?").release();
+    sstm = conn.sqlitestatement("SELECT type, value FROM " + table_name + " WHERE id_data=?").release();
 }
 
 SQLiteAttr::~SQLiteAttr()
@@ -43,7 +43,7 @@ void SQLiteAttr::read(int id_data, function<void(unique_ptr<Var>)> dest)
 void SQLiteAttr::insert(dballe::Transaction& t, v7::bulk::InsertAttrsV7& attrs, UpdateMode update_mode)
 {
     Querybuf select_query;
-    select_query.append("SELECT id_data, type, value FROM attr WHERE id_data IN (");
+    select_query.appendf("SELECT id_data, type, value FROM %s WHERE id_data IN (", table_name.c_str());
     select_query.start_list(",");
     int last_data_id = -1;
     for (const auto& a: attrs)
@@ -75,7 +75,7 @@ void SQLiteAttr::insert(dballe::Transaction& t, v7::bulk::InsertAttrsV7& attrs, 
         case UPDATE:
             if (todo.do_update)
             {
-                if (!ustm) ustm = conn.sqlitestatement("UPDATE attr SET value=? WHERE id_data=? AND type=?").release();
+                if (!ustm) ustm = conn.sqlitestatement("UPDATE " + table_name + " SET value=? WHERE id_data=? AND type=?").release();
                 for (auto& v: attrs)
                 {
                     if (!v.needs_update()) continue;
@@ -96,7 +96,7 @@ void SQLiteAttr::insert(dballe::Transaction& t, v7::bulk::InsertAttrsV7& attrs, 
 
     if (todo.do_insert)
     {
-        if (!istm) istm = conn.sqlitestatement("INSERT INTO attr (id_data, type, value) VALUES (?, ?, ?)").release();
+        if (!istm) istm = conn.sqlitestatement("INSERT INTO " + table_name + " (id_data, type, value) VALUES (?, ?, ?)").release();
         for (auto& v: attrs)
         {
             if (!v.needs_insert()) continue;
@@ -112,8 +112,8 @@ void SQLiteAttr::insert(dballe::Transaction& t, v7::bulk::InsertAttrsV7& attrs, 
 void SQLiteAttr::dump(FILE* out)
 {
     int count = 0;
-    fprintf(out, "dump of table attr:\n");
-    auto stm = conn.sqlitestatement("SELECT id_data, type, value FROM attr");
+    fprintf(out, "dump of table %s:\n", table_name.c_str());
+    auto stm = conn.sqlitestatement("SELECT id_data, type, value FROM " + table_name);
     stm->execute([&]() {
         Varcode type = stm->column_int(1);
         fprintf(out, " %4d, %01d%02d%03d",
@@ -125,7 +125,7 @@ void SQLiteAttr::dump(FILE* out)
             fprintf(out, " %s\n", stm->column_string(2));
         ++count;
     });
-    fprintf(out, "%d element%s in table attr\n", count, count != 1 ? "s" : "");
+    fprintf(out, "%d element%s in table %s\n", count, count != 1 ? "s" : "", table_name.c_str());
 }
 
 }

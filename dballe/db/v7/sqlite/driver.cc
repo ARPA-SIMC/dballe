@@ -52,7 +52,7 @@ std::unique_ptr<v7::Data> Driver::create_data()
 
 std::unique_ptr<v7::Attr> Driver::create_attr()
 {
-    return unique_ptr<v7::Attr>(new SQLiteAttr(conn));
+    return unique_ptr<v7::Attr>(new SQLiteAttr(conn, "attr"));
 }
 
 void Driver::run_built_query_v7(

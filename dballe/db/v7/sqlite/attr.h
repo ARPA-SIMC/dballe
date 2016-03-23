@@ -18,6 +18,8 @@ protected:
     /** DB connection. */
     dballe::sql::SQLiteConnection& conn;
 
+    std::string table_name;
+
     /// Precompiled select statement
     dballe::sql::SQLiteStatement* sstm = nullptr;
     /// Precompiled insert statement
@@ -26,7 +28,7 @@ protected:
     dballe::sql::SQLiteStatement* ustm = nullptr;
 
 public:
-    SQLiteAttr(dballe::sql::SQLiteConnection& conn);
+    SQLiteAttr(dballe::sql::SQLiteConnection& conn, const std::string& table_name);
     SQLiteAttr(const SQLiteAttr&) = delete;
     SQLiteAttr(const SQLiteAttr&&) = delete;
     SQLiteAttr& operator=(const SQLiteAttr&) = delete;
