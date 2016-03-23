@@ -31,9 +31,7 @@ namespace v7 {
 // First part of initialising a dba_db
 DB::DB(unique_ptr<Connection> conn)
     : conn(conn.release()),
-      m_driver(v7::Driver::create(*this->conn).release()),
-      m_repinfo(0), m_station(0), m_lev_tr(0),
-      m_data(0), m_attr(0)
+      m_driver(v7::Driver::create(*this->conn).release())
 {
     init_after_connect();
 
@@ -52,6 +50,8 @@ DB::~DB()
 {
     delete m_attr;
     delete m_data;
+    delete m_station_attr;
+    delete m_station_data;
     delete m_lev_tr;
     delete m_station;
     delete m_repinfo;
@@ -83,6 +83,20 @@ v7::LevTr& DB::lev_tr()
     if (m_lev_tr == NULL)
         m_lev_tr = m_driver->create_levtr().release();
     return *m_lev_tr;
+}
+
+v7::StationData& DB::station_data()
+{
+    if (m_station_data == NULL)
+        m_station_data = m_driver->create_station_data().release();
+    return *m_station_data;
+}
+
+v7::Attr& DB::station_attr()
+{
+    if (m_station_attr == NULL)
+        m_station_attr = m_driver->create_station_attr().release();
+    return *m_station_attr;
 }
 
 v7::Data& DB::data()
@@ -303,7 +317,7 @@ std::unique_ptr<db::CursorSummary> DB::query_summary(const Query& query)
 void DB::attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
 {
     // Create the query
-    v7::Attr& a = attr();
+    v7::Attr& a = station_attr();
     a.read(data_id, dest);
 }
 
@@ -316,7 +330,7 @@ void DB::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport
 
 void DB::attr_insert_station(dballe::Transaction& transaction, int data_id, const Values& attrs)
 {
-    v7::Attr& a = attr();
+    v7::Attr& a = station_attr();
     v7::bulk::InsertAttrsV7 iattrs;
     for (const auto& i : attrs)
         iattrs.add(i.second.var, data_id);
@@ -347,10 +361,10 @@ void DB::attr_remove_station(dballe::Transaction& transaction, int data_id, cons
     Querybuf query(500);
     if (qcs.empty())
         // Delete all attributes
-        query.appendf("DELETE FROM attr WHERE id_data=%d", data_id);
+        query.appendf("DELETE FROM station_attr WHERE id_data=%d", data_id);
     else {
         // Delete only the attributes in qcs
-        query.appendf("DELETE FROM attr WHERE id_data=%d AND type IN (", data_id);
+        query.appendf("DELETE FROM station_attr WHERE id_data=%d AND type IN (", data_id);
         query.start_list(", ");
         for (vector<Varcode>::const_iterator i = qcs.begin(); i != qcs.end(); ++i)
             query.append_listf("%hd", *i);
@@ -386,6 +400,8 @@ void DB::dump(FILE* out)
     repinfo().dump(out);
     station().dump(out);
     lev_tr().dump(out);
+    station_data().dump(out);
+    station_attr().dump(out);
     data().dump(out);
     attr().dump(out);
 }

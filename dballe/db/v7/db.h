@@ -90,15 +90,19 @@ protected:
      * @{
      */
     /** Report information */
-    struct v7::Repinfo* m_repinfo;
+    struct v7::Repinfo* m_repinfo = nullptr;
     /** Station information */
-    struct v7::Station* m_station;
+    struct v7::Station* m_station = nullptr;
     /** Level/timerange information */
-    struct v7::LevTr* m_lev_tr;
+    struct v7::LevTr* m_lev_tr = nullptr;
+    /** Station data */
+    struct v7::StationData* m_station_data = nullptr;
+    /** Station data attributes */
+    struct v7::Attr* m_station_attr = nullptr;
     /** Variable data */
-    struct v7::Data* m_data;
+    struct v7::Data* m_data = nullptr;
     /** Variable attributes */
-    struct v7::Attr* m_attr;
+    struct v7::Attr* m_attr = nullptr;
     /** @} */
 
     void init_after_connect();

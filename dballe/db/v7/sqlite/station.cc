@@ -187,7 +187,7 @@ void SQLiteStationBase::get_station_vars(int id_station, std::function<void(std:
     static const char query[] = R"(
         SELECT d.id_var, d.value, a.type, a.value
           FROM data d
-          LEFT JOIN attr a ON a.id_data = d.id
+          LEFT JOIN station_attr a ON a.id_data = d.id
          WHERE d.id_station=?
            AND d.id_lev_tr = -1
          ORDER BY d.id_var, a.type

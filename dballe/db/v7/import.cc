@@ -30,7 +30,6 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
     v7::Station& st = station();
     v7::LevTr& lt = lev_tr();
     v7::Data& dd = data();
-    v7::Attr& dq = attr();
 
     auto& t = v7::Transaction::downcast(transaction);
 
@@ -92,11 +91,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
         // Insert the attributes
         if (flags & DBA_IMPORT_ATTRS)
         {
-#if 0
-            for (const auto& v: vars)
-                if (v.inserted())
-                    dq.add(v.id_data, *v.var);
-#else
+            v7::Attr& a = station_attr();
             v7::bulk::InsertAttrsV7 attrs;
             for (const auto& v: vars)
             {
@@ -104,8 +99,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
                 attrs.add_all(*v.var, v.id_data);
             }
             if (!attrs.empty())
-                dq.insert(t, attrs, v7::Attr::UPDATE);
-#endif
+                a.insert(t, attrs, v7::Attr::UPDATE);
         }
     }
 
@@ -143,11 +137,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
     // Insert the attributes
     if (flags & DBA_IMPORT_ATTRS)
     {
-#if 0
-        for (const auto& v: vars)
-            if (v.inserted())
-                dq.add(v.id_data, *v.var);
-#else
+        v7::Attr& a = attr();
         v7::bulk::InsertAttrsV7 attrs;
         for (const auto& v: vars)
         {
@@ -155,8 +145,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
             attrs.add_all(*v.var, v.id_data);
         }
         if (!attrs.empty())
-            dq.insert(t, attrs, v7::Attr::UPDATE);
-#endif
+            a.insert(t, attrs, v7::Attr::UPDATE);
     }
 }
 
