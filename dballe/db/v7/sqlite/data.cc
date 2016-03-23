@@ -36,20 +36,23 @@ SQLiteDataV7::~SQLiteDataV7()
 
 void SQLiteDataV7::insert(dballe::Transaction& t, v7::bulk::InsertV7& vars, UpdateMode update_mode)
 {
-    // Get the current status of variables for this context
-    sstm->bind_val(1, vars.id_station);
-    sstm->bind_val(2, vars.datetime);
-
     // Scan the result in parallel with the variable list, annotating changed
     // items with their data ID
     v7::bulk::AnnotateVarsV7 todo(vars);
-    sstm->execute([&]() {
-        todo.annotate(
-                sstm->column_int(0),
-                sstm->column_int(1),
-                sstm->column_int(2),
-                sstm->column_string(3));
-    });
+
+    if (!vars.station.is_new)
+    {
+        // Get the current status of variables for this context
+        sstm->bind_val(1, vars.station.id);
+        sstm->bind_val(2, vars.datetime);
+        sstm->execute([&]() {
+            todo.annotate(
+                    sstm->column_int(0),
+                    sstm->column_int(1),
+                    sstm->column_int(2),
+                    sstm->column_string(3));
+        });
+    }
     todo.annotate_end();
 
     // We now have a todo-list
@@ -84,7 +87,7 @@ void SQLiteDataV7::insert(dballe::Transaction& t, v7::bulk::InsertV7& vars, Upda
         dq.appendf(R"(
             INSERT INTO data (id_station, id_lev_tr, datetime, id_var, value)
                  VALUES (%d, ?, '%04d-%02d-%02d %02d:%02d:%02d', ?, ?)
-        )", vars.id_station,
+        )", vars.station.id,
             vars.datetime.year, vars.datetime.month, vars.datetime.day,
             vars.datetime.hour, vars.datetime.minute, vars.datetime.second);
         auto insert = conn.sqlitestatement(dq);

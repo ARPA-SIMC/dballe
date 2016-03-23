@@ -1,14 +1,9 @@
 #ifndef DBALLE_DB_V7_DATAV7_H
 #define DBALLE_DB_V7_DATAV7_H
 
-/** @file
- * @ingroup db
- *
- * Attribute table management used by the db module.
- */
-
 #include <dballe/core/defs.h>
 #include <dballe/sql/fwd.h>
+#include <dballe/db/v7/state.h>
 #include <wreport/var.h>
 #include <memory>
 #include <vector>
@@ -106,7 +101,7 @@ struct VarV7 : public Item
  */
 struct InsertV7 : public std::vector<VarV7>
 {
-    int id_station;
+    StationState station;
     Datetime datetime;
 
     void add(const wreport::Var* var, int id_levtr)

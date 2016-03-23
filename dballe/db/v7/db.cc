@@ -191,13 +191,12 @@ void DB::insert_station_data(dballe::Transaction& transaction, StationValues& va
 {
     auto& t = v7::Transaction::downcast(transaction);
 
+    // Insert the station data, and get the ID
     v7::State::stations_t::iterator si = obtain_station(t.state, vals.info, station_can_add);
 
-    v7::DataV7& d = data();
-
     v7::bulk::InsertV7 vars;
-    // Insert the station data, and get the ID
-    vars.id_station = vals.info.ana_id = si->second.id;
+    vars.station = si->second;
+    vals.info.ana_id = si->second.id;
 
     // Hardcoded values for station variables
     vars.datetime = Datetime(1000, 1, 1, 0, 0, 0);
@@ -207,6 +206,7 @@ void DB::insert_station_data(dballe::Transaction& transaction, StationValues& va
         vars.add(i.second.var, -1);
 
     // Do the insert
+    v7::DataV7& d = data();
     d.insert(t, vars, can_replace ? v7::DataV7::UPDATE : v7::DataV7::ERROR);
 
     // Read the IDs from the results
@@ -223,13 +223,13 @@ void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool ca
 
     auto& t = v7::Transaction::downcast(transaction);
 
+    // Insert the station data, and get the ID
     v7::State::stations_t::iterator si = obtain_station(t.state, vals.info, station_can_add);
 
-    v7::DataV7& d = data();
-
     v7::bulk::InsertV7 vars;
-    // Insert the station data, and get the ID
-    vars.id_station = vals.info.ana_id = si->second.id;
+    vars.station = si->second;
+    vals.info.ana_id = si->second.id;
+
     // Set the date from the record contents
     vars.datetime = vals.info.datetime;
     // Insert the lev_tr data, and get the ID
@@ -240,6 +240,7 @@ void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool ca
         vars.add(i.second.var, id_levtr);
 
     // Do the insert
+    v7::DataV7& d = data();
     d.insert(t, vars, can_replace ? v7::DataV7::UPDATE : v7::DataV7::ERROR);
 
     // Read the IDs from the results

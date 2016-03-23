@@ -62,7 +62,7 @@ struct Fixture : V7DriverFixture
         // Insert a datum
         {
             bulk::InsertV7 vars;
-            vars.id_station = 1;
+            vars.station = state.stations[sde1];
             vars.datetime = Datetime(2001, 2, 3, 4, 5, 6);
             Var var(varinfo(WR_VAR(0, 1, 2)), 123);
             vars.add(&var, 1);
@@ -72,7 +72,7 @@ struct Fixture : V7DriverFixture
         // Insert another datum
         {
             bulk::InsertV7 vars;
-            vars.id_station = 2;
+            vars.station = state.stations[sde2];
             vars.datetime = Datetime(2002, 3, 4, 5, 6, 7);
             Var var(varinfo(WR_VAR(0, 1, 2)), 234);
             vars.add(&var, 2);
