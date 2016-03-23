@@ -1,5 +1,6 @@
 #include "db/tests.h"
 #include "db/v7/db.h"
+#include "db/v7/state.h"
 #include "sql/sql.h"
 #include "db/v7/driver.h"
 #include "db/v7/repinfo.h"
@@ -48,25 +49,45 @@ class Tests : public FixtureTestCase<Fixture>
         add_method("insert", [](Fixture& f) {
             // Insert some values and try to read them again
             auto& st = *f.station;
-            bool inserted;
+            db::v7::StationDesc sde1;
+            db::v7::StationDesc sde2;
+            db::v7::StationState sst;
 
             // Insert a mobile station
-            wassert(actual(st.obtain_id(1, 4500000, 1100000, "ciao", &inserted)) == 1);
-            wassert(actual(inserted).istrue());
-            wassert(actual(st.obtain_id(1, 4500000, 1100000, "ciao", &inserted)) == 1);
-            wassert(actual(inserted).isfalse());
+            sde1.rep = 1;
+            sde1.coords = Coords(4500000, 1100000);
+            sde1.ident = "ciao";
+
+            st.obtain_id(sde1, sst);
+            wassert(actual(sst.id) == 1);
+            wassert(actual(sst.is_new).istrue());
+
+            st.obtain_id(sde1, sst);
+            wassert(actual(sst.id) == 1);
+            wassert(actual(sst.is_new).isfalse());
 
             // Insert a fixed station
-            wassert(actual(st.obtain_id(1, 4600000, 1200000, NULL, &inserted)) == 2);
-            wassert(actual(inserted).istrue());
-            wassert(actual(st.obtain_id(1, 4600000, 1200000, NULL, &inserted)) == 2);
-            wassert(actual(inserted).isfalse());
+            sde2.rep = 1;
+            sde2.coords = Coords(4600000, 1200000);
+            sde2.ident = nullptr;
+
+            st.obtain_id(sde2, sst);
+            wassert(actual(sst.id) == 2);
+            wassert(actual(sst.is_new).istrue());
+
+            st.obtain_id(sde2, sst);
+            wassert(actual(sst.id) == 2);
+            wassert(actual(sst.is_new).isfalse());
 
             // Get the ID of the first station
-            wassert(actual(st.get_id(1, 4500000, 1100000, "ciao")) == 1);
+            st.get_id(sde1, sst);
+            wassert(actual(sst.id) == 1);
+            wassert(actual(sst.is_new).isfalse());
 
             // Get the ID of the second station
-            wassert(actual(st.get_id(1, 4600000, 1200000)) == 2);
+            st.get_id(sde2, sst);
+            wassert(actual(sst.id) == 2);
+            wassert(actual(sst.is_new).isfalse());
         });
     }
 };

@@ -34,7 +34,7 @@ SQLiteDataV7::~SQLiteDataV7()
     if (sstm) delete sstm;
 }
 
-void SQLiteDataV7::insert(dballe::sql::Transaction& t, v7::bulk::InsertV7& vars, UpdateMode update_mode)
+void SQLiteDataV7::insert(dballe::Transaction& t, v7::bulk::InsertV7& vars, UpdateMode update_mode)
 {
     // Get the current status of variables for this context
     sstm->bind_val(1, vars.id_station);

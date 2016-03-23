@@ -1,5 +1,6 @@
 #include "db.h"
 #include "dballe/sql/sql.h"
+#include "dballe/db/v7/transaction.h"
 #include "dballe/db/v7/driver.h"
 #include "dballe/db/v7/station.h"
 #include "dballe/db/v7/levtr.h"
@@ -31,56 +32,52 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
     v7::DataV7& dd = data();
     v7::AttrV7& dq = attr();
 
-    dballe::sql::Transaction* t = dynamic_cast<dballe::sql::Transaction*>(&transaction);
-    assert(t);
+    auto& t = v7::Transaction::downcast(transaction);
 
-    // Fill up the pseudoana informations needed to fetch an existing ID
+    // Fill up the station informations needed to fetch an existing ID
+    StationDesc station_desc;
 
     // Latitude
-    int lat;
     if (const Var* var = l_ana->find_by_id(DBA_MSG_LATITUDE))
-        lat = var->enqi();
+        station_desc.coords.lat = var->enqi();
     else
         throw error_notfound("latitude not found in data to import");
 
     // Longitude
-    int lon;
     if (const Var* var = l_ana->find_by_id(DBA_MSG_LONGITUDE))
-        lon = var->enqi();
+        station_desc.coords.lon = var->enqi();
     else
         throw error_notfound("longitude not found in data to import");
 
     // Station identifier
-    const char* ident = NULL;
     if (mobile)
     {
         if (const Var* var = l_ana->find_by_id(DBA_MSG_IDENT))
-            ident = var->enqc();
+            station_desc.ident = var->enqc();
         else
             throw error_notfound("mobile station identifier not found in data to import");
     }
 
     // Report code
-    int id_report;
     if (repmemo != NULL)
-        id_report = rep_cod_from_memo(repmemo);
+        station_desc.rep = rep_cod_from_memo(repmemo);
     else {
         // TODO: check if B01194 first
         if (const Var* var = msg.get_rep_memo_var())
-            id_report = rep_cod_from_memo(var->enqc());
+            station_desc.rep = rep_cod_from_memo(var->enqc());
         else
-            id_report = rep_cod_from_memo(Msg::repmemo_from_type(msg.type));
+            station_desc.rep = rep_cod_from_memo(Msg::repmemo_from_type(msg.type));
     }
 
-    bool inserted_pseudoana = false;
-    int id_station = st.obtain_id(id_report, lat, lon, ident, &inserted_pseudoana);
+    StationState station_state;
+    st.obtain_id(station_desc, station_state);
 
-    if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || inserted_pseudoana)
+    if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || station_state.is_new)
     {
         // Prepare a bulk insert
         v7::bulk::InsertV7 vars;
-        vars.id_station = id_station;
-        vars.id_report = id_report;
+        vars.id_station = station_state.id;
+        vars.id_report = station_desc.rep;
         vars.datetime = Datetime(1000, 1, 1, 0, 0, 0);
         for (size_t i = 0; i < l_ana->data.size(); ++i)
         {
@@ -92,7 +89,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
         }
 
         // Run the bulk insert
-        dd.insert(*t, vars, (flags & DBA_IMPORT_OVERWRITE) ? v7::DataV7::UPDATE : v7::DataV7::IGNORE);
+        dd.insert(t, vars, (flags & DBA_IMPORT_OVERWRITE) ? v7::DataV7::UPDATE : v7::DataV7::IGNORE);
 
         // Insert the attributes
         if (flags & DBA_IMPORT_ATTRS)
@@ -109,14 +106,14 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
                 attrs.add_all(*v.var, v.id_data);
             }
             if (!attrs.empty())
-                dq.insert(*t, attrs, v7::AttrV7::UPDATE);
+                dq.insert(t, attrs, v7::AttrV7::UPDATE);
 #endif
         }
     }
 
     v7::bulk::InsertV7 vars;
-    vars.id_station = id_station;
-    vars.id_report = id_report;
+    vars.id_station = station_state.id;
+    vars.id_report = station_desc.rep;
 
     // Date and time
     if (msg.get_datetime().is_missing())
@@ -144,7 +141,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
     }
 
     // Run the bulk insert
-    dd.insert(*t, vars, (flags & DBA_IMPORT_OVERWRITE) ? v7::DataV7::UPDATE : v7::DataV7::IGNORE);
+    dd.insert(t, vars, (flags & DBA_IMPORT_OVERWRITE) ? v7::DataV7::UPDATE : v7::DataV7::IGNORE);
 
     // Insert the attributes
     if (flags & DBA_IMPORT_ATTRS)
@@ -161,7 +158,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
             attrs.add_all(*v.var, v.id_data);
         }
         if (!attrs.empty())
-            dq.insert(*t, attrs, v7::AttrV7::UPDATE);
+            dq.insert(t, attrs, v7::AttrV7::UPDATE);
 #endif
     }
 }

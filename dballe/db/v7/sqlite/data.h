@@ -31,7 +31,7 @@ public:
     SQLiteDataV7& operator=(const SQLiteDataV7&) = delete;
     ~SQLiteDataV7();
 
-    void insert(dballe::sql::Transaction& t, v7::bulk::InsertV7& vars, UpdateMode update_mode=UPDATE) override;
+    void insert(dballe::Transaction& t, v7::bulk::InsertV7& vars, UpdateMode update_mode=UPDATE) override;
     void remove(const v7::QueryBuilder& qb) override;
     void dump(FILE* out) override;
 };

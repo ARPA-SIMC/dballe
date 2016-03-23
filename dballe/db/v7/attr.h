@@ -35,10 +35,10 @@ public:
     virtual ~AttrV7();
 
     /// Insert all attributes of the given variable
-    void insert_attributes(dballe::sql::Transaction& t, int id_data, const wreport::Var& var, UpdateMode update_mode=UPDATE);
+    void insert_attributes(dballe::Transaction& t, int id_data, const wreport::Var& var, UpdateMode update_mode=UPDATE);
 
     /// Bulk attribute insert
-    virtual void insert(dballe::sql::Transaction& t, v7::bulk::InsertAttrsV7& vars, UpdateMode update_mode=UPDATE) = 0;
+    virtual void insert(dballe::Transaction& t, v7::bulk::InsertAttrsV7& vars, UpdateMode update_mode=UPDATE) = 0;
 
     /**
      * Load from the database all the attributes for var

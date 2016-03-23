@@ -6,6 +6,8 @@
  */
 
 namespace dballe {
+class Transaction;
+
 namespace sql {
 
 class Querybuf;

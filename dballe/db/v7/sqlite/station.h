@@ -45,25 +45,8 @@ public:
     SQLiteStationBase(const SQLiteStationBase&&) = delete;
     SQLiteStationBase& operator=(const SQLiteStationBase&) = delete;
 
-    /**
-     * Get the station ID given latitude, longitude and mobile identifier.
-     *
-     * It throws an exception if it does not exist.
-     *
-     * @return
-     *   Resulting ID of the station
-     */
-    int get_id(int rep, int lat, int lon, const char* ident=nullptr) override;
-
-    /**
-     * Get the station ID given latitude, longitude and mobile identifier.
-     *
-     * It creates the station record if it does not exist.
-     *
-     * @return
-     *   Resulting ID of the station
-     */
-    int obtain_id(int rep, int lat, int lon, const char* ident=nullptr, bool* inserted=NULL) override;
+    void get_id(const StationDesc& desc, StationState& state) override;
+    void obtain_id(const StationDesc& desc, StationState& state) override;
 
     void get_station_vars(int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
     void add_station_vars(int id_station, Record& rec) override;

@@ -1,6 +1,7 @@
 #include "db.h"
 #include "dballe/sql/sql.h"
 #include "dballe/sql/querybuf.h"
+#include "dballe/db/v7/transaction.h"
 #include "dballe/db/v7/driver.h"
 #include "dballe/db/v7/repinfo.h"
 #include "dballe/db/v7/station.h"
@@ -15,7 +16,6 @@
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
-#include <cassert>
 #include <limits.h>
 #include <unistd.h>
 
@@ -114,7 +114,7 @@ void DB::init_after_connect()
 std::unique_ptr<dballe::Transaction> DB::transaction()
 {
     auto res = conn->transaction();
-    return move(res);
+    return unique_ptr<dballe::Transaction>(new v7::Transaction(move(res)));
 }
 
 void DB::delete_tables()
@@ -172,15 +172,22 @@ int DB::obtain_station(const dballe::Station& st, bool can_add)
         return st.ana_id;
 
     v7::Repinfo& ri = repinfo();
-    int rep = ri.obtain_id(st.report.c_str());
-
     v7::Station& s = station();
+
+    StationDesc sd;
+    sd.rep = ri.obtain_id(st.report.c_str());
+    sd.coords = st.coords;
+    sd.ident = st.ident;
+
+    StationState ss;
 
     // Get the ID for the station
     if (can_add)
-        return s.obtain_id(rep, st.coords.lat, st.coords.lon, st.ident.get());
+        s.obtain_id(sd, ss);
     else
-        return s.get_id(rep, st.coords.lat, st.coords.lon, st.ident.get());
+        s.get_id(sd, ss);
+
+    return ss.id;
 }
 
 void DB::insert_station_data(dballe::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add)
@@ -202,9 +209,8 @@ void DB::insert_station_data(dballe::Transaction& transaction, StationValues& va
         vars.add(i.second.var, -1);
 
     // Do the insert
-    dballe::sql::Transaction* t = dynamic_cast<dballe::sql::Transaction*>(&transaction);
-    assert(t);
-    d.insert(*t, vars, can_replace ? v7::DataV7::UPDATE : v7::DataV7::ERROR);
+    auto& t = v7::Transaction::downcast(transaction);
+    d.insert(t, vars, can_replace ? v7::DataV7::UPDATE : v7::DataV7::ERROR);
 
     // Read the IDs from the results
     for (const auto& v: vars)
@@ -236,9 +242,8 @@ void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool ca
         vars.add(i.second.var, id_levtr);
 
     // Do the insert
-    dballe::sql::Transaction* t = dynamic_cast<dballe::sql::Transaction*>(&transaction);
-    assert(t);
-    d.insert(*t, vars, can_replace ? v7::DataV7::UPDATE : v7::DataV7::ERROR);
+    auto& t = v7::Transaction::downcast(transaction);
+    d.insert(t, vars, can_replace ? v7::DataV7::UPDATE : v7::DataV7::ERROR);
 
     // Read the IDs from the results
     for (const auto& v: vars)
@@ -333,11 +338,10 @@ void DB::attr_insert_station(dballe::Transaction& transaction, int data_id, cons
         iattrs.add(i.second.var, data_id);
     if (iattrs.empty()) return;
 
-    dballe::sql::Transaction* t = dynamic_cast<dballe::sql::Transaction*>(&transaction);
-    assert(t);
+    auto& t = v7::Transaction::downcast(transaction);
 
     // Insert all the attributes we found
-    a.insert(*t, iattrs, v7::AttrV7::UPDATE);
+    a.insert(t, iattrs, v7::AttrV7::UPDATE);
 }
 
 void DB::attr_insert_data(dballe::Transaction& transaction, int data_id, const Values& attrs)
@@ -348,12 +352,10 @@ void DB::attr_insert_data(dballe::Transaction& transaction, int data_id, const V
         iattrs.add(i.second.var, data_id);
     if (iattrs.empty()) return;
 
-    // Begin the transaction
-    dballe::sql::Transaction* t = dynamic_cast<dballe::sql::Transaction*>(&transaction);
-    assert(t);
+    auto& t = v7::Transaction::downcast(transaction);
 
     // Insert all the attributes we found
-    a.insert(*t, iattrs, v7::AttrV7::UPDATE);
+    a.insert(t, iattrs, v7::AttrV7::UPDATE);
 }
 
 void DB::attr_remove_station(dballe::Transaction& transaction, int data_id, const db::AttrList& qcs)

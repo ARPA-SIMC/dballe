@@ -40,7 +40,7 @@ public:
     virtual ~DataV7();
 
     /// Bulk variable insert
-    virtual void insert(dballe::sql::Transaction& t, bulk::InsertV7& vars, UpdateMode update_mode=UPDATE) = 0;
+    virtual void insert(dballe::Transaction& t, bulk::InsertV7& vars, UpdateMode update_mode=UPDATE) = 0;
 
     /// Run the query to delete all records selected by the given QueryBuilder
     virtual void remove(const v7::QueryBuilder& qb) = 0;

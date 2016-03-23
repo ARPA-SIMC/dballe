@@ -181,7 +181,14 @@ class Tests : public FixtureTestCase<Fixture>
                     break;
                 case V7:
                     if (auto d = dynamic_cast<v7::DB*>(f.db))
-                        d->station().obtain_id(1, 1100000, 4500000);
+                    {
+                        db::v7::StationDesc sde;
+                        db::v7::StationState sst;
+                        sde.rep = 1;
+                        sde.coords = Coords(1100000, 4500000);
+                        sde.ident = "ciao";
+                        d->station().obtain_id(sde, sst);
+                    }
                     break;
                 case V5: throw error_unimplemented("v5 db is not supported");
                 case MESSAGES: throw error_unimplemented("testing stations_without_data on MESSAGES database");

@@ -121,6 +121,8 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/v6/db.h \
 	db/v6/cursor.h \
 	db/v6/qbuilder.h \
+	db/v7/transaction.h \
+	db/v7/state.h \
 	db/v7/internals.h \
 	db/v7/repinfo.h \
 	db/v7/station.h \
@@ -271,6 +273,8 @@ libdballe_la_SOURCES = \
 	db/v6/qbuilder.cc \
 	db/v6/import.cc \
 	db/v6/export.cc \
+	db/v7/transaction.cc \
+	db/v7/state.cc \
 	db/v7/repinfo.cc \
 	db/v7/station.cc \
 	db/v7/levtr.cc \

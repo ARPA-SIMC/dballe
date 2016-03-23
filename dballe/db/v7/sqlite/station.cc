@@ -67,34 +67,35 @@ bool SQLiteStationBase::maybe_get_id(int rep, int lat, int lon, const char* iden
     return found;
 }
 
-int SQLiteStationBase::get_id(int rep, int lat, int lon, const char* ident)
+void SQLiteStationBase::get_id(const StationDesc& desc, StationState& state)
 {
-    int id;
-    if (maybe_get_id(rep, lat, lon, ident, &id))
-        return id;
+    if (maybe_get_id(desc.rep, desc.coords.lat, desc.coords.lon, desc.ident.get(), &state.id))
+    {
+        state.is_new = false;
+        return;
+    }
     throw error_notfound("station not found in the database");
 }
 
-int SQLiteStationBase::obtain_id(int rep, int lat, int lon, const char* ident, bool* inserted)
+void SQLiteStationBase::obtain_id(const StationDesc& desc, StationState& state)
 {
-    int id;
-    if (maybe_get_id(rep, lat, lon, ident, &id))
+    if (maybe_get_id(desc.rep, desc.coords.lat, desc.coords.lon, desc.ident.get(), &state.id))
     {
-        if (inserted) *inserted = false;
-        return id;
+        state.is_new = false;
+        return;
     }
 
     // If no station was found, insert a new one
-    istm->bind_val(1, rep);
-    istm->bind_val(2, lat);
-    istm->bind_val(3, lon);
-    if (ident)
-        istm->bind_val(4, ident);
+    istm->bind_val(1, desc.rep);
+    istm->bind_val(2, desc.coords.lat);
+    istm->bind_val(3, desc.coords.lon);
+    if (desc.ident)
+        istm->bind_val(4, desc.ident.get());
     else
         istm->bind_null_val(4);
     istm->execute();
-    if (inserted) *inserted = true;
-    return conn.get_last_insert_id();
+    state.id = conn.get_last_insert_id();
+    state.is_new = true;
 }
 
 void SQLiteStationBase::read_station_vars(SQLiteStatement& stm, std::function<void(std::unique_ptr<wreport::Var>)> dest)

@@ -2,6 +2,7 @@
 #define DBALLE_DB_V7_TRANSACTION_H
 
 #include <dballe/transaction.h>
+#include <dballe/db/v7/state.h>
 #include <memory>
 
 namespace dballe {
@@ -11,6 +12,7 @@ namespace v7 {
 struct Transaction : public dballe::Transaction
 {
     dballe::Transaction* sql_transaction = nullptr;
+    State state;
 
     Transaction(std::unique_ptr<dballe::Transaction> sql_transaction)
         : sql_transaction(sql_transaction.release()) {}

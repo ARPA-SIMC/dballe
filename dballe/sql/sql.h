@@ -118,6 +118,10 @@ public:
 class Transaction : public dballe::Transaction
 {
 public:
+    Transaction() {}
+    Transaction(const Transaction&) = delete;
+    Transaction& operator=(const Transaction&) = delete;
+
     /// Get an exclusive lock on the given table until the end of the
     /// transaction
     virtual void lock_table(const char* name) = 0;

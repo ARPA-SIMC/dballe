@@ -29,11 +29,23 @@ struct Fixture : V7DriverFixture
         int added, deleted, updated;
         driver->create_repinfov7()->update(nullptr, &added, &deleted, &updated);
 
+        db::v7::StationDesc sde1;
+        db::v7::StationDesc sde2;
+        db::v7::StationState sst;
+
         // Insert a mobile station
-        wassert(actual(st->obtain_id(1, 4500000, 1100000, "ciao")) == 1);
+        sde1.rep = 1;
+        sde1.coords = Coords(4500000, 1100000);
+        sde1.ident = "ciao";
+        st->obtain_id(sde1, sst);
+        wassert(actual(sst.id) == 1);
 
         // Insert a fixed station
-        wassert(actual(st->obtain_id(1, 4600000, 1200000)) == 2);
+        sde2.rep = 1;
+        sde2.coords = Coords(4600000, 1200000);
+        sde2.ident = nullptr;
+        st->obtain_id(sde2, sst);
+        wassert(actual(sst.id) == 2);
 
         // Insert a lev_tr
         wassert(actual(lt->obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);

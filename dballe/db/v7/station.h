@@ -2,6 +2,7 @@
 #define DBALLE_DB_V7_STATION_H
 
 #include <dballe/sql/fwd.h>
+#include <dballe/db/v7/state.h>
 #include <memory>
 #include <cstdio>
 
@@ -27,21 +28,15 @@ public:
      * Get the station ID given latitude, longitude and mobile identifier.
      *
      * It throws an exception if it does not exist.
-     *
-     * @return
-     *   Resulting ID of the station
      */
-    virtual int get_id(int rep, int lat, int lon, const char* ident=NULL) = 0;
+    virtual void get_id(const StationDesc& desc, StationState& state) = 0;
 
     /**
      * Get the station ID given latitude, longitude and mobile identifier.
      *
      * It creates the station record if it does not exist.
-     *
-     * @return
-     *   Resulting ID of the station
      */
-    virtual int obtain_id(int rep, int lat, int lon, const char* ident=NULL, bool* inserted=NULL) = 0;
+    virtual void obtain_id(const StationDesc& desc, StationState& state) = 0;
 
     /**
      * Dump the entire contents of the table to an output stream

@@ -40,7 +40,7 @@ void SQLiteAttrV7::read(int id_data, function<void(unique_ptr<Var>)> dest)
     });
 }
 
-void SQLiteAttrV7::insert(dballe::sql::Transaction& t, v7::bulk::InsertAttrsV7& attrs, UpdateMode update_mode)
+void SQLiteAttrV7::insert(dballe::Transaction& t, v7::bulk::InsertAttrsV7& attrs, UpdateMode update_mode)
 {
     Querybuf select_query;
     select_query.append("SELECT id_data, type, value FROM attr WHERE id_data IN (");
