@@ -52,6 +52,8 @@ void SQLiteDataV7::insert(dballe::Transaction& t, v7::bulk::InsertV7& vars, Upda
                     sstm->column_int(2),
                     sstm->column_string(3));
         });
+    } else {
+        // TODO: Annotate is still needed, with the data already inserted in this transaction
     }
     todo.annotate_end();
 
