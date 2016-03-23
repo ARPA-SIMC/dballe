@@ -38,6 +38,7 @@ SQLiteStationBase::SQLiteStationBase(SQLiteConnection& conn)
 
 SQLiteStationBase::~SQLiteStationBase()
 {
+    delete sstm;
     delete sfstm;
     delete smstm;
     delete istm;
@@ -60,11 +61,40 @@ bool SQLiteStationBase::maybe_get_id(const StationDesc& st, int* id)
         s = sfstm;
     }
     bool found = false;
-    s->execute([&]() {
+    s->execute_one([&]() {
         found = true;
         *id = s->column_int(0);
     });
     return found;
+}
+
+State::stations_t::iterator SQLiteStationBase::lookup_id(State& st, int id)
+{
+    // First look it up in the transaction cache
+    for (auto i = st.stations.begin(); i != st.stations.end(); ++i)
+        if (i->second.id == id)
+            return i;
+
+    if (!sstm)
+        sstm = conn.sqlitestatement("SELECT rep, lat, lon, ident FROM station WHERE id=?").release();
+
+    sstm->bind_val(1, id);
+
+    State::stations_t::iterator res;
+    sstm->execute_one([&]() {
+        StationDesc desc;
+        desc.rep = sstm->column_int(0);
+        desc.coords.lat = sstm->column_int(1);
+        desc.coords.lon = sstm->column_int(2);
+        if (!sstm->column_isnull(3))
+            desc.ident = sstm->column_string(3);
+        StationState sst;
+        sst.id = id;
+        sst.is_new = false;
+        auto new_res = st.stations.insert(make_pair(desc, sst));
+        res = new_res.first;
+    });
+    return res;
 }
 
 State::stations_t::iterator SQLiteStationBase::get_id(State& st, const StationDesc& desc)

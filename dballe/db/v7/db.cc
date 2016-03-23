@@ -165,14 +165,15 @@ int DB::rep_cod_from_memo(const char* memo)
     return repinfo().obtain_id(memo);
 }
 
-int DB::obtain_station(v7::State& state, const dballe::Station& st, bool can_add)
+v7::State::stations_t::iterator DB::obtain_station(v7::State& state, const dballe::Station& st, bool can_add)
 {
-    // Look if the record already knows the ID
-    if (st.ana_id != MISSING_INT)
-        return st.ana_id;
+    v7::Station& s = station();
+
+    // If the station is referenced only by ID, look it up by ID only
+    if (st.ana_id != MISSING_INT && st.coords.is_missing())
+        return s.lookup_id(state, st.ana_id);
 
     v7::Repinfo& ri = repinfo();
-    v7::Station& s = station();
 
     StationDesc sd;
     sd.rep = ri.obtain_id(st.report.c_str());
@@ -180,24 +181,23 @@ int DB::obtain_station(v7::State& state, const dballe::Station& st, bool can_add
     sd.ident = st.ident;
 
     // Get the ID for the station
-    v7::State::stations_t::iterator res;
-
     if (can_add)
-        res = s.obtain_id(state, sd);
+        return s.obtain_id(state, sd);
     else
-        res = s.get_id(state, sd);
-
-    return res->second.id;
+        return s.get_id(state, sd);
 }
 
 void DB::insert_station_data(dballe::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add)
 {
     auto& t = v7::Transaction::downcast(transaction);
+
+    v7::State::stations_t::iterator si = obtain_station(t.state, vals.info, station_can_add);
+
     v7::DataV7& d = data();
 
     v7::bulk::InsertV7 vars;
     // Insert the station data, and get the ID
-    vars.id_station = vals.info.ana_id = obtain_station(t.state, vals.info, station_can_add);
+    vars.id_station = vals.info.ana_id = si->second.id;
 
     // Hardcoded values for station variables
     vars.datetime = Datetime(1000, 1, 1, 0, 0, 0);
@@ -223,11 +223,13 @@ void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool ca
 
     auto& t = v7::Transaction::downcast(transaction);
 
+    v7::State::stations_t::iterator si = obtain_station(t.state, vals.info, station_can_add);
+
     v7::DataV7& d = data();
 
     v7::bulk::InsertV7 vars;
     // Insert the station data, and get the ID
-    vars.id_station = vals.info.ana_id = obtain_station(t.state, vals.info, station_can_add);
+    vars.id_station = vals.info.ana_id = si->second.id;
     // Set the date from the record contents
     vars.datetime = vals.info.datetime;
     // Insert the lev_tr data, and get the ID

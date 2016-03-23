@@ -722,7 +722,7 @@ class Tests : public FixtureTestCase<DBFixture>
             update.info.level = q.level;
             update.info.trange = q.trange;
             update.values.set(var.code(), 200);
-            db.insert_data(update, true, false);
+            wassert(db.insert_data(update, true, false));
 
             // Query again
             cur = db.query_data(q);

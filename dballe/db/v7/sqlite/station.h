@@ -29,6 +29,8 @@ protected:
     dballe::sql::SQLiteStatement* sfstm = nullptr;
     /** Precompiled select mobile station query */
     dballe::sql::SQLiteStatement* smstm = nullptr;
+    /** Precompiled select station details query */
+    dballe::sql::SQLiteStatement* sstm = nullptr;
     /** Precompiled insert query */
     dballe::sql::SQLiteStatement* istm = nullptr;
 
@@ -45,6 +47,7 @@ public:
     SQLiteStationBase(const SQLiteStationBase&&) = delete;
     SQLiteStationBase& operator=(const SQLiteStationBase&) = delete;
 
+    State::stations_t::iterator lookup_id(State& st, int id) override;
     State::stations_t::iterator get_id(State& st, const StationDesc& desc) override;
     State::stations_t::iterator obtain_id(State& st, const StationDesc& desc) override;
 

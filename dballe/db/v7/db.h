@@ -3,6 +3,7 @@
 
 #include <dballe/db/db.h>
 #include <dballe/db/trace.h>
+#include <dballe/db/v7/state.h>
 #include <wreport/varinfo.h>
 #include <string>
 #include <vector>
@@ -120,7 +121,7 @@ protected:
      * @returns
      *   The station ID
      */
-    int obtain_station(v7::State& state, const dballe::Station& st, bool can_add=true);
+    v7::State::stations_t::iterator obtain_station(v7::State& state, const dballe::Station& st, bool can_add=true);
 
 public:
     virtual ~DB();

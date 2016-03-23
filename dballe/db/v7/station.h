@@ -25,6 +25,13 @@ public:
     virtual ~Station();
 
     /**
+     * Look up a station give its ID.
+     *
+     * It throws an exception if it does not exist.
+     */
+    virtual State::stations_t::iterator lookup_id(State& st, int id) = 0;
+
+    /**
      * Get the station ID given latitude, longitude and mobile identifier.
      *
      * It throws an exception if it does not exist.
