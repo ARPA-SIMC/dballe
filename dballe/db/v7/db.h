@@ -58,6 +58,7 @@ struct Driver;
 struct Repinfo;
 struct Station;
 struct LevTr;
+struct StationData;
 struct Data;
 struct Attr;
 }
@@ -138,7 +139,13 @@ public:
     v7::LevTr& lev_tr();
 
     /// Access the data table
+    v7::StationData& station_data();
+
+    /// Access the data table
     v7::Data& data();
+
+    /// Access the data table
+    v7::Attr& station_attr();
 
     /// Access the data table
     v7::Attr& attr();

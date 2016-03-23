@@ -17,6 +17,7 @@ struct QueryBuilder;
 struct Repinfo;
 struct Station;
 struct LevTr;
+struct StationData;
 struct Data;
 struct Attr;
 
@@ -67,7 +68,13 @@ public:
     virtual std::unique_ptr<v7::LevTr> create_levtr() = 0;
 
     /// Precompiled queries to manipulate the data table
+    virtual std::unique_ptr<v7::StationData> create_station_data() = 0;
+
+    /// Precompiled queries to manipulate the data table
     virtual std::unique_ptr<v7::Data> create_data() = 0;
+
+    /// Precompiled queries to manipulate the attr table
+    virtual std::unique_ptr<v7::Attr> create_station_attr() = 0;
 
     /// Precompiled queries to manipulate the attr table
     virtual std::unique_ptr<v7::Attr> create_attr() = 0;

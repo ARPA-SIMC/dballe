@@ -45,6 +45,16 @@ std::unique_ptr<v7::LevTr> Driver::create_levtr()
     return unique_ptr<v7::LevTr>(new SQLiteLevTrV7(conn));
 }
 
+std::unique_ptr<v7::StationData> Driver::create_station_data()
+{
+    return unique_ptr<v7::StationData>(new SQLiteStationData(conn));
+}
+
+std::unique_ptr<v7::Attr> Driver::create_station_attr()
+{
+    return unique_ptr<v7::Attr>(new SQLiteAttr(conn, "station_attr"));
+}
+
 std::unique_ptr<v7::Data> Driver::create_data()
 {
     return unique_ptr<v7::Data>(new SQLiteData(conn));
@@ -156,6 +166,15 @@ void Driver::create_tables_v7()
         );
     )");
     conn.exec(R"(
+        CREATE TABLE station_data (
+           id          INTEGER PRIMARY KEY,
+           id_station  INTEGER NOT NULL REFERENCES station (id) ON DELETE CASCADE,
+           id_var      INTEGER NOT NULL,
+           value       VARCHAR(255) NOT NULL,
+           UNIQUE (id_station, id_var)
+        );
+    )");
+    conn.exec(R"(
         CREATE TABLE data (
            id          INTEGER PRIMARY KEY,
            id_station  INTEGER NOT NULL REFERENCES station (id) ON DELETE CASCADE,
@@ -166,6 +185,14 @@ void Driver::create_tables_v7()
            UNIQUE (id_station, datetime, id_lev_tr, id_var)
         );
         CREATE INDEX data_lt ON data(id_lev_tr);
+    )");
+    conn.exec(R"(
+        CREATE TABLE station_attr (
+           id_data     INTEGER NOT NULL REFERENCES data (id) ON DELETE CASCADE,
+           type        INTEGER NOT NULL,
+           value       VARCHAR(255) NOT NULL,
+           UNIQUE (id_data, type)
+        );
     )");
     conn.exec(R"(
         CREATE TABLE attr (
@@ -181,6 +208,8 @@ void Driver::delete_tables_v7()
 {
     conn.drop_table_if_exists("attr");
     conn.drop_table_if_exists("data");
+    conn.drop_table_if_exists("station_attr");
+    conn.drop_table_if_exists("station_data");
     conn.drop_table_if_exists("lev_tr");
     conn.drop_table_if_exists("repinfo");
     conn.drop_table_if_exists("station");
