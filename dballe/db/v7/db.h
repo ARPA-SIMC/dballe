@@ -58,8 +58,8 @@ struct Driver;
 struct Repinfo;
 struct Station;
 struct LevTr;
-struct DataV7;
-struct AttrV7;
+struct Data;
+struct Attr;
 }
 
 namespace v7 {
@@ -95,9 +95,9 @@ protected:
     /** Level/timerange information */
     struct v7::LevTr* m_lev_tr;
     /** Variable data */
-    struct v7::DataV7* m_data;
+    struct v7::Data* m_data;
     /** Variable attributes */
-    struct v7::AttrV7* m_attr;
+    struct v7::Attr* m_attr;
     /** @} */
 
     void init_after_connect();
@@ -138,10 +138,10 @@ public:
     v7::LevTr& lev_tr();
 
     /// Access the data table
-    v7::DataV7& data();
+    v7::Data& data();
 
     /// Access the data table
-    v7::AttrV7& attr();
+    v7::Attr& attr();
 
     std::unique_ptr<dballe::Transaction> transaction() override;
 

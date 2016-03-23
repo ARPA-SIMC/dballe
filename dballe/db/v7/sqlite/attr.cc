@@ -15,21 +15,21 @@ namespace db {
 namespace v7 {
 namespace sqlite {
 
-SQLiteAttrV7::SQLiteAttrV7(SQLiteConnection& conn)
+SQLiteAttr::SQLiteAttr(SQLiteConnection& conn)
     : conn(conn)
 {
     // Precompile the statement for select
     sstm = conn.sqlitestatement("SELECT type, value FROM attr WHERE id_data=?").release();
 }
 
-SQLiteAttrV7::~SQLiteAttrV7()
+SQLiteAttr::~SQLiteAttr()
 {
     delete sstm;
     delete istm;
     delete ustm;
 }
 
-void SQLiteAttrV7::read(int id_data, function<void(unique_ptr<Var>)> dest)
+void SQLiteAttr::read(int id_data, function<void(unique_ptr<Var>)> dest)
 {
     sstm->bind_val(1, id_data);
     sstm->execute([&]() {
@@ -40,7 +40,7 @@ void SQLiteAttrV7::read(int id_data, function<void(unique_ptr<Var>)> dest)
     });
 }
 
-void SQLiteAttrV7::insert(dballe::Transaction& t, v7::bulk::InsertAttrsV7& attrs, UpdateMode update_mode)
+void SQLiteAttr::insert(dballe::Transaction& t, v7::bulk::InsertAttrsV7& attrs, UpdateMode update_mode)
 {
     Querybuf select_query;
     select_query.append("SELECT id_data, type, value FROM attr WHERE id_data IN (");
@@ -109,7 +109,7 @@ void SQLiteAttrV7::insert(dballe::Transaction& t, v7::bulk::InsertAttrsV7& attrs
     }
 }
 
-void SQLiteAttrV7::dump(FILE* out)
+void SQLiteAttr::dump(FILE* out)
 {
     int count = 0;
     fprintf(out, "dump of table attr:\n");

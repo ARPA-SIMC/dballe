@@ -10,9 +10,9 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
-AttrV7::~AttrV7() {}
+Attr::~Attr() {}
 
-void AttrV7::insert_attributes(dballe::Transaction& t, int id_data, const wreport::Var& var, UpdateMode update_mode)
+void Attr::insert_attributes(dballe::Transaction& t, int id_data, const wreport::Var& var, UpdateMode update_mode)
 {
     bulk::InsertAttrsV7 attrs;
     attrs.add_all(var, id_data);
@@ -25,7 +25,7 @@ namespace bulk {
 
 void InsertAttrsV7::add_all(const wreport::Var& var, int id_data)
 {
-    for (const Var* attr = var.next_attr(); attr != NULL; attr = attr->next_attr())
+    for (const wreport::Var* attr = var.next_attr(); attr != NULL; attr = attr->next_attr())
         if (attr->isset())
             emplace_back(attr, id_data);
 }

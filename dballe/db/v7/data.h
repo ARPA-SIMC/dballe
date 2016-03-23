@@ -17,25 +17,45 @@ namespace v7 {
 struct QueryBuilder;
 
 namespace bulk {
-struct InsertV7;
+struct InsertStationVars;
+struct InsertVars;
+
+enum UpdateMode {
+    UPDATE,
+    IGNORE,
+    ERROR,
+};
+
 }
 
 /**
  * Precompiled query to manipulate the data table
  */
-struct DataV7
+struct StationData
 {
 public:
-    enum UpdateMode {
-        UPDATE,
-        IGNORE,
-        ERROR,
-    };
-
-    virtual ~DataV7();
+    virtual ~StationData();
 
     /// Bulk variable insert
-    virtual void insert(dballe::Transaction& t, bulk::InsertV7& vars, UpdateMode update_mode=UPDATE) = 0;
+    virtual void insert(dballe::Transaction& t, bulk::InsertStationVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE) = 0;
+
+    /// Run the query to delete all records selected by the given QueryBuilder
+    virtual void remove(const v7::QueryBuilder& qb) = 0;
+
+    /// Dump the entire contents of the table to an output stream
+    virtual void dump(FILE* out) = 0;
+};
+
+/**
+ * Precompiled query to manipulate the data table
+ */
+struct Data
+{
+public:
+    virtual ~Data();
+
+    /// Bulk variable insert
+    virtual void insert(dballe::Transaction& t, bulk::InsertVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE) = 0;
 
     /// Run the query to delete all records selected by the given QueryBuilder
     virtual void remove(const v7::QueryBuilder& qb) = 0;
@@ -72,20 +92,42 @@ struct Item
     void format_flags(char* dest) const;
 };
 
+
 /**
  * Workflow information about a variable listed for bulk insert/update
  */
-struct VarV7 : public Item
+struct StationVar : public Item
+{
+    int id_data;
+    const wreport::Var* var;
+
+    StationVar(const wreport::Var* var, int id_data=-1)
+        : id_data(id_data), var(var)
+    {
+    }
+    bool operator<(const StationVar& v) const
+    {
+        return var->code() < v.var->code();
+    }
+
+    void dump(FILE* out) const;
+};
+
+
+/**
+ * Workflow information about a variable listed for bulk insert/update
+ */
+struct Var : public Item
 {
     int id_levtr;
     int id_data;
     const wreport::Var* var;
 
-    VarV7(const wreport::Var* var, int id_levtr=-1, int id_data=-1)
+    Var(const wreport::Var* var, int id_levtr=-1, int id_data=-1)
         : id_levtr(id_levtr), id_data(id_data), var(var)
     {
     }
-    bool operator<(const VarV7& v) const
+    bool operator<(const Var& v) const
     {
         if (int d = id_levtr - v.id_levtr) return d < 0;
         return var->code() < v.var->code();
@@ -99,7 +141,24 @@ struct VarV7 : public Item
  * Input for a bulk insert of a lot of variables sharing the same context
  * information.
  */
-struct InsertV7 : public std::vector<VarV7>
+struct InsertStationVars : public std::vector<StationVar>
+{
+    StationState station;
+
+    void add(const wreport::Var* var, int id_levtr)
+    {
+        emplace_back(var, id_levtr);
+    }
+
+    void dump(FILE* out) const;
+};
+
+
+/**
+ * Input for a bulk insert of a lot of variables sharing the same context
+ * information.
+ */
+struct InsertVars : public std::vector<Var>
 {
     StationState station;
     Datetime datetime;
@@ -118,12 +177,12 @@ struct InsertV7 : public std::vector<VarV7>
  */
 struct AnnotateVarsV7
 {
-    InsertV7& vars;
-    InsertV7::iterator iter;
+    InsertVars& vars;
+    InsertVars::iterator iter;
     bool do_insert = false;
     bool do_update = false;
 
-    AnnotateVarsV7(InsertV7& vars);
+    AnnotateVarsV7(InsertVars& vars);
 
     bool annotate(int id_data, int id_levtr, wreport::Varcode code, const char* value);
     void annotate_end();

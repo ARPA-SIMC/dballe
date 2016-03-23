@@ -20,18 +20,18 @@ struct Fixture : V7DriverFixture
 {
     using V7DriverFixture::V7DriverFixture;
 
-    unique_ptr<db::v7::AttrV7> attr;
+    unique_ptr<db::v7::Attr> attr;
 
     void reset_attr()
     {
         using namespace dballe::db::v7;
 
-        auto st = driver->create_stationv7();
-        auto lt = driver->create_levtrv7();
-        auto da = driver->create_datav7();
+        auto st = driver->create_station();
+        auto lt = driver->create_levtr();
+        auto da = driver->create_data();
 
         int added, deleted, updated;
-        driver->create_repinfov7()->update(nullptr, &added, &deleted, &updated);
+        driver->create_repinfo()->update(nullptr, &added, &deleted, &updated);
 
         db::v7::StationDesc sde1;
         db::v7::StationDesc sde2;
@@ -64,22 +64,22 @@ struct Fixture : V7DriverFixture
         auto t = conn->transaction();
         // Insert a datum
         {
-            bulk::InsertV7 vars;
+            bulk::InsertVars vars;
             vars.station = state.stations[sde1];
             vars.datetime = Datetime(2001, 2, 3, 4, 5, 6);
             Var var(varinfo(WR_VAR(0, 1, 2)), 123);
             vars.add(&var, 1);
-            da->insert(*t, vars, DataV7::ERROR);
+            da->insert(*t, vars, bulk::ERROR);
         }
 
         // Insert another datum
         {
-            bulk::InsertV7 vars;
+            bulk::InsertVars vars;
             vars.station = state.stations[sde2];
             vars.datetime = Datetime(2002, 3, 4, 5, 6, 7);
             Var var(varinfo(WR_VAR(0, 1, 2)), 234);
             vars.add(&var, 2);
-            da->insert(*t, vars, DataV7::ERROR);
+            da->insert(*t, vars, bulk::ERROR);
         }
         t->commit();
     }
@@ -87,7 +87,7 @@ struct Fixture : V7DriverFixture
     void test_setup()
     {
         V7DriverFixture::test_setup();
-        attr = driver->create_attrv7();
+        attr = driver->create_attr();
         reset_attr();
     }
 
@@ -123,7 +123,7 @@ class Tests : public FixtureTestCase<Fixture>
             {
                 bulk::InsertAttrsV7 attrs;
                 attrs.add_all(var1, 1);
-                at.insert(*t, attrs, AttrV7::ERROR);
+                at.insert(*t, attrs, Attr::ERROR);
                 wassert(actual(attrs.size()) == 1);
                 wassert(actual(attrs[0].needs_insert()).isfalse());
                 wassert(actual(attrs[0].inserted()).istrue());
@@ -133,7 +133,7 @@ class Tests : public FixtureTestCase<Fixture>
             {
                 bulk::InsertAttrsV7 attrs;
                 attrs.add_all(var2, 2);
-                at.insert(*t, attrs, AttrV7::ERROR);
+                at.insert(*t, attrs, Attr::ERROR);
                 wassert(actual(attrs.size()) == 1);
                 wassert(actual(attrs[0].needs_insert()).isfalse());
                 wassert(actual(attrs[0].inserted()).istrue());
@@ -145,7 +145,7 @@ class Tests : public FixtureTestCase<Fixture>
             {
                 bulk::InsertAttrsV7 attrs;
                 attrs.add_all(var1, 1);
-                at.insert(*t, attrs, AttrV7::IGNORE);
+                at.insert(*t, attrs, Attr::IGNORE);
                 wassert(actual(attrs.size()) == 1);
                 wassert(actual(attrs[0].needs_insert()).isfalse());
                 wassert(actual(attrs[0].inserted()).isfalse());
@@ -157,7 +157,7 @@ class Tests : public FixtureTestCase<Fixture>
             {
                 bulk::InsertAttrsV7 attrs;
                 attrs.add_all(var2, 2);
-                at.insert(*t, attrs, AttrV7::UPDATE);
+                at.insert(*t, attrs, Attr::UPDATE);
                 wassert(actual(attrs.size()) == 1);
                 wassert(actual(attrs[0].needs_insert()).isfalse());
                 wassert(actual(attrs[0].inserted()).isfalse());
@@ -183,7 +183,7 @@ class Tests : public FixtureTestCase<Fixture>
             {
                 bulk::InsertAttrsV7 attrs;
                 attrs.add_all(var2, 1);
-                at.insert(*t, attrs, AttrV7::UPDATE);
+                at.insert(*t, attrs, Attr::UPDATE);
                 wassert(actual(attrs.size()) == 1);
                 wassert(actual(attrs[0].needs_insert()).isfalse());
                 wassert(actual(attrs[0].inserted()).isfalse());
@@ -193,7 +193,7 @@ class Tests : public FixtureTestCase<Fixture>
             {
                 bulk::InsertAttrsV7 attrs;
                 attrs.add_all(var1, 2);
-                at.insert(*t, attrs, AttrV7::UPDATE);
+                at.insert(*t, attrs, Attr::UPDATE);
                 wassert(actual(attrs.size()) == 1);
                 wassert(actual(attrs[0].needs_insert()).isfalse());
                 wassert(actual(attrs[0].inserted()).isfalse());

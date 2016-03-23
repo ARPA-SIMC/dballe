@@ -30,29 +30,29 @@ Driver::~Driver()
 {
 }
 
-std::unique_ptr<v7::Repinfo> Driver::create_repinfov7()
+std::unique_ptr<v7::Repinfo> Driver::create_repinfo()
 {
     return unique_ptr<v7::Repinfo>(new SQLiteRepinfoV7(conn));
 }
 
-std::unique_ptr<v7::Station> Driver::create_stationv7()
+std::unique_ptr<v7::Station> Driver::create_station()
 {
     return unique_ptr<v7::Station>(new SQLiteStationV7(conn));
 }
 
-std::unique_ptr<v7::LevTr> Driver::create_levtrv7()
+std::unique_ptr<v7::LevTr> Driver::create_levtr()
 {
     return unique_ptr<v7::LevTr>(new SQLiteLevTrV7(conn));
 }
 
-std::unique_ptr<v7::DataV7> Driver::create_datav7()
+std::unique_ptr<v7::Data> Driver::create_data()
 {
-    return unique_ptr<v7::DataV7>(new SQLiteDataV7(conn));
+    return unique_ptr<v7::Data>(new SQLiteData(conn));
 }
 
-std::unique_ptr<v7::AttrV7> Driver::create_attrv7()
+std::unique_ptr<v7::Attr> Driver::create_attr()
 {
-    return unique_ptr<v7::AttrV7>(new SQLiteAttrV7(conn));
+    return unique_ptr<v7::Attr>(new SQLiteAttr(conn));
 }
 
 void Driver::run_built_query_v7(

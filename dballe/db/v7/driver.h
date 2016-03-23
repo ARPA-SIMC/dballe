@@ -17,8 +17,8 @@ struct QueryBuilder;
 struct Repinfo;
 struct Station;
 struct LevTr;
-struct DataV7;
-struct AttrV7;
+struct Data;
+struct Attr;
 
 /// Query results from SQL output
 struct SQLRecordV7
@@ -58,19 +58,19 @@ public:
     virtual void exec_no_data(const std::string& query) = 0;
 
     /// Precompiled queries to manipulate the repinfo table
-    virtual std::unique_ptr<v7::Repinfo> create_repinfov7() = 0;
+    virtual std::unique_ptr<v7::Repinfo> create_repinfo() = 0;
 
     /// Precompiled queries to manipulate the station table
-    virtual std::unique_ptr<v7::Station> create_stationv7() = 0;
+    virtual std::unique_ptr<v7::Station> create_station() = 0;
 
     /// Precompiled queries to manipulate the levtr table
-    virtual std::unique_ptr<v7::LevTr> create_levtrv7() = 0;
+    virtual std::unique_ptr<v7::LevTr> create_levtr() = 0;
 
     /// Precompiled queries to manipulate the data table
-    virtual std::unique_ptr<v7::DataV7> create_datav7() = 0;
+    virtual std::unique_ptr<v7::Data> create_data() = 0;
 
     /// Precompiled queries to manipulate the attr table
-    virtual std::unique_ptr<v7::AttrV7> create_attrv7() = 0;
+    virtual std::unique_ptr<v7::Attr> create_attr() = 0;
 
     /**
      * Run a query on the given statement, returning results as SQLRecordV7 objects

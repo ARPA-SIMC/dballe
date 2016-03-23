@@ -17,7 +17,7 @@ namespace db {
 namespace v7 {
 namespace sqlite {
 
-SQLiteDataV7::SQLiteDataV7(SQLiteConnection& conn)
+SQLiteData::SQLiteData(SQLiteConnection& conn)
     : conn(conn)
 {
     // Create the statement for select id
@@ -29,12 +29,12 @@ SQLiteDataV7::SQLiteDataV7(SQLiteConnection& conn)
     )").release();
 }
 
-SQLiteDataV7::~SQLiteDataV7()
+SQLiteData::~SQLiteData()
 {
     if (sstm) delete sstm;
 }
 
-void SQLiteDataV7::insert(dballe::Transaction& t, v7::bulk::InsertV7& vars, UpdateMode update_mode)
+void SQLiteData::insert(dballe::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode)
 {
     // Scan the result in parallel with the variable list, annotating changed
     // items with their data ID
@@ -62,7 +62,7 @@ void SQLiteDataV7::insert(dballe::Transaction& t, v7::bulk::InsertV7& vars, Upda
 
     switch (update_mode)
     {
-        case UPDATE:
+        case bulk::UPDATE:
             if (todo.do_update)
             {
                 auto update_stm = conn.sqlitestatement("UPDATE data SET value=? WHERE id=?");
@@ -77,9 +77,9 @@ void SQLiteDataV7::insert(dballe::Transaction& t, v7::bulk::InsertV7& vars, Upda
                 }
             }
             break;
-        case IGNORE:
+        case bulk::IGNORE:
             break;
-        case ERROR:
+        case bulk::ERROR:
             if (todo.do_update)
                 throw error_consistency("refusing to overwrite existing data");
     }
@@ -107,7 +107,7 @@ void SQLiteDataV7::insert(dballe::Transaction& t, v7::bulk::InsertV7& vars, Upda
     }
 }
 
-void SQLiteDataV7::remove(const v7::QueryBuilder& qb)
+void SQLiteData::remove(const v7::QueryBuilder& qb)
 {
     auto stmd = conn.sqlitestatement("DELETE FROM data WHERE id=?");
     auto stm = conn.sqlitestatement(qb.sql_query);
@@ -121,7 +121,7 @@ void SQLiteDataV7::remove(const v7::QueryBuilder& qb)
     });
 }
 
-void SQLiteDataV7::dump(FILE* out)
+void SQLiteData::dump(FILE* out)
 {
     int count = 0;
     fprintf(out, "dump of table data:\n");

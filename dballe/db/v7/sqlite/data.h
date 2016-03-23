@@ -15,7 +15,7 @@ struct DB;
 /**
  * Precompiled query to manipulate the data table
  */
-class SQLiteDataV7 : public v7::DataV7
+class SQLiteData : public v7::Data
 {
 protected:
     /// DB connection
@@ -25,13 +25,13 @@ protected:
     dballe::sql::SQLiteStatement* sstm = nullptr;
 
 public:
-    SQLiteDataV7(dballe::sql::SQLiteConnection& conn);
-    SQLiteDataV7(const SQLiteDataV7&) = delete;
-    SQLiteDataV7(const SQLiteDataV7&&) = delete;
-    SQLiteDataV7& operator=(const SQLiteDataV7&) = delete;
-    ~SQLiteDataV7();
+    SQLiteData(dballe::sql::SQLiteConnection& conn);
+    SQLiteData(const SQLiteData&) = delete;
+    SQLiteData(const SQLiteData&&) = delete;
+    SQLiteData& operator=(const SQLiteData&) = delete;
+    ~SQLiteData();
 
-    void insert(dballe::Transaction& t, v7::bulk::InsertV7& vars, UpdateMode update_mode=UPDATE) override;
+    void insert(dballe::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE) override;
     void remove(const v7::QueryBuilder& qb) override;
     void dump(FILE* out) override;
 };

@@ -19,7 +19,7 @@ struct Fixture : V7DriverFixture
 {
     using V7DriverFixture::V7DriverFixture;
 
-    unique_ptr<db::v7::DataV7> data;
+    unique_ptr<db::v7::Data> data;
     db::v7::State state;
     db::v7::StationDesc sde1;
     db::v7::StationDesc sde2;
@@ -40,11 +40,11 @@ struct Fixture : V7DriverFixture
     {
         state.clear();
 
-        auto st = driver->create_stationv7();
-        auto lt = driver->create_levtrv7();
+        auto st = driver->create_station();
+        auto lt = driver->create_levtr();
 
         int added, deleted, updated;
-        driver->create_repinfov7()->update(nullptr, &added, &deleted, &updated);
+        driver->create_repinfo()->update(nullptr, &added, &deleted, &updated);
 
         db::v7::State::stations_t::iterator si;
         db::v7::State::levels_t::iterator li;
@@ -69,7 +69,7 @@ struct Fixture : V7DriverFixture
     void test_setup()
     {
         V7DriverFixture::test_setup();
-        data = driver->create_datav7();
+        data = driver->create_data();
         reset_data();
     }
 };
@@ -89,7 +89,7 @@ class Tests : public FixtureTestCase<Fixture>
 
             Var var(varinfo(WR_VAR(0, 1, 2)));
 
-            auto insert_sample1 = [&](bulk::InsertV7& vars, int value, DataV7::UpdateMode update) {
+            auto insert_sample1 = [&](bulk::InsertVars& vars, int value, bulk::UpdateMode update) {
                 vars.station = f.state.stations[f.sde1];
                 vars.datetime = Datetime(2001, 2, 3, 4, 5, 6);
                 var.seti(value);
@@ -99,8 +99,8 @@ class Tests : public FixtureTestCase<Fixture>
 
             // Insert a datum
             {
-                bulk::InsertV7 vars;
-                wassert(insert_sample1(vars, 123, DataV7::ERROR));
+                bulk::InsertVars vars;
+                wassert(insert_sample1(vars, 123, bulk::ERROR));
                 wassert(actual(vars[0].id_data) == 1);
                 wassert(actual(vars[0].needs_insert()).isfalse());
                 wassert(actual(vars[0].inserted()).istrue());
@@ -110,12 +110,12 @@ class Tests : public FixtureTestCase<Fixture>
 
             // Insert another datum
             {
-                bulk::InsertV7 vars;
+                bulk::InsertVars vars;
                 vars.station = f.state.stations[f.sde2];
                 vars.datetime = Datetime(2002, 3, 4, 5, 6, 7);
                 Var var(varinfo(WR_VAR(0, 1, 2)), 234);
                 vars.add(&var, 2);
-                wassert(da.insert(*t, vars, DataV7::ERROR));
+                wassert(da.insert(*t, vars, bulk::ERROR));
                 wassert(actual(vars[0].id_data) == 2);
                 wassert(actual(vars[0].needs_insert()).isfalse());
                 wassert(actual(vars[0].inserted()).istrue());
@@ -125,8 +125,8 @@ class Tests : public FixtureTestCase<Fixture>
 
             // Reinsert the first datum: it should find its ID and do nothing
             {
-                bulk::InsertV7 vars;
-                wassert(insert_sample1(vars, 123, DataV7::ERROR));
+                bulk::InsertVars vars;
+                wassert(insert_sample1(vars, 123, bulk::ERROR));
                 wassert(actual(vars[0].id_data) == 1);
                 wassert(actual(vars[0].needs_insert()).isfalse());
                 wassert(actual(vars[0].inserted()).isfalse());
@@ -137,8 +137,8 @@ class Tests : public FixtureTestCase<Fixture>
             // Reinsert the first datum, with a different value and ignore
             // overwrite: it should find its ID and do nothing
             {
-                bulk::InsertV7 vars;
-                wassert(insert_sample1(vars, 125, DataV7::IGNORE));
+                bulk::InsertVars vars;
+                wassert(insert_sample1(vars, 125, bulk::IGNORE));
                 wassert(actual(vars[0].id_data) == 1);
                 wassert(actual(vars[0].needs_insert()).isfalse());
                 wassert(actual(vars[0].inserted()).isfalse());
@@ -149,8 +149,8 @@ class Tests : public FixtureTestCase<Fixture>
             // Reinsert the first datum, with a different value and overwrite:
             // it should find its ID and update it
             {
-                bulk::InsertV7 vars;
-                insert_sample1(vars, 125, DataV7::UPDATE);
+                bulk::InsertVars vars;
+                insert_sample1(vars, 125, bulk::UPDATE);
                 wassert(actual(vars[0].id_data) == 1);
                 wassert(actual(vars[0].needs_insert()).isfalse());
                 wassert(actual(vars[0].inserted()).isfalse());
@@ -162,8 +162,8 @@ class Tests : public FixtureTestCase<Fixture>
             // overwrite: it should find its ID and do nothing, because the value
             // does not change.
             {
-                bulk::InsertV7 vars;
-                insert_sample1(vars, 125, DataV7::ERROR);
+                bulk::InsertVars vars;
+                insert_sample1(vars, 125, bulk::ERROR);
                 wassert(actual(vars[0].id_data) == 1);
                 wassert(actual(vars[0].needs_insert()).isfalse());
                 wassert(actual(vars[0].inserted()).isfalse());
@@ -174,9 +174,9 @@ class Tests : public FixtureTestCase<Fixture>
             // Reinsert the first datum, with a different value and error on
             // overwrite: it should throw an error
             {
-                bulk::InsertV7 vars;
+                bulk::InsertVars vars;
                 try {
-                    insert_sample1(vars, 126, DataV7::IGNORE);
+                    insert_sample1(vars, 126, bulk::IGNORE);
                     wassert(actual(false).isfalse());
                 } catch (std::exception& e) {
                     wassert(actual(e.what()).contains("refusing to overwrite existing data"));

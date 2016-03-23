@@ -26,11 +26,11 @@ struct Fixture : V7DriverFixture
         if (conn->has_table("station"))
             driver->exec_no_data("DELETE FROM station");
 
-        repinfo = driver->create_repinfov7();
+        repinfo = driver->create_repinfo();
         int added, deleted, updated;
         repinfo->update(nullptr, &added, &deleted, &updated);
 
-        station = driver->create_stationv7();
+        station = driver->create_station();
     }
 
     void test_setup()

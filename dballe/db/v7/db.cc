@@ -67,35 +67,35 @@ v7::Driver& DB::driver()
 v7::Repinfo& DB::repinfo()
 {
     if (m_repinfo == NULL)
-        m_repinfo = m_driver->create_repinfov7().release();
+        m_repinfo = m_driver->create_repinfo().release();
     return *m_repinfo;
 }
 
 v7::Station& DB::station()
 {
     if (m_station == NULL)
-        m_station = m_driver->create_stationv7().release();
+        m_station = m_driver->create_station().release();
     return *m_station;
 }
 
 v7::LevTr& DB::lev_tr()
 {
     if (m_lev_tr == NULL)
-        m_lev_tr = m_driver->create_levtrv7().release();
+        m_lev_tr = m_driver->create_levtr().release();
     return *m_lev_tr;
 }
 
-v7::DataV7& DB::data()
+v7::Data& DB::data()
 {
     if (m_data == NULL)
-        m_data = m_driver->create_datav7().release();
+        m_data = m_driver->create_data().release();
     return *m_data;
 }
 
-v7::AttrV7& DB::attr()
+v7::Attr& DB::attr()
 {
     if (m_attr == NULL)
-        m_attr = m_driver->create_attrv7().release();
+        m_attr = m_driver->create_attr().release();
     return *m_attr;
 }
 
@@ -184,7 +184,7 @@ void DB::insert_station_data(dballe::Transaction& transaction, StationValues& va
     // Insert the station data, and get the ID
     v7::State::stations_t::iterator si = obtain_station(t.state, vals.info, station_can_add);
 
-    v7::bulk::InsertV7 vars;
+    v7::bulk::InsertVars vars;
     vars.station = si->second;
     vals.info.ana_id = si->second.id;
 
@@ -196,8 +196,8 @@ void DB::insert_station_data(dballe::Transaction& transaction, StationValues& va
         vars.add(i.second.var, -1);
 
     // Do the insert
-    v7::DataV7& d = data();
-    d.insert(t, vars, can_replace ? v7::DataV7::UPDATE : v7::DataV7::ERROR);
+    v7::Data& d = data();
+    d.insert(t, vars, can_replace ? v7::bulk::UPDATE : v7::bulk::ERROR);
 
     // Read the IDs from the results
     for (const auto& v: vars)
@@ -216,7 +216,7 @@ void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool ca
     // Insert the station data, and get the ID
     v7::State::stations_t::iterator si = obtain_station(t.state, vals.info, station_can_add);
 
-    v7::bulk::InsertV7 vars;
+    v7::bulk::InsertVars vars;
     vars.station = si->second;
     vals.info.ana_id = si->second.id;
 
@@ -230,8 +230,8 @@ void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool ca
         vars.add(i.second.var, ltri->second.id);
 
     // Do the insert
-    v7::DataV7& d = data();
-    d.insert(t, vars, can_replace ? v7::DataV7::UPDATE : v7::DataV7::ERROR);
+    v7::Data& d = data();
+    d.insert(t, vars, can_replace ? v7::bulk::UPDATE : v7::bulk::ERROR);
 
     // Read the IDs from the results
     for (const auto& v: vars)
@@ -303,20 +303,20 @@ std::unique_ptr<db::CursorSummary> DB::query_summary(const Query& query)
 void DB::attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
 {
     // Create the query
-    v7::AttrV7& a = attr();
+    v7::Attr& a = attr();
     a.read(data_id, dest);
 }
 
 void DB::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
 {
     // Create the query
-    v7::AttrV7& a = attr();
+    v7::Attr& a = attr();
     a.read(data_id, dest);
 }
 
 void DB::attr_insert_station(dballe::Transaction& transaction, int data_id, const Values& attrs)
 {
-    v7::AttrV7& a = attr();
+    v7::Attr& a = attr();
     v7::bulk::InsertAttrsV7 iattrs;
     for (const auto& i : attrs)
         iattrs.add(i.second.var, data_id);
@@ -325,12 +325,12 @@ void DB::attr_insert_station(dballe::Transaction& transaction, int data_id, cons
     auto& t = v7::Transaction::downcast(transaction);
 
     // Insert all the attributes we found
-    a.insert(t, iattrs, v7::AttrV7::UPDATE);
+    a.insert(t, iattrs, v7::Attr::UPDATE);
 }
 
 void DB::attr_insert_data(dballe::Transaction& transaction, int data_id, const Values& attrs)
 {
-    v7::AttrV7& a = attr();
+    v7::Attr& a = attr();
     v7::bulk::InsertAttrsV7 iattrs;
     for (const auto& i : attrs)
         iattrs.add(i.second.var, data_id);
@@ -339,7 +339,7 @@ void DB::attr_insert_data(dballe::Transaction& transaction, int data_id, const V
     auto& t = v7::Transaction::downcast(transaction);
 
     // Insert all the attributes we found
-    a.insert(t, iattrs, v7::AttrV7::UPDATE);
+    a.insert(t, iattrs, v7::Attr::UPDATE);
 }
 
 void DB::attr_remove_station(dballe::Transaction& transaction, int data_id, const db::AttrList& qcs)

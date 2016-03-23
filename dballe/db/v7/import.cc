@@ -29,8 +29,8 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
 
     v7::Station& st = station();
     v7::LevTr& lt = lev_tr();
-    v7::DataV7& dd = data();
-    v7::AttrV7& dq = attr();
+    v7::Data& dd = data();
+    v7::Attr& dq = attr();
 
     auto& t = v7::Transaction::downcast(transaction);
 
@@ -74,7 +74,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
     if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || sstate->second.is_new)
     {
         // Prepare a bulk insert
-        v7::bulk::InsertV7 vars;
+        v7::bulk::InsertVars vars;
         vars.station = sstate->second;
         vars.datetime = Datetime(1000, 1, 1, 0, 0, 0);
         for (size_t i = 0; i < l_ana->data.size(); ++i)
@@ -87,7 +87,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
         }
 
         // Run the bulk insert
-        dd.insert(t, vars, (flags & DBA_IMPORT_OVERWRITE) ? v7::DataV7::UPDATE : v7::DataV7::IGNORE);
+        dd.insert(t, vars, (flags & DBA_IMPORT_OVERWRITE) ? v7::bulk::UPDATE : v7::bulk::IGNORE);
 
         // Insert the attributes
         if (flags & DBA_IMPORT_ATTRS)
@@ -104,12 +104,12 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
                 attrs.add_all(*v.var, v.id_data);
             }
             if (!attrs.empty())
-                dq.insert(t, attrs, v7::AttrV7::UPDATE);
+                dq.insert(t, attrs, v7::Attr::UPDATE);
 #endif
         }
     }
 
-    v7::bulk::InsertV7 vars;
+    v7::bulk::InsertVars vars;
     vars.station = sstate->second;
 
     // Date and time
@@ -138,7 +138,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
     }
 
     // Run the bulk insert
-    dd.insert(t, vars, (flags & DBA_IMPORT_OVERWRITE) ? v7::DataV7::UPDATE : v7::DataV7::IGNORE);
+    dd.insert(t, vars, (flags & DBA_IMPORT_OVERWRITE) ? v7::bulk::UPDATE : v7::bulk::IGNORE);
 
     // Insert the attributes
     if (flags & DBA_IMPORT_ATTRS)
@@ -155,7 +155,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
             attrs.add_all(*v.var, v.id_data);
         }
         if (!attrs.empty())
-            dq.insert(t, attrs, v7::AttrV7::UPDATE);
+            dq.insert(t, attrs, v7::Attr::UPDATE);
 #endif
     }
 }

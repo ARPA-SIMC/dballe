@@ -23,7 +23,7 @@ struct InsertAttrsV7;
 /**
  * Precompiled queries to manipulate the attr table
  */
-struct AttrV7
+struct Attr
 {
 public:
     enum UpdateMode {
@@ -32,7 +32,7 @@ public:
         ERROR,
     };
 
-    virtual ~AttrV7();
+    virtual ~Attr();
 
     /// Insert all attributes of the given variable
     void insert_attributes(dballe::Transaction& t, int id_data, const wreport::Var& var, UpdateMode update_mode=UPDATE);

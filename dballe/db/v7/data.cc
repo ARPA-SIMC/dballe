@@ -9,7 +9,9 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
-DataV7::~DataV7() {}
+StationData::~StationData() {}
+
+Data::~Data() {}
 
 namespace bulk {
 
@@ -22,7 +24,7 @@ void Item::format_flags(char* dest) const
     dest[4] = 0;
 }
 
-AnnotateVarsV7::AnnotateVarsV7(InsertV7& vars)
+AnnotateVarsV7::AnnotateVarsV7(InsertVars& vars)
     : vars(vars)
 {
     std::sort(vars.begin(), vars.end());
@@ -115,18 +117,35 @@ void AnnotateVarsV7::dump(FILE* out) const
     vars.dump(out);
 }
 
-void VarV7::dump(FILE* out) const
+void StationVar::dump(FILE* out) const
+{
+    char flags[5];
+    format_flags(flags);
+    fprintf(out, "data:%d flags:%s %01d%02d%03d(%d): %s\n",
+            id_data, flags, WR_VAR_FXY(var->code()), (int)(var->code()),
+            var->isset() ? var->enqc() : "(null)");
+}
+
+void Var::dump(FILE* out) const
 {
     char flags[5];
     format_flags(flags);
     fprintf(out, "ltr:%d data:%d flags:%s %01d%02d%03d(%d): %s\n",
-            id_levtr, id_data, flags,
-            WR_VAR_F(var->code()), WR_VAR_X(var->code()), WR_VAR_Y(var->code()),
-            (int)(var->code()),
+            id_levtr, id_data, flags, WR_VAR_FXY(var->code()), (int)(var->code()),
             var->isset() ? var->enqc() : "(null)");
 }
 
-void InsertV7::dump(FILE* out) const
+void InsertStationVars::dump(FILE* out) const
+{
+    fprintf(out, "ID station: %d\n", station.id);
+    for (unsigned i = 0; i < size(); ++i)
+    {
+        fprintf(out, "%3u/%3zd: ", i, size());
+        (*this)[i].dump(out);
+    }
+}
+
+void InsertVars::dump(FILE* out) const
 {
     fprintf(out, "ID station: %d, datetime: %04d-%02d-%02d %02d:%02d:%02d\n",
             station.id,

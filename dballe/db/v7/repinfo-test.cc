@@ -24,7 +24,7 @@ struct Fixture : V7DriverFixture
         if (conn->has_table("repinfo"))
             driver->exec_no_data("DELETE FROM repinfo");
 
-        repinfo = driver->create_repinfov7();
+        repinfo = driver->create_repinfo();
         int added, deleted, updated;
         repinfo->update(nullptr, &added, &deleted, &updated);
     }

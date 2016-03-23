@@ -64,7 +64,7 @@ bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& quer
 {
     auto tr = trace.trace_export_msgs(query);
     v7::Repinfo& ri = repinfo();
-    v7::AttrV7& at = attr();
+    v7::Attr& at = attr();
     v7::LevTr& lt = lev_tr();
 
     auto& t = v7::Transaction::downcast(transaction);

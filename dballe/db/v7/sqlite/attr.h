@@ -12,7 +12,7 @@ namespace sqlite {
 /**
  * Precompiled queries to manipulate the attr table
  */
-class SQLiteAttrV7 : public v7::AttrV7
+class SQLiteAttr : public v7::Attr
 {
 protected:
     /** DB connection. */
@@ -26,11 +26,11 @@ protected:
     dballe::sql::SQLiteStatement* ustm = nullptr;
 
 public:
-    SQLiteAttrV7(dballe::sql::SQLiteConnection& conn);
-    SQLiteAttrV7(const SQLiteAttrV7&) = delete;
-    SQLiteAttrV7(const SQLiteAttrV7&&) = delete;
-    SQLiteAttrV7& operator=(const SQLiteAttrV7&) = delete;
-    ~SQLiteAttrV7();
+    SQLiteAttr(dballe::sql::SQLiteConnection& conn);
+    SQLiteAttr(const SQLiteAttr&) = delete;
+    SQLiteAttr(const SQLiteAttr&&) = delete;
+    SQLiteAttr& operator=(const SQLiteAttr&) = delete;
+    ~SQLiteAttr();
 
     void insert(dballe::Transaction& t, v7::bulk::InsertAttrsV7& vars, UpdateMode update_mode=UPDATE) override;
     void read(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
