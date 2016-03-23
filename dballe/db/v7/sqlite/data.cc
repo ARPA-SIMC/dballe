@@ -17,6 +17,130 @@ namespace db {
 namespace v7 {
 namespace sqlite {
 
+SQLiteStationData::SQLiteStationData(SQLiteConnection& conn)
+    : conn(conn)
+{
+    // Create the statement for select id
+    sstm = conn.sqlitestatement(R"(
+        SELECT id, id_var, value
+          FROM station_data
+         WHERE id_station=?
+         ORDER BY id_var
+    )").release();
+}
+
+SQLiteStationData::~SQLiteStationData()
+{
+    if (sstm) delete sstm;
+}
+
+void SQLiteStationData::insert(dballe::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode)
+{
+    // Scan the result in parallel with the variable list, annotating changed
+    // items with their data ID
+    v7::bulk::AnnotateStationVars todo(vars);
+
+    if (!vars.station.is_new)
+    {
+        // Get the current status of variables for this context
+        sstm->bind_val(1, vars.station.id);
+        sstm->execute([&]() {
+            todo.annotate(
+                    sstm->column_int(0),
+                    sstm->column_int(1),
+                    sstm->column_string(2));
+        });
+    } else {
+        // TODO: Annotate is still needed, with the data already inserted in
+        // this transaction, so that we update if it conflicts
+    }
+    todo.annotate_end();
+
+    // We now have a todo-list
+
+    switch (update_mode)
+    {
+        case bulk::UPDATE:
+            if (todo.do_update)
+            {
+                auto update_stm = conn.sqlitestatement("UPDATE station_data SET value=? WHERE id=?");
+                for (auto& v: vars)
+                {
+                    if (!v.needs_update()) continue;
+                    // Warning: we do not know if v.var is a string, so the result of
+                    // enqc is only valid until another enqc is called
+                    update_stm->bind(v.var->enqc(), v.id_data);
+                    update_stm->execute();
+                    v.set_updated();
+                }
+            }
+            break;
+        case bulk::IGNORE:
+            break;
+        case bulk::ERROR:
+            if (todo.do_update)
+                throw error_consistency("refusing to overwrite existing data");
+    }
+
+    if (todo.do_insert)
+    {
+        Querybuf dq(512);
+        dq.appendf(R"(
+            INSERT INTO station_data (id_station, id_var, value)
+                 VALUES (%d, ?, ?)
+        )", vars.station.id);
+        auto insert = conn.sqlitestatement(dq);
+        for (auto& v: vars)
+        {
+            if (!v.needs_insert()) continue;
+            // Warning: we do not know if v.var is a string, so the result of
+            // enqc is only valid until another enqc is called
+            insert->bind(v.var->code(), v.var->enqc());
+            insert->execute();
+            v.id_data = conn.get_last_insert_id();
+            v.set_inserted();
+        }
+    }
+}
+
+void SQLiteStationData::remove(const v7::QueryBuilder& qb)
+{
+    auto stmd = conn.sqlitestatement("DELETE FROM station_data WHERE id=?");
+    auto stm = conn.sqlitestatement(qb.sql_query);
+    if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
+
+    // Iterate all the data_id results, deleting the related data and attributes
+    stm->execute([&]() {
+        // Compile the DELETE query for the data
+        stmd->bind_val(1, stm->column_int(0));
+        stmd->execute();
+    });
+}
+
+void SQLiteStationData::dump(FILE* out)
+{
+    int count = 0;
+    fprintf(out, "dump of table station_data:\n");
+    fprintf(out, " id   st   var\n");
+    auto stm = conn.sqlitestatement("SELECT id, id_station, id_var, value FROM data");
+    stm->execute([&]() {
+        Varcode code = stm->column_int(2);
+
+        fprintf(out, " %4d %4d %01d%02d%03d",
+                stm->column_int(0),
+                stm->column_int(1),
+                WR_VAR_FXY(code));
+        if (stm->column_isnull(3))
+            fprintf(out, "\n");
+        else
+            fprintf(out, " %s\n", stm->column_string(3));
+
+        ++count;
+    });
+    fprintf(out, "%d element%s in table data\n", count, count != 1 ? "s" : "");
+}
+
+
 SQLiteData::SQLiteData(SQLiteConnection& conn)
     : conn(conn)
 {
@@ -38,7 +162,7 @@ void SQLiteData::insert(dballe::Transaction& t, v7::bulk::InsertVars& vars, bulk
 {
     // Scan the result in parallel with the variable list, annotating changed
     // items with their data ID
-    v7::bulk::AnnotateVarsV7 todo(vars);
+    v7::bulk::AnnotateVars todo(vars);
 
     if (!vars.station.is_new)
     {
@@ -125,7 +249,7 @@ void SQLiteData::dump(FILE* out)
 {
     int count = 0;
     fprintf(out, "dump of table data:\n");
-    fprintf(out, " id   st   rep ltr  datetime              var\n");
+    fprintf(out, " id   st   ltr  datetime              var\n");
     auto stm = conn.sqlitestatement("SELECT id, id_station, id_lev_tr, datetime, id_var, value FROM data");
     stm->execute([&]() {
         int id_lev_tr = stm->column_int(2);
@@ -143,11 +267,11 @@ void SQLiteData::dump(FILE* out)
                 stm->column_int(1),
                 ltr,
                 datetime,
-                WR_VAR_F(code), WR_VAR_X(code), WR_VAR_Y(code));
+                WR_VAR_FXY(code));
         if (stm->column_isnull(5))
             fprintf(out, "\n");
         else
-            fprintf(out, " %s\n", stm->column_string(6));
+            fprintf(out, " %s\n", stm->column_string(5));
 
         ++count;
     });

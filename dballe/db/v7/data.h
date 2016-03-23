@@ -171,21 +171,44 @@ struct InsertVars : public std::vector<Var>
     void dump(FILE* out) const;
 };
 
+
+template<typename Inserter>
+struct Annotate
+{
+    Inserter& vars;
+    typename Inserter::iterator iter;
+    bool do_insert = false;
+    bool do_update = false;
+
+    Annotate(Inserter& vars);
+
+    void annotate_end();
+};
+
+
 /**
  * Helper class for annotating InsertV7 variables with the current status of
  * the database.
  */
-struct AnnotateVarsV7
+struct AnnotateStationVars : public Annotate<InsertStationVars>
 {
-    InsertVars& vars;
-    InsertVars::iterator iter;
-    bool do_insert = false;
-    bool do_update = false;
+    using Annotate::Annotate;
 
-    AnnotateVarsV7(InsertVars& vars);
+    bool annotate(int id_data, wreport::Varcode code, const char* value);
+
+    void dump(FILE* out) const;
+};
+
+
+/**
+ * Helper class for annotating InsertV7 variables with the current status of
+ * the database.
+ */
+struct AnnotateVars : public Annotate<InsertVars>
+{
+    using Annotate::Annotate;
 
     bool annotate(int id_data, int id_levtr, wreport::Varcode code, const char* value);
-    void annotate_end();
 
     void dump(FILE* out) const;
 };

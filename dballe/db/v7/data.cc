@@ -24,14 +24,86 @@ void Item::format_flags(char* dest) const
     dest[4] = 0;
 }
 
-AnnotateVarsV7::AnnotateVarsV7(InsertVars& vars)
+
+template<typename Inserter>
+Annotate<Inserter>::Annotate(Inserter& vars)
     : vars(vars)
 {
     std::sort(vars.begin(), vars.end());
     iter = vars.begin();
 }
 
-bool AnnotateVarsV7::annotate(int id_data, int id_levtr, Varcode code, const char* value)
+template<typename Inserter>
+void Annotate<Inserter>::annotate_end()
+{
+    // Mark all remaining variables as needing insert
+    for ( ; iter != vars.end(); ++iter)
+    {
+        //fprintf(stderr, "LEFTOVER: id_levtr: %d  varcode: %d  value: %s\n", iter->id_levtr, iter->var->code(), iter->var->value());
+        iter->set_needs_insert();
+        do_insert = true;
+    }
+}
+
+
+bool AnnotateStationVars::annotate(int id_data, Varcode code, const char* value)
+{
+    //fprintf(stderr, "ANNOTATE ");
+    while (iter != vars.end())
+    {
+        //fprintf(stderr, "id_data: %d/%d  id_levtr: %d/%d  varcode: %d/%d  value: %s/%s: ", id_data, iter->id_data, id_levtr, iter->id_levtr, code, iter->var->code(), value, iter->var->value());
+
+        // This variable is not on our list: stop here and wait for a new one
+        if (code < iter->var->code())
+        {
+            //fprintf(stderr, "varcode lower than ours, wait for next\n");
+            return true;
+        }
+
+        // iter points to a variable that is not currently in the DB
+        if (code > iter->var->code())
+        {
+            //fprintf(stderr, "varcode higher than ours, insert this\n");
+            do_insert = true;
+            iter->set_needs_insert();
+            ++iter;
+            continue;
+        }
+
+        // iter points to a variable that is also in the DB
+
+        // Annotate with the ID
+        //fprintf(stderr, "id_data=%d ", id_data);
+        iter->id_data = id_data;
+
+        // If the value is different, we need to update
+        if (strcmp(value, iter->var->enqc()) != 0)
+        {
+            //fprintf(stderr, "needs_update ");
+            iter->set_needs_update();
+            do_update = true;
+        }
+
+        // We processed this variable: stop here and wait for a new one
+        ++iter;
+        //fprintf(stderr, "wait for next\n");
+        return true;
+    }
+
+    // We have no more variables to consider: signal the caller that they can
+    // stop iterating if they wish.
+    //fprintf(stderr, "done.\n");
+    return false;
+}
+
+void AnnotateStationVars::dump(FILE* out) const
+{
+    fprintf(out, "Needs insert: %d, needs update: %d\n", do_insert, do_update);
+    vars.dump(out);
+}
+
+
+bool AnnotateVars::annotate(int id_data, int id_levtr, Varcode code, const char* value)
 {
     //fprintf(stderr, "ANNOTATE ");
     while (iter != vars.end())
@@ -100,22 +172,12 @@ bool AnnotateVarsV7::annotate(int id_data, int id_levtr, Varcode code, const cha
     return false;
 }
 
-void AnnotateVarsV7::annotate_end()
-{
-    // Mark all remaining variables as needing insert
-    for ( ; iter != vars.end(); ++iter)
-    {
-        //fprintf(stderr, "LEFTOVER: id_levtr: %d  varcode: %d  value: %s\n", iter->id_levtr, iter->var->code(), iter->var->value());
-        iter->set_needs_insert();
-        do_insert = true;
-    }
-}
-
-void AnnotateVarsV7::dump(FILE* out) const
+void AnnotateVars::dump(FILE* out) const
 {
     fprintf(out, "Needs insert: %d, needs update: %d\n", do_insert, do_update);
     vars.dump(out);
 }
+
 
 void StationVar::dump(FILE* out) const
 {
@@ -158,9 +220,10 @@ void InsertVars::dump(FILE* out) const
     }
 }
 
-}
+template class Annotate<InsertStationVars>;
+template class Annotate<InsertVars>;
 
 }
 }
 }
-
+}
