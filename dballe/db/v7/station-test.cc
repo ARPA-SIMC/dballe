@@ -51,43 +51,62 @@ class Tests : public FixtureTestCase<Fixture>
             auto& st = *f.station;
             db::v7::StationDesc sde1;
             db::v7::StationDesc sde2;
-            db::v7::StationState sst;
+            db::v7::State state;
+            db::v7::State::stations_t::iterator si;
 
             // Insert a mobile station
             sde1.rep = 1;
             sde1.coords = Coords(4500000, 1100000);
             sde1.ident = "ciao";
 
-            st.obtain_id(sde1, sst);
-            wassert(actual(sst.id) == 1);
-            wassert(actual(sst.is_new).istrue());
+            // Create
+            si = st.obtain_id(state, sde1);
+            wassert(actual(si->second.id) == 1);
+            wassert(actual(si->second.is_new).istrue());
 
-            st.obtain_id(sde1, sst);
-            wassert(actual(sst.id) == 1);
-            wassert(actual(sst.is_new).isfalse());
+            // Retrieve from cache, we know it was created in this transaction
+            si = st.obtain_id(state, sde1);
+            wassert(actual(si->second.id) == 1);
+            wassert(actual(si->second.is_new).istrue());
+
+            // Clear cache, "new in this transaction" state is lost, it will
+            // look it up in the database
+            state.clear();
+            si = st.obtain_id(state, sde1);
+            wassert(actual(si->second.id) == 1);
+            wassert(actual(si->second.is_new).isfalse());
 
             // Insert a fixed station
             sde2.rep = 1;
             sde2.coords = Coords(4600000, 1200000);
             sde2.ident = nullptr;
 
-            st.obtain_id(sde2, sst);
-            wassert(actual(sst.id) == 2);
-            wassert(actual(sst.is_new).istrue());
+            // Create
+            si = st.obtain_id(state, sde2);
+            wassert(actual(si->second.id) == 2);
+            wassert(actual(si->second.is_new).istrue());
 
-            st.obtain_id(sde2, sst);
-            wassert(actual(sst.id) == 2);
-            wassert(actual(sst.is_new).isfalse());
+            // Retrieve from cache, we know it was created in this transaction
+            si = st.obtain_id(state, sde2);
+            wassert(actual(si->second.id) == 2);
+            wassert(actual(si->second.is_new).istrue());
+
+            // Clear cache, "new in this transaction" state is lost, it will
+            // look it up in the database
+            state.clear();
+            si = st.obtain_id(state, sde2);
+            wassert(actual(si->second.id) == 2);
+            wassert(actual(si->second.is_new).isfalse());
 
             // Get the ID of the first station
-            st.get_id(sde1, sst);
-            wassert(actual(sst.id) == 1);
-            wassert(actual(sst.is_new).isfalse());
+            si = st.get_id(state, sde1);
+            wassert(actual(si->second.id) == 1);
+            wassert(actual(si->second.is_new).isfalse());
 
             // Get the ID of the second station
-            st.get_id(sde2, sst);
-            wassert(actual(sst.id) == 2);
-            wassert(actual(sst.is_new).isfalse());
+            si = st.get_id(state, sde2);
+            wassert(actual(si->second.id) == 2);
+            wassert(actual(si->second.is_new).isfalse());
         });
     }
 };

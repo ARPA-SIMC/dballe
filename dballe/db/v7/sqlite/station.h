@@ -33,7 +33,7 @@ protected:
     dballe::sql::SQLiteStatement* istm = nullptr;
 
     /// Lookup the ID of a station, returning true if it was found, false if not
-    bool maybe_get_id(int rep, int lat, int lon, const char* ident, int* id);
+    bool maybe_get_id(const StationDesc& st, int* id);
 
     /// Run stm, read its output and generate variables to send to dest
     void read_station_vars(dballe::sql::SQLiteStatement& stm, std::function<void(std::unique_ptr<wreport::Var>)> dest);
@@ -45,8 +45,8 @@ public:
     SQLiteStationBase(const SQLiteStationBase&&) = delete;
     SQLiteStationBase& operator=(const SQLiteStationBase&) = delete;
 
-    void get_id(const StationDesc& desc, StationState& state) override;
-    void obtain_id(const StationDesc& desc, StationState& state) override;
+    State::stations_t::iterator get_id(State& st, const StationDesc& desc) override;
+    State::stations_t::iterator obtain_id(State& st, const StationDesc& desc) override;
 
     void get_station_vars(int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
     void add_station_vars(int id_station, Record& rec) override;

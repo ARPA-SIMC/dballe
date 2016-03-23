@@ -57,6 +57,9 @@ struct StationDesc
     int rep;
     Coords coords;
     Ident ident;
+
+    int compare(const StationDesc&) const;
+    bool operator<(const StationDesc& o) const { return compare(o) < 0; }
 };
 
 struct StationState
@@ -81,7 +84,12 @@ struct StationState
  */
 struct State
 {
-    std::map<StationDesc, StationState> stations;
+    typedef std::map<StationDesc, StationState> stations_t;
+
+    stations_t stations;
+
+    /// Clear the state, removing all cached data
+    void clear();
 };
 
 }

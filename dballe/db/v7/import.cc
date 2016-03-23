@@ -69,14 +69,13 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
             station_desc.rep = rep_cod_from_memo(Msg::repmemo_from_type(msg.type));
     }
 
-    StationState station_state;
-    st.obtain_id(station_desc, station_state);
+    auto sstate = st.obtain_id(t.state, station_desc);
 
-    if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || station_state.is_new)
+    if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || sstate->second.is_new)
     {
         // Prepare a bulk insert
         v7::bulk::InsertV7 vars;
-        vars.id_station = station_state.id;
+        vars.id_station = sstate->second.id;
         vars.datetime = Datetime(1000, 1, 1, 0, 0, 0);
         for (size_t i = 0; i < l_ana->data.size(); ++i)
         {
@@ -111,7 +110,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
     }
 
     v7::bulk::InsertV7 vars;
-    vars.id_station = station_state.id;
+    vars.id_station = sstate->second.id;
 
     // Date and time
     if (msg.get_datetime().is_missing())

@@ -43,20 +43,20 @@ SQLiteStationBase::~SQLiteStationBase()
     delete istm;
 }
 
-bool SQLiteStationBase::maybe_get_id(int rep, int lat, int lon, const char* ident, int* id)
+bool SQLiteStationBase::maybe_get_id(const StationDesc& st, int* id)
 {
     SQLiteStatement* s;
-    if (ident)
+    if (st.ident.get())
     {
-        smstm->bind_val(1, rep);
-        smstm->bind_val(2, lat);
-        smstm->bind_val(3, lon);
-        smstm->bind_val(4, ident);
+        smstm->bind_val(1, st.rep);
+        smstm->bind_val(2, st.coords.lat);
+        smstm->bind_val(3, st.coords.lon);
+        smstm->bind_val(4, st.ident.get());
         s = smstm;
     } else {
-        sfstm->bind_val(1, rep);
-        sfstm->bind_val(2, lat);
-        sfstm->bind_val(3, lon);
+        sfstm->bind_val(1, st.rep);
+        sfstm->bind_val(2, st.coords.lat);
+        sfstm->bind_val(3, st.coords.lon);
         s = sfstm;
     }
     bool found = false;
@@ -67,22 +67,34 @@ bool SQLiteStationBase::maybe_get_id(int rep, int lat, int lon, const char* iden
     return found;
 }
 
-void SQLiteStationBase::get_id(const StationDesc& desc, StationState& state)
+State::stations_t::iterator SQLiteStationBase::get_id(State& st, const StationDesc& desc)
 {
-    if (maybe_get_id(desc.rep, desc.coords.lat, desc.coords.lon, desc.ident.get(), &state.id))
+    auto res = st.stations.find(desc);
+    if (res != st.stations.end())
+        return res;
+
+    StationState state;
+    if (maybe_get_id(desc, &state.id))
     {
         state.is_new = false;
-        return;
+        auto res = st.stations.insert(make_pair(desc, state));
+        return res.first;
     }
     throw error_notfound("station not found in the database");
 }
 
-void SQLiteStationBase::obtain_id(const StationDesc& desc, StationState& state)
+State::stations_t::iterator SQLiteStationBase::obtain_id(State& st, const StationDesc& desc)
 {
-    if (maybe_get_id(desc.rep, desc.coords.lat, desc.coords.lon, desc.ident.get(), &state.id))
+    auto res = st.stations.find(desc);
+    if (res != st.stations.end())
+        return res;
+
+    StationState state;
+    if (maybe_get_id(desc, &state.id))
     {
         state.is_new = false;
-        return;
+        auto res = st.stations.insert(make_pair(desc, state));
+        return res.first;
     }
 
     // If no station was found, insert a new one
@@ -96,6 +108,8 @@ void SQLiteStationBase::obtain_id(const StationDesc& desc, StationState& state)
     istm->execute();
     state.id = conn.get_last_insert_id();
     state.is_new = true;
+    auto new_res = st.stations.insert(make_pair(desc, state));
+    return new_res.first;
 }
 
 void SQLiteStationBase::read_station_vars(SQLiteStatement& stm, std::function<void(std::unique_ptr<wreport::Var>)> dest)

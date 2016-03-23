@@ -52,6 +52,7 @@ struct Sequence;
 namespace db {
 
 namespace v7 {
+struct State;
 struct Driver;
 struct Repinfo;
 struct Station;
@@ -119,7 +120,7 @@ protected:
      * @returns
      *   The station ID
      */
-    int obtain_station(const dballe::Station& st, bool can_add=true);
+    int obtain_station(v7::State& state, const dballe::Station& st, bool can_add=true);
 
 public:
     virtual ~DB();

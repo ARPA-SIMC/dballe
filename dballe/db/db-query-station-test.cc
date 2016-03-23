@@ -183,11 +183,11 @@ class Tests : public FixtureTestCase<Fixture>
                     if (auto d = dynamic_cast<v7::DB*>(f.db))
                     {
                         db::v7::StationDesc sde;
-                        db::v7::StationState sst;
+                        db::v7::State state;
                         sde.rep = 1;
                         sde.coords = Coords(1100000, 4500000);
                         sde.ident = "ciao";
-                        d->station().obtain_id(sde, sst);
+                        d->station().obtain_id(state, sde);
                     }
                     break;
                 case V5: throw error_unimplemented("v5 db is not supported");

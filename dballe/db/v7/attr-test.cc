@@ -35,21 +35,22 @@ struct Fixture : V7DriverFixture
 
         db::v7::StationDesc sde1;
         db::v7::StationDesc sde2;
-        db::v7::StationState sst;
+        db::v7::State state;
+        db::v7::State::stations_t::iterator si;
 
         // Insert a mobile station
         sde1.rep = 1;
         sde1.coords = Coords(4500000, 1100000);
         sde1.ident = "ciao";
-        st->obtain_id(sde1, sst);
-        wassert(actual(sst.id) == 1);
+        si = st->obtain_id(state, sde1);
+        wassert(actual(si->second.id) == 1);
 
         // Insert a fixed station
         sde2.rep = 1;
         sde2.coords = Coords(4600000, 1200000);
         sde2.ident = nullptr;
-        st->obtain_id(sde2, sst);
-        wassert(actual(sst.id) == 2);
+        si = st->obtain_id(state, sde2);
+        wassert(actual(si->second.id) == 2);
 
         // Insert a lev_tr
         wassert(actual(lt->obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);
