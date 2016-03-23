@@ -192,14 +192,11 @@ int DB::obtain_station(const dballe::Station& st, bool can_add)
 
 void DB::insert_station_data(dballe::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add)
 {
-    v7::Repinfo& ri = repinfo();
     v7::DataV7& d = data();
 
     v7::bulk::InsertV7 vars;
     // Insert the station data, and get the ID
     vars.id_station = vals.info.ana_id = obtain_station(vals.info, station_can_add);
-    // Get the ID of the report
-    vars.id_report = ri.obtain_id(vals.info.report.c_str());
 
     // Hardcoded values for station variables
     vars.datetime = Datetime(1000, 1, 1, 0, 0, 0);
@@ -224,14 +221,11 @@ void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool ca
     if (vals.values.empty())
         throw error_notfound("no variables found in input record");
 
-    v7::Repinfo& ri = repinfo();
     v7::DataV7& d = data();
 
     v7::bulk::InsertV7 vars;
     // Insert the station data, and get the ID
     vars.id_station = vals.info.ana_id = obtain_station(vals.info, station_can_add);
-    // Get the ID of the report
-    vars.id_report = ri.obtain_id(vals.info.report.c_str());
     // Set the date from the record contents
     vars.datetime = vals.info.datetime;
     // Insert the lev_tr data, and get the ID

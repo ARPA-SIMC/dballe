@@ -128,8 +128,8 @@ void VarV7::dump(FILE* out) const
 
 void InsertV7::dump(FILE* out) const
 {
-    fprintf(out, "ID station: %d, ID report: %d, datetime: %04d-%02d-%02d %02d:%02d:%02d\n",
-            id_station, id_report,
+    fprintf(out, "ID station: %d, datetime: %04d-%02d-%02d %02d:%02d:%02d\n",
+            id_station,
             datetime.year, datetime.month, datetime.day,
             datetime.hour, datetime.minute, datetime.second);
     for (unsigned i = 0; i < size(); ++i)

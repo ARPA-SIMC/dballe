@@ -107,7 +107,6 @@ struct VarV7 : public Item
 struct InsertV7 : public std::vector<VarV7>
 {
     int id_station;
-    int id_report;
     Datetime datetime;
 
     void add(const wreport::Var* var, int id_levtr)

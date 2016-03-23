@@ -79,7 +79,6 @@ class Tests : public FixtureTestCase<Fixture>
 
             auto insert_sample1 = [&](bulk::InsertV7& vars, int value, DataV7::UpdateMode update) {
                 vars.id_station = 1;
-                vars.id_report = 1;
                 vars.datetime = Datetime(2001, 2, 3, 4, 5, 6);
                 var.seti(value);
                 vars.add(&var, 1);
@@ -101,7 +100,6 @@ class Tests : public FixtureTestCase<Fixture>
             {
                 bulk::InsertV7 vars;
                 vars.id_station = 2;
-                vars.id_report = 2;
                 vars.datetime = Datetime(2002, 3, 4, 5, 6, 7);
                 Var var(varinfo(WR_VAR(0, 1, 2)), 234);
                 vars.add(&var, 2);
