@@ -1,6 +1,7 @@
 #include "db/tests.h"
-#include "db/v7/db.h"
 #include "sql/sql.h"
+#include "db/v7/db.h"
+#include "db/v7/state.h"
 #include "db/v7/driver.h"
 #include "db/v7/levtr.h"
 #include "config.h"
@@ -41,11 +42,15 @@ class Tests : public FixtureTestCase<Fixture>
         add_method("insert", [](Fixture& f) {
             auto& lt = *f.levtr;
 
+            db::v7::State state;
+
             // Insert a lev_tr
-            wassert(actual(lt.obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);
+            auto i = lt.obtain_id(state, db::v7::LevTrDesc(Level(1, 2, 0, 3), Trange(4, 5, 6)));
+            wassert(actual(i->second.id) == 1);
 
             // Insert another lev_tr
-            wassert(actual(lt.obtain_id(Level(2, 3, 1, 4), Trange(5, 6, 7))) == 2);
+            i = lt.obtain_id(state, db::v7::LevTrDesc(Level(2, 3, 1, 4), Trange(5, 6, 7)));
+            wassert(actual(i->second.id) == 2);
         });
     }
 };

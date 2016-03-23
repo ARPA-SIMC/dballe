@@ -32,7 +32,7 @@ namespace v7 {
 DB::DB(unique_ptr<Connection> conn)
     : conn(conn.release()),
       m_driver(v7::Driver::create(*this->conn).release()),
-      m_repinfo(0), m_station(0), m_lev_tr(0), m_lev_tr_cache(0),
+      m_repinfo(0), m_station(0), m_lev_tr(0),
       m_data(0), m_attr(0)
 {
     init_after_connect();
@@ -52,7 +52,6 @@ DB::~DB()
 {
     delete m_attr;
     delete m_data;
-    delete m_lev_tr_cache;
     delete m_lev_tr;
     delete m_station;
     delete m_repinfo;
@@ -84,13 +83,6 @@ v7::LevTr& DB::lev_tr()
     if (m_lev_tr == NULL)
         m_lev_tr = m_driver->create_levtrv7().release();
     return *m_lev_tr;
-}
-
-v7::LevTrCache& DB::lev_tr_cache()
-{
-    if (m_lev_tr_cache == NULL)
-        m_lev_tr_cache = v7::LevTrCache::create(lev_tr()).release();
-    return *m_lev_tr_cache;
 }
 
 v7::DataV7& DB::data()
@@ -132,8 +124,6 @@ void DB::disappear()
         delete m_repinfo;
         m_repinfo = 0;
     }
-    if (m_lev_tr_cache)
-        m_lev_tr_cache->invalidate();
 }
 
 void DB::reset(const char* repinfo_file)
@@ -233,11 +223,11 @@ void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool ca
     // Set the date from the record contents
     vars.datetime = vals.info.datetime;
     // Insert the lev_tr data, and get the ID
-    int id_levtr = lev_tr().obtain_id(vals.info.level, vals.info.trange);
+    auto ltri = lev_tr().obtain_id(t.state, LevTrDesc(vals.info.level, vals.info.trange));
 
     // Add all the variables we find
     for (auto& i: vals.values)
-        vars.add(i.second.var, id_levtr);
+        vars.add(i.second.var, ltri->second.id);
 
     // Do the insert
     v7::DataV7& d = data();
@@ -266,8 +256,6 @@ void DB::remove_all(dballe::Transaction& transaction)
 {
     auto tr = trace.trace_remove_all();
     driver().remove_all_v7();
-    if (m_lev_tr_cache)
-        m_lev_tr_cache->invalidate();
     tr->done();
 }
 
@@ -276,8 +264,6 @@ void DB::vacuum()
     auto tr = trace.trace_vacuum();
     auto t = conn->transaction();
     driver().vacuum_v7();
-    if (m_lev_tr_cache)
-        m_lev_tr_cache->invalidate();
     t->commit();
     tr->done();
 }
@@ -400,24 +386,9 @@ void DB::dump(FILE* out)
     repinfo().dump(out);
     station().dump(out);
     lev_tr().dump(out);
-    lev_tr_cache().dump(out);
     data().dump(out);
     attr().dump(out);
 }
-
-#if 0
-    {
-        /* List DSNs */
-        char dsn[100], desc[100];
-        short int len_dsn, len_desc, next;
-
-        for (next = SQL_FETCH_FIRST;
-                SQLDataSources(pc.od_env, next, dsn, sizeof(dsn),
-                    &len_dsn, desc, sizeof(desc), &len_desc) == SQL_SUCCESS;
-                next = SQL_FETCH_NEXT)
-            printf("DSN %s (%s)\n", dsn, desc);
-    }
-#endif
 
 }
 }

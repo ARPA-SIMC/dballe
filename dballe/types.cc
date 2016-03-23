@@ -944,7 +944,7 @@ int Level::print(FILE* out, const char* undef, const char* end) const
     if (l2 == MISSING_INT)
         res += fprintf(out, "%s,", undef);
     else
-        res += fprintf(out, "%d,", l2);
+        res += fprintf(out, "%d", l2);
     res += fprintf(out, "%s", end);
     return res;
 }
@@ -1094,7 +1094,7 @@ int Trange::print(FILE* out, const char* undef, const char* end) const
     if (p2 == MISSING_INT)
         res += fprintf(out, "%s,", undef);
     else
-        res += fprintf(out, "%d,", p2);
+        res += fprintf(out, "%d", p2);
     res += fprintf(out, "%s", end);
     return res;
 }

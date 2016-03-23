@@ -37,6 +37,7 @@ struct Fixture : V7DriverFixture
         db::v7::StationDesc sde2;
         db::v7::State state;
         db::v7::State::stations_t::iterator si;
+        db::v7::State::levels_t::iterator li;
 
         // Insert a mobile station
         sde1.rep = 1;
@@ -53,10 +54,12 @@ struct Fixture : V7DriverFixture
         wassert(actual(si->second.id) == 2);
 
         // Insert a lev_tr
-        wassert(actual(lt->obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);
+        li = lt->obtain_id(state, db::v7::LevTrDesc(Level(1, 2, 0, 3), Trange(4, 5, 6)));
+        wassert(actual(li->second.id) == 1);
 
         // Insert another lev_tr
-        wassert(actual(lt->obtain_id(Level(2, 3, 1, 4), Trange(5, 6, 7))) == 2);
+        li = lt->obtain_id(state, db::v7::LevTrDesc(Level(2, 3, 1, 4), Trange(5, 6, 7)));
+        wassert(actual(li->second.id) == 2);
 
         auto t = conn->transaction();
         // Insert a datum

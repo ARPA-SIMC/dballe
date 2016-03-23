@@ -127,13 +127,13 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
         if (is_ana_level) continue;
 
         // Get the database ID of the lev_tr
-        int id_lev_tr = lt.obtain_id(ctx.level, ctx.trange);
+        auto levtri = lt.obtain_id(t.state, LevTrDesc(ctx.level, ctx.trange));
 
         for (size_t j = 0; j < ctx.data.size(); ++j)
         {
             const Var* var = ctx.data[j];
             if (not var->isset()) continue;
-            vars.add(var, id_lev_tr);
+            vars.add(var, levtri->second.id);
         }
     }
 

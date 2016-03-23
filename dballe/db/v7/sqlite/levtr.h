@@ -40,8 +40,6 @@ protected:
     /** Precompiled delete statement */
     dballe::sql::SQLiteStatement* dstm = nullptr;
 
-    DBRow working_row;
-
 public:
     SQLiteLevTrV7(dballe::sql::SQLiteConnection& conn);
     SQLiteLevTrV7(const LevTr&) = delete;
@@ -49,14 +47,13 @@ public:
     SQLiteLevTrV7& operator=(const SQLiteLevTrV7&) = delete;
     ~SQLiteLevTrV7();
 
-    /**
-     * Return the ID for the given Level and Trange, adding it to the database
-     * if it does not already exist
-     */
-    int obtain_id(const Level& lev, const Trange& tr) override;
-
+    void prefetch_ids(const std::set<int>& ids, std::map<int, LevTrDesc>& data) override;
+    State::levels_t::iterator lookup_id(State& st, int id) override;
+    State::levels_t::iterator obtain_id(State& state, const LevTrDesc& desc) override;
+#if 0
     const DBRow* read(int id) override;
     void read_all(std::function<void(const DBRow&)> dest) override;
+#endif
 
     /**
      * Dump the entire contents of the table to an output stream

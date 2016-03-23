@@ -2,6 +2,7 @@
 #include "cursor.h"
 #include "qbuilder.h"
 #include "dballe/sql/sql.h"
+#include "dballe/db/v7/transaction.h"
 #include "dballe/db/v7/driver.h"
 #include "dballe/db/v7/repinfo.h"
 #include "dballe/db/v7/station.h"
@@ -64,7 +65,9 @@ bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& quer
     auto tr = trace.trace_export_msgs(query);
     v7::Repinfo& ri = repinfo();
     v7::AttrV7& at = attr();
-    v7::LevTrCache& ltrc = lev_tr_cache();
+    v7::LevTr& lt = lev_tr();
+
+    auto& t = v7::Transaction::downcast(transaction);
 
     // Message being built
     unique_ptr<Msg> msg;
@@ -164,7 +167,7 @@ bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& quer
         {
             msg->set(move(var), Level(), Trange());
         } else {
-            msg::Context* ctx = ltrc.to_msg(sqlrec.out_id_ltr, *msg);
+            msg::Context* ctx = lt.to_msg(t.state, sqlrec.out_id_ltr, *msg);
             if (ctx)
                 ctx->set(move(var));
         }

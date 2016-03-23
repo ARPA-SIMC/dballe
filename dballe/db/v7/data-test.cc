@@ -47,6 +47,7 @@ struct Fixture : V7DriverFixture
         driver->create_repinfov7()->update(nullptr, &added, &deleted, &updated);
 
         db::v7::State::stations_t::iterator si;
+        db::v7::State::levels_t::iterator li;
 
         // Insert a mobile station
         si = st->obtain_id(state, sde1);
@@ -57,10 +58,12 @@ struct Fixture : V7DriverFixture
         wassert(actual(si->second.id) == 2);
 
         // Insert a lev_tr
-        wassert(actual(lt->obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);
+        li = lt->obtain_id(state, db::v7::LevTrDesc(Level(1, 2, 0, 3), Trange(4, 5, 6)));
+        wassert(actual(li->second.id) == 1);
 
         // Insert another lev_tr
-        wassert(actual(lt->obtain_id(Level(2, 3, 1, 4), Trange(5, 6, 7))) == 2);
+        li = lt->obtain_id(state, db::v7::LevTrDesc(Level(2, 3, 1, 4), Trange(5, 6, 7)));
+        wassert(actual(li->second.id) == 2);
     }
 
     void test_setup()
@@ -91,13 +94,13 @@ class Tests : public FixtureTestCase<Fixture>
                 vars.datetime = Datetime(2001, 2, 3, 4, 5, 6);
                 var.seti(value);
                 vars.add(&var, 1);
-                da.insert(*t, vars, update);
+                wassert(da.insert(*t, vars, update));
             };
 
             // Insert a datum
             {
                 bulk::InsertV7 vars;
-                insert_sample1(vars, 123, DataV7::ERROR);
+                wassert(insert_sample1(vars, 123, DataV7::ERROR));
                 wassert(actual(vars[0].id_data) == 1);
                 wassert(actual(vars[0].needs_insert()).isfalse());
                 wassert(actual(vars[0].inserted()).istrue());
@@ -112,7 +115,7 @@ class Tests : public FixtureTestCase<Fixture>
                 vars.datetime = Datetime(2002, 3, 4, 5, 6, 7);
                 Var var(varinfo(WR_VAR(0, 1, 2)), 234);
                 vars.add(&var, 2);
-                da.insert(*t, vars, DataV7::ERROR);
+                wassert(da.insert(*t, vars, DataV7::ERROR));
                 wassert(actual(vars[0].id_data) == 2);
                 wassert(actual(vars[0].needs_insert()).isfalse());
                 wassert(actual(vars[0].inserted()).istrue());
@@ -123,7 +126,7 @@ class Tests : public FixtureTestCase<Fixture>
             // Reinsert the first datum: it should find its ID and do nothing
             {
                 bulk::InsertV7 vars;
-                insert_sample1(vars, 123, DataV7::ERROR);
+                wassert(insert_sample1(vars, 123, DataV7::ERROR));
                 wassert(actual(vars[0].id_data) == 1);
                 wassert(actual(vars[0].needs_insert()).isfalse());
                 wassert(actual(vars[0].inserted()).isfalse());
@@ -135,7 +138,7 @@ class Tests : public FixtureTestCase<Fixture>
             // overwrite: it should find its ID and do nothing
             {
                 bulk::InsertV7 vars;
-                insert_sample1(vars, 125, DataV7::IGNORE);
+                wassert(insert_sample1(vars, 125, DataV7::IGNORE));
                 wassert(actual(vars[0].id_data) == 1);
                 wassert(actual(vars[0].needs_insert()).isfalse());
                 wassert(actual(vars[0].inserted()).isfalse());

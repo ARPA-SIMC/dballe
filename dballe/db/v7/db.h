@@ -58,7 +58,6 @@ struct Driver;
 struct Repinfo;
 struct Station;
 struct LevTr;
-struct LevTrCache;
 struct DataV7;
 struct AttrV7;
 }
@@ -95,8 +94,6 @@ protected:
     struct v7::Station* m_station;
     /** Level/timerange information */
     struct v7::LevTr* m_lev_tr;
-    /// Level/timerange cache
-    struct v7::LevTrCache* m_lev_tr_cache;
     /** Variable data */
     struct v7::DataV7* m_data;
     /** Variable attributes */
@@ -139,9 +136,6 @@ public:
 
     /// Access the lev_tr table
     v7::LevTr& lev_tr();
-
-    /// Access the lev_tr cache
-    v7::LevTrCache& lev_tr_cache();
 
     /// Access the data table
     v7::DataV7& data();

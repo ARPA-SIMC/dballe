@@ -80,6 +80,7 @@ State::stations_t::iterator SQLiteStationBase::lookup_id(State& st, int id)
 
     sstm->bind_val(1, id);
 
+    bool found = false;
     State::stations_t::iterator res;
     sstm->execute_one([&]() {
         StationDesc desc;
@@ -91,9 +92,13 @@ State::stations_t::iterator SQLiteStationBase::lookup_id(State& st, int id)
         StationState sst;
         sst.id = id;
         sst.is_new = false;
-        auto new_res = st.stations.insert(make_pair(desc, sst));
-        res = new_res.first;
+        res = st.add_station(desc, sst);
+        found = true;
     });
+
+    if (!found)
+        error_notfound::throwf("station with id %d not found in the database", id);
+
     return res;
 }
 
@@ -107,8 +112,7 @@ State::stations_t::iterator SQLiteStationBase::get_id(State& st, const StationDe
     if (maybe_get_id(desc, &state.id))
     {
         state.is_new = false;
-        auto res = st.stations.insert(make_pair(desc, state));
-        return res.first;
+        return st.add_station(desc, state);
     }
     throw error_notfound("station not found in the database");
 }
@@ -123,8 +127,7 @@ State::stations_t::iterator SQLiteStationBase::obtain_id(State& st, const Statio
     if (maybe_get_id(desc, &state.id))
     {
         state.is_new = false;
-        auto res = st.stations.insert(make_pair(desc, state));
-        return res.first;
+        return st.add_station(desc, state);
     }
 
     // If no station was found, insert a new one
@@ -138,8 +141,7 @@ State::stations_t::iterator SQLiteStationBase::obtain_id(State& st, const Statio
     istm->execute();
     state.id = conn.get_last_insert_id();
     state.is_new = true;
-    auto new_res = st.stations.insert(make_pair(desc, state));
-    return new_res.first;
+    return st.add_station(desc, state);
 }
 
 void SQLiteStationBase::read_station_vars(SQLiteStatement& stm, std::function<void(std::unique_ptr<wreport::Var>)> dest)

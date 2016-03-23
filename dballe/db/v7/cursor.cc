@@ -59,6 +59,9 @@ struct Base : public Interface
     /// Results from the query
     Structbuf<v7::SQLRecordV7> results;
 
+    /// Prefetched mapping between levtr IDs and their values
+    std::map<int, LevTrDesc> levtrs;
+
     /// Current result element being iterated
     int cur = -1;
 
@@ -93,15 +96,6 @@ struct Base : public Interface
 
     void discard_rest() override { cur = results.size(); }
 
-#if 0
-    /**
-     * Query attributes for the current variable
-     */
-    void query_attrs(std::function<void(std::unique_ptr<wreport::Var>&&)> dest) override;
-    void attr_insert(const Values& attrs) override;
-    void attr_remove(const AttrList& qcs) override;
-#endif
-
     int get_station_id() const override { return results[cur].out_ana_id; }
     double get_lat() const override { return (double)results[cur].out_lat / 100000.0; }
     double get_lon() const override { return (double)results[cur].out_lon / 100000.0; }
@@ -116,6 +110,13 @@ struct Base : public Interface
         return db.repinfo().get_rep_memo(results[cur].out_rep_cod);
     }
 
+    const LevTrDesc& get_levtr(int id) const
+    {
+        auto i = levtrs.find(id);
+        if (i == levtrs.end()) error_notfound::throwf("levtrs with id %d not found", id);
+        return i->second;
+    }
+
     /**
      * Iterate the cursor until the end, returning the number of items.
      *
@@ -126,11 +127,15 @@ struct Base : public Interface
     /// Run the query in qb and fill results with its output
     virtual void load(const QueryBuilder& qb)
     {
+        set<int> ids;
         db.driver().run_built_query_v7(qb, [&](v7::SQLRecordV7& rec) {
             results.append(rec);
+            if (qb.select_varinfo) ids.insert(rec.out_id_ltr);
         });
         // We are done adding, prepare the structbuf for reading
         results.ready_to_read();
+        // And prefetch the LevTr data
+        db.lev_tr().prefetch_ids(ids, levtrs);
     }
 
     void to_record_pseudoana(Record& rec)
@@ -156,7 +161,11 @@ struct Base : public Interface
     void to_record_ltr(Record& rec)
     {
         if (results[cur].out_id_ltr != -1)
-            db.lev_tr_cache().to_rec(results[cur].out_id_ltr, rec);
+        {
+            auto& ltr = levtrs[results[cur].out_id_ltr];
+            rec.set(ltr.level);
+            rec.set(ltr.trange);
+        }
         else
         {
             rec.unset("leveltype1");
@@ -193,8 +202,7 @@ struct Base : public Interface
 
 struct Stations : public Base<CursorStation>
 {
-    Stations(DB& db, unsigned int modifiers)
-        : Base<CursorStation>(db, modifiers) {}
+    using Base::Base;
     ~Stations() {}
 
     void to_record(Record& rec) override
@@ -226,8 +234,7 @@ struct Stations : public Base<CursorStation>
 
 struct StationData : public Base<CursorStationData>
 {
-    StationData(DB& db, unsigned int modifiers)
-        : Base<CursorStationData>(db, modifiers) {}
+    using Base::Base;
     ~StationData() {}
     void to_record(Record& rec) override
     {
@@ -269,8 +276,7 @@ struct StationData : public Base<CursorStationData>
 
 struct Data : public Base<CursorData>
 {
-    Data(DB& db, unsigned int modifiers)
-        : Base<CursorData>(db, modifiers) {}
+    using Base::Base;
     ~Data() {}
     void to_record(Record& rec) override
     {
@@ -308,8 +314,8 @@ struct Data : public Base<CursorData>
         return count;
     }
 
-    Level get_level() const override { return db.lev_tr_cache().to_level(results[cur].out_id_ltr); }
-    Trange get_trange() const override { return db.lev_tr_cache().to_trange(results[cur].out_id_ltr); }
+    Level get_level() const override { return get_levtr(results[cur].out_id_ltr).level; }
+    Trange get_trange() const override { return get_levtr(results[cur].out_id_ltr).trange; }
     Datetime get_datetime() const override { return results[cur].out_datetime; }
     wreport::Varcode get_varcode() const override { return (wreport::Varcode)results[cur].out_varcode; }
     wreport::Var get_var() const override { return Var(varinfo(results[cur].out_varcode), results[cur].out_value); }
@@ -335,8 +341,7 @@ void Cursor::attr_remove(const AttrList& qcs)
 
 struct Summary : public Base<CursorSummary>
 {
-    Summary(DB& db, unsigned int modifiers)
-        : Base<CursorSummary>(db, modifiers) {}
+    using Base::Base;
     ~Summary() {}
     void to_record(Record& rec) override
     {
@@ -375,8 +380,8 @@ struct Summary : public Base<CursorSummary>
         return count;
     }
 
-    Level get_level() const override { return db.lev_tr_cache().to_level(results[cur].out_id_ltr); }
-    Trange get_trange() const override { return db.lev_tr_cache().to_trange(results[cur].out_id_ltr); }
+    Level get_level() const override { return get_levtr(results[cur].out_id_ltr).level; }
+    Trange get_trange() const override { return get_levtr(results[cur].out_id_ltr).trange; }
     DatetimeRange get_datetimerange() const override
     {
         return DatetimeRange(results[cur].out_datetime, results[cur].out_datetimemax);
@@ -387,8 +392,7 @@ struct Summary : public Base<CursorSummary>
 
 struct Best : public Base<CursorData>
 {
-    Best(DB& db, unsigned int modifiers)
-        : Base<CursorData>(db, modifiers) {}
+    using Base::Base;
     ~Best() {}
 
     void to_record(Record& rec) override
@@ -420,8 +424,8 @@ struct Best : public Base<CursorData>
         return count;
     }
 
-    Level get_level() const override { return db.lev_tr_cache().to_level(results[cur].out_id_ltr); }
-    Trange get_trange() const override { return db.lev_tr_cache().to_trange(results[cur].out_id_ltr); }
+    Level get_level() const override { return get_levtr(results[cur].out_id_ltr).level; }
+    Trange get_trange() const override { return get_levtr(results[cur].out_id_ltr).trange; }
     Datetime get_datetime() const override { return results[cur].out_datetime; }
     wreport::Varcode get_varcode() const override { return (wreport::Varcode)results[cur].out_varcode; }
     wreport::Var get_var() const override { return Var(varinfo(results[cur].out_varcode), results[cur].out_value); }
@@ -434,6 +438,7 @@ struct Best : public Base<CursorData>
         bool first = true;
         v7::SQLRecordV7 best;
 
+        set<int> ids;
         db.driver().run_built_query_v7(qb, [&](v7::SQLRecordV7& rec) {
             // Fill priority
             rec.priority = ri.get_priority(rec.out_rep_cod);
@@ -449,6 +454,7 @@ struct Best : public Base<CursorData>
                 if (rec.priority > best.priority)
                     best = rec;
             } else {
+                if (qb.select_varinfo) ids.insert(best.out_id_ltr);
                 // If they don't match, write out the previous best value
                 results.append(best);
                 // And restart with a new candidate best record for the next batch
@@ -458,7 +464,11 @@ struct Best : public Base<CursorData>
 
         // Write out the last best value
         if (!first)
+        {
+            if (qb.select_varinfo) ids.insert(best.out_id_ltr);
             results.append(best);
+        }
+        db.lev_tr().prefetch_ids(ids, levtrs);
 
         // We are done adding, prepare the structbuf for reading
         results.ready_to_read();
