@@ -92,8 +92,6 @@ unique_ptr<DB> DB::create(unique_ptr<sql::Connection> conn)
             format = V6;
         else if (conn->has_table("context"))
             format = V5;
-        else
-            format = default_format;
     }
 
     switch (format)
