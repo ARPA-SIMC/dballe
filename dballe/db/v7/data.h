@@ -145,9 +145,9 @@ struct InsertStationVars : public std::vector<StationVar>
 {
     StationState station;
 
-    void add(const wreport::Var* var, int id_levtr)
+    void add(const wreport::Var* var)
     {
-        emplace_back(var, id_levtr);
+        emplace_back(var);
     }
 
     void dump(FILE* out) const;

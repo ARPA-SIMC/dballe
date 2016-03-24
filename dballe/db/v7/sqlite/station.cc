@@ -186,10 +186,9 @@ void SQLiteStationBase::get_station_vars(int id_station, std::function<void(std:
     // Perform the query
     static const char query[] = R"(
         SELECT d.id_var, d.value, a.type, a.value
-          FROM data d
+          FROM station_data d
           LEFT JOIN station_attr a ON a.id_data = d.id
          WHERE d.id_station=?
-           AND d.id_lev_tr = -1
          ORDER BY d.id_var, a.type
     )";
 
@@ -225,8 +224,8 @@ void SQLiteStationBase::add_station_vars(int id_station, Record& rec)
 {
     const char* query = R"(
         SELECT d.id_var, d.value
-          FROM data d
-         WHERE d.id_lev_tr = -1 AND d.id_station = ?
+          FROM station_data d
+         WHERE d.id_station = ?
     )";
 
     auto stm = conn.sqlitestatement(query);

@@ -293,18 +293,22 @@ bool StationQueryBuilder::build_where()
     // Add pseudoana-specific where parts
     has_where |= add_pa_where("s");
 
+    /*
+     * Querying var= or varlist= on a station query means querying stations
+     * that measure that variable or those variables.
+     */
     switch (query.varcodes.size())
     {
         case 0: break;
         case 1:
             sql_where.append_listf("EXISTS(SELECT id FROM data s_stvar"
-                                   " WHERE s_stvar.id_station=s.id AND s_stvar.id_lev_tr != -1"
+                                   " WHERE s_stvar.id_station=s.id"
                                    "   AND s_stvar.id_var=%d)", *query.varcodes.begin());
             has_where = true;
             break;
         default:
             sql_where.append_listf("EXISTS(SELECT id FROM data s_stvar"
-                                   " WHERE s_stvar.id_station=s.id AND s_stvar.id_lev_tr != -1"
+                                   " WHERE s_stvar.id_station=s.id"
                                    "   AND s_stvar.id_var IN (");
             sql_where.append_varlist(query.varcodes);
             sql_where.append("))");
@@ -330,36 +334,42 @@ void StationQueryBuilder::build_order_by()
 
 void DataQueryBuilder::build_select()
 {
-    sql_query.append("SELECT s.id, s.rep, s.lat, s.lon, s.ident, d.id_lev_tr, d.id_var, d.id, d.datetime, d.value");
+    if (query_station_vars)
+        sql_query.append("SELECT s.id, s.rep, s.lat, s.lon, s.ident, d.id_var, d.id, d.value");
+    else
+        sql_query.append("SELECT s.id, s.rep, s.lat, s.lon, s.ident, d.id_lev_tr, d.id_var, d.id, d.datetime, d.value");
     select_station = true;
     select_varinfo = true;
     select_data_id = true;
     select_data = true;
-    sql_from.append(
-            " FROM station s"
-            " JOIN data d ON s.id=d.id_station"
-    );
-    if (!query_station_vars)
+    sql_from.append(" FROM station s");
+
+    if (query_station_vars)
+    {
+        sql_from.append(" JOIN station_data d ON s.id=d.id_station");
+    } else {
+        sql_from.append(" JOIN data d ON s.id=d.id_station");
         sql_from.append(" JOIN lev_tr ltr ON ltr.id=d.id_lev_tr");
+    }
 }
 
 bool DataQueryBuilder::build_where()
 {
-    if (query_station_vars)
-        sql_where.append_list("d.id_lev_tr = -1");
-    else
-        sql_where.append_list("d.id_lev_tr != -1");
+    bool has_where = false;
 
     // Add pseudoana-specific where parts
-    add_pa_where("s");
-    add_dt_where("d");
-    add_ltr_where("ltr");
-    add_varcode_where("d");
-    add_repinfo_where("s");
-    add_datafilter_where("d");
-    add_attrfilter_where("d");
+    has_where = add_pa_where("s") || has_where;
+    if (!query_station_vars)
+    {
+        has_where = add_dt_where("d") || has_where;
+        has_where = add_ltr_where("ltr") || has_where;
+    }
+    has_where = add_varcode_where("d") || has_where;
+    has_where = add_repinfo_where("s") || has_where;
+    has_where = add_datafilter_where("d") || has_where;
+    has_where = add_attrfilter_where("d") || has_where;
 
-    return true;
+    return has_where;
 }
 
 void DataQueryBuilder::build_order_by()
@@ -368,9 +378,11 @@ void DataQueryBuilder::build_order_by()
         sql_query.append(" ORDER BY d.id_station");
     else
         sql_query.append(" ORDER BY s.lat, s.lon, s.ident");
-    sql_query.append(", d.datetime");
     if (!query_station_vars)
+    {
+        sql_query.append(", d.datetime");
         sql_query.append(", ltr.ltype1, ltr.l1, ltr.ltype2, ltr.l2, ltr.ptype, ltr.p1, ltr.p2");
+    }
     // TODO: id_report should be at the end, so we get all the variables for a
     // given report. If this has not been caught so far, are clients actually
     // relying on ordering? If not, negotiate relaxing of ordering requirements (#19)
@@ -384,12 +396,14 @@ void IdQueryBuilder::build_select()
 {
     sql_query.append("SELECT d.id");
     select_data_id = true;
-    sql_from.append(
-            " FROM station s"
-            " JOIN data d ON s.id = d.id_station"
-    );
-    if (!query_station_vars)
+    sql_from.append(" FROM station s");
+    if (query_station_vars)
+        sql_from.append(" JOIN station_data d ON s.id = d.id_station");
+    else
+    {
+        sql_from.append(" JOIN data d ON s.id = d.id_station");
         sql_from.append(" JOIN lev_tr ltr ON ltr.id = d.id_lev_tr");
+    }
 }
 
 void IdQueryBuilder::build_order_by()
@@ -402,13 +416,19 @@ void SummaryQueryBuilder::build_select()
 {
     if (modifiers & DBA_DB_MODIFIER_SUMMARY_DETAILS)
     {
-        sql_query.append(R"(
-            SELECT s.id, s.rep, s.lat, s.lon, s.ident, d.id_lev_tr, d.id_var,
-                   COUNT(1), MIN(d.datetime), MAX(d.datetime)
-        )");
+        if (query_station_vars)
+            sql_query.append("SELECT s.id, s.rep, s.lat, s.lon, s.ident, d.id_var, COUNT(1)");
+        else
+            sql_query.append(R"(
+                SELECT s.id, s.rep, s.lat, s.lon, s.ident, d.id_lev_tr, d.id_var,
+                       COUNT(1), MIN(d.datetime), MAX(d.datetime)
+            )");
         select_summary_details = true;
     } else {
-        sql_query.append("SELECT DISTINCT s.id, s.rep, s.lat, s.lon, s.ident, d.id_lev_tr, d.id_var");
+        if (query_station_vars)
+            sql_query.append("SELECT DISTINCT s.id, s.rep, s.lat, s.lon, s.ident, d.id_var");
+        else
+            sql_query.append("SELECT DISTINCT s.id, s.rep, s.lat, s.lon, s.ident, d.id_lev_tr, d.id_var");
     }
 
     select_station = true;
@@ -419,19 +439,26 @@ void SummaryQueryBuilder::build_select()
     stm.bind_out(output_seq++, cur.sqlrec.out_datetime);
     stm.bind_out(output_seq++, cur_s.out_datetime_max);
     */
-    sql_from.append(
-            " FROM station s"
-            " JOIN data d ON s.id = d.id_station"
-    );
-    if (!query_station_vars)
+    sql_from.append(" FROM station s");
+    if (query_station_vars)
+        sql_from.append(" JOIN station_data d ON s.id = d.id_station");
+    else
+    {
+        sql_from.append(" JOIN data d ON s.id = d.id_station");
         sql_from.append(" JOIN lev_tr ltr ON ltr.id=d.id_lev_tr");
+    }
 }
 
 void SummaryQueryBuilder::build_order_by()
 {
     // No ordering required, but we may add a GROUP BY
     if (modifiers & DBA_DB_MODIFIER_SUMMARY_DETAILS)
-        sql_query.append(" GROUP BY s.id, d.id_lev_tr, d.id_var");
+    {
+        if (query_station_vars)
+            sql_query.append(" GROUP BY s.id, d.id_var");
+        else
+            sql_query.append(" GROUP BY s.id, d.id_lev_tr, d.id_var");
+    }
 }
 
 
@@ -474,16 +501,16 @@ bool QueryBuilder::add_pa_where(const char* tbl)
     if (query.block != MISSING_INT)
     {
         // No need to escape since the variable is integer
-        sql_where.append_listf("EXISTS(SELECT id FROM data %s_blo WHERE %s_blo.id_station=%s.id"
-                               " AND %s_blo.id_var=257 AND %s_blo.id_lev_tr = -1 AND %s_blo.value='%d')",
-                tbl, tbl, tbl, tbl, tbl, tbl, query.block);
+        sql_where.append_listf("EXISTS(SELECT id FROM station_data %s_blo WHERE %s_blo.id_station=%s.id"
+                               " AND %s_blo.id_var=257 AND %s_blo.value='%d')",
+                tbl, tbl, tbl, tbl, tbl, query.block);
         c.found = true;
     }
     if (query.station != MISSING_INT)
     {
-        sql_where.append_listf("EXISTS(SELECT id FROM data %s_sta WHERE %s_sta.id_station=%s.id"
-                               " AND %s_sta.id_var=258 AND %s_sta.id_lev_tr = -1 AND %s_sta.value='%d')",
-                tbl, tbl, tbl, tbl, tbl, tbl, query.station);
+        sql_where.append_listf("EXISTS(SELECT id FROM station_data %s_sta WHERE %s_sta.id_station=%s.id"
+                               " AND %s_sta.id_var=258 AND %s_sta.value='%d')",
+                tbl, tbl, tbl, tbl, tbl, query.station);
         c.found = true;
     }
     if (!query.ana_filter.empty())
@@ -491,9 +518,8 @@ bool QueryBuilder::add_pa_where(const char* tbl)
         const char *op, *value, *value1;
         Varinfo info = decode_data_filter(query.ana_filter, &op, &value, &value1);
 
-        sql_where.append_listf("EXISTS(SELECT id FROM data %s_af WHERE %s_af.id_station=%s.id"
-                               " AND %s_af.id_lev_tr = -1"
-                               " AND %s_af.id_var=%d", tbl, tbl, tbl, tbl, tbl, info->code);
+        sql_where.append_listf("EXISTS(SELECT id FROM station_data %s_af WHERE %s_af.id_station=%s.id"
+                               " AND %s_af.id_var=%d", tbl, tbl, tbl, tbl, info->code);
 
         if (value[0] == '\'')
             if (value1 == NULL)
@@ -695,7 +721,9 @@ bool QueryBuilder::add_attrfilter_where(const char* tbl)
     const char *op, *value, *value1;
     Varinfo info = decode_data_filter(query.attr_filter, &op, &value, &value1);
 
-    sql_from.appendf(" JOIN attr %s_atf ON %s.id=%s_atf.id_data AND %s_atf.type=%d", tbl, tbl, tbl, tbl, info->code);
+    const char* atbl = query_station_vars ? "station_attr" : "attr";
+
+    sql_from.appendf(" JOIN %s %s_atf ON %s.id=%s_atf.id_data AND %s_atf.type=%d", atbl, tbl, tbl, tbl, tbl, info->code);
     if (value[0] == '\'')
         if (value1 == NULL)
             sql_where.append_listf("%s_atf.value%s%s", tbl, op, value);

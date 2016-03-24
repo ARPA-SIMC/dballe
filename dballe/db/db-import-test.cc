@@ -72,7 +72,7 @@ class Tests : public FixtureTestCase<DBFixture>
                     wassert(actual(msgs.size()) == 1u);
                     wassert(actual(diff_msg(msg, msgs[0], "crex")) == 0);
                 } catch (std::exception& e) {
-                    throw TestFailed(string("[") + files[i] + "] " + e.what());
+                    wassert(throw TestFailed(string("[") + files[i] + "] " + e.what()));
                 }
             }
         });
@@ -102,7 +102,7 @@ class Tests : public FixtureTestCase<DBFixture>
 
                     wassert(actual(diff_msg(msg, msgs[0], "bufr")) == 0);
                 } catch (std::exception& e) {
-                    throw TestFailed(string("[") + files[i] + "] " + e.what());
+                    wassert(throw TestFailed(string("[") + files[i] + "] " + e.what()));
                 }
             }
         });
@@ -133,7 +133,7 @@ class Tests : public FixtureTestCase<DBFixture>
                     wassert(actual(msgs.size()) == 1u);
                     wassert(actual(diff_msg(msg, msgs[0], "bufr")) == 0);
                 } catch (std::exception& e) {
-                    throw TestFailed(string("[") + files[i] + "] " + e.what());
+                    wassert(throw TestFailed(string("[") + files[i] + "] " + e.what()));
                 }
             }
         });

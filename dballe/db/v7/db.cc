@@ -198,19 +198,16 @@ void DB::insert_station_data(dballe::Transaction& transaction, StationValues& va
     // Insert the station data, and get the ID
     v7::State::stations_t::iterator si = obtain_station(t.state, vals.info, station_can_add);
 
-    v7::bulk::InsertVars vars;
+    v7::bulk::InsertStationVars vars;
     vars.station = si->second;
     vals.info.ana_id = si->second.id;
 
-    // Hardcoded values for station variables
-    vars.datetime = Datetime(1000, 1, 1, 0, 0, 0);
-
     // Add all the variables we find
     for (auto& i: vals.values)
-        vars.add(i.second.var, -1);
+        vars.add(i.second.var);
 
     // Do the insert
-    v7::Data& d = data();
+    v7::StationData& d = station_data();
     d.insert(t, vars, can_replace ? v7::bulk::UPDATE : v7::bulk::ERROR);
 
     // Read the IDs from the results

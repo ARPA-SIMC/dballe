@@ -29,7 +29,6 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
 
     v7::Station& st = station();
     v7::LevTr& lt = lev_tr();
-    v7::Data& dd = data();
 
     auto& t = v7::Transaction::downcast(transaction);
 
@@ -73,20 +72,20 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
     if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || sstate->second.is_new)
     {
         // Prepare a bulk insert
-        v7::bulk::InsertVars vars;
+        v7::StationData& sd = station_data();
+        v7::bulk::InsertStationVars vars;
         vars.station = sstate->second;
-        vars.datetime = Datetime(1000, 1, 1, 0, 0, 0);
         for (size_t i = 0; i < l_ana->data.size(); ++i)
         {
             Varcode code = l_ana->data[i]->code();
             // Do not import datetime in the station info context
             if (code >= WR_VAR(0, 4, 1) && code <= WR_VAR(0, 4, 6))
                 continue;
-            vars.add(l_ana->data[i], -1);
+            vars.add(l_ana->data[i]);
         }
 
         // Run the bulk insert
-        dd.insert(t, vars, (flags & DBA_IMPORT_OVERWRITE) ? v7::bulk::UPDATE : v7::bulk::IGNORE);
+        sd.insert(t, vars, (flags & DBA_IMPORT_OVERWRITE) ? v7::bulk::UPDATE : v7::bulk::IGNORE);
 
         // Insert the attributes
         if (flags & DBA_IMPORT_ATTRS)
@@ -103,6 +102,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
         }
     }
 
+    v7::Data& dd = data();
     v7::bulk::InsertVars vars;
     vars.station = sstate->second;
 

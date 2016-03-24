@@ -98,7 +98,8 @@ void Driver::run_built_query_v7(
 
         if (qb.select_varinfo)
         {
-            rec.out_id_ltr = stm->column_int(output_seq++);
+            if (!qb.query_station_vars)
+                rec.out_id_ltr = stm->column_int(output_seq++);
             rec.out_varcode = stm->column_int(output_seq++);
         }
 
@@ -107,7 +108,8 @@ void Driver::run_built_query_v7(
 
         if (qb.select_data)
         {
-            rec.out_datetime = stm->column_datetime(output_seq++);
+            if (!qb.query_station_vars)
+                rec.out_datetime = stm->column_datetime(output_seq++);
 
             const char* value = stm->column_string(output_seq++);
             unsigned val_size = min(strlen(value), (string::size_type)255);
@@ -118,8 +120,11 @@ void Driver::run_built_query_v7(
         if (qb.select_summary_details)
         {
             rec.out_id_data = stm->column_int(output_seq++);
-            rec.out_datetime = stm->column_datetime(output_seq++);
-            rec.out_datetimemax = stm->column_datetime(output_seq++);
+            if (!qb.query_station_vars)
+            {
+                rec.out_datetime = stm->column_datetime(output_seq++);
+                rec.out_datetimemax = stm->column_datetime(output_seq++);
+            }
         }
 
         dest(rec);
@@ -178,7 +183,7 @@ void Driver::create_tables_v7()
         CREATE TABLE data (
            id          INTEGER PRIMARY KEY,
            id_station  INTEGER NOT NULL REFERENCES station (id) ON DELETE CASCADE,
-           id_lev_tr   INTEGER NOT NULL,
+           id_lev_tr   INTEGER NOT NULL REFERENCES lev_tr(id) ON DELETE CASCADE,
            datetime    TEXT NOT NULL,
            id_var      INTEGER NOT NULL,
            value       VARCHAR(255) NOT NULL,
@@ -188,7 +193,7 @@ void Driver::create_tables_v7()
     )");
     conn.exec(R"(
         CREATE TABLE station_attr (
-           id_data     INTEGER NOT NULL REFERENCES data (id) ON DELETE CASCADE,
+           id_data     INTEGER NOT NULL REFERENCES station_data (id) ON DELETE CASCADE,
            type        INTEGER NOT NULL,
            value       VARCHAR(255) NOT NULL,
            UNIQUE (id_data, type)

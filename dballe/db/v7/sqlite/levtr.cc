@@ -202,14 +202,15 @@ void SQLiteLevTrV7::dump(FILE* out)
 {
     int count = 0;
     fprintf(out, "dump of table lev_tr:\n");
-    fprintf(out, "   id   lev              tr\n");
+    fprintf(out, "   id   lev                  tr\n");
     auto stm = conn.sqlitestatement("SELECT id, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr ORDER BY ID");
     stm->execute([&]() {
-        fprintf(out, " %4d ", stm->column_int(0));
-        int written = to_level(*stm, 1).print(out);
+        fprintf(out, " %4d   ", stm->column_int(0));
+        int written = to_level(*stm, 1).print(out, "-", "");
         while (written++ < 21) putc(' ', out);
-        written = to_trange(*stm, 5).print(out);
+        written = to_trange(*stm, 5).print(out, "-", "");
         while (written++ < 11) putc(' ', out);
+        putc('\n', out);
         ++count;
     });
     fprintf(out, "%d element%s in table lev_tr\n", count, count != 1 ? "s" : "");

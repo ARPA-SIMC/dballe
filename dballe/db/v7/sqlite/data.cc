@@ -122,7 +122,7 @@ void SQLiteStationData::dump(FILE* out)
     int count = 0;
     fprintf(out, "dump of table station_data:\n");
     fprintf(out, " id   st   var\n");
-    auto stm = conn.sqlitestatement("SELECT id, id_station, id_var, value FROM data");
+    auto stm = conn.sqlitestatement("SELECT id, id_station, id_var, value FROM station_data");
     stm->execute([&]() {
         Varcode code = stm->column_int(2);
 

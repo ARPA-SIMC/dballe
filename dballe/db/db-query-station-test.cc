@@ -132,7 +132,6 @@ class Tests : public FixtureTestCase<Fixture>
             wassert(actual(db).try_station_query("B01002=4", f.some));
         });
         add_method("query_mobile", [](Fixture& f) {
-            auto& db = *f.db;
         });
         add_method("query_ana_filter", [](Fixture& f) {
             auto& db = *f.db;
@@ -154,6 +153,10 @@ class Tests : public FixtureTestCase<Fixture>
             wassert(actual(db).try_station_query("ana_filter=50<=B07030<=100", 2));
         });
         add_method("query_var", [](Fixture& f) {
+            /*
+             * Querying var= or varlist= on a station query means querying stations
+             * that measure that variable or those variables.
+             */
             auto& db = *f.db;
             wassert(actual(db).try_station_query("var=B12101", 2));
             wassert(actual(db).try_station_query("var=B12103", 1));
