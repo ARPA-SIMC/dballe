@@ -1,4 +1,5 @@
 #include "data.h"
+#include "dballe/db/v7/transaction.h"
 #include "dballe/db/v7/qbuilder.h"
 #include "dballe/sql/sqlite.h"
 #include "dballe/sql/querybuf.h"
@@ -34,16 +35,16 @@ SQLiteStationData::~SQLiteStationData()
     if (sstm) delete sstm;
 }
 
-void SQLiteStationData::insert(dballe::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode)
+void SQLiteStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode)
 {
     // Scan the result in parallel with the variable list, annotating changed
     // items with their data ID
     v7::bulk::AnnotateStationVars todo(vars);
 
-    if (!vars.station.is_new)
+    if (!vars.station->second.is_new)
     {
         // Get the current status of variables for this context
-        sstm->bind_val(1, vars.station.id);
+        sstm->bind_val(1, vars.station->second.id);
         sstm->execute([&]() {
             todo.annotate(
                     sstm->column_int(0),
@@ -51,8 +52,10 @@ void SQLiteStationData::insert(dballe::Transaction& t, v7::bulk::InsertStationVa
                     sstm->column_string(2));
         });
     } else {
-        // TODO: Annotate is still needed, with the data already inserted in
-        // this transaction, so that we update if it conflicts
+        // Annotate with the data already inserted in this transaction, so that
+        // we update if it conflicts
+        for (const auto& i: t.state.stationvalues)
+            todo.annotate(i.second.id, i.first.var.code(), i.first.var.enqc());
     }
     todo.annotate_end();
 
@@ -88,7 +91,7 @@ void SQLiteStationData::insert(dballe::Transaction& t, v7::bulk::InsertStationVa
         dq.appendf(R"(
             INSERT INTO station_data (id_station, id_var, value)
                  VALUES (%d, ?, ?)
-        )", vars.station.id);
+        )", vars.station->second.id);
         auto insert = conn.sqlitestatement(dq);
         for (auto& v: vars)
         {
@@ -158,16 +161,16 @@ SQLiteData::~SQLiteData()
     if (sstm) delete sstm;
 }
 
-void SQLiteData::insert(dballe::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode)
+void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode)
 {
     // Scan the result in parallel with the variable list, annotating changed
     // items with their data ID
     v7::bulk::AnnotateVars todo(vars);
 
-    if (!vars.station.is_new)
+    if (!vars.station->second.is_new)
     {
         // Get the current status of variables for this context
-        sstm->bind_val(1, vars.station.id);
+        sstm->bind_val(1, vars.station->second.id);
         sstm->bind_val(2, vars.datetime);
         sstm->execute([&]() {
             todo.annotate(
@@ -214,7 +217,7 @@ void SQLiteData::insert(dballe::Transaction& t, v7::bulk::InsertVars& vars, bulk
         dq.appendf(R"(
             INSERT INTO data (id_station, id_lev_tr, datetime, id_var, value)
                  VALUES (%d, ?, '%04d-%02d-%02d %02d:%02d:%02d', ?, ?)
-        )", vars.station.id,
+        )", vars.station->second.id,
             vars.datetime.year, vars.datetime.month, vars.datetime.day,
             vars.datetime.hour, vars.datetime.minute, vars.datetime.second);
         auto insert = conn.sqlitestatement(dq);

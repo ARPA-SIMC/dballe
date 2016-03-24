@@ -1,7 +1,7 @@
 #ifndef DBALLE_DB_V7_STATE_H
 #define DBALLE_DB_V7_STATE_H
 
-#include <wreport/varinfo.h>
+#include <wreport/var.h>
 #include <dballe/core/defs.h>
 #include <map>
 
@@ -67,7 +67,7 @@ struct StationValueDesc
 {
     stations_t::iterator station;
 
-    wreport::Varcode varcode;
+    wreport::Var var;
 
     int compare(const StationValueDesc&) const;
     bool operator<(const StationValueDesc& o) const { return compare(o) < 0; }
@@ -93,7 +93,7 @@ struct ValueDesc
     /// Date and time at which the value was measured or forecast
     Datetime datetime;
 
-    wreport::Varcode varcode;
+    wreport::Var var;
 
     int compare(const ValueDesc&) const;
     bool operator<(const ValueDesc& o) const { return compare(o) < 0; }

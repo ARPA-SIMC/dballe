@@ -1,6 +1,7 @@
 #include "db/tests.h"
 #include "sql/sql.h"
 #include "db/v7/db.h"
+#include "db/v7/transaction.h"
 #include "db/v7/driver.h"
 #include "db/v7/repinfo.h"
 #include "db/v7/station.h"
@@ -61,11 +62,13 @@ struct Fixture : V7DriverFixture
         li = lt->obtain_id(state, db::v7::LevTrDesc(Level(2, 3, 1, 4), Trange(5, 6, 7)));
         wassert(actual(li->second.id) == 2);
 
-        auto t = conn->transaction();
+        auto conn_t = conn->transaction();
+        unique_ptr<dballe::db::v7::Transaction> t(new dballe::db::v7::Transaction(move(conn_t)));
+
         // Insert a datum
         {
             bulk::InsertVars vars;
-            vars.station = state.stations[sde1];
+            vars.station = state.stations.find(sde1);
             vars.datetime = Datetime(2001, 2, 3, 4, 5, 6);
             Var var(varinfo(WR_VAR(0, 1, 2)), 123);
             vars.add(&var, 1);
@@ -75,7 +78,7 @@ struct Fixture : V7DriverFixture
         // Insert another datum
         {
             bulk::InsertVars vars;
-            vars.station = state.stations[sde2];
+            vars.station = state.stations.find(sde2);
             vars.datetime = Datetime(2002, 3, 4, 5, 6, 7);
             Var var(varinfo(WR_VAR(0, 1, 2)), 234);
             vars.add(&var, 2);
@@ -111,7 +114,8 @@ class Tests : public FixtureTestCase<Fixture>
             using namespace dballe::db::v7;
             auto& at = *f.attr;
 
-            auto t = f.conn->transaction();
+            auto conn_t = f.conn->transaction();
+            unique_ptr<dballe::db::v7::Transaction> t(new dballe::db::v7::Transaction(move(conn_t)));
 
             Var var1(varinfo(WR_VAR(0, 12, 101)), 280.0);
             var1.seta(newvar(WR_VAR(0, 33, 7), 50));

@@ -22,7 +22,7 @@ int LevTrDesc::compare(const LevTrDesc& o) const
 int StationValueDesc::compare(const StationValueDesc& o) const
 {
     if (int res = station->first.compare(o.station->first)) return res;
-    return varcode - o.varcode;
+    return var.code() - o.var.code();
 }
 
 int ValueDesc::compare(const ValueDesc& o) const
@@ -30,7 +30,7 @@ int ValueDesc::compare(const ValueDesc& o) const
     if (int res = station->first.compare(o.station->first)) return res;
     if (int res = levtr->first.compare(o.levtr->first)) return res;
     if (int res = datetime.compare(o.datetime)) return res;
-    return varcode - o.varcode;
+    return var.code() - o.var.code();
 }
 
 void State::clear()

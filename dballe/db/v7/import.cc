@@ -74,7 +74,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
         // Prepare a bulk insert
         v7::StationData& sd = station_data();
         v7::bulk::InsertStationVars vars;
-        vars.station = sstate->second;
+        vars.station = sstate;
         for (size_t i = 0; i < l_ana->data.size(); ++i)
         {
             Varcode code = l_ana->data[i]->code();
@@ -104,7 +104,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
 
     v7::Data& dd = data();
     v7::bulk::InsertVars vars;
-    vars.station = sstate->second;
+    vars.station = sstate;
 
     // Date and time
     if (msg.get_datetime().is_missing())

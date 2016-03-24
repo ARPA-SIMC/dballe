@@ -12,7 +12,7 @@ namespace v7 {
 
 Attr::~Attr() {}
 
-void Attr::insert_attributes(dballe::Transaction& t, int id_data, const wreport::Var& var, UpdateMode update_mode)
+void Attr::insert_attributes(dballe::db::v7::Transaction& t, int id_data, const wreport::Var& var, UpdateMode update_mode)
 {
     bulk::InsertAttrsV7 attrs;
     attrs.add_all(var, id_data);

@@ -31,7 +31,7 @@ public:
     SQLiteStationData& operator=(const SQLiteStationData&) = delete;
     ~SQLiteStationData();
 
-    void insert(dballe::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE) override;
+    void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE) override;
     void remove(const v7::QueryBuilder& qb) override;
     void dump(FILE* out) override;
 };
@@ -55,7 +55,7 @@ public:
     SQLiteData& operator=(const SQLiteData&) = delete;
     ~SQLiteData();
 
-    void insert(dballe::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE) override;
+    void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE) override;
     void remove(const v7::QueryBuilder& qb) override;
     void dump(FILE* out) override;
 };

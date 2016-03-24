@@ -199,7 +199,7 @@ void Var::dump(FILE* out) const
 
 void InsertStationVars::dump(FILE* out) const
 {
-    fprintf(out, "ID station: %d\n", station.id);
+    fprintf(out, "ID station: %d\n", station->second.id);
     for (unsigned i = 0; i < size(); ++i)
     {
         fprintf(out, "%3u/%3zd: ", i, size());
@@ -210,7 +210,7 @@ void InsertStationVars::dump(FILE* out) const
 void InsertVars::dump(FILE* out) const
 {
     fprintf(out, "ID station: %d, datetime: %04d-%02d-%02d %02d:%02d:%02d\n",
-            station.id,
+            station->second.id,
             datetime.year, datetime.month, datetime.day,
             datetime.hour, datetime.minute, datetime.second);
     for (unsigned i = 0; i < size(); ++i)

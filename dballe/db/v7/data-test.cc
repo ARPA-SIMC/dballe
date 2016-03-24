@@ -1,6 +1,7 @@
 #include "db/tests.h"
 #include "sql/sql.h"
 #include "db/v7/db.h"
+#include "db/v7/transaction.h"
 #include "db/v7/driver.h"
 #include "db/v7/repinfo.h"
 #include "db/v7/station.h"
@@ -85,12 +86,13 @@ class Tests : public FixtureTestCase<Fixture>
             using namespace dballe::db::v7;
             auto& da = *f.data;
 
-            auto t = f.conn->transaction();
+            auto conn_t = f.conn->transaction();
+            unique_ptr<dballe::db::v7::Transaction> t(new dballe::db::v7::Transaction(move(conn_t)));
 
             Var var(varinfo(WR_VAR(0, 1, 2)));
 
             auto insert_sample1 = [&](bulk::InsertVars& vars, int value, bulk::UpdateMode update) {
-                vars.station = f.state.stations[f.sde1];
+                vars.station = f.state.stations.find(f.sde1);
                 vars.datetime = Datetime(2001, 2, 3, 4, 5, 6);
                 var.seti(value);
                 vars.add(&var, 1);
@@ -111,7 +113,7 @@ class Tests : public FixtureTestCase<Fixture>
             // Insert another datum
             {
                 bulk::InsertVars vars;
-                vars.station = f.state.stations[f.sde2];
+                vars.station = f.state.stations.find(f.sde2);
                 vars.datetime = Datetime(2002, 3, 4, 5, 6, 7);
                 Var var(varinfo(WR_VAR(0, 1, 2)), 234);
                 vars.add(&var, 2);

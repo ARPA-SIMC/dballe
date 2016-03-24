@@ -199,7 +199,7 @@ void DB::insert_station_data(dballe::Transaction& transaction, StationValues& va
     v7::stations_t::iterator si = obtain_station(t.state, vals.info, station_can_add);
 
     v7::bulk::InsertStationVars vars;
-    vars.station = si->second;
+    vars.station = si;
     vals.info.ana_id = si->second.id;
 
     // Add all the variables we find
@@ -228,7 +228,7 @@ void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool ca
     v7::stations_t::iterator si = obtain_station(t.state, vals.info, station_can_add);
 
     v7::bulk::InsertVars vars;
-    vars.station = si->second;
+    vars.station = si;
     vals.info.ana_id = si->second.id;
 
     // Set the date from the record contents

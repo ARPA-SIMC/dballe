@@ -34,7 +34,7 @@ public:
     SQLiteAttr& operator=(const SQLiteAttr&) = delete;
     ~SQLiteAttr();
 
-    void insert(dballe::Transaction& t, v7::bulk::InsertAttrsV7& vars, UpdateMode update_mode=UPDATE) override;
+    void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertAttrsV7& vars, UpdateMode update_mode=UPDATE) override;
     void read(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
     void dump(FILE* out) override;
 };

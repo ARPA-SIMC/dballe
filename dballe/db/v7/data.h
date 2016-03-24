@@ -14,6 +14,7 @@ struct Record;
 
 namespace db {
 namespace v7 {
+struct Transaction;
 struct QueryBuilder;
 
 namespace bulk {
@@ -37,7 +38,7 @@ public:
     virtual ~StationData();
 
     /// Bulk variable insert
-    virtual void insert(dballe::Transaction& t, bulk::InsertStationVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE) = 0;
+    virtual void insert(dballe::db::v7::Transaction& t, bulk::InsertStationVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE) = 0;
 
     /// Run the query to delete all records selected by the given QueryBuilder
     virtual void remove(const v7::QueryBuilder& qb) = 0;
@@ -55,7 +56,7 @@ public:
     virtual ~Data();
 
     /// Bulk variable insert
-    virtual void insert(dballe::Transaction& t, bulk::InsertVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE) = 0;
+    virtual void insert(dballe::db::v7::Transaction& t, bulk::InsertVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE) = 0;
 
     /// Run the query to delete all records selected by the given QueryBuilder
     virtual void remove(const v7::QueryBuilder& qb) = 0;
@@ -143,7 +144,7 @@ struct Var : public Item
  */
 struct InsertStationVars : public std::vector<StationVar>
 {
-    StationState station;
+    stations_t::iterator station;
 
     void add(const wreport::Var* var)
     {
@@ -160,7 +161,7 @@ struct InsertStationVars : public std::vector<StationVar>
  */
 struct InsertVars : public std::vector<Var>
 {
-    StationState station;
+    stations_t::iterator station;
     Datetime datetime;
 
     void add(const wreport::Var* var, int id_levtr)
