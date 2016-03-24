@@ -7,6 +7,7 @@
 #include <wreport/var.h>
 #include <memory>
 #include <vector>
+#include <list>
 #include <cstdio>
 
 namespace dballe {
@@ -93,24 +94,26 @@ struct Item
     void format_flags(char* dest) const;
 };
 
+template<typename state_t>
+struct VarItem : public Item
+{
+    typename state_t::iterator cur;
+    const wreport::Var* var;
+
+    VarItem(typename state_t::iterator cur, const wreport::Var* var)
+        : cur(cur), var(var) {}
+};
 
 /**
  * Workflow information about a variable listed for bulk insert/update
  */
-struct StationVar : public Item
+struct StationVar : public VarItem<stationvalues_t>
 {
-    int id_data;
-    const wreport::Var* var;
+    using VarItem::VarItem;
 
-    StationVar(const wreport::Var* var, int id_data=-1)
-        : id_data(id_data), var(var)
-    {
-    }
-    bool operator<(const StationVar& v) const
-    {
-        return var->code() < v.var->code();
-    }
-
+    bool is_new() const { return false; }
+    bool has_cur(State& state) const { return cur != state.stationvalues.end(); }
+    void fill_cur(State& state, const StationValueDesc& desc) { cur = state.stationvalues.find(desc); }
     void dump(FILE* out) const;
 };
 
@@ -118,37 +121,121 @@ struct StationVar : public Item
 /**
  * Workflow information about a variable listed for bulk insert/update
  */
-struct Var : public Item
+struct Var : public VarItem<values_t>
 {
-    int id_levtr;
-    int id_data;
-    const wreport::Var* var;
+    levtrs_t::iterator levtr;
 
-    Var(const wreport::Var* var, int id_levtr=-1, int id_data=-1)
-        : id_levtr(id_levtr), id_data(id_data), var(var)
-    {
-    }
-    bool operator<(const Var& v) const
-    {
-        if (int d = id_levtr - v.id_levtr) return d < 0;
-        return var->code() < v.var->code();
-    }
+    Var(values_t::iterator cur, const wreport::Var* var, levtrs_t::iterator levtr)
+        : VarItem(cur, var), levtr(levtr) {}
 
+    bool is_new() const { return levtr->second.is_new; }
+    bool has_cur(State& state) const { return cur != state.values.end(); }
+    void fill_cur(State& state, const ValueDesc& desc) { cur = state.values.find(desc); }
     void dump(FILE* out) const;
 };
 
+struct SharedContext
+{
+    stations_t::iterator station;
+
+    SharedContext() {}
+    SharedContext(stations_t::iterator station) : station(station) {}
+
+    bool is_new() const { return station->second.is_new; }
+};
+
+struct SharedStationContext : public SharedContext
+{
+    using SharedContext::SharedContext;
+
+    StationValueDesc make_desc(StationVar& v) const
+    {
+        return StationValueDesc(station, v.var->code());
+    }
+};
+
+struct SharedDataContext : public SharedContext
+{
+    Datetime datetime;
+
+    SharedDataContext() {}
+    SharedDataContext(stations_t::iterator station, const Datetime& datetime) : SharedContext(station), datetime(datetime) {}
+
+    ValueDesc make_desc(Var& v) const
+    {
+        return ValueDesc(station, v.levtr, datetime, v.var->code());
+    }
+};
+
+template<typename var_t, typename shared_context_t>
+struct InsertPlan : public std::vector<var_t>
+{
+    typedef typename std::vector<var_t>::iterator iterator;
+
+    State& state;
+    shared_context_t shared_context;
+
+    bool do_insert = false;
+    bool do_update = false;
+    std::list<var_t*> to_query;
+
+    template<typename... Args>
+    InsertPlan(State& state, Args&&... args) : state(state), shared_context(std::forward<Args>(args)...) {}
+
+    /**
+     * Fill the cur state pointer in all variables to insert.
+     *
+     * When state info is not available, add the variable to to_query.
+     */
+    void map_known_values()
+    {
+        to_query.clear();
+        for (auto i = this->begin(); i != this->end(); ++i)
+        {
+            i->fill_cur(state, shared_context.make_desc(*i));
+            if (i->has_cur(state)) continue;
+            if (shared_context.is_new() || i->is_new()) continue;
+            to_query.push_back(&*i);
+        }
+    }
+
+    void compute_plan()
+    {
+        do_insert = false;
+        do_update = false;
+        for (auto& var: *this)
+        {
+            if (!var.has_cur(state))
+            {
+                var.set_needs_insert();
+                do_insert = true;
+            }
+            else if (var.cur->second.value != var.var->enqc())
+            {
+                // If the value is different, we need to update
+                var.set_needs_update();
+                do_update = true;
+            }
+        }
+    }
+};
 
 /**
  * Input for a bulk insert of a lot of variables sharing the same context
  * information.
  */
-struct InsertStationVars : public std::vector<StationVar>
+struct InsertStationVars : public InsertPlan<StationVar, SharedStationContext>
 {
-    stations_t::iterator station;
+    using InsertPlan::InsertPlan;
+
+    StationValueDesc make_desc(iterator& i) const
+    {
+        return StationValueDesc(shared_context.station, i->var->code());
+    }
 
     void add(const wreport::Var* var)
     {
-        emplace_back(var);
+        emplace_back(state.stationvalues.end(), var);
     }
 
     void dump(FILE* out) const;
@@ -159,20 +246,19 @@ struct InsertStationVars : public std::vector<StationVar>
  * Input for a bulk insert of a lot of variables sharing the same context
  * information.
  */
-struct InsertVars : public std::vector<Var>
+struct InsertVars : public InsertPlan<Var, SharedDataContext>
 {
-    stations_t::iterator station;
-    Datetime datetime;
+    using InsertPlan::InsertPlan;
 
-    void add(const wreport::Var* var, int id_levtr)
+    void add(const wreport::Var* var, levtrs_t::iterator levtr)
     {
-        emplace_back(var, id_levtr);
+        emplace_back(state.values.end(), var, levtr);
     }
 
     void dump(FILE* out) const;
 };
 
-
+#if 0
 template<typename Inserter>
 struct Annotate
 {
@@ -213,14 +299,10 @@ struct AnnotateVars : public Annotate<InsertVars>
 
     void dump(FILE* out) const;
 };
-
-}
-
-
-
-}
-}
-}
-
 #endif
 
+}
+}
+}
+}
+#endif

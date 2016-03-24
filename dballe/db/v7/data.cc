@@ -25,6 +25,7 @@ void Item::format_flags(char* dest) const
 }
 
 
+#if 0
 template<typename Inserter>
 Annotate<Inserter>::Annotate(Inserter& vars)
     : vars(vars)
@@ -177,14 +178,15 @@ void AnnotateVars::dump(FILE* out) const
     fprintf(out, "Needs insert: %d, needs update: %d\n", do_insert, do_update);
     vars.dump(out);
 }
+#endif
 
 
 void StationVar::dump(FILE* out) const
 {
     char flags[5];
     format_flags(flags);
-    fprintf(out, "data:%d flags:%s %01d%02d%03d(%d): %s\n",
-            id_data, flags, WR_VAR_FXY(var->code()), (int)(var->code()),
+    fprintf(out, "flags:%s %01d%02d%03d(%d): %s\n",
+            flags, WR_VAR_FXY(var->code()), (int)(var->code()),
             var->isset() ? var->enqc() : "(null)");
 }
 
@@ -192,14 +194,14 @@ void Var::dump(FILE* out) const
 {
     char flags[5];
     format_flags(flags);
-    fprintf(out, "ltr:%d data:%d flags:%s %01d%02d%03d(%d): %s\n",
-            id_levtr, id_data, flags, WR_VAR_FXY(var->code()), (int)(var->code()),
+    fprintf(out, "flags:%s %01d%02d%03d(%d): %s\n",
+            flags, WR_VAR_FXY(var->code()), (int)(var->code()),
             var->isset() ? var->enqc() : "(null)");
 }
 
 void InsertStationVars::dump(FILE* out) const
 {
-    fprintf(out, "ID station: %d\n", station->second.id);
+    fprintf(out, "ID station: %d\n", shared_context.station->second.id);
     for (unsigned i = 0; i < size(); ++i)
     {
         fprintf(out, "%3u/%3zd: ", i, size());
@@ -209,10 +211,11 @@ void InsertStationVars::dump(FILE* out) const
 
 void InsertVars::dump(FILE* out) const
 {
+    const auto& dt = shared_context.datetime;
+
     fprintf(out, "ID station: %d, datetime: %04d-%02d-%02d %02d:%02d:%02d\n",
-            station->second.id,
-            datetime.year, datetime.month, datetime.day,
-            datetime.hour, datetime.minute, datetime.second);
+            shared_context.station->second.id,
+            dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
     for (unsigned i = 0; i < size(); ++i)
     {
         fprintf(out, "%3u/%3zd: ", i, size());
@@ -220,8 +223,10 @@ void InsertVars::dump(FILE* out) const
     }
 }
 
+#if 0
 template class Annotate<InsertStationVars>;
 template class Annotate<InsertVars>;
+#endif
 
 }
 }

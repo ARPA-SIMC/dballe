@@ -36,52 +36,46 @@ struct Fixture : V7DriverFixture
 
         db::v7::StationDesc sde1;
         db::v7::StationDesc sde2;
-        db::v7::State state;
         db::v7::stations_t::iterator si;
-        db::v7::levtrs_t::iterator li;
+
+        auto conn_t = conn->transaction();
+        unique_ptr<dballe::db::v7::Transaction> t(new dballe::db::v7::Transaction(move(conn_t)));
 
         // Insert a mobile station
         sde1.rep = 1;
         sde1.coords = Coords(4500000, 1100000);
         sde1.ident = "ciao";
-        si = st->obtain_id(state, sde1);
+        si = st->obtain_id(t->state, sde1);
         wassert(actual(si->second.id) == 1);
 
         // Insert a fixed station
         sde2.rep = 1;
         sde2.coords = Coords(4600000, 1200000);
         sde2.ident = nullptr;
-        si = st->obtain_id(state, sde2);
+        si = st->obtain_id(t->state, sde2);
         wassert(actual(si->second.id) == 2);
 
         // Insert a lev_tr
-        li = lt->obtain_id(state, db::v7::LevTrDesc(Level(1, 2, 0, 3), Trange(4, 5, 6)));
-        wassert(actual(li->second.id) == 1);
+        db::v7::levtrs_t::iterator lt1 = lt->obtain_id(t->state, db::v7::LevTrDesc(Level(1, 2, 0, 3), Trange(4, 5, 6)));
+        wassert(actual(lt1->second.id) == 1);
 
         // Insert another lev_tr
-        li = lt->obtain_id(state, db::v7::LevTrDesc(Level(2, 3, 1, 4), Trange(5, 6, 7)));
-        wassert(actual(li->second.id) == 2);
-
-        auto conn_t = conn->transaction();
-        unique_ptr<dballe::db::v7::Transaction> t(new dballe::db::v7::Transaction(move(conn_t)));
+        db::v7::levtrs_t::iterator lt2 = lt->obtain_id(t->state, db::v7::LevTrDesc(Level(2, 3, 1, 4), Trange(5, 6, 7)));
+        wassert(actual(lt2->second.id) == 2);
 
         // Insert a datum
         {
-            bulk::InsertVars vars;
-            vars.station = state.stations.find(sde1);
-            vars.datetime = Datetime(2001, 2, 3, 4, 5, 6);
+            bulk::InsertVars vars(t->state, t->state.stations.find(sde1), Datetime(2001, 2, 3, 4, 5, 6));
             Var var(varinfo(WR_VAR(0, 1, 2)), 123);
-            vars.add(&var, 1);
+            vars.add(&var, lt1);
             da->insert(*t, vars, bulk::ERROR);
         }
 
         // Insert another datum
         {
-            bulk::InsertVars vars;
-            vars.station = state.stations.find(sde2);
-            vars.datetime = Datetime(2002, 3, 4, 5, 6, 7);
+            bulk::InsertVars vars(t->state, t->state.stations.find(sde2), Datetime(2002, 3, 4, 5, 6, 7));
             Var var(varinfo(WR_VAR(0, 1, 2)), 234);
-            vars.add(&var, 2);
+            vars.add(&var, lt2);
             da->insert(*t, vars, bulk::ERROR);
         }
         t->commit();

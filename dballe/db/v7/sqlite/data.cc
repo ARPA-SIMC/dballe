@@ -37,42 +37,51 @@ SQLiteStationData::~SQLiteStationData()
 
 void SQLiteStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode)
 {
-    // Scan the result in parallel with the variable list, annotating changed
-    // items with their data ID
-    v7::bulk::AnnotateStationVars todo(vars);
+    // Scan vars adding the State pointer to the current database values, if any
+    vars.map_known_values();
 
-    if (!vars.station->second.is_new)
+    // Load the missing varcodes into the state and into vars
+    if (!vars.to_query.empty())
     {
-        // Get the current status of variables for this context
-        sstm->bind_val(1, vars.station->second.id);
-        sstm->execute([&]() {
-            todo.annotate(
-                    sstm->column_int(0),
-                    sstm->column_int(1),
-                    sstm->column_string(2));
-        });
-    } else {
-        // Annotate with the data already inserted in this transaction, so that
-        // we update if it conflicts
-        for (const auto& i: t.state.stationvalues)
-            todo.annotate(i.second.id, i.first.var.code(), i.first.var.enqc());
-    }
-    todo.annotate_end();
+        Querybuf q(512);
+        q.appendf("SELECT id, id_var, value FROM station_data WHERE id_station=%d AND id_var IN (", vars.shared_context.station->second.id);
+        q.start_list(",");
+        for (const auto& vi: vars.to_query)
+            q.append_listf("%d", (int)vi->var->code());
+        q.append(")");
 
-    // We now have a todo-list
+        auto stm = conn.sqlitestatement(q);
+        stm->execute([&]() {
+            StationValueState vs;
+            vs.value = stm->column_string(2);
+            vs.id = stm->column_int(0);
+            vs.is_new = false;
+            wreport::Varcode code = stm->column_int(1);
+
+            auto cur = t.state.add_stationvalue(StationValueDesc(vars.shared_context.station, code), vs);
+            auto vi = std::find_if(vars.to_query.begin(), vars.to_query.end(), [code](const bulk::StationVar* v) { return v->var->code() == code; });
+            if (vi == vars.to_query.end()) return;
+            (*vi)->cur = cur;
+            vars.to_query.erase(vi);
+        });
+    }
+
+    // Compute the action plan
+    vars.compute_plan();
+
+    // Execute the plan
 
     switch (update_mode)
     {
         case bulk::UPDATE:
-            if (todo.do_update)
+            if (vars.do_update)
             {
                 auto update_stm = conn.sqlitestatement("UPDATE station_data SET value=? WHERE id=?");
                 for (auto& v: vars)
                 {
                     if (!v.needs_update()) continue;
-                    // Warning: we do not know if v.var is a string, so the result of
-                    // enqc is only valid until another enqc is called
-                    update_stm->bind(v.var->enqc(), v.id_data);
+                    v.cur->second.value = v.var->enqc();
+                    update_stm->bind(v.cur->second.value, v.cur->second.id);
                     update_stm->execute();
                     v.set_updated();
                 }
@@ -81,26 +90,30 @@ void SQLiteStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertS
         case bulk::IGNORE:
             break;
         case bulk::ERROR:
-            if (todo.do_update)
+            if (vars.do_update)
                 throw error_consistency("refusing to overwrite existing data");
     }
 
-    if (todo.do_insert)
+    if (vars.do_insert)
     {
         Querybuf dq(512);
         dq.appendf(R"(
             INSERT INTO station_data (id_station, id_var, value)
                  VALUES (%d, ?, ?)
-        )", vars.station->second.id);
+        )", vars.shared_context.station->second.id);
         auto insert = conn.sqlitestatement(dq);
         for (auto& v: vars)
         {
             if (!v.needs_insert()) continue;
-            // Warning: we do not know if v.var is a string, so the result of
-            // enqc is only valid until another enqc is called
-            insert->bind(v.var->code(), v.var->enqc());
+            StationValueState vs;
+            vs.value = v.var->enqc();
+            insert->bind(v.var->code(), vs.value);
             insert->execute();
-            v.id_data = conn.get_last_insert_id();
+
+            vs.id = conn.get_last_insert_id();
+            vs.is_new = true;
+
+            v.cur = t.state.add_stationvalue(StationValueDesc(vars.shared_context.station, v.var->code()), vs);
             v.set_inserted();
         }
     }
@@ -163,42 +176,64 @@ SQLiteData::~SQLiteData()
 
 void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode)
 {
-    // Scan the result in parallel with the variable list, annotating changed
-    // items with their data ID
-    v7::bulk::AnnotateVars todo(vars);
+    // Scan vars adding the State pointer to the current database values, if any
+    vars.map_known_values();
 
-    if (!vars.station->second.is_new)
+    // Load the missing varcodes into the state and into vars
+    // If the station has just been inserted, then there is nothing in the
+    // database that is not already in State, and we can skip this part.
+    if (!vars.to_query.empty())
     {
-        // Get the current status of variables for this context
-        sstm->bind_val(1, vars.station->second.id);
-        sstm->bind_val(2, vars.datetime);
-        sstm->execute([&]() {
-            todo.annotate(
-                    sstm->column_int(0),
-                    sstm->column_int(1),
-                    sstm->column_int(2),
-                    sstm->column_string(3));
-        });
-    } else {
-        // TODO: Annotate is still needed, with the data already inserted in
-        // this transaction, so that we update if it conflicts
-    }
-    todo.annotate_end();
+        const auto& dt = vars.shared_context.datetime;
+        Querybuf q(512);
+        q.appendf("SELECT id, id_lev_tr, id_var, value FROM data"
+                  " WHERE id_station=%d AND datetime='%04d-%02d-%02d %02d:%02d:%02d'"
+                  " AND id_lev_tr IN (",
+                  vars.shared_context.station->second.id,
+                  dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
+        q.start_list(",");
+        for (const auto& v: vars.to_query)
+            q.append_listf("%d", (int)v->levtr->second.id);
+        q.append(") AND id_var IN (");
+        q.start_list(",");
+        for (const auto& v: vars.to_query)
+            q.append_listf("%d", (int)v->var->code());
+        q.append(")");
 
-    // We now have a todo-list
+        auto stm = conn.sqlitestatement(q);
+        stm->execute([&]() {
+            int id_levtr = stm->column_int(1);
+            wreport::Varcode code = stm->column_int(2);
+
+            auto vi = std::find_if(vars.to_query.begin(), vars.to_query.end(), [id_levtr, code](const bulk::Var* v) { return v->levtr->second.id == id_levtr && v->var->code() == code; });
+            if (vi == vars.to_query.end()) return;
+
+            ValueState vs;
+            vs.value = stm->column_string(3);
+            vs.id = stm->column_int(0);
+            vs.is_new = false;
+
+            (*vi)->cur = t.state.add_value(ValueDesc(vars.shared_context.station, (*vi)->levtr, vars.shared_context.datetime, code), vs);
+            vars.to_query.erase(vi);
+        });
+    }
+
+    // Compute the action plan
+    vars.compute_plan();
+
+    // Execute the plan
 
     switch (update_mode)
     {
         case bulk::UPDATE:
-            if (todo.do_update)
+            if (vars.do_update)
             {
                 auto update_stm = conn.sqlitestatement("UPDATE data SET value=? WHERE id=?");
                 for (auto& v: vars)
                 {
                     if (!v.needs_update()) continue;
-                    // Warning: we do not know if v.var is a string, so the result of
-                    // enqc is only valid until another enqc is called
-                    update_stm->bind(v.var->enqc(), v.id_data);
+                    v.cur->second.value = v.var->enqc();
+                    update_stm->bind(v.cur->second.value, v.cur->second.id);
                     update_stm->execute();
                     v.set_updated();
                 }
@@ -207,28 +242,33 @@ void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& va
         case bulk::IGNORE:
             break;
         case bulk::ERROR:
-            if (todo.do_update)
+            if (vars.do_update)
                 throw error_consistency("refusing to overwrite existing data");
     }
 
-    if (todo.do_insert)
+    if (vars.do_insert)
     {
+        const auto& dt = vars.shared_context.datetime;
+
         Querybuf dq(512);
         dq.appendf(R"(
             INSERT INTO data (id_station, id_lev_tr, datetime, id_var, value)
                  VALUES (%d, ?, '%04d-%02d-%02d %02d:%02d:%02d', ?, ?)
-        )", vars.station->second.id,
-            vars.datetime.year, vars.datetime.month, vars.datetime.day,
-            vars.datetime.hour, vars.datetime.minute, vars.datetime.second);
+        )", vars.shared_context.station->second.id,
+            dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
         auto insert = conn.sqlitestatement(dq);
         for (auto& v: vars)
         {
             if (!v.needs_insert()) continue;
-            // Warning: we do not know if v.var is a string, so the result of
-            // enqc is only valid until another enqc is called
-            insert->bind(v.id_levtr, v.var->code(), v.var->enqc());
+            ValueState vs;
+            vs.value = v.var->enqc();
+            insert->bind(v.levtr->second.id, v.var->code(), vs.value);
             insert->execute();
-            v.id_data = conn.get_last_insert_id();
+
+            vs.id = conn.get_last_insert_id();
+            vs.is_new = true;
+
+            v.cur = t.state.add_value(ValueDesc(vars.shared_context.station, v.levtr, vars.shared_context.datetime, v.var->code()), vs);
             v.set_inserted();
         }
     }

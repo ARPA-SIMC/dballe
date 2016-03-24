@@ -198,8 +198,7 @@ void DB::insert_station_data(dballe::Transaction& transaction, StationValues& va
     // Insert the station data, and get the ID
     v7::stations_t::iterator si = obtain_station(t.state, vals.info, station_can_add);
 
-    v7::bulk::InsertStationVars vars;
-    vars.station = si;
+    v7::bulk::InsertStationVars vars(t.state, si);
     vals.info.ana_id = si->second.id;
 
     // Add all the variables we find
@@ -212,7 +211,7 @@ void DB::insert_station_data(dballe::Transaction& transaction, StationValues& va
 
     // Read the IDs from the results
     for (const auto& v: vars)
-        vals.values.add_data_id(v.var->code(), v.id_data);
+        vals.values.add_data_id(v.var->code(), v.cur->second.id);
 }
 
 void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool can_replace, bool station_can_add)
@@ -227,18 +226,15 @@ void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool ca
     // Insert the station data, and get the ID
     v7::stations_t::iterator si = obtain_station(t.state, vals.info, station_can_add);
 
-    v7::bulk::InsertVars vars;
-    vars.station = si;
+    v7::bulk::InsertVars vars(t.state, si, vals.info.datetime);
     vals.info.ana_id = si->second.id;
 
-    // Set the date from the record contents
-    vars.datetime = vals.info.datetime;
     // Insert the lev_tr data, and get the ID
     auto ltri = lev_tr().obtain_id(t.state, LevTrDesc(vals.info.level, vals.info.trange));
 
     // Add all the variables we find
     for (auto& i: vals.values)
-        vars.add(i.second.var, ltri->second.id);
+        vars.add(i.second.var, ltri);
 
     // Do the insert
     v7::Data& d = data();
@@ -246,7 +242,7 @@ void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool ca
 
     // Read the IDs from the results
     for (const auto& v: vars)
-        vals.values.add_data_id(v.var->code(), v.id_data);
+        vals.values.add_data_id(v.var->code(), v.cur->second.id);
 }
 
 void DB::remove_station_data(dballe::Transaction& transaction, const Query& query)

@@ -66,8 +66,13 @@ typedef std::map<int, levtrs_t::iterator> levtr_id_t;
 struct StationValueDesc
 {
     stations_t::iterator station;
+    wreport::Varcode varcode;
 
-    wreport::Var var;
+    StationValueDesc() {}
+    StationValueDesc(const StationValueDesc&) = default;
+    StationValueDesc(stations_t::iterator station, wreport::Varcode varcode)
+        : station(station), varcode(varcode) {}
+    StationValueDesc& operator=(const StationValueDesc&) = default;
 
     int compare(const StationValueDesc&) const;
     bool operator<(const StationValueDesc& o) const { return compare(o) < 0; }
@@ -75,10 +80,13 @@ struct StationValueDesc
 
 struct StationValueState
 {
-    // Database ID
+    /// Variable value
+    std::string value;
+
+    /// Database ID
     int id;
 
-    // True if the station value has just been inserted
+    /// True if the station value has just been inserted
     bool is_new;
 };
 
@@ -89,11 +97,15 @@ struct ValueDesc
 {
     stations_t::iterator station;
     levtrs_t::iterator levtr;
-
     /// Date and time at which the value was measured or forecast
     Datetime datetime;
+    wreport::Varcode varcode;
 
-    wreport::Var var;
+    ValueDesc() {}
+    ValueDesc(const ValueDesc&) = default;
+    ValueDesc(stations_t::iterator station, levtrs_t::iterator levtr, const Datetime& datetime, wreport::Varcode varcode)
+        : station(station), levtr(levtr), datetime(datetime), varcode(varcode) {}
+    ValueDesc& operator=(const ValueDesc&) = default;
 
     int compare(const ValueDesc&) const;
     bool operator<(const ValueDesc& o) const { return compare(o) < 0; }
@@ -101,10 +113,13 @@ struct ValueDesc
 
 struct ValueState
 {
-    // Database ID
+    /// Variable value
+    std::string value;
+
+    /// Database ID
     int id;
 
-    // True if the value has just been inserted
+    /// True if the value has just been inserted
     bool is_new;
 };
 
@@ -126,6 +141,8 @@ struct State
 
     stations_t::iterator add_station(const StationDesc& desc, const StationState& state);
     levtrs_t::iterator add_levtr(const LevTrDesc& desc, const LevTrState& state);
+    stationvalues_t::iterator add_stationvalue(const StationValueDesc& desc, const StationValueState& state);
+    values_t::iterator add_value(const ValueDesc& desc, const ValueState& state);
 
     /// Clear the state, removing all cached data
     void clear();

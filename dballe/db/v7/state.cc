@@ -22,7 +22,7 @@ int LevTrDesc::compare(const LevTrDesc& o) const
 int StationValueDesc::compare(const StationValueDesc& o) const
 {
     if (int res = station->first.compare(o.station->first)) return res;
-    return var.code() - o.var.code();
+    return varcode - o.varcode;
 }
 
 int ValueDesc::compare(const ValueDesc& o) const
@@ -30,7 +30,7 @@ int ValueDesc::compare(const ValueDesc& o) const
     if (int res = station->first.compare(o.station->first)) return res;
     if (int res = levtr->first.compare(o.levtr->first)) return res;
     if (int res = datetime.compare(o.datetime)) return res;
-    return var.code() - o.var.code();
+    return varcode - o.varcode;
 }
 
 void State::clear()
@@ -52,6 +52,18 @@ levtrs_t::iterator State::add_levtr(const LevTrDesc& desc, const LevTrState& sta
 {
     auto res = levtrs.insert(make_pair(desc, state));
     levtr_ids.insert(make_pair(state.id, res.first));
+    return res.first;
+}
+
+stationvalues_t::iterator State::add_stationvalue(const StationValueDesc& desc, const StationValueState& state)
+{
+    auto res = stationvalues.insert(make_pair(desc, state));
+    return res.first;
+}
+
+values_t::iterator State::add_value(const ValueDesc& desc, const ValueState& state)
+{
+    auto res = values.insert(make_pair(desc, state));
     return res.first;
 }
 

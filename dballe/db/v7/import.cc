@@ -73,8 +73,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
     {
         // Prepare a bulk insert
         v7::StationData& sd = station_data();
-        v7::bulk::InsertStationVars vars;
-        vars.station = sstate;
+        v7::bulk::InsertStationVars vars(t.state, sstate);
         for (size_t i = 0; i < l_ana->data.size(); ++i)
         {
             Varcode code = l_ana->data[i]->code();
@@ -95,7 +94,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
             for (const auto& v: vars)
             {
                 if (!v.inserted()) continue;
-                attrs.add_all(*v.var, v.id_data);
+                attrs.add_all(*v.var, v.cur->second.id);
             }
             if (!attrs.empty())
                 a.insert(t, attrs, v7::Attr::UPDATE);
@@ -103,13 +102,13 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
     }
 
     v7::Data& dd = data();
-    v7::bulk::InsertVars vars;
-    vars.station = sstate;
 
     // Date and time
-    if (msg.get_datetime().is_missing())
+    Datetime dt = msg.get_datetime();
+    if (dt.is_missing())
         throw error_notfound("date/time informations not found (or incomplete) in message to insert");
-    vars.datetime = msg.get_datetime();
+
+    v7::bulk::InsertVars vars(t.state, sstate, dt);
 
     // Fill the bulk insert with the rest of the data
     for (size_t i = 0; i < msg.data.size(); ++i)
@@ -127,7 +126,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
         {
             const Var* var = ctx.data[j];
             if (not var->isset()) continue;
-            vars.add(var, levtri->second.id);
+            vars.add(var, levtri);
         }
     }
 
@@ -142,7 +141,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
         for (const auto& v: vars)
         {
             if (!v.inserted()) continue;
-            attrs.add_all(*v.var, v.id_data);
+            attrs.add_all(*v.var, v.cur->second.id);
         }
         if (!attrs.empty())
             a.insert(t, attrs, v7::Attr::UPDATE);
