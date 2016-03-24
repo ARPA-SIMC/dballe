@@ -47,9 +47,9 @@ public:
     SQLiteStationBase(const SQLiteStationBase&&) = delete;
     SQLiteStationBase& operator=(const SQLiteStationBase&) = delete;
 
-    State::stations_t::iterator lookup_id(State& st, int id) override;
-    State::stations_t::iterator get_id(State& st, const StationDesc& desc) override;
-    State::stations_t::iterator obtain_id(State& st, const StationDesc& desc) override;
+    stations_t::iterator lookup_id(State& st, int id) override;
+    stations_t::iterator get_id(State& st, const StationDesc& desc) override;
+    stations_t::iterator obtain_id(State& st, const StationDesc& desc) override;
 
     void get_station_vars(int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
     void add_station_vars(int id_station, Record& rec) override;

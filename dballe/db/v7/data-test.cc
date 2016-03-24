@@ -46,8 +46,8 @@ struct Fixture : V7DriverFixture
         int added, deleted, updated;
         driver->create_repinfo()->update(nullptr, &added, &deleted, &updated);
 
-        db::v7::State::stations_t::iterator si;
-        db::v7::State::levels_t::iterator li;
+        db::v7::stations_t::iterator si;
+        db::v7::levels_t::iterator li;
 
         // Insert a mobile station
         si = st->obtain_id(state, sde1);

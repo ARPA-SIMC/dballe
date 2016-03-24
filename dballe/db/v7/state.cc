@@ -26,13 +26,13 @@ void State::clear()
     level_ids.clear();
 }
 
-State::stations_t::iterator State::add_station(const StationDesc& desc, const StationState& state)
+stations_t::iterator State::add_station(const StationDesc& desc, const StationState& state)
 {
     auto res = stations.insert(make_pair(desc, state));
     return res.first;
 }
 
-State::levels_t::iterator State::add_levtr(const LevTrDesc& desc, const LevTrState& state)
+levels_t::iterator State::add_levtr(const LevTrDesc& desc, const LevTrState& state)
 {
     auto res = levels.insert(make_pair(desc, state));
     level_ids.insert(make_pair(state.id, res.first));

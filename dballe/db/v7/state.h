@@ -8,30 +8,6 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
-#if 0
-struct ValueDesc
-{
-    /// Date and time at which the value was measured or forecast
-    Datetime datetime;
-
-    wreport::Varcode varcode;
-};
-
-struct ValueState
-{
-    /// wreport::Var representing the value
-    wreport::Var* var = nullptr;
-
-    /// Database ID
-    int id;
-
-    // True if the value has just been inserted
-    bool is_new;
-
-    std::map<wreport::Varcode, ValueState> attributes;
-};
-#endif
-
 struct StationDesc
 {
     int rep;
@@ -56,6 +32,8 @@ struct StationState
     std::map<LevTrDesc, LevTrState> levtrs;
 #endif
 };
+
+typedef std::map<StationDesc, StationState> stations_t;
 
 struct LevTrDesc
 {
@@ -89,6 +67,34 @@ struct LevTrState
 #endif
 };
 
+typedef std::map<LevTrDesc, LevTrState> levels_t;
+typedef std::map<int, levels_t::iterator> level_id_t;
+
+#if 0
+struct ValueDesc
+{
+    /// Date and time at which the value was measured or forecast
+    Datetime datetime;
+
+    wreport::Varcode varcode;
+};
+
+struct ValueState
+{
+    /// wreport::Var representing the value
+    wreport::Var* var = nullptr;
+
+    /// Database ID
+    int id;
+
+    // True if the value has just been inserted
+    bool is_new;
+
+    std::map<wreport::Varcode, ValueState> attributes;
+};
+#endif
+
+
 /**
  * Cache intermediate results during a database transaction, to avoid hitting
  * the database multiple times when we already know values from previous
@@ -96,10 +102,6 @@ struct LevTrState
  */
 struct State
 {
-    typedef std::map<StationDesc, StationState> stations_t;
-    typedef std::map<LevTrDesc, LevTrState> levels_t;
-    typedef std::map<int, levels_t::iterator> level_id_t;
-
     stations_t stations;
     levels_t levels;
     level_id_t level_ids;

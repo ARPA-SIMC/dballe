@@ -68,7 +68,7 @@ bool SQLiteStationBase::maybe_get_id(const StationDesc& st, int* id)
     return found;
 }
 
-State::stations_t::iterator SQLiteStationBase::lookup_id(State& st, int id)
+stations_t::iterator SQLiteStationBase::lookup_id(State& st, int id)
 {
     // First look it up in the transaction cache
     for (auto i = st.stations.begin(); i != st.stations.end(); ++i)
@@ -81,7 +81,7 @@ State::stations_t::iterator SQLiteStationBase::lookup_id(State& st, int id)
     sstm->bind_val(1, id);
 
     bool found = false;
-    State::stations_t::iterator res;
+    stations_t::iterator res;
     sstm->execute_one([&]() {
         StationDesc desc;
         desc.rep = sstm->column_int(0);
@@ -102,7 +102,7 @@ State::stations_t::iterator SQLiteStationBase::lookup_id(State& st, int id)
     return res;
 }
 
-State::stations_t::iterator SQLiteStationBase::get_id(State& st, const StationDesc& desc)
+stations_t::iterator SQLiteStationBase::get_id(State& st, const StationDesc& desc)
 {
     auto res = st.stations.find(desc);
     if (res != st.stations.end())
@@ -117,7 +117,7 @@ State::stations_t::iterator SQLiteStationBase::get_id(State& st, const StationDe
     throw error_notfound("station not found in the database");
 }
 
-State::stations_t::iterator SQLiteStationBase::obtain_id(State& st, const StationDesc& desc)
+stations_t::iterator SQLiteStationBase::obtain_id(State& st, const StationDesc& desc)
 {
     auto res = st.stations.find(desc);
     if (res != st.stations.end())

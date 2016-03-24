@@ -169,7 +169,7 @@ int DB::rep_cod_from_memo(const char* memo)
     return repinfo().obtain_id(memo);
 }
 
-v7::State::stations_t::iterator DB::obtain_station(v7::State& state, const dballe::Station& st, bool can_add)
+v7::stations_t::iterator DB::obtain_station(v7::State& state, const dballe::Station& st, bool can_add)
 {
     v7::Station& s = station();
 
@@ -196,7 +196,7 @@ void DB::insert_station_data(dballe::Transaction& transaction, StationValues& va
     auto& t = v7::Transaction::downcast(transaction);
 
     // Insert the station data, and get the ID
-    v7::State::stations_t::iterator si = obtain_station(t.state, vals.info, station_can_add);
+    v7::stations_t::iterator si = obtain_station(t.state, vals.info, station_can_add);
 
     v7::bulk::InsertStationVars vars;
     vars.station = si->second;
@@ -225,7 +225,7 @@ void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool ca
     auto& t = v7::Transaction::downcast(transaction);
 
     // Insert the station data, and get the ID
-    v7::State::stations_t::iterator si = obtain_station(t.state, vals.info, station_can_add);
+    v7::stations_t::iterator si = obtain_station(t.state, vals.info, station_can_add);
 
     v7::bulk::InsertVars vars;
     vars.station = si->second;

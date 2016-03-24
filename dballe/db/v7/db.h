@@ -123,7 +123,7 @@ protected:
      * @returns
      *   The station ID
      */
-    v7::State::stations_t::iterator obtain_station(v7::State& state, const dballe::Station& st, bool can_add=true);
+    v7::stations_t::iterator obtain_station(v7::State& state, const dballe::Station& st, bool can_add=true);
 
 public:
     virtual ~DB();

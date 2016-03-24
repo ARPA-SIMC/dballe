@@ -38,13 +38,13 @@ struct LevTr
     msg::Context* to_msg(State& st, int id, Msg& msg);
 
     /// Look up a LevTr from the database given its ID.
-    virtual State::levels_t::iterator lookup_id(State& st, int id) = 0;
+    virtual levels_t::iterator lookup_id(State& st, int id) = 0;
 
     /**
      * Look up a LevTr from the database given its description. Insert a new
      * one if not found.
      */
-    virtual State::levels_t::iterator obtain_id(State& state, const LevTrDesc& desc) = 0;
+    virtual levels_t::iterator obtain_id(State& state, const LevTrDesc& desc) = 0;
 
 #if 0
     /// Read the LevTr data for an id, returns nullptr if not found

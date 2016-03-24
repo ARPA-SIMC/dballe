@@ -29,21 +29,21 @@ public:
      *
      * It throws an exception if it does not exist.
      */
-    virtual State::stations_t::iterator lookup_id(State& st, int id) = 0;
+    virtual stations_t::iterator lookup_id(State& st, int id) = 0;
 
     /**
      * Get the station ID given latitude, longitude and mobile identifier.
      *
      * It throws an exception if it does not exist.
      */
-    virtual State::stations_t::iterator get_id(State& st, const StationDesc& desc) = 0;
+    virtual stations_t::iterator get_id(State& st, const StationDesc& desc) = 0;
 
     /**
      * Get the station ID given latitude, longitude and mobile identifier.
      *
      * It creates the station record if it does not exist.
      */
-    virtual State::stations_t::iterator obtain_id(State& st, const StationDesc& desc) = 0;
+    virtual stations_t::iterator obtain_id(State& st, const StationDesc& desc) = 0;
 
     /**
      * Dump the entire contents of the table to an output stream

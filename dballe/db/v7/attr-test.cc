@@ -36,8 +36,8 @@ struct Fixture : V7DriverFixture
         db::v7::StationDesc sde1;
         db::v7::StationDesc sde2;
         db::v7::State state;
-        db::v7::State::stations_t::iterator si;
-        db::v7::State::levels_t::iterator li;
+        db::v7::stations_t::iterator si;
+        db::v7::levels_t::iterator li;
 
         // Insert a mobile station
         sde1.rep = 1;
