@@ -1,6 +1,7 @@
 #ifndef DBALLE_DB_V7_STATE_H
 #define DBALLE_DB_V7_STATE_H
 
+#include <wreport/varinfo.h>
 #include <dballe/core/defs.h>
 #include <map>
 
@@ -25,15 +26,10 @@ struct StationState
 
     // True if the station has just been inserted
     bool is_new;
-
-#if 0
-    std::map<wreport::Varcode, ValueState> station_values;
-
-    std::map<LevTrDesc, LevTrState> levtrs;
-#endif
 };
 
 typedef std::map<StationDesc, StationState> stations_t;
+
 
 struct LevTrDesc
 {
@@ -61,36 +57,34 @@ struct LevTrState
 
     // True if the value has just been inserted
     bool is_new;
-
-#if 0
-    std::map<ValueDesc, ValueState> values;
-#endif
 };
 
-typedef std::map<LevTrDesc, LevTrState> levels_t;
-typedef std::map<int, levels_t::iterator> level_id_t;
+typedef std::map<LevTrDesc, LevTrState> levtrs_t;
+typedef std::map<int, levtrs_t::iterator> levtr_id_t;
+
 
 #if 0
 struct ValueDesc
 {
+    stations_t::iterator station;
+    levtrs_t::iterator levtr;
+
     /// Date and time at which the value was measured or forecast
     Datetime datetime;
 
     wreport::Varcode varcode;
+
+    int compare(const ValueDesc&) const;
+    bool operator<(const ValueDesc& o) const { return compare(o) < 0; }
 };
 
 struct ValueState
 {
-    /// wreport::Var representing the value
-    wreport::Var* var = nullptr;
-
-    /// Database ID
+    // Database ID
     int id;
 
     // True if the value has just been inserted
     bool is_new;
-
-    std::map<wreport::Varcode, ValueState> attributes;
 };
 #endif
 
@@ -103,11 +97,11 @@ struct ValueState
 struct State
 {
     stations_t stations;
-    levels_t levels;
-    level_id_t level_ids;
+    levtrs_t levtrs;
+    levtr_id_t levtr_ids;
 
     stations_t::iterator add_station(const StationDesc& desc, const StationState& state);
-    levels_t::iterator add_levtr(const LevTrDesc& desc, const LevTrState& state);
+    levtrs_t::iterator add_levtr(const LevTrDesc& desc, const LevTrState& state);
 
     /// Clear the state, removing all cached data
     void clear();

@@ -48,8 +48,8 @@ public:
     ~SQLiteLevTrV7();
 
     void prefetch_ids(const std::set<int>& ids, std::map<int, LevTrDesc>& data) override;
-    levels_t::iterator lookup_id(State& st, int id) override;
-    levels_t::iterator obtain_id(State& state, const LevTrDesc& desc) override;
+    levtrs_t::iterator lookup_id(State& st, int id) override;
+    levtrs_t::iterator obtain_id(State& state, const LevTrDesc& desc) override;
 
     /**
      * Dump the entire contents of the table to an output stream

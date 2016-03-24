@@ -22,8 +22,8 @@ int LevTrDesc::compare(const LevTrDesc& o) const
 void State::clear()
 {
     stations.clear();
-    levels.clear();
-    level_ids.clear();
+    levtrs.clear();
+    levtr_ids.clear();
 }
 
 stations_t::iterator State::add_station(const StationDesc& desc, const StationState& state)
@@ -32,10 +32,10 @@ stations_t::iterator State::add_station(const StationDesc& desc, const StationSt
     return res.first;
 }
 
-levels_t::iterator State::add_levtr(const LevTrDesc& desc, const LevTrState& state)
+levtrs_t::iterator State::add_levtr(const LevTrDesc& desc, const LevTrState& state)
 {
-    auto res = levels.insert(make_pair(desc, state));
-    level_ids.insert(make_pair(state.id, res.first));
+    auto res = levtrs.insert(make_pair(desc, state));
+    levtr_ids.insert(make_pair(state.id, res.first));
     return res.first;
 }
 

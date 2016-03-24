@@ -94,15 +94,15 @@ void SQLiteLevTrV7::prefetch_ids(const std::set<int>& ids, std::map<int, LevTrDe
     });
 }
 
-levels_t::iterator SQLiteLevTrV7::lookup_id(State& st, int id)
+levtrs_t::iterator SQLiteLevTrV7::lookup_id(State& st, int id)
 {
-    auto res = st.level_ids.find(id);
-    if (res != st.level_ids.end())
+    auto res = st.levtr_ids.find(id);
+    if (res != st.levtr_ids.end())
         return res->second;
 
     sdstm->bind(id);
     bool found = false;
-    levels_t::iterator new_res;
+    levtrs_t::iterator new_res;
     sdstm->execute_one([&]() {
         LevTrDesc desc;
 
@@ -128,10 +128,10 @@ levels_t::iterator SQLiteLevTrV7::lookup_id(State& st, int id)
     return new_res;
 }
 
-levels_t::iterator SQLiteLevTrV7::obtain_id(State& state, const LevTrDesc& desc)
+levtrs_t::iterator SQLiteLevTrV7::obtain_id(State& state, const LevTrDesc& desc)
 {
-    auto res = state.levels.find(desc);
-    if (res != state.levels.end())
+    auto res = state.levtrs.find(desc);
+    if (res != state.levtrs.end())
         return res;
 
     sstm->bind(
