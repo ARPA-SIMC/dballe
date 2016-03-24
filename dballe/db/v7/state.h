@@ -63,7 +63,28 @@ typedef std::map<LevTrDesc, LevTrState> levtrs_t;
 typedef std::map<int, levtrs_t::iterator> levtr_id_t;
 
 
-#if 0
+struct StationValueDesc
+{
+    stations_t::iterator station;
+
+    wreport::Varcode varcode;
+
+    int compare(const StationValueDesc&) const;
+    bool operator<(const StationValueDesc& o) const { return compare(o) < 0; }
+};
+
+struct StationValueState
+{
+    // Database ID
+    int id;
+
+    // True if the station value has just been inserted
+    bool is_new;
+};
+
+typedef std::map<StationValueDesc, StationValueState> stationvalues_t;
+
+
 struct ValueDesc
 {
     stations_t::iterator station;
@@ -86,7 +107,8 @@ struct ValueState
     // True if the value has just been inserted
     bool is_new;
 };
-#endif
+
+typedef std::map<ValueDesc, ValueState> values_t;
 
 
 /**
@@ -99,6 +121,8 @@ struct State
     stations_t stations;
     levtrs_t levtrs;
     levtr_id_t levtr_ids;
+    stationvalues_t stationvalues;
+    values_t values;
 
     stations_t::iterator add_station(const StationDesc& desc, const StationState& state);
     levtrs_t::iterator add_levtr(const LevTrDesc& desc, const LevTrState& state);
