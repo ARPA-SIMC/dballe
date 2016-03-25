@@ -160,18 +160,14 @@ void SQLiteStationData::dump(FILE* out)
 SQLiteData::SQLiteData(SQLiteConnection& conn)
     : conn(conn)
 {
-    // Create the statement for select id
-    sstm = conn.sqlitestatement(R"(
-        SELECT id, id_lev_tr, id_var, value
-          FROM data
-         WHERE id_station=? AND datetime=?
-         ORDER BY id_lev_tr, id_var
-    )").release();
+    istm = conn.sqlitestatement("INSERT INTO data (id_station, id_lev_tr, datetime, id_var, value) VALUES (?, ?, ?, ?, ?)").release();
+    ustm = conn.sqlitestatement("UPDATE data SET value=? WHERE id=?").release();
 }
 
 SQLiteData::~SQLiteData()
 {
-    if (sstm) delete sstm;
+    delete istm;
+    delete ustm;
 }
 
 void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode)
@@ -228,13 +224,12 @@ void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& va
         case bulk::UPDATE:
             if (vars.do_update)
             {
-                auto update_stm = conn.sqlitestatement("UPDATE data SET value=? WHERE id=?");
                 for (auto& v: vars)
                 {
                     if (!v.needs_update()) continue;
                     v.cur->second.value = v.var->enqc();
-                    update_stm->bind(v.cur->second.value, v.cur->second.id);
-                    update_stm->execute();
+                    ustm->bind(v.cur->second.value, v.cur->second.id);
+                    ustm->execute();
                     v.set_updated();
                 }
             }
@@ -248,22 +243,17 @@ void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& va
 
     if (vars.do_insert)
     {
-        const auto& dt = vars.shared_context.datetime;
-
-        Querybuf dq(512);
-        dq.appendf(R"(
-            INSERT INTO data (id_station, id_lev_tr, datetime, id_var, value)
-                 VALUES (%d, ?, '%04d-%02d-%02d %02d:%02d:%02d', ?, ?)
-        )", vars.shared_context.station->second.id,
-            dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
-        auto insert = conn.sqlitestatement(dq);
+        istm->bind_val(1, vars.shared_context.station->second.id);
+        istm->bind_val(3, vars.shared_context.datetime);
         for (auto& v: vars)
         {
             if (!v.needs_insert()) continue;
             ValueState vs;
             vs.value = v.var->enqc();
-            insert->bind(v.levtr->second.id, v.var->code(), vs.value);
-            insert->execute();
+            istm->bind_val(2, v.levtr->second.id);
+            istm->bind_val(4, v.var->code());
+            istm->bind_val(5, vs.value);
+            istm->execute();
 
             vs.id = conn.get_last_insert_id();
             vs.is_new = true;

@@ -45,8 +45,10 @@ protected:
     /// DB connection
     dballe::sql::SQLiteConnection& conn;
 
-    /// Precompiled select statement to prepare bulk insert
-    dballe::sql::SQLiteStatement* sstm = nullptr;
+    /// Precompiled insert statement
+    dballe::sql::SQLiteStatement* istm = nullptr;
+    /// Precompiled update statement
+    dballe::sql::SQLiteStatement* ustm = nullptr;
 
 public:
     SQLiteData(dballe::sql::SQLiteConnection& conn);
