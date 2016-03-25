@@ -21,12 +21,14 @@ namespace sqlite {
 SQLiteStationData::SQLiteStationData(SQLiteConnection& conn)
     : conn(conn)
 {
+    sstm = conn.sqlitestatement("SELECT id, id_var, value FROM station_data WHERE id_station=?").release();
     istm = conn.sqlitestatement("INSERT INTO station_data (id_station, id_var, value) VALUES (?, ?, ?)").release();
     ustm = conn.sqlitestatement("UPDATE station_data SET value=? WHERE id=?").release();
 }
 
 SQLiteStationData::~SQLiteStationData()
 {
+    delete sstm;
     delete istm;
     delete ustm;
 }
@@ -39,20 +41,13 @@ void SQLiteStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertS
     // Load the missing varcodes into the state and into vars
     if (!vars.to_query.empty())
     {
-        Querybuf q(512);
-        q.appendf("SELECT id, id_var, value FROM station_data WHERE id_station=%d AND id_var IN (", vars.shared_context.station->second.id);
-        q.start_list(",");
-        for (const auto& vi: vars.to_query)
-            q.append_listf("%d", (int)vi->var->code());
-        q.append(")");
-
-        auto stm = conn.sqlitestatement(q);
-        stm->execute([&]() {
+        sstm->bind_val(1, vars.shared_context.station->second.id);
+        sstm->execute([&]() {
             StationValueState vs;
-            vs.value = stm->column_string(2);
-            vs.id = stm->column_int(0);
+            vs.value = sstm->column_string(2);
+            vs.id = sstm->column_int(0);
             vs.is_new = false;
-            wreport::Varcode code = stm->column_int(1);
+            wreport::Varcode code = sstm->column_int(1);
 
             auto cur = t.state.add_stationvalue(StationValueDesc(vars.shared_context.station, code), vs);
             auto vi = std::find_if(vars.to_query.begin(), vars.to_query.end(), [code](const bulk::StationVar* v) { return v->var->code() == code; });
