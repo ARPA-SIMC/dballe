@@ -12,6 +12,7 @@
 #include "sql/mysql.h"
 #endif
 #include <cstring>
+#include <cstdlib>
 
 using namespace std;
 using namespace wreport;
@@ -19,7 +20,28 @@ using namespace wreport;
 namespace dballe {
 namespace sql {
 
-Connection::~Connection() {}
+const char* format_server_type(ServerType type)
+{
+    switch (type)
+    {
+        case ServerType::MYSQL: return "mysql";
+        case ServerType::SQLITE: return "sqlite";
+        case ServerType::ORACLE: return "oracle";
+        case ServerType::POSTGRES: return "postgresql";
+        default: return "unknown";
+    }
+}
+
+Connection::Connection()
+{
+    profile = getenv("DBA_PROFILE") != nullptr;
+}
+
+Connection::~Connection()
+{
+    if (profile)
+        fprintf(stderr, "%s: %d queries\n", format_server_type(server_type), profile_query_count);
+}
 
 void Connection::add_datetime(Querybuf& qb, const Datetime& dt) const
 {

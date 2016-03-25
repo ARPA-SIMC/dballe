@@ -50,10 +50,18 @@ enum class ServerType
 };
 /// @endcond
 
+/**
+ * Return a string description for a ServerType value
+ */
+const char* format_server_type(ServerType type);
+
+
 class Connection
 {
 protected:
     std::string url;
+    bool profile = false;
+    unsigned profile_query_count = 0;
 
 public:
     /**
@@ -64,6 +72,7 @@ public:
      */
     ServerType server_type;
 
+    Connection();
     virtual ~Connection();
 
     const std::string& get_url() const { return url; }

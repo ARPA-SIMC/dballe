@@ -39,8 +39,8 @@ protected:
     /// Database connection
     sqlite3* db = nullptr;
 
-protected:
     void init_after_connect();
+    static void on_sqlite3_profile(void* arg, const char* query, sqlite3_uint64 usecs);
 
 public:
     SQLiteConnection();

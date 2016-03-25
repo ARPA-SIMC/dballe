@@ -4,7 +4,6 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
-#include <cstdlib>
 
 using namespace std;
 using namespace wreport;
@@ -84,6 +83,13 @@ void SQLiteConnection::open_private_file(int flags)
     open_file("", flags);
 }
 
+void SQLiteConnection::on_sqlite3_profile(void* arg, const char* query, sqlite3_uint64 usecs)
+{
+    SQLiteConnection* conn = (SQLiteConnection*)arg;
+    ++(conn->profile_query_count);
+    fprintf(stderr, "sqlite:%.3fs:%s\n", usecs / 1000000.0, query);
+}
+
 void SQLiteConnection::init_after_connect()
 {
     server_type = ServerType::SQLITE;
@@ -101,6 +107,9 @@ void SQLiteConnection::init_after_connect()
         exec("PRAGMA journal_mode = MEMORY");
         exec("PRAGMA legacy_file_format = 0");
     }
+
+    if (profile)
+        sqlite3_profile(db, on_sqlite3_profile, this);
 }
 
 void SQLiteConnection::exec(const std::string& query)
