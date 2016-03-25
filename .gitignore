@@ -44,6 +44,7 @@ Makefile
 /dballe/msg/context-extravars.h
 /dballe/test-dballe
 /dballe/bench-run
+/dballe/profile-run
 /dballe/dump-core-info
 /fortran/check_attrs
 /fortran/check_fdballe

@@ -484,6 +484,19 @@ bench_run_LDADD = \
 
 
 #
+# Profile
+#
+
+noinst_PROGRAMS += profile-run
+
+profile_run_SOURCES = \
+	profile-main.cc
+profile_run_LDADD = \
+	libdballe.la \
+	$(common_libs)
+
+
+#
 # Documentation
 #
 
