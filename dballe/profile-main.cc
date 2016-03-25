@@ -54,6 +54,55 @@ struct ImportSynopOneStation: public Scenario
 };
 
 
+struct ImportSynopManyTimes: public Scenario
+{
+    Messages messages;
+
+    const char* name() const override { return "import_synop_many_times"; }
+
+    void read_input()
+    {
+        unique_ptr<File> f = File::create(File::BUFR, "extra/bufr/synop-groundtemp.bufr", "r");
+        std::unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR);
+        f->foreach([&](const BinaryMessage& msg) {
+            messages = importer->from_binary(msg);
+            return true;
+        });
+    }
+
+    void import()
+    {
+        auto db = DB::connect_test();
+        db->reset();
+        {
+            auto t = db->transaction();
+            for (const auto& msg: messages)
+                db->import_msg(*t, msg, "synop", DBA_IMPORT_ATTRS | DBA_IMPORT_OVERWRITE);
+            t->commit();
+        }
+        {
+            auto t = db->transaction();
+            for (const auto& msg: messages)
+                db->import_msg(*t, msg, "synop", DBA_IMPORT_ATTRS | DBA_IMPORT_OVERWRITE);
+            t->commit();
+        }
+        {
+            auto t = db->transaction();
+            for (const auto& msg: messages)
+                db->import_msg(*t, msg, "synop", DBA_IMPORT_ATTRS | DBA_IMPORT_OVERWRITE);
+            t->commit();
+        }
+    }
+
+    int run(int argc, const char* argv[]) override
+    {
+        read_input();
+        import();
+        return 0;
+    }
+};
+
+
 struct Profile
 {
     vector<Scenario*> profiles;
@@ -63,6 +112,7 @@ struct Profile
         : argv0(argv0)
     {
         profiles.push_back(new ImportSynopOneStation);
+        profiles.push_back(new ImportSynopManyTimes);
     }
 
     ~Profile()
