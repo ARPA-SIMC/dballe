@@ -87,7 +87,7 @@ void SQLiteConnection::on_sqlite3_profile(void* arg, const char* query, sqlite3_
 {
     SQLiteConnection* conn = (SQLiteConnection*)arg;
     ++(conn->profile_query_count);
-    fprintf(stderr, "sqlite:%.3fs:%s\n", usecs / 1000000.0, query);
+    fprintf(stderr, "sqlite:%.3fs:%s\n", (double)usecs / 1000000000.0, query);
 }
 
 void SQLiteConnection::init_after_connect()
