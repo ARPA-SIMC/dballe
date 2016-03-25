@@ -21,18 +21,14 @@ namespace sqlite {
 SQLiteStationData::SQLiteStationData(SQLiteConnection& conn)
     : conn(conn)
 {
-    // Create the statement for select id
-    sstm = conn.sqlitestatement(R"(
-        SELECT id, id_var, value
-          FROM station_data
-         WHERE id_station=?
-         ORDER BY id_var
-    )").release();
+    istm = conn.sqlitestatement("INSERT INTO station_data (id_station, id_var, value) VALUES (?, ?, ?)").release();
+    ustm = conn.sqlitestatement("UPDATE station_data SET value=? WHERE id=?").release();
 }
 
 SQLiteStationData::~SQLiteStationData()
 {
-    if (sstm) delete sstm;
+    delete istm;
+    delete ustm;
 }
 
 void SQLiteStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode)
@@ -76,13 +72,12 @@ void SQLiteStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertS
         case bulk::UPDATE:
             if (vars.do_update)
             {
-                auto update_stm = conn.sqlitestatement("UPDATE station_data SET value=? WHERE id=?");
                 for (auto& v: vars)
                 {
                     if (!v.needs_update()) continue;
                     v.cur->second.value = v.var->enqc();
-                    update_stm->bind(v.cur->second.value, v.cur->second.id);
-                    update_stm->execute();
+                    ustm->bind(v.cur->second.value, v.cur->second.id);
+                    ustm->execute();
                     v.set_updated();
                 }
             }
@@ -96,19 +91,15 @@ void SQLiteStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertS
 
     if (vars.do_insert)
     {
-        Querybuf dq(512);
-        dq.appendf(R"(
-            INSERT INTO station_data (id_station, id_var, value)
-                 VALUES (%d, ?, ?)
-        )", vars.shared_context.station->second.id);
-        auto insert = conn.sqlitestatement(dq);
+        istm->bind_val(1, vars.shared_context.station->second.id);
         for (auto& v: vars)
         {
             if (!v.needs_insert()) continue;
             StationValueState vs;
             vs.value = v.var->enqc();
-            insert->bind(v.var->code(), vs.value);
-            insert->execute();
+            istm->bind_val(2, v.var->code());
+            istm->bind_val(3, vs.value);
+            istm->execute();
 
             vs.id = conn.get_last_insert_id();
             vs.is_new = true;
