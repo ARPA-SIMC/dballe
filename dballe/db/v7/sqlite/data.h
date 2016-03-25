@@ -49,6 +49,8 @@ protected:
     /// DB connection
     dballe::sql::SQLiteConnection& conn;
 
+    /// Precompiled select statement
+    dballe::sql::SQLiteStatement* sstm = nullptr;
     /// Precompiled insert statement
     dballe::sql::SQLiteStatement* istm = nullptr;
     /// Precompiled update statement
