@@ -210,9 +210,8 @@ struct InsertPlan : public std::vector<var_t>
                 var.set_needs_insert();
                 do_insert = true;
             }
-            else if (var.cur->second.value != var.var->enqc())
+            else
             {
-                // If the value is different, we need to update
                 var.set_needs_update();
                 do_update = true;
             }

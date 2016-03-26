@@ -81,9 +81,6 @@ struct StationValueDesc
 
 struct StationValueState
 {
-    /// Variable value
-    std::string value;
-
     /// Database ID
     int id;
 
@@ -114,9 +111,6 @@ struct ValueDesc
 
 struct ValueState
 {
-    /// Variable value
-    std::string value;
-
     /// Database ID
     int id;
 
