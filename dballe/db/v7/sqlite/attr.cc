@@ -46,26 +46,32 @@ void SQLiteAttr::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertAttrsV7&
     select_query.appendf("SELECT id_data, type, value FROM %s WHERE id_data IN (", table_name.c_str());
     select_query.start_list(",");
     int last_data_id = -1;
+    bool do_select = false;
     for (const auto& a: attrs)
     {
         if (a.id_data == last_data_id) continue;
-        select_query.append_listf("%d", a.id_data);
         last_data_id = a.id_data;
+        if (attrs.id_data_new.find(a.id_data) != attrs.id_data_new.end()) continue;
+        select_query.append_listf("%d", a.id_data);
+        do_select = true;
     }
     select_query.append(") ORDER BY id_data, type");
 
-    // Get the current status of variables for this context
-    auto sstm = conn.sqlitestatement(select_query);
-
-    // Scan the result in parallel with the variable list, annotating changed
-    // items with their data ID
     v7::bulk::AnnotateAttrsV7 todo(attrs);
-    sstm->execute([&]() {
-        todo.annotate(
-                sstm->column_int(0),
-                sstm->column_int(1),
-                sstm->column_string(2));
-    });
+    if (do_select)
+    {
+        // Get the current status of variables for this context
+        auto sstm = conn.sqlitestatement(select_query);
+
+        // Scan the result in parallel with the variable list, annotating changed
+        // items with their data ID
+        sstm->execute([&]() {
+            todo.annotate(
+                    sstm->column_int(0),
+                    sstm->column_int(1),
+                    sstm->column_string(2));
+        });
+    }
     todo.annotate_end();
 
     // We now have a todo-list
