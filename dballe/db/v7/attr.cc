@@ -1,4 +1,5 @@
 #include "attr.h"
+#include "transaction.h"
 #include "internals.h"
 #include <algorithm>
 #include <cstring>
@@ -10,11 +11,13 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
+Attr::Attr(std::unordered_set<int> State::* new_ids)
+    : new_ids(new_ids) {}
 Attr::~Attr() {}
 
 void Attr::insert_attributes(dballe::db::v7::Transaction& t, int id_data, const wreport::Var& var, UpdateMode update_mode)
 {
-    bulk::InsertAttrsV7 attrs;
+    bulk::InsertAttrsV7 attrs(t.state.*new_ids);
     attrs.add_all(var, id_data);
     if (attrs.empty()) return;
     insert(t, attrs, update_mode);

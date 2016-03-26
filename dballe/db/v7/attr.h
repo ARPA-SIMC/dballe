@@ -2,11 +2,13 @@
 #define DBALLE_DB_V7_ATTRV7_H
 
 #include <dballe/db/v7/data.h>
+#include <dballe/db/v7/state.h>
 #include <dballe/sql/fwd.h>
 #include <wreport/var.h>
 #include <functional>
 #include <vector>
 #include <memory>
+#include <unordered_set>
 #include <cstdio>
 
 namespace dballe {
@@ -32,6 +34,9 @@ public:
         ERROR,
     };
 
+    std::unordered_set<int> State::*new_ids = nullptr;
+
+    Attr(std::unordered_set<int> State::* new_ids);
     virtual ~Attr();
 
     /// Insert all attributes of the given variable
@@ -83,6 +88,13 @@ struct AttrV7 : public Item
 
 struct InsertAttrsV7 : public std::vector<AttrV7>
 {
+    const std::unordered_set<int>& id_data_new;
+
+    InsertAttrsV7(const std::unordered_set<int>& id_data_new)
+        : id_data_new(id_data_new)
+    {
+    }
+
     void add(const wreport::Var* attr, int id_data)
     {
         emplace_back(attr, id_data);

@@ -58,12 +58,14 @@ levtrs_t::iterator State::add_levtr(const LevTrDesc& desc, const LevTrState& sta
 stationvalues_t::iterator State::add_stationvalue(const StationValueDesc& desc, const StationValueState& state)
 {
     auto res = stationvalues.insert(make_pair(desc, state));
+    if (state.is_new) stationvalues_new.insert(state.id);
     return res.first;
 }
 
 values_t::iterator State::add_value(const ValueDesc& desc, const ValueState& state)
 {
     auto res = values.insert(make_pair(desc, state));
+    if (state.is_new) values_new.insert(state.id);
     return res.first;
 }
 

@@ -4,6 +4,7 @@
 #include <wreport/var.h>
 #include <dballe/core/defs.h>
 #include <map>
+#include <unordered_set>
 
 namespace dballe {
 namespace db {
@@ -138,6 +139,8 @@ struct State
     levtr_id_t levtr_ids;
     stationvalues_t stationvalues;
     values_t values;
+    std::unordered_set<int> stationvalues_new;
+    std::unordered_set<int> values_new;
 
     stations_t::iterator add_station(const StationDesc& desc, const StationState& state);
     levtrs_t::iterator add_levtr(const LevTrDesc& desc, const LevTrState& state);

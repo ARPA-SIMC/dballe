@@ -15,8 +15,8 @@ namespace db {
 namespace v7 {
 namespace sqlite {
 
-SQLiteAttr::SQLiteAttr(SQLiteConnection& conn, const std::string& table_name)
-    : conn(conn), table_name(table_name)
+SQLiteAttr::SQLiteAttr(SQLiteConnection& conn, const std::string& table_name, std::unordered_set<int> State::* new_ids)
+    : Attr(new_ids), conn(conn), table_name(table_name)
 {
     // Precompile the statement for select
     sstm = conn.sqlitestatement("SELECT type, value FROM " + table_name + " WHERE id_data=?").release();

@@ -28,7 +28,7 @@ protected:
     dballe::sql::SQLiteStatement* ustm = nullptr;
 
 public:
-    SQLiteAttr(dballe::sql::SQLiteConnection& conn, const std::string& table_name);
+    SQLiteAttr(dballe::sql::SQLiteConnection& conn, const std::string& table_name, std::unordered_set<int> State::* new_ids);
     SQLiteAttr(const SQLiteAttr&) = delete;
     SQLiteAttr(const SQLiteAttr&&) = delete;
     SQLiteAttr& operator=(const SQLiteAttr&) = delete;

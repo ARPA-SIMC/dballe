@@ -323,13 +323,13 @@ void DB::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport
 
 void DB::attr_insert_station(dballe::Transaction& transaction, int data_id, const Values& attrs)
 {
+    auto& t = v7::Transaction::downcast(transaction);
+
     v7::Attr& a = station_attr();
-    v7::bulk::InsertAttrsV7 iattrs;
+    v7::bulk::InsertAttrsV7 iattrs(t.state.stationvalues_new);
     for (const auto& i : attrs)
         iattrs.add(i.second.var, data_id);
     if (iattrs.empty()) return;
-
-    auto& t = v7::Transaction::downcast(transaction);
 
     // Insert all the attributes we found
     a.insert(t, iattrs, v7::Attr::UPDATE);
@@ -337,13 +337,13 @@ void DB::attr_insert_station(dballe::Transaction& transaction, int data_id, cons
 
 void DB::attr_insert_data(dballe::Transaction& transaction, int data_id, const Values& attrs)
 {
+    auto& t = v7::Transaction::downcast(transaction);
+
     v7::Attr& a = attr();
-    v7::bulk::InsertAttrsV7 iattrs;
+    v7::bulk::InsertAttrsV7 iattrs(t.state.values_new);
     for (const auto& i : attrs)
         iattrs.add(i.second.var, data_id);
     if (iattrs.empty()) return;
-
-    auto& t = v7::Transaction::downcast(transaction);
 
     // Insert all the attributes we found
     a.insert(t, iattrs, v7::Attr::UPDATE);

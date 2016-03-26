@@ -90,7 +90,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
         if (flags & DBA_IMPORT_ATTRS)
         {
             v7::Attr& a = station_attr();
-            v7::bulk::InsertAttrsV7 attrs;
+            v7::bulk::InsertAttrsV7 attrs(t.state.stationvalues_new);
             for (const auto& v: vars)
             {
                 if (!v.inserted()) continue;
@@ -137,7 +137,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
     if (flags & DBA_IMPORT_ATTRS)
     {
         v7::Attr& a = attr();
-        v7::bulk::InsertAttrsV7 attrs;
+        v7::bulk::InsertAttrsV7 attrs(t.state.values_new);
         for (const auto& v: vars)
         {
             if (!v.inserted()) continue;

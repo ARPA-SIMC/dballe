@@ -52,7 +52,7 @@ std::unique_ptr<v7::StationData> Driver::create_station_data()
 
 std::unique_ptr<v7::Attr> Driver::create_station_attr()
 {
-    return unique_ptr<v7::Attr>(new SQLiteAttr(conn, "station_attr"));
+    return unique_ptr<v7::Attr>(new SQLiteAttr(conn, "station_attr", &State::stationvalues_new));
 }
 
 std::unique_ptr<v7::Data> Driver::create_data()
@@ -62,7 +62,7 @@ std::unique_ptr<v7::Data> Driver::create_data()
 
 std::unique_ptr<v7::Attr> Driver::create_attr()
 {
-    return unique_ptr<v7::Attr>(new SQLiteAttr(conn, "attr"));
+    return unique_ptr<v7::Attr>(new SQLiteAttr(conn, "attr", &State::values_new));
 }
 
 void Driver::run_built_query_v7(

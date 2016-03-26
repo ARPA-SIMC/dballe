@@ -119,7 +119,7 @@ class Tests : public FixtureTestCase<Fixture>
 
             // Insert two attributes
             {
-                bulk::InsertAttrsV7 attrs;
+                bulk::InsertAttrsV7 attrs(t->state.values_new);
                 attrs.add_all(var1, 1);
                 at.insert(*t, attrs, Attr::ERROR);
                 wassert(actual(attrs.size()) == 1);
@@ -129,7 +129,7 @@ class Tests : public FixtureTestCase<Fixture>
                 wassert(actual(attrs[0].updated()).isfalse());
             }
             {
-                bulk::InsertAttrsV7 attrs;
+                bulk::InsertAttrsV7 attrs(t->state.values_new);
                 attrs.add_all(var2, 2);
                 at.insert(*t, attrs, Attr::ERROR);
                 wassert(actual(attrs.size()) == 1);
@@ -141,7 +141,7 @@ class Tests : public FixtureTestCase<Fixture>
 
             // Reinsert the first attribute: it should work, doing no insert/update queries
             {
-                bulk::InsertAttrsV7 attrs;
+                bulk::InsertAttrsV7 attrs(t->state.values_new);
                 attrs.add_all(var1, 1);
                 at.insert(*t, attrs, Attr::IGNORE);
                 wassert(actual(attrs.size()) == 1);
@@ -153,7 +153,7 @@ class Tests : public FixtureTestCase<Fixture>
 
             // Reinsert the second attribute: it should work, doing no insert/update queries
             {
-                bulk::InsertAttrsV7 attrs;
+                bulk::InsertAttrsV7 attrs(t->state.values_new);
                 attrs.add_all(var2, 2);
                 at.insert(*t, attrs, Attr::UPDATE);
                 wassert(actual(attrs.size()) == 1);
@@ -179,7 +179,7 @@ class Tests : public FixtureTestCase<Fixture>
 
             // Update both values
             {
-                bulk::InsertAttrsV7 attrs;
+                bulk::InsertAttrsV7 attrs(t->state.values_new);
                 attrs.add_all(var2, 1);
                 at.insert(*t, attrs, Attr::UPDATE);
                 wassert(actual(attrs.size()) == 1);
@@ -189,7 +189,7 @@ class Tests : public FixtureTestCase<Fixture>
                 wassert(actual(attrs[0].updated()).istrue());
             }
             {
-                bulk::InsertAttrsV7 attrs;
+                bulk::InsertAttrsV7 attrs(t->state.values_new);
                 attrs.add_all(var1, 2);
                 at.insert(*t, attrs, Attr::UPDATE);
                 wassert(actual(attrs.size()) == 1);
