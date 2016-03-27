@@ -10,6 +10,23 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
+struct ItemState
+{
+    // Database ID
+    int id;
+
+    // True if the item has just been inserted
+    bool is_new;
+
+    ItemState() {}
+    ItemState(int id, bool is_new) : id(id), is_new(is_new) {}
+    ItemState(const ItemState&) = default;
+    ItemState(ItemState&&) = default;
+    ItemState& operator=(const ItemState&) = default;
+    ItemState& operator=(ItemState&&) = default;
+};
+
+
 struct StationDesc
 {
     int rep;
@@ -20,13 +37,9 @@ struct StationDesc
     bool operator<(const StationDesc& o) const { return compare(o) < 0; }
 };
 
-struct StationState
+struct StationState : public ItemState
 {
-    // Database ID
-    int id;
-
-    // True if the station has just been inserted
-    bool is_new;
+    using ItemState::ItemState;
 };
 
 typedef std::map<StationDesc, StationState> stations_t;
@@ -51,13 +64,9 @@ struct LevTrDesc
     bool operator<(const LevTrDesc& o) const { return compare(o) < 0; }
 };
 
-struct LevTrState
+struct LevTrState : public ItemState
 {
-    /// ID in the database
-    int id;
-
-    // True if the value has just been inserted
-    bool is_new;
+    using ItemState::ItemState;
 };
 
 typedef std::map<LevTrDesc, LevTrState> levtrs_t;
@@ -79,13 +88,9 @@ struct StationValueDesc
     bool operator<(const StationValueDesc& o) const { return compare(o) < 0; }
 };
 
-struct StationValueState
+struct StationValueState : public ItemState
 {
-    /// Database ID
-    int id;
-
-    /// True if the station value has just been inserted
-    bool is_new;
+    using ItemState::ItemState;
 };
 
 typedef std::map<StationValueDesc, StationValueState> stationvalues_t;
@@ -109,13 +114,9 @@ struct ValueDesc
     bool operator<(const ValueDesc& o) const { return compare(o) < 0; }
 };
 
-struct ValueState
+struct ValueState : public ItemState
 {
-    /// Database ID
-    int id;
-
-    /// True if the value has just been inserted
-    bool is_new;
+    using ItemState::ItemState;
 };
 
 typedef std::map<ValueDesc, ValueState> values_t;
