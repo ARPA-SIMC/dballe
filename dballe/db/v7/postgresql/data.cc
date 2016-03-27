@@ -210,8 +210,13 @@ void PostgreSQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars
                     const char* value = v.var->enqc();
                     char* escaped_val = PQescapeLiteral(conn, value, strlen(value));
                     if (!escaped_val)
-                        throw error_postgresql(conn, string("cannot escaping string '") + value + "'");
-                    dq.append_listf("(%d, %s)", v.cur->second.id, escaped_val);
+                        throw error_postgresql(conn, string("cannot escape string '") + value + "'");
+                    dq.start_list_item();
+                    dq.append("(");
+                    dq.append_int(v.cur->second.id);
+                    dq.append(",");
+                    dq.append(escaped_val);
+                    dq.append(")");
                     PQfreemem(escaped_val);
                     v.set_updated();
                 }
@@ -231,19 +236,29 @@ void PostgreSQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars
     {
         const Datetime& dt = vars.shared_context.datetime;
         Querybuf dq(512);
-        dq.append("INSERT INTO data (id, id_station, id_levtr, datetime, code, value) VALUES ");
+        dq.append("INSERT INTO data (id, id_station, datetime, id_levtr, code, value) VALUES ");
         dq.start_list(",");
+
+        char val_lead[64];
+        snprintf(val_lead, 64, "(DEFAULT,%d,'%04d-%02d-%02d %02d:%02d:%02d',",
+                    vars.shared_context.station->second.id,
+                    dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
+
         for (auto& v: vars)
         {
             if (!v.needs_insert()) continue;
             const char* value = v.var->enqc();
             char* escaped_val = PQescapeLiteral(conn, value, strlen(value));
             if (!escaped_val)
-                throw error_postgresql(conn, string("escaping string '") + value + "'");
-            dq.append_listf("(DEFAULT, %d, %d, '%04d-%02d-%02d %02d:%02d:%02d', %d, %s)",
-                    vars.shared_context.station->second.id, v.levtr.id,
-                    dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,
-                    (int)v.var->code(), escaped_val);
+                throw error_postgresql(conn, string("cannot escape string '") + value + "'");
+            dq.start_list_item();
+            dq.append(val_lead);
+            dq.append_int(v.levtr.id);
+            dq.append(",");
+            dq.append_int(v.var->code());
+            dq.append(",");
+            dq.append(escaped_val);
+            dq.append(")");
             PQfreemem(escaped_val);
         }
         dq.append(" RETURNING id");

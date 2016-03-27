@@ -35,6 +35,21 @@ void Querybuf::start_list(const char* sep)
 	list_sep[9] = 0;
 }
 
+void Querybuf::start_list_item()
+{
+    if (list_first)
+        list_first = false;
+    else
+        append(list_sep);
+}
+
+void Querybuf::append_int(int val)
+{
+    char buf[16];
+    snprintf(buf, 16, "%d", val);
+    append(buf);
+}
+
 void Querybuf::appendf(const char* fmt, ...)
 {
 	va_list ap;
@@ -48,11 +63,8 @@ void Querybuf::appendf(const char* fmt, ...)
 
 void Querybuf::append_list(const char* str)
 {
-	if (list_first)
-		list_first = false;
-	else
-		append(list_sep);
-	append(str);
+    start_list_item();
+    append(str);
 }
 
 void Querybuf::append_listf(const char* fmt, ...)
@@ -60,10 +72,7 @@ void Querybuf::append_listf(const char* fmt, ...)
 	va_list ap;
 	va_start(ap, fmt);
 
-	if (list_first)
-		list_first = false;
-	else
-		append(list_sep);
+    start_list_item();
 
 	char* buf;
 	int size = vasprintf(&buf, fmt, ap);
