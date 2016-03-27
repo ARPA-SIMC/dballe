@@ -17,7 +17,7 @@ namespace sqlite {
 /**
  * Precompiled queries to manipulate the station table
  */
-class SQLiteStationBase : public v7::Station
+class SQLiteStation : public v7::Station
 {
 protected:
     /**
@@ -41,11 +41,11 @@ protected:
     void read_station_vars(dballe::sql::SQLiteStatement& stm, std::function<void(std::unique_ptr<wreport::Var>)> dest);
 
 public:
-    SQLiteStationBase(dballe::sql::SQLiteConnection& conn);
-    ~SQLiteStationBase();
-    SQLiteStationBase(const SQLiteStationBase&) = delete;
-    SQLiteStationBase(const SQLiteStationBase&&) = delete;
-    SQLiteStationBase& operator=(const SQLiteStationBase&) = delete;
+    SQLiteStation(dballe::sql::SQLiteConnection& conn);
+    ~SQLiteStation();
+    SQLiteStation(const SQLiteStation&) = delete;
+    SQLiteStation(const SQLiteStation&&) = delete;
+    SQLiteStation& operator=(const SQLiteStation&) = delete;
 
     stations_t::iterator lookup_id(State& st, int id) override;
     stations_t::iterator get_id(State& st, const StationDesc& desc) override;
@@ -58,12 +58,6 @@ public:
      * Dump the entire contents of the table to an output stream
      */
     void dump(FILE* out) override;
-};
-
-class SQLiteStationV7 : public SQLiteStationBase
-{
-public:
-    SQLiteStationV7(dballe::sql::SQLiteConnection& conn);
 };
 
 }

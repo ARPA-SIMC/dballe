@@ -15,7 +15,7 @@ namespace db {
 namespace v7 {
 namespace sqlite {
 
-SQLiteStationBase::SQLiteStationBase(SQLiteConnection& conn)
+SQLiteStation::SQLiteStation(SQLiteConnection& conn)
     : conn(conn)
 {
     const char* select_fixed_query =
@@ -36,7 +36,7 @@ SQLiteStationBase::SQLiteStationBase(SQLiteConnection& conn)
     istm = conn.sqlitestatement(insert_query).release();
 }
 
-SQLiteStationBase::~SQLiteStationBase()
+SQLiteStation::~SQLiteStation()
 {
     delete sstm;
     delete sfstm;
@@ -44,7 +44,7 @@ SQLiteStationBase::~SQLiteStationBase()
     delete istm;
 }
 
-bool SQLiteStationBase::maybe_get_id(const StationDesc& st, int* id)
+bool SQLiteStation::maybe_get_id(const StationDesc& st, int* id)
 {
     SQLiteStatement* s;
     if (st.ident.get())
@@ -68,7 +68,7 @@ bool SQLiteStationBase::maybe_get_id(const StationDesc& st, int* id)
     return found;
 }
 
-stations_t::iterator SQLiteStationBase::lookup_id(State& st, int id)
+stations_t::iterator SQLiteStation::lookup_id(State& st, int id)
 {
     // First look it up in the transaction cache
     for (auto i = st.stations.begin(); i != st.stations.end(); ++i)
@@ -102,7 +102,7 @@ stations_t::iterator SQLiteStationBase::lookup_id(State& st, int id)
     return res;
 }
 
-stations_t::iterator SQLiteStationBase::get_id(State& st, const StationDesc& desc)
+stations_t::iterator SQLiteStation::get_id(State& st, const StationDesc& desc)
 {
     auto res = st.stations.find(desc);
     if (res != st.stations.end())
@@ -117,7 +117,7 @@ stations_t::iterator SQLiteStationBase::get_id(State& st, const StationDesc& des
     throw error_notfound("station not found in the database");
 }
 
-stations_t::iterator SQLiteStationBase::obtain_id(State& st, const StationDesc& desc)
+stations_t::iterator SQLiteStation::obtain_id(State& st, const StationDesc& desc)
 {
     auto res = st.stations.find(desc);
     if (res != st.stations.end())
@@ -144,7 +144,7 @@ stations_t::iterator SQLiteStationBase::obtain_id(State& st, const StationDesc& 
     return st.add_station(desc, state);
 }
 
-void SQLiteStationBase::read_station_vars(SQLiteStatement& stm, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+void SQLiteStation::read_station_vars(SQLiteStatement& stm, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     // Retrieve results
     Varcode last_varcode = 0;
@@ -181,7 +181,7 @@ void SQLiteStationBase::read_station_vars(SQLiteStatement& stm, std::function<vo
     }
 }
 
-void SQLiteStationBase::get_station_vars(int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+void SQLiteStation::get_station_vars(int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     // Perform the query
     static const char query[] = R"(
@@ -199,7 +199,7 @@ void SQLiteStationBase::get_station_vars(int id_station, std::function<void(std:
     read_station_vars(*stm, dest);
 }
 
-void SQLiteStationBase::dump(FILE* out)
+void SQLiteStation::dump(FILE* out)
 {
     int count = 0;
     fprintf(out, "dump of table station:\n");
@@ -220,7 +220,7 @@ void SQLiteStationBase::dump(FILE* out)
     fprintf(out, "%d element%s in table station\n", count, count != 1 ? "s" : "");
 }
 
-void SQLiteStationBase::add_station_vars(int id_station, Record& rec)
+void SQLiteStation::add_station_vars(int id_station, Record& rec)
 {
     const char* query = R"(
         SELECT d.code, d.value
@@ -234,9 +234,6 @@ void SQLiteStationBase::add_station_vars(int id_station, Record& rec)
         rec.set(newvar((wreport::Varcode)stm->column_int(0), stm->column_string(1)));
     });
 }
-
-SQLiteStationV7::SQLiteStationV7(SQLiteConnection& conn)
-    : SQLiteStationBase(conn) {}
 
 }
 }
