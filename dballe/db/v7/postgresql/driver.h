@@ -1,5 +1,5 @@
-#ifndef DBALLE_DB_V7_SQLITE_DRIVER_H
-#define DBALLE_DB_V7_SQLITE_DRIVER_H
+#ifndef DBALLE_DB_V7_POSTGRESQL_DRIVER_H
+#define DBALLE_DB_V7_POSTGRESQL_DRIVER_H
 
 #include <dballe/db/v7/driver.h>
 #include <dballe/sql/fwd.h>
@@ -7,13 +7,13 @@
 namespace dballe {
 namespace db {
 namespace v7 {
-namespace sqlite {
+namespace postgresql {
 
 struct Driver : public v7::Driver
 {
-    dballe::sql::SQLiteConnection& conn;
+    dballe::sql::PostgreSQLConnection& conn;
 
-    Driver(dballe::sql::SQLiteConnection& conn);
+    Driver(dballe::sql::PostgreSQLConnection& conn);
     virtual ~Driver();
 
     std::unique_ptr<v7::Repinfo> create_repinfo() override;

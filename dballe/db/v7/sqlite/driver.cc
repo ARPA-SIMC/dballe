@@ -22,7 +22,7 @@ namespace v7 {
 namespace sqlite {
 
 Driver::Driver(SQLiteConnection& conn)
-    : conn(conn)
+    : v7::Driver(conn), conn(conn)
 {
 }
 
@@ -236,28 +236,6 @@ void Driver::vacuum_v7()
          LEFT JOIN data d ON d.id_station = p.id
              WHERE d.id is NULL)
     )");
-}
-
-void Driver::exec_no_data(const std::string& query)
-{
-    conn.exec(query);
-}
-
-void Driver::explain(const std::string& query)
-{
-    string explain_query = "EXPLAIN QUERY PLAN ";
-    explain_query += query;
-
-    fprintf(stderr, "%s\n", explain_query.c_str());
-    auto stm = conn.sqlitestatement(explain_query);
-    fprintf(stderr, "sid\torder\tfrom\tdetail\n");
-    stm->execute([&]() {
-        int selectid = stm->column_int(0);
-        int order = stm->column_int(1);
-        int from = stm->column_int(2);
-        const char* detail = stm->column_string(3);
-        fprintf(stderr, "%d\t%d\t%d\t%s\n", selectid, order, from, detail);
-    });
 }
 
 }

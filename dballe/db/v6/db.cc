@@ -367,7 +367,7 @@ void DB::attr_remove_station(dballe::Transaction& transaction, int data_id, cons
             query.append_listf("%hd", *i);
         query.append(")");
     }
-    driver().exec_no_data(query);
+    conn->execute(query);
 }
 
 void DB::attr_remove_data(dballe::Transaction& transaction, int data_id, const db::AttrList& qcs)
@@ -384,7 +384,7 @@ void DB::attr_remove_data(dballe::Transaction& transaction, int data_id, const d
             query.append_listf("%hd", *i);
         query.append(")");
     }
-    driver().exec_no_data(query);
+    conn->execute(query);
 }
 
 bool DB::is_station_variable(int data_id, wreport::Varcode varcode)

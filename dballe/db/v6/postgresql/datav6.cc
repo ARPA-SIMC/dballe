@@ -20,31 +20,6 @@ namespace postgresql {
 PostgreSQLDataV6::PostgreSQLDataV6(PostgreSQLConnection& conn)
     : conn(conn)
 {
-    conn.prepare("datav6_insert", R"(
-        INSERT INTO data (id, id_station, id_report, id_lev_tr, datetime, id_var, value)
-             VALUES (DEFAULT, $1::int4, $2::int4, $3::int4, $4::timestamp, $5::int4, $6::text)
-          RETURNING id
-    )");
-    conn.prepare("datav6_insert_ignore", R"(
-        INSERT INTO data (id_station, id_report, id_lev_tr, datetime, id_var, value)
-             SELECT $1::int4, $2::int4, $3::int4, $4::timestamp, $5::int4, $6::text
-              WHERE NOT EXISTS (
-                    SELECT 1
-                      FROM data
-                     WHERE id_station = $1::int4 AND datetime = $4::timestamp
-                       AND id_lev_tr = $3::int4 AND id_report = $2::int4
-                       AND id_var = $5::int4
-                    )
-          RETURNING id
-    )");
-    conn.prepare("datav6_update", R"(
-        UPDATE data SET value=$2::text WHERE id=$1::int4
-    )");
-    conn.prepare("datav6_select_id", R"(
-        SELECT id FROM data
-         WHERE id_station=$1::int4 AND id_report=$2::int4
-           AND id_lev_tr=$3::int4 AND datetime=$4::timestamp AND id_var=$5::int4
-    )");
 }
 
 PostgreSQLDataV6::~PostgreSQLDataV6()

@@ -2,11 +2,11 @@
 #include "config.h"
 #include "dballe/db/v7/sqlite/driver.h"
 #include "dballe/sql/sqlite.h"
-#if 0
 #ifdef HAVE_LIBPQ
 #include "dballe/db/v7/postgresql/driver.h"
 #include "dballe/sql/postgresql.h"
 #endif
+#if 0
 #ifdef HAVE_MYSQL
 #include "dballe/db/v7/mysql/driver.h"
 #include "dballe/sql/mysql.h"
@@ -51,6 +51,11 @@ void SQLRecordV7::dump(FILE* out)
     fprintf(out, "%d%02d%03d %s\n", WR_VAR_FXY(out_varcode), out_value);
 }
 
+Driver::Driver(sql::Connection& connection)
+    : connection(connection)
+{
+}
+
 Driver::~Driver()
 {
 }
@@ -84,17 +89,12 @@ void Driver::remove_all(db::Format format)
 
 void Driver::remove_all_v7()
 {
-    exec_no_data("DELETE FROM station_attr");
-    exec_no_data("DELETE FROM attr");
-    exec_no_data("DELETE FROM station_data");
-    exec_no_data("DELETE FROM data");
-    exec_no_data("DELETE FROM levtr");
-    exec_no_data("DELETE FROM station");
-}
-
-void Driver::explain(const std::string& query)
-{
-    fprintf(stderr, "Explaining query %s is not supported on this db.\n", query.c_str());
+    connection.execute("DELETE FROM station_attr");
+    connection.execute("DELETE FROM attr");
+    connection.execute("DELETE FROM station_data");
+    connection.execute("DELETE FROM data");
+    connection.execute("DELETE FROM levtr");
+    connection.execute("DELETE FROM station");
 }
 
 std::unique_ptr<Driver> Driver::create(dballe::sql::Connection& conn)
@@ -103,26 +103,26 @@ std::unique_ptr<Driver> Driver::create(dballe::sql::Connection& conn)
 
     if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(&conn))
         return unique_ptr<Driver>(new sqlite::Driver(*c));
-#if 0
-#ifdef HAVE_ODBC
-    else if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(&conn))
-        return unique_ptr<Driver>(new odbc::Driver(*c));
-#endif
 #ifdef HAVE_LIBPQ
     else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(&conn))
         return unique_ptr<Driver>(new postgresql::Driver(*c));
 #endif
+#if 0
 #ifdef HAVE_MYSQL
     else if (MySQLConnection* c = dynamic_cast<MySQLConnection*>(&conn))
         return unique_ptr<Driver>(new mysql::Driver(*c));
 #endif
+#ifdef HAVE_ODBC
+    else if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(&conn))
+        return unique_ptr<Driver>(new odbc::Driver(*c));
+#endif
 #endif
     else
         throw error_unimplemented("DB drivers only implemented for "
-#if 0
 #ifdef HAVE_LIBPQ
                 "PostgreSQL, "
 #endif
+#if 0
 #ifdef HAVE_MYSQL
                 "MySQL, "
 #endif

@@ -21,7 +21,7 @@ struct Fixture : DriverFixture
     void reset_station()
     {
         if (conn->has_table("station"))
-            driver->exec_no_data("DELETE FROM station");
+            driver->connection.execute("DELETE FROM station");
 
         switch (format)
         {

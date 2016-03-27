@@ -24,7 +24,7 @@ struct Fixture : V7DriverFixture
     void reset_station()
     {
         if (conn->has_table("station"))
-            driver->exec_no_data("DELETE FROM station");
+            conn->execute("DELETE FROM station");
 
         repinfo = driver->create_repinfo();
         int added, deleted, updated;

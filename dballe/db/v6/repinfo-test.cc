@@ -22,7 +22,7 @@ struct Fixture : DriverFixture
     void reset_repinfo()
     {
         if (conn->has_table("repinfo"))
-            driver->exec_no_data("DELETE FROM repinfo");
+            driver->connection.execute("DELETE FROM repinfo");
 
         switch (format)
         {

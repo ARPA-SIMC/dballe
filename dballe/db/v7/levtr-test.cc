@@ -22,7 +22,7 @@ struct Fixture : V7DriverFixture
     void reset_levtr()
     {
         if (conn->has_table("levtr"))
-            driver->exec_no_data("DELETE FROM levtr");
+            conn->execute("DELETE FROM levtr");
         levtr = driver->create_levtr();
     }
 

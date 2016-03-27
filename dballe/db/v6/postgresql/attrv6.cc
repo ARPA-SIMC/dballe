@@ -18,18 +18,7 @@ namespace postgresql {
 PostgreSQLAttrV6::PostgreSQLAttrV6(PostgreSQLConnection& conn)
     : conn(conn)
 {
-    conn.prepare("attrv6_select", R"(
-        SELECT type, value FROM attr WHERE id_data=$1::int4
-    )");
-    conn.prepare("attrv6_select_existing", R"(
-        SELECT type, value FROM attr WHERE id_data=$1::int4
-    )");
-    conn.prepare("attrv6_insert", R"(
-        INSERT INTO attr (id_data, type, value) VALUES ($1::int4, $2::int4, $3::text)
-    )");
-    conn.prepare("attrv6_update", R"(
-        UPDATE attr SET value=$3::text WHERE id_data=$1::int4 AND type=$2::int4
-    )");
+    conn.prepare("attrv6_select", "SELECT type, value FROM attr WHERE id_data=$1::int4");
 }
 
 PostgreSQLAttrV6::~PostgreSQLAttrV6()

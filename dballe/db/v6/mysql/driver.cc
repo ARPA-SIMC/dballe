@@ -20,7 +20,7 @@ namespace v6 {
 namespace mysql {
 
 Driver::Driver(MySQLConnection& conn)
-    : conn(conn)
+    : v6::Driver(conn), conn(conn)
 {
 }
 
@@ -185,52 +185,6 @@ void Driver::vacuum_v6()
 {
     conn.exec_no_data("DELETE c FROM lev_tr c LEFT JOIN data d ON d.id_lev_tr = c.id WHERE d.id_lev_tr IS NULL");
     conn.exec_no_data("DELETE p FROM station p LEFT JOIN data d ON d.id_station = p.id WHERE d.id IS NULL");
-}
-
-void Driver::exec_no_data(const std::string& query)
-{
-    conn.exec_no_data(query);
-}
-
-void Driver::explain(const std::string& query)
-{
-    string explain_query = "EXPLAIN EXTENDED ";
-    explain_query += query;
-
-    fprintf(stderr, "%s\n", explain_query.c_str());
-    fprintf(stderr, "sid\tstype\ttable\ttype\tpos_ks\tkey\tkeylen\tref\trows\textra\n");
-    conn.exec_use(explain_query, [&](const Row& row) {
-        fprintf(stderr, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
-                row.as_cstring(0),
-                row.as_cstring(1),
-                row.as_cstring(2),
-                row.as_cstring(3),
-                row.as_cstring(4),
-                row.as_cstring(5),
-                row.as_cstring(6),
-                row.as_cstring(7),
-                row.as_cstring(8),
-                row.as_cstring(9));
-
-// 0 id: 1
-// 1 select_type: PRIMARY
-// 2 table: t1
-// 3 type: index
-// 4 possible_keys: NULL
-// 5 key: PRIMARY
-// 6 key_len: 4
-// 7 ref: NULL
-// 8 rows: 4
-// 9 Extra: Using index
-    });
-
-    fprintf(stderr, "level\tcode\tmessage\n");
-    conn.exec_use("SHOW WARNINGS", [&](const Row& row) {
-        fprintf(stderr, "%s\t%s\t%s\n",
-                row.as_cstring(0),
-                row.as_cstring(1),
-                row.as_cstring(2));
-    });
 }
 
 }

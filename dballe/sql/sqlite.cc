@@ -151,6 +151,28 @@ void SQLiteConnection::exec_nothrow(const std::string& query) noexcept
     }
 }
 
+void SQLiteConnection::execute(const std::string& query)
+{
+    exec(query);
+}
+
+void SQLiteConnection::explain(const std::string& query, FILE* out)
+{
+    string explain_query = "EXPLAIN QUERY PLAN ";
+    explain_query += query;
+
+    fprintf(out, "%s\n", explain_query.c_str());
+    auto stm = sqlitestatement(explain_query);
+    fprintf(out, "sid\torder\tfrom\tdetail\n");
+    stm->execute([&]() {
+        int selectid = stm->column_int(0);
+        int order = stm->column_int(1);
+        int from = stm->column_int(2);
+        const char* detail = stm->column_string(3);
+        fprintf(out, "%d\t%d\t%d\t%s\n", selectid, order, from, detail);
+    });
+}
+
 struct SQLiteTransaction : public Transaction
 {
     SQLiteConnection& conn;

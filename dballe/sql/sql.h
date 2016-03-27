@@ -108,6 +108,12 @@ public:
     /// Format a datetime and add it to the querybuf
     virtual void add_datetime(Querybuf& qb, const Datetime& dt) const;
 
+    /// Execute a query without reading its results
+    virtual void execute(const std::string& query) = 0;
+
+    /// Format and print the EXPLAIN output for the query to the given file
+    virtual void explain(const std::string& query, FILE* out) = 0;
+
     /// Create a new connection from a URL
     static std::unique_ptr<Connection> create_from_url(const char* url);
 

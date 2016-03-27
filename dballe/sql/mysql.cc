@@ -567,5 +567,52 @@ void MySQLConnection::drop_settings()
     drop_table_if_exists("dballe_settings");
 }
 
+void MySQLConnection::execute(const std::string& query)
+{
+    exec_no_data(query);
+}
+
+void MySQLConnection::explain(const std::string& query, FILE* out)
+{
+    using namespace dballe::sql::mysql;
+    string explain_query = "EXPLAIN EXTENDED ";
+    explain_query += query;
+
+    fprintf(out, "%s\n", explain_query.c_str());
+    fprintf(out, "sid\tstype\ttable\ttype\tpos_ks\tkey\tkeylen\tref\trows\textra\n");
+    exec_use(explain_query, [&](const Row& row) {
+        fprintf(out, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+                row.as_cstring(0),
+                row.as_cstring(1),
+                row.as_cstring(2),
+                row.as_cstring(3),
+                row.as_cstring(4),
+                row.as_cstring(5),
+                row.as_cstring(6),
+                row.as_cstring(7),
+                row.as_cstring(8),
+                row.as_cstring(9));
+
+// 0 id: 1
+// 1 select_type: PRIMARY
+// 2 table: t1
+// 3 type: index
+// 4 possible_keys: NULL
+// 5 key: PRIMARY
+// 6 key_len: 4
+// 7 ref: NULL
+// 8 rows: 4
+// 9 Extra: Using index
+    });
+
+    fprintf(out, "level\tcode\tmessage\n");
+    exec_use("SHOW WARNINGS", [&](const Row& row) {
+        fprintf(out, "%s\t%s\t%s\n",
+                row.as_cstring(0),
+                row.as_cstring(1),
+                row.as_cstring(2));
+    });
+}
+
 }
 }

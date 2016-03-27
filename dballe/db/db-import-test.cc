@@ -349,14 +349,17 @@ class Tests : public FixtureTestCase<DBFixture>
 Tests tg1("db_import_mem", nullptr, db::MEM);
 Tests tg2("db_import_v6_sqlite", "SQLITE", db::V6);
 #ifdef HAVE_ODBC
-Tests tg4("db_import_v6_odbc", "ODBC", db::V6);
+Tests tg3("db_import_v6_odbc", "ODBC", db::V6);
 #endif
 #ifdef HAVE_LIBPQ
-Tests tg6("db_import_v6_postgresql", "POSTGRESQL", db::V6);
+Tests tg4("db_import_v6_postgresql", "POSTGRESQL", db::V6);
 #endif
 #ifdef HAVE_MYSQL
-Tests tg8("db_import_v6_mysql", "MYSQL", db::V6);
+Tests tg5("db_import_v6_mysql", "MYSQL", db::V6);
 #endif
-Tests tg9("db_import_v7_sqlite", "SQLITE", db::V7);
+Tests tg6("db_import_v7_sqlite", "SQLITE", db::V7);
+#ifdef HAVE_LIBPQ
+Tests tg7("db_import_v7_postgresql", "POSTGRESQL", db::V7);
+#endif
 
 }

@@ -404,25 +404,12 @@ public:
     /// Discard all input from an asynchronous request
     void discard_all_input_nothrow() noexcept;
 
-    /// Check if the database contains a table
     bool has_table(const std::string& name) override;
-
-    /**
-     * Get a value from the settings table.
-     *
-     * Returns the empty string if the table does not exist.
-     */
     std::string get_setting(const std::string& key) override;
-
-    /**
-     * Set a value in the settings table.
-     *
-     * The table is created if it does not exist.
-     */
     void set_setting(const std::string& key, const std::string& value) override;
-
-    /// Drop the settings table
     void drop_settings() override;
+    void execute(const std::string& query) override;
+    void explain(const std::string& query, FILE* out) override;
 
     /**
      * Delete a table in the database if it exists, otherwise do nothing.

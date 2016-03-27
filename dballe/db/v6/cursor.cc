@@ -1,6 +1,7 @@
 #include "cursor.h"
 #include "qbuilder.h"
 #include "db.h"
+#include <dballe/sql/sql.h>
 #include <dballe/db/v6/driver.h>
 #include "dballe/db/v6/repinfo.h"
 #include "dballe/db/v6/station.h"
@@ -479,7 +480,7 @@ unique_ptr<CursorStation> run_station_query(DB& db, const core::Query& q, bool e
     if (explain)
     {
         fprintf(stderr, "EXPLAIN "); q.print(stderr);
-        db.driver().explain(qb.sql_query);
+        db.conn->explain(qb.sql_query, stderr);
     }
 
     auto resptr = new Stations(db, modifiers);
@@ -497,7 +498,7 @@ unique_ptr<CursorStationData> run_station_data_query(DB& db, const core::Query& 
     if (explain)
     {
         fprintf(stderr, "EXPLAIN "); q.print(stderr);
-        db.driver().explain(qb.sql_query);
+        db.conn->explain(qb.sql_query, stderr);
     }
 
     unique_ptr<CursorStationData> res;
@@ -524,7 +525,7 @@ unique_ptr<CursorData> run_data_query(DB& db, const core::Query& q, bool explain
     if (explain)
     {
         fprintf(stderr, "EXPLAIN "); q.print(stderr);
-        db.driver().explain(qb.sql_query);
+        db.conn->explain(qb.sql_query, stderr);
     }
 
     unique_ptr<CursorData> res;
@@ -553,7 +554,7 @@ unique_ptr<CursorSummary> run_summary_query(DB& db, const core::Query& q, bool e
     if (explain)
     {
         fprintf(stderr, "EXPLAIN "); q.print(stderr);
-        db.driver().explain(qb.sql_query);
+        db.conn->explain(qb.sql_query, stderr);
     }
 
     auto resptr = new Summary(db, modifiers);
@@ -574,7 +575,7 @@ void run_delete_query(DB& db, const core::Query& q, bool station_vars, bool expl
     if (explain)
     {
         fprintf(stderr, "EXPLAIN "); q.print(stderr);
-        db.driver().explain(qb.sql_query);
+        db.conn->explain(qb.sql_query, stderr);
     }
 
     db.data().remove(qb);

@@ -157,7 +157,13 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/v6/postgresql/levtr.h \
 	db/v6/postgresql/datav6.h \
 	db/v6/postgresql/attrv6.h \
-	db/v6/postgresql/driver.h
+	db/v6/postgresql/driver.h \
+	db/v7/postgresql/repinfo.h \
+	db/v7/postgresql/station.h \
+	db/v7/postgresql/levtr.h \
+	db/v7/postgresql/data.h \
+	db/v7/postgresql/attr.h \
+	db/v7/postgresql/driver.h
 endif
 if HAVE_MYSQL
 nobase_dist_dballeinclude_HEADERS += \
@@ -310,7 +316,13 @@ libdballe_la_SOURCES += \
 	db/v6/postgresql/levtr.cc \
 	db/v6/postgresql/datav6.cc \
 	db/v6/postgresql/attrv6.cc \
-	db/v6/postgresql/driver.cc
+	db/v6/postgresql/driver.cc \
+	db/v7/postgresql/repinfo.cc \
+	db/v7/postgresql/station.cc \
+	db/v7/postgresql/levtr.cc \
+	db/v7/postgresql/data.cc \
+	db/v7/postgresql/attr.cc \
+	db/v7/postgresql/driver.cc
 endif
 if HAVE_MYSQL
 libdballe_la_SOURCES += \

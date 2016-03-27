@@ -21,7 +21,7 @@ struct Fixture : DriverFixture
     void reset_levtr()
     {
         if (conn->has_table("levtr"))
-            driver->exec_no_data("DELETE FROM levtr");
+            driver->connection.execute("DELETE FROM levtr");
         levtr = driver->create_levtrv6();
     }
 

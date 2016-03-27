@@ -2,13 +2,9 @@
 #define DBALLE_DB_V6_POSTGRESQL_DRIVER_H
 
 #include <dballe/db/v6/driver.h>
+#include <dballe/sql/fwd.h>
 
 namespace dballe {
-
-namespace sql {
-struct PostgreSQLConnection;
-}
-
 namespace db {
 namespace v6 {
 namespace postgresql {
@@ -29,8 +25,6 @@ struct Driver : public v6::Driver
     void create_tables_v6() override;
     void delete_tables_v6() override;
     void vacuum_v6() override;
-    void exec_no_data(const std::string& query) override;
-    void explain(const std::string& query) override;
 };
 
 }

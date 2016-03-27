@@ -2,9 +2,9 @@
 #include "repinfo.h"
 #include "station.h"
 #include "levtr.h"
-#include "datav6.h"
-#include "attrv6.h"
-#include "dballe/db/v6/qbuilder.h"
+#include "data.h"
+#include "attr.h"
+#include "dballe/db/v7/qbuilder.h"
 #include "dballe/sql/postgresql.h"
 #include <algorithm>
 #include <cstring>
@@ -16,11 +16,11 @@ using dballe::sql::error_postgresql;
 
 namespace dballe {
 namespace db {
-namespace v6 {
+namespace v7 {
 namespace postgresql {
 
 Driver::Driver(PostgreSQLConnection& conn)
-    : v6::Driver(conn), conn(conn)
+    : v7::Driver(conn), conn(conn)
 {
 }
 
@@ -28,38 +28,46 @@ Driver::~Driver()
 {
 }
 
-std::unique_ptr<v6::Repinfo> Driver::create_repinfov6()
+std::unique_ptr<v7::Repinfo> Driver::create_repinfo()
 {
-    return unique_ptr<v6::Repinfo>(new PostgreSQLRepinfoV6(conn));
+    return unique_ptr<v7::Repinfo>(new PostgreSQLRepinfo(conn));
 }
 
-std::unique_ptr<v6::Station> Driver::create_stationv6()
+std::unique_ptr<v7::Station> Driver::create_station()
 {
-    return unique_ptr<v6::Station>(new PostgreSQLStationV6(conn));
+    return unique_ptr<v7::Station>(new PostgreSQLStation(conn));
 }
 
-std::unique_ptr<v6::LevTr> Driver::create_levtrv6()
+std::unique_ptr<v7::LevTr> Driver::create_levtr()
 {
-    return unique_ptr<v6::LevTr>(new PostgreSQLLevTrV6(conn));
+    return unique_ptr<v7::LevTr>(new PostgreSQLLevTr(conn));
 }
 
-std::unique_ptr<v6::DataV6> Driver::create_datav6()
+std::unique_ptr<v7::StationData> Driver::create_station_data()
 {
-    return unique_ptr<v6::DataV6>(new PostgreSQLDataV6(conn));
+    return unique_ptr<v7::StationData>(new PostgreSQLStationData(conn));
 }
 
-std::unique_ptr<v6::AttrV6> Driver::create_attrv6()
+std::unique_ptr<v7::Attr> Driver::create_station_attr()
 {
-    return unique_ptr<v6::AttrV6>(new PostgreSQLAttrV6(conn));
+    return unique_ptr<v7::Attr>(new PostgreSQLAttr(conn, "station_attr", &State::stationvalues_new));
 }
 
-void Driver::run_built_query_v6(
-        const v6::QueryBuilder& qb,
-        std::function<void(v6::SQLRecordV6& rec)> dest)
+std::unique_ptr<v7::Data> Driver::create_data()
+{
+    return unique_ptr<v7::Data>(new PostgreSQLData(conn));
+}
+
+std::unique_ptr<v7::Attr> Driver::create_attr()
+{
+    return unique_ptr<v7::Attr>(new PostgreSQLAttr(conn, "attr", &State::values_new));
+}
+
+void Driver::run_built_query_v7(
+        const v7::QueryBuilder& qb,
+        std::function<void(v7::SQLRecordV7& rec)> dest)
 {
     using namespace dballe::sql::postgresql;
-
-    // fprintf(stderr, "QUERY %d %s\n", qb.bind_in_ident, qb.sql_query.c_str());
 
     // Start the query asynchronously
     int res;
@@ -82,7 +90,7 @@ void Driver::run_built_query_v6(
         throw error_postgresql(errmsg, "cannot set single row mode for query " + qb.sql_query);
     }
 
-    v6::SQLRecordV6 rec;
+    v7::SQLRecordV7 rec;
     while (true)
     {
         Result res(PQgetResult(conn));
@@ -120,6 +128,7 @@ void Driver::run_built_query_v6(
             if (qb.select_station)
             {
                 rec.out_ana_id = res.get_int4(row, output_seq++);
+                rec.out_rep_cod = res.get_int4(row, output_seq++);
                 rec.out_lat = res.get_int4(row, output_seq++);
                 rec.out_lon = res.get_int4(row, output_seq++);
                 if (res.is_null(row, output_seq))
@@ -137,8 +146,8 @@ void Driver::run_built_query_v6(
 
             if (qb.select_varinfo)
             {
-                rec.out_rep_cod = res.get_int4(row, output_seq++);
-                rec.out_id_ltr = res.get_int4(row, output_seq++);
+                if (!qb.query_station_vars)
+                    rec.out_id_ltr = res.get_int4(row, output_seq++);
                 rec.out_varcode = res.get_int4(row, output_seq++);
             }
 
@@ -147,7 +156,8 @@ void Driver::run_built_query_v6(
 
             if (qb.select_data)
             {
-                rec.out_datetime = res.get_timestamp(row, output_seq++);
+                if (!qb.query_station_vars)
+                    rec.out_datetime = res.get_timestamp(row, output_seq++);
 
                 int value_len = min(PQgetlength(res, row, output_seq), 255);
                 const char* value = res.get_string(row, output_seq++);
@@ -158,8 +168,11 @@ void Driver::run_built_query_v6(
             if (qb.select_summary_details)
             {
                 rec.out_id_data = res.get_int8(row, output_seq++);
-                rec.out_datetime = res.get_timestamp(row, output_seq++);
-                rec.out_datetimemax = res.get_timestamp(row, output_seq++);
+                if (!qb.query_station_vars)
+                {
+                    rec.out_datetime = res.get_timestamp(row, output_seq++);
+                    rec.out_datetimemax = res.get_timestamp(row, output_seq++);
+                }
             }
 
             // rec.dump(stderr);
@@ -176,18 +189,8 @@ void Driver::run_built_query_v6(
     }
 }
 
-void Driver::create_tables_v6()
+void Driver::create_tables_v7()
 {
-    conn.exec_no_data(R"(
-        CREATE TABLE station (
-           id         SERIAL PRIMARY KEY,
-           lat        INTEGER NOT NULL,
-           lon        INTEGER NOT NULL,
-           ident      VARCHAR(64)
-        );
-    )");
-    conn.exec_no_data("CREATE UNIQUE INDEX pa_uniq ON station(lat, lon, ident);");
-    conn.exec_no_data("CREATE INDEX pa_lon ON station(lon);");
     conn.exec_no_data(R"(
         CREATE TABLE repinfo (
            id           INTEGER PRIMARY KEY,
@@ -200,76 +203,97 @@ void Driver::create_tables_v6()
     )");
     conn.exec_no_data("CREATE UNIQUE INDEX ri_memo_uniq ON repinfo(memo);");
     conn.exec_no_data("CREATE UNIQUE INDEX ri_prio_uniq ON repinfo(prio);");
+
     conn.exec_no_data(R"(
-        CREATE TABLE lev_tr (
-           id          SERIAL PRIMARY KEY,
-           ltype1      INTEGER NOT NULL,
-           l1          INTEGER NOT NULL,
-           ltype2      INTEGER NOT NULL,
-           l2          INTEGER NOT NULL,
-           ptype       INTEGER NOT NULL,
-           p1          INTEGER NOT NULL,
-           p2          INTEGER NOT NULL
+        CREATE TABLE station (
+           id     SERIAL PRIMARY KEY,
+           rep    INTEGER NOT NULL REFERENCES repinfo (id) ON DELETE CASCADE,
+           lat    INTEGER NOT NULL,
+           lon    INTEGER NOT NULL,
+           ident  VARCHAR(64)
         );
     )");
-    conn.exec_no_data("CREATE UNIQUE INDEX lev_tr_uniq ON lev_tr(ltype1, l1, ltype2, l2, ptype, p1, p2);");
+    conn.exec_no_data("CREATE UNIQUE INDEX pa_uniq ON station(rep, lat, lon, ident);");
+    conn.exec_no_data("CREATE INDEX pa_lon ON station(lon);");
+
+    conn.exec_no_data(R"(
+        CREATE TABLE levtr (
+           id       SERIAL PRIMARY KEY,
+           ltype1   INTEGER NOT NULL,
+           l1       INTEGER NOT NULL,
+           ltype2   INTEGER NOT NULL,
+           l2       INTEGER NOT NULL,
+           pind     INTEGER NOT NULL,
+           p1       INTEGER NOT NULL,
+           p2       INTEGER NOT NULL
+        );
+    )");
+    conn.exec_no_data("CREATE UNIQUE INDEX levtr_uniq ON levtr(ltype1, l1, ltype2, l2, pind, p1, p2);");
+
+    conn.exec_no_data(R"(
+        CREATE TABLE station_data (
+           id          SERIAL PRIMARY KEY,
+           id_station  INTEGER NOT NULL REFERENCES station (id) ON DELETE CASCADE,
+           code        INTEGER NOT NULL,
+           value       VARCHAR(255) NOT NULL
+        );
+    )");
+    conn.exec_no_data("CREATE UNIQUE INDEX station_data_uniq on station_data(id_station, code);");
+
     conn.exec_no_data(R"(
         CREATE TABLE data (
            id          SERIAL PRIMARY KEY,
            id_station  INTEGER NOT NULL REFERENCES station (id) ON DELETE CASCADE,
-           id_report   INTEGER NOT NULL REFERENCES repinfo (id) ON DELETE CASCADE,
-           id_lev_tr   INTEGER NOT NULL,
+           id_levtr    INTEGER NOT NULL REFERENCES levtr(id) ON DELETE CASCADE,
            datetime    TIMESTAMP NOT NULL,
-           id_var      INTEGER NOT NULL,
+           code        INTEGER NOT NULL,
            value       VARCHAR(255) NOT NULL
         );
     )");
-    conn.exec_no_data("CREATE UNIQUE INDEX data_uniq on data(id_station, datetime, id_lev_tr, id_report, id_var);");
-    conn.exec_no_data("CREATE INDEX data_ana ON data(id_station);");
-    conn.exec_no_data("CREATE INDEX data_report ON data(id_report);");
-    conn.exec_no_data("CREATE INDEX data_dt ON data(datetime);");
-    conn.exec_no_data("CREATE INDEX data_lt ON data(id_lev_tr);");
+    conn.exec_no_data("CREATE UNIQUE INDEX data_uniq on data(id_station, datetime, id_levtr, code);");
+    //conn.exec_no_data("CREATE INDEX data_ana ON data(id_station);");
+    //conn.exec_no_data("CREATE INDEX data_dt ON data(datetime);");
+    //conn.exec_no_data("CREATE INDEX data_lt ON data(id_lev_tr);");
+
+    conn.exec_no_data(R"(
+        CREATE TABLE station_attr (
+           id_data     INTEGER NOT NULL REFERENCES station_data (id) ON DELETE CASCADE,
+           code        INTEGER NOT NULL,
+           value       VARCHAR(255) NOT NULL
+        );
+    )");
+    conn.exec_no_data("CREATE UNIQUE INDEX station_attr_uniq ON station_attr(id_data, code);");
+
     conn.exec_no_data(R"(
         CREATE TABLE attr (
            id_data     INTEGER NOT NULL REFERENCES data (id) ON DELETE CASCADE,
-           type        INTEGER NOT NULL,
+           code        INTEGER NOT NULL,
            value       VARCHAR(255) NOT NULL
         );
     )");
-    conn.exec_no_data("CREATE UNIQUE INDEX attr_uniq ON attr(id_data, type);");
-/*
- * Not a good idea: it works on ALL inserts, even on those that should fail
-    "CREATE RULE data_insert_or_update AS "
-    " ON INSERT TO data "
-    " WHERE (new.id_context, new.id_var) IN ( "
-    " SELECT id_context, id_var "
-    " FROM data "
-    " WHERE id_context=new.id_context AND id_var=new.id_var) "
-    " DO INSTEAD "
-    " UPDATE data SET value=new.value "
-    " WHERE id_context=new.id_context AND id_var=new.id_var",
-*/
-    /*"CREATE FUNCTION identity (val anyelement, val1 anyelement, OUT val anyelement) AS 'select $2' LANGUAGE sql STRICT",
-    "CREATE AGGREGATE anyval ( basetype=anyelement, sfunc='identity', stype='anyelement' )",*/
-    conn.set_setting("version", "V6");
+    conn.exec_no_data("CREATE UNIQUE INDEX attr_uniq ON attr(id_data, code);");
+
+    conn.set_setting("version", "V7");
 }
-void Driver::delete_tables_v6()
+void Driver::delete_tables_v7()
 {
     conn.drop_table_if_exists("attr");
     conn.drop_table_if_exists("data");
-    conn.drop_table_if_exists("lev_tr");
-    conn.drop_table_if_exists("repinfo");
+    conn.drop_table_if_exists("station_attr");
+    conn.drop_table_if_exists("station_data");
+    conn.drop_table_if_exists("levtr");
     conn.drop_table_if_exists("station");
+    conn.drop_table_if_exists("repinfo");
     conn.drop_settings();
 }
-void Driver::vacuum_v6()
+void Driver::vacuum_v7()
 {
     conn.exec_no_data(R"(
-        DELETE FROM lev_tr WHERE id IN (
+        DELETE FROM levtr WHERE id IN (
             SELECT ltr.id
-              FROM lev_tr ltr
-         LEFT JOIN data d ON d.id_lev_tr = ltr.id
-             WHERE d.id_lev_tr is NULL)
+              FROM levtr ltr
+         LEFT JOIN data d ON d.id_levtr = ltr.id
+             WHERE d.id_levtr is NULL)
     )");
     conn.exec_no_data(R"(
         DELETE FROM station WHERE id IN (

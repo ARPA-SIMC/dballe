@@ -23,7 +23,7 @@ namespace v6 {
 namespace odbc {
 
 Driver::Driver(ODBCConnection& conn)
-    : conn(conn)
+    : v6::Driver(conn), conn(conn)
 {
 }
 
@@ -302,11 +302,6 @@ void Driver::vacuum_v6()
             )");
             break;
     }
-}
-
-void Driver::exec_no_data(const std::string& query)
-{
-    conn.exec(query);
 }
 
 }

@@ -47,6 +47,11 @@ void SQLRecordV6::dump(FILE* out)
     fprintf(out, "%d%02d%03d %s\n", WR_VAR_FXY(out_varcode), out_value);
 }
 
+Driver::Driver(sql::Connection& connection)
+    : connection(connection)
+{
+}
+
 Driver::~Driver()
 {
 }
@@ -83,15 +88,10 @@ void Driver::remove_all(db::Format format)
 
 void Driver::remove_all_v6()
 {
-    exec_no_data("DELETE FROM attr");
-    exec_no_data("DELETE FROM data");
-    exec_no_data("DELETE FROM lev_tr");
-    exec_no_data("DELETE FROM station");
-}
-
-void Driver::explain(const std::string& query)
-{
-    fprintf(stderr, "Explaining query %s is not supported on this db.\n", query.c_str());
+    connection.execute("DELETE FROM attr");
+    connection.execute("DELETE FROM data");
+    connection.execute("DELETE FROM lev_tr");
+    connection.execute("DELETE FROM station");
 }
 
 std::unique_ptr<Driver> Driver::create(dballe::sql::Connection& conn)

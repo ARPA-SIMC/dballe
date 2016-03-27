@@ -42,6 +42,10 @@ class Benchmark:
         elif name == "sqlitev7":
             self.env["DBA_DB"] = self.env["DBA_DB_SQLITE"]
             self.env["DBA_DB_FORMAT"] = "V7"
+        elif name in ("pgv7", "postgresqlv7"):
+            self.db = "postgresqlv7"
+            self.env["DBA_DB"] = self.env["DBA_DB_POSTGRESQL"]
+            self.env["DBA_DB_FORMAT"] = "V7"
         else:
             raise RuntimeError("unknown database type {}".format(name))
 
@@ -69,7 +73,7 @@ class Benchmark:
 def main():
     parser = argparse.ArgumentParser(description="Run DB-All.e benchmarks.")
     parser.add_argument("env", nargs="*", help="Extra env var assignments")
-    parser.add_argument("-d", "--db", default=None, help="Database to use (pg/postgresql, mysql, sqlite, odbc, mem, sqlitev7)")
+    parser.add_argument("-d", "--db", default=None, help="Database to use (pg/postgresql, mysql, sqlite, odbc, mem, sqlitev7, pgv7/postgresqlv7)")
     args = parser.parse_args()
 
     bench = Benchmark()
@@ -82,7 +86,7 @@ def main():
     bench.build()
 
     if args.db is None:
-        for db in ("pg", "mysql", "sqlite", "odbc", "mem", "sqlitev7"):
+        for db in ("pg", "mysql", "sqlite", "odbc", "mem", "sqlitev7", "postgresqlv7"):
             print("Running benchmarks for {}...".format(db))
             bench.select_db(db)
             bench.run()

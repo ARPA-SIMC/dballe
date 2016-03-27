@@ -51,11 +51,10 @@ struct SQLRecordV6
 
 struct Driver
 {
-public:
-    virtual ~Driver();
+    sql::Connection& connection;
 
-    /// Run a SQL query that is expected to return no data
-    virtual void exec_no_data(const std::string& query) = 0;
+    Driver(sql::Connection& connection);
+    virtual ~Driver();
 
     /// Precompiled queries to manipulate the repinfo table
     virtual std::unique_ptr<v6::Repinfo> create_repinfov6() = 0;
@@ -103,11 +102,8 @@ public:
     /// Perform database cleanup/maintenance on v6 databases
     virtual void vacuum_v6() = 0;
 
-    /// Outputs to stderr an explanation of the given query
-    virtual void explain(const std::string& query);
-
     /// Create a Driver for this connection
-    static std::unique_ptr<Driver> create(dballe::sql::Connection& conn);
+    static std::unique_ptr<Driver> create(sql::Connection& conn);
 };
 
 }
