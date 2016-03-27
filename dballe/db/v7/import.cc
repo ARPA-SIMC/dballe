@@ -126,7 +126,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
         {
             const Var* var = ctx.data[j];
             if (not var->isset()) continue;
-            vars.add(var, levtri);
+            vars.add(var, levtri->second);
         }
     }
 

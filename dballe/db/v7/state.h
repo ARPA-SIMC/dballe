@@ -94,14 +94,14 @@ typedef std::map<StationValueDesc, StationValueState> stationvalues_t;
 struct ValueDesc
 {
     stations_t::iterator station;
-    levtrs_t::iterator levtr;
+    int levtr;
     /// Date and time at which the value was measured or forecast
     Datetime datetime;
     wreport::Varcode varcode;
 
     ValueDesc() {}
     ValueDesc(const ValueDesc&) = default;
-    ValueDesc(stations_t::iterator station, levtrs_t::iterator levtr, const Datetime& datetime, wreport::Varcode varcode)
+    ValueDesc(stations_t::iterator station, int levtr, const Datetime& datetime, wreport::Varcode varcode)
         : station(station), levtr(levtr), datetime(datetime), varcode(varcode) {}
     ValueDesc& operator=(const ValueDesc&) = default;
 

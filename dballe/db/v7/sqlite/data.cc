@@ -171,14 +171,15 @@ void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& va
             int id_levtr = sstm->column_int(1);
             wreport::Varcode code = sstm->column_int(2);
 
-            auto vi = std::find_if(vars.to_query.begin(), vars.to_query.end(), [id_levtr, code](const bulk::Var* v) { return v->levtr->second.id == id_levtr && v->var->code() == code; });
+            auto vi = std::find_if(vars.to_query.begin(), vars.to_query.end(), [id_levtr, code](const bulk::Var* v) { return v->levtr.id == id_levtr && v->var->code() == code; });
             if (vi == vars.to_query.end()) return;
 
             ValueState vs;
             vs.id = sstm->column_int(0);
             vs.is_new = false;
 
-            (*vi)->cur = t.state.add_value(ValueDesc(vars.shared_context.station, (*vi)->levtr, vars.shared_context.datetime, code), vs);
+            // TODO: add the value to the state for each result no matter what
+            (*vi)->cur = t.state.add_value(ValueDesc(vars.shared_context.station, (*vi)->levtr.id, vars.shared_context.datetime, code), vs);
             vars.to_query.erase(vi);
         });
     }
@@ -216,7 +217,7 @@ void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& va
         for (auto& v: vars)
         {
             if (!v.needs_insert()) continue;
-            istm->bind_val(2, v.levtr->second.id);
+            istm->bind_val(2, v.levtr.id);
             istm->bind_val(4, v.var->code());
             istm->bind_val(5, v.var->enqc());
             istm->execute();
@@ -225,7 +226,7 @@ void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& va
             vs.id = conn.get_last_insert_id();
             vs.is_new = true;
 
-            v.cur = t.state.add_value(ValueDesc(vars.shared_context.station, v.levtr, vars.shared_context.datetime, v.var->code()), vs);
+            v.cur = t.state.add_value(ValueDesc(vars.shared_context.station, v.levtr.id, vars.shared_context.datetime, v.var->code()), vs);
             v.set_inserted();
         }
     }

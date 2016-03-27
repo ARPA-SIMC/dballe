@@ -97,7 +97,7 @@ class Tests : public FixtureTestCase<Fixture>
                 vars.shared_context.station = f.t->state.stations.find(f.sde1);
                 vars.shared_context.datetime = Datetime(2001, 2, 3, 4, 5, 6);
                 var.seti(value);
-                vars.add(&var, f.lt1);
+                vars.add(&var, f.lt1->second);
                 wassert(da.insert(*f.t, vars, update));
             };
 
@@ -118,7 +118,7 @@ class Tests : public FixtureTestCase<Fixture>
                 vars.shared_context.station = f.t->state.stations.find(f.sde2);
                 vars.shared_context.datetime = Datetime(2002, 3, 4, 5, 6, 7);
                 Var var(varinfo(WR_VAR(0, 1, 2)), 234);
-                vars.add(&var, f.lt2);
+                vars.add(&var, f.lt2->second);
                 wassert(da.insert(*f.t, vars, bulk::ERROR));
                 wassert(actual(vars[0].cur->second.id) == 2);
                 wassert(actual(vars[0].needs_insert()).isfalse());
@@ -127,15 +127,18 @@ class Tests : public FixtureTestCase<Fixture>
                 wassert(actual(vars[0].updated()).isfalse());
             }
 
-            // Reinsert the first datum: it should find its ID and do nothing
+            // Reinsert the first datum: it should give an error, since V7 does
+            // not check if old and new values are the same
             {
                 bulk::InsertVars vars(f.t->state);
-                wassert(insert_sample1(vars, 123, bulk::ERROR));
-                wassert(actual(vars[0].cur->second.id) == 1);
-                wassert(actual(vars[0].needs_insert()).isfalse());
-                wassert(actual(vars[0].inserted()).isfalse());
-                wassert(actual(vars[0].needs_update()).isfalse());
-                wassert(actual(vars[0].updated()).isfalse());
+                bool successful = false;
+                try {
+                    insert_sample1(vars, 123, bulk::ERROR);
+                    successful = true;
+                } catch (std::exception& e) {
+                    wassert(actual(e.what()).matches("refusing to overwrite existing data"));
+                }
+                wassert(actual(successful).isfalse());
             }
 
             // Reinsert the first datum, with a different value and ignore
@@ -154,7 +157,7 @@ class Tests : public FixtureTestCase<Fixture>
             // it should find its ID and update it
             {
                 bulk::InsertVars vars(f.t->state);
-                insert_sample1(vars, 125, bulk::UPDATE);
+                wassert(insert_sample1(vars, 125, bulk::UPDATE));
                 wassert(actual(vars[0].cur->second.id) == 1);
                 wassert(actual(vars[0].needs_insert()).isfalse());
                 wassert(actual(vars[0].inserted()).isfalse());
@@ -167,24 +170,26 @@ class Tests : public FixtureTestCase<Fixture>
             // does not change.
             {
                 bulk::InsertVars vars(f.t->state);
-                insert_sample1(vars, 125, bulk::ERROR);
-                wassert(actual(vars[0].cur->second.id) == 1);
-                wassert(actual(vars[0].needs_insert()).isfalse());
-                wassert(actual(vars[0].inserted()).isfalse());
-                wassert(actual(vars[0].needs_update()).isfalse());
-                wassert(actual(vars[0].updated()).isfalse());
+                bool successful = false;
+                try {
+                    insert_sample1(vars, 125, bulk::ERROR);
+                    successful = true;
+                } catch (std::exception& e) {
+                    wassert(actual(e.what()).matches("refusing to overwrite existing data"));
+                }
+                wassert(actual(successful).isfalse());
             }
 
             // Reinsert the first datum, with a different value and error on
-            // overwrite: it should throw an error
+            // overwrite: it should find the ID and skip the update
             {
                 bulk::InsertVars vars(f.t->state);
-                try {
-                    insert_sample1(vars, 126, bulk::IGNORE);
-                    wassert(actual(false).isfalse());
-                } catch (std::exception& e) {
-                    wassert(actual(e.what()).contains("refusing to overwrite existing data"));
-                }
+                wassert(insert_sample1(vars, 126, bulk::IGNORE));
+                wassert(actual(vars[0].cur->second.id) == 1);
+                wassert(actual(vars[0].needs_insert()).isfalse());
+                wassert(actual(vars[0].inserted()).isfalse());
+                wassert(actual(vars[0].needs_update()).istrue());
+                wassert(actual(vars[0].updated()).isfalse());
             }
 
             f.t->commit();

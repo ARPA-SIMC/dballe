@@ -234,7 +234,7 @@ void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool ca
 
     // Add all the variables we find
     for (auto& i: vals.values)
-        vars.add(i.second.var, ltri);
+        vars.add(i.second.var, ltri->second);
 
     // Do the insert
     v7::Data& d = data();

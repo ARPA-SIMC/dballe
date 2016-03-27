@@ -67,7 +67,7 @@ struct Fixture : V7DriverFixture
         {
             bulk::InsertVars vars(t->state, t->state.stations.find(sde1), Datetime(2001, 2, 3, 4, 5, 6));
             Var var(varinfo(WR_VAR(0, 1, 2)), 123);
-            vars.add(&var, lt1);
+            vars.add(&var, lt1->second);
             da->insert(*t, vars, bulk::ERROR);
         }
 
@@ -75,7 +75,7 @@ struct Fixture : V7DriverFixture
         {
             bulk::InsertVars vars(t->state, t->state.stations.find(sde2), Datetime(2002, 3, 4, 5, 6, 7));
             Var var(varinfo(WR_VAR(0, 1, 2)), 234);
-            vars.add(&var, lt2);
+            vars.add(&var, lt2->second);
             da->insert(*t, vars, bulk::ERROR);
         }
         t->commit();
