@@ -3,16 +3,25 @@
 import argparse
 import os
 import csv
+import fnmatch
+import re
 import datetime
 from collections import defaultdict
 import jinja2
 import matplotlib.pyplot as plt
 
 class Benchmarks:
-    def __init__(self, dirname):
+    def __init__(self, args, dirname):
         self.data = []
+
+        if args.filter:
+            re_match = re.compile(fnmatch.translate(args.filter))
+        else:
+            re_match = None
+
         for f in os.listdir(dirname):
             if not f.endswith(".csv"): continue
+            if re_match and not re_match.match(f): continue
             dt, db, shasum = os.path.splitext(f)[0].split("_")
             dt = datetime.datetime.strptime(dt, "%Y%m%d%H%M%S")
             with open(os.path.join(dirname, f), "rt") as fd:
@@ -72,9 +81,10 @@ class Benchmarks:
 
 def main():
     parser = argparse.ArgumentParser(description="Plot DB-All.e benchmark results.")
+    parser.add_argument("-f", "--filter", default=None, help="Graph only the data files matching the given glob")
     args = parser.parse_args()
 
-    results = Benchmarks("bench")
+    results = Benchmarks(args, "bench")
     results.plot()
 
 

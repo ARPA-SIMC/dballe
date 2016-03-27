@@ -376,5 +376,23 @@ int PostgreSQLConnection::changes()
     //return sqlite3_changes(db);
 }
 
+void PostgreSQLConnection::execute(const std::string& query)
+{
+    exec_no_data(query);
+}
+
+void PostgreSQLConnection::explain(const std::string& query, FILE* out)
+{
+    using namespace dballe::sql::postgresql;
+
+    string explain_query = "EXPLAIN ";
+    explain_query += query;
+
+    fprintf(out, "%s\n", explain_query.c_str());
+    Result res = exec(explain_query);
+    for (unsigned row = 0; row < res.rowcount(); ++row)
+        fprintf(out, "  %s\n", res.get_string(row, 0));
+}
+
 }
 }

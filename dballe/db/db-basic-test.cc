@@ -2,6 +2,7 @@
 #include "msg/msg.h"
 #include "db/tests.h"
 #include "db/mem/db.h"
+#include <cstring>
 
 using namespace dballe;
 using namespace dballe::db;
@@ -106,30 +107,49 @@ class Tests : public FixtureTestCase<DBFixture>
 
             // Check results
             core::Record result;
-            if (dynamic_cast<db::mem::DB*>(f.db))
+            switch (db.format())
             {
-                // For mem databases, we get one record per (station, network)
-                // combination
-                wassert(actual(cur->next()).istrue());
-                wassert(actual(cur->get_station_id()) == svals_esmac.info.ana_id);
-                wassert(actual(cur->get_rep_memo()) == "temp");
-                cur->to_record(result);
-                wassert(actual(result["B01019"]) == "Esmac");
+                case MEM:
+                case V7:
+                {
+                    bool have_temp = false;
+                    bool have_synop = false;
 
-                wassert(actual(cur->next()).istrue());
-                wassert(actual(cur->get_station_id()) == svals_camse.info.ana_id);
-                wassert(actual(cur->get_rep_memo()) == "synop");
-                cur->to_record(result);
-                wassert(actual(result["B01019"]) == "Camse");
-            } else {
-                // For normal databases, we only get one record, with the station
-                // values merged keeping values for the best networks
-                wassert(actual(cur->next()).istrue());
-                wassert(actual(cur->get_station_id()) == 1);
-                cur->to_record(result);
-                wassert(actual(result["B01019"]) == "Camse");
+                    // For mem and v7 databases, we get one record per (station, network)
+                    // combination
+                    for (unsigned i = 0; i < 2; ++i)
+                    {
+                        wassert(actual(cur->next()).istrue());
+                        if (strcmp(cur->get_rep_memo(), "temp") == 0)
+                        {
+                            wassert(actual(cur->get_station_id()) == svals_esmac.info.ana_id);
+                            cur->to_record(result);
+                            wassert(actual(result["B01019"]) == "Esmac");
+                            have_temp = true;
+                        } else if (strcmp(cur->get_rep_memo(), "synop") == 0) {
+                            wassert(actual(cur->get_station_id()) == svals_camse.info.ana_id);
+                            cur->to_record(result);
+                            wassert(actual(result["B01019"]) == "Camse");
+                            have_synop = true;
+                        }
+                    }
+                    wassert(actual(cur->next()).isfalse());
 
-                wassert(actual(cur->next()).isfalse());
+                    wassert(actual(have_temp).istrue());
+                    wassert(actual(have_synop).istrue());
+                    break;
+                }
+                case V6:
+                    // For v6 databases, we only get one record, with the station
+                    // values merged keeping values for the best networks
+                    wassert(actual(cur->next()).istrue());
+                    wassert(actual(cur->get_station_id()) == 1);
+                    cur->to_record(result);
+                    wassert(actual(result["B01019"]) == "Camse");
+
+                    wassert(actual(cur->next()).isfalse());
+                    break;
+                default: throw error_unimplemented("testing stations_without_data on unsupported database");
             }
 
             Messages msgs;
@@ -175,13 +195,17 @@ class Tests : public FixtureTestCase<DBFixture>
 Tests tg1("db_basic_mem", nullptr, db::MEM);
 Tests tg2("db_basic_v6_sqlite", "SQLITE", db::V6);
 #ifdef HAVE_ODBC
-Tests tg4("db_basic_v6_odbc", "ODBC", db::V6);
+Tests tg3("db_basic_v6_odbc", "ODBC", db::V6);
 #endif
 #ifdef HAVE_LIBPQ
-Tests tg6("db_basic_v6_postgresql", "POSTGRESQL", db::V6);
+Tests tg4("db_basic_v6_postgresql", "POSTGRESQL", db::V6);
 #endif
 #ifdef HAVE_MYSQL
-Tests tg8("db_basic_v6_mysql", "MYSQL", db::V6);
+Tests tg5("db_basic_v6_mysql", "MYSQL", db::V6);
+#endif
+Tests tg6("db_basic_v7_sqlite", "SQLITE", db::V7);
+#ifdef HAVE_LIBPQ
+Tests tg7("db_basic_v7_postgresql", "POSTGRESQL", db::V7);
 #endif
 
 }

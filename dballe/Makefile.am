@@ -105,22 +105,40 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/mem/repinfo.h \
 	db/mem/cursor.h \
 	db/mem/db.h \
-	db/sql/internals.h \
-	db/sql/repinfo.h \
-	db/sql/station.h \
-	db/sql/levtr.h \
-	db/sql/datav6.h \
-	db/sql/attrv6.h \
-	db/sql/driver.h \
-	db/sqlite/repinfo.h \
-	db/sqlite/station.h \
-	db/sqlite/levtr.h \
-	db/sqlite/datav6.h \
-	db/sqlite/attrv6.h \
-	db/sqlite/driver.h \
+	db/v6/internals.h \
+	db/v6/repinfo.h \
+	db/v6/station.h \
+	db/v6/levtr.h \
+	db/v6/datav6.h \
+	db/v6/attrv6.h \
+	db/v6/driver.h \
+	db/v6/sqlite/repinfo.h \
+	db/v6/sqlite/station.h \
+	db/v6/sqlite/levtr.h \
+	db/v6/sqlite/datav6.h \
+	db/v6/sqlite/attrv6.h \
+	db/v6/sqlite/driver.h \
 	db/v6/db.h \
 	db/v6/cursor.h \
 	db/v6/qbuilder.h \
+	db/v7/transaction.h \
+	db/v7/state.h \
+	db/v7/internals.h \
+	db/v7/repinfo.h \
+	db/v7/station.h \
+	db/v7/levtr.h \
+	db/v7/data.h \
+	db/v7/attr.h \
+	db/v7/driver.h \
+	db/v7/sqlite/repinfo.h \
+	db/v7/sqlite/station.h \
+	db/v7/sqlite/levtr.h \
+	db/v7/sqlite/data.h \
+	db/v7/sqlite/attr.h \
+	db/v7/sqlite/driver.h \
+	db/v7/db.h \
+	db/v7/cursor.h \
+	db/v7/qbuilder.h \
 	db/summary.h \
 	db/ostream.h \
 	cmdline/cmdline.h \
@@ -134,32 +152,38 @@ nobase_dist_dballeinclude_HEADERS = \
 if HAVE_LIBPQ
 nobase_dist_dballeinclude_HEADERS += \
 	sql/postgresql.h \
-	db/postgresql/repinfo.h \
-	db/postgresql/station.h \
-	db/postgresql/levtr.h \
-	db/postgresql/datav6.h \
-	db/postgresql/attrv6.h \
-	db/postgresql/driver.h
+	db/v6/postgresql/repinfo.h \
+	db/v6/postgresql/station.h \
+	db/v6/postgresql/levtr.h \
+	db/v6/postgresql/datav6.h \
+	db/v6/postgresql/attrv6.h \
+	db/v6/postgresql/driver.h \
+	db/v7/postgresql/repinfo.h \
+	db/v7/postgresql/station.h \
+	db/v7/postgresql/levtr.h \
+	db/v7/postgresql/data.h \
+	db/v7/postgresql/attr.h \
+	db/v7/postgresql/driver.h
 endif
 if HAVE_MYSQL
 nobase_dist_dballeinclude_HEADERS += \
 	sql/mysql.h \
-	db/mysql/repinfo.h \
-	db/mysql/station.h \
-	db/mysql/levtr.h \
-	db/mysql/datav6.h \
-	db/mysql/attrv6.h \
-	db/mysql/driver.h
+	db/v6/mysql/repinfo.h \
+	db/v6/mysql/station.h \
+	db/v6/mysql/levtr.h \
+	db/v6/mysql/datav6.h \
+	db/v6/mysql/attrv6.h \
+	db/v6/mysql/driver.h
 endif
 if HAVE_ODBC
 nobase_dist_dballeinclude_HEADERS += \
 	sql/odbc.h \
-	db/odbc/repinfo.h \
-	db/odbc/station.h \
-	db/odbc/levtr.h \
-	db/odbc/datav6.h \
-	db/odbc/attrv6.h \
-	db/odbc/driver.h
+	db/v6/odbc/repinfo.h \
+	db/v6/odbc/station.h \
+	db/v6/odbc/levtr.h \
+	db/v6/odbc/datav6.h \
+	db/v6/odbc/attrv6.h \
+	db/v6/odbc/driver.h
 endif
 
 lib_LTLIBRARIES = libdballe.la
@@ -235,26 +259,45 @@ libdballe_la_SOURCES = \
 	sql/sqlite.cc \
 	db/db.cc \
 	db/trace.cc \
-	db/sql/repinfo.cc \
-	db/sql/station.cc \
-	db/sql/levtr.cc \
-	db/sql/datav6.cc \
-	db/sql/attrv6.cc \
-	db/sql/driver.cc \
-	db/sqlite/repinfo.cc \
-	db/sqlite/station.cc \
-	db/sqlite/levtr.cc \
-	db/sqlite/datav6.cc \
-	db/sqlite/attrv6.cc \
-	db/sqlite/driver.cc \
 	db/mem/repinfo.cc \
 	db/mem/cursor.cc \
 	db/mem/db.cc \
+	db/v6/repinfo.cc \
+	db/v6/station.cc \
+	db/v6/levtr.cc \
+	db/v6/datav6.cc \
+	db/v6/attrv6.cc \
+	db/v6/driver.cc \
+	db/v6/sqlite/repinfo.cc \
+	db/v6/sqlite/station.cc \
+	db/v6/sqlite/levtr.cc \
+	db/v6/sqlite/datav6.cc \
+	db/v6/sqlite/attrv6.cc \
+	db/v6/sqlite/driver.cc \
 	db/v6/db.cc \
 	db/v6/cursor.cc \
 	db/v6/qbuilder.cc \
 	db/v6/import.cc \
 	db/v6/export.cc \
+	db/v7/transaction.cc \
+	db/v7/state.cc \
+	db/v7/repinfo.cc \
+	db/v7/station.cc \
+	db/v7/levtr.cc \
+	db/v7/data.cc \
+	db/v7/attr.cc \
+	db/v7/driver.cc \
+	db/v7/sqlite/repinfo.cc \
+	db/v7/sqlite/station.cc \
+	db/v7/sqlite/levtr.cc \
+	db/v7/sqlite/data.cc \
+	db/v7/sqlite/attr.cc \
+	db/v7/sqlite/driver.cc \
+	db/v7/db.cc \
+	db/v7/cursor.cc \
+	db/v7/qbuilder.cc \
+	db/v7/import.cc \
+	db/v7/export.cc \
 	db/summary.cc \
 	db/ostream.cc \
 	cmdline/cmdline.cc \
@@ -268,32 +311,38 @@ libdballe_la_SOURCES = \
 if HAVE_LIBPQ
 libdballe_la_SOURCES += \
 	sql/postgresql.cc \
-	db/postgresql/repinfo.cc \
-	db/postgresql/station.cc \
-	db/postgresql/levtr.cc \
-	db/postgresql/datav6.cc \
-	db/postgresql/attrv6.cc \
-	db/postgresql/driver.cc
+	db/v6/postgresql/repinfo.cc \
+	db/v6/postgresql/station.cc \
+	db/v6/postgresql/levtr.cc \
+	db/v6/postgresql/datav6.cc \
+	db/v6/postgresql/attrv6.cc \
+	db/v6/postgresql/driver.cc \
+	db/v7/postgresql/repinfo.cc \
+	db/v7/postgresql/station.cc \
+	db/v7/postgresql/levtr.cc \
+	db/v7/postgresql/data.cc \
+	db/v7/postgresql/attr.cc \
+	db/v7/postgresql/driver.cc
 endif
 if HAVE_MYSQL
 libdballe_la_SOURCES += \
 	sql/mysql.cc \
-	db/mysql/driver.cc \
-	db/mysql/repinfo.cc \
-	db/mysql/station.cc \
-	db/mysql/levtr.cc \
-	db/mysql/datav6.cc \
-	db/mysql/attrv6.cc
+	db/v6/mysql/driver.cc \
+	db/v6/mysql/repinfo.cc \
+	db/v6/mysql/station.cc \
+	db/v6/mysql/levtr.cc \
+	db/v6/mysql/datav6.cc \
+	db/v6/mysql/attrv6.cc
 endif
 if HAVE_ODBC
 libdballe_la_SOURCES += \
 	sql/odbc.cc \
-	db/odbc/repinfo.cc \
-	db/odbc/station.cc \
-	db/odbc/levtr.cc \
-	db/odbc/datav6.cc \
-	db/odbc/attrv6.cc \
-	db/odbc/driver.cc
+	db/v6/odbc/repinfo.cc \
+	db/v6/odbc/station.cc \
+	db/v6/odbc/levtr.cc \
+	db/v6/odbc/datav6.cc \
+	db/v6/odbc/attrv6.cc \
+	db/v6/odbc/driver.cc
 endif
 
 libdballe_la_CPPFLAGS = $(AM_CPPFLAGS) -Werror
@@ -380,11 +429,16 @@ test_dballe_SOURCES = \
 	sql/sqlite-test.cc \
 	db/tests.cc \
 	db/trace-test.cc \
-	db/sql/repinfo-test.cc \
-	db/sql/station-test.cc \
-	db/sql/levtr-test.cc \
-	db/sql/datav6-test.cc \
-	db/sql/attrv6-test.cc \
+	db/v6/repinfo-test.cc \
+	db/v6/station-test.cc \
+	db/v6/levtr-test.cc \
+	db/v6/datav6-test.cc \
+	db/v6/attrv6-test.cc \
+	db/v7/repinfo-test.cc \
+	db/v7/station-test.cc \
+	db/v7/levtr-test.cc \
+	db/v7/data-test.cc \
+	db/v7/attr-test.cc \
 	db/db-basic-test.cc \
 	db/db-misc-test.cc \
 	db/db-query-station-test.cc \
@@ -427,7 +481,7 @@ test_dballe_LDADD = \
 noinst_PROGRAMS += bench-run
 
 dist_noinst_HEADERS += \
-	core/benchmark.h
+	core/benchmark.h \
 	db/benchmark.h
 
 bench_run_SOURCES = \
@@ -437,6 +491,19 @@ bench_run_SOURCES = \
 	db/db-query-bench.cc \
 	bench-main.cc
 bench_run_LDADD = \
+	libdballe.la \
+	$(common_libs)
+
+
+#
+# Profile
+#
+
+noinst_PROGRAMS += profile-run
+
+profile_run_SOURCES = \
+	profile-main.cc
+profile_run_LDADD = \
 	libdballe.la \
 	$(common_libs)
 

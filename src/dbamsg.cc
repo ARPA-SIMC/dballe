@@ -573,7 +573,7 @@ struct WriteRaw : public cmdline::Action
     virtual bool operator()(const cmdline::Item& item)
     {
         if (!item.rmsg) return false;
-        if (!file) file = File::create(item.rmsg->encoding, "(stdout)", "w").release();
+        if (!file) file = File::create(item.rmsg->encoding, stdout, false, "(stdout)").release();
         file->write(item.rmsg->data);
         return true;
     }

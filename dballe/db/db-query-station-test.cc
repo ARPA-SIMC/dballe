@@ -2,7 +2,9 @@
 #include "db/tests.h"
 #include "db/mem/db.h"
 #include "db/v6/db.h"
-#include "db/sql/station.h"
+#include "db/v7/db.h"
+#include "db/v6/station.h"
+#include "db/v7/station.h"
 
 using namespace dballe;
 using namespace dballe::db;
@@ -56,7 +58,7 @@ struct Fixture : public DBFixture
     const int all;
 
     Fixture(const char* backend, db::Format format)
-        : DBFixture(backend, format), some(format == MEM ? 2 : 1), all(format == MEM ? 4 : 2)
+        : DBFixture(backend, format), some(format != V6 ? 2 : 1), all(format != V6 ? 4 : 2)
 #warning FIXME: change after testing if we can move to report-in-station behaviour or not
     {
     }
@@ -130,7 +132,6 @@ class Tests : public FixtureTestCase<Fixture>
             wassert(actual(db).try_station_query("B01002=4", f.some));
         });
         add_method("query_mobile", [](Fixture& f) {
-            auto& db = *f.db;
         });
         add_method("query_ana_filter", [](Fixture& f) {
             auto& db = *f.db;
@@ -145,13 +146,17 @@ class Tests : public FixtureTestCase<Fixture>
             wassert(actual(db).try_station_query("ana_filter=B07030=120", 0));
             wassert(actual(db).try_station_query("ana_filter=B07030>50", f.some));
 #warning FIXME: change after testing if we can move to report-in-station behaviour or not
-            if (db.format() == MEM)
+            if (db.format() != V6)
                 wassert(actual(db).try_station_query("ana_filter=B07030>=50", 3));
             else
                 wassert(actual(db).try_station_query("ana_filter=B07030>=50", 2));
             wassert(actual(db).try_station_query("ana_filter=50<=B07030<=100", 2));
         });
         add_method("query_var", [](Fixture& f) {
+            /*
+             * Querying var= or varlist= on a station query means querying stations
+             * that measure that variable or those variables.
+             */
             auto& db = *f.db;
             wassert(actual(db).try_station_query("var=B12101", 2));
             wassert(actual(db).try_station_query("var=B12103", 1));
@@ -177,6 +182,17 @@ class Tests : public FixtureTestCase<Fixture>
                     if (auto d = dynamic_cast<v6::DB*>(f.db))
                         d->station().obtain_id(1100000, 4500000);
                     break;
+                case V7:
+                    if (auto d = dynamic_cast<v7::DB*>(f.db))
+                    {
+                        db::v7::StationDesc sde;
+                        db::v7::State state;
+                        sde.rep = 1;
+                        sde.coords = Coords(1100000, 4500000);
+                        sde.ident = "ciao";
+                        d->station().obtain_id(state, sde);
+                    }
+                    break;
                 case V5: throw error_unimplemented("v5 db is not supported");
                 case MESSAGES: throw error_unimplemented("testing stations_without_data on MESSAGES database");
             }
@@ -198,8 +214,13 @@ class Tests : public FixtureTestCase<Fixture>
             auto cur = db.query_stations(core::Query());
             switch (db.format())
             {
-                case MEM: wassert(actual(cur->remaining()) == 4); break;
-                case V6: wassert(actual(cur->remaining()) == 2); break;
+                case V7:
+                case MEM:
+                    wassert(actual(cur->remaining()) == 4);
+                    break;
+                case V6:
+                    wassert(actual(cur->remaining()) == 2);
+                    break;
                 default: error_unimplemented::throwf("cannot run this test on a database of format %d", (int)db.format());
             }
         });
@@ -215,13 +236,17 @@ class Tests : public FixtureTestCase<Fixture>
 Tests tg1("db_query_station_mem", nullptr, db::MEM);
 Tests tg2("db_query_station_v6_sqlite", "SQLITE", db::V6);
 #ifdef HAVE_ODBC
-Tests tg4("db_query_station_v6_odbc", "ODBC", db::V6);
+Tests tg3("db_query_station_v6_odbc", "ODBC", db::V6);
 #endif
 #ifdef HAVE_LIBPQ
-Tests tg6("db_query_station_v6_postgresql", "POSTGRESQL", db::V6);
+Tests tg4("db_query_station_v6_postgresql", "POSTGRESQL", db::V6);
 #endif
 #ifdef HAVE_MYSQL
-Tests tg8("db_query_station_v6_mysql", "MYSQL", db::V6);
+Tests tg5("db_query_station_v6_mysql", "MYSQL", db::V6);
+#endif
+Tests tg6("db_query_station_v7_sqlite", "SQLITE", db::V7);
+#ifdef HAVE_LIBPQ
+Tests tg7("db_query_station_v7_postgresql", "POSTGRESQL", db::V7);
 #endif
 
 }

@@ -50,10 +50,18 @@ enum class ServerType
 };
 /// @endcond
 
+/**
+ * Return a string description for a ServerType value
+ */
+const char* format_server_type(ServerType type);
+
+
 class Connection
 {
 protected:
     std::string url;
+    bool profile = false;
+    unsigned profile_query_count = 0;
 
 public:
     /**
@@ -64,6 +72,7 @@ public:
      */
     ServerType server_type;
 
+    Connection();
     virtual ~Connection();
 
     const std::string& get_url() const { return url; }
@@ -99,6 +108,12 @@ public:
     /// Format a datetime and add it to the querybuf
     virtual void add_datetime(Querybuf& qb, const Datetime& dt) const;
 
+    /// Execute a query without reading its results
+    virtual void execute(const std::string& query) = 0;
+
+    /// Format and print the EXPLAIN output for the query to the given file
+    virtual void explain(const std::string& query, FILE* out) = 0;
+
     /// Create a new connection from a URL
     static std::unique_ptr<Connection> create_from_url(const char* url);
 
@@ -118,6 +133,10 @@ public:
 class Transaction : public dballe::Transaction
 {
 public:
+    Transaction() {}
+    Transaction(const Transaction&) = delete;
+    Transaction& operator=(const Transaction&) = delete;
+
     /// Get an exclusive lock on the given table until the end of the
     /// transaction
     virtual void lock_table(const char* name) = 0;

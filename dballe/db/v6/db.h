@@ -72,7 +72,7 @@ struct Sequence;
 
 namespace db {
 
-namespace sql {
+namespace v6 {
 struct Driver;
 struct Repinfo;
 struct Station;
@@ -99,7 +99,7 @@ public:
 
 protected:
     /// SQL driver backend
-    sql::Driver* m_driver;
+    v6::Driver* m_driver;
 
     /**
      * Accessors for the various parts of the database.
@@ -109,17 +109,17 @@ protected:
      * @{
      */
     /** Report information */
-    struct sql::Repinfo* m_repinfo;
+    struct v6::Repinfo* m_repinfo;
     /** Station information */
-    struct sql::Station* m_station;
+    struct v6::Station* m_station;
     /** Level/timerange information */
-    struct sql::LevTr* m_lev_tr;
+    struct v6::LevTr* m_lev_tr;
     /// Level/timerange cache
-    struct sql::LevTrCache* m_lev_tr_cache;
+    struct v6::LevTrCache* m_lev_tr_cache;
     /** Variable data */
-    struct sql::DataV6* m_data;
+    struct v6::DataV6* m_data;
     /** Variable attributes */
-    struct sql::AttrV6* m_attr;
+    struct v6::AttrV6* m_attr;
     /** @} */
 
     void init_after_connect();
@@ -140,7 +140,7 @@ protected:
      * @returns
      *   The station ID
      */
-    int obtain_station(const Station& st, bool can_add=true);
+    int obtain_station(const dballe::Station& st, bool can_add=true);
 
 public:
     virtual ~DB();
@@ -148,25 +148,25 @@ public:
     db::Format format() const { return V6; }
 
     /// Access the backend DB driver
-    sql::Driver& driver();
+    v6::Driver& driver();
 
     /// Access the repinfo table
-    sql::Repinfo& repinfo();
+    v6::Repinfo& repinfo();
 
     /// Access the station table
-    sql::Station& station();
+    v6::Station& station();
 
     /// Access the lev_tr table
-    sql::LevTr& lev_tr();
+    v6::LevTr& lev_tr();
 
     /// Access the lev_tr cache
-    sql::LevTrCache& lev_tr_cache();
+    v6::LevTrCache& lev_tr_cache();
 
     /// Access the data table
-    sql::DataV6& data();
+    v6::DataV6& data();
 
     /// Access the data table
-    sql::AttrV6& attr();
+    v6::AttrV6& attr();
 
     std::unique_ptr<dballe::Transaction> transaction() override;
 

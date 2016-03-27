@@ -16,12 +16,26 @@ explicitly providing one.
 
 By default, `/usr/share/wreport/repinfo.csv` is used.
 
+## `DBA_DB_FORMAT`
+
+Override the database format to use when creating new databases.
+
+Possible values:
+
+ * `V6`: current stable format (the default)
+ * `V7`: new format still being worked on
+
 ## `DBA_EXPLAIN`
 
 If present in the environment, then on SQL databases `EXPLAIN` is run before
 each nontrivial query, and its output is printed to standard error.
 
 This is used to debug SQL performance problems and help design better queries.
+
+## `DBA_PROFILE`
+
+If present in the environment, then DB-All.e collects profiling information and
+prints them to standard error.
 
 ## `DBA_LOGDIR`
 

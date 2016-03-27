@@ -916,6 +916,16 @@ std::ostream& operator<<(std::ostream& o, const SQL_TIMESTAMP_STRUCT& t)
     return o;
 }
 
+void ODBCConnection::execute(const std::string& query)
+{
+    exec(query);
+}
+
+void ODBCConnection::explain(const std::string& query, FILE* out)
+{
+    fprintf(out, "Explaining query %s is not supported on this db.\n", query.c_str());
+}
+
 } // namespace db
 } // namespace dballe
 

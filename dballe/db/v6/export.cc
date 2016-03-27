@@ -2,11 +2,11 @@
 #include "cursor.h"
 #include "qbuilder.h"
 #include "dballe/sql/sql.h"
-#include "dballe/db/sql/driver.h"
-#include "dballe/db/sql/repinfo.h"
-#include "dballe/db/sql/station.h"
-#include "dballe/db/sql/levtr.h"
-#include "dballe/db/sql/attrv6.h"
+#include "dballe/db/v6/driver.h"
+#include "dballe/db/v6/repinfo.h"
+#include "dballe/db/v6/station.h"
+#include "dballe/db/v6/levtr.h"
+#include "dballe/db/v6/attrv6.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
 #include "dballe/core/query.h"
@@ -62,9 +62,9 @@ struct StationLayerCache : protected std::vector<wreport::Var*>
 bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest)
 {
     auto tr = trace.trace_export_msgs(query);
-    sql::Repinfo& ri = repinfo();
-    sql::AttrV6& at = attr();
-    sql::LevTrCache& ltrc = lev_tr_cache();
+    v6::Repinfo& ri = repinfo();
+    v6::AttrV6& at = attr();
+    v6::LevTrCache& ltrc = lev_tr_cache();
 
     // Message being built
     unique_ptr<Msg> msg;
@@ -82,15 +82,15 @@ bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& quer
 
     // Retrieve results, buffering them locally to avoid performing concurrent
     // queries
-    Structbuf<sql::SQLRecordV6> results;
-    driver().run_built_query_v6(qb, [&](sql::SQLRecordV6& sqlrec) {
+    Structbuf<v6::SQLRecordV6> results;
+    driver().run_built_query_v6(qb, [&](v6::SQLRecordV6& sqlrec) {
         results.append(sqlrec);
     });
     results.ready_to_read();
 
     for (unsigned row = 0; row < results.size(); ++row)
     {
-        const sql::SQLRecordV6& sqlrec = results[row];
+        const v6::SQLRecordV6& sqlrec = results[row];
 
         //TRACE("Got B%02d%03d %ld,%ld, %ld,%ld %ld,%ld,%ld %s\n",
         //        WR_VAR_X(sqlrec.out_varcode), WR_VAR_Y(sqlrec.out_varcode),

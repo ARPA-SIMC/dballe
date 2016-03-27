@@ -2,6 +2,7 @@
 #include "db.h"
 #include "sql.h"
 #include "v6/db.h"
+#include "v7/db.h"
 #include "mem/db.h"
 #include "sql/sqlite.h"
 #ifdef HAVE_ODBC
@@ -21,11 +22,7 @@ using namespace wreport;
 namespace dballe {
 namespace db {
 
-#ifdef HAVE_ODBC
 static Format default_format = V6;
-#else
-static Format default_format = MEM;
-#endif
 
 Cursor::~Cursor()
 {
@@ -64,6 +61,15 @@ unique_ptr<DB> DB::create(unique_ptr<sql::Connection> conn)
     // Autodetect format
     Format format = default_format;
 
+    const char* format_override = getenv("DBA_DB_FORMAT");
+    if (format_override)
+    {
+        if (strcmp(format_override, "V6") == 0)
+            format = V6;
+        else if (strcmp(format_override, "V7") == 0)
+            format = V7;
+    }
+
     bool found = true;
 
     // Try with reading it from the settings table
@@ -72,6 +78,8 @@ unique_ptr<DB> DB::create(unique_ptr<sql::Connection> conn)
         format = V5;
     else if (version == "V6")
         format = V6;
+    else if (version == "V7")
+        format = V7;
     else if (version == "")
         found = false;// Some other key exists, but the version has not been set
     else
@@ -84,14 +92,13 @@ unique_ptr<DB> DB::create(unique_ptr<sql::Connection> conn)
             format = V6;
         else if (conn->has_table("context"))
             format = V5;
-        else
-            format = default_format;
     }
 
     switch (format)
     {
         case V5: throw error_unimplemented("V5 format is not supported anymore by this version of DB-All.e");
         case V6: return unique_ptr<DB>(new v6::DB(move(conn)));
+        case V7: return unique_ptr<DB>(new v7::DB(move(conn)));
         default: error_consistency::throwf("requested unknown format %d", (int)format);
     }
 }

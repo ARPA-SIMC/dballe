@@ -1,12 +1,12 @@
 #include "db.h"
 #include "dballe/sql/sql.h"
 #include "dballe/sql/querybuf.h"
-#include "dballe/db/sql/driver.h"
-#include "dballe/db/sql/repinfo.h"
-#include "dballe/db/sql/station.h"
-#include "dballe/db/sql/levtr.h"
-#include "dballe/db/sql/datav6.h"
-#include "dballe/db/sql/attrv6.h"
+#include "dballe/db/v6/driver.h"
+#include "dballe/db/v6/repinfo.h"
+#include "dballe/db/v6/station.h"
+#include "dballe/db/v6/levtr.h"
+#include "dballe/db/v6/datav6.h"
+#include "dballe/db/v6/attrv6.h"
 #include "cursor.h"
 #include "dballe/core/query.h"
 #include "dballe/core/record.h"
@@ -31,7 +31,7 @@ namespace v6 {
 // First part of initialising a dba_db
 DB::DB(unique_ptr<Connection> conn)
     : conn(conn.release()),
-      m_driver(sql::Driver::create(*this->conn).release()),
+      m_driver(v6::Driver::create(*this->conn).release()),
       m_repinfo(0), m_station(0), m_lev_tr(0), m_lev_tr_cache(0),
       m_data(0), m_attr(0)
 {
@@ -60,47 +60,47 @@ DB::~DB()
     delete conn;
 }
 
-sql::Driver& DB::driver()
+v6::Driver& DB::driver()
 {
     return *m_driver;
 }
 
-sql::Repinfo& DB::repinfo()
+v6::Repinfo& DB::repinfo()
 {
     if (m_repinfo == NULL)
         m_repinfo = m_driver->create_repinfov6().release();
     return *m_repinfo;
 }
 
-sql::Station& DB::station()
+v6::Station& DB::station()
 {
     if (m_station == NULL)
         m_station = m_driver->create_stationv6().release();
     return *m_station;
 }
 
-sql::LevTr& DB::lev_tr()
+v6::LevTr& DB::lev_tr()
 {
     if (m_lev_tr == NULL)
         m_lev_tr = m_driver->create_levtrv6().release();
     return *m_lev_tr;
 }
 
-sql::LevTrCache& DB::lev_tr_cache()
+v6::LevTrCache& DB::lev_tr_cache()
 {
     if (m_lev_tr_cache == NULL)
-        m_lev_tr_cache = sql::LevTrCache::create(lev_tr()).release();
+        m_lev_tr_cache = v6::LevTrCache::create(lev_tr()).release();
     return *m_lev_tr_cache;
 }
 
-sql::DataV6& DB::data()
+v6::DataV6& DB::data()
 {
     if (m_data == NULL)
         m_data = m_driver->create_datav6().release();
     return *m_data;
 }
 
-sql::AttrV6& DB::attr()
+v6::AttrV6& DB::attr()
 {
     if (m_attr == NULL)
         m_attr = m_driver->create_attrv6().release();
@@ -165,13 +165,13 @@ int DB::rep_cod_from_memo(const char* memo)
     return repinfo().obtain_id(memo);
 }
 
-int DB::obtain_station(const Station& st, bool can_add)
+int DB::obtain_station(const dballe::Station& st, bool can_add)
 {
     // Look if the record already knows the ID
     if (st.ana_id != MISSING_INT)
         return st.ana_id;
 
-    sql::Station& s = station();
+    v6::Station& s = station();
 
     // Get the ID for the station
     if (can_add)
@@ -182,10 +182,10 @@ int DB::obtain_station(const Station& st, bool can_add)
 
 void DB::insert_station_data(dballe::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add)
 {
-    sql::Repinfo& ri = repinfo();
-    sql::DataV6& d = data();
+    v6::Repinfo& ri = repinfo();
+    v6::DataV6& d = data();
 
-    sql::bulk::InsertV6 vars;
+    v6::bulk::InsertV6 vars;
     // Insert the station data, and get the ID
     vars.id_station = vals.info.ana_id = obtain_station(vals.info, station_can_add);
     // Get the ID of the report
@@ -201,7 +201,7 @@ void DB::insert_station_data(dballe::Transaction& transaction, StationValues& va
     // Do the insert
     dballe::sql::Transaction* t = dynamic_cast<dballe::sql::Transaction*>(&transaction);
     assert(t);
-    d.insert(*t, vars, can_replace ? sql::DataV6::UPDATE : sql::DataV6::ERROR);
+    d.insert(*t, vars, can_replace ? v6::DataV6::UPDATE : v6::DataV6::ERROR);
 
     // Read the IDs from the results
     for (const auto& v: vars)
@@ -215,10 +215,10 @@ void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool ca
     if (vals.values.empty())
         throw error_notfound("no variables found in input record");
 
-    sql::Repinfo& ri = repinfo();
-    sql::DataV6& d = data();
+    v6::Repinfo& ri = repinfo();
+    v6::DataV6& d = data();
 
-    sql::bulk::InsertV6 vars;
+    v6::bulk::InsertV6 vars;
     // Insert the station data, and get the ID
     vars.id_station = vals.info.ana_id = obtain_station(vals.info, station_can_add);
     // Get the ID of the report
@@ -235,7 +235,7 @@ void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool ca
     // Do the insert
     dballe::sql::Transaction* t = dynamic_cast<dballe::sql::Transaction*>(&transaction);
     assert(t);
-    d.insert(*t, vars, can_replace ? sql::DataV6::UPDATE : sql::DataV6::ERROR);
+    d.insert(*t, vars, can_replace ? v6::DataV6::UPDATE : v6::DataV6::ERROR);
 
     // Read the IDs from the results
     for (const auto& v: vars)
@@ -311,21 +311,21 @@ std::unique_ptr<db::CursorSummary> DB::query_summary(const Query& query)
 void DB::attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
 {
     // Create the query
-    sql::AttrV6& a = attr();
+    v6::AttrV6& a = attr();
     a.read(data_id, dest);
 }
 
 void DB::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
 {
     // Create the query
-    sql::AttrV6& a = attr();
+    v6::AttrV6& a = attr();
     a.read(data_id, dest);
 }
 
 void DB::attr_insert_station(dballe::Transaction& transaction, int data_id, const Values& attrs)
 {
-    sql::AttrV6& a = attr();
-    sql::bulk::InsertAttrsV6 iattrs;
+    v6::AttrV6& a = attr();
+    v6::bulk::InsertAttrsV6 iattrs;
     for (const auto& i : attrs)
         iattrs.add(i.second.var, data_id);
     if (iattrs.empty()) return;
@@ -334,13 +334,13 @@ void DB::attr_insert_station(dballe::Transaction& transaction, int data_id, cons
     assert(t);
 
     // Insert all the attributes we found
-    a.insert(*t, iattrs, sql::AttrV6::UPDATE);
+    a.insert(*t, iattrs, v6::AttrV6::UPDATE);
 }
 
 void DB::attr_insert_data(dballe::Transaction& transaction, int data_id, const Values& attrs)
 {
-    sql::AttrV6& a = attr();
-    sql::bulk::InsertAttrsV6 iattrs;
+    v6::AttrV6& a = attr();
+    v6::bulk::InsertAttrsV6 iattrs;
     for (const auto& i : attrs)
         iattrs.add(i.second.var, data_id);
     if (iattrs.empty()) return;
@@ -350,7 +350,7 @@ void DB::attr_insert_data(dballe::Transaction& transaction, int data_id, const V
     assert(t);
 
     // Insert all the attributes we found
-    a.insert(*t, iattrs, sql::AttrV6::UPDATE);
+    a.insert(*t, iattrs, v6::AttrV6::UPDATE);
 }
 
 void DB::attr_remove_station(dballe::Transaction& transaction, int data_id, const db::AttrList& qcs)
@@ -367,7 +367,7 @@ void DB::attr_remove_station(dballe::Transaction& transaction, int data_id, cons
             query.append_listf("%hd", *i);
         query.append(")");
     }
-    driver().exec_no_data(query);
+    conn->execute(query);
 }
 
 void DB::attr_remove_data(dballe::Transaction& transaction, int data_id, const db::AttrList& qcs)
@@ -384,7 +384,7 @@ void DB::attr_remove_data(dballe::Transaction& transaction, int data_id, const d
             query.append_listf("%hd", *i);
         query.append(")");
     }
-    driver().exec_no_data(query);
+    conn->execute(query);
 }
 
 bool DB::is_station_variable(int data_id, wreport::Varcode varcode)

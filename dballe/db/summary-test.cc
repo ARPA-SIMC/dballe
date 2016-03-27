@@ -32,10 +32,16 @@ class Tests : public FixtureTestCase<DBFixture>
 
             // Check its contents
             wassert(actual(s.is_valid()).istrue());
-            if (f.db->format() == V6)
-                wassert(actual(s.all_stations.size()) == 1);
-            else
-                wassert(actual(s.all_stations.size()) == 2);
+            switch (f.db->format())
+            {
+                case V6:
+                    wassert(actual(s.all_stations.size()) == 1);
+                    break;
+                case V7:
+                default:
+                    wassert(actual(s.all_stations.size()) == 2);
+                    break;
+            }
             wassert(actual(s.all_levels.size()) == 1);
             wassert(actual(s.all_tranges.size()) == 2);
             wassert(actual(s.all_varcodes.size()) == 2);
@@ -116,13 +122,17 @@ class Tests : public FixtureTestCase<DBFixture>
 Tests tg1("db_summary_mem", nullptr, db::MEM);
 Tests tg2("db_summary_v6_sqlite", "SQLITE", db::V6);
 #ifdef HAVE_ODBC
-Tests tg4("db_summary_v6_odbc", "ODBC", db::V6);
+Tests tg3("db_summary_v6_odbc", "ODBC", db::V6);
 #endif
 #ifdef HAVE_LIBPQ
-Tests tg6("db_summary_v6_postgresql", "POSTGRESQL", db::V6);
+Tests tg4("db_summary_v6_postgresql", "POSTGRESQL", db::V6);
 #endif
 #ifdef HAVE_MYSQL
-Tests tg8("db_summary_v6_mysql", "MYSQL", db::V6);
+Tests tg5("db_summary_v6_mysql", "MYSQL", db::V6);
+#endif
+Tests tg6("db_summary_v7_sqlite", "SQLITE", db::V7);
+#ifdef HAVE_LIBPQ
+Tests tg7("db_summary_v7_postgresql", "POSTGRESQL", db::V7);
 #endif
 
 }

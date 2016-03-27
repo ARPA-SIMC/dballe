@@ -84,7 +84,7 @@ class Tests : public FixtureTestCase<DBFixture>
             char query[20];
             snprintf(query, 20, "ana_id=%d", oldf.data["synop"].info.ana_id);
 #warning FIXME: change after testing if we can move to report-in-station behaviour or not
-            if (f.db->format() == MEM)
+            if (f.db->format() != V6)
                 TRY_QUERY(query, 2);
             else
                 TRY_QUERY(query, 4);
@@ -350,6 +350,16 @@ class Tests : public FixtureTestCase<DBFixture>
             core::Record test;
             switch (db.format())
             {
+                case V7:
+                    // v7: coords, ident, datetime, level, trange, report, code
+                    wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals01)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
+                    wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals07)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12103=280.15
+                    wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals06)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=b, B12101=280.15
+                    wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals05)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=2, rep_memo=a, B12101=280.15
+                    wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals04)); // lat=1, lon=1, year=2000, leveltype1=2, pindicator=1, rep_memo=a, B12101=280.15
+                    wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals03)); // lat=1, lon=1, year=2001, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
+                    wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals02)); // lat=2, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
+                    break;
                 case MEM:
                     // mem: coords, ident, datetime, level, trange, code, report
                     wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals01)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
@@ -380,13 +390,17 @@ class Tests : public FixtureTestCase<DBFixture>
 Tests tg1("db_query_data_mem", nullptr, db::MEM);
 Tests tg2("db_query_data_v6_sqlite", "SQLITE", db::V6);
 #ifdef HAVE_ODBC
-Tests tg4("db_query_data_v6_odbc", "ODBC", db::V6);
+Tests tg3("db_query_data_v6_odbc", "ODBC", db::V6);
 #endif
 #ifdef HAVE_LIBPQ
-Tests tg6("db_query_data_v6_postgresql", "POSTGRESQL", db::V6);
+Tests tg4("db_query_data_v6_postgresql", "POSTGRESQL", db::V6);
 #endif
 #ifdef HAVE_MYSQL
-Tests tg8("db_query_data_v6_mysql", "MYSQL", db::V6);
+Tests tg5("db_query_data_v6_mysql", "MYSQL", db::V6);
+#endif
+Tests tg6("db_query_data_v7_sqlite", "SQLITE", db::V7);
+#ifdef HAVE_LIBPQ
+Tests tg7("db_query_data_v7_postgresql", "POSTGRESQL", db::V7);
 #endif
 
 }

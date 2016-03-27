@@ -38,6 +38,16 @@ struct Querybuf : public std::string
 	 */
 	void start_list(const char* sep);
 
+    /**
+     * Notify the start of a new list item
+     */
+    void start_list_item();
+
+    /**
+     * Append an integer value
+     */
+    void append_int(int val);
+
 	/**
 	 * Append a formatted string to the querybuf
 	 *

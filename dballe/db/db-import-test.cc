@@ -72,7 +72,7 @@ class Tests : public FixtureTestCase<DBFixture>
                     wassert(actual(msgs.size()) == 1u);
                     wassert(actual(diff_msg(msg, msgs[0], "crex")) == 0);
                 } catch (std::exception& e) {
-                    throw TestFailed(string("[") + files[i] + "] " + e.what());
+                    wassert(throw TestFailed(string("[") + files[i] + "] " + e.what()));
                 }
             }
         });
@@ -102,7 +102,7 @@ class Tests : public FixtureTestCase<DBFixture>
 
                     wassert(actual(diff_msg(msg, msgs[0], "bufr")) == 0);
                 } catch (std::exception& e) {
-                    throw TestFailed(string("[") + files[i] + "] " + e.what());
+                    wassert(throw TestFailed(string("[") + files[i] + "] " + e.what()));
                 }
             }
         });
@@ -133,7 +133,7 @@ class Tests : public FixtureTestCase<DBFixture>
                     wassert(actual(msgs.size()) == 1u);
                     wassert(actual(diff_msg(msg, msgs[0], "bufr")) == 0);
                 } catch (std::exception& e) {
-                    throw TestFailed(string("[") + files[i] + "] " + e.what());
+                    wassert(throw TestFailed(string("[") + files[i] + "] " + e.what()));
                 }
             }
         });
@@ -171,6 +171,35 @@ class Tests : public FixtureTestCase<DBFixture>
             // Compare the two dba_msg
             wassert(actual(diff_msg(msg1, msgs[0], "synop1")) == 0);
             wassert(actual(diff_msg(msg2, msgs[1], "synop2")) == 0);
+        });
+        add_method("double", [](Fixture& f) {
+            // Check that importing the same message twice works
+            auto& db = f.db;
+
+            // msg1 has latitude 33.88
+            // msg2 has latitude 46.22
+            Messages msgs1 = read_msgs("bufr/obs0-1.22.bufr", File::BUFR);
+            Msg& msg1 = Msg::downcast(msgs1[0]);
+
+            normalise_datetime(msg1);
+
+            db->remove_all();
+            auto t = db->transaction();
+            db->import_msg(*t, msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+            db->import_msg(*t, msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+            t->commit();
+
+            // Explicitly set the rep_memo variable that is added during export
+            msg1.set_rep_memo(Msg::repmemo_from_type(msg1.type));
+
+            core::Query query;
+            query.rep_memo = Msg::repmemo_from_type(msg1.type);
+
+            Messages msgs = dballe::tests::messages_from_db(*db, query);
+            wassert(actual(msgs.size()) == 1u);
+
+            // Compare the two dba_msg
+            wassert(actual(diff_msg(msg1, msgs[0], "synop1")) == 0);
         });
         add_method("auto_repinfo", [](Fixture& f) {
             // Check automatic repinfo allocation
@@ -320,13 +349,17 @@ class Tests : public FixtureTestCase<DBFixture>
 Tests tg1("db_import_mem", nullptr, db::MEM);
 Tests tg2("db_import_v6_sqlite", "SQLITE", db::V6);
 #ifdef HAVE_ODBC
-Tests tg4("db_import_v6_odbc", "ODBC", db::V6);
+Tests tg3("db_import_v6_odbc", "ODBC", db::V6);
 #endif
 #ifdef HAVE_LIBPQ
-Tests tg6("db_import_v6_postgresql", "POSTGRESQL", db::V6);
+Tests tg4("db_import_v6_postgresql", "POSTGRESQL", db::V6);
 #endif
 #ifdef HAVE_MYSQL
-Tests tg8("db_import_v6_mysql", "MYSQL", db::V6);
+Tests tg5("db_import_v6_mysql", "MYSQL", db::V6);
+#endif
+Tests tg6("db_import_v7_sqlite", "SQLITE", db::V7);
+#ifdef HAVE_LIBPQ
+Tests tg7("db_import_v7_postgresql", "POSTGRESQL", db::V7);
 #endif
 
 }

@@ -20,7 +20,7 @@ def test_venti():
     fedora_ldflags = "-Wl,-z,relro"
 
     repo = git.Repo()
-    local(cmd("git", "push", "venti"))
+    local(cmd("git", "push", "venti", "HEAD"))
     with cd("~/dballe"):
         #run(cmd("git", "fetch"))
         run(cmd("git", "checkout", "-B", "test_venti", repo.head.commit.hexsha))
