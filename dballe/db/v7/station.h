@@ -18,6 +18,9 @@ namespace v7 {
 
 struct Station
 {
+protected:
+    virtual void _dump(std::function<void(int, int, const Coords& coords, const char* ident)> out) = 0;
+
 public:
     /// Instantiate a Station object for this connection
     //static std::unique_ptr<Station> create(Connection& conn);
@@ -48,7 +51,7 @@ public:
     /**
      * Dump the entire contents of the table to an output stream
      */
-    virtual void dump(FILE* out) = 0;
+    void dump(FILE* out);
 
     /**
      * Export station variables

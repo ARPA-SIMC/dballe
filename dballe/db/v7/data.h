@@ -35,6 +35,9 @@ enum UpdateMode {
  */
 struct StationData
 {
+protected:
+    virtual void _dump(std::function<void(int, int, wreport::Varcode, const char*)> out) = 0;
+
 public:
     virtual ~StationData();
 
@@ -45,7 +48,7 @@ public:
     virtual void remove(const v7::QueryBuilder& qb) = 0;
 
     /// Dump the entire contents of the table to an output stream
-    virtual void dump(FILE* out) = 0;
+    void dump(FILE* out);
 };
 
 /**
@@ -53,6 +56,9 @@ public:
  */
 struct Data
 {
+protected:
+    virtual void _dump(std::function<void(int, int, int, const Datetime&, wreport::Varcode, const char*)> out) = 0;
+
 public:
     virtual ~Data();
 
@@ -63,7 +69,7 @@ public:
     virtual void remove(const v7::QueryBuilder& qb) = 0;
 
     /// Dump the entire contents of the table to an output stream
-    virtual void dump(FILE* out) = 0;
+    void dump(FILE* out);
 };
 
 

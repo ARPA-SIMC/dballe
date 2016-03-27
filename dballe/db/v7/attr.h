@@ -27,6 +27,9 @@ struct InsertAttrsV7;
  */
 struct Attr
 {
+protected:
+    virtual void _dump(std::function<void(int, wreport::Varcode, const char*)> out) = 0;
+
 public:
     enum UpdateMode {
         UPDATE,
@@ -34,9 +37,10 @@ public:
         ERROR,
     };
 
+    std::string table_name;
     std::unordered_set<int> State::*new_ids = nullptr;
 
-    Attr(std::unordered_set<int> State::* new_ids);
+    Attr(const std::string& table_name, std::unordered_set<int> State::* new_ids);
     virtual ~Attr();
 
     /// Insert all attributes of the given variable
@@ -59,7 +63,7 @@ public:
     /**
      * Dump the entire contents of the table to an output stream
      */
-    virtual void dump(FILE* out) = 0;
+    void dump(FILE* out);
 };
 
 namespace bulk {

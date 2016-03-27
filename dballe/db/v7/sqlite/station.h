@@ -40,6 +40,8 @@ protected:
     /// Run stm, read its output and generate variables to send to dest
     void read_station_vars(dballe::sql::SQLiteStatement& stm, std::function<void(std::unique_ptr<wreport::Var>)> dest);
 
+    void _dump(std::function<void(int, int, const Coords& coords, const char* ident)> out) override;
+
 public:
     SQLiteStation(dballe::sql::SQLiteConnection& conn);
     ~SQLiteStation();
@@ -53,11 +55,6 @@ public:
 
     void get_station_vars(int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
     void add_station_vars(int id_station, Record& rec) override;
-
-    /**
-     * Dump the entire contents of the table to an output stream
-     */
-    void dump(FILE* out) override;
 };
 
 }

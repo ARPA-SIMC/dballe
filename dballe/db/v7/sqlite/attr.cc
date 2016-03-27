@@ -16,7 +16,7 @@ namespace v7 {
 namespace sqlite {
 
 SQLiteAttr::SQLiteAttr(SQLiteConnection& conn, const std::string& table_name, std::unordered_set<int> State::* new_ids)
-    : Attr(new_ids), conn(conn), table_name(table_name)
+    : Attr(table_name, new_ids), conn(conn)
 {
     // Precompile the statement for select
     sstm = conn.sqlitestatement("SELECT code, value FROM " + table_name + " WHERE id_data=?").release();
@@ -115,21 +115,13 @@ void SQLiteAttr::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertAttrsV7&
     }
 }
 
-void SQLiteAttr::dump(FILE* out)
+void SQLiteAttr::_dump(std::function<void(int, wreport::Varcode, const char*)> out)
 {
-    int count = 0;
-    fprintf(out, "dump of table %s:\n", table_name.c_str());
     auto stm = conn.sqlitestatement("SELECT id_data, code, value FROM " + table_name);
     stm->execute([&]() {
-        Varcode code = stm->column_int(1);
-        fprintf(out, " %4d, %01d%02d%03d", stm->column_int(0), WR_VAR_FXY(code));
-        if (stm->column_isnull(2))
-            fprintf(out, "\n");
-        else
-            fprintf(out, " %s\n", stm->column_string(2));
-        ++count;
+        const char* val = stm->column_isnull(2) ? nullptr : stm->column_string(2);
+        out(stm->column_int(0), stm->column_int(1), val);
     });
-    fprintf(out, "%d element%s in table %s\n", count, count != 1 ? "s" : "", table_name.c_str());
 }
 
 }

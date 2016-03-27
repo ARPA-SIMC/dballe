@@ -42,7 +42,7 @@ std::unique_ptr<v7::Station> Driver::create_station()
 
 std::unique_ptr<v7::LevTr> Driver::create_levtr()
 {
-    return unique_ptr<v7::LevTr>(new SQLiteLevTrV7(conn));
+    return unique_ptr<v7::LevTr>(new SQLiteLevTr(conn));
 }
 
 std::unique_ptr<v7::StationData> Driver::create_station_data()

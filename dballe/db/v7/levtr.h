@@ -23,6 +23,10 @@ namespace v7 {
  */
 struct LevTr
 {
+protected:
+    virtual void _dump(std::function<void(int, const Level&, const Trange&)> out) = 0;
+
+public:
     virtual ~LevTr();
 
     /**
@@ -46,16 +50,8 @@ struct LevTr
      */
     virtual levtrs_t::iterator obtain_id(State& state, const LevTrDesc& desc) = 0;
 
-#if 0
-    /// Read the LevTr data for an id, returns nullptr if not found
-    virtual const DBRow* read(int id) = 0;
-
-    /// Read the contents of the LevTr table
-    virtual void read_all(std::function<void(const DBRow&)> dest) = 0;
-#endif
-
     /// Dump the entire contents of the table to an output stream
-    virtual void dump(FILE* out) = 0;
+    void dump(FILE* out);
 };
 
 }

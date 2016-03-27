@@ -116,27 +116,13 @@ void SQLiteStationData::remove(const v7::QueryBuilder& qb)
     });
 }
 
-void SQLiteStationData::dump(FILE* out)
+void SQLiteStationData::_dump(std::function<void(int, int, wreport::Varcode, const char*)> out)
 {
-    int count = 0;
-    fprintf(out, "dump of table station_data:\n");
-    fprintf(out, " id   st   var\n");
     auto stm = conn.sqlitestatement("SELECT id, id_station, code, value FROM station_data");
     stm->execute([&]() {
-        Varcode code = stm->column_int(2);
-
-        fprintf(out, " %4d %4d %01d%02d%03d",
-                stm->column_int(0),
-                stm->column_int(1),
-                WR_VAR_FXY(code));
-        if (stm->column_isnull(3))
-            fprintf(out, "\n");
-        else
-            fprintf(out, " %s\n", stm->column_string(3));
-
-        ++count;
+        const char* val = stm->column_isnull(3) ? nullptr : stm->column_string(3);
+        out(stm->column_int(0), stm->column_int(1), stm->column_int(2), val);
     });
-    fprintf(out, "%d element%s in table data\n", count, count != 1 ? "s" : "");
 }
 
 
@@ -245,37 +231,13 @@ void SQLiteData::remove(const v7::QueryBuilder& qb)
     });
 }
 
-void SQLiteData::dump(FILE* out)
+void SQLiteData::_dump(std::function<void(int, int, int, const Datetime&, wreport::Varcode, const char*)> out)
 {
-    int count = 0;
-    fprintf(out, "dump of table data:\n");
-    fprintf(out, " id   st   ltr  datetime              var\n");
     auto stm = conn.sqlitestatement("SELECT id, id_station, id_levtr, datetime, code, value FROM data");
     stm->execute([&]() {
-        int id_levtr = stm->column_int(2);
-        const char* datetime = stm->column_string(3);
-        Varcode code = stm->column_int(4);
-
-        char ltr[20];
-        if (id_levtr == -1)
-            strcpy(ltr, "----");
-        else
-            snprintf(ltr, 20, "%04d", id_levtr);
-
-        fprintf(out, " %4d %4d %s %s %01d%02d%03d",
-                stm->column_int(0),
-                stm->column_int(1),
-                ltr,
-                datetime,
-                WR_VAR_FXY(code));
-        if (stm->column_isnull(5))
-            fprintf(out, "\n");
-        else
-            fprintf(out, " %s\n", stm->column_string(5));
-
-        ++count;
+        const char* val = stm->column_isnull(5) ? nullptr : stm->column_string(5);
+        out(stm->column_int(0), stm->column_int(1), stm->column_int(2), stm->column_datetime(3), stm->column_int(4), val);
     });
-    fprintf(out, "%d element%s in table data\n", count, count != 1 ? "s" : "");
 }
 
 }

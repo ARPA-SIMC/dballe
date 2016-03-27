@@ -28,6 +28,8 @@ protected:
     /// Precompiled update statement
     dballe::sql::SQLiteStatement* ustm = nullptr;
 
+    void _dump(std::function<void(int, int, wreport::Varcode, const char*)> out) override;
+
 public:
     SQLiteStationData(dballe::sql::SQLiteConnection& conn);
     SQLiteStationData(const SQLiteStationData&) = delete;
@@ -37,7 +39,6 @@ public:
 
     void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE) override;
     void remove(const v7::QueryBuilder& qb) override;
-    void dump(FILE* out) override;
 };
 
 /**
@@ -56,6 +57,8 @@ protected:
     /// Precompiled update statement
     dballe::sql::SQLiteStatement* ustm = nullptr;
 
+    void _dump(std::function<void(int, int, int, const Datetime&, wreport::Varcode, const char*)> out) override;
+
 public:
     SQLiteData(dballe::sql::SQLiteConnection& conn);
     SQLiteData(const SQLiteData&) = delete;
@@ -65,7 +68,6 @@ public:
 
     void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE) override;
     void remove(const v7::QueryBuilder& qb) override;
-    void dump(FILE* out) override;
 };
 
 }

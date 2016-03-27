@@ -40,7 +40,7 @@ Trange to_trange(SQLiteStatement& stm, int first_id=0)
 
 }
 
-SQLiteLevTrV7::SQLiteLevTrV7(SQLiteConnection& conn)
+SQLiteLevTr::SQLiteLevTr(SQLiteConnection& conn)
     : conn(conn)
 {
     const char* select_query =
@@ -62,14 +62,14 @@ SQLiteLevTrV7::SQLiteLevTrV7(SQLiteConnection& conn)
     istm = conn.sqlitestatement(insert_query).release();
 }
 
-SQLiteLevTrV7::~SQLiteLevTrV7()
+SQLiteLevTr::~SQLiteLevTr()
 {
     delete sstm;
     delete sdstm;
     delete istm;
 }
 
-void SQLiteLevTrV7::prefetch_ids(const std::set<int>& ids, std::map<int, LevTrDesc>& data)
+void SQLiteLevTr::prefetch_ids(const std::set<int>& ids, std::map<int, LevTrDesc>& data)
 {
     if (ids.empty()) return;
 
@@ -94,7 +94,7 @@ void SQLiteLevTrV7::prefetch_ids(const std::set<int>& ids, std::map<int, LevTrDe
     });
 }
 
-levtrs_t::iterator SQLiteLevTrV7::lookup_id(State& st, int id)
+levtrs_t::iterator SQLiteLevTr::lookup_id(State& st, int id)
 {
     auto res = st.levtr_ids.find(id);
     if (res != st.levtr_ids.end())
@@ -128,7 +128,7 @@ levtrs_t::iterator SQLiteLevTrV7::lookup_id(State& st, int id)
     return new_res;
 }
 
-levtrs_t::iterator SQLiteLevTrV7::obtain_id(State& state, const LevTrDesc& desc)
+levtrs_t::iterator SQLiteLevTr::obtain_id(State& state, const LevTrDesc& desc)
 {
     auto res = state.levtrs.find(desc);
     if (res != state.levtrs.end())
@@ -160,60 +160,12 @@ levtrs_t::iterator SQLiteLevTrV7::obtain_id(State& state, const LevTrDesc& desc)
     return state.add_levtr(desc, st);
 }
 
-#if 0
-const v7::LevTr::DBRow* SQLiteLevTrV7::read(int id)
+void SQLiteLevTr::_dump(std::function<void(int, const Level&, const Trange&)> out)
 {
-    sdstm->bind(id);
-    bool found = false;
-    sdstm->execute([&]() {
-        working_row.id = id;
-        working_row.ltype1 = sdstm->column_int(0);
-        working_row.l1 = sdstm->column_int(1);
-        working_row.ltype2 = sdstm->column_int(2);
-        working_row.l2 = sdstm->column_int(3);
-        working_row.pind = sdstm->column_int(4);
-        working_row.p1 = sdstm->column_int(5);
-        working_row.p2 = sdstm->column_int(6);
-        found = true;
-    });
-
-    if (!found) return nullptr;
-    return &working_row;
-}
-
-void SQLiteLevTrV7::read_all(std::function<void(const LevTr::DBRow&)> dest)
-{
-    auto stm = conn.sqlitestatement("SELECT id, ltype1, l1, ltype2, l2, pind, p1, p2 FROM levtr");
-    stm->execute([&]() {
-        working_row.id = stm->column_int(0);
-        working_row.ltype1 = stm->column_int(1);
-        working_row.l1 = stm->column_int(2);
-        working_row.ltype2 = stm->column_int(3);
-        working_row.l2 = stm->column_int(4);
-        working_row.pind = stm->column_int(5);
-        working_row.p1 = stm->column_int(6);
-        working_row.p2 = stm->column_int(7);
-        dest(working_row);
-    });
-}
-#endif
-
-void SQLiteLevTrV7::dump(FILE* out)
-{
-    int count = 0;
-    fprintf(out, "dump of table levtr:\n");
-    fprintf(out, "   id   lev                  tr\n");
     auto stm = conn.sqlitestatement("SELECT id, ltype1, l1, ltype2, l2, pind, p1, p2 FROM levtr ORDER BY ID");
     stm->execute([&]() {
-        fprintf(out, " %4d   ", stm->column_int(0));
-        int written = to_level(*stm, 1).print(out, "-", "");
-        while (written++ < 21) putc(' ', out);
-        written = to_trange(*stm, 5).print(out, "-", "");
-        while (written++ < 11) putc(' ', out);
-        putc('\n', out);
-        ++count;
+        out(stm->column_int(0), to_level(*stm, 1), to_trange(*stm, 5));
     });
-    fprintf(out, "%d element%s in table levtr\n", count, count != 1 ? "s" : "");
 }
 
 }

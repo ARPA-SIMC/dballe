@@ -11,8 +11,8 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
-Attr::Attr(std::unordered_set<int> State::* new_ids)
-    : new_ids(new_ids) {}
+Attr::Attr(const std::string& table_name, std::unordered_set<int> State::* new_ids)
+    : table_name(table_name), new_ids(new_ids) {}
 Attr::~Attr() {}
 
 void Attr::insert_attributes(dballe::db::v7::Transaction& t, int id_data, const wreport::Var& var, UpdateMode update_mode)
@@ -23,6 +23,20 @@ void Attr::insert_attributes(dballe::db::v7::Transaction& t, int id_data, const 
     insert(t, attrs, update_mode);
 }
 
+void Attr::dump(FILE* out)
+{
+    int count = 0;
+    fprintf(out, "dump of table %s:\n", table_name.c_str());
+    _dump([&](int id_data, wreport::Varcode code, const char* val) {
+        fprintf(out, " %4d, %01d%02d%03d", id_data, WR_VAR_FXY(code));
+        if (!val)
+            fprintf(out, "\n");
+        else
+            fprintf(out, " %s\n", val);
+        ++count;
+    });
+    fprintf(out, "%d element%s in table %s\n", count, count != 1 ? "s" : "", table_name.c_str());
+}
 
 namespace bulk {
 

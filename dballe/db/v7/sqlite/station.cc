@@ -199,25 +199,13 @@ void SQLiteStation::get_station_vars(int id_station, std::function<void(std::uni
     read_station_vars(*stm, dest);
 }
 
-void SQLiteStation::dump(FILE* out)
+void SQLiteStation::_dump(std::function<void(int, int, const Coords& coords, const char* ident)> out)
 {
-    int count = 0;
-    fprintf(out, "dump of table station:\n");
-
     auto stm = conn.sqlitestatement("SELECT id, rep, lat, lon, ident FROM station");
     stm->execute([&]() {
-        fprintf(out, " %d, %d, %.5f, %.5f",
-                stm->column_int(0),
-                stm->column_int(1),
-                stm->column_int(2) / 100000.0,
-                stm->column_int(3) / 100000.0);
-        if (stm->column_isnull(4))
-            putc('\n', out);
-        else
-            fprintf(out, ", %s\n", stm->column_string(4));
-        ++count;
+        const char* ident = stm->column_isnull(4) ? nullptr : stm->column_string(4);
+        out(stm->column_int(0), stm->column_int(1), Coords(stm->column_int(2), stm->column_int(3)), ident);
     });
-    fprintf(out, "%d element%s in table station\n", count, count != 1 ? "s" : "");
 }
 
 void SQLiteStation::add_station_vars(int id_station, Record& rec)

@@ -18,14 +18,14 @@ protected:
     /** DB connection. */
     dballe::sql::SQLiteConnection& conn;
 
-    std::string table_name;
-
     /// Precompiled select statement
     dballe::sql::SQLiteStatement* sstm = nullptr;
     /// Precompiled insert statement
     dballe::sql::SQLiteStatement* istm = nullptr;
     /// Precompiled update statement
     dballe::sql::SQLiteStatement* ustm = nullptr;
+
+    void _dump(std::function<void(int, wreport::Varcode, const char*)> out) override;
 
 public:
     SQLiteAttr(dballe::sql::SQLiteConnection& conn, const std::string& table_name, std::unordered_set<int> State::* new_ids);
@@ -36,7 +36,6 @@ public:
 
     void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertAttrsV7& vars, UpdateMode update_mode=UPDATE) override;
     void read(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
-    void dump(FILE* out) override;
 };
 
 }

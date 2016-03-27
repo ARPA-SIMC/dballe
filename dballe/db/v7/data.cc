@@ -11,7 +11,48 @@ namespace v7 {
 
 StationData::~StationData() {}
 
+void StationData::dump(FILE* out)
+{
+    int count = 0;
+    fprintf(out, "dump of table station_data:\n");
+    fprintf(out, " id   st   var\n");
+    _dump([&](int id, int id_station, wreport::Varcode code, const char* val) {
+        fprintf(out, " %4d %4d %01d%02d%03d", id, id_station, WR_VAR_FXY(code));
+        if (!val)
+            fprintf(out, "\n");
+        else
+            fprintf(out, " %s\n", val);
+
+        ++count;
+    });
+    fprintf(out, "%d element%s in table data\n", count, count != 1 ? "s" : "");
+}
+
+
 Data::~Data() {}
+
+void Data::dump(FILE* out)
+{
+    int count = 0;
+    fprintf(out, "dump of table data:\n");
+    fprintf(out, " id   st   ltr  datetime              var\n");
+    _dump([&](int id, int id_station, int id_levtr, const Datetime& dt, wreport::Varcode code, const char* val) {
+        fprintf(out, " %4d %4d %04d %04d-%02d-%02d %02d:%02d:%02d %01d%02d%03d",
+                id,
+                id_station,
+                id_levtr,
+                dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,
+                WR_VAR_FXY(code));
+        if (!val)
+            fprintf(out, "\n");
+        else
+            fprintf(out, " %s\n", val);
+
+        ++count;
+    });
+    fprintf(out, "%d element%s in table data\n", count, count != 1 ? "s" : "");
+}
+
 
 namespace bulk {
 
