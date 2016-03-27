@@ -158,53 +158,53 @@ void Driver::create_tables_v7()
         CREATE INDEX pa_lon ON station(lon);
     )");
     conn.exec(R"(
-        CREATE TABLE lev_tr (
+        CREATE TABLE levtr (
            id         INTEGER PRIMARY KEY,
            ltype1      INTEGER NOT NULL,
            l1          INTEGER NOT NULL,
            ltype2      INTEGER NOT NULL,
            l2          INTEGER NOT NULL,
-           ptype       INTEGER NOT NULL,
+           pind       INTEGER NOT NULL,
            p1          INTEGER NOT NULL,
            p2          INTEGER NOT NULL,
-           UNIQUE (ltype1, l1, ltype2, l2, ptype, p1, p2)
+           UNIQUE (ltype1, l1, ltype2, l2, pind, p1, p2)
         );
     )");
     conn.exec(R"(
         CREATE TABLE station_data (
            id          INTEGER PRIMARY KEY,
            id_station  INTEGER NOT NULL REFERENCES station (id) ON DELETE CASCADE,
-           id_var      INTEGER NOT NULL,
+           code        INTEGER NOT NULL,
            value       VARCHAR(255) NOT NULL,
-           UNIQUE (id_station, id_var)
+           UNIQUE (id_station, code)
         );
     )");
     conn.exec(R"(
         CREATE TABLE data (
            id          INTEGER PRIMARY KEY,
            id_station  INTEGER NOT NULL REFERENCES station (id) ON DELETE CASCADE,
-           id_lev_tr   INTEGER NOT NULL REFERENCES lev_tr(id) ON DELETE CASCADE,
+           id_levtr    INTEGER NOT NULL REFERENCES levtr(id) ON DELETE CASCADE,
            datetime    TEXT NOT NULL,
-           id_var      INTEGER NOT NULL,
+           code        INTEGER NOT NULL,
            value       VARCHAR(255) NOT NULL,
-           UNIQUE (id_station, datetime, id_lev_tr, id_var)
+           UNIQUE (id_station, datetime, id_levtr, code)
         );
-        CREATE INDEX data_lt ON data(id_lev_tr);
+        CREATE INDEX data_lt ON data(id_levtr);
     )");
     conn.exec(R"(
         CREATE TABLE station_attr (
            id_data     INTEGER NOT NULL REFERENCES station_data (id) ON DELETE CASCADE,
-           type        INTEGER NOT NULL,
+           code        INTEGER NOT NULL,
            value       VARCHAR(255) NOT NULL,
-           UNIQUE (id_data, type)
+           UNIQUE (id_data, code)
         );
     )");
     conn.exec(R"(
         CREATE TABLE attr (
            id_data     INTEGER NOT NULL REFERENCES data (id) ON DELETE CASCADE,
-           type        INTEGER NOT NULL,
+           code        INTEGER NOT NULL,
            value       VARCHAR(255) NOT NULL,
-           UNIQUE (id_data, type)
+           UNIQUE (id_data, code)
         );
     )");
     conn.set_setting("version", "V7");
@@ -215,7 +215,7 @@ void Driver::delete_tables_v7()
     conn.drop_table_if_exists("data");
     conn.drop_table_if_exists("station_attr");
     conn.drop_table_if_exists("station_data");
-    conn.drop_table_if_exists("lev_tr");
+    conn.drop_table_if_exists("levtr");
     conn.drop_table_if_exists("repinfo");
     conn.drop_table_if_exists("station");
     conn.drop_settings();
@@ -223,11 +223,11 @@ void Driver::delete_tables_v7()
 void Driver::vacuum_v7()
 {
     conn.exec(R"(
-        DELETE FROM lev_tr WHERE id IN (
+        DELETE FROM levtr WHERE id IN (
             SELECT ltr.id
-              FROM lev_tr ltr
-         LEFT JOIN data d ON d.id_lev_tr = ltr.id
-             WHERE d.id_lev_tr is NULL)
+              FROM levtr ltr
+         LEFT JOIN data d ON d.id_levtr = ltr.id
+             WHERE d.id_levtr is NULL)
     )");
     conn.exec(R"(
         DELETE FROM station WHERE id IN (

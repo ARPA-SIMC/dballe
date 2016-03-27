@@ -357,7 +357,7 @@ void DB::attr_remove_station(dballe::Transaction& transaction, int data_id, cons
         query.appendf("DELETE FROM station_attr WHERE id_data=%d", data_id);
     else {
         // Delete only the attributes in qcs
-        query.appendf("DELETE FROM station_attr WHERE id_data=%d AND type IN (", data_id);
+        query.appendf("DELETE FROM station_attr WHERE id_data=%d AND code IN (", data_id);
         query.start_list(", ");
         for (vector<Varcode>::const_iterator i = qcs.begin(); i != qcs.end(); ++i)
             query.append_listf("%hd", *i);
@@ -374,7 +374,7 @@ void DB::attr_remove_data(dballe::Transaction& transaction, int data_id, const d
         query.appendf("DELETE FROM attr WHERE id_data=%d", data_id);
     else {
         // Delete only the attributes in qcs
-        query.appendf("DELETE FROM attr WHERE id_data=%d AND type IN (", data_id);
+        query.appendf("DELETE FROM attr WHERE id_data=%d AND code IN (", data_id);
         query.start_list(", ");
         for (vector<Varcode>::const_iterator i = qcs.begin(); i != qcs.end(); ++i)
             query.append_listf("%hd", *i);

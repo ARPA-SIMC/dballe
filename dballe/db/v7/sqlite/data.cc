@@ -21,8 +21,8 @@ namespace sqlite {
 SQLiteStationData::SQLiteStationData(SQLiteConnection& conn)
     : conn(conn)
 {
-    sstm = conn.sqlitestatement("SELECT id, id_var FROM station_data WHERE id_station=?").release();
-    istm = conn.sqlitestatement("INSERT INTO station_data (id_station, id_var, value) VALUES (?, ?, ?)").release();
+    sstm = conn.sqlitestatement("SELECT id, code FROM station_data WHERE id_station=?").release();
+    istm = conn.sqlitestatement("INSERT INTO station_data (id_station, code, value) VALUES (?, ?, ?)").release();
     ustm = conn.sqlitestatement("UPDATE station_data SET value=? WHERE id=?").release();
 }
 
@@ -121,7 +121,7 @@ void SQLiteStationData::dump(FILE* out)
     int count = 0;
     fprintf(out, "dump of table station_data:\n");
     fprintf(out, " id   st   var\n");
-    auto stm = conn.sqlitestatement("SELECT id, id_station, id_var, value FROM station_data");
+    auto stm = conn.sqlitestatement("SELECT id, id_station, code, value FROM station_data");
     stm->execute([&]() {
         Varcode code = stm->column_int(2);
 
@@ -143,8 +143,8 @@ void SQLiteStationData::dump(FILE* out)
 SQLiteData::SQLiteData(SQLiteConnection& conn)
     : conn(conn)
 {
-    sstm = conn.sqlitestatement("SELECT id, id_lev_tr, id_var FROM data WHERE id_station=? AND datetime=?").release();
-    istm = conn.sqlitestatement("INSERT INTO data (id_station, id_lev_tr, datetime, id_var, value) VALUES (?, ?, ?, ?, ?)").release();
+    sstm = conn.sqlitestatement("SELECT id, id_levtr, code FROM data WHERE id_station=? AND datetime=?").release();
+    istm = conn.sqlitestatement("INSERT INTO data (id_station, id_levtr, datetime, code, value) VALUES (?, ?, ?, ?, ?)").release();
     ustm = conn.sqlitestatement("UPDATE data SET value=? WHERE id=?").release();
 }
 
@@ -250,17 +250,17 @@ void SQLiteData::dump(FILE* out)
     int count = 0;
     fprintf(out, "dump of table data:\n");
     fprintf(out, " id   st   ltr  datetime              var\n");
-    auto stm = conn.sqlitestatement("SELECT id, id_station, id_lev_tr, datetime, id_var, value FROM data");
+    auto stm = conn.sqlitestatement("SELECT id, id_station, id_levtr, datetime, code, value FROM data");
     stm->execute([&]() {
-        int id_lev_tr = stm->column_int(2);
+        int id_levtr = stm->column_int(2);
         const char* datetime = stm->column_string(3);
         Varcode code = stm->column_int(4);
 
         char ltr[20];
-        if (id_lev_tr == -1)
+        if (id_levtr == -1)
             strcpy(ltr, "----");
         else
-            snprintf(ltr, 20, "%04d", id_lev_tr);
+            snprintf(ltr, 20, "%04d", id_levtr);
 
         fprintf(out, " %4d %4d %s %s %01d%02d%03d",
                 stm->column_int(0),

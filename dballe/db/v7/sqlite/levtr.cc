@@ -44,13 +44,13 @@ SQLiteLevTrV7::SQLiteLevTrV7(SQLiteConnection& conn)
     : conn(conn)
 {
     const char* select_query =
-        "SELECT id FROM lev_tr WHERE"
+        "SELECT id FROM levtr WHERE"
         "     ltype1=? AND l1=? AND ltype2=? AND l2=?"
-        " AND ptype=? AND p1=? AND p2=?";
+        " AND pind=? AND p1=? AND p2=?";
     const char* select_data_query =
-        "SELECT ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr WHERE id=?";
+        "SELECT ltype1, l1, ltype2, l2, pind, p1, p2 FROM levtr WHERE id=?";
     const char* insert_query =
-        "INSERT INTO lev_tr (ltype1, l1, ltype2, l2, ptype, p1, p2) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        "INSERT INTO levtr (ltype1, l1, ltype2, l2, pind, p1, p2) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
     // Create the statement for select fixed
     sstm = conn.sqlitestatement(select_query).release();
@@ -76,13 +76,13 @@ void SQLiteLevTrV7::prefetch_ids(const std::set<int>& ids, std::map<int, LevTrDe
     sql::Querybuf qb;
     if (ids.size() < 100)
     {
-        qb.append("SELECT id, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr WHERE id IN (");
+        qb.append("SELECT id, ltype1, l1, ltype2, l2, pind, p1, p2 FROM levtr WHERE id IN (");
         qb.start_list(",");
         for (auto id: ids)
             qb.append_listf("%d", id);
         qb.append(")");
     } else
-        qb.append("SELECT id, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr");
+        qb.append("SELECT id, ltype1, l1, ltype2, l2, pind, p1, p2 FROM levtr");
 
     auto stm = conn.sqlitestatement(qb);
     stm->execute([&]() {
@@ -183,7 +183,7 @@ const v7::LevTr::DBRow* SQLiteLevTrV7::read(int id)
 
 void SQLiteLevTrV7::read_all(std::function<void(const LevTr::DBRow&)> dest)
 {
-    auto stm = conn.sqlitestatement("SELECT id, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr");
+    auto stm = conn.sqlitestatement("SELECT id, ltype1, l1, ltype2, l2, pind, p1, p2 FROM levtr");
     stm->execute([&]() {
         working_row.id = stm->column_int(0);
         working_row.ltype1 = stm->column_int(1);
@@ -201,9 +201,9 @@ void SQLiteLevTrV7::read_all(std::function<void(const LevTr::DBRow&)> dest)
 void SQLiteLevTrV7::dump(FILE* out)
 {
     int count = 0;
-    fprintf(out, "dump of table lev_tr:\n");
+    fprintf(out, "dump of table levtr:\n");
     fprintf(out, "   id   lev                  tr\n");
-    auto stm = conn.sqlitestatement("SELECT id, ltype1, l1, ltype2, l2, ptype, p1, p2 FROM lev_tr ORDER BY ID");
+    auto stm = conn.sqlitestatement("SELECT id, ltype1, l1, ltype2, l2, pind, p1, p2 FROM levtr ORDER BY ID");
     stm->execute([&]() {
         fprintf(out, " %4d   ", stm->column_int(0));
         int written = to_level(*stm, 1).print(out, "-", "");
@@ -213,7 +213,7 @@ void SQLiteLevTrV7::dump(FILE* out)
         putc('\n', out);
         ++count;
     });
-    fprintf(out, "%d element%s in table lev_tr\n", count, count != 1 ? "s" : "");
+    fprintf(out, "%d element%s in table levtr\n", count, count != 1 ? "s" : "");
 }
 
 }

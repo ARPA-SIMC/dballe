@@ -88,7 +88,7 @@ void Driver::remove_all_v7()
     exec_no_data("DELETE FROM attr");
     exec_no_data("DELETE FROM station_data");
     exec_no_data("DELETE FROM data");
-    exec_no_data("DELETE FROM lev_tr");
+    exec_no_data("DELETE FROM levtr");
     exec_no_data("DELETE FROM station");
 }
 

@@ -19,7 +19,7 @@ SQLiteAttr::SQLiteAttr(SQLiteConnection& conn, const std::string& table_name, st
     : Attr(new_ids), conn(conn), table_name(table_name)
 {
     // Precompile the statement for select
-    sstm = conn.sqlitestatement("SELECT type, value FROM " + table_name + " WHERE id_data=?").release();
+    sstm = conn.sqlitestatement("SELECT code, value FROM " + table_name + " WHERE id_data=?").release();
 }
 
 SQLiteAttr::~SQLiteAttr()
@@ -43,7 +43,7 @@ void SQLiteAttr::read(int id_data, function<void(unique_ptr<Var>)> dest)
 void SQLiteAttr::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertAttrsV7& attrs, UpdateMode update_mode)
 {
     Querybuf select_query;
-    select_query.appendf("SELECT id_data, type, value FROM %s WHERE id_data IN (", table_name.c_str());
+    select_query.appendf("SELECT id_data, code, value FROM %s WHERE id_data IN (", table_name.c_str());
     select_query.start_list(",");
     int last_data_id = -1;
     bool do_select = false;
@@ -55,7 +55,7 @@ void SQLiteAttr::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertAttrsV7&
         select_query.append_listf("%d", a.id_data);
         do_select = true;
     }
-    select_query.append(") ORDER BY id_data, type");
+    select_query.append(") ORDER BY id_data, code");
 
     v7::bulk::AnnotateAttrsV7 todo(attrs);
     if (do_select)
@@ -81,7 +81,7 @@ void SQLiteAttr::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertAttrsV7&
         case UPDATE:
             if (todo.do_update)
             {
-                if (!ustm) ustm = conn.sqlitestatement("UPDATE " + table_name + " SET value=? WHERE id_data=? AND type=?").release();
+                if (!ustm) ustm = conn.sqlitestatement("UPDATE " + table_name + " SET value=? WHERE id_data=? AND code=?").release();
                 for (auto& v: attrs)
                 {
                     if (!v.needs_update()) continue;
@@ -102,7 +102,7 @@ void SQLiteAttr::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertAttrsV7&
 
     if (todo.do_insert)
     {
-        if (!istm) istm = conn.sqlitestatement("INSERT INTO " + table_name + " (id_data, type, value) VALUES (?, ?, ?)").release();
+        if (!istm) istm = conn.sqlitestatement("INSERT INTO " + table_name + " (id_data, code, value) VALUES (?, ?, ?)").release();
         for (auto& v: attrs)
         {
             if (!v.needs_insert()) continue;
@@ -119,12 +119,10 @@ void SQLiteAttr::dump(FILE* out)
 {
     int count = 0;
     fprintf(out, "dump of table %s:\n", table_name.c_str());
-    auto stm = conn.sqlitestatement("SELECT id_data, type, value FROM " + table_name);
+    auto stm = conn.sqlitestatement("SELECT id_data, code, value FROM " + table_name);
     stm->execute([&]() {
-        Varcode type = stm->column_int(1);
-        fprintf(out, " %4d, %01d%02d%03d",
-                stm->column_int(0),
-                WR_VAR_F(type), WR_VAR_X(type), WR_VAR_Y(type));
+        Varcode code = stm->column_int(1);
+        fprintf(out, " %4d, %01d%02d%03d", stm->column_int(0), WR_VAR_FXY(code));
         if (stm->column_isnull(2))
             fprintf(out, "\n");
         else
