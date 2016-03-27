@@ -1,11 +1,10 @@
 #include "querybuf.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
 #include "dballe/core/vasprintf.h"
 #include "dballe/var.h"
+#include <cstdio>
+#include <cstdlib>
+#include <cstdarg>
+#include <cstring>
 
 using namespace std;
 using namespace wreport;
