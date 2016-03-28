@@ -251,6 +251,7 @@ void Driver::create_tables_v7()
         );
     )");
     conn.exec_no_data("CREATE UNIQUE INDEX data_uniq on data(id_station, datetime, id_levtr, code);");
+    // When possible, replace with a postgresql 9.5 BRIN index
     conn.exec_no_data("CREATE INDEX data_dt ON data(datetime);");
 
     conn.exec_no_data(R"(
