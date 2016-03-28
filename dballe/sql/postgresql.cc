@@ -209,12 +209,14 @@ void PostgreSQLConnection::init_after_connect()
 
 void PostgreSQLConnection::pqexec(const std::string& query)
 {
+    if (profile) ++profile_query_count;
     postgresql::Result res(PQexec(db, query.c_str()));
     res.expect_success(query);
 }
 
 void PostgreSQLConnection::pqexec_nothrow(const std::string& query) noexcept
 {
+    if (profile) ++profile_query_count;
     postgresql::Result res(PQexec(db, query.c_str()));
     switch (PQresultStatus(res))
     {
@@ -271,13 +273,6 @@ void PostgreSQLConnection::prepare(const std::string& name, const std::string& q
     Result res(PQprepare(db, name.c_str(), query.c_str(), 0, nullptr));
     res.expect_no_data("prepare:" + query);
 }
-
-#if 0
-std::unique_ptr<PostgreSQLCompiledQuery> PostgreSQLConnection::pqstatement(const std::string& name, const std::string& query)
-{
-    return unique_ptr<PostgreSQLCompiledQuery>(new PostgreSQLCompiledQuery(*this, name, query));
-}
-#endif
 
 void PostgreSQLConnection::drop_table_if_exists(const char* name)
 {
