@@ -251,9 +251,7 @@ void Driver::create_tables_v7()
         );
     )");
     conn.exec_no_data("CREATE UNIQUE INDEX data_uniq on data(id_station, datetime, id_levtr, code);");
-    //conn.exec_no_data("CREATE INDEX data_ana ON data(id_station);");
-    //conn.exec_no_data("CREATE INDEX data_dt ON data(datetime);");
-    //conn.exec_no_data("CREATE INDEX data_lt ON data(id_lev_tr);");
+    conn.exec_no_data("CREATE INDEX data_dt ON data(datetime);");
 
     conn.exec_no_data(R"(
         CREATE TABLE station_attr (
