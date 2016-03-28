@@ -34,6 +34,8 @@ int op_no_attrs = 0;
 int op_full_pseudoana = 0;
 int op_verbose = 0;
 int op_precise_import = 0;
+int op_wipe_disappear = 0;
+
 
 struct poptOption grepTable[] = {
     { "category", 0, POPT_ARG_INT, &reader.filter.category, 0,
@@ -172,6 +174,14 @@ struct WipeCmd : public DatabaseCmd
             "If no file is provided, a default version is used";
     }
 
+    void add_to_optable(std::vector<poptOption>& opts) const override
+    {
+        DatabaseCmd::add_to_optable(opts);
+        opts.push_back({ "disappear", 0, POPT_ARG_NONE, &op_wipe_disappear, 0,
+            "just remove the DB-All.e data and tables", 0 });
+    }
+
+
     int main(poptContext optCon) override
     {
         /* Throw away the command name */
@@ -186,9 +196,12 @@ struct WipeCmd : public DatabaseCmd
             db->disappear();
         }
 
-        // Recreate tables
-        unique_ptr<DB> db = connect();
-        db->reset(fname);
+        if (!op_wipe_disappear)
+        {
+            // Recreate tables
+            unique_ptr<DB> db = connect();
+            db->reset(fname);
+        }
         return 0;
     }
 };
