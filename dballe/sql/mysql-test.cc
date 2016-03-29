@@ -209,6 +209,36 @@ class Tests : public FixtureTestCase<ConnectorFixture>
             wassert(actual(count) == 1);
             wassert(actual(val) == WR_VAR(3, 1, 12));
         });
+        add_method("bytes", [](Fixture& f) {
+            // Test querying unsigned short values
+            auto& conn = f.conn;
+            conn.drop_table_if_exists("dballe_testbytes");
+            conn.exec_no_data("CREATE TABLE dballe_testbytes (val VARBINARY(2048))");
+            conn.exec_no_data("INSERT INTO dballe_testbytes VALUES (x'0011EEFF')");
+
+            auto s = conn.exec_store("SELECT val FROM dballe_testbytes");
+            auto row = s.expect_one_result();
+            std::vector<uint8_t> val = row.as_blob(0);
+            wassert(actual(val.size()) == 4);
+            wassert(actual(val[0]) == 0x00);
+            wassert(actual(val[1]) == 0x11);
+            wassert(actual(val[2]) == 0xEE);
+            wassert(actual(val[3]) == 0xFF);
+
+            val[0] = 0xff;
+            val[3] = 0x00;
+            conn.exec_no_data("UPDATE dballe_testbytes SET val=x'" + conn.escape(val) + "'");
+
+            val.clear();
+            s = conn.exec_store("SELECT val FROM dballe_testbytes");
+            row = s.expect_one_result();
+            val = row.as_blob(0);
+            wassert(actual(val.size()) == 4);
+            wassert(actual(val[0]) == 0xFF);
+            wassert(actual(val[1]) == 0x11);
+            wassert(actual(val[2]) == 0xEE);
+            wassert(actual(val[3]) == 0x00);
+        });
         add_method("has_tables", [](Fixture& f) {
             // Test has_tables
             wassert(actual(f.conn.has_table("this_should_not_exist")).isfalse());
@@ -236,6 +266,6 @@ class Tests : public FixtureTestCase<ConnectorFixture>
             wassert(actual(f.conn.get_last_insert_id()) == 2);
         });
     }
-} test("db_internals_mysql");
+} test("db_sql_mysql");
 
 }

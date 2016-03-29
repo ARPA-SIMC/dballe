@@ -98,11 +98,41 @@ class Tests : public FixtureTestCase<ConnectorFixture>
 
             auto s = conn.exec("SELECT val FROM dballe_testshort");
             wassert(actual(s.rowcount()) == 1);
-
-            Varcode val = 0;
-            for (unsigned row = 0; row < 1; ++row)
-                val += s.get_int2(row, 0);
+            Varcode val = s.get_int2(0, 0);;
             wassert(actual(val) == 123);
+        });
+
+        add_method("bytea", [](Fixture& f) {
+            // Test querying unsigned short values
+            auto& conn = f.conn;
+            conn.drop_table_if_exists("dballe_testbytea");
+            conn.exec_no_data("CREATE TABLE dballe_testbytea (val BYTEA)");
+            conn.exec_no_data("INSERT INTO dballe_testbytea VALUES (E'\\\\x0011EEFF')");
+
+            auto s = conn.exec("SELECT val FROM dballe_testbytea");
+            wassert(actual(s.rowcount()) == 1);
+
+            std::vector<uint8_t> val = s.get_bytea(0, 0);
+            wassert(actual(val.size()) == 4);
+            wassert(actual(val[0]) == 0x00);
+            wassert(actual(val[1]) == 0x11);
+            wassert(actual(val[2]) == 0xEE);
+            wassert(actual(val[3]) == 0xFF);
+
+            val[0] = 0xff;
+            val[3] = 0x00;
+            conn.exec_no_data("UPDATE dballe_testbytea SET val=$1::bytea", val);
+            val.clear();
+
+            s = conn.exec("SELECT val FROM dballe_testbytea");
+            wassert(actual(s.rowcount()) == 1);
+
+            val = s.get_bytea(0, 0);
+            wassert(actual(val.size()) == 4);
+            wassert(actual(val[0]) == 0xFF);
+            wassert(actual(val[1]) == 0x11);
+            wassert(actual(val[2]) == 0xEE);
+            wassert(actual(val[3]) == 0x00);
         });
 
         add_method("has_tables", [](Fixture& f) {
@@ -212,6 +242,6 @@ class Tests : public FixtureTestCase<ConnectorFixture>
             wassert(actual(res4.get_timestamp(0, 0)) == Datetime(1945, 4, 25, 8, 10, 20));
         });
     }
-} test("db_postgresql_internals");
+} test("db_sql_postgresql");
 
 }

@@ -7,6 +7,7 @@
 #include <dballe/core/error.h>
 #include <dballe/sql/sql.h>
 #include <sqlite3.h>
+#include <vector>
 
 namespace dballe {
 namespace sql {
@@ -118,6 +119,7 @@ struct SQLiteStatement
     void bind_val(int idx, const Datetime& val);
     void bind_val(int idx, const char* val); // Warning: SQLITE_STATIC is used
     void bind_val(int idx, const std::string& val); // Warning: SQLITE_STATIC is used
+    void bind_val(int idx, const std::vector<uint8_t>& val); // Warning: SQLITE_STATIC is used
 
     /// Run the query, ignoring all results
     void execute();
@@ -147,6 +149,13 @@ struct SQLiteStatement
 
     /// Read the string value of a column in the result set (0-based)
     const char* column_string(int col) { return (const char*)sqlite3_column_text(stm, col); }
+
+    /// Read the string value of a column in the result set (0-based)
+    std::vector<uint8_t> column_blob(int col) {
+        int size = sqlite3_column_bytes(stm, col);
+        const uint8_t* val = (const uint8_t*)sqlite3_column_blob(stm, col);
+        return std::vector<uint8_t>(val, val + size);
+    }
 
     /// Read the string value of a column and parse it as a Datetime
     Datetime column_datetime(int col);

@@ -103,6 +103,42 @@ class Tests : public FixtureTestCase<SQLiteFixture>
             wassert(actual(count) == 1);
             wassert(actual(val) == WR_VAR(3, 1, 12));
         });
+        add_method("bytes", [](Fixture& f) {
+            // Test querying unsigned short values
+            auto& conn = f.conn;
+            conn.drop_table_if_exists("dballe_testbytes");
+            conn.exec("CREATE TABLE dballe_testbytes (val BLOB)");
+            conn.exec("INSERT INTO dballe_testbytes VALUES (x'0011EEFF')");
+
+            auto s = conn.sqlitestatement("SELECT val FROM dballe_testbytes");
+            std::vector<uint8_t> val;
+            s->execute_one([&]() {
+                val = s->column_blob(0);
+            });
+            wassert(actual(val.size()) == 4);
+            wassert(actual(val[0]) == 0x00);
+            wassert(actual(val[1]) == 0x11);
+            wassert(actual(val[2]) == 0xEE);
+            wassert(actual(val[3]) == 0xFF);
+
+            val[0] = 0xff;
+            val[3] = 0x00;
+            s = conn.sqlitestatement("UPDATE dballe_testbytes SET val=?");
+            s->bind_val(1, val);
+            s->execute();
+
+            val.clear();
+            s = conn.sqlitestatement("SELECT val FROM dballe_testbytes");
+            s->execute_one([&]() {
+                val = s->column_blob(0);
+            });
+            wassert(actual(val.size()) == 4);
+            wassert(actual(val[0]) == 0xFF);
+            wassert(actual(val[1]) == 0x11);
+            wassert(actual(val[2]) == 0xEE);
+            wassert(actual(val[3]) == 0x00);
+        });
+
         add_method("query_has_tables", [](Fixture& f) {
             // Test has_tables
             wassert(actual(f.conn.has_table("this_should_not_exist")).isfalse());
@@ -131,6 +167,6 @@ class Tests : public FixtureTestCase<SQLiteFixture>
     }
 };
 
-Tests tests("db_internals_sqlite");
+Tests tests("db_sql_sqlite");
 
 }

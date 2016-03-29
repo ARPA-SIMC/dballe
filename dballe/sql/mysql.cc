@@ -319,6 +319,18 @@ std::string MySQLConnection::escape(const std::string& str)
     return res;
 }
 
+std::string MySQLConnection::escape(const std::vector<uint8_t>& buf)
+{
+    // Dirty: we write directly inside the resulting std::string storage.
+    // It should work in C++11, although not according to its specifications,
+    // and if for some reason we discover that it does not work, this can be
+    // rewritten with one extra string copy.
+    string res(buf.size() * 2 + 1, 0);
+    unsigned long len = mysql_hex_string(const_cast<char*>(res.data()), (const char*)buf.data(), buf.size());
+    res.resize(len);
+    return res;
+}
+
 void MySQLConnection::exec_no_data_nothrow(const char* query) noexcept
 {
     using namespace dballe::sql::mysql;

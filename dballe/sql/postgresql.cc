@@ -94,6 +94,13 @@ uint64_t Result::get_int8(unsigned row, unsigned col) const
     return be64toh(*(uint64_t*)val);
 }
 
+std::vector<uint8_t> Result::get_bytea(unsigned row, unsigned col) const
+{
+    int size = PQgetlength(res, row, col);
+    char* val = PQgetvalue(res, row, col);
+    return std::vector<uint8_t>(val, val + size);
+}
+
 Datetime Result::get_timestamp(unsigned row, unsigned col) const
 {
     // Adapter from http://libpqtypes.esilo.com/browse_source.html?file=datetime.c

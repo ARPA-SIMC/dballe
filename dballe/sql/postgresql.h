@@ -7,6 +7,7 @@
 #include <dballe/sql/sql.h>
 #include <libpq-fe.h>
 #include <arpa/inet.h>
+#include <vector>
 
 namespace dballe {
 namespace sql {
@@ -127,6 +128,17 @@ protected:
 
     /// Fill in the argument structures
     template<typename... REST>
+    void _add(unsigned pos, const std::vector<uint8_t>& arg, const REST&... rest)
+    {
+        local[pos] = nullptr;
+        args[pos] = (const char*)arg.data();
+        lengths[pos] = arg.size();
+        formats[pos] = 1;
+        _add(pos + 1, rest...);
+    }
+
+    /// Fill in the argument structures
+    template<typename... REST>
     void _add(unsigned pos, const Datetime& arg, const REST&... rest)
     {
         local[pos] = malloc(sizeof(int64_t));
@@ -206,6 +218,9 @@ struct Result
 
     /// Return a result value, transmitted in binary as an 8 bit integer
     uint64_t get_int8(unsigned row, unsigned col) const;
+
+    /// Return a result value, transmitted in binary as an 8 bit integer
+    std::vector<uint8_t> get_bytea(unsigned row, unsigned col) const;
 
     /// Return a result value, transmitted as a string
     const char* get_string(unsigned row, unsigned col) const

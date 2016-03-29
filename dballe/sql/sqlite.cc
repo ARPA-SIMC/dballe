@@ -425,6 +425,12 @@ void SQLiteStatement::bind_val(int idx, const std::string& val)
         throw error_sqlite(conn, "cannot bind a text input column");
 }
 
+void SQLiteStatement::bind_val(int idx, const std::vector<uint8_t>& val)
+{
+    if (sqlite3_bind_blob(stm, idx, val.data(), val.size(), SQLITE_STATIC))
+        throw error_sqlite(conn, "cannot bind a blob input column");
+}
+
 void SQLiteStatement::wrap_sqlite3_reset()
 {
     if (sqlite3_reset(stm) != SQLITE_OK)

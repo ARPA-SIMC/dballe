@@ -5,8 +5,9 @@
 #define DBALLE_SQL_MYSQL_H
 
 #include <dballe/sql/sql.h>
-#include <cstdlib>
 #include <mysql.h>
+#include <cstdlib>
+#include <vector>
 
 namespace dballe {
 namespace sql {
@@ -67,6 +68,10 @@ struct Row
     unsigned as_unsigned(unsigned col) const { return strtoul(row[col], 0, 10); }
     const char* as_cstring(unsigned col) const { return row[col]; }
     std::string as_string(unsigned col) const { return std::string(row[col], mysql_fetch_lengths(res)[col]); }
+    std::vector<uint8_t> as_blob(unsigned col) const
+    {
+        return std::vector<uint8_t>(row[col], row[col] + mysql_fetch_lengths(res)[col]);
+    }
     Datetime as_datetime(int col) const;
     bool isnull(unsigned col) const { return row[col] == nullptr; }
 };
@@ -153,6 +158,8 @@ public:
     std::string escape(const char* str);
     /// Escape a string
     std::string escape(const std::string& str);
+    /// Escape a byte buffer
+    std::string escape(const std::vector<uint8_t>& str);
 
     /**
      * Run a query throwing no exceptions, warning on stderr if it is not
