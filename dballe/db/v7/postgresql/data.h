@@ -12,40 +12,49 @@ namespace v7 {
 namespace postgresql {
 struct DB;
 
-class PostgreSQLStationData : public v7::StationData
+template<typename Traits>
+class PostgreSQLDataCommon : public DataCommon<Traits>
 {
 protected:
+    /// DB connection
     dballe::sql::PostgreSQLConnection& conn;
 
-    void _dump(std::function<void(int, int, wreport::Varcode, const char*)> out) override;
-
 public:
-    PostgreSQLStationData(dballe::sql::PostgreSQLConnection& conn);
-    PostgreSQLStationData(const PostgreSQLStationData&) = delete;
-    PostgreSQLStationData(const PostgreSQLStationData&&) = delete;
-    PostgreSQLStationData& operator=(const PostgreSQLStationData&) = delete;
-    ~PostgreSQLStationData();
+    PostgreSQLDataCommon(dballe::sql::PostgreSQLConnection& conn);
+    PostgreSQLDataCommon(const PostgreSQLDataCommon&) = delete;
+    PostgreSQLDataCommon(const PostgreSQLDataCommon&&) = delete;
+    PostgreSQLDataCommon& operator=(const PostgreSQLDataCommon&) = delete;
 
-    void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE) override;
+    void read_attrs(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
+    void write_attrs(int id_data, const Values& values) override;
+    void remove_all_attrs(int id_data) override;
     void remove(const v7::QueryBuilder& qb) override;
 };
 
-class PostgreSQLData : public v7::Data
+extern template class PostgreSQLDataCommon<StationDataTraits>;
+extern template class PostgreSQLDataCommon<DataTraits>;
+
+
+class PostgreSQLStationData : public PostgreSQLDataCommon<StationDataTraits>
 {
-protected:
-    dballe::sql::PostgreSQLConnection& conn;
-
-    void _dump(std::function<void(int, int, int, const Datetime&, wreport::Varcode, const char*)> out) override;
-
 public:
-    PostgreSQLData(dballe::sql::PostgreSQLConnection& conn);
-    PostgreSQLData(const PostgreSQLData&) = delete;
-    PostgreSQLData(const PostgreSQLData&&) = delete;
-    PostgreSQLData& operator=(const PostgreSQLData&) = delete;
-    ~PostgreSQLData();
+    using PostgreSQLDataCommon::PostgreSQLDataCommon;
 
-    void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE) override;
-    void remove(const v7::QueryBuilder& qb) override;
+    PostgreSQLStationData(dballe::sql::PostgreSQLConnection& conn);
+
+    void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE, bool with_attrs=false) override;
+    void dump(FILE* out) override;
+};
+
+class PostgreSQLData : public PostgreSQLDataCommon<DataTraits>
+{
+public:
+    using PostgreSQLDataCommon::PostgreSQLDataCommon;
+
+    PostgreSQLData(dballe::sql::PostgreSQLConnection& conn);
+
+    void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE, bool with_attrs=false) override;
+    void dump(FILE* out) override;
 };
 
 }

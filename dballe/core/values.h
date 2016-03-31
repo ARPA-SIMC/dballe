@@ -9,6 +9,7 @@
 #include <dballe/core/var.h>
 #include <dballe/record.h>
 #include <wreport/varinfo.h>
+#include <vector>
 #include <map>
 
 namespace dballe {
@@ -182,6 +183,7 @@ struct Values : protected std::map<wreport::Varcode, values::Value>
     size_t size() const { return std::map<wreport::Varcode, values::Value>::size(); }
     bool empty() const { return std::map<wreport::Varcode, values::Value>::empty(); }
     void clear() { return std::map<wreport::Varcode, values::Value>::clear(); }
+    void erase(wreport::Varcode code) { std::map<wreport::Varcode, values::Value>::erase(code); }
     bool operator==(const Values& o) const;
 
     const values::Value& operator[](wreport::Varcode code) const;
@@ -196,6 +198,9 @@ struct Values : protected std::map<wreport::Varcode, values::Value>
 
     /// Set from a wreport::Var, taking ownership of it
     void set(std::unique_ptr<wreport::Var>&&);
+
+    /// Set with all the variables from vals
+    void set(const Values& vals);
 
     /// Set from a variable created by dballe::newvar()
     template<typename C, typename T> void set(C code, const T& val) { this->set(newvar(code, val)); }
@@ -212,6 +217,21 @@ struct Values : protected std::map<wreport::Varcode, values::Value>
         for (auto& i : *this)
             i.second.clear_ids();
     }
+
+    /**
+     * Encode these values in a DB-All.e specific binary representation
+     */
+    std::vector<uint8_t> encode() const;
+
+    /**
+     * Encode the attributes of var in a DB-All.e specific binary representation
+     */
+    static std::vector<uint8_t> encode_attrs(const wreport::Var& var);
+
+    /**
+     * Decode variables from a DB-All.e specific binary representation
+     */
+    static void decode(const std::vector<uint8_t>& buf, std::function<void(std::unique_ptr<wreport::Var>)> dest);
 
     /// Print the contents of this Values
     void print(FILE* out) const;

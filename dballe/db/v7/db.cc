@@ -48,9 +48,7 @@ DB::DB(unique_ptr<Connection> conn)
 
 DB::~DB()
 {
-    delete m_attr;
     delete m_data;
-    delete m_station_attr;
     delete m_station_data;
     delete m_lev_tr;
     delete m_station;
@@ -92,25 +90,11 @@ v7::StationData& DB::station_data()
     return *m_station_data;
 }
 
-v7::Attr& DB::station_attr()
-{
-    if (m_station_attr == NULL)
-        m_station_attr = m_driver->create_station_attr().release();
-    return *m_station_attr;
-}
-
 v7::Data& DB::data()
 {
     if (m_data == NULL)
         m_data = m_driver->create_data().release();
     return *m_data;
-}
-
-v7::Attr& DB::attr()
-{
-    if (m_attr == NULL)
-        m_attr = m_driver->create_attr().release();
-    return *m_attr;
 }
 
 void DB::init_after_connect()
@@ -310,77 +294,55 @@ std::unique_ptr<db::CursorSummary> DB::query_summary(const Query& query)
 void DB::attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
 {
     // Create the query
-    v7::Attr& a = station_attr();
-    a.read(data_id, dest);
+    auto& d = station_data();
+    d.read_attrs(data_id, dest);
 }
 
 void DB::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
 {
     // Create the query
-    v7::Attr& a = attr();
-    a.read(data_id, dest);
+    auto& d = data();
+    d.read_attrs(data_id, dest);
 }
 
 void DB::attr_insert_station(dballe::Transaction& transaction, int data_id, const Values& attrs)
 {
-    auto& t = v7::Transaction::downcast(transaction);
-
-    v7::Attr& a = station_attr();
-    v7::bulk::InsertAttrsV7 iattrs(t.state.stationvalues_new);
-    for (const auto& i : attrs)
-        iattrs.add(i.second.var, data_id);
-    if (iattrs.empty()) return;
-
-    // Insert all the attributes we found
-    a.insert(t, iattrs, v7::Attr::UPDATE);
+    auto& d = station_data();
+    d.merge_attrs(data_id, attrs);
 }
 
 void DB::attr_insert_data(dballe::Transaction& transaction, int data_id, const Values& attrs)
 {
-    auto& t = v7::Transaction::downcast(transaction);
-
-    v7::Attr& a = attr();
-    v7::bulk::InsertAttrsV7 iattrs(t.state.values_new);
-    for (const auto& i : attrs)
-        iattrs.add(i.second.var, data_id);
-    if (iattrs.empty()) return;
-
-    // Insert all the attributes we found
-    a.insert(t, iattrs, v7::Attr::UPDATE);
+    auto& d = data();
+    d.merge_attrs(data_id, attrs);
 }
 
-void DB::attr_remove_station(dballe::Transaction& transaction, int data_id, const db::AttrList& qcs)
+void DB::attr_remove_station(dballe::Transaction& transaction, int data_id, const db::AttrList& attrs)
 {
-    Querybuf query(500);
-    if (qcs.empty())
+    if (attrs.empty())
+    {
         // Delete all attributes
-        query.appendf("DELETE FROM station_attr WHERE id_data=%d", data_id);
-    else {
-        // Delete only the attributes in qcs
-        query.appendf("DELETE FROM station_attr WHERE id_data=%d AND code IN (", data_id);
-        query.start_list(", ");
-        for (vector<Varcode>::const_iterator i = qcs.begin(); i != qcs.end(); ++i)
-            query.append_listf("%hd", *i);
-        query.append(")");
+        char buf[64];
+        snprintf(buf, 64, "UPDATE station_data SET attr=NULL WHERE id_data=%d", data_id);
+        conn->execute(buf);
+    } else {
+        auto& d = station_data();
+        d.remove_attrs(data_id, attrs);
     }
-    conn->execute(query);
 }
 
-void DB::attr_remove_data(dballe::Transaction& transaction, int data_id, const db::AttrList& qcs)
+void DB::attr_remove_data(dballe::Transaction& transaction, int data_id, const db::AttrList& attrs)
 {
-    Querybuf query(500);
-    if (qcs.empty())
+    if (attrs.empty())
+    {
         // Delete all attributes
-        query.appendf("DELETE FROM attr WHERE id_data=%d", data_id);
-    else {
-        // Delete only the attributes in qcs
-        query.appendf("DELETE FROM attr WHERE id_data=%d AND code IN (", data_id);
-        query.start_list(", ");
-        for (vector<Varcode>::const_iterator i = qcs.begin(); i != qcs.end(); ++i)
-            query.append_listf("%hd", *i);
-        query.append(")");
+        char buf[64];
+        snprintf(buf, 64, "UPDATE data SET attr=NULL WHERE id_data=%d", data_id);
+        conn->execute(buf);
+    } else {
+        auto& d = data();
+        d.remove_attrs(data_id, attrs);
     }
-    conn->execute(query);
 }
 
 bool DB::is_station_variable(int data_id, wreport::Varcode varcode)
@@ -394,9 +356,7 @@ void DB::dump(FILE* out)
     station().dump(out);
     lev_tr().dump(out);
     station_data().dump(out);
-    station_attr().dump(out);
     data().dump(out);
-    attr().dump(out);
 }
 
 }

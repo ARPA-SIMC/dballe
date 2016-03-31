@@ -30,11 +30,6 @@ struct DB;
 
 namespace db {
 
-/**
- * Simple typedef to make typing easier
- */
-typedef std::vector<wreport::Varcode> AttrList;
-
 /// Common interface for all kinds of cursors
 struct Cursor
 {

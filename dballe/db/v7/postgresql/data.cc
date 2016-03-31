@@ -19,17 +19,55 @@ namespace db {
 namespace v7 {
 namespace postgresql {
 
-PostgreSQLStationData::PostgreSQLStationData(PostgreSQLConnection& conn)
+template class PostgreSQLDataCommon<StationDataTraits>;
+template class PostgreSQLDataCommon<DataTraits>;
+
+template<typename Traits>
+PostgreSQLDataCommon<Traits>::PostgreSQLDataCommon(dballe::sql::PostgreSQLConnection& conn)
     : conn(conn)
+{
+}
+
+template<typename Traits>
+void PostgreSQLDataCommon<Traits>::read_attrs(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+{
+}
+
+template<typename Traits>
+void PostgreSQLDataCommon<Traits>::write_attrs(int id_data, const Values& values)
+{
+}
+
+template<typename Traits>
+void PostgreSQLDataCommon<Traits>::remove_all_attrs(int data_id)
+{
+}
+
+template<typename Traits>
+void PostgreSQLDataCommon<Traits>::remove(const v7::QueryBuilder& qb)
+{
+    Querybuf dq(512);
+    dq.append("DELETE FROM ");
+    dq.append(Traits::table_name);
+    dq.append(" WHERE id IN (");
+    dq.append(qb.sql_query);
+    dq.append(")");
+    if (qb.bind_in_ident)
+    {
+        conn.exec_no_data(dq.c_str(), qb.bind_in_ident);
+    } else {
+        conn.exec_no_data(dq.c_str());
+    }
+}
+
+
+PostgreSQLStationData::PostgreSQLStationData(PostgreSQLConnection& conn)
+    : PostgreSQLDataCommon(conn)
 {
     conn.prepare("station_datav7_select", "SELECT id, code FROM station_data WHERE id_station=$1::int4");
 }
 
-PostgreSQLStationData::~PostgreSQLStationData()
-{
-}
-
-void PostgreSQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode)
+void PostgreSQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
 {
     // Scan vars adding the State pointer to the current database values, if any
     vars.map_known_values();
@@ -131,42 +169,28 @@ void PostgreSQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::Ins
     }
 }
 
-void PostgreSQLStationData::remove(const v7::QueryBuilder& qb)
+void PostgreSQLStationData::dump(FILE* out)
 {
-    Querybuf dq(512);
-    dq.append("DELETE FROM station_data WHERE id IN (");
-    dq.append(qb.sql_query);
-    dq.append(")");
-    if (qb.bind_in_ident)
-    {
-        conn.exec_no_data(dq.c_str(), qb.bind_in_ident);
-    } else {
-        conn.exec_no_data(dq.c_str());
-    }
-}
+    StationDataDumper dumper(out);
 
-void PostgreSQLStationData::_dump(std::function<void(int, int, wreport::Varcode, const char*)> out)
-{
+    dumper.print_head();
     auto res = conn.exec("SELECT id, id_station, code, value FROM station_data");
     for (unsigned row = 0; row < res.rowcount(); ++row)
     {
         const char* val = res.is_null(row, 3) ? nullptr : res.get_string(row, 3);
-        out(res.get_int4(row, 0), res.get_int4(row, 1), res.get_int4(row, 2), val);
+        dumper.print_row(res.get_int4(row, 0), res.get_int4(row, 1), res.get_int4(row, 2), val);
     }
+    dumper.print_tail();
 }
 
 
 PostgreSQLData::PostgreSQLData(PostgreSQLConnection& conn)
-    : conn(conn)
+    : PostgreSQLDataCommon(conn)
 {
     conn.prepare("datav7_select", "SELECT id, id_levtr, code FROM data WHERE id_station=$1::int4 AND datetime=$2::timestamp");
 }
 
-PostgreSQLData::~PostgreSQLData()
-{
-}
-
-void PostgreSQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode)
+void PostgreSQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
 {
     // Scan vars adding the State pointer to the current database values, if any
     vars.map_known_values();
@@ -285,28 +309,18 @@ void PostgreSQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars
     }
 }
 
-void PostgreSQLData::remove(const v7::QueryBuilder& qb)
+void PostgreSQLData::dump(FILE* out)
 {
-    Querybuf dq(512);
-    dq.append("DELETE FROM data WHERE id IN (");
-    dq.append(qb.sql_query);
-    dq.append(")");
-    if (qb.bind_in_ident)
-    {
-        conn.exec_no_data(dq.c_str(), qb.bind_in_ident);
-    } else {
-        conn.exec_no_data(dq.c_str());
-    }
-}
+    DataDumper dumper(out);
 
-void PostgreSQLData::_dump(std::function<void(int, int, int, const Datetime&, wreport::Varcode, const char*)> out)
-{
+    dumper.print_head();
     auto res = conn.exec("SELECT id, id_station, id_levtr, datetime, code, value FROM data");
     for (unsigned row = 0; row < res.rowcount(); ++row)
     {
         const char* val = res.is_null(row, 5) ? nullptr : res.get_string(row, 5);
-        out(res.get_int4(row, 0), res.get_int4(row, 1), res.get_int4(row, 2), res.get_timestamp(row, 3), res.get_int4(row, 4), val);
+        dumper.print_row(res.get_int4(row, 0), res.get_int4(row, 1), res.get_int4(row, 2), res.get_timestamp(row, 3), res.get_int4(row, 4), val);
     };
+    dumper.print_tail();
 }
 
 }

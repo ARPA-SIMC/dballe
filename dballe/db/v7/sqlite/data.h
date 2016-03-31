@@ -12,15 +12,19 @@ namespace v7 {
 namespace sqlite {
 struct DB;
 
-/**
- * Precompiled query to manipulate the station data table
- */
-class SQLiteStationData : public v7::StationData
+template<typename Traits>
+class SQLiteDataCommon : public DataCommon<Traits>
 {
 protected:
     /// DB connection
     dballe::sql::SQLiteConnection& conn;
 
+    /// Precompiled read attributes statement
+    dballe::sql::SQLiteStatement* read_attrs_stm = nullptr;
+    /// Precompiled write attributes statement
+    dballe::sql::SQLiteStatement* write_attrs_stm = nullptr;
+    /// Precompiled remove attributes statement
+    dballe::sql::SQLiteStatement* remove_attrs_stm = nullptr;
     /// Precompiled select statement
     dballe::sql::SQLiteStatement* sstm = nullptr;
     /// Precompiled insert statement
@@ -28,46 +32,46 @@ protected:
     /// Precompiled update statement
     dballe::sql::SQLiteStatement* ustm = nullptr;
 
-    void _dump(std::function<void(int, int, wreport::Varcode, const char*)> out) override;
-
 public:
-    SQLiteStationData(dballe::sql::SQLiteConnection& conn);
-    SQLiteStationData(const SQLiteStationData&) = delete;
-    SQLiteStationData(const SQLiteStationData&&) = delete;
-    SQLiteStationData& operator=(const SQLiteStationData&) = delete;
-    ~SQLiteStationData();
+    SQLiteDataCommon(dballe::sql::SQLiteConnection& conn);
+    SQLiteDataCommon(const SQLiteDataCommon&) = delete;
+    SQLiteDataCommon(const SQLiteDataCommon&&) = delete;
+    SQLiteDataCommon& operator=(const SQLiteDataCommon&) = delete;
+    ~SQLiteDataCommon();
 
-    void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE) override;
+    void read_attrs(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
+    void write_attrs(int id_data, const Values& values) override;
+    void remove_all_attrs(int id_data) override;
     void remove(const v7::QueryBuilder& qb) override;
+};
+
+extern template class SQLiteDataCommon<StationDataTraits>;
+extern template class SQLiteDataCommon<DataTraits>;
+
+/**
+ * Precompiled query to manipulate the station data table
+ */
+class SQLiteStationData : public SQLiteDataCommon<StationDataTraits>
+{
+public:
+    using SQLiteDataCommon::SQLiteDataCommon;
+
+    SQLiteStationData(dballe::sql::SQLiteConnection& conn);
+    void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE, bool with_attrs=false) override;
+    void dump(FILE* out) override;
 };
 
 /**
  * Precompiled query to manipulate the data table
  */
-class SQLiteData : public v7::Data
+class SQLiteData : public SQLiteDataCommon<DataTraits>
 {
-protected:
-    /// DB connection
-    dballe::sql::SQLiteConnection& conn;
-
-    /// Precompiled select statement
-    dballe::sql::SQLiteStatement* sstm = nullptr;
-    /// Precompiled insert statement
-    dballe::sql::SQLiteStatement* istm = nullptr;
-    /// Precompiled update statement
-    dballe::sql::SQLiteStatement* ustm = nullptr;
-
-    void _dump(std::function<void(int, int, int, const Datetime&, wreport::Varcode, const char*)> out) override;
-
 public:
-    SQLiteData(dballe::sql::SQLiteConnection& conn);
-    SQLiteData(const SQLiteData&) = delete;
-    SQLiteData(const SQLiteData&&) = delete;
-    SQLiteData& operator=(const SQLiteData&) = delete;
-    ~SQLiteData();
+    using SQLiteDataCommon::SQLiteDataCommon;
 
-    void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE) override;
-    void remove(const v7::QueryBuilder& qb) override;
+    SQLiteData(dballe::sql::SQLiteConnection& conn);
+    void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE, bool with_attrs=false) override;
+    void dump(FILE* out) override;
 };
 
 }

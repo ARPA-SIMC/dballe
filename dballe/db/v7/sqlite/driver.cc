@@ -3,7 +3,6 @@
 #include "station.h"
 #include "levtr.h"
 #include "data.h"
-#include "attr.h"
 #include "dballe/db/v7/qbuilder.h"
 #include "dballe/sql/sqlite.h"
 #include <algorithm>
@@ -50,19 +49,9 @@ std::unique_ptr<v7::StationData> Driver::create_station_data()
     return unique_ptr<v7::StationData>(new SQLiteStationData(conn));
 }
 
-std::unique_ptr<v7::Attr> Driver::create_station_attr()
-{
-    return unique_ptr<v7::Attr>(new SQLiteAttr(conn, "station_attr", &State::stationvalues_new));
-}
-
 std::unique_ptr<v7::Data> Driver::create_data()
 {
     return unique_ptr<v7::Data>(new SQLiteData(conn));
-}
-
-std::unique_ptr<v7::Attr> Driver::create_attr()
-{
-    return unique_ptr<v7::Attr>(new SQLiteAttr(conn, "attr", &State::values_new));
 }
 
 void Driver::run_built_query_v7(
@@ -176,6 +165,7 @@ void Driver::create_tables_v7()
            id_station  INTEGER NOT NULL REFERENCES station (id) ON DELETE CASCADE,
            code        INTEGER NOT NULL,
            value       VARCHAR(255) NOT NULL,
+           attrs       BLOB,
            UNIQUE (id_station, code)
         );
     )");
@@ -187,33 +177,17 @@ void Driver::create_tables_v7()
            datetime    TEXT NOT NULL,
            code        INTEGER NOT NULL,
            value       VARCHAR(255) NOT NULL,
+           attrs       BLOB,
            UNIQUE (id_station, datetime, id_levtr, code)
         );
         CREATE INDEX data_lt ON data(id_levtr);
     )");
-    conn.exec(R"(
-        CREATE TABLE station_attr (
-           id_data     INTEGER NOT NULL REFERENCES station_data (id) ON DELETE CASCADE,
-           code        INTEGER NOT NULL,
-           value       VARCHAR(255) NOT NULL,
-           UNIQUE (id_data, code)
-        );
-    )");
-    conn.exec(R"(
-        CREATE TABLE attr (
-           id_data     INTEGER NOT NULL REFERENCES data (id) ON DELETE CASCADE,
-           code        INTEGER NOT NULL,
-           value       VARCHAR(255) NOT NULL,
-           UNIQUE (id_data, code)
-        );
-    )");
+
     conn.set_setting("version", "V7");
 }
 void Driver::delete_tables_v7()
 {
-    conn.drop_table_if_exists("attr");
     conn.drop_table_if_exists("data");
-    conn.drop_table_if_exists("station_attr");
     conn.drop_table_if_exists("station_data");
     conn.drop_table_if_exists("levtr");
     conn.drop_table_if_exists("repinfo");

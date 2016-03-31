@@ -64,7 +64,7 @@ bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& quer
 {
     auto tr = trace.trace_export_msgs(query);
     v7::Repinfo& ri = repinfo();
-    v7::Attr& at = attr();
+    v7::Data& da = data();
     v7::LevTr& lt = lev_tr();
 
     auto& t = v7::Transaction::downcast(transaction);
@@ -104,7 +104,7 @@ bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& quer
         unique_ptr<Var> var(newvar(sqlrec.out_varcode, sqlrec.out_value));
 
         /* Load the attributes from the database */
-        at.read(sqlrec.out_id_data, [&](unique_ptr<Var> attr) { var->seta(move(attr)); });
+        da.read_attrs(sqlrec.out_id_data, [&](unique_ptr<Var> attr) { var->seta(move(attr)); });
 
         /* See if we have the start of a new message */
         if (sqlrec.out_ana_id != last_ana_id

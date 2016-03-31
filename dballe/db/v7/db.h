@@ -4,6 +4,7 @@
 #include <dballe/db/db.h>
 #include <dballe/db/trace.h>
 #include <dballe/db/v7/state.h>
+#include <dballe/db/v7/data.h>
 #include <wreport/varinfo.h>
 #include <string>
 #include <vector>
@@ -58,9 +59,6 @@ struct Driver;
 struct Repinfo;
 struct Station;
 struct LevTr;
-struct StationData;
-struct Data;
-struct Attr;
 }
 
 namespace v7 {
@@ -90,19 +88,15 @@ protected:
      * @{
      */
     /** Report information */
-    struct v7::Repinfo* m_repinfo = nullptr;
+    v7::Repinfo* m_repinfo = nullptr;
     /** Station information */
-    struct v7::Station* m_station = nullptr;
+    v7::Station* m_station = nullptr;
     /** Level/timerange information */
-    struct v7::LevTr* m_lev_tr = nullptr;
+    v7::LevTr* m_lev_tr = nullptr;
     /** Station data */
-    struct v7::StationData* m_station_data = nullptr;
-    /** Station data attributes */
-    struct v7::Attr* m_station_attr = nullptr;
+    v7::StationData* m_station_data = nullptr;
     /** Variable data */
-    struct v7::Data* m_data = nullptr;
-    /** Variable attributes */
-    struct v7::Attr* m_attr = nullptr;
+    v7::Data* m_data = nullptr;
     /** @} */
 
     void init_after_connect();
@@ -139,20 +133,14 @@ public:
     /// Access the station table
     v7::Station& station();
 
-    /// Access the lev_tr table
+    /// Access the levtr table
     v7::LevTr& lev_tr();
 
-    /// Access the data table
+    /// Access the station_data table
     v7::StationData& station_data();
 
     /// Access the data table
     v7::Data& data();
-
-    /// Access the data table
-    v7::Attr& station_attr();
-
-    /// Access the data table
-    v7::Attr& attr();
 
     std::unique_ptr<dballe::Transaction> transaction() override;
 
@@ -229,8 +217,8 @@ public:
     void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
     void attr_insert_station(dballe::Transaction& transaction, int data_id, const Values& attrs) override;
     void attr_insert_data(dballe::Transaction& transaction, int data_id, const Values& attrs) override;
-    void attr_remove_station(dballe::Transaction& transaction, int data_id, const db::AttrList& qcs) override;
-    void attr_remove_data(dballe::Transaction& transaction, int data_id, const db::AttrList& qcs) override;
+    void attr_remove_station(dballe::Transaction& transaction, int data_id, const db::AttrList& attrs) override;
+    void attr_remove_data(dballe::Transaction& transaction, int data_id, const db::AttrList& attrs) override;
     bool is_station_variable(int data_id, wreport::Varcode varcode) override;
 
     void import_msg(dballe::Transaction& transaction, const Message& msg, const char* repmemo, int flags) override;

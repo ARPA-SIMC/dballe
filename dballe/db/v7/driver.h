@@ -4,6 +4,7 @@
 #include <dballe/core/defs.h>
 #include <dballe/db/defs.h>
 #include <dballe/sql/fwd.h>
+#include <dballe/db/v7/data.h>
 #include <wreport/var.h>
 #include <memory>
 #include <functional>
@@ -17,9 +18,6 @@ struct QueryBuilder;
 struct Repinfo;
 struct Station;
 struct LevTr;
-struct StationData;
-struct Data;
-struct Attr;
 
 /// Query results from SQL output
 struct SQLRecordV7
@@ -72,12 +70,6 @@ public:
 
     /// Precompiled queries to manipulate the data table
     virtual std::unique_ptr<v7::Data> create_data() = 0;
-
-    /// Precompiled queries to manipulate the attr table
-    virtual std::unique_ptr<v7::Attr> create_station_attr() = 0;
-
-    /// Precompiled queries to manipulate the attr table
-    virtual std::unique_ptr<v7::Attr> create_attr() = 0;
 
     /**
      * Run a query on the given statement, returning results as SQLRecordV7 objects

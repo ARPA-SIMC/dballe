@@ -1,5 +1,6 @@
 #include "values.h"
 #include "record.h"
+#include <arpa/inet.h>
 
 using namespace std;
 using namespace wreport;
@@ -152,6 +153,12 @@ void Values::set(std::unique_ptr<wreport::Var>&& v)
         i->second.set(move(v));
 }
 
+void Values::set(const Values& vals)
+{
+    for (const auto& vi: vals)
+        set(*vi.second.var);
+}
+
 const values::Value& Values::operator[](wreport::Varcode code) const
 {
     auto i = find(code);
@@ -174,6 +181,143 @@ void Values::print(FILE* out) const
     for (const auto& i: *this)
         i.second.print(out);
 }
+
+namespace {
+
+struct Encoder
+{
+    std::vector<uint8_t> buf;
+
+    Encoder()
+    {
+        buf.reserve(64);
+    }
+
+    void append_uint16(uint16_t val)
+    {
+        uint16_t encoded = htons(val);
+        buf.insert(buf.end(), (uint8_t*)&encoded, (uint8_t*)&encoded + 2);
+    }
+
+    void append_uint32(uint32_t val)
+    {
+        uint32_t encoded = htonl(val);
+        buf.insert(buf.end(), (uint8_t*)&encoded, (uint8_t*)&encoded + 4);
+    }
+
+    void append_cstring(const char* val)
+    {
+        for ( ; *val; ++val)
+            buf.push_back(*val);
+        buf.push_back(0);
+    }
+
+    void append(const wreport::Var& var)
+    {
+        // Encode code
+        append_uint16(var.code());
+        switch (var.info()->type)
+        {
+            case Vartype::Binary:
+            case Vartype::String:
+                // Encode value, including terminating zero
+                append_cstring(var.enqc());
+                break;
+            case Vartype::Integer:
+            case Vartype::Decimal:
+                // Just encode the integer value
+                append_uint32(var.enqi());
+                break;
+        }
+    }
+};
+
+struct Decoder
+{
+    const uint8_t* buf;
+    unsigned size;
+
+    Decoder(const std::vector<uint8_t>& buf)
+        : buf(buf.data()), size(buf.size())
+    {
+    }
+
+    uint16_t decode_uint16()
+    {
+        if (size < 2) error_toolong::throwf("cannot decode a 16 bit integer: only %u bytes are left to read", size);
+        uint16_t res = ntohs(*(uint16_t*)buf);
+        buf += 2;
+        size -= 2;
+        return res;
+    }
+
+    uint32_t decode_uint32()
+    {
+        if (size < 4) error_toolong::throwf("cannot decode a 32 bit integer: only %u bytes are left to read", size);
+        uint32_t res = ntohl(*(uint32_t*)buf);
+        buf += 4;
+        size -= 4;
+        return res;
+    }
+
+    const char* decode_cstring()
+    {
+        if (!size) error_toolong::throwf("cannot decode a C string: the buffer is empty");
+        const char* res = (const char*)buf;
+        while (true)
+        {
+            if (!size) error_toolong::throwf("cannot decode a C string: reached the end of buffer before finding the string terminator");
+            if (*buf == 0) break;
+            ++buf;
+            --size;
+        }
+        ++buf;
+        --size;
+        return res;
+    }
+
+    unique_ptr<wreport::Var> decode_var()
+    {
+        wreport::Varinfo info = varinfo(decode_uint16());
+        switch (info->type)
+        {
+            case Vartype::Binary:
+            case Vartype::String:
+                return unique_ptr<wreport::Var>(new wreport::Var(info, decode_cstring()));
+            case Vartype::Integer:
+            case Vartype::Decimal:
+                return unique_ptr<wreport::Var>(new wreport::Var(info, (int)decode_uint32()));
+            default:
+                error_consistency::throwf("unsupported variable type %d", (int)info->type);
+        }
+    }
+};
+
+}
+
+std::vector<uint8_t> Values::encode() const
+{
+    Encoder enc;
+    for (const auto& i: *this)
+        enc.append(*i.second.var);
+    return enc.buf;
+}
+
+std::vector<uint8_t> Values::encode_attrs(const wreport::Var& var)
+{
+    Encoder enc;
+    for (const Var* a = var.next_attr(); a != NULL; a = a->next_attr())
+        enc.append(*a);
+    return enc.buf;
+}
+
+void Values::decode(const std::vector<uint8_t>& buf, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+{
+    Decoder dec(buf);
+    while (dec.size)
+        dest(move(dec.decode_var()));
+}
+
 
 void StationValues::set_from_record(const Record& rec)
 {

@@ -4,6 +4,7 @@
 #include "dballe/sql/sqlite.h"
 #include "dballe/sql/querybuf.h"
 #include "dballe/record.h"
+#include "dballe/core/values.h"
 #include <algorithm>
 #include <cstring>
 
@@ -18,22 +19,96 @@ namespace db {
 namespace v7 {
 namespace sqlite {
 
-SQLiteStationData::SQLiteStationData(SQLiteConnection& conn)
+template class SQLiteDataCommon<StationDataTraits>;
+template class SQLiteDataCommon<DataTraits>;
+
+template<typename Traits>
+SQLiteDataCommon<Traits>::SQLiteDataCommon(dballe::sql::SQLiteConnection& conn)
     : conn(conn)
+{
+}
+
+template<typename Traits>
+SQLiteDataCommon<Traits>::~SQLiteDataCommon()
+{
+    delete read_attrs_stm;
+    delete write_attrs_stm;
+    delete remove_attrs_stm;
+    delete sstm;
+    delete istm;
+    delete ustm;
+}
+
+template<typename Traits>
+void SQLiteDataCommon<Traits>::read_attrs(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+{
+    if (!read_attrs_stm)
+    {
+        char query[64];
+        snprintf(query, 64, "SELECT attrs FROM %s WHERE id=?", Traits::table_name);
+        read_attrs_stm = conn.sqlitestatement(query).release();
+    }
+    read_attrs_stm->bind_val(1, id_data);
+    read_attrs_stm->execute_one([&]() {
+        Values::decode(read_attrs_stm->column_blob(0), dest);
+    });
+}
+
+template<typename Traits>
+void SQLiteDataCommon<Traits>::write_attrs(int id_data, const Values& values)
+{
+    if (!write_attrs_stm)
+    {
+        char query[64];
+        snprintf(query, 64, "UPDATE %s SET attr=? WHERE id=?", Traits::table_name);
+        write_attrs_stm = conn.sqlitestatement(query).release();
+    }
+    vector<uint8_t> encoded = values.encode();
+    write_attrs_stm->bind_val(1, encoded);
+    write_attrs_stm->bind_val(2, id_data);
+    write_attrs_stm->execute();
+}
+
+template<typename Traits>
+void SQLiteDataCommon<Traits>::remove_all_attrs(int id_data)
+{
+    if (!remove_attrs_stm)
+    {
+        char query[64];
+        snprintf(query, 64, "UPDATE %s SET attr=NULL WHERE id=?", Traits::table_name);
+        remove_attrs_stm = conn.sqlitestatement(query).release();
+    }
+    remove_attrs_stm->bind_val(1, id_data);
+    remove_attrs_stm->execute();
+}
+
+template<typename Traits>
+void SQLiteDataCommon<Traits>::remove(const v7::QueryBuilder& qb)
+{
+    char query[64];
+    snprintf(query, 64, "DELETE FROM %s WHERE id=?", Traits::table_name);
+    auto stmd = conn.sqlitestatement(query);
+    auto stm = conn.sqlitestatement(qb.sql_query);
+    if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
+
+    // Iterate all the data_id results, deleting the related data and attributes
+    stm->execute([&]() {
+        // Compile the DELETE query for the data
+        stmd->bind_val(1, stm->column_int(0));
+        stmd->execute();
+    });
+}
+
+
+SQLiteStationData::SQLiteStationData(SQLiteConnection& conn)
+    : SQLiteDataCommon(conn)
 {
     sstm = conn.sqlitestatement("SELECT id, code FROM station_data WHERE id_station=?").release();
     istm = conn.sqlitestatement("INSERT INTO station_data (id_station, code, value) VALUES (?, ?, ?)").release();
     ustm = conn.sqlitestatement("UPDATE station_data SET value=? WHERE id=?").release();
 }
 
-SQLiteStationData::~SQLiteStationData()
-{
-    delete sstm;
-    delete istm;
-    delete ustm;
-}
-
-void SQLiteStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode)
+void SQLiteStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
 {
     // Scan vars adding the State pointer to the current database values, if any
     vars.map_known_values();
@@ -102,46 +177,29 @@ void SQLiteStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertS
     }
 }
 
-void SQLiteStationData::remove(const v7::QueryBuilder& qb)
+void SQLiteStationData::dump(FILE* out)
 {
-    auto stmd = conn.sqlitestatement("DELETE FROM station_data WHERE id=?");
-    auto stm = conn.sqlitestatement(qb.sql_query);
-    if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
+    StationDataDumper dumper(out);
 
-    // Iterate all the data_id results, deleting the related data and attributes
-    stm->execute([&]() {
-        // Compile the DELETE query for the data
-        stmd->bind_val(1, stm->column_int(0));
-        stmd->execute();
-    });
-}
-
-void SQLiteStationData::_dump(std::function<void(int, int, wreport::Varcode, const char*)> out)
-{
+    dumper.print_head();
     auto stm = conn.sqlitestatement("SELECT id, id_station, code, value FROM station_data");
     stm->execute([&]() {
         const char* val = stm->column_isnull(3) ? nullptr : stm->column_string(3);
-        out(stm->column_int(0), stm->column_int(1), stm->column_int(2), val);
+        dumper.print_row(stm->column_int(0), stm->column_int(1), stm->column_int(2), val);
     });
+    dumper.print_tail();
 }
 
 
 SQLiteData::SQLiteData(SQLiteConnection& conn)
-    : conn(conn)
+    : SQLiteDataCommon(conn)
 {
     sstm = conn.sqlitestatement("SELECT id, id_levtr, code FROM data WHERE id_station=? AND datetime=?").release();
     istm = conn.sqlitestatement("INSERT INTO data (id_station, id_levtr, datetime, code, value) VALUES (?, ?, ?, ?, ?)").release();
     ustm = conn.sqlitestatement("UPDATE data SET value=? WHERE id=?").release();
 }
 
-SQLiteData::~SQLiteData()
-{
-    delete sstm;
-    delete istm;
-    delete ustm;
-}
-
-void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode)
+void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
 {
     // Scan vars adding the State pointer to the current database values, if any
     vars.map_known_values();
@@ -217,28 +275,19 @@ void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& va
     }
 }
 
-void SQLiteData::remove(const v7::QueryBuilder& qb)
+void SQLiteData::dump(FILE* out)
 {
-    auto stmd = conn.sqlitestatement("DELETE FROM data WHERE id=?");
-    auto stm = conn.sqlitestatement(qb.sql_query);
-    if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
+    DataDumper dumper(out);
 
-    // Iterate all the data_id results, deleting the related data and attributes
-    stm->execute([&]() {
-        // Compile the DELETE query for the data
-        stmd->bind_val(1, stm->column_int(0));
-        stmd->execute();
-    });
-}
-
-void SQLiteData::_dump(std::function<void(int, int, int, const Datetime&, wreport::Varcode, const char*)> out)
-{
+    dumper.print_head();
     auto stm = conn.sqlitestatement("SELECT id, id_station, id_levtr, datetime, code, value FROM data");
     stm->execute([&]() {
         const char* val = stm->column_isnull(5) ? nullptr : stm->column_string(5);
-        out(stm->column_int(0), stm->column_int(1), stm->column_int(2), stm->column_datetime(3), stm->column_int(4), val);
+        dumper.print_row(stm->column_int(0), stm->column_int(1), stm->column_int(2), stm->column_datetime(3), stm->column_int(4), val);
     });
+    dumper.print_tail();
 }
+
 
 }
 }

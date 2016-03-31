@@ -2,6 +2,8 @@
 #define DBALLE_DB_DEFS_H
 
 #include <wreport/error.h>
+#include <wreport/varinfo.h>
+#include <vector>
 
 /**
  * Flags controlling message import
@@ -29,6 +31,11 @@ typedef enum {
     MESSAGES = 3,
     V7 = 4,
 } Format;
+
+/**
+ * Structure uesd to pass lists of varcodes
+ */
+typedef std::vector<wreport::Varcode> AttrList;
 
 }
 }

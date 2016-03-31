@@ -3,7 +3,6 @@
 #include "station.h"
 #include "levtr.h"
 #include "data.h"
-#include "attr.h"
 #include "dballe/db/v7/qbuilder.h"
 #include "dballe/sql/postgresql.h"
 #include <algorithm>
@@ -48,19 +47,9 @@ std::unique_ptr<v7::StationData> Driver::create_station_data()
     return unique_ptr<v7::StationData>(new PostgreSQLStationData(conn));
 }
 
-std::unique_ptr<v7::Attr> Driver::create_station_attr()
-{
-    return unique_ptr<v7::Attr>(new PostgreSQLAttr(conn, "station_attr", &State::stationvalues_new));
-}
-
 std::unique_ptr<v7::Data> Driver::create_data()
 {
     return unique_ptr<v7::Data>(new PostgreSQLData(conn));
-}
-
-std::unique_ptr<v7::Attr> Driver::create_attr()
-{
-    return unique_ptr<v7::Attr>(new PostgreSQLAttr(conn, "attr", &State::values_new));
 }
 
 void Driver::run_built_query_v7(
@@ -235,7 +224,8 @@ void Driver::create_tables_v7()
            id          SERIAL PRIMARY KEY,
            id_station  INTEGER NOT NULL REFERENCES station (id) ON DELETE CASCADE,
            code        INTEGER NOT NULL,
-           value       VARCHAR(255) NOT NULL
+           value       VARCHAR(255) NOT NULL,
+           attrs       BYTEA
         );
     )");
     conn.exec_no_data("CREATE UNIQUE INDEX station_data_uniq on station_data(id_station, code);");
@@ -247,38 +237,19 @@ void Driver::create_tables_v7()
            id_levtr    INTEGER NOT NULL REFERENCES levtr(id) ON DELETE CASCADE,
            datetime    TIMESTAMP NOT NULL,
            code        INTEGER NOT NULL,
-           value       VARCHAR(255) NOT NULL
+           value       VARCHAR(255) NOT NULL,
+           attrs       BYTEA
         );
     )");
     conn.exec_no_data("CREATE UNIQUE INDEX data_uniq on data(id_station, datetime, id_levtr, code);");
     // When possible, replace with a postgresql 9.5 BRIN index
     conn.exec_no_data("CREATE INDEX data_dt ON data(datetime);");
 
-    conn.exec_no_data(R"(
-        CREATE TABLE station_attr (
-           id_data     INTEGER NOT NULL REFERENCES station_data (id) ON DELETE CASCADE,
-           code        INTEGER NOT NULL,
-           value       VARCHAR(255) NOT NULL
-        );
-    )");
-    conn.exec_no_data("CREATE UNIQUE INDEX station_attr_uniq ON station_attr(id_data, code);");
-
-    conn.exec_no_data(R"(
-        CREATE TABLE attr (
-           id_data     INTEGER NOT NULL REFERENCES data (id) ON DELETE CASCADE,
-           code        INTEGER NOT NULL,
-           value       VARCHAR(255) NOT NULL
-        );
-    )");
-    conn.exec_no_data("CREATE UNIQUE INDEX attr_uniq ON attr(id_data, code);");
-
     conn.set_setting("version", "V7");
 }
 void Driver::delete_tables_v7()
 {
-    conn.drop_table_if_exists("attr");
     conn.drop_table_if_exists("data");
-    conn.drop_table_if_exists("station_attr");
     conn.drop_table_if_exists("station_data");
     conn.drop_table_if_exists("levtr");
     conn.drop_table_if_exists("station");

@@ -11,10 +11,6 @@
 #include "dballe/db/v7/mysql/driver.h"
 #include "dballe/sql/mysql.h"
 #endif
-#ifdef HAVE_ODBC
-#include "dballe/db/v7/odbc/driver.h"
-#include "dballe/sql/odbc.h"
-#endif
 #endif
 #include <cstring>
 #include <sstream>
@@ -89,8 +85,6 @@ void Driver::remove_all(db::Format format)
 
 void Driver::remove_all_v7()
 {
-    connection.execute("DELETE FROM station_attr");
-    connection.execute("DELETE FROM attr");
     connection.execute("DELETE FROM station_data");
     connection.execute("DELETE FROM data");
     connection.execute("DELETE FROM levtr");
@@ -112,10 +106,6 @@ std::unique_ptr<Driver> Driver::create(dballe::sql::Connection& conn)
     else if (MySQLConnection* c = dynamic_cast<MySQLConnection*>(&conn))
         return unique_ptr<Driver>(new mysql::Driver(*c));
 #endif
-#ifdef HAVE_ODBC
-    else if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(&conn))
-        return unique_ptr<Driver>(new odbc::Driver(*c));
-#endif
 #endif
     else
         throw error_unimplemented("DB drivers only implemented for "
@@ -125,9 +115,6 @@ std::unique_ptr<Driver> Driver::create(dballe::sql::Connection& conn)
 #if 0
 #ifdef HAVE_MYSQL
                 "MySQL, "
-#endif
-#ifdef HAVE_ODBC
-                "ODBC, "
 #endif
 #endif
                 " and SQLite connectors");

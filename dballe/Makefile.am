@@ -128,13 +128,11 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/v7/station.h \
 	db/v7/levtr.h \
 	db/v7/data.h \
-	db/v7/attr.h \
 	db/v7/driver.h \
 	db/v7/sqlite/repinfo.h \
 	db/v7/sqlite/station.h \
 	db/v7/sqlite/levtr.h \
 	db/v7/sqlite/data.h \
-	db/v7/sqlite/attr.h \
 	db/v7/sqlite/driver.h \
 	db/v7/db.h \
 	db/v7/cursor.h \
@@ -162,7 +160,6 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/v7/postgresql/station.h \
 	db/v7/postgresql/levtr.h \
 	db/v7/postgresql/data.h \
-	db/v7/postgresql/attr.h \
 	db/v7/postgresql/driver.h
 endif
 if HAVE_MYSQL
@@ -285,13 +282,11 @@ libdballe_la_SOURCES = \
 	db/v7/station.cc \
 	db/v7/levtr.cc \
 	db/v7/data.cc \
-	db/v7/attr.cc \
 	db/v7/driver.cc \
 	db/v7/sqlite/repinfo.cc \
 	db/v7/sqlite/station.cc \
 	db/v7/sqlite/levtr.cc \
 	db/v7/sqlite/data.cc \
-	db/v7/sqlite/attr.cc \
 	db/v7/sqlite/driver.cc \
 	db/v7/db.cc \
 	db/v7/cursor.cc \
@@ -321,7 +316,6 @@ libdballe_la_SOURCES += \
 	db/v7/postgresql/station.cc \
 	db/v7/postgresql/levtr.cc \
 	db/v7/postgresql/data.cc \
-	db/v7/postgresql/attr.cc \
 	db/v7/postgresql/driver.cc
 endif
 if HAVE_MYSQL
@@ -438,7 +432,6 @@ test_dballe_SOURCES = \
 	db/v7/station-test.cc \
 	db/v7/levtr-test.cc \
 	db/v7/data-test.cc \
-	db/v7/attr-test.cc \
 	db/db-basic-test.cc \
 	db/db-misc-test.cc \
 	db/db-query-station-test.cc \

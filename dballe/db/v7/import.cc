@@ -84,21 +84,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
         }
 
         // Run the bulk insert
-        sd.insert(t, vars, (flags & DBA_IMPORT_OVERWRITE) ? v7::bulk::UPDATE : v7::bulk::IGNORE);
-
-        // Insert the attributes
-        if (flags & DBA_IMPORT_ATTRS)
-        {
-            v7::Attr& a = station_attr();
-            v7::bulk::InsertAttrsV7 attrs(t.state.stationvalues_new);
-            for (const auto& v: vars)
-            {
-                if (!v.inserted()) continue;
-                attrs.add_all(*v.var, v.cur->second.id);
-            }
-            if (!attrs.empty())
-                a.insert(t, attrs, v7::Attr::UPDATE);
-        }
+        sd.insert(t, vars, (flags & DBA_IMPORT_OVERWRITE) ? v7::bulk::UPDATE : v7::bulk::IGNORE, flags & DBA_IMPORT_ATTRS);
     }
 
     v7::Data& dd = data();
@@ -131,21 +117,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
     }
 
     // Run the bulk insert
-    dd.insert(t, vars, (flags & DBA_IMPORT_OVERWRITE) ? v7::bulk::UPDATE : v7::bulk::IGNORE);
-
-    // Insert the attributes
-    if (flags & DBA_IMPORT_ATTRS)
-    {
-        v7::Attr& a = attr();
-        v7::bulk::InsertAttrsV7 attrs(t.state.values_new);
-        for (const auto& v: vars)
-        {
-            if (!v.inserted()) continue;
-            attrs.add_all(*v.var, v.cur->second.id);
-        }
-        if (!attrs.empty())
-            a.insert(t, attrs, v7::Attr::UPDATE);
-    }
+    dd.insert(t, vars, (flags & DBA_IMPORT_OVERWRITE) ? v7::bulk::UPDATE : v7::bulk::IGNORE, flags & DBA_IMPORT_ATTRS);
 }
 
 }

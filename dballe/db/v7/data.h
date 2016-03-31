@@ -3,6 +3,7 @@
 
 #include <dballe/core/defs.h>
 #include <dballe/sql/fwd.h>
+#include <dballe/db/defs.h>
 #include <dballe/db/v7/state.h>
 #include <wreport/var.h>
 #include <memory>
@@ -12,6 +13,7 @@
 
 namespace dballe {
 struct Record;
+struct Values;
 
 namespace db {
 namespace v7 {
@@ -30,48 +32,88 @@ enum UpdateMode {
 
 }
 
-/**
- * Precompiled query to manipulate the data table
- */
-struct StationData
+template<typename Traits>
+class DataCommon
 {
 protected:
-    virtual void _dump(std::function<void(int, int, wreport::Varcode, const char*)> out) = 0;
+    /**
+     * Load attributes from the database into a Values
+     */
+    void read_attrs_into_values(int id_data, Values& values);
+
+    /**
+     * Replace the attributes of a variable with those in Values
+     */
+    virtual void write_attrs(int id_data, const Values& values) = 0;
+
+    /**
+     * Remove all attributes from a variable
+     */
+    virtual void remove_all_attrs(int id_data) = 0;
 
 public:
-    virtual ~StationData();
+    virtual ~DataCommon() {}
+
+    /**
+     * Load from the database all the attributes for var
+     *
+     * @param id_data
+     *   ID of the data row for the value of which we will read attributes
+     * @param dest
+     *   Function that will be called to consume the attrbutes as they are
+     *   loaded.
+     */
+    virtual void read_attrs(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
+
+    /**
+     * Merge the given attributes with the existing attributes of the given
+     * variable:
+     *
+     * * Existing attributes not in attrs are preserved.
+     * * Existing attributes in attrs are overwritten.
+     * * New attributes in attrs are inesrted.
+     */
+    void merge_attrs(int id_data, const Values& attrs);
+
+    /**
+     * Remove the given attributes from the given variable, if they exist.
+     */
+    void remove_attrs(int data_id, const db::AttrList& attrs);
 
     /// Bulk variable insert
-    virtual void insert(dballe::db::v7::Transaction& t, bulk::InsertStationVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE) = 0;
+    virtual void insert(dballe::db::v7::Transaction& t, typename Traits::BulkVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE, bool with_attrs=false) = 0;
 
     /// Run the query to delete all records selected by the given QueryBuilder
     virtual void remove(const v7::QueryBuilder& qb) = 0;
 
     /// Dump the entire contents of the table to an output stream
-    void dump(FILE* out);
+    virtual void dump(FILE* out) = 0;
 };
 
-/**
- * Precompiled query to manipulate the data table
- */
-struct Data
+
+struct StationDataDumper
 {
-protected:
-    virtual void _dump(std::function<void(int, int, int, const Datetime&, wreport::Varcode, const char*)> out) = 0;
+    unsigned count = 0;
+    FILE* out;
 
-public:
-    virtual ~Data();
+    StationDataDumper(FILE* out);
 
-    /// Bulk variable insert
-    virtual void insert(dballe::db::v7::Transaction& t, bulk::InsertVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE) = 0;
-
-    /// Run the query to delete all records selected by the given QueryBuilder
-    virtual void remove(const v7::QueryBuilder& qb) = 0;
-
-    /// Dump the entire contents of the table to an output stream
-    void dump(FILE* out);
+    void print_head();
+    void print_row(int id, int id_station, wreport::Varcode code, const char* val);
+    void print_tail();
 };
 
+struct DataDumper
+{
+    unsigned count = 0;
+    FILE* out;
+
+    DataDumper(FILE* out);
+
+    void print_head();
+    void print_row(int id, int id_station, int id_levtr, const Datetime& dt, wreport::Varcode code, const char* val);
+    void print_tail();
+};
 
 namespace bulk {
 
@@ -264,6 +306,25 @@ struct InsertVars : public InsertPlan<Var, SharedDataContext>
 };
 
 }
+
+struct StationDataTraits
+{
+    typedef bulk::InsertStationVars BulkVars;
+    static const char* table_name;
+};
+
+struct DataTraits
+{
+    typedef bulk::InsertVars BulkVars;
+    static const char* table_name;
+};
+
+extern template class DataCommon<StationDataTraits>;
+extern template class DataCommon<DataTraits>;
+
+typedef DataCommon<StationDataTraits> StationData;
+typedef DataCommon<DataTraits> Data;
+
 }
 }
 }
