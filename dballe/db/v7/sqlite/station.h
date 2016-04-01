@@ -37,9 +37,6 @@ protected:
     /// Lookup the ID of a station, returning true if it was found, false if not
     bool maybe_get_id(const StationDesc& st, int* id);
 
-    /// Run stm, read its output and generate variables to send to dest
-    void read_station_vars(dballe::sql::SQLiteStatement& stm, std::function<void(std::unique_ptr<wreport::Var>)> dest);
-
     void _dump(std::function<void(int, int, const Coords& coords, const char* ident)> out) override;
 
 public:

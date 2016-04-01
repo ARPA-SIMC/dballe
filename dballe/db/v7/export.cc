@@ -73,6 +73,7 @@ bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& quer
     unique_ptr<Msg> msg;
 
     // The big export query
+    // TODO: also select attrs
     DataQueryBuilder qb(*this, core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT, false);
     qb.build();
 

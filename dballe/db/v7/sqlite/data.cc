@@ -26,6 +26,9 @@ template<typename Traits>
 SQLiteDataCommon<Traits>::SQLiteDataCommon(dballe::sql::SQLiteConnection& conn)
     : conn(conn)
 {
+    char query[64];
+    snprintf(query, 64, "UPDATE %s set value=?, attrs=? WHERE id=?", Traits::table_name);
+    ustm = conn.sqlitestatement(query).release();
 }
 
 template<typename Traits>
@@ -60,7 +63,7 @@ void SQLiteDataCommon<Traits>::write_attrs(int id_data, const Values& values)
     if (!write_attrs_stm)
     {
         char query[64];
-        snprintf(query, 64, "UPDATE %s SET attr=? WHERE id=?", Traits::table_name);
+        snprintf(query, 64, "UPDATE %s SET attrs=? WHERE id=?", Traits::table_name);
         write_attrs_stm = conn.sqlitestatement(query).release();
     }
     vector<uint8_t> encoded = values.encode();
@@ -75,7 +78,7 @@ void SQLiteDataCommon<Traits>::remove_all_attrs(int id_data)
     if (!remove_attrs_stm)
     {
         char query[64];
-        snprintf(query, 64, "UPDATE %s SET attr=NULL WHERE id=?", Traits::table_name);
+        snprintf(query, 64, "UPDATE %s SET attrs=NULL WHERE id=?", Traits::table_name);
         remove_attrs_stm = conn.sqlitestatement(query).release();
     }
     remove_attrs_stm->bind_val(1, id_data);
@@ -104,8 +107,7 @@ SQLiteStationData::SQLiteStationData(SQLiteConnection& conn)
     : SQLiteDataCommon(conn)
 {
     sstm = conn.sqlitestatement("SELECT id, code FROM station_data WHERE id_station=?").release();
-    istm = conn.sqlitestatement("INSERT INTO station_data (id_station, code, value) VALUES (?, ?, ?)").release();
-    ustm = conn.sqlitestatement("UPDATE station_data SET value=? WHERE id=?").release();
+    istm = conn.sqlitestatement("INSERT INTO station_data (id_station, code, value, attrs) VALUES (?, ?, ?, ?)").release();
 }
 
 void SQLiteStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
@@ -144,7 +146,17 @@ void SQLiteStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertS
                 for (auto& v: vars)
                 {
                     if (!v.needs_update()) continue;
-                    ustm->bind(v.var->enqc(), v.cur->second.id);
+                    ustm->bind_val(1, v.var->enqc());
+                    values::Encoder enc;
+                    if (with_attrs)
+                    {
+                        enc.append_attributes(*v.var);
+                        ustm->bind_val(2, enc.buf);
+                    }
+                    else
+                        ustm->bind_null_val(2);
+                    ustm->bind_val(3, v.cur->second.id);
+
                     ustm->execute();
                     v.set_updated();
                 }
@@ -165,6 +177,14 @@ void SQLiteStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertS
             if (!v.needs_insert()) continue;
             istm->bind_val(2, v.var->code());
             istm->bind_val(3, v.var->enqc());
+            values::Encoder enc;
+            if (with_attrs)
+            {
+                enc.append_attributes(*v.var);
+                istm->bind_val(4, enc.buf);
+            }
+            else
+                istm->bind_null_val(4);
             istm->execute();
 
             StationValueState vs;
@@ -195,8 +215,7 @@ SQLiteData::SQLiteData(SQLiteConnection& conn)
     : SQLiteDataCommon(conn)
 {
     sstm = conn.sqlitestatement("SELECT id, id_levtr, code FROM data WHERE id_station=? AND datetime=?").release();
-    istm = conn.sqlitestatement("INSERT INTO data (id_station, id_levtr, datetime, code, value) VALUES (?, ?, ?, ?, ?)").release();
-    ustm = conn.sqlitestatement("UPDATE data SET value=? WHERE id=?").release();
+    istm = conn.sqlitestatement("INSERT INTO data (id_station, id_levtr, datetime, code, value, attrs) VALUES (?, ?, ?, ?, ?, ?)").release();
 }
 
 void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
@@ -240,7 +259,17 @@ void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& va
                 for (auto& v: vars)
                 {
                     if (!v.needs_update()) continue;
-                    ustm->bind(v.var->enqc(), v.cur->second.id);
+                    ustm->bind_val(1, v.var->enqc());
+                    values::Encoder enc;
+                    if (with_attrs)
+                    {
+                        enc.append_attributes(*v.var);
+                        ustm->bind_val(2, enc.buf);
+                    }
+                    else
+                        ustm->bind_null_val(2);
+                    ustm->bind_val(3, v.cur->second.id);
+
                     ustm->execute();
                     v.set_updated();
                 }
@@ -263,6 +292,14 @@ void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& va
             istm->bind_val(2, v.levtr.id);
             istm->bind_val(4, v.var->code());
             istm->bind_val(5, v.var->enqc());
+            values::Encoder enc;
+            if (with_attrs)
+            {
+                enc.append_attributes(*v.var);
+                istm->bind_val(6, enc.buf);
+            }
+            else
+                istm->bind_null_val(6);
             istm->execute();
 
             ValueState vs;

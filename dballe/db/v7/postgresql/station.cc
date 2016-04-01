@@ -2,6 +2,7 @@
 #include "dballe/sql/postgresql.h"
 #include "dballe/record.h"
 #include "dballe/core/var.h"
+#include "dballe/core/values.h"
 #include <wreport/var.h>
 
 using namespace wreport;
@@ -23,11 +24,10 @@ PostgreSQLStation::PostgreSQLStation(PostgreSQLConnection& conn)
     conn.prepare("v7_station_lookup_id", "SELECT rep, lat, lon, ident FROM station WHERE id=$1::int4");
     conn.prepare("v7_station_insert", "INSERT INTO station (id, rep, lat, lon, ident) VALUES (DEFAULT, $1::int4, $2::int4, $3::int4, $4::text) RETURNING id");
     conn.prepare("v7_station_get_station_vars", R"(
-        SELECT d.code, d.value, a.code, a.value
+        SELECT d.code, d.value, d.attrs
           FROM station_data d
-          LEFT JOIN station_attr a ON a.id_data = d.id
          WHERE d.id_station=$1::int4
-         ORDER BY d.code, a.code
+         ORDER BY d.code
     )");
     conn.prepare("v7_station_add_station_vars", R"(
         SELECT d.code, d.value
@@ -133,43 +133,24 @@ void PostgreSQLStation::get_station_vars(int id_station, std::function<void(std:
 {
     using namespace dballe::sql::postgresql;
 
-    TRACE("fill_ana_layer Performing query v7_station_get_station_vars with idst %d\n", id_station);
+    TRACE("get_station_vars Performing query v7_station_get_station_vars with idst %d\n", id_station);
     Result res(conn.exec_prepared("v7_station_get_station_vars", id_station));
 
     // Retrieve results
-    Varcode last_varcode = 0;
-    unique_ptr<Var> var;
-
     for (unsigned row = 0; row < res.rowcount(); ++row)
     {
         Varcode code = res.get_int4(row, 0);
-        TRACE("fill_ana_layer Got %01d%02ld%03ld %s\n", WR_VAR_FXY(code), res.get_string(row, 1));
+        TRACE("get_station_vars Got %01d%02d%03d %s\n", WR_VAR_FXY(code), res.get_string(row, 1));
 
-        // First process the variable, possibly inserting the old one in the message
-        if (last_varcode != code)
-        {
-            TRACE("fill_ana_layer new var\n");
-            if (var.get())
-            {
-                TRACE("fill_ana_layer inserting old var B%02d%03d\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()));
-                dest(move(var));
-            }
-            var = newvar(code, res.get_string(row, 1));
-            last_varcode = code;
-        }
-
+        unique_ptr<Var> var = newvar(code, res.get_string(row, 1));
         if (!res.is_null(row, 2))
         {
-            TRACE("fill_ana_layer new attribute\n");
-            var->seta(newvar(res.get_int4(row, 2), res.get_string(row, 3)));
+            TRACE("get_station_vars new attribute\n");
+            Values::decode(res.get_bytea(row, 2), [&](unique_ptr<wreport::Var> a) { var->seta(move(a)); });
         }
-    };
 
-    if (var.get())
-    {
-        TRACE("fill_ana_layer inserting leftover old var B%02d%03d\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()));
         dest(move(var));
-    }
+    };
 }
 
 void PostgreSQLStation::add_station_vars(int id_station, Record& rec)

@@ -164,6 +164,31 @@ struct Value
     /// Print the contents of this Value
     void print(FILE* out) const;
 };
+
+struct Encoder
+{
+    std::vector<uint8_t> buf;
+
+    Encoder();
+    void append_uint16(uint16_t val);
+    void append_uint32(uint32_t val);
+    void append_cstring(const char* val);
+    void append(const wreport::Var& var);
+    void append_attributes(const wreport::Var& var);
+};
+
+struct Decoder
+{
+    const uint8_t* buf;
+    unsigned size;
+
+    Decoder(const std::vector<uint8_t>& buf);
+    uint16_t decode_uint16();
+    uint32_t decode_uint32();
+    const char* decode_cstring();
+    std::unique_ptr<wreport::Var> decode_var();
+};
+
 }
 
 /**

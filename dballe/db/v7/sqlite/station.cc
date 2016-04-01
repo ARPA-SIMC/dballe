@@ -2,6 +2,7 @@
 #include "dballe/sql/sqlite.h"
 #include "dballe/record.h"
 #include "dballe/core/var.h"
+#include "dballe/core/values.h"
 #include <wreport/var.h>
 
 using namespace wreport;
@@ -144,59 +145,34 @@ stations_t::iterator SQLiteStation::obtain_id(State& st, const StationDesc& desc
     return st.add_station(desc, state);
 }
 
-void SQLiteStation::read_station_vars(SQLiteStatement& stm, std::function<void(std::unique_ptr<wreport::Var>)> dest)
-{
-    // Retrieve results
-    Varcode last_varcode = 0;
-    unique_ptr<Var> var;
-
-    stm.execute([&]() {
-        Varcode code = stm.column_int(0);
-        TRACE("fill_ana_layer Got B%02ld%03ld %s\n", WR_VAR_X(code), WR_VAR_Y(code), stm.column_string(3));
-
-        // First process the variable, possibly inserting the old one in the message
-        if (last_varcode != code)
-        {
-            TRACE("fill_ana_layer new var\n");
-            if (var.get())
-            {
-                TRACE("fill_ana_layer inserting old var B%02d%03d\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()));
-                dest(move(var));
-            }
-            var = newvar(code, stm.column_string(1));
-            last_varcode = code;
-        }
-
-        if (!stm.column_isnull(2))
-        {
-            TRACE("fill_ana_layer new attribute\n");
-            var->seta(newvar(stm.column_int(2), stm.column_string(3)));
-        }
-    });
-
-    if (var.get())
-    {
-        TRACE("fill_ana_layer inserting leftover old var B%02d%03d\n", WR_VAR_X(var->code()), WR_VAR_Y(var->code()));
-        dest(move(var));
-    }
-}
-
 void SQLiteStation::get_station_vars(int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     // Perform the query
     static const char query[] = R"(
-        SELECT d.code, d.value, a.code, a.value
+        SELECT d.code, d.value, d.attrs
           FROM station_data d
-          LEFT JOIN station_attr a ON a.id_data = d.id
          WHERE d.id_station=?
-         ORDER BY d.code, a.code
+         ORDER BY d.code
     )";
 
     auto stm = conn.sqlitestatement(query);
     stm->bind(id_station);
-    TRACE("fill_ana_layer Performing query: %s with idst %d\n", query, id_station);
+    TRACE("get_station_vars Performing query: %s with idst %d\n", query, id_station);
 
-    read_station_vars(*stm, dest);
+    // Retrieve results
+    stm->execute([&]() {
+        Varcode code = stm->column_int(0);
+        TRACE("get_station_vars Got %d%02d%03d %s\n", WR_VAR_FXY(code), stm->column_string(1));
+
+        unique_ptr<Var> var = newvar(code, stm->column_string(1));
+        if (!stm->column_isnull(2))
+        {
+            TRACE("get_station_vars add attributes\n");
+            Values::decode(stm->column_blob(2), [&](unique_ptr<wreport::Var> a) { var->seta(move(a)); });
+        }
+
+        dest(move(var));
+    });
 }
 
 void SQLiteStation::_dump(std::function<void(int, int, const Coords& coords, const char* ident)> out)
