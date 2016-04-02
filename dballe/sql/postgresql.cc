@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include "sql/querybuf.h"
 #include <cstdlib>
+#include <cstring>
 #include <arpa/inet.h>
 #include <endian.h>
 
@@ -394,6 +395,34 @@ void PostgreSQLConnection::explain(const std::string& query, FILE* out)
     Result res = exec(explain_query);
     for (unsigned row = 0; row < res.rowcount(); ++row)
         fprintf(out, "  %s\n", res.get_string(row, 0));
+}
+
+void PostgreSQLConnection::append_escaped(Querybuf& qb, const char* str)
+{
+    char* escaped = PQescapeLiteral(db, str, strlen(str));
+    if (!escaped)
+        error_postgresql::throwf(db, "cannot escape string '%s'", str);
+    qb.append(escaped);
+    PQfreemem(escaped);
+}
+
+void PostgreSQLConnection::append_escaped(Querybuf& qb, const std::string& str)
+{
+    char* escaped = PQescapeLiteral(db, str.data(), str.size());
+    if (!escaped)
+        throw error_postgresql(db, "cannot escape string '" + str + "'");
+    qb.append(escaped);
+    PQfreemem(escaped);
+}
+
+void PostgreSQLConnection::append_escaped(Querybuf& qb, const std::vector<uint8_t>& buf)
+{
+    size_t len;
+    char* escaped = (char*)PQescapeByteaConn(db, buf.data(), buf.size(), &len);
+    qb.append("\'");
+    qb.append(escaped, len - 1);
+    qb.append("\'");
+    PQfreemem(escaped);
 }
 
 }

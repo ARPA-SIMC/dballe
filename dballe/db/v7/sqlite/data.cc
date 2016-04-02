@@ -148,7 +148,7 @@ void SQLiteStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertS
                     if (!v.needs_update()) continue;
                     ustm->bind_val(1, v.var->enqc());
                     values::Encoder enc;
-                    if (with_attrs)
+                    if (with_attrs && v.var->next_attr())
                     {
                         enc.append_attributes(*v.var);
                         ustm->bind_val(2, enc.buf);
@@ -178,7 +178,7 @@ void SQLiteStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertS
             istm->bind_val(2, v.var->code());
             istm->bind_val(3, v.var->enqc());
             values::Encoder enc;
-            if (with_attrs)
+            if (with_attrs && v.var->next_attr())
             {
                 enc.append_attributes(*v.var);
                 istm->bind_val(4, enc.buf);
@@ -261,7 +261,7 @@ void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& va
                     if (!v.needs_update()) continue;
                     ustm->bind_val(1, v.var->enqc());
                     values::Encoder enc;
-                    if (with_attrs)
+                    if (with_attrs && v.var->next_attr())
                     {
                         enc.append_attributes(*v.var);
                         ustm->bind_val(2, enc.buf);
@@ -293,7 +293,7 @@ void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& va
             istm->bind_val(4, v.var->code());
             istm->bind_val(5, v.var->enqc());
             values::Encoder enc;
-            if (with_attrs)
+            if (with_attrs && v.var->next_attr())
             {
                 enc.append_attributes(*v.var);
                 istm->bind_val(6, enc.buf);

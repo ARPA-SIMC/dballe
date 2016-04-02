@@ -4,6 +4,7 @@
 #include "dballe/sql/postgresql.h"
 #include "dballe/sql/querybuf.h"
 #include "dballe/record.h"
+#include "dballe/core/values.h"
 #include <algorithm>
 #include <cstring>
 
@@ -31,16 +32,46 @@ PostgreSQLDataCommon<Traits>::PostgreSQLDataCommon(dballe::sql::PostgreSQLConnec
 template<typename Traits>
 void PostgreSQLDataCommon<Traits>::read_attrs(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
+    if (select_attrs_query_name.empty())
+    {
+        select_attrs_query_name = Traits::table_name;
+        select_attrs_query_name += "v7_select_attrs";
+        char query[64];
+        snprintf(query, 64, "SELECT attrs FROM %s WHERE id=$1::int4", Traits::table_name);
+        conn.prepare(select_attrs_query_name, query);
+    }
+    Values::decode(
+            conn.exec_prepared_one_row(select_attrs_query_name, id_data).get_bytea(0, 0),
+            dest);
 }
 
 template<typename Traits>
 void PostgreSQLDataCommon<Traits>::write_attrs(int id_data, const Values& values)
 {
+    if (write_attrs_query_name.empty())
+    {
+        write_attrs_query_name = Traits::table_name;
+        write_attrs_query_name += "v7_write_attrs";
+        char query[64];
+        snprintf(query, 64, "UPDATE %s SET attrs=$1::bytea WHERE id=$2::int4", Traits::table_name);
+        conn.prepare(write_attrs_query_name, query);
+    }
+    vector<uint8_t> encoded = values.encode();
+    conn.exec_prepared_no_data(write_attrs_query_name, encoded, id_data);
 }
 
 template<typename Traits>
-void PostgreSQLDataCommon<Traits>::remove_all_attrs(int data_id)
+void PostgreSQLDataCommon<Traits>::remove_all_attrs(int id_data)
 {
+    if (remove_attrs_query_name.empty())
+    {
+        remove_attrs_query_name = Traits::table_name;
+        remove_attrs_query_name += "v7_remove_attrs";
+        char query[64];
+        snprintf(query, 64, "UPDATE %s SET attrs=NULL WHERE id=$1::int4", Traits::table_name);
+        conn.prepare(remove_attrs_query_name, query);
+    }
+    conn.exec_prepared_no_data(remove_attrs_query_name, id_data);
 }
 
 template<typename Traits>
@@ -65,6 +96,55 @@ PostgreSQLStationData::PostgreSQLStationData(PostgreSQLConnection& conn)
     : PostgreSQLDataCommon(conn)
 {
     conn.prepare("station_datav7_select", "SELECT id, code FROM station_data WHERE id_station=$1::int4");
+}
+
+template<typename Traits>
+static void build_update_query(PostgreSQLConnection& conn, Querybuf& qb, bool with_attrs, typename Traits::BulkVars& vars)
+{
+    if (with_attrs)
+    {
+        qb.append("UPDATE ");
+        qb.append(Traits::table_name);
+        qb.append(" as d SET value=i.value, attrs=i.attrs FROM (values ");
+        qb.start_list(",");
+        for (auto& v: vars)
+        {
+            if (!v.needs_update()) continue;
+            qb.start_list_item();
+            qb.append("(");
+            qb.append_int(v.cur->second.id);
+            qb.append(",");
+            conn.append_escaped(qb, v.var->enqc());
+            qb.append(",");
+            if (v.var->next_attr())
+            {
+                values::Encoder enc;
+                enc.append_attributes(*v.var);
+                conn.append_escaped(qb, enc.buf);
+            } else
+                qb.append("NULL");
+            qb.append("::bytea)");
+            v.set_updated();
+        }
+        qb.append(") AS i(id, value, attrs) WHERE d.id = i.id");
+    } else {
+        qb.append("UPDATE ");
+        qb.append(Traits::table_name);
+        qb.append(" as d SET value=i.value, attrs=NULL FROM (values ");
+        qb.start_list(",");
+        for (auto& v: vars)
+        {
+            if (!v.needs_update()) continue;
+            qb.start_list_item();
+            qb.append("(");
+            qb.append_int(v.cur->second.id);
+            qb.append(",");
+            conn.append_escaped(qb, v.var->enqc());
+            qb.append(")");
+            v.set_updated();
+        }
+        qb.append(") AS i(id, value) WHERE d.id = i.id");
+    }
 }
 
 void PostgreSQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
@@ -100,20 +180,7 @@ void PostgreSQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::Ins
             if (vars.do_update)
             {
                 Querybuf dq(512);
-                dq.append("UPDATE station_data as d SET value=i.value FROM (values ");
-                dq.start_list(",");
-                for (auto& v: vars)
-                {
-                    if (!v.needs_update()) continue;
-                    const char* value = v.var->enqc();
-                    char* escaped_val = PQescapeLiteral(conn, value, strlen(value));
-                    if (!escaped_val)
-                        throw error_postgresql(conn, string("cannot escape string '") + value + "'");
-                    dq.append_listf("(%d, %s)", v.cur->second.id, escaped_val);
-                    PQfreemem(escaped_val);
-                    v.set_updated();
-                }
-                dq.append(") AS i(id, value) WHERE d.id = i.id");
+                build_update_query<StationDataTraits>(conn, dq, with_attrs, vars);
                 //fprintf(stderr, "Update query: %s\n", dq.c_str());
                 conn.exec_no_data(dq);
             }
@@ -127,18 +194,29 @@ void PostgreSQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::Ins
 
     if (vars.do_insert)
     {
+        char lead[64];
+        snprintf(lead, 64, "(DEFAULT,%d,", vars.shared_context.station->second.id);
+
         Querybuf dq(512);
-        dq.append("INSERT INTO station_data (id, id_station, code, value) VALUES ");
+        dq.append("INSERT INTO station_data (id, id_station, code, value, attrs) VALUES ");
         dq.start_list(",");
         for (auto& v: vars)
         {
             if (!v.needs_insert()) continue;
-            const char* value = v.var->enqc();
-            char* escaped_val = PQescapeLiteral(conn, value, strlen(value));
-            if (!escaped_val)
-                throw error_postgresql(conn, string("cannot escape string '") + value + "'");
-            dq.append_listf("(DEFAULT, %d, %d, %s)", vars.shared_context.station->second.id, (int)v.var->code(), escaped_val);
-            PQfreemem(escaped_val);
+            dq.start_list_item();
+            dq.append(lead);
+            dq.append_int(v.var->code());
+            dq.append(",");
+            conn.append_escaped(dq, v.var->enqc());
+            dq.append(",");
+            if (with_attrs && v.var->next_attr())
+            {
+                values::Encoder enc;
+                enc.append_attributes(*v.var);
+                conn.append_escaped(dq, enc.buf);
+            } else
+                dq.append("NULL::bytea");
+            dq.append(")");
         }
         dq.append(" RETURNING id");
 
@@ -226,25 +304,7 @@ void PostgreSQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars
             if (vars.do_update)
             {
                 Querybuf dq(512);
-                dq.append("UPDATE data as d SET value=i.value FROM (values ");
-                dq.start_list(",");
-                for (auto& v: vars)
-                {
-                    if (!v.needs_update()) continue;
-                    const char* value = v.var->enqc();
-                    char* escaped_val = PQescapeLiteral(conn, value, strlen(value));
-                    if (!escaped_val)
-                        throw error_postgresql(conn, string("cannot escape string '") + value + "'");
-                    dq.start_list_item();
-                    dq.append("(");
-                    dq.append_int(v.cur->second.id);
-                    dq.append(",");
-                    dq.append(escaped_val);
-                    dq.append(")");
-                    PQfreemem(escaped_val);
-                    v.set_updated();
-                }
-                dq.append(") AS i(id, value) WHERE d.id = i.id");
+                build_update_query<DataTraits>(conn, dq, with_attrs, vars);
                 // fprintf(stderr, "Update query: %s\n", dq.c_str());
                 conn.exec_no_data(dq);
             }
@@ -259,31 +319,33 @@ void PostgreSQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars
     if (vars.do_insert)
     {
         const Datetime& dt = vars.shared_context.datetime;
-        Querybuf dq(512);
-        dq.append("INSERT INTO data (id, id_station, datetime, id_levtr, code, value) VALUES ");
-        dq.start_list(",");
-
         char val_lead[64];
         snprintf(val_lead, 64, "(DEFAULT,%d,'%04d-%02d-%02d %02d:%02d:%02d',",
                     vars.shared_context.station->second.id,
                     dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
 
+        Querybuf dq(512);
+        dq.append("INSERT INTO data (id, id_station, datetime, id_levtr, code, value, attrs) VALUES ");
+        dq.start_list(",");
         for (auto& v: vars)
         {
             if (!v.needs_insert()) continue;
-            const char* value = v.var->enqc();
-            char* escaped_val = PQescapeLiteral(conn, value, strlen(value));
-            if (!escaped_val)
-                throw error_postgresql(conn, string("cannot escape string '") + value + "'");
             dq.start_list_item();
             dq.append(val_lead);
             dq.append_int(v.levtr.id);
             dq.append(",");
             dq.append_int(v.var->code());
             dq.append(",");
-            dq.append(escaped_val);
+            conn.append_escaped(dq, v.var->enqc());
+            dq.append(",");
+            if (with_attrs && v.var->next_attr())
+            {
+                values::Encoder enc;
+                enc.append_attributes(*v.var);
+                conn.append_escaped(dq, enc.buf);
+            } else
+                dq.append("NULL::bytea");
             dq.append(")");
-            PQfreemem(escaped_val);
         }
         dq.append(" RETURNING id");
 

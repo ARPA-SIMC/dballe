@@ -444,6 +444,7 @@ public:
 
     /// Wrap PQexec
     void pqexec(const std::string& query);
+
     /**
      * Wrap PQexec but do not throw an exception in case of errors.
      *
@@ -451,6 +452,15 @@ public:
      * stderr.
      */
     void pqexec_nothrow(const std::string& query) noexcept;
+
+    /// Escape the string as a literal value and append it to qb
+    void append_escaped(Querybuf& qb, const char* str);
+
+    /// Escape the string as a literal value and append it to qb
+    void append_escaped(Querybuf& qb, const std::string& str);
+
+    /// Escape the buffer as bytea literal and append it to qb
+    void append_escaped(Querybuf& qb, const std::vector<uint8_t>& buf);
 };
 
 }

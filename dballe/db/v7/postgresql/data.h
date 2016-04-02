@@ -18,6 +18,9 @@ class PostgreSQLDataCommon : public DataCommon<Traits>
 protected:
     /// DB connection
     dballe::sql::PostgreSQLConnection& conn;
+    std::string select_attrs_query_name;
+    std::string write_attrs_query_name;
+    std::string remove_attrs_query_name;
 
 public:
     PostgreSQLDataCommon(dballe::sql::PostgreSQLConnection& conn);
