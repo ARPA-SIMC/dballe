@@ -329,7 +329,11 @@ bool StationQueryBuilder::build_where()
 
 void StationQueryBuilder::build_order_by()
 {
-    sql_query.append(" ORDER BY s.id");
+    // https://github.com/ARPA-SIMC/dballe/issues/18
+    // confirmed that nothing relies on the ordering of stations in station
+    // queries
+
+    //sql_query.append(" ORDER BY s.id");
 }
 
 void DataQueryBuilder::build_select()

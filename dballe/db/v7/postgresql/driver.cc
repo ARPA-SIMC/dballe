@@ -70,46 +70,8 @@ void Driver::run_built_query_v7(
     if (!res)
         throw error_postgresql(conn, "executing " + qb.sql_query);
 
-    // http://www.postgresql.org/docs/9.4/static/libpq-single-row-mode.html
-    if (!PQsetSingleRowMode(conn))
-    {
-        string errmsg(PQerrorMessage(conn));
-        conn.cancel_running_query_nothrow();
-        conn.discard_all_input_nothrow();
-        throw error_postgresql(errmsg, "cannot set single row mode for query " + qb.sql_query);
-    }
-
     v7::SQLRecordV7 rec;
-    while (true)
-    {
-        Result res(PQgetResult(conn));
-        if (!res) break;
-
-        // Note: Even when PQresultStatus indicates a fatal error, PQgetResult
-        // should be called until it returns a null pointer to allow libpq to
-        // process the error information completely.
-        //  (http://www.postgresql.org/docs/9.1/static/libpq-async.html)
-
-        // If we get what we don't want, cancel, flush our input and throw
-        if (PQresultStatus(res) == PGRES_SINGLE_TUPLE)
-        {
-            // Ok, we have a tuple
-        } else if (PQresultStatus(res) == PGRES_TUPLES_OK) {
-            // No more rows will arrive
-            continue;
-        } else {
-            // An error arrived
-            conn.cancel_running_query_nothrow();
-            conn.discard_all_input_nothrow();
-
-            switch (PQresultStatus(res))
-            {
-                case PGRES_COMMAND_OK:
-                    throw error_postgresql("command_ok", "no data returned by query " + qb.sql_query);
-                default:
-                    throw error_postgresql(res, "executing " + qb.sql_query);
-            }
-        }
+    conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
         // fprintf(stderr, "ST %d vi %d did %d d %d sd %d\n", qb.select_station, qb.select_varinfo, qb.select_data_id, qb.select_data, qb.select_summary_details);
         for (unsigned row = 0; row < res.rowcount(); ++row)
         {
@@ -165,17 +127,46 @@ void Driver::run_built_query_v7(
             }
 
             // rec.dump(stderr);
-            try {
-                dest(rec);
-            } catch (std::exception& e) {
-                // If we get an exception from downstream, cancel, flush all
-                // input and rethrow it
-                conn.cancel_running_query_nothrow();
-                conn.discard_all_input_nothrow();
-                throw;
-            }
+            dest(rec);
         }
+    });
+}
+
+void Driver::run_station_query(const v7::QueryBuilder& qb, std::function<void(int id, const StationDesc&)> dest)
+{
+    using namespace dballe::sql::postgresql;
+
+    // Start the query asynchronously
+    int res;
+    if (qb.bind_in_ident)
+    {
+        const char* args[1] = { qb.bind_in_ident };
+        res = PQsendQueryParams(conn, qb.sql_query.c_str(), 1, nullptr, args, nullptr, nullptr, 1);
+    } else {
+        res = PQsendQueryParams(conn, qb.sql_query.c_str(), 0, nullptr, nullptr, nullptr, nullptr, 1);
     }
+    if (!res)
+        throw error_postgresql(conn, "executing " + qb.sql_query);
+
+    StationDesc desc;
+    conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
+        for (unsigned row = 0; row < res.rowcount(); ++row)
+        {
+            int output_seq = 0;
+
+            int id = res.get_int4(row, output_seq++);
+            desc.rep = res.get_int4(row, output_seq++);
+            desc.coords.lat = res.get_int4(row, output_seq++);
+            desc.coords.lon = res.get_int4(row, output_seq++);
+
+            if (res.is_null(row, output_seq))
+                desc.ident.clear();
+            else
+                desc.ident = res.get_string(row, output_seq);
+
+            dest(id, desc);
+        }
+    });
 }
 
 void Driver::create_tables_v7()

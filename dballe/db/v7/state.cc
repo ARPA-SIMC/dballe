@@ -1,4 +1,5 @@
 #include "state.h"
+#include "dballe/record.h"
 
 using namespace std;
 
@@ -11,6 +12,19 @@ int StationDesc::compare(const StationDesc& o) const
     if (int res = rep - o.rep) return res;
     if (int res = coords.compare(o.coords)) return res;
     return ident.compare(o.ident);
+}
+
+void StationDesc::to_record(Record& rec) const
+{
+    rec.set_coords(coords);
+    if (ident.is_missing())
+    {
+        rec.unset("ident");
+        rec.seti("mobile", 0);
+    } else {
+        rec.setc("ident", ident);
+        rec.seti("mobile", 1);
+    }
 }
 
 int LevTrDesc::compare(const LevTrDesc& o) const

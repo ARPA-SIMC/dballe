@@ -4,6 +4,7 @@
 #include <dballe/core/defs.h>
 #include <dballe/db/defs.h>
 #include <dballe/sql/fwd.h>
+#include <dballe/db/v7/state.h>
 #include <dballe/db/v7/data.h>
 #include <wreport/var.h>
 #include <memory>
@@ -80,6 +81,11 @@ public:
      * the actual implementation of stm.
      */
     virtual void run_built_query_v7(const v7::QueryBuilder& qb, std::function<void(SQLRecordV7& rec)> dest) = 0;
+
+    /**
+     * Run a station query, iterating on the resulting stations
+     */
+    virtual void run_station_query(const v7::QueryBuilder& qb, std::function<void(int id, const StationDesc&)>) = 0;
 
     /// Create all missing tables for a DB with the given format
     void create_tables(db::Format format);

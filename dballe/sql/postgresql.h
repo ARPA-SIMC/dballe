@@ -453,6 +453,9 @@ public:
      */
     void pqexec_nothrow(const std::string& query) noexcept;
 
+    /// Retrieve query results in single row mode
+    void run_single_row_mode(const std::string& query_desc, std::function<void(const postgresql::Result&)> dest);
+
     /// Escape the string as a literal value and append it to qb
     void append_escaped(Querybuf& qb, const char* str);
 

@@ -57,15 +57,6 @@ struct Base : public Interface
     /** Modifier flags to enable special query behaviours */
     const unsigned int modifiers;
 
-    /// Results from the query
-    Structbuf<v7::SQLRecordV7> results;
-
-    /// Prefetched mapping between levtr IDs and their values
-    std::map<int, LevTrDesc> levtrs;
-
-    /// Current result element being iterated
-    int cur = -1;
-
     Base(v7::DB& db, unsigned int modifiers)
         : db(db), modifiers(modifiers)
     {
@@ -76,6 +67,112 @@ struct Base : public Interface
     dballe::DB& get_db() const override { return db; }
 
     /**
+     * Iterate the cursor until the end, returning the number of items.
+     *
+     * If dump is a FILE pointer, also dump the cursor values to it
+     */
+    unsigned test_iterate(FILE* dump=0) override = 0;
+
+    /// Run the query in qb and fill results with its output
+    virtual void load(const QueryBuilder& qb) = 0;
+};
+
+struct Stations : public Base<CursorStation>
+{
+    struct Item
+    {
+        int id;
+        StationDesc station;
+
+        Item(int id, const StationDesc& station) : id(id), station(station) {}
+    };
+
+    std::vector<Item> stations;
+    std::vector<Item>::const_iterator cur;
+    bool at_start;
+
+    using Base::Base;
+    ~Stations() {}
+
+    int remaining() const override
+    {
+        if (at_start)
+            return stations.size();
+        else
+            return stations.end() - cur - 1;
+    }
+
+    bool next() override
+    {
+        if (at_start)
+            at_start = false;
+        else
+            ++cur;
+        return cur != stations.end();
+    }
+
+    void discard_rest() override
+    {
+        at_start = false;
+        cur = stations.end();
+    }
+
+    void to_record(Record& rec) override
+    {
+        this->db.repinfo().to_record(cur->station.rep, rec);
+        cur->station.to_record(rec);
+        this->db.station().add_station_vars(cur->id, rec);
+    }
+
+    int get_station_id() const override { return cur->id; }
+    const char* get_rep_memo() const override { return this->db.repinfo().get_rep_memo(cur->station.rep); }
+    double get_lat() const override { return cur->station.coords.dlat(); }
+    double get_lon() const override { return cur->station.coords.dlon(); }
+    const char* get_ident(const char* def=0) const override
+    {
+        if (cur->station.ident.is_missing())
+            return def;
+        else
+            return cur->station.ident.get();
+    }
+
+    void load(const QueryBuilder& qb) override
+    {
+        this->db.driver().run_station_query(qb, [&](int id, const StationDesc& desc) {
+            stations.emplace_back(id, desc);
+        });
+        at_start = true;
+        cur = stations.begin();
+    }
+
+    unsigned test_iterate(FILE* dump=0) override
+    {
+        unsigned count;
+        for (count = 0; next(); ++count)
+            if (dump)
+                fprintf(dump, "%02d %3d %02.4f %02.4f %-10s\n",
+                        cur->id, cur->station.rep, cur->station.coords.dlat(), cur->station.coords.dlon(), cur->station.ident.get());
+        return count;
+    }
+};
+
+template<typename Interface>
+struct OldBase : public Base<Interface>
+{
+    /// Current result element being iterated
+    int cur = -1;
+
+    using Base<Interface>::Base;
+
+    /// Results from the query
+    Structbuf<v7::SQLRecordV7> results;
+
+    /// Prefetched mapping between levtr IDs and their values
+    std::map<int, LevTrDesc> levtrs;
+
+    unsigned size() const { return results.size(); }
+
+    /**
      * Get the number of rows still to be fetched
      *
      * @return
@@ -84,31 +181,30 @@ struct Base : public Interface
      */
     int remaining() const override
     {
-        if (cur == -1) return results.size();
-        return results.size() - cur - 1;
+        if (cur == -1) return size();
+        return size() - cur - 1;
     }
 
     bool next() override
     {
         ++cur;
-        return (size_t)cur < results.size();
+        return (size_t)cur < size();
     }
 
+    void discard_rest() override { cur = size(); }
 
-    void discard_rest() override { cur = results.size(); }
-
-    int get_station_id() const override { return results[cur].out_ana_id; }
-    double get_lat() const override { return (double)results[cur].out_lat / 100000.0; }
-    double get_lon() const override { return (double)results[cur].out_lon / 100000.0; }
+    int get_station_id() const override { return results[this->cur].out_ana_id; }
+    double get_lat() const override { return (double)results[this->cur].out_lat / 100000.0; }
+    double get_lon() const override { return (double)results[this->cur].out_lon / 100000.0; }
     const char* get_ident(const char* def=0) const override
     {
-        if (results[cur].out_ident_size == -1 || results[cur].out_ident[0] == 0)
+        if (results[this->cur].out_ident_size == -1 || results[this->cur].out_ident[0] == 0)
             return def;
-        return results[cur].out_ident;
+        return results[this->cur].out_ident;
     }
     const char* get_rep_memo() const override
     {
-        return db.repinfo().get_rep_memo(results[cur].out_rep_cod);
+        return this->db.repinfo().get_rep_memo(results[this->cur].out_rep_cod);
     }
 
     const LevTrDesc& get_levtr(int id) const
@@ -118,35 +214,27 @@ struct Base : public Interface
         return i->second;
     }
 
-    /**
-     * Iterate the cursor until the end, returning the number of items.
-     *
-     * If dump is a FILE pointer, also dump the cursor values to it
-     */
-    unsigned test_iterate(FILE* dump=0) override = 0;
-
-    /// Run the query in qb and fill results with its output
-    virtual void load(const QueryBuilder& qb)
+    void load(const QueryBuilder& qb) override
     {
         set<int> ids;
-        db.driver().run_built_query_v7(qb, [&](v7::SQLRecordV7& rec) {
+        this->db.driver().run_built_query_v7(qb, [&](v7::SQLRecordV7& rec) {
             results.append(rec);
             if (qb.select_varinfo) ids.insert(rec.out_id_ltr);
         });
         // We are done adding, prepare the structbuf for reading
         results.ready_to_read();
         // And prefetch the LevTr data
-        db.lev_tr().prefetch_ids(ids, levtrs);
+        this->db.lev_tr().prefetch_ids(ids, levtrs);
     }
 
     void to_record_pseudoana(Record& rec)
     {
-        rec.seti("ana_id", results[cur].out_ana_id);
-        rec.seti("lat", results[cur].out_lat);
-        rec.seti("lon", results[cur].out_lon);
-        if (results[cur].out_ident_size != -1 && results[cur].out_ident[0] != 0)
+        rec.seti("ana_id", results[this->cur].out_ana_id);
+        rec.seti("lat", results[this->cur].out_lat);
+        rec.seti("lon", results[this->cur].out_lon);
+        if (results[this->cur].out_ident_size != -1 && results[this->cur].out_ident[0] != 0)
         {
-            rec.setc("ident", results[cur].out_ident);
+            rec.setc("ident", results[this->cur].out_ident);
             rec.seti("mobile", 1);
         } else {
             rec.unset("ident");
@@ -156,14 +244,14 @@ struct Base : public Interface
 
     void to_record_repinfo(Record& rec)
     {
-        db.repinfo().to_record(results[cur].out_rep_cod, rec);
+        this->db.repinfo().to_record(results[this->cur].out_rep_cod, rec);
     }
 
     void to_record_ltr(Record& rec)
     {
-        if (results[cur].out_id_ltr != -1)
+        if (results[this->cur].out_id_ltr != -1)
         {
-            auto& ltr = levtrs[results[cur].out_id_ltr];
+            auto& ltr = levtrs[results[this->cur].out_id_ltr];
             rec.set(ltr.level);
             rec.set(ltr.trange);
         }
@@ -181,73 +269,40 @@ struct Base : public Interface
 
     void to_record_datetime(Record& rec)
     {
-        rec.set(results[cur].out_datetime);
+        rec.set(results[this->cur].out_datetime);
     }
 
     void to_record_varcode(Record& rec)
     {
         char bname[7];
         snprintf(bname, 7, "B%02d%03d",
-                WR_VAR_X(results[cur].out_varcode),
-                WR_VAR_Y(results[cur].out_varcode));
+                WR_VAR_X(results[this->cur].out_varcode),
+                WR_VAR_Y(results[this->cur].out_varcode));
         rec.setc("var", bname);
     }
 
     /// Query extra station info and add it to \a rec
     void add_station_info(Record& rec)
     {
-        db.station().add_station_vars(results[cur].out_ana_id, rec);
+        this->db.station().add_station_vars(results[this->cur].out_ana_id, rec);
     }
 };
 
-
-struct Stations : public Base<CursorStation>
+struct StationData : public OldBase<CursorStationData>
 {
-    using Base::Base;
-    ~Stations() {}
-
-    void to_record(Record& rec) override
-    {
-        to_record_pseudoana(rec);
-        add_station_info(rec);
-    }
-
-    unsigned test_iterate(FILE* dump=0) override
-    {
-        auto r = Record::create();
-        unsigned count;
-        for (count = 0; next(); ++count)
-        {
-            if (dump)
-            {
-                to_record(*r);
-                fprintf(dump, "%02d %02.4f %02.4f %-10s\n",
-                        r->enq("ana_id", -1),
-                        r->enq("lat", 0.0),
-                        r->enq("lon", 0.0),
-                        r->enq("ident", ""));
-            }
-        }
-        return count;
-    }
-};
-
-
-struct StationData : public Base<CursorStationData>
-{
-    using Base::Base;
+    using OldBase::OldBase;
     ~StationData() {}
     void to_record(Record& rec) override
     {
         to_record_pseudoana(rec);
         to_record_repinfo(rec);
-        if (results[cur].out_id_ltr == -1)
+        if (results[this->cur].out_id_ltr == -1)
             rec.unset("context_id");
         else
-            rec.seti("context_id", results[cur].out_id_data);
+            rec.seti("context_id", results[this->cur].out_id_data);
         to_record_varcode(rec);
         rec.clear_vars();
-        rec.set(newvar(results[cur].out_varcode, results[cur].out_value));
+        rec.set(newvar(results[this->cur].out_varcode, results[this->cur].out_value));
     }
     unsigned test_iterate(FILE* dump=0) override
     {
@@ -270,29 +325,29 @@ struct StationData : public Base<CursorStationData>
         return count;
     }
 
-    wreport::Varcode get_varcode() const override { return (wreport::Varcode)results[cur].out_varcode; }
-    wreport::Var get_var() const override { return Var(varinfo(results[cur].out_varcode), results[cur].out_value); }
-    int attr_reference_id() const override { return results[cur].out_id_data; }
+    wreport::Varcode get_varcode() const override { return (wreport::Varcode)results[this->cur].out_varcode; }
+    wreport::Var get_var() const override { return Var(varinfo(results[this->cur].out_varcode), results[this->cur].out_value); }
+    int attr_reference_id() const override { return results[this->cur].out_id_data; }
 };
 
-struct Data : public Base<CursorData>
+struct Data : public OldBase<CursorData>
 {
-    using Base::Base;
+    using OldBase::OldBase;
     ~Data() {}
     void to_record(Record& rec) override
     {
         to_record_pseudoana(rec);
         to_record_repinfo(rec);
-        if (results[cur].out_id_ltr == -1)
+        if (results[this->cur].out_id_ltr == -1)
             rec.unset("context_id");
         else
-            rec.seti("context_id", results[cur].out_id_data);
+            rec.seti("context_id", results[this->cur].out_id_data);
         to_record_varcode(rec);
         to_record_ltr(rec);
         to_record_datetime(rec);
 
         rec.clear_vars();
-        rec.set(newvar(results[cur].out_varcode, results[cur].out_value));
+        rec.set(newvar(results[this->cur].out_varcode, results[this->cur].out_value));
     }
     unsigned test_iterate(FILE* dump=0) override
     {
@@ -315,34 +370,34 @@ struct Data : public Base<CursorData>
         return count;
     }
 
-    Level get_level() const override { return get_levtr(results[cur].out_id_ltr).level; }
-    Trange get_trange() const override { return get_levtr(results[cur].out_id_ltr).trange; }
-    Datetime get_datetime() const override { return results[cur].out_datetime; }
-    wreport::Varcode get_varcode() const override { return (wreport::Varcode)results[cur].out_varcode; }
-    wreport::Var get_var() const override { return Var(varinfo(results[cur].out_varcode), results[cur].out_value); }
-    int attr_reference_id() const override { return results[cur].out_id_data; }
+    Level get_level() const override { return get_levtr(results[this->cur].out_id_ltr).level; }
+    Trange get_trange() const override { return get_levtr(results[this->cur].out_id_ltr).trange; }
+    Datetime get_datetime() const override { return results[this->cur].out_datetime; }
+    wreport::Varcode get_varcode() const override { return (wreport::Varcode)results[this->cur].out_varcode; }
+    wreport::Var get_var() const override { return Var(varinfo(results[this->cur].out_varcode), results[this->cur].out_value); }
+    int attr_reference_id() const override { return results[this->cur].out_id_data; }
 
 #if 0
 void Cursor::query_attrs(function<void(unique_ptr<Var>&&)> dest)
 {
-    db.query_attrs(results[cur].out_id_data, results[cur].out_varcode, dest);
+    db.query_attrs(results[this->cur].out_id_data, results[this->cur].out_varcode, dest);
 }
 
 void Cursor::attr_insert(const Values& attrs)
 {
-    db.attr_insert(results[cur].out_id_data, results[cur].out_varcode, attrs);
+    db.attr_insert(results[this->cur].out_id_data, results[this->cur].out_varcode, attrs);
 }
 
 void Cursor::attr_remove(const AttrList& qcs)
 {
-    db.attr_remove(results[cur].out_id_data, results[cur].out_varcode, qcs);
+    db.attr_remove(results[this->cur].out_id_data, results[this->cur].out_varcode, qcs);
 }
 #endif
 };
 
-struct Summary : public Base<CursorSummary>
+struct Summary : public OldBase<CursorSummary>
 {
-    using Base::Base;
+    using OldBase::OldBase;
     ~Summary() {}
     void to_record(Record& rec) override
     {
@@ -353,8 +408,8 @@ struct Summary : public Base<CursorSummary>
 
         if (modifiers & DBA_DB_MODIFIER_SUMMARY_DETAILS)
         {
-            rec.seti("context_id", results[cur].out_id_data);
-            rec.set(DatetimeRange(results[cur].out_datetime, results[cur].out_datetimemax));
+            rec.seti("context_id", results[this->cur].out_id_data);
+            rec.set(DatetimeRange(results[this->cur].out_datetime, results[this->cur].out_datetimemax));
         }
     }
     unsigned test_iterate(FILE* dump=0) override
@@ -369,7 +424,7 @@ struct Summary : public Base<CursorSummary>
                 fprintf(dump, "%02d %s %03d %s %04d-%02d-%02d %02d:%02d:%02d  %04d-%02d-%02d %02d:%02d:%02d  %d\n",
                         r->enq("ana_id", -1),
                         r->enq("rep_memo", ""),
-                        (int)results[cur].out_id_ltr,
+                        (int)results[this->cur].out_id_ltr,
                         r->enq("var", ""),
                         r->enq("yearmin", 0), r->enq("monthmin", 0), r->enq("daymin", 0),
                         r->enq("hourmin", 0), r->enq("minumin", 0), r->enq("secmin", 0),
@@ -381,35 +436,35 @@ struct Summary : public Base<CursorSummary>
         return count;
     }
 
-    Level get_level() const override { return get_levtr(results[cur].out_id_ltr).level; }
-    Trange get_trange() const override { return get_levtr(results[cur].out_id_ltr).trange; }
+    Level get_level() const override { return get_levtr(results[this->cur].out_id_ltr).level; }
+    Trange get_trange() const override { return get_levtr(results[this->cur].out_id_ltr).trange; }
     DatetimeRange get_datetimerange() const override
     {
-        return DatetimeRange(results[cur].out_datetime, results[cur].out_datetimemax);
+        return DatetimeRange(results[this->cur].out_datetime, results[this->cur].out_datetimemax);
     }
-    wreport::Varcode get_varcode() const override { return (wreport::Varcode)results[cur].out_varcode; }
-    size_t get_count() const override { return results[cur].out_id_data; }
+    wreport::Varcode get_varcode() const override { return (wreport::Varcode)results[this->cur].out_varcode; }
+    size_t get_count() const override { return results[this->cur].out_id_data; }
 };
 
-struct Best : public Base<CursorData>
+struct Best : public OldBase<CursorData>
 {
-    using Base::Base;
+    using OldBase::OldBase;
     ~Best() {}
 
     void to_record(Record& rec) override
     {
         to_record_pseudoana(rec);
         to_record_repinfo(rec);
-        if (results[cur].out_id_ltr == -1)
+        if (results[this->cur].out_id_ltr == -1)
             rec.unset("context_id");
         else
-            rec.seti("context_id", results[cur].out_id_data);
+            rec.seti("context_id", results[this->cur].out_id_data);
         to_record_varcode(rec);
         to_record_ltr(rec);
         to_record_datetime(rec);
 
         rec.clear_vars();
-        rec.set(newvar(results[cur].out_varcode, results[cur].out_value));
+        rec.set(newvar(results[this->cur].out_varcode, results[this->cur].out_value));
     }
     unsigned test_iterate(FILE* dump=0) override
     {
@@ -419,18 +474,18 @@ struct Best : public Base<CursorData>
         {
             /*
             if (dump)
-                fprintf(dump, "%03d\n", (int)results[cur].out_id_data);
+                fprintf(dump, "%03d\n", (int)results[this->cur].out_id_data);
                 */
         }
         return count;
     }
 
-    Level get_level() const override { return get_levtr(results[cur].out_id_ltr).level; }
-    Trange get_trange() const override { return get_levtr(results[cur].out_id_ltr).trange; }
-    Datetime get_datetime() const override { return results[cur].out_datetime; }
-    wreport::Varcode get_varcode() const override { return (wreport::Varcode)results[cur].out_varcode; }
-    wreport::Var get_var() const override { return Var(varinfo(results[cur].out_varcode), results[cur].out_value); }
-    int attr_reference_id() const override { return results[cur].out_id_data; }
+    Level get_level() const override { return get_levtr(results[this->cur].out_id_ltr).level; }
+    Trange get_trange() const override { return get_levtr(results[this->cur].out_id_ltr).trange; }
+    Datetime get_datetime() const override { return results[this->cur].out_datetime; }
+    wreport::Varcode get_varcode() const override { return (wreport::Varcode)results[this->cur].out_varcode; }
+    wreport::Var get_var() const override { return Var(varinfo(results[this->cur].out_varcode), results[this->cur].out_value); }
+    int attr_reference_id() const override { return results[this->cur].out_id_data; }
 
 
     void load(const QueryBuilder& qb) override

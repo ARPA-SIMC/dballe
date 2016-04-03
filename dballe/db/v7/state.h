@@ -7,6 +7,8 @@
 #include <unordered_set>
 
 namespace dballe {
+struct Record;
+
 namespace db {
 namespace v7 {
 
@@ -35,6 +37,14 @@ struct StationDesc
 
     int compare(const StationDesc&) const;
     bool operator<(const StationDesc& o) const { return compare(o) < 0; }
+
+    /**
+     * Set coords and ident to rec.
+     *
+     * rep is not set, because StationDesc does not contain rep_memo
+     * information.
+     */
+    void to_record(Record& rec) const;
 };
 
 struct StationState : public ItemState

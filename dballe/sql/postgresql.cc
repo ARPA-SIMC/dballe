@@ -320,6 +320,62 @@ void PostgreSQLConnection::discard_all_input_nothrow() noexcept
     }
 }
 
+void PostgreSQLConnection::run_single_row_mode(const std::string& query_desc, std::function<void(const postgresql::Result&)> dest)
+{
+    using namespace dballe::sql::postgresql;
+
+    // http://www.postgresql.org/docs/9.4/static/libpq-single-row-mode.html
+    if (!PQsetSingleRowMode(db))
+    {
+        string errmsg(PQerrorMessage(db));
+        cancel_running_query_nothrow();
+        discard_all_input_nothrow();
+        throw error_postgresql(errmsg, "cannot set single row mode for query " + query_desc);
+    }
+
+    while (true)
+    {
+        Result res(PQgetResult(db));
+        if (!res) break;
+
+        // Note: Even when PQresultStatus indicates a fatal error, PQgetResult
+        // should be called until it returns a null pointer to allow libpq to
+        // process the error information completely.
+        //  (http://www.postgresql.org/docs/9.1/static/libpq-async.html)
+
+        // If we get what we don't want, cancel, flush our input and throw
+        if (PQresultStatus(res) == PGRES_SINGLE_TUPLE)
+        {
+            // Ok, we have a tuple
+        } else if (PQresultStatus(res) == PGRES_TUPLES_OK) {
+            // No more rows will arrive
+            continue;
+        } else {
+            // An error arrived
+            cancel_running_query_nothrow();
+            discard_all_input_nothrow();
+
+            switch (PQresultStatus(res))
+            {
+                case PGRES_COMMAND_OK:
+                    throw error_postgresql("command_ok", "no data returned by query " + query_desc);
+                default:
+                    throw error_postgresql(res, "executing " + query_desc);
+            }
+        }
+
+        try {
+            dest(res);
+        } catch (std::exception& e) {
+            // If we get an exception from downstream, cancel, flush all
+            // input and rethrow it
+            cancel_running_query_nothrow();
+            discard_all_input_nothrow();
+            throw;
+        }
+    }
+}
+
 bool PostgreSQLConnection::has_table(const std::string& name)
 {
     using namespace postgresql;

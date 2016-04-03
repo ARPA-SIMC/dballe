@@ -120,6 +120,30 @@ void Driver::run_built_query_v7(
     });
 }
 
+void Driver::run_station_query(const v7::QueryBuilder& qb, std::function<void(int id, const StationDesc&)> dest)
+{
+    auto stm = conn.sqlitestatement(qb.sql_query);
+
+    if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
+
+    StationDesc desc;
+    stm->execute([&]() {
+        int output_seq = 0;
+
+        int id = stm->column_int(output_seq++);
+        desc.rep = stm->column_int(output_seq++);
+        desc.coords.lat = stm->column_int(output_seq++);
+        desc.coords.lon = stm->column_int(output_seq++);
+
+        if (stm->column_isnull(output_seq))
+            desc.ident.clear();
+        else
+            desc.ident = stm->column_string(output_seq);
+
+        dest(id, desc);
+    });
+}
+
 void Driver::create_tables_v7()
 {
     conn.exec(R"(
