@@ -13,7 +13,7 @@
 #include "dballe/core/query.h"
 #include "dballe/core/structbuf.h"
 #include "wreport/var.h"
-
+#include <unordered_map>
 #include <cstdio>
 #include <cstring>
 
@@ -77,29 +77,22 @@ struct Base : public Interface
     virtual void load(const QueryBuilder& qb) = 0;
 };
 
-struct Stations : public Base<CursorStation>
+
+template<typename Interface, typename Result>
+struct VectorBase : public Base<Interface>
 {
-    struct Item
-    {
-        int id;
-        StationDesc station;
+    using Base<Interface>::Base;
 
-        Item(int id, const StationDesc& station) : id(id), station(station) {}
-    };
-
-    std::vector<Item> stations;
-    std::vector<Item>::const_iterator cur;
+    std::vector<Result> results;
+    typename std::vector<Result>::const_iterator cur;
     bool at_start;
-
-    using Base::Base;
-    ~Stations() {}
 
     int remaining() const override
     {
         if (at_start)
-            return stations.size();
+            return results.size();
         else
-            return stations.end() - cur - 1;
+            return results.end() - cur - 1;
     }
 
     bool next() override
@@ -108,41 +101,30 @@ struct Stations : public Base<CursorStation>
             at_start = false;
         else
             ++cur;
-        return cur != stations.end();
+        return cur != results.end();
     }
 
     void discard_rest() override
     {
         at_start = false;
-        cur = stations.end();
+        cur = results.end();
+    }
+
+    int get_station_id() const override { return cur->get_station_id(); }
+    const char* get_rep_memo() const override { return this->db.repinfo().get_rep_memo(cur->get_station().rep); }
+    double get_lat() const override { return cur->get_station().coords.dlat(); }
+    double get_lon() const override { return cur->get_station().coords.dlon(); }
+    const char* get_ident(const char* def=0) const override
+    {
+        if (cur->get_station().ident.is_missing())
+            return def;
+        else
+            return cur->get_station().ident.get();
     }
 
     void to_record(Record& rec) override
     {
-        this->db.repinfo().to_record(cur->station.rep, rec);
-        cur->station.to_record(rec);
-        this->db.station().add_station_vars(cur->id, rec);
-    }
-
-    int get_station_id() const override { return cur->id; }
-    const char* get_rep_memo() const override { return this->db.repinfo().get_rep_memo(cur->station.rep); }
-    double get_lat() const override { return cur->station.coords.dlat(); }
-    double get_lon() const override { return cur->station.coords.dlon(); }
-    const char* get_ident(const char* def=0) const override
-    {
-        if (cur->station.ident.is_missing())
-            return def;
-        else
-            return cur->station.ident.get();
-    }
-
-    void load(const QueryBuilder& qb) override
-    {
-        this->db.driver().run_station_query(qb, [&](int id, const StationDesc& desc) {
-            stations.emplace_back(id, desc);
-        });
-        at_start = true;
-        cur = stations.begin();
+        cur->to_record(this->db, rec);
     }
 
     unsigned test_iterate(FILE* dump=0) override
@@ -150,11 +132,130 @@ struct Stations : public Base<CursorStation>
         unsigned count;
         for (count = 0; next(); ++count)
             if (dump)
-                fprintf(dump, "%02d %3d %02.4f %02.4f %-10s\n",
-                        cur->id, cur->station.rep, cur->station.coords.dlat(), cur->station.coords.dlon(), cur->station.ident.get());
+                cur->dump(dump);
         return count;
     }
 };
+
+
+struct StationResult
+{
+    int id;
+    StationDesc station;
+
+    StationResult(int id, const StationDesc& station) : id(id), station(station) {}
+
+    void dump(FILE* out) const
+    {
+        fprintf(out, "%02d %3d %02.4f %02.4f %-10s\n", id, station.rep, station.coords.dlat(), station.coords.dlon(), station.ident.get());
+    }
+
+    int get_station_id() const { return id; }
+    const StationDesc& get_station() const { return station; }
+    void to_record(v7::DB& db, Record& rec) const
+    {
+        rec.seti("ana_id", id);
+        db.repinfo().to_record(station.rep, rec);
+        station.to_record(rec);
+        db.station().add_station_vars(id, rec);
+    }
+};
+
+struct Stations : public VectorBase<CursorStation, StationResult>
+{
+    using VectorBase::VectorBase;
+
+    void load(const QueryBuilder& qb) override
+    {
+        results.clear();
+        this->db.driver().run_station_query(qb, [&](int id, const StationDesc& desc) {
+            results.emplace_back(id, desc);
+        });
+        at_start = true;
+        cur = results.begin();
+    }
+};
+
+
+struct StationDataResult
+{
+    typedef std::unordered_map<int, StationDesc>::iterator station_t;
+    station_t station;
+    int id_data;
+    Var* var;
+
+    StationDataResult(station_t station, int id_data, Var* var) : station(station), id_data(id_data), var(var) {}
+    StationDataResult(const StationDataResult&) = delete;
+    StationDataResult(StationDataResult&& o) : station(o.station), id_data(o.id_data), var(o.var) { o.var = nullptr; }
+    StationDataResult& operator=(const StationDataResult&) = delete;
+    StationDataResult& operator=(StationDataResult&& o)
+    {
+        if (this == &o) return *this;
+        delete var;
+        var = o.var;
+        o.var = nullptr;
+        station = o.station;
+        id_data = o.id_data;
+        return *this;
+    }
+    ~StationDataResult() { delete var; }
+
+    int get_station_id() const { return station->first; }
+    const StationDesc& get_station() const { return station->second; }
+
+    void to_record(v7::DB& db, Record& rec) const
+    {
+        rec.seti("ana_id", station->first);
+        db.repinfo().to_record(station->second.rep, rec);
+        station->second.to_record(rec);
+        rec.seti("context_id", id_data);
+
+        char bname[7];
+        snprintf(bname, 7, "B%02d%03d", WR_VAR_X(var->code()), WR_VAR_Y(var->code()));
+        rec.setc("var", bname);
+
+        rec.clear_vars();
+        // TODO: this could be optimized with a move, but it would mean that
+        // to_record can only be called once. That is currently the case, but
+        // not explicitly specified anywhere, so the change needs to happen
+        // when we can check what breaks.
+        rec.set(*var);
+    }
+
+    void dump(FILE* out) const
+    {
+        fprintf(out, "%02d %3d %02.4f %02.4f %-10s %4d ",
+                station->first, station->second.rep, station->second.coords.dlat(), station->second.coords.dlon(), station->second.ident.get(), id_data);
+        var->print_without_attrs(out, "\n");
+    }
+};
+
+
+struct StationData : public VectorBase<CursorStationData, StationDataResult>
+{
+    using VectorBase::VectorBase;
+
+    std::unordered_map<int, StationDesc> stations;
+
+    void load(const QueryBuilder& qb) override
+    {
+        stations.clear();
+        results.clear();
+        this->db.driver().run_station_data_query(qb, [&](int id_station, const StationDesc& station, int id_data, std::unique_ptr<wreport::Var> var) {
+            std::unordered_map<int, StationDesc>::iterator i = stations.find(id_station);
+            if (i == stations.end())
+                tie(i, std::ignore) = stations.insert(make_pair(id_station, station));
+            results.emplace_back(i, id_data, var.release());
+        });
+        at_start = true;
+        cur = results.begin();
+    }
+
+    wreport::Varcode get_varcode() const override { return cur->var->code(); }
+    wreport::Var get_var() const override { return *cur->var; }
+    int attr_reference_id() const override { return cur->id_data; }
+};
+
 
 template<typename Interface>
 struct OldBase : public Base<Interface>
@@ -286,48 +387,6 @@ struct OldBase : public Base<Interface>
     {
         this->db.station().add_station_vars(results[this->cur].out_ana_id, rec);
     }
-};
-
-struct StationData : public OldBase<CursorStationData>
-{
-    using OldBase::OldBase;
-    ~StationData() {}
-    void to_record(Record& rec) override
-    {
-        to_record_pseudoana(rec);
-        to_record_repinfo(rec);
-        if (results[this->cur].out_id_ltr == -1)
-            rec.unset("context_id");
-        else
-            rec.seti("context_id", results[this->cur].out_id_data);
-        to_record_varcode(rec);
-        rec.clear_vars();
-        rec.set(newvar(results[this->cur].out_varcode, results[this->cur].out_value));
-    }
-    unsigned test_iterate(FILE* dump=0) override
-    {
-        //auto r = Record::create();
-        unsigned count;
-        for (count = 0; next(); ++count)
-        {
-            if (dump)
-            {
-    /*
-                to_record(r);
-                fprintf(dump, "%02d %06d %06d %-10s\n",
-                        r.get(DBA_KEY_ANA_ID, -1),
-                        r.get(DBA_KEY_LAT, 0.0),
-                        r.get(DBA_KEY_LON, 0.0),
-                        r.get(DBA_KEY_IDENT, ""));
-                        */
-            }
-        }
-        return count;
-    }
-
-    wreport::Varcode get_varcode() const override { return (wreport::Varcode)results[this->cur].out_varcode; }
-    wreport::Var get_var() const override { return Var(varinfo(results[this->cur].out_varcode), results[this->cur].out_value); }
-    int attr_reference_id() const override { return results[this->cur].out_id_data; }
 };
 
 struct Data : public OldBase<CursorData>

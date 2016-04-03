@@ -5,6 +5,7 @@
 #include "data.h"
 #include "dballe/db/v7/qbuilder.h"
 #include "dballe/sql/sqlite.h"
+#include "dballe/var.h"
 #include <algorithm>
 #include <cstring>
 
@@ -128,19 +129,48 @@ void Driver::run_station_query(const v7::QueryBuilder& qb, std::function<void(in
 
     StationDesc desc;
     stm->execute([&]() {
-        int output_seq = 0;
+        int id = stm->column_int(0);
+        desc.rep = stm->column_int(1);
+        desc.coords.lat = stm->column_int(2);
+        desc.coords.lon = stm->column_int(3);
 
-        int id = stm->column_int(output_seq++);
-        desc.rep = stm->column_int(output_seq++);
-        desc.coords.lat = stm->column_int(output_seq++);
-        desc.coords.lon = stm->column_int(output_seq++);
-
-        if (stm->column_isnull(output_seq))
+        if (stm->column_isnull(4))
             desc.ident.clear();
         else
-            desc.ident = stm->column_string(output_seq);
+            desc.ident = stm->column_string(4);
 
         dest(id, desc);
+    });
+}
+
+void Driver::run_station_data_query(const v7::QueryBuilder& qb, std::function<void(int id_station, const StationDesc& station, int id_data, std::unique_ptr<wreport::Var> var)> dest)
+{
+    auto stm = conn.sqlitestatement(qb.sql_query);
+
+    if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
+
+    StationDesc station;
+    int cur_id_station = -1;
+
+    stm->execute([&]() {
+        int id_station = stm->column_int(0);
+        if (id_station != cur_id_station)
+        {
+            station.rep = stm->column_int(1);
+            station.coords.lat = stm->column_int(2);
+            station.coords.lon = stm->column_int(3);
+            if (stm->column_isnull(4))
+                station.ident.clear();
+            else
+                station.ident = stm->column_string(4);
+            cur_id_station = id_station;
+        }
+
+        wreport::Varcode code = stm->column_int(5);
+        int id_data = stm->column_int(6);
+        const char* value = stm->column_string(7);
+
+        dest(id_station, station, id_data, newvar(code, value));
     });
 }
 

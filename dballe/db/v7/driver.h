@@ -85,7 +85,12 @@ public:
     /**
      * Run a station query, iterating on the resulting stations
      */
-    virtual void run_station_query(const v7::QueryBuilder& qb, std::function<void(int id, const StationDesc&)>) = 0;
+    virtual void run_station_query(const v7::QueryBuilder& qb, std::function<void(int id_station, const StationDesc& station)>) = 0;
+
+    /**
+     * Run a station data query, iterating on the resulting variables
+     */
+    virtual void run_station_data_query(const v7::QueryBuilder& qb, std::function<void(int id_station, const StationDesc& station, int id_data, std::unique_ptr<wreport::Var> var)>) = 0;
 
     /// Create all missing tables for a DB with the given format
     void create_tables(db::Format format);
