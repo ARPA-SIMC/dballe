@@ -266,7 +266,6 @@ struct StationData : public BaseData<CursorStationData, StationDataResult>
 
 struct DataResult : public StationDataResult
 {
-    typedef std::unordered_map<int, LevTrDesc>::iterator levtr_t;
     int id_levtr;
     Datetime datetime;
 
@@ -401,187 +400,98 @@ struct Best : public Data
 };
 
 
-template<typename Interface>
-struct OldBase : public Base<Interface>
+struct SummaryResult
 {
-    /// Current result element being iterated
-    int cur = -1;
+    typedef std::unordered_map<int, StationDesc>::iterator station_t;
+    station_t station;
+    int id_levtr;
+    wreport::Varcode code;
+    DatetimeRange datetime;
+    size_t count = 0;
 
-    using Base<Interface>::Base;
+    SummaryResult(station_t station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t count)
+        : station(station), id_levtr(id_levtr), code(code), datetime(datetime), count(count) {}
 
-    /// Results from the query
-    Structbuf<v7::SQLRecordV7> results;
+    int get_station_id() const { return station->first; }
+    const StationDesc& get_station() const { return station->second; }
 
-    /// Prefetched mapping between levtr IDs and their values
-    std::map<int, LevTrDesc> levtrs;
-
-    unsigned size() const { return results.size(); }
-
-    /**
-     * Get the number of rows still to be fetched
-     *
-     * @return
-     *   The number of rows still to be queried.  The value is undefined if no
-     *   query has been successfully peformed yet using this cursor.
-     */
-    int remaining() const override
+    void to_record(v7::DB& db, Record& rec) const
     {
-        if (cur == -1) return size();
-        return size() - cur - 1;
-    }
+        rec.seti("ana_id", station->first);
+        db.repinfo().to_record(station->second.rep, rec);
+        station->second.to_record(rec);
 
-    bool next() override
-    {
-        ++cur;
-        return (size_t)cur < size();
-    }
-
-    void discard_rest() override { cur = size(); }
-
-    int get_station_id() const override { return results[this->cur].out_ana_id; }
-    double get_lat() const override { return (double)results[this->cur].out_lat / 100000.0; }
-    double get_lon() const override { return (double)results[this->cur].out_lon / 100000.0; }
-    const char* get_ident(const char* def=0) const override
-    {
-        if (results[this->cur].out_ident_size == -1 || results[this->cur].out_ident[0] == 0)
-            return def;
-        return results[this->cur].out_ident;
-    }
-    const char* get_rep_memo() const override
-    {
-        return this->db.repinfo().get_rep_memo(results[this->cur].out_rep_cod);
-    }
-
-    const LevTrDesc& get_levtr(int id) const
-    {
-        auto i = levtrs.find(id);
-        if (i == levtrs.end()) error_notfound::throwf("levtrs with id %d not found", id);
-        return i->second;
-    }
-
-    void load(const QueryBuilder& qb)
-    {
-        set<int> ids;
-        this->db.driver().run_built_query_v7(qb, [&](v7::SQLRecordV7& rec) {
-            results.append(rec);
-            if (qb.select_varinfo) ids.insert(rec.out_id_ltr);
-        });
-        // We are done adding, prepare the structbuf for reading
-        results.ready_to_read();
-        // And prefetch the LevTr data
-        this->db.levtr().prefetch_ids(ids, [&](int id, const LevTrDesc& ltr) { levtrs.insert(make_pair(id, ltr)); });
-    }
-
-    void to_record_pseudoana(Record& rec)
-    {
-        rec.seti("ana_id", results[this->cur].out_ana_id);
-        rec.seti("lat", results[this->cur].out_lat);
-        rec.seti("lon", results[this->cur].out_lon);
-        if (results[this->cur].out_ident_size != -1 && results[this->cur].out_ident[0] != 0)
-        {
-            rec.setc("ident", results[this->cur].out_ident);
-            rec.seti("mobile", 1);
-        } else {
-            rec.unset("ident");
-            rec.seti("mobile", 0);
-        }
-    }
-
-    void to_record_repinfo(Record& rec)
-    {
-        this->db.repinfo().to_record(results[this->cur].out_rep_cod, rec);
-    }
-
-    void to_record_ltr(Record& rec)
-    {
-        if (results[this->cur].out_id_ltr != -1)
-        {
-            auto& ltr = levtrs[results[this->cur].out_id_ltr];
-            rec.set(ltr.level);
-            rec.set(ltr.trange);
-        }
-        else
-        {
-            rec.unset("leveltype1");
-            rec.unset("l1");
-            rec.unset("leveltype2");
-            rec.unset("l2");
-            rec.unset("pindicator");
-            rec.unset("p1");
-            rec.unset("p2");
-        }
-    }
-
-    void to_record_datetime(Record& rec)
-    {
-        rec.set(results[this->cur].out_datetime);
-    }
-
-    void to_record_varcode(Record& rec)
-    {
         char bname[7];
-        snprintf(bname, 7, "B%02d%03d",
-                WR_VAR_X(results[this->cur].out_varcode),
-                WR_VAR_Y(results[this->cur].out_varcode));
+        snprintf(bname, 7, "B%02d%03d", WR_VAR_X(code), WR_VAR_Y(code));
         rec.setc("var", bname);
+
+        if (count > 0)
+        {
+            rec.seti("context_id", count);
+            rec.set(datetime);
+        }
     }
 
-    /// Query extra station info and add it to \a rec
-    void add_station_info(Record& rec)
+    void dump(FILE* out) const
     {
-        this->db.station().add_station_vars(results[this->cur].out_ana_id, rec);
+        fprintf(out, "%02d %3d %02.4f %02.4f %-10s %4d %d%02d%03d\n",
+                station->first, station->second.rep, station->second.coords.dlat(), station->second.coords.dlon(), station->second.ident.get(), id_levtr, WR_VAR_FXY(code));
     }
 };
 
-struct Summary : public OldBase<CursorSummary>
+struct Summary : public VectorBase<CursorSummary, SummaryResult>
 {
-    using OldBase::OldBase;
-    ~Summary() {}
-    void to_record(Record& rec) override
-    {
-        to_record_pseudoana(rec);
-        to_record_repinfo(rec);
-        to_record_varcode(rec);
-        to_record_ltr(rec);
+    using VectorBase::VectorBase;
 
-        if (modifiers & DBA_DB_MODIFIER_SUMMARY_DETAILS)
-        {
-            rec.seti("context_id", results[this->cur].out_id_data);
-            rec.set(DatetimeRange(results[this->cur].out_datetime, results[this->cur].out_datetimemax));
-        }
-    }
-    unsigned test_iterate(FILE* dump=0) override
+    std::unordered_map<int, StationDesc> stations;
+    std::unordered_map<int, LevTrDesc> levtrs;
+
+    const LevTrDesc& get_levtr(int id_levtr) const
     {
-        auto r = Record::create();
-        unsigned count;
-        for (count = 0; next(); ++count)
-        {
-            if (dump)
-            {
-                to_record(*r);
-                fprintf(dump, "%02d %s %03d %s %04d-%02d-%02d %02d:%02d:%02d  %04d-%02d-%02d %02d:%02d:%02d  %d\n",
-                        r->enq("ana_id", -1),
-                        r->enq("rep_memo", ""),
-                        (int)results[this->cur].out_id_ltr,
-                        r->enq("var", ""),
-                        r->enq("yearmin", 0), r->enq("monthmin", 0), r->enq("daymin", 0),
-                        r->enq("hourmin", 0), r->enq("minumin", 0), r->enq("secmin", 0),
-                        r->enq("yearmax", 0), r->enq("monthmax", 0), r->enq("daymax", 0),
-                        r->enq("hourmax", 0), r->enq("minumax", 0), r->enq("secmax", 0),
-                        r->enq("limit", -1));
-            }
-        }
-        return count;
+        std::unordered_map<int, LevTrDesc>::const_iterator li = levtrs.find(id_levtr);
+        // We prefetch levtr info for all IDs, so we should always find the levtr here
+        assert(li != levtrs.end());
+        return li->second;
     }
 
-    Level get_level() const override { return get_levtr(results[this->cur].out_id_ltr).level; }
-    Trange get_trange() const override { return get_levtr(results[this->cur].out_id_ltr).trange; }
+    Level get_level() const override { return get_levtr(cur->id_levtr).level; }
+    Trange get_trange() const override { return get_levtr(cur->id_levtr).trange; }
+
     DatetimeRange get_datetimerange() const override
     {
-        return DatetimeRange(results[this->cur].out_datetime, results[this->cur].out_datetimemax);
+        return this->cur->datetime;
     }
-    wreport::Varcode get_varcode() const override { return (wreport::Varcode)results[this->cur].out_varcode; }
-    size_t get_count() const override { return results[this->cur].out_id_data; }
+    wreport::Varcode get_varcode() const override { return this->cur->code; }
+    size_t get_count() const override { return this->cur->count; }
+
+    void to_record(Record& rec) override
+    {
+        VectorBase::to_record(rec);
+        const LevTrDesc& levtr = get_levtr(cur->id_levtr);
+        rec.set_level(levtr.level);
+        rec.set_trange(levtr.trange);
+    }
+
+    void load(const SummaryQueryBuilder& qb)
+    {
+        stations.clear();
+        levtrs.clear();
+        results.clear();
+        set<int> ids;
+        this->db.driver().run_summary_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t count) {
+            std::unordered_map<int, StationDesc>::iterator i = stations.find(id_station);
+            if (i == stations.end())
+                tie(i, std::ignore) = stations.insert(make_pair(id_station, station));
+            results.emplace_back(i, id_levtr, code, datetime, count);
+            ids.insert(id_levtr);
+        });
+        at_start = true;
+        cur = results.begin();
+
+        this->db.levtr().prefetch_ids(ids, [&](int id, const LevTrDesc& ltr) {
+            levtrs.insert(make_pair(id, ltr));
+        });
+    }
 };
 
 }

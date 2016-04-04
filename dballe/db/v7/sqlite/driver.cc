@@ -56,72 +56,6 @@ std::unique_ptr<v7::Data> Driver::create_data()
     return unique_ptr<v7::Data>(new SQLiteData(conn));
 }
 
-void Driver::run_built_query_v7(
-        const v7::QueryBuilder& qb,
-        std::function<void(v7::SQLRecordV7& rec)> dest)
-{
-    auto stm = conn.sqlitestatement(qb.sql_query);
-
-    if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
-
-    v7::SQLRecordV7 rec;
-    stm->execute([&]() {
-        int output_seq = 0;
-
-        if (qb.select_station)
-        {
-            rec.out_ana_id = stm->column_int(output_seq++);
-            rec.out_rep_cod = stm->column_int(output_seq++);
-            rec.out_lat = stm->column_int(output_seq++);
-            rec.out_lon = stm->column_int(output_seq++);
-            if (stm->column_isnull(output_seq))
-            {
-                rec.out_ident_size = -1;
-                rec.out_ident[0] = 0;
-            } else {
-                const char* ident = stm->column_string(output_seq);
-                rec.out_ident_size = min(strlen(ident), (string::size_type)63);
-                memcpy(rec.out_ident, ident, rec.out_ident_size);
-                rec.out_ident[rec.out_ident_size] = 0;
-            }
-            ++output_seq;
-        }
-
-        if (qb.select_varinfo)
-        {
-            if (!qb.query_station_vars)
-                rec.out_id_ltr = stm->column_int(output_seq++);
-            rec.out_varcode = stm->column_int(output_seq++);
-        }
-
-        if (qb.select_data_id)
-            rec.out_id_data = stm->column_int(output_seq++);
-
-        if (qb.select_data)
-        {
-            if (!qb.query_station_vars)
-                rec.out_datetime = stm->column_datetime(output_seq++);
-
-            const char* value = stm->column_string(output_seq++);
-            unsigned val_size = min(strlen(value), (string::size_type)255);
-            memcpy(rec.out_value, value, val_size);
-            rec.out_value[val_size] = 0;
-        }
-
-        if (qb.select_summary_details)
-        {
-            rec.out_id_data = stm->column_int(output_seq++);
-            if (!qb.query_station_vars)
-            {
-                rec.out_datetime = stm->column_datetime(output_seq++);
-                rec.out_datetimemax = stm->column_datetime(output_seq++);
-            }
-        }
-
-        dest(rec);
-    });
-}
-
 void Driver::run_station_query(const v7::StationQueryBuilder& qb, std::function<void(int id, const StationDesc&)> dest)
 {
     auto stm = conn.sqlitestatement(qb.sql_query);
@@ -191,7 +125,6 @@ void Driver::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(i
 
     StationDesc station;
     int cur_id_station = -1;
-
     stm->execute([&]() {
         wreport::Varcode code = stm->column_int(6);
         const char* value = stm->column_string(9);
@@ -223,6 +156,44 @@ void Driver::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(i
         dest(id_station, station, id_levtr, datetime, id_data, move(var));
     });
 }
+
+void Driver::run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<void(int id_station, const StationDesc& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)> dest)
+{
+    auto stm = conn.sqlitestatement(qb.sql_query);
+
+    if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
+
+    StationDesc station;
+    int cur_id_station = -1;
+    stm->execute([&]() {
+        int id_station = stm->column_int(0);
+        if (id_station != cur_id_station)
+        {
+            station.rep = stm->column_int(1);
+            station.coords.lat = stm->column_int(2);
+            station.coords.lon = stm->column_int(3);
+            if (stm->column_isnull(4))
+                station.ident.clear();
+            else
+                station.ident = stm->column_string(4);
+            cur_id_station = id_station;
+        }
+
+        int id_levtr = stm->column_int(5);
+        wreport::Varcode code = stm->column_int(6);
+
+        size_t count = 0;
+        DatetimeRange datetime;
+        if (qb.select_summary_details)
+        {
+            count = stm->column_int(7);
+            datetime = DatetimeRange(stm->column_datetime(8), stm->column_datetime(9));
+        }
+
+        dest(id_station, station, id_levtr, code, datetime, count);
+    });
+}
+
 
 void Driver::create_tables_v7()
 {
