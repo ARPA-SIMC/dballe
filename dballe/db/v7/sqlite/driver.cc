@@ -154,6 +154,16 @@ void Driver::run_station_data_query(const v7::DataQueryBuilder& qb, std::functio
     int cur_id_station = -1;
 
     stm->execute([&]() {
+        wreport::Varcode code = stm->column_int(5);
+        const char* value = stm->column_string(7);
+        auto var = newvar(code, value);
+        if (qb.select_attrs)
+            values::Decoder::decode_attrs(stm->column_blob(8), *var);
+
+        // Postprocessing filter of attr_filter
+        if (qb.attr_filter && !qb.match_attrs(*var))
+            return;
+
         int id_station = stm->column_int(0);
         if (id_station != cur_id_station)
         {
@@ -167,11 +177,9 @@ void Driver::run_station_data_query(const v7::DataQueryBuilder& qb, std::functio
             cur_id_station = id_station;
         }
 
-        wreport::Varcode code = stm->column_int(5);
         int id_data = stm->column_int(6);
-        const char* value = stm->column_string(7);
 
-        dest(id_station, station, id_data, newvar(code, value));
+        dest(id_station, station, id_data, move(var));
     });
 }
 
@@ -185,6 +193,16 @@ void Driver::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(i
     int cur_id_station = -1;
 
     stm->execute([&]() {
+        wreport::Varcode code = stm->column_int(6);
+        const char* value = stm->column_string(9);
+        auto var = newvar(code, value);
+        if (qb.select_attrs)
+            values::Decoder::decode_attrs(stm->column_blob(10), *var);
+
+        // Postprocessing filter of attr_filter
+        if (qb.attr_filter && !qb.match_attrs(*var))
+            return;
+
         int id_station = stm->column_int(0);
         if (id_station != cur_id_station)
         {
@@ -199,15 +217,8 @@ void Driver::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(i
         }
 
         int id_levtr = stm->column_int(5);
-        wreport::Varcode code = stm->column_int(6);
         int id_data = stm->column_int(7);
         Datetime datetime = stm->column_datetime(8);
-        const char* value = stm->column_string(9);
-
-        auto var = newvar(code, value);
-
-        if (qb.select_attrs)
-            values::Decoder::decode_attrs(stm->column_blob(10), *var);
 
         dest(id_station, station, id_levtr, datetime, id_data, move(var));
     });

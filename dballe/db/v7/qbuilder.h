@@ -7,6 +7,8 @@
 #include <regex.h>
 
 namespace dballe {
+struct Varmatch;
+
 namespace db {
 namespace v7 {
 
@@ -88,6 +90,9 @@ struct StationQueryBuilder : public QueryBuilder
 
 struct DataQueryBuilder : public QueryBuilder
 {
+    /// Attribute filter, if requested
+    Varmatch* attr_filter = nullptr;
+
     /// True if we also query attributes of data
     bool query_attrs;
 
@@ -95,8 +100,12 @@ struct DataQueryBuilder : public QueryBuilder
     bool select_attrs = false;
 
     DataQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars, bool query_attrs);
+    ~DataQueryBuilder();
 
     // bool add_attrfilter_where(const char* tbl);
+
+    /// Match the attributes of var against attr_filter
+    bool match_attrs(const wreport::Var& var) const;
 
     virtual void build_select();
     virtual bool build_where();

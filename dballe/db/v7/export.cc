@@ -132,7 +132,6 @@ bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& quer
     // queries
     std::vector<DataRow> results;
     driver().run_data_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
-        // TODO: filter on attr_filter (inside run_data_query)
         results.emplace_back(id_station, station, id_levtr, datetime, id_data, move(var));
     });
 

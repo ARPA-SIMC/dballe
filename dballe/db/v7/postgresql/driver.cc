@@ -192,6 +192,16 @@ void Driver::run_station_data_query(const v7::DataQueryBuilder& qb, std::functio
     conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
         for (unsigned row = 0; row < res.rowcount(); ++row)
         {
+            wreport::Varcode code = res.get_int4(row, 5);
+            const char* value = res.get_string(row, 7);
+            auto var = newvar(code, value);
+            if (qb.select_attrs)
+                values::Decoder::decode_attrs(res.get_bytea(row, 8), *var);
+
+            // Postprocessing filter of attr_filter
+            if (qb.attr_filter && !qb.match_attrs(*var))
+                return;
+
             int id_station = res.get_int4(row, 0);
             if (id_station != cur_id_station)
             {
@@ -205,11 +215,9 @@ void Driver::run_station_data_query(const v7::DataQueryBuilder& qb, std::functio
                 cur_id_station = id_station;
             }
 
-            wreport::Varcode code = res.get_int4(row, 5);
             int id_data = res.get_int4(row, 6);
-            const char* value = res.get_string(row, 7);
 
-            dest(id_station, station, id_data, newvar(code, value));
+            dest(id_station, station, id_data, move(var));
         }
     });
 }
@@ -235,6 +243,16 @@ void Driver::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(i
     conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
         for (unsigned row = 0; row < res.rowcount(); ++row)
         {
+            wreport::Varcode code = res.get_int4(row, 6);
+            const char* value = res.get_string(row, 9);
+            auto var = newvar(code, value);
+            if (qb.select_attrs)
+                values::Decoder::decode_attrs(res.get_bytea(row, 10), *var);
+
+            // Postprocessing filter of attr_filter
+            if (qb.attr_filter && !qb.match_attrs(*var))
+                return;
+
             int id_station = res.get_int4(row, 0);
             if (id_station != cur_id_station)
             {
@@ -249,15 +267,8 @@ void Driver::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(i
             }
 
             int id_levtr = res.get_int4(row, 5);
-            wreport::Varcode code = res.get_int4(row, 6);
             int id_data = res.get_int4(row, 7);
             Datetime datetime = res.get_timestamp(row, 8);
-            const char* value = res.get_string(row, 9);
-
-            auto var = newvar(code, value);
-
-            if (qb.select_attrs)
-                values::Decoder::decode_attrs(res.get_bytea(row, 10), *var);
 
             dest(id_station, station, id_levtr, datetime, id_data, move(var));
         }

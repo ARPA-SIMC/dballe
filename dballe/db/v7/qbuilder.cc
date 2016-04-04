@@ -2,6 +2,7 @@
 #include "dballe/core/defs.h"
 #include "dballe/core/aliases.h"
 #include "dballe/core/query.h"
+#include "dballe/core/varmatch.h"
 #include "dballe/var.h"
 #include "dballe/db/v7/repinfo.h"
 #include <wreport/var.h>
@@ -242,6 +243,10 @@ DataQueryBuilder::DataQueryBuilder(DB& db, const core::Query& query, unsigned in
 {
 }
 
+DataQueryBuilder::~DataQueryBuilder()
+{
+    delete attr_filter;
+}
 
 void QueryBuilder::build()
 {
@@ -346,6 +351,11 @@ void DataQueryBuilder::build_select()
     {
         sql_query.append(", d.attrs");
         select_attrs = true;
+        if (!query.attr_filter.empty())
+        {
+            delete attr_filter;
+            attr_filter = Varmatch::parse(query.attr_filter).release();
+        }
     }
     select_station = true;
     select_varinfo = true;
@@ -379,6 +389,14 @@ bool DataQueryBuilder::build_where()
     //has_where = add_attrfilter_where("d") || has_where;
 
     return has_where;
+}
+
+bool DataQueryBuilder::match_attrs(const Var& var) const
+{
+    for (const Var* a = var.next_attr(); a != NULL; a = a->next_attr())
+        if ((*attr_filter)(*a))
+            return true;
+    return false;
 }
 
 #if 0

@@ -1,7 +1,6 @@
 #include "cursor.h"
 #include "qbuilder.h"
 #include "db.h"
-#include "dballe/core/varmatch.h"
 #include "dballe/sql/sql.h"
 #include <dballe/db/v7/driver.h>
 #include "dballe/db/v7/repinfo.h"
@@ -232,21 +231,9 @@ struct StationDataResult
 template<typename Interface, typename Result>
 struct BaseData : public VectorBase<Interface, Result>
 {
-    std::unique_ptr<Varmatch> attr_filter;
-
     BaseData(DataQueryBuilder& qb, unsigned int modifiers)
         : VectorBase<Interface, Result>(qb.db, modifiers)
     {
-        if (!qb.query.attr_filter.empty())
-            attr_filter = Varmatch::parse(qb.query.attr_filter);
-    }
-
-    bool match_attrs(const Var& var)
-    {
-        for (const Var* a = var.next_attr(); a != NULL; a = a->next_attr())
-            if ((*attr_filter)(*a))
-                return true;
-        return false;
     }
 };
 
@@ -262,8 +249,6 @@ struct StationData : public BaseData<CursorStationData, StationDataResult>
         stations.clear();
         results.clear();
         this->db.driver().run_station_data_query(qb, [&](int id_station, const StationDesc& station, int id_data, std::unique_ptr<wreport::Var> var) {
-            // Apply attr_filter
-            if (attr_filter.get() && !match_attrs(*var)) return;
             std::unordered_map<int, StationDesc>::iterator i = stations.find(id_station);
             if (i == stations.end())
                 tie(i, std::ignore) = stations.insert(make_pair(id_station, station));
@@ -321,8 +306,6 @@ struct Data : public BaseData<CursorData, DataResult>
         results.clear();
         set<int> ids;
         this->db.driver().run_data_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
-            // Apply attr_filter
-            if (attr_filter.get() && !match_attrs(*var)) return;
             std::unordered_map<int, StationDesc>::iterator i = stations.find(id_station);
             if (i == stations.end())
                 tie(i, std::ignore) = stations.insert(make_pair(id_station, station));
@@ -402,8 +385,6 @@ struct Best : public Data
         results.clear();
         set<int> ids;
         this->db.driver().run_data_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
-            // Apply attr_filter
-            if (attr_filter.get() && !match_attrs(*var)) return;
             std::unordered_map<int, StationDesc>::iterator i = stations.find(id_station);
             if (i == stations.end())
                 tie(i, std::ignore) = stations.insert(make_pair(id_station, station));
