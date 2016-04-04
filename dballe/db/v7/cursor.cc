@@ -599,10 +599,10 @@ unique_ptr<CursorStation> run_station_query(DB& db, const core::Query& q, bool e
     return res;
 }
 
-unique_ptr<CursorStationData> run_station_data_query(DB& db, const core::Query& q, bool explain)
+unique_ptr<CursorStationData> run_station_data_query(DB& db, const core::Query& q, bool explain, bool with_attrs)
 {
     unsigned int modifiers = q.get_modifiers();
-    DataQueryBuilder qb(db, q, modifiers, true);
+    DataQueryBuilder qb(db, q, modifiers, true, with_attrs);
     qb.build();
 
     if (explain)
@@ -626,10 +626,10 @@ unique_ptr<CursorStationData> run_station_data_query(DB& db, const core::Query& 
     return res;
 }
 
-unique_ptr<CursorData> run_data_query(DB& db, const core::Query& q, bool explain)
+unique_ptr<CursorData> run_data_query(DB& db, const core::Query& q, bool explain, bool with_attrs)
 {
     unsigned int modifiers = q.get_modifiers();
-    DataQueryBuilder qb(db, q, modifiers, false);
+    DataQueryBuilder qb(db, q, modifiers, false, with_attrs);
     qb.build();
 
     if (explain)

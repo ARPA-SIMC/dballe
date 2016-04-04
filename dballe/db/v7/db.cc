@@ -270,7 +270,7 @@ std::unique_ptr<db::CursorStation> DB::query_stations(const Query& query)
 std::unique_ptr<db::CursorStationData> DB::query_station_data(const Query& query)
 {
     auto tr = trace.trace_query_station_data(query);
-    auto res = cursor::run_station_data_query(*this, core::Query::downcast(query), explain_queries);
+    auto res = cursor::run_station_data_query(*this, core::Query::downcast(query), explain_queries, false);
     tr->done();
     return move(res);
 }
@@ -278,7 +278,7 @@ std::unique_ptr<db::CursorStationData> DB::query_station_data(const Query& query
 std::unique_ptr<db::CursorData> DB::query_data(const Query& query)
 {
     auto tr = trace.trace_query_data(query);
-    auto res = cursor::run_data_query(*this, core::Query::downcast(query), explain_queries);
+    auto res = cursor::run_data_query(*this, core::Query::downcast(query), explain_queries, false);
     tr->done();
     return move(res);
 }

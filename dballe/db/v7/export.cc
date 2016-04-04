@@ -73,8 +73,7 @@ bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& quer
     unique_ptr<Msg> msg;
 
     // The big export query
-    // TODO: also select attrs
-    DataQueryBuilder qb(*this, core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT, false);
+    DataQueryBuilder qb(*this, core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT, false, true);
     qb.build();
 
     // Current context information used to detect context changes
@@ -105,6 +104,7 @@ bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& quer
         unique_ptr<Var> var(newvar(sqlrec.out_varcode, sqlrec.out_value));
 
         /* Load the attributes from the database */
+        // TODO: read attrs directly from query results
         da.read_attrs(sqlrec.out_id_data, [&](unique_ptr<Var> attr) { var->seta(move(attr)); });
 
         /* See if we have the start of a new message */

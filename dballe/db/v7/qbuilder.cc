@@ -237,8 +237,8 @@ QueryBuilder::QueryBuilder(DB& db, const core::Query& query, unsigned int modifi
 {
 }
 
-DataQueryBuilder::DataQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars)
-    : QueryBuilder(db, query, modifiers, query_station_vars)
+DataQueryBuilder::DataQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars, bool query_attrs)
+    : QueryBuilder(db, query, modifiers, query_station_vars), query_attrs(query_attrs)
 {
 }
 
@@ -342,6 +342,11 @@ void DataQueryBuilder::build_select()
         sql_query.append("SELECT s.id, s.rep, s.lat, s.lon, s.ident, d.code, d.id, d.value");
     else
         sql_query.append("SELECT s.id, s.rep, s.lat, s.lon, s.ident, d.id_levtr, d.code, d.id, d.datetime, d.value");
+    if (query_attrs || !query.attr_filter.empty())
+    {
+        sql_query.append(", d.attrs");
+        select_attrs = true;
+    }
     select_station = true;
     select_varinfo = true;
     select_data_id = true;
@@ -371,10 +376,38 @@ bool DataQueryBuilder::build_where()
     has_where = add_varcode_where("d") || has_where;
     has_where = add_repinfo_where("s") || has_where;
     has_where = add_datafilter_where("d") || has_where;
-    has_where = add_attrfilter_where("d") || has_where;
+    //has_where = add_attrfilter_where("d") || has_where;
 
     return has_where;
 }
+
+#if 0
+bool DataQueryBuilder::add_attrfilter_where(const char* tbl)
+{
+    if (query.attr_filter.empty()) return false;
+
+    const char *op, *value, *value1;
+    Varinfo info = decode_data_filter(query.attr_filter, &op, &value, &value1);
+
+    const char* atbl = query_station_vars ? "station_attr" : "attr";
+
+    sql_from.appendf(" JOIN %s %s_atf ON %s.id=%s_atf.id_data AND %s_atf.code=%d", atbl, tbl, tbl, tbl, tbl, info->code);
+    if (value[0] == '\'')
+        if (value1 == NULL)
+            sql_where.append_listf("%s_atf.value%s%s", tbl, op, value);
+        else
+            sql_where.append_listf("%s_atf.value BETWEEN %s AND %s", tbl, value, value1);
+    else
+    {
+        const char* type = (conn.server_type == ServerType::MYSQL) ? "SIGNED" : "INT";
+        if (value1 == NULL)
+            sql_where.append_listf("CAST(%s_atf.value AS %s)%s%s", tbl, type, op, value);
+        else
+            sql_where.append_listf("CAST(%s_atf.value AS %s) BETWEEN %s AND %s", tbl, type, value, value1);
+    }
+    return true;
+}
+#endif
 
 void DataQueryBuilder::build_order_by()
 {
@@ -418,6 +451,9 @@ void IdQueryBuilder::build_order_by()
 
 void SummaryQueryBuilder::build_select()
 {
+    if (!query.attr_filter.empty())
+        throw error_consistency("attr_filter is not supported on summary queries");
+
     if (modifiers & DBA_DB_MODIFIER_SUMMARY_DETAILS)
     {
         if (query_station_vars)
@@ -715,32 +751,6 @@ bool QueryBuilder::add_datafilter_where(const char* tbl)
             sql_where.append_listf("CAST(%s.value AS %s) BETWEEN %s AND %s", tbl, type, value, value1);
     }
 
-    return true;
-}
-
-bool QueryBuilder::add_attrfilter_where(const char* tbl)
-{
-    if (query.attr_filter.empty()) return false;
-
-    const char *op, *value, *value1;
-    Varinfo info = decode_data_filter(query.attr_filter, &op, &value, &value1);
-
-    const char* atbl = query_station_vars ? "station_attr" : "attr";
-
-    sql_from.appendf(" JOIN %s %s_atf ON %s.id=%s_atf.id_data AND %s_atf.code=%d", atbl, tbl, tbl, tbl, tbl, info->code);
-    if (value[0] == '\'')
-        if (value1 == NULL)
-            sql_where.append_listf("%s_atf.value%s%s", tbl, op, value);
-        else
-            sql_where.append_listf("%s_atf.value BETWEEN %s AND %s", tbl, value, value1);
-    else
-    {
-        const char* type = (conn.server_type == ServerType::MYSQL) ? "SIGNED" : "INT";
-        if (value1 == NULL)
-            sql_where.append_listf("CAST(%s_atf.value AS %s)%s%s", tbl, type, op, value);
-        else
-            sql_where.append_listf("CAST(%s_atf.value AS %s) BETWEEN %s AND %s", tbl, type, value, value1);
-    }
     return true;
 }
 

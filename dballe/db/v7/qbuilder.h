@@ -57,7 +57,6 @@ struct QueryBuilder
     /// True if we are querying station information, rather than measured data
     bool query_station_vars;
 
-
     QueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars);
     virtual ~QueryBuilder() {}
 
@@ -71,7 +70,6 @@ protected:
     bool add_varcode_where(const char* tbl);
     bool add_repinfo_where(const char* tbl);
     bool add_datafilter_where(const char* tbl);
-    bool add_attrfilter_where(const char* tbl);
 
     virtual void build_select() = 0;
     virtual bool build_where() = 0;
@@ -90,7 +88,15 @@ struct StationQueryBuilder : public QueryBuilder
 
 struct DataQueryBuilder : public QueryBuilder
 {
-    DataQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars);
+    /// True if we also query attributes of data
+    bool query_attrs;
+
+    /// True if the select includes the attrs field
+    bool select_attrs = false;
+
+    DataQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars, bool query_attrs);
+
+    // bool add_attrfilter_where(const char* tbl);
 
     virtual void build_select();
     virtual bool build_where();
@@ -100,7 +106,7 @@ struct DataQueryBuilder : public QueryBuilder
 struct IdQueryBuilder : public DataQueryBuilder
 {
     IdQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars)
-        : DataQueryBuilder(db, query, modifiers, query_station_vars) {}
+        : DataQueryBuilder(db, query, modifiers, query_station_vars, false) {}
 
     virtual void build_select();
     virtual void build_order_by();
@@ -109,7 +115,7 @@ struct IdQueryBuilder : public DataQueryBuilder
 struct SummaryQueryBuilder : public DataQueryBuilder
 {
     SummaryQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars)
-        : DataQueryBuilder(db, query, modifiers, query_station_vars) {}
+        : DataQueryBuilder(db, query, modifiers, query_station_vars, false) {}
 
     virtual void build_select();
     virtual void build_order_by();

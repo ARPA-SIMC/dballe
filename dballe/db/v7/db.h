@@ -10,36 +10,6 @@
 #include <vector>
 #include <memory>
 
-/** @file
- * @ingroup db
- *
- * Functions used to connect to DB-All.e and insert, query and delete data.
- */
-
-/**
- * Constants used to define what values we should retrieve from a query
- */
-/** Retrieve latitude and longitude */
-#define DBA_DB_WANT_COORDS      (1 << 0)
-/** Retrieve the mobile station identifier */
-#define DBA_DB_WANT_IDENT       (1 << 1)
-/** Retrieve the level information */
-#define DBA_DB_WANT_LEVEL       (1 << 2)
-/** Retrieve the time range information */
-#define DBA_DB_WANT_TIMERANGE   (1 << 3)
-/** Retrieve the date and time information */
-#define DBA_DB_WANT_DATETIME    (1 << 4)
-/** Retrieve the variable name */
-#define DBA_DB_WANT_VAR_NAME    (1 << 5)
-/** Retrieve the variable value */
-#define DBA_DB_WANT_VAR_VALUE   (1 << 6)
-/** Retrieve the report code */
-#define DBA_DB_WANT_REPCOD      (1 << 7)
-/** Retrieve the station ID */
-#define DBA_DB_WANT_ANA_ID      (1 << 8)
-/** Retrieve the lev_tr ID */
-#define DBA_DB_WANT_CONTEXT_ID  (1 << 9)
-
 namespace dballe {
 struct Station;
 struct StationValues;
@@ -64,7 +34,7 @@ struct LevTr;
 namespace v7 {
 
 /**
- * DB-ALLe database connection
+ * DB-ALLe database connection for database format V7
  */
 class DB : public dballe::DB
 {
