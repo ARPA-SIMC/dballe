@@ -32,7 +32,12 @@ public:
     /**
      * Given a set of IDs, load LevTr information for them and add it to data.
      */
-    virtual void prefetch_ids(const std::set<int>& ids, std::map<int, LevTrDesc>& data) = 0;
+    virtual void prefetch_ids(const std::set<int>& ids, std::function<void(int, const LevTrDesc&)> dest) = 0;
+
+    /**
+     * Given an ID, load LevTr information for all the entries with the same level type
+     */
+    virtual void prefetch_same_level(int id, std::function<void(int, const LevTrDesc&)> dest) = 0;
 
     /**
      * Get/create a Context in the Msg for this level/timerange.

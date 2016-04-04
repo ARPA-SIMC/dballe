@@ -174,6 +174,39 @@ void Driver::run_station_data_query(const v7::QueryBuilder& qb, std::function<vo
     });
 }
 
+void Driver::run_data_query(const v7::QueryBuilder& qb, std::function<void(int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)> dest)
+{
+    auto stm = conn.sqlitestatement(qb.sql_query);
+
+    if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
+
+    StationDesc station;
+    int cur_id_station = -1;
+
+    stm->execute([&]() {
+        int id_station = stm->column_int(0);
+        if (id_station != cur_id_station)
+        {
+            station.rep = stm->column_int(1);
+            station.coords.lat = stm->column_int(2);
+            station.coords.lon = stm->column_int(3);
+            if (stm->column_isnull(4))
+                station.ident.clear();
+            else
+                station.ident = stm->column_string(4);
+            cur_id_station = id_station;
+        }
+
+        int id_levtr = stm->column_int(5);
+        wreport::Varcode code = stm->column_int(6);
+        int id_data = stm->column_int(7);
+        Datetime datetime = stm->column_datetime(8);
+        const char* value = stm->column_string(9);
+
+        dest(id_station, station, id_levtr, datetime, id_data, newvar(code, value));
+    });
+}
+
 void Driver::create_tables_v7()
 {
     conn.exec(R"(

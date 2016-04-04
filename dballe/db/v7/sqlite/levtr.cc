@@ -69,7 +69,7 @@ SQLiteLevTr::~SQLiteLevTr()
     delete istm;
 }
 
-void SQLiteLevTr::prefetch_ids(const std::set<int>& ids, std::map<int, LevTrDesc>& data)
+void SQLiteLevTr::prefetch_ids(const std::set<int>& ids, std::function<void(int, const LevTrDesc&)> dest)
 {
     if (ids.empty()) return;
 
@@ -86,11 +86,25 @@ void SQLiteLevTr::prefetch_ids(const std::set<int>& ids, std::map<int, LevTrDesc
 
     auto stm = conn.sqlitestatement(qb);
     stm->execute([&]() {
-        data.insert(make_pair(
+        dest(
             stm->column_int(0),
             LevTrDesc(
                 Level(stm->column_int(1), stm->column_int(2), stm->column_int(3), stm->column_int(4)),
-                Trange(stm->column_int(5), stm->column_int(6), stm->column_int(7)))));
+                Trange(stm->column_int(5), stm->column_int(6), stm->column_int(7))));
+    });
+}
+
+void SQLiteLevTr::prefetch_same_level(int id, std::function<void(int, const LevTrDesc&)> dest)
+{
+    char query[128];
+    snprintf(query, 128, "SELECT id, ltype1, l1, ltype2, l2, pind, p1, p2 FROM levtr WHERE ltype1=(SELECT ltype1 FROM levtr WHERE id=%d)", id);
+    auto stm = conn.sqlitestatement(query);
+    stm->execute([&]() {
+        dest(
+            stm->column_int(0),
+            LevTrDesc(
+                Level(stm->column_int(1), stm->column_int(2), stm->column_int(3), stm->column_int(4)),
+                Trange(stm->column_int(5), stm->column_int(6), stm->column_int(7))));
     });
 }
 

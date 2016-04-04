@@ -213,6 +213,52 @@ void Driver::run_station_data_query(const v7::QueryBuilder& qb, std::function<vo
     });
 }
 
+void Driver::run_data_query(const v7::QueryBuilder& qb, std::function<void(int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)> dest)
+{
+    using namespace dballe::sql::postgresql;
+
+    // Start the query asynchronously
+    int res;
+    if (qb.bind_in_ident)
+    {
+        const char* args[1] = { qb.bind_in_ident };
+        res = PQsendQueryParams(conn, qb.sql_query.c_str(), 1, nullptr, args, nullptr, nullptr, 1);
+    } else {
+        res = PQsendQueryParams(conn, qb.sql_query.c_str(), 0, nullptr, nullptr, nullptr, nullptr, 1);
+    }
+    if (!res)
+        throw error_postgresql(conn, "executing " + qb.sql_query);
+
+    StationDesc station;
+    int cur_id_station = -1;
+    conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
+        for (unsigned row = 0; row < res.rowcount(); ++row)
+        {
+            int id_station = res.get_int4(row, 0);
+            if (id_station != cur_id_station)
+            {
+                station.rep = res.get_int4(row, 1);
+                station.coords.lat = res.get_int4(row, 2);
+                station.coords.lon = res.get_int4(row, 3);
+                if (res.is_null(row, 4))
+                    station.ident.clear();
+                else
+                    station.ident = res.get_string(row, 4);
+                cur_id_station = id_station;
+            }
+
+            int id_levtr = res.get_int4(row, 5);
+            wreport::Varcode code = res.get_int4(row, 6);
+            int id_data = res.get_int4(row, 7);
+            Datetime datetime = res.get_timestamp(row, 8);
+            const char* value = res.get_string(row, 9);
+
+            dest(id_station, station, id_levtr, datetime, id_data, newvar(code, value));
+        }
+    });
+}
+
+
 
 void Driver::create_tables_v7()
 {

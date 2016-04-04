@@ -16,6 +16,7 @@
 #include <unordered_map>
 #include <cstdio>
 #include <cstring>
+#include <cassert>
 
 namespace {
 
@@ -257,6 +258,86 @@ struct StationData : public VectorBase<CursorStationData, StationDataResult>
 };
 
 
+struct DataResult : public StationDataResult
+{
+    typedef std::unordered_map<int, LevTrDesc>::iterator levtr_t;
+    int id_levtr;
+    Datetime datetime;
+
+    using StationDataResult::StationDataResult;
+
+    DataResult(station_t station, int id_levtr, const Datetime& datetime, int id_data, Var* var)
+        : StationDataResult(station, id_data, var), id_levtr(id_levtr), datetime(datetime) {}
+
+    void to_record(v7::DB& db, Record& rec) const
+    {
+        StationDataResult::to_record(db, rec);
+        rec.set_datetime(datetime);
+    }
+
+    void dump(FILE* out) const
+    {
+        fprintf(out, "%02d %3d %02.4f %02.4f %-10s %4d %4d ",
+                station->first, station->second.rep, station->second.coords.dlat(), station->second.coords.dlon(), station->second.ident.get(), id_levtr, id_data);
+        datetime.print_iso8601(out, ' ');
+        fprintf(out, " ");
+        var->print_without_attrs(out, "\n");
+    }
+};
+
+
+struct Data : public VectorBase<CursorData, DataResult>
+{
+    using VectorBase::VectorBase;
+
+    std::unordered_map<int, StationDesc> stations;
+    std::unordered_map<int, LevTrDesc> levtrs;
+
+    void load(const QueryBuilder& qb) override
+    {
+        stations.clear();
+        levtrs.clear();
+        results.clear();
+        set<int> ids;
+        this->db.driver().run_data_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+            std::unordered_map<int, StationDesc>::iterator i = stations.find(id_station);
+            if (i == stations.end())
+                tie(i, std::ignore) = stations.insert(make_pair(id_station, station));
+            results.emplace_back(i, id_levtr, datetime, id_data, var.release());
+            ids.insert(id_levtr);
+        });
+        at_start = true;
+        cur = results.begin();
+
+        this->db.levtr().prefetch_ids(ids, [&](int id, const LevTrDesc& ltr) {
+            levtrs.insert(make_pair(id, ltr));
+        });
+    }
+
+    const LevTrDesc& get_levtr(int id_levtr) const
+    {
+        std::unordered_map<int, LevTrDesc>::const_iterator li = levtrs.find(id_levtr);
+        // We prefetch levtr info for all IDs, so we should always find the levtr here
+        assert(li != levtrs.end());
+        return li->second;
+    }
+
+    Level get_level() const override { return get_levtr(cur->id_levtr).level; }
+    Trange get_trange() const override { return get_levtr(cur->id_levtr).trange; }
+    Datetime get_datetime() const override { return cur->datetime; }
+    wreport::Varcode get_varcode() const override { return cur->var->code(); }
+    wreport::Var get_var() const override { return *cur->var; }
+    int attr_reference_id() const override { return cur->id_data; }
+
+    void to_record(Record& rec) override
+    {
+        VectorBase::to_record(rec);
+        const LevTrDesc& levtr = get_levtr(cur->id_levtr);
+        rec.set_level(levtr.level);
+        rec.set_trange(levtr.trange);
+    }
+};
+
 template<typename Interface>
 struct OldBase : public Base<Interface>
 {
@@ -325,7 +406,7 @@ struct OldBase : public Base<Interface>
         // We are done adding, prepare the structbuf for reading
         results.ready_to_read();
         // And prefetch the LevTr data
-        this->db.lev_tr().prefetch_ids(ids, levtrs);
+        this->db.levtr().prefetch_ids(ids, [&](int id, const LevTrDesc& ltr) { levtrs.insert(make_pair(id, ltr)); });
     }
 
     void to_record_pseudoana(Record& rec)
@@ -387,71 +468,6 @@ struct OldBase : public Base<Interface>
     {
         this->db.station().add_station_vars(results[this->cur].out_ana_id, rec);
     }
-};
-
-struct Data : public OldBase<CursorData>
-{
-    using OldBase::OldBase;
-    ~Data() {}
-    void to_record(Record& rec) override
-    {
-        to_record_pseudoana(rec);
-        to_record_repinfo(rec);
-        if (results[this->cur].out_id_ltr == -1)
-            rec.unset("context_id");
-        else
-            rec.seti("context_id", results[this->cur].out_id_data);
-        to_record_varcode(rec);
-        to_record_ltr(rec);
-        to_record_datetime(rec);
-
-        rec.clear_vars();
-        rec.set(newvar(results[this->cur].out_varcode, results[this->cur].out_value));
-    }
-    unsigned test_iterate(FILE* dump=0) override
-    {
-        //auto r = Record::create();
-        unsigned count;
-        for (count = 0; next(); ++count)
-        {
-            if (dump)
-            {
-    /*
-                to_record(r);
-                fprintf(dump, "%02d %06d %06d %-10s\n",
-                        r.get(DBA_KEY_ANA_ID, -1),
-                        r.get(DBA_KEY_LAT, 0.0),
-                        r.get(DBA_KEY_LON, 0.0),
-                        r.get(DBA_KEY_IDENT, ""));
-                        */
-            }
-        }
-        return count;
-    }
-
-    Level get_level() const override { return get_levtr(results[this->cur].out_id_ltr).level; }
-    Trange get_trange() const override { return get_levtr(results[this->cur].out_id_ltr).trange; }
-    Datetime get_datetime() const override { return results[this->cur].out_datetime; }
-    wreport::Varcode get_varcode() const override { return (wreport::Varcode)results[this->cur].out_varcode; }
-    wreport::Var get_var() const override { return Var(varinfo(results[this->cur].out_varcode), results[this->cur].out_value); }
-    int attr_reference_id() const override { return results[this->cur].out_id_data; }
-
-#if 0
-void Cursor::query_attrs(function<void(unique_ptr<Var>&&)> dest)
-{
-    db.query_attrs(results[this->cur].out_id_data, results[this->cur].out_varcode, dest);
-}
-
-void Cursor::attr_insert(const Values& attrs)
-{
-    db.attr_insert(results[this->cur].out_id_data, results[this->cur].out_varcode, attrs);
-}
-
-void Cursor::attr_remove(const AttrList& qcs)
-{
-    db.attr_remove(results[this->cur].out_id_data, results[this->cur].out_varcode, qcs);
-}
-#endif
 };
 
 struct Summary : public OldBase<CursorSummary>
@@ -583,7 +599,7 @@ struct Best : public OldBase<CursorData>
             if (qb.select_varinfo) ids.insert(best.out_id_ltr);
             results.append(best);
         }
-        db.lev_tr().prefetch_ids(ids, levtrs);
+        db.levtr().prefetch_ids(ids, [&](int id, const LevTrDesc& ltr) { levtrs.insert(make_pair(id, ltr)); });
 
         // We are done adding, prepare the structbuf for reading
         results.ready_to_read();

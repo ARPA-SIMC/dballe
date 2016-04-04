@@ -58,7 +58,7 @@ PostgreSQLLevTr::~PostgreSQLLevTr()
 {
 }
 
-void PostgreSQLLevTr::prefetch_ids(const std::set<int>& ids, std::map<int, LevTrDesc>& data)
+void PostgreSQLLevTr::prefetch_ids(const std::set<int>& ids, std::function<void(int, const LevTrDesc&)> dest)
 {
     if (ids.empty()) return;
 
@@ -75,7 +75,16 @@ void PostgreSQLLevTr::prefetch_ids(const std::set<int>& ids, std::map<int, LevTr
 
     auto res = conn.exec(qb);
     for (unsigned row = 0; row < res.rowcount(); ++row)
-        data.insert(make_pair(res.get_int4(row, 0), LevTrDesc(to_level(res, row, 1), to_trange(res, row, 5))));
+        dest(res.get_int4(row, 0), LevTrDesc(to_level(res, row, 1), to_trange(res, row, 5)));
+}
+
+void PostgreSQLLevTr::prefetch_same_level(int id, std::function<void(int, const LevTrDesc&)> dest)
+{
+    char query[128];
+    snprintf(query, 128, "SELECT id, ltype1, l1, ltype2, l2, pind, p1, p2 FROM levtr WHERE ltype1=(SELECT ltype1 FROM levtr WHERE id=%d)", id);
+    auto res = conn.exec(query);
+    for (unsigned row = 0; row < res.rowcount(); ++row)
+        dest(res.get_int4(row, 0), LevTrDesc(to_level(res, row, 1), to_trange(res, row, 5)));
 }
 
 levtrs_t::iterator PostgreSQLLevTr::lookup_id(State& st, int id)

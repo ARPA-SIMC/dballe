@@ -28,7 +28,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
     bool mobile = msg.get_ident_var() != NULL;
 
     v7::Station& st = station();
-    v7::LevTr& lt = lev_tr();
+    v7::LevTr& lt = levtr();
 
     auto& t = v7::Transaction::downcast(transaction);
 

@@ -50,7 +50,7 @@ DB::~DB()
 {
     delete m_data;
     delete m_station_data;
-    delete m_lev_tr;
+    delete m_levtr;
     delete m_station;
     delete m_repinfo;
     delete m_driver;
@@ -76,11 +76,11 @@ v7::Station& DB::station()
     return *m_station;
 }
 
-v7::LevTr& DB::lev_tr()
+v7::LevTr& DB::levtr()
 {
-    if (m_lev_tr == NULL)
-        m_lev_tr = m_driver->create_levtr().release();
-    return *m_lev_tr;
+    if (m_levtr == NULL)
+        m_levtr = m_driver->create_levtr().release();
+    return *m_levtr;
 }
 
 v7::StationData& DB::station_data()
@@ -214,7 +214,7 @@ void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool ca
     vals.info.ana_id = si->second.id;
 
     // Insert the lev_tr data, and get the ID
-    auto ltri = lev_tr().obtain_id(t.state, LevTrDesc(vals.info.level, vals.info.trange));
+    auto ltri = levtr().obtain_id(t.state, LevTrDesc(vals.info.level, vals.info.trange));
 
     // Add all the variables we find
     for (auto& i: vals.values)
@@ -354,7 +354,7 @@ void DB::dump(FILE* out)
 {
     repinfo().dump(out);
     station().dump(out);
-    lev_tr().dump(out);
+    levtr().dump(out);
     station_data().dump(out);
     data().dump(out);
 }

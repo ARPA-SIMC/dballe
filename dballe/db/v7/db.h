@@ -92,7 +92,7 @@ protected:
     /** Station information */
     v7::Station* m_station = nullptr;
     /** Level/timerange information */
-    v7::LevTr* m_lev_tr = nullptr;
+    v7::LevTr* m_levtr = nullptr;
     /** Station data */
     v7::StationData* m_station_data = nullptr;
     /** Variable data */
@@ -134,7 +134,7 @@ public:
     v7::Station& station();
 
     /// Access the levtr table
-    v7::LevTr& lev_tr();
+    v7::LevTr& levtr();
 
     /// Access the station_data table
     v7::StationData& station_data();
