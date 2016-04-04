@@ -58,13 +58,59 @@ struct StationLayerCache : protected std::vector<wreport::Var*>
     }
 };
 
+struct DataRow
+{
+    int id_station;
+    StationDesc station;
+    int id_levtr;
+    Datetime datetime;
+    int id_data;
+    wreport::Var* var;
+
+    DataRow(int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)
+        : id_station(id_station), station(station), id_levtr(id_levtr), datetime(datetime), id_data(id_data), var(var.release())
+    {
+    }
+    DataRow(const DataRow&) = delete;
+    DataRow(DataRow&& o)
+        : id_station(o.id_station), station(o.station), id_levtr(o.id_levtr), datetime(o.datetime), id_data(o.id_data), var(o.var)
+    {
+        o.var = nullptr;
+    }
+    ~DataRow()
+    {
+        delete var;
+    }
+    DataRow& operator=(const DataRow&) = delete;
+    DataRow& operator=(DataRow&& o)
+    {
+        if (this == &o) return *this;
+        delete var;
+        var = nullptr;
+        id_station = o.id_station;
+        station = o.station;
+        id_levtr = o.id_levtr;
+        datetime = o.datetime;
+        id_data = o.id_data;
+        var = o.var;
+        o.var = nullptr;
+        return *this;
+    }
+
+    std::unique_ptr<wreport::Var> release_var()
+    {
+        std::unique_ptr<wreport::Var> res(var);
+        var = nullptr;
+        return res;
+    }
+};
+
 }
 
 bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest)
 {
     auto tr = trace.trace_export_msgs(query);
     v7::Repinfo& ri = repinfo();
-    v7::Data& da = data();
     v7::LevTr& lt = levtr();
 
     auto& t = v7::Transaction::downcast(transaction);
@@ -79,38 +125,26 @@ bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& quer
     // Current context information used to detect context changes
     Datetime last_datetime;
     int last_ana_id = -1;
-    int last_rep_cod = -1;
 
     StationLayerCache station_cache;
 
     // Retrieve results, buffering them locally to avoid performing concurrent
     // queries
-    Structbuf<v7::SQLRecordV7> results;
-    driver().run_built_query_v7(qb, [&](v7::SQLRecordV7& sqlrec) {
-        results.append(sqlrec);
+    std::vector<DataRow> results;
+    driver().run_data_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+        // TODO: filter on attr_filter (inside run_data_query)
+        results.emplace_back(id_station, station, id_levtr, datetime, id_data, move(var));
     });
-    results.ready_to_read();
 
-    for (unsigned row = 0; row < results.size(); ++row)
+    for (auto& row: results)
     {
-        const v7::SQLRecordV7& sqlrec = results[row];
-
         //TRACE("Got B%02d%03d %ld,%ld, %ld,%ld %ld,%ld,%ld %s\n",
         //        WR_VAR_X(sqlrec.out_varcode), WR_VAR_Y(sqlrec.out_varcode),
         //        sqlrec.out_ltype1, sqlrec.out_l1, sqlrec.out_ltype2, sqlrec.out_l2, sqlrec.out_pind, sqlrec.out_p1, sqlrec.out_p2,
         //        sqlrec.out_value);
 
-        /* Create the variable that we got on this iteration */
-        unique_ptr<Var> var(newvar(sqlrec.out_varcode, sqlrec.out_value));
-
-        /* Load the attributes from the database */
-        // TODO: read attrs directly from query results
-        da.read_attrs(sqlrec.out_id_data, [&](unique_ptr<Var> attr) { var->seta(move(attr)); });
-
         /* See if we have the start of a new message */
-        if (sqlrec.out_ana_id != last_ana_id
-         || sqlrec.out_rep_cod != last_rep_cod
-         || sqlrec.out_datetime != last_datetime)
+        if (row.id_station != last_ana_id || row.datetime != last_datetime)
         {
             // Flush current message
             TRACE("New message\n");
@@ -133,45 +167,40 @@ bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& quer
             msg.reset(new Msg);
 
             // Fill in datetime
-            msg->set_datetime(sqlrec.out_datetime);
+            msg->set_datetime(row.datetime);
 
             msg::Context& c_st = msg->obtain_station_context();
 
             // Update station layer cache if needed
-            if (sqlrec.out_ana_id != last_ana_id)
-                station_cache.fill(*this, sqlrec.out_ana_id);
+            if (row.id_station != last_ana_id)
+                station_cache.fill(*this, row.id_station);
 
             // Fill in report information
             {
-                const char* memo = ri.get_rep_memo(sqlrec.out_rep_cod);
+                // TODO: move to station_cache
+                const char* memo = ri.get_rep_memo(row.station.rep);
                 c_st.set_rep_memo(memo);
                 msg->type = Msg::type_from_repmemo(memo);
             }
 
             // Fill in the basic station values
-            c_st.seti(WR_VAR(0, 5, 1), sqlrec.out_lat);
-            c_st.seti(WR_VAR(0, 6, 1), sqlrec.out_lon);
-            if (sqlrec.out_ident_size != -1)
-                c_st.set_ident(sqlrec.out_ident);
+            c_st.seti(WR_VAR(0, 5, 1), row.station.coords.lat);
+            c_st.seti(WR_VAR(0, 6, 1), row.station.coords.lon);
+            if (!row.station.ident.is_missing())
+                c_st.set_ident(row.station.ident);
 
             // Fill in station information
             station_cache.to_context(c_st);
 
             // Update current context information
-            last_datetime = sqlrec.out_datetime;
-            last_ana_id = sqlrec.out_ana_id;
-            last_rep_cod = sqlrec.out_rep_cod;
+            last_datetime = row.datetime;
+            last_ana_id = row.id_station;
         }
 
         TRACE("Inserting var %01d%02d%03d (%s)\n", WR_VAR_FXY(var->code()), var->enqc());
-        if (sqlrec.out_id_ltr == -1)
-        {
-            msg->set(move(var), Level(), Trange());
-        } else {
-            msg::Context* ctx = lt.to_msg(t.state, sqlrec.out_id_ltr, *msg);
-            if (ctx)
-                ctx->set(move(var));
-        }
+        msg::Context* ctx = lt.to_msg(t.state, row.id_levtr, *msg);
+        if (ctx)
+            ctx->set(row.release_var());
     }
 
     if (msg.get() != NULL)
