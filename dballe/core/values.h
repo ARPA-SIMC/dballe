@@ -187,6 +187,11 @@ struct Decoder
     uint32_t decode_uint32();
     const char* decode_cstring();
     std::unique_ptr<wreport::Var> decode_var();
+
+    /**
+     * Decode the attributes of var from a buffer
+     */
+    static void decode_attrs(const std::vector<uint8_t>& buf, wreport::Var& var);
 };
 
 }

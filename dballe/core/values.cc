@@ -208,6 +208,13 @@ unique_ptr<wreport::Var> Decoder::decode_var()
     }
 }
 
+void Decoder::decode_attrs(const std::vector<uint8_t>& buf, wreport::Var& var)
+{
+    Decoder dec(buf);
+    while (dec.size)
+        var.seta(move(dec.decode_var()));
+}
+
 }
 
 bool Values::operator==(const Values& o) const

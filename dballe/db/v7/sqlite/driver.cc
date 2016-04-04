@@ -4,6 +4,7 @@
 #include "levtr.h"
 #include "data.h"
 #include "dballe/db/v7/qbuilder.h"
+#include "dballe/core/values.h"
 #include "dballe/sql/sqlite.h"
 #include "dballe/var.h"
 #include <algorithm>
@@ -121,7 +122,7 @@ void Driver::run_built_query_v7(
     });
 }
 
-void Driver::run_station_query(const v7::QueryBuilder& qb, std::function<void(int id, const StationDesc&)> dest)
+void Driver::run_station_query(const v7::StationQueryBuilder& qb, std::function<void(int id, const StationDesc&)> dest)
 {
     auto stm = conn.sqlitestatement(qb.sql_query);
 
@@ -143,7 +144,7 @@ void Driver::run_station_query(const v7::QueryBuilder& qb, std::function<void(in
     });
 }
 
-void Driver::run_station_data_query(const v7::QueryBuilder& qb, std::function<void(int id_station, const StationDesc& station, int id_data, std::unique_ptr<wreport::Var> var)> dest)
+void Driver::run_station_data_query(const v7::DataQueryBuilder& qb, std::function<void(int id_station, const StationDesc& station, int id_data, std::unique_ptr<wreport::Var> var)> dest)
 {
     auto stm = conn.sqlitestatement(qb.sql_query);
 
@@ -174,7 +175,7 @@ void Driver::run_station_data_query(const v7::QueryBuilder& qb, std::function<vo
     });
 }
 
-void Driver::run_data_query(const v7::QueryBuilder& qb, std::function<void(int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)> dest)
+void Driver::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)> dest)
 {
     auto stm = conn.sqlitestatement(qb.sql_query);
 
@@ -203,7 +204,12 @@ void Driver::run_data_query(const v7::QueryBuilder& qb, std::function<void(int i
         Datetime datetime = stm->column_datetime(8);
         const char* value = stm->column_string(9);
 
-        dest(id_station, station, id_levtr, datetime, id_data, newvar(code, value));
+        auto var = newvar(code, value);
+
+        if (qb.select_attrs)
+            values::Decoder::decode_attrs(stm->column_blob(10), *var);
+
+        dest(id_station, station, id_levtr, datetime, id_data, move(var));
     });
 }
 

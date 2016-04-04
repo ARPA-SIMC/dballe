@@ -1,6 +1,7 @@
 #include "cursor.h"
 #include "qbuilder.h"
 #include "db.h"
+#include "dballe/core/varmatch.h"
 #include "dballe/sql/sql.h"
 #include <dballe/db/v7/driver.h>
 #include "dballe/db/v7/repinfo.h"
@@ -73,9 +74,6 @@ struct Base : public Interface
      * If dump is a FILE pointer, also dump the cursor values to it
      */
     unsigned test_iterate(FILE* dump=0) override = 0;
-
-    /// Run the query in qb and fill results with its output
-    virtual void load(const QueryBuilder& qb) = 0;
 };
 
 
@@ -166,7 +164,7 @@ struct Stations : public VectorBase<CursorStation, StationResult>
 {
     using VectorBase::VectorBase;
 
-    void load(const QueryBuilder& qb) override
+    void load(const StationQueryBuilder& qb)
     {
         results.clear();
         this->db.driver().run_station_query(qb, [&](int id, const StationDesc& desc) {
@@ -231,18 +229,41 @@ struct StationDataResult
     }
 };
 
-
-struct StationData : public VectorBase<CursorStationData, StationDataResult>
+template<typename Interface, typename Result>
+struct BaseData : public VectorBase<Interface, Result>
 {
-    using VectorBase::VectorBase;
+    std::unique_ptr<Varmatch> attr_filter;
+
+    BaseData(DataQueryBuilder& qb, unsigned int modifiers)
+        : VectorBase<Interface, Result>(qb.db, modifiers)
+    {
+        if (!qb.query.attr_filter.empty())
+            attr_filter = Varmatch::parse(qb.query.attr_filter);
+    }
+
+    bool match_attrs(const Var& var)
+    {
+        for (const Var* a = var.next_attr(); a != NULL; a = a->next_attr())
+            if ((*attr_filter)(*a))
+                return true;
+        return false;
+    }
+};
+
+
+struct StationData : public BaseData<CursorStationData, StationDataResult>
+{
+    using BaseData::BaseData;
 
     std::unordered_map<int, StationDesc> stations;
 
-    void load(const QueryBuilder& qb) override
+    void load(const DataQueryBuilder& qb)
     {
         stations.clear();
         results.clear();
         this->db.driver().run_station_data_query(qb, [&](int id_station, const StationDesc& station, int id_data, std::unique_ptr<wreport::Var> var) {
+            // Apply attr_filter
+            if (attr_filter.get() && !match_attrs(*var)) return;
             std::unordered_map<int, StationDesc>::iterator i = stations.find(id_station);
             if (i == stations.end())
                 tie(i, std::ignore) = stations.insert(make_pair(id_station, station));
@@ -286,20 +307,22 @@ struct DataResult : public StationDataResult
 };
 
 
-struct Data : public VectorBase<CursorData, DataResult>
+struct Data : public BaseData<CursorData, DataResult>
 {
-    using VectorBase::VectorBase;
+    using BaseData::BaseData;
 
     std::unordered_map<int, StationDesc> stations;
     std::unordered_map<int, LevTrDesc> levtrs;
 
-    void load(const QueryBuilder& qb) override
+    void load(const DataQueryBuilder& qb)
     {
         stations.clear();
         levtrs.clear();
         results.clear();
         set<int> ids;
         this->db.driver().run_data_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+            // Apply attr_filter
+            if (attr_filter.get() && !match_attrs(*var)) return;
             std::unordered_map<int, StationDesc>::iterator i = stations.find(id_station);
             if (i == stations.end())
                 tie(i, std::ignore) = stations.insert(make_pair(id_station, station));
@@ -372,13 +395,15 @@ struct Best : public Data
         return true;
     }
 
-    void load(const QueryBuilder& qb) override
+    void load(const DataQueryBuilder& qb)
     {
         stations.clear();
         levtrs.clear();
         results.clear();
         set<int> ids;
         this->db.driver().run_data_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+            // Apply attr_filter
+            if (attr_filter.get() && !match_attrs(*var)) return;
             std::unordered_map<int, StationDesc>::iterator i = stations.find(id_station);
             if (i == stations.end())
                 tie(i, std::ignore) = stations.insert(make_pair(id_station, station));
@@ -453,7 +478,7 @@ struct OldBase : public Base<Interface>
         return i->second;
     }
 
-    void load(const QueryBuilder& qb) override
+    void load(const QueryBuilder& qb)
     {
         set<int> ids;
         this->db.driver().run_built_query_v7(qb, [&](v7::SQLRecordV7& rec) {
@@ -619,7 +644,7 @@ unique_ptr<CursorStationData> run_station_data_query(DB& db, const core::Query& 
         //res.reset(resptr);
         //resptr->load(qb);
     } else {
-        auto resptr = new StationData(db, modifiers);
+        auto resptr = new StationData(qb, modifiers);
         res.reset(resptr);
         resptr->load(qb);
     }
@@ -641,11 +666,11 @@ unique_ptr<CursorData> run_data_query(DB& db, const core::Query& q, bool explain
     unique_ptr<CursorData> res;
     if (modifiers & DBA_DB_MODIFIER_BEST)
     {
-        auto resptr = new Best(db, modifiers);
+        auto resptr = new Best(qb, modifiers);
         res.reset(resptr);
         resptr->load(qb);
     } else {
-        auto resptr = new Data(db, modifiers);
+        auto resptr = new Data(qb, modifiers);
         res.reset(resptr);
         resptr->load(qb);
     }
