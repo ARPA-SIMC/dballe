@@ -338,6 +338,63 @@ struct Data : public VectorBase<CursorData, DataResult>
     }
 };
 
+struct Best : public Data
+{
+    using Data::Data;
+
+    int insert_cur_prio;
+
+    /// Append or replace the last result according to priotity. Returns false if the value has been ignored.
+    bool add_to_results(std::unordered_map<int, StationDesc>::iterator station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)
+    {
+        int prio = db.repinfo().get_priority(station->second.rep);
+
+        if (results.empty()) goto append;
+        if (station->second.coords != results.back().station->second.coords) goto append;
+        if (station->second.ident != results.back().station->second.ident) goto append;
+        if (id_levtr != results.back().id_levtr) goto append;
+        if (datetime != results.back().datetime) goto append;
+        if (var->code() != results.back().var->code()) goto append;
+
+        if (prio <= insert_cur_prio) return false;
+
+        // Replace
+        results.back().station = station;
+        results.back().id_data = id_data;
+        delete results.back().var;
+        results.back().var = var.release();
+        insert_cur_prio = prio;
+        return true;
+
+    append:
+        results.emplace_back(station, id_levtr, datetime, id_data, var.release());
+        insert_cur_prio = prio;
+        return true;
+    }
+
+    void load(const QueryBuilder& qb) override
+    {
+        stations.clear();
+        levtrs.clear();
+        results.clear();
+        set<int> ids;
+        this->db.driver().run_data_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+            std::unordered_map<int, StationDesc>::iterator i = stations.find(id_station);
+            if (i == stations.end())
+                tie(i, std::ignore) = stations.insert(make_pair(id_station, station));
+            if (add_to_results(i, id_levtr, datetime, id_data, move(var)))
+                ids.insert(id_levtr);
+        });
+        at_start = true;
+        cur = results.begin();
+
+        this->db.levtr().prefetch_ids(ids, [&](int id, const LevTrDesc& ltr) {
+            levtrs.insert(make_pair(id, ltr));
+        });
+    }
+};
+
+
 template<typename Interface>
 struct OldBase : public Base<Interface>
 {
@@ -519,93 +576,6 @@ struct Summary : public OldBase<CursorSummary>
     }
     wreport::Varcode get_varcode() const override { return (wreport::Varcode)results[this->cur].out_varcode; }
     size_t get_count() const override { return results[this->cur].out_id_data; }
-};
-
-struct Best : public OldBase<CursorData>
-{
-    using OldBase::OldBase;
-    ~Best() {}
-
-    void to_record(Record& rec) override
-    {
-        to_record_pseudoana(rec);
-        to_record_repinfo(rec);
-        if (results[this->cur].out_id_ltr == -1)
-            rec.unset("context_id");
-        else
-            rec.seti("context_id", results[this->cur].out_id_data);
-        to_record_varcode(rec);
-        to_record_ltr(rec);
-        to_record_datetime(rec);
-
-        rec.clear_vars();
-        rec.set(newvar(results[this->cur].out_varcode, results[this->cur].out_value));
-    }
-    unsigned test_iterate(FILE* dump=0) override
-    {
-        // auto r = Record::create();
-        unsigned count;
-        for (count = 0; next(); ++count)
-        {
-            /*
-            if (dump)
-                fprintf(dump, "%03d\n", (int)results[this->cur].out_id_data);
-                */
-        }
-        return count;
-    }
-
-    Level get_level() const override { return get_levtr(results[this->cur].out_id_ltr).level; }
-    Trange get_trange() const override { return get_levtr(results[this->cur].out_id_ltr).trange; }
-    Datetime get_datetime() const override { return results[this->cur].out_datetime; }
-    wreport::Varcode get_varcode() const override { return (wreport::Varcode)results[this->cur].out_varcode; }
-    wreport::Var get_var() const override { return Var(varinfo(results[this->cur].out_varcode), results[this->cur].out_value); }
-    int attr_reference_id() const override { return results[this->cur].out_id_data; }
-
-
-    void load(const QueryBuilder& qb) override
-    {
-        db::v7::Repinfo& ri = db.repinfo();
-        bool first = true;
-        v7::SQLRecordV7 best;
-
-        set<int> ids;
-        db.driver().run_built_query_v7(qb, [&](v7::SQLRecordV7& rec) {
-            // Fill priority
-            rec.priority = ri.get_priority(rec.out_rep_cod);
-
-            // Filter results keeping only those with the best priority
-            if (first)
-            {
-                // The first record initialises 'best'
-                best = rec;
-                first = false;
-            } else if (rec.querybest_fields_are_the_same(best)) {
-                // If they match, keep the record with the highest priority
-                if (rec.priority > best.priority)
-                    best = rec;
-            } else {
-                if (qb.select_varinfo) ids.insert(best.out_id_ltr);
-                // If they don't match, write out the previous best value
-                results.append(best);
-                // And restart with a new candidate best record for the next batch
-                best = rec;
-            }
-        });
-
-        // Write out the last best value
-        if (!first)
-        {
-            if (qb.select_varinfo) ids.insert(best.out_id_ltr);
-            results.append(best);
-        }
-        db.levtr().prefetch_ids(ids, [&](int id, const LevTrDesc& ltr) { levtrs.insert(make_pair(id, ltr)); });
-
-        // We are done adding, prepare the structbuf for reading
-        results.ready_to_read();
-    }
-
-    friend class Cursor;
 };
 
 }
