@@ -42,7 +42,7 @@ public:
     void read_attrs(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
     void write_attrs(int id_data, const Values& values) override;
     void remove_all_attrs(int id_data) override;
-    void remove(const v7::QueryBuilder& qb) override;
+    void remove(const v7::IdQueryBuilder& qb) override;
 };
 
 extern template class SQLiteDataCommon<StationDataTraits>;

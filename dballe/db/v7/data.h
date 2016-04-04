@@ -18,7 +18,7 @@ struct Values;
 namespace db {
 namespace v7 {
 struct Transaction;
-struct QueryBuilder;
+struct IdQueryBuilder;
 
 namespace bulk {
 struct InsertStationVars;
@@ -84,7 +84,7 @@ public:
     virtual void insert(dballe::db::v7::Transaction& t, typename Traits::BulkVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE, bool with_attrs=false) = 0;
 
     /// Run the query to delete all records selected by the given QueryBuilder
-    virtual void remove(const v7::QueryBuilder& qb) = 0;
+    virtual void remove(const v7::IdQueryBuilder& qb) = 0;
 
     /// Dump the entire contents of the table to an output stream
     virtual void dump(FILE* out) = 0;

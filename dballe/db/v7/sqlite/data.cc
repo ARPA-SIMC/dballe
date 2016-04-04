@@ -5,6 +5,7 @@
 #include "dballe/sql/querybuf.h"
 #include "dballe/record.h"
 #include "dballe/core/values.h"
+#include "dballe/core/varmatch.h"
 #include <algorithm>
 #include <cstring>
 
@@ -85,8 +86,22 @@ void SQLiteDataCommon<Traits>::remove_all_attrs(int id_data)
     remove_attrs_stm->execute();
 }
 
+namespace {
+
+bool match_attrs(const Varmatch& match, const std::vector<uint8_t>& attrs)
+{
+    bool found = false;
+    Values::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
+        if (match(*var))
+            found = true;
+    });
+    return found;
+}
+
+}
+
 template<typename Traits>
-void SQLiteDataCommon<Traits>::remove(const v7::QueryBuilder& qb)
+void SQLiteDataCommon<Traits>::remove(const v7::IdQueryBuilder& qb)
 {
     char query[64];
     snprintf(query, 64, "DELETE FROM %s WHERE id=?", Traits::table_name);
@@ -94,8 +109,14 @@ void SQLiteDataCommon<Traits>::remove(const v7::QueryBuilder& qb)
     auto stm = conn.sqlitestatement(qb.sql_query);
     if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
 
+    std::unique_ptr<Varmatch> attr_filter;
+    if (!qb.query.attr_filter.empty())
+        attr_filter = Varmatch::parse(qb.query.attr_filter);
+
     // Iterate all the data_id results, deleting the related data and attributes
     stm->execute([&]() {
+        if (attr_filter.get() && !match_attrs(*attr_filter, stm->column_blob(1))) return;
+
         // Compile the DELETE query for the data
         stmd->bind_val(1, stm->column_int(0));
         stmd->execute();

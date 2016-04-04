@@ -432,6 +432,11 @@ void DataQueryBuilder::build_order_by()
 void IdQueryBuilder::build_select()
 {
     sql_query.append("SELECT d.id");
+    if (!query.attr_filter.empty())
+    {
+        sql_query.append(", d.attrs");
+        select_attrs = true;
+    }
     select_data_id = true;
     sql_from.append(" FROM station s");
     if (query_station_vars)

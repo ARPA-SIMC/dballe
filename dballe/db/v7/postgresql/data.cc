@@ -5,6 +5,7 @@
 #include "dballe/sql/querybuf.h"
 #include "dballe/record.h"
 #include "dballe/core/values.h"
+#include "dballe/core/varmatch.h"
 #include <algorithm>
 #include <cstring>
 
@@ -74,20 +75,60 @@ void PostgreSQLDataCommon<Traits>::remove_all_attrs(int id_data)
     conn.exec_prepared_no_data(remove_attrs_query_name, id_data);
 }
 
-template<typename Traits>
-void PostgreSQLDataCommon<Traits>::remove(const v7::QueryBuilder& qb)
+namespace {
+
+bool match_attrs(const Varmatch& match, const std::vector<uint8_t>& attrs)
 {
-    Querybuf dq(512);
-    dq.append("DELETE FROM ");
-    dq.append(Traits::table_name);
-    dq.append(" WHERE id IN (");
-    dq.append(qb.sql_query);
-    dq.append(")");
-    if (qb.bind_in_ident)
+    bool found = false;
+    Values::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
+        if (match(*var))
+            found = true;
+    });
+    return found;
+}
+
+}
+
+template<typename Traits>
+void PostgreSQLDataCommon<Traits>::remove(const v7::IdQueryBuilder& qb)
+{
+    if (!qb.query.attr_filter.empty())
     {
-        conn.exec_no_data(dq.c_str(), qb.bind_in_ident);
+        // We need to apply attr_filter to all results of the query, so we
+        // iterate the results and delete the matching ones one by one.
+        std::unique_ptr<Varmatch> attr_filter = Varmatch::parse(qb.query.attr_filter);
+        if (remove_data_query_name.empty())
+        {
+            remove_data_query_name = Traits::table_name;
+            remove_data_query_name += "v7_remove_data";
+            char query[64];
+            snprintf(query, 64, "DELETE FROM %s WHERE id=$1::int4", Traits::table_name);
+            conn.prepare(remove_data_query_name, query);
+        }
+
+        Result to_remove;
+        if (qb.bind_in_ident)
+            to_remove = conn.exec(qb.sql_query, qb.bind_in_ident);
+        else
+            to_remove = conn.exec(qb.sql_query);
+        for (unsigned row = 0; row < to_remove.rowcount(); ++row)
+        {
+            if (!match_attrs(*attr_filter, to_remove.get_bytea(row, 1))) return;
+            conn.exec_prepared(remove_data_query_name, (int)to_remove.get_int4(row, 0));
+        }
     } else {
-        conn.exec_no_data(dq.c_str());
+        Querybuf dq(512);
+        dq.append("DELETE FROM ");
+        dq.append(Traits::table_name);
+        dq.append(" WHERE id IN (");
+        dq.append(qb.sql_query);
+        dq.append(")");
+        if (qb.bind_in_ident)
+        {
+            conn.exec_no_data(dq.c_str(), qb.bind_in_ident);
+        } else {
+            conn.exec_no_data(dq.c_str());
+        }
     }
 }
 
