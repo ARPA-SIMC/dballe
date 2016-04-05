@@ -13,9 +13,6 @@ namespace v7 {
 const char* StationDataTraits::table_name = "station_data";
 const char* DataTraits::table_name = "data";
 
-template class DataCommon<StationDataTraits>;
-template class DataCommon<DataTraits>;
-
 template<typename Traits>
 void DataCommon<Traits>::read_attrs_into_values(int id_data, Values& values)
 {
@@ -55,6 +52,9 @@ void DataCommon<Traits>::remove_attrs(int id_data, const db::AttrList& attrs)
             write_attrs(id_data, remaining);
     }
 }
+
+template class DataCommon<StationDataTraits>;
+template class DataCommon<DataTraits>;
 
 
 StationDataDumper::StationDataDumper(FILE* out)
