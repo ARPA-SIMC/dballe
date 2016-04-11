@@ -101,16 +101,10 @@ static PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key)
 
         const Var* var = self->rec->get(varname.c_str());
         if (var == NULL)
-        {
-            PyErr_SetString(PyExc_KeyError, varname.c_str());
-            return NULL;
-        }
+            Py_RETURN_NONE;
 
         if (!var->isset())
-        {
-            PyErr_SetString(PyExc_KeyError, varname.c_str());
-            return NULL;
-        }
+            Py_RETURN_NONE;
 
         return wrpy->var_value_to_python(*var);
     } DBALLE_CATCH_RETURN_PYO
