@@ -360,15 +360,16 @@ void MsgAPI::prendilo()
     int mi = input.enq("min", MISSING_INT);
     int se = input.enq("sec", MISSING_INT);
 
-    if (ye == MISSING_INT)
-        throw error_consistency("no year information found in message to import");
-    if (mo == MISSING_INT)
-        throw error_consistency("no month information found in message to import");
-    if (da == MISSING_INT)
-        throw error_consistency("no day information found in message to import");
-    if (ho == MISSING_INT)
-        throw error_consistency("no hour information found in message to import");
-    wmsg->set_datetime(Datetime(ye, mo, da, ho, mi, se));
+    if (ye != MISSING_INT)
+    {
+        if (mo == MISSING_INT)
+            throw error_consistency("no month information found in message to import");
+        if (da == MISSING_INT)
+            throw error_consistency("no day information found in message to import");
+        if (ho == MISSING_INT)
+            throw error_consistency("no hour information found in message to import");
+        wmsg->set_datetime(Datetime(ye, mo, da, ho, mi, se));
+    }
 
 	const vector<Var*>& in_vars = input.vars();
 	flushVars();
