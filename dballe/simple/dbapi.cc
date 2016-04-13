@@ -435,8 +435,8 @@ void DbAPI::critica()
                             break;
                         }
                     if (data_id == MISSING_INT)
-                        error_consistency::throwf("cannot insert attributes for variable %01d%02d%03d: no data id given or found from last prendilo()",
-                                WR_VAR_F(attr_varid), WR_VAR_X(attr_varid), WR_VAR_Y(attr_varid));
+                        error_consistency::throwf("cannot insert attributes for variable %01d%02d%03d: the last prendilo inserted %zd variables, and *var_related is not set",
+                                WR_VAR_F(attr_varid), WR_VAR_X(attr_varid), WR_VAR_Y(attr_varid), last_inserted_varids.size());
                 }
                 if (is_station)
                 {
