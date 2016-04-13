@@ -1,5 +1,6 @@
 #include "core/tests.h"
 #include "msgapi.h"
+#include <wreport/utils/sys.h>
 
 using namespace std;
 using namespace dballe;
@@ -157,6 +158,22 @@ void Tests::register_tests()
 
       include "check-utils.h"
 #endif
+    });
+    add_method("bug46", []() {
+        using namespace wreport;
+        sys::unlink_ifexists("tmp.bufr");
+        {
+            MsgAPI msgapi0("tmp.bufr", "w", "BUFR");
+            msgapi0.setcontextana();
+            msgapi0.setc("rep_memo", "temp");
+            msgapi0.setd("lat", 45.027700);
+            msgapi0.setd("lon", 9.666700);
+            msgapi0.seti("mobile", 0);
+            msgapi0.seti("block", 0);
+            msgapi0.seti("station", 101);
+            msgapi0.prendilo();
+        }
+        // error: no year information found in message to import
     });
 }
 

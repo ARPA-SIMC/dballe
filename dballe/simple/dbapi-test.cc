@@ -762,6 +762,32 @@ class Tests : public FixtureTestCase<DBFixture>
             dbapi0.setc("*var_related", "B12101");
             dbapi0.critica();
         });
+        add_method("bug45", [](Fixture& f) {
+            // ** Execution begins **
+            fortran::DbAPI dbapi0(*f.db, "write", "write", "write");
+            dbapi0.scopa();
+            dbapi0.unsetall();
+            dbapi0.seti("lat", 4500000);
+            dbapi0.seti("lon", 1000000);
+            dbapi0.unset("ident");
+            dbapi0.unset("mobile");
+            dbapi0.setc("rep_memo", "generic");
+            dbapi0.setdate(2014, 1, 6, 18, 0, 0);
+            dbapi0.setlevel(105, 2000, 2147483647, 2147483647);
+            dbapi0.settimerange(4, 3600, 7200);
+            dbapi0.seti("B13003", 85);
+            dbapi0.prendilo();
+            dbapi0.setd("*B33192", 30.000000);
+            dbapi0.seti("*B33193", 50);
+            dbapi0.setd("*B33194", 70.000000);
+            dbapi0.critica();
+            dbapi0.seti("B12101", 27315);
+            dbapi0.prendilo();
+            dbapi0.setd("*B33192", 30.000000);
+            dbapi0.seti("*B33193", 50);
+            dbapi0.critica();
+            // error: cannot insert attributes for variable 000000: no data id given or found from last prendilo()
+        });
     }
 };
 
