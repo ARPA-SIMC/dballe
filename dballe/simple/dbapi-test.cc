@@ -793,14 +793,16 @@ class Tests : public FixtureTestCase<DBFixture>
 
 Tests tg1("dbapi_mem", nullptr, db::MEM);
 Tests tg2("dbapi_v6_sqlite", "SQLITE", db::V6);
+Tests tg3("dbapi_v7_sqlite", "SQLITE", db::V7);
 #ifdef HAVE_ODBC
 Tests tg4("dbapi_v6_odbc", "ODBC", db::V6);
 #endif
 #ifdef HAVE_LIBPQ
-Tests tg6("dbapi_v6_postgresql", "POSTGRESQL", db::V6);
+Tests tg5("dbapi_v6_postgresql", "POSTGRESQL", db::V6);
+Tests tg6("dbapi_v7_postgresql", "POSTGRESQL", db::V6);
 #endif
 #ifdef HAVE_MYSQL
-Tests tg8("dbapi_v6_mysql", "MYSQL", db::V6);
+Tests tg7("dbapi_v6_mysql", "MYSQL", db::V6);
 #endif
 
 }
