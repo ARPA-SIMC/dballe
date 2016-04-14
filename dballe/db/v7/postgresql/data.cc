@@ -293,11 +293,11 @@ void PostgreSQLStationData::dump(FILE* out)
     StationDataDumper dumper(out);
 
     dumper.print_head();
-    auto res = conn.exec("SELECT id, id_station, code, value FROM station_data");
+    auto res = conn.exec("SELECT id, id_station, code, value, attrs FROM station_data");
     for (unsigned row = 0; row < res.rowcount(); ++row)
     {
         const char* val = res.is_null(row, 3) ? nullptr : res.get_string(row, 3);
-        dumper.print_row(res.get_int4(row, 0), res.get_int4(row, 1), res.get_int4(row, 2), val);
+        dumper.print_row(res.get_int4(row, 0), res.get_int4(row, 1), res.get_int4(row, 2), val, res.get_bytea(row, 4));
     }
     dumper.print_tail();
 }
@@ -417,11 +417,11 @@ void PostgreSQLData::dump(FILE* out)
     DataDumper dumper(out);
 
     dumper.print_head();
-    auto res = conn.exec("SELECT id, id_station, id_levtr, datetime, code, value FROM data");
+    auto res = conn.exec("SELECT id, id_station, id_levtr, datetime, code, value, attrs FROM data");
     for (unsigned row = 0; row < res.rowcount(); ++row)
     {
         const char* val = res.is_null(row, 5) ? nullptr : res.get_string(row, 5);
-        dumper.print_row(res.get_int4(row, 0), res.get_int4(row, 1), res.get_int4(row, 2), res.get_timestamp(row, 3), res.get_int4(row, 4), val);
+        dumper.print_row(res.get_int4(row, 0), res.get_int4(row, 1), res.get_int4(row, 2), res.get_timestamp(row, 3), res.get_int4(row, 4), val, res.get_bytea(row, 6));
     };
     dumper.print_tail();
 }

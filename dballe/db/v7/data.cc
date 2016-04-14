@@ -68,13 +68,18 @@ void StationDataDumper::print_head()
     fprintf(out, " id   st   var\n");
 }
 
-void StationDataDumper::print_row(int id, int id_station, wreport::Varcode code, const char* val)
+void StationDataDumper::print_row(int id, int id_station, wreport::Varcode code, const char* val, const std::vector<uint8_t>& attrs)
 {
     fprintf(out, " %4d %4d %01d%02d%03d", id, id_station, WR_VAR_FXY(code));
     if (!val)
         fprintf(out, "\n");
     else
         fprintf(out, " %s\n", val);
+
+    Values::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
+        fprintf(out, "     ");
+        var->print(out);
+    });
 
     ++count;
 }
@@ -95,7 +100,7 @@ void DataDumper::print_head()
     fprintf(out, " id   st   ltr  datetime              var\n");
 }
 
-void DataDumper::print_row(int id, int id_station, int id_levtr, const Datetime& dt, wreport::Varcode code, const char* val)
+void DataDumper::print_row(int id, int id_station, int id_levtr, const Datetime& dt, wreport::Varcode code, const char* val, const std::vector<uint8_t>& attrs)
 {
     fprintf(out, " %4d %4d %04d %04d-%02d-%02d %02d:%02d:%02d %01d%02d%03d",
             id,
@@ -107,6 +112,11 @@ void DataDumper::print_row(int id, int id_station, int id_levtr, const Datetime&
         fprintf(out, "\n");
     else
         fprintf(out, " %s\n", val);
+
+    Values::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
+        fprintf(out, "     ");
+        var->print(out);
+    });
 
     ++count;
 }

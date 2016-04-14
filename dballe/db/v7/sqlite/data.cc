@@ -223,10 +223,10 @@ void SQLiteStationData::dump(FILE* out)
     StationDataDumper dumper(out);
 
     dumper.print_head();
-    auto stm = conn.sqlitestatement("SELECT id, id_station, code, value FROM station_data");
+    auto stm = conn.sqlitestatement("SELECT id, id_station, code, value, attrs FROM station_data");
     stm->execute([&]() {
         const char* val = stm->column_isnull(3) ? nullptr : stm->column_string(3);
-        dumper.print_row(stm->column_int(0), stm->column_int(1), stm->column_int(2), val);
+        dumper.print_row(stm->column_int(0), stm->column_int(1), stm->column_int(2), val, stm->column_blob(4));
     });
     dumper.print_tail();
 }
@@ -338,10 +338,10 @@ void SQLiteData::dump(FILE* out)
     DataDumper dumper(out);
 
     dumper.print_head();
-    auto stm = conn.sqlitestatement("SELECT id, id_station, id_levtr, datetime, code, value FROM data");
+    auto stm = conn.sqlitestatement("SELECT id, id_station, id_levtr, datetime, code, value, attrs FROM data");
     stm->execute([&]() {
         const char* val = stm->column_isnull(5) ? nullptr : stm->column_string(5);
-        dumper.print_row(stm->column_int(0), stm->column_int(1), stm->column_int(2), stm->column_datetime(3), stm->column_int(4), val);
+        dumper.print_row(stm->column_int(0), stm->column_int(1), stm->column_int(2), stm->column_datetime(3), stm->column_int(4), val, stm->column_blob(6));
     });
     dumper.print_tail();
 }

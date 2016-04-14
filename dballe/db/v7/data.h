@@ -99,7 +99,7 @@ struct StationDataDumper
     StationDataDumper(FILE* out);
 
     void print_head();
-    void print_row(int id, int id_station, wreport::Varcode code, const char* val);
+    void print_row(int id, int id_station, wreport::Varcode code, const char* val, const std::vector<uint8_t>& attrs);
     void print_tail();
 };
 
@@ -111,7 +111,7 @@ struct DataDumper
     DataDumper(FILE* out);
 
     void print_head();
-    void print_row(int id, int id_station, int id_levtr, const Datetime& dt, wreport::Varcode code, const char* val);
+    void print_row(int id, int id_station, int id_levtr, const Datetime& dt, wreport::Varcode code, const char* val, const std::vector<uint8_t>& attrs);
     void print_tail();
 };
 
