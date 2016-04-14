@@ -732,8 +732,22 @@ class Tests : public FixtureTestCase<DBFixture>
             wassert(actual(var.enqi()) == 200);
 
             qattrs.clear();
-            wassert(actual(run_attr_query_data(db, cur->attr_reference_id(), qattrs)) == 1);
-            wassert(actual(qattrs["B33007"].var->enq(MISSING_INT)) == 50);
+
+            // V7 databases implement the semantics in #44 where updating a
+            // value removes the attributes
+            switch (db.format())
+            {
+                case V6:
+                case MEM:
+                    wassert(actual(run_attr_query_data(db, cur->attr_reference_id(), qattrs)) == 1);
+                    wassert(actual(qattrs["B33007"].var->enq(MISSING_INT)) == 50);
+                    break;
+                case V7:
+                    wassert(actual(run_attr_query_data(db, cur->attr_reference_id(), qattrs)) == 0);
+                    break;
+                default:
+                    throw TestFailed("Database format " + to_string((int)db.format()) + " not supported");
+            }
         });
         add_method("query_stepbystep", [](Fixture& f) {
             auto& db = *f.db;
