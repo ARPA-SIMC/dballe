@@ -21,6 +21,7 @@ struct Fixture : V7DriverFixture
     using V7DriverFixture::V7DriverFixture;
 
     unique_ptr<dballe::db::v7::Transaction> t;
+    unique_ptr<db::v7::Station> station;
     unique_ptr<db::v7::Data> data;
     unique_ptr<db::v7::LevTr> levtr;
     db::v7::StationDesc sde1;
@@ -46,8 +47,6 @@ struct Fixture : V7DriverFixture
         auto conn_t = conn->transaction();
         t.reset(new dballe::db::v7::Transaction(move(conn_t)));
 
-        auto st = driver->create_station();
-
         int added, deleted, updated;
         driver->create_repinfo()->update(nullptr, &added, &deleted, &updated);
 
@@ -55,10 +54,10 @@ struct Fixture : V7DriverFixture
         db::v7::levtrs_t::iterator li;
 
         // Insert a mobile station
-        si = st->obtain_id(t->state, sde1);
+        si = station->obtain_id(t->state, sde1);
 
         // Insert a fixed station
-        si = st->obtain_id(t->state, sde2);
+        si = station->obtain_id(t->state, sde2);
 
         // Insert a lev_tr
         lt1 = levtr->obtain_id(t->state, db::v7::LevTrDesc(Level(1, 2, 0, 3), Trange(4, 5, 6)));
@@ -70,8 +69,9 @@ struct Fixture : V7DriverFixture
     void test_setup()
     {
         V7DriverFixture::test_setup();
-        data = driver->create_data();
-        levtr = driver->create_levtr();
+        if (!station.get()) station = driver->create_station();
+        if (!data.get()) data = driver->create_data();
+        if (!levtr.get()) levtr = driver->create_levtr();
         reset_data();
     }
 };
