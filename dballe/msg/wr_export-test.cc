@@ -109,7 +109,7 @@ class Tests : public TestCase
         });
         add_method("reproduce_temp", []() {
             // Export a well known TEMP which used to fail
-            Messages msgs = read_msgs_csv("csv/temp1.csv");
+            Messages msgs = wcallchecked(read_msgs_csv("csv/temp1.csv"));
             wassert(actual(msgs.size()) > 0);
 
             // Replace with packed levels because comparison later happens against
