@@ -279,6 +279,7 @@ struct MemCursorStationData : public CursorSorted<CursorStationData, StationValu
         to_record_station(values[cur]->station, rec);
         to_record_varcode(values[cur]->var->code(), rec);
         rec.set(*values[cur]->var);
+        rec.seti("context_id", cur);
     }
 };
 

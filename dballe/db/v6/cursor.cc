@@ -234,10 +234,7 @@ struct StationData : public Base<CursorStationData>
     {
         to_record_pseudoana(rec);
         to_record_repinfo(rec);
-        if (results[cur].out_id_ltr == -1)
-            rec.unset("context_id");
-        else
-            rec.seti("context_id", results[cur].out_id_data);
+        rec.seti("context_id", results[cur].out_id_data);
         to_record_varcode(rec);
         rec.clear_vars();
         rec.set(newvar(results[cur].out_varcode, results[cur].out_value));
@@ -277,10 +274,7 @@ struct Data : public Base<CursorData>
     {
         to_record_pseudoana(rec);
         to_record_repinfo(rec);
-        if (results[cur].out_id_ltr == -1)
-            rec.unset("context_id");
-        else
-            rec.seti("context_id", results[cur].out_id_data);
+        rec.seti("context_id", results[cur].out_id_data);
         to_record_varcode(rec);
         to_record_ltr(rec);
         to_record_datetime(rec);

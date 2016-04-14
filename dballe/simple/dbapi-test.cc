@@ -580,7 +580,7 @@ class Tests : public FixtureTestCase<DBFixture>
             wassert(actual(api.voglioquesto()) == 1);
             api.dammelo();
             // Get its reference id
-            wassert(actual(api.enqi("context_id")) == MISSING_INT);
+            wassert(actual(api.enqi("context_id")) != MISSING_INT);
             // Get its attrs (none)
             wassert(actual(api.voglioancora()) == 0);
             // Set an attr
