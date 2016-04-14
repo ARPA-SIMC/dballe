@@ -803,6 +803,7 @@ Tests tg6("dbapi_v7_postgresql", "POSTGRESQL", db::V6);
 #endif
 #ifdef HAVE_MYSQL
 Tests tg7("dbapi_v6_mysql", "MYSQL", db::V6);
+Tests tg8("dbapi_v7_mysql", "MYSQL", db::V7);
 #endif
 
 }

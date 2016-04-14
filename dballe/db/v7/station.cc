@@ -12,6 +12,21 @@ Station::~Station()
 {
 }
 
+stations_t::iterator Station::get_id(State& st, const StationDesc& desc)
+{
+    auto res = st.stations.find(desc);
+    if (res != st.stations.end())
+        return res;
+
+    StationState state;
+    if (maybe_get_id(desc, &state.id))
+    {
+        state.is_new = false;
+        return st.add_station(desc, state);
+    }
+    throw error_notfound("station not found in the database");
+}
+
 void Station::dump(FILE* out)
 {
     int count = 0;

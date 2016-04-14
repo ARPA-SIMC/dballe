@@ -170,7 +170,12 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/v6/mysql/levtr.h \
 	db/v6/mysql/datav6.h \
 	db/v6/mysql/attrv6.h \
-	db/v6/mysql/driver.h
+	db/v6/mysql/driver.h \
+	db/v7/mysql/repinfo.h \
+	db/v7/mysql/station.h \
+	db/v7/mysql/levtr.h \
+	db/v7/mysql/data.h \
+	db/v7/mysql/driver.h
 endif
 if HAVE_ODBC
 nobase_dist_dballeinclude_HEADERS += \
@@ -326,7 +331,12 @@ libdballe_la_SOURCES += \
 	db/v6/mysql/station.cc \
 	db/v6/mysql/levtr.cc \
 	db/v6/mysql/datav6.cc \
-	db/v6/mysql/attrv6.cc
+	db/v6/mysql/attrv6.cc \
+	db/v7/mysql/repinfo.cc \
+	db/v7/mysql/station.cc \
+	db/v7/mysql/levtr.cc \
+	db/v7/mysql/data.cc \
+	db/v7/mysql/driver.cc
 endif
 if HAVE_ODBC
 libdballe_la_SOURCES += \

@@ -103,21 +103,6 @@ stations_t::iterator SQLiteStation::lookup_id(State& st, int id)
     return res;
 }
 
-stations_t::iterator SQLiteStation::get_id(State& st, const StationDesc& desc)
-{
-    auto res = st.stations.find(desc);
-    if (res != st.stations.end())
-        return res;
-
-    StationState state;
-    if (maybe_get_id(desc, &state.id))
-    {
-        state.is_new = false;
-        return st.add_station(desc, state);
-    }
-    throw error_notfound("station not found in the database");
-}
-
 stations_t::iterator SQLiteStation::obtain_id(State& st, const StationDesc& desc)
 {
     auto res = st.stations.find(desc);

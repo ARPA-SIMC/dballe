@@ -6,11 +6,9 @@
 #include "dballe/db/v7/postgresql/driver.h"
 #include "dballe/sql/postgresql.h"
 #endif
-#if 0
 #ifdef HAVE_MYSQL
 #include "dballe/db/v7/mysql/driver.h"
 #include "dballe/sql/mysql.h"
-#endif
 #endif
 #include <cstring>
 #include <sstream>
@@ -76,23 +74,19 @@ std::unique_ptr<Driver> Driver::create(dballe::sql::Connection& conn)
     else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(&conn))
         return unique_ptr<Driver>(new postgresql::Driver(*c));
 #endif
-#if 0
 #ifdef HAVE_MYSQL
     else if (MySQLConnection* c = dynamic_cast<MySQLConnection*>(&conn))
         return unique_ptr<Driver>(new mysql::Driver(*c));
-#endif
 #endif
     else
         throw error_unimplemented("DB drivers only implemented for "
 #ifdef HAVE_LIBPQ
                 "PostgreSQL, "
 #endif
-#if 0
 #ifdef HAVE_MYSQL
                 "MySQL, "
 #endif
-#endif
-                " and SQLite connectors");
+                "SQLite connectors");
 }
 
 }

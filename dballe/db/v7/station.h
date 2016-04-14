@@ -19,6 +19,7 @@ namespace v7 {
 struct Station
 {
 protected:
+    virtual bool maybe_get_id(const StationDesc& st, int* id) = 0;
     virtual void _dump(std::function<void(int, int, const Coords& coords, const char* ident)> out) = 0;
 
 public:
@@ -39,7 +40,7 @@ public:
      *
      * It throws an exception if it does not exist.
      */
-    virtual stations_t::iterator get_id(State& st, const StationDesc& desc) = 0;
+    virtual stations_t::iterator get_id(State& st, const StationDesc& desc);
 
     /**
      * Get the station ID given latitude, longitude and mobile identifier.
