@@ -323,7 +323,7 @@ void DB::attr_remove_station(dballe::Transaction& transaction, int data_id, cons
     {
         // Delete all attributes
         char buf[64];
-        snprintf(buf, 64, "UPDATE station_data SET attr=NULL WHERE id_data=%d", data_id);
+        snprintf(buf, 64, "UPDATE station_data SET attrs=NULL WHERE id=%d", data_id);
         conn->execute(buf);
     } else {
         auto& d = station_data();
@@ -337,7 +337,7 @@ void DB::attr_remove_data(dballe::Transaction& transaction, int data_id, const d
     {
         // Delete all attributes
         char buf[64];
-        snprintf(buf, 64, "UPDATE data SET attr=NULL WHERE id_data=%d", data_id);
+        snprintf(buf, 64, "UPDATE data SET attrs=NULL WHERE id=%d", data_id);
         conn->execute(buf);
     } else {
         auto& d = data();
