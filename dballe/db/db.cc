@@ -24,6 +24,19 @@ namespace db {
 
 static Format default_format = V6;
 
+std::string format_format(Format format)
+{
+    switch (format)
+    {
+        case V5: return "V5";
+        case V6: return "V6";
+        case MEM: return "MEM";
+        case MESSAGES: return "MESSAGES";
+        case V7: return "V7";
+        default: return "unknown format " + std::to_string((int)format);
+    }
+}
+
 Cursor::~Cursor()
 {
 }
@@ -249,6 +262,11 @@ bool DB::export_msgs(const Query& query, std::function<bool(std::unique_ptr<Mess
     bool res = export_msgs(*t, query, dest);
     t->commit();
     return res;
+}
+
+void DB::print_info(FILE* out)
+{
+    fprintf(out, "Format: %s\n", format_format(format()).c_str());
 }
 
 }

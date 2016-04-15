@@ -30,6 +30,10 @@ struct DB;
 
 namespace db {
 
+/// Format a db::Format value to a string
+std::string format_format(Format format);
+
+
 /// Common interface for all kinds of cursors
 struct Cursor
 {
@@ -698,6 +702,9 @@ public:
      * Dump the entire contents of the database to an output stream
      */
     virtual void dump(FILE* out) = 0;
+
+    /// Print informations about the database to the given output stream
+    virtual void print_info(FILE* out);
 
     /// Return the default repinfo file pathname
     static const char* default_repinfo_file();

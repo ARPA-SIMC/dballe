@@ -416,6 +416,30 @@ struct DeleteCmd : public DatabaseCmd
     }
 };
 
+struct InfoCmd : public DatabaseCmd
+{
+    InfoCmd()
+    {
+        names.push_back("info");
+        usage = "info";
+        desc = "Print information about the database";
+    }
+
+    int main(poptContext optCon) override
+    {
+        // Throw away the command name
+        poptGetArg(optCon);
+
+        unique_ptr<DB> db = connect();
+
+        string default_format = db::format_format(DB::get_default_format());
+        fprintf(stdout, "Default format for new DBs: %s\n", default_format.c_str());
+        db->print_info(stdout);
+
+        return 0;
+    }
+};
+
 
 int main (int argc, const char* argv[])
 {
@@ -434,6 +458,7 @@ int main (int argc, const char* argv[])
     dbadb.add_subcommand(new ImportCmd);
     dbadb.add_subcommand(new ExportCmd);
     dbadb.add_subcommand(new DeleteCmd);
+    dbadb.add_subcommand(new InfoCmd);
 
     return dbadb.main(argc, argv);
 }
