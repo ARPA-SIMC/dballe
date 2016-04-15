@@ -1354,6 +1354,8 @@ F77_INTEGER_FUNCTION(idba_scopa)(INTEGER(handle), CHARACTER(repinfofile) TRAIL(r
  *
  * Results are retrieved using idba_elencamele().
  *
+ * There is no guarantee on the ordering of results of quantesono/elencamele.
+ *
  * @param handle
  *   Handle to a DB-All.e session
  * @param count
