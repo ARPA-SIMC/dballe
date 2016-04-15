@@ -756,6 +756,8 @@ The error indicator for the function
 Query the stations in the database.
 
 Results are retrieved using [idba_elencamele()](#idba_elencamele).
+There is no guarantee on the ordering of results of
+quantesono/elencamele.
 <a name='idba_elencamele'></a>
 #### idba_elencamele(handle)
 
