@@ -350,6 +350,8 @@ class Tests : public FixtureTestCase<DBFixture>
             core::Record test;
             switch (db.format())
             {
+                case MEM:
+                case V6:
                 case V7:
                     // v7: coords, ident, datetime, level, trange, report, code
                     wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals01)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
@@ -359,27 +361,6 @@ class Tests : public FixtureTestCase<DBFixture>
                     wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals04)); // lat=1, lon=1, year=2000, leveltype1=2, pindicator=1, rep_memo=a, B12101=280.15
                     wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals03)); // lat=1, lon=1, year=2001, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
                     wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals02)); // lat=2, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
-                    break;
-                case MEM:
-                    // mem: coords, ident, datetime, level, trange, code, report
-                    wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals01)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
-                    wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals07)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12103=280.15
-                    wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals06)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=b, B12101=280.15
-                    wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals05)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=2, rep_memo=a, B12101=280.15
-                    wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals04)); // lat=1, lon=1, year=2000, leveltype1=2, pindicator=1, rep_memo=a, B12101=280.15
-                    wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals03)); // lat=1, lon=1, year=2001, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
-                    wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals02)); // lat=2, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
-                    break;
-                case V6:
-                    // V6: ana_id, datetime, level, trange, report, var
-                    wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals01)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
-                    wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals07)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12103=280.15
-                    wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals06)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=b, B12101=280.15
-                    wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals05)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=2, rep_memo=a, B12101=280.15
-                    wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals04)); // lat=1, lon=1, year=2000, leveltype1=2, pindicator=1, rep_memo=a, B12101=280.15
-                    wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals03)); // lat=1, lon=1, year=2001, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
-                    wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals02)); // lat=2, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
-                    // cur->to_record(test); test.print(stderr);
                     break;
                 default: error_unimplemented::throwf("cannot run this test on a database of format %d", (int)db.format());
             }

@@ -1414,6 +1414,19 @@ F77_INTEGER_FUNCTION(idba_elencamele)(INTEGER(handle))
  *
  * Results are retrieved using idba_dammelo().
  *
+ * Results are sorted by (in order): latitude, longitude, ident, datetime,
+ * level, time range, rep_memo, varcode. The latitude changes slowest, and the
+ * varcode changes fastest.
+ *
+ * Note that in V6 databases the ana_id corresponds to (latitude, longitude,
+ * ident), and therefore changes slowest, and in MEM and V7 databases the
+ * ana_id corresponds to (latitude, longitude, ident, rep_memo), and therefore
+ * changes almost the fastest.
+ *
+ * Sort order can change in the future, with the invariant that the slowest to
+ * change remains (coordinates, ident) and the fastest to change remains the
+ * varcode.
+ *
  * @param handle
  *   Handle to a DB-All.e session
  * @retval count
