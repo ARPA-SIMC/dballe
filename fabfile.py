@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 from fabric.api import local, run, sudo, cd, env, hosts, shell_env
 from fabric.contrib.files import exists
 import git
+import re
 from six.moves import shlex_quote
 
 env.hosts = ["venti"]
@@ -20,8 +21,12 @@ def test_venti():
     fedora_ldflags = "-Wl,-z,relro"
 
     repo = git.Repo()
+    remote = repo.remote("venti")
+    push_url = remote.config_reader.get("url")
+    remote_dir = re.sub(r"^ssh://[^/]+", "", push_url)
+
     local(cmd("git", "push", "venti", "HEAD"))
-    with cd("~/dballe"):
+    with cd(remote_dir):
         #run(cmd("git", "fetch"))
         run(cmd("git", "checkout", "-B", "test_venti", repo.head.commit.hexsha))
         run(cmd("git", "reset", "--hard"))
