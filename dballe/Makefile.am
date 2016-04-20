@@ -96,6 +96,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	msg/aof_codec.h \
 	msg/wr_codec.h \
 	msg/wr_exporters/common.h \
+	sql/fwd.h \
 	sql/sql.h \
 	sql/querybuf.h \
 	sql/sqlite.h \
