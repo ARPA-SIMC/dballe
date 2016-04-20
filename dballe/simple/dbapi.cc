@@ -290,6 +290,7 @@ void DbAPI::prendilo()
     // Move attr_state to PRENDILO, so that the next critica() knows they can
     // lookup the output of this insert
     attr_state = ATTR_PRENDILO;
+    unsetb();
 }
 
 void DbAPI::dimenticami()
