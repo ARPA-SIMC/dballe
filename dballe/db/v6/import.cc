@@ -118,11 +118,6 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
     vars.id_station = id_station;
     vars.id_report = id_report;
 
-    // Date and time
-    if (msg.get_datetime().is_missing())
-        throw error_notfound("date/time informations not found (or incomplete) in message to insert");
-    vars.datetime = msg.get_datetime();
-
     // Fill the bulk insert with the rest of the data
     for (size_t i = 0; i < msg.data.size(); ++i)
     {
@@ -131,6 +126,14 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
 
         // Skip the station info level
         if (is_ana_level) continue;
+
+        // Date and time
+        if (vars.datetime.is_missing())
+        {
+            vars.datetime = msg.get_datetime();
+            if (vars.datetime.is_missing())
+                throw error_notfound("date/time informations not found (or incomplete) in message to insert");
+        }
 
         // Get the database ID of the lev_tr
         int id_lev_tr = lt.obtain_id(ctx.level, ctx.trange);

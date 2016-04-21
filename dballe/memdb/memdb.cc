@@ -143,8 +143,7 @@ void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool wi
     // Fill up the common context information for the rest of the data
 
     // Date and time
-    if (msg.get_datetime().is_missing())
-        throw error_notfound("date/time informations not found (or incomplete) in message to insert");
+    Datetime datetime;
 
     // Insert the rest of the data
     for (size_t i = 0; i < msg.data.size(); ++i)
@@ -154,6 +153,12 @@ void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool wi
         // Skip the station info level
         if (is_ana_level) continue;
 
+        if (datetime.is_missing())
+        {
+            datetime = msg.get_datetime();
+            if (datetime.is_missing())
+                throw error_notfound("date/time informations not found (or incomplete) in message to insert");
+        }
         size_t levtr_id = levtrs.obtain(ctx.level, ctx.trange);
         const LevTr& levtr = *levtrs[levtr_id];
 
@@ -169,7 +174,7 @@ void Memdb::insert(const Msg& msg, bool replace, bool with_station_info, bool wi
                 var.reset(new Var(srcvar->info()));
                 var->setval(*srcvar);
             }
-            values.insert(station, levtr, msg.get_datetime(), std::move(var), replace);
+            values.insert(station, levtr, datetime, std::move(var), replace);
         }
     }
 }

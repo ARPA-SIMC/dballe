@@ -253,12 +253,7 @@ class Tests : public FixtureTestCase<DBFixture>
             core::Record query;
             Messages msgs = read_msgs("bufr/arpa-station.bufr", File::BUFR);
             db->remove_all();
-            try {
-                db->import_msg(msgs[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
-                wassert(actual(false).istrue());
-            } catch (error_notfound& e) {
-                // ok.
-            }
+            wassert(db->import_msg(msgs[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA));
 
             // Redo it with manually generated messages, this should not get imported
             {
@@ -268,12 +263,7 @@ class Tests : public FixtureTestCase<DBFixture>
                 msg.set_rep_memo("synop");
                 msg.set_latitude(44.53000);
                 msg.set_longitude(11.30000);
-                try {
-                    db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
-                    wassert(actual(false).istrue());
-                } catch (error_notfound& e) {
-                    // ok.
-                }
+                wassert(db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA));
             }
 
             // Same but with a datetime set. This should not get imported, but it

@@ -780,7 +780,8 @@ add_method("attr_insert", [](Fixture& f) {
     dbapi0.setc("*var_related", "B12101");
     dbapi0.critica();
 });
-add_method("bug45", [](Fixture& f) {
+
+add_method("issue45", [](Fixture& f) {
     // ** Execution begins **
     fortran::DbAPI dbapi0(*f.db, "write", "write", "write");
     dbapi0.scopa();
@@ -805,6 +806,18 @@ add_method("bug45", [](Fixture& f) {
     dbapi0.seti("*B33193", 50);
     dbapi0.critica();
     // error: cannot insert attributes for variable 000000: no data id given or found from last prendilo()
+});
+
+add_method("issue52", [](Fixture& f) {
+    using namespace wreport;
+
+    std::string fname = dballe::tests::datafile("bufr/issue52.bufr");
+    fortran::DbAPI dbapi(*f.db, "write", "write", "write");
+    wassert(dbapi.messages_open_input(fname.c_str(), "r", File::BUFR, true));
+    wassert(actual(dbapi.messages_read_next()).istrue());
+    wassert(actual(dbapi.messages_read_next()).istrue());
+
+    // error: no year information found in message to import
 });
 
 }

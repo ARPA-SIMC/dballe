@@ -89,12 +89,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
 
     v7::Data& dd = data();
 
-    // Date and time
-    Datetime dt = msg.get_datetime();
-    if (dt.is_missing())
-        throw error_notfound("date/time informations not found (or incomplete) in message to insert");
-
-    v7::bulk::InsertVars vars(t.state, sstate, dt);
+    v7::bulk::InsertVars vars(t.state, sstate);
 
     // Fill the bulk insert with the rest of the data
     for (size_t i = 0; i < msg.data.size(); ++i)
@@ -104,6 +99,14 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
 
         // Skip the station info level
         if (is_ana_level) continue;
+
+        // Date and time
+        if (not vars.has_datetime())
+        {
+            vars.set_datetime(msg.get_datetime());
+            if (not vars.has_datetime())
+                throw error_notfound("date/time informations not found (or incomplete) in message to insert");
+        }
 
         // Get the database ID of the lev_tr
         auto levtri = lt.obtain_id(t.state, LevTrDesc(ctx.level, ctx.trange));

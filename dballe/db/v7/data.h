@@ -207,6 +207,7 @@ struct SharedDataContext : public SharedContext
     Datetime datetime;
 
     SharedDataContext() {}
+    SharedDataContext(stations_t::iterator station) : SharedContext(station) {}
     SharedDataContext(stations_t::iterator station, const Datetime& datetime) : SharedContext(station), datetime(datetime) {}
 
     ValueDesc make_desc(Var& v) const
@@ -296,6 +297,16 @@ struct InsertStationVars : public InsertPlan<StationVar, SharedStationContext>
 struct InsertVars : public InsertPlan<Var, SharedDataContext>
 {
     using InsertPlan::InsertPlan;
+
+    bool has_datetime() const
+    {
+        return not shared_context.datetime.is_missing();
+    }
+
+    void set_datetime(const Datetime& dt)
+    {
+        shared_context.datetime = dt;
+    }
 
     void add(const wreport::Var* var, const LevTrState& levtr)
     {
