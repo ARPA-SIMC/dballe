@@ -159,7 +159,7 @@ void Tests::register_tests()
       include "check-utils.h"
 #endif
     });
-    add_method("bug46", []() {
+    add_method("issue46", []() {
         using namespace wreport;
         sys::unlink_ifexists("tmp.bufr");
         {
