@@ -1,6 +1,6 @@
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
-Version: 7.12
+Version: 7.13
 Release: 1
 License: GPL
 Group: Applications/Meteo
@@ -270,44 +270,47 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 
 
 %changelog
-* Thu Apr 21 2016 Daniele Branchini <dbranchini@arpa.emr.it> - 7.12-1%{dist}
+* Thu Apr 21 2016 Daniele Branchini <dbranchini@arpa.emr.it> - 7.13-1
+- closed #52
+
+* Thu Apr 21 2016 Daniele Branchini <dbranchini@arpa.emr.it> - 7.12-1
 - packaged missing headers
 - closed #45
 
-* Tue Apr 19 2016 Daniele Branchini <dbranchini@arpa.emr.it> - 7.11-1%{dist}
+* Tue Apr 19 2016 Daniele Branchini <dbranchini@arpa.emr.it> - 7.11-1
 - Implemented experimental V7 database format for MySQL
 - Implemented dbadb info
 - Added documentation (see #18, #19)
 - Adapted tests to fit the #44 attribute behaviour in V7 databases
 
-* Thu Apr 14 2016 Daniele Branchini <dbranchini@arpa.emr.it> - 7.10-1%{dist}
+* Thu Apr 14 2016 Daniele Branchini <dbranchini@arpa.emr.it> - 7.10-1
 - Added new experimental V7 database format
 - closed #45, #46
 
-* Tue Mar 15 2016 Daniele Branchini <dbranchini@arpa.emr.it> - 7.9-1%{dist}
+* Tue Mar 15 2016 Daniele Branchini <dbranchini@arpa.emr.it> - 7.9-1
 - dbadb import tuning
 - closed #35, #37
 
-* Thu Feb 25 2016 Davide Cesari <dcesari@arpa.emr.it> - 7.8-1%{dist}
+* Thu Feb 25 2016 Davide Cesari <dcesari@arpa.emr.it> - 7.8-1
 - closed #33
 
-* Tue Nov 24 2015 Daniele Branchini <dbranchini@arpa.emr.it> - 7.7-2%{dist}
+* Tue Nov 24 2015 Daniele Branchini <dbranchini@arpa.emr.it> - 7.7-2
 - managing provami messy legacy
 
-* Tue Nov 24 2015 Daniele Branchini <dbranchini@arpa.emr.it> - 7.7-1%{dist}
+* Tue Nov 24 2015 Daniele Branchini <dbranchini@arpa.emr.it> - 7.7-1
 - virtualenv/pip support
 - closed #13, #22
 
-* Thu Nov 12 2015 Daniele Branchini <dbranchini@arpa.emr.it> - 7.6-2%{dist}
+* Thu Nov 12 2015 Daniele Branchini <dbranchini@arpa.emr.it> - 7.6-2
 - Fix dballe and dballe-python dependencies, excluded old provami files
 
-* Wed Sep 16 2015 Emanuele Di Giacomo <edigiacomo@arpa.emr.it> - 7.6-1%{dist}
+* Wed Sep 16 2015 Emanuele Di Giacomo <edigiacomo@arpa.emr.it> - 7.6-1
 - Fix JSON import from stdin (issue #11)
 
-* Wed Sep 16 2015 Emanuele Di Giacomo <edigiacomo@arpa.emr.it> - 7.5-1%{dist}
+* Wed Sep 16 2015 Emanuele Di Giacomo <edigiacomo@arpa.emr.it> - 7.5-1
 - Fixed tests
 
-* Tue Sep 15 2015 Emanuele Di Giacomo <edigiacomo@arpa.emr.it> - 7.4-1%{dist}
+* Tue Sep 15 2015 Emanuele Di Giacomo <edigiacomo@arpa.emr.it> - 7.4-1
 - JSON import/export (issue #5)
 - Fix empty report in import (issue #8)
 - Fix opening stdin and stdout from Fortran bindings (issue #3)
@@ -315,13 +318,13 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 - Ported to wreport-3.2
 - Removed wibble dependency
 
-* Fri Sep  4 2015 Emanuele Di Giacomo <edigiacomo@arpa.emr.it> - 7.3-2%{dist}
+* Fri Sep  4 2015 Emanuele Di Giacomo <edigiacomo@arpa.emr.it> - 7.3-2
 - Fixed test
 
-* Fri Sep  4 2015 Emanuele Di Giacomo <edigiacomo@arpa.emr.it> - 7.3-1%{dist}
+* Fri Sep  4 2015 Emanuele Di Giacomo <edigiacomo@arpa.emr.it> - 7.3-1
 - Encoding parser ignore case
 
-* Mon Aug  3 2015 Daniele Branchini <dbranchini@arpa.emr.it> - 7.2-1%{dist}
+* Mon Aug  3 2015 Daniele Branchini <dbranchini@arpa.emr.it> - 7.2-1
 - Requires libwreport v3.0
 - Switching to git upstream
 
