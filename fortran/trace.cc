@@ -66,6 +66,7 @@ void trace_init()
     if (tracefile)
     {
         trace_file = fopen(tracefile, "at");
+        setvbuf(trace_file, nullptr, _IOLBF, 0);
         do_trace = true;
         fprintf(trace_file, "// ** Execution begins **\n");
     }
