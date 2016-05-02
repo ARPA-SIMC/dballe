@@ -167,9 +167,6 @@ class Tests : public FixtureTestCase<Fixture>
 };
 
 Tests tg1("db_sql_data_v6_sqlite", "SQLITE", db::V6);
-#ifdef HAVE_ODBC
-Tests tg2("db_sql_data_v6_odbc", "ODBC", db::V6);
-#endif
 #ifdef HAVE_LIBPQ
 Tests tg3("db_sql_data_v6_postgresql", "POSTGRESQL", db::V6);
 #endif

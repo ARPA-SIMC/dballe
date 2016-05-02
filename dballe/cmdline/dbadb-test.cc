@@ -57,9 +57,6 @@ add_method("import", [](Fixture& f) {
 
 Tests tg1("cmdline_dbadb_mem", nullptr, db::MEM);
 Tests tg2("cmdline_dbadb_v6_sqlite", "SQLITE", db::V6);
-#ifdef HAVE_ODBC
-Tests tg4("cmdline_dbadb_v6_odbc", "ODBC", db::V6);
-#endif
 #ifdef HAVE_LIBPQ
 Tests tg6("cmdline_dbadb_v6_postgresql", "POSTGRESQL", db::V6);
 #endif

@@ -19,10 +19,6 @@ struct error_postgresql : public error_db
 {
     std::string msg;
 
-    /**
-     * Copy informations from the ODBC diagnostic record to the dba error
-     * report
-     */
     error_postgresql(PGconn* db, const std::string& msg);
     error_postgresql(PGresult* db, const std::string& msg);
     error_postgresql(const std::string& dbmsg, const std::string& msg);

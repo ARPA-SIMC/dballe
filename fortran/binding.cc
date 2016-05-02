@@ -136,12 +136,12 @@ extern "C" {
  * This function can be called more than once once to connect to different
  * databases at the same time.
  *
- * @param dsn
- *   The ODBC DSN of the database to use
+ * @param url
+ *   The URL of the database to use
  * @param user
- *   The username used to connect to the database
+ *   Used in the past, now it is ignored.
  * @param password
- *   The username used to connect to the database
+ *   Used in the past, now it is ignored.
  * @retval dbahandle
  *   The database handle that can be passed to idba_preparati to work with the
  *   database.
@@ -150,27 +150,23 @@ extern "C" {
  */
 F77_INTEGER_FUNCTION(idba_presentati)(
         INTEGER(dbahandle),
-        CHARACTER(dsn),
+        CHARACTER(url),
         CHARACTER(user),
         CHARACTER(password)
-        TRAIL(dsn)
+        TRAIL(url)
         TRAIL(user)
         TRAIL(password))
 {
     GENPTR_INTEGER(dbahandle)
-    GENPTR_CHARACTER(dsn)
+    GENPTR_CHARACTER(url)
     GENPTR_CHARACTER(user)
     GENPTR_CHARACTER(password)
-    const char* chosen_dsn;
-    char s_dsn[256];
-    char s_user[20];
-    char s_password[20];
+    const char* chosen_url;
+    char s_url[256];
 
     try {
         /* Import input string parameters */
-        cnfImpn(dsn, dsn_length, 255, s_dsn); s_dsn[255] = 0;
-        cnfImpn(user, user_length, 19, s_user); s_user[19] = 0;
-        cnfImpn(password, password_length, 19, s_password); s_password[19] = 0;
+        cnfImpn(url, url_length, 255, s_url); s_url[255] = 0;
 
         /* Initialize the library if needed */
         lib_init();
@@ -181,25 +177,16 @@ F77_INTEGER_FUNCTION(idba_presentati)(
 
         /* Open the DB-All.e session */
 
-        /* If dsn is missing, look in the environment */
-        if (s_dsn[0] == 0)
+        /* If url is missing, look in the environment */
+        if (s_url[0] == 0)
         {
-            chosen_dsn = getenv("DBA_DB");
-            if (chosen_dsn == NULL) chosen_dsn = "";
+            chosen_url = getenv("DBA_DB");
+            if (chosen_url == NULL) chosen_url = "";
         } else
-            chosen_dsn = s_dsn;
+            chosen_url = s_url;
 
-        /* If dsn looks like a url, treat it accordingly */
-        if (DB::is_url(chosen_dsn))
-        {
-            IF_TRACING(fortran::log_presentati_url(*dbahandle, chosen_dsn));
-            hs.db = DB::connect_from_url(chosen_dsn).release();
-        }
-        else
-        {
-            IF_TRACING(fortran::log_presentati_dsn(*dbahandle, chosen_dsn, s_user, s_password));
-            hs.db = DB::connect(chosen_dsn, s_user, s_password).release();
-        }
+        IF_TRACING(fortran::log_presentati_url(*dbahandle, chosen_url));
+        hs.db = DB::connect_from_url(chosen_url).release();
 
         /* Open the database session */
         return fortran::success();

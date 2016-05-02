@@ -16,8 +16,6 @@ class Statement;
 class Connection;
 class Sequence;
 class MySQLConnection;
-class ODBCConnection;
-class ODBCStatement;
 class PostgreSQLConnection;
 class SQLiteConnection;
 class SQLiteStatement;

@@ -20,10 +20,6 @@ struct error_sqlite : public dballe::error_db
 {
     std::string msg;
 
-    /**
-     * Copy informations from the ODBC diagnostic record to the dba error
-     * report
-     */
     error_sqlite(sqlite3* db, const std::string& msg);
     error_sqlite(const std::string& dbmsg, const std::string& msg);
     ~error_sqlite() noexcept {}

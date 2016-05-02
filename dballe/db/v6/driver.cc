@@ -10,10 +10,6 @@
 #include "dballe/db/v6/mysql/driver.h"
 #include "dballe/sql/mysql.h"
 #endif
-#ifdef HAVE_ODBC
-#include "dballe/db/v6/odbc/driver.h"
-#include "dballe/sql/odbc.h"
-#endif
 #include <cstring>
 #include <sstream>
 
@@ -100,10 +96,6 @@ std::unique_ptr<Driver> Driver::create(dballe::sql::Connection& conn)
 
     if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(&conn))
         return unique_ptr<Driver>(new sqlite::Driver(*c));
-#ifdef HAVE_ODBC
-    else if (ODBCConnection* c = dynamic_cast<ODBCConnection*>(&conn))
-        return unique_ptr<Driver>(new odbc::Driver(*c));
-#endif
 #ifdef HAVE_LIBPQ
     else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(&conn))
         return unique_ptr<Driver>(new postgresql::Driver(*c));
@@ -119,9 +111,6 @@ std::unique_ptr<Driver> Driver::create(dballe::sql::Connection& conn)
 #endif
 #ifdef HAVE_MYSQL
                 "MySQL, "
-#endif
-#ifdef HAVE_ODBC
-                "ODBC, "
 #endif
                 " and SQLite connectors");
 }

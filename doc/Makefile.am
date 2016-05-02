@@ -98,7 +98,7 @@ EXTRA_DIST += $(fapisources) make_fortran_reference
 
 # Install guide
 
-#guidesources = guide.tex intro.tex install.tex maintainance.tex troubleshooting.tex local.bib
+#guidesources = guide.tex intro.tex maintainance.tex troubleshooting.tex local.bib
 
 
 # make install machinery

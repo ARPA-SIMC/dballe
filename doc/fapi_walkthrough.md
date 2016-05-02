@@ -149,7 +149,7 @@ This code will open a connection with DB-All.e, then it will start a session:
 
 ```fortran
       ! Connect to the database and get a handle to work with it
-      ierr = idba_presentati(dbhandle, "dsn", "username", "password")
+      ierr = idba_presentati(dbhandle, "url", "ignored", "ignored")
       ierr = idba_preparati(dbhandle, handle, "read", "read", "read")
 
       ! ...do your work...
@@ -160,9 +160,8 @@ This code will open a connection with DB-All.e, then it will start a session:
 ```
 
 You call [idba_presentati][] to connect to the databse. The parameters are
-the usual ODBC triplet of DSN, username and password.
-There are alternative ways of invoking [idba_presentati][]: see [Database
-URLs](fapi_connect.md) for details.
+the [database connection URL](fapi_connect.md), and two parameters that were
+used in the past and are now ignored.
 
 You can call [idba_preparati][] many times and get more handles.  This allows
 to perform many operations on the database at the same time.

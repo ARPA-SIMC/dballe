@@ -115,9 +115,6 @@ class Tests : public FixtureTestCase<Fixture>
 };
 
 Tests test_sqlite("db_sql_repinfo_v7_sqlite", "SQLITE", db::V7);
-#ifdef HAVE_ODBC
-Tests test_odbc("db_sql_repinfo_v7_odbc", "ODBC", db::V7);
-#endif
 #ifdef HAVE_LIBPQ
 Tests test_psql("db_sql_repinfo_v7_postgresql", "POSTGRESQL", db::V7);
 #endif

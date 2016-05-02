@@ -74,9 +74,6 @@ class Tests : public FixtureTestCase<Fixture>
 };
 
 Tests test_sqlite("db_sql_station_v6_sqlite", "SQLITE", db::V6);
-#ifdef HAVE_ODBC
-Tests test_odbc("db_sql_station_v6_odbc", "ODBC", db::V6);
-#endif
 #ifdef HAVE_LIBPQ
 Tests test_psql("db_sql_station_v6_postgresql", "POSTGRESQL", db::V6);
 #endif

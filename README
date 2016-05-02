@@ -47,30 +47,28 @@ The main characteristics of DB-ALL.e are:
 Dependencies
 ------------
 
-DB-All.e requires unixodbc, gperf and popt in order to be built.
+DB-All.e requires libwreport, libsqlite, gperf and popt in order to be built.
 
 Additionally, to build the Fortran API the CNF library is required, and
 gfortran is required to build its unit tests.
 
-To build the documentation, you need doxygen and LaTeX.  If latex2html is
-present, HTML documentation will also be built.  If rst2html is present, the
-README file will also be converted to HTML.
+libpg is needed for PostgreSQL support. libmysql is needed for MySQL/MariaDB
+support. liblua5.1 is needed for Lua support, a python2 or python3 development
+environment, together with NumPy and Six, are needed for Python support.
 
 In Fedora, the names of the packages depended on are:
 
- * unixODBC-devel gperf gcc-gfortran doxygen tetex tetex-latex latex2html
+ * gperf gcc-gfortran doxygen python-docutils lua-devel libwreport-devel >= 3.2
+   python-devel popt-devel postgresql-devel mariadb-devel
  * For CNF there is an unofficial starmet package: contact the DB-All.e team
    about it.
 
 In Debian, the names of the packages depended on are:
 
- * unixodbc-dev gperf libpopt-dev libcnf-dev gfortran doxygen python-docutils
- * tetex-bin tetex-extra (in etch), or 
- * texlive-base texlive-latex-base texlive-latex-extra
-   texlive-latex-recommended (in lenny and sid)
- * latex2html (optional, from non-free)
-
-(see http://www.arpa.emr.it/dettaglio_documento.asp?id=514&idlivello=64)
+ * libsqlite3-dev, libwreport-dev (>= 3.0), python-wreport, python3-wreport,
+   libpopt-dev, gperf, liblua5.1-0-dev, libcnf-dev, gfortran | g77,
+   python-all-dev, python3-all-dev, python-docutils, python-numpy,
+   python3-numpy, python-six, python3-six
 
 
 Building DB-All.e
@@ -92,29 +90,13 @@ software:
 Getting started
 ---------------
 
-DB-All.e requires ODBC access to a MySQL database for most of its
-functionality.
-
-To set up DB-All.e on the MySQL side, you need to create a database and grant
-users create table, drop table, insert, delete and select access.  MySQL needs
-to run with InnoDB support.
-
-To set up ODBC access to the database (this is called a DSN) you can run a
-graphical configuration file like ODBCConfig.  Otherwise, this is a sample
-.odbc.ini you can use::
-
-  [dballe]
-  Description     = MySQL
-  Driver          = MySQL
-  Server          = localhost
-  Database        = dballe
+DB-All.e requires a database to run. It can create a SQLite database, or access
+a PostgreSQL or MySQL database. See doc/fapi_connect.md for details about
+connecting to a database.
 
 Once this is set up, you can initialise the DB-All.e database using the command::
 
-  dbadb wipe --dsn=dballe --user=username [--pass=password]
-
-"--user" can be omitted if it is the same as your Unix username; "--pass" can
-be omitted if the user has no password.
+  dbadb wipe --url=sqlite:dballe.sqlite3
 
 If you do not already have access to datasets to import, some are available
 from http://www.ncar.ucar.edu/tools/datasets/ after registering (for free) on
@@ -147,11 +129,6 @@ database.
 
 Useful resources
 ----------------
-
-ODBC links:
-
- * http://www.unixodbc.org/doc/ProgrammerManual/Tutorial/
- * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/odbc/htm/odbcabout_this_manual.asp
 
 BUFR decoding:
 

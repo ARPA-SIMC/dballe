@@ -1,10 +1,8 @@
 #include "sql/sql.h"
 #include "dballe/types.h"
 #include "config.h"
+#include "sql/querybuf.h"
 #include "sql/sqlite.h"
-#ifdef HAVE_ODBC
-#include "sql/odbc.h"
-#endif
 #ifdef HAVE_LIBPQ
 #include "sql/postgresql.h"
 #endif
@@ -91,16 +89,6 @@ std::unique_ptr<Connection> Connection::create_from_url(const char* url)
         return unique_ptr<Connection>(conn.release());
 #else
         throw error_unimplemented("MySQL support is not available");
-#endif
-    }
-    if (strncmp(url, "odbc://", 7) == 0)
-    {
-#ifdef HAVE_ODBC
-        unique_ptr<ODBCConnection> conn(new ODBCConnection);
-        conn->connect_url(url);
-        return unique_ptr<Connection>(conn.release());
-#else
-        throw error_unimplemented("ODBC support is not available");
 #endif
     }
     if (strncmp(url, "test:", 5) == 0)

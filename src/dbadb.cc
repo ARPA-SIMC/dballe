@@ -23,7 +23,7 @@ struct cmdline::Reader reader;
 static const char* op_output_template = "";
 const char* op_output_type = "bufr";
 const char* op_report = "";
-const char* op_dsn = "";
+const char* op_url = "";
 const char* op_user = "";
 const char* op_pass = "";
 int op_wipe_first = 0;
@@ -52,12 +52,10 @@ struct poptOption grepTable[] = {
 };
 
 struct poptOption dbTable[] = {
-    { "dsn", 0, POPT_ARG_STRING, &op_dsn, 0,
-        "DSN, or URL-like database definition, to use for connecting to the DB-All.e database (can also be specified in the environment as DBA_DB)", "dsn" },
-    { "user", 0, POPT_ARG_STRING, &op_user, 0,
-        "username to use for connecting to the DB-All.e database", "user" },
-    { "pass", 0, POPT_ARG_STRING, &op_pass, 0,
-        "password to use for connecting to the DB-All.e database", "pass" },
+    { "dsn", 0, POPT_ARG_STRING, &op_url, 0,
+        "alias of --url, used for historical compatibility", "url" },
+    { "url", 0, POPT_ARG_STRING, &op_url, 0,
+        "DSN, or URL-like database definition, to use for connecting to the DB-All.e database (can also be specified in the environment as DBA_DB)", "url" },
     { "wipe-first", 0, POPT_ARG_NONE, &op_wipe_first, 0,
         "wipe database before any other action" },
     POPT_TABLEEND
@@ -65,23 +63,19 @@ struct poptOption dbTable[] = {
 
 static unique_ptr<DB> connect()
 {
-    unique_ptr<DB> db;
-    const char* chosen_dsn;
+    const char* chosen_url;
 
-    /* If dsn is missing, look in the environment */
-    if (op_dsn[0] == 0)
+    /* If url is missing, look in the environment */
+    if (op_url[0] == 0)
     {
-        chosen_dsn = getenv("DBA_DB");
-        if (chosen_dsn == NULL)
+        chosen_url = getenv("DBA_DB");
+        if (chosen_url == NULL)
             throw error_consistency("no database specified");
     } else
-        chosen_dsn = op_dsn;
+        chosen_url = op_url;
 
-    /* If dsn looks like a url, treat it accordingly */
-    if (DB::is_url(chosen_dsn))
-        db = DB::connect_from_url(chosen_dsn);
-    else
-        db = DB::connect(chosen_dsn, op_user, op_pass);
+    /* If url looks like a url, treat it accordingly */
+    unique_ptr<DB> db = DB::connect_from_url(chosen_url);
 
     // Wipe database if requested
     if (op_wipe_first)

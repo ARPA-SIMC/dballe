@@ -35,7 +35,7 @@ DB-All.e.
 </th>
 </thead>
 <tbody>
-<tr><td><code><a href='#idba_presentati'>idba_presentati(dbahandle, dsn, user, password)</a></code></td><td>Connect to the database.</td></tr>
+<tr><td><code><a href='#idba_presentati'>idba_presentati(dbahandle, url, user, password)</a></code></td><td>Connect to the database.</td></tr>
 <tr><td><code><a href='#idba_arrivederci'>idba_arrivederci(dbahandle)</a></code></td><td>Disconnect from the database.</td></tr>
 <tr><td><code><a href='#idba_preparati'>idba_preparati(dbahandle, handle, anaflag, dataflag, attrflag)</a></code></td><td>Open a new session.</td></tr>
 <tr><td><code><a href='#idba_messaggi'>idba_messaggi(handle, filename, mode, type)</a></code></td><td>Start working with a message file.</td></tr>
@@ -171,7 +171,7 @@ This is a list of known codes:
 * 1: Item not found
 * 2: Wrong variable type
 * 3: Cannot allocate memory
-* 4: ODBC error
+* 4: Database error
 * 5: Handle management error
 * 6: Buffer is too short to fit data
 * 7: Error reported by the system
@@ -269,13 +269,13 @@ In case of overflows it prints a warning and continues execution
 ### Session routines
 
 <a name='idba_presentati'></a>
-#### idba_presentati(dbahandle, dsn, user, password)
+#### idba_presentati(dbahandle, url, user, password)
 
 Parameters:
 
-* `dsn`: The ODBC DSN of the database to use
-* `user`: The username used to connect to the database
-* `password`: The username used to connect to the database
+* `url`: The URL of the database to use
+* `user`: Used in the past, now it is ignored.
+* `password`: Used in the past, now it is ignored.
 * `dbahandle`: The database handle that can be passed to
   [idba_preparati()](#idba_preparati) to work with the database.
 

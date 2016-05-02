@@ -1,79 +1,3 @@
-#include "db/tests.h"
-#include "sql/sql.h"
-#include "db/v7/db.h"
-#include "db/v7/transaction.h"
-#include "db/v7/driver.h"
-#include "db/v7/repinfo.h"
-#include "db/v7/station.h"
-#include "db/v7/levtr.h"
-#include "db/v7/data.h"
-#include "db/v7/attr.h"
-#include "config.h"
-
-using namespace dballe;
-using namespace dballe::tests;
-using namespace wreport;
-using namespace std;
-
-namespace {
-
-struct Fixture : V7DriverFixture
-{
-    using V7DriverFixture::V7DriverFixture;
-
-    unique_ptr<db::v7::Attr> attr;
-
-    void reset_attr()
-    {
-        using namespace dballe::db::v7;
-
-        auto st = driver->create_station();
-        auto lt = driver->create_levtr();
-        auto da = driver->create_data();
-
-        int added, deleted, updated;
-        driver->create_repinfo()->update(nullptr, &added, &deleted, &updated);
-
-        db::v7::StationDesc sde1;
-        db::v7::StationDesc sde2;
-        db::v7::stations_t::iterator si;
-
-        auto conn_t = conn->transaction();
-        unique_ptr<dballe::db::v7::Transaction> t(new dballe::db::v7::Transaction(move(conn_t)));
-
-        // Insert a mobile station
-        sde1.rep = 1;
-        sde1.coords = Coords(4500000, 1100000);
-        sde1.ident = "ciao";
-        si = st->obtain_id(t->state, sde1);
-        wassert(actual(si->second.id) == 1);
-
-        // Insert a fixed station
-        sde2.rep = 1;
-        sde2.coords = Coords(4600000, 1200000);
-        sde2.ident = nullptr;
-        si = st->obtain_id(t->state, sde2);
-        wassert(actual(si->second.id) == 2);
-
-        // Insert a lev_tr
-        db::v7::levtrs_t::iterator lt1 = lt->obtain_id(t->state, db::v7::LevTrDesc(Level(1, 2, 0, 3), Trange(4, 5, 6)));
-        wassert(actual(lt1->second.id) == 1);
-
-        // Insert another lev_tr
-        db::v7::levtrs_t::iterator lt2 = lt->obtain_id(t->state, db::v7::LevTrDesc(Level(2, 3, 1, 4), Trange(5, 6, 7)));
-        wassert(actual(lt2->second.id) == 2);
-
-        // Insert a datum
-        {
-            bulk::InsertVars vars(t->state, t->state.stations.find(sde1), Datetime(2001, 2, 3, 4, 5, 6));
-            Var var(varinfo(WR_VAR(0, 1, 2)), 123);
-            vars.add(&var, lt1->second);
-            da->insert(*t, vars, bulk::ERROR);
-        }
-
-        // Insert another datum
-        {
-            bulk::InsertVars vars(t->state, t->state.stations.find(sde2), Datetime(2002, 3, 4, 5, 6, 7));
             Var var(varinfo(WR_VAR(0, 1, 2)), 234);
             vars.add(&var, lt2->second);
             da->insert(*t, vars, bulk::ERROR);
@@ -216,9 +140,6 @@ class Tests : public FixtureTestCase<Fixture>
 };
 
 Tests tg1("db_sql_attr_v7_sqlite", "SQLITE", db::V7);
-#ifdef HAVE_ODBC
-Tests tg2("db_sql_attr_v7_odbc", "ODBC", db::V7);
-#endif
 #ifdef HAVE_LIBPQ
 Tests tg3("db_sql_attr_v7_postgresql", "POSTGRESQL", db::V7);
 #endif

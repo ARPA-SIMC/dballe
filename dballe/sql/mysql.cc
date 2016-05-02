@@ -94,30 +94,6 @@ struct URLParser
         }
     }
 
-
-#if 0
-    string buf(url + 7);
-    size_t pos = buf.find('@');
-    if (pos == string::npos)
-    {
-        return connect(buf.c_str(), "", ""); // odbc://dsn
-    }
-    // Split the string at '@'
-    string userpass = buf.substr(0, pos);
-    string dsn = buf.substr(pos + 1);
-
-    pos = userpass.find(':');
-    if (pos == string::npos)
-    {
-        return connect(dsn.c_str(), userpass.c_str(), ""); // odbc://user@dsn
-    }
-
-    string user = userpass.substr(0, pos);
-    string pass = userpass.substr(pos + 1);
-
-    connect(dsn.c_str(), user.c_str(), pass.c_str()); // odbc://user:pass@dsn
-#endif
-
     // Parse host:port part of the URL
     void parse_hostport(std::string::size_type beg, std::string::size_type end)
     {

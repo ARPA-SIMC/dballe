@@ -53,7 +53,7 @@ def test_venti():
                 "CXXFLAGS=" + fedora_cxxflags,
                 "LDFLAGS=" + fedora_ldflags))
         run(cmd("make"))
-        run(cmd("./run-check", "TEST_BLACKLIST=*odbc*"))
+        run(cmd("./run-check"))
 
 def test():
     test_venti()

@@ -44,7 +44,7 @@ void set_wreport_exception(const wreport::error& e)
         case WR_ERR_ALLOC:       // Cannot allocate memory
             PyErr_SetString(PyExc_MemoryError, e.what());
             break;
-        case WR_ERR_ODBC:        // ODBC error
+        case WR_ERR_ODBC:        // Database error
             PyErr_SetString(PyExc_OSError, e.what());
             break;
         case WR_ERR_HANDLES:     // Handle management error

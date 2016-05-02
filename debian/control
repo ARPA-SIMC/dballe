@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 9), dh-python, dh-autoreconf,
   autotools-dev, pkg-config,
   libsqlite3-dev,
   libwreport-dev (>= 3.0), python-wreport, python3-wreport,
-  libpopt-dev, unixodbc-dev, gperf, liblua5.1-0-dev,
+  libpopt-dev, gperf, liblua5.1-0-dev,
   libcnf-dev, gfortran | g77,
   python-all-dev, python3-all-dev, python-docutils, python-numpy, python3-numpy,
   python-six, python3-six

@@ -20,10 +20,6 @@ struct error_mysql : public error_db
 {
     std::string msg;
 
-    /**
-     * Copy informations from the ODBC diagnostic record to the dba error
-     * report
-     */
     error_mysql(MYSQL* db, const std::string& msg);
     error_mysql(const std::string& dbmsg, const std::string& msg);
     ~error_mysql() throw () {}

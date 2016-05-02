@@ -13,7 +13,6 @@ do
 		export DBA_DB_SQLITE
 		export DBA_DB_POSTGRESQL
 		export DBA_DB_MYSQL
-		export DBA_DB_ODBC
 		break
 	fi
 done

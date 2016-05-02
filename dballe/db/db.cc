@@ -5,9 +5,6 @@
 #include "v7/db.h"
 #include "mem/db.h"
 #include "sql/sqlite.h"
-#ifdef HAVE_ODBC
-#include "sql/odbc.h"
-#endif
 #include "dballe/message.h"
 #include "dballe/core/record.h"
 #include "dballe/core/values.h"
@@ -64,7 +61,6 @@ bool DB::is_url(const char* str)
     if (strncmp(str, "sqlite:", 7) == 0) return true;
     if (strncmp(str, "postgresql:", 11) == 0) return true;
     if (strncmp(str, "mysql:", 6) == 0) return true;
-    if (strncmp(str, "odbc://", 7) == 0) return true;
     if (strncmp(str, "test:", 5) == 0) return true;
     return false;
 }
@@ -114,17 +110,6 @@ unique_ptr<DB> DB::create(unique_ptr<sql::Connection> conn)
         case V7: return unique_ptr<DB>(new v7::DB(move(conn)));
         default: error_consistency::throwf("requested unknown format %d", (int)format);
     }
-}
-
-unique_ptr<DB> DB::connect(const char* dsn, const char* user, const char* password)
-{
-#ifdef HAVE_ODBC
-    unique_ptr<sql::ODBCConnection> conn(new sql::ODBCConnection);
-    conn->connect(dsn, user, password);
-    return create(move(conn));
-#else
-    throw error_unimplemented("ODBC support is not available");
-#endif
 }
 
 unique_ptr<DB> DB::connect_from_file(const char* pathname)

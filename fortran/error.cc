@@ -102,7 +102,7 @@ extern "C" {
  * @li 1: Item not found
  * @li 2: Wrong variable type
  * @li 3: Cannot allocate memory
- * @li 4: ODBC error
+ * @li 4: Database error
  * @li 5: Handle management error
  * @li 6: Buffer is too short to fit data
  * @li 7: Error reported by the system

@@ -370,9 +370,6 @@ class Tests : public FixtureTestCase<DBFixture>
 
 Tests tg1("db_query_data_mem", nullptr, db::MEM);
 Tests tg2("db_query_data_v6_sqlite", "SQLITE", db::V6);
-#ifdef HAVE_ODBC
-Tests tg3("db_query_data_v6_odbc", "ODBC", db::V6);
-#endif
 #ifdef HAVE_LIBPQ
 Tests tg4("db_query_data_v6_postgresql", "POSTGRESQL", db::V6);
 #endif

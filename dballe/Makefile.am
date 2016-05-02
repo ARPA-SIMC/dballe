@@ -178,16 +178,6 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/v7/mysql/data.h \
 	db/v7/mysql/driver.h
 endif
-if HAVE_ODBC
-nobase_dist_dballeinclude_HEADERS += \
-	sql/odbc.h \
-	db/v6/odbc/repinfo.h \
-	db/v6/odbc/station.h \
-	db/v6/odbc/levtr.h \
-	db/v6/odbc/datav6.h \
-	db/v6/odbc/attrv6.h \
-	db/v6/odbc/driver.h
-endif
 
 lib_LTLIBRARIES = libdballe.la
 libdballe_la_SOURCES = \
@@ -339,16 +329,6 @@ libdballe_la_SOURCES += \
 	db/v7/mysql/data.cc \
 	db/v7/mysql/driver.cc
 endif
-if HAVE_ODBC
-libdballe_la_SOURCES += \
-	sql/odbc.cc \
-	db/v6/odbc/repinfo.cc \
-	db/v6/odbc/station.cc \
-	db/v6/odbc/levtr.cc \
-	db/v6/odbc/datav6.cc \
-	db/v6/odbc/attrv6.cc \
-	db/v6/odbc/driver.cc
-endif
 
 libdballe_la_CPPFLAGS = $(AM_CPPFLAGS) -Werror
 libdballe_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(common_libs)
@@ -468,10 +448,6 @@ endif
 if HAVE_MYSQL
 test_dballe_SOURCES += \
 	sql/mysql-test.cc
-endif
-if HAVE_ODBC
-test_dballe_SOURCES += \
-	sql/odbc-test.cc
 endif
 
 test_dballe_LDADD = \

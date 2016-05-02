@@ -162,21 +162,6 @@ public:
     static void set_default_format(db::Format format);
 
     /**
-     * Start a session with DB-All.e
-     *
-     * @param dsn
-     *   The ODBC DSN of the database to use
-     * @param user
-     *   The user name to use to connect to the DSN
-     * @param password
-     *   The password to use to connect to the DSN.  To specify an empty password,
-     *   pass "" or NULL
-     * @return
-     *   The new DB object
-     */
-    static std::unique_ptr<DB> connect(const char* dsn, const char* user, const char* password);
-
-    /**
      * Create from a SQLite file pathname
      *
      * @param pathname
@@ -185,11 +170,8 @@ public:
     static std::unique_ptr<DB> connect_from_file(const char* pathname);
 
     /**
-     * Create from an url-like specification, that can be:
-     *
-     * @li sqlite:[//]foo.sqlite
-     * @li odbc://[user[:pass]@]dsn
-     * @li test:[//]
+     * Create from an url-like specification, as described in
+     * doc/fapi_connect.md
      *
      * @param url
      *   The url-like connection descriptor

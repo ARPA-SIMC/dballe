@@ -56,28 +56,6 @@ static PyGetSetDef dpy_DB_getsetters[] = {
     {NULL}
 };
 
-static PyObject* dpy_DB_connect(PyTypeObject *type, PyObject *args, PyObject* kw)
-{
-    if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use DB.connect_from_url instead of DB.connect", 1))
-        return NULL;
-    static const char* kwlist[] = { "dsn", "user", "password", NULL };
-    const char* dsn;
-    const char* user = "";
-    const char* pass = "";
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "s|ss", const_cast<char**>(kwlist), &dsn, &user, &pass))
-        return NULL;
-
-    unique_ptr<DB> db;
-    try {
-        db = DB::connect(dsn, user, pass);
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
-    return (PyObject*)db_create(move(db));
-}
-
 static PyObject* dpy_DB_connect_from_file(PyTypeObject *type, PyObject *args)
 {
     const char* fname;
@@ -704,8 +682,6 @@ static PyObject* dpy_DB_export_to_file(dpy_DB* self, PyObject* args, PyObject* k
 }
 
 static PyMethodDef dpy_DB_methods[] = {
-    {"connect",           (PyCFunction)dpy_DB_connect, METH_VARARGS | METH_KEYWORDS | METH_CLASS,
-        "(deprecated) Create a DB connecting to an ODBC source" },
     {"connect_from_file", (PyCFunction)dpy_DB_connect_from_file, METH_VARARGS | METH_CLASS,
         "Create a DB connecting to a SQLite file" },
     {"connect_from_url",  (PyCFunction)dpy_DB_connect_from_url, METH_VARARGS | METH_CLASS,
