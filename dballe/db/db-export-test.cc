@@ -124,6 +124,14 @@ class Tests : public FixtureTestCase<DBFixture>
             wassert(actual(msgs[0], DBA_MSG_BLOCK) == 10);
             wassert(actual(msgs[0], DBA_MSG_TEMP_2M) == 290.0);
         });
+        add_method("missing_repmemo", [](Fixture& f) {
+            // Text exporting of extra station information
+            auto& db = f.db;
+            core::Query query;
+            query.rep_memo = "nonexisting";
+            Messages msgs = wcallchecked(dballe::tests::messages_from_db(*db, query));
+            wassert(actual(msgs.size()) == 0u);
+        });
     }
 };
 

@@ -189,6 +189,16 @@ class Tests : public FixtureTestCase<DBFixture>
             wassert(actual(db).try_data_query("mobile=1", 1));
             wassert(actual(db).try_data_query("mobile=0", 0));
         });
+        add_method("missing_repmemo", [](Fixture& f) {
+            // Test querying with a missing rep_memo
+            auto& db = *f.db;
+            core::Query query;
+            query.rep_memo = "nonexisting";
+            wassert(actual(db.query_stations(query)->remaining()) == 0);
+            wassert(actual(db.query_station_data(query)->remaining()) == 0);
+            wassert(actual(db.query_data(query)->remaining()) == 0);
+            wassert(actual(db.query_summary(query)->remaining()) == 0);
+        });
     }
 };
 

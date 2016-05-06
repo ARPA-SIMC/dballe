@@ -49,8 +49,7 @@ int Repinfo::get_id(const char* memo)
     if (memo_idx.empty()) rebuild_memo_idx();
 
     int pos = cache_find_by_memo(lc_memo);
-    if (pos == -1)
-        error_notfound::throwf("looking for repinfo corresponding to '%s'", memo);
+    if (pos == -1) return -1;
     return memo_idx[pos].id;
 }
 

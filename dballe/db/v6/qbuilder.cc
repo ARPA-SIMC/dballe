@@ -315,9 +315,15 @@ bool StationQueryBuilder::build_where()
     if (!query.rep_memo.empty())
     {
         int src_val = db.repinfo().get_id(query.rep_memo.c_str());
-        sql_where.append_listf(
-                "EXISTS(SELECT id FROM data s_repmemo WHERE s_repmemo.id_station=s.id AND s_repmemo.id_report=%d)", src_val);
-        TRACE("found rep_memo %s: adding AND EXISTS(SELECT id FROM data s_repmemo WHERE s_repmemo.id_station=s.id AND s_repmemo.id_report=%d)\n", query.rep_memo.c_str(), src_val);
+        if (src_val == -1)
+        {
+            sql_where.append_listf("1=0");
+            TRACE("rep_memo %s not found: adding AND 1=0\n", query.rep_memo.c_str());
+        } else {
+            sql_where.append_listf(
+                    "EXISTS(SELECT id FROM data s_repmemo WHERE s_repmemo.id_station=s.id AND s_repmemo.id_report=%d)", src_val);
+            TRACE("found rep_memo %s: adding AND EXISTS(SELECT id FROM data s_repmemo WHERE s_repmemo.id_station=s.id AND s_repmemo.id_report=%d)\n", query.rep_memo.c_str(), src_val);
+        }
         has_where = true;
     }
 
@@ -654,8 +660,14 @@ bool QueryBuilder::add_repinfo_where(const char* tbl)
     if (!query.rep_memo.empty())
     {
         int src_val = db.repinfo().get_id(query.rep_memo.c_str());
-        sql_where.append_listf("%s.id_report=%d", tbl, src_val);
-        TRACE("found rep_memo %s: adding AND %s.id_report=%d\n", query.rep_memo.c_str(), tbl, (int)src_val);
+        if (src_val == -1)
+        {
+            sql_where.append_listf("1=0");
+            TRACE("rep_memo %s not found: adding AND 1=0\n", query.rep_memo.c_str());
+        } else {
+            sql_where.append_listf("%s.id_report=%d", tbl, src_val);
+            TRACE("found rep_memo %s: adding AND %s.id_report=%d\n", query.rep_memo.c_str(), tbl, (int)src_val);
+        }
         found = true;
     }
 

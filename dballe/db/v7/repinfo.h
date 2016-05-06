@@ -91,7 +91,7 @@ struct Repinfo
     /// Get the rep_memo for a given ID; throws if id is not valud
     const char* get_rep_memo(int id);
 
-    /// Get the ID for a given rep_memo; throws if rep_memo is not valid
+    /// Get the ID for a given rep_memo; returns -1 if rep_memo is not valid
     int get_id(const char* rep_memo);
 
     /// Get the priority for a given ID; returns INT_MAX if id is not valid
