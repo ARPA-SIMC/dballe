@@ -16,6 +16,13 @@ explicitly providing one.
 
 By default, `/usr/share/wreport/repinfo.csv` is used.
 
+## `DBA_TABLES`
+
+Directory where the file with B table definitions `dballe.txt` is
+searched for.
+
+By default, `/usr/share/wreport` is used.
+
 ## `DBA_DB_FORMAT`
 
 Override the database format to use when creating new databases.
