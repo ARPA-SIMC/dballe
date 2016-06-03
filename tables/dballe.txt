@@ -29,8 +29,8 @@
  002012 RADIOSONDE COMPUTATIONAL METHOD                                  CODE TABLE 2012            0            0   4 CODE TABLE 2012           0          2
  002013 SOLAR AND INFRARED RADIATION CORRECTION                          CODE TABLE 2013            0            0   4 CODE TABLE 2013           0          2
  002014 TRACKING TECHNIQUE/STATUS OF SYSTEM USED                         CODE TABLE 2014            0            0   7 CODE TABLE 2014           0          3
- 002038 METHOD OF WATER TEMPERATURE AND/OR SALINITY MEASUREMENT          CODE TABLE 2038            0            0   4 CODE TABLE 2038           0         2              
- 002039 METHOD OF WET-BULB TEMPERATURE MEASUREMENT                       CODE TABLE 2039            0            0   3 CODE TABLE 2039           0         1              
+ 002038 METHOD OF WATER TEMPERATURE AND/OR SALINITY MEASUREMENT          CODE TABLE 2038            0            0   4 CODE TABLE 2038           0          2
+ 002039 METHOD OF WET-BULB TEMPERATURE MEASUREMENT                       CODE TABLE 2039            0            0   3 CODE TABLE 2039           0          1
  002048 SATELLITE SENSOR INDICATOR                                       CODE TABLE 2048            0            0   4 CODE TABLE 2048           0          2
  002061 AIRCRAFT NAVIGATIONAL SYSTEM                                     CODE TABLE 2061            0            0   3 CODE TABLE 2061           0          1
  002062 TYPE OF AIRCRAFT DATA RELAY SYSTEM                               CODE TABLE 2062            0            0   4 CODE TABLE 2062           0          2
@@ -80,7 +80,7 @@
  008009 DETAILED PHASE OF FLIGHT                                         CODE TABLE 8009            0            0   4 CODE TABLE 8009           0          2
  008021 TIME SIGNIFICANCE                                                CODE TABLE 8021            0            0   5 CODE TABLE 8021           0          2
  008042 EXTENDED VERTICAL SOUNDING SIGNIFICANCE                          FLAG TABLE 8042            0            0  18 FLAG TABLE 8042           0          6
- 008044 (VAL) CAS REGISTRY NUMBER                                        CCITTIA5                   0            0  88 CHARACTER                 0         11 
+ 008044 (VAL) CAS REGISTRY NUMBER                                        CCITTIA5                   0            0  88 CHARACTER                 0         11
  008192 [SIM] Number of wind velocity mean values present                NUMERIC                    0            0   5 NUMERIC                   0          2
  008193 [SIM] Number of wind velocity minimum values present             NUMERIC                    0            0   5 NUMERIC                   0          2
  008194 [SIM] Number of wind velocity maximum values present             NUMERIC                    0            0   5 NUMERIC                   0          2
@@ -106,7 +106,7 @@
  010009 GEOPOTENTIAL HEIGHT                                              GPM                        0        -1000  17 GPM                       0          5
  010051 PRESSURE REDUCED TO MEAN SEA LEVEL                               PA                        -1            0  14 PA                       -1          5
  010052 ALTIMETER SETTING (QNH)                                          PA                        -1            0  14 PA                       -1          5
- 010060 PRESSURE CHANGE                                                  PA                        -1        -1024  11 PA                       -1          4              
+ 010060 PRESSURE CHANGE                                                  PA                        -1        -1024  11 PA                       -1          4
  010063 CHARACTERISTIC OF PRESSURE TENDENCY                              CODE TABLE 10063           0            0   4 CODE TABLE 10063          0          2
  010197 ANEMOMETER HEIGHT                                                M                          0            0   9 M                         0          3
  011001 WIND DIRECTION                                                   DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
@@ -152,16 +152,16 @@
  012049 Temperature change over specified period                         K                          0          -30   6 C                         0          2
  012061 SKIN TEMPERATURE                                                 K                          1            0  12 K                         1          4
  012063 BRIGHTNESS TEMPERATURE                                           K                          1            0  12 K                         1          4
- 012101 TEMPERATURE/DRY-BULB TEMPERATURE                                 K                          2            0  16 K                         2          5             
- 012102 WET-BULB TEMPERATURE                                             K                          2            0  16 C                         2          4              
- 012103 DEW-POINT TEMPERATURE                                            K                          2            0  16 K                         2          5              
- 012121 GROUND MINIMUM TEMPERATURE                                       K                          2            0  16 C                         2          4 
- 012131 SNOW TEMPERATURE                                                 K                          2            0  16 C                         2          4 
- 012192 POTENTIAL TEMPERATURE                                            K                          2            0  16 K                         2          5             
- 012193 PSEUDO-EQUIVALENT POTENTIAL TEMPERATURE                          K                          2            0  16 K                         2          5             
+ 012101 TEMPERATURE/DRY-BULB TEMPERATURE                                 K                          2            0  16 K                         2          5
+ 012102 WET-BULB TEMPERATURE                                             K                          2            0  16 C                         2          4
+ 012103 DEW-POINT TEMPERATURE                                            K                          2            0  16 K                         2          5
+ 012121 GROUND MINIMUM TEMPERATURE                                       K                          2            0  16 C                         2          4
+ 012131 SNOW TEMPERATURE                                                 K                          2            0  16 C                         2          4
+ 012192 POTENTIAL TEMPERATURE                                            K                          2            0  16 K                         2          5
+ 012193 PSEUDO-EQUIVALENT POTENTIAL TEMPERATURE                          K                          2            0  16 K                         2          5
  012194 [SIM] Air density                                                KG/M**3                    6            0  20 KG/M**3                   6          6
  013001 SPECIFIC HUMIDITY                                                KG/KG                      5            0  14 KG/KG                     5          5
- 013002 MIXING RATIO                                                     KG/KG                      5            0  14 KG/KG                     5          5              
+ 013002 MIXING RATIO                                                     KG/KG                      5            0  14 KG/KG                     5          5
  013003 RELATIVE HUMIDITY                                                %                          0            0   7 %                         0          3
  013011 TOTAL PRECIPITATION / TOTAL WATER EQUIVALENT                     KG/M**2                    1           -1  14 KG/M**2                   1          5
  013012 DEPTH OF FRESH SNOW                                              M                          2           -2  12 M                         2          4
@@ -286,7 +286,7 @@
  020011 CLOUD AMOUNT                                                     CODE TABLE 20011           0            0   4 CODE TABLE 20011          0          2
  020012 CLOUD TYPE                                                       CODE TABLE 20012           0            0   6 CODE TABLE 20012          0          2
  020013 HEIGHT OF BASE OF CLOUD                                          M                          0         -400  17 M                         0          5
- 020017 CLOUD TOP DESCRIPTION                                            CODE TABLE 20017           0            0   4 CODE TABLE 20017          0          2 
+ 020017 CLOUD TOP DESCRIPTION                                            CODE TABLE 20017           0            0   4 CODE TABLE 20017          0          2
  020019 SIGNIFICANT PRESENT OR FORECAST WEATHER                          CCITTIA5                   0            0  72 CHARACTER                 0          9
  020021 TYPE OF PRECIPITATION                                            FLAG TABLE 20021           0            0  30 FLAG TABLE 20021          0         10
  020031 ICE DEPOSIT (THICKNESS)                                          M                          2            0   7 M                         2          3
