@@ -16,10 +16,10 @@ explicitly providing one.
 
 By default, `/usr/share/wreport/repinfo.csv` is used.
 
-## `DBA_TABLES`
+## `WREPORT_TABLES`
 
-Directory where the file with B table definitions `dballe.txt` is
-searched for.
+Directory where the file with B table definitions `dballe.txt` is searched for,
+together with all the bufr decoding tables needed by wreport.
 
 By default, `/usr/share/wreport` is used.
 
