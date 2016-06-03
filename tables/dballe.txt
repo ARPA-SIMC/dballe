@@ -168,8 +168,10 @@
  013013 TOTAL SNOW DEPTH                                                 M                          3          -20  20 M                         3          6
  013031 EVAPOTRANSPIRATION                                               KG/M**2                    1            0   7 KG/M**2                   0          3
  013033 EVAPORATION/EVAPOTRANSPIRATION                                   KG/M**2                    1            0  10 KG/M**2                   1          4
+ 013080 WATER PH                                                         pH                         1            0  10 pH                        1          3
  013081 WATER CONDUCTIVITY                                               S/M                        3            0  14 S/M                       3          4
  013082 WATER TEMPERATURE                                                K                          1            0  12 K                         1          4
+ 013083 DISSOLVED OXYGEN                                                 KG/M**3                    6            0  15 KG/M**3                   6          5
  013192 [SIM] Cloud liquid water content                                 KG/KG                      8            0  27 KG/KG                     8          8
  013193 [SIM] Cloud ice content                                          KG/KG                      8            0  27 KG/KG                     8          8
  013194 [SIM] Water table depth                                          M                          3            0  18 M                         3          6
@@ -203,6 +205,7 @@
  013228 [SIM] Piezometric level                                          M                          3            0  18 M                         3          6
  013229 [SIM] Density of snow                                            KG/M**3                    1            0  14 KG/M**3                   1          5
  013230 [SIM] Convective Available Potential Energy (CAPE)               J/KG                       1            0  17 J/KG                      1          5
+ 013231 [SIM] Ossigeno disciolto sat                                     %                          1            0  10 %                         1          4
  014002 Long-wave radiation, integrated over period specified            J M-2                     -3       -65536  17 J M-2                    -3          5
  014004 Short-wave radiation, integrated over period specified           J M-2                     -3       -65536  17 J M-2                    -3          5
  014016 NET RADIATION                                                    J/M**2                    -4       -16384  15 J/M**2                   -4          5
@@ -327,11 +330,15 @@
  022042 SEA/WATER TEMPERATURE                                            K                          1            0  12 K                         1          4
  022043 SEA/WATER TEMPERATURE                                            K                          2            0  15 K                         2          5
  022049 SEA-SURFACE TEMPERATURE                                          K                          2            0  15 K                         2          5
+ 022062 SALINITY                                                         PART PER THOUSAND          2            0  14 PART PER THOUSAND         2          5
+ 022063 TOTAL WATER DEPTH                                                M                          0            0  14 M                         0          5
+ 022066 WATER CONDUCTIVITY                                               S M-1                      6            0  26 S M-1                     6          8
  022070 SIGNIFICANT WAVE HEIGHT                                          M                          2            0  13 M                         2          4
  022071 SPECTRAL PEAK WAVE PERIOD                                        S                          1            0   9 S                         1          3
  022074 AVERAGE WAVE PERIOD                                              S                          1            0   9 S                         1          3
  022192 [SIM] Current X component                                        M/S                        2            0  13 M/S                       2          4
  022193 [SIM] Current Y component                                        M/S                        2            0  13 M/S                       2          4
+ 022194 [SIM] Concentrazione clorofilla a                                microg/l                   2            0  17 microg/l                  2          6
  023192 [SIM] Dry deposition of H2SO4                                    MOL/M**2                   5            0  20 MOL/M**3                  5          6
  023193 [SIM] Wet deposition of H2SO4                                    MOL/M**2                   5            0  20 MOL/M**3                  5          6
  023194 [SIM] Dry deposition of NH4                                      MOL/M**2                   5            0  20 MOL/M**3                  5          6
