@@ -132,10 +132,13 @@ unique_ptr<DB> DB::connect_from_url(const char* url)
 
 unique_ptr<DB> DB::connect_memory(const std::string& arg)
 {
-    if (arg.empty())
-        return unique_ptr<DB>(new mem::DB());
-    else
-        return unique_ptr<DB>(new mem::DB(arg));
+    sql::SQLiteConnection* sqlite_conn;
+
+    unique_ptr<sql::Connection> conn(sqlite_conn = new sql::SQLiteConnection);
+    sqlite_conn->open_memory();
+    unique_ptr<DB> res(new v7::DB(move(conn)));
+    res->reset();
+    return res;
 }
 
 unique_ptr<DB> DB::connect_test()
