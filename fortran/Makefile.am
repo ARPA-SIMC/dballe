@@ -14,12 +14,15 @@ dist_dballeinclude_HEADERS = dballef.h dballeff.h
 
 dist_noinst_HEADERS = handles.h
 
+nodist_include_HEADERS = dballef.mod
+
 lib_LTLIBRARIES = libdballef.la
 
 libdballef_la_SOURCES = \
 	error.cc \
 	trace.cc \
-	binding.cc
+	binding.cc \
+	dballef.f90
 libdballef_la_LIBADD = ../dballe/libdballe.la -lcnf
 libdballef_la_LDFLAGS = -version-info @LIBDBALLEF_VERSION_INFO@
 
