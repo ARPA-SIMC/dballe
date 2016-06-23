@@ -148,26 +148,9 @@ extern "C" {
  * @return
  *   The error indication for the function.
  */
-F77_INTEGER_FUNCTION(idba_presentati)(
-        INTEGER(dbahandle),
-        CHARACTER(url),
-        CHARACTER(user),
-        CHARACTER(password)
-        TRAIL(url)
-        TRAIL(user)
-        TRAIL(password))
+int idba_presentati(int* dbahandle, char* url, char* user, char* password)
 {
-    GENPTR_INTEGER(dbahandle)
-    GENPTR_CHARACTER(url)
-    GENPTR_CHARACTER(user)
-    GENPTR_CHARACTER(password)
-    const char* chosen_url;
-    char s_url[256];
-
     try {
-        /* Import input string parameters */
-        cnfImpn(url, url_length, 255, s_url); s_url[255] = 0;
-
         /* Initialize the library if needed */
         lib_init();
 
@@ -178,15 +161,14 @@ F77_INTEGER_FUNCTION(idba_presentati)(
         /* Open the DB-All.e session */
 
         /* If url is missing, look in the environment */
-        if (s_url[0] == 0)
+        if (url[0] == 0)
         {
-            chosen_url = getenv("DBA_DB");
-            if (chosen_url == NULL) chosen_url = "";
-        } else
-            chosen_url = s_url;
+            url = getenv("DBA_DB");
+            if (url == NULL) url = "";
+        }
 
-        IF_TRACING(fortran::log_presentati_url(*dbahandle, chosen_url));
-        hs.db = DB::connect_from_url(chosen_url).release();
+        IF_TRACING(fortran::log_presentati_url(*dbahandle, url));
+        hs.db = DB::connect_from_url(url).release();
 
         /* Open the database session */
         return fortran::success();
@@ -202,10 +184,8 @@ F77_INTEGER_FUNCTION(idba_presentati)(
  * @param dbahandle
  *   The database handle to close.
  */
-F77_SUBROUTINE(idba_arrivederci)(INTEGER(dbahandle))
+int idba_arrivederci(int *dbahandle)
 {
-    GENPTR_INTEGER(dbahandle)
-
     IF_TRACING(fortran::log_arrivederci(*dbahandle));
 
     // try {
@@ -270,28 +250,8 @@ F77_SUBROUTINE(idba_arrivederci)(INTEGER(dbahandle))
  * @return
  *   The error indication for the function.
  */
-F77_INTEGER_FUNCTION(idba_preparati)(
-        INTEGER(dbahandle),
-        INTEGER(handle),
-        CHARACTER(anaflag),
-        CHARACTER(dataflag),
-        CHARACTER(attrflag)
-        TRAIL(anaflag)
-        TRAIL(dataflag)
-        TRAIL(attrflag))
+int idba_preparati(int* dbahandle, int* handle, char* anaflag, char* dataflag, char* attrflag)
 {
-    GENPTR_INTEGER(dbahandle)
-    GENPTR_INTEGER(handle)
-    GENPTR_CHARACTER(anaflag)
-    GENPTR_CHARACTER(dataflag)
-    GENPTR_CHARACTER(attrflag)
-    char c_anaflag[10];
-    char c_dataflag[10];
-    char c_attrflag[10];
-    cnfImpn(anaflag, anaflag_length,  10, c_anaflag);
-    cnfImpn(dataflag, dataflag_length,  10, c_dataflag);
-    cnfImpn(attrflag, attrflag_length,  10, c_attrflag);
-
     try {
         /* Check here to warn users of the introduction of idba_presentati */
         /*
@@ -303,8 +263,8 @@ F77_INTEGER_FUNCTION(idba_preparati)(
         *handle = hsimp.request();
         HSession& hs = hsess.get(*dbahandle);
         HSimple& h = hsimp.get(*handle);
-        IF_TRACING(h.trace.log_preparati(*dbahandle, *handle, c_anaflag, c_dataflag, c_attrflag));
-        h.api = new fortran::DbAPI(*hs.db, c_anaflag, c_dataflag, c_attrflag);
+        IF_TRACING(h.trace.log_preparati(*dbahandle, *handle, anaflag, dataflag, attrflag));
+        h.api = new fortran::DbAPI(*hs.db, anaflag, dataflag, attrflag);
 
         return fortran::success();
     } catch (error& e) {
