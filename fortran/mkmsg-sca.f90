@@ -1,4 +1,5 @@
       program mkmsg
+include "dballef.h"
 
 ! ****************************
 ! * Create a test message file

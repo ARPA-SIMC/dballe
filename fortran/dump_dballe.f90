@@ -1,11 +1,12 @@
       program dump_dballe
+      include "dballef.h"
 
 ! *****************************************
 ! * Dump the contents of a dballe database
 ! *****************************************
 
       integer dbahandle, handle, handle_ana, nstaz, ndata, nattr
-      integer i, i1, i2, tmp
+      integer i, i1, i2, tmp, ierr
       integer id,height
       character cname*20,rete*20,value*255,avalue*255
       character btable*10,starbtable*10
@@ -15,11 +16,11 @@
       call idba_error_set_callback(0, errorrep, 2, i)
 
 !     Database login
-      call idba_presentati(dbahandle, "test", "enrico", "")
+      ierr = idba_presentati(dbahandle, "test", "enrico", "")
 
 !     Open a session
-      call idba_preparati(dbahandle, handle_ana, "read", "read", "read")
-      call idba_preparati(dbahandle, handle, "read", "read", "read")
+      ierr = idba_preparati(dbahandle, handle_ana, "read", "read", "read")
+      ierr = idba_preparati(dbahandle, handle, "read", "read", "read")
 
 !     Query all the stations
       call idba_quantesono(handle_ana, nstaz)
@@ -61,7 +62,7 @@
 
       call idba_fatto(handle_ana)
       call idba_fatto(handle)
-      call idba_arrivederci(dbahandle)
+      ierr = idba_arrivederci(dbahandle)
 
       call exit (0)
     

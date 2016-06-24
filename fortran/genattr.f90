@@ -1,8 +1,6 @@
 program tmp
 
-implicit none
-
-INCLUDE "dballef.h"
+include "dballef.h"
 
 integer,parameter :: nvar=5
 real :: field(nvar),obsinc(nvar)

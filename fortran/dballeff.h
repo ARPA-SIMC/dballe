@@ -153,21 +153,6 @@ interface
 
 ! Init/Shutdown routines
    
-   integer function idba_presentati(dbahandle, dsn, user, password)
-     integer, intent(out) :: dbahandle
-     character (len=*), intent(in) :: dsn,user,password
-   end function idba_presentati
-
-   integer function idba_arrivederci(dbahandle)
-     integer, intent(in) :: dbahandle
-   end function idba_arrivederci
-
-   integer function idba_preparati(dbahandle, handle, anaflag, dataflag, attrflag)
-     integer, intent(in) :: dbahandle
-     integer, intent(out) :: handle
-     character (len=*), intent(in) :: anaflag,dataflag,attrflag
-   end function idba_preparati
-
    integer function idba_messaggi(handle, filename, mode, type)
      integer, intent(out) :: handle
      character (len=*), intent(in) :: filename,mode,type
