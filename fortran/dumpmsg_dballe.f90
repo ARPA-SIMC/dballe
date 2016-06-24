@@ -22,7 +22,7 @@ include "dballef.h"
 ! * Dump the contents of a weather messages in a file
 ! ****************************************************
 
-implicit none
+!implicit none
 
 integer :: handle, nstaz, ndata, nattr
 integer :: i, i1, i2, type1, l1, type2, l2
