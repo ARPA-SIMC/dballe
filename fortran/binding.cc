@@ -352,20 +352,20 @@ int idba_fatto(int* handle)
  * @return
  *   The error indicator for the function
  */
-int idba_seti(int handle, const char* key, const int* value)
+int idba_seti(int handle, const char* parameter, const int* value)
 {
     try {
         HSimple& h = hsimp.get(handle);
         if (*value == MISSING_INT)
         {
             TRACEMISSING("int");
-            IF_TRACING(h.trace.log_unset(key));
-            h.api->unset(key);
+            IF_TRACING(h.trace.log_unset(parameter));
+            h.api->unset(parameter);
         }
         else
         {
-            IF_TRACING(h.trace.log_set(key, *value));
-            h.api->seti(key, *value);
+            IF_TRACING(h.trace.log_set(parameter, *value));
+            h.api->seti(parameter, *value);
         }
         return fortran::success();
     } catch (error& e) {
@@ -387,20 +387,20 @@ int idba_seti(int handle, const char* key, const int* value)
  * @return
  *   The error indicator for the function
  */
-int idba_setb(int handle, const char* key, const unsigned char* value)
+int idba_setb(int handle, const char* parameter, const unsigned char* value)
 {
     try {
         HSimple& h = hsimp.get(handle);
         if (*value == MISSING_BYTE)
         {
             TRACEMISSING("byte");
-            IF_TRACING(h.trace.log_unset(key));
-            h.api->unset(key);
+            IF_TRACING(h.trace.log_unset(parameter));
+            h.api->unset(parameter);
         }
         else
         {
-            IF_TRACING(h.trace.log_set(key, *value));
-            h.api->setb(key, *value);
+            IF_TRACING(h.trace.log_set(parameter, *value));
+            h.api->setb(parameter, *value);
         }
         return fortran::success();
     } catch (error& e) {
@@ -424,20 +424,20 @@ int idba_setb(int handle, const char* key, const unsigned char* value)
  * @return
  *   The error indicator for the function
  */
-int idba_setr(int handle, const char* key, const float* value)
+int idba_setr(int handle, const char* parameter, const float* value)
 {
     try {
         HSimple& h = hsimp.get(handle);
         if (*value == MISSING_REAL)
         {
             TRACEMISSING("real");
-            IF_TRACING(h.trace.log_unset(key));
-            h.api->unset(key);
+            IF_TRACING(h.trace.log_unset(parameter));
+            h.api->unset(parameter);
         }
         else
         {
-            IF_TRACING(h.trace.log_set(key, *value));
-            h.api->setr(key, *value);
+            IF_TRACING(h.trace.log_set(parameter, *value));
+            h.api->setr(parameter, *value);
         }
         return fortran::success();
     } catch (error& e) {
@@ -459,20 +459,20 @@ int idba_setr(int handle, const char* key, const float* value)
  * @return
  *   The error indicator for the function
  */
-int idba_setd(int handle, const char* key, const double* value)
+int idba_setd(int handle, const char* parameter, const double* value)
 {
     try {
         HSimple& h = hsimp.get(handle);
         if (*value == MISSING_DOUBLE)
         {
             TRACEMISSING("double");
-            IF_TRACING(h.trace.log_unset(key));
-            h.api->unset(key);
+            IF_TRACING(h.trace.log_unset(parameter));
+            h.api->unset(parameter);
         }
         else
         {
-            IF_TRACING(h.trace.log_set(key, *value));
-            h.api->setd(key, *value);
+            IF_TRACING(h.trace.log_set(parameter, *value));
+            h.api->setd(parameter, *value);
         }
         return fortran::success();
     } catch (error& e) {
@@ -494,20 +494,20 @@ int idba_setd(int handle, const char* key, const double* value)
  * @return
  *   The error indicator for the function
  */
-int idba_setc(int handle, const char* key, const char* value)
+int idba_setc(int handle, const char* parameter, const char* value)
 {
     try {
         HSimple& h = hsimp.get(handle);
         if (value[0] == 0)
         {
             TRACEMISSING("char");
-            IF_TRACING(h.trace.log_unset(key));
-            h.api->unset(key);
+            IF_TRACING(h.trace.log_unset(parameter));
+            h.api->unset(parameter);
         }
         else
         {
-            IF_TRACING(h.trace.log_set(key, value));
-            h.api->setc(key, value);
+            IF_TRACING(h.trace.log_set(parameter, value));
+            h.api->setc(parameter, value);
         }
 
         return fortran::success();
@@ -530,21 +530,11 @@ int idba_setc(int handle, const char* key, const char* value)
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_enqi)(
-        INTEGER(handle),
-        CHARACTER(parameter),
-        INTEGER(value)
-        TRAIL(parameter))
+int idba_enqi(int handle, const char* parameter, int* value)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_CHARACTER(parameter)
-    GENPTR_INTEGER(value)
-    char parm[20];
-    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
-
     try {
-        HSimple& h = hsimp.get(*handle);
-        *value = h.api->enqi(parm);
+        HSimple& h = hsimp.get(handle);
+        *value = h.api->enqi(parameter);
         tofortran(*value);
         return fortran::success();
     } catch (error& e) {
@@ -566,21 +556,11 @@ F77_INTEGER_FUNCTION(idba_enqi)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_enqb)(
-        INTEGER(handle),
-        CHARACTER(parameter),
-        BYTE(value)
-        TRAIL(parameter))
+int idba_enqb(int handle, const char* parameter, unsigned char* value)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_CHARACTER(parameter)
-    GENPTR_BYTE(value)
-    char parm[20];
-    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
-
     try {
-        HSimple& h = hsimp.get(*handle);
-        *value = h.api->enqb(parm);
+        HSimple& h = hsimp.get(handle);
+        *value = h.api->enqb(parameter);
         if (*value == fortran::API::missing_byte)
             *value = MISSING_BYTE;
         return fortran::success();
@@ -603,21 +583,11 @@ F77_INTEGER_FUNCTION(idba_enqb)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_enqr)(
-        INTEGER(handle),
-        CHARACTER(parameter),
-        REAL(value)
-        TRAIL(parameter))
+int idba_enqr(int handle, const char* parameter, float* value)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_CHARACTER(parameter)
-    GENPTR_REAL(value)
-    char parm[20];
-    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
-
     try {
-        HSimple& h = hsimp.get(*handle);
-        *value = h.api->enqr(parm);
+        HSimple& h = hsimp.get(handle);
+        *value = h.api->enqr(parameter);
         if (*value == fortran::API::missing_float)
             *value = MISSING_REAL;
         return fortran::success();
@@ -640,21 +610,11 @@ F77_INTEGER_FUNCTION(idba_enqr)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_enqd)(
-        INTEGER(handle),
-        CHARACTER(parameter),
-        DOUBLE(value)
-        TRAIL(parameter))
+int idba_enqd(int handle, const char* parameter, double* value)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_CHARACTER(parameter)
-    GENPTR_DOUBLE(value)
-    char parm[20];
-    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
-
     try {
-        HSimple& h = hsimp.get(*handle);
-        *value = h.api->enqd(parm);
+        HSimple& h = hsimp.get(handle);
+        *value = h.api->enqd(parameter);
         if (*value == fortran::API::missing_double)
             *value = MISSING_DOUBLE;
         return fortran::success();
@@ -678,33 +638,15 @@ F77_INTEGER_FUNCTION(idba_enqd)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_enqc)(
-        INTEGER(handle),
-        CHARACTER(parameter),
-        CHARACTER(value)
-        TRAIL(parameter)
-        TRAIL(value))
+int idba_enqc(int handle, const char* parameter, const char** value)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_CHARACTER(parameter)
-    GENPTR_CHARACTER(value)
-    char parm[20];
-    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
-
     try {
-        HSimple& h = hsimp.get(*handle);
-        const char* v = h.api->enqc(parm);
+        HSimple& h = hsimp.get(handle);
+        const char* v = h.api->enqc(parameter);
         if (!v)
-        {
-            if (value_length > 0)
-            {
-                // The missing string value has been defined as a
-                // null byte plus blank padding.
-                value[0] = 0;
-                memset(value+1, ' ', value_length - 1);
-            }
-        } else
-            cnfExprt(v, value, value_length);
+            *value = "";
+        else
+            *value = v;
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
