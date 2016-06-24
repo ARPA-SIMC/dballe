@@ -55,11 +55,11 @@ routines.
 </th>
 </thead>
 <tbody>
-<tr><td><code><a href='#idba_seti'>idba_seti(handle, parameter, value)</a></code></td><td>Set an integer value in input.</td></tr>
-<tr><td><code><a href='#idba_setb'>idba_setb(handle, parameter)</a></code></td><td>Set a byte value in input.</td></tr>
-<tr><td><code><a href='#idba_setr'>idba_setr(handle, parameter, value)</a></code></td><td>Set a real value in input.</td></tr>
-<tr><td><code><a href='#idba_setd'>idba_setd(handle, parameter, value)</a></code></td><td>Set a real*8 value in input.</td></tr>
-<tr><td><code><a href='#idba_setc'>idba_setc(handle, parameter, value)</a></code></td><td>Set a character value in input.</td></tr>
+<tr><td><code><a href='#idba_seti'>idba_seti(handle, key, value)</a></code></td><td>Set an integer value in input.</td></tr>
+<tr><td><code><a href='#idba_setb'>idba_setb(handle, key, value)</a></code></td><td>Set a byte value in input.</td></tr>
+<tr><td><code><a href='#idba_setr'>idba_setr(handle, key, value)</a></code></td><td>Set a real value in input.</td></tr>
+<tr><td><code><a href='#idba_setd'>idba_setd(handle, key, value)</a></code></td><td>Set a real*8 value in input.</td></tr>
+<tr><td><code><a href='#idba_setc'>idba_setc(handle, key, value)</a></code></td><td>Set a character value in input.</td></tr>
 <tr><td><code><a href='#idba_enqi'>idba_enqi(handle, parameter, value)</a></code></td><td>Read an integer value from the output.</td></tr>
 <tr><td><code><a href='#idba_enqb'>idba_enqb(handle, parameter)</a></code></td><td>Read a byte value from the output.</td></tr>
 <tr><td><code><a href='#idba_enqr'>idba_enqr(handle, parameter, value)</a></code></td><td>Read a real value from the output.</td></tr>
@@ -372,7 +372,7 @@ Close a session.
 ### Input/output routines
 
 <a name='idba_seti'></a>
-#### idba_seti(handle, parameter, value)
+#### idba_seti(handle, key, value)
 
 Parameters:
 
@@ -389,7 +389,7 @@ The error indicator for the function
 Set an integer value in input.
 
 <a name='idba_setb'></a>
-#### idba_setb(handle, parameter)
+#### idba_setb(handle, key, value)
 
 Parameters:
 
@@ -406,7 +406,7 @@ The error indicator for the function
 Set a byte value in input.
 
 <a name='idba_setr'></a>
-#### idba_setr(handle, parameter, value)
+#### idba_setr(handle, key, value)
 
 Parameters:
 
@@ -423,7 +423,7 @@ The error indicator for the function
 Set a real value in input.
 
 <a name='idba_setd'></a>
-#### idba_setd(handle, parameter, value)
+#### idba_setd(handle, key, value)
 
 Parameters:
 
@@ -440,7 +440,7 @@ The error indicator for the function
 Set a real*8 value in input.
 
 <a name='idba_setc'></a>
-#### idba_setc(handle, parameter, value)
+#### idba_setc(handle, key, value)
 
 Parameters:
 
