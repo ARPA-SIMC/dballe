@@ -148,7 +148,7 @@ extern "C" {
  * @return
  *   The error indication for the function.
  */
-int idba_presentati(int* dbahandle, char* url, char* user, char* password)
+int idba_presentati(int* dbahandle, const char* url, const char* user, const char* password)
 {
     try {
         /* Initialize the library if needed */
@@ -204,6 +204,7 @@ int idba_arrivederci(int *dbahandle)
     // } catch (error& e) {
     //  return fortran::error(e);
     // }
+    return fortran::success();
 }
 
 
@@ -250,7 +251,7 @@ int idba_arrivederci(int *dbahandle)
  * @return
  *   The error indication for the function.
  */
-int idba_preparati(int* dbahandle, int* handle, char* anaflag, char* dataflag, char* attrflag)
+int idba_preparati(int* dbahandle, int* handle, const char* anaflag, const char* dataflag, const char* attrflag)
 {
     try {
         /* Check here to warn users of the introduction of idba_presentati */
@@ -289,27 +290,8 @@ int idba_preparati(int* dbahandle, int* handle, char* anaflag, char* dataflag, c
  * @return
  *   The error indication for the function.
  */
-F77_INTEGER_FUNCTION(idba_messaggi)(
-        INTEGER(handle),
-        CHARACTER(filename),
-        CHARACTER(mode),
-        CHARACTER(type)
-        TRAIL(filename)
-        TRAIL(mode)
-        TRAIL(type))
+int idba_messaggi(int* handle, const char* filename, const char* mode, const char* type)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_CHARACTER(filename)
-    GENPTR_CHARACTER(mode)
-    GENPTR_CHARACTER(type)
-    char c_filename[512];
-    char c_mode[10];
-    char c_type[10];
-
-    cnfImpn(filename, filename_length,  512, c_filename);
-    cnfImpn(mode, mode_length,  10, c_mode);
-    cnfImpn(type, type_length,  10, c_type);
-
     try {
         lib_init();
 
@@ -317,9 +299,9 @@ F77_INTEGER_FUNCTION(idba_messaggi)(
         //HSession& hs = hsess.get(*dbahandle);
         HSimple& h = hsimp.get(*handle);
 
-        IF_TRACING(h.trace.log_messaggi(*handle, c_filename, c_mode, c_type));
+        IF_TRACING(h.trace.log_messaggi(*handle, filename, mode, type));
 
-        h.api = new fortran::MsgAPI(c_filename, c_mode, c_type);
+        h.api = new fortran::MsgAPI(filename, mode, type);
 
         return fortran::success();
     } catch (error& e) {
@@ -335,10 +317,8 @@ F77_INTEGER_FUNCTION(idba_messaggi)(
  * @param handle
  *   Handle to the session to be closed.
  */
-F77_INTEGER_FUNCTION(idba_fatto)(INTEGER(handle))
+int idba_fatto(int* handle)
 {
-    GENPTR_INTEGER(handle)
-
     try {
         HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_fatto());
@@ -372,30 +352,20 @@ F77_INTEGER_FUNCTION(idba_fatto)(INTEGER(handle))
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_seti)(
-        INTEGER(handle),
-        CHARACTER(parameter),
-        INTEGER(value)
-        TRAIL(parameter))
+int idba_seti(int handle, const char* key, const int* value)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_CHARACTER(parameter)
-    GENPTR_INTEGER(value)
-    char parm[20];
-    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
-
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         if (*value == MISSING_INT)
         {
             TRACEMISSING("int");
-            IF_TRACING(h.trace.log_unset(parm));
-            h.api->unset(parm);
+            IF_TRACING(h.trace.log_unset(key));
+            h.api->unset(key);
         }
         else
         {
-            IF_TRACING(h.trace.log_set(parm, *value));
-            h.api->seti(parm, *value);
+            IF_TRACING(h.trace.log_set(key, *value));
+            h.api->seti(key, *value);
         }
         return fortran::success();
     } catch (error& e) {
@@ -417,30 +387,20 @@ F77_INTEGER_FUNCTION(idba_seti)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_setb)(
-        INTEGER(handle),
-        CHARACTER(parameter),
-        BYTE(value)
-        TRAIL(parameter))
+int idba_setb(int handle, const char* key, const unsigned char* value)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_CHARACTER(parameter)
-    GENPTR_BYTE(value)
-    char parm[20];
-    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
-
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         if (*value == MISSING_BYTE)
         {
             TRACEMISSING("byte");
-            IF_TRACING(h.trace.log_unset(parm));
-            h.api->unset(parm);
+            IF_TRACING(h.trace.log_unset(key));
+            h.api->unset(key);
         }
         else
         {
-            IF_TRACING(h.trace.log_set(parm, *value));
-            h.api->setb(parm, *value);
+            IF_TRACING(h.trace.log_set(key, *value));
+            h.api->setb(key, *value);
         }
         return fortran::success();
     } catch (error& e) {
@@ -464,30 +424,20 @@ F77_INTEGER_FUNCTION(idba_setb)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_setr)(
-        INTEGER(handle),
-        CHARACTER(parameter),
-        REAL(value)
-        TRAIL(parameter))
+int idba_setr(int handle, const char* key, const float* value)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_CHARACTER(parameter)
-    GENPTR_REAL(value)
-    char parm[20];
-    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
-
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         if (*value == MISSING_REAL)
         {
             TRACEMISSING("real");
-            IF_TRACING(h.trace.log_unset(parm));
-            h.api->unset(parm);
+            IF_TRACING(h.trace.log_unset(key));
+            h.api->unset(key);
         }
         else
         {
-            IF_TRACING(h.trace.log_set(parm, *value));
-            h.api->setr(parm, *value);
+            IF_TRACING(h.trace.log_set(key, *value));
+            h.api->setr(key, *value);
         }
         return fortran::success();
     } catch (error& e) {
@@ -509,30 +459,20 @@ F77_INTEGER_FUNCTION(idba_setr)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_setd)(
-        INTEGER(handle),
-        CHARACTER(parameter),
-        DOUBLE(value)
-        TRAIL(parameter))
+int idba_setd(int handle, const char* key, const double* value)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_CHARACTER(parameter)
-    GENPTR_DOUBLE(value)
-    char parm[20];
-    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
-
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         if (*value == MISSING_DOUBLE)
         {
             TRACEMISSING("double");
-            IF_TRACING(h.trace.log_unset(parm));
-            h.api->unset(parm);
+            IF_TRACING(h.trace.log_unset(key));
+            h.api->unset(key);
         }
         else
         {
-            IF_TRACING(h.trace.log_set(parm, *value));
-            h.api->setd(parm, *value);
+            IF_TRACING(h.trace.log_set(key, *value));
+            h.api->setd(key, *value);
         }
         return fortran::success();
     } catch (error& e) {
@@ -554,33 +494,20 @@ F77_INTEGER_FUNCTION(idba_setd)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_setc)(
-        INTEGER(handle),
-        CHARACTER(parameter),
-        CHARACTER(value)
-        TRAIL(parameter)
-        TRAIL(value))
+int idba_setc(int handle, const char* key, const char* value)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_CHARACTER(parameter)
-    GENPTR_CHARACTER(value)
-    char parm[20];
-    char val[255];
-    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
-    cnfImpn(value, value_length, 254, val); val[254] = 0;
-
     try {
-        HSimple& h = hsimp.get(*handle);
-        if (val[0] == 0)
+        HSimple& h = hsimp.get(handle);
+        if (value[0] == 0)
         {
             TRACEMISSING("char");
-            IF_TRACING(h.trace.log_unset(parm));
-            h.api->unset(parm);
+            IF_TRACING(h.trace.log_unset(key));
+            h.api->unset(key);
         }
         else
         {
-            IF_TRACING(h.trace.log_set(parm, val));
-            h.api->setc(parm, val);
+            IF_TRACING(h.trace.log_set(key, value));
+            h.api->setc(key, value);
         }
 
         return fortran::success();
