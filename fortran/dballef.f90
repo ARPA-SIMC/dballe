@@ -104,11 +104,67 @@ INTERFACE idba_set
   MODULE PROCEDURE idba_seti, idba_setb, idba_setr, idba_setd, idba_setc
 END INTERFACE idba_set
 
+INTERFACE
+  FUNCTION idba_enqi_orig(handle, param, val) BIND(C,name='idba_enqi')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  CHARACTER(kind=c_char) :: param(*)
+  INTEGER(kind=c_int) :: val
+  INTEGER(kind=c_int) :: idba_enqi_orig
+  END FUNCTION idba_enqi_orig
+END INTERFACE
+  
+INTERFACE
+  FUNCTION idba_enqb_orig(handle, param, val) BIND(C,name='idba_enqb')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  CHARACTER(kind=c_char) :: param(*)
+  INTEGER(kind=c_signed_char) :: val
+  INTEGER(kind=c_int) :: idba_enqb_orig
+  END FUNCTION idba_enqb_orig
+END INTERFACE
+  
+INTERFACE
+  FUNCTION idba_enqr_orig(handle, param, val) BIND(C,name='idba_enqr')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  CHARACTER(kind=c_char) :: param(*)
+  REAL(kind=c_float) :: val
+  INTEGER(kind=c_int) :: idba_enqr_orig
+  END FUNCTION idba_enqr_orig
+END INTERFACE
+  
+INTERFACE
+  FUNCTION idba_enqd_orig(handle, param, val) BIND(C,name='idba_enqd')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  CHARACTER(kind=c_char) :: param(*)
+  REAL(kind=c_double) :: val
+  INTEGER(kind=c_int) :: idba_enqd_orig
+  END FUNCTION idba_enqd_orig
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_enqc_orig(handle, param, val, val_len) BIND(C,name='idba_enqc')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  CHARACTER(kind=c_char) :: param(*)
+  CHARACTER(kind=c_char) :: val(*)
+  INTEGER(kind=c_int),VALUE :: val_len
+  INTEGER(kind=c_int) :: idba_enqc_orig
+  END FUNCTION idba_enqc_orig
+END INTERFACE
+
+INTERFACE idba_enq
+  MODULE PROCEDURE idba_enqi, idba_enqb, idba_enqr, idba_enqd, idba_enqc
+END INTERFACE idba_enq
+
 
 PRIVATE
 PUBLIC idba_presentati, idba_arrivederci, idba_preparati, idba_messaggi, &
  idba_fatto, &
- idba_set, idba_seti, idba_setb, idba_setr, idba_setd, idba_setc
+ idba_set, idba_seti, idba_setb, idba_setr, idba_setd, idba_setc, &
+ idba_enq, idba_enqi, idba_enqb, idba_enqr, idba_enqd, idba_enqc
 
 CONTAINS
 
@@ -163,7 +219,6 @@ idba_messaggi = idba_messaggi_orig(handle, fchartrimtostr(filename), &
 
 END FUNCTION idba_messaggi
 
-
 FUNCTION idba_seti(handle, param, val)
 INTEGER(kind=c_int) :: handle
 CHARACTER(kind=c_char,len=*) :: param
@@ -213,6 +268,57 @@ INTEGER(kind=c_int) :: idba_setc
 idba_setc = idba_setc_orig(handle, fchartrimtostr(param), fchartrimtostr(val))
 
 END FUNCTION idba_setc
+
+FUNCTION idba_enqi(handle, param, val)
+INTEGER(kind=c_int) :: handle
+CHARACTER(kind=c_char,len=*) :: param
+INTEGER(kind=c_int) :: val
+INTEGER(kind=c_int) :: idba_enqi
+
+idba_enqi = idba_enqi_orig(handle, fchartrimtostr(param), val)
+
+END FUNCTION idba_enqi
+
+FUNCTION idba_enqb(handle, param, val)
+INTEGER(kind=c_int) :: handle
+CHARACTER(kind=c_char,len=*) :: param
+INTEGER(kind=c_signed_char) :: val
+INTEGER(kind=c_int) :: idba_enqb
+
+idba_enqb = idba_enqb_orig(handle, fchartrimtostr(param), val)
+
+END FUNCTION idba_enqb
+
+FUNCTION idba_enqr(handle, param, val)
+INTEGER(kind=c_int) :: handle
+CHARACTER(kind=c_char,len=*) :: param
+REAL(kind=c_float) :: val
+INTEGER(kind=c_int) :: idba_enqr
+
+idba_enqr = idba_enqr_orig(handle, fchartrimtostr(param), val)
+
+END FUNCTION idba_enqr
+
+FUNCTION idba_enqd(handle, param, val)
+INTEGER(kind=c_int) :: handle
+CHARACTER(kind=c_char,len=*) :: param
+REAL(kind=c_double) :: val
+INTEGER(kind=c_int) :: idba_enqd
+
+idba_enqd = idba_enqd_orig(handle, fchartrimtostr(param), val)
+
+END FUNCTION idba_enqd
+
+FUNCTION idba_enqc(handle, param, val)
+INTEGER(kind=c_int) :: handle
+CHARACTER(kind=c_char,len=*) :: param
+CHARACTER(kind=c_char,len=*) :: val
+INTEGER(kind=c_int) :: idba_enqc
+
+
+idba_enqc = idba_enqc_orig(handle, fchartrimtostr(param), val, LEN(val))
+
+END FUNCTION idba_enqc
 
 
 END MODULE dballef

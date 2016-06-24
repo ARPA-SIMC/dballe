@@ -40,46 +40,6 @@ INTEGER, PARAMETER :: DBA_MVI = HUGE(0)
 INTEGER(kind=dba_int_b), PARAMETER :: DBA_MVB = HUGE(0_dba_int_b)
 CHARACTER(len=1), PARAMETER :: DBA_MVC = char(0)
 
-
-! Get/Set routines
-
-interface idba_enq
-
-   integer function idba_enqb(handle,param,value)
-     integer, intent(in) :: handle
-     integer (kind=1),intent(out) :: value
-     character (len=*), intent(in) :: param
-   end function idba_enqb
-   
-   integer function idba_enqi(handle,param,value)
-     integer, intent(in) :: handle
-     integer, intent(out) :: value
-     character (len=*), intent(in) :: param
-   end function idba_enqi
-   
-   integer function idba_enqr(handle,param,value)
-     integer, intent(in) :: handle
-     real, intent(out) :: value
-     character (len=*), intent(in) :: param
-   end function idba_enqr
-   
-   integer function idba_enqd(handle,param,value)
-     integer, intent(in) :: handle
-     double precision, intent(out) :: value
-     character (len=*), intent(in) :: param
-   end function idba_enqd
-   
-   integer function idba_enqc(handle,param,value)
-     integer, intent(in) :: handle
-     character (len=*), intent(in) :: param
-     character (len=*), intent(out) :: value
-   end function idba_enqc
-     
-end interface
-
-  
-
-
 interface
 
 ! Error handling routines
