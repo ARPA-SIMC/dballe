@@ -16,6 +16,7 @@
 ! Author: Paolo Patruno <ppatruno@arpa.emr.it>
 
 program dump_dballe
+include "dballef.h"
 
 ! ****************************************************
 ! * Dump the contents of a weather messages in a file
@@ -31,7 +32,6 @@ character(len=20)  :: cname, rep_memo,value, avalue
 character(len=10) :: btable, starbtable
 doubleprecision ::dlat,dlon
 
-include "dballef.h"
 external errorrep
 call getarg(1,fname)
 
