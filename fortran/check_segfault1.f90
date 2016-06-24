@@ -1,12 +1,14 @@
 program test
 
+USE,INTRINSIC :: iso_c_binding
+
 include "dballeff.h"
 
 integer :: idbhandle1,handle1
 integer :: i,anaid
 integer :: error_handle
 
-ierr = idba_error_set_callback(0, idba_default_error_handler, 42, error_handle)
+ierr = idba_error_set_callback(0, C_FUNLOC(idba_default_error_handler), 42, error_handle)
 
 ierr = idba_presentati(idbhandle1,"sqlite:tmp.sqlite","","")
 ierr = idba_preparati (idbhandle1,handle1,"write","write","write")
