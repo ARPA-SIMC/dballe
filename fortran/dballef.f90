@@ -159,12 +159,37 @@ INTERFACE idba_enq
   MODULE PROCEDURE idba_enqi, idba_enqb, idba_enqr, idba_enqd, idba_enqc
 END INTERFACE idba_enq
 
+INTERFACE
+  FUNCTION idba_error_set_callback(code, func, dat, handle) BIND(C,name='idba_error_set_callback')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: code
+  TYPE(c_funptr),VALUE :: func
+  INTEGER(kind=c_int),VALUE :: dat
+  INTEGER(kind=c_int) :: handle
+  END FUNCTION idba_error_set_callback
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_default_error_handler(debug) BIND(C,name='idba_default_error_handler')
+  IMPORT
+  INTEGER(kind=c_int) :: debug
+  END FUNCTION idba_default_error_handler
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_default_error_handle_tolerating_overflows(debug) BIND(C,name='idba_default_error_handle_tolerating_overflows')
+  IMPORT
+  INTEGER(kind=c_int) :: debug
+  END FUNCTION idba_default_error_handle_tolerating_overflows
+END INTERFACE
+
 
 PRIVATE
 PUBLIC idba_presentati, idba_arrivederci, idba_preparati, idba_messaggi, &
  idba_fatto, &
  idba_set, idba_seti, idba_setb, idba_setr, idba_setd, idba_setc, &
- idba_enq, idba_enqi, idba_enqb, idba_enqr, idba_enqd, idba_enqc
+ idba_enq, idba_enqi, idba_enqb, idba_enqr, idba_enqd, idba_enqc, &
+ idba_error_set_callback, idba_default_error_handler, idba_default_error_handle_tolerating_overflows
 
 CONTAINS
 
