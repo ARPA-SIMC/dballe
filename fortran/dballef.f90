@@ -32,8 +32,83 @@ INTERFACE
   END FUNCTION idba_preparati_orig
 END INTERFACE
 
+INTERFACE
+  FUNCTION idba_messaggi_orig(handle, filename, mode, typ) BIND(C,name='idba_messaggi')
+  IMPORT
+  INTEGER(kind=c_int) :: handle
+  CHARACTER(kind=c_char) :: filename(*)
+  CHARACTER(kind=c_char) :: mode(*)
+  CHARACTER(kind=c_char) :: typ(*)
+  INTEGER(kind=c_int) :: idba_messaggi_orig
+  END FUNCTION idba_messaggi_orig
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_fatto(dbahandle) BIND(C,name='idba_fatto')
+  IMPORT
+  INTEGER(kind=c_int) :: dbahandle
+  END FUNCTION idba_fatto
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_seti_orig(handle, param, val) BIND(C,name='idba_seti')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  CHARACTER(kind=c_char) :: param(*)
+  INTEGER(kind=c_int) :: val
+  INTEGER(kind=c_int) :: idba_seti_orig
+  END FUNCTION idba_seti_orig
+END INTERFACE
+  
+INTERFACE
+  FUNCTION idba_setb_orig(handle, param, val) BIND(C,name='idba_setb')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  CHARACTER(kind=c_char) :: param(*)
+  INTEGER(kind=c_signed_char) :: val
+  INTEGER(kind=c_int) :: idba_setb_orig
+  END FUNCTION idba_setb_orig
+END INTERFACE
+  
+INTERFACE
+  FUNCTION idba_setr_orig(handle, param, val) BIND(C,name='idba_setr')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  CHARACTER(kind=c_char) :: param(*)
+  REAL(kind=c_float) :: val
+  INTEGER(kind=c_int) :: idba_setr_orig
+  END FUNCTION idba_setr_orig
+END INTERFACE
+  
+INTERFACE
+  FUNCTION idba_setd_orig(handle, param, val) BIND(C,name='idba_setd')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  CHARACTER(kind=c_char) :: param(*)
+  REAL(kind=c_double) :: val
+  INTEGER(kind=c_int) :: idba_setd_orig
+  END FUNCTION idba_setd_orig
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_setc_orig(handle, param, val) BIND(C,name='idba_setc')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  CHARACTER(kind=c_char) :: param(*)
+  CHARACTER(kind=c_char) :: val(*)
+  INTEGER(kind=c_int) :: idba_setc_orig
+  END FUNCTION idba_setc_orig
+END INTERFACE
+
+INTERFACE idba_set
+  MODULE PROCEDURE idba_seti, idba_setb, idba_setr, idba_setd, idba_setc
+END INTERFACE idba_set
+
+
 PRIVATE
-PUBLIC idba_presentati, idba_arrivederci, idba_preparati
+PUBLIC idba_presentati, idba_arrivederci, idba_preparati, idba_messaggi, &
+ idba_fatto, &
+ idba_set, idba_seti, idba_setb, idba_setr, idba_setd, idba_setc
 
 CONTAINS
 
@@ -73,5 +148,71 @@ idba_preparati = idba_preparati_orig(dbahandle, handle, fchartrimtostr(anaflag),
  fchartrimtostr(dataflag), fchartrimtostr(attrflag))
 
 END FUNCTION idba_preparati
+
+
+! public simplified interface to messaggi
+FUNCTION idba_messaggi(handle, filename, mode, typ)
+INTEGER(kind=c_int) :: handle
+CHARACTER(kind=c_char,len=*) :: filename
+CHARACTER(kind=c_char,len=*) :: mode
+CHARACTER(kind=c_char,len=*) :: typ
+INTEGER(kind=c_int) :: idba_messaggi
+
+idba_messaggi = idba_messaggi_orig(handle, fchartrimtostr(filename), &
+ fchartrimtostr(mode), fchartrimtostr(typ))
+
+END FUNCTION idba_messaggi
+
+
+FUNCTION idba_seti(handle, param, val)
+INTEGER(kind=c_int) :: handle
+CHARACTER(kind=c_char,len=*) :: param
+INTEGER(kind=c_int) :: val
+INTEGER(kind=c_int) :: idba_seti
+
+idba_seti = idba_seti_orig(handle, fchartrimtostr(param), val)
+
+END FUNCTION idba_seti
+
+FUNCTION idba_setb(handle, param, val)
+INTEGER(kind=c_int) :: handle
+CHARACTER(kind=c_char,len=*) :: param
+INTEGER(kind=c_signed_char) :: val
+INTEGER(kind=c_int) :: idba_setb
+
+idba_setb = idba_setb_orig(handle, fchartrimtostr(param), val)
+
+END FUNCTION idba_setb
+
+FUNCTION idba_setr(handle, param, val)
+INTEGER(kind=c_int) :: handle
+CHARACTER(kind=c_char,len=*) :: param
+REAL(kind=c_float) :: val
+INTEGER(kind=c_int) :: idba_setr
+
+idba_setr = idba_setr_orig(handle, fchartrimtostr(param), val)
+
+END FUNCTION idba_setr
+
+FUNCTION idba_setd(handle, param, val)
+INTEGER(kind=c_int) :: handle
+CHARACTER(kind=c_char,len=*) :: param
+REAL(kind=c_double) :: val
+INTEGER(kind=c_int) :: idba_setd
+
+idba_setd = idba_setd_orig(handle, fchartrimtostr(param), val)
+
+END FUNCTION idba_setd
+
+FUNCTION idba_setc(handle, param, val)
+INTEGER(kind=c_int) :: handle
+CHARACTER(kind=c_char,len=*) :: param
+CHARACTER(kind=c_char,len=*) :: val
+INTEGER(kind=c_int) :: idba_setc
+
+idba_setc = idba_setc_orig(handle, fchartrimtostr(param), fchartrimtostr(val))
+
+END FUNCTION idba_setc
+
 
 END MODULE dballef

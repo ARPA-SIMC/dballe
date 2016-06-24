@@ -78,38 +78,6 @@ interface idba_enq
 end interface
 
   
-interface idba_set
-     
-   integer function idba_setb(handle,param,value)
-     integer, intent(in) :: handle
-     integer (kind=1), intent(in) :: value
-     character (len=*), intent(in) :: param
-   end function idba_setb
-   
-   integer function idba_seti(handle,param,value)
-     integer, intent(in) :: handle,value
-     character (len=*), intent(in) :: param
-   end function idba_seti
-  
-   integer function idba_setr(handle,param,value)
-     integer, intent(in) :: handle
-     real, intent(in) :: value
-     character (len=*), intent(in) :: param
-   end function idba_setr
-
-   integer function idba_setd(handle,param,value)
-     integer, intent(in) :: handle
-     double precision, intent(in) :: value
-     character (len=*), intent(in) :: param
-   end function idba_setd
-
-   integer function idba_setc(handle,param,value)
-     integer, intent(in) :: handle
-     character (len=*), intent(in) :: param,value
-   end function idba_setc
-
-
-end interface
 
 
 interface
@@ -153,11 +121,6 @@ interface
 
 ! Init/Shutdown routines
    
-   integer function idba_messaggi(handle, filename, mode, type)
-     integer, intent(out) :: handle
-     character (len=*), intent(in) :: filename,mode,type
-   end function idba_messaggi
-
    integer function idba_messages_open_input(handle, filename, mode, format, simplified)
      integer, intent(in) :: handle
      character (len=*), intent(in) :: filename,mode,format
@@ -178,10 +141,6 @@ interface
      integer, intent(in) :: handle
      character (len=*), intent(in) :: template_name
    end function idba_messages_write_next
-
-   integer function idba_fatto(handle)
-     integer, intent(in) :: handle
-   end function idba_fatto
 
 
 
