@@ -59,24 +59,9 @@ interface
    integer function idba_error_code()
    end function idba_error_code
    
-   integer function idba_error_set_callback(code,func,data,handle)
-     integer, intent(in) :: code
-     external :: func
-     integer, intent(in) :: data
-     integer, intent(out) :: handle
-   end function idba_error_set_callback
-
    integer function idba_error_remove_callback(handle)
      integer, intent(in) :: handle
    end function idba_error_remove_callback
-
-   integer function idba_default_error_handler(debug)
-     logical, intent(in) :: debug
-   end function idba_default_error_handler
-
-   integer function idba_error_handler_tolerating_overflows(debug)
-     logical, intent(in) :: debug
-   end function idba_error_handler_tolerating_overflows
 
 
 ! Init/Shutdown routines

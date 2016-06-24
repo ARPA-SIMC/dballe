@@ -16,6 +16,7 @@
 ! Author: Paolo Patruno <ppatruno@arpa.emr.it>
 
 program dump_dballe
+USE,INTRINSIC :: iso_c_binding
 include "dballeff.h"
 
 ! ****************************************************
@@ -35,7 +36,7 @@ doubleprecision ::dlat,dlon
 external errorrep
 call getarg(1,fname)
 
-ierr = idba_error_set_callback(0, errorrep, 0, i)
+ierr = idba_error_set_callback(0, C_FUNLOC(errorrep), 0, i)
 
 !     Open a session
 ierr = idba_messaggi(handle, fname, "r", "BUFR")
@@ -90,7 +91,7 @@ call exit (0)
 
 end program dump_dballe
 
-subroutine errorrep(val)
+SUBROUTINE errorrep(val) BIND(C)
 integer :: val
 character(len=1000) :: buf
 
@@ -108,4 +109,3 @@ end if
 return
 
 end subroutine errorrep
-
