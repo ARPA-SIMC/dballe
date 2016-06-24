@@ -44,7 +44,7 @@ ierr = idba_messaggi(handle, fname, "r", "BUFR")
 !     Query all the stations
 do while (.true.)
   ierr = idba_quantesono(handle, nstaz)
-  if (nstaz .eq. 0) exit
+  if (nstaz .eq. DBA_MVI) exit
 
   ierr = idba_elencamele(handle)
   ierr = idba_enq(handle, "name", cname)
