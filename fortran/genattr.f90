@@ -1,5 +1,5 @@
 program tmp
-
+USE,INTRINSIC :: iso_c_binding
 include "dballeff.h"
 
 integer,parameter :: nvar=5
@@ -9,7 +9,7 @@ INTEGER :: handle,handle_err,ana_id,debug,i
 
 
 ! gestione degli errori
-ierr = idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
+ierr = idba_error_set_callback(0,C_FUNLOC(idba_default_error_handler),debug,handle_err)
 
 ierr = idba_messaggi(handle, "tmp.bufr", "w", "BUFR")
 

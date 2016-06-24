@@ -1,4 +1,5 @@
       program dump_dballe
+      USE,INTRINSIC :: iso_c_binding
       include "dballeff.h"
 
 ! *****************************************
@@ -13,7 +14,7 @@
       real dlat,dlon
       external errorrep
 
-      ierr = idba_error_set_callback(0, errorrep, 2, i)
+      ierr = idba_error_set_callback(0, C_FUNLOC(errorrep), 2, i)
 
 !     Database login
       ierr = idba_presentati(dbahandle, "test", "enrico", "")
@@ -84,7 +85,7 @@
       return
       end
 
-      subroutine errorrep(val)
+      subroutine errorrep(val) BIND(C)
       integer val
       character buf*1000
 
