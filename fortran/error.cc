@@ -19,7 +19,7 @@ extern "C" {
 using namespace wreport;
 
 namespace {
-typedef void (*fdba_error_callback)(INTEGER(data));
+typedef void (*fdba_error_callback)(int* data);
 
 struct HErrcb : public dballe::fortran::HBase
 {
@@ -188,26 +188,17 @@ F77_SUBROUTINE(idba_error_details)(CHARACTER(message) TRAIL(message))
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_error_set_callback)(
-		INTEGER(code),
-		SUBROUTINE(func),
-		INTEGER(data),
-		INTEGER(handle))
+int idba_error_set_callback(int code, fdba_error_callback func, int data, int* handle)
 {
-	GENPTR_INTEGER(code)
-	GENPTR_SUBROUTINE(func)
-	GENPTR_INTEGER(data)
-	GENPTR_INTEGER(handle)
+    // Initialise the error library in case it has not been done yet
+    fortran::error_init();
 
-	// Initialise the error library in case it has not been done yet
-	fortran::error_init();
-
-	*handle = herr.request();
-	HErrcb& h = herr.get(*handle);
-	h.error = (ErrorCode)*code;
-	h.cb = (fdba_error_callback)func;
-	h.data = *data;
-	return fortran::success();
+    *handle = herr.request();
+    HErrcb& h = herr.get(*handle);
+    h.error = (ErrorCode)code;
+    h.cb = func;
+    h.data = data;
+    return fortran::success();
 }
 
 /**
@@ -231,12 +222,11 @@ F77_INTEGER_FUNCTION(idba_error_remove_callback)(INTEGER(handle))
  *
  * The message is printed only if a non-zero value is supplied as user data
  */
-F77_INTEGER_FUNCTION(idba_default_error_handler)(INTEGER(debug))
+void idba_default_error_handler(int* debug)
 {
-	GENPTR_INTEGER(debug)
-	if (*debug)
-		fprintf(stderr, "DB-All.e error %d: %s\n", last_err_code, last_err_msg);
-	exit(1);
+    if (*debug)
+        fprintf(stderr, "DB-All.e error %d: %s\n", last_err_code, last_err_msg);
+    exit(1);
 }
 
 /**
@@ -245,16 +235,14 @@ F77_INTEGER_FUNCTION(idba_default_error_handler)(INTEGER(debug))
  *
  * In case of overflows it prints a warning and continues execution
  */
-F77_INTEGER_FUNCTION(idba_error_handle_tolerating_overflows)(INTEGER(debug))
+void idba_error_handle_tolerating_overflows(int* debug)
 {
-	GENPTR_INTEGER(debug)
-	if (last_err_code != WR_ERR_NOTFOUND)
-	{
-		if (*debug)
-			fprintf(stderr, "DB-All.e error %d: %s\n", last_err_code, last_err_msg);
-		exit(1);
-	}
-	return 0;
+    if (last_err_code != WR_ERR_NOTFOUND)
+    {
+        if (*debug)
+            fprintf(stderr, "DB-All.e error %d: %s\n", last_err_code, last_err_msg);
+        exit(1);
+    }
 }
 
 /// @}
