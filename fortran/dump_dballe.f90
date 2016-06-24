@@ -1,5 +1,5 @@
       program dump_dballe
-      include "dballef.h"
+      include "dballeff.h"
 
 ! *****************************************
 ! * Dump the contents of a dballe database
@@ -13,7 +13,7 @@
       real dlat,dlon
       external errorrep
 
-      call idba_error_set_callback(0, errorrep, 2, i)
+      ierr = idba_error_set_callback(0, errorrep, 2, i)
 
 !     Database login
       ierr = idba_presentati(dbahandle, "test", "enrico", "")
@@ -23,45 +23,45 @@
       ierr = idba_preparati(dbahandle, handle, "read", "read", "read")
 
 !     Query all the stations
-      call idba_quantesono(handle_ana, nstaz)
+      ierr = idba_quantesono(handle_ana, nstaz)
       write (*,*) nstaz," stazioni:"
 
       do i=1, nstaz
-        call idba_elencamele(handle_ana)
-        call idba_enqc(handle_ana, "name", cname)
-        call idba_enqi(handle_ana, "ana_id", id)
-        call idba_enqr(handle_ana, "lat", dlat)
-        call idba_enqr(handle_ana, "lon", dlon)
-        call idba_enqi(handle_ana, "height", height)
-        call idba_enqc(handle_ana,"rep_memo",rete)
+        ierr = idba_elencamele(handle_ana)
+        ierr = idba_enqc(handle_ana, "name", cname)
+        ierr = idba_enqi(handle_ana, "ana_id", id)
+        ierr = idba_enqr(handle_ana, "lat", dlat)
+        ierr = idba_enqr(handle_ana, "lon", dlon)
+        ierr = idba_enqi(handle_ana, "height", height)
+        ierr = idba_enqc(handle_ana,"rep_memo",rete)
         write (*,*) "Staz ",id," (",dlat,",",dlon,") '", &
             cname(:istrlen(cname)),"' h:",height, &
             " ",rep_memo
-        call idba_seti(handle,"ana_id",id)
-        call idba_voglioquesto(handle,ndata)
+        ierr = idba_seti(handle,"ana_id",id)
+        ierr = idba_voglioquesto(handle,ndata)
         write (*,*) " ",ndata," dati:"
         do i1=1, ndata
-          call idba_dammelo(handle,btable)
-          call idba_enqc(handle,btable,value)
+          ierr = idba_dammelo(handle,btable)
+          ierr = idba_enqc(handle,btable,value)
           write (*,*) '  var ',btable(:istrlen(btable)),": ", &
             value(:istrlen(btable))
 
-          call idba_enqi(handle,"!context_id",tmp)
+          ierr = idba_enqi(handle,"!context_id",tmp)
           write (*,*) "  CTX: ",tmp
 
-          call idba_voglioancora (handle,nattr)
+          ierr = idba_voglioancora (handle,nattr)
           write (*,*) "   ",nattr," attributi:"
           do i2=1, nattr
-            call idba_ancora(handle,starbtable)
-            call idba_enqc(handle,starbtable,avalue)
+            ierr = idba_ancora(handle,starbtable)
+            ierr = idba_enqc(handle,starbtable,avalue)
             write(*,*) "    attr ",starbtable(:istrlen(starbtable)), &
               ": ",avalue(:istrlen(avalue))
           enddo
         enddo
       enddo
 
-      call idba_fatto(handle_ana)
-      call idba_fatto(handle)
+      ierr = idba_fatto(handle_ana)
+      ierr = idba_fatto(handle)
       ierr = idba_arrivederci(dbahandle)
 
       call exit (0)
@@ -91,11 +91,11 @@
       ier = idba_error_code()
       if (ier.ne.0) then
          print *,ier," error in ",val
-         call idba_error_message(buf)
+         ierr = idba_error_message(buf)
          print *,buf(:istrlen(buf))
-         call idba_error_context(buf)
+         ierr = idba_error_context(buf)
          print *,buf(:istrlen(buf))
-         call idba_error_details(buf)
+         ierr = idba_error_details(buf)
          print *,buf(:istrlen(buf))
          call exit (1)
       end if

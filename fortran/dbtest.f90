@@ -19,8 +19,8 @@
         call ensure_no_error("presentati")
 
         ierr = idba_preparati(dbahandle, handle, "write", "write", "write")
-        call idba_scopa(handle, char(0))
-        call idba_fatto(handle)
+        ierr = idba_scopa(handle, char(0))
+        ierr = idba_fatto(handle)
       endsubroutine dbinit
 
       endmodule dbtest
