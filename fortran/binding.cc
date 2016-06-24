@@ -638,15 +638,32 @@ int idba_enqd(int handle, const char* parameter, double* value)
  * @return
  *   The error indicator for the function
  */
-int idba_enqc(int handle, const char* parameter, const char** value)
+int idba_enqc(int handle, const char* parameter, char* value, unsigned value_len)
 {
     try {
         HSimple& h = hsimp.get(handle);
         const char* v = h.api->enqc(parameter);
-        if (!v)
-            *value = "";
-        else
-            *value = v;
+
+        // Copy the result values
+        size_t len;
+        if (value_len == 0)
+            len = 0;
+        else if (v)
+        {
+            len = strlen(v);
+            if (len > value_len)
+                len = value_len;
+            memcpy(value, v, value_len);
+        } else {
+            // The missing string value has been defined as a
+            // null byte plus blank padding.
+            value[0] = 0;
+            len = 1;
+        }
+
+        if (len < value_len)
+            memset(value + len, ' ', value_len - len);
+
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
