@@ -15,7 +15,7 @@
           dsn = "test:"
         end if
 
-        ierr = idba_presentati(dbahandle, dsn, char(0), char(0))
+        ierr = idba_presentati(dbahandle, dsn)
         call ensure_no_error("presentati")
 
         ierr = idba_preparati(dbahandle, handle, "write", "write", "write")

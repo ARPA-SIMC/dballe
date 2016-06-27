@@ -17,7 +17,7 @@
       ierr = idba_error_set_callback(0, C_FUNLOC(errorrep), 2, i)
 
 !     Database login
-      ierr = idba_presentati(dbahandle, "test", "enrico", "")
+      ierr = idba_presentati(dbahandle, "test")
 
 !     Open a session
       ierr = idba_preparati(dbahandle, handle_ana, "read", "read", "read")

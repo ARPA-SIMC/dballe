@@ -19,7 +19,7 @@
 
 !      call fdba_error_set_callback(0, testcb, 2, i)
 
-      ier = idba_presentati(dbahandle, "mem:", char(0), char(0))
+      ier = idba_presentati(dbahandle, "mem:")
       call ensure_no_error("presentati")
 
       ier = idba_preparati(dbahandle, handle, "write", "write", "write")
