@@ -11,10 +11,6 @@
 #include <cstring>
 #include <cstdio>
 
-extern "C" {
-#include <f77.h>
-}
-
 #define MAX_CALLBACKS 50
 
 using namespace wreport;
@@ -117,7 +113,7 @@ extern "C" {
  * @return
  *   The error code.
  */
-F77_INTEGER_FUNCTION(idba_error_code)()
+int idba_error_code()
 {
     return last_err_code;
 }
