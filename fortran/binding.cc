@@ -11,10 +11,6 @@
 #include "error.h"
 #include "trace.h"
 
-extern "C" {
-#include <f77.h>
-}
-
 //#define TRACEMISSING(type) fprintf(stderr, "SET TO MISSING (" type ")\n")
 #define TRACEMISSING(type) do {} while(0)
 
@@ -1005,13 +1001,6 @@ int idba_enqdate(int handle,
         int* year, int* month, int* day,
         int* hour, int* min, int* sec)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_INTEGER(year)
-    GENPTR_INTEGER(month)
-    GENPTR_INTEGER(day)
-    GENPTR_INTEGER(hour)
-    GENPTR_INTEGER(min)
-    GENPTR_INTEGER(sec)
     try {
         HSimple& h = hsimp.get(handle);
         h.api->enqdate(*year, *month, *day, *hour, *min, *sec);
@@ -1204,15 +1193,12 @@ int idba_dammelo(int handle, char* parameter, int parameter_len)
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_prendilo)(
-        INTEGER(handle))
+int idba_prendilo(int handle)
 {
-    GENPTR_INTEGER(handle)
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         IF_TRACING(h.trace.log_func("prendilo"));
         h.api->prendilo();
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1229,12 +1215,10 @@ F77_INTEGER_FUNCTION(idba_prendilo)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_dimenticami)(
-        INTEGER(handle))
+int idba_dimenticami(int handle)
 {
-    GENPTR_INTEGER(handle)
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         IF_TRACING(h.trace.log_func("dimenticami"));
         h.api->dimenticami();
 
@@ -1255,13 +1239,10 @@ F77_INTEGER_FUNCTION(idba_dimenticami)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_remove_all)(
-        INTEGER(handle))
+int idba_remove_all(int handle)
 {
-    GENPTR_INTEGER(handle)
-
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         IF_TRACING(h.trace.log_func("remove_all"));
         h.api->remove_all();
         return fortran::success();
@@ -1289,16 +1270,13 @@ F77_INTEGER_FUNCTION(idba_remove_all)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_voglioancora)(INTEGER(handle), INTEGER(count))
+int idba_voglioancora(int handle, int* count)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_INTEGER(count)
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         IF_TRACING(h.trace.log_voglioancora());
         *count = h.api->voglioancora();
         IF_TRACING(fortran::log_result(*count));
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1315,24 +1293,14 @@ F77_INTEGER_FUNCTION(idba_voglioancora)(INTEGER(handle), INTEGER(count))
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_ancora)(
-        INTEGER(handle),
-        CHARACTER(parameter)
-        TRAIL(parameter))
+int idba_ancora(int handle, char* parameter, unsigned parameter_len)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_CHARACTER(parameter)
-
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         IF_TRACING(h.trace.log_ancora());
         const char* res = h.api->ancora();
         IF_TRACING(fortran::log_result(res));
-        if (!res)
-            cnfExprt("", parameter, parameter_length);
-        else
-            cnfExprt(res, parameter, parameter_length);
-
+        fortran::cstring_to_fortran(res, parameter, parameter_len);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1365,16 +1333,12 @@ F77_INTEGER_FUNCTION(idba_ancora)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_critica)(
-        INTEGER(handle))
+int idba_critica(int handle)
 {
-    GENPTR_INTEGER(handle)
-
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         IF_TRACING(h.trace.log_func("critica"));
         h.api->critica();
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1400,15 +1364,12 @@ F77_INTEGER_FUNCTION(idba_critica)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_scusa)(INTEGER(handle))
+int idba_scusa(int handle)
 {
-    GENPTR_INTEGER(handle)
-
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         IF_TRACING(h.trace.log_func("scusa"));
         h.api->scusa();
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1443,33 +1404,17 @@ F77_INTEGER_FUNCTION(idba_scusa)(INTEGER(handle))
  * @return
  *   The error indication for the function.
  */
-F77_INTEGER_FUNCTION(idba_messages_open_input)(
-        INTEGER(handle),
-        CHARACTER(filename),
-        CHARACTER(mode),
-        CHARACTER(format),
-        LOGICAL(simplified)
-        TRAIL(filename)
-        TRAIL(mode)
-        TRAIL(format))
+int idba_messages_open_input(
+        int handle,
+        const char* filename,
+        const char* mode,
+        const char* format,
+        int simplified)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_CHARACTER(filename)
-    GENPTR_CHARACTER(mode)
-    GENPTR_CHARACTER(format)
-    GENPTR_LOGICAL(simplified)
-    char c_filename[512];
-    char c_mode[10];
-    char c_format[10];
-    cnfImpn(filename, filename_length,  511, c_filename); c_filename[511] = 0;
-    cnfImpn(mode, mode_length,  9, c_mode); c_mode[9] = 0;
-    cnfImpn(format, format_length,  9, c_format); c_format[9] = 0;
-
     try {
-        HSimple& h = hsimp.get(*handle);
-        IF_TRACING(h.trace.log_messages_open_input(c_filename, c_mode, c_format, *simplified));
-        h.api->messages_open_input(c_filename, c_mode, File::parse_encoding(c_format), *simplified);
-
+        HSimple& h = hsimp.get(handle);
+        IF_TRACING(h.trace.log_messages_open_input(filename, mode, format, simplified));
+        h.api->messages_open_input(filename, mode, File::parse_encoding(format), simplified);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1493,31 +1438,16 @@ F77_INTEGER_FUNCTION(idba_messages_open_input)(
  * @return
  *   The error indication for the function.
  */
-F77_INTEGER_FUNCTION(idba_messages_open_output)(
-        INTEGER(handle),
-        CHARACTER(filename),
-        CHARACTER(mode),
-        CHARACTER(format)
-        TRAIL(filename)
-        TRAIL(mode)
-        TRAIL(format))
+int idba_messages_open_output(
+        int handle,
+        const char* filename,
+        const char* mode,
+        const char* format)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_CHARACTER(filename)
-    GENPTR_CHARACTER(mode)
-    GENPTR_CHARACTER(format)
-    char c_filename[512];
-    char c_mode[10];
-    char c_format[10];
-    cnfImpn(filename, filename_length,  511, c_filename); c_filename[511] = 0;
-    cnfImpn(mode, mode_length,  9, c_mode); c_mode[9] = 0;
-    cnfImpn(format, format_length,  9, c_format); c_format[9] = 0;
-
     try {
-        HSimple& h = hsimp.get(*handle);
-        IF_TRACING(h.trace.log_messages_open_output(c_filename, c_mode, c_format));
-        h.api->messages_open_output(c_filename, c_mode, File::parse_encoding(c_format));
-
+        HSimple& h = hsimp.get(handle);
+        IF_TRACING(h.trace.log_messages_open_output(filename, mode, format));
+        h.api->messages_open_output(filename, mode, File::parse_encoding(format));
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1541,16 +1471,13 @@ F77_INTEGER_FUNCTION(idba_messages_open_output)(
  * @return
  *   The error indication for the function.
  */
-F77_INTEGER_FUNCTION(idba_messages_read_next)(INTEGER(handle), LOGICAL(found))
+int idba_messages_read_next(int handle, int *found)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_LOGICAL(found)
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         IF_TRACING(h.trace.log_messages_read_next());
         *found = h.api->messages_read_next();
         IF_TRACING(fortran::log_result(*found));
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1569,17 +1496,12 @@ F77_INTEGER_FUNCTION(idba_messages_read_next)(INTEGER(handle), LOGICAL(found))
  * @return
  *   The error indication for the function.
  */
-F77_INTEGER_FUNCTION(idba_messages_write_next)(INTEGER(handle), CHARACTER(template_name) TRAIL(template_name))
+int idba_messages_write_next(int handle, const char* template_name)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_CHARACTER(template_name)
-    char c_template_name[64];
-    cnfImpn(template_name, template_name_length, 63, c_template_name); c_template_name[63] = 0;
     try {
-        HSimple& h = hsimp.get(*handle);
-        IF_TRACING(h.trace.log_messages_write_next(c_template_name));
-        h.api->messages_write_next(c_template_name);
-
+        HSimple& h = hsimp.get(handle);
+        IF_TRACING(h.trace.log_messages_write_next(template_name));
+        h.api->messages_write_next(template_name);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1612,27 +1534,15 @@ F77_INTEGER_FUNCTION(idba_messages_write_next)(INTEGER(handle), CHARACTER(templa
  * @return
  *   The error indication for the function.
  */
-F77_INTEGER_FUNCTION(idba_spiegal)(
-        INTEGER(handle),
-        INTEGER(ltype1),
-        INTEGER(l1),
-        INTEGER(ltype2),
-        INTEGER(l2),
-        CHARACTER(result)
-        TRAIL(result))
+int idba_spiegal(
+        int handle,
+        int ltype1, int l1, int ltype2, int l2,
+        char* result, unsigned result_len)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_INTEGER(ltype1)
-    GENPTR_INTEGER(l1)
-    GENPTR_INTEGER(ltype2)
-    GENPTR_INTEGER(l2)
-    GENPTR_CHARACTER(result)
-
     try {
-        HSimple& h = hsimp.get(*handle);
-        const char* res = h.api->spiegal(*ltype1, *l1, *ltype2, *l2);
-        cnfExprt(res, result, result_length);
-
+        HSimple& h = hsimp.get(handle);
+        const char* res = h.api->spiegal(ltype1, l1, ltype2, l2);
+        fortran::cstring_to_fortran(res, result, result_len);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1655,25 +1565,15 @@ F77_INTEGER_FUNCTION(idba_spiegal)(
  * @return
  *   The error indication for the function.
  */
-F77_INTEGER_FUNCTION(idba_spiegat)(
-        INTEGER(handle),
-        INTEGER(ptype),
-        INTEGER(p1),
-        INTEGER(p2),
-        CHARACTER(result)
-        TRAIL(result))
+int idba_spiegat(
+        int handle,
+        int ptype, int p1, int p2,
+        char* result, unsigned result_len)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_INTEGER(ptype)
-    GENPTR_INTEGER(p1)
-    GENPTR_INTEGER(p2)
-    GENPTR_CHARACTER(result)
-
     try {
-        HSimple& h = hsimp.get(*handle);
-        const char* res = h.api->spiegat(*ptype, *p1, *p2);
-        cnfExprt(res, result, result_length);
-
+        HSimple& h = hsimp.get(handle);
+        const char* res = h.api->spiegat(ptype, p1, p2);
+        fortran::cstring_to_fortran(res, result, result_len);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1694,29 +1594,16 @@ F77_INTEGER_FUNCTION(idba_spiegat)(
  * @return
  *   The error indication for the function.
  */
-F77_INTEGER_FUNCTION(idba_spiegab)(
-        INTEGER(handle),
-        CHARACTER(varcode),
-        CHARACTER(value),
-        CHARACTER(result)
-        TRAIL(varcode)
-        TRAIL(value)
-        TRAIL(result))
+int idba_spiegab(
+        int handle,
+        const char* varcode,
+        const char* value,
+        char* result, unsigned result_len)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_CHARACTER(varcode)
-    GENPTR_CHARACTER(value)
-    GENPTR_CHARACTER(result)
-    char s_varcode[10];
-    char s_value[300];
-    cnfImpn(varcode, varcode_length, 9, s_varcode); s_varcode[9] = 0;
-    cnfImpn(value, value_length, 299, s_value); s_value[299] = 0;
-
     try {
-        HSimple& h = hsimp.get(*handle);
-        const char* res = h.api->spiegab(s_varcode, s_value);
-        cnfExprt(res, result, result_length);
-
+        HSimple& h = hsimp.get(handle);
+        const char* res = h.api->spiegab(varcode, value);
+        fortran::cstring_to_fortran(res, result, result_len);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1725,15 +1612,11 @@ F77_INTEGER_FUNCTION(idba_spiegab)(
 
 /*@}*/
 
-F77_INTEGER_FUNCTION(idba_test_input_to_output)(
-        INTEGER(handle))
+int idba_test_input_to_output(int handle)
 {
-    GENPTR_INTEGER(handle)
-
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         h.api->test_input_to_output();
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
