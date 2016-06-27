@@ -259,9 +259,9 @@ int idba_preparati(int dbahandle, int* handle, const char* anaflag, const char* 
 
         /* Allocate and initialize a new handle */
         *handle = hsimp.request();
-        HSession& hs = hsess.get(*dbahandle);
+        HSession& hs = hsess.get(dbahandle);
         HSimple& h = hsimp.get(*handle);
-        IF_TRACING(h.trace.log_preparati(*dbahandle, *handle, anaflag, dataflag, attrflag));
+        IF_TRACING(h.trace.log_preparati(dbahandle, *handle, anaflag, dataflag, attrflag));
         h.api = new fortran::DbAPI(*hs.db, anaflag, dataflag, attrflag);
 
         return fortran::success();
