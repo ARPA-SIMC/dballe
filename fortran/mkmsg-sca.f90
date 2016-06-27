@@ -1,6 +1,5 @@
       program mkmsg
-      USE,INTRINSIC :: iso_c_binding
-      include "dballeff.h"
+      use dballef
 
 ! ****************************
 ! * Create a test message file
@@ -60,8 +59,7 @@
       end
 
       subroutine errorrep(val) BIND(C)
-      USE,INTRINSIC :: iso_c_binding
-      include "dballeff.h"
+      use dballef
       integer val
       character buf*1000
 

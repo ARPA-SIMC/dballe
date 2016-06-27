@@ -5,8 +5,7 @@
 ! *****************************************
 
       use dbtest
-
-      include "dballeff.h"
+      use dballef
 
       integer :: dbahandler, dbahandlew, handler, handlew,i,i1,i2,i3,i4,i5,i6,ival,saved_id
       real :: rval

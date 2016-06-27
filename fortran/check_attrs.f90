@@ -1,8 +1,7 @@
       program check_attrs
 
       use dbtest
-
-      include "dballeff.h"
+      use dballef
 
 ! *****************************************
 ! * Dump the contents of a dballe database

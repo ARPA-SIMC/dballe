@@ -1,8 +1,6 @@
 program test
 
-USE,INTRINSIC :: iso_c_binding
-
-include "dballeff.h"
+use dballef
 
 integer :: handle
 integer :: error_handle

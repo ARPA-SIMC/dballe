@@ -1,6 +1,5 @@
       program dump_dballe
-      USE,INTRINSIC :: iso_c_binding
-      include "dballeff.h"
+      use dballef
 
 ! *****************************************
 ! * Dump the contents of a dballe database
@@ -45,7 +44,7 @@
           ierr = idba_dammelo(handle,btable)
           ierr = idba_enqc(handle,btable,value)
           write (*,*) '  var ',btable(:istrlen(btable)),": ", &
-            value(:istrlen(btable))
+            value(:istrlen(value))
 
           ierr = idba_enqi(handle,"!context_id",tmp)
           write (*,*) "  CTX: ",tmp
@@ -86,8 +85,7 @@
       end
 
       subroutine errorrep(val) BIND(C)
-      USE,INTRINSIC :: iso_c_binding
-      include "dballeff.h"
+      use dballef
       integer val
       character buf*1000
 

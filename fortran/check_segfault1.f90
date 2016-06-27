@@ -1,8 +1,6 @@
 program test
 
-USE,INTRINSIC :: iso_c_binding
-
-include "dballeff.h"
+use dballef
 
 integer :: idbhandle1,handle1
 integer :: i,anaid

@@ -5,8 +5,7 @@
 ! *****************************************
 
       use dbtest
-
-      include "dballeff.h"
+      use dballef
 
       integer :: handle,idbhandle,handle_err, ierr
       !data var/ "B22070", "B22074", "B22001", "B22071", "B22042"/

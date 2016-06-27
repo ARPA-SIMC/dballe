@@ -5,8 +5,7 @@
 ! *****************************************
 
       use test
-
-      include "dballeff.h"
+      use dballef
 
       integer handle, ival, ndata, n, i
       integer (kind=dba_int_b):: bval

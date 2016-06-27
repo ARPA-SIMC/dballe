@@ -5,8 +5,7 @@ program check_range
 ! *****************************************
 
       use dbtest
-
-      include "dballeff.h" 
+      use dballef
       
       integer :: handle,idbhandle,handle_err, errcode
       real :: rval

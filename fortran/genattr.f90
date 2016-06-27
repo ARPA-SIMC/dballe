@@ -1,6 +1,5 @@
 program tmp
-USE,INTRINSIC :: iso_c_binding
-include "dballeff.h"
+use dballef
 
 integer,parameter :: nvar=5
 real :: field(nvar),obsinc(nvar)

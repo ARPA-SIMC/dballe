@@ -5,8 +5,7 @@
 ! *****************************************
 
       use dbtest
-
-      include "dballeff.h"
+      use dballef
 
       integer dbahandle, handle, ival
       integer (kind=dba_int_b):: bval

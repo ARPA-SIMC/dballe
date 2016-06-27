@@ -16,8 +16,7 @@
 ! Author: Paolo Patruno <ppatruno@arpa.emr.it>
 
 program dump_dballe
-USE,INTRINSIC :: iso_c_binding
-include "dballeff.h"
+use dballef
 
 ! ****************************************************
 ! * Dump the contents of a weather messages in a file
@@ -92,8 +91,7 @@ call exit (0)
 end program dump_dballe
 
 SUBROUTINE errorrep(val) BIND(C)
-USE,INTRINSIC :: iso_c_binding
-include "dballeff.h"
+use dballef
 integer :: val
 character(len=1000) :: buf
 
