@@ -47,6 +47,7 @@ INTERFACE
   FUNCTION idba_fatto(dbahandle) BIND(C,name='idba_fatto')
   IMPORT
   INTEGER(kind=c_int) :: dbahandle
+  INTEGER(kind=c_int) :: idba_fatto
   END FUNCTION idba_fatto
 END INTERFACE
 
@@ -294,6 +295,51 @@ INTERFACE
   END FUNCTION idba_enqdate
 END INTERFACE
 
+INTERFACE
+  FUNCTION idba_scopa_orig(handle, repinfofile) BIND(C,name='idba_scopa')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  CHARACTER(kind=c_char) :: repinfofile(*)
+  INTEGER(kind=c_int) :: idba_scopa_orig
+  END FUNCTION idba_scopa_orig
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_quantesono(handle, count) BIND(C,name='idba_quantesono')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  INTEGER(kind=c_int),INTENT(out) :: count
+  INTEGER(kind=c_int) :: idba_quantesono
+  END FUNCTION idba_quantesono
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_elencamele(handle) BIND(C,name='idba_elencamele')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  INTEGER(kind=c_int) :: idba_elencamele
+  END FUNCTION idba_elencamele
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_voglioquesto(handle, count) BIND(C,name='idba_voglioquesto')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  INTEGER(kind=c_int),INTENT(out) :: count
+  INTEGER(kind=c_int) :: idba_voglioquesto
+  END FUNCTION idba_voglioquesto
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_dammelo_orig(handle, param) BIND(C,name='idba_dammelo')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  CHARACTER(kind=c_char) :: param(*)
+  INTEGER(kind=c_int) :: idba_dammelo_orig
+  END FUNCTION idba_dammelo_orig
+END INTERFACE
+
+
 ! interfaces to error handling functions
 INTERFACE
   FUNCTION idba_error_set_callback(code, func, dat, handle) BIND(C,name='idba_error_set_callback')
@@ -536,6 +582,26 @@ idba_unset = idba_unset_orig(handle, fchartrimtostr(param))
 END FUNCTION idba_unset
 
 
+FUNCTION idba_scopa(handle, repinfofile)
+INTEGER(kind=c_int) :: handle
+CHARACTER(kind=c_char,len=*) :: repinfofile
+INTEGER(kind=c_int) :: idba_scopa
+
+idba_scopa = idba_scopa_orig(handle, fchartrimtostr(repinfofile))
+
+END FUNCTION idba_scopa
+
+FUNCTION idba_dammelo(handle, param)
+INTEGER(kind=c_int) :: handle
+CHARACTER(kind=c_char,len=*) :: param
+INTEGER(kind=c_int) :: idba_dammelo
+
+idba_dammelo = idba_dammelo_orig(handle, fchartrimtostr(param))
+
+END FUNCTION idba_dammelo
+
+
+! fortran style interface to error handling functions
 SUBROUTINE idba_error_message(message)
 CHARACTER(kind=c_char,len=*),INTENT(out) :: message
 
