@@ -1,11 +1,12 @@
       module test
+      use dballef
 
       contains
 
 !     Continue execution only if there was no error
       subroutine ensure_no_error(message)
       character (len=*) :: message
-      integer :: idba_error_code, ier
+      integer :: ier
       character (len=1000) :: buf
 
 !      print *,"siamo a ",message

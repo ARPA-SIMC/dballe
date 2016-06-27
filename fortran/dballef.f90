@@ -208,10 +208,10 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  SUBROUTINE idba_remove_callback(dbahandle) BIND(C,name='idba_remove_callback')
+  SUBROUTINE idba_error_remove_callback(dbahandle) BIND(C,name='idba_remove_callback')
   IMPORT
   INTEGER(kind=c_int) :: dbahandle
-  END SUBROUTINE idba_remove_callback
+  END SUBROUTINE idba_error_remove_callback
 END INTERFACE
 
 INTERFACE
@@ -225,8 +225,11 @@ PRIVATE
 PUBLIC idba_presentati, idba_arrivederci, idba_preparati, idba_messaggi, &
  idba_fatto, &
  idba_set, idba_seti, idba_setb, idba_setr, idba_setd, idba_setc, &
- idba_enq, idba_enqi, idba_enqb, idba_enqr, idba_enqd, idba_enqc, &
- idba_error_set_callback, idba_default_error_handler, idba_default_error_handle_tolerating_overflows
+ idba_enq, idba_enqi, idba_enqb, idba_enqr, idba_enqd, idba_enqc
+PUBLIC idba_error_set_callback, idba_default_error_handler, &
+ idba_default_error_handle_tolerating_overflows, &
+ idba_error_message, idba_error_context, idba_error_details, &
+ idba_error_remove_callback, idba_error_code
 
 CONTAINS
 

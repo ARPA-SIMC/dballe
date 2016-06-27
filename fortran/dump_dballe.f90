@@ -86,17 +86,19 @@
       end
 
       subroutine errorrep(val) BIND(C)
+      USE,INTRINSIC :: iso_c_binding
+      include "dballeff.h"
       integer val
       character buf*1000
 
       ier = idba_error_code()
       if (ier.ne.0) then
          print *,ier," error in ",val
-         ierr = idba_error_message(buf)
+         call idba_error_message(buf)
          print *,buf(:istrlen(buf))
-         ierr = idba_error_context(buf)
+         call idba_error_context(buf)
          print *,buf(:istrlen(buf))
-         ierr = idba_error_details(buf)
+         call idba_error_details(buf)
          print *,buf(:istrlen(buf))
          call exit (1)
       end if
