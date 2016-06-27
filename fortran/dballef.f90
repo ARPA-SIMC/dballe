@@ -1,10 +1,32 @@
+ !
+ ! Interface file for DB-ALLe
+ !
+ ! Copyright (C) 2005,2006  ARPA-SIM <urpsim@smr.arpa.emr.it>
+ !
+ ! This program is free software; you can redistribute it and/or modify
+ ! it under the terms of the GNU General Public License as published by
+ ! the Free Software Foundation; either version 2 of the License.
+ !
+ ! This program is distributed in the hope that it will be useful,
+ ! but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ! GNU General Public License for more details.
+ !
+ ! You should have received a copy of the GNU General Public License
+ ! along with this program; if not, write to the Free Software
+ ! Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ !
+ ! Author: Enrico Zini <enrico@enricozini.com>
 MODULE dballef
 USE,INTRINSIC :: iso_c_binding
 IMPLICIT NONE
 
+! TODO: check the missing values constants and decide whether the
+! _orig interfaces should become private
+
 ! definition of missing values
 INTEGER, PARAMETER :: &
- dba_int_b = c_char, & ! Byte  integer
+ dba_int_b = c_signed_char, & ! Byte  integer
  dba_int_i = c_int     ! Integer
 
 INTEGER, PARAMETER :: &
@@ -570,25 +592,8 @@ INTERFACE
   END FUNCTION idba_error_code
 END INTERFACE
 
-PRIVATE
-PUBLIC idba_presentati, idba_arrivederci, idba_preparati, idba_messaggi, &
- idba_fatto, idba_remove_all, &
- idba_set, idba_seti, idba_setb, idba_setr, idba_setd, idba_setc, &
- idba_enq, idba_enqi, idba_enqb, idba_enqr, idba_enqd, idba_enqc
-PUBLIC idba_unset, idba_unsetb, idba_unsetall, idba_setcontextana, &
- idba_setlevel, idba_settimerange, idba_setdate, idba_setdatemin, idba_setdatemax, &
- idba_enqlevel, idba_enqtimerange, idba_enqdate
-PUBLIC idba_scopa, idba_quantesono, idba_elencamele, idba_voglioquesto, &
- idba_dammelo, idba_prendilo, idba_dimenticami, idba_voglioancora, idba_ancora, &
- idba_critica, idba_scusa
-PUBLIC idba_messages_open_input, idba_messages_open_output, &
- idba_messages_read_next, idba_messages_write_next
-PUBLIC idba_test_input_to_output
-PUBLIC idba_spiegal, idba_spiegat, idba_spiegab
-PUBLIC idba_error_set_callback, idba_default_error_handler, &
- idba_default_error_handle_tolerating_overflows, &
- idba_error_message, idba_error_context, idba_error_details, &
- idba_error_remove_callback, idba_error_code
+PUBLIC
+PRIVATE fchartrimtostr
 
 CONTAINS
 
