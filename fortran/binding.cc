@@ -1045,23 +1045,17 @@ int idba_enqdate(int handle,
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_scopa)(INTEGER(handle), CHARACTER(repinfofile) TRAIL(repinfofile))
+int idba_scopa(int handle, const char* repinfofile)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_CHARACTER(repinfofile)
-    char fname[PATH_MAX];
-
-    cnfImpn(repinfofile, repinfofile_length,  PATH_MAX, fname); fname[PATH_MAX - 1] = 0;
-
     try {
-        HSimple& h = hsimp.get(*handle);
-        if (fname[0] == 0)
+        HSimple& h = hsimp.get(handle);
+        if (repinfofile[0] == 0)
         {
             IF_TRACING(h.trace.log_scopa());
-            h.api->scopa(0);
+            h.api->scopa(nullptr);
         } else {
-            IF_TRACING(h.trace.log_scopa(fname));
-            h.api->scopa(fname);
+            IF_TRACING(h.trace.log_scopa(repinfofile));
+            h.api->scopa(repinfofile);
         }
 
         return fortran::success();
@@ -1084,19 +1078,13 @@ F77_INTEGER_FUNCTION(idba_scopa)(INTEGER(handle), CHARACTER(repinfofile) TRAIL(r
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_quantesono)(
-        INTEGER(handle),
-        INTEGER(count))
+int idba_quantesono(int handle, int* count)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_INTEGER(count)
-
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         IF_TRACING(h.trace.log_quantesono());
         *count = h.api->quantesono();
         IF_TRACING(fortran::log_result(*count));
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1117,12 +1105,10 @@ F77_INTEGER_FUNCTION(idba_quantesono)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_elencamele)(INTEGER(handle))
+int idba_elencamele(int handle)
 {
-    GENPTR_INTEGER(handle)
-
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         IF_TRACING(h.trace.log_func("elencamele"));
         h.api->elencamele();
 
@@ -1157,19 +1143,13 @@ F77_INTEGER_FUNCTION(idba_elencamele)(INTEGER(handle))
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_voglioquesto)(
-        INTEGER(handle),
-        INTEGER(count))
+int idba_voglioquesto(int handle, int* count)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_INTEGER(count)
-
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         IF_TRACING(h.trace.log_voglioquesto());
         *count = h.api->voglioquesto();
         IF_TRACING(fortran::log_result(*count));
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1192,24 +1172,14 @@ F77_INTEGER_FUNCTION(idba_voglioquesto)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_dammelo)(
-        INTEGER(handle),
-        CHARACTER(parameter)
-        TRAIL(parameter))
+int idba_dammelo(int handle, char* parameter, int parameter_len)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_CHARACTER(parameter)
-
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         IF_TRACING(h.trace.log_dammelo());
         const char* res = h.api->dammelo();
         IF_TRACING(fortran::log_result(res));
-        if (!res)
-            cnfExprt("", parameter, parameter_length);
-        else
-            cnfExprt(res, parameter, parameter_length);
-
+        fortran::cstring_to_fortran(res, parameter, parameter_len);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
