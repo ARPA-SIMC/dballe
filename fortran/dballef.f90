@@ -2,6 +2,23 @@ MODULE dballef
 USE,INTRINSIC :: iso_c_binding
 IMPLICIT NONE
 
+! definition of missing values
+INTEGER, PARAMETER :: &
+ dba_int_b = c_char, & ! Byte  integer
+ dba_int_i = c_int     ! Integer
+
+INTEGER, PARAMETER :: &
+ dba_fp_s = c_float, & ! Single precision
+ dba_fp_d = c_double   ! Double precision
+
+REAL(kind=dba_fp_s), PARAMETER :: DBA_MVR = HUGE(1.0_dba_fp_s)
+REAL(kind=dba_fp_d), PARAMETER :: DBA_MVD = HUGE(1.0_dba_fp_d)
+INTEGER(kind=dba_int_b), PARAMETER :: DBA_MVB = HUGE(0_dba_int_b)
+INTEGER(kind=dba_int_i), PARAMETER :: DBA_MVI = HUGE(0_dba_int_i)
+CHARACTER(kind=c_char,len=1), PARAMETER :: DBA_MVC = CHAR(0)
+
+
+! interface to generic dba functions
 INTERFACE
   FUNCTION idba_presentati_orig(dbahandle, url) BIND(C,name='idba_presentati')
   IMPORT
@@ -301,6 +318,7 @@ INTERFACE
   END FUNCTION idba_enqdate
 END INTERFACE
 
+
 ! interface to action functions
 INTERFACE
   FUNCTION idba_scopa_orig(handle, repinfofile) BIND(C,name='idba_scopa')
@@ -439,6 +457,7 @@ INTERFACE
   END FUNCTION idba_messages_write_next_orig
 END INTERFACE
 
+
 ! interface to pretty-printing functions
 INTERFACE
   FUNCTION idba_spiegal_orig(handle, ltype1, l1, ltype2, l2, res, res_len) BIND(C,name='idba_spiegal')
@@ -486,6 +505,7 @@ INTERFACE
   INTEGER(kind=c_int) :: idba_test_input_to_output
   END FUNCTION idba_test_input_to_output
 END INTERFACE
+
 
 ! interfaces to error handling functions
 INTERFACE
@@ -573,6 +593,7 @@ PUBLIC idba_error_set_callback, idba_default_error_handler, &
 CONTAINS
 
 ! helper function for trimming a fortran character and null terminating it
+! used for intent(in) string arguments, intent(out) are converted by C code
 FUNCTION fchartrimtostr(fchar) RESULT(string)
 CHARACTER(len=*),INTENT(in) :: fchar !< Fortran \a CHARACTER variable to convert
 CHARACTER(kind=c_char,len=LEN_TRIM(fchar)+1) :: string
@@ -581,7 +602,8 @@ string = TRIM(fchar)//CHAR(0)
 
 END FUNCTION fchartrimtostr
 
-! public simplified interface to presentati
+
+! fortran-style interface to generic dba functions
 FUNCTION idba_presentati(dbahandle, url)
 INTEGER(kind=c_int) :: dbahandle
 CHARACTER(kind=c_char,len=*) :: url
@@ -591,8 +613,6 @@ idba_presentati = idba_presentati_orig(dbahandle, fchartrimtostr(url))
 
 END FUNCTION idba_presentati
 
-
-! public simplified interface to preparati
 FUNCTION idba_preparati(dbahandle, handle, anaflag, dataflag, attrflag)
 INTEGER(kind=c_int) :: dbahandle
 INTEGER(kind=c_int) :: handle
@@ -606,8 +626,6 @@ idba_preparati = idba_preparati_orig(dbahandle, handle, fchartrimtostr(anaflag),
 
 END FUNCTION idba_preparati
 
-
-! public simplified interface to messaggi
 FUNCTION idba_messaggi(handle, filename, mode, typ)
 INTEGER(kind=c_int) :: handle
 CHARACTER(kind=c_char,len=*) :: filename
@@ -619,7 +637,6 @@ idba_messaggi = idba_messaggi_orig(handle, fchartrimtostr(filename), &
  fchartrimtostr(mode), fchartrimtostr(typ))
 
 END FUNCTION idba_messaggi
-
 
 FUNCTION idba_seti(handle, param, val)
 INTEGER(kind=c_int) :: handle
@@ -733,6 +750,7 @@ idba_unset = idba_unset_orig(handle, fchartrimtostr(param))
 END FUNCTION idba_unset
 
 
+! fortran-style interface to action functions
 FUNCTION idba_scopa(handle, repinfofile)
 INTEGER(kind=c_int) :: handle
 CHARACTER(kind=c_char,len=*) :: repinfofile
@@ -812,7 +830,7 @@ idba_messages_write_next = idba_messages_write_next_orig(handle, &
 END FUNCTION idba_messages_write_next
 
 
-! fortran style interface to pretty-printing functions
+! fortran-style interface to pretty-printing functions
 FUNCTION idba_spiegal(handle, ltype1, l1, ltype2, l2, res)
 INTEGER(kind=c_int) :: handle
 INTEGER(kind=c_int) :: ltype1
@@ -851,7 +869,7 @@ idba_spiegab = idba_spiegab_orig(handle, fchartrimtostr(varcode), &
 END FUNCTION idba_spiegab
 
 
-! fortran style interface to error handling functions
+! fortran-style interface to error handling functions
 SUBROUTINE idba_error_message(message)
 CHARACTER(kind=c_char,len=*),INTENT(out) :: message
 
@@ -859,14 +877,12 @@ CALL idba_error_message_orig(message, LEN(message))
 
 END SUBROUTINE idba_error_message
 
-
 SUBROUTINE idba_error_context(message)
 CHARACTER(kind=c_char,len=*),INTENT(out) :: message
 
 CALL idba_error_context_orig(message, LEN(message))
 
 END SUBROUTINE idba_error_context
-
 
 SUBROUTINE idba_error_details(message)
 CHARACTER(kind=c_char,len=*),INTENT(out) :: message
