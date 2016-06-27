@@ -248,7 +248,7 @@ int idba_arrivederci(int *dbahandle)
  * @return
  *   The error indication for the function.
  */
-int idba_preparati(int* dbahandle, int* handle, const char* anaflag, const char* dataflag, const char* attrflag)
+int idba_preparati(int dbahandle, int* handle, const char* anaflag, const char* dataflag, const char* attrflag)
 {
     try {
         /* Check here to warn users of the introduction of idba_presentati */
