@@ -42,28 +42,6 @@ CHARACTER(len=1), PARAMETER :: DBA_MVC = char(0)
 
 interface
 
-! Error handling routines
-
-   subroutine idba_error_message(message)
-     character (len=*), intent(out) :: message
-   end subroutine idba_error_message
-
-   subroutine idba_error_context(message)
-     character (len=*), intent(out) :: message
-   end subroutine idba_error_context
-
-   subroutine idba_error_details(message)
-     character (len=*), intent(out) :: message
-   end subroutine idba_error_details
-
-   integer function idba_error_code()
-   end function idba_error_code
-   
-   integer function idba_error_remove_callback(handle)
-     integer, intent(in) :: handle
-   end function idba_error_remove_callback
-
-
 ! Init/Shutdown routines
    
    integer function idba_messages_open_input(handle, filename, mode, format, simplified)

@@ -183,6 +183,43 @@ INTERFACE
   END FUNCTION idba_default_error_handle_tolerating_overflows
 END INTERFACE
 
+INTERFACE
+  SUBROUTINE idba_error_message_orig(message, message_len) BIND(C,name='idba_error_message')
+  IMPORT
+  CHARACTER(kind=c_char) :: message(*)
+  INTEGER(kind=c_int),VALUE :: message_len
+  END SUBROUTINE idba_error_message_orig
+END INTERFACE
+
+INTERFACE
+  SUBROUTINE idba_error_context_orig(message, message_len) BIND(C,name='idba_error_context')
+  IMPORT
+  CHARACTER(kind=c_char) :: message(*)
+  INTEGER(kind=c_int),VALUE :: message_len
+  END SUBROUTINE idba_error_context_orig
+END INTERFACE
+
+INTERFACE
+  SUBROUTINE idba_error_details_orig(message, message_len) BIND(C,name='idba_error_details')
+  IMPORT
+  CHARACTER(kind=c_char) :: message(*)
+  INTEGER(kind=c_int),VALUE :: message_len
+  END SUBROUTINE idba_error_details_orig
+END INTERFACE
+
+INTERFACE
+  SUBROUTINE idba_remove_callback(dbahandle) BIND(C,name='idba_remove_callback')
+  IMPORT
+  INTEGER(kind=c_int) :: dbahandle
+  END SUBROUTINE idba_remove_callback
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_error_code() BIND(C,name='idba_error_code')
+  IMPORT
+  INTEGER(kind=c_int) :: idba_error_code
+  END FUNCTION idba_error_code
+END INTERFACE
 
 PRIVATE
 PUBLIC idba_presentati, idba_arrivederci, idba_preparati, idba_messaggi, &
@@ -344,6 +381,30 @@ INTEGER(kind=c_int) :: idba_enqc
 idba_enqc = idba_enqc_orig(handle, fchartrimtostr(param), val, LEN(val))
 
 END FUNCTION idba_enqc
+
+
+SUBROUTINE idba_error_message(message)
+CHARACTER(kind=c_char,len=*),INTENT(out) :: message
+
+CALL idba_error_message_orig(message, LEN(message))
+
+END SUBROUTINE idba_error_message
+
+
+SUBROUTINE idba_error_context(message)
+CHARACTER(kind=c_char,len=*),INTENT(out) :: message
+
+CALL idba_error_context_orig(message, LEN(message))
+
+END SUBROUTINE idba_error_context
+
+
+SUBROUTINE idba_error_details(message)
+CHARACTER(kind=c_char,len=*),INTENT(out) :: message
+
+CALL idba_error_details_orig(message, LEN(message))
+
+END SUBROUTINE idba_error_details
 
 
 END MODULE dballef
