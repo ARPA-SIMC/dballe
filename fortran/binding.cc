@@ -941,24 +941,13 @@ int idba_setdatemax(int handle,
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_enqlevel)(
-        INTEGER(handle),
-        INTEGER(ltype1),
-        INTEGER(l1),
-        INTEGER(ltype2),
-        INTEGER(l2))
+int idba_enqlevel(int handle, int* ltype1, int* l1, int* ltype2, int* l2)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_INTEGER(ltype1)
-    GENPTR_INTEGER(l1)
-    GENPTR_INTEGER(ltype2)
-    GENPTR_INTEGER(l2)
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         h.api->enqlevel(*ltype1, *l1, *ltype2, *l2);
         tofortran(*ltype1); tofortran(*l1);
         tofortran(*ltype2); tofortran(*l2);
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -979,18 +968,10 @@ F77_INTEGER_FUNCTION(idba_enqlevel)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_enqtimerange)(
-        INTEGER(handle),
-        INTEGER(ptype),
-        INTEGER(p1),
-        INTEGER(p2))
+int idba_enqtimerange(int handle, int* ptype, int* p1, int* p2)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_INTEGER(ptype)
-    GENPTR_INTEGER(p1)
-    GENPTR_INTEGER(p2)
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         h.api->enqtimerange(*ptype, *p1, *p2);
         tofortran(*ptype); tofortran(*p1); tofortran(*p2);
 
@@ -1020,14 +1001,9 @@ F77_INTEGER_FUNCTION(idba_enqtimerange)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_enqdate)(
-        INTEGER(handle),
-        INTEGER(year),
-        INTEGER(month),
-        INTEGER(day),
-        INTEGER(hour),
-        INTEGER(min),
-        INTEGER(sec))
+int idba_enqdate(int handle,
+        int* year, int* month, int* day,
+        int* hour, int* min, int* sec)
 {
     GENPTR_INTEGER(handle)
     GENPTR_INTEGER(year)
@@ -1037,7 +1013,7 @@ F77_INTEGER_FUNCTION(idba_enqdate)(
     GENPTR_INTEGER(min)
     GENPTR_INTEGER(sec)
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         h.api->enqdate(*year, *month, *day, *hour, *min, *sec);
         tofortran(*year), tofortran(*month), tofortran(*day);
         tofortran(*hour), tofortran(*min), tofortran(*sec);

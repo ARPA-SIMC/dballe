@@ -1,8 +1,3 @@
-/** @file
- * @ingroup fortran
- * Error inspection functions for Dballe.
- */
-
 #include "handles.h"
 #include "trace.h"
 #include "common.h"
