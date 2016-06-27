@@ -6,6 +6,7 @@
 #include <cstring>  // memset
 #include <limits.h>
 #include <float.h>
+#include "common.h"
 #include "handles.h"
 #include "error.h"
 #include "trace.h"
@@ -645,24 +646,7 @@ int idba_enqc(int handle, const char* parameter, char* value, unsigned value_len
         const char* v = h.api->enqc(parameter);
 
         // Copy the result values
-        size_t len;
-        if (value_len == 0)
-            len = 0;
-        else if (v)
-        {
-            len = strlen(v);
-            if (len > value_len)
-                len = value_len;
-            memcpy(value, v, value_len);
-        } else {
-            // The missing string value has been defined as a
-            // null byte plus blank padding.
-            value[0] = 0;
-            len = 1;
-        }
-
-        if (len < value_len)
-            memset(value + len, ' ', value_len - len);
+        fortran::cstring_to_fortran(v, value, value_len);
 
         return fortran::success();
     } catch (error& e) {

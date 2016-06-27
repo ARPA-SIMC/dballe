@@ -5,8 +5,9 @@
 
 #include "handles.h"
 #include "trace.h"
+#include "common.h"
 #include <wreport/error.h>
-#include <stdint.h>
+#include <cstdint>
 #include <cstring>
 #include <cstdio>
 
@@ -132,10 +133,9 @@ F77_INTEGER_FUNCTION(idba_error_code)()
  *   The string holding the error message.  If the string is not long enough, it
  *   will be truncated.
  */
-F77_SUBROUTINE(idba_error_message)(CHARACTER(message) TRAIL(message))
+void idba_error_message(char* message, unsigned message_len)
 {
-	GENPTR_CHARACTER(message)
-	cnfExprt(last_err_msg, message, message_length);
+    fortran::cstring_to_fortran(last_err_msg, message, message_len);
 }
 
 /**
@@ -148,10 +148,9 @@ F77_SUBROUTINE(idba_error_message)(CHARACTER(message) TRAIL(message))
  *   The string holding the error context.  If the string is not long enough,
  *   it will be truncated.
  */
-F77_SUBROUTINE(idba_error_context)(CHARACTER(message) TRAIL(message))
+void idba_error_context(char* message, unsigned message_len)
 {
-	GENPTR_CHARACTER(message)
-	cnfExprt("", message, message_length);
+    fortran::cstring_to_fortran("", message, message_len);
 }
 
 /**
@@ -166,10 +165,9 @@ F77_SUBROUTINE(idba_error_context)(CHARACTER(message) TRAIL(message))
  *   The string holding the error details.  If the string is not long enough,
  *   it will be truncated.
  */
-F77_SUBROUTINE(idba_error_details)(CHARACTER(message) TRAIL(message))
+void idba_error_details(char* message, unsigned message_len)
 {
-	GENPTR_CHARACTER(message)
-	cnfExprt("", message, message_length);
+    fortran::cstring_to_fortran("", message, message_len);
 }
 
 /**
@@ -209,12 +207,9 @@ int idba_error_set_callback(int code, fdba_error_callback func, int data, int* h
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_error_remove_callback)(INTEGER(handle))
+void idba_error_remove_callback(int* handle)
 {
-	GENPTR_INTEGER(handle)
-	
-	herr.release(*handle);
-	return fortran::success();
+    herr.release(*handle);
 }
 
 /**

@@ -12,13 +12,14 @@ dballeincludedir = $(includedir)/dballe
 # Include the F90 interface file as well
 dist_dballeinclude_HEADERS = dballef.h dballeff.h
 
-dist_noinst_HEADERS = handles.h
+dist_noinst_HEADERS = common.h handles.h error.h trace.h
 
 nodist_include_HEADERS = dballef.mod
 
 lib_LTLIBRARIES = libdballef.la
 
 libdballef_la_SOURCES = \
+	common.cc \
 	error.cc \
 	trace.cc \
 	binding.cc \
@@ -111,7 +112,7 @@ dump_dballe_SOURCES = dump_dballe.f90
 dump_dballe_LDADD = ../fortran/libdballef.la -lcnf -lpopt
 dump_dballe_FCFLAGS = -g 
 
-EXTRA_DIST = fortran.dox check-utils.h error.h trace.h
+EXTRA_DIST = fortran.dox check-utils.h
 
 CLEANFILES = *.mod
 
