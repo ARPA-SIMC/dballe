@@ -160,6 +160,142 @@ INTERFACE idba_enq
 END INTERFACE idba_enq
 
 INTERFACE
+  FUNCTION idba_unset_orig(handle, param) BIND(C,name='idba_unset')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  CHARACTER(kind=c_char) :: param(*)
+  INTEGER(kind=c_int) :: idba_unset_orig
+  END FUNCTION idba_unset_orig
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_unsetb(handle) BIND(C,name='idba_unsetb')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  INTEGER(kind=c_int) :: idba_unsetb
+  END FUNCTION idba_unsetb
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_unsetall(handle) BIND(C,name='idba_unsetall')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  INTEGER(kind=c_int) :: idba_unsetall
+  END FUNCTION idba_unsetall
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_setcontextana(handle) BIND(C,name='idba_setcontextana')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  INTEGER(kind=c_int) :: idba_setcontextana
+  END FUNCTION idba_setcontextana
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_setlevel(handle, ltype1, l1, ltype2, l2) BIND(C,name='idba_setlevel')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  INTEGER(kind=c_int),VALUE :: ltype1
+  INTEGER(kind=c_int),VALUE :: l1
+  INTEGER(kind=c_int),VALUE :: ltype2
+  INTEGER(kind=c_int),VALUE :: l2
+  INTEGER(kind=c_int) :: idba_setlevel
+  END FUNCTION idba_setlevel
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_settimerange(handle, ptype, p1, p2) BIND(C,name='idba_settimerange')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  INTEGER(kind=c_int),VALUE :: ptype
+  INTEGER(kind=c_int),VALUE :: p1
+  INTEGER(kind=c_int),VALUE :: p2
+  INTEGER(kind=c_int) :: idba_settimerange
+  END FUNCTION idba_settimerange
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_setdate(handle, year, month, day, hour, minute, second) BIND(C,name='idba_setdate')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  INTEGER(kind=c_int),VALUE :: year
+  INTEGER(kind=c_int),VALUE :: month
+  INTEGER(kind=c_int),VALUE :: day
+  INTEGER(kind=c_int),VALUE :: hour
+  INTEGER(kind=c_int),VALUE :: minute
+  INTEGER(kind=c_int),VALUE :: second
+  INTEGER(kind=c_int) :: idba_setdate
+  END FUNCTION idba_setdate
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_setdatemin(handle, year, month, day, hour, minute, second) BIND(C,name='idba_setdatemin')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  INTEGER(kind=c_int),VALUE :: year
+  INTEGER(kind=c_int),VALUE :: month
+  INTEGER(kind=c_int),VALUE :: day
+  INTEGER(kind=c_int),VALUE :: hour
+  INTEGER(kind=c_int),VALUE :: minute
+  INTEGER(kind=c_int),VALUE :: second
+  INTEGER(kind=c_int) :: idba_setdatemin
+  END FUNCTION idba_setdatemin
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_setdatemax(handle, year, month, day, hour, minute, second) BIND(C,name='idba_setdatemax')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  INTEGER(kind=c_int),VALUE :: year
+  INTEGER(kind=c_int),VALUE :: month
+  INTEGER(kind=c_int),VALUE :: day
+  INTEGER(kind=c_int),VALUE :: hour
+  INTEGER(kind=c_int),VALUE :: minute
+  INTEGER(kind=c_int),VALUE :: second
+  INTEGER(kind=c_int) :: idba_setdatemax
+  END FUNCTION idba_setdatemax
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_enqlevel(handle, ltype1, l1, ltype2, l2) BIND(C,name='idba_enqlevel')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  INTEGER(kind=c_int) :: ltype1
+  INTEGER(kind=c_int) :: l1
+  INTEGER(kind=c_int) :: ltype2
+  INTEGER(kind=c_int) :: l2
+  INTEGER(kind=c_int) :: idba_enqlevel
+  END FUNCTION idba_enqlevel
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_enqtimerange(handle, ptype, p1, p2) BIND(C,name='idba_enqtimerange')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  INTEGER(kind=c_int) :: ptype
+  INTEGER(kind=c_int) :: p1
+  INTEGER(kind=c_int) :: p2
+  INTEGER(kind=c_int) :: idba_enqtimerange
+  END FUNCTION idba_enqtimerange
+END INTERFACE
+
+INTERFACE
+  FUNCTION idba_enqdate(handle, year, month, day, hour, minute, second) BIND(C,name='idba_enqdate')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: handle
+  INTEGER(kind=c_int) :: year
+  INTEGER(kind=c_int) :: month
+  INTEGER(kind=c_int) :: day
+  INTEGER(kind=c_int) :: hour
+  INTEGER(kind=c_int) :: minute
+  INTEGER(kind=c_int) :: second
+  INTEGER(kind=c_int) :: idba_enqdate
+  END FUNCTION idba_enqdate
+END INTERFACE
+
+! interfaces to error handling functions
+INTERFACE
   FUNCTION idba_error_set_callback(code, func, dat, handle) BIND(C,name='idba_error_set_callback')
   IMPORT
   INTEGER(kind=c_int),VALUE :: code
@@ -226,6 +362,10 @@ PUBLIC idba_presentati, idba_arrivederci, idba_preparati, idba_messaggi, &
  idba_fatto, &
  idba_set, idba_seti, idba_setb, idba_setr, idba_setd, idba_setc, &
  idba_enq, idba_enqi, idba_enqb, idba_enqr, idba_enqd, idba_enqc
+PUBLIC idba_unset, idba_unsetb, idba_unsetall, idba_setcontextana, &
+ idba_setlevel, idba_settimerange, idba_setdate, idba_setdatemin, idba_setdatemax, &
+ idba_enqlevel, idba_enqtimerange, idba_enqdate
+
 PUBLIC idba_error_set_callback, idba_default_error_handler, &
  idba_default_error_handle_tolerating_overflows, &
  idba_error_message, idba_error_context, idba_error_details, &
@@ -384,6 +524,16 @@ INTEGER(kind=c_int) :: idba_enqc
 idba_enqc = idba_enqc_orig(handle, fchartrimtostr(param), val, LEN(val))
 
 END FUNCTION idba_enqc
+
+
+FUNCTION idba_unset(handle, param)
+INTEGER(kind=c_int) :: handle
+CHARACTER(kind=c_char,len=*) :: param
+INTEGER(kind=c_int) :: idba_unset
+
+idba_unset = idba_unset_orig(handle, fchartrimtostr(param))
+
+END FUNCTION idba_unset
 
 
 SUBROUTINE idba_error_message(message)

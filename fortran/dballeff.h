@@ -65,66 +65,9 @@ interface
      character (len=*), intent(in) :: template_name
    end function idba_messages_write_next
 
-
-
-   integer function idba_unset(handle,param)
-     integer, intent(in) :: handle
-     character (len=*), intent(in) :: param
-   end function idba_unset
-
-   integer function idba_unsetall(handle)
-     integer, intent(in) :: handle
-   end function idba_unsetall
-
    integer function idba_remove_all(handle)
      integer, intent(in) :: handle
    end function idba_remove_all
-
-   integer function idba_unsetb(handle)
-     integer, intent(in) :: handle
-   end function idba_unsetb
-
-   integer function idba_setcontextana(handle)
-     integer, intent(in) :: handle
-   end function idba_setcontextana
-
-
-   integer function idba_enqlevel(handle,ltype1,l1,ltype2,l2)
-     integer, intent(in) :: handle
-     integer, intent(out) :: ltype1,l1,ltype2,l2
-   end function idba_enqlevel
-
-   integer function idba_setlevel(handle,ltype1,l1,ltype2,l2)
-     integer, intent(in) :: handle,ltype1,l1,ltype2,l2
-   end function idba_setlevel
-
-
-   integer function idba_enqtimerange(handle,ptype,p1,p2)
-     integer, intent(in) :: handle
-     integer, intent(out) :: ptype,p1,p2
-   end function idba_enqtimerange
-
-   integer function idba_settimerange(handle,ptype,p1,p2)
-     integer, intent(in) :: handle,ptype,p1,p2
-   end function idba_settimerange
-
-
-   integer function idba_enqdate(handle,year,month,day,hour,min,sec)
-     integer, intent(in) :: handle
-     integer, intent(out) :: year,month,day,hour,min,sec
-   end function idba_enqdate
-
-   integer function idba_setdate(handle,year,month,day,hour,min,sec)
-     integer, intent(in) :: handle,year,month,day,hour,min,sec
-   end function idba_setdate
-
-   integer function idba_setdatemin(handle,year,month,day,hour,min,sec)
-     integer, intent(in) :: handle,year,month,day,hour,min,sec
-   end function idba_setdatemin
-
-   integer function idba_setdatemax(handle,year,month,day,hour,min,sec)
-     integer, intent(in) :: handle,year,month,day,hour,min,sec
-   end function idba_setdatemax
 
 
 ! Action routines
