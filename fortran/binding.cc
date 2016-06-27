@@ -666,21 +666,12 @@ int idba_enqc(int handle, const char* parameter, char* value, unsigned value_len
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_unset)(
-        INTEGER(handle),
-        CHARACTER(parameter)
-        TRAIL(parameter))
+int idba_unset(int handle, const char* parameter)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_CHARACTER(parameter)
-    GENPTR_INTEGER(err)
-    char parm[20];
-    cnfImpn(parameter, parameter_length, 19, parm); parm[19] = 0;
-
     try {
-        HSimple& h = hsimp.get(*handle);
-        IF_TRACING(h.trace.log_unset(parm));
-        h.api->unset(parm);
+        HSimple& h = hsimp.get(handle);
+        IF_TRACING(h.trace.log_unset(parameter));
+        h.api->unset(parameter);
 
         return fortran::success();
     } catch (error& e) {
@@ -694,13 +685,10 @@ F77_INTEGER_FUNCTION(idba_unset)(
  * @param handle
  *   Handle to a DB-All.e session
  */
-F77_INTEGER_FUNCTION(idba_unsetb)(
-        INTEGER(handle))
+int idba_unsetb(int handle)
 {
-    GENPTR_INTEGER(handle)
-
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         IF_TRACING(h.trace.log_func("unsetb"));
         h.api->unsetb();
         return fortran::success();
@@ -715,13 +703,10 @@ F77_INTEGER_FUNCTION(idba_unsetb)(
  * @param handle
  *   Handle to a DB-All.e session
  */
-F77_INTEGER_FUNCTION(idba_unsetall)(
-        INTEGER(handle))
+int idba_unsetall(int handle)
 {
-    GENPTR_INTEGER(handle)
-
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         IF_TRACING(h.trace.log_func("unsetall"));
         h.api->unsetall();
         return fortran::success();
@@ -739,12 +724,10 @@ F77_INTEGER_FUNCTION(idba_unsetall)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_setcontextana)(
-        INTEGER(handle))
+int idba_setcontextana(int handle)
 {
-    GENPTR_INTEGER(handle)
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         IF_TRACING(h.trace.log_func("setcontextana"));
         h.api->setcontextana();
 
@@ -780,26 +763,16 @@ F77_INTEGER_FUNCTION(idba_setcontextana)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_setlevel)(
-        INTEGER(handle),
-        INTEGER(ltype1),
-        INTEGER(l1),
-        INTEGER(ltype2),
-        INTEGER(l2))
+int idba_setlevel(int handle, int ltype1, int l1, int ltype2, int l2)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_INTEGER(ltype1)
-    GENPTR_INTEGER(l1)
-    GENPTR_INTEGER(ltype2)
-    GENPTR_INTEGER(l2)
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         IF_TRACING(h.trace.log_setlevel(
-                fromfortran(*ltype1), fromfortran(*l1),
-                fromfortran(*ltype2), fromfortran(*l2)));
+                fromfortran(ltype1), fromfortran(l1),
+                fromfortran(ltype2), fromfortran(l2)));
         h.api->setlevel(
-            fromfortran(*ltype1), fromfortran(*l1),
-            fromfortran(*ltype2), fromfortran(*l2));
+            fromfortran(ltype1), fromfortran(l1),
+            fromfortran(ltype2), fromfortran(l2));
 
         return fortran::success();
     } catch (error& e) {
@@ -821,21 +794,12 @@ F77_INTEGER_FUNCTION(idba_setlevel)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_settimerange)(
-        INTEGER(handle),
-        INTEGER(ptype),
-        INTEGER(p1),
-        INTEGER(p2))
+int idba_settimerange(int handle, int ptype, int p1, int p2)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_INTEGER(ptype)
-    GENPTR_INTEGER(p1)
-    GENPTR_INTEGER(p2)
     try {
-        HSimple& h = hsimp.get(*handle);
-        IF_TRACING(h.trace.log_settimerange(fromfortran(*ptype), fromfortran(*p1), fromfortran(*p2)));
-        h.api->settimerange(
-            fromfortran(*ptype), fromfortran(*p1), fromfortran(*p2));
+        HSimple& h = hsimp.get(handle);
+        IF_TRACING(h.trace.log_settimerange(fromfortran(ptype), fromfortran(p1), fromfortran(p2)));
+        h.api->settimerange(fromfortran(ptype), fromfortran(p1), fromfortran(p2));
 
         return fortran::success();
     } catch (error& e) {
@@ -863,31 +827,19 @@ F77_INTEGER_FUNCTION(idba_settimerange)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_setdate)(
-        INTEGER(handle),
-        INTEGER(year),
-        INTEGER(month),
-        INTEGER(day),
-        INTEGER(hour),
-        INTEGER(min),
-        INTEGER(sec))
+int idba_setdate(int handle,
+        int year, int month, int day,
+        int hour, int min, int sec)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_INTEGER(year)
-    GENPTR_INTEGER(month)
-    GENPTR_INTEGER(day)
-    GENPTR_INTEGER(hour)
-    GENPTR_INTEGER(min)
-    GENPTR_INTEGER(sec)
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         IF_TRACING(h.trace.log_setdate(
-                fromfortran(*year), fromfortran(*month), fromfortran(*day),
-                fromfortran(*hour), fromfortran(*min), fromfortran(*sec)));
+                fromfortran(year), fromfortran(month), fromfortran(day),
+                fromfortran(hour), fromfortran(min), fromfortran(sec)));
 
         h.api->setdate(
-            fromfortran(*year), fromfortran(*month), fromfortran(*day),
-            fromfortran(*hour), fromfortran(*min), fromfortran(*sec));
+            fromfortran(year), fromfortran(month), fromfortran(day),
+            fromfortran(hour), fromfortran(min), fromfortran(sec));
 
         return fortran::success();
     } catch (error& e) {
@@ -915,30 +867,18 @@ F77_INTEGER_FUNCTION(idba_setdate)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_setdatemin)(
-        INTEGER(handle),
-        INTEGER(year),
-        INTEGER(month),
-        INTEGER(day),
-        INTEGER(hour),
-        INTEGER(min),
-        INTEGER(sec))
+int idba_setdatemin(int handle,
+        int year, int month, int day,
+        int hour, int min, int sec)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_INTEGER(year)
-    GENPTR_INTEGER(month)
-    GENPTR_INTEGER(day)
-    GENPTR_INTEGER(hour)
-    GENPTR_INTEGER(min)
-    GENPTR_INTEGER(sec)
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         IF_TRACING(h.trace.log_setdate(
-                fromfortran(*year), fromfortran(*month), fromfortran(*day),
-                fromfortran(*hour), fromfortran(*min), fromfortran(*sec), "min"));
+                fromfortran(year), fromfortran(month), fromfortran(day),
+                fromfortran(hour), fromfortran(min), fromfortran(sec), "min"));
         h.api->setdatemin(
-            fromfortran(*year), fromfortran(*month), fromfortran(*day),
-            fromfortran(*hour), fromfortran(*min), fromfortran(*sec));
+            fromfortran(year), fromfortran(month), fromfortran(day),
+            fromfortran(hour), fromfortran(min), fromfortran(sec));
 
         return fortran::success();
     } catch (error& e) {
@@ -966,30 +906,18 @@ F77_INTEGER_FUNCTION(idba_setdatemin)(
  * @return
  *   The error indicator for the function
  */
-F77_INTEGER_FUNCTION(idba_setdatemax)(
-        INTEGER(handle),
-        INTEGER(year),
-        INTEGER(month),
-        INTEGER(day),
-        INTEGER(hour),
-        INTEGER(min),
-        INTEGER(sec))
+int idba_setdatemax(int handle,
+        int year, int month, int day,
+        int hour, int min, int sec)
 {
-    GENPTR_INTEGER(handle)
-    GENPTR_INTEGER(year)
-    GENPTR_INTEGER(month)
-    GENPTR_INTEGER(day)
-    GENPTR_INTEGER(hour)
-    GENPTR_INTEGER(min)
-    GENPTR_INTEGER(sec)
     try {
-        HSimple& h = hsimp.get(*handle);
+        HSimple& h = hsimp.get(handle);
         IF_TRACING(h.trace.log_setdate(
-                fromfortran(*year), fromfortran(*month), fromfortran(*day),
-                fromfortran(*hour), fromfortran(*min), fromfortran(*sec), "max"));
+                fromfortran(year), fromfortran(month), fromfortran(day),
+                fromfortran(hour), fromfortran(min), fromfortran(sec), "max"));
         h.api->setdatemax(
-            fromfortran(*year), fromfortran(*month), fromfortran(*day),
-            fromfortran(*hour), fromfortran(*min), fromfortran(*sec));
+            fromfortran(year), fromfortran(month), fromfortran(day),
+            fromfortran(hour), fromfortran(min), fromfortran(sec));
 
         return fortran::success();
     } catch (error& e) {
