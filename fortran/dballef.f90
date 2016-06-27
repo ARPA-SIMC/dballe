@@ -3,12 +3,10 @@ USE,INTRINSIC :: iso_c_binding
 IMPLICIT NONE
 
 INTERFACE
-  FUNCTION idba_presentati_orig(dbahandle, url, user, password) BIND(C,name='idba_presentati')
+  FUNCTION idba_presentati_orig(dbahandle, url) BIND(C,name='idba_presentati')
   IMPORT
   INTEGER(kind=c_int) :: dbahandle
   CHARACTER(kind=c_char) :: url(*)
-  CHARACTER(kind=c_char) :: user(*)
-  CHARACTER(kind=c_char) :: password(*)
   INTEGER(kind=c_int) :: idba_presentati_orig
   END FUNCTION idba_presentati_orig
 END INTERFACE
@@ -584,15 +582,12 @@ string = TRIM(fchar)//CHAR(0)
 END FUNCTION fchartrimtostr
 
 ! public simplified interface to presentati
-FUNCTION idba_presentati(dbahandle, url, user, password)
+FUNCTION idba_presentati(dbahandle, url)
 INTEGER(kind=c_int) :: dbahandle
 CHARACTER(kind=c_char,len=*) :: url
-CHARACTER(kind=c_char,len=*) :: user
-CHARACTER(kind=c_char,len=*) :: password
 INTEGER(kind=c_int) :: idba_presentati
 
-idba_presentati = idba_presentati_orig(dbahandle, fchartrimtostr(url), &
- fchartrimtostr(user), fchartrimtostr(password))
+idba_presentati = idba_presentati_orig(dbahandle, fchartrimtostr(url))
 
 END FUNCTION idba_presentati
 
