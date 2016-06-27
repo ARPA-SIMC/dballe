@@ -23,7 +23,7 @@ END INTERFACE
 INTERFACE
   FUNCTION idba_preparati_orig(dbahandle, handle, anaflag, dataflag, attrflag) BIND(C,name='idba_preparati')
   IMPORT
-  INTEGER(kind=c_int) :: dbahandle
+  INTEGER(kind=c_int),VALUE :: dbahandle
   INTEGER(kind=c_int) :: handle
   CHARACTER(kind=c_char) :: anaflag(*)
   CHARACTER(kind=c_char) :: dataflag(*)
@@ -481,6 +481,13 @@ INTERFACE
   END FUNCTION idba_spiegab_orig
 END INTERFACE
 
+INTERFACE
+  FUNCTION idba_test_input_to_output(dbahandle) BIND(C,name='idba_test_input_to_output')
+  IMPORT
+  INTEGER(kind=c_int),VALUE :: dbahandle
+  INTEGER(kind=c_int) :: idba_test_input_to_output
+  END FUNCTION idba_test_input_to_output
+END INTERFACE
 
 ! interfaces to error handling functions
 INTERFACE
@@ -547,7 +554,7 @@ END INTERFACE
 
 PRIVATE
 PUBLIC idba_presentati, idba_arrivederci, idba_preparati, idba_messaggi, &
- idba_fatto, &
+ idba_fatto, idba_remove_all, &
  idba_set, idba_seti, idba_setb, idba_setr, idba_setd, idba_setc, &
  idba_enq, idba_enqi, idba_enqb, idba_enqr, idba_enqd, idba_enqc
 PUBLIC idba_unset, idba_unsetb, idba_unsetall, idba_setcontextana, &
@@ -558,6 +565,7 @@ PUBLIC idba_scopa, idba_quantesono, idba_elencamele, idba_voglioquesto, &
  idba_critica, idba_scusa
 PUBLIC idba_messages_open_input, idba_messages_open_output, &
  idba_messages_read_next, idba_messages_write_next
+PUBLIC idba_test_input_to_output
 PUBLIC idba_spiegal, idba_spiegat, idba_spiegab
 PUBLIC idba_error_set_callback, idba_default_error_handler, &
  idba_default_error_handle_tolerating_overflows, &
