@@ -72,32 +72,6 @@ interface
 
 ! Action routines
 
-   integer function idba_scopa(handle, repinfofile)
-     integer, intent(in) :: handle
-     character (len=*), intent(in) :: repinfofile
-   end function idba_scopa
-
-
-   integer function idba_quantesono(handle, count)
-     integer, intent(in) :: handle
-     integer, intent(out) :: count
-   end function idba_quantesono
-
-   integer function idba_elencamele(handle)
-     integer, intent(in) :: handle
-   end function idba_elencamele
-
-
-   integer function idba_voglioquesto(handle, count)
-     integer, intent(in) :: handle
-     integer, intent(out) :: count
-   end function idba_voglioquesto
-
-   integer function idba_dammelo(handle,param)
-     integer, intent(in) :: handle
-     character (len=*), intent(out) :: param
-   end function idba_dammelo
-
    integer function idba_prendilo(handle)
      integer, intent(in) :: handle
    end function idba_prendilo

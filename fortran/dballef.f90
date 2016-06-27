@@ -331,10 +331,11 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_dammelo_orig(handle, param) BIND(C,name='idba_dammelo')
+  FUNCTION idba_dammelo_orig(handle, param, param_len) BIND(C,name='idba_dammelo')
   IMPORT
   INTEGER(kind=c_int),VALUE :: handle
   CHARACTER(kind=c_char) :: param(*)
+  INTEGER(kind=c_int),VALUE :: param_len
   INTEGER(kind=c_int) :: idba_dammelo_orig
   END FUNCTION idba_dammelo_orig
 END INTERFACE
@@ -411,7 +412,7 @@ PUBLIC idba_presentati, idba_arrivederci, idba_preparati, idba_messaggi, &
 PUBLIC idba_unset, idba_unsetb, idba_unsetall, idba_setcontextana, &
  idba_setlevel, idba_settimerange, idba_setdate, idba_setdatemin, idba_setdatemax, &
  idba_enqlevel, idba_enqtimerange, idba_enqdate
-
+PUBLIC idba_scopa, idba_quantesono, idba_elencamele, idba_voglioquesto, idba_dammelo
 PUBLIC idba_error_set_callback, idba_default_error_handler, &
  idba_default_error_handle_tolerating_overflows, &
  idba_error_message, idba_error_context, idba_error_details, &
@@ -596,7 +597,7 @@ INTEGER(kind=c_int) :: handle
 CHARACTER(kind=c_char,len=*) :: param
 INTEGER(kind=c_int) :: idba_dammelo
 
-idba_dammelo = idba_dammelo_orig(handle, fchartrimtostr(param))
+idba_dammelo = idba_dammelo_orig(handle, param, LEN(param))
 
 END FUNCTION idba_dammelo
 
