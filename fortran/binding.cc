@@ -145,7 +145,7 @@ extern "C" {
  * @return
  *   The error indication for the function.
  */
-int idba_presentati(int* dbahandle, const char* url, const char* user, const char* password)
+int idba_presentati(int* dbahandle, const char* url)
 {
     try {
         /* Initialize the library if needed */
