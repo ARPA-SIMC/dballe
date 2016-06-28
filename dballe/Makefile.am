@@ -129,6 +129,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/v7/station.h \
 	db/v7/levtr.h \
 	db/v7/data.h \
+	db/v7/attr.h \
 	db/v7/driver.h \
 	db/v7/sqlite/repinfo.h \
 	db/v7/sqlite/station.h \
