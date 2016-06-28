@@ -178,8 +178,10 @@ digits and description.
 | 013013 | TOTAL SNOW DEPTH                                                   | M                        | ###.###        |
 | 013031 | EVAPOTRANSPIRATION                                                 | KG/M**2                  | 3 digits       |
 | 013033 | EVAPORATION/EVAPOTRANSPIRATION                                     | KG/M**2                  | ###.#          |
+| 013080 | WATER PH                                                           | pH                       | ##.#           |
 | 013081 | WATER CONDUCTIVITY                                                 | S/M                      | #.###          |
 | 013082 | WATER TEMPERATURE                                                  | K                        | ###.#          |
+| 013083 | DISSOLVED OXYGEN                                                   | KG/M**3                  | .######        |
 | 013192 | [SIM] Cloud liquid water content                                   | KG/KG                    | .########      |
 | 013193 | [SIM] Cloud ice content                                            | KG/KG                    | .########      |
 | 013194 | [SIM] Water table depth                                            | M                        | ###.###        |
@@ -213,6 +215,7 @@ digits and description.
 | 013228 | [SIM] Piezometric level                                            | M                        | ###.###        |
 | 013229 | [SIM] Density of snow                                              | KG/M**3                  | ####.#         |
 | 013230 | [SIM] Convective Available Potential Energy (CAPE)                 | J/KG                     | ####.#         |
+| 013231 | [SIM] Ossigeno disciolto sat                                       | %                        | ###.#          |
 | 014002 | Long-wave radiation, integrated over period specified              | J M-2                    | #####000       |
 | 014004 | Short-wave radiation, integrated over period specified             | J M-2                    | #####000       |
 | 014016 | NET RADIATION                                                      | J/M**2                   | #####0000      |
@@ -337,11 +340,16 @@ digits and description.
 | 022042 | SEA/WATER TEMPERATURE                                              | K                        | ###.#          |
 | 022043 | SEA/WATER TEMPERATURE                                              | K                        | ###.##         |
 | 022049 | SEA-SURFACE TEMPERATURE                                            | K                        | ###.##         |
+| 022062 | SALINITY                                                           | PART PER THOUSAND        | ###.##         |
+| 022063 | TOTAL WATER DEPTH                                                  | M                        | 5 digits       |
+| 022066 | WATER CONDUCTIVITY                                                 | S M-1                    | ##.######      |
 | 022070 | SIGNIFICANT WAVE HEIGHT                                            | M                        | ##.##          |
 | 022071 | SPECTRAL PEAK WAVE PERIOD                                          | S                        | ##.#           |
+| 022073 | MAXIMUM WAVE HEIGHT                                                | M                        | ##.##          |
 | 022074 | AVERAGE WAVE PERIOD                                                | S                        | ##.#           |
 | 022192 | [SIM] Current X component                                          | M/S                      | ##.##          |
 | 022193 | [SIM] Current Y component                                          | M/S                      | ##.##          |
+| 022194 | [SIM] Concentrazione clorofilla a                                  | microg/l                 | ####.##        |
 | 023192 | [SIM] Dry deposition of H2SO4                                      | MOL/M**3                 | #.#####        |
 | 023193 | [SIM] Wet deposition of H2SO4                                      | MOL/M**3                 | #.#####        |
 | 023194 | [SIM] Dry deposition of NH4                                        | MOL/M**3                 | #.#####        |
