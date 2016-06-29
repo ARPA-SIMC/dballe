@@ -184,6 +184,9 @@ make
 [ "%{buildroot}" != / ] && rm -rf "%{buildroot}"
 
 make install DESTDIR="%{buildroot}" STRIP=/bin/true
+mkdir -p $RPM_BUILD_ROOT%{_fmoddir}
+mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
+
 
 %clean
 [ "%{buildroot}" != / ] && rm -rf "%{buildroot}"
@@ -238,7 +241,7 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 %{_libdir}/libdballef*.la
 %{_libdir}/libdballef*.so
 %{_datadir}/aclocal/libdballef*.m4
-
+%{_fmoddir}/*.mod
 
 
 
