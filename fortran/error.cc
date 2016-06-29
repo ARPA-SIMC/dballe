@@ -198,9 +198,10 @@ int idba_error_set_callback(int code, fdba_error_callback func, int data, int* h
  * @return
  *   The error indicator for the function
  */
-void idba_error_remove_callback(int* handle)
+int idba_error_remove_callback(int* handle)
 {
     herr.release(*handle);
+    return fortran::success();
 }
 
 /**
