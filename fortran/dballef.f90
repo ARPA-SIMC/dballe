@@ -579,10 +579,11 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  SUBROUTINE idba_error_remove_callback(dbahandle) BIND(C,name='idba_remove_callback')
+  FUNCTION idba_error_remove_callback(dbahandle) BIND(C,name='idba_error_remove_callback')
   IMPORT
   INTEGER(kind=c_int) :: dbahandle
-  END SUBROUTINE idba_error_remove_callback
+  INTEGER(kind=c_int) :: idba_error_remove_callback
+  END FUNCTION idba_error_remove_callback
 END INTERFACE
 
 INTERFACE
