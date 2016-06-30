@@ -21,8 +21,10 @@ MODULE dballef
 USE,INTRINSIC :: iso_c_binding
 IMPLICIT NONE
 
-! TODO: check the missing values constants and decide whether the
-! _orig interfaces should become private
+! TODO:
+! - check the missing value constants
+! - decide whether the _orig interfaces should become private
+! - restore the intent's in/out
 
 ! definition of missing values
 INTEGER, PARAMETER :: &
@@ -821,7 +823,7 @@ INTEGER(kind=c_int) :: idba_messages_read_next
 INTEGER :: lfound
 
 idba_messages_read_next = idba_messages_read_next_orig(handle, lfound)
-found = lfound == 1 ! int to logical
+found = lfound /= 0 ! int to logical
 
 END FUNCTION idba_messages_read_next
 
