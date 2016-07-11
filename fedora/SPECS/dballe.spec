@@ -8,7 +8,7 @@ URL: https://github.com/ARPA-SIMC/dballe
 #Source0: %{name}-%{version}.tar.gz
 Source0: https://github.com/arpa-simc/%{name}/archive/v%{version}-%{release}.tar.gz#/%{name}-%{version}-%{release}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-BuildRequires: unixODBC-devel, gperf, cnf-devel, tetex, tetex-latex, doxygen, latex2html, python-docutils, lua-devel, libwreport-devel >= 3.2 , swig , python-devel, popt-devel, postgresql-devel, mariadb-devel
+BuildRequires: unixODBC-devel, gperf, tetex, tetex-latex, doxygen, latex2html, python-docutils, lua-devel, libwreport-devel >= 3.2 , swig , python-devel, popt-devel, postgresql-devel, mariadb-devel
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, unixODBC, sqliteodbc, mysql-connector-odbc, python-dballe
 Obsoletes: provami <= 7.6
 
@@ -117,7 +117,7 @@ DB-ALL.e C shared library
 
 Summary:  DB-All.e Fortran development library
 Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, lua-devel, cnf-devel
+Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, lua-devel
 
 %description -n libdballef-devel
  DB-All.e is a fast on-disk database where meteorological observed and
@@ -274,7 +274,7 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 %changelog
 * Mon Jul 11 2016 Daniele Branchini <dbranchini@arpae.it> - 7.15-1
-- closed #61
+- closed #61 (removed cnf)
 
 * Tue May 3 2016 Daniele Branchini <dbranchini@arpa.emr.it> - 7.14-1
 - removed ODBC support
