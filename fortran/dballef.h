@@ -18,6 +18,7 @@
  !
  ! Author: Enrico Zini <enrico@enricozini.com>
  !
+use dballef
 
 ! TODO: function o subroutine?
 
@@ -154,20 +155,6 @@ interface
 
 ! Init/Shutdown routines
    
-   subroutine idba_presentati(dbahandle, dsn, user, password)
-     integer, intent(out) :: dbahandle
-     character (len=*), intent(in) :: dsn,user,password
-   end subroutine idba_presentati
-
-   subroutine idba_arrivederci(dbahandle)
-     integer, intent(in) :: dbahandle
-   end subroutine idba_arrivederci
-
-   subroutine idba_preparati(dbahandle, handle, anaflag, dataflag, attrflag)
-     integer, intent(in) :: dbahandle
-     integer, intent(out) :: handle
-     character (len=*), intent(in) :: anaflag,dataflag,attrflag
-   end subroutine idba_preparati
 
    subroutine idba_messaggi(handle, filename, mode, type)
      integer, intent(out) :: handle

@@ -21,7 +21,6 @@ EXTRA_DIST += $(generic_mds)
 # C++ API documentation
 
 cppdeps = libdballe.dox \
-	  ../dballe/libdballe.la \
 	  record_keyword.dox \
 	  aliases.dox \
 	  ltypes.dox \
@@ -64,8 +63,7 @@ fapisources = fapi.md fapi_concepts.md fapi_walkthrough.md fapi_reference.md \
 	      fapi_parms.md fapi_aliases.md fapi_connect.md fapi_ltypes.md \
 	      fapi_tranges.md fapi_btable.md
 
-fortrandeps = libdballef.dox \
-	    ../fortran/libdballef.la
+fortrandeps = libdballef.dox
 
 libdballef.doxytags: $(fortrandeps)
 	doxygen $<

@@ -1,4 +1,5 @@
       program mkmsg
+      use dballef
 
 ! ****************************
 ! * Create a test message file
@@ -12,58 +13,58 @@
       real*8 dlat,dlon
       external errorrep
 
-      call idba_error_set_callback(0, errorrep, 2, i)
+      ierr = idba_error_set_callback(0, C_FUNLOC(errorrep), 2, i)
 
 !     Open a session
       call getarg(1,fname)
       call getarg(2,encoding)
-      call idba_messaggi(handle, fname, "w", encoding)
+      ierr = idba_messaggi(handle, fname, "w", encoding)
 
-      call idba_setd(handle, "lat", 44.D0)
-      call idba_setd(handle, "lon", 11.D0)
-      call idba_setlevel(handle, 102, 2000, 0, 0)
-      call idba_settimerange(handle, 254, 0, 0)
-      call idba_setdate(handle, 2008, 7, 6, 5, 4, 3)
+      ierr = idba_setd(handle, "lat", 44.D0)
+      ierr = idba_setd(handle, "lon", 11.D0)
+      ierr = idba_setlevel(handle, 102, 2000, 0, 0)
+      ierr = idba_settimerange(handle, 254, 0, 0)
+      ierr = idba_setdate(handle, 2008, 7, 6, 5, 4, 3)
 
 !     One without setting 'query'
-      call idba_seti(handle, "B12001", 2731+120)
-      call idba_prendilo(handle)
-      call idba_seti(handle, "*B33192", 74)
-      call idba_seti(handle, "*B33193", 81)
-      call idba_seti(handle, "*B33194", 59)
-      call idba_critica(handle)
-      call idba_seti(handle, "B12003", 2731+100)
-      call idba_prendilo(handle)
+      ierr = idba_seti(handle, "B12001", 2731+120)
+      ierr = idba_prendilo(handle)
+      ierr = idba_seti(handle, "*B33192", 74)
+      ierr = idba_seti(handle, "*B33193", 81)
+      ierr = idba_seti(handle, "*B33194", 59)
+      ierr = idba_critica(handle)
+      ierr = idba_seti(handle, "B12003", 2731+100)
+      ierr = idba_prendilo(handle)
 
 !     One setting 'query' to subset
-      call idba_setc(handle, "query", "subset")
-      call idba_seti(handle, "B12001", 2731+110)
-      call idba_prendilo(handle)
-      call idba_seti(handle, "*B33192", 47)
-      call idba_seti(handle, "*B33193", 18)
-      call idba_seti(handle, "*B33194", 95)
-      call idba_critica(handle)
-      call idba_seti(handle, "B12003", 2731+100)
-      call idba_prendilo(handle)
+      ierr = idba_setc(handle, "query", "subset")
+      ierr = idba_seti(handle, "B12001", 2731+110)
+      ierr = idba_prendilo(handle)
+      ierr = idba_seti(handle, "*B33192", 47)
+      ierr = idba_seti(handle, "*B33193", 18)
+      ierr = idba_seti(handle, "*B33194", 95)
+      ierr = idba_critica(handle)
+      ierr = idba_seti(handle, "B12003", 2731+100)
+      ierr = idba_prendilo(handle)
 
 !     One setting 'query' to message, and making a synop
-      call idba_setc(handle, "query", "message")
-      call idba_setc(handle, "rep_memo", "synop")
-      call idba_seti(handle, "B12001",  2731+90)
-      call idba_prendilo(handle)
-      call idba_seti(handle, "*B33007", 81)
-      call idba_critica(handle)
-      call idba_seti(handle, "B12003",  2731+80)
-      call idba_seti(handle, "B13003",  80)
-      call idba_prendilo(handle)
+      ierr = idba_setc(handle, "query", "message")
+      ierr = idba_setc(handle, "rep_memo", "synop")
+      ierr = idba_seti(handle, "B12001",  2731+90)
+      ierr = idba_prendilo(handle)
+      ierr = idba_seti(handle, "*B33007", 81)
+      ierr = idba_critica(handle)
+      ierr = idba_seti(handle, "B12003",  2731+80)
+      ierr = idba_seti(handle, "B13003",  80)
+      ierr = idba_prendilo(handle)
 
 !     One setting 'query' to message, and making a synop
-      call idba_setc(handle, "query", "message synop")
-      call idba_setc(handle, "rep_memo", "synop")
-      call idba_seti(handle, "B12001",  2731+90)
-      call idba_prendilo(handle)
+      ierr = idba_setc(handle, "query", "message synop")
+      ierr = idba_setc(handle, "rep_memo", "synop")
+      ierr = idba_seti(handle, "B12001",  2731+90)
+      ierr = idba_prendilo(handle)
 
-      call idba_fatto(handle)
+      ierr = idba_fatto(handle)
 
       call exit (0)
     
@@ -85,7 +86,8 @@
       return
       end
 
-      subroutine errorrep(val)
+      subroutine errorrep(val) BIND(C)
+      use dballef
       integer val
       character buf*1000
 

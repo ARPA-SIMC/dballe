@@ -3,6 +3,8 @@
 !!! ********************
 
       subroutine testcb(val)
+      USE,INTRINSIC :: iso_c_binding
+      include "dballeff.h"
       integer :: val
       character (len=1000) :: buf
 

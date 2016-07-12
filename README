@@ -66,7 +66,7 @@ In Fedora, the names of the packages depended on are:
 In Debian, the names of the packages depended on are:
 
  * libsqlite3-dev, libwreport-dev (>= 3.0), python-wreport, python3-wreport,
-   libpopt-dev, gperf, liblua5.1-0-dev, libcnf-dev, gfortran | g77,
+   libpopt-dev, gperf, liblua5.1-0-dev, gfortran | g77,
    python-all-dev, python3-all-dev, python-docutils, python-numpy,
    python3-numpy, python-six, python3-six
 

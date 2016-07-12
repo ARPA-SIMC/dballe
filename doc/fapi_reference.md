@@ -13,9 +13,9 @@
 </thead>
 <tbody>
 <tr><td><code><a href='#idba_error_code'>idba_error_code()</a></code></td><td>Return the error code for the last function that was called.</td></tr>
-<tr><td><code><a href='#idba_error_message'>idba_error_message(message)</a></code></td><td>Return the error message for the last function that was called.</td></tr>
-<tr><td><code><a href='#idba_error_context'>idba_error_context(message)</a></code></td><td>Return a string describing the error context description for the last function that was called.</td></tr>
-<tr><td><code><a href='#idba_error_details'>idba_error_details(message)</a></code></td><td>Return a string with additional details about the error for the last function that was called.</td></tr>
+<tr><td><code><a href='#idba_error_message'>idba_error_message(message, message_len)</a></code></td><td>Return the error message for the last function that was called.</td></tr>
+<tr><td><code><a href='#idba_error_context'>idba_error_context(message, message_len)</a></code></td><td>Return a string describing the error context description for the last function that was called.</td></tr>
+<tr><td><code><a href='#idba_error_details'>idba_error_details(message, message_len)</a></code></td><td>Return a string with additional details about the error for the last function that was called.</td></tr>
 <tr><td><code><a href='#idba_error_set_callback'>idba_error_set_callback(code, func, data, handle)</a></code></td><td>Set a callback to be invoked when an error of a specific kind happens.</td></tr>
 <tr><td><code><a href='#idba_error_remove_callback'>idba_error_remove_callback(handle)</a></code></td><td>Remove a previously set callback.</td></tr>
 <tr><td><code><a href='#idba_default_error_handler'>idba_default_error_handler(debug)</a></code></td><td>Predefined error callback that prints a message and exits.</td></tr>
@@ -35,7 +35,7 @@ DB-All.e.
 </th>
 </thead>
 <tbody>
-<tr><td><code><a href='#idba_presentati'>idba_presentati(dbahandle, url, user, password)</a></code></td><td>Connect to the database.</td></tr>
+<tr><td><code><a href='#idba_presentati'>idba_presentati(dbahandle, url)</a></code></td><td>Connect to the database.</td></tr>
 <tr><td><code><a href='#idba_arrivederci'>idba_arrivederci(dbahandle)</a></code></td><td>Disconnect from the database.</td></tr>
 <tr><td><code><a href='#idba_preparati'>idba_preparati(dbahandle, handle, anaflag, dataflag, attrflag)</a></code></td><td>Open a new session.</td></tr>
 <tr><td><code><a href='#idba_messaggi'>idba_messaggi(handle, filename, mode, type)</a></code></td><td>Start working with a message file.</td></tr>
@@ -56,15 +56,15 @@ routines.
 </thead>
 <tbody>
 <tr><td><code><a href='#idba_seti'>idba_seti(handle, parameter, value)</a></code></td><td>Set an integer value in input.</td></tr>
-<tr><td><code><a href='#idba_setb'>idba_setb(handle, parameter)</a></code></td><td>Set a byte value in input.</td></tr>
+<tr><td><code><a href='#idba_setb'>idba_setb(handle, parameter, value)</a></code></td><td>Set a byte value in input.</td></tr>
 <tr><td><code><a href='#idba_setr'>idba_setr(handle, parameter, value)</a></code></td><td>Set a real value in input.</td></tr>
 <tr><td><code><a href='#idba_setd'>idba_setd(handle, parameter, value)</a></code></td><td>Set a real*8 value in input.</td></tr>
 <tr><td><code><a href='#idba_setc'>idba_setc(handle, parameter, value)</a></code></td><td>Set a character value in input.</td></tr>
 <tr><td><code><a href='#idba_enqi'>idba_enqi(handle, parameter, value)</a></code></td><td>Read an integer value from the output.</td></tr>
-<tr><td><code><a href='#idba_enqb'>idba_enqb(handle, parameter)</a></code></td><td>Read a byte value from the output.</td></tr>
+<tr><td><code><a href='#idba_enqb'>idba_enqb(handle, parameter, value)</a></code></td><td>Read a byte value from the output.</td></tr>
 <tr><td><code><a href='#idba_enqr'>idba_enqr(handle, parameter, value)</a></code></td><td>Read a real value from the output.</td></tr>
 <tr><td><code><a href='#idba_enqd'>idba_enqd(handle, parameter, value)</a></code></td><td>Read a real*8 value from the output.</td></tr>
-<tr><td><code><a href='#idba_enqc'>idba_enqc(handle, parameter, value)</a></code></td><td>Read a character value from the output.</td></tr>
+<tr><td><code><a href='#idba_enqc'>idba_enqc(handle, parameter, value, value_len)</a></code></td><td>Read a character value from the output.</td></tr>
 <tr><td><code><a href='#idba_unset'>idba_unset(handle, parameter)</a></code></td><td>Remove one value from the input.</td></tr>
 <tr><td><code><a href='#idba_unsetb'>idba_unsetb(handle)</a></code></td><td>Remove all Bxxyyy values from the input.</td></tr>
 <tr><td><code><a href='#idba_unsetall'>idba_unsetall(handle)</a></code></td><td>Completely clear the input, removing all values.</td></tr>
@@ -109,12 +109,12 @@ Input/Output routines.
 <tr><td><code><a href='#idba_quantesono'>idba_quantesono(handle, count)</a></code></td><td>Query the stations in the database.</td></tr>
 <tr><td><code><a href='#idba_elencamele'>idba_elencamele(handle)</a></code></td><td>Retrieve the data about one station.</td></tr>
 <tr><td><code><a href='#idba_voglioquesto'>idba_voglioquesto(handle, count)</a></code></td><td>Query the data in the database.</td></tr>
-<tr><td><code><a href='#idba_dammelo'>idba_dammelo(handle, parameter)</a></code></td><td>Retrieve the data about one value.</td></tr>
+<tr><td><code><a href='#idba_dammelo'>idba_dammelo(handle, parameter, parameter_len)</a></code></td><td>Retrieve the data about one value.</td></tr>
 <tr><td><code><a href='#idba_prendilo'>idba_prendilo(handle)</a></code></td><td>Insert a new value in the database.</td></tr>
 <tr><td><code><a href='#idba_dimenticami'>idba_dimenticami(handle)</a></code></td><td>Remove from the database all values that match the query.</td></tr>
 <tr><td><code><a href='#idba_remove_all'>idba_remove_all(handle)</a></code></td><td>Remove all values from the database.</td></tr>
 <tr><td><code><a href='#idba_voglioancora'>idba_voglioancora(handle, count)</a></code></td><td>Query attributes about a variable.</td></tr>
-<tr><td><code><a href='#idba_ancora'>idba_ancora(handle, parameter)</a></code></td><td>Retrieve one attribute from the result of idba_voglioancora().</td></tr>
+<tr><td><code><a href='#idba_ancora'>idba_ancora(handle, parameter, parameter_len)</a></code></td><td>Retrieve one attribute from the result of idba_voglioancora().</td></tr>
 <tr><td><code><a href='#idba_critica'>idba_critica(handle)</a></code></td><td>Insert new attributes for a variable.</td></tr>
 <tr><td><code><a href='#idba_scusa'>idba_scusa(handle)</a></code></td><td>Remove attribute information for a variable.</td></tr>
 </tbody>
@@ -147,9 +147,9 @@ Input/Output routines.
 </th>
 </thead>
 <tbody>
-<tr><td><code><a href='#idba_spiegal'>idba_spiegal(handle, ltype1, l1, ltype2, l2, result)</a></code></td><td>Format the description of a level given its value.</td></tr>
-<tr><td><code><a href='#idba_spiegat'>idba_spiegat(handle, ptype, p1, p2, result)</a></code></td><td>Format the description of a time range given its value.</td></tr>
-<tr><td><code><a href='#idba_spiegab'>idba_spiegab(handle, varcode, value, result)</a></code></td><td>Format the description of a variable given its varcode and its value.</td></tr>
+<tr><td><code><a href='#idba_spiegal'>idba_spiegal(handle, ltype1, l1, ltype2, l2, result, result_len)</a></code></td><td>Format the description of a level given its value.</td></tr>
+<tr><td><code><a href='#idba_spiegat'>idba_spiegat(handle, ptype, p1, p2, result, result_len)</a></code></td><td>Format the description of a time range given its value.</td></tr>
+<tr><td><code><a href='#idba_spiegab'>idba_spiegab(handle, varcode, value, result, result_len)</a></code></td><td>Format the description of a variable given its varcode and its value.</td></tr>
 </tbody>
 </table>
 
@@ -183,7 +183,7 @@ This is a list of known codes:
 * 13: Value outside acceptable domain
 
 <a name='idba_error_message'></a>
-#### idba_error_message(message)
+#### idba_error_message(message, message_len)
 
 Parameters:
 
@@ -197,7 +197,7 @@ details of the specific condition that caused the error, use
 [idba_error_context()](#idba_error_context) and
 [idba_error_details()](#idba_error_details)
 <a name='idba_error_context'></a>
-#### idba_error_context(message)
+#### idba_error_context(message, message_len)
 
 Parameters:
 
@@ -209,7 +209,7 @@ function that was called.
 
 This string describes what the code that failed was trying to do.
 <a name='idba_error_details'></a>
-#### idba_error_details(message)
+#### idba_error_details(message, message_len)
 
 Parameters:
 
@@ -269,7 +269,7 @@ In case of overflows it prints a warning and continues execution
 ### Session routines
 
 <a name='idba_presentati'></a>
-#### idba_presentati(dbahandle, url, user, password)
+#### idba_presentati(dbahandle, url)
 
 Parameters:
 
@@ -389,7 +389,7 @@ The error indicator for the function
 Set an integer value in input.
 
 <a name='idba_setb'></a>
-#### idba_setb(handle, parameter)
+#### idba_setb(handle, parameter, value)
 
 Parameters:
 
@@ -474,7 +474,7 @@ The error indicator for the function
 Read an integer value from the output.
 
 <a name='idba_enqb'></a>
-#### idba_enqb(handle, parameter)
+#### idba_enqb(handle, parameter, value)
 
 Parameters:
 
@@ -525,7 +525,7 @@ The error indicator for the function
 Read a real*8 value from the output.
 
 <a name='idba_enqc'></a>
-#### idba_enqc(handle, parameter, value)
+#### idba_enqc(handle, parameter, value, value_len)
 
 Parameters:
 
@@ -799,7 +799,7 @@ Sort order can change in the future, with the invariant that the
 slowest to change remains (coordinates, ident) and the fastest to
 change remains the varcode.
 <a name='idba_dammelo'></a>
-#### idba_dammelo(handle, parameter)
+#### idba_dammelo(handle, parameter, parameter_len)
 
 Parameters:
 
@@ -885,7 +885,7 @@ The variable queried is either:
 
 Results are retrieved using [idba_ancora()](#idba_ancora).
 <a name='idba_ancora'></a>
-#### idba_ancora(handle, parameter)
+#### idba_ancora(handle, parameter, parameter_len)
 
 Parameters:
 
@@ -1032,7 +1032,7 @@ them to the current message.
 ### Pretty-printing routines
 
 <a name='idba_spiegal'></a>
-#### idba_spiegal(handle, ltype1, l1, ltype2, l2, result)
+#### idba_spiegal(handle, ltype1, l1, ltype2, l2, result, result_len)
 
 Parameters:
 
@@ -1049,7 +1049,7 @@ The error indication for the function.
 Format the description of a level given its value.
 
 <a name='idba_spiegat'></a>
-#### idba_spiegat(handle, ptype, p1, p2, result)
+#### idba_spiegat(handle, ptype, p1, p2, result, result_len)
 
 Parameters:
 
@@ -1065,7 +1065,7 @@ The error indication for the function.
 Format the description of a time range given its value.
 
 <a name='idba_spiegab'></a>
-#### idba_spiegab(handle, varcode, value, result)
+#### idba_spiegab(handle, varcode, value, result, result_len)
 
 Parameters:
 

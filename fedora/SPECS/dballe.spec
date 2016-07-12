@@ -1,20 +1,19 @@
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
-Version: 7.14
-Release: 2
+Version: 7.15
+Release: 1
 License: GPL
 Group: Applications/Meteo
 URL: https://github.com/ARPA-SIMC/dballe
 #Source0: %{name}-%{version}.tar.gz
 Source0: https://github.com/arpa-simc/%{name}/archive/v%{version}-%{release}.tar.gz#/%{name}-%{version}-%{release}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-BuildRequires: unixODBC-devel, gperf, cnf-devel, tetex, tetex-latex, doxygen, latex2html, python-docutils, lua-devel, libwreport-devel >= 3.2 , swig , python-devel, popt-devel, postgresql-devel, mariadb-devel
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, unixODBC, sqliteodbc, mysql-connector-odbc, python-dballe
+BuildRequires: gperf, doxygen, python-docutils, lua-devel, libwreport-devel >= 3.2 , swig , python-devel, popt-devel, postgresql-devel, mariadb-devel, sqlite-devel, help2man
+Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, python-dballe
 Obsoletes: provami <= 7.6
 
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 %{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
-%{!?python_siteinc: %define python_siteinc %(%{__python} -c "from distutils.sysconfig import get_python_inc; print get_python_inc()")}
 
 %description
  Database for punctual meteorological data (Command line tools)
@@ -117,7 +116,7 @@ DB-ALL.e C shared library
 
 Summary:  DB-All.e Fortran development library
 Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, lua-devel, cnf-devel
+Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, lua-devel
 
 %description -n libdballef-devel
  DB-All.e is a fast on-disk database where meteorological observed and
@@ -184,6 +183,9 @@ make
 [ "%{buildroot}" != / ] && rm -rf "%{buildroot}"
 
 make install DESTDIR="%{buildroot}" STRIP=/bin/true
+mkdir -p $RPM_BUILD_ROOT%{_fmoddir}
+mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
+
 
 %clean
 [ "%{buildroot}" != / ] && rm -rf "%{buildroot}"
@@ -238,7 +240,7 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 %{_libdir}/libdballef*.la
 %{_libdir}/libdballef*.so
 %{_datadir}/aclocal/libdballef*.m4
-
+%{_fmoddir}/*.mod
 
 
 
@@ -270,6 +272,9 @@ make install DESTDIR="%{buildroot}" STRIP=/bin/true
 
 
 %changelog
+* Mon Jul 11 2016 Daniele Branchini <dbranchini@arpae.it> - 7.15-1
+- closed #61 (removed cnf)
+
 * Tue May 3 2016 Daniele Branchini <dbranchini@arpa.emr.it> - 7.14-1
 - removed ODBC support
 - make the fortran trace file line-buffered (#53)
