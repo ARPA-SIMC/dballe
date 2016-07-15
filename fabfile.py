@@ -8,7 +8,7 @@ import git
 import re
 from six.moves import shlex_quote
 
-env.hosts = ["venti"]
+env.hosts = ["venti", "ventiquattro"]
 env.use_ssh_config = True
 
 def cmd(*args):
@@ -27,7 +27,6 @@ def test_venti():
 
     local(cmd("git", "push", "venti", "HEAD"))
     with cd(remote_dir):
-        #run(cmd("git", "fetch"))
         run(cmd("git", "checkout", "-B", "test_venti", repo.head.commit.hexsha))
         run(cmd("git", "reset", "--hard"))
         run(cmd("git", "clean", "-fx"))
@@ -55,5 +54,47 @@ def test_venti():
         run(cmd("make"))
         run(cmd("./run-check"))
 
+@hosts("ventiquattro")
+def test_ventiquattro():
+    fedora_cxxflags = "-O2 -g -pipe -Wall -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-strong"\
+                      " --param=ssp-buffer-size=4 -grecord-gcc-switches -specs=/usr/lib/rpm/redhat/redhat-hardened-cc1 -m64 -mtune=generic"
+    fedora_ldflags = "-Wl,-z,relro -specs=/usr/lib/rpm/redhat/redhat-hardened-ld"
+
+    repo = git.Repo()
+    remote = repo.remote("ventiquattro")
+    push_url = remote.config_reader.get("url")
+    remote_dir = re.sub(r"^ssh://[^/]+", "", push_url)
+
+    local(cmd("git", "push", "ventiquattro", "HEAD"))
+    with cd(remote_dir):
+        run(cmd("git", "checkout", "-B", "test_venti", repo.head.commit.hexsha))
+        run(cmd("git", "reset", "--hard"))
+        run(cmd("git", "clean", "-fx"))
+        run(cmd("autoreconf", "-if"))
+        run(cmd("./configure",
+                "--build=x86_64-redhat-linux-gnu",
+                "--host=x86_64-redhat-linux-gnu",
+                "--program-prefix=",
+                "--disable-dependency-tracking",
+                "--prefix=/usr",
+                "--exec-prefix=/usr",
+                "--bindir=/usr/bin",
+                "--sbindir=/usr/sbin",
+                "--sysconfdir=/etc",
+                "--datadir=/usr/share",
+                "--includedir=/usr/include",
+                "--libdir=/usr/lib64",
+                "--libexecdir=/usr/libexec",
+                "--localstatedir=/var",
+                "--sharedstatedir=/var/lib",
+                "--mandir=/usr/share/man",
+                "--infodir=/usr/share/info",
+                "CFLAGS=" + fedora_cxxflags,
+                "CXXFLAGS=" + fedora_cxxflags,
+                "LDFLAGS=" + fedora_ldflags))
+        run(cmd("make"))
+        run(cmd("./run-check"))
+
 def test():
     test_venti()
+    test_ventiquattro()
