@@ -67,13 +67,6 @@ struct BetweenString : public Varmatch
     }
 };
 
-namespace {
-template<typename T>
-static T from_raw_var(const char* val) { throw error_unimplemented("cannot get value for this type"); }
-template<> int from_raw_var<int>(const char* val) { return strtoul(val, 0, 10); }
-template<> string from_raw_var<string>(const char* val) { return val; }
-}
-
 template<typename T, typename OP>
 struct Op : public Varmatch
 {
