@@ -54,8 +54,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	var.h \
 	core/error.h \
 	core/aliases.h \
-	core/stlutils.h \
-	core/stlutils.tcc \
 	core/defs.h \
 	core/var.h \
 	core/values.h \
@@ -341,7 +339,6 @@ test_dballe_SOURCES = \
 	query-test.cc \
 	var-test.cc \
 	core/aliases-test.cc \
-	core/stlutils-test.cc \
 	core/defs-test.cc \
 	core/var-test.cc \
 	core/values-test.cc \
