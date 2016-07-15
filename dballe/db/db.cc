@@ -3,7 +3,6 @@
 #include "sql.h"
 #include "v6/db.h"
 #include "v7/db.h"
-#include "mem/db.h"
 #include "sql/sqlite.h"
 #include "dballe/message.h"
 #include "dballe/core/record.h"

@@ -1,6 +1,5 @@
 #include "config.h"
 #include "db/tests.h"
-#include "db/mem/db.h"
 #include <algorithm>
 #include <cstring>
 
@@ -608,8 +607,6 @@ class Tests : public FixtureTestCase<DBFixture>
         });
         add_method("query_station_best", [](Fixture& f) {
 #warning BEST queries of station values are not yet implemented for memdb
-            if (dynamic_cast<db::mem::DB*>(f.db))
-                return;
             auto& db = *f.db;
 
             // Reproduce a querybest scenario which produced invalid SQL

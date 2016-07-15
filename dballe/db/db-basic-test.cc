@@ -1,7 +1,6 @@
 #include "config.h"
 #include "msg/msg.h"
 #include "db/tests.h"
-#include "db/mem/db.h"
 #include <cstring>
 
 using namespace dballe;
