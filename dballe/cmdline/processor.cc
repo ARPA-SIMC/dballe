@@ -262,12 +262,12 @@ bool Filter::match_aof(const BinaryMessage& rmsg, const Messages* msgs) const
     if (!match_common(rmsg, msgs))
         return false;
 
-    if (category != -1)
-        if (category != category)
+    if (this->category != -1)
+        if (this->category != category)
             return false;
 
-    if (subcategory != -1)
-        if (subcategory != subcategory)
+    if (this->subcategory != -1)
+        if (this->subcategory != subcategory)
             return false;
 
     if (msgs) return match_msgs(*msgs);
