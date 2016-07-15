@@ -1,7 +1,7 @@
 #include "commonapi.h"
 #include "dballe/var.h"
 #include "dballe/types.h"
-#include <stdio.h>	// snprintf
+#include <stdio.h>  // snprintf
 #include <limits>
 #include <cstdlib>
 #include <cstring>
@@ -26,65 +26,65 @@ CommonAPIImplementation::~CommonAPIImplementation()
 
 void CommonAPIImplementation::set_permissions(const char* anaflag, const char* dataflag, const char* attrflag)
 {
-	if (strcasecmp("read",	anaflag) == 0)
-		perms |= PERM_ANA_RO;
-	if (strcasecmp("write",	anaflag) == 0)
-		perms |= PERM_ANA_WRITE;
-	if (strcasecmp("read",	dataflag) == 0)
-		perms |= PERM_DATA_RO;
-	if (strcasecmp("add",	dataflag) == 0)
-		perms |= PERM_DATA_ADD;
-	if (strcasecmp("write",	dataflag) == 0)
-		perms |= PERM_DATA_WRITE;
-	if (strcasecmp("read",	attrflag) == 0)
-		perms |= PERM_ATTR_RO;
-	if (strcasecmp("write",	attrflag) == 0)
-		perms |= PERM_ATTR_WRITE;
+    if (strcasecmp("read",  anaflag) == 0)
+        perms |= PERM_ANA_RO;
+    if (strcasecmp("write", anaflag) == 0)
+        perms |= PERM_ANA_WRITE;
+    if (strcasecmp("read",  dataflag) == 0)
+        perms |= PERM_DATA_RO;
+    if (strcasecmp("add",   dataflag) == 0)
+        perms |= PERM_DATA_ADD;
+    if (strcasecmp("write", dataflag) == 0)
+        perms |= PERM_DATA_WRITE;
+    if (strcasecmp("read",  attrflag) == 0)
+        perms |= PERM_ATTR_RO;
+    if (strcasecmp("write", attrflag) == 0)
+        perms |= PERM_ATTR_WRITE;
 
-	if ((perms & (PERM_ANA_RO | PERM_ANA_WRITE)) == 0)
-		throw error_consistency("pseudoana should be opened in either 'read' or 'write' mode");
-	if ((perms & (PERM_DATA_RO | PERM_DATA_ADD | PERM_DATA_WRITE)) == 0)
-		throw error_consistency("data should be opened in one of 'read', 'add' or 'write' mode");
-	if ((perms & (PERM_ATTR_RO | PERM_ATTR_WRITE)) == 0)
-		throw error_consistency("attr should be opened in either 'read' or 'write' mode");
+    if ((perms & (PERM_ANA_RO | PERM_ANA_WRITE)) == 0)
+        throw error_consistency("pseudoana should be opened in either 'read' or 'write' mode");
+    if ((perms & (PERM_DATA_RO | PERM_DATA_ADD | PERM_DATA_WRITE)) == 0)
+        throw error_consistency("data should be opened in one of 'read', 'add' or 'write' mode");
+    if ((perms & (PERM_ATTR_RO | PERM_ATTR_WRITE)) == 0)
+        throw error_consistency("attr should be opened in either 'read' or 'write' mode");
 
-	if (perms & PERM_ANA_RO && perms & PERM_DATA_WRITE)
-		throw error_consistency("when data is 'write' ana must also be set to 'write', because deleting data can potentially also delete pseudoana");
+    if (perms & PERM_ANA_RO && perms & PERM_DATA_WRITE)
+        throw error_consistency("when data is 'write' ana must also be set to 'write', because deleting data can potentially also delete pseudoana");
     /*
     // Check disabled: allowing importing data without attributes is more
     // important than a dubious corner case
-	if (perms & PERM_ATTR_RO && perms & PERM_DATA_WRITE)
-		throw error_consistency("when data is 'write' attr must also be set to 'write', because deleting data also deletes its attributes");
+    if (perms & PERM_ATTR_RO && perms & PERM_DATA_WRITE)
+        throw error_consistency("when data is 'write' attr must also be set to 'write', because deleting data also deletes its attributes");
     */
 }
 
 Record& CommonAPIImplementation::choose_input_record(const char*& param)
 {
-	switch (param[0])
-	{
-		case '*':
-			param = param + 1;
-			return qcinput;
-		default:
-			return input;
-	}
+    switch (param[0])
+    {
+        case '*':
+            param = param + 1;
+            return qcinput;
+        default:
+            return input;
+    }
 }
 
 Record& CommonAPIImplementation::choose_output_record(const char*& param)
 {
-	switch (param[0])
-	{
-		case '*':
-			param = param + 1;
-			return qcoutput;
-		default:
-			return output;
-	}
+    switch (param[0])
+    {
+        case '*':
+            param = param + 1;
+            return qcoutput;
+        default:
+            return output;
+    }
 }
 
 void CommonAPIImplementation::test_input_to_output()
 {
-	output = input;
+    output = input;
 }
 
 int CommonAPIImplementation::enqi(const char* param)
@@ -172,12 +172,12 @@ void CommonAPIImplementation::seti(const char* param, int value)
 
 void CommonAPIImplementation::setb(const char* param, signed char value)
 {
-	return seti(param, value);
+    return seti(param, value);
 }
 
 void CommonAPIImplementation::setr(const char* param, float value)
 {
-	return setd(param, value);
+    return setd(param, value);
 }
 
 void CommonAPIImplementation::setd(const char* param, double value)
@@ -296,20 +296,20 @@ void CommonAPIImplementation::unsetb()
 
 const char* CommonAPIImplementation::spiegal(int ltype1, int l1, int ltype2, int l2)
 {
-	cached_spiega = Level(ltype1, l1, ltype2, l2).describe();
-	return cached_spiega.c_str();
+    cached_spiega = Level(ltype1, l1, ltype2, l2).describe();
+    return cached_spiega.c_str();
 }
 
 const char* CommonAPIImplementation::spiegat(int ptype, int p1, int p2)
 {
-	cached_spiega = Trange(ptype, p1, p2).describe();
-	return cached_spiega.c_str();
+    cached_spiega = Trange(ptype, p1, p2).describe();
+    return cached_spiega.c_str();
 }
 
 const char* CommonAPIImplementation::spiegab(const char* varcode, const char* value)
 {
-	Varinfo info = varinfo(WR_STRING_TO_VAR(varcode + 1));
-	Var var(info, value);
+    Varinfo info = varinfo(WR_STRING_TO_VAR(varcode + 1));
+    Var var(info, value);
 
     char buf[1024];
     switch (info->type)
@@ -331,20 +331,20 @@ const char* CommonAPIImplementation::spiegab(const char* varcode, const char* va
 
 const char* CommonAPIImplementation::ancora()
 {
-	static char parm[10];
+    static char parm[10];
 
     if (qc_iter < 0)
         throw error_consistency("ancora called without a previous voglioancora");
     if ((unsigned)qc_iter >= qcoutput.vars().size())
         throw error_notfound("ancora called with no (or no more) results available");
 
-	Varcode var = qcoutput.vars()[qc_iter]->code();
-	snprintf(parm, 10, "*B%02d%03d", WR_VAR_X(var), WR_VAR_Y(var));
+    Varcode var = qcoutput.vars()[qc_iter]->code();
+    snprintf(parm, 10, "*B%02d%03d", WR_VAR_X(var), WR_VAR_Y(var));
 
-	/* Get next value from qc */
-	++qc_iter;
+    /* Get next value from qc */
+    ++qc_iter;
 
-	return parm;
+    return parm;
 }
 
 void CommonAPIImplementation::fatto()
