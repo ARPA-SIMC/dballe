@@ -57,6 +57,7 @@ class Tests : public TestCase
             bulletin->data_subcategory_local = 2;
             bulletin->master_table_version_number = 14;
             bulletin->master_table_version_number_local = 0;
+            bulletin->compression = false;
             bulletin->rep_year = 2015;
             bulletin->rep_month = 4;
             bulletin->rep_day = 25;
