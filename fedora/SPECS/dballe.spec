@@ -8,7 +8,7 @@ URL: https://github.com/ARPA-SIMC/dballe
 #Source0: %{name}-%{version}.tar.gz
 Source0: https://github.com/arpa-simc/%{name}/archive/v%{version}-%{release}.tar.gz#/%{name}-%{version}-%{release}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-BuildRequires: gperf, doxygen, python-docutils, lua-devel, libwreport-devel >= 3.2 , swig , python-devel, popt-devel, postgresql-devel, mariadb-devel, sqlite-devel, help2man
+BuildRequires: gperf, doxygen, python-docutils, lua-devel, libwreport-devel >= 3.2 , swig , python-devel, popt-devel, postgresql-devel, mariadb-devel, sqlite-devel, help2man, libwreport-doc
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, python-dballe
 Obsoletes: provami <= 7.6
 
@@ -274,6 +274,7 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 %changelog
 * Mon Jul 18 2016 Daniele Branchini <dbranchini@arpae.it> - 7.16-1
 - closed #63 (removed memdb)
+- closed #62 (dbadb export missing date)
 - removed warnings for Fedora 24 compiling
 
 * Mon Jul 11 2016 Daniele Branchini <dbranchini@arpae.it> - 7.15-1
