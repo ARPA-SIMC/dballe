@@ -751,6 +751,13 @@ class Tests : public TestCase
             wassert(test.run_reimport());
             wassert(test.run_convert("acars"));
         });
+        // Specific issues
+        add_testcodec("issue62.bufr", [](TestCodec& test) {
+            test.expected_min_vars = 21;
+
+            wassert(test.run_reimport());
+            wassert(test.run_convert("temp-wmo"));
+        });
     }
 } test("msg_wr_export");
 
