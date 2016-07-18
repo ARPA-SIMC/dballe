@@ -93,7 +93,11 @@ Msg::~Msg()
 }
 
 Msg::Msg(const Msg& m)
-    : m_datetime(m.m_datetime), type(m.type)
+    : m_rep_memo(m.m_rep_memo),
+      m_coords(m.m_coords),
+      m_ident(m.m_ident),
+      m_datetime(m.m_datetime),
+      type(m.type)
 {
     // Reserve space for the new contexts
     data.reserve(m.data.size());
@@ -726,6 +730,10 @@ const char* Msg::repmemo_from_type(MsgType type)
 void Msg::sounding_pack_levels(Msg& dst) const
 {
     dst.clear();
+    dst.m_rep_memo = m_rep_memo;
+    dst.m_coords = m_coords;
+    dst.m_ident = m_ident;
+    dst.m_datetime = m_datetime;
     dst.type = type;
 
     for (size_t i = 0; i < data.size(); ++i)
