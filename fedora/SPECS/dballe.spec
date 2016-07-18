@@ -8,7 +8,7 @@ URL: https://github.com/ARPA-SIMC/dballe
 #Source0: %{name}-%{version}.tar.gz
 Source0: https://github.com/arpa-simc/%{name}/archive/v%{version}-%{release}.tar.gz#/%{name}-%{version}-%{release}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-BuildRequires: gperf, doxygen, python-docutils, lua-devel, libwreport-devel >= 3.2 , swig , python-devel, popt-devel, postgresql-devel, mariadb-devel, sqlite-devel, help2man, libwreport-doc
+BuildRequires: gperf, doxygen, python-docutils, lua-devel, libwreport-devel >= 3.2 , python-devel, popt-devel, postgresql-devel, mariadb-devel, sqlite-devel, help2man, libwreport-doc
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, python-dballe
 Obsoletes: provami <= 7.6
 
