@@ -57,7 +57,7 @@ Obsoletes: provami <= 7.6
 %package  -n libdballe-devel
 Summary:  DB-ALL.e core C development library
 Group:    Applications/Meteo
-Requires: lib%{name}6 = %{?epoch:%epoch:}%{version}-%{release}, lua-devel, postgresql-devel mariadb-devel sqlite-devel
+Requires: lib%{name}6 = %{?epoch:%epoch:}%{version}-%{release}, lua-devel, postgresql-devel, mariadb-devel, sqlite-devel, popt-devel
 Obsoletes: libdballepp-devel 
 
 %description -n libdballe-devel

@@ -44,33 +44,6 @@ The main characteristics of DB-ALL.e are:
  * Does not need backup, since it only contains replicated or derived data.
  * Write access is enabled for its users.
 
-Dependencies
-------------
-
-DB-All.e requires libwreport, libsqlite, gperf and popt in order to be built.
-
-Additionally, to build the Fortran API the CNF library is required, and
-gfortran is required to build its unit tests.
-
-libpg is needed for PostgreSQL support. libmysql is needed for MySQL/MariaDB
-support. liblua5.1 is needed for Lua support, a python2 or python3 development
-environment, together with NumPy and Six, are needed for Python support.
-
-In Fedora, the names of the packages depended on are:
-
- * gperf gcc-gfortran doxygen python-docutils lua-devel libwreport-devel >= 3.2
-   python-devel popt-devel postgresql-devel mariadb-devel
- * For CNF there is an unofficial starmet package: contact the DB-All.e team
-   about it.
-
-In Debian, the names of the packages depended on are:
-
- * libsqlite3-dev, libwreport-dev (>= 3.0), python-wreport, python3-wreport,
-   libpopt-dev, gperf, liblua5.1-0-dev, gfortran | g77,
-   python-all-dev, python3-all-dev, python-docutils, python-numpy,
-   python3-numpy, python-six, python3-six
-
-
 Building DB-All.e
 -----------------
 
@@ -149,18 +122,18 @@ Contact and copyright information
 
 The author of DB-ALLe is Enrico Zini <enrico@enricozini.com>
 
-DB-ALLe is Copyright (C) 2005-2015 ARPA-SIMC <urpsim@arpa.emr.it>
+DB-ALLe is Copyright (C) 2005-2016 ARPAE-SIMC <urpsim@arpae.it>
 
 DB-ALLe is licensed under the terms of the GNU General Public License version
 2.  Please see the file COPYING for details.
 
-Contact informations for ARPA-SIM:
+Contact informations for ARPAE-SIMC:
 
-  Agenzia Regionale Prevenzione e Ambiente (ARPA)
+  Agenzia Regionale per la Prevenzione, l'Ambiente e l'Energia (ARPAE)
   Servizio Idro-Meteo-Climatologico (SIMC)
 
   Address: Viale Silvani 6, 40122 Bologna, Italy
   Tel: + 39 051 6497511
   Fax: + 39 051 6497501
-  Email: urpsim@arpa.emr.it
-  Website: http://www.arpa.emr.it/sim/
+  Email: urpsim@arpae.it
+  Website: http://www.arpae.it/sim/
