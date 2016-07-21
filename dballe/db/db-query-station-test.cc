@@ -1,6 +1,5 @@
 #include "config.h"
 #include "db/tests.h"
-#include "db/mem/db.h"
 #include "db/v6/db.h"
 #include "db/v7/db.h"
 #include "db/v6/station.h"
@@ -174,14 +173,11 @@ class Tests : public FixtureTestCase<Fixture>
             // Manually insert an orphan station
             switch (db.format())
             {
-                case MEM:
-                    if (auto d = dynamic_cast<mem::DB*>(f.db))
-                        d->memdb.stations.obtain_fixed(Coords(11.0, 45.0), "synop");
-                    break;
                 case V6:
                     if (auto d = dynamic_cast<v6::DB*>(f.db))
                         d->station().obtain_id(1100000, 4500000);
                     break;
+                case MEM:
                 case V7:
                     if (auto d = dynamic_cast<v7::DB*>(f.db))
                     {

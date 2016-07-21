@@ -54,8 +54,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	var.h \
 	core/error.h \
 	core/aliases.h \
-	core/stlutils.h \
-	core/stlutils.tcc \
 	core/defs.h \
 	core/var.h \
 	core/values.h \
@@ -72,20 +70,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/trace.h \
 	core/json.h \
 	core/ostream.h \
-	memdb/valuestorage.h \
-	memdb/valuestorage.tcc \
-	memdb/index.h \
-	memdb/match.h \
-	memdb/match.tcc \
-	memdb/results.h \
-	memdb/results.tcc \
-	memdb/station.h \
-	memdb/valuebase.h \
-	memdb/stationvalue.h \
-	memdb/levtr.h \
-	memdb/value.h \
-	memdb/memdb.h \
-	memdb/serializer.h \
 	msg/codec.h \
 	msg/bulletin.h \
 	msg/context.h \
@@ -103,9 +87,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/defs.h \
 	db/db.h \
 	db/trace.h \
-	db/mem/repinfo.h \
-	db/mem/cursor.h \
-	db/mem/db.h \
 	db/v6/internals.h \
 	db/v6/repinfo.h \
 	db/v6/station.h \
@@ -140,7 +121,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/v7/cursor.h \
 	db/v7/qbuilder.h \
 	db/summary.h \
-	db/ostream.h \
 	cmdline/cmdline.h \
 	cmdline/conversion.h \
 	cmdline/processor.h \
@@ -206,17 +186,6 @@ libdballe_la_SOURCES = \
 	core/varmatch.cc \
 	core/json.cc \
 	core/ostream.cc \
-	memdb/station.cc \
-	memdb/valuebase.cc \
-	memdb/stationvalue.cc \
-	memdb/levtr.cc \
-	memdb/valuestorage.cc \
-	memdb/index.cc \
-	memdb/match.cc \
-	memdb/results.cc \
-	memdb/value.cc \
-	memdb/memdb.cc \
-	memdb/serializer.cc \
 	msg/bulletin.cc \
 	msg/vars.cc \
 	msg/context.cc \
@@ -253,9 +222,6 @@ libdballe_la_SOURCES = \
 	sql/sqlite.cc \
 	db/db.cc \
 	db/trace.cc \
-	db/mem/repinfo.cc \
-	db/mem/cursor.cc \
-	db/mem/db.cc \
 	db/v6/repinfo.cc \
 	db/v6/station.cc \
 	db/v6/levtr.cc \
@@ -291,7 +257,6 @@ libdballe_la_SOURCES = \
 	db/v7/import.cc \
 	db/v7/export.cc \
 	db/summary.cc \
-	db/ostream.cc \
 	cmdline/cmdline.cc \
 	cmdline/processor.cc \
 	cmdline/conversion.cc \
@@ -360,7 +325,6 @@ check-local:
 
 dist_noinst_HEADERS = \
 	core/tests.h \
-	memdb/tests.h \
 	msg/tests.h \
 	msg/tests-lua.h \
 	db/tests.h
@@ -375,7 +339,6 @@ test_dballe_SOURCES = \
 	query-test.cc \
 	var-test.cc \
 	core/aliases-test.cc \
-	core/stlutils-test.cc \
 	core/defs-test.cc \
 	core/var-test.cc \
 	core/values-test.cc \
@@ -388,18 +351,6 @@ test_dballe_SOURCES = \
 	core/match-wreport-test.cc \
 	core/varmatch-test.cc \
 	core/json-test.cc \
-	memdb/tests.cc \
-	memdb/valuestorage-test.cc \
-	memdb/index-test.cc \
-	memdb/match-test.cc \
-	memdb/results-test.cc \
-	memdb/station-test.cc \
-	memdb/valuebase-test.cc \
-	memdb/stationvalue-test.cc \
-	memdb/levtr-test.cc \
-	memdb/value-test.cc \
-	memdb/memdb-test.cc \
-	memdb/serializer-test.cc \
 	msg/tests.cc \
 	msg/bulletin-test.cc \
 	msg/vars-test.cc \
@@ -431,8 +382,6 @@ test_dballe_SOURCES = \
 	db/db-query-summary-test.cc \
 	db/db-import-test.cc \
 	db/db-export-test.cc \
-	db/mem/repinfo-test.cc \
-	db/mem/cursor-test.cc \
 	db/summary-test.cc \
 	simple/msgapi-test.cc \
 	cmdline/dbadb-test.cc \
