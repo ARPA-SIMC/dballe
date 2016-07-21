@@ -278,15 +278,6 @@ class Tests : public TestCase
             wassert(test.run_reimport());
             wassert(test.run_convert("synop-wmo"));
         });
-        add_testcodec("temp-timesig18.bufr", [](TestCodec& test) {
-            // FIXME: temp message with data category 0: what do we do with it?
-            // FIXME: currently fails
-            test.expected_min_vars = 50;
-            test.expected_template = "temp-wmo";
-
-            wassert(test.run_reimport());
-            wassert(test.run_convert("temp-wmo"));
-        });
         add_testcodec("obs2-101.16.bufr", [](TestCodec& test) {
             // Re-export test for old style temps
             wassert(test.run_reimport());

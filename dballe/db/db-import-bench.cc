@@ -72,7 +72,7 @@ struct B : benchmark::Benchmark
         // Read samples
         for (auto& fn : {
                 "synop-cloudbelow.bufr", "synop-evapo.bufr", "synop-groundtemp.bufr", "synop-gtscosmo.bufr", "synop-longname.bufr",
-                "temp-gts1.bufr", "temp-gts2.bufr", "temp-gts3.bufr", "temp-gtscosmo.bufr", "temp-timesig18.bufr",
+                "temp-gts1.bufr", "temp-gts2.bufr", "temp-gts3.bufr", "temp-gtscosmo.bufr",
                 "gts-acars1.bufr", "gts-acars2.bufr", "gts-acars-us1.bufr"
                 })
         {
