@@ -166,28 +166,28 @@ bool Filter::match_index(int idx) const
     if (index == 0 || index[0] == 0)
         return true;
 
-	size_t pos;
-	size_t len;
-	for (pos = 0; (len = strcspn(index + pos, ",")) > 0; pos += len + 1)
-	{
-		int start, end;
-		int found = sscanf(index + pos, "%d-%d", &start, &end);
-		switch (found)
-		{
-			case 1:
-				if (start == idx)
-					return true;
-				break;
-			case 2: 
-				if (start <= idx && idx <= end)
-					return true;
-				break;
-			default:
-				fprintf(stderr, "Cannot parse index string %s\n", index);
-				return false;
-		}
-	}
-	return false;
+    size_t pos;
+    size_t len;
+    for (pos = 0; (len = strcspn(index + pos, ",")) > 0; pos += len + 1)
+    {
+        int start, end;
+        int found = sscanf(index + pos, "%d-%d", &start, &end);
+        switch (found)
+        {
+            case 1:
+                if (start == idx)
+                    return true;
+                break;
+            case 2: 
+                if (start <= idx && idx <= end)
+                    return true;
+                break;
+            default:
+                fprintf(stderr, "Cannot parse index string %s\n", index);
+                return false;
+        }
+    }
+    return false;
 }
 
 bool Filter::match_common(const BinaryMessage&, const Messages* msgs) const
@@ -241,16 +241,16 @@ bool Filter::match_crex(const BinaryMessage& rmsg, const Bulletin* rm, const Mes
     return true;
 
 #if 0
-	if (grepdata->checkdigit != -1)
-	{
-		int checkdigit;
-		DBA_RUN_OR_RETURN(crex_message_has_check_digit(msg, &checkdigit));
-		if (grepdata->checkdigit != checkdigit)
-		{
-			*match = 0;
-			return dba_error_ok();
-		}
-	}
+    if (grepdata->checkdigit != -1)
+    {
+        int checkdigit;
+        DBA_RUN_OR_RETURN(crex_message_has_check_digit(msg, &checkdigit));
+        if (grepdata->checkdigit != checkdigit)
+        {
+            *match = 0;
+            return dba_error_ok();
+        }
+    }
 #endif
 }
 
@@ -262,12 +262,12 @@ bool Filter::match_aof(const BinaryMessage& rmsg, const Messages* msgs) const
     if (!match_common(rmsg, msgs))
         return false;
 
-    if (category != -1)
-        if (category != category)
+    if (this->category != -1)
+        if (this->category != category)
             return false;
 
-    if (subcategory != -1)
-        if (subcategory != subcategory)
+    if (this->subcategory != -1)
+        if (this->subcategory != subcategory)
             return false;
 
     if (msgs) return match_msgs(*msgs);

@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(dballe, [7.15], [enrico@enricozini.org])
+AC_INIT(dballe, [7.16], [enrico@enricozini.org])
 AC_CONFIG_SRCDIR([configure.ac])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AC_CONFIG_HEADER(config.h)
@@ -34,7 +34,6 @@ AC_ARG_ENABLE([docs],
     [],
     [enable_docs="yes"])
 
-AC_CHECK_PROG(have_latex2html, latex2html, yes, no)
 AC_CHECK_PROG(have_rst2html, rst2html, yes, no)
 
 dnl To use subdirs
@@ -268,7 +267,6 @@ AM_CONDITIONAL([DO_DBALLEF], [test x"$enable_dballef" = x"yes"])
 AM_CONDITIONAL([DO_DBALLE_PYTHON], [test x"$enable_dballe_python" = x"yes"])
 AM_CONDITIONAL([DO_DOCS], [test x"$enable_docs" = x"yes"])
 
-AM_CONDITIONAL([HAVE_LATEX2HTML], [test x$have_latex2html = xyes])
 AM_CONDITIONAL([HAVE_RST2HTML], [test x$have_rst2html = xyes])
 
 AC_CONFIG_FILES([
@@ -295,6 +293,5 @@ AS_HELP_STRING([MySQL:], [$have_mysql])
 AS_HELP_STRING([Fortran:], [$enable_dballef])
 AS_HELP_STRING([Python:], [$enable_dballe_python])
 AS_HELP_STRING([documentation:], [$enable_docs])
-AS_HELP_STRING([latex2html:], [$have_latex2html])
 AS_HELP_STRING([rst2html:], [$have_rst2html])
 ===================================================])

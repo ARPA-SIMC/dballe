@@ -53,15 +53,41 @@ add_method("import", [](Fixture& f) {
     wassert(actual(var->enq<std::string>()) == "ship");
 });
 
+add_method("issue62", [](Fixture& f) {
+    // https://github.com/ARPA-SIMC/dballe/issues/62
+    Dbadb dbadb(*f.db);
+
+    // Import a synop
+    cmdline::Reader reader;
+    wassert(actual(dbadb.do_import(dballe::tests::datafile("bufr/issue62.bufr"), reader)) == 0);
+
+    // Export
+    core::Query query;
+    core::ArrayFile file(File::BUFR);
+    wassert(actual(dbadb.do_export(query, file, "", nullptr)) == 0);
+    wassert(actual(file.msgs.size()) == 2u);
+
+    // Decode results
+    auto importer = msg::Importer::create(File::BUFR);
+    Messages msgs = importer->from_binary(file.msgs[0]);
+    wassert(actual(msgs.size()) == 1u);
+    Msg& msg = Msg::downcast(msgs[0]);
+
+    wassert(actual(msg.get_datetime()) == Datetime(2016, 3, 14, 23, 0, 4));
+});
+
 }
 
 Tests tg1("cmdline_dbadb_mem", nullptr, db::MEM);
 Tests tg2("cmdline_dbadb_v6_sqlite", "SQLITE", db::V6);
+Tests tg2a("cmdline_dbadb_v7_sqlite", "SQLITE", db::V7);
 #ifdef HAVE_LIBPQ
 Tests tg6("cmdline_dbadb_v6_postgresql", "POSTGRESQL", db::V6);
+Tests tg6a("cmdline_dbadb_v7_postgresql", "POSTGRESQL", db::V7);
 #endif
 #ifdef HAVE_MYSQL
 Tests tg8("cmdline_dbadb_v6_mysql", "MYSQL", db::V6);
+Tests tg8a("cmdline_dbadb_v7_mysql", "MYSQL", db::V7);
 #endif
 
 }

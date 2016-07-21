@@ -1,6 +1,6 @@
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
-Version: 7.15
+Version: 7.16
 Release: 1
 License: GPL
 Group: Applications/Meteo
@@ -8,7 +8,7 @@ URL: https://github.com/ARPA-SIMC/dballe
 #Source0: %{name}-%{version}.tar.gz
 Source0: https://github.com/arpa-simc/%{name}/archive/v%{version}-%{release}.tar.gz#/%{name}-%{version}-%{release}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-BuildRequires: gperf, doxygen, python-docutils, lua-devel, libwreport-devel >= 3.2 , swig , python-devel, popt-devel, postgresql-devel, mariadb-devel, sqlite-devel, help2man
+BuildRequires: gperf, doxygen, python-docutils, lua-devel, libwreport-devel >= 3.2 , python-devel, popt-devel, postgresql-devel, mariadb-devel, sqlite-devel, help2man, libwreport-doc
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, python-dballe
 Obsoletes: provami <= 7.6
 
@@ -57,7 +57,7 @@ Obsoletes: provami <= 7.6
 %package  -n libdballe-devel
 Summary:  DB-ALL.e core C development library
 Group:    Applications/Meteo
-Requires: lib%{name}6 = %{?epoch:%epoch:}%{version}-%{release}, lua-devel, postgresql-devel mariadb-devel sqlite-devel
+Requires: lib%{name}6 = %{?epoch:%epoch:}%{version}-%{release}, lua-devel, postgresql-devel, mariadb-devel, sqlite-devel, popt-devel
 Obsoletes: libdballepp-devel 
 
 %description -n libdballe-devel
@@ -272,6 +272,11 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Mon Jul 18 2016 Daniele Branchini <dbranchini@arpae.it> - 7.16-1
+- closed #63 (removed memdb)
+- closed #62 (dbadb export missing date)
+- removed warnings for Fedora 24 compiling
+
 * Mon Jul 11 2016 Daniele Branchini <dbranchini@arpae.it> - 7.15-1
 - closed #61 (removed cnf)
 
@@ -368,95 +373,3 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 * Tue May 28 2013 Paolo Patruno <ppatruno@pigna.metarpa> - 6.1-3884%{dist}
 - dballe 6.1
-
-* Wed Aug 29 2012 Daniele Branchini <dbranchini@arpa.emr.it> - 5.22-3684%{dist}
-- corretto bug in provami su query
-
-* Tue Jun 12 2012 Daniele Branchini <dbranchini@arpa.emr.it> - 5.19-3633%{dist}
-- Aggiornato a revisione 3633
-
-* Tue May  8 2012 Daniele Branchini <dbranchini@arpa.emr.it> - 5.17-3621%{dist}
-- Nuova variabile bagnatura fogliare
-
-* Tue Jul 19 2011 root <root@pigna> - 5.7-3390%{dist}
-- port to wreport 2.0
-
-* Thu Jul  8 2010 Daniele Branchini <dbranchini@carenza.metarpa> - 4.0.18-2513%{dist}
-- Aggiornato alla revisione 2513
-
-* Thu Feb 25 2010 Daniele Branchini <dbranchini@localhost.localdomain> - 4.0.16-2451
-- corretta sintassi release di pacchettizzazione
-
-* Tue Nov 11 2008 root <root@strip.metarpa> - 4.0.8-1
-- bug resolved about units conversion in import/export and template used in api query message
-
-* Wed Oct 29 2008 root <root@strip.metarpa> - 4.0.7-1
-- bug on query best corrected
-
-* Wed Apr  2 2008 root <root@localhost.localdomain> - 4.0.0-8
-- added some units conversion
-
-* Tue Mar 18 2008 root <root@spinacio> - 4.0.0-4
-- new package (less packages)
-
-* Tue Dec 19 2006 root <root@strip.metarpa> - 3.0-1
-- spitted in more packages for version 3.0
-
-* Wed Nov 29 2006 root <root@strip.metarpa> - 2.6-2
-- aggiuntevar e rete per icecast
-
-* Wed Nov 22 2006 root <root@strip.metarpa> - 2.6-1
-- added support for sqlite
-
-* Wed Aug  9 2006 root <root@strip.metarpa> - 2.3-3
-- Aggiornato alla revisione 1086
-
-* Wed Aug  2 2006 root <root@strip.metarpa> - 2.3-1
-- some bugs solved
-
-* Tue May  9 2006 root <root@strip.metarpa> - 2.0-1
-- cambio delle api e della struttura db per permette la piu' versatile gestione dell'anagrafica
-
-* Wed May  3 2006 root <root@strip.metarpa> - 1.1-1
-- ottimizzazioni! eliminato querybest e introdotto parametro quesy con opzioni best e bigana
-
-* Wed Apr 26 2006 root <root@strip.metarpa> - 1.0-5
-- modificate query per ottimizzazione
-
-* Tue Apr 11 2006 root <root@strip.metarpa> - 1.0-4
-- inserita indicizzazione
-
-* Tue Apr 11 2006 root <root@strip.metarpa> - 1.0-3
-- corretti alcni bug
-
-* Wed Mar 15 2006 root <root@strip.metarpa> - 1.0-2
-- corrette conversioni mancanti e gestione generici
-
-* Wed Mar  8 2006 root <root@strip.metarpa> - 1.0-1
-- prima release ufficiale
-
-* Wed Feb 15 2006 root <root@strip.metarpa> - 0.7-9
--  a lot of bug fixes
-
-* Wed Feb  8 2006 root <root@strip.metarpa> - 0.7-8
-- a lot of bug fixes
-
-* Wed Feb  1 2006 root <root@strip.metarpa> - 0.7-7
-- resolved performace iusses and metar implemented + aof fixes
-
-* Wed Jan 25 2006 root <root@strip.metarpa> - 0.7-6
-- corretti bug
-
-* Wed Jan 18 2006 root <root@strip.metarpa> - 0.7-5
-- about source and table bug
-
-* Tue Jan 17 2006 root <root@strip.metarpa> - 0.7-4
-- lot of bug corrected and documentation improvements
-
-* Tue Jan 10 2006 root <patruno@strip.metarpa> - 0.7-2
-- corretti vari bug di fine anno
-
-* Tue Sep 13 2005 root <root@strip.metarpa> 
-- Initial build.
-
-

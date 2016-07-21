@@ -3,9 +3,6 @@
 VERSION=$(shell debian/vercheck)
 RELEASE_PACKAGE=dballe
 
-# Work around to latex2html bug #368693
-export RGBDEF=/usr/share/latex2html/styles/rgb.txt
-
 %:
 	dh --with autoreconf,python2,python3 $@
 

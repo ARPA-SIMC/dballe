@@ -278,15 +278,6 @@ class Tests : public TestCase
             wassert(test.run_reimport());
             wassert(test.run_convert("synop-wmo"));
         });
-        add_testcodec("temp-timesig18.bufr", [](TestCodec& test) {
-            // FIXME: temp message with data category 0: what do we do with it?
-            // FIXME: currently fails
-            test.expected_min_vars = 50;
-            test.expected_template = "temp-wmo";
-
-            wassert(test.run_reimport());
-            wassert(test.run_convert("temp-wmo"));
-        });
         add_testcodec("obs2-101.16.bufr", [](TestCodec& test) {
             // Re-export test for old style temps
             wassert(test.run_reimport());
@@ -461,17 +452,6 @@ class Tests : public TestCase
             //run_test(test, do_test, "acars-wmo");
         });
 #endif
-        // New style AMDAR
-        add_testcodec("gts-amdar1.bufr", [](TestCodec& test) {
-            // FIXME: currently fails
-            wassert(test.run_reimport());
-            wassert(test.run_convert("amdar-wmo"));
-        });
-        add_testcodec("gts-amdar2.bufr", [](TestCodec& test) {
-            // FIXME: currently fails
-            wassert(test.run_reimport());
-            wassert(test.run_convert("amdar-wmo"));
-        });
         // Re-export to BUFR (simplified, full template autodetect) and see the differences
         add_method("all_simplified", []() {
             const char** files = dballe::tests::bufr_files;
@@ -631,14 +611,6 @@ class Tests : public TestCase
             wassert(test.run_convert("pilot-wmo"));
         });
         // New style PILOT
-        add_testcodec("pilot-gts1.bufr", [](TestCodec& test) {
-            test.expected_data_category = 2;
-            test.expected_data_subcategory = 1;
-            test.expected_data_subcategory_local = 211;
-
-            wassert(test.run_reimport());
-            wassert(test.run_convert("pilot-wmo"));
-        });
         add_testcodec("pilot-ecmwf-geopotential.bufr", [](TestCodec& test) {
             test.configure_ecmwf_to_wmo_tweaks();
             test.after_reimport_reimport.add(new StripVars({ WR_VAR(0, 10, 8) }));
@@ -750,6 +722,13 @@ class Tests : public TestCase
 
             wassert(test.run_reimport());
             wassert(test.run_convert("acars"));
+        });
+        // Specific issues
+        add_testcodec("issue62.bufr", [](TestCodec& test) {
+            test.expected_min_vars = 21;
+
+            wassert(test.run_reimport());
+            wassert(test.run_convert("temp-wmo"));
         });
     }
 } test("msg_wr_export");

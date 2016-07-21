@@ -16,15 +16,15 @@ namespace fortran {
 
 
 MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
-	: file(0), state(STATE_BLANK), importer(0), exporter(0), msgs(0), wmsg(0), curmsgidx(0), iter_ctx(-1), iter_var(-1),
-		cached_cat(0), cached_subcat(0), cached_lcat(0)
+    : file(0), state(STATE_BLANK), importer(0), exporter(0), msgs(0), wmsg(0), curmsgidx(0), iter_ctx(-1), iter_var(-1),
+        cached_cat(0), cached_subcat(0), cached_lcat(0)
 {
-	if (strchr(mode, 'r') != NULL)
-	{
-		set_permissions("read", "read", "read");
-	} else if (strchr(mode, 'w') != NULL || strchr(mode, 'a') != NULL) {
-		set_permissions("write", "add", "write");
-	}
+    if (strchr(mode, 'r') != NULL)
+    {
+        set_permissions("read", "read", "read");
+    } else if (strchr(mode, 'w') != NULL || strchr(mode, 'a') != NULL) {
+        set_permissions("write", "add", "write");
+    }
 
     if (strcasecmp(type, "BUFR") == 0)
         file = File::create(File::BUFR, fname, mode).release();
@@ -43,19 +43,19 @@ MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
 
 MsgAPI::~MsgAPI()
 {
-	if (perms & (PERM_DATA_WRITE | PERM_DATA_ADD))
-	{
-		if (wmsg) flushSubset();
-		if (msgs) flushMessage();
-	} else {
-		if (wmsg) delete wmsg;
-		if (msgs) delete msgs;
-	}
-	if (file) delete file;
-	if (importer) delete importer;
-	if (exporter) delete exporter;
-	for (vector<Var*>::iterator i = vars.begin(); i != vars.end(); ++i)
-		delete *i;
+    if (perms & (PERM_DATA_WRITE | PERM_DATA_ADD))
+    {
+        if (wmsg) flushSubset();
+        if (msgs) flushMessage();
+    } else {
+        if (wmsg) delete wmsg;
+        if (msgs) delete msgs;
+    }
+    if (file) delete file;
+    if (importer) delete importer;
+    if (exporter) delete exporter;
+    for (vector<Var*>::iterator i = vars.begin(); i != vars.end(); ++i)
+        delete *i;
 }
 
 Msg* MsgAPI::curmsg()
@@ -68,22 +68,22 @@ Msg* MsgAPI::curmsg()
 
 bool MsgAPI::readNextMessage()
 {
-	if (state & STATE_EOF)
-		return false;
+    if (state & STATE_EOF)
+        return false;
 
-	if (msgs && curmsgidx < msgs->size() - 1)
-	{
-		++curmsgidx;
-		return true;
-	}
+    if (msgs && curmsgidx < msgs->size() - 1)
+    {
+        ++curmsgidx;
+        return true;
+    }
 
     state = STATE_BLANK;
-	curmsgidx = 0;
-	if (msgs)
-	{
-		delete msgs;
-		msgs = 0;
-	}
+    curmsgidx = 0;
+    if (msgs)
+    {
+        delete msgs;
+        msgs = 0;
+    }
 
     if (BinaryMessage raw = file->read())
     {
@@ -95,18 +95,18 @@ bool MsgAPI::readNextMessage()
     }
 
     state &= ~STATE_BLANK;
-	state |= STATE_EOF;
-	return false;
+    state |= STATE_EOF;
+    return false;
 }
 
 void MsgAPI::scopa(const char* repinfofile)
 {
-	if (!(perms & PERM_DATA_WRITE))
-		throw error_consistency(
-			"scopa must be run with the database open in data write mode");
+    if (!(perms & PERM_DATA_WRITE))
+        throw error_consistency(
+            "scopa must be run with the database open in data write mode");
 
-	// FIXME: In theory, nothing to do
-	// FIXME: In practice, we could reset all buffered data and ftruncate the file
+    // FIXME: In theory, nothing to do
+    // FIXME: In practice, we could reset all buffered data and ftruncate the file
 }
 
 int MsgAPI::quantesono()
@@ -115,23 +115,23 @@ int MsgAPI::quantesono()
         readNextMessage();
     if (state & STATE_EOF)
         return missing_int;
-	state |= STATE_QUANTESONO;
-		
-	return 1;
+    state |= STATE_QUANTESONO;
+        
+    return 1;
 }
 
 void MsgAPI::elencamele()
 {
-	if ((state & STATE_QUANTESONO) == 0)
-		throw error_consistency("elencamele called without a previous quantesono");
+    if ((state & STATE_QUANTESONO) == 0)
+        throw error_consistency("elencamele called without a previous quantesono");
 
-	output.clear();
+    output.clear();
 
-	Msg* msg = curmsg();
-	if (!msg) return;
+    Msg* msg = curmsg();
+    if (!msg) return;
 
-	const msg::Context* ctx = msg->find_context(Level(), Trange());
-	if (!ctx) return;
+    const msg::Context* ctx = msg->find_context(Level(), Trange());
+    if (!ctx) return;
 
     output.set("mobile", 0);
     output.set("rep_memo", Msg::repmemo_from_type(msg->type));
@@ -156,24 +156,24 @@ void MsgAPI::elencamele()
 
 bool MsgAPI::incrementMsgIters()
 {
-	if (iter_ctx < 0)
-	{
-		iter_ctx = 0;
-		iter_var = -1;
-	}
+    if (iter_ctx < 0)
+    {
+        iter_ctx = 0;
+        iter_var = -1;
+    }
 
-	Msg* msg = curmsg();
-	if ((unsigned)iter_ctx >= msg->data.size())
-		return false;
+    Msg* msg = curmsg();
+    if ((unsigned)iter_ctx >= msg->data.size())
+        return false;
 
-	const msg::Context* ctx = msg->data[iter_ctx];
-	if (iter_var < (int)ctx->data.size() - 1)
-	{
-		++iter_var;
-	} else {
-		++iter_ctx;
-		iter_var = 0;
-	}
+    const msg::Context* ctx = msg->data[iter_ctx];
+    if (iter_var < (int)ctx->data.size() - 1)
+    {
+        ++iter_var;
+    } else {
+        ++iter_ctx;
+        iter_var = 0;
+    }
 
     // Skip redundant variables in the pseudoana layer
     if ((unsigned)iter_ctx < msg->data.size() && msg->data[iter_ctx]->level == Level())
@@ -188,10 +188,10 @@ bool MsgAPI::incrementMsgIters()
         }
     }
 
-	if ((unsigned)iter_ctx >= msg->data.size())
-		return false;
+    if ((unsigned)iter_ctx >= msg->data.size())
+        return false;
 
-	return true;
+    return true;
 }
 
 int MsgAPI::voglioquesto()
@@ -207,10 +207,10 @@ int MsgAPI::voglioquesto()
     Msg* msg = curmsg();
     if (!msg) return missing_int;
 
-	int count = 0;
-	for (size_t l = 0; l < msg->data.size(); ++l)
-	{
-		const msg::Context* ctx = msg->data[l];
+    int count = 0;
+    for (size_t l = 0; l < msg->data.size(); ++l)
+    {
+        const msg::Context* ctx = msg->data[l];
         if (ctx->level == Level())
         {
             // Count skipping datetime and coordinate variables
@@ -220,22 +220,22 @@ int MsgAPI::voglioquesto()
                     ++count;
         } else
             count += ctx->data.size();
-	}
-	return count;
+    }
+    return count;
 }
 
 const char* MsgAPI::dammelo()
 {
-	if ((state & STATE_VOGLIOQUESTO) == 0)
-		throw error_consistency("dammelo called without a previous voglioquesto");
+    if ((state & STATE_VOGLIOQUESTO) == 0)
+        throw error_consistency("dammelo called without a previous voglioquesto");
 
-	output.clear();
+    output.clear();
 
-	Msg* msg = curmsg();
+    Msg* msg = curmsg();
     if (!msg) return 0;
 
-	if (!incrementMsgIters())
-		return 0;
+    if (!incrementMsgIters())
+        return 0;
 
     output.set(msg->get_datetime());
 
@@ -288,16 +288,16 @@ const char* MsgAPI::dammelo()
 
 void MsgAPI::flushVars()
 {
-	// Acquire the variables still around from the last prendilo
-	while (!vars.empty())
-	{
-		// Pop a variable from the vector and take ownership of
-		// its memory management
-		unique_ptr<Var> var(vars.back());
-		vars.pop_back();
+    // Acquire the variables still around from the last prendilo
+    while (!vars.empty())
+    {
+        // Pop a variable from the vector and take ownership of
+        // its memory management
+        unique_ptr<Var> var(vars.back());
+        vars.pop_back();
 
-		wmsg->set(move(var), vars_level, vars_trange);
-	}
+        wmsg->set(move(var), vars_level, vars_trange);
+    }
 }
 
 void MsgAPI::flushSubset()
@@ -330,8 +330,8 @@ void MsgAPI::flushMessage()
 
 void MsgAPI::prendilo()
 {
-	if (perms & PERM_DATA_RO)
-		error_consistency("prendilo cannot be called with the file open in read mode");
+    if (perms & PERM_DATA_RO)
+        error_consistency("prendilo cannot be called with the file open in read mode");
 
     if (!msgs) msgs = new Messages;
     if (!wmsg) wmsg = new Msg;
@@ -371,9 +371,9 @@ void MsgAPI::prendilo()
         wmsg->set_datetime(Datetime(ye, mo, da, ho, mi, se));
     }
 
-	const vector<Var*>& in_vars = input.vars();
-	flushVars();
-	assert(vars.empty());
+    const vector<Var*>& in_vars = input.vars();
+    flushVars();
+    assert(vars.empty());
 
     vars_level.ltype1 = input.enq("leveltype1", MISSING_INT);
     vars_level.l1 = input.enq("l1", MISSING_INT);
@@ -383,9 +383,9 @@ void MsgAPI::prendilo()
     vars_trange.p1 = input.enq("p1", MISSING_INT);
     vars_trange.p2 = input.enq("p2", MISSING_INT);
 
-	for (vector<Var*>::const_iterator v = in_vars.begin(); v != in_vars.end(); ++v)
-		vars.push_back(new Var(**v));
-	input.clear_vars();
+    for (vector<Var*>::const_iterator v = in_vars.begin(); v != in_vars.end(); ++v)
+        vars.push_back(new Var(**v));
+    input.clear_vars();
 
     if (const Var* var = input.get("query"))
         if (var->isset())
@@ -423,54 +423,54 @@ void MsgAPI::prendilo()
 
 void MsgAPI::dimenticami()
 {
-	throw error_consistency("dimenticami does not make sense when writing messages");
+    throw error_consistency("dimenticami does not make sense when writing messages");
 }
 
 int MsgAPI::voglioancora()
 {
-	Msg* msg = curmsg();
-	if (msg == 0 || iter_ctx < 0 || iter_var < 0)
-		throw error_consistency("voglioancora called before dammelo");
+    Msg* msg = curmsg();
+    if (msg == 0 || iter_ctx < 0 || iter_var < 0)
+        throw error_consistency("voglioancora called before dammelo");
 
-	if ((unsigned)iter_ctx >= msg->data.size()) return 0;
-	const msg::Context& ctx = *(msg->data[iter_ctx]);
+    if ((unsigned)iter_ctx >= msg->data.size()) return 0;
+    const msg::Context& ctx = *(msg->data[iter_ctx]);
 
-	if ((unsigned)iter_var >= ctx.data.size()) return 0;
-	const Var& var = *(ctx.data[iter_var]);
+    if ((unsigned)iter_var >= ctx.data.size()) return 0;
+    const Var& var = *(ctx.data[iter_var]);
 
-	qcoutput.clear();
+    qcoutput.clear();
 
-	int count = 0;
-	for (const Var* attr = var.next_attr(); attr; attr = attr->next_attr())
-	{
-		qcoutput.set(*attr);
-		++count;
-	}
+    int count = 0;
+    for (const Var* attr = var.next_attr(); attr; attr = attr->next_attr())
+    {
+        qcoutput.set(*attr);
+        ++count;
+    }
 
-	qc_iter = 0;
+    qc_iter = 0;
 
-	return count;
+    return count;
 }
 
 void MsgAPI::critica()
 {
-	if (perms & PERM_ATTR_RO)
-		throw error_consistency(
-			"critica cannot be called with the database open in attribute readonly mode");
-	if (vars.empty())
-		throw error_consistency("critica has been called without a previous prendilo");
-	if (vars.size() > 1)
-		throw error_consistency("critica has been called after setting many variables with a single prendilo, so I do not know which one should get the attributes");
+    if (perms & PERM_ATTR_RO)
+        throw error_consistency(
+            "critica cannot be called with the database open in attribute readonly mode");
+    if (vars.empty())
+        throw error_consistency("critica has been called without a previous prendilo");
+    if (vars.size() > 1)
+        throw error_consistency("critica has been called after setting many variables with a single prendilo, so I do not know which one should get the attributes");
 
-	const vector<Var*>& avars = qcinput.vars();
-	for (vector<Var*>::const_iterator i = avars.begin(); i != avars.end(); ++i)
-		vars[0]->seta(**i);
-	qcinput.clear();
+    const vector<Var*>& avars = qcinput.vars();
+    for (vector<Var*>::const_iterator i = avars.begin(); i != avars.end(); ++i)
+        vars[0]->seta(**i);
+    qcinput.clear();
 }
 
 void MsgAPI::scusa()
 {
-	throw error_consistency("scusa does not make sense when writing messages");
+    throw error_consistency("scusa does not make sense when writing messages");
 }
 
 void MsgAPI::messages_open_input(const char* filename, const char* mode, File::Encoding format, bool)

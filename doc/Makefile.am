@@ -110,10 +110,6 @@ uninstall-local:
 	rm -rf $(DESTDIR)$(docdir)/c_api
 
 
-#guide_html/index.html: $(guidesources)
-#	$(LATEX2HTML) -dir guide_html -split 1 -mkdir $<
-
-
 EXTRA_DIST += doxy2swig.py add_templates_to_manpage introduzione.odt
 
 CLEANFILES += doxygen_sqlite3.db
