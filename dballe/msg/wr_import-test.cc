@@ -322,22 +322,6 @@ class Tests : public TestCase
             IS(ident, "FJCYR4RA");
         });
 
-        // WMO AMDAR
-        add_bufr_simplified_method("gts-amdar1.bufr", [](const Messages& msgs) {
-            wassert(actual(msgs.size()) == 1u);
-            const Msg& msg = Msg::downcast(msgs[0]);
-            wassert(actual(msg.type) == MSG_AMDAR);
-            IS(ident, "EU0274");
-        });
-
-        // WMO AMDAR
-        add_bufr_simplified_method("gts-amdar2.bufr", [](const Messages& msgs) {
-            wassert(actual(msgs.size()) == 1u);
-            const Msg& msg = Msg::downcast(msgs[0]);
-            wassert(actual(msg.type) == MSG_AMDAR);
-            IS(ident, "EU7866");
-        });
-
         // BUFR that has a variable that goes out of range when converted to local B
         // table
         add_method("outofrange", []() {

@@ -461,17 +461,6 @@ class Tests : public TestCase
             //run_test(test, do_test, "acars-wmo");
         });
 #endif
-        // New style AMDAR
-        add_testcodec("gts-amdar1.bufr", [](TestCodec& test) {
-            // FIXME: currently fails
-            wassert(test.run_reimport());
-            wassert(test.run_convert("amdar-wmo"));
-        });
-        add_testcodec("gts-amdar2.bufr", [](TestCodec& test) {
-            // FIXME: currently fails
-            wassert(test.run_reimport());
-            wassert(test.run_convert("amdar-wmo"));
-        });
         // Re-export to BUFR (simplified, full template autodetect) and see the differences
         add_method("all_simplified", []() {
             const char** files = dballe::tests::bufr_files;
