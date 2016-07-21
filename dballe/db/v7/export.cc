@@ -11,7 +11,6 @@
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
 #include "dballe/core/query.h"
-#include "dballe/core/structbuf.h"
 #include <memory>
 #include <cstring>
 #include <iostream>

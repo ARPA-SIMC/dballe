@@ -11,7 +11,6 @@
 #include "dballe/record.h"
 #include "dballe/var.h"
 #include "dballe/core/query.h"
-#include "dballe/core/structbuf.h"
 #include "wreport/var.h"
 #include <unordered_map>
 #include <cstdio>
