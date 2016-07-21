@@ -631,14 +631,6 @@ class Tests : public TestCase
             wassert(test.run_convert("pilot-wmo"));
         });
         // New style PILOT
-        add_testcodec("pilot-gts1.bufr", [](TestCodec& test) {
-            test.expected_data_category = 2;
-            test.expected_data_subcategory = 1;
-            test.expected_data_subcategory_local = 211;
-
-            wassert(test.run_reimport());
-            wassert(test.run_convert("pilot-wmo"));
-        });
         add_testcodec("pilot-ecmwf-geopotential.bufr", [](TestCodec& test) {
             test.configure_ecmwf_to_wmo_tweaks();
             test.after_reimport_reimport.add(new StripVars({ WR_VAR(0, 10, 8) }));

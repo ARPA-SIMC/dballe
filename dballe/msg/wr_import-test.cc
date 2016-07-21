@@ -362,13 +362,6 @@ class Tests : public TestCase
             }
         });
 
-        // WMO PILOT, with geopotential levels
-        add_bufr_simplified_method("pilot-gts1.bufr", [](const Messages& msgs) {
-            wassert(actual(msgs.size()) == 1u);
-            const Msg& msg = Msg::downcast(msgs[0]);
-            wassert(actual(msg.type) == MSG_PILOT);
-        });
-
         // WMO PILOT, with pressure levels
         add_bufr_simplified_method("pilot-gts2.bufr", [](const Messages& msgs) {
             wassert(actual(msgs.size()) == 1u);
