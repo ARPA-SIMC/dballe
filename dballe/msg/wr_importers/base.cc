@@ -357,22 +357,7 @@ void Interpreted::annotate_trange(const TimerangeContext& trange_context)
 }
 
 
-ContextChooser::ContextChooser(const LevelContext& level, const TimerangeContext& trange)
-    : level(level), trange(trange)
-{
-}
-
-ContextChooser::~ContextChooser()
-{
-}
-
-void ContextChooser::init(Msg& _msg, bool simplified)
-{
-    this->simplified = simplified;
-    msg = &_msg;
-}
-
-void ContextChooser::set_gen_sensor(const Var& var, Varcode code, const Level& defaultLevel, const Trange& trange)
+void SynopBaseImporter::set_gen_sensor(const Var& var, Varcode code, const Level& defaultLevel, const Trange& trange)
 {
     if (!level.height_sensor_seen ||
                 (level.height_sensor != MISSING_SENSOR_H && (
@@ -381,12 +366,12 @@ void ContextChooser::set_gen_sensor(const Var& var, Varcode code, const Level& d
         msg->set(var, code, defaultLevel, trange);
     else if (level.height_sensor == MISSING_SENSOR_H)
     {
-        if (simplified)
+        if (opts.simplified)
             msg->set(var, code, defaultLevel, trange);
         else
             msg->set(var, code, Level(103, MISSING_INT), trange);
     }
-    else if (simplified)
+    else if (opts.simplified)
     {
         Var var1(var);
         var1.seta(newvar(WR_VAR(0, 7, 32), level.height_sensor));
@@ -395,17 +380,17 @@ void ContextChooser::set_gen_sensor(const Var& var, Varcode code, const Level& d
         msg->set(var, code, Level(103, level.height_sensor * 1000), trange);
 }
 
-void ContextChooser::set_gen_sensor(const Var& var, int shortcut)
+void SynopBaseImporter::set_gen_sensor(const Var& var, int shortcut)
 {
     const MsgVarShortcut& v = shortcutTable[shortcut];
     set_gen_sensor(var, shortcut, Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2));
 }
 
-void ContextChooser::set_gen_sensor(const Var& var, int shortcut, const Trange& tr_std, bool tr_careful)
+void SynopBaseImporter::set_gen_sensor(const Var& var, int shortcut, const Trange& tr_std, bool tr_careful)
 {
     Interpreted res(shortcut, var);
 
-    if (!simplified)
+    if (!opts.simplified)
         res.trange = trange.get_real(tr_std); // Use real timerange
     else {
         Trange real = trange.get_real(tr_std);
@@ -423,11 +408,11 @@ void ContextChooser::set_gen_sensor(const Var& var, int shortcut, const Trange& 
     res.to_msg(*msg);
 }
 
-void ContextChooser::set_gen_sensor(const Var& var, int shortcut, const Level& lev_std, const Trange& tr_std, bool lev_careful, bool tr_careful)
+void SynopBaseImporter::set_gen_sensor(const Var& var, int shortcut, const Level& lev_std, const Trange& tr_std, bool lev_careful, bool tr_careful)
 {
     Interpreted res(shortcut, var);
 
-    if (!simplified)
+    if (!opts.simplified)
     {
         res.level = level.get_real(lev_std); // Use real level
         res.trange = trange.get_real(tr_std); // Use real timerange
@@ -460,11 +445,11 @@ void ContextChooser::set_gen_sensor(const Var& var, int shortcut, const Level& l
     res.to_msg(*msg);
 }
 
-void ContextChooser::set_baro_sensor(const Var& var, int shortcut)
+void SynopBaseImporter::set_baro_sensor(const Var& var, int shortcut)
 {
     if (level.height_baro == MISSING_BARO)
         msg->set_by_id(var, shortcut);
-    else if (simplified)
+    else if (opts.simplified)
     {
         Var var1(var);
         var1.seta(newvar(WR_VAR(0, 7, 31), level.height_baro));
@@ -475,11 +460,11 @@ void ContextChooser::set_baro_sensor(const Var& var, int shortcut)
     }
 }
 
-void ContextChooser::set_past_weather(const wreport::Var& var, int shortcut)
+void SynopBaseImporter::set_past_weather(const wreport::Var& var, int shortcut)
 {
     Interpreted res(shortcut, var);
     res.trange = Trange((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
-    if (simplified)
+    if (opts.simplified)
     {
         // Use standard and preserve the rest
         if (res.trange != trange.get_real(res.trange))
@@ -490,19 +475,19 @@ void ContextChooser::set_past_weather(const wreport::Var& var, int shortcut)
     res.to_msg(*msg);
 }
 
-void ContextChooser::set_wind(const wreport::Var& var, int shortcut)
+void SynopBaseImporter::set_wind(const wreport::Var& var, int shortcut)
 {
     if (trange.time_sig != MISSING_TIME_SIG && trange.time_sig != 2)
         error_consistency::throwf("Found unsupported time significance %d for wind direction", trange.time_sig);
     set_gen_sensor(var, shortcut, lev_std_wind, tr_std_wind);
 }
 
-void ContextChooser::set_wind_max(const wreport::Var& var, int shortcut)
+void SynopBaseImporter::set_wind_max(const wreport::Var& var, int shortcut)
 {
     set_gen_sensor(var, shortcut, lev_std_wind, tr_std_wind_max10m, false, true);
 }
 
-void ContextChooser::set_pressure(const wreport::Var& var)
+void SynopBaseImporter::set_pressure(const wreport::Var& var)
 {
     if (level.press_std == MISSING_PRESS_STD)
         msg->set(var, WR_VAR(0, 10,  8), Level(100), Trange::instant());
@@ -510,7 +495,7 @@ void ContextChooser::set_pressure(const wreport::Var& var)
         msg->set(var, WR_VAR(0, 10,  8), Level(100, level.press_std), Trange::instant());
 }
 
-void ContextChooser::set_water_temperature(const wreport::Var& var)
+void SynopBaseImporter::set_water_temperature(const wreport::Var& var)
 {
     if (level.depth == MISSING_SENSOR_H)
         msg->set(var, WR_VAR(0, 22, 43), Level(1), Trange::instant());
@@ -518,13 +503,13 @@ void ContextChooser::set_water_temperature(const wreport::Var& var)
         msg->set(var, WR_VAR(0, 22, 43), Level(160, level.depth * 1000), Trange::instant());
 }
 
-void ContextChooser::set_swell_waves(const wreport::Var& var)
+void SynopBaseImporter::set_swell_waves(const wreport::Var& var)
 {
     msg->set(var, var.code(), Level(264, MISSING_INT, 261, level.swell_wave_group), Trange::instant());
 }
 
 SynopBaseImporter::SynopBaseImporter(const msg::Importer::Options& opts)
-    : WMOImporter(opts), ctx(level, trange)
+    : WMOImporter(opts)
 {
 }
 
@@ -534,7 +519,6 @@ void SynopBaseImporter::init()
     clouds.init();
     level.init();
     trange.init();
-    ctx.init(*msg, opts.simplified);
 }
 
 void SynopBaseImporter::run()
@@ -586,35 +570,35 @@ void SynopBaseImporter::import_var(const Var& var)
             break;
 
         // Pressure data (complete)
-        case WR_VAR(0, 10,  4): ctx.set_baro_sensor(var, DBA_MSG_PRESS); break;
-        case WR_VAR(0, 10, 51): ctx.set_baro_sensor(var, DBA_MSG_PRESS_MSL); break;
-        case WR_VAR(0, 10, 61): ctx.set_baro_sensor(var, DBA_MSG_PRESS_3H); break;
-        case WR_VAR(0, 10, 62): ctx.set_baro_sensor(var, DBA_MSG_PRESS_24H); break;
-        case WR_VAR(0, 10, 63): ctx.set_baro_sensor(var, DBA_MSG_PRESS_TEND); break;
+        case WR_VAR(0, 10,  4): set_baro_sensor(var, DBA_MSG_PRESS); break;
+        case WR_VAR(0, 10, 51): set_baro_sensor(var, DBA_MSG_PRESS_MSL); break;
+        case WR_VAR(0, 10, 61): set_baro_sensor(var, DBA_MSG_PRESS_3H); break;
+        case WR_VAR(0, 10, 62): set_baro_sensor(var, DBA_MSG_PRESS_24H); break;
+        case WR_VAR(0, 10, 63): set_baro_sensor(var, DBA_MSG_PRESS_TEND); break;
         case WR_VAR(0, 10,  3):
         case WR_VAR(0, 10,  8):
-        case WR_VAR(0, 10,  9): ctx.set_pressure(var); break;
+        case WR_VAR(0, 10,  9): set_pressure(var); break;
 
         // Ship “instantaneous” data
 
         // Temperature and humidity data (complete)
         case WR_VAR(0, 12,   4):
-        case WR_VAR(0, 12, 101): ctx.set_gen_sensor(var, DBA_MSG_TEMP_2M); break;
+        case WR_VAR(0, 12, 101): set_gen_sensor(var, DBA_MSG_TEMP_2M); break;
         case WR_VAR(0, 12,   6):
-        case WR_VAR(0, 12, 103): ctx.set_gen_sensor(var, DBA_MSG_DEWPOINT_2M); break;
-        case WR_VAR(0, 13,   3): ctx.set_gen_sensor(var, DBA_MSG_HUMIDITY); break;
+        case WR_VAR(0, 12, 103): set_gen_sensor(var, DBA_MSG_DEWPOINT_2M); break;
+        case WR_VAR(0, 13,   3): set_gen_sensor(var, DBA_MSG_HUMIDITY); break;
         case WR_VAR(0, 12,   2):
-        case WR_VAR(0, 12, 102): ctx.set_gen_sensor(var, DBA_MSG_WET_TEMP_2M); break;
+        case WR_VAR(0, 12, 102): set_gen_sensor(var, DBA_MSG_WET_TEMP_2M); break;
 
         // Visibility data (complete)
-        case WR_VAR(0, 20,  1): ctx.set_gen_sensor(var, DBA_MSG_VISIBILITY); break;
+        case WR_VAR(0, 20,  1): set_gen_sensor(var, DBA_MSG_VISIBILITY); break;
 
         // Precipitation past 24h (complete)
-        case WR_VAR(0, 13, 19): ctx.set_gen_sensor(var, DBA_MSG_TOT_PREC1); break;
-        case WR_VAR(0, 13, 20): ctx.set_gen_sensor(var, DBA_MSG_TOT_PREC3); break;
-        case WR_VAR(0, 13, 21): ctx.set_gen_sensor(var, DBA_MSG_TOT_PREC6); break;
-        case WR_VAR(0, 13, 22): ctx.set_gen_sensor(var, DBA_MSG_TOT_PREC12); break;
-        case WR_VAR(0, 13, 23): ctx.set_gen_sensor(var, DBA_MSG_TOT_PREC24); break;
+        case WR_VAR(0, 13, 19): set_gen_sensor(var, DBA_MSG_TOT_PREC1); break;
+        case WR_VAR(0, 13, 20): set_gen_sensor(var, DBA_MSG_TOT_PREC3); break;
+        case WR_VAR(0, 13, 21): set_gen_sensor(var, DBA_MSG_TOT_PREC6); break;
+        case WR_VAR(0, 13, 22): set_gen_sensor(var, DBA_MSG_TOT_PREC12); break;
+        case WR_VAR(0, 13, 23): set_gen_sensor(var, DBA_MSG_TOT_PREC24); break;
 
         // Cloud data
         case WR_VAR(0, 20, 10): msg->set_cloud_n_var(var); break;
@@ -632,18 +616,18 @@ void SynopBaseImporter::import_var(const Var& var)
 
         // Present and past weather (complete)
         case WR_VAR(0, 20,  3): msg->set_pres_wtr_var(var); break;
-        case WR_VAR(0, 20,  4): ctx.set_past_weather(var, DBA_MSG_PAST_WTR1_6H); break;
-        case WR_VAR(0, 20,  5): ctx.set_past_weather(var, DBA_MSG_PAST_WTR2_6H); break;
+        case WR_VAR(0, 20,  4): set_past_weather(var, DBA_MSG_PAST_WTR1_6H); break;
+        case WR_VAR(0, 20,  5): set_past_weather(var, DBA_MSG_PAST_WTR2_6H); break;
 
         // Precipitation measurement (complete)
-        case WR_VAR(0, 13, 11): ctx.set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, abs(trange.time_period))); break;
+        case WR_VAR(0, 13, 11): set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, abs(trange.time_period))); break;
 
         // Extreme temperature data
         case WR_VAR(0, 12, 111):
-            ctx.set_gen_sensor(var, WR_VAR(0, 12, 101), Level(1), Trange(2, -abs(trange.time_period_offset), abs(trange.time_period)));
+            set_gen_sensor(var, WR_VAR(0, 12, 101), Level(1), Trange(2, -abs(trange.time_period_offset), abs(trange.time_period)));
             break;
         case WR_VAR(0, 12, 112):
-            ctx.set_gen_sensor(var, WR_VAR(0, 12, 101), Level(1), Trange(3, -abs(trange.time_period_offset), abs(trange.time_period)));
+            set_gen_sensor(var, WR_VAR(0, 12, 101), Level(1), Trange(3, -abs(trange.time_period_offset), abs(trange.time_period)));
             break;
 
         // Wind data (complete)
@@ -656,11 +640,11 @@ void SynopBaseImporter::import_var(const Var& var)
          * missing value indicator.
          */
         case WR_VAR(0, 11,  1):
-        case WR_VAR(0, 11, 11): ctx.set_wind(var, DBA_MSG_WIND_DIR); break;
+        case WR_VAR(0, 11, 11): set_wind(var, DBA_MSG_WIND_DIR); break;
         case WR_VAR(0, 11,  2):
-        case WR_VAR(0, 11, 12): ctx.set_wind(var, DBA_MSG_WIND_SPEED); break;
-        case WR_VAR(0, 11, 43): ctx.set_wind_max(var, DBA_MSG_WIND_GUST_MAX_DIR); break;
-        case WR_VAR(0, 11, 41): ctx.set_wind_max(var, DBA_MSG_WIND_GUST_MAX_SPEED); break;
+        case WR_VAR(0, 11, 12): set_wind(var, DBA_MSG_WIND_SPEED); break;
+        case WR_VAR(0, 11, 43): set_wind_max(var, DBA_MSG_WIND_GUST_MAX_DIR); break;
+        case WR_VAR(0, 11, 41): set_wind_max(var, DBA_MSG_WIND_GUST_MAX_SPEED); break;
 
         case WR_VAR(0, 12,  5): msg->set_wet_temp_2m_var(var); break;
         case WR_VAR(0, 10,197): msg->set_height_anem_var(var); break;

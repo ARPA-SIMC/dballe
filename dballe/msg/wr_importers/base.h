@@ -142,21 +142,18 @@ struct Interpreted
     void to_msg(Msg& msg);
 };
 
-struct ContextChooser
+/**
+ * Base class for synop, ship and other importer with synop-like data
+ */
+class SynopBaseImporter : public WMOImporter
 {
-    const LevelContext& level;
-    const TimerangeContext& trange;
+protected:
+    CloudContext clouds;
+    LevelContext level;
+    TimerangeContext trange;
 
-    // Configuration
-    bool simplified = false;
-
-    // Output message
-    Msg* msg = nullptr;
-
-    ContextChooser(const LevelContext& level, const TimerangeContext& trange);
-    ~ContextChooser();
-
-    void init(Msg& msg, bool simplified);
+    virtual void peek_var(const wreport::Var& var);
+    virtual void import_var(const wreport::Var& var);
 
     void set_gen_sensor(const wreport::Var& var, wreport::Varcode code, const Level& defaultLevel, const Trange& trange);
     void set_gen_sensor(const wreport::Var& var, int shortcut);
@@ -169,21 +166,6 @@ struct ContextChooser
     void set_pressure(const wreport::Var& var);
     void set_water_temperature(const wreport::Var& var);
     void set_swell_waves(const wreport::Var& var);
-};
-
-/**
- * Base class for synop, ship and other importer with synop-like data
- */
-class SynopBaseImporter : public WMOImporter
-{
-protected:
-    CloudContext clouds;
-    LevelContext level;
-    TimerangeContext trange;
-    ContextChooser ctx;
-
-    virtual void peek_var(const wreport::Var& var);
-    virtual void import_var(const wreport::Var& var);
 
 public:
     SynopBaseImporter(const msg::Importer::Options& opts);
