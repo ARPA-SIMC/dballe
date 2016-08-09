@@ -52,7 +52,7 @@ protected:
 
     void import_var(const wreport::Var& var);
 
-    virtual void init()
+    void init() override
     {
         pos = 0;
         Importer::init();
@@ -170,8 +170,8 @@ protected:
 public:
     SynopBaseImporter(const msg::Importer::Options& opts);
 
-    virtual void init();
-    virtual void run();
+    void init() override;
+    void run() override;
 };
 
 }
