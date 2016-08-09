@@ -337,7 +337,6 @@ digits and description.
 | 022032 | SPEED OF SEA SURFACE CURRENT                                       | M/S                      | ##.##          |
 | 022037 | Tidal elevation with respect to national land datum                | M                        | ##.###         |
 | 022038 | Tidal elevation with respect to local chart datum                  | M                        | ##.###         |
-| 022042 | SEA/WATER TEMPERATURE                                              | K                        | ###.#          |
 | 022043 | SEA/WATER TEMPERATURE                                              | K                        | ###.##         |
 | 022049 | SEA-SURFACE TEMPERATURE                                            | K                        | ###.##         |
 | 022062 | SALINITY                                                           | PART PER THOUSAND        | ###.##         |
