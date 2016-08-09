@@ -75,6 +75,12 @@ struct LevelContext
 
     void init();
     void peek_var(const wreport::Var& var);
+
+    /**
+     * Compute the most precise current level information possible, taking
+     * defaults from the given standard level.
+     */
+    Level get_real(const Level& standard) const;
 };
 
 /// Keep track of time range context changes
@@ -89,6 +95,12 @@ struct TimerangeContext
 
     void init();
     void peek_var(const wreport::Var& var, unsigned pos);
+
+    /**
+     * Compute the most precise current time range information possible, taking
+     * defaults from the given standard time range.
+     */
+    Trange get_real(const Trange& standard) const;
 };
 
 /**
@@ -157,10 +169,6 @@ struct ContextChooser
     void set_pressure(const wreport::Var& var);
     void set_water_temperature(const wreport::Var& var);
     void set_swell_waves(const wreport::Var& var);
-
-protected:
-    Level lev_real(const Level& standard) const;
-    Trange tr_real(const Trange& standard) const;
 };
 
 /**

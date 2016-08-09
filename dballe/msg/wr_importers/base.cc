@@ -142,6 +142,25 @@ void LevelContext::peek_var(const wreport::Var& var)
     }
 }
 
+Level LevelContext::get_real(const Level& standard) const
+{
+    if (height_sensor == 0) return Level(1);
+    if (!height_sensor_seen) return standard;
+    return height_sensor == MISSING_SENSOR_H ?
+        Level(103) :
+        Level(103, height_sensor * 1000);
+}
+
+Trange TimerangeContext::get_real(const Trange& standard) const
+{
+    if (standard.pind == 254) return Trange::instant();
+    if (!time_period_seen) return standard;
+    return time_period == MISSING_INT ?
+        Trange(standard.pind, 0) :
+        Trange(standard.pind, 0, abs(time_period));
+}
+
+
 void TimerangeContext::init()
 {
     time_period = MISSING_INT;
@@ -353,24 +372,6 @@ void ContextChooser::init(Msg& _msg, bool simplified)
     msg = &_msg;
 }
 
-Level ContextChooser::lev_real(const Level& standard) const
-{
-    if (level.height_sensor == 0) return Level(1);
-    if (!level.height_sensor_seen) return standard;
-    return level.height_sensor == MISSING_SENSOR_H ?
-        Level(103) :
-        Level(103, level.height_sensor * 1000);
-}
-
-Trange ContextChooser::tr_real(const Trange& standard) const
-{
-    if (standard.pind == 254) return Trange::instant();
-    if (!trange.time_period_seen) return standard;
-    return trange.time_period == MISSING_INT ?
-        Trange(standard.pind, 0) :
-        Trange(standard.pind, 0, abs(trange.time_period));
-}
-
 void ContextChooser::set_gen_sensor(const Var& var, Varcode code, const Level& defaultLevel, const Trange& trange)
 {
     if (!level.height_sensor_seen ||
@@ -405,9 +406,9 @@ void ContextChooser::set_gen_sensor(const Var& var, int shortcut, const Trange& 
     Interpreted res(shortcut, var);
 
     if (!simplified)
-        res.trange = tr_real(tr_std); // Use real timerange
+        res.trange = trange.get_real(tr_std); // Use real timerange
     else {
-        Trange real = tr_real(tr_std);
+        Trange real = trange.get_real(tr_std);
         if (real != res.trange && real != tr_std)
         {
             if (tr_careful)
@@ -428,12 +429,12 @@ void ContextChooser::set_gen_sensor(const Var& var, int shortcut, const Level& l
 
     if (!simplified)
     {
-        res.level = lev_real(lev_std); // Use real level
-        res.trange = tr_real(tr_std); // Use real timerange
+        res.level = level.get_real(lev_std); // Use real level
+        res.trange = trange.get_real(tr_std); // Use real timerange
     }
     else
     {
-        Level lreal = lev_real(lev_std);
+        Level lreal = level.get_real(lev_std);
         if (lreal != res.level && lreal != lev_std)
         {
             if (lev_careful)
@@ -444,7 +445,7 @@ void ContextChooser::set_gen_sensor(const Var& var, int shortcut, const Level& l
                 res.annotate_level(level);
         }
 
-        Trange treal = tr_real(tr_std);
+        Trange treal = trange.get_real(tr_std);
         if (treal != res.trange && treal != tr_std)
         {
             if (tr_careful)
@@ -481,11 +482,11 @@ void ContextChooser::set_past_weather(const wreport::Var& var, int shortcut)
     if (simplified)
     {
         // Use standard and preserve the rest
-        if (res.trange != tr_real(res.trange))
+        if (res.trange != trange.get_real(res.trange))
             res.annotate_trange(trange);
     }
     else
-        res.trange = tr_real(res.trange); // Use real timerange
+        res.trange = trange.get_real(res.trange); // Use real timerange
     res.to_msg(*msg);
 }
 
