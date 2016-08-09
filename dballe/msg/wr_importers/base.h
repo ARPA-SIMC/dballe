@@ -104,22 +104,42 @@ struct CloudContext
     void on_vss(const wreport::Subset& subset, unsigned pos);
 };
 
+/**
+ * Struct used to build an interpreted value
+ */
+struct Interpreted
+{
+    /// Interpreted value being built
+    std::unique_ptr<wreport::Var> var;
+    /// Interpreted level
+    Level level;
+    /// Interpreted time range
+    Trange trange;
+
+    /**
+     * Beging building using a copy of var, and level and timerange from \a
+     * shortcut
+     */
+    Interpreted(int shortcut, const wreport::Var& var);
+    ~Interpreted();
+
+    void annotate_level(const LevelContext& level_context);
+    void annotate_trange(const TimerangeContext& trange_context);
+
+    /// Move the resulting value to msg
+    void to_msg(Msg& msg);
+};
+
 struct ContextChooser
 {
     const LevelContext& level;
     const TimerangeContext& trange;
 
     // Configuration
-    bool simplified;
-
-    // Import builder parts
-    const MsgVarShortcut* v;
-    wreport::Var* var;
-    Level chosen_lev;
-    Trange chosen_tr;
+    bool simplified = false;
 
     // Output message
-    Msg* msg;
+    Msg* msg = nullptr;
 
     ContextChooser(const LevelContext& level, const TimerangeContext& trange);
     ~ContextChooser();
@@ -139,15 +159,8 @@ struct ContextChooser
     void set_swell_waves(const wreport::Var& var);
 
 protected:
-    void ib_start(int shortcut, const wreport::Var& var);
     Level lev_real(const Level& standard) const;
     Trange tr_real(const Trange& standard) const;
-    Level lev_shortcut() const { return Level(v->ltype1, v->l1, v->ltype2, v->l2); }
-    Trange tr_shortcut() const { return Trange(v->pind, v->p1, v->p2); }
-    void ib_annotate_level();
-    void ib_annotate_trange();
-    void ib_trange_use_standard_and_preserve_rest(const Trange& standard);
-    void ib_set();
 };
 
 /**

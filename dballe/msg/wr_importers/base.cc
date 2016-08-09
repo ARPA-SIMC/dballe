@@ -307,28 +307,50 @@ const Level& CloudContext::clcmch()
     return level;
 }
 
+
+Interpreted::Interpreted(int shortcut, const wreport::Var& var)
+{
+    const auto& v = shortcutTable[shortcut];
+    level = Level(v.ltype1, v.l1, v.ltype2, v.l2);
+    trange = Trange(v.pind, v.p1, v.p2);
+    this->var = var_copy_without_unset_attrs(var, v.code);
+}
+
+Interpreted::~Interpreted()
+{
+}
+
+void Interpreted::to_msg(Msg& msg)
+{
+    msg.set(move(var), level, trange);
+}
+
+void Interpreted::annotate_level(const LevelContext& level_context)
+{
+    if (level_context.height_sensor == MISSING_SENSOR_H) return;
+    var->seta(newvar(WR_VAR(0, 7, 32), level_context.height_sensor));
+}
+
+void Interpreted::annotate_trange(const TimerangeContext& trange_context)
+{
+    if (trange_context.time_period == MISSING_INT) return;
+    var->seta(newvar(WR_VAR(0, 4, 194), abs(trange_context.time_period)));
+}
+
+
 ContextChooser::ContextChooser(const LevelContext& level, const TimerangeContext& trange)
-    : level(level), trange(trange), simplified(false), var(0)
+    : level(level), trange(trange)
 {
 }
 
 ContextChooser::~ContextChooser()
 {
-    if (var) delete var;
 }
 
 void ContextChooser::init(Msg& _msg, bool simplified)
 {
     this->simplified = simplified;
     msg = &_msg;
-}
-
-void ContextChooser::ib_start(int shortcut, const Var& var)
-{
-    v = &shortcutTable[shortcut];
-    if (this->var)
-        delete this->var;
-    this->var = var_copy_without_unset_attrs(var, v->code).release();
 }
 
 Level ContextChooser::lev_real(const Level& standard) const
@@ -347,31 +369,6 @@ Trange ContextChooser::tr_real(const Trange& standard) const
     return trange.time_period == MISSING_INT ?
         Trange(standard.pind, 0) :
         Trange(standard.pind, 0, abs(trange.time_period));
-}
-
-void ContextChooser::ib_annotate_level()
-{
-    if (level.height_sensor == MISSING_SENSOR_H) return;
-    var->seta(newvar(WR_VAR(0, 7, 32), level.height_sensor));
-}
-void ContextChooser::ib_annotate_trange()
-{
-    if (trange.time_period == MISSING_INT) return;
-    var->seta(newvar(WR_VAR(0, 4, 194), abs(trange.time_period)));
-}
-
-void ContextChooser::ib_trange_use_standard_and_preserve_rest(const Trange& standard)
-{
-    chosen_tr = standard;
-    if (chosen_tr != tr_real(standard))
-        ib_annotate_trange();
-}
-
-void ContextChooser::ib_set()
-{
-    unique_ptr<Var> handover(var);
-    var = 0;
-    msg->set(move(handover), chosen_lev, chosen_tr);
 }
 
 void ContextChooser::set_gen_sensor(const Var& var, Varcode code, const Level& defaultLevel, const Trange& trange)
@@ -405,62 +402,61 @@ void ContextChooser::set_gen_sensor(const Var& var, int shortcut)
 
 void ContextChooser::set_gen_sensor(const Var& var, int shortcut, const Trange& tr_std, bool tr_careful)
 {
-    ib_start(shortcut, var);
-    chosen_lev = lev_shortcut(); // Use shortcut and discard rest
-    if (!simplified)
-        chosen_tr = tr_real(tr_std); // Use real timerange
-    else {
-        chosen_tr = tr_shortcut();
-        Trange real = tr_real(tr_std);
+    Interpreted res(shortcut, var);
 
-        if (real != chosen_tr && real != tr_std)
+    if (!simplified)
+        res.trange = tr_real(tr_std); // Use real timerange
+    else {
+        Trange real = tr_real(tr_std);
+        if (real != res.trange && real != tr_std)
         {
             if (tr_careful)
                 // Use shortcut if standard, else real
-                chosen_tr = real;
+                res.trange = real;
             else
                 // Use shortcut and preserve the rest
-                ib_annotate_trange();
+                res.annotate_trange(trange);
         }
     }
-    ib_set();
+
+    res.to_msg(*msg);
 }
 
 void ContextChooser::set_gen_sensor(const Var& var, int shortcut, const Level& lev_std, const Trange& tr_std, bool lev_careful, bool tr_careful)
 {
-    ib_start(shortcut, var);
+    Interpreted res(shortcut, var);
+
     if (!simplified)
     {
-        chosen_lev = lev_real(lev_std); // Use real level
-        chosen_tr = tr_real(tr_std); // Use real timerange
+        res.level = lev_real(lev_std); // Use real level
+        res.trange = tr_real(tr_std); // Use real timerange
     }
     else
     {
-        chosen_lev = lev_shortcut();
         Level lreal = lev_real(lev_std);
-        if (lreal != chosen_lev && lreal != lev_std)
+        if (lreal != res.level && lreal != lev_std)
         {
             if (lev_careful)
                 // use shorcut level if standard, else real
-                chosen_lev = lreal;
+                res.level = lreal;
             else
                 // use shourtcut level and preserve the real value
-                ib_annotate_level();
+                res.annotate_level(level);
         }
 
-        chosen_tr = tr_shortcut();
         Trange treal = tr_real(tr_std);
-        if (treal != chosen_tr && treal != tr_std)
+        if (treal != res.trange && treal != tr_std)
         {
             if (tr_careful)
                 // Use shortcut if standard, else real
-                chosen_tr = treal;
+                res.trange = treal;
             else
                 // Use shortcut and preserve the rest
-                ib_annotate_trange();
+                res.annotate_trange(trange);
         }
     }
-    ib_set();
+
+    res.to_msg(*msg);
 }
 
 void ContextChooser::set_baro_sensor(const Var& var, int shortcut)
@@ -480,13 +476,17 @@ void ContextChooser::set_baro_sensor(const Var& var, int shortcut)
 
 void ContextChooser::set_past_weather(const wreport::Var& var, int shortcut)
 {
-    ib_start(shortcut, var);
-    chosen_lev = lev_shortcut(); // Choose shortcut and discard rest
+    Interpreted res(shortcut, var);
+    res.trange = Trange((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
     if (simplified)
-        ib_trange_use_standard_and_preserve_rest((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
+    {
+        // Use standard and preserve the rest
+        if (res.trange != tr_real(res.trange))
+            res.annotate_trange(trange);
+    }
     else
-        chosen_tr = tr_real((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3); // Use real timerange
-    ib_set();
+        res.trange = tr_real(res.trange); // Use real timerange
+    res.to_msg(*msg);
 }
 
 void ContextChooser::set_wind(const wreport::Var& var, int shortcut)
