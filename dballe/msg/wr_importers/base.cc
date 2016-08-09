@@ -360,54 +360,11 @@ void ContextChooser::ib_annotate_trange()
     var->seta(newvar(WR_VAR(0, 4, 194), abs(trange.time_period)));
 }
 
-void ContextChooser::ib_level_use_shorcut_and_preserve_rest(const Level& standard)
-{
-    chosen_lev = lev_shortcut();
-    Level real = lev_real(standard);
-    if (real != chosen_lev && real != standard)
-        ib_annotate_level();
-}
-
-void ContextChooser::ib_trange_use_shorcut_and_preserve_rest(const Trange& standard)
-{
-    chosen_tr = tr_shortcut();
-    Trange real = tr_real(standard);
-    if (real != chosen_tr && real != standard)
-        ib_annotate_trange();
-}
-
-void ContextChooser::ib_level_use_standard_and_preserve_rest(const Level& standard)
-{
-    chosen_lev = standard;
-    if (chosen_lev != lev_real(standard))
-        ib_annotate_level();
-}
-
 void ContextChooser::ib_trange_use_standard_and_preserve_rest(const Trange& standard)
 {
     chosen_tr = standard;
     if (chosen_tr != tr_real(standard))
         ib_annotate_trange();
-}
-
-void ContextChooser::ib_level_use_shorcut_if_standard_else_real(const Level& standard)
-{
-    Level shortcut = lev_shortcut();
-    Level real = lev_real(standard);
-    if (real == shortcut || real == standard)
-        chosen_lev = shortcut;
-    else
-        chosen_lev = real;
-}
-
-void ContextChooser::ib_trange_use_shorcut_if_standard_else_real(const Trange& standard)
-{
-    Trange shortcut = tr_shortcut();
-    Trange real = tr_real(standard);
-    if (real == shortcut || real == standard)
-        chosen_tr = shortcut;
-    else
-        chosen_tr = real;
 }
 
 void ContextChooser::ib_set()
@@ -419,8 +376,6 @@ void ContextChooser::ib_set()
 
 void ContextChooser::set_gen_sensor(const Var& var, Varcode code, const Level& defaultLevel, const Trange& trange)
 {
-    Level lev;
-
     if (!level.height_sensor_seen ||
                 (level.height_sensor != MISSING_SENSOR_H && (
                     defaultLevel == Level(103, level.height_sensor * 1000)
@@ -451,13 +406,23 @@ void ContextChooser::set_gen_sensor(const Var& var, int shortcut)
 void ContextChooser::set_gen_sensor(const Var& var, int shortcut, const Trange& tr_std, bool tr_careful)
 {
     ib_start(shortcut, var);
-    ib_level_use_shorcut_and_discard_rest();
+    chosen_lev = lev_shortcut(); // Use shortcut and discard rest
     if (!simplified)
-        ib_trange_use_real(tr_std);
-    else if (tr_careful)
-        ib_trange_use_shorcut_if_standard_else_real(tr_std);
-    else
-        ib_trange_use_shorcut_and_preserve_rest(tr_std);
+        chosen_tr = tr_real(tr_std); // Use real timerange
+    else {
+        chosen_tr = tr_shortcut();
+        Trange real = tr_real(tr_std);
+
+        if (real != chosen_tr && real != tr_std)
+        {
+            if (tr_careful)
+                // Use shortcut if standard, else real
+                chosen_tr = real;
+            else
+                // Use shortcut and preserve the rest
+                ib_annotate_trange();
+        }
+    }
     ib_set();
 }
 
@@ -466,19 +431,34 @@ void ContextChooser::set_gen_sensor(const Var& var, int shortcut, const Level& l
     ib_start(shortcut, var);
     if (!simplified)
     {
-        ib_level_use_real(lev_std);
-        ib_trange_use_real(tr_std);
+        chosen_lev = lev_real(lev_std); // Use real level
+        chosen_tr = tr_real(tr_std); // Use real timerange
     }
     else
     {
-        if (lev_careful)
-            ib_level_use_shorcut_if_standard_else_real(lev_std);
-        else
-            ib_level_use_shorcut_and_preserve_rest(lev_std);
-        if (tr_careful)
-            ib_trange_use_shorcut_if_standard_else_real(tr_std);
-        else
-            ib_trange_use_shorcut_and_preserve_rest(tr_std);
+        chosen_lev = lev_shortcut();
+        Level lreal = lev_real(lev_std);
+        if (lreal != chosen_lev && lreal != lev_std)
+        {
+            if (lev_careful)
+                // use shorcut level if standard, else real
+                chosen_lev = lreal;
+            else
+                // use shourtcut level and preserve the real value
+                ib_annotate_level();
+        }
+
+        chosen_tr = tr_shortcut();
+        Trange treal = tr_real(tr_std);
+        if (treal != chosen_tr && treal != tr_std)
+        {
+            if (tr_careful)
+                // Use shortcut if standard, else real
+                chosen_tr = treal;
+            else
+                // Use shortcut and preserve the rest
+                ib_annotate_trange();
+        }
     }
     ib_set();
 }
@@ -501,11 +481,11 @@ void ContextChooser::set_baro_sensor(const Var& var, int shortcut)
 void ContextChooser::set_past_weather(const wreport::Var& var, int shortcut)
 {
     ib_start(shortcut, var);
-    ib_level_use_shorcut_and_discard_rest();
+    chosen_lev = lev_shortcut(); // Choose shortcut and discard rest
     if (simplified)
         ib_trange_use_standard_and_preserve_rest((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
     else
-        ib_trange_use_real((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
+        chosen_tr = tr_real((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3); // Use real timerange
     ib_set();
 }
 

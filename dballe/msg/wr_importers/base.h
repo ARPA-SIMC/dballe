@@ -146,16 +146,7 @@ protected:
     Trange tr_shortcut() const { return Trange(v->pind, v->p1, v->p2); }
     void ib_annotate_level();
     void ib_annotate_trange();
-    void ib_level_use_real(const Level& standard) { chosen_lev = lev_real(standard); }
-    void ib_trange_use_real(const Trange& standard) { chosen_tr = tr_real(standard); }
-    void ib_level_use_shorcut_and_discard_rest() { chosen_lev = lev_shortcut(); }
-    void ib_trange_use_shortcut_and_discard_rest() { chosen_tr = tr_shortcut(); }
-    void ib_level_use_shorcut_and_preserve_rest(const Level& standard);
-    void ib_trange_use_shorcut_and_preserve_rest(const Trange& standard);
-    void ib_level_use_standard_and_preserve_rest(const Level& standard);
     void ib_trange_use_standard_and_preserve_rest(const Trange& standard);
-    void ib_level_use_shorcut_if_standard_else_real(const Level& standard);
-    void ib_trange_use_shorcut_if_standard_else_real(const Trange& standard);
     void ib_set();
 };
 
