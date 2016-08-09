@@ -75,8 +75,8 @@ protected:
 
     virtual void init()
     {
-	    pos = 0;
-	    Importer::init();
+        pos = 0;
+        Importer::init();
     }
 
 public:
