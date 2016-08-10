@@ -158,10 +158,12 @@ struct Interpreted
      * shortcut
      */
     Interpreted(int shortcut, const wreport::Var& var);
+    Interpreted(int shortcut, const wreport::Var& var, const Level& level, const Trange& trange);
     ~Interpreted();
 
+    void annotate_if_needed(const Level& real);
+    void annotate_if_needed(const Trange& real);
     void annotate_level(const LevelContext& level_context);
-    void annotate_trange(const TimerangeContext& trange_context);
 
     /// Move the resulting value to msg
     void to_msg(Msg& msg);
@@ -183,8 +185,7 @@ protected:
 
     void set_gen_sensor(const wreport::Var& var, wreport::Varcode code, const Level& defaultLevel, const Trange& trange);
     void set_gen_sensor(const wreport::Var& var, int shortcut);
-    void set_gen_sensor(const wreport::Var& var, int shortcut, const Trange& tr_std, bool tr_careful=false);
-    void set_gen_sensor(const wreport::Var& var, int shortcut, const Level& lev_std, const Trange& tr_std, bool lev_careful=false, bool tr_careful=false);
+    void set_gen_sensor(const wreport::Var& var, int shortcut, const Level& lev_std, const Trange& tr_std);
     void set_baro_sensor(const wreport::Var& var, int shortcut);
     void set_past_weather(const wreport::Var& var, int shortcut);
     void set_wind(const wreport::Var& var, int shortcut);

@@ -369,6 +369,13 @@ Interpreted::Interpreted(int shortcut, const wreport::Var& var)
     this->var = var_copy_without_unset_attrs(var, v.code);
 }
 
+Interpreted::Interpreted(int shortcut, const wreport::Var& var, const Level& level, const Trange& trange)
+    : level(level), trange(trange)
+{
+    const auto& v = shortcutTable[shortcut];
+    this->var = var_copy_without_unset_attrs(var, v.code);
+}
+
 Interpreted::~Interpreted()
 {
 }
@@ -378,16 +385,26 @@ void Interpreted::to_msg(Msg& msg)
     msg.set(move(var), level, trange);
 }
 
+void Interpreted::annotate_if_needed(const Level& real)
+{
+    if (level == real) return;
+    if (level.ltype1 != 103) return;
+    if (level.l1 == MISSING_INT) return;
+    var->seta(newvar(WR_VAR(0, 7, 32), level.l1 / 1000.0));
+}
+
+void Interpreted::annotate_if_needed(const Trange& real)
+{
+    if (trange == real) return;
+    if (real.pind == 254) return;
+    if (real.p2 == MISSING_INT) return;
+    var->seta(newvar(WR_VAR(0, 4, 194), real.p2));
+}
+
 void Interpreted::annotate_level(const LevelContext& level_context)
 {
     if (level_context.height_sensor == MISSING_SENSOR_H) return;
     var->seta(newvar(WR_VAR(0, 7, 32), level_context.height_sensor));
-}
-
-void Interpreted::annotate_trange(const TimerangeContext& trange_context)
-{
-    if (trange_context.time_period == MISSING_INT) return;
-    var->seta(newvar(WR_VAR(0, 4, 194), abs(trange_context.time_period)));
 }
 
 
@@ -418,69 +435,58 @@ void SynopBaseImporter::set_gen_sensor(const Var& var, Varcode code, const Level
 
 void SynopBaseImporter::set_gen_sensor(const Var& var, int shortcut)
 {
-    const MsgVarShortcut& v = shortcutTable[shortcut];
-    set_gen_sensor(var, shortcut, Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2));
-}
-
-void SynopBaseImporter::set_gen_sensor(const Var& var, int shortcut, const Trange& tr_std, bool tr_careful)
-{
     if (unsupported.is_unsupported()) return;
-
     Interpreted res(shortcut, var);
+#if 0
 
     if (!opts.simplified)
-        res.trange = trange.get_real(tr_std); // Use real timerange
-    else {
-        Trange real = trange.get_real(tr_std);
-        if (real != res.trange && real != tr_std)
-        {
-            if (tr_careful)
-                // Use shortcut if standard, else real
-                res.trange = real;
-            else
-                // Use shortcut and preserve the rest
-                res.annotate_trange(trange);
-        }
+    {
+        res.level = level.get_real(res.level); // Use real level
+        res.trange = trange.get_real(res.trange); // Use real timerange
     }
+    else
+    {
+        res.annotate_if_needed(level.get_real(res.level));
+        res.annotate_if_needed(trange.get_real(res.trange));
+    }
+
+    res.to_msg(*msg);
+#endif
+
+    if (!opts.simplified)
+        res.level = level.get_real(res.level); // Use real level
+    else {
+        Level lreal = level.get_real(res.level);
+        if (lreal != res.level)
+            res.annotate_level(level);
+    }
+
+    if (!opts.simplified)
+        res.trange = trange.get_real(res.trange); // Use real timerange
+    else 
+        res.annotate_if_needed(trange.get_real(res.trange));
 
     res.to_msg(*msg);
 }
 
-void SynopBaseImporter::set_gen_sensor(const Var& var, int shortcut, const Level& lev_std, const Trange& tr_std, bool lev_careful, bool tr_careful)
+void SynopBaseImporter::set_gen_sensor(const Var& var, int shortcut, const Level& lev_std, const Trange& tr_std)
 {
     if (unsupported.is_unsupported()) return;
 
-    Interpreted res(shortcut, var);
+    Interpreted res(shortcut, var, lev_std, tr_std);
 
     if (!opts.simplified)
-    {
         res.level = level.get_real(lev_std); // Use real level
-        res.trange = trange.get_real(tr_std); // Use real timerange
-    }
-    else
-    {
+    else {
         Level lreal = level.get_real(lev_std);
-        if (lreal != res.level && lreal != lev_std)
-        {
-            if (lev_careful)
-                // use shorcut level if standard, else real
-                res.level = lreal;
-            else
-                // use shourtcut level and preserve the real value
-                res.annotate_level(level);
-        }
-
-        Trange treal = trange.get_real(tr_std);
-        if (treal != res.trange && treal != tr_std)
-        {
-            if (tr_careful)
-                // Use shortcut if standard, else real
-                res.trange = treal;
-            else
-                // Use shortcut and preserve the rest
-                res.annotate_trange(trange);
-        }
+        if (lreal != res.level)
+            res.annotate_level(level);
     }
+
+    if (!opts.simplified)
+        res.trange = trange.get_real(res.trange); // Use real timerange
+    else 
+        res.annotate_if_needed(trange.get_real(res.trange));
 
     res.to_msg(*msg);
 }
@@ -509,13 +515,9 @@ void SynopBaseImporter::set_past_weather(const wreport::Var& var, int shortcut)
     Interpreted res(shortcut, var);
     res.trange = Trange((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
     if (opts.simplified)
-    {
-        // Use standard and preserve the rest
-        if (res.trange != trange.get_real(res.trange))
-            res.annotate_trange(trange);
-    }
+        res.annotate_if_needed(trange.get_real(res.trange));
     else
-        res.trange = trange.get_real(res.trange); // Use real timerange
+        res.trange = trange.get_real(res.trange);
     res.to_msg(*msg);
 }
 
@@ -523,12 +525,55 @@ void SynopBaseImporter::set_wind(const wreport::Var& var, int shortcut)
 {
     if (trange.time_sig != MISSING_TIME_SIG && trange.time_sig != 2)
         error_consistency::throwf("Found unsupported time significance %d for wind direction", trange.time_sig);
-    set_gen_sensor(var, shortcut, lev_std_wind, tr_std_wind);
+    //set_gen_sensor(var, shortcut, lev_std_wind, tr_std_wind);
+
+    if (unsupported.is_unsupported()) return;
+
+    Interpreted res(shortcut, var);
+
+    if (!opts.simplified)
+    {
+        res.level = level.get_real(lev_std_wind); // Use real level
+        res.trange = trange.get_real(tr_std_wind); // Use real timerange
+    }
+    else
+    {
+        Level lreal = level.get_real(lev_std_wind);
+        if (lreal != res.level && lreal != lev_std_wind)
+            // use shourtcut level and preserve the real value
+            res.annotate_level(level);
+
+        Trange treal = trange.get_real(tr_std_wind);
+        if (treal != res.trange && treal != tr_std_wind)
+        {
+            // Use shortcut and preserve the rest
+            if (trange.time_period != MISSING_INT)
+                res.var->seta(newvar(WR_VAR(0, 4, 194), abs(trange.time_period)));
+        }
+    }
+
+    res.to_msg(*msg);
 }
 
 void SynopBaseImporter::set_wind_max(const wreport::Var& var, int shortcut)
 {
-    set_gen_sensor(var, shortcut, lev_std_wind, tr_std_wind_max10m, false, true);
+    //set_gen_sensor(var, shortcut, lev_std_wind, tr_std_wind_max10m, false, true);
+
+    if (unsupported.is_unsupported()) return;
+
+    Interpreted res(shortcut, var, lev_std_wind, tr_std_wind_max10m);
+
+    if (!opts.simplified)
+        res.level = level.get_real(res.level); // Use real level
+    else {
+        Level lreal = level.get_real(res.level);
+        if (lreal != res.level)
+            res.annotate_level(level);
+    }
+
+    res.trange = trange.get_real(res.trange); // Use real timerange
+
+    res.to_msg(*msg);
 }
 
 void SynopBaseImporter::set_pressure(const wreport::Var& var)
