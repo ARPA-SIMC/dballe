@@ -263,13 +263,14 @@ class Tests : public TestCase
         });
         add_testcodec("synop-rad2.bufr", [](TestCodec& test) {
             // Test import/export of GTS synop without pressure of standard level
-            // FIXME: currently fails
             test.expected_template = "synop-wmo";
             test.expected_min_vars = 50;
-            test.verbose = true;
             test.after_reimport_import.add(new dballe::tests::tweaks::RemoveContext(Level(1), Trange(1, 0, 21600)));
             test.after_reimport_import.add(new dballe::tests::tweaks::RemoveContext(Level(1), Trange(1, 0, 43200)));
             test.after_reimport_import.add(new dballe::tests::tweaks::StripVars{WR_VAR(0, 11, 41), WR_VAR(0, 11, 43)});
+            test.after_convert_import.add(new dballe::tests::tweaks::RemoveContext(Level(1), Trange(1, 0, 21600)));
+            test.after_convert_import.add(new dballe::tests::tweaks::RemoveContext(Level(1), Trange(1, 0, 43200)));
+            test.after_convert_import.add(new dballe::tests::tweaks::RemoveContext(Level(103, 10000), Trange(205, 0, 10800)));
 
             wassert(test.run_reimport());
             wassert(test.run_convert("synop-wmo"));

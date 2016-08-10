@@ -200,6 +200,7 @@ protected:
     LevelContext level;
     TimerangeContext trange;
     UnsupportedContext unsupported;
+    std::vector<Interpreted*> queued;
 
     virtual void peek_var(const wreport::Var& var);
     virtual void import_var(const wreport::Var& var);
@@ -219,6 +220,7 @@ protected:
 
 public:
     SynopBaseImporter(const msg::Importer::Options& opts);
+    ~SynopBaseImporter();
 
     void init() override;
     void run() override;

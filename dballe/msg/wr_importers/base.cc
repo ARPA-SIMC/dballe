@@ -1,6 +1,7 @@
 #include "base.h"
 #include "core/var.h"
 #include <wreport/bulletin.h>
+#include <algorithm>
 #include <cstdlib>
 #include <iostream>
 
@@ -530,12 +531,20 @@ void SynopBaseImporter::set(const wreport::Var& var, wreport::Varcode code, cons
 
 void SynopBaseImporter::set(std::unique_ptr<Interpreted> val)
 {
-    msg->set(move(val->var), val->level, val->trange);
+    if (opts.simplified)
+        queued.push_back(val.release());
+    else
+        msg->set(move(val->var), val->level, val->trange);
 }
 
 SynopBaseImporter::SynopBaseImporter(const msg::Importer::Options& opts)
     : WMOImporter(opts)
 {
+}
+
+SynopBaseImporter::~SynopBaseImporter()
+{
+    for (auto& i: queued) delete i;
 }
 
 void SynopBaseImporter::init()
@@ -545,6 +554,8 @@ void SynopBaseImporter::init()
     level.init();
     trange.init();
     unsupported.init();
+    for (auto& i: queued) delete i;
+    queued.clear();
 }
 
 void SynopBaseImporter::run()
@@ -556,6 +567,22 @@ void SynopBaseImporter::run()
         if (WR_VAR_X(var.code()) < 10 || var.code() == WR_VAR(0, 22, 3)) peek_var(var);
         if (var.isset()) import_var(var);
     }
+
+    std::sort(queued.begin(), queued.end(), [](const Interpreted* a, const Interpreted* b) {
+        if (a->level < b->level) return true;
+        if (a->level > b->level) return false;
+        if (a->trange < b->trange) return true;
+        if (a->trange > b->trange) return false;
+        if (a->level_deviation > b->level_deviation) return true;
+        return false;
+    });
+    for (auto& i: queued)
+    {
+        msg->set(move(i->var), i->level, i->trange);
+        delete i;
+        i = nullptr;
+    }
+    queued.clear();
 }
 
 void SynopBaseImporter::peek_var(const Var& var)
