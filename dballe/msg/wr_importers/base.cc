@@ -404,6 +404,16 @@ void Interpreted::set_sensor_height(const LevelContext& ctx, bool simplified)
     }
 }
 
+void Interpreted::set_barometer_height(const LevelContext& ctx, bool simplified)
+{
+    if (ctx.height_baro == MISSING_BARO) return;
+
+    if (simplified)
+        var->seta(newvar(WR_VAR(0, 7, 31), ctx.height_baro));
+    else
+        level = Level(102, ctx.height_baro * 1000);
+}
+
 void Interpreted::set_duration(const TimerangeContext& ctx, bool simplified)
 {
     if (simplified)
@@ -448,31 +458,10 @@ void SynopBaseImporter::set_gen_sensor(const Var& var, int shortcut)
 void SynopBaseImporter::set_baro_sensor(const Var& var, int shortcut)
 {
     if (unsupported.is_unsupported()) return;
-#if 0
     Interpreted res(shortcut, var);
-
-    if (!opts.simplified)
-    {
-        res.level = level.get_real_baro();
-        res.trange = trange.get_real(res.trange);
-    } else {
-        res.annotate_if_needed(level.get_real_baro());
-        res.annotate_if_needed(trange.get_real(res.trange));
-    }
+    res.set_barometer_height(level, opts.simplified);
+    res.set_duration(trange, opts.simplified);
     res.to_msg(*msg);
-#endif
-
-    if (level.height_baro == MISSING_BARO)
-        msg->set_by_id(var, shortcut);
-    else if (opts.simplified)
-    {
-        Var var1(var);
-        var1.seta(newvar(WR_VAR(0, 7, 31), level.height_baro));
-        msg->set_by_id(var1, shortcut);
-    } else {
-        const MsgVarShortcut& v = shortcutTable[shortcut];
-        msg->set(var, v.code, Level(102, level.height_baro*1000), Trange(v.pind, v.p1, v.p2));
-    }
 }
 
 void SynopBaseImporter::set_past_weather(const wreport::Var& var, int shortcut)

@@ -159,6 +159,7 @@ struct Interpreted
     ~Interpreted();
 
     void set_sensor_height(const LevelContext& ctx, bool simplified=false);
+    void set_barometer_height(const LevelContext& ctx, bool simplified=false);
     void set_duration(const TimerangeContext& ctx, bool simplified=false);
 
     void annotate_if_needed(const Trange& real);
