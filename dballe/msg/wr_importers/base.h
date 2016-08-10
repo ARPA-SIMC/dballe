@@ -120,6 +120,28 @@ struct CloudContext
 };
 
 /**
+ * Check if the current context state of BUFR information is something that we
+ * currently cannot handle.
+ *
+ * For example, a BUFR can provide a B12101 as a measured temperature, or a
+ * B12101 as a standard deviation of temperature in the last 10 minutes. The
+ * former we can handle, the latter we cannot.
+ *
+ * This class keeps track of when we are in such unusual states.
+ *
+ * See https://github.com/ARPA-SIMC/dballe/issues/47
+ */
+struct UnsupportedContext
+{
+    const wreport::Var* B08023 = nullptr; // First order statistics (code table)
+
+    bool is_unsupported() const;
+
+    void init();
+    void peek_var(const wreport::Var& var, unsigned pos);
+};
+
+/**
  * Struct used to build an interpreted value
  */
 struct Interpreted
@@ -154,6 +176,7 @@ protected:
     CloudContext clouds;
     LevelContext level;
     TimerangeContext trange;
+    UnsupportedContext unsupported;
 
     virtual void peek_var(const wreport::Var& var);
     virtual void import_var(const wreport::Var& var);
@@ -169,6 +192,8 @@ protected:
     void set_pressure(const wreport::Var& var);
     void set_water_temperature(const wreport::Var& var);
     void set_swell_waves(const wreport::Var& var);
+    void set(const wreport::Var& var, int shortcut);
+    void set(const wreport::Var& var, wreport::Varcode code, const Level& level, const Trange& trange);
 
 public:
     SynopBaseImporter(const msg::Importer::Options& opts);

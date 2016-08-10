@@ -337,6 +337,30 @@ const Level& CloudContext::clcmch()
 }
 
 
+void UnsupportedContext::init()
+{
+    B08023 = nullptr;
+}
+
+bool UnsupportedContext::is_unsupported() const
+{
+    return B08023 != nullptr;
+}
+
+void UnsupportedContext::peek_var(const wreport::Var& var, unsigned pos)
+{
+    switch (var.code())
+    {
+        case WR_VAR(0, 8, 23):
+            if (var.isset())
+                B08023 = &var;
+            else
+                B08023 = nullptr;
+            break;
+    }
+}
+
+
 Interpreted::Interpreted(int shortcut, const wreport::Var& var)
 {
     const auto& v = shortcutTable[shortcut];
@@ -369,6 +393,8 @@ void Interpreted::annotate_trange(const TimerangeContext& trange_context)
 
 void SynopBaseImporter::set_gen_sensor(const Var& var, Varcode code, const Level& defaultLevel, const Trange& trange)
 {
+    if (unsupported.is_unsupported()) return;
+
     if (!level.height_sensor_seen ||
                 (level.height_sensor != MISSING_SENSOR_H && (
                     defaultLevel == Level(103, level.height_sensor * 1000)
@@ -398,6 +424,8 @@ void SynopBaseImporter::set_gen_sensor(const Var& var, int shortcut)
 
 void SynopBaseImporter::set_gen_sensor(const Var& var, int shortcut, const Trange& tr_std, bool tr_careful)
 {
+    if (unsupported.is_unsupported()) return;
+
     Interpreted res(shortcut, var);
 
     if (!opts.simplified)
@@ -420,6 +448,8 @@ void SynopBaseImporter::set_gen_sensor(const Var& var, int shortcut, const Trang
 
 void SynopBaseImporter::set_gen_sensor(const Var& var, int shortcut, const Level& lev_std, const Trange& tr_std, bool lev_careful, bool tr_careful)
 {
+    if (unsupported.is_unsupported()) return;
+
     Interpreted res(shortcut, var);
 
     if (!opts.simplified)
@@ -457,6 +487,8 @@ void SynopBaseImporter::set_gen_sensor(const Var& var, int shortcut, const Level
 
 void SynopBaseImporter::set_baro_sensor(const Var& var, int shortcut)
 {
+    if (unsupported.is_unsupported()) return;
+
     if (level.height_baro == MISSING_BARO)
         msg->set_by_id(var, shortcut);
     else if (opts.simplified)
@@ -472,6 +504,8 @@ void SynopBaseImporter::set_baro_sensor(const Var& var, int shortcut)
 
 void SynopBaseImporter::set_past_weather(const wreport::Var& var, int shortcut)
 {
+    if (unsupported.is_unsupported()) return;
+
     Interpreted res(shortcut, var);
     res.trange = Trange((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
     if (opts.simplified)
@@ -500,22 +534,34 @@ void SynopBaseImporter::set_wind_max(const wreport::Var& var, int shortcut)
 void SynopBaseImporter::set_pressure(const wreport::Var& var)
 {
     if (level.press_std == MISSING_PRESS_STD)
-        msg->set(var, WR_VAR(0, 10,  8), Level(100), Trange::instant());
+        set(var, WR_VAR(0, 10,  8), Level(100), Trange::instant());
     else
-        msg->set(var, WR_VAR(0, 10,  8), Level(100, level.press_std), Trange::instant());
+        set(var, WR_VAR(0, 10,  8), Level(100, level.press_std), Trange::instant());
 }
 
 void SynopBaseImporter::set_water_temperature(const wreport::Var& var)
 {
     if (level.depth == MISSING_SENSOR_H)
-        msg->set(var, WR_VAR(0, 22, 43), Level(1), Trange::instant());
+        set(var, WR_VAR(0, 22, 43), Level(1), Trange::instant());
     else
-        msg->set(var, WR_VAR(0, 22, 43), Level(160, level.depth * 1000), Trange::instant());
+        set(var, WR_VAR(0, 22, 43), Level(160, level.depth * 1000), Trange::instant());
 }
 
 void SynopBaseImporter::set_swell_waves(const wreport::Var& var)
 {
-    msg->set(var, var.code(), Level(264, MISSING_INT, 261, level.swell_wave_group), Trange::instant());
+    set(var, var.code(), Level(264, MISSING_INT, 261, level.swell_wave_group), Trange::instant());
+}
+
+void SynopBaseImporter::set(const wreport::Var& var, int shortcut)
+{
+    if (unsupported.is_unsupported()) return;
+    WMOImporter::set(var, shortcut);
+}
+
+void SynopBaseImporter::set(const wreport::Var& var, wreport::Varcode code, const Level& level, const Trange& trange)
+{
+    if (unsupported.is_unsupported()) return;
+    WMOImporter::set(var, code, level, trange);
 }
 
 SynopBaseImporter::SynopBaseImporter(const msg::Importer::Options& opts)
@@ -529,6 +575,7 @@ void SynopBaseImporter::init()
     clouds.init();
     level.init();
     trange.init();
+    unsupported.init();
 }
 
 void SynopBaseImporter::run()
@@ -544,6 +591,8 @@ void SynopBaseImporter::run()
 
 void SynopBaseImporter::peek_var(const Var& var)
 {
+    unsupported.peek_var(var, pos);
+
     switch (var.code())
     {
         case WR_VAR(0,  4,  4):
