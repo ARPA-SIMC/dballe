@@ -367,115 +367,108 @@ Interpreted::~Interpreted()
 {
 }
 
-void Interpreted::set_sensor_height(const LevelContext& ctx, bool simplified)
+void InterpretedPrecise::set_sensor_height(const LevelContext& ctx)
 {
-    if (simplified)
-    {
-        if (ctx.height_sensor == 0) return;
-        if (!ctx.height_sensor_seen) return;
-        if (ctx.height_sensor == MISSING_SENSOR_H) return;
-        if (level == Level(103, ctx.height_sensor * 1000)) return;
-        var->seta(newvar(WR_VAR(0, 7, 32), ctx.height_sensor));
-    }
-    else
-    {
-        if (ctx.height_sensor == 0)
-            level = Level(1);
-        else if (ctx.height_sensor_seen)
-            level = ctx.height_sensor == MISSING_SENSOR_H ? Level(103) : Level(103, ctx.height_sensor * 1000);
-    }
+    if (ctx.height_sensor == 0)
+        level = Level(1);
+    else if (ctx.height_sensor_seen)
+        level = ctx.height_sensor == MISSING_SENSOR_H ? Level(103) : Level(103, ctx.height_sensor * 1000);
 }
 
-void Interpreted::set_barometer_height(const LevelContext& ctx, bool simplified)
+void InterpretedSimplified::set_sensor_height(const LevelContext& ctx)
+{
+    if (ctx.height_sensor == 0) return;
+    if (!ctx.height_sensor_seen) return;
+    if (ctx.height_sensor == MISSING_SENSOR_H) return;
+    if (level == Level(103, ctx.height_sensor * 1000)) return;
+    var->seta(newvar(WR_VAR(0, 7, 32), ctx.height_sensor));
+    if (level.ltype1 == 103 && level.l1 != MISSING_INT) level_deviation = abs(level.l1 - (int)(ctx.height_sensor * 1000));
+}
+
+void InterpretedPrecise::set_barometer_height(const LevelContext& ctx)
 {
     if (ctx.height_baro == MISSING_BARO) return;
-
-    if (simplified)
-        var->seta(newvar(WR_VAR(0, 7, 31), ctx.height_baro));
-    else
-        level = Level(102, ctx.height_baro * 1000);
+    level = Level(102, ctx.height_baro * 1000);
 }
 
-void Interpreted::set_duration(const TimerangeContext& ctx, bool simplified)
+void InterpretedSimplified::set_barometer_height(const LevelContext& ctx)
 {
-    if (simplified)
-    {
-        if (trange.pind == 254) return;
-        if (!ctx.time_period_seen) return;
-        if (ctx.time_period == MISSING_INT) return;
-        Trange real = Trange(trange.pind, 0, abs(ctx.time_period));
-        if (trange == real) return;
-        var->seta(newvar(WR_VAR(0, 4, 194), abs(ctx.time_period)));
-    }
-    else
-    {
-        if (trange.pind == 254)
-            trange = Trange::instant();
-        else if (ctx.time_period_seen)
-            trange = ctx.time_period == MISSING_INT ? Trange(trange.pind, 0) : Trange(trange.pind, 0, abs(ctx.time_period));
-    }
+    if (ctx.height_baro == MISSING_BARO) return;
+    var->seta(newvar(WR_VAR(0, 7, 31), ctx.height_baro));
+    if (level.ltype1 == 102 && level.l1 != MISSING_INT) level_deviation = abs(level.l1 - (int)(ctx.height_baro * 1000));
 }
 
-void Interpreted::set_wind_mean(const TimerangeContext& ctx, bool simplified)
+void InterpretedPrecise::set_duration(const TimerangeContext& ctx)
 {
-    if (simplified)
-    {
-        if (!ctx.time_period_seen) return;
-        if (ctx.time_period == MISSING_INT) return;
-        Trange real = Trange(200, 0, abs(ctx.time_period));
-        if (real.p2 == 600) return;
-        if (real == trange) return;
-        var->seta(newvar(WR_VAR(0, 4, 194), abs(ctx.time_period)));
-    }
-    else
-    {
-        if (!ctx.time_period_seen)
-            trange = Trange(200, 0, 600);
-        else
-            trange = ctx.time_period == MISSING_INT ? Trange(200, 0) : Trange(200, 0, abs(ctx.time_period));
-    }
+    if (trange.pind == 254)
+        trange = Trange::instant();
+    else if (ctx.time_period_seen)
+        trange = ctx.time_period == MISSING_INT ? Trange(trange.pind, 0) : Trange(trange.pind, 0, abs(ctx.time_period));
 }
 
-void Interpreted::to_msg(Msg& msg)
+void InterpretedSimplified::set_duration(const TimerangeContext& ctx)
 {
-    msg.set(move(var), level, trange);
+    if (trange.pind == 254) return;
+    if (!ctx.time_period_seen) return;
+    if (ctx.time_period == MISSING_INT) return;
+    Trange real = Trange(trange.pind, 0, abs(ctx.time_period));
+    if (trange == real) return;
+    var->seta(newvar(WR_VAR(0, 4, 194), abs(ctx.time_period)));
+}
+
+void InterpretedPrecise::set_wind_mean(const TimerangeContext& ctx)
+{
+    if (!ctx.time_period_seen)
+        trange = Trange(200, 0, 600);
+    else
+        trange = ctx.time_period == MISSING_INT ? Trange(200, 0) : Trange(200, 0, abs(ctx.time_period));
+}
+
+void InterpretedSimplified::set_wind_mean(const TimerangeContext& ctx)
+{
+    if (!ctx.time_period_seen) return;
+    if (ctx.time_period == MISSING_INT) return;
+    Trange real = Trange(200, 0, abs(ctx.time_period));
+    if (real.p2 == 600) return;
+    if (real == trange) return;
+    var->seta(newvar(WR_VAR(0, 4, 194), abs(ctx.time_period)));
 }
 
 
 void SynopBaseImporter::set_gen_sensor(const Var& var, Varcode code, const Level& lev_std, const Trange& tr_std)
 {
     if (unsupported.is_unsupported()) return;
-    Interpreted res(code, var, lev_std, tr_std);
-    res.set_sensor_height(level, opts.simplified);
-    res.set_duration(trange, opts.simplified);
-    res.to_msg(*msg);
+    auto res = create_interpreted(opts.simplified, code, var, lev_std, tr_std);
+    res->set_sensor_height(level);
+    res->set_duration(trange);
+    set(move(res));
 }
 
 void SynopBaseImporter::set_gen_sensor(const Var& var, int shortcut)
 {
     if (unsupported.is_unsupported()) return;
-    Interpreted res(shortcut, var);
-    res.set_sensor_height(level, opts.simplified);
-    res.set_duration(trange, opts.simplified);
-    res.to_msg(*msg);
+    auto res = create_interpreted(opts.simplified, shortcut, var);
+    res->set_sensor_height(level);
+    res->set_duration(trange);
+    set(move(res));
 }
 
 void SynopBaseImporter::set_baro_sensor(const Var& var, int shortcut)
 {
     if (unsupported.is_unsupported()) return;
-    Interpreted res(shortcut, var);
-    res.set_barometer_height(level, opts.simplified);
-    res.set_duration(trange, opts.simplified);
-    res.to_msg(*msg);
+    auto res = create_interpreted(opts.simplified, shortcut, var);
+    res->set_barometer_height(level);
+    res->set_duration(trange);
+    set(move(res));
 }
 
 void SynopBaseImporter::set_past_weather(const wreport::Var& var, int shortcut)
 {
     if (unsupported.is_unsupported()) return;
-    Interpreted res(shortcut, var);
-    res.trange = Trange((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
-    res.set_duration(trange, opts.simplified);
-    res.to_msg(*msg);
+    auto res = create_interpreted(opts.simplified, shortcut, var);
+    res->trange = Trange((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
+    res->set_duration(trange);
+    set(move(res));
 }
 
 void SynopBaseImporter::set_wind(const wreport::Var& var, int shortcut)
@@ -484,20 +477,22 @@ void SynopBaseImporter::set_wind(const wreport::Var& var, int shortcut)
         error_consistency::throwf("Found unsupported time significance %d for wind direction", trange.time_sig);
 
     if (unsupported.is_unsupported()) return;
-    Interpreted res(shortcut, var);
-    res.level = lev_std_wind;
-    res.set_sensor_height(level, opts.simplified);
-    res.set_wind_mean(trange, opts.simplified);
-    res.to_msg(*msg);
+    auto res = create_interpreted(opts.simplified, shortcut, var);
+    res->level = lev_std_wind;
+    res->set_sensor_height(level);
+    res->set_wind_mean(trange);
+    set(move(res));
 }
 
 void SynopBaseImporter::set_wind_max(const wreport::Var& var, int shortcut)
 {
     if (unsupported.is_unsupported()) return;
-    Interpreted res(shortcut, var, lev_std_wind, tr_std_wind_max10m);
-    res.set_sensor_height(level, opts.simplified);
-    res.set_duration(trange); // Always use real trange
-    res.to_msg(*msg);
+    auto res = create_interpreted(opts.simplified, shortcut, var, lev_std_wind, tr_std_wind_max10m);
+    res->set_sensor_height(level);
+    // Always use real trange
+    if (trange.time_period_seen)
+        res->trange = trange.time_period == MISSING_INT ? Trange(205, 0) : Trange(205, 0, abs(trange.time_period));
+    set(move(res));
 }
 
 void SynopBaseImporter::set_pressure(const wreport::Var& var)
@@ -531,6 +526,11 @@ void SynopBaseImporter::set(const wreport::Var& var, wreport::Varcode code, cons
 {
     if (unsupported.is_unsupported()) return;
     WMOImporter::set(var, code, level, trange);
+}
+
+void SynopBaseImporter::set(std::unique_ptr<Interpreted> val)
+{
+    msg->set(move(val->var), val->level, val->trange);
 }
 
 SynopBaseImporter::SynopBaseImporter(const msg::Importer::Options& opts)

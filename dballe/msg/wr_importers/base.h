@@ -140,6 +140,13 @@ struct Interpreted
     Level level;
     /// Interpreted time range
     Trange trange;
+    /**
+     * Distance from the standard level to the real one.
+     *
+     * This is used, in case multiple values get simplified to the same level,
+     * to select the one closer to the standard level.
+     */
+    unsigned level_deviation = 0;
 
     /**
      * Beging building using a copy of var, and level and timerange from \a
@@ -148,16 +155,40 @@ struct Interpreted
     Interpreted(int shortcut, const wreport::Var& var);
     Interpreted(int shortcut, const wreport::Var& var, const Level& level, const Trange& trange);
     Interpreted(wreport::Varcode code, const wreport::Var& var, const Level& level, const Trange& trange);
-    ~Interpreted();
+    virtual ~Interpreted();
 
-    void set_sensor_height(const LevelContext& ctx, bool simplified=false);
-    void set_barometer_height(const LevelContext& ctx, bool simplified=false);
-    void set_duration(const TimerangeContext& ctx, bool simplified=false);
-    void set_wind_mean(const TimerangeContext& ctx, bool simplified=false);
-
-    /// Move the resulting value to msg
-    void to_msg(Msg& msg);
+    virtual void set_sensor_height(const LevelContext& ctx) = 0;
+    virtual void set_barometer_height(const LevelContext& ctx) = 0;
+    virtual void set_duration(const TimerangeContext& ctx) = 0;
+    virtual void set_wind_mean(const TimerangeContext& ctx) = 0;
 };
+
+struct InterpretedPrecise : public Interpreted
+{
+    using Interpreted::Interpreted;
+    void set_sensor_height(const LevelContext& ctx) override;
+    void set_barometer_height(const LevelContext& ctx) override;
+    void set_duration(const TimerangeContext& ctx) override;
+    void set_wind_mean(const TimerangeContext& ctx) override;
+};
+
+struct InterpretedSimplified : public Interpreted
+{
+    using Interpreted::Interpreted;
+    void set_sensor_height(const LevelContext& ctx) override;
+    void set_barometer_height(const LevelContext& ctx) override;
+    void set_duration(const TimerangeContext& ctx) override;
+    void set_wind_mean(const TimerangeContext& ctx) override;
+};
+
+template<typename ...Args>
+std::unique_ptr<Interpreted> create_interpreted(bool simplified, Args&& ...args)
+{
+    if (simplified)
+        return std::unique_ptr<Interpreted>(new InterpretedSimplified(std::forward<Args>(args)...));
+    else
+        return std::unique_ptr<Interpreted>(new InterpretedPrecise(std::forward<Args>(args)...));
+}
 
 /**
  * Base class for synop, ship and other importer with synop-like data
@@ -184,6 +215,7 @@ protected:
     void set_swell_waves(const wreport::Var& var);
     void set(const wreport::Var& var, int shortcut);
     void set(const wreport::Var& var, wreport::Varcode code, const Level& level, const Trange& trange);
+    void set(std::unique_ptr<Interpreted> val);
 
 public:
     SynopBaseImporter(const msg::Importer::Options& opts);
