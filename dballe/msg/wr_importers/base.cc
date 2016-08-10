@@ -94,27 +94,27 @@ void WMOImporter::import_var(const Var& var)
 {
     switch (var.code())
     {
-// General bulletin metadata
-        case WR_VAR(0,  1,  1): msg->set_block_var(var); break;
-        case WR_VAR(0,  1,  2): msg->set_station_var(var); break;
+        // General bulletin metadata
+        case WR_VAR(0,  1,  1): set(var, DBA_MSG_BLOCK); break;
+        case WR_VAR(0,  1,  2): set(var, DBA_MSG_STATION); break;
         case WR_VAR(0,  1,  5):
         case WR_VAR(0,  1,  6):
-        case WR_VAR(0,  1, 11): msg->set_ident_var(var); break;
-        case WR_VAR(0,  1, 12): msg->set_st_dir_var(var); break;
-        case WR_VAR(0,  1, 13): msg->set_st_speed_var(var); break;
-        case WR_VAR(0,  1, 63): msg->set_st_name_icao_var(var); break;
-        case WR_VAR(0,  2,  1): msg->set_st_type_var(var); break;
-        case WR_VAR(0,  1, 15): msg->set_st_name_var(var); break;
-        case WR_VAR(0,  4,  1): ye = var.enqi(); if (var.next_attr()) msg->set_year_var(var); break;
-        case WR_VAR(0,  4,  2): mo = var.enqi(); if (var.next_attr()) msg->set_month_var(var); break;
-        case WR_VAR(0,  4,  3): da = var.enqi(); if (var.next_attr()) msg->set_day_var(var); break;
-        case WR_VAR(0,  4,  4): ho = var.enqi(); if (var.next_attr()) msg->set_hour_var(var); break;
-        case WR_VAR(0,  4,  5): mi = var.enqi(); if (var.next_attr()) msg->set_minute_var(var); break;
-        case WR_VAR(0,  4,  6): se = var.enqi(); if (var.next_attr()) msg->set_second_var(var); break;
+        case WR_VAR(0,  1, 11): set(var, DBA_MSG_IDENT); break;
+        case WR_VAR(0,  1, 12): set(var, DBA_MSG_ST_DIR); break;
+        case WR_VAR(0,  1, 13): set(var, DBA_MSG_ST_SPEED); break;
+        case WR_VAR(0,  1, 63): set(var, DBA_MSG_ST_NAME_ICAO); break;
+        case WR_VAR(0,  2,  1): set(var, DBA_MSG_ST_TYPE); break;
+        case WR_VAR(0,  1, 15): set(var, DBA_MSG_ST_NAME); break;
+        case WR_VAR(0,  4,  1): ye = var.enqi(); if (var.next_attr()) set(var, DBA_MSG_YEAR); break;
+        case WR_VAR(0,  4,  2): mo = var.enqi(); if (var.next_attr()) set(var, DBA_MSG_MONTH); break;
+        case WR_VAR(0,  4,  3): da = var.enqi(); if (var.next_attr()) set(var, DBA_MSG_DAY); break;
+        case WR_VAR(0,  4,  4): ho = var.enqi(); if (var.next_attr()) set(var, DBA_MSG_HOUR); break;
+        case WR_VAR(0,  4,  5): mi = var.enqi(); if (var.next_attr()) set(var, DBA_MSG_MINUTE); break;
+        case WR_VAR(0,  4,  6): se = var.enqi(); if (var.next_attr()) set(var, DBA_MSG_SECOND); break;
         case WR_VAR(0,  5,  1):
-        case WR_VAR(0,  5,  2): msg->set_latitude_var(var); break;
+        case WR_VAR(0,  5,  2): set(var, DBA_MSG_LATITUDE); break;
         case WR_VAR(0,  6,  1):
-        case WR_VAR(0,  6,  2): msg->set_longitude_var(var); break;
+        case WR_VAR(0,  6,  2): set(var, DBA_MSG_LONGITUDE); break;
     }
 }
 
