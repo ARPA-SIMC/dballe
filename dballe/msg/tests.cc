@@ -803,5 +803,3 @@ void TestCodec::run_convert(const std::string& tplname)
 
 }
 }
-
-// vim:set ts=4 sw=4:

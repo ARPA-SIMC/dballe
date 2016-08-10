@@ -15,11 +15,11 @@ CMD=`pwd`/"$1"
 libeatmydata="/usr/lib/libeatmydata/libeatmydata.so"
 if [ -e $libeatmydata ]
 then
-	if [ -n "$LD_PRELOAD" ]; then
-		export LD_PRELOAD="$libeatmydata $LD_PRELOAD"
-	else
-		export LD_PRELOAD="$libeatmydata"
-	fi
+    if [ -n "$LD_PRELOAD" ]; then
+        export LD_PRELOAD="$libeatmydata $LD_PRELOAD"
+    else
+        export LD_PRELOAD="$libeatmydata"
+    fi
 fi
 
 
@@ -68,21 +68,25 @@ then
         CMD="$DIR/.libs/lt-$BASE"
     fi
 
-	echo "Running $DEBUGGER $CMD $ARGS"
-	RES=0
-	if ! $DEBUGGER $CMD $ARGS
-	then
-		RES=$?
-		echo "Failed with result $RES"
-	fi
+    echo "Running $DEBUGGER $CMD $ARGS"
+    RES=0
+    if $DEBUGGER $CMD $ARGS
+    then
+        true
+    else
+        RES=$?
+        echo "Failed with result $RES"
+    fi
 else
-	echo "Running $CMD $ARGS"
-	RES=0
-	if ! $CMD $ARGS
-	then
-		RES=$?
-		echo "Failed with result $RES"
-	fi
+    echo "Running $CMD $ARGS"
+    RES=0
+    if $CMD $ARGS
+    then
+        true
+    else
+        RES=$?
+        echo "Failed with result $RES"
+    fi
 fi
 
 

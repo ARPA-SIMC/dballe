@@ -1,24 +1,3 @@
-/*
- * dballe/wr_importers/base - Base infrastructure for wreport importers
- *
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #ifndef DBALLE_MSG_WRIMPORTER_BASE_H
 #define DBALLE_MSG_WRIMPORTER_BASE_H
 
@@ -47,6 +26,9 @@ protected:
     virtual void init();
     virtual void run() = 0;
 
+    void set(const wreport::Var& var, int shortcut);
+    void set(const wreport::Var& var, wreport::Varcode code, const Level& level, const Trange& trange);
+
 public:
     Importer(const msg::Importer::Options& opts) : opts(opts) {}
     virtual ~Importer() {}
@@ -73,10 +55,10 @@ protected:
 
     void import_var(const wreport::Var& var);
 
-    virtual void init()
+    void init() override
     {
-	    pos = 0;
-	    Importer::init();
+        pos = 0;
+        Importer::init();
     }
 
 public:
@@ -125,60 +107,88 @@ struct CloudContext
     void on_vss(const wreport::Subset& subset, unsigned pos);
 };
 
-struct ContextChooser
+/**
+ * Check if the current context state of BUFR information is something that we
+ * currently cannot handle.
+ *
+ * For example, a BUFR can provide a B12101 as a measured temperature, or a
+ * B12101 as a standard deviation of temperature in the last 10 minutes. The
+ * former we can handle, the latter we cannot.
+ *
+ * This class keeps track of when we are in such unusual states.
+ *
+ * See https://github.com/ARPA-SIMC/dballe/issues/47
+ */
+struct UnsupportedContext
 {
-    const LevelContext& level;
-    const TimerangeContext& trange;
+    const wreport::Var* B08023 = nullptr; // First order statistics (code table)
 
-    // Configuration
-    bool simplified;
+    bool is_unsupported() const;
 
-    // Import builder parts
-    const MsgVarShortcut* v;
-    wreport::Var* var;
-    Level chosen_lev;
-    Trange chosen_tr;
-
-    // Output message
-    Msg* msg;
-
-    ContextChooser(const LevelContext& level, const TimerangeContext& trange);
-    ~ContextChooser();
-
-    void init(Msg& msg, bool simplified);
-
-    void set_gen_sensor(const wreport::Var& var, wreport::Varcode code, const Level& defaultLevel, const Trange& trange);
-    void set_gen_sensor(const wreport::Var& var, int shortcut);
-    void set_gen_sensor(const wreport::Var& var, int shortcut, const Trange& tr_std, bool tr_careful=false);
-    void set_gen_sensor(const wreport::Var& var, int shortcut, const Level& lev_std, const Trange& tr_std, bool lev_careful=false, bool tr_careful=false);
-    void set_baro_sensor(const wreport::Var& var, int shortcut);
-    void set_past_weather(const wreport::Var& var, int shortcut);
-    void set_wind(const wreport::Var& var, int shortcut);
-    void set_wind_max(const wreport::Var& var, int shortcut);
-    void set_pressure(const wreport::Var& var);
-    void set_water_temperature(const wreport::Var& var);
-    void set_swell_waves(const wreport::Var& var);
-
-protected:
-    void ib_start(int shortcut, const wreport::Var& var);
-    Level lev_real(const Level& standard) const;
-    Trange tr_real(const Trange& standard) const;
-    Level lev_shortcut() const { return Level(v->ltype1, v->l1, v->ltype2, v->l2); }
-    Trange tr_shortcut() const { return Trange(v->pind, v->p1, v->p2); }
-    void ib_annotate_level();
-    void ib_annotate_trange();
-    void ib_level_use_real(const Level& standard) { chosen_lev = lev_real(standard); }
-    void ib_trange_use_real(const Trange& standard) { chosen_tr = tr_real(standard); }
-    void ib_level_use_shorcut_and_discard_rest() { chosen_lev = lev_shortcut(); }
-    void ib_trange_use_shortcut_and_discard_rest() { chosen_tr = tr_shortcut(); }
-    void ib_level_use_shorcut_and_preserve_rest(const Level& standard);
-    void ib_trange_use_shorcut_and_preserve_rest(const Trange& standard);
-    void ib_level_use_standard_and_preserve_rest(const Level& standard);
-    void ib_trange_use_standard_and_preserve_rest(const Trange& standard);
-    void ib_level_use_shorcut_if_standard_else_real(const Level& standard);
-    void ib_trange_use_shorcut_if_standard_else_real(const Trange& standard);
-    void ib_set();
+    void init();
+    void peek_var(const wreport::Var& var, unsigned pos);
 };
+
+/**
+ * Struct used to build an interpreted value
+ */
+struct Interpreted
+{
+    /// Interpreted value being built
+    std::unique_ptr<wreport::Var> var;
+    /// Interpreted level
+    Level level;
+    /// Interpreted time range
+    Trange trange;
+    /**
+     * Distance from the standard level to the real one.
+     *
+     * This is used, in case multiple values get simplified to the same level,
+     * to select the one closer to the standard level.
+     */
+    unsigned level_deviation = 0;
+
+    /**
+     * Beging building using a copy of var, and level and timerange from \a
+     * shortcut
+     */
+    Interpreted(int shortcut, const wreport::Var& var);
+    Interpreted(int shortcut, const wreport::Var& var, const Level& level, const Trange& trange);
+    Interpreted(wreport::Varcode code, const wreport::Var& var, const Level& level, const Trange& trange);
+    virtual ~Interpreted();
+
+    virtual void set_sensor_height(const LevelContext& ctx) = 0;
+    virtual void set_barometer_height(const LevelContext& ctx) = 0;
+    virtual void set_duration(const TimerangeContext& ctx) = 0;
+    virtual void set_wind_mean(const TimerangeContext& ctx) = 0;
+};
+
+struct InterpretedPrecise : public Interpreted
+{
+    using Interpreted::Interpreted;
+    void set_sensor_height(const LevelContext& ctx) override;
+    void set_barometer_height(const LevelContext& ctx) override;
+    void set_duration(const TimerangeContext& ctx) override;
+    void set_wind_mean(const TimerangeContext& ctx) override;
+};
+
+struct InterpretedSimplified : public Interpreted
+{
+    using Interpreted::Interpreted;
+    void set_sensor_height(const LevelContext& ctx) override;
+    void set_barometer_height(const LevelContext& ctx) override;
+    void set_duration(const TimerangeContext& ctx) override;
+    void set_wind_mean(const TimerangeContext& ctx) override;
+};
+
+template<typename ...Args>
+std::unique_ptr<Interpreted> create_interpreted(bool simplified, Args&& ...args)
+{
+    if (simplified)
+        return std::unique_ptr<Interpreted>(new InterpretedSimplified(std::forward<Args>(args)...));
+    else
+        return std::unique_ptr<Interpreted>(new InterpretedPrecise(std::forward<Args>(args)...));
+}
 
 /**
  * Base class for synop, ship and other importer with synop-like data
@@ -189,21 +199,34 @@ protected:
     CloudContext clouds;
     LevelContext level;
     TimerangeContext trange;
-    ContextChooser ctx;
+    UnsupportedContext unsupported;
+    std::vector<Interpreted*> queued;
 
     virtual void peek_var(const wreport::Var& var);
     virtual void import_var(const wreport::Var& var);
 
+    void set_gen_sensor(const wreport::Var& var, wreport::Varcode code, const Level& defaultLevel, const Trange& trange);
+    void set_gen_sensor(const wreport::Var& var, int shortcut);
+    void set_baro_sensor(const wreport::Var& var, int shortcut);
+    void set_past_weather(const wreport::Var& var, int shortcut);
+    void set_wind(const wreport::Var& var, int shortcut);
+    void set_wind_max(const wreport::Var& var, int shortcut);
+    void set_pressure(const wreport::Var& var);
+    void set_water_temperature(const wreport::Var& var);
+    void set_swell_waves(const wreport::Var& var);
+    void set(const wreport::Var& var, int shortcut);
+    void set(const wreport::Var& var, wreport::Varcode code, const Level& level, const Trange& trange);
+    void set(std::unique_ptr<Interpreted> val);
+
 public:
     SynopBaseImporter(const msg::Importer::Options& opts);
+    ~SynopBaseImporter();
 
-    virtual void init();
-    virtual void run();
+    void init() override;
+    void run() override;
 };
 
-} // namespace wr
-} // namespace msg
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
+}
+}
+}
 #endif
