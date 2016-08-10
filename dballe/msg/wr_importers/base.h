@@ -84,6 +84,7 @@ struct LevelContext
      * defaults from the given standard level.
      */
     Level get_real(const Level& standard) const;
+    Level get_real_baro() const;
 };
 
 /// Keep track of time range context changes
@@ -159,11 +160,14 @@ struct Interpreted
      */
     Interpreted(int shortcut, const wreport::Var& var);
     Interpreted(int shortcut, const wreport::Var& var, const Level& level, const Trange& trange);
+    Interpreted(wreport::Varcode code, const wreport::Var& var, const Level& level, const Trange& trange);
     ~Interpreted();
+
+    void set_sensor_height(const LevelContext& ctx, bool simplified=false);
+    void set_duration(const TimerangeContext& ctx, bool simplified=false);
 
     void annotate_if_needed(const Level& real);
     void annotate_if_needed(const Trange& real);
-    void annotate_level(const LevelContext& level_context);
 
     /// Move the resulting value to msg
     void to_msg(Msg& msg);
@@ -185,7 +189,6 @@ protected:
 
     void set_gen_sensor(const wreport::Var& var, wreport::Varcode code, const Level& defaultLevel, const Trange& trange);
     void set_gen_sensor(const wreport::Var& var, int shortcut);
-    void set_gen_sensor(const wreport::Var& var, int shortcut, const Level& lev_std, const Trange& tr_std);
     void set_baro_sensor(const wreport::Var& var, int shortcut);
     void set_past_weather(const wreport::Var& var, int shortcut);
     void set_wind(const wreport::Var& var, int shortcut);
