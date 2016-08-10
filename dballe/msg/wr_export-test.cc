@@ -266,7 +266,10 @@ class Tests : public TestCase
             // FIXME: currently fails
             test.expected_template = "synop-wmo";
             test.expected_min_vars = 50;
-            //test.verbose = true;
+            test.verbose = true;
+            test.after_reimport_import.add(new dballe::tests::tweaks::RemoveContext(Level(1), Trange(1, 0, 21600)));
+            test.after_reimport_import.add(new dballe::tests::tweaks::RemoveContext(Level(1), Trange(1, 0, 43200)));
+            test.after_reimport_import.add(new dballe::tests::tweaks::StripVars{WR_VAR(0, 11, 41), WR_VAR(0, 11, 43)});
 
             wassert(test.run_reimport());
             wassert(test.run_convert("synop-wmo"));
