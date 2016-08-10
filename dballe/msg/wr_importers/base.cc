@@ -152,15 +152,6 @@ void LevelContext::peek_var(const wreport::Var& var)
     }
 }
 
-Level LevelContext::get_real(const Level& standard) const
-{
-    if (height_sensor == 0) return Level(1);
-    if (!height_sensor_seen) return standard;
-    return height_sensor == MISSING_SENSOR_H ?
-        Level(103) :
-        Level(103, height_sensor * 1000);
-}
-
 Level LevelContext::get_real_baro() const
 {
     if (height_baro == 0) return Level(1);
@@ -397,9 +388,20 @@ Interpreted::~Interpreted()
 void Interpreted::set_sensor_height(const LevelContext& ctx, bool simplified)
 {
     if (simplified)
-        annotate_if_needed(ctx.get_real(level));
+    {
+        if (ctx.height_sensor == 0) return;
+        if (!ctx.height_sensor_seen) return;
+        if (ctx.height_sensor == MISSING_SENSOR_H) return;
+        if (level == Level(103, ctx.height_sensor * 1000)) return;
+        var->seta(newvar(WR_VAR(0, 7, 32), ctx.height_sensor));
+    }
     else
-        level = ctx.get_real(level);
+    {
+        if (ctx.height_sensor == 0)
+            level = Level(1);
+        else if (ctx.height_sensor_seen)
+            level = ctx.height_sensor == MISSING_SENSOR_H ? Level(103) : Level(103, ctx.height_sensor * 1000);
+    }
 }
 
 void Interpreted::set_duration(const TimerangeContext& ctx, bool simplified)
@@ -413,21 +415,6 @@ void Interpreted::set_duration(const TimerangeContext& ctx, bool simplified)
 void Interpreted::to_msg(Msg& msg)
 {
     msg.set(move(var), level, trange);
-}
-
-void Interpreted::annotate_if_needed(const Level& real)
-{
-    if (level == real) return;
-    if (real.l1 == MISSING_INT) return;
-    switch (real.ltype1)
-    {
-        case 102:
-            var->seta(newvar(WR_VAR(0, 7, 31), real.l1 / 1000.0));
-            break;
-        case 103:
-            var->seta(newvar(WR_VAR(0, 7, 32), real.l1 / 1000.0));
-            break;
-    }
 }
 
 void Interpreted::annotate_if_needed(const Trange& real)
@@ -502,21 +489,16 @@ void SynopBaseImporter::set_wind(const wreport::Var& var, int shortcut)
 {
     if (trange.time_sig != MISSING_TIME_SIG && trange.time_sig != 2)
         error_consistency::throwf("Found unsupported time significance %d for wind direction", trange.time_sig);
-    //set_gen_sensor(var, shortcut, lev_std_wind, tr_std_wind);
 
     if (unsupported.is_unsupported()) return;
-
     Interpreted res(shortcut, var);
+    res.level = lev_std_wind;
+    res.set_sensor_height(level, opts.simplified);
 
     if (!opts.simplified)
-    {
-        res.level = level.get_real(lev_std_wind); // Use real level
         res.trange = trange.get_real(tr_std_wind); // Use real timerange
-    }
     else
     {
-        res.annotate_if_needed(level.get_real(lev_std_wind));
-
         Trange treal = trange.get_real(tr_std_wind);
         if (treal != res.trange && treal != tr_std_wind)
         {
@@ -531,10 +513,7 @@ void SynopBaseImporter::set_wind(const wreport::Var& var, int shortcut)
 
 void SynopBaseImporter::set_wind_max(const wreport::Var& var, int shortcut)
 {
-    //set_gen_sensor(var, shortcut, lev_std_wind, tr_std_wind_max10m, false, true);
-
     if (unsupported.is_unsupported()) return;
-
     Interpreted res(shortcut, var, lev_std_wind, tr_std_wind_max10m);
     res.set_sensor_height(level, opts.simplified);
     res.set_duration(trange); // Always use real trange

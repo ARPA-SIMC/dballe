@@ -79,11 +79,6 @@ struct LevelContext
     void init();
     void peek_var(const wreport::Var& var);
 
-    /**
-     * Compute the most precise current level information possible, taking
-     * defaults from the given standard level.
-     */
-    Level get_real(const Level& standard) const;
     Level get_real_baro() const;
 };
 
@@ -166,7 +161,6 @@ struct Interpreted
     void set_sensor_height(const LevelContext& ctx, bool simplified=false);
     void set_duration(const TimerangeContext& ctx, bool simplified=false);
 
-    void annotate_if_needed(const Level& real);
     void annotate_if_needed(const Trange& real);
 
     /// Move the resulting value to msg
