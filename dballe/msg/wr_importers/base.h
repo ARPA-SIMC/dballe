@@ -78,8 +78,6 @@ struct LevelContext
 
     void init();
     void peek_var(const wreport::Var& var);
-
-    Level get_real_baro() const;
 };
 
 /// Keep track of time range context changes
@@ -94,12 +92,6 @@ struct TimerangeContext
 
     void init();
     void peek_var(const wreport::Var& var, unsigned pos);
-
-    /**
-     * Compute the most precise current time range information possible, taking
-     * defaults from the given standard time range.
-     */
-    Trange get_real(const Trange& standard) const;
 };
 
 /**
@@ -161,8 +153,7 @@ struct Interpreted
     void set_sensor_height(const LevelContext& ctx, bool simplified=false);
     void set_barometer_height(const LevelContext& ctx, bool simplified=false);
     void set_duration(const TimerangeContext& ctx, bool simplified=false);
-
-    void annotate_if_needed(const Trange& real);
+    void set_wind_mean(const TimerangeContext& ctx, bool simplified=false);
 
     /// Move the resulting value to msg
     void to_msg(Msg& msg);

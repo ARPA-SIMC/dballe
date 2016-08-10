@@ -152,23 +152,6 @@ void LevelContext::peek_var(const wreport::Var& var)
     }
 }
 
-Level LevelContext::get_real_baro() const
-{
-    if (height_baro == 0) return Level(1);
-    return height_baro == MISSING_BARO ?
-        Level(102) :
-        Level(102, height_baro * 1000);
-}
-
-Trange TimerangeContext::get_real(const Trange& standard) const
-{
-    if (standard.pind == 254) return Trange::instant();
-    if (!time_period_seen) return standard;
-    return time_period == MISSING_INT ?
-        Trange(standard.pind, 0) :
-        Trange(standard.pind, 0, abs(time_period));
-}
-
 
 void TimerangeContext::init()
 {
@@ -417,9 +400,41 @@ void Interpreted::set_barometer_height(const LevelContext& ctx, bool simplified)
 void Interpreted::set_duration(const TimerangeContext& ctx, bool simplified)
 {
     if (simplified)
-        annotate_if_needed(ctx.get_real(trange));
+    {
+        if (trange.pind == 254) return;
+        if (!ctx.time_period_seen) return;
+        if (ctx.time_period == MISSING_INT) return;
+        Trange real = Trange(trange.pind, 0, abs(ctx.time_period));
+        if (trange == real) return;
+        var->seta(newvar(WR_VAR(0, 4, 194), abs(ctx.time_period)));
+    }
     else
-        trange = ctx.get_real(trange);
+    {
+        if (trange.pind == 254)
+            trange = Trange::instant();
+        else if (ctx.time_period_seen)
+            trange = ctx.time_period == MISSING_INT ? Trange(trange.pind, 0) : Trange(trange.pind, 0, abs(ctx.time_period));
+    }
+}
+
+void Interpreted::set_wind_mean(const TimerangeContext& ctx, bool simplified)
+{
+    Trange real;
+    if (tr_std_wind.pind == 254) real = Trange::instant();
+    else if (!ctx.time_period_seen) real = tr_std_wind;
+    else real = ctx.time_period == MISSING_INT ? Trange(tr_std_wind.pind, 0) : Trange(tr_std_wind.pind, 0, abs(ctx.time_period));
+
+    if (!simplified)
+        trange = real; // Use real timerange
+    else
+    {
+        if (real != trange && real != tr_std_wind)
+        {
+            // Use shortcut and preserve the rest
+            if (ctx.time_period != MISSING_INT)
+                var->seta(newvar(WR_VAR(0, 4, 194), abs(ctx.time_period)));
+        }
+    }
 }
 
 void Interpreted::to_msg(Msg& msg)
@@ -427,19 +442,10 @@ void Interpreted::to_msg(Msg& msg)
     msg.set(move(var), level, trange);
 }
 
-void Interpreted::annotate_if_needed(const Trange& real)
-{
-    if (trange == real) return;
-    if (real.pind == 254) return;
-    if (real.p2 == MISSING_INT) return;
-    var->seta(newvar(WR_VAR(0, 4, 194), real.p2));
-}
-
 
 void SynopBaseImporter::set_gen_sensor(const Var& var, Varcode code, const Level& lev_std, const Trange& tr_std)
 {
     if (unsupported.is_unsupported()) return;
-
     Interpreted res(code, var, lev_std, tr_std);
     res.set_sensor_height(level, opts.simplified);
     res.set_duration(trange, opts.simplified);
@@ -467,7 +473,6 @@ void SynopBaseImporter::set_baro_sensor(const Var& var, int shortcut)
 void SynopBaseImporter::set_past_weather(const wreport::Var& var, int shortcut)
 {
     if (unsupported.is_unsupported()) return;
-
     Interpreted res(shortcut, var);
     res.trange = Trange((trange.hour % 6 == 0) ? tr_std_past_wtr6 : tr_std_past_wtr3);
     res.set_duration(trange, opts.simplified);
@@ -483,20 +488,7 @@ void SynopBaseImporter::set_wind(const wreport::Var& var, int shortcut)
     Interpreted res(shortcut, var);
     res.level = lev_std_wind;
     res.set_sensor_height(level, opts.simplified);
-
-    if (!opts.simplified)
-        res.trange = trange.get_real(tr_std_wind); // Use real timerange
-    else
-    {
-        Trange treal = trange.get_real(tr_std_wind);
-        if (treal != res.trange && treal != tr_std_wind)
-        {
-            // Use shortcut and preserve the rest
-            if (trange.time_period != MISSING_INT)
-                res.var->seta(newvar(WR_VAR(0, 4, 194), abs(trange.time_period)));
-        }
-    }
-
+    res.set_wind_mean(trange, opts.simplified);
     res.to_msg(*msg);
 }
 
