@@ -78,6 +78,16 @@ void Importer::import(const wreport::Subset& subset, Msg& msg)
     }
 }
 
+void Importer::set(const wreport::Var& var, int shortcut)
+{
+    msg->set_by_id(var, shortcut);
+}
+
+void Importer::set(const wreport::Var& var, wreport::Varcode code, const Level& level, const Trange& trange)
+{
+    msg->set(var, code, level, trange);
+}
+
 std::unique_ptr<Importer> Importer::createSat(const msg::Importer::Options&) { throw error_unimplemented("WB sat Importers"); }
 
 void WMOImporter::import_var(const Var& var)
@@ -555,18 +565,18 @@ void SynopBaseImporter::import_var(const Var& var)
     {
         case WR_VAR(0,  8,  2):
             // Store original VS value as a measured value
-            msg->set(var, WR_VAR(0, 8, 2), clouds.level, Trange::instant());
+            set(var, WR_VAR(0, 8, 2), clouds.level, Trange::instant());
             break;
 
         // Ship identification, movement, date/time, horizontal and vertical
         // coordinates
         case WR_VAR(0,  7,  1):
-        case WR_VAR(0,  7, 30): msg->set_height_station_var(var); break;
+        case WR_VAR(0,  7, 30): set(var, DBA_MSG_HEIGHT_STATION); break;
         case WR_VAR(0,  7, 31):
             /* Store also in the ana level, so that if the
              * pressure later is missing we still have
              * access to the value */
-            msg->set_height_baro_var(var);
+            set(var, DBA_MSG_HEIGHT_BARO);
             break;
 
         // Pressure data (complete)
@@ -601,7 +611,7 @@ void SynopBaseImporter::import_var(const Var& var)
         case WR_VAR(0, 13, 23): set_gen_sensor(var, DBA_MSG_TOT_PREC24); break;
 
         // Cloud data
-        case WR_VAR(0, 20, 10): msg->set_cloud_n_var(var); break;
+        case WR_VAR(0, 20, 10): set(var, DBA_MSG_CLOUD_N); break;
 
         // Individual cloud layers or masses (complete)
         // Clouds with bases below station level (complete)
@@ -609,13 +619,13 @@ void SynopBaseImporter::import_var(const Var& var)
         case WR_VAR(0, 20, 11):
         case WR_VAR(0, 20, 13):
         case WR_VAR(0, 20, 17):
-        case WR_VAR(0, 20, 54): msg->set(var, var.code(), clouds.level, Trange::instant()); break;
+        case WR_VAR(0, 20, 54): set(var, var.code(), clouds.level, Trange::instant()); break;
         case WR_VAR(0, 20, 12): // CH CL CM
-            msg->set(var, WR_VAR(0, 20, 12), clouds.clcmch(), Trange::instant());
+            set(var, WR_VAR(0, 20, 12), clouds.clcmch(), Trange::instant());
             break;
 
         // Present and past weather (complete)
-        case WR_VAR(0, 20,  3): msg->set_pres_wtr_var(var); break;
+        case WR_VAR(0, 20,  3): set(var, DBA_MSG_PRES_WTR); break;
         case WR_VAR(0, 20,  4): set_past_weather(var, DBA_MSG_PAST_WTR1_6H); break;
         case WR_VAR(0, 20,  5): set_past_weather(var, DBA_MSG_PAST_WTR2_6H); break;
 
@@ -631,7 +641,7 @@ void SynopBaseImporter::import_var(const Var& var)
             break;
 
         // Wind data (complete)
-        case WR_VAR(0, 2, 2): msg->set_wind_inst_var(var); break;
+        case WR_VAR(0, 2, 2): set(var, DBA_MSG_WIND_INST); break;
 
         /* Note B/C 1.10.5.3.2 Calm shall be reported by
          * setting wind direction to 0 and wind speed to 0.
@@ -646,8 +656,8 @@ void SynopBaseImporter::import_var(const Var& var)
         case WR_VAR(0, 11, 43): set_wind_max(var, DBA_MSG_WIND_GUST_MAX_DIR); break;
         case WR_VAR(0, 11, 41): set_wind_max(var, DBA_MSG_WIND_GUST_MAX_SPEED); break;
 
-        case WR_VAR(0, 12,  5): msg->set_wet_temp_2m_var(var); break;
-        case WR_VAR(0, 10,197): msg->set_height_anem_var(var); break;
+        case WR_VAR(0, 12,  5): set(var, DBA_MSG_WET_TEMP_2M); break;
+        case WR_VAR(0, 10,197): set(var, DBA_MSG_HEIGHT_ANEM); break;
 
         default: WMOImporter::import_var(var); break;
     }

@@ -26,6 +26,9 @@ protected:
     virtual void init();
     virtual void run() = 0;
 
+    void set(const wreport::Var& var, int shortcut);
+    void set(const wreport::Var& var, wreport::Varcode code, const Level& level, const Trange& trange);
+
 public:
     Importer(const msg::Importer::Options& opts) : opts(opts) {}
     virtual ~Importer() {}
