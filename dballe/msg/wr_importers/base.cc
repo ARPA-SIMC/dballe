@@ -19,7 +19,6 @@ namespace wr {
 static const Trange tr_std_past_wtr3(205, 0, 10800);
 static const Trange tr_std_past_wtr6(205, 0, 21600);
 static const Level lev_std_wind(103, 10*1000);
-static const Trange tr_std_wind(200, 0, 600);
 static const Trange tr_std_wind_max10m(205, 0, 600);
 
 void Importer::init()
@@ -419,21 +418,21 @@ void Interpreted::set_duration(const TimerangeContext& ctx, bool simplified)
 
 void Interpreted::set_wind_mean(const TimerangeContext& ctx, bool simplified)
 {
-    Trange real;
-    if (tr_std_wind.pind == 254) real = Trange::instant();
-    else if (!ctx.time_period_seen) real = tr_std_wind;
-    else real = ctx.time_period == MISSING_INT ? Trange(tr_std_wind.pind, 0) : Trange(tr_std_wind.pind, 0, abs(ctx.time_period));
-
-    if (!simplified)
-        trange = real; // Use real timerange
+    if (simplified)
+    {
+        if (!ctx.time_period_seen) return;
+        if (ctx.time_period == MISSING_INT) return;
+        Trange real = Trange(200, 0, abs(ctx.time_period));
+        if (real.p2 == 600) return;
+        if (real == trange) return;
+        var->seta(newvar(WR_VAR(0, 4, 194), abs(ctx.time_period)));
+    }
     else
     {
-        if (real != trange && real != tr_std_wind)
-        {
-            // Use shortcut and preserve the rest
-            if (ctx.time_period != MISSING_INT)
-                var->seta(newvar(WR_VAR(0, 4, 194), abs(ctx.time_period)));
-        }
+        if (!ctx.time_period_seen)
+            trange = Trange(200, 0, 600);
+        else
+            trange = ctx.time_period == MISSING_INT ? Trange(200, 0) : Trange(200, 0, abs(ctx.time_period));
     }
 }
 
