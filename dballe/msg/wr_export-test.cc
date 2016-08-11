@@ -727,6 +727,12 @@ class Tests : public TestCase
             wassert(test.run_reimport());
             wassert(test.run_convert("acars"));
         });
+        // // Soil temperatures (we still do not have a template to export this)
+        // add_testcodec("test-soil1.bufr", [](TestCodec& test) {
+        //     test.expected_min_vars = 10;
+
+        //     wassert(test.run_reimport());
+        // });
         // Specific issues
         add_testcodec("issue62.bufr", [](TestCodec& test) {
             test.expected_min_vars = 21;

@@ -7,7 +7,6 @@
 
 #define MISSING_BARO -10000.0
 #define MISSING_PRESS_STD 0.0
-#define MISSING_SENSOR_H -10000.0
 #define MISSING_TIME_SIG -10000
 
 using namespace wreport;
@@ -122,9 +121,10 @@ void LevelContext::init()
 {
     height_baro = MISSING_BARO;
     press_std = MISSING_PRESS_STD;
-    height_sensor = MISSING_SENSOR_H;
+    height_sensor = missing;
     height_sensor_seen = false;
-    depth = MISSING_SENSOR_H;
+    sea_depth = missing;
+    ground_depth = missing;
     swell_wave_group = 0;
 }
 
@@ -142,13 +142,13 @@ void LevelContext::peek_var(const wreport::Var& var)
             break;
         case WR_VAR(0,  7, 32):
             // Height to use later as level for whatever needs it
-            height_sensor = MISSING_SENSOR_H;
-            height_sensor = var.enq(MISSING_SENSOR_H);
+            height_sensor = missing;
+            height_sensor = var.enq(missing);
             height_sensor_seen = true;
             break;
-        case WR_VAR(0,  7, 63):
-            depth = var.enq(MISSING_SENSOR_H);
-            break;
+        case WR_VAR(0,  7, 61): ground_depth = var.enq(missing); break;
+        case WR_VAR(0,  7, 63): sea_depth = var.enq(missing); break;
+        case WR_VAR(0, 22,  3): ++swell_wave_group; break;
     }
 }
 
@@ -373,14 +373,14 @@ void InterpretedPrecise::set_sensor_height(const LevelContext& ctx)
     if (ctx.height_sensor == 0)
         level = Level(1);
     else if (ctx.height_sensor_seen)
-        level = ctx.height_sensor == MISSING_SENSOR_H ? Level(103) : Level(103, ctx.height_sensor * 1000);
+        level = ctx.height_sensor == LevelContext::missing ? Level(103) : Level(103, ctx.height_sensor * 1000);
 }
 
 void InterpretedSimplified::set_sensor_height(const LevelContext& ctx)
 {
     if (ctx.height_sensor == 0) return;
     if (!ctx.height_sensor_seen) return;
-    if (ctx.height_sensor == MISSING_SENSOR_H) return;
+    if (ctx.height_sensor == LevelContext::missing) return;
     if (level == Level(103, ctx.height_sensor * 1000)) return;
     var->seta(newvar(WR_VAR(0, 7, 32), ctx.height_sensor));
     if (level.ltype1 == 103 && level.l1 != MISSING_INT) level_deviation = abs(level.l1 - (int)(ctx.height_sensor * 1000));
@@ -504,19 +504,6 @@ void SynopBaseImporter::set_pressure(const wreport::Var& var)
         set(var, WR_VAR(0, 10,  8), Level(100, level.press_std), Trange::instant());
 }
 
-void SynopBaseImporter::set_water_temperature(const wreport::Var& var)
-{
-    if (level.depth == MISSING_SENSOR_H)
-        set(var, WR_VAR(0, 22, 43), Level(1), Trange::instant());
-    else
-        set(var, WR_VAR(0, 22, 43), Level(160, level.depth * 1000), Trange::instant());
-}
-
-void SynopBaseImporter::set_swell_waves(const wreport::Var& var)
-{
-    set(var, var.code(), Level(264, MISSING_INT, 261, level.swell_wave_group), Trange::instant());
-}
-
 void SynopBaseImporter::set(const wreport::Var& var, int shortcut)
 {
     if (unsupported.is_unsupported()) return;
@@ -588,6 +575,7 @@ void SynopBaseImporter::run()
 void SynopBaseImporter::peek_var(const Var& var)
 {
     unsupported.peek_var(var, pos);
+    level.peek_var(var);
 
     switch (var.code())
     {
@@ -596,11 +584,6 @@ void SynopBaseImporter::peek_var(const Var& var)
         case WR_VAR(0,  4, 25):
         case WR_VAR(0,  8, 21): trange.peek_var(var, pos); break;
         case WR_VAR(0,  8,  2): clouds.on_vss(*subset, pos); break;
-        case WR_VAR(0,  7,  4):
-        case WR_VAR(0,  7, 31):
-        case WR_VAR(0,  7, 32):
-        case WR_VAR(0,  7, 63): level.peek_var(var); break;
-        case WR_VAR(0, 22,  3): ++level.swell_wave_group; break;
     }
 }
 
@@ -703,6 +686,10 @@ void SynopBaseImporter::import_var(const Var& var)
 
         case WR_VAR(0, 12,  5): set(var, DBA_MSG_WET_TEMP_2M); break;
         case WR_VAR(0, 10,197): set(var, DBA_MSG_HEIGHT_ANEM); break;
+
+        case WR_VAR(0, 12, 30):
+            set(var, WR_VAR(0, 12, 30), Level(106, level.ground_depth == LevelContext::missing ? MISSING_INT : level.ground_depth * 1000), Trange::instant());
+            break;
 
         default: WMOImporter::import_var(var); break;
     }

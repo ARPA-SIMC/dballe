@@ -72,7 +72,12 @@ void ShipImporter::import_var(const Var& var)
         case WR_VAR(0,  2, 38): msg->set(var, var.code(), Level(), Trange()); break;
         case WR_VAR(0,  2, 39): msg->set(var, var.code(), Level(), Trange()); break;
         case WR_VAR(0, 22, 42):
-        case WR_VAR(0, 22, 43): set_water_temperature(var); break;
+        case WR_VAR(0, 22, 43):
+            if (level.sea_depth == LevelContext::missing)
+                set(var, WR_VAR(0, 22, 43), Level(1), Trange::instant());
+            else
+                set(var, WR_VAR(0, 22, 43), Level(160, level.sea_depth * 1000), Trange::instant());
+            break;
 
         // Waves
         case WR_VAR(0, 22,  1):
@@ -87,7 +92,7 @@ void ShipImporter::import_var(const Var& var)
         case WR_VAR(0, 22,  3): // Direction of swell waves
         case WR_VAR(0, 22, 13): // Period of swell waves
         case WR_VAR(0, 22, 23): // Height of swell waves
-            set_swell_waves(var);
+            set(var, var.code(), Level(264, MISSING_INT, 261, level.swell_wave_group), Trange::instant());
             break;
 
         default: SynopBaseImporter::import_var(var); break;
@@ -102,8 +107,6 @@ std::unique_ptr<Importer> Importer::createShip(const msg::Importer::Options& opt
 }
 
 
-} // namespace wbimporter
-} // namespace msg
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
+}
+}
+}
