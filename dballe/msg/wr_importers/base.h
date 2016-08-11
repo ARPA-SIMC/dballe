@@ -3,7 +3,8 @@
 
 #include <dballe/msg/wr_codec.h>
 #include <dballe/msg/msg.h>
-#include <stdint.h>
+#include <limits>
+#include <cstdint>
 
 namespace wreport {
 struct Subset;
@@ -69,10 +70,11 @@ public:
 /// Keep track of level context changes
 struct LevelContext
 {
+    static constexpr double missing = std::numeric_limits<double>::max();
     double height_baro;
     double press_std;
     double height_sensor;
-    double depth;
+    double sea_depth;
     bool height_sensor_seen;
     bool swell_wave_group;
 
@@ -212,8 +214,6 @@ protected:
     void set_wind(const wreport::Var& var, int shortcut);
     void set_wind_max(const wreport::Var& var, int shortcut);
     void set_pressure(const wreport::Var& var);
-    void set_water_temperature(const wreport::Var& var);
-    void set_swell_waves(const wreport::Var& var);
     void set(const wreport::Var& var, int shortcut);
     void set(const wreport::Var& var, wreport::Varcode code, const Level& level, const Trange& trange);
     void set(std::unique_ptr<Interpreted> val);
