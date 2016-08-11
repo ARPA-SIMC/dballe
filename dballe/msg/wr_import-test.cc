@@ -396,6 +396,19 @@ class Tests : public TestCase
             wassert(actual(v).istrue());
             wassert(actual(v->enqd()) == 284.75);
         });
+
+        // Soil temperature (see https://github.com/ARPA-SIMC/dballe/issues/41 )
+        add_bufr_simplified_method("test-soil1.bufr", [](const Messages& msgs) {
+            wassert(actual(msgs.size()) == 1u);
+            const Msg& msg = Msg::downcast(msgs[0]);
+            wassert(actual(msg.type) == MSG_SYNOP);
+            IS2(WR_VAR(0, 12, 30), Level(106,   50), Trange::instant(), 288.5);
+            IS2(WR_VAR(0, 12, 30), Level(106,  100), Trange::instant(), 289.4);
+            IS2(WR_VAR(0, 12, 30), Level(106,  200), Trange::instant(), 288.6);
+            IS2(WR_VAR(0, 12, 30), Level(106,  500), Trange::instant(), 288.8);
+            IS2(WR_VAR(0, 12, 30), Level(106, 1000), Trange::instant(), 288.4);
+        });
+
     }
 } test("msg_wr_import");
 

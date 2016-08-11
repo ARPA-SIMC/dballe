@@ -124,6 +124,7 @@ void LevelContext::init()
     height_sensor = missing;
     height_sensor_seen = false;
     sea_depth = missing;
+    ground_depth = missing;
     swell_wave_group = 0;
 }
 
@@ -145,6 +146,7 @@ void LevelContext::peek_var(const wreport::Var& var)
             height_sensor = var.enq(missing);
             height_sensor_seen = true;
             break;
+        case WR_VAR(0,  7, 61): ground_depth = var.enq(missing); break;
         case WR_VAR(0,  7, 63): sea_depth = var.enq(missing); break;
         case WR_VAR(0, 22,  3): ++swell_wave_group; break;
     }
@@ -684,6 +686,10 @@ void SynopBaseImporter::import_var(const Var& var)
 
         case WR_VAR(0, 12,  5): set(var, DBA_MSG_WET_TEMP_2M); break;
         case WR_VAR(0, 10,197): set(var, DBA_MSG_HEIGHT_ANEM); break;
+
+        case WR_VAR(0, 12, 30):
+            set(var, WR_VAR(0, 12, 30), Level(106, level.ground_depth == LevelContext::missing ? MISSING_INT : level.ground_depth * 1000), Trange::instant());
+            break;
 
         default: WMOImporter::import_var(var); break;
     }

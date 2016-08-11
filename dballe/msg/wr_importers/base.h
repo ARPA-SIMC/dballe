@@ -75,6 +75,7 @@ struct LevelContext
     double press_std;
     double height_sensor;
     double sea_depth;
+    double ground_depth;
     bool height_sensor_seen;
     bool swell_wave_group;
 
