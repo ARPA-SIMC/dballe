@@ -18,16 +18,38 @@ using namespace std;
 namespace dballe {
 namespace tests {
 
-OverrideTestDBFormat::OverrideTestDBFormat(dballe::db::Format fmt)
-    : old_format(DB::get_default_format())
+namespace {
+
+struct OverrideTestDBFormat
 {
-    DB::set_default_format(fmt);
+    dballe::db::Format old_format;
+    OverrideTestDBFormat(dballe::db::Format fmt)
+        : old_format(DB::get_default_format())
+    {
+        DB::set_default_format(fmt);
+    }
+    ~OverrideTestDBFormat()
+    {
+        DB::set_default_format(old_format);
+    }
+};
+
+std::unique_ptr<dballe::sql::Connection> get_test_connection(const std::string& backend)
+{
+    std::string envname = "DBA_DB";
+    if (!backend.empty())
+    {
+        envname = "DBA_DB_";
+        envname += backend;
+    }
+    const char* envurl = getenv(envname.c_str());
+    if (envurl == NULL)
+        error_consistency::throwf("Environment variable %s is not set", envname.c_str());
+    return dballe::sql::Connection::create_from_url(envurl);
 }
 
-OverrideTestDBFormat::~OverrideTestDBFormat()
-{
-    DB::set_default_format(old_format);
 }
+
 
 Messages messages_from_db(DB& db, const dballe::Query& query)
 {
@@ -49,93 +71,6 @@ Messages messages_from_db(DB& db, const char* query)
     return res;
 }
 
-#if 0
-void StationValues::set_latlonident_into(Record& rec) const
-{
-    rec.set("lat", lat);
-    rec.set("lon", lon);
-    if (!ident.empty())
-        rec.set("ident", ident);
-    else
-        rec.unset("ident");
-}
-
-core::Record TestStation::merged_info_with_highest_prio(DB& db) const
-{
-    core::Record res;
-    map<string, int> prios = db.get_repinfo_priorities();
-    map<wreport::Varcode, int> cur_prios;
-    for (const auto& i: info)
-    {
-        int prio = prios[i.first];
-        const vector<Var*>& vars = i.second.vars();
-        for (vector<Var*>::const_iterator v = vars.begin(); v != vars.end(); ++v)
-        {
-            map<wreport::Varcode, int>::const_iterator cur_prio = cur_prios.find((*v)->code());
-            if (cur_prio == cur_prios.end() || cur_prio->second < prio)
-            {
-                res.set(**v);
-                cur_prios[(*v)->code()] = prio;
-            }
-        }
-    }
-    return res;
-}
-
-void TestStation::insert(WIBBLE_TEST_LOCPRM, DB& db, bool can_replace)
-{
-    for (const auto& i: info)
-    {
-        WIBBLE_TEST_INFO(locinfo);
-        if (i.second.vars().empty()) continue;
-        core::Record insert(i.second);
-        set_latlonident_into(insert);
-        insert.set("rep_memo", i.first);
-        insert.set_datetime(Datetime());
-        insert.set_level(Level());
-        insert.set_trange(Trange());
-        locinfo() << insert.to_string();
-        wrunchecked(db.insert(insert, can_replace, true));
-    }
-}
-
-void TestRecord::insert(WIBBLE_TEST_LOCPRM, DB& db, bool can_replace)
-{
-    // Insert the station info
-    wruntest(station.insert, db, can_replace);
-    ana_id = db.last_station_id();
-
-    // Insert variables
-    if (!data.vars().empty())
-    {
-        WIBBLE_TEST_INFO(locinfo);
-        core::Record insert(data);
-        wrunchecked(station.set_latlonident_into(insert));
-        locinfo() << insert.to_string();
-        wrunchecked(db.insert(insert, can_replace, true));
-        ana_id = db.last_station_id();
-    }
-
-    // Insert attributes
-    for (const auto& i: attrs)
-    {
-        WIBBLE_TEST_INFO(locinfo);
-        locinfo() << wreport::varcode_format(i.first) << ": " << i.second.to_string();
-        wrunchecked(db.attr_insert(i.first, i.second));
-    }
-}
-
-void TestRecord::set_var(const char* msgvarname, double val, int conf)
-{
-    int msgvarid = resolve_var(msgvarname);
-    const MsgVarShortcut& v = shortcutTable[msgvarid];
-    data.set(Level(v.ltype1, v.l1, v.ltype2, v.l2));
-    data.set(Trange(v.pind, v.p1, v.p2));
-    data.set(newvar(v.code, val));
-    if (conf != -1)
-        attrs[v.code].set("B33007", conf);
-}
-#endif
 
 void ActualCursor::station_keys_match(const Station& expected)
 {
@@ -279,7 +214,12 @@ void ActualDB::try_summary_query(const std::string& query, unsigned expected, re
     }
 }
 
-std::unique_ptr<dballe::sql::Connection> get_test_connection(const std::string& backend)
+BaseDBFixture::BaseDBFixture(const char* backend, db::Format format)
+    : backend(backend ? backend : ""), format(format)
+{
+}
+
+bool BaseDBFixture::has_driver()
 {
     std::string envname = "DBA_DB";
     if (!backend.empty())
@@ -287,14 +227,11 @@ std::unique_ptr<dballe::sql::Connection> get_test_connection(const std::string& 
         envname = "DBA_DB_";
         envname += backend;
     }
-    const char* envurl = getenv(envname.c_str());
-    if (envurl == NULL)
-        error_consistency::throwf("Environment variable %s is not set", envname.c_str());
-    return dballe::sql::Connection::create_from_url(envurl);
+    return getenv(envname.c_str()) != NULL;
 }
 
 DriverFixture::DriverFixture(const char* backend, db::Format format)
-    : backend(backend ? backend : ""), format(format)
+    : BaseDBFixture(backend, format)
 {
     conn = get_test_connection(this->backend).release();
     driver = db::v6::Driver::create(*conn).release();
@@ -312,12 +249,12 @@ DriverFixture::~DriverFixture()
 
 void DriverFixture::test_setup()
 {
-    Fixture::test_setup();
+    BaseDBFixture::test_setup();
     driver->remove_all(format);
 }
 
 V7DriverFixture::V7DriverFixture(const char* backend, db::Format format)
-    : backend(backend ? backend : ""), format(format)
+    : BaseDBFixture(backend, format)
 {
     conn = get_test_connection(this->backend).release();
     driver = db::v7::Driver::create(*conn).release();
@@ -335,12 +272,12 @@ V7DriverFixture::~V7DriverFixture()
 
 void V7DriverFixture::test_setup()
 {
-    Fixture::test_setup();
+    BaseDBFixture::test_setup();
     driver->remove_all(format);
 }
 
 DBFixture::DBFixture(const char* backend, db::Format format)
-    : backend(backend ? backend : ""), format(format)
+    : BaseDBFixture(backend, format)
 {
     db = create_db().release();
     db->reset();
@@ -367,7 +304,7 @@ std::unique_ptr<DB> DBFixture::create_db()
 
 void DBFixture::test_setup()
 {
-    Fixture::test_setup();
+    BaseDBFixture::test_setup();
     db->remove_all();
     int added, deleted, updated;
     db->update_repinfo(nullptr, &added, &deleted, &updated);
