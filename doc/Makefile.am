@@ -94,11 +94,6 @@ CLEANFILES += libdballef.doxytags
 EXTRA_DIST += $(fapisources) make_fortran_reference
 
 
-# Install guide
-
-#guidesources = guide.tex intro.tex maintainance.tex troubleshooting.tex local.bib
-
-
 # make install machinery
 
 install-data-local:
