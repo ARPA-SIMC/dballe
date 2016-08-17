@@ -3,6 +3,7 @@
 #include <dballe/core/values.h>
 #include <dballe/db/db.h>
 #include <dballe/sql/fwd.h>
+#include <utility>
 
 namespace dballe {
 struct DB;
@@ -101,6 +102,36 @@ struct DBFixture : public BaseDBFixture
     }
 
     void populate_database(TestDataSet& data_set);
+};
+
+struct Skippable
+{
+    virtual ~Skippable() {}
+
+    virtual bool skip() const { return false; }
+};
+
+template<typename FIXTURE>
+struct DBFixtureTestCase : public FixtureTestCase<FIXTURE>, public Skippable
+{
+    std::string db_backend;
+
+    template<typename... Args>
+    DBFixtureTestCase(const std::string& name, const char* backend, Args&&... args)
+        : FixtureTestCase<FIXTURE>(name, backend, std::forward<Args>(args)...), db_backend(backend ? backend : "")
+    {
+    }
+
+    bool skip() const override
+    {
+        std::string envname = "DBA_DB";
+        if (!db_backend.empty())
+        {
+            envname = "DBA_DB_";
+            envname += db_backend;
+        }
+        return getenv(envname.c_str()) == NULL;
+    }
 };
 
 struct ActualCursor : public Actual<dballe::db::Cursor&>

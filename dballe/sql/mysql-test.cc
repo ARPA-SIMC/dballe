@@ -1,4 +1,4 @@
-#include "core/tests.h"
+#include "db/tests.h"
 #include "sql/mysql.h"
 
 using namespace std;
@@ -13,7 +13,7 @@ struct ConnectorFixture : public Fixture
 {
     MySQLConnection conn;
 
-    ConnectorFixture()
+    ConnectorFixture(const char* backend)
     {
         conn.open_test();
     }
@@ -26,9 +26,9 @@ struct ConnectorFixture : public Fixture
     }
 };
 
-class Tests : public FixtureTestCase<ConnectorFixture>
+class Tests : public DBFixtureTestCase<ConnectorFixture>
 {
-    using FixtureTestCase::FixtureTestCase;
+    using DBFixtureTestCase::DBFixtureTestCase;
 
     void register_tests() override
     {
@@ -266,6 +266,6 @@ class Tests : public FixtureTestCase<ConnectorFixture>
             wassert(actual(f.conn.get_last_insert_id()) == 2);
         });
     }
-} test("db_sql_mysql");
+} test("db_sql_mysql", "MYSQL");
 
 }

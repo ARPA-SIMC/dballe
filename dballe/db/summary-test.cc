@@ -10,9 +10,9 @@ using namespace std;
 
 namespace {
 
-class Tests : public FixtureTestCase<DBFixture>
+class Tests : public DBFixtureTestCase<DBFixture>
 {
-    using FixtureTestCase::FixtureTestCase;
+    using DBFixtureTestCase::DBFixtureTestCase;
 
     void register_tests() override
     {

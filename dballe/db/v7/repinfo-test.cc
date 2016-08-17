@@ -36,9 +36,9 @@ struct Fixture : V7DriverFixture
     }
 };
 
-class Tests : public FixtureTestCase<Fixture>
+class Tests : public DBFixtureTestCase<Fixture>
 {
-    using FixtureTestCase::FixtureTestCase;
+    using DBFixtureTestCase::DBFixtureTestCase;
 
     void register_tests() override
     {
@@ -114,12 +114,12 @@ class Tests : public FixtureTestCase<Fixture>
     }
 };
 
-Tests test_sqlite("db_sql_repinfo_v7_sqlite", "SQLITE", db::V7);
+Tests test_sqlite("db_v7_repinfo_sqlite", "SQLITE", db::V7);
 #ifdef HAVE_LIBPQ
-Tests test_psql("db_sql_repinfo_v7_postgresql", "POSTGRESQL", db::V7);
+Tests test_psql("db_v7_repinfo_postgresql", "POSTGRESQL", db::V7);
 #endif
 #ifdef HAVE_MYSQL
-Tests test_mysql("db_sql_repinfo_v7_mysql", "MYSQL", db::V7);
+Tests test_mysql("db_v7_repinfo_mysql", "MYSQL", db::V7);
 #endif
 
 }

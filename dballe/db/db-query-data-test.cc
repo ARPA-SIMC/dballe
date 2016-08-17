@@ -72,9 +72,9 @@ struct DateDayDataSet : public TestDataSet
 
 #define TRY_QUERY(qstring, expected_count) wassert(actual(*f.db).try_data_query(qstring, expected_count))
 
-class Tests : public FixtureTestCase<DBFixture>
+class Tests : public DBFixtureTestCase<DBFixture>
 {
-    using FixtureTestCase::FixtureTestCase;
+    using DBFixtureTestCase::DBFixtureTestCase;
 
     void register_tests() override
     {
