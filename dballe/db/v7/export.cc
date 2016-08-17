@@ -7,7 +7,6 @@
 #include "dballe/db/v7/repinfo.h"
 #include "dballe/db/v7/station.h"
 #include "dballe/db/v7/levtr.h"
-#include "dballe/db/v7/attr.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
 #include "dballe/core/query.h"
