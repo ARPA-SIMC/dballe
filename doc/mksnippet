@@ -147,15 +147,55 @@ class Keywords:
             ("limit",    [ "ignored", "optional", "absent",
                     "Maximum number of results to return" ]),
         ))
+        self.data = OrderedDict()
+
+    def read_kw(self, key, const):
+        self.data[const] = {"key": key}
+
+    def read_info_string(self, const, desc, len):
+        if const not in self.data: return
+        self.data[const]["desc"] = desc
+        self.data[const]["unit"] = "CCITTIA5"
+        self.data[const]["scale"] = 0
+        self.data[const]["len"] = int(len)
+
+    def read_info_maxint(self, const, desc, unit):
+        if const not in self.data: return
+        self.data[const]["desc"] = desc
+        self.data[const]["unit"] = unit
+        self.data[const]["scale"] = 0
+        self.data[const]["len"] = 10
+
+    def read_info_int(self, const, desc, unit, len):
+        if const not in self.data: return
+        self.data[const]["desc"] = desc
+        self.data[const]["unit"] = unit
+        self.data[const]["scale"] = 0
+        self.data[const]["len"] = len
+
+    def read_info_bufr(self, const, desc, unit, scale, len):
+        if const not in self.data: return
+        self.data[const]["desc"] = desc
+        self.data[const]["unit"] = unit
+        self.data[const]["scale"] = int(scale)
+        self.data[const]["len"] = int(len)
 
     def read(self):
-        self.data = []
+        parser = (
+            (self.read_kw, re.compile(r"^(?P<key>[a-z0-9_]+),\s+(?P<const>[A-Z0-9_]+)$")),
+            (self.read_info_string, re.compile(r"""^\s+infos\[(?P<const>[A-Z0-9_]+)\s*\].set_string\s*\(0,\s*"(?P<desc>[^"]+)",\s*(?P<len>\d+)""")),
+            (self.read_info_maxint, re.compile(r"""^\s+infos\[(?P<const>[A-Z0-9_]+)\s*\].set_bufr\s*\(0,\s*"(?P<desc>[^"]+)",\s*"(?P<unit>[^"]+)",\s*DEF_MAXINT""")),
+            (self.read_info_int, re.compile(r"""^\s+infos\[(?P<const>[A-Z0-9_]+)\s*\].set_bufr\s*\(0,\s*"(?P<desc>[^"]+)",\s*"(?P<unit>[^"]+)",\s*DEF_INT\((?P<len>\d+)\)""")),
+            (self.read_info_bufr, re.compile(r"""^\s+infos\[(?P<const>[A-Z0-9_]+)\s*\].set_bufr\s*\(0,\s*"(?P<desc>[^"]+)",\s*"(?P<unit>[^"]+)",\s*(?P<scale>\d+),\s*(?P<len>\d+),""")),
+        )
         for line in sys.stdin:
-            line = line.strip()
-            res = line.split(",")
-            res[2] = int(res[2])
-            res[3] = int(res[3])
-            self.data.append(res)
+            for fun, regex in parser:
+                mo = regex.match(line)
+                if not mo: continue
+                fun(**mo.groupdict())
+        for const, info in self.data.items():
+            if "desc" not in info:
+                raise RuntimeError("keyword {} has no description".format(const))
 
     def print_dox(self):
         print("""/**@defgroup dba_record_keywords Keywords used by dballe::Record
@@ -176,9 +216,10 @@ digits and description.
         )
         table.print_head()
 
-        for tag, unit, sz, dec, desc in self.data:
-            fmt = mkformat(unit, sz, dec)
-            table.print_row((tag, unit, fmt, desc))
+        for const, info in self.data.items():
+            #tag, unit, sz, dec, desc
+            fmt = mkformat(info["unit"], info["len"], info["scale"])
+            table.print_row((info["key"], info["unit"], fmt, info["desc"]))
 
         print()
         print("\\endverbatim")
@@ -194,16 +235,17 @@ digits and description.
         )
         table.print_head()
 
-        for tag, unit, sz, dec, desc in self.data:
-            info = self.comments.get(tag, None)
+        for const, kwinfo in self.data.items():
+        #for tag, unit, sz, dec, desc in self.data:
+            info = self.comments.get(kwinfo["key"], None)
             if info is None:
                 ins = que = res = com = ""
             else:
                 ins, que, res, com = info + ([""] * (4 - len(info)))
 
-            fmt = mkformat(unit, sz, dec)
+            fmt = mkformat(kwinfo["unit"], kwinfo["len"], kwinfo["scale"])
 
-            table.print_row((tag, unit, fmt, desc, ins, que, res, com))
+            table.print_row((kwinfo["key"], kwinfo["unit"], fmt, kwinfo["desc"], ins, que, res, com))
 
         print()
         print("## Input parameters for attribute-related action routines")

@@ -27,17 +27,17 @@ cppdeps = libdballe.dox \
 	  tranges.dox \
 	  libwreport.doxytags
 
-record_keyword.dox: $(top_builddir)/dballe/dump-core-info mksnippet
-	$(top_builddir)/dballe/dump-core-info keywords | $(top_srcdir)/doc/mksnippet key dox > $@ || rm $@
+record_keyword.dox: $(top_builddir)/dballe/core/record_keyword.gperf mksnippet
+	$(top_srcdir)/doc/mksnippet key dox < $< > $@ || rm $@
 
 aliases.dox: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
-	$(top_builddir)/doc/mksnippet alias dox < $< > $@ || rm $@
+	$(top_srcdir)/doc/mksnippet alias dox < $< > $@ || rm $@
 
 ltypes.dox: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
-	$(top_builddir)/doc/mksnippet levels dox < $< > $@ || rm $@
+	$(top_srcdir)/doc/mksnippet levels dox < $< > $@ || rm $@
 
 tranges.dox: mksnippet
-	$(top_builddir)/doc/mksnippet tranges dox > $@ || rm $@
+	$(top_srcdir)/doc/mksnippet tranges dox > $@ || rm $@
 
 libdballe.doxytags: $(cppdeps)
 	doxygen $<
@@ -71,20 +71,20 @@ libdballef.doxytags: $(fortrandeps)
 fapi_reference.md: $(top_srcdir)/doc/make_fortran_reference libdballef.doxytags
 	$< > $@ fortran_xml || rm $@
 
-fapi_parms.md: $(top_builddir)/dballe/dump-core-info mksnippet
-	$(top_builddir)/dballe/dump-core-info keywords | $(top_srcdir)/doc/mksnippet key md > $@ || rm $@
+fapi_parms.md: $(top_builddir)/dballe/core/record_keyword.gperf mksnippet
+	$(top_srcdir)/doc/mksnippet key md < $< > $@ || rm $@
 
 fapi_aliases.md: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
-	$(top_builddir)/doc/mksnippet alias md < $< > $@ || rm $@
+	$(top_srcdir)/doc/mksnippet alias md < $< > $@ || rm $@
 
 fapi_ltypes.md: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
-	$(top_builddir)/doc/mksnippet levels md < $< > $@ || rm $@
+	$(top_srcdir)/doc/mksnippet levels md < $< > $@ || rm $@
 
 fapi_tranges.md: mksnippet
-	$(top_builddir)/doc/mksnippet tranges md > $@ || rm $@
+	$(top_srcdir)/doc/mksnippet tranges md > $@ || rm $@
 
 fapi_btable.md: ../tables/dballe.txt mksnippet
-	$(top_builddir)/doc/mksnippet btable md < $< > $@ || rm $@
+	$(top_srcdir)/doc/mksnippet btable md < $< > $@ || rm $@
 
 
 doc_DATA += $(fapisources)
