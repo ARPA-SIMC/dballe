@@ -7,6 +7,7 @@ dballe (7.16-1) UNRELEASED; urgency=medium
   * Dropped LaTeX dependencies
   * Dropped CNF dependency
   * Increased libdballef soname
+  * Updated Standards-Version, no changes required
 
  -- Enrico Zini <enrico@debian.org>  Wed, 17 Aug 2016 09:30:12 +0200
 

@@ -10,7 +10,7 @@ Build-Depends: debhelper (>= 9), dh-python, dh-autoreconf,
   gfortran | g77,
   python-all-dev, python3-all-dev, python-docutils, python-numpy, python3-numpy,
   python-six, python3-six
-Standards-Version: 3.9.6.0
+Standards-Version: 3.9.8.0
 Homepage: https://github.com/ARPA-SIMC/dballe
 Vcs-Git: https://github.com/ARPA-SIMC/dballe
 
