@@ -7,7 +7,6 @@
 #include "dballe/db/v7/station.h"
 #include "dballe/db/v7/levtr.h"
 #include "dballe/db/v7/data.h"
-#include "dballe/db/v7/attr.h"
 #include "cursor.h"
 #include "dballe/core/query.h"
 #include "dballe/core/record.h"

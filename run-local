@@ -8,4 +8,4 @@ export DBA_TABLES=$TOP_SRCDIR/tables/
 export PYTHONPATH=$TOP_SRCDIR/python
 export PATH="$TOP_SRCDIR/src:$PATH"
 
-exec libtool --mode=execute "$@"
+exec "$TOP_SRCDIR"/libtool --mode=execute "$@"

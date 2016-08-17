@@ -77,9 +77,9 @@ std::string parm(const char* name, int val)
     return out.str();
 }
 
-class Tests : public FixtureTestCase<Fixture>
+class Tests : public DBFixtureTestCase<Fixture>
 {
-    using FixtureTestCase::FixtureTestCase;
+    using DBFixtureTestCase::DBFixtureTestCase;
 
     void register_tests() override
     {

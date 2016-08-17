@@ -13,7 +13,7 @@ struct ConnectorFixture : public Fixture
 {
     PostgreSQLConnection conn;
 
-    ConnectorFixture()
+    ConnectorFixture(const char* backend)
     {
         conn.open_test();
     }
@@ -26,9 +26,9 @@ struct ConnectorFixture : public Fixture
     }
 };
 
-class Tests : public FixtureTestCase<ConnectorFixture>
+class Tests : public DBFixtureTestCase<ConnectorFixture>
 {
-    using FixtureTestCase::FixtureTestCase;
+    using DBFixtureTestCase::DBFixtureTestCase;
 
     void register_tests() override
     {
@@ -242,6 +242,6 @@ class Tests : public FixtureTestCase<ConnectorFixture>
             wassert(actual(res4.get_timestamp(0, 0)) == Datetime(1945, 4, 25, 8, 10, 20));
         });
     }
-} test("db_sql_postgresql");
+} test("db_sql_postgresql", "POSTGRESQL");
 
 }

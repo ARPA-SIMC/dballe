@@ -6,8 +6,6 @@
 #include <map>
 #include <sstream>
 #include <cstring>
-#include <sqltypes.h>
-#include <sql.h>
 
 using namespace wreport;
 using namespace std;

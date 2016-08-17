@@ -41,9 +41,9 @@ struct Fixture : DriverFixture
     }
 };
 
-class Tests : public FixtureTestCase<Fixture>
+class Tests : public DBFixtureTestCase<Fixture>
 {
-    using FixtureTestCase::FixtureTestCase;
+    using DBFixtureTestCase::DBFixtureTestCase;
 
     void register_tests() override
     {
@@ -73,12 +73,12 @@ class Tests : public FixtureTestCase<Fixture>
     }
 };
 
-Tests test_sqlite("db_sql_station_v6_sqlite", "SQLITE", db::V6);
+Tests test_sqlite("db_v6_station_sqlite", "SQLITE", db::V6);
 #ifdef HAVE_LIBPQ
-Tests test_psql("db_sql_station_v6_postgresql", "POSTGRESQL", db::V6);
+Tests test_psql("db_v6_station_postgresql", "POSTGRESQL", db::V6);
 #endif
 #ifdef HAVE_MYSQL
-Tests test_mysql("db_sql_station_v6_mysql", "MYSQL", db::V6);
+Tests test_mysql("db_v6_station_mysql", "MYSQL", db::V6);
 #endif
 
 }

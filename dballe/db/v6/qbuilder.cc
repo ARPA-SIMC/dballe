@@ -4,6 +4,7 @@
 #include "dballe/core/query.h"
 #include "dballe/var.h"
 #include "dballe/db/v6/repinfo.h"
+#include "dballe/sql/sql.h"
 #include <wreport/var.h>
 #include <regex.h>
 #include <cstring>

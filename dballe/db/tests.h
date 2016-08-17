@@ -3,7 +3,7 @@
 #include <dballe/core/values.h>
 #include <dballe/db/db.h>
 #include <dballe/sql/fwd.h>
-#include <dballe/db/ostream.h>
+#include <utility>
 
 namespace dballe {
 struct DB;
@@ -27,89 +27,6 @@ namespace tests {
 Messages messages_from_db(DB& db, const dballe::Query& query);
 Messages messages_from_db(DB& db, const char* query);
 
-struct OverrideTestDBFormat
-{
-    dballe::db::Format old_format;
-    OverrideTestDBFormat(dballe::db::Format fmt);
-    ~OverrideTestDBFormat();
-};
-
-#if 0
-template<typename T>
-struct db_tg : public tut::test_group<T>
-{
-    dballe::db::Format db_format;
-    const char* backend = 0;
-    const char* name;
-
-    db_tg(const char* name, dballe::db::Format fmt, const char* backend=0)
-        : tut::test_group<T>(name), db_format(fmt), backend(backend), name(name)
-    {
-    }
-
-    tut::test_result run_next()
-    {
-        dballe::tests::OverrideTestDBFormat otf(db_format);
-        return tut::test_group<T>::run_next();
-    }
-    tut::test_result run_test(int n)
-    {
-        dballe::tests::OverrideTestDBFormat otf(db_format);
-        return tut::test_group<T>::run_test(n);
-    }
-};
-#endif
-
-#if 0
-/// Fixture data about a station
-struct TestStation
-{
-    double lat;
-    double lon;
-    std::string ident;
-    /// Station information variables for each network
-    std::map<std::string, core::Record> info;
-
-    /// Set our lat, lon and indent into the given record
-    void set_latlonident_into(Record& rec) const;
-
-    /**
-     * Get a record with all info variables. In case of conflict, keeps only
-     * those with highest priority.
-     *
-     * @param db
-     *   Database used to read priority information
-     */
-    core::Record merged_info_with_highest_prio(DB& db) const;
-
-    /**
-     * Insert the station and its info in the database.
-     *
-     * Note that if info is empty, nothing will happen, as a station cannot
-     * exist without station vars or measured values.
-     */
-    void insert(WIBBLE_TEST_LOCPRM, DB& db, bool can_replace=false);
-};
-
-/// Fixture data about measured variables
-struct TestRecord
-{
-    StationValues station;
-    /// Measured variables context, measured variables
-    core::Record data;
-    /// Attributes on measured variables
-    std::map<wreport::Varcode, core::Record> attrs;
-    /// ana_id of this station after inserting it
-    int ana_id;
-
-    /// Set a value as identified by the Msg ID, with its level, timerange and
-    /// varcode, at the given date and with an optional confidence %
-    void set_var(const char* msgvarname, double val, int conf=-1);
-
-    void insert(WIBBLE_TEST_LOCPRM, DB& db, bool can_replace=false);
-};
-#endif
-
 /// Base for datasets used to populate test databases
 struct TestDataSet
 {
@@ -130,14 +47,20 @@ struct OldDballeTestDataSet : public TestDataSet
     OldDballeTestDataSet();
 };
 
-std::unique_ptr<dballe::sql::Connection> get_test_connection(const std::string& backend);
 
-/// Test fixture for SQL backend drivers
-struct DriverFixture : public Fixture
+struct BaseDBFixture : public Fixture
 {
     std::string backend;
     db::Format format;
 
+    BaseDBFixture(const char* backend, db::Format format);
+
+    bool has_driver();
+};
+
+/// Test fixture for SQL backend drivers
+struct DriverFixture : public BaseDBFixture
+{
     dballe::sql::Connection* conn = nullptr;
     db::v6::Driver* driver = nullptr;
 
@@ -148,11 +71,8 @@ struct DriverFixture : public Fixture
 };
 
 /// Test fixture for SQL backend drivers
-struct V7DriverFixture : public Fixture
+struct V7DriverFixture : public BaseDBFixture
 {
-    std::string backend;
-    db::Format format;
-
     dballe::sql::Connection* conn = nullptr;
     db::v7::Driver* driver = nullptr;
 
@@ -162,32 +82,8 @@ struct V7DriverFixture : public Fixture
     void test_setup();
 };
 
-#if 0
-template<typename T=DriverFixture>
-struct driver_test_group : public dballe::tests::test_group<T>
+struct DBFixture : public BaseDBFixture
 {
-    const char* backend;
-    db::Format dbformat;
-
-    driver_test_group(const char* name, const char* backend, db::Format dbformat, const typename dballe::tests::test_group<T>::Tests& tests)
-        : dballe::tests::test_group<T>(name, tests), backend(backend), dbformat(dbformat)
-    {
-    }
-
-    T* create_fixture()
-    {
-        DriverFixture::backend = backend;
-        DriverFixture::format = dbformat;
-        return dballe::tests::test_group<T>::create_fixture();
-    }
-};
-#endif
-
-struct DBFixture : public Fixture
-{
-    std::string backend;
-    db::Format format;
-
     DB* db = nullptr;
 
     DBFixture(const char* backend, db::Format format);
@@ -208,26 +104,35 @@ struct DBFixture : public Fixture
     void populate_database(TestDataSet& data_set);
 };
 
-#if 0
-template<typename T=DBFixture>
-struct db_test_group : public dballe::tests::test_group<T>
+struct Skippable
 {
-    const char* backend;
-    db::Format dbformat;
+    virtual ~Skippable() {}
 
-    db_test_group(const char* name, const char* backend, db::Format dbformat, const typename dballe::tests::test_group<T>::Tests& tests)
-        : dballe::tests::test_group<T>(name, tests), backend(backend), dbformat(dbformat)
+    virtual bool skip() const { return false; }
+};
+
+template<typename FIXTURE>
+struct DBFixtureTestCase : public FixtureTestCase<FIXTURE>, public Skippable
+{
+    std::string db_backend;
+
+    template<typename... Args>
+    DBFixtureTestCase(const std::string& name, const char* backend, Args&&... args)
+        : FixtureTestCase<FIXTURE>(name, backend, std::forward<Args>(args)...), db_backend(backend ? backend : "")
     {
     }
 
-    T* create_fixture()
+    bool skip() const override
     {
-        DBFixture::backend = backend;
-        DBFixture::format = dbformat;
-        return dballe::tests::test_group<T>::create_fixture();
+        std::string envname = "DBA_DB";
+        if (!db_backend.empty())
+        {
+            envname = "DBA_DB_";
+            envname += db_backend;
+        }
+        return getenv(envname.c_str()) == NULL;
     }
 };
-#endif
 
 struct ActualCursor : public Actual<dballe::db::Cursor&>
 {

@@ -1,24 +1,35 @@
 #include <wreport/utils/tests.h>
+#include <dballe/db/tests.h>
 #include <signal.h>
 #include <cstdlib>
 #include <cstring>
 #include <exception>
+
+using namespace wreport::tests;
 
 void signal_to_exception(int)
 {
     throw std::runtime_error("killing signal catched");
 }
 
+struct DBTestController : public SimpleTestController
+{
+    bool test_case_begin(const TestCase& test_case, const TestCaseResult& test_case_result) override
+    {
+        const dballe::tests::Skippable* skippable = dynamic_cast<const dballe::tests::Skippable*>(&test_case);
+        if (skippable && skippable->skip()) return false;
+        return SimpleTestController::test_case_begin(test_case, test_case_result);
+    }
+};
+
 int main(int argc,const char* argv[])
 {
-    using namespace wreport::tests;
-
     signal(SIGSEGV, signal_to_exception);
     signal(SIGILL, signal_to_exception);
 
     auto& tests = TestRegistry::get();
 
-    SimpleTestController controller;
+    DBTestController controller;
 
     if (const char* whitelist = getenv("TEST_WHITELIST"))
         controller.whitelist = whitelist;

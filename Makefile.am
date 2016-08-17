@@ -37,13 +37,15 @@ dbaexport.1: src/dbaexport
 
 BUILT_SOURCES = dbaexport.1
 
-EXTRA_DIST = LICENSE BENCHMARKS autogen.sh \
+EXTRA_DIST = README.md LICENSE BENCHMARKS autogen.sh \
 	     libdballe.m4 libdballef.m4 \
 	     libdballe.pc.in libdballef.pc.in \
 	     $(conf_DATA) get_line_no run-check.conf.example \
-	     run-check run-local run-bench show_code_notes \
+	     run-check run-local run-bench bench-plot show_code_notes \
+	     fabfile.py \
+	     $(wildcard bench/*.csv) \
 	     UPGRADE-5.x \
 	     dbaexport.1 \
              fedora/SPECS/dballe.spec
 
-CLEANFILES = dbatbl.1 dbamsg.1 dbadb.1
+CLEANFILES = dbatbl.1 dbamsg.1 dbadb.1 fabfile.pyc

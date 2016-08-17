@@ -1,3 +1,16 @@
+dballe (7.16-1) unstable; urgency=medium
+
+  * New upstream version
+     - Redone documentation from LaTeX to Markdown
+     - Introduced new SQL schema "V7"
+     - Refactored Fortran bindings to not need CNF
+  * Dropped LaTeX dependencies
+  * Dropped CNF dependency
+  * Increased libdballef soname
+  * Updated Standards-Version, no changes required
+
+ -- Enrico Zini <enrico@debian.org>  Wed, 17 Aug 2016 11:09:02 +0200
+
 dballe (7.7-1) unstable; urgency=medium
 
   [ Scott Kitterman ]

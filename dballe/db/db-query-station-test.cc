@@ -71,9 +71,9 @@ struct Fixture : public DBFixture
 
 #define TRY_QUERY(qstring, expected_count) wassert(actual(*f.db).try_data_query(qstring, expected_count))
 
-class Tests : public FixtureTestCase<Fixture>
+class Tests : public DBFixtureTestCase<Fixture>
 {
-    using FixtureTestCase::FixtureTestCase;
+    using DBFixtureTestCase::DBFixtureTestCase;
 
     void register_tests() override
     {
