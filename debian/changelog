@@ -2,6 +2,7 @@ dballe (7.17-2) UNRELEASED; urgency=medium
 
   * New upstream version
      - depend on newer libwreport
+  * Added missing help2man dependency
 
  -- Enrico Zini <enrico@debian.org>  Thu, 18 Aug 2016 15:55:48 +0200
 
