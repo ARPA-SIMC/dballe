@@ -25,6 +25,14 @@ class Tests : public TestCase
             } catch (std::exception& e) {
                 wassert(actual(e.what()).contains("cannot parse"));
             }
+            try {
+                resolve_varcode("B1210A");
+                wassert(throw TestFailed("an exception should be thrown"));
+            } catch (TestFailed) {
+                throw;
+            } catch (std::exception& e) {
+                wassert(actual(e.what()).contains("cannot parse"));
+            }
         });
         add_method("varinfo", []() {
             Varinfo i = varinfo(WR_VAR(0, 12, 101));
