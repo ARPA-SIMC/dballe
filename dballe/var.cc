@@ -45,7 +45,7 @@ wreport::Varcode resolve_varcode(const char* name)
 
     // Ensure that B is followed by 5 integers
     for (unsigned i = 1; i < 6; ++i)
-        if (name[i] and !isdigit(name[i]))
+        if (!name[i] || !isdigit(name[i]))
             error_consistency::throwf("cannot parse a Varcode out of '%s'", name);
 
     return WR_STRING_TO_VAR(name + 1);
@@ -65,7 +65,7 @@ wreport::Varcode resolve_varcode(const std::string& name)
 
     // Ensure that B is followed by 5 integers
     for (unsigned i = 1; i < 6; ++i)
-        if (name[i] and !isdigit(name[i]))
+        if (!name[i] || !isdigit(name[i]))
             error_consistency::throwf("cannot parse a Varcode out of '%s'", name.c_str());
 
     return WR_STRING_TO_VAR(name.data() + 1);

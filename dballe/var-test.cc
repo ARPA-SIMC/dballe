@@ -19,7 +19,7 @@ class Tests : public TestCase
             wassert(actual(resolve_varcode("t")) == WR_VAR(0, 12, 101));
             try {
                 resolve_varcode("B121");
-                throw TestFailed("an exception should be thrown");
+                wassert(throw TestFailed("an exception should be thrown"));
             } catch (TestFailed) {
                 throw;
             } catch (std::exception& e) {
