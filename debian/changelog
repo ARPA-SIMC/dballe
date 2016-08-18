@@ -1,3 +1,10 @@
+dballe (7.17-1) unstable; urgency=medium
+
+  * New upstream version
+     - fixed build failures on 32bit machines
+
+ -- Enrico Zini <enrico@debian.org>  Thu, 18 Aug 2016 11:11:43 +0200
+
 dballe (7.16-1) unstable; urgency=medium
 
   * New upstream version
