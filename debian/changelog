@@ -1,10 +1,10 @@
-dballe (7.17-2) UNRELEASED; urgency=medium
+dballe (7.18-1) unstable; urgency=medium
 
   * New upstream version
      - depend on newer libwreport
   * Added missing help2man dependency
 
- -- Enrico Zini <enrico@debian.org>  Thu, 18 Aug 2016 15:55:48 +0200
+ -- Enrico Zini <enrico@debian.org>  Thu, 18 Aug 2016 16:27:42 +0200
 
 dballe (7.17-1) unstable; urgency=medium
 
