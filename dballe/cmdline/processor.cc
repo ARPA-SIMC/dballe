@@ -35,8 +35,8 @@ void ProcessingException::initmsg(const std::string& fname, unsigned index, cons
 
 static void print_parse_error(const BinaryMessage& msg, error& e)
 {
-    fprintf(stderr, "Cannot parse %s message #%d: %s at offset %ld.\n",
-            File::encoding_name(msg.encoding), msg.index, e.what(), msg.offset);
+    fprintf(stderr, "Cannot parse %s message #%d: %s at offset %jd.\n",
+            File::encoding_name(msg.encoding), msg.index, e.what(), (intmax_t)msg.offset);
 }
 
 
