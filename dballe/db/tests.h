@@ -55,7 +55,9 @@ struct BaseDBFixture : public Fixture
 
     BaseDBFixture(const char* backend, db::Format format);
 
+    void test_setup();
     bool has_driver();
+    static bool has_driver(const std::string& backend);
 };
 
 /// Test fixture for SQL backend drivers
@@ -104,34 +106,10 @@ struct DBFixture : public BaseDBFixture
     void populate_database(TestDataSet& data_set);
 };
 
-struct Skippable
-{
-    virtual ~Skippable() {}
-
-    virtual bool skip() const { return false; }
-};
-
 template<typename FIXTURE>
-struct DBFixtureTestCase : public FixtureTestCase<FIXTURE>, public Skippable
+struct DBFixtureTestCase : public FixtureTestCase<FIXTURE>
 {
-    std::string db_backend;
-
-    template<typename... Args>
-    DBFixtureTestCase(const std::string& name, const char* backend, Args&&... args)
-        : FixtureTestCase<FIXTURE>(name, backend, std::forward<Args>(args)...), db_backend(backend ? backend : "")
-    {
-    }
-
-    bool skip() const override
-    {
-        std::string envname = "DBA_DB";
-        if (!db_backend.empty())
-        {
-            envname = "DBA_DB_";
-            envname += db_backend;
-        }
-        return getenv(envname.c_str()) == NULL;
-    }
+    using FixtureTestCase<FIXTURE>::FixtureTestCase;
 };
 
 struct ActualCursor : public Actual<dballe::db::Cursor&>

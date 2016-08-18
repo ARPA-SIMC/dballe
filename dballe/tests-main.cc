@@ -12,16 +12,6 @@ void signal_to_exception(int)
     throw std::runtime_error("killing signal catched");
 }
 
-struct DBTestController : public SimpleTestController
-{
-    bool test_case_begin(const TestCase& test_case, const TestCaseResult& test_case_result) override
-    {
-        const dballe::tests::Skippable* skippable = dynamic_cast<const dballe::tests::Skippable*>(&test_case);
-        if (skippable && skippable->skip()) return false;
-        return SimpleTestController::test_case_begin(test_case, test_case_result);
-    }
-};
-
 int main(int argc,const char* argv[])
 {
     signal(SIGSEGV, signal_to_exception);
@@ -29,7 +19,7 @@ int main(int argc,const char* argv[])
 
     auto& tests = TestRegistry::get();
 
-    DBTestController controller;
+    SimpleTestController controller;
 
     if (const char* whitelist = getenv("TEST_WHITELIST"))
         controller.whitelist = whitelist;

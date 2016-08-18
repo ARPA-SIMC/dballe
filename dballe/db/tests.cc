@@ -221,6 +221,11 @@ BaseDBFixture::BaseDBFixture(const char* backend, db::Format format)
 
 bool BaseDBFixture::has_driver()
 {
+    return has_driver(backend);
+}
+
+bool BaseDBFixture::has_driver(const std::string& backend)
+{
     std::string envname = "DBA_DB";
     if (!backend.empty())
     {
@@ -230,18 +235,22 @@ bool BaseDBFixture::has_driver()
     return getenv(envname.c_str()) != NULL;
 }
 
+void BaseDBFixture::test_setup()
+{
+    Fixture::test_setup();
+    if (!has_driver())
+        throw TestSkipped();
+    fprintf(stderr, "HD %s\n", backend.c_str());
+}
+
 DriverFixture::DriverFixture(const char* backend, db::Format format)
     : BaseDBFixture(backend, format)
 {
-    conn = get_test_connection(this->backend).release();
-    driver = db::v6::Driver::create(*conn).release();
-    driver->delete_tables(format);
-    driver->create_tables(format);
 }
 
 DriverFixture::~DriverFixture()
 {
-    if (getenv("PAUSE") == nullptr)
+    if (driver && getenv("PAUSE") == nullptr)
         driver->delete_tables(format);
     delete driver;
     delete conn;
@@ -250,21 +259,24 @@ DriverFixture::~DriverFixture()
 void DriverFixture::test_setup()
 {
     BaseDBFixture::test_setup();
+    if (!conn)
+    {
+        conn = get_test_connection(this->backend).release();
+        driver = db::v6::Driver::create(*conn).release();
+        driver->delete_tables(format);
+        driver->create_tables(format);
+    }
     driver->remove_all(format);
 }
 
 V7DriverFixture::V7DriverFixture(const char* backend, db::Format format)
     : BaseDBFixture(backend, format)
 {
-    conn = get_test_connection(this->backend).release();
-    driver = db::v7::Driver::create(*conn).release();
-    driver->delete_tables(format);
-    driver->create_tables(format);
 }
 
 V7DriverFixture::~V7DriverFixture()
 {
-    if (getenv("PAUSE") == nullptr)
+    if (driver && getenv("PAUSE") == nullptr)
         driver->delete_tables(format);
     delete driver;
     delete conn;
@@ -273,19 +285,24 @@ V7DriverFixture::~V7DriverFixture()
 void V7DriverFixture::test_setup()
 {
     BaseDBFixture::test_setup();
+    if (!conn)
+    {
+        conn = get_test_connection(this->backend).release();
+        driver = db::v7::Driver::create(*conn).release();
+        driver->delete_tables(format);
+        driver->create_tables(format);
+    }
     driver->remove_all(format);
 }
 
 DBFixture::DBFixture(const char* backend, db::Format format)
     : BaseDBFixture(backend, format)
 {
-    db = create_db().release();
-    db->reset();
 }
 
 DBFixture::~DBFixture()
 {
-    if (getenv("PAUSE") == nullptr)
+    if (db && getenv("PAUSE") == nullptr)
         db->disappear();
     delete db;
 }
@@ -305,6 +322,11 @@ std::unique_ptr<DB> DBFixture::create_db()
 void DBFixture::test_setup()
 {
     BaseDBFixture::test_setup();
+    if (!db)
+    {
+        db = create_db().release();
+        db->reset();
+    }
     db->remove_all();
     int added, deleted, updated;
     db->update_repinfo(nullptr, &added, &deleted, &updated);

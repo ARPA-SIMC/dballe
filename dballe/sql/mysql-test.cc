@@ -12,15 +12,21 @@ namespace {
 struct ConnectorFixture : public Fixture
 {
     MySQLConnection conn;
+    bool conn_open = false;
 
     ConnectorFixture(const char* backend)
     {
-        conn.open_test();
     }
 
     void test_setup()
     {
         Fixture::test_setup();
+        if (!BaseDBFixture::has_driver("MYSQL")) throw TestSkipped();
+        if (!conn_open)
+        {
+            conn.open_test();
+            conn_open = true;
+        }
         conn.drop_table_if_exists("dballe_test");
         conn.exec_no_data("CREATE TABLE dballe_test (val INTEGER NOT NULL)");
     }
