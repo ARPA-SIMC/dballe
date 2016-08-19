@@ -374,10 +374,7 @@ void InterpretedPrecise::set_sensor_height(const LevelContext& ctx)
     if (ctx.height_sensor == 0)
         level = Level(1);
     else if (ctx.height_sensor_seen)
-    {
-        fprintf(stderr, "%.10f %.10f %d\n", ctx.height_sensor, ctx.height_sensor * 1000.0, (int)round(ctx.height_sensor * 1000.0));
         level = ctx.height_sensor == LevelContext::missing ? Level(103) : Level(103, round(ctx.height_sensor * 1000.0));
-    }
 }
 
 void InterpretedSimplified::set_sensor_height(const LevelContext& ctx)
