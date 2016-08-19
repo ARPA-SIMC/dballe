@@ -2,6 +2,7 @@
 #include "core/var.h"
 #include <wreport/bulletin.h>
 #include <algorithm>
+#include <cmath>
 #include <cstdlib>
 #include <iostream>
 
@@ -373,7 +374,10 @@ void InterpretedPrecise::set_sensor_height(const LevelContext& ctx)
     if (ctx.height_sensor == 0)
         level = Level(1);
     else if (ctx.height_sensor_seen)
-        level = ctx.height_sensor == LevelContext::missing ? Level(103) : Level(103, ctx.height_sensor * 1000);
+    {
+        fprintf(stderr, "%.10f %.10f %d\n", ctx.height_sensor, ctx.height_sensor * 1000.0, (int)round(ctx.height_sensor * 1000.0));
+        level = ctx.height_sensor == LevelContext::missing ? Level(103) : Level(103, round(ctx.height_sensor * 1000.0));
+    }
 }
 
 void InterpretedSimplified::set_sensor_height(const LevelContext& ctx)
