@@ -40,7 +40,7 @@ class Tests : public TestCase
 
     void add_bufr_method(const std::string& fname, std::function<void(const Messages& msgs)> m)
     {
-        add_method(fname, [=]() {
+        add_method("prec_" + fname, [=]() {
             std::string pathname = "bufr/" + fname;
             msg::Importer::Options opts;
             opts.simplified = false;
@@ -51,7 +51,7 @@ class Tests : public TestCase
 
     void add_bufr_simplified_method(const std::string& fname, std::function<void(const Messages& msgs)> m)
     {
-        add_method(fname, [=]() {
+        add_method("simp_" + fname, [=]() {
             std::string pathname = "bufr/" + fname;
             msg::Importer::Options opts;
             opts.simplified = true;
@@ -174,7 +174,31 @@ class Tests : public TestCase
             wassert(actual(msg.get_datetime()) == Datetime(2009, 12, 3, 15, 0));
             IS(latitude, 50.07361); IS(longitude, 12.40333);
             IS(height_station, 483.0); IS(height_baro, 490.0);
+            IS(press, 95090.0); IS(press_msl, 101060.0); IS(press_3h, -110.0); IS(press_tend, 6.0);
+            IS(wind_dir, 0.0); IS(wind_speed, 1.0);
+            IS(temp_2m, 273.05); IS(dewpoint_2m, 271.35); IS(humidity, 88.0);
+            IS(visibility, 14000.0); IS(pres_wtr, 508);
+            IS2(WR_VAR(0, 20, 4), Level(1), Trange(205, 0, 10800), 10); // past_wtr1
+            IS2(WR_VAR(0, 20, 5), Level(1), Trange(205, 0, 10800), 10); // past_wtr2
+            IS(cloud_n, 38); IS(cloud_nh, 0); IS(cloud_hh, 6000.0);
+            IS(cloud_cl, 30); IS(cloud_cm, 20); IS(cloud_ch, 12);
+            IS(cloud_n1, 3); IS(cloud_c1, 0); IS(cloud_h1, 6000.0);
+            UN(cloud_n2); UN(cloud_c2); UN(cloud_h2);
+            UN(cloud_n3); UN(cloud_c3); UN(cloud_h3);
+            UN(cloud_n4); UN(cloud_c4); UN(cloud_h4);
+            UN(tot_prec24); UN(tot_snow);
+        });
 
+        add_bufr_method("synop-cloudbelow.bufr", [](const Messages& msgs) {
+            const Msg& msg = Msg::downcast(msgs[0]);
+            wassert(actual(msg.type) == MSG_SYNOP);
+
+            // msg.print(stderr);
+
+            IS(block, 11); IS(station, 406); IS(st_type, 1);
+            wassert(actual(msg.get_datetime()) == Datetime(2009, 12, 3, 15, 0));
+            IS(latitude, 50.07361); IS(longitude, 12.40333);
+            IS(height_station, 483.0); IS(height_baro, 490.0);
             IS2(WR_VAR(0, 10,  4), Level(102, 490000), Trange::instant(), 95090.0); // press
             IS2(WR_VAR(0, 10, 51), Level(102, 490000), Trange::instant(), 101060.0); // press_msl
             IS2(WR_VAR(0, 10, 63), Level(102, 490000), Trange(205, 0,10800), 6.0); // press_tend
@@ -185,11 +209,7 @@ class Tests : public TestCase
             IS2(WR_VAR(0, 12, 103), Level(103, 2050), Trange::instant(), 271.35); // dewpoint_2m
             IS2(WR_VAR(0, 13,   3), Level(103, 2050), Trange::instant(), 88.0); // humidity
             IS2(WR_VAR(0, 20, 1), Level(103, 8000), Trange::instant(), 14000.0); // visibility
-
-            IS(press, 95090.0); IS(press_msl, 101060.0); IS(press_3h, -110.0); IS(press_tend, 6.0);
-            IS(wind_dir, 0.0); IS(wind_speed, 1.0);
-            IS(temp_2m, 273.05); IS(dewpoint_2m, 271.35); IS(humidity, 88.0);
-            IS(visibility, 14000.0); IS(pres_wtr, 508);
+            IS(pres_wtr, 508);
             IS2(WR_VAR(0, 20, 4), Level(1), Trange(205, 0, 10800), 10); // past_wtr1
             IS2(WR_VAR(0, 20, 5), Level(1), Trange(205, 0, 10800), 10); // past_wtr2
             IS(cloud_n, 38); IS(cloud_nh, 0); IS(cloud_hh, 6000.0);
