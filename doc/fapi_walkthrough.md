@@ -156,7 +156,7 @@ This code will open a connection with DB-All.e, then it will start a session:
 
       ! End of the work
       ierr = idba_fatto(handle)
-      call idba_arrivederci(dbhandle)
+      ierr = idba_arrivederci(dbhandle)
 ```
 
 You call [idba_presentati][] to connect to the databse. The parameters are
@@ -777,7 +777,7 @@ close all connections and release all resources:
 
 ```fortran
       ! We do not need to work with dballe anymore
-      call idba_arrivederci(dbh)
+      ierr = idba_arrivederci(dbh)
 ```
 
 
