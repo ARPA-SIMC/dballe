@@ -240,7 +240,6 @@ void BaseDBFixture::test_setup()
     Fixture::test_setup();
     if (!has_driver())
         throw TestSkipped();
-    fprintf(stderr, "HD %s\n", backend.c_str());
 }
 
 DriverFixture::DriverFixture(const char* backend, db::Format format)
