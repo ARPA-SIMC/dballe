@@ -244,7 +244,7 @@ void Driver::create_tables_v7()
     conn.exec_no_data(R"(
         CREATE TABLE data (
            id          INTEGER auto_increment PRIMARY KEY,
-           id_station  SMALLINT NOT NULL,
+           id_station  INTEGER NOT NULL,
            id_levtr    INTEGER NOT NULL,
            datetime    DATETIME NOT NULL,
            code        SMALLINT NOT NULL,
