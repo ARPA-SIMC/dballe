@@ -1,6 +1,6 @@
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
-Version: 7.16
+Version: 7.19
 Release: 1
 License: GPL
 Group: Applications/Meteo
@@ -272,6 +272,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Wed Oct 12 2016 Daniele Branchini <dbranchini@arpae.it> - 7.19-1
+- closed #41, #47, #48, #49, #50, #51, #58, #65, #72
+
 * Mon Jul 18 2016 Daniele Branchini <dbranchini@arpae.it> - 7.16-1
 - closed #63 (removed memdb)
 - closed #62 (dbadb export missing date)
