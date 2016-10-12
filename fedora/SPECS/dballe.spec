@@ -222,7 +222,6 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 %{_includedir}/dballe/db/*
 %{_includedir}/dballe/cmdline/*
 %{_includedir}/dballe/simple/*
-%{_includedir}/dballe/memdb/*
 
 %{_libdir}/libdballe.a
 %{_libdir}/libdballe.la
