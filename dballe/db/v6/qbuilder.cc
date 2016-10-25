@@ -620,7 +620,7 @@ bool QueryBuilder::add_varcode_where(const char* tbl)
             TRACE("found b: adding AND %s.id_var=%d\n", tbl, (int)*query.varcodes.begin());
             found = true;
             break;
-        case 2:
+        default:
             sql_where.append_listf("%s.id_var IN (", tbl);
             sql_where.append_varlist(query.varcodes);
             sql_where.append(")");

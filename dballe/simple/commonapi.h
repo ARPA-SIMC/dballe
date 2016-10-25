@@ -109,6 +109,11 @@ public:
     void fatto() override;
 
     AttrState test_get_attr_state() const { return attr_state; }
+
+    const core::Record& test_get_input() const { return input; }
+    const core::Record& test_get_output() const { return output; }
+    const core::Record& test_get_qcinput() const { return qcinput; }
+    const core::Record& test_get_qcoutput() const { return qcoutput; }
 };
 
 }

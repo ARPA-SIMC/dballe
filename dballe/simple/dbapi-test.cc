@@ -817,6 +817,21 @@ add_method("issue52", [](Fixture& f) {
     // error: no year information found in message to import
 });
 
+add_method("issue73", [](Fixture& f) {
+    using namespace wreport;
+
+    {
+        fortran::DbAPI dbapi(*f.db, "write", "write", "write");
+        populate_variables(dbapi);
+    }
+
+    {
+        fortran::DbAPI dbapi(*f.db, "read", "read", "read");
+        dbapi.setc("varlist", "B10004,B12101,B12103");
+        wassert(actual(dbapi.voglioquesto()) == 1);
+    }
+});
+
 }
 
 }
