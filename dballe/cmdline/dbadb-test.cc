@@ -27,7 +27,8 @@ add_method("import", [](Fixture& f) {
     Dbadb dbadb(*f.db);
 
     // Import a synop
-    cmdline::Reader reader;
+    cmdline::ReaderOptions opts;
+    cmdline::Reader reader(opts);
     wassert(actual(dbadb.do_import(dballe::tests::datafile("bufr/obs0-1.22.bufr"), reader)) == 0);
 
     // Export forcing report as temp
@@ -58,7 +59,8 @@ add_method("issue62", [](Fixture& f) {
     Dbadb dbadb(*f.db);
 
     // Import a synop
-    cmdline::Reader reader;
+    cmdline::ReaderOptions opts;
+    cmdline::Reader reader(opts);
     wassert(actual(dbadb.do_import(dballe::tests::datafile("bufr/issue62.bufr"), reader)) == 0);
 
     // Export

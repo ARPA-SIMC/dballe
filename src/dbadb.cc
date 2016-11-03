@@ -19,7 +19,7 @@ using namespace wreport;
 using namespace std;
 
 // Command line parser variables
-struct cmdline::Reader reader;
+struct cmdline::ReaderOptions readeropts;
 static const char* op_output_template = "";
 const char* op_output_type = "bufr";
 const char* op_report = "";
@@ -38,15 +38,15 @@ int op_wipe_disappear = 0;
 
 
 struct poptOption grepTable[] = {
-    { "category", 0, POPT_ARG_INT, &reader.filter.category, 0,
+    { "category", 0, POPT_ARG_INT, &readeropts.category, 0,
         "match messages with the given data category", "num" },
-    { "subcategory", 0, POPT_ARG_INT, &reader.filter.subcategory, 0,
+    { "subcategory", 0, POPT_ARG_INT, &readeropts.subcategory, 0,
         "match BUFR messages with the given data subcategory", "num" },
-    { "check-digit", 0, POPT_ARG_INT, &reader.filter.checkdigit, 0,
+    { "check-digit", 0, POPT_ARG_INT, &readeropts.checkdigit, 0,
         "match CREX messages with check digit (if 1) or without check digit (if 0)", "num" },
-    { "parsable", 0, 0, &reader.filter.parsable, 0,
+    { "parsable", 0, 0, &readeropts.parsable, 0,
         "match only messages that can be parsed", 0 },
-    { "index", 0, POPT_ARG_STRING, &reader.filter.index, 0,
+    { "index", 0, POPT_ARG_STRING, &readeropts.index_filter, 0,
         "match messages with the index in the given range (ex.: 1-5,9,22-30)", "expr" },
     POPT_TABLEEND
 };
@@ -265,9 +265,9 @@ struct ImportCmd : public DatabaseCmd
     void add_to_optable(std::vector<poptOption>& opts) const override
     {
         DatabaseCmd::add_to_optable(opts);
-        opts.push_back({ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
+        opts.push_back({ "type", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
             "format of the input data ('bufr', 'crex', 'aof', 'csv', 'json')", "type" });
-        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ "overwrite", 'f', POPT_ARG_NONE, &op_overwrite, 0,
             "overwrite existing data", 0 });
@@ -290,6 +290,7 @@ struct ImportCmd : public DatabaseCmd
     {
         // Throw away the command name
         poptGetArg(optCon);
+        cmdline::Reader reader(readeropts);
 
         // Configure the reader
         core::Query query;

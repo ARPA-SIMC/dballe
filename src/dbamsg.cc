@@ -48,27 +48,27 @@ static int op_precise_import = 0;
 static int op_bufr2netcdf_categories = 0;
 static const char* op_output_type = "bufr";
 static const char* op_output_template = "";
-static const char* op_output_file = NULL;
+static const char* op_output_file = nullptr;
 static const char* op_report = "";
-static const char* op_bisect_cmd = NULL;
+static const char* op_bisect_cmd = nullptr;
 int op_verbose = 0;
 
-struct cmdline::Reader reader;
+struct cmdline::ReaderOptions readeropts;
 
 struct poptOption grepTable[] = {
-	{ "category", 0, POPT_ARG_INT, &reader.filter.category, 0,
-		"match messages with the given data category", "num" },
-	{ "subcategory", 0, POPT_ARG_INT, &reader.filter.subcategory, 0,
-		"match BUFR messages with the given data subcategory", "num" },
-	{ "check-digit", 0, POPT_ARG_INT, &reader.filter.checkdigit, 0,
-		"match CREX messages with check digit (if 1) or without check digit (if 0)", "num" },
-	{ "unparsable", 0, 0, &reader.filter.unparsable, 0,
-		"match only messages that cannot be parsed", 0 },
-	{ "parsable", 0, 0, &reader.filter.parsable, 0,
-		"match only messages that can be parsed", 0 },
-	{ "index", 0, POPT_ARG_STRING, &reader.filter.index, 0,
-		"match messages with the index in the given range (ex.: 1-5,9,22-30)", "expr" },
-	POPT_TABLEEND
+    { "category", 0, POPT_ARG_INT, &readeropts.category, 0,
+        "match messages with the given data category", "num" },
+    { "subcategory", 0, POPT_ARG_INT, &readeropts.subcategory, 0,
+        "match BUFR messages with the given data subcategory", "num" },
+    { "check-digit", 0, POPT_ARG_INT, &readeropts.checkdigit, 0,
+        "match CREX messages with check digit (if 1) or without check digit (if 0)", "num" },
+    { "unparsable", 0, 0, &readeropts.unparsable, 0,
+        "match only messages that cannot be parsed", 0 },
+    { "parsable", 0, 0, &readeropts.parsable, 0,
+        "match only messages that can be parsed", 0 },
+    { "index", 0, POPT_ARG_STRING, &readeropts.index_filter, 0,
+        "match messages with the index in the given range (ex.: 1-5,9,22-30)", "expr" },
+    POPT_TABLEEND
 };
 
 /// Write CSV output to the given output stream
@@ -591,9 +591,9 @@ struct Scan : public cmdline::Subcommand
     void add_to_optable(std::vector<poptOption>& opts) const override
     {
         Subcommand::add_to_optable(opts);
-        opts.push_back({ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
+        opts.push_back({ "type", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
             "format of the input data ('bufr', 'crex', 'aof')", "type" });
-        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
                 "Options used to filter messages", 0 });
@@ -605,6 +605,7 @@ struct Scan : public cmdline::Subcommand
         poptGetArg(optCon);
 
         core::Query query;
+        cmdline::Reader reader(readeropts);
         if (dba_cmdline_get_query(optCon, query) > 0)
             reader.filter.matcher_from_record(query);
         Summarise s;
@@ -625,9 +626,9 @@ struct HeadCmd : public cmdline::Subcommand
     void add_to_optable(std::vector<poptOption>& opts) const override
     {
         Subcommand::add_to_optable(opts);
-        opts.push_back({ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
+        opts.push_back({ "type", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
             "format of the input data ('bufr', 'crex', 'aof')", "type" });
-        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
                 "Options used to filter messages", 0 });
@@ -637,6 +638,7 @@ struct HeadCmd : public cmdline::Subcommand
     {
         /* Throw away the command name */
         poptGetArg(optCon);
+        cmdline::Reader reader(readeropts);
 
         core::Query query;
         if (dba_cmdline_get_query(optCon, query) > 0)
@@ -660,9 +662,9 @@ struct Dump : public cmdline::Subcommand
     void add_to_optable(std::vector<poptOption>& opts) const override
     {
         Subcommand::add_to_optable(opts);
-        opts.push_back({ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
+        opts.push_back({ "type", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
             "format of the input data ('bufr', 'crex', 'aof')", "type" });
-        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ "interpreted", 0, 0, &op_dump_interpreted, 0,
             "dump the message as understood by the importer", 0 });
@@ -707,6 +709,7 @@ struct Dump : public cmdline::Subcommand
 
         /* Throw away the command name */
         poptGetArg(optCon);
+        cmdline::Reader reader(readeropts);
         if (op_precise_import) reader.import_opts.simplified = false;
 
         core::Query query;
@@ -730,9 +733,9 @@ struct Cat : public cmdline::Subcommand
     void add_to_optable(std::vector<poptOption>& opts) const override
     {
         Subcommand::add_to_optable(opts);
-        opts.push_back({ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
+        opts.push_back({ "type", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
             "format of the input data ('bufr', 'crex', 'aof')", "type" });
-        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
             "Options used to filter messages", 0 });
@@ -742,6 +745,7 @@ struct Cat : public cmdline::Subcommand
     {
         /* Throw away the command name */
         poptGetArg(optCon);
+        cmdline::Reader reader(readeropts);
 
         core::Query query;
         if (dba_cmdline_get_query(optCon, query) > 0)
@@ -837,9 +841,9 @@ struct Bisect : public cmdline::Subcommand
         Subcommand::add_to_optable(opts);
         opts.push_back({ "test", 0, POPT_ARG_STRING, &op_bisect_cmd, 0,
             "command to run to test a message group", "cmd" });
-        opts.push_back({ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
+        opts.push_back({ "type", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
             "format of the input data ('bufr', 'crex', 'aof')", "type" });
-        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
             "Options used to filter messages", 0 });
@@ -912,11 +916,11 @@ struct Convert : public cmdline::Subcommand
     void add_to_optable(std::vector<poptOption>& opts) const override
     {
         Subcommand::add_to_optable(opts);
-        opts.push_back({ "type", 't', POPT_ARG_STRING, &reader.input_type, 0,
+        opts.push_back({ "type", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
             "format of the input data ('bufr', 'crex', 'aof', 'csv')", "type" });
         opts.push_back({ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
             "format of the data in output ('bufr', 'crex', 'aof')", "type" });
-        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ "template", 0, POPT_ARG_STRING, &op_output_template, 0,
             "template of the data in output (autoselect if not specified, 'list' gives a list)", "name" });
@@ -936,6 +940,7 @@ struct Convert : public cmdline::Subcommand
     {
         msg::Exporter::Options opts;
         cmdline::Converter conv;
+        cmdline::Reader reader(readeropts);
         reader.verbose = op_verbose;
 
         /* Throw away the command name */
@@ -1000,11 +1005,11 @@ struct Compare : public cmdline::Subcommand
     void add_to_optable(std::vector<poptOption>& opts) const override
     {
         Subcommand::add_to_optable(opts);
-        opts.push_back({ "type1", 't', POPT_ARG_STRING, &reader.input_type, 0,
+        opts.push_back({ "type1", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
             "format of the first file to compare ('bufr', 'crex', 'aof')", "type" });
         opts.push_back({ "type2", 'd', POPT_ARG_STRING, &op_output_type, 0,
             "format of the second file to compare ('bufr', 'crex', 'aof')", "type" });
-        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &reader.fail_file_name, 0,
+        opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
             "Options used to filter messages", 0 });
@@ -1014,6 +1019,7 @@ struct Compare : public cmdline::Subcommand
     {
         /* Throw away the command name */
         poptGetArg(optCon);
+        cmdline::Reader reader(readeropts);
 
         /* Read the file names */
         const char* file1_name = poptGetArg(optCon);
@@ -1026,10 +1032,10 @@ struct Compare : public cmdline::Subcommand
 
         unique_ptr<File> file1;
         unique_ptr<File> file2;
-        if (strcmp(reader.input_type, "auto") == 0)
+        if (strcmp(readeropts.input_type, "auto") == 0)
             file1 = File::create(file1_name, "r");
         else
-            file1 = File::create(string_to_encoding(reader.input_type), file1_name, "r");
+            file1 = File::create(string_to_encoding(readeropts.input_type), file1_name, "r");
         if (strcmp(op_output_type, "auto") == 0)
             file2 = File::create(file2_name, "r");
         else

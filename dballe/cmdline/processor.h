@@ -115,19 +115,43 @@ struct Action
     virtual bool operator()(const Item& item) = 0;
 };
 
+struct IndexMatcher
+{
+    std::vector<std::pair<int, int>> ranges;
+
+    void parse(const std::string& str);
+
+    bool match(int val) const;
+};
+
+struct ReaderOptions
+{
+    int category = -1;
+    int subcategory = -1;
+    int checkdigit = -1;
+    int unparsable = 0;
+    int parsable = 0;
+    const char* index_filter = nullptr;
+    const char* input_type = "auto";
+    const char* fail_file_name = nullptr;
+};
+
 struct Filter
 {
     msg::Exporter::Options export_opts;
-    int category;
-    int subcategory;
-    int checkdigit;
-    int unparsable;
-    int parsable;
-    const char* index;
-    Matcher* matcher;
+    int category = -1;
+    int subcategory = -1;
+    int checkdigit = -1;
+    int unparsable = 0;
+    int parsable = 0;
+    IndexMatcher imatcher;
+    Matcher* matcher = nullptr;
 
     Filter();
+    Filter(const ReaderOptions& opts);
     ~Filter();
+
+    void set_index_filter(const std::string& val);
 
     /// Reset to the empty matcher
     void matcher_reset();
@@ -148,18 +172,19 @@ struct Filter
 class Reader
 {
 protected:
+    std::string input_type;
+    const char* fail_file_name;
+
     void read_csv(const std::list<std::string>& fnames, Action& action);
     void read_json(const std::list<std::string>& fnames, Action& action);
     void read_file(const std::list<std::string>& fnames, Action& action);
 
 public:
-    const char* input_type;
     msg::Importer::Options import_opts;
     Filter filter;
     bool verbose;
-    const char* fail_file_name;
 
-    Reader();
+    Reader(const ReaderOptions& opts);
 
     void read(const std::list<std::string>& fnames, Action& action);
 };

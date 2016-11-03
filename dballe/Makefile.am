@@ -383,6 +383,7 @@ test_dballe_SOURCES = \
 	db/db-export-test.cc \
 	db/summary-test.cc \
 	simple/msgapi-test.cc \
+	cmdline/processor-test.cc \
 	cmdline/dbadb-test.cc \
 	simple/dbapi-test.cc
 if LUA

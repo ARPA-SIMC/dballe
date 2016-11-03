@@ -1,6 +1,6 @@
 #include "processor.h"
-
 #include <wreport/bulletin.h>
+#include <wreport/utils/string.h>
 #include "dballe/file.h"
 #include "dballe/message.h"
 #include "dballe/msg/context.h"
@@ -10,13 +10,13 @@
 #include "dballe/core/match-wreport.h"
 #include "dballe/msg/aof_codec.h"
 #include "dballe/cmdline/cmdline.h"
-
 #include <cstring>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <stack>
+#include <limits>
 
 using namespace wreport;
 using namespace std;
@@ -131,15 +131,57 @@ void Item::decode(msg::Importer& imp, bool print_errors)
 }
 
 
-Filter::Filter()
-    : category(-1), subcategory(-1), checkdigit(-1), unparsable(0), parsable(0),
-      index(0), matcher(0)
+void IndexMatcher::parse(const std::string& str)
 {
+    ranges.clear();
+    str::Split parts(str, ",", true);
+    for (const auto& s: parts)
+    {
+        size_t pos = s.find('-');
+        if (pos == 0)
+            ranges.push_back(make_pair(0, std::stoi(s.substr(pos + 1))));
+        else if (pos == s.size() - 1)
+            ranges.push_back(make_pair(std::stoi(s.substr(0, pos)), std::numeric_limits<int>::max()));
+        else if (pos == string::npos)
+        {
+            int val = std::stoi(s);
+            ranges.push_back(make_pair(val, val));
+        }
+        else
+            ranges.push_back(make_pair(std::stoi(s.substr(0, pos)), std::stoi(s.substr(pos + 1))));
+    }
+}
+
+bool IndexMatcher::match(int val) const
+{
+    if (ranges.empty()) return true;
+
+    for (const auto& range: ranges)
+        if (val >= range.first && val <= range.second)
+            return true;
+    return false;
+}
+
+
+Filter::Filter() {}
+Filter::Filter(const ReaderOptions& opts)
+    : category(opts.category),
+      subcategory(opts.subcategory),
+      checkdigit(opts.checkdigit),
+      unparsable(opts.unparsable),
+      parsable(opts.parsable)
+{
+    if (opts.index_filter) imatcher.parse(opts.index_filter);
 }
 
 Filter::~Filter()
 {
-    if (matcher) delete matcher;
+    delete matcher;
+}
+
+void Filter::set_index_filter(const std::string& val)
+{
+    imatcher.parse(val);
 }
 
 void Filter::matcher_reset()
@@ -163,31 +205,7 @@ void Filter::matcher_from_record(const Query& query)
 
 bool Filter::match_index(int idx) const
 {
-    if (index == 0 || index[0] == 0)
-        return true;
-
-    size_t pos;
-    size_t len;
-    for (pos = 0; (len = strcspn(index + pos, ",")) > 0; pos += len + 1)
-    {
-        int start, end;
-        int found = sscanf(index + pos, "%d-%d", &start, &end);
-        switch (found)
-        {
-            case 1:
-                if (start == idx)
-                    return true;
-                break;
-            case 2: 
-                if (start <= idx && idx <= end)
-                    return true;
-                break;
-            default:
-                fprintf(stderr, "Cannot parse index string %s\n", index);
-                return false;
-        }
-    }
-    return false;
+    return imatcher.match(idx);
 }
 
 bool Filter::match_common(const BinaryMessage&, const Messages* msgs) const
@@ -300,8 +318,8 @@ bool Filter::match_item(const Item& item) const
         return false;
 }
 
-Reader::Reader()
-    : input_type("auto"), verbose(false), fail_file_name(0)
+Reader::Reader(const ReaderOptions& opts)
+    : input_type(opts.input_type), fail_file_name(opts.fail_file_name), filter(opts), verbose(false)
 {
 }
 
@@ -781,7 +799,7 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
     {
         unique_ptr<File> file;
 
-        if (strcmp(input_type, "auto") == 0)
+        if (input_type == "auto")
         {
             if (name != fnames.end())
             {
@@ -791,7 +809,7 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
                 file = File::create(stdin, false, "standard input");
             }
         } else {
-            File::Encoding intype = string_to_encoding(input_type);
+            File::Encoding intype = string_to_encoding(input_type.c_str());
             if (name != fnames.end())
             {
                 file = File::create(intype, *name, "r");
@@ -850,15 +868,13 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
 
 void Reader::read(const std::list<std::string>& fnames, Action& action)
 {
-    if (strcmp(input_type, "csv") == 0)
+    if (input_type == "csv")
         read_csv(fnames, action);
-    else if (strcmp(input_type, "json") == 0)
+    else if (input_type == "json")
         read_json(fnames, action);
     else
         read_file(fnames, action);
 }
 
-} // namespace cmdline
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
+}
+}
