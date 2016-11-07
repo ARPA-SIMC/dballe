@@ -6,6 +6,7 @@
 #include "db/v7/db.h"
 #include "db/v7/driver.h"
 #include "db/v7/repinfo.h"
+#include <wreport/utils/sys.h>
 #include "config.h"
 
 using namespace dballe;
@@ -145,6 +146,26 @@ class Tests : public DBFixtureTestCase<Fixture>
             wassert(actual(id) > 0);
             wassert(actual(ri.get_rep_memo(id)) == "barbaz");
             wassert(actual(ri.get_priority(id)) == 1002);
+        });
+        // See https://github.com/ARPA-SIMC/dballe/issues/30
+        this->add_method("case", [](Fixture& f) {
+            auto& ri = *f.repinfo;
+
+            int added, deleted, updated;
+            sys::write_file("test_case.csv", "234,foOBar,foOBar,100,oss,0\n");
+            ri.update("test_case.csv", &added, &deleted, &updated);
+            wassert(actual(added) == 1);
+            wassert(actual(deleted) == 13);
+            wassert(actual(updated) == 0);
+
+            int id = ri.obtain_id("fooBAR");
+            wassert(actual(id) == 234);
+            wassert(actual(ri.get_rep_memo(id)) == "foobar");
+            wassert(actual(ri.get_priority(id)) == 100);
+            wassert(actual(ri.get_id("foobar")) == id);
+            wassert(actual(ri.get_id("Foobar")) == id);
+            wassert(actual(ri.get_id("FOOBAR")) == id);
+            wassert(actual(ri.obtain_id("FOOBAR")) == id);
         });
     }
 };
