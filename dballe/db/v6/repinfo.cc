@@ -81,9 +81,9 @@ int Repinfo::obtain_id(const char* memo)
     int pos = cache_find_by_memo(lc_memo);
     if (pos == -1)
     {
-        insert_auto_entry(memo);
+        insert_auto_entry(lc_memo);
         read_cache();
-        return get_id(memo);
+        return get_id(lc_memo);
     }
     return memo_idx[pos].id;
 }
