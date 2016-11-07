@@ -365,7 +365,6 @@ test_dballe_SOURCES = \
 	sql/sqlite-test.cc \
 	db/tests.cc \
 	db/trace-test.cc \
-	db/v6/repinfo-test.cc \
 	db/v6/station-test.cc \
 	db/v6/levtr-test.cc \
 	db/v6/datav6-test.cc \

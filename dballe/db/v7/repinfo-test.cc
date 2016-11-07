@@ -1,6 +1,9 @@
 #include "db/tests.h"
-#include "db/v7/db.h"
 #include "sql/sql.h"
+#include "db/v6/db.h"
+#include "db/v6/driver.h"
+#include "db/v6/repinfo.h"
+#include "db/v7/db.h"
 #include "db/v7/driver.h"
 #include "db/v7/repinfo.h"
 #include "config.h"
@@ -13,7 +16,38 @@ using namespace wreport;
 
 namespace {
 
-struct Fixture : V7DriverFixture
+struct FixtureV6 : DriverFixture
+{
+    using DriverFixture::DriverFixture;
+
+    unique_ptr<db::v6::Repinfo> repinfo;
+
+    void reset_repinfo()
+    {
+        if (conn->has_table("repinfo"))
+            driver->connection.execute("DELETE FROM repinfo");
+
+        switch (format)
+        {
+            case V5: throw error_unimplemented("v5 db is not supported");
+            case V6:
+                repinfo = driver->create_repinfov6();
+                break;
+            default:
+                throw error_consistency("cannot test repinfo on the current DB format");
+        }
+        int added, deleted, updated;
+        repinfo->update(nullptr, &added, &deleted, &updated);
+    }
+
+    void test_setup()
+    {
+        DriverFixture::test_setup();
+        reset_repinfo();
+    }
+};
+
+struct FixtureV7 : V7DriverFixture
 {
     using V7DriverFixture::V7DriverFixture;
 
@@ -36,14 +70,15 @@ struct Fixture : V7DriverFixture
     }
 };
 
+template<typename Fixture>
 class Tests : public DBFixtureTestCase<Fixture>
 {
-    using DBFixtureTestCase::DBFixtureTestCase;
+    using DBFixtureTestCase<Fixture>::DBFixtureTestCase;
 
     void register_tests() override
     {
         // Test simple queries
-        add_method("query", [](Fixture& f) {
+        this->add_method("query", [](Fixture& f) {
             auto& ri = *f.repinfo;
             wassert(actual(ri.get_id("synop")) == 1);
             wassert(actual(ri.get_id("generic")) == 255);
@@ -51,7 +86,7 @@ class Tests : public DBFixtureTestCase<Fixture>
             wassert(actual(ri.get_priority(199)) == INT_MAX);
         });
         // Test update
-        add_method("update", [](Fixture& f) {
+        this->add_method("update", [](Fixture& f) {
             auto& ri = *f.repinfo;
 
             wassert(actual(ri.get_id("synop")) == 1);
@@ -66,7 +101,7 @@ class Tests : public DBFixtureTestCase<Fixture>
             wassert(actual(ri.get_id("synop")) == 1);
         });
         // Test update from a file that was known to fail
-        add_method("fail", [](Fixture& f) {
+        this->add_method("fail", [](Fixture& f) {
             auto& ri = *f.repinfo;
 
             wassert(actual(ri.get_id("synop")) == 1);
@@ -82,7 +117,7 @@ class Tests : public DBFixtureTestCase<Fixture>
             wassert(actual(ri.get_id("FIXspnpo")) == 201);
         });
         // Test update from a file with a negative priority
-        add_method("fail1", [](Fixture& f) {
+        this->add_method("fail1", [](Fixture& f) {
             auto& ri = *f.repinfo;
 
             int id = ri.get_id("generic");
@@ -98,7 +133,7 @@ class Tests : public DBFixtureTestCase<Fixture>
             wassert(actual(ri.get_priority(id)) == -5);
         });
         // Test automatic repinfo creation
-        add_method("fail2", [](Fixture& f) {
+        this->add_method("fail2", [](Fixture& f) {
             auto& ri = *f.repinfo;
 
             int id = ri.obtain_id("foobar");
@@ -114,12 +149,15 @@ class Tests : public DBFixtureTestCase<Fixture>
     }
 };
 
-Tests test_sqlite("db_v7_repinfo_sqlite", "SQLITE", db::V7);
+Tests<FixtureV6> test_sqlitev6("db_v6_repinfo_sqlite", "SQLITE", db::V6);
+Tests<FixtureV7> test_sqlitev7("db_v7_repinfo_sqlite", "SQLITE", db::V7);
 #ifdef HAVE_LIBPQ
-Tests test_psql("db_v7_repinfo_postgresql", "POSTGRESQL", db::V7);
+Tests<FixtureV6> test_psqlv6("db_v6_repinfo_postgresql", "POSTGRESQL", db::V6);
+Tests<FixtureV7> test_psqlv7("db_v7_repinfo_postgresql", "POSTGRESQL", db::V7);
 #endif
 #ifdef HAVE_MYSQL
-Tests test_mysql("db_v7_repinfo_mysql", "MYSQL", db::V7);
+Tests<FixtureV6> test_mysqlv6("db_v6_repinfo_mysql", "MYSQL", db::V6);
+Tests<FixtureV7> test_mysqlv7("db_v7_repinfo_mysql", "MYSQL", db::V7);
 #endif
 
 }
