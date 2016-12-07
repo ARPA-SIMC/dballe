@@ -381,10 +381,11 @@ test_dballe_SOURCES = \
 	db/db-import-test.cc \
 	db/db-export-test.cc \
 	db/summary-test.cc \
+	simple/commonapi-test.cc \
 	simple/msgapi-test.cc \
+	simple/dbapi-test.cc \
 	cmdline/processor-test.cc \
-	cmdline/dbadb-test.cc \
-	simple/dbapi-test.cc
+	cmdline/dbadb-test.cc
 if LUA
 test_dballe_SOURCES += \
 	msg/lua-test.cc \
