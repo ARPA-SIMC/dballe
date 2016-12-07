@@ -832,6 +832,30 @@ add_method("issue73", [](Fixture& f) {
     }
 });
 
+add_method("issue75", [](Fixture& f) {
+    using namespace wreport;
+
+    std::string fname = dballe::tests::datafile("bufr/issue75.bufr");
+    {
+        fortran::DbAPI dbapi(*f.db, "write", "write", "write");
+        wassert(dbapi.messages_open_input(fname.c_str(), "r", File::BUFR, true));
+        wassert(actual(dbapi.messages_read_next()).istrue());
+        wassert(actual(dbapi.messages_read_next()).istrue());
+        wassert(actual(dbapi.messages_read_next()).istrue());
+        wassert(actual(dbapi.messages_read_next()).istrue());
+    }
+
+    {
+        fortran::DbAPI dbapi(*f.db, "read", "read", "read");
+        dbapi.setc("rep_memo", "temp");
+        dbapi.setcontextana();
+        dbapi.setc("varlist", "B07001");
+        wassert(actual(dbapi.voglioquesto()) == 0);
+        dbapi.setc("varlist", "B07030");
+        wassert(actual(dbapi.voglioquesto()) == 1);
+    }
+});
+
 }
 
 }
