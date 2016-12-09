@@ -1,6 +1,7 @@
 dballe (7.21-1) unstable; urgency=medium
 
   * New upstream version
+  * Build-Depend on default-libmysqlclient-dev. Closes: #845833
   * Updated debhelper compatibility level to 10
 
  -- Enrico Zini <enrico@debian.org>  Fri, 09 Dec 2016 11:27:58 +0100
