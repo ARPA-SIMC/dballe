@@ -4,7 +4,7 @@ VERSION=$(shell debian/vercheck)
 RELEASE_PACKAGE=dballe
 
 %:
-	dh --with autoreconf,python2,python3 $@
+	dh $@ --with autoreconf,python2,python3
 
 # #DEB_MAKE_CHECK_TARGET := check
 # 

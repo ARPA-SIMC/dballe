@@ -10,7 +10,7 @@ usr/include/dballe/msg
 usr/include/dballe/sql
 usr/include/dballe/db
 usr/include/dballe/cmdline
-usr/lib/libdballe.a
-usr/lib/libdballe.so
-usr/lib/pkgconfig/libdballe.pc
+usr/lib/*/libdballe.a
+usr/lib/*/libdballe.so
+usr/lib/*/pkgconfig/libdballe.pc
 usr/share/aclocal/libdballe.m4
