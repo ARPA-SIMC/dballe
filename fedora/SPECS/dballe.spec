@@ -180,18 +180,29 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{?fedora:rpy
 %prep
 %setup -q -n %{name}-%{version}-%{release}
 
+rm -rf %{py3dir}
+cp -a . %{py3dir}
+
 %build
 
 autoreconf -ifv
 
 %configure FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs
-
 make
 
-#make check
+pushd %{py3dir}
+%configure PYTHON=python3 FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs
+popd
+make
 
 %install
 [ "%{buildroot}" != / ] && rm -rf "%{buildroot}"
+
+pushd %{py3dir}
+make install DESTDIR="%{buildroot}" STRIP=/bin/true
+mkdir -p $RPM_BUILD_ROOT%{_fmoddir}
+mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
+popd
 
 make install DESTDIR="%{buildroot}" STRIP=/bin/true
 mkdir -p $RPM_BUILD_ROOT%{_fmoddir}
