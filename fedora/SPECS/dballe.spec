@@ -153,12 +153,13 @@ Common data files for all DB-All.e modules
  BUFR and CREX decoding tables, report metadata, level and time range
  descriptions.
 
-%package -n python-dballe
+%package -n python2-dballe
 Summary:  DB-ALL.e Python library
 Group:    Applications/Meteo
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{?fedora:rpy}, numpy, python-wreport3
+%{?python_provide:%python_provide python2-dballe}
 
-%description -n python-dballe
+%description -n python2-dballe
  DB-ALL.e Python library for weather research
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
@@ -169,6 +170,7 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{?fedora:rpy
 Summary:  DB-ALL.e Python library
 Group:    Applications/Meteo
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{?fedora:rpy}, python3-numpy, python3-wreport3
+%{?python_provide:%python_provide python3-dballe}
 
 %description -n python3-dballe
  DB-ALL.e Python library for weather research
@@ -270,14 +272,14 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 %{_libdir}/libdballef*.so.*
 
 
-%files -n python-dballe
+%files -n python2-dballe
 %defattr(-,root,root,-)
-%dir %{python_sitelib}/dballe
-%{python_sitelib}/dballe/*
-%dir %{python_sitearch}
-%{python_sitearch}/*.a
-%{python_sitearch}/*.la
-%{python_sitearch}/*.so*
+%dir %{}/dballe
+%{}/dballe/*
+%dir %{python2_sitearch}
+%{python2_sitearch}/*.a
+%{python2_sitearch}/*.la
+%{python2_sitearch}/*.so*
 %{_bindir}/dbatbl_makeb
 
 %files -n libdballe-doc
