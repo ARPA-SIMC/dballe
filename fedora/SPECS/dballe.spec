@@ -193,7 +193,7 @@ autoreconf -ifv
 make
 
 pushd %{py3dir}
-%configure PYTHON=python3 FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs
+%configure PYTHON=%{__python3} FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs
 popd
 make
 
