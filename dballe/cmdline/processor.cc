@@ -420,6 +420,8 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
         JSONMsgReader(std::istream& in) : in(&in), close_on_exit(false) {}
         JSONMsgReader(const std::string& name) : close_on_exit(true) {
             in = new ifstream(name);
+            if (not in->good())
+                throw runtime_error(strerror(errno));
         }
         ~JSONMsgReader() {
             if (close_on_exit)
