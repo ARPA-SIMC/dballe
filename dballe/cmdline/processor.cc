@@ -656,7 +656,9 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     state.pop();
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_KEY:
-                    var->set(val);
+                    // Var::seti on decimal vars is considered as the value
+                    // with the scale already applied
+                    var->setf(to_string(val).c_str());
                     ctx->set(*var);
                     state.pop();
                     break;
