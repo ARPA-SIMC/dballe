@@ -61,6 +61,19 @@ add_method("parse_index", [] {
     wassert(actual(filter.match_index(10)).istrue());
 });
 
+add_method("parse_json", [] {
+    struct TestAction : public Action {
+        virtual bool operator()(const Item& item) { return true; }
+    };
+
+    ReaderOptions opts;
+    opts.input_type = "json";
+    Reader reader(opts);
+    TestAction action;
+
+    reader.read({dballe::tests::datafile("/json/issue76.json")}, action);
+});
+
 }
 
 }
