@@ -12,8 +12,6 @@ BuildRequires: gperf, doxygen, python-docutils, lua-devel, libwreport-devel >= 3
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, python-dballe
 Obsoletes: provami <= 7.6
 
-%{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
-%{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
 
 %description
  Database for punctual meteorological data (Command line tools)
@@ -180,7 +178,7 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{?fedora:rpy
  These are the python bindings.
 
 %prep
-%setup -q -n %{name}-%{version}-%{release}
+%setup -q -n %{name}-%{version}
 
 rm -rf %{py3dir}
 cp -a . %{py3dir}
@@ -274,8 +272,8 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 %files -n python2-dballe
 %defattr(-,root,root,-)
-%dir %{}/dballe
-%{}/dballe/*
+%dir %{python2_sitelib}/dballe
+%{python2_sitelib}/dballe/*
 %dir %{python2_sitearch}
 %{python2_sitearch}/*.a
 %{python2_sitearch}/*.la
