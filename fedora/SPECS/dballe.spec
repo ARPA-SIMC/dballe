@@ -178,7 +178,7 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{?fedora:rpy
  These are the python bindings.
 
 %prep
-%setup -q -n %{name}-%{version}
+%setup -q -n %{name}-%{version}-%{release}
 
 rm -rf %{py3dir}
 cp -a . %{py3dir}
