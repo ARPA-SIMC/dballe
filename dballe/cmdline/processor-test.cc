@@ -74,6 +74,20 @@ add_method("parse_json", [] {
     reader.read({dballe::tests::datafile("/json/issue76.json")}, action);
 });
 
+add_method("issue77", [] {
+    struct TestAction : public Action {
+        virtual bool operator()(const Item& item) { return true; }
+    };
+
+    ReaderOptions opts;
+    opts.input_type = "json";
+    Reader reader(opts);
+    TestAction action;
+
+    reader.read({dballe::tests::datafile("/json/issue77.json")}, action);
+});
+
+
 }
 
 }

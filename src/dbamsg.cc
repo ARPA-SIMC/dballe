@@ -367,13 +367,15 @@ struct JSONMsgs : public cmdline::Action
                     json.start_mapping();
                     json.add("v");
                     json.add(*var);
-                    json.add("a");
-                    json.start_mapping();
-                    for (const Var* attr = var->next_attr(); attr; attr = attr->next_attr()) {
-                        json.add(wreport::varcode_format(attr->code()));
-                        json.add(*attr);
+                    if (var->next_attr()) {
+                        json.add("a");
+                        json.start_mapping();
+                        for (const Var* attr = var->next_attr(); attr; attr = attr->next_attr()) {
+                            json.add(wreport::varcode_format(attr->code()));
+                            json.add(*attr);
+                        }
+                        json.end_mapping();
                     }
-                    json.end_mapping();
                     json.end_mapping();
                 }
                 json.end_mapping();
