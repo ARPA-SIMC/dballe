@@ -8,12 +8,10 @@ URL: https://github.com/ARPA-SIMC/dballe
 #Source0: %{name}-%{version}.tar.gz
 Source0: https://github.com/arpa-simc/%{name}/archive/v%{version}-%{release}.tar.gz#/%{name}-%{version}-%{release}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-BuildRequires: gperf, doxygen, python-docutils, lua-devel, libwreport-devel >= 3.2 , python-devel, popt-devel, postgresql-devel, mariadb-devel, sqlite-devel, help2man, libwreport-doc
+BuildRequires: gperf, doxygen, python-docutils, lua-devel, libwreport-devel >= 3.2 , python-devel, python3-devel, popt-devel, postgresql-devel, mariadb-devel, sqlite-devel, help2man, libwreport-doc
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, python-dballe
 Obsoletes: provami <= 7.6
 
-%{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
-%{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
 
 %description
  Database for punctual meteorological data (Command line tools)
@@ -153,34 +151,58 @@ Common data files for all DB-All.e modules
  BUFR and CREX decoding tables, report metadata, level and time range
  descriptions.
 
-%package -n python-dballe
+%package -n python2-dballe
 Summary:  DB-ALL.e Python library
 Group:    Applications/Meteo
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{?fedora:rpy}, numpy, python-wreport3
+%{?python_provide:%python_provide python2-dballe}
 
-%description -n python-dballe
+%description -n python2-dballe
  DB-ALL.e Python library for weather research
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
 
  These are the python bindings.
 
+%package -n python3-dballe
+Summary:  DB-ALL.e Python library
+Group:    Applications/Meteo
+Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{?fedora:rpy}, python3-numpy, python3-wreport3
+%{?python_provide:%python_provide python3-dballe}
+
+%description -n python3-dballe
+ DB-ALL.e Python library for weather research
+ DB-All.e is a fast on-disk database where meteorological observed and
+ forecast data can be stored, searched, retrieved and updated.
+
+ These are the python bindings.
 
 %prep
 %setup -q -n %{name}-%{version}-%{release}
+
+rm -rf %{py3dir}
+cp -a . %{py3dir}
 
 %build
 
 autoreconf -ifv
 
 %configure FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs
-
 make
 
-#make check
+pushd %{py3dir}
+%configure PYTHON=%{__python3} FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs
+popd
+make
 
 %install
 [ "%{buildroot}" != / ] && rm -rf "%{buildroot}"
+
+pushd %{py3dir}
+make install DESTDIR="%{buildroot}" STRIP=/bin/true
+mkdir -p $RPM_BUILD_ROOT%{_fmoddir}
+mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
+popd
 
 make install DESTDIR="%{buildroot}" STRIP=/bin/true
 mkdir -p $RPM_BUILD_ROOT%{_fmoddir}
@@ -248,20 +270,30 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 %{_libdir}/libdballef*.so.*
 
 
-%files -n python-dballe
+%files -n python2-dballe
 %defattr(-,root,root,-)
-%dir %{python_sitelib}/dballe
-%{python_sitelib}/dballe/*
-%dir %{python_sitearch}
-%{python_sitearch}/*.a
-%{python_sitearch}/*.la
-%{python_sitearch}/*.so*
+%dir %{python2_sitelib}/dballe
+%{python2_sitelib}/dballe/*
+%dir %{python2_sitearch}
+%{python2_sitearch}/*.a
+%{python2_sitearch}/*.la
+%{python2_sitearch}/*.so*
 %{_bindir}/dbatbl_makeb
 
 %files -n libdballe-doc
 %defattr(-,root,root,-)
 %doc %{_docdir}/dballe/*
 
+
+%files -n python3-dballe
+%defattr(-,root,root,-)
+%dir %{python3_sitelib}/dballe
+%{python3_sitelib}/dballe/*
+%dir %{python3_sitearch}
+%{python3_sitearch}/*.a
+%{python3_sitearch}/*.la
+%{python3_sitearch}/*.so*
+%{_bindir}/dbatbl_makeb
 
 %post
 /sbin/ldconfig
