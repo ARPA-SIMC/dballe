@@ -760,14 +760,20 @@ class Tests : public DBFixtureTestCase<DBFixture>
             // remaining() should decrement
             wassert(actual(cur->remaining()) == 3);
             // results should match what was inserted
-            wassert(actual(cur).data_matches(oldf.data["synop"]));
+            if (db.format() == V6)
+                wassert(actual(cur).data_matches(oldf.data["synop"]));
+            else
+                wassert(actual(cur).data_matches(oldf.data["metar"]));
             // just call to_record now, to check if in the next call old variables are removed
             core::Record result;
             cur->to_record(result);
 
             wassert(actual(cur->next()).istrue());
             wassert(actual(cur->remaining()) == 2);
-            wassert(actual(cur).data_matches(oldf.data["synop"]));
+            if (db.format() == V6)
+                wassert(actual(cur).data_matches(oldf.data["synop"]));
+            else
+                wassert(actual(cur).data_matches(oldf.data["metar"]));
 
             // Variables from the previous to_record should be removed
             cur->to_record(result);
@@ -776,11 +782,17 @@ class Tests : public DBFixtureTestCase<DBFixture>
 
             wassert(actual(cur->next()).istrue());
             wassert(actual(cur->remaining()) == 1);
-            wassert(actual(cur).data_matches(oldf.data["metar"]));
+            if (db.format() == V6)
+                wassert(actual(cur).data_matches(oldf.data["metar"]));
+            else
+                wassert(actual(cur).data_matches(oldf.data["synop"]));
 
             wassert(actual(cur->next()).istrue());
             wassert(actual(cur->remaining()) == 0);
-            wassert(actual(cur).data_matches(oldf.data["metar"]));
+            if (db.format() == V6)
+                wassert(actual(cur).data_matches(oldf.data["metar"]));
+            else
+                wassert(actual(cur).data_matches(oldf.data["synop"]));
 
             // Now there should not be anything anymore
             wassert(actual(cur->remaining()) == 0);
