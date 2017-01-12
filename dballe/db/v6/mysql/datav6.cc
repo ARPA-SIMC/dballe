@@ -98,25 +98,52 @@ void MySQLDataV6::insert(dballe::sql::Transaction& t, v6::bulk::InsertV6& vars, 
     }
 }
 
+namespace {
+
+struct Remover
+{
+    dballe::sql::MySQLConnection& conn;
+    Querybuf dq;
+    unsigned cur_size = 0;
+    unsigned batch_size;
+
+    Remover(dballe::sql::MySQLConnection& conn, unsigned batch_size=1024)
+        : conn(conn), dq(512), batch_size(batch_size) {}
+
+    void add(const char* id)
+    {
+        if (!cur_size)
+        {
+            dq.clear();
+            dq.append("DELETE FROM data WHERE id IN (");
+            dq.start_list(",");
+        }
+        dq.append_list(id);
+        ++cur_size;
+        if (cur_size >= batch_size)
+            flush();
+    }
+
+    void flush()
+    {
+        if (!cur_size) return;
+        dq.append(")");
+        conn.exec_no_data(dq);
+        cur_size = 0;
+    }
+};
+
+}
+
 void MySQLDataV6::remove(const v6::QueryBuilder& qb)
 {
     if (qb.bind_in_ident)
         throw error_unimplemented("binding in MySQL driver is not implemented");
-    Querybuf dq(512);
-    dq.append("DELETE FROM data WHERE id IN (");
-    dq.start_list(",");
-    bool found = false;
+    Remover remover(conn);
     auto res = conn.exec_store(qb.sql_query);
     while (auto row = res.fetch())
-    {
-        // Note: if the query gets too long, we can split this in more DELETE
-        // runs
-        dq.append_list(row.as_cstring(0));
-        found = true;
-    }
-    dq.append(")");
-    if (found)
-        conn.exec_no_data(dq);
+        remover.add(row.as_cstring(0));
+    remover.flush();
 }
 
 void MySQLDataV6::dump(FILE* out)
