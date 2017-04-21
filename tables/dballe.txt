@@ -456,6 +456,24 @@
  048058 [SIM] Juglandacee_Juglandacee indistinte 1                       POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
  048059 [SIM] Ippocastanacee_Ippocastanacee indistinte 1                 POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
  048060 [SIM] Oleacee_Ligustro                                           POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048061 [SIM] Anacardiacee                                               POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048062 [SIM] Apocinacee                                                 POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048063 [SIM] Araliacee                                                  POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048064 [SIM] Boraginacee                                                POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048065 [SIM] Brassicacee                                                POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048066 [SIM] Cannabacee                                                 POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048067 [SIM] Caprifoliacee                                              POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048068 [SIM] Cariofillacee                                              POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048069 [SIM] Cornacee                                                   POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048070 [SIM] Elaegnacee                                                 POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048071 [SIM] Lauracee                                                   POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048072 [SIM] Moracee                                                    POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048073 [SIM] Ramnacee                                                   POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048074 [SIM] Rosacee                                                    POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048075 [SIM] Rubiacee                                                   POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048076 [SIM] Simaroubacee                                               POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048077 [SIM] Umbellifere                                                POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048078 [SIM] Vitacee                                                    POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
  048128 [SIM] Conta Graminacee_Graminacee indistinte                     NUMERIC                    0            0  20 NUMERIC                   0          7
  048129 [SIM] Conta Betulacee_Ontano nero                                NUMERIC                    0            0  20 NUMERIC                   0          7
  048130 [SIM] Conta Betulacee_Betulla                                    NUMERIC                    0            0  20 NUMERIC                   0          7
@@ -516,3 +534,21 @@
  048185 [SIM] Conta Juglandacee_Juglandacee indistinte 1                 NUMERIC                    0            0  20 NUMERIC                   0          7
  048186 [SIM] Conta Ippocastanacee_Ippocastanacee indistinte 1           NUMERIC                    0            0  20 NUMERIC                   0          7
  048187 [SIM] Conta Oleacee_Ligustro                                     NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048188 [SIM] Conta Anacardiacee                                         NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048189 [SIM] Conta Apocinacee                                           NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048190 [SIM] Conta Araliacee                                            NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048191 [SIM] Conta Boraginacee                                          NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048192 [SIM] Conta Brassicacee                                          NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048193 [SIM] Conta Cannabacee                                           NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048194 [SIM] Conta Caprifoliacee                                        NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048195 [SIM] Conta Cariofillacee                                        NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048196 [SIM] Conta Cornacee                                             NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048197 [SIM] Conta Elaegnacee                                           NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048198 [SIM] Conta Lauracee                                             NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048199 [SIM] Conta Moracee                                              NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048200 [SIM] Conta Ramnacee                                             NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048201 [SIM] Conta Rosacee                                              NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048202 [SIM] Conta Rubiacee                                             NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048203 [SIM] Conta Simaroubacee                                         NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048204 [SIM] Conta Umbellifere                                          NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048205 [SIM] Conta Vitacee                                              NUMERIC                    0            0  20 NUMERIC                   0          7

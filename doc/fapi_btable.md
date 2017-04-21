@@ -466,6 +466,24 @@ digits and description.
 | 048058 | [SIM] Juglandacee_Juglandacee indistinte 1                         | POLLEN/M**3              | #######.#      |
 | 048059 | [SIM] Ippocastanacee_Ippocastanacee indistinte 1                   | POLLEN/M**3              | #######.#      |
 | 048060 | [SIM] Oleacee_Ligustro                                             | POLLEN/M**3              | #######.#      |
+| 048061 | [SIM] Anacardiacee                                                 | POLLEN/M**3              | #######.#      |
+| 048062 | [SIM] Apocinacee                                                   | POLLEN/M**3              | #######.#      |
+| 048063 | [SIM] Araliacee                                                    | POLLEN/M**3              | #######.#      |
+| 048064 | [SIM] Boraginacee                                                  | POLLEN/M**3              | #######.#      |
+| 048065 | [SIM] Brassicacee                                                  | POLLEN/M**3              | #######.#      |
+| 048066 | [SIM] Cannabacee                                                   | POLLEN/M**3              | #######.#      |
+| 048067 | [SIM] Caprifoliacee                                                | POLLEN/M**3              | #######.#      |
+| 048068 | [SIM] Cariofillacee                                                | POLLEN/M**3              | #######.#      |
+| 048069 | [SIM] Cornacee                                                     | POLLEN/M**3              | #######.#      |
+| 048070 | [SIM] Elaegnacee                                                   | POLLEN/M**3              | #######.#      |
+| 048071 | [SIM] Lauracee                                                     | POLLEN/M**3              | #######.#      |
+| 048072 | [SIM] Moracee                                                      | POLLEN/M**3              | #######.#      |
+| 048073 | [SIM] Ramnacee                                                     | POLLEN/M**3              | #######.#      |
+| 048074 | [SIM] Rosacee                                                      | POLLEN/M**3              | #######.#      |
+| 048075 | [SIM] Rubiacee                                                     | POLLEN/M**3              | #######.#      |
+| 048076 | [SIM] Simaroubacee                                                 | POLLEN/M**3              | #######.#      |
+| 048077 | [SIM] Umbellifere                                                  | POLLEN/M**3              | #######.#      |
+| 048078 | [SIM] Vitacee                                                      | POLLEN/M**3              | #######.#      |
 | 048128 | [SIM] Conta Graminacee_Graminacee indistinte                       | Numeric                  | 7 digits       |
 | 048129 | [SIM] Conta Betulacee_Ontano nero                                  | Numeric                  | 7 digits       |
 | 048130 | [SIM] Conta Betulacee_Betulla                                      | Numeric                  | 7 digits       |
@@ -526,3 +544,21 @@ digits and description.
 | 048185 | [SIM] Conta Juglandacee_Juglandacee indistinte 1                   | Numeric                  | 7 digits       |
 | 048186 | [SIM] Conta Ippocastanacee_Ippocastanacee indistinte 1             | Numeric                  | 7 digits       |
 | 048187 | [SIM] Conta Oleacee_Ligustro                                       | Numeric                  | 7 digits       |
+| 048188 | [SIM] Conta Anacardiacee                                           | Numeric                  | 7 digits       |
+| 048189 | [SIM] Conta Apocinacee                                             | Numeric                  | 7 digits       |
+| 048190 | [SIM] Conta Araliacee                                              | Numeric                  | 7 digits       |
+| 048191 | [SIM] Conta Boraginacee                                            | Numeric                  | 7 digits       |
+| 048192 | [SIM] Conta Brassicacee                                            | Numeric                  | 7 digits       |
+| 048193 | [SIM] Conta Cannabacee                                             | Numeric                  | 7 digits       |
+| 048194 | [SIM] Conta Caprifoliacee                                          | Numeric                  | 7 digits       |
+| 048195 | [SIM] Conta Cariofillacee                                          | Numeric                  | 7 digits       |
+| 048196 | [SIM] Conta Cornacee                                               | Numeric                  | 7 digits       |
+| 048197 | [SIM] Conta Elaegnacee                                             | Numeric                  | 7 digits       |
+| 048198 | [SIM] Conta Lauracee                                               | Numeric                  | 7 digits       |
+| 048199 | [SIM] Conta Moracee                                                | Numeric                  | 7 digits       |
+| 048200 | [SIM] Conta Ramnacee                                               | Numeric                  | 7 digits       |
+| 048201 | [SIM] Conta Rosacee                                                | Numeric                  | 7 digits       |
+| 048202 | [SIM] Conta Rubiacee                                               | Numeric                  | 7 digits       |
+| 048203 | [SIM] Conta Simaroubacee                                           | Numeric                  | 7 digits       |
+| 048204 | [SIM] Conta Umbellifere                                            | Numeric                  | 7 digits       |
+| 048205 | [SIM] Conta Vitacee                                                | Numeric                  | 7 digits       |
