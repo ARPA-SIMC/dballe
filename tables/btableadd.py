@@ -29,6 +29,7 @@ class DballeTableEntry:
 # dballe.txt
 class DballeTable:
     def __init__(self, filename="/usr/share/wreport/dballe.txt"):
+        #TODO: use the local dballe.txt instead of the system one
         self.table = []
         for line in open(filename).readlines():
             self.table.append(DballeTableEntry(line))
