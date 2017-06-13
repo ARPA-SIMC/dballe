@@ -69,7 +69,7 @@
  007024 SATELLITE ZENITH ANGLE                                           DEGREE                     2        -9000  15 DEGREE                    2          5
  007025 SOLAR ZENITH ANGLE                                               DEGREE                     2        -9000  15 DEGREE                    2          5
  007030 HEIGHT OF STATION GROUND ABOVE MEAN SEA LEVEL (SEE NOTE 3)       M                          1        -4000  17 M                         1          5
- 007031 HEIGHT OF BAROMETER ABOVE MEAN SEA LEVEL (SEE NOTE 4)            M                          1       - 4000  17 M                         1          5
+ 007031 HEIGHT OF BAROMETER ABOVE MEAN SEA LEVEL (SEE NOTE 4)            M                          1        -4000  17 M                         1          5
  007032 HEIGHT OF SENSOR ABOVE LOCAL GROUND (OR DECK OF MARINE PLATFORM) M                          2            0  16 M                         2          5
  007192 [SIM] First level type                                           NUMERIC                    0            0  10 NUMERIC                   0          4
  007193 [SIM] Level L1                                                   NUMERIC                    0   -536870912  31 NUMERIC                   0         10
@@ -188,6 +188,7 @@
  013205 [SIM] Snowfall (grid-scale + convective)                         KG/M**2                    1           -1  14 KG/M**2                   1          5
  013206 [SIM] Soil water content                                         KG/M**2                    1            0  14 KG/M**2                   1          5
  013210 [SIM] Penetration of the probe in the snow                       M                          2            0   9 M                         2          3
+ 013211 Volume of basin                                                  M**3                       0            0  37 M**3                      0         12
  013212 [SIM] Leaf wetness duration                                      S                         -1            0  24 S                        -1          7
  013215 [SIM] River level                                                M                          2      -100000  18 M                         2          6
  013216 [SIM] Hourly precipitation                                       KG/M**2                    1           -1  14 KG/M**2                   1          5

@@ -118,8 +118,8 @@ def wmobufrcatHelp():
 
 
 # importo dballe.txt
-bufrtable = DballeTable()
-outfile = "out.txt"
+bufrtable = DballeTable(filename="dballe.txt")
+outfile = "dballe.txt"
 # chiedo la categoria
 nocat = True
 while nocat:
@@ -146,7 +146,10 @@ else:
     sys.exit(1)
 
 # trovato un codice libero
-print "Inserisco una nuova variabile con codice ",b
+print "Il primo codice disponibile è",b
+print "Codice variabile (default",b,")?"
+bcode = sys.stdin.readline()[:-1]
+if bcode == '': bcode = b
 # chiedo il resto dell'informazione
 print "nome ?"
 name = sys.stdin.readline()[:-1]
@@ -164,7 +167,7 @@ widthb = int(math.ceil(math.log((maxp-minp)/prec+2)/math.log(2.0)))
 widthc = int(math.ceil(math.log10(max(abs(minp),abs(maxp))/prec+1)))
 
 # aggiungo la variabile
-bufrtable.AddEntry(b, name, unit, scale, ref, widthb, widthc)
+bufrtable.AddEntry(bcode, name, unit, scale, ref, widthb, widthc)
 # stampo la tabella
 print "la nuova tabella è in",outfile
 bufrtable.Output(open(outfile,"w"))
