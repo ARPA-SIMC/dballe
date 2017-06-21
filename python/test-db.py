@@ -147,46 +147,42 @@ class DballeTest(unittest.TestCase):
             self.assertTrue(self.db.query_data(dballe.Record()).remaining > 0)
 
     def testLoadFileWithAttrs(self):
-        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-bad.bufr", "rb") as fp:
+        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withB33196.bufr", "rb") as fp:
             self.db.reset()
             self.db.load(fp, attrs=True)
             r = next(self.db.query_data(dballe.Record()))
             a = self.db.attr_query_data(r["context_id"])
             self.assertTrue("B33196" in a)
 
-    def testLoadFileWithAttrsWithOverwrite(self):
-        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-bad.bufr", "rb") as fp:
-            self.db.reset()
-            self.db.load(fp, attrs=True, overwrite=True)
-
-        r = next(self.db.query_data(dballe.Record()))
-        self.assertTrue(r["B12101"] == 273.15)
-
-        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-good.bufr", "rb") as fp:
-            self.db.load(fp, attrs=True, overwrite=True)
-
-        r = next(self.db.query_data(dballe.Record()))
-        a = self.db.attr_query_data(r["context_id"])
-        self.assertTrue(r["B12101"] == 274.15)
-        self.assertTrue("B33196" in a)
-
-    def testLoadFileWithoutAttrsWithOverwrite(self):
-        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-bad.bufr", "rb") as fp:
+    def testLoadFileOverwrite(self):
+        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withoutB33196.bufr", "rb") as fp:
             self.db.reset()
             self.db.load(fp, overwrite=True)
+            r = next(self.db.query_data(dballe.Record()))
+            a = self.db.attr_query_data(r["context_id"])
+            self.assertTrue(r["B12101"] == 274.15)
 
-        r = next(self.db.query_data(dballe.Record()))
-        self.assertTrue(r["B12101"] == 273.15)
+        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withB33196.bufr", "rb") as fp:
+            self.db.load(fp, overwrite=True)
+            r = next(self.db.query_data(dballe.Record()))
+            a = self.db.attr_query_data(r["context_id"])
+            self.assertTrue(r["B12101"] == 273.15)
 
-        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-good.bufr", "rb") as fp:
+    def testLoadFileOverwriteAttrs(self):
+        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withoutB33196.bufr", "rb") as fp:
+            self.db.reset()
             self.db.load(fp, attrs=True, overwrite=True)
+            r = next(self.db.query_data(dballe.Record()))
+            a = self.db.attr_query_data(r["context_id"])
+            self.assertTrue(r["B12101"] == 274.15)
+            self.assertTrue("B33196" not in a)
 
-        r = next(self.db.query_data(dballe.Record()))
-        a = self.db.attr_query_data(r["context_id"])
-        self.assertTrue(r["B12101"] == 274.15)
-        self.assertTrue("B33196" in a)
-
-
+        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withB33196.bufr", "rb") as fp:
+            self.db.load(fp, attrs=True, overwrite=True)
+            r = next(self.db.query_data(dballe.Record()))
+            a = self.db.attr_query_data(r["context_id"])
+            self.assertTrue(r["B12101"] == 273.15)
+            self.assertTrue("B33196" in a)
 
     def testLoadFileno(self):
         import os
