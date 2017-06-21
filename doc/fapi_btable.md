@@ -198,6 +198,7 @@ digits and description.
 | 013205 | [SIM] Snowfall (grid-scale + convective)                           | KG/M**2                  | ####.#         |
 | 013206 | [SIM] Soil water content                                           | KG/M**2                  | ####.#         |
 | 013210 | [SIM] Penetration of the probe in the snow                         | M                        | #.##           |
+| 013211 | Volume of basin                                                    | M**3                     | 12 digits      |
 | 013212 | [SIM] Leaf wetness duration                                        | S                        | #######0       |
 | 013215 | [SIM] River level                                                  | M                        | ####.##        |
 | 013216 | [SIM] Hourly precipitation                                         | KG/M**2                  | ####.#         |
