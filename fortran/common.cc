@@ -15,7 +15,7 @@ void cstring_to_fortran(const char* str, char* buf, unsigned buf_len)
         len = strlen(str);
         if (len > buf_len)
             len = buf_len;
-        memcpy(buf, str, buf_len);
+        memcpy(buf, str, len);
     } else {
         // The missing string value has been defined as a
         // null byte plus blank padding.
