@@ -435,19 +435,17 @@ bool DataQueryBuilder::add_attrfilter_where(const char* tbl)
 
 void DataQueryBuilder::build_order_by()
 {
-    if (modifiers & DBA_DB_MODIFIER_SORT_FOR_EXPORT)
-        sql_query.append(" ORDER BY d.id_station");
-    else
+    if (modifiers & DBA_DB_MODIFIER_BEST)
         sql_query.append(" ORDER BY s.lat, s.lon, s.ident");
+    else
+        sql_query.append(" ORDER BY d.id_station");
+
     if (!query_station_vars)
     {
         sql_query.append(", d.datetime");
         sql_query.append(", ltr.ltype1, ltr.l1, ltr.ltype2, ltr.l2, ltr.pind, ltr.p1, ltr.p2");
     }
-    // TODO: id_report should be at the end, so we get all the variables for a
-    // given report. If this has not been caught so far, are clients actually
-    // relying on ordering? If not, negotiate relaxing of ordering requirements (#19)
-    if (!(modifiers & DBA_DB_MODIFIER_SORT_FOR_EXPORT))
+    if (modifiers & DBA_DB_MODIFIER_BEST)
         sql_query.append(", s.rep");
     sql_query.append(", d.code");
 }

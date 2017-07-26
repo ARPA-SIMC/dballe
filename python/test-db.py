@@ -254,7 +254,10 @@ class DballeTestMixin(object):
             reports.append(cur["rep_memo"])
         s = "synop"
         t = "temp"
-        self.assertEqual(reports, [s, t, s, t, s, t, s, s, t, s, t])
+        if self.DB_FORMAT == "V6":
+            self.assertEqual(reports, [s, t, s, t, s, t, s, s, t, s, t])
+        else:
+            self.assertEqual(reports, [s, s, s, s, s, s, t, t, t, t, t])
 
 
 class AttrTestMixin(object):
