@@ -28,8 +28,12 @@ class CSVMixin(DballeDBMixin):
                           "Station B01001: 12; Station B01002: 123; Station B01019: Test of long station name,,,,,,,,,,,,,,,")
         self.assertEqual(lines[1],
                           "Station,Latitude,Longitude,Network,Datetime,Level1,L1,Level2,L2,Time range,P1,P2,Variable,Value,Attr B33007,Attr B33040")
-        self.assertEqual(lines[2],
-                         "1,10.0,15.0,temp,2006-12-31 23:53:12,3,2,-,-,4,-21600,0,B13011,3.0,,17")
+        if self.DB_FORMAT == "V6":
+            self.assertEqual(lines[2],
+                             "1,10.0,15.0,temp,2006-12-31 23:53:12,3,2,-,-,4,-21600,0,B13011,3.0,,17")
+        else:
+            self.assertEqual(lines[2],
+                             "1,10.0,15.0,synop,2006-12-31 23:57:09,3,2,-,-,4,-21600,0,B13011,3.8,69,")
 
     def testAttrs(self):
         self.db.reset()
