@@ -10,19 +10,11 @@ import io
 import datetime
 import unittest
 import warnings
+from testlib import DballeDBMixin
 
-class DballeTestMixin(object):
+class DballeTestMixin(DballeDBMixin):
     def setUp(self):
-        if os.path.exists("test.sqlite"):
-            os.unlink("test.sqlite")
-        self.orig_db_format = dballe.DB.get_default_format()
-        dballe.DB.set_default_format(self.DB_FORMAT)
-
-        if not hasattr(self, "assertCountEqual"):
-            self.assertCountEqual = self.assertItemsEqual
-        self.db = dballe.DB.connect_test()
-        self.db.connect_test();
-        self.db.reset()
+        super(DballeTestMixin, self).setUp()
 
         data = dballe.Record(
                 lat=12.34560, lon=76.54320,
@@ -42,10 +34,6 @@ class DballeTestMixin(object):
 
         for rec in self.db.query_data(dballe.Record(var="B01011")):
             self.attr_ref = rec["context_id"]
-
-    def tearDown(self):
-        self.db = None
-        dballe.DB.set_default_format(self.orig_db_format)
 
     def testQueryAna(self):
         query = dballe.Record()

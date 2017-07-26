@@ -6,6 +6,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import dballe
 from dballe.volnd import *
+from testlib import DballeDBMixin
 import unittest, random, sys
 import datetime
 import warnings
@@ -63,20 +64,11 @@ class TestTddiv(unittest.TestCase):
         #       td2 = datetime.timedelta(0, 0, random.randint(0, 1000000))
         #       self.dtest(td1, td2)
 
-class TestRead(unittest.TestCase):
-    def __init__(self, *args, **kw):
-        super(TestRead, self).__init__(*args, **kw)
-        if not hasattr(self, "assertCountEqual"):
-            self.assertCountEqual = self.assertItemsEqual
-
+class ReadMixin(DballeDBMixin):
     def setUp(self):
+        super(ReadMixin, self).setUp()
         from testlib import fill_volnd
-        self.db = dballe.DB.connect_test()
         fill_volnd(self.db)
-
-    def tearDown(self):
-        #self.db.disconnect()
-        pass
 
     def testIndexFind(self):
         # Ana in one dimension, network in the other
@@ -159,19 +151,34 @@ class TestRead(unittest.TestCase):
         self.assertEqual(data.name, "B10004")
         self.assertEqual(len(data.attrs), 0)
         self.assertEqual(len(data.dims), 2)
-        self.assertEqual(len(data.dims[0]), 6)
-        self.assertEqual(len(data.dims[1]), 2)
-        self.assertEqual(data.vals.size, 12)
-        self.assertEqual(data.vals.shape, (6, 2))
-        self.assertEqual(sum(data.vals.mask.flat), 1)
-        self.assertEqual(round(ma.average(data.vals)), 83185)
-        self.assertEqual(data.dims[0][0], (1, 10., 15., None))
-        self.assertEqual(data.dims[0][1], (2, 10., 25., None))
-        self.assertEqual(data.dims[0][2], (3, 20., 15., None))
-        self.assertEqual(data.dims[0][3], (4, 20., 25., None))
-        self.assertEqual(data.dims[0][4], (5, 30., 15., None))
-        self.assertEqual(data.dims[0][5], (6, 30., 25., None))
-        self.assertEqual(set(data.dims[1]), set(("temp", "synop")))
+        if self.DB_FORMAT == "V6":
+            self.assertEqual(len(data.dims[0]), 6)
+            self.assertEqual(len(data.dims[1]), 2)
+            self.assertEqual(data.vals.size, 12)
+            self.assertEqual(data.vals.shape, (6, 2))
+            self.assertEqual(sum(data.vals.mask.flat), 1)
+            self.assertEqual(round(ma.average(data.vals)), 83185)
+            self.assertEqual(data.dims[0][0], (1, 10., 15., None))
+            self.assertEqual(data.dims[0][1], (2, 10., 25., None))
+            self.assertEqual(data.dims[0][2], (3, 20., 15., None))
+            self.assertEqual(data.dims[0][3], (4, 20., 25., None))
+            self.assertEqual(data.dims[0][4], (5, 30., 15., None))
+            self.assertEqual(data.dims[0][5], (6, 30., 25., None))
+            self.assertEqual(set(data.dims[1]), set(("temp", "synop")))
+        else:
+            self.assertEqual(len(data.dims[0]), 11)
+            self.assertEqual(len(data.dims[1]), 2)
+            self.assertEqual(data.vals.size, 22)
+            self.assertEqual(data.vals.shape, (11, 2))
+            self.assertEqual(sum(data.vals.mask.flat), 11)
+            self.assertEqual(round(ma.average(data.vals)), 83185)
+            self.assertEqual(data.dims[0][0], (1, 10., 15., None))
+            self.assertEqual(data.dims[0][1], (2, 10., 25., None))
+            self.assertEqual(data.dims[0][2], (3, 20., 15., None))
+            self.assertEqual(data.dims[0][3], (4, 20., 25., None))
+            self.assertEqual(data.dims[0][4], (5, 30., 15., None))
+            self.assertEqual(data.dims[0][5], (6, 30., 25., None))
+            self.assertEqual(set(data.dims[1]), set(("temp", "synop")))
 
     def testAnaTrangeNetwork(self):
         # 3 dimensions: ana, timerange, network
@@ -185,42 +192,77 @@ class TestRead(unittest.TestCase):
         self.assertEqual(data.name, "B10004")
         self.assertEqual(len(data.attrs), 0)
         self.assertEqual(len(data.dims), 3)
-        self.assertEqual(len(data.dims[0]), 6)
-        self.assertEqual(len(data.dims[1]), 1)
-        self.assertEqual(len(data.dims[2]), 2)
-        self.assertEqual(data.vals.size, 12)
-        self.assertEqual(data.vals.shape, (6, 1, 2))
-        self.assertEqual(sum(data.vals.mask.flat), 1)
-        self.assertEqual(round(ma.average(data.vals)), 83185)
-        self.assertEqual(data.dims[0][0], (1, 10., 15., None))
-        self.assertEqual(data.dims[0][1], (2, 10., 25., None))
-        self.assertEqual(data.dims[0][2], (3, 20., 15., None))
-        self.assertEqual(data.dims[0][3], (4, 20., 25., None))
-        self.assertEqual(data.dims[0][4], (5, 30., 15., None))
-        self.assertEqual(data.dims[0][5], (6, 30., 25., None))
-        self.assertEqual(data.dims[1][0], (0, None, None))
-        self.assertEqual(set(data.dims[2]), set(("temp", "synop")))
+        if self.DB_FORMAT == "V6":
+            self.assertEqual(len(data.dims[0]), 6)
+            self.assertEqual(len(data.dims[1]), 1)
+            self.assertEqual(len(data.dims[2]), 2)
+            self.assertEqual(data.vals.size, 12)
+            self.assertEqual(data.vals.shape, (6, 1, 2))
+            self.assertEqual(sum(data.vals.mask.flat), 1)
+            self.assertEqual(round(ma.average(data.vals)), 83185)
+            self.assertEqual(data.dims[0][0], (1, 10., 15., None))
+            self.assertEqual(data.dims[0][1], (2, 10., 25., None))
+            self.assertEqual(data.dims[0][2], (3, 20., 15., None))
+            self.assertEqual(data.dims[0][3], (4, 20., 25., None))
+            self.assertEqual(data.dims[0][4], (5, 30., 15., None))
+            self.assertEqual(data.dims[0][5], (6, 30., 25., None))
+            self.assertEqual(data.dims[1][0], (0, None, None))
+            self.assertEqual(set(data.dims[2]), set(("temp", "synop")))
+        else:
+            self.assertEqual(len(data.dims[0]), 12)
+            self.assertEqual(len(data.dims[1]), 1)
+            self.assertEqual(len(data.dims[2]), 2)
+            self.assertEqual(data.vals.size, 24)
+            self.assertEqual(data.vals.shape, (12, 1, 2))
+            self.assertEqual(sum(data.vals.mask.flat), 13)
+            self.assertEqual(round(ma.average(data.vals)), 83185)
+            self.assertEqual(data.dims[0][0], (1, 10., 15., None))
+            self.assertEqual(data.dims[0][1], (2, 10., 25., None))
+            self.assertEqual(data.dims[0][2], (3, 20., 15., None))
+            self.assertEqual(data.dims[0][3], (4, 20., 25., None))
+            self.assertEqual(data.dims[0][4], (5, 30., 15., None))
+            self.assertEqual(data.dims[0][5], (6, 30., 25., None))
+            self.assertEqual(data.dims[1][0], (0, None, None))
+            self.assertEqual(set(data.dims[2]), set(("temp", "synop")))
 
         data = vars["B13011"]
         self.assertEqual(data.name, "B13011")
         self.assertEqual(len(data.attrs), 0)
         self.assertEqual(len(data.dims), 3)
-        self.assertEqual(len(data.dims[0]), 6)
-        self.assertEqual(len(data.dims[1]), 2)
-        self.assertEqual(len(data.dims[2]), 2)
-        self.assertEqual(data.vals.size, 24)
-        self.assertEqual(data.vals.shape, (6, 2, 2))
-        self.assertEqual(sum(data.vals.mask.flat), 0)
-        self.assertAlmostEqual(ma.average(data.vals), 5.325, 6)
-        self.assertEqual(data.dims[0][0], (1, 10., 15., None))
-        self.assertEqual(data.dims[0][1], (2, 10., 25., None))
-        self.assertEqual(data.dims[0][2], (3, 20., 15., None))
-        self.assertEqual(data.dims[0][3], (4, 20., 25., None))
-        self.assertEqual(data.dims[0][4], (5, 30., 15., None))
-        self.assertEqual(data.dims[0][5], (6, 30., 25., None))
-        self.assertEqual(data.dims[1][0], (4, -43200, 0))
-        self.assertEqual(data.dims[1][1], (4, -21600, 0))
-        self.assertEqual(set(data.dims[2]), set(("temp", "synop")))
+        if self.DB_FORMAT == "V6":
+            self.assertEqual(len(data.dims[0]), 6)
+            self.assertEqual(len(data.dims[1]), 2)
+            self.assertEqual(len(data.dims[2]), 2)
+            self.assertEqual(data.vals.size, 24)
+            self.assertEqual(data.vals.shape, (6, 2, 2))
+            self.assertEqual(sum(data.vals.mask.flat), 0)
+            self.assertAlmostEqual(ma.average(data.vals), 5.325, 6)
+            self.assertEqual(data.dims[0][0], (1, 10., 15., None))
+            self.assertEqual(data.dims[0][1], (2, 10., 25., None))
+            self.assertEqual(data.dims[0][2], (3, 20., 15., None))
+            self.assertEqual(data.dims[0][3], (4, 20., 25., None))
+            self.assertEqual(data.dims[0][4], (5, 30., 15., None))
+            self.assertEqual(data.dims[0][5], (6, 30., 25., None))
+            self.assertEqual(data.dims[1][0], (4, -43200, 0))
+            self.assertEqual(data.dims[1][1], (4, -21600, 0))
+            self.assertEqual(set(data.dims[2]), set(("temp", "synop")))
+        else:
+            self.assertEqual(len(data.dims[0]), 12)
+            self.assertEqual(len(data.dims[1]), 2)
+            self.assertEqual(len(data.dims[2]), 2)
+            self.assertEqual(data.vals.size, 48)
+            self.assertEqual(data.vals.shape, (12, 2, 2))
+            self.assertEqual(sum(data.vals.mask.flat), 24)
+            self.assertAlmostEqual(ma.average(data.vals), 5.325, 6)
+            self.assertEqual(data.dims[0][0], (1, 10., 15., None))
+            self.assertEqual(data.dims[0][1], (2, 10., 25., None))
+            self.assertEqual(data.dims[0][2], (3, 20., 15., None))
+            self.assertEqual(data.dims[0][3], (4, 20., 25., None))
+            self.assertEqual(data.dims[0][4], (5, 30., 15., None))
+            self.assertEqual(data.dims[0][5], (6, 30., 25., None))
+            self.assertEqual(data.dims[1][0], (4, -43200, 0))
+            self.assertEqual(data.dims[1][1], (4, -21600, 0))
+            self.assertEqual(set(data.dims[2]), set(("temp", "synop")))
 
         self.assertEqual(vars["B10004"].dims[0], vars["B13011"].dims[0])
         self.assertNotEqual(vars["B10004"].dims[1], vars["B13011"].dims[1])
@@ -349,6 +391,19 @@ class TestRead(unittest.TestCase):
 
         self.assertEqual(sorted(anas.keys()), ["B01001", "B01002", "B01019"])
         self.assertEqual(anas["B01001"].dims[0], vars["B13011"].dims[0])
+
+
+class TestReadV6(ReadMixin, unittest.TestCase):
+    DB_FORMAT = "V6"
+
+
+class TestReadV7(ReadMixin, unittest.TestCase):
+    DB_FORMAT = "V7"
+
+
+class TestReadMEM(ReadMixin, unittest.TestCase):
+    DB_FORMAT = "MEM"
+
 
 if __name__ == "__main__":
     from testlib import main
