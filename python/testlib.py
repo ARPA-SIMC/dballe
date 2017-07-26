@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+import dballe
 import shlex
 import os
 import sys
@@ -127,3 +128,23 @@ def fill_volnd(db):
     rec.clear()
     rec.update(ana_id=1, B01001=12, B01002=123, B01019="Test of long station name", rep_memo="synop")
     db.insert_station_data(rec, False, True)
+
+
+class DballeDBMixin(object):
+    def __init__(self, *args, **kw):
+        super(DballeDBMixin, self).__init__(*args, **kw)
+        if not hasattr(self, "assertCountEqual"):
+            self.assertCountEqual = self.assertItemsEqual
+
+    def setUp(self):
+        if os.path.exists("test.sqlite"):
+            os.unlink("test.sqlite")
+        self.orig_db_format = dballe.DB.get_default_format()
+        dballe.DB.set_default_format(self.DB_FORMAT)
+        self.db = dballe.DB.connect_test()
+        self.db.connect_test();
+        self.db.reset()
+
+    def tearDown(self):
+        self.db = None
+        dballe.DB.set_default_format(self.orig_db_format)

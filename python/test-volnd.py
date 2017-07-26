@@ -6,6 +6,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import dballe
 from dballe.volnd import *
+from testlib import DballeDBMixin
 import unittest, random, sys
 import datetime
 import warnings
@@ -63,20 +64,11 @@ class TestTddiv(unittest.TestCase):
         #       td2 = datetime.timedelta(0, 0, random.randint(0, 1000000))
         #       self.dtest(td1, td2)
 
-class TestRead(unittest.TestCase):
-    def __init__(self, *args, **kw):
-        super(TestRead, self).__init__(*args, **kw)
-        if not hasattr(self, "assertCountEqual"):
-            self.assertCountEqual = self.assertItemsEqual
-
+class ReadMixin(DballeDBMixin):
     def setUp(self):
+        super(ReadMixin, self).setUp()
         from testlib import fill_volnd
-        self.db = dballe.DB.connect_test()
         fill_volnd(self.db)
-
-    def tearDown(self):
-        #self.db.disconnect()
-        pass
 
     def testIndexFind(self):
         # Ana in one dimension, network in the other
@@ -349,6 +341,19 @@ class TestRead(unittest.TestCase):
 
         self.assertEqual(sorted(anas.keys()), ["B01001", "B01002", "B01019"])
         self.assertEqual(anas["B01001"].dims[0], vars["B13011"].dims[0])
+
+
+class TestReadV6(ReadMixin, unittest.TestCase):
+    DB_FORMAT = "V6"
+
+
+class TestReadV7(ReadMixin, unittest.TestCase):
+    DB_FORMAT = "V7"
+
+
+class TestReadMEM(ReadMixin, unittest.TestCase):
+    DB_FORMAT = "MEM"
+
 
 if __name__ == "__main__":
     from testlib import main

@@ -6,14 +6,15 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import dballe
 from dballe import dbacsv
+from testlib import DballeDBMixin
 import datetime
 import unittest
 import io
 
-class TestCSV(unittest.TestCase):
+class CSVMixin(DballeDBMixin):
     def setUp(self):
+        super(CSVMixin, self).setUp()
         from testlib import fill_volnd
-        self.db = dballe.DB.connect_test()
         fill_volnd(self.db)
 
     def testExport(self):
@@ -66,6 +67,18 @@ class TestCSV(unittest.TestCase):
         lines = out.getvalue().splitlines()
         self.assertEqual(lines[2], "1005-01-01 01:01:00,270.96,98")
         self.assertEqual(lines[3], "1005-01-01 01:01:01,271.96,100")
+
+
+class TestCSVV6(CSVMixin, unittest.TestCase):
+    DB_FORMAT = "V6"
+
+
+class TestCSVV7(CSVMixin, unittest.TestCase):
+    DB_FORMAT = "V7"
+
+
+class TestCSVMEM(CSVMixin, unittest.TestCase):
+    DB_FORMAT = "MEM"
 
 
 if __name__ == "__main__":
