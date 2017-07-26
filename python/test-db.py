@@ -146,6 +146,44 @@ class DballeTest(unittest.TestCase):
             self.db.load(s)
             self.assertTrue(self.db.query_data(dballe.Record()).remaining > 0)
 
+    def testLoadFileWithAttrs(self):
+        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withB33196.bufr", "rb") as fp:
+            self.db.reset()
+            self.db.load(fp, attrs=True)
+            r = next(self.db.query_data(dballe.Record()))
+            a = self.db.attr_query_data(r["context_id"])
+            self.assertTrue("B33196" in a)
+
+    def testLoadFileOverwrite(self):
+        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withoutB33196.bufr", "rb") as fp:
+            self.db.reset()
+            self.db.load(fp, overwrite=True)
+            r = next(self.db.query_data(dballe.Record()))
+            a = self.db.attr_query_data(r["context_id"])
+            self.assertTrue(r["B12101"] == 274.15)
+
+        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withB33196.bufr", "rb") as fp:
+            self.db.load(fp, overwrite=True)
+            r = next(self.db.query_data(dballe.Record()))
+            a = self.db.attr_query_data(r["context_id"])
+            self.assertTrue(r["B12101"] == 273.15)
+
+    def testLoadFileOverwriteAttrs(self):
+        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withoutB33196.bufr", "rb") as fp:
+            self.db.reset()
+            self.db.load(fp, attrs=True, overwrite=True)
+            r = next(self.db.query_data(dballe.Record()))
+            a = self.db.attr_query_data(r["context_id"])
+            self.assertTrue(r["B12101"] == 274.15)
+            self.assertTrue("B33196" not in a)
+
+        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withB33196.bufr", "rb") as fp:
+            self.db.load(fp, attrs=True, overwrite=True)
+            r = next(self.db.query_data(dballe.Record()))
+            a = self.db.attr_query_data(r["context_id"])
+            self.assertTrue(r["B12101"] == 273.15)
+            self.assertTrue("B33196" in a)
+
     def testLoadFileno(self):
         import os
 

@@ -9,6 +9,7 @@
 #include "dballe/core/values.h"
 #include "dballe/message.h"
 #include "dballe/msg/codec.h"
+#include "dballe/db/defs.h"
 #include <algorithm>
 #include <wreport/bulletin.h>
 #include "config.h"
@@ -194,44 +195,54 @@ static PyObject* dpy_DB_insert_data(dpy_DB* self, PyObject* args, PyObject* kw)
     } DBALLE_CATCH_RETURN_PYO
 }
 
-static unsigned db_load_file_enc(DB* db, File::Encoding encoding, FILE* file, bool close_on_exit, const std::string& name)
+static unsigned db_load_file_enc(DB* db, File::Encoding encoding, FILE* file, bool close_on_exit, const std::string& name, int flags)
 {
     std::unique_ptr<File> f = File::create(encoding, file, close_on_exit, name);
     std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->encoding());
     unsigned count = 0;
     f->foreach([&](const BinaryMessage& raw) {
         Messages msgs = imp->from_binary(raw);
-        db->import_msgs(msgs, NULL, 0);
+        db->import_msgs(msgs, NULL, flags);
         ++count;
         return true;
     });
     return count;
 }
 
-static unsigned db_load_file(DB* db, FILE* file, bool close_on_exit, const std::string& name)
+static unsigned db_load_file(DB* db, FILE* file, bool close_on_exit, const std::string& name, int flags)
 {
     std::unique_ptr<File> f = File::create(file, close_on_exit, name);
     std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->encoding());
     unsigned count = 0;
     f->foreach([&](const BinaryMessage& raw) {
         Messages msgs = imp->from_binary(raw);
-        db->import_msgs(msgs, NULL, 0);
+        db->import_msgs(msgs, NULL, flags);
         ++count;
         return true;
     });
     return count;
 }
 
-static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args)
+static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args, PyObject* kw)
 {
+    static const char* kwlist[] = {"fp", "encoding", "attrs", "full_pseudoana", "overwrite", NULL};
+
     PyObject* obj;
     const char* encoding = nullptr;
-    if (!PyArg_ParseTuple(args, "O|s", &obj, &encoding))
+    int attrs = 0;
+    int full_pseudoana = 0;
+    int overwrite = 0;
+    int flags = 0;
+
+
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|s$iii", const_cast<char**>(kwlist), &obj, &encoding, &attrs, &full_pseudoana, &overwrite))
         return nullptr;
 
     string repr;
     if (object_repr(obj, repr))
         return nullptr;
+
+    flags = (attrs ? DBA_IMPORT_ATTRS : 0) | (full_pseudoana ? DBA_IMPORT_FULL_PSEUDOANA : 0) | (overwrite ? DBA_IMPORT_OVERWRITE : 0);
 
     try {
         int fileno = file_get_fileno(obj);
@@ -249,9 +260,9 @@ static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args)
             unsigned count;
             if (encoding)
             {
-                count = db_load_file_enc(self->db, File::parse_encoding(encoding), f, true, repr);
+                count = db_load_file_enc(self->db, File::parse_encoding(encoding), f, true, repr, flags);
             } else
-                count = db_load_file(self->db, f, true, repr);
+                count = db_load_file(self->db, f, true, repr, flags);
             return PyInt_FromLong(count);
         } else {
             // Duplicate the file descriptor because both python and libc will want to
@@ -274,9 +285,9 @@ static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args)
             unsigned count;
             if (encoding)
             {
-                count = db_load_file_enc(self->db, File::parse_encoding(encoding), f, true, repr);
+                count = db_load_file_enc(self->db, File::parse_encoding(encoding), f, true, repr, flags);
             } else
-                count = db_load_file(self->db, f, true, repr);
+                count = db_load_file(self->db, f, true, repr, flags);
             return PyInt_FromLong(count);
         }
     } catch (wreport::error& e) {
@@ -700,8 +711,8 @@ static PyMethodDef dpy_DB_methods[] = {
         "Insert station values in the database" },
     {"insert_data",       (PyCFunction)dpy_DB_insert_data, METH_VARARGS | METH_KEYWORDS,
         "Insert data values in the database" },
-    {"load",              (PyCFunction)dpy_DB_load, METH_VARARGS, R"(
-        load(fp, encoding=None)
+    {"load",              (PyCFunction)dpy_DB_load, METH_VARARGS | METH_KEYWORDS, R"(
+        load(fp, encoding=None, attrs=False, full_pseudoana=False, overwrite=False)
 
         Load a file object in the database. An encoding can optionally be
         provided as a string ("BUFR", "CREX", "AOF"). If encoding is None then
