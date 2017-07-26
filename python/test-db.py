@@ -11,8 +11,13 @@ import datetime
 import unittest
 import warnings
 
-class DballeTest(unittest.TestCase):
+class DballeTestMixin(object):
     def setUp(self):
+        if os.path.exists("test.sqlite"):
+            os.unlink("test.sqlite")
+        self.orig_db_format = dballe.DB.get_default_format()
+        dballe.DB.set_default_format(self.DB_FORMAT)
+
         if not hasattr(self, "assertCountEqual"):
             self.assertCountEqual = self.assertItemsEqual
         self.db = dballe.DB.connect_test()
@@ -40,6 +45,7 @@ class DballeTest(unittest.TestCase):
 
     def tearDown(self):
         self.db = None
+        dballe.DB.set_default_format(self.orig_db_format)
 
     def testQueryAna(self):
         query = dballe.Record()
@@ -168,22 +174,6 @@ class DballeTest(unittest.TestCase):
             a = self.db.attr_query_data(r["context_id"])
             self.assertTrue(r["B12101"] == 273.15)
 
-    def testLoadFileOverwriteAttrs(self):
-        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withoutB33196.bufr", "rb") as fp:
-            self.db.reset()
-            self.db.load(fp, attrs=True, overwrite=True)
-            r = next(self.db.query_data(dballe.Record()))
-            a = self.db.attr_query_data(r["context_id"])
-            self.assertTrue(r["B12101"] == 274.15)
-            self.assertTrue("B33196" not in a)
-
-        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withB33196.bufr", "rb") as fp:
-            self.db.load(fp, attrs=True, overwrite=True)
-            r = next(self.db.query_data(dballe.Record()))
-            a = self.db.attr_query_data(r["context_id"])
-            self.assertTrue(r["B12101"] == 273.15)
-            self.assertTrue("B33196" in a)
-
     def testLoadFileno(self):
         import os
 
@@ -222,6 +212,7 @@ class DballeTest(unittest.TestCase):
                 self.db.load(fp)
 
         # CREX, autodetectable
+
         with io.open(os.getenv("DBA_TESTDATA") + "/crex/test-synop0.crex", "rb") as fp:
             self.db.reset()
             self.assertEqual(self.db.load(fp), 1)
@@ -251,8 +242,6 @@ class DballeTest(unittest.TestCase):
             self.db.reset()
             self.assertEqual(self.db.load(fp, "CREX"), 0)
 
-
-
     def testQueryVolnd(self):
         from testlib import fill_volnd
         self.db.reset()
@@ -266,6 +255,35 @@ class DballeTest(unittest.TestCase):
         s = "synop"
         t = "temp"
         self.assertEqual(reports, [s, t, s, t, s, t, s, s, t, s, t])
+
+
+class AttrTestMixin(object):
+    def testLoadFileOverwriteAttrs(self):
+        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withoutB33196.bufr", "rb") as fp:
+            self.db.reset()
+            self.db.load(fp, attrs=True, overwrite=True)
+            r = next(self.db.query_data(dballe.Record()))
+            a = self.db.attr_query_data(r["context_id"])
+            self.assertTrue(r["B12101"] == 274.15)
+            self.assertTrue("B33196" not in a)
+
+        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withB33196.bufr", "rb") as fp:
+            self.db.load(fp, attrs=True, overwrite=True)
+            r = next(self.db.query_data(dballe.Record()))
+            a = self.db.attr_query_data(r["context_id"])
+            self.assertTrue(r["B12101"] == 273.15)
+            self.assertTrue("B33196" in a)
+
+
+class DballeV6Test(DballeTestMixin, unittest.TestCase):
+    DB_FORMAT = "V6"
+
+class DballeV7Test(DballeTestMixin, AttrTestMixin, unittest.TestCase):
+    DB_FORMAT = "V7"
+
+class DballeMEMTest(DballeTestMixin, AttrTestMixin, unittest.TestCase):
+    DB_FORMAT = "MEM"
+
 
 if __name__ == "__main__":
     from testlib import main

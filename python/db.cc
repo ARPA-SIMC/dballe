@@ -57,6 +57,35 @@ static PyGetSetDef dpy_DB_getsetters[] = {
     {NULL}
 };
 
+static PyObject* dpy_DB_get_default_format(PyTypeObject *type)
+{
+    try {
+        string format = db::format_format(DB::get_default_format());
+        return PyUnicode_FromString(format.c_str());
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+}
+
+static PyObject* dpy_DB_set_default_format(PyTypeObject *type, PyObject *args)
+{
+    const char* format;
+    if (!PyArg_ParseTuple(args, "s", &format))
+        return NULL;
+
+    try {
+        DB::set_default_format(db::format_parse(format));
+
+        Py_RETURN_NONE;
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+}
+
 static PyObject* dpy_DB_connect_from_file(PyTypeObject *type, PyObject *args)
 {
     const char* fname;
@@ -235,7 +264,7 @@ static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args, PyObject* kw)
     int flags = 0;
 
 
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|s$iii", const_cast<char**>(kwlist), &obj, &encoding, &attrs, &full_pseudoana, &overwrite))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|siii", const_cast<char**>(kwlist), &obj, &encoding, &attrs, &full_pseudoana, &overwrite))
         return nullptr;
 
     string repr;
@@ -693,6 +722,10 @@ static PyObject* dpy_DB_export_to_file(dpy_DB* self, PyObject* args, PyObject* k
 }
 
 static PyMethodDef dpy_DB_methods[] = {
+    {"get_default_format", (PyCFunction)dpy_DB_get_default_format, METH_NOARGS | METH_CLASS,
+        "Get the default DB format" },
+    {"set_default_format", (PyCFunction)dpy_DB_set_default_format, METH_VARARGS | METH_CLASS,
+        "Set the default DB format" },
     {"connect_from_file", (PyCFunction)dpy_DB_connect_from_file, METH_VARARGS | METH_CLASS,
         "Create a DB connecting to a SQLite file" },
     {"connect_from_url",  (PyCFunction)dpy_DB_connect_from_url, METH_VARARGS | METH_CLASS,

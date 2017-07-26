@@ -33,6 +33,9 @@ namespace db {
 /// Format a db::Format value to a string
 std::string format_format(Format format);
 
+/// Parse a formatted db::Format value
+Format format_parse(const std::string& str);
+
 
 /// Common interface for all kinds of cursors
 struct Cursor

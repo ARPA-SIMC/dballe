@@ -7,6 +7,7 @@
 #include "dballe/message.h"
 #include "dballe/core/record.h"
 #include "dballe/core/values.h"
+#include <wreport/utils/sys.h>
 #include <wreport/error.h>
 #include <cstring>
 #include <cstdlib>
@@ -31,6 +32,16 @@ std::string format_format(Format format)
         case V7: return "V7";
         default: return "unknown format " + std::to_string((int)format);
     }
+}
+
+Format format_parse(const std::string& str)
+{
+    if (str == "V7") return V7;
+    if (str == "V6") return V6;
+    if (str == "V5") return V5;
+    if (str == "MEM") return MEM;
+    if (str == "MESSAGES") return MESSAGES;
+    error_consistency::throwf("unsupported database format: '%s'", str.c_str());
 }
 
 Cursor::~Cursor()
@@ -71,12 +82,7 @@ unique_ptr<DB> DB::create(unique_ptr<sql::Connection> conn)
 
     const char* format_override = getenv("DBA_DB_FORMAT");
     if (format_override)
-    {
-        if (strcmp(format_override, "V6") == 0)
-            format = V6;
-        else if (strcmp(format_override, "V7") == 0)
-            format = V7;
-    }
+        format = format_parse(format_override);
 
     bool found = true;
 
