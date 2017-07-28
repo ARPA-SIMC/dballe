@@ -278,8 +278,13 @@ void Driver::vacuum_v7()
          LEFT JOIN data d ON d.id_levtr = ltr.id
              WHERE d.id_levtr is NULL)
     )");
-#if 0
-    // FIXME: this needs checking both against data and station_data
+    conn.exec(R"(
+        DELETE FROM station_data WHERE id IN (
+            SELECT sd.id
+              FROM station_data sd
+              LEFT JOIN data dd ON sd.id_station = dd.id_station
+             WHERE dd.id IS NULL)
+    )");
     conn.exec(R"(
         DELETE FROM station WHERE id IN (
             SELECT p.id
@@ -287,7 +292,6 @@ void Driver::vacuum_v7()
          LEFT JOIN data d ON d.id_station = p.id
              WHERE d.id is NULL)
     )");
-#endif
 }
 
 }

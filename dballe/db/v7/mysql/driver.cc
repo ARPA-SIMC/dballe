@@ -269,17 +269,13 @@ void Driver::delete_tables_v7()
 void Driver::vacuum_v7()
 {
     conn.exec_no_data("DELETE ltr FROM levtr ltr LEFT JOIN data d ON d.id_levtr=ltr.id WHERE d.id_levtr IS NULL");
-#if 0
-    // FIXME: this needs checking both against data and station_data
     conn.exec_no_data(R"(
-        DELETE FROM station WHERE id IN (
-            SELECT p.id
-              FROM station p
-         LEFT JOIN data d ON d.id_station = p.id
-             WHERE d.id is NULL)
+        DELETE sd
+          FROM station_data sd
+          LEFT JOIN data dd ON sd.id_station = dd.id_station
+         WHERE dd.id IS NULL
     )");
-    conn.exec_no_data("DELETE p FROM station p LEFT JOIN data d ON d.id_station=p.id WHERE d.id IS NULL");
-#endif
+    conn.exec_no_data("DELETE s FROM station s LEFT JOIN data d ON d.id_station = s.id WHERE d.id IS NULL");
 }
 
 }
