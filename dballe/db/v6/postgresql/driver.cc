@@ -272,6 +272,13 @@ void Driver::vacuum_v6()
              WHERE d.id_lev_tr is NULL)
     )");
     conn.exec_no_data(R"(
+        DELETE FROM data WHERE id IN (
+            SELECT sd.id
+              FROM data sd
+              LEFT JOIN data dd ON sd.id_station = dd.id_station AND dd.id_lev_tr != -1
+             WHERE sd.id_lev_tr = -1 AND dd.id IS NULL)
+    )");
+    conn.exec_no_data(R"(
         DELETE FROM station WHERE id IN (
             SELECT p.id
               FROM station p

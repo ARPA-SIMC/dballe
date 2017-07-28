@@ -184,6 +184,12 @@ void Driver::delete_tables_v6()
 void Driver::vacuum_v6()
 {
     conn.exec_no_data("DELETE c FROM lev_tr c LEFT JOIN data d ON d.id_lev_tr = c.id WHERE d.id_lev_tr IS NULL");
+    conn.exec_no_data(R"(
+        DELETE sd
+          FROM data sd
+          LEFT JOIN data dd ON sd.id_station = dd.id_station AND dd.id_lev_tr != -1
+         WHERE sd.id_lev_tr = -1 AND dd.id IS NULL
+    )");
     conn.exec_no_data("DELETE p FROM station p LEFT JOIN data d ON d.id_station = p.id WHERE d.id IS NULL");
 }
 

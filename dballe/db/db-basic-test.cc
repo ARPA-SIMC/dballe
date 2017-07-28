@@ -43,9 +43,80 @@ class Tests : public DBFixtureTestCase<DBFixture>
             wassert(actual(prios["fixspnpo"]) == 200);
         });
         add_method("vacuum", [](Fixture& f) {
-            // Just invoke vacuum
+            TestDataSet data;
+            data.stations["s1"].info.report = "synop";
+            data.stations["s1"].info.coords = Coords(12.34560, 76.54320);
+            data.stations["s1"].values.set("B01019", "Station 1");
+
+            data.stations["s2"].info.report = "metar";
+            data.stations["s2"].info.coords = Coords(23.45670, 65.43210);
+            data.stations["s2"].values.set("B01019", "Station 2");
+
+            data.data["s1"].info = data.stations["s1"].info;
+            data.data["s1"].info.level = Level(10, 11, 15, 22);
+            data.data["s1"].info.trange = Trange(20, 111, 122);
+            data.data["s1"].info.datetime = Datetime(1945, 4, 25, 8);
+            data.data["s1"].values.set("B01011", "Data 1");
+
+            data.data["s2"].info = data.stations["s2"].info;
+            data.data["s2"].info.level = Level(10, 11, 15, 22);
+            data.data["s2"].info.trange = Trange(20, 111, 122);
+            data.data["s2"].info.datetime = Datetime(1945, 4, 25, 8);
+            data.data["s2"].values.set("B01011", "Data 2");
+
+            // Insert some data
+            wassert(f.populate_database(data));
+
+            // Invoke vacuum
             auto& db = *f.db;
             db.vacuum();
+
+            // Stations are still there
+            {
+                core::Query q;
+                auto c = db.query_stations(q);
+                wassert(actual(c->remaining()) == 2);
+            }
+
+            // Delete all measured values, but not station values
+            {
+                core::Query q;
+                q.ana_id = data.stations["s1"].info.ana_id;
+                db.remove(q);
+            }
+
+            {
+                core::Query q;
+
+                // Stations are still there before vacuum
+                auto c = db.query_stations(q);
+                wassert(actual(c->remaining()) == 2);
+            }
+
+            // Invoke vacuum
+            db.vacuum();
+
+            // Station 1 is gone
+            {
+                core::Query q;
+                q.ana_id = data.stations["s1"].info.ana_id;
+                auto c = db.query_stations(q);
+                wassert(actual(c->remaining()) == 0);
+            }
+
+            // Station 2 is still there with all its data
+            {
+                core::Query q;
+                q.ana_id = data.stations["s2"].info.ana_id;
+                auto c = db.query_stations(q);
+                wassert(actual(c->remaining()) == 1);
+
+                auto sd = db.query_station_data(q);
+                wassert(actual(sd->remaining()) == 1);
+
+                auto dd = db.query_data(q);
+                wassert(actual(dd->remaining()) == 1);
+            }
         });
         add_method("simple", [](Fixture& f) {
             // Test remove_all
