@@ -43,9 +43,39 @@ class Tests : public DBFixtureTestCase<DBFixture>
             wassert(actual(prios["fixspnpo"]) == 200);
         });
         add_method("vacuum", [](Fixture& f) {
-            // Just invoke vacuum
+            // Insert some data
+            wassert(f.populate<OldDballeTestDataSet>());
+
+            // Invoke vacuum
             auto& db = *f.db;
             db.vacuum();
+
+            // Stations are still there
+            {
+                core::Query q;
+                auto c = db.query_stations(q);
+                wassert(actual(c->remaining()) > 0);
+            }
+
+            // Delete all measured values, but not station values
+            {
+                core::Query q;
+                db.remove(q);
+
+                // Stations are still there before vacuum
+                auto c = db.query_stations(q);
+                wassert(actual(c->remaining()) > 0);
+            }
+
+            // Invoke vacuum
+            db.vacuum();
+
+            // Stations are gone
+            {
+                core::Query q;
+                auto c = db.query_stations(q);
+                wassert(actual(c->remaining()) == 0);
+            }
         });
         add_method("simple", [](Fixture& f) {
             // Test remove_all
