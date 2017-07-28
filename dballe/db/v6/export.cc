@@ -80,6 +80,12 @@ bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& quer
 
     StationLayerCache station_cache;
 
+    if (explain_queries)
+    {
+        fprintf(stderr, "EXPLAIN "); query.print(stderr);
+        conn->explain(qb.sql_query, stderr);
+    }
+
     // Retrieve results, buffering them locally to avoid performing concurrent
     // queries
     Structbuf<v6::SQLRecordV6> results;
