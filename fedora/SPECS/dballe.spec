@@ -8,7 +8,12 @@ URL: https://github.com/ARPA-SIMC/dballe
 #Source0: %{name}-%{version}.tar.gz
 Source0: https://github.com/arpa-simc/%{name}/archive/v%{version}-%{release}.tar.gz#/%{name}-%{version}-%{release}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-BuildRequires: gperf, doxygen, python-docutils, lua-devel, libwreport-devel >= 3.2 , python-devel, python3-devel, popt-devel, postgresql-devel, mariadb-devel, sqlite-devel, help2man, libwreport-doc, python-wreport3, python3-wreport3
+%if 0%{?rhel} == 7
+%define python3_vers python34
+%else
+%define python3_vers python3
+%endif
+BuildRequires: libtool, gperf, doxygen, python-docutils, lua-devel, libwreport-devel >= 3.2 , python-devel, %{python3_vers}-devel, popt-devel, postgresql-devel, mariadb-devel, sqlite-devel, help2man, libwreport-doc, python-wreport3, %{python3_vers}-wreport3
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, python-dballe
 Obsoletes: provami <= 7.6
 
@@ -163,12 +168,12 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{?fedora:rpy
 
  These are the python bindings.
 
-%package -n python3-dballe
+%package -n %{python3_vers}-dballe
 Summary:  DB-ALL.e Python library
 Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{?fedora:rpy}, python3-numpy, python3-wreport3
+Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{?fedora:rpy}, %{python3_vers}-numpy, %{python3_vers}-wreport3
 
-%description -n python3-dballe
+%description -n %{python3_vers}-dballe
  DB-ALL.e Python library for weather research
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
@@ -286,7 +291,7 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 %doc %{_docdir}/dballe/*
 
 
-%files -n python3-dballe
+%files -n %{python3_vers}-dballe
 %defattr(-,root,root,-)
 %dir %{python3_sitelib}/dballe
 %{python3_sitelib}/dballe/*
