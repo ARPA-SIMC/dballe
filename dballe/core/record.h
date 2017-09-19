@@ -11,6 +11,7 @@
 #include <dballe/var.h>
 #include <dballe/core/matcher.h>
 #include <vector>
+#include <functional>
 
 namespace dballe {
 namespace core {

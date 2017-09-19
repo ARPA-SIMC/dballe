@@ -4,6 +4,7 @@
 #include <dballe/types.h>
 #include <memory>
 #include <string>
+#include <functional>
 
 namespace dballe {
 

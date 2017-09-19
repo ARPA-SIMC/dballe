@@ -4,6 +4,7 @@
 #include <wreport/var.h>
 #include <dballe/types.h>
 #include <memory>
+#include <functional>
 
 namespace dballe {
 

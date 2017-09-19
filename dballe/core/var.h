@@ -7,6 +7,7 @@
 
 #include <dballe/var.h>
 #include <set>
+#include <functional>
 
 namespace dballe {
 
