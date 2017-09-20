@@ -126,7 +126,7 @@ void LevelContext::init()
     height_sensor_seen = false;
     sea_depth = missing;
     ground_depth = missing;
-    swell_wave_group = 0;
+    swell_wave_group = false;
 }
 
 void LevelContext::peek_var(const wreport::Var& var)
@@ -149,7 +149,7 @@ void LevelContext::peek_var(const wreport::Var& var)
             break;
         case WR_VAR(0,  7, 61): ground_depth = var.enq(missing); break;
         case WR_VAR(0,  7, 63): sea_depth = var.enq(missing); break;
-        case WR_VAR(0, 22,  3): ++swell_wave_group; break;
+        case WR_VAR(0, 22,  3): swell_wave_group=true; break;
     }
 }
 
