@@ -140,6 +140,13 @@ if test x$have_libpq = xyes
 then
     PKG_CHECK_MODULES(LIBPQ, libpq)
     AC_DEFINE([HAVE_LIBPQ], 1, [PostgreSQL is available])
+else
+    dnl libpq without .pc file
+    have_libpq=yes
+    AC_CHECK_LIB([pq], [PQconnectStart], [true], [have_libpq=no])
+    AC_CHECK_HEADER([libpq-fe.h], [true], [have_libpq=no])
+    LIBPQ_CFLAGS=
+    LIBPQ_LIBS="-lpq"
 fi
 AM_CONDITIONAL([HAVE_LIBPQ], [test x"$have_libpq" = x"yes"])
 
