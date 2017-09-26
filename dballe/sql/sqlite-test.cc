@@ -73,7 +73,13 @@ class Tests : public FixtureTestCase<SQLiteFixture>
         });
         add_method("query_unsigned", [](Fixture& f) {
             // Test querying unsigned values
+#if SQLITE_VERSION_NUMBER < 3008006
+            char buf[200];
+            snprintf(buf, 200, "INSERT INTO dballe_test VALUES (%ld)", 0xFFFFFFFE);
+            f.conn.exec(buf);
+#else
             f.conn.exec("INSERT INTO dballe_test VALUES (0xFFFFFFFE)");
+#endif
 
             auto s = f.conn.sqlitestatement("SELECT val FROM dballe_test");
 
