@@ -1,0 +1,28 @@
+language: cpp
+
+sudo: required
+
+services:
+    - docker
+
+script:
+    - docker run -v ${TRAVIS_BUILD_DIR}:/root/src/ -w /root/src/ $DOCKER_IMAGE /bin/bash .travis-build.sh $DOCKER_IMAGE
+
+env:
+    - DOCKER_IMAGE=fedora:26
+    - DOCKER_IMAGE=fedora:25
+
+before_deploy:
+    - openssl aes-256-cbc -K $encrypted_022b85a83fb3_key -iv $encrypted_022b85a83fb3_iv -in .copr.enc -out .copr -d
+
+deploy:
+    skip_cleanup: true
+    provider: script
+    script: docker run -v ${TRAVIS_BUILD_DIR}:/root/src/ -w /root/src/ fedora:latest /bin/sh -c "dnf install -y copr-cli && copr-cli --config .copr build --nowait pat1/simc fedora/SPECS/wreport.spec"
+    on:
+        branch: master
+        condition: $DOCKER_IMAGE = fedora:25
+
+matrix:
+    allow_failures:
+        - env: DOCKER_IMAGE=fedora:26
