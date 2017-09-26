@@ -18,7 +18,7 @@ before_deploy:
 deploy:
     skip_cleanup: true
     provider: script
-    script: docker run -v ${TRAVIS_BUILD_DIR}:/root/src/ -w /root/src/ fedora:latest /bin/sh -c "dnf install -y copr-cli && copr-cli --config .copr build --nowait pat1/simc fedora/SPECS/wreport.spec"
+    script: docker run -v ${TRAVIS_BUILD_DIR}:/root/src/ -w /root/src/ fedora:latest /bin/sh -c "dnf install -y copr-cli && copr-cli --config .copr build --nowait pat1/simc fedora/SPECS/dballe.spec"
     on:
         branch: master
         condition: $DOCKER_IMAGE = fedora:25
