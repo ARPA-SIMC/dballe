@@ -8,6 +8,7 @@
 #include <mysql.h>
 #include <cstdlib>
 #include <vector>
+#include <functional>
 
 namespace dballe {
 namespace sql {

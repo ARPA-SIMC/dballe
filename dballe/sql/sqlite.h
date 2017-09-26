@@ -8,6 +8,7 @@
 #include <dballe/sql/sql.h>
 #include <sqlite3.h>
 #include <vector>
+#include <functional>
 
 namespace dballe {
 namespace sql {

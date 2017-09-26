@@ -8,6 +8,7 @@
 #include <libpq-fe.h>
 #include <arpa/inet.h>
 #include <vector>
+#include <functional>
 
 namespace dballe {
 namespace sql {
