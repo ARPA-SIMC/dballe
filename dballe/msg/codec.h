@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <cstdio>
+#include <functional>
 
 /** @file
  * @ingroup msg

@@ -4,6 +4,7 @@
 #include <dballe/sql/fwd.h>
 #include <memory>
 #include <cstdio>
+#include <functional>
 
 namespace wreport {
 struct Var;

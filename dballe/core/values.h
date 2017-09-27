@@ -11,6 +11,7 @@
 #include <wreport/varinfo.h>
 #include <vector>
 #include <map>
+#include <functional>
 
 namespace dballe {
 

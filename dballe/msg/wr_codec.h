@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <map>
 #include <string>
+#include <functional>
 
 namespace wreport {
 struct Bulletin;

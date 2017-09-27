@@ -6,6 +6,7 @@
 #include <memory>
 #include <set>
 #include <cstdio>
+#include <functional>
 
 namespace dballe {
 struct Record;

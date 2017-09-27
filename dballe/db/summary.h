@@ -5,6 +5,7 @@
 #include <dballe/db/db.h>
 #include <vector>
 #include <set>
+#include <functional>
 
 namespace dballe {
 namespace db {

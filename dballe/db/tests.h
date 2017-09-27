@@ -4,6 +4,7 @@
 #include <dballe/db/db.h>
 #include <dballe/sql/fwd.h>
 #include <utility>
+#include <functional>
 
 namespace dballe {
 struct DB;

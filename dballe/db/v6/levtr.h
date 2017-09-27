@@ -4,6 +4,7 @@
 #include <dballe/core/defs.h>
 #include <memory>
 #include <cstdio>
+#include <functional>
 
 namespace dballe {
 struct Record;

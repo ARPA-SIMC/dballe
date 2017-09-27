@@ -10,6 +10,7 @@
 #include <vector>
 #include <list>
 #include <cstdio>
+#include <functional>
 
 namespace dballe {
 struct Record;

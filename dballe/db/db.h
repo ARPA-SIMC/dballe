@@ -11,6 +11,7 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <functional>
 
 /** @file
  * @ingroup db
