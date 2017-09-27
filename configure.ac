@@ -34,6 +34,17 @@ AC_ARG_ENABLE([docs],
     [],
     [enable_docs="yes"])
 
+AC_ARG_VAR([WREPORT_DOXYGEN_DIR], [path of wreport doxygen doc])
+if test x$WREPORT_DOXYGEN_DIR = x
+then
+    WREPORT_DOXYGEN_DIR=/usr/share/doc/wreport/apidocs
+fi
+AC_ARG_VAR([WREPORT_DOXYGEN_TAGFILE], [path of libwreport.doxytags])
+if test x$WREPORT_DOXYGEN_TAGFILE = x
+then
+    WREPORT_DOXYGEN_TAGFILE=/usr/share/doc/wreport/libwreport.doxytags
+fi
+
 AC_CHECK_PROG(have_rst2html, rst2html, yes, no)
 
 dnl To use subdirs

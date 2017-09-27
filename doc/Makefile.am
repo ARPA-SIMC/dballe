@@ -42,7 +42,7 @@ tranges.dox: mksnippet
 libdballe.doxytags: $(cppdeps)
 	doxygen $<
 
-libwreport.doxytags: $(wildcard $(docdir)/*wreport*/libwreport.doxytags* /usr/share/doc/*wreport*/libwreport.doxytags*)
+libwreport.doxytags: @WREPORT_DOXYGEN_TAGFILE@
 	if [ -z "$<" ]; then \
 	        ( echo "libwreport.doxytags* not found" >&2 ; exit 1 ); \
 	elif [ `basename "$<"` = libwreport.doxytags.gz ]; then \
