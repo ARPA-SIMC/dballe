@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <cstdio>
+#include <functional>
 
 namespace dballe {
 namespace core {
