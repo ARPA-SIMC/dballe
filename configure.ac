@@ -44,6 +44,33 @@ if test x$WREPORT_DOXYGEN_TAGFILE = x
 then
     WREPORT_DOXYGEN_TAGFILE=/usr/share/doc/wreport/libwreport.doxytags
 fi
+if test x$enable_docs = xyes
+then
+    if test ! -d "$WREPORT_DOXYGEN_DIR"
+    then
+        wreport_doxygen_dir_result=no
+    else
+        wreport_doxygen_dir_result=yes
+    fi
+    if test ! -e "$WREPORT_DOXYGEN_TAGFILE"
+    then
+        wreport_doxygen_tagfile_result=no
+    else
+        wreport_doxygen_tagfile_result=yes
+    fi
+    AC_MSG_CHECKING([for wreport documentation dir $WREPORT_DOXYGEN_DIR])
+    AC_MSG_RESULT([$wreport_doxygen_dir_result])
+    AC_MSG_CHECKING([for wreport doxytag file $WREPORT_DOXYGEN_TAGFILE])
+    AC_MSG_RESULT([$wreport_doxygen_tagfile_result])
+    if test x$wreport_doxygen_dir_result = xno
+    then
+        AC_MSG_ERROR([WREPORT_DOXYGEN_TAGFILE not found. Set the var or run configure with --disable-docs.])
+    fi
+    if test x$wreport_doxygen_tagfile_result = xno
+    then
+        AC_MSG_ERROR([WREPORT_DOXYGEN_DIR not found. Set the var or run configure with --disable-docs.])
+    fi
+fi
 
 AC_CHECK_PROG(have_rst2html, rst2html, yes, no)
 
