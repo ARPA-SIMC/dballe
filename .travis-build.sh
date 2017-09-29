@@ -18,7 +18,7 @@ fi
 
 $builddep -y fedora/SPECS/dballe.spec
 
-if [[ $image =~ "^fedora:" ]]
+if [[ $image =~ ^fedora: ]]
 then
     pkgname="$(rpmspec -q --qf="dballe-%{version}-%{release}\n" fedora/SPECS/dballe.spec | head -n1)"
     rpmdev-setuptree
