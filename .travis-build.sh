@@ -8,12 +8,14 @@ then
     pkgcmd="yum"
     builddep="yum-builddep"
     yum install -y yum-utils
+    sed -i 's/^\(tsflags *= .*\)nodocs\(.*\)/\1\2/g' /etc/yum.conf
 elif [[ $image =~ ^fedora: ]]
 then
     pkgcmd="dnf"
     builddep="dnf builddep"
     dnf install -y @buildsys-build 'dnf-command(builddep)' fedora-packager
     dnf copr enable -y pat1/simc
+    sed -i 's/^\(tsflags *= .*\)nodocs\(.*\)/\1\2/g' /etc/dnf/dnf.conf
 fi
 
 $builddep -y fedora/SPECS/dballe.spec
