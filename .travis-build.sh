@@ -7,25 +7,33 @@ if [[ $image =~ ^centos: ]]
 then
     pkgcmd="yum"
     builddep="yum-builddep"
+    sed -i '/^tsflags=/d' /etc/yum.conf
+    yum install -y epel-release
+    yum install -y @buildsys-build
     yum install -y yum-utils
-    sed -i 's/^\(tsflags *=.*\)nodocs\(.*\)/\1\2/g' /etc/yum.conf
+    yum install -y yum-plugin-copr
+    yum install -y git
+    yum copr enable -y pat1/simc
 elif [[ $image =~ ^fedora: ]]
 then
     pkgcmd="dnf"
     builddep="dnf builddep"
-    dnf install -y @buildsys-build 'dnf-command(builddep)' fedora-packager
+    sed -i '/^tsflags=/d' /etc/dnf/dnf.conf
+    dnf install -y @buildsys-build
+    dnf install -y 'dnf-command(builddep)'
+    dnf install -y git
     dnf copr enable -y pat1/simc
-    sed -i 's/^\(tsflags *=.*\)nodocs\(.*\)/\1\2/g' /etc/dnf/dnf.conf
 fi
 
 $builddep -y fedora/SPECS/dballe.spec
 
-if [[ $image =~ ^fedora: ]]
+if [[ $image =~ ^fedora: || $image =~ ^centos: ]]
 then
     pkgname="$(rpmspec -q --qf="dballe-%{version}-%{release}\n" fedora/SPECS/dballe.spec | head -n1)"
-    rpmdev-setuptree
+    mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+    cp fedora/SPECS/dballe.spec ~/rpmbuild/SPECS/dballe.spec
     git archive --prefix=$pkgname/ --format=tar HEAD | gzip -c > ~/rpmbuild/SOURCES/$pkgname.tar.gz
-    rpmbuild -ba fedora/SPECS/dballe.spec
+    rpmbuild -ba ~/rpmbuild/SPECS/dballe.spec
     find ~/rpmbuild/{RPMS,SRPMS}/ -name "${pkgname}*rpm" -exec cp -v {} . \;
     # TODO upload ${pkgname}*.rpm to github release on deploy stage
 else
