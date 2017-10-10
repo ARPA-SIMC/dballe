@@ -314,6 +314,7 @@
  020200 [SIM] Presence of fog                                            BOOLEAN                    0            0   1 BOOLEAN                   0          1
  020201 [SIM] Presence of water-spout                                    BOOLEAN                    0            0   1 BOOLEAN                   0          1
  020202 [SIM] State of the ground with snow                              CODE TABLE                 0            0   5 CODE TABLE                0          2
+ 020203 [SIM] Weather impact                                             CODE TABLE 20203           0            0   9 CODE TABLE 20203          0          3
  022001 DIRECTION OF WAVES                                               DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  022002 DIRECTION OF WIND WAVES                                          DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  022003 DIRECTION OF SWELL WAVES                                         DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
