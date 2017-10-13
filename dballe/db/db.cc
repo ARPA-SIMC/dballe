@@ -19,7 +19,7 @@ using namespace wreport;
 namespace dballe {
 namespace db {
 
-static Format default_format = V6;
+static Format default_format = V7;
 
 std::string format_format(Format format)
 {
