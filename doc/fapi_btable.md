@@ -324,6 +324,7 @@ digits and description.
 | 020200 | [SIM] Presence of fog                                              | BOOLEAN                  | 1 digits       |
 | 020201 | [SIM] Presence of water-spout                                      | BOOLEAN                  | 1 digits       |
 | 020202 | [SIM] State of the ground with snow                                | CODE TABLE               | 2 chars        |
+| 020203 | [SIM] Weather impact                                               | CODE TABLE 20203         | 3 chars        |
 | 022001 | DIRECTION OF WAVES                                                 | DEGREE TRUE              | 3 digits       |
 | 022002 | DIRECTION OF WIND WAVES                                            | DEGREE TRUE              | 3 digits       |
 | 022003 | DIRECTION OF SWELL WAVES                                           | DEGREE TRUE              | 3 digits       |
