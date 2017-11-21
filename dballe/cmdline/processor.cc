@@ -853,6 +853,10 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
                 processed = false;
                 if (verbose)
                     fprintf(stderr, "%s\n", pe.what());
+            } catch (wreport::error_notfound& e) {
+                processed = false;
+                if (verbose)
+                    fprintf(stderr, "%s:\n", e.what());
             } catch (std::exception& e) {
                 if (verbose)
                     fprintf(stderr, "%s:#%d: %s\n", file->pathname().c_str(), item.idx, e.what());
