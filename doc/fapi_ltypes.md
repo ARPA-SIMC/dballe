@@ -88,3 +88,4 @@ where possible.
 | 262         | (use when ltype1=256) Direction and elevation of clouds, L2 is ignored |                             |
 | 263         | (use when ltype1=256) Cloud groups with bases below station level, L2 = group number |                             |
 | 264         | Waves                                  |                             |
+| 265         | Non-physical data level                | engineering ordinal level   |

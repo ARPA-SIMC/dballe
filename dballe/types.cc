@@ -883,6 +883,7 @@ static std::string describe_level(int ltype, int val)
         case 260: return snprintf(buf, 256, "Cloud drift group %d", val), buf;
         case 261: return snprintf(buf, 256, "Cloud elevation group %d", val), buf;
         case 262: return "Direction and elevation of clouds";
+        case 265: return snprintf(buf, 256, "Non-physical data level #%d", val), buf;
         case MISSING_INT: return "Information about the station that generated the data";
         default:    return snprintf(buf, 256, "%d %d", ltype, val), buf; break;
     }
