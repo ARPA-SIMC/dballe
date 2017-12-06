@@ -64,11 +64,13 @@ then
     AC_MSG_RESULT([$wreport_doxygen_tagfile_result])
     if test x$wreport_doxygen_dir_result = xno
     then
-        AC_MSG_ERROR([WREPORT_DOXYGEN_TAGFILE not found. Set the var or run configure with --disable-docs.])
+        AC_MSG_WARN([WREPORT_DOXYGEN_TAGFILE not found, documentation will not be built.])
+        enable_docs=no
     fi
     if test x$wreport_doxygen_tagfile_result = xno
     then
-        AC_MSG_ERROR([WREPORT_DOXYGEN_DIR not found. Set the var or run configure with --disable-docs.])
+        AC_MSG_WARN([WREPORT_DOXYGEN_DIR not found, documentation will not be built.])
+        enable_docs=no
     fi
 fi
 

@@ -1,21 +1,18 @@
 ## Process this file with automake to produce Makefile.in
 
-doc_DATA =
+generic_mds = dballe_env.md
+
+doc_DATA = $(generic_mds)
 
 noinst_DATA =
 
-EXTRA_DIST = mksnippet
+EXTRA_DIST = mksnippet add_templates_to_manpage $(generic_mds)
 
 CLEANFILES =
 
 if DO_DOCS
 
 # Generic documentation
-
-generic_mds = dballe_env.md
-
-doc_DATA += $(generic_mds)
-EXTRA_DIST += $(generic_mds)
 
 
 # C++ API documentation
@@ -103,7 +100,7 @@ uninstall-local:
 	rm -rf $(DESTDIR)$(docdir)/c_api
 
 
-EXTRA_DIST += doxy2swig.py add_templates_to_manpage introduzione.odt
+EXTRA_DIST += doxy2swig.py introduzione.odt
 
 CLEANFILES += doxygen_sqlite3.db
 
