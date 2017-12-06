@@ -358,7 +358,10 @@ digits and description.
 | 023196 | [SIM] Dry deposition of HNO3                                       | MOL/M**3                 | #.#####        |
 | 023197 | [SIM] Wet deposition of HNO3                                       | MOL/M**3                 | #.#####        |
 | 023198 | [SIM] Solid transport by river                                     | KG/S                     | ######.##      |
+| 025025 | Battery voltage                                                    | V                        | ##.#           |
 | 025076 | LOG-10 OF (TEMP-RAD CENTRAL WAVENUMBER) FOR ATOVS                  | LOGM-1                   | ##.########    |
+| 025192 | Battery charge                                                     | %                        | 3 digits       |
+| 025193 | Battery current                                                    | A                        | ##.###         |
 | 029192 | [SIM] Land fraction                                                | %                        | ###.#          |
 | 031000 | SHORT DELAYED DESCRIPTOR REPLICATION FACTOR                        | Numeric                  | 1 digits       |
 | 031001 | DELAYED DESCRIPTOR REPLICATION FACTOR                              | Numeric                  | 3 digits       |
