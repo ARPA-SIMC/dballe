@@ -64,11 +64,15 @@ bool Importer::operator()(const Item& item)
     for (size_t i = 0; i < item.msgs->size(); ++i)
     {
         Msg& msg = Msg::downcast((*item.msgs)[i]);
-        if (forced_repmemo == NULL && msg.type == MSG_GENERIC)
-            /* Put generic messages in the generic report by default */
-            db.import_msg(*transaction, msg, NULL, import_flags);
-        else
-            db.import_msg(*transaction, msg, forced_repmemo, import_flags);
+        try {
+            if (forced_repmemo == NULL && msg.type == MSG_GENERIC)
+                /* Put generic messages in the generic report by default */
+                db.import_msg(*transaction, msg, NULL, import_flags);
+            else
+                db.import_msg(*transaction, msg, forced_repmemo, import_flags);
+        } catch (std::exception& e) {
+            item.processing_failed(e);
+        }
     }
     return true;
 }
@@ -123,6 +127,8 @@ int Dbadb::do_import(const list<string>& fnames, Reader& reader, int import_flag
     importer.forced_repmemo = forced_repmemo;
     reader.read(fnames, importer);
     importer.commit();
+    if (reader.verbose)
+        fprintf(stderr, "%u messages successfully imported, %u messages skipped\n", reader.count_successes, reader.count_failures);
     return 0;
 }
 

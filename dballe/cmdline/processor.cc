@@ -130,6 +130,10 @@ void Item::decode(msg::Importer& imp, bool print_errors)
     }
 }
 
+void Item::processing_failed(std::exception& e) const
+{
+    throw ProcessingException(rmsg ? rmsg->pathname : "(unknown)", idx, e);
+}
 
 void IndexMatcher::parse(const std::string& str)
 {
@@ -839,7 +843,15 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
                 if (!filter.match_index(item.idx))
                     continue;
 
-                item.decode(*imp, print_errors);
+                try {
+                    item.decode(*imp, print_errors);
+                } catch (std::exception& e) {
+                    // Convert decode errors into ProcessingException, to skip
+                    // this item if it fails to decode. We can safely skip,
+                    // because if file->read() returned successfully the next
+                    // read should properly start at the next item
+                    item.processing_failed(e);
+                }
 
                 //process_input(*file, rmsg, grepdata, action);
 
@@ -853,14 +865,6 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
                 processed = false;
                 if (verbose)
                     fprintf(stderr, "%s\n", pe.what());
-            } catch (wreport::error_notfound& e) {
-                processed = false;
-                if (verbose)
-                    fprintf(stderr, "%s:\n", e.what());
-            } catch (wreport::error_consistency& e) {
-                processed = false;
-                if (verbose)
-                    fprintf(stderr, "%s:\n", e.what());
             } catch (std::exception& e) {
                 if (verbose)
                     fprintf(stderr, "%s:#%d: %s\n", file->pathname().c_str(), item.idx, e.what());
@@ -874,6 +878,10 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
                     fail_file = File::create(file->encoding(), fail_file_name, "ab");
                 fail_file->write(item.rmsg->data);
             }
+            if (processed)
+                ++count_successes;
+            else
+                ++count_failures;
         }
     } while (name != fnames.end());
 }

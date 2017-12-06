@@ -291,6 +291,7 @@ struct ImportCmd : public DatabaseCmd
         // Throw away the command name
         poptGetArg(optCon);
         cmdline::Reader reader(readeropts);
+        reader.verbose = op_verbose;
 
         // Configure the reader
         core::Query query;

@@ -28,6 +28,8 @@ namespace cmdline {
  */
 struct ProcessingException : public std::exception
 {
+    std::string filename;
+    unsigned index;
     std::string msg;
 
     /**
@@ -41,6 +43,7 @@ struct ProcessingException : public std::exception
             const std::string& filename,
             unsigned index,
             const std::string& msg)
+        : filename(filename), index(index)
     {
         initmsg(filename, index, msg.c_str());
     }
@@ -57,6 +60,7 @@ struct ProcessingException : public std::exception
             const std::string& filename,
             unsigned index,
             const std::exception& original)
+        : filename(filename), index(index)
     {
         initmsg(filename, index, original.what());
     }
@@ -75,6 +79,7 @@ struct ProcessingException : public std::exception
             unsigned index,
             const std::string& msg,
             const std::exception& original)
+        : filename(filename), index(index)
     {
         initmsg(filename, index, msg.c_str());
         this->msg += ": ";
@@ -107,6 +112,9 @@ struct Item
 
     /// Set the value of msgs, possibly replacing the previous one
     void set_msgs(Messages* new_msgs);
+
+    /// Throw a ProcessingException based on e
+    void processing_failed(std::exception& e) const __attribute__ ((noreturn));
 };
 
 struct Action
@@ -183,6 +191,8 @@ public:
     msg::Importer::Options import_opts;
     Filter filter;
     bool verbose;
+    unsigned count_successes = 0;
+    unsigned count_failures = 0;
 
     Reader(const ReaderOptions& opts);
 
