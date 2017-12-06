@@ -129,7 +129,17 @@ int Dbadb::do_import(const list<string>& fnames, Reader& reader, int import_flag
     importer.commit();
     if (reader.verbose)
         fprintf(stderr, "%u messages successfully imported, %u messages skipped\n", reader.count_successes, reader.count_failures);
-    return 0;
+
+    // As discussed in #101, if there are both successes and failures, return
+    // success only if --rejected has been used, because in that case the
+    // caller can check the size of the rejected file to detect the difference
+    // between a mixed result and a complete success.
+    // One can use --rejected=/dev/null to ignore partial failures.
+    if (!reader.count_failures)
+        return 0;
+    if (!reader.count_successes)
+        return 1;
+    return reader.has_fail_file() ? 0 : 1;
 }
 
 int Dbadb::do_import(const std::string& fname, Reader& reader, int import_flags, const char* forced_repmemo)

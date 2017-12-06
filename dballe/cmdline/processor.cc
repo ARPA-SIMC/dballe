@@ -323,8 +323,13 @@ bool Filter::match_item(const Item& item) const
 }
 
 Reader::Reader(const ReaderOptions& opts)
-    : input_type(opts.input_type), fail_file_name(opts.fail_file_name), filter(opts), verbose(false)
+    : input_type(opts.input_type), fail_file_name(opts.fail_file_name), filter(opts)
 {
+}
+
+bool Reader::has_fail_file() const
+{
+    return fail_file_name != nullptr;
 }
 
 void Reader::read_csv(const std::list<std::string>& fnames, Action& action)

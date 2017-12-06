@@ -190,11 +190,13 @@ protected:
 public:
     msg::Importer::Options import_opts;
     Filter filter;
-    bool verbose;
+    bool verbose = false;
     unsigned count_successes = 0;
     unsigned count_failures = 0;
 
     Reader(const ReaderOptions& opts);
+
+    bool has_fail_file() const;
 
     void read(const std::list<std::string>& fnames, Action& action);
 };
