@@ -38,11 +38,13 @@ AC_ARG_VAR([WREPORT_DOXYGEN_DIR], [path of wreport doxygen doc])
 if test x$WREPORT_DOXYGEN_DIR = x
 then
     WREPORT_DOXYGEN_DIR=/usr/share/doc/wreport/apidocs
+    test -d "$WREPORT_DOXYGEN_DIR" || WREPORT_DOXYGEN_DIR=/usr/share/doc/libwreport-doc/apidocs
 fi
 AC_ARG_VAR([WREPORT_DOXYGEN_TAGFILE], [path of libwreport.doxytags])
 if test x$WREPORT_DOXYGEN_TAGFILE = x
 then
-    WREPORT_DOXYGEN_TAGFILE=/usr/share/doc/wreport/libwreport.doxytags
+    WREPORT_DOXYGEN_TAGFILE="/usr/share/doc/wreport/libwreport.doxytags"
+    test -e "$WREPORT_DOXYGEN_TAGFILE" || WREPORT_DOXYGEN_TAGFILE="/usr/share/doc/libwreport-doc/libwreport.doxytags.gz"
 fi
 if test x$enable_docs = xyes
 then
@@ -64,12 +66,12 @@ then
     AC_MSG_RESULT([$wreport_doxygen_tagfile_result])
     if test x$wreport_doxygen_dir_result = xno
     then
-        AC_MSG_WARN([WREPORT_DOXYGEN_TAGFILE not found, documentation will not be built.])
+        AC_MSG_WARN([WREPORT_DOXYGEN_DIR not found, documentation will not be built.])
         enable_docs=no
     fi
     if test x$wreport_doxygen_tagfile_result = xno
     then
-        AC_MSG_WARN([WREPORT_DOXYGEN_DIR not found, documentation will not be built.])
+        AC_MSG_WARN([WREPORT_DOXYGEN_TAGFILE not found, documentation will not be built.])
         enable_docs=no
     fi
 fi
