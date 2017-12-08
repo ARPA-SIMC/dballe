@@ -401,6 +401,28 @@ static PyObject* dpy_DB_vacuum(dpy_DB* self)
     Py_RETURN_NONE;
 }
 
+struct ReleaseGIL
+{
+    PyThreadState *_save = nullptr;
+
+    ReleaseGIL()
+    {
+        _save = PyEval_SaveThread();
+    }
+
+    ~ReleaseGIL()
+    {
+        lock();
+    }
+
+    void lock()
+    {
+        if (!_save) return;
+        PyEval_RestoreThread(_save);
+        _save = nullptr;
+    }
+};
+
 static PyObject* dpy_DB_query_stations(dpy_DB* self, PyObject* args)
 {
     dpy_Record* record;
@@ -410,9 +432,11 @@ static PyObject* dpy_DB_query_stations(dpy_DB* self, PyObject* args)
     // TODO: if it is a dict, turn it directly into a Query?
 
     try {
+        ReleaseGIL gil;
         core::Query query;
         query.set_from_record(*record->rec);
         std::unique_ptr<db::Cursor> res = self->db->query_stations(query);
+        gil.lock();
         return (PyObject*)cursor_create(self, move(res));
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -439,9 +463,12 @@ static PyObject* dpy_DB_query_data(dpy_DB* self, PyObject* args)
         {
             if (PyErr_WarnEx(PyExc_DeprecationWarning, "DB.query_data after Record.set_station_context is deprecated in favour of using DB.query_station_data", 1))
                 return NULL;
+            ReleaseGIL gil;
             res = self->db->query_station_data(query);
-        } else
+        } else {
+            ReleaseGIL gil;
             res = self->db->query_data(query);
+        }
         return (PyObject*)cursor_create(self, move(res));
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -461,7 +488,9 @@ static PyObject* dpy_DB_query_station_data(dpy_DB* self, PyObject* args)
     try {
         core::Query query;
         query.set_from_record(*record->rec);
+        ReleaseGIL gil;
         std::unique_ptr<db::Cursor> res = self->db->query_station_data(query);
+        gil.lock();
         return (PyObject*)cursor_create(self, move(res));
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -481,7 +510,9 @@ static PyObject* dpy_DB_query_summary(dpy_DB* self, PyObject* args)
     try {
         core::Query query;
         query.set_from_record(*record->rec);
+        ReleaseGIL gil;
         std::unique_ptr<db::Cursor> res = self->db->query_summary(query);
+        gil.lock();
         return (PyObject*)cursor_create(self, move(res));
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -707,12 +738,14 @@ static PyObject* dpy_DB_export_to_file(dpy_DB* self, PyObject* args, PyObject* k
         auto exporter = msg::Exporter::create(out->encoding(), opts);
         auto q = Query::create();
         q->set_from_record(*query->rec);
+        ReleaseGIL gil;
         self->db->export_msgs(*q, [&](unique_ptr<Message>&& msg) {
             Messages msgs;
             msgs.append(move(msg));
             out->write(exporter->to_binary(msgs));
             return true;
         });
+        gil.lock();
         Py_RETURN_NONE;
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
