@@ -65,6 +65,12 @@ class DballeTestMixin(DballeDBMixin):
             del expected[var.code]
             count += 1
 
+    def testQueryDataLimit(self):
+        query = dballe.Record()
+        query["limit"] = 1
+        cur = self.db.query_data(query)
+        self.assertEqual(cur.remaining, 1)
+
     def testQueryAttrs(self):
         data = self.db.attr_query_data(self.attr_ref)
         self.assertCountEqual(data.keys(), ["B33007", "B33036"])
