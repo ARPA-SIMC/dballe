@@ -77,6 +77,7 @@ class RecordTest(unittest.TestCase):
             self.assertEqual(r["date"], datetime.datetime(2007, 2, 1, 1, 2, 3))
             self.assertEqual(r["level"], (105, 2, None, None))
             self.assertEqual(r["timerange"], (2, 3, 4))
+
     def testWriteDictOperators(self):
         r = self.r.copy()
         r["block"] = 2
@@ -97,6 +98,7 @@ class RecordTest(unittest.TestCase):
             self.assertEqual(r["date"], datetime.datetime(2006, 1, 2, 0, 1, 2))
             self.assertEqual(r["level"], (104, 1, 105, 2))
             self.assertEqual(r["timerange"], (1, 2, 3))
+
     def testSpecials(self):
         r = self.r.copy()
         r["datetime"] = (datetime.datetime(2005, 3, 4, 5, 6, 7), datetime.datetime(2004, 4, 5, 6, 7, 8))
@@ -138,6 +140,32 @@ class RecordTest(unittest.TestCase):
             "pindicator", "p1", "p2",
             "var",
             "B12101", "B01002", "B01001"])
+
+    def testItems(self):
+        res = self.r.items();
+        self.assertCountEqual(res, [
+            ("lat", 45.12345), ("lon", 11.54321),
+            ("year", 2007), ("month", 2), ("day", 1),
+            ("hour", 1), ("min", 2), ("sec", 3),
+            ("leveltype1", 105), ("l1", 2),
+            ("pindicator", 2), ("p1", 3), ("p2", 4),
+            ("var", "B12101"),
+            ("B12101", 285.0),
+            ("B01002", 123),
+            ("B01001", 1)])
+
+    def testToDict(self):
+        res = self.r.keys();
+        self.assertCountEqual(res, {
+            "lat": 45.12345, "lon": 11.54321,
+            "year": 2007, "month": 2, "day": 1,
+            "hour": 1, "min": 2, "sec": 3,
+            "leveltype1": 105, "l1": 2,
+            "pindicator": 2, "p1": 3, "p2": 4,
+            "var": "B12101",
+            "B12101": 285.0,
+            "B01002": 123,
+            "B01001": 1})
 
     def testVars(self):
         with warnings.catch_warnings():

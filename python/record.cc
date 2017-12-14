@@ -342,6 +342,30 @@ static PyObject* dpy_Record_items(dpy_Record* self)
     } DBALLE_CATCH_RETURN_PYO
 }
 
+static PyObject* dpy_Record_to_dict(dpy_Record* self)
+{
+    pyo_unique_ptr result(PyDict_New());
+    if (!result) return nullptr;
+
+    try {
+        bool fail = false;
+        self->rec->foreach_key([&](const char* key, const wreport::Var& val) {
+            if (fail) return;
+
+            pyo_unique_ptr py_val(wrpy->var_value_to_python(val));
+            if (!py_val) { fail = true; return; }
+
+            if (PyDict_SetItemString(result, key, py_val.get()))
+            {
+                fail = true;
+                return;
+            }
+        });
+
+        return result.release();
+    } DBALLE_CATCH_RETURN_PYO
+}
+
 static PyObject* dpy_Record_varitems(dpy_Record* self)
 {
     pyo_unique_ptr result(PyList_New(0));
@@ -519,6 +543,7 @@ static PyMethodDef dpy_Record_methods[] = {
     {"clear_vars", (PyCFunction)dpy_Record_clear_vars, METH_NOARGS, "remove all variables from the record, leaving the keywords intact" },
     {"keys", (PyCFunction)dpy_Record_keys, METH_NOARGS, "return a list with all the keys set in the Record." },
     {"items", (PyCFunction)dpy_Record_items, METH_NOARGS, "return a list with all the (key, value) tuples set in the Record." },
+    {"to_dict", (PyCFunction)dpy_Record_to_dict, METH_NOARGS, "return a dict with all the key: value assignments set in the Record." },
     {"varitems", (PyCFunction)dpy_Record_varitems, METH_NOARGS, "return a list with all the (key, `dballe.Var`_) tuples set in the Record." },
     {"var", (PyCFunction)dpy_Record_var, METH_VARARGS, "return a `dballe.Var`_ from the record, given its key." },
     {"update", (PyCFunction)dpy_Record_update, METH_VARARGS | METH_KEYWORDS, "set many record keys/vars in a single shot, via kwargs" },
