@@ -120,6 +120,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/v7/cursor.h \
 	db/v7/qbuilder.h \
 	db/summary.h \
+	db/explorer.h \
 	cmdline/cmdline.h \
 	cmdline/conversion.h \
 	cmdline/processor.h \
@@ -256,6 +257,7 @@ libdballe_la_SOURCES = \
 	db/v7/import.cc \
 	db/v7/export.cc \
 	db/summary.cc \
+	db/explorer.cc \
 	cmdline/cmdline.cc \
 	cmdline/processor.cc \
 	cmdline/conversion.cc \
@@ -381,6 +383,7 @@ test_dballe_SOURCES = \
 	db/db-import-test.cc \
 	db/db-export-test.cc \
 	db/summary-test.cc \
+	db/explorer-test.cc \
 	simple/commonapi-test.cc \
 	simple/msgapi-test.cc \
 	simple/dbapi-test.cc \

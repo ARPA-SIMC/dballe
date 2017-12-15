@@ -10,18 +10,14 @@ namespace dballe {
 namespace db {
 namespace summary {
 
-Entry::Entry(dballe::db::CursorSummary& cur, bool want_details)
+Entry::Entry(dballe::db::CursorSummary& cur)
 {
-    ana_id = cur.get_station_id();
-    rep_memo = cur.get_rep_memo();
+    station = cur.get_station();
     level = cur.get_level();
     trange = cur.get_trange();
     varcode = cur.get_varcode();
-    if (want_details)
-    {
-        count = cur.get_count();
-        dtrange = cur.get_datetimerange();
-    }
+    count = cur.get_count();
+    dtrange = cur.get_datetimerange();
 }
 
 }
@@ -58,7 +54,7 @@ summary::Support Summary::supports(const Query& query) const
             res = Support::OVERESTIMATED;
         } else {
             // The query introduced further restrictions, check with the actual entries what we can do
-            for (const auto& e: summary)
+            for (const auto& e: entries)
             {
                 if (new_range.contains(e.dtrange))
                     ; // If the query entirely contains this summary entry, we can still match it exactly
@@ -81,8 +77,8 @@ summary::Support Summary::supports(const Query& query) const
 
 void Summary::aggregate(const summary::Entry &val)
 {
-    all_stations.insert(val.ana_id);
-    all_reports.insert(val.rep_memo);
+    all_stations.insert(make_pair(val.station.ana_id, val.station));
+    all_reports.insert(val.station.report);
     all_levels.insert(val.level);
     all_tranges.insert(val.trange);
     all_varcodes.insert(val.varcode);
@@ -102,64 +98,99 @@ void Summary::aggregate(const summary::Entry &val)
     valid = true;
 }
 
-void Summary::add_summary(dballe::db::CursorSummary& cur, bool with_details)
+void Summary::add_filtered(const Summary& summary)
 {
-    summary.emplace_back(cur, with_details);
-    aggregate(summary.back());
+    switch (summary.supports(query))
+    {
+        case summary::Support::UNSUPPORTED:
+            throw std::runtime_error("Source summary does not support the query for this summary");
+        case summary::Support::OVERESTIMATED:
+        case summary::Support::EXACT:
+            break;
+    }
+
+    const core::Query& q = core::Query::downcast(query);
+
+    // Scan the filter building a todo list of things to match
+
+    // If there is any filtering on the station, build a whitelist of matching stations
+    bool has_flt_station;
+    std::set<int> wanted_stations;
+    bool has_flt_ident = !q.ident.is_missing();
+    bool has_flt_area = !q.get_latrange().is_missing() || !q.get_lonrange().is_missing();
+    if (has_flt_ident || has_flt_area || q.ana_id != MISSING_INT)
+    {
+        LatRange flt_area_latrange = q.get_latrange();
+        LonRange flt_area_lonrange = q.get_lonrange();
+        has_flt_station = true;
+        for (auto s: summary.all_stations)
+        {
+            const Station& station = s.second;
+            if (q.ana_id != MISSING_INT && station.ana_id != q.ana_id)
+                continue;
+
+            if (has_flt_area)
+            {
+                if (!flt_area_latrange.contains(station.coords.lat) ||
+                    !flt_area_lonrange.contains(station.coords.lon))
+                    continue;
+            }
+            if (has_flt_ident && query.ident != station.ident)
+                continue;
+
+            wanted_stations.insert(station.ana_id);
+        }
+    }
+
+    bool has_flt_rep_memo = !query.rep_memo.empty();
+    bool has_flt_level = !query.level.is_missing();
+    bool has_flt_trange = !query.trange.is_missing();
+    bool has_flt_varcode = !query.varcodes.empty();
+    wreport::Varcode wanted_varcode = has_flt_varcode ? *query.varcodes.begin() : 0;
+    DatetimeRange wanted_dtrange = query.get_datetimerange();
+
+    for (const auto& entry: summary.entries)
+    {
+        if (has_flt_station && wanted_stations.find(entry.station.ana_id) == wanted_stations.end())
+            continue;
+
+        if (has_flt_rep_memo && query.rep_memo != entry.station.report)
+            continue;
+
+        if (has_flt_level && query.level != entry.level)
+            continue;
+
+        if (has_flt_trange && query.trange != entry.trange)
+            continue;
+
+        if (has_flt_varcode && wanted_varcode != entry.varcode)
+            continue;
+
+        if (!wanted_dtrange.contains(entry.dtrange))
+            continue;
+
+        add_entry(entry);
+    }
+}
+
+void Summary::add_summary(dballe::db::CursorSummary& cur)
+{
+    entries.emplace_back(cur);
+    aggregate(entries.back());
 }
 
 void Summary::add_entry(const summary::Entry &entry)
 {
-    summary.push_back(entry);
-    aggregate(summary.back());
+    entries.push_back(entry);
+    aggregate(entries.back());
 }
 
 bool Summary::iterate(std::function<bool(const summary::Entry&)> f) const
 {
-    for (auto i: summary)
+    for (auto i: entries)
         if (!f(i))
             return false;
     return true;
-}
-
-namespace summary {
-
-Summary& Stack::push(const Query& query)
-{
-    summaries.emplace_back(query);
-    return summaries.back();
-}
-
-Support Stack::query(const Query& query, bool exact, std::function<bool(const Entry&)> match)
-{
-    if (summaries.empty())
-    {
-        // If we do not contain any summary, every query is unsupported
-        return Support::UNSUPPORTED;
-    }
-
-    // Starting from the most specific, drop all summaries that do not support the current query
-    while (summaries.size() > 1)
-        summaries.pop_back();
-
-    Support supported = summaries.back().supports(query);
-    if (supported == UNSUPPORTED || (supported == OVERESTIMATED && exact))
-        return supported;
-    else
-    {
-        int last = summaries.size() - 1;
-        summaries.emplace_back(query);
-        const Summary& source = summaries[last];
-
-        source.iterate([&](const Entry& entry) {
-            if (match(entry))
-                summaries.back().add_entry(entry);
-            return true;
-        });
-        return supported;
-    }
-}
-
 }
 
 }

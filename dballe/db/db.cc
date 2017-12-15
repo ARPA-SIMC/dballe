@@ -48,6 +48,17 @@ Cursor::~Cursor()
 {
 }
 
+Station Cursor::get_station() const
+{
+    Station station;
+    station.report = get_rep_memo();
+    station.ana_id = get_station_id();
+    station.coords.lat = get_lat();
+    station.coords.lon = get_lon();
+    station.ident = Ident(get_ident());
+    return station;
+}
+
 unsigned Cursor::test_iterate(FILE* dump)
 {
     unsigned count;
