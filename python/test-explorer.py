@@ -53,4 +53,4 @@ class DballeMEMTest(DballeTestMixin, unittest.TestCase):
 
 if __name__ == "__main__":
     from testlib import main
-    main("test_db")
+    main("test_explorer")

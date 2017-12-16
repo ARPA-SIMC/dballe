@@ -16,6 +16,7 @@ PyAPI_DATA(PyTypeObject) dpy_Explorer_Type;
 #define dpy_Explorer_Check(ob) \
     (Py_TYPE(ob) == &dpy_Explorer_Type || \
      PyType_IsSubtype(Py_TYPE(ob), &dpy_Explorer_Type))
+
 }
 
 namespace dballe {

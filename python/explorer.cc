@@ -21,9 +21,24 @@ using namespace wreport;
 
 extern "C" {
 
+static PyObject* dpy_Explorer_all_stations(dpy_Explorer* self, void* closure)
+{
+    try {
+        const auto& summary = self->explorer->global_summary();
+        pyo_unique_ptr result(PyList_New(summary.all_stations.size()));
+
+        for (const auto& s: summary.all_stations)
+        {
+            //int PyList_SetItem(PyObject *list, Py_ssize_t index, PyObject *item)¶
+        }
+
+        return result.release();
+    } DBALLE_CATCH_RETURN_PYO
+}
+
 static PyGetSetDef dpy_Explorer_getsetters[] = {
-    //{"code", (getter)dpy_Var_code, NULL, "variable code", NULL },
-    //{"isset", (getter)dpy_Var_isset, NULL, "true if the value is set", NULL },
+    {"all_stations", (getter)dpy_Explorer_all_stations, nullptr, "get all stations", nullptr },
+    //{"stations", (getter)dpy_Explorer_stations, nullptr, "get the stations currently selected", nullptr },
     {nullptr}
 };
 

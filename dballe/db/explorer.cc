@@ -14,6 +14,26 @@ Explorer::Explorer(dballe::DB& db)
 {
 }
 
+Explorer::~Explorer()
+{
+    delete _global_summary;
+    delete _active_summary;
+}
+
+const dballe::db::Summary& Explorer::global_summary() const
+{
+    if (!_global_summary)
+        throw std::runtime_error("global summary is not available, call revalidate first");
+    return *_global_summary;
+}
+
+const dballe::db::Summary& Explorer::active_summary() const
+{
+    if (!_active_summary)
+        throw std::runtime_error("active summary is not available, call revalidate first");
+    return *_active_summary;
+}
+
 const dballe::Query& Explorer::get_filter() const
 {
     return filter;
@@ -23,16 +43,16 @@ void Explorer::set_filter(const dballe::Query& query)
 {
     filter = core::Query::downcast(query);
     unique_ptr<db::Summary> new_active_summary(new db::Summary(filter));
-    new_active_summary->add_filtered(*global_summary);
-    active_summary = new_active_summary.release();
+    new_active_summary->add_filtered(*_global_summary);
+    _active_summary = new_active_summary.release();
 }
 
 void Explorer::revalidate()
 {
-    delete global_summary;
-    global_summary = nullptr;
-    delete active_summary;
-    active_summary = nullptr;
+    delete _global_summary;
+    _global_summary = nullptr;
+    delete _active_summary;
+    _active_summary = nullptr;
 
     core::Query query;
     query.query = "details";
@@ -46,8 +66,8 @@ void Explorer::revalidate()
     unique_ptr<db::Summary> new_active_summary(new db::Summary(filter));
     new_active_summary->add_filtered(*new_global_summary);
 
-    global_summary = new_global_summary.release();
-    active_summary = new_active_summary.release();
+    _global_summary = new_global_summary.release();
+    _active_summary = new_active_summary.release();
 }
 
 void Explorer::update_station(values::Value &val, const wreport::Var &new_val)

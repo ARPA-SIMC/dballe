@@ -1,6 +1,7 @@
 #include <Python.h>
 #include <wreport/python.h>
 #include "common.h"
+#include "types.h"
 #include "record.h"
 #include "db.h"
 #include "cursor.h"
@@ -172,6 +173,7 @@ PyMODINIT_FUNC init_dballe(void)
             "DB-All.e Python interface.");
 #endif
 
+    register_types(m);
     register_record(m);
     register_db(m);
     register_cursor(m);

@@ -3,6 +3,7 @@
 #include <dballe/core/defs.h>
 #include "record.h"
 #include "common.h"
+#include "types.h"
 #include <vector>
 #include "config.h"
 
@@ -431,11 +432,11 @@ static PyObject* dpy_Record_update(dpy_Record* self, PyObject *args, PyObject *k
 
 static PyObject* dpy_Record_get(dpy_Record* self, PyObject *args, PyObject* kw)
 {
-    static char* kwlist[] = { "key", "default", NULL };
+    static const char* kwlist[] = { "key", "default", NULL };
     PyObject* key;
     PyObject* def = Py_None;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|O", kwlist, &key, &def))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|O", const_cast<char**>(kwlist), &key, &def))
         return nullptr;
 
     try {
