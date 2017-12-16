@@ -107,16 +107,26 @@ struct VectorBase : public Base<Interface>
         cur = results.end();
     }
 
+    dballe::Station get_station() const override
+    {
+        dballe::Station station;
+        station.report = get_rep_memo();
+        station.ana_id = get_station_id();
+        station.coords = cur->get_stationdesc().coords;
+        station.ident = cur->get_stationdesc().ident;
+        return station;
+    }
+
     int get_station_id() const override { return cur->get_station_id(); }
-    const char* get_rep_memo() const override { return this->db.repinfo().get_rep_memo(cur->get_station().rep); }
-    double get_lat() const override { return cur->get_station().coords.dlat(); }
-    double get_lon() const override { return cur->get_station().coords.dlon(); }
+    const char* get_rep_memo() const override { return this->db.repinfo().get_rep_memo(cur->get_stationdesc().rep); }
+    double get_lat() const override { return cur->get_stationdesc().coords.dlat(); }
+    double get_lon() const override { return cur->get_stationdesc().coords.dlon(); }
     const char* get_ident(const char* def=0) const override
     {
-        if (cur->get_station().ident.is_missing())
+        if (cur->get_stationdesc().ident.is_missing())
             return def;
         else
-            return cur->get_station().ident.get();
+            return cur->get_stationdesc().ident.get();
     }
 
     void to_record(Record& rec) override
@@ -148,7 +158,7 @@ struct StationResult
     }
 
     int get_station_id() const { return id; }
-    const StationDesc& get_station() const { return station; }
+    const StationDesc& get_stationdesc() const { return station; }
     void to_record(v7::DB& db, Record& rec) const
     {
         rec.seti("ana_id", id);
@@ -198,7 +208,7 @@ struct StationDataResult
     ~StationDataResult() { delete var; }
 
     int get_station_id() const { return station->first; }
-    const StationDesc& get_station() const { return station->second; }
+    const StationDesc& get_stationdesc() const { return station->second; }
 
     void to_record(v7::DB& db, Record& rec) const
     {
@@ -412,7 +422,7 @@ struct SummaryResult
         : station(station), id_levtr(id_levtr), code(code), datetime(datetime), count(count) {}
 
     int get_station_id() const { return station->first; }
-    const StationDesc& get_station() const { return station->second; }
+    const StationDesc& get_stationdesc() const { return station->second; }
 
     void to_record(v7::DB& db, Record& rec) const
     {

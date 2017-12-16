@@ -35,63 +35,31 @@ Tests tg8("db_explorer_v7_mysql", "MYSQL", db::V7);
 
 void Tests::register_tests()
 {
-    add_method("populate", [](Fixture& f) {
-        // Test building a summary and checking if it supports queries
-        wassert(f.populate<OldDballeTestDataSet>());
 
-        Explorer explorer(*f.db);
-        /*
-        core::Query query;
-        query.query = "details";
-        Summary s(query);
-        wassert(actual(s.is_valid()).isfalse());
+add_method("populate", [](Fixture& f) {
+    // Test building a summary and checking if it supports queries
+    wassert(f.populate<OldDballeTestDataSet>());
 
-        // Build the whole db summary
-        auto cur = f.db->query_summary(query);
-        while (cur->next())
-            s.add_summary(*cur, true);
+    Explorer explorer(*f.db);
+    explorer.revalidate();
 
-        // Check its contents
-        wassert(actual(s.is_valid()).istrue());
-        switch (f.db->format())
-        {
-            case V6:
-                wassert(actual(s.all_stations.size()) == 1);
-                break;
-            case V7:
-            default:
-                wassert(actual(s.all_stations.size()) == 2);
-                break;
-        }
-        wassert(actual(s.all_levels.size()) == 1);
-        wassert(actual(s.all_tranges.size()) == 2);
-        wassert(actual(s.all_varcodes.size()) == 2);
-        wassert(actual(s.datetime_min()) == Datetime(1945, 4, 25, 8));
-        wassert(actual(s.datetime_max()) == Datetime(1945, 4, 25, 8, 30));
-        wassert(actual(s.data_count()) == 4);
+    vector<Station> stations;
 
-        // Check what it can support
+    stations.clear();
+    for (const auto& s: explorer.global_summary().all_stations)
+        stations.push_back(s.second);
+    wassert(actual(stations.size()) == 2);
+    wassert(actual(stations[0].report) == "metar");
+    wassert(actual(stations[1].report) == "synop");
 
-        // An existing station is ok: we know we have it
-        wassert(actual(s.supports(*query_from_string("ana_id=1"))) == summary::Support::EXACT);
+    stations.clear();
+    for (const auto& s: explorer.active_summary().all_stations)
+        stations.push_back(s.second);
+    wassert(actual(stations.size()) == 2);
+    wassert(actual(stations[0].report) == "metar");
+    wassert(actual(stations[1].report) == "synop");
+});
 
-        // A non-existing station is also ok: we know we don't have it
-        wassert(actual(s.supports(*query_from_string("ana_id=2"))) == summary::Support::EXACT);
-
-        wassert(actual(s.supports(*query_from_string("ana_id=1, leveltype1=10"))) == summary::Support::EXACT);
-
-        wassert(actual(s.supports(*query_from_string("ana_id=1, leveltype1=10, pindicator=20"))) == summary::Support::EXACT);
-
-        wassert(actual(s.supports(*query_from_string("ana_id=1, leveltype1=10, pindicator=20"))) == summary::Support::EXACT);
-
-        // Still exact, because the query matches the entire summary
-        wassert(actual(s.supports(*query_from_string("yearmin=1945"))) == summary::Support::EXACT);
-
-        // Still exact, because although the query partially matches the summary,
-        // each summary entry is entier included completely or excluded completely
-        wassert(actual(s.supports(*query_from_string("yearmin=1945, monthmin=4, daymin=25, hourmin=8, yearmax=1945, monthmax=4, daymax=25, hourmax=8, minumax=10"))) == summary::Support::EXACT);
-        */
-    });
 }
 
 }

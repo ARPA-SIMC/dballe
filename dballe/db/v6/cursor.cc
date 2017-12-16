@@ -103,6 +103,17 @@ struct Base : public Interface
     void attr_remove(const AttrList& qcs) override;
 #endif
 
+    dballe::Station get_station() const override
+    {
+        dballe::Station station;
+        station.report = get_rep_memo();
+        station.ana_id = get_station_id();
+        station.coords.lat = results[cur].out_lat;
+        station.coords.lon = results[cur].out_lon;
+        station.ident = Ident(get_ident());
+        return station;
+    }
+
     int get_station_id() const override { return results[cur].out_ana_id; }
     double get_lat() const override { return (double)results[cur].out_lat / 100000.0; }
     double get_lon() const override { return (double)results[cur].out_lon / 100000.0; }

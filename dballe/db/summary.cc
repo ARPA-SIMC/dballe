@@ -114,15 +114,15 @@ void Summary::add_filtered(const Summary& summary)
     // Scan the filter building a todo list of things to match
 
     // If there is any filtering on the station, build a whitelist of matching stations
-    bool has_flt_station;
+    bool has_flt_rep_memo = !query.rep_memo.empty();
     std::set<int> wanted_stations;
     bool has_flt_ident = !q.ident.is_missing();
     bool has_flt_area = !q.get_latrange().is_missing() || !q.get_lonrange().is_missing();
-    if (has_flt_ident || has_flt_area || q.ana_id != MISSING_INT)
+    bool has_flt_station = has_flt_ident || has_flt_area || q.ana_id != MISSING_INT;
+    if (has_flt_station)
     {
         LatRange flt_area_latrange = q.get_latrange();
         LonRange flt_area_lonrange = q.get_lonrange();
-        has_flt_station = true;
         for (auto s: summary.all_stations)
         {
             const Station& station = s.second;
@@ -135,6 +135,10 @@ void Summary::add_filtered(const Summary& summary)
                     !flt_area_lonrange.contains(station.coords.lon))
                     continue;
             }
+
+            if (has_flt_rep_memo && query.rep_memo != station.report)
+                continue;
+
             if (has_flt_ident && query.ident != station.ident)
                 continue;
 
@@ -142,7 +146,6 @@ void Summary::add_filtered(const Summary& summary)
         }
     }
 
-    bool has_flt_rep_memo = !query.rep_memo.empty();
     bool has_flt_level = !query.level.is_missing();
     bool has_flt_trange = !query.trange.is_missing();
     bool has_flt_varcode = !query.varcodes.empty();
@@ -151,10 +154,11 @@ void Summary::add_filtered(const Summary& summary)
 
     for (const auto& entry: summary.entries)
     {
-        if (has_flt_station && wanted_stations.find(entry.station.ana_id) == wanted_stations.end())
-            continue;
-
-        if (has_flt_rep_memo && query.rep_memo != entry.station.report)
+        if (has_flt_station)
+        {
+            if (wanted_stations.find(entry.station.ana_id) == wanted_stations.end())
+                continue;
+        } else if (has_flt_rep_memo && query.rep_memo != entry.station.report)
             continue;
 
         if (has_flt_level && query.level != entry.level)

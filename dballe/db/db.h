@@ -78,7 +78,7 @@ struct Cursor
     /**
      * Get the whole station data in a single call
      */
-    Station get_station() const;
+    virtual Station get_station() const = 0;
 
     /// Get the station identifier
     virtual int get_station_id() const = 0;

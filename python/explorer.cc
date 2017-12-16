@@ -1,6 +1,7 @@
 #include <Python.h>
 #include "common.h"
 #include "explorer.h"
+#include "types.h"
 #include "db.h"
 #include "record.h"
 #include <algorithm>
@@ -21,24 +22,43 @@ using namespace wreport;
 
 extern "C" {
 
-static PyObject* dpy_Explorer_all_stations(dpy_Explorer* self, void* closure)
+static PyObject* _export_stations(const std::map<int, Station>& stations)
 {
     try {
-        const auto& summary = self->explorer->global_summary();
-        pyo_unique_ptr result(PyList_New(summary.all_stations.size()));
+        pyo_unique_ptr result(PyList_New(stations.size()));
 
-        for (const auto& s: summary.all_stations)
+        unsigned idx = 0;
+        for (const auto& s: stations)
         {
-            //int PyList_SetItem(PyObject *list, Py_ssize_t index, PyObject *item)¶
+            pyo_unique_ptr station(station_to_python(s.second));
+            if (PyList_SetItem(result, idx, station.release()))
+                return nullptr;
+            ++idx;
         }
 
         return result.release();
     } DBALLE_CATCH_RETURN_PYO
 }
 
+static PyObject* dpy_Explorer_all_stations(dpy_Explorer* self, void* closure)
+{
+    try {
+        const auto& summary = self->explorer->global_summary();
+        return _export_stations(summary.all_stations);
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+static PyObject* dpy_Explorer_stations(dpy_Explorer* self, void* closure)
+{
+    try {
+        const auto& summary = self->explorer->active_summary();
+        return _export_stations(summary.all_stations);
+    } DBALLE_CATCH_RETURN_PYO
+}
+
 static PyGetSetDef dpy_Explorer_getsetters[] = {
     {"all_stations", (getter)dpy_Explorer_all_stations, nullptr, "get all stations", nullptr },
-    //{"stations", (getter)dpy_Explorer_stations, nullptr, "get the stations currently selected", nullptr },
+    {"stations", (getter)dpy_Explorer_stations, nullptr, "get the stations currently selected", nullptr },
     {nullptr}
 };
 

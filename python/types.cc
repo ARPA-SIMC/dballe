@@ -300,12 +300,12 @@ PyObject* station_to_python(const Station& st)
     else
         return nullptr;
 
-    if (PyObject* v = PyFloat_FromDouble(st.coords.lat))
+    if (PyObject* v = PyFloat_FromDouble(st.coords.dlat()))
         PyStructSequence_SET_ITEM((PyObject*)res, 2, v);
     else
         return nullptr;
 
-    if (PyObject* v = PyFloat_FromDouble(st.coords.lon))
+    if (PyObject* v = PyFloat_FromDouble(st.coords.dlon()))
         PyStructSequence_SET_ITEM((PyObject*)res, 3, v);
     else
         return nullptr;

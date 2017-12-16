@@ -37,8 +37,15 @@ class DballeTestMixin(DballeDBMixin):
 
     def testCreate(self):
         explorer = dballe.Explorer(self.db)
+        explorer.revalidate()
         self.assertEqual(str(explorer), "Explorer")
         self.assertEqual(repr(explorer), "Explorer object")
+        self.assertEqual(explorer.all_stations, [
+            dballe.Station(("synop", 1, 12.34560, 76.54320, None)),
+        ])
+        self.assertEqual(explorer.stations, [
+            dballe.Station(("synop", 1, 12.34560, 76.54320, None)),
+        ])
 
 
 class DballeV6Test(DballeTestMixin, unittest.TestCase):
