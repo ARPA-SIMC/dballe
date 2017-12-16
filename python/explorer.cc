@@ -1,0 +1,191 @@
+#include <Python.h>
+#include "common.h"
+#include "explorer.h"
+#include "db.h"
+#include "record.h"
+#include <algorithm>
+#include "config.h"
+
+#if PY_MAJOR_VERSION >= 3
+    #define PyInt_FromLong PyLong_FromLong
+    #define PyInt_AsLong PyLong_AsLong
+    #define PyInt_Check PyLong_Check
+    #define PyInt_Type PyLong_Type
+    #define Py_TPFLAGS_HAVE_ITER 0
+#endif
+
+using namespace std;
+using namespace dballe;
+using namespace dballe::python;
+using namespace wreport;
+
+extern "C" {
+
+static PyGetSetDef dpy_Explorer_getsetters[] = {
+    //{"code", (getter)dpy_Var_code, NULL, "variable code", NULL },
+    //{"isset", (getter)dpy_Var_isset, NULL, "true if the value is set", NULL },
+    {nullptr}
+};
+
+static PyObject* dpy_Explorer_set_filter(dpy_Explorer* self, PyObject* args)
+{
+    dpy_Record* record;
+    if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
+        return nullptr;
+
+    // TODO: if it is a dict, turn it directly into a Query?
+
+    try {
+        core::Query query;
+        query.set_from_record(*record->rec);
+        ReleaseGIL rg;
+        self->explorer->set_filter(query);
+    } DBALLE_CATCH_RETURN_PYO
+
+    Py_RETURN_NONE;
+}
+
+static PyObject* dpy_Explorer_revalidate(dpy_Explorer* self)
+{
+    try {
+        ReleaseGIL rg;
+        self->explorer->revalidate();
+    } DBALLE_CATCH_RETURN_PYO
+
+    Py_RETURN_NONE;
+}
+
+static PyMethodDef dpy_Explorer_methods[] = {
+    {"set_filter",        (PyCFunction)dpy_Explorer_set_filter, METH_VARARGS,
+        "Set a new filter, updating all browsing data" },
+    {"revalidate",        (PyCFunction)dpy_Explorer_revalidate, METH_NOARGS, R"(
+        Throw away all cached data and reload everything from the database.
+
+        Use this when you suspect that the database has been externally modified
+    )" },
+    {nullptr}
+};
+
+static int dpy_Explorer_init(dpy_Explorer* self, PyObject* args, PyObject* kw)
+{
+    static const char* kwlist[] = { "db", nullptr };
+    dpy_DB* db = nullptr;
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "O!", const_cast<char**>(kwlist), &dpy_DB_Type, &db))
+        return -1;
+
+    try {
+        self->explorer = new db::Explorer(*db->db);
+    } DBALLE_CATCH_RETURN_INT
+
+    return 0;
+}
+
+static void dpy_Explorer_dealloc(dpy_Explorer* self)
+{
+    delete self->explorer;
+}
+
+static PyObject* dpy_Explorer_str(dpy_Explorer* self)
+{
+    /*
+    std::string f = self->var.format("None");
+    return PyUnicode_FromString(f.c_str());
+    */
+    return PyUnicode_FromString("Explorer");
+}
+
+static PyObject* dpy_Explorer_repr(dpy_Explorer* self)
+{
+    /*
+    string res = "Var('";
+    res += varcode_format(self->var.code());
+    if (self->var.info()->is_string())
+    {
+        res += "', '";
+        res += self->var.format();
+        res += "')";
+    } else {
+        res += "', ";
+        res += self->var.format("None");
+        res += ")";
+    }
+    return PyUnicode_FromString(res.c_str());
+    */
+    return PyUnicode_FromString("Explorer object");
+}
+
+PyTypeObject dpy_Explorer_Type = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "dballe.Explorer",               // tp_name
+    sizeof(dpy_Explorer),            // tp_basicsize
+    0,                         // tp_itemsize
+    (destructor)dpy_Explorer_dealloc, // tp_dealloc
+    0,                         // tp_print
+    0,                         // tp_getattr
+    0,                         // tp_setattr
+    0,                         // tp_compare
+    (reprfunc)dpy_Explorer_repr,     // tp_repr
+    0,                         // tp_as_number
+    0,                         // tp_as_sequence
+    0,                         // tp_as_mapping
+    0,                         // tp_hash
+    0,                         // tp_call
+    (reprfunc)dpy_Explorer_str,      // tp_str
+    0,                         // tp_getattro
+    0,                         // tp_setattro
+    0,                         // tp_as_buffer
+    Py_TPFLAGS_DEFAULT,        // tp_flags
+    "DB-All.e Explorer",             // tp_doc
+    0,                         // tp_traverse
+    0,                         // tp_clear
+    0,                         // tp_richcompare
+    0,                         // tp_weaklistoffset
+    0,                         // tp_iter
+    0,                         // tp_iternext
+    dpy_Explorer_methods,            // tp_methods
+    0,                         // tp_members
+    dpy_Explorer_getsetters,         // tp_getset
+    0,                         // tp_base
+    0,                         // tp_dict
+    0,                         // tp_descr_get
+    0,                         // tp_descr_set
+    0,                         // tp_dictoffset
+    (initproc)dpy_Explorer_init,     // tp_init
+    0,                         // tp_alloc
+    0,                         // tp_new
+};
+
+}
+
+namespace dballe {
+namespace python {
+
+dpy_Explorer* explorer_create(dballe::DB& db)
+{
+    unique_ptr<db::Explorer> explorer(new db::Explorer(db));
+    return explorer_create(move(explorer));
+}
+
+dpy_Explorer* explorer_create(std::unique_ptr<db::Explorer> explorer)
+{
+    dpy_Explorer* result = PyObject_New(dpy_Explorer, &dpy_Explorer_Type);
+    if (!result) return nullptr;
+
+    result->explorer = explorer.release();
+    return result;
+}
+
+void register_explorer(PyObject* m)
+{
+    common_init();
+
+    dpy_Explorer_Type.tp_new = PyType_GenericNew;
+    if (PyType_Ready(&dpy_Explorer_Type) < 0)
+        return;
+
+    Py_INCREF(&dpy_Explorer_Type);
+    PyModule_AddObject(m, "Explorer", (PyObject*)&dpy_Explorer_Type);
+}
+
+}
+}

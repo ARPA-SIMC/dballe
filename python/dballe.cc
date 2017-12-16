@@ -4,6 +4,7 @@
 #include "record.h"
 #include "db.h"
 #include "cursor.h"
+#include "explorer.h"
 #include "dballe/types.h"
 #include "dballe/var.h"
 #include "config.h"
@@ -95,12 +96,12 @@ static PyObject* dballe_var(PyTypeObject *type, PyObject *args)
 
 static PyObject* dballe_describe_level(PyTypeObject *type, PyObject *args, PyObject* kw)
 {
-    static char* kwlist[] = { "ltype1", "l1", "ltype2", "l2", NULL };
+    static const char* kwlist[] = { "ltype1", "l1", "ltype2", "l2", NULL };
     PyObject* oltype1 = Py_None;
     PyObject* ol1 = Py_None;
     PyObject* oltype2 = Py_None;
     PyObject* ol2 = Py_None;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|OOO", kwlist, &oltype1, &ol1, &oltype2, &ol2))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|OOO", const_cast<char**>(kwlist), &oltype1, &ol1, &oltype2, &ol2))
         return NULL;
 
     get_int_or_missing(ltype1, oltype1);
@@ -115,11 +116,11 @@ static PyObject* dballe_describe_level(PyTypeObject *type, PyObject *args, PyObj
 
 static PyObject* dballe_describe_trange(PyTypeObject *type, PyObject *args, PyObject* kw)
 {
-    static char* kwlist[] = { "pind", "p1", "p2", NULL };
+    static const char* kwlist[] = { "pind", "p1", "p2", NULL };
     PyObject* opind = Py_None;
     PyObject* op1 = Py_None;
     PyObject* op2 = Py_None;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|OO", kwlist, &opind, &op1, &op2))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|OO", const_cast<char**>(kwlist), &opind, &op1, &op2))
         return NULL;
 
     get_int_or_missing(pind, opind);
@@ -174,6 +175,7 @@ PyMODINIT_FUNC init_dballe(void)
     register_record(m);
     register_db(m);
     register_cursor(m);
+    register_explorer(m);
 
 #if PY_MAJOR_VERSION >= 3
     return m;

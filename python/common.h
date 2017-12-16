@@ -57,6 +57,33 @@ public:
 
 typedef py_unique_ptr<PyObject> pyo_unique_ptr;
 
+
+/**
+ * Release the GIL during the lifetime of this object;
+ */
+struct ReleaseGIL
+{
+    PyThreadState *_save = nullptr;
+
+    ReleaseGIL()
+    {
+        _save = PyEval_SaveThread();
+    }
+
+    ~ReleaseGIL()
+    {
+        lock();
+    }
+
+    void lock()
+    {
+        if (!_save) return;
+        PyEval_RestoreThread(_save);
+        _save = nullptr;
+    }
+};
+
+
 /**
  * Return a python string representing a varcode
  */
