@@ -159,7 +159,7 @@ then
 fi
 
 dnl Check for python
-AM_PATH_PYTHON([], [], [
+AM_PATH_PYTHON([3.4], [], [
 	enable_dballe_python=no
 ])
 if test x$enable_dballe_python = xyes
