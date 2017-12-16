@@ -153,6 +153,11 @@ int datetimerange_from_python(PyObject* val, DatetimeRange& out)
     return 0;
 }
 
+PyObject* string_to_python(const std::string& str)
+{
+    return PyUnicode_FromStringAndSize(str.data(), str.size());
+}
+
 int string_from_python(PyObject* o, std::string& out)
 {
 #if PY_MAJOR_VERSION >= 3

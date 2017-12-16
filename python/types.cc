@@ -1,5 +1,6 @@
 #include <Python.h>
 #include "dballe/types.h"
+#include "dballe/core/values.h"
 #include "common.h"
 #include "types.h"
 #include "config.h"
@@ -19,9 +20,20 @@ using namespace dballe::python;
 extern "C" {
 PyTypeObject dpy_Level_Type;
 PyTypeObject dpy_Trange_Type;
+PyTypeObject dpy_Station_Type;
 }
 
 namespace {
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wwrite-strings"
+#endif
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwrite-strings"
+#endif
 
 PyStructSequence_Field dpy_level_fields[] = {
     { "ltype1", "Type of the level or the first layer" },
@@ -52,6 +64,30 @@ PyStructSequence_Desc dpy_trange_desc = {
     3,
 };
 
+PyStructSequence_Field dpy_station_fields[] = {
+    { "report", "rep_memo for this station" },
+    { "ana_id", "Database ID of the station" },
+    { "lat", "Station latitude" },
+    { "lon", "Station longitude" },
+    { "ident", "Mobile station identifier" },
+    nullptr,
+};
+
+PyStructSequence_Desc dpy_station_desc = {
+    "Station",
+    "DB-All.e station",
+    dpy_station_fields,
+    5,
+};
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+
 /// Convert an integer to Python, returning None if it is MISSING_INT
 PyObject* dballe_int_to_python(int val)
 {
@@ -76,6 +112,16 @@ int dballe_int_from_python(PyObject* o, int& out)
     if (res == -1 && PyErr_Occurred())
         return -1;
 
+    out = res;
+    return 0;
+}
+
+/// Convert a Python object to a double
+int double_from_python(PyObject* o, double& out)
+{
+    double res = PyFloat_AsDouble(o);
+    if (res == -1.0 && PyErr_Occurred())
+        return -1;
     out = res;
     return 0;
 }
@@ -239,6 +285,74 @@ int trange_from_python(PyObject* o, Trange& out)
     }
 }
 
+PyObject* station_to_python(const Station& st)
+{
+    pyo_unique_ptr res(PyStructSequence_New(&dpy_Station_Type));
+    if (!res) return nullptr;
+
+    if (PyObject* v = string_to_python(st.report))
+        PyStructSequence_SET_ITEM((PyObject*)res, 0, v);
+    else
+        return nullptr;
+
+    if (PyObject* v = dballe_int_to_python(st.ana_id))
+        PyStructSequence_SET_ITEM((PyObject*)res, 1, v);
+    else
+        return nullptr;
+
+    if (PyObject* v = PyFloat_FromDouble(st.coords.lat))
+        PyStructSequence_SET_ITEM((PyObject*)res, 2, v);
+    else
+        return nullptr;
+
+    if (PyObject* v = PyFloat_FromDouble(st.coords.lon))
+        PyStructSequence_SET_ITEM((PyObject*)res, 3, v);
+    else
+        return nullptr;
+
+    if (st.ident.is_missing())
+    {
+        Py_INCREF(Py_None);
+        PyStructSequence_SET_ITEM((PyObject*)res, 4, Py_None);
+    } else if (PyObject* v = PyUnicode_FromString(st.ident.get())) {
+        PyStructSequence_SET_ITEM((PyObject*)res, 4, v);
+    } else
+        return nullptr;
+
+    return res.release();
+}
+
+int station_from_python(PyObject* o, Station& out)
+{
+    if (!dpy_Station_Check(o))
+    {
+        PyErr_SetString(PyExc_TypeError, "value must be a Station structseq");
+        return -1;
+    }
+
+    Station res;
+    if (int err = string_from_python(PyStructSequence_GET_ITEM(o, 0), res.report)) return err;
+    if (int err = dballe_int_from_python(PyStructSequence_GET_ITEM(o, 1), res.ana_id)) return err;
+
+    double dlat, dlon;
+    if (int err = double_from_python(PyStructSequence_GET_ITEM(o, 2), dlat)) return err;
+    if (int err = double_from_python(PyStructSequence_GET_ITEM(o, 3), dlon)) return err;
+    res.coords.set(dlat, dlon);
+
+    PyObject* ident = PyStructSequence_GET_ITEM(o, 4);
+    if (ident != Py_None)
+    {
+        // TODO: when migrating to python3 only, this can be replaced with a
+        // simple call to PyUnicode_AsUTF8. Currently string_from_python is
+        // only used to get version-independent string extraction
+        std::string ident_val;
+        if (int err = string_from_python(ident, ident_val)) return err;
+        res.ident = ident_val;
+    }
+    out = res;
+    return 0;
+}
+
 
 void register_types(PyObject* m)
 {
@@ -246,9 +360,11 @@ void register_types(PyObject* m)
 
     PyStructSequence_InitType(&dpy_Level_Type, &dpy_level_desc);
     PyStructSequence_InitType(&dpy_Trange_Type, &dpy_trange_desc);
+    PyStructSequence_InitType(&dpy_Station_Type, &dpy_station_desc);
 
     PyModule_AddObject(m, "Level", (PyObject*)&dpy_Level_Type);
     PyModule_AddObject(m, "Trange", (PyObject*)&dpy_Trange_Type);
+    PyModule_AddObject(m, "Station", (PyObject*)&dpy_Station_Type);
 }
 
 }

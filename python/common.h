@@ -148,6 +148,9 @@ int datetime_from_python(PyObject* dt, Datetime& out);
 /// Convert a sequence of two python datetime objects to a DatetimeRange
 int datetimerange_from_python(PyObject* dt, DatetimeRange& out);
 
+/// Convert an utf8 string to a python str object
+PyObject* string_to_python(const std::string& str);
+
 /// Convert a python string, bytes or unicode to an utf8 string
 int string_from_python(PyObject* o, std::string& out);
 

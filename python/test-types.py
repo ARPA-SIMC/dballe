@@ -46,6 +46,26 @@ class TestTrange(unittest.TestCase):
         self.assertEqual(t.p2, 3)
 
 
+class TestStation(unittest.TestCase):
+    def testCreateEmpty(self):
+        t = dballe.Station((None, None, None, None, None))
+        self.assertEqual(t, (None, None, None, None, None))
+        self.assertIsNone(t.report)
+        self.assertIsNone(t.ana_id)
+        self.assertIsNone(t.lat)
+        self.assertIsNone(t.lon)
+        self.assertIsNone(t.ident)
+
+    def testCreateFull(self):
+        t = dballe.Station(("foo", 2, 3.0, 4.0, "bar"))
+        self.assertEqual(t, ("foo", 2, 3.0, 4.0, "bar"))
+        self.assertEqual(t.report, "foo")
+        self.assertEqual(t.ana_id, 2)
+        self.assertEqual(t.lat, 3.0)
+        self.assertEqual(t.lon, 4.0)
+        self.assertEqual(t.ident, "bar")
+
+
 if __name__ == "__main__":
     from testlib import main
     main("test_types")
