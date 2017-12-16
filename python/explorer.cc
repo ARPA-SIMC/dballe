@@ -56,9 +56,158 @@ static PyObject* dpy_Explorer_stations(dpy_Explorer* self, void* closure)
     } DBALLE_CATCH_RETURN_PYO
 }
 
+
+static PyObject* _export_reports(const std::set<std::string>& reports)
+{
+    try {
+        pyo_unique_ptr result(PyList_New(reports.size()));
+
+        unsigned idx = 0;
+        for (const auto& v: reports)
+        {
+            pyo_unique_ptr value(string_to_python(v));
+            if (PyList_SetItem(result, idx, value.release()))
+                return nullptr;
+            ++idx;
+        }
+
+        return result.release();
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+static PyObject* dpy_Explorer_all_reports(dpy_Explorer* self, void* closure)
+{
+    try {
+        const auto& summary = self->explorer->global_summary();
+        return _export_reports(summary.all_reports);
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+static PyObject* dpy_Explorer_reports(dpy_Explorer* self, void* closure)
+{
+    try {
+        const auto& summary = self->explorer->active_summary();
+        return _export_reports(summary.all_reports);
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+
+static PyObject* _export_levels(const std::set<dballe::Level>& levels)
+{
+    try {
+        pyo_unique_ptr result(PyList_New(levels.size()));
+
+        unsigned idx = 0;
+        for (const auto& v: levels)
+        {
+            pyo_unique_ptr level(level_to_python(v));
+            if (PyList_SetItem(result, idx, level.release()))
+                return nullptr;
+            ++idx;
+        }
+
+        return result.release();
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+static PyObject* dpy_Explorer_all_levels(dpy_Explorer* self, void* closure)
+{
+    try {
+        const auto& summary = self->explorer->global_summary();
+        return _export_levels(summary.all_levels);
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+static PyObject* dpy_Explorer_levels(dpy_Explorer* self, void* closure)
+{
+    try {
+        const auto& summary = self->explorer->active_summary();
+        return _export_levels(summary.all_levels);
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+
+static PyObject* _export_tranges(const std::set<dballe::Trange>& tranges)
+{
+    try {
+        pyo_unique_ptr result(PyList_New(tranges.size()));
+
+        unsigned idx = 0;
+        for (const auto& v: tranges)
+        {
+            pyo_unique_ptr trange(trange_to_python(v));
+            if (PyList_SetItem(result, idx, trange.release()))
+                return nullptr;
+            ++idx;
+        }
+
+        return result.release();
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+static PyObject* dpy_Explorer_all_tranges(dpy_Explorer* self, void* closure)
+{
+    try {
+        const auto& summary = self->explorer->global_summary();
+        return _export_tranges(summary.all_tranges);
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+static PyObject* dpy_Explorer_tranges(dpy_Explorer* self, void* closure)
+{
+    try {
+        const auto& summary = self->explorer->active_summary();
+        return _export_tranges(summary.all_tranges);
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+
+static PyObject* _export_varcodes(const std::set<wreport::Varcode>& varcodes)
+{
+    try {
+        pyo_unique_ptr result(PyList_New(varcodes.size()));
+
+        unsigned idx = 0;
+        for (const auto& v: varcodes)
+        {
+            pyo_unique_ptr varcode(varcode_to_python(v));
+            if (PyList_SetItem(result, idx, varcode.release()))
+                return nullptr;
+            ++idx;
+        }
+
+        return result.release();
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+static PyObject* dpy_Explorer_all_varcodes(dpy_Explorer* self, void* closure)
+{
+    try {
+        const auto& summary = self->explorer->global_summary();
+        return _export_varcodes(summary.all_varcodes);
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+static PyObject* dpy_Explorer_varcodes(dpy_Explorer* self, void* closure)
+{
+    try {
+        const auto& summary = self->explorer->active_summary();
+        return _export_varcodes(summary.all_varcodes);
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+
 static PyGetSetDef dpy_Explorer_getsetters[] = {
     {"all_stations", (getter)dpy_Explorer_all_stations, nullptr, "get all stations", nullptr },
     {"stations", (getter)dpy_Explorer_stations, nullptr, "get the stations currently selected", nullptr },
+    {"all_reports", (getter)dpy_Explorer_all_reports, nullptr, "get all rep_memo values", nullptr },
+    {"reports", (getter)dpy_Explorer_reports, nullptr, "get the rep_memo values currently selected", nullptr },
+    {"all_levels", (getter)dpy_Explorer_all_levels, nullptr, "get all level values", nullptr },
+    {"levels", (getter)dpy_Explorer_levels, nullptr, "get the level values currently selected", nullptr },
+    {"all_tranges", (getter)dpy_Explorer_all_tranges, nullptr, "get all time range values", nullptr },
+    {"tranges", (getter)dpy_Explorer_tranges, nullptr, "get the time range values currently selected", nullptr },
+    {"all_varcodes", (getter)dpy_Explorer_all_varcodes, nullptr, "get all varcode values", nullptr },
+    {"varcodes", (getter)dpy_Explorer_varcodes, nullptr, "get the varcode values currently selected", nullptr },
     {nullptr}
 };
 

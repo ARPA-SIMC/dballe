@@ -18,34 +18,46 @@ class DballeTestMixin(DballeDBMixin):
 
         data = dballe.Record(
                 lat=12.34560, lon=76.54320,
-                mobile=0,
                 datetime=datetime.datetime(1945, 4, 25, 8, 0, 0),
                 level=(10, 11, 15, 22),
                 trange=(20,111,222),
                 rep_memo="synop",
-                B01011="Hey Hey!!",
+                B01011="test1",
                 B01012=500)
         ids = self.db.insert_data(data, False, True)
 
-        data.clear()
-        data["B33007"] = 50
-        data["B33036"] = 75
-        self.db.attr_insert_data(ids["B01011"], data)
-
-        for rec in self.db.query_data(dballe.Record(var="B01011")):
-            self.attr_ref = rec["context_id"]
+        data = dballe.Record(
+                lat=12.34560, lon=76.54320,
+                ident="foo",
+                datetime=datetime.datetime(1945, 4, 25, 12, 0, 0),
+                level=(10, 11, 15, 22),
+                trange=(20,111,223),
+                rep_memo="amdar",
+                B01012=500)
+        ids = self.db.insert_data(data, False, True)
 
     def testCreate(self):
         explorer = dballe.Explorer(self.db)
         explorer.revalidate()
+        explorer.set_filter(dballe.Record(rep_memo="amdar"))
+
         self.assertEqual(str(explorer), "Explorer")
         self.assertEqual(repr(explorer), "Explorer object")
         self.assertEqual(explorer.all_stations, [
             dballe.Station(("synop", 1, 12.34560, 76.54320, None)),
+            dballe.Station(("amdar", 2, 12.34560, 76.54320, "foo")),
         ])
         self.assertEqual(explorer.stations, [
-            dballe.Station(("synop", 1, 12.34560, 76.54320, None)),
+            dballe.Station(("amdar", 2, 12.34560, 76.54320, "foo")),
         ])
+        self.assertEqual(explorer.all_reports, ["amdar", "synop"])
+        self.assertEqual(explorer.reports, ["amdar"])
+        self.assertEqual(explorer.all_levels, [(10, 11, 15, 22)])
+        self.assertEqual(explorer.levels, [(10, 11, 15, 22)])
+        self.assertEqual(explorer.all_tranges, [(20, 111, 222), (20, 111, 223)])
+        self.assertEqual(explorer.tranges, [(20, 111, 223)])
+        self.assertEqual(explorer.all_varcodes, ["B01011", "B01012"])
+        self.assertEqual(explorer.varcodes, ["B01012"])
 
 
 class DballeV6Test(DballeTestMixin, unittest.TestCase):

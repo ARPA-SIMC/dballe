@@ -51,6 +51,10 @@ PyObject* station_to_python(const Station& lev);
 /// Convert a structseq to a Station
 int station_from_python(PyObject* o, Station& out);
 
+/// Convert a varcode to a Python string
+PyObject* varcode_to_python(wreport::Varcode code);
+
+
 void register_types(PyObject* m);
 
 }
