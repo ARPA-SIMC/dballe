@@ -8,7 +8,8 @@ Build-Depends: debhelper (>= 10), dh-python, dh-autoreconf,
   libwreport-dev (>= 3.6), python-wreport, python3-wreport,
   libpopt-dev, gperf, liblua5.1-0-dev,
   gfortran | g77,
-  python3-all-dev, python3-docutils, python3-numpy, python3-six
+  python-all-dev, python3-all-dev, python-docutils, python-numpy, python3-numpy,
+  python-six, python3-six
 Standards-Version: 3.9.8.0
 Homepage: https://github.com/ARPA-SIMC/dballe
 Vcs-Git: https://github.com/ARPA-SIMC/dballe
@@ -85,6 +86,18 @@ Description: DB-ALL.e Fortran shared library for weather research
  forecast data can be stored, searched, retrieved and updated.
  .
  This is the shared library for Fortran programs.
+
+Package: python-dballe
+Section: python
+Architecture: any
+Depends: dballe-common, python-wreport, ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
+Recommends: python-numpy
+Suggests: python-rpy2
+Description: DB-ALL.e Python library for weather research
+ DB-All.e is a fast on-disk database where meteorological observed and
+ forecast data can be stored, searched, retrieved and updated.
+ .
+ These are the Python bindings.
 
 Package: python3-dballe
 Section: python
