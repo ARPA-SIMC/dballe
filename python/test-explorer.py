@@ -44,11 +44,11 @@ class DballeTestMixin(DballeDBMixin):
         self.assertEqual(str(explorer), "Explorer")
         self.assertEqual(repr(explorer), "Explorer object")
         self.assertEqual(explorer.all_stations, [
-            dballe.Station(("synop", 1, 12.34560, 76.54320, None)),
-            dballe.Station(("amdar", 2, 12.34560, 76.54320, "foo")),
+            ("synop", 1, 12.34560, 76.54320, None),
+            ("amdar", 2, 12.34560, 76.54320, "foo"),
         ])
         self.assertEqual(explorer.stations, [
-            dballe.Station(("amdar", 2, 12.34560, 76.54320, "foo")),
+            ("amdar", 2, 12.34560, 76.54320, "foo"),
         ])
         self.assertEqual(explorer.all_reports, ["amdar", "synop"])
         self.assertEqual(explorer.reports, ["amdar"])
