@@ -1,12 +1,14 @@
+%global releaseno 1
+
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
 Version: 7.27
-Release: 1
+Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
 URL: https://github.com/ARPA-SIMC/dballe
 #Source0: %{name}-%{version}.tar.gz
-Source0: https://github.com/arpa-simc/%{name}/archive/v%{version}-%{release}.tar.gz#/%{name}-%{version}-%{release}.tar.gz
+Source0: https://github.com/arpa-simc/%{name}/archive/v%{version}-%{releaseno}.tar.gz#/%{name}-%{version}-%{releaseno}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 %if 0%{?rhel} == 7
 %define python3_vers python34
@@ -181,7 +183,7 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{?fedora:rpy
  These are the python bindings.
 
 %prep
-%setup -q -n %{name}-%{version}-%{release}
+%setup -q -n %{name}-%{version}-%{releaseno}
 
 rm -rf %{py3dir}
 cp -a . %{py3dir}
