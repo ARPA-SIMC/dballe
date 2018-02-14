@@ -375,6 +375,7 @@ test_dballe_SOURCES = \
 	db/v7/station-test.cc \
 	db/v7/levtr-test.cc \
 	db/v7/data-test.cc \
+	db/db-test.cc \
 	db/db-basic-test.cc \
 	db/db-misc-test.cc \
 	db/db-query-station-test.cc \
