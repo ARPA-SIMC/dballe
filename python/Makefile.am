@@ -4,7 +4,7 @@ TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 
 export PYTHONPATH=.
 
-dballe_python_tests = test-core.py test-record.py test-db.py test-volnd.py test-rconvert.py test-csv.py
+dballe_python_tests = test-core.py test-types.py test-record.py test-db.py test-explorer.py test-volnd.py test-rconvert.py test-csv.py
 
 # TESTS = $(dballe_python_tests)
 
@@ -14,9 +14,11 @@ pyexec_LTLIBRARIES = _dballe.la
 
 _dballe_la_SOURCES = \
     common.cc \
+    types.cc \
     record.cc \
     dballe.cc \
     db.cc \
+    explorer.cc \
     cursor.cc
 _dballe_la_CPPFLAGS = $(PYTHON_CFLAGS)
 _dballe_la_LDFLAGS = -module -avoid-version -export-symbols-regex init_dballe
@@ -44,9 +46,11 @@ clean-local:
 EXTRA_DIST = \
     doc-dballe \
     common.h \
+    types.h \
     record.h \
     db.h \
     cursor.h \
+    explorer.h \
     testlib.py \
     MANIFEST.in \
     setup.py \

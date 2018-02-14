@@ -28,7 +28,7 @@ class Tests : public DBFixtureTestCase<DBFixture>
             // Build the whole db summary
             auto cur = f.db->query_summary(query);
             while (cur->next())
-                s.add_summary(*cur, true);
+                s.add_summary(*cur);
 
             // Check its contents
             wassert(actual(s.is_valid()).istrue());
@@ -69,52 +69,6 @@ class Tests : public DBFixtureTestCase<DBFixture>
             // Still exact, because although the query partially matches the summary,
             // each summary entry is entier included completely or excluded completely
             wassert(actual(s.supports(*query_from_string("yearmin=1945, monthmin=4, daymin=25, hourmin=8, yearmax=1945, monthmax=4, daymax=25, hourmax=8, minumax=10"))) == summary::Support::EXACT);
-        });
-        add_method("summary_stack", [](Fixture& f) {
-            // Test summary::Stack
-            using namespace summary;
-
-            wassert(f.populate<OldDballeTestDataSet>());
-
-            core::Query query;
-            query.query = "details";
-            Summary s(query);
-            wassert(actual(s.is_valid()).isfalse());
-
-            Stack stack;
-
-            // Build the whole db summary
-            Summary& general = stack.push(core::Query());
-            auto cur = f.db->query_summary(query);
-            while (cur->next())
-                general.add_summary(*cur, true);
-
-            wassert(actual(stack.size()) == 1);
-            wassert(actual(stack.top().data_count()) == 4);
-
-            // Query the stack
-            query.clear(); query.rep_memo = "synop";
-            Support res = stack.query(query, true, [](const Entry& e) { return e.rep_memo == "synop"; });
-            wassert(actual(res) == EXACT);
-
-            wassert(actual(stack.size()) == 2);
-            wassert(actual(stack.top().data_count()) == 2);
-
-            // Query further
-            query.clear(); query.rep_memo = "synop"; query.varcodes.insert(WR_VAR(0, 1, 11));
-            res = stack.query(query, true, [](const Entry& e) { return e.rep_memo == "synop" && e.varcode == WR_VAR(0, 1, 11); });
-            wassert(actual(res) == EXACT);
-
-            wassert(actual(stack.size()) == 2);
-            wassert(actual(stack.top().data_count()) == 1);
-
-            // Query the same var but a different rep_memo
-            query.clear(); query.rep_memo = "metar"; query.varcodes.insert(WR_VAR(0, 1, 11));
-            res = stack.query(query, true, [](const Entry& e) { return e.rep_memo == "metar" && e.varcode == WR_VAR(0, 1, 11); });
-            wassert(actual(res) == EXACT);
-
-            wassert(actual(stack.size()) == 2);
-            wassert(actual(stack.top().data_count()) == 1);
         });
     }
 };

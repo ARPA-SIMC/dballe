@@ -3,6 +3,7 @@
 
 #include <dballe/transaction.h>
 #include <dballe/core/defs.h>
+#include <dballe/core/values.h>
 #include <dballe/db/defs.h>
 #include <dballe/sql/fwd.h>
 #include <wreport/varinfo.h>
@@ -73,6 +74,11 @@ struct Cursor
      *   The record where to store the values
      */
     virtual void to_record(Record& rec) = 0;
+
+    /**
+     * Get the whole station data in a single call
+     */
+    virtual Station get_station() const = 0;
 
     /// Get the station identifier
     virtual int get_station_id() const = 0;

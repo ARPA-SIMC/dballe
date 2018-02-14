@@ -2,12 +2,16 @@
 #define DBALLE_PYTHON_COMMON_H
 
 #include <Python.h>
-#include <dballe/types.h>
 #include <wreport/python.h>
 #include <wreport/error.h>
 #include <wreport/varinfo.h>
 
 namespace dballe {
+struct Datetime;
+struct DatetimeRange;
+struct Level;
+struct Trange;
+
 namespace python {
 
 extern wrpy_c_api* wrpy;
@@ -56,6 +60,33 @@ public:
 };
 
 typedef py_unique_ptr<PyObject> pyo_unique_ptr;
+
+
+/**
+ * Release the GIL during the lifetime of this object;
+ */
+struct ReleaseGIL
+{
+    PyThreadState *_save = nullptr;
+
+    ReleaseGIL()
+    {
+        _save = PyEval_SaveThread();
+    }
+
+    ~ReleaseGIL()
+    {
+        lock();
+    }
+
+    void lock()
+    {
+        if (!_save) return;
+        PyEval_RestoreThread(_save);
+        _save = nullptr;
+    }
+};
+
 
 /**
  * Return a python string representing a varcode
@@ -117,17 +148,8 @@ int datetime_from_python(PyObject* dt, Datetime& out);
 /// Convert a sequence of two python datetime objects to a DatetimeRange
 int datetimerange_from_python(PyObject* dt, DatetimeRange& out);
 
-/// Convert a Level to a python 4-tuple
-PyObject* level_to_python(const Level& lev);
-
-/// Convert a 4-tuple to a Level
-int level_from_python(PyObject* o, Level& out);
-
-/// Convert a Trange to a python 3-tuple
-PyObject* trange_to_python(const Trange& tr);
-
-/// Convert a 3-tuple to a Trange
-int trange_from_python(PyObject* o, Trange& out);
+/// Convert an utf8 string to a python str object
+PyObject* string_to_python(const std::string& str);
 
 /// Convert a python string, bytes or unicode to an utf8 string
 int string_from_python(PyObject* o, std::string& out);

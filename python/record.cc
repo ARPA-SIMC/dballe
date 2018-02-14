@@ -3,6 +3,7 @@
 #include <dballe/core/defs.h>
 #include "record.h"
 #include "common.h"
+#include "types.h"
 #include <vector>
 #include "config.h"
 
@@ -401,19 +402,6 @@ static PyObject* dpy_Record_var(dpy_Record* self, PyObject* args)
     } DBALLE_CATCH_RETURN_PYO
 }
 
-static PyObject* dpy_Record_key(dpy_Record* self, PyObject* args)
-{
-    if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use Record.var(name) instead of Record.key(name)", 1))
-        return nullptr;
-    const char* name = NULL;
-    if (!PyArg_ParseTuple(args, "s", &name))
-        return nullptr;
-
-    try {
-        return (PyObject*)wrpy->var_create_copy((*self->rec)[name]);
-    } DBALLE_CATCH_RETURN_PYO
-}
-
 static PyObject* dpy_Record_update(dpy_Record* self, PyObject *args, PyObject *kw)
 {
     if (kw)
@@ -431,11 +419,11 @@ static PyObject* dpy_Record_update(dpy_Record* self, PyObject *args, PyObject *k
 
 static PyObject* dpy_Record_get(dpy_Record* self, PyObject *args, PyObject* kw)
 {
-    static char* kwlist[] = { "key", "default", NULL };
+    static const char* kwlist[] = { "key", "default", NULL };
     PyObject* key;
     PyObject* def = Py_None;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|O", kwlist, &key, &def))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|O", const_cast<char**>(kwlist), &key, &def))
         return nullptr;
 
     try {

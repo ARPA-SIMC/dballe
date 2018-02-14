@@ -63,17 +63,10 @@ then
 fi
 if [ ! -z "$DEBUGGER" ]
 then
-    if [ -x $DIR/.libs/lt-$BASE ]
-    then
-        CMD="$DIR/.libs/lt-$BASE"
-    fi
-
     echo "Running $DEBUGGER $CMD $ARGS"
     RES=0
-    if $DEBUGGER $CMD $ARGS
+    if ! libtool --mode=execute $DEBUGGER $CMD $ARGS
     then
-        true
-    else
         RES=$?
         echo "Failed with result $RES"
     fi

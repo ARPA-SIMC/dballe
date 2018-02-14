@@ -401,28 +401,6 @@ static PyObject* dpy_DB_vacuum(dpy_DB* self)
     Py_RETURN_NONE;
 }
 
-struct ReleaseGIL
-{
-    PyThreadState *_save = nullptr;
-
-    ReleaseGIL()
-    {
-        _save = PyEval_SaveThread();
-    }
-
-    ~ReleaseGIL()
-    {
-        lock();
-    }
-
-    void lock()
-    {
-        if (!_save) return;
-        PyEval_RestoreThread(_save);
-        _save = nullptr;
-    }
-};
-
 static PyObject* dpy_DB_query_stations(dpy_DB* self, PyObject* args)
 {
     dpy_Record* record;
