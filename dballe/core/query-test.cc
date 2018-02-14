@@ -42,6 +42,7 @@ add_method("all_unset", []() {
     wassert(actual(q.block) == MISSING_INT);
     wassert(actual(q.station) == MISSING_INT);
 });
+
 add_method("all_set", []() {
     core::Record rec;
     rec.set("ana_id", 4);
@@ -87,6 +88,7 @@ add_method("all_set", []() {
     wassert(actual(q.block) == 16);
     wassert(actual(q.station) == 404);
 });
+
 add_method("prio", []() {
     core::Query q;
     q.set_from_test_string("priority=11");
@@ -113,6 +115,7 @@ add_method("prio", []() {
     wassert(actual(q.prio_min) == 16);
     wassert(actual(q.prio_max) == 16);
 });
+
 add_method("lat", []() {
     core::Query q;
     q.set_from_test_string("lat=45.0");
@@ -134,6 +137,7 @@ add_method("lat", []() {
     q.set_from_test_string("latmin=40.0, latmax=50.0, lat=42.0");
     wassert(actual(q.latrange) == LatRange(42.0, 42.0));
 });
+
 add_method("lon", []() {
     core::Query q;
     q.set_from_test_string("lon=45.0");
@@ -156,27 +160,33 @@ add_method("lon", []() {
     q.set_from_test_string("lonmin=40.0, lonmax=50.0, lon=42.0");
     wassert(actual(q.lonrange) == LonRange(42.0, 42.0));
 });
+
 add_method("datetime", []() {
     core::Query q;
-    q.set_from_test_string("year=2015");
+    wassert(q.set_from_test_string("year=2015"));
     wassert(actual(q.datetime) == DatetimeRange(2015,  1,  1,  0 , 0,  0, 2015, 12, 31, 23, 59, 59));
 
     q.clear();
-    q.set_from_test_string("year=2015, monthmin=1, monthmax=2");
+    wassert(q.set_from_test_string("year=2015, monthmin=1, monthmax=2"));
     wassert(actual(q.datetime) == DatetimeRange(2015,  1,  1,  0 , 0,  0, 2015,  2, 28, 23, 59, 59));
 
     q.clear();
-    q.set_from_test_string("year=2015, monthmin=2, day=28");
-    wassert(actual(q.datetime) == DatetimeRange(2015,  2, 28,  0 , 0,  0, 2015, 12, 28, 23, 59, 59));
+    auto e = wassert_throws(wreport::error_consistency, q.set_from_test_string("year=2015, monthmin=2, day=28"));
+    wassert(actual(e.what()) == "day 28 given with no month");
 
     q.clear();
-    q.set_from_test_string("yearmin=2000, yearmax=2012, month=2, min=30");
-    wassert(actual(q.datetime) == DatetimeRange(2000,  2,  1,  0, 30,  0, 2012,  2, 29, 23, 30, 59));
+    e = wassert_throws(wreport::error_consistency, q.set_from_test_string("yearmin=2000, yearmax=2012, month=2, min=30"));
+    wassert(actual(e.what()) == "minute 30 given with no hour");
 
     q.clear();
-    q.set_from_test_string("yearmin=2010, yearmax=2012, year=2000, month=2, min=30");
-    wassert(actual(q.datetime) == DatetimeRange(2000,  2,  1,  0, 30,  0, 2000,  2, 29, 23, 30, 59));
+    wassert(q.set_from_test_string("yearmin=2010, yearmax=2012, year=2000, month=2, hour=12, min=30"));
+    wassert(actual(q.datetime) == DatetimeRange(2000,  2,  1,  12, 30,  0, 2000,  2, 29, 12, 30, 59));
+
+    q.clear();
+    e = wassert_throws(wreport::error_consistency, q.set_from_test_string("yearmin=2010, yearmax=2012, year=2000, month=2, min=30"));
+    wassert(actual(e.what()) == "minute 30 given with no hour");
 });
+
 add_method("varlist", []() {
     core::Query q;
     q.set_from_test_string("var=B12101");
@@ -194,6 +204,7 @@ add_method("varlist", []() {
     wassert(actual(q.varcodes.size()) == 1);
     wassert(actual(*q.varcodes.begin()) == WR_VAR(0, 12, 102));
 });
+
 add_method("modifiers", []() {
     wassert(actual(core::Query::parse_modifiers("best")) == DBA_DB_MODIFIER_BEST);
     wassert(actual(core::Query::parse_modifiers("details")) == DBA_DB_MODIFIER_SUMMARY_DETAILS);
