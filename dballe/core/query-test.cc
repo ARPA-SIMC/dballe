@@ -210,6 +210,14 @@ add_method("modifiers", []() {
     wassert(actual(core::Query::parse_modifiers("details")) == DBA_DB_MODIFIER_SUMMARY_DETAILS);
 });
 
+add_method("issue107", []() {
+    core::Record rec;
+    rec.set("month", 6);
+
+    core::Query q;
+    wassert_throws(wreport::error_consistency, q.set_from_record(rec));
+});
+
 }
 
 }
