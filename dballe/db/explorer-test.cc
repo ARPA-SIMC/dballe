@@ -52,9 +52,14 @@ add_method("filter_rep_memo", [](Fixture& f) {
     stations.clear();
     for (const auto& s: explorer.global_summary().all_stations)
         stations.push_back(s.second);
-    wassert(actual(stations.size()) == 2);
-    wassert(actual(stations[0].report) == "metar");
-    wassert(actual(stations[1].report) == "synop");
+    if (f.db->format() == db::V6)
+    {
+        wassert(actual(stations.size()) == 1);
+    } else {
+        wassert(actual(stations.size()) == 2);
+        wassert(actual(stations[0].report) == "metar");
+        wassert(actual(stations[1].report) == "synop");
+    }
 
     stations.clear();
     for (const auto& s: explorer.active_summary().all_stations)
