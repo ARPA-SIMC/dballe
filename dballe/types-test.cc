@@ -224,6 +224,17 @@ add_method("known_descs", []() {
     wassert(actual(Trange(3, 194400, 43200).describe()) == "Minimum over 12h at forecast time 2d 6h");
 });
 
+add_method("datetime_bounds", []() {
+#define MISSING_DTOS MISSING_INT, MISSING_INT, MISSING_INT, MISSING_INT
+    wassert(actual(Datetime::lower_bound(2000, MISSING_INT, MISSING_DTOS)) == Datetime(2000, 1, 1, 0, 0, 0));
+    wassert(actual(Datetime::upper_bound(2000, 2, MISSING_DTOS)) == Datetime(2000, 2, 29, 23, 59, 59));
+    wassert(actual(Datetime::upper_bound(2002, 2, MISSING_DTOS)) == Datetime(2002, 2, 28, 23, 59, 59));
+    wassert(actual(Datetime::upper_bound(2004, 2, MISSING_DTOS)) == Datetime(2004, 2, 29, 23, 59, 59));
+
+    wassert_throws(wreport::error_consistency, Datetime::lower_bound(MISSING_INT, 2, MISSING_DTOS));
+#undef MISSING_DTOS
+});
+
 }
 
 }
