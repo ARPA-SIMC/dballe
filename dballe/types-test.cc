@@ -231,7 +231,8 @@ add_method("datetime_bounds", []() {
     wassert(actual(Datetime::upper_bound(2002, 2, MISSING_DTOS)) == Datetime(2002, 2, 28, 23, 59, 59));
     wassert(actual(Datetime::upper_bound(2004, 2, MISSING_DTOS)) == Datetime(2004, 2, 29, 23, 59, 59));
 
-    wassert_throws(wreport::error_consistency, Datetime::lower_bound(MISSING_INT, 2, MISSING_DTOS));
+    auto e = wassert_throws(wreport::error_consistency, Datetime::lower_bound(MISSING_INT, 2, MISSING_DTOS));
+    wassert(actual(e.what()) == "month 2 given with no year");
 #undef MISSING_DTOS
 });
 

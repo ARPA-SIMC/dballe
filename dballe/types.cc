@@ -324,8 +324,31 @@ Datetime Datetime::from_julian(int jday, int ho, int mi, int se)
     return Datetime(Date::from_julian(jday), Time(ho, mi, se));
 }
 
+static void check_partial_consistency(int ye, int mo, int da, int ho, int mi, int se)
+{
+    if (ye == MISSING_INT)
+    {
+        if (mo != MISSING_INT) error_consistency::throwf("month %d given with no year", mo);
+        if (da != MISSING_INT) error_consistency::throwf("day %d given with no year", da);
+        if (ho != MISSING_INT) error_consistency::throwf("hour %d given with no year", ho);
+        if (mi != MISSING_INT) error_consistency::throwf("minute %d given with no year", mi);
+        if (se != MISSING_INT) error_consistency::throwf("second %d given with no year", se);
+    }
+    if (mo == MISSING_INT) {
+        if (da != MISSING_INT) error_consistency::throwf("day %d given with no month", da);
+    }
+    if (ho == MISSING_INT) {
+        if (mi != MISSING_INT) error_consistency::throwf("minute %d given with no hour", mi);
+        if (se != MISSING_INT) error_consistency::throwf("second %d given with no hour", se);
+    }
+    if (mi == MISSING_INT) {
+        if (se != MISSING_INT) error_consistency::throwf("second %d given with no minute", se);
+    }
+}
+
 Datetime Datetime::lower_bound(int ye, int mo, int da, int ho, int mi, int se)
 {
+    check_partial_consistency(ye, mo, da, ho, mi, se);
     if (mo == MISSING_INT) mo = 1;
     if (da == MISSING_INT) da = 1;
     if (ho == MISSING_INT) ho = 0;
@@ -336,6 +359,7 @@ Datetime Datetime::lower_bound(int ye, int mo, int da, int ho, int mi, int se)
 
 Datetime Datetime::upper_bound(int ye, int mo, int da, int ho, int mi, int se)
 {
+    check_partial_consistency(ye, mo, da, ho, mi, se);
     if (mo == MISSING_INT) mo = 12;
     if (da == MISSING_INT) da = Date::days_in_month(ye, mo);
     if (ho == MISSING_INT) ho = 23;
