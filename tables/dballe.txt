@@ -401,6 +401,7 @@
  033207 [SIM] Kalman observation sequential counter                      NUMERIC                    0         -127   8 NUMERIC                   0          3
  033208 [SIM] Kalman osservation missing counter                         NUMERIC                    0         -127   8 NUMERIC                   0          3
  033209 [SIM] Normalized Density Index                                   %                          0            0   7 PERCENT                   0          3
+ 033210 [SIM] Data in the interval used to compute the value             %                          0            0   7 PERCENT                   0          3
  048001 [SIM] Graminacee_Graminacee indistinte                           POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
  048002 [SIM] Betulacee_Ontano nero                                      POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
  048003 [SIM] Betulacee_Betulla                                          POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
