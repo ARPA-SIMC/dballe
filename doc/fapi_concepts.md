@@ -26,9 +26,11 @@ otherwise representable in any Fortran data type.
 When you create a connection or a session, DB-All.e will give you the integer
 handle that you will later use to refer to it.
 
-Values in DB-All.e are associated to informations about their source, such as
-what kind of station generated the data and some characteristics of the
-station. What follows are the main concept of DB-All.e data representation.
+Sessions run with their own database transaction, which means that the changes
+they perform on data are handled in an all-or-nothing fashion. If you close a
+session with [idba_fatto][], then all the changes made will be preserved. If
+you do not call [idba_fatto][], such as if your program unexpectedly
+terminates, then all the changes made will be undone.
 
 <a name="report"></a>
 ### Report
@@ -106,8 +108,6 @@ identified by a [*local B table descriptor*](fapi_btable.md).
 
 <a name="value"></a>
 ### Value
-
-The main work of DB-All.e is to store and access *measured values*.
 
 A measured value is a datum that can be expressed as a floating point (single
 or double precision), integer, character or byte, depending on what value it

@@ -95,9 +95,7 @@ DbAPI::DbAPI(DB& db, const char* anaflag, const char* dataflag, const char* attr
 {
     set_permissions(anaflag, dataflag, attrflag);
     if (strcmp(anaflag, "read") || strcmp(dataflag, "read") || strcmp(attrflag, "read"))
-        // TODO: remove this and make it a default, once we get the OK from the API consumers
-        if (getenv("DBA_FORTRAN_TRANSACTION") != nullptr)
-            transaction = db.transaction().release();
+        transaction = db.transaction().release();
 }
 
 DbAPI::~DbAPI()
