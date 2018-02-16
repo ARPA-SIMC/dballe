@@ -822,7 +822,8 @@ add_method("issue73", [](Fixture& f) {
 
     {
         fortran::DbAPI dbapi(*f.db, "write", "write", "write");
-        populate_variables(dbapi);
+        wassert(populate_variables(dbapi));
+        wassert(dbapi.fatto());
     }
 
     {
@@ -843,6 +844,7 @@ add_method("issue75", [](Fixture& f) {
         wassert(actual(dbapi.messages_read_next()).istrue());
         wassert(actual(dbapi.messages_read_next()).istrue());
         wassert(actual(dbapi.messages_read_next()).istrue());
+        wassert(dbapi.fatto());
     }
 
     {
@@ -853,6 +855,45 @@ add_method("issue75", [](Fixture& f) {
         wassert(actual(dbapi.voglioquesto()) == 0);
         dbapi.setc("varlist", "B07030");
         wassert(actual(dbapi.voglioquesto()) == 1);
+    }
+});
+
+add_method("transactions", [](Fixture& f) {
+    // Write, do not commit
+    {
+        fortran::DbAPI api(*f.db, "write", "write", "write");
+        wassert(actual(api.voglioquesto()) == 0);
+        api.setd("lat", 44.5);
+        api.setd("lon", 11.5);
+        api.setc("rep_memo", "synop");
+        api.settimerange(254, 0, 0);
+        api.setdate(2013, 4, 25, 12, 0, 0);
+        api.setlevel(103, 2000, MISSING_INT, MISSING_INT);
+        api.setd("B12101", 21.5);
+        api.prendilo();
+        wassert(actual(api.voglioquesto()) == 1);
+    }
+
+    // Write, commit
+    {
+        fortran::DbAPI api(*f.db, "write", "write", "write");
+        wassert(actual(api.voglioquesto()) == 0);
+        api.setd("lat", 44.5);
+        api.setd("lon", 11.5);
+        api.setc("rep_memo", "synop");
+        api.settimerange(254, 0, 0);
+        api.setdate(2013, 4, 25, 12, 0, 0);
+        api.setlevel(103, 2000, MISSING_INT, MISSING_INT);
+        api.setd("B12101", 21.5);
+        api.prendilo();
+        wassert(actual(api.voglioquesto()) == 1);
+        wassert(api.fatto());
+    }
+
+    // This time, data was written
+    {
+        fortran::DbAPI api(*f.db, "write", "write", "write");
+        wassert(actual(api.voglioquesto()) == 1);
     }
 });
 

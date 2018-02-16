@@ -22,6 +22,15 @@ public:
 
     /// Roll back this transaction
     virtual void rollback() = 0;
+
+    /**
+     * Clear state information cached during the transaction.
+     *
+     * This can be used when, for example, a command that deletes data is
+     * issued that would invalidate ID information cached inside the
+     * transaction.
+     */
+    virtual void clear_cached_state() = 0;
 };
 
 }

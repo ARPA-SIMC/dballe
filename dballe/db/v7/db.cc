@@ -246,6 +246,7 @@ void DB::remove_all(dballe::Transaction& transaction)
 {
     auto tr = trace.trace_remove_all();
     driver().remove_all_v7();
+    transaction.clear_cached_state();
     tr->done();
 }
 

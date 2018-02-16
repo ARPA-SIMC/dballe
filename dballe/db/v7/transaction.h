@@ -27,6 +27,7 @@ struct Transaction : public dballe::Transaction
 
     void commit() override { sql_transaction->commit(); }
     void rollback() override { sql_transaction->rollback(); }
+    void clear_cached_state() override { state.clear(); }
 
     static Transaction& downcast(dballe::Transaction& transaction);
 };

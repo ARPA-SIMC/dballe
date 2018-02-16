@@ -260,6 +260,7 @@ void DB::remove_all(dballe::Transaction& transaction)
 {
     auto tr = trace.trace_remove_all();
     driver().remove_all_v6();
+    transaction.clear_cached_state();
     if (m_lev_tr_cache)
         m_lev_tr_cache->invalidate();
     tr->done();

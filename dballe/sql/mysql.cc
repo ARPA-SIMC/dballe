@@ -483,6 +483,7 @@ struct MySQLTransaction : public Transaction
         conn.exec_no_data_nothrow("ROLLBACK");
         fired = true;
     }
+    void clear_cached_state() override {}
     void lock_table(const char* name) override
     {
         // https://dev.mysql.com/doc/refman/5.0/en/lock-tables-and-transactions.html
