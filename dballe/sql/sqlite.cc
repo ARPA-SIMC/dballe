@@ -97,16 +97,11 @@ void SQLiteConnection::init_after_connect()
     // set_autocommit(false);
 
     exec("PRAGMA foreign_keys = ON");
+    exec("PRAGMA journal_mode = MEMORY");
+    exec("PRAGMA legacy_file_format = 0");
 
     if (getenv("DBA_INSECURE_SQLITE") != NULL)
-    {
         exec("PRAGMA synchronous = OFF");
-        exec("PRAGMA journal_mode = OFF");
-        exec("PRAGMA legacy_file_format = 0");
-    } else {
-        exec("PRAGMA journal_mode = MEMORY");
-        exec("PRAGMA legacy_file_format = 0");
-    }
 
     if (profile)
         sqlite3_profile(db, on_sqlite3_profile, this);
