@@ -284,7 +284,7 @@ void PostgreSQLConnection::prepare(const std::string& name, const std::string& q
 
 void PostgreSQLConnection::drop_table_if_exists(const char* name)
 {
-    exec_no_data(string("DROP TABLE IF EXISTS ") + name);
+    exec_no_data(string("DROP TABLE IF EXISTS ") + name + " CASCADE");
 }
 
 void PostgreSQLConnection::cancel_running_query_nothrow() noexcept

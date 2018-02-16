@@ -105,33 +105,7 @@ void Query::set_from_record(const dballe::Record& rec)
     else
         lonrange.set(rec.enq("lonmin", MISSING_INT), rec.enq("lonmax", MISSING_INT));
     // Datetime
-    // fetch all values involved in the computation
-    int ye = rec.enq("year", MISSING_INT);
-    int mo = rec.enq("month", MISSING_INT);
-    int da = rec.enq("day", MISSING_INT);
-    int ho = rec.enq("hour", MISSING_INT);
-    int mi = rec.enq("min", MISSING_INT);
-    int se = rec.enq("sec", MISSING_INT);
-    int yemin = rec.enq("yearmin", MISSING_INT);
-    int momin = rec.enq("monthmin", MISSING_INT);
-    int damin = rec.enq("daymin", MISSING_INT);
-    int homin = rec.enq("hourmin", MISSING_INT);
-    int mimin = rec.enq("minumin", MISSING_INT);
-    int semin = rec.enq("secmin", MISSING_INT);
-    int yemax = rec.enq("yearmax", MISSING_INT);
-    int momax = rec.enq("monthmax", MISSING_INT);
-    int damax = rec.enq("daymax", MISSING_INT);
-    int homax = rec.enq("hourmax", MISSING_INT);
-    int mimax = rec.enq("minumax", MISSING_INT);
-    int semax = rec.enq("secmax", MISSING_INT);
-    // give absolute values priority over ranges
-    if (ye != MISSING_INT) yemin = yemax = ye;
-    if (mo != MISSING_INT) momin = momax = mo;
-    if (da != MISSING_INT) damin = damax = da;
-    if (ho != MISSING_INT) homin = homax = ho;
-    if (mi != MISSING_INT) mimin = mimax = mi;
-    if (se != MISSING_INT) semin = semax = se;
-    datetime = DatetimeRange(yemin, momin, damin, homin, mimin, semin, yemax, momax, damax, homax, mimax, semax);
+    datetime = r.get_datetimerange();
     // Level
     level = r.get_level();
     // Trange
