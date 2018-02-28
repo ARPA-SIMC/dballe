@@ -189,6 +189,9 @@ else
     AC_CHECK_HEADER([libpq-fe.h], [true], [have_libpq=no])
     LIBPQ_CFLAGS=
     LIBPQ_LIBS="-lpq"
+    AC_SUBST(LIBPQ_CFLAGS)
+    AC_SUBST(LIBPQ_LIBS)
+    AC_DEFINE([HAVE_LIBPQ], 1, [PostgreSQL is available])
 fi
 AM_CONDITIONAL([HAVE_LIBPQ], [test x"$have_libpq" = x"yes"])
 
