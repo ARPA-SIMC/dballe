@@ -223,46 +223,6 @@ void DB::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport
     d.read_attrs(data_id, dest);
 }
 
-void DB::attr_insert_station(dballe::db::Transaction& transaction, int data_id, const Values& attrs)
-{
-    auto& d = station_data();
-    d.merge_attrs(data_id, attrs);
-}
-
-void DB::attr_insert_data(dballe::db::Transaction& transaction, int data_id, const Values& attrs)
-{
-    auto& d = data();
-    d.merge_attrs(data_id, attrs);
-}
-
-void DB::attr_remove_station(dballe::Transaction& transaction, int data_id, const db::AttrList& attrs)
-{
-    if (attrs.empty())
-    {
-        // Delete all attributes
-        char buf[64];
-        snprintf(buf, 64, "UPDATE station_data SET attrs=NULL WHERE id=%d", data_id);
-        conn->execute(buf);
-    } else {
-        auto& d = station_data();
-        d.remove_attrs(data_id, attrs);
-    }
-}
-
-void DB::attr_remove_data(dballe::Transaction& transaction, int data_id, const db::AttrList& attrs)
-{
-    if (attrs.empty())
-    {
-        // Delete all attributes
-        char buf[64];
-        snprintf(buf, 64, "UPDATE data SET attrs=NULL WHERE id=%d", data_id);
-        conn->execute(buf);
-    } else {
-        auto& d = data();
-        d.remove_attrs(data_id, attrs);
-    }
-}
-
 bool DB::is_station_variable(int data_id, wreport::Varcode varcode)
 {
     return false;

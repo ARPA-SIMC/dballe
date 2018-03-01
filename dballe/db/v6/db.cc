@@ -28,112 +28,158 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
-struct Transaction : public dballe::db::Transaction
+Transaction::Transaction(v6::DB& db, std::unique_ptr<dballe::Transaction> sql_transaction)
+    : db(db), sql_transaction(sql_transaction.release()) {}
+Transaction::~Transaction()
 {
-    v6::DB& db;
-    dballe::Transaction* sql_transaction = nullptr;
+    delete sql_transaction;
+}
 
-    Transaction(v6::DB& db, std::unique_ptr<dballe::Transaction> sql_transaction)
-        : db(db), sql_transaction(sql_transaction.release()) {}
-    Transaction(const Transaction&) = delete;
-    Transaction(Transaction&&) = delete;
-    Transaction& operator=(const Transaction&) = delete;
-    Transaction& operator=(Transaction&&) = delete;
-    ~Transaction()
-    {
-        delete sql_transaction;
+void Transaction::commit() { sql_transaction->commit(); }
+void Transaction::rollback() { sql_transaction->rollback(); }
+void Transaction::clear_cached_state()
+{
+    if (db.m_lev_tr_cache)
+        db.m_lev_tr_cache->invalidate();
+}
+
+void Transaction::remove_all()
+{
+    auto tr = db.trace.trace_remove_all();
+    db.driver().remove_all_v6();
+    clear_cached_state();
+    tr->done();
+}
+
+void Transaction::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
+{
+    v6::Repinfo& ri = db.repinfo();
+    v6::DataV6& d = db.data();
+
+    v6::bulk::InsertV6 vars;
+    // Insert the station data, and get the ID
+    vars.id_station = vals.info.ana_id = db.obtain_station(vals.info, station_can_add);
+    // Get the ID of the report
+    vars.id_report = ri.obtain_id(vals.info.report.c_str());
+
+    // Hardcoded values for station variables
+    vars.datetime = Datetime(1000, 1, 1, 0, 0, 0);
+
+    // Add all the variables we find
+    for (auto& i: vals.values)
+        vars.add(i.second.var, -1);
+
+    // Do the insert
+    d.insert(*this, vars, can_replace ? v6::DataV6::UPDATE : v6::DataV6::ERROR);
+
+    // Read the IDs from the results
+    for (const auto& v: vars)
+        vals.values.add_data_id(v.var->code(), v.id_data);
+}
+
+void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
+{
+    /* Check for the existance of non-lev_tr data, otherwise it's all
+     * useless.  Not inserting data is fine in case of setlev_trana */
+    if (vals.values.empty())
+        throw error_notfound("no variables found in input record");
+
+    v6::Repinfo& ri = db.repinfo();
+    v6::DataV6& d = db.data();
+
+    v6::bulk::InsertV6 vars;
+    // Insert the station data, and get the ID
+    vars.id_station = vals.info.ana_id = db.obtain_station(vals.info, station_can_add);
+    // Get the ID of the report
+    vars.id_report = ri.obtain_id(vals.info.report.c_str());
+    // Set the date from the record contents
+    vars.datetime = vals.info.datetime;
+    // Insert the lev_tr data, and get the ID
+    int id_levtr = db.lev_tr().obtain_id(vals.info.level, vals.info.trange);
+
+    // Add all the variables we find
+    for (auto& i: vals.values)
+        vars.add(i.second.var, id_levtr);
+
+    // Do the insert
+    d.insert(*this, vars, can_replace ? v6::DataV6::UPDATE : v6::DataV6::ERROR);
+
+    // Read the IDs from the results
+    for (const auto& v: vars)
+        vals.values.add_data_id(v.var->code(), v.id_data);
+}
+
+void Transaction::remove_station_data(const Query& query)
+{
+    auto tr = db.trace.trace_remove_station_data(query);
+    cursor::run_delete_query(db, core::Query::downcast(query), true, db.explain_queries);
+    tr->done();
+}
+
+void Transaction::remove(const Query& query)
+{
+    auto tr = db.trace.trace_remove(query);
+    cursor::run_delete_query(db, core::Query::downcast(query), false, db.explain_queries);
+    tr->done();
+}
+
+void Transaction::attr_insert_station(int data_id, const Values& attrs)
+{
+    v6::AttrV6& a = db.attr();
+    v6::bulk::InsertAttrsV6 iattrs;
+    for (const auto& i : attrs)
+        iattrs.add(i.second.var, data_id);
+    if (iattrs.empty()) return;
+
+    // Insert all the attributes we found
+    a.insert(*this, iattrs, v6::AttrV6::UPDATE);
+}
+
+void Transaction::attr_insert_data(int data_id, const Values& attrs)
+{
+    v6::AttrV6& a = db.attr();
+    v6::bulk::InsertAttrsV6 iattrs;
+    for (const auto& i : attrs)
+        iattrs.add(i.second.var, data_id);
+    if (iattrs.empty()) return;
+
+    // Insert all the attributes we found
+    a.insert(*this, iattrs, v6::AttrV6::UPDATE);
+}
+
+void Transaction::attr_remove_station(int data_id, const db::AttrList& qcs)
+{
+    Querybuf query(500);
+    if (qcs.empty())
+        // Delete all attributes
+        query.appendf("DELETE FROM attr WHERE id_data=%d", data_id);
+    else {
+        // Delete only the attributes in qcs
+        query.appendf("DELETE FROM attr WHERE id_data=%d AND type IN (", data_id);
+        query.start_list(", ");
+        for (vector<Varcode>::const_iterator i = qcs.begin(); i != qcs.end(); ++i)
+            query.append_listf("%hd", *i);
+        query.append(")");
     }
+    db.conn->execute(query);
+}
 
-    void commit() override { sql_transaction->commit(); }
-    void rollback() override { sql_transaction->rollback(); }
-    void clear_cached_state() override
-    {
-        if (db.m_lev_tr_cache)
-            db.m_lev_tr_cache->invalidate();
+void Transaction::attr_remove_data(int data_id, const db::AttrList& qcs)
+{
+    Querybuf query(500);
+    if (qcs.empty())
+        // Delete all attributes
+        query.appendf("DELETE FROM attr WHERE id_data=%d", data_id);
+    else {
+        // Delete only the attributes in qcs
+        query.appendf("DELETE FROM attr WHERE id_data=%d AND type IN (", data_id);
+        query.start_list(", ");
+        for (vector<Varcode>::const_iterator i = qcs.begin(); i != qcs.end(); ++i)
+            query.append_listf("%hd", *i);
+        query.append(")");
     }
-
-    void remove_all() override
-    {
-        auto tr = db.trace.trace_remove_all();
-        db.driver().remove_all_v6();
-        clear_cached_state();
-        tr->done();
-    }
-
-    void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add) override
-    {
-        v6::Repinfo& ri = db.repinfo();
-        v6::DataV6& d = db.data();
-
-        v6::bulk::InsertV6 vars;
-        // Insert the station data, and get the ID
-        vars.id_station = vals.info.ana_id = db.obtain_station(vals.info, station_can_add);
-        // Get the ID of the report
-        vars.id_report = ri.obtain_id(vals.info.report.c_str());
-
-        // Hardcoded values for station variables
-        vars.datetime = Datetime(1000, 1, 1, 0, 0, 0);
-
-        // Add all the variables we find
-        for (auto& i: vals.values)
-            vars.add(i.second.var, -1);
-
-        // Do the insert
-        d.insert(*this, vars, can_replace ? v6::DataV6::UPDATE : v6::DataV6::ERROR);
-
-        // Read the IDs from the results
-        for (const auto& v: vars)
-            vals.values.add_data_id(v.var->code(), v.id_data);
-    }
-
-    void insert_data(DataValues& vals, bool can_replace, bool station_can_add) override
-    {
-        /* Check for the existance of non-lev_tr data, otherwise it's all
-         * useless.  Not inserting data is fine in case of setlev_trana */
-        if (vals.values.empty())
-            throw error_notfound("no variables found in input record");
-
-        v6::Repinfo& ri = db.repinfo();
-        v6::DataV6& d = db.data();
-
-        v6::bulk::InsertV6 vars;
-        // Insert the station data, and get the ID
-        vars.id_station = vals.info.ana_id = db.obtain_station(vals.info, station_can_add);
-        // Get the ID of the report
-        vars.id_report = ri.obtain_id(vals.info.report.c_str());
-        // Set the date from the record contents
-        vars.datetime = vals.info.datetime;
-        // Insert the lev_tr data, and get the ID
-        int id_levtr = db.lev_tr().obtain_id(vals.info.level, vals.info.trange);
-
-        // Add all the variables we find
-        for (auto& i: vals.values)
-            vars.add(i.second.var, id_levtr);
-
-        // Do the insert
-        d.insert(*this, vars, can_replace ? v6::DataV6::UPDATE : v6::DataV6::ERROR);
-
-        // Read the IDs from the results
-        for (const auto& v: vars)
-            vals.values.add_data_id(v.var->code(), v.id_data);
-    }
-
-    void remove_station_data(const Query& query) override
-    {
-        auto tr = db.trace.trace_remove_station_data(query);
-        cursor::run_delete_query(db, core::Query::downcast(query), true, db.explain_queries);
-        tr->done();
-    }
-
-    void remove(const Query& query) override
-    {
-        auto tr = db.trace.trace_remove(query);
-        cursor::run_delete_query(db, core::Query::downcast(query), false, db.explain_queries);
-        tr->done();
-    }
-
-};
-
+    db.conn->execute(query);
+}
 
 // First part of initialising a dba_db
 DB::DB(unique_ptr<Connection> conn)
@@ -342,64 +388,6 @@ void DB::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport
     // Create the query
     v6::AttrV6& a = attr();
     a.read(data_id, dest);
-}
-
-void DB::attr_insert_station(dballe::db::Transaction& transaction, int data_id, const Values& attrs)
-{
-    v6::AttrV6& a = attr();
-    v6::bulk::InsertAttrsV6 iattrs;
-    for (const auto& i : attrs)
-        iattrs.add(i.second.var, data_id);
-    if (iattrs.empty()) return;
-
-    // Insert all the attributes we found
-    a.insert(transaction, iattrs, v6::AttrV6::UPDATE);
-}
-
-void DB::attr_insert_data(dballe::db::Transaction& transaction, int data_id, const Values& attrs)
-{
-    v6::AttrV6& a = attr();
-    v6::bulk::InsertAttrsV6 iattrs;
-    for (const auto& i : attrs)
-        iattrs.add(i.second.var, data_id);
-    if (iattrs.empty()) return;
-
-    // Insert all the attributes we found
-    a.insert(transaction, iattrs, v6::AttrV6::UPDATE);
-}
-
-void DB::attr_remove_station(dballe::Transaction& transaction, int data_id, const db::AttrList& qcs)
-{
-    Querybuf query(500);
-    if (qcs.empty())
-        // Delete all attributes
-        query.appendf("DELETE FROM attr WHERE id_data=%d", data_id);
-    else {
-        // Delete only the attributes in qcs
-        query.appendf("DELETE FROM attr WHERE id_data=%d AND type IN (", data_id);
-        query.start_list(", ");
-        for (vector<Varcode>::const_iterator i = qcs.begin(); i != qcs.end(); ++i)
-            query.append_listf("%hd", *i);
-        query.append(")");
-    }
-    conn->execute(query);
-}
-
-void DB::attr_remove_data(dballe::Transaction& transaction, int data_id, const db::AttrList& qcs)
-{
-    Querybuf query(500);
-    if (qcs.empty())
-        // Delete all attributes
-        query.appendf("DELETE FROM attr WHERE id_data=%d", data_id);
-    else {
-        // Delete only the attributes in qcs
-        query.appendf("DELETE FROM attr WHERE id_data=%d AND type IN (", data_id);
-        query.start_list(", ");
-        for (vector<Varcode>::const_iterator i = qcs.begin(); i != qcs.end(); ++i)
-            query.append_listf("%hd", *i);
-        query.append(")");
-    }
-    conn->execute(query);
 }
 
 bool DB::is_station_variable(int data_id, wreport::Varcode varcode)

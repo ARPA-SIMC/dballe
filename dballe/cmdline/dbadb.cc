@@ -67,9 +67,9 @@ bool Importer::operator()(const Item& item)
         try {
             if (forced_repmemo == NULL && msg.type == MSG_GENERIC)
                 /* Put generic messages in the generic report by default */
-                db.import_msg(*transaction, msg, NULL, import_flags);
+                transaction->import_msg(msg, NULL, import_flags);
             else
-                db.import_msg(*transaction, msg, forced_repmemo, import_flags);
+                transaction->import_msg(msg, forced_repmemo, import_flags);
         } catch (std::exception& e) {
             item.processing_failed(e);
         }

@@ -178,14 +178,7 @@ public:
 
     void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
     void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
-    void attr_insert_station(dballe::db::Transaction& transaction, int data_id, const Values& attrs) override;
-    void attr_insert_data(dballe::db::Transaction& transaction, int data_id, const Values& attrs) override;
-    void attr_remove_station(dballe::Transaction& transaction, int data_id, const db::AttrList& attrs) override;
-    void attr_remove_data(dballe::Transaction& transaction, int data_id, const db::AttrList& attrs) override;
     bool is_station_variable(int data_id, wreport::Varcode varcode) override;
-
-    void import_msg(dballe::db::Transaction& transaction, const Message& msg, const char* repmemo, int flags) override;
-    bool export_msgs(dballe::Transaction& transaction, const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) override;
 
     /**
      * Dump the entire contents of the database to an output stream

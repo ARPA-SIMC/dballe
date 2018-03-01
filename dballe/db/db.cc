@@ -56,6 +56,13 @@ unsigned Cursor::test_iterate(FILE* dump)
     return count;
 }
 
+void Transaction::import_msgs(const Messages& msgs, const char* repmemo, int flags)
+{
+    for (const auto& i: msgs)
+        import_msg(i, repmemo, flags);
+}
+
+
 }
 
 DB::~DB()
@@ -204,55 +211,49 @@ void DB::remove_all()
 void DB::attr_insert_station(int data_id, const Values& attrs)
 {
     auto t = transaction();
-    attr_insert_station(*t, data_id, attrs);
+    t->attr_insert_station(data_id, attrs);
     t->commit();
 }
 
 void DB::attr_insert_data(int data_id, const Values& attrs)
 {
     auto t = transaction();
-    attr_insert_data(*t, data_id, attrs);
+    t->attr_insert_data(data_id, attrs);
     t->commit();
 }
 
 void DB::attr_remove_station(int data_id, const db::AttrList& attrs)
 {
     auto t = transaction();
-    attr_remove_station(*t, data_id, attrs);
+    t->attr_remove_station(data_id, attrs);
     t->commit();
 }
 
 void DB::attr_remove_data(int data_id, const db::AttrList& attrs)
 {
     auto t = transaction();
-    attr_remove_data(*t, data_id, attrs);
+    t->attr_remove_data(data_id, attrs);
     t->commit();
 }
 
 void DB::import_msg(const Message& msg, const char* repmemo, int flags)
 {
     auto t = transaction();
-    import_msg(*t, msg, repmemo, flags);
+    t->import_msg(msg, repmemo, flags);
     t->commit();
 }
 
 void DB::import_msgs(const Messages& msgs, const char* repmemo, int flags)
 {
     auto t = transaction();
-    import_msgs(*t, msgs, repmemo, flags);
+    t->import_msgs(msgs, repmemo, flags);
     t->commit();
-}
-
-void DB::import_msgs(dballe::db::Transaction& transaction, const Messages& msgs, const char* repmemo, int flags)
-{
-    for (const auto& i: msgs)
-        import_msg(transaction, i, repmemo, flags);
 }
 
 bool DB::export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest)
 {
     auto t = transaction();
-    bool res = export_msgs(*t, query, dest);
+    bool res = t->export_msgs(query, dest);
     t->commit();
     return res;
 }

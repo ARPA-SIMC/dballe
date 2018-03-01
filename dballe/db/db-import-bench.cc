@@ -44,7 +44,7 @@ struct CreateTask : public MessageTask
         auto t = db->transaction();
         t->remove_all();
         for (auto& m: msgs)
-            db->import_msg(*t, *m, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+            t->import_msg(*m, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
         t->commit();
     }
 };
@@ -57,7 +57,7 @@ struct OverwriteTask : public MessageTask
     {
         auto t = db->transaction();
         for (auto& m: msgs)
-            db->import_msg(*t, *m, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+            t->import_msg(*m, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
         t->commit();
     }
 };

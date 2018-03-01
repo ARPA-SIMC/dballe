@@ -386,12 +386,12 @@ void DbAPI::critica()
                 if (db.is_station_variable(attr_reference_id, attr_varid))
                 {
                     if (transaction)
-                        db.attr_insert_station(*transaction, attr_reference_id, attrs);
+                        transaction->attr_insert_station(attr_reference_id, attrs);
                     else
                         db.attr_insert_station(attr_reference_id, attrs);
                 } else {
                     if (transaction)
-                        db.attr_insert_data(*transaction, attr_reference_id, attrs);
+                        transaction->attr_insert_data(attr_reference_id, attrs);
                     else
                         db.attr_insert_data(attr_reference_id, attrs);
                 }
@@ -401,12 +401,12 @@ void DbAPI::critica()
             if (dynamic_cast<const db::CursorStationData*>(query_cur))
             {
                 if (transaction)
-                    db.attr_insert_station(*transaction, query_cur->attr_reference_id(), qcinput);
+                    transaction->attr_insert_station(query_cur->attr_reference_id(), qcinput);
                 else
                     db.attr_insert_station(query_cur->attr_reference_id(), qcinput);
             } else {
                 if (transaction)
-                    db.attr_insert_data(*transaction, query_cur->attr_reference_id(), qcinput);
+                    transaction->attr_insert_data(query_cur->attr_reference_id(), qcinput);
                 else
                     db.attr_insert_data(query_cur->attr_reference_id(), qcinput);
             }
@@ -440,12 +440,12 @@ void DbAPI::critica()
                 if (is_station)
                 {
                     if (transaction)
-                        db.attr_insert_station(*transaction, data_id, qcinput);
+                        transaction->attr_insert_station(data_id, qcinput);
                     else
                         db.attr_insert_station(data_id, qcinput);
                 } else {
                     if (transaction)
-                        db.attr_insert_data(*transaction, data_id, qcinput);
+                        transaction->attr_insert_data(data_id, qcinput);
                     else
                         db.attr_insert_data(data_id, qcinput);
                 }
@@ -475,12 +475,12 @@ void DbAPI::scusa()
             if (db.is_station_variable(attr_reference_id, attr_varid))
             {
                 if (transaction)
-                    db.attr_remove_station(*transaction, attr_reference_id, arr);
+                    transaction->attr_remove_station(attr_reference_id, arr);
                 else
                     db.attr_remove_station(attr_reference_id, arr);
             } else {
                 if (transaction)
-                    db.attr_remove_data(*transaction, attr_reference_id, arr);
+                    transaction->attr_remove_data(attr_reference_id, arr);
                 else
                     db.attr_remove_data(attr_reference_id, arr);
             }
@@ -489,12 +489,12 @@ void DbAPI::scusa()
             if (dynamic_cast<const db::CursorStationData*>(query_cur))
             {
                 if (transaction)
-                    db.attr_remove_station(*transaction, query_cur->attr_reference_id(), arr);
+                    transaction->attr_remove_station(query_cur->attr_reference_id(), arr);
                 else
                     db.attr_remove_station(query_cur->attr_reference_id(), arr);
             } else {
                 if (transaction)
-                    db.attr_remove_data(*transaction, query_cur->attr_reference_id(), arr);
+                    transaction->attr_remove_data(query_cur->attr_reference_id(), arr);
                 else
                     db.attr_remove_data(query_cur->attr_reference_id(), arr);
             }
@@ -560,7 +560,7 @@ bool DbAPI::messages_read_next()
         return false;
 
     if (transaction)
-        db.import_msg(*transaction, input_file->msg(), NULL, input_file->import_flags);
+        transaction->import_msg(input_file->msg(), NULL, input_file->import_flags);
     else
         db.import_msg(input_file->msg(), NULL, input_file->import_flags);
 
@@ -578,7 +578,7 @@ void DbAPI::messages_write_next(const char* template_name)
     // Do the export with the current filter
     auto query = Query::from_record(input);
     if (transaction)
-        db.export_msgs(*transaction, *query, [&](unique_ptr<Message>&& msg) {
+        transaction->export_msgs(*query, [&](unique_ptr<Message>&& msg) {
             Messages msgs;
             msgs.append(move(msg));
             out.write(exporter->to_binary(msgs));

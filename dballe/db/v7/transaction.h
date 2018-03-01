@@ -38,6 +38,12 @@ struct Transaction : public dballe::db::Transaction
     void remove(const Query& query);
     void remove_all() override;
 
+    void attr_insert_station(int data_id, const Values& attrs) override;
+    void attr_insert_data(int data_id, const Values& attrs) override;
+    void attr_remove_station(int data_id, const db::AttrList& attrs) override;
+    void attr_remove_data(int data_id, const db::AttrList& attrs) override;
+    void import_msg(const Message& msg, const char* repmemo, int flags) override;
+    bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) override;
 
     static Transaction& downcast(dballe::Transaction& transaction);
 };

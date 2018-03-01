@@ -16,20 +16,20 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
-void DB::import_msg(dballe::db::Transaction& transaction, const Message& message, const char* repmemo, int flags)
+void Transaction::import_msg(const Message& message, const char* repmemo, int flags)
 {
     const Msg& msg = Msg::downcast(message);
     const msg::Context* l_ana = msg.find_context(Level(), Trange());
-	if (!l_ana)
-		throw error_consistency("cannot import into the database a message without station information");
+    if (!l_ana)
+        throw error_consistency("cannot import into the database a message without station information");
 
-	// Check if the station is mobile
+    // Check if the station is mobile
     bool mobile = msg.get_ident_var() != NULL;
 
-    v6::Station& st = station();
-    v6::LevTr& lt = lev_tr();
-    v6::DataV6& dd = data();
-    v6::AttrV6& dq = attr();
+    v6::Station& st = db.station();
+    v6::LevTr& lt = db.lev_tr();
+    v6::DataV6& dd = db.data();
+    v6::AttrV6& dq = db.attr();
 
     // Fill up the pseudoana informations needed to fetch an existing ID
 
@@ -63,13 +63,13 @@ void DB::import_msg(dballe::db::Transaction& transaction, const Message& message
     // Report code
     int id_report;
     if (repmemo != NULL)
-        id_report = rep_cod_from_memo(repmemo);
+        id_report = db.rep_cod_from_memo(repmemo);
     else {
         // TODO: check if B01194 first
         if (const Var* var = msg.get_rep_memo_var())
-            id_report = rep_cod_from_memo(var->enqc());
+            id_report = db.rep_cod_from_memo(var->enqc());
         else
-            id_report = rep_cod_from_memo(Msg::repmemo_from_type(msg.type));
+            id_report = db.rep_cod_from_memo(Msg::repmemo_from_type(msg.type));
     }
 
     if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || inserted_pseudoana)
@@ -89,7 +89,7 @@ void DB::import_msg(dballe::db::Transaction& transaction, const Message& message
         }
 
         // Run the bulk insert
-        dd.insert(transaction, vars, (flags & DBA_IMPORT_OVERWRITE) ? v6::DataV6::UPDATE : v6::DataV6::IGNORE);
+        dd.insert(*this, vars, (flags & DBA_IMPORT_OVERWRITE) ? v6::DataV6::UPDATE : v6::DataV6::IGNORE);
 
         // Insert the attributes
         if (flags & DBA_IMPORT_ATTRS)
@@ -106,7 +106,7 @@ void DB::import_msg(dballe::db::Transaction& transaction, const Message& message
                 attrs.add_all(*v.var, v.id_data);
             }
             if (!attrs.empty())
-                dq.insert(transaction, attrs, v6::AttrV6::UPDATE);
+                dq.insert(*this, attrs, v6::AttrV6::UPDATE);
 #endif
         }
     }
@@ -144,7 +144,7 @@ void DB::import_msg(dballe::db::Transaction& transaction, const Message& message
     }
 
     // Run the bulk insert
-    dd.insert(transaction, vars, (flags & DBA_IMPORT_OVERWRITE) ? v6::DataV6::UPDATE : v6::DataV6::IGNORE);
+    dd.insert(*this, vars, (flags & DBA_IMPORT_OVERWRITE) ? v6::DataV6::UPDATE : v6::DataV6::IGNORE);
 
     // Insert the attributes
     if (flags & DBA_IMPORT_ATTRS)
@@ -161,7 +161,7 @@ void DB::import_msg(dballe::db::Transaction& transaction, const Message& message
             attrs.add_all(*v.var, v.id_data);
         }
         if (!attrs.empty())
-            dq.insert(transaction, attrs, v6::AttrV6::UPDATE);
+            dq.insert(*this, attrs, v6::AttrV6::UPDATE);
 #endif
     }
 }

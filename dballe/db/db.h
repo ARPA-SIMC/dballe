@@ -246,6 +246,104 @@ public:
      *   "parameter output/input") to select the items to be deleted
      */
     virtual void remove(const Query& rec) = 0;
+
+    /**
+     * Insert new attributes on a station value
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param data_id
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     * @param attrs
+     *   The attributes to be added
+     */
+    virtual void attr_insert_station(int data_id, const Values& attrs) = 0;
+
+    /**
+     * Insert new attributes on a data value
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param data_id
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     * @param attrs
+     *   The attributes to be added
+     */
+    virtual void attr_insert_data(int data_id, const Values& attrs) = 0;
+
+    /**
+     * Delete attributes from a station value
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param data_id
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     * @param attrs
+     *   Array of WMO codes of the attributes to delete.  If empty, all attributes
+     *   associated to the value will be deleted.
+     */
+    virtual void attr_remove_station(int data_id, const db::AttrList& attrs) = 0;
+
+    /**
+     * Delete attributes from a data value
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param data_id
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     * @param attrs
+     *   Array of WMO codes of the attributes to delete.  If empty, all attributes
+     *   associated to the value will be deleted.
+     */
+    virtual void attr_remove_data(int data_id, const db::AttrList& attrs) = 0;
+
+    /**
+     * Import a Message into the DB-All.e database
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param msg
+     *   The Message containing the data to import
+     * @param repmemo
+     *   Report mnemonic to which imported data belong.  If NULL is passed, then it
+     *   will be chosen automatically based on the message type.
+     * @param flags
+     *   Customise different aspects of the import process.  It is a bitmask of the
+     *   various DBA_IMPORT_* macros.
+     */
+    virtual void import_msg(const Message& msg, const char* repmemo, int flags) = 0;
+
+    /**
+     * Import Messages into the DB-All.e database
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param msgs
+     *   The Messages containing the data to import
+     * @param repmemo
+     *   Report mnemonic to which imported data belong.  If NULL is passed, then it
+     *   will be chosen automatically based on the message type.
+     * @param flags
+     *   Customise different aspects of the import process.  It is a bitmask of the
+     *   various DBA_IMPORT_* macros.
+     */
+    virtual void import_msgs(const Messages& msgs, const char* repmemo, int flags);
+
+    /**
+     * Perform the query in `query', and send the results to dest.
+     *
+     * Return false from dest to interrupt the query.
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param query
+     *   The query to perform
+     * @param dest
+     *   The function that will handle the resulting messages
+     * @returns true if the query reached its end, false if it got interrupted
+     *   because dest returned false.
+     */
+    virtual bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) = 0;
 };
 
 }
@@ -519,18 +617,6 @@ public:
     void attr_insert_station(int data_id, const Values& attrs);
 
     /**
-     * Insert new attributes on a station value
-     *
-     * @param transaction
-     *   The current active transaction.
-     * @param data_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
-     * @param attrs
-     *   The attributes to be added
-     */
-    virtual void attr_insert_station(dballe::db::Transaction& transaction, int data_id, const Values& attrs) = 0;
-
-    /**
      * Insert new attributes on a data value
      *
      * @param data_id
@@ -539,18 +625,6 @@ public:
      *   The attributes to be added
      */
     void attr_insert_data(int data_id, const Values& attrs);
-
-    /**
-     * Insert new attributes on a data value
-     *
-     * @param transaction
-     *   The current active transaction.
-     * @param data_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
-     * @param attrs
-     *   The attributes to be added
-     */
-    virtual void attr_insert_data(dballe::db::Transaction& transaction, int data_id, const Values& attrs) = 0;
 
     /**
      * Delete attributes from a station value
@@ -564,19 +638,6 @@ public:
     void attr_remove_station(int data_id, const db::AttrList& attrs);
 
     /**
-     * Delete attributes from a station value
-     *
-     * @param transaction
-     *   The current active transaction.
-     * @param data_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
-     * @param attrs
-     *   Array of WMO codes of the attributes to delete.  If empty, all attributes
-     *   associated to the value will be deleted.
-     */
-    virtual void attr_remove_station(dballe::Transaction& transaction, int data_id, const db::AttrList& attrs) = 0;
-
-    /**
      * Delete attributes from a data value
      *
      * @param data_id
@@ -586,19 +647,6 @@ public:
      *   associated to the value will be deleted.
      */
     void attr_remove_data(int data_id, const db::AttrList& attrs);
-
-    /**
-     * Delete attributes from a data value
-     *
-     * @param transaction
-     *   The current active transaction.
-     * @param data_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
-     * @param attrs
-     *   Array of WMO codes of the attributes to delete.  If empty, all attributes
-     *   associated to the value will be deleted.
-     */
-    virtual void attr_remove_data(dballe::Transaction& transaction, int data_id, const db::AttrList& attrs) = 0;
 
     /**
      * Check if this varcode and data_id correspond to a station variable. This
@@ -629,22 +677,6 @@ public:
     void import_msg(const Message& msg, const char* repmemo, int flags);
 
     /**
-     * Import a Message into the DB-All.e database
-     *
-     * @param transaction
-     *   The current active transaction.
-     * @param msg
-     *   The Message containing the data to import
-     * @param repmemo
-     *   Report mnemonic to which imported data belong.  If NULL is passed, then it
-     *   will be chosen automatically based on the message type.
-     * @param flags
-     *   Customise different aspects of the import process.  It is a bitmask of the
-     *   various DBA_IMPORT_* macros.
-     */
-    virtual void import_msg(dballe::db::Transaction& transaction, const Message& msg, const char* repmemo, int flags) = 0;
-
-    /**
      * Import Messages into the DB-All.e database
      *
      * @param msgs
@@ -659,22 +691,6 @@ public:
     void import_msgs(const Messages& msgs, const char* repmemo, int flags);
 
     /**
-     * Import Messages into the DB-All.e database
-     *
-     * @param transaction
-     *   The current active transaction.
-     * @param msgs
-     *   The Messages containing the data to import
-     * @param repmemo
-     *   Report mnemonic to which imported data belong.  If NULL is passed, then it
-     *   will be chosen automatically based on the message type.
-     * @param flags
-     *   Customise different aspects of the import process.  It is a bitmask of the
-     *   various DBA_IMPORT_* macros.
-     */
-    virtual void import_msgs(dballe::db::Transaction& transaction, const Messages& msgs, const char* repmemo, int flags);
-
-    /**
      * Perform the query in `query', and send the results to dest.
      *
      * Return false from dest to interrupt the query.
@@ -687,22 +703,6 @@ public:
      *   because dest returned false.
      */
     bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest);
-
-    /**
-     * Perform the query in `query', and send the results to dest.
-     *
-     * Return false from dest to interrupt the query.
-     *
-     * @param transaction
-     *   The current active transaction.
-     * @param query
-     *   The query to perform
-     * @param dest
-     *   The function that will handle the resulting messages
-     * @returns true if the query reached its end, false if it got interrupted
-     *   because dest returned false.
-     */
-    virtual bool export_msgs(dballe::Transaction& transaction, const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) = 0;
 
     /**
      * Dump the entire contents of the database to an output stream

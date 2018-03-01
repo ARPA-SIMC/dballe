@@ -4,6 +4,7 @@
 #include "levtr.h"
 #include "cursor.h"
 #include "dballe/core/query.h"
+#include "dballe/sql/sql.h"
 #include <cassert>
 
 using namespace wreport;
@@ -91,6 +92,45 @@ void Transaction::remove(const Query& query)
     tr->done();
 }
 
+void Transaction::attr_insert_station(int data_id, const Values& attrs)
+{
+    auto& d = db.station_data();
+    d.merge_attrs(data_id, attrs);
+}
+
+void Transaction::attr_insert_data(int data_id, const Values& attrs)
+{
+    auto& d = db.data();
+    d.merge_attrs(data_id, attrs);
+}
+
+void Transaction::attr_remove_station(int data_id, const db::AttrList& attrs)
+{
+    if (attrs.empty())
+    {
+        // Delete all attributes
+        char buf[64];
+        snprintf(buf, 64, "UPDATE station_data SET attrs=NULL WHERE id=%d", data_id);
+        db.conn->execute(buf);
+    } else {
+        auto& d = db.station_data();
+        d.remove_attrs(data_id, attrs);
+    }
+}
+
+void Transaction::attr_remove_data(int data_id, const db::AttrList& attrs)
+{
+    if (attrs.empty())
+    {
+        // Delete all attributes
+        char buf[64];
+        snprintf(buf, 64, "UPDATE data SET attrs=NULL WHERE id=%d", data_id);
+        db.conn->execute(buf);
+    } else {
+        auto& d = db.data();
+        d.remove_attrs(data_id, attrs);
+    }
+}
 
 }
 }

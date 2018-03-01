@@ -185,8 +185,8 @@ class Tests : public DBFixtureTestCase<DBFixture>
 
             db->remove_all();
             auto t = db->transaction();
-            db->import_msg(*t, msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
-            db->import_msg(*t, msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+            t->import_msg(msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+            t->import_msg(msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
             t->commit();
 
             // Explicitly set the rep_memo variable that is added during export

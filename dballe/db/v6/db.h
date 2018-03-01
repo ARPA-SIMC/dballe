@@ -33,6 +33,35 @@ struct Transaction;
 }
 
 namespace v6 {
+struct DB;
+
+struct Transaction : public dballe::db::Transaction
+{
+    DB& db;
+    dballe::Transaction* sql_transaction = nullptr;
+
+    Transaction(v6::DB& db, std::unique_ptr<dballe::Transaction> sql_transaction);
+    Transaction(const Transaction&) = delete;
+    Transaction(Transaction&&) = delete;
+    Transaction& operator=(const Transaction&) = delete;
+    Transaction& operator=(Transaction&&) = delete;
+    ~Transaction();
+
+    void commit() override;
+    void rollback() override;
+    void clear_cached_state() override;
+    void remove_all() override;
+    void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add) override;
+    void insert_data(DataValues& vals, bool can_replace, bool station_can_add) override;
+    void remove_station_data(const Query& query) override;
+    void remove(const Query& query) override;
+    void attr_insert_station(int data_id, const Values& attrs) override;
+    void attr_insert_data(int data_id, const Values& attrs) override;
+    void attr_remove_station(int data_id, const db::AttrList& qcs) override;
+    void attr_remove_data(int data_id, const db::AttrList& qcs) override;
+    void import_msg(const Message& msg, const char* repmemo, int flags) override;
+    bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) override;
+};
 
 /**
  * DB-ALLe database connection, database format V6
@@ -183,14 +212,7 @@ public:
 
     void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
     void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
-    void attr_insert_station(dballe::db::Transaction& transaction, int data_id, const Values& attrs) override;
-    void attr_insert_data(dballe::db::Transaction& transaction, int data_id, const Values& attrs) override;
-    void attr_remove_station(dballe::Transaction& transaction, int data_id, const db::AttrList& qcs) override;
-    void attr_remove_data(dballe::Transaction& transaction, int data_id, const db::AttrList& qcs) override;
     bool is_station_variable(int data_id, wreport::Varcode varcode) override;
-
-    void import_msg(dballe::db::Transaction& transaction, const Message& msg, const char* repmemo, int flags) override;
-    bool export_msgs(dballe::Transaction& transaction, const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) override;
 
     /**
      * Dump the entire contents of the database to an output stream

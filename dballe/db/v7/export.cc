@@ -105,19 +105,17 @@ struct DataRow
 
 }
 
-bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest)
+bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest)
 {
-    auto tr = trace.trace_export_msgs(query);
-    v7::Repinfo& ri = repinfo();
-    v7::LevTr& lt = levtr();
-
-    auto& t = v7::Transaction::downcast(transaction);
+    auto tr = db.trace.trace_export_msgs(query);
+    v7::Repinfo& ri = db.repinfo();
+    v7::LevTr& lt = db.levtr();
 
     // Message being built
     unique_ptr<Msg> msg;
 
     // The big export query
-    DataQueryBuilder qb(*this, core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT, false, true);
+    DataQueryBuilder qb(db, core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT, false, true);
     qb.build();
 
     // Current context information used to detect context changes
@@ -126,16 +124,16 @@ bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& quer
 
     StationLayerCache station_cache;
 
-    if (explain_queries)
+    if (db.explain_queries)
     {
         fprintf(stderr, "EXPLAIN "); query.print(stderr);
-        conn->explain(qb.sql_query, stderr);
+        db.conn->explain(qb.sql_query, stderr);
     }
 
     // Retrieve results, buffering them locally to avoid performing concurrent
     // queries
     std::vector<DataRow> results;
-    driver().run_data_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+    db.driver().run_data_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
         results.emplace_back(id_station, station, id_levtr, datetime, id_data, move(var));
     });
 
@@ -176,7 +174,7 @@ bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& quer
 
             // Update station layer cache if needed
             if (row.id_station != last_ana_id)
-                station_cache.fill(*this, row.id_station);
+                station_cache.fill(db, row.id_station);
 
             // Fill in report information
             {
@@ -201,7 +199,7 @@ bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& quer
         }
 
         TRACE("Inserting var %01d%02d%03d (%s)\n", WR_VAR_FXY(var->code()), var->enqc());
-        msg::Context* ctx = lt.to_msg(t.state, row.id_levtr, *msg);
+        msg::Context* ctx = lt.to_msg(state, row.id_levtr, *msg);
         if (ctx)
             ctx->set(row.release_var());
     }
