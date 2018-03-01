@@ -165,12 +165,6 @@ public:
      */
     int rep_cod_from_memo(const char* memo);
 
-    void insert_station_data(dballe::db::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add) override;
-    void insert_data(dballe::db::Transaction& transaction, DataValues& vals, bool can_replace, bool station_can_add) override;
-
-    void remove_station_data(dballe::Transaction& transaction, const Query& query) override;
-    void remove(dballe::Transaction& transaction, const Query& query);
-
     /**
      * Remove orphan values from the database.
      *

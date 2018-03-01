@@ -268,7 +268,7 @@ void DbAPI::prendilo()
     {
         StationValues sv(input);
         if (transaction)
-            db.insert_station_data(*transaction, sv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
+            transaction->insert_station_data(sv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
         else
             db.insert_station_data(sv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
         last_inserted_station_id = sv.info.ana_id;
@@ -277,7 +277,7 @@ void DbAPI::prendilo()
     } else {
         DataValues dv(input);
         if (transaction)
-            db.insert_data(*transaction, dv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
+            transaction->insert_data(dv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
         else
             db.insert_data(dv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
         last_inserted_station_id = dv.info.ana_id;
@@ -300,12 +300,12 @@ void DbAPI::dimenticami()
     if (station_context)
     {
         if (transaction)
-            db.remove_station_data(*transaction, *query);
+            transaction->remove_station_data(*query);
         else
             db.remove_station_data(*query);
     } else {
         if (transaction)
-            db.remove(*transaction, *query);
+            transaction->remove(*query);
         else
             db.remove(*query);
     }

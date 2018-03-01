@@ -169,28 +169,28 @@ const char* DB::default_repinfo_file()
 void DB::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
 {
     auto t = transaction();
-    insert_station_data(*t, vals, can_replace, station_can_add);
+    t->insert_station_data(vals, can_replace, station_can_add);
     t->commit();
 }
 
 void DB::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
 {
     auto t = transaction();
-    insert_data(*t, vals, can_replace, station_can_add);
+    t->insert_data(vals, can_replace, station_can_add);
     t->commit();
 }
 
 void DB::remove_station_data(const Query& query)
 {
     auto t = transaction();
-    remove_station_data(*t, query);
+    t->remove_station_data(query);
     t->commit();
 }
 
 void DB::remove(const Query& query)
 {
     auto t = transaction();
-    remove(*t, query);
+    t->remove(query);
     t->commit();
 }
 

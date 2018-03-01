@@ -184,6 +184,68 @@ public:
      *   The current active transaction.
      */
     virtual void remove_all() = 0;
+
+    /**
+     * Insert station values into the database
+     *
+     * The IDs of the station andl all variables that were inserted will be
+     * stored in vals.
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param vals
+     *   The values to insert.
+     * @param can_replace
+     *   If true, then existing data can be rewritten, else data can only be added.
+     * @param station_can_add
+     *   If false, it will not create a missing station record, and only data
+     *   for existing stations can be added. If true, then if we are inserting
+     *   data for a station that does not yet exists in the database, it will
+     *   be created.
+     */
+    virtual void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add) = 0;
+
+    /**
+     * Insert data values into the database
+     *
+     * The IDs of the station andl all variables that were inserted will be
+     * stored in vals.
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param vals
+     *   The values to insert.
+     * @param can_replace
+     *   If true, then existing data can be rewritten, else data can only be added.
+     * @param station_can_add
+     *   If false, it will not create a missing station record, and only data
+     *   for existing stations can be added. If true, then if we are inserting
+     *   data for a station that does not yet exists in the database, it will
+     *   be created.
+     */
+    virtual void insert_data(DataValues& vals, bool can_replace, bool station_can_add) = 0;
+
+    /**
+     * Remove data from the database
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param query
+     *   The record with the query data (see technical specifications, par. 1.6.4
+     *   "parameter output/input") to select the items to be deleted
+     */
+    virtual void remove_station_data(const Query& query) = 0;
+
+    /**
+     * Remove data from the database
+     *
+     * @param transaction
+     *   The current active transaction.
+     * @param rec
+     *   The record with the query data (see technical specifications, par. 1.6.4
+     *   "parameter output/input") to select the items to be deleted
+     */
+    virtual void remove(const Query& rec) = 0;
 };
 
 }
@@ -315,26 +377,6 @@ public:
     void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add);
 
     /**
-     * Insert station values into the database
-     *
-     * The IDs of the station andl all variables that were inserted will be
-     * stored in vals.
-     *
-     * @param transaction
-     *   The current active transaction.
-     * @param vals
-     *   The values to insert.
-     * @param can_replace
-     *   If true, then existing data can be rewritten, else data can only be added.
-     * @param station_can_add
-     *   If false, it will not create a missing station record, and only data
-     *   for existing stations can be added. If true, then if we are inserting
-     *   data for a station that does not yet exists in the database, it will
-     *   be created.
-     */
-    virtual void insert_station_data(dballe::db::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add) = 0;
-
-    /**
      * Insert data values into the database
      *
      * The IDs of the station andl all variables that were inserted will be
@@ -353,26 +395,6 @@ public:
     void insert_data(DataValues& vals, bool can_replace, bool station_can_add);
 
     /**
-     * Insert data values into the database
-     *
-     * The IDs of the station andl all variables that were inserted will be
-     * stored in vals.
-     *
-     * @param transaction
-     *   The current active transaction.
-     * @param vals
-     *   The values to insert.
-     * @param can_replace
-     *   If true, then existing data can be rewritten, else data can only be added.
-     * @param station_can_add
-     *   If false, it will not create a missing station record, and only data
-     *   for existing stations can be added. If true, then if we are inserting
-     *   data for a station that does not yet exists in the database, it will
-     *   be created.
-     */
-    virtual void insert_data(dballe::db::Transaction& transaction, DataValues& vals, bool can_replace, bool station_can_add) = 0;
-
-    /**
      * Remove data from the database
      *
      * @param query
@@ -384,33 +406,11 @@ public:
     /**
      * Remove data from the database
      *
-     * @param transaction
-     *   The current active transaction.
-     * @param query
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input") to select the items to be deleted
-     */
-    virtual void remove_station_data(dballe::Transaction& transaction, const Query& query) = 0;
-
-    /**
-     * Remove data from the database
-     *
      * @param rec
      *   The record with the query data (see technical specifications, par. 1.6.4
      *   "parameter output/input") to select the items to be deleted
      */
     void remove(const Query& query);
-
-    /**
-     * Remove data from the database
-     *
-     * @param transaction
-     *   The current active transaction.
-     * @param rec
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input") to select the items to be deleted
-     */
-    virtual void remove(dballe::Transaction& transaction, const Query& rec) = 0;
 
     /**
      * Remove all data from the database.

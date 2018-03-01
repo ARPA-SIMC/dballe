@@ -107,7 +107,7 @@ struct B : benchmark::DBBenchmark
                             {
                                 vals.values.set(var);
                             }
-                            db->insert_data(*t, vals, false, true);
+                            t->insert_data(vals, false, true);
                         }
                     }
                 }

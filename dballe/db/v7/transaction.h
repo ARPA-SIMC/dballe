@@ -32,7 +32,12 @@ struct Transaction : public dballe::db::Transaction
     void rollback() override { sql_transaction->rollback(); }
     void clear_cached_state() override { state.clear(); }
 
+    void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add) override;
+    void insert_data(DataValues& vals, bool can_replace, bool station_can_add) override;
+    void remove_station_data(const Query& query) override;
+    void remove(const Query& query);
     void remove_all() override;
+
 
     static Transaction& downcast(dballe::Transaction& transaction);
 };

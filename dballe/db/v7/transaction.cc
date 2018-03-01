@@ -1,7 +1,12 @@
 #include "transaction.h"
 #include "db.h"
 #include "driver.h"
+#include "levtr.h"
+#include "cursor.h"
+#include "dballe/core/query.h"
 #include <cassert>
+
+using namespace wreport;
 
 namespace dballe {
 namespace db {
@@ -21,6 +26,71 @@ void Transaction::remove_all()
     clear_cached_state();
     tr->done();
 }
+
+void Transaction::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
+{
+    // Insert the station data, and get the ID
+    v7::stations_t::iterator si = db.obtain_station(state, vals.info, station_can_add);
+
+    v7::bulk::InsertStationVars vars(state, si);
+    vals.info.ana_id = si->second.id;
+
+    // Add all the variables we find
+    for (auto& i: vals.values)
+        vars.add(i.second.var);
+
+    // Do the insert
+    v7::StationData& d = db.station_data();
+    d.insert(*this, vars, can_replace ? v7::bulk::UPDATE : v7::bulk::ERROR);
+
+    // Read the IDs from the results
+    for (const auto& v: vars)
+        vals.values.add_data_id(v.var->code(), v.cur->second.id);
+}
+
+void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
+{
+    /* Check for the existance of non-lev_tr data, otherwise it's all
+     * useless.  Not inserting data is fine in case of setlev_trana */
+    if (vals.values.empty())
+        throw error_notfound("no variables found in input record");
+
+    // Insert the station data, and get the ID
+    v7::stations_t::iterator si = db.obtain_station(state, vals.info, station_can_add);
+
+    v7::bulk::InsertVars vars(state, si, vals.info.datetime);
+    vals.info.ana_id = si->second.id;
+
+    // Insert the lev_tr data, and get the ID
+    auto ltri = db.levtr().obtain_id(state, LevTrDesc(vals.info.level, vals.info.trange));
+
+    // Add all the variables we find
+    for (auto& i: vals.values)
+        vars.add(i.second.var, ltri->second);
+
+    // Do the insert
+    v7::Data& d = db.data();
+    d.insert(*this, vars, can_replace ? v7::bulk::UPDATE : v7::bulk::ERROR);
+
+    // Read the IDs from the results
+    for (const auto& v: vars)
+        vals.values.add_data_id(v.var->code(), v.cur->second.id);
+}
+
+void Transaction::remove_station_data(const Query& query)
+{
+    auto tr = db.trace.trace_remove_station_data(query);
+    cursor::run_delete_query(db, core::Query::downcast(query), true, db.explain_queries);
+    tr->done();
+}
+
+void Transaction::remove(const Query& query)
+{
+    auto tr = db.trace.trace_remove(query);
+    cursor::run_delete_query(db, core::Query::downcast(query), false, db.explain_queries);
+    tr->done();
+}
+
 
 }
 }

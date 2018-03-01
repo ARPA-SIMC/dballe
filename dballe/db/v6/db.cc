@@ -59,6 +59,79 @@ struct Transaction : public dballe::db::Transaction
         clear_cached_state();
         tr->done();
     }
+
+    void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add) override
+    {
+        v6::Repinfo& ri = db.repinfo();
+        v6::DataV6& d = db.data();
+
+        v6::bulk::InsertV6 vars;
+        // Insert the station data, and get the ID
+        vars.id_station = vals.info.ana_id = db.obtain_station(vals.info, station_can_add);
+        // Get the ID of the report
+        vars.id_report = ri.obtain_id(vals.info.report.c_str());
+
+        // Hardcoded values for station variables
+        vars.datetime = Datetime(1000, 1, 1, 0, 0, 0);
+
+        // Add all the variables we find
+        for (auto& i: vals.values)
+            vars.add(i.second.var, -1);
+
+        // Do the insert
+        d.insert(*this, vars, can_replace ? v6::DataV6::UPDATE : v6::DataV6::ERROR);
+
+        // Read the IDs from the results
+        for (const auto& v: vars)
+            vals.values.add_data_id(v.var->code(), v.id_data);
+    }
+
+    void insert_data(DataValues& vals, bool can_replace, bool station_can_add) override
+    {
+        /* Check for the existance of non-lev_tr data, otherwise it's all
+         * useless.  Not inserting data is fine in case of setlev_trana */
+        if (vals.values.empty())
+            throw error_notfound("no variables found in input record");
+
+        v6::Repinfo& ri = db.repinfo();
+        v6::DataV6& d = db.data();
+
+        v6::bulk::InsertV6 vars;
+        // Insert the station data, and get the ID
+        vars.id_station = vals.info.ana_id = db.obtain_station(vals.info, station_can_add);
+        // Get the ID of the report
+        vars.id_report = ri.obtain_id(vals.info.report.c_str());
+        // Set the date from the record contents
+        vars.datetime = vals.info.datetime;
+        // Insert the lev_tr data, and get the ID
+        int id_levtr = db.lev_tr().obtain_id(vals.info.level, vals.info.trange);
+
+        // Add all the variables we find
+        for (auto& i: vals.values)
+            vars.add(i.second.var, id_levtr);
+
+        // Do the insert
+        d.insert(*this, vars, can_replace ? v6::DataV6::UPDATE : v6::DataV6::ERROR);
+
+        // Read the IDs from the results
+        for (const auto& v: vars)
+            vals.values.add_data_id(v.var->code(), v.id_data);
+    }
+
+    void remove_station_data(const Query& query) override
+    {
+        auto tr = db.trace.trace_remove_station_data(query);
+        cursor::run_delete_query(db, core::Query::downcast(query), true, db.explain_queries);
+        tr->done();
+    }
+
+    void remove(const Query& query) override
+    {
+        auto tr = db.trace.trace_remove(query);
+        cursor::run_delete_query(db, core::Query::downcast(query), false, db.explain_queries);
+        tr->done();
+    }
+
 };
 
 
@@ -212,78 +285,6 @@ int DB::obtain_station(const dballe::Station& st, bool can_add)
         return s.obtain_id(st.coords.lat, st.coords.lon, st.ident.get());
     else
         return s.get_id(st.coords.lat, st.coords.lon, st.ident.get());
-}
-
-void DB::insert_station_data(dballe::db::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add)
-{
-    v6::Repinfo& ri = repinfo();
-    v6::DataV6& d = data();
-
-    v6::bulk::InsertV6 vars;
-    // Insert the station data, and get the ID
-    vars.id_station = vals.info.ana_id = obtain_station(vals.info, station_can_add);
-    // Get the ID of the report
-    vars.id_report = ri.obtain_id(vals.info.report.c_str());
-
-    // Hardcoded values for station variables
-    vars.datetime = Datetime(1000, 1, 1, 0, 0, 0);
-
-    // Add all the variables we find
-    for (auto& i: vals.values)
-        vars.add(i.second.var, -1);
-
-    // Do the insert
-    d.insert(transaction, vars, can_replace ? v6::DataV6::UPDATE : v6::DataV6::ERROR);
-
-    // Read the IDs from the results
-    for (const auto& v: vars)
-        vals.values.add_data_id(v.var->code(), v.id_data);
-}
-
-void DB::insert_data(dballe::db::Transaction& transaction, DataValues& vals, bool can_replace, bool station_can_add)
-{
-    /* Check for the existance of non-lev_tr data, otherwise it's all
-     * useless.  Not inserting data is fine in case of setlev_trana */
-    if (vals.values.empty())
-        throw error_notfound("no variables found in input record");
-
-    v6::Repinfo& ri = repinfo();
-    v6::DataV6& d = data();
-
-    v6::bulk::InsertV6 vars;
-    // Insert the station data, and get the ID
-    vars.id_station = vals.info.ana_id = obtain_station(vals.info, station_can_add);
-    // Get the ID of the report
-    vars.id_report = ri.obtain_id(vals.info.report.c_str());
-    // Set the date from the record contents
-    vars.datetime = vals.info.datetime;
-    // Insert the lev_tr data, and get the ID
-    int id_levtr = lev_tr().obtain_id(vals.info.level, vals.info.trange);
-
-    // Add all the variables we find
-    for (auto& i: vals.values)
-        vars.add(i.second.var, id_levtr);
-
-    // Do the insert
-    d.insert(transaction, vars, can_replace ? v6::DataV6::UPDATE : v6::DataV6::ERROR);
-
-    // Read the IDs from the results
-    for (const auto& v: vars)
-        vals.values.add_data_id(v.var->code(), v.id_data);
-}
-
-void DB::remove_station_data(dballe::Transaction& transaction, const Query& query)
-{
-    auto tr = trace.trace_remove_station_data(query);
-    cursor::run_delete_query(*this, core::Query::downcast(query), true, explain_queries);
-    tr->done();
-}
-
-void DB::remove(dballe::Transaction& transaction, const Query& query)
-{
-    auto tr = trace.trace_remove(query);
-    cursor::run_delete_query(*this, core::Query::downcast(query), false, explain_queries);
-    tr->done();
 }
 
 void DB::vacuum()
