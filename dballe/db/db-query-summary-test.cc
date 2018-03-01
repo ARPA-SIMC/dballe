@@ -237,7 +237,6 @@ class Tests : public DBFixtureTestCase<Fixture>
     }
 };
 
-Tests tg1("db_query_summary_mem", nullptr, db::MEM);
 Tests tg2("db_query_summary_v6_sqlite", "SQLITE", db::V6);
 #ifdef HAVE_LIBPQ
 Tests tg4("db_query_summary_v6_postgresql", "POSTGRESQL", db::V6);

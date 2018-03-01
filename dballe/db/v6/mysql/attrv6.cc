@@ -23,7 +23,7 @@ MySQLAttrV6::~MySQLAttrV6()
 {
 }
 
-void MySQLAttrV6::insert(dballe::sql::Transaction& t, v6::bulk::InsertAttrsV6& attrs, UpdateMode update_mode)
+void MySQLAttrV6::insert(dballe::db::Transaction& t, v6::bulk::InsertAttrsV6& attrs, UpdateMode update_mode)
 {
     Querybuf select_query;
     select_query.append("SELECT id_data, type, value FROM attr WHERE id_data IN (");

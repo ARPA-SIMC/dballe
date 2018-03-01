@@ -12,7 +12,7 @@ namespace v6 {
 
 AttrV6::~AttrV6() {}
 
-void AttrV6::insert_attributes(dballe::sql::Transaction& t, int id_data, const wreport::Var& var, UpdateMode update_mode)
+void AttrV6::insert_attributes(dballe::db::Transaction& t, int id_data, const wreport::Var& var, UpdateMode update_mode)
 {
     bulk::InsertAttrsV6 attrs;
     attrs.add_all(var, id_data);

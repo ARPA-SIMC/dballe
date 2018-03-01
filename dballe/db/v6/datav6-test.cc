@@ -15,37 +15,36 @@ using namespace std;
 
 namespace {
 
-struct Fixture : DriverFixture
+struct Fixture : V6DBFixture
 {
-    using DriverFixture::DriverFixture;
+    using V6DBFixture::V6DBFixture;
 
     unique_ptr<db::v6::DataV6> data;
 
     void reset_data()
     {
-        auto st = driver->create_stationv6();
-        auto lt = driver->create_levtrv6();
+        db->disappear();
+        db->reset();
 
-        int added, deleted, updated;
-        driver->create_repinfov6()->update(nullptr, &added, &deleted, &updated);
+        auto& st = db->station();
+        auto& lt = db->lev_tr();
 
         // Insert a mobile station
-        wassert(actual(st->obtain_id(4500000, 1100000, "ciao")) == 1);
+        wassert(actual(st.obtain_id(4500000, 1100000, "ciao")) == 1);
 
         // Insert a fixed station
-        wassert(actual(st->obtain_id(4600000, 1200000)) == 2);
+        wassert(actual(st.obtain_id(4600000, 1200000)) == 2);
 
         // Insert a lev_tr
-        wassert(actual(lt->obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);
+        wassert(actual(lt.obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);
 
         // Insert another lev_tr
-        wassert(actual(lt->obtain_id(Level(2, 3, 1, 4), Trange(5, 6, 7))) == 2);
+        wassert(actual(lt.obtain_id(Level(2, 3, 1, 4), Trange(5, 6, 7))) == 2);
     }
 
     void test_setup()
     {
-        DriverFixture::test_setup();
-        data = driver->create_datav6();
+        V6DBFixture::test_setup();
         reset_data();
     }
 };
@@ -59,9 +58,9 @@ class Tests : public DBFixtureTestCase<Fixture>
     {
         add_method("insert", [](Fixture& f) {
             using namespace dballe::db::v6;
-            auto& da = *f.data;
+            auto& da = f.db->data();
 
-            auto t = f.conn->transaction();
+            auto t = f.db->transaction();
 
             Var var(varinfo(WR_VAR(0, 1, 2)));
 
@@ -166,12 +165,12 @@ class Tests : public DBFixtureTestCase<Fixture>
     }
 };
 
-Tests tg1("db_v6_data_sqlite", "SQLITE", db::V6);
+Tests tg1("db_v6_data_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests tg3("db_v6_data_postgresql", "POSTGRESQL", db::V6);
+Tests tg3("db_v6_data_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests tg4("db_v6_data_mysql", "MYSQL", db::V6);
+Tests tg4("db_v6_data_mysql", "MYSQL");
 #endif
 
 }

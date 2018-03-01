@@ -43,7 +43,6 @@ class Tests : public DBFixtureTestCase<DBFixture>
     void register_tests() override;
 };
 
-Tests tg1("db_misc_mem", nullptr, db::MEM);
 Tests tg2("db_misc_v6_sqlite", "SQLITE", db::V6);
 #ifdef HAVE_LIBPQ
 Tests tg4("db_misc_v6_postgresql", "POSTGRESQL", db::V6);
@@ -169,7 +168,6 @@ add_method("query_station", [](Fixture& f) {
     switch (db.format())
     {
         case V7:
-        case MEM:
         {
             bool have_synop = false;
             bool have_metar = false;
@@ -755,7 +753,6 @@ add_method("update", [](Fixture& f) {
     switch (db.format())
     {
         case V6:
-        case MEM:
             wassert(actual(run_attr_query_data(db, cur->attr_reference_id(), qattrs)) == 1);
             wassert(actual(qattrs["B33007"].var->enq(MISSING_INT)) == 50);
             break;

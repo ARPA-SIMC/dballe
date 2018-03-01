@@ -80,7 +80,6 @@ add_method("issue62", [](Fixture& f) {
 
 }
 
-Tests tg1("cmdline_dbadb_mem", nullptr, db::MEM);
 Tests tg2("cmdline_dbadb_v6_sqlite", "SQLITE", db::V6);
 Tests tg2a("cmdline_dbadb_v7_sqlite", "SQLITE", db::V7);
 #ifdef HAVE_LIBPQ

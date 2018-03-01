@@ -18,6 +18,8 @@ namespace dballe {
 struct Record;
 
 namespace db {
+struct Transaction;
+
 namespace v6 {
 struct QueryBuilder;
 
@@ -40,7 +42,7 @@ public:
     virtual ~DataV6();
 
     /// Bulk variable insert
-    virtual void insert(dballe::sql::Transaction& t, bulk::InsertV6& vars, UpdateMode update_mode=UPDATE) = 0;
+    virtual void insert(dballe::db::Transaction& t, bulk::InsertV6& vars, UpdateMode update_mode=UPDATE) = 0;
 
     /// Run the query to delete all records selected by the given QueryBuilder
     virtual void remove(const v6::QueryBuilder& qb) = 0;

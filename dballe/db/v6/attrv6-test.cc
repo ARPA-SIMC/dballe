@@ -16,36 +16,33 @@ using namespace std;
 
 namespace {
 
-struct Fixture : DriverFixture
+struct Fixture : V6DBFixture
 {
-    using DriverFixture::DriverFixture;
-
-    unique_ptr<db::v6::AttrV6> attr;
+    using V6DBFixture::V6DBFixture;
 
     void reset_attr()
     {
         using namespace dballe::db::v6;
 
-        auto st = driver->create_stationv6();
-        auto lt = driver->create_levtrv6();
-        auto da = driver->create_datav6();
-
-        int added, deleted, updated;
-        driver->create_repinfov6()->update(nullptr, &added, &deleted, &updated);
+        db->disappear();
+        db->reset();
+        auto& st = db->station();
+        auto& lt = db->lev_tr();
+        auto& da = db->data();
 
         // Insert a mobile station
-        wassert(actual(st->obtain_id(4500000, 1100000, "ciao")) == 1);
+        wassert(actual(st.obtain_id(4500000, 1100000, "ciao")) == 1);
 
         // Insert a fixed station
-        wassert(actual(st->obtain_id(4600000, 1200000)) == 2);
+        wassert(actual(st.obtain_id(4600000, 1200000)) == 2);
 
         // Insert a lev_tr
-        wassert(actual(lt->obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);
+        wassert(actual(lt.obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);
 
         // Insert another lev_tr
-        wassert(actual(lt->obtain_id(Level(2, 3, 1, 4), Trange(5, 6, 7))) == 2);
+        wassert(actual(lt.obtain_id(Level(2, 3, 1, 4), Trange(5, 6, 7))) == 2);
 
-        auto t = conn->transaction();
+        auto t = db->transaction();
         // Insert a datum
         {
             bulk::InsertV6 vars;
@@ -54,7 +51,7 @@ struct Fixture : DriverFixture
             vars.datetime = Datetime(2001, 2, 3, 4, 5, 6);
             Var var(varinfo(WR_VAR(0, 1, 2)), 123);
             vars.add(&var, 1);
-            da->insert(*t, vars, DataV6::ERROR);
+            da.insert(*t, vars, DataV6::ERROR);
         }
 
         // Insert another datum
@@ -65,15 +62,14 @@ struct Fixture : DriverFixture
             vars.datetime = Datetime(2002, 3, 4, 5, 6, 7);
             Var var(varinfo(WR_VAR(0, 1, 2)), 234);
             vars.add(&var, 2);
-            da->insert(*t, vars, DataV6::ERROR);
+            da.insert(*t, vars, DataV6::ERROR);
         }
         t->commit();
     }
 
     void test_setup()
     {
-        DriverFixture::test_setup();
-        attr = driver->create_attrv6();
+        V6DBFixture::test_setup();
         reset_attr();
     }
 
@@ -81,7 +77,7 @@ struct Fixture : DriverFixture
     {
         Var res(varinfo(WR_VAR(0, 12, 101)));
         unsigned count = 0;
-        attr->read(id_data, [&](unique_ptr<Var> attr) { res.seta(move(attr)); ++count; });
+        db->attr().read(id_data, [&](unique_ptr<Var> attr) { res.seta(move(attr)); ++count; });
         wassert(actual(count) == expected_attr_count);
         return res;
     }
@@ -95,9 +91,9 @@ class Tests : public DBFixtureTestCase<Fixture>
     {
         add_method("insert", [](Fixture& f) {
             using namespace dballe::db::v6;
-            auto& at = *f.attr;
+            auto& at = f.db->attr();
 
-            auto t = f.conn->transaction();
+            auto t = f.db->transaction();
 
             Var var1(varinfo(WR_VAR(0, 12, 101)), 280.0);
             var1.seta(newvar(WR_VAR(0, 33, 7), 50));
@@ -203,12 +199,12 @@ class Tests : public DBFixtureTestCase<Fixture>
     }
 };
 
-Tests tg1("db_v6_attr_sqlite", "SQLITE", db::V6);
+Tests tg1("db_v6_attr_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests tg3("db_v6_attr_postgresql", "POSTGRESQL", db::V6);
+Tests tg3("db_v6_attr_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests tg4("db_v6_attr_mysql", "MYSQL", db::V6);
+Tests tg4("db_v6_attr_mysql", "MYSQL");
 #endif
 
 }

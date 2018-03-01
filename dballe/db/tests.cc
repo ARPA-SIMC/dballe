@@ -214,17 +214,7 @@ void ActualDB::try_summary_query(const std::string& query, unsigned expected, re
     }
 }
 
-BaseDBFixture::BaseDBFixture(const char* backend, db::Format format)
-    : backend(backend ? backend : ""), format(format)
-{
-}
-
-bool BaseDBFixture::has_driver()
-{
-    return has_driver(backend);
-}
-
-bool BaseDBFixture::has_driver(const std::string& backend)
+bool has_driver(const std::string& backend)
 {
     std::string envname = "DBA_DB";
     if (!backend.empty())
@@ -235,92 +225,33 @@ bool BaseDBFixture::has_driver(const std::string& backend)
     return getenv(envname.c_str()) != NULL;
 }
 
-void BaseDBFixture::test_setup()
-{
-    Fixture::test_setup();
-    if (!has_driver())
-        throw TestSkipped();
-}
-
-DriverFixture::DriverFixture(const char* backend, db::Format format)
-    : BaseDBFixture(backend, format)
+template<typename DB>
+BaseDBFixture<DB>::BaseDBFixture(const char* backend, db::Format format)
+    : backend(backend ? backend : ""), format(format)
 {
 }
 
-DriverFixture::~DriverFixture()
-{
-    if (driver && getenv("PAUSE") == nullptr)
-        driver->delete_tables(format);
-    delete driver;
-    delete conn;
-}
-
-void DriverFixture::test_setup()
-{
-    BaseDBFixture::test_setup();
-    if (!conn)
-    {
-        conn = get_test_connection(this->backend).release();
-        driver = db::v6::Driver::create(*conn).release();
-        driver->delete_tables(format);
-        driver->create_tables(format);
-    }
-    driver->remove_all(format);
-}
-
-V7DriverFixture::V7DriverFixture(const char* backend, db::Format format)
-    : BaseDBFixture(backend, format)
-{
-}
-
-V7DriverFixture::~V7DriverFixture()
-{
-    if (driver && getenv("PAUSE") == nullptr)
-        driver->delete_tables(format);
-    delete driver;
-    delete conn;
-}
-
-void V7DriverFixture::test_setup()
-{
-    BaseDBFixture::test_setup();
-    if (!conn)
-    {
-        conn = get_test_connection(this->backend).release();
-        driver = db::v7::Driver::create(*conn).release();
-        driver->delete_tables(format);
-        driver->create_tables(format);
-    }
-    driver->remove_all(format);
-}
-
-DBFixture::DBFixture(const char* backend, db::Format format)
-    : BaseDBFixture(backend, format)
-{
-}
-
-DBFixture::~DBFixture()
+template<typename DB>
+BaseDBFixture<DB>::~BaseDBFixture()
 {
     if (db && getenv("PAUSE") == nullptr)
         db->disappear();
     delete db;
 }
 
-std::unique_ptr<DB> DBFixture::create_db()
+template<typename DB>
+bool BaseDBFixture<DB>::has_driver()
 {
-    if (format == db::MEM)
-    {
-        return DB::connect_memory();
-    } else {
-        OverrideTestDBFormat odbf(format);
-        auto conn = get_test_connection(backend);
-        return DB::create(move(conn));
-    }
+    return tests::has_driver(backend);
 }
 
-void DBFixture::test_setup()
+template<typename DB>
+void BaseDBFixture<DB>::test_setup()
 {
-    BaseDBFixture::test_setup();
+    Fixture::test_setup();
+    if (!has_driver())
+        throw TestSkipped();
+
     if (!db)
     {
         db = create_db().release();
@@ -331,9 +262,29 @@ void DBFixture::test_setup()
     db->update_repinfo(nullptr, &added, &deleted, &updated);
 }
 
-void DBFixture::populate_database(TestDataSet& data_set)
+template<typename DB>
+void BaseDBFixture<DB>::populate_database(TestDataSet& data_set)
 {
     wassert(data_set.populate_db(*db));
+}
+
+std::unique_ptr<DB> DBFixture::create_db()
+{
+    OverrideTestDBFormat odbf(format);
+    auto conn = get_test_connection(backend);
+    return dballe::DB::create(move(conn));
+}
+
+std::unique_ptr<dballe::db::v6::DB> V6DBFixture::create_db()
+{
+    auto conn = get_test_connection(backend);
+    return std::unique_ptr<dballe::db::v6::DB>(new dballe::db::v6::DB(move(conn)));
+}
+
+std::unique_ptr<dballe::db::v7::DB> V7DBFixture::create_db()
+{
+    auto conn = get_test_connection(backend);
+    return std::unique_ptr<dballe::db::v7::DB>(new dballe::db::v7::DB(move(conn)));
 }
 
 
@@ -372,6 +323,10 @@ OldDballeTestDataSet::OldDballeTestDataSet()
     data["metar"].values.set("B01011", "Arpa-Sim!");
     data["metar"].values.set("B01012", 400);
 }
+
+template class BaseDBFixture<dballe::DB>;
+template class BaseDBFixture<dballe::db::v6::DB>;
+template class BaseDBFixture<dballe::db::v7::DB>;
 
 }
 }

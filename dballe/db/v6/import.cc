@@ -16,7 +16,7 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
-void DB::import_msg(dballe::Transaction& transaction, const Message& message, const char* repmemo, int flags)
+void DB::import_msg(dballe::db::Transaction& transaction, const Message& message, const char* repmemo, int flags)
 {
     const Msg& msg = Msg::downcast(message);
     const msg::Context* l_ana = msg.find_context(Level(), Trange());
@@ -30,9 +30,6 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
     v6::LevTr& lt = lev_tr();
     v6::DataV6& dd = data();
     v6::AttrV6& dq = attr();
-
-    dballe::sql::Transaction* t = dynamic_cast<dballe::sql::Transaction*>(&transaction);
-    assert(t);
 
     // Fill up the pseudoana informations needed to fetch an existing ID
 
@@ -92,7 +89,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
         }
 
         // Run the bulk insert
-        dd.insert(*t, vars, (flags & DBA_IMPORT_OVERWRITE) ? v6::DataV6::UPDATE : v6::DataV6::IGNORE);
+        dd.insert(transaction, vars, (flags & DBA_IMPORT_OVERWRITE) ? v6::DataV6::UPDATE : v6::DataV6::IGNORE);
 
         // Insert the attributes
         if (flags & DBA_IMPORT_ATTRS)
@@ -109,7 +106,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
                 attrs.add_all(*v.var, v.id_data);
             }
             if (!attrs.empty())
-                dq.insert(*t, attrs, v6::AttrV6::UPDATE);
+                dq.insert(transaction, attrs, v6::AttrV6::UPDATE);
 #endif
         }
     }
@@ -147,7 +144,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
     }
 
     // Run the bulk insert
-    dd.insert(*t, vars, (flags & DBA_IMPORT_OVERWRITE) ? v6::DataV6::UPDATE : v6::DataV6::IGNORE);
+    dd.insert(transaction, vars, (flags & DBA_IMPORT_OVERWRITE) ? v6::DataV6::UPDATE : v6::DataV6::IGNORE);
 
     // Insert the attributes
     if (flags & DBA_IMPORT_ATTRS)
@@ -164,7 +161,7 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
             attrs.add_all(*v.var, v.id_data);
         }
         if (!attrs.empty())
-            dq.insert(*t, attrs, v6::AttrV6::UPDATE);
+            dq.insert(transaction, attrs, v6::AttrV6::UPDATE);
 #endif
     }
 }

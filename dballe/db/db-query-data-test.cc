@@ -137,27 +137,23 @@ class Tests : public DBFixtureTestCase<DBFixture>
         });
         add_method("block_station", [](Fixture& f) {
             wassert(f.populate<OldDballeTestDataSet>());
-#warning FIXME: change after testing if we can move to report-in-station behaviour or not
-            const int all = (f.db->format() == MEM ? 4 : 4);
             // Block and station queries
-            TRY_QUERY("B01001=1", all);
+            TRY_QUERY("B01001=1", 4);
             TRY_QUERY("B01001=2", 0);
-            TRY_QUERY("B01002=52", all);
+            TRY_QUERY("B01002=52", 4);
             TRY_QUERY("B01002=53", 0);
         });
         add_method("ana_filter", [](Fixture& f) {
-#warning FIXME: change after testing if we can move to report-in-station behaviour or not
-            const int all = (f.db->format() == MEM ? 4 : 4);
             wassert(f.populate<OldDballeTestDataSet>());
             // ana_filter queries
-            TRY_QUERY("ana_filter=block=1", all);
-            TRY_QUERY("ana_filter=B01001=1", all);
+            TRY_QUERY("ana_filter=block=1", 4);
+            TRY_QUERY("ana_filter=B01001=1", 4);
             TRY_QUERY("ana_filter=block>1", 0);
             TRY_QUERY("ana_filter=B01001>1", 0);
-            TRY_QUERY("ana_filter=block<=1", all);
-            TRY_QUERY("ana_filter=B01001<=1", all);
-            TRY_QUERY("ana_filter=0<=B01001<=2", all);
-            TRY_QUERY("ana_filter=1<=B01001<=1", all);
+            TRY_QUERY("ana_filter=block<=1", 4);
+            TRY_QUERY("ana_filter=B01001<=1", 4);
+            TRY_QUERY("ana_filter=0<=B01001<=2", 4);
+            TRY_QUERY("ana_filter=1<=B01001<=1", 4);
             TRY_QUERY("ana_filter=2<=B01001<=4", 0);
         });
         add_method("data_filter", [](Fixture& f) {
@@ -360,7 +356,6 @@ class Tests : public DBFixtureTestCase<DBFixture>
                     wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals03)); // lat=1, lon=1, year=2001, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
                     wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals02)); // lat=2, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
                     break;
-                case MEM:
                 case V7:
                     // v7: ana_id(coords, ident, report), datetime, level, trange, code
                     wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals01)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
@@ -377,7 +372,6 @@ class Tests : public DBFixtureTestCase<DBFixture>
     }
 };
 
-Tests tg1("db_query_data_mem", nullptr, db::MEM);
 Tests tg2("db_query_data_v6_sqlite", "SQLITE", db::V6);
 #ifdef HAVE_LIBPQ
 Tests tg4("db_query_data_v6_postgresql", "POSTGRESQL", db::V6);

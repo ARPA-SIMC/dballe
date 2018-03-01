@@ -42,7 +42,7 @@ struct CreateTask : public MessageTask
     void run_once() override
     {
         auto t = db->transaction();
-        db->remove_all(*t);
+        t->remove_all();
         for (auto& m: msgs)
             db->import_msg(*t, *m, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
         t->commit();

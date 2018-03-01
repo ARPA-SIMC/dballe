@@ -14,28 +14,19 @@ using namespace std;
 
 namespace {
 
-struct Fixture : V7DriverFixture
+struct Fixture : V7DBFixture
 {
-    using V7DriverFixture::V7DriverFixture;
-
-    unique_ptr<db::v7::Station> station;
-    unique_ptr<db::v7::Repinfo> repinfo;
+    using V7DBFixture::V7DBFixture;
 
     void reset_station()
     {
-        if (conn->has_table("station"))
-            conn->execute("DELETE FROM station");
-
-        repinfo = driver->create_repinfo();
-        int added, deleted, updated;
-        repinfo->update(nullptr, &added, &deleted, &updated);
-
-        station = driver->create_station();
+        db->disappear();
+        db->reset();
     }
 
     void test_setup()
     {
-        V7DriverFixture::test_setup();
+        V7DBFixture::test_setup();
         reset_station();
     }
 };
@@ -48,7 +39,7 @@ class Tests : public DBFixtureTestCase<Fixture>
     {
         add_method("insert", [](Fixture& f) {
             // Insert some values and try to read them again
-            auto& st = *f.station;
+            auto& st = f.db->station();
             db::v7::StationDesc sde1;
             db::v7::StationDesc sde2;
             db::v7::State state;
@@ -111,12 +102,12 @@ class Tests : public DBFixtureTestCase<Fixture>
     }
 };
 
-Tests test_sqlite("db_v7_station_sqlite", "SQLITE", db::V7);
+Tests test_sqlite("db_v7_station_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests test_psql("db_v7_station_postgresql", "POSTGRESQL", db::V7);
+Tests test_psql("db_v7_station_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests test_mysql("db_v7_station_mysql", "MYSQL", db::V7);
+Tests test_mysql("db_v7_station_mysql", "MYSQL");
 #endif
 
 }

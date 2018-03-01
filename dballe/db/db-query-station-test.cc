@@ -161,11 +161,7 @@ class Tests : public DBFixtureTestCase<Fixture>
             wassert(actual(db).try_station_query("var=B12103", 1));
             wassert(actual(db).try_station_query("varlist=B12101", 2));
             wassert(actual(db).try_station_query("varlist=B12103", 1));
-#warning FIXME: change after testing if we can move to report-in-station behaviour or not
-            if (db.format() == MEM)
-                wassert(actual(db).try_station_query("varlist=B12101,B12103", 3));
-            else
-                wassert(actual(db).try_station_query("varlist=B12101,B12103", 2));
+            wassert(actual(db).try_station_query("varlist=B12101,B12103", 2));
         });
         add_method("stations_without_data", [](Fixture& f) {
             auto& db = *f.db;
@@ -177,7 +173,6 @@ class Tests : public DBFixtureTestCase<Fixture>
                     if (auto d = dynamic_cast<v6::DB*>(f.db))
                         d->station().obtain_id(1100000, 4500000);
                     break;
-                case MEM:
                 case V7:
                     if (auto d = dynamic_cast<v7::DB*>(f.db))
                     {
@@ -211,7 +206,6 @@ class Tests : public DBFixtureTestCase<Fixture>
             switch (db.format())
             {
                 case V7:
-                case MEM:
                     wassert(actual(cur->remaining()) == 4);
                     break;
                 case V6:
@@ -229,7 +223,6 @@ class Tests : public DBFixtureTestCase<Fixture>
     }
 };
 
-Tests tg1("db_query_station_mem", nullptr, db::MEM);
 Tests tg2("db_query_station_v6_sqlite", "SQLITE", db::V6);
 #ifdef HAVE_LIBPQ
 Tests tg4("db_query_station_v6_postgresql", "POSTGRESQL", db::V6);

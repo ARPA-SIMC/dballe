@@ -25,7 +25,7 @@ PostgreSQLAttrV6::~PostgreSQLAttrV6()
 {
 }
 
-void PostgreSQLAttrV6::insert(dballe::sql::Transaction& t, v6::bulk::InsertAttrsV6& attrs, UpdateMode update_mode)
+void PostgreSQLAttrV6::insert(dballe::db::Transaction& t, v6::bulk::InsertAttrsV6& attrs, UpdateMode update_mode)
 {
     using namespace dballe::sql::postgresql;
     Querybuf select_query;

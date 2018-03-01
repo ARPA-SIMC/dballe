@@ -12,22 +12,21 @@ using namespace std;
 
 namespace {
 
-struct Fixture : DriverFixture
+struct Fixture : V6DBFixture
 {
-    using DriverFixture::DriverFixture;
+    using V6DBFixture::V6DBFixture;
 
     unique_ptr<db::v6::LevTr> levtr;
 
     void reset_levtr()
     {
-        if (conn->has_table("levtr"))
-            driver->connection.execute("DELETE FROM levtr");
-        levtr = driver->create_levtrv6();
+        db->disappear();
+        db->reset();
     }
 
     void test_setup()
     {
-        DriverFixture::test_setup();
+        V6DBFixture::test_setup();
         reset_levtr();
     }
 };
@@ -39,7 +38,7 @@ class Tests : public DBFixtureTestCase<Fixture>
     void register_tests() override
     {
         add_method("insert", [](Fixture& f) {
-            auto& lt = *f.levtr;
+            auto& lt = f.db->lev_tr();
 
             // Insert a lev_tr
             wassert(actual(lt.obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);
@@ -50,12 +49,12 @@ class Tests : public DBFixtureTestCase<Fixture>
     }
 };
 
-Tests test_sqlite("db_v6_levtr_sqlite", "SQLITE", db::V6);
+Tests test_sqlite("db_v6_levtr_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests test_psql("db_v6_levtr_postgresql", "POSTGRESQL", db::V6);
+Tests test_psql("db_v6_levtr_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests test_mysql("db_v6_levtr_mysql", "MYSQL", db::V6);
+Tests test_mysql("db_v6_levtr_mysql", "MYSQL");
 #endif
 
 }

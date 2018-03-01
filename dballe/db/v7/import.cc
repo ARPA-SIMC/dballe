@@ -16,7 +16,7 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
-void DB::import_msg(dballe::Transaction& transaction, const Message& message, const char* repmemo, int flags)
+void DB::import_msg(dballe::db::Transaction& transaction, const Message& message, const char* repmemo, int flags)
 {
     const Msg& msg = Msg::downcast(message);
     const msg::Context* l_ana = msg.find_context(Level(), Trange());

@@ -28,6 +28,40 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
+struct Transaction : public dballe::db::Transaction
+{
+    v6::DB& db;
+    dballe::Transaction* sql_transaction = nullptr;
+
+    Transaction(v6::DB& db, std::unique_ptr<dballe::Transaction> sql_transaction)
+        : db(db), sql_transaction(sql_transaction.release()) {}
+    Transaction(const Transaction&) = delete;
+    Transaction(Transaction&&) = delete;
+    Transaction& operator=(const Transaction&) = delete;
+    Transaction& operator=(Transaction&&) = delete;
+    ~Transaction()
+    {
+        delete sql_transaction;
+    }
+
+    void commit() override { sql_transaction->commit(); }
+    void rollback() override { sql_transaction->rollback(); }
+    void clear_cached_state() override
+    {
+        if (db.m_lev_tr_cache)
+            db.m_lev_tr_cache->invalidate();
+    }
+
+    void remove_all() override
+    {
+        auto tr = db.trace.trace_remove_all();
+        db.driver().remove_all_v6();
+        clear_cached_state();
+        tr->done();
+    }
+};
+
+
 // First part of initialising a dba_db
 DB::DB(unique_ptr<Connection> conn)
     : conn(conn.release()),
@@ -111,10 +145,10 @@ void DB::init_after_connect()
 {
 }
 
-std::unique_ptr<dballe::Transaction> DB::transaction()
+std::unique_ptr<dballe::db::Transaction> DB::transaction()
 {
     auto res = conn->transaction();
-    return move(res);
+    return unique_ptr<dballe::db::Transaction>(new v6::Transaction(*this, move(res)));
 }
 
 void DB::delete_tables()
@@ -180,7 +214,7 @@ int DB::obtain_station(const dballe::Station& st, bool can_add)
         return s.get_id(st.coords.lat, st.coords.lon, st.ident.get());
 }
 
-void DB::insert_station_data(dballe::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add)
+void DB::insert_station_data(dballe::db::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add)
 {
     v6::Repinfo& ri = repinfo();
     v6::DataV6& d = data();
@@ -199,16 +233,14 @@ void DB::insert_station_data(dballe::Transaction& transaction, StationValues& va
         vars.add(i.second.var, -1);
 
     // Do the insert
-    dballe::sql::Transaction* t = dynamic_cast<dballe::sql::Transaction*>(&transaction);
-    assert(t);
-    d.insert(*t, vars, can_replace ? v6::DataV6::UPDATE : v6::DataV6::ERROR);
+    d.insert(transaction, vars, can_replace ? v6::DataV6::UPDATE : v6::DataV6::ERROR);
 
     // Read the IDs from the results
     for (const auto& v: vars)
         vals.values.add_data_id(v.var->code(), v.id_data);
 }
 
-void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool can_replace, bool station_can_add)
+void DB::insert_data(dballe::db::Transaction& transaction, DataValues& vals, bool can_replace, bool station_can_add)
 {
     /* Check for the existance of non-lev_tr data, otherwise it's all
      * useless.  Not inserting data is fine in case of setlev_trana */
@@ -233,9 +265,7 @@ void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool ca
         vars.add(i.second.var, id_levtr);
 
     // Do the insert
-    dballe::sql::Transaction* t = dynamic_cast<dballe::sql::Transaction*>(&transaction);
-    assert(t);
-    d.insert(*t, vars, can_replace ? v6::DataV6::UPDATE : v6::DataV6::ERROR);
+    d.insert(transaction, vars, can_replace ? v6::DataV6::UPDATE : v6::DataV6::ERROR);
 
     // Read the IDs from the results
     for (const auto& v: vars)
@@ -253,16 +283,6 @@ void DB::remove(dballe::Transaction& transaction, const Query& query)
 {
     auto tr = trace.trace_remove(query);
     cursor::run_delete_query(*this, core::Query::downcast(query), false, explain_queries);
-    tr->done();
-}
-
-void DB::remove_all(dballe::Transaction& transaction)
-{
-    auto tr = trace.trace_remove_all();
-    driver().remove_all_v6();
-    transaction.clear_cached_state();
-    if (m_lev_tr_cache)
-        m_lev_tr_cache->invalidate();
     tr->done();
 }
 
@@ -323,7 +343,7 @@ void DB::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport
     a.read(data_id, dest);
 }
 
-void DB::attr_insert_station(dballe::Transaction& transaction, int data_id, const Values& attrs)
+void DB::attr_insert_station(dballe::db::Transaction& transaction, int data_id, const Values& attrs)
 {
     v6::AttrV6& a = attr();
     v6::bulk::InsertAttrsV6 iattrs;
@@ -331,14 +351,11 @@ void DB::attr_insert_station(dballe::Transaction& transaction, int data_id, cons
         iattrs.add(i.second.var, data_id);
     if (iattrs.empty()) return;
 
-    dballe::sql::Transaction* t = dynamic_cast<dballe::sql::Transaction*>(&transaction);
-    assert(t);
-
     // Insert all the attributes we found
-    a.insert(*t, iattrs, v6::AttrV6::UPDATE);
+    a.insert(transaction, iattrs, v6::AttrV6::UPDATE);
 }
 
-void DB::attr_insert_data(dballe::Transaction& transaction, int data_id, const Values& attrs)
+void DB::attr_insert_data(dballe::db::Transaction& transaction, int data_id, const Values& attrs)
 {
     v6::AttrV6& a = attr();
     v6::bulk::InsertAttrsV6 iattrs;
@@ -346,12 +363,8 @@ void DB::attr_insert_data(dballe::Transaction& transaction, int data_id, const V
         iattrs.add(i.second.var, data_id);
     if (iattrs.empty()) return;
 
-    // Begin the transaction
-    dballe::sql::Transaction* t = dynamic_cast<dballe::sql::Transaction*>(&transaction);
-    assert(t);
-
     // Insert all the attributes we found
-    a.insert(*t, iattrs, v6::AttrV6::UPDATE);
+    a.insert(transaction, iattrs, v6::AttrV6::UPDATE);
 }
 
 void DB::attr_remove_station(dballe::Transaction& transaction, int data_id, const db::AttrList& qcs)

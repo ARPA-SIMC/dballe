@@ -48,54 +48,23 @@ struct OldDballeTestDataSet : public TestDataSet
     OldDballeTestDataSet();
 };
 
+bool has_driver(const std::string& backend);
 
+template<typename DB>
 struct BaseDBFixture : public Fixture
 {
     std::string backend;
     db::Format format;
+    DB* db = nullptr;
 
     BaseDBFixture(const char* backend, db::Format format);
+    ~BaseDBFixture();
+
+    /// Open a new DB with the backend and format specified in this fixture
+    virtual std::unique_ptr<DB> create_db() = 0;
 
     void test_setup();
     bool has_driver();
-    static bool has_driver(const std::string& backend);
-};
-
-/// Test fixture for SQL backend drivers
-struct DriverFixture : public BaseDBFixture
-{
-    dballe::sql::Connection* conn = nullptr;
-    db::v6::Driver* driver = nullptr;
-
-    DriverFixture(const char* backend, db::Format format);
-    ~DriverFixture();
-
-    void test_setup();
-};
-
-/// Test fixture for SQL backend drivers
-struct V7DriverFixture : public BaseDBFixture
-{
-    dballe::sql::Connection* conn = nullptr;
-    db::v7::Driver* driver = nullptr;
-
-    V7DriverFixture(const char* backend, db::Format format);
-    ~V7DriverFixture();
-
-    void test_setup();
-};
-
-struct DBFixture : public BaseDBFixture
-{
-    DB* db = nullptr;
-
-    DBFixture(const char* backend, db::Format format);
-    ~DBFixture();
-
-    /// Open a new DB with the backend and format specified in this fixture
-    std::unique_ptr<DB> create_db();
-
-    void test_setup();
 
     template<typename DataSet>
     void populate()
@@ -105,6 +74,36 @@ struct DBFixture : public BaseDBFixture
     }
 
     void populate_database(TestDataSet& data_set);
+};
+
+struct DBFixture : public BaseDBFixture<dballe::DB>
+{
+    DBFixture(const char* backend, db::Format format)
+        : BaseDBFixture(backend, format)
+    {
+    }
+
+    std::unique_ptr<dballe::DB> create_db() override;
+};
+
+struct V6DBFixture : public BaseDBFixture<dballe::db::v6::DB>
+{
+    V6DBFixture(const char* backend)
+        : BaseDBFixture(backend, db::Format::V6)
+    {
+    }
+
+    std::unique_ptr<dballe::db::v6::DB> create_db() override;
+};
+
+struct V7DBFixture : public BaseDBFixture<dballe::db::v7::DB>
+{
+    V7DBFixture(const char* backend)
+        : BaseDBFixture(backend, db::Format::V7)
+    {
+    }
+
+    std::unique_ptr<dballe::db::v7::DB> create_db() override;
 };
 
 template<typename FIXTURE>
@@ -191,6 +190,10 @@ inline ActualCursor actual(std::unique_ptr<dballe::db::CursorData>& actual) { re
 inline ActualCursor actual(std::unique_ptr<dballe::db::CursorSummary>& actual) { return ActualCursor(*actual); }
 inline ActualDB actual(dballe::DB& actual) { return ActualDB(actual); }
 inline ActualDB actual(std::unique_ptr<dballe::DB>& actual) { return ActualDB(*actual); }
+
+extern template class BaseDBFixture<dballe::DB>;
+extern template class BaseDBFixture<dballe::db::v6::DB>;
+extern template class BaseDBFixture<dballe::db::v7::DB>;
 
 }
 }

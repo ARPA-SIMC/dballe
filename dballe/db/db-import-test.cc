@@ -336,7 +336,6 @@ class Tests : public DBFixtureTestCase<DBFixture>
     }
 };
 
-Tests tg1("db_import_mem", nullptr, db::MEM);
 Tests tg2("db_import_v6_sqlite", "SQLITE", db::V6);
 #ifdef HAVE_LIBPQ
 Tests tg4("db_import_v6_postgresql", "POSTGRESQL", db::V6);

@@ -166,7 +166,7 @@ void DbAPI::remove_all()
         error_consistency::throwf(
             "remove_all must be run with the database open in data write mode");
     if (transaction)
-        db.remove_all(*transaction);
+        transaction->remove_all();
     else
         db.remove_all();
     attr_state = ATTR_REFERENCE;

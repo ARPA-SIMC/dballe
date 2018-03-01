@@ -1,4 +1,3 @@
-#include "config.h"
 #include "msg/msg.h"
 #include "db/tests.h"
 #include <cstring>
@@ -18,7 +17,6 @@ class Tests : public DBFixtureTestCase<DBFixture>
     void register_tests() override;
 };
 
-Tests tg1("db_basic_mem", nullptr, db::MEM);
 Tests tg2("db_basic_v6_sqlite", "SQLITE", db::V6);
 #ifdef HAVE_LIBPQ
 Tests tg4("db_basic_v6_postgresql", "POSTGRESQL", db::V6);
@@ -199,7 +197,6 @@ add_method("stationdata", [](Fixture& f) {
     core::Record result;
     switch (db.format())
     {
-        case MEM:
         case V7:
         {
             bool have_temp = false;

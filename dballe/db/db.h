@@ -161,6 +161,31 @@ struct CursorSummary : public Cursor
     virtual size_t get_count() const = 0;
 };
 
+
+class Transaction : public dballe::Transaction
+{
+public:
+    /**
+     * Clear state information cached during the transaction.
+     *
+     * This can be used when, for example, a command that deletes data is
+     * issued that would invalidate ID information cached inside the
+     * transaction.
+     */
+    virtual void clear_cached_state() = 0;
+
+    /**
+     * Remove all data from the database.
+     *
+     * This is faster than remove() with an empty record, and unlike reset() it
+     * preserves existing report information.
+     *
+     * @param transaction
+     *   The current active transaction.
+     */
+    virtual void remove_all() = 0;
+};
+
 }
 
 class DB
@@ -269,7 +294,7 @@ public:
      * Begin a transaction on this database, and return a Transaction object
      * that can be used to commit it.
      */
-    virtual std::unique_ptr<dballe::Transaction> transaction() = 0;
+    virtual std::unique_ptr<dballe::db::Transaction> transaction() = 0;
 
     /**
      * Insert station values into the database
@@ -307,7 +332,7 @@ public:
      *   data for a station that does not yet exists in the database, it will
      *   be created.
      */
-    virtual void insert_station_data(dballe::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add) = 0;
+    virtual void insert_station_data(dballe::db::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add) = 0;
 
     /**
      * Insert data values into the database
@@ -345,7 +370,7 @@ public:
      *   data for a station that does not yet exists in the database, it will
      *   be created.
      */
-    virtual void insert_data(dballe::Transaction& transaction, DataValues& vals, bool can_replace, bool station_can_add) = 0;
+    virtual void insert_data(dballe::db::Transaction& transaction, DataValues& vals, bool can_replace, bool station_can_add) = 0;
 
     /**
      * Remove data from the database
@@ -394,17 +419,6 @@ public:
      * preserves existing report information.
      */
     void remove_all();
-
-    /**
-     * Remove all data from the database.
-     *
-     * This is faster than remove() with an empty record, and unlike reset() it
-     * preserves existing report information.
-     *
-     * @param transaction
-     *   The current active transaction.
-     */
-    virtual void remove_all(dballe::Transaction& transaction) = 0;
 
     /**
      * Perform database cleanup operations.
@@ -514,7 +528,7 @@ public:
      * @param attrs
      *   The attributes to be added
      */
-    virtual void attr_insert_station(dballe::Transaction& transaction, int data_id, const Values& attrs) = 0;
+    virtual void attr_insert_station(dballe::db::Transaction& transaction, int data_id, const Values& attrs) = 0;
 
     /**
      * Insert new attributes on a data value
@@ -536,7 +550,7 @@ public:
      * @param attrs
      *   The attributes to be added
      */
-    virtual void attr_insert_data(dballe::Transaction& transaction, int data_id, const Values& attrs) = 0;
+    virtual void attr_insert_data(dballe::db::Transaction& transaction, int data_id, const Values& attrs) = 0;
 
     /**
      * Delete attributes from a station value
@@ -628,7 +642,7 @@ public:
      *   Customise different aspects of the import process.  It is a bitmask of the
      *   various DBA_IMPORT_* macros.
      */
-    virtual void import_msg(dballe::Transaction& transaction, const Message& msg, const char* repmemo, int flags) = 0;
+    virtual void import_msg(dballe::db::Transaction& transaction, const Message& msg, const char* repmemo, int flags) = 0;
 
     /**
      * Import Messages into the DB-All.e database
@@ -658,7 +672,7 @@ public:
      *   Customise different aspects of the import process.  It is a bitmask of the
      *   various DBA_IMPORT_* macros.
      */
-    virtual void import_msgs(dballe::Transaction& transaction, const Messages& msgs, const char* repmemo, int flags);
+    virtual void import_msgs(dballe::db::Transaction& transaction, const Messages& msgs, const char* repmemo, int flags);
 
     /**
      * Perform the query in `query', and send the results to dest.

@@ -32,8 +32,6 @@ DB::DB(unique_ptr<Connection> conn)
     : conn(conn.release()),
       m_driver(v7::Driver::create(*this->conn).release())
 {
-    init_after_connect();
-
     if (getenv("DBA_EXPLAIN") != NULL)
         explain_queries = true;
 
@@ -96,14 +94,10 @@ v7::Data& DB::data()
     return *m_data;
 }
 
-void DB::init_after_connect()
-{
-}
-
-std::unique_ptr<dballe::Transaction> DB::transaction()
+std::unique_ptr<dballe::db::Transaction> DB::transaction()
 {
     auto res = conn->transaction();
-    return unique_ptr<dballe::Transaction>(new v7::Transaction(move(res)));
+    return unique_ptr<dballe::db::Transaction>(new v7::Transaction(*this, move(res)));
 }
 
 void DB::delete_tables()
@@ -174,7 +168,7 @@ v7::stations_t::iterator DB::obtain_station(v7::State& state, const dballe::Stat
         return s.get_id(state, sd);
 }
 
-void DB::insert_station_data(dballe::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add)
+void DB::insert_station_data(dballe::db::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add)
 {
     auto& t = v7::Transaction::downcast(transaction);
 
@@ -197,7 +191,7 @@ void DB::insert_station_data(dballe::Transaction& transaction, StationValues& va
         vals.values.add_data_id(v.var->code(), v.cur->second.id);
 }
 
-void DB::insert_data(dballe::Transaction& transaction, DataValues& vals, bool can_replace, bool station_can_add)
+void DB::insert_data(dballe::db::Transaction& transaction, DataValues& vals, bool can_replace, bool station_can_add)
 {
     /* Check for the existance of non-lev_tr data, otherwise it's all
      * useless.  Not inserting data is fine in case of setlev_trana */
@@ -239,14 +233,6 @@ void DB::remove(dballe::Transaction& transaction, const Query& query)
 {
     auto tr = trace.trace_remove(query);
     cursor::run_delete_query(*this, core::Query::downcast(query), false, explain_queries);
-    tr->done();
-}
-
-void DB::remove_all(dballe::Transaction& transaction)
-{
-    auto tr = trace.trace_remove_all();
-    driver().remove_all_v7();
-    transaction.clear_cached_state();
     tr->done();
 }
 
@@ -305,13 +291,13 @@ void DB::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport
     d.read_attrs(data_id, dest);
 }
 
-void DB::attr_insert_station(dballe::Transaction& transaction, int data_id, const Values& attrs)
+void DB::attr_insert_station(dballe::db::Transaction& transaction, int data_id, const Values& attrs)
 {
     auto& d = station_data();
     d.merge_attrs(data_id, attrs);
 }
 
-void DB::attr_insert_data(dballe::Transaction& transaction, int data_id, const Values& attrs)
+void DB::attr_insert_data(dballe::db::Transaction& transaction, int data_id, const Values& attrs)
 {
     auto& d = data();
     d.merge_attrs(data_id, attrs);

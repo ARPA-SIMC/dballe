@@ -193,7 +193,6 @@ struct SQLiteTransaction : public Transaction
         conn.exec_nothrow("ROLLBACK");
         fired = true;
     }
-    void clear_cached_state() override {}
     void lock_table(const char* name) override
     {
         // Nothing to do: SQLite locks the whole database, so table locking

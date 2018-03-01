@@ -26,7 +26,7 @@ MySQLDataV6::~MySQLDataV6()
 {
 }
 
-void MySQLDataV6::insert(dballe::sql::Transaction& t, v6::bulk::InsertV6& vars, UpdateMode update_mode)
+void MySQLDataV6::insert(dballe::db::Transaction& t, v6::bulk::InsertV6& vars, UpdateMode update_mode)
 {
     // Get the current status of variables for this context
     Querybuf select;

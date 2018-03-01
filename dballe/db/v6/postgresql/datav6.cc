@@ -26,7 +26,7 @@ PostgreSQLDataV6::~PostgreSQLDataV6()
 {
 }
 
-void PostgreSQLDataV6::insert(dballe::sql::Transaction& t, v6::bulk::InsertV6& vars, UpdateMode update_mode)
+void PostgreSQLDataV6::insert(dballe::db::Transaction& t, v6::bulk::InsertV6& vars, UpdateMode update_mode)
 {
     using namespace dballe::sql::postgresql;
     const char* select_query = R"(

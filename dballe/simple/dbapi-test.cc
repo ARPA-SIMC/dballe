@@ -64,7 +64,6 @@ class Tests : public DBFixtureTestCase<DBFixture>
     void register_tests() override;
 };
 
-Tests tg1("dbapi_mem", nullptr, db::MEM);
 Tests tg2("dbapi_v6_sqlite", "SQLITE", db::V6);
 Tests tg3("dbapi_v7_sqlite", "SQLITE", db::V7);
 #ifdef HAVE_LIBPQ

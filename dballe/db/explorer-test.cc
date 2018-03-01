@@ -17,7 +17,6 @@ class Tests : public DBFixtureTestCase<DBFixture>
     void register_tests() override;
 };
 
-Tests tg1("db_explorer_mem", nullptr, db::MEM);
 Tests tg2("db_explorer_v6_sqlite", "SQLITE", db::V6);
 #ifdef HAVE_LIBPQ
 Tests tg4("db_explorer_v6_postgresql", "POSTGRESQL", db::V6);

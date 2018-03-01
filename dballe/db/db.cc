@@ -197,7 +197,7 @@ void DB::remove(const Query& query)
 void DB::remove_all()
 {
     auto t = transaction();
-    remove_all(*t);
+    t->remove_all();
     t->commit();
 }
 
@@ -243,7 +243,7 @@ void DB::import_msgs(const Messages& msgs, const char* repmemo, int flags)
     t->commit();
 }
 
-void DB::import_msgs(dballe::Transaction& transaction, const Messages& msgs, const char* repmemo, int flags)
+void DB::import_msgs(dballe::db::Transaction& transaction, const Messages& msgs, const char* repmemo, int flags)
 {
     for (const auto& i: msgs)
         import_msg(transaction, i, repmemo, flags);

@@ -6,11 +6,11 @@
 
 namespace dballe {
 struct DB;
-struct Transaction;
 
 namespace db {
 struct CursorStation;
 struct CursorValue;
+struct Transaction;
 }
 
 namespace fortran {
@@ -26,7 +26,7 @@ protected:
     db::CursorValue* query_cur;
     InputFile* input_file;
     OutputFile* output_file;
-    dballe::Transaction* transaction = nullptr;
+    dballe::db::Transaction* transaction = nullptr;
     int last_inserted_station_id;
 
     /// Store information about the database ID of a variable

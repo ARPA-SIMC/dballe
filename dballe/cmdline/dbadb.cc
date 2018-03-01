@@ -39,7 +39,7 @@ struct Importer : public Action
     DB& db;
     int import_flags;
     const char* forced_repmemo;
-    unique_ptr<dballe::Transaction> transaction;
+    unique_ptr<dballe::db::Transaction> transaction;
 
     Importer(DB& db) : db(db), import_flags(0), forced_repmemo(0) {}
 

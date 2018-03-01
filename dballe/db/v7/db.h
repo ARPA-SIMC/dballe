@@ -71,8 +71,6 @@ protected:
 
     void init_after_connect();
 
-    DB(std::unique_ptr<dballe::sql::Connection> conn);
-
     /*
      * Lookup, insert or replace data in station taking the values from
      * rec.
@@ -90,6 +88,7 @@ protected:
     v7::stations_t::iterator obtain_station(v7::State& state, const dballe::Station& st, bool can_add=true);
 
 public:
+    DB(std::unique_ptr<dballe::sql::Connection> conn);
     virtual ~DB();
 
     db::Format format() const { return V7; }
@@ -112,7 +111,7 @@ public:
     /// Access the data table
     v7::Data& data();
 
-    std::unique_ptr<dballe::Transaction> transaction() override;
+    std::unique_ptr<dballe::db::Transaction> transaction() override;
 
     void disappear();
 
@@ -160,12 +159,11 @@ public:
      */
     int rep_cod_from_memo(const char* memo);
 
-    void insert_station_data(dballe::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add) override;
-    void insert_data(dballe::Transaction& transaction, DataValues& vals, bool can_replace, bool station_can_add) override;
+    void insert_station_data(dballe::db::Transaction& transaction, StationValues& vals, bool can_replace, bool station_can_add) override;
+    void insert_data(dballe::db::Transaction& transaction, DataValues& vals, bool can_replace, bool station_can_add) override;
 
     void remove_station_data(dballe::Transaction& transaction, const Query& query) override;
     void remove(dballe::Transaction& transaction, const Query& query);
-    void remove_all(dballe::Transaction& transaction);
 
     /**
      * Remove orphan values from the database.
@@ -185,13 +183,13 @@ public:
 
     void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
     void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
-    void attr_insert_station(dballe::Transaction& transaction, int data_id, const Values& attrs) override;
-    void attr_insert_data(dballe::Transaction& transaction, int data_id, const Values& attrs) override;
+    void attr_insert_station(dballe::db::Transaction& transaction, int data_id, const Values& attrs) override;
+    void attr_insert_data(dballe::db::Transaction& transaction, int data_id, const Values& attrs) override;
     void attr_remove_station(dballe::Transaction& transaction, int data_id, const db::AttrList& attrs) override;
     void attr_remove_data(dballe::Transaction& transaction, int data_id, const db::AttrList& attrs) override;
     bool is_station_variable(int data_id, wreport::Varcode varcode) override;
 
-    void import_msg(dballe::Transaction& transaction, const Message& msg, const char* repmemo, int flags) override;
+    void import_msg(dballe::db::Transaction& transaction, const Message& msg, const char* repmemo, int flags) override;
     bool export_msgs(dballe::Transaction& transaction, const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) override;
 
     /**

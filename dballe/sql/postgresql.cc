@@ -261,7 +261,6 @@ struct PostgreSQLTransaction : public Transaction
         conn.pqexec_nothrow("ROLLBACK");
         fired = true;
     }
-    void clear_cached_state() override {}
     void lock_table(const char* name) override
     {
         char buf[256];

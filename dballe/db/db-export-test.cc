@@ -140,7 +140,6 @@ add_method("missing_repmemo", [](Fixture& f) {
 
 }
 
-Tests tg1("db_export_mem", nullptr, db::MEM);
 Tests tg2("db_export_v6_sqlite", "SQLITE", db::V6);
 #ifdef HAVE_LIBPQ
 Tests tg4("db_export_v6_postgresql", "POSTGRESQL", db::V6);

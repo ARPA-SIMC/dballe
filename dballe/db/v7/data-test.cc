@@ -16,21 +16,18 @@ using namespace std;
 
 namespace {
 
-struct Fixture : V7DriverFixture
+struct Fixture : V7DBFixture
 {
-    using V7DriverFixture::V7DriverFixture;
+    using V7DBFixture::V7DBFixture;
 
-    unique_ptr<dballe::db::v7::Transaction> t;
-    unique_ptr<db::v7::Station> station;
-    unique_ptr<db::v7::Data> data;
-    unique_ptr<db::v7::LevTr> levtr;
+    std::unique_ptr<dballe::db::v7::Transaction> t;
     db::v7::StationDesc sde1;
     db::v7::StationDesc sde2;
     db::v7::levtrs_t::iterator lt1;
     db::v7::levtrs_t::iterator lt2;
 
-    Fixture(const char* backend, dballe::db::Format format)
-        : V7DriverFixture(backend, format)
+    Fixture(const char* backend)
+        : V7DBFixture(backend)
     {
         sde1.rep = 1;
         sde1.coords = Coords(4500000, 1100000);
@@ -43,36 +40,41 @@ struct Fixture : V7DriverFixture
 
     void reset_data()
     {
-        t.reset(nullptr);
-        auto conn_t = conn->transaction();
-        t.reset(new dballe::db::v7::Transaction(move(conn_t)));
-
-        int added, deleted, updated;
-        driver->create_repinfo()->update(nullptr, &added, &deleted, &updated);
+        db->disappear();
+        db->reset();
 
         db::v7::stations_t::iterator si;
         db::v7::levtrs_t::iterator li;
 
+        auto transaction = db->transaction();
+        auto tp = dynamic_cast<dballe::db::v7::Transaction*>(transaction.get());
+        wassert_true(tp);
+        t.reset(tp);
+        transaction.release();
+
         // Insert a mobile station
-        si = station->obtain_id(t->state, sde1);
+        si = db->station().obtain_id(t->state, sde1);
 
         // Insert a fixed station
-        si = station->obtain_id(t->state, sde2);
+        si = db->station().obtain_id(t->state, sde2);
 
         // Insert a lev_tr
-        lt1 = levtr->obtain_id(t->state, db::v7::LevTrDesc(Level(1, 2, 0, 3), Trange(4, 5, 6)));
+        lt1 = db->levtr().obtain_id(t->state, db::v7::LevTrDesc(Level(1, 2, 0, 3), Trange(4, 5, 6)));
 
         // Insert another lev_tr
-        lt2 = levtr->obtain_id(t->state, db::v7::LevTrDesc(Level(2, 3, 1, 4), Trange(5, 6, 7)));
+        lt2 = db->levtr().obtain_id(t->state, db::v7::LevTrDesc(Level(2, 3, 1, 4), Trange(5, 6, 7)));
     }
 
     void test_setup()
     {
-        V7DriverFixture::test_setup();
-        if (!station.get()) station = driver->create_station();
-        if (!data.get()) data = driver->create_data();
-        if (!levtr.get()) levtr = driver->create_levtr();
+        V7DBFixture::test_setup();
         reset_data();
+    }
+
+    void test_teardown()
+    {
+        V7DBFixture::test_teardown();
+        t.reset();
     }
 };
 
@@ -84,12 +86,12 @@ class Tests : public DBFixtureTestCase<Fixture>
     void register_tests() override;
 };
 
-Tests tg1("db_v7_data_sqlite", "SQLITE", db::V7);
+Tests tg1("db_v7_data_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests tg3("db_v7_data_postgresql", "POSTGRESQL", db::V7);
+Tests tg3("db_v7_data_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests tg4("db_v7_data_mysql", "MYSQL", db::V7);
+Tests tg4("db_v7_data_mysql", "MYSQL");
 #endif
 
 
@@ -98,7 +100,7 @@ void Tests::register_tests()
 
 add_method("insert", [](Fixture& f) {
     using namespace dballe::db::v7;
-    auto& da = *f.data;
+    auto& da = f.db->data();
 
     Var var(varinfo(WR_VAR(0, 1, 2)));
 
@@ -204,7 +206,7 @@ add_method("insert", [](Fixture& f) {
 
 add_method("attrs", [](Fixture& f) {
     using namespace dballe::db::v7;
-    auto& da = *f.data;
+    auto& da = f.db->data();
 
     Var var(varinfo(WR_VAR(0, 1, 2)), 123);
 
