@@ -516,24 +516,22 @@ static PyObject* dpy_DB_query_attrs(dpy_DB* self, PyObject* args, PyObject* kw)
     if (db_read_attrlist(attrs, codes))
         return NULL;
 
-    self->attr_rec->rec->clear();
-
+    py_unique_ptr<dpy_Record> rec(record_create());
     try {
         wreport::Varcode varcode = resolve_varcode(varname);
         if (self->db->is_station_variable(reference_id, varcode))
             self->db->attr_query_station(reference_id, [&](unique_ptr<Var>&& var) {
                 if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
                     return;
-                self->attr_rec->rec->set(move(var));
+                rec->rec->set(move(var));
             });
         else
             self->db->attr_query_data(reference_id, [&](unique_ptr<Var>&& var) {
                 if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
                     return;
-                self->attr_rec->rec->set(move(var));
+                rec->rec->set(move(var));
             });
-        Py_INCREF(self->attr_rec);
-        return (PyObject*)self->attr_rec;
+        return (PyObject*)rec.release();
     } DBALLE_CATCH_RETURN_PYO
 }
 
@@ -543,13 +541,12 @@ static PyObject* dpy_DB_attr_query_station(dpy_DB* self, PyObject* args)
     if (!PyArg_ParseTuple(args, "i", &reference_id))
         return NULL;
 
-    self->attr_rec->rec->clear();
+    py_unique_ptr<dpy_Record> rec(record_create());
     try {
         self->db->attr_query_station(reference_id, [&](unique_ptr<Var> var) {
-            self->attr_rec->rec->set(move(var));
+            rec->rec->set(move(var));
         });
-        Py_INCREF(self->attr_rec);
-        return (PyObject*)self->attr_rec;
+        return (PyObject*)rec.release();
     } DBALLE_CATCH_RETURN_PYO
 }
 
@@ -559,13 +556,12 @@ static PyObject* dpy_DB_attr_query_data(dpy_DB* self, PyObject* args)
     if (!PyArg_ParseTuple(args, "i", &reference_id))
         return NULL;
 
-    self->attr_rec->rec->clear();
+    py_unique_ptr<dpy_Record> rec(record_create());
     try {
         self->db->attr_query_data(reference_id, [&](unique_ptr<Var>&& var) {
-            self->attr_rec->rec->set(move(var));
+            rec->rec->set(move(var));
         });
-        Py_INCREF(self->attr_rec);
-        return (PyObject*)self->attr_rec;
+        return (PyObject*)rec.release();
     } DBALLE_CATCH_RETURN_PYO
 }
 
@@ -918,18 +914,10 @@ int db_read_attrlist(PyObject* attrs, db::AttrList& codes)
 
 dpy_DB* db_create(std::shared_ptr<DB> db)
 {
-    dpy_Record* attr_rec = record_create();
-    if (!attr_rec) return NULL;
-
     dpy_DB* result = (dpy_DB*)PyObject_CallObject((PyObject*)&dpy_DB_Type, nullptr);
     if (!result)
-    {
-        Py_DECREF(attr_rec);
         return NULL;
-    }
-
     result->db = db;
-    result->attr_rec = attr_rec;
     return result;
 }
 

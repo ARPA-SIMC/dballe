@@ -30,7 +30,6 @@ extern "C" {
 typedef struct {
     PyObject_HEAD
     std::shared_ptr<dballe::DB> db;
-    dpy_Record* attr_rec;
 } dpy_DB;
 
 PyAPI_DATA(PyTypeObject) dpy_DB_Type;

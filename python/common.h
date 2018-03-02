@@ -52,6 +52,9 @@ public:
     /// Use it as a Obj
     operator Obj*() { return ptr; }
 
+    /// Use it as a Obj
+    Obj* operator->() { return ptr; }
+
     /// Get the pointer (useful for passing to Py_BuildValue)
     Obj* get() { return ptr; }
 
