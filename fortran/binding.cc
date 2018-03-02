@@ -67,17 +67,17 @@ using namespace std;
 
 struct HSession : public fortran::HBase
 {
-    DB* db;
+    std::shared_ptr<DB> db;
 
     void start()
     {
         fortran::HBase::start();
-        db = 0;
+        db.reset();
     }
 
     void stop()
     {
-        if (db) delete db;
+        db.reset();
         fortran::HBase::stop();
     }
 };
@@ -165,7 +165,7 @@ int idba_presentati(int* dbahandle, const char* url)
         }
 
         IF_TRACING(fortran::log_presentati_url(*dbahandle, url));
-        hs.db = DB::connect_from_url(url).release();
+        hs.db = DB::connect_from_url(url);
 
         /* Open the database session */
         return fortran::success();
