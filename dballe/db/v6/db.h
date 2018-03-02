@@ -37,10 +37,10 @@ struct DB;
 
 struct Transaction : public dballe::db::Transaction
 {
-    DB& db;
+    std::shared_ptr<DB> db;
     dballe::Transaction* sql_transaction = nullptr;
 
-    Transaction(v6::DB& db, std::unique_ptr<dballe::Transaction> sql_transaction);
+    Transaction(std::shared_ptr<v6::DB> db, std::unique_ptr<dballe::Transaction> sql_transaction);
     Transaction(const Transaction&) = delete;
     Transaction(Transaction&&) = delete;
     Transaction& operator=(const Transaction&) = delete;

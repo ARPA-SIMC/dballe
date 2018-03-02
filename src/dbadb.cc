@@ -61,7 +61,7 @@ struct poptOption dbTable[] = {
     POPT_TABLEEND
 };
 
-static unique_ptr<DB> connect()
+static shared_ptr<DB> connect()
 {
     const char* chosen_url;
 

@@ -691,7 +691,7 @@ add_method("fd_leaks", [](Fixture& f) {
     // Assume a max open file limit of 1100
     for (unsigned i = 0; i < 1100; ++i)
     {
-        std::unique_ptr<DB> db = f.create_db();
+        auto db = f.create_db();
         vals.clear_ids();
         wassert(db->insert_station_data(vals, true, true));
     }

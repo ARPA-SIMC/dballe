@@ -97,7 +97,7 @@ v7::Data& DB::data()
 std::unique_ptr<dballe::db::Transaction> DB::transaction()
 {
     auto res = conn->transaction();
-    return unique_ptr<dballe::db::Transaction>(new v7::Transaction(*this, move(res)));
+    return unique_ptr<dballe::db::Transaction>(new v7::Transaction(dynamic_pointer_cast<v7::DB>(shared_from_this()), move(res)));
 }
 
 void DB::delete_tables()

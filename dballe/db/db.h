@@ -348,7 +348,7 @@ public:
 
 }
 
-class DB
+class DB: public std::enable_shared_from_this<DB>
 {
 public:
     virtual ~DB();
@@ -362,7 +362,7 @@ public:
      * @param pathname
      *   The pathname to a SQLite file
      */
-    static std::unique_ptr<DB> connect_from_file(const char* pathname);
+    static std::shared_ptr<DB> connect_from_file(const char* pathname);
 
     /**
      * Create from an url-like specification, as described in
@@ -371,12 +371,12 @@ public:
      * @param url
      *   The url-like connection descriptor
      */
-    static std::unique_ptr<DB> connect_from_url(const char* url);
+    static std::shared_ptr<DB> connect_from_url(const char* url);
 
     /**
      * Create an in-memory database
      */
-    static std::unique_ptr<DB> connect_memory(const std::string& arg = std::string());
+    static std::shared_ptr<DB> connect_memory(const std::string& arg = std::string());
 
     /**
      * Start a test session with DB-All.e
@@ -384,12 +384,12 @@ public:
      * Take information from the environment (@see dba_db_create_from_env) and
      * default to ./test.sqlite if nothing is specified.
      */
-    static std::unique_ptr<DB> connect_test();
+    static std::shared_ptr<DB> connect_test();
 
     /**
      * Create a database from an open Connection
      */
-    static std::unique_ptr<DB> create(std::unique_ptr<sql::Connection> conn);
+    static std::shared_ptr<DB> create(std::unique_ptr<sql::Connection> conn);
 
     /**
      * Return TRUE if the string looks like a DB URL

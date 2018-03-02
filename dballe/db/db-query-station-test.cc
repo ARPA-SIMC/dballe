@@ -170,11 +170,11 @@ class Tests : public DBFixtureTestCase<Fixture>
             switch (db.format())
             {
                 case V6:
-                    if (auto d = dynamic_cast<v6::DB*>(f.db))
+                    if (auto d = dynamic_cast<v6::DB*>(f.db.get()))
                         d->station().obtain_id(1100000, 4500000);
                     break;
                 case V7:
-                    if (auto d = dynamic_cast<v7::DB*>(f.db))
+                    if (auto d = dynamic_cast<v7::DB*>(f.db.get()))
                     {
                         db::v7::StationDesc sde;
                         db::v7::State state;
@@ -186,6 +186,7 @@ class Tests : public DBFixtureTestCase<Fixture>
                     break;
                 case V5: throw error_unimplemented("v5 db is not supported");
                 case MESSAGES: throw error_unimplemented("testing stations_without_data on MESSAGES database");
+                case MEM: throw error_unimplemented("MEM databases should not be created anymore");
             }
 
             // Query stations and make sure that they do not appear. They should

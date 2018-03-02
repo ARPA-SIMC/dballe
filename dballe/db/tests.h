@@ -55,13 +55,13 @@ struct BaseDBFixture : public Fixture
 {
     std::string backend;
     db::Format format;
-    DB* db = nullptr;
+    std::shared_ptr<DB> db;
 
     BaseDBFixture(const char* backend, db::Format format);
     ~BaseDBFixture();
 
     /// Open a new DB with the backend and format specified in this fixture
-    virtual std::unique_ptr<DB> create_db() = 0;
+    virtual std::shared_ptr<DB> create_db() = 0;
 
     void test_setup();
     bool has_driver();
@@ -83,7 +83,7 @@ struct DBFixture : public BaseDBFixture<dballe::DB>
     {
     }
 
-    std::unique_ptr<dballe::DB> create_db() override;
+    std::shared_ptr<dballe::DB> create_db() override;
 };
 
 struct V6DBFixture : public BaseDBFixture<dballe::db::v6::DB>
@@ -93,7 +93,7 @@ struct V6DBFixture : public BaseDBFixture<dballe::db::v6::DB>
     {
     }
 
-    std::unique_ptr<dballe::db::v6::DB> create_db() override;
+    std::shared_ptr<dballe::db::v6::DB> create_db() override;
 };
 
 struct V7DBFixture : public BaseDBFixture<dballe::db::v7::DB>
@@ -103,7 +103,7 @@ struct V7DBFixture : public BaseDBFixture<dballe::db::v7::DB>
     {
     }
 
-    std::unique_ptr<dballe::db::v7::DB> create_db() override;
+    std::shared_ptr<dballe::db::v7::DB> create_db() override;
 };
 
 template<typename FIXTURE>
@@ -189,7 +189,7 @@ inline ActualCursor actual(std::unique_ptr<dballe::db::CursorStationData>& actua
 inline ActualCursor actual(std::unique_ptr<dballe::db::CursorData>& actual) { return ActualCursor(*actual); }
 inline ActualCursor actual(std::unique_ptr<dballe::db::CursorSummary>& actual) { return ActualCursor(*actual); }
 inline ActualDB actual(dballe::DB& actual) { return ActualDB(actual); }
-inline ActualDB actual(std::unique_ptr<dballe::DB>& actual) { return ActualDB(*actual); }
+inline ActualDB actual(std::shared_ptr<dballe::DB>& actual) { return ActualDB(*actual); }
 
 extern template class BaseDBFixture<dballe::DB>;
 extern template class BaseDBFixture<dballe::db::v6::DB>;

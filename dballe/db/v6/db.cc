@@ -28,7 +28,7 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
-Transaction::Transaction(v6::DB& db, std::unique_ptr<dballe::Transaction> sql_transaction)
+Transaction::Transaction(std::shared_ptr<v6::DB> db, std::unique_ptr<dballe::Transaction> sql_transaction)
     : db(db), sql_transaction(sql_transaction.release()) {}
 Transaction::~Transaction()
 {
@@ -39,26 +39,26 @@ void Transaction::commit() { sql_transaction->commit(); }
 void Transaction::rollback() { sql_transaction->rollback(); }
 void Transaction::clear_cached_state()
 {
-    if (db.m_lev_tr_cache)
-        db.m_lev_tr_cache->invalidate();
+    if (db->m_lev_tr_cache)
+        db->m_lev_tr_cache->invalidate();
 }
 
 void Transaction::remove_all()
 {
-    auto tr = db.trace.trace_remove_all();
-    db.driver().remove_all_v6();
+    auto tr = db->trace.trace_remove_all();
+    db->driver().remove_all_v6();
     clear_cached_state();
     tr->done();
 }
 
 void Transaction::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
 {
-    v6::Repinfo& ri = db.repinfo();
-    v6::DataV6& d = db.data();
+    v6::Repinfo& ri = db->repinfo();
+    v6::DataV6& d = db->data();
 
     v6::bulk::InsertV6 vars;
     // Insert the station data, and get the ID
-    vars.id_station = vals.info.ana_id = db.obtain_station(vals.info, station_can_add);
+    vars.id_station = vals.info.ana_id = db->obtain_station(vals.info, station_can_add);
     // Get the ID of the report
     vars.id_report = ri.obtain_id(vals.info.report.c_str());
 
@@ -84,18 +84,18 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
     if (vals.values.empty())
         throw error_notfound("no variables found in input record");
 
-    v6::Repinfo& ri = db.repinfo();
-    v6::DataV6& d = db.data();
+    v6::Repinfo& ri = db->repinfo();
+    v6::DataV6& d = db->data();
 
     v6::bulk::InsertV6 vars;
     // Insert the station data, and get the ID
-    vars.id_station = vals.info.ana_id = db.obtain_station(vals.info, station_can_add);
+    vars.id_station = vals.info.ana_id = db->obtain_station(vals.info, station_can_add);
     // Get the ID of the report
     vars.id_report = ri.obtain_id(vals.info.report.c_str());
     // Set the date from the record contents
     vars.datetime = vals.info.datetime;
     // Insert the lev_tr data, and get the ID
-    int id_levtr = db.lev_tr().obtain_id(vals.info.level, vals.info.trange);
+    int id_levtr = db->lev_tr().obtain_id(vals.info.level, vals.info.trange);
 
     // Add all the variables we find
     for (auto& i: vals.values)
@@ -111,21 +111,21 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
 
 void Transaction::remove_station_data(const Query& query)
 {
-    auto tr = db.trace.trace_remove_station_data(query);
-    cursor::run_delete_query(db, core::Query::downcast(query), true, db.explain_queries);
+    auto tr = db->trace.trace_remove_station_data(query);
+    cursor::run_delete_query(*db, core::Query::downcast(query), true, db->explain_queries);
     tr->done();
 }
 
 void Transaction::remove(const Query& query)
 {
-    auto tr = db.trace.trace_remove(query);
-    cursor::run_delete_query(db, core::Query::downcast(query), false, db.explain_queries);
+    auto tr = db->trace.trace_remove(query);
+    cursor::run_delete_query(*db, core::Query::downcast(query), false, db->explain_queries);
     tr->done();
 }
 
 void Transaction::attr_insert_station(int data_id, const Values& attrs)
 {
-    v6::AttrV6& a = db.attr();
+    v6::AttrV6& a = db->attr();
     v6::bulk::InsertAttrsV6 iattrs;
     for (const auto& i : attrs)
         iattrs.add(i.second.var, data_id);
@@ -137,7 +137,7 @@ void Transaction::attr_insert_station(int data_id, const Values& attrs)
 
 void Transaction::attr_insert_data(int data_id, const Values& attrs)
 {
-    v6::AttrV6& a = db.attr();
+    v6::AttrV6& a = db->attr();
     v6::bulk::InsertAttrsV6 iattrs;
     for (const auto& i : attrs)
         iattrs.add(i.second.var, data_id);
@@ -161,7 +161,7 @@ void Transaction::attr_remove_station(int data_id, const db::AttrList& qcs)
             query.append_listf("%hd", *i);
         query.append(")");
     }
-    db.conn->execute(query);
+    db->conn->execute(query);
 }
 
 void Transaction::attr_remove_data(int data_id, const db::AttrList& qcs)
@@ -178,7 +178,7 @@ void Transaction::attr_remove_data(int data_id, const db::AttrList& qcs)
             query.append_listf("%hd", *i);
         query.append(")");
     }
-    db.conn->execute(query);
+    db->conn->execute(query);
 }
 
 // First part of initialising a dba_db
@@ -267,7 +267,7 @@ void DB::init_after_connect()
 std::unique_ptr<dballe::db::Transaction> DB::transaction()
 {
     auto res = conn->transaction();
-    return unique_ptr<dballe::db::Transaction>(new v6::Transaction(*this, move(res)));
+    return unique_ptr<dballe::db::Transaction>(new v6::Transaction(dynamic_pointer_cast<v6::DB>(shared_from_this()), move(res)));
 }
 
 void DB::delete_tables()

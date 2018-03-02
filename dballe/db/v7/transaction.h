@@ -13,11 +13,11 @@ struct DB;
 
 struct Transaction : public dballe::db::Transaction
 {
-    v7::DB& db;
+    std::shared_ptr<v7::DB> db;
     dballe::Transaction* sql_transaction = nullptr;
     State state;
 
-    Transaction(v7::DB& db, std::unique_ptr<dballe::Transaction> sql_transaction)
+    Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Transaction> sql_transaction)
         : db(db), sql_transaction(sql_transaction.release()) {}
     Transaction(const Transaction&) = delete;
     Transaction(Transaction&&) = delete;

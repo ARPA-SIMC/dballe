@@ -82,7 +82,7 @@ bool DB::is_url(const char* str)
     return false;
 }
 
-unique_ptr<DB> DB::create(unique_ptr<sql::Connection> conn)
+shared_ptr<DB> DB::create(unique_ptr<sql::Connection> conn)
 {
     // Autodetect format
     Format format = default_format;
@@ -118,20 +118,20 @@ unique_ptr<DB> DB::create(unique_ptr<sql::Connection> conn)
     switch (format)
     {
         case V5: throw error_unimplemented("V5 format is not supported anymore by this version of DB-All.e");
-        case V6: return unique_ptr<DB>(new v6::DB(move(conn)));
-        case V7: return unique_ptr<DB>(new v7::DB(move(conn)));
+        case V6: return static_pointer_cast<DB>(make_shared<v6::DB>(move(conn)));
+        case V7: return static_pointer_cast<DB>(make_shared<v7::DB>(move(conn)));
         default: error_consistency::throwf("requested unknown format %d", (int)format);
     }
 }
 
-unique_ptr<DB> DB::connect_from_file(const char* pathname)
+shared_ptr<DB> DB::connect_from_file(const char* pathname)
 {
     unique_ptr<sql::SQLiteConnection> conn(new sql::SQLiteConnection);
     conn->open_file(pathname);
     return create(unique_ptr<sql::Connection>(conn.release()));
 }
 
-unique_ptr<DB> DB::connect_from_url(const char* url)
+shared_ptr<DB> DB::connect_from_url(const char* url)
 {
     if (strncmp(url, "mem:", 4) == 0)
     {
@@ -142,18 +142,18 @@ unique_ptr<DB> DB::connect_from_url(const char* url)
     }
 }
 
-unique_ptr<DB> DB::connect_memory(const std::string& arg)
+shared_ptr<DB> DB::connect_memory(const std::string& arg)
 {
     sql::SQLiteConnection* sqlite_conn;
 
     unique_ptr<sql::Connection> conn(sqlite_conn = new sql::SQLiteConnection);
     sqlite_conn->open_memory();
-    unique_ptr<DB> res(new v7::DB(move(conn)));
+    shared_ptr<DB> res(new v7::DB(move(conn)));
     res->reset();
     return res;
 }
 
-unique_ptr<DB> DB::connect_test()
+shared_ptr<DB> DB::connect_test()
 {
     if (default_format == MEM)
         return connect_memory();

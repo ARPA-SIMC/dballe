@@ -9,7 +9,7 @@ namespace benchmark {
 
 struct DBTask : Task
 {
-    std::unique_ptr<DB> db;
+    std::shared_ptr<DB> db;
 
     using Task::Task;
 
@@ -22,7 +22,7 @@ struct DBTask : Task
     void teardown() override
     {
         db->disappear();
-        db.reset(0);
+        db.reset();
     }
 };
 
@@ -36,7 +36,7 @@ struct ExistingDBTask : Task
 
 struct DBBenchmark : Benchmark
 {
-    std::unique_ptr<DB> db;
+    std::shared_ptr<DB> db;
 
     using Benchmark::Benchmark;
 
@@ -49,7 +49,7 @@ struct DBBenchmark : Benchmark
     void teardown() override
     {
         db->disappear();
-        db.reset(0);
+        db.reset();
     }
 };
 

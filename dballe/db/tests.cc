@@ -236,7 +236,6 @@ BaseDBFixture<DB>::~BaseDBFixture()
 {
     if (db && getenv("PAUSE") == nullptr)
         db->disappear();
-    delete db;
 }
 
 template<typename DB>
@@ -254,7 +253,7 @@ void BaseDBFixture<DB>::test_setup()
 
     if (!db)
     {
-        db = create_db().release();
+        db = create_db();
         db->reset();
     }
     db->remove_all();
@@ -268,23 +267,23 @@ void BaseDBFixture<DB>::populate_database(TestDataSet& data_set)
     wassert(data_set.populate_db(*db));
 }
 
-std::unique_ptr<DB> DBFixture::create_db()
+std::shared_ptr<DB> DBFixture::create_db()
 {
     OverrideTestDBFormat odbf(format);
     auto conn = get_test_connection(backend);
     return dballe::DB::create(move(conn));
 }
 
-std::unique_ptr<dballe::db::v6::DB> V6DBFixture::create_db()
+std::shared_ptr<dballe::db::v6::DB> V6DBFixture::create_db()
 {
     auto conn = get_test_connection(backend);
-    return std::unique_ptr<dballe::db::v6::DB>(new dballe::db::v6::DB(move(conn)));
+    return std::make_shared<dballe::db::v6::DB>(move(conn));
 }
 
-std::unique_ptr<dballe::db::v7::DB> V7DBFixture::create_db()
+std::shared_ptr<dballe::db::v7::DB> V7DBFixture::create_db()
 {
     auto conn = get_test_connection(backend);
-    return std::unique_ptr<dballe::db::v7::DB>(new dballe::db::v7::DB(move(conn)));
+    return std::make_shared<dballe::db::v7::DB>(move(conn));
 }
 
 

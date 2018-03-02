@@ -26,10 +26,10 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
     // Check if the station is mobile
     bool mobile = msg.get_ident_var() != NULL;
 
-    v6::Station& st = db.station();
-    v6::LevTr& lt = db.lev_tr();
-    v6::DataV6& dd = db.data();
-    v6::AttrV6& dq = db.attr();
+    v6::Station& st = db->station();
+    v6::LevTr& lt = db->lev_tr();
+    v6::DataV6& dd = db->data();
+    v6::AttrV6& dq = db->attr();
 
     // Fill up the pseudoana informations needed to fetch an existing ID
 
@@ -63,13 +63,13 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
     // Report code
     int id_report;
     if (repmemo != NULL)
-        id_report = db.rep_cod_from_memo(repmemo);
+        id_report = db->rep_cod_from_memo(repmemo);
     else {
         // TODO: check if B01194 first
         if (const Var* var = msg.get_rep_memo_var())
-            id_report = db.rep_cod_from_memo(var->enqc());
+            id_report = db->rep_cod_from_memo(var->enqc());
         else
-            id_report = db.rep_cod_from_memo(Msg::repmemo_from_type(msg.type));
+            id_report = db->rep_cod_from_memo(Msg::repmemo_from_type(msg.type));
     }
 
     if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || inserted_pseudoana)

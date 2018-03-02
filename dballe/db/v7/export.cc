@@ -107,15 +107,15 @@ struct DataRow
 
 bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest)
 {
-    auto tr = db.trace.trace_export_msgs(query);
-    v7::Repinfo& ri = db.repinfo();
-    v7::LevTr& lt = db.levtr();
+    auto tr = db->trace.trace_export_msgs(query);
+    v7::Repinfo& ri = db->repinfo();
+    v7::LevTr& lt = db->levtr();
 
     // Message being built
     unique_ptr<Msg> msg;
 
     // The big export query
-    DataQueryBuilder qb(db, core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT, false, true);
+    DataQueryBuilder qb(*db, core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT, false, true);
     qb.build();
 
     // Current context information used to detect context changes
@@ -124,16 +124,16 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
 
     StationLayerCache station_cache;
 
-    if (db.explain_queries)
+    if (db->explain_queries)
     {
         fprintf(stderr, "EXPLAIN "); query.print(stderr);
-        db.conn->explain(qb.sql_query, stderr);
+        db->conn->explain(qb.sql_query, stderr);
     }
 
     // Retrieve results, buffering them locally to avoid performing concurrent
     // queries
     std::vector<DataRow> results;
-    db.driver().run_data_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+    db->driver().run_data_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
         results.emplace_back(id_station, station, id_levtr, datetime, id_data, move(var));
     });
 
@@ -174,7 +174,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
 
             // Update station layer cache if needed
             if (row.id_station != last_ana_id)
-                station_cache.fill(db, row.id_station);
+                station_cache.fill(*db, row.id_station);
 
             // Fill in report information
             {

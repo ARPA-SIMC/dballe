@@ -61,16 +61,16 @@ struct StationLayerCache : protected std::vector<wreport::Var*>
 
 bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest)
 {
-    auto tr = db.trace.trace_export_msgs(query);
-    v6::Repinfo& ri = db.repinfo();
-    v6::AttrV6& at = db.attr();
-    v6::LevTrCache& ltrc = db.lev_tr_cache();
+    auto tr = db->trace.trace_export_msgs(query);
+    v6::Repinfo& ri = db->repinfo();
+    v6::AttrV6& at = db->attr();
+    v6::LevTrCache& ltrc = db->lev_tr_cache();
 
     // Message being built
     unique_ptr<Msg> msg;
 
     // The big export query
-    DataQueryBuilder qb(db, core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT, false);
+    DataQueryBuilder qb(*db, core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT, false);
     qb.build();
 
     // Current context information used to detect context changes
@@ -80,16 +80,16 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
 
     StationLayerCache station_cache;
 
-    if (db.explain_queries)
+    if (db->explain_queries)
     {
         fprintf(stderr, "EXPLAIN "); query.print(stderr);
-        db.conn->explain(qb.sql_query, stderr);
+        db->conn->explain(qb.sql_query, stderr);
     }
 
     // Retrieve results, buffering them locally to avoid performing concurrent
     // queries
     Structbuf<v6::SQLRecordV6> results;
-    db.driver().run_built_query_v6(qb, [&](v6::SQLRecordV6& sqlrec) {
+    db->driver().run_built_query_v6(qb, [&](v6::SQLRecordV6& sqlrec) {
         results.append(sqlrec);
     });
     results.ready_to_read();
@@ -141,7 +141,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
 
             // Update station layer cache if needed
             if (sqlrec.out_ana_id != last_ana_id || sqlrec.out_rep_cod != last_rep_cod)
-                station_cache.fill(db, sqlrec.out_ana_id, sqlrec.out_rep_cod);
+                station_cache.fill(*db, sqlrec.out_ana_id, sqlrec.out_rep_cod);
 
             // Fill in report information
             {

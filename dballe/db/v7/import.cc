@@ -26,8 +26,8 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
     // Check if the station is mobile
     bool mobile = msg.get_ident_var() != NULL;
 
-    v7::Station& st = db.station();
-    v7::LevTr& lt = db.levtr();
+    v7::Station& st = db->station();
+    v7::LevTr& lt = db->levtr();
 
     // Fill up the station informations needed to fetch an existing ID
     StationDesc station_desc;
@@ -55,13 +55,13 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
 
     // Report code
     if (repmemo != NULL)
-        station_desc.rep = db.rep_cod_from_memo(repmemo);
+        station_desc.rep = db->rep_cod_from_memo(repmemo);
     else {
         // TODO: check if B01194 first
         if (const Var* var = msg.get_rep_memo_var())
-            station_desc.rep = db.rep_cod_from_memo(var->enqc());
+            station_desc.rep = db->rep_cod_from_memo(var->enqc());
         else
-            station_desc.rep = db.rep_cod_from_memo(Msg::repmemo_from_type(msg.type));
+            station_desc.rep = db->rep_cod_from_memo(Msg::repmemo_from_type(msg.type));
     }
 
     auto sstate = st.obtain_id(state, station_desc);
@@ -69,7 +69,7 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
     if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || sstate->second.is_new)
     {
         // Prepare a bulk insert
-        v7::StationData& sd = db.station_data();
+        v7::StationData& sd = db->station_data();
         v7::bulk::InsertStationVars vars(state, sstate);
         for (size_t i = 0; i < l_ana->data.size(); ++i)
         {
@@ -84,7 +84,7 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
         sd.insert(*this, vars, (flags & DBA_IMPORT_OVERWRITE) ? v7::bulk::UPDATE : v7::bulk::IGNORE, flags & DBA_IMPORT_ATTRS);
     }
 
-    v7::Data& dd = db.data();
+    v7::Data& dd = db->data();
 
     v7::bulk::InsertVars vars(state, sstate);
 
