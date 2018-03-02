@@ -189,56 +189,56 @@ class CommonDBTestMixin(DballeDBMixin):
                 self.fp.close()
 
         with F(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr") as f:
-            self.db.reset()
+            self.db.remove_all()
             self.db.load(f)
             self.assertTrue(self.db.query_data(dballe.Record()).remaining > 0)
 
     def testLoadAutodetect(self):
         # BUFR, autodetectable
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.assertEqual(self.db.load(fp), 25)
 
         # BUFR, not autodetectable
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/synop-groundtemp.bufr", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             with self.assertRaises(KeyError):
                 self.db.load(fp)
 
         # CREX, autodetectable
 
         with io.open(os.getenv("DBA_TESTDATA") + "/crex/test-synop0.crex", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.assertEqual(self.db.load(fp), 1)
 
         # BUFR
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.assertEqual(self.db.load(fp, "BUFR"), 25)
 
         # BUFR
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/synop-groundtemp.bufr", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.assertEqual(self.db.load(fp, "BUFR"), 1)
 
         # CREX loaded as BUFR yields no results
         with io.open(os.getenv("DBA_TESTDATA") + "/crex/test-synop0.crex", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.assertEqual(self.db.load(fp, "BUFR"), 0)
 
         # CREX
         with io.open(os.getenv("DBA_TESTDATA") + "/crex/test-synop0.crex", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.assertEqual(self.db.load(fp, "CREX"), 1)
 
         # BUFR loaded as CREX yields no results
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.assertEqual(self.db.load(fp, "CREX"), 0)
 
     def testQueryVolnd(self):
         from testlib import fill_volnd
-        self.db.reset()
+        self.db.remove_all()
         fill_volnd(self.db)
         query = dballe.Record()
         query["var"] = "B10004"

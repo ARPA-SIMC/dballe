@@ -43,7 +43,7 @@ def fill_volnd(db):
     rattr = not_so_random(2)
 
     # Wipe the test database
-    db.reset()
+    db.remove_all()
 
     attrs = dballe.Record()
     rec = dballe.Record(mobile=0)

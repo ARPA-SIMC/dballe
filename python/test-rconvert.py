@@ -15,6 +15,7 @@ class TestR(unittest.TestCase):
         from testlib import fill_volnd
         numpy.seterr(divide="raise", over="raise", under="raise", invalid="raise")
         self.db = dballe.DB.connect_test()
+        self.db.reset()
         fill_volnd(self.db)
 
         #def f(x,y,z):
