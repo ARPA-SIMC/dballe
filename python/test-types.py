@@ -7,8 +7,10 @@ from __future__ import unicode_literals
 import dballe
 import datetime
 import unittest
+import sys
 import warnings
 
+@unittest.skipIf(sys.version_info[0] < 3, "python3 only")
 class TestLevel(unittest.TestCase):
     def testCreateEmpty(self):
         # structseq constructors have two arguments: sequence, dict=NULL)
@@ -30,6 +32,7 @@ class TestLevel(unittest.TestCase):
         self.assertEqual(l.l2, 4)
 
 
+@unittest.skipIf(sys.version_info[0] < 3, "python3 only")
 class TestTrange(unittest.TestCase):
     def testCreateEmpty(self):
         t = dballe.Trange((None, None, None))
@@ -46,6 +49,7 @@ class TestTrange(unittest.TestCase):
         self.assertEqual(t.p2, 3)
 
 
+@unittest.skipIf(sys.version_info[0] < 3, "python3 only")
 class TestStation(unittest.TestCase):
     def testCreateEmpty(self):
         t = dballe.Station((None, None, None, None, None))
