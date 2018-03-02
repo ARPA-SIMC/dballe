@@ -49,9 +49,13 @@ static PyObject* get_insert_ids(const Vals& vals)
     return res.release();
 }
 
-extern "C" {
-
 static PyGetSetDef dpy_DB_getsetters[] = {
+    //{"code", (getter)dpy_Var_code, NULL, "variable code", NULL },
+    //{"isset", (getter)dpy_Var_isset, NULL, "true if the value is set", NULL },
+    {NULL}
+};
+
+static PyGetSetDef dpy_Transaction_getsetters[] = {
     //{"code", (getter)dpy_Var_code, NULL, "variable code", NULL },
     //{"isset", (getter)dpy_Var_isset, NULL, "true if the value is set", NULL },
     {NULL}
@@ -162,6 +166,18 @@ static PyObject* dpy_DB_reset(dpy_DB* self, PyObject *args)
     Py_RETURN_NONE;
 }
 
+static PyObject* dpy_DB_transaction(dpy_DB* self)
+{
+    try {
+        auto res = self->db->transaction();
+        return (PyObject*)transaction_create(move(res));
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+}
+
 /*
 virtual void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated) = 0;
 */
@@ -192,7 +208,8 @@ static PyObject* dpy_DB_insert(dpy_DB* self, PyObject* args, PyObject* kw)
     } DBALLE_CATCH_RETURN_PYO
 }
 
-static PyObject* dpy_DB_insert_station_data(dpy_DB* self, PyObject* args, PyObject* kw)
+template<typename PYDB>
+static PyObject* dpy_insert_station_data(PYDB* self, PyObject* args, PyObject* kw)
 {
     static const char* kwlist[] = { "record", "can_replace", "can_add_stations", NULL };
     dpy_Record* record;
@@ -208,7 +225,8 @@ static PyObject* dpy_DB_insert_station_data(dpy_DB* self, PyObject* args, PyObje
     } DBALLE_CATCH_RETURN_PYO
 }
 
-static PyObject* dpy_DB_insert_data(dpy_DB* self, PyObject* args, PyObject* kw)
+template<typename PYDB>
+static PyObject* dpy_insert_data(PYDB* self, PyObject* args, PyObject* kw)
 {
     static const char* kwlist[] = { "record", "can_replace", "can_add_stations", NULL };
     dpy_Record* record;
@@ -224,35 +242,38 @@ static PyObject* dpy_DB_insert_data(dpy_DB* self, PyObject* args, PyObject* kw)
     } DBALLE_CATCH_RETURN_PYO
 }
 
-static unsigned db_load_file_enc(std::shared_ptr<DB> db, File::Encoding encoding, FILE* file, bool close_on_exit, const std::string& name, int flags)
+template<typename DB>
+static unsigned db_load_file_enc(DB& db, File::Encoding encoding, FILE* file, bool close_on_exit, const std::string& name, int flags)
 {
     std::unique_ptr<File> f = File::create(encoding, file, close_on_exit, name);
     std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->encoding());
     unsigned count = 0;
     f->foreach([&](const BinaryMessage& raw) {
         Messages msgs = imp->from_binary(raw);
-        db->import_msgs(msgs, NULL, flags);
+        db.import_msgs(msgs, NULL, flags);
         ++count;
         return true;
     });
     return count;
 }
 
-static unsigned db_load_file(std::shared_ptr<DB> db, FILE* file, bool close_on_exit, const std::string& name, int flags)
+template<typename DB>
+static unsigned db_load_file(DB& db, FILE* file, bool close_on_exit, const std::string& name, int flags)
 {
     std::unique_ptr<File> f = File::create(file, close_on_exit, name);
     std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->encoding());
     unsigned count = 0;
     f->foreach([&](const BinaryMessage& raw) {
         Messages msgs = imp->from_binary(raw);
-        db->import_msgs(msgs, NULL, flags);
+        db.import_msgs(msgs, NULL, flags);
         ++count;
         return true;
     });
     return count;
 }
 
-static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args, PyObject* kw)
+template<typename PYDB>
+static PyObject* dpy_load(PYDB* self, PyObject* args, PyObject* kw)
 {
     static const char* kwlist[] = {"fp", "encoding", "attrs", "full_pseudoana", "overwrite", NULL};
 
@@ -289,9 +310,9 @@ static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args, PyObject* kw)
             unsigned count;
             if (encoding)
             {
-                count = db_load_file_enc(self->db, File::parse_encoding(encoding), f, true, repr, flags);
+                count = db_load_file_enc(*self->db, File::parse_encoding(encoding), f, true, repr, flags);
             } else
-                count = db_load_file(self->db, f, true, repr, flags);
+                count = db_load_file(*self->db, f, true, repr, flags);
             return PyInt_FromLong(count);
         } else {
             // Duplicate the file descriptor because both python and libc will want to
@@ -314,9 +335,9 @@ static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args, PyObject* kw)
             unsigned count;
             if (encoding)
             {
-                count = db_load_file_enc(self->db, File::parse_encoding(encoding), f, true, repr, flags);
+                count = db_load_file_enc(*self->db, File::parse_encoding(encoding), f, true, repr, flags);
             } else
-                count = db_load_file(self->db, f, true, repr, flags);
+                count = db_load_file(*self->db, f, true, repr, flags);
             return PyInt_FromLong(count);
         }
     } catch (wreport::error& e) {
@@ -327,7 +348,8 @@ static PyObject* dpy_DB_load(dpy_DB* self, PyObject* args, PyObject* kw)
 }
 
 
-static PyObject* dpy_DB_remove_station_data(dpy_DB* self, PyObject* args)
+template<typename PYDB>
+static PyObject* dpy_remove_station_data(PYDB* self, PyObject* args)
 {
     dpy_Record* record;
     if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
@@ -348,7 +370,8 @@ static PyObject* dpy_DB_remove_station_data(dpy_DB* self, PyObject* args)
     Py_RETURN_NONE;
 }
 
-static PyObject* dpy_DB_remove(dpy_DB* self, PyObject* args)
+template<typename PYDB>
+static PyObject* dpy_remove(PYDB* self, PyObject* args)
 {
     dpy_Record* record;
     if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
@@ -595,7 +618,8 @@ static PyObject* dpy_DB_attr_insert(dpy_DB* self, PyObject* args, PyObject* kw)
     } DBALLE_CATCH_RETURN_PYO
 }
 
-static PyObject* dpy_DB_attr_insert_station(dpy_DB* self, PyObject* args)
+template<typename PYDB>
+static PyObject* dpy_attr_insert_station(PYDB* self, PyObject* args)
 {
     int data_id;
     dpy_Record* attrs;
@@ -608,7 +632,8 @@ static PyObject* dpy_DB_attr_insert_station(dpy_DB* self, PyObject* args)
     } DBALLE_CATCH_RETURN_PYO
 }
 
-static PyObject* dpy_DB_attr_insert_data(dpy_DB* self, PyObject* args)
+template<typename PYDB>
+static PyObject* dpy_attr_insert_data(PYDB* self, PyObject* args)
 {
     int data_id;
     dpy_Record* attrs;
@@ -647,7 +672,8 @@ static PyObject* dpy_DB_attr_remove(dpy_DB* self, PyObject* args, PyObject* kw)
     } DBALLE_CATCH_RETURN_PYO
 }
 
-static PyObject* dpy_DB_attr_remove_station(dpy_DB* self, PyObject* args)
+template<typename PYDB>
+static PyObject* dpy_attr_remove_station(PYDB* self, PyObject* args)
 {
     int reference_id;
     PyObject* attrs = 0;
@@ -665,7 +691,8 @@ static PyObject* dpy_DB_attr_remove_station(dpy_DB* self, PyObject* args)
     } DBALLE_CATCH_RETURN_PYO
 }
 
-static PyObject* dpy_DB_attr_remove_data(dpy_DB* self, PyObject* args)
+template<typename PYDB>
+static PyObject* dpy_attr_remove_data(PYDB* self, PyObject* args)
 {
     int reference_id;
     PyObject* attrs = 0;
@@ -683,7 +710,8 @@ static PyObject* dpy_DB_attr_remove_data(dpy_DB* self, PyObject* args)
     } DBALLE_CATCH_RETURN_PYO
 }
 
-static PyObject* dpy_DB_export_to_file(dpy_DB* self, PyObject* args, PyObject* kw)
+template<typename PYDB>
+static PyObject* dpy_export_to_file(PYDB* self, PyObject* args, PyObject* kw)
 {
     static const char* kwlist[] = { "query", "format", "filename", "generic", NULL };
     dpy_Record* query;
@@ -741,26 +769,28 @@ static PyMethodDef dpy_DB_methods[] = {
         "Create a DB for running the test suite, as configured in the test environment" },
     {"is_url",            (PyCFunction)dpy_DB_is_url, METH_VARARGS | METH_CLASS,
         "Checks if a string looks like a DB url" },
+    {"transaction",       (PyCFunction)dpy_DB_transaction, METH_NOARGS,
+        "Create a new database transaction" },
     {"disappear",         (PyCFunction)dpy_DB_disappear, METH_NOARGS,
         "Remove all our traces from the database, if applicable." },
     {"reset",             (PyCFunction)dpy_DB_reset, METH_VARARGS,
         "Reset the database, removing all existing Db-All.e tables and re-creating them empty." },
     {"insert",            (PyCFunction)dpy_DB_insert, METH_VARARGS | METH_KEYWORDS,
         "(deprecated)Insert a record in the database" },
-    {"insert_station_data", (PyCFunction)dpy_DB_insert_station_data, METH_VARARGS | METH_KEYWORDS,
+    {"insert_station_data", (PyCFunction)dpy_insert_station_data<dpy_DB>, METH_VARARGS | METH_KEYWORDS,
         "Insert station values in the database" },
-    {"insert_data",       (PyCFunction)dpy_DB_insert_data, METH_VARARGS | METH_KEYWORDS,
+    {"insert_data",       (PyCFunction)dpy_insert_data<dpy_DB>, METH_VARARGS | METH_KEYWORDS,
         "Insert data values in the database" },
-    {"load",              (PyCFunction)dpy_DB_load, METH_VARARGS | METH_KEYWORDS, R"(
+    {"load",              (PyCFunction)dpy_load<dpy_DB>, METH_VARARGS | METH_KEYWORDS, R"(
         load(fp, encoding=None, attrs=False, full_pseudoana=False, overwrite=False)
 
         Load a file object in the database. An encoding can optionally be
         provided as a string ("BUFR", "CREX", "AOF"). If encoding is None then
         load will try to autodetect based on the first byte of the file.
     )" },
-    {"remove_station_data", (PyCFunction)dpy_DB_remove_station_data, METH_VARARGS,
+    {"remove_station_data", (PyCFunction)dpy_remove_station_data<dpy_DB>, METH_VARARGS,
         "Remove station variables from the database" },
-    {"remove",            (PyCFunction)dpy_DB_remove, METH_VARARGS,
+    {"remove",            (PyCFunction)dpy_remove<dpy_DB>, METH_VARARGS,
         "Remove variables from the database" },
     {"vacuum",            (PyCFunction)dpy_DB_vacuum, METH_NOARGS,
         "Perform database cleanup operations" },
@@ -780,17 +810,66 @@ static PyMethodDef dpy_DB_methods[] = {
         "Query attributes" },
     {"attr_insert",       (PyCFunction)dpy_DB_attr_insert, METH_VARARGS | METH_KEYWORDS,
         "Insert new attributes into the database" },
-    {"attr_insert_station", (PyCFunction)dpy_DB_attr_insert_station, METH_VARARGS,
+    {"attr_insert_station", (PyCFunction)dpy_attr_insert_station<dpy_DB>, METH_VARARGS,
         "Insert new attributes into the database" },
-    {"attr_insert_data",  (PyCFunction)dpy_DB_attr_insert_data, METH_VARARGS,
+    {"attr_insert_data",  (PyCFunction)dpy_attr_insert_data<dpy_DB>, METH_VARARGS,
         "Insert new attributes into the database" },
     {"attr_remove",       (PyCFunction)dpy_DB_attr_remove, METH_VARARGS | METH_KEYWORDS,
         "Remove attributes" },
-    {"attr_remove_station", (PyCFunction)dpy_DB_attr_remove_station, METH_VARARGS,
+    {"attr_remove_station", (PyCFunction)dpy_attr_remove_station<dpy_DB>, METH_VARARGS,
         "Remove attributes" },
-    {"attr_remove_data",  (PyCFunction)dpy_DB_attr_remove_data, METH_VARARGS,
+    {"attr_remove_data",  (PyCFunction)dpy_attr_remove_data<dpy_DB>, METH_VARARGS,
         "Remove attributes" },
-    {"export_to_file",    (PyCFunction)dpy_DB_export_to_file, METH_VARARGS | METH_KEYWORDS,
+    {"export_to_file",    (PyCFunction)dpy_export_to_file<dpy_DB>, METH_VARARGS | METH_KEYWORDS,
+        "Export data matching a query as bulletins to a named file" },
+    {NULL}
+};
+
+static PyMethodDef dpy_Transaction_methods[] = {
+//    {"disappear",         (PyCFunction)dpy_DB_disappear, METH_NOARGS,
+//        "Remove all our traces from the database, if applicable." },
+//    {"reset",             (PyCFunction)dpy_DB_reset, METH_VARARGS,
+//        "Reset the database, removing all existing Db-All.e tables and re-creating them empty." },
+    {"insert_station_data", (PyCFunction)dpy_insert_station_data<dpy_Transaction>, METH_VARARGS | METH_KEYWORDS,
+        "Insert station values in the database" },
+    {"insert_data",       (PyCFunction)dpy_insert_data<dpy_Transaction>, METH_VARARGS | METH_KEYWORDS,
+        "Insert data values in the database" },
+    {"load",              (PyCFunction)dpy_load<dpy_Transaction>, METH_VARARGS | METH_KEYWORDS, R"(
+        load(fp, encoding=None, attrs=False, full_pseudoana=False, overwrite=False)
+
+        Load a file object in the database. An encoding can optionally be
+        provided as a string ("BUFR", "CREX", "AOF"). If encoding is None then
+        load will try to autodetect based on the first byte of the file.
+    )" },
+    {"remove_station_data", (PyCFunction)dpy_remove_station_data<dpy_Transaction>, METH_VARARGS,
+        "Remove station variables from the database" },
+    {"remove",            (PyCFunction)dpy_remove<dpy_Transaction>, METH_VARARGS,
+        "Remove variables from the database" },
+//    {"vacuum",            (PyCFunction)dpy_DB_vacuum, METH_NOARGS,
+//        "Perform database cleanup operations" },
+//    {"query_stations",    (PyCFunction)dpy_DB_query_stations, METH_VARARGS,
+//        "Query the station archive in the database; returns a Cursor" },
+//    {"query_station_data", (PyCFunction)dpy_DB_query_station_data, METH_VARARGS,
+//        "Query the station variables in the database; returns a Cursor" },
+//    {"query_data",        (PyCFunction)dpy_DB_query_data, METH_VARARGS,
+//        "Query the variables in the database; returns a Cursor" },
+//    {"query_summary",     (PyCFunction)dpy_DB_query_summary, METH_VARARGS,
+//        "Query the summary of the results of a query; returns a Cursor" },
+//    {"query_attrs",       (PyCFunction)dpy_DB_query_attrs, METH_VARARGS | METH_KEYWORDS,
+//        "Query attributes" },
+//    {"attr_query_station", (PyCFunction)dpy_DB_attr_query_station, METH_VARARGS,
+//        "Query attributes" },
+//    {"attr_query_data",   (PyCFunction)dpy_DB_attr_query_data, METH_VARARGS,
+//        "Query attributes" },
+    {"attr_insert_station", (PyCFunction)dpy_attr_insert_station<dpy_Transaction>, METH_VARARGS,
+        "Insert new attributes into the database" },
+    {"attr_insert_data",  (PyCFunction)dpy_attr_insert_data<dpy_Transaction>, METH_VARARGS,
+        "Insert new attributes into the database" },
+    {"attr_remove_station", (PyCFunction)dpy_attr_remove_station<dpy_Transaction>, METH_VARARGS,
+        "Remove attributes" },
+    {"attr_remove_data",  (PyCFunction)dpy_attr_remove_data<dpy_Transaction>, METH_VARARGS,
+        "Remove attributes" },
+    {"export_to_file",    (PyCFunction)dpy_export_to_file<dpy_Transaction>, METH_VARARGS | METH_KEYWORDS,
         "Export data matching a query as bulletins to a named file" },
     {NULL}
 };
@@ -846,6 +925,80 @@ static PyObject* dpy_DB_repr(dpy_DB* self)
     */
     return PyUnicode_FromString("DB object");
 }
+
+
+static int dpy_Transaction_init(dpy_Transaction* self, PyObject* args, PyObject* kw)
+{
+    return 0;
+}
+
+static dpy_Transaction* dpy_Transaction_new(PyTypeObject* subtype, PyObject* args, PyObject* kw)
+{
+    dpy_Transaction* self = reinterpret_cast<dpy_Transaction*>(subtype->tp_alloc(subtype, 0));
+    if (!self) return self;
+    self->db = 0;
+    return self;
+}
+
+static void dpy_Transaction_dealloc(dpy_Transaction* self)
+{
+    delete self->db;
+    Py_TYPE(self)->tp_free(self);
+}
+
+static PyObject* dpy_Transaction_str(dpy_Transaction* self)
+{
+    return PyUnicode_FromString("Transaction");
+}
+
+static PyObject* dpy_Transaction_repr(dpy_Transaction* self)
+{
+    return PyUnicode_FromString("Transaction object");
+}
+
+
+extern "C" {
+
+PyTypeObject dpy_Transaction_Type = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "dballe.Transaction",      // tp_name
+    sizeof(dpy_Transaction),   // tp_basicsize
+    0,                         // tp_itemsize
+    (destructor)dpy_Transaction_dealloc, // tp_dealloc
+    0,                         // tp_print
+    0,                         // tp_getattr
+    0,                         // tp_setattr
+    0,                         // tp_compare
+    (reprfunc)dpy_Transaction_repr, // tp_repr
+    0,                         // tp_as_number
+    0,                         // tp_as_sequence
+    0,                         // tp_as_mapping
+    0,                         // tp_hash
+    0,                         // tp_call
+    (reprfunc)dpy_Transaction_str, // tp_str
+    0,                         // tp_getattro
+    0,                         // tp_setattro
+    0,                         // tp_as_buffer
+    Py_TPFLAGS_DEFAULT,        // tp_flags
+    "DB-All.e Transaction",    // tp_doc
+    0,                         // tp_traverse
+    0,                         // tp_clear
+    0,                         // tp_richcompare
+    0,                         // tp_weaklistoffset
+    0,                         // tp_iter
+    0,                         // tp_iternext
+    dpy_Transaction_methods,   // tp_methods
+    0,                         // tp_members
+    dpy_Transaction_getsetters, // tp_getset
+    0,                         // tp_base
+    0,                         // tp_dict
+    0,                         // tp_descr_get
+    0,                         // tp_descr_set
+    0,                         // tp_dictoffset
+    (initproc)dpy_Transaction_init, // tp_init
+    0,                         // tp_alloc
+    (newfunc)dpy_Transaction_new, // tp_new
+};
 
 PyTypeObject dpy_DB_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -921,14 +1074,27 @@ dpy_DB* db_create(std::shared_ptr<DB> db)
     return result;
 }
 
+dpy_Transaction* transaction_create(std::unique_ptr<dballe::db::Transaction> transaction)
+{
+    dpy_Transaction* result = (dpy_Transaction*)PyObject_CallObject((PyObject*)&dpy_Transaction_Type, nullptr);
+    if (!result)
+        return NULL;
+    result->db = transaction.release();
+    return result;
+}
+
 void register_db(PyObject* m)
 {
     common_init();
 
+    if (PyType_Ready(&dpy_Transaction_Type) < 0)
+        return;
+    Py_INCREF(&dpy_Transaction_Type);
+
     if (PyType_Ready(&dpy_DB_Type) < 0)
         return;
-
     Py_INCREF(&dpy_DB_Type);
+
     PyModule_AddObject(m, "DB", (PyObject*)&dpy_DB_Type);
 }
 

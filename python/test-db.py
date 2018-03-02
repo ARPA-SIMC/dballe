@@ -12,9 +12,9 @@ import unittest
 import warnings
 from testlib import DballeDBMixin
 
-class DballeTestMixin(DballeDBMixin):
+class CommonDBTestMixin(DballeDBMixin):
     def setUp(self):
-        super(DballeTestMixin, self).setUp()
+        super(CommonDBTestMixin, self).setUp()
 
         data = dballe.Record(
                 lat=12.34560, lon=76.54320,
@@ -35,6 +35,15 @@ class DballeTestMixin(DballeDBMixin):
         for rec in self.db.query_data(dballe.Record(var="B01011")):
             self.attr_ref = rec["context_id"]
 
+    def testQueryExport(self):
+        query = dballe.Record()
+        self.db.export_to_file(query, "BUFR", "/dev/null")
+        self.db.export_to_file(query, "CREX", "/dev/null")
+        self.db.export_to_file(query, "BUFR", "/dev/null", generic=True)
+        self.db.export_to_file(query, "CREX", "/dev/null", generic=True)
+
+
+class FullDBTestMixin(CommonDBTestMixin):
     def testQueryAna(self):
         query = dballe.Record()
         cur = self.db.query_stations(query)
@@ -121,13 +130,6 @@ class DballeTestMixin(DballeDBMixin):
                     result["datemin"], result["datemax"], result["context_id"])
         self.assertEqual(res[(1, "synop", (10, 11, 15, 22), (20, 111, 222), 'B01011')], (datetime.datetime(1945, 4, 25, 8, 0), datetime.datetime(1945, 4, 25, 8, 0), 1))
         self.assertEqual(res[(1, "synop", (10, 11, 15, 22), (20, 111, 222), 'B01012')], (datetime.datetime(1945, 4, 25, 8, 0), datetime.datetime(1945, 4, 25, 8, 0), 1))
-
-    def testQueryExport(self):
-        query = dballe.Record()
-        self.db.export_to_file(query, "BUFR", "/dev/null")
-        self.db.export_to_file(query, "CREX", "/dev/null")
-        self.db.export_to_file(query, "BUFR", "/dev/null", generic=True)
-        self.db.export_to_file(query, "CREX", "/dev/null", generic=True)
 
     def testAttrRemove(self):
         #db.attrRemove(1, "B01011", [ "B33007" ])
@@ -272,13 +274,27 @@ class AttrTestMixin(object):
             self.assertTrue("B33196" in a)
 
 
-class DballeV6Test(DballeTestMixin, unittest.TestCase):
+class TransactionTestMixin(object):
+    def get_db(self):
+        db = super(TransactionTestMixin, self).get_db()
+        return db.transaction()
+
+class DballeV6Test(FullDBTestMixin, unittest.TestCase):
     DB_FORMAT = "V6"
 
-class DballeV7Test(DballeTestMixin, AttrTestMixin, unittest.TestCase):
+class DballeV6TransactionTest(TransactionTestMixin, CommonDBTestMixin, unittest.TestCase):
+    DB_FORMAT = "V6"
+
+class DballeV7Test(FullDBTestMixin, AttrTestMixin, unittest.TestCase):
     DB_FORMAT = "V7"
 
-class DballeMEMTest(DballeTestMixin, AttrTestMixin, unittest.TestCase):
+class DballeV7TransactionTest(TransactionTestMixin, CommonDBTestMixin, AttrTestMixin, unittest.TestCase):
+    DB_FORMAT = "V7"
+
+class DballeMEMTest(FullDBTestMixin, AttrTestMixin, unittest.TestCase):
+    DB_FORMAT = "MEM"
+
+class DballeMEMTransactionTest(TransactionTestMixin, CommonDBTestMixin, AttrTestMixin, unittest.TestCase):
     DB_FORMAT = "MEM"
 
 

@@ -136,14 +136,18 @@ class DballeDBMixin(object):
         if not hasattr(self, "assertCountEqual"):
             self.assertCountEqual = self.assertItemsEqual
 
+    def get_db(self):
+        db = dballe.DB.connect_test()
+        db.connect_test();
+        db.reset()
+        return db
+
     def setUp(self):
         if os.path.exists("test.sqlite"):
             os.unlink("test.sqlite")
         self.orig_db_format = dballe.DB.get_default_format()
         dballe.DB.set_default_format(self.DB_FORMAT)
-        self.db = dballe.DB.connect_test()
-        self.db.connect_test();
-        self.db.reset()
+        self.db = self.get_db()
 
     def tearDown(self):
         self.db = None
