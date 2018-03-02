@@ -267,6 +267,7 @@ static int dpy_Explorer_init(dpy_Explorer* self, PyObject* args, PyObject* kw)
 static void dpy_Explorer_dealloc(dpy_Explorer* self)
 {
     delete self->explorer;
+    Py_TYPE(self)->tp_free(self);
 }
 
 static PyObject* dpy_Explorer_str(dpy_Explorer* self)

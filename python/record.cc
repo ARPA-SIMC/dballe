@@ -570,6 +570,7 @@ static void dpy_Record_dealloc(dpy_Record* self)
 {
     delete self->rec;
     self->rec = 0;
+    Py_TYPE(self)->tp_free(self);
 }
 
 static PyObject* dpy_Record_str(dpy_Record* self)

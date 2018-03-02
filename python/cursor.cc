@@ -111,6 +111,7 @@ static void dpy_Cursor_dealloc(dpy_Cursor* self)
     delete self->cur;
     Py_DECREF(self->rec);
     Py_DECREF(self->db);
+    Py_TYPE(self)->tp_free(self);
 }
 
 static PyObject* dpy_Cursor_iter(dpy_Cursor* self)
