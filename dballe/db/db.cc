@@ -148,7 +148,9 @@ shared_ptr<DB> DB::connect_memory(const std::string& arg)
 
     unique_ptr<sql::Connection> conn(sqlite_conn = new sql::SQLiteConnection);
     sqlite_conn->open_memory();
-    return static_pointer_cast<DB>(make_shared<v7::DB>(move(conn)));
+    auto res = static_pointer_cast<DB>(make_shared<v7::DB>(move(conn)));
+    res->reset();
+    return res;
 }
 
 shared_ptr<DB> DB::connect_test()
