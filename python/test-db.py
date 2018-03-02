@@ -259,7 +259,7 @@ class FullDBTestMixin(CommonDBTestMixin):
 class AttrTestMixin(object):
     def testLoadFileOverwriteAttrs(self):
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withoutB33196.bufr", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.db.load(fp, attrs=True, overwrite=True)
             r = next(self.db.query_data(dballe.Record()))
             a = self.db.attr_query_data(r["context_id"])

@@ -51,6 +51,10 @@ struct Transaction : public dballe::db::Transaction
     void rollback() override;
     void clear_cached_state() override;
     void remove_all() override;
+    std::unique_ptr<db::CursorStation> query_stations(const Query& query);
+    std::unique_ptr<db::CursorStationData> query_station_data(const Query& query) override;
+    std::unique_ptr<db::CursorData> query_data(const Query& query);
+    std::unique_ptr<db::CursorSummary> query_summary(const Query& query);
     void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add) override;
     void insert_data(DataValues& vals, bool can_replace, bool station_can_add) override;
     void remove_station_data(const Query& query) override;
@@ -204,11 +208,6 @@ public:
      * Depending on database size, this routine can take a few minutes to execute.
      */
     void vacuum();
-
-    std::unique_ptr<db::CursorStation> query_stations(const Query& query);
-    std::unique_ptr<db::CursorStationData> query_station_data(const Query& query) override;
-    std::unique_ptr<db::CursorData> query_data(const Query& query);
-    std::unique_ptr<db::CursorSummary> query_summary(const Query& query);
 
     void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
     void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;

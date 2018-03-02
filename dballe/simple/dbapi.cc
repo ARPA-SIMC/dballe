@@ -182,7 +182,10 @@ int DbAPI::quantesono()
         ana_cur = 0;
     }
     auto query = Query::from_record(input);
-    ana_cur = db.query_stations(*query).release();
+    if (transaction)
+        ana_cur = transaction->query_stations(*query).release();
+    else
+        ana_cur = db.query_stations(*query).release();
     attr_state = ATTR_REFERENCE;
     attr_reference_id = missing_int;
 
@@ -213,10 +216,18 @@ int DbAPI::voglioquesto()
         query_cur = NULL;
     }
     auto query = Query::from_record(input);
-    if (station_context)
-        query_cur = db.query_station_data(*query).release();
-    else
-        query_cur = db.query_data(*query).release();
+    if (transaction)
+    {
+        if (station_context)
+            query_cur = transaction->query_station_data(*query).release();
+        else
+            query_cur = transaction->query_data(*query).release();
+    } else {
+        if (station_context)
+            query_cur = db.query_station_data(*query).release();
+        else
+            query_cur = db.query_data(*query).release();
+    }
     attr_state = ATTR_REFERENCE;
     attr_reference_id = missing_int;
 

@@ -173,6 +173,38 @@ const char* DB::default_repinfo_file()
     return repinfo_file;
 }
 
+std::unique_ptr<db::CursorStation> DB::query_stations(const Query& query)
+{
+    auto t = transaction();
+    auto res = t->query_stations(query);
+    t->commit();
+    return res;
+}
+
+std::unique_ptr<db::CursorStationData> DB::query_station_data(const Query& query)
+{
+    auto t = transaction();
+    auto res = t->query_station_data(query);
+    t->commit();
+    return res;
+}
+
+std::unique_ptr<db::CursorData> DB::query_data(const Query& query)
+{
+    auto t = transaction();
+    auto res = t->query_data(query);
+    t->commit();
+    return res;
+}
+
+std::unique_ptr<db::CursorSummary> DB::query_summary(const Query& query)
+{
+    auto t = transaction();
+    auto res = t->query_summary(query);
+    t->commit();
+    return res;
+}
+
 void DB::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
 {
     auto t = transaction();

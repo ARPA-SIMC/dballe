@@ -407,7 +407,19 @@ static PyObject* dpy_DB_disappear(dpy_DB* self)
     } catch (std::exception& se) {
         return raise_std_exception(se);
     }
+    Py_RETURN_NONE;
+}
 
+template<typename PYDB>
+static PyObject* dpy_remove_all(PYDB* self)
+{
+    try {
+        self->db->remove_all();
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
     Py_RETURN_NONE;
 }
 
@@ -420,11 +432,11 @@ static PyObject* dpy_DB_vacuum(dpy_DB* self)
     } catch (std::exception& se) {
         return raise_std_exception(se);
     }
-
     Py_RETURN_NONE;
 }
 
-static PyObject* dpy_DB_query_stations(dpy_DB* self, PyObject* args)
+template<typename PYDB>
+static PyObject* dpy_query_stations(PYDB* self, PyObject* args)
 {
     dpy_Record* record;
     if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
@@ -438,7 +450,7 @@ static PyObject* dpy_DB_query_stations(dpy_DB* self, PyObject* args)
         query.set_from_record(*record->rec);
         std::unique_ptr<db::Cursor> res = self->db->query_stations(query);
         gil.lock();
-        return (PyObject*)cursor_create(self, move(res));
+        return (PyObject*)cursor_create(move(res));
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -446,7 +458,8 @@ static PyObject* dpy_DB_query_stations(dpy_DB* self, PyObject* args)
     }
 }
 
-static PyObject* dpy_DB_query_data(dpy_DB* self, PyObject* args)
+template<typename PYDB>
+static PyObject* dpy_query_data(PYDB* self, PyObject* args)
 {
     dpy_Record* record;
     if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
@@ -470,7 +483,7 @@ static PyObject* dpy_DB_query_data(dpy_DB* self, PyObject* args)
             ReleaseGIL gil;
             res = self->db->query_data(query);
         }
-        return (PyObject*)cursor_create(self, move(res));
+        return (PyObject*)cursor_create(move(res));
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -478,7 +491,8 @@ static PyObject* dpy_DB_query_data(dpy_DB* self, PyObject* args)
     }
 }
 
-static PyObject* dpy_DB_query_station_data(dpy_DB* self, PyObject* args)
+template<typename PYDB>
+static PyObject* dpy_query_station_data(PYDB* self, PyObject* args)
 {
     dpy_Record* record;
     if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
@@ -492,7 +506,7 @@ static PyObject* dpy_DB_query_station_data(dpy_DB* self, PyObject* args)
         ReleaseGIL gil;
         std::unique_ptr<db::Cursor> res = self->db->query_station_data(query);
         gil.lock();
-        return (PyObject*)cursor_create(self, move(res));
+        return (PyObject*)cursor_create(move(res));
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -500,7 +514,8 @@ static PyObject* dpy_DB_query_station_data(dpy_DB* self, PyObject* args)
     }
 }
 
-static PyObject* dpy_DB_query_summary(dpy_DB* self, PyObject* args)
+template<typename PYDB>
+static PyObject* dpy_query_summary(PYDB* self, PyObject* args)
 {
     dpy_Record* record;
     if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
@@ -514,7 +529,7 @@ static PyObject* dpy_DB_query_summary(dpy_DB* self, PyObject* args)
         ReleaseGIL gil;
         std::unique_ptr<db::Cursor> res = self->db->query_summary(query);
         gil.lock();
-        return (PyObject*)cursor_create(self, move(res));
+        return (PyObject*)cursor_create(move(res));
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -792,15 +807,17 @@ static PyMethodDef dpy_DB_methods[] = {
         "Remove station variables from the database" },
     {"remove",            (PyCFunction)dpy_remove<dpy_DB>, METH_VARARGS,
         "Remove variables from the database" },
+    {"remove_all",            (PyCFunction)dpy_remove_all<dpy_DB>, METH_NOARGS,
+        "Remove all data from the database" },
     {"vacuum",            (PyCFunction)dpy_DB_vacuum, METH_NOARGS,
         "Perform database cleanup operations" },
-    {"query_stations",    (PyCFunction)dpy_DB_query_stations, METH_VARARGS,
+    {"query_stations",    (PyCFunction)dpy_query_stations<dpy_DB>, METH_VARARGS,
         "Query the station archive in the database; returns a Cursor" },
-    {"query_station_data", (PyCFunction)dpy_DB_query_station_data, METH_VARARGS,
+    {"query_station_data", (PyCFunction)dpy_query_station_data<dpy_DB>, METH_VARARGS,
         "Query the station variables in the database; returns a Cursor" },
-    {"query_data",        (PyCFunction)dpy_DB_query_data, METH_VARARGS,
+    {"query_data",        (PyCFunction)dpy_query_data<dpy_DB>, METH_VARARGS,
         "Query the variables in the database; returns a Cursor" },
-    {"query_summary",     (PyCFunction)dpy_DB_query_summary, METH_VARARGS,
+    {"query_summary",     (PyCFunction)dpy_query_summary<dpy_DB>, METH_VARARGS,
         "Query the summary of the results of a query; returns a Cursor" },
     {"query_attrs",       (PyCFunction)dpy_DB_query_attrs, METH_VARARGS | METH_KEYWORDS,
         "Query attributes" },
@@ -845,16 +862,18 @@ static PyMethodDef dpy_Transaction_methods[] = {
         "Remove station variables from the database" },
     {"remove",            (PyCFunction)dpy_remove<dpy_Transaction>, METH_VARARGS,
         "Remove variables from the database" },
+    {"remove_all",            (PyCFunction)dpy_remove_all<dpy_Transaction>, METH_NOARGS,
+        "Remove all data from the database" },
 //    {"vacuum",            (PyCFunction)dpy_DB_vacuum, METH_NOARGS,
 //        "Perform database cleanup operations" },
-//    {"query_stations",    (PyCFunction)dpy_DB_query_stations, METH_VARARGS,
-//        "Query the station archive in the database; returns a Cursor" },
-//    {"query_station_data", (PyCFunction)dpy_DB_query_station_data, METH_VARARGS,
-//        "Query the station variables in the database; returns a Cursor" },
-//    {"query_data",        (PyCFunction)dpy_DB_query_data, METH_VARARGS,
-//        "Query the variables in the database; returns a Cursor" },
-//    {"query_summary",     (PyCFunction)dpy_DB_query_summary, METH_VARARGS,
-//        "Query the summary of the results of a query; returns a Cursor" },
+    {"query_stations",    (PyCFunction)dpy_query_stations<dpy_Transaction>, METH_VARARGS,
+        "Query the station archive in the database; returns a Cursor" },
+    {"query_station_data", (PyCFunction)dpy_query_station_data<dpy_Transaction>, METH_VARARGS,
+        "Query the station variables in the database; returns a Cursor" },
+    {"query_data",        (PyCFunction)dpy_query_data<dpy_Transaction>, METH_VARARGS,
+        "Query the variables in the database; returns a Cursor" },
+    {"query_summary",     (PyCFunction)dpy_query_summary<dpy_Transaction>, METH_VARARGS,
+        "Query the summary of the results of a query; returns a Cursor" },
 //    {"query_attrs",       (PyCFunction)dpy_DB_query_attrs, METH_VARARGS | METH_KEYWORDS,
 //        "Query attributes" },
 //    {"attr_query_station", (PyCFunction)dpy_DB_attr_query_station, METH_VARARGS,

@@ -18,7 +18,7 @@ struct QueryBuilder
     dballe::sql::Connection& conn;
 
     /** Database to operate on */
-    DB& db;
+    std::shared_ptr<DB> db;
 
     /**
      * If defined, it need to point to the identifier to be used as the only
@@ -59,7 +59,7 @@ struct QueryBuilder
     /// True if we are querying station information, rather than measured data
     bool query_station_vars;
 
-    QueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars);
+    QueryBuilder(std::shared_ptr<DB> db, const core::Query& query, unsigned int modifiers, bool query_station_vars);
     virtual ~QueryBuilder() {}
 
     void build();
@@ -80,7 +80,7 @@ protected:
 
 struct StationQueryBuilder : public QueryBuilder
 {
-    StationQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers)
+    StationQueryBuilder(std::shared_ptr<DB> db, const core::Query& query, unsigned int modifiers)
         : QueryBuilder(db, query, modifiers, false) {}
 
     virtual void build_select();
@@ -99,7 +99,7 @@ struct DataQueryBuilder : public QueryBuilder
     /// True if the select includes the attrs field
     bool select_attrs = false;
 
-    DataQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars, bool query_attrs);
+    DataQueryBuilder(std::shared_ptr<DB> db, const core::Query& query, unsigned int modifiers, bool query_station_vars, bool query_attrs);
     ~DataQueryBuilder();
 
     // bool add_attrfilter_where(const char* tbl);
@@ -114,7 +114,7 @@ struct DataQueryBuilder : public QueryBuilder
 
 struct IdQueryBuilder : public DataQueryBuilder
 {
-    IdQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars)
+    IdQueryBuilder(std::shared_ptr<DB> db, const core::Query& query, unsigned int modifiers, bool query_station_vars)
         : DataQueryBuilder(db, query, modifiers, query_station_vars, false) {}
 
     virtual void build_select();
@@ -123,7 +123,7 @@ struct IdQueryBuilder : public DataQueryBuilder
 
 struct SummaryQueryBuilder : public DataQueryBuilder
 {
-    SummaryQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars)
+    SummaryQueryBuilder(std::shared_ptr<DB> db, const core::Query& query, unsigned int modifiers, bool query_station_vars)
         : DataQueryBuilder(db, query, modifiers, query_station_vars, false) {}
 
     virtual void build_select();

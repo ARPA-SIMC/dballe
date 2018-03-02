@@ -232,13 +232,13 @@ struct Constraints
     }
 };
 
-QueryBuilder::QueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars)
-    : conn(*db.conn), db(db), query(query), sql_query(2048), sql_from(1024), sql_where(1024),
+QueryBuilder::QueryBuilder(std::shared_ptr<DB> db, const core::Query& query, unsigned int modifiers, bool query_station_vars)
+    : conn(*db->conn), db(db), query(query), sql_query(2048), sql_from(1024), sql_where(1024),
       modifiers(modifiers), query_station_vars(query_station_vars)
 {
 }
 
-DataQueryBuilder::DataQueryBuilder(DB& db, const core::Query& query, unsigned int modifiers, bool query_station_vars, bool query_attrs)
+DataQueryBuilder::DataQueryBuilder(std::shared_ptr<DB> db, const core::Query& query, unsigned int modifiers, bool query_station_vars, bool query_attrs)
     : QueryBuilder(db, query, modifiers, query_station_vars), query_attrs(query_attrs)
 {
 }
@@ -323,7 +323,7 @@ bool StationQueryBuilder::build_where()
 
     if (!query.rep_memo.empty())
     {
-        int src_val = db.repinfo().get_id(query.rep_memo.c_str());
+        int src_val = db->repinfo().get_id(query.rep_memo.c_str());
         if (src_val == -1)
         {
             sql_where.append_listf("1=0");
@@ -725,7 +725,7 @@ bool QueryBuilder::add_repinfo_where(const char* tbl)
     if (query.prio_min != MISSING_INT || query.prio_max != MISSING_INT)
     {
         // Filter the repinfo cache and build a IN query
-        std::vector<int> ids = db.repinfo().ids_by_prio(query);
+        std::vector<int> ids = db->repinfo().ids_by_prio(query);
         if (ids.empty())
         {
             // No repinfo matches, so we just introduce a false value
@@ -746,7 +746,7 @@ bool QueryBuilder::add_repinfo_where(const char* tbl)
 
     if (!query.rep_memo.empty())
     {
-        int src_val = db.repinfo().get_id(query.rep_memo.c_str());
+        int src_val = db->repinfo().get_id(query.rep_memo.c_str());
         if (src_val == -1)
         {
             sql_where.append_listf("1=0");

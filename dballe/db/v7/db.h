@@ -171,11 +171,6 @@ public:
      */
     void vacuum();
 
-    std::unique_ptr<db::CursorStation> query_stations(const Query& query);
-    std::unique_ptr<db::CursorStationData> query_station_data(const Query& query) override;
-    std::unique_ptr<db::CursorData> query_data(const Query& query);
-    std::unique_ptr<db::CursorSummary> query_summary(const Query& query);
-
     void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
     void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
     bool is_station_variable(int data_id, wreport::Varcode varcode) override;

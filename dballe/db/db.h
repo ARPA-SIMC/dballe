@@ -45,7 +45,7 @@ struct Cursor
     virtual ~Cursor();
 
     /// Get the database that created this cursor
-    virtual DB& get_db() const = 0;
+    virtual std::shared_ptr<DB> get_db() const = 0;
 
     /**
      * Get the number of rows still to be fetched
@@ -184,6 +184,63 @@ public:
      *   The current active transaction.
      */
     virtual void remove_all() = 0;
+
+    /**
+     * Start a query on the station variables archive.
+     *
+     * The cursor will iterate over unique lat, lon, ident triples, and will
+     * contain all station vars. If a station var exists twice on two different
+     * networks, only one will be present: the one of the network with the
+     * highest priority.
+     *
+     * @param query
+     *   The record with the query data (see @ref dba_record_keywords)
+     * @return
+     *   The cursor to use to iterate over the results
+     */
+    virtual std::unique_ptr<db::CursorStation> query_stations(const Query& query) = 0;
+
+    /**
+     * Query the station variables in the database.
+     *
+     * When multiple values per variable are present, the results will be presented
+     * in increasing order of priority.
+     *
+     * @param query
+     *   The record with the query data (see technical specifications, par. 1.6.4
+     *   "parameter output/input")
+     * @return
+     *   The cursor to use to iterate over the results
+     */
+    virtual std::unique_ptr<db::CursorStationData> query_station_data(const Query& query) = 0;
+
+    /**
+     * Query the database.
+     *
+     * When multiple values per variable are present, the results will be presented
+     * in increasing order of priority.
+     *
+     * @param query
+     *   The record with the query data (see technical specifications, par. 1.6.4
+     *   "parameter output/input")
+     * @return
+     *   The cursor to use to iterate over the results
+     */
+    virtual std::unique_ptr<db::CursorData> query_data(const Query& query) = 0;
+
+    /**
+     * Query a summary of what the result would be for a query.
+     *
+     * @param query
+     *   The record with the query data (see technical specifications, par. 1.6.4
+     *   "parameter output/input")
+     * @return
+     *   The cursor to use to iterate over the results. The results are the
+     *   same as query_data, except that no context_id, datetime and value are
+     *   provided, so it only gives all the available combinations of data
+     *   contexts.
+     */
+    virtual std::unique_ptr<db::CursorSummary> query_summary(const Query& query) = 0;
 
     /**
      * Insert station values into the database
@@ -542,7 +599,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<db::CursorStation> query_stations(const Query& query) = 0;
+    virtual std::unique_ptr<db::CursorStation> query_stations(const Query& query);
 
     /**
      * Query the station variables in the database.
@@ -556,7 +613,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<db::CursorStationData> query_station_data(const Query& query) = 0;
+    virtual std::unique_ptr<db::CursorStationData> query_station_data(const Query& query);
 
     /**
      * Query the database.
@@ -570,7 +627,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<db::CursorData> query_data(const Query& query) = 0;
+    virtual std::unique_ptr<db::CursorData> query_data(const Query& query);
 
     /**
      * Query a summary of what the result would be for a query.
@@ -584,7 +641,7 @@ public:
      *   provided, so it only gives all the available combinations of data
      *   contexts.
      */
-    virtual std::unique_ptr<db::CursorSummary> query_summary(const Query& query) = 0;
+    virtual std::unique_ptr<db::CursorSummary> query_summary(const Query& query);
 
     /**
      * Query attributes on a station value

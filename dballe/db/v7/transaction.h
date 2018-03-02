@@ -32,6 +32,11 @@ struct Transaction : public dballe::db::Transaction
     void rollback() override { sql_transaction->rollback(); }
     void clear_cached_state() override { state.clear(); }
 
+    std::unique_ptr<db::CursorStation> query_stations(const Query& query);
+    std::unique_ptr<db::CursorStationData> query_station_data(const Query& query) override;
+    std::unique_ptr<db::CursorData> query_data(const Query& query);
+    std::unique_ptr<db::CursorSummary> query_summary(const Query& query);
+
     void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add) override;
     void insert_data(DataValues& vals, bool can_replace, bool station_can_add) override;
     void remove_station_data(const Query& query) override;

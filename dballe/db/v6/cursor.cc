@@ -52,7 +52,7 @@ template<typename Interface>
 struct Base : public Interface
 {
     /// Database to operate on
-    v6::DB& db;
+    std::shared_ptr<v6::DB> db;
 
     /** Modifier flags to enable special query behaviours */
     const unsigned int modifiers;
@@ -63,14 +63,14 @@ struct Base : public Interface
     /// Current result element being iterated
     int cur = -1;
 
-    Base(v6::DB& db, unsigned int modifiers)
+    Base(std::shared_ptr<v6::DB> db, unsigned int modifiers)
         : db(db), modifiers(modifiers)
     {
     }
 
     virtual ~Base() {}
 
-    dballe::DB& get_db() const override { return db; }
+    std::shared_ptr<dballe::DB> get_db() const override { return db; }
 
     /**
      * Get the number of rows still to be fetched
@@ -125,7 +125,7 @@ struct Base : public Interface
     }
     const char* get_rep_memo() const override
     {
-        return db.repinfo().get_rep_memo(results[cur].out_rep_cod);
+        return db->repinfo().get_rep_memo(results[cur].out_rep_cod);
     }
 
     /**
@@ -138,7 +138,7 @@ struct Base : public Interface
     /// Run the query in qb and fill results with its output
     virtual void load(const QueryBuilder& qb)
     {
-        db.driver().run_built_query_v6(qb, [&](v6::SQLRecordV6& rec) {
+        db->driver().run_built_query_v6(qb, [&](v6::SQLRecordV6& rec) {
             results.append(rec);
         });
         // We are done adding, prepare the structbuf for reading
@@ -162,13 +162,13 @@ struct Base : public Interface
 
     void to_record_repinfo(Record& rec)
     {
-        db.repinfo().to_record(results[cur].out_rep_cod, rec);
+        db->repinfo().to_record(results[cur].out_rep_cod, rec);
     }
 
     void to_record_ltr(Record& rec)
     {
         if (results[cur].out_id_ltr != -1)
-            db.lev_tr_cache().to_rec(results[cur].out_id_ltr, rec);
+            db->lev_tr_cache().to_rec(results[cur].out_id_ltr, rec);
         else
         {
             rec.unset("leveltype1");
@@ -198,14 +198,14 @@ struct Base : public Interface
     /// Query extra station info and add it to \a rec
     void add_station_info(Record& rec)
     {
-        db.station().add_station_vars(results[cur].out_ana_id, rec);
+        db->station().add_station_vars(results[cur].out_ana_id, rec);
     }
 };
 
 
 struct Stations : public Base<CursorStation>
 {
-    Stations(DB& db, unsigned int modifiers)
+    Stations(std::shared_ptr<DB> db, unsigned int modifiers)
         : Base<CursorStation>(db, modifiers) {}
     ~Stations() {}
 
@@ -238,7 +238,7 @@ struct Stations : public Base<CursorStation>
 
 struct StationData : public Base<CursorStationData>
 {
-    StationData(DB& db, unsigned int modifiers)
+    StationData(std::shared_ptr<DB> db, unsigned int modifiers)
         : Base<CursorStationData>(db, modifiers) {}
     ~StationData() {}
     void to_record(Record& rec) override
@@ -278,7 +278,7 @@ struct StationData : public Base<CursorStationData>
 
 struct Data : public Base<CursorData>
 {
-    Data(DB& db, unsigned int modifiers)
+    Data(std::shared_ptr<DB> db, unsigned int modifiers)
         : Base<CursorData>(db, modifiers) {}
     ~Data() {}
     void to_record(Record& rec) override
@@ -314,8 +314,8 @@ struct Data : public Base<CursorData>
         return count;
     }
 
-    Level get_level() const override { return db.lev_tr_cache().to_level(results[cur].out_id_ltr); }
-    Trange get_trange() const override { return db.lev_tr_cache().to_trange(results[cur].out_id_ltr); }
+    Level get_level() const override { return db->lev_tr_cache().to_level(results[cur].out_id_ltr); }
+    Trange get_trange() const override { return db->lev_tr_cache().to_trange(results[cur].out_id_ltr); }
     Datetime get_datetime() const override { return results[cur].out_datetime; }
     wreport::Varcode get_varcode() const override { return (wreport::Varcode)results[cur].out_varcode; }
     wreport::Var get_var() const override { return Var(varinfo(results[cur].out_varcode), results[cur].out_value); }
@@ -324,24 +324,24 @@ struct Data : public Base<CursorData>
 #if 0
 void Cursor::query_attrs(function<void(unique_ptr<Var>&&)> dest)
 {
-    db.query_attrs(results[cur].out_id_data, results[cur].out_varcode, dest);
+    db->query_attrs(results[cur].out_id_data, results[cur].out_varcode, dest);
 }
 
 void Cursor::attr_insert(const Values& attrs)
 {
-    db.attr_insert(results[cur].out_id_data, results[cur].out_varcode, attrs);
+    db->attr_insert(results[cur].out_id_data, results[cur].out_varcode, attrs);
 }
 
 void Cursor::attr_remove(const AttrList& qcs)
 {
-    db.attr_remove(results[cur].out_id_data, results[cur].out_varcode, qcs);
+    db->attr_remove(results[cur].out_id_data, results[cur].out_varcode, qcs);
 }
 #endif
 };
 
 struct Summary : public Base<CursorSummary>
 {
-    Summary(DB& db, unsigned int modifiers)
+    Summary(std::shared_ptr<DB> db, unsigned int modifiers)
         : Base<CursorSummary>(db, modifiers) {}
     ~Summary() {}
     void to_record(Record& rec) override
@@ -381,8 +381,8 @@ struct Summary : public Base<CursorSummary>
         return count;
     }
 
-    Level get_level() const override { return db.lev_tr_cache().to_level(results[cur].out_id_ltr); }
-    Trange get_trange() const override { return db.lev_tr_cache().to_trange(results[cur].out_id_ltr); }
+    Level get_level() const override { return db->lev_tr_cache().to_level(results[cur].out_id_ltr); }
+    Trange get_trange() const override { return db->lev_tr_cache().to_trange(results[cur].out_id_ltr); }
     DatetimeRange get_datetimerange() const override
     {
         return DatetimeRange(results[cur].out_datetime, results[cur].out_datetimemax);
@@ -393,7 +393,7 @@ struct Summary : public Base<CursorSummary>
 
 struct Best : public Base<CursorData>
 {
-    Best(DB& db, unsigned int modifiers)
+    Best(std::shared_ptr<DB> db, unsigned int modifiers)
         : Base<CursorData>(db, modifiers) {}
     ~Best() {}
 
@@ -426,8 +426,8 @@ struct Best : public Base<CursorData>
         return count;
     }
 
-    Level get_level() const override { return db.lev_tr_cache().to_level(results[cur].out_id_ltr); }
-    Trange get_trange() const override { return db.lev_tr_cache().to_trange(results[cur].out_id_ltr); }
+    Level get_level() const override { return db->lev_tr_cache().to_level(results[cur].out_id_ltr); }
+    Trange get_trange() const override { return db->lev_tr_cache().to_trange(results[cur].out_id_ltr); }
     Datetime get_datetime() const override { return results[cur].out_datetime; }
     wreport::Varcode get_varcode() const override { return (wreport::Varcode)results[cur].out_varcode; }
     wreport::Var get_var() const override { return Var(varinfo(results[cur].out_varcode), results[cur].out_value); }
@@ -436,11 +436,11 @@ struct Best : public Base<CursorData>
 
     void load(const QueryBuilder& qb) override
     {
-        db::v6::Repinfo& ri = db.repinfo();
+        db::v6::Repinfo& ri = db->repinfo();
         bool first = true;
         v6::SQLRecordV6 best;
 
-        db.driver().run_built_query_v6(qb, [&](v6::SQLRecordV6& rec) {
+        db->driver().run_built_query_v6(qb, [&](v6::SQLRecordV6& rec) {
             // Fill priority
             rec.priority = ri.get_priority(rec.out_rep_cod);
 
@@ -475,17 +475,17 @@ struct Best : public Base<CursorData>
 
 }
 
-unique_ptr<CursorStation> run_station_query(DB& db, const core::Query& q, bool explain)
+unique_ptr<CursorStation> run_station_query(std::shared_ptr<DB> db, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
 
-    StationQueryBuilder qb(db, q, modifiers);
+    StationQueryBuilder qb(*db, q, modifiers);
     qb.build();
 
     if (explain)
     {
         fprintf(stderr, "EXPLAIN "); q.print(stderr);
-        db.conn->explain(qb.sql_query, stderr);
+        db->conn->explain(qb.sql_query, stderr);
     }
 
     auto resptr = new Stations(db, modifiers);
@@ -494,16 +494,16 @@ unique_ptr<CursorStation> run_station_query(DB& db, const core::Query& q, bool e
     return res;
 }
 
-unique_ptr<CursorStationData> run_station_data_query(DB& db, const core::Query& q, bool explain)
+unique_ptr<CursorStationData> run_station_data_query(std::shared_ptr<DB> db, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
-    DataQueryBuilder qb(db, q, modifiers, true);
+    DataQueryBuilder qb(*db, q, modifiers, true);
     qb.build();
 
     if (explain)
     {
         fprintf(stderr, "EXPLAIN "); q.print(stderr);
-        db.conn->explain(qb.sql_query, stderr);
+        db->conn->explain(qb.sql_query, stderr);
     }
 
     unique_ptr<CursorStationData> res;
@@ -521,16 +521,16 @@ unique_ptr<CursorStationData> run_station_data_query(DB& db, const core::Query& 
     return res;
 }
 
-unique_ptr<CursorData> run_data_query(DB& db, const core::Query& q, bool explain)
+unique_ptr<CursorData> run_data_query(std::shared_ptr<DB> db, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
-    DataQueryBuilder qb(db, q, modifiers, false);
+    DataQueryBuilder qb(*db, q, modifiers, false);
     qb.build();
 
     if (explain)
     {
         fprintf(stderr, "EXPLAIN "); q.print(stderr);
-        db.conn->explain(qb.sql_query, stderr);
+        db->conn->explain(qb.sql_query, stderr);
     }
 
     unique_ptr<CursorData> res;
@@ -547,19 +547,19 @@ unique_ptr<CursorData> run_data_query(DB& db, const core::Query& q, bool explain
     return res;
 }
 
-unique_ptr<CursorSummary> run_summary_query(DB& db, const core::Query& q, bool explain)
+unique_ptr<CursorSummary> run_summary_query(std::shared_ptr<DB> db, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
     if (modifiers & DBA_DB_MODIFIER_BEST)
         throw error_consistency("cannot use query=best on summary queries");
 
-    SummaryQueryBuilder qb(db, q, modifiers, false);
+    SummaryQueryBuilder qb(*db, q, modifiers, false);
     qb.build();
 
     if (explain)
     {
         fprintf(stderr, "EXPLAIN "); q.print(stderr);
-        db.conn->explain(qb.sql_query, stderr);
+        db->conn->explain(qb.sql_query, stderr);
     }
 
     auto resptr = new Summary(db, modifiers);

@@ -115,7 +115,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
     unique_ptr<Msg> msg;
 
     // The big export query
-    DataQueryBuilder qb(*db, core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT, false, true);
+    DataQueryBuilder qb(db, core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT, false, true);
     qb.build();
 
     // Current context information used to detect context changes

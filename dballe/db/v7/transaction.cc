@@ -81,15 +81,47 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
 void Transaction::remove_station_data(const Query& query)
 {
     auto tr = db->trace.trace_remove_station_data(query);
-    cursor::run_delete_query(*db, core::Query::downcast(query), true, db->explain_queries);
+    cursor::run_delete_query(db, core::Query::downcast(query), true, db->explain_queries);
     tr->done();
 }
 
 void Transaction::remove(const Query& query)
 {
     auto tr = db->trace.trace_remove(query);
-    cursor::run_delete_query(*db, core::Query::downcast(query), false, db->explain_queries);
+    cursor::run_delete_query(db, core::Query::downcast(query), false, db->explain_queries);
     tr->done();
+}
+
+std::unique_ptr<db::CursorStation> Transaction::query_stations(const Query& query)
+{
+    auto tr = db->trace.trace_query_stations(query);
+    auto res = cursor::run_station_query(db, core::Query::downcast(query), db->explain_queries);
+    tr->done();
+    return move(res);
+}
+
+std::unique_ptr<db::CursorStationData> Transaction::query_station_data(const Query& query)
+{
+    auto tr = db->trace.trace_query_station_data(query);
+    auto res = cursor::run_station_data_query(db, core::Query::downcast(query), db->explain_queries, false);
+    tr->done();
+    return move(res);
+}
+
+std::unique_ptr<db::CursorData> Transaction::query_data(const Query& query)
+{
+    auto tr = db->trace.trace_query_data(query);
+    auto res = cursor::run_data_query(db, core::Query::downcast(query), db->explain_queries, false);
+    tr->done();
+    return move(res);
+}
+
+std::unique_ptr<db::CursorSummary> Transaction::query_summary(const Query& query)
+{
+    auto tr = db->trace.trace_query_summary(query);
+    auto res = cursor::run_summary_query(db, core::Query::downcast(query), db->explain_queries);
+    tr->done();
+    return move(res);
 }
 
 void Transaction::attr_insert_station(int data_id, const Values& attrs)
