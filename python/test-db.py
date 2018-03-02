@@ -42,8 +42,6 @@ class CommonDBTestMixin(DballeDBMixin):
         self.db.export_to_file(query, "BUFR", "/dev/null", generic=True)
         self.db.export_to_file(query, "CREX", "/dev/null", generic=True)
 
-
-class FullDBTestMixin(CommonDBTestMixin):
     def testQueryAna(self):
         query = dballe.Record()
         cur = self.db.query_stations(query)
@@ -137,20 +135,20 @@ class FullDBTestMixin(CommonDBTestMixin):
 
     def testLoadFile(self):
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.db.load(fp)
             self.assertTrue(self.db.query_data(dballe.Record()).remaining > 0)
 
     def testLoadFileLike(self):
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "rb") as fp:
             s = io.BytesIO(fp.read())
-            self.db.reset()
+            self.db.remove_all()
             self.db.load(s)
             self.assertTrue(self.db.query_data(dballe.Record()).remaining > 0)
 
     def testLoadFileWithAttrs(self):
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withB33196.bufr", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.db.load(fp, attrs=True)
             r = next(self.db.query_data(dballe.Record()))
             a = self.db.attr_query_data(r["context_id"])
@@ -158,7 +156,7 @@ class FullDBTestMixin(CommonDBTestMixin):
 
     def testLoadFileOverwrite(self):
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withoutB33196.bufr", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.db.load(fp, overwrite=True)
             r = next(self.db.query_data(dballe.Record()))
             a = self.db.attr_query_data(r["context_id"])
@@ -254,6 +252,10 @@ class FullDBTestMixin(CommonDBTestMixin):
             self.assertEqual(reports, [s, t, s, t, s, t, s, s, t, s, t])
         else:
             self.assertEqual(reports, [s, s, s, s, s, s, t, t, t, t, t])
+
+
+class FullDBTestMixin(CommonDBTestMixin):
+    pass
 
 
 class AttrTestMixin(object):

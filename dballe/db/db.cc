@@ -205,6 +205,20 @@ std::unique_ptr<db::CursorSummary> DB::query_summary(const Query& query)
     return res;
 }
 
+void DB::attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
+{
+    auto t = transaction();
+    t->attr_query_station(data_id, move(dest));
+    t->commit();
+}
+
+void DB::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
+{
+    auto t = transaction();
+    t->attr_query_data(data_id, move(dest));
+    t->commit();
+}
+
 void DB::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
 {
     auto t = transaction();

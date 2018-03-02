@@ -360,16 +360,32 @@ int DbAPI::voglioancora()
         case ATTR_REFERENCE:
             if (attr_reference_id == missing_int || attr_varid == 0)
                 throw error_consistency("voglioancora was not called after a dammelo, or was called with an invalid *context_id or *var_related");
-            if (db.is_station_variable(attr_reference_id, attr_varid))
-                db.attr_query_station(attr_reference_id, dest);
-            else
-                db.attr_query_data(attr_reference_id, dest);
+            if (transaction)
+            {
+                if (db.is_station_variable(attr_reference_id, attr_varid))
+                    transaction->attr_query_station(attr_reference_id, dest);
+                else
+                    transaction->attr_query_data(attr_reference_id, dest);
+            } else {
+                if (db.is_station_variable(attr_reference_id, attr_varid))
+                    db.attr_query_station(attr_reference_id, dest);
+                else
+                    db.attr_query_data(attr_reference_id, dest);
+            }
             break;
         case ATTR_DAMMELO:
-            if (dynamic_cast<const db::CursorStationData*>(query_cur))
-                db.attr_query_station(query_cur->attr_reference_id(), dest);
-            else
-                db.attr_query_data(query_cur->attr_reference_id(), dest);
+            if (transaction)
+            {
+                if (dynamic_cast<const db::CursorStationData*>(query_cur))
+                    transaction->attr_query_station(query_cur->attr_reference_id(), dest);
+                else
+                    transaction->attr_query_data(query_cur->attr_reference_id(), dest);
+            } else {
+                if (dynamic_cast<const db::CursorStationData*>(query_cur))
+                    db.attr_query_station(query_cur->attr_reference_id(), dest);
+                else
+                    db.attr_query_data(query_cur->attr_reference_id(), dest);
+            }
             break;
         case ATTR_PRENDILO:
             throw error_consistency("voglioancora cannot be called after a prendilo");

@@ -573,7 +573,8 @@ static PyObject* dpy_DB_query_attrs(dpy_DB* self, PyObject* args, PyObject* kw)
     } DBALLE_CATCH_RETURN_PYO
 }
 
-static PyObject* dpy_DB_attr_query_station(dpy_DB* self, PyObject* args)
+template<typename PYDB>
+static PyObject* dpy_attr_query_station(PYDB* self, PyObject* args)
 {
     int reference_id;
     if (!PyArg_ParseTuple(args, "i", &reference_id))
@@ -588,7 +589,8 @@ static PyObject* dpy_DB_attr_query_station(dpy_DB* self, PyObject* args)
     } DBALLE_CATCH_RETURN_PYO
 }
 
-static PyObject* dpy_DB_attr_query_data(dpy_DB* self, PyObject* args)
+template<typename PYDB>
+static PyObject* dpy_attr_query_data(PYDB* self, PyObject* args)
 {
     int reference_id;
     if (!PyArg_ParseTuple(args, "i", &reference_id))
@@ -821,9 +823,9 @@ static PyMethodDef dpy_DB_methods[] = {
         "Query the summary of the results of a query; returns a Cursor" },
     {"query_attrs",       (PyCFunction)dpy_DB_query_attrs, METH_VARARGS | METH_KEYWORDS,
         "Query attributes" },
-    {"attr_query_station", (PyCFunction)dpy_DB_attr_query_station, METH_VARARGS,
+    {"attr_query_station", (PyCFunction)dpy_attr_query_station<dpy_DB>, METH_VARARGS,
         "Query attributes" },
-    {"attr_query_data",   (PyCFunction)dpy_DB_attr_query_data, METH_VARARGS,
+    {"attr_query_data",   (PyCFunction)dpy_attr_query_data<dpy_DB>, METH_VARARGS,
         "Query attributes" },
     {"attr_insert",       (PyCFunction)dpy_DB_attr_insert, METH_VARARGS | METH_KEYWORDS,
         "Insert new attributes into the database" },
@@ -874,12 +876,10 @@ static PyMethodDef dpy_Transaction_methods[] = {
         "Query the variables in the database; returns a Cursor" },
     {"query_summary",     (PyCFunction)dpy_query_summary<dpy_Transaction>, METH_VARARGS,
         "Query the summary of the results of a query; returns a Cursor" },
-//    {"query_attrs",       (PyCFunction)dpy_DB_query_attrs, METH_VARARGS | METH_KEYWORDS,
-//        "Query attributes" },
-//    {"attr_query_station", (PyCFunction)dpy_DB_attr_query_station, METH_VARARGS,
-//        "Query attributes" },
-//    {"attr_query_data",   (PyCFunction)dpy_DB_attr_query_data, METH_VARARGS,
-//        "Query attributes" },
+    {"attr_query_station", (PyCFunction)dpy_attr_query_station<dpy_Transaction>, METH_VARARGS,
+        "Query attributes" },
+    {"attr_query_data",   (PyCFunction)dpy_attr_query_data<dpy_Transaction>, METH_VARARGS,
+        "Query attributes" },
     {"attr_insert_station", (PyCFunction)dpy_attr_insert_station<dpy_Transaction>, METH_VARARGS,
         "Insert new attributes into the database" },
     {"attr_insert_data",  (PyCFunction)dpy_attr_insert_data<dpy_Transaction>, METH_VARARGS,

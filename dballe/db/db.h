@@ -243,6 +243,26 @@ public:
     virtual std::unique_ptr<db::CursorSummary> query_summary(const Query& query) = 0;
 
     /**
+     * Query attributes on a station value
+     *
+     * @param data_id
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     * @param dest
+     *   The function that will be called on each resulting attribute
+     */
+    virtual void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) = 0;
+
+    /**
+     * Query attributes on a data value
+     *
+     * @param data_id
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     * @param dest
+     *   The function that will be called on each resulting attribute
+     */
+    virtual void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) = 0;
+
+    /**
      * Insert station values into the database
      *
      * The IDs of the station andl all variables that were inserted will be
@@ -651,7 +671,7 @@ public:
      * @param dest
      *   The function that will be called on each resulting attribute
      */
-    virtual void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) = 0;
+    virtual void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest);
 
     /**
      * Query attributes on a data value
@@ -661,7 +681,7 @@ public:
      * @param dest
      *   The function that will be called on each resulting attribute
      */
-    virtual void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) = 0;
+    virtual void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest);
 
     /**
      * Insert new attributes on a station value

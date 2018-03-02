@@ -177,20 +177,6 @@ void DB::vacuum()
     tr->done();
 }
 
-void DB::attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
-{
-    // Create the query
-    auto& d = station_data();
-    d.read_attrs(data_id, dest);
-}
-
-void DB::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
-{
-    // Create the query
-    auto& d = data();
-    d.read_attrs(data_id, dest);
-}
-
 bool DB::is_station_variable(int data_id, wreport::Varcode varcode)
 {
     return false;

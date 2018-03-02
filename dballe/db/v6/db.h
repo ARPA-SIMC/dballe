@@ -55,6 +55,8 @@ struct Transaction : public dballe::db::Transaction
     std::unique_ptr<db::CursorStationData> query_station_data(const Query& query) override;
     std::unique_ptr<db::CursorData> query_data(const Query& query);
     std::unique_ptr<db::CursorSummary> query_summary(const Query& query);
+    void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
+    void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
     void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add) override;
     void insert_data(DataValues& vals, bool can_replace, bool station_can_add) override;
     void remove_station_data(const Query& query) override;
@@ -209,8 +211,6 @@ public:
      */
     void vacuum();
 
-    void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
-    void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
     bool is_station_variable(int data_id, wreport::Varcode varcode) override;
 
     /**

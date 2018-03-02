@@ -83,6 +83,20 @@ std::unique_ptr<db::CursorSummary> Transaction::query_summary(const Query& query
     return move(res);
 }
 
+void Transaction::attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
+{
+    // Create the query
+    v6::AttrV6& a = db->attr();
+    a.read(data_id, dest);
+}
+
+void Transaction::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
+{
+    // Create the query
+    v6::AttrV6& a = db->attr();
+    a.read(data_id, dest);
+}
+
 void Transaction::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
 {
     v6::Repinfo& ri = db->repinfo();
@@ -374,20 +388,6 @@ void DB::vacuum()
         m_lev_tr_cache->invalidate();
     t->commit();
     tr->done();
-}
-
-void DB::attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
-{
-    // Create the query
-    v6::AttrV6& a = attr();
-    a.read(data_id, dest);
-}
-
-void DB::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
-{
-    // Create the query
-    v6::AttrV6& a = attr();
-    a.read(data_id, dest);
 }
 
 bool DB::is_station_variable(int data_id, wreport::Varcode varcode)

@@ -124,6 +124,20 @@ std::unique_ptr<db::CursorSummary> Transaction::query_summary(const Query& query
     return move(res);
 }
 
+void Transaction::attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
+{
+    // Create the query
+    auto& d = db->station_data();
+    d.read_attrs(data_id, dest);
+}
+
+void Transaction::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
+{
+    // Create the query
+    auto& d = db->data();
+    d.read_attrs(data_id, dest);
+}
+
 void Transaction::attr_insert_station(int data_id, const Values& attrs)
 {
     auto& d = db->station_data();
