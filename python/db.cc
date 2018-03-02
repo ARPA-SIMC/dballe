@@ -92,7 +92,7 @@ static PyObject* dpy_DB_connect_from_file(PyTypeObject *type, PyObject *args)
     if (!PyArg_ParseTuple(args, "s", &fname))
         return NULL;
 
-    unique_ptr<DB> db;
+    shared_ptr<DB> db;
     try {
         db = DB::connect_from_file(fname);
     } catch (wreport::error& e) {
@@ -100,7 +100,7 @@ static PyObject* dpy_DB_connect_from_file(PyTypeObject *type, PyObject *args)
     } catch (std::exception& se) {
         return raise_std_exception(se);
     }
-    return (PyObject*)db_create(move(db));
+    return (PyObject*)db_create(db);
 }
 
 static PyObject* dpy_DB_connect_from_url(PyTypeObject *type, PyObject *args)
@@ -109,7 +109,7 @@ static PyObject* dpy_DB_connect_from_url(PyTypeObject *type, PyObject *args)
     if (!PyArg_ParseTuple(args, "s", &url))
         return NULL;
 
-    unique_ptr<DB> db;
+    shared_ptr<DB> db;
     try {
         db = DB::connect_from_url(url);
     } catch (wreport::error& e) {
@@ -117,12 +117,12 @@ static PyObject* dpy_DB_connect_from_url(PyTypeObject *type, PyObject *args)
     } catch (std::exception& se) {
         return raise_std_exception(se);
     }
-    return (PyObject*)db_create(move(db));
+    return (PyObject*)db_create(db);
 }
 
 static PyObject* dpy_DB_connect_test(PyTypeObject *type)
 {
-    unique_ptr<DB> db;
+    shared_ptr<DB> db;
     try {
         db = DB::connect_test();
     } catch (wreport::error& e) {
@@ -130,7 +130,7 @@ static PyObject* dpy_DB_connect_test(PyTypeObject *type)
     } catch (std::exception& se) {
         return raise_std_exception(se);
     }
-    return (PyObject*)db_create(move(db));
+    return (PyObject*)db_create(db);
 }
 
 static PyObject* dpy_DB_is_url(PyTypeObject *type, PyObject *args)
@@ -224,7 +224,7 @@ static PyObject* dpy_DB_insert_data(dpy_DB* self, PyObject* args, PyObject* kw)
     } DBALLE_CATCH_RETURN_PYO
 }
 
-static unsigned db_load_file_enc(DB* db, File::Encoding encoding, FILE* file, bool close_on_exit, const std::string& name, int flags)
+static unsigned db_load_file_enc(std::shared_ptr<DB> db, File::Encoding encoding, FILE* file, bool close_on_exit, const std::string& name, int flags)
 {
     std::unique_ptr<File> f = File::create(encoding, file, close_on_exit, name);
     std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->encoding());
@@ -238,7 +238,7 @@ static unsigned db_load_file_enc(DB* db, File::Encoding encoding, FILE* file, bo
     return count;
 }
 
-static unsigned db_load_file(DB* db, FILE* file, bool close_on_exit, const std::string& name, int flags)
+static unsigned db_load_file(std::shared_ptr<DB> db, FILE* file, bool close_on_exit, const std::string& name, int flags)
 {
     std::unique_ptr<File> f = File::create(file, close_on_exit, name);
     std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->encoding());
@@ -803,14 +803,23 @@ static int dpy_DB_init(dpy_DB* self, PyObject* args, PyObject* kw)
 {
     // People should not invoke DB() as a constructor, but if they do,
     // this is better than a segfault later on
-    PyErr_SetString(PyExc_NotImplementedError, "DB objects cannot be constructed explicitly");
-    return -1;
+    //PyErr_SetString(PyExc_NotImplementedError, "DB objects cannot be constructed explicitly");
+    //return -1;
+    return 0;
+}
+
+static dpy_DB* dpy_DB_new(PyTypeObject* subtype, PyObject* args, PyObject* kw)
+{
+    dpy_DB* self = reinterpret_cast<dpy_DB*>(subtype->tp_alloc(subtype, 0));
+    if (!self) return self;
+    new(&(self->db)) std::shared_ptr<DB>();
+    return self;
 }
 
 static void dpy_DB_dealloc(dpy_DB* self)
 {
-    if (self->db)
-        delete self->db;
+    self->db.~shared_ptr<DB>();
+    Py_TYPE(self)->tp_free(self);
 }
 
 static PyObject* dpy_DB_str(dpy_DB* self)
@@ -880,7 +889,7 @@ PyTypeObject dpy_DB_Type = {
     0,                         // tp_dictoffset
     (initproc)dpy_DB_init,     // tp_init
     0,                         // tp_alloc
-    0,                         // tp_new
+    (newfunc)dpy_DB_new,       // tp_new
 };
 
 }
@@ -907,19 +916,19 @@ int db_read_attrlist(PyObject* attrs, db::AttrList& codes)
     } DBALLE_CATCH_RETURN_INT
 }
 
-dpy_DB* db_create(std::unique_ptr<DB> db)
+dpy_DB* db_create(std::shared_ptr<DB> db)
 {
     dpy_Record* attr_rec = record_create();
     if (!attr_rec) return NULL;
 
-    dpy_DB* result = PyObject_New(dpy_DB, &dpy_DB_Type);
+    dpy_DB* result = (dpy_DB*)PyObject_CallObject((PyObject*)&dpy_DB_Type, nullptr);
     if (!result)
     {
         Py_DECREF(attr_rec);
         return NULL;
     }
 
-    result->db = db.release();
+    result->db = db;
     result->attr_rec = attr_rec;
     return result;
 }
@@ -928,7 +937,6 @@ void register_db(PyObject* m)
 {
     common_init();
 
-    dpy_DB_Type.tp_new = PyType_GenericNew;
     if (PyType_Ready(&dpy_DB_Type) < 0)
         return;
 

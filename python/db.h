@@ -29,7 +29,7 @@ extern "C" {
 
 typedef struct {
     PyObject_HEAD
-    dballe::DB* db;
+    std::shared_ptr<dballe::DB> db;
     dpy_Record* attr_rec;
 } dpy_DB;
 
@@ -46,7 +46,7 @@ namespace python {
 /**
  * Create a new dpy_DB, taking over memory management
  */
-dpy_DB* db_create(std::unique_ptr<DB> db);
+dpy_DB* db_create(std::shared_ptr<DB> db);
 
 /**
  * Copy varcodes from a Python sequence to a db::AttrList
