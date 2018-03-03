@@ -161,9 +161,10 @@ struct ActualCursor : public Actual<dballe::db::Cursor&>
 
 typedef std::function<void(const std::vector<core::Record>&)> result_checker;
 
-struct ActualDB : public Actual<dballe::DB&>
+template<typename DB>
+struct ActualDB : public Actual<std::shared_ptr<DB>>
 {
-    using Actual::Actual;
+    using Actual<std::shared_ptr<DB>>::Actual;
 
     /// Check cursor data context anda variable after a query_data
     void try_data_query(const std::string& query, unsigned expected);
@@ -188,12 +189,14 @@ inline ActualCursor actual(std::unique_ptr<dballe::db::CursorStation>& actual) {
 inline ActualCursor actual(std::unique_ptr<dballe::db::CursorStationData>& actual) { return ActualCursor(*actual); }
 inline ActualCursor actual(std::unique_ptr<dballe::db::CursorData>& actual) { return ActualCursor(*actual); }
 inline ActualCursor actual(std::unique_ptr<dballe::db::CursorSummary>& actual) { return ActualCursor(*actual); }
-inline ActualDB actual(dballe::DB& actual) { return ActualDB(actual); }
-inline ActualDB actual(std::shared_ptr<dballe::DB>& actual) { return ActualDB(*actual); }
+inline ActualDB<dballe::DB> actual(std::shared_ptr<dballe::DB> actual) { return ActualDB<dballe::DB>(actual); }
+inline ActualDB<dballe::db::Transaction> actual(std::shared_ptr<dballe::db::Transaction> actual) { return ActualDB<dballe::db::Transaction>(actual); }
 
 extern template class BaseDBFixture<dballe::DB>;
 extern template class BaseDBFixture<dballe::db::v6::DB>;
 extern template class BaseDBFixture<dballe::db::v7::DB>;
+extern template class ActualDB<dballe::DB>;
+extern template class ActualDB<dballe::db::Transaction>;
 
 }
 }

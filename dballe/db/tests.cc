@@ -145,17 +145,19 @@ void ActualCursor::data_matches(const DataValues& ds, wreport::Varcode code)
     wassert(actual(_actual).data_var_matches(ds, code));
 }
 
-void ActualDB::try_data_query(const std::string& query, unsigned expected)
+template<typename DB>
+void ActualDB<DB>::try_data_query(const std::string& query, unsigned expected)
 {
     core::Query q;
     q.set_from_test_string(query);
     try_data_query(q, expected);
 }
 
-void ActualDB::try_data_query(const Query& query, unsigned expected)
+template<typename DB>
+void ActualDB<DB>::try_data_query(const Query& query, unsigned expected)
 {
     // Run the query
-    unique_ptr<db::Cursor> cur = _actual.query_data(query);
+    unique_ptr<db::Cursor> cur = this->_actual->query_data(query);
 
     // Check the number of results
     wassert(actual(cur->remaining()) == expected);
@@ -163,10 +165,11 @@ void ActualDB::try_data_query(const Query& query, unsigned expected)
     wassert(actual(count) == expected);
 }
 
-void ActualDB::try_station_query(const std::string& query, unsigned expected)
+template<typename DB>
+void ActualDB<DB>::try_station_query(const std::string& query, unsigned expected)
 {
     // Run the query
-    unique_ptr<db::Cursor> cur = _actual.query_stations(core_query_from_string(query));
+    unique_ptr<db::Cursor> cur = this->_actual->query_stations(core_query_from_string(query));
 
     // Check the number of results
     wassert(actual(cur->remaining()) == expected);
@@ -174,10 +177,11 @@ void ActualDB::try_station_query(const std::string& query, unsigned expected)
     wassert(actual(count) == expected);
 }
 
-void ActualDB::try_summary_query(const std::string& query, unsigned expected, result_checker check_results)
+template<typename DB>
+void ActualDB<DB>::try_summary_query(const std::string& query, unsigned expected, result_checker check_results)
 {
     // Run the query
-    unique_ptr<db::Cursor> cur = _actual.query_summary(core_query_from_string(query));
+    unique_ptr<db::Cursor> cur = this->_actual->query_summary(core_query_from_string(query));
 
     // Check the number of results
     // query_summary counts results in advance only optionally
@@ -326,6 +330,8 @@ OldDballeTestDataSet::OldDballeTestDataSet()
 template class BaseDBFixture<dballe::DB>;
 template class BaseDBFixture<dballe::db::v6::DB>;
 template class BaseDBFixture<dballe::db::v7::DB>;
+template class ActualDB<dballe::DB>;
+template class ActualDB<dballe::db::Transaction>;
 
 }
 }

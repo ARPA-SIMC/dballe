@@ -21,7 +21,7 @@ struct OutputFile;
 class DbAPI : public CommonAPIImplementation
 {
 protected:
-    DB& db;
+    std::shared_ptr<DB> db;
     db::CursorStation* ana_cur;
     db::CursorValue* query_cur;
     InputFile* input_file;
@@ -45,7 +45,7 @@ protected:
     void shutdown(bool commit);
 
 public:
-    DbAPI(DB& db, const char* anaflag, const char* dataflag, const char* attrflag);
+    DbAPI(std::shared_ptr<DB> db, const char* anaflag, const char* dataflag, const char* attrflag);
     virtual ~DbAPI();
 
     int enqi(const char* param) override;

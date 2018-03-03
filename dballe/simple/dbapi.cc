@@ -90,12 +90,11 @@ struct OutputFile
 };
 
 
-DbAPI::DbAPI(DB& db, const char* anaflag, const char* dataflag, const char* attrflag)
+DbAPI::DbAPI(std::shared_ptr<DB> db, const char* anaflag, const char* dataflag, const char* attrflag)
     : db(db), ana_cur(0), query_cur(0), input_file(0), output_file(0)
 {
     set_permissions(anaflag, dataflag, attrflag);
-    //if (strcmp(anaflag, "read") || strcmp(dataflag, "read") || strcmp(attrflag, "read"))
-        transaction = db.transaction();
+    transaction = db->transaction();
 }
 
 DbAPI::~DbAPI()
@@ -150,13 +149,11 @@ void DbAPI::scopa(const char* repinfofile)
     if (!(perms & PERM_DATA_WRITE))
         error_consistency::throwf(
             "scopa must be run with the database open in data write mode");
-    bool has_transaction = (bool)transaction;
     transaction.reset();
-    db.reset(repinfofile);
+    db->reset(repinfofile);
     attr_state = ATTR_REFERENCE;
     attr_reference_id = missing_int;
-    if (has_transaction)
-        transaction = db.transaction();
+    transaction = db->transaction();
 }
 
 void DbAPI::remove_all()
@@ -164,10 +161,7 @@ void DbAPI::remove_all()
     if (!(perms & PERM_DATA_WRITE))
         error_consistency::throwf(
             "remove_all must be run with the database open in data write mode");
-    if (transaction)
-        transaction->remove_all();
-    else
-        db.remove_all();
+    transaction->remove_all();
     attr_state = ATTR_REFERENCE;
     attr_reference_id = missing_int;
 }
@@ -181,10 +175,7 @@ int DbAPI::quantesono()
         ana_cur = 0;
     }
     auto query = Query::from_record(input);
-    if (transaction)
-        ana_cur = transaction->query_stations(*query).release();
-    else
-        ana_cur = db.query_stations(*query).release();
+    ana_cur = transaction->query_stations(*query).release();
     attr_state = ATTR_REFERENCE;
     attr_reference_id = missing_int;
 
@@ -215,18 +206,10 @@ int DbAPI::voglioquesto()
         query_cur = NULL;
     }
     auto query = Query::from_record(input);
-    if (transaction)
-    {
-        if (station_context)
-            query_cur = transaction->query_station_data(*query).release();
-        else
-            query_cur = transaction->query_data(*query).release();
-    } else {
-        if (station_context)
-            query_cur = db.query_station_data(*query).release();
-        else
-            query_cur = db.query_data(*query).release();
-    }
+    if (station_context)
+        query_cur = transaction->query_station_data(*query).release();
+    else
+        query_cur = transaction->query_data(*query).release();
     attr_state = ATTR_REFERENCE;
     attr_reference_id = missing_int;
 
@@ -277,19 +260,13 @@ void DbAPI::prendilo()
     if (station_context)
     {
         StationValues sv(input);
-        if (transaction)
-            transaction->insert_station_data(sv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
-        else
-            db.insert_station_data(sv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
+        transaction->insert_station_data(sv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
         last_inserted_station_id = sv.info.ana_id;
         for (const auto& v: sv.values)
             last_inserted_varids.push_back(VarID(v.first, true, v.second.data_id));
     } else {
         DataValues dv(input);
-        if (transaction)
-            transaction->insert_data(dv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
-        else
-            db.insert_data(dv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
+        transaction->insert_data(dv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
         last_inserted_station_id = dv.info.ana_id;
         for (const auto& v: dv.values)
             last_inserted_varids.push_back(VarID(v.first, false, v.second.data_id));
@@ -308,17 +285,9 @@ void DbAPI::dimenticami()
 
     auto query = Query::from_record(input);
     if (station_context)
-    {
-        if (transaction)
-            transaction->remove_station_data(*query);
-        else
-            db.remove_station_data(*query);
-    } else {
-        if (transaction)
-            transaction->remove(*query);
-        else
-            db.remove(*query);
-    }
+        transaction->remove_station_data(*query);
+    else
+        transaction->remove(*query);
     attr_state = ATTR_REFERENCE;
     attr_reference_id = missing_int;
 }
@@ -359,32 +328,16 @@ int DbAPI::voglioancora()
         case ATTR_REFERENCE:
             if (attr_reference_id == missing_int || attr_varid == 0)
                 throw error_consistency("voglioancora was not called after a dammelo, or was called with an invalid *context_id or *var_related");
-            if (transaction)
-            {
-                if (db.is_station_variable(attr_reference_id, attr_varid))
-                    transaction->attr_query_station(attr_reference_id, dest);
-                else
-                    transaction->attr_query_data(attr_reference_id, dest);
-            } else {
-                if (db.is_station_variable(attr_reference_id, attr_varid))
-                    db.attr_query_station(attr_reference_id, dest);
-                else
-                    db.attr_query_data(attr_reference_id, dest);
-            }
+            if (db->is_station_variable(attr_reference_id, attr_varid))
+                transaction->attr_query_station(attr_reference_id, dest);
+            else
+                transaction->attr_query_data(attr_reference_id, dest);
             break;
         case ATTR_DAMMELO:
-            if (transaction)
-            {
-                if (dynamic_cast<const db::CursorStationData*>(query_cur))
-                    transaction->attr_query_station(query_cur->attr_reference_id(), dest);
-                else
-                    transaction->attr_query_data(query_cur->attr_reference_id(), dest);
-            } else {
-                if (dynamic_cast<const db::CursorStationData*>(query_cur))
-                    db.attr_query_station(query_cur->attr_reference_id(), dest);
-                else
-                    db.attr_query_data(query_cur->attr_reference_id(), dest);
-            }
+            if (dynamic_cast<const db::CursorStationData*>(query_cur))
+                transaction->attr_query_station(query_cur->attr_reference_id(), dest);
+            else
+                transaction->attr_query_data(query_cur->attr_reference_id(), dest);
             break;
         case ATTR_PRENDILO:
             throw error_consistency("voglioancora cannot be called after a prendilo");
@@ -409,33 +362,17 @@ void DbAPI::critica()
                 throw error_consistency("critica was not called after a dammelo or prendilo, or was called with an invalid *context_id or *var_related");
             {
                 Values attrs(qcinput);
-                if (db.is_station_variable(attr_reference_id, attr_varid))
-                {
-                    if (transaction)
-                        transaction->attr_insert_station(attr_reference_id, attrs);
-                    else
-                        db.attr_insert_station(attr_reference_id, attrs);
-                } else {
-                    if (transaction)
-                        transaction->attr_insert_data(attr_reference_id, attrs);
-                    else
-                        db.attr_insert_data(attr_reference_id, attrs);
-                }
+                if (db->is_station_variable(attr_reference_id, attr_varid))
+                    transaction->attr_insert_station(attr_reference_id, attrs);
+                else
+                    transaction->attr_insert_data(attr_reference_id, attrs);
             }
             break;
         case ATTR_DAMMELO:
             if (dynamic_cast<const db::CursorStationData*>(query_cur))
-            {
-                if (transaction)
-                    transaction->attr_insert_station(query_cur->attr_reference_id(), qcinput);
-                else
-                    db.attr_insert_station(query_cur->attr_reference_id(), qcinput);
-            } else {
-                if (transaction)
-                    transaction->attr_insert_data(query_cur->attr_reference_id(), qcinput);
-                else
-                    db.attr_insert_data(query_cur->attr_reference_id(), qcinput);
-            }
+                transaction->attr_insert_station(query_cur->attr_reference_id(), qcinput);
+            else
+                transaction->attr_insert_data(query_cur->attr_reference_id(), qcinput);
             break;
         case ATTR_PRENDILO:
             {
@@ -464,17 +401,9 @@ void DbAPI::critica()
                                 WR_VAR_F(attr_varid), WR_VAR_X(attr_varid), WR_VAR_Y(attr_varid), last_inserted_varids.size());
                 }
                 if (is_station)
-                {
-                    if (transaction)
-                        transaction->attr_insert_station(data_id, qcinput);
-                    else
-                        db.attr_insert_station(data_id, qcinput);
-                } else {
-                    if (transaction)
-                        transaction->attr_insert_data(data_id, qcinput);
-                    else
-                        db.attr_insert_data(data_id, qcinput);
-                }
+                    transaction->attr_insert_station(data_id, qcinput);
+                else
+                    transaction->attr_insert_data(data_id, qcinput);
             }
             break;
     }
@@ -498,32 +427,16 @@ void DbAPI::scusa()
         case ATTR_REFERENCE:
             if (attr_reference_id == missing_int || attr_varid == 0)
                 throw error_consistency("scusa was not called after a dammelo, or was called with an invalid *context_id or *var_related");
-            if (db.is_station_variable(attr_reference_id, attr_varid))
-            {
-                if (transaction)
-                    transaction->attr_remove_station(attr_reference_id, arr);
-                else
-                    db.attr_remove_station(attr_reference_id, arr);
-            } else {
-                if (transaction)
-                    transaction->attr_remove_data(attr_reference_id, arr);
-                else
-                    db.attr_remove_data(attr_reference_id, arr);
-            }
+            if (db->is_station_variable(attr_reference_id, attr_varid))
+                transaction->attr_remove_station(attr_reference_id, arr);
+            else
+                transaction->attr_remove_data(attr_reference_id, arr);
             break;
         case ATTR_DAMMELO:
             if (dynamic_cast<const db::CursorStationData*>(query_cur))
-            {
-                if (transaction)
-                    transaction->attr_remove_station(query_cur->attr_reference_id(), arr);
-                else
-                    db.attr_remove_station(query_cur->attr_reference_id(), arr);
-            } else {
-                if (transaction)
-                    transaction->attr_remove_data(query_cur->attr_reference_id(), arr);
-                else
-                    db.attr_remove_data(query_cur->attr_reference_id(), arr);
-            }
+                transaction->attr_remove_station(query_cur->attr_reference_id(), arr);
+            else
+                transaction->attr_remove_data(query_cur->attr_reference_id(), arr);
             break;
         case ATTR_PRENDILO:
             throw error_consistency("scusa cannot be called after a prendilo");
@@ -584,12 +497,7 @@ bool DbAPI::messages_read_next()
         throw error_consistency("messages_read_next called but there are no open input files");
     if (!input_file->next())
         return false;
-
-    if (transaction)
-        transaction->import_msg(input_file->msg(), NULL, input_file->import_flags);
-    else
-        db.import_msg(input_file->msg(), NULL, input_file->import_flags);
-
+    transaction->import_msg(input_file->msg(), NULL, input_file->import_flags);
     return true;
 }
 
@@ -603,20 +511,12 @@ void DbAPI::messages_write_next(const char* template_name)
 
     // Do the export with the current filter
     auto query = Query::from_record(input);
-    if (transaction)
-        transaction->export_msgs(*query, [&](unique_ptr<Message>&& msg) {
-            Messages msgs;
-            msgs.append(move(msg));
-            out.write(exporter->to_binary(msgs));
-            return true;
-        });
-    else
-        db.export_msgs(*query, [&](unique_ptr<Message>&& msg) {
-            Messages msgs;
-            msgs.append(move(msg));
-            out.write(exporter->to_binary(msgs));
-            return true;
-        });
+    transaction->export_msgs(*query, [&](unique_ptr<Message>&& msg) {
+        Messages msgs;
+        msgs.append(move(msg));
+        out.write(exporter->to_binary(msgs));
+        return true;
+    });
 }
 
 }

@@ -253,9 +253,6 @@ add_method("stationdata", [](Fixture& f) {
     wassert(actual(Msg::downcast(msgs[1]).get_temp_2m_var()->enqd()) == 274.15);
 });
 add_method("query_ident", [](Fixture& f) {
-    // Try querying by ident
-    auto& db = *f.db;
-
     // Insert a mobile station
     DataValues vals;
     vals.info.report = "synop";
@@ -265,16 +262,16 @@ add_method("query_ident", [](Fixture& f) {
     vals.info.trange = Trange::instant();
     vals.info.datetime = Datetime(2015, 4, 25, 12, 30, 45);
     vals.values.set("B12101", 295.1);
-    db.insert_data(vals, true, true);
+    f.db->insert_data(vals, true, true);
 
-    wassert(actual(db).try_station_query("ident=foo", 1));
-    wassert(actual(db).try_station_query("ident=bar", 0));
-    wassert(actual(db).try_station_query("mobile=1", 1));
-    wassert(actual(db).try_station_query("mobile=0", 0));
-    wassert(actual(db).try_data_query("ident=foo", 1));
-    wassert(actual(db).try_data_query("ident=bar", 0));
-    wassert(actual(db).try_data_query("mobile=1", 1));
-    wassert(actual(db).try_data_query("mobile=0", 0));
+    wassert(actual(f.db).try_station_query("ident=foo", 1));
+    wassert(actual(f.db).try_station_query("ident=bar", 0));
+    wassert(actual(f.db).try_station_query("mobile=1", 1));
+    wassert(actual(f.db).try_station_query("mobile=0", 0));
+    wassert(actual(f.db).try_data_query("ident=foo", 1));
+    wassert(actual(f.db).try_data_query("ident=bar", 0));
+    wassert(actual(f.db).try_data_query("mobile=1", 1));
+    wassert(actual(f.db).try_data_query("mobile=0", 0));
 });
 add_method("missing_repmemo", [](Fixture& f) {
     // Test querying with a missing rep_memo

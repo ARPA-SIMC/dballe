@@ -82,7 +82,8 @@ bool Importer::operator()(const Item& item)
 /// Query data in the database and output results as arbitrary human readable text
 int Dbadb::do_dump(const Query& query, FILE* out)
 {
-    unique_ptr<db::Cursor> cursor = db.query_data(query);
+    auto tr = db.transaction();
+    unique_ptr<db::Cursor> cursor = tr->query_data(query);
 
     auto res = Record::create();
     for (unsigned i = 0; cursor->next(); ++i)
@@ -92,13 +93,15 @@ int Dbadb::do_dump(const Query& query, FILE* out)
         res->print(out);
     }
 
+    tr->rollback();
     return 0;
 }
 
 /// Query stations in the database and output results as arbitrary human readable text
 int Dbadb::do_stations(const Query& query, FILE* out)
 {
-    unique_ptr<db::Cursor> cursor = db.query_stations(query);
+    auto tr = db.transaction();
+    unique_ptr<db::Cursor> cursor = tr->query_stations(query);
 
     auto res = Record::create();
     for (unsigned i = 0; cursor->next(); ++i)
@@ -108,6 +111,7 @@ int Dbadb::do_stations(const Query& query, FILE* out)
         res->print(out);
     }
 
+    tr->rollback();
     return 0;
 }
 

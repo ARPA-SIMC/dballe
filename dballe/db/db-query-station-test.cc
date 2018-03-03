@@ -78,90 +78,90 @@ class Tests : public DBFixtureTestCase<Fixture>
     void register_tests() override
     {
         add_method("query_ana_id", [](Fixture& f) {
-            auto& db = *f.db;
-            wassert(actual(db).try_station_query("ana_id=1", 1));
-            wassert(actual(db).try_station_query("ana_id=2", 1));
+            auto tr = f.db->transaction();
+            wassert(actual(tr).try_station_query("ana_id=1", 1));
+            wassert(actual(tr).try_station_query("ana_id=2", 1));
         });
         add_method("query_lat_lon", [](Fixture& f) {
-            auto& db = *f.db;
+            auto tr = f.db->transaction();
             const auto some = f.some;
             const auto all = f.all;
-            wassert(actual(db).try_station_query("lat=12.00000", 0));
-            wassert(actual(db).try_station_query("lat=12.34560", some));
-            wassert(actual(db).try_station_query("lat=23.45670", some));
-            wassert(actual(db).try_station_query("latmin=12.00000", all));
-            wassert(actual(db).try_station_query("latmin=12.34560", all));
-            wassert(actual(db).try_station_query("latmin=12.34570", some));
-            wassert(actual(db).try_station_query("latmin=23.45670", some));
-            wassert(actual(db).try_station_query("latmin=23.45680", 0));
-            wassert(actual(db).try_station_query("latmax=12.00000", 0));
-            wassert(actual(db).try_station_query("latmax=12.34560", some));
-            wassert(actual(db).try_station_query("latmax=12.34570", some));
-            wassert(actual(db).try_station_query("latmax=23.45670", all));
-            wassert(actual(db).try_station_query("latmax=23.45680", all));
-            wassert(actual(db).try_station_query("lon=76.00000", 0));
-            wassert(actual(db).try_station_query("lon=76.54320", some));
-            wassert(actual(db).try_station_query("lon=65.43210", some));
-            wassert(actual(db).try_station_query("lonmin=10., lonmax=20.", 0));
-            wassert(actual(db).try_station_query("lonmin=76.54320, lonmax=76.54320", some));
-            wassert(actual(db).try_station_query("lonmin=76.54320, lonmax=77.", some));
-            wassert(actual(db).try_station_query("lonmin=76.54330, lonmax=77.", 0));
-            wassert(actual(db).try_station_query("lonmin=60., lonmax=77.", all));
-            wassert(actual(db).try_station_query("lonmin=77., lonmax=76.54310", some));
-            wassert(actual(db).try_station_query("lonmin=77., lonmax=76.54320", all));
-            wassert(actual(db).try_station_query("lonmin=77., lonmax=-10", 0));
+            wassert(actual(tr).try_station_query("lat=12.00000", 0));
+            wassert(actual(tr).try_station_query("lat=12.34560", some));
+            wassert(actual(tr).try_station_query("lat=23.45670", some));
+            wassert(actual(tr).try_station_query("latmin=12.00000", all));
+            wassert(actual(tr).try_station_query("latmin=12.34560", all));
+            wassert(actual(tr).try_station_query("latmin=12.34570", some));
+            wassert(actual(tr).try_station_query("latmin=23.45670", some));
+            wassert(actual(tr).try_station_query("latmin=23.45680", 0));
+            wassert(actual(tr).try_station_query("latmax=12.00000", 0));
+            wassert(actual(tr).try_station_query("latmax=12.34560", some));
+            wassert(actual(tr).try_station_query("latmax=12.34570", some));
+            wassert(actual(tr).try_station_query("latmax=23.45670", all));
+            wassert(actual(tr).try_station_query("latmax=23.45680", all));
+            wassert(actual(tr).try_station_query("lon=76.00000", 0));
+            wassert(actual(tr).try_station_query("lon=76.54320", some));
+            wassert(actual(tr).try_station_query("lon=65.43210", some));
+            wassert(actual(tr).try_station_query("lonmin=10., lonmax=20.", 0));
+            wassert(actual(tr).try_station_query("lonmin=76.54320, lonmax=76.54320", some));
+            wassert(actual(tr).try_station_query("lonmin=76.54320, lonmax=77.", some));
+            wassert(actual(tr).try_station_query("lonmin=76.54330, lonmax=77.", 0));
+            wassert(actual(tr).try_station_query("lonmin=60., lonmax=77.", all));
+            wassert(actual(tr).try_station_query("lonmin=77., lonmax=76.54310", some));
+            wassert(actual(tr).try_station_query("lonmin=77., lonmax=76.54320", all));
+            wassert(actual(tr).try_station_query("lonmin=77., lonmax=-10", 0));
         });
         add_method("query_mobile", [](Fixture& f) {
-            auto& db = *f.db;
-            wassert(actual(db).try_station_query("mobile=0", f.all));
-            wassert(actual(db).try_station_query("mobile=1", 0));
+            auto tr = f.db->transaction();
+            wassert(actual(tr).try_station_query("mobile=0", f.all));
+            wassert(actual(tr).try_station_query("mobile=1", 0));
         });
         add_method("query_ident", [](Fixture& f) {
             // FIXME: add some mobile stations to the test fixture to test ident
         });
         add_method("query_block_station", [](Fixture& f) {
-            auto& db = *f.db;
-            wassert(actual(db).try_station_query("B01001=1", f.some));
-            wassert(actual(db).try_station_query("B01001=2", 0));
-            wassert(actual(db).try_station_query("B01001=3", f.some));
-            wassert(actual(db).try_station_query("B01001=4", 0));
-            wassert(actual(db).try_station_query("B01002=1", 1));
-            wassert(actual(db).try_station_query("B01002=2", 1));
-            wassert(actual(db).try_station_query("B01002=3", 0));
-            wassert(actual(db).try_station_query("B01002=4", f.some));
+            auto tr = f.db->transaction();
+            wassert(actual(tr).try_station_query("B01001=1", f.some));
+            wassert(actual(tr).try_station_query("B01001=2", 0));
+            wassert(actual(tr).try_station_query("B01001=3", f.some));
+            wassert(actual(tr).try_station_query("B01001=4", 0));
+            wassert(actual(tr).try_station_query("B01002=1", 1));
+            wassert(actual(tr).try_station_query("B01002=2", 1));
+            wassert(actual(tr).try_station_query("B01002=3", 0));
+            wassert(actual(tr).try_station_query("B01002=4", f.some));
         });
         add_method("query_mobile", [](Fixture& f) {
         });
         add_method("query_ana_filter", [](Fixture& f) {
-            auto& db = *f.db;
-            wassert(actual(db).try_station_query("ana_filter=block=1", f.some));
-            wassert(actual(db).try_station_query("ana_filter=block=2", 0));
-            wassert(actual(db).try_station_query("ana_filter=block=3", f.some));
-            wassert(actual(db).try_station_query("ana_filter=block>=1", f.all));
-            wassert(actual(db).try_station_query("ana_filter=B07030=42", 1));
-            wassert(actual(db).try_station_query("ana_filter=B07030=50", 1));
-            wassert(actual(db).try_station_query("ana_filter=B07030=100", 1));
-            wassert(actual(db).try_station_query("ana_filter=B07030=110", 1));
-            wassert(actual(db).try_station_query("ana_filter=B07030=120", 0));
-            wassert(actual(db).try_station_query("ana_filter=B07030>50", f.some));
+            auto tr = f.db->transaction();
+            wassert(actual(tr).try_station_query("ana_filter=block=1", f.some));
+            wassert(actual(tr).try_station_query("ana_filter=block=2", 0));
+            wassert(actual(tr).try_station_query("ana_filter=block=3", f.some));
+            wassert(actual(tr).try_station_query("ana_filter=block>=1", f.all));
+            wassert(actual(tr).try_station_query("ana_filter=B07030=42", 1));
+            wassert(actual(tr).try_station_query("ana_filter=B07030=50", 1));
+            wassert(actual(tr).try_station_query("ana_filter=B07030=100", 1));
+            wassert(actual(tr).try_station_query("ana_filter=B07030=110", 1));
+            wassert(actual(tr).try_station_query("ana_filter=B07030=120", 0));
+            wassert(actual(tr).try_station_query("ana_filter=B07030>50", f.some));
 #warning FIXME: change after testing if we can move to report-in-station behaviour or not
-            if (db.format() != V6)
-                wassert(actual(db).try_station_query("ana_filter=B07030>=50", 3));
+            if (f.db->format() != V6)
+                wassert(actual(tr).try_station_query("ana_filter=B07030>=50", 3));
             else
-                wassert(actual(db).try_station_query("ana_filter=B07030>=50", 2));
-            wassert(actual(db).try_station_query("ana_filter=50<=B07030<=100", 2));
+                wassert(actual(tr).try_station_query("ana_filter=B07030>=50", 2));
+            wassert(actual(tr).try_station_query("ana_filter=50<=B07030<=100", 2));
         });
         add_method("query_var", [](Fixture& f) {
             /*
              * Querying var= or varlist= on a station query means querying stations
              * that measure that variable or those variables.
              */
-            auto& db = *f.db;
-            wassert(actual(db).try_station_query("var=B12101", 2));
-            wassert(actual(db).try_station_query("var=B12103", 1));
-            wassert(actual(db).try_station_query("varlist=B12101", 2));
-            wassert(actual(db).try_station_query("varlist=B12103", 1));
-            wassert(actual(db).try_station_query("varlist=B12101,B12103", 2));
+            auto tr = f.db->transaction();
+            wassert(actual(tr).try_station_query("var=B12101", 2));
+            wassert(actual(tr).try_station_query("var=B12103", 1));
+            wassert(actual(tr).try_station_query("varlist=B12101", 2));
+            wassert(actual(tr).try_station_query("varlist=B12103", 1));
+            wassert(actual(tr).try_station_query("varlist=B12101,B12103", 2));
         });
         add_method("stations_without_data", [](Fixture& f) {
             auto& db = *f.db;
@@ -202,9 +202,9 @@ class Tests : public DBFixtureTestCase<Fixture>
             wassert(actual(cur->remaining()) == 1);
         });
         add_method("query_ordering", [](Fixture& f) {
-            auto& db = *f.db;
-            auto cur = db.query_stations(core::Query());
-            switch (db.format())
+            auto tr = f.db->transaction();
+            auto cur = tr->query_stations(core::Query());
+            switch (f.db->format())
             {
                 case V7:
                     wassert(actual(cur->remaining()) == 4);
@@ -212,14 +212,14 @@ class Tests : public DBFixtureTestCase<Fixture>
                 case V6:
                     wassert(actual(cur->remaining()) == 2);
                     break;
-                default: error_unimplemented::throwf("cannot run this test on a database of format %d", (int)db.format());
+                default: error_unimplemented::throwf("cannot run this test on a database of format %d", (int)f.db->format());
             }
         });
         add_method("query_rep_memo", [](Fixture& f) {
             // https://github.com/ARPA-SIMC/dballe/issues/35
-            auto& db = *f.db;
-            wassert(actual(db).try_station_query("rep_memo=synop", 1));
-            wassert(actual(db).try_station_query("rep_memo=metar", 2));
+            auto tr = f.db->transaction();
+            wassert(actual(tr).try_station_query("rep_memo=synop", 1));
+            wassert(actual(tr).try_station_query("rep_memo=metar", 2));
         });
     }
 };

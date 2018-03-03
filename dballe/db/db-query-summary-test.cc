@@ -84,10 +84,10 @@ class Tests : public DBFixtureTestCase<Fixture>
     void register_tests() override
     {
         add_method("query_ana_id", [](Fixture& f) {
-            auto& db = *f.db;
-            wassert(actual(db).try_summary_query(parm("ana_id", f.st1_id), 2));
-            wassert(actual(db).try_summary_query(parm("ana_id", f.st2_id), 2));
-            wassert(actual(db).try_summary_query(parm("ana_id", (f.st1_id + f.st2_id) * 2), 0));
+            auto tr = f.db->transaction();
+            wassert(actual(tr).try_summary_query(parm("ana_id", f.st1_id), 2));
+            wassert(actual(tr).try_summary_query(parm("ana_id", f.st2_id), 2));
+            wassert(actual(tr).try_summary_query(parm("ana_id", (f.st1_id + f.st2_id) * 2), 0));
         });
 #if 0
         // TODO: summary of station vars is not supported at the moment, waiting for a use case for it
@@ -100,9 +100,9 @@ class Tests : public DBFixtureTestCase<Fixture>
         });
 #endif
         add_method("query_year", [](Fixture& f) {
-            auto& db = *f.db;
-            wassert(actual(db).try_summary_query("year=1001", 0));
-            wassert(actual(db).try_summary_query("yearmin=1999", 0));
+            auto tr = f.db->transaction();
+            wassert(actual(tr).try_summary_query("year=1001", 0));
+            wassert(actual(tr).try_summary_query("yearmin=1999", 0));
             auto check_base = [](const vector<core::Record>& res) {
                 wassert(actual(res[0].enq("lat", MISSING_INT)) == 1234560);
                 wassert(actual(res[0].enq("lon", MISSING_INT)) == 7654320);
@@ -123,116 +123,116 @@ class Tests : public DBFixtureTestCase<Fixture>
                 wassert(actual(dtr.min) == Datetime(1945, 4, 25, 8));
                 wassert(actual(dtr.max) == Datetime(1945, 4, 26, 8));
             };
-            wassert(actual(db).try_summary_query("yearmin=1945", 4, check_nodetails));
-            wassert(actual(db).try_summary_query("yearmin=1945, query=details", 4, check_details));
-            wassert(actual(db).try_summary_query("yearmax=1944", 0));
-            wassert(actual(db).try_summary_query("yearmax=1945", 4));
-            wassert(actual(db).try_summary_query("yearmax=2030", 4));
-            wassert(actual(db).try_summary_query("year=1944", 0));
-            wassert(actual(db).try_summary_query("year=1945", 4));
-            wassert(actual(db).try_summary_query("year=1946", 0));
+            wassert(actual(tr).try_summary_query("yearmin=1945", 4, check_nodetails));
+            wassert(actual(tr).try_summary_query("yearmin=1945, query=details", 4, check_details));
+            wassert(actual(tr).try_summary_query("yearmax=1944", 0));
+            wassert(actual(tr).try_summary_query("yearmax=1945", 4));
+            wassert(actual(tr).try_summary_query("yearmax=2030", 4));
+            wassert(actual(tr).try_summary_query("year=1944", 0));
+            wassert(actual(tr).try_summary_query("year=1945", 4));
+            wassert(actual(tr).try_summary_query("year=1946", 0));
         });
         add_method("query_blockstation", [](Fixture& f) {
-            auto& db = *f.db;
-            wassert(actual(db).try_summary_query("B01001=1", 2));
-            wassert(actual(db).try_summary_query("B01001=2", 0));
-            wassert(actual(db).try_summary_query("B01002=3", 0));
-            wassert(actual(db).try_summary_query("B01002=4", 2));
+            auto tr = f.db->transaction();
+            wassert(actual(tr).try_summary_query("B01001=1", 2));
+            wassert(actual(tr).try_summary_query("B01001=2", 0));
+            wassert(actual(tr).try_summary_query("B01002=3", 0));
+            wassert(actual(tr).try_summary_query("B01002=4", 2));
         });
         add_method("query_ana_filter", [](Fixture& f) {
-            auto& db = *f.db;
-            wassert(actual(db).try_summary_query("ana_filter=block=1", 2));
-            wassert(actual(db).try_summary_query("ana_filter=B01001=1", 2));
-            wassert(actual(db).try_summary_query("ana_filter=block>1", 2));
-            wassert(actual(db).try_summary_query("ana_filter=B01001>1", 2));
-            wassert(actual(db).try_summary_query("ana_filter=block<=1", 2));
-            wassert(actual(db).try_summary_query("ana_filter=B01001>3", 0));
-            wassert(actual(db).try_summary_query("ana_filter=B01001>=3", 2));
-            wassert(actual(db).try_summary_query("ana_filter=B01001<=1", 2));
-            wassert(actual(db).try_summary_query("ana_filter=0<=B01001<=2", 2));
-            wassert(actual(db).try_summary_query("ana_filter=1<=B01001<=1", 2));
-            wassert(actual(db).try_summary_query("ana_filter=2<=B01001<=4", 2));
-            wassert(actual(db).try_summary_query("ana_filter=4<=B01001<=6", 0));
+            auto tr = f.db->transaction();
+            wassert(actual(tr).try_summary_query("ana_filter=block=1", 2));
+            wassert(actual(tr).try_summary_query("ana_filter=B01001=1", 2));
+            wassert(actual(tr).try_summary_query("ana_filter=block>1", 2));
+            wassert(actual(tr).try_summary_query("ana_filter=B01001>1", 2));
+            wassert(actual(tr).try_summary_query("ana_filter=block<=1", 2));
+            wassert(actual(tr).try_summary_query("ana_filter=B01001>3", 0));
+            wassert(actual(tr).try_summary_query("ana_filter=B01001>=3", 2));
+            wassert(actual(tr).try_summary_query("ana_filter=B01001<=1", 2));
+            wassert(actual(tr).try_summary_query("ana_filter=0<=B01001<=2", 2));
+            wassert(actual(tr).try_summary_query("ana_filter=1<=B01001<=1", 2));
+            wassert(actual(tr).try_summary_query("ana_filter=2<=B01001<=4", 2));
+            wassert(actual(tr).try_summary_query("ana_filter=4<=B01001<=6", 0));
         });
         add_method("query_data_filter", [](Fixture& f) {
-            auto& db = *f.db;
-            wassert(actual(db).try_summary_query("data_filter=B12101<300.0", 1));
-            wassert(actual(db).try_summary_query("data_filter=B12101<=300.0", 2));
-            wassert(actual(db).try_summary_query("data_filter=B12101=300.0", 1));
-            wassert(actual(db).try_summary_query("data_filter=B12101>=300,0", 1));
-            wassert(actual(db).try_summary_query("data_filter=B12101>300.0", 1));
-            wassert(actual(db).try_summary_query("data_filter=B12101<400.0", 2));
-            wassert(actual(db).try_summary_query("data_filter=B12101<=400.0", 2));
-            wassert(actual(db).try_summary_query("data_filter=B12102>400.0", 0));
+            auto tr = f.db->transaction();
+            wassert(actual(tr).try_summary_query("data_filter=B12101<300.0", 1));
+            wassert(actual(tr).try_summary_query("data_filter=B12101<=300.0", 2));
+            wassert(actual(tr).try_summary_query("data_filter=B12101=300.0", 1));
+            wassert(actual(tr).try_summary_query("data_filter=B12101>=300,0", 1));
+            wassert(actual(tr).try_summary_query("data_filter=B12101>300.0", 1));
+            wassert(actual(tr).try_summary_query("data_filter=B12101<400.0", 2));
+            wassert(actual(tr).try_summary_query("data_filter=B12101<=400.0", 2));
+            wassert(actual(tr).try_summary_query("data_filter=B12102>400.0", 0));
         });
         add_method("query_lat_lon", [](Fixture& f) {
-            auto& db = *f.db;
-            wassert(actual(db).try_summary_query("latmin=11.0", 4));
-            wassert(actual(db).try_summary_query("latmin=12.34560", 4));
-            wassert(actual(db).try_summary_query("latmin=13.0", 2));
-            wassert(actual(db).try_summary_query("latmax=11.0", 0));
-            wassert(actual(db).try_summary_query("latmax=12.34560", 2));
-            wassert(actual(db).try_summary_query("latmax=13.0", 2));
-            wassert(actual(db).try_summary_query("lonmin=75., lonmax=77.", 2));
-            wassert(actual(db).try_summary_query("lonmin=76.54320, lonmax=76.54320", 2));
-            wassert(actual(db).try_summary_query("lonmin=76.54330, lonmax=77.", 0));
-            wassert(actual(db).try_summary_query("lonmin=77., lonmax=76.54310", 2));
-            wassert(actual(db).try_summary_query("lonmin=77., lonmax=76.54320", 4));
-            wassert(actual(db).try_summary_query("lonmin=77., lonmax=-10", 0));
+            auto tr = f.db->transaction();
+            wassert(actual(tr).try_summary_query("latmin=11.0", 4));
+            wassert(actual(tr).try_summary_query("latmin=12.34560", 4));
+            wassert(actual(tr).try_summary_query("latmin=13.0", 2));
+            wassert(actual(tr).try_summary_query("latmax=11.0", 0));
+            wassert(actual(tr).try_summary_query("latmax=12.34560", 2));
+            wassert(actual(tr).try_summary_query("latmax=13.0", 2));
+            wassert(actual(tr).try_summary_query("lonmin=75., lonmax=77.", 2));
+            wassert(actual(tr).try_summary_query("lonmin=76.54320, lonmax=76.54320", 2));
+            wassert(actual(tr).try_summary_query("lonmin=76.54330, lonmax=77.", 0));
+            wassert(actual(tr).try_summary_query("lonmin=77., lonmax=76.54310", 2));
+            wassert(actual(tr).try_summary_query("lonmin=77., lonmax=76.54320", 4));
+            wassert(actual(tr).try_summary_query("lonmin=77., lonmax=-10", 0));
         });
         add_method("query_mobile", [](Fixture& f) {
-            auto& db = *f.db;
-            wassert(actual(db).try_summary_query("mobile=0", 4));
-            wassert(actual(db).try_summary_query("mobile=1", 0));
+            auto tr = f.db->transaction();
+            wassert(actual(tr).try_summary_query("mobile=0", 4));
+            wassert(actual(tr).try_summary_query("mobile=1", 0));
         });
         add_method("query_ident", [](Fixture& f) {
             //auto& db = *f.db;
             // TODO: add mobile stations to the fixture so we can query ident
         });
         add_method("query_timerange", [](Fixture& f) {
-            auto& db = *f.db;
-            wassert(actual(db).try_summary_query("pindicator=20", 4));
-            wassert(actual(db).try_summary_query("pindicator=21", 0));
-            wassert(actual(db).try_summary_query("p1=111", 4));
-            wassert(actual(db).try_summary_query("p1=112", 0));
-            wassert(actual(db).try_summary_query("p2=121", 0));
-            wassert(actual(db).try_summary_query("p2=122", 4));
-            wassert(actual(db).try_summary_query("p2=123", 0));
+            auto tr = f.db->transaction();
+            wassert(actual(tr).try_summary_query("pindicator=20", 4));
+            wassert(actual(tr).try_summary_query("pindicator=21", 0));
+            wassert(actual(tr).try_summary_query("p1=111", 4));
+            wassert(actual(tr).try_summary_query("p1=112", 0));
+            wassert(actual(tr).try_summary_query("p2=121", 0));
+            wassert(actual(tr).try_summary_query("p2=122", 4));
+            wassert(actual(tr).try_summary_query("p2=123", 0));
         });
         add_method("query_level", [](Fixture& f) {
-            auto& db = *f.db;
-            wassert(actual(db).try_summary_query("leveltype1=10", 4));
-            wassert(actual(db).try_summary_query("leveltype1=11", 0));
-            wassert(actual(db).try_summary_query("leveltype2=15", 4));
-            wassert(actual(db).try_summary_query("leveltype2=16", 0));
-            wassert(actual(db).try_summary_query("l1=11", 4));
-            wassert(actual(db).try_summary_query("l1=12", 0));
-            wassert(actual(db).try_summary_query("l2=22", 4));
-            wassert(actual(db).try_summary_query("l2=23", 0));
+            auto tr = f.db->transaction();
+            wassert(actual(tr).try_summary_query("leveltype1=10", 4));
+            wassert(actual(tr).try_summary_query("leveltype1=11", 0));
+            wassert(actual(tr).try_summary_query("leveltype2=15", 4));
+            wassert(actual(tr).try_summary_query("leveltype2=16", 0));
+            wassert(actual(tr).try_summary_query("l1=11", 4));
+            wassert(actual(tr).try_summary_query("l1=12", 0));
+            wassert(actual(tr).try_summary_query("l2=22", 4));
+            wassert(actual(tr).try_summary_query("l2=23", 0));
         });
         add_method("query_var", [](Fixture& f) {
-            auto& db = *f.db;
-            wassert(actual(db).try_summary_query("var=B01001", 0));
-            wassert(actual(db).try_summary_query("var=B12101", 2));
-            wassert(actual(db).try_summary_query("var=B12102", 0));
+            auto tr = f.db->transaction();
+            wassert(actual(tr).try_summary_query("var=B01001", 0));
+            wassert(actual(tr).try_summary_query("var=B12101", 2));
+            wassert(actual(tr).try_summary_query("var=B12102", 0));
         });
         add_method("query_rep_memo", [](Fixture& f) {
-            auto& db = *f.db;
-            wassert(actual(db).try_summary_query("rep_memo=synop", 0));
-            wassert(actual(db).try_summary_query("rep_memo=metar", 4));
-            wassert(actual(db).try_summary_query("rep_memo=temp", 0));
+            auto tr = f.db->transaction();
+            wassert(actual(tr).try_summary_query("rep_memo=synop", 0));
+            wassert(actual(tr).try_summary_query("rep_memo=metar", 4));
+            wassert(actual(tr).try_summary_query("rep_memo=temp", 0));
         });
         add_method("query_priority", [](Fixture& f) {
-            auto& db = *f.db;
-            wassert(actual(db).try_summary_query("priority=101", 0));
-            wassert(actual(db).try_summary_query("priority=81", 4));
-            wassert(actual(db).try_summary_query("priority=102", 0));
-            wassert(actual(db).try_summary_query("priomin=70", 4));
-            wassert(actual(db).try_summary_query("priomin=80", 4));
-            wassert(actual(db).try_summary_query("priomin=90", 0));
-            wassert(actual(db).try_summary_query("priomax=70", 0));
-            wassert(actual(db).try_summary_query("priomax=81", 4));
-            wassert(actual(db).try_summary_query("priomax=100", 4));
+            auto tr = f.db->transaction();
+            wassert(actual(tr).try_summary_query("priority=101", 0));
+            wassert(actual(tr).try_summary_query("priority=81", 4));
+            wassert(actual(tr).try_summary_query("priority=102", 0));
+            wassert(actual(tr).try_summary_query("priomin=70", 4));
+            wassert(actual(tr).try_summary_query("priomin=80", 4));
+            wassert(actual(tr).try_summary_query("priomin=90", 0));
+            wassert(actual(tr).try_summary_query("priomax=70", 0));
+            wassert(actual(tr).try_summary_query("priomax=81", 4));
+            wassert(actual(tr).try_summary_query("priomax=100", 4));
         });
     }
 };

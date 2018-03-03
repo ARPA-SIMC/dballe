@@ -59,9 +59,11 @@ void Explorer::revalidate()
 
     unique_ptr<db::Summary> new_global_summary(new db::Summary(query));
 
-    auto cur = db.query_summary(query);
+    auto tr = db.transaction();
+    auto cur = tr->query_summary(query);
     while (cur->next())
         new_global_summary->add_summary(*cur);
+    tr->rollback();
 
     unique_ptr<db::Summary> new_active_summary(new db::Summary(filter));
     new_active_summary->add_filtered(*new_global_summary);

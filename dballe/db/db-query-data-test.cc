@@ -70,7 +70,7 @@ struct DateDayDataSet : public TestDataSet
     }
 };
 
-#define TRY_QUERY(qstring, expected_count) wassert(actual(*f.db).try_data_query(qstring, expected_count))
+#define TRY_QUERY(qstring, expected_count) wassert(actual(tr).try_data_query(qstring, expected_count))
 
 class Tests : public DBFixtureTestCase<DBFixture>
 {
@@ -81,6 +81,7 @@ class Tests : public DBFixtureTestCase<DBFixture>
         add_method("ana_id", [](Fixture& f) {
             OldDballeTestDataSet oldf;
             wassert(f.populate_database(oldf));
+            auto tr = f.db->transaction();
             char query[20];
             snprintf(query, 20, "ana_id=%d", oldf.data["synop"].info.ana_id);
 #warning FIXME: change after testing if we can move to report-in-station behaviour or not
@@ -92,13 +93,15 @@ class Tests : public DBFixtureTestCase<DBFixture>
         });
         add_method("ana_context", [](Fixture& f) {
             wassert(f.populate<OldDballeTestDataSet>());
+            auto tr = f.db->transaction();
             // Query data in station context
             core::Query query;
-            unique_ptr<db::Cursor> cur = f.db->query_station_data(query);
+            unique_ptr<db::Cursor> cur = tr->query_station_data(query);
             wassert(actual(cur->remaining()) == 10);
         });
         add_method("year", [](Fixture& f) {
             wassert(f.populate<OldDballeTestDataSet>());
+            auto tr = f.db->transaction();
             // Datetime queries
             TRY_QUERY("year=1001", 0);
             TRY_QUERY("yearmin=1999", 0);
@@ -137,6 +140,7 @@ class Tests : public DBFixtureTestCase<DBFixture>
         });
         add_method("block_station", [](Fixture& f) {
             wassert(f.populate<OldDballeTestDataSet>());
+            auto tr = f.db->transaction();
             // Block and station queries
             TRY_QUERY("B01001=1", 4);
             TRY_QUERY("B01001=2", 0);
@@ -145,6 +149,7 @@ class Tests : public DBFixtureTestCase<DBFixture>
         });
         add_method("ana_filter", [](Fixture& f) {
             wassert(f.populate<OldDballeTestDataSet>());
+            auto tr = f.db->transaction();
             // ana_filter queries
             TRY_QUERY("ana_filter=block=1", 4);
             TRY_QUERY("ana_filter=B01001=1", 4);
@@ -158,6 +163,7 @@ class Tests : public DBFixtureTestCase<DBFixture>
         });
         add_method("data_filter", [](Fixture& f) {
             wassert(f.populate<OldDballeTestDataSet>());
+            auto tr = f.db->transaction();
             // data_filter queries
             TRY_QUERY("data_filter=B01011=DB-All.e!", 1);
             TRY_QUERY("data_filter=B01012<300", 0);
@@ -170,6 +176,7 @@ class Tests : public DBFixtureTestCase<DBFixture>
         });
         add_method("latlon", [](Fixture& f) {
             wassert(f.populate<OldDballeTestDataSet>());
+            auto tr = f.db->transaction();
             // latitude/longitude queries
             TRY_QUERY("latmin=11.0", 4);
             TRY_QUERY("latmin=12.34560", 4);
@@ -194,6 +201,7 @@ class Tests : public DBFixtureTestCase<DBFixture>
         });
         add_method("mobile", [](Fixture& f) {
             wassert(f.populate<OldDballeTestDataSet>());
+            auto tr = f.db->transaction();
             // fixed/mobile queries
             TRY_QUERY("mobile=0", 4);
             TRY_QUERY("mobile=1", 0);
@@ -203,6 +211,7 @@ class Tests : public DBFixtureTestCase<DBFixture>
         //TRY_QUERY(c, DBA_KEY_IDENT_SELECT, "pippo");
         add_method("timerange", [](Fixture& f) {
             wassert(f.populate<OldDballeTestDataSet>());
+            auto tr = f.db->transaction();
             // timerange queries
             TRY_QUERY("pindicator=20", 4);
             TRY_QUERY("pindicator=21", 0);
@@ -214,6 +223,7 @@ class Tests : public DBFixtureTestCase<DBFixture>
         });
         add_method("level", [](Fixture& f) {
             wassert(f.populate<OldDballeTestDataSet>());
+            auto tr = f.db->transaction();
             // level queries
             TRY_QUERY("leveltype1=10", 4);
             TRY_QUERY("leveltype1=11", 0);
@@ -226,6 +236,7 @@ class Tests : public DBFixtureTestCase<DBFixture>
         });
         add_method("varcode", [](Fixture& f) {
             wassert(f.populate<OldDballeTestDataSet>());
+            auto tr = f.db->transaction();
             // varcode queries
             TRY_QUERY("var=B01011", 2);
             TRY_QUERY("var=B01012", 2);
@@ -233,6 +244,7 @@ class Tests : public DBFixtureTestCase<DBFixture>
         });
         add_method("report", [](Fixture& f) {
             wassert(f.populate<OldDballeTestDataSet>());
+            auto tr = f.db->transaction();
             // report queries
             TRY_QUERY("rep_memo=synop", 2);
             TRY_QUERY("rep_memo=metar", 2);
@@ -240,6 +252,7 @@ class Tests : public DBFixtureTestCase<DBFixture>
         });
         add_method("priority", [](Fixture& f) {
             wassert(f.populate<OldDballeTestDataSet>());
+            auto tr = f.db->transaction();
             // report priority queries
             TRY_QUERY("priority=101", 2);
             TRY_QUERY("priority=81", 2);
@@ -258,70 +271,70 @@ class Tests : public DBFixtureTestCase<DBFixture>
         add_method("datetime1", [](Fixture& f) {
             // Check datetime queries, with data that only differs by its hour
             wassert(f.populate<DateHourDataSet>());
-            auto& db = *f.db;
+            auto tr = f.db->transaction();
 
             // Valid hours: 11 and 12
 
             // Exact match
-            wassert(actual(db).try_data_query(query_exact(Datetime(2013, 10, 30, 10)), 0));
-            wassert(actual(db).try_data_query(query_exact(Datetime(2013, 10, 30, 11)), 1));
-            wassert(actual(db).try_data_query(query_exact(Datetime(2013, 10, 30, 12)), 1));
-            wassert(actual(db).try_data_query(query_exact(Datetime(2013, 10, 30, 13)), 0));
+            wassert(actual(tr).try_data_query(query_exact(Datetime(2013, 10, 30, 10)), 0));
+            wassert(actual(tr).try_data_query(query_exact(Datetime(2013, 10, 30, 11)), 1));
+            wassert(actual(tr).try_data_query(query_exact(Datetime(2013, 10, 30, 12)), 1));
+            wassert(actual(tr).try_data_query(query_exact(Datetime(2013, 10, 30, 13)), 0));
 
             // Datemin match
-            wassert(actual(db).try_data_query(query_min(Datetime(2013, 10, 30, 10)), 2));
-            wassert(actual(db).try_data_query(query_min(Datetime(2013, 10, 30, 11)), 2));
-            wassert(actual(db).try_data_query(query_min(Datetime(2013, 10, 30, 12)), 1));
-            wassert(actual(db).try_data_query(query_min(Datetime(2013, 10, 30, 13)), 0));
+            wassert(actual(tr).try_data_query(query_min(Datetime(2013, 10, 30, 10)), 2));
+            wassert(actual(tr).try_data_query(query_min(Datetime(2013, 10, 30, 11)), 2));
+            wassert(actual(tr).try_data_query(query_min(Datetime(2013, 10, 30, 12)), 1));
+            wassert(actual(tr).try_data_query(query_min(Datetime(2013, 10, 30, 13)), 0));
 
             // Datemax match
-            wassert(actual(db).try_data_query(query_max(Datetime(2013, 10, 30, 13)), 2));
-            wassert(actual(db).try_data_query(query_max(Datetime(2013, 10, 30, 12)), 2));
-            wassert(actual(db).try_data_query(query_max(Datetime(2013, 10, 30, 11)), 1));
-            wassert(actual(db).try_data_query(query_max(Datetime(2013, 10, 30, 10)), 0));
+            wassert(actual(tr).try_data_query(query_max(Datetime(2013, 10, 30, 13)), 2));
+            wassert(actual(tr).try_data_query(query_max(Datetime(2013, 10, 30, 12)), 2));
+            wassert(actual(tr).try_data_query(query_max(Datetime(2013, 10, 30, 11)), 1));
+            wassert(actual(tr).try_data_query(query_max(Datetime(2013, 10, 30, 10)), 0));
 
             // Date min-max match
-            wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 30, 10), Datetime(2013, 10, 30, 13)), 2));
-            wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 30, 11), Datetime(2013, 10, 30, 12)), 2));
-            wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 30, 10), Datetime(2013, 10, 30, 11)), 1));
-            wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 30, 12), Datetime(2013, 10, 30, 13)), 1));
-            wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 30,  9), Datetime(2013, 10, 30, 10)), 0));
-            wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 30, 13), Datetime(2013, 10, 30, 14)), 0));
+            wassert(actual(tr).try_data_query(query_minmax(Datetime(2013, 10, 30, 10), Datetime(2013, 10, 30, 13)), 2));
+            wassert(actual(tr).try_data_query(query_minmax(Datetime(2013, 10, 30, 11), Datetime(2013, 10, 30, 12)), 2));
+            wassert(actual(tr).try_data_query(query_minmax(Datetime(2013, 10, 30, 10), Datetime(2013, 10, 30, 11)), 1));
+            wassert(actual(tr).try_data_query(query_minmax(Datetime(2013, 10, 30, 12), Datetime(2013, 10, 30, 13)), 1));
+            wassert(actual(tr).try_data_query(query_minmax(Datetime(2013, 10, 30,  9), Datetime(2013, 10, 30, 10)), 0));
+            wassert(actual(tr).try_data_query(query_minmax(Datetime(2013, 10, 30, 13), Datetime(2013, 10, 30, 14)), 0));
         });
         add_method("datetime2", [](Fixture& f) {
             // Check datetime queries, with data that only differs by its day
             wassert(f.populate<DateDayDataSet>());
-            auto& db = *f.db;
+            auto tr = f.db->transaction();
 
             // Valid days: 23 and 24
 
             // Exact match
-            wassert(actual(db).try_data_query(query_exact(Datetime(2013, 10, 22)), 0));
-            wassert(actual(db).try_data_query(query_exact(Datetime(2013, 10, 23)), 1));
-            wassert(actual(db).try_data_query(query_exact(Datetime(2013, 10, 24)), 1));
-            wassert(actual(db).try_data_query(query_exact(Datetime(2013, 10, 25)), 0));
+            wassert(actual(tr).try_data_query(query_exact(Datetime(2013, 10, 22)), 0));
+            wassert(actual(tr).try_data_query(query_exact(Datetime(2013, 10, 23)), 1));
+            wassert(actual(tr).try_data_query(query_exact(Datetime(2013, 10, 24)), 1));
+            wassert(actual(tr).try_data_query(query_exact(Datetime(2013, 10, 25)), 0));
 
             // Datemin match
-            wassert(actual(db).try_data_query(query_min(Datetime(2013, 10, 22)), 2));
-            wassert(actual(db).try_data_query(query_min(Datetime(2013, 10, 23)), 2));
-            wassert(actual(db).try_data_query(query_min(Datetime(2013, 10, 24)), 1));
-            wassert(actual(db).try_data_query(query_min(Datetime(2013, 10, 25)), 0));
+            wassert(actual(tr).try_data_query(query_min(Datetime(2013, 10, 22)), 2));
+            wassert(actual(tr).try_data_query(query_min(Datetime(2013, 10, 23)), 2));
+            wassert(actual(tr).try_data_query(query_min(Datetime(2013, 10, 24)), 1));
+            wassert(actual(tr).try_data_query(query_min(Datetime(2013, 10, 25)), 0));
 
             // Datemax match
-            wassert(actual(db).try_data_query(query_max(Datetime(2013, 10, 25)), 2));
-            wassert(actual(db).try_data_query(query_max(Datetime(2013, 10, 24)), 2));
-            wassert(actual(db).try_data_query(query_max(Datetime(2013, 10, 23)), 1));
-            wassert(actual(db).try_data_query(query_max(Datetime(2013, 10, 22)), 0));
+            wassert(actual(tr).try_data_query(query_max(Datetime(2013, 10, 25)), 2));
+            wassert(actual(tr).try_data_query(query_max(Datetime(2013, 10, 24)), 2));
+            wassert(actual(tr).try_data_query(query_max(Datetime(2013, 10, 23)), 1));
+            wassert(actual(tr).try_data_query(query_max(Datetime(2013, 10, 22)), 0));
 
             // Date min-max match
-            wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 22), Datetime(2013, 10, 25)), 2));
-            wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 23), Datetime(2013, 10, 24)), 2));
-            wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 23), Datetime(2013, 10, 23)), 1));
-            wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 24), Datetime(2013, 10, 24)), 1));
-            wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 22), Datetime(2013, 10, 23)), 1));
-            wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 24), Datetime(2013, 10, 25)), 1));
-            wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 21), Datetime(2013, 10, 22)), 0));
-            wassert(actual(db).try_data_query(query_minmax(Datetime(2013, 10, 25), Datetime(2013, 10, 26)), 0));
+            wassert(actual(tr).try_data_query(query_minmax(Datetime(2013, 10, 22), Datetime(2013, 10, 25)), 2));
+            wassert(actual(tr).try_data_query(query_minmax(Datetime(2013, 10, 23), Datetime(2013, 10, 24)), 2));
+            wassert(actual(tr).try_data_query(query_minmax(Datetime(2013, 10, 23), Datetime(2013, 10, 23)), 1));
+            wassert(actual(tr).try_data_query(query_minmax(Datetime(2013, 10, 24), Datetime(2013, 10, 24)), 1));
+            wassert(actual(tr).try_data_query(query_minmax(Datetime(2013, 10, 22), Datetime(2013, 10, 23)), 1));
+            wassert(actual(tr).try_data_query(query_minmax(Datetime(2013, 10, 24), Datetime(2013, 10, 25)), 1));
+            wassert(actual(tr).try_data_query(query_minmax(Datetime(2013, 10, 21), Datetime(2013, 10, 22)), 0));
+            wassert(actual(tr).try_data_query(query_minmax(Datetime(2013, 10, 25), Datetime(2013, 10, 26)), 0));
         });
         add_method("query_ordering", [](Fixture& f) {
             auto& db = *f.db;
