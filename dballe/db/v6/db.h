@@ -152,7 +152,7 @@ public:
     /// Access the data table
     v6::AttrV6& attr();
 
-    std::unique_ptr<dballe::db::Transaction> transaction() override;
+    std::shared_ptr<dballe::db::Transaction> transaction() override;
 
     void disappear();
 

@@ -94,10 +94,10 @@ v7::Data& DB::data()
     return *m_data;
 }
 
-std::unique_ptr<dballe::db::Transaction> DB::transaction()
+std::shared_ptr<dballe::db::Transaction> DB::transaction()
 {
     auto res = conn->transaction();
-    return unique_ptr<dballe::db::Transaction>(new v7::Transaction(dynamic_pointer_cast<v7::DB>(shared_from_this()), move(res)));
+    return make_shared<v7::Transaction>(dynamic_pointer_cast<v7::DB>(shared_from_this()), move(res));
 }
 
 void DB::delete_tables()

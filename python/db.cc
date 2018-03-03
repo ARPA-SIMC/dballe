@@ -955,13 +955,13 @@ static dpy_Transaction* dpy_Transaction_new(PyTypeObject* subtype, PyObject* arg
 {
     dpy_Transaction* self = reinterpret_cast<dpy_Transaction*>(subtype->tp_alloc(subtype, 0));
     if (!self) return self;
-    self->db = 0;
+    new(&(self->db)) std::shared_ptr<dballe::db::Transaction>();
     return self;
 }
 
 static void dpy_Transaction_dealloc(dpy_Transaction* self)
 {
-    delete self->db;
+    self->db.~shared_ptr<dballe::db::Transaction>();
     Py_TYPE(self)->tp_free(self);
 }
 
@@ -1093,12 +1093,12 @@ dpy_DB* db_create(std::shared_ptr<DB> db)
     return result;
 }
 
-dpy_Transaction* transaction_create(std::unique_ptr<dballe::db::Transaction> transaction)
+dpy_Transaction* transaction_create(std::shared_ptr<dballe::db::Transaction> transaction)
 {
     dpy_Transaction* result = (dpy_Transaction*)PyObject_CallObject((PyObject*)&dpy_Transaction_Type, nullptr);
     if (!result)
         return NULL;
-    result->db = transaction.release();
+    result->db = transaction;
     return result;
 }
 

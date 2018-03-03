@@ -54,7 +54,7 @@ void Transaction::remove_all()
 std::unique_ptr<db::CursorStation> Transaction::query_stations(const Query& query)
 {
     auto tr = db->trace.trace_query_stations(query);
-    auto res = cursor::run_station_query(db, core::Query::downcast(query), db->explain_queries);
+    auto res = cursor::run_station_query(dynamic_pointer_cast<v6::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
     tr->done();
     return move(res);
 }
@@ -62,7 +62,7 @@ std::unique_ptr<db::CursorStation> Transaction::query_stations(const Query& quer
 std::unique_ptr<db::CursorStationData> Transaction::query_station_data(const Query& query)
 {
     auto tr = db->trace.trace_query_station_data(query);
-    auto res = cursor::run_station_data_query(db, core::Query::downcast(query), db->explain_queries);
+    auto res = cursor::run_station_data_query(dynamic_pointer_cast<v6::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
     tr->done();
     return move(res);
 }
@@ -70,7 +70,7 @@ std::unique_ptr<db::CursorStationData> Transaction::query_station_data(const Que
 std::unique_ptr<db::CursorData> Transaction::query_data(const Query& query)
 {
     auto tr = db->trace.trace_query_data(query);
-    auto res = cursor::run_data_query(db, core::Query::downcast(query), db->explain_queries);
+    auto res = cursor::run_data_query(dynamic_pointer_cast<v6::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
     tr->done();
     return move(res);
 }
@@ -78,7 +78,7 @@ std::unique_ptr<db::CursorData> Transaction::query_data(const Query& query)
 std::unique_ptr<db::CursorSummary> Transaction::query_summary(const Query& query)
 {
     auto tr = db->trace.trace_query_summary(query);
-    auto res = cursor::run_summary_query(db, core::Query::downcast(query), db->explain_queries);
+    auto res = cursor::run_summary_query(dynamic_pointer_cast<v6::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
     tr->done();
     return move(res);
 }
@@ -310,10 +310,10 @@ void DB::init_after_connect()
 {
 }
 
-std::unique_ptr<dballe::db::Transaction> DB::transaction()
+std::shared_ptr<dballe::db::Transaction> DB::transaction()
 {
     auto res = conn->transaction();
-    return unique_ptr<dballe::db::Transaction>(new v6::Transaction(dynamic_pointer_cast<v6::DB>(shared_from_this()), move(res)));
+    return make_shared<v6::Transaction>(dynamic_pointer_cast<v6::DB>(shared_from_this()), move(res));
 }
 
 void DB::delete_tables()

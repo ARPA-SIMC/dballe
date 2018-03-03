@@ -41,7 +41,7 @@ PyAPI_DATA(PyTypeObject) dpy_DB_Type;
 
 typedef struct {
     PyObject_HEAD
-    dballe::db::Transaction* db;
+    std::shared_ptr<dballe::db::Transaction> db;
 } dpy_Transaction;
 
 PyAPI_DATA(PyTypeObject) dpy_Transaction_Type;
@@ -63,7 +63,7 @@ dpy_DB* db_create(std::shared_ptr<DB> db);
 /**
  * Create a new dpy_Transaction, taking over memory management
  */
-dpy_Transaction* transaction_create(std::unique_ptr<dballe::db::Transaction> transaction);
+dpy_Transaction* transaction_create(std::shared_ptr<dballe::db::Transaction> transaction);
 
 /**
  * Copy varcodes from a Python sequence to a db::AttrList

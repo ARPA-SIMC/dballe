@@ -1,6 +1,7 @@
 #include "cursor.h"
 #include "qbuilder.h"
 #include "db.h"
+#include "transaction.h"
 #include "dballe/sql/sql.h"
 #include <dballe/db/v7/driver.h>
 #include "dballe/db/v7/repinfo.h"
@@ -52,19 +53,19 @@ template<typename Interface>
 struct Base : public Interface
 {
     /// Database to operate on
-    std::shared_ptr<v7::DB> db;
+    std::shared_ptr<v7::Transaction> tr;
 
     /** Modifier flags to enable special query behaviours */
     const unsigned int modifiers;
 
-    Base(std::shared_ptr<v7::DB> db, unsigned int modifiers)
-        : db(db), modifiers(modifiers)
+    Base(std::shared_ptr<v7::Transaction> tr, unsigned int modifiers)
+        : tr(tr), modifiers(modifiers)
     {
     }
 
     virtual ~Base() {}
 
-    std::shared_ptr<dballe::DB> get_db() const override { return db; }
+    std::shared_ptr<dballe::db::Transaction> get_transaction() const override { return tr; }
 
     /**
      * Iterate the cursor until the end, returning the number of items.
@@ -118,7 +119,7 @@ struct VectorBase : public Base<Interface>
     }
 
     int get_station_id() const override { return cur->get_station_id(); }
-    const char* get_rep_memo() const override { return this->db->repinfo().get_rep_memo(cur->get_stationdesc().rep); }
+    const char* get_rep_memo() const override { return this->tr->db->repinfo().get_rep_memo(cur->get_stationdesc().rep); }
     double get_lat() const override { return cur->get_stationdesc().coords.dlat(); }
     double get_lon() const override { return cur->get_stationdesc().coords.dlon(); }
     const char* get_ident(const char* def=0) const override
@@ -131,7 +132,7 @@ struct VectorBase : public Base<Interface>
 
     void to_record(Record& rec) override
     {
-        cur->to_record(*this->db, rec);
+        cur->to_record(*this->tr->db, rec);
     }
 
     unsigned test_iterate(FILE* dump=0) override
@@ -175,7 +176,7 @@ struct Stations : public VectorBase<CursorStation, StationResult>
     void load(const StationQueryBuilder& qb)
     {
         results.clear();
-        this->db->driver().run_station_query(qb, [&](int id, const StationDesc& desc) {
+        this->tr->db->driver().run_station_query(qb, [&](int id, const StationDesc& desc) {
             results.emplace_back(id, desc);
         });
         at_start = true;
@@ -241,7 +242,7 @@ template<typename Interface, typename Result>
 struct BaseData : public VectorBase<Interface, Result>
 {
     BaseData(DataQueryBuilder& qb, unsigned int modifiers)
-        : VectorBase<Interface, Result>(qb.db, modifiers)
+        : VectorBase<Interface, Result>(qb.tr, modifiers)
     {
     }
 };
@@ -257,7 +258,7 @@ struct StationData : public BaseData<CursorStationData, StationDataResult>
     {
         stations.clear();
         results.clear();
-        this->db->driver().run_station_data_query(qb, [&](int id_station, const StationDesc& station, int id_data, std::unique_ptr<wreport::Var> var) {
+        this->tr->db->driver().run_station_data_query(qb, [&](int id_station, const StationDesc& station, int id_data, std::unique_ptr<wreport::Var> var) {
             std::unordered_map<int, StationDesc>::iterator i = stations.find(id_station);
             if (i == stations.end())
                 tie(i, std::ignore) = stations.insert(make_pair(id_station, station));
@@ -313,7 +314,7 @@ struct Data : public BaseData<CursorData, DataResult>
         levtrs.clear();
         results.clear();
         set<int> ids;
-        this->db->driver().run_data_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+        this->tr->db->driver().run_data_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
             std::unordered_map<int, StationDesc>::iterator i = stations.find(id_station);
             if (i == stations.end())
                 tie(i, std::ignore) = stations.insert(make_pair(id_station, station));
@@ -323,7 +324,7 @@ struct Data : public BaseData<CursorData, DataResult>
         at_start = true;
         cur = results.begin();
 
-        this->db->levtr().prefetch_ids(ids, [&](int id, const LevTrDesc& ltr) {
+        this->tr->db->levtr().prefetch_ids(ids, [&](int id, const LevTrDesc& ltr) {
             levtrs.insert(make_pair(id, ltr));
         });
     }
@@ -361,7 +362,7 @@ struct Best : public Data
     /// Append or replace the last result according to priotity. Returns false if the value has been ignored.
     bool add_to_results(std::unordered_map<int, StationDesc>::iterator station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)
     {
-        int prio = db->repinfo().get_priority(station->second.rep);
+        int prio = tr->db->repinfo().get_priority(station->second.rep);
 
         if (results.empty()) goto append;
         if (station->second.coords != results.back().station->second.coords) goto append;
@@ -392,7 +393,7 @@ struct Best : public Data
         levtrs.clear();
         results.clear();
         set<int> ids;
-        this->db->driver().run_data_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+        this->tr->db->driver().run_data_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
             std::unordered_map<int, StationDesc>::iterator i = stations.find(id_station);
             if (i == stations.end())
                 tie(i, std::ignore) = stations.insert(make_pair(id_station, station));
@@ -402,7 +403,7 @@ struct Best : public Data
         at_start = true;
         cur = results.begin();
 
-        this->db->levtr().prefetch_ids(ids, [&](int id, const LevTrDesc& ltr) {
+        this->tr->db->levtr().prefetch_ids(ids, [&](int id, const LevTrDesc& ltr) {
             levtrs.insert(make_pair(id, ltr));
         });
     }
@@ -487,7 +488,7 @@ struct Summary : public VectorBase<CursorSummary, SummaryResult>
         levtrs.clear();
         results.clear();
         set<int> ids;
-        this->db->driver().run_summary_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t count) {
+        this->tr->db->driver().run_summary_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t count) {
             std::unordered_map<int, StationDesc>::iterator i = stations.find(id_station);
             if (i == stations.end())
                 tie(i, std::ignore) = stations.insert(make_pair(id_station, station));
@@ -497,7 +498,7 @@ struct Summary : public VectorBase<CursorSummary, SummaryResult>
         at_start = true;
         cur = results.begin();
 
-        this->db->levtr().prefetch_ids(ids, [&](int id, const LevTrDesc& ltr) {
+        this->tr->db->levtr().prefetch_ids(ids, [&](int id, const LevTrDesc& ltr) {
             levtrs.insert(make_pair(id, ltr));
         });
     }
@@ -505,42 +506,42 @@ struct Summary : public VectorBase<CursorSummary, SummaryResult>
 
 }
 
-unique_ptr<CursorStation> run_station_query(std::shared_ptr<DB> db, const core::Query& q, bool explain)
+unique_ptr<CursorStation> run_station_query(std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
 
-    StationQueryBuilder qb(db, q, modifiers);
+    StationQueryBuilder qb(tr, q, modifiers);
     qb.build();
 
     if (explain)
     {
         fprintf(stderr, "EXPLAIN "); q.print(stderr);
-        db->conn->explain(qb.sql_query, stderr);
+        tr->db->conn->explain(qb.sql_query, stderr);
     }
 
-    auto resptr = new Stations(db, modifiers);
+    auto resptr = new Stations(tr, modifiers);
     unique_ptr<CursorStation> res(resptr);
     resptr->load(qb);
     return res;
 }
 
-unique_ptr<CursorStationData> run_station_data_query(std::shared_ptr<DB> db, const core::Query& q, bool explain, bool with_attrs)
+unique_ptr<CursorStationData> run_station_data_query(std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain, bool with_attrs)
 {
     unsigned int modifiers = q.get_modifiers();
-    DataQueryBuilder qb(db, q, modifiers, true, with_attrs);
+    DataQueryBuilder qb(tr, q, modifiers, true, with_attrs);
     qb.build();
 
     if (explain)
     {
         fprintf(stderr, "EXPLAIN "); q.print(stderr);
-        db->conn->explain(qb.sql_query, stderr);
+        tr->db->conn->explain(qb.sql_query, stderr);
     }
 
     unique_ptr<CursorStationData> res;
     if (modifiers & DBA_DB_MODIFIER_BEST)
     {
         throw error_unimplemented("best queries of station vars");
-        //auto resptr = new Best(db, modifiers);
+        //auto resptr = new Best(tr, modifiers);
         //res.reset(resptr);
         //resptr->load(qb);
     } else {
@@ -551,16 +552,16 @@ unique_ptr<CursorStationData> run_station_data_query(std::shared_ptr<DB> db, con
     return res;
 }
 
-unique_ptr<CursorData> run_data_query(std::shared_ptr<DB> db, const core::Query& q, bool explain, bool with_attrs)
+unique_ptr<CursorData> run_data_query(std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain, bool with_attrs)
 {
     unsigned int modifiers = q.get_modifiers();
-    DataQueryBuilder qb(db, q, modifiers, false, with_attrs);
+    DataQueryBuilder qb(tr, q, modifiers, false, with_attrs);
     qb.build();
 
     if (explain)
     {
         fprintf(stderr, "EXPLAIN "); q.print(stderr);
-        db->conn->explain(qb.sql_query, stderr);
+        tr->db->conn->explain(qb.sql_query, stderr);
     }
 
     unique_ptr<CursorData> res;
@@ -577,43 +578,43 @@ unique_ptr<CursorData> run_data_query(std::shared_ptr<DB> db, const core::Query&
     return res;
 }
 
-unique_ptr<CursorSummary> run_summary_query(std::shared_ptr<DB> db, const core::Query& q, bool explain)
+unique_ptr<CursorSummary> run_summary_query(std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
     if (modifiers & DBA_DB_MODIFIER_BEST)
         throw error_consistency("cannot use query=best on summary queries");
 
-    SummaryQueryBuilder qb(db, q, modifiers, false);
+    SummaryQueryBuilder qb(tr, q, modifiers, false);
     qb.build();
 
     if (explain)
     {
         fprintf(stderr, "EXPLAIN "); q.print(stderr);
-        db->conn->explain(qb.sql_query, stderr);
+        tr->db->conn->explain(qb.sql_query, stderr);
     }
 
-    auto resptr = new Summary(db, modifiers);
+    auto resptr = new Summary(tr, modifiers);
     unique_ptr<CursorSummary> res(resptr);
     resptr->load(qb);
     return res;
 }
 
-void run_delete_query(std::shared_ptr<DB> db, const core::Query& q, bool station_vars, bool explain)
+void run_delete_query(std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool station_vars, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
     if (modifiers & DBA_DB_MODIFIER_BEST)
         throw error_consistency("cannot use query=best on delete queries");
 
-    IdQueryBuilder qb(db, q, modifiers, station_vars);
+    IdQueryBuilder qb(tr, q, modifiers, station_vars);
     qb.build();
 
     if (explain)
     {
         fprintf(stderr, "EXPLAIN "); q.print(stderr);
-        db->conn->explain(qb.sql_query, stderr);
+        tr->db->conn->explain(qb.sql_query, stderr);
     }
 
-    db->data().remove(qb);
+    tr->db->data().remove(qb);
 }
 
 

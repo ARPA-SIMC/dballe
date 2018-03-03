@@ -47,13 +47,13 @@ static PyObject* dpy_Cursor_query_attrs(dpy_Cursor* self, PyObject* args, PyObje
     py_unique_ptr<dpy_Record> rec(record_create());
     try {
         if (auto c = dynamic_cast<const db::CursorStationData*>(self->cur))
-            c->get_db()->attr_query_station(c->attr_reference_id(), [&](unique_ptr<Var>&& var) {
+            c->get_transaction()->attr_query_station(c->attr_reference_id(), [&](unique_ptr<Var>&& var) {
                 if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
                     return;
                 rec->rec->set(move(var));
             });
         else if (auto c = dynamic_cast<const db::CursorData*>(self->cur))
-            c->get_db()->attr_query_data(c->attr_reference_id(), [&](unique_ptr<Var>&& var) {
+            c->get_transaction()->attr_query_data(c->attr_reference_id(), [&](unique_ptr<Var>&& var) {
                 if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
                     return;
                 rec->rec->set(move(var));
@@ -72,11 +72,11 @@ static PyObject* dpy_Cursor_attr_query(dpy_Cursor* self)
     py_unique_ptr<dpy_Record> rec(record_create());
     try {
         if (auto c = dynamic_cast<const db::CursorStationData*>(self->cur))
-            c->get_db()->attr_query_station(c->attr_reference_id(), [&](unique_ptr<Var>&& var) {
+            c->get_transaction()->attr_query_station(c->attr_reference_id(), [&](unique_ptr<Var>&& var) {
                 rec->rec->set(move(var));
             });
         else if (auto c = dynamic_cast<const db::CursorData*>(self->cur))
-            c->get_db()->attr_query_data(c->attr_reference_id(), [&](unique_ptr<Var>&& var) {
+            c->get_transaction()->attr_query_data(c->attr_reference_id(), [&](unique_ptr<Var>&& var) {
                 rec->rec->set(move(var));
             });
         else

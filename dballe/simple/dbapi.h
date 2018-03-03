@@ -26,7 +26,7 @@ protected:
     db::CursorValue* query_cur;
     InputFile* input_file;
     OutputFile* output_file;
-    dballe::db::Transaction* transaction = nullptr;
+    std::shared_ptr<dballe::db::Transaction> transaction = nullptr;
     int last_inserted_station_id;
 
     /// Store information about the database ID of a variable

@@ -20,7 +20,7 @@ struct Fixture : V7DBFixture
 {
     using V7DBFixture::V7DBFixture;
 
-    std::unique_ptr<dballe::db::v7::Transaction> t;
+    std::shared_ptr<dballe::db::v7::Transaction> t;
     db::v7::StationDesc sde1;
     db::v7::StationDesc sde2;
     db::v7::levtrs_t::iterator lt1;
@@ -46,11 +46,7 @@ struct Fixture : V7DBFixture
         db::v7::stations_t::iterator si;
         db::v7::levtrs_t::iterator li;
 
-        auto transaction = db->transaction();
-        auto tp = dynamic_cast<dballe::db::v7::Transaction*>(transaction.get());
-        wassert_true(tp);
-        t.reset(tp);
-        transaction.release();
+        t = dynamic_pointer_cast<dballe::db::v7::Transaction>(db->transaction());
 
         // Insert a mobile station
         si = db->station().obtain_id(t->state, sde1);

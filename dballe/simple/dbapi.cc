@@ -94,8 +94,8 @@ DbAPI::DbAPI(DB& db, const char* anaflag, const char* dataflag, const char* attr
     : db(db), ana_cur(0), query_cur(0), input_file(0), output_file(0)
 {
     set_permissions(anaflag, dataflag, attrflag);
-    if (strcmp(anaflag, "read") || strcmp(dataflag, "read") || strcmp(attrflag, "read"))
-        transaction = db.transaction().release();
+    //if (strcmp(anaflag, "read") || strcmp(dataflag, "read") || strcmp(attrflag, "read"))
+        transaction = db.transaction();
 }
 
 DbAPI::~DbAPI()
@@ -128,8 +128,7 @@ void DbAPI::shutdown(bool commit)
     if (transaction)
     {
         if (commit) transaction->commit();
-        delete transaction;
-        transaction = nullptr;
+        transaction.reset();
     }
 }
 
@@ -151,13 +150,13 @@ void DbAPI::scopa(const char* repinfofile)
     if (!(perms & PERM_DATA_WRITE))
         error_consistency::throwf(
             "scopa must be run with the database open in data write mode");
-    bool has_transaction = transaction != nullptr;
-    delete transaction;
+    bool has_transaction = (bool)transaction;
+    transaction.reset();
     db.reset(repinfofile);
     attr_state = ATTR_REFERENCE;
     attr_reference_id = missing_int;
     if (has_transaction)
-        transaction = db.transaction().release();
+        transaction = db.transaction();
 }
 
 void DbAPI::remove_all()

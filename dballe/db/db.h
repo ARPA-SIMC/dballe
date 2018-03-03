@@ -31,6 +31,7 @@ struct Messages;
 struct DB;
 
 namespace db {
+struct Transaction;
 
 /// Format a db::Format value to a string
 std::string format_format(Format format);
@@ -45,7 +46,7 @@ struct Cursor
     virtual ~Cursor();
 
     /// Get the database that created this cursor
-    virtual std::shared_ptr<DB> get_db() const = 0;
+    virtual std::shared_ptr<db::Transaction> get_transaction() const = 0;
 
     /**
      * Get the number of rows still to be fetched
@@ -162,7 +163,7 @@ struct CursorSummary : public Cursor
 };
 
 
-class Transaction : public dballe::Transaction
+class Transaction : public dballe::Transaction, public std::enable_shared_from_this<Transaction>
 {
 public:
     /**
@@ -268,8 +269,6 @@ public:
      * The IDs of the station andl all variables that were inserted will be
      * stored in vals.
      *
-     * @param transaction
-     *   The current active transaction.
      * @param vals
      *   The values to insert.
      * @param can_replace
@@ -288,8 +287,6 @@ public:
      * The IDs of the station andl all variables that were inserted will be
      * stored in vals.
      *
-     * @param transaction
-     *   The current active transaction.
      * @param vals
      *   The values to insert.
      * @param can_replace
@@ -305,8 +302,6 @@ public:
     /**
      * Remove data from the database
      *
-     * @param transaction
-     *   The current active transaction.
      * @param query
      *   The record with the query data (see technical specifications, par. 1.6.4
      *   "parameter output/input") to select the items to be deleted
@@ -316,8 +311,6 @@ public:
     /**
      * Remove data from the database
      *
-     * @param transaction
-     *   The current active transaction.
      * @param rec
      *   The record with the query data (see technical specifications, par. 1.6.4
      *   "parameter output/input") to select the items to be deleted
@@ -327,8 +320,6 @@ public:
     /**
      * Insert new attributes on a station value
      *
-     * @param transaction
-     *   The current active transaction.
      * @param data_id
      *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
      * @param attrs
@@ -339,8 +330,6 @@ public:
     /**
      * Insert new attributes on a data value
      *
-     * @param transaction
-     *   The current active transaction.
      * @param data_id
      *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
      * @param attrs
@@ -351,8 +340,6 @@ public:
     /**
      * Delete attributes from a station value
      *
-     * @param transaction
-     *   The current active transaction.
      * @param data_id
      *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
      * @param attrs
@@ -364,8 +351,6 @@ public:
     /**
      * Delete attributes from a data value
      *
-     * @param transaction
-     *   The current active transaction.
      * @param data_id
      *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
      * @param attrs
@@ -377,8 +362,6 @@ public:
     /**
      * Import a Message into the DB-All.e database
      *
-     * @param transaction
-     *   The current active transaction.
      * @param msg
      *   The Message containing the data to import
      * @param repmemo
@@ -393,8 +376,6 @@ public:
     /**
      * Import Messages into the DB-All.e database
      *
-     * @param transaction
-     *   The current active transaction.
      * @param msgs
      *   The Messages containing the data to import
      * @param repmemo
@@ -411,8 +392,6 @@ public:
      *
      * Return false from dest to interrupt the query.
      *
-     * @param transaction
-     *   The current active transaction.
      * @param query
      *   The query to perform
      * @param dest
@@ -531,7 +510,7 @@ public:
      * Begin a transaction on this database, and return a Transaction object
      * that can be used to commit it.
      */
-    virtual std::unique_ptr<dballe::db::Transaction> transaction() = 0;
+    virtual std::shared_ptr<dballe::db::Transaction> transaction() = 0;
 
     /**
      * Insert station values into the database

@@ -6,8 +6,10 @@
 #include "dballe/core/query.h"
 #include "dballe/sql/sql.h"
 #include <cassert>
+#include <memory>
 
 using namespace wreport;
+using namespace std;
 
 namespace dballe {
 namespace db {
@@ -81,21 +83,21 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
 void Transaction::remove_station_data(const Query& query)
 {
     auto tr = db->trace.trace_remove_station_data(query);
-    cursor::run_delete_query(db, core::Query::downcast(query), true, db->explain_queries);
+    cursor::run_delete_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), true, db->explain_queries);
     tr->done();
 }
 
 void Transaction::remove(const Query& query)
 {
     auto tr = db->trace.trace_remove(query);
-    cursor::run_delete_query(db, core::Query::downcast(query), false, db->explain_queries);
+    cursor::run_delete_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), false, db->explain_queries);
     tr->done();
 }
 
 std::unique_ptr<db::CursorStation> Transaction::query_stations(const Query& query)
 {
     auto tr = db->trace.trace_query_stations(query);
-    auto res = cursor::run_station_query(db, core::Query::downcast(query), db->explain_queries);
+    auto res = cursor::run_station_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
     tr->done();
     return move(res);
 }
@@ -103,7 +105,7 @@ std::unique_ptr<db::CursorStation> Transaction::query_stations(const Query& quer
 std::unique_ptr<db::CursorStationData> Transaction::query_station_data(const Query& query)
 {
     auto tr = db->trace.trace_query_station_data(query);
-    auto res = cursor::run_station_data_query(db, core::Query::downcast(query), db->explain_queries, false);
+    auto res = cursor::run_station_data_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries, false);
     tr->done();
     return move(res);
 }
@@ -111,7 +113,7 @@ std::unique_ptr<db::CursorStationData> Transaction::query_station_data(const Que
 std::unique_ptr<db::CursorData> Transaction::query_data(const Query& query)
 {
     auto tr = db->trace.trace_query_data(query);
-    auto res = cursor::run_data_query(db, core::Query::downcast(query), db->explain_queries, false);
+    auto res = cursor::run_data_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries, false);
     tr->done();
     return move(res);
 }
@@ -119,7 +121,7 @@ std::unique_ptr<db::CursorData> Transaction::query_data(const Query& query)
 std::unique_ptr<db::CursorSummary> Transaction::query_summary(const Query& query)
 {
     auto tr = db->trace.trace_query_summary(query);
-    auto res = cursor::run_summary_query(db, core::Query::downcast(query), db->explain_queries);
+    auto res = cursor::run_summary_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
     tr->done();
     return move(res);
 }
