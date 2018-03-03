@@ -67,19 +67,7 @@ using namespace std;
 
 struct HSession : public fortran::HBase
 {
-    std::shared_ptr<DB> db;
-
-    void start()
-    {
-        fortran::HBase::start();
-        db.reset();
-    }
-
-    void stop()
-    {
-        db.reset();
-        fortran::HBase::stop();
-    }
+    std::string url;
 };
 
 struct fortran::Handler<HSession, MAX_SESSION> hsess;
@@ -96,7 +84,8 @@ struct HSimple : public fortran::HBase
     }
     void stop()
     {
-        if (api) delete api;
+        delete api;
+        api = 0;
         fortran::HBase::stop();
     }
 };
@@ -165,7 +154,7 @@ int idba_presentati(int* dbahandle, const char* url)
         }
 
         IF_TRACING(fortran::log_presentati_url(*dbahandle, url));
-        hs.db = DB::connect_from_url(url);
+        hs.url = url;
 
         /* Open the database session */
         return fortran::success();
@@ -262,7 +251,8 @@ int idba_preparati(int dbahandle, int* handle, const char* anaflag, const char* 
         HSession& hs = hsess.get(dbahandle);
         HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_preparati(dbahandle, *handle, anaflag, dataflag, attrflag));
-        h.api = new fortran::DbAPI(*hs.db, anaflag, dataflag, attrflag);
+        auto db = DB::connect_from_url(hs.url.c_str());
+        h.api = new fortran::DbAPI(db, anaflag, dataflag, attrflag);
 
         return fortran::success();
     } catch (error& e) {

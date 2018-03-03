@@ -211,10 +211,6 @@
       ierr = idba_arrivederci(dbahandle)
       call ensure_no_error("arrivederci")
 
-
-!     If we made it so far, exit with no error
-      print*,"check_fdballe: all tests succeed."
-
       call exit (0)
     
       end program
