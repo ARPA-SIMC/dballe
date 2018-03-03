@@ -1,5 +1,7 @@
 #include "config.h"
 #include "db/tests.h"
+#include "v6/db.h"
+#include "v7/db.h"
 #include <algorithm>
 #include <cstring>
 
@@ -21,13 +23,6 @@ struct NavileDataSet : public TestDataSet
     }
 };
 
-unsigned run_attr_query_station(DB& db, int data_id, Values& dest)
-{
-    unsigned count = 0;
-    db.attr_query_station(data_id, [&](unique_ptr<Var> var) { dest.set(move(var)); ++count; });
-    return count;
-}
-
 unsigned run_attr_query_data(DB& db, int data_id, Values& dest)
 {
     unsigned count = 0;
@@ -36,32 +31,31 @@ unsigned run_attr_query_data(DB& db, int data_id, Values& dest)
 }
 
 
-class Tests : public DBFixtureTestCase<DBFixture>
+template<typename DB>
+class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
 {
-    using DBFixtureTestCase::DBFixtureTestCase;
+    typedef EmptyTransactionFixture<DB> Fixture;
+    using FixtureTestCase<Fixture>::FixtureTestCase;
 
     void register_tests() override;
 };
 
-Tests tg2("db_misc_v6_sqlite", "SQLITE", db::V6);
+Tests<V6DB> tg1("db_misc_v6_sqlite", "SQLITE");
+Tests<V7DB> tg2("db_misc_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests tg4("db_misc_v6_postgresql", "POSTGRESQL", db::V6);
+Tests<V6DB> tg3("db_misc_v6_postgresql", "POSTGRESQL");
+Tests<V7DB> tg4("db_misc_v7_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests tg5("db_misc_v6_mysql", "MYSQL", db::V6);
-#endif
-Tests tg6("db_misc_v7_sqlite", "SQLITE", db::V7);
-#ifdef HAVE_LIBPQ
-Tests tg7("db_misc_v7_postgresql", "POSTGRESQL", db::V7);
-#endif
-#ifdef HAVE_MYSQL
-Tests tg8("db_misc_v7_mysql", "MYSQL", db::V7);
+Tests<V6DB> tg5("db_misc_v6_mysql", "MYSQL");
+Tests<V7DB> tg6("db_misc_v7_mysql", "MYSQL");
 #endif
 
-void Tests::register_tests()
+template<typename DB>
+void Tests<DB>::register_tests()
 {
 
-add_method("insert", [](Fixture& f) {
+this->add_method("insert", [](Fixture& f) {
     // Test a simple insert round trip
     auto& db = *f.db;
 
@@ -106,7 +100,7 @@ add_method("insert", [](Fixture& f) {
         wassert(actual(attr->enq(MISSING_INT)) == 50);
     }
 });
-add_method("insert_perms", [](Fixture& f) {
+this->add_method("insert_perms", [](Fixture& f) {
     // Test insert
     auto& db = *f.db;
     OldDballeTestDataSet oldf;
@@ -140,7 +134,7 @@ add_method("insert_perms", [](Fixture& f) {
         wassert(actual(e.what()).matches("refusing to overwrite existing data|cannot replace an existing value|Duplicate entry"));
     }
 });
-add_method("insert_twice", [](Fixture& f) {
+this->add_method("insert_twice", [](Fixture& f) {
     // Test double station insert
     auto& db = *f.db;
     OldDballeTestDataSet oldf;
@@ -156,7 +150,7 @@ add_method("insert_twice", [](Fixture& f) {
         wassert(actual(e.what()).matches("refusing to overwrite existing data|cannot replace an existing value|Duplicate entry"));
     }
 });
-add_method("query_station", [](Fixture& f) {
+this->add_method("query_station", [](Fixture& f) {
     // Test station query
     auto& db = *f.db;
     OldDballeTestDataSet oldf;
@@ -222,7 +216,7 @@ add_method("query_station", [](Fixture& f) {
     wassert(actual(cur->remaining()) == 0);
     wassert(actual(cur->next()).isfalse());
 });
-add_method("query_best", [](Fixture& f) {
+this->add_method("query_best", [](Fixture& f) {
     // Test querybest
     auto& db = *f.db;
     OldDballeTestDataSet oldf;
@@ -263,7 +257,7 @@ add_method("query_best", [](Fixture& f) {
     // Now there should not be anything anymore
     wassert(actual(cur->next()).isfalse());
 });
-add_method("delete", [](Fixture& f) {
+this->add_method("delete", [](Fixture& f) {
     // Test deletion
     auto& db = *f.db;
     OldDballeTestDataSet oldf;
@@ -320,7 +314,7 @@ add_method("delete", [](Fixture& f) {
         }
     }
 });
-add_method("delete_notfound", [](Fixture& f) {
+this->add_method("delete_notfound", [](Fixture& f) {
     // Test deletion
     auto& db = *f.db;
     OldDballeTestDataSet oldf;
@@ -342,7 +336,7 @@ add_method("delete_notfound", [](Fixture& f) {
     wassert(actual(cur->remaining()) == 4);
     cur->discard_rest();
 });
-add_method("query_datetime", [](Fixture& f) {
+this->add_method("query_datetime", [](Fixture& f) {
     // Test datetime queries
     auto& db = *f.db;
 
@@ -428,7 +422,7 @@ add_method("query_datetime", [](Fixture& f) {
     WANTRESULT("year=2006, month=5, day=3, hour=12, minumax=29", a);
     WANTRESULT("year=2006, month=5, day=3, hour=12, min=30", b);
 });
-add_method("attrs", [](Fixture& f) {
+this->add_method("attrs", [](Fixture& f) {
     // Test QC
     auto& db = *f.db;
     OldDballeTestDataSet oldf;
@@ -440,7 +434,7 @@ add_method("attrs", [](Fixture& f) {
     auto cur = db.query_data(query);
 
     // Move the cursor to B01011
-    int context_id;
+    int context_id = 0;
     bool found = false;
     while (cur->next())
     {
@@ -501,7 +495,7 @@ add_method("attrs", [](Fixture& f) {
     wassert(actual(attr->var->enqi()) == 5);
     /*dba_error_remove_callback(DBA_ERR_NONE, crash, 0);*/
 });
-add_method("query_station", [](Fixture& f) {
+this->add_method("query_station", [](Fixture& f) {
     // Test station queries
     auto& db = *f.db;
     OldDballeTestDataSet oldf;
@@ -513,7 +507,7 @@ add_method("query_station", [](Fixture& f) {
     wassert(actual(cur->next()).istrue());
     wassert(actual(cur->next()).isfalse());
 });
-add_method("attrs1", [](Fixture& f) {
+this->add_method("attrs1", [](Fixture& f) {
     // Test attributes
     auto& db = *f.db;
     OldDballeTestDataSet oldf;
@@ -557,7 +551,7 @@ add_method("attrs1", [](Fixture& f) {
     wassert(actual_varcode(qc["B07025"].var->code()) == WR_VAR(0,   7, 25)); wassert(actual(*qc["B07025"].var) ==  9);
     wassert(actual_varcode(qc["B33032"].var->code()) == WR_VAR(0,  33, 32)); wassert(actual(*qc["B33032"].var) ==  6);
 });
-add_method("longitude_wrap", [](Fixture& f) {
+this->add_method("longitude_wrap", [](Fixture& f) {
     // Test longitude wrapping around
     auto& db = *f.db;
     OldDballeTestDataSet oldf;
@@ -569,7 +563,7 @@ add_method("longitude_wrap", [](Fixture& f) {
     wassert(actual(cur->remaining()) == 2);
     cur->discard_rest();
 });
-add_method("query_ana_filter", [](Fixture& f) {
+this->add_method("query_ana_filter", [](Fixture& f) {
     // Test numeric comparisons in ana_filter
     auto& db = *f.db;
     OldDballeTestDataSet oldf;
@@ -623,7 +617,7 @@ add_method("query_ana_filter", [](Fixture& f) {
     wassert(actual(cur->remaining()) == 0);
     cur->discard_rest();
 });
-add_method("query_station_best", [](Fixture& f) {
+this->add_method("query_station_best", [](Fixture& f) {
 #warning BEST queries of station values are not yet implemented for memdb
     auto& db = *f.db;
 
@@ -639,7 +633,7 @@ add_method("query_station_best", [](Fixture& f) {
     {
     }
 });
-add_method("query_best_bug1", [](Fixture& f) {
+this->add_method("query_best_bug1", [](Fixture& f) {
     auto& db = *f.db;
     // Reproduce a querybest scenario which produced always the same data record
 
@@ -671,7 +665,7 @@ add_method("query_best_bug1", [](Fixture& f) {
     wassert(actual(id_data_changes) == count);
     wassert(actual(count) == orig_count);
 });
-add_method("query_invalid_sql", [](Fixture& f) {
+this->add_method("query_invalid_sql", [](Fixture& f) {
     auto& db = *f.db;
     // Reproduce a query that generated invalid SQL on V6
     OldDballeTestDataSet oldf;
@@ -680,7 +674,7 @@ add_method("query_invalid_sql", [](Fixture& f) {
     // All DB
     db.query_stations(*query_from_string("leveltype1=103, l1=2000"));
 });
-add_method("fd_leaks", [](Fixture& f) {
+this->add_method("fd_leaks", [](Fixture& f) {
     // Test connect leaks
     StationValues vals;
     // Set station data
@@ -691,12 +685,12 @@ add_method("fd_leaks", [](Fixture& f) {
     // Assume a max open file limit of 1100
     for (unsigned i = 0; i < 1100; ++i)
     {
-        auto db = f.create_db();
+        auto db = DB::create_db(f.backend);
         vals.clear_ids();
         wassert(db->insert_station_data(vals, true, true));
     }
 });
-add_method("update", [](Fixture& f) {
+this->add_method("update", [](Fixture& f) {
     auto& db = *f.db;
     // Test value update
     OldDballeTestDataSet oldf;
@@ -763,7 +757,7 @@ add_method("update", [](Fixture& f) {
             throw TestFailed("Database format " + to_string((int)db.format()) + " not supported");
     }
 });
-add_method("query_stepbystep", [](Fixture& f) {
+this->add_method("query_stepbystep", [](Fixture& f) {
     auto& db = *f.db;
     // Try a query checking all the steps
     OldDballeTestDataSet oldf;
@@ -815,7 +809,7 @@ add_method("query_stepbystep", [](Fixture& f) {
     wassert(actual(cur->remaining()) == 0);
     wassert(actual(cur->next()).isfalse());
 });
-add_method("insert_stationinfo_twice", [](Fixture& f) {
+this->add_method("insert_stationinfo_twice", [](Fixture& f) {
     // Test double insert of station info
     auto& db = *f.db;
 
@@ -832,7 +826,7 @@ add_method("insert_stationinfo_twice", [](Fixture& f) {
     cur->next();
     wassert(actual(cur).station_vars_match(ds.stations["synop"]));
 });
-add_method("insert_stationinfo_twice1", [](Fixture& f) {
+this->add_method("insert_stationinfo_twice1", [](Fixture& f) {
     // Test double insert of station info
     auto& db = *f.db;
 
@@ -857,7 +851,7 @@ add_method("insert_stationinfo_twice1", [](Fixture& f) {
     wassert(actual(reports[0]) == "metar");
     wassert(actual(reports[1]) == "synop");
 });
-add_method("insert_undefined_level2", [](Fixture& f) {
+this->add_method("insert_undefined_level2", [](Fixture& f) {
     // Test handling of values with undefined leveltype2 and l2
     auto& db = *f.db;
     OldDballeTestDataSet oldf;
@@ -882,7 +876,7 @@ add_method("insert_undefined_level2", [](Fixture& f) {
 
     wassert(actual(cur->next()).isfalse());
 });
-add_method("query_undefined_level2", [](Fixture& f) {
+this->add_method("query_undefined_level2", [](Fixture& f) {
     // Test handling of values with undefined leveltype2 and l2
     auto& db = *f.db;
     OldDballeTestDataSet oldf;
@@ -893,7 +887,7 @@ add_method("query_undefined_level2", [](Fixture& f) {
     wassert(actual(cur->remaining()) == 4);
     cur->discard_rest();
 });
-add_method("query_bad_attrfilter", [](Fixture& f) {
+this->add_method("query_bad_attrfilter", [](Fixture& f) {
     // Query with an incorrect attr_filter
     auto& db = *f.db;
     OldDballeTestDataSet oldf;
@@ -905,7 +899,7 @@ add_method("query_bad_attrfilter", [](Fixture& f) {
         wassert(actual(e.what()).matches("B12001 is not a valid filter|cannot find any operator in filter 'B12001'"));
     }
 });
-add_method("query_best_priomax", [](Fixture& f) {
+this->add_method("query_best_priomax", [](Fixture& f) {
     // Test querying priomax together with query=best
     auto& db = *f.db;
 
@@ -978,10 +972,11 @@ add_method("query_best_priomax", [](Fixture& f) {
         cur->discard_rest();
     }
 });
-add_method("query_repmemo_in_results", [](Fixture& f) {
+this->add_method("query_repmemo_in_results", [](Fixture& f) {
     // Ensure that rep_memo is set in the results
     auto& db = *f.db;
-    wassert(f.populate<OldDballeTestDataSet>());
+    OldDballeTestDataSet oldf;
+    wassert(f.populate_database(oldf));
 
     core::Record res;
     auto cur = db.query_data(core::Query());

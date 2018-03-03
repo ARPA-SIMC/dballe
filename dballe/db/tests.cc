@@ -1,6 +1,7 @@
 #include "tests.h"
 #include "v6/db.h"
 #include "v7/db.h"
+#include "v7/transaction.h"
 #include "v6/driver.h"
 #include "v7/driver.h"
 #include "dballe/sql/sql.h"
@@ -20,20 +21,6 @@ namespace tests {
 
 namespace {
 
-struct OverrideTestDBFormat
-{
-    dballe::db::Format old_format;
-    OverrideTestDBFormat(dballe::db::Format fmt)
-        : old_format(DB::get_default_format())
-    {
-        DB::set_default_format(fmt);
-    }
-    ~OverrideTestDBFormat()
-    {
-        DB::set_default_format(old_format);
-    }
-};
-
 std::unique_ptr<dballe::sql::Connection> get_test_connection(const std::string& backend)
 {
     std::string envname = "DBA_DB";
@@ -51,20 +38,20 @@ std::unique_ptr<dballe::sql::Connection> get_test_connection(const std::string& 
 }
 
 
-Messages messages_from_db(DB& db, const dballe::Query& query)
+Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const dballe::Query& query)
 {
     Messages res;
-    db.export_msgs(query, [&](unique_ptr<Message>&& msg) {
+    tr->export_msgs(query, [&](unique_ptr<Message>&& msg) {
         res.append(move(msg));
         return true;
     });
     return res;
 }
 
-Messages messages_from_db(DB& db, const char* query)
+Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const char* query)
 {
     Messages res;
-    db.export_msgs(*dballe::tests::query_from_string(query), [&](unique_ptr<Message>&& msg) {
+    tr->export_msgs(*dballe::tests::query_from_string(query), [&](unique_ptr<Message>&& msg) {
         res.append(move(msg));
         return true;
     });
@@ -230,8 +217,8 @@ bool has_driver(const std::string& backend)
 }
 
 template<typename DB>
-BaseDBFixture<DB>::BaseDBFixture(const char* backend, db::Format format)
-    : backend(backend ? backend : ""), format(format)
+BaseDBFixture<DB>::BaseDBFixture(const char* backend)
+    : backend(backend ? backend : "")
 {
 }
 
@@ -249,6 +236,13 @@ bool BaseDBFixture<DB>::has_driver()
 }
 
 template<typename DB>
+void BaseDBFixture<DB>::create_db()
+{
+    db = DB::create_db(backend);
+    db->reset();
+}
+
+template<typename DB>
 void BaseDBFixture<DB>::test_setup()
 {
     Fixture::test_setup();
@@ -256,35 +250,51 @@ void BaseDBFixture<DB>::test_setup()
         throw TestSkipped();
 
     if (!db)
-    {
-        db = create_db();
-        db->reset();
-    }
-    db->remove_all();
-    int added, deleted, updated;
-    db->update_repinfo(nullptr, &added, &deleted, &updated);
+        create_db();
 }
 
 template<typename DB>
-void BaseDBFixture<DB>::populate_database(TestDataSet& data_set)
+void EmptyTransactionFixture<DB>::populate_database(TestDataSet& data_set)
 {
-    wassert(data_set.populate_db(*db));
+    wassert(data_set.populate_transaction(*tr));
 }
 
-std::shared_ptr<DB> DBFixture::create_db()
+template<typename DB>
+void EmptyTransactionFixture<DB>::test_setup()
 {
-    OverrideTestDBFormat odbf(format);
-    auto conn = get_test_connection(backend);
-    return dballe::DB::create(move(conn));
+    BaseDBFixture<DB>::test_setup();
+    tr = dynamic_pointer_cast<typename DB::TR>(this->db->transaction());
 }
 
-std::shared_ptr<dballe::db::v6::DB> V6DBFixture::create_db()
+template<typename DB>
+void EmptyTransactionFixture<DB>::test_teardown()
+{
+    tr.reset();
+    BaseDBFixture<DB>::test_teardown();
+}
+
+template<typename DB>
+void DBFixture<DB>::test_setup()
+{
+    BaseDBFixture<DB>::test_setup();
+    this->db->remove_all();
+    int added, deleted, updated;
+    this->db->update_repinfo(nullptr, &added, &deleted, &updated);
+}
+
+template<typename DB>
+void DBFixture<DB>::populate_database(TestDataSet& data_set)
+{
+    wassert(data_set.populate_db(*this->db));
+}
+
+std::shared_ptr<dballe::db::v6::DB> V6DB::create_db(const std::string& backend)
 {
     auto conn = get_test_connection(backend);
     return std::make_shared<dballe::db::v6::DB>(move(conn));
 }
 
-std::shared_ptr<dballe::db::v7::DB> V7DBFixture::create_db()
+std::shared_ptr<dballe::db::v7::DB> V7DB::create_db(const std::string& backend)
 {
     auto conn = get_test_connection(backend);
     return std::make_shared<dballe::db::v7::DB>(move(conn));
@@ -293,10 +303,17 @@ std::shared_ptr<dballe::db::v7::DB> V7DBFixture::create_db()
 
 void TestDataSet::populate_db(DB& db)
 {
+    auto tr = db.transaction();
+    populate_transaction(*tr);
+    tr->commit();
+}
+
+void TestDataSet::populate_transaction(db::Transaction& tr)
+{
     for (auto& d: stations)
-        wassert(db.insert_station_data(d.second, true, true));
+        wassert(tr.insert_station_data(d.second, true, true));
     for (auto& d: data)
-        wassert(db.insert_data(d.second, true, true));
+        wassert(tr.insert_data(d.second, true, true));
 }
 
 OldDballeTestDataSet::OldDballeTestDataSet()
@@ -327,9 +344,29 @@ OldDballeTestDataSet::OldDballeTestDataSet()
     data["metar"].values.set("B01012", 400);
 }
 
-template class BaseDBFixture<dballe::DB>;
-template class BaseDBFixture<dballe::db::v6::DB>;
-template class BaseDBFixture<dballe::db::v7::DB>;
+ActualDB<dballe::DB> actual(std::shared_ptr<dballe::db::v6::DB> actual)
+{
+    return ActualDB<dballe::DB>(std::static_pointer_cast<dballe::DB>(actual));
+}
+ActualDB<dballe::DB> actual(std::shared_ptr<dballe::db::v7::DB> actual)
+{
+    return ActualDB<dballe::DB>(std::static_pointer_cast<dballe::DB>(actual));
+}
+ActualDB<dballe::db::Transaction> actual(std::shared_ptr<dballe::db::v6::Transaction> actual)
+{
+    return ActualDB<dballe::db::Transaction>(std::static_pointer_cast<dballe::db::Transaction>(actual));
+}
+ActualDB<dballe::db::Transaction> actual(std::shared_ptr<dballe::db::v7::Transaction> actual)
+{
+    return ActualDB<dballe::db::Transaction>(std::static_pointer_cast<dballe::db::Transaction>(actual));
+}
+
+template class BaseDBFixture<V6DB>;
+template class BaseDBFixture<V7DB>;
+template class DBFixture<V6DB>;
+template class DBFixture<V7DB>;
+template class EmptyTransactionFixture<V6DB>;
+template class EmptyTransactionFixture<V7DB>;
 template class ActualDB<dballe::DB>;
 template class ActualDB<dballe::db::Transaction>;
 

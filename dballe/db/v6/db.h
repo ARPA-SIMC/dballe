@@ -37,6 +37,8 @@ struct DB;
 
 struct Transaction : public dballe::db::Transaction
 {
+    typedef v6::DB DB;
+
     std::shared_ptr<DB> db;
     dballe::Transaction* sql_transaction = nullptr;
 

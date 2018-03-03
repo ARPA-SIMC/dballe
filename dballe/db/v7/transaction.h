@@ -13,6 +13,8 @@ struct DB;
 
 struct Transaction : public dballe::db::Transaction
 {
+    typedef v7::DB DB;
+
     std::shared_ptr<v7::DB> db;
     dballe::Transaction* sql_transaction = nullptr;
     State state;

@@ -17,55 +17,11 @@ using namespace wreport;
 
 namespace {
 
-struct FixtureV6 : V6DBFixture
+template<typename DB>
+class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
 {
-    using V6DBFixture::V6DBFixture;
-
-    void reset_repinfo()
-    {
-        db->disappear();
-
-        switch (format)
-        {
-            case V5: throw error_unimplemented("v5 db is not supported");
-            case V6:
-                db->reset();
-                break;
-            default:
-                throw error_consistency("cannot test repinfo on the current DB format");
-        }
-    }
-
-    void test_setup()
-    {
-        V6DBFixture::test_setup();
-        reset_repinfo();
-    }
-};
-
-struct FixtureV7 : V7DBFixture
-{
-    using V7DBFixture::V7DBFixture;
-
-    unique_ptr<db::v7::Repinfo> repinfo;
-
-    void reset_repinfo()
-    {
-        db->disappear();
-        db->reset();
-    }
-
-    void test_setup()
-    {
-        V7DBFixture::test_setup();
-        reset_repinfo();
-    }
-};
-
-template<typename Fixture>
-class Tests : public DBFixtureTestCase<Fixture>
-{
-    using DBFixtureTestCase<Fixture>::DBFixtureTestCase;
+    using FixtureTestCase<EmptyTransactionFixture<DB>>::FixtureTestCase;
+    typedef EmptyTransactionFixture<DB> Fixture;
 
     void register_tests() override
     {
@@ -161,15 +117,15 @@ class Tests : public DBFixtureTestCase<Fixture>
     }
 };
 
-Tests<FixtureV6> test_sqlitev6("db_v6_repinfo_sqlite", "SQLITE");
-Tests<FixtureV7> test_sqlitev7("db_v7_repinfo_sqlite", "SQLITE");
+Tests<V6DB> test_sqlitev6("db_v6_repinfo_sqlite", "SQLITE");
+Tests<V7DB> test_sqlitev7("db_v7_repinfo_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests<FixtureV6> test_psqlv6("db_v6_repinfo_postgresql", "POSTGRESQL");
-Tests<FixtureV7> test_psqlv7("db_v7_repinfo_postgresql", "POSTGRESQL");
+Tests<V6DB> test_psqlv6("db_v6_repinfo_postgresql", "POSTGRESQL");
+Tests<V7DB> test_psqlv7("db_v7_repinfo_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests<FixtureV6> test_mysqlv6("db_v6_repinfo_mysql", "MYSQL");
-Tests<FixtureV7> test_mysqlv7("db_v7_repinfo_mysql", "MYSQL");
+Tests<V6DB> test_mysqlv6("db_v6_repinfo_mysql", "MYSQL");
+Tests<V7DB> test_mysqlv7("db_v7_repinfo_mysql", "MYSQL");
 #endif
 
 }

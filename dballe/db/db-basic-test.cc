@@ -1,5 +1,7 @@
 #include "msg/msg.h"
 #include "db/tests.h"
+#include "v6/db.h"
+#include "v7/db.h"
 #include <cstring>
 
 using namespace dballe;
@@ -10,39 +12,38 @@ using namespace std;
 
 namespace {
 
-class Tests : public DBFixtureTestCase<DBFixture>
+template<typename DB>
+class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
 {
-    using DBFixtureTestCase::DBFixtureTestCase;
+    typedef EmptyTransactionFixture<DB> Fixture;
+    using FixtureTestCase<Fixture>::FixtureTestCase;
 
     void register_tests() override;
 };
 
-Tests tg2("db_basic_v6_sqlite", "SQLITE", db::V6);
+Tests<V6DB> tg1("db_basic_v6_sqlite", "SQLITE");
+Tests<V7DB> tg2("db_basic_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests tg4("db_basic_v6_postgresql", "POSTGRESQL", db::V6);
+Tests<V6DB> tg3("db_basic_v6_postgresql", "POSTGRESQL");
+Tests<V7DB> tg4("db_basic_v7_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests tg5("db_basic_v6_mysql", "MYSQL", db::V6);
-#endif
-Tests tg6("db_basic_v7_sqlite", "SQLITE", db::V7);
-#ifdef HAVE_LIBPQ
-Tests tg7("db_basic_v7_postgresql", "POSTGRESQL", db::V7);
-#endif
-#ifdef HAVE_MYSQL
-Tests tg8("db_basic_v7_mysql", "MYSQL", db::V7);
+Tests<V6DB> tg5("db_basic_v6_mysql", "MYSQL");
+Tests<V7DB> tg6("db_basic_v7_mysql", "MYSQL");
 #endif
 
-void Tests::register_tests()
+template<typename DB>
+void Tests<DB>::register_tests()
 {
 
 // Test simple queries
-add_method("reset", [](Fixture& f) {
+this->add_method("reset", [](Fixture& f) {
     // Run twice to see if it is idempotent
     auto& db = *f.db;
     db.reset();
     db.reset();
 });
-add_method("repinfo", [](Fixture& f) {
+this->add_method("repinfo", [](Fixture& f) {
     // Test repinfo-related functions
     auto& db = *f.db;
     std::map<std::string, int> prios = db.get_repinfo_priorities();
@@ -60,7 +61,7 @@ add_method("repinfo", [](Fixture& f) {
     wassert(actual(prios.find("fixspnpo") != prios.end()).istrue());
     wassert(actual(prios["fixspnpo"]) == 200);
 });
-add_method("vacuum", [](Fixture& f) {
+this->add_method("vacuum", [](Fixture& f) {
     TestDataSet data;
     data.stations["s1"].info.report = "synop";
     data.stations["s1"].info.coords = Coords(12.34560, 76.54320);
@@ -136,7 +137,7 @@ add_method("vacuum", [](Fixture& f) {
         wassert(actual(dd->remaining()) == 1);
     }
 });
-add_method("simple", [](Fixture& f) {
+this->add_method("simple", [](Fixture& f) {
     // Test remove_all
     auto& db = *f.db;
     db.remove_all();
@@ -149,7 +150,8 @@ add_method("simple", [](Fixture& f) {
     wassert(actual(cur->remaining()) == 0);
 
     // Insert something
-    wassert(f.populate<OldDballeTestDataSet>());
+    OldDballeTestDataSet data_set;
+    wassert(f.populate_database(data_set));
 
     cur = db.query_data(core::Query());
     wassert(actual(cur->remaining()) == 4);
@@ -159,7 +161,7 @@ add_method("simple", [](Fixture& f) {
     cur = db.query_data(core::Query());
     wassert(actual(cur->remaining()) == 0);
 });
-add_method("stationdata", [](Fixture& f) {
+this->add_method("stationdata", [](Fixture& f) {
     // Test adding station data for different networks
     auto& db = *f.db;
     db.reset();
@@ -252,7 +254,7 @@ add_method("stationdata", [](Fixture& f) {
     wassert(actual(Msg::downcast(msgs[1]).get_st_name_var()->enqc()) == "Esmac");
     wassert(actual(Msg::downcast(msgs[1]).get_temp_2m_var()->enqd()) == 274.15);
 });
-add_method("query_ident", [](Fixture& f) {
+this->add_method("query_ident", [](Fixture& f) {
     // Insert a mobile station
     DataValues vals;
     vals.info.report = "synop";
@@ -273,7 +275,7 @@ add_method("query_ident", [](Fixture& f) {
     wassert(actual(f.db).try_data_query("mobile=1", 1));
     wassert(actual(f.db).try_data_query("mobile=0", 0));
 });
-add_method("missing_repmemo", [](Fixture& f) {
+this->add_method("missing_repmemo", [](Fixture& f) {
     // Test querying with a missing rep_memo
     auto& db = *f.db;
     core::Query query;

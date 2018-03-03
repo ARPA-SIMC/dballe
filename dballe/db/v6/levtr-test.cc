@@ -12,28 +12,9 @@ using namespace std;
 
 namespace {
 
-struct Fixture : V6DBFixture
+class Tests : public FixtureTestCase<EmptyTransactionFixture<V6DB>>
 {
-    using V6DBFixture::V6DBFixture;
-
-    unique_ptr<db::v6::LevTr> levtr;
-
-    void reset_levtr()
-    {
-        db->disappear();
-        db->reset();
-    }
-
-    void test_setup()
-    {
-        V6DBFixture::test_setup();
-        reset_levtr();
-    }
-};
-
-class Tests : public DBFixtureTestCase<Fixture>
-{
-    using DBFixtureTestCase::DBFixtureTestCase;
+    using FixtureTestCase::FixtureTestCase;
 
     void register_tests() override
     {

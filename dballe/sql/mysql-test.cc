@@ -32,9 +32,9 @@ struct ConnectorFixture : public Fixture
     }
 };
 
-class Tests : public DBFixtureTestCase<ConnectorFixture>
+class Tests : public FixtureTestCase<ConnectorFixture>
 {
-    using DBFixtureTestCase::DBFixtureTestCase;
+    using FixtureTestCase::FixtureTestCase;
 
     void register_tests() override
     {

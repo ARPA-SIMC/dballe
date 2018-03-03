@@ -16,16 +16,15 @@ using namespace std;
 
 namespace {
 
-struct Fixture : V6DBFixture
+struct Fixture : public EmptyTransactionFixture<V6DB>
 {
-    using V6DBFixture::V6DBFixture;
+    using EmptyTransactionFixture::EmptyTransactionFixture;
 
-    void reset_attr()
+    void create_db() override
     {
         using namespace dballe::db::v6;
+        EmptyTransactionFixture::create_db();
 
-        db->disappear();
-        db->reset();
         auto& st = db->station();
         auto& lt = db->lev_tr();
         auto& da = db->data();
@@ -67,12 +66,6 @@ struct Fixture : V6DBFixture
         t->commit();
     }
 
-    void test_setup()
-    {
-        V6DBFixture::test_setup();
-        reset_attr();
-    }
-
     Var query(int id_data, unsigned expected_attr_count)
     {
         Var res(varinfo(WR_VAR(0, 12, 101)));
@@ -83,9 +76,9 @@ struct Fixture : V6DBFixture
     }
 };
 
-class Tests : public DBFixtureTestCase<Fixture>
+class Tests : public FixtureTestCase<Fixture>
 {
-    using DBFixtureTestCase::DBFixtureTestCase;
+    using FixtureTestCase::FixtureTestCase;
 
     void register_tests() override
     {

@@ -14,26 +14,10 @@ using namespace std;
 
 namespace {
 
-struct Fixture : V7DBFixture
+class Tests : public FixtureTestCase<EmptyTransactionFixture<V7DB>>
 {
-    using V7DBFixture::V7DBFixture;
-
-    void reset_station()
-    {
-        db->disappear();
-        db->reset();
-    }
-
-    void test_setup()
-    {
-        V7DBFixture::test_setup();
-        reset_station();
-    }
-};
-
-class Tests : public DBFixtureTestCase<Fixture>
-{
-    using DBFixtureTestCase::DBFixtureTestCase;
+    using FixtureTestCase::FixtureTestCase;
+    typedef EmptyTransactionFixture<V7DB> Fixture;
 
     void register_tests() override
     {

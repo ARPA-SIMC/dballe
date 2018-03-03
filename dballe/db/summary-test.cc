@@ -1,4 +1,7 @@
 #include "db/tests.h"
+#include "db/v6/db.h"
+#include "db/v7/db.h"
+#include "db/v7/transaction.h"
 #include "summary.h"
 #include "config.h"
 
@@ -10,15 +13,18 @@ using namespace std;
 
 namespace {
 
-class Tests : public DBFixtureTestCase<DBFixture>
+template<typename DB>
+class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
 {
-    using DBFixtureTestCase::DBFixtureTestCase;
+    typedef EmptyTransactionFixture<DB> Fixture;
+    using FixtureTestCase<Fixture>::FixtureTestCase;
 
     void register_tests() override
     {
-        add_method("summary", [](Fixture& f) {
+        this->add_method("summary", [](Fixture& f) {
             // Test building a summary and checking if it supports queries
-            wassert(f.populate<OldDballeTestDataSet>());
+            OldDballeTestDataSet test_data;
+            wassert(f.populate_database(test_data));
 
             core::Query query;
             query.query = "details";
@@ -73,19 +79,15 @@ class Tests : public DBFixtureTestCase<DBFixture>
     }
 };
 
-Tests tg2("db_summary_v6_sqlite", "SQLITE", db::V6);
+Tests<V6DB> tg1("db_summary_v6_sqlite", "SQLITE");
+Tests<V7DB> tg2("db_summary_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests tg4("db_summary_v6_postgresql", "POSTGRESQL", db::V6);
+Tests<V6DB> tg3("db_summary_v6_postgresql", "POSTGRESQL");
+Tests<V7DB> tg4("db_summary_v7_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests tg5("db_summary_v6_mysql", "MYSQL", db::V6);
-#endif
-Tests tg6("db_summary_v7_sqlite", "SQLITE", db::V7);
-#ifdef HAVE_LIBPQ
-Tests tg7("db_summary_v7_postgresql", "POSTGRESQL", db::V7);
-#endif
-#ifdef HAVE_MYSQL
-Tests tg8("db_summary_v7_mysql", "MYSQL", db::V7);
+Tests<V6DB> tg5("db_summary_v6_mysql", "MYSQL");
+Tests<V7DB> tg6("db_summary_v7_mysql", "MYSQL");
 #endif
 
 }

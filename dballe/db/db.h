@@ -166,6 +166,8 @@ struct CursorSummary : public Cursor
 class Transaction : public dballe::Transaction, public std::enable_shared_from_this<Transaction>
 {
 public:
+    typedef dballe::DB DB;
+
     /**
      * Clear state information cached during the transaction.
      *

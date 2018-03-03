@@ -15,16 +15,13 @@ using namespace std;
 
 namespace {
 
-struct Fixture : V6DBFixture
+struct Fixture : public EmptyTransactionFixture<V6DB>
 {
-    using V6DBFixture::V6DBFixture;
+    using EmptyTransactionFixture::EmptyTransactionFixture;
 
-    unique_ptr<db::v6::DataV6> data;
-
-    void reset_data()
+    void create_db() override
     {
-        db->disappear();
-        db->reset();
+        EmptyTransactionFixture::create_db();
 
         auto& st = db->station();
         auto& lt = db->lev_tr();
@@ -41,18 +38,12 @@ struct Fixture : V6DBFixture
         // Insert another lev_tr
         wassert(actual(lt.obtain_id(Level(2, 3, 1, 4), Trange(5, 6, 7))) == 2);
     }
-
-    void test_setup()
-    {
-        V6DBFixture::test_setup();
-        reset_data();
-    }
 };
 
 
-class Tests : public DBFixtureTestCase<Fixture>
+class Tests : public FixtureTestCase<Fixture>
 {
-    using DBFixtureTestCase::DBFixtureTestCase;
+    using FixtureTestCase::FixtureTestCase;
 
     void register_tests() override
     {

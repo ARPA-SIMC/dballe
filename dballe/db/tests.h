@@ -14,19 +14,21 @@ namespace db {
 namespace v6 {
 struct Driver;
 class DB;
+class Transaction;
 }
 
 namespace v7 {
 struct Driver;
 class DB;
+class Transaction;
 }
 
 }
 
 namespace tests {
 
-Messages messages_from_db(DB& db, const dballe::Query& query);
-Messages messages_from_db(DB& db, const char* query);
+Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const dballe::Query& query);
+Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const char* query);
 
 /// Base for datasets used to populate test databases
 struct TestDataSet
@@ -39,7 +41,13 @@ struct TestDataSet
     TestDataSet() {}
     virtual ~TestDataSet() {}
 
-    virtual void populate_db(DB& db);
+    void populate_db(DB& db);
+    virtual void populate_transaction(db::Transaction& tr);
+};
+
+struct EmptyTestDataset
+{
+    void populate_db();
 };
 
 /// Test fixture used by old DB-All.e db tests
@@ -50,67 +58,79 @@ struct OldDballeTestDataSet : public TestDataSet
 
 bool has_driver(const std::string& backend);
 
+struct V6DB
+{
+    typedef db::v6::DB DB;
+    typedef db::v6::Transaction TR;
+    static const auto format = db::V6;
+    static std::shared_ptr<DB> create_db(const std::string& backend);
+};
+
+struct V7DB
+{
+    typedef db::v7::DB DB;
+    typedef db::v7::Transaction TR;
+    static const auto format = db::V7;
+    static std::shared_ptr<DB> create_db(const std::string& backend);
+};
+
 template<typename DB>
 struct BaseDBFixture : public Fixture
 {
     std::string backend;
-    db::Format format;
-    std::shared_ptr<DB> db;
+    std::shared_ptr<typename DB::DB> db;
 
-    BaseDBFixture(const char* backend, db::Format format);
+    BaseDBFixture(const char* backend);
     ~BaseDBFixture();
 
-    /// Open a new DB with the backend and format specified in this fixture
-    virtual std::shared_ptr<DB> create_db() = 0;
-
     void test_setup();
+    virtual void create_db();
     bool has_driver();
 
+#if 0
     template<typename DataSet>
     void populate()
     {
         DataSet data_set;
         wassert(populate_database(data_set));
     }
+#endif
+};
 
+template<typename DB>
+struct EmptyTransactionFixture : public BaseDBFixture<DB>
+{
+    using BaseDBFixture<DB>::BaseDBFixture;
+    std::shared_ptr<typename DB::TR> tr;
+
+    void test_setup();
+    void test_teardown();
     void populate_database(TestDataSet& data_set);
 };
 
-struct DBFixture : public BaseDBFixture<dballe::DB>
+template<typename DB, typename TestData>
+struct TransactionFixture : public EmptyTransactionFixture<DB>
 {
-    DBFixture(const char* backend, db::Format format)
-        : BaseDBFixture(backend, format)
+    using EmptyTransactionFixture<DB>::EmptyTransactionFixture;
+
+    TestData test_data;
+
+    void create_db() override
     {
+        EmptyTransactionFixture<DB>::create_db();
+        wassert(test_data.populate_db(*this->db));
     }
-
-    std::shared_ptr<dballe::DB> create_db() override;
 };
 
-struct V6DBFixture : public BaseDBFixture<dballe::db::v6::DB>
+template<typename DB>
+struct DBFixture : public BaseDBFixture<DB>
 {
-    V6DBFixture(const char* backend)
-        : BaseDBFixture(backend, db::Format::V6)
-    {
-    }
+    using BaseDBFixture<DB>::BaseDBFixture;
 
-    std::shared_ptr<dballe::db::v6::DB> create_db() override;
+    void test_setup();
+    void populate_database(TestDataSet& data_set);
 };
 
-struct V7DBFixture : public BaseDBFixture<dballe::db::v7::DB>
-{
-    V7DBFixture(const char* backend)
-        : BaseDBFixture(backend, db::Format::V7)
-    {
-    }
-
-    std::shared_ptr<dballe::db::v7::DB> create_db() override;
-};
-
-template<typename FIXTURE>
-struct DBFixtureTestCase : public FixtureTestCase<FIXTURE>
-{
-    using FixtureTestCase<FIXTURE>::FixtureTestCase;
-};
 
 struct ActualCursor : public Actual<dballe::db::Cursor&>
 {
@@ -190,11 +210,18 @@ inline ActualCursor actual(std::unique_ptr<dballe::db::CursorStationData>& actua
 inline ActualCursor actual(std::unique_ptr<dballe::db::CursorData>& actual) { return ActualCursor(*actual); }
 inline ActualCursor actual(std::unique_ptr<dballe::db::CursorSummary>& actual) { return ActualCursor(*actual); }
 inline ActualDB<dballe::DB> actual(std::shared_ptr<dballe::DB> actual) { return ActualDB<dballe::DB>(actual); }
+ActualDB<dballe::DB> actual(std::shared_ptr<dballe::db::v6::DB> actual);
+ActualDB<dballe::DB> actual(std::shared_ptr<dballe::db::v7::DB> actual);
 inline ActualDB<dballe::db::Transaction> actual(std::shared_ptr<dballe::db::Transaction> actual) { return ActualDB<dballe::db::Transaction>(actual); }
+ActualDB<dballe::db::Transaction> actual(std::shared_ptr<dballe::db::v6::Transaction> actual);
+ActualDB<dballe::db::Transaction> actual(std::shared_ptr<dballe::db::v7::Transaction> actual);
 
-extern template class BaseDBFixture<dballe::DB>;
-extern template class BaseDBFixture<dballe::db::v6::DB>;
-extern template class BaseDBFixture<dballe::db::v7::DB>;
+extern template class BaseDBFixture<V6DB>;
+extern template class BaseDBFixture<V7DB>;
+extern template class DBFixture<V6DB>;
+extern template class DBFixture<V7DB>;
+extern template class EmptyTransactionFixture<V6DB>;
+extern template class EmptyTransactionFixture<V7DB>;
 extern template class ActualDB<dballe::DB>;
 extern template class ActualDB<dballe::db::Transaction>;
 

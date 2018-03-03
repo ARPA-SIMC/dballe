@@ -1,6 +1,9 @@
 #include "config.h"
 #include "db/tests.h"
 #include "db/db.h"
+#include "db/v6/db.h"
+#include "db/v7/db.h"
+#include "db/v7/transaction.h"
 #include "dballe/record.h"
 #include "msg/msg.h"
 
@@ -39,24 +42,36 @@ struct DBData : public TestDataSet
     }
 };
 
-class Tests : public DBFixtureTestCase<DBFixture>
+template<typename DB>
+class Tests : public FixtureTestCase<TransactionFixture<DB, DBData>>
 {
-    using DBFixtureTestCase::DBFixtureTestCase;
+    typedef TransactionFixture<DB, DBData> Fixture;
+    using FixtureTestCase<Fixture>::FixtureTestCase;
 
     void register_tests() override;
 };
 
-void Tests::register_tests()
+Tests<V6DB> tg1("db_export_v6_sqlite", "SQLITE");
+Tests<V7DB> tg2("db_export_v7_sqlite", "SQLITE");
+#ifdef HAVE_LIBPQ
+Tests<V6DB> tg3("db_export_v6_postgresql", "POSTGRESQL");
+Tests<V7DB> tg4("db_export_v7_postgresql", "POSTGRESQL");
+#endif
+#ifdef HAVE_MYSQL
+Tests<V6DB> tg5("db_export_v6_mysql", "MYSQL");
+Tests<V7DB> tg6("db_export_v7_mysql", "MYSQL");
+#endif
+
+template<typename DB>
+void Tests<DB>::register_tests()
 {
 
-add_method("export", [](Fixture& f) {
+this->add_method("export", [](Fixture& f) {
     // Simple export
-    auto& db = f.db;
-    wassert(f.populate<DBData>());
 
     // Put some data in the database and check that it gets exported properly
     // Query back the data
-    Messages messages = dballe::tests::messages_from_db(*db, core::Query());
+    Messages messages = dballe::tests::messages_from_db(f.tr, core::Query());
     wassert(actual(messages.size()) == 4u);
 
     int synmsg = 2;
@@ -95,9 +110,8 @@ add_method("export", [](Fixture& f) {
     wassert(actual(messages[metmsg].get_datetime()) == Datetime(1945, 4, 26, 8, 0, 0));
     wassert(actual(messages[metmsg], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)) == 200);
 });
-add_method("export", [](Fixture& f) {
+this->add_method("export", [](Fixture& f) {
     // Text exporting of extra station information
-    auto& db = f.db;
 
     // Import some data in the station extra information context
     StationValues st;
@@ -105,7 +119,7 @@ add_method("export", [](Fixture& f) {
     st.info.coords = Coords(45.0, 11.0);
     st.info.report = "synop";
     st.values.set("B01001", 10);
-    db->insert_station_data(st, false, true);
+    f.tr->insert_station_data(st, false, true);
 
     // Import one real datum
     DataValues dv;
@@ -114,10 +128,10 @@ add_method("export", [](Fixture& f) {
     dv.info.level = Level(103, 2000);
     dv.info.trange = Trange(254, 0, 0);
     dv.values.set("B12101", 290.0);
-    db->insert_data(dv, false, true);
+    f.tr->insert_data(dv, false, true);
 
     // Query back the data
-    Messages msgs = dballe::tests::messages_from_db(*db, core::Query());
+    Messages msgs = dballe::tests::messages_from_db(f.tr, core::Query());
     wassert(actual(msgs.size()) == 1u);
     Msg& msg = Msg::downcast(msgs[0]);
 
@@ -129,30 +143,14 @@ add_method("export", [](Fixture& f) {
     wassert(actual(msgs[0], DBA_MSG_TEMP_2M) == 290.0);
 });
 
-add_method("missing_repmemo", [](Fixture& f) {
+this->add_method("missing_repmemo", [](Fixture& f) {
     // Text exporting of extra station information
-    auto& db = f.db;
     core::Query query;
     query.rep_memo = "nonexisting";
-    Messages msgs = wcallchecked(dballe::tests::messages_from_db(*db, query));
+    Messages msgs = wcallchecked(dballe::tests::messages_from_db(f.tr, query));
     wassert(actual(msgs.size()) == 0u);
 });
 
 }
-
-Tests tg2("db_export_v6_sqlite", "SQLITE", db::V6);
-#ifdef HAVE_LIBPQ
-Tests tg4("db_export_v6_postgresql", "POSTGRESQL", db::V6);
-#endif
-#ifdef HAVE_MYSQL
-Tests tg5("db_export_v6_mysql", "MYSQL", db::V6);
-#endif
-Tests tg6("db_export_v7_sqlite", "SQLITE", db::V7);
-#ifdef HAVE_LIBPQ
-Tests tg7("db_export_v7_postgresql", "POSTGRESQL", db::V7);
-#endif
-#ifdef HAVE_MYSQL
-Tests tg8("db_export_v7_mysql", "MYSQL", db::V7);
-#endif
 
 }
