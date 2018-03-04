@@ -3,14 +3,40 @@
 
 #include <wreport/var.h>
 #include <dballe/core/defs.h>
+#include <dballe/core/values.h>
 #include <map>
 #include <unordered_set>
+#include <unordered_map>
 
 namespace dballe {
 struct Record;
 
 namespace db {
 namespace v7 {
+
+struct Stations
+{
+    std::unordered_map<int, dballe::Station*> by_id;
+    std::unordered_map<int, std::vector<const dballe::Station*>> by_lon;
+
+    Stations() = default;
+    Stations(const Stations&) = delete;
+    Stations(Stations&&) = delete;
+    Stations& operator=(const Stations&) = delete;
+    Stations& operator=(Stations&&) = delete;
+    ~Stations();
+
+    void insert(const dballe::Station& st);
+    void insert(std::unique_ptr<dballe::Station> st);
+
+    const dballe::Station* find_station(int id) const;
+    int find_id(const dballe::Station& st) const;
+
+protected:
+    void by_lon_add(const dballe::Station* st);
+    void by_lon_remove(const dballe::Station* st);
+};
+
 
 struct ItemState
 {

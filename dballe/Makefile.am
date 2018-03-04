@@ -369,6 +369,7 @@ test_dballe_SOURCES = \
 	db/v6/levtr-test.cc \
 	db/v6/datav6-test.cc \
 	db/v6/attrv6-test.cc \
+	db/v7/state-test.cc \
 	db/v7/repinfo-test.cc \
 	db/v7/station-test.cc \
 	db/v7/levtr-test.cc \

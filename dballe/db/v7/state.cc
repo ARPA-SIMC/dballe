@@ -1,11 +1,85 @@
 #include "state.h"
 #include "dballe/record.h"
+#include <algorithm>
 
 using namespace std;
 
 namespace dballe {
 namespace db {
 namespace v7 {
+
+Stations::~Stations()
+{
+    for (auto& i: by_id)
+        delete i.second;
+}
+
+const dballe::Station* Stations::find_station(int id) const
+{
+    auto i = by_id.find(id);
+    if (i == by_id.end())
+        return nullptr;
+    return i->second;
+}
+
+int Stations::find_id(const dballe::Station& st) const
+{
+    if (st.ana_id != MISSING_INT)
+        return st.ana_id;
+    auto li = by_lon.find(st.coords.lon);
+    if (li == by_lon.end())
+        return MISSING_INT;
+    for (auto i: li->second)
+        if (i->report == st.report && i->coords == st.coords && i->ident == st.ident)
+            return i->ana_id;
+    return MISSING_INT;
+}
+
+void Stations::insert(const dballe::Station& st)
+{
+    insert(std::unique_ptr<dballe::Station>(new dballe::Station(st)));
+}
+
+void Stations::insert(std::unique_ptr<dballe::Station> st)
+{
+    if (st->ana_id == MISSING_INT)
+        throw std::runtime_error("station to cache in transaction state must have a database ID");
+
+    auto i = by_id.find(st->ana_id);
+    if (i == by_id.end())
+    {
+        dballe::Station* ns = st.release();
+        by_id.insert(make_pair(ns->ana_id, ns));
+        by_lon_add(ns);
+    } else {
+        std::unique_ptr<dballe::Station> old(i->second);
+        dballe::Station* ns;
+        i->second = ns = st.release();
+        by_lon_remove(old.get());
+        by_lon_add(ns);
+    }
+}
+
+void Stations::by_lon_add(const dballe::Station* st)
+{
+    auto li = by_lon.find(st->coords.lon);
+    if (li == by_lon.end())
+        by_lon.insert(make_pair(st->coords.lon, std::vector<const dballe::Station*>{st}));
+    else
+        li->second.push_back(st);
+}
+
+void Stations::by_lon_remove(const dballe::Station* st)
+{
+    auto li = by_lon.find(st->coords.lon);
+    if (li == by_lon.end())
+        return;
+    auto i = std::find(li->second.begin(), li->second.end(), st);
+    if (i == li->second.end())
+        return;
+    li->second.erase(i);
+}
+
 
 int StationDesc::compare(const StationDesc& o) const
 {
