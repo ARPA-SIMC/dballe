@@ -91,4 +91,12 @@ Ident::operator std::string() const
     return std::string(value);
 }
 
+std::ostream& operator<<(std::ostream& out, const Ident& i)
+{
+    if (i.is_missing())
+        return out;
+    else
+        return out << (const char*)i;
+}
+
 }

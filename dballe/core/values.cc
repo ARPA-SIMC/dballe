@@ -1,6 +1,7 @@
 #include "values.h"
 #include "record.h"
 #include <arpa/inet.h>
+#include <ostream>
 
 using namespace std;
 using namespace wreport;
@@ -14,7 +15,7 @@ void Station::set_from_record(const Record& rec)
         // If we have ana_id, the rest is optional
         ana_id = var->enqi();
         coords.lat = rec.enq("lat", MISSING_INT);
-        coords.lat = rec.enq("lon", MISSING_INT);
+        coords.lon = rec.enq("lon", MISSING_INT);
         ident.clear();
         if (const Var* var = rec.get("ident"))
             ident = var->isset() ? var->enqc() : 0;
@@ -33,6 +34,8 @@ void Station::set_from_record(const Record& rec)
         else
             throw error_notfound("record has no 'lon' set");
 
+        fprintf(stderr, "CLCLCL %d %d\n", coords.lat, coords.lon);
+
         ident.clear();
         if (const Var* var = rec.get("ident"))
             ident = var->isset() ? var->enqc() : 0;
@@ -45,6 +48,26 @@ void Station::set_from_record(const Record& rec)
             else
                 throw error_notfound("record has no 'rep_memo' set");
         }
+    }
+}
+
+void Station::to_record(Record& rec) const
+{
+    if (ana_id != MISSING_INT)
+        rec.set("ana_id", ana_id);
+    else
+        rec.unset("ana_id");
+
+    rec.set("rep_memo", report);
+
+    rec.set_coords(coords);
+    if (ident.is_missing())
+    {
+        rec.unset("ident");
+        rec.seti("mobile", 0);
+    } else {
+        rec.setc("ident", ident);
+        rec.seti("mobile", 1);
     }
 }
 
@@ -66,6 +89,16 @@ void Station::print(FILE* out, const char* end) const
         fputs(ident.get(), out);
 
     fputs(end, out);
+}
+
+std::ostream& operator<<(std::ostream& out, const Station& st)
+{
+    if (st.ana_id == MISSING_INT)
+        out << "-,";
+    else
+        out << st.ana_id << ",";
+
+    return out << st.coords << "," << st.ident;
 }
 
 void Sampling::set_from_record(const Record& rec)

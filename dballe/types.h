@@ -337,16 +337,16 @@ struct DatetimeRange
 struct Coords
 {
     /// Latitude in 1/100000 of a degree (5 significant digits preserved)
-    int lat;
+    int lat = MISSING_INT;
 
     /**
      * Longitude in 1/100000 of a degree (5 significant digits preserved) and
      * normalised between -180.0 and 180.0.
      */
-    int lon;
+    int lon = MISSING_INT;
 
     /// Construct a missing Coords
-    Coords();
+    Coords() = default;
     /// Construct a coords from integers in 1/100000 of a degree
     Coords(int lat, int lon);
     /// Construct a coords from values in degrees
@@ -389,6 +389,8 @@ struct Coords
     /// Print to an output stream
     int print(FILE* out, const char* end="\n") const;
 };
+
+std::ostream& operator<<(std::ostream&, const Coords&);
 
 
 /**

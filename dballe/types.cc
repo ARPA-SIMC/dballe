@@ -556,8 +556,6 @@ inline int normalon(int lon)
  * Coords
  */
 
-Coords::Coords() : lat(MISSING_INT), lon(MISSING_INT) {}
-
 Coords::Coords(int lat, int lon)
 {
     set(lat, lon);
@@ -610,6 +608,20 @@ bool Coords::operator>=(const Coords& o) const { return compare(o) >= 0; }
 int Coords::print(FILE* out, const char* end) const
 {
     return fprintf(out, "%.5f,%.5f%s", dlat(), dlon(), end);
+}
+
+std::ostream& operator<<(std::ostream& out, const Coords& c)
+{
+    if (c.is_missing())
+        return out << "(-,-)";
+    else
+        return out << fixed
+                   << "(" << setprecision(5) << c.dlat()
+                   << "," << setprecision(5) << c.dlon()
+                   << ")"
+    //             << resetiosflags(ios_base::floatfield);
+    //             << defaultfloat;
+            ;
 }
 
 /*

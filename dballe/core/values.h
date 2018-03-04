@@ -12,6 +12,7 @@
 #include <vector>
 #include <map>
 #include <functional>
+#include <iosfwd>
 
 namespace dballe {
 
@@ -45,6 +46,9 @@ struct Station
     /// Fill this Station with values from a dballe::Record
     void set_from_record(const Record& rec);
 
+    /// Copy ana_id, report, coords and ident to rec
+    void to_record(Record& rec) const;
+
     bool operator==(const Station& o) const
     {
         return report == o.report && ana_id == o.ana_id && coords == o.coords && ident == o.ident;
@@ -58,6 +62,8 @@ struct Station
      */
     void print(FILE* out, const char* end="\n") const;
 };
+
+std::ostream& operator<<(std::ostream&, const Station&);
 
 /**
  * Information about a physical variable

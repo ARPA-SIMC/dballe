@@ -6,17 +6,6 @@ using namespace std;
 
 namespace dballe {
 
-std::ostream& operator<<(std::ostream& out, const Coords& c)
-{
-    out << fixed
-        << "(" << setprecision(5) << c.dlat()
-        << "," << setprecision(5) << c.dlon()
-        << ")"
-        << resetiosflags(ios_base::floatfield);
-    //    << defaultfloat;
-    return out;
-}
-
 std::ostream& operator<<(std::ostream& out, const Date& dt)
 {
     dt.to_stream_iso8601(out);
@@ -73,15 +62,6 @@ std::ostream& operator<<(std::ostream& out, const LonRange& lr)
         << ")"
         << resetiosflags(ios_base::floatfield);
     //    << defaultfloat;
-    return out;
-}
-
-std::ostream& operator<<(std::ostream& out, const Ident& i)
-{
-    if (i.is_missing())
-        out << "(null)";
-    else
-        out << (const char*)i;
     return out;
 }
 
