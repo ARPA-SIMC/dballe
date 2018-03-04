@@ -34,8 +34,6 @@ void Station::set_from_record(const Record& rec)
         else
             throw error_notfound("record has no 'lon' set");
 
-        fprintf(stderr, "CLCLCL %d %d\n", coords.lat, coords.lon);
-
         ident.clear();
         if (const Var* var = rec.get("ident"))
             ident = var->isset() ? var->enqc() : 0;

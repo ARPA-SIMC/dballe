@@ -69,7 +69,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/varmatch.h \
 	core/trace.h \
 	core/json.h \
-	core/ostream.h \
 	msg/codec.h \
 	msg/bulletin.h \
 	msg/context.h \
@@ -185,7 +184,6 @@ libdballe_la_SOURCES = \
 	core/match-wreport.cc \
 	core/varmatch.cc \
 	core/json.cc \
-	core/ostream.cc \
 	msg/bulletin.cc \
 	msg/vars.cc \
 	msg/context.cc \

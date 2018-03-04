@@ -5,10 +5,9 @@
 #include "dballe/core/csv.h"
 #include <wreport/codetables.h>
 #include <wreport/notes.h>
-#include "dballe/core/ostream.h"
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
 #include <sstream>
 #include <iomanip>
 #include <iostream>

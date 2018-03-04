@@ -85,6 +85,8 @@ struct Date
     static void julian_to_calendar(int jday, unsigned short& year, unsigned char& month, unsigned char& day);
 };
 
+std::ostream& operator<<(std::ostream& out, const Date& dt);
+
 
 /**
  * Time of the day.
@@ -147,6 +149,8 @@ struct Time
      */
     static void validate(int ho, int mi, int se);
 };
+
+std::ostream& operator<<(std::ostream& out, const Time& t);
 
 
 /**
@@ -262,6 +266,8 @@ struct Datetime
     static void normalise_h24(int& ye, int& mo, int& da, int& ho, int& mi, int& se);
 };
 
+std::ostream& operator<<(std::ostream& out, const Datetime& dt);
+
 
 /**
  * Range of datetimes.
@@ -321,6 +327,8 @@ struct DatetimeRange
     /// Check if the two ranges are completely disjoint
     bool is_disjoint(const DatetimeRange& dtr) const;
 };
+
+std::ostream& operator<<(std::ostream& out, const DatetimeRange& dtr);
 
 
 /**
@@ -460,6 +468,8 @@ struct LatRange
     bool contains(const LatRange& lr) const;
 };
 
+std::ostream& operator<<(std::ostream& out, const LatRange& lr);
+
 
 /**
  * Range of longitudes.
@@ -529,6 +539,8 @@ struct LonRange
     bool contains(const LonRange& lr) const;
 };
 
+std::ostream& operator<<(std::ostream& out, const LonRange& lr);
+
 
 /// Vertical level or layer
 struct Level
@@ -581,6 +593,8 @@ struct Level
     /// Print to an output stream
     int print(FILE* out, const char* undef="-", const char* end="\n") const;
 };
+
+std::ostream& operator<<(std::ostream& out, const Level& l);
 
 
 /**
@@ -635,7 +649,7 @@ struct Trange
     int print(FILE* out, const char* undef="-", const char* end="\n") const;
 };
 
-
+std::ostream& operator<<(std::ostream& out, const Trange& l);
 
 }
 

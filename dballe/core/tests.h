@@ -5,7 +5,6 @@
 #include <dballe/core/values.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/csv.h>
-#include <dballe/core/ostream.h>
 #include <cstdlib>
 #include <climits>
 #include <string>

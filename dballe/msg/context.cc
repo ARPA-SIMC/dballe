@@ -1,10 +1,9 @@
-#include <dballe/msg/context.h>
-#include <dballe/msg/vars.h>
+#include "dballe/msg/context.h"
+#include "dballe/msg/vars.h"
 #include <wreport/notes.h>
-#include <dballe/core/ostream.h>
 #include <sstream>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 using namespace wreport;
 using namespace std;

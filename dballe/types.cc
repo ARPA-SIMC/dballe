@@ -175,6 +175,11 @@ void Date::to_csv_iso8601(CSVWriter& out) const
     }
 }
 
+std::ostream& operator<<(std::ostream& out, const Date& dt)
+{
+    dt.to_stream_iso8601(out);
+    return out;
+}
 
 
 /*
@@ -265,6 +270,13 @@ void Time::to_csv_iso8601(CSVWriter& out) const
         out.add_value(buf);
     }
 }
+
+std::ostream& operator<<(std::ostream& out, const Time& dt)
+{
+    dt.to_stream_iso8601(out);
+    return out;
+}
+
 
 /*
  * Datetime
@@ -449,10 +461,16 @@ void Datetime::to_csv_iso8601(CSVWriter& out, char sep, const char* tz) const
     }
 }
 
+std::ostream& operator<<(std::ostream& out, const Datetime& dt)
+{
+    dt.to_stream_iso8601(out);
+    return out;
+}
+
+
 /*
  * DatetimeRange
  */
-
 
 DatetimeRange::DatetimeRange(
             int yemin, int momin, int damin, int homin, int mimin, int semin,
@@ -533,6 +551,21 @@ bool DatetimeRange::is_disjoint(const DatetimeRange& dtr) const
         return true;
 
     return false;
+}
+
+std::ostream& operator<<(std::ostream& out, const DatetimeRange& dtr)
+{
+    if (dtr.min == dtr.max)
+        dtr.min.to_stream_iso8601(out);
+    else
+    {
+        out << "(";
+        dtr.min.to_stream_iso8601(out);
+        out << " to ";
+        dtr.max.to_stream_iso8601(out);
+        out << ")";
+    }
+    return out;
 }
 
 
@@ -690,6 +723,20 @@ bool LatRange::contains(const LatRange& lr) const
     return imin <= lr.imin && lr.imax <= imax;
 }
 
+std::ostream& operator<<(std::ostream& out, const LatRange& lr)
+{
+    double dmin, dmax;
+    lr.get(dmin, dmax);
+    out << fixed
+        << "(" << setprecision(5) << dmin
+        << " to " << setprecision(5) << dmax
+        << ")"
+        << resetiosflags(ios_base::floatfield);
+    //    << defaultfloat;
+    return out;
+}
+
+
 /*
  * LonRange
  */
@@ -801,6 +848,19 @@ bool LonRange::contains(const LonRange& lr) const
             return lr.imin <= imin || lr.imax >= imax;
         }
     }
+}
+
+std::ostream& operator<<(std::ostream& out, const LonRange& lr)
+{
+    double dmin, dmax;
+    lr.get(dmin, dmax);
+    out << fixed
+        << "(" << setprecision(5) << dmin
+        << " to " << setprecision(5) << dmax
+        << ")"
+        << resetiosflags(ios_base::floatfield);
+    //    << defaultfloat;
+    return out;
 }
 
 
