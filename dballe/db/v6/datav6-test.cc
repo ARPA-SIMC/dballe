@@ -51,8 +51,6 @@ class Tests : public FixtureTestCase<Fixture>
             using namespace dballe::db::v6;
             auto& da = f.db->data();
 
-            auto t = f.db->transaction();
-
             Var var(varinfo(WR_VAR(0, 1, 2)));
 
             auto insert_sample1 = [&](bulk::InsertV6& vars, int value, DataV6::UpdateMode update) {
@@ -61,7 +59,7 @@ class Tests : public FixtureTestCase<Fixture>
                 vars.datetime = Datetime(2001, 2, 3, 4, 5, 6);
                 var.seti(value);
                 vars.add(&var, 1);
-                da.insert(*t, vars, update);
+                da.insert(*f.tr, vars, update);
             };
 
             // Insert a datum
@@ -83,7 +81,7 @@ class Tests : public FixtureTestCase<Fixture>
                 vars.datetime = Datetime(2002, 3, 4, 5, 6, 7);
                 Var var(varinfo(WR_VAR(0, 1, 2)), 234);
                 vars.add(&var, 2);
-                da.insert(*t, vars, DataV6::ERROR);
+                da.insert(*f.tr, vars, DataV6::ERROR);
                 wassert(actual(vars[0].id_data) == 2);
                 wassert(actual(vars[0].needs_insert()).isfalse());
                 wassert(actual(vars[0].inserted()).istrue());
@@ -151,7 +149,7 @@ class Tests : public FixtureTestCase<Fixture>
                 }
             }
 
-            t->commit();
+            f.tr->commit();
         });
     }
 };

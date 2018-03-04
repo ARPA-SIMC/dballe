@@ -86,8 +86,6 @@ class Tests : public FixtureTestCase<Fixture>
             using namespace dballe::db::v6;
             auto& at = f.db->attr();
 
-            auto t = f.db->transaction();
-
             Var var1(varinfo(WR_VAR(0, 12, 101)), 280.0);
             var1.seta(newvar(WR_VAR(0, 33, 7), 50));
 
@@ -98,7 +96,7 @@ class Tests : public FixtureTestCase<Fixture>
             {
                 bulk::InsertAttrsV6 attrs;
                 attrs.add_all(var1, 1);
-                at.insert(*t, attrs, AttrV6::ERROR);
+                at.insert(*f.tr, attrs, AttrV6::ERROR);
                 wassert(actual(attrs.size()) == 1);
                 wassert(actual(attrs[0].needs_insert()).isfalse());
                 wassert(actual(attrs[0].inserted()).istrue());
@@ -108,7 +106,7 @@ class Tests : public FixtureTestCase<Fixture>
             {
                 bulk::InsertAttrsV6 attrs;
                 attrs.add_all(var2, 2);
-                at.insert(*t, attrs, AttrV6::ERROR);
+                at.insert(*f.tr, attrs, AttrV6::ERROR);
                 wassert(actual(attrs.size()) == 1);
                 wassert(actual(attrs[0].needs_insert()).isfalse());
                 wassert(actual(attrs[0].inserted()).istrue());
@@ -120,7 +118,7 @@ class Tests : public FixtureTestCase<Fixture>
             {
                 bulk::InsertAttrsV6 attrs;
                 attrs.add_all(var1, 1);
-                at.insert(*t, attrs, AttrV6::IGNORE);
+                at.insert(*f.tr, attrs, AttrV6::IGNORE);
                 wassert(actual(attrs.size()) == 1);
                 wassert(actual(attrs[0].needs_insert()).isfalse());
                 wassert(actual(attrs[0].inserted()).isfalse());
@@ -132,7 +130,7 @@ class Tests : public FixtureTestCase<Fixture>
             {
                 bulk::InsertAttrsV6 attrs;
                 attrs.add_all(var2, 2);
-                at.insert(*t, attrs, AttrV6::UPDATE);
+                at.insert(*f.tr, attrs, AttrV6::UPDATE);
                 wassert(actual(attrs.size()) == 1);
                 wassert(actual(attrs[0].needs_insert()).isfalse());
                 wassert(actual(attrs[0].inserted()).isfalse());
@@ -158,7 +156,7 @@ class Tests : public FixtureTestCase<Fixture>
             {
                 bulk::InsertAttrsV6 attrs;
                 attrs.add_all(var2, 1);
-                at.insert(*t, attrs, AttrV6::UPDATE);
+                at.insert(*f.tr, attrs, AttrV6::UPDATE);
                 wassert(actual(attrs.size()) == 1);
                 wassert(actual(attrs[0].needs_insert()).isfalse());
                 wassert(actual(attrs[0].inserted()).isfalse());
@@ -168,7 +166,7 @@ class Tests : public FixtureTestCase<Fixture>
             {
                 bulk::InsertAttrsV6 attrs;
                 attrs.add_all(var1, 2);
-                at.insert(*t, attrs, AttrV6::UPDATE);
+                at.insert(*f.tr, attrs, AttrV6::UPDATE);
                 wassert(actual(attrs.size()) == 1);
                 wassert(actual(attrs[0].needs_insert()).isfalse());
                 wassert(actual(attrs[0].inserted()).isfalse());
