@@ -357,16 +357,16 @@ this->add_method("query_ordering", [](Fixture& f) {
         core::Record rec;
         rec.set_from_test_string(str);
         DataValues vals(rec);
-        f.tr->insert_data(vals, false, true);
+        wassert(f.tr->insert_data(vals, false, true));
         return vals;
     };
-    auto vals01 = insert("lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15");
-    auto vals02 = insert("lat=2, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15");
-    auto vals03 = insert("lat=1, lon=1, year=2001, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15");
-    auto vals04 = insert("lat=1, lon=1, year=2000, leveltype1=2, pindicator=1, rep_memo=a, B12101=280.15");
-    auto vals05 = insert("lat=1, lon=1, year=2000, leveltype1=1, pindicator=2, rep_memo=a, B12101=280.15");
-    auto vals06 = insert("lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=b, B12101=280.15");
-    auto vals07 = insert("lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12103=280.15");
+    auto vals01 = insert("lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=synop, B12101=280.15");
+    auto vals02 = insert("lat=2, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=synop, B12101=280.15");
+    auto vals03 = insert("lat=1, lon=1, year=2001, leveltype1=1, pindicator=1, rep_memo=synop, B12101=280.15");
+    auto vals04 = insert("lat=1, lon=1, year=2000, leveltype1=2, pindicator=1, rep_memo=synop, B12101=280.15");
+    auto vals05 = insert("lat=1, lon=1, year=2000, leveltype1=1, pindicator=2, rep_memo=synop, B12101=280.15");
+    auto vals06 = insert("lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=metar, B12101=280.15");
+    auto vals07 = insert("lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=synop, B12103=280.15");
 
     auto cur = f.tr->query_data(core::Query());
     wassert(actual(cur->remaining()) == 7);
