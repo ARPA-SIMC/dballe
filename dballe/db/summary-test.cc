@@ -24,7 +24,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
         this->add_method("summary", [](Fixture& f) {
             // Test building a summary and checking if it supports queries
             OldDballeTestDataSet test_data;
-            wassert(f.populate_database(test_data));
+            wassert(f.populate(test_data));
 
             core::Query query;
             query.query = "details";

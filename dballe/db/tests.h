@@ -96,7 +96,7 @@ struct EmptyTransactionFixture : public BaseDBFixture<DB>
 
     void test_setup();
     void test_teardown();
-    void populate_database(TestDataSet& data_set);
+    void populate(TestDataSet& data_set);
 };
 
 template<typename DB, typename TestData>

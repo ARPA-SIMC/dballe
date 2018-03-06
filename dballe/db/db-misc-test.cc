@@ -2,6 +2,7 @@
 #include "db/tests.h"
 #include "v6/db.h"
 #include "v7/db.h"
+#include "v7/transaction.h"
 #include <algorithm>
 #include <cstring>
 
@@ -23,10 +24,10 @@ struct NavileDataSet : public TestDataSet
     }
 };
 
-unsigned run_attr_query_data(DB& db, int data_id, Values& dest)
+unsigned run_attr_query_data(std::shared_ptr<db::Transaction> tr, int data_id, Values& dest)
 {
     unsigned count = 0;
-    db.attr_query_data(data_id, [&](unique_ptr<Var> var) { dest.set(move(var)); ++count; });
+    tr->attr_query_data(data_id, [&](unique_ptr<Var> var) { dest.set(move(var)); ++count; });
     return count;
 }
 
@@ -57,22 +58,21 @@ void Tests<DB>::register_tests()
 
 this->add_method("insert", [](Fixture& f) {
     // Test a simple insert round trip
-    auto& db = *f.db;
 
     // Insert some data
     NavileDataSet ds;
     ds.data["synop"].info = ds.stations["synop"].info;
     ds.data["synop"].info.datetime = Datetime(2013, 10, 16, 10);
     ds.data["synop"].values.set(WR_VAR(0, 12, 101), 16.5);
-    wassert(f.populate_database(ds));
+    wassert(f.populate(ds));
 
     Values attrs;
     attrs.set("B33007", 50);
-    wassert(db.attr_insert_data(ds.data["synop"].values[WR_VAR(0, 12, 101)].data_id, attrs));
+    wassert(f.tr->attr_insert_data(ds.data["synop"].values[WR_VAR(0, 12, 101)].data_id, attrs));
 
     // Query and verify the station data
     {
-        auto cur = db.query_stations(core::Query());
+        auto cur = f.tr->query_stations(core::Query());
         wassert(actual(cur->remaining()) == 1);
         cur->next();
         wassert(actual(cur).station_vars_match(ds.stations["synop"]));
@@ -80,7 +80,7 @@ this->add_method("insert", [](Fixture& f) {
 
     // Query and verify the measured data
     {
-        auto cur = db.query_data(core::Query());
+        auto cur = f.tr->query_data(core::Query());
         wassert(actual(cur->remaining()) == 1);
         cur->next();
         wassert(actual(cur).data_context_matches(ds.data["synop"]));
@@ -91,7 +91,7 @@ this->add_method("insert", [](Fixture& f) {
     {
         int count = 0;
         unique_ptr<Var> attr;
-        wassert(db.attr_query_data(ds.data["synop"].values[WR_VAR(0, 12, 101)].data_id, [&](std::unique_ptr<wreport::Var>&& var) {
+        wassert(f.tr->attr_query_data(ds.data["synop"].values[WR_VAR(0, 12, 101)].data_id, [&](std::unique_ptr<wreport::Var>&& var) {
             ++count;
             attr = move(var);
         }));
@@ -102,12 +102,11 @@ this->add_method("insert", [](Fixture& f) {
 });
 this->add_method("insert_perms", [](Fixture& f) {
     // Test insert
-    auto& db = *f.db;
     OldDballeTestDataSet oldf;
 
     // Check if adding a nonexisting station when not allowed causes an error
     try {
-        db.insert_data(oldf.data["synop"], false, false);
+        f.tr->insert_data(oldf.data["synop"], false, false);
         throw TestFailed("error_consistency should have been thrown");
     } catch (error_consistency& e) {
         wassert(actual(e.what()).contains("insert a station entry when it is forbidden"));
@@ -120,15 +119,15 @@ this->add_method("insert_perms", [](Fixture& f) {
     oldf.data["synop"].clear_ids();
 
     // Insert the record
-    wassert(db.insert_data(oldf.data["synop"], false, true));
+    wassert(f.tr->insert_data(oldf.data["synop"], false, true));
     oldf.data["synop"].clear_ids();
     // Check if duplicate updates are allowed by insert
-    wassert(db.insert_data(oldf.data["synop"], true, false));
+    wassert(f.tr->insert_data(oldf.data["synop"], true, false));
     oldf.data["synop"].clear_ids();
     // Check if overwrites are trapped by insert_new
     oldf.data["synop"].values.set("B01011", "DB-All.e?");
     try {
-        db.insert_data(oldf.data["synop"], false, false);
+        f.tr->insert_data(oldf.data["synop"], false, false);
         throw TestFailed("wreport::error should have been thrown");
     } catch (wreport::error& e) {
         wassert(actual(e.what()).matches("refusing to overwrite existing data|cannot replace an existing value|Duplicate entry"));
@@ -136,15 +135,14 @@ this->add_method("insert_perms", [](Fixture& f) {
 });
 this->add_method("insert_twice", [](Fixture& f) {
     // Test double station insert
-    auto& db = *f.db;
     OldDballeTestDataSet oldf;
 
     // Insert the record twice
-    wassert(db.insert_data(oldf.data["synop"], false, true));
+    wassert(f.tr->insert_data(oldf.data["synop"], false, true));
     // This should fail, refusing to replace station info
     oldf.data["synop"].values.set("B01011", "DB-All.e?");
     try {
-        db.insert_data(oldf.data["synop"], false, true);
+        f.tr->insert_data(oldf.data["synop"], false, true);
         throw TestFailed("wreport::error should have been thrown");
     } catch (wreport::error& e) {
         wassert(actual(e.what()).matches("refusing to overwrite existing data|cannot replace an existing value|Duplicate entry"));
@@ -152,14 +150,13 @@ this->add_method("insert_twice", [](Fixture& f) {
 });
 this->add_method("query_station", [](Fixture& f) {
     // Test station query
-    auto& db = *f.db;
     OldDballeTestDataSet oldf;
-    wassert(f.populate_database(oldf));
+    wassert(f.populate(oldf));
 
     // Iterate the station database
-    auto cur = db.query_stations(core::Query());
+    auto cur = f.tr->query_stations(core::Query());
 
-    switch (db.format())
+    switch (DB::format)
     {
         case V7:
         {
@@ -211,16 +208,15 @@ this->add_method("query_station", [](Fixture& f) {
 
             // There should be only one item
             break;
-        default: error_unimplemented::throwf("cannot run this test on a database of format %d", (int)db.format());
+        default: error_unimplemented::throwf("cannot run this test on a database of format %d", (int)DB::format);
     }
     wassert(actual(cur->remaining()) == 0);
     wassert(actual(cur->next()).isfalse());
 });
 this->add_method("query_best", [](Fixture& f) {
     // Test querybest
-    auto& db = *f.db;
     OldDballeTestDataSet oldf;
-    wassert(f.populate_database(oldf));
+    wassert(f.populate(oldf));
 
     //if (db.server_type == ORACLE || db.server_type == POSTGRES)
     //      return;
@@ -231,7 +227,7 @@ this->add_method("query_best", [](Fixture& f) {
     query.query = "best";
 
     // Make the query
-    auto cur = db.query_data(query);
+    auto cur = f.tr->query_data(query);
 
     wassert(actual(cur->remaining()) == 4);
 
@@ -259,30 +255,29 @@ this->add_method("query_best", [](Fixture& f) {
 });
 this->add_method("delete", [](Fixture& f) {
     // Test deletion
-    auto& db = *f.db;
     OldDballeTestDataSet oldf;
-    wassert(f.populate_database(oldf));
+    wassert(f.populate(oldf));
 
     // 4 items to begin with
     core::Query query;
-    auto cur = db.query_data(query);
+    auto cur = f.tr->query_data(query);
     wassert(actual(cur->remaining()) == 4);
     cur->discard_rest();
 
     query.clear();
     query.datetime = DatetimeRange(Datetime(1945, 4, 25, 8, 10), Datetime());
-    db.remove(query);
+    f.tr->remove(query);
 
     // 2 remaining after remove
     query.clear();
-    cur = db.query_data(query);
+    cur = f.tr->query_data(query);
     wassert(actual(cur->remaining()) == 2);
     cur->discard_rest();
 
     // Did it remove the right ones?
     query.clear();
     query.latrange = LatRange(10.0, LatRange::DMAX);
-    cur = db.query_data(query);
+    cur = f.tr->query_data(query);
     wassert(actual(cur->remaining()) == 2);
     wassert(actual(cur->next()).istrue());
     wassert(actual(cur).data_context_matches(oldf.data["synop"]));
@@ -316,30 +311,27 @@ this->add_method("delete", [](Fixture& f) {
 });
 this->add_method("delete_notfound", [](Fixture& f) {
     // Test deletion
-    auto& db = *f.db;
     OldDballeTestDataSet oldf;
-    wassert(f.populate_database(oldf));
+    wassert(f.populate(oldf));
 
     // 4 items to begin with
     core::Query query;
-    auto cur = db.query_data(query);
+    auto cur = f.tr->query_data(query);
     wassert(actual(cur->remaining()) == 4);
     cur->discard_rest();
 
     // Try to remove using a query that matches none
     query.attr_filter = "B33007<50";
-    db.remove(query);
+    f.tr->remove(query);
 
     // Verify that nothing has been deleted
     query.clear();
-    cur = db.query_data(query);
+    cur = f.tr->query_data(query);
     wassert(actual(cur->remaining()) == 4);
     cur->discard_rest();
 });
 this->add_method("query_datetime", [](Fixture& f) {
     // Test datetime queries
-    auto& db = *f.db;
-
     /* Prepare test data */
     DataValues base;
     base.info.coords = Coords(12.0, 48.0);
@@ -350,7 +342,7 @@ this->add_method("query_datetime", [](Fixture& f) {
 
 #define WANTRESULT(querystr, ab) do { \
     core::Record result; \
-    auto cur = db.query_data(*dballe::tests::query_from_string(querystr)); \
+    auto cur = f.tr->query_data(*dballe::tests::query_from_string(querystr)); \
     wassert(actual(cur->remaining()) == 1); \
     wassert(actual(cur->next()).istrue()); \
     cur->to_record(result); \
@@ -363,75 +355,74 @@ this->add_method("query_datetime", [](Fixture& f) {
     DataValues a, b;
 
     /* Year */
-    db.reset();
+    f.tr->remove_all();
     a = base;
     a.info.datetime = Datetime(2005);
-    db.insert_data(a, false, true);
+    f.tr->insert_data(a, false, true);
     b = base;
     b.info.datetime = Datetime(2006);
-    db.insert_data(b, false, false);
+    f.tr->insert_data(b, false, false);
     WANTRESULT("yearmin=2006", b);
     WANTRESULT("yearmax=2005", a);
     WANTRESULT("year=2006", b);
 
     /* Month */
-    db.reset();
+    f.tr->remove_all();
     a = base;
     a.info.datetime = Datetime(2006, 4);
-    db.insert_data(a, false, true);
+    f.tr->insert_data(a, false, true);
     b = base;
     b.info.datetime = Datetime(2006, 5);
-    db.insert_data(b, false, false);
+    f.tr->insert_data(b, false, false);
     WANTRESULT("year=2006, monthmin=5", b);
     WANTRESULT("year=2006, monthmax=4", a);
     WANTRESULT("year=2006, month=5", b);
 
     /* Day */
-    db.reset();
+    f.tr->remove_all();
     a = base;
     a.info.datetime = Datetime(2006, 5, 2);
-    db.insert_data(a, false, true);
+    f.tr->insert_data(a, false, true);
     b = base;
     b.info.datetime = Datetime(2006, 5, 3);
-    db.insert_data(b, false, false);
+    f.tr->insert_data(b, false, false);
     WANTRESULT("year=2006, month=5, daymin=3", b);
     WANTRESULT("year=2006, month=5, daymax=2", a);
     WANTRESULT("year=2006, month=5, day=3", b);
 
     /* Hour */
-    db.reset();
+    f.tr->remove_all();
     a = base;
     a.info.datetime = Datetime(2006, 5, 3, 12);
-    db.insert_data(a, false, true);
+    f.tr->insert_data(a, false, true);
     b = base;
     b.info.datetime = Datetime(2006, 5, 3, 13);
-    db.insert_data(b, false, false);
+    f.tr->insert_data(b, false, false);
     WANTRESULT("year=2006, month=5, day=3, hourmin=13", b);
     WANTRESULT("year=2006, month=5, day=3, hourmax=12", a);
     WANTRESULT("year=2006, month=5, day=3, hour=13", b);
 
     /* Minute */
-    db.reset();
+    f.tr->remove_all();
     a = base;
     a.info.datetime = Datetime(2006, 5, 3, 12, 29);
-    db.insert_data(a, false, true);
+    f.tr->insert_data(a, false, true);
     b = base;
     b.info.datetime = Datetime(2006, 5, 3, 12, 30);
-    db.insert_data(b, false, false);
+    f.tr->insert_data(b, false, false);
     WANTRESULT("year=2006, month=5, day=3, hour=12, minumin=30", b);
     WANTRESULT("year=2006, month=5, day=3, hour=12, minumax=29", a);
     WANTRESULT("year=2006, month=5, day=3, hour=12, min=30", b);
 });
 this->add_method("attrs", [](Fixture& f) {
     // Test QC
-    auto& db = *f.db;
     OldDballeTestDataSet oldf;
-    wassert(f.populate_database(oldf));
+    wassert(f.populate(oldf));
 
     core::Query query;
     core::Record result;
     query.latrange.set(1000000, LatRange::IMAX);
-    auto cur = db.query_data(query);
+    auto cur = f.tr->query_data(query);
 
     // Move the cursor to B01011
     int context_id = 0;
@@ -454,11 +445,11 @@ this->add_method("attrs", [](Fixture& f) {
     qc.set("B33002", 2);
     qc.set("B33003", 5);
     qc.set("B33005", 33);
-    db.attr_insert_data(context_id, qc);
+    f.tr->attr_insert_data(context_id, qc);
 
     // Query back the data
     qc.clear();
-    wassert(actual(run_attr_query_data(db, context_id, qc)) == 3);
+    wassert(actual(run_attr_query_data(f.tr, context_id, qc)) == 3);
 
     const auto* attr = qc.get("B33002");
     wassert(actual(attr).istrue());
@@ -476,17 +467,17 @@ this->add_method("attrs", [](Fixture& f) {
     vector<Varcode> codes;
     codes.push_back(WR_VAR(0, 33, 2));
     codes.push_back(WR_VAR(0, 33, 5));
-    db.attr_remove_data(context_id, codes);
+    f.tr->attr_remove_data(context_id, codes);
 
     // Deleting non-existing items should not fail.  Also try creating a
     // query with just one item
     codes.clear();
     codes.push_back(WR_VAR(0, 33, 2));
-    db.attr_remove_data(context_id, codes);
+    f.tr->attr_remove_data(context_id, codes);
 
     /* Query back the data */
     qc.clear();
-    wassert(actual(run_attr_query_data(db, context_id, qc)) == 1);
+    wassert(actual(run_attr_query_data(f.tr, context_id, qc)) == 1);
 
     wassert(actual(qc.get("B33002")).isfalse());
     wassert(actual(qc.get("B33005")).isfalse());
@@ -497,11 +488,10 @@ this->add_method("attrs", [](Fixture& f) {
 });
 this->add_method("query_station", [](Fixture& f) {
     // Test station queries
-    auto& db = *f.db;
     OldDballeTestDataSet oldf;
-    wassert(f.populate_database(oldf));
+    wassert(f.populate(oldf));
 
-    auto cur = db.query_stations(*query_from_string("rep_memo=synop"));
+    auto cur = f.tr->query_stations(*query_from_string("rep_memo=synop"));
     wassert(actual(cur->remaining()) == 1);
 
     wassert(actual(cur->next()).istrue());
@@ -509,11 +499,10 @@ this->add_method("query_station", [](Fixture& f) {
 });
 this->add_method("attrs1", [](Fixture& f) {
     // Test attributes
-    auto& db = *f.db;
     OldDballeTestDataSet oldf;
 
     // Insert a data record
-    db.insert_data(oldf.data["synop"], true, true);
+    f.tr->insert_data(oldf.data["synop"], true, true);
 
     Values qc;
     qc.set("B01007",  1);
@@ -526,17 +515,17 @@ this->add_method("attrs1", [](Fixture& f) {
     qc.set("B05021",  8);
     qc.set("B07025",  9);
     qc.set("B05022", 10);
-    db.attr_insert_data(oldf.data["synop"].values[WR_VAR(0, 1, 11)].data_id, qc);
+    f.tr->attr_insert_data(oldf.data["synop"].values[WR_VAR(0, 1, 11)].data_id, qc);
 
     // Query back the B01011 variable to read the attr reference id
-    auto cur = db.query_data(*query_from_string("var=B01011"));
+    auto cur = f.tr->query_data(*query_from_string("var=B01011"));
     wassert(actual(cur->remaining()) == 1);
     cur->next();
     int attr_id = cur->attr_reference_id();
     cur->discard_rest();
 
     qc.clear();
-    wassert(actual(run_attr_query_data(db, attr_id, qc)) == 10);
+    wassert(actual(run_attr_query_data(f.tr, attr_id, qc)) == 10);
 
     // Check that all the attributes come out
     wassert(actual(qc.size()) == 10);
@@ -553,23 +542,21 @@ this->add_method("attrs1", [](Fixture& f) {
 });
 this->add_method("longitude_wrap", [](Fixture& f) {
     // Test longitude wrapping around
-    auto& db = *f.db;
     OldDballeTestDataSet oldf;
 
     // Insert a data record
-    db.insert_data(oldf.data["synop"], true, true);
+    f.tr->insert_data(oldf.data["synop"], true, true);
 
-    auto cur = db.query_data(*query_from_string("latmin=10.0, latmax=15.0, lonmin=70.0, lonmax=-160.0"));
+    auto cur = f.tr->query_data(*query_from_string("latmin=10.0, latmax=15.0, lonmin=70.0, lonmax=-160.0"));
     wassert(actual(cur->remaining()) == 2);
     cur->discard_rest();
 });
 this->add_method("query_ana_filter", [](Fixture& f) {
     // Test numeric comparisons in ana_filter
-    auto& db = *f.db;
     OldDballeTestDataSet oldf;
-    wassert(f.populate_database(oldf));
+    wassert(f.populate(oldf));
 
-    auto cur = db.query_data(*query_from_string("rep_memo=metar, var=B01011"));
+    auto cur = f.tr->query_data(*query_from_string("rep_memo=metar, var=B01011"));
     wassert(actual(cur->remaining()) == 1);
 
     // Move the cursor to B01011
@@ -581,60 +568,57 @@ this->add_method("query_ana_filter", [](Fixture& f) {
     Values qc;
     qc.set("B01001", 50);
     qc.set("B01008", "50");
-    db.attr_insert_data(context_id, qc);
+    f.tr->attr_insert_data(context_id, qc);
 
     // Try queries filtered by numeric attributes
-    cur = db.query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01001=50"));
+    cur = f.tr->query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01001=50"));
     wassert(actual(cur->remaining()) == 1);
     cur->discard_rest();
 
-    cur = db.query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01001<=50"));
+    cur = f.tr->query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01001<=50"));
     wassert(actual(cur->remaining()) == 1);
     cur->discard_rest();
 
-    cur = db.query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01001<51"));
+    cur = f.tr->query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01001<51"));
     wassert(actual(cur->remaining()) == 1);
     cur->discard_rest();
 
-    cur = db.query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01001<8"));
+    cur = f.tr->query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01001<8"));
     wassert(actual(cur->remaining()) == 0);
     cur->discard_rest();
 
     // Try queries filtered by string attributes
-    cur = db.query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01008=50"));
+    cur = f.tr->query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01008=50"));
     wassert(actual(cur->remaining()) == 1);
     cur->discard_rest();
 
-    cur = db.query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01008<=50"));
+    cur = f.tr->query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01008<=50"));
     wassert(actual(cur->remaining()) == 1);
     cur->discard_rest();
 
-    cur = db.query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01008<8"));
+    cur = f.tr->query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01008<8"));
     wassert(actual(cur->remaining()) == 1);
     cur->discard_rest();
 
-    cur = db.query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01008<100"));
+    cur = f.tr->query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01008<100"));
     wassert(actual(cur->remaining()) == 0);
     cur->discard_rest();
 });
 this->add_method("query_station_best", [](Fixture& f) {
 #warning BEST queries of station values are not yet implemented for memdb
-    auto& db = *f.db;
-
     // Reproduce a querybest scenario which produced invalid SQL
     OldDballeTestDataSet oldf;
-    wassert(f.populate_database(oldf));
+    wassert(f.populate(oldf));
 
     core::Query q;
     q.datetime = DatetimeRange(Datetime(1000, 1, 1, 0, 0, 0), Datetime(1000, 1, 1, 0, 0, 0));
     q.query = "best";
-    auto cur = db.query_data(q);
+    auto cur = f.tr->query_data(q);
     while (cur->next())
     {
     }
 });
 this->add_method("query_best_bug1", [](Fixture& f) {
-    auto& db = *f.db;
     // Reproduce a querybest scenario which produced always the same data record
 
     // Import lots
@@ -642,11 +626,11 @@ this->add_method("query_best_bug1", [](Fixture& f) {
     for (int i = 0; files[i] != NULL; i++)
     {
         Messages inmsgs = read_msgs(files[i], File::BUFR);
-        wassert(db.import_msg(inmsgs[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE));
+        wassert(f.tr->import_msg(inmsgs[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE));
     }
 
     // Query all with best
-    auto cur = db.query_data(*query_from_string("var=B12101, query=best"));
+    auto cur = f.tr->query_data(*query_from_string("var=B12101, query=best"));
     unsigned orig_count = cur->remaining();
     unsigned count = 0;
     int id_data = 0;
@@ -666,13 +650,12 @@ this->add_method("query_best_bug1", [](Fixture& f) {
     wassert(actual(count) == orig_count);
 });
 this->add_method("query_invalid_sql", [](Fixture& f) {
-    auto& db = *f.db;
     // Reproduce a query that generated invalid SQL on V6
     OldDballeTestDataSet oldf;
-    wassert(f.populate_database(oldf));
+    wassert(f.populate(oldf));
 
     // All DB
-    db.query_stations(*query_from_string("leveltype1=103, l1=2000"));
+    f.tr->query_stations(*query_from_string("leveltype1=103, l1=2000"));
 });
 this->add_method("fd_leaks", [](Fixture& f) {
     // Test connect leaks
@@ -689,17 +672,21 @@ this->add_method("fd_leaks", [](Fixture& f) {
         vals.clear_ids();
         wassert(db->insert_station_data(vals, true, true));
     }
+    // Because we create new DBs and inserted data, writes happened outside the
+    // transaction and we need to remove them manually, as they will not be
+    // undone by rollback
+    f.tr->rollback();
+    f.db->remove_all();
 });
 this->add_method("update", [](Fixture& f) {
-    auto& db = *f.db;
     // Test value update
     OldDballeTestDataSet oldf;
 
     DataValues dataset = oldf.data["synop"];
-    db.insert_data(dataset, true, true);
+    f.tr->insert_data(dataset, true, true);
     Values attrs;
     attrs.set("B33007", 50);
-    db.attr_insert_data(dataset.values["B01012"].data_id, attrs);
+    f.tr->attr_insert_data(dataset.values["B01012"].data_id, attrs);
 
     core::Query q;
     q.latrange.set(12.34560, 12.34560);
@@ -711,7 +698,7 @@ this->add_method("update", [](Fixture& f) {
     q.varcodes.insert(WR_VAR(0, 1, 12));
 
     // Query the initial value
-    auto cur = db.query_data(q);
+    auto cur = f.tr->query_data(q);
     wassert(actual(cur->remaining()) == 1);
     cur->next();
     int ana_id = cur->get_station_id();
@@ -720,7 +707,7 @@ this->add_method("update", [](Fixture& f) {
 
     // Query the attributes and check that they are there
     Values qattrs;
-    wassert(actual(run_attr_query_data(db, cur->attr_reference_id(), qattrs)) == 1);
+    wassert(actual(run_attr_query_data(f.tr, cur->attr_reference_id(), qattrs)) == 1);
     wassert(actual(qattrs["B33007"].var->enq(MISSING_INT)) == 50);
 
     // Update it
@@ -731,10 +718,10 @@ this->add_method("update", [](Fixture& f) {
     update.info.level = q.level;
     update.info.trange = q.trange;
     update.values.set(var.code(), 200);
-    wassert(db.insert_data(update, true, false));
+    wassert(f.tr->insert_data(update, true, false));
 
     // Query again
-    cur = db.query_data(q);
+    cur = f.tr->query_data(q);
     wassert(actual(cur->remaining()) == 1);
     cur->next();
     var = cur->get_var();
@@ -744,34 +731,33 @@ this->add_method("update", [](Fixture& f) {
 
     // V7 databases implement the semantics in #44 where updating a
     // value removes the attributes
-    switch (db.format())
+    switch (DB::format)
     {
         case V6:
-            wassert(actual(run_attr_query_data(db, cur->attr_reference_id(), qattrs)) == 1);
+            wassert(actual(run_attr_query_data(f.tr, cur->attr_reference_id(), qattrs)) == 1);
             wassert(actual(qattrs["B33007"].var->enq(MISSING_INT)) == 50);
             break;
         case V7:
-            wassert(actual(run_attr_query_data(db, cur->attr_reference_id(), qattrs)) == 0);
+            wassert(actual(run_attr_query_data(f.tr, cur->attr_reference_id(), qattrs)) == 0);
             break;
         default:
-            throw TestFailed("Database format " + to_string((int)db.format()) + " not supported");
+            throw TestFailed("Database format " + to_string((int)DB::format) + " not supported");
     }
 });
 this->add_method("query_stepbystep", [](Fixture& f) {
-    auto& db = *f.db;
     // Try a query checking all the steps
     OldDballeTestDataSet oldf;
-    wassert(f.populate_database(oldf));
+    wassert(f.populate(oldf));
 
     // Make the query
-    auto cur = db.query_data(*query_from_string("latmin=10.0"));
+    auto cur = f.tr->query_data(*query_from_string("latmin=10.0"));
     wassert(actual(cur->remaining()) == 4);
 
     wassert(actual(cur->next()).istrue());
     // remaining() should decrement
     wassert(actual(cur->remaining()) == 3);
     // results should match what was inserted
-    if (db.format() == V6)
+    if (DB::format == V6)
         wassert(actual(cur).data_matches(oldf.data["synop"]));
     else
         wassert(actual(cur).data_matches(oldf.data["metar"]));
@@ -781,7 +767,7 @@ this->add_method("query_stepbystep", [](Fixture& f) {
 
     wassert(actual(cur->next()).istrue());
     wassert(actual(cur->remaining()) == 2);
-    if (db.format() == V6)
+    if (DB::format == V6)
         wassert(actual(cur).data_matches(oldf.data["synop"]));
     else
         wassert(actual(cur).data_matches(oldf.data["metar"]));
@@ -793,14 +779,14 @@ this->add_method("query_stepbystep", [](Fixture& f) {
 
     wassert(actual(cur->next()).istrue());
     wassert(actual(cur->remaining()) == 1);
-    if (db.format() == V6)
+    if (DB::format == V6)
         wassert(actual(cur).data_matches(oldf.data["metar"]));
     else
         wassert(actual(cur).data_matches(oldf.data["synop"]));
 
     wassert(actual(cur->next()).istrue());
     wassert(actual(cur->remaining()) == 0);
-    if (db.format() == V6)
+    if (DB::format == V6)
         wassert(actual(cur).data_matches(oldf.data["metar"]));
     else
         wassert(actual(cur).data_matches(oldf.data["synop"]));
@@ -811,34 +797,30 @@ this->add_method("query_stepbystep", [](Fixture& f) {
 });
 this->add_method("insert_stationinfo_twice", [](Fixture& f) {
     // Test double insert of station info
-    auto& db = *f.db;
-
     NavileDataSet ds;
 
     //wassert(actual(f.db).empty());
-    db.insert_station_data(ds.stations["synop"], true, true);
-    db.insert_station_data(ds.stations["synop"], true, true);
+    f.tr->insert_station_data(ds.stations["synop"], true, true);
+    f.tr->insert_station_data(ds.stations["synop"], true, true);
 
     // Query station data and ensure there is only one info (height)
     core::Query query;
-    auto cur = db.query_station_data(query);
+    auto cur = f.tr->query_station_data(query);
     wassert(actual(cur->remaining()) == 1);
     cur->next();
     wassert(actual(cur).station_vars_match(ds.stations["synop"]));
 });
 this->add_method("insert_stationinfo_twice1", [](Fixture& f) {
     // Test double insert of station info
-    auto& db = *f.db;
-
     NavileDataSet ds;
     ds.stations["metar"] = ds.stations["synop"];
     ds.stations["metar"].info.report = "metar";
-    db.insert_station_data(ds.stations["synop"], true, true);
-    db.insert_station_data(ds.stations["metar"], true, true);
+    f.tr->insert_station_data(ds.stations["synop"], true, true);
+    f.tr->insert_station_data(ds.stations["metar"], true, true);
 
     // Query station data and ensure there is only one info (height)
     core::Query query;
-    auto cur = db.query_station_data(query);
+    auto cur = f.tr->query_station_data(query);
     wassert(actual(cur->remaining()) == 2);
 
     // Ensure that the network info is preserved
@@ -853,7 +835,6 @@ this->add_method("insert_stationinfo_twice1", [](Fixture& f) {
 });
 this->add_method("insert_undefined_level2", [](Fixture& f) {
     // Test handling of values with undefined leveltype2 and l2
-    auto& db = *f.db;
     OldDballeTestDataSet oldf;
 
     // Insert with undef leveltype2 and l2
@@ -862,10 +843,10 @@ this->add_method("insert_undefined_level2", [](Fixture& f) {
     dataset.info.level = Level(44, 55);
     dataset.info.trange = Trange(20);
     dataset.values.set("B01012", 300);
-    db.insert_data(dataset, true, true);
+    f.tr->insert_data(dataset, true, true);
 
     // Query it back
-    auto cur = db.query_data(*query_from_string("leveltype1=44, l1=55"));
+    auto cur = f.tr->query_data(*query_from_string("leveltype1=44, l1=55"));
     wassert(actual(cur->remaining()) == 1);
 
     wassert(actual(cur->next()).istrue());
@@ -878,31 +859,27 @@ this->add_method("insert_undefined_level2", [](Fixture& f) {
 });
 this->add_method("query_undefined_level2", [](Fixture& f) {
     // Test handling of values with undefined leveltype2 and l2
-    auto& db = *f.db;
     OldDballeTestDataSet oldf;
-    wassert(f.populate_database(oldf));
+    wassert(f.populate(oldf));
 
     // Query with undef leveltype2 and l2
-    auto cur = db.query_data(*query_from_string("leveltype1=10, l1=11"));
+    auto cur = f.tr->query_data(*query_from_string("leveltype1=10, l1=11"));
     wassert(actual(cur->remaining()) == 4);
     cur->discard_rest();
 });
 this->add_method("query_bad_attrfilter", [](Fixture& f) {
     // Query with an incorrect attr_filter
-    auto& db = *f.db;
     OldDballeTestDataSet oldf;
-    wassert(f.populate_database(oldf));
+    wassert(f.populate(oldf));
 
     try {
-        db.query_data(*query_from_string("attr_filter=B12001"));
+        f.tr->query_data(*query_from_string("attr_filter=B12001"));
     } catch (error_consistency& e) {
         wassert(actual(e.what()).matches("B12001 is not a valid filter|cannot find any operator in filter 'B12001'"));
     }
 });
 this->add_method("query_best_priomax", [](Fixture& f) {
     // Test querying priomax together with query=best
-    auto& db = *f.db;
-
     // Prepare the common parts of some data
     DataValues insert;
     insert.info.coords = Coords(1.0, 1.0);
@@ -929,7 +906,7 @@ this->add_method("query_best_priomax", [](Fixture& f) {
         insert.clear_ids();
         insert.info.report = *i;
         insert.values.set("B12101", (int)(i - rep_memos));
-        db.insert_data(insert, false, true);
+        f.tr->insert_data(insert, false, true);
     }
 
     // Query with querybest only
@@ -938,7 +915,7 @@ this->add_method("query_best_priomax", [](Fixture& f) {
         query.query = "best";
         query.datetime = DatetimeRange(Datetime(2009, 11, 11, 0, 0, 0), Datetime(2009, 11, 11, 0, 0, 0));
         query.varcodes.insert(WR_VAR(0, 12, 101));
-        auto cur = db.query_data(query);
+        auto cur = f.tr->query_data(query);
 
         wassert(actual(cur->remaining()) == 1);
 
@@ -959,7 +936,7 @@ this->add_method("query_best_priomax", [](Fixture& f) {
         query.query = "best";
         query.datetime = DatetimeRange(Datetime(2009, 11, 11, 0, 0, 0), Datetime(2009, 11, 11, 0, 0, 0));
         query.varcodes.insert(WR_VAR(0, 12, 101));
-        auto cur = db.query_data(query);
+        auto cur = f.tr->query_data(query);
         wassert(actual(cur->remaining()) == 1);
 
         wassert(actual(cur->next()).istrue());
@@ -974,12 +951,11 @@ this->add_method("query_best_priomax", [](Fixture& f) {
 });
 this->add_method("query_repmemo_in_results", [](Fixture& f) {
     // Ensure that rep_memo is set in the results
-    auto& db = *f.db;
     OldDballeTestDataSet oldf;
-    wassert(f.populate_database(oldf));
+    wassert(f.populate(oldf));
 
     core::Record res;
-    auto cur = db.query_data(core::Query());
+    auto cur = f.tr->query_data(core::Query());
     while (cur->next())
     {
         cur->to_record(res);

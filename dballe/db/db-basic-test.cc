@@ -2,6 +2,7 @@
 #include "db/tests.h"
 #include "v6/db.h"
 #include "v7/db.h"
+#include "v7/transaction.h"
 #include <cstring>
 
 using namespace dballe;
@@ -84,7 +85,7 @@ this->add_method("vacuum", [](Fixture& f) {
     data.data["s2"].values.set("B01011", "Data 2");
 
     // Insert some data
-    wassert(f.populate_database(data));
+    wassert(f.populate(data));
 
     // Invoke vacuum
     auto& db = *f.db;
@@ -139,32 +140,29 @@ this->add_method("vacuum", [](Fixture& f) {
 });
 this->add_method("simple", [](Fixture& f) {
     // Test remove_all
-    auto& db = *f.db;
-    db.remove_all();
-    std::unique_ptr<db::Cursor> cur = db.query_data(core::Query());
+    f.tr->remove_all();
+    std::unique_ptr<db::Cursor> cur = f.tr->query_data(core::Query());
     wassert(actual(cur->remaining()) == 0);
 
     // Check that it is idempotent
-    db.remove_all();
-    cur = db.query_data(core::Query());
+    f.tr->remove_all();
+    cur = f.tr->query_data(core::Query());
     wassert(actual(cur->remaining()) == 0);
 
     // Insert something
     OldDballeTestDataSet data_set;
-    wassert(f.populate_database(data_set));
+    wassert(f.populate(data_set));
 
-    cur = db.query_data(core::Query());
+    cur = f.tr->query_data(core::Query());
     wassert(actual(cur->remaining()) == 4);
 
-    db.remove_all();
+    f.tr->remove_all();
 
-    cur = db.query_data(core::Query());
+    cur = f.tr->query_data(core::Query());
     wassert(actual(cur->remaining()) == 0);
 });
 this->add_method("stationdata", [](Fixture& f) {
     // Test adding station data for different networks
-    auto& db = *f.db;
-    db.reset();
 
     // Insert two values in two networks
     DataValues vals;
@@ -174,30 +172,30 @@ this->add_method("stationdata", [](Fixture& f) {
     vals.info.trange = Trange::instant();
     vals.info.datetime = Datetime(2014, 1, 1, 0, 0, 0);
     vals.values.set("B12101", 273.15);
-    db.insert_data(vals, true, true);
+    f.tr->insert_data(vals, true, true);
     vals.clear_ids();
     vals.info.report = "temp";
     vals.values.set("B12101", 274.15);
-    db.insert_data(vals, true, true);
+    f.tr->insert_data(vals, true, true);
 
     // Insert station names in both networks
     StationValues svals_camse;
     svals_camse.info.coords = vals.info.coords;
     svals_camse.info.report = "synop";
     svals_camse.values.set("B01019", "Camse");
-    db.insert_station_data(svals_camse, true, true);
+    f.tr->insert_station_data(svals_camse, true, true);
     StationValues svals_esmac;
     svals_esmac.info.coords = vals.info.coords;
     svals_esmac.info.report = "temp";
     svals_esmac.values.set("B01019", "Esmac");
-    db.insert_station_data(svals_esmac, true, true);
+    f.tr->insert_station_data(svals_esmac, true, true);
 
     // Query back all the data
-    auto cur = db.query_stations(core::Query());
+    auto cur = f.tr->query_stations(core::Query());
 
     // Check results
     core::Record result;
-    switch (db.format())
+    switch (DB::format)
     {
         case V7:
         {
@@ -242,7 +240,7 @@ this->add_method("stationdata", [](Fixture& f) {
     }
 
     Messages msgs;
-    db.export_msgs(core::Query(), [&](unique_ptr<Message>&& msg) { msgs.append(move(msg)); return true; });
+    f.tr->export_msgs(core::Query(), [&](unique_ptr<Message>&& msg) { msgs.append(move(msg)); return true; });
     wassert(actual(msgs.size()) == 2);
 
     //msgs.print(stderr);
@@ -264,26 +262,25 @@ this->add_method("query_ident", [](Fixture& f) {
     vals.info.trange = Trange::instant();
     vals.info.datetime = Datetime(2015, 4, 25, 12, 30, 45);
     vals.values.set("B12101", 295.1);
-    f.db->insert_data(vals, true, true);
+    f.tr->insert_data(vals, true, true);
 
-    wassert(actual(f.db).try_station_query("ident=foo", 1));
-    wassert(actual(f.db).try_station_query("ident=bar", 0));
-    wassert(actual(f.db).try_station_query("mobile=1", 1));
-    wassert(actual(f.db).try_station_query("mobile=0", 0));
-    wassert(actual(f.db).try_data_query("ident=foo", 1));
-    wassert(actual(f.db).try_data_query("ident=bar", 0));
-    wassert(actual(f.db).try_data_query("mobile=1", 1));
-    wassert(actual(f.db).try_data_query("mobile=0", 0));
+    wassert(actual(f.tr).try_station_query("ident=foo", 1));
+    wassert(actual(f.tr).try_station_query("ident=bar", 0));
+    wassert(actual(f.tr).try_station_query("mobile=1", 1));
+    wassert(actual(f.tr).try_station_query("mobile=0", 0));
+    wassert(actual(f.tr).try_data_query("ident=foo", 1));
+    wassert(actual(f.tr).try_data_query("ident=bar", 0));
+    wassert(actual(f.tr).try_data_query("mobile=1", 1));
+    wassert(actual(f.tr).try_data_query("mobile=0", 0));
 });
 this->add_method("missing_repmemo", [](Fixture& f) {
     // Test querying with a missing rep_memo
-    auto& db = *f.db;
     core::Query query;
     query.rep_memo = "nonexisting";
-    wassert(actual(db.query_stations(query)->remaining()) == 0);
-    wassert(actual(db.query_station_data(query)->remaining()) == 0);
-    wassert(actual(db.query_data(query)->remaining()) == 0);
-    wassert(actual(db.query_summary(query)->remaining()) == 0);
+    wassert(actual(f.tr->query_stations(query)->remaining()) == 0);
+    wassert(actual(f.tr->query_station_data(query)->remaining()) == 0);
+    wassert(actual(f.tr->query_data(query)->remaining()) == 0);
+    wassert(actual(f.tr->query_summary(query)->remaining()) == 0);
 });
 
 }

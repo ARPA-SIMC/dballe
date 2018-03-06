@@ -287,7 +287,7 @@ void EmptyFixtureTests<DB>::register_tests()
 this->add_method("datetime1", [](Fixture& f) {
     // Check datetime queries, with data that only differs by its hour
     DateHourDataSet test_data;
-    wassert(f.populate_database(test_data));
+    wassert(f.populate(test_data));
 
     // Valid hours: 11 and 12
 
@@ -320,7 +320,7 @@ this->add_method("datetime1", [](Fixture& f) {
 this->add_method("datetime2", [](Fixture& f) {
     // Check datetime queries, with data that only differs by its day
     DateDayDataSet test_data;
-    wassert(f.populate_database(test_data));
+    wassert(f.populate(test_data));
 
     // Valid days: 23 and 24
 

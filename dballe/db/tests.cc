@@ -260,7 +260,7 @@ void BaseDBFixture<DB>::test_setup()
 }
 
 template<typename DB>
-void EmptyTransactionFixture<DB>::populate_database(TestDataSet& data_set)
+void EmptyTransactionFixture<DB>::populate(TestDataSet& data_set)
 {
     wassert(data_set.populate_transaction(*tr));
 }

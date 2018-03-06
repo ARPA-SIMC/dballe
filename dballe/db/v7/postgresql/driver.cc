@@ -76,18 +76,14 @@ void Driver::run_station_query(const v7::StationQueryBuilder& qb, std::function<
     conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
         for (unsigned row = 0; row < res.rowcount(); ++row)
         {
-            int output_seq = 0;
-
-            station.ana_id = res.get_int4(row, output_seq++);
+            station.ana_id = res.get_int4(row, 0);
             station.report = qb.tr->db->repinfo().get_rep_memo(res.get_int4(row, 1));
-            station.coords.lat = res.get_int4(row, output_seq++);
-            station.coords.lon = res.get_int4(row, output_seq++);
-
-            if (res.is_null(row, output_seq))
+            station.coords.lat = res.get_int4(row, 2);
+            station.coords.lon = res.get_int4(row, 3);
+            if (res.is_null(row, 4))
                 station.ident.clear();
             else
-                station.ident = res.get_string(row, output_seq);
-
+                station.ident = res.get_string(row, 4);
             dest(station);
         }
     });

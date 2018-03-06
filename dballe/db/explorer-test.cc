@@ -40,7 +40,7 @@ void Tests<DB>::register_tests()
 this->add_method("filter_rep_memo", [](Fixture& f) {
     // Test building a summary and checking if it supports queries
     OldDballeTestDataSet test_data;
-    wassert(f.populate_database(test_data));
+    wassert(f.populate(test_data));
 
     Explorer explorer(*f.db);
     explorer.revalidate();
