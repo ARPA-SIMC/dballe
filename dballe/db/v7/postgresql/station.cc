@@ -48,7 +48,7 @@ bool PostgreSQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station&
 {
     using namespace dballe::sql::postgresql;
 
-    int rep = tr.db->repinfo().get_id(st.report.c_str());
+    int rep = tr.db->repinfo().obtain_id(st.report.c_str());
 
     Result res;
     if (st.ident.get())

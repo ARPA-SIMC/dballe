@@ -32,7 +32,7 @@ MySQLStation::~MySQLStation()
 
 bool MySQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st, int* id)
 {
-    int rep = tr.db->repinfo().get_id(st.report.c_str());
+    int rep = tr.db->repinfo().obtain_id(st.report.c_str());
 
     Querybuf qb;
     if (st.ident.get())

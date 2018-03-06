@@ -51,7 +51,7 @@ SQLiteStation::~SQLiteStation()
 bool SQLiteStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st, int* id)
 {
     SQLiteStatement* s;
-    int rep = tr.db->repinfo().get_id(st.report.c_str());
+    int rep = tr.db->repinfo().obtain_id(st.report.c_str());
     if (st.ident.get())
     {
         smstm->bind_val(1, rep);

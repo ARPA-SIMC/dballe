@@ -82,7 +82,6 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
         });
         this->add_method("bufr", [](Fixture& f) {
             // Test import/export with all BUFR samples
-            auto& db = f.db;
             core::Query query;
             const char** files = dballe::tests::bufr_files;
             for (int i = 0; files[i] != NULL; i++)
@@ -92,8 +91,8 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
                     Msg& msg = Msg::downcast(inmsgs[0]);
                     normalise_datetime(msg);
 
-                    db->remove_all();
-                    wassert(db->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA));
+                    f.tr->remove_all();
+                    wassert(f.tr->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA));
 
                     query.clear();
                     query.rep_memo = Msg::repmemo_from_type(msg.type);
