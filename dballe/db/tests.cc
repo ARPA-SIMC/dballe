@@ -275,7 +275,7 @@ void EmptyTransactionFixture<DB>::test_setup()
 template<typename DB>
 void EmptyTransactionFixture<DB>::test_teardown()
 {
-    tr->rollback();
+    if (tr) tr->rollback();
     tr.reset();
     BaseDBFixture<DB>::test_teardown();
 }
