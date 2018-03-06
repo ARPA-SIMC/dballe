@@ -32,15 +32,30 @@ Transaction::Transaction(std::shared_ptr<v6::DB> db, std::unique_ptr<dballe::Tra
     : db(db), sql_transaction(sql_transaction.release()) {}
 Transaction::~Transaction()
 {
+    // FIXME: use a nothrow version
+    rollback();
     delete sql_transaction;
 }
 
-void Transaction::commit() { sql_transaction->commit(); }
-void Transaction::rollback() { sql_transaction->rollback(); }
+void Transaction::commit()
+{
+    if (fired) return;
+    sql_transaction->commit();
+    fired = true;
+}
+
+void Transaction::rollback()
+{
+    if (fired) return;
+    sql_transaction->rollback();
+    clear_cached_state();
+    fired = true;
+}
 void Transaction::clear_cached_state()
 {
     if (db->m_lev_tr_cache)
         db->m_lev_tr_cache->invalidate();
+    db->repinfo().read_cache();
 }
 
 void Transaction::remove_all()

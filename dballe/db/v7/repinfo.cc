@@ -303,12 +303,14 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
     // Verify that we are not trying to delete a repinfo entry that is
     // in use
     for (const auto& entry : cache)
+    {
         /* Ensure that we are not deleting a repinfo entry that is already in use */
         if (!entry.memo.empty() && entry.new_memo.empty())
             if (id_use_count(entry.id, entry.memo.c_str()) > 0)
                 error_consistency::throwf(
                         "trying to delete repinfo entry %u,%s which is currently in use",
                         (unsigned)entry.id, entry.memo.c_str());
+    }
 
     // Perform the changes
 

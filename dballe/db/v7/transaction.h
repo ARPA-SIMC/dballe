@@ -18,6 +18,7 @@ struct Transaction : public dballe::db::Transaction
     std::shared_ptr<v7::DB> db;
     dballe::Transaction* sql_transaction = nullptr;
     State state;
+    bool fired = false;
 
     Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Transaction> sql_transaction)
         : db(db), sql_transaction(sql_transaction.release()) {}
@@ -25,14 +26,11 @@ struct Transaction : public dballe::db::Transaction
     Transaction(Transaction&&) = delete;
     Transaction& operator=(const Transaction&) = delete;
     Transaction& operator=(Transaction&&) = delete;
-    ~Transaction()
-    {
-        delete sql_transaction;
-    }
+    ~Transaction();
 
-    void commit() override { sql_transaction->commit(); }
-    void rollback() override { sql_transaction->rollback(); }
-    void clear_cached_state() override { state.clear(); }
+    void commit() override;
+    void rollback() override;
+    void clear_cached_state() override;
 
     std::unique_ptr<db::CursorStation> query_stations(const Query& query);
     std::unique_ptr<db::CursorStationData> query_station_data(const Query& query) override;

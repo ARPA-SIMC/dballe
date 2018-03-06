@@ -141,6 +141,9 @@ struct Repinfo
     /// Dump the entire contents of the database to an output stream
     virtual void dump(FILE* out) = 0;
 
+    /// Reread the repinfo cache from the database
+    virtual void read_cache() = 0;
+
 protected:
     /** Cache of table entries */
     std::vector<repinfo::Cache> cache;
@@ -180,9 +183,6 @@ protected:
 
     /// Insert an entry using the new_* fields of \a entry
     virtual void insert_entry(const repinfo::Cache& entry) = 0;
-
-    /// Reread the repinfo cache from the database
-    virtual void read_cache() = 0;
 
     /// Create an automatic entry for a missing memo, and insert it in the database
     virtual void insert_auto_entry(const char* memo) = 0;

@@ -41,6 +41,7 @@ struct Transaction : public dballe::db::Transaction
 
     std::shared_ptr<DB> db;
     dballe::Transaction* sql_transaction = nullptr;
+    bool fired = false;
 
     Transaction(std::shared_ptr<v6::DB> db, std::unique_ptr<dballe::Transaction> sql_transaction);
     Transaction(const Transaction&) = delete;

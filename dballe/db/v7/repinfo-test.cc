@@ -69,7 +69,6 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
         this->add_method("fail1", [](Fixture& f) {
             auto& ri = f.db->repinfo();
 
-            int id = ri.get_id("generic");
             wassert(actual(ri.get_priority("generic")) == 1000);
 
             int added, deleted, updated;

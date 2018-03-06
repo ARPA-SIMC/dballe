@@ -86,15 +86,6 @@ struct BaseDBFixture : public Fixture
     void test_setup();
     virtual void create_db();
     bool has_driver();
-
-#if 0
-    template<typename DataSet>
-    void populate()
-    {
-        DataSet data_set;
-        wassert(populate_database(data_set));
-    }
-#endif
 };
 
 template<typename DB>

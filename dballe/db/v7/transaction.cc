@@ -4,6 +4,7 @@
 #include "levtr.h"
 #include "cursor.h"
 #include "station.h"
+#include "repinfo.h"
 #include "dballe/core/query.h"
 #include "dballe/sql/sql.h"
 #include <cassert>
@@ -15,6 +16,33 @@ using namespace std;
 namespace dballe {
 namespace db {
 namespace v7 {
+
+Transaction::~Transaction()
+{
+    rollback();
+    delete sql_transaction;
+}
+
+void Transaction::commit()
+{
+    if (fired) return;
+    sql_transaction->commit();
+    fired = true;
+}
+
+void Transaction::rollback()
+{
+    if (fired) return;
+    sql_transaction->rollback();
+    clear_cached_state();
+    fired = true;
+}
+
+void Transaction::clear_cached_state()
+{
+    state.clear();
+    db->repinfo().read_cache();
+}
 
 Transaction& Transaction::downcast(dballe::Transaction& transaction)
 {

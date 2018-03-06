@@ -5,6 +5,7 @@
 #include "v6/driver.h"
 #include "v7/driver.h"
 #include "dballe/sql/sql.h"
+#include "dballe/sql/sqlite.h"
 #include "dballe/msg/vars.h"
 #include <wreport/error.h>
 #include <algorithm>
@@ -239,6 +240,11 @@ template<typename DB>
 void BaseDBFixture<DB>::create_db()
 {
     db = DB::create_db(backend);
+    /*
+    if (auto d = dynamic_cast<db::v7::DB*>(db.get()))
+        if (auto c = dynamic_cast<sql::SQLiteConnection*>(d->conn))
+            c->trace();
+    */
     db->reset();
 }
 
@@ -269,6 +275,7 @@ void EmptyTransactionFixture<DB>::test_setup()
 template<typename DB>
 void EmptyTransactionFixture<DB>::test_teardown()
 {
+    tr->rollback();
     tr.reset();
     BaseDBFixture<DB>::test_teardown();
 }
