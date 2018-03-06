@@ -43,9 +43,9 @@ struct DBData : public TestDataSet
 };
 
 template<typename DB>
-class Tests : public FixtureTestCase<TransactionFixture<DB, DBData>>
+class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
 {
-    typedef TransactionFixture<DB, DBData> Fixture;
+    typedef EmptyTransactionFixture<DB> Fixture;
     using FixtureTestCase<Fixture>::FixtureTestCase;
 
     void register_tests() override;
@@ -68,6 +68,8 @@ void Tests<DB>::register_tests()
 
 this->add_method("export", [](Fixture& f) {
     // Simple export
+    DBData test_data;
+    wassert(f.populate(test_data));
 
     // Put some data in the database and check that it gets exported properly
     // Query back the data
