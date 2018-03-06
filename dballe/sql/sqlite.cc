@@ -13,6 +13,32 @@ namespace sql {
 
 namespace {
 
+static int trace_callback(unsigned T, void* C, void* P,void* X)
+{
+    switch (T)
+    {
+        case SQLITE_TRACE_STMT:
+        {
+            sqlite3* db = sqlite3_db_handle((sqlite3_stmt*)P);
+            bool is_autocommit = sqlite3_get_autocommit(db);
+            fprintf(stderr, "SQLite: %sstarted %s\n", is_autocommit ? "AC " : "", sqlite3_expanded_sql((sqlite3_stmt*)P));
+            break;
+        }
+        case SQLITE_TRACE_PROFILE:
+            fprintf(stderr, "SQLite: completed %s in %.9fs\n",
+                    sqlite3_expanded_sql((sqlite3_stmt*)P), *(int64_t*)X / 1000000000.0);
+
+            break;
+        case SQLITE_TRACE_ROW:
+            fprintf(stderr, "SQLite: got a row of result\n");
+            break;
+        case SQLITE_TRACE_CLOSE:
+            fprintf(stderr, "SQLite: connection closed %p\n", P);
+            break;
+    }
+    return 0;
+}
+
 }
 
 
@@ -272,6 +298,12 @@ void SQLiteConnection::drop_settings()
 int SQLiteConnection::changes()
 {
     return sqlite3_changes(db);
+}
+
+void SQLiteConnection::trace(unsigned mask)
+{
+    if (sqlite3_trace_v2(db, mask, trace_callback, nullptr) != SQLITE_OK)
+        error_sqlite::throwf(db, "Cannot set up SQLite tracing");
 }
 
 SQLiteStatement::SQLiteStatement(SQLiteConnection& conn, const std::string& query)

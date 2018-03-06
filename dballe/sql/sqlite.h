@@ -83,6 +83,13 @@ public:
     /// Wrap sqlite3_exec, without a callback
     void exec(const std::string& query);
     void exec_nothrow(const std::string& query) noexcept;
+
+    /**
+     * Enable/change/disable SQLite tracing.
+     *
+     * See sqlite3_trace_v2 docmentation for values for mask use 0 to disable.
+     */
+    void trace(unsigned mask=SQLITE_TRACE_STMT);
 };
 
 /// SQLite statement
