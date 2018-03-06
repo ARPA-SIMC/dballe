@@ -185,12 +185,10 @@ struct Var : public VarItem<values_t>
 
 struct SharedContext
 {
-    stations_t::iterator station;
+    int station;
 
     SharedContext() {}
-    SharedContext(stations_t::iterator station) : station(station) {}
-
-    bool is_new() const { return station->second.is_new; }
+    SharedContext(int station) : station(station) {}
 };
 
 struct SharedStationContext : public SharedContext
@@ -208,8 +206,8 @@ struct SharedDataContext : public SharedContext
     Datetime datetime;
 
     SharedDataContext() {}
-    SharedDataContext(stations_t::iterator station) : SharedContext(station) {}
-    SharedDataContext(stations_t::iterator station, const Datetime& datetime) : SharedContext(station), datetime(datetime) {}
+    SharedDataContext(int station) : SharedContext(station) {}
+    SharedDataContext(int station, const Datetime& datetime) : SharedContext(station), datetime(datetime) {}
 
     ValueDesc make_desc(Var& v) const
     {
@@ -244,7 +242,9 @@ struct InsertPlan : public std::vector<var_t>
         {
             i->fill_cur(state, shared_context.make_desc(*i));
             if (i->has_cur(state)) continue;
-            if (shared_context.is_new() || i->is_new()) continue;
+            // TODO: track the newly inserted stations/levtrs to prevent
+            // unneeded queries for data we know we just put in the database
+            //if (shared_context.is_new() || i->is_new()) continue;
             to_query.push_back(&*i);
         }
     }

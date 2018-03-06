@@ -14,6 +14,14 @@ Stations::~Stations()
         delete i.second;
 }
 
+void Stations::clear()
+{
+    for (auto& i: by_id)
+        delete i.second;
+    by_id.clear();
+    by_lon.clear();
+}
+
 const dballe::Station* Stations::find_station(int id) const
 {
     auto i = by_id.find(id);
@@ -35,29 +43,38 @@ int Stations::find_id(const dballe::Station& st) const
     return MISSING_INT;
 }
 
-void Stations::insert(const dballe::Station& st)
+const dballe::Station* Stations::insert(const dballe::Station& st)
 {
-    insert(std::unique_ptr<dballe::Station>(new dballe::Station(st)));
+    return insert(std::unique_ptr<dballe::Station>(new dballe::Station(st)));
 }
 
-void Stations::insert(std::unique_ptr<dballe::Station> st)
+const dballe::Station* Stations::insert(const dballe::Station& st, int id)
+{
+    std::unique_ptr<dballe::Station> nst(new dballe::Station(st));
+    nst->ana_id = id;
+    return insert(move(nst));
+}
+
+const dballe::Station* Stations::insert(std::unique_ptr<dballe::Station> st)
 {
     if (st->ana_id == MISSING_INT)
         throw std::runtime_error("station to cache in transaction state must have a database ID");
 
     auto i = by_id.find(st->ana_id);
-    if (i == by_id.end())
+    if (i != by_id.end())
     {
-        dballe::Station* ns = st.release();
-        by_id.insert(make_pair(ns->ana_id, ns));
-        by_lon_add(ns);
-    } else {
-        std::unique_ptr<dballe::Station> old(i->second);
-        dballe::Station* ns;
-        i->second = ns = st.release();
-        by_lon_remove(old.get());
-        by_lon_add(ns);
+        // Stations do not move: if we have a match on the ID, we just need to
+        // enforce that there is no mismatch on the station data
+        if (*i->second != *st)
+            throw std::runtime_error("cannot replace a station with one with the same ID and different data");
+        return i->second;
     }
+
+    const dballe::Station* res;
+    res = st.get();
+    by_id.insert(make_pair(res->ana_id, st.release()));
+    by_lon_add(res);
+    return res;
 }
 
 void Stations::by_lon_add(const dballe::Station* st)
@@ -69,37 +86,6 @@ void Stations::by_lon_add(const dballe::Station* st)
         li->second.push_back(st);
 }
 
-void Stations::by_lon_remove(const dballe::Station* st)
-{
-    auto li = by_lon.find(st->coords.lon);
-    if (li == by_lon.end())
-        return;
-    auto i = std::find(li->second.begin(), li->second.end(), st);
-    if (i == li->second.end())
-        return;
-    li->second.erase(i);
-}
-
-
-int StationDesc::compare(const StationDesc& o) const
-{
-    if (int res = rep - o.rep) return res;
-    if (int res = coords.compare(o.coords)) return res;
-    return ident.compare(o.ident);
-}
-
-void StationDesc::to_record(Record& rec) const
-{
-    rec.set_coords(coords);
-    if (ident.is_missing())
-    {
-        rec.unset("ident");
-        rec.seti("mobile", 0);
-    } else {
-        rec.setc("ident", ident);
-        rec.seti("mobile", 1);
-    }
-}
 
 int LevTrDesc::compare(const LevTrDesc& o) const
 {
@@ -109,13 +95,13 @@ int LevTrDesc::compare(const LevTrDesc& o) const
 
 int StationValueDesc::compare(const StationValueDesc& o) const
 {
-    if (int res = station->first.compare(o.station->first)) return res;
+    if (int res = station - o.station) return res;
     return varcode - o.varcode;
 }
 
 int ValueDesc::compare(const ValueDesc& o) const
 {
-    if (int res = station->first.compare(o.station->first)) return res;
+    if (int res = station - o.station) return res;
     if (int res = levtr - o.levtr) return res;
     if (int res = datetime.compare(o.datetime)) return res;
     return varcode - o.varcode;
@@ -128,12 +114,6 @@ void State::clear()
     levtr_ids.clear();
     stationvalues.clear();
     values.clear();
-}
-
-stations_t::iterator State::add_station(const StationDesc& desc, const StationState& state)
-{
-    auto res = stations.insert(make_pair(desc, state));
-    return res.first;
 }
 
 levtrs_t::iterator State::add_levtr(const LevTrDesc& desc, const LevTrState& state)

@@ -4,6 +4,8 @@
 #include "levtr.h"
 #include "data.h"
 #include "dballe/db/v7/qbuilder.h"
+#include "dballe/db/v7/db.h"
+#include "dballe/db/v7/transaction.h"
 #include "dballe/core/values.h"
 #include "dballe/sql/sqlite.h"
 #include "dballe/var.h"
@@ -56,37 +58,35 @@ std::unique_ptr<v7::Data> Driver::create_data()
     return unique_ptr<v7::Data>(new SQLiteData(conn));
 }
 
-void Driver::run_station_query(const v7::StationQueryBuilder& qb, std::function<void(int id, const StationDesc&)> dest)
+void Driver::run_station_query(const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)> dest)
 {
     auto stm = conn.sqlitestatement(qb.sql_query);
 
     if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
 
-    StationDesc desc;
+    dballe::Station station;
     stm->execute([&]() {
-        int id = stm->column_int(0);
-        desc.rep = stm->column_int(1);
-        desc.coords.lat = stm->column_int(2);
-        desc.coords.lon = stm->column_int(3);
+        station.ana_id = stm->column_int(0);
+        station.report = qb.tr->db->repinfo().get_rep_memo(stm->column_int(1));
+        station.coords.lat = stm->column_int(2);
+        station.coords.lon = stm->column_int(3);
 
         if (stm->column_isnull(4))
-            desc.ident.clear();
+            station.ident.clear();
         else
-            desc.ident = stm->column_string(4);
+            station.ident = stm->column_string(4);
 
-        dest(id, desc);
+        dest(station);
     });
 }
 
-void Driver::run_station_data_query(const v7::DataQueryBuilder& qb, std::function<void(int id_station, const StationDesc& station, int id_data, std::unique_ptr<wreport::Var> var)> dest)
+void Driver::run_station_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var)> dest)
 {
     auto stm = conn.sqlitestatement(qb.sql_query);
 
     if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
 
-    StationDesc station;
-    int cur_id_station = -1;
-
+    dballe::Station station;
     stm->execute([&]() {
         wreport::Varcode code = stm->column_int(5);
         const char* value = stm->column_string(7);
@@ -99,32 +99,31 @@ void Driver::run_station_data_query(const v7::DataQueryBuilder& qb, std::functio
             return;
 
         int id_station = stm->column_int(0);
-        if (id_station != cur_id_station)
+        if (id_station != station.ana_id)
         {
-            station.rep = stm->column_int(1);
+            station.ana_id = id_station;
+            station.report = qb.tr->db->repinfo().get_rep_memo(stm->column_int(1));
             station.coords.lat = stm->column_int(2);
             station.coords.lon = stm->column_int(3);
             if (stm->column_isnull(4))
                 station.ident.clear();
             else
                 station.ident = stm->column_string(4);
-            cur_id_station = id_station;
         }
 
         int id_data = stm->column_int(6);
 
-        dest(id_station, station, id_data, move(var));
+        dest(station, id_data, move(var));
     });
 }
 
-void Driver::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)> dest)
+void Driver::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)> dest)
 {
     auto stm = conn.sqlitestatement(qb.sql_query);
 
     if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
 
-    StationDesc station;
-    int cur_id_station = -1;
+    dballe::Station station;
     stm->execute([&]() {
         wreport::Varcode code = stm->column_int(6);
         const char* value = stm->column_string(9);
@@ -137,46 +136,45 @@ void Driver::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(i
             return;
 
         int id_station = stm->column_int(0);
-        if (id_station != cur_id_station)
+        if (id_station != station.ana_id)
         {
-            station.rep = stm->column_int(1);
+            station.ana_id = id_station;
+            station.report = qb.tr->db->repinfo().get_rep_memo(stm->column_int(1));
             station.coords.lat = stm->column_int(2);
             station.coords.lon = stm->column_int(3);
             if (stm->column_isnull(4))
                 station.ident.clear();
             else
                 station.ident = stm->column_string(4);
-            cur_id_station = id_station;
         }
 
         int id_levtr = stm->column_int(5);
         int id_data = stm->column_int(7);
         Datetime datetime = stm->column_datetime(8);
 
-        dest(id_station, station, id_levtr, datetime, id_data, move(var));
+        dest(station, id_levtr, datetime, id_data, move(var));
     });
 }
 
-void Driver::run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<void(int id_station, const StationDesc& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)> dest)
+void Driver::run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)> dest)
 {
     auto stm = conn.sqlitestatement(qb.sql_query);
 
     if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
 
-    StationDesc station;
-    int cur_id_station = -1;
+    dballe::Station station;
     stm->execute([&]() {
         int id_station = stm->column_int(0);
-        if (id_station != cur_id_station)
+        if (id_station != station.ana_id)
         {
-            station.rep = stm->column_int(1);
+            station.ana_id = id_station;
+            station.report = qb.tr->db->repinfo().get_rep_memo(stm->column_int(1));
             station.coords.lat = stm->column_int(2);
             station.coords.lon = stm->column_int(3);
             if (stm->column_isnull(4))
                 station.ident.clear();
             else
                 station.ident = stm->column_string(4);
-            cur_id_station = id_station;
         }
 
         int id_levtr = stm->column_int(5);
@@ -190,7 +188,7 @@ void Driver::run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<
             datetime = DatetimeRange(stm->column_datetime(8), stm->column_datetime(9));
         }
 
-        dest(id_station, station, id_levtr, code, datetime, count);
+        dest(station, id_levtr, code, datetime, count);
     });
 }
 

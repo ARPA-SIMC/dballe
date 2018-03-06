@@ -139,7 +139,7 @@ void SQLiteStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertS
     // Load the missing varcodes into the state and into vars
     if (!vars.to_query.empty())
     {
-        sstm->bind_val(1, vars.shared_context.station->second.id);
+        sstm->bind_val(1, vars.shared_context.station);
         sstm->execute([&]() {
             StationValueState vs;
             vs.id = sstm->column_int(0);
@@ -192,7 +192,7 @@ void SQLiteStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertS
 
     if (vars.do_insert)
     {
-        istm->bind_val(1, vars.shared_context.station->second.id);
+        istm->bind_val(1, vars.shared_context.station);
         for (auto& v: vars)
         {
             if (!v.needs_insert()) continue;
@@ -249,7 +249,7 @@ void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& va
     // database that is not already in State, and we can skip this part.
     if (!vars.to_query.empty())
     {
-        sstm->bind_val(1, vars.shared_context.station->second.id);
+        sstm->bind_val(1, vars.shared_context.station);
         sstm->bind_val(2, vars.shared_context.datetime);
         sstm->execute([&]() {
             int id_levtr = sstm->column_int(1);
@@ -305,7 +305,7 @@ void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& va
 
     if (vars.do_insert)
     {
-        istm->bind_val(1, vars.shared_context.station->second.id);
+        istm->bind_val(1, vars.shared_context.station);
         istm->bind_val(3, vars.shared_context.datetime);
         for (auto& v: vars)
         {

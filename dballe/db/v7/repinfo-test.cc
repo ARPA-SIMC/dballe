@@ -31,7 +31,8 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             wassert(actual(ri.get_id("synop")) == 1);
             wassert(actual(ri.get_id("generic")) == 255);
             wassert(actual(ri.get_rep_memo(1)) == "synop");
-            wassert(actual(ri.get_priority(199)) == INT_MAX);
+            wassert(actual(ri.get_priority("synop")) == 101);
+            wassert(actual(ri.get_priority("wrong")) == INT_MAX);
         });
         // Test update
         this->add_method("update", [](Fixture& f) {
@@ -69,7 +70,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             auto& ri = f.db->repinfo();
 
             int id = ri.get_id("generic");
-            wassert(actual(ri.get_priority(id)) == 1000);
+            wassert(actual(ri.get_priority("generic")) == 1000);
 
             int added, deleted, updated;
             wassert(ri.update((string(getenv("DBA_TESTDATA")) + "/test-repinfo2.csv").c_str(), &added, &deleted, &updated));
@@ -78,7 +79,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             wassert(actual(deleted) == 11);
             wassert(actual(updated) == 2);
 
-            wassert(actual(ri.get_priority(id)) == -5);
+            wassert(actual(ri.get_priority("generic")) == -5);
         });
         // Test automatic repinfo creation
         this->add_method("fail2", [](Fixture& f) {
@@ -87,12 +88,12 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             int id = ri.obtain_id("foobar");
             wassert(actual(id) > 0);
             wassert(actual(ri.get_rep_memo(id)) == "foobar");
-            wassert(actual(ri.get_priority(id)) == 1001);
+            wassert(actual(ri.get_priority("foobar")) == 1001);
 
             id = ri.obtain_id("barbaz");
             wassert(actual(id) > 0);
             wassert(actual(ri.get_rep_memo(id)) == "barbaz");
-            wassert(actual(ri.get_priority(id)) == 1002);
+            wassert(actual(ri.get_priority("barbaz")) == 1002);
         });
         // See https://github.com/ARPA-SIMC/dballe/issues/30
         this->add_method("case", [](Fixture& f) {
@@ -108,7 +109,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             int id = ri.obtain_id("fooBAR");
             wassert(actual(id) == 234);
             wassert(actual(ri.get_rep_memo(id)) == "foobar");
-            wassert(actual(ri.get_priority(id)) == 100);
+            wassert(actual(ri.get_priority("foobar")) == 100);
             wassert(actual(ri.get_id("foobar")) == id);
             wassert(actual(ri.get_id("Foobar")) == id);
             wassert(actual(ri.get_id("FOOBAR")) == id);

@@ -20,8 +20,8 @@ struct Fixture : EmptyTransactionFixture<V7DB>
 {
     using EmptyTransactionFixture::EmptyTransactionFixture;
 
-    db::v7::StationDesc sde1;
-    db::v7::StationDesc sde2;
+    dballe::Station sde1;
+    dballe::Station sde2;
 
     Fixture(const char* backend)
         : EmptyTransactionFixture(backend)
@@ -32,11 +32,11 @@ struct Fixture : EmptyTransactionFixture<V7DB>
     {
         EmptyTransactionFixture::create_db();
 
-        sde1.rep = 1;
+        sde1.report = "synop";
         sde1.coords = Coords(4500000, 1100000);
         sde1.ident = "ciao";
 
-        sde2.rep = 1;
+        sde2.report = "synop";
         sde2.coords = Coords(4600000, 1200000);
         sde2.ident = nullptr;
 
@@ -45,10 +45,10 @@ struct Fixture : EmptyTransactionFixture<V7DB>
         t = dynamic_pointer_cast<dballe::db::v7::Transaction>(db->transaction());
 
         // Insert a mobile station
-        db->station().obtain_id(t->state, sde1);
+        wassert(db->station().obtain_id(*t, sde1));
 
         // Insert a fixed station
-        db->station().obtain_id(t->state, sde2);
+        wassert(db->station().obtain_id(*t, sde2));
 
         t->commit();
     }
@@ -87,7 +87,7 @@ add_method("insert", [](Fixture& f) {
     Var var(varinfo(WR_VAR(0, 1, 2)));
 
     auto insert_sample1 = [&](bulk::InsertVars& vars, int value, bulk::UpdateMode update) {
-        vars.shared_context.station = f.tr->state.stations.find(f.sde1);
+        vars.shared_context.station = f.tr->state.stations.find_id(f.sde1);
         vars.shared_context.datetime = Datetime(2001, 2, 3, 4, 5, 6);
         var.seti(value);
         vars.add(&var, lt1->second);
@@ -108,7 +108,7 @@ add_method("insert", [](Fixture& f) {
     // Insert another datum
     {
         bulk::InsertVars vars(f.tr->state);
-        vars.shared_context.station = f.tr->state.stations.find(f.sde2);
+        vars.shared_context.station = f.tr->state.stations.find_id(f.sde2);
         vars.shared_context.datetime = Datetime(2002, 3, 4, 5, 6, 7);
         Var var(varinfo(WR_VAR(0, 1, 2)), 234);
         vars.add(&var, lt2->second);
@@ -197,7 +197,7 @@ add_method("attrs", [](Fixture& f) {
 
     // Insert a datum with attributes
     bulk::InsertVars vars(f.tr->state);
-    vars.shared_context.station = f.tr->state.stations.find(f.sde1);
+    vars.shared_context.station = f.tr->state.stations.find_id(f.sde1);
     vars.shared_context.datetime = Datetime(2001, 2, 3, 4, 5, 6);
     var.seta(newvar(WR_VAR(0, 33, 7), 50));
     vars.add(&var, lt1->second);

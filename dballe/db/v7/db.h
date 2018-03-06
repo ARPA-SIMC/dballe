@@ -72,22 +72,6 @@ protected:
 
     void init_after_connect();
 
-    /*
-     * Lookup, insert or replace data in station taking the values from
-     * rec.
-     *
-     * If rec did not contain ana_id, it will be set by this function.
-     *
-     * @param rec
-     *   The record with the station information
-     * @param can_add
-     *   If true we can insert new stations in the database, if false we
-     *   only look up existing records and raise an exception if missing
-     * @returns
-     *   The station ID
-     */
-    v7::stations_t::iterator obtain_station(v7::State& state, const dballe::Station& st, bool can_add=true);
-
 public:
     DB(std::unique_ptr<dballe::sql::Connection> conn);
     virtual ~DB();

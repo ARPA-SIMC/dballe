@@ -196,7 +196,7 @@ void PostgreSQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::Ins
     // Load the missing varcodes into the state and into vars
     if (!vars.to_query.empty())
     {
-        Result existing(conn.exec_prepared("station_datav7_select", vars.shared_context.station->second.id));
+        Result existing(conn.exec_prepared("station_datav7_select", vars.shared_context.station));
         for (unsigned row = 0; row < existing.rowcount(); ++row)
         {
             StationValueState vs(existing.get_int4(row, 0), false);
@@ -236,7 +236,7 @@ void PostgreSQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::Ins
     if (vars.do_insert)
     {
         char lead[64];
-        snprintf(lead, 64, "(DEFAULT,%d,", vars.shared_context.station->second.id);
+        snprintf(lead, 64, "(DEFAULT,%d,", vars.shared_context.station);
 
         Querybuf dq(512);
         dq.append("INSERT INTO station_data (id, id_station, code, value, attrs) VALUES ");
@@ -319,7 +319,7 @@ void PostgreSQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars
     // database that is not already in State, and we can skip this part.
     if (!vars.to_query.empty())
     {
-        Result existing(conn.exec_prepared("datav7_select", vars.shared_context.station->second.id, vars.shared_context.datetime));
+        Result existing(conn.exec_prepared("datav7_select", vars.shared_context.station, vars.shared_context.datetime));
         for (unsigned row = 0; row < existing.rowcount(); ++row)
         {
             ValueState vs(existing.get_int4(row, 0), false);
@@ -362,7 +362,7 @@ void PostgreSQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars
         const Datetime& dt = vars.shared_context.datetime;
         char val_lead[64];
         snprintf(val_lead, 64, "(DEFAULT,%d,'%04d-%02d-%02d %02d:%02d:%02d',",
-                    vars.shared_context.station->second.id,
+                    vars.shared_context.station,
                     dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
 
         Querybuf dq(512);

@@ -3,6 +3,7 @@
 #include "driver.h"
 #include "levtr.h"
 #include "cursor.h"
+#include "station.h"
 #include "dballe/core/query.h"
 #include "dballe/sql/sql.h"
 #include <cassert>
@@ -33,10 +34,10 @@ void Transaction::remove_all()
 void Transaction::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
 {
     // Insert the station data, and get the ID
-    v7::stations_t::iterator si = db->obtain_station(state, vals.info, station_can_add);
+    int si = obtain_station(state, vals.info, station_can_add);
 
     v7::bulk::InsertStationVars vars(state, si);
-    vals.info.ana_id = si->second.id;
+    vals.info.ana_id = si;
 
     // Add all the variables we find
     for (auto& i: vals.values)
@@ -59,10 +60,10 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
         throw error_notfound("no variables found in input record");
 
     // Insert the station data, and get the ID
-    v7::stations_t::iterator si = db->obtain_station(state, vals.info, station_can_add);
+    int si = obtain_station(state, vals.info, station_can_add);
 
     v7::bulk::InsertVars vars(state, si, vals.info.datetime);
-    vals.info.ana_id = si->second.id;
+    vals.info.ana_id = si;
 
     // Insert the lev_tr data, and get the ID
     auto ltri = db->levtr().obtain_id(state, LevTrDesc(vals.info.level, vals.info.trange));
@@ -178,6 +179,21 @@ void Transaction::attr_remove_data(int data_id, const db::AttrList& attrs)
         auto& d = db->data();
         d.remove_attrs(data_id, attrs);
     }
+}
+
+int Transaction::obtain_station(v7::State& state, const dballe::Station& st, bool can_add)
+{
+    v7::Station& s = db->station();
+
+    // If the station is referenced only by ID, look it up by ID only
+    if (st.ana_id != MISSING_INT)
+        return st.ana_id;
+
+    // Get the ID for the station
+    if (can_add)
+        return s.obtain_id(*this, st);
+    else
+        return s.get_id(*this, st);
 }
 
 }

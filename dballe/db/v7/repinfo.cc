@@ -18,12 +18,12 @@ Repinfo::Repinfo(dballe::sql::Connection& conn)
 {
 }
 
-void Repinfo::to_record(int id, Record& rec)
+void Repinfo::to_record(const std::string& report, Record& rec)
 {
-    const repinfo::Cache* c = get_by_id(id);
+    const repinfo::Cache* c = get_by_memo(report.c_str());
     if (c)
     {
-        rec.setc("rep_memo", c->memo.c_str());
+        rec.sets("rep_memo", report);
         rec.seti("priority", c->prio);
     } else {
         rec.unset("rep_memo");
@@ -53,9 +53,9 @@ int Repinfo::get_id(const char* memo)
     return memo_idx[pos].id;
 }
 
-int Repinfo::get_priority(int id)
+int Repinfo::get_priority(const std::string& report)
 {
-    const repinfo::Cache* ri_entry = get_by_id(id);
+    const repinfo::Cache* ri_entry = get_by_memo(report.c_str());
     return ri_entry ? ri_entry->prio : INT_MAX;
 }
 

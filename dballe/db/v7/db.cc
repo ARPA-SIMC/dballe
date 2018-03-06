@@ -146,28 +146,6 @@ int DB::rep_cod_from_memo(const char* memo)
     return repinfo().obtain_id(memo);
 }
 
-v7::stations_t::iterator DB::obtain_station(v7::State& state, const dballe::Station& st, bool can_add)
-{
-    v7::Station& s = station();
-
-    // If the station is referenced only by ID, look it up by ID only
-    if (st.ana_id != MISSING_INT && st.coords.is_missing())
-        return s.lookup_id(state, st.ana_id);
-
-    v7::Repinfo& ri = repinfo();
-
-    StationDesc sd;
-    sd.rep = ri.obtain_id(st.report.c_str());
-    sd.coords = st.coords;
-    sd.ident = st.ident;
-
-    // Get the ID for the station
-    if (can_add)
-        return s.obtain_id(state, sd);
-    else
-        return s.get_id(state, sd);
-}
-
 void DB::vacuum()
 {
     auto tr = trace.trace_vacuum();

@@ -95,6 +95,9 @@ struct Repinfo
     int get_id(const char* rep_memo);
 
     /// Get the priority for a given ID; returns INT_MAX if id is not valid
+    int get_priority(const std::string& report);
+
+    /// Get the priority for a given ID; returns INT_MAX if id is not valid
     int get_priority(int id);
 
     /**

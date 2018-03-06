@@ -2,7 +2,6 @@
 #define DBALLE_DB_V7_STATION_H
 
 #include <dballe/sql/fwd.h>
-#include <dballe/db/v7/state.h>
 #include <memory>
 #include <cstdio>
 #include <functional>
@@ -13,14 +12,18 @@ struct Var;
 
 namespace dballe {
 struct Record;
+struct Coords;
+struct Station;
 
 namespace db {
 namespace v7 {
+struct Transaction;
+
 
 struct Station
 {
 protected:
-    virtual bool maybe_get_id(const StationDesc& st, int* id) = 0;
+    virtual bool maybe_get_id(v7::Transaction& tr, const dballe::Station& st, int* id) = 0;
     virtual void _dump(std::function<void(int, int, const Coords& coords, const char* ident)> out) = 0;
 
 public:
@@ -30,25 +33,25 @@ public:
     virtual ~Station();
 
     /**
-     * Look up a station give its ID.
+     * Look up a station given its ID.
      *
      * It throws an exception if it does not exist.
      */
-    virtual stations_t::iterator lookup_id(State& st, int id) = 0;
+    virtual const dballe::Station* lookup_id(v7::Transaction& tr, int id) = 0;
 
     /**
      * Get the station ID given latitude, longitude and mobile identifier.
      *
      * It throws an exception if it does not exist.
      */
-    virtual stations_t::iterator get_id(State& st, const StationDesc& desc);
+    virtual int get_id(v7::Transaction& tr, const dballe::Station& desc);
 
     /**
      * Get the station ID given latitude, longitude and mobile identifier.
      *
      * It creates the station record if it does not exist.
      */
-    virtual stations_t::iterator obtain_id(State& st, const StationDesc& desc) = 0;
+    virtual int obtain_id(v7::Transaction& tr, const dballe::Station& desc) = 0;
 
     /**
      * Dump the entire contents of the table to an output stream

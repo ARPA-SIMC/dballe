@@ -1,8 +1,12 @@
 #include "station.h"
+#include "transaction.h"
 #include "dballe/sql/postgresql.h"
 #include "dballe/record.h"
 #include "dballe/core/var.h"
 #include "dballe/core/values.h"
+#include "dballe/db/v7/transaction.h"
+#include "dballe/db/v7/db.h"
+#include "dballe/db/v7/repinfo.h"
 #include <wreport/var.h>
 
 using namespace wreport;
@@ -40,15 +44,17 @@ PostgreSQLStation::~PostgreSQLStation()
 {
 }
 
-bool PostgreSQLStation::maybe_get_id(const StationDesc& st, int* id)
+bool PostgreSQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st, int* id)
 {
     using namespace dballe::sql::postgresql;
 
+    int rep = tr.db->repinfo().get_id(st.report.c_str());
+
     Result res;
     if (st.ident.get())
-        res = move(conn.exec_prepared("v7_station_select_mobile", st.rep, st.coords.lat, st.coords.lon, st.ident.get()));
+        res = move(conn.exec_prepared("v7_station_select_mobile", rep, st.coords.lat, st.coords.lon, st.ident.get()));
     else
-        res = move(conn.exec_prepared("v7_station_select_fixed", st.rep, st.coords.lat, st.coords.lon));
+        res = move(conn.exec_prepared("v7_station_select_fixed", rep, st.coords.lat, st.coords.lon));
 
     unsigned rows = res.rowcount();
     switch (rows)
@@ -61,14 +67,13 @@ bool PostgreSQLStation::maybe_get_id(const StationDesc& st, int* id)
     }
 }
 
-stations_t::iterator PostgreSQLStation::lookup_id(State& st, int id)
+const dballe::Station* PostgreSQLStation::lookup_id(v7::Transaction& tr, int id)
 {
     using namespace dballe::sql::postgresql;
 
     // First look it up in the transaction cache
-    for (auto i = st.stations.begin(); i != st.stations.end(); ++i)
-        if (i->second.id == id)
-            return i;
+    if (const dballe::Station* res = tr.state.stations.find_station(id))
+        return res;
 
     Result res = conn.exec_prepared("v7_station_lookup_id", id);
 
@@ -78,40 +83,39 @@ stations_t::iterator PostgreSQLStation::lookup_id(State& st, int id)
         case 0: error_notfound::throwf("station with id %d not found in the database", id);
         case 1:
         {
-            StationDesc desc;
-            desc.rep = res.get_int4(0, 0);
-            desc.coords.lat = res.get_int4(0, 1);
-            desc.coords.lon = res.get_int4(0, 2);
+            std::unique_ptr<dballe::Station> station(new dballe::Station);
+            station->ana_id = id;
+            station->report = tr.db->repinfo().get_rep_memo(res.get_int4(0, 0));
+            station->coords.lat = res.get_int4(0, 1);
+            station->coords.lon = res.get_int4(0, 2);
             if (!res.is_null(0, 3))
-                desc.ident = res.get_string(0, 3);
-            StationState sst;
-            sst.id = id;
-            sst.is_new = false;
-            return st.add_station(desc, sst);
+                station->ident = res.get_string(0, 3);
+            // TODO: mark station as newly inserted
+            return tr.state.stations.insert(move(station));
         }
         default: error_consistency::throwf("select station ID query returned %u results", rows);
     }
 }
 
-stations_t::iterator PostgreSQLStation::obtain_id(State& st, const StationDesc& desc)
+int PostgreSQLStation::obtain_id(v7::Transaction& tr, const dballe::Station& desc)
 {
     using namespace dballe::sql::postgresql;
 
-    auto res = st.stations.find(desc);
-    if (res != st.stations.end())
-        return res;
+    int id = tr.state.stations.find_id(desc);
+    if (id != MISSING_INT) return id;
 
-    StationState state;
-    if (maybe_get_id(desc, &state.id))
+    if (maybe_get_id(tr, desc, &id))
     {
-        state.is_new = false;
-        return st.add_station(desc, state);
+        tr.state.stations.insert(desc, id);
+        return id;
     }
 
     // If no station was found, insert a new one
-    state.id = conn.exec_prepared_one_row("v7_station_insert", desc.rep, desc.coords.lat, desc.coords.lon, desc.ident.get()).get_int4(0, 0);
-    state.is_new = true;
-    return st.add_station(desc, state);
+    int rep = tr.db->repinfo().get_id(desc.report.c_str());
+    id = conn.exec_prepared_one_row("v7_station_insert", rep, desc.coords.lat, desc.coords.lon, desc.ident.get()).get_int4(0, 0);
+    // TODO: mark station as newly inserted
+    tr.state.stations.insert(desc, id);
+    return id;
 }
 
 void PostgreSQLStation::get_station_vars(int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest)

@@ -119,7 +119,7 @@ void MySQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertSt
     if (!vars.to_query.empty())
     {
         char query[128];
-        snprintf(query, 128, "SELECT id, code FROM station_data WHERE id_station=%d", vars.shared_context.station->second.id);
+        snprintf(query, 128, "SELECT id, code FROM station_data WHERE id_station=%d", vars.shared_context.station);
         auto res = conn.exec_store(query);
         while (auto row = res.fetch())
         {
@@ -189,14 +189,14 @@ void MySQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertSt
                 enc.append_attributes(*v.var);
                 string escaped_attrs = conn.escape(enc.buf);
                 qb.appendf("INSERT INTO station_data (id_station, code, value, attrs) VALUES (%d, %d, '%s', X'%s')",
-                        vars.shared_context.station->second.id,
+                        vars.shared_context.station,
                         (int)v.var->code(),
                         escaped_value.c_str(),
                         escaped_attrs.c_str());
             }
             else
                 qb.appendf("INSERT INTO station_data (id_station, code, value, attrs) VALUES (%d, %d, '%s', NULL)",
-                        vars.shared_context.station->second.id,
+                        vars.shared_context.station,
                         (int)v.var->code(),
                         escaped_value.c_str());
             conn.exec_no_data(qb);
@@ -244,7 +244,7 @@ void MySQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& var
         const auto& dt = vars.shared_context.datetime;
         char query[128];
         snprintf(query, 128, "SELECT id, id_levtr, code FROM data WHERE id_station=%d AND datetime='%04d-%02d-%02d %02d:%02d:%02d'",
-                vars.shared_context.station->second.id,
+                vars.shared_context.station,
                 dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
         auto res = conn.exec_store(query);
         while (auto row = res.fetch())
@@ -319,7 +319,7 @@ void MySQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& var
                 enc.append_attributes(*v.var);
                 string escaped_attrs = conn.escape(enc.buf);
                 qb.appendf("INSERT INTO data (id_station, id_levtr, datetime, code, value, attrs) VALUES (%d, %d, '%04d-%02d-%02d %02d:%02d:%02d', %d, '%s', X'%s')",
-                        vars.shared_context.station->second.id,
+                        vars.shared_context.station,
                         v.levtr.id,
                         dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,
                         (int)v.var->code(),
@@ -328,7 +328,7 @@ void MySQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& var
             }
             else
                 qb.appendf("INSERT INTO data (id_station, id_levtr, datetime, code, value, attrs) VALUES (%d, %d, '%04d-%02d-%02d %02d:%02d:%02d', %d, '%s', NULL)",
-                        vars.shared_context.station->second.id,
+                        vars.shared_context.station,
                         v.levtr.id,
                         dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,
                         (int)v.var->code(),

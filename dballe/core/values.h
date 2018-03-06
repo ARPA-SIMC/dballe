@@ -51,7 +51,11 @@ struct Station
 
     bool operator==(const Station& o) const
     {
-        return report == o.report && ana_id == o.ana_id && coords == o.coords && ident == o.ident;
+        return ana_id == o.ana_id && report == o.report && coords == o.coords && ident == o.ident;
+    }
+    bool operator!=(const Station& o) const
+    {
+        return ana_id != o.ana_id || report != o.report || coords != o.coords || ident != o.ident;
     }
 
     /**

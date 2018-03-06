@@ -53,6 +53,11 @@ int Repinfo::get_id(const char* memo)
     return memo_idx[pos].id;
 }
 
+int Repinfo::get_priority(const std::string& report)
+{
+    return get_priority(get_id(report.c_str()));
+}
+
 int Repinfo::get_priority(int id)
 {
     const repinfo::Cache* ri_entry = get_by_id(id);

@@ -30,17 +30,17 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
     v7::LevTr& lt = db->levtr();
 
     // Fill up the station informations needed to fetch an existing ID
-    StationDesc station_desc;
+    dballe::Station station;
 
     // Latitude
     if (const Var* var = l_ana->find_by_id(DBA_MSG_LATITUDE))
-        station_desc.coords.lat = var->enqi();
+        station.coords.lat = var->enqi();
     else
         throw error_notfound("latitude not found in data to import");
 
     // Longitude
     if (const Var* var = l_ana->find_by_id(DBA_MSG_LONGITUDE))
-        station_desc.coords.lon = var->enqi();
+        station.coords.lon = var->enqi();
     else
         throw error_notfound("longitude not found in data to import");
 
@@ -48,29 +48,30 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
     if (mobile)
     {
         if (const Var* var = l_ana->find_by_id(DBA_MSG_IDENT))
-            station_desc.ident = var->enqc();
+            station.ident = var->enqc();
         else
             throw error_notfound("mobile station identifier not found in data to import");
     }
 
     // Report code
     if (repmemo != NULL)
-        station_desc.rep = db->rep_cod_from_memo(repmemo);
+        station.report = repmemo;
     else {
         // TODO: check if B01194 first
         if (const Var* var = msg.get_rep_memo_var())
-            station_desc.rep = db->rep_cod_from_memo(var->enqc());
+            station.report = var->enqc();
         else
-            station_desc.rep = db->rep_cod_from_memo(Msg::repmemo_from_type(msg.type));
+            station.report = Msg::repmemo_from_type(msg.type);
     }
 
-    auto sstate = st.obtain_id(state, station_desc);
+    int station_id = st.obtain_id(*this, station);
 
-    if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || sstate->second.is_new)
+    // TODO: track in state if the station was just inserted, and skip this if it was
+    if (flags & DBA_IMPORT_FULL_PSEUDOANA)
     {
         // Prepare a bulk insert
         v7::StationData& sd = db->station_data();
-        v7::bulk::InsertStationVars vars(state, sstate);
+        v7::bulk::InsertStationVars vars(state, station_id);
         for (size_t i = 0; i < l_ana->data.size(); ++i)
         {
             Varcode code = l_ana->data[i]->code();
@@ -86,7 +87,7 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
 
     v7::Data& dd = db->data();
 
-    v7::bulk::InsertVars vars(state, sstate);
+    v7::bulk::InsertVars vars(state, station_id);
 
     // Fill the bulk insert with the rest of the data
     for (size_t i = 0; i < msg.data.size(); ++i)

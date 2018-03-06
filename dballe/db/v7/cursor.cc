@@ -113,21 +113,21 @@ struct VectorBase : public Base<Interface>
         dballe::Station station;
         station.report = get_rep_memo();
         station.ana_id = get_station_id();
-        station.coords = cur->get_stationdesc().coords;
-        station.ident = cur->get_stationdesc().ident;
+        station.coords = cur->station.coords;
+        station.ident = cur->station.ident;
         return station;
     }
 
     int get_station_id() const override { return cur->get_station_id(); }
-    const char* get_rep_memo() const override { return this->tr->db->repinfo().get_rep_memo(cur->get_stationdesc().rep); }
-    double get_lat() const override { return cur->get_stationdesc().coords.dlat(); }
-    double get_lon() const override { return cur->get_stationdesc().coords.dlon(); }
+    const char* get_rep_memo() const override { return cur->station.report.c_str(); }
+    double get_lat() const override { return cur->station.coords.dlat(); }
+    double get_lon() const override { return cur->station.coords.dlon(); }
     const char* get_ident(const char* def=0) const override
     {
-        if (cur->get_stationdesc().ident.is_missing())
+        if (cur->station.ident.is_missing())
             return def;
         else
-            return cur->get_stationdesc().ident.get();
+            return cur->station.ident.get();
     }
 
     void to_record(Record& rec) override
@@ -148,24 +148,21 @@ struct VectorBase : public Base<Interface>
 
 struct StationResult
 {
-    int id;
-    StationDesc station;
+    dballe::Station station;
 
-    StationResult(int id, const StationDesc& station) : id(id), station(station) {}
+    StationResult(const dballe::Station& station) : station(station) {}
 
     void dump(FILE* out) const
     {
-        fprintf(out, "%02d %3d %02.4f %02.4f %-10s\n", id, station.rep, station.coords.dlat(), station.coords.dlon(), station.ident.get());
+        fprintf(out, "%02d %8.8s %02.4f %02.4f %-10s\n", station.ana_id, station.report.c_str(), station.coords.dlat(), station.coords.dlon(), station.ident.get());
     }
 
-    int get_station_id() const { return id; }
-    const StationDesc& get_stationdesc() const { return station; }
+    int get_station_id() const { return station.ana_id; }
     void to_record(v7::DB& db, Record& rec) const
     {
-        rec.seti("ana_id", id);
-        db.repinfo().to_record(station.rep, rec);
+        db.repinfo().to_record(station.report, rec);
         station.to_record(rec);
-        db.station().add_station_vars(id, rec);
+        db.station().add_station_vars(station.ana_id, rec);
     }
 };
 
@@ -176,8 +173,8 @@ struct Stations : public VectorBase<CursorStation, StationResult>
     void load(const StationQueryBuilder& qb)
     {
         results.clear();
-        this->tr->db->driver().run_station_query(qb, [&](int id, const StationDesc& desc) {
-            results.emplace_back(id, desc);
+        this->tr->db->driver().run_station_query(qb, [&](const dballe::Station& desc) {
+            results.emplace_back(desc);
         });
         at_start = true;
         cur = results.begin();
@@ -187,12 +184,11 @@ struct Stations : public VectorBase<CursorStation, StationResult>
 
 struct StationDataResult
 {
-    typedef std::unordered_map<int, StationDesc>::iterator station_t;
-    station_t station;
+    dballe::Station station;
     int id_data;
     Var* var;
 
-    StationDataResult(station_t station, int id_data, Var* var) : station(station), id_data(id_data), var(var) {}
+    StationDataResult(const dballe::Station& station, int id_data, Var* var) : station(station), id_data(id_data), var(var) {}
     StationDataResult(const StationDataResult&) = delete;
     StationDataResult(StationDataResult&& o) : station(o.station), id_data(o.id_data), var(o.var) { o.var = nullptr; }
     StationDataResult& operator=(const StationDataResult&) = delete;
@@ -208,14 +204,12 @@ struct StationDataResult
     }
     ~StationDataResult() { delete var; }
 
-    int get_station_id() const { return station->first; }
-    const StationDesc& get_stationdesc() const { return station->second; }
+    int get_station_id() const { return station.ana_id; }
 
     void to_record(v7::DB& db, Record& rec) const
     {
-        rec.seti("ana_id", station->first);
-        db.repinfo().to_record(station->second.rep, rec);
-        station->second.to_record(rec);
+        db.repinfo().to_record(station.report, rec);
+        station.to_record(rec);
         rec.seti("context_id", id_data);
 
         char bname[7];
@@ -232,8 +226,8 @@ struct StationDataResult
 
     void dump(FILE* out) const
     {
-        fprintf(out, "%02d %3d %02.4f %02.4f %-10s %4d ",
-                station->first, station->second.rep, station->second.coords.dlat(), station->second.coords.dlon(), station->second.ident.get(), id_data);
+        fprintf(out, "%02d %8.8s %02.4f %02.4f %-10s %4d ",
+                station.ana_id, station.report.c_str(), station.coords.dlat(), station.coords.dlon(), station.ident.get(), id_data);
         var->print_without_attrs(out, "\n");
     }
 };
@@ -252,17 +246,11 @@ struct StationData : public BaseData<CursorStationData, StationDataResult>
 {
     using BaseData::BaseData;
 
-    std::unordered_map<int, StationDesc> stations;
-
     void load(const DataQueryBuilder& qb)
     {
-        stations.clear();
         results.clear();
-        this->tr->db->driver().run_station_data_query(qb, [&](int id_station, const StationDesc& station, int id_data, std::unique_ptr<wreport::Var> var) {
-            std::unordered_map<int, StationDesc>::iterator i = stations.find(id_station);
-            if (i == stations.end())
-                tie(i, std::ignore) = stations.insert(make_pair(id_station, station));
-            results.emplace_back(i, id_data, var.release());
+        this->tr->db->driver().run_station_data_query(qb, [&](const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var) {
+            results.emplace_back(station, id_data, var.release());
         });
         at_start = true;
         cur = results.begin();
@@ -281,7 +269,7 @@ struct DataResult : public StationDataResult
 
     using StationDataResult::StationDataResult;
 
-    DataResult(station_t station, int id_levtr, const Datetime& datetime, int id_data, Var* var)
+    DataResult(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, Var* var)
         : StationDataResult(station, id_data, var), id_levtr(id_levtr), datetime(datetime) {}
 
     void to_record(v7::DB& db, Record& rec) const
@@ -292,8 +280,8 @@ struct DataResult : public StationDataResult
 
     void dump(FILE* out) const
     {
-        fprintf(out, "%02d %3d %02.4f %02.4f %-10s %4d %4d ",
-                station->first, station->second.rep, station->second.coords.dlat(), station->second.coords.dlon(), station->second.ident.get(), id_levtr, id_data);
+        fprintf(out, "%02d %8.8s %02.4f %02.4f %-10s %4d %4d ",
+                station.ana_id, station.report.c_str(), station.coords.dlat(), station.coords.dlon(), station.ident.get(), id_levtr, id_data);
         datetime.print_iso8601(out, ' ');
         fprintf(out, " ");
         var->print_without_attrs(out, "\n");
@@ -305,20 +293,15 @@ struct Data : public BaseData<CursorData, DataResult>
 {
     using BaseData::BaseData;
 
-    std::unordered_map<int, StationDesc> stations;
     std::unordered_map<int, LevTrDesc> levtrs;
 
     void load(const DataQueryBuilder& qb)
     {
-        stations.clear();
         levtrs.clear();
         results.clear();
         set<int> ids;
-        this->tr->db->driver().run_data_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
-            std::unordered_map<int, StationDesc>::iterator i = stations.find(id_station);
-            if (i == stations.end())
-                tie(i, std::ignore) = stations.insert(make_pair(id_station, station));
-            results.emplace_back(i, id_levtr, datetime, id_data, var.release());
+        this->tr->db->driver().run_data_query(qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+            results.emplace_back(station, id_levtr, datetime, id_data, var.release());
             ids.insert(id_levtr);
         });
         at_start = true;
@@ -360,13 +343,13 @@ struct Best : public Data
     int insert_cur_prio;
 
     /// Append or replace the last result according to priotity. Returns false if the value has been ignored.
-    bool add_to_results(std::unordered_map<int, StationDesc>::iterator station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)
+    bool add_to_results(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)
     {
-        int prio = tr->db->repinfo().get_priority(station->second.rep);
+        int prio = tr->db->repinfo().get_priority(station.report);
 
         if (results.empty()) goto append;
-        if (station->second.coords != results.back().station->second.coords) goto append;
-        if (station->second.ident != results.back().station->second.ident) goto append;
+        if (station.coords != results.back().station.coords) goto append;
+        if (station.ident != results.back().station.ident) goto append;
         if (id_levtr != results.back().id_levtr) goto append;
         if (datetime != results.back().datetime) goto append;
         if (var->code() != results.back().var->code()) goto append;
@@ -389,15 +372,11 @@ struct Best : public Data
 
     void load(const DataQueryBuilder& qb)
     {
-        stations.clear();
         levtrs.clear();
         results.clear();
         set<int> ids;
-        this->tr->db->driver().run_data_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
-            std::unordered_map<int, StationDesc>::iterator i = stations.find(id_station);
-            if (i == stations.end())
-                tie(i, std::ignore) = stations.insert(make_pair(id_station, station));
-            if (add_to_results(i, id_levtr, datetime, id_data, move(var)))
+        this->tr->db->driver().run_data_query(qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+            if (add_to_results(station, id_levtr, datetime, id_data, move(var)))
                 ids.insert(id_levtr);
         });
         at_start = true;
@@ -412,24 +391,21 @@ struct Best : public Data
 
 struct SummaryResult
 {
-    typedef std::unordered_map<int, StationDesc>::iterator station_t;
-    station_t station;
+    dballe::Station station;
     int id_levtr;
     wreport::Varcode code;
     DatetimeRange datetime;
     size_t count = 0;
 
-    SummaryResult(station_t station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t count)
+    SummaryResult(const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t count)
         : station(station), id_levtr(id_levtr), code(code), datetime(datetime), count(count) {}
 
-    int get_station_id() const { return station->first; }
-    const StationDesc& get_stationdesc() const { return station->second; }
+    int get_station_id() const { return station.ana_id; }
 
     void to_record(v7::DB& db, Record& rec) const
     {
-        rec.seti("ana_id", station->first);
-        db.repinfo().to_record(station->second.rep, rec);
-        station->second.to_record(rec);
+        db.repinfo().to_record(station.report, rec);
+        station.to_record(rec);
 
         char bname[7];
         snprintf(bname, 7, "B%02d%03d", WR_VAR_X(code), WR_VAR_Y(code));
@@ -444,8 +420,8 @@ struct SummaryResult
 
     void dump(FILE* out) const
     {
-        fprintf(out, "%02d %3d %02.4f %02.4f %-10s %4d %d%02d%03d\n",
-                station->first, station->second.rep, station->second.coords.dlat(), station->second.coords.dlon(), station->second.ident.get(), id_levtr, WR_VAR_FXY(code));
+        fprintf(out, "%02d %8.8s %02.4f %02.4f %-10s %4d %d%02d%03d\n",
+                station.ana_id, station.report.c_str(), station.coords.dlat(), station.coords.dlon(), station.ident.get(), id_levtr, WR_VAR_FXY(code));
     }
 };
 
@@ -453,7 +429,6 @@ struct Summary : public VectorBase<CursorSummary, SummaryResult>
 {
     using VectorBase::VectorBase;
 
-    std::unordered_map<int, StationDesc> stations;
     std::unordered_map<int, LevTrDesc> levtrs;
 
     const LevTrDesc& get_levtr(int id_levtr) const
@@ -484,15 +459,11 @@ struct Summary : public VectorBase<CursorSummary, SummaryResult>
 
     void load(const SummaryQueryBuilder& qb)
     {
-        stations.clear();
         levtrs.clear();
         results.clear();
         set<int> ids;
-        this->tr->db->driver().run_summary_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t count) {
-            std::unordered_map<int, StationDesc>::iterator i = stations.find(id_station);
-            if (i == stations.end())
-                tie(i, std::ignore) = stations.insert(make_pair(id_station, station));
-            results.emplace_back(i, id_levtr, code, datetime, count);
+        this->tr->db->driver().run_summary_query(qb, [&](const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t count) {
+            results.emplace_back(station, id_levtr, code, datetime, count);
             ids.insert(id_levtr);
         });
         at_start = true;

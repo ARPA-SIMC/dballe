@@ -86,16 +86,18 @@ struct Repinfo
      * Fill repinfo information in a Record based on the repinfo entry with the
      * given ID
      */
-    void to_record(int id, Record& rec);
+    // FIXME: still used?
+    void to_record(const std::string& report, Record& rec);
 
     /// Get the rep_memo for a given ID; throws if id is not valud
+    // FIXME: use std::string?
     const char* get_rep_memo(int id);
 
     /// Get the ID for a given rep_memo; returns -1 if rep_memo is not valid
     int get_id(const char* rep_memo);
 
     /// Get the priority for a given ID; returns INT_MAX if id is not valid
-    int get_priority(int id);
+    int get_priority(const std::string& report);
 
     /**
      * Update the report type information in the database using the data from the

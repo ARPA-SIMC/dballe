@@ -153,14 +153,13 @@ class Tests : public FixtureTestCase<TransactionFixture<DB, DBData>>
                         d->station().obtain_id(1100000, 4500000);
                     break;
                 case V7:
-                    if (auto d = dynamic_cast<v7::DB*>(f.db.get()))
+                    if (auto t = dynamic_cast<v7::Transaction*>(f.tr.get()))
                     {
-                        db::v7::StationDesc sde;
-                        db::v7::State state;
-                        sde.rep = 1;
-                        sde.coords = Coords(1100000, 4500000);
-                        sde.ident = "ciao";
-                        d->station().obtain_id(state, sde);
+                        dballe::Station station;
+                        station.report = "synop";
+                        station.coords = Coords(1100000, 4500000);
+                        station.ident = "ciao";
+                        wassert(t->db->station().obtain_id(*t, station));
                     }
                     break;
                 case V5: throw error_unimplemented("v5 db is not supported");
