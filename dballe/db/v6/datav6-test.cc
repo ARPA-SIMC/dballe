@@ -148,8 +148,6 @@ class Tests : public FixtureTestCase<Fixture>
                     wassert(actual(e.what()).contains("refusing to overwrite existing data"));
                 }
             }
-
-            f.tr->commit();
         });
     }
 };

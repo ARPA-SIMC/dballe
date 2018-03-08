@@ -69,15 +69,35 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
     void register_tests() override;
 };
 
-Tests<V6DB> tg2("dbapi_v6_sqlite", "SQLITE");
-Tests<V7DB> tg3("dbapi_v7_sqlite", "SQLITE");
+template<typename DB>
+class CommitTests : public FixtureTestCase<DBFixture<DB>>
+{
+    typedef DBFixture<DB> Fixture;
+    using FixtureTestCase<Fixture>::FixtureTestCase;
+
+    void register_tests() override;
+};
+
+Tests<V6DB> tg1("dbapi_tr_v6_sqlite", "SQLITE");
+Tests<V7DB> tg2("dbapi_tr_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests<V6DB> tg5("dbapi_v6_postgresql", "POSTGRESQL");
-Tests<V7DB> tg6("dbapi_v7_postgresql", "POSTGRESQL");
+Tests<V6DB> tg3("dbapi_tr_v6_postgresql", "POSTGRESQL");
+Tests<V7DB> tg4("dbapi_tr_v7_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests<V6DB> tg7("dbapi_v6_mysql", "MYSQL");
-Tests<V7DB> tg8("dbapi_v7_mysql", "MYSQL");
+Tests<V6DB> tg5("dbapi_tr_v6_mysql", "MYSQL");
+Tests<V7DB> tg6("dbapi_tr_v7_mysql", "MYSQL");
+#endif
+
+CommitTests<V6DB> ct1("dbapi_db_v6_sqlite", "SQLITE");
+CommitTests<V7DB> ct2("dbapi_db_v7_sqlite", "SQLITE");
+#ifdef HAVE_LIBPQ
+CommitTests<V6DB> ct3("dbapi_db_v6_postgresql", "POSTGRESQL");
+CommitTests<V7DB> ct4("dbapi_db_v7_postgresql", "POSTGRESQL");
+#endif
+#ifdef HAVE_MYSQL
+CommitTests<V6DB> ct5("dbapi_db_v6_mysql", "MYSQL");
+CommitTests<V7DB> ct6("dbapi_db_v7_mysql", "MYSQL");
 #endif
 
 template<typename DB>
@@ -749,39 +769,6 @@ this->add_method("segfault1", [](Fixture& f) {
     dbapi0.setc("*B33194", "50");
     wassert(dbapi0.critica());
 });
-this->add_method("attr_insert", [](Fixture& f) {
-    // Reproduce a problem with attribute insert when inserting a variable
-    // that already exists in the database
-    fortran::DbAPI pre(f.tr, "write", "write", "write");
-    pre.unsetall();
-    pre.seti("lat", 4452128);
-    pre.seti("lon", 1199127);
-    pre.unset("ident");
-    pre.unset("mobile");
-    pre.setc("rep_memo", "locali");
-    pre.setdate(2014, 8, 1, 0, 0, 0);
-    pre.setlevel(103, 2000, 2147483647, 2147483647);
-    pre.settimerange(254, 0, 0);
-    pre.setd("B12101", 273.149994);
-    pre.prendilo();
-    pre.fatto();
-
-    fortran::DbAPI dbapi0(f.tr, "write", "write", "write");
-    dbapi0.unsetall();
-    dbapi0.seti("lat", 4452128);
-    dbapi0.seti("lon", 1199127);
-    dbapi0.unset("ident");
-    dbapi0.unset("mobile");
-    dbapi0.setc("rep_memo", "locali");
-    dbapi0.setdate(2014, 8, 1, 0, 0, 0);
-    dbapi0.setlevel(103, 2000, 2147483647, 2147483647);
-    dbapi0.settimerange(254, 0, 0);
-    dbapi0.setd("B12101", 273.149994);
-    dbapi0.prendilo();
-    dbapi0.seti("*B33192", 0);
-    dbapi0.setc("*var_related", "B12101");
-    dbapi0.critica();
-});
 
 this->add_method("issue45", [](Fixture& f) {
     // ** Execution begins **
@@ -822,17 +809,64 @@ this->add_method("issue52", [](Fixture& f) {
     // error: no year information found in message to import
 });
 
+}
+
+template<typename DB>
+void CommitTests<DB>::register_tests() {
+
+this->add_method("attr_insert", [](Fixture& f) {
+    // Reproduce a problem with attribute insert when inserting a variable
+    // that already exists in the database
+    {
+        auto tr = f.db->transaction();
+        fortran::DbAPI pre(tr, "write", "write", "write");
+        pre.unsetall();
+        pre.seti("lat", 4452128);
+        pre.seti("lon", 1199127);
+        pre.unset("ident");
+        pre.unset("mobile");
+        pre.setc("rep_memo", "locali");
+        pre.setdate(2014, 8, 1, 0, 0, 0);
+        pre.setlevel(103, 2000, 2147483647, 2147483647);
+        pre.settimerange(254, 0, 0);
+        pre.setd("B12101", 273.149994);
+        pre.prendilo();
+        pre.fatto();
+    }
+
+    {
+        auto tr = f.db->transaction();
+        fortran::DbAPI dbapi0(tr, "write", "write", "write");
+        dbapi0.unsetall();
+        dbapi0.seti("lat", 4452128);
+        dbapi0.seti("lon", 1199127);
+        dbapi0.unset("ident");
+        dbapi0.unset("mobile");
+        dbapi0.setc("rep_memo", "locali");
+        dbapi0.setdate(2014, 8, 1, 0, 0, 0);
+        dbapi0.setlevel(103, 2000, 2147483647, 2147483647);
+        dbapi0.settimerange(254, 0, 0);
+        dbapi0.setd("B12101", 273.149994);
+        dbapi0.prendilo();
+        dbapi0.seti("*B33192", 0);
+        dbapi0.setc("*var_related", "B12101");
+        dbapi0.critica();
+    }
+});
+
 this->add_method("issue73", [](Fixture& f) {
     using namespace wreport;
 
     {
-        fortran::DbAPI dbapi(f.tr, "write", "write", "write");
+        auto tr = f.db->transaction();
+        fortran::DbAPI dbapi(tr, "write", "write", "write");
         wassert(populate_variables(dbapi));
         wassert(dbapi.fatto());
     }
 
     {
-        fortran::DbAPI dbapi(f.tr, "read", "read", "read");
+        auto tr = f.db->transaction();
+        fortran::DbAPI dbapi(tr, "read", "read", "read");
         dbapi.setc("varlist", "B10004,B12101,B12103");
         wassert(actual(dbapi.voglioquesto()) == 1);
     }
@@ -843,7 +877,8 @@ this->add_method("issue75", [](Fixture& f) {
 
     std::string fname = dballe::tests::datafile("bufr/issue75.bufr");
     {
-        fortran::DbAPI dbapi(f.tr, "write", "write", "write");
+        auto tr = f.db->transaction();
+        fortran::DbAPI dbapi(tr, "write", "write", "write");
         wassert(dbapi.messages_open_input(fname.c_str(), "r", File::BUFR, true));
         wassert(actual(dbapi.messages_read_next()).istrue());
         wassert(actual(dbapi.messages_read_next()).istrue());
@@ -853,7 +888,8 @@ this->add_method("issue75", [](Fixture& f) {
     }
 
     {
-        fortran::DbAPI dbapi(f.tr, "read", "read", "read");
+        auto tr = f.db->transaction();
+        fortran::DbAPI dbapi(tr, "read", "read", "read");
         dbapi.setc("rep_memo", "temp");
         dbapi.setcontextana();
         dbapi.setc("varlist", "B07001");
@@ -867,7 +903,8 @@ this->add_method("transactions", [](Fixture& f) {
     // FIXME: move check to fortran and python bindings
     // Write, do not commit
     {
-        fortran::DbAPI api(f.tr, "write", "write", "write");
+        auto tr = f.db->transaction();
+        fortran::DbAPI api(tr, "write", "write", "write");
         wassert(actual(api.voglioquesto()) == 0);
         api.setd("lat", 44.5);
         api.setd("lon", 11.5);
@@ -882,7 +919,8 @@ this->add_method("transactions", [](Fixture& f) {
 
     // Write, commit
     {
-        fortran::DbAPI api(f.tr, "write", "write", "write");
+        auto tr = f.db->transaction();
+        fortran::DbAPI api(tr, "write", "write", "write");
         wassert(actual(api.voglioquesto()) == 0);
         api.setd("lat", 44.5);
         api.setd("lon", 11.5);
@@ -898,7 +936,8 @@ this->add_method("transactions", [](Fixture& f) {
 
     // This time, data was written
     {
-        fortran::DbAPI api(f.tr, "write", "write", "write");
+        auto tr = f.db->transaction();
+        fortran::DbAPI api(tr, "write", "write", "write");
         wassert(actual(api.voglioquesto()) == 1);
     }
 });
