@@ -204,7 +204,7 @@ void PostgreSQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::Ins
 
             auto cur = t.state.add_stationvalue(StationValueDesc(vars.shared_context.station, code), vs);
             auto vi = std::find_if(vars.to_query.begin(), vars.to_query.end(), [code](const bulk::StationVar* v) { return v->var->code() == code; });
-            if (vi == vars.to_query.end()) return;
+            if (vi == vars.to_query.end()) continue;
             (*vi)->cur = cur;
             vars.to_query.erase(vi);
         }

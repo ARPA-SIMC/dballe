@@ -311,6 +311,17 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             second.set_wet_temp_2m(275.8);    // Data variable, same value
             second.set_humidity(55.6);        // Data variable, new value
 
+            Msg third;
+            add_common(third);
+            third.set_block(6);              // Station variable, different value
+            third.set_station(2);            // Station variable, same value
+            third.set_height_station(101.0); // Station variable, same value as the second
+            third.set_height_baro(102.0);    // Station variable, new value
+            third.set_temp_2m(282.1);        // Data variable, different value
+            third.set_wet_temp_2m(275.8);    // Data variable, same value
+            third.set_humidity(55.6);        // Data variable, same value as the second
+            third.set_dewpoint_2m(55.6);     // Data variable, new value
+
             // Import the first message
             f.tr->remove_all();
             f.tr->import_msg(first, NULL, DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE);
@@ -327,6 +338,17 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             Messages export_second = dballe::tests::messages_from_db(f.tr, "rep_memo=synop");
             wassert(actual(export_second.size()) == 1);
             wassert(actual(diff_msg(second, export_second[0], "second")) == 0);
+
+            // Try again with empty caches
+            f.tr->clear_cached_state();
+
+            // Import the third message
+            f.tr->import_msg(third, NULL, DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE);
+
+            // Export and check
+            Messages export_third = dballe::tests::messages_from_db(f.tr, "rep_memo=synop");
+            wassert(actual(export_third.size()) == 1);
+            wassert(actual(diff_msg(third, export_third[0], "third")) == 0);
         });
     }
 };
