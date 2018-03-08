@@ -32,13 +32,13 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             wassert(actual(s.is_valid()).isfalse());
 
             // Build the whole db summary
-            auto cur = f.db->query_summary(query);
+            auto cur = f.tr->query_summary(query);
             while (cur->next())
                 s.add_summary(*cur);
 
             // Check its contents
             wassert(actual(s.is_valid()).istrue());
-            switch (f.db->format())
+            switch (DB::format)
             {
                 case V6:
                     wassert(actual(s.all_stations.size()) == 1);

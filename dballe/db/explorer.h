@@ -15,9 +15,6 @@ namespace db {
 class Explorer
 {
 protected:
-    /// DB-All.e database
-    dballe::DB& db;
-
     /// Currently active filter
     dballe::core::Query filter;
 
@@ -29,7 +26,7 @@ protected:
 
 
 public:
-    Explorer(dballe::DB& db);
+    Explorer();
     ~Explorer();
 
     /// Get the current filter
@@ -45,7 +42,7 @@ public:
      *
      * Use this when you suspect that the database has been externally modified
      */
-    void revalidate();
+    void revalidate(dballe::db::Transaction& tr);
 
     /// Get a reference to the global summary
     const dballe::db::Summary& global_summary() const;

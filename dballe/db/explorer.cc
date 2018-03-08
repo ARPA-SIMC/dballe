@@ -9,8 +9,7 @@ using namespace dballe;
 namespace dballe {
 namespace db {
 
-Explorer::Explorer(dballe::DB& db)
-    : db(db)
+Explorer::Explorer()
 {
 }
 
@@ -47,7 +46,7 @@ void Explorer::set_filter(const dballe::Query& query)
     _active_summary = new_active_summary.release();
 }
 
-void Explorer::revalidate()
+void Explorer::revalidate(dballe::db::Transaction& tr)
 {
     delete _global_summary;
     _global_summary = nullptr;
@@ -59,11 +58,9 @@ void Explorer::revalidate()
 
     unique_ptr<db::Summary> new_global_summary(new db::Summary(query));
 
-    auto tr = db.transaction();
-    auto cur = tr->query_summary(query);
+    auto cur = tr.query_summary(query);
     while (cur->next())
         new_global_summary->add_summary(*cur);
-    tr->rollback();
 
     unique_ptr<db::Summary> new_active_summary(new db::Summary(filter));
     new_active_summary->add_filtered(*new_global_summary);

@@ -42,8 +42,8 @@ this->add_method("filter_rep_memo", [](Fixture& f) {
     OldDballeTestDataSet test_data;
     wassert(f.populate(test_data));
 
-    Explorer explorer(*f.db);
-    explorer.revalidate();
+    Explorer explorer;
+    explorer.revalidate(*f.tr);
 
     core::Query query;
     query.set_from_test_string("rep_memo=metar");
