@@ -25,7 +25,7 @@ namespace python {
 /**
  * Create a new dpy_Explorer for an existing DB
  */
-dpy_Explorer* explorer_create(dballe::DB& db);
+dpy_Explorer* explorer_create();
 
 /**
  * Create a new dpy_Explorer, taking over memory management

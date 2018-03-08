@@ -229,11 +229,15 @@ static PyObject* dpy_Explorer_set_filter(dpy_Explorer* self, PyObject* args)
     Py_RETURN_NONE;
 }
 
-static PyObject* dpy_Explorer_revalidate(dpy_Explorer* self)
+static PyObject* dpy_Explorer_revalidate(dpy_Explorer* self, PyObject* args)
 {
+    dpy_Transaction* tr;
+    if (!PyArg_ParseTuple(args, "O!", &dpy_Transaction_Type, &tr))
+        return nullptr;
+
     try {
         ReleaseGIL rg;
-        self->explorer->revalidate();
+        self->explorer->revalidate(*tr->db);
     } DBALLE_CATCH_RETURN_PYO
 
     Py_RETURN_NONE;
@@ -242,7 +246,7 @@ static PyObject* dpy_Explorer_revalidate(dpy_Explorer* self)
 static PyMethodDef dpy_Explorer_methods[] = {
     {"set_filter",        (PyCFunction)dpy_Explorer_set_filter, METH_VARARGS,
         "Set a new filter, updating all browsing data" },
-    {"revalidate",        (PyCFunction)dpy_Explorer_revalidate, METH_NOARGS, R"(
+    {"revalidate",        (PyCFunction)dpy_Explorer_revalidate, METH_VARARGS, R"(
         Throw away all cached data and reload everything from the database.
 
         Use this when you suspect that the database has been externally modified
@@ -252,13 +256,12 @@ static PyMethodDef dpy_Explorer_methods[] = {
 
 static int dpy_Explorer_init(dpy_Explorer* self, PyObject* args, PyObject* kw)
 {
-    static const char* kwlist[] = { "db", nullptr };
-    dpy_DB* db = nullptr;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "O!", const_cast<char**>(kwlist), &dpy_DB_Type, &db))
+    static const char* kwlist[] = { nullptr };
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "", const_cast<char**>(kwlist)))
         return -1;
 
     try {
-        self->explorer = new db::Explorer(*db->db);
+        self->explorer = new db::Explorer;
     } DBALLE_CATCH_RETURN_INT
 
     return 0;
@@ -345,9 +348,9 @@ PyTypeObject dpy_Explorer_Type = {
 namespace dballe {
 namespace python {
 
-dpy_Explorer* explorer_create(dballe::DB& db)
+dpy_Explorer* explorer_create()
 {
-    unique_ptr<db::Explorer> explorer(new db::Explorer(db));
+    unique_ptr<db::Explorer> explorer;
     return explorer_create(move(explorer));
 }
 

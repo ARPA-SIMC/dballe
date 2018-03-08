@@ -37,8 +37,8 @@ class DballeTestMixin(DballeDBMixin):
         ids = self.db.insert_data(data, False, True)
 
     def testCreate(self):
-        explorer = dballe.Explorer(self.db)
-        explorer.revalidate()
+        explorer = dballe.Explorer()
+        explorer.revalidate(self.db.transaction())
         explorer.set_filter(dballe.Record(rep_memo="amdar"))
 
         self.assertEqual(str(explorer), "Explorer")
