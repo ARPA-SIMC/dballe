@@ -214,8 +214,6 @@ public:
      */
     void vacuum();
 
-    bool is_station_variable(int data_id, wreport::Varcode varcode) override;
-
     /**
      * Dump the entire contents of the database to an output stream
      */

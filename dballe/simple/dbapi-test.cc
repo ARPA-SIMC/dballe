@@ -85,7 +85,7 @@ void Tests<DB>::register_tests() {
 
 this->add_method("query_basic", [](Fixture& f) {
     // Test vars
-    fortran::DbAPI api(f.db, "write", "write", "write");
+    fortran::DbAPI api(f.tr, "write", "write", "write");
     populate_variables(api);
 
     // Query stations
@@ -113,7 +113,7 @@ this->add_method("query_basic", [](Fixture& f) {
 });
 this->add_method("query_attrs", [](Fixture& f) {
     // Test attrs
-    fortran::DbAPI api(f.db, "write", "write", "write");
+    fortran::DbAPI api(f.tr, "write", "write", "write");
     populate_variables(api);
 
     int reference_id;
@@ -161,7 +161,7 @@ this->add_method("query_attrs", [](Fixture& f) {
 });
 this->add_method("insert_attrs_prendilo", [](Fixture& f) {
     // Test attrs prendilo
-    fortran::DbAPI api(f.db, "write", "write", "write");
+    fortran::DbAPI api(f.tr, "write", "write", "write");
     populate_variables(api);
 
     // Set one attribute after a prendilo
@@ -186,7 +186,7 @@ this->add_method("insert_attrs_prendilo", [](Fixture& f) {
 });
 this->add_method("insert_attrs_prendilo_anaid", [](Fixture& f) {
     // Test prendilo anaid
-    fortran::DbAPI api(f.db, "write", "write", "write");
+    fortran::DbAPI api(f.tr, "write", "write", "write");
     populate_variables(api);
 
     // Run a prendilo
@@ -210,7 +210,7 @@ this->add_method("insert_attrs_prendilo_anaid", [](Fixture& f) {
 });
 this->add_method("insert_auto_repmemo", [](Fixture& f) {
     // Check that an unknown rep_memo is correctly handled on insert
-    fortran::DbAPI api(f.db, "write", "write", "write");
+    fortran::DbAPI api(f.tr, "write", "write", "write");
 
     // Insert a record with a rep_memo that is not in the database
     api.setc("rep_memo", "insert_auto_repmemo");
@@ -230,7 +230,7 @@ this->add_method("insert_auto_repmemo", [](Fixture& f) {
 });
 this->add_method("undefined_level2", [](Fixture& f) {
     // Test handling of values with undefined leveltype2 and l2
-    fortran::DbAPI api(f.db, "write", "write", "write");
+    fortran::DbAPI api(f.tr, "write", "write", "write");
     api.setd("lat", 44.5);
     api.setd("lon", 11.5);
     api.setc("rep_memo", "synop");
@@ -256,7 +256,7 @@ this->add_method("undefined_level2", [](Fixture& f) {
 });
 this->add_method("delete_attrs_dammelo", [](Fixture& f) {
     // Test deleting attributes after a dammelo
-    fortran::DbAPI api(f.db, "write", "write", "write");
+    fortran::DbAPI api(f.tr, "write", "write", "write");
     populate_variables(api);
 
     // Query all variables and add attributes
@@ -300,7 +300,7 @@ this->add_method("delete_attrs_dammelo", [](Fixture& f) {
 });
 this->add_method("perms_consistency", [](Fixture& f) {
     {
-        fortran::DbAPI api(f.db, "read", "read", "read");
+        fortran::DbAPI api(f.tr, "read", "read", "read");
         try {
             api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
         } catch (std::exception& e) {
@@ -308,7 +308,7 @@ this->add_method("perms_consistency", [](Fixture& f) {
         }
     }
     {
-        fortran::DbAPI api(f.db, "write", "read", "read");
+        fortran::DbAPI api(f.tr, "write", "read", "read");
         try {
             api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
         } catch (std::exception& e) {
@@ -316,7 +316,7 @@ this->add_method("perms_consistency", [](Fixture& f) {
         }
     }
     {
-        fortran::DbAPI api(f.db, "read", "add", "read");
+        fortran::DbAPI api(f.tr, "read", "add", "read");
         try {
             api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
         } catch (std::exception& e) {
@@ -324,25 +324,25 @@ this->add_method("perms_consistency", [](Fixture& f) {
         }
     }
     {
-        fortran::DbAPI api(f.db, "write", "add", "read");
+        fortran::DbAPI api(f.tr, "write", "add", "read");
         api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
     }
     {
-        fortran::DbAPI api(f.db, "write", "write", "read");
+        fortran::DbAPI api(f.tr, "write", "write", "read");
         api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
     }
     {
-        fortran::DbAPI api(f.db, "write", "add", "write");
+        fortran::DbAPI api(f.tr, "write", "add", "write");
         api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
     }
     {
-        fortran::DbAPI api(f.db, "write", "write", "write");
+        fortran::DbAPI api(f.tr, "write", "write", "write");
         api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
     }
 });
 this->add_method("messages_read_messages", [](Fixture& f) {
     // 2 messages, 1 subset each
-    fortran::DbAPI api(f.db, "write", "write", "write");
+    fortran::DbAPI api(f.tr, "write", "write", "write");
     api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
 
     // At the beginning, the DB is empty
@@ -363,7 +363,7 @@ this->add_method("messages_read_messages", [](Fixture& f) {
     wassert(actual(api.voglioquesto()) == 0);
 });
 this->add_method("messages_read_messages_stdin", [](Fixture& f) {
-    fortran::DbAPI api(f.db, "write", "write", "write");
+    fortran::DbAPI api(f.tr, "write", "write", "write");
 
     // Connect stdin to an input file
     wreport::sys::File in(tests::datafile("bufr/synotemp.bufr"), O_RDONLY);
@@ -391,7 +391,7 @@ this->add_method("messages_read_messages_stdin", [](Fixture& f) {
 });
 this->add_method("messages_read_subsets", [](Fixture& f) {
     // 1 message, 6 subsets
-    fortran::DbAPI api(f.db, "write", "write", "write");
+    fortran::DbAPI api(f.tr, "write", "write", "write");
     api.messages_open_input(dballe::tests::datafile("bufr/temp-gts2.bufr").c_str(), "r", File::BUFR);
 
     // At the beginning, the DB is empty
@@ -424,7 +424,7 @@ this->add_method("messages_read_subsets", [](Fixture& f) {
 });
 this->add_method("messages_read_messages_subsets", [](Fixture& f) {
     // 2 messages, 2 subsets each
-    fortran::DbAPI api(f.db, "write", "write", "write");
+    fortran::DbAPI api(f.tr, "write", "write", "write");
     api.messages_open_input(dballe::tests::datafile("bufr/db-messages1.bufr").c_str(), "r", File::BUFR);
 
     // At the beginning, the DB is empty
@@ -463,7 +463,7 @@ this->add_method("messages_read_messages_subsets", [](Fixture& f) {
 this->add_method("messages_write", [](Fixture& f) {
     // Write one message
     {
-        fortran::DbAPI api(f.db, "write", "write", "write");
+        fortran::DbAPI api(f.tr, "write", "write", "write");
         api.messages_open_output("test.bufr", "wb", File::BUFR);
 
         api.setd("lat", 44.5);
@@ -487,7 +487,7 @@ this->add_method("messages_write", [](Fixture& f) {
 
     // Read it back
     {
-        fortran::DbAPI api(f.db, "write", "write", "write");
+        fortran::DbAPI api(f.tr, "write", "write", "write");
         api.messages_open_input("test.bufr", "rb", File::BUFR);
 
         wassert(actual(api.messages_read_next()).istrue());
@@ -508,7 +508,7 @@ this->add_method("messages_write_stdout", [](Fixture& f) {
         TempBind tb(1, out);
 
         {
-            fortran::DbAPI api(f.db, "write", "write", "write");
+            fortran::DbAPI api(f.tr, "write", "write", "write");
             api.messages_open_output("", "wb", File::BUFR);
 
             api.setd("lat", 44.5);
@@ -535,7 +535,7 @@ this->add_method("messages_write_stdout", [](Fixture& f) {
 
     // Read it back
     {
-        fortran::DbAPI api(f.db, "write", "write", "write");
+        fortran::DbAPI api(f.tr, "write", "write", "write");
         api.messages_open_input("test.bufr", "rb", File::BUFR);
 
         wassert(actual(api.messages_read_next()).istrue());
@@ -551,7 +551,7 @@ this->add_method("messages_write_stdout", [](Fixture& f) {
 this->add_method("messages_bug1", [](Fixture& f) {
     // Reproduce an issue reported by Paolo
     // 2 messages, 2 subsets each
-    fortran::DbAPI api(f.db, "write", "write", "write");
+    fortran::DbAPI api(f.tr, "write", "write", "write");
     api.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140312.bufr").c_str(), "r", File::BUFR);
     wassert(actual(api.messages_read_next()) == 1);
     api.unsetall();
@@ -565,7 +565,7 @@ this->add_method("messages_bug1", [](Fixture& f) {
 this->add_method("messages_bug2", [](Fixture& f) {
     // Reproduce an issue reported by Paolo
     // 2 messages, 2 subsets each
-    fortran::DbAPI api(f.db, "write", "write", "write");
+    fortran::DbAPI api(f.tr, "write", "write", "write");
     api.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140326.bufr").c_str(), "r", File::BUFR);
     wassert(actual(api.messages_read_next()) == 1);
     api.unsetall();
@@ -577,7 +577,7 @@ this->add_method("messages_bug2", [](Fixture& f) {
 });
 this->add_method("attr_reference_id", [](Fixture& f) {
     // Test attr_reference_id behaviour
-    fortran::DbAPI api(f.db, "write", "write", "write");
+    fortran::DbAPI api(f.tr, "write", "write", "write");
     // Initial data
     api.setd("lat", 44.5);
     api.setd("lon", 11.5);
@@ -678,7 +678,7 @@ this->add_method("attr_reference_id", [](Fixture& f) {
 });
 this->add_method("attrs_bug1", [](Fixture& f) {
     // Reproduce a bug when setting attributes
-    fortran::DbAPI dbapi0(f.db, "write", "write", "write");
+    fortran::DbAPI dbapi0(f.tr, "write", "write", "write");
     dbapi0.scopa();
 
     // Add a value
@@ -711,7 +711,7 @@ this->add_method("attrs_bug1", [](Fixture& f) {
 this->add_method("stationdata_bug1", [](Fixture& f) {
     // Reproduce a bug handling station data
     {
-        fortran::DbAPI dbapi0(f.db, "write", "write", "write");
+        fortran::DbAPI dbapi0(f.tr, "write", "write", "write");
         dbapi0.scopa();
         // Copy a message using the API
         dbapi0.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140403.bufr").c_str(), "r", File::BUFR);
@@ -739,7 +739,7 @@ this->add_method("stationdata_bug1", [](Fixture& f) {
 });
 this->add_method("segfault1", [](Fixture& f) {
     // Reproduce a segfault with mem:
-    fortran::DbAPI dbapi0(f.db, "write", "write", "write");
+    fortran::DbAPI dbapi0(f.tr, "write", "write", "write");
     dbapi0.seti("lat", 4500000);
     dbapi0.seti("lon", 1300000);
     dbapi0.setc("rep_memo", "generic");
@@ -752,7 +752,7 @@ this->add_method("segfault1", [](Fixture& f) {
 this->add_method("attr_insert", [](Fixture& f) {
     // Reproduce a problem with attribute insert when inserting a variable
     // that already exists in the database
-    fortran::DbAPI pre(f.db, "write", "write", "write");
+    fortran::DbAPI pre(f.tr, "write", "write", "write");
     pre.unsetall();
     pre.seti("lat", 4452128);
     pre.seti("lon", 1199127);
@@ -766,7 +766,7 @@ this->add_method("attr_insert", [](Fixture& f) {
     pre.prendilo();
     pre.fatto();
 
-    fortran::DbAPI dbapi0(f.db, "write", "write", "write");
+    fortran::DbAPI dbapi0(f.tr, "write", "write", "write");
     dbapi0.unsetall();
     dbapi0.seti("lat", 4452128);
     dbapi0.seti("lon", 1199127);
@@ -785,7 +785,7 @@ this->add_method("attr_insert", [](Fixture& f) {
 
 this->add_method("issue45", [](Fixture& f) {
     // ** Execution begins **
-    fortran::DbAPI dbapi0(f.db, "write", "write", "write");
+    fortran::DbAPI dbapi0(f.tr, "write", "write", "write");
     dbapi0.scopa();
     dbapi0.unsetall();
     dbapi0.seti("lat", 4500000);
@@ -814,7 +814,7 @@ this->add_method("issue52", [](Fixture& f) {
     using namespace wreport;
 
     std::string fname = dballe::tests::datafile("bufr/issue52.bufr");
-    fortran::DbAPI dbapi(f.db, "write", "write", "write");
+    fortran::DbAPI dbapi(f.tr, "write", "write", "write");
     wassert(dbapi.messages_open_input(fname.c_str(), "r", File::BUFR, true));
     wassert(actual(dbapi.messages_read_next()).istrue());
     wassert(actual(dbapi.messages_read_next()).istrue());
@@ -826,13 +826,13 @@ this->add_method("issue73", [](Fixture& f) {
     using namespace wreport;
 
     {
-        fortran::DbAPI dbapi(f.db, "write", "write", "write");
+        fortran::DbAPI dbapi(f.tr, "write", "write", "write");
         wassert(populate_variables(dbapi));
         wassert(dbapi.fatto());
     }
 
     {
-        fortran::DbAPI dbapi(f.db, "read", "read", "read");
+        fortran::DbAPI dbapi(f.tr, "read", "read", "read");
         dbapi.setc("varlist", "B10004,B12101,B12103");
         wassert(actual(dbapi.voglioquesto()) == 1);
     }
@@ -843,7 +843,7 @@ this->add_method("issue75", [](Fixture& f) {
 
     std::string fname = dballe::tests::datafile("bufr/issue75.bufr");
     {
-        fortran::DbAPI dbapi(f.db, "write", "write", "write");
+        fortran::DbAPI dbapi(f.tr, "write", "write", "write");
         wassert(dbapi.messages_open_input(fname.c_str(), "r", File::BUFR, true));
         wassert(actual(dbapi.messages_read_next()).istrue());
         wassert(actual(dbapi.messages_read_next()).istrue());
@@ -853,7 +853,7 @@ this->add_method("issue75", [](Fixture& f) {
     }
 
     {
-        fortran::DbAPI dbapi(f.db, "read", "read", "read");
+        fortran::DbAPI dbapi(f.tr, "read", "read", "read");
         dbapi.setc("rep_memo", "temp");
         dbapi.setcontextana();
         dbapi.setc("varlist", "B07001");
@@ -864,9 +864,10 @@ this->add_method("issue75", [](Fixture& f) {
 });
 
 this->add_method("transactions", [](Fixture& f) {
+    // FIXME: move check to fortran and python bindings
     // Write, do not commit
     {
-        fortran::DbAPI api(f.db, "write", "write", "write");
+        fortran::DbAPI api(f.tr, "write", "write", "write");
         wassert(actual(api.voglioquesto()) == 0);
         api.setd("lat", 44.5);
         api.setd("lon", 11.5);
@@ -881,7 +882,7 @@ this->add_method("transactions", [](Fixture& f) {
 
     // Write, commit
     {
-        fortran::DbAPI api(f.db, "write", "write", "write");
+        fortran::DbAPI api(f.tr, "write", "write", "write");
         wassert(actual(api.voglioquesto()) == 0);
         api.setd("lat", 44.5);
         api.setd("lon", 11.5);
@@ -897,7 +898,7 @@ this->add_method("transactions", [](Fixture& f) {
 
     // This time, data was written
     {
-        fortran::DbAPI api(f.db, "write", "write", "write");
+        fortran::DbAPI api(f.tr, "write", "write", "write");
         wassert(actual(api.voglioquesto()) == 1);
     }
 });

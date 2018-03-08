@@ -155,11 +155,6 @@ void DB::vacuum()
     tr->done();
 }
 
-bool DB::is_station_variable(int data_id, wreport::Varcode varcode)
-{
-    return false;
-}
-
 void DB::dump(FILE* out)
 {
     repinfo().dump(out);

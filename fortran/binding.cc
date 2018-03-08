@@ -252,7 +252,8 @@ int idba_preparati(int dbahandle, int* handle, const char* anaflag, const char* 
         HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_preparati(dbahandle, *handle, anaflag, dataflag, attrflag));
         auto db = DB::connect_from_url(hs.url.c_str());
-        h.api = new fortran::DbAPI(db, anaflag, dataflag, attrflag);
+        auto tr = db->transaction();
+        h.api = new fortran::DbAPI(tr, anaflag, dataflag, attrflag);
 
         return fortran::success();
     } catch (error& e) {

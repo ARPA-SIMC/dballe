@@ -707,20 +707,6 @@ public:
     void attr_remove_data(int data_id, const db::AttrList& attrs);
 
     /**
-     * Check if this varcode and data_id correspond to a station variable. This
-     * is used only to implement attr_* functions to be used when this
-     * information is not known. A database for which this information is not
-     * relevant (for example, in v6 databases there is a single ID space for
-     * station and data variable) can return any arbitrary value, since later
-     * they will be ignored.
-     *
-     * This should disappear once client APIs start making a distinction
-     * between attributes in station variables and attributes on data
-     * variables.
-     */
-    virtual bool is_station_variable(int data_id, wreport::Varcode varcode) = 0;
-
-    /**
      * Import a Message into the DB-All.e database
      *
      * @param msg

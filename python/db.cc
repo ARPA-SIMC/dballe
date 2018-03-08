@@ -556,19 +556,11 @@ static PyObject* dpy_DB_query_attrs(dpy_DB* self, PyObject* args, PyObject* kw)
 
     py_unique_ptr<dpy_Record> rec(record_create());
     try {
-        wreport::Varcode varcode = resolve_varcode(varname);
-        if (self->db->is_station_variable(reference_id, varcode))
-            self->db->attr_query_station(reference_id, [&](unique_ptr<Var>&& var) {
-                if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
-                    return;
-                rec->rec->set(move(var));
-            });
-        else
-            self->db->attr_query_data(reference_id, [&](unique_ptr<Var>&& var) {
-                if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
-                    return;
-                rec->rec->set(move(var));
-            });
+        self->db->attr_query_data(reference_id, [&](unique_ptr<Var>&& var) {
+            if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
+                return;
+            rec->rec->set(move(var));
+        });
         return (PyObject*)rec.release();
     } DBALLE_CATCH_RETURN_PYO
 }
@@ -627,10 +619,7 @@ static PyObject* dpy_DB_attr_insert(dpy_DB* self, PyObject* args, PyObject* kw)
     }
 
     try {
-        if (self->db->is_station_variable(reference_id, resolve_varcode(varname)))
-            self->db->attr_insert_data(reference_id, *record->rec);
-        else
-            self->db->attr_insert_data(reference_id, *record->rec);
+        self->db->attr_insert_data(reference_id, *record->rec);
         Py_RETURN_NONE;
     } DBALLE_CATCH_RETURN_PYO
 }
@@ -681,10 +670,7 @@ static PyObject* dpy_DB_attr_remove(dpy_DB* self, PyObject* args, PyObject* kw)
         return NULL;
 
     try {
-        if (self->db->is_station_variable(reference_id, resolve_varcode(varname)))
-            self->db->attr_remove_station(reference_id, codes);
-        else
-            self->db->attr_remove_data(reference_id, codes);
+        self->db->attr_remove_data(reference_id, codes);
         Py_RETURN_NONE;
     } DBALLE_CATCH_RETURN_PYO
 }

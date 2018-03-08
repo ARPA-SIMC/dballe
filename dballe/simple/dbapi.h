@@ -21,12 +21,11 @@ struct OutputFile;
 class DbAPI : public CommonAPIImplementation
 {
 protected:
-    std::shared_ptr<DB> db;
+    std::shared_ptr<db::Transaction> tr;
     db::CursorStation* ana_cur;
     db::CursorValue* query_cur;
     InputFile* input_file;
     OutputFile* output_file;
-    std::shared_ptr<dballe::db::Transaction> transaction = nullptr;
     int last_inserted_station_id;
 
     /// Store information about the database ID of a variable
@@ -45,7 +44,7 @@ protected:
     void shutdown(bool commit);
 
 public:
-    DbAPI(std::shared_ptr<DB> db, const char* anaflag, const char* dataflag, const char* attrflag);
+    DbAPI(std::shared_ptr<db::Transaction> tr, const char* anaflag, const char* dataflag, const char* attrflag);
     virtual ~DbAPI();
 
     int enqi(const char* param) override;
