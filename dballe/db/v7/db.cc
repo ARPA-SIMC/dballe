@@ -100,6 +100,12 @@ std::shared_ptr<dballe::db::Transaction> DB::transaction()
     return make_shared<v7::Transaction>(dynamic_pointer_cast<v7::DB>(shared_from_this()), move(res));
 }
 
+std::shared_ptr<dballe::db::Transaction> DB::test_transaction()
+{
+    auto res = conn->transaction();
+    return make_shared<v7::TestTransaction>(dynamic_pointer_cast<v7::DB>(shared_from_this()), move(res));
+}
+
 void DB::delete_tables()
 {
     m_driver->delete_tables_v7();

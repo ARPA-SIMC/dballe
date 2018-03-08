@@ -269,7 +269,7 @@ template<typename DB>
 void EmptyTransactionFixture<DB>::test_setup()
 {
     BaseDBFixture<DB>::test_setup();
-    tr = dynamic_pointer_cast<typename DB::TR>(this->db->transaction());
+    tr = dynamic_pointer_cast<typename DB::TR>(this->db->test_transaction());
 }
 
 template<typename DB>

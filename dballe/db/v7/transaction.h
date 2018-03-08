@@ -71,6 +71,13 @@ struct Transaction : public dballe::db::Transaction
     int obtain_station(v7::State& state, const dballe::Station& st, bool can_add=true);
 };
 
+struct TestTransaction : public Transaction
+{
+    using Transaction::Transaction;
+
+    void commit() override;
+};
+
 }
 }
 }

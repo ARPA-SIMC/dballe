@@ -28,6 +28,16 @@ namespace dballe {
 namespace db {
 namespace v6 {
 
+struct TestTransaction : public Transaction
+{
+    using Transaction::Transaction;
+
+    void commit() override
+    {
+        throw std::runtime_error("commit attempted while forbidden during tests");
+    }
+};
+
 Transaction::Transaction(std::shared_ptr<v6::DB> db, std::unique_ptr<dballe::Transaction> sql_transaction)
     : db(db), sql_transaction(sql_transaction.release()) {}
 Transaction::~Transaction()
@@ -329,6 +339,12 @@ std::shared_ptr<dballe::db::Transaction> DB::transaction()
 {
     auto res = conn->transaction();
     return make_shared<v6::Transaction>(dynamic_pointer_cast<v6::DB>(shared_from_this()), move(res));
+}
+
+std::shared_ptr<dballe::db::Transaction> DB::test_transaction()
+{
+    auto res = conn->transaction();
+    return make_shared<v6::TestTransaction>(dynamic_pointer_cast<v6::DB>(shared_from_this()), move(res));
 }
 
 void DB::delete_tables()

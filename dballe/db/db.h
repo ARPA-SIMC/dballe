@@ -515,6 +515,12 @@ public:
     virtual std::shared_ptr<dballe::db::Transaction> transaction() = 0;
 
     /**
+     * Same as transaction(), but the resulting transaction will throw an
+     * exception if commit is called. Used for tests.
+     */
+    virtual std::shared_ptr<dballe::db::Transaction> test_transaction() = 0;
+
+    /**
      * Insert station values into the database
      *
      * The IDs of the station andl all variables that were inserted will be

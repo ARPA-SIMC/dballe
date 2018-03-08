@@ -97,6 +97,7 @@ public:
     v7::Data& data();
 
     std::shared_ptr<dballe::db::Transaction> transaction() override;
+    std::shared_ptr<dballe::db::Transaction> test_transaction() override;
 
     void disappear();
 

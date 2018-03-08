@@ -224,6 +224,11 @@ int Transaction::obtain_station(v7::State& state, const dballe::Station& st, boo
         return s.get_id(*this, st);
 }
 
+void TestTransaction::commit()
+{
+    throw std::runtime_error("commit attempted while forbidden during tests");
+}
+
 }
 }
 }
