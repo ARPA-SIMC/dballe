@@ -125,8 +125,6 @@ void DbAPI::shutdown(bool commit)
 
     if (commit)
         tr->commit();
-    else
-        tr->rollback();
 }
 
 void DbAPI::fatto()
