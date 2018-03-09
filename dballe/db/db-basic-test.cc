@@ -24,28 +24,41 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
     void register_tests() override;
 };
 
-Tests<V6DB> tg1("db_basic_v6_sqlite", "SQLITE");
-Tests<V7DB> tg2("db_basic_v7_sqlite", "SQLITE");
+template<typename DB>
+class CommitTests : public FixtureTestCase<DBFixture<DB>>
+{
+    typedef DBFixture<DB> Fixture;
+    using FixtureTestCase<Fixture>::FixtureTestCase;
+
+    void register_tests() override;
+};
+
+Tests<V6DB> tg1("db_basic_tr_v6_sqlite", "SQLITE");
+Tests<V7DB> tg2("db_basic_tr_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests<V6DB> tg3("db_basic_v6_postgresql", "POSTGRESQL");
-Tests<V7DB> tg4("db_basic_v7_postgresql", "POSTGRESQL");
+Tests<V6DB> tg3("db_basic_tr_v6_postgresql", "POSTGRESQL");
+Tests<V7DB> tg4("db_basic_tr_v7_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests<V6DB> tg5("db_basic_v6_mysql", "MYSQL");
-Tests<V7DB> tg6("db_basic_v7_mysql", "MYSQL");
+Tests<V6DB> tg5("db_basic_tr_v6_mysql", "MYSQL");
+Tests<V7DB> tg6("db_basic_tr_v7_mysql", "MYSQL");
+#endif
+
+CommitTests<V6DB> ct1("db_basic_db_v6_sqlite", "SQLITE");
+CommitTests<V7DB> ct2("db_basic_db_v7_sqlite", "SQLITE");
+#ifdef HAVE_LIBPQ
+CommitTests<V6DB> ct3("db_basic_db_v6_postgresql", "POSTGRESQL");
+CommitTests<V7DB> ct4("db_basic_db_v7_postgresql", "POSTGRESQL");
+#endif
+#ifdef HAVE_MYSQL
+CommitTests<V6DB> ct5("db_basic_db_v6_mysql", "MYSQL");
+CommitTests<V7DB> ct6("db_basic_db_v7_mysql", "MYSQL");
 #endif
 
 template<typename DB>
 void Tests<DB>::register_tests()
 {
 
-// Test simple queries
-this->add_method("reset", [](Fixture& f) {
-    // Run twice to see if it is idempotent
-    auto& db = *f.db;
-    db.reset();
-    db.reset();
-});
 this->add_method("repinfo", [](Fixture& f) {
     // Test repinfo-related functions
     std::map<std::string, int> prios = f.tr->db->repinfo().get_priorities();
@@ -62,82 +75,6 @@ this->add_method("repinfo", [](Fixture& f) {
     prios = f.tr->db->repinfo().get_priorities();
     wassert(actual(prios.find("fixspnpo") != prios.end()).istrue());
     wassert(actual(prios["fixspnpo"]) == 200);
-});
-this->add_method("vacuum", [](Fixture& f) {
-    TestDataSet data;
-    data.stations["s1"].info.report = "synop";
-    data.stations["s1"].info.coords = Coords(12.34560, 76.54320);
-    data.stations["s1"].values.set("B01019", "Station 1");
-
-    data.stations["s2"].info.report = "metar";
-    data.stations["s2"].info.coords = Coords(23.45670, 65.43210);
-    data.stations["s2"].values.set("B01019", "Station 2");
-
-    data.data["s1"].info = data.stations["s1"].info;
-    data.data["s1"].info.level = Level(10, 11, 15, 22);
-    data.data["s1"].info.trange = Trange(20, 111, 122);
-    data.data["s1"].info.datetime = Datetime(1945, 4, 25, 8);
-    data.data["s1"].values.set("B01011", "Data 1");
-
-    data.data["s2"].info = data.stations["s2"].info;
-    data.data["s2"].info.level = Level(10, 11, 15, 22);
-    data.data["s2"].info.trange = Trange(20, 111, 122);
-    data.data["s2"].info.datetime = Datetime(1945, 4, 25, 8);
-    data.data["s2"].values.set("B01011", "Data 2");
-
-    // Insert some data
-    wassert(f.populate(data));
-
-    // Invoke vacuum
-    auto& db = *f.db;
-    db.vacuum();
-
-    // Stations are still there
-    {
-        core::Query q;
-        auto c = db.query_stations(q);
-        wassert(actual(c->remaining()) == 2);
-    }
-
-    // Delete all measured values, but not station values
-    {
-        core::Query q;
-        q.ana_id = data.stations["s1"].info.ana_id;
-        db.remove(q);
-    }
-
-    {
-        core::Query q;
-
-        // Stations are still there before vacuum
-        auto c = db.query_stations(q);
-        wassert(actual(c->remaining()) == 2);
-    }
-
-    // Invoke vacuum
-    db.vacuum();
-
-    // Station 1 is gone
-    {
-        core::Query q;
-        q.ana_id = data.stations["s1"].info.ana_id;
-        auto c = db.query_stations(q);
-        wassert(actual(c->remaining()) == 0);
-    }
-
-    // Station 2 is still there with all its data
-    {
-        core::Query q;
-        q.ana_id = data.stations["s2"].info.ana_id;
-        auto c = db.query_stations(q);
-        wassert(actual(c->remaining()) == 1);
-
-        auto sd = db.query_station_data(q);
-        wassert(actual(sd->remaining()) == 1);
-
-        auto dd = db.query_data(q);
-        wassert(actual(dd->remaining()) == 1);
-    }
 });
 this->add_method("simple", [](Fixture& f) {
     // Test remove_all
@@ -282,6 +219,96 @@ this->add_method("missing_repmemo", [](Fixture& f) {
     wassert(actual(f.tr->query_station_data(query)->remaining()) == 0);
     wassert(actual(f.tr->query_data(query)->remaining()) == 0);
     wassert(actual(f.tr->query_summary(query)->remaining()) == 0);
+});
+
+}
+
+template<typename DB>
+void CommitTests<DB>::register_tests() {
+
+// Test simple queries
+this->add_method("reset", [](Fixture& f) {
+    // Run twice to see if it is idempotent
+    auto& db = *f.db;
+    db.reset();
+    db.reset();
+});
+
+this->add_method("vacuum", [](Fixture& f) {
+    TestDataSet data;
+    data.stations["s1"].info.report = "synop";
+    data.stations["s1"].info.coords = Coords(12.34560, 76.54320);
+    data.stations["s1"].values.set("B01019", "Station 1");
+
+    data.stations["s2"].info.report = "metar";
+    data.stations["s2"].info.coords = Coords(23.45670, 65.43210);
+    data.stations["s2"].values.set("B01019", "Station 2");
+
+    data.data["s1"].info = data.stations["s1"].info;
+    data.data["s1"].info.level = Level(10, 11, 15, 22);
+    data.data["s1"].info.trange = Trange(20, 111, 122);
+    data.data["s1"].info.datetime = Datetime(1945, 4, 25, 8);
+    data.data["s1"].values.set("B01011", "Data 1");
+
+    data.data["s2"].info = data.stations["s2"].info;
+    data.data["s2"].info.level = Level(10, 11, 15, 22);
+    data.data["s2"].info.trange = Trange(20, 111, 122);
+    data.data["s2"].info.datetime = Datetime(1945, 4, 25, 8);
+    data.data["s2"].values.set("B01011", "Data 2");
+
+    // Insert some data
+    wassert(f.populate_database(data));
+
+    // Invoke vacuum
+    auto& db = *f.db;
+    db.vacuum();
+
+    // Stations are still there
+    {
+        core::Query q;
+        auto c = db.query_stations(q);
+        wassert(actual(c->remaining()) == 2);
+    }
+
+    // Delete all measured values, but not station values
+    {
+        core::Query q;
+        q.ana_id = data.stations["s1"].info.ana_id;
+        db.remove(q);
+    }
+
+    {
+        core::Query q;
+
+        // Stations are still there before vacuum
+        auto c = db.query_stations(q);
+        wassert(actual(c->remaining()) == 2);
+    }
+
+    // Invoke vacuum
+    db.vacuum();
+
+    // Station 1 is gone
+    {
+        core::Query q;
+        q.ana_id = data.stations["s1"].info.ana_id;
+        auto c = db.query_stations(q);
+        wassert(actual(c->remaining()) == 0);
+    }
+
+    // Station 2 is still there with all its data
+    {
+        core::Query q;
+        q.ana_id = data.stations["s2"].info.ana_id;
+        auto c = db.query_stations(q);
+        wassert(actual(c->remaining()) == 1);
+
+        auto sd = db.query_station_data(q);
+        wassert(actual(sd->remaining()) == 1);
+
+        auto dd = db.query_data(q);
+        wassert(actual(dd->remaining()) == 1);
+    }
 });
 
 }
