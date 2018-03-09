@@ -5,6 +5,8 @@
 #include <memory>
 #include <cstdio>
 #include <functional>
+#include <unordered_map>
+#include <vector>
 
 namespace wreport {
 struct Var;
@@ -19,10 +21,35 @@ namespace db {
 namespace v7 {
 struct Transaction;
 
+struct StationCache
+{
+    std::unordered_map<int, dballe::Station*> by_id;
+    std::unordered_map<int, std::vector<const dballe::Station*>> by_lon;
+
+    StationCache() = default;
+    StationCache(const StationCache&) = delete;
+    StationCache(StationCache&&) = delete;
+    StationCache& operator=(const StationCache&) = delete;
+    StationCache& operator=(StationCache&&) = delete;
+    ~StationCache();
+
+    const dballe::Station* insert(const dballe::Station& st);
+    const dballe::Station* insert(const dballe::Station& st, int id);
+    const dballe::Station* insert(std::unique_ptr<dballe::Station> st);
+
+    const dballe::Station* find_station(int id) const;
+    int find_id(const dballe::Station& st) const;
+
+    void clear();
+
+protected:
+    void by_lon_add(const dballe::Station* st);
+};
 
 struct Station
 {
 protected:
+    StationCache cache;
     virtual bool maybe_get_id(v7::Transaction& tr, const dballe::Station& st, int* id) = 0;
     virtual void _dump(std::function<void(int, int, const Coords& coords, const char* ident)> out) = 0;
 
@@ -31,6 +58,14 @@ public:
     //static std::unique_ptr<Station> create(Connection& conn);
 
     virtual ~Station();
+
+    /**
+     * Invalidate the station cache.
+     *
+     * Further accesses will be done via the database, and slowly repopulate
+     * the cache from scratch.
+     */
+    void clear_cache();
 
     /**
      * Look up a station given its ID.

@@ -14,32 +14,6 @@ struct Record;
 namespace db {
 namespace v7 {
 
-struct Stations
-{
-    std::unordered_map<int, dballe::Station*> by_id;
-    std::unordered_map<int, std::vector<const dballe::Station*>> by_lon;
-
-    Stations() = default;
-    Stations(const Stations&) = delete;
-    Stations(Stations&&) = delete;
-    Stations& operator=(const Stations&) = delete;
-    Stations& operator=(Stations&&) = delete;
-    ~Stations();
-
-    const dballe::Station* insert(const dballe::Station& st);
-    const dballe::Station* insert(const dballe::Station& st, int id);
-    const dballe::Station* insert(std::unique_ptr<dballe::Station> st);
-
-    const dballe::Station* find_station(int id) const;
-    int find_id(const dballe::Station& st) const;
-
-    void clear();
-
-protected:
-    void by_lon_add(const dballe::Station* st);
-};
-
-
 struct ItemState
 {
     // Database ID
@@ -141,7 +115,6 @@ typedef std::map<ValueDesc, ValueState> values_t;
  */
 struct State
 {
-    Stations stations;
     levtrs_t levtrs;
     levtr_id_t levtr_ids;
     stationvalues_t stationvalues;

@@ -72,7 +72,7 @@ const dballe::Station* PostgreSQLStation::lookup_id(v7::Transaction& tr, int id)
     using namespace dballe::sql::postgresql;
 
     // First look it up in the transaction cache
-    if (const dballe::Station* res = tr.state.stations.find_station(id))
+    if (const dballe::Station* res = cache.find_station(id))
         return res;
 
     Result res = conn.exec_prepared("v7_station_lookup_id", id);
@@ -91,7 +91,7 @@ const dballe::Station* PostgreSQLStation::lookup_id(v7::Transaction& tr, int id)
             if (!res.is_null(0, 3))
                 station->ident = res.get_string(0, 3);
             // TODO: mark station as newly inserted
-            return tr.state.stations.insert(move(station));
+            return cache.insert(move(station));
         }
         default: error_consistency::throwf("select station ID query returned %u results", rows);
     }
@@ -101,12 +101,12 @@ int PostgreSQLStation::obtain_id(v7::Transaction& tr, const dballe::Station& des
 {
     using namespace dballe::sql::postgresql;
 
-    int id = tr.state.stations.find_id(desc);
+    int id = cache.find_id(desc);
     if (id != MISSING_INT) return id;
 
     if (maybe_get_id(tr, desc, &id))
     {
-        tr.state.stations.insert(desc, id);
+        cache.insert(desc, id);
         return id;
     }
 
@@ -114,7 +114,7 @@ int PostgreSQLStation::obtain_id(v7::Transaction& tr, const dballe::Station& des
     int rep = tr.repinfo().get_id(desc.report.c_str());
     id = conn.exec_prepared_one_row("v7_station_insert", rep, desc.coords.lat, desc.coords.lon, desc.ident.get()).get_int4(0, 0);
     // TODO: mark station as newly inserted
-    tr.state.stations.insert(desc, id);
+    cache.insert(desc, id);
     return id;
 }
 

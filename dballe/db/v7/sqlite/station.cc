@@ -76,7 +76,7 @@ bool SQLiteStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st,
 const dballe::Station* SQLiteStation::lookup_id(v7::Transaction& tr, int id)
 {
     // First look it up in the transaction cache
-    const dballe::Station* res = tr.state.stations.find_station(id);
+    const dballe::Station* res = cache.find_station(id);
     if (res) return res;
 
     if (!sstm)
@@ -93,7 +93,7 @@ const dballe::Station* SQLiteStation::lookup_id(v7::Transaction& tr, int id)
         if (!sstm->column_isnull(3))
             station->ident = sstm->column_string(3);
         // TODO: mark station as newly inserted
-        res = tr.state.stations.insert(move(station));
+        res = cache.insert(move(station));
     });
 
     if (!res)
@@ -104,12 +104,12 @@ const dballe::Station* SQLiteStation::lookup_id(v7::Transaction& tr, int id)
 
 int SQLiteStation::obtain_id(v7::Transaction& tr, const dballe::Station& desc)
 {
-    int id = tr.state.stations.find_id(desc);
+    int id = cache.find_id(desc);
     if (id != MISSING_INT) return id;
 
     if (maybe_get_id(tr, desc, &id))
     {
-        tr.state.stations.insert(desc, id);
+        cache.insert(desc, id);
         return id;
     }
 
@@ -125,7 +125,7 @@ int SQLiteStation::obtain_id(v7::Transaction& tr, const dballe::Station& desc)
 
     id = conn.get_last_insert_id();
     // TODO: mark station as newly inserted
-    tr.state.stations.insert(desc, id);
+    cache.insert(desc, id);
     return id;
 }
 

@@ -54,6 +54,7 @@ void Transaction::clear_cached_state()
 {
     state.clear();
     repinfo().read_cache();
+    db->station().clear_cache();
 }
 
 Transaction& Transaction::downcast(dballe::Transaction& transaction)

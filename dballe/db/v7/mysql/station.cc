@@ -60,7 +60,7 @@ bool MySQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st, 
 const dballe::Station* MySQLStation::lookup_id(v7::Transaction& tr, int id)
 {
     // First look it up in the transaction cache
-    if (const dballe::Station* res = tr.state.stations.find_station(id))
+    if (const dballe::Station* res = cache.find_station(id))
         return res;
 
     Querybuf qb;
@@ -76,17 +76,17 @@ const dballe::Station* MySQLStation::lookup_id(v7::Transaction& tr, int id)
     if (!row.isnull(3))
         station->ident = row.as_string(3);
     // TODO: mark station as newly inserted
-    return tr.state.stations.insert(move(station));
+    return cache.insert(move(station));
 }
 
 int MySQLStation::obtain_id(v7::Transaction& tr, const dballe::Station& desc)
 {
-    int id = tr.state.stations.find_id(desc);
+    int id = cache.find_id(desc);
     if (id != MISSING_INT) return id;
 
     if (maybe_get_id(tr, desc, &id))
     {
-        tr.state.stations.insert(desc, id);
+        cache.insert(desc, id);
         return id;
     }
 
@@ -108,7 +108,7 @@ int MySQLStation::obtain_id(v7::Transaction& tr, const dballe::Station& desc)
 
     // TODO: mark station as newly inserted
     id = conn.get_last_insert_id();
-    tr.state.stations.insert(desc, id);
+    cache.insert(desc, id);
     return id;
 #if 0
     // See http://mikefenwick.com/blog/insert-into-database-or-return-id-of-duplicate-row-in-mysql/
