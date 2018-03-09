@@ -507,11 +507,6 @@ public:
      */
     virtual void reset(const char* repinfo_file=0) = 0;
 
-    /**
-     * Get a mapping between rep_memo and their priorities
-     */
-    virtual std::map<std::string, int> get_repinfo_priorities() = 0;
-
 public:
     /**
      * Begin a transaction on this database, and return a Transaction object

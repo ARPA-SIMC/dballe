@@ -119,13 +119,6 @@ public:
      */
     void delete_tables();
 
-    std::map<std::string, int> get_repinfo_priorities();
-
-    /**
-     * Get the report code from a report mnemonic
-     */
-    int rep_cod_from_memo(const char* memo);
-
     /**
      * Remove orphan values from the database.
      *

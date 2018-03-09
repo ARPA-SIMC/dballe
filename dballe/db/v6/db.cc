@@ -397,11 +397,6 @@ void DB::reset(const char* repinfo_file)
     trc->done();
 }
 
-std::map<std::string, int> DB::get_repinfo_priorities()
-{
-    return repinfo().get_priorities();
-}
-
 int DB::rep_cod_from_memo(const char* memo)
 {
     return repinfo().obtain_id(memo);

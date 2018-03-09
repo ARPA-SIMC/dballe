@@ -180,8 +180,6 @@ public:
      */
     void delete_tables();
 
-    std::map<std::string, int> get_repinfo_priorities();
-
     /**
      * Get the report code from a report mnemonic
      */
