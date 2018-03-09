@@ -224,6 +224,11 @@ int Transaction::obtain_station(v7::State& state, const dballe::Station& st, boo
         return s.get_id(*this, st);
 }
 
+void Transaction::update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated)
+{
+    db->repinfo().update(repinfo_file, added, deleted, updated);
+}
+
 void Transaction::dump(FILE* out)
 {
     db->repinfo().dump(out);

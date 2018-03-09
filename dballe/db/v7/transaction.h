@@ -51,6 +51,7 @@ struct Transaction : public dballe::db::Transaction
     void attr_remove_data(int data_id, const db::AttrList& attrs) override;
     void import_msg(const Message& msg, const char* repmemo, int flags) override;
     bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) override;
+    void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated) override;
 
     static Transaction& downcast(dballe::Transaction& transaction);
 

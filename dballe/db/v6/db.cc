@@ -252,6 +252,11 @@ void Transaction::attr_remove_data(int data_id, const db::AttrList& qcs)
     db->conn->execute(query);
 }
 
+void Transaction::update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated)
+{
+    db->repinfo().update(repinfo_file, added, deleted, updated);
+}
+
 void Transaction::dump(FILE* out)
 {
     db->repinfo().dump(out);
@@ -379,21 +384,17 @@ void DB::disappear()
 
 void DB::reset(const char* repinfo_file)
 {
-    auto tr = trace.trace_reset(repinfo_file);
+    auto trc = trace.trace_reset(repinfo_file);
     disappear();
     m_driver->create_tables_v6();
 
     // Populate the tables with values
+    auto tr = transaction();
     int added, deleted, updated;
-    update_repinfo(repinfo_file, &added, &deleted, &updated);
-    tr->done();
-}
+    tr->update_repinfo(repinfo_file, &added, &deleted, &updated);
+    tr->commit();
 
-void DB::update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated)
-{
-    auto t = conn->transaction();
-    repinfo().update(repinfo_file, added, deleted, updated);
-    t->commit();
+    trc->done();
 }
 
 std::map<std::string, int> DB::get_repinfo_priorities()

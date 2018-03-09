@@ -404,6 +404,25 @@ public:
     virtual bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) = 0;
 
     /**
+     * Update the repinfo table in the database, with the data found in the given
+     * file.
+     *
+     * @param repinfo_file
+     *   The name of the CSV file with the report type information data to load.
+     *   The file is in CSV format with 6 columns: report code, mnemonic id,
+     *   description, priority, descriptor, table A category.
+     *   If repinfo_file is NULL, then the default of /etc/dballe/repinfo.csv is
+     *   used.
+     * @retval added
+     *   The number of repinfo entries that have been added
+     * @retval deleted
+     *   The number of repinfo entries that have been deleted
+     * @retval updated
+     *   The number of repinfo entries that have been updated
+     */
+    virtual void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated) = 0;
+
+    /**
      * Dump the entire contents of the database to an output stream
      */
     virtual void dump(FILE* out) = 0;
@@ -487,25 +506,6 @@ public:
      *   used.
      */
     virtual void reset(const char* repinfo_file=0) = 0;
-
-    /**
-     * Update the repinfo table in the database, with the data found in the given
-     * file.
-     *
-     * @param repinfo_file
-     *   The name of the CSV file with the report type information data to load.
-     *   The file is in CSV format with 6 columns: report code, mnemonic id,
-     *   description, priority, descriptor, table A category.
-     *   If repinfo_file is NULL, then the default of /etc/dballe/repinfo.csv is
-     *   used.
-     * @retval added
-     *   The number of repinfo entries that have been added
-     * @retval deleted
-     *   The number of repinfo entries that have been deleted
-     * @retval updated
-     *   The number of repinfo entries that have been updated
-     */
-    virtual void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated) = 0;
 
     /**
      * Get a mapping between rep_memo and their priorities

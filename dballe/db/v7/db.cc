@@ -125,21 +125,17 @@ void DB::disappear()
 
 void DB::reset(const char* repinfo_file)
 {
-    auto tr = trace.trace_reset(repinfo_file);
+    auto trc = trace.trace_reset(repinfo_file);
     disappear();
     m_driver->create_tables_v7();
 
     // Populate the tables with values
+    auto tr = transaction();
     int added, deleted, updated;
-    update_repinfo(repinfo_file, &added, &deleted, &updated);
-    tr->done();
-}
+    tr->update_repinfo(repinfo_file, &added, &deleted, &updated);
+    tr->commit();
 
-void DB::update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated)
-{
-    auto t = conn->transaction();
-    repinfo().update(repinfo_file, added, deleted, updated);
-    t->commit();
+    trc->done();
 }
 
 std::map<std::string, int> DB::get_repinfo_priorities()

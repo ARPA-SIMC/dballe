@@ -46,19 +46,18 @@ this->add_method("reset", [](Fixture& f) {
 });
 this->add_method("repinfo", [](Fixture& f) {
     // Test repinfo-related functions
-    auto& db = *f.db;
-    std::map<std::string, int> prios = db.get_repinfo_priorities();
+    std::map<std::string, int> prios = f.tr->db->get_repinfo_priorities();
     wassert(actual(prios.find("synop") != prios.end()).istrue());
     wassert(actual(prios["synop"]) == 101);
 
     int added, deleted, updated;
-    db.update_repinfo((string(getenv("DBA_TESTDATA")) + "/test-repinfo1.csv").c_str(), &added, &deleted, &updated);
+    f.tr->update_repinfo((string(getenv("DBA_TESTDATA")) + "/test-repinfo1.csv").c_str(), &added, &deleted, &updated);
 
     wassert(actual(added) == 3);
     wassert(actual(deleted) == 11);
     wassert(actual(updated) == 2);
 
-    prios = db.get_repinfo_priorities();
+    prios = f.tr->db->get_repinfo_priorities();
     wassert(actual(prios.find("fixspnpo") != prios.end()).istrue());
     wassert(actual(prios["fixspnpo"]) == 200);
 });

@@ -284,9 +284,11 @@ template<typename DB>
 void DBFixture<DB>::test_setup()
 {
     BaseDBFixture<DB>::test_setup();
-    this->db->remove_all();
+    auto tr = this->db->transaction();
+    tr->remove_all();
     int added, deleted, updated;
-    this->db->update_repinfo(nullptr, &added, &deleted, &updated);
+    tr->update_repinfo(nullptr, &added, &deleted, &updated);
+    tr->commit();
 }
 
 template<typename DB>
