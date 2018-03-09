@@ -216,7 +216,7 @@ void Driver::run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<
             if (id_station != station.ana_id)
             {
                 station.ana_id = id_station;
-                station.report = qb.tr->db->repinfo().get_rep_memo(res.get_int4(row, 1));
+                station.report = qb.tr->repinfo().get_rep_memo(res.get_int4(row, 1));
                 station.coords.lat = res.get_int4(row, 2);
                 station.coords.lon = res.get_int4(row, 3);
                 if (res.is_null(row, 4))

@@ -246,8 +246,11 @@ struct RepinfoCmd : public DatabaseCmd
         /* Get the optional name of the repinfo file.  If missing, the default will be used */
         const char* fname = poptGetArg(optCon);
 
+        auto tr = db->transaction();
         int added, deleted, updated;
-        db->update_repinfo(fname, &added, &deleted, &updated);
+        tr->update_repinfo(fname, &added, &deleted, &updated);
+        tr->commit();
+
         printf("Update completed: %d added, %d deleted, %d updated.\n", added, deleted, updated);
         return 0;
     }

@@ -41,15 +41,35 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
     void register_tests() override;
 };
 
-Tests<V6DB> tg1("db_misc_v6_sqlite", "SQLITE");
-Tests<V7DB> tg2("db_misc_v7_sqlite", "SQLITE");
+template<typename DB>
+class CommitTests : public FixtureTestCase<DBFixture<DB>>
+{
+    typedef DBFixture<DB> Fixture;
+    using FixtureTestCase<Fixture>::FixtureTestCase;
+
+    void register_tests() override;
+};
+
+Tests<V6DB> tg1("db_misc_tr_v6_sqlite", "SQLITE");
+Tests<V7DB> tg2("db_misc_tr_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests<V6DB> tg3("db_misc_v6_postgresql", "POSTGRESQL");
-Tests<V7DB> tg4("db_misc_v7_postgresql", "POSTGRESQL");
+Tests<V6DB> tg3("db_misc_tr_v6_postgresql", "POSTGRESQL");
+Tests<V7DB> tg4("db_misc_tr_v7_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests<V6DB> tg5("db_misc_v6_mysql", "MYSQL");
-Tests<V7DB> tg6("db_misc_v7_mysql", "MYSQL");
+Tests<V6DB> tg5("db_misc_tr_v6_mysql", "MYSQL");
+Tests<V7DB> tg6("db_misc_tr_v7_mysql", "MYSQL");
+#endif
+
+CommitTests<V6DB> ct1("db_misc_db_v6_sqlite", "SQLITE");
+CommitTests<V7DB> ct2("db_misc_db_v7_sqlite", "SQLITE");
+#ifdef HAVE_LIBPQ
+CommitTests<V6DB> ct3("db_misc_db_v6_postgresql", "POSTGRESQL");
+CommitTests<V7DB> ct4("db_misc_db_v7_postgresql", "POSTGRESQL");
+#endif
+#ifdef HAVE_MYSQL
+CommitTests<V6DB> ct5("db_misc_db_v6_mysql", "MYSQL");
+CommitTests<V7DB> ct6("db_misc_db_v7_mysql", "MYSQL");
 #endif
 
 template<typename DB>
@@ -657,27 +677,7 @@ this->add_method("query_invalid_sql", [](Fixture& f) {
     // All DB
     f.tr->query_stations(*query_from_string("leveltype1=103, l1=2000"));
 });
-this->add_method("fd_leaks", [](Fixture& f) {
-    // Test connect leaks
-    StationValues vals;
-    // Set station data
-    vals.info.coords = Coords(12.34560, 76.54320);
-    vals.info.report = "synop";
-    vals.values.set("B07030", 42.0); // Height
 
-    // Assume a max open file limit of 1100
-    for (unsigned i = 0; i < 1100; ++i)
-    {
-        auto db = DB::create_db(f.backend);
-        vals.clear_ids();
-        wassert(db->insert_station_data(vals, true, true));
-    }
-    // Because we create new DBs and inserted data, writes happened outside the
-    // transaction and we need to remove them manually, as they will not be
-    // undone by rollback
-    f.tr->rollback();
-    f.db->remove_all();
-});
 this->add_method("update", [](Fixture& f) {
     // Test value update
     OldDballeTestDataSet oldf;
@@ -960,6 +960,28 @@ this->add_method("query_repmemo_in_results", [](Fixture& f) {
     {
         cur->to_record(res);
         wassert(actual(res["rep_memo"].isset()).istrue());
+    }
+});
+
+}
+
+template<typename DB>
+void CommitTests<DB>::register_tests() {
+
+this->add_method("fd_leaks", [](Fixture& f) {
+    // Test connect leaks
+    StationValues vals;
+    // Set station data
+    vals.info.coords = Coords(12.34560, 76.54320);
+    vals.info.report = "synop";
+    vals.values.set("B07030", 42.0); // Height
+
+    // Assume a max open file limit of 1100
+    for (unsigned i = 0; i < 1100; ++i)
+    {
+        auto db = DB::create_db(f.backend);
+        vals.clear_ids();
+        wassert(db->insert_station_data(vals, true, true));
     }
 });
 

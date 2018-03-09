@@ -14,15 +14,21 @@ struct Repinfo;
 
 struct Transaction : public dballe::db::Transaction
 {
+protected:
+    /// Report information
+    v7::Repinfo* m_repinfo = nullptr;
+
+public:
     typedef v7::DB DB;
 
     std::shared_ptr<v7::DB> db;
+    /// SQL-side transaction
     dballe::Transaction* sql_transaction = nullptr;
     State state;
+    /// True if commit or rollback have already been called on this transaction
     bool fired = false;
 
-    Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Transaction> sql_transaction)
-        : db(db), sql_transaction(sql_transaction.release()) {}
+    Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Transaction> sql_transaction);
     Transaction(const Transaction&) = delete;
     Transaction(Transaction&&) = delete;
     Transaction& operator=(const Transaction&) = delete;

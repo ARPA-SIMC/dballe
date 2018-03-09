@@ -53,13 +53,7 @@ protected:
 
     /**
      * Accessors for the various parts of the database.
-     *
-     * @warning Before using these 5 pointers, ensure they are initialised
-     * using one of the dba_db_need_* functions
-     * @{
      */
-    /** Report information */
-    v7::Repinfo* m_repinfo = nullptr;
     /** Station information */
     v7::Station* m_station = nullptr;
     /** Level/timerange information */
@@ -80,9 +74,6 @@ public:
 
     /// Access the backend DB driver
     v7::Driver& driver();
-
-    /// Access the repinfo table
-    v7::Repinfo& repinfo();
 
     /// Access the station table
     v7::Station& station();

@@ -17,15 +17,22 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
+Transaction::Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Transaction> sql_transaction)
+    : db(db), sql_transaction(sql_transaction.release())
+{
+    m_repinfo = db->driver().create_repinfo().release();
+}
+
 Transaction::~Transaction()
 {
     rollback();
+    delete m_repinfo;
     delete sql_transaction;
 }
 
 v7::Repinfo& Transaction::repinfo()
 {
-    return db->repinfo();
+    return *m_repinfo;
 }
 
 void Transaction::commit()
@@ -46,7 +53,7 @@ void Transaction::rollback()
 void Transaction::clear_cached_state()
 {
     state.clear();
-    db->repinfo().read_cache();
+    repinfo().read_cache();
 }
 
 Transaction& Transaction::downcast(dballe::Transaction& transaction)
@@ -231,12 +238,12 @@ int Transaction::obtain_station(v7::State& state, const dballe::Station& st, boo
 
 void Transaction::update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated)
 {
-    db->repinfo().update(repinfo_file, added, deleted, updated);
+    repinfo().update(repinfo_file, added, deleted, updated);
 }
 
 void Transaction::dump(FILE* out)
 {
-    db->repinfo().dump(out);
+    repinfo().dump(out);
     db->station().dump(out);
     db->levtr().dump(out);
     db->station_data().dump(out);

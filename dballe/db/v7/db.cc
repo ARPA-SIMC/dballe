@@ -49,7 +49,6 @@ DB::~DB()
     delete m_station_data;
     delete m_levtr;
     delete m_station;
-    delete m_repinfo;
     delete m_driver;
     delete conn;
 }
@@ -57,13 +56,6 @@ DB::~DB()
 v7::Driver& DB::driver()
 {
     return *m_driver;
-}
-
-v7::Repinfo& DB::repinfo()
-{
-    if (m_repinfo == NULL)
-        m_repinfo = m_driver->create_repinfo().release();
-    return *m_repinfo;
 }
 
 v7::Station& DB::station()
@@ -113,14 +105,9 @@ void DB::delete_tables()
 
 void DB::disappear()
 {
+    // TODO: track open trasnsactions with weak pointers and roll them all
+    // back, or raise errors if some of them have not been fired yet?
     m_driver->delete_tables_v7();
-
-    // Invalidate the repinfo cache if we have a repinfo structure active
-    if (m_repinfo)
-    {
-        delete m_repinfo;
-        m_repinfo = 0;
-    }
 }
 
 void DB::reset(const char* repinfo_file)
