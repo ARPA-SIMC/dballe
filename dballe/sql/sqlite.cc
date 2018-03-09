@@ -149,7 +149,7 @@ void SQLiteConnection::exec(const std::string& query)
         // error message string is no longer needed.·
         std::string msg(errmsg);
         sqlite3_free(errmsg);
-        throw error_sqlite(errmsg, "executing " + query);
+        throw error_sqlite(msg, "executing " + query);
     }
 }
 
