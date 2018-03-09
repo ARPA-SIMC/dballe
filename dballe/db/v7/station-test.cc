@@ -63,7 +63,7 @@ add_method("insert", [](Fixture& f) {
 
 add_method("insert", [](Fixture& f) {
     // Insert some values and try to read them again
-    auto& st = f.db->station();
+    auto& st = f.tr->station();
     dballe::Station sde1;
     dballe::Station sde2;
     int si;

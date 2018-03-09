@@ -11,12 +11,15 @@ namespace db {
 namespace v7 {
 struct DB;
 struct Repinfo;
+struct Station;
 
 struct Transaction : public dballe::db::Transaction
 {
 protected:
     /// Report information
     v7::Repinfo* m_repinfo = nullptr;
+    /// Station information
+    v7::Station* m_station = nullptr;
 
 public:
     typedef v7::DB DB;
@@ -37,6 +40,8 @@ public:
 
     /// Access the repinfo table
     v7::Repinfo& repinfo();
+    /// Access the station table
+    v7::Station& station();
 
     void commit() override;
     void rollback() override;

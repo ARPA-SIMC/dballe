@@ -140,6 +140,7 @@ error_postgresql::error_postgresql(PGconn* db, const std::string& msg)
     this->msg = msg;
     this->msg += ": ";
     this->msg += PQerrorMessage(db);
+    fprintf(stderr, "ERROR %s\n", this->msg.c_str());
 }
 
 error_postgresql::error_postgresql(PGresult* res, const std::string& msg)
@@ -147,6 +148,7 @@ error_postgresql::error_postgresql(PGresult* res, const std::string& msg)
     this->msg = msg;
     this->msg += ": ";
     this->msg += PQresultErrorMessage(res);
+    fprintf(stderr, "ERROR %s\n", this->msg.c_str());
 }
 
 error_postgresql::error_postgresql(const std::string& dbmsg, const std::string& msg)
@@ -154,6 +156,7 @@ error_postgresql::error_postgresql(const std::string& dbmsg, const std::string& 
     this->msg = msg;
     this->msg += ": ";
     this->msg += dbmsg;
+    fprintf(stderr, "ERROR %s\n", this->msg.c_str());
 }
 
 void error_postgresql::throwf(PGconn* db, const char* fmt, ...)
@@ -278,8 +281,11 @@ std::unique_ptr<Transaction> PostgreSQLConnection::transaction()
 void PostgreSQLConnection::prepare(const std::string& name, const std::string& query)
 {
     using namespace postgresql;
+    if (prepared_names.find(name) != prepared_names.end())
+        return;
     Result res(PQprepare(db, name.c_str(), query.c_str(), 0, nullptr));
     res.expect_no_data("prepare:" + query);
+    prepared_names.insert(name);
 }
 
 void PostgreSQLConnection::drop_table_if_exists(const char* name)

@@ -21,11 +21,13 @@ Transaction::Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Tra
     : db(db), sql_transaction(sql_transaction.release())
 {
     m_repinfo = db->driver().create_repinfo().release();
+    m_station = db->driver().create_station().release();
 }
 
 Transaction::~Transaction()
 {
     rollback();
+    delete m_station;
     delete m_repinfo;
     delete sql_transaction;
 }
@@ -34,6 +36,12 @@ v7::Repinfo& Transaction::repinfo()
 {
     return *m_repinfo;
 }
+
+v7::Station& Transaction::station()
+{
+    return *m_station;
+}
+
 
 void Transaction::commit()
 {
@@ -54,7 +62,7 @@ void Transaction::clear_cached_state()
 {
     state.clear();
     repinfo().read_cache();
-    db->station().clear_cache();
+    station().clear_cache();
 }
 
 Transaction& Transaction::downcast(dballe::Transaction& transaction)
@@ -224,7 +232,7 @@ void Transaction::attr_remove_data(int data_id, const db::AttrList& attrs)
 
 int Transaction::obtain_station(v7::State& state, const dballe::Station& st, bool can_add)
 {
-    v7::Station& s = db->station();
+    v7::Station& s = station();
 
     // If the station is referenced only by ID, look it up by ID only
     if (st.ana_id != MISSING_INT)
@@ -245,7 +253,7 @@ void Transaction::update_repinfo(const char* repinfo_file, int* added, int* dele
 void Transaction::dump(FILE* out)
 {
     repinfo().dump(out);
-    db->station().dump(out);
+    station().dump(out);
     db->levtr().dump(out);
     db->station_data().dump(out);
     db->data().dump(out);

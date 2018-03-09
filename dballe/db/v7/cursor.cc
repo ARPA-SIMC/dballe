@@ -162,7 +162,7 @@ struct StationResult
     {
         tr.repinfo().to_record(station.report, rec);
         station.to_record(rec);
-        tr.db->station().add_station_vars(station.ana_id, rec);
+        tr.station().add_station_vars(station.ana_id, rec);
     }
 };
 

@@ -26,7 +26,7 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
     // Check if the station is mobile
     bool mobile = msg.get_ident_var() != NULL;
 
-    v7::Station& st = db->station();
+    v7::Station& st = station();
     v7::LevTr& lt = db->levtr();
 
     // Fill up the station informations needed to fetch an existing ID

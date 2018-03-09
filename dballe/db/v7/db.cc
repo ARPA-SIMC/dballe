@@ -48,7 +48,6 @@ DB::~DB()
     delete m_data;
     delete m_station_data;
     delete m_levtr;
-    delete m_station;
     delete m_driver;
     delete conn;
 }
@@ -56,13 +55,6 @@ DB::~DB()
 v7::Driver& DB::driver()
 {
     return *m_driver;
-}
-
-v7::Station& DB::station()
-{
-    if (m_station == NULL)
-        m_station = m_driver->create_station().release();
-    return *m_station;
 }
 
 v7::LevTr& DB::levtr()
