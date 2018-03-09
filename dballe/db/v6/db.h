@@ -72,6 +72,8 @@ struct Transaction : public dballe::db::Transaction
     bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) override;
     void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated) override;
     void dump(FILE* out);
+
+    v6::Repinfo& repinfo();
 };
 
 /**

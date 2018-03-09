@@ -267,6 +267,7 @@ void Transaction::dump(FILE* out)
     db->attr().dump(out);
 }
 
+v6::Repinfo& Transaction::repinfo() { return db->repinfo(); }
 
 // First part of initialising a dba_db
 DB::DB(unique_ptr<Connection> conn)

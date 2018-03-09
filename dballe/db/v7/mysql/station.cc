@@ -32,7 +32,7 @@ MySQLStation::~MySQLStation()
 
 bool MySQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st, int* id)
 {
-    int rep = tr.db->repinfo().obtain_id(st.report.c_str());
+    int rep = tr.repinfo().obtain_id(st.report.c_str());
 
     Querybuf qb;
     if (st.ident.get())
@@ -70,7 +70,7 @@ const dballe::Station* MySQLStation::lookup_id(v7::Transaction& tr, int id)
 
     std::unique_ptr<dballe::Station> station(new dballe::Station);
     station->ana_id = id;
-    station->report = tr.db->repinfo().get_rep_memo(row.as_int(0));
+    station->report = tr.repinfo().get_rep_memo(row.as_int(0));
     station->coords.lat = row.as_int(1);
     station->coords.lon = row.as_int(2);
     if (!row.isnull(3))
@@ -91,7 +91,7 @@ int MySQLStation::obtain_id(v7::Transaction& tr, const dballe::Station& desc)
     }
 
     // If no station was found, insert a new one
-    int rep = tr.db->repinfo().get_id(desc.report.c_str());
+    int rep = tr.repinfo().get_id(desc.report.c_str());
     Querybuf qb;
     if (desc.ident.get())
     {

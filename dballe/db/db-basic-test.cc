@@ -61,7 +61,7 @@ void Tests<DB>::register_tests()
 
 this->add_method("repinfo", [](Fixture& f) {
     // Test repinfo-related functions
-    std::map<std::string, int> prios = f.tr->db->repinfo().get_priorities();
+    std::map<std::string, int> prios = f.tr->repinfo().get_priorities();
     wassert(actual(prios.find("synop") != prios.end()).istrue());
     wassert(actual(prios["synop"]) == 101);
 
@@ -72,7 +72,7 @@ this->add_method("repinfo", [](Fixture& f) {
     wassert(actual(deleted) == 11);
     wassert(actual(updated) == 2);
 
-    prios = f.tr->db->repinfo().get_priorities();
+    prios = f.tr->repinfo().get_priorities();
     wassert(actual(prios.find("fixspnpo") != prios.end()).istrue());
     wassert(actual(prios["fixspnpo"]) == 200);
 });

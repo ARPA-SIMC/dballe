@@ -51,7 +51,7 @@ SQLiteStation::~SQLiteStation()
 bool SQLiteStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st, int* id)
 {
     SQLiteStatement* s;
-    int rep = tr.db->repinfo().obtain_id(st.report.c_str());
+    int rep = tr.repinfo().obtain_id(st.report.c_str());
     if (st.ident.get())
     {
         smstm->bind_val(1, rep);
@@ -87,7 +87,7 @@ const dballe::Station* SQLiteStation::lookup_id(v7::Transaction& tr, int id)
     sstm->execute_one([&]() {
         std::unique_ptr<dballe::Station> station(new dballe::Station);
         station->ana_id = id;
-        station->report = tr.db->repinfo().get_rep_memo(sstm->column_int(0));
+        station->report = tr.repinfo().get_rep_memo(sstm->column_int(0));
         station->coords.lat = sstm->column_int(1);
         station->coords.lon = sstm->column_int(2);
         if (!sstm->column_isnull(3))
@@ -114,7 +114,7 @@ int SQLiteStation::obtain_id(v7::Transaction& tr, const dballe::Station& desc)
     }
 
     // If no station was found, insert a new one
-    istm->bind_val(1, tr.db->repinfo().get_id(desc.report.c_str()));
+    istm->bind_val(1, tr.repinfo().get_id(desc.report.c_str()));
     istm->bind_val(2, desc.coords.lat);
     istm->bind_val(3, desc.coords.lon);
     if (desc.ident)

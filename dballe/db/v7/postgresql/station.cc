@@ -48,7 +48,7 @@ bool PostgreSQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station&
 {
     using namespace dballe::sql::postgresql;
 
-    int rep = tr.db->repinfo().obtain_id(st.report.c_str());
+    int rep = tr.repinfo().obtain_id(st.report.c_str());
 
     Result res;
     if (st.ident.get())
@@ -85,7 +85,7 @@ const dballe::Station* PostgreSQLStation::lookup_id(v7::Transaction& tr, int id)
         {
             std::unique_ptr<dballe::Station> station(new dballe::Station);
             station->ana_id = id;
-            station->report = tr.db->repinfo().get_rep_memo(res.get_int4(0, 0));
+            station->report = tr.repinfo().get_rep_memo(res.get_int4(0, 0));
             station->coords.lat = res.get_int4(0, 1);
             station->coords.lon = res.get_int4(0, 2);
             if (!res.is_null(0, 3))
@@ -111,7 +111,7 @@ int PostgreSQLStation::obtain_id(v7::Transaction& tr, const dballe::Station& des
     }
 
     // If no station was found, insert a new one
-    int rep = tr.db->repinfo().get_id(desc.report.c_str());
+    int rep = tr.repinfo().get_id(desc.report.c_str());
     id = conn.exec_prepared_one_row("v7_station_insert", rep, desc.coords.lat, desc.coords.lon, desc.ident.get()).get_int4(0, 0);
     // TODO: mark station as newly inserted
     tr.state.stations.insert(desc, id);

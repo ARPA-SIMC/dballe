@@ -67,7 +67,7 @@ void Driver::run_station_query(const v7::StationQueryBuilder& qb, std::function<
     dballe::Station station;
     conn.exec_use(qb.sql_query, [&](const Row& row) {
         station.ana_id = row.as_int(0);
-        station.report = qb.tr->db->repinfo().get_rep_memo(row.as_int(1));
+        station.report = qb.tr->repinfo().get_rep_memo(row.as_int(1));
         station.coords.lat = row.as_int(2);
         station.coords.lon = row.as_int(3);
 
@@ -101,7 +101,7 @@ void Driver::run_station_data_query(const v7::DataQueryBuilder& qb, std::functio
         if (id_station != station.ana_id)
         {
             station.ana_id = id_station;
-            station.report = qb.tr->db->repinfo().get_rep_memo(row.as_int(1));
+            station.report = qb.tr->repinfo().get_rep_memo(row.as_int(1));
             station.coords.lat = row.as_int(2);
             station.coords.lon = row.as_int(3);
             if (row.isnull(4))
@@ -137,7 +137,7 @@ void Driver::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(c
         if (id_station != station.ana_id)
         {
             station.ana_id = id_station;
-            station.report = qb.tr->db->repinfo().get_rep_memo(row.as_int(1));
+            station.report = qb.tr->repinfo().get_rep_memo(row.as_int(1));
             station.coords.lat = row.as_int(2);
             station.coords.lon = row.as_int(3);
             if (row.isnull(4))
@@ -165,7 +165,7 @@ void Driver::run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<
         if (id_station != station.ana_id)
         {
             station.ana_id = id_station;
-            station.report = qb.tr->db->repinfo().get_rep_memo(row.as_int(1));
+            station.report = qb.tr->repinfo().get_rep_memo(row.as_int(1));
             station.coords.lat = row.as_int(2);
             station.coords.lon = row.as_int(3);
             if (row.isnull(4))

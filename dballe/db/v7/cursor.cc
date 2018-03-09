@@ -132,7 +132,7 @@ struct VectorBase : public Base<Interface>
 
     void to_record(Record& rec) override
     {
-        cur->to_record(*this->tr->db, rec);
+        cur->to_record(*this->tr, rec);
     }
 
     unsigned test_iterate(FILE* dump=0) override
@@ -158,11 +158,11 @@ struct StationResult
     }
 
     int get_station_id() const { return station.ana_id; }
-    void to_record(v7::DB& db, Record& rec) const
+    void to_record(v7::Transaction& tr, Record& rec) const
     {
-        db.repinfo().to_record(station.report, rec);
+        tr.repinfo().to_record(station.report, rec);
         station.to_record(rec);
-        db.station().add_station_vars(station.ana_id, rec);
+        tr.db->station().add_station_vars(station.ana_id, rec);
     }
 };
 
@@ -206,9 +206,9 @@ struct StationDataResult
 
     int get_station_id() const { return station.ana_id; }
 
-    void to_record(v7::DB& db, Record& rec) const
+    void to_record(v7::Transaction& tr, Record& rec) const
     {
-        db.repinfo().to_record(station.report, rec);
+        tr.repinfo().to_record(station.report, rec);
         station.to_record(rec);
         rec.seti("context_id", id_data);
 
@@ -272,9 +272,9 @@ struct DataResult : public StationDataResult
     DataResult(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, Var* var)
         : StationDataResult(station, id_data, var), id_levtr(id_levtr), datetime(datetime) {}
 
-    void to_record(v7::DB& db, Record& rec) const
+    void to_record(v7::Transaction& tr, Record& rec) const
     {
-        StationDataResult::to_record(db, rec);
+        StationDataResult::to_record(tr, rec);
         rec.set_datetime(datetime);
     }
 
@@ -345,7 +345,7 @@ struct Best : public Data
     /// Append or replace the last result according to priotity. Returns false if the value has been ignored.
     bool add_to_results(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)
     {
-        int prio = tr->db->repinfo().get_priority(station.report);
+        int prio = tr->repinfo().get_priority(station.report);
 
         if (results.empty()) goto append;
         if (station.coords != results.back().station.coords) goto append;
@@ -402,9 +402,9 @@ struct SummaryResult
 
     int get_station_id() const { return station.ana_id; }
 
-    void to_record(v7::DB& db, Record& rec) const
+    void to_record(v7::Transaction& tr, Record& rec) const
     {
-        db.repinfo().to_record(station.report, rec);
+        tr.repinfo().to_record(station.report, rec);
         station.to_record(rec);
 
         char bname[7];

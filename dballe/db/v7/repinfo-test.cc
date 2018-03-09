@@ -4,6 +4,7 @@
 #include "db/v6/driver.h"
 #include "db/v6/repinfo.h"
 #include "db/v7/db.h"
+#include "db/v7/transaction.h"
 #include "db/v7/driver.h"
 #include "db/v7/repinfo.h"
 #include <wreport/utils/sys.h>
@@ -27,7 +28,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
     {
         // Test simple queries
         this->add_method("query", [](Fixture& f) {
-            auto& ri = f.db->repinfo();
+            auto& ri = f.tr->repinfo();
             wassert(actual(ri.get_id("synop")) == 1);
             wassert(actual(ri.get_id("generic")) == 255);
             wassert(actual(ri.get_rep_memo(1)) == "synop");
@@ -36,7 +37,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
         });
         // Test update
         this->add_method("update", [](Fixture& f) {
-            auto& ri = f.db->repinfo();
+            auto& ri = f.tr->repinfo();
 
             wassert(actual(ri.get_id("synop")) == 1);
 
@@ -51,7 +52,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
         });
         // Test update from a file that was known to fail
         this->add_method("fail", [](Fixture& f) {
-            auto& ri = f.db->repinfo();
+            auto& ri = f.tr->repinfo();
 
             wassert(actual(ri.get_id("synop")) == 1);
 
@@ -67,7 +68,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
         });
         // Test update from a file with a negative priority
         this->add_method("fail1", [](Fixture& f) {
-            auto& ri = f.db->repinfo();
+            auto& ri = f.tr->repinfo();
 
             wassert(actual(ri.get_priority("generic")) == 1000);
 
@@ -82,7 +83,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
         });
         // Test automatic repinfo creation
         this->add_method("fail2", [](Fixture& f) {
-            auto& ri = f.db->repinfo();
+            auto& ri = f.tr->repinfo();
 
             int id = ri.obtain_id("foobar");
             wassert(actual(id) > 0);
@@ -96,7 +97,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
         });
         // See https://github.com/ARPA-SIMC/dballe/issues/30
         this->add_method("case", [](Fixture& f) {
-            auto& ri = f.db->repinfo();
+            auto& ri = f.tr->repinfo();
 
             int added, deleted, updated;
             sys::write_file("test_case.csv", "234,foOBar,foOBar,100,oss,0\n");

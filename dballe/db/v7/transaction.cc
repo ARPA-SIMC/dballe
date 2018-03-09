@@ -23,6 +23,11 @@ Transaction::~Transaction()
     delete sql_transaction;
 }
 
+v7::Repinfo& Transaction::repinfo()
+{
+    return db->repinfo();
+}
+
 void Transaction::commit()
 {
     if (fired) return;

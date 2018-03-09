@@ -10,6 +10,7 @@ namespace dballe {
 namespace db {
 namespace v7 {
 struct DB;
+struct Repinfo;
 
 struct Transaction : public dballe::db::Transaction
 {
@@ -27,6 +28,9 @@ struct Transaction : public dballe::db::Transaction
     Transaction& operator=(const Transaction&) = delete;
     Transaction& operator=(Transaction&&) = delete;
     ~Transaction();
+
+    /// Access the repinfo table
+    v7::Repinfo& repinfo();
 
     void commit() override;
     void rollback() override;

@@ -324,7 +324,7 @@ bool StationQueryBuilder::build_where()
 
     if (!query.rep_memo.empty())
     {
-        int src_val = tr->db->repinfo().get_id(query.rep_memo.c_str());
+        int src_val = tr->repinfo().get_id(query.rep_memo.c_str());
         if (src_val == -1)
         {
             sql_where.append_listf("1=0");
@@ -726,7 +726,7 @@ bool QueryBuilder::add_repinfo_where(const char* tbl)
     if (query.prio_min != MISSING_INT || query.prio_max != MISSING_INT)
     {
         // Filter the repinfo cache and build a IN query
-        std::vector<int> ids = tr->db->repinfo().ids_by_prio(query);
+        std::vector<int> ids = tr->repinfo().ids_by_prio(query);
         if (ids.empty())
         {
             // No repinfo matches, so we just introduce a false value
@@ -747,7 +747,7 @@ bool QueryBuilder::add_repinfo_where(const char* tbl)
 
     if (!query.rep_memo.empty())
     {
-        int src_val = tr->db->repinfo().get_id(query.rep_memo.c_str());
+        int src_val = tr->repinfo().get_id(query.rep_memo.c_str());
         if (src_val == -1)
         {
             sql_where.append_listf("1=0");

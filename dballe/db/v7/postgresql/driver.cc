@@ -77,7 +77,7 @@ void Driver::run_station_query(const v7::StationQueryBuilder& qb, std::function<
         for (unsigned row = 0; row < res.rowcount(); ++row)
         {
             station.ana_id = res.get_int4(row, 0);
-            station.report = qb.tr->db->repinfo().get_rep_memo(res.get_int4(row, 1));
+            station.report = qb.tr->repinfo().get_rep_memo(res.get_int4(row, 1));
             station.coords.lat = res.get_int4(row, 2);
             station.coords.lon = res.get_int4(row, 3);
             if (res.is_null(row, 4))
@@ -123,7 +123,7 @@ void Driver::run_station_data_query(const v7::DataQueryBuilder& qb, std::functio
             if (id_station != station.ana_id)
             {
                 station.ana_id = id_station;
-                station.report = qb.tr->db->repinfo().get_rep_memo(res.get_int4(row, 1));
+                station.report = qb.tr->repinfo().get_rep_memo(res.get_int4(row, 1));
                 station.coords.lat = res.get_int4(row, 2);
                 station.coords.lon = res.get_int4(row, 3);
                 if (res.is_null(row, 4))
@@ -173,7 +173,7 @@ void Driver::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(c
             if (id_station != station.ana_id)
             {
                 station.ana_id = id_station;
-                station.report = qb.tr->db->repinfo().get_rep_memo(res.get_int4(row, 1));
+                station.report = qb.tr->repinfo().get_rep_memo(res.get_int4(row, 1));
                 station.coords.lat = res.get_int4(row, 2);
                 station.coords.lon = res.get_int4(row, 3);
                 if (res.is_null(row, 4))
