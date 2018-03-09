@@ -69,6 +69,8 @@ struct Transaction : public dballe::db::Transaction
      *   The station ID
      */
     int obtain_station(v7::State& state, const dballe::Station& st, bool can_add=true);
+
+    void dump(FILE* out) override;
 };
 
 struct TestTransaction : public Transaction

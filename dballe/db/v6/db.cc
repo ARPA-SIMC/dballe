@@ -252,6 +252,17 @@ void Transaction::attr_remove_data(int data_id, const db::AttrList& qcs)
     db->conn->execute(query);
 }
 
+void Transaction::dump(FILE* out)
+{
+    db->repinfo().dump(out);
+    db->station().dump(out);
+    db->lev_tr().dump(out);
+    db->lev_tr_cache().dump(out);
+    db->data().dump(out);
+    db->attr().dump(out);
+}
+
+
 // First part of initialising a dba_db
 DB::DB(unique_ptr<Connection> conn)
     : conn(conn.release()),
@@ -419,16 +430,6 @@ void DB::vacuum()
         m_lev_tr_cache->invalidate();
     t->commit();
     tr->done();
-}
-
-void DB::dump(FILE* out)
-{
-    repinfo().dump(out);
-    station().dump(out);
-    lev_tr().dump(out);
-    lev_tr_cache().dump(out);
-    data().dump(out);
-    attr().dump(out);
 }
 
 #if 0

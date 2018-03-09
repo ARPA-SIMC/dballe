@@ -402,6 +402,11 @@ public:
      *   because dest returned false.
      */
     virtual bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) = 0;
+
+    /**
+     * Dump the entire contents of the database to an output stream
+     */
+    virtual void dump(FILE* out) = 0;
 };
 
 }
@@ -757,7 +762,7 @@ public:
     /**
      * Dump the entire contents of the database to an output stream
      */
-    virtual void dump(FILE* out) = 0;
+    void dump(FILE* out);
 
     /// Print informations about the database to the given output stream
     virtual void print_info(FILE* out);

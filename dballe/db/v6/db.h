@@ -70,6 +70,7 @@ struct Transaction : public dballe::db::Transaction
     void attr_remove_data(int data_id, const db::AttrList& qcs) override;
     void import_msg(const Message& msg, const char* repmemo, int flags) override;
     bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) override;
+    void dump(FILE* out);
 };
 
 /**
@@ -214,11 +215,6 @@ public:
      * Depending on database size, this routine can take a few minutes to execute.
      */
     void vacuum();
-
-    /**
-     * Dump the entire contents of the database to an output stream
-     */
-    void dump(FILE* out);
 
     friend class dballe::DB;
     friend class dballe::db::v6::Transaction;

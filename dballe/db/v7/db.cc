@@ -161,15 +161,6 @@ void DB::vacuum()
     tr->done();
 }
 
-void DB::dump(FILE* out)
-{
-    repinfo().dump(out);
-    station().dump(out);
-    levtr().dump(out);
-    station_data().dump(out);
-    data().dump(out);
-}
-
 }
 }
 }

@@ -224,6 +224,15 @@ int Transaction::obtain_station(v7::State& state, const dballe::Station& st, boo
         return s.get_id(*this, st);
 }
 
+void Transaction::dump(FILE* out)
+{
+    db->repinfo().dump(out);
+    db->station().dump(out);
+    db->levtr().dump(out);
+    db->station_data().dump(out);
+    db->data().dump(out);
+}
+
 void TestTransaction::commit()
 {
     throw std::runtime_error("commit attempted while forbidden during tests");

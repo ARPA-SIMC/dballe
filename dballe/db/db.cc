@@ -304,6 +304,13 @@ bool DB::export_msgs(const Query& query, std::function<bool(std::unique_ptr<Mess
     return res;
 }
 
+void DB::dump(FILE* out)
+{
+    auto t = transaction();
+    t->dump(out);
+    t->rollback();
+}
+
 void DB::print_info(FILE* out)
 {
     fprintf(out, "Format: %s\n", format_format(format()).c_str());
