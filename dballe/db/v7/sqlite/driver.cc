@@ -66,7 +66,7 @@ void Driver::run_station_query(const v7::StationQueryBuilder& qb, std::function<
 
     dballe::Station station;
     stm->execute([&]() {
-        station.ana_id = stm->column_int(0);
+        station.id = stm->column_int(0);
         station.report = qb.tr->repinfo().get_rep_memo(stm->column_int(1));
         station.coords.lat = stm->column_int(2);
         station.coords.lon = stm->column_int(3);
@@ -99,9 +99,9 @@ void Driver::run_station_data_query(const v7::DataQueryBuilder& qb, std::functio
             return;
 
         int id_station = stm->column_int(0);
-        if (id_station != station.ana_id)
+        if (id_station != station.id)
         {
-            station.ana_id = id_station;
+            station.id = id_station;
             station.report = qb.tr->repinfo().get_rep_memo(stm->column_int(1));
             station.coords.lat = stm->column_int(2);
             station.coords.lon = stm->column_int(3);
@@ -136,9 +136,9 @@ void Driver::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(c
             return;
 
         int id_station = stm->column_int(0);
-        if (id_station != station.ana_id)
+        if (id_station != station.id)
         {
-            station.ana_id = id_station;
+            station.id = id_station;
             station.report = qb.tr->repinfo().get_rep_memo(stm->column_int(1));
             station.coords.lat = stm->column_int(2);
             station.coords.lon = stm->column_int(3);
@@ -165,9 +165,9 @@ void Driver::run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<
     dballe::Station station;
     stm->execute([&]() {
         int id_station = stm->column_int(0);
-        if (id_station != station.ana_id)
+        if (id_station != station.id)
         {
-            station.ana_id = id_station;
+            station.id = id_station;
             station.report = qb.tr->repinfo().get_rep_memo(stm->column_int(1));
             station.coords.lat = stm->column_int(2);
             station.coords.lon = stm->column_int(3);

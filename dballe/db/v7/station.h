@@ -2,6 +2,7 @@
 #define DBALLE_DB_V7_STATION_H
 
 #include <dballe/sql/fwd.h>
+#include <dballe/db/v7/cache.h>
 #include <memory>
 #include <cstdio>
 #include <functional>
@@ -20,31 +21,6 @@ struct Station;
 namespace db {
 namespace v7 {
 struct Transaction;
-
-struct StationCache
-{
-    std::unordered_map<int, dballe::Station*> by_id;
-    std::unordered_map<int, std::vector<const dballe::Station*>> by_lon;
-
-    StationCache() = default;
-    StationCache(const StationCache&) = delete;
-    StationCache(StationCache&&) = delete;
-    StationCache& operator=(const StationCache&) = delete;
-    StationCache& operator=(StationCache&&) = delete;
-    ~StationCache();
-
-    const dballe::Station* insert(const dballe::Station& st);
-    const dballe::Station* insert(const dballe::Station& st, int id);
-    const dballe::Station* insert(std::unique_ptr<dballe::Station> st);
-
-    const dballe::Station* find_station(int id) const;
-    int find_id(const dballe::Station& st) const;
-
-    void clear();
-
-protected:
-    void by_lon_add(const dballe::Station* st);
-};
 
 struct Station
 {

@@ -13,7 +13,7 @@ void Station::set_from_record(const Record& rec)
     if (const Var* var = rec.get("ana_id"))
     {
         // If we have ana_id, the rest is optional
-        ana_id = var->enqi();
+        id = var->enqi();
         coords.lat = rec.enq("lat", MISSING_INT);
         coords.lon = rec.enq("lon", MISSING_INT);
         ident.clear();
@@ -22,7 +22,7 @@ void Station::set_from_record(const Record& rec)
         report = rec.enq("rep_memo", "");
     } else {
         // If we do not have ana_id, we require at least lat, lon and rep_memo
-        ana_id = MISSING_INT;
+        id = MISSING_INT;
 
         if (const Var* var = rec.get("lat"))
             coords.lat = var->enqi();
@@ -51,8 +51,8 @@ void Station::set_from_record(const Record& rec)
 
 void Station::to_record(Record& rec) const
 {
-    if (ana_id != MISSING_INT)
-        rec.set("ana_id", ana_id);
+    if (id != MISSING_INT)
+        rec.set("ana_id", id);
     else
         rec.unset("ana_id");
 
@@ -71,10 +71,10 @@ void Station::to_record(Record& rec) const
 
 void Station::print(FILE* out, const char* end) const
 {
-    if (ana_id == MISSING_INT)
+    if (id == MISSING_INT)
         fputs("- ", out);
     else
-        fprintf(out, "%d,", ana_id);
+        fprintf(out, "%d,", id);
 
     if (coords.is_missing())
         fputs("(-,-) ", out);
@@ -91,10 +91,10 @@ void Station::print(FILE* out, const char* end) const
 
 std::ostream& operator<<(std::ostream& out, const Station& st)
 {
-    if (st.ana_id == MISSING_INT)
+    if (st.id == MISSING_INT)
         out << "-,";
     else
-        out << st.ana_id << ",";
+        out << st.id << ",";
 
     return out << st.coords << "," << st.ident;
 }

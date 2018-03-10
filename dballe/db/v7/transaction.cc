@@ -86,7 +86,7 @@ void Transaction::insert_station_data(StationValues& vals, bool can_replace, boo
     int si = obtain_station(state, vals.info, station_can_add);
 
     v7::bulk::InsertStationVars vars(state, si);
-    vals.info.ana_id = si;
+    vals.info.id = si;
 
     // Add all the variables we find
     for (auto& i: vals.values)
@@ -112,7 +112,7 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
     int si = obtain_station(state, vals.info, station_can_add);
 
     v7::bulk::InsertVars vars(state, si, vals.info.datetime);
-    vals.info.ana_id = si;
+    vals.info.id = si;
 
     // Insert the lev_tr data, and get the ID
     auto ltri = db->levtr().obtain_id(state, LevTrDesc(vals.info.level, vals.info.trange));
@@ -235,8 +235,8 @@ int Transaction::obtain_station(v7::State& state, const dballe::Station& st, boo
     v7::Station& s = station();
 
     // If the station is referenced only by ID, look it up by ID only
-    if (st.ana_id != MISSING_INT)
-        return st.ana_id;
+    if (st.id != MISSING_INT)
+        return st.id;
 
     // Get the ID for the station
     if (can_add)

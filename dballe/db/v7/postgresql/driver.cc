@@ -76,7 +76,7 @@ void Driver::run_station_query(const v7::StationQueryBuilder& qb, std::function<
     conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
         for (unsigned row = 0; row < res.rowcount(); ++row)
         {
-            station.ana_id = res.get_int4(row, 0);
+            station.id = res.get_int4(row, 0);
             station.report = qb.tr->repinfo().get_rep_memo(res.get_int4(row, 1));
             station.coords.lat = res.get_int4(row, 2);
             station.coords.lon = res.get_int4(row, 3);
@@ -120,9 +120,9 @@ void Driver::run_station_data_query(const v7::DataQueryBuilder& qb, std::functio
                 return;
 
             int id_station = res.get_int4(row, 0);
-            if (id_station != station.ana_id)
+            if (id_station != station.id)
             {
-                station.ana_id = id_station;
+                station.id = id_station;
                 station.report = qb.tr->repinfo().get_rep_memo(res.get_int4(row, 1));
                 station.coords.lat = res.get_int4(row, 2);
                 station.coords.lon = res.get_int4(row, 3);
@@ -170,9 +170,9 @@ void Driver::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(c
                 return;
 
             int id_station = res.get_int4(row, 0);
-            if (id_station != station.ana_id)
+            if (id_station != station.id)
             {
-                station.ana_id = id_station;
+                station.id = id_station;
                 station.report = qb.tr->repinfo().get_rep_memo(res.get_int4(row, 1));
                 station.coords.lat = res.get_int4(row, 2);
                 station.coords.lon = res.get_int4(row, 3);
@@ -213,9 +213,9 @@ void Driver::run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<
         for (unsigned row = 0; row < res.rowcount(); ++row)
         {
             int id_station = res.get_int4(row, 0);
-            if (id_station != station.ana_id)
+            if (id_station != station.id)
             {
-                station.ana_id = id_station;
+                station.id = id_station;
                 station.report = qb.tr->repinfo().get_rep_memo(res.get_int4(row, 1));
                 station.coords.lat = res.get_int4(row, 2);
                 station.coords.lon = res.get_int4(row, 3);

@@ -76,7 +76,7 @@ bool SQLiteStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st,
 const dballe::Station* SQLiteStation::lookup_id(v7::Transaction& tr, int id)
 {
     // First look it up in the transaction cache
-    const dballe::Station* res = cache.find_station(id);
+    const dballe::Station* res = cache.find_entry(id);
     if (res) return res;
 
     if (!sstm)
@@ -86,7 +86,7 @@ const dballe::Station* SQLiteStation::lookup_id(v7::Transaction& tr, int id)
 
     sstm->execute_one([&]() {
         std::unique_ptr<dballe::Station> station(new dballe::Station);
-        station->ana_id = id;
+        station->id = id;
         station->report = tr.repinfo().get_rep_memo(sstm->column_int(0));
         station->coords.lat = sstm->column_int(1);
         station->coords.lon = sstm->column_int(2);

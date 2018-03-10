@@ -66,8 +66,8 @@ struct DBDataFixture : public TransactionFixture<DB, DBData>
     void create_db() override
     {
         TransactionFixture<DB, DBData>::create_db();
-        st1_id = this->test_data.stations["st1_metar"].info.ana_id;
-        st2_id = this->test_data.stations["st2_metar"].info.ana_id;
+        st1_id = this->test_data.stations["st1_metar"].info.id;
+        st2_id = this->test_data.stations["st2_metar"].info.id;
     }
 };
 

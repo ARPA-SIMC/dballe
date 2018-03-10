@@ -21,7 +21,7 @@ void Tests::register_tests()
 
 add_method("station", []() {
     Station st;
-    st.ana_id = 1;
+    st.id = 1;
     st.report = "testreport";
     st.coords = Coords(11.5, 42.5);
     st.ident = "testident";

@@ -133,7 +133,7 @@ this->add_method("insert_perms", [](Fixture& f) {
     } catch (error_notfound& e) {
         wassert(actual(e.what()).contains("station not found"));
     }
-    wassert(actual(oldf.data["synop"].info.ana_id) == MISSING_INT);
+    wassert(actual(oldf.data["synop"].info.id) == MISSING_INT);
     wassert(actual(oldf.data["synop"].values["B01011"].data_id) == MISSING_INT);
     wassert(actual(oldf.data["synop"].values["B01012"].data_id) == MISSING_INT);
     oldf.data["synop"].clear_ids();
@@ -712,7 +712,7 @@ this->add_method("update", [](Fixture& f) {
 
     // Update it
     DataValues update;
-    update.info.ana_id = ana_id;
+    update.info.id = ana_id;
     update.info.report = "synop";
     update.info.datetime = q.datetime.min;
     update.info.level = q.level;

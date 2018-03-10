@@ -116,7 +116,7 @@ void OldFixtureTests<DB>::register_tests()
 {
 this->add_method("ana_id", [](Fixture& f) {
     char query[20];
-    snprintf(query, 20, "ana_id=%d", f.test_data.data["synop"].info.ana_id);
+    snprintf(query, 20, "ana_id=%d", f.test_data.data["synop"].info.id);
 #warning FIXME: change after testing if we can move to report-in-station behaviour or not
     if (f.db->format() != V6)
         TRY_QUERY(query, 2);

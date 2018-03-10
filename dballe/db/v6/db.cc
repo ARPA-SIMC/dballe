@@ -129,7 +129,7 @@ void Transaction::insert_station_data(StationValues& vals, bool can_replace, boo
 
     v6::bulk::InsertV6 vars;
     // Insert the station data, and get the ID
-    vars.id_station = vals.info.ana_id = db->obtain_station(vals.info, station_can_add);
+    vars.id_station = vals.info.id = db->obtain_station(vals.info, station_can_add);
     // Get the ID of the report
     vars.id_report = ri.obtain_id(vals.info.report.c_str());
 
@@ -160,7 +160,7 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
 
     v6::bulk::InsertV6 vars;
     // Insert the station data, and get the ID
-    vars.id_station = vals.info.ana_id = db->obtain_station(vals.info, station_can_add);
+    vars.id_station = vals.info.id = db->obtain_station(vals.info, station_can_add);
     // Get the ID of the report
     vars.id_report = ri.obtain_id(vals.info.report.c_str());
     // Set the date from the record contents
@@ -406,8 +406,8 @@ int DB::rep_cod_from_memo(const char* memo)
 int DB::obtain_station(const dballe::Station& st, bool can_add)
 {
     // Look if the record already knows the ID
-    if (st.ana_id != MISSING_INT)
-        return st.ana_id;
+    if (st.id != MISSING_INT)
+        return st.id;
 
     v6::Station& s = station();
 

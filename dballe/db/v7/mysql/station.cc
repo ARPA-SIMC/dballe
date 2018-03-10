@@ -60,7 +60,7 @@ bool MySQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st, 
 const dballe::Station* MySQLStation::lookup_id(v7::Transaction& tr, int id)
 {
     // First look it up in the transaction cache
-    if (const dballe::Station* res = cache.find_station(id))
+    if (const dballe::Station* res = cache.find_entry(id))
         return res;
 
     Querybuf qb;
@@ -69,7 +69,7 @@ const dballe::Station* MySQLStation::lookup_id(v7::Transaction& tr, int id)
     auto row = res.expect_one_result();
 
     std::unique_ptr<dballe::Station> station(new dballe::Station);
-    station->ana_id = id;
+    station->id = id;
     station->report = tr.repinfo().get_rep_memo(row.as_int(0));
     station->coords.lat = row.as_int(1);
     station->coords.lon = row.as_int(2);

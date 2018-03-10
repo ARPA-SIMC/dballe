@@ -33,34 +33,6 @@ Tests test_mysql("db_v7_station_mysql", "MYSQL");
 
 void Tests::register_tests()
 {
-add_method("cache", [](Fixture& f) {
-    db::v7::StationCache stations;
-
-    wassert_false(stations.find_station(1));
-    wassert_false(stations.find_station(MISSING_INT));
-    wassert(actual(stations.find_id(Station())) == MISSING_INT);
-
-    Station st;
-    st.ana_id = 1;
-    st.report = "testreport";
-    st.coords = Coords(11.5, 42.5);
-    st.ident = "testident";
-
-    stations.insert(st);
-
-    wassert_true(stations.find_station(1));
-    wassert(actual(*stations.find_station(1)) == st);
-    wassert(actual(stations.find_id(st)) == 1);
-
-    stations.insert(st);
-
-    wassert_true(stations.find_station(1));
-    wassert(actual(*stations.find_station(1)) == st);
-    wassert(actual(stations.find_id(st)) == 1);
-
-    wassert(actual(stations.by_lon[st.coords.lon].size()) == 1u);
-});
-
 add_method("insert", [](Fixture& f) {
     // Insert some values and try to read them again
     auto& st = f.tr->station();

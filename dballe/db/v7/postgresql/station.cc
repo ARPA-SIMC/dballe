@@ -72,7 +72,7 @@ const dballe::Station* PostgreSQLStation::lookup_id(v7::Transaction& tr, int id)
     using namespace dballe::sql::postgresql;
 
     // First look it up in the transaction cache
-    if (const dballe::Station* res = cache.find_station(id))
+    if (const dballe::Station* res = cache.find_entry(id))
         return res;
 
     Result res = conn.exec_prepared("v7_station_lookup_id", id);
@@ -84,7 +84,7 @@ const dballe::Station* PostgreSQLStation::lookup_id(v7::Transaction& tr, int id)
         case 1:
         {
             std::unique_ptr<dballe::Station> station(new dballe::Station);
-            station->ana_id = id;
+            station->id = id;
             station->report = tr.repinfo().get_rep_memo(res.get_int4(0, 0));
             station->coords.lat = res.get_int4(0, 1);
             station->coords.lon = res.get_int4(0, 2);

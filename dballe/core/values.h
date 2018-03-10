@@ -29,7 +29,7 @@ struct Station
      *
      * It will be filled when the Station is inserted on the database.
      */
-    int ana_id = MISSING_INT;
+    int id = MISSING_INT;
 
     /// Station coordinates
     Coords coords;
@@ -41,7 +41,7 @@ struct Station
     Station(const dballe::Record& rec) { set_from_record(rec); }
 
     /// Reset the database ID
-    void clear_ids() { ana_id = MISSING_INT; }
+    void clear_ids() { id = MISSING_INT; }
 
     /// Fill this Station with values from a dballe::Record
     void set_from_record(const Record& rec);
@@ -51,11 +51,11 @@ struct Station
 
     bool operator==(const Station& o) const
     {
-        return ana_id == o.ana_id && report == o.report && coords == o.coords && ident == o.ident;
+        return id == o.id && report == o.report && coords == o.coords && ident == o.ident;
     }
     bool operator!=(const Station& o) const
     {
-        return ana_id != o.ana_id || report != o.report || coords != o.coords || ident != o.ident;
+        return id != o.id || report != o.report || coords != o.coords || ident != o.ident;
     }
 
     /**

@@ -32,7 +32,7 @@ static PyObject* get_insert_ids(const Vals& vals)
 {
     pyo_unique_ptr res(PyDict_New());
 
-    pyo_unique_ptr ana_id(PyInt_FromLong(vals.info.ana_id));
+    pyo_unique_ptr ana_id(PyInt_FromLong(vals.info.id));
     if (!ana_id) return nullptr;
     if (PyDict_SetItemString(res, "ana_id", ana_id))
         return nullptr;

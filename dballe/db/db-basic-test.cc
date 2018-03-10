@@ -147,12 +147,12 @@ this->add_method("stationdata", [](Fixture& f) {
                 wassert(actual(cur->next()).istrue());
                 if (strcmp(cur->get_rep_memo(), "temp") == 0)
                 {
-                    wassert(actual(cur->get_station_id()) == svals_esmac.info.ana_id);
+                    wassert(actual(cur->get_station_id()) == svals_esmac.info.id);
                     cur->to_record(result);
                     wassert(actual(result["B01019"]) == "Esmac");
                     have_temp = true;
                 } else if (strcmp(cur->get_rep_memo(), "synop") == 0) {
-                    wassert(actual(cur->get_station_id()) == svals_camse.info.ana_id);
+                    wassert(actual(cur->get_station_id()) == svals_camse.info.id);
                     cur->to_record(result);
                     wassert(actual(result["B01019"]) == "Camse");
                     have_synop = true;
@@ -273,7 +273,7 @@ this->add_method("vacuum", [](Fixture& f) {
     // Delete all measured values, but not station values
     {
         core::Query q;
-        q.ana_id = data.stations["s1"].info.ana_id;
+        q.ana_id = data.stations["s1"].info.id;
         db.remove(q);
     }
 
@@ -291,7 +291,7 @@ this->add_method("vacuum", [](Fixture& f) {
     // Station 1 is gone
     {
         core::Query q;
-        q.ana_id = data.stations["s1"].info.ana_id;
+        q.ana_id = data.stations["s1"].info.id;
         auto c = db.query_stations(q);
         wassert(actual(c->remaining()) == 0);
     }
@@ -299,7 +299,7 @@ this->add_method("vacuum", [](Fixture& f) {
     // Station 2 is still there with all its data
     {
         core::Query q;
-        q.ana_id = data.stations["s2"].info.ana_id;
+        q.ana_id = data.stations["s2"].info.id;
         auto c = db.query_stations(q);
         wassert(actual(c->remaining()) == 1);
 

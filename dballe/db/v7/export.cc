@@ -141,7 +141,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
         //        sqlrec.out_value);
 
         /* See if we have the start of a new message */
-        if (row.station.ana_id != last_ana_id || row.datetime != last_datetime)
+        if (row.station.id != last_ana_id || row.datetime != last_datetime)
         {
             // Flush current message
             TRACE("New message\n");
@@ -169,8 +169,8 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
             msg::Context& c_st = msg->obtain_station_context();
 
             // Update station layer cache if needed
-            if (row.station.ana_id != last_ana_id)
-                station_cache.fill(*this, row.station.ana_id);
+            if (row.station.id != last_ana_id)
+                station_cache.fill(*this, row.station.id);
 
             // Fill in report information
             {
@@ -190,7 +190,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
 
             // Update current context information
             last_datetime = row.datetime;
-            last_ana_id = row.station.ana_id;
+            last_ana_id = row.station.id;
         }
 
         TRACE("Inserting var %01d%02d%03d (%s)\n", WR_VAR_FXY(var->code()), var->enqc());

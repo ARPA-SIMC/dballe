@@ -3,6 +3,7 @@
 
 #include <dballe/core/defs.h>
 #include <dballe/db/v7/state.h>
+#include <dballe/db/v7/cache.h>
 #include <memory>
 #include <set>
 #include <cstdio>
@@ -18,32 +19,6 @@ struct Context;
 
 namespace db {
 namespace v7 {
-
-struct LevTrCache
-{
-    std::unordered_map<int, LevTrEntry*> by_id;
-    std::unordered_map<Level, std::vector<const LevTrEntry*>> by_level;
-
-    LevTrCache() = default;
-    LevTrCache(const LevTrCache&) = delete;
-    LevTrCache(LevTrCache&&) = delete;
-    LevTrCache& operator=(const LevTrCache&) = delete;
-    LevTrCache& operator=(LevTrCache&&) = delete;
-    ~LevTrCache();
-
-    const LevTrEntry* insert(const LevTrEntry& st);
-    const LevTrEntry* insert(const LevTrEntry& st, int id);
-    const LevTrEntry* insert(std::unique_ptr<LevTrEntry> st);
-
-    const LevTrEntry* find_station(int id) const;
-    int find_id(const LevTrEntry& st) const;
-
-    void clear();
-
-protected:
-    void by_level_add(const LevTrEntry* st);
-};
-
 
 /**
  * Precompiled queries to manipulate the lev_tr table

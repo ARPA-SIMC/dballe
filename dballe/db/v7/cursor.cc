@@ -112,7 +112,7 @@ struct VectorBase : public Base<Interface>
     {
         dballe::Station station;
         station.report = get_rep_memo();
-        station.ana_id = get_station_id();
+        station.id = get_station_id();
         station.coords = cur->station.coords;
         station.ident = cur->station.ident;
         return station;
@@ -154,15 +154,15 @@ struct StationResult
 
     void dump(FILE* out) const
     {
-        fprintf(out, "%02d %8.8s %02.4f %02.4f %-10s\n", station.ana_id, station.report.c_str(), station.coords.dlat(), station.coords.dlon(), station.ident.get());
+        fprintf(out, "%02d %8.8s %02.4f %02.4f %-10s\n", station.id, station.report.c_str(), station.coords.dlat(), station.coords.dlon(), station.ident.get());
     }
 
-    int get_station_id() const { return station.ana_id; }
+    int get_station_id() const { return station.id; }
     void to_record(v7::Transaction& tr, Record& rec) const
     {
         tr.repinfo().to_record(station.report, rec);
         station.to_record(rec);
-        tr.station().add_station_vars(station.ana_id, rec);
+        tr.station().add_station_vars(station.id, rec);
     }
 };
 
@@ -204,7 +204,7 @@ struct StationDataResult
     }
     ~StationDataResult() { delete var; }
 
-    int get_station_id() const { return station.ana_id; }
+    int get_station_id() const { return station.id; }
 
     void to_record(v7::Transaction& tr, Record& rec) const
     {
@@ -227,7 +227,7 @@ struct StationDataResult
     void dump(FILE* out) const
     {
         fprintf(out, "%02d %8.8s %02.4f %02.4f %-10s %4d ",
-                station.ana_id, station.report.c_str(), station.coords.dlat(), station.coords.dlon(), station.ident.get(), id_data);
+                station.id, station.report.c_str(), station.coords.dlat(), station.coords.dlon(), station.ident.get(), id_data);
         var->print_without_attrs(out, "\n");
     }
 };
@@ -281,7 +281,7 @@ struct DataResult : public StationDataResult
     void dump(FILE* out) const
     {
         fprintf(out, "%02d %8.8s %02.4f %02.4f %-10s %4d %4d ",
-                station.ana_id, station.report.c_str(), station.coords.dlat(), station.coords.dlon(), station.ident.get(), id_levtr, id_data);
+                station.id, station.report.c_str(), station.coords.dlat(), station.coords.dlon(), station.ident.get(), id_levtr, id_data);
         datetime.print_iso8601(out, ' ');
         fprintf(out, " ");
         var->print_without_attrs(out, "\n");
@@ -400,7 +400,7 @@ struct SummaryResult
     SummaryResult(const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t count)
         : station(station), id_levtr(id_levtr), code(code), datetime(datetime), count(count) {}
 
-    int get_station_id() const { return station.ana_id; }
+    int get_station_id() const { return station.id; }
 
     void to_record(v7::Transaction& tr, Record& rec) const
     {
@@ -421,7 +421,7 @@ struct SummaryResult
     void dump(FILE* out) const
     {
         fprintf(out, "%02d %8.8s %02.4f %02.4f %-10s %4d %d%02d%03d\n",
-                station.ana_id, station.report.c_str(), station.coords.dlat(), station.coords.dlon(), station.ident.get(), id_levtr, WR_VAR_FXY(code));
+                station.id, station.report.c_str(), station.coords.dlat(), station.coords.dlon(), station.ident.get(), id_levtr, WR_VAR_FXY(code));
     }
 };
 

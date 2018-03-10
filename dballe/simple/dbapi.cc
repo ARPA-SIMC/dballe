@@ -255,13 +255,13 @@ void DbAPI::prendilo()
     {
         StationValues sv(input);
         tr->insert_station_data(sv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
-        last_inserted_station_id = sv.info.ana_id;
+        last_inserted_station_id = sv.info.id;
         for (const auto& v: sv.values)
             last_inserted_varids.push_back(VarID(v.first, true, v.second.data_id));
     } else {
         DataValues dv(input);
         tr->insert_data(dv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
-        last_inserted_station_id = dv.info.ana_id;
+        last_inserted_station_id = dv.info.id;
         for (const auto& v: dv.values)
             last_inserted_varids.push_back(VarID(v.first, false, v.second.data_id));
     }

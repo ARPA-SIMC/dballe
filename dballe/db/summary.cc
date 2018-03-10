@@ -77,7 +77,7 @@ summary::Support Summary::supports(const Query& query) const
 
 void Summary::aggregate(const summary::Entry &val)
 {
-    all_stations.insert(make_pair(val.station.ana_id, val.station));
+    all_stations.insert(make_pair(val.station.id, val.station));
     all_reports.insert(val.station.report);
     all_levels.insert(val.level);
     all_tranges.insert(val.trange);
@@ -126,7 +126,7 @@ void Summary::add_filtered(const Summary& summary)
         for (auto s: summary.all_stations)
         {
             const Station& station = s.second;
-            if (q.ana_id != MISSING_INT && station.ana_id != q.ana_id)
+            if (q.ana_id != MISSING_INT && station.id != q.ana_id)
                 continue;
 
             if (has_flt_area)
@@ -142,7 +142,7 @@ void Summary::add_filtered(const Summary& summary)
             if (has_flt_ident && query.ident != station.ident)
                 continue;
 
-            wanted_stations.insert(station.ana_id);
+            wanted_stations.insert(station.id);
         }
     }
 
@@ -156,7 +156,7 @@ void Summary::add_filtered(const Summary& summary)
     {
         if (has_flt_station)
         {
-            if (wanted_stations.find(entry.station.ana_id) == wanted_stations.end())
+            if (wanted_stations.find(entry.station.id) == wanted_stations.end())
                 continue;
         } else if (has_flt_rep_memo && query.rep_memo != entry.station.report)
             continue;

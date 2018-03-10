@@ -107,7 +107,7 @@ struct Base : public Interface
     {
         dballe::Station station;
         station.report = get_rep_memo();
-        station.ana_id = get_station_id();
+        station.id = get_station_id();
         station.coords.lat = results[cur].out_lat;
         station.coords.lon = results[cur].out_lon;
         station.ident = Ident(get_ident());
