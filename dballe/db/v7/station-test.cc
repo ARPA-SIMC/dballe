@@ -33,7 +33,7 @@ Tests test_mysql("db_v7_station_mysql", "MYSQL");
 
 void Tests::register_tests()
 {
-add_method("insert", [](Fixture& f) {
+add_method("cache", [](Fixture& f) {
     db::v7::StationCache stations;
 
     wassert_false(stations.find_station(1));

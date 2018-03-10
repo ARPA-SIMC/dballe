@@ -6,6 +6,7 @@
  */
 
 #include <iosfwd>
+#include <functional>
 #include <limits.h>
 
 namespace dballe {
@@ -596,7 +597,6 @@ struct Level
 
 std::ostream& operator<<(std::ostream& out, const Level& l);
 
-
 /**
  * Information on how a value has been sampled or computed with regards to time.
  */
@@ -652,5 +652,26 @@ struct Trange
 std::ostream& operator<<(std::ostream& out, const Trange& l);
 
 }
+
+namespace std {
+
+template<> struct hash<dballe::Level>
+{
+    typedef dballe::Level argument_type;
+    typedef size_t result_type;
+    result_type operator()(argument_type const& o) const noexcept
+    {
+        using dballe::MISSING_INT;
+        size_t res = 0;
+        if (o.ltype1 != MISSING_INT) res += o.ltype1;
+        if (o.l1 != MISSING_INT) res += o.l1;
+        if (o.ltype2 != MISSING_INT) res += o.ltype2 << 8;
+        if (o.l2 != MISSING_INT) res += o.l2;
+        return res;
+    }
+};
+
+}
+
 
 #endif

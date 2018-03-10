@@ -14,6 +14,30 @@ struct Record;
 namespace db {
 namespace v7 {
 
+struct LevTrEntry
+{
+    // Database ID
+    int id = MISSING_INT;
+
+    /// Vertical level or layer
+    Level level;
+
+    /// Time range
+    Trange trange;
+
+    LevTrEntry() = default;
+    LevTrEntry(const Level& level, const Trange& trange) : level(level), trange(trange) {}
+    LevTrEntry(const LevTrEntry&) = default;
+    LevTrEntry(LevTrEntry&&) = default;
+    LevTrEntry& operator=(const LevTrEntry&) = default;
+    LevTrEntry& operator=(LevTrEntry&&) = default;
+
+    bool operator==(const LevTrEntry& o) const;
+    bool operator!=(const LevTrEntry& o) const;
+};
+
+std::ostream& operator<<(std::ostream&, const LevTrEntry&);
+
 struct ItemState
 {
     // Database ID
