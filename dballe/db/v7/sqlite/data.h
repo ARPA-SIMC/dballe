@@ -56,12 +56,11 @@ class SQLiteStationData : public SQLiteDataCommon<StationDataTraits>
 {
 public:
     using SQLiteDataCommon::SQLiteDataCommon;
-    StationValueCache cache;
 
     SQLiteStationData(dballe::sql::SQLiteConnection& conn);
     void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE, bool with_attrs=false) override;
     void dump(FILE* out) override;
-    void clear_cache() override { return cache.clear(); }
+    void clear_cache() override {}
 };
 
 /**
@@ -71,12 +70,11 @@ class SQLiteData : public SQLiteDataCommon<DataTraits>
 {
 public:
     using SQLiteDataCommon::SQLiteDataCommon;
-    ValueCache cache;
 
     SQLiteData(dballe::sql::SQLiteConnection& conn);
     void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE, bool with_attrs=false) override;
     void dump(FILE* out) override;
-    void clear_cache() override { return cache.clear(); }
+    void clear_cache() override {}
 };
 
 }

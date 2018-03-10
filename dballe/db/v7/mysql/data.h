@@ -58,12 +58,11 @@ class MySQLStationData : public MySQLDataCommon<StationDataTraits>
 {
 public:
     using MySQLDataCommon::MySQLDataCommon;
-    StationValueCache cache;
 
     MySQLStationData(dballe::sql::MySQLConnection& conn);
     void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE, bool with_attrs=false) override;
     void dump(FILE* out) override;
-    void clear_cache() override { return cache.clear(); }
+    void clear_cache() override {}
 };
 
 /**
@@ -73,12 +72,11 @@ class MySQLData : public MySQLDataCommon<DataTraits>
 {
 public:
     using MySQLDataCommon::MySQLDataCommon;
-    ValueCache cache;
 
     MySQLData(dballe::sql::MySQLConnection& conn);
     void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE, bool with_attrs=false) override;
     void dump(FILE* out) override;
-    void clear_cache() override { return cache.clear(); }
+    void clear_cache() override {}
 };
 
 }

@@ -145,6 +145,7 @@ struct Item
     void format_flags(char* dest) const;
 };
 
+
 /**
  * Workflow information about a variable listed for bulk insert/update
  */

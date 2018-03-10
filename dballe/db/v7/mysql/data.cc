@@ -124,7 +124,7 @@ void MySQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertSt
         {
             int id = row.as_int(0);
             wreport::Varcode code = row.as_int(1);
-            cache.insert(unique_ptr<StationValueEntry>(new StationValueEntry(id, vars.shared_context.station, code)));
+            //cache.insert(unique_ptr<StationValueEntry>(new StationValueEntry(id, vars.shared_context.station, code)));
             auto vi = std::find_if(vars.to_query.begin(), vars.to_query.end(), [code](const bulk::StationVar* v) { return v->var->code() == code; });
             if (vi == vars.to_query.end()) continue;
             (*vi)->id = id;
@@ -198,7 +198,7 @@ void MySQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertSt
             conn.exec_no_data(qb);
 
             v.id = conn.get_last_insert_id();
-            cache.insert(unique_ptr<StationValueEntry>(new StationValueEntry(v.id, vars.shared_context.station, v.var->code())));
+            //cache.insert(unique_ptr<StationValueEntry>(new StationValueEntry(v.id, vars.shared_context.station, v.var->code())));
             // TODO: mark as newly inserted
             v.set_inserted();
         }
@@ -245,7 +245,7 @@ void MySQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& var
             int id_levtr = row.as_int(1);
             wreport::Varcode code = row.as_int(2);
             int id = row.as_int(0);
-            cache.insert(unique_ptr<ValueEntry>(new ValueEntry(id, vars.shared_context.station, id_levtr, vars.shared_context.datetime, code)));
+            //cache.insert(unique_ptr<ValueEntry>(new ValueEntry(id, vars.shared_context.station, id_levtr, vars.shared_context.datetime, code)));
 
             auto vi = std::find_if(vars.to_query.begin(), vars.to_query.end(), [id_levtr, code](const bulk::Var* v) { return v->id_levtr == id_levtr && v->var->code() == code; });
             if (vi == vars.to_query.end()) continue;
@@ -326,7 +326,7 @@ void MySQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& var
             conn.exec_no_data(qb);
 
             v.id = conn.get_last_insert_id();
-            cache.insert(unique_ptr<ValueEntry>(new ValueEntry(v.id, vars.shared_context.station, v.id_levtr, vars.shared_context.datetime, v.var->code())));
+            //cache.insert(unique_ptr<ValueEntry>(new ValueEntry(v.id, vars.shared_context.station, v.id_levtr, vars.shared_context.datetime, v.var->code())));
             v.set_inserted();
             // TODO: mark as newly inserted
         }
