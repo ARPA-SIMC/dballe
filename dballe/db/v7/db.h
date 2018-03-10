@@ -5,7 +5,6 @@
 #include <dballe/db/trace.h>
 #include <wreport/varinfo.h>
 #include <string>
-#include <vector>
 #include <memory>
 
 namespace dballe {

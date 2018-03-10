@@ -5,9 +5,7 @@
 #include "sql/sql.h"
 #include "sql/sqlite.h"
 #include "dballe/message.h"
-#include "dballe/core/record.h"
 #include "dballe/core/values.h"
-#include <wreport/utils/sys.h>
 #include <wreport/error.h>
 #include <cstring>
 #include <cstdlib>

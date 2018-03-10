@@ -8,9 +8,7 @@
 #include <dballe/sql/fwd.h>
 #include <wreport/varinfo.h>
 #include <wreport/var.h>
-#include <vector>
 #include <string>
-#include <map>
 #include <memory>
 #include <functional>
 
