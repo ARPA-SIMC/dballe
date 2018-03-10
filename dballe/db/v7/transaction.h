@@ -12,6 +12,7 @@ namespace v7 {
 struct DB;
 struct Repinfo;
 struct Station;
+struct LevTr;
 
 struct Transaction : public dballe::db::Transaction
 {
@@ -20,6 +21,8 @@ protected:
     v7::Repinfo* m_repinfo = nullptr;
     /// Station information
     v7::Station* m_station = nullptr;
+    /// Level/timerange information
+    v7::LevTr* m_levtr = nullptr;
 
 public:
     typedef v7::DB DB;
@@ -42,6 +45,8 @@ public:
     v7::Repinfo& repinfo();
     /// Access the station table
     v7::Station& station();
+    /// Access the levtr table
+    v7::LevTr& levtr();
 
     void commit() override;
     void rollback() override;

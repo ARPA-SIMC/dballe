@@ -54,8 +54,6 @@ protected:
     /**
      * Accessors for the various parts of the database.
      */
-    /** Level/timerange information */
-    v7::LevTr* m_levtr = nullptr;
     /** Station data */
     v7::StationData* m_station_data = nullptr;
     /** Variable data */
@@ -72,9 +70,6 @@ public:
 
     /// Access the backend DB driver
     v7::Driver& driver();
-
-    /// Access the levtr table
-    v7::LevTr& levtr();
 
     /// Access the station_data table
     v7::StationData& station_data();

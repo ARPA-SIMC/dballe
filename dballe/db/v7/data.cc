@@ -151,9 +151,9 @@ void Var::dump(FILE* out) const
 {
     char flags[5];
     format_flags(flags);
-    fprintf(out, "flags:%s ltr:%d%c %01d%02d%03d(%d): %s\n",
+    fprintf(out, "flags:%s ltr:%d %01d%02d%03d(%d): %s\n",
             flags,
-            levtr.id, levtr.is_new ? 'n' : 'o',
+            id_levtr,
             WR_VAR_FXY(var->code()), (int)(var->code()),
             var->isset() ? var->enqc() : "(null)");
 }

@@ -36,12 +36,6 @@ std::ostream& operator<<(std::ostream& out, const LevTrEntry& l)
 }
 
 
-int LevTrDesc::compare(const LevTrDesc& o) const
-{
-    if (int res = level.compare(o.level)) return res;
-    return trange.compare(o.trange);
-}
-
 int StationValueDesc::compare(const StationValueDesc& o) const
 {
     if (int res = station - o.station) return res;
@@ -58,17 +52,8 @@ int ValueDesc::compare(const ValueDesc& o) const
 
 void State::clear()
 {
-    levtrs.clear();
-    levtr_ids.clear();
     stationvalues.clear();
     values.clear();
-}
-
-levtrs_t::iterator State::add_levtr(const LevTrDesc& desc, const LevTrState& state)
-{
-    auto res = levtrs.insert(make_pair(desc, state));
-    levtr_ids.insert(make_pair(state.id, res.first));
-    return res.first;
 }
 
 stationvalues_t::iterator State::add_stationvalue(const StationValueDesc& desc, const StationValueState& state)

@@ -22,6 +22,8 @@ struct Fixture : EmptyTransactionFixture<V7DB>
 
     dballe::Station sde1;
     dballe::Station sde2;
+    int lt1;
+    int lt2;
 
     Fixture(const char* backend)
         : EmptyTransactionFixture(backend)
@@ -47,6 +49,13 @@ struct Fixture : EmptyTransactionFixture<V7DB>
 
         // Insert a fixed station
         wassert(t->station().obtain_id(*t, sde2));
+
+        // Insert a lev_tr
+        lt1 = t->levtr().obtain_id(db::v7::LevTrEntry(Level(1, 2, 0, 3), Trange(4, 5, 6)));
+
+        // Insert another lev_tr
+        lt2 = t->levtr().obtain_id(db::v7::LevTrEntry(Level(2, 3, 1, 4), Trange(5, 6, 7)));
+
 
         t->commit();
     }
@@ -76,19 +85,13 @@ add_method("insert", [](Fixture& f) {
     using namespace dballe::db::v7;
     auto& da = f.db->data();
 
-    // Insert a lev_tr
-    auto lt1 = f.db->levtr().obtain_id(f.tr->state, db::v7::LevTrDesc(Level(1, 2, 0, 3), Trange(4, 5, 6)));
-
-    // Insert another lev_tr
-    auto lt2 = f.db->levtr().obtain_id(f.tr->state, db::v7::LevTrDesc(Level(2, 3, 1, 4), Trange(5, 6, 7)));
-
     Var var(varinfo(WR_VAR(0, 1, 2)));
 
     auto insert_sample1 = [&](bulk::InsertVars& vars, int value, bulk::UpdateMode update) {
         vars.shared_context.station = f.tr->station().get_id(*f.tr, f.sde1);
         vars.shared_context.datetime = Datetime(2001, 2, 3, 4, 5, 6);
         var.seti(value);
-        vars.add(&var, lt1->second);
+        vars.add(&var, f.lt1);
         wassert(da.insert(*f.tr, vars, update));
     };
 
@@ -109,7 +112,7 @@ add_method("insert", [](Fixture& f) {
         vars.shared_context.station = f.tr->station().get_id(*f.tr, f.sde2);
         vars.shared_context.datetime = Datetime(2002, 3, 4, 5, 6, 7);
         Var var(varinfo(WR_VAR(0, 1, 2)), 234);
-        vars.add(&var, lt2->second);
+        vars.add(&var, f.lt2);
         wassert(da.insert(*f.tr, vars, bulk::ERROR));
         wassert(actual(vars[0].cur->second.id) == 2);
         wassert(actual(vars[0].needs_insert()).isfalse());
@@ -188,9 +191,6 @@ add_method("attrs", [](Fixture& f) {
     using namespace dballe::db::v7;
     auto& da = f.db->data();
 
-    // Insert a lev_tr
-    auto lt1 = f.db->levtr().obtain_id(f.tr->state, db::v7::LevTrDesc(Level(1, 2, 0, 3), Trange(4, 5, 6)));
-
     Var var(varinfo(WR_VAR(0, 1, 2)), 123);
 
     // Insert a datum with attributes
@@ -198,7 +198,7 @@ add_method("attrs", [](Fixture& f) {
     vars.shared_context.station = f.tr->station().get_id(*f.tr, f.sde1);
     vars.shared_context.datetime = Datetime(2001, 2, 3, 4, 5, 6);
     var.seta(newvar(WR_VAR(0, 33, 7), 50));
-    vars.add(&var, lt1->second);
+    vars.add(&var, f.lt1);
     wassert(da.insert(*f.tr, vars, bulk::ERROR, true));
     int id = vars[0].cur->second.id;
 

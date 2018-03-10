@@ -27,7 +27,7 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
     bool mobile = msg.get_ident_var() != NULL;
 
     v7::Station& st = station();
-    v7::LevTr& lt = db->levtr();
+    v7::LevTr& lt = levtr();
 
     // Fill up the station informations needed to fetch an existing ID
     dballe::Station station;
@@ -107,13 +107,13 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
         }
 
         // Get the database ID of the lev_tr
-        auto levtri = lt.obtain_id(state, LevTrDesc(ctx.level, ctx.trange));
+        auto id_levtr = lt.obtain_id(LevTrEntry(ctx.level, ctx.trange));
 
         for (size_t j = 0; j < ctx.data.size(); ++j)
         {
             const Var* var = ctx.data[j];
             if (not var->isset()) continue;
-            vars.add(var, levtri->second);
+            vars.add(var, id_levtr);
         }
     }
 

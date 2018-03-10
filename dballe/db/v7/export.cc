@@ -105,7 +105,7 @@ struct DataRow
 bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest)
 {
     auto tr = db->trace.trace_export_msgs(query);
-    v7::LevTr& lt = db->levtr();
+    v7::LevTr& lt = levtr();
 
     // Message being built
     unique_ptr<Msg> msg;

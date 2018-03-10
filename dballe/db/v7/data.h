@@ -172,12 +172,11 @@ struct StationVar : public VarItem<stationvalues_t>
  */
 struct Var : public VarItem<values_t>
 {
-    LevTrState levtr;
+    int id_levtr;
 
-    Var(values_t::iterator cur, const wreport::Var* var, const LevTrState& levtr)
-        : VarItem(cur, var), levtr(levtr) {}
+    Var(values_t::iterator cur, const wreport::Var* var, int id_levtr)
+        : VarItem(cur, var), id_levtr(id_levtr) {}
 
-    bool is_new() const { return levtr.is_new; }
     bool has_cur(State& state) const { return cur != state.values.end(); }
     void fill_cur(State& state, const ValueDesc& desc) { cur = state.values.find(desc); }
     void dump(FILE* out) const;
@@ -211,7 +210,7 @@ struct SharedDataContext : public SharedContext
 
     ValueDesc make_desc(Var& v) const
     {
-        return ValueDesc(station, v.levtr.id, datetime, v.var->code());
+        return ValueDesc(station, v.id_levtr, datetime, v.var->code());
     }
 };
 
@@ -309,9 +308,9 @@ struct InsertVars : public InsertPlan<Var, SharedDataContext>
         shared_context.datetime = dt;
     }
 
-    void add(const wreport::Var* var, const LevTrState& levtr)
+    void add(const wreport::Var* var, int id_levtr)
     {
-        emplace_back(state.values.end(), var, levtr);
+        emplace_back(state.values.end(), var, id_levtr);
     }
 
     void dump(FILE* out) const;

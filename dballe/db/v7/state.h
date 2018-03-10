@@ -26,6 +26,7 @@ struct LevTrEntry
     Trange trange;
 
     LevTrEntry() = default;
+    LevTrEntry(int id, const Level& level, const Trange& trange) : id(id), level(level), trange(trange) {}
     LevTrEntry(const Level& level, const Trange& trange) : level(level), trange(trange) {}
     LevTrEntry(const LevTrEntry&) = default;
     LevTrEntry(LevTrEntry&&) = default;
@@ -53,34 +54,6 @@ struct ItemState
     ItemState& operator=(const ItemState&) = default;
     ItemState& operator=(ItemState&&) = default;
 };
-
-
-struct LevTrDesc
-{
-    /// Vertical level or layer
-    Level level;
-
-    /// Time range
-    Trange trange;
-
-    LevTrDesc() = default;
-    LevTrDesc(const Level& level, const Trange& trange) : level(level), trange(trange) {}
-    LevTrDesc(const LevTrDesc&) = default;
-    LevTrDesc(LevTrDesc&&) = default;
-    LevTrDesc& operator=(const LevTrDesc&) = default;
-    LevTrDesc& operator=(LevTrDesc&&) = default;
-
-    int compare(const LevTrDesc&) const;
-    bool operator<(const LevTrDesc& o) const { return compare(o) < 0; }
-};
-
-struct LevTrState : public ItemState
-{
-    using ItemState::ItemState;
-};
-
-typedef std::map<LevTrDesc, LevTrState> levtrs_t;
-typedef std::map<int, levtrs_t::iterator> levtr_id_t;
 
 
 struct StationValueDesc
@@ -139,14 +112,11 @@ typedef std::map<ValueDesc, ValueState> values_t;
  */
 struct State
 {
-    levtrs_t levtrs;
-    levtr_id_t levtr_ids;
     stationvalues_t stationvalues;
     values_t values;
     std::unordered_set<int> stationvalues_new;
     std::unordered_set<int> values_new;
 
-    levtrs_t::iterator add_levtr(const LevTrDesc& desc, const LevTrState& state);
     stationvalues_t::iterator add_stationvalue(const StationValueDesc& desc, const StationValueState& state);
     values_t::iterator add_value(const ValueDesc& desc, const ValueState& state);
 

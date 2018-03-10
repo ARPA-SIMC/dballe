@@ -56,7 +56,7 @@ PostgreSQLLevTr::~PostgreSQLLevTr()
 {
 }
 
-void PostgreSQLLevTr::prefetch_ids(const std::set<int>& ids, std::function<void(int, const LevTrDesc&)> dest)
+void PostgreSQLLevTr::prefetch_ids(const std::set<int>& ids)
 {
     if (ids.empty()) return;
 
@@ -73,42 +73,30 @@ void PostgreSQLLevTr::prefetch_ids(const std::set<int>& ids, std::function<void(
 
     auto res = conn.exec(qb);
     for (unsigned row = 0; row < res.rowcount(); ++row)
-        dest(res.get_int4(row, 0), LevTrDesc(to_level(res, row, 1), to_trange(res, row, 5)));
+        cache.insert(unique_ptr<LevTrEntry>(new LevTrEntry(
+                    res.get_int4(row, 0), to_level(res, row, 1), to_trange(res, row, 5))));
 }
 
-void PostgreSQLLevTr::prefetch_same_level(int id, std::function<void(int, const LevTrDesc&)> dest)
-{
-    char query[128];
-    snprintf(query, 128, "SELECT id, ltype1, l1, ltype2, l2, pind, p1, p2 FROM levtr WHERE ltype1=(SELECT ltype1 FROM levtr WHERE id=%d)", id);
-    auto res = conn.exec(query);
-    for (unsigned row = 0; row < res.rowcount(); ++row)
-        dest(res.get_int4(row, 0), LevTrDesc(to_level(res, row, 1), to_trange(res, row, 5)));
-}
-
-levtrs_t::iterator PostgreSQLLevTr::lookup_id(State& st, int id)
+const LevTrEntry* PostgreSQLLevTr::lookup_id(int id)
 {
     using namespace dballe::sql::postgresql;
-
-    auto cached = st.levtr_ids.find(id);
-    if (cached != st.levtr_ids.end())
-        return cached->second;
+    const LevTrEntry* e = cache.find_entry(id);
+    if (e) return e;
 
     auto res = conn.exec_prepared("v7_levtr_select_data", id);
     switch (res.rowcount())
     {
         case 0: error_notfound::throwf("levtr with id %d not found in the database", id);
-        case 1: return st.add_levtr(LevTrDesc(to_level(res, 0, 0), to_trange(res, 0, 4)), LevTrState(id, false));
+        case 1: return cache.insert(unique_ptr<LevTrEntry>(new LevTrEntry(id, to_level(res, 0, 0), to_trange(res, 0, 4))));
         default: error_consistency::throwf("select levtr data query returned %u results", res.rowcount());
     }
 }
 
-levtrs_t::iterator PostgreSQLLevTr::obtain_id(State& state, const LevTrDesc& desc)
+int PostgreSQLLevTr::obtain_id(const LevTrEntry& desc)
 {
     using namespace dballe::sql::postgresql;
-
-    auto cached = state.levtrs.find(desc);
-    if (cached != state.levtrs.end())
-        return cached;
+    int id = cache.find_id(desc);
+    if (id != MISSING_INT) return id;
 
     Result res = conn.exec_prepared("v7_levtr_select_id",
             desc.level.ltype1, desc.level.l1, desc.level.ltype2, desc.level.l2,
@@ -116,11 +104,21 @@ levtrs_t::iterator PostgreSQLLevTr::obtain_id(State& state, const LevTrDesc& des
     switch (res.rowcount())
     {
         case 0:
-            return state.add_levtr(desc, LevTrState(
-                conn.exec_prepared_one_row("v7_levtr_insert",
+        {
+            auto res = conn.exec_prepared_one_row("v7_levtr_insert",
                         desc.level.ltype1, desc.level.l1, desc.level.ltype2, desc.level.l2,
-                        desc.trange.pind, desc.trange.p1, desc.trange.p2).get_int4(0, 0), true));
-        case 1: return state.add_levtr(desc, LevTrState(res.get_int4(0, 0), false));
+                        desc.trange.pind, desc.trange.p1, desc.trange.p2);
+            id = res.get_int4(0, 0);
+            cache.insert(desc, id);
+            // TODO: mark as inserted in this transaction
+            return id;
+        }
+        case 1:
+        {
+            id = res.get_int4(0, 0);
+            cache.insert(desc, id);
+            return id;
+        }
         default: error_consistency::throwf("select levtr ID query returned %u results", res.rowcount());
 
     }

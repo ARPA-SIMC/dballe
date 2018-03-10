@@ -10,10 +10,15 @@ namespace v7 {
 
 LevTr::~LevTr() {}
 
+void LevTr::clear_cache()
+{
+    cache.clear();
+}
+
 msg::Context* LevTr::to_msg(State& st, int id, Msg& msg)
 {
-    auto i = lookup_id(st, id);
-    msg::Context& res = msg.obtain_context(i->first.level, i->first.trange);
+    auto i = lookup_id(id);
+    msg::Context& res = msg.obtain_context(i->level, i->trange);
     return &res;
 }
 

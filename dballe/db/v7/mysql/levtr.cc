@@ -48,7 +48,7 @@ MySQLLevTr::~MySQLLevTr()
 {
 }
 
-void MySQLLevTr::prefetch_ids(const std::set<int>& ids, std::function<void(int, const LevTrDesc&)> dest)
+void MySQLLevTr::prefetch_ids(const std::set<int>& ids)
 {
     if (ids.empty()) return;
 
@@ -66,72 +66,46 @@ void MySQLLevTr::prefetch_ids(const std::set<int>& ids, std::function<void(int, 
     auto res = conn.exec_store(qb);
     while (auto row = res.fetch())
     {
-        dest(
+        cache.insert(unique_ptr<LevTrEntry>(new LevTrEntry(
             row.as_int(0),
-            LevTrDesc(
-                Level(row.as_int(1), row.as_int(2), row.as_int(3), row.as_int(4)),
-                Trange(row.as_int(5), row.as_int(6), row.as_int(7))));
+            Level(row.as_int(1), row.as_int(2), row.as_int(3), row.as_int(4)),
+            Trange(row.as_int(5), row.as_int(6), row.as_int(7)))));
     }
 }
 
-void MySQLLevTr::prefetch_same_level(int id, std::function<void(int, const LevTrDesc&)> dest)
+const LevTrEntry* MySQLLevTr::lookup_id(int id)
 {
-    char query[128];
-    snprintf(query, 128, "SELECT id, ltype1, l1, ltype2, l2, pind, p1, p2 FROM levtr WHERE ltype1=(SELECT ltype1 FROM levtr WHERE id=%d)", id);
-    auto res = conn.exec_store(query);
-    while (auto row = res.fetch())
-    {
-        dest(
-            row.as_int(0),
-            LevTrDesc(
-                Level(row.as_int(1), row.as_int(2), row.as_int(3), row.as_int(4)),
-                Trange(row.as_int(5), row.as_int(6), row.as_int(7))));
-    }
-}
-
-levtrs_t::iterator MySQLLevTr::lookup_id(State& st, int id)
-{
-    auto res = st.levtr_ids.find(id);
-    if (res != st.levtr_ids.end())
-        return res->second;
+    const LevTrEntry* res = cache.find_entry(id);
+    if (res) return res;
 
     char query[128];
     snprintf(query, 128, "SELECT ltype1, l1, ltype2, l2, pind, p1, p2 FROM levtr WHERE id=%d", id);
 
-    bool found = false;
-    levtrs_t::iterator new_res;
     auto qres = conn.exec_store(query);
     while (auto row = qres.fetch())
     {
-        LevTrDesc desc;
-
-        desc.level.ltype1 = row.as_int(0);
-        desc.level.l1 = row.as_int(1);
-        desc.level.ltype2 = row.as_int(2);
-        desc.level.l2 = row.as_int(3);
-
-        desc.trange.pind = row.as_int(4);
-        desc.trange.p1 = row.as_int(5);
-        desc.trange.p2 = row.as_int(6);
-
-        LevTrState sst;
-        sst.id = id;
-        sst.is_new = false;
-        new_res = st.add_levtr(desc, sst);
-        found = true;
+        std::unique_ptr<LevTrEntry> e(new LevTrEntry);
+        e->id = id;
+        e->level.ltype1 = row.as_int(0);
+        e->level.l1 = row.as_int(1);
+        e->level.ltype2 = row.as_int(2);
+        e->level.l2 = row.as_int(3);
+        e->trange.pind = row.as_int(4);
+        e->trange.p1 = row.as_int(5);
+        e->trange.p2 = row.as_int(6);
+        res = cache.insert(move(e));
     }
 
-    if (!found)
+    if (!res)
         error_notfound::throwf("levtr with id %d not found in the database", id);
 
-    return new_res;
+    return res;
 }
 
-levtrs_t::iterator MySQLLevTr::obtain_id(State& state, const LevTrDesc& desc)
+int MySQLLevTr::obtain_id(const LevTrEntry& desc)
 {
-    auto res = state.levtrs.find(desc);
-    if (res != state.levtrs.end())
-        return res;
+    int id = cache.find_id(desc);
+    if (id != MISSING_INT) return id;
 
     char query[512];
     snprintf(query, 512, R"(
@@ -141,28 +115,25 @@ levtrs_t::iterator MySQLLevTr::obtain_id(State& state, const LevTrDesc& desc)
     )", desc.level.ltype1, desc.level.l1, desc.level.ltype2, desc.level.l2,
             desc.trange.pind, desc.trange.p1, desc.trange.p2);
 
-    LevTrState st;
-
     // If there is an existing record, use its ID and don't do an INSERT
-    bool found = false;
     auto qres = conn.exec_store(query);
     while (auto row = qres.fetch())
+        id = row.as_int(0);
+    if (id != MISSING_INT)
     {
-        st.id = row.as_int(0);
-        st.is_new = false;
-        found = true;
+        cache.insert(desc, id);
+        return id;
     }
-    if (found)
-        return state.add_levtr(desc, st);
 
     // Not found in the database, insert a new one
     snprintf(query, 512, "INSERT INTO levtr (ltype1, l1, ltype2, l2, pind, p1, p2) VALUES (%d, %d, %d, %d, %d, %d, %d)",
             desc.level.ltype1, desc.level.l1, desc.level.ltype2, desc.level.l2,
             desc.trange.pind, desc.trange.p1, desc.trange.p2);
     conn.exec_no_data(query);
-    st.id = conn.get_last_insert_id();
-    st.is_new = true;
-    return state.add_levtr(desc, st);
+    id = conn.get_last_insert_id();
+    cache.insert(desc, id);
+    // TODO: mark as inserted in this transaction
+    return id;
 }
 
 void MySQLLevTr::_dump(std::function<void(int, const Level&, const Trange&)> out)

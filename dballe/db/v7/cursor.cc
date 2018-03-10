@@ -293,11 +293,8 @@ struct Data : public BaseData<CursorData, DataResult>
 {
     using BaseData::BaseData;
 
-    std::unordered_map<int, LevTrDesc> levtrs;
-
     void load(const DataQueryBuilder& qb)
     {
-        levtrs.clear();
         results.clear();
         set<int> ids;
         this->tr->db->driver().run_data_query(qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
@@ -307,17 +304,15 @@ struct Data : public BaseData<CursorData, DataResult>
         at_start = true;
         cur = results.begin();
 
-        this->tr->db->levtr().prefetch_ids(ids, [&](int id, const LevTrDesc& ltr) {
-            levtrs.insert(make_pair(id, ltr));
-        });
+        this->tr->levtr().prefetch_ids(ids);
     }
 
-    const LevTrDesc& get_levtr(int id_levtr) const
+    const LevTrEntry& get_levtr(int id_levtr) const
     {
-        std::unordered_map<int, LevTrDesc>::const_iterator li = levtrs.find(id_levtr);
+        auto res = tr->levtr().lookup_id(id_levtr);
         // We prefetch levtr info for all IDs, so we should always find the levtr here
-        assert(li != levtrs.end());
-        return li->second;
+        assert(res);
+        return *res;
     }
 
     Level get_level() const override { return get_levtr(cur->id_levtr).level; }
@@ -330,7 +325,7 @@ struct Data : public BaseData<CursorData, DataResult>
     void to_record(Record& rec) override
     {
         VectorBase::to_record(rec);
-        const LevTrDesc& levtr = get_levtr(cur->id_levtr);
+        const LevTrEntry& levtr = get_levtr(cur->id_levtr);
         rec.set_level(levtr.level);
         rec.set_trange(levtr.trange);
     }
@@ -372,7 +367,6 @@ struct Best : public Data
 
     void load(const DataQueryBuilder& qb)
     {
-        levtrs.clear();
         results.clear();
         set<int> ids;
         this->tr->db->driver().run_data_query(qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
@@ -382,9 +376,7 @@ struct Best : public Data
         at_start = true;
         cur = results.begin();
 
-        this->tr->db->levtr().prefetch_ids(ids, [&](int id, const LevTrDesc& ltr) {
-            levtrs.insert(make_pair(id, ltr));
-        });
+        this->tr->levtr().prefetch_ids(ids);
     }
 };
 
@@ -429,14 +421,12 @@ struct Summary : public VectorBase<CursorSummary, SummaryResult>
 {
     using VectorBase::VectorBase;
 
-    std::unordered_map<int, LevTrDesc> levtrs;
-
-    const LevTrDesc& get_levtr(int id_levtr) const
+    const LevTrEntry& get_levtr(int id_levtr) const
     {
-        std::unordered_map<int, LevTrDesc>::const_iterator li = levtrs.find(id_levtr);
+        auto res = tr->levtr().lookup_id(id_levtr);
         // We prefetch levtr info for all IDs, so we should always find the levtr here
-        assert(li != levtrs.end());
-        return li->second;
+        assert(res);
+        return *res;
     }
 
     Level get_level() const override { return get_levtr(cur->id_levtr).level; }
@@ -452,14 +442,13 @@ struct Summary : public VectorBase<CursorSummary, SummaryResult>
     void to_record(Record& rec) override
     {
         VectorBase::to_record(rec);
-        const LevTrDesc& levtr = get_levtr(cur->id_levtr);
+        const LevTrEntry& levtr = get_levtr(cur->id_levtr);
         rec.set_level(levtr.level);
         rec.set_trange(levtr.trange);
     }
 
     void load(const SummaryQueryBuilder& qb)
     {
-        levtrs.clear();
         results.clear();
         set<int> ids;
         this->tr->db->driver().run_summary_query(qb, [&](const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t count) {
@@ -469,9 +458,7 @@ struct Summary : public VectorBase<CursorSummary, SummaryResult>
         at_start = true;
         cur = results.begin();
 
-        this->tr->db->levtr().prefetch_ids(ids, [&](int id, const LevTrDesc& ltr) {
-            levtrs.insert(make_pair(id, ltr));
-        });
+        this->tr->levtr().prefetch_ids(ids);
     }
 };
 

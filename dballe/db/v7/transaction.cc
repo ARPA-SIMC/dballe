@@ -22,11 +22,13 @@ Transaction::Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Tra
 {
     m_repinfo = db->driver().create_repinfo().release();
     m_station = db->driver().create_station().release();
+    m_levtr = db->driver().create_levtr().release();
 }
 
 Transaction::~Transaction()
 {
     rollback();
+    delete m_levtr;
     delete m_station;
     delete m_repinfo;
     delete sql_transaction;
@@ -42,6 +44,10 @@ v7::Station& Transaction::station()
     return *m_station;
 }
 
+v7::LevTr& Transaction::levtr()
+{
+    return *m_levtr;
+}
 
 void Transaction::commit()
 {
@@ -63,6 +69,7 @@ void Transaction::clear_cached_state()
     state.clear();
     repinfo().read_cache();
     station().clear_cache();
+    levtr().clear_cache();
 }
 
 Transaction& Transaction::downcast(dballe::Transaction& transaction)
@@ -115,11 +122,11 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
     vals.info.id = si;
 
     // Insert the lev_tr data, and get the ID
-    auto ltri = db->levtr().obtain_id(state, LevTrDesc(vals.info.level, vals.info.trange));
+    auto ltri = levtr().obtain_id(LevTrEntry(vals.info.level, vals.info.trange));
 
     // Add all the variables we find
     for (auto& i: vals.values)
-        vars.add(i.second.var, ltri->second);
+        vars.add(i.second.var, ltri);
 
     // Do the insert
     v7::Data& d = db->data();
@@ -254,7 +261,7 @@ void Transaction::dump(FILE* out)
 {
     repinfo().dump(out);
     station().dump(out);
-    db->levtr().dump(out);
+    levtr().dump(out);
     db->station_data().dump(out);
     db->data().dump(out);
 }

@@ -327,7 +327,7 @@ void PostgreSQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars
             wreport::Varcode code = (Varcode)existing.get_int4(row, 2);
             auto cur = t.state.add_value(ValueDesc(vars.shared_context.station, id_levtr, vars.shared_context.datetime, code), vs);
 
-            auto vi = std::find_if(vars.to_query.begin(), vars.to_query.end(), [id_levtr, code](const bulk::Var* v) { return v->levtr.id == id_levtr && v->var->code() == code; });
+            auto vi = std::find_if(vars.to_query.begin(), vars.to_query.end(), [id_levtr, code](const bulk::Var* v) { return v->id_levtr == id_levtr && v->var->code() == code; });
             if (vi == vars.to_query.end()) continue;
             (*vi)->cur = cur;
             vars.to_query.erase(vi);
@@ -373,7 +373,7 @@ void PostgreSQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars
             if (!v.needs_insert()) continue;
             dq.start_list_item();
             dq.append(val_lead);
-            dq.append_int(v.levtr.id);
+            dq.append_int(v.id_levtr);
             dq.append(",");
             dq.append_int(v.var->code());
             dq.append(",");
@@ -404,7 +404,7 @@ void PostgreSQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars
                continue;
             }
             ValueState vs(res.get_int4(row, 0), true);
-            v->cur = t.state.add_value(ValueDesc(vars.shared_context.station, v->levtr.id, dt, v->var->code()), vs);
+            v->cur = t.state.add_value(ValueDesc(vars.shared_context.station, v->id_levtr, dt, v->var->code()), vs);
             v->set_inserted();
             ++v;
             ++row;
