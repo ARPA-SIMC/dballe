@@ -2,6 +2,7 @@
 #define DBALLE_DB_V7_SQLITE_DATA_H
 
 #include <dballe/db/v7/data.h>
+#include <dballe/db/v7/cache.h>
 #include <dballe/sql/fwd.h>
 
 namespace dballe {
@@ -55,10 +56,12 @@ class SQLiteStationData : public SQLiteDataCommon<StationDataTraits>
 {
 public:
     using SQLiteDataCommon::SQLiteDataCommon;
+    StationValueCache cache;
 
     SQLiteStationData(dballe::sql::SQLiteConnection& conn);
     void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE, bool with_attrs=false) override;
     void dump(FILE* out) override;
+    void clear_cache() override { return cache.clear(); }
 };
 
 /**
@@ -68,10 +71,12 @@ class SQLiteData : public SQLiteDataCommon<DataTraits>
 {
 public:
     using SQLiteDataCommon::SQLiteDataCommon;
+    ValueCache cache;
 
     SQLiteData(dballe::sql::SQLiteConnection& conn);
     void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE, bool with_attrs=false) override;
     void dump(FILE* out) override;
+    void clear_cache() override { return cache.clear(); }
 };
 
 }

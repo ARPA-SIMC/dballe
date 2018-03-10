@@ -57,7 +57,7 @@ add_method("insert", [](Fixture& f) {
 
     // Clear cache, "new in this transaction" state is lost, it will
     // look it up in the database
-    f.tr->state.clear();
+    f.tr->clear_cached_state();
     si = st.obtain_id(*f.tr, sde1);
     wassert(actual(si) == 1);
     // TODO: wassert(actual(si->second.is_new).isfalse());
@@ -79,7 +79,7 @@ add_method("insert", [](Fixture& f) {
 
     // Clear cache, "new in this transaction" state is lost, it will
     // look it up in the database
-    f.tr->state.clear();
+    f.tr->clear_cached_state();
     si = st.obtain_id(*f.tr, sde2);
     wassert(actual(si) == 2);
     // TODO: wassert(actual(si->second.is_new).isfalse());

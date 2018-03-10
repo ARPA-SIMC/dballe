@@ -71,7 +71,7 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
     {
         // Prepare a bulk insert
         v7::StationData& sd = station_data();
-        v7::bulk::InsertStationVars vars(state, station_id);
+        v7::bulk::InsertStationVars vars(station_id);
         for (size_t i = 0; i < l_ana->data.size(); ++i)
         {
             Varcode code = l_ana->data[i]->code();
@@ -87,7 +87,7 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
 
     v7::Data& dd = data();
 
-    v7::bulk::InsertVars vars(state, station_id);
+    v7::bulk::InsertVars vars(station_id);
 
     // Fill the bulk insert with the rest of the data
     for (size_t i = 0; i < msg.data.size(); ++i)

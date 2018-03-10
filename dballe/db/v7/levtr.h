@@ -50,7 +50,7 @@ public:
      *
      * @returns the context, or 0 if the id is not valid.
      */
-    msg::Context* to_msg(State& st, int id, Msg& msg);
+    msg::Context* to_msg(int id, Msg& msg);
 
     /// Look up a LevTr from the database given its ID.
     virtual const LevTrEntry* lookup_id(int id) = 0;

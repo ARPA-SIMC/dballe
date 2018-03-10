@@ -2,6 +2,7 @@
 #define DBALLE_DB_V7_POSTGRESQL_DATA_H
 
 #include <dballe/db/v7/data.h>
+#include <dballe/db/v7/cache.h>
 #include <dballe/sql/fwd.h>
 
 namespace dballe {
@@ -43,22 +44,26 @@ class PostgreSQLStationData : public PostgreSQLDataCommon<StationDataTraits>
 {
 public:
     using PostgreSQLDataCommon::PostgreSQLDataCommon;
+    StationValueCache cache;
 
     PostgreSQLStationData(dballe::sql::PostgreSQLConnection& conn);
 
     void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE, bool with_attrs=false) override;
     void dump(FILE* out) override;
+    void clear_cache() override { return cache.clear(); }
 };
 
 class PostgreSQLData : public PostgreSQLDataCommon<DataTraits>
 {
 public:
     using PostgreSQLDataCommon::PostgreSQLDataCommon;
+    ValueCache cache;
 
     PostgreSQLData(dballe::sql::PostgreSQLConnection& conn);
 
     void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE, bool with_attrs=false) override;
     void dump(FILE* out) override;
+    void clear_cache() override { return cache.clear(); }
 };
 
 }

@@ -120,6 +120,8 @@ void SQLiteDataCommon<Traits>::remove(const v7::IdQueryBuilder& qb)
         // Compile the DELETE query for the data
         stmd->bind_val(1, stm->column_int(0));
         stmd->execute();
+
+        // TODO: drop from cache
     });
 }
 
@@ -131,25 +133,21 @@ SQLiteStationData::SQLiteStationData(SQLiteConnection& conn)
     istm = conn.sqlitestatement("INSERT INTO station_data (id_station, code, value, attrs) VALUES (?, ?, ?, ?)").release();
 }
 
-void SQLiteStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
+void SQLiteStationData::insert(dballe::db::v7::Transaction& tr, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
 {
-    // Scan vars adding the State pointer to the current database values, if any
-    vars.map_known_values();
+    vars.look_for_missing_ids();
 
     // Load the missing varcodes into the state and into vars
     if (!vars.to_query.empty())
     {
         sstm->bind_val(1, vars.shared_context.station);
         sstm->execute([&]() {
-            StationValueState vs;
-            vs.id = sstm->column_int(0);
-            vs.is_new = false;
+            int id = sstm->column_int(0);
             wreport::Varcode code = sstm->column_int(1);
-
-            auto cur = t.state.add_stationvalue(StationValueDesc(vars.shared_context.station, code), vs);
+            cache.insert(unique_ptr<StationValueEntry>(new StationValueEntry(id, vars.shared_context.station, code)));
             auto vi = std::find_if(vars.to_query.begin(), vars.to_query.end(), [code](const bulk::StationVar* v) { return v->var->code() == code; });
             if (vi == vars.to_query.end()) return;
-            (*vi)->cur = cur;
+            (*vi)->id = id;
             vars.to_query.erase(vi);
         });
     }
@@ -176,7 +174,7 @@ void SQLiteStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertS
                     }
                     else
                         ustm->bind_null_val(2);
-                    ustm->bind_val(3, v.cur->second.id);
+                    ustm->bind_val(3, v.id);
 
                     ustm->execute();
                     v.set_updated();
@@ -208,11 +206,9 @@ void SQLiteStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertS
                 istm->bind_null_val(4);
             istm->execute();
 
-            StationValueState vs;
-            vs.id = conn.get_last_insert_id();
-            vs.is_new = true;
-
-            v.cur = t.state.add_stationvalue(StationValueDesc(vars.shared_context.station, v.var->code()), vs);
+            v.id = conn.get_last_insert_id();
+            cache.insert(unique_ptr<StationValueEntry>(new StationValueEntry(v.id, vars.shared_context.station, v.var->code())));
+            // TODO: mark as newly inserted
             v.set_inserted();
         }
     }
@@ -241,8 +237,7 @@ SQLiteData::SQLiteData(SQLiteConnection& conn)
 
 void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
 {
-    // Scan vars adding the State pointer to the current database values, if any
-    vars.map_known_values();
+    vars.look_for_missing_ids();
 
     // Load the missing varcodes into the state and into vars
     // If the station has just been inserted, then there is nothing in the
@@ -255,14 +250,12 @@ void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& va
             int id_levtr = sstm->column_int(1);
             wreport::Varcode code = sstm->column_int(2);
 
-            ValueState vs;
-            vs.id = sstm->column_int(0);
-            vs.is_new = false;
-            auto cur = t.state.add_value(ValueDesc(vars.shared_context.station, id_levtr, vars.shared_context.datetime, code), vs);
+            int id = sstm->column_int(0);
+            cache.insert(unique_ptr<ValueEntry>(new ValueEntry(id, vars.shared_context.station, id_levtr, vars.shared_context.datetime, code)));
 
             auto vi = std::find_if(vars.to_query.begin(), vars.to_query.end(), [id_levtr, code](const bulk::Var* v) { return v->id_levtr == id_levtr && v->var->code() == code; });
             if (vi == vars.to_query.end()) return;
-            (*vi)->cur = cur;
+            (*vi)->id = id;
             vars.to_query.erase(vi);
         });
     }
@@ -289,7 +282,7 @@ void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& va
                     }
                     else
                         ustm->bind_null_val(2);
-                    ustm->bind_val(3, v.cur->second.id);
+                    ustm->bind_val(3, v.id);
 
                     ustm->execute();
                     v.set_updated();
@@ -323,11 +316,9 @@ void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& va
                 istm->bind_null_val(6);
             istm->execute();
 
-            ValueState vs;
-            vs.id = conn.get_last_insert_id();
-            vs.is_new = true;
-
-            v.cur = t.state.add_value(ValueDesc(vars.shared_context.station, v.id_levtr, vars.shared_context.datetime, v.var->code()), vs);
+            v.id = conn.get_last_insert_id();
+            // TODO: mark as newly inserted
+            cache.insert(unique_ptr<ValueEntry>(new ValueEntry(v.id, vars.shared_context.station, v.id_levtr, vars.shared_context.datetime, v.var->code())));
             v.set_inserted();
         }
     }

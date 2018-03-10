@@ -194,7 +194,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
         }
 
         TRACE("Inserting var %01d%02d%03d (%s)\n", WR_VAR_FXY(var->code()), var->enqc());
-        msg::Context* ctx = lt.to_msg(state, row.id_levtr, *msg);
+        msg::Context* ctx = lt.to_msg(row.id_levtr, *msg);
         if (ctx)
             ctx->set(row.release_var());
     }

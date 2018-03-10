@@ -34,8 +34,6 @@ void Tests::register_tests() {
 add_method("insert", [](Fixture& f) {
     auto& lt = f.tr->levtr();
 
-    db::v7::State state;
-
     // Insert a lev_tr
     auto i = lt.obtain_id(db::v7::LevTrEntry(Level(1, 2, 0, 3), Trange(4, 5, 6)));
     wassert(actual(i) == 1);

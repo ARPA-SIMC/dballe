@@ -112,8 +112,7 @@ MySQLStationData::MySQLStationData(MySQLConnection& conn)
 
 void MySQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
 {
-    // Scan vars adding the State pointer to the current database values, if any
-    vars.map_known_values();
+    vars.look_for_missing_ids();
 
     // Load the missing varcodes into the state and into vars
     if (!vars.to_query.empty())
@@ -123,15 +122,12 @@ void MySQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertSt
         auto res = conn.exec_store(query);
         while (auto row = res.fetch())
         {
-            StationValueState vs;
-            vs.id = row.as_int(0);
-            vs.is_new = false;
+            int id = row.as_int(0);
             wreport::Varcode code = row.as_int(1);
-
-            auto cur = t.state.add_stationvalue(StationValueDesc(vars.shared_context.station, code), vs);
+            cache.insert(unique_ptr<StationValueEntry>(new StationValueEntry(id, vars.shared_context.station, code)));
             auto vi = std::find_if(vars.to_query.begin(), vars.to_query.end(), [code](const bulk::StationVar* v) { return v->var->code() == code; });
             if (vi == vars.to_query.end()) continue;
-            (*vi)->cur = cur;
+            (*vi)->id = id;
             vars.to_query.erase(vi);
         }
     }
@@ -158,10 +154,10 @@ void MySQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertSt
                         values::Encoder enc;
                         enc.append_attributes(*v.var);
                         string escaped_attrs = conn.escape(enc.buf);
-                        qb.appendf("UPDATE station_data SET value='%s', attrs=X'%s' WHERE id=%d", escaped_value.c_str(), escaped_attrs.c_str(), v.cur->second.id);
+                        qb.appendf("UPDATE station_data SET value='%s', attrs=X'%s' WHERE id=%d", escaped_value.c_str(), escaped_attrs.c_str(), v.id);
                     }
                     else
-                        qb.appendf("UPDATE station_data SET value='%s', attrs=NULL WHERE id=%d", escaped_value.c_str(), v.cur->second.id);
+                        qb.appendf("UPDATE station_data SET value='%s', attrs=NULL WHERE id=%d", escaped_value.c_str(), v.id);
                     conn.exec_no_data(qb);
                     v.set_updated();
                 }
@@ -201,11 +197,9 @@ void MySQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertSt
                         escaped_value.c_str());
             conn.exec_no_data(qb);
 
-            StationValueState vs;
-            vs.id = conn.get_last_insert_id();
-            vs.is_new = true;
-
-            v.cur = t.state.add_stationvalue(StationValueDesc(vars.shared_context.station, v.var->code()), vs);
+            v.id = conn.get_last_insert_id();
+            cache.insert(unique_ptr<StationValueEntry>(new StationValueEntry(v.id, vars.shared_context.station, v.var->code())));
+            // TODO: mark as newly inserted
             v.set_inserted();
         }
     }
@@ -233,8 +227,7 @@ MySQLData::MySQLData(MySQLConnection& conn)
 
 void MySQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
 {
-    // Scan vars adding the State pointer to the current database values, if any
-    vars.map_known_values();
+    vars.look_for_missing_ids();
 
     // Load the missing varcodes into the state and into vars
     // If the station has just been inserted, then there is nothing in the
@@ -251,15 +244,12 @@ void MySQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& var
         {
             int id_levtr = row.as_int(1);
             wreport::Varcode code = row.as_int(2);
-
-            ValueState vs;
-            vs.id = row.as_int(0);
-            vs.is_new = false;
-            auto cur = t.state.add_value(ValueDesc(vars.shared_context.station, id_levtr, vars.shared_context.datetime, code), vs);
+            int id = row.as_int(0);
+            cache.insert(unique_ptr<ValueEntry>(new ValueEntry(id, vars.shared_context.station, id_levtr, vars.shared_context.datetime, code)));
 
             auto vi = std::find_if(vars.to_query.begin(), vars.to_query.end(), [id_levtr, code](const bulk::Var* v) { return v->id_levtr == id_levtr && v->var->code() == code; });
             if (vi == vars.to_query.end()) continue;
-            (*vi)->cur = cur;
+            (*vi)->id = id;
             vars.to_query.erase(vi);
         }
     }
@@ -286,10 +276,10 @@ void MySQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& var
                         values::Encoder enc;
                         enc.append_attributes(*v.var);
                         string escaped_attrs = conn.escape(enc.buf);
-                        qb.appendf("UPDATE data SET value='%s', attrs=X'%s' WHERE id=%d", escaped_value.c_str(), escaped_attrs.c_str(), v.cur->second.id);
+                        qb.appendf("UPDATE data SET value='%s', attrs=X'%s' WHERE id=%d", escaped_value.c_str(), escaped_attrs.c_str(), v.id);
                     }
                     else
-                        qb.appendf("UPDATE data SET value='%s', attrs=NULL WHERE id=%d", escaped_value.c_str(), v.cur->second.id);
+                        qb.appendf("UPDATE data SET value='%s', attrs=NULL WHERE id=%d", escaped_value.c_str(), v.id);
                     conn.exec_no_data(qb);
                     v.set_updated();
                 }
@@ -335,12 +325,10 @@ void MySQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& var
                         escaped_value.c_str());
             conn.exec_no_data(qb);
 
-            ValueState vs;
-            vs.id = conn.get_last_insert_id();
-            vs.is_new = true;
-
-            v.cur = t.state.add_value(ValueDesc(vars.shared_context.station, v.id_levtr, vars.shared_context.datetime, v.var->code()), vs);
+            v.id = conn.get_last_insert_id();
+            cache.insert(unique_ptr<ValueEntry>(new ValueEntry(v.id, vars.shared_context.station, v.id_levtr, vars.shared_context.datetime, v.var->code())));
             v.set_inserted();
+            // TODO: mark as newly inserted
         }
     }
 }

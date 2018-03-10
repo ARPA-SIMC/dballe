@@ -80,10 +80,11 @@ void Transaction::rollback()
 
 void Transaction::clear_cached_state()
 {
-    state.clear();
     repinfo().read_cache();
     station().clear_cache();
     levtr().clear_cache();
+    station_data().clear_cache();
+    data().clear_cache();
 }
 
 Transaction& Transaction::downcast(dballe::Transaction& transaction)
@@ -104,9 +105,9 @@ void Transaction::remove_all()
 void Transaction::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
 {
     // Insert the station data, and get the ID
-    int si = obtain_station(state, vals.info, station_can_add);
+    int si = obtain_station(vals.info, station_can_add);
 
-    v7::bulk::InsertStationVars vars(state, si);
+    v7::bulk::InsertStationVars vars(si);
     vals.info.id = si;
 
     // Add all the variables we find
@@ -119,7 +120,7 @@ void Transaction::insert_station_data(StationValues& vals, bool can_replace, boo
 
     // Read the IDs from the results
     for (const auto& v: vars)
-        vals.values.add_data_id(v.var->code(), v.cur->second.id);
+        vals.values.add_data_id(v.var->code(), v.id);
 }
 
 void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
@@ -130,9 +131,9 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
         throw error_notfound("no variables found in input record");
 
     // Insert the station data, and get the ID
-    int si = obtain_station(state, vals.info, station_can_add);
+    int si = obtain_station(vals.info, station_can_add);
 
-    v7::bulk::InsertVars vars(state, si, vals.info.datetime);
+    v7::bulk::InsertVars vars(si, vals.info.datetime);
     vals.info.id = si;
 
     // Insert the lev_tr data, and get the ID
@@ -148,7 +149,7 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
 
     // Read the IDs from the results
     for (const auto& v: vars)
-        vals.values.add_data_id(v.var->code(), v.cur->second.id);
+        vals.values.add_data_id(v.var->code(), v.id);
 }
 
 void Transaction::remove_station_data(const Query& query)
@@ -251,7 +252,7 @@ void Transaction::attr_remove_data(int data_id, const db::AttrList& attrs)
     }
 }
 
-int Transaction::obtain_station(v7::State& state, const dballe::Station& st, bool can_add)
+int Transaction::obtain_station(const dballe::Station& st, bool can_add)
 {
     v7::Station& s = station();
 

@@ -97,9 +97,9 @@ add_method("insert", [](Fixture& f) {
 
     // Insert a datum
     {
-        bulk::InsertVars vars(f.tr->state);
+        bulk::InsertVars vars;
         wassert(insert_sample1(vars, 123, bulk::ERROR));
-        wassert(actual(vars[0].cur->second.id) == 1);
+        wassert(actual(vars[0].id) == 1);
         wassert(actual(vars[0].needs_insert()).isfalse());
         wassert(actual(vars[0].inserted()).istrue());
         wassert(actual(vars[0].needs_update()).isfalse());
@@ -108,13 +108,13 @@ add_method("insert", [](Fixture& f) {
 
     // Insert another datum
     {
-        bulk::InsertVars vars(f.tr->state);
+        bulk::InsertVars vars;
         vars.shared_context.station = f.tr->station().get_id(*f.tr, f.sde2);
         vars.shared_context.datetime = Datetime(2002, 3, 4, 5, 6, 7);
         Var var(varinfo(WR_VAR(0, 1, 2)), 234);
         vars.add(&var, f.lt2);
         wassert(da.insert(*f.tr, vars, bulk::ERROR));
-        wassert(actual(vars[0].cur->second.id) == 2);
+        wassert(actual(vars[0].id) == 2);
         wassert(actual(vars[0].needs_insert()).isfalse());
         wassert(actual(vars[0].inserted()).istrue());
         wassert(actual(vars[0].needs_update()).isfalse());
@@ -124,7 +124,7 @@ add_method("insert", [](Fixture& f) {
     // Reinsert the first datum: it should give an error, since V7 does
     // not check if old and new values are the same
     {
-        bulk::InsertVars vars(f.tr->state);
+        bulk::InsertVars vars;
         bool successful = false;
         try {
             insert_sample1(vars, 123, bulk::ERROR);
@@ -138,9 +138,9 @@ add_method("insert", [](Fixture& f) {
     // Reinsert the first datum, with a different value and ignore
     // overwrite: it should find its ID and do nothing
     {
-        bulk::InsertVars vars(f.tr->state);
+        bulk::InsertVars vars;
         wassert(insert_sample1(vars, 125, bulk::IGNORE));
-        wassert(actual(vars[0].cur->second.id) == 1);
+        wassert(actual(vars[0].id) == 1);
         wassert(actual(vars[0].needs_insert()).isfalse());
         wassert(actual(vars[0].inserted()).isfalse());
         wassert(actual(vars[0].needs_update()).istrue());
@@ -150,9 +150,9 @@ add_method("insert", [](Fixture& f) {
     // Reinsert the first datum, with a different value and overwrite:
     // it should find its ID and update it
     {
-        bulk::InsertVars vars(f.tr->state);
+        bulk::InsertVars vars;
         wassert(insert_sample1(vars, 125, bulk::UPDATE));
-        wassert(actual(vars[0].cur->second.id) == 1);
+        wassert(actual(vars[0].id) == 1);
         wassert(actual(vars[0].needs_insert()).isfalse());
         wassert(actual(vars[0].inserted()).isfalse());
         wassert(actual(vars[0].needs_update()).isfalse());
@@ -163,7 +163,7 @@ add_method("insert", [](Fixture& f) {
     // overwrite: it should find its ID and do nothing, because the value
     // does not change.
     {
-        bulk::InsertVars vars(f.tr->state);
+        bulk::InsertVars vars;
         bool successful = false;
         try {
             insert_sample1(vars, 125, bulk::ERROR);
@@ -177,9 +177,9 @@ add_method("insert", [](Fixture& f) {
     // Reinsert the first datum, with a different value and error on
     // overwrite: it should find the ID and skip the update
     {
-        bulk::InsertVars vars(f.tr->state);
+        bulk::InsertVars vars;
         wassert(insert_sample1(vars, 126, bulk::IGNORE));
-        wassert(actual(vars[0].cur->second.id) == 1);
+        wassert(actual(vars[0].id) == 1);
         wassert(actual(vars[0].needs_insert()).isfalse());
         wassert(actual(vars[0].inserted()).isfalse());
         wassert(actual(vars[0].needs_update()).istrue());
@@ -194,13 +194,13 @@ add_method("attrs", [](Fixture& f) {
     Var var(varinfo(WR_VAR(0, 1, 2)), 123);
 
     // Insert a datum with attributes
-    bulk::InsertVars vars(f.tr->state);
+    bulk::InsertVars vars;
     vars.shared_context.station = f.tr->station().get_id(*f.tr, f.sde1);
     vars.shared_context.datetime = Datetime(2001, 2, 3, 4, 5, 6);
     var.seta(newvar(WR_VAR(0, 33, 7), 50));
     vars.add(&var, f.lt1);
     wassert(da.insert(*f.tr, vars, bulk::ERROR, true));
-    int id = vars[0].cur->second.id;
+    int id = vars[0].id;
 
     vector<wreport::Var> attrs;
     da.read_attrs(id, [&](std::unique_ptr<wreport::Var> a) {

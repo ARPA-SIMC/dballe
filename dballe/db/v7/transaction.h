@@ -35,7 +35,6 @@ public:
     std::shared_ptr<v7::DB> db;
     /// SQL-side transaction
     dballe::Transaction* sql_transaction = nullptr;
-    State state;
     /// True if commit or rollback have already been called on this transaction
     bool fired = false;
 
@@ -98,7 +97,7 @@ public:
      * @returns
      *   The station ID
      */
-    int obtain_station(v7::State& state, const dballe::Station& st, bool can_add=true);
+    int obtain_station(const dballe::Station& st, bool can_add=true);
 
     void dump(FILE* out) override;
 };
