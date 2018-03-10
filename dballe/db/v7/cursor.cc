@@ -572,7 +572,7 @@ void run_delete_query(std::shared_ptr<v7::Transaction> tr, const core::Query& q,
         tr->db->conn->explain(qb.sql_query, stderr);
     }
 
-    tr->db->data().remove(qb);
+    tr->data().remove(qb);
 }
 
 

@@ -45,8 +45,6 @@ DB::DB(unique_ptr<Connection> conn)
 
 DB::~DB()
 {
-    delete m_data;
-    delete m_station_data;
     delete m_driver;
     delete conn;
 }
@@ -54,20 +52,6 @@ DB::~DB()
 v7::Driver& DB::driver()
 {
     return *m_driver;
-}
-
-v7::StationData& DB::station_data()
-{
-    if (m_station_data == NULL)
-        m_station_data = m_driver->create_station_data().release();
-    return *m_station_data;
-}
-
-v7::Data& DB::data()
-{
-    if (m_data == NULL)
-        m_data = m_driver->create_data().release();
-    return *m_data;
 }
 
 std::shared_ptr<dballe::db::Transaction> DB::transaction()

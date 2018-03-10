@@ -83,7 +83,7 @@ void Tests::register_tests()
 
 add_method("insert", [](Fixture& f) {
     using namespace dballe::db::v7;
-    auto& da = f.db->data();
+    auto& da = f.tr->data();
 
     Var var(varinfo(WR_VAR(0, 1, 2)));
 
@@ -189,7 +189,7 @@ add_method("insert", [](Fixture& f) {
 
 add_method("attrs", [](Fixture& f) {
     using namespace dballe::db::v7;
-    auto& da = f.db->data();
+    auto& da = f.tr->data();
 
     Var var(varinfo(WR_VAR(0, 1, 2)), 123);
 

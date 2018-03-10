@@ -3,8 +3,6 @@
 
 #include <dballe/db/db.h>
 #include <dballe/db/trace.h>
-#include <dballe/db/v7/state.h>
-#include <dballe/db/v7/data.h>
 #include <wreport/varinfo.h>
 #include <string>
 #include <vector>
@@ -26,9 +24,6 @@ namespace db {
 namespace v7 {
 struct State;
 struct Driver;
-struct Repinfo;
-struct Station;
-struct LevTr;
 }
 
 namespace v7 {
@@ -51,15 +46,6 @@ protected:
     /// SQL driver backend
     v7::Driver* m_driver;
 
-    /**
-     * Accessors for the various parts of the database.
-     */
-    /** Station data */
-    v7::StationData* m_station_data = nullptr;
-    /** Variable data */
-    v7::Data* m_data = nullptr;
-    /** @} */
-
     void init_after_connect();
 
 public:
@@ -70,12 +56,6 @@ public:
 
     /// Access the backend DB driver
     v7::Driver& driver();
-
-    /// Access the station_data table
-    v7::StationData& station_data();
-
-    /// Access the data table
-    v7::Data& data();
 
     std::shared_ptr<dballe::db::Transaction> transaction() override;
     std::shared_ptr<dballe::db::Transaction> test_transaction() override;

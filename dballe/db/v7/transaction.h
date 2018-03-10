@@ -4,6 +4,7 @@
 #include <dballe/transaction.h>
 #include <dballe/db/db.h>
 #include <dballe/db/v7/state.h>
+#include <dballe/db/v7/data.h>
 #include <memory>
 
 namespace dballe {
@@ -23,6 +24,10 @@ protected:
     v7::Station* m_station = nullptr;
     /// Level/timerange information
     v7::LevTr* m_levtr = nullptr;
+    /// Station data
+    v7::StationData* m_station_data = nullptr;
+    /// Variable data
+    v7::Data* m_data = nullptr;
 
 public:
     typedef v7::DB DB;
@@ -47,6 +52,10 @@ public:
     v7::Station& station();
     /// Access the levtr table
     v7::LevTr& levtr();
+    /// Access the station_data table
+    v7::StationData& station_data();
+    /// Access the data table
+    v7::Data& data();
 
     void commit() override;
     void rollback() override;

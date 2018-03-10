@@ -70,7 +70,7 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
     if (flags & DBA_IMPORT_FULL_PSEUDOANA)
     {
         // Prepare a bulk insert
-        v7::StationData& sd = db->station_data();
+        v7::StationData& sd = station_data();
         v7::bulk::InsertStationVars vars(state, station_id);
         for (size_t i = 0; i < l_ana->data.size(); ++i)
         {
@@ -85,7 +85,7 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
         sd.insert(*this, vars, (flags & DBA_IMPORT_OVERWRITE) ? v7::bulk::UPDATE : v7::bulk::IGNORE, flags & DBA_IMPORT_ATTRS);
     }
 
-    v7::Data& dd = db->data();
+    v7::Data& dd = data();
 
     v7::bulk::InsertVars vars(state, station_id);
 

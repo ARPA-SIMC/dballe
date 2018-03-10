@@ -23,11 +23,15 @@ Transaction::Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Tra
     m_repinfo = db->driver().create_repinfo().release();
     m_station = db->driver().create_station().release();
     m_levtr = db->driver().create_levtr().release();
+    m_station_data = db->driver().create_station_data().release();
+    m_data = db->driver().create_data().release();
 }
 
 Transaction::~Transaction()
 {
     rollback();
+    delete m_data;
+    delete m_station_data;
     delete m_levtr;
     delete m_station;
     delete m_repinfo;
@@ -47,6 +51,16 @@ v7::Station& Transaction::station()
 v7::LevTr& Transaction::levtr()
 {
     return *m_levtr;
+}
+
+v7::StationData& Transaction::station_data()
+{
+    return *m_station_data;
+}
+
+v7::Data& Transaction::data()
+{
+    return *m_data;
 }
 
 void Transaction::commit()
@@ -100,7 +114,7 @@ void Transaction::insert_station_data(StationValues& vals, bool can_replace, boo
         vars.add(i.second.var);
 
     // Do the insert
-    v7::StationData& d = db->station_data();
+    v7::StationData& d = station_data();
     d.insert(*this, vars, can_replace ? v7::bulk::UPDATE : v7::bulk::ERROR);
 
     // Read the IDs from the results
@@ -129,7 +143,7 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
         vars.add(i.second.var, ltri);
 
     // Do the insert
-    v7::Data& d = db->data();
+    v7::Data& d = data();
     d.insert(*this, vars, can_replace ? v7::bulk::UPDATE : v7::bulk::ERROR);
 
     // Read the IDs from the results
@@ -186,26 +200,26 @@ std::unique_ptr<db::CursorSummary> Transaction::query_summary(const Query& query
 void Transaction::attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
 {
     // Create the query
-    auto& d = db->station_data();
+    auto& d = station_data();
     d.read_attrs(data_id, dest);
 }
 
 void Transaction::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
 {
     // Create the query
-    auto& d = db->data();
+    auto& d = data();
     d.read_attrs(data_id, dest);
 }
 
 void Transaction::attr_insert_station(int data_id, const Values& attrs)
 {
-    auto& d = db->station_data();
+    auto& d = station_data();
     d.merge_attrs(data_id, attrs);
 }
 
 void Transaction::attr_insert_data(int data_id, const Values& attrs)
 {
-    auto& d = db->data();
+    auto& d = data();
     d.merge_attrs(data_id, attrs);
 }
 
@@ -218,7 +232,7 @@ void Transaction::attr_remove_station(int data_id, const db::AttrList& attrs)
         snprintf(buf, 64, "UPDATE station_data SET attrs=NULL WHERE id=%d", data_id);
         db->conn->execute(buf);
     } else {
-        auto& d = db->station_data();
+        auto& d = station_data();
         d.remove_attrs(data_id, attrs);
     }
 }
@@ -232,7 +246,7 @@ void Transaction::attr_remove_data(int data_id, const db::AttrList& attrs)
         snprintf(buf, 64, "UPDATE data SET attrs=NULL WHERE id=%d", data_id);
         db->conn->execute(buf);
     } else {
-        auto& d = db->data();
+        auto& d = data();
         d.remove_attrs(data_id, attrs);
     }
 }
@@ -262,8 +276,8 @@ void Transaction::dump(FILE* out)
     repinfo().dump(out);
     station().dump(out);
     levtr().dump(out);
-    db->station_data().dump(out);
-    db->data().dump(out);
+    station_data().dump(out);
+    data().dump(out);
 }
 
 void TestTransaction::commit()
