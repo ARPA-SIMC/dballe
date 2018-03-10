@@ -55,6 +55,38 @@ struct ItemState
     ItemState& operator=(ItemState&&) = default;
 };
 
+struct StationValueEntry
+{
+    int id = MISSING_INT;
+    int station;
+    wreport::Varcode varcode;
+
+    StationValueEntry() {}
+    StationValueEntry(const StationValueEntry&) = default;
+    StationValueEntry(int id, int station, wreport::Varcode varcode)
+        : id(id), station(station), varcode(varcode) {}
+    StationValueEntry(int station, wreport::Varcode varcode)
+        : station(station), varcode(varcode) {}
+    StationValueEntry& operator=(const StationValueEntry&) = default;
+
+    int compare(const StationValueEntry&) const;
+    bool operator<(const StationValueEntry& o) const { return compare(o) < 0; }
+    bool operator==(const StationValueEntry& o) const
+    {
+        if (id != MISSING_INT && o.id != MISSING_INT)
+            return id == o.id;
+        if (station != o.station) return false;
+        return varcode == o.varcode;
+    }
+    bool operator!=(const StationValueEntry& o) const
+    {
+        if (id != MISSING_INT && o.id != MISSING_INT)
+            return id != o.id;
+        if (station == o.station) return false;
+        return varcode != o.varcode;
+    }
+};
+
 
 struct StationValueDesc
 {
@@ -78,6 +110,43 @@ struct StationValueState : public ItemState
 
 typedef std::map<StationValueDesc, StationValueState> stationvalues_t;
 
+
+struct ValueEntry
+{
+    int id = MISSING_INT;
+    int station;
+    int levtr;
+    /// Date and time at which the value was measured or forecast
+    Datetime datetime;
+    wreport::Varcode varcode;
+
+    ValueEntry() {}
+    ValueEntry(const ValueEntry&) = default;
+    ValueEntry(int id, int station, int levtr, const Datetime& datetime, wreport::Varcode varcode)
+        : id(id), station(station), levtr(levtr), datetime(datetime), varcode(varcode) {}
+    ValueEntry(int station, int levtr, const Datetime& datetime, wreport::Varcode varcode)
+        : station(station), levtr(levtr), datetime(datetime), varcode(varcode) {}
+    ValueEntry& operator=(const ValueEntry&) = default;
+
+    int compare(const ValueEntry&) const;
+    bool operator<(const ValueEntry& o) const { return compare(o) < 0; }
+    bool operator==(const ValueEntry& o) const
+    {
+        if (id != MISSING_INT && o.id != MISSING_INT)
+            return id == o.id;
+        if (station != o.station) return false;
+        if (levtr != o.levtr) return false;
+        return varcode == o.varcode;
+    }
+    bool operator!=(const ValueEntry& o) const
+    {
+        if (id != MISSING_INT && o.id != MISSING_INT)
+            return id != o.id;
+        if (station == o.station) return false;
+        if (levtr == o.levtr) return false;
+        return varcode != o.varcode;
+    }
+};
 
 struct ValueDesc
 {
