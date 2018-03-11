@@ -21,8 +21,6 @@
       call dbinit(dbahandle)
 
 !     Open a session
-      ierr = idba_preparati(dbahandle, handle, "read", "read", "read")
-      call ensure_no_error("preparati handle")
       ierr = idba_preparati(dbahandle, handleinit, &
              "write", "write", "write")
       call ensure_no_error("preparati handleinit")
@@ -70,6 +68,12 @@
       call ensure_no_error("init 15")
       ierr = idba_critica(handleinit)
       call ensure_no_error("critica 3")
+      ierr = idba_fatto(handleinit)
+      call ensure_no_error("fatto 1")
+
+      ! Read back the data
+      ierr = idba_preparati(dbahandle, handle, "read", "read", "read")
+      call ensure_no_error("preparati handle")
 
       ierr = idba_setc(handle, "var", "B12101")
       call ensure_no_error("query set 1")

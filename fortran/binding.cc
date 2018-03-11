@@ -1,6 +1,7 @@
 #include "config.h"
 #include "dballe/simple/msgapi.h"
 #include "dballe/simple/dbapi.h"
+#include "dballe/core/string.h"
 #include "dballe/db/db.h"
 
 #include <cstring>  // memset
@@ -154,7 +155,18 @@ int idba_presentati(int* dbahandle, const char* url)
         }
 
         IF_TRACING(fortran::log_presentati_url(*dbahandle, url));
+
         hs.url = url;
+
+        std::string wipe = url_pop_query_string(hs.url, "wipe");
+        if (!wipe.empty())
+        {
+            // Disappear then reset, to allow migrating a db from V6 to V7
+            auto db = DB::connect_from_url(hs.url.c_str());
+            db->disappear();
+            db = DB::connect_from_url(hs.url.c_str());
+            db->reset();
+        }
 
         /* Open the database session */
         return fortran::success();

@@ -71,7 +71,7 @@
       call ensure_no_error("seti 13")
       ierr = idba_seti(handlew, "p2", 1)
       call ensure_no_error("seti 14")
-      
+
       ierr = idba_setc(handlew, "rep_memo", "synop")
       call ensure_no_error("seti 15")
 

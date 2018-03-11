@@ -67,6 +67,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/matcher.h \
 	core/match-wreport.h \
 	core/varmatch.h \
+	core/string.h \
 	core/trace.h \
 	core/json.h \
 	msg/codec.h \
@@ -184,6 +185,7 @@ libdballe_la_SOURCES = \
 	core/match-wreport.cc \
 	core/varmatch.cc \
 	core/json.cc \
+	core/string.cc \
 	msg/bulletin.cc \
 	msg/vars.cc \
 	msg/context.cc \
@@ -350,6 +352,7 @@ test_dballe_SOURCES = \
 	core/match-wreport-test.cc \
 	core/varmatch-test.cc \
 	core/json-test.cc \
+	core/string-test.cc \
 	msg/tests.cc \
 	msg/bulletin-test.cc \
 	msg/vars-test.cc \
