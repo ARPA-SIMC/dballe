@@ -1,36 +1,34 @@
 #ifndef DBALLE_DB_V7_CACHE_H
 #define DBALLE_DB_V7_CACHE_H
 
-#include <dballe/db/v7/state.h>
+#include <dballe/types.h>
 #include <unordered_map>
+#include <memory>
+#include <vector>
+#include <iosfwd>
 
 namespace dballe {
+struct Station;
+
 namespace db {
 namespace v7 {
+struct LevTrEntry;
 
-template<typename Entry>
-struct ForwardCache
-{
-    std::unordered_map<int, Entry*> by_id;
-
-    ForwardCache() = default;
-    ForwardCache(const ForwardCache&) = delete;
-    ForwardCache(ForwardCache&&) = delete;
-    ForwardCache& operator=(const ForwardCache&) = delete;
-    ForwardCache& operator=(ForwardCache&&) = delete;
-    ~ForwardCache();
-
-    void clear();
-    const Entry* find_entry(int id) const;
-    const Entry* insert(std::unique_ptr<Entry> e);
-};
 
 template<typename Entry, typename Reverse>
-struct Cache : public ForwardCache<Entry>
+struct Cache
 {
-    using ForwardCache<Entry>::ForwardCache;
+    std::unordered_map<int, Entry*> by_id;
     Reverse reverse;
 
+    Cache() = default;
+    Cache(const Cache&) = delete;
+    Cache(Cache&&) = delete;
+    Cache& operator=(const Cache&) = delete;
+    Cache& operator=(Cache&&) = delete;
+    ~Cache();
+
+    const Entry* find_entry(int id) const;
     int find_id(const Entry& e) const;
 
     const Entry* insert(const Entry& e);
@@ -52,6 +50,30 @@ struct StationCache : Cache<dballe::Station, StationReverseIndex>
 };
 
 
+struct LevTrEntry
+{
+    // Database ID
+    int id = MISSING_INT;
+
+    /// Vertical level or layer
+    Level level;
+
+    /// Time range
+    Trange trange;
+
+    LevTrEntry() = default;
+    LevTrEntry(int id, const Level& level, const Trange& trange) : id(id), level(level), trange(trange) {}
+    LevTrEntry(const Level& level, const Trange& trange) : level(level), trange(trange) {}
+    LevTrEntry(const LevTrEntry&) = default;
+    LevTrEntry(LevTrEntry&&) = default;
+    LevTrEntry& operator=(const LevTrEntry&) = default;
+    LevTrEntry& operator=(LevTrEntry&&) = default;
+
+    bool operator==(const LevTrEntry& o) const;
+    bool operator!=(const LevTrEntry& o) const;
+};
+
+std::ostream& operator<<(std::ostream&, const LevTrEntry&);
 
 struct LevTrReverseIndex : public std::unordered_map<Level, std::vector<const LevTrEntry*>>
 {
@@ -64,22 +86,6 @@ struct LevTrCache : public Cache<LevTrEntry, LevTrReverseIndex>
     using Cache::Cache;
 };
 
-
-struct StationValueCache : public ForwardCache<StationValueEntry>
-{
-    using ForwardCache::ForwardCache;
-};
-
-struct ValueCache : public ForwardCache<ValueEntry>
-{
-    using ForwardCache::ForwardCache;
-};
-
-
-extern template class ForwardCache<dballe::Station>;
-extern template class ForwardCache<LevTrEntry>;
-extern template class ForwardCache<StationValueEntry>;
-extern template class ForwardCache<ValueEntry>;
 extern template class Cache<dballe::Station, StationReverseIndex>;
 extern template class Cache<LevTrEntry, LevTrReverseIndex>;
 

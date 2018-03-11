@@ -132,7 +132,6 @@ int MySQLLevTr::obtain_id(const LevTrEntry& desc)
     conn.exec_no_data(query);
     id = conn.get_last_insert_id();
     cache.insert(desc, id);
-    // TODO: mark as inserted in this transaction
     return id;
 }
 

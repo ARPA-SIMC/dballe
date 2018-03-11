@@ -2,7 +2,6 @@
 #define DBALLE_DB_V7_LEVTR_H
 
 #include <dballe/core/defs.h>
-#include <dballe/db/v7/state.h>
 #include <dballe/db/v7/cache.h>
 #include <memory>
 #include <set>

@@ -1,4 +1,6 @@
 #include "cache.h"
+#include "dballe/core/values.h"
+#include <ostream>
 
 using namespace std;
 
@@ -6,57 +8,29 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
-template<typename Entry>
-ForwardCache<Entry>::~ForwardCache()
+template<typename Entry, typename Reverse>
+Cache<Entry, Reverse>::~Cache()
 {
     for (auto& i: by_id)
         delete i.second;
 }
 
-template<typename Entry>
-void ForwardCache<Entry>::clear()
+template<typename Entry, typename Reverse>
+void Cache<Entry, Reverse>::clear()
 {
     for (auto& i: by_id)
         delete i.second;
     by_id.clear();
+    reverse.clear();
 }
 
-template<typename Entry>
-const Entry* ForwardCache<Entry>::find_entry(int id) const
+template<typename Entry, typename Reverse>
+const Entry* Cache<Entry, Reverse>::find_entry(int id) const
 {
     auto i = by_id.find(id);
     if (i == by_id.end())
         return nullptr;
     return i->second;
-}
-
-template<typename Entry>
-const Entry* ForwardCache<Entry>::insert(std::unique_ptr<Entry> e)
-{
-    if (e->id == MISSING_INT)
-        throw std::runtime_error("station to cache in transaction state must have a database ID");
-
-    auto i = by_id.find(e->id);
-    if (i != by_id.end())
-    {
-        // StationCache do not move: if we have a match on the ID, we just need to
-        // enforce that there is no mismatch on the station data
-        if (*i->second != *e)
-            throw std::runtime_error("cannot replace a cached DB entry with one with the same ID and different data");
-        return i->second;
-    }
-
-    const Entry* res = e.get();
-    by_id.insert(make_pair(res->id, e.release()));
-    return res;
-}
-
-
-template<typename Entry, typename Reverse>
-void Cache<Entry, Reverse>::clear()
-{
-    ForwardCache<Entry>::clear();
-    reverse.clear();
 }
 
 template<typename Entry, typename Reverse>
@@ -126,6 +100,32 @@ void StationReverseIndex::add(const dballe::Station* st)
 }
 
 
+bool LevTrEntry::operator==(const LevTrEntry& o) const
+{
+    if (id != MISSING_INT && o.id != MISSING_INT)
+        return id == o.id;
+    if (level != o.level) return false;
+    return trange == o.trange;
+}
+
+bool LevTrEntry::operator!=(const LevTrEntry& o) const
+{
+    if (id != MISSING_INT && o.id != MISSING_INT)
+        return id != o.id;
+    if (level == o.level) return false;
+    return trange != o.trange;
+}
+
+std::ostream& operator<<(std::ostream& out, const LevTrEntry& l)
+{
+    out << "(";
+    if (l.id == MISSING_INT)
+        out << "-";
+    else
+        out << l.id;
+    return out << ":" << l.level << ":" << l.trange;
+}
+
 int LevTrReverseIndex::find_id(const LevTrEntry& lt) const
 {
     auto li = find(lt.level);
@@ -147,10 +147,6 @@ void LevTrReverseIndex::add(const LevTrEntry* lt)
 }
 
 
-template class ForwardCache<dballe::Station>;
-template class ForwardCache<LevTrEntry>;
-template class ForwardCache<StationValueEntry>;
-template class ForwardCache<ValueEntry>;
 template class Cache<dballe::Station, StationReverseIndex>;
 template class Cache<LevTrEntry, LevTrReverseIndex>;
 

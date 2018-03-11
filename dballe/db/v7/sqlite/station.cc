@@ -92,7 +92,6 @@ const dballe::Station* SQLiteStation::lookup_id(v7::Transaction& tr, int id)
         station->coords.lon = sstm->column_int(2);
         if (!sstm->column_isnull(3))
             station->ident = sstm->column_string(3);
-        // TODO: mark station as newly inserted
         res = cache.insert(move(station));
     });
 
@@ -124,8 +123,8 @@ int SQLiteStation::obtain_id(v7::Transaction& tr, const dballe::Station& desc)
     istm->execute();
 
     id = conn.get_last_insert_id();
-    // TODO: mark station as newly inserted
     cache.insert(desc, id);
+    new_ids.insert(id);
     return id;
 }
 

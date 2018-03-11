@@ -2,9 +2,9 @@
 #define DBALLE_DB_V7_DRIVER_H
 
 #include <dballe/core/defs.h>
+#include <dballe/core/values.h>
 #include <dballe/db/defs.h>
 #include <dballe/sql/fwd.h>
-#include <dballe/db/v7/state.h>
 #include <dballe/db/v7/data.h>
 #include <wreport/var.h>
 #include <memory>

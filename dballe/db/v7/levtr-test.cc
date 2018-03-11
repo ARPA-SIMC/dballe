@@ -1,7 +1,6 @@
 #include "db/tests.h"
 #include "sql/sql.h"
 #include "db/v7/transaction.h"
-#include "db/v7/state.h"
 #include "db/v7/driver.h"
 #include "db/v7/levtr.h"
 #include "config.h"

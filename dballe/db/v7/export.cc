@@ -24,9 +24,9 @@ namespace v7 {
 namespace {
 
 
-struct StationLayerCache : protected std::vector<wreport::Var*>
+struct StationValues : protected std::vector<wreport::Var*>
 {
-    ~StationLayerCache()
+    ~StationValues()
     {
         for (iterator i = begin(); i != end(); ++i)
             delete *i;
@@ -45,10 +45,9 @@ struct StationLayerCache : protected std::vector<wreport::Var*>
             c.set(**i);
     }
 
-    void fill(v7::Transaction& tr, int id_station)
+    void read(v7::Transaction& tr, int id_station)
     {
         reset();
-
         tr.station().get_station_vars(id_station, [&](std::unique_ptr<wreport::Var> var) {
             push_back(var.release());
         });
@@ -118,7 +117,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
     Datetime last_datetime;
     int last_ana_id = -1;
 
-    StationLayerCache station_cache;
+    StationValues station_values;
 
     if (db->explain_queries)
     {
@@ -170,14 +169,11 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
 
             // Update station layer cache if needed
             if (row.station.id != last_ana_id)
-                station_cache.fill(*this, row.station.id);
+                station_values.read(*this, row.station.id);
 
             // Fill in report information
-            {
-                // TODO: move to station_cache
-                c_st.set_rep_memo(row.station.report.c_str());
-                msg->type = Msg::type_from_repmemo(row.station.report.c_str());
-            }
+            c_st.set_rep_memo(row.station.report.c_str());
+            msg->type = Msg::type_from_repmemo(row.station.report.c_str());
 
             // Fill in the basic station values
             c_st.seti(WR_VAR(0, 5, 1), row.station.coords.lat);
@@ -186,7 +182,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
                 c_st.set_ident(row.station.ident);
 
             // Fill in station information
-            station_cache.to_context(c_st);
+            station_values.to_context(c_st);
 
             // Update current context information
             last_datetime = row.datetime;

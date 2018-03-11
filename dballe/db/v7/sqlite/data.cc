@@ -120,8 +120,6 @@ void SQLiteDataCommon<Traits>::remove(const v7::IdQueryBuilder& qb)
         // Compile the DELETE query for the data
         stmd->bind_val(1, stm->column_int(0));
         stmd->execute();
-
-        // TODO: drop from cache
     });
 }
 
@@ -207,8 +205,6 @@ void SQLiteStationData::insert(dballe::db::v7::Transaction& tr, v7::bulk::Insert
             istm->execute();
 
             v.id = conn.get_last_insert_id();
-            //cache.insert(unique_ptr<StationValueEntry>(new StationValueEntry(v.id, vars.shared_context.station, v.var->code())));
-            // TODO: mark as newly inserted
             v.set_inserted();
         }
     }
@@ -264,7 +260,6 @@ void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& va
     vars.compute_plan();
 
     // Execute the plan
-
     switch (update_mode)
     {
         case bulk::UPDATE:
@@ -317,8 +312,6 @@ void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& va
             istm->execute();
 
             v.id = conn.get_last_insert_id();
-            // TODO: mark as newly inserted
-            //cache.insert(unique_ptr<ValueEntry>(new ValueEntry(v.id, vars.shared_context.station, v.id_levtr, vars.shared_context.datetime, v.var->code())));
             v.set_inserted();
         }
     }
@@ -336,7 +329,6 @@ void SQLiteData::dump(FILE* out)
     });
     dumper.print_tail();
 }
-
 
 }
 }

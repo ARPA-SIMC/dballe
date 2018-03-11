@@ -198,8 +198,6 @@ void MySQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertSt
             conn.exec_no_data(qb);
 
             v.id = conn.get_last_insert_id();
-            //cache.insert(unique_ptr<StationValueEntry>(new StationValueEntry(v.id, vars.shared_context.station, v.var->code())));
-            // TODO: mark as newly inserted
             v.set_inserted();
         }
     }
@@ -326,9 +324,7 @@ void MySQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& var
             conn.exec_no_data(qb);
 
             v.id = conn.get_last_insert_id();
-            //cache.insert(unique_ptr<ValueEntry>(new ValueEntry(v.id, vars.shared_context.station, v.id_levtr, vars.shared_context.datetime, v.var->code())));
             v.set_inserted();
-            // TODO: mark as newly inserted
         }
     }
 }

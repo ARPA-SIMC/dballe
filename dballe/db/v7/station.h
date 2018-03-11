@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <functional>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace wreport {
@@ -26,6 +27,8 @@ struct Station
 {
 protected:
     StationCache cache;
+    /// IDs of station that were inserted during this session
+    std::unordered_set<int> new_ids;
     virtual bool maybe_get_id(v7::Transaction& tr, const dballe::Station& st, int* id) = 0;
     virtual void _dump(std::function<void(int, int, const Coords& coords, const char* ident)> out) = 0;
 
@@ -42,6 +45,9 @@ public:
      * the cache from scratch.
      */
     void clear_cache();
+
+    /// Return true if the station has been inserted during this session
+    bool is_newly_inserted(int id) const;
 
     /**
      * Look up a station given its ID.

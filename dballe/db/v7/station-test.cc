@@ -1,6 +1,5 @@
 #include "db/tests.h"
 #include "db/v7/db.h"
-#include "db/v7/state.h"
 #include "sql/sql.h"
 #include "db/v7/driver.h"
 #include "db/v7/repinfo.h"
@@ -48,19 +47,19 @@ add_method("insert", [](Fixture& f) {
     // Create
     si = st.obtain_id(*f.tr, sde1);
     wassert(actual(si) == 1);
-    // TODO: wassert(actual(si->second.is_new).istrue());
+    wassert_true(st.is_newly_inserted(si));
 
     // Retrieve from cache, we know it was created in this transaction
     si = st.obtain_id(*f.tr, sde1);
     wassert(actual(si) == 1);
-    // TODO: wassert(actual(si->second.is_new).istrue());
+    wassert_true(st.is_newly_inserted(si));
 
     // Clear cache, "new in this transaction" state is lost, it will
     // look it up in the database
     f.tr->clear_cached_state();
     si = st.obtain_id(*f.tr, sde1);
     wassert(actual(si) == 1);
-    // TODO: wassert(actual(si->second.is_new).isfalse());
+    wassert_false(st.is_newly_inserted(si));
 
     // Insert a fixed station
     sde2.report = "synop";
@@ -70,29 +69,29 @@ add_method("insert", [](Fixture& f) {
     // Create
     si = st.obtain_id(*f.tr, sde2);
     wassert(actual(si) == 2);
-    // TODO: wassert(actual(si->second.is_new).istrue());
+    wassert_true(st.is_newly_inserted(si));
 
     // Retrieve from cache, we know it was created in this transaction
     si = st.obtain_id(*f.tr, sde2);
     wassert(actual(si) == 2);
-    // TODO: wassert(actual(si->second.is_new).istrue());
+    wassert_true(st.is_newly_inserted(si));
 
     // Clear cache, "new in this transaction" state is lost, it will
     // look it up in the database
     f.tr->clear_cached_state();
     si = st.obtain_id(*f.tr, sde2);
     wassert(actual(si) == 2);
-    // TODO: wassert(actual(si->second.is_new).isfalse());
+    wassert_false(st.is_newly_inserted(si));
 
     // Get the ID of the first station
     si = st.get_id(*f.tr, sde1);
     wassert(actual(si) == 1);
-    // TODO: wassert(actual(si->second.is_new).isfalse());
+    wassert_false(st.is_newly_inserted(si));
 
     // Get the ID of the second station
     si = st.get_id(*f.tr, sde2);
     wassert(actual(si) == 2);
-    // TODO: wassert(actual(si->second.is_new).isfalse());
+    wassert_false(st.is_newly_inserted(si));
 });
 
 }

@@ -110,7 +110,6 @@ int PostgreSQLLevTr::obtain_id(const LevTrEntry& desc)
                         desc.trange.pind, desc.trange.p1, desc.trange.p2);
             id = res.get_int4(0, 0);
             cache.insert(desc, id);
-            // TODO: mark as inserted in this transaction
             return id;
         }
         case 1:

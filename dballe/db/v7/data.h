@@ -4,7 +4,6 @@
 #include <dballe/core/defs.h>
 #include <dballe/sql/fwd.h>
 #include <dballe/db/defs.h>
-#include <dballe/db/v7/state.h>
 #include <wreport/var.h>
 #include <memory>
 #include <vector>
@@ -217,12 +216,6 @@ struct InsertPlan : public std::vector<var_t>
         for (auto& i: *this)
         {
             if (i.id != MISSING_INT) continue;
-            // TODO: if we have it already in cache, we can find the ID, but is it worth keeping all that data in cache?
-            //i.id = cache.find_id(vars.shared_context.make_desc(i));
-            //if (i.id != MISSING_INT) continue;
-            // TODO: track the newly inserted stations/levtrs to prevent
-            // unneeded queries for data we know we just put in the database
-            //if (shared_context.is_new() || i->is_new()) continue;
             to_query.push_back(&i);
         }
     }

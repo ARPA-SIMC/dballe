@@ -75,7 +75,6 @@ const dballe::Station* MySQLStation::lookup_id(v7::Transaction& tr, int id)
     station->coords.lon = row.as_int(2);
     if (!row.isnull(3))
         station->ident = row.as_string(3);
-    // TODO: mark station as newly inserted
     return cache.insert(move(station));
 }
 
@@ -106,9 +105,9 @@ int MySQLStation::obtain_id(v7::Transaction& tr, const dballe::Station& desc)
     }
     conn.exec_no_data(qb);
 
-    // TODO: mark station as newly inserted
     id = conn.get_last_insert_id();
     cache.insert(desc, id);
+    new_ids.insert(id);
     return id;
 #if 0
     // See http://mikefenwick.com/blog/insert-into-database-or-return-id-of-duplicate-row-in-mysql/

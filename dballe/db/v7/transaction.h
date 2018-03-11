@@ -3,7 +3,6 @@
 
 #include <dballe/transaction.h>
 #include <dballe/db/db.h>
-#include <dballe/db/v7/state.h>
 #include <dballe/db/v7/data.h>
 #include <memory>
 

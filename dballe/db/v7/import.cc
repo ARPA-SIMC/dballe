@@ -57,7 +57,6 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
     if (repmemo != NULL)
         station.report = repmemo;
     else {
-        // TODO: check if B01194 first
         if (const Var* var = msg.get_rep_memo_var())
             station.report = var->enqc();
         else
@@ -66,8 +65,7 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
 
     int station_id = st.obtain_id(*this, station);
 
-    // TODO: track in state if the station was just inserted, and skip this if it was
-    if (flags & DBA_IMPORT_FULL_PSEUDOANA)
+    if (flags & DBA_IMPORT_FULL_PSEUDOANA || st.is_newly_inserted(station_id))
     {
         // Prepare a bulk insert
         v7::StationData& sd = station_data();

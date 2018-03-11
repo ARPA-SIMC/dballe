@@ -108,8 +108,6 @@ const LevTrEntry* SQLiteLevTr::lookup_id(int id)
         e->trange.pind = sdstm->column_int(4);
         e->trange.p1 = sdstm->column_int(5);
         e->trange.p2 = sdstm->column_int(6);
-        // TODO: mark that this has been inserted in this transaction
-        // sst.is_new = false;
         res = cache.insert(move(e));
     });
 
@@ -144,8 +142,6 @@ int SQLiteLevTr::obtain_id(const LevTrEntry& desc)
             desc.trange.pind, desc.trange.p1, desc.trange.p2);
     istm->execute();
     id = conn.get_last_insert_id();
-    // TODO: mark entry as newly inserted in this transaction
-    // st.is_new = true;
     cache.insert(desc, id);
     return id;
 }

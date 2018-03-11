@@ -274,8 +274,6 @@ void PostgreSQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::Ins
             }
 
             v->id = res.get_int4(row, 0);
-            //cache.insert(unique_ptr<StationValueEntry>(new StationValueEntry(v->id, vars.shared_context.station, v->var->code())));
-            // TODO: mark as newly inserted
             v->set_inserted();
 
             ++v;
@@ -399,8 +397,6 @@ void PostgreSQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars
             }
 
             v->id = res.get_int4(row, 0);
-            //cache.insert(unique_ptr<ValueEntry>(new ValueEntry(v->id, vars.shared_context.station, v->id_levtr, vars.shared_context.datetime, v->var->code())));
-            // TODO: mark as newly inserted
             v->set_inserted();
 
             ++v;

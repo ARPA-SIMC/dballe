@@ -18,6 +18,12 @@ Station::~Station()
 void Station::clear_cache()
 {
     cache.clear();
+    new_ids.clear();
+}
+
+bool Station::is_newly_inserted(int id) const
+{
+    return new_ids.find(id) != new_ids.end();
 }
 
 int Station::get_id(v7::Transaction& tr, const dballe::Station& desc)
