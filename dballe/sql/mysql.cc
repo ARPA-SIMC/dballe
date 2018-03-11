@@ -510,6 +510,8 @@ struct MySQLTransaction : public Transaction
 
 std::unique_ptr<Transaction> MySQLConnection::transaction()
 {
+    // The default MySQL isolation level is REPEATABLE READ
+    // https://dev.mysql.com/doc/refman/5.7/en/innodb-transaction-isolation-levels.html
     exec_no_data("BEGIN");
     return unique_ptr<Transaction>(new MySQLTransaction(*this));
 }
