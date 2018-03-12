@@ -135,7 +135,6 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
                 if (datetime_from_python(val, dt)) return -1;
                 self->rec->set(dt);
             }
-            self->station_context = false;
             return 0;
         }
 
@@ -145,7 +144,6 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
             DatetimeRange dtr = core::Record::downcast(*self->rec).get_datetimerange();
             if (datetime_from_python(val, dtr.min)) return -1;
             self->rec->set(dtr);
-            self->station_context = false;
             return 0;
         }
 
@@ -155,7 +153,6 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
             DatetimeRange dtr = core::Record::downcast(*self->rec).get_datetimerange();
             if (datetime_from_python(val, dtr.max)) return -1;
             self->rec->set(dtr);
-            self->station_context = false;
             return 0;
         }
 
@@ -163,7 +160,6 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
         {
             Level lev;
             if (level_from_python(val, lev)) return -1;
-            self->station_context = false;
             self->rec->set(lev);
             return 0;
         }
@@ -175,7 +171,6 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
                     return res;
             Trange tr;
             if (trange_from_python(val, tr)) return -1;
-            self->station_context = false;
             self->rec->set(tr);
             return 0;
         }
@@ -277,7 +272,6 @@ static PyObject* dpy_Record_copy(dpy_Record* self)
     if (!result) return NULL;
     try {
         result->rec = self->rec->clone().release();
-        result->station_context = self->station_context;
         return (PyObject*)result;
     } DBALLE_CATCH_RETURN_PYO
 }
@@ -286,7 +280,6 @@ static PyObject* dpy_Record_clear(dpy_Record* self)
 {
     try {
         self->rec->clear();
-        self->station_context = false;
         Py_RETURN_NONE;
     } DBALLE_CATCH_RETURN_PYO
 }
@@ -488,23 +481,6 @@ static PyObject* dpy_Record_date_extremes(dpy_Record* self)
     }
 }
 
-static PyObject* dpy_Record_set_station_context(dpy_Record* self)
-{
-    if (PyErr_WarnEx(PyExc_DeprecationWarning, "Record.set_station_context is deprecated in favour of using DB.query_station_data", 1))
-        return NULL;
-    try {
-        self->rec->set_datetime(Datetime());
-        self->rec->set_level(Level());
-        self->rec->set_trange(Trange());
-        self->station_context = true;
-        Py_RETURN_NONE;
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
-}
-
 static PyObject* dpy_Record_set_from_string(dpy_Record* self, PyObject *args)
 {
     if (PyErr_WarnEx(PyExc_DeprecationWarning, "Record.set_from_string() may disappear in a future version of DB-All.e, and no replacement is planned", 1))
@@ -516,7 +492,6 @@ static PyObject* dpy_Record_set_from_string(dpy_Record* self, PyObject *args)
 
     try {
         core::Record::downcast(*self->rec).set_from_string(str);
-        self->station_context = false;
         Py_RETURN_NONE;
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -541,7 +516,6 @@ static PyMethodDef dpy_Record_methods[] = {
     {"key", (PyCFunction)dpy_Record_var, METH_VARARGS, "(deprecated) return a `dballe.Var`_ from the record, given its key." },
     {"vars", (PyCFunction)dpy_Record_vars, METH_NOARGS, "(deprecated) return a sequence with all the variables set on the Record. Note that this does not include keys." },
     {"date_extremes", (PyCFunction)dpy_Record_date_extremes, METH_NOARGS, "(deprecated) get two datetime objects with the lower and upper bounds of the datetime period in this record" },
-    {"set_station_context", (PyCFunction)dpy_Record_set_station_context, METH_NOARGS, "(deprecated) set the date, level and time range values to match the station data context" },
     {"set_from_string", (PyCFunction)dpy_Record_set_from_string, METH_VARARGS, "(deprecated) set values from a 'key=val' string" },
 
     {NULL}
@@ -551,7 +525,6 @@ static int dpy_Record_init(dpy_Record* self, PyObject* args, PyObject* kw)
 {
     // Construct on preallocated memory
     self->rec = Record::create().release();
-    self->station_context = false;
 
     if (kw)
     {

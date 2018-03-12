@@ -12,7 +12,6 @@ extern "C" {
 typedef struct {
     PyObject_HEAD
     dballe::Record* rec;
-    bool station_context;
 } dpy_Record;
 
 PyAPI_DATA(PyTypeObject) dpy_Record_Type;
