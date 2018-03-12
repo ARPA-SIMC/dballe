@@ -186,14 +186,17 @@ template<typename PYDB>
 static PyObject* dpy_insert_station_data(PYDB* self, PyObject* args, PyObject* kw)
 {
     static const char* kwlist[] = { "record", "can_replace", "can_add_stations", NULL };
-    dpy_Record* record;
+    PyObject* record;
     int can_replace = 0;
     int station_can_add = 0;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "O!|ii", const_cast<char**>(kwlist), &dpy_Record_Type, &record, &can_replace, &station_can_add))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|ii", const_cast<char**>(kwlist), &record, &can_replace, &station_can_add))
         return NULL;
 
     try {
-        StationValues vals(*record->rec);
+        RecordAccess rec;
+        if (rec.init(record) == -1)
+            return nullptr;
+        StationValues vals(rec);
         self->db->insert_station_data(vals, can_replace, station_can_add);
         return get_insert_ids(vals);
     } DBALLE_CATCH_RETURN_PYO
@@ -203,14 +206,17 @@ template<typename PYDB>
 static PyObject* dpy_insert_data(PYDB* self, PyObject* args, PyObject* kw)
 {
     static const char* kwlist[] = { "record", "can_replace", "can_add_stations", NULL };
-    dpy_Record* record;
+    PyObject* record;
     int can_replace = 0;
     int station_can_add = 0;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "O!|ii", const_cast<char**>(kwlist), &dpy_Record_Type, &record, &can_replace, &station_can_add))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|ii", const_cast<char**>(kwlist), &record, &can_replace, &station_can_add))
         return NULL;
 
     try {
-        DataValues vals(*record->rec);
+        RecordAccess rec;
+        if (rec.init(record) == -1)
+            return nullptr;
+        DataValues vals(rec);
         self->db->insert_data(vals, can_replace, station_can_add);
         return get_insert_ids(vals);
     } DBALLE_CATCH_RETURN_PYO
@@ -325,15 +331,16 @@ static PyObject* dpy_load(PYDB* self, PyObject* args, PyObject* kw)
 template<typename PYDB>
 static PyObject* dpy_remove_station_data(PYDB* self, PyObject* args)
 {
-    dpy_Record* record;
-    if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
-        return NULL;
-
-    // TODO: if it is a dict, turn it directly into a Query?
+    PyObject* record;
+    if (!PyArg_ParseTuple(args, "O", &record))
+        return nullptr;
 
     try {
+        RecordAccess rec;
+        if (rec.init(record) == -1)
+            return nullptr;
         core::Query query;
-        query.set_from_record(*record->rec);
+        query.set_from_record(rec);
         self->db->remove_station_data(query);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -347,15 +354,16 @@ static PyObject* dpy_remove_station_data(PYDB* self, PyObject* args)
 template<typename PYDB>
 static PyObject* dpy_remove(PYDB* self, PyObject* args)
 {
-    dpy_Record* record;
-    if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
-        return NULL;
-
-    // TODO: if it is a dict, turn it directly into a Query?
+    PyObject* record;
+    if (!PyArg_ParseTuple(args, "O", &record))
+        return nullptr;
 
     try {
+        RecordAccess rec;
+        if (rec.init(record) == -1)
+            return nullptr;
         core::Query query;
-        query.set_from_record(*record->rec);
+        query.set_from_record(rec);
         ReleaseGIL gil;
         self->db->remove(query);
     } catch (wreport::error& e) {
@@ -407,16 +415,17 @@ static PyObject* dpy_DB_vacuum(dpy_DB* self)
 template<typename PYDB>
 static PyObject* dpy_query_stations(PYDB* self, PyObject* args)
 {
-    dpy_Record* record;
-    if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
-        return NULL;
-
-    // TODO: if it is a dict, turn it directly into a Query?
+    PyObject* record;
+    if (!PyArg_ParseTuple(args, "O", &record))
+        return nullptr;
 
     try {
+        RecordAccess rec;
+        if (rec.init(record) == -1)
+            return nullptr;
         ReleaseGIL gil;
         core::Query query;
-        query.set_from_record(*record->rec);
+        query.set_from_record(rec);
         std::unique_ptr<db::Cursor> res = self->db->query_stations(query);
         gil.lock();
         return (PyObject*)cursor_create(move(res));
@@ -430,17 +439,16 @@ static PyObject* dpy_query_stations(PYDB* self, PyObject* args)
 template<typename PYDB>
 static PyObject* dpy_query_data(PYDB* self, PyObject* args)
 {
-    dpy_Record* record;
-    if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
-        return NULL;
-
-    // TODO: if it is a dict, turn it directly into a Query?
-
-    //self->db->dump(stderr);
+    PyObject* record;
+    if (!PyArg_ParseTuple(args, "O", &record))
+        return nullptr;
 
     try {
+        RecordAccess rec;
+        if (rec.init(record) == -1)
+            return nullptr;
         core::Query query;
-        query.set_from_record(*record->rec);
+        query.set_from_record(rec);
         std::unique_ptr<db::Cursor> res;
         {
             ReleaseGIL gil;
@@ -457,15 +465,16 @@ static PyObject* dpy_query_data(PYDB* self, PyObject* args)
 template<typename PYDB>
 static PyObject* dpy_query_station_data(PYDB* self, PyObject* args)
 {
-    dpy_Record* record;
-    if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
-        return NULL;
-
-    // TODO: if it is a dict, turn it directly into a Query?
+    PyObject* record;
+    if (!PyArg_ParseTuple(args, "O", &record))
+        return nullptr;
 
     try {
+        RecordAccess rec;
+        if (rec.init(record) == -1)
+            return nullptr;
         core::Query query;
-        query.set_from_record(*record->rec);
+        query.set_from_record(rec);
         ReleaseGIL gil;
         std::unique_ptr<db::Cursor> res = self->db->query_station_data(query);
         gil.lock();
@@ -480,15 +489,16 @@ static PyObject* dpy_query_station_data(PYDB* self, PyObject* args)
 template<typename PYDB>
 static PyObject* dpy_query_summary(PYDB* self, PyObject* args)
 {
-    dpy_Record* record;
-    if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
-        return NULL;
-
-    // TODO: if it is a dict, turn it directly into a Query?
+    PyObject* record;
+    if (!PyArg_ParseTuple(args, "O", &record))
+        return nullptr;
 
     try {
+        RecordAccess rec;
+        if (rec.init(record) == -1)
+            return nullptr;
         core::Query query;
-        query.set_from_record(*record->rec);
+        query.set_from_record(rec);
         ReleaseGIL gil;
         std::unique_ptr<db::Cursor> res = self->db->query_summary(query);
         gil.lock();
@@ -568,21 +578,24 @@ static PyObject* dpy_DB_attr_insert(dpy_DB* self, PyObject* args, PyObject* kw)
     static const char* kwlist[] = { "varcode", "attrs", "reference_id", NULL };
     int reference_id = -1;
     const char* varname;
-    dpy_Record* record;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "sO!|i", const_cast<char**>(kwlist),
+    PyObject* record;
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "sO|i", const_cast<char**>(kwlist),
                 &varname,
-                &dpy_Record_Type, &record,
+                &record,
                 &reference_id))
-        return NULL;
+        return nullptr;
 
     if (reference_id == -1)
     {
         PyErr_SetString(PyExc_ValueError, "please provide a reference_id argument: implicitly reusing the one from the last insert is not supported anymore");
-        return NULL;
+        return nullptr;
     }
 
     try {
-        self->db->attr_insert_data(reference_id, *record->rec);
+        RecordAccess rec;
+        if (rec.init(record) == -1)
+            return nullptr;
+        self->db->attr_insert_data(reference_id, Values(rec));
         Py_RETURN_NONE;
     } DBALLE_CATCH_RETURN_PYO
 }
@@ -591,12 +604,15 @@ template<typename PYDB>
 static PyObject* dpy_attr_insert_station(PYDB* self, PyObject* args)
 {
     int data_id;
-    dpy_Record* attrs;
-    if (!PyArg_ParseTuple(args, "iO!", &data_id, &dpy_Record_Type, &attrs))
-        return NULL;
+    PyObject* attrs;
+    if (!PyArg_ParseTuple(args, "iO", &data_id, &attrs))
+        return nullptr;
 
     try {
-        self->db->attr_insert_station(data_id, *attrs->rec);
+        RecordAccess rec;
+        if (rec.init(attrs) == -1)
+            return nullptr;
+        self->db->attr_insert_station(data_id, Values(rec));
         Py_RETURN_NONE;
     } DBALLE_CATCH_RETURN_PYO
 }
@@ -605,12 +621,15 @@ template<typename PYDB>
 static PyObject* dpy_attr_insert_data(PYDB* self, PyObject* args)
 {
     int data_id;
-    dpy_Record* attrs;
-    if (!PyArg_ParseTuple(args, "iO!", &data_id, &dpy_Record_Type, &attrs))
+    PyObject* attrs;
+    if (!PyArg_ParseTuple(args, "iO", &data_id, &attrs))
         return NULL;
 
     try {
-        self->db->attr_insert_data(data_id, *attrs->rec);
+        RecordAccess rec;
+        if (rec.init(attrs) == -1)
+            return nullptr;
+        self->db->attr_insert_data(data_id, Values(rec));
         Py_RETURN_NONE;
     } DBALLE_CATCH_RETURN_PYO
 }
