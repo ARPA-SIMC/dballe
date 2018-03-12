@@ -182,32 +182,6 @@ static PyObject* dpy_DB_transaction(dpy_DB* self)
 virtual void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated) = 0;
 */
 
-static PyObject* dpy_DB_insert(dpy_DB* self, PyObject* args, PyObject* kw)
-{
-    static const char* kwlist[] = { "record", "can_replace", "can_add_stations", NULL };
-    dpy_Record* record;
-    int can_replace = 0;
-    int station_can_add = 0;
-    if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use DB.insert_station_data or DB.insert_data instead of DB.insert", 1))
-        return NULL;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "O!|ii", const_cast<char**>(kwlist), &dpy_Record_Type, &record, &can_replace, &station_can_add))
-        return NULL;
-
-    try {
-        if (record->station_context)
-        {
-            StationValues vals(*record->rec);
-            self->db->insert_station_data(vals, can_replace, station_can_add);
-        }
-        else
-        {
-            DataValues vals(*record->rec);
-            self->db->insert_data(vals, can_replace, station_can_add);
-        }
-        Py_RETURN_NONE;
-    } DBALLE_CATCH_RETURN_PYO
-}
-
 template<typename PYDB>
 static PyObject* dpy_insert_station_data(PYDB* self, PyObject* args, PyObject* kw)
 {
@@ -778,8 +752,6 @@ static PyMethodDef dpy_DB_methods[] = {
         "Remove all our traces from the database, if applicable." },
     {"reset",             (PyCFunction)dpy_DB_reset, METH_VARARGS,
         "Reset the database, removing all existing Db-All.e tables and re-creating them empty." },
-    {"insert",            (PyCFunction)dpy_DB_insert, METH_VARARGS | METH_KEYWORDS,
-        "(deprecated)Insert a record in the database" },
     {"insert_station_data", (PyCFunction)dpy_insert_station_data<dpy_DB>, METH_VARARGS | METH_KEYWORDS,
         "Insert station values in the database" },
     {"insert_data",       (PyCFunction)dpy_insert_data<dpy_DB>, METH_VARARGS | METH_KEYWORDS,
