@@ -356,13 +356,8 @@ static PyObject* dpy_remove(PYDB* self, PyObject* args)
     try {
         core::Query query;
         query.set_from_record(*record->rec);
-        if (record->station_context)
-        {
-            if (PyErr_WarnEx(PyExc_DeprecationWarning, "DB.remove after Record.set_station_context is deprecated in favour of using DB.remove_station_data", 1))
-                return NULL;
-            self->db->remove_station_data(query);
-        } else
-            self->db->remove(query);
+        ReleaseGIL gil;
+        self->db->remove(query);
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
     } catch (std::exception& se) {
@@ -447,13 +442,7 @@ static PyObject* dpy_query_data(PYDB* self, PyObject* args)
         core::Query query;
         query.set_from_record(*record->rec);
         std::unique_ptr<db::Cursor> res;
-        if (record->station_context)
         {
-            if (PyErr_WarnEx(PyExc_DeprecationWarning, "DB.query_data after Record.set_station_context is deprecated in favour of using DB.query_station_data", 1))
-                return NULL;
-            ReleaseGIL gil;
-            res = self->db->query_station_data(query);
-        } else {
             ReleaseGIL gil;
             res = self->db->query_data(query);
         }
