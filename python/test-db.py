@@ -171,7 +171,7 @@ class CommonDBTestMixin(DballeDBMixin):
     def testLoadFileno(self):
         import os
 
-        class F():
+        class F(object):
             def __init__(self, path):
                 self.path = path
 
@@ -255,8 +255,32 @@ class CommonDBTestMixin(DballeDBMixin):
 
 
 class FullDBTestMixin(CommonDBTestMixin):
-    pass
+    def test_transaction_enter_exit(self):
+        with self.db.transaction() as tr:
+            tr.insert_data({
+                "lat": 12.34560, "lon": 76.54320,
+                "mobile": 0,
+                "datetime": datetime.datetime(1945, 4, 25, 9, 0, 0),
+                "level": (10, 11, 15, 22),
+                "trange": (20,111,222),
+                "rep_memo": "synop",
+                "B01011": "test",
+            })
+        self.assertEqual(len(list(self.db.query_data({"rep_memo": "synop"}))), 3)
 
+        with self.assertRaises(RuntimeError):
+            with self.db.transaction() as tr:
+                tr.insert_data({
+                    "lat": 12.34560, "lon": 76.54320,
+                    "mobile": 0,
+                    "datetime": datetime.datetime(1945, 4, 25, 10, 0, 0),
+                    "level": (10, 11, 15, 22),
+                    "trange": (20,111,222),
+                    "rep_memo": "synop",
+                    "B01011": "test",
+                })
+                raise RuntimeError("test rollback")
+        self.assertEqual(len(list(self.db.query_data({"rep_memo": "synop"}))), 3)
 
 class AttrTestMixin(object):
     def testLoadFileOverwriteAttrs(self):

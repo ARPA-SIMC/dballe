@@ -741,6 +741,36 @@ static PyObject* dpy_export_to_file(PYDB* self, PyObject* args, PyObject* kw)
     }
 }
 
+static PyObject* dpy_tr_enter(dpy_Transaction* self)
+{
+    Py_INCREF(self);
+    return (PyObject*)self;
+}
+
+static PyObject* dpy_tr_exit(dpy_Transaction* self, PyObject* args)
+{
+    PyObject* exc_type;
+    PyObject* exc_val;
+    PyObject* exc_tb;
+    if (!PyArg_ParseTuple(args, "OOO", &exc_type, &exc_val, &exc_tb))
+        return nullptr;
+
+    try {
+        {
+            ReleaseGIL gil;
+            if (exc_type == Py_None)
+                self->db->commit();
+            else
+                self->db->rollback();
+        }
+        Py_RETURN_FALSE;
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+}
+
 static PyMethodDef dpy_DB_methods[] = {
     {"get_default_format", (PyCFunction)dpy_DB_get_default_format, METH_NOARGS | METH_CLASS,
         "Get the default DB format" },
@@ -856,6 +886,8 @@ static PyMethodDef dpy_Transaction_methods[] = {
         "Remove attributes" },
     {"export_to_file",    (PyCFunction)dpy_export_to_file<dpy_Transaction>, METH_VARARGS | METH_KEYWORDS,
         "Export data matching a query as bulletins to a named file" },
+    {"__enter__",         (PyCFunction)dpy_tr_enter, METH_NOARGS, "Context manager __enter__" },
+    {"__exit__",          (PyCFunction)dpy_tr_exit, METH_VARARGS, "Context manager __exit__" },
     {NULL}
 };
 
