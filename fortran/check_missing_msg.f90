@@ -115,11 +115,8 @@
       ierr = idba_fatto(handle)
       call ensure_no_error("fatto")
 
-!     If we made it so far, exit with no error
-      print*,"check_missing: all tests succeed."
-
       call exit (0)
-    
+
       end program
 
       include "check-utils.h"

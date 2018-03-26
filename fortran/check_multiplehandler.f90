@@ -25,10 +25,6 @@
       dbahandlew=dbahandler
 
 !     Open a session
-      ierr = idba_preparati(dbahandler, handler, "read", "read", "read")
-      call ensure_no_error("preparati read")
-
-!     Open a session
       ierr = idba_preparati(dbahandlew, handlew, "write", "write", "write")
       call ensure_no_error("preparati write")
 
@@ -82,7 +78,15 @@
       ierr = idba_prendilo(handlew)
       call ensure_no_error("first prendilo")
 
+      ierr = idba_fatto(handlew)
+      call ensure_no_error("fatto")
+      ierr = idba_preparati(dbahandlew, handlew, "write", "write", "write")
+      call ensure_no_error("second preparati write")
+
 !     Query back the data
+      ierr = idba_preparati(dbahandler, handler, "read", "read", "read")
+      call ensure_no_error("preparati read")
+
 !      ierr = idba_ricominciamo(handle)
       ierr = idba_unsetall(handler)
       call ensure_no_error("ricominciamo")
@@ -185,10 +189,10 @@
 
       enddo
 
-      ierr = idba_fatto(handlew)
+      ierr = idba_fatto(handler)
       call ensure_no_error("fatto")
 
-      ierr = idba_fatto(handler)
+      ierr = idba_fatto(handlew)
       call ensure_no_error("fatto")
 
 ! use only in multiple dbhandlers case
@@ -197,10 +201,6 @@
 
       ierr = idba_arrivederci(dbahandler)
       call ensure_no_error("arrivederci r")
-
-
-!     If we made it so far, exit with no error
-      print*,"check_fdballe: all tests succeed."
 
       call exit (0)
     

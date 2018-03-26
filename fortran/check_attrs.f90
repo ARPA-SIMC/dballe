@@ -106,9 +106,6 @@
       ierr = idba_fatto(handle)
       ierr = idba_arrivederci(dbahandle)
 
-!     If we made it so far, exit with no error
-      print*,"check_attrs: all tests succeed."
-
       call exit (0)
     
       end
