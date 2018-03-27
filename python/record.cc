@@ -674,7 +674,9 @@ PyTypeObject dpy_Record_Type = {
         A Record is used to make queries to the database, and read results.
 
         When creating a new record, keyword arguments can be passed and they
-        are set as if Record.update(\*\*kwargs) had been called.
+        are set as if Record.update(\*\*kwargs) had been called. Also, any
+        function that accepts a Record as input, can also accept a Python dict
+        with the Record keys.
 
         When setting items, either via __setitem__ and via update(), there are
         special keys that allow to set many items in a single call::

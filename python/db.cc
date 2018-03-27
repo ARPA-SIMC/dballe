@@ -771,6 +771,27 @@ static PyObject* dpy_tr_exit(dpy_Transaction* self, PyObject* args)
     }
 }
 
+static PyObject* dpy_tr_commit(dpy_Transaction* self)
+{
+    try {
+        ReleaseGIL gil;
+        self->db->commit();
+    } DBALLE_CATCH_RETURN_PYO;
+
+    Py_RETURN_NONE;
+}
+
+static PyObject* dpy_tr_rollback(dpy_Transaction* self)
+{
+    try {
+        ReleaseGIL gil;
+        self->db->rollback();
+    } DBALLE_CATCH_RETURN_PYO;
+
+    Py_RETURN_NONE;
+}
+
+
 static PyMethodDef dpy_DB_methods[] = {
     {"get_default_format", (PyCFunction)dpy_DB_get_default_format, METH_NOARGS | METH_CLASS,
         "Get the default DB format" },
@@ -888,6 +909,8 @@ static PyMethodDef dpy_Transaction_methods[] = {
         "Export data matching a query as bulletins to a named file" },
     {"__enter__",         (PyCFunction)dpy_tr_enter, METH_NOARGS, "Context manager __enter__" },
     {"__exit__",          (PyCFunction)dpy_tr_exit, METH_VARARGS, "Context manager __exit__" },
+    {"commit",            (PyCFunction)dpy_tr_commit, METH_NOARGS, "Commit the transaction" },
+    {"rollback",          (PyCFunction)dpy_tr_rollback, METH_NOARGS, "Roll back the transaction" },
     {NULL}
 };
 
@@ -1113,6 +1136,7 @@ void register_db(PyObject* m)
     Py_INCREF(&dpy_DB_Type);
 
     PyModule_AddObject(m, "DB", (PyObject*)&dpy_DB_Type);
+    PyModule_AddObject(m, "Transaction", (PyObject*)&dpy_Transaction_Type);
 }
 
 }
