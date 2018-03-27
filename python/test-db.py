@@ -262,7 +262,7 @@ class FullDBTestMixin(CommonDBTestMixin):
                 "mobile": 0,
                 "datetime": datetime.datetime(1945, 4, 25, 9, 0, 0),
                 "level": (10, 11, 15, 22),
-                "trange": (20,111,222),
+                "trange": (20, 111, 222),
                 "rep_memo": "synop",
                 "B01011": "test",
             })
@@ -275,7 +275,7 @@ class FullDBTestMixin(CommonDBTestMixin):
                     "mobile": 0,
                     "datetime": datetime.datetime(1945, 4, 25, 10, 0, 0),
                     "level": (10, 11, 15, 22),
-                    "trange": (20,111,222),
+                    "trange": (20, 111, 222),
                     "rep_memo": "synop",
                     "B01011": "test",
                 })
@@ -304,6 +304,59 @@ class TransactionTestMixin(object):
     def get_db(self):
         db = super(TransactionTestMixin, self).get_db()
         return db.transaction()
+
+#    def testConcurrentWrites(self):
+# This deadlocks
+#         insert_ids = self.db.insert_data({
+#             "lat": 12.34560, "lon": 76.54320,
+#             "mobile": 0,
+#             "datetime": datetime.datetime(1945, 4, 25, 10, 0, 0),
+#             "level": (10, 11, 15, 22),
+#             "trange": (20, 111, 222),
+#             "rep_memo": "synop",
+#             "B01011": "test",
+#             }, can_replace=True, can_add_stations=True)
+#         self.db.commit()
+#         data_id = insert_ids["B01011"]
+#         db1 = dballe.DB.connect_test()
+#         db2 = dballe.DB.connect_test()
+#         with db1.transaction() as tr1:
+#             with db2.transaction() as tr2:
+#                 tr1.insert_data({
+#                     "lat": 12.34560, "lon": 76.54320,
+#                     "mobile": 0,
+#                     "datetime": datetime.datetime(1945, 4, 25, 10, 0, 0),
+#                     "level": (10, 11, 15, 22),
+#                     "trange": (20, 111, 222),
+#                     "rep_memo": "synop",
+#                     "B01011": "test1",
+#                 }, can_replace=True)
+#                 tr2.attr_insert_data(data_id, { "B33007": 50.0 })
+
+# This deadlocks:
+#         db1 = dballe.DB.connect_test()
+#         db2 = dballe.DB.connect_test()
+#         with db1.transaction() as tr1:
+#             with db2.transaction() as tr2:
+#                 tr1.insert_data({
+#                     "lat": 12.34560, "lon": 76.54320,
+#                     "mobile": 0,
+#                     "datetime": datetime.datetime(1945, 4, 25, 10, 0, 0),
+#                     "level": (10, 11, 15, 22),
+#                     "trange": (20, 111, 222),
+#                     "rep_memo": "synop",
+#                     "B01011": "test",
+#                 }, can_replace=True, can_add_stations=True)
+#                 tr2.insert_data({
+#                     "lat": 12.34560, "lon": 76.54320,
+#                     "mobile": 0,
+#                     "datetime": datetime.datetime(1945, 4, 25, 10, 0, 0),
+#                     "level": (10, 11, 15, 22),
+#                     "trange": (20, 111, 222),
+#                     "rep_memo": "synop",
+#                     "B01011": "test",
+#                 }, can_replace=True, can_add_stations=True)
+
 
 class DballeV6Test(FullDBTestMixin, unittest.TestCase):
     DB_FORMAT = "V6"
