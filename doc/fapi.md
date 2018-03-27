@@ -28,6 +28,9 @@ get up to speed, and as a quick reference for everyday use.
   routines instead of B table codes.
 * [Connection methods](fapi_connect.md), documents the various ways that can be
   used to connect to a DB-All.e database.
+* [Transactional behaviour](fapi_transactions.md), documents if and when
+  updates to the database take effect, and what happens when multiple programs
+  work on the same DB-All.e database at the same time.
 * [Level types](fapi_ltypes.md), description of values that define vertical
   levels and layers.
 * [Time ranges](fapi_tranges.md), descriptions of values that define time

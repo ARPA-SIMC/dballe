@@ -120,8 +120,12 @@ extern "C" {
 /**
  * Connect to the database
  *
- * This function can be called more than once once to connect to different
+ * This function can be called more than once to connect to different
  * databases at the same time.
+ *
+ * The function expects to find a properly initialised DB-All.e database.
+ * Append `&wipe=true` to the end of the url to wipe any existing DB-All.e
+ * information from the database if it exists, then recreate it from scratch.
  *
  * @param url
  *   The URL of the database to use
