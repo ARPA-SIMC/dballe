@@ -138,7 +138,6 @@ class DballeDBMixin(object):
 
     def get_db(self):
         db = dballe.DB.connect_test()
-        db.connect_test();
         db.reset()
         return db
 
