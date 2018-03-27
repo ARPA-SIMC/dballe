@@ -61,7 +61,7 @@ struct poptOption dbTable[] = {
     POPT_TABLEEND
 };
 
-static unique_ptr<DB> connect()
+static shared_ptr<DB> connect()
 {
     const char* chosen_url;
 
@@ -75,7 +75,7 @@ static unique_ptr<DB> connect()
         chosen_url = op_url;
 
     /* If url looks like a url, treat it accordingly */
-    unique_ptr<DB> db = DB::connect_from_url(chosen_url);
+    auto db = DB::connect_from_url(chosen_url);
 
     // Wipe database if requested
     if (op_wipe_first)
@@ -119,7 +119,7 @@ struct DumpCmd : public DatabaseCmd
         core::Query query;
         dba_cmdline_get_query(optCon, query);
 
-        unique_ptr<DB> db = connect();
+        auto db = connect();
         Dbadb dbadb(*db);
 
         return dbadb.do_dump(query, stdout);
@@ -148,7 +148,7 @@ struct StationsCmd : public DatabaseCmd
         core::Query query;
         dba_cmdline_get_query(optCon, query);
 
-        unique_ptr<DB> db = connect();
+        auto db = connect();
         Dbadb dbadb(*db);
 
         return dbadb.do_stations(query, stdout);
@@ -186,14 +186,14 @@ struct WipeCmd : public DatabaseCmd
 
         {
             // Connect first using the current format, and remove all tables.
-            unique_ptr<DB> db = connect();
+            auto db = connect();
             db->disappear();
         }
 
         if (!op_wipe_disappear)
         {
             // Recreate tables
-            unique_ptr<DB> db = connect();
+            auto db = connect();
             db->reset(fname);
         }
         return 0;
@@ -216,7 +216,7 @@ struct CleanupCmd : public DatabaseCmd
 
     int main(poptContext optCon)
     {
-        unique_ptr<DB> db = connect();
+        auto db = connect();
         db->vacuum();
         return 0;
     }
@@ -241,13 +241,16 @@ struct RepinfoCmd : public DatabaseCmd
         /* Throw away the command name */
         poptGetArg(optCon);
 
-        unique_ptr<DB> db = connect();
+        auto db = connect();
 
         /* Get the optional name of the repinfo file.  If missing, the default will be used */
         const char* fname = poptGetArg(optCon);
 
+        auto tr = db->transaction();
         int added, deleted, updated;
-        db->update_repinfo(fname, &added, &deleted, &updated);
+        tr->update_repinfo(fname, &added, &deleted, &updated);
+        tr->commit();
+
         printf("Update completed: %d added, %d deleted, %d updated.\n", added, deleted, updated);
         return 0;
     }
@@ -310,7 +313,7 @@ struct ImportCmd : public DatabaseCmd
         if (op_full_pseudoana)
             import_flags |= DBA_IMPORT_FULL_PSEUDOANA;
 
-        unique_ptr<DB> db = connect();
+        auto db = connect();
 
         const char* forced_repmemo = NULL;
         if (strcmp(op_report, "") != 0)
@@ -362,7 +365,7 @@ struct ExportCmd : public DatabaseCmd
         core::Query query;
         dba_cmdline_get_query(optCon, query);
 
-        unique_ptr<DB> db = connect();
+        auto db = connect();
         Dbadb dbadb(*db);
 
         const char* forced_repmemo = NULL;
@@ -374,7 +377,7 @@ struct ExportCmd : public DatabaseCmd
             return dbadb.do_export_dump(query, stdout);
         } else {
             File::Encoding type = File::parse_encoding(op_output_type);
-            unique_ptr<File> file = File::create(type, stdout, false, "w");
+            auto file = File::create(type, stdout, false, "w");
             return dbadb.do_export(query, *file, op_output_template, forced_repmemo);
         }
     }
@@ -405,7 +408,7 @@ struct DeleteCmd : public DatabaseCmd
         core::Query query;
         dba_cmdline_get_query(optCon, query);
 
-        unique_ptr<DB> db = connect();
+        auto db = connect();
         // TODO: check that there is something
         db->remove(query);
         return 0;
@@ -426,7 +429,7 @@ struct InfoCmd : public DatabaseCmd
         // Throw away the command name
         poptGetArg(optCon);
 
-        unique_ptr<DB> db = connect();
+        auto db = connect();
 
         string default_format = db::format_format(DB::get_default_format());
         fprintf(stdout, "Default format for new DBs: %s\n", default_format.c_str());

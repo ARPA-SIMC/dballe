@@ -18,12 +18,12 @@ Repinfo::Repinfo(dballe::sql::Connection& conn)
 {
 }
 
-void Repinfo::to_record(int id, Record& rec)
+void Repinfo::to_record(const std::string& report, Record& rec)
 {
-    const repinfo::Cache* c = get_by_id(id);
+    const repinfo::Cache* c = get_by_memo(report.c_str());
     if (c)
     {
-        rec.setc("rep_memo", c->memo.c_str());
+        rec.sets("rep_memo", report);
         rec.seti("priority", c->prio);
     } else {
         rec.unset("rep_memo");
@@ -53,9 +53,9 @@ int Repinfo::get_id(const char* memo)
     return memo_idx[pos].id;
 }
 
-int Repinfo::get_priority(int id)
+int Repinfo::get_priority(const std::string& report)
 {
-    const repinfo::Cache* ri_entry = get_by_id(id);
+    const repinfo::Cache* ri_entry = get_by_memo(report.c_str());
     return ri_entry ? ri_entry->prio : INT_MAX;
 }
 
@@ -303,12 +303,14 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
     // Verify that we are not trying to delete a repinfo entry that is
     // in use
     for (const auto& entry : cache)
+    {
         /* Ensure that we are not deleting a repinfo entry that is already in use */
         if (!entry.memo.empty() && entry.new_memo.empty())
             if (id_use_count(entry.id, entry.memo.c_str()) > 0)
                 error_consistency::throwf(
                         "trying to delete repinfo entry %u,%s which is currently in use",
                         (unsigned)entry.id, entry.memo.c_str());
+    }
 
     // Perform the changes
 

@@ -39,7 +39,7 @@ struct Importer : public Action
     DB& db;
     int import_flags;
     const char* forced_repmemo;
-    unique_ptr<dballe::Transaction> transaction;
+    shared_ptr<dballe::db::Transaction> transaction;
 
     Importer(DB& db) : db(db), import_flags(0), forced_repmemo(0) {}
 
@@ -67,9 +67,9 @@ bool Importer::operator()(const Item& item)
         try {
             if (forced_repmemo == NULL && msg.type == MSG_GENERIC)
                 /* Put generic messages in the generic report by default */
-                db.import_msg(*transaction, msg, NULL, import_flags);
+                transaction->import_msg(msg, NULL, import_flags);
             else
-                db.import_msg(*transaction, msg, forced_repmemo, import_flags);
+                transaction->import_msg(msg, forced_repmemo, import_flags);
         } catch (std::exception& e) {
             item.processing_failed(e);
         }
@@ -82,7 +82,8 @@ bool Importer::operator()(const Item& item)
 /// Query data in the database and output results as arbitrary human readable text
 int Dbadb::do_dump(const Query& query, FILE* out)
 {
-    unique_ptr<db::Cursor> cursor = db.query_data(query);
+    auto tr = db.transaction();
+    unique_ptr<db::Cursor> cursor = tr->query_data(query);
 
     auto res = Record::create();
     for (unsigned i = 0; cursor->next(); ++i)
@@ -92,13 +93,15 @@ int Dbadb::do_dump(const Query& query, FILE* out)
         res->print(out);
     }
 
+    tr->rollback();
     return 0;
 }
 
 /// Query stations in the database and output results as arbitrary human readable text
 int Dbadb::do_stations(const Query& query, FILE* out)
 {
-    unique_ptr<db::Cursor> cursor = db.query_stations(query);
+    auto tr = db.transaction();
+    unique_ptr<db::Cursor> cursor = tr->query_stations(query);
 
     auto res = Record::create();
     for (unsigned i = 0; cursor->next(); ++i)
@@ -108,6 +111,7 @@ int Dbadb::do_stations(const Query& query, FILE* out)
         res->print(out);
     }
 
+    tr->rollback();
     return 0;
 }
 

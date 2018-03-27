@@ -49,5 +49,7 @@ public:
     operator std::string() const;
 };
 
+std::ostream& operator<<(std::ostream&, const Ident&);
+
 }
 #endif

@@ -41,7 +41,7 @@ struct ImportSynopOneStation: public Scenario
         auto t = db->transaction();
         for (const auto& msgs: input)
             for (const auto& msg: msgs)
-                db->import_msg(*t, msg, "synop", DBA_IMPORT_ATTRS | DBA_IMPORT_OVERWRITE);
+                t->import_msg(msg, "synop", DBA_IMPORT_ATTRS | DBA_IMPORT_OVERWRITE);
         t->commit();
     }
 
@@ -77,19 +77,19 @@ struct ImportSynopManyTimes: public Scenario
         {
             auto t = db->transaction();
             for (const auto& msg: messages)
-                db->import_msg(*t, msg, "synop", DBA_IMPORT_ATTRS | DBA_IMPORT_OVERWRITE);
+                t->import_msg(msg, "synop", DBA_IMPORT_ATTRS | DBA_IMPORT_OVERWRITE);
             t->commit();
         }
         {
             auto t = db->transaction();
             for (const auto& msg: messages)
-                db->import_msg(*t, msg, "synop", DBA_IMPORT_ATTRS | DBA_IMPORT_OVERWRITE);
+                t->import_msg(msg, "synop", DBA_IMPORT_ATTRS | DBA_IMPORT_OVERWRITE);
             t->commit();
         }
         {
             auto t = db->transaction();
             for (const auto& msg: messages)
-                db->import_msg(*t, msg, "synop", DBA_IMPORT_ATTRS | DBA_IMPORT_OVERWRITE);
+                t->import_msg(msg, "synop", DBA_IMPORT_ATTRS | DBA_IMPORT_OVERWRITE);
             t->commit();
         }
     }

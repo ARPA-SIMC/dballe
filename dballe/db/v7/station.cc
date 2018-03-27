@@ -1,4 +1,6 @@
 #include "station.h"
+#include "dballe/core/values.h"
+#include "transaction.h"
 
 using namespace wreport;
 using namespace dballe::db;
@@ -8,22 +10,34 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
+
 Station::~Station()
 {
 }
 
-stations_t::iterator Station::get_id(State& st, const StationDesc& desc)
+void Station::clear_cache()
 {
-    auto res = st.stations.find(desc);
-    if (res != st.stations.end())
-        return res;
+    cache.clear();
+    new_ids.clear();
+}
 
-    StationState state;
-    if (maybe_get_id(desc, &state.id))
+bool Station::is_newly_inserted(int id) const
+{
+    return new_ids.find(id) != new_ids.end();
+}
+
+int Station::get_id(v7::Transaction& tr, const dballe::Station& desc)
+{
+    auto id = cache.find_id(desc);
+    if (id != MISSING_INT)
+        return id;
+
+    if (maybe_get_id(tr, desc, &id))
     {
-        state.is_new = false;
-        return st.add_station(desc, state);
+        cache.insert(desc, id);
+        return id;
     }
+
     throw error_notfound("station not found in the database");
 }
 

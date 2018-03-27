@@ -21,7 +21,7 @@ struct ConnectorFixture : public Fixture
     void test_setup()
     {
         Fixture::test_setup();
-        if (!BaseDBFixture::has_driver("MYSQL")) throw TestSkipped();
+        if (!has_driver("MYSQL")) throw TestSkipped();
         if (!conn_open)
         {
             conn.open_test();
@@ -32,9 +32,9 @@ struct ConnectorFixture : public Fixture
     }
 };
 
-class Tests : public DBFixtureTestCase<ConnectorFixture>
+class Tests : public FixtureTestCase<ConnectorFixture>
 {
-    using DBFixtureTestCase::DBFixtureTestCase;
+    using FixtureTestCase::FixtureTestCase;
 
     void register_tests() override
     {

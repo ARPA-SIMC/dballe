@@ -28,8 +28,10 @@ struct StationTask : public Task
     {
         core::Query query;
         make_query(query);
-        auto cur = db.query_stations(query);
+        auto tr = db.transaction();
+        auto cur = tr->query_stations(query);
         while (cur->next()) ;
+        tr->rollback();
     }
 };
 
@@ -41,8 +43,10 @@ struct StationDataTask : public Task
     {
         core::Query query;
         make_query(query);
-        auto cur = db.query_station_data(query);
+        auto tr = db.transaction();
+        auto cur = tr->query_station_data(query);
         while (cur->next()) ;
+        tr->rollback();
     }
 };
 
@@ -54,8 +58,10 @@ struct DataTask : public Task
     {
         core::Query query;
         make_query(query);
-        auto cur = db.query_data(query);
+        auto tr = db.transaction();
+        auto cur = tr->query_data(query);
         while (cur->next()) ;
+        tr->rollback();
     }
 };
 
@@ -107,7 +113,7 @@ struct B : benchmark::DBBenchmark
                             {
                                 vals.values.set(var);
                             }
-                            db->insert_data(*t, vals, false, true);
+                            t->insert_data(vals, false, true);
                         }
                     }
                 }

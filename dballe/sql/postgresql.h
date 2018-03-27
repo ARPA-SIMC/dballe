@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 #include <vector>
 #include <functional>
+#include <unordered_set>
 
 namespace dballe {
 namespace sql {
@@ -242,6 +243,7 @@ class PostgreSQLConnection : public Connection
 protected:
     /// Database connection
     PGconn* db = nullptr;
+    std::unordered_set<std::string> prepared_names;
 
 protected:
     void init_after_connect();

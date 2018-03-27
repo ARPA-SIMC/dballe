@@ -13,6 +13,32 @@ namespace sql {
 
 namespace {
 
+static int trace_callback(unsigned T, void* C, void* P,void* X)
+{
+    switch (T)
+    {
+        case SQLITE_TRACE_STMT:
+        {
+            sqlite3* db = sqlite3_db_handle((sqlite3_stmt*)P);
+            bool is_autocommit = sqlite3_get_autocommit(db);
+            fprintf(stderr, "SQLite: %sstarted %s\n", is_autocommit ? "AC " : "", sqlite3_expanded_sql((sqlite3_stmt*)P));
+            break;
+        }
+        case SQLITE_TRACE_PROFILE:
+            fprintf(stderr, "SQLite: completed %s in %.9fs\n",
+                    sqlite3_expanded_sql((sqlite3_stmt*)P), *(int64_t*)X / 1000000000.0);
+
+            break;
+        case SQLITE_TRACE_ROW:
+            fprintf(stderr, "SQLite: got a row of result\n");
+            break;
+        case SQLITE_TRACE_CLOSE:
+            fprintf(stderr, "SQLite: connection closed %p\n", P);
+            break;
+    }
+    return 0;
+}
+
 }
 
 
@@ -97,16 +123,11 @@ void SQLiteConnection::init_after_connect()
     // set_autocommit(false);
 
     exec("PRAGMA foreign_keys = ON");
+    exec("PRAGMA journal_mode = MEMORY");
+    exec("PRAGMA legacy_file_format = 0");
 
     if (getenv("DBA_INSECURE_SQLITE") != NULL)
-    {
         exec("PRAGMA synchronous = OFF");
-        exec("PRAGMA journal_mode = OFF");
-        exec("PRAGMA legacy_file_format = 0");
-    } else {
-        exec("PRAGMA journal_mode = MEMORY");
-        exec("PRAGMA legacy_file_format = 0");
-    }
 
     if (profile)
         sqlite3_profile(db, on_sqlite3_profile, this);
@@ -128,7 +149,7 @@ void SQLiteConnection::exec(const std::string& query)
         // error message string is no longer needed.·
         std::string msg(errmsg);
         sqlite3_free(errmsg);
-        throw error_sqlite(errmsg, "executing " + query);
+        throw error_sqlite(msg, "executing " + query);
     }
 }
 
@@ -277,6 +298,12 @@ void SQLiteConnection::drop_settings()
 int SQLiteConnection::changes()
 {
     return sqlite3_changes(db);
+}
+
+void SQLiteConnection::trace(unsigned mask)
+{
+    if (sqlite3_trace_v2(db, mask, trace_callback, nullptr) != SQLITE_OK)
+        error_sqlite::throwf(db, "Cannot set up SQLite tracing");
 }
 
 SQLiteStatement::SQLiteStatement(SQLiteConnection& conn, const std::string& query)

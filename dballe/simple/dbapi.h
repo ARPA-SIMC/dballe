@@ -6,11 +6,11 @@
 
 namespace dballe {
 struct DB;
-struct Transaction;
 
 namespace db {
 struct CursorStation;
 struct CursorValue;
+struct Transaction;
 }
 
 namespace fortran {
@@ -21,12 +21,11 @@ struct OutputFile;
 class DbAPI : public CommonAPIImplementation
 {
 protected:
-    DB& db;
+    std::shared_ptr<db::Transaction> tr;
     db::CursorStation* ana_cur;
     db::CursorValue* query_cur;
     InputFile* input_file;
     OutputFile* output_file;
-    dballe::Transaction* transaction = nullptr;
     int last_inserted_station_id;
 
     /// Store information about the database ID of a variable
@@ -45,7 +44,7 @@ protected:
     void shutdown(bool commit);
 
 public:
-    DbAPI(DB& db, const char* anaflag, const char* dataflag, const char* attrflag);
+    DbAPI(std::shared_ptr<db::Transaction> tr, const char* anaflag, const char* dataflag, const char* attrflag);
     virtual ~DbAPI();
 
     int enqi(const char* param) override;

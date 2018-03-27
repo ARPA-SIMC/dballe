@@ -16,33 +16,31 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
-void DB::import_msg(dballe::Transaction& transaction, const Message& message, const char* repmemo, int flags)
+void Transaction::import_msg(const Message& message, const char* repmemo, int flags)
 {
     const Msg& msg = Msg::downcast(message);
     const msg::Context* l_ana = msg.find_context(Level(), Trange());
-	if (!l_ana)
-		throw error_consistency("cannot import into the database a message without station information");
+    if (!l_ana)
+        throw error_consistency("cannot import into the database a message without station information");
 
-	// Check if the station is mobile
+    // Check if the station is mobile
     bool mobile = msg.get_ident_var() != NULL;
 
     v7::Station& st = station();
     v7::LevTr& lt = levtr();
 
-    auto& t = v7::Transaction::downcast(transaction);
-
     // Fill up the station informations needed to fetch an existing ID
-    StationDesc station_desc;
+    dballe::Station station;
 
     // Latitude
     if (const Var* var = l_ana->find_by_id(DBA_MSG_LATITUDE))
-        station_desc.coords.lat = var->enqi();
+        station.coords.lat = var->enqi();
     else
         throw error_notfound("latitude not found in data to import");
 
     // Longitude
     if (const Var* var = l_ana->find_by_id(DBA_MSG_LONGITUDE))
-        station_desc.coords.lon = var->enqi();
+        station.coords.lon = var->enqi();
     else
         throw error_notfound("longitude not found in data to import");
 
@@ -50,29 +48,28 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
     if (mobile)
     {
         if (const Var* var = l_ana->find_by_id(DBA_MSG_IDENT))
-            station_desc.ident = var->enqc();
+            station.ident = var->enqc();
         else
             throw error_notfound("mobile station identifier not found in data to import");
     }
 
     // Report code
     if (repmemo != NULL)
-        station_desc.rep = rep_cod_from_memo(repmemo);
+        station.report = repmemo;
     else {
-        // TODO: check if B01194 first
         if (const Var* var = msg.get_rep_memo_var())
-            station_desc.rep = rep_cod_from_memo(var->enqc());
+            station.report = var->enqc();
         else
-            station_desc.rep = rep_cod_from_memo(Msg::repmemo_from_type(msg.type));
+            station.report = Msg::repmemo_from_type(msg.type);
     }
 
-    auto sstate = st.obtain_id(t.state, station_desc);
+    int station_id = st.obtain_id(*this, station);
 
-    if ((flags & DBA_IMPORT_FULL_PSEUDOANA) || sstate->second.is_new)
+    if (flags & DBA_IMPORT_FULL_PSEUDOANA || st.is_newly_inserted(station_id))
     {
         // Prepare a bulk insert
         v7::StationData& sd = station_data();
-        v7::bulk::InsertStationVars vars(t.state, sstate);
+        v7::bulk::InsertStationVars vars(station_id);
         for (size_t i = 0; i < l_ana->data.size(); ++i)
         {
             Varcode code = l_ana->data[i]->code();
@@ -83,12 +80,12 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
         }
 
         // Run the bulk insert
-        sd.insert(t, vars, (flags & DBA_IMPORT_OVERWRITE) ? v7::bulk::UPDATE : v7::bulk::IGNORE, flags & DBA_IMPORT_ATTRS);
+        sd.insert(*this, vars, (flags & DBA_IMPORT_OVERWRITE) ? v7::bulk::UPDATE : v7::bulk::IGNORE, flags & DBA_IMPORT_ATTRS);
     }
 
     v7::Data& dd = data();
 
-    v7::bulk::InsertVars vars(t.state, sstate);
+    v7::bulk::InsertVars vars(station_id);
 
     // Fill the bulk insert with the rest of the data
     for (size_t i = 0; i < msg.data.size(); ++i)
@@ -108,18 +105,18 @@ void DB::import_msg(dballe::Transaction& transaction, const Message& message, co
         }
 
         // Get the database ID of the lev_tr
-        auto levtri = lt.obtain_id(t.state, LevTrDesc(ctx.level, ctx.trange));
+        auto id_levtr = lt.obtain_id(LevTrEntry(ctx.level, ctx.trange));
 
         for (size_t j = 0; j < ctx.data.size(); ++j)
         {
             const Var* var = ctx.data[j];
             if (not var->isset()) continue;
-            vars.add(var, levtri->second);
+            vars.add(var, id_levtr);
         }
     }
 
     // Run the bulk insert
-    dd.insert(t, vars, (flags & DBA_IMPORT_OVERWRITE) ? v7::bulk::UPDATE : v7::bulk::IGNORE, flags & DBA_IMPORT_ATTRS);
+    dd.insert(*this, vars, (flags & DBA_IMPORT_OVERWRITE) ? v7::bulk::UPDATE : v7::bulk::IGNORE, flags & DBA_IMPORT_ATTRS);
 }
 
 }

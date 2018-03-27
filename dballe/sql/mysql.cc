@@ -7,6 +7,13 @@
 #include <cstdlib>
 #include <iostream>
 
+//#define TRACE_MYSQL
+#ifdef TRACE_MYSQL
+#define trace_query(...) fprintf(stderr, "mysql:" __VA_ARGS__)
+#else
+#define trace_query(...) do {} while(0)
+#endif
+
 using namespace std;
 using namespace wreport;
 
@@ -249,6 +256,7 @@ void MySQLConnection::open(const mysql::ConnectInfo& info)
 void MySQLConnection::open_url(const std::string& url)
 {
     using namespace dballe::sql::mysql;
+    trace_query("open_url: %s\n", url.c_str());
     this->url = url;
     ConnectInfo info;
     info.parse_url(url);
@@ -310,6 +318,7 @@ std::string MySQLConnection::escape(const std::vector<uint8_t>& buf)
 void MySQLConnection::exec_no_data_nothrow(const char* query) noexcept
 {
     using namespace dballe::sql::mysql;
+    trace_query("exec_no_data_nothrow: %s\n", query);
 
     if (mysql_query(db, query))
     {
@@ -336,6 +345,7 @@ void MySQLConnection::exec_no_data_nothrow(const char* query) noexcept
 void MySQLConnection::exec_no_data(const char* query)
 {
     using namespace dballe::sql::mysql;
+    trace_query("exec_no_data: %s\n", query);
 
     if (mysql_query(db, query))
         error_mysql::throwf(db, "cannot execute '%s'", query);
@@ -351,6 +361,7 @@ void MySQLConnection::exec_no_data(const char* query)
 void MySQLConnection::exec_no_data(const std::string& query)
 {
     using namespace dballe::sql::mysql;
+    trace_query("exec_no_data: %s\n", query.c_str());
 
     if (mysql_real_query(db, query.data(), query.size()))
         error_mysql::throwf(db, "cannot execute '%s'", query.c_str());
@@ -366,6 +377,7 @@ void MySQLConnection::exec_no_data(const std::string& query)
 mysql::Result MySQLConnection::exec_store(const char* query)
 {
     using namespace dballe::sql::mysql;
+    trace_query("exec_store: %s\n", query);
 
     if (mysql_query(db, query))
         error_mysql::throwf(db, "cannot execute '%s'", query);
@@ -381,6 +393,7 @@ mysql::Result MySQLConnection::exec_store(const char* query)
 mysql::Result MySQLConnection::exec_store(const std::string& query)
 {
     using namespace dballe::sql::mysql;
+    trace_query("exec_store: %s\n", query.c_str());
 
     if (mysql_real_query(db, query.data(), query.size()))
         error_mysql::throwf(db, "cannot execute '%s'", query.c_str());
@@ -396,6 +409,7 @@ mysql::Result MySQLConnection::exec_store(const std::string& query)
 void MySQLConnection::exec_use(const char* query, std::function<void(const mysql::Row&)> dest)
 {
     using namespace dballe::sql::mysql;
+    trace_query("exec_use: %s\n", query);
 
     if (mysql_query(db, query))
         error_mysql::throwf(db, "cannot execute '%s'", query);
@@ -413,6 +427,7 @@ void MySQLConnection::exec_use(const char* query, std::function<void(const mysql
 void MySQLConnection::exec_use(const std::string& query, std::function<void(const mysql::Row&)> dest)
 {
     using namespace dballe::sql::mysql;
+    trace_query("exec_use: %s\n", query.c_str());
 
     if (mysql_real_query(db, query.data(), query.size()))
         error_mysql::throwf(db, "cannot execute '%s'", query.c_str());
@@ -495,6 +510,8 @@ struct MySQLTransaction : public Transaction
 
 std::unique_ptr<Transaction> MySQLConnection::transaction()
 {
+    // The default MySQL isolation level is REPEATABLE READ
+    // https://dev.mysql.com/doc/refman/5.7/en/innodb-transaction-isolation-levels.html
     exec_no_data("BEGIN");
     return unique_ptr<Transaction>(new MySQLTransaction(*this));
 }

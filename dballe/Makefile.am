@@ -67,9 +67,9 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/matcher.h \
 	core/match-wreport.h \
 	core/varmatch.h \
+	core/string.h \
 	core/trace.h \
 	core/json.h \
-	core/ostream.h \
 	msg/codec.h \
 	msg/bulletin.h \
 	msg/context.h \
@@ -104,7 +104,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/v6/cursor.h \
 	db/v6/qbuilder.h \
 	db/v7/transaction.h \
-	db/v7/state.h \
+	db/v7/cache.h \
 	db/v7/internals.h \
 	db/v7/repinfo.h \
 	db/v7/station.h \
@@ -185,7 +185,7 @@ libdballe_la_SOURCES = \
 	core/match-wreport.cc \
 	core/varmatch.cc \
 	core/json.cc \
-	core/ostream.cc \
+	core/string.cc \
 	msg/bulletin.cc \
 	msg/vars.cc \
 	msg/context.cc \
@@ -240,7 +240,7 @@ libdballe_la_SOURCES = \
 	db/v6/import.cc \
 	db/v6/export.cc \
 	db/v7/transaction.cc \
-	db/v7/state.cc \
+	db/v7/cache.cc \
 	db/v7/repinfo.cc \
 	db/v7/station.cc \
 	db/v7/levtr.cc \
@@ -352,6 +352,7 @@ test_dballe_SOURCES = \
 	core/match-wreport-test.cc \
 	core/varmatch-test.cc \
 	core/json-test.cc \
+	core/string-test.cc \
 	msg/tests.cc \
 	msg/bulletin-test.cc \
 	msg/vars-test.cc \
@@ -371,6 +372,7 @@ test_dballe_SOURCES = \
 	db/v6/levtr-test.cc \
 	db/v6/datav6-test.cc \
 	db/v6/attrv6-test.cc \
+	db/v7/cache-test.cc \
 	db/v7/repinfo-test.cc \
 	db/v7/station-test.cc \
 	db/v7/levtr-test.cc \

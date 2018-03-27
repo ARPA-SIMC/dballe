@@ -1,4 +1,7 @@
 #include "db/tests.h"
+#include "db/v6/db.h"
+#include "db/v7/db.h"
+#include "db/v7/transaction.h"
 #include "explorer.h"
 #include "config.h"
 
@@ -10,38 +13,37 @@ using namespace std;
 
 namespace {
 
-class Tests : public DBFixtureTestCase<DBFixture>
+template<typename DB>
+class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
 {
-    using DBFixtureTestCase::DBFixtureTestCase;
+    typedef EmptyTransactionFixture<DB> Fixture;
+    using FixtureTestCase<Fixture>::FixtureTestCase;
 
     void register_tests() override;
 };
 
-Tests tg1("db_explorer_mem", nullptr, db::MEM);
-Tests tg2("db_explorer_v6_sqlite", "SQLITE", db::V6);
+Tests<V6DB> tg2("db_explorer_v6_sqlite", "SQLITE");
+Tests<V7DB> tg6("db_explorer_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests tg4("db_explorer_v6_postgresql", "POSTGRESQL", db::V6);
+Tests<V6DB> tg4("db_explorer_v6_postgresql", "POSTGRESQL");
+Tests<V7DB> tg7("db_explorer_v7_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests tg5("db_explorer_v6_mysql", "MYSQL", db::V6);
-#endif
-Tests tg6("db_explorer_v7_sqlite", "SQLITE", db::V7);
-#ifdef HAVE_LIBPQ
-Tests tg7("db_explorer_v7_postgresql", "POSTGRESQL", db::V7);
-#endif
-#ifdef HAVE_MYSQL
-Tests tg8("db_explorer_v7_mysql", "MYSQL", db::V7);
+Tests<V6DB> tg5("db_explorer_v6_mysql", "MYSQL");
+Tests<V7DB> tg8("db_explorer_v7_mysql", "MYSQL");
 #endif
 
-void Tests::register_tests()
+template<typename DB>
+void Tests<DB>::register_tests()
 {
 
-add_method("filter_rep_memo", [](Fixture& f) {
+this->add_method("filter_rep_memo", [](Fixture& f) {
     // Test building a summary and checking if it supports queries
-    wassert(f.populate<OldDballeTestDataSet>());
+    OldDballeTestDataSet test_data;
+    wassert(f.populate(test_data));
 
-    Explorer explorer(*f.db);
-    explorer.revalidate();
+    Explorer explorer;
+    explorer.revalidate(*f.tr);
 
     core::Query query;
     query.set_from_test_string("rep_memo=metar");
@@ -52,7 +54,7 @@ add_method("filter_rep_memo", [](Fixture& f) {
     stations.clear();
     for (const auto& s: explorer.global_summary().all_stations)
         stations.push_back(s.second);
-    if (f.db->format() == db::V6)
+    if (DB::format == db::V6)
     {
         wassert(actual(stations.size()) == 1);
     } else {

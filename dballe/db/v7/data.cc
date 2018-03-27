@@ -151,14 +151,16 @@ void Var::dump(FILE* out) const
 {
     char flags[5];
     format_flags(flags);
-    fprintf(out, "flags:%s %01d%02d%03d(%d): %s\n",
-            flags, WR_VAR_FXY(var->code()), (int)(var->code()),
+    fprintf(out, "flags:%s ltr:%d %01d%02d%03d(%d): %s\n",
+            flags,
+            id_levtr,
+            WR_VAR_FXY(var->code()), (int)(var->code()),
             var->isset() ? var->enqc() : "(null)");
 }
 
 void InsertStationVars::dump(FILE* out) const
 {
-    fprintf(out, "ID station: %d\n", shared_context.station->second.id);
+    fprintf(out, "ID station: %d\n", shared_context.station);
     for (unsigned i = 0; i < size(); ++i)
     {
         fprintf(out, "%3u/%3zd: ", i, size());
@@ -171,7 +173,7 @@ void InsertVars::dump(FILE* out) const
     const auto& dt = shared_context.datetime;
 
     fprintf(out, "ID station: %d, datetime: %04d-%02d-%02d %02d:%02d:%02d\n",
-            shared_context.station->second.id,
+            shared_context.station,
             dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
     for (unsigned i = 0; i < size(); ++i)
     {

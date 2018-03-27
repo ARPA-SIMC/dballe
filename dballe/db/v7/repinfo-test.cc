@@ -4,6 +4,7 @@
 #include "db/v6/driver.h"
 #include "db/v6/repinfo.h"
 #include "db/v7/db.h"
+#include "db/v7/transaction.h"
 #include "db/v7/driver.h"
 #include "db/v7/repinfo.h"
 #include <wreport/utils/sys.h>
@@ -17,78 +18,26 @@ using namespace wreport;
 
 namespace {
 
-struct FixtureV6 : DriverFixture
+template<typename DB>
+class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
 {
-    using DriverFixture::DriverFixture;
-
-    unique_ptr<db::v6::Repinfo> repinfo;
-
-    void reset_repinfo()
-    {
-        if (conn->has_table("repinfo"))
-            driver->connection.execute("DELETE FROM repinfo");
-
-        switch (format)
-        {
-            case V5: throw error_unimplemented("v5 db is not supported");
-            case V6:
-                repinfo = driver->create_repinfov6();
-                break;
-            default:
-                throw error_consistency("cannot test repinfo on the current DB format");
-        }
-        int added, deleted, updated;
-        repinfo->update(nullptr, &added, &deleted, &updated);
-    }
-
-    void test_setup()
-    {
-        DriverFixture::test_setup();
-        reset_repinfo();
-    }
-};
-
-struct FixtureV7 : V7DriverFixture
-{
-    using V7DriverFixture::V7DriverFixture;
-
-    unique_ptr<db::v7::Repinfo> repinfo;
-
-    void reset_repinfo()
-    {
-        if (conn->has_table("repinfo"))
-            conn->execute("DELETE FROM repinfo");
-
-        repinfo = driver->create_repinfo();
-        int added, deleted, updated;
-        repinfo->update(nullptr, &added, &deleted, &updated);
-    }
-
-    void test_setup()
-    {
-        V7DriverFixture::test_setup();
-        reset_repinfo();
-    }
-};
-
-template<typename Fixture>
-class Tests : public DBFixtureTestCase<Fixture>
-{
-    using DBFixtureTestCase<Fixture>::DBFixtureTestCase;
+    using FixtureTestCase<EmptyTransactionFixture<DB>>::FixtureTestCase;
+    typedef EmptyTransactionFixture<DB> Fixture;
 
     void register_tests() override
     {
         // Test simple queries
         this->add_method("query", [](Fixture& f) {
-            auto& ri = *f.repinfo;
+            auto& ri = f.tr->repinfo();
             wassert(actual(ri.get_id("synop")) == 1);
             wassert(actual(ri.get_id("generic")) == 255);
             wassert(actual(ri.get_rep_memo(1)) == "synop");
-            wassert(actual(ri.get_priority(199)) == INT_MAX);
+            wassert(actual(ri.get_priority("synop")) == 101);
+            wassert(actual(ri.get_priority("wrong")) == INT_MAX);
         });
         // Test update
         this->add_method("update", [](Fixture& f) {
-            auto& ri = *f.repinfo;
+            auto& ri = f.tr->repinfo();
 
             wassert(actual(ri.get_id("synop")) == 1);
 
@@ -103,7 +52,7 @@ class Tests : public DBFixtureTestCase<Fixture>
         });
         // Test update from a file that was known to fail
         this->add_method("fail", [](Fixture& f) {
-            auto& ri = *f.repinfo;
+            auto& ri = f.tr->repinfo();
 
             wassert(actual(ri.get_id("synop")) == 1);
 
@@ -119,10 +68,9 @@ class Tests : public DBFixtureTestCase<Fixture>
         });
         // Test update from a file with a negative priority
         this->add_method("fail1", [](Fixture& f) {
-            auto& ri = *f.repinfo;
+            auto& ri = f.tr->repinfo();
 
-            int id = ri.get_id("generic");
-            wassert(actual(ri.get_priority(id)) == 1000);
+            wassert(actual(ri.get_priority("generic")) == 1000);
 
             int added, deleted, updated;
             wassert(ri.update((string(getenv("DBA_TESTDATA")) + "/test-repinfo2.csv").c_str(), &added, &deleted, &updated));
@@ -131,25 +79,25 @@ class Tests : public DBFixtureTestCase<Fixture>
             wassert(actual(deleted) == 11);
             wassert(actual(updated) == 2);
 
-            wassert(actual(ri.get_priority(id)) == -5);
+            wassert(actual(ri.get_priority("generic")) == -5);
         });
         // Test automatic repinfo creation
         this->add_method("fail2", [](Fixture& f) {
-            auto& ri = *f.repinfo;
+            auto& ri = f.tr->repinfo();
 
             int id = ri.obtain_id("foobar");
             wassert(actual(id) > 0);
             wassert(actual(ri.get_rep_memo(id)) == "foobar");
-            wassert(actual(ri.get_priority(id)) == 1001);
+            wassert(actual(ri.get_priority("foobar")) == 1001);
 
             id = ri.obtain_id("barbaz");
             wassert(actual(id) > 0);
             wassert(actual(ri.get_rep_memo(id)) == "barbaz");
-            wassert(actual(ri.get_priority(id)) == 1002);
+            wassert(actual(ri.get_priority("barbaz")) == 1002);
         });
         // See https://github.com/ARPA-SIMC/dballe/issues/30
         this->add_method("case", [](Fixture& f) {
-            auto& ri = *f.repinfo;
+            auto& ri = f.tr->repinfo();
 
             int added, deleted, updated;
             sys::write_file("test_case.csv", "234,foOBar,foOBar,100,oss,0\n");
@@ -161,7 +109,7 @@ class Tests : public DBFixtureTestCase<Fixture>
             int id = ri.obtain_id("fooBAR");
             wassert(actual(id) == 234);
             wassert(actual(ri.get_rep_memo(id)) == "foobar");
-            wassert(actual(ri.get_priority(id)) == 100);
+            wassert(actual(ri.get_priority("foobar")) == 100);
             wassert(actual(ri.get_id("foobar")) == id);
             wassert(actual(ri.get_id("Foobar")) == id);
             wassert(actual(ri.get_id("FOOBAR")) == id);
@@ -170,15 +118,15 @@ class Tests : public DBFixtureTestCase<Fixture>
     }
 };
 
-Tests<FixtureV6> test_sqlitev6("db_v6_repinfo_sqlite", "SQLITE", db::V6);
-Tests<FixtureV7> test_sqlitev7("db_v7_repinfo_sqlite", "SQLITE", db::V7);
+Tests<V6DB> test_sqlitev6("db_v6_repinfo_sqlite", "SQLITE");
+Tests<V7DB> test_sqlitev7("db_v7_repinfo_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests<FixtureV6> test_psqlv6("db_v6_repinfo_postgresql", "POSTGRESQL", db::V6);
-Tests<FixtureV7> test_psqlv7("db_v7_repinfo_postgresql", "POSTGRESQL", db::V7);
+Tests<V6DB> test_psqlv6("db_v6_repinfo_postgresql", "POSTGRESQL");
+Tests<V7DB> test_psqlv7("db_v7_repinfo_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests<FixtureV6> test_mysqlv6("db_v6_repinfo_mysql", "MYSQL", db::V6);
-Tests<FixtureV7> test_mysqlv7("db_v7_repinfo_mysql", "MYSQL", db::V7);
+Tests<V6DB> test_mysqlv6("db_v6_repinfo_mysql", "MYSQL");
+Tests<V7DB> test_mysqlv7("db_v7_repinfo_mysql", "MYSQL");
 #endif
 
 }

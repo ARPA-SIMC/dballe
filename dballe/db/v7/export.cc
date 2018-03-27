@@ -4,7 +4,6 @@
 #include "dballe/sql/sql.h"
 #include "dballe/db/v7/transaction.h"
 #include "dballe/db/v7/driver.h"
-#include "dballe/db/v7/repinfo.h"
 #include "dballe/db/v7/station.h"
 #include "dballe/db/v7/levtr.h"
 #include "dballe/msg/msg.h"
@@ -25,9 +24,9 @@ namespace v7 {
 namespace {
 
 
-struct StationLayerCache : protected std::vector<wreport::Var*>
+struct StationValues : protected std::vector<wreport::Var*>
 {
-    ~StationLayerCache()
+    ~StationValues()
     {
         for (iterator i = begin(); i != end(); ++i)
             delete *i;
@@ -46,11 +45,10 @@ struct StationLayerCache : protected std::vector<wreport::Var*>
             c.set(**i);
     }
 
-    void fill(DB& db, int id_station)
+    void read(v7::Transaction& tr, int id_station)
     {
         reset();
-
-        db.station().get_station_vars(id_station, [&](std::unique_ptr<wreport::Var> var) {
+        tr.station().get_station_vars(id_station, [&](std::unique_ptr<wreport::Var> var) {
             push_back(var.release());
         });
     }
@@ -58,20 +56,19 @@ struct StationLayerCache : protected std::vector<wreport::Var*>
 
 struct DataRow
 {
-    int id_station;
-    StationDesc station;
+    dballe::Station station;
     int id_levtr;
     Datetime datetime;
     int id_data;
     wreport::Var* var;
 
-    DataRow(int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)
-        : id_station(id_station), station(station), id_levtr(id_levtr), datetime(datetime), id_data(id_data), var(var.release())
+    DataRow(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)
+        : station(station), id_levtr(id_levtr), datetime(datetime), id_data(id_data), var(var.release())
     {
     }
     DataRow(const DataRow&) = delete;
     DataRow(DataRow&& o)
-        : id_station(o.id_station), station(o.station), id_levtr(o.id_levtr), datetime(o.datetime), id_data(o.id_data), var(o.var)
+        : station(move(o.station)), id_levtr(o.id_levtr), datetime(move(o.datetime)), id_data(o.id_data), var(o.var)
     {
         o.var = nullptr;
     }
@@ -85,7 +82,6 @@ struct DataRow
         if (this == &o) return *this;
         delete var;
         var = nullptr;
-        id_station = o.id_station;
         station = o.station;
         id_levtr = o.id_levtr;
         datetime = o.datetime;
@@ -105,38 +101,35 @@ struct DataRow
 
 }
 
-bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest)
+bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest)
 {
-    auto tr = trace.trace_export_msgs(query);
-    v7::Repinfo& ri = repinfo();
+    auto tr = db->trace.trace_export_msgs(query);
     v7::LevTr& lt = levtr();
-
-    auto& t = v7::Transaction::downcast(transaction);
 
     // Message being built
     unique_ptr<Msg> msg;
 
     // The big export query
-    DataQueryBuilder qb(*this, core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT, false, true);
+    DataQueryBuilder qb(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT, false, true);
     qb.build();
 
     // Current context information used to detect context changes
     Datetime last_datetime;
     int last_ana_id = -1;
 
-    StationLayerCache station_cache;
+    StationValues station_values;
 
-    if (explain_queries)
+    if (db->explain_queries)
     {
         fprintf(stderr, "EXPLAIN "); query.print(stderr);
-        conn->explain(qb.sql_query, stderr);
+        db->conn->explain(qb.sql_query, stderr);
     }
 
     // Retrieve results, buffering them locally to avoid performing concurrent
     // queries
     std::vector<DataRow> results;
-    driver().run_data_query(qb, [&](int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
-        results.emplace_back(id_station, station, id_levtr, datetime, id_data, move(var));
+    db->driver().run_data_query(qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+        results.emplace_back(station, id_levtr, datetime, id_data, move(var));
     });
 
     for (auto& row: results)
@@ -147,7 +140,7 @@ bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& quer
         //        sqlrec.out_value);
 
         /* See if we have the start of a new message */
-        if (row.id_station != last_ana_id || row.datetime != last_datetime)
+        if (row.station.id != last_ana_id || row.datetime != last_datetime)
         {
             // Flush current message
             TRACE("New message\n");
@@ -175,16 +168,12 @@ bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& quer
             msg::Context& c_st = msg->obtain_station_context();
 
             // Update station layer cache if needed
-            if (row.id_station != last_ana_id)
-                station_cache.fill(*this, row.id_station);
+            if (row.station.id != last_ana_id)
+                station_values.read(*this, row.station.id);
 
             // Fill in report information
-            {
-                // TODO: move to station_cache
-                const char* memo = ri.get_rep_memo(row.station.rep);
-                c_st.set_rep_memo(memo);
-                msg->type = Msg::type_from_repmemo(memo);
-            }
+            c_st.set_rep_memo(row.station.report.c_str());
+            msg->type = Msg::type_from_repmemo(row.station.report.c_str());
 
             // Fill in the basic station values
             c_st.seti(WR_VAR(0, 5, 1), row.station.coords.lat);
@@ -193,15 +182,15 @@ bool DB::export_msgs(dballe::Transaction& transaction, const dballe::Query& quer
                 c_st.set_ident(row.station.ident);
 
             // Fill in station information
-            station_cache.to_context(c_st);
+            station_values.to_context(c_st);
 
             // Update current context information
             last_datetime = row.datetime;
-            last_ana_id = row.id_station;
+            last_ana_id = row.station.id;
         }
 
         TRACE("Inserting var %01d%02d%03d (%s)\n", WR_VAR_FXY(var->code()), var->enqc());
-        msg::Context* ctx = lt.to_msg(t.state, row.id_levtr, *msg);
+        msg::Context* ctx = lt.to_msg(row.id_levtr, *msg);
         if (ctx)
             ctx->set(row.release_var());
     }

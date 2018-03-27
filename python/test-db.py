@@ -12,9 +12,9 @@ import unittest
 import warnings
 from testlib import DballeDBMixin
 
-class DballeTestMixin(DballeDBMixin):
+class CommonDBTestMixin(DballeDBMixin):
     def setUp(self):
-        super(DballeTestMixin, self).setUp()
+        super(CommonDBTestMixin, self).setUp()
 
         data = dballe.Record(
                 lat=12.34560, lon=76.54320,
@@ -34,6 +34,13 @@ class DballeTestMixin(DballeDBMixin):
 
         for rec in self.db.query_data(dballe.Record(var="B01011")):
             self.attr_ref = rec["context_id"]
+
+    def testQueryExport(self):
+        query = dballe.Record()
+        self.db.export_to_file(query, "BUFR", "/dev/null")
+        self.db.export_to_file(query, "CREX", "/dev/null")
+        self.db.export_to_file(query, "BUFR", "/dev/null", generic=True)
+        self.db.export_to_file(query, "CREX", "/dev/null", generic=True)
 
     def testQueryAna(self):
         query = dballe.Record()
@@ -122,33 +129,26 @@ class DballeTestMixin(DballeDBMixin):
         self.assertEqual(res[(1, "synop", (10, 11, 15, 22), (20, 111, 222), 'B01011')], (datetime.datetime(1945, 4, 25, 8, 0), datetime.datetime(1945, 4, 25, 8, 0), 1))
         self.assertEqual(res[(1, "synop", (10, 11, 15, 22), (20, 111, 222), 'B01012')], (datetime.datetime(1945, 4, 25, 8, 0), datetime.datetime(1945, 4, 25, 8, 0), 1))
 
-    def testQueryExport(self):
-        query = dballe.Record()
-        self.db.export_to_file(query, "BUFR", "/dev/null")
-        self.db.export_to_file(query, "CREX", "/dev/null")
-        self.db.export_to_file(query, "BUFR", "/dev/null", generic=True)
-        self.db.export_to_file(query, "CREX", "/dev/null", generic=True)
-
     def testAttrRemove(self):
         #db.attrRemove(1, "B01011", [ "B33007" ])
         self.db.attr_remove_data(self.attr_ref, ("B33007",))
 
     def testLoadFile(self):
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.db.load(fp)
             self.assertTrue(self.db.query_data(dballe.Record()).remaining > 0)
 
     def testLoadFileLike(self):
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "rb") as fp:
             s = io.BytesIO(fp.read())
-            self.db.reset()
+            self.db.remove_all()
             self.db.load(s)
             self.assertTrue(self.db.query_data(dballe.Record()).remaining > 0)
 
     def testLoadFileWithAttrs(self):
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withB33196.bufr", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.db.load(fp, attrs=True)
             r = next(self.db.query_data(dballe.Record()))
             a = self.db.attr_query_data(r["context_id"])
@@ -156,7 +156,7 @@ class DballeTestMixin(DballeDBMixin):
 
     def testLoadFileOverwrite(self):
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withoutB33196.bufr", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.db.load(fp, overwrite=True)
             r = next(self.db.query_data(dballe.Record()))
             a = self.db.attr_query_data(r["context_id"])
@@ -171,7 +171,7 @@ class DballeTestMixin(DballeDBMixin):
     def testLoadFileno(self):
         import os
 
-        class F():
+        class F(object):
             def __init__(self, path):
                 self.path = path
 
@@ -189,56 +189,56 @@ class DballeTestMixin(DballeDBMixin):
                 self.fp.close()
 
         with F(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr") as f:
-            self.db.reset()
+            self.db.remove_all()
             self.db.load(f)
             self.assertTrue(self.db.query_data(dballe.Record()).remaining > 0)
 
     def testLoadAutodetect(self):
         # BUFR, autodetectable
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.assertEqual(self.db.load(fp), 25)
 
         # BUFR, not autodetectable
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/synop-groundtemp.bufr", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             with self.assertRaises(KeyError):
                 self.db.load(fp)
 
         # CREX, autodetectable
 
         with io.open(os.getenv("DBA_TESTDATA") + "/crex/test-synop0.crex", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.assertEqual(self.db.load(fp), 1)
 
         # BUFR
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.assertEqual(self.db.load(fp, "BUFR"), 25)
 
         # BUFR
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/synop-groundtemp.bufr", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.assertEqual(self.db.load(fp, "BUFR"), 1)
 
         # CREX loaded as BUFR yields no results
         with io.open(os.getenv("DBA_TESTDATA") + "/crex/test-synop0.crex", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.assertEqual(self.db.load(fp, "BUFR"), 0)
 
         # CREX
         with io.open(os.getenv("DBA_TESTDATA") + "/crex/test-synop0.crex", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.assertEqual(self.db.load(fp, "CREX"), 1)
 
         # BUFR loaded as CREX yields no results
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.assertEqual(self.db.load(fp, "CREX"), 0)
 
     def testQueryVolnd(self):
         from testlib import fill_volnd
-        self.db.reset()
+        self.db.remove_all()
         fill_volnd(self.db)
         query = dballe.Record()
         query["var"] = "B10004"
@@ -254,10 +254,38 @@ class DballeTestMixin(DballeDBMixin):
             self.assertEqual(reports, [s, s, s, s, s, s, t, t, t, t, t])
 
 
+class FullDBTestMixin(CommonDBTestMixin):
+    def test_transaction_enter_exit(self):
+        with self.db.transaction() as tr:
+            tr.insert_data({
+                "lat": 12.34560, "lon": 76.54320,
+                "mobile": 0,
+                "datetime": datetime.datetime(1945, 4, 25, 9, 0, 0),
+                "level": (10, 11, 15, 22),
+                "trange": (20, 111, 222),
+                "rep_memo": "synop",
+                "B01011": "test",
+            })
+        self.assertEqual(len(list(self.db.query_data({"rep_memo": "synop"}))), 3)
+
+        with self.assertRaises(RuntimeError):
+            with self.db.transaction() as tr:
+                tr.insert_data({
+                    "lat": 12.34560, "lon": 76.54320,
+                    "mobile": 0,
+                    "datetime": datetime.datetime(1945, 4, 25, 10, 0, 0),
+                    "level": (10, 11, 15, 22),
+                    "trange": (20, 111, 222),
+                    "rep_memo": "synop",
+                    "B01011": "test",
+                })
+                raise RuntimeError("test rollback")
+        self.assertEqual(len(list(self.db.query_data({"rep_memo": "synop"}))), 3)
+
 class AttrTestMixin(object):
     def testLoadFileOverwriteAttrs(self):
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withoutB33196.bufr", "rb") as fp:
-            self.db.reset()
+            self.db.remove_all()
             self.db.load(fp, attrs=True, overwrite=True)
             r = next(self.db.query_data(dballe.Record()))
             a = self.db.attr_query_data(r["context_id"])
@@ -272,16 +300,83 @@ class AttrTestMixin(object):
             self.assertTrue("B33196" in a)
 
 
-class DballeV6Test(DballeTestMixin, unittest.TestCase):
+class TransactionTestMixin(object):
+    def get_db(self):
+        db = super(TransactionTestMixin, self).get_db()
+        return db.transaction()
+
+#    def testConcurrentWrites(self):
+# This deadlocks
+#         insert_ids = self.db.insert_data({
+#             "lat": 12.34560, "lon": 76.54320,
+#             "mobile": 0,
+#             "datetime": datetime.datetime(1945, 4, 25, 10, 0, 0),
+#             "level": (10, 11, 15, 22),
+#             "trange": (20, 111, 222),
+#             "rep_memo": "synop",
+#             "B01011": "test",
+#             }, can_replace=True, can_add_stations=True)
+#         self.db.commit()
+#         data_id = insert_ids["B01011"]
+#         db1 = dballe.DB.connect_test()
+#         db2 = dballe.DB.connect_test()
+#         with db1.transaction() as tr1:
+#             with db2.transaction() as tr2:
+#                 tr1.insert_data({
+#                     "lat": 12.34560, "lon": 76.54320,
+#                     "mobile": 0,
+#                     "datetime": datetime.datetime(1945, 4, 25, 10, 0, 0),
+#                     "level": (10, 11, 15, 22),
+#                     "trange": (20, 111, 222),
+#                     "rep_memo": "synop",
+#                     "B01011": "test1",
+#                 }, can_replace=True)
+#                 tr2.attr_insert_data(data_id, { "B33007": 50.0 })
+
+# This deadlocks:
+#         db1 = dballe.DB.connect_test()
+#         db2 = dballe.DB.connect_test()
+#         with db1.transaction() as tr1:
+#             with db2.transaction() as tr2:
+#                 tr1.insert_data({
+#                     "lat": 12.34560, "lon": 76.54320,
+#                     "mobile": 0,
+#                     "datetime": datetime.datetime(1945, 4, 25, 10, 0, 0),
+#                     "level": (10, 11, 15, 22),
+#                     "trange": (20, 111, 222),
+#                     "rep_memo": "synop",
+#                     "B01011": "test",
+#                 }, can_replace=True, can_add_stations=True)
+#                 tr2.insert_data({
+#                     "lat": 12.34560, "lon": 76.54320,
+#                     "mobile": 0,
+#                     "datetime": datetime.datetime(1945, 4, 25, 10, 0, 0),
+#                     "level": (10, 11, 15, 22),
+#                     "trange": (20, 111, 222),
+#                     "rep_memo": "synop",
+#                     "B01011": "test",
+#                 }, can_replace=True, can_add_stations=True)
+
+
+class DballeV6Test(FullDBTestMixin, unittest.TestCase):
     DB_FORMAT = "V6"
 
-class DballeV7Test(DballeTestMixin, AttrTestMixin, unittest.TestCase):
+class DballeV6TransactionTest(TransactionTestMixin, CommonDBTestMixin, unittest.TestCase):
+    DB_FORMAT = "V6"
+
+class DballeV7Test(FullDBTestMixin, AttrTestMixin, unittest.TestCase):
     DB_FORMAT = "V7"
 
-class DballeMEMTest(DballeTestMixin, AttrTestMixin, unittest.TestCase):
+class DballeV7TransactionTest(TransactionTestMixin, CommonDBTestMixin, AttrTestMixin, unittest.TestCase):
+    DB_FORMAT = "V7"
+
+class DballeMEMTest(FullDBTestMixin, AttrTestMixin, unittest.TestCase):
+    DB_FORMAT = "MEM"
+
+class DballeMEMTransactionTest(TransactionTestMixin, CommonDBTestMixin, AttrTestMixin, unittest.TestCase):
     DB_FORMAT = "MEM"
 
 
 if __name__ == "__main__":
     from testlib import main
-    main("test_db")
+    main("test-db")

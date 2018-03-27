@@ -1,7 +1,6 @@
 #include "db/tests.h"
 #include "sql/sql.h"
-#include "db/v7/db.h"
-#include "db/v7/state.h"
+#include "db/v7/transaction.h"
 #include "db/v7/driver.h"
 #include "db/v7/levtr.h"
 #include "config.h"
@@ -13,54 +12,35 @@ using namespace std;
 
 namespace {
 
-struct Fixture : V7DriverFixture
+class Tests : public FixtureTestCase<EmptyTransactionFixture<V7DB>>
 {
-    using V7DriverFixture::V7DriverFixture;
+    using FixtureTestCase::FixtureTestCase;
+    typedef EmptyTransactionFixture<V7DB> Fixture;
 
-    unique_ptr<db::v7::LevTr> levtr;
-
-    void reset_levtr()
-    {
-        if (conn->has_table("levtr"))
-            conn->execute("DELETE FROM levtr");
-        levtr = driver->create_levtr();
-    }
-
-    void test_setup()
-    {
-        V7DriverFixture::test_setup();
-        reset_levtr();
-    }
+    void register_tests() override;
 };
 
-class Tests : public DBFixtureTestCase<Fixture>
-{
-    using DBFixtureTestCase::DBFixtureTestCase;
-
-    void register_tests() override
-    {
-        add_method("insert", [](Fixture& f) {
-            auto& lt = *f.levtr;
-
-            db::v7::State state;
-
-            // Insert a lev_tr
-            auto i = lt.obtain_id(state, db::v7::LevTrDesc(Level(1, 2, 0, 3), Trange(4, 5, 6)));
-            wassert(actual(i->second.id) == 1);
-
-            // Insert another lev_tr
-            i = lt.obtain_id(state, db::v7::LevTrDesc(Level(2, 3, 1, 4), Trange(5, 6, 7)));
-            wassert(actual(i->second.id) == 2);
-        });
-    }
-};
-
-Tests test_sqlite("db_v7_levtr_sqlite", "SQLITE", db::V7);
+Tests test_sqlite("db_v7_levtr_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests test_psql("db_v7_levtr_postgresql", "POSTGRESQL", db::V7);
+Tests test_psql("db_v7_levtr_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests test_mysql("db_v7_levtr_mysql", "MYSQL", db::V7);
+Tests test_mysql("db_v7_levtr_mysql", "MYSQL");
 #endif
+
+void Tests::register_tests() {
+
+add_method("insert", [](Fixture& f) {
+    auto& lt = f.tr->levtr();
+
+    // Insert a lev_tr
+    auto i = lt.obtain_id(db::v7::LevTrEntry(Level(1, 2, 0, 3), Trange(4, 5, 6)));
+    wassert(actual(i) == 1);
+
+    // Insert another lev_tr
+    i = lt.obtain_id(db::v7::LevTrEntry(Level(2, 3, 1, 4), Trange(5, 6, 7)));
+    wassert(actual(i) == 2);
+});
+}
 
 }

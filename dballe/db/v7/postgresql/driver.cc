@@ -3,6 +3,8 @@
 #include "station.h"
 #include "levtr.h"
 #include "data.h"
+#include "dballe/db/v7/transaction.h"
+#include "dballe/db/v7/db.h"
 #include "dballe/db/v7/qbuilder.h"
 #include "dballe/core/values.h"
 #include "dballe/sql/postgresql.h"
@@ -54,7 +56,7 @@ std::unique_ptr<v7::Data> Driver::create_data()
     return unique_ptr<v7::Data>(new PostgreSQLData(conn));
 }
 
-void Driver::run_station_query(const v7::StationQueryBuilder& qb, std::function<void(int id, const StationDesc&)> dest)
+void Driver::run_station_query(const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)> dest)
 {
     using namespace dballe::sql::postgresql;
 
@@ -70,28 +72,24 @@ void Driver::run_station_query(const v7::StationQueryBuilder& qb, std::function<
     if (!res)
         throw error_postgresql(conn, "executing " + qb.sql_query);
 
-    StationDesc desc;
+    dballe::Station station;
     conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
         for (unsigned row = 0; row < res.rowcount(); ++row)
         {
-            int output_seq = 0;
-
-            int id = res.get_int4(row, output_seq++);
-            desc.rep = res.get_int4(row, output_seq++);
-            desc.coords.lat = res.get_int4(row, output_seq++);
-            desc.coords.lon = res.get_int4(row, output_seq++);
-
-            if (res.is_null(row, output_seq))
-                desc.ident.clear();
+            station.id = res.get_int4(row, 0);
+            station.report = qb.tr->repinfo().get_rep_memo(res.get_int4(row, 1));
+            station.coords.lat = res.get_int4(row, 2);
+            station.coords.lon = res.get_int4(row, 3);
+            if (res.is_null(row, 4))
+                station.ident.clear();
             else
-                desc.ident = res.get_string(row, output_seq);
-
-            dest(id, desc);
+                station.ident = res.get_string(row, 4);
+            dest(station);
         }
     });
 }
 
-void Driver::run_station_data_query(const v7::DataQueryBuilder& qb, std::function<void(int id_station, const StationDesc& station, int id_data, std::unique_ptr<wreport::Var> var)> dest)
+void Driver::run_station_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var)> dest)
 {
     using namespace dballe::sql::postgresql;
 
@@ -107,8 +105,7 @@ void Driver::run_station_data_query(const v7::DataQueryBuilder& qb, std::functio
     if (!res)
         throw error_postgresql(conn, "executing " + qb.sql_query);
 
-    StationDesc station;
-    int cur_id_station = -1;
+    dballe::Station station;
     conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
         for (unsigned row = 0; row < res.rowcount(); ++row)
         {
@@ -123,26 +120,26 @@ void Driver::run_station_data_query(const v7::DataQueryBuilder& qb, std::functio
                 return;
 
             int id_station = res.get_int4(row, 0);
-            if (id_station != cur_id_station)
+            if (id_station != station.id)
             {
-                station.rep = res.get_int4(row, 1);
+                station.id = id_station;
+                station.report = qb.tr->repinfo().get_rep_memo(res.get_int4(row, 1));
                 station.coords.lat = res.get_int4(row, 2);
                 station.coords.lon = res.get_int4(row, 3);
                 if (res.is_null(row, 4))
                     station.ident.clear();
                 else
                     station.ident = res.get_string(row, 4);
-                cur_id_station = id_station;
             }
 
             int id_data = res.get_int4(row, 6);
 
-            dest(id_station, station, id_data, move(var));
+            dest(station, id_data, move(var));
         }
     });
 }
 
-void Driver::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)> dest)
+void Driver::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)> dest)
 {
     using namespace dballe::sql::postgresql;
 
@@ -158,8 +155,7 @@ void Driver::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(i
     if (!res)
         throw error_postgresql(conn, "executing " + qb.sql_query);
 
-    StationDesc station;
-    int cur_id_station = -1;
+    dballe::Station station;
     conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
         for (unsigned row = 0; row < res.rowcount(); ++row)
         {
@@ -174,28 +170,28 @@ void Driver::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(i
                 return;
 
             int id_station = res.get_int4(row, 0);
-            if (id_station != cur_id_station)
+            if (id_station != station.id)
             {
-                station.rep = res.get_int4(row, 1);
+                station.id = id_station;
+                station.report = qb.tr->repinfo().get_rep_memo(res.get_int4(row, 1));
                 station.coords.lat = res.get_int4(row, 2);
                 station.coords.lon = res.get_int4(row, 3);
                 if (res.is_null(row, 4))
                     station.ident.clear();
                 else
                     station.ident = res.get_string(row, 4);
-                cur_id_station = id_station;
             }
 
             int id_levtr = res.get_int4(row, 5);
             int id_data = res.get_int4(row, 7);
             Datetime datetime = res.get_timestamp(row, 8);
 
-            dest(id_station, station, id_levtr, datetime, id_data, move(var));
+            dest(station, id_levtr, datetime, id_data, move(var));
         }
     });
 }
 
-void Driver::run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<void(int id_station, const StationDesc& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)> dest)
+void Driver::run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)> dest)
 {
     using namespace dballe::sql::postgresql;
 
@@ -211,23 +207,22 @@ void Driver::run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<
     if (!res)
         throw error_postgresql(conn, "executing " + qb.sql_query);
 
-    StationDesc station;
-    int cur_id_station = -1;
+    dballe::Station station;
     conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
         // fprintf(stderr, "ST %d vi %d did %d d %d sd %d\n", qb.select_station, qb.select_varinfo, qb.select_data_id, qb.select_data, qb.select_summary_details);
         for (unsigned row = 0; row < res.rowcount(); ++row)
         {
             int id_station = res.get_int4(row, 0);
-            if (id_station != cur_id_station)
+            if (id_station != station.id)
             {
-                station.rep = res.get_int4(row, 1);
+                station.id = id_station;
+                station.report = qb.tr->repinfo().get_rep_memo(res.get_int4(row, 1));
                 station.coords.lat = res.get_int4(row, 2);
                 station.coords.lon = res.get_int4(row, 3);
                 if (res.is_null(row, 4))
                     station.ident.clear();
                 else
                     station.ident = res.get_string(row, 4);
-                cur_id_station = id_station;
             }
 
             int id_levtr = res.get_int4(row, 5);
@@ -241,7 +236,7 @@ void Driver::run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<
                 datetime = DatetimeRange(res.get_timestamp(row, 8), res.get_timestamp(row, 9));
             }
 
-            dest(id_station, station, id_levtr, code, datetime, count);
+            dest(station, id_levtr, code, datetime, count);
         }
     });
 }

@@ -28,7 +28,7 @@ struct StationTask : public Task
 
     void run_once() override
     {
-        db->query_stations(query);
+        db->transaction()->query_stations(query);
     }
 };
 
@@ -38,7 +38,7 @@ struct StationDataTask : public Task
 
     void run_once() override
     {
-        db->query_station_data(query);
+        db->transaction()->query_station_data(query);
     }
 };
 
@@ -48,7 +48,7 @@ struct DataTask : public Task
 
     void run_once() override
     {
-        db->query_data(query);
+        db->transaction()->query_data(query);
     }
 };
 

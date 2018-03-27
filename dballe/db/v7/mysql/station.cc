@@ -1,4 +1,7 @@
 #include "station.h"
+#include "dballe/db/v7/transaction.h"
+#include "dballe/db/v7/db.h"
+#include "dballe/db/v7/repinfo.h"
 #include "dballe/sql/mysql.h"
 #include "dballe/sql/querybuf.h"
 #include "dballe/record.h"
@@ -27,17 +30,19 @@ MySQLStation::~MySQLStation()
 {
 }
 
-bool MySQLStation::maybe_get_id(const StationDesc& st, int* id)
+bool MySQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st, int* id)
 {
+    int rep = tr.repinfo().obtain_id(st.report.c_str());
+
     Querybuf qb;
     if (st.ident.get())
     {
         string escaped_ident = conn.escape(st.ident.get());
         qb.appendf("SELECT id FROM station WHERE rep=%d AND lat=%d AND lon=%d AND ident='%s'",
-                st.rep, st.coords.lat, st.coords.lon, escaped_ident.c_str());
+                rep, st.coords.lat, st.coords.lon, escaped_ident.c_str());
     } else {
         qb.appendf("SELECT id FROM station WHERE rep=%d AND lat=%d AND lon=%d AND ident IS NULL",
-                st.rep, st.coords.lat, st.coords.lon);
+                rep, st.coords.lat, st.coords.lon);
     }
     auto res = conn.exec_store(qb);
     switch (res.rowcount())
@@ -52,60 +57,58 @@ bool MySQLStation::maybe_get_id(const StationDesc& st, int* id)
     }
 }
 
-stations_t::iterator MySQLStation::lookup_id(State& st, int id)
+const dballe::Station* MySQLStation::lookup_id(v7::Transaction& tr, int id)
 {
     // First look it up in the transaction cache
-    for (auto i = st.stations.begin(); i != st.stations.end(); ++i)
-        if (i->second.id == id)
-            return i;
+    if (const dballe::Station* res = cache.find_entry(id))
+        return res;
 
     Querybuf qb;
     qb.appendf("SELECT rep, lat, lon, ident FROM station WHERE id=%d", id);
     auto res = conn.exec_store(qb);
     auto row = res.expect_one_result();
 
-    StationDesc desc;
-    desc.rep = row.as_int(0);
-    desc.coords.lat = row.as_int(1);
-    desc.coords.lon = row.as_int(2);
+    std::unique_ptr<dballe::Station> station(new dballe::Station);
+    station->id = id;
+    station->report = tr.repinfo().get_rep_memo(row.as_int(0));
+    station->coords.lat = row.as_int(1);
+    station->coords.lon = row.as_int(2);
     if (!row.isnull(3))
-        desc.ident = row.as_string(3);
-    StationState sst;
-    sst.id = id;
-    sst.is_new = false;
-    return st.add_station(desc, sst);
+        station->ident = row.as_string(3);
+    return cache.insert(move(station));
 }
 
-stations_t::iterator MySQLStation::obtain_id(State& st, const StationDesc& desc)
+int MySQLStation::obtain_id(v7::Transaction& tr, const dballe::Station& desc)
 {
-    auto res = st.stations.find(desc);
-    if (res != st.stations.end())
-        return res;
+    int id = cache.find_id(desc);
+    if (id != MISSING_INT) return id;
 
-    StationState state;
-    if (maybe_get_id(desc, &state.id))
+    if (maybe_get_id(tr, desc, &id))
     {
-        state.is_new = false;
-        return st.add_station(desc, state);
+        cache.insert(desc, id);
+        return id;
     }
 
     // If no station was found, insert a new one
+    int rep = tr.repinfo().get_id(desc.report.c_str());
     Querybuf qb;
     if (desc.ident.get())
     {
         string escaped_ident = conn.escape(desc.ident.get());
         qb.appendf(R"(
             INSERT INTO station (rep, lat, lon, ident) VALUES (%d, %d, %d, '%s')
-        )", desc.rep, desc.coords.lat, desc.coords.lon, escaped_ident.c_str());
+        )", rep, desc.coords.lat, desc.coords.lon, escaped_ident.c_str());
     } else {
         qb.appendf(R"(
             INSERT INTO station (rep, lat, lon, ident) VALUES (%d, %d, %d, NULL)
-        )", desc.rep, desc.coords.lat, desc.coords.lon);
+        )", rep, desc.coords.lat, desc.coords.lon);
     }
     conn.exec_no_data(qb);
-    state.id = conn.get_last_insert_id();
-    state.is_new = true;
-    return st.add_station(desc, state);
+
+    id = conn.get_last_insert_id();
+    cache.insert(desc, id);
+    new_ids.insert(id);
+    return id;
 #if 0
     // See http://mikefenwick.com/blog/insert-into-database-or-return-id-of-duplicate-row-in-mysql/
     //

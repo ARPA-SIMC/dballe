@@ -32,7 +32,7 @@ public:
     SQLiteAttrV6& operator=(const SQLiteAttrV6&) = delete;
     ~SQLiteAttrV6();
 
-    void insert(dballe::sql::Transaction& t, v6::bulk::InsertAttrsV6& vars, UpdateMode update_mode=UPDATE) override;
+    void insert(dballe::db::Transaction& t, v6::bulk::InsertAttrsV6& vars, UpdateMode update_mode=UPDATE) override;
     void read(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
     void dump(FILE* out) override;
 };

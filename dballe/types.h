@@ -6,6 +6,7 @@
  */
 
 #include <iosfwd>
+#include <functional>
 #include <limits.h>
 
 namespace dballe {
@@ -85,6 +86,8 @@ struct Date
     static void julian_to_calendar(int jday, unsigned short& year, unsigned char& month, unsigned char& day);
 };
 
+std::ostream& operator<<(std::ostream& out, const Date& dt);
+
 
 /**
  * Time of the day.
@@ -147,6 +150,8 @@ struct Time
      */
     static void validate(int ho, int mi, int se);
 };
+
+std::ostream& operator<<(std::ostream& out, const Time& t);
 
 
 /**
@@ -262,6 +267,8 @@ struct Datetime
     static void normalise_h24(int& ye, int& mo, int& da, int& ho, int& mi, int& se);
 };
 
+std::ostream& operator<<(std::ostream& out, const Datetime& dt);
+
 
 /**
  * Range of datetimes.
@@ -322,6 +329,8 @@ struct DatetimeRange
     bool is_disjoint(const DatetimeRange& dtr) const;
 };
 
+std::ostream& operator<<(std::ostream& out, const DatetimeRange& dtr);
+
 
 /**
  * Coordinates
@@ -337,16 +346,16 @@ struct DatetimeRange
 struct Coords
 {
     /// Latitude in 1/100000 of a degree (5 significant digits preserved)
-    int lat;
+    int lat = MISSING_INT;
 
     /**
      * Longitude in 1/100000 of a degree (5 significant digits preserved) and
      * normalised between -180.0 and 180.0.
      */
-    int lon;
+    int lon = MISSING_INT;
 
     /// Construct a missing Coords
-    Coords();
+    Coords() = default;
     /// Construct a coords from integers in 1/100000 of a degree
     Coords(int lat, int lon);
     /// Construct a coords from values in degrees
@@ -389,6 +398,8 @@ struct Coords
     /// Print to an output stream
     int print(FILE* out, const char* end="\n") const;
 };
+
+std::ostream& operator<<(std::ostream&, const Coords&);
 
 
 /**
@@ -457,6 +468,8 @@ struct LatRange
     /// Check if a range is inside this range (extremes included)
     bool contains(const LatRange& lr) const;
 };
+
+std::ostream& operator<<(std::ostream& out, const LatRange& lr);
 
 
 /**
@@ -527,6 +540,8 @@ struct LonRange
     bool contains(const LonRange& lr) const;
 };
 
+std::ostream& operator<<(std::ostream& out, const LonRange& lr);
+
 
 /// Vertical level or layer
 struct Level
@@ -580,6 +595,7 @@ struct Level
     int print(FILE* out, const char* undef="-", const char* end="\n") const;
 };
 
+std::ostream& operator<<(std::ostream& out, const Level& l);
 
 /**
  * Information on how a value has been sampled or computed with regards to time.
@@ -633,8 +649,29 @@ struct Trange
     int print(FILE* out, const char* undef="-", const char* end="\n") const;
 };
 
-
+std::ostream& operator<<(std::ostream& out, const Trange& l);
 
 }
+
+namespace std {
+
+template<> struct hash<dballe::Level>
+{
+    typedef dballe::Level argument_type;
+    typedef size_t result_type;
+    result_type operator()(argument_type const& o) const noexcept
+    {
+        using dballe::MISSING_INT;
+        size_t res = 0;
+        if (o.ltype1 != MISSING_INT) res += o.ltype1;
+        if (o.l1 != MISSING_INT) res += o.l1;
+        if (o.ltype2 != MISSING_INT) res += o.ltype2 << 8;
+        if (o.l2 != MISSING_INT) res += o.l2;
+        return res;
+    }
+};
+
+}
+
 
 #endif

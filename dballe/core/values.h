@@ -12,6 +12,7 @@
 #include <vector>
 #include <map>
 #include <functional>
+#include <iosfwd>
 
 namespace dballe {
 
@@ -28,7 +29,7 @@ struct Station
      *
      * It will be filled when the Station is inserted on the database.
      */
-    int ana_id = MISSING_INT;
+    int id = MISSING_INT;
 
     /// Station coordinates
     Coords coords;
@@ -40,14 +41,21 @@ struct Station
     Station(const dballe::Record& rec) { set_from_record(rec); }
 
     /// Reset the database ID
-    void clear_ids() { ana_id = MISSING_INT; }
+    void clear_ids() { id = MISSING_INT; }
 
     /// Fill this Station with values from a dballe::Record
     void set_from_record(const Record& rec);
 
+    /// Copy ana_id, report, coords and ident to rec
+    void to_record(Record& rec) const;
+
     bool operator==(const Station& o) const
     {
-        return report == o.report && ana_id == o.ana_id && coords == o.coords && ident == o.ident;
+        return id == o.id && report == o.report && coords == o.coords && ident == o.ident;
+    }
+    bool operator!=(const Station& o) const
+    {
+        return id != o.id || report != o.report || coords != o.coords || ident != o.ident;
     }
 
     /**
@@ -58,6 +66,8 @@ struct Station
      */
     void print(FILE* out, const char* end="\n") const;
 };
+
+std::ostream& operator<<(std::ostream&, const Station&);
 
 /**
  * Information about a physical variable

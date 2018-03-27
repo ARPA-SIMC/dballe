@@ -67,7 +67,7 @@ SQLiteLevTr::~SQLiteLevTr()
     delete istm;
 }
 
-void SQLiteLevTr::prefetch_ids(const std::set<int>& ids, std::function<void(int, const LevTrDesc&)> dest)
+void SQLiteLevTr::prefetch_ids(const std::set<int>& ids)
 {
     if (ids.empty()) return;
 
@@ -84,92 +84,66 @@ void SQLiteLevTr::prefetch_ids(const std::set<int>& ids, std::function<void(int,
 
     auto stm = conn.sqlitestatement(qb);
     stm->execute([&]() {
-        dest(
-            stm->column_int(0),
-            LevTrDesc(
+        cache.insert(unique_ptr<LevTrEntry>(new LevTrEntry(
+                stm->column_int(0),
                 Level(stm->column_int(1), stm->column_int(2), stm->column_int(3), stm->column_int(4)),
-                Trange(stm->column_int(5), stm->column_int(6), stm->column_int(7))));
+                Trange(stm->column_int(5), stm->column_int(6), stm->column_int(7)))));
     });
 }
 
-void SQLiteLevTr::prefetch_same_level(int id, std::function<void(int, const LevTrDesc&)> dest)
+const LevTrEntry* SQLiteLevTr::lookup_id(int id)
 {
-    char query[128];
-    snprintf(query, 128, "SELECT id, ltype1, l1, ltype2, l2, pind, p1, p2 FROM levtr WHERE ltype1=(SELECT ltype1 FROM levtr WHERE id=%d)", id);
-    auto stm = conn.sqlitestatement(query);
-    stm->execute([&]() {
-        dest(
-            stm->column_int(0),
-            LevTrDesc(
-                Level(stm->column_int(1), stm->column_int(2), stm->column_int(3), stm->column_int(4)),
-                Trange(stm->column_int(5), stm->column_int(6), stm->column_int(7))));
-    });
-}
-
-levtrs_t::iterator SQLiteLevTr::lookup_id(State& st, int id)
-{
-    auto res = st.levtr_ids.find(id);
-    if (res != st.levtr_ids.end())
-        return res->second;
+    // First look it up in the transaction cache
+    const LevTrEntry* res = cache.find_entry(id);
+    if (res) return res;
 
     sdstm->bind(id);
-    bool found = false;
-    levtrs_t::iterator new_res;
     sdstm->execute_one([&]() {
-        LevTrDesc desc;
-
-        desc.level.ltype1 = sdstm->column_int(0);
-        desc.level.l1 = sdstm->column_int(1);
-        desc.level.ltype2 = sdstm->column_int(2);
-        desc.level.l2 = sdstm->column_int(3);
-
-        desc.trange.pind = sdstm->column_int(4);
-        desc.trange.p1 = sdstm->column_int(5);
-        desc.trange.p2 = sdstm->column_int(6);
-
-        LevTrState sst;
-        sst.id = id;
-        sst.is_new = false;
-        new_res = st.add_levtr(desc, sst);
-        found = true;
+        std::unique_ptr<LevTrEntry> e(new LevTrEntry);
+        e->id = id;
+        e->level.ltype1 = sdstm->column_int(0);
+        e->level.l1 = sdstm->column_int(1);
+        e->level.ltype2 = sdstm->column_int(2);
+        e->level.l2 = sdstm->column_int(3);
+        e->trange.pind = sdstm->column_int(4);
+        e->trange.p1 = sdstm->column_int(5);
+        e->trange.p2 = sdstm->column_int(6);
+        res = cache.insert(move(e));
     });
 
-    if (!found)
+    if (!res)
         error_notfound::throwf("levtr with id %d not found in the database", id);
 
-    return new_res;
+    return res;
 }
 
-levtrs_t::iterator SQLiteLevTr::obtain_id(State& state, const LevTrDesc& desc)
+int SQLiteLevTr::obtain_id(const LevTrEntry& desc)
 {
-    auto res = state.levtrs.find(desc);
-    if (res != state.levtrs.end())
-        return res;
+    int id = cache.find_id(desc);
+    if (id != MISSING_INT) return id;
 
     sstm->bind(
             desc.level.ltype1, desc.level.l1, desc.level.ltype2, desc.level.l2,
             desc.trange.pind, desc.trange.p1, desc.trange.p2);
 
-    LevTrState st;
-
     // If there is an existing record, use its ID and don't do an INSERT
-    bool found = false;
     sstm->execute_one([&]() {
-        st.id = sstm->column_int(0);
-        st.is_new = false;
-        found = true;
+        id = sstm->column_int(0);
     });
-    if (found)
-        return state.add_levtr(desc, st);
+    if (id != MISSING_INT)
+    {
+        cache.insert(desc, id);
+        return id;
+    }
 
     // Not found in the database, insert a new one
     istm->bind(
             desc.level.ltype1, desc.level.l1, desc.level.ltype2, desc.level.l2,
             desc.trange.pind, desc.trange.p1, desc.trange.p2);
     istm->execute();
-    st.id = conn.get_last_insert_id();
-    st.is_new = true;
-    return state.add_levtr(desc, st);
+    id = conn.get_last_insert_id();
+    cache.insert(desc, id);
+    return id;
 }
 
 void SQLiteLevTr::_dump(std::function<void(int, const Level&, const Trange&)> out)

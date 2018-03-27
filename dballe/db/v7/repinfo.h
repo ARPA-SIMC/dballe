@@ -86,16 +86,18 @@ struct Repinfo
      * Fill repinfo information in a Record based on the repinfo entry with the
      * given ID
      */
-    void to_record(int id, Record& rec);
+    // FIXME: still used?
+    void to_record(const std::string& report, Record& rec);
 
     /// Get the rep_memo for a given ID; throws if id is not valud
+    // FIXME: use std::string?
     const char* get_rep_memo(int id);
 
     /// Get the ID for a given rep_memo; returns -1 if rep_memo is not valid
     int get_id(const char* rep_memo);
 
     /// Get the priority for a given ID; returns INT_MAX if id is not valid
-    int get_priority(int id);
+    int get_priority(const std::string& report);
 
     /**
      * Update the report type information in the database using the data from the
@@ -138,6 +140,12 @@ struct Repinfo
     /// Dump the entire contents of the database to an output stream
     virtual void dump(FILE* out) = 0;
 
+    /** Reread the repinfo cache from the database
+     * FIXME: needed when rolling back a transaction, won't be needed anymore
+     * when repinfo is moved to Transaction instead of db
+     */
+    virtual void read_cache() = 0;
+
 protected:
     /** Cache of table entries */
     std::vector<repinfo::Cache> cache;
@@ -177,9 +185,6 @@ protected:
 
     /// Insert an entry using the new_* fields of \a entry
     virtual void insert_entry(const repinfo::Cache& entry) = 0;
-
-    /// Reread the repinfo cache from the database
-    virtual void read_cache() = 0;
 
     /// Create an automatic entry for a missing memo, and insert it in the database
     virtual void insert_auto_entry(const char* memo) = 0;

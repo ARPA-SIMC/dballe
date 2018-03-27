@@ -31,7 +31,7 @@ Errors can be handled by checking the return value of every function:
 
 ```fortran
       ! Example error handling
-      ierr = idba_presentati(dbhandle, "dsn", "user", "password")
+      ierr = idba_presentati(dbhandle, "dburl")
       if (ierr.ne.0) then
            ! handle the error...
       end if
@@ -149,7 +149,7 @@ This code will open a connection with DB-All.e, then it will start a session:
 
 ```fortran
       ! Connect to the database and get a handle to work with it
-      ierr = idba_presentati(dbhandle, "url", "ignored", "ignored")
+      ierr = idba_presentati(dbhandle, "url")
       ierr = idba_preparati(dbhandle, handle, "read", "read", "read")
 
       ! ...do your work...

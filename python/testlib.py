@@ -43,7 +43,7 @@ def fill_volnd(db):
     rattr = not_so_random(2)
 
     # Wipe the test database
-    db.reset()
+    db.remove_all()
 
     attrs = dballe.Record()
     rec = dballe.Record(mobile=0)
@@ -136,14 +136,17 @@ class DballeDBMixin(object):
         if not hasattr(self, "assertCountEqual"):
             self.assertCountEqual = self.assertItemsEqual
 
+    def get_db(self):
+        db = dballe.DB.connect_test()
+        db.reset()
+        return db
+
     def setUp(self):
         if os.path.exists("test.sqlite"):
             os.unlink("test.sqlite")
         self.orig_db_format = dballe.DB.get_default_format()
         dballe.DB.set_default_format(self.DB_FORMAT)
-        self.db = dballe.DB.connect_test()
-        self.db.connect_test();
-        self.db.reset()
+        self.db = self.get_db()
 
     def tearDown(self):
         self.db = None

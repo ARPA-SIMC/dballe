@@ -15,53 +15,41 @@ using namespace std;
 
 namespace {
 
-struct Fixture : DriverFixture
+struct Fixture : public EmptyTransactionFixture<V6DB>
 {
-    using DriverFixture::DriverFixture;
+    using EmptyTransactionFixture::EmptyTransactionFixture;
 
-    unique_ptr<db::v6::DataV6> data;
-
-    void reset_data()
+    void create_db() override
     {
-        auto st = driver->create_stationv6();
-        auto lt = driver->create_levtrv6();
+        EmptyTransactionFixture::create_db();
 
-        int added, deleted, updated;
-        driver->create_repinfov6()->update(nullptr, &added, &deleted, &updated);
+        auto& st = db->station();
+        auto& lt = db->lev_tr();
 
         // Insert a mobile station
-        wassert(actual(st->obtain_id(4500000, 1100000, "ciao")) == 1);
+        wassert(actual(st.obtain_id(4500000, 1100000, "ciao")) == 1);
 
         // Insert a fixed station
-        wassert(actual(st->obtain_id(4600000, 1200000)) == 2);
+        wassert(actual(st.obtain_id(4600000, 1200000)) == 2);
 
         // Insert a lev_tr
-        wassert(actual(lt->obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);
+        wassert(actual(lt.obtain_id(Level(1, 2, 0, 3), Trange(4, 5, 6))) == 1);
 
         // Insert another lev_tr
-        wassert(actual(lt->obtain_id(Level(2, 3, 1, 4), Trange(5, 6, 7))) == 2);
-    }
-
-    void test_setup()
-    {
-        DriverFixture::test_setup();
-        data = driver->create_datav6();
-        reset_data();
+        wassert(actual(lt.obtain_id(Level(2, 3, 1, 4), Trange(5, 6, 7))) == 2);
     }
 };
 
 
-class Tests : public DBFixtureTestCase<Fixture>
+class Tests : public FixtureTestCase<Fixture>
 {
-    using DBFixtureTestCase::DBFixtureTestCase;
+    using FixtureTestCase::FixtureTestCase;
 
     void register_tests() override
     {
         add_method("insert", [](Fixture& f) {
             using namespace dballe::db::v6;
-            auto& da = *f.data;
-
-            auto t = f.conn->transaction();
+            auto& da = f.db->data();
 
             Var var(varinfo(WR_VAR(0, 1, 2)));
 
@@ -71,7 +59,7 @@ class Tests : public DBFixtureTestCase<Fixture>
                 vars.datetime = Datetime(2001, 2, 3, 4, 5, 6);
                 var.seti(value);
                 vars.add(&var, 1);
-                da.insert(*t, vars, update);
+                da.insert(*f.tr, vars, update);
             };
 
             // Insert a datum
@@ -93,7 +81,7 @@ class Tests : public DBFixtureTestCase<Fixture>
                 vars.datetime = Datetime(2002, 3, 4, 5, 6, 7);
                 Var var(varinfo(WR_VAR(0, 1, 2)), 234);
                 vars.add(&var, 2);
-                da.insert(*t, vars, DataV6::ERROR);
+                da.insert(*f.tr, vars, DataV6::ERROR);
                 wassert(actual(vars[0].id_data) == 2);
                 wassert(actual(vars[0].needs_insert()).isfalse());
                 wassert(actual(vars[0].inserted()).istrue());
@@ -160,18 +148,16 @@ class Tests : public DBFixtureTestCase<Fixture>
                     wassert(actual(e.what()).contains("refusing to overwrite existing data"));
                 }
             }
-
-            t->commit();
         });
     }
 };
 
-Tests tg1("db_v6_data_sqlite", "SQLITE", db::V6);
+Tests tg1("db_v6_data_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests tg3("db_v6_data_postgresql", "POSTGRESQL", db::V6);
+Tests tg3("db_v6_data_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests tg4("db_v6_data_mysql", "MYSQL", db::V6);
+Tests tg4("db_v6_data_mysql", "MYSQL");
 #endif
 
 }

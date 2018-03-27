@@ -12,44 +12,15 @@ using namespace std;
 
 namespace {
 
-struct Fixture : DriverFixture
+class Tests : public FixtureTestCase<EmptyTransactionFixture<V6DB>>
 {
-    using DriverFixture::DriverFixture;
-
-    unique_ptr<db::v6::Station> station;
-
-    void reset_station()
-    {
-        if (conn->has_table("station"))
-            driver->connection.execute("DELETE FROM station");
-
-        switch (format)
-        {
-            case db::V5: throw error_unimplemented("v5 db is not supported");
-            case db::V6:
-                station = driver->create_stationv6();
-                break;
-            default:
-                throw error_consistency("cannot test station on the current DB format");
-        }
-    }
-
-    void test_setup()
-    {
-        DriverFixture::test_setup();
-        reset_station();
-    }
-};
-
-class Tests : public DBFixtureTestCase<Fixture>
-{
-    using DBFixtureTestCase::DBFixtureTestCase;
+    using FixtureTestCase::FixtureTestCase;
 
     void register_tests() override
     {
         add_method("insert", [](Fixture& f) {
             // Insert some values and try to read them again
-            auto& st = *f.station;
+            auto& st = f.db->station();
             bool inserted;
 
             // Insert a mobile station
@@ -73,12 +44,12 @@ class Tests : public DBFixtureTestCase<Fixture>
     }
 };
 
-Tests test_sqlite("db_v6_station_sqlite", "SQLITE", db::V6);
+Tests test_sqlite("db_v6_station_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests test_psql("db_v6_station_postgresql", "POSTGRESQL", db::V6);
+Tests test_psql("db_v6_station_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests test_mysql("db_v6_station_mysql", "MYSQL", db::V6);
+Tests test_mysql("db_v6_station_mysql", "MYSQL");
 #endif
 
 }

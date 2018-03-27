@@ -52,7 +52,7 @@ check_missing_msg_SOURCES = test.f90 check_missing_msg.f90
 check_missing_msg_LDADD = libdballef.la -lpopt
 check_missing_msg_FCFLAGS = -g
 
-check_PROGRAMS += check_real0 check_range check_fdballe check_attrs check_missing check_segfault1 check_multiplehandler check_spiegab check_messages
+check_PROGRAMS += check_real0 check_range check_fdballe check_attrs check_missing check_segfault1 check_multiplehandler check_spiegab check_messages check_transactions1
 
 check_real0_SOURCES = $(dbtestlib) check_real0.f90
 check_real0_LDADD = libdballef.la -lpopt
@@ -93,6 +93,10 @@ check_messages_stdinstdout_FCFLAGS = -g
 check_multiplehandler_SOURCES = $(dbtestlib) check_multiplehandler.f90
 check_multiplehandler_LDADD = libdballef.la -lpopt
 check_multiplehandler_FCFLAGS = -g
+
+check_transactions1_SOURCES = $(dbtestlib) check_transactions1.f90
+check_transactions1_LDADD = libdballef.la -lpopt
+check_transactions1_FCFLAGS = -g
 
 
 noinst_PROGRAMS = dumpmsg_dballe mkmsg mkmsg-sca genattr

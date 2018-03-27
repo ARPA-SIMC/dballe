@@ -12,7 +12,6 @@ extern "C" {
 typedef struct {
     PyObject_HEAD
     dballe::Record* rec;
-    bool station_context;
 } dpy_Record;
 
 PyAPI_DATA(PyTypeObject) dpy_Record_Type;
@@ -24,6 +23,26 @@ PyAPI_DATA(PyTypeObject) dpy_Record_Type;
 
 namespace dballe {
 namespace python {
+
+class RecordAccess
+{
+protected:
+    dballe::Record* temp = nullptr;
+    dballe::Record* result = nullptr;
+
+public:
+    RecordAccess() = default;
+    RecordAccess(const RecordAccess&) = delete;
+    RecordAccess(RecordAccess&&) = delete;
+    ~RecordAccess();
+    RecordAccess& operator=(const RecordAccess&) = delete;
+    RecordAccess& operator=(RecordAccess&&) = delete;
+
+    int init(PyObject*);
+
+    operator dballe::Record&() { return *result; }
+    operator const dballe::Record&() const { return *result; }
+};
 
 dpy_Record* record_create();
 

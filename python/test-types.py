@@ -7,8 +7,10 @@ from __future__ import unicode_literals
 import dballe
 import datetime
 import unittest
+import sys
 import warnings
 
+@unittest.skipIf(sys.version_info[0] < 3, "python3 only")
 class TestLevel(unittest.TestCase):
     def testCreateEmpty(self):
         # structseq constructors have two arguments: sequence, dict=NULL)
@@ -30,6 +32,7 @@ class TestLevel(unittest.TestCase):
         self.assertEqual(l.l2, 4)
 
 
+@unittest.skipIf(sys.version_info[0] < 3, "python3 only")
 class TestTrange(unittest.TestCase):
     def testCreateEmpty(self):
         t = dballe.Trange((None, None, None))
@@ -46,12 +49,13 @@ class TestTrange(unittest.TestCase):
         self.assertEqual(t.p2, 3)
 
 
+@unittest.skipIf(sys.version_info[0] < 3, "python3 only")
 class TestStation(unittest.TestCase):
     def testCreateEmpty(self):
         t = dballe.Station((None, None, None, None, None))
         self.assertEqual(t, (None, None, None, None, None))
         self.assertIsNone(t.report)
-        self.assertIsNone(t.ana_id)
+        self.assertIsNone(t.id)
         self.assertIsNone(t.lat)
         self.assertIsNone(t.lon)
         self.assertIsNone(t.ident)
@@ -60,7 +64,7 @@ class TestStation(unittest.TestCase):
         t = dballe.Station(("foo", 2, 3.0, 4.0, "bar"))
         self.assertEqual(t, ("foo", 2, 3.0, 4.0, "bar"))
         self.assertEqual(t.report, "foo")
-        self.assertEqual(t.ana_id, 2)
+        self.assertEqual(t.id, 2)
         self.assertEqual(t.lat, 3.0)
         self.assertEqual(t.lon, 4.0)
         self.assertEqual(t.ident, "bar")

@@ -15,6 +15,7 @@ except ImportError:
     pass
 import sys
 import inspect
+import wreport
 import dballe
 import dballe.volnd
 import dballe.rconvert
@@ -25,7 +26,7 @@ def print_indented(spaces, *args):
         for line in s.split("\n"):
             for i in range(1,spaces):
                 sys.stdout.write(" ")
-            sys.stdout.write(line)
+            sys.stdout.write(line.replace("wreport.", "dballe."))
             sys.stdout.write("\n")
 
 c_argspecs = {
@@ -39,6 +40,7 @@ c_argspecs = {
     "Var.enq": "()",
     "Var.get": "(default=None)",
     "Var.format": "(default='')",
+    "Record.to_dict": "()",
     "Record.clear": "()",
     "Record.clear_vars": "()",
     "Record.get": "(key, default=None)",
@@ -53,32 +55,47 @@ c_argspecs = {
     "Record.date_extremes": "()",
     "Record.set_station_context": "()",
     "Record.set_from_string": "(str)",
-    "DB.connect": "(dsn, user='', password='')",
-    "DB.connect_from_file": "(filename)",
-    "DB.connect_from_url": "(url)",
+    "Transaction.commit": "()",
+    "Transaction.rollback": "()",
+    "DB.get_default_format": "()",
+    "DB.set_default_format": "(fmt: str)",
+    "DB.connect_from_file": "(filename: str)",
+    "DB.connect_from_url": "(url: str)",
     "DB.connect_test": "()",
-    "DB.is_url": "(string)",
+    "DB.is_url": "(url: str)",
+    "DB.transaction": "()",
     "DB.disappear": "()",
-    "DB.reset": "([repinfo_filename])",
-    "DB.insert": "(record, can_replace=False, can_add_stations=False)",
-    "DB.remove": "(query)",
+    "DB.reset": "(repinfo_filename: str=None)",
+    "DB.insert": "(record: Union[dballe.Record, dict], can_replace: bool=False, can_add_stations: bool=False)",
+    "DB.remove": "(query: Union[dballe.Record, dict])",
     "DB.vacuum": "()",
-    "DB.query_reports": "(query)",
-    "DB.query_stations": "(query)",
-    "DB.query_levels": "(query)",
-    "DB.query_tranges": "(query)",
-    "DB.query_variable_types": "(query)",
-    "DB.query_summary": "(query)",
-    "DB.query_data": "(query)",
-    "DB.query_datetime_extremes": "(query)",
-    "DB.attr_insert": "(varcode, attrs, reference_id=None, replace=True)",
-    "DB.attr_remove": "(varcode, reference_id, attrs=None)",
-    "DB.query_attrs": "(varcode, reference_id, attrs=None)",
-    "DB.load": "(file)",
-    "DB.export_to_file": "(query, format, filename, generic=False)",
-    "Cursor.next": "()",
-    "Cursor.query_attrs": "(attrs=None)",
+    "DB.query_attrs": "(query: Union[dballe.Record, dict])",
+    "Cursor.attr_query": "()",
 }
+
+for meth, args in [
+            ("attr_insert_data", "(data_id: int, attrs: Union[dballe.Record, dict])"),
+            ("attr_insert_station", "(data_id: int, attrs: Union[dballe.Record, dict])"),
+            ("attr_query_data", "(data_id: int)"),
+            ("attr_query_station", "(data_id: int)"),
+            ("attr_remove_data", "(data_id: int, attrs: Union[dballe.Record, dict]=None)"),
+            ("attr_remove_station", "(data_id: int, attrs: Union[dballe.Record, dict]=None)"),
+            ("export_to_file", "(query: Union[dballe.Record, dict], format: str, filename: str, generic: bool=False)"),
+            ("insert_data", "(record: Union[dballe.Record, dict], can_replace: bool=False, can_add_stations:bool=False)"),
+            ("insert_station_data", "(record: Union[dballe.Record, dict], can_replace: bool=False, can_add_stations:bool=False)"),
+            ("load", "(file: str)"),
+            ("query_data", "(query: Union[dballe.Record, dict])"),
+            ("query_station_data", "(query: Union[dballe.Record, dict])"),
+            ("query_stations", "(query: Union[dballe.Record, dict])"),
+            ("query_summary", "(query: Union[dballe.Record, dict])"),
+            ("remove", "(query: Union[dballe.Record, dict])"),
+            ("remove_all", "()"),
+            ("remove_station_data", "(query: Union[dballe.Record, dict])"),
+        ]:
+    c_argspecs["Transaction." + meth] = args
+    c_argspecs["DB." + meth] = args
+
+
 
 def document_class(cls):
     name = cls.__name__
@@ -86,7 +103,7 @@ def document_class(cls):
     print("dballe.{}".format(name))
     print("-" * (len(name) + 7))
     print()
-    print(inspect.getdoc(cls))
+    print(inspect.getdoc(cls).replace("wreport.", "dballe."))
     print()
     print("Members")
     print("```````")
@@ -106,13 +123,15 @@ def document(obj):
         print_indented(2, obj.__name__)
         print_indented(4, inspect.getdoc(obj))
 
-def document_members(cls):
+def document_members(cls, include=None, exclude=None):
     # List and classify members
     member_vars = []
     member_funcs = []
 
     for name, m in inspect.getmembers(cls):
         if name[0] == '_': continue
+        if include is not None and name not in include: continue
+        if exclude is not None and name in exclude: continue
         fullname = cls.__name__ + "." + name
         if inspect.isroutine(m) and (inspect.isfunction(m) or fullname in c_argspecs):
             member_funcs.append((fullname, name, m))
@@ -133,7 +152,7 @@ def document_members(cls):
         print(".. _{}.{}():".format(cls.__name__, name))
     print()
     for fullname, name, m in member_vars:
-        print_indented(2, name)
+        print_indented(2, "{}.{}".format(cls.__name__, name))
         print_indented(4, inspect.getdoc(m))
 
     # Document functions
@@ -144,7 +163,7 @@ def document_members(cls):
                 argspec = inspect.formatargspec(*inspect.getargspec(m))
             else:
                 argspec = ""
-        print_indented(2, name + argspec)
+        print_indented(2, "{}.{}{}".format(cls.__name__, name, argspec))
         print_indented(4, inspect.getdoc(m))
 
 
@@ -176,6 +195,10 @@ document_class(dballe.Vartable)
 document_class(dballe.Record)
 
 print("""
+Note that all the functions that take a dballe.Record, can also take a Python dict.
+""")
+
+print("""
 dballe.DB
 ---------
 
@@ -184,7 +207,64 @@ a DB is used to access the database.
 Its members are:
 """)
 
-document_members(dballe.DB)
+db_transaction_methods = ["attr_insert_data", "attr_insert_station", "attr_query_data", "attr_query_station", "attr_remove_data", "attr_remove_station", "export_to_file", "insert_data", "insert_station_data", "load", "query_data", "query_station_data", "query_stations", "query_summary", "remove", "remove_all", "remove_station_data"]
+db_deprecated_methods = ["attr_insert", "attr_remove", "query_attrs"]
+
+document_members(dballe.DB, exclude=db_transaction_methods + db_deprecated_methods)
+
+print("""
+These methods are the same in dballe.DB and dballe.Transaction. The version in
+dballe.DB is implemented by automatically creating a temporary transaction and
+running the dballe.Transaction method inside it.
+""")
+
+document_members(dballe.DB, include=db_transaction_methods)
+
+print("""
+dballe.Transaction
+------------------
+
+A Transaction is used to execute DB operations in an all-or-nothing fashion. In
+fact, most DB methods are implemented using a short-lived temporary
+transaction.
+
+You cannot have more than one active dballe.Transaction for each dballe.DB. An
+attempt to start a second one will result in an exception being raised. Note
+that dballe.DB functions like `insert_data` or `export_to_file` create a
+temporary transaction to run, and so they will also fail if a transaction is
+currently open. The general idea is that all database work should be done
+inside a transaction.
+
+Transactions run using the `REPEATABLE READ` isolation level of the underlying
+database. This usually means that modifications performed inside a transaction
+are not visible to other database connections until the transaction is
+committed. If a transaction is rolled back, all changes done with it are
+undone.
+
+Transactions can also be used as context managers, like this:
+
+::
+
+    with db.transaction() as t:
+        for i in range(10):
+            t.insert({
+                "lat": 44.5 + i, "lon": 11.4 + i, "level": (1,),
+                "trange": (254,), "date": datetime.datetime(2013, 4, 25, 12, 0, 0),
+                "B11101": 22.4 + i, "B12103": 17.2
+            })
+
+Its members are:
+
+""")
+
+document_members(dballe.Transaction, exclude=db_transaction_methods)
+
+print("""
+The dballe.Transaction methods are the same as those in dballe.DB. The version
+in dballe.DB is implemented by automatically creating a temporary transaction
+and running the dballe.Transaction method inside it.
+""")
+document_members(dballe.Transaction, include=db_transaction_methods)
 
 print("""
 
@@ -201,20 +281,21 @@ Examples:
     # The results always point to the same Record to avoid creating a new one
     # for every iteration: if you need to store them, use Record.copy()
     for rec in db.query_data(query):
-        print rec["lat"], rec["lon"], rec["var"], rec.var().format("undefined")
+        print(rec["lat"], rec["lon"], rec["var"], rec.var().format("undefined"))
 
     # Insert 2 new variables in the database
-    rec = dballe.Record(
-        lat=44.5, lon=11.4,
-        level=(1,),
-        trange=(254,),
-        date=datetime.datetime(2013, 4, 25, 12, 0, 0),
-        B11101=22.4,
-        B12103=17.2,
-    )
-    db.insert(rec)
+    db.insert({
+        "lat": 44.5, "lon": 11.4,
+        "level": (1,),
+        "trange": (254,),
+        "date": datetime.datetime(2013, 4, 25, 12, 0, 0),
+        "B11101": 22.4,
+        "B12103": 17.2,
+    })
+""")
 
 
+print("""
 dballe.Cursor
 -------------
 

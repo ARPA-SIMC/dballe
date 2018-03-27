@@ -1,5 +1,8 @@
 #include "config.h"
 #include "db/tests.h"
+#include "db/v6/db.h"
+#include "db/v7/db.h"
+#include "db/v7/transaction.h"
 #include "cmdline/dbadb.h"
 #include "core/arrayfile.h"
 #include "msg/codec.h"
@@ -14,16 +17,31 @@ using namespace std;
 
 namespace {
 
-class Tests : public DBFixtureTestCase<DBFixture>
+template<typename DB>
+class Tests : public FixtureTestCase<DBFixture<DB>>
 {
-    using DBFixtureTestCase::DBFixtureTestCase;
+    typedef DBFixture<DB> Fixture;
+    using FixtureTestCase<Fixture>::FixtureTestCase;
 
     void register_tests() override;
 };
 
-void Tests::register_tests() {
+Tests<V6DB> tg2("cmdline_dbadb_v6_sqlite", "SQLITE");
+Tests<V7DB> tg2a("cmdline_dbadb_v7_sqlite", "SQLITE");
+#ifdef HAVE_LIBPQ
+Tests<V6DB> tg6("cmdline_dbadb_v6_postgresql", "POSTGRESQL");
+Tests<V7DB> tg6a("cmdline_dbadb_v7_postgresql", "POSTGRESQL");
+#endif
+#ifdef HAVE_MYSQL
+Tests<V6DB> tg8("cmdline_dbadb_v6_mysql", "MYSQL");
+Tests<V7DB> tg8a("cmdline_dbadb_v7_mysql", "MYSQL");
+#endif
 
-add_method("import", [](Fixture& f) {
+
+template<typename DB>
+void Tests<DB>::register_tests() {
+
+this->add_method("import", [](Fixture& f) {
     Dbadb dbadb(*f.db);
 
     // Import a synop
@@ -54,7 +72,7 @@ add_method("import", [](Fixture& f) {
     wassert(actual(var->enq<std::string>()) == "ship");
 });
 
-add_method("issue62", [](Fixture& f) {
+this->add_method("issue62", [](Fixture& f) {
     // https://github.com/ARPA-SIMC/dballe/issues/62
     Dbadb dbadb(*f.db);
 
@@ -79,17 +97,5 @@ add_method("issue62", [](Fixture& f) {
 });
 
 }
-
-Tests tg1("cmdline_dbadb_mem", nullptr, db::MEM);
-Tests tg2("cmdline_dbadb_v6_sqlite", "SQLITE", db::V6);
-Tests tg2a("cmdline_dbadb_v7_sqlite", "SQLITE", db::V7);
-#ifdef HAVE_LIBPQ
-Tests tg6("cmdline_dbadb_v6_postgresql", "POSTGRESQL", db::V6);
-Tests tg6a("cmdline_dbadb_v7_postgresql", "POSTGRESQL", db::V7);
-#endif
-#ifdef HAVE_MYSQL
-Tests tg8("cmdline_dbadb_v6_mysql", "MYSQL", db::V6);
-Tests tg8a("cmdline_dbadb_v7_mysql", "MYSQL", db::V7);
-#endif
 
 }

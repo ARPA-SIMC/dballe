@@ -68,7 +68,7 @@ PyStructSequence_Desc dpy_trange_desc = {
 
 PyStructSequence_Field dpy_station_fields[] = {
     { "report", "rep_memo for this station" },
-    { "ana_id", "Database ID of the station" },
+    { "id", "Database ID of the station" },
     { "lat", "Station latitude" },
     { "lon", "Station longitude" },
     { "ident", "Mobile station identifier" },
@@ -365,7 +365,7 @@ PyObject* station_to_python(const Station& st)
     else
         return nullptr;
 
-    if (PyObject* v = dballe_int_to_python(st.ana_id))
+    if (PyObject* v = dballe_int_to_python(st.id))
         PyStructSequence_SET_ITEM((PyObject*)res, 1, v);
     else
         return nullptr;
@@ -397,7 +397,7 @@ PyObject* station_to_python(const Station& st)
     else
         return NULL;
 
-    if (PyObject* v = dballe_int_to_python(st.ana_id))
+    if (PyObject* v = dballe_int_to_python(st.id))
         PyTuple_SET_ITEM((PyObject*)res, 1, v);
     else
         return nullptr;
@@ -432,7 +432,7 @@ int station_from_python(PyObject* o, Station& out)
     {
         Station res;
         if (int err = string_from_python(PyStructSequence_GET_ITEM(o, 0), res.report)) return err;
-        if (int err = dballe_int_from_python(PyStructSequence_GET_ITEM(o, 1), res.ana_id)) return err;
+        if (int err = dballe_int_from_python(PyStructSequence_GET_ITEM(o, 1), res.id)) return err;
 
         double dlat, dlon;
         if (int err = double_from_python(PyStructSequence_GET_ITEM(o, 2), dlat)) return err;
@@ -464,7 +464,7 @@ int station_from_python(PyObject* o, Station& out)
 
         Station res;
         if (int err = string_from_python(PyTuple_GET_ITEM(o, 0), res.report)) return err;
-        if (int err = dballe_int_from_python(PyTuple_GET_ITEM(o, 1), res.ana_id)) return err;
+        if (int err = dballe_int_from_python(PyTuple_GET_ITEM(o, 1), res.id)) return err;
 
         double dlat, dlon;
         if (int err = double_from_python(PyTuple_GET_ITEM(o, 2), dlat)) return err;

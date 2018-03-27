@@ -80,14 +80,14 @@ void trace_init()
 void log_presentati_url(int handle, const char* chosen_dsn)
 {
     string arg1 = c_escape(chosen_dsn);
-    fprintf(trace_file, "auto_ptr<DB> db%d(DB::connect_from_url(\"%s\"));\n", handle, arg1.c_str());
+    fprintf(trace_file, "auto db%d(DB::connect_from_url(\"%s\"));\n", handle, arg1.c_str());
 }
 
 void log_presentati_dsn(int handle, const char* dsn, const char* user, const char* pwd)
 {
     string arg1 = c_escape(dsn);
     string arg2 = c_escape(user);
-    fprintf(trace_file, "auto_ptr<DB> db%d(DB::connect(\"%s\", \"%s\", \"xxx\"));\n",
+    fprintf(trace_file, "auto db%d(DB::connect(\"%s\", \"%s\", \"xxx\"));\n",
             handle, arg1.c_str(), arg2.c_str());
 }
 

@@ -153,7 +153,7 @@ static void build_update_query(PostgreSQLConnection& conn, Querybuf& qb, bool wi
             if (!v.needs_update()) continue;
             qb.start_list_item();
             qb.append("(");
-            qb.append_int(v.cur->second.id);
+            qb.append_int(v.id);
             qb.append(",");
             conn.append_escaped(qb, v.var->enqc());
             qb.append(",");
@@ -178,7 +178,7 @@ static void build_update_query(PostgreSQLConnection& conn, Querybuf& qb, bool wi
             if (!v.needs_update()) continue;
             qb.start_list_item();
             qb.append("(");
-            qb.append_int(v.cur->second.id);
+            qb.append_int(v.id);
             qb.append(",");
             conn.append_escaped(qb, v.var->enqc());
             qb.append(")");
@@ -190,22 +190,20 @@ static void build_update_query(PostgreSQLConnection& conn, Querybuf& qb, bool wi
 
 void PostgreSQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
 {
-    // Scan vars adding the State pointer to the current database values, if any
-    vars.map_known_values();
+    vars.look_for_missing_ids();
 
     // Load the missing varcodes into the state and into vars
     if (!vars.to_query.empty())
     {
-        Result existing(conn.exec_prepared("station_datav7_select", vars.shared_context.station->second.id));
+        Result existing(conn.exec_prepared("station_datav7_select", vars.shared_context.station));
         for (unsigned row = 0; row < existing.rowcount(); ++row)
         {
-            StationValueState vs(existing.get_int4(row, 0), false);
+            int id = existing.get_int4(row, 0);
             wreport::Varcode code = (Varcode)existing.get_int4(row, 1);
-
-            auto cur = t.state.add_stationvalue(StationValueDesc(vars.shared_context.station, code), vs);
+            //cache.insert(unique_ptr<StationValueEntry>(new StationValueEntry(id, vars.shared_context.station, code)));
             auto vi = std::find_if(vars.to_query.begin(), vars.to_query.end(), [code](const bulk::StationVar* v) { return v->var->code() == code; });
-            if (vi == vars.to_query.end()) return;
-            (*vi)->cur = cur;
+            if (vi == vars.to_query.end()) continue;
+            (*vi)->id = id;
             vars.to_query.erase(vi);
         }
     }
@@ -236,7 +234,7 @@ void PostgreSQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::Ins
     if (vars.do_insert)
     {
         char lead[64];
-        snprintf(lead, 64, "(DEFAULT,%d,", vars.shared_context.station->second.id);
+        snprintf(lead, 64, "(DEFAULT,%d,", vars.shared_context.station);
 
         Querybuf dq(512);
         dq.append("INSERT INTO station_data (id, id_station, code, value, attrs) VALUES ");
@@ -275,11 +273,7 @@ void PostgreSQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::Ins
                continue;
             }
 
-            StationValueState vs;
-            vs.id = res.get_int4(row, 0);
-            vs.is_new = true;
-
-            v->cur = t.state.add_stationvalue(StationValueDesc(vars.shared_context.station, v->var->code()), vs);
+            v->id = res.get_int4(row, 0);
             v->set_inserted();
 
             ++v;
@@ -311,25 +305,23 @@ PostgreSQLData::PostgreSQLData(PostgreSQLConnection& conn)
 
 void PostgreSQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
 {
-    // Scan vars adding the State pointer to the current database values, if any
-    vars.map_known_values();
+    vars.look_for_missing_ids();
 
     // Load the missing varcodes into the state and into vars
     // If the station has just been inserted, then there is nothing in the
     // database that is not already in State, and we can skip this part.
     if (!vars.to_query.empty())
     {
-        Result existing(conn.exec_prepared("datav7_select", vars.shared_context.station->second.id, vars.shared_context.datetime));
+        Result existing(conn.exec_prepared("datav7_select", vars.shared_context.station, vars.shared_context.datetime));
         for (unsigned row = 0; row < existing.rowcount(); ++row)
         {
-            ValueState vs(existing.get_int4(row, 0), false);
+            int id = existing.get_int4(row, 0);
             int id_levtr = existing.get_int4(row, 1);
             wreport::Varcode code = (Varcode)existing.get_int4(row, 2);
-            auto cur = t.state.add_value(ValueDesc(vars.shared_context.station, id_levtr, vars.shared_context.datetime, code), vs);
-
-            auto vi = std::find_if(vars.to_query.begin(), vars.to_query.end(), [id_levtr, code](const bulk::Var* v) { return v->levtr.id == id_levtr && v->var->code() == code; });
+            //cache.insert(unique_ptr<ValueEntry>(new ValueEntry(id, vars.shared_context.station, id_levtr, vars.shared_context.datetime, code)));
+            auto vi = std::find_if(vars.to_query.begin(), vars.to_query.end(), [id_levtr, code](const bulk::Var* v) { return v->id_levtr == id_levtr && v->var->code() == code; });
             if (vi == vars.to_query.end()) continue;
-            (*vi)->cur = cur;
+            (*vi)->id = id;
             vars.to_query.erase(vi);
         }
     }
@@ -362,7 +354,7 @@ void PostgreSQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars
         const Datetime& dt = vars.shared_context.datetime;
         char val_lead[64];
         snprintf(val_lead, 64, "(DEFAULT,%d,'%04d-%02d-%02d %02d:%02d:%02d',",
-                    vars.shared_context.station->second.id,
+                    vars.shared_context.station,
                     dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
 
         Querybuf dq(512);
@@ -373,7 +365,7 @@ void PostgreSQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars
             if (!v.needs_insert()) continue;
             dq.start_list_item();
             dq.append(val_lead);
-            dq.append_int(v.levtr.id);
+            dq.append_int(v.id_levtr);
             dq.append(",");
             dq.append_int(v.var->code());
             dq.append(",");
@@ -403,9 +395,10 @@ void PostgreSQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars
                ++v;
                continue;
             }
-            ValueState vs(res.get_int4(row, 0), true);
-            v->cur = t.state.add_value(ValueDesc(vars.shared_context.station, v->levtr.id, dt, v->var->code()), vs);
+
+            v->id = res.get_int4(row, 0);
             v->set_inserted();
+
             ++v;
             ++row;
         }

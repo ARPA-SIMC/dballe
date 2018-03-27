@@ -21,10 +21,10 @@ struct Driver : public v7::Driver
     std::unique_ptr<v7::LevTr> create_levtr() override;
     std::unique_ptr<v7::Data> create_data() override;
     std::unique_ptr<v7::StationData> create_station_data() override;
-    void run_station_query(const v7::StationQueryBuilder& qb, std::function<void(int id, const StationDesc&)>) override;
-    void run_station_data_query(const v7::DataQueryBuilder& qb, std::function<void(int id_station, const StationDesc& station, int id_data, std::unique_ptr<wreport::Var> var)>) override;
-    void run_data_query(const v7::DataQueryBuilder& qb, std::function<void(int id_station, const StationDesc& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)>) override;
-    void run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<void(int id_station, const StationDesc& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)>) override;
+    void run_station_query(const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)>) override;
+    void run_station_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var)>) override;
+    void run_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)>) override;
+    void run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)>) override;
     void create_tables_v7() override;
     void delete_tables_v7() override;
     void vacuum_v7() override;

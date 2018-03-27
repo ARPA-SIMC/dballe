@@ -1,6 +1,7 @@
 #include "values.h"
 #include "record.h"
 #include <arpa/inet.h>
+#include <ostream>
 
 using namespace std;
 using namespace wreport;
@@ -12,16 +13,16 @@ void Station::set_from_record(const Record& rec)
     if (const Var* var = rec.get("ana_id"))
     {
         // If we have ana_id, the rest is optional
-        ana_id = var->enqi();
+        id = var->enqi();
         coords.lat = rec.enq("lat", MISSING_INT);
-        coords.lat = rec.enq("lon", MISSING_INT);
+        coords.lon = rec.enq("lon", MISSING_INT);
         ident.clear();
         if (const Var* var = rec.get("ident"))
             ident = var->isset() ? var->enqc() : 0;
         report = rec.enq("rep_memo", "");
     } else {
         // If we do not have ana_id, we require at least lat, lon and rep_memo
-        ana_id = MISSING_INT;
+        id = MISSING_INT;
 
         if (const Var* var = rec.get("lat"))
             coords.lat = var->enqi();
@@ -48,12 +49,32 @@ void Station::set_from_record(const Record& rec)
     }
 }
 
+void Station::to_record(Record& rec) const
+{
+    if (id != MISSING_INT)
+        rec.set("ana_id", id);
+    else
+        rec.unset("ana_id");
+
+    rec.set("rep_memo", report);
+
+    rec.set_coords(coords);
+    if (ident.is_missing())
+    {
+        rec.unset("ident");
+        rec.seti("mobile", 0);
+    } else {
+        rec.setc("ident", ident);
+        rec.seti("mobile", 1);
+    }
+}
+
 void Station::print(FILE* out, const char* end) const
 {
-    if (ana_id == MISSING_INT)
+    if (id == MISSING_INT)
         fputs("- ", out);
     else
-        fprintf(out, "%d,", ana_id);
+        fprintf(out, "%d,", id);
 
     if (coords.is_missing())
         fputs("(-,-) ", out);
@@ -66,6 +87,16 @@ void Station::print(FILE* out, const char* end) const
         fputs(ident.get(), out);
 
     fputs(end, out);
+}
+
+std::ostream& operator<<(std::ostream& out, const Station& st)
+{
+    if (st.id == MISSING_INT)
+        out << "-,";
+    else
+        out << st.id << ",";
+
+    return out << st.coords << "," << st.ident;
 }
 
 void Sampling::set_from_record(const Record& rec)

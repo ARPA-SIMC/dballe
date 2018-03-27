@@ -1,6 +1,7 @@
 #include "config.h"
 #include "dballe/simple/msgapi.h"
 #include "dballe/simple/dbapi.h"
+#include "dballe/core/string.h"
 #include "dballe/db/db.h"
 
 #include <cstring>  // memset
@@ -67,19 +68,7 @@ using namespace std;
 
 struct HSession : public fortran::HBase
 {
-    DB* db;
-
-    void start()
-    {
-        fortran::HBase::start();
-        db = 0;
-    }
-
-    void stop()
-    {
-        if (db) delete db;
-        fortran::HBase::stop();
-    }
+    std::string url;
 };
 
 struct fortran::Handler<HSession, MAX_SESSION> hsess;
@@ -96,7 +85,8 @@ struct HSimple : public fortran::HBase
     }
     void stop()
     {
-        if (api) delete api;
+        delete api;
+        api = 0;
         fortran::HBase::stop();
     }
 };
@@ -130,8 +120,12 @@ extern "C" {
 /**
  * Connect to the database
  *
- * This function can be called more than once once to connect to different
+ * This function can be called more than once to connect to different
  * databases at the same time.
+ *
+ * The function expects to find a properly initialised DB-All.e database.
+ * Append `&wipe=true` to the end of the url to wipe any existing DB-All.e
+ * information from the database if it exists, then recreate it from scratch.
  *
  * @param url
  *   The URL of the database to use
@@ -165,7 +159,18 @@ int idba_presentati(int* dbahandle, const char* url)
         }
 
         IF_TRACING(fortran::log_presentati_url(*dbahandle, url));
-        hs.db = DB::connect_from_url(url).release();
+
+        hs.url = url;
+
+        std::string wipe = url_pop_query_string(hs.url, "wipe");
+        if (!wipe.empty())
+        {
+            // Disappear then reset, to allow migrating a db from V6 to V7
+            auto db = DB::connect_from_url(hs.url.c_str());
+            db->disappear();
+            db = DB::connect_from_url(hs.url.c_str());
+            db->reset();
+        }
 
         /* Open the database session */
         return fortran::success();
@@ -262,7 +267,9 @@ int idba_preparati(int dbahandle, int* handle, const char* anaflag, const char* 
         HSession& hs = hsess.get(dbahandle);
         HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_preparati(dbahandle, *handle, anaflag, dataflag, attrflag));
-        h.api = new fortran::DbAPI(*hs.db, anaflag, dataflag, attrflag);
+        auto db = DB::connect_from_url(hs.url.c_str());
+        auto tr = db->transaction();
+        h.api = new fortran::DbAPI(tr, anaflag, dataflag, attrflag);
 
         return fortran::success();
     } catch (error& e) {
