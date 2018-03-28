@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Enrico Zini <enrico@debian.org>
 Build-Depends: debhelper (>= 10), dh-python, dh-autoreconf,
   autotools-dev, pkg-config, doxygen, help2man,
-  libsqlite3-dev, libpq-dev, default-libmysqlclient-dev,
+  libsqlite3-dev (>= 3.14), libpq-dev, default-libmysqlclient-dev,
   libwreport-dev (>= 3.6), python-wreport, python3-wreport,
   libpopt-dev, gperf, liblua5.1-0-dev,
   gfortran | g77,
