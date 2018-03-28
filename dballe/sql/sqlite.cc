@@ -13,6 +13,7 @@ namespace sql {
 
 namespace {
 
+#if SQLITE_VERSION_NUMBER >= 3014000
 static int trace_callback(unsigned T, void* C, void* P,void* X)
 {
     switch (T)
@@ -38,6 +39,7 @@ static int trace_callback(unsigned T, void* C, void* P,void* X)
     }
     return 0;
 }
+#endif
 
 }
 
@@ -300,11 +302,13 @@ int SQLiteConnection::changes()
     return sqlite3_changes(db);
 }
 
+#if SQLITE_VERSION_NUMBER >= 3014000
 void SQLiteConnection::trace(unsigned mask)
 {
     if (sqlite3_trace_v2(db, mask, trace_callback, nullptr) != SQLITE_OK)
         error_sqlite::throwf(db, "Cannot set up SQLite tracing");
 }
+#endif
 
 SQLiteStatement::SQLiteStatement(SQLiteConnection& conn, const std::string& query)
     : conn(conn)
