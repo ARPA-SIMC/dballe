@@ -1,4 +1,4 @@
-%global releaseno 1
+%global releaseno 2
 
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
@@ -309,6 +309,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Wed Mar 28 2018 Daniele Branchini <dbranchini@arpae.it> - 7.30-2
+- dependency on newer sqlite is now conditional
+
 * Wed Mar 28 2018 Daniele Branchini <dbranchini@arpae.it> - 7.30-1
 - fixed #86, #67
 
