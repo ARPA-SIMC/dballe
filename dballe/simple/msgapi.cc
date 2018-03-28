@@ -21,9 +21,9 @@ MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
 {
     if (strchr(mode, 'r') != NULL)
     {
-        set_permissions("read", "read", "read");
+        perms = compute_permissions("read", "read", "read");
     } else if (strchr(mode, 'w') != NULL || strchr(mode, 'a') != NULL) {
-        set_permissions("write", "add", "write");
+        perms = compute_permissions("write", "add", "write");
     }
 
     if (strcasecmp(type, "BUFR") == 0)

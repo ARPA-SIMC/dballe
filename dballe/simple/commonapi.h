@@ -23,18 +23,23 @@ public:
         ATTR_REFERENCE = 3,
     };
 
-protected:
-	enum {
-		PERM_ANA_RO =		(1 << 0),
-		PERM_ANA_WRITE =	(1 << 1),
-		PERM_DATA_RO =		(1 << 2),
-		PERM_DATA_ADD =		(1 << 3),
-		PERM_DATA_WRITE =	(1 << 4),
-		PERM_ATTR_RO =		(1 << 5),
-		PERM_ATTR_WRITE	=	(1 << 6)
-	};
+    enum Permissions {
+        PERM_ANA_RO =       (1 << 0),
+        PERM_ANA_WRITE =    (1 << 1),
+        PERM_DATA_RO =      (1 << 2),
+        PERM_DATA_ADD =     (1 << 3),
+        PERM_DATA_WRITE =   (1 << 4),
+        PERM_ATTR_RO =      (1 << 5),
+        PERM_ATTR_WRITE =   (1 << 6)
+    };
 
-	int perms;
+    /**
+     * Set the permission bits, parsing the flags and doing consistency checks
+     */
+    static unsigned compute_permissions(const char* anaflag, const char* dataflag, const char* attrflag);
+
+protected:
+    unsigned perms;
     core::Record input;
     bool station_context = false;
     core::Record output;
@@ -54,11 +59,6 @@ protected:
 	// Last string returned by one of the spiega* functions, held here so
 	// that we can deallocate it when needed.
 	std::string cached_spiega;
-
-	/**
-	 * Set the permission bits, parsing the flags and doing consistency checks
-	 */
-	void set_permissions(const char* anaflag, const char* dataflag, const char* attrflag);
 
 	/**
 	 * Choose the input record to use for param.  Also, adjust param to remove

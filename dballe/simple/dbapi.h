@@ -45,6 +45,7 @@ protected:
 
 public:
     DbAPI(std::shared_ptr<db::Transaction> tr, const char* anaflag, const char* dataflag, const char* attrflag);
+    DbAPI(std::shared_ptr<db::Transaction> tr, unsigned perms);
     virtual ~DbAPI();
 
     int enqi(const char* param) override;

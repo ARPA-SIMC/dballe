@@ -91,9 +91,14 @@ struct OutputFile
 
 
 DbAPI::DbAPI(std::shared_ptr<db::Transaction> tr, const char* anaflag, const char* dataflag, const char* attrflag)
+    : DbAPI(tr, compute_permissions(anaflag, dataflag, attrflag))
+{
+}
+
+DbAPI::DbAPI(std::shared_ptr<db::Transaction> tr, unsigned perms)
     : tr(tr), ana_cur(0), query_cur(0), input_file(0), output_file(0)
 {
-    set_permissions(anaflag, dataflag, attrflag);
+    this->perms = perms;
 }
 
 DbAPI::~DbAPI()

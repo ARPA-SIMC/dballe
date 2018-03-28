@@ -267,9 +267,11 @@ int idba_preparati(int dbahandle, int* handle, const char* anaflag, const char* 
         HSession& hs = hsess.get(dbahandle);
         HSimple& h = hsimp.get(*handle);
         IF_TRACING(h.trace.log_preparati(dbahandle, *handle, anaflag, dataflag, attrflag));
+        unsigned perms = fortran::DbAPI::compute_permissions(anaflag, dataflag, attrflag);
+        bool readonly = !(perms & (fortran::DbAPI::PERM_ANA_WRITE | fortran::DbAPI::PERM_DATA_ADD | fortran::DbAPI::PERM_DATA_WRITE | fortran::DbAPI::PERM_ATTR_WRITE));
         auto db = DB::connect_from_url(hs.url.c_str());
-        auto tr = db->transaction();
-        h.api = new fortran::DbAPI(tr, anaflag, dataflag, attrflag);
+        auto tr = db->transaction(readonly);
+        h.api = new fortran::DbAPI(tr, perms);
 
         return fortran::success();
     } catch (error& e) {

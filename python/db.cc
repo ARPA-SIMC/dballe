@@ -166,10 +166,14 @@ static PyObject* dpy_DB_reset(dpy_DB* self, PyObject *args)
     Py_RETURN_NONE;
 }
 
-static PyObject* dpy_DB_transaction(dpy_DB* self)
+static PyObject* dpy_DB_transaction(dpy_DB* self, PyObject *args)
 {
+    int readonly = 0;
+    if (!PyArg_ParseTuple(args, "|p", &readonly))
+        return NULL;
+
     try {
-        auto res = self->db->transaction();
+        auto res = self->db->transaction(readonly);
         return (PyObject*)transaction_create(move(res));
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -805,7 +809,7 @@ static PyMethodDef dpy_DB_methods[] = {
         "Create a DB for running the test suite, as configured in the test environment" },
     {"is_url",            (PyCFunction)dpy_DB_is_url, METH_VARARGS | METH_CLASS,
         "Checks if a string looks like a DB url" },
-    {"transaction",       (PyCFunction)dpy_DB_transaction, METH_NOARGS,
+    {"transaction",       (PyCFunction)dpy_DB_transaction, METH_VARARGS,
         "Create a new database transaction" },
     {"disappear",         (PyCFunction)dpy_DB_disappear, METH_NOARGS,
         "Remove all our traces from the database, if applicable." },
