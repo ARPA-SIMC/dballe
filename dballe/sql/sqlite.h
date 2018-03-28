@@ -54,7 +54,7 @@ public:
     void open_memory(int flags=SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
     void open_private_file(int flags=SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
 
-    std::unique_ptr<Transaction> transaction() override;
+    std::unique_ptr<Transaction> transaction(bool readonly=false) override;
     std::unique_ptr<SQLiteStatement> sqlitestatement(const std::string& query);
 
     bool has_table(const std::string& name) override;

@@ -272,11 +272,14 @@ struct PostgreSQLTransaction : public Transaction
     }
 };
 
-std::unique_ptr<Transaction> PostgreSQLConnection::transaction()
+std::unique_ptr<Transaction> PostgreSQLConnection::transaction(bool readonly)
 {
     // The default PostgreSQL isolation level is READ COMMITTED
     // https://www.postgresql.org/docs/9.2/static/sql-set-transaction.html
-    exec_no_data("BEGIN ISOLATION LEVEL REPEATABLE READ");
+    if (readonly)
+        exec_no_data("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
+    else
+        exec_no_data("BEGIN ISOLATION LEVEL REPEATABLE READ READ WRITE");
     return unique_ptr<Transaction>(new PostgreSQLTransaction(*this));
 }
 

@@ -267,7 +267,7 @@ public:
     void open_url(const std::string& connection_string);
     void open_test();
 
-    std::unique_ptr<Transaction> transaction() override;
+    std::unique_ptr<Transaction> transaction(bool readonly=false) override;
 
     /// Precompile a query
     void prepare(const std::string& name, const std::string& query);

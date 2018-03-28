@@ -176,7 +176,7 @@ public:
     // Run a query, with a remotely fetched result
     void exec_use(const std::string& query, std::function<void(const mysql::Row&)> dest);
 
-    std::unique_ptr<Transaction> transaction() override;
+    std::unique_ptr<Transaction> transaction(bool readonly=false) override;
     bool has_table(const std::string& name) override;
     std::string get_setting(const std::string& key) override;
     void set_setting(const std::string& key, const std::string& value) override;

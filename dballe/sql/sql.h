@@ -83,7 +83,7 @@ public:
      * The transaction will be controller by the returned Transaction object,
      * and will end when its destuctor is called.
      */
-    virtual std::unique_ptr<Transaction> transaction() = 0;
+    virtual std::unique_ptr<Transaction> transaction(bool readonly=false) = 0;
 
     /// Check if the database contains a table
     virtual bool has_table(const std::string& name) = 0;

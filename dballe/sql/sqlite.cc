@@ -228,8 +228,9 @@ struct SQLiteTransaction : public Transaction
     }
 };
 
-std::unique_ptr<Transaction> SQLiteConnection::transaction()
+std::unique_ptr<Transaction> SQLiteConnection::transaction(bool readonly)
 {
+    // readonly is currently ignored on sqlite
     exec("BEGIN");
     return unique_ptr<Transaction>(new SQLiteTransaction(*this));
 }

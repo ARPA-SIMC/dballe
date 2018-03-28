@@ -352,15 +352,15 @@ void DB::init_after_connect()
 {
 }
 
-std::shared_ptr<dballe::db::Transaction> DB::transaction()
+std::shared_ptr<dballe::db::Transaction> DB::transaction(bool readonly)
 {
-    auto res = conn->transaction();
+    auto res = conn->transaction(readonly);
     return make_shared<v6::Transaction>(dynamic_pointer_cast<v6::DB>(shared_from_this()), move(res));
 }
 
-std::shared_ptr<dballe::db::Transaction> DB::test_transaction()
+std::shared_ptr<dballe::db::Transaction> DB::test_transaction(bool readonly)
 {
-    auto res = conn->transaction();
+    auto res = conn->transaction(readonly);
     return make_shared<v6::TestTransaction>(dynamic_pointer_cast<v6::DB>(shared_from_this()), move(res));
 }
 

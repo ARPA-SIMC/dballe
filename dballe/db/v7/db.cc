@@ -54,15 +54,15 @@ v7::Driver& DB::driver()
     return *m_driver;
 }
 
-std::shared_ptr<dballe::db::Transaction> DB::transaction()
+std::shared_ptr<dballe::db::Transaction> DB::transaction(bool readonly)
 {
-    auto res = conn->transaction();
+    auto res = conn->transaction(readonly);
     return make_shared<v7::Transaction>(dynamic_pointer_cast<v7::DB>(shared_from_this()), move(res));
 }
 
-std::shared_ptr<dballe::db::Transaction> DB::test_transaction()
+std::shared_ptr<dballe::db::Transaction> DB::test_transaction(bool readonly)
 {
-    auto res = conn->transaction();
+    auto res = conn->transaction(readonly);
     return make_shared<v7::TestTransaction>(dynamic_pointer_cast<v7::DB>(shared_from_this()), move(res));
 }
 
