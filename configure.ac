@@ -173,7 +173,7 @@ dnl Check for wreport
 PKG_CHECK_MODULES(WREPORT,libwreport >= 3.6)
 
 dnl Check for sqlite3
-PKG_CHECK_MODULES(SQLITE3, sqlite3)
+PKG_CHECK_MODULES(SQLITE3, sqlite3 >= 3.14)
 
 
 dnl Check for libpq
