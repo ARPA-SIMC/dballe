@@ -13,7 +13,7 @@ then
     yum install -y yum-utils
     yum install -y yum-plugin-copr
     yum install -y git
-    yum copr enable -y pat1/simc
+    yum copr enable -y simc/stable
 elif [[ $image =~ ^fedora: ]]
 then
     pkgcmd="dnf"
@@ -22,7 +22,7 @@ then
     dnf install -y @buildsys-build
     dnf install -y 'dnf-command(builddep)'
     dnf install -y git
-    dnf copr enable -y pat1/simc
+    dnf copr enable -y simc/stable
 fi
 
 $builddep -y fedora/SPECS/dballe.spec
