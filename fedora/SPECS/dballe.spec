@@ -1,4 +1,6 @@
 %global releaseno 2
+# Note: define _srcarchivename in Travis build only.
+%{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
@@ -8,7 +10,7 @@ License: GPL
 Group: Applications/Meteo
 URL: https://github.com/ARPA-SIMC/dballe
 #Source0: %{name}-%{version}.tar.gz
-Source0: https://github.com/arpa-simc/%{name}/archive/v%{version}-%{releaseno}.tar.gz#/%{name}-%{version}-%{releaseno}.tar.gz
+Source0: https://github.com/arpa-simc/%{name}/archive/v%{version}-%{releaseno}.tar.gz#/%{srcarchivename}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 %if 0%{?rhel} == 7
 %define python3_vers python34
@@ -181,7 +183,7 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{?fedora:rpy
  These are the python bindings.
 
 %prep
-%setup -q -n %{name}-%{version}-%{releaseno}
+%setup -q -n %{srcarchivename}
 
 rm -rf %{py3dir}
 cp -a . %{py3dir}

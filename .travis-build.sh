@@ -29,13 +29,11 @@ $builddep -y fedora/SPECS/dballe.spec
 
 if [[ $image =~ ^fedora: || $image =~ ^centos: ]]
 then
-    pkgname=dballe-"$(rpmspec -q --qf="%{version}-%{release}\n" fedora/SPECS/dballe.spec | head -n1)"
+    pkgname=dballe-master
     mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
     cp fedora/SPECS/dballe.spec ~/rpmbuild/SPECS/dballe.spec
     git archive --prefix=$pkgname/ --format=tar HEAD | gzip -c > ~/rpmbuild/SOURCES/$pkgname.tar.gz
-    rpmbuild -ba ~/rpmbuild/SPECS/dballe.spec
-    find ~/rpmbuild/{RPMS,SRPMS}/ -name "${pkgname}*rpm" -exec cp -v {} . \;
-    # TODO upload ${pkgname}*.rpm to github release on deploy stage
+    rpmbuild -ba --define "srcarchivename $pkgname" ~/rpmbuild/SPECS/dballe.spec
 else
     autoreconf -ifv
     ./configure
