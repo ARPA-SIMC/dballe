@@ -29,7 +29,7 @@ $builddep -y fedora/SPECS/dballe.spec
 
 if [[ $image =~ ^fedora: || $image =~ ^centos: ]]
 then
-    pkgname=dballe-$(git describe --abbrev=0 --tags --match='v*' | sed -e 's,^v,,g')
+    pkgname=dballe-"$(rpmspec -q --qf="%{version}-%{release}\n" fedora/SPECS/dballe.spec | head -n1)"
     mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
     cp fedora/SPECS/dballe.spec ~/rpmbuild/SPECS/dballe.spec
     git archive --prefix=$pkgname/ --format=tar HEAD | gzip -c > ~/rpmbuild/SOURCES/$pkgname.tar.gz
