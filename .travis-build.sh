@@ -13,7 +13,7 @@ then
     yum install -y yum-utils
     yum install -y yum-plugin-copr
     yum install -y git
-    yum copr enable -y simc/stable
+    yum copr enable -y simc/stable epel-7
 elif [[ $image =~ ^fedora: ]]
 then
     pkgcmd="dnf"
