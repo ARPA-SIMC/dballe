@@ -480,6 +480,8 @@
  048076 [SIM] Simaroubacee                                               POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
  048077 [SIM] Umbellifere                                                POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
  048078 [SIM] Vitacee                                                    POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048079 [SIM] Corilacee_Carpino                                          POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048080 [SIM] Corilacee_Ostria                                           POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
  048128 [SIM] Conta Graminacee_Graminacee indistinte                     NUMERIC                    0            0  20 NUMERIC                   0          7
  048129 [SIM] Conta Betulacee_Ontano nero                                NUMERIC                    0            0  20 NUMERIC                   0          7
  048130 [SIM] Conta Betulacee_Betulla                                    NUMERIC                    0            0  20 NUMERIC                   0          7
@@ -558,3 +560,5 @@
  048203 [SIM] Conta Simaroubacee                                         NUMERIC                    0            0  20 NUMERIC                   0          7
  048204 [SIM] Conta Umbellifere                                          NUMERIC                    0            0  20 NUMERIC                   0          7
  048205 [SIM] Conta Vitacee                                              NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048206 [SIM] Conta Corilacee_Carpino                                    NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048207 [SIM] Conta Corilacee_Ostria                                     NUMERIC                    0            0  20 NUMERIC                   0          7

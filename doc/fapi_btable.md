@@ -411,6 +411,7 @@ digits and description.
 | 033207 | [SIM] Kalman observation sequential counter                        | Numeric                  | 3 digits       |
 | 033208 | [SIM] Kalman osservation missing counter                           | Numeric                  | 3 digits       |
 | 033209 | [SIM] Normalized Density Index                                     | PERCENT                  | 3 digits       |
+| 033210 | [SIM] Data in the interval used to compute the value               | PERCENT                  | 3 digits       |
 | 048001 | [SIM] Graminacee_Graminacee indistinte                             | POLLEN/M**3              | #######.#      |
 | 048002 | [SIM] Betulacee_Ontano nero                                        | POLLEN/M**3              | #######.#      |
 | 048003 | [SIM] Betulacee_Betulla                                            | POLLEN/M**3              | #######.#      |
@@ -489,6 +490,8 @@ digits and description.
 | 048076 | [SIM] Simaroubacee                                                 | POLLEN/M**3              | #######.#      |
 | 048077 | [SIM] Umbellifere                                                  | POLLEN/M**3              | #######.#      |
 | 048078 | [SIM] Vitacee                                                      | POLLEN/M**3              | #######.#      |
+| 048079 | [SIM] Corilacee_Carpino                                            | POLLEN/M**3              | #######.#      |
+| 048080 | [SIM] Corilacee_Ostria                                             | POLLEN/M**3              | #######.#      |
 | 048128 | [SIM] Conta Graminacee_Graminacee indistinte                       | Numeric                  | 7 digits       |
 | 048129 | [SIM] Conta Betulacee_Ontano nero                                  | Numeric                  | 7 digits       |
 | 048130 | [SIM] Conta Betulacee_Betulla                                      | Numeric                  | 7 digits       |
@@ -567,3 +570,5 @@ digits and description.
 | 048203 | [SIM] Conta Simaroubacee                                           | Numeric                  | 7 digits       |
 | 048204 | [SIM] Conta Umbellifere                                            | Numeric                  | 7 digits       |
 | 048205 | [SIM] Conta Vitacee                                                | Numeric                  | 7 digits       |
+| 048206 | [SIM] Conta Corilacee_Carpino                                      | Numeric                  | 7 digits       |
+| 048207 | [SIM] Conta Corilacee_Ostria                                       | Numeric                  | 7 digits       |

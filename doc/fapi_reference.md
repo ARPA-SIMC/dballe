@@ -284,8 +284,12 @@ Return value:
 The error indication for the function.
 Connect to the database.
 
-This function can be called more than once once to connect to
-different databases at the same time.
+This function can be called more than once to connect to different
+databases at the same time.
+The function expects to find a properly initialised DB-All.e database.
+Append `&wipe=true` to the end of the url to wipe any existing
+DB-All.e information from the database if it exists, then recreate it
+from scratch.
 <a name='idba_arrivederci'></a>
 #### idba_arrivederci(dbahandle)
 
@@ -343,12 +347,6 @@ anaflag=read and dataflag=add (when adding a new data, it's sometimes
 necessary to insert new pseudoana records), or dataflag=rewrite and
 attrflag=read (when deleting data, their attributes are deleted as
 well).
-
-The session started with `idba_preparati` works with a database transaction:
-all changes done inside the session will either all be preserved, when
-[idba_fatto()](#idba_fatto) is called, or all undone, if for example the
-program which started the session abruptly terminates.
-
 <a name='idba_messaggi'></a>
 #### idba_messaggi(handle, filename, mode, type)
 
@@ -374,11 +372,6 @@ Parameters:
 * `handle`: Handle to the session to be closed.
 
 Close a session.
-
-This tells the underlying database to commit the modifications done during the
-session. If `idba_fatto` is not called, for example if the program which
-started the session abruptly terminates, then all changes done during the
-session will be undone.
 
 ### Input/output routines
 
