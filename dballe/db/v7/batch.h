@@ -33,32 +33,62 @@ public:
 
 namespace batch {
 
-struct Datum
+struct StationDatumInsert
 {
-    int data_id = MISSING_INT;
     wreport::Var var;
     std::vector<uint8_t> attrs;
-    bool to_update = false;
 
-    Datum(const wreport::Var& var, int data_id)
-        : data_id(data_id), var(var) {}
-    Datum(const wreport::Var& var)
+    StationDatumInsert(const wreport::Var& var)
         : var(var) {}
+};
+
+struct StationDatumUpdate
+{
+    int id;
+    wreport::Var var;
+    std::vector<uint8_t> attrs;
+
+    StationDatumUpdate(int id, const wreport::Var& var)
+        : id(id), var(var) {}
 };
 
 struct StationData
 {
     std::unordered_map<wreport::Varcode, int> ids_by_code;
-    std::vector<Datum> data;
+    std::vector<StationDatumInsert> to_insert;
+    std::vector<StationDatumUpdate> to_update;
     bool loaded = false;
 
     void add(const wreport::Var& var, bool overwrite=false, bool with_attrs=false);
 };
 
+
+struct MeasuredDatumInsert
+{
+    int id_levtr;
+    wreport::Var var;
+    std::vector<uint8_t> attrs;
+
+    MeasuredDatumInsert(int id_levtr, const wreport::Var& var)
+        : id_levtr(id_levtr), var(var) {}
+};
+
+struct MeasuredDatumUpdate
+{
+    int id;
+    int id_levtr;
+    wreport::Var var;
+    std::vector<uint8_t> attrs;
+
+    MeasuredDatumUpdate(int id, int id_levtr, const wreport::Var& var)
+        : id(id), id_levtr(id_levtr), var(var) {}
+};
+
 struct MeasuredData
 {
     Datetime datetime;
-    std::vector<Datum> data;
+    std::vector<MeasuredDatumInsert> to_insert;
+    std::vector<MeasuredDatumUpdate> to_update;
     bool loaded = false;
 
     void add(int id_levtr, const wreport::Var& var, bool overwrite=false, bool with_attrs=false);

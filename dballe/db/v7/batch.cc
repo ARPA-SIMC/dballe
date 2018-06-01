@@ -67,7 +67,21 @@ namespace batch {
 
 void StationData::add(const wreport::Var& var, bool overwrite, bool with_attrs)
 {
-    throw std::runtime_error("not implemented yet");
+    if (with_attrs)
+        throw std::runtime_error("StationData::add with_attrs not yet implemented"); // TODO
+    if (!loaded)
+        throw std::runtime_error("StationData::add called without loading status from DB first");
+    auto in_db = ids_by_code.find(var.code());
+    if (in_db != ids_by_code.end())
+    {
+        // Exists in the database
+        if (!overwrite)
+            return;
+        to_update.emplace_back(in_db->second, var);
+    } else {
+        // Does not exist in the database
+        to_insert.emplace_back(var);
+    }
 }
 
 void MeasuredData::add(int id_levtr, const wreport::Var& var, bool overwrite, bool with_attrs)
