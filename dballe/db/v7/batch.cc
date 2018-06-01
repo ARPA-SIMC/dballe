@@ -141,6 +141,8 @@ void StationData::commit(Transaction& tr, int station_id, bool with_attrs)
     {
         auto& st = tr.station_data();
         st.insert(tr, station_id, to_insert, with_attrs);
+        for (const auto& v: to_insert)
+            ids_by_code[v.var->code()] = v.id;
     }
     if (!to_update.empty())
     {
@@ -170,6 +172,8 @@ void MeasuredData::commit(Transaction& tr, int station_id, bool with_attrs)
     {
         auto& st = tr.data();
         st.insert(tr, station_id, datetime, to_insert, with_attrs);
+        for (const auto& v: to_insert)
+            ids_on_db[IdVarcode(v.id_levtr, v.var->code())] = v.id;
     }
     if (!to_update.empty())
     {

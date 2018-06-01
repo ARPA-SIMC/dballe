@@ -1,8 +1,8 @@
-#include "config.h"
-#include "db/tests.h"
+#include "dballe/db/tests.h"
 #include "v6/db.h"
 #include "v7/db.h"
 #include "v7/transaction.h"
+#include "config.h"
 #include <algorithm>
 #include <cstring>
 
