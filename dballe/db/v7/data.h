@@ -4,6 +4,7 @@
 #include <dballe/core/defs.h>
 #include <dballe/sql/fwd.h>
 #include <dballe/db/defs.h>
+#include <dballe/db/v7/fwd.h>
 #include <wreport/var.h>
 #include <memory>
 #include <vector>
@@ -17,25 +18,14 @@ struct Values;
 
 namespace db {
 namespace v7 {
-struct Transaction;
-struct IdQueryBuilder;
-
-namespace bulk {
-struct InsertStationVars;
-struct InsertVars;
-
-enum UpdateMode {
-    UPDATE,
-    IGNORE,
-    ERROR,
-};
-
-}
 
 template<typename Traits>
 class DataCommon
 {
 protected:
+    typedef typename Traits::BatchValue BatchValue;
+    static const char* table_name;
+
     /**
      * Load attributes from the database into a Values
      */
@@ -80,14 +70,11 @@ public:
      */
     void remove_attrs(int data_id, const db::AttrList& attrs);
 
-    /// Bulk variable insert
-    virtual void insert(dballe::db::v7::Transaction& t, typename Traits::BulkVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE, bool with_attrs=false) = 0;
+    /// Bulk variable update
+    virtual void update(dballe::db::v7::Transaction& t, std::vector<typename Traits::BatchValue>& vars, bool with_attrs=false) = 0;
 
     /// Run the query to delete all records selected by the given QueryBuilder
     virtual void remove(const v7::IdQueryBuilder& qb) = 0;
-
-    /// Query contents of the data table
-    virtual void query(const typename Traits::query_contents& query, typename Traits::read_contents dest) = 0;
 
     /// Dump the entire contents of the table to an output stream
     virtual void dump(FILE* out) = 0;
@@ -120,197 +107,38 @@ struct DataDumper
     void print_tail();
 };
 
-namespace bulk {
-
-struct Item
-{
-    static const unsigned FLAG_NEEDS_UPDATE = 1 << 0;
-    static const unsigned FLAG_UPDATED      = 1 << 1;
-    static const unsigned FLAG_NEEDS_INSERT = 1 << 2;
-    static const unsigned FLAG_INSERTED     = 1 << 3;
-    unsigned flags = 0;
-
-    bool needs_update() const { return flags & FLAG_NEEDS_UPDATE; }
-    bool updated() const { return flags & FLAG_UPDATED; }
-    bool needs_insert() const { return flags & FLAG_NEEDS_INSERT; }
-    bool inserted() const { return flags & FLAG_INSERTED; }
-    void set_needs_update() { flags |= FLAG_NEEDS_UPDATE; }
-    void set_updated() { flags = (flags & ~FLAG_NEEDS_UPDATE) | FLAG_UPDATED; }
-    void set_needs_insert() { flags |= FLAG_NEEDS_INSERT; }
-    void set_inserted() { flags = (flags & ~FLAG_NEEDS_INSERT) | FLAG_INSERTED; }
-
-    /**
-     * Format flags in the first 4 characters of dest.
-     *
-     * It adds a trailing 0, so dest should be at least 5 bytes long.
-     */
-    void format_flags(char* dest) const;
-};
-
-
-/**
- * Workflow information about a variable listed for bulk insert/update
- */
-struct StationVar : public Item
-{
-    int id = MISSING_INT;
-    const wreport::Var* var;
-
-    StationVar(const wreport::Var* var) : var(var) {}
-    StationVar(int id, const wreport::Var* var)
-        : id(id), var(var) {}
-
-    void dump(FILE* out) const;
-};
-
-
-/**
- * Workflow information about a variable listed for bulk insert/update
- */
-struct Var : public Item
-{
-    int id = MISSING_INT;
-    int id_levtr;
-    const wreport::Var* var;
-
-    Var(const wreport::Var* var, int id_levtr) : id_levtr(id_levtr), var(var) {}
-    Var(int id, const wreport::Var* var, int id_levtr)
-        : id(id), id_levtr(id_levtr), var(var) {}
-
-    void dump(FILE* out) const;
-};
-
-struct SharedStationContext
-{
-    int station = MISSING_INT;
-
-    SharedStationContext() = default;
-    SharedStationContext(int station) : station(station) {}
-};
-
-struct SharedDataContext
-{
-    int station = MISSING_INT;
-    Datetime datetime;
-
-    SharedDataContext() = default;
-    SharedDataContext(int station) : station(station) {}
-    SharedDataContext(int station, const Datetime& datetime) : station(station), datetime(datetime) {}
-};
-
-template<typename var_t, typename shared_context_t>
-struct InsertPlan : public std::vector<var_t>
-{
-    typedef typename std::vector<var_t>::iterator iterator;
-
-    shared_context_t shared_context;
-
-    bool do_insert = false;
-    bool do_update = false;
-    std::list<var_t*> to_query;
-
-    template<typename... Args>
-    InsertPlan(Args&&... args) : shared_context(std::forward<Args>(args)...) {}
-
-    void look_for_missing_ids()
-    {
-        // Scan vars adding known IDs to the current state
-        to_query.clear();
-        for (auto& i: *this)
-        {
-            if (i.id != MISSING_INT) continue;
-            to_query.push_back(&i);
-        }
-    }
-
-    void compute_plan()
-    {
-        do_insert = false;
-        do_update = false;
-        for (auto& var: *this)
-        {
-            if (var.id == MISSING_INT)
-            {
-                var.set_needs_insert();
-                do_insert = true;
-            }
-            else
-            {
-                var.set_needs_update();
-                do_update = true;
-            }
-        }
-    }
-};
-
-/**
- * Input for a bulk insert of a lot of variables sharing the same context
- * information.
- */
-struct InsertStationVars : public InsertPlan<StationVar, SharedStationContext>
-{
-    using InsertPlan::InsertPlan;
-
-    void add(const wreport::Var* var)
-    {
-        emplace_back(var);
-    }
-
-    void dump(FILE* out) const;
-};
-
-
-/**
- * Input for a bulk insert of a lot of variables sharing the same context
- * information.
- */
-struct InsertVars : public InsertPlan<Var, SharedDataContext>
-{
-    using InsertPlan::InsertPlan;
-
-    bool has_datetime() const
-    {
-        return not shared_context.datetime.is_missing();
-    }
-
-    void set_datetime(const Datetime& dt)
-    {
-        shared_context.datetime = dt;
-    }
-
-    void add(const wreport::Var* var, int id_levtr)
-    {
-        emplace_back(var, id_levtr);
-    }
-
-    void dump(FILE* out) const;
-};
-
-}
-
 struct StationDataTraits
 {
-    typedef bulk::InsertStationVars BulkVars;
+    typedef batch::StationDatum BatchValue;
     static const char* table_name;
-
-    typedef int query_contents;
-    typedef std::function<void(int id, wreport::Varcode code)> read_contents;
 };
 
 struct DataTraits
 {
-    typedef bulk::InsertVars BulkVars;
+    typedef batch::MeasuredDatum BatchValue;
     static const char* table_name;
-
-    typedef std::pair<int, Datetime> query_contents;
-    typedef std::function<void(int id, int id_levtr, wreport::Varcode code)> read_contents;
 };
 
 extern template class DataCommon<StationDataTraits>;
 extern template class DataCommon<DataTraits>;
 
-typedef DataCommon<StationDataTraits> StationData;
-typedef DataCommon<DataTraits> Data;
+struct StationData : public DataCommon<StationDataTraits>
+{
+    /// Bulk variable insert
+    virtual void insert(dballe::db::v7::Transaction& t, int id_station, std::vector<batch::StationDatum>& vars, bool with_attrs=false) = 0;
+
+    /// Query contents of the data table
+    virtual void query(int id_station, std::function<void(int id, wreport::Varcode code)> dest) = 0;
+};
+
+struct Data : public DataCommon<DataTraits>
+{
+    /// Bulk variable insert
+    virtual void insert(dballe::db::v7::Transaction& t, int id_station, const Datetime& datetime, std::vector<batch::MeasuredDatum>& vars, bool with_attrs=false) = 0;
+
+    /// Query contents of the data table
+    virtual void query(int id_station, const Datetime& datetime, std::function<void(int id, int id_levtr, wreport::Varcode code)> dest) = 0;
+};
 
 }
 }

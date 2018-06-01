@@ -66,7 +66,7 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
             if (code >= WR_VAR(0, 4, 1) && code <= WR_VAR(0, 4, 6))
                 continue;
 
-            station->get_station_data().add(*l_ana->data[i], flags & DBA_IMPORT_OVERWRITE, flags & DBA_IMPORT_ATTRS);
+            station->get_station_data().add(l_ana->data[i], flags & DBA_IMPORT_OVERWRITE);
         }
     }
 
@@ -88,12 +88,12 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
         {
             const Var* var = ctx.data[j];
             if (not var->isset()) continue;
-            md.add(id_levtr, *var, flags & DBA_IMPORT_OVERWRITE, flags & DBA_IMPORT_ATTRS);
+            md.add(id_levtr, var, flags & DBA_IMPORT_OVERWRITE);
         }
     }
 
     // Run the bulk insert
-    batch.commit();
+    batch.commit(flags & DBA_IMPORT_ATTRS);
 }
 
 }

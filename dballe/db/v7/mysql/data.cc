@@ -1,5 +1,6 @@
 #include "data.h"
 #include "dballe/db/v7/transaction.h"
+#include "dballe/db/v7/batch.h"
 #include "dballe/db/v7/qbuilder.h"
 #include "dballe/sql/mysql.h"
 #include "dballe/sql/querybuf.h"
@@ -20,45 +21,45 @@ namespace db {
 namespace v7 {
 namespace mysql {
 
-template class MySQLDataCommon<StationDataTraits>;
-template class MySQLDataCommon<DataTraits>;
+template class MySQLDataCommon<StationData>;
+template class MySQLDataCommon<Data>;
 
-template<typename Traits>
-MySQLDataCommon<Traits>::MySQLDataCommon(dballe::sql::MySQLConnection& conn)
+template<typename Parent>
+MySQLDataCommon<Parent>::MySQLDataCommon(dballe::sql::MySQLConnection& conn)
     : conn(conn)
 {
 }
 
-template<typename Traits>
-MySQLDataCommon<Traits>::~MySQLDataCommon()
+template<typename Parent>
+MySQLDataCommon<Parent>::~MySQLDataCommon()
 {
 }
 
-template<typename Traits>
-void MySQLDataCommon<Traits>::read_attrs(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+template<typename Parent>
+void MySQLDataCommon<Parent>::read_attrs(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     char query[128];
-    snprintf(query, 128, "SELECT attrs FROM %s WHERE id=%d", Traits::table_name, id_data);
+    snprintf(query, 128, "SELECT attrs FROM %s WHERE id=%d", Parent::table_name, id_data);
     Values::decode(
             conn.exec_store(query).expect_one_result().as_blob(0),
             dest);
 }
 
-template<typename Traits>
-void MySQLDataCommon<Traits>::write_attrs(int id_data, const Values& values)
+template<typename Parent>
+void MySQLDataCommon<Parent>::write_attrs(int id_data, const Values& values)
 {
     vector<uint8_t> encoded = values.encode();
     string escaped = conn.escape(encoded);
     Querybuf qb;
-    qb.appendf("UPDATE %s SET attrs=X'%s' WHERE id=%d", Traits::table_name, escaped.c_str(), id_data);
+    qb.appendf("UPDATE %s SET attrs=X'%s' WHERE id=%d", Parent::table_name, escaped.c_str(), id_data);
     conn.exec_no_data(qb);
 }
 
-template<typename Traits>
-void MySQLDataCommon<Traits>::remove_all_attrs(int id_data)
+template<typename Parent>
+void MySQLDataCommon<Parent>::remove_all_attrs(int id_data)
 {
     char query[128];
-    snprintf(query, 128, "UPDATE %s SET attrs=NULL WHERE id=%d", Traits::table_name, id_data);
+    snprintf(query, 128, "UPDATE %s SET attrs=NULL WHERE id=%d", Parent::table_name, id_data);
     conn.exec_no_data(query);
 }
 
@@ -76,8 +77,8 @@ bool match_attrs(const Varmatch& match, const std::vector<uint8_t>& attrs)
 
 }
 
-template<typename Traits>
-void MySQLDataCommon<Traits>::remove(const v7::IdQueryBuilder& qb)
+template<typename Parent>
+void MySQLDataCommon<Parent>::remove(const v7::IdQueryBuilder& qb)
 {
     if (qb.bind_in_ident)
         throw error_unimplemented("binding in MySQL driver is not implemented");
@@ -87,7 +88,7 @@ void MySQLDataCommon<Traits>::remove(const v7::IdQueryBuilder& qb)
         attr_filter = Varmatch::parse(qb.query.attr_filter);
 
     Querybuf dq(512);
-    dq.appendf("DELETE FROM %s WHERE id IN (", Traits::table_name);
+    dq.appendf("DELETE FROM %s WHERE id IN (", Parent::table_name);
     dq.start_list(",");
     bool found = false;
     auto res = conn.exec_store(qb.sql_query);
@@ -105,15 +106,37 @@ void MySQLDataCommon<Traits>::remove(const v7::IdQueryBuilder& qb)
         conn.exec_no_data(dq);
 }
 
+template<typename Parent>
+void MySQLDataCommon<Parent>::update(dballe::db::v7::Transaction& t, std::vector<typename Parent::BatchValue>& vars, bool with_attrs)
+{
+    for (auto& v: vars)
+    {
+        string escaped_value = conn.escape(v.var->enqc());
+
+        Querybuf qb;
+        if (with_attrs && v.var->next_attr())
+        {
+            values::Encoder enc;
+            enc.append_attributes(*v.var);
+            string escaped_attrs = conn.escape(enc.buf);
+            qb.appendf("UPDATE %s SET value='%s', attrs=X'%s' WHERE id=%d", Parent::table_name, escaped_value.c_str(), escaped_attrs.c_str(), v.id);
+        }
+        else
+            qb.appendf("UPDATE %s SET value='%s', attrs=NULL WHERE id=%d", Parent::table_name, escaped_value.c_str(), v.id);
+        conn.exec_no_data(qb);
+    }
+}
+
+
 MySQLStationData::MySQLStationData(MySQLConnection& conn)
     : MySQLDataCommon(conn)
 {
 }
 
-void MySQLStationData::query(const int& query, std::function<void(int id, wreport::Varcode code)> dest)
+void MySQLStationData::query(int id_station, std::function<void(int id, wreport::Varcode code)> dest)
 {
     char strquery[128];
-    snprintf(strquery, 128, "SELECT id, code FROM station_data WHERE id_station=%d", query);
+    snprintf(strquery, 128, "SELECT id, code FROM station_data WHERE id_station=%d", id_station);
     auto res = conn.exec_store(strquery);
     while (auto row = res.fetch())
     {
@@ -123,96 +146,33 @@ void MySQLStationData::query(const int& query, std::function<void(int id, wrepor
     }
 }
 
-void MySQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
+void MySQLStationData::insert(dballe::db::v7::Transaction& t, int id_station, std::vector<batch::StationDatum>& vars, bool with_attrs)
 {
-    vars.look_for_missing_ids();
-
-    // Load the missing varcodes into the state and into vars
-    if (!vars.to_query.empty())
+    for (auto& v: vars)
     {
-        char query[128];
-        snprintf(query, 128, "SELECT id, code FROM station_data WHERE id_station=%d", vars.shared_context.station);
-        auto res = conn.exec_store(query);
-        while (auto row = res.fetch())
+        Querybuf qb;
+
+        string escaped_value = conn.escape(v.var->enqc());
+
+        if (with_attrs && v.var->next_attr())
         {
-            int id = row.as_int(0);
-            wreport::Varcode code = row.as_int(1);
-            //cache.insert(unique_ptr<StationValueEntry>(new StationValueEntry(id, vars.shared_context.station, code)));
-            auto vi = std::find_if(vars.to_query.begin(), vars.to_query.end(), [code](const bulk::StationVar* v) { return v->var->code() == code; });
-            if (vi == vars.to_query.end()) continue;
-            (*vi)->id = id;
-            vars.to_query.erase(vi);
+            values::Encoder enc;
+            enc.append_attributes(*v.var);
+            string escaped_attrs = conn.escape(enc.buf);
+            qb.appendf("INSERT INTO station_data (id_station, code, value, attrs) VALUES (%d, %d, '%s', X'%s')",
+                    id_station,
+                    (int)v.var->code(),
+                    escaped_value.c_str(),
+                    escaped_attrs.c_str());
         }
-    }
+        else
+            qb.appendf("INSERT INTO station_data (id_station, code, value, attrs) VALUES (%d, %d, '%s', NULL)",
+                    id_station,
+                    (int)v.var->code(),
+                    escaped_value.c_str());
+        conn.exec_no_data(qb);
 
-    // Compute the action plan
-    vars.compute_plan();
-
-    // Execute the plan
-
-    switch (update_mode)
-    {
-        case bulk::UPDATE:
-            if (vars.do_update)
-            {
-                for (auto& v: vars)
-                {
-                    if (!v.needs_update()) continue;
-
-                    string escaped_value = conn.escape(v.var->enqc());
-
-                    Querybuf qb;
-                    if (with_attrs && v.var->next_attr())
-                    {
-                        values::Encoder enc;
-                        enc.append_attributes(*v.var);
-                        string escaped_attrs = conn.escape(enc.buf);
-                        qb.appendf("UPDATE station_data SET value='%s', attrs=X'%s' WHERE id=%d", escaped_value.c_str(), escaped_attrs.c_str(), v.id);
-                    }
-                    else
-                        qb.appendf("UPDATE station_data SET value='%s', attrs=NULL WHERE id=%d", escaped_value.c_str(), v.id);
-                    conn.exec_no_data(qb);
-                    v.set_updated();
-                }
-            }
-            break;
-        case bulk::IGNORE:
-            break;
-        case bulk::ERROR:
-            if (vars.do_update)
-                throw error_consistency("refusing to overwrite existing data");
-    }
-
-    if (vars.do_insert)
-    {
-        for (auto& v: vars)
-        {
-            if (!v.needs_insert()) continue;
-            Querybuf qb;
-
-            string escaped_value = conn.escape(v.var->enqc());
-
-            if (with_attrs && v.var->next_attr())
-            {
-                values::Encoder enc;
-                enc.append_attributes(*v.var);
-                string escaped_attrs = conn.escape(enc.buf);
-                qb.appendf("INSERT INTO station_data (id_station, code, value, attrs) VALUES (%d, %d, '%s', X'%s')",
-                        vars.shared_context.station,
-                        (int)v.var->code(),
-                        escaped_value.c_str(),
-                        escaped_attrs.c_str());
-            }
-            else
-                qb.appendf("INSERT INTO station_data (id_station, code, value, attrs) VALUES (%d, %d, '%s', NULL)",
-                        vars.shared_context.station,
-                        (int)v.var->code(),
-                        escaped_value.c_str());
-            conn.exec_no_data(qb);
-
-            v.id = conn.get_last_insert_id();
-            v.set_inserted();
-        }
+        v.id = conn.get_last_insert_id();
     }
 }
 
@@ -236,12 +196,12 @@ MySQLData::MySQLData(MySQLConnection& conn)
 {
 }
 
-void MySQLData::query(const std::pair<int, Datetime>& query, std::function<void(int id, int id_levtr, wreport::Varcode code)> dest)
+void MySQLData::query(int id_station, const Datetime& datetime, std::function<void(int id, int id_levtr, wreport::Varcode code)> dest)
 {
-    const auto& dt = query.second;
+    const auto& dt = datetime;
     char strquery[128];
     snprintf(strquery, 128, "SELECT id, id_levtr, code FROM data WHERE id_station=%d AND datetime='%04d-%02d-%02d %02d:%02d:%02d'",
-            query.first, dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
+            id_station, dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
     auto res = conn.exec_store(strquery);
     while (auto row = res.fetch())
     {
@@ -252,109 +212,34 @@ void MySQLData::query(const std::pair<int, Datetime>& query, std::function<void(
     }
 }
 
-void MySQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
+void MySQLData::insert(dballe::db::v7::Transaction& t, int id_station, const Datetime& datetime, std::vector<batch::MeasuredDatum>& vars, bool with_attrs)
 {
-    vars.look_for_missing_ids();
-
-    // Load the missing varcodes into the state and into vars
-    // If the station has just been inserted, then there is nothing in the
-    // database that is not already in State, and we can skip this part.
-    if (!vars.to_query.empty())
+    for (auto& v: vars)
     {
-        const auto& dt = vars.shared_context.datetime;
-        char query[128];
-        snprintf(query, 128, "SELECT id, id_levtr, code FROM data WHERE id_station=%d AND datetime='%04d-%02d-%02d %02d:%02d:%02d'",
-                vars.shared_context.station,
-                dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
-        auto res = conn.exec_store(query);
-        while (auto row = res.fetch())
+        Querybuf qb;
+
+        const auto& dt = datetime;
+        string escaped_value = conn.escape(v.var->enqc());
+
+        if (with_attrs && v.var->next_attr())
         {
-            int id_levtr = row.as_int(1);
-            wreport::Varcode code = row.as_int(2);
-            int id = row.as_int(0);
-            //cache.insert(unique_ptr<ValueEntry>(new ValueEntry(id, vars.shared_context.station, id_levtr, vars.shared_context.datetime, code)));
-
-            auto vi = std::find_if(vars.to_query.begin(), vars.to_query.end(), [id_levtr, code](const bulk::Var* v) { return v->id_levtr == id_levtr && v->var->code() == code; });
-            if (vi == vars.to_query.end()) continue;
-            (*vi)->id = id;
-            vars.to_query.erase(vi);
+            values::Encoder enc;
+            enc.append_attributes(*v.var);
+            string escaped_attrs = conn.escape(enc.buf);
+            qb.appendf("INSERT INTO data (id_station, id_levtr, datetime, code, value, attrs) VALUES (%d, %d, '%04d-%02d-%02d %02d:%02d:%02d', %d, '%s', X'%s')",
+                    id_station, v.id_levtr, dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,
+                    (int)v.var->code(),
+                    escaped_value.c_str(),
+                    escaped_attrs.c_str());
         }
-    }
+        else
+            qb.appendf("INSERT INTO data (id_station, id_levtr, datetime, code, value, attrs) VALUES (%d, %d, '%04d-%02d-%02d %02d:%02d:%02d', %d, '%s', NULL)",
+                    id_station, v.id_levtr, dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,
+                    (int)v.var->code(),
+                    escaped_value.c_str());
+        conn.exec_no_data(qb);
 
-    // Compute the action plan
-    vars.compute_plan();
-
-    // Execute the plan
-
-    switch (update_mode)
-    {
-        case bulk::UPDATE:
-            if (vars.do_update)
-            {
-                for (auto& v: vars)
-                {
-                    if (!v.needs_update()) continue;
-
-                    string escaped_value = conn.escape(v.var->enqc());
-
-                    Querybuf qb;
-                    if (with_attrs && v.var->next_attr())
-                    {
-                        values::Encoder enc;
-                        enc.append_attributes(*v.var);
-                        string escaped_attrs = conn.escape(enc.buf);
-                        qb.appendf("UPDATE data SET value='%s', attrs=X'%s' WHERE id=%d", escaped_value.c_str(), escaped_attrs.c_str(), v.id);
-                    }
-                    else
-                        qb.appendf("UPDATE data SET value='%s', attrs=NULL WHERE id=%d", escaped_value.c_str(), v.id);
-                    conn.exec_no_data(qb);
-                    v.set_updated();
-                }
-            }
-            break;
-        case bulk::IGNORE:
-            break;
-        case bulk::ERROR:
-            if (vars.do_update)
-                throw error_consistency("refusing to overwrite existing data");
-    }
-
-    if (vars.do_insert)
-    {
-        for (auto& v: vars)
-        {
-            if (!v.needs_insert()) continue;
-
-            Querybuf qb;
-
-            const auto& dt = vars.shared_context.datetime;
-            string escaped_value = conn.escape(v.var->enqc());
-
-            if (with_attrs && v.var->next_attr())
-            {
-                values::Encoder enc;
-                enc.append_attributes(*v.var);
-                string escaped_attrs = conn.escape(enc.buf);
-                qb.appendf("INSERT INTO data (id_station, id_levtr, datetime, code, value, attrs) VALUES (%d, %d, '%04d-%02d-%02d %02d:%02d:%02d', %d, '%s', X'%s')",
-                        vars.shared_context.station,
-                        v.id_levtr,
-                        dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,
-                        (int)v.var->code(),
-                        escaped_value.c_str(),
-                        escaped_attrs.c_str());
-            }
-            else
-                qb.appendf("INSERT INTO data (id_station, id_levtr, datetime, code, value, attrs) VALUES (%d, %d, '%04d-%02d-%02d %02d:%02d:%02d', %d, '%s', NULL)",
-                        vars.shared_context.station,
-                        v.id_levtr,
-                        dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,
-                        (int)v.var->code(),
-                        escaped_value.c_str());
-            conn.exec_no_data(qb);
-
-            v.id = conn.get_last_insert_id();
-            v.set_inserted();
-        }
+        v.id = conn.get_last_insert_id();
     }
 }
 

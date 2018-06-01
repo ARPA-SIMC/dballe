@@ -94,21 +94,35 @@ batch::Station* Batch::get_station(const std::string& report, const Coords& coor
     return res;
 }
 
-void Batch::commit()
+void Batch::commit(bool with_attrs)
 {
     for (auto& st: stations)
-        st.commit();
+        st.commit(with_attrs);
 }
 
 namespace batch {
 
-void StationData::add(const wreport::Var& var, bool overwrite, bool with_attrs)
+void StationDatum::dump(FILE* out) const
 {
-    if (with_attrs)
-        throw std::runtime_error("StationData::add with_attrs not yet implemented"); // TODO
+    fprintf(out, "%01d%02d%03d(%d): %s\n",
+            WR_VAR_FXY(var->code()), (int)(var->code()),
+            var->isset() ? var->enqc() : "(null)");
+}
+
+void MeasuredDatum::dump(FILE* out) const
+{
+    fprintf(out, "ltr:%d %01d%02d%03d(%d): %s\n",
+            id_levtr,
+            WR_VAR_FXY(var->code()), (int)(var->code()),
+            var->isset() ? var->enqc() : "(null)");
+}
+
+
+void StationData::add(const wreport::Var* var, bool overwrite)
+{
     if (!loaded)
         throw std::runtime_error("StationData::add called without loading status from DB first");
-    auto in_db = ids_by_code.find(var.code());
+    auto in_db = ids_by_code.find(var->code());
     if (in_db != ids_by_code.end())
     {
         // Exists in the database
@@ -121,23 +135,23 @@ void StationData::add(const wreport::Var& var, bool overwrite, bool with_attrs)
     }
 }
 
-void StationData::commit(Transaction& tr, int station_id)
+void StationData::commit(Transaction& tr, int station_id, bool with_attrs)
 {
     if (!to_insert.empty())
     {
-        throw std::runtime_error("not implemented yet");
+        auto& st = tr.station_data();
+        st.insert(tr, station_id, to_insert, with_attrs);
     }
     if (!to_update.empty())
     {
-        throw std::runtime_error("not implemented yet");
+        auto& st = tr.station_data();
+        st.update(tr, to_update, with_attrs);
     }
 }
 
-void MeasuredData::add(int id_levtr, const wreport::Var& var, bool overwrite, bool with_attrs)
+void MeasuredData::add(int id_levtr, const wreport::Var* var, bool overwrite)
 {
-    if (with_attrs)
-        throw std::runtime_error("MeasuredData::add with_attrs not yet implemented"); // TODO
-    auto in_db = ids_on_db.find(IdVarcode(id_levtr, var.code()));
+    auto in_db = ids_on_db.find(IdVarcode(id_levtr, var->code()));
     if (in_db != ids_on_db.end())
     {
         // Exists in the database
@@ -150,15 +164,17 @@ void MeasuredData::add(int id_levtr, const wreport::Var& var, bool overwrite, bo
     }
 }
 
-void MeasuredData::commit(Transaction& tr, int station_id)
+void MeasuredData::commit(Transaction& tr, int station_id, bool with_attrs)
 {
     if (!to_insert.empty())
     {
-        throw std::runtime_error("not implemented yet");
+        auto& st = tr.data();
+        st.insert(tr, station_id, datetime, to_insert, with_attrs);
     }
     if (!to_update.empty())
     {
-        throw std::runtime_error("not implemented yet");
+        auto& st = tr.data();
+        st.update(tr, to_update, with_attrs);
     }
 }
 
@@ -188,7 +204,7 @@ MeasuredData& Station::get_measured_data(const Datetime& datetime)
     if (!is_new)
     {
         v7::Data& d = transaction->data();
-        d.query(std::make_pair(id, datetime), [&](int data_id, int id_levtr, wreport::Varcode code) {
+        d.query(id, datetime, [&](int data_id, int id_levtr, wreport::Varcode code) {
             md.ids_on_db.insert(std::make_pair(IdVarcode(id_levtr, code), data_id));
         });
     }
@@ -196,15 +212,41 @@ MeasuredData& Station::get_measured_data(const Datetime& datetime)
     return md;
 }
 
-void Station::commit()
+void Station::commit(bool with_attrs)
 {
     if (id == MISSING_INT)
         id = transaction->station().obtain_id(*transaction, *this);
 
-    station_data.commit(*transaction, id);
+    station_data.commit(*transaction, id, with_attrs);
     for (auto& md: measured_data)
-        md.second.commit(*transaction, id);
+        md.second.commit(*transaction, id, with_attrs);
 }
+
+#if 0
+void InsertStationVars::dump(FILE* out) const
+{
+    fprintf(out, "ID station: %d\n", shared_context.station);
+    for (unsigned i = 0; i < size(); ++i)
+    {
+        fprintf(out, "%3u/%3zd: ", i, size());
+        (*this)[i].dump(out);
+    }
+}
+
+void InsertVars::dump(FILE* out) const
+{
+    const auto& dt = shared_context.datetime;
+
+    fprintf(out, "ID station: %d, datetime: %04d-%02d-%02d %02d:%02d:%02d\n",
+            shared_context.station,
+            dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
+    for (unsigned i = 0; i < size(); ++i)
+    {
+        fprintf(out, "%3u/%3zd: ", i, size());
+        (*this)[i].dump(out);
+    }
+}
+#endif
 
 }
 

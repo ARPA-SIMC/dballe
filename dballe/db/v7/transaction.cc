@@ -111,10 +111,10 @@ void Transaction::insert_station_data(StationValues& vals, bool can_replace, boo
     // Add all the variables we find
     batch::StationData& sd = st->get_station_data();
     for (auto& i: vals.values)
-        sd.add(*i.second.var, can_replace, true);
+        sd.add(i.second.var, can_replace);
 
     // Perform changes
-    batch.commit();
+    batch.commit(true);
 
     // Read the IDs from the results
     for (auto& v: vals.values)
@@ -136,10 +136,10 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
 
     // Add all the variables we find
     for (auto& i: vals.values)
-        md.add(id_levtr, *i.second.var, can_replace, true);
+        md.add(id_levtr, i.second.var, can_replace);
 
     // Perform changes
-    batch.commit();
+    batch.commit(true);
 
     // Read the IDs from the results
     for (auto& v: vals.values)

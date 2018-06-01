@@ -29,62 +29,48 @@ public:
     batch::Station* get_station(const dballe::Station& station, bool station_can_add);
     batch::Station* get_station(const std::string& report, const Coords& coords, const Ident& ident);
 
-    void commit();
+    void commit(bool with_attrs);
 };
 
 
 namespace batch {
 
-struct StationDatumInsert
+struct StationDatum
 {
-    wreport::Var var;
-    std::vector<uint8_t> attrs;
+    int id = MISSING_INT;
+    const wreport::Var* var;
 
-    StationDatumInsert(const wreport::Var& var)
+    StationDatum(const wreport::Var* var)
         : var(var) {}
-};
-
-struct StationDatumUpdate
-{
-    int id;
-    wreport::Var var;
-    std::vector<uint8_t> attrs;
-
-    StationDatumUpdate(int id, const wreport::Var& var)
+    StationDatum(int id, const wreport::Var* var)
         : id(id), var(var) {}
+
+    void dump(FILE* out) const;
 };
 
 struct StationData
 {
     std::unordered_map<wreport::Varcode, int> ids_by_code;
-    std::vector<StationDatumInsert> to_insert;
-    std::vector<StationDatumUpdate> to_update;
+    std::vector<StationDatum> to_insert;
+    std::vector<StationDatum> to_update;
     bool loaded = false;
 
-    void add(const wreport::Var& var, bool overwrite=false, bool with_attrs=false);
-    void commit(Transaction& tr, int station_id);
+    void add(const wreport::Var* var, bool overwrite=false);
+    void commit(Transaction& tr, int station_id, bool with_attrs);
 };
 
-
-struct MeasuredDatumInsert
+struct MeasuredDatum
 {
+    int id = MISSING_INT;
     int id_levtr;
-    wreport::Var var;
-    std::vector<uint8_t> attrs;
+    const wreport::Var* var;
 
-    MeasuredDatumInsert(int id_levtr, const wreport::Var& var)
+    MeasuredDatum(int id_levtr, const wreport::Var* var)
         : id_levtr(id_levtr), var(var) {}
-};
-
-struct MeasuredDatumUpdate
-{
-    int id;
-    int id_levtr;
-    wreport::Var var;
-    std::vector<uint8_t> attrs;
-
-    MeasuredDatumUpdate(int id, int id_levtr, const wreport::Var& var)
+    MeasuredDatum(int id, int id_levtr, const wreport::Var* var)
         : id(id), id_levtr(id_levtr), var(var) {}
+
+    void dump(FILE* out) const;
 };
 
 struct IdVarcode
@@ -123,16 +109,16 @@ struct MeasuredData
 {
     Datetime datetime;
     std::unordered_map<IdVarcode, int> ids_on_db;
-    std::vector<MeasuredDatumInsert> to_insert;
-    std::vector<MeasuredDatumUpdate> to_update;
+    std::vector<MeasuredDatum> to_insert;
+    std::vector<MeasuredDatum> to_update;
 
     MeasuredData(Datetime datetime)
         : datetime(datetime)
     {
     }
 
-    void add(int id_levtr, const wreport::Var& var, bool overwrite=false, bool with_attrs=false);
-    void commit(Transaction& tr, int station_id);
+    void add(int id_levtr, const wreport::Var* var, bool overwrite=false);
+    void commit(Transaction& tr, int station_id, bool with_attrs);
 };
 
 struct Station : public dballe::Station
@@ -147,7 +133,7 @@ struct Station : public dballe::Station
     StationData& get_station_data();
     MeasuredData& get_measured_data(const Datetime& datetime);
 
-    void commit();
+    void commit(bool with_attrs);
 };
 
 }
