@@ -57,6 +57,7 @@ struct Station : public dballe::Station
     bool is_new = true;
     Data station_data;
 
+    using dballe::Station::Station;
     MeasuredData& get_measured_data(int id_levtr, const Datetime& datetime);
 };
 

@@ -6,12 +6,19 @@ namespace v7 {
 
 std::shared_ptr<batch::Station> Batch::get_station(const std::string& report, const Coords& coords)
 {
-    throw std::runtime_error("not implemented yet");
+    auto res = std::make_shared<batch::Station>();
+    res->report = report;
+    res->coords = coords;
+    return res;
 }
 
 std::shared_ptr<batch::Station> Batch::get_station(const std::string& report, const Coords& coords, const std::string& ident)
 {
-    throw std::runtime_error("not implemented yet");
+    auto res = std::make_shared<batch::Station>();
+    res->report = report;
+    res->coords = coords;
+    res->ident = ident;
+    return res;
 }
 
 void Batch::commit()

@@ -36,6 +36,24 @@ void Tests::register_tests()
 
 add_method("empty", [](Fixture& f) {
     using namespace dballe::db::v7;
+
+    Batch batch(f.tr);
+    auto station = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0)));
+    wassert(actual(station->report) == "synop");
+    wassert(actual(station->id) == MISSING_INT);
+    wassert(actual(station->coords) == Coords(11.0, 45.0));
+    wassert_true(station->ident.is_missing());
+    wassert_true(station->is_new);
+    wassert_true(station->station_data.data.empty());
+
+    station = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0), "AB123"));
+    wassert(actual(station->report) == "synop");
+    wassert(actual(station->id) == MISSING_INT);
+    wassert(actual(station->coords) == Coords(11.0, 45.0));
+    wassert_false(station->ident.is_missing());
+    wassert(actual(station->ident) == "AB123");
+    wassert_true(station->is_new);
+    wassert_true(station->station_data.data.empty());
 });
 
 }
