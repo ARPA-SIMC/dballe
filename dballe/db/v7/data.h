@@ -71,7 +71,7 @@ public:
     void remove_attrs(int data_id, const db::AttrList& attrs);
 
     /// Bulk variable update
-    virtual void update(dballe::db::v7::Transaction& t, std::vector<typename Traits::BatchValue>& vars, bool with_attrs=false) = 0;
+    virtual void update(dballe::db::v7::Transaction& t, std::vector<typename Traits::BatchValue>& vars, bool with_attrs) = 0;
 
     /// Run the query to delete all records selected by the given QueryBuilder
     virtual void remove(const v7::IdQueryBuilder& qb) = 0;
@@ -125,7 +125,7 @@ extern template class DataCommon<DataTraits>;
 struct StationData : public DataCommon<StationDataTraits>
 {
     /// Bulk variable insert
-    virtual void insert(dballe::db::v7::Transaction& t, int id_station, std::vector<batch::StationDatum>& vars, bool with_attrs=false) = 0;
+    virtual void insert(dballe::db::v7::Transaction& t, int id_station, std::vector<batch::StationDatum>& vars, bool with_attrs) = 0;
 
     /// Query contents of the data table
     virtual void query(int id_station, std::function<void(int id, wreport::Varcode code)> dest) = 0;
@@ -134,7 +134,7 @@ struct StationData : public DataCommon<StationDataTraits>
 struct Data : public DataCommon<DataTraits>
 {
     /// Bulk variable insert
-    virtual void insert(dballe::db::v7::Transaction& t, int id_station, const Datetime& datetime, std::vector<batch::MeasuredDatum>& vars, bool with_attrs=false) = 0;
+    virtual void insert(dballe::db::v7::Transaction& t, int id_station, const Datetime& datetime, std::vector<batch::MeasuredDatum>& vars, bool with_attrs) = 0;
 
     /// Query contents of the data table
     virtual void query(int id_station, const Datetime& datetime, std::function<void(int id, int id_levtr, wreport::Varcode code)> dest) = 0;

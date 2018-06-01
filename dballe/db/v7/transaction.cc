@@ -107,6 +107,7 @@ void Transaction::insert_station_data(StationValues& vals, bool can_replace, boo
 {
     Batch batch(std::dynamic_pointer_cast<v7::Transaction>(shared_from_this()));
     batch::Station* st = batch.get_station(vals.info, station_can_add);
+    vals.info.id = st->id;
 
     // Add all the variables we find
     batch::StationData& sd = st->get_station_data();
@@ -128,6 +129,7 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
 
     Batch batch(std::dynamic_pointer_cast<v7::Transaction>(shared_from_this()));
     batch::Station* st = batch.get_station(vals.info, station_can_add);
+    vals.info.id = st->id;
 
     batch::MeasuredData& md = st->get_measured_data(vals.info.datetime);
 

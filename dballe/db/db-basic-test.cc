@@ -1,10 +1,11 @@
-#include "msg/msg.h"
-#include "db/tests.h"
+#include "dballe/msg/msg.h"
+#include "dballe/db/tests.h"
 #include "v6/repinfo.h"
 #include "v6/db.h"
 #include "v7/repinfo.h"
 #include "v7/db.h"
 #include "v7/transaction.h"
+#include "config.h"
 #include <cstring>
 
 using namespace dballe;

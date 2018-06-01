@@ -42,7 +42,7 @@ public:
     MySQLDataCommon& operator=(const MySQLDataCommon&) = delete;
     ~MySQLDataCommon();
 
-    void update(dballe::db::v7::Transaction& t, std::vector<typename Parent::BatchValue>& vars, bool with_attrs=false) override;
+    void update(dballe::db::v7::Transaction& t, std::vector<typename Parent::BatchValue>& vars, bool with_attrs) override;
     void read_attrs(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
     void write_attrs(int id_data, const Values& values) override;
     void remove_all_attrs(int id_data) override;
@@ -63,7 +63,7 @@ public:
     MySQLStationData(dballe::sql::MySQLConnection& conn);
 
     void query(int id_station, std::function<void(int id, wreport::Varcode code)> dest) override;
-    void insert(dballe::db::v7::Transaction& t, int id_station, std::vector<batch::StationDatum>& vars, bool with_attrs=false) override;
+    void insert(dballe::db::v7::Transaction& t, int id_station, std::vector<batch::StationDatum>& vars, bool with_attrs) override;
     void dump(FILE* out) override;
     void clear_cache() override {}
 };
@@ -79,7 +79,7 @@ public:
     MySQLData(dballe::sql::MySQLConnection& conn);
 
     void query(int id_station, const Datetime& datetime, std::function<void(int id, int id_levtr, wreport::Varcode code)> dest) override;
-    void insert(dballe::db::v7::Transaction& t, int id_station, const Datetime& datetime, std::vector<batch::MeasuredDatum>& vars, bool with_attrs=false) override;
+    void insert(dballe::db::v7::Transaction& t, int id_station, const Datetime& datetime, std::vector<batch::MeasuredDatum>& vars, bool with_attrs) override;
     void dump(FILE* out) override;
     void clear_cache() override {}
 };

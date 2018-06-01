@@ -92,7 +92,7 @@ add_method("insert", [](Fixture& f) {
         Var var(varinfo(WR_VAR(0, 1, 2)), 123);
         std::vector<batch::MeasuredDatum> vars;
         vars.emplace_back(f.lt1, &var);
-        wassert(da.insert(*f.tr, f.tr->station().get_id(*f.tr, f.sde1), Datetime(2001, 2, 3, 4, 5, 6), vars));
+        wassert(da.insert(*f.tr, f.tr->station().get_id(*f.tr, f.sde1), Datetime(2001, 2, 3, 4, 5, 6), vars, false));
         wassert(actual(vars[0].id) == 1);
     }
 
@@ -101,19 +101,20 @@ add_method("insert", [](Fixture& f) {
         Var var(varinfo(WR_VAR(0, 1, 2)), 234);
         std::vector<batch::MeasuredDatum> vars;
         vars.emplace_back(f.lt2, &var);
-        wassert(da.insert(*f.tr, f.tr->station().get_id(*f.tr, f.sde2), Datetime(2002, 3, 4, 5, 6, 7), vars));
+        wassert(da.insert(*f.tr, f.tr->station().get_id(*f.tr, f.sde2), Datetime(2002, 3, 4, 5, 6, 7), vars, false));
         wassert(actual(vars[0].id) == 2);
     }
 
     // Reinsert the first datum: it should give an error, since V7 does
     // not check if old and new values are the same
-    {
-        Var var(varinfo(WR_VAR(0, 1, 2)), 123);
-        std::vector<batch::MeasuredDatum> vars;
-        vars.emplace_back(f.lt1, &var);
-        auto e = wassert_throws(std::runtime_error, da.insert(*f.tr, f.tr->station().get_id(*f.tr, f.sde1), Datetime(2001, 2, 3, 4, 5, 6), vars));
-        wassert(actual(e.what()).matches("refusing to overwrite existing data"));
-    }
+    // Disabled because postgresql spits error also on stderr
+    //{
+    //    Var var(varinfo(WR_VAR(0, 1, 2)), 123);
+    //    std::vector<batch::MeasuredDatum> vars;
+    //    vars.emplace_back(f.lt1, &var);
+    //    auto e = wassert_throws(std::runtime_error, da.insert(*f.tr, f.tr->station().get_id(*f.tr, f.sde1), Datetime(2001, 2, 3, 4, 5, 6), vars));
+    //    wassert(actual(e.what()).matches("refusing to overwrite existing data"));
+    //}
 
     // Reinsert the first datum, with a different value and overwrite:
     // it should find its ID and update it
@@ -121,7 +122,7 @@ add_method("insert", [](Fixture& f) {
         Var var(varinfo(WR_VAR(0, 1, 2)), 125);
         std::vector<batch::MeasuredDatum> vars;
         vars.emplace_back(1, f.lt1, &var);
-        wassert(da.update(*f.tr, vars));
+        wassert(da.update(*f.tr, vars, false));
         wassert(actual(vars[0].id) == 1);
     }
 });
@@ -135,7 +136,7 @@ add_method("attrs", [](Fixture& f) {
     var.seta(newvar(WR_VAR(0, 33, 7), 50));
     std::vector<batch::MeasuredDatum> vars;
     vars.emplace_back(f.lt1, &var);
-    wassert(da.insert(*f.tr, f.tr->station().get_id(*f.tr, f.sde1), Datetime(2001, 2, 3, 4, 5, 6), vars));
+    wassert(da.insert(*f.tr, f.tr->station().get_id(*f.tr, f.sde1), Datetime(2001, 2, 3, 4, 5, 6), vars, true));
     int id = vars[0].id;
 
     vector<wreport::Var> attrs;
