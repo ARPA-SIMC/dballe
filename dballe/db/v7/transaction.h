@@ -3,16 +3,13 @@
 
 #include <dballe/transaction.h>
 #include <dballe/db/db.h>
+#include <dballe/db/v7/fwd.h>
 #include <dballe/db/v7/data.h>
 #include <memory>
 
 namespace dballe {
 namespace db {
 namespace v7 {
-struct DB;
-struct Repinfo;
-struct Station;
-struct LevTr;
 
 struct Transaction : public dballe::db::Transaction
 {
