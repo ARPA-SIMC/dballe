@@ -72,14 +72,21 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
 
     // Fill the bulk insert with the rest of the data
     v7::LevTr& lt = levtr();
-    Datetime datetime = msg.get_datetime();
-    if (datetime.is_missing())
-        throw error_notfound("date/time informations not found (or incomplete) in message to insert");
-    batch::MeasuredData& md = station->get_measured_data(datetime);
+    // Defer creation of MeasuredData to prevent complaining about missing
+    // datetime info if we have no data to import
+    batch::MeasuredData* md = nullptr;
     for (size_t i = 0; i < msg.data.size(); ++i)
     {
         if (msg.data[i] == l_ana) continue;
         const msg::Context& ctx = *msg.data[i];
+
+        if (!md)
+        {
+            Datetime datetime = msg.get_datetime();
+            if (datetime.is_missing())
+                throw error_notfound("date/time informations not found (or incomplete) in message to insert");
+            md = &station->get_measured_data(datetime);
+        }
 
         // Get the database ID of the lev_tr
         int id_levtr = lt.obtain_id(LevTrEntry(ctx.level, ctx.trange));
@@ -88,7 +95,7 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
         {
             const Var* var = ctx.data[j];
             if (not var->isset()) continue;
-            md.add(id_levtr, var, flags & DBA_IMPORT_OVERWRITE ? batch::UPDATE : batch::IGNORE);
+            md->add(id_levtr, var, flags & DBA_IMPORT_OVERWRITE ? batch::UPDATE : batch::IGNORE);
         }
     }
 
