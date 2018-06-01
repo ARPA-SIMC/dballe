@@ -35,6 +35,12 @@ public:
 
 namespace batch {
 
+enum UpdateMode {
+    UPDATE,
+    IGNORE,
+    ERROR,
+};
+
 struct StationDatum
 {
     int id = MISSING_INT;
@@ -55,7 +61,7 @@ struct StationData
     std::vector<StationDatum> to_update;
     bool loaded = false;
 
-    void add(const wreport::Var* var, bool overwrite=false);
+    void add(const wreport::Var* var, UpdateMode on_conflict);
     void commit(Transaction& tr, int station_id, bool with_attrs);
 };
 
@@ -117,7 +123,7 @@ struct MeasuredData
     {
     }
 
-    void add(int id_levtr, const wreport::Var* var, bool overwrite=false);
+    void add(int id_levtr, const wreport::Var* var, UpdateMode on_conflict);
     void commit(Transaction& tr, int station_id, bool with_attrs);
 };
 

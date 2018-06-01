@@ -118,7 +118,7 @@ void MeasuredDatum::dump(FILE* out) const
 }
 
 
-void StationData::add(const wreport::Var* var, bool overwrite)
+void StationData::add(const wreport::Var* var, UpdateMode on_conflict)
 {
     if (!loaded)
         throw std::runtime_error("StationData::add called without loading status from DB first");
@@ -126,9 +126,12 @@ void StationData::add(const wreport::Var* var, bool overwrite)
     if (in_db != ids_by_code.end())
     {
         // Exists in the database
-        if (!overwrite)
-            return;
-        to_update.emplace_back(in_db->second, var);
+        switch (on_conflict)
+        {
+            case UPDATE: to_update.emplace_back(in_db->second, var); break;
+            case IGNORE: break;
+            case ERROR: throw wreport::error_consistency("refusing to overwrite existing data");
+        }
     } else {
         // Does not exist in the database
         to_insert.emplace_back(var);
@@ -151,15 +154,18 @@ void StationData::commit(Transaction& tr, int station_id, bool with_attrs)
     }
 }
 
-void MeasuredData::add(int id_levtr, const wreport::Var* var, bool overwrite)
+void MeasuredData::add(int id_levtr, const wreport::Var* var, UpdateMode on_conflict)
 {
     auto in_db = ids_on_db.find(IdVarcode(id_levtr, var->code()));
     if (in_db != ids_on_db.end())
     {
         // Exists in the database
-        if (!overwrite)
-            return;
-        to_update.emplace_back(in_db->second, id_levtr, var);
+        switch (on_conflict)
+        {
+            case UPDATE: to_update.emplace_back(in_db->second, id_levtr, var); break;
+            case IGNORE: break;
+            case ERROR: throw wreport::error_consistency("refusing to overwrite existing data");
+        }
     } else {
         // Does not exist in the database
         to_insert.emplace_back(id_levtr, var);
