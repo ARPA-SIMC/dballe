@@ -60,7 +60,8 @@ batch::Station* Batch::get_station(const std::string& report, const Coords& coor
 
 void Batch::commit()
 {
-    throw std::runtime_error("not implemented yet");
+    for (auto& st: stations)
+        st.commit();
 }
 
 namespace batch {
@@ -86,7 +87,19 @@ void StationData::add(const wreport::Var& var, bool overwrite, bool with_attrs)
 
 void MeasuredData::add(int id_levtr, const wreport::Var& var, bool overwrite, bool with_attrs)
 {
-    throw std::runtime_error("not implemented yet");
+    if (with_attrs)
+        throw std::runtime_error("MeasuredData::add with_attrs not yet implemented"); // TODO
+    auto in_db = ids_on_db.find(IdVarcode(id_levtr, var.code()));
+    if (in_db != ids_on_db.end())
+    {
+        // Exists in the database
+        if (!overwrite)
+            return;
+        to_update.emplace_back(in_db->second, id_levtr, var);
+    } else {
+        // Does not exist in the database
+        to_insert.emplace_back(id_levtr, var);
+    }
 }
 
 
@@ -104,6 +117,26 @@ StationData& Station::get_station_data()
 }
 
 MeasuredData& Station::get_measured_data(const Datetime& datetime)
+{
+    auto i = measured_data.find(datetime);
+    if (i != measured_data.end())
+        return i->second;
+
+    auto inserted = measured_data.emplace(datetime, datetime);
+    MeasuredData& md = inserted.first->second;
+
+    if (!is_new)
+    {
+        v7::Data& d = transaction->data();
+        d.query(std::make_pair(id, datetime), [&](int data_id, int id_levtr, wreport::Varcode code) {
+            md.ids_on_db.insert(std::make_pair(IdVarcode(id_levtr, code), data_id));
+        });
+    }
+
+    return md;
+}
+
+void Station::commit()
 {
     throw std::runtime_error("not implemented yet");
 }

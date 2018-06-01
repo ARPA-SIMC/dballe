@@ -131,9 +131,23 @@ add_method("from_db", [](Fixture& f) {
     wassert_true(station->station_data.to_insert.empty());
     wassert_true(station->station_data.to_update.empty());
     wassert(actual(station->station_data.ids_by_code.size()) == 1u);
-    auto it = station->station_data.ids_by_code.begin();
-    wassert(actual(it->first) == WR_VAR(0, 7, 30));
-    wassert(actual(it->second) > 0u);
+    {
+        auto it = station->station_data.ids_by_code.begin();
+        wassert(actual(it->first) == WR_VAR(0, 7, 30));
+        wassert(actual(it->second) > 0u);
+    }
+
+    auto measured_data = station->get_measured_data(Datetime(2013, 10, 16, 10));
+    wassert(actual(measured_data.datetime) == Datetime(2013, 10, 16, 10));
+    wassert_true(measured_data.to_insert.empty());
+    wassert_true(measured_data.to_update.empty());
+    wassert(actual(measured_data.ids_on_db.size()) == 1u);
+    {
+        auto it = measured_data.ids_on_db.begin();
+        wassert(actual(it->first.id) > 0);
+        wassert(actual(it->first.varcode) == WR_VAR(0, 12, 101));
+        wassert(actual(it->second) > 0u);
+    }
 });
 
 }
