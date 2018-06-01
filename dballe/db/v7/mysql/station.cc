@@ -30,7 +30,7 @@ MySQLStation::~MySQLStation()
 {
 }
 
-bool MySQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st, int* id)
+int MySQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st)
 {
     int rep = tr.repinfo().obtain_id(st.report.c_str());
 
@@ -48,10 +48,9 @@ bool MySQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st, 
     switch (res.rowcount())
     {
         case 0:
-            return false;
+            return MISSING_INT;
         case 1:
-            *id = res.fetch().as_int(0);
-            return true;
+            return res.fetch().as_int(0);
         default:
             error_consistency::throwf("select station ID query returned %u results", res.rowcount());
     }
@@ -83,7 +82,8 @@ int MySQLStation::obtain_id(v7::Transaction& tr, const dballe::Station& desc)
     int id = cache.find_id(desc);
     if (id != MISSING_INT) return id;
 
-    if (maybe_get_id(tr, desc, &id))
+    id = maybe_get_id(tr, desc);
+    if (id != MISSING_INT)
     {
         cache.insert(desc, id);
         return id;

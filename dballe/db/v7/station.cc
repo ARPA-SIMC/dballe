@@ -32,7 +32,8 @@ int Station::get_id(v7::Transaction& tr, const dballe::Station& desc)
     if (id != MISSING_INT)
         return id;
 
-    if (maybe_get_id(tr, desc, &id))
+    id = maybe_get_id(tr, desc);
+    if (id != MISSING_INT)
     {
         cache.insert(desc, id);
         return id;

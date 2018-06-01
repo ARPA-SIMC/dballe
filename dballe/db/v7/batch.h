@@ -49,6 +49,7 @@ struct Datum
 struct Data
 {
     std::vector<Datum> data;
+    bool loaded = false;
 
     void add(const wreport::Var& var, bool overwrite=false, bool with_attrs=false);
 

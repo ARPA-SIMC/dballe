@@ -1,4 +1,6 @@
 #include "dballe/db/tests.h"
+#include "dballe/db/v7/db.h"
+#include "dballe/db/v7/transaction.h"
 #include "batch.h"
 #include "config.h"
 
@@ -82,6 +84,31 @@ add_method("reuse", [](Fixture& f) {
 
     station1 = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0), "AB123"));
     wassert(actual(station) == station1);
+});
+
+add_method("from_db", [](Fixture& f) {
+    using namespace dballe::db::v7;
+
+    Coords coords(44.5008, 11.3288);
+
+    TestDataSet ds;
+    ds.stations["synop"].info.coords = coords;
+    ds.stations["synop"].info.report = "synop";
+    ds.stations["synop"].values.set("B07030", 78); // Height
+    ds.data["synop"].info = ds.stations["synop"].info;
+    ds.data["synop"].info.datetime = Datetime(2013, 10, 16, 10);
+    ds.data["synop"].values.set(WR_VAR(0, 12, 101), 16.5);
+    wassert(f.populate(ds));
+
+    Batch batch(f.tr);
+    batch::Station* station = wcallchecked(batch.get_station("synop", coords, Ident()));
+    wassert(actual(station->report) == "synop");
+    wassert(actual(station->id) != MISSING_INT);
+    wassert(actual(station->coords) == coords);
+    wassert_true(station->ident.is_missing());
+    wassert_false(station->is_new);
+    wassert_false(station->station_data.loaded);
+    wassert_true(station->station_data.data.empty());
 });
 
 }

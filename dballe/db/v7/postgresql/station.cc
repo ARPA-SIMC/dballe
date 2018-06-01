@@ -44,7 +44,7 @@ PostgreSQLStation::~PostgreSQLStation()
 {
 }
 
-bool PostgreSQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st, int* id)
+int PostgreSQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st)
 {
     using namespace dballe::sql::postgresql;
 
@@ -59,10 +59,8 @@ bool PostgreSQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station&
     unsigned rows = res.rowcount();
     switch (rows)
     {
-        case 0: return false;
-        case 1:
-            *id = res.get_int4(0, 0);
-            return true;
+        case 0: return MISSING_INT;
+        case 1: return res.get_int4(0, 0);
         default: error_consistency::throwf("select station ID query returned %u results", rows);
     }
 }
@@ -103,7 +101,8 @@ int PostgreSQLStation::obtain_id(v7::Transaction& tr, const dballe::Station& des
     int id = cache.find_id(desc);
     if (id != MISSING_INT) return id;
 
-    if (maybe_get_id(tr, desc, &id))
+    id = maybe_get_id(tr, desc);
+    if (id != MISSING_INT)
     {
         cache.insert(desc, id);
         return id;

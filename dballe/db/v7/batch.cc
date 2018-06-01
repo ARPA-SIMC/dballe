@@ -1,4 +1,6 @@
 #include "batch.h"
+#include "transaction.h"
+#include "station.h"
 
 namespace dballe {
 namespace db {
@@ -30,11 +32,24 @@ batch::Station* Batch::get_station(const std::string& report, const Coords& coor
     batch::Station* res = find_existing(report, coords, ident);
     if (res) return res;
 
+    v7::Station& st = transaction->station();
+
     stations.emplace_back();
     res = &stations.back(); // FIXME: in C++17, emplace_back returns a reference
     res->report = report;
     res->coords = coords;
     res->ident = ident;
+    res->id = st.maybe_get_id(*transaction, *res);
+    if (res->id == MISSING_INT)
+    {
+        res->is_new = true;
+        res->station_data.loaded = true;
+    }
+    else
+    {
+        res->is_new = false;
+        res->station_data.loaded = false;
+    }
     index_existing(res);
     return res;
 }

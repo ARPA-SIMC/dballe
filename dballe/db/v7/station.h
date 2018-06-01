@@ -29,7 +29,6 @@ protected:
     StationCache cache;
     /// IDs of station that were inserted during this session
     std::unordered_set<int> new_ids;
-    virtual bool maybe_get_id(v7::Transaction& tr, const dballe::Station& st, int* id) = 0;
     virtual void _dump(std::function<void(int, int, const Coords& coords, const char* ident)> out) = 0;
 
 public:
@@ -48,6 +47,13 @@ public:
 
     /// Return true if the station has been inserted during this session
     bool is_newly_inserted(int id) const;
+
+    /**
+     * Get the station ID given latitude, longitude and mobile identifier.
+     *
+     * It returns MISSING_INT if it does not exist.
+     */
+    virtual int maybe_get_id(v7::Transaction& tr, const dballe::Station& st) = 0;
 
     /**
      * Look up a station given its ID.

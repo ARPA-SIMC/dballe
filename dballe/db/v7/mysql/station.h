@@ -25,9 +25,6 @@ protected:
      */
     dballe::sql::MySQLConnection& conn;
 
-    /// Lookup the ID of a station, returning true if it was found, false if not
-    bool maybe_get_id(v7::Transaction& tr, const dballe::Station& st, int* id) override;
-
     void _dump(std::function<void(int, int, const Coords& coords, const char* ident)> out) override;
 
 public:
@@ -37,6 +34,7 @@ public:
     MySQLStation(const MySQLStation&&) = delete;
     MySQLStation& operator=(const MySQLStation&) = delete;
 
+    int maybe_get_id(v7::Transaction& tr, const dballe::Station& st) override;
     const dballe::Station* lookup_id(v7::Transaction& tr, int id) override;
     int obtain_id(v7::Transaction& tr, const dballe::Station& desc) override;
 

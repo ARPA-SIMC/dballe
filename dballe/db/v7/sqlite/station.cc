@@ -48,7 +48,7 @@ SQLiteStation::~SQLiteStation()
     delete istm;
 }
 
-bool SQLiteStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st, int* id)
+int SQLiteStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st)
 {
     SQLiteStatement* s;
     int rep = tr.repinfo().obtain_id(st.report.c_str());
@@ -66,11 +66,15 @@ bool SQLiteStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st,
         s = sfstm;
     }
     bool found = false;
+    int id;
     s->execute_one([&]() {
         found = true;
-        *id = s->column_int(0);
+        id = s->column_int(0);
     });
-    return found;
+    if (found)
+        return id;
+    else
+        return MISSING_INT;
 }
 
 const dballe::Station* SQLiteStation::lookup_id(v7::Transaction& tr, int id)
@@ -106,7 +110,8 @@ int SQLiteStation::obtain_id(v7::Transaction& tr, const dballe::Station& desc)
     int id = cache.find_id(desc);
     if (id != MISSING_INT) return id;
 
-    if (maybe_get_id(tr, desc, &id))
+    id = maybe_get_id(tr, desc);
+    if (id != MISSING_INT)
     {
         cache.insert(desc, id);
         return id;
