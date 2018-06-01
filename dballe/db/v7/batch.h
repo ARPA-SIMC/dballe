@@ -26,6 +26,7 @@ protected:
 public:
     Batch(std::shared_ptr<Transaction> transaction) : transaction(transaction) {}
 
+    batch::Station* get_station(const dballe::Station& station, bool station_can_add);
     batch::Station* get_station(const std::string& report, const Coords& coords, const Ident& ident);
 
     void commit();

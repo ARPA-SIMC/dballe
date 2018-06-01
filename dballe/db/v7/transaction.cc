@@ -5,6 +5,7 @@
 #include "cursor.h"
 #include "station.h"
 #include "repinfo.h"
+#include "batch.h"
 #include "dballe/core/query.h"
 #include "dballe/sql/sql.h"
 #include <cassert>
@@ -104,52 +105,45 @@ void Transaction::remove_all()
 
 void Transaction::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
 {
-    // Insert the station data, and get the ID
-    int si = obtain_station(vals.info, station_can_add);
-
-    v7::bulk::InsertStationVars vars(si);
-    vals.info.id = si;
+    Batch batch(std::dynamic_pointer_cast<v7::Transaction>(shared_from_this()));
+    batch::Station* st = batch.get_station(vals.info, station_can_add);
 
     // Add all the variables we find
+    batch::StationData& sd = st->get_station_data();
     for (auto& i: vals.values)
-        vars.add(i.second.var);
+        sd.add(*i.second.var, can_replace, true);
 
-    // Do the insert
-    v7::StationData& d = station_data();
-    d.insert(*this, vars, can_replace ? v7::bulk::UPDATE : v7::bulk::ERROR);
+    // Perform changes
+    batch.commit();
 
     // Read the IDs from the results
-    for (const auto& v: vars)
-        vals.values.add_data_id(v.var->code(), v.id);
+    for (auto& v: vals.values)
+        v.second.data_id = sd.ids_by_code[v.first];
 }
 
 void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
 {
-    /* Check for the existance of non-lev_tr data, otherwise it's all
-     * useless.  Not inserting data is fine in case of setlev_trana */
     if (vals.values.empty())
         throw error_notfound("no variables found in input record");
 
-    // Insert the station data, and get the ID
-    int si = obtain_station(vals.info, station_can_add);
+    Batch batch(std::dynamic_pointer_cast<v7::Transaction>(shared_from_this()));
+    batch::Station* st = batch.get_station(vals.info, station_can_add);
 
-    v7::bulk::InsertVars vars(si, vals.info.datetime);
-    vals.info.id = si;
+    batch::MeasuredData& md = st->get_measured_data(vals.info.datetime);
 
     // Insert the lev_tr data, and get the ID
-    auto ltri = levtr().obtain_id(LevTrEntry(vals.info.level, vals.info.trange));
+    int id_levtr = levtr().obtain_id(LevTrEntry(vals.info.level, vals.info.trange));
 
     // Add all the variables we find
     for (auto& i: vals.values)
-        vars.add(i.second.var, ltri);
+        md.add(id_levtr, *i.second.var, can_replace, true);
 
-    // Do the insert
-    v7::Data& d = data();
-    d.insert(*this, vars, can_replace ? v7::bulk::UPDATE : v7::bulk::ERROR);
+    // Perform changes
+    batch.commit();
 
     // Read the IDs from the results
-    for (const auto& v: vars)
-        vals.values.add_data_id(v.var->code(), v.id);
+    for (auto& v: vals.values)
+        v.second.data_id = md.ids_on_db[batch::IdVarcode(id_levtr, v.first)];
 }
 
 void Transaction::remove_station_data(const Query& query)

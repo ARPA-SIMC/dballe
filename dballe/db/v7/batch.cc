@@ -29,6 +29,42 @@ void Batch::index_existing(batch::Station* st, size_t pos)
         li->second.push_back(pos);
 }
 
+batch::Station* Batch::get_station(const dballe::Station& station, bool station_can_add)
+{
+    batch::Station* res = find_existing(station.report, station.coords, station.ident);
+    if (res)
+    {
+        if (res->id != station.id)
+            throw std::runtime_error("batch station has different id than the station we are using to look it up");
+        return res;
+    }
+    v7::Station& st = transaction->station();
+
+    stations.emplace_back();
+    res = &stations.back(); // FIXME: in C++17, emplace_back already returns a reference
+    res->transaction = transaction;
+    res->report = station.report;
+    res->coords = station.coords;
+    res->ident = station.ident;
+    if (station.id != MISSING_INT)
+        res->id = station.id;
+    else
+        res->id = st.maybe_get_id(*transaction, *res);
+    if (res->id == MISSING_INT)
+    {
+        if (!station_can_add)
+            throw wreport::error_notfound("station not found in the database");
+        res->is_new = true;
+        res->station_data.loaded = true;
+    }
+    else
+    {
+        res->is_new = false;
+        res->station_data.loaded = false;
+    }
+    index_existing(res, stations.size() - 1);
+    return res;
+}
 
 batch::Station* Batch::get_station(const std::string& report, const Coords& coords, const Ident& ident)
 {
