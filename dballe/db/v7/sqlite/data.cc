@@ -131,6 +131,16 @@ SQLiteStationData::SQLiteStationData(SQLiteConnection& conn)
     istm = conn.sqlitestatement("INSERT INTO station_data (id_station, code, value, attrs) VALUES (?, ?, ?, ?)").release();
 }
 
+void SQLiteStationData::query(const int& query, std::function<void(int id, wreport::Varcode code)> dest)
+{
+    sstm->bind_val(1, query);
+    sstm->execute([&]() {
+        int id = sstm->column_int(0);
+        wreport::Varcode code = sstm->column_int(1);
+        dest(id, code);
+    });
+}
+
 void SQLiteStationData::insert(dballe::db::v7::Transaction& tr, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
 {
     vars.look_for_missing_ids();
@@ -229,6 +239,18 @@ SQLiteData::SQLiteData(SQLiteConnection& conn)
 {
     sstm = conn.sqlitestatement("SELECT id, id_levtr, code FROM data WHERE id_station=? AND datetime=?").release();
     istm = conn.sqlitestatement("INSERT INTO data (id_station, id_levtr, datetime, code, value, attrs) VALUES (?, ?, ?, ?, ?, ?)").release();
+}
+
+void SQLiteData::query(const std::pair<int, Datetime>& query, std::function<void(int id, int id_levtr, wreport::Varcode code)> dest)
+{
+    sstm->bind_val(1, query.first);
+    sstm->bind_val(2, query.second);
+    sstm->execute([&]() {
+        int id_levtr = sstm->column_int(1);
+        wreport::Varcode code = sstm->column_int(2);
+        int id = sstm->column_int(0);
+        dest(id, id_levtr, code);
+    });
 }
 
 void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode, bool with_attrs)

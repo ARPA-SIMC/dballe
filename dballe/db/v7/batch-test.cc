@@ -41,6 +41,7 @@ add_method("empty", [](Fixture& f) {
 
     Batch batch(f.tr);
     batch::Station* station = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0), Ident()));
+    wassert_true(station->transaction);
     wassert(actual(station->report) == "synop");
     wassert(actual(station->id) == MISSING_INT);
     wassert(actual(station->coords) == Coords(11.0, 45.0));
@@ -49,6 +50,7 @@ add_method("empty", [](Fixture& f) {
     wassert_true(station->station_data.data.empty());
 
     station = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0), "AB123"));
+    wassert_true(station->transaction);
     wassert(actual(station->report) == "synop");
     wassert(actual(station->id) == MISSING_INT);
     wassert(actual(station->coords) == Coords(11.0, 45.0));
@@ -63,6 +65,7 @@ add_method("reuse", [](Fixture& f) {
 
     Batch batch(f.tr);
     batch::Station* station = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0), Ident()));
+    wassert_true(station->transaction);
     wassert(actual(station->report) == "synop");
     wassert(actual(station->id) == MISSING_INT);
     wassert(actual(station->coords) == Coords(11.0, 45.0));
@@ -74,6 +77,7 @@ add_method("reuse", [](Fixture& f) {
     wassert(actual(station) == station1);
 
     station = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0), "AB123"));
+    wassert_true(station->transaction);
     wassert(actual(station->report) == "synop");
     wassert(actual(station->id) == MISSING_INT);
     wassert(actual(station->coords) == Coords(11.0, 45.0));
@@ -102,13 +106,24 @@ add_method("from_db", [](Fixture& f) {
 
     Batch batch(f.tr);
     batch::Station* station = wcallchecked(batch.get_station("synop", coords, Ident()));
+    wassert_true(station->transaction);
     wassert(actual(station->report) == "synop");
     wassert(actual(station->id) != MISSING_INT);
     wassert(actual(station->coords) == coords);
     wassert_true(station->ident.is_missing());
     wassert_false(station->is_new);
+
     wassert_false(station->station_data.loaded);
     wassert_true(station->station_data.data.empty());
+    wassert_true(station->station_data.ids_by_code.empty());
+
+    station->get_station_data();
+    wassert_true(station->station_data.loaded);
+    wassert_true(station->station_data.data.empty());
+    wassert(actual(station->station_data.ids_by_code.size()) == 1u);
+    auto it = station->station_data.ids_by_code.begin();
+    wassert(actual(it->first) == WR_VAR(0, 7, 30));
+    wassert(actual(it->second) > 0u);
 });
 
 }

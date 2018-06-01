@@ -60,6 +60,8 @@ public:
     using MySQLDataCommon::MySQLDataCommon;
 
     MySQLStationData(dballe::sql::MySQLConnection& conn);
+
+    void query(const int& query, std::function<void(int id, wreport::Varcode code)> dest) override;
     void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE, bool with_attrs=false) override;
     void dump(FILE* out) override;
     void clear_cache() override {}
@@ -74,6 +76,8 @@ public:
     using MySQLDataCommon::MySQLDataCommon;
 
     MySQLData(dballe::sql::MySQLConnection& conn);
+
+    void query(const std::pair<int, Datetime>& query, std::function<void(int id, int id_levtr, wreport::Varcode code)> dest) override;
     void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE, bool with_attrs=false) override;
     void dump(FILE* out) override;
     void clear_cache() override {}

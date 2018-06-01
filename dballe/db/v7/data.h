@@ -86,6 +86,9 @@ public:
     /// Run the query to delete all records selected by the given QueryBuilder
     virtual void remove(const v7::IdQueryBuilder& qb) = 0;
 
+    /// Query contents of the data table
+    virtual void query(const typename Traits::query_contents& query, typename Traits::read_contents dest) = 0;
+
     /// Dump the entire contents of the table to an output stream
     virtual void dump(FILE* out) = 0;
 
@@ -289,12 +292,18 @@ struct StationDataTraits
 {
     typedef bulk::InsertStationVars BulkVars;
     static const char* table_name;
+
+    typedef int query_contents;
+    typedef std::function<void(int id, wreport::Varcode code)> read_contents;
 };
 
 struct DataTraits
 {
     typedef bulk::InsertVars BulkVars;
     static const char* table_name;
+
+    typedef std::pair<int, Datetime> query_contents;
+    typedef std::function<void(int id, int id_levtr, wreport::Varcode code)> read_contents;
 };
 
 extern template class DataCommon<StationDataTraits>;

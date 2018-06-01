@@ -6,24 +6,27 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
-batch::Station* Batch::find_existing(const std::string& report, const Coords& coords, const Ident& ident) const
+batch::Station* Batch::find_existing(const std::string& report, const Coords& coords, const Ident& ident)
 {
     auto li = stations_by_lon.find(coords.lon);
     if (li == stations_by_lon.end())
         return nullptr;
     for (auto i: li->second)
-        if (i->report == report && i->coords == coords && i->ident == ident)
-            return i;
+    {
+        batch::Station* st = &stations[i];
+        if (st->report == report && st->coords == coords && st->ident == ident)
+            return st;
+    }
     return nullptr;
 }
 
-void Batch::index_existing(batch::Station* st)
+void Batch::index_existing(batch::Station* st, size_t pos)
 {
     auto li = stations_by_lon.find(st->coords.lon);
     if (li == stations_by_lon.end())
-        stations_by_lon.insert(make_pair(st->coords.lon, std::vector<batch::Station*>{st}));
+        stations_by_lon.insert(std::make_pair(st->coords.lon, std::vector<size_t>{pos}));
     else
-        li->second.push_back(st);
+        li->second.push_back(pos);
 }
 
 
@@ -35,7 +38,8 @@ batch::Station* Batch::get_station(const std::string& report, const Coords& coor
     v7::Station& st = transaction->station();
 
     stations.emplace_back();
-    res = &stations.back(); // FIXME: in C++17, emplace_back returns a reference
+    res = &stations.back(); // FIXME: in C++17, emplace_back already returns a reference
+    res->transaction = transaction;
     res->report = report;
     res->coords = coords;
     res->ident = ident;
@@ -50,7 +54,7 @@ batch::Station* Batch::get_station(const std::string& report, const Coords& coor
         res->is_new = false;
         res->station_data.loaded = false;
     }
-    index_existing(res);
+    index_existing(res, stations.size() - 1);
     return res;
 }
 
@@ -61,12 +65,31 @@ void Batch::commit()
 
 namespace batch {
 
-void Data::add(const wreport::Var& var, bool overwrite, bool with_attrs)
+void StationData::add(const wreport::Var& var, bool overwrite, bool with_attrs)
 {
     throw std::runtime_error("not implemented yet");
 }
 
-MeasuredData& Station::get_measured_data(int id_levtr, const Datetime& datetime)
+void MeasuredData::add(int id_levtr, const wreport::Var& var, bool overwrite, bool with_attrs)
+{
+    throw std::runtime_error("not implemented yet");
+}
+
+
+StationData& Station::get_station_data()
+{
+    if (!station_data.loaded)
+    {
+        v7::StationData& sd = transaction->station_data();
+        sd.query(id, [&](int data_id, wreport::Varcode code) {
+            station_data.ids_by_code.insert(std::make_pair(code, data_id));
+        });
+        station_data.loaded = true;
+    }
+    return station_data;
+}
+
+MeasuredData& Station::get_measured_data(const Datetime& datetime)
 {
     throw std::runtime_error("not implemented yet");
 }

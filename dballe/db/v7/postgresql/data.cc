@@ -188,6 +188,17 @@ static void build_update_query(PostgreSQLConnection& conn, Querybuf& qb, bool wi
     }
 }
 
+void PostgreSQLStationData::query(const int& query, std::function<void(int id, wreport::Varcode code)> dest)
+{
+    Result existing(conn.exec_prepared("station_datav7_select", query));
+    for (unsigned row = 0; row < existing.rowcount(); ++row)
+    {
+        int id = existing.get_int4(row, 0);
+        wreport::Varcode code = (Varcode)existing.get_int4(row, 1);
+        dest(id, code);
+    }
+}
+
 void PostgreSQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
 {
     vars.look_for_missing_ids();
@@ -301,6 +312,18 @@ PostgreSQLData::PostgreSQLData(PostgreSQLConnection& conn)
     : PostgreSQLDataCommon(conn)
 {
     conn.prepare("datav7_select", "SELECT id, id_levtr, code FROM data WHERE id_station=$1::int4 AND datetime=$2::timestamp");
+}
+
+void PostgreSQLData::query(const std::pair<int, Datetime>& query, std::function<void(int id, int id_levtr, wreport::Varcode code)> dest)
+{
+    Result existing(conn.exec_prepared("datav7_select", query.first, query.second));
+    for (unsigned row = 0; row < existing.rowcount(); ++row)
+    {
+        int id = existing.get_int4(row, 0);
+        int id_levtr = existing.get_int4(row, 1);
+        wreport::Varcode code = (Varcode)existing.get_int4(row, 2);
+        dest(id, id_levtr, code);
+    }
 }
 
 void PostgreSQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode, bool with_attrs)

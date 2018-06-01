@@ -66,7 +66,7 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
             if (code >= WR_VAR(0, 4, 1) && code <= WR_VAR(0, 4, 6))
                 continue;
 
-            station->station_data.add(*l_ana->data[i], flags & DBA_IMPORT_OVERWRITE, flags & DBA_IMPORT_ATTRS);
+            station->get_station_data().add(*l_ana->data[i], flags & DBA_IMPORT_OVERWRITE, flags & DBA_IMPORT_ATTRS);
         }
     }
 
@@ -75,6 +75,7 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
     Datetime datetime = msg.get_datetime();
     if (datetime.is_missing())
         throw error_notfound("date/time informations not found (or incomplete) in message to insert");
+    batch::MeasuredData& md = station->get_measured_data(datetime);
     for (size_t i = 0; i < msg.data.size(); ++i)
     {
         if (msg.data[i] == l_ana) continue;
@@ -83,13 +84,11 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
         // Get the database ID of the lev_tr
         int id_levtr = lt.obtain_id(LevTrEntry(ctx.level, ctx.trange));
 
-        batch::MeasuredData& md = station->get_measured_data(id_levtr, datetime);
-
         for (size_t j = 0; j < ctx.data.size(); ++j)
         {
             const Var* var = ctx.data[j];
             if (not var->isset()) continue;
-            md.add(*var, flags & DBA_IMPORT_OVERWRITE, flags & DBA_IMPORT_ATTRS);
+            md.add(id_levtr, *var, flags & DBA_IMPORT_OVERWRITE, flags & DBA_IMPORT_ATTRS);
         }
     }
 

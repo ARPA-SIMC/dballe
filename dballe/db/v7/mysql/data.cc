@@ -110,6 +110,19 @@ MySQLStationData::MySQLStationData(MySQLConnection& conn)
 {
 }
 
+void MySQLStationData::query(const int& query, std::function<void(int id, wreport::Varcode code)> dest)
+{
+    char strquery[128];
+    snprintf(strquery, 128, "SELECT id, code FROM station_data WHERE id_station=%d", query);
+    auto res = conn.exec_store(strquery);
+    while (auto row = res.fetch())
+    {
+        int id = row.as_int(0);
+        wreport::Varcode code = row.as_int(1);
+        dest(id, code);
+    }
+}
+
 void MySQLStationData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
 {
     vars.look_for_missing_ids();
@@ -221,6 +234,22 @@ void MySQLStationData::dump(FILE* out)
 MySQLData::MySQLData(MySQLConnection& conn)
     : MySQLDataCommon(conn)
 {
+}
+
+void MySQLData::query(const std::pair<int, Datetime>& query, std::function<void(int id, int id_levtr, wreport::Varcode code)> dest)
+{
+    const auto& dt = query.second;
+    char strquery[128];
+    snprintf(strquery, 128, "SELECT id, id_levtr, code FROM data WHERE id_station=%d AND datetime='%04d-%02d-%02d %02d:%02d:%02d'",
+            query.first, dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
+    auto res = conn.exec_store(strquery);
+    while (auto row = res.fetch())
+    {
+        int id_levtr = row.as_int(1);
+        wreport::Varcode code = row.as_int(2);
+        int id = row.as_int(0);
+        dest(id, id_levtr, code);
+    }
 }
 
 void MySQLData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
