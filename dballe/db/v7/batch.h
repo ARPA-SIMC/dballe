@@ -61,6 +61,7 @@ struct StationData
     bool loaded = false;
 
     void add(const wreport::Var& var, bool overwrite=false, bool with_attrs=false);
+    void commit(Transaction& tr, int station_id);
 };
 
 
@@ -130,6 +131,7 @@ struct MeasuredData
     }
 
     void add(int id_levtr, const wreport::Var& var, bool overwrite=false, bool with_attrs=false);
+    void commit(Transaction& tr, int station_id);
 };
 
 struct Station : public dballe::Station

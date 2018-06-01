@@ -85,6 +85,18 @@ void StationData::add(const wreport::Var& var, bool overwrite, bool with_attrs)
     }
 }
 
+void StationData::commit(Transaction& tr, int station_id)
+{
+    if (!to_insert.empty())
+    {
+        throw std::runtime_error("not implemented yet");
+    }
+    if (!to_update.empty())
+    {
+        throw std::runtime_error("not implemented yet");
+    }
+}
+
 void MeasuredData::add(int id_levtr, const wreport::Var& var, bool overwrite, bool with_attrs)
 {
     if (with_attrs)
@@ -99,6 +111,18 @@ void MeasuredData::add(int id_levtr, const wreport::Var& var, bool overwrite, bo
     } else {
         // Does not exist in the database
         to_insert.emplace_back(id_levtr, var);
+    }
+}
+
+void MeasuredData::commit(Transaction& tr, int station_id)
+{
+    if (!to_insert.empty())
+    {
+        throw std::runtime_error("not implemented yet");
+    }
+    if (!to_update.empty())
+    {
+        throw std::runtime_error("not implemented yet");
     }
 }
 
@@ -138,7 +162,12 @@ MeasuredData& Station::get_measured_data(const Datetime& datetime)
 
 void Station::commit()
 {
-    throw std::runtime_error("not implemented yet");
+    if (id == MISSING_INT)
+        id = transaction->station().obtain_id(*transaction, *this);
+
+    station_data.commit(*transaction, id);
+    for (auto& md: measured_data)
+        md.second.commit(*transaction, id);
 }
 
 }
