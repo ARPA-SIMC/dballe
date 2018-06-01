@@ -3,6 +3,8 @@
 
 #include <dballe/core/values.h>
 #include <dballe/db/v7/fwd.h>
+#include <vector>
+#include <unordered_map>
 #include <memory>
 
 namespace dballe {
@@ -10,14 +12,20 @@ namespace db {
 namespace v7 {
 struct Transaction;
 
-struct Batch
+class Batch
 {
+protected:
     std::shared_ptr<Transaction> transaction;
+    std::vector<batch::Station> stations;
+    std::unordered_map<int, std::vector<batch::Station*>> stations_by_lon;
 
+    batch::Station* find_existing(const std::string& report, const Coords& coords, const Ident& ident) const;
+    void index_existing(batch::Station* st);
+
+public:
     Batch(std::shared_ptr<Transaction> transaction) : transaction(transaction) {}
 
-    std::shared_ptr<batch::Station> get_station(const std::string& report, const Coords& coords);
-    std::shared_ptr<batch::Station> get_station(const std::string& report, const Coords& coords, const std::string& ident);
+    batch::Station* get_station(const std::string& report, const Coords& coords, const Ident& ident);
 
     void commit();
 };

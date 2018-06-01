@@ -25,7 +25,7 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
         throw error_consistency("cannot import into the database a message without station information");
 
     v7::Batch batch(std::dynamic_pointer_cast<v7::Transaction>(shared_from_this()));
-    std::shared_ptr<batch::Station> station;
+    batch::Station* station;
 
     // Latitude
     Coords coords;
@@ -55,7 +55,7 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
     if (const Var* var = l_ana->find_by_id(DBA_MSG_IDENT))
         station = batch.get_station(report, coords, var->enqc());
     else
-        station = batch.get_station(report, coords);
+        station = batch.get_station(report, coords, Ident());
 
     if (flags & DBA_IMPORT_FULL_PSEUDOANA || (station->is_new && station->id == MISSING_INT))
     {

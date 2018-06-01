@@ -38,7 +38,7 @@ add_method("empty", [](Fixture& f) {
     using namespace dballe::db::v7;
 
     Batch batch(f.tr);
-    auto station = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0)));
+    batch::Station* station = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0), Ident()));
     wassert(actual(station->report) == "synop");
     wassert(actual(station->id) == MISSING_INT);
     wassert(actual(station->coords) == Coords(11.0, 45.0));
@@ -54,6 +54,34 @@ add_method("empty", [](Fixture& f) {
     wassert(actual(station->ident) == "AB123");
     wassert_true(station->is_new);
     wassert_true(station->station_data.data.empty());
+});
+
+add_method("reuse", [](Fixture& f) {
+    using namespace dballe::db::v7;
+
+    Batch batch(f.tr);
+    batch::Station* station = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0), Ident()));
+    wassert(actual(station->report) == "synop");
+    wassert(actual(station->id) == MISSING_INT);
+    wassert(actual(station->coords) == Coords(11.0, 45.0));
+    wassert_true(station->ident.is_missing());
+    wassert_true(station->is_new);
+    wassert_true(station->station_data.data.empty());
+
+    batch::Station* station1 = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0), Ident()));
+    wassert(actual(station) == station1);
+
+    station = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0), "AB123"));
+    wassert(actual(station->report) == "synop");
+    wassert(actual(station->id) == MISSING_INT);
+    wassert(actual(station->coords) == Coords(11.0, 45.0));
+    wassert_false(station->ident.is_missing());
+    wassert(actual(station->ident) == "AB123");
+    wassert_true(station->is_new);
+    wassert_true(station->station_data.data.empty());
+
+    station1 = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0), "AB123"));
+    wassert(actual(station) == station1);
 });
 
 }
