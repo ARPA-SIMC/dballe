@@ -1,5 +1,5 @@
 #include "station.h"
-#include "transaction.h"
+#include "dballe/db/v7/transaction.h"
 #include "dballe/sql/postgresql.h"
 #include "dballe/record.h"
 #include "dballe/core/var.h"
@@ -94,25 +94,12 @@ const dballe::Station* PostgreSQLStation::lookup_id(v7::Transaction& tr, int id)
     }
 }
 
-int PostgreSQLStation::obtain_id(v7::Transaction& tr, const dballe::Station& desc)
+int PostgreSQLStation::insert_new(v7::Transaction& tr, const dballe::Station& desc)
 {
-    using namespace dballe::sql::postgresql;
-
-    int id = cache.find_id(desc);
-    if (id != MISSING_INT) return id;
-
-    id = maybe_get_id(tr, desc);
-    if (id != MISSING_INT)
-    {
-        cache.insert(desc, id);
-        return id;
-    }
-
     // If no station was found, insert a new one
     int rep = tr.repinfo().get_id(desc.report.c_str());
-    id = conn.exec_prepared_one_row("v7_station_insert", rep, desc.coords.lat, desc.coords.lon, desc.ident.get()).get_int4(0, 0);
+    int id = conn.exec_prepared_one_row("v7_station_insert", rep, desc.coords.lat, desc.coords.lon, desc.ident.get()).get_int4(0, 0);
     cache.insert(desc, id);
-    new_ids.insert(id);
     return id;
 }
 

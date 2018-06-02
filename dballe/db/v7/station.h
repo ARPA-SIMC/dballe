@@ -27,8 +27,6 @@ struct Station
 {
 protected:
     StationCache cache;
-    /// IDs of station that were inserted during this session
-    std::unordered_set<int> new_ids;
     virtual void _dump(std::function<void(int, int, const Coords& coords, const char* ident)> out) = 0;
 
 public:
@@ -44,9 +42,6 @@ public:
      * the cache from scratch.
      */
     void clear_cache();
-
-    /// Return true if the station has been inserted during this session
-    bool is_newly_inserted(int id) const;
 
     /**
      * Get the station ID given latitude, longitude and mobile identifier.
@@ -74,7 +69,14 @@ public:
      *
      * It creates the station record if it does not exist.
      */
-    virtual int obtain_id(v7::Transaction& tr, const dballe::Station& desc) = 0;
+    virtual int obtain_id(v7::Transaction& tr, const dballe::Station& desc);
+
+    /**
+     * Insert a new station in the database, without checking if it already exists.
+     *
+     * Returns the ID of the new station
+     */
+    virtual int insert_new(v7::Transaction& tr, const dballe::Station& desc) = 0;
 
     /**
      * Dump the entire contents of the table to an output stream

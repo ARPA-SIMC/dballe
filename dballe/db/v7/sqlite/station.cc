@@ -105,18 +105,8 @@ const dballe::Station* SQLiteStation::lookup_id(v7::Transaction& tr, int id)
     return res;
 }
 
-int SQLiteStation::obtain_id(v7::Transaction& tr, const dballe::Station& desc)
+int SQLiteStation::insert_new(v7::Transaction& tr, const dballe::Station& desc)
 {
-    int id = cache.find_id(desc);
-    if (id != MISSING_INT) return id;
-
-    id = maybe_get_id(tr, desc);
-    if (id != MISSING_INT)
-    {
-        cache.insert(desc, id);
-        return id;
-    }
-
     // If no station was found, insert a new one
     istm->bind_val(1, tr.repinfo().get_id(desc.report.c_str()));
     istm->bind_val(2, desc.coords.lat);
@@ -127,9 +117,8 @@ int SQLiteStation::obtain_id(v7::Transaction& tr, const dballe::Station& desc)
         istm->bind_null_val(4);
     istm->execute();
 
-    id = conn.get_last_insert_id();
+    int id = conn.get_last_insert_id();
     cache.insert(desc, id);
-    new_ids.insert(id);
     return id;
 }
 

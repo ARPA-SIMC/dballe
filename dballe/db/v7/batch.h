@@ -16,7 +16,6 @@ struct Transaction;
 class Batch
 {
 protected:
-    Transaction& transaction;
     std::vector<batch::Station> stations;
     std::unordered_map<int, std::vector<size_t>> stations_by_lon;
 
@@ -24,6 +23,11 @@ protected:
     void index_existing(batch::Station* st, size_t pos);
 
 public:
+    Transaction& transaction;
+    unsigned count_select_stations = 0;
+    unsigned count_select_station_data = 0;
+    unsigned count_select_data = 0;
+
     Batch(Transaction& transaction) : transaction(transaction) {}
 
     batch::Station* get_station(const dballe::Station& station, bool station_can_add);
@@ -130,13 +134,13 @@ struct MeasuredData
 
 struct Station : public dballe::Station
 {
-    Transaction& transaction;
+    Batch& batch;
     bool is_new = true;
     StationData station_data;
     std::map<Datetime, MeasuredData> measured_data;
 
-    Station(Transaction& transaction)
-        : transaction(transaction) {}
+    Station(Batch& batch)
+        : batch(batch) {}
 
     StationData& get_station_data();
     MeasuredData& get_measured_data(const Datetime& datetime);

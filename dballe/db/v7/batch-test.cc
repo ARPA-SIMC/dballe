@@ -146,6 +146,15 @@ add_method("from_db", [](Fixture& f) {
     }
 });
 
+add_method("import", [](Fixture& f) {
+    Messages msgs1 = read_msgs("bufr/test-airep1.bufr", File::BUFR);
+    f.tr->import_msg(msgs1[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+    db::v7::Batch& batch = f.tr->batch;
+    wassert(actual(batch.count_select_stations) == 1u);
+    wassert(actual(batch.count_select_station_data) == 0u);
+    wassert(actual(batch.count_select_data) == 0u);
+});
+
 }
 
 }

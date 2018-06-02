@@ -77,18 +77,8 @@ const dballe::Station* MySQLStation::lookup_id(v7::Transaction& tr, int id)
     return cache.insert(move(station));
 }
 
-int MySQLStation::obtain_id(v7::Transaction& tr, const dballe::Station& desc)
+int MySQLStation::insert_new(v7::Transaction& tr, const dballe::Station& desc)
 {
-    int id = cache.find_id(desc);
-    if (id != MISSING_INT) return id;
-
-    id = maybe_get_id(tr, desc);
-    if (id != MISSING_INT)
-    {
-        cache.insert(desc, id);
-        return id;
-    }
-
     // If no station was found, insert a new one
     int rep = tr.repinfo().get_id(desc.report.c_str());
     Querybuf qb;
@@ -105,10 +95,11 @@ int MySQLStation::obtain_id(v7::Transaction& tr, const dballe::Station& desc)
     }
     conn.exec_no_data(qb);
 
-    id = conn.get_last_insert_id();
+    int id = conn.get_last_insert_id();
     cache.insert(desc, id);
-    new_ids.insert(id);
     return id;
+}
+
 #if 0
     // See http://mikefenwick.com/blog/insert-into-database-or-return-id-of-duplicate-row-in-mysql/
     //
@@ -142,7 +133,6 @@ int MySQLStation::obtain_id(v7::Transaction& tr, const dballe::Station& desc)
     if (inserted) *inserted = mysql_affected_rows(conn) > 0;
     return conn.get_last_insert_id();
 #endif
-}
 
 void MySQLStation::get_station_vars(int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
