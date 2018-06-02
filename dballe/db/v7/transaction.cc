@@ -19,7 +19,7 @@ namespace db {
 namespace v7 {
 
 Transaction::Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Transaction> sql_transaction)
-    : db(db), sql_transaction(sql_transaction.release())
+    : db(db), sql_transaction(sql_transaction.release()), batch(*this)
 {
     m_repinfo = db->driver().create_repinfo().release();
     m_station = db->driver().create_station().release();
@@ -68,6 +68,7 @@ void Transaction::commit()
 {
     if (fired) return;
     sql_transaction->commit();
+    clear_cached_state();
     fired = true;
 }
 
@@ -86,6 +87,7 @@ void Transaction::clear_cached_state()
     levtr().clear_cache();
     station_data().clear_cache();
     data().clear_cache();
+    batch.clear();
 }
 
 Transaction& Transaction::downcast(dballe::Transaction& transaction)
@@ -105,7 +107,6 @@ void Transaction::remove_all()
 
 void Transaction::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
 {
-    Batch batch(std::dynamic_pointer_cast<v7::Transaction>(shared_from_this()));
     batch::Station* st = batch.get_station(vals.info, station_can_add);
 
     // Add all the variables we find
@@ -114,7 +115,7 @@ void Transaction::insert_station_data(StationValues& vals, bool can_replace, boo
         sd.add(i.second.var, can_replace ? batch::UPDATE : batch::ERROR);
 
     // Perform changes
-    batch.commit(true);
+    batch.write_pending(true);
 
     // Read the IDs from the results
     vals.info.id = st->id;
@@ -127,7 +128,6 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
     if (vals.values.empty())
         throw error_notfound("no variables found in input record");
 
-    Batch batch(std::dynamic_pointer_cast<v7::Transaction>(shared_from_this()));
     batch::Station* st = batch.get_station(vals.info, station_can_add);
 
     batch::MeasuredData& md = st->get_measured_data(vals.info.datetime);
@@ -140,7 +140,7 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
         md.add(id_levtr, i.second.var, can_replace ? batch::UPDATE : batch::ERROR);
 
     // Perform changes
-    batch.commit(true);
+    batch.write_pending(true);
 
     // Read the IDs from the results
     vals.info.id = st->id;

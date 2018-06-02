@@ -319,6 +319,7 @@ void TestDataSet::populate_db(DB& db)
 
 void TestDataSet::populate_transaction(db::Transaction& tr)
 {
+    // TODO: do everything in a single batch
     for (auto& d: stations)
         wassert(tr.insert_station_data(d.second, true, true));
     for (auto& d: data)

@@ -39,9 +39,8 @@ void Tests::register_tests()
 add_method("empty", [](Fixture& f) {
     using namespace dballe::db::v7;
 
-    Batch batch(f.tr);
+    Batch& batch = f.tr->batch;
     batch::Station* station = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0), Ident()));
-    wassert_true(station->transaction);
     wassert(actual(station->report) == "synop");
     wassert(actual(station->id) == MISSING_INT);
     wassert(actual(station->coords) == Coords(11.0, 45.0));
@@ -52,7 +51,6 @@ add_method("empty", [](Fixture& f) {
     wassert_true(station->station_data.to_update.empty());
 
     station = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0), "AB123"));
-    wassert_true(station->transaction);
     wassert(actual(station->report) == "synop");
     wassert(actual(station->id) == MISSING_INT);
     wassert(actual(station->coords) == Coords(11.0, 45.0));
@@ -67,9 +65,8 @@ add_method("empty", [](Fixture& f) {
 add_method("reuse", [](Fixture& f) {
     using namespace dballe::db::v7;
 
-    Batch batch(f.tr);
+    Batch& batch = f.tr->batch;
     batch::Station* station = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0), Ident()));
-    wassert_true(station->transaction);
     wassert(actual(station->report) == "synop");
     wassert(actual(station->id) == MISSING_INT);
     wassert(actual(station->coords) == Coords(11.0, 45.0));
@@ -83,7 +80,6 @@ add_method("reuse", [](Fixture& f) {
     wassert(actual(station) == station1);
 
     station = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0), "AB123"));
-    wassert_true(station->transaction);
     wassert(actual(station->report) == "synop");
     wassert(actual(station->id) == MISSING_INT);
     wassert(actual(station->coords) == Coords(11.0, 45.0));
@@ -112,9 +108,9 @@ add_method("from_db", [](Fixture& f) {
     ds.data["synop"].values.set(WR_VAR(0, 12, 101), 16.5);
     wassert(f.populate(ds));
 
-    Batch batch(f.tr);
+    Batch& batch = f.tr->batch;
+    batch.clear();
     batch::Station* station = wcallchecked(batch.get_station("synop", coords, Ident()));
-    wassert_true(station->transaction);
     wassert(actual(station->report) == "synop");
     wassert(actual(station->id) != MISSING_INT);
     wassert(actual(station->coords) == coords);

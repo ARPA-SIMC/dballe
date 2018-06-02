@@ -16,7 +16,7 @@ struct Transaction;
 class Batch
 {
 protected:
-    std::shared_ptr<Transaction> transaction;
+    Transaction& transaction;
     std::vector<batch::Station> stations;
     std::unordered_map<int, std::vector<size_t>> stations_by_lon;
 
@@ -24,12 +24,13 @@ protected:
     void index_existing(batch::Station* st, size_t pos);
 
 public:
-    Batch(std::shared_ptr<Transaction> transaction) : transaction(transaction) {}
+    Batch(Transaction& transaction) : transaction(transaction) {}
 
     batch::Station* get_station(const dballe::Station& station, bool station_can_add);
     batch::Station* get_station(const std::string& report, const Coords& coords, const Ident& ident);
 
-    void commit(bool with_attrs);
+    void write_pending(bool with_attrs);
+    void clear();
 };
 
 
@@ -62,7 +63,7 @@ struct StationData
     bool loaded = false;
 
     void add(const wreport::Var* var, UpdateMode on_conflict);
-    void commit(Transaction& tr, int station_id, bool with_attrs);
+    void write_pending(Transaction& tr, int station_id, bool with_attrs);
 };
 
 struct MeasuredDatum
@@ -124,22 +125,23 @@ struct MeasuredData
     }
 
     void add(int id_levtr, const wreport::Var* var, UpdateMode on_conflict);
-    void commit(Transaction& tr, int station_id, bool with_attrs);
+    void write_pending(Transaction& tr, int station_id, bool with_attrs);
 };
 
 struct Station : public dballe::Station
 {
-    std::shared_ptr<Transaction> transaction;
+    Transaction& transaction;
     bool is_new = true;
     StationData station_data;
     std::map<Datetime, MeasuredData> measured_data;
 
-    using dballe::Station::Station;
+    Station(Transaction& transaction)
+        : transaction(transaction) {}
 
     StationData& get_station_data();
     MeasuredData& get_measured_data(const Datetime& datetime);
 
-    void commit(bool with_attrs);
+    void write_pending(bool with_attrs);
 };
 
 }

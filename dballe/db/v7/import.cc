@@ -24,7 +24,6 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
     if (!l_ana)
         throw error_consistency("cannot import into the database a message without station information");
 
-    v7::Batch batch(std::dynamic_pointer_cast<v7::Transaction>(shared_from_this()));
     batch::Station* station;
 
     // Latitude
@@ -100,7 +99,7 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
     }
 
     // Run the bulk insert
-    batch.commit(flags & DBA_IMPORT_ATTRS);
+    batch.write_pending(flags & DBA_IMPORT_ATTRS);
 }
 
 }

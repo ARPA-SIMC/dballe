@@ -34,22 +34,21 @@ batch::Station* Batch::get_station(const dballe::Station& station, bool station_
     batch::Station* res = find_existing(station.report, station.coords, station.ident);
     if (res)
     {
-        if (res->id != station.id)
+        if (station.id != MISSING_INT && res->id != station.id)
             throw std::runtime_error("batch station has different id than the station we are using to look it up");
         return res;
     }
-    v7::Station& st = transaction->station();
+    v7::Station& st = transaction.station();
 
-    stations.emplace_back();
+    stations.emplace_back(transaction);
     res = &stations.back(); // FIXME: in C++17, emplace_back already returns a reference
-    res->transaction = transaction;
     res->report = station.report;
     res->coords = station.coords;
     res->ident = station.ident;
     if (station.id != MISSING_INT)
         res->id = station.id;
     else
-        res->id = st.maybe_get_id(*transaction, *res);
+        res->id = st.maybe_get_id(transaction, *res);
     if (res->id == MISSING_INT)
     {
         if (!station_can_add)
@@ -71,15 +70,14 @@ batch::Station* Batch::get_station(const std::string& report, const Coords& coor
     batch::Station* res = find_existing(report, coords, ident);
     if (res) return res;
 
-    v7::Station& st = transaction->station();
+    v7::Station& st = transaction.station();
 
-    stations.emplace_back();
+    stations.emplace_back(transaction);
     res = &stations.back(); // FIXME: in C++17, emplace_back already returns a reference
-    res->transaction = transaction;
     res->report = report;
     res->coords = coords;
     res->ident = ident;
-    res->id = st.maybe_get_id(*transaction, *res);
+    res->id = st.maybe_get_id(transaction, *res);
     if (res->id == MISSING_INT)
     {
         res->is_new = true;
@@ -94,10 +92,16 @@ batch::Station* Batch::get_station(const std::string& report, const Coords& coor
     return res;
 }
 
-void Batch::commit(bool with_attrs)
+void Batch::write_pending(bool with_attrs)
 {
     for (auto& st: stations)
-        st.commit(with_attrs);
+        st.write_pending(with_attrs);
+}
+
+void Batch::clear()
+{
+    stations_by_lon.clear();
+    stations.clear();
 }
 
 namespace batch {
@@ -138,7 +142,7 @@ void StationData::add(const wreport::Var* var, UpdateMode on_conflict)
     }
 }
 
-void StationData::commit(Transaction& tr, int station_id, bool with_attrs)
+void StationData::write_pending(Transaction& tr, int station_id, bool with_attrs)
 {
     if (!to_insert.empty())
     {
@@ -152,6 +156,8 @@ void StationData::commit(Transaction& tr, int station_id, bool with_attrs)
         auto& st = tr.station_data();
         st.update(tr, to_update, with_attrs);
     }
+    to_insert.clear();
+    to_update.clear();
 }
 
 void MeasuredData::add(int id_levtr, const wreport::Var* var, UpdateMode on_conflict)
@@ -172,7 +178,7 @@ void MeasuredData::add(int id_levtr, const wreport::Var* var, UpdateMode on_conf
     }
 }
 
-void MeasuredData::commit(Transaction& tr, int station_id, bool with_attrs)
+void MeasuredData::write_pending(Transaction& tr, int station_id, bool with_attrs)
 {
     if (!to_insert.empty())
     {
@@ -180,12 +186,15 @@ void MeasuredData::commit(Transaction& tr, int station_id, bool with_attrs)
         st.insert(tr, station_id, datetime, to_insert, with_attrs);
         for (const auto& v: to_insert)
             ids_on_db[IdVarcode(v.id_levtr, v.var->code())] = v.id;
+
     }
     if (!to_update.empty())
     {
         auto& st = tr.data();
         st.update(tr, to_update, with_attrs);
     }
+    to_insert.clear();
+    to_update.clear();
 }
 
 
@@ -193,7 +202,7 @@ StationData& Station::get_station_data()
 {
     if (!station_data.loaded)
     {
-        v7::StationData& sd = transaction->station_data();
+        v7::StationData& sd = transaction.station_data();
         sd.query(id, [&](int data_id, wreport::Varcode code) {
             station_data.ids_by_code.insert(std::make_pair(code, data_id));
         });
@@ -213,7 +222,7 @@ MeasuredData& Station::get_measured_data(const Datetime& datetime)
 
     if (!is_new)
     {
-        v7::Data& d = transaction->data();
+        v7::Data& d = transaction.data();
         d.query(id, datetime, [&](int data_id, int id_levtr, wreport::Varcode code) {
             md.ids_on_db.insert(std::make_pair(IdVarcode(id_levtr, code), data_id));
         });
@@ -222,14 +231,14 @@ MeasuredData& Station::get_measured_data(const Datetime& datetime)
     return md;
 }
 
-void Station::commit(bool with_attrs)
+void Station::write_pending(bool with_attrs)
 {
     if (id == MISSING_INT)
-        id = transaction->station().obtain_id(*transaction, *this);
+        id = transaction.station().obtain_id(transaction, *this);
 
-    station_data.commit(*transaction, id, with_attrs);
+    station_data.write_pending(transaction, id, with_attrs);
     for (auto& md: measured_data)
-        md.second.commit(*transaction, id, with_attrs);
+        md.second.write_pending(transaction, id, with_attrs);
 }
 
 #if 0
