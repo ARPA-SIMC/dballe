@@ -22,7 +22,6 @@ add_method("cache", [] {
 
     wassert_false(stations.find_entry(1));
     wassert_false(stations.find_entry(MISSING_INT));
-    wassert(actual(stations.find_id(Station())) == MISSING_INT);
 
     Station st;
     st.id = 1;
@@ -34,15 +33,11 @@ add_method("cache", [] {
 
     wassert_true(stations.find_entry(1));
     wassert(actual(*stations.find_entry(1)) == st);
-    wassert(actual(stations.find_id(st)) == 1);
 
     stations.insert(st);
 
     wassert_true(stations.find_entry(1));
     wassert(actual(*stations.find_entry(1)) == st);
-    wassert(actual(stations.find_id(st)) == 1);
-
-    wassert(actual(stations.reverse[st.coords.lon].size()) == 1u);
 });
 
 add_method("levtr", [] {

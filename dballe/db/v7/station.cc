@@ -20,37 +20,6 @@ void Station::clear_cache()
     cache.clear();
 }
 
-int Station::get_id(v7::Transaction& tr, const dballe::Station& desc)
-{
-    auto id = cache.find_id(desc);
-    if (id != MISSING_INT)
-        return id;
-
-    id = maybe_get_id(tr, desc);
-    if (id != MISSING_INT)
-    {
-        cache.insert(desc, id);
-        return id;
-    }
-
-    throw error_notfound("station not found in the database");
-}
-
-int Station::obtain_id(v7::Transaction& tr, const dballe::Station& desc)
-{
-    int id = cache.find_id(desc);
-    if (id != MISSING_INT) return id;
-
-    id = maybe_get_id(tr, desc);
-    if (id != MISSING_INT)
-    {
-        cache.insert(desc, id);
-        return id;
-    }
-
-    return insert_new(tr, desc);
-}
-
 void Station::dump(FILE* out)
 {
     int count = 0;

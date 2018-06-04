@@ -1,10 +1,10 @@
 #include "config.h"
-#include "db/tests.h"
-#include "db/v6/db.h"
-#include "db/v7/db.h"
-#include "db/v7/transaction.h"
-#include "db/v6/station.h"
-#include "db/v7/station.h"
+#include "dballe/db/tests.h"
+#include "dballe/db/v6/db.h"
+#include "dballe/db/v7/db.h"
+#include "dballe/db/v7/transaction.h"
+#include "dballe/db/v6/station.h"
+#include "dballe/db/v7/station.h"
 
 using namespace dballe;
 using namespace dballe::db;
@@ -159,7 +159,7 @@ class Tests : public FixtureTestCase<TransactionFixture<DB, DBData>>
                         station.report = "synop";
                         station.coords = Coords(1100000, 4500000);
                         station.ident = "ciao";
-                        wassert(t->station().obtain_id(*t, station));
+                        wassert(t->station().insert_new(*t, station));
                     }
                     break;
                 case V5: throw error_unimplemented("v5 db is not supported");

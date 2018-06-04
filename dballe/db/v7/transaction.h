@@ -82,22 +82,6 @@ public:
 
     static Transaction& downcast(dballe::Transaction& transaction);
 
-    /*
-     * Lookup, insert or replace data in station taking the values from
-     * rec.
-     *
-     * If rec did not contain ana_id, it will be set by this function.
-     *
-     * @param rec
-     *   The record with the station information
-     * @param can_add
-     *   If true we can insert new stations in the database, if false we
-     *   only look up existing records and raise an exception if missing
-     * @returns
-     *   The station ID
-     */
-    int obtain_station(const dballe::Station& st, bool can_add=true);
-
     void dump(FILE* out) override;
 };
 

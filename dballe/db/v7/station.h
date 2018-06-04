@@ -58,20 +58,6 @@ public:
     virtual const dballe::Station* lookup_id(v7::Transaction& tr, int id) = 0;
 
     /**
-     * Get the station ID given latitude, longitude and mobile identifier.
-     *
-     * It throws an exception if it does not exist.
-     */
-    virtual int get_id(v7::Transaction& tr, const dballe::Station& desc);
-
-    /**
-     * Get the station ID given latitude, longitude and mobile identifier.
-     *
-     * It creates the station record if it does not exist.
-     */
-    virtual int obtain_id(v7::Transaction& tr, const dballe::Station& desc);
-
-    /**
      * Insert a new station in the database, without checking if it already exists.
      *
      * Returns the ID of the new station

@@ -248,21 +248,6 @@ void Transaction::attr_remove_data(int data_id, const db::AttrList& attrs)
     }
 }
 
-int Transaction::obtain_station(const dballe::Station& st, bool can_add)
-{
-    v7::Station& s = station();
-
-    // If the station is referenced only by ID, look it up by ID only
-    if (st.id != MISSING_INT)
-        return st.id;
-
-    // Get the ID for the station
-    if (can_add)
-        return s.obtain_id(*this, st);
-    else
-        return s.get_id(*this, st);
-}
-
 void Transaction::update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated)
 {
     repinfo().update(repinfo_file, added, deleted, updated);

@@ -46,10 +46,10 @@ struct Fixture : EmptyTransactionFixture<V7DB>
         auto t = dynamic_pointer_cast<dballe::db::v7::Transaction>(db->transaction());
 
         // Insert a mobile station
-        wassert(t->station().obtain_id(*t, sde1));
+        sde1.id = wcallchecked(t->station().insert_new(*t, sde1));
 
         // Insert a fixed station
-        wassert(t->station().obtain_id(*t, sde2));
+        sde2.id = wcallchecked(t->station().insert_new(*t, sde2));
 
         // Insert a lev_tr
         lt1 = t->levtr().obtain_id(db::v7::LevTrEntry(Level(1, 2, 0, 3), Trange(4, 5, 6)));
@@ -92,7 +92,7 @@ add_method("insert", [](Fixture& f) {
         Var var(varinfo(WR_VAR(0, 1, 2)), 123);
         std::vector<batch::MeasuredDatum> vars;
         vars.emplace_back(f.lt1, &var);
-        wassert(da.insert(*f.tr, f.tr->station().get_id(*f.tr, f.sde1), Datetime(2001, 2, 3, 4, 5, 6), vars, false));
+        wassert(da.insert(*f.tr, f.sde1.id, Datetime(2001, 2, 3, 4, 5, 6), vars, false));
         wassert(actual(vars[0].id) == 1);
     }
 
@@ -101,7 +101,7 @@ add_method("insert", [](Fixture& f) {
         Var var(varinfo(WR_VAR(0, 1, 2)), 234);
         std::vector<batch::MeasuredDatum> vars;
         vars.emplace_back(f.lt2, &var);
-        wassert(da.insert(*f.tr, f.tr->station().get_id(*f.tr, f.sde2), Datetime(2002, 3, 4, 5, 6, 7), vars, false));
+        wassert(da.insert(*f.tr, f.sde2.id, Datetime(2002, 3, 4, 5, 6, 7), vars, false));
         wassert(actual(vars[0].id) == 2);
     }
 
@@ -136,7 +136,7 @@ add_method("attrs", [](Fixture& f) {
     var.seta(newvar(WR_VAR(0, 33, 7), 50));
     std::vector<batch::MeasuredDatum> vars;
     vars.emplace_back(f.lt1, &var);
-    wassert(da.insert(*f.tr, f.tr->station().get_id(*f.tr, f.sde1), Datetime(2001, 2, 3, 4, 5, 6), vars, true));
+    wassert(da.insert(*f.tr, f.sde1.id, Datetime(2001, 2, 3, 4, 5, 6), vars, true));
     int id = vars[0].id;
 
     vector<wreport::Var> attrs;

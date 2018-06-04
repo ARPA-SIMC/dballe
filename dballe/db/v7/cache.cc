@@ -8,24 +8,20 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
-template<typename Entry, typename Reverse>
-Cache<Entry, Reverse>::~Cache()
+StationCache::~StationCache()
 {
     for (auto& i: by_id)
         delete i.second;
 }
 
-template<typename Entry, typename Reverse>
-void Cache<Entry, Reverse>::clear()
+void StationCache::clear()
 {
     for (auto& i: by_id)
         delete i.second;
     by_id.clear();
-    reverse.clear();
 }
 
-template<typename Entry, typename Reverse>
-const Entry* Cache<Entry, Reverse>::find_entry(int id) const
+const dballe::Station* StationCache::find_entry(int id) const
 {
     auto i = by_id.find(id);
     if (i == by_id.end())
@@ -33,30 +29,19 @@ const Entry* Cache<Entry, Reverse>::find_entry(int id) const
     return i->second;
 }
 
-template<typename Entry, typename Reverse>
-int Cache<Entry, Reverse>::find_id(const Entry& e) const
+const dballe::Station* StationCache::insert(const dballe::Station& e)
 {
-    if (e.id != MISSING_INT)
-        return e.id;
-    return reverse.find_id(e);
+    return insert(std::unique_ptr<dballe::Station>(new dballe::Station(e)));
 }
 
-template<typename Entry, typename Reverse>
-const Entry* Cache<Entry, Reverse>::insert(const Entry& e)
+const dballe::Station* StationCache::insert(const dballe::Station& e, int id)
 {
-    return insert(std::unique_ptr<Entry>(new Entry(e)));
-}
-
-template<typename Entry, typename Reverse>
-const Entry* Cache<Entry, Reverse>::insert(const Entry& e, int id)
-{
-    std::unique_ptr<Entry> ne(new Entry(e));
+    std::unique_ptr<dballe::Station> ne(new dballe::Station(e));
     ne->id = id;
     return insert(move(ne));
 }
 
-template<typename Entry, typename Reverse>
-const Entry* Cache<Entry, Reverse>::insert(std::unique_ptr<Entry> e)
+const dballe::Station* StationCache::insert(std::unique_ptr<dballe::Station> e)
 {
     if (e->id == MISSING_INT)
         throw std::runtime_error("station to cache in transaction state must have a database ID");
@@ -71,32 +56,9 @@ const Entry* Cache<Entry, Reverse>::insert(std::unique_ptr<Entry> e)
         return i->second;
     }
 
-    const Entry* res = e.get();
+    const dballe::Station* res = e.get();
     this->by_id.insert(make_pair(res->id, e.release()));
-    reverse.add(res);
     return res;
-}
-
-
-
-int StationReverseIndex::find_id(const dballe::Station& st) const
-{
-    auto li = find(st.coords.lon);
-    if (li == end())
-        return MISSING_INT;
-    for (auto i: li->second)
-        if (i->report == st.report && i->coords == st.coords && i->ident == st.ident)
-            return i->id;
-    return MISSING_INT;
-}
-
-void StationReverseIndex::add(const dballe::Station* st)
-{
-    auto li = find(st->coords.lon);
-    if (li == end())
-        insert(make_pair(st->coords.lon, std::vector<const dballe::Station*>{st}));
-    else
-        li->second.push_back(st);
 }
 
 
@@ -147,8 +109,67 @@ void LevTrReverseIndex::add(const LevTrEntry* lt)
 }
 
 
-template class Cache<dballe::Station, StationReverseIndex>;
-template class Cache<LevTrEntry, LevTrReverseIndex>;
+LevTrCache::~LevTrCache()
+{
+    for (auto& i: by_id)
+        delete i.second;
+}
+
+void LevTrCache::clear()
+{
+    for (auto& i: by_id)
+        delete i.second;
+    by_id.clear();
+    reverse.clear();
+}
+
+const LevTrEntry* LevTrCache::find_entry(int id) const
+{
+    auto i = by_id.find(id);
+    if (i == by_id.end())
+        return nullptr;
+    return i->second;
+}
+
+const LevTrEntry* LevTrCache::insert(const LevTrEntry& e)
+{
+    return insert(std::unique_ptr<LevTrEntry>(new LevTrEntry(e)));
+}
+
+const LevTrEntry* LevTrCache::insert(const LevTrEntry& e, int id)
+{
+    std::unique_ptr<LevTrEntry> ne(new LevTrEntry(e));
+    ne->id = id;
+    return insert(move(ne));
+}
+
+const LevTrEntry* LevTrCache::insert(std::unique_ptr<LevTrEntry> e)
+{
+    if (e->id == MISSING_INT)
+        throw std::runtime_error("station to cache in transaction state must have a database ID");
+
+    auto i = this->by_id.find(e->id);
+    if (i != this->by_id.end())
+    {
+        // StationCache do not move: if we have a match on the ID, we just need to
+        // enforce that there is no mismatch on the station data
+        if (*i->second != *e)
+            throw std::runtime_error("cannot replace a cached DB entry with one with the same ID and different data");
+        return i->second;
+    }
+
+    const LevTrEntry* res = e.get();
+    this->by_id.insert(make_pair(res->id, e.release()));
+    reverse.add(res);
+    return res;
+}
+
+int LevTrCache::find_id(const LevTrEntry& e) const
+{
+    if (e.id != MISSING_INT)
+        return e.id;
+    return reverse.find_id(e);
+}
 
 }
 }
