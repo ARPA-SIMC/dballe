@@ -25,9 +25,6 @@ protected:
      */
     dballe::sql::PostgreSQLConnection& conn;
 
-    /// Lookup the ID of a station, returning true if it was found, false if not
-    bool maybe_get_id(v7::Transaction& tr, const dballe::Station& st, int* id) override;
-
     void _dump(std::function<void(int, int, const Coords& coords, const char* ident)> out) override;
 
 public:
@@ -37,8 +34,8 @@ public:
     PostgreSQLStation(const PostgreSQLStation&&) = delete;
     PostgreSQLStation& operator=(const PostgreSQLStation&) = delete;
 
-    const dballe::Station* lookup_id(v7::Transaction& tr, int id) override;
-    int obtain_id(v7::Transaction& tr, const dballe::Station& desc) override;
+    int maybe_get_id(v7::Transaction& tr, const dballe::Station& st) override;
+    int insert_new(v7::Transaction& tr, const dballe::Station& desc) override;
 
     void get_station_vars(int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
     void add_station_vars(int id_station, Record& rec) override;

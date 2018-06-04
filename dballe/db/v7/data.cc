@@ -14,6 +14,9 @@ const char* StationDataTraits::table_name = "station_data";
 const char* DataTraits::table_name = "data";
 
 template<typename Traits>
+const char* DataCommon<Traits>::table_name = Traits::table_name;
+
+template<typename Traits>
 void DataCommon<Traits>::read_attrs_into_values(int id_data, Values& values)
 {
     read_attrs(id_data, [&](unique_ptr<wreport::Var> var) { values.set(move(var)); });
@@ -126,63 +129,6 @@ void DataDumper::print_tail()
     fprintf(out, "%d element%s in table data\n", count, count != 1 ? "s" : "");
 }
 
-
-namespace bulk {
-
-void Item::format_flags(char* dest) const
-{
-    dest[0] = needs_update() ? 'u' : '-',
-    dest[1] = updated() ? 'U' : '-',
-    dest[2] = needs_insert() ? 'i' : '-',
-    dest[3] = inserted() ? 'I' : '-',
-    dest[4] = 0;
-}
-
-void StationVar::dump(FILE* out) const
-{
-    char flags[5];
-    format_flags(flags);
-    fprintf(out, "flags:%s %01d%02d%03d(%d): %s\n",
-            flags, WR_VAR_FXY(var->code()), (int)(var->code()),
-            var->isset() ? var->enqc() : "(null)");
-}
-
-void Var::dump(FILE* out) const
-{
-    char flags[5];
-    format_flags(flags);
-    fprintf(out, "flags:%s ltr:%d %01d%02d%03d(%d): %s\n",
-            flags,
-            id_levtr,
-            WR_VAR_FXY(var->code()), (int)(var->code()),
-            var->isset() ? var->enqc() : "(null)");
-}
-
-void InsertStationVars::dump(FILE* out) const
-{
-    fprintf(out, "ID station: %d\n", shared_context.station);
-    for (unsigned i = 0; i < size(); ++i)
-    {
-        fprintf(out, "%3u/%3zd: ", i, size());
-        (*this)[i].dump(out);
-    }
-}
-
-void InsertVars::dump(FILE* out) const
-{
-    const auto& dt = shared_context.datetime;
-
-    fprintf(out, "ID station: %d, datetime: %04d-%02d-%02d %02d:%02d:%02d\n",
-            shared_context.station,
-            dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
-    for (unsigned i = 0; i < size(); ++i)
-    {
-        fprintf(out, "%3u/%3zd: ", i, size());
-        (*this)[i].dump(out);
-    }
-}
-
-}
 }
 }
 }

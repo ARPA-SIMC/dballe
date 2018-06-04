@@ -42,13 +42,12 @@ SQLiteStation::SQLiteStation(SQLiteConnection& conn)
 
 SQLiteStation::~SQLiteStation()
 {
-    delete sstm;
     delete sfstm;
     delete smstm;
     delete istm;
 }
 
-bool SQLiteStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st, int* id)
+int SQLiteStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st)
 {
     SQLiteStatement* s;
     int rep = tr.repinfo().obtain_id(st.report.c_str());
@@ -66,52 +65,19 @@ bool SQLiteStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st,
         s = sfstm;
     }
     bool found = false;
+    int id;
     s->execute_one([&]() {
         found = true;
-        *id = s->column_int(0);
+        id = s->column_int(0);
     });
-    return found;
-}
-
-const dballe::Station* SQLiteStation::lookup_id(v7::Transaction& tr, int id)
-{
-    // First look it up in the transaction cache
-    const dballe::Station* res = cache.find_entry(id);
-    if (res) return res;
-
-    if (!sstm)
-        sstm = conn.sqlitestatement("SELECT rep, lat, lon, ident FROM station WHERE id=?").release();
-
-    sstm->bind_val(1, id);
-
-    sstm->execute_one([&]() {
-        std::unique_ptr<dballe::Station> station(new dballe::Station);
-        station->id = id;
-        station->report = tr.repinfo().get_rep_memo(sstm->column_int(0));
-        station->coords.lat = sstm->column_int(1);
-        station->coords.lon = sstm->column_int(2);
-        if (!sstm->column_isnull(3))
-            station->ident = sstm->column_string(3);
-        res = cache.insert(move(station));
-    });
-
-    if (!res)
-        error_notfound::throwf("station with id %d not found in the database", id);
-
-    return res;
-}
-
-int SQLiteStation::obtain_id(v7::Transaction& tr, const dballe::Station& desc)
-{
-    int id = cache.find_id(desc);
-    if (id != MISSING_INT) return id;
-
-    if (maybe_get_id(tr, desc, &id))
-    {
-        cache.insert(desc, id);
+    if (found)
         return id;
-    }
+    else
+        return MISSING_INT;
+}
 
+int SQLiteStation::insert_new(v7::Transaction& tr, const dballe::Station& desc)
+{
     // If no station was found, insert a new one
     istm->bind_val(1, tr.repinfo().get_id(desc.report.c_str()));
     istm->bind_val(2, desc.coords.lat);
@@ -122,10 +88,7 @@ int SQLiteStation::obtain_id(v7::Transaction& tr, const dballe::Station& desc)
         istm->bind_null_val(4);
     istm->execute();
 
-    id = conn.get_last_insert_id();
-    cache.insert(desc, id);
-    new_ids.insert(id);
-    return id;
+    return conn.get_last_insert_id();
 }
 
 void SQLiteStation::get_station_vars(int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest)

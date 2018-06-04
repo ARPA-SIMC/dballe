@@ -26,49 +26,24 @@ struct Transaction;
 struct Station
 {
 protected:
-    StationCache cache;
-    /// IDs of station that were inserted during this session
-    std::unordered_set<int> new_ids;
-    virtual bool maybe_get_id(v7::Transaction& tr, const dballe::Station& st, int* id) = 0;
     virtual void _dump(std::function<void(int, int, const Coords& coords, const char* ident)> out) = 0;
 
 public:
-    /// Instantiate a Station object for this connection
-    //static std::unique_ptr<Station> create(Connection& conn);
-
     virtual ~Station();
 
     /**
-     * Invalidate the station cache.
-     *
-     * Further accesses will be done via the database, and slowly repopulate
-     * the cache from scratch.
-     */
-    void clear_cache();
-
-    /// Return true if the station has been inserted during this session
-    bool is_newly_inserted(int id) const;
-
-    /**
-     * Look up a station given its ID.
-     *
-     * It throws an exception if it does not exist.
-     */
-    virtual const dballe::Station* lookup_id(v7::Transaction& tr, int id) = 0;
-
-    /**
      * Get the station ID given latitude, longitude and mobile identifier.
      *
-     * It throws an exception if it does not exist.
+     * It returns MISSING_INT if it does not exist.
      */
-    virtual int get_id(v7::Transaction& tr, const dballe::Station& desc);
+    virtual int maybe_get_id(v7::Transaction& tr, const dballe::Station& st) = 0;
 
     /**
-     * Get the station ID given latitude, longitude and mobile identifier.
+     * Insert a new station in the database, without checking if it already exists.
      *
-     * It creates the station record if it does not exist.
+     * Returns the ID of the new station
      */
-    virtual int obtain_id(v7::Transaction& tr, const dballe::Station& desc) = 0;
+    virtual int insert_new(v7::Transaction& tr, const dballe::Station& desc) = 0;
 
     /**
      * Dump the entire contents of the table to an output stream

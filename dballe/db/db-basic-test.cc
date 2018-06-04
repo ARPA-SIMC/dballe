@@ -1,10 +1,11 @@
-#include "msg/msg.h"
-#include "db/tests.h"
+#include "dballe/msg/msg.h"
+#include "dballe/db/tests.h"
 #include "v6/repinfo.h"
 #include "v6/db.h"
 #include "v7/repinfo.h"
 #include "v7/db.h"
 #include "v7/transaction.h"
+#include "config.h"
 #include <cstring>
 
 using namespace dballe;
@@ -140,7 +141,7 @@ this->add_method("stationdata", [](Fixture& f) {
             bool have_temp = false;
             bool have_synop = false;
 
-            // For mem and v7 databases, we get one record per (station, network)
+            // For v7 databases, we get one record per (station, network)
             // combination
             for (unsigned i = 0; i < 2; ++i)
             {
@@ -168,7 +169,7 @@ this->add_method("stationdata", [](Fixture& f) {
             // For v6 databases, we only get one record, with the station
             // values merged keeping values for the best networks
             wassert(actual(cur->next()).istrue());
-            wassert(actual(cur->get_station_id()) == 1);
+            wassert(actual(cur->get_station_id()) > 0);
             cur->to_record(result);
             wassert(actual(result["B01019"]) == "Camse");
 

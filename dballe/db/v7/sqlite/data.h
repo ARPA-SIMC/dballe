@@ -13,8 +13,9 @@ namespace v7 {
 namespace sqlite {
 struct DB;
 
-template<typename Traits>
-class SQLiteDataCommon : public DataCommon<Traits>
+// Partial implementation of the common parts of StationData and Data
+template<typename Parent>
+class SQLiteDataCommon : public Parent
 {
 protected:
     /// DB connection
@@ -40,25 +41,28 @@ public:
     SQLiteDataCommon& operator=(const SQLiteDataCommon&) = delete;
     ~SQLiteDataCommon();
 
+    void update(dballe::db::v7::Transaction& t, std::vector<typename Parent::BatchValue>& vars, bool with_attrs) override;
     void read_attrs(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
     void write_attrs(int id_data, const Values& values) override;
     void remove_all_attrs(int id_data) override;
     void remove(const v7::IdQueryBuilder& qb) override;
 };
 
-extern template class SQLiteDataCommon<StationDataTraits>;
-extern template class SQLiteDataCommon<DataTraits>;
+extern template class SQLiteDataCommon<StationData>;
+extern template class SQLiteDataCommon<Data>;
 
 /**
  * Precompiled query to manipulate the station data table
  */
-class SQLiteStationData : public SQLiteDataCommon<StationDataTraits>
+class SQLiteStationData : public SQLiteDataCommon<StationData>
 {
 public:
     using SQLiteDataCommon::SQLiteDataCommon;
 
     SQLiteStationData(dballe::sql::SQLiteConnection& conn);
-    void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE, bool with_attrs=false) override;
+
+    void query(int id_station, std::function<void(int id, wreport::Varcode code)> dest) override;
+    void insert(dballe::db::v7::Transaction& t, int id_station, std::vector<batch::StationDatum>& vars, bool with_attrs) override;
     void dump(FILE* out) override;
     void clear_cache() override {}
 };
@@ -66,13 +70,15 @@ public:
 /**
  * Precompiled query to manipulate the data table
  */
-class SQLiteData : public SQLiteDataCommon<DataTraits>
+class SQLiteData : public SQLiteDataCommon<Data>
 {
 public:
     using SQLiteDataCommon::SQLiteDataCommon;
 
     SQLiteData(dballe::sql::SQLiteConnection& conn);
-    void insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode=bulk::UPDATE, bool with_attrs=false) override;
+
+    void query(int id_station, const Datetime& datetime, std::function<void(int id, int id_levtr, wreport::Varcode code)> dest) override;
+    void insert(dballe::db::v7::Transaction& t, int id_station, const Datetime& datetime, std::vector<batch::MeasuredDatum>& vars, bool with_attrs) override;
     void dump(FILE* out) override;
     void clear_cache() override {}
 };

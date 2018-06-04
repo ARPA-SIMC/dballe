@@ -1,5 +1,6 @@
 #include "data.h"
 #include "dballe/db/v7/transaction.h"
+#include "dballe/db/v7/batch.h"
 #include "dballe/db/v7/qbuilder.h"
 #include "dballe/sql/sqlite.h"
 #include "dballe/sql/querybuf.h"
@@ -20,20 +21,20 @@ namespace db {
 namespace v7 {
 namespace sqlite {
 
-template class SQLiteDataCommon<StationDataTraits>;
-template class SQLiteDataCommon<DataTraits>;
+template class SQLiteDataCommon<StationData>;
+template class SQLiteDataCommon<Data>;
 
-template<typename Traits>
-SQLiteDataCommon<Traits>::SQLiteDataCommon(dballe::sql::SQLiteConnection& conn)
+template<typename Parent>
+SQLiteDataCommon<Parent>::SQLiteDataCommon(dballe::sql::SQLiteConnection& conn)
     : conn(conn)
 {
     char query[64];
-    snprintf(query, 64, "UPDATE %s set value=?, attrs=? WHERE id=?", Traits::table_name);
+    snprintf(query, 64, "UPDATE %s set value=?, attrs=? WHERE id=?", Parent::table_name);
     ustm = conn.sqlitestatement(query).release();
 }
 
-template<typename Traits>
-SQLiteDataCommon<Traits>::~SQLiteDataCommon()
+template<typename Parent>
+SQLiteDataCommon<Parent>::~SQLiteDataCommon()
 {
     delete read_attrs_stm;
     delete write_attrs_stm;
@@ -43,13 +44,13 @@ SQLiteDataCommon<Traits>::~SQLiteDataCommon()
     delete ustm;
 }
 
-template<typename Traits>
-void SQLiteDataCommon<Traits>::read_attrs(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+template<typename Parent>
+void SQLiteDataCommon<Parent>::read_attrs(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     if (!read_attrs_stm)
     {
         char query[64];
-        snprintf(query, 64, "SELECT attrs FROM %s WHERE id=?", Traits::table_name);
+        snprintf(query, 64, "SELECT attrs FROM %s WHERE id=?", Parent::table_name);
         read_attrs_stm = conn.sqlitestatement(query).release();
     }
     read_attrs_stm->bind_val(1, id_data);
@@ -58,13 +59,13 @@ void SQLiteDataCommon<Traits>::read_attrs(int id_data, std::function<void(std::u
     });
 }
 
-template<typename Traits>
-void SQLiteDataCommon<Traits>::write_attrs(int id_data, const Values& values)
+template<typename Parent>
+void SQLiteDataCommon<Parent>::write_attrs(int id_data, const Values& values)
 {
     if (!write_attrs_stm)
     {
         char query[64];
-        snprintf(query, 64, "UPDATE %s SET attrs=? WHERE id=?", Traits::table_name);
+        snprintf(query, 64, "UPDATE %s SET attrs=? WHERE id=?", Parent::table_name);
         write_attrs_stm = conn.sqlitestatement(query).release();
     }
     vector<uint8_t> encoded = values.encode();
@@ -73,13 +74,13 @@ void SQLiteDataCommon<Traits>::write_attrs(int id_data, const Values& values)
     write_attrs_stm->execute();
 }
 
-template<typename Traits>
-void SQLiteDataCommon<Traits>::remove_all_attrs(int id_data)
+template<typename Parent>
+void SQLiteDataCommon<Parent>::remove_all_attrs(int id_data)
 {
     if (!remove_attrs_stm)
     {
         char query[64];
-        snprintf(query, 64, "UPDATE %s SET attrs=NULL WHERE id=?", Traits::table_name);
+        snprintf(query, 64, "UPDATE %s SET attrs=NULL WHERE id=?", Parent::table_name);
         remove_attrs_stm = conn.sqlitestatement(query).release();
     }
     remove_attrs_stm->bind_val(1, id_data);
@@ -100,11 +101,11 @@ bool match_attrs(const Varmatch& match, const std::vector<uint8_t>& attrs)
 
 }
 
-template<typename Traits>
-void SQLiteDataCommon<Traits>::remove(const v7::IdQueryBuilder& qb)
+template<typename Parent>
+void SQLiteDataCommon<Parent>::remove(const v7::IdQueryBuilder& qb)
 {
     char query[64];
-    snprintf(query, 64, "DELETE FROM %s WHERE id=?", Traits::table_name);
+    snprintf(query, 64, "DELETE FROM %s WHERE id=?", Parent::table_name);
     auto stmd = conn.sqlitestatement(query);
     auto stm = conn.sqlitestatement(qb.sql_query);
     if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
@@ -123,6 +124,26 @@ void SQLiteDataCommon<Traits>::remove(const v7::IdQueryBuilder& qb)
     });
 }
 
+template<typename Parent>
+void SQLiteDataCommon<Parent>::update(dballe::db::v7::Transaction& t, std::vector<typename Parent::BatchValue>& vars, bool with_attrs)
+{
+    for (auto& v: vars)
+    {
+        ustm->bind_val(1, v.var->enqc());
+        values::Encoder enc;
+        if (with_attrs && v.var->next_attr())
+        {
+            enc.append_attributes(*v.var);
+            ustm->bind_val(2, enc.buf);
+        }
+        else
+            ustm->bind_null_val(2);
+        ustm->bind_val(3, v.id);
+
+        ustm->execute();
+    }
+}
+
 
 SQLiteStationData::SQLiteStationData(SQLiteConnection& conn)
     : SQLiteDataCommon(conn)
@@ -131,82 +152,39 @@ SQLiteStationData::SQLiteStationData(SQLiteConnection& conn)
     istm = conn.sqlitestatement("INSERT INTO station_data (id_station, code, value, attrs) VALUES (?, ?, ?, ?)").release();
 }
 
-void SQLiteStationData::insert(dballe::db::v7::Transaction& tr, v7::bulk::InsertStationVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
+void SQLiteStationData::query(int id_station, std::function<void(int id, wreport::Varcode code)> dest)
 {
-    vars.look_for_missing_ids();
+    sstm->bind_val(1, id_station);
+    sstm->execute([&]() {
+        int id = sstm->column_int(0);
+        wreport::Varcode code = sstm->column_int(1);
+        dest(id, code);
+    });
+}
 
-    // Load the missing varcodes into the state and into vars
-    if (!vars.to_query.empty())
+void SQLiteStationData::insert(dballe::db::v7::Transaction& t, int id_station, std::vector<batch::StationDatum>& vars, bool with_attrs)
+{
+    std::sort(vars.begin(), vars.end());
+    istm->bind_val(1, id_station);
+    for (auto v = vars.begin(); v != vars.end(); ++v)
     {
-        sstm->bind_val(1, vars.shared_context.station);
-        sstm->execute([&]() {
-            int id = sstm->column_int(0);
-            wreport::Varcode code = sstm->column_int(1);
-            //cache.insert(unique_ptr<StationValueEntry>(new StationValueEntry(id, vars.shared_context.station, code)));
-            auto vi = std::find_if(vars.to_query.begin(), vars.to_query.end(), [code](const bulk::StationVar* v) { return v->var->code() == code; });
-            if (vi == vars.to_query.end()) return;
-            (*vi)->id = id;
-            vars.to_query.erase(vi);
-        });
-    }
-
-    // Compute the action plan
-    vars.compute_plan();
-
-    // Execute the plan
-
-    switch (update_mode)
-    {
-        case bulk::UPDATE:
-            if (vars.do_update)
-            {
-                for (auto& v: vars)
-                {
-                    if (!v.needs_update()) continue;
-                    ustm->bind_val(1, v.var->enqc());
-                    values::Encoder enc;
-                    if (with_attrs && v.var->next_attr())
-                    {
-                        enc.append_attributes(*v.var);
-                        ustm->bind_val(2, enc.buf);
-                    }
-                    else
-                        ustm->bind_null_val(2);
-                    ustm->bind_val(3, v.id);
-
-                    ustm->execute();
-                    v.set_updated();
-                }
-            }
-            break;
-        case bulk::IGNORE:
-            break;
-        case bulk::ERROR:
-            if (vars.do_update)
-                throw error_consistency("refusing to overwrite existing data");
-    }
-
-    if (vars.do_insert)
-    {
-        istm->bind_val(1, vars.shared_context.station);
-        for (auto& v: vars)
+        // Skip duplicates
+        auto next = v + 1;
+        if (next != vars.end() && *v == *next)
+            continue;
+        istm->bind_val(2, v->var->code());
+        istm->bind_val(3, v->var->enqc());
+        values::Encoder enc;
+        if (with_attrs && v->var->next_attr())
         {
-            if (!v.needs_insert()) continue;
-            istm->bind_val(2, v.var->code());
-            istm->bind_val(3, v.var->enqc());
-            values::Encoder enc;
-            if (with_attrs && v.var->next_attr())
-            {
-                enc.append_attributes(*v.var);
-                istm->bind_val(4, enc.buf);
-            }
-            else
-                istm->bind_null_val(4);
-            istm->execute();
-
-            v.id = conn.get_last_insert_id();
-            v.set_inserted();
+            enc.append_attributes(*v->var);
+            istm->bind_val(4, enc.buf);
         }
+        else
+            istm->bind_null_val(4);
+        istm->execute();
+
+        v->id = conn.get_last_insert_id();
     }
 }
 
@@ -231,89 +209,43 @@ SQLiteData::SQLiteData(SQLiteConnection& conn)
     istm = conn.sqlitestatement("INSERT INTO data (id_station, id_levtr, datetime, code, value, attrs) VALUES (?, ?, ?, ?, ?, ?)").release();
 }
 
-void SQLiteData::insert(dballe::db::v7::Transaction& t, v7::bulk::InsertVars& vars, bulk::UpdateMode update_mode, bool with_attrs)
+void SQLiteData::query(int id_station, const Datetime& datetime, std::function<void(int id, int id_levtr, wreport::Varcode code)> dest)
 {
-    vars.look_for_missing_ids();
+    sstm->bind_val(1, id_station);
+    sstm->bind_val(2, datetime);
+    sstm->execute([&]() {
+        int id_levtr = sstm->column_int(1);
+        wreport::Varcode code = sstm->column_int(2);
+        int id = sstm->column_int(0);
+        dest(id, id_levtr, code);
+    });
+}
 
-    // Load the missing varcodes into the state and into vars
-    // If the station has just been inserted, then there is nothing in the
-    // database that is not already in State, and we can skip this part.
-    if (!vars.to_query.empty())
+void SQLiteData::insert(dballe::db::v7::Transaction& t, int id_station, const Datetime& datetime, std::vector<batch::MeasuredDatum>& vars, bool with_attrs)
+{
+    std::sort(vars.begin(), vars.end());
+    istm->bind_val(1, id_station);
+    istm->bind_val(3, datetime);
+    for (auto v = vars.begin(); v != vars.end(); ++v)
     {
-        sstm->bind_val(1, vars.shared_context.station);
-        sstm->bind_val(2, vars.shared_context.datetime);
-        sstm->execute([&]() {
-            int id_levtr = sstm->column_int(1);
-            wreport::Varcode code = sstm->column_int(2);
-
-            int id = sstm->column_int(0);
-            //cache.insert(unique_ptr<ValueEntry>(new ValueEntry(id, vars.shared_context.station, id_levtr, vars.shared_context.datetime, code)));
-
-            auto vi = std::find_if(vars.to_query.begin(), vars.to_query.end(), [id_levtr, code](const bulk::Var* v) { return v->id_levtr == id_levtr && v->var->code() == code; });
-            if (vi == vars.to_query.end()) return;
-            (*vi)->id = id;
-            vars.to_query.erase(vi);
-        });
-    }
-
-    // Compute the action plan
-    vars.compute_plan();
-
-    // Execute the plan
-    switch (update_mode)
-    {
-        case bulk::UPDATE:
-            if (vars.do_update)
-            {
-                for (auto& v: vars)
-                {
-                    if (!v.needs_update()) continue;
-                    ustm->bind_val(1, v.var->enqc());
-                    values::Encoder enc;
-                    if (with_attrs && v.var->next_attr())
-                    {
-                        enc.append_attributes(*v.var);
-                        ustm->bind_val(2, enc.buf);
-                    }
-                    else
-                        ustm->bind_null_val(2);
-                    ustm->bind_val(3, v.id);
-
-                    ustm->execute();
-                    v.set_updated();
-                }
-            }
-            break;
-        case bulk::IGNORE:
-            break;
-        case bulk::ERROR:
-            if (vars.do_update)
-                throw error_consistency("refusing to overwrite existing data");
-    }
-
-    if (vars.do_insert)
-    {
-        istm->bind_val(1, vars.shared_context.station);
-        istm->bind_val(3, vars.shared_context.datetime);
-        for (auto& v: vars)
+        // Skip duplicates
+        auto next = v + 1;
+        if (next != vars.end() && *v == *next)
+            continue;
+        istm->bind_val(2, v->id_levtr);
+        istm->bind_val(4, v->var->code());
+        istm->bind_val(5, v->var->enqc());
+        values::Encoder enc;
+        if (with_attrs && v->var->next_attr())
         {
-            if (!v.needs_insert()) continue;
-            istm->bind_val(2, v.id_levtr);
-            istm->bind_val(4, v.var->code());
-            istm->bind_val(5, v.var->enqc());
-            values::Encoder enc;
-            if (with_attrs && v.var->next_attr())
-            {
-                enc.append_attributes(*v.var);
-                istm->bind_val(6, enc.buf);
-            }
-            else
-                istm->bind_null_val(6);
-            istm->execute();
-
-            v.id = conn.get_last_insert_id();
-            v.set_inserted();
+            enc.append_attributes(*v->var);
+            istm->bind_val(6, enc.buf);
         }
+        else
+            istm->bind_null_val(6);
+        istm->execute();
+
+        v->id = conn.get_last_insert_id();
     }
 }
 

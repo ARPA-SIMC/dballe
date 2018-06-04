@@ -1,12 +1,13 @@
-#include "db/tests.h"
-#include "sql/sql.h"
-#include "db/v7/db.h"
-#include "db/v7/transaction.h"
-#include "db/v7/driver.h"
-#include "db/v7/repinfo.h"
-#include "db/v7/station.h"
-#include "db/v7/levtr.h"
-#include "db/v7/data.h"
+#include "dballe/db/tests.h"
+#include "dballe/sql/sql.h"
+#include "dballe/db/v7/db.h"
+#include "dballe/db/v7/transaction.h"
+#include "dballe/db/v7/batch.h"
+#include "dballe/db/v7/driver.h"
+#include "dballe/db/v7/repinfo.h"
+#include "dballe/db/v7/station.h"
+#include "dballe/db/v7/levtr.h"
+#include "dballe/db/v7/data.h"
 #include "config.h"
 
 using namespace dballe;
@@ -45,10 +46,10 @@ struct Fixture : EmptyTransactionFixture<V7DB>
         auto t = dynamic_pointer_cast<dballe::db::v7::Transaction>(db->transaction());
 
         // Insert a mobile station
-        wassert(t->station().obtain_id(*t, sde1));
+        sde1.id = wcallchecked(t->station().insert_new(*t, sde1));
 
         // Insert a fixed station
-        wassert(t->station().obtain_id(*t, sde2));
+        sde2.id = wcallchecked(t->station().insert_new(*t, sde2));
 
         // Insert a lev_tr
         lt1 = t->levtr().obtain_id(db::v7::LevTrEntry(Level(1, 2, 0, 3), Trange(4, 5, 6)));
@@ -85,105 +86,44 @@ add_method("insert", [](Fixture& f) {
     using namespace dballe::db::v7;
     auto& da = f.tr->data();
 
-    Var var(varinfo(WR_VAR(0, 1, 2)));
-
-    auto insert_sample1 = [&](bulk::InsertVars& vars, int value, bulk::UpdateMode update) {
-        vars.shared_context.station = f.tr->station().get_id(*f.tr, f.sde1);
-        vars.shared_context.datetime = Datetime(2001, 2, 3, 4, 5, 6);
-        var.seti(value);
-        vars.add(&var, f.lt1);
-        wassert(da.insert(*f.tr, vars, update));
-    };
 
     // Insert a datum
     {
-        bulk::InsertVars vars;
-        wassert(insert_sample1(vars, 123, bulk::ERROR));
+        Var var(varinfo(WR_VAR(0, 1, 2)), 123);
+        std::vector<batch::MeasuredDatum> vars;
+        vars.emplace_back(f.lt1, &var);
+        wassert(da.insert(*f.tr, f.sde1.id, Datetime(2001, 2, 3, 4, 5, 6), vars, false));
         wassert(actual(vars[0].id) == 1);
-        wassert(actual(vars[0].needs_insert()).isfalse());
-        wassert(actual(vars[0].inserted()).istrue());
-        wassert(actual(vars[0].needs_update()).isfalse());
-        wassert(actual(vars[0].updated()).isfalse());
     }
 
     // Insert another datum
     {
-        bulk::InsertVars vars;
-        vars.shared_context.station = f.tr->station().get_id(*f.tr, f.sde2);
-        vars.shared_context.datetime = Datetime(2002, 3, 4, 5, 6, 7);
         Var var(varinfo(WR_VAR(0, 1, 2)), 234);
-        vars.add(&var, f.lt2);
-        wassert(da.insert(*f.tr, vars, bulk::ERROR));
+        std::vector<batch::MeasuredDatum> vars;
+        vars.emplace_back(f.lt2, &var);
+        wassert(da.insert(*f.tr, f.sde2.id, Datetime(2002, 3, 4, 5, 6, 7), vars, false));
         wassert(actual(vars[0].id) == 2);
-        wassert(actual(vars[0].needs_insert()).isfalse());
-        wassert(actual(vars[0].inserted()).istrue());
-        wassert(actual(vars[0].needs_update()).isfalse());
-        wassert(actual(vars[0].updated()).isfalse());
     }
 
     // Reinsert the first datum: it should give an error, since V7 does
     // not check if old and new values are the same
-    {
-        bulk::InsertVars vars;
-        bool successful = false;
-        try {
-            insert_sample1(vars, 123, bulk::ERROR);
-            successful = true;
-        } catch (std::exception& e) {
-            wassert(actual(e.what()).matches("refusing to overwrite existing data"));
-        }
-        wassert(actual(successful).isfalse());
-    }
-
-    // Reinsert the first datum, with a different value and ignore
-    // overwrite: it should find its ID and do nothing
-    {
-        bulk::InsertVars vars;
-        wassert(insert_sample1(vars, 125, bulk::IGNORE));
-        wassert(actual(vars[0].id) == 1);
-        wassert(actual(vars[0].needs_insert()).isfalse());
-        wassert(actual(vars[0].inserted()).isfalse());
-        wassert(actual(vars[0].needs_update()).istrue());
-        wassert(actual(vars[0].updated()).isfalse());
-    }
+    // Disabled because postgresql spits error also on stderr
+    //{
+    //    Var var(varinfo(WR_VAR(0, 1, 2)), 123);
+    //    std::vector<batch::MeasuredDatum> vars;
+    //    vars.emplace_back(f.lt1, &var);
+    //    auto e = wassert_throws(std::runtime_error, da.insert(*f.tr, f.tr->station().get_id(*f.tr, f.sde1), Datetime(2001, 2, 3, 4, 5, 6), vars));
+    //    wassert(actual(e.what()).matches("refusing to overwrite existing data"));
+    //}
 
     // Reinsert the first datum, with a different value and overwrite:
     // it should find its ID and update it
     {
-        bulk::InsertVars vars;
-        wassert(insert_sample1(vars, 125, bulk::UPDATE));
+        Var var(varinfo(WR_VAR(0, 1, 2)), 125);
+        std::vector<batch::MeasuredDatum> vars;
+        vars.emplace_back(1, f.lt1, &var);
+        wassert(da.update(*f.tr, vars, false));
         wassert(actual(vars[0].id) == 1);
-        wassert(actual(vars[0].needs_insert()).isfalse());
-        wassert(actual(vars[0].inserted()).isfalse());
-        wassert(actual(vars[0].needs_update()).isfalse());
-        wassert(actual(vars[0].updated()).istrue());
-    }
-
-    // Reinsert the first datum, with the same value and error on
-    // overwrite: it should find its ID and do nothing, because the value
-    // does not change.
-    {
-        bulk::InsertVars vars;
-        bool successful = false;
-        try {
-            insert_sample1(vars, 125, bulk::ERROR);
-            successful = true;
-        } catch (std::exception& e) {
-            wassert(actual(e.what()).matches("refusing to overwrite existing data"));
-        }
-        wassert(actual(successful).isfalse());
-    }
-
-    // Reinsert the first datum, with a different value and error on
-    // overwrite: it should find the ID and skip the update
-    {
-        bulk::InsertVars vars;
-        wassert(insert_sample1(vars, 126, bulk::IGNORE));
-        wassert(actual(vars[0].id) == 1);
-        wassert(actual(vars[0].needs_insert()).isfalse());
-        wassert(actual(vars[0].inserted()).isfalse());
-        wassert(actual(vars[0].needs_update()).istrue());
-        wassert(actual(vars[0].updated()).isfalse());
     }
 });
 
@@ -191,15 +131,12 @@ add_method("attrs", [](Fixture& f) {
     using namespace dballe::db::v7;
     auto& da = f.tr->data();
 
-    Var var(varinfo(WR_VAR(0, 1, 2)), 123);
-
     // Insert a datum with attributes
-    bulk::InsertVars vars;
-    vars.shared_context.station = f.tr->station().get_id(*f.tr, f.sde1);
-    vars.shared_context.datetime = Datetime(2001, 2, 3, 4, 5, 6);
+    Var var(varinfo(WR_VAR(0, 1, 2)), 123);
     var.seta(newvar(WR_VAR(0, 33, 7), 50));
-    vars.add(&var, f.lt1);
-    wassert(da.insert(*f.tr, vars, bulk::ERROR, true));
+    std::vector<batch::MeasuredDatum> vars;
+    vars.emplace_back(f.lt1, &var);
+    wassert(da.insert(*f.tr, f.sde1.id, Datetime(2001, 2, 3, 4, 5, 6), vars, true));
     int id = vars[0].id;
 
     vector<wreport::Var> attrs;

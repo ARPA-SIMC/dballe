@@ -2,8 +2,8 @@
 #include "db.h"
 #include "v6/db.h"
 #include "v7/db.h"
-#include "sql/sql.h"
-#include "sql/sqlite.h"
+#include "dballe/sql/sql.h"
+#include "dballe/sql/sqlite.h"
 #include "dballe/message.h"
 #include "dballe/core/values.h"
 #include <wreport/error.h>

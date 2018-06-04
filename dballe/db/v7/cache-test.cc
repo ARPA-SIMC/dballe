@@ -1,4 +1,4 @@
-#include "core/tests.h"
+#include "dballe/core/tests.h"
 #include "cache.h"
 
 using namespace dballe;
@@ -16,34 +16,6 @@ class Tests : public TestCase
 } tests("db_v7_cache");
 
 void Tests::register_tests() {
-
-add_method("cache", [] {
-    db::v7::StationCache stations;
-
-    wassert_false(stations.find_entry(1));
-    wassert_false(stations.find_entry(MISSING_INT));
-    wassert(actual(stations.find_id(Station())) == MISSING_INT);
-
-    Station st;
-    st.id = 1;
-    st.report = "testreport";
-    st.coords = Coords(11.5, 42.5);
-    st.ident = "testident";
-
-    stations.insert(st);
-
-    wassert_true(stations.find_entry(1));
-    wassert(actual(*stations.find_entry(1)) == st);
-    wassert(actual(stations.find_id(st)) == 1);
-
-    stations.insert(st);
-
-    wassert_true(stations.find_entry(1));
-    wassert(actual(*stations.find_entry(1)) == st);
-    wassert(actual(stations.find_id(st)) == 1);
-
-    wassert(actual(stations.reverse[st.coords.lon].size()) == 1u);
-});
 
 add_method("levtr", [] {
     db::v7::LevTrCache cache;

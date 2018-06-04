@@ -1,4 +1,4 @@
-%global releaseno 1
+%global releaseno 2
 # Note: define _srcarchivename in Travis build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
@@ -17,7 +17,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 %else
 %define python3_vers python3
 %endif
-BuildRequires: libtool, gperf, doxygen, python-docutils, lua-devel, libwreport-devel >= 3.10 , python-devel, %{python3_vers}-devel, popt-devel, postgresql-devel, mariadb-devel, sqlite-devel, help2man, libwreport-doc, python-wreport3, %{python3_vers}-wreport3, gcc-gfortran
+BuildRequires: libtool, gperf, doxygen, python-docutils, lua-devel, libwreport-devel >= 3.11 , python-devel, %{python3_vers}-devel, popt-devel, postgresql-devel, mariadb-devel, sqlite-devel, help2man, libwreport-doc, python-wreport3, %{python3_vers}-wreport3, gcc-gfortran
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, python-dballe
 
 %description
@@ -311,6 +311,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Mon Jun 4 2018 Daniele Branchini <dbranchini@arpae.it> - 7.31-2
+- addressing #112
+
 * Tue May 29 2018 Daniele Branchini <dbranchini@arpae.it> - 7.31-1
 - added support for readonly transactions
 - updated pollen variables

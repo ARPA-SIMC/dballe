@@ -90,11 +90,6 @@ public:
      */
     void vacuum();
 
-    /**
-     * Dump the entire contents of the database to an output stream
-     */
-    void dump(FILE* out);
-
     friend class dballe::DB;
     friend class dballe::db::v7::Transaction;
 };

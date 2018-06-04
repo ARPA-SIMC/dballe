@@ -1,10 +1,10 @@
 #include "config.h"
-#include "db/tests.h"
+#include "dballe/db/tests.h"
 #include "v6/db.h"
 #include "v7/db.h"
 #include "v7/transaction.h"
-#include "msg/msg.h"
-#include "msg/context.h"
+#include "dballe/msg/msg.h"
+#include "dballe/msg/context.h"
 #include <wreport/notes.h>
 #include <set>
 

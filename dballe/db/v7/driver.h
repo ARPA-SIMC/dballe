@@ -5,6 +5,7 @@
 #include <dballe/core/values.h>
 #include <dballe/db/defs.h>
 #include <dballe/sql/fwd.h>
+#include <dballe/db/v7/fwd.h>
 #include <dballe/db/v7/data.h>
 #include <wreport/var.h>
 #include <memory>
@@ -15,13 +16,6 @@
 namespace dballe {
 namespace db {
 namespace v7 {
-struct QueryBuilder;
-struct StationQueryBuilder;
-struct DataQueryBuilder;
-struct SummaryQueryBuilder;
-struct Repinfo;
-struct Station;
-struct LevTr;
 
 struct Driver
 {
