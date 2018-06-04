@@ -1,5 +1,4 @@
 #include "cache.h"
-#include "dballe/core/values.h"
 #include <ostream>
 
 using namespace std;
@@ -7,60 +6,6 @@ using namespace std;
 namespace dballe {
 namespace db {
 namespace v7 {
-
-StationCache::~StationCache()
-{
-    for (auto& i: by_id)
-        delete i.second;
-}
-
-void StationCache::clear()
-{
-    for (auto& i: by_id)
-        delete i.second;
-    by_id.clear();
-}
-
-const dballe::Station* StationCache::find_entry(int id) const
-{
-    auto i = by_id.find(id);
-    if (i == by_id.end())
-        return nullptr;
-    return i->second;
-}
-
-const dballe::Station* StationCache::insert(const dballe::Station& e)
-{
-    return insert(std::unique_ptr<dballe::Station>(new dballe::Station(e)));
-}
-
-const dballe::Station* StationCache::insert(const dballe::Station& e, int id)
-{
-    std::unique_ptr<dballe::Station> ne(new dballe::Station(e));
-    ne->id = id;
-    return insert(move(ne));
-}
-
-const dballe::Station* StationCache::insert(std::unique_ptr<dballe::Station> e)
-{
-    if (e->id == MISSING_INT)
-        throw std::runtime_error("station to cache in transaction state must have a database ID");
-
-    auto i = this->by_id.find(e->id);
-    if (i != this->by_id.end())
-    {
-        // StationCache do not move: if we have a match on the ID, we just need to
-        // enforce that there is no mismatch on the station data
-        if (*i->second != *e)
-            throw std::runtime_error("cannot replace a cached DB entry with one with the same ID and different data");
-        return i->second;
-    }
-
-    const dballe::Station* res = e.get();
-    this->by_id.insert(make_pair(res->id, e.release()));
-    return res;
-}
-
 
 bool LevTrEntry::operator==(const LevTrEntry& o) const
 {

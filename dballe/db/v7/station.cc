@@ -15,11 +15,6 @@ Station::~Station()
 {
 }
 
-void Station::clear_cache()
-{
-    cache.clear();
-}
-
 void Station::dump(FILE* out)
 {
     int count = 0;

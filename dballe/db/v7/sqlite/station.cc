@@ -88,9 +88,7 @@ int SQLiteStation::insert_new(v7::Transaction& tr, const dballe::Station& desc)
         istm->bind_null_val(4);
     istm->execute();
 
-    int id = conn.get_last_insert_id();
-    cache.insert(desc, id);
-    return id;
+    return conn.get_last_insert_id();
 }
 
 void SQLiteStation::get_station_vars(int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest)

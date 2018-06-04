@@ -26,19 +26,10 @@ struct Transaction;
 struct Station
 {
 protected:
-    StationCache cache;
     virtual void _dump(std::function<void(int, int, const Coords& coords, const char* ident)> out) = 0;
 
 public:
     virtual ~Station();
-
-    /**
-     * Invalidate the station cache.
-     *
-     * Further accesses will be done via the database, and slowly repopulate
-     * the cache from scratch.
-     */
-    void clear_cache();
 
     /**
      * Get the station ID given latitude, longitude and mobile identifier.

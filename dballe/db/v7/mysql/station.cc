@@ -74,9 +74,7 @@ int MySQLStation::insert_new(v7::Transaction& tr, const dballe::Station& desc)
     }
     conn.exec_no_data(qb);
 
-    int id = conn.get_last_insert_id();
-    cache.insert(desc, id);
-    return id;
+    return conn.get_last_insert_id();
 }
 
 #if 0

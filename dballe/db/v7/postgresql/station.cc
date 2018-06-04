@@ -68,9 +68,7 @@ int PostgreSQLStation::insert_new(v7::Transaction& tr, const dballe::Station& de
 {
     // If no station was found, insert a new one
     int rep = tr.repinfo().get_id(desc.report.c_str());
-    int id = conn.exec_prepared_one_row("v7_station_insert", rep, desc.coords.lat, desc.coords.lon, desc.ident.get()).get_int4(0, 0);
-    cache.insert(desc, id);
-    return id;
+    return conn.exec_prepared_one_row("v7_station_insert", rep, desc.coords.lat, desc.coords.lon, desc.ident.get()).get_int4(0, 0);
 }
 
 void PostgreSQLStation::get_station_vars(int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest)

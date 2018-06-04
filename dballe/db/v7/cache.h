@@ -8,31 +8,8 @@
 #include <iosfwd>
 
 namespace dballe {
-struct Station;
-
 namespace db {
 namespace v7 {
-
-struct StationCache
-{
-    std::unordered_map<int, dballe::Station*> by_id;
-
-    StationCache() = default;
-    StationCache(const StationCache&) = delete;
-    StationCache(StationCache&&) = delete;
-    StationCache& operator=(const StationCache&) = delete;
-    StationCache& operator=(StationCache&&) = delete;
-    ~StationCache();
-
-    const dballe::Station* find_entry(int id) const;
-
-    const dballe::Station* insert(const dballe::Station& e);
-    const dballe::Station* insert(const dballe::Station& e, int id);
-    const dballe::Station* insert(std::unique_ptr<dballe::Station> e);
-
-    void clear();
-};
-
 
 struct LevTrEntry
 {

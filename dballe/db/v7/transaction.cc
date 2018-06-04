@@ -83,7 +83,6 @@ void Transaction::rollback()
 void Transaction::clear_cached_state()
 {
     repinfo().read_cache();
-    station().clear_cache();
     levtr().clear_cache();
     station_data().clear_cache();
     data().clear_cache();
