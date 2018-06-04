@@ -30,9 +30,6 @@ protected:
     virtual void _dump(std::function<void(int, int, const Coords& coords, const char* ident)> out) = 0;
 
 public:
-    /// Instantiate a Station object for this connection
-    //static std::unique_ptr<Station> create(Connection& conn);
-
     virtual ~Station();
 
     /**
@@ -49,13 +46,6 @@ public:
      * It returns MISSING_INT if it does not exist.
      */
     virtual int maybe_get_id(v7::Transaction& tr, const dballe::Station& st) = 0;
-
-    /**
-     * Look up a station given its ID.
-     *
-     * It throws an exception if it does not exist.
-     */
-    virtual const dballe::Station* lookup_id(v7::Transaction& tr, int id) = 0;
 
     /**
      * Insert a new station in the database, without checking if it already exists.

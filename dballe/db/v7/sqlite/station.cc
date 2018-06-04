@@ -42,7 +42,6 @@ SQLiteStation::SQLiteStation(SQLiteConnection& conn)
 
 SQLiteStation::~SQLiteStation()
 {
-    delete sstm;
     delete sfstm;
     delete smstm;
     delete istm;
@@ -75,34 +74,6 @@ int SQLiteStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st)
         return id;
     else
         return MISSING_INT;
-}
-
-const dballe::Station* SQLiteStation::lookup_id(v7::Transaction& tr, int id)
-{
-    // First look it up in the transaction cache
-    const dballe::Station* res = cache.find_entry(id);
-    if (res) return res;
-
-    if (!sstm)
-        sstm = conn.sqlitestatement("SELECT rep, lat, lon, ident FROM station WHERE id=?").release();
-
-    sstm->bind_val(1, id);
-
-    sstm->execute_one([&]() {
-        std::unique_ptr<dballe::Station> station(new dballe::Station);
-        station->id = id;
-        station->report = tr.repinfo().get_rep_memo(sstm->column_int(0));
-        station->coords.lat = sstm->column_int(1);
-        station->coords.lon = sstm->column_int(2);
-        if (!sstm->column_isnull(3))
-            station->ident = sstm->column_string(3);
-        res = cache.insert(move(station));
-    });
-
-    if (!res)
-        error_notfound::throwf("station with id %d not found in the database", id);
-
-    return res;
 }
 
 int SQLiteStation::insert_new(v7::Transaction& tr, const dballe::Station& desc)

@@ -25,7 +25,6 @@ PostgreSQLStation::PostgreSQLStation(PostgreSQLConnection& conn)
     // Precompile our statements
     conn.prepare("v7_station_select_fixed", "SELECT id FROM station WHERE rep=$1::int4 AND lat=$2::int4 AND lon=$3::int4 AND ident IS NULL");
     conn.prepare("v7_station_select_mobile", "SELECT id FROM station WHERE rep=$1::int4 AND lat=$2::int4 AND lon=$3::int4 AND ident=$4::text");
-    conn.prepare("v7_station_lookup_id", "SELECT rep, lat, lon, ident FROM station WHERE id=$1::int4");
     conn.prepare("v7_station_insert", "INSERT INTO station (id, rep, lat, lon, ident) VALUES (DEFAULT, $1::int4, $2::int4, $3::int4, $4::text) RETURNING id");
     conn.prepare("v7_station_get_station_vars", R"(
         SELECT d.code, d.value, d.attrs
@@ -61,35 +60,6 @@ int PostgreSQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& 
     {
         case 0: return MISSING_INT;
         case 1: return res.get_int4(0, 0);
-        default: error_consistency::throwf("select station ID query returned %u results", rows);
-    }
-}
-
-const dballe::Station* PostgreSQLStation::lookup_id(v7::Transaction& tr, int id)
-{
-    using namespace dballe::sql::postgresql;
-
-    // First look it up in the transaction cache
-    if (const dballe::Station* res = cache.find_entry(id))
-        return res;
-
-    Result res = conn.exec_prepared("v7_station_lookup_id", id);
-
-    unsigned rows = res.rowcount();
-    switch (rows)
-    {
-        case 0: error_notfound::throwf("station with id %d not found in the database", id);
-        case 1:
-        {
-            std::unique_ptr<dballe::Station> station(new dballe::Station);
-            station->id = id;
-            station->report = tr.repinfo().get_rep_memo(res.get_int4(0, 0));
-            station->coords.lat = res.get_int4(0, 1);
-            station->coords.lon = res.get_int4(0, 2);
-            if (!res.is_null(0, 3))
-                station->ident = res.get_string(0, 3);
-            return cache.insert(move(station));
-        }
         default: error_consistency::throwf("select station ID query returned %u results", rows);
     }
 }

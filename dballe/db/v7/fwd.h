@@ -6,6 +6,10 @@ namespace db {
 namespace v7 {
 
 struct Transaction;
+struct QueryBuilder;
+struct StationQueryBuilder;
+struct DataQueryBuilder;
+struct SummaryQueryBuilder;
 struct IdQueryBuilder;
 struct DB;
 struct Repinfo;

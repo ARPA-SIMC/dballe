@@ -56,27 +56,6 @@ int MySQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st)
     }
 }
 
-const dballe::Station* MySQLStation::lookup_id(v7::Transaction& tr, int id)
-{
-    // First look it up in the transaction cache
-    if (const dballe::Station* res = cache.find_entry(id))
-        return res;
-
-    Querybuf qb;
-    qb.appendf("SELECT rep, lat, lon, ident FROM station WHERE id=%d", id);
-    auto res = conn.exec_store(qb);
-    auto row = res.expect_one_result();
-
-    std::unique_ptr<dballe::Station> station(new dballe::Station);
-    station->id = id;
-    station->report = tr.repinfo().get_rep_memo(row.as_int(0));
-    station->coords.lat = row.as_int(1);
-    station->coords.lon = row.as_int(2);
-    if (!row.isnull(3))
-        station->ident = row.as_string(3);
-    return cache.insert(move(station));
-}
-
 int MySQLStation::insert_new(v7::Transaction& tr, const dballe::Station& desc)
 {
     // If no station was found, insert a new one
