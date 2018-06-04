@@ -148,31 +148,34 @@ void MySQLStationData::query(int id_station, std::function<void(int id, wreport:
 
 void MySQLStationData::insert(dballe::db::v7::Transaction& t, int id_station, std::vector<batch::StationDatum>& vars, bool with_attrs)
 {
-    for (auto& v: vars)
+    std::sort(vars.begin(), vars.end());
+    for (auto v = vars.begin(); v != vars.end(); ++v)
     {
+        // Skip duplicates
+        auto next = v + 1;
+        if (next != vars.end() && *v == *next)
+            continue;
         Querybuf qb;
-
-        string escaped_value = conn.escape(v.var->enqc());
-
-        if (with_attrs && v.var->next_attr())
+        string escaped_value = conn.escape(v->var->enqc());
+        if (with_attrs && v->var->next_attr())
         {
             values::Encoder enc;
-            enc.append_attributes(*v.var);
+            enc.append_attributes(*v->var);
             string escaped_attrs = conn.escape(enc.buf);
             qb.appendf("INSERT INTO station_data (id_station, code, value, attrs) VALUES (%d, %d, '%s', X'%s')",
                     id_station,
-                    (int)v.var->code(),
+                    (int)v->var->code(),
                     escaped_value.c_str(),
                     escaped_attrs.c_str());
         }
         else
             qb.appendf("INSERT INTO station_data (id_station, code, value, attrs) VALUES (%d, %d, '%s', NULL)",
                     id_station,
-                    (int)v.var->code(),
+                    (int)v->var->code(),
                     escaped_value.c_str());
         conn.exec_no_data(qb);
 
-        v.id = conn.get_last_insert_id();
+        v->id = conn.get_last_insert_id();
     }
 }
 
@@ -214,32 +217,37 @@ void MySQLData::query(int id_station, const Datetime& datetime, std::function<vo
 
 void MySQLData::insert(dballe::db::v7::Transaction& t, int id_station, const Datetime& datetime, std::vector<batch::MeasuredDatum>& vars, bool with_attrs)
 {
-    for (auto& v: vars)
+    std::sort(vars.begin(), vars.end());
+    for (auto v = vars.begin(); v != vars.end(); ++v)
     {
+        // Skip duplicates
+        auto next = v + 1;
+        if (next != vars.end() && *v == *next)
+            continue;
         Querybuf qb;
 
         const auto& dt = datetime;
-        string escaped_value = conn.escape(v.var->enqc());
+        string escaped_value = conn.escape(v->var->enqc());
 
-        if (with_attrs && v.var->next_attr())
+        if (with_attrs && v->var->next_attr())
         {
             values::Encoder enc;
-            enc.append_attributes(*v.var);
+            enc.append_attributes(*v->var);
             string escaped_attrs = conn.escape(enc.buf);
             qb.appendf("INSERT INTO data (id_station, id_levtr, datetime, code, value, attrs) VALUES (%d, %d, '%04d-%02d-%02d %02d:%02d:%02d', %d, '%s', X'%s')",
-                    id_station, v.id_levtr, dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,
-                    (int)v.var->code(),
+                    id_station, v->id_levtr, dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,
+                    (int)v->var->code(),
                     escaped_value.c_str(),
                     escaped_attrs.c_str());
         }
         else
             qb.appendf("INSERT INTO data (id_station, id_levtr, datetime, code, value, attrs) VALUES (%d, %d, '%04d-%02d-%02d %02d:%02d:%02d', %d, '%s', NULL)",
-                    id_station, v.id_levtr, dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,
-                    (int)v.var->code(),
+                    id_station, v->id_levtr, dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,
+                    (int)v->var->code(),
                     escaped_value.c_str());
         conn.exec_no_data(qb);
 
-        v.id = conn.get_last_insert_id();
+        v->id = conn.get_last_insert_id();
     }
 }
 

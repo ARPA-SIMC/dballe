@@ -3,6 +3,7 @@
 
 #include <dballe/core/values.h>
 #include <dballe/db/v7/fwd.h>
+#include <dballe/db/v7/utils.h>
 #include <vector>
 #include <unordered_map>
 #include <map>
@@ -57,6 +58,8 @@ struct StationDatum
         : id(id), var(var) {}
 
     void dump(FILE* out) const;
+    bool operator<(const StationDatum& o) const { return var->code() < o.var->code(); }
+    bool operator==(const StationDatum& o) const { return var->code() == o.var->code(); }
 };
 
 struct StationData
@@ -82,39 +85,9 @@ struct MeasuredDatum
         : id(id), id_levtr(id_levtr), var(var) {}
 
     void dump(FILE* out) const;
+    bool operator<(const MeasuredDatum& o) const { return id_levtr < o.id_levtr || (id_levtr == o.id_levtr && var->code() < o.var->code()); }
+    bool operator==(const MeasuredDatum& o) const { return id_levtr == o.id_levtr && var->code() == o.var->code(); }
 };
-
-struct IdVarcode
-{
-    int id;
-    wreport::Varcode varcode;
-
-    IdVarcode(int id, wreport::Varcode varcode)
-        : id(id), varcode(varcode)
-    {
-    }
-
-    bool operator==(const IdVarcode& o) const { return o.id == id && o.varcode == varcode; }
-};
-
-} } } }
-
-namespace std
-{
-    template<> struct hash<dballe::db::v7::batch::IdVarcode>
-    {
-        typedef dballe::db::v7::batch::IdVarcode argument_type;
-        typedef std::size_t result_type;
-        result_type operator()(argument_type const& s) const noexcept
-        {
-            result_type const h1 ( std::hash<int>{}(s.id) );
-            result_type const h2 ( std::hash<wreport::Varcode>{}(s.varcode) );
-            return h1 ^ (h2 << 1);
-        }
-    };
-}
-
-namespace dballe { namespace db { namespace v7 { namespace batch {
 
 struct MeasuredData
 {

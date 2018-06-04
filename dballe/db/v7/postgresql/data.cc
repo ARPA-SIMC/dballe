@@ -201,24 +201,30 @@ void PostgreSQLStationData::query(int id_station, std::function<void(int id, wre
 
 void PostgreSQLStationData::insert(dballe::db::v7::Transaction& t, int id_station, std::vector<batch::StationDatum>& vars, bool with_attrs)
 {
+    std::sort(vars.begin(), vars.end());
+
     char lead[64];
     snprintf(lead, 64, "(DEFAULT,%d,", id_station);
 
     Querybuf dq(512);
     dq.append("INSERT INTO station_data (id, id_station, code, value, attrs) VALUES ");
     dq.start_list(",");
-    for (auto& v: vars)
+    for (auto v = vars.begin(); v != vars.end(); ++v)
     {
+        // Skip duplicates
+        auto next = v + 1;
+        if (next != vars.end() && *v == *next)
+            continue;
         dq.start_list_item();
         dq.append(lead);
-        dq.append_int(v.var->code());
+        dq.append_int(v->var->code());
         dq.append(",");
-        conn.append_escaped(dq, v.var->enqc());
+        conn.append_escaped(dq, v->var->enqc());
         dq.append(",");
-        if (with_attrs && v.var->next_attr())
+        if (with_attrs && v->var->next_attr())
         {
             values::Encoder enc;
-            enc.append_attributes(*v.var);
+            enc.append_attributes(*v->var);
             conn.append_escaped(dq, enc.buf);
         } else
             dq.append("NULL::bytea");
@@ -231,10 +237,14 @@ void PostgreSQLStationData::insert(dballe::db::v7::Transaction& t, int id_statio
     // Run the insert query and read back the new IDs
     Result res(conn.exec(dq));
     unsigned row = 0;
-    for (auto& v: vars)
+    for (auto v = vars.begin(); v != vars.end(); ++v)
     {
+        // Skip duplicates
+        auto next = v + 1;
+        if (next != vars.end() && *v == *next)
+            continue;
         if (row >= res.rowcount()) break;
-        v.id = res.get_int4(row, 0);
+        v->id = res.get_int4(row, 0);
         ++row;
     }
 }
@@ -274,6 +284,8 @@ void PostgreSQLData::query(int id_station, const Datetime& datetime, std::functi
 
 void PostgreSQLData::insert(dballe::db::v7::Transaction& t, int id_station, const Datetime& datetime, std::vector<batch::MeasuredDatum>& vars, bool with_attrs)
 {
+    std::sort(vars.begin(), vars.end());
+
     const Datetime& dt = datetime;
     char val_lead[64];
     snprintf(val_lead, 64, "(DEFAULT,%d,'%04d-%02d-%02d %02d:%02d:%02d',",
@@ -283,20 +295,24 @@ void PostgreSQLData::insert(dballe::db::v7::Transaction& t, int id_station, cons
     Querybuf dq(512);
     dq.append("INSERT INTO data (id, id_station, datetime, id_levtr, code, value, attrs) VALUES ");
     dq.start_list(",");
-    for (auto& v: vars)
+    for (auto v = vars.begin(); v != vars.end(); ++v)
     {
+        // Skip duplicates
+        auto next = v + 1;
+        if (next != vars.end() && *v == *next)
+            continue;
         dq.start_list_item();
         dq.append(val_lead);
-        dq.append_int(v.id_levtr);
+        dq.append_int(v->id_levtr);
         dq.append(",");
-        dq.append_int(v.var->code());
+        dq.append_int(v->var->code());
         dq.append(",");
-        conn.append_escaped(dq, v.var->enqc());
+        conn.append_escaped(dq, v->var->enqc());
         dq.append(",");
-        if (with_attrs && v.var->next_attr())
+        if (with_attrs && v->var->next_attr())
         {
             values::Encoder enc;
-            enc.append_attributes(*v.var);
+            enc.append_attributes(*v->var);
             conn.append_escaped(dq, enc.buf);
         } else
             dq.append("NULL::bytea");
@@ -309,10 +325,14 @@ void PostgreSQLData::insert(dballe::db::v7::Transaction& t, int id_station, cons
     // Run the insert query and read back the new IDs
     Result res(conn.exec(dq));
     unsigned row = 0;
-    for (auto& v: vars)
+    for (auto v = vars.begin(); v != vars.end(); ++v)
     {
+        // Skip duplicates
+        auto next = v + 1;
+        if (next != vars.end() && *v == *next)
+            continue;
         if (row >= res.rowcount()) break;
-        v.id = res.get_int4(row, 0);
+        v->id = res.get_int4(row, 0);
         ++row;
     }
 }

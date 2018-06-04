@@ -1,6 +1,8 @@
 #include "dballe/db/tests.h"
 #include "dballe/db/v7/db.h"
 #include "dballe/db/v7/transaction.h"
+#include "dballe/db/v7/levtr.h"
+#include "dballe/var.h"
 #include "batch.h"
 #include "config.h"
 
@@ -153,6 +155,72 @@ add_method("import", [](Fixture& f) {
     wassert(actual(batch.count_select_stations) == 1u);
     wassert(actual(batch.count_select_station_data) == 0u);
     wassert(actual(batch.count_select_data) == 0u);
+});
+
+add_method("insert", [](Fixture& f) {
+    using namespace db::v7;
+    Batch& batch = f.tr->batch;
+    auto st = batch.get_station("synop", Coords(45.0, 11.0), Ident());
+    auto& st_data = st->get_station_data();
+    auto& data = st->get_measured_data(Datetime(2018, 6, 1));
+
+    Var sv(var(WR_VAR(0, 7, 30), 1000.0));
+    st_data.add(&sv, batch::ERROR);
+    Var dv(var(WR_VAR(0, 12, 101), 25.6));
+    int id_levtr = f.tr->levtr().obtain_id(LevTrEntry(Level(1), Trange(254)));
+    data.add(id_levtr, &dv, batch::ERROR);
+
+    batch.write_pending(false);
+    wassert(actual(batch.count_select_stations) == 1u);
+    wassert(actual(batch.count_select_station_data) == 0u);
+    wassert(actual(batch.count_select_data) == 0u);
+});
+
+add_method("insert_double_station_value", [](Fixture& f) {
+    using namespace db::v7;
+    Batch& batch = f.tr->batch;
+    auto st = batch.get_station("synop", Coords(45.0, 11.0), Ident());
+    auto& st_data = st->get_station_data();
+
+    Var sv1(var(WR_VAR(0, 7, 30), 1000.0));
+    Var sv2(var(WR_VAR(0, 7, 30), 1001.0));
+    st_data.add(&sv1, batch::ERROR);
+    st_data.add(&sv2, batch::ERROR);
+    batch.write_pending(false);
+
+    wassert(actual(batch.count_select_stations) == 1u);
+    wassert(actual(batch.count_select_station_data) == 0u);
+    wassert(actual(batch.count_select_data) == 0u);
+
+    // Query var and check that it is 1001
+    auto cur = f.tr->query_station_data(core::Query());
+    wassert(actual(cur->remaining()) == 1);
+    wassert(cur->next());
+    wassert(actual(cur->get_var()) == sv2);
+});
+
+add_method("insert_double_measured_value", [](Fixture& f) {
+    using namespace db::v7;
+    Batch& batch = f.tr->batch;
+    auto st = batch.get_station("synop", Coords(45.0, 11.0), Ident());
+    auto& data = st->get_measured_data(Datetime(2018, 6, 1));
+
+    Var dv1(var(WR_VAR(0, 12, 101), 25.6));
+    Var dv2(var(WR_VAR(0, 12, 101), 25.7));
+    int id_levtr = f.tr->levtr().obtain_id(LevTrEntry(Level(1), Trange(254)));
+    data.add(id_levtr, &dv1, batch::ERROR);
+    data.add(id_levtr, &dv2, batch::ERROR);
+    batch.write_pending(false);
+
+    wassert(actual(batch.count_select_stations) == 1u);
+    wassert(actual(batch.count_select_station_data) == 0u);
+    wassert(actual(batch.count_select_data) == 0u);
+
+    // Query var and check that it is 25.7
+    auto cur = f.tr->query_data(core::Query());
+    wassert(actual(cur->remaining()) == 1);
+    wassert(cur->next());
+    wassert(actual(cur->get_var()) == dv2);
 });
 
 }

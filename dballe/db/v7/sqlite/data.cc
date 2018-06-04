@@ -164,22 +164,27 @@ void SQLiteStationData::query(int id_station, std::function<void(int id, wreport
 
 void SQLiteStationData::insert(dballe::db::v7::Transaction& t, int id_station, std::vector<batch::StationDatum>& vars, bool with_attrs)
 {
+    std::sort(vars.begin(), vars.end());
     istm->bind_val(1, id_station);
-    for (auto& v: vars)
+    for (auto v = vars.begin(); v != vars.end(); ++v)
     {
-        istm->bind_val(2, v.var->code());
-        istm->bind_val(3, v.var->enqc());
+        // Skip duplicates
+        auto next = v + 1;
+        if (next != vars.end() && *v == *next)
+            continue;
+        istm->bind_val(2, v->var->code());
+        istm->bind_val(3, v->var->enqc());
         values::Encoder enc;
-        if (with_attrs && v.var->next_attr())
+        if (with_attrs && v->var->next_attr())
         {
-            enc.append_attributes(*v.var);
+            enc.append_attributes(*v->var);
             istm->bind_val(4, enc.buf);
         }
         else
             istm->bind_null_val(4);
         istm->execute();
 
-        v.id = conn.get_last_insert_id();
+        v->id = conn.get_last_insert_id();
     }
 }
 
@@ -218,24 +223,29 @@ void SQLiteData::query(int id_station, const Datetime& datetime, std::function<v
 
 void SQLiteData::insert(dballe::db::v7::Transaction& t, int id_station, const Datetime& datetime, std::vector<batch::MeasuredDatum>& vars, bool with_attrs)
 {
+    std::sort(vars.begin(), vars.end());
     istm->bind_val(1, id_station);
     istm->bind_val(3, datetime);
-    for (auto& v: vars)
+    for (auto v = vars.begin(); v != vars.end(); ++v)
     {
-        istm->bind_val(2, v.id_levtr);
-        istm->bind_val(4, v.var->code());
-        istm->bind_val(5, v.var->enqc());
+        // Skip duplicates
+        auto next = v + 1;
+        if (next != vars.end() && *v == *next)
+            continue;
+        istm->bind_val(2, v->id_levtr);
+        istm->bind_val(4, v->var->code());
+        istm->bind_val(5, v->var->enqc());
         values::Encoder enc;
-        if (with_attrs && v.var->next_attr())
+        if (with_attrs && v->var->next_attr())
         {
-            enc.append_attributes(*v.var);
+            enc.append_attributes(*v->var);
             istm->bind_val(6, enc.buf);
         }
         else
             istm->bind_null_val(6);
         istm->execute();
 
-        v.id = conn.get_last_insert_id();
+        v->id = conn.get_last_insert_id();
     }
 }
 

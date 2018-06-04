@@ -104,6 +104,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/v6/cursor.h \
 	db/v6/qbuilder.h \
 	db/v7/fwd.h \
+	db/v7/utils.h \
 	db/v7/transaction.h \
 	db/v7/batch.h \
 	db/v7/cache.h \
@@ -241,6 +242,7 @@ libdballe_la_SOURCES = \
 	db/v6/qbuilder.cc \
 	db/v6/import.cc \
 	db/v6/export.cc \
+	db/v7/utils.cc \
 	db/v7/transaction.cc \
 	db/v7/batch.cc \
 	db/v7/cache.cc \
@@ -375,6 +377,7 @@ test_dballe_SOURCES = \
 	db/v6/levtr-test.cc \
 	db/v6/datav6-test.cc \
 	db/v6/attrv6-test.cc \
+	db/v7/utils-test.cc \
 	db/v7/batch-test.cc \
 	db/v7/cache-test.cc \
 	db/v7/repinfo-test.cc \
