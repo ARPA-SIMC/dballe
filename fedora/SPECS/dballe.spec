@@ -1,4 +1,4 @@
-%global releaseno 1
+%global releaseno 2
 # Note: define _srcarchivename in Travis build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
@@ -311,6 +311,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Mon Jun 4 2018 Daniele Branchini <dbranchini@arpae.it> - 7.31-2
+- addressing #112
+
 * Tue May 29 2018 Daniele Branchini <dbranchini@arpae.it> - 7.31-1
 - added support for readonly transactions
 - updated pollen variables
