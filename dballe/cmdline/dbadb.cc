@@ -37,11 +37,11 @@ namespace {
 struct Importer : public Action
 {
     DB& db;
-    int import_flags;
-    const char* forced_repmemo;
+    int import_flags = 0;
+    const char* forced_repmemo = nullptr;
     shared_ptr<dballe::db::Transaction> transaction;
 
-    Importer(DB& db) : db(db), import_flags(0), forced_repmemo(0) {}
+    Importer(DB& db) : db(db) {}
 
     virtual bool operator()(const cmdline::Item& item);
     void commit()
@@ -61,18 +61,10 @@ bool Importer::operator()(const Item& item)
         fprintf(stderr, "Message #%d cannot be parsed: ignored\n", item.idx);
         return false;
     }
-    for (size_t i = 0; i < item.msgs->size(); ++i)
-    {
-        Msg& msg = Msg::downcast((*item.msgs)[i]);
-        try {
-            if (forced_repmemo == NULL && msg.type == MSG_GENERIC)
-                /* Put generic messages in the generic report by default */
-                transaction->import_msg(msg, NULL, import_flags);
-            else
-                transaction->import_msg(msg, forced_repmemo, import_flags);
-        } catch (std::exception& e) {
-            item.processing_failed(e);
-        }
+    try {
+        transaction->import_msgs(*item.msgs, forced_repmemo, import_flags);
+    } catch (std::exception& e) {
+        item.processing_failed(e);
     }
     return true;
 }

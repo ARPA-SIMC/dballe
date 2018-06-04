@@ -26,6 +26,8 @@ protected:
     /// Variable data
     v7::Data* m_data = nullptr;
 
+    void add_msg_to_batch(const Message& message, const char* repmemo, int flags);
+
 public:
     typedef v7::DB DB;
 
@@ -77,6 +79,7 @@ public:
     void attr_remove_station(int data_id, const db::AttrList& attrs) override;
     void attr_remove_data(int data_id, const db::AttrList& attrs) override;
     void import_msg(const Message& msg, const char* repmemo, int flags) override;
+    void import_msgs(const Messages& msgs, const char* repmemo, int flags) override;
     bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) override;
     void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated) override;
 

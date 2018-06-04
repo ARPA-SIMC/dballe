@@ -17,7 +17,7 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
-void Transaction::import_msg(const Message& message, const char* repmemo, int flags)
+void Transaction::add_msg_to_batch(const Message& message, const char* repmemo, int flags)
 {
     const Msg& msg = Msg::downcast(message);
     const msg::Context* l_ana = msg.find_context(Level(), Trange());
@@ -97,6 +97,20 @@ void Transaction::import_msg(const Message& message, const char* repmemo, int fl
             md->add(id_levtr, var, flags & DBA_IMPORT_OVERWRITE ? batch::UPDATE : batch::IGNORE);
         }
     }
+}
+
+void Transaction::import_msg(const Message& message, const char* repmemo, int flags)
+{
+    add_msg_to_batch(message, repmemo, flags);
+
+    // Run the bulk insert
+    batch.write_pending(flags & DBA_IMPORT_ATTRS);
+}
+
+void Transaction::import_msgs(const Messages& msgs, const char* repmemo, int flags)
+{
+    for (const auto& i: msgs)
+        add_msg_to_batch(i, repmemo, flags);
 
     // Run the bulk insert
     batch.write_pending(flags & DBA_IMPORT_ATTRS);
