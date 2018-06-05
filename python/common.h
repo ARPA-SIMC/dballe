@@ -154,6 +154,9 @@ int datetimerange_from_python(PyObject* dt, DatetimeRange& out);
 /// Convert an utf8 string to a python str object
 PyObject* string_to_python(const std::string& str);
 
+/// Check if a python object is a string
+bool pyobject_is_string(PyObject* o);
+
 /// Convert a python string, bytes or unicode to an utf8 string
 int string_from_python(PyObject* o, std::string& out);
 

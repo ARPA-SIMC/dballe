@@ -158,6 +158,20 @@ PyObject* string_to_python(const std::string& str)
     return PyUnicode_FromStringAndSize(str.data(), str.size());
 }
 
+bool pyobject_is_string(PyObject* o)
+{
+#if PY_MAJOR_VERSION >= 3
+    if (PyBytes_Check(o))
+        return true;
+#else
+    if (PyString_Check(o))
+        return true;
+#endif
+    if (PyUnicode_Check(o))
+        return true;
+    return false;
+}
+
 int string_from_python(PyObject* o, std::string& out)
 {
 #if PY_MAJOR_VERSION >= 3
