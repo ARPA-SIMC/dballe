@@ -11,12 +11,6 @@ struct DB;
 
 namespace db {
 
-namespace v6 {
-struct Driver;
-class DB;
-class Transaction;
-}
-
 namespace v7 {
 struct Driver;
 class DB;
@@ -57,14 +51,6 @@ struct OldDballeTestDataSet : public TestDataSet
 };
 
 bool has_driver(const std::string& backend);
-
-struct V6DB
-{
-    typedef db::v6::DB DB;
-    typedef db::v6::Transaction TR;
-    static const auto format = db::V6;
-    static std::shared_ptr<DB> create_db(const std::string& backend);
-};
 
 struct V7DB
 {
@@ -201,17 +187,12 @@ inline ActualCursor actual(std::unique_ptr<dballe::db::CursorStationData>& actua
 inline ActualCursor actual(std::unique_ptr<dballe::db::CursorData>& actual) { return ActualCursor(*actual); }
 inline ActualCursor actual(std::unique_ptr<dballe::db::CursorSummary>& actual) { return ActualCursor(*actual); }
 inline ActualDB<dballe::DB> actual(std::shared_ptr<dballe::DB> actual) { return ActualDB<dballe::DB>(actual); }
-ActualDB<dballe::DB> actual(std::shared_ptr<dballe::db::v6::DB> actual);
 ActualDB<dballe::DB> actual(std::shared_ptr<dballe::db::v7::DB> actual);
 inline ActualDB<dballe::db::Transaction> actual(std::shared_ptr<dballe::db::Transaction> actual) { return ActualDB<dballe::db::Transaction>(actual); }
-ActualDB<dballe::db::Transaction> actual(std::shared_ptr<dballe::db::v6::Transaction> actual);
 ActualDB<dballe::db::Transaction> actual(std::shared_ptr<dballe::db::v7::Transaction> actual);
 
-extern template class BaseDBFixture<V6DB>;
 extern template class BaseDBFixture<V7DB>;
-extern template class DBFixture<V6DB>;
 extern template class DBFixture<V7DB>;
-extern template class EmptyTransactionFixture<V6DB>;
 extern template class EmptyTransactionFixture<V7DB>;
 extern template class ActualDB<dballe::DB>;
 extern template class ActualDB<dballe::db::Transaction>;

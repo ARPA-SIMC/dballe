@@ -1,12 +1,10 @@
-#include "config.h"
-#include "db/tests.h"
-#include "db/v6/db.h"
-#include "db/v7/db.h"
-#include "db/v7/transaction.h"
-#include "cmdline/dbadb.h"
-#include "core/arrayfile.h"
-#include "msg/codec.h"
-#include "msg/msg.h"
+#include "dballe/db/tests.h"
+#include "dballe/db/v7/db.h"
+#include "dballe/db/v7/transaction.h"
+#include "dballe/cmdline/dbadb.h"
+#include "dballe/core/arrayfile.h"
+#include "dballe/msg/codec.h"
+#include "dballe/msg/msg.h"
 #include "config.h"
 
 using namespace dballe;
@@ -26,14 +24,11 @@ class Tests : public FixtureTestCase<DBFixture<DB>>
     void register_tests() override;
 };
 
-Tests<V6DB> tg2("cmdline_dbadb_v6_sqlite", "SQLITE");
 Tests<V7DB> tg2a("cmdline_dbadb_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests<V6DB> tg6("cmdline_dbadb_v6_postgresql", "POSTGRESQL");
 Tests<V7DB> tg6a("cmdline_dbadb_v7_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests<V6DB> tg8("cmdline_dbadb_v6_mysql", "MYSQL");
 Tests<V7DB> tg8a("cmdline_dbadb_v7_mysql", "MYSQL");
 #endif
 

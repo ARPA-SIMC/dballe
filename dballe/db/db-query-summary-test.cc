@@ -1,8 +1,7 @@
+#include "dballe/db/tests.h"
+#include "dballe/db/v7/db.h"
+#include "dballe/db/v7/transaction.h"
 #include "config.h"
-#include "db/tests.h"
-#include "db/v6/db.h"
-#include "db/v7/db.h"
-#include "db/v7/transaction.h"
 
 using namespace dballe;
 using namespace dballe::db;
@@ -228,14 +227,11 @@ class Tests : public FixtureTestCase<DBDataFixture<DB>>
     }
 };
 
-Tests<V6DB> tg1("db_query_summary_v6_sqlite", "SQLITE");
 Tests<V7DB> tg2("db_query_summary_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests<V6DB> tg3("db_query_summary_v6_postgresql", "POSTGRESQL");
 Tests<V7DB> tg4("db_query_summary_v7_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests<V6DB> tg5("db_query_summary_v6_mysql", "MYSQL");
 Tests<V7DB> tg6("db_query_summary_v7_mysql", "MYSQL");
 #endif
 

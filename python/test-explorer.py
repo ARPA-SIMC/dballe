@@ -60,9 +60,6 @@ class DballeTestMixin(DballeDBMixin):
         self.assertEqual(explorer.varcodes, ["B01012"])
 
 
-class DballeV6Test(DballeTestMixin, unittest.TestCase):
-    DB_FORMAT = "V6"
-
 class DballeV7Test(DballeTestMixin, unittest.TestCase):
     DB_FORMAT = "V7"
 

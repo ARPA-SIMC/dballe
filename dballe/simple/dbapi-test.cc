@@ -1,8 +1,6 @@
-#include "config.h"
-#include "db/tests.h"
-#include "db/v6/db.h"
-#include "db/v7/db.h"
-#include "db/v7/transaction.h"
+#include "dballe/db/tests.h"
+#include "dballe/db/v7/db.h"
+#include "dballe/db/v7/transaction.h"
 #include "dbapi.h"
 #include "config.h"
 #include "msgapi.h"
@@ -78,25 +76,19 @@ class CommitTests : public FixtureTestCase<DBFixture<DB>>
     void register_tests() override;
 };
 
-Tests<V6DB> tg1("dbapi_tr_v6_sqlite", "SQLITE");
 Tests<V7DB> tg2("dbapi_tr_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests<V6DB> tg3("dbapi_tr_v6_postgresql", "POSTGRESQL");
 Tests<V7DB> tg4("dbapi_tr_v7_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests<V6DB> tg5("dbapi_tr_v6_mysql", "MYSQL");
 Tests<V7DB> tg6("dbapi_tr_v7_mysql", "MYSQL");
 #endif
 
-CommitTests<V6DB> ct1("dbapi_db_v6_sqlite", "SQLITE");
 CommitTests<V7DB> ct2("dbapi_db_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-CommitTests<V6DB> ct3("dbapi_db_v6_postgresql", "POSTGRESQL");
 CommitTests<V7DB> ct4("dbapi_db_v7_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-CommitTests<V6DB> ct5("dbapi_db_v6_mysql", "MYSQL");
 CommitTests<V7DB> ct6("dbapi_db_v7_mysql", "MYSQL");
 #endif
 

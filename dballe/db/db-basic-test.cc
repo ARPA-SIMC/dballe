@@ -1,7 +1,5 @@
 #include "dballe/msg/msg.h"
 #include "dballe/db/tests.h"
-#include "v6/repinfo.h"
-#include "v6/db.h"
 #include "v7/repinfo.h"
 #include "v7/db.h"
 #include "v7/transaction.h"
@@ -34,25 +32,19 @@ class CommitTests : public FixtureTestCase<DBFixture<DB>>
     void register_tests() override;
 };
 
-Tests<V6DB> tg1("db_basic_tr_v6_sqlite", "SQLITE");
 Tests<V7DB> tg2("db_basic_tr_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests<V6DB> tg3("db_basic_tr_v6_postgresql", "POSTGRESQL");
 Tests<V7DB> tg4("db_basic_tr_v7_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests<V6DB> tg5("db_basic_tr_v6_mysql", "MYSQL");
 Tests<V7DB> tg6("db_basic_tr_v7_mysql", "MYSQL");
 #endif
 
-CommitTests<V6DB> ct1("db_basic_db_v6_sqlite", "SQLITE");
 CommitTests<V7DB> ct2("db_basic_db_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-CommitTests<V6DB> ct3("db_basic_db_v6_postgresql", "POSTGRESQL");
 CommitTests<V7DB> ct4("db_basic_db_v7_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-CommitTests<V6DB> ct5("db_basic_db_v6_mysql", "MYSQL");
 CommitTests<V7DB> ct6("db_basic_db_v7_mysql", "MYSQL");
 #endif
 
@@ -165,16 +157,6 @@ this->add_method("stationdata", [](Fixture& f) {
             wassert(actual(have_synop).istrue());
             break;
         }
-        case V6:
-            // For v6 databases, we only get one record, with the station
-            // values merged keeping values for the best networks
-            wassert(actual(cur->next()).istrue());
-            wassert(actual(cur->get_station_id()) > 0);
-            cur->to_record(result);
-            wassert(actual(result["B01019"]) == "Camse");
-
-            wassert(actual(cur->next()).isfalse());
-            break;
         default: throw error_unimplemented("testing stations_without_data on unsupported database");
     }
 

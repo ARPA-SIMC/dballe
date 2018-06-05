@@ -87,22 +87,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/defs.h \
 	db/db.h \
 	db/trace.h \
-	db/v6/internals.h \
-	db/v6/repinfo.h \
-	db/v6/station.h \
-	db/v6/levtr.h \
-	db/v6/datav6.h \
-	db/v6/attrv6.h \
-	db/v6/driver.h \
-	db/v6/sqlite/repinfo.h \
-	db/v6/sqlite/station.h \
-	db/v6/sqlite/levtr.h \
-	db/v6/sqlite/datav6.h \
-	db/v6/sqlite/attrv6.h \
-	db/v6/sqlite/driver.h \
-	db/v6/db.h \
-	db/v6/cursor.h \
-	db/v6/qbuilder.h \
 	db/v7/fwd.h \
 	db/v7/utils.h \
 	db/v7/transaction.h \
@@ -135,12 +119,6 @@ nobase_dist_dballeinclude_HEADERS = \
 if HAVE_LIBPQ
 nobase_dist_dballeinclude_HEADERS += \
 	sql/postgresql.h \
-	db/v6/postgresql/repinfo.h \
-	db/v6/postgresql/station.h \
-	db/v6/postgresql/levtr.h \
-	db/v6/postgresql/datav6.h \
-	db/v6/postgresql/attrv6.h \
-	db/v6/postgresql/driver.h \
 	db/v7/postgresql/repinfo.h \
 	db/v7/postgresql/station.h \
 	db/v7/postgresql/levtr.h \
@@ -150,12 +128,6 @@ endif
 if HAVE_MYSQL
 nobase_dist_dballeinclude_HEADERS += \
 	sql/mysql.h \
-	db/v6/mysql/repinfo.h \
-	db/v6/mysql/station.h \
-	db/v6/mysql/levtr.h \
-	db/v6/mysql/datav6.h \
-	db/v6/mysql/attrv6.h \
-	db/v6/mysql/driver.h \
 	db/v7/mysql/repinfo.h \
 	db/v7/mysql/station.h \
 	db/v7/mysql/levtr.h \
@@ -225,23 +197,6 @@ libdballe_la_SOURCES = \
 	sql/sqlite.cc \
 	db/db.cc \
 	db/trace.cc \
-	db/v6/repinfo.cc \
-	db/v6/station.cc \
-	db/v6/levtr.cc \
-	db/v6/datav6.cc \
-	db/v6/attrv6.cc \
-	db/v6/driver.cc \
-	db/v6/sqlite/repinfo.cc \
-	db/v6/sqlite/station.cc \
-	db/v6/sqlite/levtr.cc \
-	db/v6/sqlite/datav6.cc \
-	db/v6/sqlite/attrv6.cc \
-	db/v6/sqlite/driver.cc \
-	db/v6/db.cc \
-	db/v6/cursor.cc \
-	db/v6/qbuilder.cc \
-	db/v6/import.cc \
-	db/v6/export.cc \
 	db/v7/utils.cc \
 	db/v7/transaction.cc \
 	db/v7/batch.cc \
@@ -274,12 +229,6 @@ libdballe_la_SOURCES = \
 if HAVE_LIBPQ
 libdballe_la_SOURCES += \
 	sql/postgresql.cc \
-	db/v6/postgresql/repinfo.cc \
-	db/v6/postgresql/station.cc \
-	db/v6/postgresql/levtr.cc \
-	db/v6/postgresql/datav6.cc \
-	db/v6/postgresql/attrv6.cc \
-	db/v6/postgresql/driver.cc \
 	db/v7/postgresql/repinfo.cc \
 	db/v7/postgresql/station.cc \
 	db/v7/postgresql/levtr.cc \
@@ -289,12 +238,6 @@ endif
 if HAVE_MYSQL
 libdballe_la_SOURCES += \
 	sql/mysql.cc \
-	db/v6/mysql/driver.cc \
-	db/v6/mysql/repinfo.cc \
-	db/v6/mysql/station.cc \
-	db/v6/mysql/levtr.cc \
-	db/v6/mysql/datav6.cc \
-	db/v6/mysql/attrv6.cc \
 	db/v7/mysql/repinfo.cc \
 	db/v7/mysql/station.cc \
 	db/v7/mysql/levtr.cc \
@@ -373,10 +316,6 @@ test_dballe_SOURCES = \
 	sql/sqlite-test.cc \
 	db/tests.cc \
 	db/trace-test.cc \
-	db/v6/station-test.cc \
-	db/v6/levtr-test.cc \
-	db/v6/datav6-test.cc \
-	db/v6/attrv6-test.cc \
 	db/v7/utils-test.cc \
 	db/v7/batch-test.cc \
 	db/v7/cache-test.cc \
