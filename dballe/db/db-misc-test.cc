@@ -1,5 +1,4 @@
 #include "dballe/db/tests.h"
-#include "v6/db.h"
 #include "v7/db.h"
 #include "v7/transaction.h"
 #include "config.h"
@@ -50,25 +49,19 @@ class CommitTests : public FixtureTestCase<DBFixture<DB>>
     void register_tests() override;
 };
 
-Tests<V6DB> tg1("db_misc_tr_v6_sqlite", "SQLITE");
 Tests<V7DB> tg2("db_misc_tr_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests<V6DB> tg3("db_misc_tr_v6_postgresql", "POSTGRESQL");
 Tests<V7DB> tg4("db_misc_tr_v7_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests<V6DB> tg5("db_misc_tr_v6_mysql", "MYSQL");
 Tests<V7DB> tg6("db_misc_tr_v7_mysql", "MYSQL");
 #endif
 
-CommitTests<V6DB> ct1("db_misc_db_v6_sqlite", "SQLITE");
 CommitTests<V7DB> ct2("db_misc_db_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-CommitTests<V6DB> ct3("db_misc_db_v6_postgresql", "POSTGRESQL");
 CommitTests<V7DB> ct4("db_misc_db_v7_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-CommitTests<V6DB> ct5("db_misc_db_v6_mysql", "MYSQL");
 CommitTests<V7DB> ct6("db_misc_db_v7_mysql", "MYSQL");
 #endif
 
@@ -213,21 +206,6 @@ this->add_method("query_station", [](Fixture& f) {
             wassert(actual(have_metar).istrue());
             break;
         }
-        case V6:
-            // V5 and V6 have one station entry (lat, lon, ident)
-            wassert(actual(cur->remaining()) == 1);
-
-            // There should be an item
-            wassert(actual(cur->next()).istrue());
-            wassert(actual(cur->get_lat()) == 12.34560);
-            wassert(actual(cur->get_lon()) == 76.54320);
-            wassert(actual((void*)cur->get_ident()) == (void*)0);
-
-            // Check that the result matches
-            wassert(actual(cur).station_keys_match(oldf.stations["metar"].info));
-
-            // There should be only one item
-            break;
         default: error_unimplemented::throwf("cannot run this test on a database of format %d", (int)DB::format);
     }
     wassert(actual(cur->remaining()) == 0);
@@ -625,7 +603,6 @@ this->add_method("query_ana_filter", [](Fixture& f) {
     cur->discard_rest();
 });
 this->add_method("query_station_best", [](Fixture& f) {
-#warning BEST queries of station values are not yet implemented for memdb
     // Reproduce a querybest scenario which produced invalid SQL
     OldDballeTestDataSet oldf;
     wassert(f.populate(oldf));
@@ -733,10 +710,6 @@ this->add_method("update", [](Fixture& f) {
     // value removes the attributes
     switch (DB::format)
     {
-        case V6:
-            wassert(actual(run_attr_query_data(f.tr, cur->attr_reference_id(), qattrs)) == 1);
-            wassert(actual(qattrs["B33007"].var->enq(MISSING_INT)) == 50);
-            break;
         case V7:
             wassert(actual(run_attr_query_data(f.tr, cur->attr_reference_id(), qattrs)) == 0);
             break;
@@ -757,20 +730,14 @@ this->add_method("query_stepbystep", [](Fixture& f) {
     // remaining() should decrement
     wassert(actual(cur->remaining()) == 3);
     // results should match what was inserted
-    if (DB::format == V6)
-        wassert(actual(cur).data_matches(oldf.data["synop"]));
-    else
-        wassert(actual(cur).data_matches(oldf.data["metar"]));
+    wassert(actual(cur).data_matches(oldf.data["metar"]));
     // just call to_record now, to check if in the next call old variables are removed
     core::Record result;
     cur->to_record(result);
 
     wassert(actual(cur->next()).istrue());
     wassert(actual(cur->remaining()) == 2);
-    if (DB::format == V6)
-        wassert(actual(cur).data_matches(oldf.data["synop"]));
-    else
-        wassert(actual(cur).data_matches(oldf.data["metar"]));
+    wassert(actual(cur).data_matches(oldf.data["metar"]));
 
     // Variables from the previous to_record should be removed
     cur->to_record(result);
@@ -779,17 +746,11 @@ this->add_method("query_stepbystep", [](Fixture& f) {
 
     wassert(actual(cur->next()).istrue());
     wassert(actual(cur->remaining()) == 1);
-    if (DB::format == V6)
-        wassert(actual(cur).data_matches(oldf.data["metar"]));
-    else
-        wassert(actual(cur).data_matches(oldf.data["synop"]));
+    wassert(actual(cur).data_matches(oldf.data["synop"]));
 
     wassert(actual(cur->next()).istrue());
     wassert(actual(cur->remaining()) == 0);
-    if (DB::format == V6)
-        wassert(actual(cur).data_matches(oldf.data["metar"]));
-    else
-        wassert(actual(cur).data_matches(oldf.data["synop"]));
+    wassert(actual(cur).data_matches(oldf.data["synop"]));
 
     // Now there should not be anything anymore
     wassert(actual(cur->remaining()) == 0);

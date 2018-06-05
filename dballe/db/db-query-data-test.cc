@@ -1,7 +1,6 @@
-#include "db/tests.h"
-#include "db/v6/db.h"
-#include "db/v7/db.h"
-#include "db/v7/transaction.h"
+#include "dballe/db/tests.h"
+#include "dballe/db/v7/db.h"
+#include "dballe/db/v7/transaction.h"
 #include "config.h"
 
 using namespace dballe;
@@ -94,20 +93,14 @@ class EmptyFixtureTests : public FixtureTestCase<EmptyTransactionFixture<DB>>
 };
 
 
-OldFixtureTests<V6DB> tg1("db_query_data1_v6_sqlite", "SQLITE");
 OldFixtureTests<V7DB> tg2("db_query_data1_v7_sqlite", "SQLITE");
-EmptyFixtureTests<V6DB> tg3("db_query_data2_v6_sqlite", "SQLITE");
 EmptyFixtureTests<V7DB> tg4("db_query_data2_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-OldFixtureTests<V6DB> tg5("db_query_data1_v6_postgresql", "POSTGRESQL");
 OldFixtureTests<V7DB> tg6("db_query_data1_v7_postgresql", "POSTGRESQL");
-EmptyFixtureTests<V6DB> tg7("db_query_data2_v6_postgresql", "POSTGRESQL");
 EmptyFixtureTests<V7DB> tg8("db_query_data2_v7_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-OldFixtureTests<V6DB> tg9("db_query_data1_v6_mysql", "MYSQL");
 OldFixtureTests<V7DB> tga("db_query_data1_v7_mysql", "MYSQL");
-EmptyFixtureTests<V6DB> tgb("db_query_data2_v6_mysql", "MYSQL");
 EmptyFixtureTests<V7DB> tgc("db_query_data2_v7_mysql", "MYSQL");
 #endif
 
@@ -117,11 +110,7 @@ void OldFixtureTests<DB>::register_tests()
 this->add_method("ana_id", [](Fixture& f) {
     char query[20];
     snprintf(query, 20, "ana_id=%d", f.test_data.data["synop"].info.id);
-#warning FIXME: change after testing if we can move to report-in-station behaviour or not
-    if (f.db->format() != V6)
-        TRY_QUERY(query, 2);
-    else
-        TRY_QUERY(query, 4);
+    TRY_QUERY(query, 2);
     TRY_QUERY("ana_id=4242", 0);
 });
 this->add_method("ana_context", [](Fixture& f) {
@@ -374,16 +363,6 @@ this->add_method("query_ordering", [](Fixture& f) {
     core::Record test;
     switch (DB::format)
     {
-        case V6:
-            // v7: coords, ident, datetime, level, trange, report, code
-            wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals01)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
-            wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals07)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12103=280.15
-            wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals06)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=b, B12101=280.15
-            wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals05)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=2, rep_memo=a, B12101=280.15
-            wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals04)); // lat=1, lon=1, year=2000, leveltype1=2, pindicator=1, rep_memo=a, B12101=280.15
-            wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals03)); // lat=1, lon=1, year=2001, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
-            wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals02)); // lat=2, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
-            break;
         case V7:
             // v7: ana_id(coords, ident, report), datetime, level, trange, code
             wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals01)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15

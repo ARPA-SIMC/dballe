@@ -1,8 +1,6 @@
 #include "tests.h"
-#include "v6/db.h"
 #include "v7/db.h"
 #include "v7/transaction.h"
-#include "v6/driver.h"
 #include "v7/driver.h"
 #include "dballe/sql/sql.h"
 #include "dballe/sql/sqlite.h"
@@ -297,12 +295,6 @@ void DBFixture<DB>::populate_database(TestDataSet& data_set)
     wassert(data_set.populate_db(*this->db));
 }
 
-std::shared_ptr<dballe::db::v6::DB> V6DB::create_db(const std::string& backend)
-{
-    auto conn = get_test_connection(backend);
-    return std::make_shared<dballe::db::v6::DB>(move(conn));
-}
-
 std::shared_ptr<dballe::db::v7::DB> V7DB::create_db(const std::string& backend)
 {
     auto conn = get_test_connection(backend);
@@ -354,28 +346,17 @@ OldDballeTestDataSet::OldDballeTestDataSet()
     data["metar"].values.set("B01012", 400);
 }
 
-ActualDB<dballe::DB> actual(std::shared_ptr<dballe::db::v6::DB> actual)
-{
-    return ActualDB<dballe::DB>(std::static_pointer_cast<dballe::DB>(actual));
-}
 ActualDB<dballe::DB> actual(std::shared_ptr<dballe::db::v7::DB> actual)
 {
     return ActualDB<dballe::DB>(std::static_pointer_cast<dballe::DB>(actual));
-}
-ActualDB<dballe::db::Transaction> actual(std::shared_ptr<dballe::db::v6::Transaction> actual)
-{
-    return ActualDB<dballe::db::Transaction>(std::static_pointer_cast<dballe::db::Transaction>(actual));
 }
 ActualDB<dballe::db::Transaction> actual(std::shared_ptr<dballe::db::v7::Transaction> actual)
 {
     return ActualDB<dballe::db::Transaction>(std::static_pointer_cast<dballe::db::Transaction>(actual));
 }
 
-template class BaseDBFixture<V6DB>;
 template class BaseDBFixture<V7DB>;
-template class DBFixture<V6DB>;
 template class DBFixture<V7DB>;
-template class EmptyTransactionFixture<V6DB>;
 template class EmptyTransactionFixture<V7DB>;
 template class ActualDB<dballe::DB>;
 template class ActualDB<dballe::db::Transaction>;

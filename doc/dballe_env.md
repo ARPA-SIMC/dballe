@@ -29,8 +29,7 @@ Override the database format to use when creating new databases.
 
 Possible values:
 
- * `V6`: current stable format (the default)
- * `V7`: new format still being worked on
+ * `V7`: current stable format (the default)
 
 ## `DBA_EXPLAIN`
 

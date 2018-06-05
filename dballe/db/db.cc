@@ -1,6 +1,5 @@
 #include "config.h"
 #include "db.h"
-#include "v6/db.h"
 #include "v7/db.h"
 #include "dballe/sql/sql.h"
 #include "dballe/sql/sqlite.h"
@@ -116,7 +115,7 @@ shared_ptr<DB> DB::create(unique_ptr<sql::Connection> conn)
     switch (format)
     {
         case V5: throw error_unimplemented("V5 format is not supported anymore by this version of DB-All.e");
-        case V6: return static_pointer_cast<DB>(make_shared<v6::DB>(move(conn)));
+        case V6: throw error_unimplemented("V6 format is not supported anymore by this version of DB-All.e");
         case V7: return static_pointer_cast<DB>(make_shared<v7::DB>(move(conn)));
         default: error_consistency::throwf("requested unknown format %d", (int)format);
     }

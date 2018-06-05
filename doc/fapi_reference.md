@@ -796,10 +796,6 @@ Results are sorted by (in order): ana_id, datetime, level, time range,
 varcode. The ana_id changes slowest, and the varcode changes fastest.
 Ordering by ana_id effectively does grouping by station rather than
 ordering.
-Note that in V6 databases the ana_id corresponds to (latitude,
-longitude, ident), and does not include rep_memo, so in V6 databases
-the ordering is effectively: ana_id, rep_memo, datetime, level, time
-range, varcode.
 Sort order can change in the future, with the invariant that the
 slowest to change remains ana_id, followed by datetime, and the
 fastest to change remains the varcode.

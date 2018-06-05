@@ -1,9 +1,7 @@
 #include "config.h"
 #include "dballe/db/tests.h"
-#include "dballe/db/v6/db.h"
 #include "dballe/db/v7/db.h"
 #include "dballe/db/v7/transaction.h"
-#include "dballe/db/v6/station.h"
 #include "dballe/db/v7/station.h"
 
 using namespace dballe;
@@ -65,72 +63,62 @@ class Tests : public FixtureTestCase<TransactionFixture<DB, DBData>>
             wassert(actual(f.tr).try_station_query("ana_id=2", 1));
         });
         this->add_method("query_lat_lon", [](Fixture& f) {
-            const auto some = DB::format != V6 ? 2 : 1;
-            const auto all = DB::format != V6 ? 4 : 2;
             wassert(actual(f.tr).try_station_query("lat=12.00000", 0));
-            wassert(actual(f.tr).try_station_query("lat=12.34560", some));
-            wassert(actual(f.tr).try_station_query("lat=23.45670", some));
-            wassert(actual(f.tr).try_station_query("latmin=12.00000", all));
-            wassert(actual(f.tr).try_station_query("latmin=12.34560", all));
-            wassert(actual(f.tr).try_station_query("latmin=12.34570", some));
-            wassert(actual(f.tr).try_station_query("latmin=23.45670", some));
+            wassert(actual(f.tr).try_station_query("lat=12.34560", 2));
+            wassert(actual(f.tr).try_station_query("lat=23.45670", 2));
+            wassert(actual(f.tr).try_station_query("latmin=12.00000", 4));
+            wassert(actual(f.tr).try_station_query("latmin=12.34560", 4));
+            wassert(actual(f.tr).try_station_query("latmin=12.34570", 2));
+            wassert(actual(f.tr).try_station_query("latmin=23.45670", 2));
             wassert(actual(f.tr).try_station_query("latmin=23.45680", 0));
             wassert(actual(f.tr).try_station_query("latmax=12.00000", 0));
-            wassert(actual(f.tr).try_station_query("latmax=12.34560", some));
-            wassert(actual(f.tr).try_station_query("latmax=12.34570", some));
-            wassert(actual(f.tr).try_station_query("latmax=23.45670", all));
-            wassert(actual(f.tr).try_station_query("latmax=23.45680", all));
+            wassert(actual(f.tr).try_station_query("latmax=12.34560", 2));
+            wassert(actual(f.tr).try_station_query("latmax=12.34570", 2));
+            wassert(actual(f.tr).try_station_query("latmax=23.45670", 4));
+            wassert(actual(f.tr).try_station_query("latmax=23.45680", 4));
             wassert(actual(f.tr).try_station_query("lon=76.00000", 0));
-            wassert(actual(f.tr).try_station_query("lon=76.54320", some));
-            wassert(actual(f.tr).try_station_query("lon=65.43210", some));
+            wassert(actual(f.tr).try_station_query("lon=76.54320", 2));
+            wassert(actual(f.tr).try_station_query("lon=65.43210", 2));
             wassert(actual(f.tr).try_station_query("lonmin=10., lonmax=20.", 0));
-            wassert(actual(f.tr).try_station_query("lonmin=76.54320, lonmax=76.54320", some));
-            wassert(actual(f.tr).try_station_query("lonmin=76.54320, lonmax=77.", some));
+            wassert(actual(f.tr).try_station_query("lonmin=76.54320, lonmax=76.54320", 2));
+            wassert(actual(f.tr).try_station_query("lonmin=76.54320, lonmax=77.", 2));
             wassert(actual(f.tr).try_station_query("lonmin=76.54330, lonmax=77.", 0));
-            wassert(actual(f.tr).try_station_query("lonmin=60., lonmax=77.", all));
-            wassert(actual(f.tr).try_station_query("lonmin=77., lonmax=76.54310", some));
-            wassert(actual(f.tr).try_station_query("lonmin=77., lonmax=76.54320", all));
+            wassert(actual(f.tr).try_station_query("lonmin=60., lonmax=77.", 4));
+            wassert(actual(f.tr).try_station_query("lonmin=77., lonmax=76.54310", 2));
+            wassert(actual(f.tr).try_station_query("lonmin=77., lonmax=76.54320", 4));
             wassert(actual(f.tr).try_station_query("lonmin=77., lonmax=-10", 0));
         });
         this->add_method("query_mobile", [](Fixture& f) {
-            const auto all = DB::format != V6 ? 4 : 2;
-            wassert(actual(f.tr).try_station_query("mobile=0", all));
+            wassert(actual(f.tr).try_station_query("mobile=0", 4));
             wassert(actual(f.tr).try_station_query("mobile=1", 0));
         });
         this->add_method("query_ident", [](Fixture& f) {
             // FIXME: add some mobile stations to the test fixture to test ident
         });
         this->add_method("query_block_station", [](Fixture& f) {
-            const auto some = DB::format != V6 ? 2 : 1;
-            wassert(actual(f.tr).try_station_query("B01001=1", some));
+            wassert(actual(f.tr).try_station_query("B01001=1", 2));
             wassert(actual(f.tr).try_station_query("B01001=2", 0));
-            wassert(actual(f.tr).try_station_query("B01001=3", some));
+            wassert(actual(f.tr).try_station_query("B01001=3", 2));
             wassert(actual(f.tr).try_station_query("B01001=4", 0));
             wassert(actual(f.tr).try_station_query("B01002=1", 1));
             wassert(actual(f.tr).try_station_query("B01002=2", 1));
             wassert(actual(f.tr).try_station_query("B01002=3", 0));
-            wassert(actual(f.tr).try_station_query("B01002=4", some));
+            wassert(actual(f.tr).try_station_query("B01002=4", 2));
         });
         this->add_method("query_mobile", [](Fixture& f) {
         });
         this->add_method("query_ana_filter", [](Fixture& f) {
-            const auto some = DB::format != V6 ? 2 : 1;
-            const auto all = DB::format != V6 ? 4 : 2;
-            wassert(actual(f.tr).try_station_query("ana_filter=block=1", some));
+            wassert(actual(f.tr).try_station_query("ana_filter=block=1", 2));
             wassert(actual(f.tr).try_station_query("ana_filter=block=2", 0));
-            wassert(actual(f.tr).try_station_query("ana_filter=block=3", some));
-            wassert(actual(f.tr).try_station_query("ana_filter=block>=1", all));
+            wassert(actual(f.tr).try_station_query("ana_filter=block=3", 2));
+            wassert(actual(f.tr).try_station_query("ana_filter=block>=1", 4));
             wassert(actual(f.tr).try_station_query("ana_filter=B07030=42", 1));
             wassert(actual(f.tr).try_station_query("ana_filter=B07030=50", 1));
             wassert(actual(f.tr).try_station_query("ana_filter=B07030=100", 1));
             wassert(actual(f.tr).try_station_query("ana_filter=B07030=110", 1));
             wassert(actual(f.tr).try_station_query("ana_filter=B07030=120", 0));
-            wassert(actual(f.tr).try_station_query("ana_filter=B07030>50", some));
-#warning FIXME: change after testing if we can move to report-in-station behaviour or not
-            if (f.db->format() != V6)
-                wassert(actual(f.tr).try_station_query("ana_filter=B07030>=50", 3));
-            else
-                wassert(actual(f.tr).try_station_query("ana_filter=B07030>=50", 2));
+            wassert(actual(f.tr).try_station_query("ana_filter=B07030>50", 2));
+            wassert(actual(f.tr).try_station_query("ana_filter=B07030>=50", 3));
             wassert(actual(f.tr).try_station_query("ana_filter=50<=B07030<=100", 2));
         });
         this->add_method("query_var", [](Fixture& f) {
@@ -148,10 +136,6 @@ class Tests : public FixtureTestCase<TransactionFixture<DB, DBData>>
             // Manually insert an orphan station
             switch (DB::format)
             {
-                case V6:
-                    if (auto d = dynamic_cast<v6::DB*>(f.db.get()))
-                        d->station().obtain_id(1100000, 4500000);
-                    break;
                 case V7:
                     if (auto t = dynamic_cast<v7::Transaction*>(f.tr.get()))
                     {
@@ -162,9 +146,7 @@ class Tests : public FixtureTestCase<TransactionFixture<DB, DBData>>
                         wassert(t->station().insert_new(*t, station));
                     }
                     break;
-                case V5: throw error_unimplemented("v5 db is not supported");
-                case MESSAGES: throw error_unimplemented("testing stations_without_data on MESSAGES database");
-                case MEM: throw error_unimplemented("MEM databases should not be created anymore");
+                default: error_unimplemented::throwf("cannot run this test on a database of format %d", (int)DB::format);
             }
 
             // Query stations and make sure that they do not appear. They should
@@ -186,9 +168,6 @@ class Tests : public FixtureTestCase<TransactionFixture<DB, DBData>>
                 case V7:
                     wassert(actual(cur->remaining()) == 4);
                     break;
-                case V6:
-                    wassert(actual(cur->remaining()) == 2);
-                    break;
                 default: error_unimplemented::throwf("cannot run this test on a database of format %d", (int)DB::format);
             }
         });
@@ -200,14 +179,11 @@ class Tests : public FixtureTestCase<TransactionFixture<DB, DBData>>
     }
 };
 
-Tests<V6DB> tg1("db_query_station_v6_sqlite", "SQLITE");
 Tests<V7DB> tg2("db_query_station_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests<V6DB> tg3("db_query_station_v6_postgresql", "POSTGRESQL");
 Tests<V7DB> tg4("db_query_station_v7_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests<V6DB> tg5("db_query_station_v6_mysql", "MYSQL");
 Tests<V7DB> tg6("db_query_station_v7_mysql", "MYSQL");
 #endif
 

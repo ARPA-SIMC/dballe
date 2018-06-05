@@ -1,7 +1,6 @@
-#include "db/tests.h"
-#include "db/v6/db.h"
-#include "db/v7/db.h"
-#include "db/v7/transaction.h"
+#include "dballe/db/tests.h"
+#include "dballe/db/v7/db.h"
+#include "dballe/db/v7/transaction.h"
 #include "explorer.h"
 #include "config.h"
 
@@ -22,14 +21,11 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
     void register_tests() override;
 };
 
-Tests<V6DB> tg2("db_explorer_v6_sqlite", "SQLITE");
 Tests<V7DB> tg6("db_explorer_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests<V6DB> tg4("db_explorer_v6_postgresql", "POSTGRESQL");
 Tests<V7DB> tg7("db_explorer_v7_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests<V6DB> tg5("db_explorer_v6_mysql", "MYSQL");
 Tests<V7DB> tg8("db_explorer_v7_mysql", "MYSQL");
 #endif
 
@@ -54,14 +50,9 @@ this->add_method("filter_rep_memo", [](Fixture& f) {
     stations.clear();
     for (const auto& s: explorer.global_summary().all_stations)
         stations.push_back(s.second);
-    if (DB::format == db::V6)
-    {
-        wassert(actual(stations.size()) == 1);
-    } else {
-        wassert(actual(stations.size()) == 2);
-        wassert(actual(stations[0].report) == "metar");
-        wassert(actual(stations[1].report) == "synop");
-    }
+    wassert(actual(stations.size()) == 2);
+    wassert(actual(stations[0].report) == "metar");
+    wassert(actual(stations[1].report) == "synop");
 
     stations.clear();
     for (const auto& s: explorer.active_summary().all_stations)

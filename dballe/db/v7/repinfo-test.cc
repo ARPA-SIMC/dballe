@@ -1,12 +1,9 @@
-#include "db/tests.h"
-#include "sql/sql.h"
-#include "db/v6/db.h"
-#include "db/v6/driver.h"
-#include "db/v6/repinfo.h"
-#include "db/v7/db.h"
-#include "db/v7/transaction.h"
-#include "db/v7/driver.h"
-#include "db/v7/repinfo.h"
+#include "dballe/db/tests.h"
+#include "dballe/sql/sql.h"
+#include "dballe/db/v7/db.h"
+#include "dballe/db/v7/transaction.h"
+#include "dballe/db/v7/driver.h"
+#include "dballe/db/v7/repinfo.h"
 #include <wreport/utils/sys.h>
 #include "config.h"
 
@@ -118,14 +115,11 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
     }
 };
 
-Tests<V6DB> test_sqlitev6("db_v6_repinfo_sqlite", "SQLITE");
 Tests<V7DB> test_sqlitev7("db_v7_repinfo_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests<V6DB> test_psqlv6("db_v6_repinfo_postgresql", "POSTGRESQL");
 Tests<V7DB> test_psqlv7("db_v7_repinfo_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests<V6DB> test_mysqlv6("db_v6_repinfo_mysql", "MYSQL");
 Tests<V7DB> test_mysqlv7("db_v7_repinfo_mysql", "MYSQL");
 #endif
 
