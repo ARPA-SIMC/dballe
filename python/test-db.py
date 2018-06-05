@@ -43,6 +43,12 @@ class CommonDBTestMixin(DballeDBMixin):
         self.db.export_to_file(query, "BUFR", "/dev/null", generic=True)
         self.db.export_to_file(query, "CREX", "/dev/null", generic=True)
 
+    def testExportFileObject(self):
+        query = dballe.Record()
+        out = io.BytesIO()
+        self.db.export_to_file(query, "BUFR", out)
+        self.assertTrue(out.getvalue().startswith(b"BUFR"))
+
     def testQueryAna(self):
         query = dballe.Record()
         cur = self.db.query_stations(query)

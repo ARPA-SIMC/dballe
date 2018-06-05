@@ -705,9 +705,9 @@ static PyObject* dpy_export_to_file(PYDB* self, PyObject* args, PyObject* kw)
     static const char* kwlist[] = { "query", "format", "filename", "generic", NULL };
     dpy_Record* query;
     const char* format;
-    const char* filename;
+    PyObject* file;
     int as_generic = 0;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "O!ss|i", const_cast<char**>(kwlist), &dpy_Record_Type, &query, &format, &filename, &as_generic))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "O!sO|i", const_cast<char**>(kwlist), &dpy_Record_Type, &query, &format, &file, &as_generic))
         return NULL;
 
     File::Encoding encoding = File::BUFR;
@@ -721,27 +721,63 @@ static PyObject* dpy_export_to_file(PYDB* self, PyObject* args, PyObject* kw)
         return NULL;
     }
 
-    try {
-        std::unique_ptr<File> out = File::create(encoding, filename, "wb");
-        msg::Exporter::Options opts;
-        if (as_generic)
-            opts.template_name = "generic";
-        auto exporter = msg::Exporter::create(out->encoding(), opts);
-        auto q = Query::create();
-        q->set_from_record(*query->rec);
-        ReleaseGIL gil;
-        self->db->export_msgs(*q, [&](unique_ptr<Message>&& msg) {
-            Messages msgs;
-            msgs.append(move(msg));
-            out->write(exporter->to_binary(msgs));
-            return true;
-        });
-        gil.lock();
-        Py_RETURN_NONE;
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
+    if (pyobject_is_string(file))
+    {
+        std::string filename;
+        if (string_from_python(file, filename))
+            return NULL;
+        try {
+            std::unique_ptr<File> out = File::create(encoding, filename, "wb");
+            msg::Exporter::Options opts;
+            if (as_generic)
+                opts.template_name = "generic";
+            auto exporter = msg::Exporter::create(out->encoding(), opts);
+            auto q = Query::create();
+            q->set_from_record(*query->rec);
+            ReleaseGIL gil;
+            self->db->export_msgs(*q, [&](unique_ptr<Message>&& msg) {
+                Messages msgs;
+                msgs.append(move(msg));
+                out->write(exporter->to_binary(msgs));
+                return true;
+            });
+            gil.lock();
+            Py_RETURN_NONE;
+        } catch (wreport::error& e) {
+            return raise_wreport_exception(e);
+        } catch (std::exception& se) {
+            return raise_std_exception(se);
+        }
+    } else {
+        try {
+            msg::Exporter::Options opts;
+            if (as_generic)
+                opts.template_name = "generic";
+            auto exporter = msg::Exporter::create(encoding, opts);
+            auto q = Query::create();
+            q->set_from_record(*query->rec);
+            pyo_unique_ptr res(nullptr);
+            bool has_error = false;
+            self->db->export_msgs(*q, [&](unique_ptr<Message>&& msg) {
+                Messages msgs;
+                msgs.append(move(msg));
+                std::string encoded = exporter->to_binary(msgs);
+                res = pyo_unique_ptr(PyObject_CallMethod(file, (char*)"write", (char*)"s#", encoded.data(), (int)encoded.size()));
+                if (!res)
+                {
+                    has_error = true;
+                    return false;
+                }
+                return true;
+            });
+            if (has_error)
+                return nullptr;
+            Py_RETURN_NONE;
+        } catch (wreport::error& e) {
+            return raise_wreport_exception(e);
+        } catch (std::exception& se) {
+            return raise_std_exception(se);
+        }
     }
 }
 
