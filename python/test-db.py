@@ -12,6 +12,7 @@ import unittest
 import warnings
 from testlib import DballeDBMixin
 
+
 class CommonDBTestMixin(DballeDBMixin):
     def setUp(self):
         super(CommonDBTestMixin, self).setUp()
@@ -21,7 +22,7 @@ class CommonDBTestMixin(DballeDBMixin):
                 mobile=0,
                 datetime=datetime.datetime(1945, 4, 25, 8, 0, 0),
                 level=(10, 11, 15, 22),
-                trange=(20,111,222),
+                trange=(20, 111, 222),
                 rep_memo="synop",
                 B01011="Hey Hey!!",
                 B01012=500)
@@ -56,8 +57,8 @@ class CommonDBTestMixin(DballeDBMixin):
 
     def testQueryData(self):
         expected = {}
-        expected["B01011"] = "Hey Hey!!";
-        expected["B01012"] = 500;
+        expected["B01011"] = "Hey Hey!!"
+        expected["B01012"] = 500
 
         query = dballe.Record()
         query["latmin"] = 10.0
@@ -97,7 +98,7 @@ class CommonDBTestMixin(DballeDBMixin):
     def testQueryCursorAttrs(self):
         # Query a variable
         query = dballe.Record(var="B01011")
-        cur = self.db.query_data(query);
+        cur = self.db.query_data(query)
         data = next(cur)
         self.assertTrue(data)
 
@@ -126,11 +127,14 @@ class CommonDBTestMixin(DballeDBMixin):
                 warnings.simplefilter("ignore", DeprecationWarning)
                 res[(result["ana_id"], result["rep_memo"], result["level"], result["trange"], result["var"])] = (
                     result["datemin"], result["datemax"], result["context_id"])
-        self.assertEqual(res[(1, "synop", (10, 11, 15, 22), (20, 111, 222), 'B01011')], (datetime.datetime(1945, 4, 25, 8, 0), datetime.datetime(1945, 4, 25, 8, 0), 1))
-        self.assertEqual(res[(1, "synop", (10, 11, 15, 22), (20, 111, 222), 'B01012')], (datetime.datetime(1945, 4, 25, 8, 0), datetime.datetime(1945, 4, 25, 8, 0), 1))
+        self.assertEqual(
+                res[(1, "synop", (10, 11, 15, 22), (20, 111, 222), 'B01011')],
+                (datetime.datetime(1945, 4, 25, 8, 0), datetime.datetime(1945, 4, 25, 8, 0), 1))
+        self.assertEqual(
+                res[(1, "synop", (10, 11, 15, 22), (20, 111, 222), 'B01012')],
+                (datetime.datetime(1945, 4, 25, 8, 0), datetime.datetime(1945, 4, 25, 8, 0), 1))
 
     def testAttrRemove(self):
-        #db.attrRemove(1, "B01011", [ "B33007" ])
         self.db.attr_remove_data(self.attr_ref, ("B33007",))
 
     def testLoadFile(self):
@@ -159,13 +163,13 @@ class CommonDBTestMixin(DballeDBMixin):
             self.db.remove_all()
             self.db.load(fp, overwrite=True)
             r = next(self.db.query_data(dballe.Record()))
-            a = self.db.attr_query_data(r["context_id"])
+            self.db.attr_query_data(r["context_id"])  # cannot verify the result, but expecting not to raise
             self.assertTrue(r["B12101"] == 274.15)
 
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withB33196.bufr", "rb") as fp:
             self.db.load(fp, overwrite=True)
             r = next(self.db.query_data(dballe.Record()))
-            a = self.db.attr_query_data(r["context_id"])
+            self.db.attr_query_data(r["context_id"])  # cannot verify the result, but expecting not to raise)
             self.assertTrue(r["B12101"] == 273.15)
 
     def testLoadFileno(self):
@@ -282,6 +286,7 @@ class FullDBTestMixin(CommonDBTestMixin):
                 raise RuntimeError("test rollback")
         self.assertEqual(len(list(self.db.query_data({"rep_memo": "synop"}))), 3)
 
+
 class AttrTestMixin(object):
     def testLoadFileOverwriteAttrs(self):
         with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withoutB33196.bufr", "rb") as fp:
@@ -361,17 +366,22 @@ class TransactionTestMixin(object):
 class DballeV6Test(FullDBTestMixin, unittest.TestCase):
     DB_FORMAT = "V6"
 
+
 class DballeV6TransactionTest(TransactionTestMixin, CommonDBTestMixin, unittest.TestCase):
     DB_FORMAT = "V6"
+
 
 class DballeV7Test(FullDBTestMixin, AttrTestMixin, unittest.TestCase):
     DB_FORMAT = "V7"
 
+
 class DballeV7TransactionTest(TransactionTestMixin, CommonDBTestMixin, AttrTestMixin, unittest.TestCase):
     DB_FORMAT = "V7"
 
+
 class DballeMEMTest(FullDBTestMixin, AttrTestMixin, unittest.TestCase):
     DB_FORMAT = "MEM"
+
 
 class DballeMEMTransactionTest(TransactionTestMixin, CommonDBTestMixin, AttrTestMixin, unittest.TestCase):
     DB_FORMAT = "MEM"
