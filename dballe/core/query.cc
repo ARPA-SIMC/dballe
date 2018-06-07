@@ -611,6 +611,12 @@ unsigned Query::parse_modifiers(const char* s)
                 else
                     got = 0;
                 break;
+            case 5:
+                if (strncmp(s, "attrs", 4) == 0)
+                    modifiers |= DBA_DB_MODIFIER_WITH_ATTRIBUTES;
+                else
+                    got = 0;
+                break;
             case 6:
                 /* "bigana": optimize with date first */
                 if (strncmp(s, "bigana", 6) == 0)

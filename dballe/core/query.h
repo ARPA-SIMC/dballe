@@ -19,6 +19,8 @@
 #define DBA_DB_MODIFIER_SORT_FOR_EXPORT (1 << 7)
 /// Add minimum date, maximum date and data count details to summary query results
 #define DBA_DB_MODIFIER_SUMMARY_DETAILS (1 << 8)
+/// Also get attributes alongside data
+#define DBA_DB_MODIFIER_WITH_ATTRIBUTES (1 << 9)
 
 namespace dballe {
 namespace core {

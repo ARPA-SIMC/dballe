@@ -1,6 +1,6 @@
-#include "core/tests.h"
-#include "core/query.h"
-#include "core/record.h"
+#include "dballe/core/tests.h"
+#include "dballe/core/query.h"
+#include "dballe/core/record.h"
 #include <stdexcept>
 
 using namespace std;
@@ -208,6 +208,8 @@ add_method("varlist", []() {
 add_method("modifiers", []() {
     wassert(actual(core::Query::parse_modifiers("best")) == DBA_DB_MODIFIER_BEST);
     wassert(actual(core::Query::parse_modifiers("details")) == DBA_DB_MODIFIER_SUMMARY_DETAILS);
+    wassert(actual(core::Query::parse_modifiers("attrs")) == DBA_DB_MODIFIER_WITH_ATTRIBUTES);
+    wassert(actual(core::Query::parse_modifiers("best,attrs")) == (DBA_DB_MODIFIER_BEST | DBA_DB_MODIFIER_WITH_ATTRIBUTES));
 });
 
 add_method("issue107", []() {
