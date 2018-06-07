@@ -239,8 +239,8 @@ QueryBuilder::QueryBuilder(std::shared_ptr<v7::Transaction> tr, const core::Quer
 {
 }
 
-DataQueryBuilder::DataQueryBuilder(std::shared_ptr<v7::Transaction> tr, const core::Query& query, unsigned int modifiers, bool query_station_vars, bool query_attrs)
-    : QueryBuilder(tr, query, modifiers, query_station_vars), query_attrs(query_attrs)
+DataQueryBuilder::DataQueryBuilder(std::shared_ptr<v7::Transaction> tr, const core::Query& query, unsigned int modifiers, bool query_station_vars)
+    : QueryBuilder(tr, query, modifiers, query_station_vars), query_attrs(modifiers & DBA_DB_MODIFIER_WITH_ATTRIBUTES)
 {
 }
 

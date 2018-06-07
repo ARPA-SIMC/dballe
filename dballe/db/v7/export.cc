@@ -110,7 +110,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
     unique_ptr<Msg> msg;
 
     // The big export query
-    DataQueryBuilder qb(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT, false, true);
+    DataQueryBuilder qb(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT | DBA_DB_MODIFIER_WITH_ATTRIBUTES, false);
     qb.build();
 
     // Current context information used to detect context changes

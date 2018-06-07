@@ -99,7 +99,7 @@ struct DataQueryBuilder : public QueryBuilder
     /// True if the select includes the attrs field
     bool select_attrs = false;
 
-    DataQueryBuilder(std::shared_ptr<v7::Transaction> tr, const core::Query& query, unsigned int modifiers, bool query_station_vars, bool query_attrs);
+    DataQueryBuilder(std::shared_ptr<v7::Transaction> tr, const core::Query& query, unsigned int modifiers, bool query_station_vars);
     ~DataQueryBuilder();
 
     // bool add_attrfilter_where(const char* tbl);
@@ -115,7 +115,7 @@ struct DataQueryBuilder : public QueryBuilder
 struct IdQueryBuilder : public DataQueryBuilder
 {
     IdQueryBuilder(std::shared_ptr<v7::Transaction> tr, const core::Query& query, unsigned int modifiers, bool query_station_vars)
-        : DataQueryBuilder(tr, query, modifiers, query_station_vars, false) {}
+        : DataQueryBuilder(tr, query, modifiers, query_station_vars) {}
 
     virtual void build_select();
     virtual void build_order_by();
@@ -124,7 +124,7 @@ struct IdQueryBuilder : public DataQueryBuilder
 struct SummaryQueryBuilder : public DataQueryBuilder
 {
     SummaryQueryBuilder(std::shared_ptr<v7::Transaction> tr, const core::Query& query, unsigned int modifiers, bool query_station_vars)
-        : DataQueryBuilder(tr, query, modifiers, query_station_vars, false) {}
+        : DataQueryBuilder(tr, query, modifiers, query_station_vars) {}
 
     virtual void build_select();
     virtual void build_order_by();

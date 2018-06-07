@@ -483,10 +483,10 @@ unique_ptr<CursorStation> run_station_query(std::shared_ptr<v7::Transaction> tr,
     return res;
 }
 
-unique_ptr<CursorStationData> run_station_data_query(std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain, bool with_attrs)
+unique_ptr<CursorStationData> run_station_data_query(std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
-    DataQueryBuilder qb(tr, q, modifiers, true, with_attrs);
+    DataQueryBuilder qb(tr, q, modifiers, true);
     qb.build();
 
     if (explain)
@@ -510,10 +510,10 @@ unique_ptr<CursorStationData> run_station_data_query(std::shared_ptr<v7::Transac
     return res;
 }
 
-unique_ptr<CursorData> run_data_query(std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain, bool with_attrs)
+unique_ptr<CursorData> run_data_query(std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
-    DataQueryBuilder qb(tr, q, modifiers, false, with_attrs);
+    DataQueryBuilder qb(tr, q, modifiers, false);
     qb.build();
 
     if (explain)
