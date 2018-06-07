@@ -62,22 +62,36 @@ class CommonDBTestMixin(DballeDBMixin):
         self.assertEqual(count, 1)
 
     def testQueryData(self):
-        expected = {}
-        expected["B01011"] = "Hey Hey!!"
-        expected["B01012"] = 500
+        expected = [
+            {"code": "B01011", "val": "Hey Hey!!"},
+            {"code": "B01012", "val": 500},
+        ]
 
         query = dballe.Record()
         query["latmin"] = 10.0
         cur = self.db.query_data(query)
         self.assertEqual(cur.remaining, 2)
-        count = 0
-        for result in cur:
-            self.assertEqual(cur.remaining, 2-count-1)
+        for idx, result in enumerate(cur):
+            self.assertEqual(cur.remaining, 2-idx-1)
             var = result.var(result["var"])
-            assert var.code in expected
-            self.assertEqual(var.enq(), expected[var.code])
-            del expected[var.code]
-            count += 1
+            self.assertEqual(var.code, expected[idx]["code"])
+            self.assertEqual(var.enq(), expected[idx]["val"])
+            self.assertFalse(result.attrs(result["var"]))
+
+    def testQueryDataAttrs(self):
+        expected = [
+            {"code": "B01011", "val": "Hey Hey!!"},
+            {"code": "B01012", "val": 500},
+        ]
+
+        cur = self.db.query_data({"latmin": 10.0, "query": "attrs"})
+        self.assertEqual(cur.remaining, 2)
+        for idx, result in enumerate(cur):
+            self.assertEqual(cur.remaining, 2-idx-1)
+            var = result.var(result["var"])
+            self.assertEqual(var.code, expected[idx]["code"])
+            self.assertEqual(var.enq(), expected[idx]["val"])
+            self.assertFalse(result.attrs(result["var"]))
 
     def testQueryDataLimit(self):
         query = dballe.Record()

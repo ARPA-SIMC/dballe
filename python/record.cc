@@ -442,7 +442,6 @@ static PyObject* dpy_Record_get(dpy_Record* self, PyObject *args, PyObject* kw)
     } DBALLE_CATCH_RETURN_PYO
 }
 
-
 static PyObject* dpy_Record_vars(dpy_Record* self)
 {
     if (PyErr_WarnEx(PyExc_DeprecationWarning, "Record.vars() may disappear in a future version of DB-All.e, and no replacement is planned", 1))
@@ -462,6 +461,35 @@ static PyObject* dpy_Record_vars(dpy_Record* self)
             if (PyTuple_SetItem(result, i, v.release()))
                 return nullptr;
         }
+        return result.release();
+    } catch (wreport::error& e) {
+        return raise_wreport_exception(e);
+    } catch (std::exception& se) {
+        return raise_std_exception(se);
+    }
+}
+
+static PyObject* dpy_Record_attrs(dpy_Record* self, PyObject *args, PyObject* kw)
+{
+    static const char* kwlist[] = { "code", NULL };
+    const char* code = nullptr;
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "s", const_cast<char**>(kwlist), &code))
+        return nullptr;
+
+    try {
+        const wreport::Var& var = (*self->rec)[code];
+
+        pyo_unique_ptr result(PyDict_New());
+        if (!result) return nullptr;
+
+        for (const Var* a = var.next_attr(); a != nullptr; a = a->next_attr())
+        {
+            string key = wreport::varcode_format(a->code());
+            pyo_unique_ptr val((PyObject*)wrpy->var_create_copy(*a));
+            if (PyDict_SetItemString(result, key.c_str(), val.get()))
+                return nullptr;
+        }
+
         return result.release();
     } catch (wreport::error& e) {
         return raise_wreport_exception(e);
@@ -521,7 +549,10 @@ static PyMethodDef dpy_Record_methods[] = {
     {"var", (PyCFunction)dpy_Record_var, METH_VARARGS, "return a `dballe.Var`_ from the record, given its key." },
     {"update", (PyCFunction)dpy_Record_update, METH_VARARGS | METH_KEYWORDS, "set many record keys/vars in a single shot, via kwargs" },
     {"get", (PyCFunction)dpy_Record_get, METH_VARARGS | METH_KEYWORDS, "lookup a value, returning a fallback value (None by default) if unset" },
+    {"attrs", (PyCFunction)dpy_Record_attrs, METH_VARARGS | METH_KEYWORDS, R"(
+        attrs(code) -> {code: var}
 
+        return a dict with the attributes of the given varcode)" },
     // Deprecated
     {"key", (PyCFunction)dpy_Record_var, METH_VARARGS, "(deprecated) return a `dballe.Var`_ from the record, given its key." },
     {"vars", (PyCFunction)dpy_Record_vars, METH_NOARGS, "(deprecated) return a sequence with all the variables set on the Record. Note that this does not include keys." },
