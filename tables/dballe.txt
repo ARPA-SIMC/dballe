@@ -341,6 +341,7 @@
  022192 [SIM] Current X component                                        M/S                        2            0  13 M/S                       2          4
  022193 [SIM] Current Y component                                        M/S                        2            0  13 M/S                       2          4
  022194 [SIM] Concentrazione clorofilla a                                microg/l                   2            0  17 microg/l                  2          6
+ 022195 [SIM] Depth below sea surface                                    M                          3            0  23 M                         3          7
  023192 [SIM] Dry deposition of H2SO4                                    MOL/M**2                   5            0  20 MOL/M**3                  5          6
  023193 [SIM] Wet deposition of H2SO4                                    MOL/M**2                   5            0  20 MOL/M**3                  5          6
  023194 [SIM] Dry deposition of NH4                                      MOL/M**2                   5            0  20 MOL/M**3                  5          6

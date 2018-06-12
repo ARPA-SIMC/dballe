@@ -351,6 +351,7 @@ digits and description.
 | 022192 | [SIM] Current X component                                          | M/S                      | ##.##          |
 | 022193 | [SIM] Current Y component                                          | M/S                      | ##.##          |
 | 022194 | [SIM] Concentrazione clorofilla a                                  | microg/l                 | ####.##        |
+| 022195 | [SIM] Depth below sea surface                                      | M                        | ####.###       |
 | 023192 | [SIM] Dry deposition of H2SO4                                      | MOL/M**3                 | #.#####        |
 | 023193 | [SIM] Wet deposition of H2SO4                                      | MOL/M**3                 | #.#####        |
 | 023194 | [SIM] Dry deposition of NH4                                        | MOL/M**3                 | #.#####        |
