@@ -7,27 +7,11 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
-batch::Station* Batch::find_existing(const std::string& report, const Coords& coords, const Ident& ident)
+Batch::~Batch()
 {
-    auto li = stations_by_lon.find(coords.lon);
-    if (li == stations_by_lon.end())
-        return nullptr;
-    for (auto i: li->second)
-    {
-        batch::Station* st = &stations[i];
-        if (st->report == report && st->coords == coords && st->ident == ident)
-            return st;
-    }
-    return nullptr;
-}
-
-void Batch::index_existing(batch::Station* st, size_t pos)
-{
-    auto li = stations_by_lon.find(st->coords.lon);
-    if (li == stations_by_lon.end())
-        stations_by_lon.insert(std::make_pair(st->coords.lon, std::vector<size_t>{pos}));
-    else
-        li->second.push_back(pos);
+    // Do not try to flush it, pending data may be lost unless write_pending is
+    // called, and it's ok
+    delete last_station;
 }
 
 void Batch::set_write_attrs(bool write_attrs)
@@ -40,83 +24,95 @@ void Batch::set_write_attrs(bool write_attrs)
     this->write_attrs = write_attrs;
 }
 
+bool Batch::have_station(const std::string& report, const Coords& coords, const Ident& ident)
+{
+    return last_station && last_station->report == report && last_station->coords == coords && last_station->ident == ident;
+
+}
+
+void Batch::new_station(const std::string& report, const Coords& coords, const Ident& ident)
+{
+    if (last_station)
+    {
+        last_station->write_pending(write_attrs);
+        delete last_station;
+        last_station = nullptr;
+    }
+    last_station = new batch::Station(*this);
+    last_station->report = report;
+    last_station->coords = coords;
+    last_station->ident = ident;
+}
+
 batch::Station* Batch::get_station(const dballe::Station& station, bool station_can_add)
 {
-    batch::Station* res = find_existing(station.report, station.coords, station.ident);
-    if (res)
+    if (have_station(station.report, station.coords, station.ident))
     {
-        if (station.id != MISSING_INT && res->id != station.id)
+        if (station.id != MISSING_INT && last_station->id != station.id)
             throw std::runtime_error("batch station has different id than the station we are using to look it up");
-        return res;
+        return last_station;
     }
     v7::Station& st = transaction.station();
 
-    stations.emplace_back(*this);
-    res = &stations.back(); // FIXME: in C++17, emplace_back already returns a reference
-    res->report = station.report;
-    res->coords = station.coords;
-    res->ident = station.ident;
+    new_station(station.report, station.coords, station.ident);
+
     if (station.id != MISSING_INT)
-        res->id = station.id;
+        last_station->id = station.id;
     else
     {
         ++count_select_stations;
-        res->id = st.maybe_get_id(transaction, *res);
+        last_station->id = st.maybe_get_id(transaction, *last_station);
     }
-    if (res->id == MISSING_INT)
+    if (last_station->id == MISSING_INT)
     {
         if (!station_can_add)
             throw wreport::error_notfound("station not found in the database");
-        res->is_new = true;
-        res->station_data.loaded = true;
+        last_station->is_new = true;
+        last_station->station_data.loaded = true;
     }
     else
     {
-        res->is_new = false;
-        res->station_data.loaded = false;
+        last_station->is_new = false;
+        last_station->station_data.loaded = false;
     }
-    index_existing(res, stations.size() - 1);
-    return res;
+    return last_station;
 }
 
 batch::Station* Batch::get_station(const std::string& report, const Coords& coords, const Ident& ident)
 {
-    batch::Station* res = find_existing(report, coords, ident);
-    if (res) return res;
+    if (have_station(report, coords, ident))
+        return last_station;
 
     v7::Station& st = transaction.station();
 
-    stations.emplace_back(*this);
-    res = &stations.back(); // FIXME: in C++17, emplace_back already returns a reference
-    res->report = report;
-    res->coords = coords;
-    res->ident = ident;
-    res->id = st.maybe_get_id(transaction, *res);
+    new_station(report, coords, ident);
+
+    last_station->id = st.maybe_get_id(transaction, *last_station);
     ++count_select_stations;
-    if (res->id == MISSING_INT)
+    if (last_station->id == MISSING_INT)
     {
-        res->is_new = true;
-        res->station_data.loaded = true;
+        last_station->is_new = true;
+        last_station->station_data.loaded = true;
     }
     else
     {
-        res->is_new = false;
-        res->station_data.loaded = false;
+        last_station->is_new = false;
+        last_station->station_data.loaded = false;
     }
-    index_existing(res, stations.size() - 1);
-    return res;
+    return last_station;
 }
 
 void Batch::write_pending()
 {
-    for (auto& st: stations)
-        st.write_pending(write_attrs);
+    if (!last_station)
+        return;
+    last_station->write_pending(write_attrs);
 }
 
 void Batch::clear()
 {
-    stations_by_lon.clear();
-    stations.clear();
+    delete last_station;
+    last_station = nullptr;
 }
 
 namespace batch {

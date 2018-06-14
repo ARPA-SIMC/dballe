@@ -17,11 +17,10 @@ class Batch
 {
 protected:
     bool write_attrs = true;
-    std::vector<batch::Station> stations;
-    std::unordered_map<int, std::vector<size_t>> stations_by_lon;
+    batch::Station* last_station = nullptr;
 
-    batch::Station* find_existing(const std::string& report, const Coords& coords, const Ident& ident);
-    void index_existing(batch::Station* st, size_t pos);
+    bool have_station(const std::string& report, const Coords& coords, const Ident& ident);
+    void new_station(const std::string& report, const Coords& coords, const Ident& ident);
 
 public:
     Transaction& transaction;
@@ -30,6 +29,7 @@ public:
     unsigned count_select_data = 0;
 
     Batch(Transaction& transaction) : transaction(transaction) {}
+    ~Batch();
 
     void set_write_attrs(bool write_attrs);
 
