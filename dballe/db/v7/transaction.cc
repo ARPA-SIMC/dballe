@@ -114,7 +114,7 @@ void Transaction::insert_station_data(StationValues& vals, bool can_replace, boo
         sd.add(i.second.var, can_replace ? batch::UPDATE : batch::ERROR);
 
     // Perform changes
-    batch.write_pending(true);
+    batch.write_pending();
 
     // Read the IDs from the results
     vals.info.id = st->id;
@@ -139,7 +139,7 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
         md.add(id_levtr, i.second.var, can_replace ? batch::UPDATE : batch::ERROR);
 
     // Perform changes
-    batch.write_pending(true);
+    batch.write_pending();
 
     // Read the IDs from the results
     vals.info.id = st->id;

@@ -30,6 +30,16 @@ void Batch::index_existing(batch::Station* st, size_t pos)
         li->second.push_back(pos);
 }
 
+void Batch::set_write_attrs(bool write_attrs)
+{
+    if (this->write_attrs != write_attrs)
+    {
+        write_pending();
+        clear();
+    }
+    this->write_attrs = write_attrs;
+}
+
 batch::Station* Batch::get_station(const dballe::Station& station, bool station_can_add)
 {
     batch::Station* res = find_existing(station.report, station.coords, station.ident);
@@ -97,10 +107,10 @@ batch::Station* Batch::get_station(const std::string& report, const Coords& coor
     return res;
 }
 
-void Batch::write_pending(bool with_attrs)
+void Batch::write_pending()
 {
     for (auto& st: stations)
-        st.write_pending(with_attrs);
+        st.write_pending(write_attrs);
 }
 
 void Batch::clear()

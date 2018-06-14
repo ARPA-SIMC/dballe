@@ -101,19 +101,23 @@ void Transaction::add_msg_to_batch(const Message& message, const char* repmemo, 
 
 void Transaction::import_msg(const Message& message, const char* repmemo, int flags)
 {
+    batch.set_write_attrs(flags & DBA_IMPORT_ATTRS);
+
     add_msg_to_batch(message, repmemo, flags);
 
     // Run the bulk insert
-    batch.write_pending(flags & DBA_IMPORT_ATTRS);
+    batch.write_pending();
 }
 
 void Transaction::import_msgs(const Messages& msgs, const char* repmemo, int flags)
 {
+    batch.set_write_attrs(flags & DBA_IMPORT_ATTRS);
+
     for (const auto& i: msgs)
         add_msg_to_batch(i, repmemo, flags);
 
     // Run the bulk insert
-    batch.write_pending(flags & DBA_IMPORT_ATTRS);
+    batch.write_pending();
 }
 
 }

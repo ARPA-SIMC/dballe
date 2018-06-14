@@ -16,6 +16,7 @@ struct Transaction;
 class Batch
 {
 protected:
+    bool write_attrs = true;
     std::vector<batch::Station> stations;
     std::unordered_map<int, std::vector<size_t>> stations_by_lon;
 
@@ -30,10 +31,12 @@ public:
 
     Batch(Transaction& transaction) : transaction(transaction) {}
 
+    void set_write_attrs(bool write_attrs);
+
     batch::Station* get_station(const dballe::Station& station, bool station_can_add);
     batch::Station* get_station(const std::string& report, const Coords& coords, const Ident& ident);
 
-    void write_pending(bool with_attrs);
+    void write_pending();
     void clear();
 };
 

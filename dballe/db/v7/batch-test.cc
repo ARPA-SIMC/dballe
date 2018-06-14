@@ -160,6 +160,7 @@ add_method("import", [](Fixture& f) {
 add_method("insert", [](Fixture& f) {
     using namespace db::v7;
     Batch& batch = f.tr->batch;
+    batch.set_write_attrs(false);
     auto st = batch.get_station("synop", Coords(45.0, 11.0), Ident());
     auto& st_data = st->get_station_data();
     auto& data = st->get_measured_data(Datetime(2018, 6, 1));
@@ -170,7 +171,7 @@ add_method("insert", [](Fixture& f) {
     int id_levtr = f.tr->levtr().obtain_id(LevTrEntry(Level(1), Trange(254)));
     data.add(id_levtr, &dv, batch::ERROR);
 
-    batch.write_pending(false);
+    batch.write_pending();
     wassert(actual(batch.count_select_stations) == 1u);
     wassert(actual(batch.count_select_station_data) == 0u);
     wassert(actual(batch.count_select_data) == 0u);
@@ -179,6 +180,7 @@ add_method("insert", [](Fixture& f) {
 add_method("insert_double_station_value", [](Fixture& f) {
     using namespace db::v7;
     Batch& batch = f.tr->batch;
+    batch.set_write_attrs(false);
     auto st = batch.get_station("synop", Coords(45.0, 11.0), Ident());
     auto& st_data = st->get_station_data();
 
@@ -186,7 +188,7 @@ add_method("insert_double_station_value", [](Fixture& f) {
     Var sv2(var(WR_VAR(0, 7, 30), 1001.0));
     st_data.add(&sv1, batch::ERROR);
     st_data.add(&sv2, batch::ERROR);
-    batch.write_pending(false);
+    batch.write_pending();
 
     wassert(actual(batch.count_select_stations) == 1u);
     wassert(actual(batch.count_select_station_data) == 0u);
@@ -202,6 +204,7 @@ add_method("insert_double_station_value", [](Fixture& f) {
 add_method("insert_double_measured_value", [](Fixture& f) {
     using namespace db::v7;
     Batch& batch = f.tr->batch;
+    batch.set_write_attrs(false);
     auto st = batch.get_station("synop", Coords(45.0, 11.0), Ident());
     auto& data = st->get_measured_data(Datetime(2018, 6, 1));
 
@@ -210,7 +213,7 @@ add_method("insert_double_measured_value", [](Fixture& f) {
     int id_levtr = f.tr->levtr().obtain_id(LevTrEntry(Level(1), Trange(254)));
     data.add(id_levtr, &dv1, batch::ERROR);
     data.add(id_levtr, &dv2, batch::ERROR);
-    batch.write_pending(false);
+    batch.write_pending();
 
     wassert(actual(batch.count_select_stations) == 1u);
     wassert(actual(batch.count_select_station_data) == 0u);
