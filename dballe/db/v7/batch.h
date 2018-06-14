@@ -6,7 +6,6 @@
 #include <dballe/db/v7/utils.h>
 #include <vector>
 #include <unordered_map>
-#include <map>
 #include <memory>
 
 namespace dballe {
@@ -105,12 +104,28 @@ struct MeasuredData
     void write_pending(Transaction& tr, int station_id, bool with_attrs);
 };
 
+struct MeasuredDataVector
+{
+    std::vector<MeasuredData*> measured_data;
+    bool dirty = false;
+
+    MeasuredDataVector() {}
+    MeasuredDataVector(const MeasuredDataVector&) = delete;
+    MeasuredDataVector(MeasuredDataVector&&) = default;
+    ~MeasuredDataVector();
+    MeasuredDataVector& operator=(const MeasuredDataVector&) = delete;
+    MeasuredDataVector& operator=(MeasuredDataVector&&) = default;
+
+    MeasuredData* find(const Datetime& datetime);
+    MeasuredData& add(const Datetime& datetime);
+};
+
 struct Station : public dballe::Station
 {
     Batch& batch;
     bool is_new = true;
     StationData station_data;
-    std::map<Datetime, MeasuredData> measured_data;
+    MeasuredDataVector measured_data;
 
     Station(Batch& batch)
         : batch(batch) {}

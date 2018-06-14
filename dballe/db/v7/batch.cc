@@ -1,6 +1,7 @@
 #include "batch.h"
 #include "transaction.h"
 #include "station.h"
+#include <algorithm>
 
 namespace dballe {
 namespace db {
@@ -202,6 +203,59 @@ void MeasuredData::write_pending(Transaction& tr, int station_id, bool with_attr
 }
 
 
+MeasuredDataVector::~MeasuredDataVector()
+{
+    for (auto md: measured_data)
+        delete md;
+}
+
+MeasuredData* MeasuredDataVector::find(const Datetime& datetime)
+{
+    if (measured_data.empty()) return nullptr;
+
+    // Stick to linear search if the vector size is small
+    if (measured_data.size() < 6)
+    {
+        for (auto md: measured_data)
+            if (md->datetime == datetime)
+                return md;
+        return nullptr;
+    }
+
+    // Use binary search for larger vectors
+    if (dirty)
+    {
+        std::sort(measured_data.begin(), measured_data.end(), [](const MeasuredData* a, const MeasuredData* b) {
+            return a->datetime < b->datetime;
+        });
+        dirty = false;
+    }
+
+    // Binary search
+    int begin, end;
+    begin = -1, end = measured_data.size();
+    while (end - begin > 1)
+    {
+        int cur = (end + begin) / 2;
+        if (measured_data[cur]->datetime > datetime)
+            end = cur;
+        else
+            begin = cur;
+    }
+    if (begin == -1 || measured_data[begin]->datetime != datetime)
+        return nullptr;
+    else
+        return measured_data[begin];
+}
+
+MeasuredData& MeasuredDataVector::add(const Datetime& datetime)
+{
+    dirty = true;
+    measured_data.push_back(new MeasuredData(datetime));
+    return *measured_data.back();
+}
+
+
 StationData& Station::get_station_data()
 {
     if (!station_data.loaded)
@@ -218,12 +272,10 @@ StationData& Station::get_station_data()
 
 MeasuredData& Station::get_measured_data(const Datetime& datetime)
 {
-    auto i = measured_data.find(datetime);
-    if (i != measured_data.end())
-        return i->second;
+    if (MeasuredData* md = measured_data.find(datetime))
+        return *md;
 
-    auto inserted = measured_data.emplace(datetime, datetime);
-    MeasuredData& md = inserted.first->second;
+    MeasuredData& md = measured_data.add(datetime);
 
     if (!is_new)
     {
@@ -243,8 +295,8 @@ void Station::write_pending(bool with_attrs)
         id = batch.transaction.station().insert_new(batch.transaction, *this);
 
     station_data.write_pending(batch.transaction, id, with_attrs);
-    for (auto& md: measured_data)
-        md.second.write_pending(batch.transaction, id, with_attrs);
+    for (auto md: measured_data.measured_data)
+        md->write_pending(batch.transaction, id, with_attrs);
 }
 
 #if 0
