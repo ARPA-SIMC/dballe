@@ -35,8 +35,8 @@ DB::DB(unique_ptr<Connection> conn)
     if (getenv("DBA_EXPLAIN") != NULL)
         explain_queries = true;
 
-    if (getenv("DBA_PROFILE") != nullptr)
-        trace = new CollectTrace;
+    if (const char* logdir = getenv("DBA_PROFILE"))
+        trace = new CollectTrace(logdir);
     else if (Trace::in_test_suite())
         trace = new QuietCollectTrace;
     else
@@ -50,6 +50,7 @@ DB::DB(unique_ptr<Connection> conn)
 
 DB::~DB()
 {
+    trace->save();
     delete m_driver;
     delete conn;
     delete trace;

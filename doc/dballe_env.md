@@ -40,11 +40,6 @@ This is used to debug SQL performance problems and help design better queries.
 
 ## `DBA_PROFILE`
 
-If present in the environment, then DB-All.e collects profiling information and
-prints them to standard error.
-
-## `DBA_LOGDIR`
-
 If present in the environment, its value points to a directory where DB-All.e
 will write a file for each database session, with a list of all nontrivial
 queries that are run and their timing information.

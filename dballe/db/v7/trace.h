@@ -95,6 +95,8 @@ public:
     void done();
     unsigned elapsed_usec() const;
 
+    void to_json(core::JSONWriter& writer) const;
+
     // Remove all children accumulated so far
     void clear()
     {
@@ -196,6 +198,7 @@ struct Trace
     virtual Tracer<trace::Transaction> trace_transaction() = 0;
     virtual Tracer<> trace_remove_all() = 0;
     virtual Tracer<> trace_vacuum() = 0;
+    virtual void save() = 0;
 
     static bool in_test_suite();
     static void set_in_test_suite();
@@ -208,61 +211,41 @@ struct NullTrace : public Trace
     Tracer<trace::Transaction> trace_transaction() override { return Tracer<trace::Transaction>(nullptr); }
     Tracer<> trace_remove_all() override { return Tracer<>(nullptr); }
     Tracer<> trace_vacuum() override { return Tracer<>(nullptr); }
+    void save() override {}
 };
 
-class CollectTrace : public Trace
+class QuietCollectTrace : public Trace
 {
 protected:
     std::vector<trace::Step*> steps;
-#if 0
-    // Command line used to start the current process
-    std::vector<std::string> argv;
-
-    // Process ID of the current process (cached getpid() result)
-    pid_t pid;
-
-    // Database connection URL
-    std::string db_url;
-
-    // JSON output buffer, holding one JSON record
-    std::stringstream json_buf;
-
-    // JSON serializer
-    core::JSONWriter writer;
-
-    // Output file name
-    std::string out_fname;
-
-    // Output file
-    FILE* out = 0;
-
-    // Populate argv
-    void read_argv();
-
-    // Cancel the current output, resetting json_buf
-    void output_abort();
-
-    // Flush the current output, then reset json_buf
-    void output_flush();
-#endif
 
 public:
-    CollectTrace() = default;
-    CollectTrace(const CollectTrace&) = delete;
-    CollectTrace(CollectTrace&&) = delete;
-    CollectTrace& operator=(const CollectTrace&) = delete;
-    CollectTrace& operator=(CollectTrace&&) = delete;
-    ~CollectTrace();
+    QuietCollectTrace() = default;
+    QuietCollectTrace(const QuietCollectTrace&) = delete;
+    QuietCollectTrace(QuietCollectTrace&&) = delete;
+    QuietCollectTrace& operator=(const QuietCollectTrace&) = delete;
+    QuietCollectTrace& operator=(QuietCollectTrace&&) = delete;
+    ~QuietCollectTrace();
 
     Tracer<> trace_connect(const std::string& url) override;
     Tracer<> trace_reset(const char* repinfo_file=0) override;
     Tracer<trace::Transaction> trace_transaction() override;
     Tracer<> trace_remove_all() override;
     Tracer<> trace_vacuum() override;
+
+    void save() override {}
 };
 
-struct QuietCollectTrace : public CollectTrace
+class CollectTrace : public QuietCollectTrace
 {
+protected:
+    std::string logdir;
+    time_t start;
+
+public:
+    CollectTrace(const std::string& logdir);
+
+    void save() override;
 };
 
 }

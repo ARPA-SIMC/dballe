@@ -71,6 +71,7 @@ void Transaction::commit()
     sql_transaction->commit();
     clear_cached_state();
     fired = true;
+    trc.done();
 }
 
 void Transaction::rollback()
@@ -79,6 +80,7 @@ void Transaction::rollback()
     sql_transaction->rollback();
     clear_cached_state();
     fired = true;
+    trc.done();
 }
 
 void Transaction::clear_cached_state()

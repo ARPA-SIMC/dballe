@@ -72,7 +72,6 @@ void JSONWriter::add_cstring(const char* val)
         {
             case '"': out << "\\\""; break;
             case '\\': out << "\\\\"; break;
-            case '/': out << "\\/"; break;
             case '\b': out << "\\b"; break;
             case '\f': out << "\\f"; break;
             case '\n': out << "\\n"; break;

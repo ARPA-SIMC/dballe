@@ -19,6 +19,51 @@ std::string query_to_string(const Query& query)
     return json_buf.str();
 }
 
+std::vector<std::string> read_argv()
+{
+    std::vector<std::string> argv;
+    FILE* in = fopen("/proc/self/cmdline", "rb");
+    if (!in) throw error_system("cannot open /proc/self/cmdline");
+
+    std::string cur;
+    char c;
+    while ((c = getc(in)) != EOF)
+    {
+        if (c == 0)
+        {
+            argv.push_back(cur);
+            cur.clear();
+        } else
+            cur += c;
+    }
+
+    if (ferror(in))
+    {
+        int e = errno;
+        fclose(in);
+        throw error_system("cannot read from /proc/self/cmdline", e);
+    }
+    return argv;
+}
+
+std::string format_time(time_t time)
+{
+    struct tm tmp;
+    localtime_r(&time, &tmp);
+    char buf[20];
+    strftime(buf, 20, "%Y-%m-%dT%H:%M:%S", &tmp);
+    return buf;
+}
+
+std::string format_time_fname(time_t time)
+{
+    struct tm tmp;
+    localtime_r(&time, &tmp);
+    char buf[20];
+    strftime(buf, 20, "%Y%m%d-%H%M%S", &tmp);
+    return buf;
+}
+
 }
 
 namespace trace {
@@ -49,6 +94,23 @@ unsigned Step::elapsed_usec() const
     return (end - start) * 1000000 / CLOCKS_PER_SEC;
 }
 
+void Step::to_json(core::JSONWriter& writer) const
+{
+    writer.start_mapping();
+    writer.add("name", name);
+    writer.add("detail", detail);
+    writer.add("rows", (int)rows);
+    writer.add("usecs", (int)elapsed_usec());
+    if (child)
+    {
+        writer.add("ops");
+        writer.start_list();
+        for (Step* s = child; s; s = s->sibling)
+            s->to_json(writer);
+        writer.end_list();
+    }
+    writer.end_mapping();
+}
 
 Tracer<> Transaction::trace_query_stations(const Query& query)
 {
@@ -112,174 +174,84 @@ Tracer<> Transaction::trace_remove(const Query& query)
 
 }
 
-#if 0
-void ProfileTrace::print(FILE* out)
-{
-    fprintf(stderr, "Transaction end: %u queries\n", profile_count_select + profile_count_insert + profile_count_update + profile_count_delete);
-    fprintf(stderr, "   %u selects, %u rows\n", profile_count_select, profile_count_select_rows);
-    fprintf(stderr, "   %u inserts, %u rows\n", profile_count_insert, profile_count_insert_rows);
-    fprintf(stderr, "   %u updates, %u rows\n", profile_count_update, profile_count_update_rows);
-    fprintf(stderr, "   %u deletes\n", profile_count_delete);
-}
 
-void ProfileTrace::reset()
-{
-    profile_count_select = 0;
-    profile_count_insert = 0;
-    profile_count_update = 0;
-    profile_count_delete = 0;
-    profile_count_select_rows = 0;
-    profile_count_insert_rows = 0;
-    profile_count_update_rows = 0;
-}
-
-void QuietProfileTrace::print(FILE* out)
-{
-}
-#endif
-
-#if 0
-TraceOp::TraceOp()
-{
-}
-
-TraceOp::TraceOp(Trace& trace, const char* operation)
-    : trace(&trace), start(clock())
-{
-    trace.writer.start_mapping();
-    add("op", operation);
-    add_list("cmdline", trace.argv);
-    add("pid", trace.pid);
-    add("url", trace.db_url);
-}
-
-TraceOp::~TraceOp()
-{
-    if (!trace) return;
-    trace->output_abort();
-}
-
-void TraceOp::done()
-{
-    if (!trace) return;
-    int elapsed = (clock() - start) * 1000 / CLOCKS_PER_SEC;
-    add("elapsed", elapsed);
-    trace->writer.end_mapping();
-    trace->output_flush();
-}
-
-void TraceOp::add_query(const Query& query)
-{
-    if (!trace) return;
-    trace->writer.add("query");
-    core::Query::downcast(query).serialize(trace->writer);
-}
-
-Trace::Trace()
-    : writer(json_buf)
-{
-    const char* outdir = getenv("DBA_LOGDIR");
-    if (outdir)
-    {
-        read_argv();
-        pid = getpid();
-
-        time_t t = time(NULL);
-        struct tm tmp;
-        localtime_r(&t, &tmp);
-        char buf[20];
-        strftime(buf, 20, "%Y%m%d-%H%M%S-", &tmp);
-        out_fname = outdir;
-        out_fname += "/";
-        out_fname += buf;
-        out_fname += std::to_string(pid);
-        out_fname += ".log";
-
-        out = fopen(out_fname.c_str(), "at");
-        if (!out)
-            error_system::throwf("cannot open file %s", out_fname.c_str());
-    }
-}
-#endif
-
-CollectTrace::~CollectTrace()
+QuietCollectTrace::~QuietCollectTrace()
 {
     for (auto& i: steps)
         delete i;
-//    if (out) fclose(out);
 }
 
-#if 0
-void Trace::read_argv()
-{
-    FILE* in = fopen("/proc/self/cmdline", "rb");
-    if (!in) throw error_system("cannot open /proc/self/cmdline");
-
-    std::string cur;
-    char c;
-    while ((c = getc(in)) != EOF)
-    {
-        if (c == 0)
-        {
-            argv.push_back(cur);
-            cur.clear();
-        } else
-            cur += c;
-    }
-
-    if (ferror(in))
-    {
-        int e = errno;
-        fclose(in);
-        throw error_system("cannot read from /proc/self/cmdline", e);
-    }
-}
-
-void Trace::output_abort()
-{
-    writer.reset();
-    json_buf.str("");
-}
-
-void Trace::output_flush()
-{
-    fputs(json_buf.str().c_str(), out);
-    putc('\n', out);
-    writer.reset();
-    json_buf.str("");
-}
-#endif
-
-Tracer<> CollectTrace::trace_connect(const std::string& url)
+Tracer<> QuietCollectTrace::trace_connect(const std::string& url)
 {
     steps.push_back(new trace::Step("connect", url));
     return Tracer<>(steps.back());
 }
 
-Tracer<> CollectTrace::trace_reset(const char* repinfo_file)
+Tracer<> QuietCollectTrace::trace_reset(const char* repinfo_file)
 {
     steps.push_back(new trace::Step("reset", repinfo_file ? repinfo_file : ""));
     return steps.back();
 }
 
-Tracer<trace::Transaction> CollectTrace::trace_transaction()
+Tracer<trace::Transaction> QuietCollectTrace::trace_transaction()
 {
     trace::Transaction* res = new trace::Transaction;
     steps.push_back(res);
     return res;
 }
 
-Tracer<> CollectTrace::trace_remove_all()
+Tracer<> QuietCollectTrace::trace_remove_all()
 {
     steps.push_back(new trace::Step("remove_all"));
     return Tracer<>(steps.back());
 }
 
-Tracer<> CollectTrace::trace_vacuum()
+Tracer<> QuietCollectTrace::trace_vacuum()
 {
     steps.push_back(new trace::Step("vacuum"));
     return Tracer<>(steps.back());
 }
+
+
+CollectTrace::CollectTrace(const std::string& logdir)
+    : logdir(logdir), start(time(nullptr))
+{
+}
+
+void CollectTrace::save()
+{
+    pid_t pid = getpid();
+    std::stringstream json_buf;
+    core::JSONWriter writer(json_buf);
+    writer.start_mapping();
+
+    writer.add("cmdline");
+    writer.add_list(read_argv());
+    writer.add("pid", (int)pid);
+    writer.add("start", format_time(start));
+    writer.add("end", format_time(time(nullptr)));
+
+    writer.add("ops");
+    writer.start_list();
+    for (const auto& s: steps)
+        s->to_json(writer);
+    writer.end_list();
+
+    writer.end_mapping();
+
+    std::string fname = logdir;
+    fname += "/";
+    fname += format_time_fname(start);
+    fname += "-";
+    fname += std::to_string(pid);
+    fname += ".json";
+
+    FILE* out = fopen(fname.c_str(), "wt");
+    fwrite(json_buf.str().data(), json_buf.str().size(), 1, out);
+    putc('\n', out);
+    fclose(out);
+}
+
 
 static bool _in_test_suite = false;
 
