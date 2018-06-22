@@ -809,6 +809,7 @@ this->add_method("perf", [](Fixture& f) {
     const v7::ProfileTrace* trace = dynamic_cast<const v7::ProfileTrace*>(f.tr->trace);
 
     // Run a prendilo
+    f.tr->trc->clear();
     api.setd("lat", 44.5);
     api.setd("lon", 11.5);
     api.setc("rep_memo", "synop");
@@ -817,8 +818,9 @@ this->add_method("perf", [](Fixture& f) {
     api.settimerange(254, 0, 0);
     api.setd("B10004", 100000.0);
     api.prendilo(); // Pressure at ground level
-    wassert(actual(trace->profile_count_select) == 2);
-    wassert(actual(trace->profile_count_select_rows) == 0);
+    v7::trace::Aggregate selects = f.tr->trc->aggregate("select");
+    wassert(actual(selects.count) == 2);
+    wassert(actual(selects.rows) == 0);
     wassert(actual(trace->profile_count_insert) == 3);
     wassert(actual(trace->profile_count_insert_rows) == 3);
 
@@ -830,7 +832,7 @@ this->add_method("perf", [](Fixture& f) {
     api.setdate(2013, 4, 25, 12, 0, 0);
     api.setc("var", "B10004");
     wassert(actual(api.voglioquesto()) == 1);
-    v7::trace::Aggregate selects = f.tr->trc->aggregate("select");
+    selects = f.tr->trc->aggregate("select");
     wassert(actual(selects.count) == 2);
     wassert(actual(selects.rows) == 2);
 

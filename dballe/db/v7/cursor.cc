@@ -305,15 +305,13 @@ struct Data : public BaseData<CursorData, DataResult>
         at_start = true;
         cur = results.begin();
 
-        this->tr->levtr().prefetch_ids(ids);
+        this->tr->levtr().prefetch_ids(trc, ids);
     }
 
     const LevTrEntry& get_levtr(int id_levtr) const
     {
-        auto res = tr->levtr().lookup_id(id_levtr);
-        // We prefetch levtr info for all IDs, so we should always find the levtr here
-        assert(res);
-        return *res;
+        // We prefetch levtr info for all IDs, so we do not need to hit the database here
+        return tr->levtr().lookup_cache(id_levtr);
     }
 
     Level get_level() const override { return get_levtr(cur->id_levtr).level; }
@@ -377,7 +375,7 @@ struct Best : public Data
         at_start = true;
         cur = results.begin();
 
-        this->tr->levtr().prefetch_ids(ids);
+        this->tr->levtr().prefetch_ids(trc, ids);
     }
 };
 
@@ -424,10 +422,8 @@ struct Summary : public VectorBase<CursorSummary, SummaryResult>
 
     const LevTrEntry& get_levtr(int id_levtr) const
     {
-        auto res = tr->levtr().lookup_id(id_levtr);
-        // We prefetch levtr info for all IDs, so we should always find the levtr here
-        assert(res);
-        return *res;
+        // We prefetch levtr info for all IDs, so we do not need to hit the database here
+        return tr->levtr().lookup_cache(id_levtr);
     }
 
     Level get_level() const override { return get_levtr(cur->id_levtr).level; }
@@ -459,7 +455,7 @@ struct Summary : public VectorBase<CursorSummary, SummaryResult>
         at_start = true;
         cur = results.begin();
 
-        this->tr->levtr().prefetch_ids(ids);
+        this->tr->levtr().prefetch_ids(trc, ids);
     }
 };
 

@@ -173,7 +173,7 @@ add_method("insert", [](Fixture& f) {
     Var sv(var(WR_VAR(0, 7, 30), 1000.0));
     st_data.add(&sv, batch::ERROR);
     Var dv(var(WR_VAR(0, 12, 101), 25.6));
-    int id_levtr = f.tr->levtr().obtain_id(LevTrEntry(Level(1), Trange(254)));
+    int id_levtr = f.tr->levtr().obtain_id(trc, LevTrEntry(Level(1), Trange(254)));
     data.add(id_levtr, &dv, batch::ERROR);
 
     batch.write_pending(trc);
@@ -217,7 +217,7 @@ add_method("insert_double_measured_value", [](Fixture& f) {
 
     Var dv1(var(WR_VAR(0, 12, 101), 25.6));
     Var dv2(var(WR_VAR(0, 12, 101), 25.7));
-    int id_levtr = f.tr->levtr().obtain_id(LevTrEntry(Level(1), Trange(254)));
+    int id_levtr = f.tr->levtr().obtain_id(trc, LevTrEntry(Level(1), Trange(254)));
     data.add(id_levtr, &dv1, batch::ERROR);
     data.add(id_levtr, &dv2, batch::ERROR);
     batch.write_pending(trc);

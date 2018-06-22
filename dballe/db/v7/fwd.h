@@ -58,6 +58,11 @@ public:
     {
         this->step = step;
     }
+    void done()
+    {
+        if (step) step->done();
+        step = nullptr;
+    }
     Step* operator->() { return step; }
     operator bool() const { return step; }
 };

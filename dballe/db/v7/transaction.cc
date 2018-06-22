@@ -152,7 +152,7 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
     batch::MeasuredData& md = st->get_measured_data(vals.info.datetime);
 
     // Insert the lev_tr data, and get the ID
-    int id_levtr = levtr().obtain_id(LevTrEntry(vals.info.level, vals.info.trange)); // TODO: tracing
+    int id_levtr = levtr().obtain_id(trc, LevTrEntry(vals.info.level, vals.info.trange));
 
     // Add all the variables we find
     for (auto& i: vals.values)

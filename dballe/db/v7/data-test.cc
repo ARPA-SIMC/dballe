@@ -53,10 +53,10 @@ struct Fixture : EmptyTransactionFixture<V7DB>
         sde2.id = wcallchecked(t->station().insert_new(trc, sde2));
 
         // Insert a lev_tr
-        lt1 = t->levtr().obtain_id(db::v7::LevTrEntry(Level(1, 2, 0, 3), Trange(4, 5, 6)));
+        lt1 = t->levtr().obtain_id(trc, db::v7::LevTrEntry(Level(1, 2, 0, 3), Trange(4, 5, 6)));
 
         // Insert another lev_tr
-        lt2 = t->levtr().obtain_id(db::v7::LevTrEntry(Level(2, 3, 1, 4), Trange(5, 6, 7)));
+        lt2 = t->levtr().obtain_id(trc, db::v7::LevTrEntry(Level(2, 3, 1, 4), Trange(5, 6, 7)));
 
 
         t->commit();

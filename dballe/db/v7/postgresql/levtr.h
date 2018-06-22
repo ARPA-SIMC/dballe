@@ -38,9 +38,9 @@ public:
     PostgreSQLLevTr& operator=(const PostgreSQLLevTr&) = delete;
     ~PostgreSQLLevTr();
 
-    void prefetch_ids(const std::set<int>& ids) override;
-    const LevTrEntry* lookup_id(int id) override;
-    int obtain_id(const LevTrEntry& desc) override;
+    void prefetch_ids(Tracer<>& trc, const std::set<int>& ids) override;
+    const LevTrEntry* lookup_id(Tracer<>& trc, int id) override;
+    int obtain_id(Tracer<>& trc, const LevTrEntry& desc) override;
 };
 
 

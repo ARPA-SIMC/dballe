@@ -88,7 +88,7 @@ void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const 
         }
 
         // Get the database ID of the lev_tr
-        int id_levtr = lt.obtain_id(LevTrEntry(ctx.level, ctx.trange));
+        int id_levtr = lt.obtain_id(trc, LevTrEntry(ctx.level, ctx.trange));
 
         for (size_t j = 0; j < ctx.data.size(); ++j)
         {

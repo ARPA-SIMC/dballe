@@ -50,7 +50,7 @@ MySQLLevTr::~MySQLLevTr()
 {
 }
 
-void MySQLLevTr::prefetch_ids(const std::set<int>& ids)
+void MySQLLevTr::prefetch_ids(Tracer<>& trc, const std::set<int>& ids)
 {
     if (ids.empty()) return;
 
@@ -65,11 +65,11 @@ void MySQLLevTr::prefetch_ids(const std::set<int>& ids)
     } else
         qb.append("SELECT id, ltype1, l1, ltype2, l2, pind, p1, p2 FROM levtr");
 
+    Tracer<> trc_sel(trc ? trc->trace_select(qb) : nullptr);
     auto res = conn.exec_store(qb);
-    if (tr.trace) tr.trace->trace_select(qb);
     while (auto row = res.fetch())
     {
-        if (tr.trace) tr.trace->trace_select_row();
+        if (trc_sel) trc_sel->add_row();
         cache.insert(unique_ptr<LevTrEntry>(new LevTrEntry(
             row.as_int(0),
             Level(row.as_int(1), row.as_int(2), row.as_int(3), row.as_int(4)),
@@ -77,7 +77,7 @@ void MySQLLevTr::prefetch_ids(const std::set<int>& ids)
     }
 }
 
-const LevTrEntry* MySQLLevTr::lookup_id(int id)
+const LevTrEntry* MySQLLevTr::lookup_id(Tracer<>& trc, int id)
 {
     const LevTrEntry* res = cache.find_entry(id);
     if (res) return res;
@@ -85,11 +85,11 @@ const LevTrEntry* MySQLLevTr::lookup_id(int id)
     char query[128];
     snprintf(query, 128, "SELECT ltype1, l1, ltype2, l2, pind, p1, p2 FROM levtr WHERE id=%d", id);
 
+    Tracer<> trc_sel(trc ? trc->trace_select(query) : nullptr);
     auto qres = conn.exec_store(query);
-    if (tr.trace) tr.trace->trace_select(query);
     while (auto row = qres.fetch())
     {
-        if (tr.trace) tr.trace->trace_select_row();
+        if (trc_sel) trc_sel->add_row();
         std::unique_ptr<LevTrEntry> e(new LevTrEntry);
         e->id = id;
         e->level.ltype1 = row.as_int(0);
@@ -108,7 +108,7 @@ const LevTrEntry* MySQLLevTr::lookup_id(int id)
     return res;
 }
 
-int MySQLLevTr::obtain_id(const LevTrEntry& desc)
+int MySQLLevTr::obtain_id(Tracer<>& trc, const LevTrEntry& desc)
 {
     int id = cache.find_id(desc);
     if (id != MISSING_INT) return id;
@@ -122,11 +122,11 @@ int MySQLLevTr::obtain_id(const LevTrEntry& desc)
             desc.trange.pind, desc.trange.p1, desc.trange.p2);
 
     // If there is an existing record, use its ID and don't do an INSERT
-    if (tr.trace) tr.trace->trace_select(query);
+    Tracer<> trc_oid(trc ? trc->trace_select(query) : nullptr);
     auto qres = conn.exec_store(query);
     while (auto row = qres.fetch())
     {
-        if (tr.trace) tr.trace->trace_select_row();
+        if (trc_oid) trc_oid->add_row();
         id = row.as_int(0);
     }
     if (id != MISSING_INT)
@@ -139,7 +139,7 @@ int MySQLLevTr::obtain_id(const LevTrEntry& desc)
     snprintf(query, 512, "INSERT INTO levtr (ltype1, l1, ltype2, l2, pind, p1, p2) VALUES (%d, %d, %d, %d, %d, %d, %d)",
             desc.level.ltype1, desc.level.l1, desc.level.ltype2, desc.level.l2,
             desc.trange.pind, desc.trange.p1, desc.trange.p2);
-    if (tr.trace) tr.trace->trace_insert(query, 1);
+    trc_oid.reset(trc ? trc->trace_insert(query, 1) : nullptr);
     conn.exec_no_data(query);
     id = conn.get_last_insert_id();
     cache.insert(desc, id);

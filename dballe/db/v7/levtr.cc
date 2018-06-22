@@ -17,9 +17,17 @@ void LevTr::clear_cache()
     cache.clear();
 }
 
-msg::Context* LevTr::to_msg(int id, Msg& msg)
+const LevTrEntry& LevTr::lookup_cache(int id)
 {
-    auto i = lookup_id(id);
+    const LevTrEntry* res = cache.find_entry(id);
+    if (!res)
+        wreport::error_notfound::throwf("LevTr with ID %d not found in cache", id);
+    return *res;
+}
+
+msg::Context* LevTr::to_msg(Tracer<>& trc, int id, Msg& msg)
+{
+    auto i = lookup_id(trc, id);
     msg::Context& res = msg.obtain_context(i->level, i->trange);
     return &res;
 }
