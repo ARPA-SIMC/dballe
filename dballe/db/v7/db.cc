@@ -35,12 +35,12 @@ DB::DB(unique_ptr<Connection> conn)
     if (getenv("DBA_EXPLAIN") != NULL)
         explain_queries = true;
 
-    auto tr = trace.trace_connect(this->conn->get_url());
+    auto trc = trace.trace_connect(this->conn->get_url());
 
     /* Set the connection timeout */
     /* SQLSetConnectAttr(pc.od_conn, SQL_LOGIN_TIMEOUT, (SQLPOINTER *)5, 0); */
 
-    tr->done();
+    trc->done();
 }
 
 DB::~DB()

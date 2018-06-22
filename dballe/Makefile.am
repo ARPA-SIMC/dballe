@@ -45,6 +45,7 @@ EXTRA_PROGRAMS =
 dballeincludedir = $(includedir)/dballe
 
 nobase_dist_dballeinclude_HEADERS = \
+	fwd.h \
 	file.h \
 	message.h \
 	types.h \
@@ -86,7 +87,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	sql/sqlite.h \
 	db/defs.h \
 	db/db.h \
-	db/trace.h \
 	db/v7/fwd.h \
 	db/v7/utils.h \
 	db/v7/trace.h \
@@ -197,7 +197,6 @@ libdballe_la_SOURCES = \
 	sql/querybuf.cc \
 	sql/sqlite.cc \
 	db/db.cc \
-	db/trace.cc \
 	db/v7/utils.cc \
 	db/v7/trace.cc \
 	db/v7/transaction.cc \
@@ -317,8 +316,8 @@ test_dballe_SOURCES = \
 	sql/querybuf-test.cc \
 	sql/sqlite-test.cc \
 	db/tests.cc \
-	db/trace-test.cc \
 	db/v7/utils-test.cc \
+	db/v7/trace-test.cc \
 	db/v7/batch-test.cc \
 	db/v7/cache-test.cc \
 	db/v7/repinfo-test.cc \

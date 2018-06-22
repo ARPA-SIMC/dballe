@@ -15,7 +15,7 @@ struct DB;
 struct Repinfo;
 struct Station;
 struct LevTr;
-struct Trace;
+struct SQLTrace;
 struct Driver;
 
 namespace batch {

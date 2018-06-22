@@ -30,7 +30,7 @@ Transaction::Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Tra
 
     if (getenv("DBA_PROFILE") != nullptr)
         trace = new ProfileTrace;
-    else if (db::Trace::in_test_suite())
+    else if (Trace::in_test_suite())
         trace = new QuietProfileTrace;
 }
 
@@ -117,10 +117,10 @@ Transaction& Transaction::downcast(dballe::Transaction& transaction)
 
 void Transaction::remove_all()
 {
-    auto tr = db->trace.trace_remove_all();
+    auto trc = db->trace.trace_remove_all();
     db->driver().remove_all_v7();
     clear_cached_state();
-    tr->done();
+    trc->done();
 }
 
 void Transaction::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
@@ -168,39 +168,39 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
 
 void Transaction::remove_station_data(const Query& query)
 {
-    auto tr = db->trace.trace_remove_station_data(query);
+    auto trc = db->trace.trace_remove_station_data(query);
     cursor::run_delete_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), true, db->explain_queries);
-    tr->done();
+    trc->done();
 }
 
 void Transaction::remove(const Query& query)
 {
-    auto tr = db->trace.trace_remove(query);
+    auto trc = db->trace.trace_remove(query);
     cursor::run_delete_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), false, db->explain_queries);
-    tr->done();
+    trc->done();
 }
 
 std::unique_ptr<db::CursorStation> Transaction::query_stations(const Query& query)
 {
-    auto tr = db->trace.trace_query_stations(query);
+    auto trc = db->trace.trace_query_stations(query);
     auto res = cursor::run_station_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
-    tr->done();
+    trc->done();
     return move(res);
 }
 
 std::unique_ptr<db::CursorStationData> Transaction::query_station_data(const Query& query)
 {
-    auto tr = db->trace.trace_query_station_data(query);
+    auto trc = db->trace.trace_query_station_data(query);
     auto res = cursor::run_station_data_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
-    tr->done();
+    trc->done();
     return move(res);
 }
 
 std::unique_ptr<db::CursorData> Transaction::query_data(const Query& query)
 {
-    auto tr = db->trace.trace_query_data(query);
+    auto trc = db->trace.trace_query_data(query);
     auto res = cursor::run_data_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
-    tr->done();
+    trc->done();
     return move(res);
 }
 
