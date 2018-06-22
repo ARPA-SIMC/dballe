@@ -1,6 +1,7 @@
 #include "dballe/db/tests.h"
 #include "dballe/sql/sql.h"
 #include "dballe/db/v7/db.h"
+#include "dballe/db/v7/fwd.h"
 #include "driver.h"
 #include "repinfo.h"
 #include "station.h"
@@ -33,6 +34,7 @@ Tests test_mysql("db_v7_station_mysql", "MYSQL");
 void Tests::register_tests()
 {
 add_method("insert", [](Fixture& f) {
+    db::v7::Tracer<> trc;
     // Insert some values and try to read them again
     auto& st = f.tr->station();
     dballe::Station sde1;
@@ -44,11 +46,11 @@ add_method("insert", [](Fixture& f) {
     sde1.coords = Coords(4500000, 1100000);
     sde1.ident = "ciao";
 
-    si = st.maybe_get_id(sde1);
+    si = st.maybe_get_id(trc, sde1);
     wassert(actual(si) == MISSING_INT);
 
     // Create
-    si = st.insert_new(sde1);
+    si = st.insert_new(trc, sde1);
     wassert(actual(si) == 1);
 
     // Insert a fixed station
@@ -56,19 +58,19 @@ add_method("insert", [](Fixture& f) {
     sde2.coords = Coords(4600000, 1200000);
     sde2.ident = nullptr;
 
-    si = st.maybe_get_id(sde2);
+    si = st.maybe_get_id(trc, sde2);
     wassert(actual(si) == MISSING_INT);
 
     // Create
-    si = st.insert_new(sde2);
+    si = st.insert_new(trc, sde2);
     wassert(actual(si) == 2);
 
     // Get the ID of the first station
-    si = st.maybe_get_id(sde1);
+    si = st.maybe_get_id(trc, sde1);
     wassert(actual(si) == 1);
 
     // Get the ID of the second station
-    si = st.maybe_get_id(sde2);
+    si = st.maybe_get_id(trc, sde2);
     wassert(actual(si) == 2);
 });
 

@@ -20,7 +20,7 @@ protected:
     batch::Station* last_station = nullptr;
 
     bool have_station(const std::string& report, const Coords& coords, const Ident& ident);
-    void new_station(const std::string& report, const Coords& coords, const Ident& ident);
+    void new_station(Tracer<>& trc, const std::string& report, const Coords& coords, const Ident& ident);
 
 public:
     Transaction& transaction;
@@ -33,10 +33,10 @@ public:
 
     void set_write_attrs(bool write_attrs);
 
-    batch::Station* get_station(const dballe::Station& station, bool station_can_add);
-    batch::Station* get_station(const std::string& report, const Coords& coords, const Ident& ident);
+    batch::Station* get_station(Tracer<>& trc, const dballe::Station& station, bool station_can_add);
+    batch::Station* get_station(Tracer<>& trc, const std::string& report, const Coords& coords, const Ident& ident);
 
-    void write_pending();
+    void write_pending(Tracer<>& trc);
     void clear();
 };
 
@@ -72,7 +72,7 @@ struct StationData
     bool loaded = false;
 
     void add(const wreport::Var* var, UpdateMode on_conflict);
-    void write_pending(Transaction& tr, int station_id, bool with_attrs);
+    void write_pending(Tracer<>& trc, Transaction& tr, int station_id, bool with_attrs);
 };
 
 struct MeasuredDatum
@@ -104,7 +104,7 @@ struct MeasuredData
     }
 
     void add(int id_levtr, const wreport::Var* var, UpdateMode on_conflict);
-    void write_pending(Transaction& tr, int station_id, bool with_attrs);
+    void write_pending(Tracer<>& trc, Transaction& tr, int station_id, bool with_attrs);
 };
 
 struct MeasuredDataVector
@@ -136,7 +136,7 @@ struct Station : public dballe::Station
     StationData& get_station_data();
     MeasuredData& get_measured_data(const Datetime& datetime);
 
-    void write_pending(bool with_attrs);
+    void write_pending(Tracer<>& trc, bool with_attrs);
 };
 
 }

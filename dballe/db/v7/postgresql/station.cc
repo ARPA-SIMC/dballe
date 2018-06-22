@@ -44,25 +44,26 @@ PostgreSQLStation::~PostgreSQLStation()
 {
 }
 
-int PostgreSQLStation::maybe_get_id(const dballe::Station& st)
+int PostgreSQLStation::maybe_get_id(Tracer<>& trc, const dballe::Station& st)
 {
     using namespace dballe::sql::postgresql;
 
     int rep = tr.repinfo().obtain_id(st.report.c_str());
 
+    Tracer<> trc_sel;
     Result res;
     if (st.ident.get())
     {
+        if (trc) trc_sel.reset(trc->trace_select("v7_station_select_mobile", res.rowcount()));
         res = move(conn.exec_prepared("v7_station_select_mobile", rep, st.coords.lat, st.coords.lon, st.ident.get()));
-        if (tr.trace) tr.trace->trace_select("SELECT id FROM station WHERE rep=$1::int4 AND lat=$2::int4 AND lon=$3::int4 AND ident=$4::text", res.rowcount());
     }
     else
     {
+        if (trc) trc_sel.reset(trc->trace_select("v7_station_select_fixed"));
         res = move(conn.exec_prepared("v7_station_select_fixed", rep, st.coords.lat, st.coords.lon));
-        if (tr.trace) tr.trace->trace_select("SELECT id FROM station WHERE rep=$1::int4 AND lat=$2::int4 AND lon=$3::int4 AND ident IS NULL", res.rowcount());
     }
-
     unsigned rows = res.rowcount();
+    if (trc_sel) trc_sel->add_row(rows);
     switch (rows)
     {
         case 0: return MISSING_INT;
@@ -71,21 +72,22 @@ int PostgreSQLStation::maybe_get_id(const dballe::Station& st)
     }
 }
 
-int PostgreSQLStation::insert_new(const dballe::Station& desc)
+int PostgreSQLStation::insert_new(Tracer<>& trc, const dballe::Station& desc)
 {
     // If no station was found, insert a new one
     int rep = tr.repinfo().get_id(desc.report.c_str());
-    if (tr.trace) tr.trace->trace_insert("INSERT INTO station (id, rep, lat, lon, ident) VALUES (DEFAULT, $1::int4, $2::int4, $3::int4, $4::text) RETURNING id", 1);
+    Tracer<> trc_ins(trc ? trc->trace_insert("v7_station_insert", 1) : nullptr);
     return conn.exec_prepared_one_row("v7_station_insert", rep, desc.coords.lat, desc.coords.lon, desc.ident.get()).get_int4(0, 0);
 }
 
-void PostgreSQLStation::get_station_vars(int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+void PostgreSQLStation::get_station_vars(Tracer<>& trc, int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     using namespace dballe::sql::postgresql;
 
     TRACE("get_station_vars Performing query v7_station_get_station_vars with idst %d\n", id_station);
+    Tracer<> trc_sel(trc ? trc->trace_select("v7_station_get_station_vars") : nullptr);
     Result res(conn.exec_prepared("v7_station_get_station_vars", id_station));
-    if (tr.trace) tr.trace->trace_select("v7_station_get_station_vars", res.rowcount());
+    if (trc_sel) trc_sel->add_row(res.rowcount());
 
     // Retrieve results
     for (unsigned row = 0; row < res.rowcount(); ++row)
@@ -104,11 +106,12 @@ void PostgreSQLStation::get_station_vars(int id_station, std::function<void(std:
     };
 }
 
-void PostgreSQLStation::add_station_vars(int id_station, Record& rec)
+void PostgreSQLStation::add_station_vars(Tracer<>& trc, int id_station, Record& rec)
 {
     using namespace dballe::sql::postgresql;
+    Tracer<> trc_sel(trc ? trc->trace_select("v7_station_add_station_vars") : nullptr);
     Result res(conn.exec_prepared("v7_station_add_station_vars", id_station));
-    if (tr.trace) tr.trace->trace_select("v7_station_add_station_vars", res.rowcount());
+    if (trc_sel) trc_sel->add_row(res.rowcount());
     for (unsigned row = 0; row < res.rowcount(); ++row)
         rec.set(newvar((Varcode)res.get_int4(row, 0), res.get_string(row, 1)));
 }

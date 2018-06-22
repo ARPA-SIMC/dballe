@@ -18,7 +18,9 @@ void Batch::set_write_attrs(bool write_attrs)
 {
     if (this->write_attrs != write_attrs)
     {
-        write_pending();
+        // Throw away pending data. It should not cause damage, since all
+        // insert operations have their own write_pending at the end
+        // write_pending();
         clear();
     }
     this->write_attrs = write_attrs;
@@ -30,11 +32,11 @@ bool Batch::have_station(const std::string& report, const Coords& coords, const 
 
 }
 
-void Batch::new_station(const std::string& report, const Coords& coords, const Ident& ident)
+void Batch::new_station(Tracer<>& trc, const std::string& report, const Coords& coords, const Ident& ident)
 {
     if (last_station)
     {
-        last_station->write_pending(write_attrs);
+        last_station->write_pending(trc, write_attrs);
         delete last_station;
         last_station = nullptr;
     }
@@ -44,7 +46,7 @@ void Batch::new_station(const std::string& report, const Coords& coords, const I
     last_station->ident = ident;
 }
 
-batch::Station* Batch::get_station(const dballe::Station& station, bool station_can_add)
+batch::Station* Batch::get_station(Tracer<>& trc, const dballe::Station& station, bool station_can_add)
 {
     if (have_station(station.report, station.coords, station.ident))
     {
@@ -54,14 +56,14 @@ batch::Station* Batch::get_station(const dballe::Station& station, bool station_
     }
     v7::Station& st = transaction.station();
 
-    new_station(station.report, station.coords, station.ident);
+    new_station(trc, station.report, station.coords, station.ident);
 
     if (station.id != MISSING_INT)
         last_station->id = station.id;
     else
     {
         ++count_select_stations;
-        last_station->id = st.maybe_get_id(*last_station);
+        last_station->id = st.maybe_get_id(trc, *last_station);
     }
     if (last_station->id == MISSING_INT)
     {
@@ -78,16 +80,16 @@ batch::Station* Batch::get_station(const dballe::Station& station, bool station_
     return last_station;
 }
 
-batch::Station* Batch::get_station(const std::string& report, const Coords& coords, const Ident& ident)
+batch::Station* Batch::get_station(Tracer<>& trc, const std::string& report, const Coords& coords, const Ident& ident)
 {
     if (have_station(report, coords, ident))
         return last_station;
 
     v7::Station& st = transaction.station();
 
-    new_station(report, coords, ident);
+    new_station(trc, report, coords, ident);
 
-    last_station->id = st.maybe_get_id(*last_station);
+    last_station->id = st.maybe_get_id(trc, *last_station);
     ++count_select_stations;
     if (last_station->id == MISSING_INT)
     {
@@ -102,11 +104,11 @@ batch::Station* Batch::get_station(const std::string& report, const Coords& coor
     return last_station;
 }
 
-void Batch::write_pending()
+void Batch::write_pending(Tracer<>& trc)
 {
     if (!last_station)
         return;
-    last_station->write_pending(write_attrs);
+    last_station->write_pending(trc, write_attrs);
 }
 
 void Batch::clear()
@@ -153,7 +155,7 @@ void StationData::add(const wreport::Var* var, UpdateMode on_conflict)
     }
 }
 
-void StationData::write_pending(Transaction& tr, int station_id, bool with_attrs)
+void StationData::write_pending(Tracer<>& trc, Transaction& tr, int station_id, bool with_attrs)
 {
     if (!to_insert.empty())
     {
@@ -189,7 +191,7 @@ void MeasuredData::add(int id_levtr, const wreport::Var* var, UpdateMode on_conf
     }
 }
 
-void MeasuredData::write_pending(Transaction& tr, int station_id, bool with_attrs)
+void MeasuredData::write_pending(Tracer<>& trc, Transaction& tr, int station_id, bool with_attrs)
 {
     if (!to_insert.empty())
     {
@@ -295,14 +297,14 @@ MeasuredData& Station::get_measured_data(const Datetime& datetime)
     return md;
 }
 
-void Station::write_pending(bool with_attrs)
+void Station::write_pending(Tracer<>& trc, bool with_attrs)
 {
     if (id == MISSING_INT)
-        id = batch.transaction.station().insert_new(*this);
+        id = batch.transaction.station().insert_new(trc, *this);
 
-    station_data.write_pending(batch.transaction, id, with_attrs);
+    station_data.write_pending(trc, batch.transaction, id, with_attrs);
     for (auto md: measured_data.measured_data)
-        md->write_pending(batch.transaction, id, with_attrs);
+        md->write_pending(trc, batch.transaction, id, with_attrs);
 }
 
 #if 0

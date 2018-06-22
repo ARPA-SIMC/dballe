@@ -123,8 +123,9 @@ void Transaction::remove_all()
 }
 
 void Transaction::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
-{ // TODO: tracing
-    batch::Station* st = batch.get_station(vals.info, station_can_add);
+{
+    Tracer<> trc(this->trc ? this->trc->trace_insert_station_data() : nullptr);
+    batch::Station* st = batch.get_station(trc, vals.info, station_can_add);
 
     // Add all the variables we find
     batch::StationData& sd = st->get_station_data();
@@ -132,7 +133,7 @@ void Transaction::insert_station_data(StationValues& vals, bool can_replace, boo
         sd.add(i.second.var, can_replace ? batch::UPDATE : batch::ERROR);
 
     // Perform changes
-    batch.write_pending();
+    batch.write_pending(trc);
 
     // Read the IDs from the results
     vals.info.id = st->id;
@@ -141,23 +142,24 @@ void Transaction::insert_station_data(StationValues& vals, bool can_replace, boo
 }
 
 void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
-{ // TODO: tracing
+{
     if (vals.values.empty())
         throw error_notfound("no variables found in input record");
 
-    batch::Station* st = batch.get_station(vals.info, station_can_add);
+    Tracer<> trc(this->trc ? this->trc->trace_insert_data() : nullptr);
+    batch::Station* st = batch.get_station(trc, vals.info, station_can_add);
 
     batch::MeasuredData& md = st->get_measured_data(vals.info.datetime);
 
     // Insert the lev_tr data, and get the ID
-    int id_levtr = levtr().obtain_id(LevTrEntry(vals.info.level, vals.info.trange));
+    int id_levtr = levtr().obtain_id(LevTrEntry(vals.info.level, vals.info.trange)); // TODO: tracing
 
     // Add all the variables we find
     for (auto& i: vals.values)
         md.add(id_levtr, i.second.var, can_replace ? batch::UPDATE : batch::ERROR);
 
     // Perform changes
-    batch.write_pending();
+    batch.write_pending(trc);
 
     // Read the IDs from the results
     vals.info.id = st->id;

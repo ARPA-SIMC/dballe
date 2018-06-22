@@ -26,7 +26,7 @@ protected:
     /// Variable data
     v7::Data* m_data = nullptr;
 
-    void add_msg_to_batch(const Message& message, const char* repmemo, int flags);
+    void add_msg_to_batch(Tracer<>& trc, const Message& message, const char* repmemo, int flags);
     void print_profile_counters();
 
 public:

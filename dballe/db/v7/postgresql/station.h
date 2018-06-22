@@ -34,11 +34,10 @@ public:
     PostgreSQLStation(const PostgreSQLStation&&) = delete;
     PostgreSQLStation& operator=(const PostgreSQLStation&) = delete;
 
-    int maybe_get_id(const dballe::Station& st) override;
-    int insert_new(const dballe::Station& desc) override;
-
-    void get_station_vars(int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
-    void add_station_vars(int id_station, Record& rec) override;
+    int maybe_get_id(Tracer<>& trc, const dballe::Station& st) override;
+    int insert_new(Tracer<>& trc, const dballe::Station& desc) override;
+    void get_station_vars(Tracer<>& trc, int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
+    void add_station_vars(Tracer<>& trc, int id_station, Record& rec) override;
     void run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)>) override;
 };
 

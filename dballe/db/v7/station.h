@@ -39,14 +39,14 @@ public:
      *
      * It returns MISSING_INT if it does not exist.
      */
-    virtual int maybe_get_id(const dballe::Station& st) = 0;
+    virtual int maybe_get_id(Tracer<>& trc, const dballe::Station& st) = 0;
 
     /**
      * Insert a new station in the database, without checking if it already exists.
      *
      * Returns the ID of the new station
      */
-    virtual int insert_new(const dballe::Station& desc) = 0;
+    virtual int insert_new(Tracer<>& trc, const dballe::Station& desc) = 0;
 
     /**
      * Run a station query, iterating on the resulting stations
@@ -54,14 +54,9 @@ public:
     virtual void run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station& station)>) = 0;
 
     /**
-     * Dump the entire contents of the table to an output stream
-     */
-    void dump(FILE* out);
-
-    /**
      * Export station variables
      */
-    virtual void get_station_vars(int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
+    virtual void get_station_vars(Tracer<>& trc, int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
 
     /**
      * Add all station variables (without attributes) to rec.
@@ -69,7 +64,12 @@ public:
      * If the same variable exists in many different networks, the one with the
      * highest priority will be used.
      */
-    virtual void add_station_vars(int id_station, Record& rec) = 0;
+    virtual void add_station_vars(Tracer<>& trc, int id_station, Record& rec) = 0;
+
+    /**
+     * Dump the entire contents of the table to an output stream
+     */
+    void dump(FILE* out);
 };
 
 }

@@ -70,9 +70,29 @@ Tracer<> Transaction::trace_query_summary(const Query& query)
     return Tracer<>(add_child(new trace::Step("query_summary", query_to_string(query))));
 }
 
+Tracer<> Transaction::trace_import(unsigned count)
+{
+    return Tracer<>(add_child(new trace::Step("import", std::to_string(count))));
+}
+
 Tracer<> Transaction::trace_export_msgs(const Query& query)
 {
     return Tracer<>(add_child(new trace::Step("export_msgs", query_to_string(query))));
+}
+
+Tracer<> Transaction::trace_insert_station_data()
+{
+    return Tracer<>(add_child(new trace::Step("insert_station_data")));
+}
+
+Tracer<> Transaction::trace_insert_data()
+{
+    return Tracer<>(add_child(new trace::Step("insert_data")));
+}
+
+Tracer<> Transaction::trace_add_station_vars()
+{
+    return Tracer<>(add_child(new trace::Step("insert_data")));
 }
 
 }

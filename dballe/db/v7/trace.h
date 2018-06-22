@@ -142,6 +142,20 @@ public:
         res->rows = rows;
         return res;
     }
+
+    Step* trace_insert(const std::string& query, unsigned rows=0)
+    {
+        Step* res = add_child(new Step("insert", query));
+        res->rows = rows;
+        return res;
+    }
+
+    Step* trace_update(const std::string& query, unsigned rows=0)
+    {
+        Step* res = add_child(new Step("update", query));
+        res->rows = rows;
+        return res;
+    }
 };
 
 
@@ -154,7 +168,11 @@ public:
     Tracer<> trace_query_station_data(const Query& query);
     Tracer<> trace_query_data(const Query& query);
     Tracer<> trace_query_summary(const Query& query);
+    Tracer<> trace_import(unsigned count);
     Tracer<> trace_export_msgs(const Query& query);
+    Tracer<> trace_insert_station_data();
+    Tracer<> trace_insert_data();
+    Tracer<> trace_add_station_vars();
 };
 
 }

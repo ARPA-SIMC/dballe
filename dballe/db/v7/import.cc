@@ -17,7 +17,7 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
-void Transaction::add_msg_to_batch(const Message& message, const char* repmemo, int flags)
+void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const char* repmemo, int flags)
 {
     const Msg& msg = Msg::downcast(message);
     const msg::Context* l_ana = msg.find_context(Level(), Trange());
@@ -52,9 +52,9 @@ void Transaction::add_msg_to_batch(const Message& message, const char* repmemo, 
 
     // Station identifier
     if (const Var* var = l_ana->find_by_id(DBA_MSG_IDENT))
-        station = batch.get_station(report, coords, var->enqc());
+        station = batch.get_station(trc, report, coords, var->enqc());
     else
-        station = batch.get_station(report, coords, Ident());
+        station = batch.get_station(trc, report, coords, Ident());
 
     if (flags & DBA_IMPORT_FULL_PSEUDOANA || (station->is_new && station->id == MISSING_INT))
     {
@@ -101,23 +101,27 @@ void Transaction::add_msg_to_batch(const Message& message, const char* repmemo, 
 
 void Transaction::import_msg(const Message& message, const char* repmemo, int flags)
 {
+    Tracer<> trc(this->trc ? this->trc->trace_import(1) : nullptr);
+
     batch.set_write_attrs(flags & DBA_IMPORT_ATTRS);
 
-    add_msg_to_batch(message, repmemo, flags);
+    add_msg_to_batch(trc, message, repmemo, flags);
 
     // Run the bulk insert
-    batch.write_pending();
+    batch.write_pending(trc);
 }
 
 void Transaction::import_msgs(const Messages& msgs, const char* repmemo, int flags)
 {
+    Tracer<> trc(this->trc ? this->trc->trace_import(msgs.size()) : nullptr);
+
     batch.set_write_attrs(flags & DBA_IMPORT_ATTRS);
 
     for (const auto& i: msgs)
-        add_msg_to_batch(i, repmemo, flags);
+        add_msg_to_batch(trc, i, repmemo, flags);
 
     // Run the bulk insert
-    batch.write_pending();
+    batch.write_pending(trc);
 }
 
 }

@@ -162,7 +162,8 @@ struct StationResult
     {
         tr.repinfo().to_record(station.report, rec);
         station.to_record(rec);
-        tr.station().add_station_vars(station.id, rec);
+        Tracer<> trc(tr.trc ? tr.trc->trace_add_station_vars() : nullptr);
+        tr.station().add_station_vars(trc, station.id, rec);
     }
 };
 

@@ -40,6 +40,7 @@ protected:
     Step* step;
 
 public:
+    Tracer() : step(nullptr) {}
     Tracer(Step* step) : step(step) {}
     Tracer(const Tracer&) = delete;
     Tracer(Tracer&& o)
@@ -53,7 +54,10 @@ public:
     {
         if (step) step->done();
     }
-
+    void reset(Step* step)
+    {
+        this->step = step;
+    }
     Step* operator->() { return step; }
     operator bool() const { return step; }
 };

@@ -26,6 +26,9 @@ namespace {
 
 struct StationValues : protected std::vector<wreport::Var*>
 {
+    Tracer<>& trc;
+
+    StationValues(Tracer<>& trc) : trc(trc) {}
     ~StationValues()
     {
         for (iterator i = begin(); i != end(); ++i)
@@ -48,7 +51,7 @@ struct StationValues : protected std::vector<wreport::Var*>
     void read(v7::Transaction& tr, int id_station)
     {
         reset();
-        tr.station().get_station_vars(id_station, [&](std::unique_ptr<wreport::Var> var) {
+        tr.station().get_station_vars(trc, id_station, [&](std::unique_ptr<wreport::Var> var) {
             push_back(var.release());
         });
     }
@@ -117,7 +120,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
     Datetime last_datetime;
     int last_ana_id = -1;
 
-    StationValues station_values;
+    StationValues station_values(trc);
 
     if (db->explain_queries)
     {
