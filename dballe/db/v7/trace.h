@@ -11,11 +11,135 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
-class TraceOp;
+namespace trace {
 
-class Trace
+/**
+ * One operation being traced
+ */
+class Step
 {
 protected:
+    /// Parent operation in the operation stack
+    Step* parent = nullptr;
+    /// First child operation in the operation stack
+    Step* child = nullptr;
+    /// Next sibling operation in the operation stack
+    Step* sibling = nullptr;
+    /// Operation name
+    std::string name;
+    /// Optional details about the operation
+    std::string detail;
+    /// Number of database rows affected
+    unsigned rows = 0;
+    /// Timing start
+    clock_t start = 0;
+    /// Timing end
+    clock_t end = 0;
+
+    template<typename T>
+    void add_sibling(T* step)
+    {
+        if (!sibling)
+        {
+            sibling = step;
+            step->parent = parent;
+        }
+        else
+            sibling->add_sibling(step);
+    }
+
+public:
+    Step(const std::string& name);
+    Step(const std::string& name, const std::string& detail);
+    ~Step();
+
+    void done();
+    unsigned elapsed_usec() const;
+
+    template<typename T>
+    void add_child(T* step)
+    {
+        if (!child)
+        {
+            child = step;
+            step->parent = this;
+        }
+        else
+            child->add_sibling(step);
+    }
+};
+
+}
+
+/**
+ * Smart pointer for trace::Step objects, which calls done() when going out of
+ * scope
+ */
+template<typename Step=trace::Step>
+class Tracer
+{
+protected:
+    Step* step;
+
+public:
+    Tracer(Step* step) : step(step) {}
+    Tracer(const Tracer&) = delete;
+    Tracer(Tracer&& o)
+        : step(o.step)
+    {
+        o.step = nullptr;
+    }
+    Tracer& operator=(const Tracer&) = delete;
+    Tracer& operator=(Tracer&&) = delete;
+    ~Tracer()
+    {
+        if (step) step->done();
+    }
+
+    Step* operator->() { return step; }
+    operator bool() const { return step; }
+};
+
+struct Trace
+{
+    virtual ~Trace() {}
+
+    virtual Tracer<> trace_connect(const std::string& url) = 0;
+    virtual Tracer<> trace_reset(const char* repinfo_file=0) = 0;
+    virtual Tracer<> trace_remove_station_data(const Query& query) = 0;
+    virtual Tracer<> trace_remove(const Query& query) = 0;
+    virtual Tracer<> trace_remove_all() = 0;
+    virtual Tracer<> trace_vacuum() = 0;
+    virtual Tracer<> trace_query_stations(const Query& query) = 0;
+    virtual Tracer<> trace_query_station_data(const Query& query) = 0;
+    virtual Tracer<> trace_query_data(const Query& query) = 0;
+    virtual Tracer<> trace_query_summary(const Query& query) = 0;
+    virtual Tracer<> trace_export_msgs(const Query& query) = 0;
+
+    static bool in_test_suite();
+    static void set_in_test_suite();
+};
+
+struct NullTrace : public Trace
+{
+    Tracer<> trace_connect(const std::string& url) override { return Tracer<>(nullptr); }
+    Tracer<> trace_reset(const char* repinfo_file=0) override { return Tracer<>(nullptr); }
+    Tracer<> trace_remove_station_data(const Query& query) override { return Tracer<>(nullptr); }
+    Tracer<> trace_remove(const Query& query) override { return Tracer<>(nullptr); }
+    Tracer<> trace_remove_all() override { return Tracer<>(nullptr); }
+    Tracer<> trace_vacuum() override { return Tracer<>(nullptr); }
+    Tracer<> trace_query_stations(const Query& query) override { return Tracer<>(nullptr); }
+    Tracer<> trace_query_station_data(const Query& query) override { return Tracer<>(nullptr); }
+    Tracer<> trace_query_data(const Query& query) override { return Tracer<>(nullptr); }
+    Tracer<> trace_query_summary(const Query& query) override { return Tracer<>(nullptr); }
+    Tracer<> trace_export_msgs(const Query& query) override { return Tracer<>(nullptr); }
+};
+
+class CollectTrace : public Trace
+{
+protected:
+    std::vector<trace::Step*> steps;
+#if 0
     // Command line used to start the current process
     std::vector<std::string> argv;
 
@@ -45,69 +169,32 @@ protected:
 
     // Flush the current output, then reset json_buf
     void output_flush();
-
+#endif
 
 public:
-    typedef std::unique_ptr<TraceOp> Tracer;
+    CollectTrace() = default;
+    CollectTrace(const CollectTrace&) = delete;
+    CollectTrace(CollectTrace&&) = delete;
+    CollectTrace& operator=(const CollectTrace&) = delete;
+    CollectTrace& operator=(CollectTrace&&) = delete;
+    ~CollectTrace();
 
-    Trace();
-    ~Trace();
-
-    Tracer trace_connect(const std::string& url);
-    Tracer trace_reset(const char* repinfo_file=0);
-    Tracer trace_remove_station_data(const Query& query);
-    Tracer trace_remove(const Query& query);
-    Tracer trace_remove_all();
-    Tracer trace_vacuum();
-    Tracer trace_query_stations(const Query& query);
-    Tracer trace_query_station_data(const Query& query);
-    Tracer trace_query_data(const Query& query);
-    Tracer trace_query_summary(const Query& query);
-    Tracer trace_export_msgs(const Query& query);
-
-    static bool in_test_suite();
-    static void set_in_test_suite();
-
-    friend class TraceOp;
+    Tracer<> trace_connect(const std::string& url) override;
+    Tracer<> trace_reset(const char* repinfo_file=0) override;
+    Tracer<> trace_remove_station_data(const Query& query) override;
+    Tracer<> trace_remove(const Query& query) override;
+    Tracer<> trace_remove_all() override;
+    Tracer<> trace_vacuum() override;
+    Tracer<> trace_query_stations(const Query& query) override;
+    Tracer<> trace_query_station_data(const Query& query) override;
+    Tracer<> trace_query_data(const Query& query) override;
+    Tracer<> trace_query_summary(const Query& query) override;
+    Tracer<> trace_export_msgs(const Query& query) override;
 };
 
-class TraceOp
+struct QuietCollectTrace : public CollectTrace
 {
-protected:
-    Trace* trace = 0;
-    clock_t start;
-
-public:
-    TraceOp();
-    TraceOp(Trace& trace, const char* operation);
-    ~TraceOp();
-
-    void done();
-
-    template<typename T>
-    void add_list(const char* key, const T& val)
-    {
-        trace->writer.add(key);
-        trace->writer.add_list(val);
-    }
-
-    void add_null(const char* key)
-    {
-        trace->writer.add(key);
-        trace->writer.add_null();
-     }
-
-    template<typename T>
-    void add(const char* key, const T& val)
-    {
-        trace->writer.add(key);
-        trace->writer.add(val);
-    }
-
-    void add_query(const Query& query);
 };
-
-
 
 struct SQLTrace
 {

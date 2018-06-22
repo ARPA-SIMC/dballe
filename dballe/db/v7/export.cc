@@ -103,7 +103,7 @@ struct DataRow
 
 bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest)
 {
-    auto tr = db->trace.trace_export_msgs(query);
+    auto trc = db->trace->trace_export_msgs(query);
     v7::LevTr& lt = levtr();
 
     // Message being built
@@ -211,8 +211,6 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
                 return false;
     }
 
-    // Useful for Oracle to end the session
-    tr->done();
     return true;
 }
 

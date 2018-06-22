@@ -9,6 +9,48 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
+namespace {
+
+std::string query_to_string(const Query& query)
+{
+    std::stringstream json_buf;
+    core::JSONWriter writer(json_buf);
+    core::Query::downcast(query).serialize(writer);
+    return json_buf.str();
+}
+
+}
+
+namespace trace {
+
+Step::Step(const std::string& name)
+    : name(name), start(clock())
+{
+}
+
+Step::Step(const std::string& name, const std::string& detail)
+    : name(name), detail(detail), start(clock())
+{
+}
+
+Step::~Step()
+{
+    delete child;
+    delete sibling;
+}
+
+void Step::done()
+{
+    end = clock();
+}
+
+unsigned Step::elapsed_usec() const
+{
+    return (end - start) * 1000000 / CLOCKS_PER_SEC;
+}
+
+}
+
 void ProfileTrace::print(FILE* out)
 {
     fprintf(stderr, "Transaction end: %u queries\n", profile_count_select + profile_count_insert + profile_count_update + profile_count_delete);
@@ -33,6 +75,7 @@ void QuietProfileTrace::print(FILE* out)
 {
 }
 
+#if 0
 TraceOp::TraceOp()
 {
 }
@@ -94,12 +137,16 @@ Trace::Trace()
             error_system::throwf("cannot open file %s", out_fname.c_str());
     }
 }
+#endif
 
-Trace::~Trace()
+CollectTrace::~CollectTrace()
 {
-    if (out) fclose(out);
+    for (auto& i: steps)
+        delete i;
+//    if (out) fclose(out);
 }
 
+#if 0
 void Trace::read_argv()
 {
     FILE* in = fopen("/proc/self/cmdline", "rb");
@@ -138,91 +185,72 @@ void Trace::output_flush()
     writer.reset();
     json_buf.str("");
 }
+#endif
 
-Trace::Tracer Trace::trace_connect(const std::string& url)
+Tracer<> CollectTrace::trace_connect(const std::string& url)
 {
-    if (!out) return Tracer(new TraceOp());
-    db_url = url;
-    return Tracer(new TraceOp(*this, "connect"));
+    steps.push_back(new trace::Step("connect", url));
+    return Tracer<>(steps.back());
 }
 
-Trace::Tracer Trace::trace_reset(const char* repinfo_file)
+Tracer<> CollectTrace::trace_reset(const char* repinfo_file)
 {
-    if (!out) return Tracer(new TraceOp());
-    Tracer res(new TraceOp(*this, "reset"));
-    if (repinfo_file)
-        res->add("repinfo", repinfo_file);
-    else
-        res->add_null("repinfo");
-    return res;
+    steps.push_back(new trace::Step("reset", repinfo_file ? repinfo_file : ""));
+    return Tracer<>(steps.back());
 }
 
-Trace::Tracer Trace::trace_remove_station_data(const Query& query)
+Tracer<> CollectTrace::trace_remove_station_data(const Query& query)
 {
-    if (!out) return Tracer(new TraceOp());
-    Tracer res(new TraceOp(*this, "remove_station_data"));
-    res->add_query(query);
-    return res;
+    steps.push_back(new trace::Step("remove_station_data", query_to_string(query)));
+    return Tracer<>(steps.back());
 }
 
-Trace::Tracer Trace::trace_remove(const Query& query)
+Tracer<> CollectTrace::trace_remove(const Query& query)
 {
-    if (!out) return Tracer(new TraceOp());
-    Tracer res(new TraceOp(*this, "remove"));
-    res->add_query(query);
-    return res;
+    steps.push_back(new trace::Step("remove", query_to_string(query)));
+    return Tracer<>(steps.back());
 }
 
-Trace::Tracer Trace::trace_remove_all()
+Tracer<> CollectTrace::trace_remove_all()
 {
-    if (!out) return Tracer(new TraceOp());
-    return Tracer(new TraceOp(*this, "remove_all"));
+    steps.push_back(new trace::Step("remove_all"));
+    return Tracer<>(steps.back());
 }
 
-Trace::Tracer Trace::trace_vacuum()
+Tracer<> CollectTrace::trace_vacuum()
 {
-    if (!out) return Tracer(new TraceOp());
-    return Tracer(new TraceOp(*this, "vacuum"));
+    steps.push_back(new trace::Step("vacuum"));
+    return Tracer<>(steps.back());
 }
 
-Trace::Tracer Trace::trace_query_stations(const Query& query)
+Tracer<> CollectTrace::trace_query_stations(const Query& query)
 {
-    if (!out) return Tracer(new TraceOp());
-    Tracer res(new TraceOp(*this, "query_stations"));
-    res->add_query(query);
-    return res;
+    steps.push_back(new trace::Step("query_stations", query_to_string(query)));
+    return Tracer<>(steps.back());
 }
 
-Trace::Tracer Trace::trace_query_station_data(const Query& query)
+Tracer<> CollectTrace::trace_query_station_data(const Query& query)
 {
-    if (!out) return Tracer(new TraceOp());
-    Tracer res(new TraceOp(*this, "query_station_data"));
-    res->add_query(query);
-    return res;
+    steps.push_back(new trace::Step("query_station_data", query_to_string(query)));
+    return Tracer<>(steps.back());
 }
 
-Trace::Tracer Trace::trace_query_data(const Query& query)
+Tracer<> CollectTrace::trace_query_data(const Query& query)
 {
-    if (!out) return Tracer(new TraceOp());
-    Tracer res(new TraceOp(*this, "query_data"));
-    res->add_query(query);
-    return res;
+    steps.push_back(new trace::Step("query_data", query_to_string(query)));
+    return Tracer<>(steps.back());
 }
 
-Trace::Tracer Trace::trace_query_summary(const Query& query)
+Tracer<> CollectTrace::trace_query_summary(const Query& query)
 {
-    if (!out) return Tracer(new TraceOp());
-    Tracer res(new TraceOp(*this, "query_summary"));
-    res->add_query(query);
-    return res;
+    steps.push_back(new trace::Step("query_summary", query_to_string(query)));
+    return Tracer<>(steps.back());
 }
 
-Trace::Tracer Trace::trace_export_msgs(const Query& query)
+Tracer<> CollectTrace::trace_export_msgs(const Query& query)
 {
-    if (!out) return Tracer(new TraceOp());
-    Tracer res(new TraceOp(*this, "export_msgs"));
-    res->add_query(query);
-    return res;
+    steps.push_back(new trace::Step("export_msgs", query_to_string(query)));
+    return Tracer<>(steps.back());
 }
 
 static bool _in_test_suite = false;

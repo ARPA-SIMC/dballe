@@ -31,7 +31,7 @@ public:
     /// Database connection
     dballe::sql::Connection* conn;
     /// Database query tracing
-    Trace trace;
+    Trace* trace = nullptr;
     /// True if we print an EXPLAIN trace of all queries to stderr
     bool explain_queries = false;
 
