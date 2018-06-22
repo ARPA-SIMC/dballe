@@ -2,6 +2,8 @@
 #include "dballe/db/v7/transaction.h"
 #include "dballe/db/v7/batch.h"
 #include "dballe/db/v7/qbuilder.h"
+#include "dballe/db/v7/repinfo.h"
+#include "dballe/db/v7/trace.h"
 #include "dballe/sql/sqlite.h"
 #include "dballe/sql/querybuf.h"
 #include "dballe/record.h"
@@ -25,8 +27,8 @@ template class SQLiteDataCommon<StationData>;
 template class SQLiteDataCommon<Data>;
 
 template<typename Parent>
-SQLiteDataCommon<Parent>::SQLiteDataCommon(dballe::sql::SQLiteConnection& conn)
-    : conn(conn)
+SQLiteDataCommon<Parent>::SQLiteDataCommon(v7::Transaction& tr, dballe::sql::SQLiteConnection& conn)
+    : Parent(tr), conn(conn)
 {
     char query[64];
     snprintf(query, 64, "UPDATE %s set value=?, attrs=? WHERE id=?", Parent::table_name);
@@ -53,8 +55,10 @@ void SQLiteDataCommon<Parent>::read_attrs(int id_data, std::function<void(std::u
         snprintf(query, 64, "SELECT attrs FROM %s WHERE id=?", Parent::table_name);
         read_attrs_stm = conn.sqlitestatement(query).release();
     }
+    if (this->tr.trace) this->tr.trace->trace_select("SELECT attrs FROM … WHERE id=?");
     read_attrs_stm->bind_val(1, id_data);
     read_attrs_stm->execute_one([&]() {
+        if (this->tr.trace) this->tr.trace->trace_select_row();
         Values::decode(read_attrs_stm->column_blob(0), dest);
     });
 }
@@ -72,6 +76,7 @@ void SQLiteDataCommon<Parent>::write_attrs(int id_data, const Values& values)
     write_attrs_stm->bind_val(1, encoded);
     write_attrs_stm->bind_val(2, id_data);
     write_attrs_stm->execute();
+    if (this->tr.trace) this->tr.trace->trace_insert("UPDATE … SET attrs=? WHERE id=?", 1);
 }
 
 template<typename Parent>
@@ -85,6 +90,7 @@ void SQLiteDataCommon<Parent>::remove_all_attrs(int id_data)
     }
     remove_attrs_stm->bind_val(1, id_data);
     remove_attrs_stm->execute();
+    if (this->tr.trace) this->tr.trace->trace_update("UPDATE … SET attrs=NULL WHERE id=?", 1);
 }
 
 namespace {
@@ -115,12 +121,15 @@ void SQLiteDataCommon<Parent>::remove(const v7::IdQueryBuilder& qb)
         attr_filter = Varmatch::parse(qb.query.attr_filter);
 
     // Iterate all the data_id results, deleting the related data and attributes
+    if (this->tr.trace) this->tr.trace->trace_select(qb.sql_query);
     stm->execute([&]() {
+        if (this->tr.trace) this->tr.trace->trace_select_row();
         if (attr_filter.get() && !match_attrs(*attr_filter, stm->column_blob(1))) return;
 
         // Compile the DELETE query for the data
         stmd->bind_val(1, stm->column_int(0));
         stmd->execute();
+        if (this->tr.trace) this->tr.trace->trace_delete(query);
     });
 }
 
@@ -141,12 +150,13 @@ void SQLiteDataCommon<Parent>::update(dballe::db::v7::Transaction& t, std::vecto
         ustm->bind_val(3, v.id);
 
         ustm->execute();
+        if (this->tr.trace) this->tr.trace->trace_update("UPDATE … set value=?, attrs=? WHERE id=?", 1);
     }
 }
 
 
-SQLiteStationData::SQLiteStationData(SQLiteConnection& conn)
-    : SQLiteDataCommon(conn)
+SQLiteStationData::SQLiteStationData(v7::Transaction& tr, SQLiteConnection& conn)
+    : SQLiteDataCommon(tr, conn)
 {
     sstm = conn.sqlitestatement("SELECT id, code FROM station_data WHERE id_station=?").release();
     istm = conn.sqlitestatement("INSERT INTO station_data (id_station, code, value, attrs) VALUES (?, ?, ?, ?)").release();
@@ -155,7 +165,9 @@ SQLiteStationData::SQLiteStationData(SQLiteConnection& conn)
 void SQLiteStationData::query(int id_station, std::function<void(int id, wreport::Varcode code)> dest)
 {
     sstm->bind_val(1, id_station);
+    if (tr.trace) tr.trace->trace_select("SELECT id, code FROM station_data WHERE id_station=?");
     sstm->execute([&]() {
+        if (tr.trace) tr.trace->trace_select_row();
         int id = sstm->column_int(0);
         wreport::Varcode code = sstm->column_int(1);
         dest(id, code);
@@ -183,9 +195,49 @@ void SQLiteStationData::insert(dballe::db::v7::Transaction& t, int id_station, s
         else
             istm->bind_null_val(4);
         istm->execute();
+        if (tr.trace) tr.trace->trace_insert("INSERT INTO station_data (id_station, code, value, attrs) VALUES (?, ?, ?, ?)", 1);
 
         v->id = conn.get_last_insert_id();
     }
+}
+
+void SQLiteStationData::run_station_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var)> dest)
+{
+    auto stm = conn.sqlitestatement(qb.sql_query);
+
+    if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
+
+    dballe::Station station;
+    if (tr.trace) tr.trace->trace_select(qb.sql_query);
+    stm->execute([&]() {
+        if (tr.trace) tr.trace->trace_select_row();
+        wreport::Varcode code = stm->column_int(5);
+        const char* value = stm->column_string(7);
+        auto var = newvar(code, value);
+        if (qb.select_attrs)
+            values::Decoder::decode_attrs(stm->column_blob(8), *var);
+
+        // Postprocessing filter of attr_filter
+        if (qb.attr_filter && !qb.match_attrs(*var))
+            return;
+
+        int id_station = stm->column_int(0);
+        if (id_station != station.id)
+        {
+            station.id = id_station;
+            station.report = qb.tr->repinfo().get_rep_memo(stm->column_int(1));
+            station.coords.lat = stm->column_int(2);
+            station.coords.lon = stm->column_int(3);
+            if (stm->column_isnull(4))
+                station.ident.clear();
+            else
+                station.ident = stm->column_string(4);
+        }
+
+        int id_data = stm->column_int(6);
+
+        dest(station, id_data, move(var));
+    });
 }
 
 void SQLiteStationData::dump(FILE* out)
@@ -202,8 +254,8 @@ void SQLiteStationData::dump(FILE* out)
 }
 
 
-SQLiteData::SQLiteData(SQLiteConnection& conn)
-    : SQLiteDataCommon(conn)
+SQLiteData::SQLiteData(v7::Transaction& tr, SQLiteConnection& conn)
+    : SQLiteDataCommon(tr, conn)
 {
     sstm = conn.sqlitestatement("SELECT id, id_levtr, code FROM data WHERE id_station=? AND datetime=?").release();
     istm = conn.sqlitestatement("INSERT INTO data (id_station, id_levtr, datetime, code, value, attrs) VALUES (?, ?, ?, ?, ?, ?)").release();
@@ -213,7 +265,9 @@ void SQLiteData::query(int id_station, const Datetime& datetime, std::function<v
 {
     sstm->bind_val(1, id_station);
     sstm->bind_val(2, datetime);
+    if (tr.trace) tr.trace->trace_select("SELECT id, id_levtr, code FROM data WHERE id_station=? AND datetime=?");
     sstm->execute([&]() {
+        if (tr.trace) tr.trace->trace_select_row();
         int id_levtr = sstm->column_int(1);
         wreport::Varcode code = sstm->column_int(2);
         int id = sstm->column_int(0);
@@ -244,10 +298,91 @@ void SQLiteData::insert(dballe::db::v7::Transaction& t, int id_station, const Da
         else
             istm->bind_null_val(6);
         istm->execute();
+        if (tr.trace) tr.trace->trace_insert("INSERT INTO data (id_station, id_levtr, datetime, code, value, attrs) VALUES (?, ?, ?, ?, ?, ?)", 1);
 
         v->id = conn.get_last_insert_id();
     }
 }
+
+void SQLiteData::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)> dest)
+{
+    auto stm = conn.sqlitestatement(qb.sql_query);
+
+    if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
+
+    dballe::Station station;
+    if (tr.trace) tr.trace->trace_select(qb.sql_query);
+    stm->execute([&]() {
+        if (tr.trace) tr.trace->trace_select_row();
+        wreport::Varcode code = stm->column_int(6);
+        const char* value = stm->column_string(9);
+        auto var = newvar(code, value);
+        if (qb.select_attrs)
+            values::Decoder::decode_attrs(stm->column_blob(10), *var);
+
+        // Postprocessing filter of attr_filter
+        if (qb.attr_filter && !qb.match_attrs(*var))
+            return;
+
+        int id_station = stm->column_int(0);
+        if (id_station != station.id)
+        {
+            station.id = id_station;
+            station.report = tr.repinfo().get_rep_memo(stm->column_int(1));
+            station.coords.lat = stm->column_int(2);
+            station.coords.lon = stm->column_int(3);
+            if (stm->column_isnull(4))
+                station.ident.clear();
+            else
+                station.ident = stm->column_string(4);
+        }
+
+        int id_levtr = stm->column_int(5);
+        int id_data = stm->column_int(7);
+        Datetime datetime = stm->column_datetime(8);
+
+        dest(station, id_levtr, datetime, id_data, move(var));
+    });
+}
+
+void SQLiteData::run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)> dest)
+{
+    auto stm = conn.sqlitestatement(qb.sql_query);
+
+    if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
+
+    dballe::Station station;
+    if (tr.trace) tr.trace->trace_select(qb.sql_query);
+    stm->execute([&]() {
+        if (tr.trace) tr.trace->trace_select_row();
+        int id_station = stm->column_int(0);
+        if (id_station != station.id)
+        {
+            station.id = id_station;
+            station.report = qb.tr->repinfo().get_rep_memo(stm->column_int(1));
+            station.coords.lat = stm->column_int(2);
+            station.coords.lon = stm->column_int(3);
+            if (stm->column_isnull(4))
+                station.ident.clear();
+            else
+                station.ident = stm->column_string(4);
+        }
+
+        int id_levtr = stm->column_int(5);
+        wreport::Varcode code = stm->column_int(6);
+
+        size_t count = 0;
+        DatetimeRange datetime;
+        if (qb.select_summary_details)
+        {
+            count = stm->column_int(7);
+            datetime = DatetimeRange(stm->column_datetime(8), stm->column_datetime(9));
+        }
+
+        dest(station, id_levtr, code, datetime, count);
+    });
+}
+
 
 void SQLiteData::dump(FILE* out)
 {

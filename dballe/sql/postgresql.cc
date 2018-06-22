@@ -220,14 +220,12 @@ void PostgreSQLConnection::init_after_connect()
 
 void PostgreSQLConnection::pqexec(const std::string& query)
 {
-    if (profile) ++profile_query_count;
     postgresql::Result res(PQexec(db, query.c_str()));
     res.expect_success(query);
 }
 
 void PostgreSQLConnection::pqexec_nothrow(const std::string& query) noexcept
 {
-    if (profile) ++profile_query_count;
     postgresql::Result res(PQexec(db, query.c_str()));
     switch (PQresultStatus(res))
     {

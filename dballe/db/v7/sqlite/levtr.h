@@ -43,7 +43,7 @@ protected:
     void _dump(std::function<void(int, const Level&, const Trange&)> out) override;
 
 public:
-    SQLiteLevTr(dballe::sql::SQLiteConnection& conn);
+    SQLiteLevTr(v7::Transaction& tr, dballe::sql::SQLiteConnection& conn);
     SQLiteLevTr(const LevTr&) = delete;
     SQLiteLevTr(const LevTr&&) = delete;
     SQLiteLevTr& operator=(const SQLiteLevTr&) = delete;

@@ -44,11 +44,11 @@ add_method("insert", [](Fixture& f) {
     sde1.coords = Coords(4500000, 1100000);
     sde1.ident = "ciao";
 
-    si = st.maybe_get_id(*f.tr, sde1);
+    si = st.maybe_get_id(sde1);
     wassert(actual(si) == MISSING_INT);
 
     // Create
-    si = st.insert_new(*f.tr, sde1);
+    si = st.insert_new(sde1);
     wassert(actual(si) == 1);
 
     // Insert a fixed station
@@ -56,19 +56,19 @@ add_method("insert", [](Fixture& f) {
     sde2.coords = Coords(4600000, 1200000);
     sde2.ident = nullptr;
 
-    si = st.maybe_get_id(*f.tr, sde2);
+    si = st.maybe_get_id(sde2);
     wassert(actual(si) == MISSING_INT);
 
     // Create
-    si = st.insert_new(*f.tr, sde2);
+    si = st.insert_new(sde2);
     wassert(actual(si) == 2);
 
     // Get the ID of the first station
-    si = st.maybe_get_id(*f.tr, sde1);
+    si = st.maybe_get_id(sde1);
     wassert(actual(si) == 1);
 
     // Get the ID of the second station
-    si = st.maybe_get_id(*f.tr, sde2);
+    si = st.maybe_get_id(sde2);
     wassert(actual(si) == 2);
 });
 

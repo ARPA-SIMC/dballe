@@ -61,7 +61,7 @@ batch::Station* Batch::get_station(const dballe::Station& station, bool station_
     else
     {
         ++count_select_stations;
-        last_station->id = st.maybe_get_id(transaction, *last_station);
+        last_station->id = st.maybe_get_id(*last_station);
     }
     if (last_station->id == MISSING_INT)
     {
@@ -87,7 +87,7 @@ batch::Station* Batch::get_station(const std::string& report, const Coords& coor
 
     new_station(report, coords, ident);
 
-    last_station->id = st.maybe_get_id(transaction, *last_station);
+    last_station->id = st.maybe_get_id(*last_station);
     ++count_select_stations;
     if (last_station->id == MISSING_INT)
     {
@@ -298,7 +298,7 @@ MeasuredData& Station::get_measured_data(const Datetime& datetime)
 void Station::write_pending(bool with_attrs)
 {
     if (id == MISSING_INT)
-        id = batch.transaction.station().insert_new(batch.transaction, *this);
+        id = batch.transaction.station().insert_new(*this);
 
     station_data.write_pending(batch.transaction, id, with_attrs);
     for (auto md: measured_data.measured_data)

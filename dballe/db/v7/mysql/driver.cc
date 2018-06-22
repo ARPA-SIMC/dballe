@@ -34,29 +34,29 @@ Driver::~Driver()
 {
 }
 
-std::unique_ptr<v7::Repinfo> Driver::create_repinfo()
+std::unique_ptr<v7::Repinfo> Driver::create_repinfo(v7::Transaction& tr)
 {
     return unique_ptr<v7::Repinfo>(new MySQLRepinfoV7(conn));
 }
 
-std::unique_ptr<v7::Station> Driver::create_station()
+std::unique_ptr<v7::Station> Driver::create_station(v7::Transaction& tr)
 {
-    return unique_ptr<v7::Station>(new MySQLStation(conn));
+    return unique_ptr<v7::Station>(new MySQLStation(tr, conn));
 }
 
-std::unique_ptr<v7::LevTr> Driver::create_levtr()
+std::unique_ptr<v7::LevTr> Driver::create_levtr(v7::Transaction& tr)
 {
-    return unique_ptr<v7::LevTr>(new MySQLLevTr(conn));
+    return unique_ptr<v7::LevTr>(new MySQLLevTr(tr, conn));
 }
 
-std::unique_ptr<v7::StationData> Driver::create_station_data()
+std::unique_ptr<v7::StationData> Driver::create_station_data(v7::Transaction& tr)
 {
-    return unique_ptr<v7::StationData>(new MySQLStationData(conn));
+    return unique_ptr<v7::StationData>(new MySQLStationData(tr, conn));
 }
 
-std::unique_ptr<v7::Data> Driver::create_data()
+std::unique_ptr<v7::Data> Driver::create_data(v7::Transaction& tr)
 {
-    return unique_ptr<v7::Data>(new MySQLData(conn));
+    return unique_ptr<v7::Data>(new MySQLData(tr, conn));
 }
 
 void Driver::run_station_query(const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)> dest)
@@ -79,116 +79,6 @@ void Driver::run_station_query(const v7::StationQueryBuilder& qb, std::function<
         dest(station);
     });
 }
-
-void Driver::run_station_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var)> dest)
-{
-    if (qb.bind_in_ident)
-        throw error_unimplemented("binding in MySQL driver is not implemented");
-
-    dballe::Station station;
-    conn.exec_use(qb.sql_query, [&](const Row& row) {
-        wreport::Varcode code = row.as_int(5);
-        const char* value = row.as_cstring(7);
-        auto var = newvar(code, value);
-        if (qb.select_attrs)
-            values::Decoder::decode_attrs(row.as_blob(8), *var);
-
-        // Postprocessing filter of attr_filter
-        if (qb.attr_filter && !qb.match_attrs(*var))
-            return;
-
-        int id_station = row.as_int(0);
-        if (id_station != station.id)
-        {
-            station.id = id_station;
-            station.report = qb.tr->repinfo().get_rep_memo(row.as_int(1));
-            station.coords.lat = row.as_int(2);
-            station.coords.lon = row.as_int(3);
-            if (row.isnull(4))
-                station.ident.clear();
-            else
-                station.ident = row.as_string(4);
-        }
-
-        int id_data = row.as_int(6);
-
-        dest(station, id_data, move(var));
-    });
-}
-
-void Driver::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)> dest)
-{
-    if (qb.bind_in_ident)
-        throw error_unimplemented("binding in MySQL driver is not implemented");
-
-    dballe::Station station;
-    conn.exec_use(qb.sql_query, [&](const Row& row) {
-        wreport::Varcode code = row.as_int(6);
-        const char* value = row.as_cstring(9);
-        auto var = newvar(code, value);
-        if (qb.select_attrs)
-            values::Decoder::decode_attrs(row.as_blob(10), *var);
-
-        // Postprocessing filter of attr_filter
-        if (qb.attr_filter && !qb.match_attrs(*var))
-            return;
-
-        int id_station = row.as_int(0);
-        if (id_station != station.id)
-        {
-            station.id = id_station;
-            station.report = qb.tr->repinfo().get_rep_memo(row.as_int(1));
-            station.coords.lat = row.as_int(2);
-            station.coords.lon = row.as_int(3);
-            if (row.isnull(4))
-                station.ident.clear();
-            else
-                station.ident = row.as_string(4);
-        }
-
-        int id_levtr = row.as_int(5);
-        int id_data = row.as_int(7);
-        Datetime datetime = row.as_datetime(8);
-
-        dest(station, id_levtr, datetime, id_data, move(var));
-    });
-}
-
-void Driver::run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)> dest)
-{
-    if (qb.bind_in_ident)
-        throw error_unimplemented("binding in MySQL driver is not implemented");
-
-    dballe::Station station;
-    conn.exec_use(qb.sql_query, [&](const Row& row) {
-        int id_station = row.as_int(0);
-        if (id_station != station.id)
-        {
-            station.id = id_station;
-            station.report = qb.tr->repinfo().get_rep_memo(row.as_int(1));
-            station.coords.lat = row.as_int(2);
-            station.coords.lon = row.as_int(3);
-            if (row.isnull(4))
-                station.ident.clear();
-            else
-                station.ident = row.as_string(4);
-        }
-
-        int id_levtr = row.as_int(5);
-        wreport::Varcode code = row.as_int(6);
-
-        size_t count = 0;
-        DatetimeRange datetime;
-        if (qb.select_summary_details)
-        {
-            count = row.as_int(7);
-            datetime = DatetimeRange(row.as_datetime(8), row.as_datetime(9));
-        }
-
-        dest(station, id_levtr, code, datetime, count);
-    });
-}
-
 
 void Driver::create_tables_v7()
 {

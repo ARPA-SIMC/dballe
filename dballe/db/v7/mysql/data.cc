@@ -1,7 +1,9 @@
 #include "data.h"
 #include "dballe/db/v7/transaction.h"
+#include "dballe/db/v7/trace.h"
 #include "dballe/db/v7/batch.h"
 #include "dballe/db/v7/qbuilder.h"
+#include "dballe/db/v7/repinfo.h"
 #include "dballe/sql/mysql.h"
 #include "dballe/sql/querybuf.h"
 #include "dballe/record.h"
@@ -25,8 +27,8 @@ template class MySQLDataCommon<StationData>;
 template class MySQLDataCommon<Data>;
 
 template<typename Parent>
-MySQLDataCommon<Parent>::MySQLDataCommon(dballe::sql::MySQLConnection& conn)
-    : conn(conn)
+MySQLDataCommon<Parent>::MySQLDataCommon(v7::Transaction& tr, dballe::sql::MySQLConnection& conn)
+    : Parent(tr), conn(conn)
 {
 }
 
@@ -43,6 +45,7 @@ void MySQLDataCommon<Parent>::read_attrs(int id_data, std::function<void(std::un
     Values::decode(
             conn.exec_store(query).expect_one_result().as_blob(0),
             dest);
+    if (this->tr.trace) this->tr.trace->trace_select(query, 1);
 }
 
 template<typename Parent>
@@ -53,6 +56,7 @@ void MySQLDataCommon<Parent>::write_attrs(int id_data, const Values& values)
     Querybuf qb;
     qb.appendf("UPDATE %s SET attrs=X'%s' WHERE id=%d", Parent::table_name, escaped.c_str(), id_data);
     conn.exec_no_data(qb);
+    if (this->tr.trace) this->tr.trace->trace_update(qb, 1);
 }
 
 template<typename Parent>
@@ -61,6 +65,7 @@ void MySQLDataCommon<Parent>::remove_all_attrs(int id_data)
     char query[128];
     snprintf(query, 128, "UPDATE %s SET attrs=NULL WHERE id=%d", Parent::table_name, id_data);
     conn.exec_no_data(query);
+    if (this->tr.trace) this->tr.trace->trace_update(query, 1);
 }
 
 namespace {
@@ -92,8 +97,10 @@ void MySQLDataCommon<Parent>::remove(const v7::IdQueryBuilder& qb)
     dq.start_list(",");
     bool found = false;
     auto res = conn.exec_store(qb.sql_query);
+    if (this->tr.trace) this->tr.trace->trace_select(qb.sql_query);
     while (auto row = res.fetch())
     {
+        if (this->tr.trace) this->tr.trace->trace_select_row();
         if (attr_filter.get() && !match_attrs(*attr_filter, row.as_blob(1))) return;
 
         // Note: if the query gets too long, we can split this in more DELETE
@@ -103,7 +110,10 @@ void MySQLDataCommon<Parent>::remove(const v7::IdQueryBuilder& qb)
     }
     dq.append(")");
     if (found)
+    {
         conn.exec_no_data(dq);
+        if (this->tr.trace) this->tr.trace->trace_delete(dq);
+    }
 }
 
 template<typename Parent>
@@ -124,12 +134,13 @@ void MySQLDataCommon<Parent>::update(dballe::db::v7::Transaction& t, std::vector
         else
             qb.appendf("UPDATE %s SET value='%s', attrs=NULL WHERE id=%d", Parent::table_name, escaped_value.c_str(), v.id);
         conn.exec_no_data(qb);
+        if (this->tr.trace) this->tr.trace->trace_update(qb, 1);
     }
 }
 
 
-MySQLStationData::MySQLStationData(MySQLConnection& conn)
-    : MySQLDataCommon(conn)
+MySQLStationData::MySQLStationData(v7::Transaction& tr, MySQLConnection& conn)
+    : MySQLDataCommon(tr, conn)
 {
 }
 
@@ -138,8 +149,10 @@ void MySQLStationData::query(int id_station, std::function<void(int id, wreport:
     char strquery[128];
     snprintf(strquery, 128, "SELECT id, code FROM station_data WHERE id_station=%d", id_station);
     auto res = conn.exec_store(strquery);
+    if (tr.trace) tr.trace->trace_select(strquery);
     while (auto row = res.fetch())
     {
+        if (tr.trace) tr.trace->trace_select_row();
         int id = row.as_int(0);
         wreport::Varcode code = row.as_int(1);
         dest(id, code);
@@ -176,7 +189,46 @@ void MySQLStationData::insert(dballe::db::v7::Transaction& t, int id_station, st
         conn.exec_no_data(qb);
 
         v->id = conn.get_last_insert_id();
+        if (tr.trace) tr.trace->trace_insert(qb, 1);
     }
+}
+
+void MySQLStationData::run_station_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var)> dest)
+{
+    if (qb.bind_in_ident)
+        throw error_unimplemented("binding in MySQL driver is not implemented");
+
+    dballe::Station station;
+    if (tr.trace) tr.trace->trace_select(qb.sql_query);
+    conn.exec_use(qb.sql_query, [&](const sql::mysql::Row& row) {
+        if (tr.trace) tr.trace->trace_select_row();
+        wreport::Varcode code = row.as_int(5);
+        const char* value = row.as_cstring(7);
+        auto var = newvar(code, value);
+        if (qb.select_attrs)
+            values::Decoder::decode_attrs(row.as_blob(8), *var);
+
+        // Postprocessing filter of attr_filter
+        if (qb.attr_filter && !qb.match_attrs(*var))
+            return;
+
+        int id_station = row.as_int(0);
+        if (id_station != station.id)
+        {
+            station.id = id_station;
+            station.report = tr.repinfo().get_rep_memo(row.as_int(1));
+            station.coords.lat = row.as_int(2);
+            station.coords.lon = row.as_int(3);
+            if (row.isnull(4))
+                station.ident.clear();
+            else
+                station.ident = row.as_string(4);
+        }
+
+        int id_data = row.as_int(6);
+
+        dest(station, id_data, move(var));
+    });
 }
 
 void MySQLStationData::dump(FILE* out)
@@ -194,8 +246,8 @@ void MySQLStationData::dump(FILE* out)
 }
 
 
-MySQLData::MySQLData(MySQLConnection& conn)
-    : MySQLDataCommon(conn)
+MySQLData::MySQLData(v7::Transaction& tr, MySQLConnection& conn)
+    : MySQLDataCommon(tr, conn)
 {
 }
 
@@ -205,9 +257,11 @@ void MySQLData::query(int id_station, const Datetime& datetime, std::function<vo
     char strquery[128];
     snprintf(strquery, 128, "SELECT id, id_levtr, code FROM data WHERE id_station=%d AND datetime='%04d-%02d-%02d %02d:%02d:%02d'",
             id_station, dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
+    if (tr.trace) tr.trace->trace_select(strquery);
     auto res = conn.exec_store(strquery);
     while (auto row = res.fetch())
     {
+        if (tr.trace) tr.trace->trace_select_row();
         int id_levtr = row.as_int(1);
         wreport::Varcode code = row.as_int(2);
         int id = row.as_int(0);
@@ -246,10 +300,88 @@ void MySQLData::insert(dballe::db::v7::Transaction& t, int id_station, const Dat
                     (int)v->var->code(),
                     escaped_value.c_str());
         conn.exec_no_data(qb);
-
         v->id = conn.get_last_insert_id();
+        if (tr.trace) tr.trace->trace_insert(qb, 1);
     }
 }
+
+void MySQLData::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)> dest)
+{
+    if (qb.bind_in_ident)
+        throw error_unimplemented("binding in MySQL driver is not implemented");
+
+    dballe::Station station;
+    if (tr.trace) tr.trace->trace_select(qb.sql_query);
+    conn.exec_use(qb.sql_query, [&](const sql::mysql::Row& row) {
+        if (tr.trace) tr.trace->trace_select_row();
+        wreport::Varcode code = row.as_int(6);
+        const char* value = row.as_cstring(9);
+        auto var = newvar(code, value);
+        if (qb.select_attrs)
+            values::Decoder::decode_attrs(row.as_blob(10), *var);
+
+        // Postprocessing filter of attr_filter
+        if (qb.attr_filter && !qb.match_attrs(*var))
+            return;
+
+        int id_station = row.as_int(0);
+        if (id_station != station.id)
+        {
+            station.id = id_station;
+            station.report = tr.repinfo().get_rep_memo(row.as_int(1));
+            station.coords.lat = row.as_int(2);
+            station.coords.lon = row.as_int(3);
+            if (row.isnull(4))
+                station.ident.clear();
+            else
+                station.ident = row.as_string(4);
+        }
+
+        int id_levtr = row.as_int(5);
+        int id_data = row.as_int(7);
+        Datetime datetime = row.as_datetime(8);
+
+        dest(station, id_levtr, datetime, id_data, move(var));
+    });
+}
+
+void MySQLData::run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)> dest)
+{
+    if (qb.bind_in_ident)
+        throw error_unimplemented("binding in MySQL driver is not implemented");
+
+    dballe::Station station;
+    if (tr.trace) tr.trace->trace_select(qb.sql_query);
+    conn.exec_use(qb.sql_query, [&](const sql::mysql::Row& row) {
+        if (tr.trace) tr.trace->trace_select_row();
+        int id_station = row.as_int(0);
+        if (id_station != station.id)
+        {
+            station.id = id_station;
+            station.report = tr.repinfo().get_rep_memo(row.as_int(1));
+            station.coords.lat = row.as_int(2);
+            station.coords.lon = row.as_int(3);
+            if (row.isnull(4))
+                station.ident.clear();
+            else
+                station.ident = row.as_string(4);
+        }
+
+        int id_levtr = row.as_int(5);
+        wreport::Varcode code = row.as_int(6);
+
+        size_t count = 0;
+        DatetimeRange datetime;
+        if (qb.select_summary_details)
+        {
+            count = row.as_int(7);
+            datetime = DatetimeRange(row.as_datetime(8), row.as_datetime(9));
+        }
+
+        dest(station, id_levtr, code, datetime, count);
+    });
+}
+
 
 void MySQLData::dump(FILE* out)
 {

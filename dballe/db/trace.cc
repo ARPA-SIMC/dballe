@@ -223,6 +223,11 @@ Trace::Tracer Trace::trace_export_msgs(const Query& query)
     return res;
 }
 
+static bool _in_test_suite = false;
+
+bool Trace::in_test_suite() { return _in_test_suite; }
+void Trace::set_in_test_suite() { _in_test_suite = true; }
+
 
 }
 }

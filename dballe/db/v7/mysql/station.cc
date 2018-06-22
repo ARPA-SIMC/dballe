@@ -1,5 +1,6 @@
 #include "station.h"
 #include "dballe/db/v7/transaction.h"
+#include "dballe/db/v7/trace.h"
 #include "dballe/db/v7/db.h"
 #include "dballe/db/v7/repinfo.h"
 #include "dballe/sql/mysql.h"
@@ -21,8 +22,8 @@ namespace db {
 namespace v7 {
 namespace mysql {
 
-MySQLStation::MySQLStation(MySQLConnection& conn)
-    : conn(conn)
+MySQLStation::MySQLStation(v7::Transaction& tr, MySQLConnection& conn)
+    : v7::Station(tr), conn(conn)
 {
 }
 
@@ -30,7 +31,7 @@ MySQLStation::~MySQLStation()
 {
 }
 
-int MySQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st)
+int MySQLStation::maybe_get_id(const dballe::Station& st)
 {
     int rep = tr.repinfo().obtain_id(st.report.c_str());
 
@@ -45,6 +46,7 @@ int MySQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st)
                 rep, st.coords.lat, st.coords.lon);
     }
     auto res = conn.exec_store(qb);
+    if (tr.trace) tr.trace->trace_select(qb, res.rowcount());
     switch (res.rowcount())
     {
         case 0:
@@ -56,7 +58,7 @@ int MySQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st)
     }
 }
 
-int MySQLStation::insert_new(v7::Transaction& tr, const dballe::Station& desc)
+int MySQLStation::insert_new(const dballe::Station& desc)
 {
     // If no station was found, insert a new one
     int rep = tr.repinfo().get_id(desc.report.c_str());
@@ -73,7 +75,7 @@ int MySQLStation::insert_new(v7::Transaction& tr, const dballe::Station& desc)
         )", rep, desc.coords.lat, desc.coords.lon);
     }
     conn.exec_no_data(qb);
-
+    if (tr.trace) tr.trace->trace_insert(qb, 1);
     return conn.get_last_insert_id();
 }
 
@@ -124,8 +126,10 @@ void MySQLStation::get_station_vars(int id_station, std::function<void(std::uniq
     TRACE("get_station_vars Performing query: %s\n", qb.c_str());
 
     auto res = conn.exec_store(qb);
+    if (tr.trace) tr.trace->trace_select(qb);
     while (auto row = res.fetch())
     {
+        if (tr.trace) tr.trace->trace_select_row();
         Varcode code = row.as_int(0);
         TRACE("get_station_vars Got %d%02d%03d %s\n", WR_VAR_FXY(code), row.as_cstring(1));
 
@@ -159,9 +163,13 @@ void MySQLStation::add_station_vars(int id_station, Record& rec)
          WHERE d.id_station=%d
     )", id_station);
 
+    if (tr.trace) tr.trace->trace_select(qb);
     auto res = conn.exec_store(qb);
     while (auto row = res.fetch())
+    {
+        if (tr.trace) tr.trace->trace_select_row();
         rec.set(newvar((wreport::Varcode)row.as_int(0), row.as_cstring(1)));
+    }
 }
 
 }

@@ -2,6 +2,7 @@
 #include "dballe/db/v7/transaction.h"
 #include "dballe/db/v7/db.h"
 #include "dballe/db/v7/repinfo.h"
+#include "dballe/db/v7/trace.h"
 #include "dballe/sql/sqlite.h"
 #include "dballe/record.h"
 #include "dballe/core/var.h"
@@ -19,17 +20,17 @@ namespace db {
 namespace v7 {
 namespace sqlite {
 
-SQLiteStation::SQLiteStation(SQLiteConnection& conn)
-    : conn(conn)
-{
-    const char* select_fixed_query =
+static const char* select_fixed_query =
         "SELECT id FROM station WHERE rep=? AND lat=? AND lon=? AND ident IS NULL";
-    const char* select_mobile_query =
+static const char* select_mobile_query =
         "SELECT id FROM station WHERE rep=? AND lat=? AND lon=? AND ident=?";
-    const char* insert_query =
+static const char* insert_query =
         "INSERT INTO station (rep, lat, lon, ident)"
         " VALUES (?, ?, ?, ?);";
 
+SQLiteStation::SQLiteStation(v7::Transaction& tr, SQLiteConnection& conn)
+    : v7::Station(tr), conn(conn)
+{
     // Create the statement for select fixed
     sfstm = conn.sqlitestatement(select_fixed_query).release();
 
@@ -47,7 +48,7 @@ SQLiteStation::~SQLiteStation()
     delete istm;
 }
 
-int SQLiteStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st)
+int SQLiteStation::maybe_get_id(const dballe::Station& st)
 {
     SQLiteStatement* s;
     int rep = tr.repinfo().obtain_id(st.report.c_str());
@@ -58,15 +59,18 @@ int SQLiteStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st)
         smstm->bind_val(3, st.coords.lon);
         smstm->bind_val(4, st.ident.get());
         s = smstm;
+        if (tr.trace) tr.trace->trace_select(select_mobile_query);
     } else {
         sfstm->bind_val(1, rep);
         sfstm->bind_val(2, st.coords.lat);
         sfstm->bind_val(3, st.coords.lon);
         s = sfstm;
+        if (tr.trace) tr.trace->trace_select(select_fixed_query);
     }
     bool found = false;
     int id;
     s->execute_one([&]() {
+        if (tr.trace) tr.trace->trace_select_row();
         found = true;
         id = s->column_int(0);
     });
@@ -76,7 +80,7 @@ int SQLiteStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st)
         return MISSING_INT;
 }
 
-int SQLiteStation::insert_new(v7::Transaction& tr, const dballe::Station& desc)
+int SQLiteStation::insert_new(const dballe::Station& desc)
 {
     // If no station was found, insert a new one
     istm->bind_val(1, tr.repinfo().get_id(desc.report.c_str()));
@@ -87,7 +91,7 @@ int SQLiteStation::insert_new(v7::Transaction& tr, const dballe::Station& desc)
     else
         istm->bind_null_val(4);
     istm->execute();
-
+    if (tr.trace) tr.trace->trace_insert(insert_query, 1);
     return conn.get_last_insert_id();
 }
 
@@ -106,7 +110,9 @@ void SQLiteStation::get_station_vars(int id_station, std::function<void(std::uni
     TRACE("get_station_vars Performing query: %s with idst %d\n", query, id_station);
 
     // Retrieve results
+    if (tr.trace) tr.trace->trace_select(query);
     stm->execute([&]() {
+        if (tr.trace) tr.trace->trace_select_row();
         Varcode code = stm->column_int(0);
         TRACE("get_station_vars Got %d%02d%03d %s\n", WR_VAR_FXY(code), stm->column_string(1));
 
@@ -140,7 +146,9 @@ void SQLiteStation::add_station_vars(int id_station, Record& rec)
 
     auto stm = conn.sqlitestatement(query);
     stm->bind(id_station);
+    if (tr.trace) tr.trace->trace_select(query);
     stm->execute([&]() {
+        if (tr.trace) tr.trace->trace_select_row();
         rec.set(newvar((wreport::Varcode)stm->column_int(0), stm->column_string(1)));
     });
 }

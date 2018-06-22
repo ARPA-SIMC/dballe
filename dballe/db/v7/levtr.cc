@@ -8,6 +8,8 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
+LevTr::LevTr(v7::Transaction& tr) : tr(tr) {}
+
 LevTr::~LevTr() {}
 
 void LevTr::clear_cache()

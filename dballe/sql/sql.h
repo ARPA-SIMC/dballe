@@ -60,8 +60,6 @@ class Connection
 {
 protected:
     std::string url;
-    bool profile = false;
-    unsigned profile_query_count = 0;
 
 public:
     /**

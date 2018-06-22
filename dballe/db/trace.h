@@ -88,6 +88,9 @@ public:
     Tracer trace_query_summary(const Query& query);
     Tracer trace_export_msgs(const Query& query);
 
+    static bool in_test_suite();
+    static void set_in_test_suite();
+
     friend class TraceOp;
 };
 

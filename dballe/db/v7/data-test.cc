@@ -46,10 +46,10 @@ struct Fixture : EmptyTransactionFixture<V7DB>
         auto t = dynamic_pointer_cast<dballe::db::v7::Transaction>(db->transaction());
 
         // Insert a mobile station
-        sde1.id = wcallchecked(t->station().insert_new(*t, sde1));
+        sde1.id = wcallchecked(t->station().insert_new(sde1));
 
         // Insert a fixed station
-        sde2.id = wcallchecked(t->station().insert_new(*t, sde2));
+        sde2.id = wcallchecked(t->station().insert_new(sde2));
 
         // Insert a lev_tr
         lt1 = t->levtr().obtain_id(db::v7::LevTrEntry(Level(1, 2, 0, 3), Trange(4, 5, 6)));

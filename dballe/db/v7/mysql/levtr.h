@@ -3,6 +3,7 @@
 
 #include <dballe/db/db.h>
 #include <dballe/db/v7/levtr.h>
+#include <dballe/db/v7/fwd.h>
 #include <dballe/sql/fwd.h>
 #include <cstdio>
 #include <memory>
@@ -34,7 +35,7 @@ protected:
     void _dump(std::function<void(int, const Level&, const Trange&)> out) override;
 
 public:
-    MySQLLevTr(dballe::sql::MySQLConnection& conn);
+    MySQLLevTr(v7::Transaction& tr, dballe::sql::MySQLConnection& conn);
     MySQLLevTr(const LevTr&) = delete;
     MySQLLevTr(const LevTr&&) = delete;
     MySQLLevTr& operator=(const MySQLLevTr&) = delete;

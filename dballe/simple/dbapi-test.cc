@@ -1,6 +1,7 @@
 #include "dballe/db/tests.h"
 #include "dballe/db/v7/db.h"
 #include "dballe/db/v7/transaction.h"
+#include "dballe/db/v7/trace.h"
 #include "dbapi.h"
 #include "config.h"
 #include "msgapi.h"
@@ -799,6 +800,37 @@ this->add_method("issue52", [](Fixture& f) {
     wassert(actual(dbapi.messages_read_next()).istrue());
 
     // error: no year information found in message to import
+});
+
+this->add_method("perf", [](Fixture& f) {
+    // Test prendilo anaid
+    fortran::DbAPI api(f.tr, "write", "write", "write");
+    f.tr->reset_profile_counters();
+    const v7::ProfileTrace* trace = dynamic_cast<const v7::ProfileTrace*>(f.tr->trace);
+
+    // Run a prendilo
+    api.setd("lat", 44.5);
+    api.setd("lon", 11.5);
+    api.setc("rep_memo", "synop");
+    api.setdate(2013, 4, 25, 12, 0, 0);
+    api.setlevel(1, MISSING_INT, MISSING_INT, MISSING_INT);
+    api.settimerange(254, 0, 0);
+    api.setd("B10004", 100000.0);
+    api.prendilo(); // Pressure at ground level
+    wassert(actual(trace->profile_count_select) == 2);
+    wassert(actual(trace->profile_count_select_rows) == 0);
+    wassert(actual(trace->profile_count_insert) == 3);
+    wassert(actual(trace->profile_count_insert_rows) == 3);
+
+    // Query it back
+    api.unsetall();
+    api.setd("lat", 44.5);
+    api.setd("lon", 11.5);
+    api.setdate(2013, 4, 25, 12, 0, 0);
+    api.setc("var", "B10004");
+    wassert(actual(api.voglioquesto()) == 1);
+    wassert(actual(trace->profile_count_select) == 4);
+    wassert(actual(trace->profile_count_select_rows) == 2);
 });
 
 }

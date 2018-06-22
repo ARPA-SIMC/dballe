@@ -128,7 +128,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
     // Retrieve results, buffering them locally to avoid performing concurrent
     // queries
     std::vector<DataRow> results;
-    db->driver().run_data_query(qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+    data().run_data_query(qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
         results.emplace_back(station, id_levtr, datetime, id_data, move(var));
     });
 

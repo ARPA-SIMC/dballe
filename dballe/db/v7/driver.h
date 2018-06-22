@@ -26,39 +26,24 @@ public:
     virtual ~Driver();
 
     /// Precompiled queries to manipulate the repinfo table
-    virtual std::unique_ptr<v7::Repinfo> create_repinfo() = 0;
+    virtual std::unique_ptr<v7::Repinfo> create_repinfo(v7::Transaction& tr) = 0;
 
     /// Precompiled queries to manipulate the station table
-    virtual std::unique_ptr<v7::Station> create_station() = 0;
+    virtual std::unique_ptr<v7::Station> create_station(v7::Transaction& tr) = 0;
 
     /// Precompiled queries to manipulate the levtr table
-    virtual std::unique_ptr<v7::LevTr> create_levtr() = 0;
+    virtual std::unique_ptr<v7::LevTr> create_levtr(v7::Transaction& tr) = 0;
 
     /// Precompiled queries to manipulate the data table
-    virtual std::unique_ptr<v7::StationData> create_station_data() = 0;
+    virtual std::unique_ptr<v7::StationData> create_station_data(v7::Transaction& tr) = 0;
 
     /// Precompiled queries to manipulate the data table
-    virtual std::unique_ptr<v7::Data> create_data() = 0;
+    virtual std::unique_ptr<v7::Data> create_data(v7::Transaction& tr) = 0;
 
     /**
      * Run a station query, iterating on the resulting stations
      */
     virtual void run_station_query(const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station& station)>) = 0;
-
-    /**
-     * Run a station data query, iterating on the resulting variables
-     */
-    virtual void run_station_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var)>) = 0;
-
-    /**
-     * Run a data query, iterating on the resulting variables
-     */
-    virtual void run_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)>) = 0;
-
-    /**
-     * Run a summary query, iterating on the resulting variables
-     */
-    virtual void run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)>) = 0;
 
     /// Create all missing tables for a DB with the given format
     void create_tables(db::Format format);

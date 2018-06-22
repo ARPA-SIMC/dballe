@@ -3,6 +3,7 @@
 
 #include <dballe/core/defs.h>
 #include <dballe/db/v7/cache.h>
+#include <dballe/db/v7/fwd.h>
 #include <memory>
 #include <set>
 #include <cstdio>
@@ -25,10 +26,12 @@ namespace v7 {
 struct LevTr
 {
 protected:
+    v7::Transaction& tr;
     LevTrCache cache;
     virtual void _dump(std::function<void(int, const Level&, const Trange&)> out) = 0;
 
 public:
+    LevTr(v7::Transaction& tr);
     virtual ~LevTr();
 
     /**

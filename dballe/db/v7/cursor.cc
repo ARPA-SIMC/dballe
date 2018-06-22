@@ -249,7 +249,7 @@ struct StationData : public BaseData<CursorStationData, StationDataResult>
     void load(const DataQueryBuilder& qb)
     {
         results.clear();
-        this->tr->db->driver().run_station_data_query(qb, [&](const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var) {
+        this->tr->station_data().run_station_data_query(qb, [&](const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var) {
             results.emplace_back(station, id_data, var.release());
         });
         at_start = true;
@@ -297,7 +297,7 @@ struct Data : public BaseData<CursorData, DataResult>
     {
         results.clear();
         set<int> ids;
-        this->tr->db->driver().run_data_query(qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+        this->tr->data().run_data_query(qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
             results.emplace_back(station, id_levtr, datetime, id_data, var.release());
             ids.insert(id_levtr);
         });
@@ -369,7 +369,7 @@ struct Best : public Data
     {
         results.clear();
         set<int> ids;
-        this->tr->db->driver().run_data_query(qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+        this->tr->data().run_data_query(qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
             if (add_to_results(station, id_levtr, datetime, id_data, move(var)))
                 ids.insert(id_levtr);
         });
@@ -451,7 +451,7 @@ struct Summary : public VectorBase<CursorSummary, SummaryResult>
     {
         results.clear();
         set<int> ids;
-        this->tr->db->driver().run_summary_query(qb, [&](const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t count) {
+        this->tr->data().run_summary_query(qb, [&](const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t count) {
             results.emplace_back(station, id_levtr, code, datetime, count);
             ids.insert(id_levtr);
         });

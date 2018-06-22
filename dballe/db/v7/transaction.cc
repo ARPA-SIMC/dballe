@@ -6,6 +6,7 @@
 #include "station.h"
 #include "repinfo.h"
 #include "batch.h"
+#include "trace.h"
 #include "dballe/core/query.h"
 #include "dballe/sql/sql.h"
 #include <cassert>
@@ -21,11 +22,16 @@ namespace v7 {
 Transaction::Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Transaction> sql_transaction)
     : db(db), sql_transaction(sql_transaction.release()), batch(*this)
 {
-    m_repinfo = db->driver().create_repinfo().release();
-    m_station = db->driver().create_station().release();
-    m_levtr = db->driver().create_levtr().release();
-    m_station_data = db->driver().create_station_data().release();
-    m_data = db->driver().create_data().release();
+    m_repinfo = db->driver().create_repinfo(*this).release();
+    m_station = db->driver().create_station(*this).release();
+    m_levtr = db->driver().create_levtr(*this).release();
+    m_station_data = db->driver().create_station_data(*this).release();
+    m_data = db->driver().create_data(*this).release();
+
+    if (getenv("DBA_PROFILE") != nullptr)
+        trace = new ProfileTrace;
+    else if (db::Trace::in_test_suite())
+        trace = new QuietProfileTrace;
 }
 
 Transaction::~Transaction()
@@ -37,6 +43,17 @@ Transaction::~Transaction()
     delete m_station;
     delete m_repinfo;
     delete sql_transaction;
+    delete trace;
+}
+
+void Transaction::print_profile_counters()
+{
+    if (trace) trace->print(stderr);
+}
+
+void Transaction::reset_profile_counters()
+{
+    if (trace) trace->reset();
 }
 
 v7::Repinfo& Transaction::repinfo()
@@ -70,6 +87,7 @@ void Transaction::commit()
     sql_transaction->commit();
     clear_cached_state();
     fired = true;
+    print_profile_counters();
 }
 
 void Transaction::rollback()
@@ -78,6 +96,7 @@ void Transaction::rollback()
     sql_transaction->rollback();
     clear_cached_state();
     fired = true;
+    print_profile_counters();
 }
 
 void Transaction::clear_cached_state()

@@ -3,6 +3,8 @@
 #include "dballe/msg/msg.h"
 #include "dballe/sql/querybuf.h"
 #include "dballe/sql/postgresql.h"
+#include "dballe/db/v7/transaction.h"
+#include "dballe/db/v7/trace.h"
 #include <map>
 #include <sstream>
 #include <cstring>
@@ -37,8 +39,8 @@ Trange to_trange(const dballe::sql::postgresql::Result& res, unsigned row, int f
 
 }
 
-PostgreSQLLevTr::PostgreSQLLevTr(PostgreSQLConnection& conn)
-    : conn(conn)
+PostgreSQLLevTr::PostgreSQLLevTr(v7::Transaction& tr, PostgreSQLConnection& conn)
+    : v7::LevTr(tr), conn(conn)
 {
     conn.prepare("v7_levtr_select_id", R"(
         SELECT id FROM levtr WHERE ltype1=$1::int4 AND l1=$2::int4 AND ltype2=$3::int4 AND l2=$4::int4
@@ -72,6 +74,7 @@ void PostgreSQLLevTr::prefetch_ids(const std::set<int>& ids)
         qb.append("SELECT id, ltype1, l1, ltype2, l2, pind, p1, p2 FROM levtr");
 
     auto res = conn.exec(qb);
+    if (tr.trace) tr.trace->trace_select(qb, res.rowcount());
     for (unsigned row = 0; row < res.rowcount(); ++row)
         cache.insert(unique_ptr<LevTrEntry>(new LevTrEntry(
                     res.get_int4(row, 0), to_level(res, row, 1), to_trange(res, row, 5))));
@@ -84,6 +87,7 @@ const LevTrEntry* PostgreSQLLevTr::lookup_id(int id)
     if (e) return e;
 
     auto res = conn.exec_prepared("v7_levtr_select_data", id);
+    if (tr.trace) tr.trace->trace_select("v7_levtr_select_data", res.rowcount());
     switch (res.rowcount())
     {
         case 0: error_notfound::throwf("levtr with id %d not found in the database", id);
@@ -101,6 +105,7 @@ int PostgreSQLLevTr::obtain_id(const LevTrEntry& desc)
     Result res = conn.exec_prepared("v7_levtr_select_id",
             desc.level.ltype1, desc.level.l1, desc.level.ltype2, desc.level.l2,
             desc.trange.pind, desc.trange.p1, desc.trange.p2);
+    if (tr.trace) tr.trace->trace_select("v7_levtr_select_id", res.rowcount());
     switch (res.rowcount())
     {
         case 0:
@@ -110,6 +115,7 @@ int PostgreSQLLevTr::obtain_id(const LevTrEntry& desc)
                         desc.trange.pind, desc.trange.p1, desc.trange.p2);
             id = res.get_int4(0, 0);
             cache.insert(desc, id);
+            if (tr.trace) tr.trace->trace_insert("v7_levtr_insert", 1);
             return id;
         }
         case 1:

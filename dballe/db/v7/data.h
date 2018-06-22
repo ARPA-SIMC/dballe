@@ -2,6 +2,7 @@
 #define DBALLE_DB_V7_DATAV7_H
 
 #include <dballe/core/defs.h>
+#include <dballe/core/values.h>
 #include <dballe/sql/fwd.h>
 #include <dballe/db/defs.h>
 #include <dballe/db/v7/fwd.h>
@@ -26,6 +27,8 @@ protected:
     typedef typename Traits::BatchValue BatchValue;
     static const char* table_name;
 
+    v7::Transaction& tr;
+
     /**
      * Load attributes from the database into a Values
      */
@@ -42,6 +45,7 @@ protected:
     virtual void remove_all_attrs(int id_data) = 0;
 
 public:
+    DataCommon(v7::Transaction& tr) : tr(tr) {}
     virtual ~DataCommon() {}
 
     /**
@@ -124,20 +128,39 @@ extern template class DataCommon<DataTraits>;
 
 struct StationData : public DataCommon<StationDataTraits>
 {
+    using DataCommon<StationDataTraits>::DataCommon;
+
     /// Bulk variable insert
     virtual void insert(dballe::db::v7::Transaction& t, int id_station, std::vector<batch::StationDatum>& vars, bool with_attrs) = 0;
 
     /// Query contents of the data table
     virtual void query(int id_station, std::function<void(int id, wreport::Varcode code)> dest) = 0;
+
+    /**
+     * Run a station data query, iterating on the resulting variables
+     */
+    virtual void run_station_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var)>) = 0;
 };
 
 struct Data : public DataCommon<DataTraits>
 {
+    using DataCommon<DataTraits>::DataCommon;
+
     /// Bulk variable insert
     virtual void insert(dballe::db::v7::Transaction& t, int id_station, const Datetime& datetime, std::vector<batch::MeasuredDatum>& vars, bool with_attrs) = 0;
 
     /// Query contents of the data table
     virtual void query(int id_station, const Datetime& datetime, std::function<void(int id, int id_levtr, wreport::Varcode code)> dest) = 0;
+
+    /**
+     * Run a data query, iterating on the resulting variables
+     */
+    virtual void run_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)>) = 0;
+
+    /**
+     * Run a summary query, iterating on the resulting variables
+     */
+    virtual void run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)>) = 0;
 };
 
 }

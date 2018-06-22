@@ -27,6 +27,7 @@ protected:
     v7::Data* m_data = nullptr;
 
     void add_msg_to_batch(const Message& message, const char* repmemo, int flags);
+    void print_profile_counters();
 
 public:
     typedef v7::DB DB;
@@ -38,6 +39,8 @@ public:
     bool fired = false;
     /// Batch importer
     v7::Batch batch;
+    /// Query-level tracer
+    v7::Trace* trace = nullptr;
 
     Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Transaction> sql_transaction);
     Transaction(const Transaction&) = delete;
@@ -45,6 +48,8 @@ public:
     Transaction& operator=(const Transaction&) = delete;
     Transaction& operator=(Transaction&&) = delete;
     ~Transaction();
+
+    void reset_profile_counters();
 
     /// Access the repinfo table
     v7::Repinfo& repinfo();
