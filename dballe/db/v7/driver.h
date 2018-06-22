@@ -40,11 +40,6 @@ public:
     /// Precompiled queries to manipulate the data table
     virtual std::unique_ptr<v7::Data> create_data(v7::Transaction& tr) = 0;
 
-    /**
-     * Run a station query, iterating on the resulting stations
-     */
-    virtual void run_station_query(const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station& station)>) = 0;
-
     /// Create all missing tables for a DB with the given format
     void create_tables(db::Format format);
 

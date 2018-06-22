@@ -24,6 +24,13 @@ struct StationDatum;
 struct MeasuredDatum;
 }
 
+namespace trace {
+struct Step;
+}
+
+template<typename Step=trace::Step>
+class Tracer;
+
 }
 }
 }

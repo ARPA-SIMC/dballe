@@ -2,6 +2,7 @@
 #define DBALLE_DB_V7_TRACE_H
 
 #include <dballe/fwd.h>
+#include <dballe/db/v7/fwd.h>
 #include <dballe/core/json.h>
 #include <sstream>
 #include <string>
@@ -75,7 +76,7 @@ public:
  * Smart pointer for trace::Step objects, which calls done() when going out of
  * scope
  */
-template<typename Step=trace::Step>
+template<typename Step>
 class Tracer
 {
 protected:

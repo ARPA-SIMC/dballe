@@ -3,6 +3,7 @@
 #include "dballe/db/v7/db.h"
 #include "dballe/db/v7/repinfo.h"
 #include "dballe/db/v7/trace.h"
+#include "dballe/db/v7/qbuilder.h"
 #include "dballe/sql/sqlite.h"
 #include "dballe/record.h"
 #include "dballe/core/var.h"
@@ -150,6 +151,28 @@ void SQLiteStation::add_station_vars(int id_station, Record& rec)
     stm->execute([&]() {
         if (tr.trace) tr.trace->trace_select_row();
         rec.set(newvar((wreport::Varcode)stm->column_int(0), stm->column_string(1)));
+    });
+}
+
+void SQLiteStation::run_station_query(const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)> dest)
+{
+    auto stm = conn.sqlitestatement(qb.sql_query);
+
+    if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
+
+    dballe::Station station;
+    stm->execute([&]() {
+        station.id = stm->column_int(0);
+        station.report = tr.repinfo().get_rep_memo(stm->column_int(1));
+        station.coords.lat = stm->column_int(2);
+        station.coords.lon = stm->column_int(3);
+
+        if (stm->column_isnull(4))
+            station.ident.clear();
+        else
+            station.ident = stm->column_string(4);
+
+        dest(station);
     });
 }
 

@@ -1,13 +1,13 @@
 #include "station.h"
 #include "dballe/db/v7/transaction.h"
 #include "dballe/db/v7/trace.h"
+#include "dballe/db/v7/qbuilder.h"
+#include "dballe/db/v7/db.h"
+#include "dballe/db/v7/repinfo.h"
 #include "dballe/sql/postgresql.h"
 #include "dballe/record.h"
 #include "dballe/core/var.h"
 #include "dballe/core/values.h"
-#include "dballe/db/v7/transaction.h"
-#include "dballe/db/v7/db.h"
-#include "dballe/db/v7/repinfo.h"
 #include <wreport/var.h>
 
 using namespace wreport;
@@ -111,6 +111,39 @@ void PostgreSQLStation::add_station_vars(int id_station, Record& rec)
     if (tr.trace) tr.trace->trace_select("v7_station_add_station_vars", res.rowcount());
     for (unsigned row = 0; row < res.rowcount(); ++row)
         rec.set(newvar((Varcode)res.get_int4(row, 0), res.get_string(row, 1)));
+}
+
+void PostgreSQLStation::run_station_query(const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)> dest)
+{
+    using namespace dballe::sql::postgresql;
+
+    // Start the query asynchronously
+    int res;
+    if (qb.bind_in_ident)
+    {
+        const char* args[1] = { qb.bind_in_ident };
+        res = PQsendQueryParams(conn, qb.sql_query.c_str(), 1, nullptr, args, nullptr, nullptr, 1);
+    } else {
+        res = PQsendQueryParams(conn, qb.sql_query.c_str(), 0, nullptr, nullptr, nullptr, nullptr, 1);
+    }
+    if (!res)
+        throw sql::error_postgresql(conn, "executing " + qb.sql_query);
+
+    dballe::Station station;
+    conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
+        for (unsigned row = 0; row < res.rowcount(); ++row)
+        {
+            station.id = res.get_int4(row, 0);
+            station.report = tr.repinfo().get_rep_memo(res.get_int4(row, 1));
+            station.coords.lat = res.get_int4(row, 2);
+            station.coords.lon = res.get_int4(row, 3);
+            if (res.is_null(row, 4))
+                station.ident.clear();
+            else
+                station.ident = res.get_string(row, 4);
+            dest(station);
+        }
+    });
 }
 
 void PostgreSQLStation::_dump(std::function<void(int, int, const Coords& coords, const char* ident)> out)

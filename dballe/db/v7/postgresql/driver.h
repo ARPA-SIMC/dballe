@@ -21,7 +21,6 @@ struct Driver : public v7::Driver
     std::unique_ptr<v7::LevTr> create_levtr(v7::Transaction& tr) override;
     std::unique_ptr<v7::Data> create_data(v7::Transaction& tr) override;
     std::unique_ptr<v7::StationData> create_station_data(v7::Transaction& tr) override;
-    void run_station_query(const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)>) override;
     void create_tables_v7() override;
     void delete_tables_v7() override;
     void vacuum_v7() override;

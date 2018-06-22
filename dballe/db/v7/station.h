@@ -2,6 +2,7 @@
 #define DBALLE_DB_V7_STATION_H
 
 #include <dballe/sql/fwd.h>
+#include <dballe/db/v7/fwd.h>
 #include <dballe/db/v7/cache.h>
 #include <memory>
 #include <cstdio>
@@ -46,6 +47,11 @@ public:
      * Returns the ID of the new station
      */
     virtual int insert_new(const dballe::Station& desc) = 0;
+
+    /**
+     * Run a station query, iterating on the resulting stations
+     */
+    virtual void run_station_query(const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station& station)>) = 0;
 
     /**
      * Dump the entire contents of the table to an output stream

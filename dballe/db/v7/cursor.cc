@@ -170,10 +170,10 @@ struct Stations : public VectorBase<CursorStation, StationResult>
 {
     using VectorBase::VectorBase;
 
-    void load(const StationQueryBuilder& qb)
+    void load(Tracer<>& trc, const StationQueryBuilder& qb)
     {
         results.clear();
-        this->tr->db->driver().run_station_query(qb, [&](const dballe::Station& desc) {
+        this->tr->station().run_station_query(qb, [&](const dballe::Station& desc) { // TODO: trace
             results.emplace_back(desc);
         });
         at_start = true;
@@ -464,7 +464,7 @@ struct Summary : public VectorBase<CursorSummary, SummaryResult>
 
 }
 
-unique_ptr<CursorStation> run_station_query(std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
+unique_ptr<CursorStation> run_station_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
 
@@ -479,7 +479,7 @@ unique_ptr<CursorStation> run_station_query(std::shared_ptr<v7::Transaction> tr,
 
     auto resptr = new Stations(tr, modifiers);
     unique_ptr<CursorStation> res(resptr);
-    resptr->load(qb);
+    resptr->load(trc, qb);
     return res;
 }
 

@@ -3,6 +3,7 @@
 #include "dballe/db/v7/trace.h"
 #include "dballe/db/v7/db.h"
 #include "dballe/db/v7/repinfo.h"
+#include "dballe/db/v7/qbuilder.h"
 #include "dballe/sql/mysql.h"
 #include "dballe/sql/querybuf.h"
 #include "dballe/record.h"
@@ -170,6 +171,27 @@ void MySQLStation::add_station_vars(int id_station, Record& rec)
         if (tr.trace) tr.trace->trace_select_row();
         rec.set(newvar((wreport::Varcode)row.as_int(0), row.as_cstring(1)));
     }
+}
+
+void MySQLStation::run_station_query(const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)> dest)
+{
+    if (qb.bind_in_ident)
+        throw error_unimplemented("binding in MySQL driver is not implemented");
+
+    dballe::Station station;
+    conn.exec_use(qb.sql_query, [&](const sql::mysql::Row& row) {
+        station.id = row.as_int(0);
+        station.report = tr.repinfo().get_rep_memo(row.as_int(1));
+        station.coords.lat = row.as_int(2);
+        station.coords.lon = row.as_int(3);
+
+        if (row.isnull(4))
+            station.ident.clear();
+        else
+            station.ident = row.as_string(4);
+
+        dest(station);
+    });
 }
 
 }

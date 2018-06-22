@@ -56,39 +56,6 @@ std::unique_ptr<v7::Data> Driver::create_data(v7::Transaction& tr)
     return unique_ptr<v7::Data>(new PostgreSQLData(tr, conn));
 }
 
-void Driver::run_station_query(const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)> dest)
-{
-    using namespace dballe::sql::postgresql;
-
-    // Start the query asynchronously
-    int res;
-    if (qb.bind_in_ident)
-    {
-        const char* args[1] = { qb.bind_in_ident };
-        res = PQsendQueryParams(conn, qb.sql_query.c_str(), 1, nullptr, args, nullptr, nullptr, 1);
-    } else {
-        res = PQsendQueryParams(conn, qb.sql_query.c_str(), 0, nullptr, nullptr, nullptr, nullptr, 1);
-    }
-    if (!res)
-        throw error_postgresql(conn, "executing " + qb.sql_query);
-
-    dballe::Station station;
-    conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
-        for (unsigned row = 0; row < res.rowcount(); ++row)
-        {
-            station.id = res.get_int4(row, 0);
-            station.report = qb.tr->repinfo().get_rep_memo(res.get_int4(row, 1));
-            station.coords.lat = res.get_int4(row, 2);
-            station.coords.lon = res.get_int4(row, 3);
-            if (res.is_null(row, 4))
-                station.ident.clear();
-            else
-                station.ident = res.get_string(row, 4);
-            dest(station);
-        }
-    });
-}
-
 void Driver::create_tables_v7()
 {
     conn.exec_no_data(R"(

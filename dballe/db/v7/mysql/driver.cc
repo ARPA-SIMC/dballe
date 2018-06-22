@@ -59,27 +59,6 @@ std::unique_ptr<v7::Data> Driver::create_data(v7::Transaction& tr)
     return unique_ptr<v7::Data>(new MySQLData(tr, conn));
 }
 
-void Driver::run_station_query(const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)> dest)
-{
-    if (qb.bind_in_ident)
-        throw error_unimplemented("binding in MySQL driver is not implemented");
-
-    dballe::Station station;
-    conn.exec_use(qb.sql_query, [&](const Row& row) {
-        station.id = row.as_int(0);
-        station.report = qb.tr->repinfo().get_rep_memo(row.as_int(1));
-        station.coords.lat = row.as_int(2);
-        station.coords.lon = row.as_int(3);
-
-        if (row.isnull(4))
-            station.ident.clear();
-        else
-            station.ident = row.as_string(4);
-
-        dest(station);
-    });
-}
-
 void Driver::create_tables_v7()
 {
     conn.exec_no_data(R"(

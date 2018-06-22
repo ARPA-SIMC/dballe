@@ -118,12 +118,12 @@ Transaction& Transaction::downcast(dballe::Transaction& transaction)
 void Transaction::remove_all()
 {
     auto trc = db->trace->trace_remove_all();
-    db->driver().remove_all_v7();
+    db->driver().remove_all_v7(); // TODO: pass trace step
     clear_cached_state();
 }
 
 void Transaction::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
-{
+{ // TODO: tracing
     batch::Station* st = batch.get_station(vals.info, station_can_add);
 
     // Add all the variables we find
@@ -141,7 +141,7 @@ void Transaction::insert_station_data(StationValues& vals, bool can_replace, boo
 }
 
 void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
-{
+{ // TODO: tracing
     if (vals.values.empty())
         throw error_notfound("no variables found in input record");
 
@@ -168,40 +168,40 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
 void Transaction::remove_station_data(const Query& query)
 {
     auto trc = db->trace->trace_remove_station_data(query);
-    cursor::run_delete_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), true, db->explain_queries);
+    cursor::run_delete_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), true, db->explain_queries); // TODO: tracing
 }
 
 void Transaction::remove(const Query& query)
 {
     auto trc = db->trace->trace_remove(query);
-    cursor::run_delete_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), false, db->explain_queries);
+    cursor::run_delete_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), false, db->explain_queries); // TODO: tracing
 }
 
 std::unique_ptr<db::CursorStation> Transaction::query_stations(const Query& query)
 {
     auto trc = db->trace->trace_query_stations(query);
-    auto res = cursor::run_station_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
+    auto res = cursor::run_station_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries); // TODO: tracing
     return move(res);
 }
 
 std::unique_ptr<db::CursorStationData> Transaction::query_station_data(const Query& query)
 {
     auto trc = db->trace->trace_query_station_data(query);
-    auto res = cursor::run_station_data_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
+    auto res = cursor::run_station_data_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries); // TODO: tracing
     return move(res);
 }
 
 std::unique_ptr<db::CursorData> Transaction::query_data(const Query& query)
 {
     auto trc = db->trace->trace_query_data(query);
-    auto res = cursor::run_data_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
+    auto res = cursor::run_data_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries); // TODO: tracing
     return move(res);
 }
 
 std::unique_ptr<db::CursorSummary> Transaction::query_summary(const Query& query)
 {
     auto tr = db->trace->trace_query_summary(query);
-    auto res = cursor::run_summary_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
+    auto res = cursor::run_summary_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries); // TODO: tracing
     return move(res);
 }
 
@@ -209,30 +209,30 @@ void Transaction::attr_query_station(int data_id, std::function<void(std::unique
 {
     // Create the query
     auto& d = station_data();
-    d.read_attrs(data_id, dest);
+    d.read_attrs(data_id, dest); // TODO: tracing
 }
 
 void Transaction::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
 {
     // Create the query
     auto& d = data();
-    d.read_attrs(data_id, dest);
+    d.read_attrs(data_id, dest); // TODO: tracing
 }
 
 void Transaction::attr_insert_station(int data_id, const Values& attrs)
 {
     auto& d = station_data();
-    d.merge_attrs(data_id, attrs);
+    d.merge_attrs(data_id, attrs); // TODO: tracing
 }
 
 void Transaction::attr_insert_data(int data_id, const Values& attrs)
 {
     auto& d = data();
-    d.merge_attrs(data_id, attrs);
+    d.merge_attrs(data_id, attrs); // TODO: tracing
 }
 
 void Transaction::attr_remove_station(int data_id, const db::AttrList& attrs)
-{
+{ // TODO: tracing
     if (attrs.empty())
     {
         // Delete all attributes
@@ -246,7 +246,7 @@ void Transaction::attr_remove_station(int data_id, const db::AttrList& attrs)
 }
 
 void Transaction::attr_remove_data(int data_id, const db::AttrList& attrs)
-{
+{ // TODO: tracing
     if (attrs.empty())
     {
         // Delete all attributes
@@ -260,7 +260,7 @@ void Transaction::attr_remove_data(int data_id, const db::AttrList& attrs)
 }
 
 void Transaction::update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated)
-{
+{ // TODO: tracing
     repinfo().update(repinfo_file, added, deleted, updated);
 }
 

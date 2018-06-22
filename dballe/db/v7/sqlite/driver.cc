@@ -58,28 +58,6 @@ std::unique_ptr<v7::Data> Driver::create_data(v7::Transaction& tr)
     return unique_ptr<v7::Data>(new SQLiteData(tr, conn));
 }
 
-void Driver::run_station_query(const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)> dest)
-{
-    auto stm = conn.sqlitestatement(qb.sql_query);
-
-    if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
-
-    dballe::Station station;
-    stm->execute([&]() {
-        station.id = stm->column_int(0);
-        station.report = qb.tr->repinfo().get_rep_memo(stm->column_int(1));
-        station.coords.lat = stm->column_int(2);
-        station.coords.lon = stm->column_int(3);
-
-        if (stm->column_isnull(4))
-            station.ident.clear();
-        else
-            station.ident = stm->column_string(4);
-
-        dest(station);
-    });
-}
-
 void Driver::create_tables_v7()
 {
     conn.exec(R"(

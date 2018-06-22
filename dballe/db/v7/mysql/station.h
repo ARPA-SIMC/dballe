@@ -39,6 +39,7 @@ public:
 
     void get_station_vars(int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
     void add_station_vars(int id_station, Record& rec) override;
+    void run_station_query(const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)>) override;
 };
 
 }
