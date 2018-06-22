@@ -173,7 +173,7 @@ struct Stations : public VectorBase<CursorStation, StationResult>
     void load(Tracer<>& trc, const StationQueryBuilder& qb)
     {
         results.clear();
-        this->tr->station().run_station_query(qb, [&](const dballe::Station& desc) { // TODO: trace
+        this->tr->station().run_station_query(trc, qb, [&](const dballe::Station& desc) {
             results.emplace_back(desc);
         });
         at_start = true;

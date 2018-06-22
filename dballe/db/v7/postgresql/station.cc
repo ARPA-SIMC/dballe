@@ -113,9 +113,10 @@ void PostgreSQLStation::add_station_vars(int id_station, Record& rec)
         rec.set(newvar((Varcode)res.get_int4(row, 0), res.get_string(row, 1)));
 }
 
-void PostgreSQLStation::run_station_query(const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)> dest)
+void PostgreSQLStation::run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)> dest)
 {
     using namespace dballe::sql::postgresql;
+    Tracer<> trc_sel(trc ? trc->trace_select(qb.sql_query) : nullptr);
 
     // Start the query asynchronously
     int res;
@@ -131,6 +132,7 @@ void PostgreSQLStation::run_station_query(const v7::StationQueryBuilder& qb, std
 
     dballe::Station station;
     conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
+        if (trc_sel) trc_sel->add_row(res.rowcount());
         for (unsigned row = 0; row < res.rowcount(); ++row)
         {
             station.id = res.get_int4(row, 0);

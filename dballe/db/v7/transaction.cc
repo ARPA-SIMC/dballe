@@ -20,7 +20,7 @@ namespace db {
 namespace v7 {
 
 Transaction::Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Transaction> sql_transaction)
-    : db(db), sql_transaction(sql_transaction.release()), batch(*this)
+    : db(db), sql_transaction(sql_transaction.release()), batch(*this), trc(db->trace->trace_transaction())
 {
     m_repinfo = db->driver().create_repinfo(*this).release();
     m_station = db->driver().create_station(*this).release();
@@ -179,8 +179,8 @@ void Transaction::remove(const Query& query)
 
 std::unique_ptr<db::CursorStation> Transaction::query_stations(const Query& query)
 {
-    auto trc = db->trace->trace_query_stations(query);
-    auto res = cursor::run_station_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries); // TODO: tracing
+    Tracer<> trc(this->trc ? this->trc->trace_query_stations(query) : nullptr);
+    auto res = cursor::run_station_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
     return move(res);
 }
 

@@ -41,6 +41,8 @@ public:
     v7::Batch batch;
     /// Query-level tracer
     v7::SQLTrace* trace = nullptr;
+    /// Tracing system
+    v7::Tracer<v7::trace::Transaction> trc;
 
     Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Transaction> sql_transaction);
     Transaction(const Transaction&) = delete;

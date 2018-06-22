@@ -49,6 +49,12 @@ unsigned Step::elapsed_usec() const
     return (end - start) * 1000000 / CLOCKS_PER_SEC;
 }
 
+
+Tracer<> Transaction::trace_query_stations(const Query& query)
+{
+    return Tracer<>(add_child(new trace::Step("query_stations", query_to_string(query))));
+}
+
 }
 
 void ProfileTrace::print(FILE* out)
@@ -196,7 +202,14 @@ Tracer<> CollectTrace::trace_connect(const std::string& url)
 Tracer<> CollectTrace::trace_reset(const char* repinfo_file)
 {
     steps.push_back(new trace::Step("reset", repinfo_file ? repinfo_file : ""));
-    return Tracer<>(steps.back());
+    return steps.back();
+}
+
+Tracer<trace::Transaction> CollectTrace::trace_transaction()
+{
+    trace::Transaction* res = new trace::Transaction;
+    steps.push_back(res);
+    return res;
 }
 
 Tracer<> CollectTrace::trace_remove_station_data(const Query& query)
@@ -220,12 +233,6 @@ Tracer<> CollectTrace::trace_remove_all()
 Tracer<> CollectTrace::trace_vacuum()
 {
     steps.push_back(new trace::Step("vacuum"));
-    return Tracer<>(steps.back());
-}
-
-Tracer<> CollectTrace::trace_query_stations(const Query& query)
-{
-    steps.push_back(new trace::Step("query_stations", query_to_string(query)));
     return Tracer<>(steps.back());
 }
 

@@ -51,7 +51,7 @@ public:
     /**
      * Run a station query, iterating on the resulting stations
      */
-    virtual void run_station_query(const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station& station)>) = 0;
+    virtual void run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station& station)>) = 0;
 
     /**
      * Dump the entire contents of the table to an output stream

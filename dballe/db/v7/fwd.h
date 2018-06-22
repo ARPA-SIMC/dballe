@@ -26,10 +26,37 @@ struct MeasuredDatum;
 
 namespace trace {
 struct Step;
+struct Transaction;
 }
 
+/**
+ * Smart pointer for trace::Step objects, which calls done() when going out of
+ * scope
+ */
 template<typename Step=trace::Step>
-class Tracer;
+class Tracer
+{
+protected:
+    Step* step;
+
+public:
+    Tracer(Step* step) : step(step) {}
+    Tracer(const Tracer&) = delete;
+    Tracer(Tracer&& o)
+        : step(o.step)
+    {
+        o.step = nullptr;
+    }
+    Tracer& operator=(const Tracer&) = delete;
+    Tracer& operator=(Tracer&&) = delete;
+    ~Tracer()
+    {
+        if (step) step->done();
+    }
+
+    Step* operator->() { return step; }
+    operator bool() const { return step; }
+};
 
 }
 }

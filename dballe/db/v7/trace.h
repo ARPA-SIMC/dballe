@@ -14,6 +14,14 @@ namespace v7 {
 
 namespace trace {
 
+struct Aggregate
+{
+    unsigned count = 0;
+    unsigned rows = 0;
+    clock_t ticks = 0;
+};
+
+
 /**
  * One operation being traced
  */
@@ -49,6 +57,36 @@ protected:
             sibling->add_sibling(step);
     }
 
+    Step* first_sibling(const std::string& name)
+    {
+        if (this->name == name) return this;
+        if (!sibling) return nullptr;
+        return sibling->first_sibling(name);
+    }
+
+    Step* last_sibling(const std::string& name, Step* last=nullptr)
+    {
+        if (this->name == name)
+        {
+            if (!sibling) return this;
+            return sibling->last_sibling(name, this);
+        }
+        if (!sibling) return last;
+        return sibling->last_sibling(name, last);
+    }
+
+    void _aggregate(const std::string& name, Aggregate& agg)
+    {
+        if (this->name == name)
+        {
+            ++agg.count;
+            agg.rows += rows;
+            agg.ticks += end - start;
+        }
+        if (sibling) sibling->_aggregate(name, agg);
+        if (child) child->_aggregate(name, agg);
+    }
+
 public:
     Step(const std::string& name);
     Step(const std::string& name, const std::string& detail);
@@ -57,8 +95,36 @@ public:
     void done();
     unsigned elapsed_usec() const;
 
+    // Remove all children accumulated so far
+    void clear()
+    {
+        delete child;
+        child = nullptr;
+    }
+
+    Aggregate aggregate(const std::string& name)
+    {
+        Aggregate res;
+        if (child) child->_aggregate(name, res);
+        return res;
+    }
+
+    Step* first_child(const std::string& name)
+    {
+        if (!child) return nullptr;
+        return child->first_sibling(name);
+    }
+
+    Step* last_child(const std::string& name)
+    {
+        if (!child) return nullptr;
+        return child->last_sibling(name);
+    }
+
+    void add_row(unsigned amount=1) { rows += amount; }
+
     template<typename T>
-    void add_child(T* step)
+    T* add_child(T* step)
     {
         if (!child)
         {
@@ -67,39 +133,27 @@ public:
         }
         else
             child->add_sibling(step);
+        return step;
     }
+
+    Step* trace_select(const std::string& query, unsigned rows=0)
+    {
+        Step* res = add_child(new Step("select", query));
+        res->rows = rows;
+        return res;
+    }
+};
+
+
+class Transaction : public Step
+{
+public:
+    Transaction() : Step("transaction") {}
+
+    Tracer<> trace_query_stations(const Query& query);
 };
 
 }
-
-/**
- * Smart pointer for trace::Step objects, which calls done() when going out of
- * scope
- */
-template<typename Step>
-class Tracer
-{
-protected:
-    Step* step;
-
-public:
-    Tracer(Step* step) : step(step) {}
-    Tracer(const Tracer&) = delete;
-    Tracer(Tracer&& o)
-        : step(o.step)
-    {
-        o.step = nullptr;
-    }
-    Tracer& operator=(const Tracer&) = delete;
-    Tracer& operator=(Tracer&&) = delete;
-    ~Tracer()
-    {
-        if (step) step->done();
-    }
-
-    Step* operator->() { return step; }
-    operator bool() const { return step; }
-};
 
 struct Trace
 {
@@ -107,11 +161,11 @@ struct Trace
 
     virtual Tracer<> trace_connect(const std::string& url) = 0;
     virtual Tracer<> trace_reset(const char* repinfo_file=0) = 0;
+    virtual Tracer<trace::Transaction> trace_transaction() = 0;
     virtual Tracer<> trace_remove_station_data(const Query& query) = 0;
     virtual Tracer<> trace_remove(const Query& query) = 0;
     virtual Tracer<> trace_remove_all() = 0;
     virtual Tracer<> trace_vacuum() = 0;
-    virtual Tracer<> trace_query_stations(const Query& query) = 0;
     virtual Tracer<> trace_query_station_data(const Query& query) = 0;
     virtual Tracer<> trace_query_data(const Query& query) = 0;
     virtual Tracer<> trace_query_summary(const Query& query) = 0;
@@ -125,11 +179,11 @@ struct NullTrace : public Trace
 {
     Tracer<> trace_connect(const std::string& url) override { return Tracer<>(nullptr); }
     Tracer<> trace_reset(const char* repinfo_file=0) override { return Tracer<>(nullptr); }
+    Tracer<trace::Transaction> trace_transaction() override { return Tracer<trace::Transaction>(nullptr); }
     Tracer<> trace_remove_station_data(const Query& query) override { return Tracer<>(nullptr); }
     Tracer<> trace_remove(const Query& query) override { return Tracer<>(nullptr); }
     Tracer<> trace_remove_all() override { return Tracer<>(nullptr); }
     Tracer<> trace_vacuum() override { return Tracer<>(nullptr); }
-    Tracer<> trace_query_stations(const Query& query) override { return Tracer<>(nullptr); }
     Tracer<> trace_query_station_data(const Query& query) override { return Tracer<>(nullptr); }
     Tracer<> trace_query_data(const Query& query) override { return Tracer<>(nullptr); }
     Tracer<> trace_query_summary(const Query& query) override { return Tracer<>(nullptr); }
@@ -182,11 +236,11 @@ public:
 
     Tracer<> trace_connect(const std::string& url) override;
     Tracer<> trace_reset(const char* repinfo_file=0) override;
+    Tracer<trace::Transaction> trace_transaction() override;
     Tracer<> trace_remove_station_data(const Query& query) override;
     Tracer<> trace_remove(const Query& query) override;
     Tracer<> trace_remove_all() override;
     Tracer<> trace_vacuum() override;
-    Tracer<> trace_query_stations(const Query& query) override;
     Tracer<> trace_query_station_data(const Query& query) override;
     Tracer<> trace_query_data(const Query& query) override;
     Tracer<> trace_query_summary(const Query& query) override;

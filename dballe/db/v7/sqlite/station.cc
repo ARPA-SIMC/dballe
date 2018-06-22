@@ -154,14 +154,16 @@ void SQLiteStation::add_station_vars(int id_station, Record& rec)
     });
 }
 
-void SQLiteStation::run_station_query(const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)> dest)
+void SQLiteStation::run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)> dest)
 {
+    Tracer<> trc_sel(trc ? trc->trace_select(qb.sql_query) : nullptr);
     auto stm = conn.sqlitestatement(qb.sql_query);
 
     if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
 
     dballe::Station station;
     stm->execute([&]() {
+        if (trc_sel) trc_sel->add_row();
         station.id = stm->column_int(0);
         station.report = tr.repinfo().get_rep_memo(stm->column_int(1));
         station.coords.lat = stm->column_int(2);
