@@ -20,7 +20,7 @@ std::unique_ptr<CursorStation> run_station_query(Tracer<>& trc, std::shared_ptr<
 std::unique_ptr<CursorStationData> run_station_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool explain);
 std::unique_ptr<CursorData> run_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool explain);
 std::unique_ptr<CursorSummary> run_summary_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool explain);
-void run_delete_query(std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool station_vars, bool explain);
+void run_delete_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool station_vars, bool explain);
 
 }
 }

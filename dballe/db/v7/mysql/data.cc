@@ -38,34 +38,35 @@ MySQLDataCommon<Parent>::~MySQLDataCommon()
 }
 
 template<typename Parent>
-void MySQLDataCommon<Parent>::read_attrs(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+void MySQLDataCommon<Parent>::read_attrs(Tracer<>& trc, int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     char query[128];
     snprintf(query, 128, "SELECT attrs FROM %s WHERE id=%d", Parent::table_name, id_data);
+    Tracer<> trc_sel(trc ? trc->trace_select(query) : nullptr);
     Values::decode(
             conn.exec_store(query).expect_one_result().as_blob(0),
             dest);
-    if (this->tr.trace) this->tr.trace->trace_select(query, 1);
+    if (trc_sel) trc_sel->add_row();
 }
 
 template<typename Parent>
-void MySQLDataCommon<Parent>::write_attrs(int id_data, const Values& values)
+void MySQLDataCommon<Parent>::write_attrs(Tracer<>& trc, int id_data, const Values& values)
 {
     vector<uint8_t> encoded = values.encode();
     string escaped = conn.escape(encoded);
     Querybuf qb;
     qb.appendf("UPDATE %s SET attrs=X'%s' WHERE id=%d", Parent::table_name, escaped.c_str(), id_data);
+    Tracer<> trc_upd(trc ? trc->trace_update(qb, 1) : nullptr);
     conn.exec_no_data(qb);
-    if (this->tr.trace) this->tr.trace->trace_update(qb, 1);
 }
 
 template<typename Parent>
-void MySQLDataCommon<Parent>::remove_all_attrs(int id_data)
+void MySQLDataCommon<Parent>::remove_all_attrs(Tracer<>& trc, int id_data)
 {
     char query[128];
     snprintf(query, 128, "UPDATE %s SET attrs=NULL WHERE id=%d", Parent::table_name, id_data);
+    Tracer<> trc_upd(trc ? trc->trace_update(query, 1) : nullptr);
     conn.exec_no_data(query);
-    if (this->tr.trace) this->tr.trace->trace_update(query, 1);
 }
 
 namespace {
@@ -83,7 +84,7 @@ bool match_attrs(const Varmatch& match, const std::vector<uint8_t>& attrs)
 }
 
 template<typename Parent>
-void MySQLDataCommon<Parent>::remove(const v7::IdQueryBuilder& qb)
+void MySQLDataCommon<Parent>::remove(Tracer<>& trc, const v7::IdQueryBuilder& qb)
 {
     if (qb.bind_in_ident)
         throw error_unimplemented("binding in MySQL driver is not implemented");
@@ -95,29 +96,29 @@ void MySQLDataCommon<Parent>::remove(const v7::IdQueryBuilder& qb)
     Querybuf dq(512);
     dq.appendf("DELETE FROM %s WHERE id IN (", Parent::table_name);
     dq.start_list(",");
-    bool found = false;
+    unsigned count = 0;
+    Tracer<> trc_sel(trc ? trc->trace_select(qb.sql_query) : nullptr);
     auto res = conn.exec_store(qb.sql_query);
-    if (this->tr.trace) this->tr.trace->trace_select(qb.sql_query);
     while (auto row = res.fetch())
     {
-        if (this->tr.trace) this->tr.trace->trace_select_row();
+        if (trc_sel) trc_sel->add_row();
         if (attr_filter.get() && !match_attrs(*attr_filter, row.as_blob(1))) return;
 
         // Note: if the query gets too long, we can split this in more DELETE
         // runs
         dq.append_list(row.as_cstring(0));
-        found = true;
+        ++count;
     }
     dq.append(")");
-    if (found)
+    if (count)
     {
+        Tracer<> trc_del(trc ? trc->trace_delete(dq, count) : nullptr);
         conn.exec_no_data(dq);
-        if (this->tr.trace) this->tr.trace->trace_delete(dq);
     }
 }
 
 template<typename Parent>
-void MySQLDataCommon<Parent>::update(dballe::db::v7::Transaction& t, std::vector<typename Parent::BatchValue>& vars, bool with_attrs)
+void MySQLDataCommon<Parent>::update(Tracer<>& trc, std::vector<typename Parent::BatchValue>& vars, bool with_attrs)
 {
     for (auto& v: vars)
     {
@@ -133,8 +134,8 @@ void MySQLDataCommon<Parent>::update(dballe::db::v7::Transaction& t, std::vector
         }
         else
             qb.appendf("UPDATE %s SET value='%s', attrs=NULL WHERE id=%d", Parent::table_name, escaped_value.c_str(), v.id);
+        Tracer<> trc_upd(trc ? trc->trace_update(qb, 1) : nullptr);
         conn.exec_no_data(qb);
-        if (this->tr.trace) this->tr.trace->trace_update(qb, 1);
     }
 }
 
@@ -144,22 +145,22 @@ MySQLStationData::MySQLStationData(v7::Transaction& tr, MySQLConnection& conn)
 {
 }
 
-void MySQLStationData::query(int id_station, std::function<void(int id, wreport::Varcode code)> dest)
+void MySQLStationData::query(Tracer<>& trc, int id_station, std::function<void(int id, wreport::Varcode code)> dest)
 {
     char strquery[128];
     snprintf(strquery, 128, "SELECT id, code FROM station_data WHERE id_station=%d", id_station);
+    Tracer<> trc_sel(trc ? trc->trace_select(strquery) : nullptr);
     auto res = conn.exec_store(strquery);
-    if (tr.trace) tr.trace->trace_select(strquery);
     while (auto row = res.fetch())
     {
-        if (tr.trace) tr.trace->trace_select_row();
+        if (trc_sel) trc_sel->add_row();
         int id = row.as_int(0);
         wreport::Varcode code = row.as_int(1);
         dest(id, code);
     }
 }
 
-void MySQLStationData::insert(dballe::db::v7::Transaction& t, int id_station, std::vector<batch::StationDatum>& vars, bool with_attrs)
+void MySQLStationData::insert(Tracer<>& trc, int id_station, std::vector<batch::StationDatum>& vars, bool with_attrs)
 {
     std::sort(vars.begin(), vars.end());
     for (auto v = vars.begin(); v != vars.end(); ++v)
@@ -186,10 +187,9 @@ void MySQLStationData::insert(dballe::db::v7::Transaction& t, int id_station, st
                     id_station,
                     (int)v->var->code(),
                     escaped_value.c_str());
+        Tracer<> trc_ins(trc ? trc->trace_insert(qb, 1) : nullptr);
         conn.exec_no_data(qb);
-
         v->id = conn.get_last_insert_id();
-        if (tr.trace) tr.trace->trace_insert(qb, 1);
     }
 }
 
@@ -251,17 +251,17 @@ MySQLData::MySQLData(v7::Transaction& tr, MySQLConnection& conn)
 {
 }
 
-void MySQLData::query(int id_station, const Datetime& datetime, std::function<void(int id, int id_levtr, wreport::Varcode code)> dest)
+void MySQLData::query(Tracer<>& trc, int id_station, const Datetime& datetime, std::function<void(int id, int id_levtr, wreport::Varcode code)> dest)
 {
     const auto& dt = datetime;
     char strquery[128];
     snprintf(strquery, 128, "SELECT id, id_levtr, code FROM data WHERE id_station=%d AND datetime='%04d-%02d-%02d %02d:%02d:%02d'",
             id_station, dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
-    if (tr.trace) tr.trace->trace_select(strquery);
+    Tracer<> trc_sel(trc ? trc->trace_select(strquery) : nullptr);
     auto res = conn.exec_store(strquery);
     while (auto row = res.fetch())
     {
-        if (tr.trace) tr.trace->trace_select_row();
+        if (trc_sel) trc_sel->add_row();
         int id_levtr = row.as_int(1);
         wreport::Varcode code = row.as_int(2);
         int id = row.as_int(0);
@@ -269,7 +269,7 @@ void MySQLData::query(int id_station, const Datetime& datetime, std::function<vo
     }
 }
 
-void MySQLData::insert(dballe::db::v7::Transaction& t, int id_station, const Datetime& datetime, std::vector<batch::MeasuredDatum>& vars, bool with_attrs)
+void MySQLData::insert(Tracer<>& trc, int id_station, const Datetime& datetime, std::vector<batch::MeasuredDatum>& vars, bool with_attrs)
 {
     std::sort(vars.begin(), vars.end());
     for (auto v = vars.begin(); v != vars.end(); ++v)
@@ -299,9 +299,9 @@ void MySQLData::insert(dballe::db::v7::Transaction& t, int id_station, const Dat
                     id_station, v->id_levtr, dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,
                     (int)v->var->code(),
                     escaped_value.c_str());
+        Tracer<> trc_ins(trc ? trc->trace_insert(qb, 1) : nullptr);
         conn.exec_no_data(qb);
         v->id = conn.get_last_insert_id();
-        if (tr.trace) tr.trace->trace_insert(qb, 1);
     }
 }
 

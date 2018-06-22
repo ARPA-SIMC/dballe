@@ -34,7 +34,7 @@ PostgreSQLDataCommon<Parent>::PostgreSQLDataCommon(v7::Transaction& tr, dballe::
 }
 
 template<typename Parent>
-void PostgreSQLDataCommon<Parent>::read_attrs(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+void PostgreSQLDataCommon<Parent>::read_attrs(Tracer<>& trc, int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     if (select_attrs_query_name.empty())
     {
@@ -44,14 +44,15 @@ void PostgreSQLDataCommon<Parent>::read_attrs(int id_data, std::function<void(st
         snprintf(query, 64, "SELECT attrs FROM %s WHERE id=$1::int4", Parent::table_name);
         conn.prepare(select_attrs_query_name, query);
     }
+    Tracer<> trc_sel(trc ? trc->trace_select("SELECT attrs FROM … WHERE id=$1::int4") : nullptr);
     Values::decode(
             conn.exec_prepared_one_row(select_attrs_query_name, id_data).get_bytea(0, 0),
             dest);
-    if (this->tr.trace) this->tr.trace->trace_select("SELECT attrs FROM … WHERE id=$1::int4", 1);
+    if (trc_sel) trc_sel->add_row();
 }
 
 template<typename Parent>
-void PostgreSQLDataCommon<Parent>::write_attrs(int id_data, const Values& values)
+void PostgreSQLDataCommon<Parent>::write_attrs(Tracer<>& trc, int id_data, const Values& values)
 {
     if (write_attrs_query_name.empty())
     {
@@ -61,13 +62,13 @@ void PostgreSQLDataCommon<Parent>::write_attrs(int id_data, const Values& values
         snprintf(query, 64, "UPDATE %s SET attrs=$1::bytea WHERE id=$2::int4", Parent::table_name);
         conn.prepare(write_attrs_query_name, query);
     }
+    Tracer<> trc_upd(trc ? trc->trace_update("UPDATE … SET attrs=$1::bytea WHERE id=$2::int4", 1) : nullptr);
     vector<uint8_t> encoded = values.encode();
     conn.exec_prepared_no_data(write_attrs_query_name, encoded, id_data);
-    if (this->tr.trace) this->tr.trace->trace_update("UPDATE … SET attrs=$1::bytea WHERE id=$2::int4", 1);
 }
 
 template<typename Parent>
-void PostgreSQLDataCommon<Parent>::remove_all_attrs(int id_data)
+void PostgreSQLDataCommon<Parent>::remove_all_attrs(Tracer<>& trc, int id_data)
 {
     if (remove_attrs_query_name.empty())
     {
@@ -77,8 +78,8 @@ void PostgreSQLDataCommon<Parent>::remove_all_attrs(int id_data)
         snprintf(query, 64, "UPDATE %s SET attrs=NULL WHERE id=$1::int4", Parent::table_name);
         conn.prepare(remove_attrs_query_name, query);
     }
+    Tracer<> trc_upd(trc ? trc->trace_update("UPDATE … SET attrs=NULL WHERE id=$1::int4", 1) : nullptr);
     conn.exec_prepared_no_data(remove_attrs_query_name, id_data);
-    if (this->tr.trace) this->tr.trace->trace_update("UPDATE … SET attrs=NULL WHERE id=$1::int4", 1);
 }
 
 namespace {
@@ -96,7 +97,7 @@ bool match_attrs(const Varmatch& match, const std::vector<uint8_t>& attrs)
 }
 
 template<typename Parent>
-void PostgreSQLDataCommon<Parent>::remove(const v7::IdQueryBuilder& qb)
+void PostgreSQLDataCommon<Parent>::remove(Tracer<>& trc, const v7::IdQueryBuilder& qb)
 {
     if (!qb.query.attr_filter.empty())
     {
@@ -112,17 +113,19 @@ void PostgreSQLDataCommon<Parent>::remove(const v7::IdQueryBuilder& qb)
             conn.prepare(remove_data_query_name, query);
         }
 
+        Tracer<> trc_sel(trc ? trc->trace_select(qb.sql_query) : nullptr);
         Result to_remove;
         if (qb.bind_in_ident)
             to_remove = conn.exec(qb.sql_query, qb.bind_in_ident);
         else
             to_remove = conn.exec(qb.sql_query);
-        if (this->tr.trace) this->tr.trace->trace_select(qb.sql_query, to_remove.rowcount());
+        if (trc_sel) trc_sel->add_row(to_remove.rowcount());
+        trc_sel.done();
         for (unsigned row = 0; row < to_remove.rowcount(); ++row)
         {
             if (!match_attrs(*attr_filter, to_remove.get_bytea(row, 1))) return;
+            Tracer<> trc_del(trc ? trc->trace_delete(remove_data_query_name, 1) : nullptr);
             conn.exec_prepared(remove_data_query_name, (int)to_remove.get_int4(row, 0));
-            if (this->tr.trace) this->tr.trace->trace_delete(remove_data_query_name);
         }
     } else {
         Querybuf dq(512);
@@ -131,18 +134,18 @@ void PostgreSQLDataCommon<Parent>::remove(const v7::IdQueryBuilder& qb)
         dq.append(" WHERE id IN (");
         dq.append(qb.sql_query);
         dq.append(")");
+        Tracer<> trc_del(trc ? trc->trace_delete(dq) : nullptr);
         if (qb.bind_in_ident)
         {
             conn.exec_no_data(dq.c_str(), qb.bind_in_ident);
         } else {
             conn.exec_no_data(dq.c_str());
         }
-        if (this->tr.trace) this->tr.trace->trace_delete(dq);
     }
 }
 
 template<typename Parent>
-void PostgreSQLDataCommon<Parent>::update(dballe::db::v7::Transaction& t, std::vector<typename Parent::BatchValue>& vars, bool with_attrs)
+void PostgreSQLDataCommon<Parent>::update(Tracer<>& trc, std::vector<typename Parent::BatchValue>& vars, bool with_attrs)
 {
     Querybuf qb(512);
     unsigned count = 0;
@@ -189,8 +192,8 @@ void PostgreSQLDataCommon<Parent>::update(dballe::db::v7::Transaction& t, std::v
         qb.append(") AS i(id, value) WHERE d.id = i.id");
     }
     //fprintf(stderr, "Update query: %s\n", dq.c_str());
+    Tracer<> trc_upd(trc ? trc->trace_update(qb, count) : nullptr);
     conn.exec_no_data(qb);
-    if (this->tr.trace) this->tr.trace->trace_update(qb, count);
 }
 
 
@@ -200,10 +203,11 @@ PostgreSQLStationData::PostgreSQLStationData(v7::Transaction& tr, PostgreSQLConn
     conn.prepare("station_datav7_select", "SELECT id, code FROM station_data WHERE id_station=$1::int4");
 }
 
-void PostgreSQLStationData::query(int id_station, std::function<void(int id, wreport::Varcode code)> dest)
+void PostgreSQLStationData::query(Tracer<>& trc, int id_station, std::function<void(int id, wreport::Varcode code)> dest)
 {
+    Tracer<> trc_sel(trc ? trc->trace_select("station_datav7_select") : nullptr);
     Result existing(conn.exec_prepared("station_datav7_select", id_station));
-    if (tr.trace) tr.trace->trace_select("station_datav7_select", existing.rowcount());
+    if (trc_sel) trc_sel->add_row(existing.rowcount());
     for (unsigned row = 0; row < existing.rowcount(); ++row)
     {
         int id = existing.get_int4(row, 0);
@@ -212,7 +216,7 @@ void PostgreSQLStationData::query(int id_station, std::function<void(int id, wre
     }
 }
 
-void PostgreSQLStationData::insert(dballe::db::v7::Transaction& t, int id_station, std::vector<batch::StationDatum>& vars, bool with_attrs)
+void PostgreSQLStationData::insert(Tracer<>& trc, int id_station, std::vector<batch::StationDatum>& vars, bool with_attrs)
 {
     std::sort(vars.begin(), vars.end());
 
@@ -250,7 +254,7 @@ void PostgreSQLStationData::insert(dballe::db::v7::Transaction& t, int id_statio
     //fprintf(stderr, "Insert query: %s\n", dq.c_str());
 
     // Run the insert query and read back the new IDs
-    if (tr.trace) tr.trace->trace_insert(dq, count);
+    Tracer<> trc_ins(trc ? trc->trace_insert(dq, count) : nullptr);
     Result res(conn.exec(dq));
     unsigned row = 0;
     for (auto v = vars.begin(); v != vars.end(); ++v)
@@ -338,10 +342,11 @@ PostgreSQLData::PostgreSQLData(v7::Transaction& tr, PostgreSQLConnection& conn)
     conn.prepare("datav7_select", "SELECT id, id_levtr, code FROM data WHERE id_station=$1::int4 AND datetime=$2::timestamp");
 }
 
-void PostgreSQLData::query(int id_station, const Datetime& datetime, std::function<void(int id, int id_levtr, wreport::Varcode code)> dest)
+void PostgreSQLData::query(Tracer<>& trc, int id_station, const Datetime& datetime, std::function<void(int id, int id_levtr, wreport::Varcode code)> dest)
 {
+    Tracer<> trc_sel(trc ? trc->trace_select("datav7_select") : nullptr);
     Result existing(conn.exec_prepared("datav7_select", id_station, datetime));
-    if (tr.trace) tr.trace->trace_select("datav7_select", existing.rowcount());
+    if (trc_sel) trc_sel->add_row(existing.rowcount());
     for (unsigned row = 0; row < existing.rowcount(); ++row)
     {
         int id = existing.get_int4(row, 0);
@@ -351,7 +356,7 @@ void PostgreSQLData::query(int id_station, const Datetime& datetime, std::functi
     }
 }
 
-void PostgreSQLData::insert(dballe::db::v7::Transaction& t, int id_station, const Datetime& datetime, std::vector<batch::MeasuredDatum>& vars, bool with_attrs)
+void PostgreSQLData::insert(Tracer<>& trc, int id_station, const Datetime& datetime, std::vector<batch::MeasuredDatum>& vars, bool with_attrs)
 {
     std::sort(vars.begin(), vars.end());
 
@@ -394,7 +399,7 @@ void PostgreSQLData::insert(dballe::db::v7::Transaction& t, int id_station, cons
     // fprintf(stderr, "Insert query: %s\n", dq.c_str());
 
     // Run the insert query and read back the new IDs
-    if (tr.trace) tr.trace->trace_insert(dq, count);
+    Tracer<> trc_ins(trc ? trc->trace_insert(dq, count) : nullptr);
     Result res(conn.exec(dq));
     unsigned row = 0;
     for (auto v = vars.begin(); v != vars.end(); ++v)

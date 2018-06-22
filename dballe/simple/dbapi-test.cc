@@ -806,7 +806,6 @@ this->add_method("perf", [](Fixture& f) {
     // Test prendilo anaid
     fortran::DbAPI api(f.tr, "write", "write", "write");
     f.tr->reset_profile_counters();
-    const v7::ProfileTrace* trace = dynamic_cast<const v7::ProfileTrace*>(f.tr->trace);
 
     // Run a prendilo
     f.tr->trc->clear();
@@ -818,11 +817,12 @@ this->add_method("perf", [](Fixture& f) {
     api.settimerange(254, 0, 0);
     api.setd("B10004", 100000.0);
     api.prendilo(); // Pressure at ground level
-    v7::trace::Aggregate selects = f.tr->trc->aggregate("select");
-    wassert(actual(selects.count) == 2);
-    wassert(actual(selects.rows) == 0);
-    wassert(actual(trace->profile_count_insert) == 3);
-    wassert(actual(trace->profile_count_insert_rows) == 3);
+    v7::trace::Aggregate stats = f.tr->trc->aggregate("select");
+    wassert(actual(stats.count) == 2);
+    wassert(actual(stats.rows) == 0);
+    stats = f.tr->trc->aggregate("insert");
+    wassert(actual(stats.count) == 3);
+    wassert(actual(stats.rows) == 3);
 
     // Query it back
     api.unsetall();
@@ -832,17 +832,17 @@ this->add_method("perf", [](Fixture& f) {
     api.setdate(2013, 4, 25, 12, 0, 0);
     api.setc("var", "B10004");
     wassert(actual(api.voglioquesto()) == 1);
-    selects = f.tr->trc->aggregate("select");
-    wassert(actual(selects.count) == 2);
-    wassert(actual(selects.rows) == 2);
+    stats = f.tr->trc->aggregate("select");
+    wassert(actual(stats.count) == 2);
+    wassert(actual(stats.rows) == 2);
 
     // Query stations only
     api.unsetall();
     f.tr->trc->clear();
     wassert(actual(api.quantesono()) == 1);
-    selects = f.tr->trc->aggregate("select");
-    wassert(actual(selects.count) == 1);
-    wassert(actual(selects.rows) == 1);
+    stats = f.tr->trc->aggregate("select");
+    wassert(actual(stats.count) == 1);
+    wassert(actual(stats.rows) == 1);
 });
 
 }

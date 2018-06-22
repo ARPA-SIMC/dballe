@@ -128,7 +128,7 @@ void Transaction::insert_station_data(StationValues& vals, bool can_replace, boo
     batch::Station* st = batch.get_station(trc, vals.info, station_can_add);
 
     // Add all the variables we find
-    batch::StationData& sd = st->get_station_data();
+    batch::StationData& sd = st->get_station_data(trc);
     for (auto& i: vals.values)
         sd.add(i.second.var, can_replace ? batch::UPDATE : batch::ERROR);
 
@@ -149,7 +149,7 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
     Tracer<> trc(this->trc ? this->trc->trace_insert_data() : nullptr);
     batch::Station* st = batch.get_station(trc, vals.info, station_can_add);
 
-    batch::MeasuredData& md = st->get_measured_data(vals.info.datetime);
+    batch::MeasuredData& md = st->get_measured_data(trc, vals.info.datetime);
 
     // Insert the lev_tr data, and get the ID
     int id_levtr = levtr().obtain_id(trc, LevTrEntry(vals.info.level, vals.info.trange));
@@ -169,14 +169,14 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
 
 void Transaction::remove_station_data(const Query& query)
 {
-    auto trc = db->trace->trace_remove_station_data(query);
-    cursor::run_delete_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), true, db->explain_queries); // TODO: tracing
+    Tracer<> trc(this->trc ? this->trc->trace_remove_station_data(query) : nullptr);
+    cursor::run_delete_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), true, db->explain_queries);
 }
 
 void Transaction::remove(const Query& query)
 {
-    auto trc = db->trace->trace_remove(query);
-    cursor::run_delete_query(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), false, db->explain_queries); // TODO: tracing
+    Tracer<> trc(this->trc ? this->trc->trace_remove(query) : nullptr);
+    cursor::run_delete_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), false, db->explain_queries); // TODO: tracing
 }
 
 std::unique_ptr<db::CursorStation> Transaction::query_stations(const Query& query)
@@ -209,55 +209,63 @@ std::unique_ptr<db::CursorSummary> Transaction::query_summary(const Query& query
 
 void Transaction::attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
 {
+    Tracer<> trc(this->trc ? this->trc->trace_func("attr_query_station") : nullptr);
     // Create the query
     auto& d = station_data();
-    d.read_attrs(data_id, dest); // TODO: tracing
+    d.read_attrs(trc, data_id, dest);
 }
 
 void Transaction::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
 {
+    Tracer<> trc(this->trc ? this->trc->trace_func("attr_query_data") : nullptr);
     // Create the query
     auto& d = data();
-    d.read_attrs(data_id, dest); // TODO: tracing
+    d.read_attrs(trc, data_id, dest);
 }
 
 void Transaction::attr_insert_station(int data_id, const Values& attrs)
 {
+    Tracer<> trc(this->trc ? this->trc->trace_func("attr_insert_station") : nullptr);
     auto& d = station_data();
-    d.merge_attrs(data_id, attrs); // TODO: tracing
+    d.merge_attrs(trc, data_id, attrs);
 }
 
 void Transaction::attr_insert_data(int data_id, const Values& attrs)
 {
+    Tracer<> trc(this->trc ? this->trc->trace_func("attr_insert_data") : nullptr);
     auto& d = data();
-    d.merge_attrs(data_id, attrs); // TODO: tracing
+    d.merge_attrs(trc, data_id, attrs);
 }
 
 void Transaction::attr_remove_station(int data_id, const db::AttrList& attrs)
-{ // TODO: tracing
+{
+    Tracer<> trc(this->trc ? this->trc->trace_func("attr_remove_station") : nullptr);
     if (attrs.empty())
     {
         // Delete all attributes
         char buf[64];
         snprintf(buf, 64, "UPDATE station_data SET attrs=NULL WHERE id=%d", data_id);
+        Tracer<> trc_upd(trc ? trc->trace_update(buf, 1) : nullptr);
         db->conn->execute(buf);
     } else {
         auto& d = station_data();
-        d.remove_attrs(data_id, attrs);
+        d.remove_attrs(trc, data_id, attrs);
     }
 }
 
 void Transaction::attr_remove_data(int data_id, const db::AttrList& attrs)
-{ // TODO: tracing
+{
+    Tracer<> trc(this->trc ? this->trc->trace_func("attr_remove_data") : nullptr);
     if (attrs.empty())
     {
         // Delete all attributes
         char buf[64];
         snprintf(buf, 64, "UPDATE data SET attrs=NULL WHERE id=%d", data_id);
+        Tracer<> trc_upd(trc ? trc->trace_update(buf, 1) : nullptr);
         db->conn->execute(buf);
     } else {
         auto& d = data();
-        d.remove_attrs(data_id, attrs);
+        d.remove_attrs(trc, data_id, attrs);
     }
 }
 

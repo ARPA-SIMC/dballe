@@ -133,8 +133,8 @@ struct Station : public dballe::Station
     Station(Batch& batch)
         : batch(batch) {}
 
-    StationData& get_station_data();
-    MeasuredData& get_measured_data(const Datetime& datetime);
+    StationData& get_station_data(Tracer<>& trc);
+    MeasuredData& get_measured_data(Tracer<>& trc, const Datetime& datetime);
 
     void write_pending(Tracer<>& trc, bool with_attrs);
 };

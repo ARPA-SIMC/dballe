@@ -41,11 +41,11 @@ public:
     SQLiteDataCommon& operator=(const SQLiteDataCommon&) = delete;
     ~SQLiteDataCommon();
 
-    void update(dballe::db::v7::Transaction& t, std::vector<typename Parent::BatchValue>& vars, bool with_attrs) override;
-    void read_attrs(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
-    void write_attrs(int id_data, const Values& values) override;
-    void remove_all_attrs(int id_data) override;
-    void remove(const v7::IdQueryBuilder& qb) override;
+    void update(Tracer<>& trc, std::vector<typename Parent::BatchValue>& vars, bool with_attrs) override;
+    void read_attrs(Tracer<>& trc, int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
+    void write_attrs(Tracer<>& trc, int id_data, const Values& values) override;
+    void remove_all_attrs(Tracer<>& trc, int id_data) override;
+    void remove(Tracer<>& trc, const v7::IdQueryBuilder& qb) override;
 };
 
 extern template class SQLiteDataCommon<StationData>;
@@ -61,8 +61,8 @@ public:
 
     SQLiteStationData(v7::Transaction& tr, dballe::sql::SQLiteConnection& conn);
 
-    void query(int id_station, std::function<void(int id, wreport::Varcode code)> dest) override;
-    void insert(dballe::db::v7::Transaction& t, int id_station, std::vector<batch::StationDatum>& vars, bool with_attrs) override;
+    void query(Tracer<>& trc, int id_station, std::function<void(int id, wreport::Varcode code)> dest) override;
+    void insert(Tracer<>& trc, int id_station, std::vector<batch::StationDatum>& vars, bool with_attrs) override;
     void run_station_data_query(Tracer<>& trc, const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var)>) override;
     void dump(FILE* out) override;
     void clear_cache() override {}
@@ -78,8 +78,8 @@ public:
 
     SQLiteData(v7::Transaction& tr, dballe::sql::SQLiteConnection& conn);
 
-    void query(int id_station, const Datetime& datetime, std::function<void(int id, int id_levtr, wreport::Varcode code)> dest) override;
-    void insert(dballe::db::v7::Transaction& t, int id_station, const Datetime& datetime, std::vector<batch::MeasuredDatum>& vars, bool with_attrs) override;
+    void query(Tracer<>& trc, int id_station, const Datetime& datetime, std::function<void(int id, int id_levtr, wreport::Varcode code)> dest) override;
+    void insert(Tracer<>& trc, int id_station, const Datetime& datetime, std::vector<batch::MeasuredDatum>& vars, bool with_attrs) override;
     void run_data_query(Tracer<>& trc, const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)>) override;
     void run_summary_query(Tracer<>& trc, const v7::SummaryQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)>) override;
     void dump(FILE* out) override;

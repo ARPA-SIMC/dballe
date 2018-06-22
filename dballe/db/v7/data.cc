@@ -17,42 +17,42 @@ template<typename Traits>
 const char* DataCommon<Traits>::table_name = Traits::table_name;
 
 template<typename Traits>
-void DataCommon<Traits>::read_attrs_into_values(int id_data, Values& values)
+void DataCommon<Traits>::read_attrs_into_values(Tracer<>& trc, int id_data, Values& values)
 {
-    read_attrs(id_data, [&](unique_ptr<wreport::Var> var) { values.set(move(var)); });
+    read_attrs(trc, id_data, [&](unique_ptr<wreport::Var> var) { values.set(move(var)); });
 }
 
 template<typename Traits>
-void DataCommon<Traits>::merge_attrs(int id_data, const Values& attrs)
+void DataCommon<Traits>::merge_attrs(Tracer<>& trc, int id_data, const Values& attrs)
 {
     // Read existing attributes
     Values merged;
-    read_attrs_into_values(id_data, merged);
+    read_attrs_into_values(trc, id_data, merged);
 
     // Merge attributes from attrs
     merged.set(attrs);
 
     // Write them back
-    write_attrs(id_data, merged);
+    write_attrs(trc, id_data, merged);
 }
 
 template<typename Traits>
-void DataCommon<Traits>::remove_attrs(int id_data, const db::AttrList& attrs)
+void DataCommon<Traits>::remove_attrs(Tracer<>& trc, int id_data, const db::AttrList& attrs)
 {
     if (attrs.empty())
-        remove_all_attrs(id_data);
+        remove_all_attrs(trc, id_data);
     else {
         // Read existing attributes
         Values remaining;
-        read_attrs_into_values(id_data, remaining);
+        read_attrs_into_values(trc, id_data, remaining);
 
         for (const auto& i: attrs)
             remaining.erase(i);
 
         if (remaining.empty())
-            remove_all_attrs(id_data);
+            remove_all_attrs(trc, id_data);
         else
-            write_attrs(id_data, remaining);
+            write_attrs(trc, id_data, remaining);
     }
 }
 

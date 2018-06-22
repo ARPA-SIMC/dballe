@@ -47,7 +47,7 @@ SQLiteDataCommon<Parent>::~SQLiteDataCommon()
 }
 
 template<typename Parent>
-void SQLiteDataCommon<Parent>::read_attrs(int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+void SQLiteDataCommon<Parent>::read_attrs(Tracer<>& trc, int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     if (!read_attrs_stm)
     {
@@ -55,16 +55,16 @@ void SQLiteDataCommon<Parent>::read_attrs(int id_data, std::function<void(std::u
         snprintf(query, 64, "SELECT attrs FROM %s WHERE id=?", Parent::table_name);
         read_attrs_stm = conn.sqlitestatement(query).release();
     }
-    if (this->tr.trace) this->tr.trace->trace_select("SELECT attrs FROM … WHERE id=?");
+    Tracer<> trc_sel(trc ? trc->trace_select("SELECT attrs FROM … WHERE id=?") : nullptr);
     read_attrs_stm->bind_val(1, id_data);
     read_attrs_stm->execute_one([&]() {
-        if (this->tr.trace) this->tr.trace->trace_select_row();
+        if (trc_sel) trc_sel->add_row();
         Values::decode(read_attrs_stm->column_blob(0), dest);
     });
 }
 
 template<typename Parent>
-void SQLiteDataCommon<Parent>::write_attrs(int id_data, const Values& values)
+void SQLiteDataCommon<Parent>::write_attrs(Tracer<>& trc, int id_data, const Values& values)
 {
     if (!write_attrs_stm)
     {
@@ -72,15 +72,15 @@ void SQLiteDataCommon<Parent>::write_attrs(int id_data, const Values& values)
         snprintf(query, 64, "UPDATE %s SET attrs=? WHERE id=?", Parent::table_name);
         write_attrs_stm = conn.sqlitestatement(query).release();
     }
+    Tracer<> trc_upd(trc ? trc->trace_update("UPDATE … SET attrs=? WHERE id=?", 1) : nullptr);
     vector<uint8_t> encoded = values.encode();
     write_attrs_stm->bind_val(1, encoded);
     write_attrs_stm->bind_val(2, id_data);
     write_attrs_stm->execute();
-    if (this->tr.trace) this->tr.trace->trace_insert("UPDATE … SET attrs=? WHERE id=?", 1);
 }
 
 template<typename Parent>
-void SQLiteDataCommon<Parent>::remove_all_attrs(int id_data)
+void SQLiteDataCommon<Parent>::remove_all_attrs(Tracer<>& trc, int id_data)
 {
     if (!remove_attrs_stm)
     {
@@ -88,9 +88,9 @@ void SQLiteDataCommon<Parent>::remove_all_attrs(int id_data)
         snprintf(query, 64, "UPDATE %s SET attrs=NULL WHERE id=?", Parent::table_name);
         remove_attrs_stm = conn.sqlitestatement(query).release();
     }
+    Tracer<> trc_upd(trc ? trc->trace_update("UPDATE … SET attrs=NULL WHERE id=?", 1) : nullptr);
     remove_attrs_stm->bind_val(1, id_data);
     remove_attrs_stm->execute();
-    if (this->tr.trace) this->tr.trace->trace_update("UPDATE … SET attrs=NULL WHERE id=?", 1);
 }
 
 namespace {
@@ -108,7 +108,7 @@ bool match_attrs(const Varmatch& match, const std::vector<uint8_t>& attrs)
 }
 
 template<typename Parent>
-void SQLiteDataCommon<Parent>::remove(const v7::IdQueryBuilder& qb)
+void SQLiteDataCommon<Parent>::remove(Tracer<>& trc, const v7::IdQueryBuilder& qb)
 {
     char query[64];
     snprintf(query, 64, "DELETE FROM %s WHERE id=?", Parent::table_name);
@@ -121,20 +121,20 @@ void SQLiteDataCommon<Parent>::remove(const v7::IdQueryBuilder& qb)
         attr_filter = Varmatch::parse(qb.query.attr_filter);
 
     // Iterate all the data_id results, deleting the related data and attributes
-    if (this->tr.trace) this->tr.trace->trace_select(qb.sql_query);
+    Tracer<> trc_sel(trc ? trc->trace_select(qb.sql_query) : nullptr);
     stm->execute([&]() {
-        if (this->tr.trace) this->tr.trace->trace_select_row();
+        if (trc_sel) trc_sel->add_row();
         if (attr_filter.get() && !match_attrs(*attr_filter, stm->column_blob(1))) return;
 
         // Compile the DELETE query for the data
+        Tracer<> trc_del(trc ? trc->trace_delete(query, 1) : nullptr);
         stmd->bind_val(1, stm->column_int(0));
         stmd->execute();
-        if (this->tr.trace) this->tr.trace->trace_delete(query);
     });
 }
 
 template<typename Parent>
-void SQLiteDataCommon<Parent>::update(dballe::db::v7::Transaction& t, std::vector<typename Parent::BatchValue>& vars, bool with_attrs)
+void SQLiteDataCommon<Parent>::update(Tracer<>& trc, std::vector<typename Parent::BatchValue>& vars, bool with_attrs)
 {
     for (auto& v: vars)
     {
@@ -149,32 +149,34 @@ void SQLiteDataCommon<Parent>::update(dballe::db::v7::Transaction& t, std::vecto
             ustm->bind_null_val(2);
         ustm->bind_val(3, v.id);
 
+        Tracer<> trc_upd(trc ? trc->trace_update("UPDATE … set value=?, attrs=? WHERE id=?", 1) : nullptr);
         ustm->execute();
-        if (this->tr.trace) this->tr.trace->trace_update("UPDATE … set value=?, attrs=? WHERE id=?", 1);
     }
 }
 
+static const char* select_station_data_query = "SELECT id, code FROM station_data WHERE id_station=?";
+static const char* insert_station_data_query = "INSERT INTO station_data (id_station, code, value, attrs) VALUES (?, ?, ?, ?)";
 
 SQLiteStationData::SQLiteStationData(v7::Transaction& tr, SQLiteConnection& conn)
     : SQLiteDataCommon(tr, conn)
 {
-    sstm = conn.sqlitestatement("SELECT id, code FROM station_data WHERE id_station=?").release();
-    istm = conn.sqlitestatement("INSERT INTO station_data (id_station, code, value, attrs) VALUES (?, ?, ?, ?)").release();
+    sstm = conn.sqlitestatement(select_station_data_query).release();
+    istm = conn.sqlitestatement(insert_station_data_query).release();
 }
 
-void SQLiteStationData::query(int id_station, std::function<void(int id, wreport::Varcode code)> dest)
+void SQLiteStationData::query(Tracer<>& trc, int id_station, std::function<void(int id, wreport::Varcode code)> dest)
 {
     sstm->bind_val(1, id_station);
-    if (tr.trace) tr.trace->trace_select("SELECT id, code FROM station_data WHERE id_station=?");
+    Tracer<> trc_sel(trc ? trc->trace_select(select_station_data_query) : nullptr);
     sstm->execute([&]() {
-        if (tr.trace) tr.trace->trace_select_row();
+        if (trc_sel) trc_sel->add_row();
         int id = sstm->column_int(0);
         wreport::Varcode code = sstm->column_int(1);
         dest(id, code);
     });
 }
 
-void SQLiteStationData::insert(dballe::db::v7::Transaction& t, int id_station, std::vector<batch::StationDatum>& vars, bool with_attrs)
+void SQLiteStationData::insert(Tracer<>& trc, int id_station, std::vector<batch::StationDatum>& vars, bool with_attrs)
 {
     std::sort(vars.begin(), vars.end());
     istm->bind_val(1, id_station);
@@ -194,9 +196,8 @@ void SQLiteStationData::insert(dballe::db::v7::Transaction& t, int id_station, s
         }
         else
             istm->bind_null_val(4);
+        Tracer<> trc_ins(trc ? trc->trace_insert(insert_station_data_query, 1) : nullptr);
         istm->execute();
-        if (tr.trace) tr.trace->trace_insert("INSERT INTO station_data (id_station, code, value, attrs) VALUES (?, ?, ?, ?)", 1);
-
         v->id = conn.get_last_insert_id();
     }
 }
@@ -254,20 +255,23 @@ void SQLiteStationData::dump(FILE* out)
 }
 
 
+static const char* select_data_query = "SELECT id, id_levtr, code FROM data WHERE id_station=? AND datetime=?";
+static const char* insert_data_query = "INSERT INTO data (id_station, id_levtr, datetime, code, value, attrs) VALUES (?, ?, ?, ?, ?, ?)";
+
 SQLiteData::SQLiteData(v7::Transaction& tr, SQLiteConnection& conn)
     : SQLiteDataCommon(tr, conn)
 {
-    sstm = conn.sqlitestatement("SELECT id, id_levtr, code FROM data WHERE id_station=? AND datetime=?").release();
-    istm = conn.sqlitestatement("INSERT INTO data (id_station, id_levtr, datetime, code, value, attrs) VALUES (?, ?, ?, ?, ?, ?)").release();
+    sstm = conn.sqlitestatement(select_data_query).release();
+    istm = conn.sqlitestatement(insert_data_query).release();
 }
 
-void SQLiteData::query(int id_station, const Datetime& datetime, std::function<void(int id, int id_levtr, wreport::Varcode code)> dest)
+void SQLiteData::query(Tracer<>& trc, int id_station, const Datetime& datetime, std::function<void(int id, int id_levtr, wreport::Varcode code)> dest)
 {
+    Tracer<> trc_sel(trc ? trc->trace_select(select_data_query) : nullptr);
     sstm->bind_val(1, id_station);
     sstm->bind_val(2, datetime);
-    if (tr.trace) tr.trace->trace_select("SELECT id, id_levtr, code FROM data WHERE id_station=? AND datetime=?");
     sstm->execute([&]() {
-        if (tr.trace) tr.trace->trace_select_row();
+        if (trc_sel) trc_sel->add_row();
         int id_levtr = sstm->column_int(1);
         wreport::Varcode code = sstm->column_int(2);
         int id = sstm->column_int(0);
@@ -275,7 +279,7 @@ void SQLiteData::query(int id_station, const Datetime& datetime, std::function<v
     });
 }
 
-void SQLiteData::insert(dballe::db::v7::Transaction& t, int id_station, const Datetime& datetime, std::vector<batch::MeasuredDatum>& vars, bool with_attrs)
+void SQLiteData::insert(Tracer<>& trc, int id_station, const Datetime& datetime, std::vector<batch::MeasuredDatum>& vars, bool with_attrs)
 {
     std::sort(vars.begin(), vars.end());
     istm->bind_val(1, id_station);
@@ -286,6 +290,7 @@ void SQLiteData::insert(dballe::db::v7::Transaction& t, int id_station, const Da
         auto next = v + 1;
         if (next != vars.end() && *v == *next)
             continue;
+        Tracer<> trc_ins(trc ? trc->trace_insert(insert_data_query, 1) : nullptr);
         istm->bind_val(2, v->id_levtr);
         istm->bind_val(4, v->var->code());
         istm->bind_val(5, v->var->enqc());
@@ -298,7 +303,6 @@ void SQLiteData::insert(dballe::db::v7::Transaction& t, int id_station, const Da
         else
             istm->bind_null_val(6);
         istm->execute();
-        if (tr.trace) tr.trace->trace_insert("INSERT INTO data (id_station, id_levtr, datetime, code, value, attrs) VALUES (?, ?, ?, ?, ?, ?)", 1);
 
         v->id = conn.get_last_insert_id();
     }

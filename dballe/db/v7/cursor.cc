@@ -554,7 +554,7 @@ unique_ptr<CursorSummary> run_summary_query(Tracer<>& trc, std::shared_ptr<v7::T
     return res;
 }
 
-void run_delete_query(std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool station_vars, bool explain)
+void run_delete_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool station_vars, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
     if (modifiers & DBA_DB_MODIFIER_BEST)
@@ -569,7 +569,7 @@ void run_delete_query(std::shared_ptr<v7::Transaction> tr, const core::Query& q,
         tr->db->conn->explain(qb.sql_query, stderr);
     }
 
-    tr->data().remove(qb);
+    tr->data().remove(trc, qb);
 }
 
 

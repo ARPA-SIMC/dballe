@@ -160,14 +160,14 @@ void StationData::write_pending(Tracer<>& trc, Transaction& tr, int station_id, 
     if (!to_insert.empty())
     {
         auto& st = tr.station_data();
-        st.insert(tr, station_id, to_insert, with_attrs);
+        st.insert(trc, station_id, to_insert, with_attrs);
         for (const auto& v: to_insert)
             ids_by_code[v.var->code()] = v.id;
     }
     if (!to_update.empty())
     {
         auto& st = tr.station_data();
-        st.update(tr, to_update, with_attrs);
+        st.update(trc, to_update, with_attrs);
     }
     to_insert.clear();
     to_update.clear();
@@ -196,7 +196,7 @@ void MeasuredData::write_pending(Tracer<>& trc, Transaction& tr, int station_id,
     if (!to_insert.empty())
     {
         auto& st = tr.data();
-        st.insert(tr, station_id, datetime, to_insert, with_attrs);
+        st.insert(trc, station_id, datetime, to_insert, with_attrs);
         for (const auto& v: to_insert)
             ids_on_db[IdVarcode(v.id_levtr, v.var->code())] = v.id;
 
@@ -204,7 +204,7 @@ void MeasuredData::write_pending(Tracer<>& trc, Transaction& tr, int station_id,
     if (!to_update.empty())
     {
         auto& st = tr.data();
-        st.update(tr, to_update, with_attrs);
+        st.update(trc, to_update, with_attrs);
     }
     to_insert.clear();
     to_update.clear();
@@ -264,12 +264,12 @@ MeasuredData& MeasuredDataVector::add(const Datetime& datetime)
 }
 
 
-StationData& Station::get_station_data()
+StationData& Station::get_station_data(Tracer<>& trc)
 {
     if (!station_data.loaded)
     {
         v7::StationData& sd = batch.transaction.station_data();
-        sd.query(id, [&](int data_id, wreport::Varcode code) {
+        sd.query(trc, id, [&](int data_id, wreport::Varcode code) {
             station_data.ids_by_code.insert(std::make_pair(code, data_id));
         });
         station_data.loaded = true;
@@ -278,7 +278,7 @@ StationData& Station::get_station_data()
     return station_data;
 }
 
-MeasuredData& Station::get_measured_data(const Datetime& datetime)
+MeasuredData& Station::get_measured_data(Tracer<>& trc, const Datetime& datetime)
 {
     if (MeasuredData* md = measured_data.find(datetime))
         return *md;
@@ -288,7 +288,7 @@ MeasuredData& Station::get_measured_data(const Datetime& datetime)
     if (!is_new)
     {
         v7::Data& d = batch.transaction.data();
-        d.query(id, datetime, [&](int data_id, int id_levtr, wreport::Varcode code) {
+        d.query(trc, id, datetime, [&](int data_id, int id_levtr, wreport::Varcode code) {
             md.ids_on_db.insert(std::make_pair(IdVarcode(id_levtr, code), data_id));
         });
         ++batch.count_select_data;

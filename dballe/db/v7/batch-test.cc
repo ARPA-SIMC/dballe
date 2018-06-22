@@ -127,7 +127,7 @@ add_method("from_db", [](Fixture& f) {
     wassert_true(station->station_data.to_update.empty());
     wassert_true(station->station_data.ids_by_code.empty());
 
-    station->get_station_data();
+    station->get_station_data(trc);
     wassert_true(station->station_data.loaded);
     wassert_true(station->station_data.to_insert.empty());
     wassert_true(station->station_data.to_update.empty());
@@ -138,7 +138,7 @@ add_method("from_db", [](Fixture& f) {
         wassert(actual(it->second) > 0u);
     }
 
-    auto measured_data = station->get_measured_data(Datetime(2013, 10, 16, 10));
+    auto measured_data = station->get_measured_data(trc, Datetime(2013, 10, 16, 10));
     wassert(actual(measured_data.datetime) == Datetime(2013, 10, 16, 10));
     wassert_true(measured_data.to_insert.empty());
     wassert_true(measured_data.to_update.empty());
@@ -167,8 +167,8 @@ add_method("insert", [](Fixture& f) {
     Batch& batch = f.tr->batch;
     batch.set_write_attrs(false);
     auto st = batch.get_station(trc, "synop", Coords(45.0, 11.0), Ident());
-    auto& st_data = st->get_station_data();
-    auto& data = st->get_measured_data(Datetime(2018, 6, 1));
+    auto& st_data = st->get_station_data(trc);
+    auto& data = st->get_measured_data(trc, Datetime(2018, 6, 1));
 
     Var sv(var(WR_VAR(0, 7, 30), 1000.0));
     st_data.add(&sv, batch::ERROR);
@@ -188,7 +188,7 @@ add_method("insert_double_station_value", [](Fixture& f) {
     Batch& batch = f.tr->batch;
     batch.set_write_attrs(false);
     auto st = batch.get_station(trc, "synop", Coords(45.0, 11.0), Ident());
-    auto& st_data = st->get_station_data();
+    auto& st_data = st->get_station_data(trc);
 
     Var sv1(var(WR_VAR(0, 7, 30), 1000.0));
     Var sv2(var(WR_VAR(0, 7, 30), 1001.0));
@@ -213,7 +213,7 @@ add_method("insert_double_measured_value", [](Fixture& f) {
     Batch& batch = f.tr->batch;
     batch.set_write_attrs(false);
     auto st = batch.get_station(trc, "synop", Coords(45.0, 11.0), Ident());
-    auto& data = st->get_measured_data(Datetime(2018, 6, 1));
+    auto& data = st->get_measured_data(trc, Datetime(2018, 6, 1));
 
     Var dv1(var(WR_VAR(0, 12, 101), 25.6));
     Var dv2(var(WR_VAR(0, 12, 101), 25.7));

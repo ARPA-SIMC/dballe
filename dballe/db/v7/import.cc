@@ -65,7 +65,7 @@ void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const 
             if (code >= WR_VAR(0, 4, 1) && code <= WR_VAR(0, 4, 6))
                 continue;
 
-            station->get_station_data().add(l_ana->data[i], flags & DBA_IMPORT_OVERWRITE ? batch::UPDATE : batch::IGNORE);
+            station->get_station_data(trc).add(l_ana->data[i], flags & DBA_IMPORT_OVERWRITE ? batch::UPDATE : batch::IGNORE);
         }
     }
 
@@ -84,7 +84,7 @@ void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const 
             Datetime datetime = msg.get_datetime();
             if (datetime.is_missing())
                 throw error_notfound("date/time informations not found (or incomplete) in message to insert");
-            md = &station->get_measured_data(datetime);
+            md = &station->get_measured_data(trc, datetime);
         }
 
         // Get the database ID of the lev_tr

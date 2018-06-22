@@ -156,6 +156,13 @@ public:
         res->rows = rows;
         return res;
     }
+
+    Step* trace_delete(const std::string& query, unsigned rows=0)
+    {
+        Step* res = add_child(new Step("delete", query));
+        res->rows = rows;
+        return res;
+    }
 };
 
 
@@ -173,6 +180,9 @@ public:
     Tracer<> trace_insert_station_data();
     Tracer<> trace_insert_data();
     Tracer<> trace_add_station_vars();
+    Tracer<> trace_func(const std::string& name);
+    Tracer<> trace_remove_station_data(const Query& query);
+    Tracer<> trace_remove(const Query& query);
 };
 
 }
@@ -184,8 +194,6 @@ struct Trace
     virtual Tracer<> trace_connect(const std::string& url) = 0;
     virtual Tracer<> trace_reset(const char* repinfo_file=0) = 0;
     virtual Tracer<trace::Transaction> trace_transaction() = 0;
-    virtual Tracer<> trace_remove_station_data(const Query& query) = 0;
-    virtual Tracer<> trace_remove(const Query& query) = 0;
     virtual Tracer<> trace_remove_all() = 0;
     virtual Tracer<> trace_vacuum() = 0;
 
@@ -198,8 +206,6 @@ struct NullTrace : public Trace
     Tracer<> trace_connect(const std::string& url) override { return Tracer<>(nullptr); }
     Tracer<> trace_reset(const char* repinfo_file=0) override { return Tracer<>(nullptr); }
     Tracer<trace::Transaction> trace_transaction() override { return Tracer<trace::Transaction>(nullptr); }
-    Tracer<> trace_remove_station_data(const Query& query) override { return Tracer<>(nullptr); }
-    Tracer<> trace_remove(const Query& query) override { return Tracer<>(nullptr); }
     Tracer<> trace_remove_all() override { return Tracer<>(nullptr); }
     Tracer<> trace_vacuum() override { return Tracer<>(nullptr); }
 };
@@ -251,8 +257,6 @@ public:
     Tracer<> trace_connect(const std::string& url) override;
     Tracer<> trace_reset(const char* repinfo_file=0) override;
     Tracer<trace::Transaction> trace_transaction() override;
-    Tracer<> trace_remove_station_data(const Query& query) override;
-    Tracer<> trace_remove(const Query& query) override;
     Tracer<> trace_remove_all() override;
     Tracer<> trace_vacuum() override;
 };

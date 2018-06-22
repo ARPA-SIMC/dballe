@@ -95,6 +95,21 @@ Tracer<> Transaction::trace_add_station_vars()
     return Tracer<>(add_child(new trace::Step("insert_data")));
 }
 
+Tracer<> Transaction::trace_func(const std::string& name)
+{
+    return Tracer<>(add_child(new trace::Step(name)));
+}
+
+Tracer<> Transaction::trace_remove_station_data(const Query& query)
+{
+    return Tracer<>(add_child(new trace::Step("remove_station_data", query_to_string(query))));
+}
+
+Tracer<> Transaction::trace_remove(const Query& query)
+{
+    return Tracer<>(add_child(new trace::Step("remove", query_to_string(query))));
+}
+
 }
 
 void ProfileTrace::print(FILE* out)
@@ -250,18 +265,6 @@ Tracer<trace::Transaction> CollectTrace::trace_transaction()
     trace::Transaction* res = new trace::Transaction;
     steps.push_back(res);
     return res;
-}
-
-Tracer<> CollectTrace::trace_remove_station_data(const Query& query)
-{
-    steps.push_back(new trace::Step("remove_station_data", query_to_string(query)));
-    return Tracer<>(steps.back());
-}
-
-Tracer<> CollectTrace::trace_remove(const Query& query)
-{
-    steps.push_back(new trace::Step("remove", query_to_string(query)));
-    return Tracer<>(steps.back());
 }
 
 Tracer<> CollectTrace::trace_remove_all()
