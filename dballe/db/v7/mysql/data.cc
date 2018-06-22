@@ -193,15 +193,15 @@ void MySQLStationData::insert(dballe::db::v7::Transaction& t, int id_station, st
     }
 }
 
-void MySQLStationData::run_station_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var)> dest)
+void MySQLStationData::run_station_data_query(Tracer<>& trc, const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var)> dest)
 {
     if (qb.bind_in_ident)
         throw error_unimplemented("binding in MySQL driver is not implemented");
 
+    Tracer<> trc_sel(trc ? trc->trace_select(qb.sql_query) : nullptr);
     dballe::Station station;
-    if (tr.trace) tr.trace->trace_select(qb.sql_query);
     conn.exec_use(qb.sql_query, [&](const sql::mysql::Row& row) {
-        if (tr.trace) tr.trace->trace_select_row();
+        if (trc_sel) trc_sel->add_row();
         wreport::Varcode code = row.as_int(5);
         const char* value = row.as_cstring(7);
         auto var = newvar(code, value);
@@ -305,15 +305,15 @@ void MySQLData::insert(dballe::db::v7::Transaction& t, int id_station, const Dat
     }
 }
 
-void MySQLData::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)> dest)
+void MySQLData::run_data_query(Tracer<>& trc, const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)> dest)
 {
     if (qb.bind_in_ident)
         throw error_unimplemented("binding in MySQL driver is not implemented");
+    Tracer<> trc_sel(trc ? trc->trace_select(qb.sql_query) : nullptr);
 
     dballe::Station station;
-    if (tr.trace) tr.trace->trace_select(qb.sql_query);
     conn.exec_use(qb.sql_query, [&](const sql::mysql::Row& row) {
-        if (tr.trace) tr.trace->trace_select_row();
+        if (trc_sel) trc_sel->add_row();
         wreport::Varcode code = row.as_int(6);
         const char* value = row.as_cstring(9);
         auto var = newvar(code, value);
@@ -345,15 +345,15 @@ void MySQLData::run_data_query(const v7::DataQueryBuilder& qb, std::function<voi
     });
 }
 
-void MySQLData::run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)> dest)
+void MySQLData::run_summary_query(Tracer<>& trc, const v7::SummaryQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)> dest)
 {
     if (qb.bind_in_ident)
         throw error_unimplemented("binding in MySQL driver is not implemented");
+    Tracer<> trc_sel(trc ? trc->trace_select(qb.sql_query) : nullptr);
 
     dballe::Station station;
-    if (tr.trace) tr.trace->trace_select(qb.sql_query);
     conn.exec_use(qb.sql_query, [&](const sql::mysql::Row& row) {
-        if (tr.trace) tr.trace->trace_select_row();
+        if (trc_sel) trc_sel->add_row();
         int id_station = row.as_int(0);
         if (id_station != station.id)
         {

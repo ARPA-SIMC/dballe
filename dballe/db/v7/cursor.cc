@@ -246,10 +246,10 @@ struct StationData : public BaseData<CursorStationData, StationDataResult>
 {
     using BaseData::BaseData;
 
-    void load(const DataQueryBuilder& qb)
+    void load(Tracer<>& trc, const DataQueryBuilder& qb)
     {
         results.clear();
-        this->tr->station_data().run_station_data_query(qb, [&](const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var) {
+        this->tr->station_data().run_station_data_query(trc, qb, [&](const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var) {
             results.emplace_back(station, id_data, var.release());
         });
         at_start = true;
@@ -293,11 +293,11 @@ struct Data : public BaseData<CursorData, DataResult>
 {
     using BaseData::BaseData;
 
-    void load(const DataQueryBuilder& qb)
+    void load(Tracer<>& trc, const DataQueryBuilder& qb)
     {
         results.clear();
         set<int> ids;
-        this->tr->data().run_data_query(qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+        this->tr->data().run_data_query(trc, qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
             results.emplace_back(station, id_levtr, datetime, id_data, var.release());
             ids.insert(id_levtr);
         });
@@ -365,11 +365,11 @@ struct Best : public Data
         return true;
     }
 
-    void load(const DataQueryBuilder& qb)
+    void load(Tracer<>& trc, const DataQueryBuilder& qb)
     {
         results.clear();
         set<int> ids;
-        this->tr->data().run_data_query(qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+        this->tr->data().run_data_query(trc, qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
             if (add_to_results(station, id_levtr, datetime, id_data, move(var)))
                 ids.insert(id_levtr);
         });
@@ -447,11 +447,11 @@ struct Summary : public VectorBase<CursorSummary, SummaryResult>
         rec.set_trange(levtr.trange);
     }
 
-    void load(const SummaryQueryBuilder& qb)
+    void load(Tracer<>& trc, const SummaryQueryBuilder& qb)
     {
         results.clear();
         set<int> ids;
-        this->tr->data().run_summary_query(qb, [&](const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t count) {
+        this->tr->data().run_summary_query(trc, qb, [&](const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t count) {
             results.emplace_back(station, id_levtr, code, datetime, count);
             ids.insert(id_levtr);
         });
@@ -483,7 +483,7 @@ unique_ptr<CursorStation> run_station_query(Tracer<>& trc, std::shared_ptr<v7::T
     return res;
 }
 
-unique_ptr<CursorStationData> run_station_data_query(std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
+unique_ptr<CursorStationData> run_station_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
     DataQueryBuilder qb(tr, q, modifiers, true);
@@ -505,12 +505,12 @@ unique_ptr<CursorStationData> run_station_data_query(std::shared_ptr<v7::Transac
     } else {
         auto resptr = new StationData(qb, modifiers);
         res.reset(resptr);
-        resptr->load(qb);
+        resptr->load(trc, qb);
     }
     return res;
 }
 
-unique_ptr<CursorData> run_data_query(std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
+unique_ptr<CursorData> run_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
     DataQueryBuilder qb(tr, q, modifiers, false);
@@ -527,16 +527,16 @@ unique_ptr<CursorData> run_data_query(std::shared_ptr<v7::Transaction> tr, const
     {
         auto resptr = new Best(qb, modifiers);
         res.reset(resptr);
-        resptr->load(qb);
+        resptr->load(trc, qb);
     } else {
         auto resptr = new Data(qb, modifiers);
         res.reset(resptr);
-        resptr->load(qb);
+        resptr->load(trc, qb);
     }
     return res;
 }
 
-unique_ptr<CursorSummary> run_summary_query(std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
+unique_ptr<CursorSummary> run_summary_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
     if (modifiers & DBA_DB_MODIFIER_BEST)
@@ -553,7 +553,7 @@ unique_ptr<CursorSummary> run_summary_query(std::shared_ptr<v7::Transaction> tr,
 
     auto resptr = new Summary(tr, modifiers);
     unique_ptr<CursorSummary> res(resptr);
-    resptr->load(qb);
+    resptr->load(trc, qb);
     return res;
 }
 

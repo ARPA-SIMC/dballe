@@ -151,6 +151,10 @@ public:
     Transaction() : Step("transaction") {}
 
     Tracer<> trace_query_stations(const Query& query);
+    Tracer<> trace_query_station_data(const Query& query);
+    Tracer<> trace_query_data(const Query& query);
+    Tracer<> trace_query_summary(const Query& query);
+    Tracer<> trace_export_msgs(const Query& query);
 };
 
 }
@@ -166,10 +170,6 @@ struct Trace
     virtual Tracer<> trace_remove(const Query& query) = 0;
     virtual Tracer<> trace_remove_all() = 0;
     virtual Tracer<> trace_vacuum() = 0;
-    virtual Tracer<> trace_query_station_data(const Query& query) = 0;
-    virtual Tracer<> trace_query_data(const Query& query) = 0;
-    virtual Tracer<> trace_query_summary(const Query& query) = 0;
-    virtual Tracer<> trace_export_msgs(const Query& query) = 0;
 
     static bool in_test_suite();
     static void set_in_test_suite();
@@ -184,10 +184,6 @@ struct NullTrace : public Trace
     Tracer<> trace_remove(const Query& query) override { return Tracer<>(nullptr); }
     Tracer<> trace_remove_all() override { return Tracer<>(nullptr); }
     Tracer<> trace_vacuum() override { return Tracer<>(nullptr); }
-    Tracer<> trace_query_station_data(const Query& query) override { return Tracer<>(nullptr); }
-    Tracer<> trace_query_data(const Query& query) override { return Tracer<>(nullptr); }
-    Tracer<> trace_query_summary(const Query& query) override { return Tracer<>(nullptr); }
-    Tracer<> trace_export_msgs(const Query& query) override { return Tracer<>(nullptr); }
 };
 
 class CollectTrace : public Trace
@@ -241,10 +237,6 @@ public:
     Tracer<> trace_remove(const Query& query) override;
     Tracer<> trace_remove_all() override;
     Tracer<> trace_vacuum() override;
-    Tracer<> trace_query_station_data(const Query& query) override;
-    Tracer<> trace_query_data(const Query& query) override;
-    Tracer<> trace_query_summary(const Query& query) override;
-    Tracer<> trace_export_msgs(const Query& query) override;
 };
 
 struct QuietCollectTrace : public CollectTrace

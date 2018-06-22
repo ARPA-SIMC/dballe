@@ -265,8 +265,9 @@ void PostgreSQLStationData::insert(dballe::db::v7::Transaction& t, int id_statio
     }
 }
 
-void PostgreSQLStationData::run_station_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var)> dest)
+void PostgreSQLStationData::run_station_data_query(Tracer<>& trc, const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var)> dest)
 {
+    Tracer<> trc_sel(trc ? trc->trace_select(qb.sql_query) : nullptr);
     using namespace dballe::sql::postgresql;
 
     // Start the query asynchronously
@@ -282,9 +283,8 @@ void PostgreSQLStationData::run_station_data_query(const v7::DataQueryBuilder& q
         throw error_postgresql(conn, "executing " + qb.sql_query);
 
     dballe::Station station;
-    if (tr.trace) tr.trace->trace_select(qb.sql_query);
     conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
-        if (tr.trace) tr.trace->trace_select_row(res.rowcount());
+        if (trc_sel) trc_sel->add_row(res.rowcount());
         for (unsigned row = 0; row < res.rowcount(); ++row)
         {
             wreport::Varcode code = res.get_int4(row, 5);
@@ -409,8 +409,9 @@ void PostgreSQLData::insert(dballe::db::v7::Transaction& t, int id_station, cons
     }
 }
 
-void PostgreSQLData::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)> dest)
+void PostgreSQLData::run_data_query(Tracer<>& trc, const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)> dest)
 {
+    Tracer<> trc_sel(trc ? trc->trace_select(qb.sql_query) : nullptr);
     using namespace dballe::sql::postgresql;
 
     // Start the query asynchronously
@@ -426,9 +427,8 @@ void PostgreSQLData::run_data_query(const v7::DataQueryBuilder& qb, std::functio
         throw error_postgresql(conn, "executing " + qb.sql_query);
 
     dballe::Station station;
-    if (tr.trace) tr.trace->trace_select(qb.sql_query);
     conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
-        if (tr.trace) tr.trace->trace_select_row(res.rowcount());
+        if (trc_sel) trc_sel->add_row(res.rowcount());
         for (unsigned row = 0; row < res.rowcount(); ++row)
         {
             wreport::Varcode code = res.get_int4(row, 6);
@@ -463,8 +463,9 @@ void PostgreSQLData::run_data_query(const v7::DataQueryBuilder& qb, std::functio
     });
 }
 
-void PostgreSQLData::run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)> dest)
+void PostgreSQLData::run_summary_query(Tracer<>& trc, const v7::SummaryQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)> dest)
 {
+    Tracer<> trc_sel(trc ? trc->trace_select(qb.sql_query) : nullptr);
     using namespace dballe::sql::postgresql;
 
     // Start the query asynchronously
@@ -480,9 +481,8 @@ void PostgreSQLData::run_summary_query(const v7::SummaryQueryBuilder& qb, std::f
         throw error_postgresql(conn, "executing " + qb.sql_query);
 
     dballe::Station station;
-    if (tr.trace) tr.trace->trace_select(qb.sql_query);
     conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
-        if (tr.trace) tr.trace->trace_select_row(res.rowcount());
+        if (trc_sel) trc_sel->add_row(res.rowcount());
         // fprintf(stderr, "ST %d vi %d did %d d %d sd %d\n", qb.select_station, qb.select_varinfo, qb.select_data_id, qb.select_data, qb.select_summary_details);
         for (unsigned row = 0; row < res.rowcount(); ++row)
         {

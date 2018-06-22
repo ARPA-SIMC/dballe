@@ -824,19 +824,21 @@ this->add_method("perf", [](Fixture& f) {
 
     // Query it back
     api.unsetall();
+    f.tr->trc->clear();
     api.setd("lat", 44.5);
     api.setd("lon", 11.5);
     api.setdate(2013, 4, 25, 12, 0, 0);
     api.setc("var", "B10004");
     wassert(actual(api.voglioquesto()) == 1);
-    wassert(actual(trace->profile_count_select) == 4);
-    wassert(actual(trace->profile_count_select_rows) == 2);
+    v7::trace::Aggregate selects = f.tr->trc->aggregate("select");
+    wassert(actual(selects.count) == 2);
+    wassert(actual(selects.rows) == 2);
 
     // Query stations only
     api.unsetall();
     f.tr->trc->clear();
     wassert(actual(api.quantesono()) == 1);
-    v7::trace::Aggregate selects = f.tr->trc->aggregate("select");
+    selects = f.tr->trc->aggregate("select");
     wassert(actual(selects.count) == 1);
     wassert(actual(selects.rows) == 1);
 });

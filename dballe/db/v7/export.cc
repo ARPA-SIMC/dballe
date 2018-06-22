@@ -103,7 +103,7 @@ struct DataRow
 
 bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest)
 {
-    auto trc = db->trace->trace_export_msgs(query);
+    Tracer<> trc(this->trc ? this->trc->trace_export_msgs(query) : nullptr);
     v7::LevTr& lt = levtr();
 
     // Message being built
@@ -128,7 +128,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
     // Retrieve results, buffering them locally to avoid performing concurrent
     // queries
     std::vector<DataRow> results;
-    data().run_data_query(qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+    data().run_data_query(trc, qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
         results.emplace_back(station, id_levtr, datetime, id_data, move(var));
     });
 

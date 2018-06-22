@@ -55,6 +55,26 @@ Tracer<> Transaction::trace_query_stations(const Query& query)
     return Tracer<>(add_child(new trace::Step("query_stations", query_to_string(query))));
 }
 
+Tracer<> Transaction::trace_query_station_data(const Query& query)
+{
+    return Tracer<>(add_child(new trace::Step("query_station_data", query_to_string(query))));
+}
+
+Tracer<> Transaction::trace_query_data(const Query& query)
+{
+    return Tracer<>(add_child(new trace::Step("query_data", query_to_string(query))));
+}
+
+Tracer<> Transaction::trace_query_summary(const Query& query)
+{
+    return Tracer<>(add_child(new trace::Step("query_summary", query_to_string(query))));
+}
+
+Tracer<> Transaction::trace_export_msgs(const Query& query)
+{
+    return Tracer<>(add_child(new trace::Step("export_msgs", query_to_string(query))));
+}
+
 }
 
 void ProfileTrace::print(FILE* out)
@@ -233,30 +253,6 @@ Tracer<> CollectTrace::trace_remove_all()
 Tracer<> CollectTrace::trace_vacuum()
 {
     steps.push_back(new trace::Step("vacuum"));
-    return Tracer<>(steps.back());
-}
-
-Tracer<> CollectTrace::trace_query_station_data(const Query& query)
-{
-    steps.push_back(new trace::Step("query_station_data", query_to_string(query)));
-    return Tracer<>(steps.back());
-}
-
-Tracer<> CollectTrace::trace_query_data(const Query& query)
-{
-    steps.push_back(new trace::Step("query_data", query_to_string(query)));
-    return Tracer<>(steps.back());
-}
-
-Tracer<> CollectTrace::trace_query_summary(const Query& query)
-{
-    steps.push_back(new trace::Step("query_summary", query_to_string(query)));
-    return Tracer<>(steps.back());
-}
-
-Tracer<> CollectTrace::trace_export_msgs(const Query& query)
-{
-    steps.push_back(new trace::Step("export_msgs", query_to_string(query)));
     return Tracer<>(steps.back());
 }
 
