@@ -27,11 +27,6 @@ Transaction::Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Tra
     m_levtr = db->driver().create_levtr(*this).release();
     m_station_data = db->driver().create_station_data(*this).release();
     m_data = db->driver().create_data(*this).release();
-
-    if (getenv("DBA_PROFILE") != nullptr)
-        trace = new ProfileTrace;
-    else if (Trace::in_test_suite())
-        trace = new QuietProfileTrace;
 }
 
 Transaction::~Transaction()
@@ -43,17 +38,6 @@ Transaction::~Transaction()
     delete m_station;
     delete m_repinfo;
     delete sql_transaction;
-    delete trace;
-}
-
-void Transaction::print_profile_counters()
-{
-    if (trace) trace->print(stderr);
-}
-
-void Transaction::reset_profile_counters()
-{
-    if (trace) trace->reset();
 }
 
 v7::Repinfo& Transaction::repinfo()
@@ -87,7 +71,6 @@ void Transaction::commit()
     sql_transaction->commit();
     clear_cached_state();
     fired = true;
-    print_profile_counters();
 }
 
 void Transaction::rollback()
@@ -96,7 +79,6 @@ void Transaction::rollback()
     sql_transaction->rollback();
     clear_cached_state();
     fired = true;
-    print_profile_counters();
 }
 
 void Transaction::clear_cached_state()

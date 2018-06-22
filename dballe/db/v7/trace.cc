@@ -112,6 +112,7 @@ Tracer<> Transaction::trace_remove(const Query& query)
 
 }
 
+#if 0
 void ProfileTrace::print(FILE* out)
 {
     fprintf(stderr, "Transaction end: %u queries\n", profile_count_select + profile_count_insert + profile_count_update + profile_count_delete);
@@ -135,6 +136,7 @@ void ProfileTrace::reset()
 void QuietProfileTrace::print(FILE* out)
 {
 }
+#endif
 
 #if 0
 TraceOp::TraceOp()

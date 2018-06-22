@@ -27,7 +27,6 @@ protected:
     v7::Data* m_data = nullptr;
 
     void add_msg_to_batch(Tracer<>& trc, const Message& message, const char* repmemo, int flags);
-    void print_profile_counters();
 
 public:
     typedef v7::DB DB;
@@ -39,8 +38,6 @@ public:
     bool fired = false;
     /// Batch importer
     v7::Batch batch;
-    /// Query-level tracer
-    v7::SQLTrace* trace = nullptr;
     /// Tracing system
     v7::Tracer<v7::trace::Transaction> trc;
 
@@ -50,8 +47,6 @@ public:
     Transaction& operator=(const Transaction&) = delete;
     Transaction& operator=(Transaction&&) = delete;
     ~Transaction();
-
-    void reset_profile_counters();
 
     /// Access the repinfo table
     v7::Repinfo& repinfo();

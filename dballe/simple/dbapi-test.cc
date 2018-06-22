@@ -805,7 +805,6 @@ this->add_method("issue52", [](Fixture& f) {
 this->add_method("perf", [](Fixture& f) {
     // Test prendilo anaid
     fortran::DbAPI api(f.tr, "write", "write", "write");
-    f.tr->reset_profile_counters();
 
     // Run a prendilo
     f.tr->trc->clear();
@@ -825,8 +824,8 @@ this->add_method("perf", [](Fixture& f) {
     wassert(actual(stats.rows) == 3);
 
     // Query it back
-    api.unsetall();
     f.tr->trc->clear();
+    api.unsetall();
     api.setd("lat", 44.5);
     api.setd("lon", 11.5);
     api.setdate(2013, 4, 25, 12, 0, 0);
@@ -837,8 +836,8 @@ this->add_method("perf", [](Fixture& f) {
     wassert(actual(stats.rows) == 2);
 
     // Query stations only
-    api.unsetall();
     f.tr->trc->clear();
+    api.unsetall();
     wassert(actual(api.quantesono()) == 1);
     stats = f.tr->trc->aggregate("select");
     wassert(actual(stats.count) == 1);
