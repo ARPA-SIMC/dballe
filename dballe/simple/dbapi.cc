@@ -96,7 +96,7 @@ DbAPI::DbAPI(std::shared_ptr<db::Transaction> tr, const char* anaflag, const cha
 }
 
 DbAPI::DbAPI(std::shared_ptr<db::Transaction> tr, unsigned perms)
-    : tr(tr), ana_cur(0), query_cur(0), input_file(0), output_file(0)
+    : tr(tr)
 {
     this->perms = perms;
 }
@@ -330,10 +330,7 @@ int DbAPI::voglioancora()
             tr->attr_query_data(attr_reference_id, dest);
             break;
         case ATTR_DAMMELO:
-            if (dynamic_cast<const db::CursorStationData*>(query_cur))
-                tr->attr_query_station(query_cur->attr_reference_id(), dest);
-            else
-                tr->attr_query_data(query_cur->attr_reference_id(), dest);
+            query_cur->attr_query(dest);
             break;
         case ATTR_PRENDILO:
             throw error_consistency("voglioancora cannot be called after a prendilo");

@@ -260,6 +260,17 @@ struct StationData : public BaseData<CursorStationData, StationDataResult>
     wreport::Varcode get_varcode() const override { return cur->var->code(); }
     wreport::Var get_var() const override { return *cur->var; }
     int attr_reference_id() const override { return cur->id_data; }
+
+    void attr_query(std::function<void(std::unique_ptr<wreport::Var>)>&& dest, bool force_read) override
+    {
+        if (!force_read && modifiers & DBA_DB_MODIFIER_WITH_ATTRIBUTES)
+        {
+            for (const Var* a = cur->var->next_attr(); a != NULL; a = a->next_attr())
+                dest(std::unique_ptr<wreport::Var>(new Var(*a)));
+        } else {
+            tr->attr_query_station(attr_reference_id(), std::move(dest));
+        }
+    }
 };
 
 
@@ -328,6 +339,17 @@ struct Data : public BaseData<CursorData, DataResult>
         rec.set_level(levtr.level);
         rec.set_trange(levtr.trange);
     }
+
+    void attr_query(std::function<void(std::unique_ptr<wreport::Var>)>&& dest, bool force_read) override
+    {
+        if (!force_read && modifiers & DBA_DB_MODIFIER_WITH_ATTRIBUTES)
+        {
+            for (const Var* a = cur->var->next_attr(); a != NULL; a = a->next_attr())
+                dest(std::unique_ptr<wreport::Var>(new Var(*a)));
+        } else {
+            tr->attr_query_data(attr_reference_id(), std::move(dest));
+        }
+    }
 };
 
 struct Best : public Data
@@ -376,6 +398,17 @@ struct Best : public Data
         cur = results.begin();
 
         this->tr->levtr().prefetch_ids(trc, ids);
+    }
+
+    void attr_query(std::function<void(std::unique_ptr<wreport::Var>)>&& dest, bool force_read) override
+    {
+        if (!force_read && modifiers & DBA_DB_MODIFIER_WITH_ATTRIBUTES)
+        {
+            for (const Var* a = cur->var->next_attr(); a != NULL; a = a->next_attr())
+                dest(std::unique_ptr<wreport::Var>(new Var(*a)));
+        } else {
+            tr->attr_query_data(attr_reference_id(), std::move(dest));
+        }
     }
 };
 

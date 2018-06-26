@@ -124,54 +124,74 @@ this->add_method("query_basic", [](Fixture& f) {
     api.dimenticami();
     wassert(actual(api.voglioquesto()) == 0);
 });
+
 this->add_method("query_attrs", [](Fixture& f) {
     // Test attrs
     fortran::DbAPI api(f.tr, "write", "write", "write");
     populate_variables(api);
 
-    int reference_id;
+    for (const char* query: { "", "attrs", "best", "attrs,best" })
+    {
+        WREPORT_TEST_INFO(locinfo);
+        locinfo() << "Query: " << query;
 
-    // Query a variable
-    api.setc("var", "B12101");
-    wassert(actual(api.voglioquesto()) == 1);
-    api.dammelo();
+        int reference_id;
 
-    wassert(actual(api.test_get_attr_state()) == fortran::DbAPI::ATTR_DAMMELO);
+        // Query a variable
+        api.setc("var", "B12101");
+        api.setc("query", query);
+        wassert(actual(api.voglioquesto()) == 1);
+        wassert(api.dammelo());
 
-    // Store its context info to access attributes of this variable later
-    reference_id = api.enqi("context_id");
+        wassert(actual(api.test_get_attr_state()) == fortran::DbAPI::ATTR_DAMMELO);
 
-    // It has no attributes
-    wassert(actual(api.voglioancora()) ==  0);
-    wassert(actual(api.test_get_attr_state()) == fortran::DbAPI::ATTR_DAMMELO);
+        // Store its context info to access attributes of this variable later
+        reference_id = api.enqi("context_id");
 
-    // Set one attribute after a dammelo
-    api.seti("*B33007", 50);
-    api.critica();
-    wassert(actual(api.test_get_attr_state()) == fortran::DbAPI::ATTR_DAMMELO);
+        // It has no attributes
+        wassert(actual(api.voglioancora()) ==  0);
+        wassert(actual(api.test_get_attr_state()) == fortran::DbAPI::ATTR_DAMMELO);
 
-    // It now has one attribute
-    wassert(actual(api.voglioancora()) ==  1);
+        // Set one attribute after a dammelo
+        api.seti("*B33007", 50);
+        wassert(api.critica());
+        wassert(actual(api.test_get_attr_state()) == fortran::DbAPI::ATTR_DAMMELO);
+
+        // It now has one attribute
+        wassert(actual(api.voglioancora()) ==  1);
+        wassert(actual(api.enqi("*B33007")) == 50);
+
+        // Query it back, it has attributes
+        api.setc("var", "B12101");
+        api.setc("query", query);
+        wassert(actual(api.voglioquesto()) == 1);
+        wassert(api.dammelo());
+        wassert(actual(api.voglioancora()) == 1);
+        wassert(actual(api.enqi("*B33007")) == 50);
 
 
-    // Query a different variable, it has no attributes
-    api.setc("var", "B11002");
-    wassert(actual(api.voglioquesto()) == 1);
-    api.dammelo();
-    wassert(actual(api.voglioancora()) == 0);
+        // Query a different variable, it has no attributes
+        api.setc("var", "B11002");
+        api.setc("query", query);
+        wassert(actual(api.voglioquesto()) == 1);
+        wassert(api.dammelo());
+        wassert(actual(api.voglioancora()) == 0);
 
 
-    // Query the first variable using its stored reference id
-    api.seti("*context_id", reference_id);
-    api.setc("*var_related", "B12101");
-    wassert(actual(api.test_get_attr_state()) == fortran::DbAPI::ATTR_REFERENCE);
-    wassert(actual(api.voglioancora()) == 1);
-    wassert(actual(api.enqi("*B33007")) == 50);
+        // Query the first variable using its stored reference id
+        api.seti("*context_id", reference_id);
+        api.setc("*var_related", "B12101");
+        wassert(actual(api.test_get_attr_state()) == fortran::DbAPI::ATTR_REFERENCE);
+        wassert(actual(api.voglioancora()) == 1);
+        wassert(actual(api.enqi("*B33007")) == 50);
 
-    // Delete all attributes
-    api.scusa();
-    wassert(actual(api.voglioancora()) == 0);
+
+        // Delete all attributes
+        wassert(api.scusa());
+        wassert(actual(api.voglioancora()) == 0);
+    }
 });
+
 this->add_method("insert_attrs_prendilo", [](Fixture& f) {
     // Test attrs prendilo
     fortran::DbAPI api(f.tr, "write", "write", "write");
@@ -890,8 +910,8 @@ this->add_method("perf_read_attrs", [](Fixture& f) {
 
     // Check number of queries
     stats = f.tr->trc->aggregate("select");
-    wassert(actual(stats.count) == 2);
-    wassert(actual(stats.rows) == 14);
+    wassert(actual(stats.count) == 1);
+    wassert(actual(stats.rows) == 7);
 
     // Read all measured data and their attributes
     f.tr->trc->clear();
@@ -904,7 +924,7 @@ this->add_method("perf_read_attrs", [](Fixture& f) {
     // Check number of queries
     stats = f.tr->trc->aggregate("select");
     wassert(actual(stats.count) == 2);
-    wassert(actual(stats.rows) == 550);
+    wassert(actual(stats.rows) == 606);
 });
 
 }

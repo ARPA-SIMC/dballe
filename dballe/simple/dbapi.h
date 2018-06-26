@@ -22,10 +22,10 @@ class DbAPI : public CommonAPIImplementation
 {
 protected:
     std::shared_ptr<db::Transaction> tr;
-    db::CursorStation* ana_cur;
-    db::CursorValue* query_cur;
-    InputFile* input_file;
-    OutputFile* output_file;
+    db::CursorStation* ana_cur = nullptr;
+    db::CursorValue* query_cur = nullptr;
+    InputFile* input_file = nullptr;
+    OutputFile* output_file = nullptr;
     int last_inserted_station_id;
 
     /// Store information about the database ID of a variable
