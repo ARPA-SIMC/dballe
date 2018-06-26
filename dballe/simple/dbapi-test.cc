@@ -844,6 +844,69 @@ this->add_method("perf_data", [](Fixture& f) {
     wassert(actual(stats.rows) == 1);
 });
 
+this->add_method("perf_read_attrs", [](Fixture& f) {
+    auto msgs = read_msgs("bufr/temp-gts1.bufr", File::BUFR, msg::ImporterOptions::from_string("accurate"));
+    wassert(f.tr->import_msgs(msgs, nullptr, 0));
+    wassert(f.tr->clear_cached_state());
+
+    // Readonly test session
+    fortran::DbAPI api(f.tr, "read", "read", "read");
+
+    // Read all station data and their attributes
+    f.tr->trc->clear();
+    api.unsetall();
+    api.setcontextana();
+    wassert(actual(api.voglioquesto()) == 7);
+    while (api.dammelo())
+        wassert(api.voglioancora());
+
+    // Check number of queries
+    v7::trace::Aggregate stats = f.tr->trc->aggregate("select");
+    wassert(actual(stats.count) == 8);
+    wassert(actual(stats.rows) == 14);
+
+    // Read all measured data and their attributes
+    f.tr->trc->clear();
+    api.unsetall();
+    wassert(actual(api.voglioquesto()) == 550);
+    while (api.dammelo())
+        wassert(api.voglioancora());
+
+    // Check number of queries
+    stats = f.tr->trc->aggregate("select");
+    wassert(actual(stats.count) == 552);
+    wassert(actual(stats.rows) == 1156);
+
+    // Repeat with query=attrs
+
+    // Read all station data and their attributes
+    f.tr->trc->clear();
+    api.unsetall();
+    api.setcontextana();
+    api.setc("query", "attrs");
+    wassert(actual(api.voglioquesto()) == 7);
+    while (api.dammelo())
+        wassert(api.voglioancora());
+
+    // Check number of queries
+    stats = f.tr->trc->aggregate("select");
+    wassert(actual(stats.count) == 2);
+    wassert(actual(stats.rows) == 14);
+
+    // Read all measured data and their attributes
+    f.tr->trc->clear();
+    api.unsetall();
+    api.setc("query", "attrs");
+    wassert(actual(api.voglioquesto()) == 550);
+    while (api.dammelo())
+        wassert(api.voglioancora());
+
+    // Check number of queries
+    stats = f.tr->trc->aggregate("select");
+    wassert(actual(stats.count) == 2);
+    wassert(actual(stats.rows) == 550);
+});
+
 }
 
 template<typename DB>
