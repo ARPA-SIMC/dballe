@@ -18,9 +18,9 @@
  */
 
 #include "common.h"
-#include "msg/wr_codec.h"
+#include "dballe/msg/wr_codec.h"
+#include "dballe/msg/context.h"
 #include <wreport/bulletin.h>
-#include "msg/context.h"
 
 using namespace wreport;
 using namespace std;
@@ -55,7 +55,7 @@ struct ShipBase : public Template
     CommonSynopExporter synop;
     bool is_crex;
 
-    ShipBase(const Exporter::Options& opts, const Messages& msgs)
+    ShipBase(const ExporterOptions& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
@@ -98,7 +98,7 @@ struct ShipBase : public Template
 
 struct ShipECMWFBase : public ShipBase
 {
-    ShipECMWFBase(const Exporter::Options& opts, const Messages& msgs)
+    ShipECMWFBase(const ExporterOptions& opts, const Messages& msgs)
         : ShipBase(opts, msgs) {}
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
@@ -188,7 +188,7 @@ struct ShipECMWFBase : public ShipBase
 
 struct ShipAbbr : public ShipECMWFBase
 {
-    ShipAbbr(const Exporter::Options& opts, const Messages& msgs)
+    ShipAbbr(const ExporterOptions& opts, const Messages& msgs)
         : ShipECMWFBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_ABBR_NAME; }
@@ -205,7 +205,7 @@ struct ShipAbbr : public ShipECMWFBase
 
 struct ShipPlain : public ShipECMWFBase
 {
-    ShipPlain(const Exporter::Options& opts, const Messages& msgs)
+    ShipPlain(const ExporterOptions& opts, const Messages& msgs)
         : ShipECMWFBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_PLAIN_NAME; }
@@ -222,7 +222,7 @@ struct ShipPlain : public ShipECMWFBase
 
 struct ShipAuto : public ShipECMWFBase
 {
-    ShipAuto(const Exporter::Options& opts, const Messages& msgs)
+    ShipAuto(const ExporterOptions& opts, const Messages& msgs)
         : ShipECMWFBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_AUTO_NAME; }
@@ -239,7 +239,7 @@ struct ShipAuto : public ShipECMWFBase
 
 struct ShipReduced : public ShipECMWFBase
 {
-    ShipReduced(const Exporter::Options& opts, const Messages& msgs)
+    ShipReduced(const ExporterOptions& opts, const Messages& msgs)
         : ShipECMWFBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_REDUCED_NAME; }
@@ -256,7 +256,7 @@ struct ShipReduced : public ShipECMWFBase
 
 struct ShipECMWFSecondRecord : public ShipBase
 {
-    ShipECMWFSecondRecord(const Exporter::Options& opts, const Messages& msgs)
+    ShipECMWFSecondRecord(const ExporterOptions& opts, const Messages& msgs)
         : ShipBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_ECMWF_SECOND_NAME; }
@@ -355,7 +355,7 @@ struct ShipWMO : public ShipBase
 {
     bool is_crex;
 
-    ShipWMO(const Exporter::Options& opts, const Messages& msgs)
+    ShipWMO(const ExporterOptions& opts, const Messages& msgs)
         : ShipBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_WMO_NAME; }
@@ -427,7 +427,7 @@ struct ShipWMO : public ShipBase
 void register_ship(TemplateRegistry& r)
 {
     r.register_factory(1, "ship", "Synop ship (autodetect)",
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 // Scan msgs and pick the right one
                 bool maybe_plain = true;
                 bool maybe_auto = true;
@@ -474,32 +474,32 @@ void register_ship(TemplateRegistry& r)
             });
 
     r.register_factory(1, SHIP_PLAIN_NAME, SHIP_PLAIN_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new ShipPlain(opts, msgs));
             });
 
     r.register_factory(1, SHIP_ECMWF_SECOND_NAME, SHIP_ECMWF_SECOND_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new ShipECMWFSecondRecord(opts, msgs));
             });
 
     r.register_factory(1, SHIP_ABBR_NAME, SHIP_ABBR_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new ShipAbbr(opts, msgs));
             });
 
     r.register_factory(1, SHIP_AUTO_NAME, SHIP_AUTO_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new ShipAuto(opts, msgs));
             });
 
     r.register_factory(1, SHIP_REDUCED_NAME, SHIP_REDUCED_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new ShipReduced(opts, msgs));
             });
 
     r.register_factory(1, SHIP_WMO_NAME, SHIP_WMO_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new ShipWMO(opts, msgs));
             });
 }

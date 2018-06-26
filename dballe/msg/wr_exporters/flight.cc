@@ -17,9 +17,9 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "msg/wr_codec.h"
-#include "msg/msg.h"
-#include "msg/context.h"
+#include "dballe/msg/wr_codec.h"
+#include "dballe/msg/msg.h"
+#include "dballe/msg/context.h"
 #include <wreport/bulletin.h>
 
 using namespace wreport;
@@ -61,7 +61,7 @@ struct FlightBase : public Template
     bool is_crex;
     const msg::Context* flight_ctx;
 
-    FlightBase(const Exporter::Options& opts, const Messages& msgs)
+    FlightBase(const ExporterOptions& opts, const Messages& msgs)
         : Template(opts, msgs), flight_ctx(0) {}
 
     void add(wreport::Varcode code, const wreport::Var* var) const
@@ -146,7 +146,7 @@ struct FlightBase : public Template
 
 struct Airep : public FlightBase
 {
-    Airep(const Exporter::Options& opts, const Messages& msgs)
+    Airep(const ExporterOptions& opts, const Messages& msgs)
         : FlightBase(opts, msgs) {}
 
     virtual const char* name() const { return AIREP_NAME; }
@@ -211,7 +211,7 @@ struct Airep : public FlightBase
 
 struct Amdar : public Airep
 {
-    Amdar(const Exporter::Options& opts, const Messages& msgs)
+    Amdar(const ExporterOptions& opts, const Messages& msgs)
         : Airep(opts, msgs) {}
 
     virtual const char* name() const { return AMDAR_NAME; }
@@ -226,7 +226,7 @@ struct Amdar : public Airep
 
 struct AmdarWMO : public FlightBase
 {
-    AmdarWMO(const Exporter::Options& opts, const Messages& msgs)
+    AmdarWMO(const ExporterOptions& opts, const Messages& msgs)
         : FlightBase(opts, msgs) {}
 
     virtual const char* name() const { return AMDAR_WMO_NAME; }
@@ -325,7 +325,7 @@ struct AmdarWMO : public FlightBase
 
 struct Acars : public FlightBase
 {
-    Acars(const Exporter::Options& opts, const Messages& msgs)
+    Acars(const ExporterOptions& opts, const Messages& msgs)
         : FlightBase(opts, msgs) {}
 
     virtual const char* name() const { return ACARS_NAME; }
@@ -423,7 +423,7 @@ struct Acars : public FlightBase
 
 struct AcarsWMO : public AmdarWMO
 {
-    AcarsWMO(const Exporter::Options& opts, const Messages& msgs)
+    AcarsWMO(const ExporterOptions& opts, const Messages& msgs)
         : AmdarWMO(opts, msgs) {}
 
     virtual const char* name() const { return ACARS_WMO_NAME; }
@@ -444,35 +444,35 @@ struct AcarsWMO : public AmdarWMO
 void register_flight(TemplateRegistry& r)
 {
     r.register_factory(4, AIREP_NAME, AIREP_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new Airep(opts, msgs));
             });
     r.register_factory(4, AIREP_ECMWF_NAME, AIREP_ECMWF_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new Airep(opts, msgs));
             });
     r.register_factory(4, AMDAR_NAME, AMDAR_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new Amdar(opts, msgs));
             });
     r.register_factory(4, AMDAR_ECMWF_NAME, AMDAR_ECMWF_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new Amdar(opts, msgs));
             });
     r.register_factory(4, AMDAR_WMO_NAME, AMDAR_WMO_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new AmdarWMO(opts, msgs));
             });
     r.register_factory(4, ACARS_NAME, ACARS_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new Acars(opts, msgs));
             });
     r.register_factory(4, ACARS_ECMWF_NAME, ACARS_ECMWF_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new Acars(opts, msgs));
             });
     r.register_factory(4, ACARS_WMO_NAME, ACARS_WMO_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new AcarsWMO(opts, msgs));
             });
 }

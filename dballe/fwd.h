@@ -3,6 +3,8 @@
 
 namespace dballe {
 struct Query;
+struct Messages;
+struct Message;
 }
 
 #endif

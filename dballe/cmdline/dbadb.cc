@@ -147,7 +147,7 @@ int Dbadb::do_import(const std::string& fname, Reader& reader, int import_flags,
 
 int Dbadb::do_export(const Query& query, File& file, const char* output_template, const char* forced_repmemo)
 {
-    msg::Exporter::Options opts;
+    msg::ExporterOptions opts;
     if (output_template && output_template[0] != 0)
         opts.template_name = output_template;
 

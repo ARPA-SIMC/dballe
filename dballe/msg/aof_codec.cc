@@ -39,7 +39,7 @@ using namespace std;
 namespace dballe {
 namespace msg {
 
-AOFImporter::AOFImporter(const Options& opts)
+AOFImporter::AOFImporter(const ImporterOptions& opts)
     : Importer(opts) {}
 AOFImporter::~AOFImporter() {}
 

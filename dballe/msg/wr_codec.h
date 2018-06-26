@@ -22,7 +22,7 @@ struct Context;
 class WRImporter : public Importer
 {
 public:
-    WRImporter(const Options& opts);
+    WRImporter(const ImporterOptions& opts);
 
     /**
      * Import a decoded BUFR/CREX message
@@ -47,7 +47,7 @@ public:
 class BufrImporter : public WRImporter
 {
 public:
-    BufrImporter(const Options& opts=Options());
+    BufrImporter(const ImporterOptions& opts=ImporterOptions());
     virtual ~BufrImporter();
 
     bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const override;
@@ -56,7 +56,7 @@ public:
 class CrexImporter : public WRImporter
 {
 public:
-    CrexImporter(const Options& opts=Options());
+    CrexImporter(const ImporterOptions& opts=ImporterOptions());
     virtual ~CrexImporter();
 
     bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const override;
@@ -69,7 +69,7 @@ class Template;
 class WRExporter : public Exporter
 {
 public:
-    WRExporter(const Options& opts);
+    WRExporter(const ExporterOptions& opts);
 
     /**
      * Import a decoded BUFR/CREX message
@@ -85,7 +85,7 @@ public:
 class BufrExporter : public WRExporter
 {
 public:
-    BufrExporter(const Options& opts=Options());
+    BufrExporter(const ExporterOptions& opts=ExporterOptions());
     virtual ~BufrExporter();
 
     virtual std::string to_binary(const Messages& msgs) const;
@@ -95,7 +95,7 @@ public:
 class CrexExporter : public WRExporter
 {
 public:
-    CrexExporter(const Options& opts=Options());
+    CrexExporter(const ExporterOptions& opts=ExporterOptions());
     virtual ~CrexExporter();
 
     virtual std::string to_binary(const Messages& msgs) const;
@@ -142,14 +142,14 @@ protected:
     void do_D01023() const;
 
 public:
-    const Exporter::Options& opts;
+    const ExporterOptions& opts;
     const Messages& msgs;
     const Msg* msg = 0;     // Msg being read
     const msg::Context* c_station = 0;
     const msg::Context* c_gnd_instant = 0;
     wreport::Subset* subset = 0; // Subset being written
 
-    Template(const Exporter::Options& opts, const Messages& msgs)
+    Template(const ExporterOptions& opts, const Messages& msgs)
         : opts(opts), msgs(msgs) {}
     virtual ~Template() {}
 
@@ -160,7 +160,7 @@ public:
 
 struct TemplateFactory
 {
-    typedef std::function<std::unique_ptr<Template>(const Exporter::Options& opts, const Messages& msgs)> factory_func;
+    typedef std::function<std::unique_ptr<Template>(const ExporterOptions& opts, const Messages& msgs)> factory_func;
 
     unsigned data_category = MISSING_INT;
     std::string name;

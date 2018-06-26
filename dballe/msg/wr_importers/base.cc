@@ -1,5 +1,6 @@
 #include "base.h"
-#include "core/var.h"
+#include "dballe/core/var.h"
+#include "dballe/msg/msg.h"
 #include <wreport/bulletin.h>
 #include <algorithm>
 #include <cmath>
@@ -88,7 +89,7 @@ void Importer::set(const wreport::Var& var, wreport::Varcode code, const Level& 
     msg->set(var, code, level, trange);
 }
 
-std::unique_ptr<Importer> Importer::createSat(const msg::Importer::Options&) { throw error_unimplemented("WB sat Importers"); }
+std::unique_ptr<Importer> Importer::createSat(const msg::ImporterOptions&) { throw error_unimplemented("WB sat Importers"); }
 
 void WMOImporter::import_var(const Var& var)
 {
@@ -525,7 +526,7 @@ void SynopBaseImporter::set(std::unique_ptr<Interpreted> val)
         msg->set(move(val->var), val->level, val->trange);
 }
 
-SynopBaseImporter::SynopBaseImporter(const msg::Importer::Options& opts)
+SynopBaseImporter::SynopBaseImporter(const msg::ImporterOptions& opts)
     : WMOImporter(opts)
 {
 }

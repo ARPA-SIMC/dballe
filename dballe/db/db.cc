@@ -5,6 +5,7 @@
 #include "dballe/sql/sqlite.h"
 #include "dballe/message.h"
 #include "dballe/core/values.h"
+#include "dballe/file.h"
 #include <wreport/error.h>
 #include <cstring>
 #include <cstdlib>
@@ -58,7 +59,6 @@ void Transaction::import_msgs(const Messages& msgs, const char* repmemo, int fla
     for (const auto& i: msgs)
         import_msg(i, repmemo, flags);
 }
-
 
 }
 

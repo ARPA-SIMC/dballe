@@ -802,7 +802,7 @@ this->add_method("issue52", [](Fixture& f) {
     // error: no year information found in message to import
 });
 
-this->add_method("perf", [](Fixture& f) {
+this->add_method("perf_data", [](Fixture& f) {
     // Test prendilo anaid
     fortran::DbAPI api(f.tr, "write", "write", "write");
 

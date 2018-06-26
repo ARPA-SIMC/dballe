@@ -1,4 +1,5 @@
 #include "base.h"
+#include "dballe/msg/msg.h"
 #include <wreport/bulletin.h>
 #include <wreport/subset.h>
 #include <cstdlib>
@@ -18,7 +19,7 @@ protected:
     virtual void import_var(const Var& var);
 
 public:
-    ShipImporter(const msg::Importer::Options& opts)
+    ShipImporter(const msg::ImporterOptions& opts)
         : SynopBaseImporter(opts) {}
     virtual ~ShipImporter() {}
 
@@ -101,7 +102,7 @@ void ShipImporter::import_var(const Var& var)
 
 } // anonynmous namespace
 
-std::unique_ptr<Importer> Importer::createShip(const msg::Importer::Options& opts)
+std::unique_ptr<Importer> Importer::createShip(const msg::ImporterOptions& opts)
 {
     return unique_ptr<Importer>(new ShipImporter(opts));
 }

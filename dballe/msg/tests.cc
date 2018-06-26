@@ -111,7 +111,7 @@ const char* aof_files[] = {
 	NULL,
 };
 
-Messages read_msgs(const char* filename, File::Encoding type, const msg::Importer::Options& opts)
+Messages read_msgs(const char* filename, File::Encoding type, const msg::ImporterOptions& opts)
 {
     BinaryMessage raw = wcallchecked(read_rawmsg(filename, type));
     std::unique_ptr<msg::Importer> importer = msg::Importer::create(type, opts);
@@ -133,7 +133,7 @@ Messages read_msgs_csv(const char* filename)
     return msgs;
 }
 
-unique_ptr<Bulletin> export_msgs(File::Encoding enctype, const Messages& in, const std::string& tag, const dballe::msg::Exporter::Options& opts)
+unique_ptr<Bulletin> export_msgs(File::Encoding enctype, const Messages& in, const std::string& tag, const dballe::msg::ExporterOptions& opts)
 {
     try {
         std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(enctype, opts));
@@ -593,12 +593,12 @@ TestMessage::~TestMessage()
     delete bulletin;
 }
 
-void TestMessage::read_from_file(const std::string& fname, const msg::Importer::Options& input_opts)
+void TestMessage::read_from_file(const std::string& fname, const msg::ImporterOptions& input_opts)
 {
     read_from_raw(read_rawmsg(fname.c_str(), type), input_opts);
 }
 
-void TestMessage::read_from_raw(const BinaryMessage& msg, const msg::Importer::Options& input_opts)
+void TestMessage::read_from_raw(const BinaryMessage& msg, const msg::ImporterOptions& input_opts)
 {
     std::unique_ptr<msg::Importer> importer(msg::Importer::create(type, input_opts));
     raw = msg;
@@ -611,7 +611,7 @@ void TestMessage::read_from_raw(const BinaryMessage& msg, const msg::Importer::O
     msgs = importer->from_binary(raw);
 }
 
-void TestMessage::read_from_msgs(const Messages& _msgs, const msg::Exporter::Options& export_opts)
+void TestMessage::read_from_msgs(const Messages& _msgs, const msg::ExporterOptions& export_opts)
 {
     // Export
     std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(type, export_opts));
@@ -768,7 +768,7 @@ void TestCodec::run_convert(const std::string& tplname)
 
     // Export
     if (verbose) cerr << "Exporting with template " << tplname << " and options " << output_opts.to_string() << endl;
-    msg::Exporter::Options output_opts = this->output_opts;
+    msg::ExporterOptions output_opts = this->output_opts;
     output_opts.template_name = tplname;
     TestMessage exported(type, "exported");
     try {

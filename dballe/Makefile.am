@@ -71,6 +71,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/string.h \
 	core/trace.h \
 	core/json.h \
+	msg/fwd.h \
 	msg/codec.h \
 	msg/bulletin.h \
 	msg/context.h \

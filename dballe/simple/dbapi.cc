@@ -24,14 +24,14 @@ struct InputFile
 
     InputFile(File::Encoding format, bool simplified)
     {
-        msg::Importer::Options importer_options;
+        msg::ImporterOptions importer_options;
         importer_options.simplified = simplified;
         input = File::create(format, stdin, false, "(stdin)").release();
         importer = msg::Importer::create(format, importer_options).release();
     }
     InputFile(const char* fname, File::Encoding format, bool simplified)
     {
-        msg::Importer::Options importer_options;
+        msg::ImporterOptions importer_options;
         importer_options.simplified = simplified;
         input = File::create(format, fname, "rb").release();
         importer = msg::Importer::create(format, importer_options).release();
@@ -494,7 +494,7 @@ bool DbAPI::messages_read_next()
 void DbAPI::messages_write_next(const char* template_name)
 {
     // Build an exporter for this template
-    msg::Exporter::Options options;
+    msg::ExporterOptions options;
     if (template_name) options.template_name = template_name;
     File& out = *(output_file->output);
     auto exporter = msg::Exporter::create(out.encoding(), options);

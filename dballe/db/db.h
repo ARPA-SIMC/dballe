@@ -5,6 +5,7 @@
 #include <dballe/core/defs.h>
 #include <dballe/core/values.h>
 #include <dballe/db/defs.h>
+#include <dballe/msg/fwd.h>
 #include <dballe/sql/fwd.h>
 #include <wreport/varinfo.h>
 #include <wreport/var.h>

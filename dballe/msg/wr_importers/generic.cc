@@ -19,6 +19,7 @@
 
 #include "base.h"
 #include "dballe/core/var.h"
+#include "dballe/msg/msg.h"
 #include <wreport/bulletin.h>
 #include <wreport/subset.h>
 #include <wreport/conv.h>
@@ -45,7 +46,7 @@ protected:
     void import_var(const Var& var);
 
 public:
-    GenericImporter(const msg::Importer::Options& opts) : Importer(opts) {}
+    GenericImporter(const msg::ImporterOptions& opts) : Importer(opts) {}
     virtual ~GenericImporter() {}
 
     void init() override
@@ -94,7 +95,7 @@ public:
     }
 };
 
-std::unique_ptr<Importer> Importer::createGeneric(const msg::Importer::Options& opts)
+std::unique_ptr<Importer> Importer::createGeneric(const msg::ImporterOptions& opts)
 {
     return unique_ptr<Importer>(new GenericImporter(opts));
 }

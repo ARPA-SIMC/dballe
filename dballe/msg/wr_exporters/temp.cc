@@ -17,9 +17,9 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "msg/wr_codec.h"
-#include "msg/msg.h"
-#include "msg/context.h"
+#include "dballe/msg/wr_codec.h"
+#include "dballe/msg/msg.h"
+#include "dballe/msg/context.h"
 #include <wreport/bulletin.h>
 #include <wreport/vartable.h>
 #include <wreport/conv.h>
@@ -59,7 +59,7 @@ struct TempBase : public Template
 {
     bool is_crex;
 
-    TempBase(const Exporter::Options& opts, const Messages& msgs)
+    TempBase(const ExporterOptions& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
     /// Count the number of sounding levels
@@ -199,7 +199,7 @@ struct TempBase : public Template
 
 struct TempWMO : public TempBase
 {
-    TempWMO(const Exporter::Options& opts, const Messages& msgs)
+    TempWMO(const ExporterOptions& opts, const Messages& msgs)
         : TempBase(opts, msgs) {}
 
     virtual const char* name() const { return TEMP_WMO_NAME; }
@@ -354,7 +354,7 @@ struct TempWMO : public TempBase
 
 struct TempRadar : public TempBase
 {
-    TempRadar(const Exporter::Options& opts, const Messages& msgs)
+    TempRadar(const ExporterOptions& opts, const Messages& msgs)
         : TempBase(opts, msgs) {}
 
     virtual const char* name() const { return TEMP_RADAR_NAME; }
@@ -445,7 +445,7 @@ struct TempRadar : public TempBase
 
 struct TempEcmwfLand : public TempBase
 {
-    TempEcmwfLand(const Exporter::Options& opts, const Messages& msgs)
+    TempEcmwfLand(const ExporterOptions& opts, const Messages& msgs)
         : TempBase(opts, msgs) {}
 
     virtual const char* name() const { return TEMP_ECMWF_LAND_NAME; }
@@ -512,7 +512,7 @@ struct TempEcmwfLand : public TempBase
 
 struct TempEcmwfShip : public TempBase
 {
-    TempEcmwfShip(const Exporter::Options& opts, const Messages& msgs)
+    TempEcmwfShip(const ExporterOptions& opts, const Messages& msgs)
         : TempBase(opts, msgs) {}
 
     virtual const char* name() const { return TEMP_ECMWF_SHIP_NAME; }
@@ -597,7 +597,7 @@ struct PilotWMO : public TempBase
 {
     bool pressure_levs;
 
-    PilotWMO(const Exporter::Options& opts, const Messages& msgs)
+    PilotWMO(const ExporterOptions& opts, const Messages& msgs)
         : TempBase(opts, msgs) {}
 
     virtual const char* name() const { return PILOT_WMO_NAME; }
@@ -739,7 +739,7 @@ struct PilotWMO : public TempBase
 
 struct PilotEcmwf : public TempBase
 {
-    PilotEcmwf(const Exporter::Options& opts, const Messages& msgs)
+    PilotEcmwf(const ExporterOptions& opts, const Messages& msgs)
         : TempBase(opts, msgs) {}
 
     virtual const char* name() const { return PILOT_ECMWF_NAME; }
@@ -869,7 +869,7 @@ struct PilotEcmwf : public TempBase
 void register_temp(TemplateRegistry& r)
 {
     r.register_factory(2, "temp", "Temp (autodetect)",
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 const Msg& msg = Msg::downcast(msgs[0]);
 
                 // Get the type of equipment used
@@ -891,42 +891,42 @@ void register_temp(TemplateRegistry& r)
                 }
             });
     r.register_factory(2, "temp-ship", "Temp ship (autodetect)",
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new TempEcmwfShip(opts, msgs));
             });
     r.register_factory(2, TEMP_WMO_NAME, TEMP_WMO_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new TempWMO(opts, msgs));
             });
     r.register_factory(2, "temp-ecmwf", "Temp ECMWF (autodetect)",
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 if (msgs.empty() || Msg::downcast(msgs[0]).type != MSG_TEMP_SHIP)
                     return unique_ptr<Template>(new TempEcmwfLand(opts, msgs));
                 else
                     return unique_ptr<Template>(new TempEcmwfShip(opts, msgs));
             });
     r.register_factory(2, TEMP_ECMWF_LAND_NAME, TEMP_ECMWF_LAND_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new TempEcmwfLand(opts, msgs));
             });
     r.register_factory(2, TEMP_ECMWF_SHIP_NAME, TEMP_ECMWF_SHIP_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new TempEcmwfShip(opts, msgs));
             });
     r.register_factory(6, TEMP_RADAR_NAME, TEMP_RADAR_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new TempRadar(opts, msgs));
             });
     r.register_factory(2, PILOT_WMO_NAME, PILOT_WMO_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new PilotWMO(opts, msgs));
             });
     r.register_factory(2, PILOT_ECMWF_NAME, PILOT_ECMWF_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new PilotEcmwf(opts, msgs));
             });
     r.register_factory(2, "pilot", "pilot (autodetect)",
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 const Msg& msg = Msg::downcast(msgs[0]);
                 const Var* var = msg.get_sonde_tracking_var();
                 // Try with another one in case the first was just unset

@@ -11,10 +11,10 @@ using namespace std;
 namespace dballe {
 namespace msg {
 
-WRImporter::WRImporter(const Options& opts)
+WRImporter::WRImporter(const ImporterOptions& opts)
     : Importer(opts) {}
 
-BufrImporter::BufrImporter(const Options& opts)
+BufrImporter::BufrImporter(const ImporterOptions& opts)
     : WRImporter(opts) {}
 BufrImporter::~BufrImporter() {}
 
@@ -24,7 +24,7 @@ bool BufrImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(
     return foreach_decoded_bulletin(*bulletin, dest);
 }
 
-CrexImporter::CrexImporter(const Options& opts)
+CrexImporter::CrexImporter(const ImporterOptions& opts)
     : WRImporter(opts) {}
 CrexImporter::~CrexImporter() {}
 
@@ -98,10 +98,10 @@ bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::fun
 }
 
 
-WRExporter::WRExporter(const Options& opts)
+WRExporter::WRExporter(const ExporterOptions& opts)
     : Exporter(opts) {}
 
-BufrExporter::BufrExporter(const Options& opts)
+BufrExporter::BufrExporter(const ExporterOptions& opts)
     : WRExporter(opts) {}
 
 BufrExporter::~BufrExporter() {}
@@ -116,7 +116,7 @@ std::string BufrExporter::to_binary(const Messages& msgs) const
     return to_bulletin(msgs)->encode();
 }
 
-CrexExporter::CrexExporter(const Options& opts)
+CrexExporter::CrexExporter(const ExporterOptions& opts)
     : WRExporter(opts) {}
 CrexExporter::~CrexExporter() {}
 
@@ -184,7 +184,7 @@ const TemplateRegistry& TemplateRegistry::get()
         registry = new TemplateRegistry;
 
         registry->register_factory(MISSING_INT, "wmo", "WMO style templates (autodetect)",
-                [](const Exporter::Options& opts, const Messages& msgs) {
+                [](const ExporterOptions& opts, const Messages& msgs) {
                     const Msg& msg = Msg::downcast(msgs[0]);
                     string tpl;
                     switch (msg.type)

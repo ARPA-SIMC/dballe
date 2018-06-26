@@ -318,7 +318,7 @@ void MsgAPI::flushMessage()
         flushSubset();
         if (exporter == 0)
         {
-            msg::Exporter::Options opts;
+            msg::ExporterOptions opts;
             opts.template_name = exporter_template;
             exporter = msg::Exporter::create(file->encoding(), opts).release();
         }
