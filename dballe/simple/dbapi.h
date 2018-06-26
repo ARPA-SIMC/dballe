@@ -23,23 +23,9 @@ class DbAPI : public CommonAPIImplementation
 protected:
     std::shared_ptr<db::Transaction> tr;
     db::CursorStation* ana_cur = nullptr;
-    db::CursorValue* query_cur = nullptr;
     InputFile* input_file = nullptr;
     OutputFile* output_file = nullptr;
     int last_inserted_station_id;
-
-    /// Store information about the database ID of a variable
-    struct VarID
-    {
-        wreport::Varcode code;
-        // True if it is a station value
-        bool station;
-        size_t id;
-        VarID(wreport::Varcode code, bool station, size_t id) : code(code), station(station), id(id) {}
-    };
-
-    /// Store database variable IDs for all last inserted variables
-    std::vector<VarID> last_inserted_varids;
 
     void shutdown(bool commit);
 

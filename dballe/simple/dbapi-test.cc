@@ -143,22 +143,22 @@ this->add_method("query_attrs", [](Fixture& f) {
         wassert(actual(api.voglioquesto()) == 1);
         wassert(api.dammelo());
 
-        wassert(actual(api.test_get_attr_state()) == fortran::DbAPI::ATTR_DAMMELO);
+        wassert(actual(api.test_get_operation()).istrue());
 
         // Store its context info to access attributes of this variable later
         reference_id = api.enqi("context_id");
 
         // It has no attributes
-        wassert(actual(api.voglioancora()) ==  0);
-        wassert(actual(api.test_get_attr_state()) == fortran::DbAPI::ATTR_DAMMELO);
+        wassert(actual(api.voglioancora()) == 0);
+        wassert(actual(api.test_get_operation()).istrue());
 
         // Set one attribute after a dammelo
         api.seti("*B33007", 50);
         wassert(api.critica());
-        wassert(actual(api.test_get_attr_state()) == fortran::DbAPI::ATTR_DAMMELO);
+        wassert(actual(api.test_get_operation()).istrue());
 
         // It now has one attribute
-        wassert(actual(api.voglioancora()) ==  1);
+        wassert(actual(api.voglioancora()) == 1);
         wassert(actual(api.enqi("*B33007")) == 50);
 
         // Query it back, it has attributes
@@ -169,7 +169,6 @@ this->add_method("query_attrs", [](Fixture& f) {
         wassert(actual(api.voglioancora()) == 1);
         wassert(actual(api.enqi("*B33007")) == 50);
 
-
         // Query a different variable, it has no attributes
         api.setc("var", "B11002");
         api.setc("query", query);
@@ -177,14 +176,12 @@ this->add_method("query_attrs", [](Fixture& f) {
         wassert(api.dammelo());
         wassert(actual(api.voglioancora()) == 0);
 
-
         // Query the first variable using its stored reference id
         api.seti("*context_id", reference_id);
         api.setc("*var_related", "B12101");
-        wassert(actual(api.test_get_attr_state()) == fortran::DbAPI::ATTR_REFERENCE);
+        wassert(actual(api.test_get_operation()).istrue());
         wassert(actual(api.voglioancora()) == 1);
         wassert(actual(api.enqi("*B33007")) == 50);
-
 
         // Delete all attributes
         wassert(api.scusa());
@@ -611,6 +608,13 @@ this->add_method("messages_bug2", [](Fixture& f) {
 this->add_method("attr_reference_id", [](Fixture& f) {
     // Test attr_reference_id behaviour
     fortran::DbAPI api(f.tr, "write", "write", "write");
+
+    // Try setting a context with a missing context_id
+    {
+        auto e = wassert_throws(wreport::error_consistency, api.setc("*var_related", "B07030"));
+        wassert(actual(e.what()).matches("\\*var_related set without context_id, or before any dammelo or prendilo"));
+    }
+
     // Initial data
     api.setd("lat", 44.5);
     api.setd("lon", 11.5);
@@ -633,7 +637,8 @@ this->add_method("attr_reference_id", [](Fixture& f) {
     wassert(actual(api.voglioquesto()) == 1);
     api.dammelo();
     // Get its reference id
-    wassert(actual(api.enqi("context_id")) != MISSING_INT);
+    int id_B07030 = wcallchecked(api.enqi("context_id"));
+    wassert(actual(id_B07030) != MISSING_INT);
     // Get its attrs (none)
     wassert(actual(api.voglioancora()) == 0);
     // Set an attr
@@ -644,33 +649,10 @@ this->add_method("attr_reference_id", [](Fixture& f) {
     api.setcontextana();
     api.setc("var", "B07030");
     wassert(actual(api.voglioquesto()) == 1);
-    api.dammelo();
+    wassert(api.dammelo());
     // Read its attrs (ok)
     wassert(actual(api.voglioancora()) == 1);
-    // Read attrs setting *context_id and *varid: it fails
-    api.seti("*context_id", MISSING_INT);
-    api.setc("*var_related", "B07030");
-    try {
-        api.voglioancora();
-    } catch (std::exception& e) {
-        wassert(actual(e.what()).matches("invalid \\*context_id"));
-    }
-    // Query the variable again, to delete all attributes
-    api.unsetall();
-    api.setcontextana();
-    api.setc("var", "B07030");
-    wassert(actual(api.voglioquesto()) == 1);
-    api.dammelo();
-    api.scusa();
-    wassert(actual(api.voglioancora()) == 0);
-    // Try to delete by *context_id and *varid: it fails
-    api.seti("*context_id", MISSING_INT);
-    api.setc("*var_related", "B07030");
-    try {
-        api.scusa();
-    } catch (std::exception& e) {
-        wassert(actual(e.what()).matches("invalid \\*context_id"));
-    }
+    // Cannot manipulate station attrs setting *context_id
 
     // Query the variable
     api.unsetall();

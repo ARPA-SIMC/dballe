@@ -3,9 +3,24 @@
 
 #include "simple.h"
 #include <dballe/core/record.h>
+#include <dballe/db/fwd.h>
+#include <functional>
 
 namespace dballe {
 namespace fortran {
+
+/**
+ * Operation-specific behaviour for the API
+ */
+struct Operation
+{
+    virtual ~Operation();
+    virtual void set_varcode(wreport::Varcode varcode);
+    virtual void voglioancora(db::Transaction& tr, std::function<void(std::unique_ptr<wreport::Var>&&)> dest) = 0;
+    virtual void critica(db::Transaction& tr, const core::Record& qcinput) = 0;
+    virtual void scusa(db::Transaction& tr, const std::vector<wreport::Varcode>& attrs) = 0;
+    virtual const char* dammelo(dballe::Record& output);
+};
 
 /**
  * Common implementation of the set* and enq* machinery using input and output
@@ -14,15 +29,6 @@ namespace fortran {
 class CommonAPIImplementation : public API
 {
 public:
-    enum AttrState {
-        /// After a dammelo
-        ATTR_DAMMELO =   1,
-        /// After a prendilo
-        ATTR_PRENDILO =  2,
-        /// After a set *context_id or *var_related
-        ATTR_REFERENCE = 3,
-    };
-
     enum Permissions {
         PERM_ANA_RO =       (1 << 0),
         PERM_ANA_WRITE =    (1 << 1),
@@ -45,16 +51,10 @@ protected:
     core::Record output;
     core::Record qcinput;
     core::Record qcoutput;
-	int qc_iter;
-	int qc_count;
+    int qc_iter;
+    int qc_count;
 
-    AttrState attr_state;
-
-    // Varcode of the variable referred to by the next attribute operations
-    wreport::Varcode attr_varid;
-
-    // Reference ID of the variable referred to by the next attribute operations
-    int attr_reference_id;
+    Operation* operation = nullptr;
 
 	// Last string returned by one of the spiega* functions, held here so
 	// that we can deallocate it when needed.
@@ -108,7 +108,7 @@ public:
     const char* ancora() override;
     void fatto() override;
 
-    AttrState test_get_attr_state() const { return attr_state; }
+    const Operation* test_get_operation() const { return operation; }
 
     const core::Record& test_get_input() const { return input; }
     const core::Record& test_get_output() const { return output; }

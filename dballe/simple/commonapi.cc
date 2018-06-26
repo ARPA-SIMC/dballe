@@ -1,6 +1,7 @@
 #include "commonapi.h"
 #include "dballe/var.h"
 #include "dballe/types.h"
+#include "dballe/db/db.h"
 #include <stdio.h>  // snprintf
 #include <limits>
 #include <cstdlib>
@@ -14,14 +15,44 @@ using namespace std;
 namespace dballe {
 namespace fortran {
 
+Operation::~Operation() {}
+void Operation::set_varcode(wreport::Varcode varcode) {}
+const char* Operation::dammelo(dballe::Record& output) { throw error_consistency("dammelo called without a previous voglioquesto"); }
+
+
+struct VaridOperation : public Operation
+{
+    wreport::Varcode varcode;
+    int varid;
+
+    VaridOperation(int varid) : varid(varid) {}
+    void set_varcode(wreport::Varcode varcode) override { this->varcode = varcode; }
+    void voglioancora(db::Transaction& tr, std::function<void(std::unique_ptr<wreport::Var>&&)> dest) override
+    {
+        if (!varid)
+            throw error_consistency("voglioancora called with an invalid *context_id");
+        tr.attr_query_data(varid, dest);
+    }
+    void critica(db::Transaction& tr, const core::Record& qcinput) override
+    {
+        tr.attr_insert_data(varid, qcinput);
+    }
+    void scusa(db::Transaction& tr, const std::vector<wreport::Varcode>& attrs) override
+    {
+        tr.attr_remove_data(varid, attrs);
+    }
+};
+
+
+
 CommonAPIImplementation::CommonAPIImplementation()
-    : perms(0), qc_iter(-1), qc_count(0),
-      attr_state(ATTR_REFERENCE), attr_varid(0), attr_reference_id(missing_int)
+    : perms(0), qc_iter(-1), qc_count(0)
 {
 }
 
 CommonAPIImplementation::~CommonAPIImplementation()
 {
+    delete operation;
 }
 
 unsigned CommonAPIImplementation::compute_permissions(const char* anaflag, const char* dataflag, const char* attrflag)
@@ -165,8 +196,11 @@ void CommonAPIImplementation::seti(const char* param, int value)
     {
         if (strcmp(param + 1, "context_id") == 0)
         {
-            attr_state = ATTR_REFERENCE;
-            attr_reference_id = value;
+            delete operation;
+            if (value == MISSING_INT)
+                operation = nullptr;
+            else
+                operation = new VaridOperation(value);
         } else {
             qcinput.seti(param + 1, value);
         }
@@ -196,7 +230,9 @@ void CommonAPIImplementation::setc(const char* param, const char* value)
     {
         if (strcmp(param + 1, "var_related") == 0)
         {
-            attr_varid = resolve_varcode(value);
+            if (!operation)
+                throw error_consistency("*var_related set without context_id, or before any dammelo or prendilo");
+            operation->set_varcode(resolve_varcode(value));
         } else {
             qcinput.setc(param + 1, value);
         }

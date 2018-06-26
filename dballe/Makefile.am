@@ -86,6 +86,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	sql/sql.h \
 	sql/querybuf.h \
 	sql/sqlite.h \
+	db/fwd.h \
 	db/defs.h \
 	db/db.h \
 	db/v7/fwd.h \
