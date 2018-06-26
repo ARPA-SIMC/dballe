@@ -93,6 +93,7 @@ struct VoglioquestoOperation : public Operation
 {
     dballe::Query* query = nullptr;
     db::CursorValue* query_cur = nullptr;
+    bool valid_cached_attrs = false;
 
     VoglioquestoOperation(const dballe::Record& input)
         : query(Query::from_record(input).release())
@@ -120,6 +121,7 @@ struct VoglioquestoOperation : public Operation
         if (query_cur->next())
         {
             query_cur->to_record(output);
+            valid_cached_attrs = true;
             // We bypass checks, since it comes from to_record that always sets "var"
             return output.get("var")->enqc();
         } else {
@@ -131,7 +133,7 @@ struct VoglioquestoOperation : public Operation
     void voglioancora(db::Transaction& tr, std::function<void(std::unique_ptr<wreport::Var>&&)> dest) override
     {
         if (!query_cur) throw error_consistency("voglioancora called after dammelo returned end of data");
-        query_cur->attr_query(dest);
+        query_cur->attr_query(dest, !valid_cached_attrs);
     }
     void critica(db::Transaction& tr, const core::Record& qcinput) override
     {
@@ -140,6 +142,7 @@ struct VoglioquestoOperation : public Operation
             tr.attr_insert_station(query_cur->attr_reference_id(), qcinput);
         else
             tr.attr_insert_data(query_cur->attr_reference_id(), qcinput);
+        valid_cached_attrs = false;
     }
     void scusa(db::Transaction& tr, const std::vector<wreport::Varcode>& attrs) override
     {
@@ -148,6 +151,7 @@ struct VoglioquestoOperation : public Operation
             tr.attr_remove_station(query_cur->attr_reference_id(), attrs);
         else
             tr.attr_remove_data(query_cur->attr_reference_id(), attrs);
+        valid_cached_attrs = false;
     }
 };
 
