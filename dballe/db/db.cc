@@ -174,7 +174,6 @@ std::unique_ptr<db::CursorStation> DB::query_stations(const Query& query)
 {
     auto t = transaction();
     auto res = t->query_stations(query);
-    t->commit();
     return res;
 }
 
@@ -182,7 +181,6 @@ std::unique_ptr<db::CursorStationData> DB::query_station_data(const Query& query
 {
     auto t = transaction();
     auto res = t->query_station_data(query);
-    t->commit();
     return res;
 }
 
@@ -190,7 +188,6 @@ std::unique_ptr<db::CursorData> DB::query_data(const Query& query)
 {
     auto t = transaction();
     auto res = t->query_data(query);
-    t->commit();
     return res;
 }
 
@@ -198,7 +195,6 @@ std::unique_ptr<db::CursorSummary> DB::query_summary(const Query& query)
 {
     auto t = transaction();
     auto res = t->query_summary(query);
-    t->commit();
     return res;
 }
 
