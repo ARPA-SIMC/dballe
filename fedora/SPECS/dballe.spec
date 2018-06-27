@@ -17,7 +17,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 %else
 %define python3_vers python3
 %endif
-BuildRequires: libtool, gperf, doxygen, python-docutils, lua-devel, libwreport-devel >= 3.11 , python-devel, %{python3_vers}-devel, popt-devel, postgresql-devel, mariadb-devel, sqlite-devel, help2man, libwreport-doc, python-wreport3, %{python3_vers}-wreport3, gcc-gfortran, numpy, %{python3_vers}-numpy
+BuildRequires: libtool, gperf, doxygen, python-docutils, lua-devel, libwreport-devel >= 3.11 , python-devel, %{python3_vers}-devel, popt-devel, postgresql-devel, mariadb-devel, sqlite-devel, help2man, libwreport-doc, python-wreport3, %{python3_vers}-wreport3, gcc-gfortran, numpy, %{python3_vers}-numpy, python2-rpy, %{python3_vers}-rpy
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, python-dballe
 
 %description
@@ -161,7 +161,7 @@ Common data files for all DB-All.e modules
 %package -n python-dballe
 Summary:  DB-ALL.e Python library
 Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{?fedora:rpy}, numpy, python-wreport3
+Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, python2-rpy, numpy, python-wreport3
 
 %description -n python-dballe
  DB-ALL.e Python library for weather research
@@ -173,7 +173,7 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{?fedora:rpy
 %package -n %{python3_vers}-dballe
 Summary:  DB-ALL.e Python library
 Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{?fedora:rpy}, %{python3_vers}-numpy, %{python3_vers}-wreport3
+Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{python3_vers}-rpy, %{python3_vers}-numpy, %{python3_vers}-wreport3
 
 %description -n %{python3_vers}-dballe
  DB-ALL.e Python library for weather research
