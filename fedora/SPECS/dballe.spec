@@ -1,4 +1,4 @@
-%global releaseno 2
+%global releaseno 3
 # Note: define _srcarchivename in Travis build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
@@ -311,6 +311,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Wed Jun 27 2018 Emanuele Di Giacomo <edigiacomo@arpae.it> - 7.33-3
+- optimizations addressing #117
+
 * Tue Jun 19 2018 Daniele Branchini <dbranchini@arpae.it> - 7.33-2
 - other optimizations addressing #116
 
