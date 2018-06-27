@@ -234,7 +234,7 @@ class Exporter:
         # { "context_id,varcode": { varcode: value } }
         self.attributes = {}
 
-    def compute_columns(self, filter):
+    def compute_columns(self, tr, filter):
         """
         Compute what columns need to be in the output CSV.
 
@@ -257,7 +257,7 @@ class Exporter:
         station_var_cols = {}
         attribute_cols = {}
         rowcount = 0
-        for row in self.db.query_data(filter):
+        for row in tr.query_data(filter):
             rowcount += 1
             # Let the columns examine this row
             for c in columns:
@@ -271,7 +271,7 @@ class Exporter:
             if id not in self.station_data:
                 query = dballe.Record(ana_id=id)
                 items = {}
-                for record in self.db.query_station_data(query):
+                for record in tr.query_station_data(query):
                     v = record.var(record["var"])
                     items[v.code] = v
                     col = station_var_cols.get(v.code, None)
@@ -282,7 +282,7 @@ class Exporter:
 
             # Load attributes
             attributes = {}
-            for key, v in self.db.attr_query_data(row["context_id"]).varitems():
+            for key, v in tr.attr_query_data(row["context_id"]).varitems():
                 code = v.code
                 attributes[code] = v
                 col = attribute_cols.get(code, None)
@@ -321,32 +321,33 @@ class Exporter:
         else:
             writer = UnicodeCSVWriter(fd)
 
-        self.compute_columns(query)
+        with self.db.transaction() as tr:
+            self.compute_columns(tr, query)
 
-        # Don't query an empty result set
-        if self.rowcount == 0:
-            print("Result is empty.", file=sys.stderr)
-            return
+            # Don't query an empty result set
+            if self.rowcount == 0:
+                print("Result is empty.", file=sys.stderr)
+                return
 
-        row_headers = []
-        for c in self.csv_columns:
-            row_headers.extend(c.column_labels())
-
-        # Print the title if we have it
-        if self.title_columns:
-            title = "; ".join(c.title() for c in self.title_columns)
-            row = ["" for x in row_headers]
-            row[0] = title
-            writer.writerow(row)
-
-        # Print the column headers
-        writer.writerow(row_headers)
-
-        for rec in self.db.query_data(query):
-            row = []
+            row_headers = []
             for c in self.csv_columns:
-                row.extend(c.column_data(rec))
-            writer.writerow(row)
+                row_headers.extend(c.column_labels())
+
+            # Print the title if we have it
+            if self.title_columns:
+                title = "; ".join(c.title() for c in self.title_columns)
+                row = ["" for x in row_headers]
+                row[0] = title
+                writer.writerow(row)
+
+            # Print the column headers
+            writer.writerow(row_headers)
+
+            for rec in tr.query_data(query):
+                row = []
+                for c in self.csv_columns:
+                    row.extend(c.column_data(rec))
+                writer.writerow(row)
 
 def export(db, query, fd):
     """
