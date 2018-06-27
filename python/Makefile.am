@@ -60,7 +60,7 @@ AM_CPPFLAGS = -I/usr/include/python$(PYTHON_VERSION) -I$(top_srcdir)
 
 check-local: _dballe.so
 	for test in $(dballe_python_tests); do \
-		test -n "$$ARGS" -a "$${test#$$ARGS}" == "$$test" && echo "Skipping $$test" && continue; \
+		test -n "$$ARGS" -a "$${ARGS#$${test%.py}}" == "$$ARGS" && echo "Skipping $$test" && continue; \
 		PYTHON="$(PYTHON)" $(TESTS_ENVIRONMENT) $$test ; \
 	done
 
