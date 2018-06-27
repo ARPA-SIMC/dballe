@@ -17,7 +17,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 %else
 %define python3_vers python3
 %endif
-BuildRequires: libtool, gperf, doxygen, python-docutils, lua-devel, libwreport-devel >= 3.11 , python-devel, %{python3_vers}-devel, popt-devel, postgresql-devel, mariadb-devel, sqlite-devel, help2man, libwreport-doc, python-wreport3, %{python3_vers}-wreport3, gcc-gfortran
+BuildRequires: libtool, gperf, doxygen, python-docutils, lua-devel, libwreport-devel >= 3.11 , python-devel, %{python3_vers}-devel, popt-devel, postgresql-devel, mariadb-devel, sqlite-devel, help2man, libwreport-doc, python-wreport3, %{python3_vers}-wreport3, gcc-gfortran, numpy, %{python3_vers}-numpy
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, python-dballe
 
 %description
