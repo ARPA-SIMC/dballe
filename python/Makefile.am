@@ -4,11 +4,11 @@ TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 
 export PYTHONPATH=.
 
-dballe_python_tests = test-core.py test-types.py test-record.py test-db.py test-explorer.py test-volnd.py test-rconvert.py test-csv.py
+dballe_python_tests = test-core.py test-types.py test-record.py test-db.py test-explorer.py test-volnd.py test-csv.py
 
 # TESTS = $(dballe_python_tests)
 
-pkgpython_PYTHON = dballe/dbacsv.py dballe/rconvert.py dballe/__init__.py dballe/volnd.py
+pkgpython_PYTHON = dballe/dbacsv.py dballe/__init__.py dballe/volnd.py
 
 pyexec_LTLIBRARIES = _dballe.la
 

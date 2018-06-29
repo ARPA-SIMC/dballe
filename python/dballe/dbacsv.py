@@ -13,6 +13,7 @@ import warnings
 Export data from DB-All.e into CSV format
 """
 
+
 def intormiss(x):
     """
     Format an integer to a string, returning '-' if the integer is None.
@@ -21,6 +22,7 @@ def intormiss(x):
         return "-"
     else:
         return "%d" % x
+
 
 class UnicodeCSVWriter(object):
     """
@@ -57,22 +59,29 @@ class UnicodeCSVWriter(object):
 class Column(object):
     def __init__(self):
         self.values = set()
+
     def is_single_val(self):
         return len(self.values) == 1
+
     def column_labels(self):
         return [self.LABEL]
+
     def title(self):
         return "{} {}".format(self.LABEL, next(iter(self.values)))
+
 
 class ColumnStation(Column):
     def __init__(self, stations):
         super(ColumnStation, self).__init__()
         self.stations = stations
         self.idents = set()
+
     def add(self, row):
         self.values.add(row["ana_id"])
         ident = row.get("ident", None)
-        if ident is not None: self.idents.add(ident)
+        if ident is not None:
+            self.idents.add(ident)
+
     def title(self):
         id = next(iter(self.values))
         lat, lon, ident = self.stations[id]
@@ -80,10 +89,13 @@ class ColumnStation(Column):
             return "Fixed station, lat {}, lon {}".format(lat, lon)
         else:
             return "Mobile station {}, lat {}, lon {}".format(ident, lat, lon)
+
     def column_labels(self):
         res = ["Station", "Latitude", "Longitude"]
-        if self.idents: res.append("Ident")
+        if self.idents:
+            res.append("Ident")
         return res
+
     def column_data(self, rec):
         id = rec["ana_id"]
         lat, lon, ident = self.stations[id]
@@ -92,27 +104,35 @@ class ColumnStation(Column):
             res.append(ident or "")
         return res
 
+
 class ColumnNetwork(Column):
     LABEL = "Network"
+
     def add(self, row):
         self.values.add(row["rep_memo"])
+
     def column_data(self, rec):
         return [rec["rep_memo"]]
 
+
 class ColumnDatetime(Column):
     LABEL = "Datetime"
+
     def add(self, row):
         # Suppress deprecation warnings until we have something better
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
             self.values.add(row["date"])
+
     def title(self):
         return str(next(iter(self.values)))
+
     def column_data(self, rec):
         # Suppress deprecation warnings until we have something better
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
             return [rec["date"]]
+
 
 class ColumnLevel(Column):
     def add(self, row):
@@ -120,10 +140,13 @@ class ColumnLevel(Column):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
             self.values.add(",".join([intormiss(x) for x in row["level"]]))
+
     def title(self):
         return "Level {}".format(next(iter(self.values)))
+
     def column_labels(self):
         return ["Level1", "L1", "Level2", "L2"]
+
     def column_data(self, rec):
         # Suppress deprecation warnings until we have something better
         with warnings.catch_warnings():
@@ -136,16 +159,20 @@ class ColumnLevel(Column):
             intormiss(lev[3])
         ]
 
+
 class ColumnTrange(Column):
     def add(self, row):
         # Suppress deprecation warnings until we have something better
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
             self.values.add(",".join([intormiss(x) for x in row["trange"]]))
+
     def title(self):
         return "Time range {}".format(next(iter(self.values)))
+
     def column_labels(self):
         return ["Time range", "P1", "P2"]
+
     def column_data(self, rec):
         # Suppress deprecation warnings until we have something better
         with warnings.catch_warnings():
@@ -157,19 +184,26 @@ class ColumnTrange(Column):
             intormiss(tr[2])
         ]
 
+
 class ColumnVar(Column):
     LABEL = "Variable"
+
     def add(self, row):
         self.values.add(row["var"])
+
     def column_data(self, rec):
         return [rec["var"]]
 
+
 class ColumnValue(Column):
     LABEL = "Value"
+
     def add(self, row):
         self.values.add(row.var(row["var"]).format(""))
+
     def column_data(self, rec):
         return [rec.var(rec["var"]).format("")]
+
 
 class ColumnStationData(Column):
     def __init__(self, varcode, station_data):
@@ -177,8 +211,10 @@ class ColumnStationData(Column):
         self.varcode = varcode
         # { Station id: { varcode: value } }
         self.station_data = station_data
+
     def add(self, row):
         self.values.add(row[self.varcode])
+
     def title(self):
         data = next(iter(self.station_data.values()))
         var = data.get(self.varcode, None)
@@ -187,8 +223,10 @@ class ColumnStationData(Column):
         else:
             value = var.format("")
         return "Station {}: {}".format(self.varcode, value)
+
     def column_labels(self):
         return ["Station {}".format(self.varcode)]
+
     def column_data(self, rec):
         id = rec["ana_id"]
         data = self.station_data[id]
@@ -198,14 +236,17 @@ class ColumnStationData(Column):
         else:
             return [var.format("")]
 
+
 class ColumnAttribute(Column):
     def __init__(self, varcode, attributes):
         super(ColumnAttribute, self).__init__()
         self.varcode = varcode
         # { "context_id,varcode": { varcode: value } }
         self.attributes = attributes
+
     def add(self, var):
         self.values.add(var.format(""))
+
     def title(self):
         data = next(iter(self.attributes.itervalues()))
         var = data.get(self.varcode, None)
@@ -214,8 +255,10 @@ class ColumnAttribute(Column):
         else:
             value = var.format("")
         return "Attr {}: {}".format(self.varcode, value)
+
     def column_labels(self):
         return ["Attr {}".format(self.varcode)]
+
     def column_data(self, rec):
         data = self.attributes["{},{}".format(rec["context_id"], rec["var"])]
         var = data.get(self.varcode, None)
@@ -223,6 +266,7 @@ class ColumnAttribute(Column):
             return [""]
         else:
             return [var.format("")]
+
 
 class Exporter:
     def __init__(self, db):
@@ -348,6 +392,7 @@ class Exporter:
                 for c in self.csv_columns:
                     row.extend(c.column_data(rec))
                 writer.writerow(row)
+
 
 def export(db, query, fd):
     """
