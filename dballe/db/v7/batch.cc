@@ -218,58 +218,6 @@ MeasuredDataVector::~MeasuredDataVector()
 }
 
 
-std::vector<MeasuredData*>::const_iterator MeasuredDataVector::find(const Datetime& datetime)
-{
-    if (items.empty()) return items.end();
-
-    // Stick to linear search if the vector size is small
-    if (items.size() < 6)
-    {
-        for (auto mdi = std::begin(items); mdi != std::end(items); ++mdi)
-            if ((*mdi)->datetime == datetime)
-                return mdi;
-        return items.end();
-    }
-
-    // Use binary search for larger vectors
-
-    if (dirty > 16)
-    {
-        std::sort(items.begin(), items.end(), [](const MeasuredData* a, const MeasuredData* b) {
-            return a->datetime < b->datetime;
-        });
-        dirty = 0;
-    } else if (dirty) {
-        // Use insertion sort, if less than 16 new elements appeared since the
-        // last sort
-        insertion_sort();
-    }
-
-    // Binary search
-    int begin, end;
-    begin = -1, end = items.size();
-    while (end - begin > 1)
-    {
-        int cur = (end + begin) / 2;
-        if (items[cur]->datetime > datetime)
-            end = cur;
-        else
-            begin = cur;
-    }
-    if (begin == -1 || items[begin]->datetime != datetime)
-        return items.end();
-    else
-        return items.begin() + begin;
-}
-
-MeasuredData& MeasuredDataVector::add(const Datetime& datetime)
-{
-    ++dirty;
-    items.push_back(new MeasuredData(datetime));
-    return *items.back();
-}
-
-
 StationData& Station::get_station_data(Tracer<>& trc)
 {
     if (!station_data.loaded)
@@ -290,18 +238,18 @@ MeasuredData& Station::get_measured_data(Tracer<>& trc, const Datetime& datetime
     if (mdi != measured_data.end())
         return **mdi;
 
-    MeasuredData& md = measured_data.add(datetime);
+    MeasuredData* md = measured_data.add(new MeasuredData(datetime));
 
     if (!is_new)
     {
         v7::Data& d = batch.transaction.data();
         d.query(trc, id, datetime, [&](int data_id, int id_levtr, wreport::Varcode code) {
-            md.ids_on_db.insert(std::make_pair(IdVarcode(id_levtr, code), data_id));
+            md->ids_on_db.insert(std::make_pair(IdVarcode(id_levtr, code), data_id));
         });
         ++batch.count_select_data;
     }
 
-    return md;
+    return *md;
 }
 
 void Station::write_pending(Tracer<>& trc, bool with_attrs)

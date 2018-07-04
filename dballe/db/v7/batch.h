@@ -117,9 +117,6 @@ struct MeasuredDataVector : public core::SmallSet<MeasuredDataVector, MeasuredDa
     MeasuredDataVector& operator=(const MeasuredDataVector&) = delete;
     MeasuredDataVector& operator=(MeasuredDataVector&&) = default;
 
-    std::vector<MeasuredData*>::const_iterator find(const Datetime& datetime);
-    MeasuredData& add(const Datetime& datetime);
-
     static const Datetime& _smallset_get_value(const MeasuredData* md) { return md->datetime; }
 };
 
