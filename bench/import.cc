@@ -53,9 +53,9 @@ int main(int argc, const char* argv[])
 {
     using namespace dballe::benchmark;
     dballe::benchmark::Task* tasks[] = {
-        new BenchmarkImport("import-synop", "extra/bufr/synop-rad1.bufr"),
-        new BenchmarkImport("import-temp", "extra/bufr/temp-huge.bufr", 2),
-        new BenchmarkImport("import-acars", "extra/bufr/gts-acars2.bufr", 24, 15),
+        new BenchmarkImport("synop", "extra/bufr/synop-rad1.bufr"),
+        new BenchmarkImport("temp", "extra/bufr/temp-huge.bufr", 2),
+        new BenchmarkImport("acars", "extra/bufr/gts-acars2.bufr", 24, 15),
     };
 
     Benchmark benchmark;

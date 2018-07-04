@@ -64,9 +64,9 @@ int main(int argc, const char* argv[])
 {
     using namespace dballe::benchmark;
     dballe::benchmark::Task* tasks[] = {
-        new BenchmarkQuery("query-synop", "extra/bufr/synop-rad1.bufr", 1, 24),
-        new BenchmarkQuery("query-temp", "extra/bufr/temp-huge.bufr", 1, 1),
-        new BenchmarkQuery("query-acars", "extra/bufr/gts-acars2.bufr", 12, 24, 10),
+        new BenchmarkQuery("synop", "extra/bufr/synop-rad1.bufr", 1, 24),
+        new BenchmarkQuery("temp", "extra/bufr/temp-huge.bufr", 1, 1),
+        new BenchmarkQuery("acars", "extra/bufr/gts-acars2.bufr", 12, 24, 10),
     };
 
     Benchmark benchmark;
