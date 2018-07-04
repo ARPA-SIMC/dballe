@@ -17,11 +17,34 @@ struct SmallSet
     size_t dirty = 0;
 
     typedef typename std::vector<Item>::const_iterator const_iterator;
+    typedef typename std::vector<Item>::iterator iterator;
 
+    iterator begin() { return items.begin(); }
+    iterator end() { return items.end(); }
     const_iterator begin() const { return items.begin(); }
     const_iterator end() const { return items.end(); }
+    size_t size() const { return items.size(); }
+    bool empty() const { return items.empty(); }
 
-    const_iterator find(const Value& value)
+    int binary_search(const Value& value) const
+    {
+        int begin, end;
+        begin = -1, end = items.size();
+        while (end - begin > 1)
+        {
+            int cur = (end + begin) / 2;
+            if (Parent::_smallset_get_value(items[cur]) > value)
+                end = cur;
+            else
+                begin = cur;
+        }
+        if (begin == -1 || Parent::_smallset_get_value(items[begin]) != value)
+            return -1;
+        else
+            return begin;
+    }
+
+    const_iterator find(const Value& value) const
     {
         if (items.empty()) return end();
 
@@ -48,21 +71,45 @@ struct SmallSet
             insertion_sort();
         }
 
-        // Binary search
-        int begin, end;
-        begin = -1, end = items.size();
-        while (end - begin > 1)
-        {
-            int cur = (end + begin) / 2;
-            if (Parent::_smallset_get_value(items[cur]) > value)
-                end = cur;
-            else
-                begin = cur;
-        }
-        if (begin == -1 || Parent::_smallset_get_value(items[begin]) != value)
+        int pos = binary_search(value);
+        if (pos == -1)
             return items.end();
         else
-            return items.begin() + begin;
+            return items.begin() + pos;
+    }
+
+    iterator find(const Value& value)
+    {
+        if (items.empty()) return end();
+
+        // Stick to linear search if the vector size is small
+        if (items.size() < 6)
+        {
+            for (auto it = std::begin(items); it != std::end(items); ++it)
+                if (Parent::_smallset_get_value(*it) == value)
+                    return it;
+            return end();
+        }
+
+        // Use binary search for larger vectors
+
+        if (dirty > 16)
+        {
+            std::sort(items.begin(), items.end(), [](const Item& a, const Item& b) {
+                return Parent::_smallset_get_value(a) < Parent::_smallset_get_value(b);
+            });
+            dirty = 0;
+        } else if (dirty) {
+            // Use insertion sort, if less than 16 new elements appeared since the
+            // last sort
+            insertion_sort();
+        }
+
+        int pos = binary_search(value);
+        if (pos == -1)
+            return items.end();
+        else
+            return items.begin() + pos;
     }
 
     Item& add(Item item)

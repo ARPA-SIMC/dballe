@@ -181,7 +181,7 @@ void MeasuredData::add(int id_levtr, const wreport::Var* var, UpdateMode on_conf
         // Exists in the database
         switch (on_conflict)
         {
-            case UPDATE: to_update.emplace_back(in_db->second, id_levtr, var); break;
+            case UPDATE: to_update.emplace_back(in_db->id, id_levtr, var); break;
             case IGNORE: break;
             case ERROR: throw wreport::error_consistency("refusing to overwrite existing data");
         }
@@ -198,8 +198,13 @@ void MeasuredData::write_pending(Tracer<>& trc, Transaction& tr, int station_id,
         auto& st = tr.data();
         st.insert(trc, station_id, datetime, to_insert, with_attrs);
         for (const auto& v: to_insert)
-            ids_on_db[IdVarcode(v.id_levtr, v.var->code())] = v.id;
-
+        {
+            auto cur = ids_on_db.find(IdVarcode(v.id_levtr, v.var->code()));
+            if (cur == ids_on_db.end())
+                ids_on_db.add(MeasuredDataID(IdVarcode(v.id_levtr, v.var->code()), v.id));
+            else
+                cur->id = v.id;
+        }
     }
     if (!to_update.empty())
     {
@@ -244,7 +249,7 @@ MeasuredData& Station::get_measured_data(Tracer<>& trc, const Datetime& datetime
     {
         v7::Data& d = batch.transaction.data();
         d.query(trc, id, datetime, [&](int data_id, int id_levtr, wreport::Varcode code) {
-            md->ids_on_db.insert(std::make_pair(IdVarcode(id_levtr, code), data_id));
+            md->ids_on_db.add(MeasuredDataID(IdVarcode(id_levtr, code), data_id));
         });
         ++batch.count_select_data;
     }

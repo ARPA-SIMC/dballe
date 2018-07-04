@@ -145,9 +145,9 @@ add_method("from_db", [](Fixture& f) {
     wassert(actual(measured_data.ids_on_db.size()) == 1u);
     {
         auto it = measured_data.ids_on_db.begin();
-        wassert(actual(it->first.id) > 0);
-        wassert(actual(it->first.varcode) == WR_VAR(0, 12, 101));
-        wassert(actual(it->second) > 0u);
+        wassert(actual(it->id_varcode.id) > 0);
+        wassert(actual(it->id_varcode.varcode) == WR_VAR(0, 12, 101));
+        wassert(actual(it->id) > 0u);
     }
 });
 

@@ -148,7 +148,12 @@ void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_c
     // Read the IDs from the results
     vals.info.id = st->id;
     for (auto& v: vals.values)
-        v.second.data_id = md.ids_on_db[IdVarcode(id_levtr, v.first)];
+    {
+        auto i = md.ids_on_db.find(IdVarcode(id_levtr, v.first));
+        if (i == md.ids_on_db.end())
+            continue;
+        v.second.data_id = i->id;
+    }
 }
 
 void Transaction::remove_station_data(const Query& query)

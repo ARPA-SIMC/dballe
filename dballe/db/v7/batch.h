@@ -7,6 +7,7 @@
 #include <dballe/db/v7/utils.h>
 #include <vector>
 #include <unordered_map>
+#include <tuple>
 #include <memory>
 
 namespace dballe {
@@ -92,10 +93,29 @@ struct MeasuredDatum
     bool operator==(const MeasuredDatum& o) const { return id_levtr == o.id_levtr && var->code() == o.var->code(); }
 };
 
+struct MeasuredDataID
+{
+    IdVarcode id_varcode;
+    int id;
+
+    MeasuredDataID(IdVarcode id_varcode, int id)
+        : id_varcode(id_varcode), id(id)
+    {
+    }
+};
+
+struct MeasuredDataIDs : public core::SmallSet<MeasuredDataIDs, MeasuredDataID, IdVarcode>
+{
+    static const IdVarcode& _smallset_get_value(const MeasuredDataID& item)
+    {
+        return item.id_varcode;
+    }
+};
+
 struct MeasuredData
 {
     Datetime datetime;
-    std::unordered_map<IdVarcode, int> ids_on_db;
+    MeasuredDataIDs ids_on_db;
     std::vector<MeasuredDatum> to_insert;
     std::vector<MeasuredDatum> to_update;
 
