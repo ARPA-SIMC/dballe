@@ -329,6 +329,7 @@ src/Makefile
 tables/Makefile
 extra/Makefile
 python/Makefile
+bench/Makefile
 doc/Makefile
 doc/libdballe.dox
 doc/libdballef.dox

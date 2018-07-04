@@ -1,5 +1,5 @@
-#ifndef WREPORT_BENCHMARK_H
-#define WREPORT_BENCHMARK_H
+#ifndef DBALLE_CORE_BENCHMARK_H
+#define DBALLE_CORE_BENCHMARK_H
 
 /** @file
  * Simple benchmark infrastructure.
@@ -8,10 +8,13 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <memory>
 #include <cstdio>
 #include <time.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <dballe/message.h>
+#include <dballe/file.h>
 
 namespace dballe {
 namespace benchmark {
@@ -21,16 +24,14 @@ struct Benchmark;
 /// One task to be measured.
 struct Task
 {
-    // Name of this task
-    std::string name;
-
     Task() {}
-    Task(const std::string& name) : name(name) {}
     Task(const Task&) = delete;
     Task(Task&&) = delete;
     virtual ~Task() {}
     Task& operator=(const Task&) = delete;
     Task& operator=(Task&&) = delete;
+
+    virtual const char* name() const = 0;
 
     /// Set up the environment for running run_once()
     virtual void setup() {}
@@ -49,48 +50,27 @@ struct Task
 
 struct Progress;
 
-struct TaskHolder
+struct Timeit
 {
-    Task* task = nullptr;
-
-    TaskHolder(Task* task) : task(task) {}
-    TaskHolder(TaskHolder&& o) : task(o.task) { o.task = nullptr; }
-    TaskHolder(const TaskHolder&) = delete;
-    TaskHolder& operator=(TaskHolder&& o)
-    {
-        if (task == o.task) return *this;
-        if (task) delete task;
-        task = o.task;
-        o.task = nullptr;
-        return *this;
-    }
-    TaskHolder& operator=(const TaskHolder&) = delete;
-    ~TaskHolder() { delete task; }
-};
-
-struct Timeit : TaskHolder
-{
+    std::string task_name;
     /// How many times to repeat the task for measuring how long it takes
-    unsigned repetitions;
+    unsigned repetitions = 1;
     struct timespec time_at_start;
     struct timespec time_at_end;
     struct rusage res_at_start;
     struct rusage res_at_end;
 
-    Timeit(Task* task, int repetitions=10) : TaskHolder(task), repetitions(repetitions) {}
-
-    void run(Progress& progress);
+    void run(Progress& progress, Task& task);
 };
 
-struct Throughput : TaskHolder
+struct Throughput
 {
+    std::string task_name;
     /// How many seconds to run the task to see how many times per second it runs
-    double run_time;
+    double run_time = 0.5;
     unsigned times_run = 0;
 
-    Throughput(Task* task, double run_time=0.5) : TaskHolder(task), run_time(run_time) {}
-
-    void run(Progress& progress);
+    void run(Progress& progress, Task& task);
 };
 
 
@@ -98,9 +78,6 @@ struct Throughput : TaskHolder
 struct Progress
 {
     virtual ~Progress() {}
-
-    virtual void start_benchmark(const Benchmark& b) = 0;
-    virtual void end_benchmark(const Benchmark& b) = 0;
 
     virtual void start_timeit(const Timeit& t) = 0;
     virtual void end_timeit(const Timeit& t) = 0;
@@ -118,15 +95,10 @@ struct Progress
  */
 struct BasicProgress : Progress
 {
-    std::string prefix;
     FILE* out;
     FILE* err;
-    std::string cur_benchmark;
 
-    BasicProgress(const std::string& prefix, FILE* out=stdout, FILE* err=stderr);
-
-    void start_benchmark(const Benchmark& b) override;
-    void end_benchmark(const Benchmark& b) override;
+    BasicProgress(FILE* out=stdout, FILE* err=stderr);
 
     void start_timeit(const Timeit& t) override;
     void end_timeit(const Timeit& t) override;
@@ -143,8 +115,8 @@ struct BasicProgress : Progress
  */
 struct Benchmark
 {
-    /// Name of this benchmark
-    std::string name;
+    /// Progress indicator
+    std::shared_ptr<Progress> progress;
 
     /// Tasks for which we time their duration
     std::vector<Timeit> timeit_tasks;
@@ -153,53 +125,37 @@ struct Benchmark
     std::vector<Throughput> throughput_tasks;
 
 
-    Benchmark(const std::string& name);
+    Benchmark();
     virtual ~Benchmark();
 
-    virtual void setup() {}
-    virtual void teardown() {}
+    /// Run the benchmark and collect timings
+    void timeit(Task& task, unsigned repetitions=1);
 
     /// Run the benchmark and collect timings
-    void run(Progress& progress);
+    void throughput(Task& task, double run_time=0.5);
 
     /// Print timings to stdout
-    void print_timings(const std::string& prefix);
-
-    /// Register tasks to run on this benchmark
-    virtual void register_tasks() = 0;
+    void print_timings();
 };
 
-/// Collect all existing benchmarks
-struct Registry
+
+/**
+ * Container for parsed messages used for benchmarking
+ */
+struct Messages : public std::vector<dballe::Messages>
 {
-    std::vector<Benchmark*> benchmarks;
+    void load(const std::string& pathname, dballe::File::Encoding encoding=dballe::File::BUFR, const char* codec_options="accurate");
 
-    /// Add a benchmark to this registry
-    void add(Benchmark* b);
+    // Copy the first \a size messages, change their datetime, and append them
+    // to the vector
+    void duplicate(size_t size, const Datetime& datetime);
+};
 
-    /**
-     * Get the static instance of the registry
-     */
-    static Registry& get();
+struct Whitelist : protected std::vector<std::string>
+{
+    Whitelist(int argc, const char* argv[]);
 
-    /**
-     * Basic implementation of a main function that runs all benchmarks linked
-     * into the program. This allows to make a benchmark runner tool with just
-     * this code:
-     *
-     * \code
-     * #include <wreport/benchmark.h>
-     *
-     * int main (int argc, const char* argv[])
-     * {
-     *     wreport::benchmark::Registry::basic_run(argc, argv);
-     * }
-     * \endcode
-     *
-     * If you need different logic in your benchmark running code, you can use
-     * the source code of basic_run as a template for writing your own.
-     */
-    static void basic_run(int argc, const char* argv[]);
+    bool has(const std::string& val);
 };
 
 }

@@ -55,6 +55,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	var.h \
 	core/error.h \
 	core/aliases.h \
+	core/benchmark.h \
 	core/defs.h \
 	core/var.h \
 	core/values.h \
@@ -148,6 +149,7 @@ libdballe_la_SOURCES = \
 	var.cc \
 	core/error.cc \
 	core/aliases.cc \
+	core/benchmark.cc \
 	core/defs.cc \
 	core/var.cc \
 	core/values.cc \
@@ -363,21 +365,19 @@ test_dballe_LDADD = \
 # Benchmark
 #
 
-noinst_PROGRAMS += bench-run
-
-dist_noinst_HEADERS += \
-	core/benchmark.h \
-	db/benchmark.h
-
-bench_run_SOURCES = \
-	core/benchmark.cc \
-	db/db-query-parse-bench.cc \
-	db/db-import-bench.cc \
-	db/db-query-bench.cc \
-	bench-main.cc
-bench_run_LDADD = \
-	libdballe.la \
-	$(common_libs)
+# TODO: remove/move code
+# noinst_PROGRAMS += bench-run
+# 
+# dist_noinst_HEADERS += \
+# 	db/benchmark.h
+# 
+# bench_run_SOURCES = \
+# 	db/db-query-parse-bench.cc \
+# 	db/db-import-bench.cc \
+# 	db/db-query-bench.cc
+# bench_run_LDADD = \
+# 	libdballe.la \
+# 	$(common_libs)
 
 
 #

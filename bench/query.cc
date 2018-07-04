@@ -1,0 +1,82 @@
+#include <dballe/db/db.h>
+#include <dballe/file.h>
+#include <dballe/msg/codec.h>
+#include <dballe/core/benchmark.h>
+#include <dballe/core/record.h>
+#include <dballe/core/query.h>
+#include <dballe/msg/msg.h>
+#include <vector>
+
+struct BenchmarkQuery : public dballe::benchmark::Task
+{
+    std::shared_ptr<dballe::DB> db;
+    const char* m_name;
+    const char* m_pathname;
+    unsigned months;
+    unsigned hours;
+    unsigned minutes;
+
+    BenchmarkQuery(const char* name, const char* pathname, unsigned months=12, unsigned hours=24, unsigned minutes=1)
+        : db(dballe::DB::connect_test()), m_name(name), m_pathname(pathname), months(months), hours(hours), minutes(minutes)
+    {
+    }
+
+    const char* name() const override { return m_name; }
+
+    void setup() override
+    {
+        db->reset();
+        dballe::benchmark::Messages messages;
+        messages.load(m_pathname);
+
+        // Multiply messages by changing their datetime
+        size_t size = messages.size();
+        for (unsigned year = 2016; year < 2018; ++year)
+            for (unsigned month = 1; month <= months; ++month)
+                for (unsigned hour = 0; hour < hours; ++hour)
+                    for (unsigned minute = 0; minute < minutes; ++minute)
+                        messages.duplicate(size, dballe::Datetime(year, month, 1, hour, minute));
+
+        auto tr = db->transaction();
+        for (const auto& msgs: messages)
+            tr->import_msgs(msgs, nullptr, 0);
+        tr->commit();
+    }
+
+    void run_once() override
+    {
+        auto tr = db->transaction();
+        dballe::core::Query query;
+        dballe::core::Record rec;
+        auto cur = tr->query_data(query);
+        while (cur->next())
+            cur->to_record(rec);
+        tr->commit();
+    }
+
+    void teardown() override
+    {
+        db->remove_all();
+    }
+};
+
+int main(int argc, const char* argv[])
+{
+    using namespace dballe::benchmark;
+    dballe::benchmark::Task* tasks[] = {
+        new BenchmarkQuery("query-synop", "extra/bufr/synop-rad1.bufr", 1, 24),
+        new BenchmarkQuery("query-temp", "extra/bufr/temp-huge.bufr", 1, 1),
+        new BenchmarkQuery("query-acars", "extra/bufr/gts-acars2.bufr", 12, 24, 10),
+    };
+
+    Benchmark benchmark;
+    dballe::benchmark::Whitelist whitelist(argc, argv);
+
+    for (auto task: tasks)
+        if (whitelist.has(task->name()))
+            benchmark.timeit(*task, 20);
+
+    benchmark.print_timings();
+    return 0;
+}
+
