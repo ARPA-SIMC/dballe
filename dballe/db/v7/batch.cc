@@ -217,6 +217,14 @@ MeasuredDataVector::~MeasuredDataVector()
         delete md;
 }
 
+
+static void insertion_sort(std::vector<MeasuredData*>& measured_data, unsigned since=0)
+{
+    for (size_t i = since; i < measured_data.size(); ++i)
+        for (size_t j = i; j > 0 && measured_data[j]->datetime < measured_data[j - 1]->datetime; --j)
+            std::swap(measured_data[j], measured_data[j - 1]);
+}
+
 MeasuredData* MeasuredDataVector::find(const Datetime& datetime)
 {
     if (measured_data.empty()) return nullptr;
@@ -231,12 +239,18 @@ MeasuredData* MeasuredDataVector::find(const Datetime& datetime)
     }
 
     // Use binary search for larger vectors
-    if (dirty)
+
+    if (dirty > 16)
     {
         std::sort(measured_data.begin(), measured_data.end(), [](const MeasuredData* a, const MeasuredData* b) {
             return a->datetime < b->datetime;
         });
-        dirty = false;
+        dirty = 0;
+    } else if (dirty) {
+        // Use insertion sort, if less than 16 new elements appeared since the
+        // last sort
+        insertion_sort(measured_data, measured_data.size() - dirty);
+        dirty = 0;
     }
 
     // Binary search
@@ -258,7 +272,7 @@ MeasuredData* MeasuredDataVector::find(const Datetime& datetime)
 
 MeasuredData& MeasuredDataVector::add(const Datetime& datetime)
 {
-    dirty = true;
+    ++dirty;
     measured_data.push_back(new MeasuredData(datetime));
     return *measured_data.back();
 }

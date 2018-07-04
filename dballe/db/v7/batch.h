@@ -110,7 +110,7 @@ struct MeasuredData
 struct MeasuredDataVector
 {
     std::vector<MeasuredData*> measured_data;
-    bool dirty = false;
+    unsigned dirty = 0;
 
     MeasuredDataVector() {}
     MeasuredDataVector(const MeasuredDataVector&) = delete;
