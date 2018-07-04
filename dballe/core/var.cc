@@ -27,19 +27,79 @@ using namespace std;
 
 namespace dballe {
 
+/**
+ * Format a varcode as fast as possible.
+ *
+ * It assumes res is at least 7 chars long.
+ */
+static const char* digits6bit =
+    "00010203040506070809"
+    "10111213141516171819"
+    "20212223242526272829"
+    "30313233343536373839"
+    "40414243444546474849"
+    "50515253545556575859"
+    "60616263";
+
+static const char* digits8bit =
+    "000001002003004005006007008009"
+    "010011012013014015016017018019"
+    "020021022023024025026027028029"
+    "030031032033034035036037038039"
+    "040041042043044045046047048049"
+    "050051052053054055056057058059"
+    "060061062063064065066067068069"
+    "070071072073074075076077078079"
+    "080081082083084085086087088089"
+    "090091092093094095096097098099"
+    "100101102103104105106107108109"
+    "110111112113114115116117118119"
+    "120121122123124125126127128129"
+    "130131132133134135136137138139"
+    "140141142143144145146147148149"
+    "150151152153154155156157158159"
+    "160161162163164165166167168169"
+    "170171172173174175176177178179"
+    "180181182183184185186187188189"
+    "190191192193194195196197198199"
+    "200201202203204205206207208209"
+    "210211212213214215216217218219"
+    "220221222223224225226227228229"
+    "230231232233234235236237238239"
+    "240241242243244245246247248249"
+    "250251252253254255";
+
+
+static inline void format_xy(wreport::Varcode code, char* buf)
+{
+    const char* src = digits6bit + (WR_VAR_X(code) & 0x3f) * 2;
+    buf[1] = src[0];
+    buf[2] = src[1];
+    src = digits8bit + ((WR_VAR_Y(code) & 0xff) & 0xff) * 3;
+    buf[3] = src[0];
+    buf[4] = src[1];
+    buf[5] = src[2];
+    buf[6] = 0;
+}
+
 void format_code(wreport::Varcode code, char* buf)
 {
     // Format variable code
-    char type;
     switch (WR_VAR_F(code))
     {
-        case 0: type = 'B'; break;
-        case 1: type = 'R'; break;
-        case 2: type = 'C'; break;
-        case 3: type = 'D'; break;
-        default: type = '?'; break;
+        case 0: buf[0] = 'B'; break;
+        case 1: buf[0] = 'R'; break;
+        case 2: buf[0] = 'C'; break;
+        case 3: buf[0] = 'D'; break;
+        default: buf[0] = '?'; break;
     }
-    snprintf(buf, 7, "%c%02d%03d", type, WR_VAR_X(code), WR_VAR_Y(code));
+    format_xy(code, buf);
+}
+
+void format_bcode(wreport::Varcode code, char* buf)
+{
+    buf[0] = 'B';
+    format_xy(code, buf);
 }
 
 void resolve_varlist(const std::string& varlist, std::function<void(wreport::Varcode)> dest)

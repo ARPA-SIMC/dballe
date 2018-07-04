@@ -11,10 +11,10 @@
 #include "dballe/types.h"
 #include "dballe/record.h"
 #include "dballe/var.h"
+#include "dballe/core/var.h"
 #include "dballe/core/query.h"
 #include "wreport/var.h"
 #include <unordered_map>
-#include <cstdio>
 #include <cstring>
 #include <cassert>
 
@@ -214,7 +214,7 @@ struct StationDataResult
         rec.seti("context_id", id_data);
 
         char bname[7];
-        snprintf(bname, 7, "B%02d%03d", WR_VAR_X(var->code()), WR_VAR_Y(var->code()));
+        format_bcode(var->code(), bname);
         rec.setc("var", bname);
 
         rec.clear_vars();
@@ -432,7 +432,7 @@ struct SummaryResult
         station.to_record(rec);
 
         char bname[7];
-        snprintf(bname, 7, "B%02d%03d", WR_VAR_X(code), WR_VAR_Y(code));
+        format_bcode(code, bname);
         rec.setc("var", bname);
 
         if (count > 0)

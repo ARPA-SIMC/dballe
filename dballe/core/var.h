@@ -37,6 +37,13 @@ std::unique_ptr<wreport::Var> var_copy_without_unset_attrs(const wreport::Var& v
  */
 void format_code(wreport::Varcode code, char* buf);
 
+/**
+ * Format the B code to its string representation
+ *
+ * The string will be written to buf, which must be at least 7 bytes long
+ */
+void format_bcode(wreport::Varcode code, char* buf);
+
 /// Return \a code, or its DB-All.e equivalent
 wreport::Varcode map_code_to_dballe(wreport::Varcode code);
 

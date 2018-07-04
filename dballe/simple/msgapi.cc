@@ -5,6 +5,7 @@
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
 #include "dballe/msg/codec.h"
+#include "dballe/core/var.h"
 #include <cstring>
 #include <cassert>
 
@@ -277,7 +278,7 @@ const char* MsgAPI::dammelo()
 
     char vname[10];
     Varcode code = var.code();
-    snprintf(vname, 10, "B%02d%03d", WR_VAR_X(code), WR_VAR_Y(code));
+    format_bcode(code, vname);
     output.set("var", vname);
     output.set(var);
 

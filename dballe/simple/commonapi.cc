@@ -379,7 +379,7 @@ const char* CommonAPIImplementation::ancora()
         throw error_notfound("ancora called with no (or no more) results available");
 
     Varcode var = qcoutput.vars()[qc_iter]->code();
-    snprintf(parm, 10, "*B%02d%03d", WR_VAR_X(var), WR_VAR_Y(var));
+    format_bcode(var, parm);
 
     /* Get next value from qc */
     ++qc_iter;
