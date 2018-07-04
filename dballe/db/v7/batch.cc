@@ -213,68 +213,60 @@ void MeasuredData::write_pending(Tracer<>& trc, Transaction& tr, int station_id,
 
 MeasuredDataVector::~MeasuredDataVector()
 {
-    for (auto md: measured_data)
+    for (auto md: items)
         delete md;
 }
 
 
-static void insertion_sort(std::vector<MeasuredData*>& measured_data, unsigned since=0)
+std::vector<MeasuredData*>::const_iterator MeasuredDataVector::find(const Datetime& datetime)
 {
-    for (size_t i = since; i < measured_data.size(); ++i)
-        for (size_t j = i; j > 0 && measured_data[j]->datetime < measured_data[j - 1]->datetime; --j)
-            std::swap(measured_data[j], measured_data[j - 1]);
-}
-
-MeasuredData* MeasuredDataVector::find(const Datetime& datetime)
-{
-    if (measured_data.empty()) return nullptr;
+    if (items.empty()) return items.end();
 
     // Stick to linear search if the vector size is small
-    if (measured_data.size() < 6)
+    if (items.size() < 6)
     {
-        for (auto md: measured_data)
-            if (md->datetime == datetime)
-                return md;
-        return nullptr;
+        for (auto mdi = std::begin(items); mdi != std::end(items); ++mdi)
+            if ((*mdi)->datetime == datetime)
+                return mdi;
+        return items.end();
     }
 
     // Use binary search for larger vectors
 
     if (dirty > 16)
     {
-        std::sort(measured_data.begin(), measured_data.end(), [](const MeasuredData* a, const MeasuredData* b) {
+        std::sort(items.begin(), items.end(), [](const MeasuredData* a, const MeasuredData* b) {
             return a->datetime < b->datetime;
         });
         dirty = 0;
     } else if (dirty) {
         // Use insertion sort, if less than 16 new elements appeared since the
         // last sort
-        insertion_sort(measured_data, measured_data.size() - dirty);
-        dirty = 0;
+        insertion_sort();
     }
 
     // Binary search
     int begin, end;
-    begin = -1, end = measured_data.size();
+    begin = -1, end = items.size();
     while (end - begin > 1)
     {
         int cur = (end + begin) / 2;
-        if (measured_data[cur]->datetime > datetime)
+        if (items[cur]->datetime > datetime)
             end = cur;
         else
             begin = cur;
     }
-    if (begin == -1 || measured_data[begin]->datetime != datetime)
-        return nullptr;
+    if (begin == -1 || items[begin]->datetime != datetime)
+        return items.end();
     else
-        return measured_data[begin];
+        return items.begin() + begin;
 }
 
 MeasuredData& MeasuredDataVector::add(const Datetime& datetime)
 {
     ++dirty;
-    measured_data.push_back(new MeasuredData(datetime));
-    return *measured_data.back();
+    items.push_back(new MeasuredData(datetime));
+    return *items.back();
 }
 
 
@@ -294,8 +286,9 @@ StationData& Station::get_station_data(Tracer<>& trc)
 
 MeasuredData& Station::get_measured_data(Tracer<>& trc, const Datetime& datetime)
 {
-    if (MeasuredData* md = measured_data.find(datetime))
-        return *md;
+    auto mdi = measured_data.find(datetime);
+    if (mdi != measured_data.end())
+        return **mdi;
 
     MeasuredData& md = measured_data.add(datetime);
 
@@ -317,7 +310,7 @@ void Station::write_pending(Tracer<>& trc, bool with_attrs)
         id = batch.transaction.station().insert_new(trc, *this);
 
     station_data.write_pending(trc, batch.transaction, id, with_attrs);
-    for (auto md: measured_data.measured_data)
+    for (auto md: measured_data)
         md->write_pending(trc, batch.transaction, id, with_attrs);
 }
 

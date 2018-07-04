@@ -2,6 +2,7 @@
 #define DBALLE_DB_V7_BATCH_H
 
 #include <dballe/core/values.h>
+#include <dballe/core/smallset.h>
 #include <dballe/db/v7/fwd.h>
 #include <dballe/db/v7/utils.h>
 #include <vector>
@@ -107,11 +108,8 @@ struct MeasuredData
     void write_pending(Tracer<>& trc, Transaction& tr, int station_id, bool with_attrs);
 };
 
-struct MeasuredDataVector
+struct MeasuredDataVector : public core::SmallSet<MeasuredDataVector, MeasuredData*, Datetime>
 {
-    std::vector<MeasuredData*> measured_data;
-    unsigned dirty = 0;
-
     MeasuredDataVector() {}
     MeasuredDataVector(const MeasuredDataVector&) = delete;
     MeasuredDataVector(MeasuredDataVector&&) = default;
@@ -119,8 +117,10 @@ struct MeasuredDataVector
     MeasuredDataVector& operator=(const MeasuredDataVector&) = delete;
     MeasuredDataVector& operator=(MeasuredDataVector&&) = default;
 
-    MeasuredData* find(const Datetime& datetime);
+    std::vector<MeasuredData*>::const_iterator find(const Datetime& datetime);
     MeasuredData& add(const Datetime& datetime);
+
+    static const Datetime& _smallset_get_value(const MeasuredData* md) { return md->datetime; }
 };
 
 struct Station : public dballe::Station
