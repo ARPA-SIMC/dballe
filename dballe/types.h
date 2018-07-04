@@ -217,12 +217,35 @@ struct Datetime
      */
     int compare(const Datetime& other) const;
 
-    bool operator==(const Datetime& dt) const;
-    bool operator!=(const Datetime& dt) const;
-    bool operator<(const Datetime& dt) const;
-    bool operator>(const Datetime& dt) const;
-    bool operator<=(const Datetime& dt) const;
-    bool operator>=(const Datetime& dt) const;
+    bool operator==(const Datetime& o) const
+    {
+        return std::tie(year, month, day, hour, minute, second) == std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
+    }
+
+    bool operator!=(const Datetime& o) const
+    {
+        return std::tie(year, month, day, hour, minute, second) != std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
+    }
+
+    bool operator<(const Datetime& o) const
+    {
+        return std::tie(year, month, day, hour, minute, second) < std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
+    }
+
+    bool operator>(const Datetime& o) const
+    {
+        return std::tie(year, month, day, hour, minute, second) > std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
+    }
+
+    bool operator<=(const Datetime& o) const
+    {
+        return std::tie(year, month, day, hour, minute, second) <= std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
+    }
+
+    bool operator>=(const Datetime& o) const
+    {
+        return std::tie(year, month, day, hour, minute, second) >= std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
+    }
 
     /**
      * Print to an output stream in ISO8601 combined format.
@@ -388,12 +411,35 @@ struct Coords
      */
     int compare(const Coords& o) const;
 
-    bool operator==(const Coords& dt) const;
-    bool operator!=(const Coords& dt) const;
-    bool operator<(const Coords& dt) const;
-    bool operator>(const Coords& dt) const;
-    bool operator<=(const Coords& dt) const;
-    bool operator>=(const Coords& dt) const;
+    bool operator==(const Coords& o) const
+    {
+        return std::tie(lat, lon) == std::tie(o.lat, o.lon);
+    }
+
+    bool operator!=(const Coords& o) const
+    {
+        return std::tie(lat, lon) != std::tie(o.lat, o.lon);
+    }
+
+    bool operator<(const Coords& o) const
+    {
+        return std::tie(lat, lon) < std::tie(o.lat, o.lon);
+    }
+
+    bool operator>(const Coords& o) const
+    {
+        return std::tie(lat, lon) > std::tie(o.lat, o.lon);
+    }
+
+    bool operator<=(const Coords& o) const
+    {
+        return std::tie(lat, lon) <= std::tie(o.lat, o.lon);
+    }
+
+    bool operator>=(const Coords& o) const
+    {
+        return std::tie(lat, lon) >= std::tie(o.lat, o.lon);
+    }
 
     /// Print to an output stream
     int print(FILE* out, const char* end="\n") const;
@@ -561,10 +607,35 @@ struct Level
     /// Check if this level is fully set to the missing value
     bool is_missing() const;
 
-    bool operator==(const Level& l) const;
-    bool operator!=(const Level& l) const;
-    bool operator<(const Level& l) const;
-    bool operator>(const Level& l) const;
+    bool operator==(const Level& o) const
+    {
+        return std::tie(ltype1, l1, ltype2, l2) == std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
+    }
+
+    bool operator!=(const Level& o) const
+    {
+        return std::tie(ltype1, l1, ltype2, l2) != std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
+    }
+
+    bool operator<(const Level& o) const
+    {
+        return std::tie(ltype1, l1, ltype2, l2) < std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
+    }
+
+    bool operator>(const Level& o) const
+    {
+        return std::tie(ltype1, l1, ltype2, l2) > std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
+    }
+
+    bool operator<=(const Level& o) const
+    {
+        return std::tie(ltype1, l1, ltype2, l2) <= std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
+    }
+
+    bool operator>=(const Level& o) const
+    {
+        return std::tie(ltype1, l1, ltype2, l2) >= std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
+    }
 
     /**
      * Generic comparison
@@ -597,6 +668,7 @@ struct Level
 
 std::ostream& operator<<(std::ostream& out, const Level& l);
 
+
 /**
  * Information on how a value has been sampled or computed with regards to time.
  */
@@ -624,10 +696,35 @@ struct Trange
      */
     int compare(const Trange& t) const;
 
-    bool operator==(const Trange& tr) const;
-    bool operator!=(const Trange& tr) const;
-    bool operator<(const Trange& t) const;
-    bool operator>(const Trange& t) const;
+    bool operator==(const Trange& o) const
+    {
+        return std::tie(pind, p1, p2) == std::tie(o.pind, o.p1, o.p2);
+    }
+
+    bool operator!=(const Trange& o) const
+    {
+        return std::tie(pind, p1, p2) != std::tie(o.pind, o.p1, o.p2);
+    }
+
+    bool operator<(const Trange& o) const
+    {
+        return std::tie(pind, p1, p2) < std::tie(o.pind, o.p1, o.p2);
+    }
+
+    bool operator>(const Trange& o) const
+    {
+        return std::tie(pind, p1, p2) > std::tie(o.pind, o.p1, o.p2);
+    }
+
+    bool operator<=(const Trange& o) const
+    {
+        return std::tie(pind, p1, p2) <= std::tie(o.pind, o.p1, o.p2);
+    }
+
+    bool operator>=(const Trange& o) const
+    {
+        return std::tie(pind, p1, p2) >= std::tie(o.pind, o.p1, o.p2);
+    }
 
     /**
      * Return a string description of this time range
