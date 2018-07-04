@@ -75,7 +75,7 @@ static inline void format_xy(wreport::Varcode code, char* buf)
     const char* src = digits6bit + (WR_VAR_X(code) & 0x3f) * 2;
     buf[1] = src[0];
     buf[2] = src[1];
-    src = digits8bit + ((WR_VAR_Y(code) & 0xff) & 0xff) * 3;
+    src = digits8bit + (WR_VAR_Y(code) & 0xff) * 3;
     buf[3] = src[0];
     buf[4] = src[1];
     buf[5] = src[2];
