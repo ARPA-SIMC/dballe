@@ -134,8 +134,8 @@ add_method("from_db", [](Fixture& f) {
     wassert(actual(station->station_data.ids_by_code.size()) == 1u);
     {
         auto it = station->station_data.ids_by_code.begin();
-        wassert(actual(it->first) == WR_VAR(0, 7, 30));
-        wassert(actual(it->second) > 0u);
+        wassert(actual(it->varcode) == WR_VAR(0, 7, 30));
+        wassert(actual(it->id) > 0u);
     }
 
     auto measured_data = station->get_measured_data(trc, Datetime(2013, 10, 16, 10));

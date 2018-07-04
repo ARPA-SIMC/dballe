@@ -6,7 +6,6 @@
 #include <dballe/db/v7/fwd.h>
 #include <dballe/db/v7/utils.h>
 #include <vector>
-#include <unordered_map>
 #include <tuple>
 #include <memory>
 
@@ -66,9 +65,17 @@ struct StationDatum
     bool operator==(const StationDatum& o) const { return var->code() == o.var->code(); }
 };
 
+struct StationDataIDs : public core::SmallSet<StationDataIDs, IdVarcode, wreport::Varcode>
+{
+    static const wreport::Varcode& _smallset_get_value(const IdVarcode& item)
+    {
+        return item.varcode;
+    }
+};
+
 struct StationData
 {
-    std::unordered_map<wreport::Varcode, int> ids_by_code;
+    StationDataIDs ids_by_code;
     std::vector<StationDatum> to_insert;
     std::vector<StationDatum> to_update;
     bool loaded = false;

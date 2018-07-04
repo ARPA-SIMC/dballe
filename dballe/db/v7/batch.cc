@@ -145,7 +145,7 @@ void StationData::add(const wreport::Var* var, UpdateMode on_conflict)
         // Exists in the database
         switch (on_conflict)
         {
-            case UPDATE: to_update.emplace_back(in_db->second, var); break;
+            case UPDATE: to_update.emplace_back(in_db->id, var); break;
             case IGNORE: break;
             case ERROR: throw wreport::error_consistency("refusing to overwrite existing data");
         }
@@ -162,7 +162,13 @@ void StationData::write_pending(Tracer<>& trc, Transaction& tr, int station_id, 
         auto& st = tr.station_data();
         st.insert(trc, station_id, to_insert, with_attrs);
         for (const auto& v: to_insert)
-            ids_by_code[v.var->code()] = v.id;
+        {
+            auto cur = ids_by_code.find(v.var->code());
+            if (cur == ids_by_code.end())
+                ids_by_code.add(IdVarcode(v.id, v.var->code()));
+            else
+                cur->id = v.id;
+        }
     }
     if (!to_update.empty())
     {
@@ -229,7 +235,7 @@ StationData& Station::get_station_data(Tracer<>& trc)
     {
         v7::StationData& sd = batch.transaction.station_data();
         sd.query(trc, id, [&](int data_id, wreport::Varcode code) {
-            station_data.ids_by_code.insert(std::make_pair(code, data_id));
+            station_data.ids_by_code.add(IdVarcode(data_id, code));
         });
         station_data.loaded = true;
         ++batch.count_select_station_data;

@@ -122,7 +122,12 @@ void Transaction::insert_station_data(StationValues& vals, bool can_replace, boo
     // Read the IDs from the results
     vals.info.id = st->id;
     for (auto& v: vals.values)
-        v.second.data_id = sd.ids_by_code[v.first];
+    {
+        auto i = sd.ids_by_code.find(v.first);
+        if (i == sd.ids_by_code.end())
+            continue;
+        v.second.data_id = i->id;
+    }
 }
 
 void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
