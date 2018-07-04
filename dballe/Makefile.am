@@ -68,6 +68,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/structbuf.h \
 	core/matcher.h \
 	core/match-wreport.h \
+	core/smallset.h \
 	core/varmatch.h \
 	core/string.h \
 	core/trace.h \
@@ -303,6 +304,7 @@ test_dballe_SOURCES = \
 	core/csv-test.cc \
 	core/matcher-test.cc \
 	core/match-wreport-test.cc \
+	core/smallset-test.cc \
 	core/varmatch-test.cc \
 	core/json-test.cc \
 	core/string-test.cc \
