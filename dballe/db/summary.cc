@@ -1,6 +1,7 @@
 #include "summary.h"
 #include "dballe/core/query.h"
 #include "dballe/core/record.h"
+#include "dballe/core/json.h"
 #include <cstring>
 
 using namespace std;
@@ -18,6 +19,23 @@ Entry::Entry(dballe::db::CursorSummary& cur)
     varcode = cur.get_varcode();
     count = cur.get_count();
     dtrange = cur.get_datetimerange();
+}
+
+void Entry::to_json(core::JSONWriter& writer)
+{
+    writer.start_mapping();
+    writer.add("s");
+    writer.start_mapping();
+    writer.add("r", station.report);
+    writer.add("c", station.coords);
+    writer.add("i", station.ident);
+    writer.end_mapping();
+    writer.add("l", level);
+    writer.add("t", trange);
+    writer.add("v", varcode);
+    writer.add("d", dtrange);
+    writer.add("c", count);
+    writer.end_mapping();
 }
 
 }

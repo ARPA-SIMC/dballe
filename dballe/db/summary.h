@@ -1,6 +1,7 @@
 #ifndef DBALLE_DB_SUMMARY_H
 #define DBALLE_DB_SUMMARY_H
 
+#include <dballe/core/fwd.h>
 #include <dballe/core/query.h>
 #include <dballe/core/values.h>
 #include <dballe/db/db.h>
@@ -34,9 +35,12 @@ struct Entry
     dballe::Trange trange;
     wreport::Varcode varcode;
     dballe::DatetimeRange dtrange;
-    int count = MISSING_INT;
+    size_t count = 0;
 
+    Entry() = default;
     Entry(db::CursorSummary& cur);
+
+    void to_json(core::JSONWriter& writer);
 };
 
 }
@@ -80,8 +84,8 @@ public:
     unsigned data_count() const { return count; }
 
     /**
-     * Checks if this summary correctly generate a
-     * summary for the given query.
+     * Checks if this summary can correctly generate a summary for the given
+     * query.
      */
     summary::Support supports(const Query& query) const;
 

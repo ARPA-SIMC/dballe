@@ -131,6 +131,14 @@ void JSONWriter::add_datetime(const Datetime& val)
     }
 }
 
+void JSONWriter::add_datetime_range(const DatetimeRange& val)
+{
+    start_list();
+    add(val.min);
+    add(val.max);
+    end_list();
+}
+
 void JSONWriter::add_number(const std::string& val) {
     val_head();
     out << val;
@@ -147,6 +155,14 @@ void JSONWriter::add_var(const wreport::Var& val) {
     } else {
         add_null();
     }
+}
+
+void JSONWriter::add_ident(const Ident& val)
+{
+    if (val.is_missing())
+        add_null();
+    else
+        add_cstring(val);
 }
 
 void JSONWriter::add_break() {

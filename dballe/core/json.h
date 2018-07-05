@@ -4,6 +4,7 @@
 #include <wreport/varinfo.h>
 #include <wreport/var.h>
 #include <dballe/core/defs.h>
+#include <dballe/core/fwd.h>
 #include <vector>
 #include <ostream>
 #include <istream>
@@ -61,12 +62,20 @@ public:
     void add_double(double val);
     void add_cstring(const char* val);
     void add_string(const std::string& val);
+    template<typename T>
+    void add_ostream(const T& val)
+    {
+        val_head();
+        out << val;
+    }
 
     void add_number(const std::string& val);
     void add_level(const Level& val);
     void add_trange(const Trange& val);
     void add_datetime(const Datetime& val);
+    void add_datetime_range(const DatetimeRange& val);
     void add_coords(const Coords& val);
+    void add_ident(const Ident& val);
     void add_var(const wreport::Var& val);
     void add_break();
 
@@ -75,11 +84,14 @@ public:
     void add(double val) { add_double(val); }
     void add(int val) { add_int(val); }
     void add(bool val) { add_bool(val); }
+    void add(size_t val) { add_ostream(val); }
     void add(wreport::Varcode val) { add_int(val); }
     void add(const Level& val) { add_level(val); }
     void add(const Trange& val) { add_trange(val); }
     void add(const Datetime& val) { add_datetime(val); }
+    void add(const DatetimeRange& val) { add_datetime_range(val); }
     void add(const Coords& val) { add_coords(val); }
+    void add(const Ident& val) { add_ident(val); }
     void add(const wreport::Var& val) { add_var(val); }
 
     template<typename T>
