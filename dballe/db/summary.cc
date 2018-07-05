@@ -291,7 +291,7 @@ Summary Summary::from_json(core::json::Stream& in)
     std::vector<summary::Entry> entries;
     in.parse_object([&](const std::string& key) {
         if (key == "q")
-            in.parse_object([](const std::string& key) {}); // TODO: implement parse query
+            in.parse_object([&](const std::string& key) { in.parse_string(); }); // TODO: implement parse query
         else if (key == "e")
             in.parse_array([&]{
                 entries.emplace_back(summary::Entry::from_json(in));

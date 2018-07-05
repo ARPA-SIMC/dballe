@@ -120,6 +120,7 @@ this->add_method("json_summary", [](Fixture& f) {
     entry.count = 12;
 
     core::Query query;
+    query.rep_memo = "synop";
     Summary summary(query);
     summary.add_entry(entry);
     entry.varcode = WR_VAR(0, 1, 113);
@@ -129,11 +130,11 @@ this->add_method("json_summary", [](Fixture& f) {
     core::JSONWriter writer(json);
     summary.to_json(writer);
 
-    wassert(actual(json.str()) == R"({"q":{},"e":[{"s":{"r":"test","c":[4450000,1150000],"i":null},"l":[1,null,null,null],"t":[254,0,0],"v":368,"d":[[2018,1,1,0,0,0],[2018,7,1,0,0,0]],"c":12},{"s":{"r":"test","c":[4450000,1150000],"i":null},"l":[1,null,null,null],"t":[254,0,0],"v":369,"d":[[2018,1,1,0,0,0],[2018,7,1,0,0,0]],"c":12}]})");
+    wassert(actual(json.str()) == R"({"q":{"rep_memo":"synop"},"e":[{"s":{"r":"test","c":[4450000,1150000],"i":null},"l":[1,null,null,null],"t":[254,0,0],"v":368,"d":[[2018,1,1,0,0,0],[2018,7,1,0,0,0]],"c":12},{"s":{"r":"test","c":[4450000,1150000],"i":null},"l":[1,null,null,null],"t":[254,0,0],"v":369,"d":[[2018,1,1,0,0,0],[2018,7,1,0,0,0]],"c":12}]})");
 
     json.seekg(0);
     core::json::Stream in(json);
-    Summary summary1 = Summary::from_json(in);
+    Summary summary1 = wcallchecked(Summary::from_json(in));
     wassert_true(summary == summary1);
     wassert(actual(summary.all_stations.size()) == summary1.all_stations.size());
     wassert_true(summary.all_stations == summary1.all_stations);
