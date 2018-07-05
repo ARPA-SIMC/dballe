@@ -114,8 +114,11 @@ public:
 /**
  * JSON sax-like parser.
  */
-class JSONReader {
+class JSONReader
+{
 public:
+    virtual ~JSONReader() {}
+
     virtual void on_start_list() = 0;
     virtual void on_end_list() = 0;
 
@@ -131,6 +134,140 @@ public:
     // Parse a stream
     void parse(std::istream& in);
 };
+
+
+namespace json {
+
+enum Element
+{
+    JSON_OBJECT,
+    JSON_ARRAY,
+    JSON_STRING,
+    JSON_NUMBER,
+    JSON_TRUE,
+    JSON_FALSE,
+    JSON_NULL,
+};
+
+struct Stream
+{
+    std::istream& in;
+
+    Stream(std::istream& in) : in(in) {}
+
+    /// Raise a parse error if the stream does not yield this exact token
+    void expect_token(const char* token);
+
+    /// Consume and discard all spaces at the start of the stream
+    void skip_spaces();
+
+    /// Parse an unsigned integer
+    template<typename T>
+    T parse_unsigned()
+    {
+        T res = 0;
+        while (true)
+        {
+            int c = in.peek();
+            if (c >= '0' and c <= '9')
+                res = res * 10 + c - '0';
+            else
+                break;
+        }
+        skip_spaces();
+        return res;
+    }
+
+    /// Parse a signed integer
+    template<typename T>
+    T parse_signed()
+    {
+        if (in.peek() == '-')
+        {
+            in.get();
+            return -parse_unsigned<T>();
+        } else
+            return parse_unsigned<T>();
+    }
+
+    /// Parse a double
+    double parse_double();
+
+    /**
+     * Parse a number, without converting it.
+     *
+     * Returns the number, and true if it looks like a floating point number,
+     * false if it looks like an integer number
+     */
+    std::tuple<std::string, bool> parse_number();
+
+    /// Parse a string from the start of the stream
+    std::string parse_string();
+
+    /// Parse a JSON array, calling on_element to parse each element
+    void parse_array(std::function<void()> on_element);
+
+    /// Parse a JSON object, calling on_value to parse each value
+    void parse_object(std::function<void(const std::string& key)> on_value);
+
+    /// Identify the next element in the stream, without moving the stream
+    /// position
+    Element identify_next();
+};
+
+}
+
+class StackableJSONReader: public JSONReader
+{
+protected:
+    StackableJSONReader* parent = nullptr;
+    StackableJSONReader* child = nullptr;
+
+    virtual void local_start_list() = 0;
+    virtual void local_end_list() = 0;
+
+    virtual void local_start_mapping() = 0;
+    virtual void local_end_mapping() = 0;
+
+    virtual void local_add_null() = 0;
+    virtual void local_add_bool(bool val) = 0;
+    virtual void local_add_int(int val) = 0;
+    virtual void local_add_double(double val) = 0;
+    virtual void local_add_string(const std::string& val) = 0;
+
+    void push(StackableJSONReader* reader)
+    {
+        if (child)
+        {
+            delete reader;
+            throw std::runtime_error("pushing stackable JSON reader when there is one already");
+        }
+        child = reader;
+        child->parent = this;
+    }
+
+    void pop()
+    {
+        if (!child)
+            throw std::runtime_error("popping stackable JSON reader when there is none");
+        delete child;
+        child = nullptr;
+    }
+
+public:
+    virtual ~StackableJSONReader() { delete child; }
+
+    void on_start_list() override { if (child) child->on_start_list(); else local_start_list(); }
+    void on_end_list() override { if (child) child->on_end_list(); else local_end_list(); }
+    void on_start_mapping() override { if (child) child->on_start_mapping(); else local_start_mapping(); }
+    void on_end_mapping() override { if (child) child->on_end_mapping(); else local_end_mapping(); }
+    void on_add_null() override { if (child) child->on_add_null(); else local_add_null(); }
+    void on_add_bool(bool val) override { if (child) child->on_add_bool(val); else local_add_bool(val); }
+    void on_add_int(int val) override { if (child) child->on_add_int(val); else local_add_int(val); }
+    void on_add_double(double val) override { if (child) child->on_add_double(val); else local_add_double(val); }
+    void on_add_string(const std::string& val) override { if (child) child->on_add_string(val); else local_add_string(val); }
+};
+
 
 }
 }
