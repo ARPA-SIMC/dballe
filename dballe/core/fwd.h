@@ -6,6 +6,9 @@ namespace core {
 
 class JSONWriter;
 class JSONReader;
+namespace json {
+class Stream;
+}
 
 }
 }

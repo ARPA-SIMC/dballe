@@ -12,6 +12,11 @@
 namespace dballe {
 namespace core {
 
+struct JSONParseException : public std::runtime_error {
+    using std::runtime_error::runtime_error;
+};
+
+
 /**
  * JSON serializer
  *
@@ -170,7 +175,7 @@ struct Stream
         {
             int c = in.peek();
             if (c >= '0' and c <= '9')
-                res = res * 10 + c - '0';
+                res = res * 10 + in.get() - '0';
             else
                 break;
         }
@@ -204,6 +209,24 @@ struct Stream
     /// Parse a string from the start of the stream
     std::string parse_string();
 
+    /// Parse a Coords object
+    Coords parse_coords();
+
+    /// Parse an Ident object
+    Ident parse_ident();
+
+    /// Parse a Level object
+    Level parse_level();
+
+    /// Parse a Trange object
+    Trange parse_trange();
+
+    /// Parse a Datetime object
+    Datetime parse_datetime();
+
+    /// Parse a DatetimeRange object
+    DatetimeRange parse_datetime_range();
+
     /// Parse a JSON array, calling on_element to parse each element
     void parse_array(std::function<void()> on_element);
 
@@ -216,58 +239,6 @@ struct Stream
 };
 
 }
-
-class StackableJSONReader: public JSONReader
-{
-protected:
-    StackableJSONReader* parent = nullptr;
-    StackableJSONReader* child = nullptr;
-
-    virtual void local_start_list() = 0;
-    virtual void local_end_list() = 0;
-
-    virtual void local_start_mapping() = 0;
-    virtual void local_end_mapping() = 0;
-
-    virtual void local_add_null() = 0;
-    virtual void local_add_bool(bool val) = 0;
-    virtual void local_add_int(int val) = 0;
-    virtual void local_add_double(double val) = 0;
-    virtual void local_add_string(const std::string& val) = 0;
-
-    void push(StackableJSONReader* reader)
-    {
-        if (child)
-        {
-            delete reader;
-            throw std::runtime_error("pushing stackable JSON reader when there is one already");
-        }
-        child = reader;
-        child->parent = this;
-    }
-
-    void pop()
-    {
-        if (!child)
-            throw std::runtime_error("popping stackable JSON reader when there is none");
-        delete child;
-        child = nullptr;
-    }
-
-public:
-    virtual ~StackableJSONReader() { delete child; }
-
-    void on_start_list() override { if (child) child->on_start_list(); else local_start_list(); }
-    void on_end_list() override { if (child) child->on_end_list(); else local_end_list(); }
-    void on_start_mapping() override { if (child) child->on_start_mapping(); else local_start_mapping(); }
-    void on_end_mapping() override { if (child) child->on_end_mapping(); else local_end_mapping(); }
-    void on_add_null() override { if (child) child->on_add_null(); else local_add_null(); }
-    void on_add_bool(bool val) override { if (child) child->on_add_bool(val); else local_add_bool(val); }
-    void on_add_int(int val) override { if (child) child->on_add_int(val); else local_add_int(val); }
-    void on_add_double(double val) override { if (child) child->on_add_double(val); else local_add_double(val); }
-    void on_add_string(const std::string& val) override { if (child) child->on_add_string(val); else local_add_string(val); }
-};
-
 
 }
 }

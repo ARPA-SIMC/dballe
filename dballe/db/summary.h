@@ -40,8 +40,23 @@ struct Entry
     Entry() = default;
     Entry(db::CursorSummary& cur);
 
+    bool operator==(const Entry& o) const
+    {
+        return std::tie(station, level, trange, varcode, dtrange, count) ==
+               std::tie(o.station, o.level, o.trange, o.varcode, o.dtrange, o.count);
+    }
+    bool operator!=(const Entry& o) const
+    {
+        return std::tie(station, level, trange, varcode, dtrange, count) !=
+               std::tie(o.station, o.level, o.trange, o.varcode, o.dtrange, o.count);
+    }
+
     void to_json(core::JSONWriter& writer);
+
+    static Entry from_json(core::json::Stream& in);
 };
+
+std::ostream& operator<<(std::ostream& out, const Entry& e);
 
 }
 

@@ -195,10 +195,6 @@ void JSONWriter::end_mapping()
     stack.pop_back();
 }
 
-struct JSONParseException : public std::runtime_error {
-    using std::runtime_error::runtime_error;
-};
-
 
 namespace json {
 
@@ -311,6 +307,144 @@ std::string Stream::parse_string()
     skip_spaces();
     return res;
 }
+
+Coords Stream::parse_coords()
+{
+    Coords res;
+    unsigned idx = 0;
+    parse_array([&]{
+        switch (identify_next())
+        {
+            case JSON_NUMBER:
+                switch (idx)
+                {
+                    case 0: res.lat = parse_signed<int>(); break;
+                    case 1: res.lon = parse_signed<int>(); break;
+                    default: throw JSONParseException("extra element in Coords array");
+                }
+                break;
+            case JSON_NULL: expect_token("null"); break;
+            default:
+                throw JSONParseException("unexpected element in Coords array");
+        }
+        ++idx;
+    });
+    return res;
+}
+
+Ident Stream::parse_ident()
+{
+    switch (identify_next())
+    {
+        case JSON_STRING: return Ident(parse_string());
+        case JSON_NULL: expect_token("null"); return Ident();
+        default: throw JSONParseException("unexpected element for Ident");
+    }
+}
+
+Level Stream::parse_level()
+{
+    Level res;
+    unsigned idx = 0;
+    parse_array([&]{
+        switch (identify_next())
+        {
+            case JSON_NUMBER:
+                switch (idx)
+                {
+                    case 0: res.ltype1 = parse_signed<int>(); break;
+                    case 1: res.l1 = parse_signed<int>(); break;
+                    case 2: res.ltype2 = parse_signed<int>(); break;
+                    case 3: res.l2 = parse_signed<int>(); break;
+                    default: throw JSONParseException("extra element in Level array");
+                }
+                break;
+            case JSON_NULL: expect_token("null"); break;
+            default:
+                throw JSONParseException("unexpected element in Level array");
+        }
+        ++idx;
+    });
+    return res;
+}
+
+Trange Stream::parse_trange()
+{
+    Trange res;
+    unsigned idx = 0;
+    parse_array([&]{
+        switch (identify_next())
+        {
+            case JSON_NUMBER:
+                switch (idx)
+                {
+                    case 0: res.pind = parse_signed<int>(); break;
+                    case 1: res.p1 = parse_signed<int>(); break;
+                    case 2: res.p2 = parse_signed<int>(); break;
+                    default: throw JSONParseException("extra element in Trange array");
+                }
+                break;
+            case JSON_NULL: expect_token("null"); break;
+            default:
+                throw JSONParseException("unexpected element in Trange array");
+        }
+        ++idx;
+    });
+    return res;
+}
+
+Datetime Stream::parse_datetime()
+{
+    switch (identify_next())
+    {
+        case JSON_NULL: expect_token("null"); return Datetime();
+        case JSON_ARRAY:
+        {
+            Datetime res;
+            unsigned idx = 0;
+            parse_array([&]{
+                switch (identify_next())
+                {
+                    case JSON_NUMBER:
+                        switch (idx)
+                        {
+                            case 0: res.year = parse_unsigned<unsigned short>(); break;
+                            case 1: res.month = parse_signed<unsigned char>(); break;
+                            case 2: res.day = parse_signed<unsigned char>(); break;
+                            case 3: res.hour = parse_signed<unsigned char>(); break;
+                            case 4: res.minute = parse_signed<unsigned char>(); break;
+                            case 5: res.second = parse_signed<unsigned char>(); break;
+                            default: throw JSONParseException("extra element in Datetime array");
+                        }
+                        break;
+                    case JSON_NULL: expect_token("null"); break;
+                    default:
+                        throw JSONParseException("unexpected element in Datetime array");
+                }
+                ++idx;
+            });
+            return res;
+        }
+        default: throw JSONParseException("unexpected element for Datetime");
+    }
+}
+
+DatetimeRange Stream::parse_datetime_range()
+{
+    DatetimeRange res;
+    unsigned idx = 0;
+    parse_array([&]{
+        switch (idx)
+        {
+            case 0: res.min = parse_datetime(); break;
+            case 1: res.max = parse_datetime(); break;
+            default: throw JSONParseException("extra element in DatetimeRange array");
+        }
+        ++idx;
+    });
+    return res;
+}
+
 
 void Stream::parse_array(std::function<void()> on_element)
 {

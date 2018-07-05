@@ -26,6 +26,7 @@ std::ostream& operator<<(std::ostream& out, const Trange& l)
 }
 
 Ident::Ident(const char* value) : value(value ? strdup(value) : nullptr) {}
+Ident::Ident(const std::string& value) : value(strndup(value.data(), value.size())) {}
 Ident::Ident(const Ident& o) : value(o.value ? strdup(o.value) : nullptr) {}
 Ident::Ident(Ident&& o) : value(o.value) { o.value = nullptr; }
 Ident::~Ident() { free(value); }

@@ -101,6 +101,12 @@ this->add_method("json", [](Fixture& f) {
     entry.to_json(writer);
 
     wassert(actual(json.str()) == R"({"s":{"r":"test","c":[4450000,1150000],"i":null},"l":[1,null,null,null],"t":[254,0,0],"v":368,"d":[[2018,1,1,0,0,0],[2018,7,1,0,0,0]],"c":12})");
+
+    json.seekg(0);
+    core::json::Stream in(json);
+    summary::Entry entry1 = summary::Entry::from_json(in);
+
+    wassert(actual(entry1) == entry);
 });
 
 }

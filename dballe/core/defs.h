@@ -24,6 +24,7 @@ protected:
 public:
     Ident() = default;
     Ident(const char* value);
+    Ident(const std::string& value);
     Ident(const Ident& o);
     Ident(Ident&& o);
     ~Ident();
