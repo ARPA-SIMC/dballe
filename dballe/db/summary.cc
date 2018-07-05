@@ -288,10 +288,11 @@ void Summary::to_json(core::JSONWriter& writer) const
 
 Summary Summary::from_json(core::json::Stream& in)
 {
+    core::Query query;
     std::vector<summary::Entry> entries;
     in.parse_object([&](const std::string& key) {
         if (key == "q")
-            in.parse_object([&](const std::string& key) { in.parse_string(); }); // TODO: implement parse query
+            query = core::Query::from_json(in);
         else if (key == "e")
             in.parse_array([&]{
                 entries.emplace_back(summary::Entry::from_json(in));
@@ -299,7 +300,7 @@ Summary Summary::from_json(core::json::Stream& in)
         else
             throw core::JSONParseException("unsupported key \"" + key + "\" for summary::Entry");
     });
-    return Summary(core::Query(), std::move(entries));
+    return Summary(query, std::move(entries));
 }
 
 }

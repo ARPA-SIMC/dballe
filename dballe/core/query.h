@@ -3,6 +3,7 @@
 
 #include <dballe/query.h>
 #include <dballe/core/defs.h>
+#include <dballe/core/fwd.h>
 #include <dballe/record.h>
 #include <wreport/varinfo.h>
 #include <set>
@@ -144,6 +145,8 @@ struct Query : public dballe::Query
      * Throws an exception if query is not a core::Query.
      */
     static Query& downcast(dballe::Query& query);
+
+    static Query from_json(core::json::Stream& in);
 };
 
 }

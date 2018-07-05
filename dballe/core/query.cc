@@ -652,5 +652,66 @@ unsigned Query::parse_modifiers(const char* s)
     return modifiers;
 }
 
+Query Query::from_json(core::json::Stream& in)
+{
+    Query res;
+    in.parse_object([&](const std::string& key) {
+        if (key == "ana_id")
+            res.ana_id = in.parse_signed<int>();
+        else if (key == "prio_min")
+            res.prio_min = in.parse_signed<int>();
+        else if (key == "prio_max")
+            res.prio_max = in.parse_signed<int>();
+        else if (key == "rep_memo")
+            res.rep_memo = in.parse_string();
+        else if (key == "mobile")
+            res.mobile = in.parse_signed<int>();
+        else if (key == "ident")
+            res.ident = in.parse_string();
+        else if (key == "latmin")
+            res.latrange.imin = in.parse_signed<int>();
+        else if (key == "latmax")
+            res.latrange.imax = in.parse_signed<int>();
+        else if (key == "lonmin")
+            res.lonrange.imin = in.parse_signed<int>();
+        else if (key == "lonmax")
+            res.lonrange.imax = in.parse_signed<int>();
+        else if (key == "datetime")
+        {
+            res.datetime.min = in.parse_datetime();
+            res.datetime.max = res.datetime.min;
+        }
+        else if (key == "datetime_min")
+            res.datetime.min = in.parse_datetime();
+        else if (key == "datetime_max")
+            res.datetime.max = in.parse_datetime();
+        else if (key == "level")
+            res.level = in.parse_level();
+        else if (key == "trange")
+            res.trange = in.parse_trange();
+        else if (key == "varcodes")
+        {
+            in.parse_array([&]{
+                res.varcodes.insert(in.parse_unsigned<wreport::Varcode>());
+            });
+        }
+        else if (key == "query")
+            res.query = in.parse_string();
+        else if (key == "ana_filter")
+            res.ana_filter = in.parse_string();
+        else if (key == "data_filter")
+            res.data_filter = in.parse_string();
+        else if (key == "attr_filter")
+            res.attr_filter = in.parse_string();
+        else if (key == "limit")
+            res.limit = in.parse_signed<int>();
+        else if (key == "block")
+            res.block = in.parse_signed<int>();
+        else if (key == "station")
+            res.station = in.parse_signed<int>();
+    });
+    return res;
+}
+
 }
 }
