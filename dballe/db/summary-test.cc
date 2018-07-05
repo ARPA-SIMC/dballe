@@ -86,7 +86,7 @@ this->add_method("summary", [](Fixture& f) {
     wassert(actual(s.supports(*query_from_string("yearmin=1945, monthmin=4, daymin=25, hourmin=8, yearmax=1945, monthmax=4, daymax=25, hourmax=8, minumax=10"))) == summary::Support::EXACT);
 });
 
-this->add_method("json", [](Fixture& f) {
+this->add_method("json_entry", [](Fixture& f) {
     summary::Entry entry;
     entry.station.report = "test";
     entry.station.coords = Coords(44.5, 11.5);
@@ -107,6 +107,43 @@ this->add_method("json", [](Fixture& f) {
     summary::Entry entry1 = summary::Entry::from_json(in);
 
     wassert(actual(entry1) == entry);
+});
+
+this->add_method("json_summary", [](Fixture& f) {
+    summary::Entry entry;
+    entry.station.report = "test";
+    entry.station.coords = Coords(44.5, 11.5);
+    entry.level = Level(1);
+    entry.trange = Trange::instant();
+    entry.varcode = WR_VAR(0, 1, 112);
+    entry.dtrange.set(Datetime(2018, 1, 1), Datetime(2018, 7, 1));
+    entry.count = 12;
+
+    core::Query query;
+    Summary summary(query);
+    summary.add_entry(entry);
+    entry.varcode = WR_VAR(0, 1, 113);
+    summary.add_entry(entry);
+
+    std::stringstream json;
+    core::JSONWriter writer(json);
+    summary.to_json(writer);
+
+    wassert(actual(json.str()) == R"({"q":{},"e":[{"s":{"r":"test","c":[4450000,1150000],"i":null},"l":[1,null,null,null],"t":[254,0,0],"v":368,"d":[[2018,1,1,0,0,0],[2018,7,1,0,0,0]],"c":12},{"s":{"r":"test","c":[4450000,1150000],"i":null},"l":[1,null,null,null],"t":[254,0,0],"v":369,"d":[[2018,1,1,0,0,0],[2018,7,1,0,0,0]],"c":12}]})");
+
+    json.seekg(0);
+    core::json::Stream in(json);
+    Summary summary1 = Summary::from_json(in);
+    wassert_true(summary == summary1);
+    wassert(actual(summary.all_stations.size()) == summary1.all_stations.size());
+    wassert_true(summary.all_stations == summary1.all_stations);
+    wassert_true(summary.all_reports == summary1.all_reports);
+    wassert_true(summary.all_levels == summary1.all_levels);
+    wassert_true(summary.all_tranges == summary1.all_tranges);
+    wassert_true(summary.all_varcodes == summary1.all_varcodes);
+    wassert_true(summary.dtrange == summary1.dtrange);
+    wassert_true(summary.count == summary1.count);
+    wassert_true(summary.valid == summary1.valid);
 });
 
 }

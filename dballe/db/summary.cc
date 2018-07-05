@@ -21,7 +21,7 @@ Entry::Entry(dballe::db::CursorSummary& cur)
     dtrange = cur.get_datetimerange();
 }
 
-void Entry::to_json(core::JSONWriter& writer)
+void Entry::to_json(core::JSONWriter& writer) const
 {
     writer.start_mapping();
     writer.add("s");
@@ -86,408 +86,19 @@ std::ostream& operator<<(std::ostream& out, const Entry& e)
                << " c:" << e.count;
 }
 
-#if 0
-    struct JSONMsgReader : public core::JSONReader {
-        std::istream* in;
-        bool close_on_exit;
-
-        Msg msg;
-        std::unique_ptr<msg::Context> ctx;
-        std::unique_ptr<wreport::Var> var;
-        std::unique_ptr<wreport::Var> attr;
-
-        enum State {
-            MSG,
-            MSG_IDENT_KEY,
-            MSG_VERSION_KEY,
-            MSG_NETWORK_KEY,
-            MSG_LON_KEY,
-            MSG_LAT_KEY,
-            MSG_DATE_KEY,
-            MSG_DATA_KEY,
-            MSG_DATA_LIST,
-            MSG_DATA_LIST_ITEM,
-            MSG_DATA_LIST_ITEM_VARS_KEY,
-            MSG_DATA_LIST_ITEM_LEVEL_KEY,
-            MSG_DATA_LIST_ITEM_TRANGE_KEY,
-            MSG_DATA_LIST_ITEM_VARS_MAPPING,
-            MSG_DATA_LIST_ITEM_VARS_MAPPING_KEY,
-            MSG_DATA_LIST_ITEM_LEVEL_LIST,
-            MSG_DATA_LIST_ITEM_TRANGE_LIST,
-            MSG_DATA_LIST_ITEM_LEVEL_LIST_LTYPE1,
-            MSG_DATA_LIST_ITEM_LEVEL_LIST_L1,
-            MSG_DATA_LIST_ITEM_LEVEL_LIST_LTYPE2,
-            MSG_DATA_LIST_ITEM_LEVEL_LIST_L2,
-            MSG_DATA_LIST_ITEM_TRANGE_LIST_PIND,
-            MSG_DATA_LIST_ITEM_TRANGE_LIST_P1,
-            MSG_DATA_LIST_ITEM_TRANGE_LIST_P2,
-            MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_KEY,
-            MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR,
-            MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_MAPPING,
-            MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_KEY,
-            MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING,
-            MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY,
-            MSG_END,
-        };
-
-        std::stack<State> state;
-
-        JSONMsgReader(std::istream& in) : in(&in), close_on_exit(false) {}
-        JSONMsgReader(const std::string& name) : close_on_exit(true) {
-            in = new ifstream(name);
-            if (not in->good())
-                throw runtime_error(strerror(errno));
-        }
-        ~JSONMsgReader() {
-            if (close_on_exit)
-                delete in;
-        }
-
-        void parse_msgs(std::function<void(const Msg&)> cb) {
-            if (in) {
-                while (!in->eof())
-                {
-                    parse(*in);
-                    if (not state.empty() && state.top() == MSG_END) {
-                        state.pop();
-                        cb(msg);
-                    }
-                    msg.clear();
-                }
-            }
-            if (not state.empty())
-                throw std::runtime_error("Incomplete JSON");
-        }
-
-        void throw_error_if_empty_state() {
-            if (state.empty())
-                throw std::runtime_error("Invalid JSON value");
-        }
-
-        virtual void on_start_list() {
-            throw_error_if_empty_state();
-            State s = state.top();
-            switch (s) {
-                case MSG_DATA_KEY:
-                    state.pop();
-                    state.push(MSG_DATA_LIST);
-                    break;
-                case MSG_DATA_LIST_ITEM_LEVEL_KEY:
-                    state.pop();
-                    state.push(MSG_DATA_LIST_ITEM_LEVEL_LIST);
-                    state.push(MSG_DATA_LIST_ITEM_LEVEL_LIST_LTYPE1);
-                    break;
-                case MSG_DATA_LIST_ITEM_TRANGE_KEY:
-                    state.pop();
-                    state.push(MSG_DATA_LIST_ITEM_TRANGE_LIST);
-                    state.push(MSG_DATA_LIST_ITEM_TRANGE_LIST_PIND);
-                    break;
-                default: throw std::runtime_error("Invalid JSON value start_list");
-            }
-        }
-        virtual void on_end_list() {
-            throw_error_if_empty_state();
-            State s = state.top();
-            switch (s) {
-                case MSG_DATA_LIST: state.pop(); break;
-                case MSG_DATA_LIST_ITEM_LEVEL_LIST: state.pop(); break;
-                case MSG_DATA_LIST_ITEM_TRANGE_LIST: state.pop(); break;
-                default: throw std::runtime_error("Invalid JSON value end_list");
-            }
-        }
-        virtual void on_start_mapping() {
-            if (state.empty())
-            {
-                msg.clear();
-                state.push(MSG);
-            }
-            else
-            {
-                State s = state.top();
-                switch (s) {
-                    case MSG_DATA_LIST:
-                        state.push(MSG_DATA_LIST_ITEM);
-                        ctx.reset(new msg::Context(Level(), Trange()));
-                        break;
-                    case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR:
-                        state.pop();
-                        state.push(MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_MAPPING);
-                        break;
-                    case MSG_DATA_LIST_ITEM_VARS_KEY:
-                        state.pop();
-                        state.push(MSG_DATA_LIST_ITEM_VARS_MAPPING);
-                        break;
-                    case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_KEY:
-                        state.pop();
-                        state.push(MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING);
-                        break;
-                    default: throw std::runtime_error("Invalid JSON value start_mapping");
-                }
-            }
-        }
-        virtual void on_end_mapping() {
-            throw_error_if_empty_state();
-            State s = state.top();
-            switch (s) {
-                case MSG:
-                {
-                    state.pop();
-                    state.push(MSG_END);
-                    break;
-                }
-                case MSG_DATA_LIST_ITEM:
-                {
-                    // NOTE: station context could be already created, because
-                    // of "lon", "lat", "ident", "network".
-                    // Then, context overwrite is allowed.
-                    // msg.add_context(std::move(ctx));
-                    msg::Context& ctx2 = msg.obtain_context(ctx->level, ctx->trange);
-                    for (const auto& ci: ctx->data)
-                        ctx2.set(*ci);
-                    state.pop();
-                    break;
-                }
-                case MSG_DATA_LIST_ITEM_VARS_MAPPING:
-                case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING:
-                case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_MAPPING:
-                    state.pop();
-                    break;
-                default: throw std::runtime_error("Invalid JSON value end_mapping");
-            }
-        }
-        virtual void on_add_null() {
-            throw_error_if_empty_state();
-            State s = state.top();
-            switch (s) {
-                case MSG_IDENT_KEY:
-                    state.pop();
-                    break;
-                case MSG_DATA_LIST_ITEM_LEVEL_LIST_LTYPE1:
-                    ctx->level.ltype1 = MISSING_INT;
-                    state.pop();
-                    state.push(MSG_DATA_LIST_ITEM_LEVEL_LIST_L1);
-                    break;
-                case MSG_DATA_LIST_ITEM_LEVEL_LIST_L1:
-                    ctx->level.l1 = MISSING_INT;
-                    state.pop();
-                    state.push(MSG_DATA_LIST_ITEM_LEVEL_LIST_LTYPE2);
-                    break;
-                case MSG_DATA_LIST_ITEM_LEVEL_LIST_LTYPE2:
-                    ctx->level.ltype2 = MISSING_INT;
-                    state.pop();
-                    state.push(MSG_DATA_LIST_ITEM_LEVEL_LIST_L2);
-                    break;
-                case MSG_DATA_LIST_ITEM_LEVEL_LIST_L2:
-                    ctx->level.l2 = MISSING_INT;
-                    state.pop();
-                    break;
-                case MSG_DATA_LIST_ITEM_TRANGE_LIST_PIND:
-                    ctx->trange.pind = MISSING_INT;
-                    state.pop();
-                    state.push(MSG_DATA_LIST_ITEM_TRANGE_LIST_P1);
-                    break;
-                case MSG_DATA_LIST_ITEM_TRANGE_LIST_P1:
-                    ctx->trange.p1 = MISSING_INT;
-                    state.pop();
-                    state.push(MSG_DATA_LIST_ITEM_TRANGE_LIST_P2);
-                    break;
-                case MSG_DATA_LIST_ITEM_TRANGE_LIST_P2:
-                    ctx->trange.p2 = MISSING_INT;
-                    state.pop();
-                    break;
-                case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_KEY:
-                    var->unset();
-                    ctx->set(*var);
-                    state.pop();
-                    break;
-                case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY:
-                    state.pop();
-                    attr->set(MISSING_INT);
-                    var->seta(*attr);
-                    break;
-                default: throw std::runtime_error("Invalid JSON value add_null");
-            }
-        }
-        virtual void on_add_bool(bool val) {
-            throw_error_if_empty_state();
-            State s = state.top();
-            switch (s) {
-                case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_KEY:
-                    var->set(val);
-                    ctx->set(*var);
-                    state.pop();
-                    break;
-                case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY:
-                    state.pop();
-                    attr->set(val);
-                    var->seta(*attr);
-                    break;
-                default: throw std::runtime_error("Invalid JSON value add_bool");
-            }
-        }
-        virtual void on_add_int(int val) {
-            throw_error_if_empty_state();
-            State s = state.top();
-            switch (s) {
-                case MSG_LON_KEY:
-                    msg.set_longitude_var(dballe::var("B06001", val));
-                    state.pop();
-                    break;
-                case MSG_LAT_KEY:
-                    msg.set_latitude_var(dballe::var("B05001", val));
-                    state.pop();
-                    break;
-                case MSG_DATA_LIST_ITEM_LEVEL_LIST_LTYPE1:
-                    ctx->level.ltype1 = val;
-                    state.pop();
-                    state.push(MSG_DATA_LIST_ITEM_LEVEL_LIST_L1);
-                    break;
-                case MSG_DATA_LIST_ITEM_LEVEL_LIST_L1:
-                    ctx->level.l1 = val;
-                    state.pop();
-                    state.push(MSG_DATA_LIST_ITEM_LEVEL_LIST_LTYPE2);
-                    break;
-                case MSG_DATA_LIST_ITEM_LEVEL_LIST_LTYPE2:
-                    ctx->level.ltype2 = val;
-                    state.pop();
-                    state.push(MSG_DATA_LIST_ITEM_LEVEL_LIST_L2);
-                    break;
-                case MSG_DATA_LIST_ITEM_LEVEL_LIST_L2:
-                    ctx->level.l2 = val;
-                    state.pop();
-                    break;
-                case MSG_DATA_LIST_ITEM_TRANGE_LIST_PIND:
-                    ctx->trange.pind = val;
-                    state.pop();
-                    state.push(MSG_DATA_LIST_ITEM_TRANGE_LIST_P1);
-                    break;
-                case MSG_DATA_LIST_ITEM_TRANGE_LIST_P1:
-                    ctx->trange.p1 = val;
-                    state.pop();
-                    state.push(MSG_DATA_LIST_ITEM_TRANGE_LIST_P2);
-                    break;
-                case MSG_DATA_LIST_ITEM_TRANGE_LIST_P2:
-                    ctx->trange.p2 = val;
-                    state.pop();
-                    break;
-                case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_KEY:
-                    // Var::seti on decimal vars is considered as the value
-                    // with the scale already applied
-                    var->setf(to_string(val).c_str());
-                    ctx->set(*var);
-                    state.pop();
-                    break;
-                case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY:
-                    state.pop();
-                    attr->set(val);
-                    var->seta(*attr);
-                    break;
-                default: throw std::runtime_error("Invalid JSON value add_int");
-            }
-        }
-        virtual void on_add_double(double val) {
-            throw_error_if_empty_state();
-            State s = state.top();
-            switch (s) {
-                case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_KEY:
-                    var->set(val);
-                    ctx->set(*var);
-                    state.pop();
-                    break;
-                case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY:
-                    state.pop();
-                    attr->set(val);
-                    var->seta(*attr);
-                    break;
-                default: throw std::runtime_error("Invalid JSON value add_double");
-            }
-        }
-        virtual void on_add_string(const std::string& val) {
-            throw_error_if_empty_state();
-            State s = state.top();
-            switch (s) {
-                case MSG:
-                    if (val == "ident")
-                        state.push(MSG_IDENT_KEY);
-                    else if (val == "version")
-                        state.push(MSG_VERSION_KEY);
-                    else if (val == "network")
-                        state.push(MSG_NETWORK_KEY);
-                    else if (val == "lon")
-                        state.push(MSG_LON_KEY);
-                    else if (val == "lat")
-                        state.push(MSG_LAT_KEY);
-                    else if (val == "date")
-                        state.push(MSG_DATE_KEY);
-                    else if (val == "data")
-                        state.push(MSG_DATA_KEY);
-                    else
-                        throw std::runtime_error("Invalid JSON value");
-                    break;
-                case MSG_IDENT_KEY:
-                    msg.set_ident(val.c_str());
-                    state.pop();
-                    break;
-                case MSG_VERSION_KEY:
-                    if (strcmp(val.c_str(), DBALLE_JSON_VERSION) != 0)
-                        throw std::runtime_error("Invalid JSON version " + val);
-                    state.pop();
-                    break;
-                case MSG_NETWORK_KEY:
-                    msg.set_rep_memo(val.c_str());
-                    state.pop();
-                    break;
-                case MSG_DATE_KEY:
-                    msg.set_datetime(Datetime::from_iso8601(val.c_str()));
-                    state.pop();
-                    break;
-                case MSG_DATA_LIST_ITEM:
-                    if (val == "vars")
-                        state.push(MSG_DATA_LIST_ITEM_VARS_KEY);
-                    else if (val == "level")
-                        state.push(MSG_DATA_LIST_ITEM_LEVEL_KEY);
-                    else if (val == "timerange")
-                        state.push(MSG_DATA_LIST_ITEM_TRANGE_KEY);
-                    else
-                        throw std::runtime_error("Invalid JSON value");
-                    break;
-                case MSG_DATA_LIST_ITEM_VARS_MAPPING:
-                    state.push(MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR);
-                    var.reset(new Var(dballe::var(val)));
-                    break;
-                case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_MAPPING:
-                    if (val == "v")
-                        state.push(MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_KEY);
-                    else if (val == "a")
-                        state.push(MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_KEY);
-                    else
-                        throw std::runtime_error("Invalid JSON value");
-                    break;
-                case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_KEY:
-                    var->set(val);
-                    ctx->set(*var);
-                    state.pop();
-                    break;
-                case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING:
-                    state.push(MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY);
-                    attr.reset(new Var(dballe::var(val)));
-                    break;
-                case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY:
-                    state.pop();
-                    attr->set(val);
-                    var->seta(*attr);
-                    break;
-                default: throw std::runtime_error("Invalid JSON value add_string");
-            }
-        }
-    };
-#endif
-
 }
+
 
 Summary::Summary(const Query& query)
     : query(core::Query::downcast(query))
 {
+}
+
+Summary::Summary(const dballe::Query& query, std::vector<summary::Entry>&& entries)
+    : query(core::Query::downcast(query)), entries(std::move(entries))
+{
+    for (const auto& e: this->entries)
+        aggregate(e);
 }
 
 summary::Support Summary::supports(const Query& query) const
@@ -658,6 +269,37 @@ bool Summary::iterate(std::function<bool(const summary::Entry&)> f) const
         if (!f(i))
             return false;
     return true;
+}
+
+void Summary::to_json(core::JSONWriter& writer) const
+{
+    writer.start_mapping();
+    writer.add("q");
+    writer.start_mapping();
+    query.serialize(writer);
+    writer.end_mapping();
+    writer.add("e");
+    writer.start_list();
+    for (const auto& e: entries)
+        e.to_json(writer);
+    writer.end_list();
+    writer.end_mapping();
+}
+
+Summary Summary::from_json(core::json::Stream& in)
+{
+    std::vector<summary::Entry> entries;
+    in.parse_object([&](const std::string& key) {
+        if (key == "q")
+            in.parse_object([](const std::string& key) {}); // TODO: implement parse query
+        else if (key == "e")
+            in.parse_array([&]{
+                entries.emplace_back(summary::Entry::from_json(in));
+            });
+        else
+            throw core::JSONParseException("unsupported key \"" + key + "\" for summary::Entry");
+    });
+    return Summary(core::Query(), std::move(entries));
 }
 
 }

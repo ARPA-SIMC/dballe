@@ -51,7 +51,7 @@ struct Entry
                std::tie(o.station, o.level, o.trange, o.varcode, o.dtrange, o.count);
     }
 
-    void to_json(core::JSONWriter& writer);
+    void to_json(core::JSONWriter& writer) const;
 
     static Entry from_json(core::json::Stream& in);
 };
@@ -76,6 +76,12 @@ protected:
 
 public:
     Summary(const dballe::Query& query);
+    Summary(const dballe::Query& query, std::vector<summary::Entry>&& entries);
+
+    bool operator==(const Summary& o) const
+    {
+        return std::tie(query, entries) == std::tie(o.query, o.entries);
+    }
 
     // True if the summary has been filled with data
     bool valid = false;
@@ -117,6 +123,10 @@ public:
 
     /// Iterate all values in the summary
     bool iterate(std::function<bool(const summary::Entry&)> f) const;
+
+    void to_json(core::JSONWriter& writer) const;
+
+    static Summary from_json(core::json::Stream& in);
 };
 
 }
