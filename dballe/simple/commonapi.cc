@@ -371,7 +371,7 @@ const char* CommonAPIImplementation::spiegab(const char* varcode, const char* va
 
 const char* CommonAPIImplementation::ancora()
 {
-    static char parm[10];
+    static char parm[10] = "*";
 
     if (qc_iter < 0)
         throw error_consistency("ancora called without a previous voglioancora");
@@ -379,7 +379,7 @@ const char* CommonAPIImplementation::ancora()
         throw error_notfound("ancora called with no (or no more) results available");
 
     Varcode var = qcoutput.vars()[qc_iter]->code();
-    format_bcode(var, parm);
+    format_bcode(var, parm + 1);
 
     /* Get next value from qc */
     ++qc_iter;

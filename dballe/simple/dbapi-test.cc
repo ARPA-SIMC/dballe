@@ -161,6 +161,8 @@ this->add_method("query_attrs", [](Fixture& f) {
         wassert(actual(api.voglioancora()) == 1);
         wassert(actual(api.enqi("*B33007")) == 50);
 
+        wassert(actual(api.ancora()) == "*B33007");
+
         // Query it back, it has attributes
         api.setc("var", "B12101");
         api.setc("query", query);
