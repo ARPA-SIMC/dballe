@@ -1,3 +1,4 @@
+#define _DBALLE_TEST_CODE
 #include "dballe/db/tests.h"
 #include "dballe/db/v7/db.h"
 #include "dballe/db/v7/transaction.h"
@@ -38,15 +39,15 @@ this->add_method("summary", [](Fixture& f) {
     OldDballeTestDataSet test_data;
     wassert(f.populate(test_data));
 
-    core::Query query;
-    query.query = "details";
-    Summary s(query);
+    Summary s;
     wassert(actual(s.is_valid()).isfalse());
 
     // Build the whole db summary
+    core::Query query;
+    query.query = "details";
     auto cur = f.tr->query_summary(query);
     while (cur->next())
-        s.add_summary(*cur);
+        s.add_cursor(*cur);
 
     // Check its contents
     wassert(actual(s.is_valid()).istrue());
@@ -63,27 +64,39 @@ this->add_method("summary", [](Fixture& f) {
     wassert(actual(s.datetime_min()) == Datetime(1945, 4, 25, 8));
     wassert(actual(s.datetime_max()) == Datetime(1945, 4, 25, 8, 30));
     wassert(actual(s.data_count()) == 4);
+});
 
-    // Check what it can support
+this->add_method("merge_entries", [](Fixture& f) {
+    summary::Entry entry;
+    entry.station.report = "test";
+    entry.station.coords = Coords(44.5, 11.5);
+    entry.level = Level(1);
+    entry.trange = Trange::instant();
+    entry.varcode = WR_VAR(0, 1, 112);
+    entry.dtrange.set(Datetime(2018, 1, 1), Datetime(2018, 7, 1));
+    entry.count = 12;
 
-    // An existing station is ok: we know we have it
-    wassert(actual(s.supports(*query_from_string("ana_id=1"))) == summary::Support::EXACT);
+    db::Summary summary;
+    wassert(summary.merge_entries());
+    wassert(actual(summary.test_entries().size()) == 0);
+    summary.add_entry(entry);
+    wassert(summary.merge_entries());
+    wassert(actual(summary.test_entries().size()) == 1);
+    summary.add_entry(entry);
+    wassert(actual(summary.test_entries().size()) == 2);
+    wassert(summary.merge_entries());
+    wassert(actual(summary.test_entries().size()) == 1);
+    wassert(actual(summary.test_entries()[0].count) == 24u);
 
-    // A non-existing station is also ok: we know we don't have it
-    wassert(actual(s.supports(*query_from_string("ana_id=2"))) == summary::Support::EXACT);
-
-    wassert(actual(s.supports(*query_from_string("ana_id=1, leveltype1=10"))) == summary::Support::EXACT);
-
-    wassert(actual(s.supports(*query_from_string("ana_id=1, leveltype1=10, pindicator=20"))) == summary::Support::EXACT);
-
-    wassert(actual(s.supports(*query_from_string("ana_id=1, leveltype1=10, pindicator=20"))) == summary::Support::EXACT);
-
-    // Still exact, because the query matches the entire summary
-    wassert(actual(s.supports(*query_from_string("yearmin=1945"))) == summary::Support::EXACT);
-
-    // Still exact, because although the query partially matches the summary,
-    // each summary entry is entier included completely or excluded completely
-    wassert(actual(s.supports(*query_from_string("yearmin=1945, monthmin=4, daymin=25, hourmin=8, yearmax=1945, monthmax=4, daymax=25, hourmax=8, minumax=10"))) == summary::Support::EXACT);
+    summary.add_entry(entry);
+    entry.station.report = "test1";
+    summary.add_entry(entry);
+    summary.add_entry(entry);
+    wassert(actual(summary.test_entries().size()) == 4);
+    wassert(summary.merge_entries());
+    wassert(actual(summary.test_entries().size()) == 2);
+    wassert(actual(summary.test_entries()[0].count) == 36u);
+    wassert(actual(summary.test_entries()[1].count) == 24u);
 });
 
 this->add_method("json_entry", [](Fixture& f) {
@@ -121,7 +134,7 @@ this->add_method("json_summary", [](Fixture& f) {
 
     core::Query query;
     query.rep_memo = "synop";
-    Summary summary(query);
+    Summary summary;
     summary.add_entry(entry);
     entry.varcode = WR_VAR(0, 1, 113);
     summary.add_entry(entry);
@@ -130,7 +143,7 @@ this->add_method("json_summary", [](Fixture& f) {
     core::JSONWriter writer(json);
     summary.to_json(writer);
 
-    wassert(actual(json.str()) == R"({"q":{"rep_memo":"synop"},"e":[{"s":{"r":"test","c":[4450000,1150000],"i":null},"l":[1,null,null,null],"t":[254,0,0],"v":368,"d":[[2018,1,1,0,0,0],[2018,7,1,0,0,0]],"c":12},{"s":{"r":"test","c":[4450000,1150000],"i":null},"l":[1,null,null,null],"t":[254,0,0],"v":369,"d":[[2018,1,1,0,0,0],[2018,7,1,0,0,0]],"c":12}]})");
+    wassert(actual(json.str()) == R"({"e":[{"s":{"r":"test","c":[4450000,1150000],"i":null},"l":[1,null,null,null],"t":[254,0,0],"v":368,"d":[[2018,1,1,0,0,0],[2018,7,1,0,0,0]],"c":12},{"s":{"r":"test","c":[4450000,1150000],"i":null},"l":[1,null,null,null],"t":[254,0,0],"v":369,"d":[[2018,1,1,0,0,0],[2018,7,1,0,0,0]],"c":12}]})");
 
     json.seekg(0);
     core::json::Stream in(json);

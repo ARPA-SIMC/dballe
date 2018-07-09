@@ -121,6 +121,30 @@ this->add_method("filter_rep_memo", [](Fixture& f) {
     wassert(actual(vars[1]) == WR_VAR(0, 1, 12));
 });
 
+#if 0
+// tests for supports() implementation (currently not used)
+    // Check what it can support
+
+    // An existing station is ok: we know we have it
+    wassert(actual(s.supports(*query_from_string("ana_id=1"))) == summary::Support::EXACT);
+
+    // A non-existing station is also ok: we know we don't have it
+    wassert(actual(s.supports(*query_from_string("ana_id=2"))) == summary::Support::EXACT);
+
+    wassert(actual(s.supports(*query_from_string("ana_id=1, leveltype1=10"))) == summary::Support::EXACT);
+
+    wassert(actual(s.supports(*query_from_string("ana_id=1, leveltype1=10, pindicator=20"))) == summary::Support::EXACT);
+
+    wassert(actual(s.supports(*query_from_string("ana_id=1, leveltype1=10, pindicator=20"))) == summary::Support::EXACT);
+
+    // Still exact, because the query matches the entire summary
+    wassert(actual(s.supports(*query_from_string("yearmin=1945"))) == summary::Support::EXACT);
+
+    // Still exact, because although the query partially matches the summary,
+    // each summary entry is entier included completely or excluded completely
+    wassert(actual(s.supports(*query_from_string("yearmin=1945, monthmin=4, daymin=25, hourmin=8, yearmax=1945, monthmax=4, daymax=25, hourmax=8, minumax=10"))) == summary::Support::EXACT);
+#endif
+
 }
 
 }

@@ -2,6 +2,8 @@
 #include "dballe/core/query.h"
 #include "dballe/core/record.h"
 #include "dballe/core/json.h"
+#include <algorithm>
+#include <unordered_set>
 #include <cstring>
 
 using namespace std;
@@ -89,64 +91,15 @@ std::ostream& operator<<(std::ostream& out, const Entry& e)
 }
 
 
-Summary::Summary(const Query& query)
-    : query(core::Query::downcast(query))
+Summary::Summary()
 {
 }
 
-Summary::Summary(const dballe::Query& query, std::vector<summary::Entry>&& entries)
-    : query(core::Query::downcast(query)), entries(std::move(entries))
+Summary::Summary(std::vector<summary::Entry>&& entries)
+    : entries(std::move(entries))
 {
     for (const auto& e: this->entries)
         aggregate(e);
-}
-
-summary::Support Summary::supports(const Query& query) const
-{
-    using namespace summary;
-
-    // If query is not just a restricted version of our query, then it can
-    // select more data than this summary knows about.
-    if (!query.is_subquery(this->query))
-        return Support::UNSUPPORTED;
-
-    // Now we know that query has either more fields than this->query or changes
-    // in datetime or data-related filters
-    Support res = Support::EXACT;
-
-    const DatetimeRange& new_range = core::Query::downcast(query).datetime;
-    const DatetimeRange& old_range = core::Query::downcast(this->query).datetime;
-
-    // Check if the query has more restrictive datetime extremes
-    if (old_range != new_range)
-    {
-        if (count == MISSING_INT)
-        {
-            // We do not contain precise datetime information, so we cannot at
-            // this point say anything better than "this summary may
-            // overestimate the query"
-            res = Support::OVERESTIMATED;
-        } else {
-            // The query introduced further restrictions, check with the actual entries what we can do
-            for (const auto& e: entries)
-            {
-                if (new_range.contains(e.dtrange))
-                    ; // If the query entirely contains this summary entry, we can still match it exactly
-                else if (new_range.is_disjoint(e.dtrange))
-                    // If the query is completely outside of this entry, we can still match exactly
-                    ;
-                else
-                {
-                    // If the query instead only partially overlaps this entry,
-                    // we may overestimate the results
-                    res = Support::OVERESTIMATED;
-                    break;
-                }
-            }
-        }
-    }
-
-    return res;
 }
 
 void Summary::aggregate(const summary::Entry &val)
@@ -172,24 +125,66 @@ void Summary::aggregate(const summary::Entry &val)
     valid = true;
 }
 
-void Summary::add_filtered(const Summary& summary)
+void Summary::add_cursor(dballe::db::CursorSummary& cur)
 {
-    switch (summary.supports(query))
-    {
-        case summary::Support::UNSUPPORTED:
-            throw std::runtime_error("Source summary does not support the query for this summary");
-        case summary::Support::OVERESTIMATED:
-        case summary::Support::EXACT:
-            break;
+    entries.emplace_back(cur);
+    aggregate(entries.back());
+}
+
+void Summary::add_entry(const summary::Entry &entry)
+{
+    entries.push_back(entry);
+    aggregate(entries.back());
+}
+
+void Summary::add_summary(const Summary& summary)
+{
+    bool was_empty = entries.empty();
+    for (const auto& entry: summary.entries)
+        add_entry(entry);
+    if (!was_empty)
+        merge_entries();
+}
+
+void Summary::merge_entries()
+{
+    if (entries.size() < 2) return;
+
+    std::sort(entries.begin(), entries.end());
+
+    auto first = entries.begin();
+    auto last = entries.end();
+    auto tail = first;
+    while (++first != last) {
+        if (tail->same_metadata(*first))
+            tail->count += first->count;
+        else if (++tail != first)
+            *tail = std::move(*first);
     }
+
+    ++tail;
+
+    if (tail != last)
+        entries.erase(tail, last);
+}
+
+bool Summary::iterate(std::function<bool(const summary::Entry&)> f) const
+{
+    for (auto entry: entries)
+        if (!f(entry))
+            return false;
+    return true;
+}
+
+bool Summary::iterate_filtered(const Query& query, std::function<bool(const summary::Entry&)> f) const
+{
+    // Scan the filter building a todo list of things to match
 
     const core::Query& q = core::Query::downcast(query);
 
-    // Scan the filter building a todo list of things to match
-
     // If there is any filtering on the station, build a whitelist of matching stations
-    bool has_flt_rep_memo = !query.rep_memo.empty();
-    std::set<int> wanted_stations;
+    bool has_flt_rep_memo = !q.rep_memo.empty();
+    std::unordered_set<int> wanted_stations;
     bool has_flt_ident = !q.ident.is_missing();
     bool has_flt_area = !q.get_latrange().is_missing() || !q.get_lonrange().is_missing();
     bool has_flt_station = has_flt_ident || has_flt_area || q.ana_id != MISSING_INT;
@@ -197,7 +192,7 @@ void Summary::add_filtered(const Summary& summary)
     {
         LatRange flt_area_latrange = q.get_latrange();
         LonRange flt_area_lonrange = q.get_lonrange();
-        for (auto s: summary.all_stations)
+        for (auto s: all_stations)
         {
             const Station& station = s.second;
             if (q.ana_id != MISSING_INT && station.id != q.ana_id)
@@ -210,35 +205,35 @@ void Summary::add_filtered(const Summary& summary)
                     continue;
             }
 
-            if (has_flt_rep_memo && query.rep_memo != station.report)
+            if (has_flt_rep_memo && q.rep_memo != station.report)
                 continue;
 
-            if (has_flt_ident && query.ident != station.ident)
+            if (has_flt_ident && q.ident != station.ident)
                 continue;
 
             wanted_stations.insert(station.id);
         }
     }
 
-    bool has_flt_level = !query.level.is_missing();
-    bool has_flt_trange = !query.trange.is_missing();
-    bool has_flt_varcode = !query.varcodes.empty();
-    wreport::Varcode wanted_varcode = has_flt_varcode ? *query.varcodes.begin() : 0;
-    DatetimeRange wanted_dtrange = query.get_datetimerange();
+    bool has_flt_level = !q.level.is_missing();
+    bool has_flt_trange = !q.trange.is_missing();
+    bool has_flt_varcode = !q.varcodes.empty();
+    wreport::Varcode wanted_varcode = has_flt_varcode ? *q.varcodes.begin() : 0;
+    DatetimeRange wanted_dtrange = q.get_datetimerange();
 
-    for (const auto& entry: summary.entries)
+    for (const auto& entry: entries)
     {
         if (has_flt_station)
         {
             if (wanted_stations.find(entry.station.id) == wanted_stations.end())
                 continue;
-        } else if (has_flt_rep_memo && query.rep_memo != entry.station.report)
+        } else if (has_flt_rep_memo && q.rep_memo != entry.station.report)
             continue;
 
-        if (has_flt_level && query.level != entry.level)
+        if (has_flt_level && q.level != entry.level)
             continue;
 
-        if (has_flt_trange && query.trange != entry.trange)
+        if (has_flt_trange && q.trange != entry.trange)
             continue;
 
         if (has_flt_varcode && wanted_varcode != entry.varcode)
@@ -247,37 +242,16 @@ void Summary::add_filtered(const Summary& summary)
         if (!wanted_dtrange.contains(entry.dtrange))
             continue;
 
-        add_entry(entry);
-    }
-}
-
-void Summary::add_summary(dballe::db::CursorSummary& cur)
-{
-    entries.emplace_back(cur);
-    aggregate(entries.back());
-}
-
-void Summary::add_entry(const summary::Entry &entry)
-{
-    entries.push_back(entry);
-    aggregate(entries.back());
-}
-
-bool Summary::iterate(std::function<bool(const summary::Entry&)> f) const
-{
-    for (auto i: entries)
-        if (!f(i))
+        if (!f(entry))
             return false;
+    }
+
     return true;
 }
 
 void Summary::to_json(core::JSONWriter& writer) const
 {
     writer.start_mapping();
-    writer.add("q");
-    writer.start_mapping();
-    query.serialize(writer);
-    writer.end_mapping();
     writer.add("e");
     writer.start_list();
     for (const auto& e: entries)
@@ -288,19 +262,16 @@ void Summary::to_json(core::JSONWriter& writer) const
 
 Summary Summary::from_json(core::json::Stream& in)
 {
-    core::Query query;
     std::vector<summary::Entry> entries;
     in.parse_object([&](const std::string& key) {
-        if (key == "q")
-            query = core::Query::from_json(in);
-        else if (key == "e")
+        if (key == "e")
             in.parse_array([&]{
                 entries.emplace_back(summary::Entry::from_json(in));
             });
         else
             throw core::JSONParseException("unsupported key \"" + key + "\" for summary::Entry");
     });
-    return Summary(query, std::move(entries));
+    return Summary(std::move(entries));
 }
 
 }

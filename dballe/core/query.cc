@@ -232,7 +232,7 @@ bool Query::is_subquery(const dballe::Query& other_gen) const
     if (mods != omods)
     {
         // The only relevant bits is query=best, all the rest we can safely ignore
-        if ((mods & DBA_DB_MODIFIER_BEST) != (omods & DBA_DB_MODIFIER_BEST)) return false;
+        if (!(mods & DBA_DB_MODIFIER_BEST) && (omods & DBA_DB_MODIFIER_BEST)) return false;
     }
     if (removed_or_changed(ana_filter, other.ana_filter)) return false;
     if (removed_or_changed(data_filter, other.data_filter)) return false;

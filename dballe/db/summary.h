@@ -2,6 +2,7 @@
 #define DBALLE_DB_SUMMARY_H
 
 #include <dballe/core/fwd.h>
+#include <dballe/core/defs.h>
 #include <dballe/core/query.h>
 #include <dballe/core/values.h>
 #include <dballe/db/db.h>
@@ -50,6 +51,17 @@ struct Entry
         return std::tie(station, level, trange, varcode, dtrange, count) !=
                std::tie(o.station, o.level, o.trange, o.varcode, o.dtrange, o.count);
     }
+    bool operator<(const Entry& o) const
+    {
+        return std::tie(station, level, trange, varcode, dtrange, count) <
+               std::tie(o.station, o.level, o.trange, o.varcode, o.dtrange, o.count);
+    }
+
+    bool same_metadata(const Entry& o) const
+    {
+        return std::tie(station, level, trange, varcode, dtrange) ==
+               std::tie(o.station, o.level, o.trange, o.varcode, o.dtrange);
+    }
 
     void to_json(core::JSONWriter& writer) const;
 
@@ -60,27 +72,25 @@ std::ostream& operator<<(std::ostream& out, const Entry& e);
 
 }
 
+
 /**
  * High level objects for working with DB-All.e DB summaries
  */
 class Summary
 {
 protected:
-    // Query that generated this summary
-    core::Query query;
-
     // Summary of items for the currently active filter
     std::vector<summary::Entry> entries;
 
     void aggregate(const summary::Entry& entry);
 
 public:
-    Summary(const dballe::Query& query);
-    Summary(const dballe::Query& query, std::vector<summary::Entry>&& entries);
+    Summary();
+    Summary(std::vector<summary::Entry>&& entries);
 
     bool operator==(const Summary& o) const
     {
-        return std::tie(query, entries) == std::tie(o.query, o.entries);
+        return entries == o.entries;
     }
 
     // True if the summary has been filled with data
@@ -104,29 +114,35 @@ public:
     const Datetime& datetime_max() const { return dtrange.max; }
     unsigned data_count() const { return count; }
 
-    /**
-     * Checks if this summary can correctly generate a summary for the given
-     * query.
-     */
-    summary::Support supports(const Query& query) const;
-
-    /**
-     * Add entries from a summary, filtered with a query
-     */
-    void add_filtered(const Summary& summary);
-
     /// Add an entry to the summary taken from the current status of \a cur
-    void add_summary(db::CursorSummary& cur);
+    void add_cursor(db::CursorSummary& cur);
 
     /// Add a copy of an existing entry
     void add_entry(const summary::Entry& entry);
 
+    /// Merge the copy of another summary into this one
+    void add_summary(const Summary& summary);
+
+    /**
+     * Merge entries with duplicate metadata
+     *
+     * Call this function if you call add_entry with entries that may already
+     * exist in the summary
+     */
+    void merge_entries();
+
     /// Iterate all values in the summary
     bool iterate(std::function<bool(const summary::Entry&)> f) const;
+
+    /// Iterate all values in the summary that match the given query
+    bool iterate_filtered(const Query& query, std::function<bool(const summary::Entry&)> f) const;
 
     void to_json(core::JSONWriter& writer) const;
 
     static Summary from_json(core::json::Stream& in);
+
+    DBALLE_TEST_ONLY std::vector<summary::Entry>& test_entries() { return entries; }
+    DBALLE_TEST_ONLY const std::vector<summary::Entry>& test_entries() const { return entries; }
 };
 
 }

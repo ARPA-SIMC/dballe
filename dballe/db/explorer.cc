@@ -41,9 +41,7 @@ const dballe::Query& Explorer::get_filter() const
 void Explorer::set_filter(const dballe::Query& query)
 {
     filter = core::Query::downcast(query);
-    unique_ptr<db::Summary> new_active_summary(new db::Summary(filter));
-    new_active_summary->add_filtered(*_global_summary);
-    _active_summary = new_active_summary.release();
+    update_active_summary();
 }
 
 void Explorer::revalidate(dballe::db::Transaction& tr)
@@ -56,18 +54,89 @@ void Explorer::revalidate(dballe::db::Transaction& tr)
     core::Query query;
     query.query = "details";
 
-    unique_ptr<db::Summary> new_global_summary(new db::Summary(query));
+    unique_ptr<db::Summary> new_global_summary(new db::Summary);
 
     auto cur = tr.query_summary(query);
     while (cur->next())
-        new_global_summary->add_summary(*cur);
-
-    unique_ptr<db::Summary> new_active_summary(new db::Summary(filter));
-    new_active_summary->add_filtered(*new_global_summary);
+        new_global_summary->add_cursor(*cur);
 
     _global_summary = new_global_summary.release();
+
+    update_active_summary();
+}
+
+void Explorer::update_active_summary()
+{
+    unique_ptr<db::Summary> new_active_summary(new db::Summary);
+
+#if 0
+    switch (summary.supports(query))
+    {
+        case summary::Support::UNSUPPORTED:
+            throw std::runtime_error("Source summary does not support the query for this summary");
+        case summary::Support::OVERESTIMATED:
+        case summary::Support::EXACT:
+            break;
+    }
+#endif
+
+    _global_summary->iterate_filtered(filter, [&](const summary::Entry& entry) {
+        new_active_summary->add_entry(entry);
+        return true;
+    });
+
     _active_summary = new_active_summary.release();
 }
+
+#if 0
+summary::Support Summary::supports(const Query& query) const
+{
+    using namespace summary;
+
+    // If query is not just a restricted version of our query, then it can
+    // select more data than this summary knows about.
+    if (!query.is_subquery(this->query))
+        return Support::UNSUPPORTED;
+
+    // Now we know that query has either more fields than this->query or changes
+    // in datetime or data-related filters
+    Support res = Support::EXACT;
+
+    const DatetimeRange& new_range = core::Query::downcast(query).datetime;
+    const DatetimeRange& old_range = core::Query::downcast(this->query).datetime;
+
+    // Check if the query has more restrictive datetime extremes
+    if (old_range != new_range)
+    {
+        if (count == MISSING_INT)
+        {
+            // We do not contain precise datetime information, so we cannot at
+            // this point say anything better than "this summary may
+            // overestimate the query"
+            res = Support::OVERESTIMATED;
+        } else {
+            // The query introduced further restrictions, check with the actual entries what we can do
+            for (const auto& e: entries)
+            {
+                if (new_range.contains(e.dtrange))
+                    ; // If the query entirely contains this summary entry, we can still match it exactly
+                else if (new_range.is_disjoint(e.dtrange))
+                    // If the query is completely outside of this entry, we can still match exactly
+                    ;
+                else
+                {
+                    // If the query instead only partially overlaps this entry,
+                    // we may overestimate the results
+                    res = Support::OVERESTIMATED;
+                    break;
+                }
+            }
+        }
+    }
+
+    return res;
+}
+#endif
 
 void Explorer::update_station(values::Value &val, const wreport::Var &new_val)
 {

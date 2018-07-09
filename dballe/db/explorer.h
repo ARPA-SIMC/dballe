@@ -15,15 +15,17 @@ namespace db {
 class Explorer
 {
 protected:
-    /// Currently active filter
-    dballe::core::Query filter;
-
     /// Summary of the whole database
     dballe::db::Summary* _global_summary = nullptr;
+
+    /// Currently active filter
+    dballe::core::Query filter;
 
     /// Summary of active_filter
     dballe::db::Summary* _active_summary = nullptr;
 
+    /// Regenerate _active_summary based on filter
+    void update_active_summary();
 
 public:
     Explorer();
