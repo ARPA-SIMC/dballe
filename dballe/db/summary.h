@@ -35,6 +35,7 @@ struct Entry
     dballe::Level level;
     dballe::Trange trange;
     wreport::Varcode varcode;
+
     dballe::DatetimeRange dtrange;
     size_t count = 0;
 
@@ -59,8 +60,14 @@ struct Entry
 
     bool same_metadata(const Entry& o) const
     {
-        return std::tie(station, level, trange, varcode, dtrange) ==
-               std::tie(o.station, o.level, o.trange, o.varcode, o.dtrange);
+        return std::tie(station, level, trange, varcode) ==
+               std::tie(o.station, o.level, o.trange, o.varcode);
+    }
+
+    void merge(const Entry& o)
+    {
+        dtrange.merge(o.dtrange);
+        count += o.count;
     }
 
     void to_json(core::JSONWriter& writer) const;

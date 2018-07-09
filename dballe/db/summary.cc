@@ -157,7 +157,7 @@ void Summary::merge_entries()
     auto tail = first;
     while (++first != last) {
         if (tail->same_metadata(*first))
-            tail->count += first->count;
+            tail->merge(*first);
         else if (++tail != first)
             *tail = std::move(*first);
     }
