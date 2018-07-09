@@ -21,8 +21,8 @@ struct Fixture : EmptyTransactionFixture<V7DB>
 {
     using EmptyTransactionFixture::EmptyTransactionFixture;
 
-    dballe::Station sde1;
-    dballe::Station sde2;
+    dballe::DBStation sde1;
+    dballe::DBStation sde2;
     int lt1;
     int lt2;
 

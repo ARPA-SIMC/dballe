@@ -32,7 +32,7 @@ MySQLStation::~MySQLStation()
 {
 }
 
-int MySQLStation::maybe_get_id(Tracer<>& trc, const dballe::Station& st)
+int MySQLStation::maybe_get_id(Tracer<>& trc, const dballe::DBStation& st)
 {
     int rep = tr.repinfo().obtain_id(st.report.c_str());
 
@@ -60,7 +60,7 @@ int MySQLStation::maybe_get_id(Tracer<>& trc, const dballe::Station& st)
     }
 }
 
-int MySQLStation::insert_new(Tracer<>& trc, const dballe::Station& desc)
+int MySQLStation::insert_new(Tracer<>& trc, const dballe::DBStation& desc)
 {
     // If no station was found, insert a new one
     int rep = tr.repinfo().get_id(desc.report.c_str());
@@ -164,13 +164,13 @@ void MySQLStation::add_station_vars(Tracer<>& trc, int id_station, Record& rec)
     }
 }
 
-void MySQLStation::run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)> dest)
+void MySQLStation::run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb, std::function<void(const dballe::DBStation&)> dest)
 {
     if (qb.bind_in_ident)
         throw error_unimplemented("binding in MySQL driver is not implemented");
     Tracer<> trc_sel(trc ? trc->trace_select(qb.sql_query) : nullptr);
 
-    dballe::Station station;
+    dballe::DBStation station;
     conn.exec_use(qb.sql_query, [&](const sql::mysql::Row& row) {
         if (trc_sel) trc_sel->add_row();
         station.id = row.as_int(0);

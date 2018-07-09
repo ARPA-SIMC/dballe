@@ -59,13 +59,13 @@ struct StationValues : protected std::vector<wreport::Var*>
 
 struct DataRow
 {
-    dballe::Station station;
+    dballe::DBStation station;
     int id_levtr;
     Datetime datetime;
     int id_data;
     wreport::Var* var;
 
-    DataRow(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)
+    DataRow(const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)
         : station(station), id_levtr(id_levtr), datetime(datetime), id_data(id_data), var(var.release())
     {
     }
@@ -131,7 +131,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
     // Retrieve results, buffering them locally to avoid performing concurrent
     // queries
     std::vector<DataRow> results;
-    data().run_data_query(trc, qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+    data().run_data_query(trc, qb, [&](const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
         results.emplace_back(station, id_levtr, datetime, id_data, move(var));
     });
 

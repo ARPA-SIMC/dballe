@@ -44,7 +44,7 @@ PostgreSQLStation::~PostgreSQLStation()
 {
 }
 
-int PostgreSQLStation::maybe_get_id(Tracer<>& trc, const dballe::Station& st)
+int PostgreSQLStation::maybe_get_id(Tracer<>& trc, const dballe::DBStation& st)
 {
     using namespace dballe::sql::postgresql;
 
@@ -72,7 +72,7 @@ int PostgreSQLStation::maybe_get_id(Tracer<>& trc, const dballe::Station& st)
     }
 }
 
-int PostgreSQLStation::insert_new(Tracer<>& trc, const dballe::Station& desc)
+int PostgreSQLStation::insert_new(Tracer<>& trc, const dballe::DBStation& desc)
 {
     // If no station was found, insert a new one
     int rep = tr.repinfo().get_id(desc.report.c_str());
@@ -116,7 +116,7 @@ void PostgreSQLStation::add_station_vars(Tracer<>& trc, int id_station, Record& 
         rec.set(newvar((Varcode)res.get_int4(row, 0), res.get_string(row, 1)));
 }
 
-void PostgreSQLStation::run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)> dest)
+void PostgreSQLStation::run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb, std::function<void(const dballe::DBStation&)> dest)
 {
     using namespace dballe::sql::postgresql;
     Tracer<> trc_sel(trc ? trc->trace_select(qb.sql_query) : nullptr);
@@ -133,7 +133,7 @@ void PostgreSQLStation::run_station_query(Tracer<>& trc, const v7::StationQueryB
     if (!res)
         throw sql::error_postgresql(conn, "executing " + qb.sql_query);
 
-    dballe::Station station;
+    dballe::DBStation station;
     conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
         if (trc_sel) trc_sel->add_row(res.rowcount());
         for (unsigned row = 0; row < res.rowcount(); ++row)

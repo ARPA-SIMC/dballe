@@ -199,16 +199,13 @@ void StationEntries::add_filtered(const StationEntries& entries, const dballe::Q
     bool has_flt_rep_memo = !q.rep_memo.empty();
     bool has_flt_ident = !q.ident.is_missing();
     bool has_flt_area = !q.latrange.is_missing() || !q.lonrange.is_missing();
-    if (has_flt_rep_memo || has_flt_area || has_flt_ident || q.ana_id != MISSING_INT)
+    if (has_flt_rep_memo || has_flt_area || has_flt_ident)
     {
         LatRange flt_area_latrange = q.latrange;
         LonRange flt_area_lonrange = q.lonrange;
         for (auto entry: entries)
         {
             const Station& station = entry.station;
-            if (q.ana_id != MISSING_INT && station.id != q.ana_id)
-                continue;
-
             if (has_flt_area)
             {
                 if (!flt_area_latrange.contains(station.coords.lat) ||

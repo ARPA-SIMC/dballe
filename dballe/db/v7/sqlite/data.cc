@@ -202,14 +202,14 @@ void SQLiteStationData::insert(Tracer<>& trc, int id_station, std::vector<batch:
     }
 }
 
-void SQLiteStationData::run_station_data_query(Tracer<>& trc, const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var)> dest)
+void SQLiteStationData::run_station_data_query(Tracer<>& trc, const v7::DataQueryBuilder& qb, std::function<void(const dballe::DBStation& station, int id_data, std::unique_ptr<wreport::Var> var)> dest)
 {
     Tracer<> trc_sel(trc ? trc->trace_select(qb.sql_query) : nullptr);
     auto stm = conn.sqlitestatement(qb.sql_query);
 
     if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
 
-    dballe::Station station;
+    dballe::DBStation station;
     stm->execute([&]() {
         if (trc_sel) trc_sel->add_row();
         wreport::Varcode code = stm->column_int(5);
@@ -308,14 +308,14 @@ void SQLiteData::insert(Tracer<>& trc, int id_station, const Datetime& datetime,
     }
 }
 
-void SQLiteData::run_data_query(Tracer<>& trc, const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)> dest)
+void SQLiteData::run_data_query(Tracer<>& trc, const v7::DataQueryBuilder& qb, std::function<void(const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)> dest)
 {
     Tracer<> trc_sel(trc ? trc->trace_select(qb.sql_query) : nullptr);
     auto stm = conn.sqlitestatement(qb.sql_query);
 
     if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
 
-    dballe::Station station;
+    dballe::DBStation station;
     stm->execute([&]() {
         if (trc_sel) trc_sel->add_row();
         wreport::Varcode code = stm->column_int(6);
@@ -349,14 +349,14 @@ void SQLiteData::run_data_query(Tracer<>& trc, const v7::DataQueryBuilder& qb, s
     });
 }
 
-void SQLiteData::run_summary_query(Tracer<>& trc, const v7::SummaryQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)> dest)
+void SQLiteData::run_summary_query(Tracer<>& trc, const v7::SummaryQueryBuilder& qb, std::function<void(const dballe::DBStation& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)> dest)
 {
     Tracer<> trc_sel(trc ? trc->trace_select(qb.sql_query) : nullptr);
     auto stm = conn.sqlitestatement(qb.sql_query);
 
     if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
 
-    dballe::Station station;
+    dballe::DBStation station;
     stm->execute([&]() {
         if (trc_sel) trc_sel->add_row();
         int id_station = stm->column_int(0);

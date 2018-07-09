@@ -24,24 +24,15 @@ struct Station
     /// rep_memo for this station
     std::string report;
 
-    /**
-     * Database ID of the station.
-     *
-     * It will be filled when the Station is inserted on the database.
-     */
-    int id = MISSING_INT;
-
     /// Station coordinates
     Coords coords;
 
     /// Mobile station identifier
     Ident ident;
 
+
     Station() = default;
     Station(const dballe::Record& rec) { set_from_record(rec); }
-
-    /// Reset the database ID
-    void clear_ids() { id = MISSING_INT; }
 
     /// Fill this Station with values from a dballe::Record
     void set_from_record(const Record& rec);
@@ -51,15 +42,15 @@ struct Station
 
     bool operator==(const Station& o) const
     {
-        return std::tie(id, report, coords, ident) == std::tie(o.id, o.report, o.coords, o.ident);
+        return std::tie(report, coords, ident) == std::tie(o.report, o.coords, o.ident);
     }
     bool operator!=(const Station& o) const
     {
-        return std::tie(id, report, coords, ident) != std::tie(o.id, o.report, o.coords, o.ident);
+        return std::tie(report, coords, ident) != std::tie(o.report, o.coords, o.ident);
     }
     bool operator<(const Station& o) const
     {
-        return std::tie(id, report, coords, ident) < std::tie(o.id, o.report, o.coords, o.ident);
+        return std::tie(report, coords, ident) < std::tie(o.report, o.coords, o.ident);
     }
 
     /**
@@ -73,10 +64,57 @@ struct Station
 
 std::ostream& operator<<(std::ostream&, const Station&);
 
+
+struct DBStation : public Station
+{
+    /**
+     * Database ID of the station.
+     *
+     * It will be filled when the Station is inserted on the database.
+     */
+    int id = MISSING_INT;
+
+
+    DBStation() = default;
+    DBStation(const dballe::Record& rec) { set_from_record(rec); }
+
+    /// Reset the database ID
+    void clear_ids() { id = MISSING_INT; }
+
+    /// Fill this Station with values from a dballe::Record
+    void set_from_record(const Record& rec);
+
+    /// Copy ana_id, report, coords and ident to rec
+    void to_record(Record& rec) const;
+
+    bool operator==(const DBStation& o) const
+    {
+        return std::tie(id, report, coords, ident) == std::tie(o.id, o.report, o.coords, o.ident);
+    }
+    bool operator!=(const DBStation& o) const
+    {
+        return std::tie(id, report, coords, ident) != std::tie(o.id, o.report, o.coords, o.ident);
+    }
+    bool operator<(const DBStation& o) const
+    {
+        return std::tie(id, report, coords, ident) < std::tie(o.id, o.report, o.coords, o.ident);
+    }
+
+    /**
+     * Print the Station to a FILE*.
+     *
+     * @param out  The output stream
+     * @param end  String to print after the Station
+     */
+    void print(FILE* out, const char* end="\n") const;
+};
+
+std::ostream& operator<<(std::ostream&, const DBStation&);
+
 /**
  * Information about a physical variable
  */
-struct Sampling : public Station
+struct Sampling : public DBStation
 {
     /// Date and time at which the value was measured or forecast
     Datetime datetime;
@@ -287,7 +325,7 @@ struct Values : protected std::map<wreport::Varcode, values::Value>
  */
 struct StationValues
 {
-    Station info;
+    DBStation info;
     Values values;
 
     StationValues() = default;

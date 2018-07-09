@@ -10,52 +10,32 @@ namespace dballe {
 
 void Station::set_from_record(const Record& rec)
 {
-    if (const Var* var = rec.get("ana_id"))
+    if (const Var* var = rec.get("lat"))
+        coords.lat = var->enqi();
+    else
+        throw error_notfound("record has no 'lat' set");
+
+    if (const Var* var = rec.get("lon"))
+        coords.lon = var->enqi();
+    else
+        throw error_notfound("record has no 'lon' set");
+
+    ident.clear();
+    if (const Var* var = rec.get("ident"))
+        ident = var->isset() ? var->enqc() : 0;
+
+    report.clear();
+    if (const Var* var = rec.get("rep_memo"))
     {
-        // If we have ana_id, the rest is optional
-        id = var->enqi();
-        coords.lat = rec.enq("lat", MISSING_INT);
-        coords.lon = rec.enq("lon", MISSING_INT);
-        ident.clear();
-        if (const Var* var = rec.get("ident"))
-            ident = var->isset() ? var->enqc() : 0;
-        report = rec.enq("rep_memo", "");
-    } else {
-        // If we do not have ana_id, we require at least lat, lon and rep_memo
-        id = MISSING_INT;
-
-        if (const Var* var = rec.get("lat"))
-            coords.lat = var->enqi();
+        if (var->isset())
+            report = var->enqs();
         else
-            throw error_notfound("record has no 'lat' set");
-
-        if (const Var* var = rec.get("lon"))
-            coords.lon = var->enqi();
-        else
-            throw error_notfound("record has no 'lon' set");
-
-        ident.clear();
-        if (const Var* var = rec.get("ident"))
-            ident = var->isset() ? var->enqc() : 0;
-
-        report.clear();
-        if (const Var* var = rec.get("rep_memo"))
-        {
-            if (var->isset())
-                report = var->enqs();
-            else
-                throw error_notfound("record has no 'rep_memo' set");
-        }
+            throw error_notfound("record has no 'rep_memo' set");
     }
 }
 
 void Station::to_record(Record& rec) const
 {
-    if (id != MISSING_INT)
-        rec.set("ana_id", id);
-    else
-        rec.unset("ana_id");
-
     rec.set("rep_memo", report);
 
     rec.set_coords(coords);
@@ -71,11 +51,6 @@ void Station::to_record(Record& rec) const
 
 void Station::print(FILE* out, const char* end) const
 {
-    if (id == MISSING_INT)
-        fputs("- ", out);
-    else
-        fprintf(out, "%d,", id);
-
     if (coords.is_missing())
         fputs("(-,-) ", out);
     else
@@ -91,13 +66,59 @@ void Station::print(FILE* out, const char* end) const
 
 std::ostream& operator<<(std::ostream& out, const Station& st)
 {
+    return out << st.coords << "," << st.ident << "," << st.report;
+}
+
+
+void DBStation::set_from_record(const Record& rec)
+{
+    if (const Var* var = rec.get("ana_id"))
+    {
+        // If we have ana_id, the rest is optional
+        id = var->enqi();
+        coords.lat = rec.enq("lat", MISSING_INT);
+        coords.lon = rec.enq("lon", MISSING_INT);
+        ident.clear();
+        if (const Var* var = rec.get("ident"))
+            ident = var->isset() ? var->enqc() : 0;
+        report = rec.enq("rep_memo", "");
+    } else {
+        // If we do not have ana_id, we require at least lat, lon and rep_memo
+        id = MISSING_INT;
+        Station::set_from_record(rec);
+    }
+}
+
+void DBStation::to_record(Record& rec) const
+{
+    if (id != MISSING_INT)
+        rec.set("ana_id", id);
+    else
+        rec.unset("ana_id");
+
+    Station::to_record(rec);
+}
+
+void DBStation::print(FILE* out, const char* end) const
+{
+    if (id == MISSING_INT)
+        fputs("- ", out);
+    else
+        fprintf(out, "%d,", id);
+
+    Station::print(out, end);
+}
+
+std::ostream& operator<<(std::ostream& out, const DBStation& st)
+{
     if (st.id == MISSING_INT)
         out << "-,";
     else
         out << st.id << ",";
 
-    return out << st.coords << "," << st.ident;
+    return out << (const Station&)st;
 }
+
 
 void Sampling::set_from_record(const Record& rec)
 {

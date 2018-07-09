@@ -22,6 +22,7 @@ extern "C" {
 PyTypeObject dpy_Level_Type;
 PyTypeObject dpy_Trange_Type;
 PyTypeObject dpy_Station_Type;
+PyTypeObject dpy_DBStation_Type;
 }
 
 namespace {
@@ -69,7 +70,6 @@ PyStructSequence_Desc dpy_trange_desc = {
 
 PyStructSequence_Field dpy_station_fields[] = {
     { "report", "rep_memo for this station" },
-    { "id", "Database ID of the station" },
     { "lat", "Station latitude" },
     { "lon", "Station longitude" },
     { "ident", "Mobile station identifier" },
@@ -80,6 +80,22 @@ PyStructSequence_Desc dpy_station_desc = {
     "Station",
     "DB-All.e station",
     dpy_station_fields,
+    4,
+};
+
+PyStructSequence_Field dpy_dbstation_fields[] = {
+    { "report", "rep_memo for this station" },
+    { "id", "Database ID of the station" },
+    { "lat", "Station latitude" },
+    { "lon", "Station longitude" },
+    { "ident", "Mobile station identifier" },
+    nullptr,
+};
+
+PyStructSequence_Desc dpy_dbstation_desc = {
+    "DBStation",
+    "DB-All.e DB station",
+    dpy_dbstation_fields,
     5,
 };
 
@@ -366,6 +382,131 @@ PyObject* station_to_python(const Station& st)
     else
         return nullptr;
 
+    if (PyObject* v = PyFloat_FromDouble(st.coords.dlat()))
+        PyStructSequence_SET_ITEM((PyObject*)res, 1, v);
+    else
+        return nullptr;
+
+    if (PyObject* v = PyFloat_FromDouble(st.coords.dlon()))
+        PyStructSequence_SET_ITEM((PyObject*)res, 2, v);
+    else
+        return nullptr;
+
+    if (st.ident.is_missing())
+    {
+        Py_INCREF(Py_None);
+        PyStructSequence_SET_ITEM((PyObject*)res, 3, Py_None);
+    } else if (PyObject* v = PyUnicode_FromString(st.ident.get())) {
+        PyStructSequence_SET_ITEM((PyObject*)res, 3, v);
+    } else
+        return nullptr;
+#else
+    pyo_unique_ptr res(PyTuple_New(4));
+    if (!res) return NULL;
+
+    if (PyObject* v = string_to_python(st.report))
+        PyTuple_SET_ITEM((PyObject*)res, 0, v);
+    else
+        return NULL;
+
+    if (PyObject* v = PyFloat_FromDouble(st.coords.dlat()))
+        PyTuple_SET_ITEM((PyObject*)res, 1, v);
+    else
+        return nullptr;
+
+    if (PyObject* v = PyFloat_FromDouble(st.coords.dlon()))
+        PyTuple_SET_ITEM((PyObject*)res, 2, v);
+    else
+        return nullptr;
+
+    if (st.ident.is_missing())
+    {
+        Py_INCREF(Py_None);
+        PyTuple_SET_ITEM((PyObject*)res, 3, Py_None);
+    } else if (PyObject* v = PyUnicode_FromString(st.ident.get())) {
+        PyTuple_SET_ITEM((PyObject*)res, 3, v);
+    } else
+        return nullptr;
+#endif
+
+    return res.release();
+}
+
+int station_from_python(PyObject* o, Station& out)
+{
+#if PY_MAJOR_VERSION >= 3
+    if (Py_TYPE(o) == &dpy_Station_Type || PyType_IsSubtype(Py_TYPE(o), &dpy_Station_Type))
+    {
+        Station res;
+        if (int err = string_from_python(PyStructSequence_GET_ITEM(o, 0), res.report)) return err;
+
+        double dlat, dlon;
+        if (int err = double_from_python(PyStructSequence_GET_ITEM(o, 1), dlat)) return err;
+        if (int err = double_from_python(PyStructSequence_GET_ITEM(o, 2), dlon)) return err;
+        res.coords.set(dlat, dlon);
+
+        PyObject* ident = PyStructSequence_GET_ITEM(o, 3);
+        if (ident != Py_None)
+        {
+            // TODO: when migrating to python3 only, this can be replaced with a
+            // simple call to PyUnicode_AsUTF8. Currently string_from_python is
+            // only used to get version-independent string extraction
+            std::string ident_val;
+            if (int err = string_from_python(ident, ident_val)) return err;
+            res.ident = ident_val;
+        }
+        out = res;
+        return 0;
+    } else
+#endif
+        if (PyTuple_Check(o))
+    {
+        unsigned size = PyTuple_Size(o);
+        if (size != 4)
+        {
+            PyErr_SetString(PyExc_TypeError, "station tuple must have exactly 5 elements");
+            return -1;
+        }
+
+        Station res;
+        if (int err = string_from_python(PyTuple_GET_ITEM(o, 0), res.report)) return err;
+
+        double dlat, dlon;
+        if (int err = double_from_python(PyTuple_GET_ITEM(o, 1), dlat)) return err;
+        if (int err = double_from_python(PyTuple_GET_ITEM(o, 2), dlon)) return err;
+        res.coords.set(dlat, dlon);
+
+        PyObject* ident = PyTuple_GET_ITEM(o, 3);
+        if (ident != Py_None)
+        {
+            // TODO: when migrating to python3 only, this can be replaced with a
+            // simple call to PyUnicode_AsUTF8. Currently string_from_python is
+            // only used to get version-independent string extraction
+            std::string ident_val;
+            if (int err = string_from_python(ident, ident_val)) return err;
+            res.ident = ident_val;
+        }
+        out = res;
+        return 0;
+    }
+    else
+    {
+        PyErr_SetString(PyExc_TypeError, "station must be a 4-tuple or a Station structseq");
+        return -1;
+    }
+}
+
+PyObject* dbstation_to_python(const DBStation& st)
+{
+#if PY_MAJOR_VERSION >= 3
+    pyo_unique_ptr res(PyStructSequence_New(&dpy_Station_Type));
+    if (!res) return nullptr;
+
+    if (PyObject* v = string_to_python(st.report))
+        PyStructSequence_SET_ITEM((PyObject*)res, 0, v);
+    else
+        return nullptr;
+
     if (PyObject* v = dballe_int_to_python(st.id))
         PyStructSequence_SET_ITEM((PyObject*)res, 1, v);
     else
@@ -426,12 +567,12 @@ PyObject* station_to_python(const Station& st)
     return res.release();
 }
 
-int station_from_python(PyObject* o, Station& out)
+int dbstation_from_python(PyObject* o, DBStation& out)
 {
 #if PY_MAJOR_VERSION >= 3
-    if (Py_TYPE(o) == &dpy_Station_Type || PyType_IsSubtype(Py_TYPE(o), &dpy_Station_Type))
+    if (Py_TYPE(o) == &dpy_DBStation_Type || PyType_IsSubtype(Py_TYPE(o), &dpy_DBStation_Type))
     {
-        Station res;
+        DBStation res;
         if (int err = string_from_python(PyStructSequence_GET_ITEM(o, 0), res.report)) return err;
         if (int err = dballe_int_from_python(PyStructSequence_GET_ITEM(o, 1), res.id)) return err;
 
@@ -459,11 +600,11 @@ int station_from_python(PyObject* o, Station& out)
         unsigned size = PyTuple_Size(o);
         if (size != 5)
         {
-            PyErr_SetString(PyExc_TypeError, "station tuple must have exactly 5 elements");
+            PyErr_SetString(PyExc_TypeError, "dbstation tuple must have exactly 5 elements");
             return -1;
         }
 
-        Station res;
+        DBStation res;
         if (int err = string_from_python(PyTuple_GET_ITEM(o, 0), res.report)) return err;
         if (int err = dballe_int_from_python(PyTuple_GET_ITEM(o, 1), res.id)) return err;
 
@@ -487,7 +628,7 @@ int station_from_python(PyObject* o, Station& out)
     }
     else
     {
-        PyErr_SetString(PyExc_TypeError, "station must be a 5-tuple or a Station structseq");
+        PyErr_SetString(PyExc_TypeError, "station must be a 5-tuple or a DBStation structseq");
         return -1;
     }
 }
@@ -508,10 +649,12 @@ void register_types(PyObject* m)
     PyStructSequence_InitType(&dpy_Level_Type, &dpy_level_desc);
     PyStructSequence_InitType(&dpy_Trange_Type, &dpy_trange_desc);
     PyStructSequence_InitType(&dpy_Station_Type, &dpy_station_desc);
+    PyStructSequence_InitType(&dpy_DBStation_Type, &dpy_dbstation_desc);
 
     PyModule_AddObject(m, "Level", (PyObject*)&dpy_Level_Type);
     PyModule_AddObject(m, "Trange", (PyObject*)&dpy_Trange_Type);
     PyModule_AddObject(m, "Station", (PyObject*)&dpy_Station_Type);
+    PyModule_AddObject(m, "DBStation", (PyObject*)&dpy_DBStation_Type);
 #endif
 }
 
