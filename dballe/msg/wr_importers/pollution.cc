@@ -33,6 +33,7 @@ cleanup:
 #endif
 
 #include "base.h"
+#include "dballe/msg/msg.h"
 #include <wreport/bulletin.h>
 #include <wreport/subset.h>
 #include <cmath>
@@ -92,7 +93,7 @@ protected:
     void import_var(const Var& var);
 
 public:
-    PollutionImporter(const msg::Importer::Options& opts) : WMOImporter(opts) {}
+    PollutionImporter(const msg::ImporterOptions& opts) : WMOImporter(opts) {}
     virtual ~PollutionImporter() {}
 
     virtual void init()
@@ -152,7 +153,7 @@ public:
     MsgType scanType(const Bulletin& bulletin) const { return MSG_POLLUTION; }
 };
 
-std::unique_ptr<Importer> Importer::createPollution(const msg::Importer::Options& opts)
+std::unique_ptr<Importer> Importer::createPollution(const msg::ImporterOptions& opts)
 {
     return unique_ptr<Importer>(new PollutionImporter(opts));
 }

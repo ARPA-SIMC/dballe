@@ -31,216 +31,30 @@ Driver::~Driver()
 {
 }
 
-std::unique_ptr<v7::Repinfo> Driver::create_repinfo()
+std::unique_ptr<v7::Repinfo> Driver::create_repinfo(v7::Transaction& tr)
 {
     return unique_ptr<v7::Repinfo>(new PostgreSQLRepinfo(conn));
 }
 
-std::unique_ptr<v7::Station> Driver::create_station()
+std::unique_ptr<v7::Station> Driver::create_station(v7::Transaction& tr)
 {
-    return unique_ptr<v7::Station>(new PostgreSQLStation(conn));
+    return unique_ptr<v7::Station>(new PostgreSQLStation(tr, conn));
 }
 
-std::unique_ptr<v7::LevTr> Driver::create_levtr()
+std::unique_ptr<v7::LevTr> Driver::create_levtr(v7::Transaction& tr)
 {
-    return unique_ptr<v7::LevTr>(new PostgreSQLLevTr(conn));
+    return unique_ptr<v7::LevTr>(new PostgreSQLLevTr(tr, conn));
 }
 
-std::unique_ptr<v7::StationData> Driver::create_station_data()
+std::unique_ptr<v7::StationData> Driver::create_station_data(v7::Transaction& tr)
 {
-    return unique_ptr<v7::StationData>(new PostgreSQLStationData(conn));
+    return unique_ptr<v7::StationData>(new PostgreSQLStationData(tr, conn));
 }
 
-std::unique_ptr<v7::Data> Driver::create_data()
+std::unique_ptr<v7::Data> Driver::create_data(v7::Transaction& tr)
 {
-    return unique_ptr<v7::Data>(new PostgreSQLData(conn));
+    return unique_ptr<v7::Data>(new PostgreSQLData(tr, conn));
 }
-
-void Driver::run_station_query(const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)> dest)
-{
-    using namespace dballe::sql::postgresql;
-
-    // Start the query asynchronously
-    int res;
-    if (qb.bind_in_ident)
-    {
-        const char* args[1] = { qb.bind_in_ident };
-        res = PQsendQueryParams(conn, qb.sql_query.c_str(), 1, nullptr, args, nullptr, nullptr, 1);
-    } else {
-        res = PQsendQueryParams(conn, qb.sql_query.c_str(), 0, nullptr, nullptr, nullptr, nullptr, 1);
-    }
-    if (!res)
-        throw error_postgresql(conn, "executing " + qb.sql_query);
-
-    dballe::Station station;
-    conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
-        for (unsigned row = 0; row < res.rowcount(); ++row)
-        {
-            station.id = res.get_int4(row, 0);
-            station.report = qb.tr->repinfo().get_rep_memo(res.get_int4(row, 1));
-            station.coords.lat = res.get_int4(row, 2);
-            station.coords.lon = res.get_int4(row, 3);
-            if (res.is_null(row, 4))
-                station.ident.clear();
-            else
-                station.ident = res.get_string(row, 4);
-            dest(station);
-        }
-    });
-}
-
-void Driver::run_station_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var)> dest)
-{
-    using namespace dballe::sql::postgresql;
-
-    // Start the query asynchronously
-    int res;
-    if (qb.bind_in_ident)
-    {
-        const char* args[1] = { qb.bind_in_ident };
-        res = PQsendQueryParams(conn, qb.sql_query.c_str(), 1, nullptr, args, nullptr, nullptr, 1);
-    } else {
-        res = PQsendQueryParams(conn, qb.sql_query.c_str(), 0, nullptr, nullptr, nullptr, nullptr, 1);
-    }
-    if (!res)
-        throw error_postgresql(conn, "executing " + qb.sql_query);
-
-    dballe::Station station;
-    conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
-        for (unsigned row = 0; row < res.rowcount(); ++row)
-        {
-            wreport::Varcode code = res.get_int4(row, 5);
-            const char* value = res.get_string(row, 7);
-            auto var = newvar(code, value);
-            if (qb.select_attrs)
-                values::Decoder::decode_attrs(res.get_bytea(row, 8), *var);
-
-            // Postprocessing filter of attr_filter
-            if (qb.attr_filter && !qb.match_attrs(*var))
-                return;
-
-            int id_station = res.get_int4(row, 0);
-            if (id_station != station.id)
-            {
-                station.id = id_station;
-                station.report = qb.tr->repinfo().get_rep_memo(res.get_int4(row, 1));
-                station.coords.lat = res.get_int4(row, 2);
-                station.coords.lon = res.get_int4(row, 3);
-                if (res.is_null(row, 4))
-                    station.ident.clear();
-                else
-                    station.ident = res.get_string(row, 4);
-            }
-
-            int id_data = res.get_int4(row, 6);
-
-            dest(station, id_data, move(var));
-        }
-    });
-}
-
-void Driver::run_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)> dest)
-{
-    using namespace dballe::sql::postgresql;
-
-    // Start the query asynchronously
-    int res;
-    if (qb.bind_in_ident)
-    {
-        const char* args[1] = { qb.bind_in_ident };
-        res = PQsendQueryParams(conn, qb.sql_query.c_str(), 1, nullptr, args, nullptr, nullptr, 1);
-    } else {
-        res = PQsendQueryParams(conn, qb.sql_query.c_str(), 0, nullptr, nullptr, nullptr, nullptr, 1);
-    }
-    if (!res)
-        throw error_postgresql(conn, "executing " + qb.sql_query);
-
-    dballe::Station station;
-    conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
-        for (unsigned row = 0; row < res.rowcount(); ++row)
-        {
-            wreport::Varcode code = res.get_int4(row, 6);
-            const char* value = res.get_string(row, 9);
-            auto var = newvar(code, value);
-            if (qb.select_attrs)
-                values::Decoder::decode_attrs(res.get_bytea(row, 10), *var);
-
-            // Postprocessing filter of attr_filter
-            if (qb.attr_filter && !qb.match_attrs(*var))
-                return;
-
-            int id_station = res.get_int4(row, 0);
-            if (id_station != station.id)
-            {
-                station.id = id_station;
-                station.report = qb.tr->repinfo().get_rep_memo(res.get_int4(row, 1));
-                station.coords.lat = res.get_int4(row, 2);
-                station.coords.lon = res.get_int4(row, 3);
-                if (res.is_null(row, 4))
-                    station.ident.clear();
-                else
-                    station.ident = res.get_string(row, 4);
-            }
-
-            int id_levtr = res.get_int4(row, 5);
-            int id_data = res.get_int4(row, 7);
-            Datetime datetime = res.get_timestamp(row, 8);
-
-            dest(station, id_levtr, datetime, id_data, move(var));
-        }
-    });
-}
-
-void Driver::run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)> dest)
-{
-    using namespace dballe::sql::postgresql;
-
-    // Start the query asynchronously
-    int res;
-    if (qb.bind_in_ident)
-    {
-        const char* args[1] = { qb.bind_in_ident };
-        res = PQsendQueryParams(conn, qb.sql_query.c_str(), 1, nullptr, args, nullptr, nullptr, 1);
-    } else {
-        res = PQsendQueryParams(conn, qb.sql_query.c_str(), 0, nullptr, nullptr, nullptr, nullptr, 1);
-    }
-    if (!res)
-        throw error_postgresql(conn, "executing " + qb.sql_query);
-
-    dballe::Station station;
-    conn.run_single_row_mode(qb.sql_query, [&](const Result& res) {
-        // fprintf(stderr, "ST %d vi %d did %d d %d sd %d\n", qb.select_station, qb.select_varinfo, qb.select_data_id, qb.select_data, qb.select_summary_details);
-        for (unsigned row = 0; row < res.rowcount(); ++row)
-        {
-            int id_station = res.get_int4(row, 0);
-            if (id_station != station.id)
-            {
-                station.id = id_station;
-                station.report = qb.tr->repinfo().get_rep_memo(res.get_int4(row, 1));
-                station.coords.lat = res.get_int4(row, 2);
-                station.coords.lon = res.get_int4(row, 3);
-                if (res.is_null(row, 4))
-                    station.ident.clear();
-                else
-                    station.ident = res.get_string(row, 4);
-            }
-
-            int id_levtr = res.get_int4(row, 5);
-            wreport::Varcode code = res.get_int4(row, 6);
-
-            size_t count = 0;
-            DatetimeRange datetime;
-            if (qb.select_summary_details)
-            {
-                count = res.get_int8(row, 7);
-                datetime = DatetimeRange(res.get_timestamp(row, 8), res.get_timestamp(row, 9));
-            }
-
-            dest(station, id_levtr, code, datetime, count);
-        }
-    });
-}
-
 
 void Driver::create_tables_v7()
 {

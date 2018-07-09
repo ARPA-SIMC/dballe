@@ -1,4 +1,4 @@
-%global releaseno 2
+%global releaseno 3
 # Note: define _srcarchivename in Travis build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
@@ -17,7 +17,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 %else
 %define python3_vers python3
 %endif
-BuildRequires: libtool, gperf, doxygen, python-docutils, lua-devel, libwreport-devel >= 3.11 , python-devel, %{python3_vers}-devel, popt-devel, postgresql-devel, mariadb-devel, sqlite-devel, help2man, libwreport-doc, python-wreport3, %{python3_vers}-wreport3, gcc-gfortran
+BuildRequires: libtool, gperf, doxygen, python-docutils, lua-devel, libwreport-devel >= 3.11 , python-devel, %{python3_vers}-devel, popt-devel, postgresql-devel, mariadb-devel, sqlite-devel, help2man, libwreport-doc, python-wreport3, %{python3_vers}-wreport3, gcc-gfortran, numpy, %{python3_vers}-numpy
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, python-dballe
 
 %description
@@ -161,7 +161,7 @@ Common data files for all DB-All.e modules
 %package -n python-dballe
 Summary:  DB-ALL.e Python library
 Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{?fedora:rpy}, numpy, python-wreport3
+Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, numpy, python-wreport3
 
 %description -n python-dballe
  DB-ALL.e Python library for weather research
@@ -173,7 +173,7 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{?fedora:rpy
 %package -n %{python3_vers}-dballe
 Summary:  DB-ALL.e Python library
 Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{?fedora:rpy}, %{python3_vers}-numpy, %{python3_vers}-wreport3
+Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{python3_vers}-numpy, %{python3_vers}-wreport3
 
 %description -n %{python3_vers}-dballe
  DB-ALL.e Python library for weather research
@@ -311,6 +311,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Wed Jun 27 2018 Emanuele Di Giacomo <edigiacomo@arpae.it> - 7.33-3
+- optimizations addressing #117
+
 * Tue Jun 19 2018 Daniele Branchini <dbranchini@arpae.it> - 7.33-2
 - other optimizations addressing #116
 

@@ -33,6 +33,7 @@ struct Fixture : EmptyTransactionFixture<V7DB>
 
     void create_db() override
     {
+        db::v7::Tracer<> trc;
         EmptyTransactionFixture::create_db();
 
         sde1.report = "synop";
@@ -46,16 +47,16 @@ struct Fixture : EmptyTransactionFixture<V7DB>
         auto t = dynamic_pointer_cast<dballe::db::v7::Transaction>(db->transaction());
 
         // Insert a mobile station
-        sde1.id = wcallchecked(t->station().insert_new(*t, sde1));
+        sde1.id = wcallchecked(t->station().insert_new(trc, sde1));
 
         // Insert a fixed station
-        sde2.id = wcallchecked(t->station().insert_new(*t, sde2));
+        sde2.id = wcallchecked(t->station().insert_new(trc, sde2));
 
         // Insert a lev_tr
-        lt1 = t->levtr().obtain_id(db::v7::LevTrEntry(Level(1, 2, 0, 3), Trange(4, 5, 6)));
+        lt1 = t->levtr().obtain_id(trc, db::v7::LevTrEntry(Level(1, 2, 0, 3), Trange(4, 5, 6)));
 
         // Insert another lev_tr
-        lt2 = t->levtr().obtain_id(db::v7::LevTrEntry(Level(2, 3, 1, 4), Trange(5, 6, 7)));
+        lt2 = t->levtr().obtain_id(trc, db::v7::LevTrEntry(Level(2, 3, 1, 4), Trange(5, 6, 7)));
 
 
         t->commit();
@@ -84,6 +85,7 @@ void Tests::register_tests()
 
 add_method("insert", [](Fixture& f) {
     using namespace dballe::db::v7;
+    Tracer<> trc;
     auto& da = f.tr->data();
 
 
@@ -92,7 +94,7 @@ add_method("insert", [](Fixture& f) {
         Var var(varinfo(WR_VAR(0, 1, 2)), 123);
         std::vector<batch::MeasuredDatum> vars;
         vars.emplace_back(f.lt1, &var);
-        wassert(da.insert(*f.tr, f.sde1.id, Datetime(2001, 2, 3, 4, 5, 6), vars, false));
+        wassert(da.insert(trc, f.sde1.id, Datetime(2001, 2, 3, 4, 5, 6), vars, false));
         wassert(actual(vars[0].id) == 1);
     }
 
@@ -101,7 +103,7 @@ add_method("insert", [](Fixture& f) {
         Var var(varinfo(WR_VAR(0, 1, 2)), 234);
         std::vector<batch::MeasuredDatum> vars;
         vars.emplace_back(f.lt2, &var);
-        wassert(da.insert(*f.tr, f.sde2.id, Datetime(2002, 3, 4, 5, 6, 7), vars, false));
+        wassert(da.insert(trc, f.sde2.id, Datetime(2002, 3, 4, 5, 6, 7), vars, false));
         wassert(actual(vars[0].id) == 2);
     }
 
@@ -122,13 +124,14 @@ add_method("insert", [](Fixture& f) {
         Var var(varinfo(WR_VAR(0, 1, 2)), 125);
         std::vector<batch::MeasuredDatum> vars;
         vars.emplace_back(1, f.lt1, &var);
-        wassert(da.update(*f.tr, vars, false));
+        wassert(da.update(trc, vars, false));
         wassert(actual(vars[0].id) == 1);
     }
 });
 
 add_method("attrs", [](Fixture& f) {
     using namespace dballe::db::v7;
+    Tracer<> trc;
     auto& da = f.tr->data();
 
     // Insert a datum with attributes
@@ -136,11 +139,11 @@ add_method("attrs", [](Fixture& f) {
     var.seta(newvar(WR_VAR(0, 33, 7), 50));
     std::vector<batch::MeasuredDatum> vars;
     vars.emplace_back(f.lt1, &var);
-    wassert(da.insert(*f.tr, f.sde1.id, Datetime(2001, 2, 3, 4, 5, 6), vars, true));
+    wassert(da.insert(trc, f.sde1.id, Datetime(2001, 2, 3, 4, 5, 6), vars, true));
     int id = vars[0].id;
 
     vector<wreport::Var> attrs;
-    da.read_attrs(id, [&](std::unique_ptr<wreport::Var> a) {
+    da.read_attrs(trc, id, [&](std::unique_ptr<wreport::Var> a) {
         attrs.emplace_back(*a);
     });
 

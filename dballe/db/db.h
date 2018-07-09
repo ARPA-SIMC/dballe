@@ -5,6 +5,7 @@
 #include <dballe/core/defs.h>
 #include <dballe/core/values.h>
 #include <dballe/db/defs.h>
+#include <dballe/msg/fwd.h>
 #include <dballe/sql/fwd.h>
 #include <wreport/varinfo.h>
 #include <wreport/var.h>
@@ -121,6 +122,11 @@ struct CursorValue : public Cursor
      * variable for attribute access
      */
     virtual int attr_reference_id() const = 0;
+
+    /**
+     * Query/return the attributes for the current value of this cursor
+     */
+    virtual void attr_query(std::function<void(std::unique_ptr<wreport::Var>)>&& dest, bool force_read=false) = 0;
 };
 
 /// Cursor iterating over station data values

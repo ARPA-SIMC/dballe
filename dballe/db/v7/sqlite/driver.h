@@ -16,15 +16,11 @@ struct Driver : public v7::Driver
     Driver(dballe::sql::SQLiteConnection& conn);
     virtual ~Driver();
 
-    std::unique_ptr<v7::Repinfo> create_repinfo() override;
-    std::unique_ptr<v7::Station> create_station() override;
-    std::unique_ptr<v7::LevTr> create_levtr() override;
-    std::unique_ptr<v7::StationData> create_station_data() override;
-    std::unique_ptr<v7::Data> create_data() override;
-    void run_station_query(const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)>) override;
-    void run_station_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var)>) override;
-    void run_data_query(const v7::DataQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)>) override;
-    void run_summary_query(const v7::SummaryQueryBuilder& qb, std::function<void(const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)>) override;
+    std::unique_ptr<v7::Repinfo> create_repinfo(v7::Transaction& tr) override;
+    std::unique_ptr<v7::Station> create_station(v7::Transaction& tr) override;
+    std::unique_ptr<v7::LevTr> create_levtr(v7::Transaction& tr) override;
+    std::unique_ptr<v7::StationData> create_station_data(v7::Transaction& tr) override;
+    std::unique_ptr<v7::Data> create_data(v7::Transaction& tr) override;
     void create_tables_v7() override;
     void delete_tables_v7() override;
     void vacuum_v7() override;

@@ -728,7 +728,7 @@ static PyObject* dpy_export_to_file(PYDB* self, PyObject* args, PyObject* kw)
             return NULL;
         try {
             std::unique_ptr<File> out = File::create(encoding, filename, "wb");
-            msg::Exporter::Options opts;
+            msg::ExporterOptions opts;
             if (as_generic)
                 opts.template_name = "generic";
             auto exporter = msg::Exporter::create(out->encoding(), opts);
@@ -750,7 +750,7 @@ static PyObject* dpy_export_to_file(PYDB* self, PyObject* args, PyObject* kw)
         }
     } else {
         try {
-            msg::Exporter::Options opts;
+            msg::ExporterOptions opts;
             if (as_generic)
                 opts.template_name = "generic";
             auto exporter = msg::Exporter::create(encoding, opts);

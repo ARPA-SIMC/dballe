@@ -65,7 +65,7 @@ protected:
 
 
 public:
-    AOFImporter(const Options& opts=Options());
+    AOFImporter(const ImporterOptions& opts=ImporterOptions());
     virtual ~AOFImporter();
 
     bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const override;

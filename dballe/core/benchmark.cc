@@ -4,6 +4,9 @@
 #include <fnmatch.h>
 #include <cmath>
 #include <system_error>
+#include <algorithm>
+#include "dballe/msg/msg.h"
+#include "dballe/msg/codec.h"
 
 using namespace std;
 
@@ -31,23 +34,6 @@ void Task::collect(std::function<void()> f)
 }
 */
 
-void Registry::add(Benchmark* b)
-{
-    const char* whitelist = getenv("BENCH_WHITELIST");
-    const char* blacklist = getenv("BENCH_BLACKLIST");
-    if (whitelist and fnmatch(whitelist, b->name.c_str(), 0) != 0) return;
-    if (blacklist and fnmatch(blacklist, b->name.c_str(), 0) == 0) return;
-    benchmarks.push_back(b);
-}
-
-Registry& Registry::get()
-{
-    static Registry* registry = 0;
-    if (!registry)
-        registry = new Registry();
-    return *registry;
-}
-
 static void bench_getrusage(int who, struct rusage *usage)
 {
     if (::getrusage(RUSAGE_SELF, usage) == -1)
@@ -60,39 +46,57 @@ static void bench_clock_gettime(clockid_t clk_id, struct timespec *res)
         throw std::system_error(errno, std::system_category(), "clock_gettime failed");
 }
 
-
-void Timeit::run(Progress& progress)
+std::string format_clockdiff(const struct timespec& begin, const struct timespec& until)
 {
+    unsigned long secs = 0;
+    unsigned long nsecs = 0;
+    if (begin.tv_nsec <= until.tv_nsec)
+    {
+        secs = until.tv_sec - begin.tv_sec;
+        nsecs = until.tv_nsec - begin.tv_nsec;
+    } else {
+        secs = until.tv_sec - begin.tv_sec - 1;
+        nsecs = 1000000000 + until.tv_nsec - begin.tv_nsec;
+    }
+    char buf[32];
+    if (secs > 0)
+        snprintf(buf, 32, "%lu.%03lus", secs, nsecs / 1000000);
+    else if (nsecs > 1000000)
+        snprintf(buf, 32, "%lums", nsecs / 1000000);
+    else if (nsecs > 1000)
+        snprintf(buf, 32, "%luµs", nsecs / 1000);
+    else
+        snprintf(buf, 32, "%luns", nsecs);
+    return buf;
+}
+
+
+void Timeit::run(Progress& progress, Task& task)
+{
+    task_name = task.name();
     progress.start_timeit(*this);
     try {
-        task->setup();
+        task.setup();
 
-        bench_getrusage(RUSAGE_SELF, &res_at_end);
+        bench_getrusage(RUSAGE_SELF, &res_at_start);
         bench_clock_gettime(CLOCK_MONOTONIC_RAW, &time_at_start);
         for (unsigned i = 0; i < repetitions; ++i)
-            task->run_once();
+            task.run_once();
         bench_clock_gettime(CLOCK_MONOTONIC_RAW, &time_at_end);
         bench_getrusage(RUSAGE_SELF, &res_at_end);
-        /*
-        run_count += 1;
-
-        f();
-
-        utime += tms_end.tms_utime - tms_start.tms_utime;
-        stime += tms_end.tms_stime - tms_start.tms_stime;
-        */
     } catch (std::exception& e) {
-        progress.test_failed(*task, e);
+        progress.test_failed(task, e);
     }
-    task->teardown();
+    task.teardown();
     progress.end_timeit(*this);
 }
 
-void Throughput::run(Progress& progress)
+void Throughput::run(Progress& progress, Task& task)
 {
+    task_name = task.name();
     progress.start_throughput(*this);
     try {
-        task->setup();
+        task.setup();
         struct timespec time_at_start;
         bench_clock_gettime(CLOCK_MONOTONIC_RAW, &time_at_start);
         struct timespec time_at_end;
@@ -106,48 +110,48 @@ void Throughput::run(Progress& progress)
             bench_clock_gettime(CLOCK_MONOTONIC_RAW, &time_cur);
             if (time_cur.tv_sec > time_at_end.tv_sec) break;
             if (time_cur.tv_sec == time_at_end.tv_sec && time_cur.tv_nsec > time_at_end.tv_nsec) break;
-            task->run_once();
+            task.run_once();
         }
 
         run_time = time_cur.tv_sec - time_at_start.tv_sec + (time_cur.tv_nsec - time_at_start.tv_nsec) / 1000000000.0;
     } catch (std::exception& e) {
-        progress.test_failed(*task, e);
+        progress.test_failed(task, e);
     }
-    task->teardown();
+    task.teardown();
     progress.end_throughput(*this);
 }
 
-Benchmark::Benchmark(const std::string& name)
-    : name(name)
+Benchmark::Benchmark()
+    : progress(make_shared<BasicProgress>())
 {
-    Registry::get().add(this);
 }
+
 Benchmark::~Benchmark() {}
 
-void Benchmark::run(Progress& progress)
+void Benchmark::timeit(Task& task, unsigned repetitions)
 {
-    progress.start_benchmark(*this);
-    setup();
-
-    register_tasks();
-
-    for (auto& t: timeit_tasks)
-        t.run(progress);
-
-    for (auto& t: throughput_tasks)
-        t.run(progress);
-
-    teardown();
-    progress.end_benchmark(*this);
+    timeit_tasks.emplace_back(Timeit());
+    timeit_tasks.back().repetitions = repetitions;
+    timeit_tasks.back().run(*progress, task);
 }
 
-void Benchmark::print_timings(const std::string& prefix)
+void Benchmark::throughput(Task& task, double run_time)
+{
+    throughput_tasks.emplace_back(Throughput());
+    throughput_tasks.back().run_time = run_time;
+    throughput_tasks.back().run(*progress, task);
+}
+
+void Benchmark::print_timings()
 {
     for (auto& t: timeit_tasks)
-        ; // TODO
+    {
+        string time = format_clockdiff(t.time_at_start, t.time_at_end);
+        fprintf(stdout, "%s,%u,%s\n", t.task_name.c_str(), t.repetitions, time.c_str());
+    }
     for (auto& t: throughput_tasks)
     {
-        fprintf(stdout, "%s%s.%s,%.2f,%d\n", prefix.c_str(), name.c_str(), t.task->name.c_str(), t.run_time, t.times_run);
+        fprintf(stdout, "%s,%.2f,%d\n", t.task_name.c_str(), t.run_time, t.times_run);
     }
     /*
     for (auto& t: tasks)
@@ -166,32 +170,22 @@ void Benchmark::print_timings(const std::string& prefix)
     */
 }
 
-BasicProgress::BasicProgress(const std::string& prefix, FILE* out, FILE* err)
-    : prefix(prefix), out(out), err(err) {}
-
-void BasicProgress::start_benchmark(const Benchmark& b)
-{
-    cur_benchmark = b.name;
-    fprintf(out, "%s%s: starting...\n", prefix.c_str(), cur_benchmark.c_str());
-}
-void BasicProgress::end_benchmark(const Benchmark& b)
-{
-    fprintf(out, "%s%s: done.\n", prefix.c_str(), b.name.c_str());
-}
+BasicProgress::BasicProgress(FILE* out, FILE* err)
+    : out(out), err(err) {}
 
 void BasicProgress::start_timeit(const Timeit& t)
 {
-    fprintf(out, "%s%s.%s: starting...\n", prefix.c_str(), cur_benchmark.c_str(), t.task->name.c_str());
+    fprintf(out, "%s: starting...\n", t.task_name.c_str());
 }
 
 void BasicProgress::end_timeit(const Timeit& t)
 {
-    fprintf(out, "%s%s.%s: done.\n", prefix.c_str(), cur_benchmark.c_str(), t.task->name.c_str());
+    fprintf(out, "%s: done.\n", t.task_name.c_str());
 }
 
 void BasicProgress::start_throughput(const Throughput& t)
 {
-    fprintf(out, "%s%s.%s: ", prefix.c_str(), cur_benchmark.c_str(), t.task->name.c_str());
+    fprintf(out, "%s: ", t.task_name.c_str());
     fflush(out);
 }
 
@@ -202,38 +196,44 @@ void BasicProgress::end_throughput(const Throughput& t)
 
 void BasicProgress::test_failed(const Task& t, std::exception& e)
 {
-    fprintf(err, "%s%s.%s: failed: %s\n", prefix.c_str(), cur_benchmark.c_str(), t.name.c_str(), e.what());
+    fprintf(err, "%s: failed: %s\n", t.name(), e.what());
 }
 
-void Registry::basic_run(int argc, const char* argv[])
+void Messages::load(const std::string& pathname, dballe::File::Encoding encoding, const char* codec_options)
 {
-    string prefix;
-    if (argc > 1)
-    {
-        prefix = argv[1];
-        prefix += '.';
-    }
-
-    BasicProgress progress(prefix, stderr, stderr);
-
-    // Run all benchmarks
-    for (auto& b: get().benchmarks)
-        b->run(progress);
-
-    for (auto& b: get().benchmarks)
-        b->print_timings(prefix);
+    auto importer = msg::Importer::create(File::BUFR, msg::ImporterOptions::from_string(codec_options));
+    auto in = File::create(encoding, pathname, "rb");
+    in->foreach([&](const BinaryMessage& rmsg) {
+        emplace_back(importer->from_binary(rmsg));
+        return true;
+    });
 }
 
-#if 0
-void Runner::dump_csv(std::ostream& out)
+void Messages::duplicate(size_t size, const Datetime& datetime)
 {
-    out << "Suite,Test,User,System" << endl;
-    for (auto l : log)
+    for (size_t i = 0; i < size; ++i)
     {
-        out << l.b_name << "," << l.name << "," << l.utime << "," << l.stime << endl;
+        emplace_back((*this)[i]);
+        for (auto& message: back())
+        {
+            auto msg = dynamic_cast<dballe::Msg*>(&message);
+            msg->set_datetime(datetime);
+        }
     }
 }
-#endif
+
+
+Whitelist::Whitelist(int argc, const char* argv[])
+{
+    for (int i = 1; i < argc; ++i)
+        emplace_back(argv[i]);
+}
+
+bool Whitelist::has(const std::string& val)
+{
+    if (empty()) return true;
+    return std::find(begin(), end(), val) != end();
+}
 
 }
 }

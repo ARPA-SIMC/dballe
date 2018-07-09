@@ -26,7 +26,7 @@ protected:
     /// Variable data
     v7::Data* m_data = nullptr;
 
-    void add_msg_to_batch(const Message& message, const char* repmemo, int flags);
+    void add_msg_to_batch(Tracer<>& trc, const Message& message, const char* repmemo, int flags);
 
 public:
     typedef v7::DB DB;
@@ -38,6 +38,8 @@ public:
     bool fired = false;
     /// Batch importer
     v7::Batch batch;
+    /// Tracing system
+    v7::Tracer<v7::trace::Transaction> trc;
 
     Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Transaction> sql_transaction);
     Transaction(const Transaction&) = delete;

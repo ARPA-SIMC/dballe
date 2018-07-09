@@ -35,18 +35,25 @@ DB::DB(unique_ptr<Connection> conn)
     if (getenv("DBA_EXPLAIN") != NULL)
         explain_queries = true;
 
-    auto tr = trace.trace_connect(this->conn->get_url());
+    if (const char* logdir = getenv("DBA_PROFILE"))
+        trace = new CollectTrace(logdir);
+    else if (Trace::in_test_suite())
+        trace = new QuietCollectTrace;
+    else
+        trace = new NullTrace;
+
+    auto trc = trace->trace_connect(this->conn->get_url());
 
     /* Set the connection timeout */
     /* SQLSetConnectAttr(pc.od_conn, SQL_LOGIN_TIMEOUT, (SQLPOINTER *)5, 0); */
-
-    tr->done();
 }
 
 DB::~DB()
 {
+    trace->save();
     delete m_driver;
     delete conn;
+    delete trace;
 }
 
 v7::Driver& DB::driver()
@@ -80,7 +87,7 @@ void DB::disappear()
 
 void DB::reset(const char* repinfo_file)
 {
-    auto trc = trace.trace_reset(repinfo_file);
+    auto trc = trace->trace_reset(repinfo_file);
     disappear();
     m_driver->create_tables_v7();
 
@@ -89,17 +96,14 @@ void DB::reset(const char* repinfo_file)
     int added, deleted, updated;
     tr->update_repinfo(repinfo_file, &added, &deleted, &updated);
     tr->commit();
-
-    trc->done();
 }
 
 void DB::vacuum()
 {
-    auto tr = trace.trace_vacuum();
+    auto trc = trace->trace_vacuum();
     auto t = conn->transaction();
     driver().vacuum_v7();
     t->commit();
-    tr->done();
 }
 
 }

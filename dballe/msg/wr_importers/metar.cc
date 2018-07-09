@@ -1,4 +1,5 @@
 #include "base.h"
+#include "dballe/msg/msg.h"
 #include <wreport/bulletin.h>
 #include <wreport/subset.h>
 #include <cmath>
@@ -40,7 +41,7 @@ protected:
     }
 
 public:
-    MetarImporter(const msg::Importer::Options& opts) : WMOImporter(opts) {}
+    MetarImporter(const msg::ImporterOptions& opts) : WMOImporter(opts) {}
     virtual ~MetarImporter() {}
 
     virtual void init()
@@ -65,7 +66,7 @@ public:
     MsgType scanType(const Bulletin& bulletin) const { return MSG_METAR; }
 };
 
-std::unique_ptr<Importer> Importer::createMetar(const msg::Importer::Options& opts)
+std::unique_ptr<Importer> Importer::createMetar(const msg::ImporterOptions& opts)
 {
     return unique_ptr<Importer>(new MetarImporter(opts));
 }

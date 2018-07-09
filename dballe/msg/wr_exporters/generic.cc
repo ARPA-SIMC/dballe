@@ -17,9 +17,9 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 
-#include "msg/wr_codec.h"
-#include "msg/msg.h"
-#include "msg/context.h"
+#include "dballe/msg/wr_codec.h"
+#include "dballe/msg/msg.h"
+#include "dballe/msg/context.h"
 #include <wreport/bulletin.h>
 #include <cstdlib>
 
@@ -39,7 +39,7 @@ struct Generic : public Template
 {
     Bulletin* bulletin;
 
-    Generic(const Exporter::Options& opts, const Messages& msgs)
+    Generic(const ExporterOptions& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
     virtual const char* name() const { return GENERIC_NAME; }
@@ -259,7 +259,7 @@ struct Generic : public Template
 void register_generic(TemplateRegistry& r)
 {
     r.register_factory(255, GENERIC_NAME, GENERIC_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new Generic(opts, msgs));
             });
 }

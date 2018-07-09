@@ -113,8 +113,6 @@ void SQLiteConnection::open_private_file(int flags)
 
 void SQLiteConnection::on_sqlite3_profile(void* arg, const char* query, sqlite3_uint64 usecs)
 {
-    SQLiteConnection* conn = (SQLiteConnection*)arg;
-    ++(conn->profile_query_count);
     fprintf(stderr, "sqlite:%.3fs:%s\n", (double)usecs / 1000000000.0, query);
 }
 
@@ -131,7 +129,7 @@ void SQLiteConnection::init_after_connect()
     if (getenv("DBA_INSECURE_SQLITE") != NULL)
         exec("PRAGMA synchronous = OFF");
 
-    if (profile)
+    if (getenv("DBA_PROFILE") != nullptr)
         sqlite3_profile(db, on_sqlite3_profile, this);
 }
 

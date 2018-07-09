@@ -1,5 +1,5 @@
-#include "msg/tests.h"
-#include "msg/codec.h"
+#include "dballe/msg/tests.h"
+#include "dballe/msg/codec.h"
 
 using namespace wreport;
 using namespace dballe;
@@ -17,13 +17,13 @@ class Tests : public TestCase
         add_method("options", []() {
             using namespace dballe::msg;
 
-            Importer::Options simplified;
-            Importer::Options accurate;
+            ImporterOptions simplified;
+            ImporterOptions accurate;
             accurate.simplified = false;
 
-            wassert(actual(Importer::Options::from_string("") == simplified).istrue());
-            wassert(actual(Importer::Options::from_string("simplified") == simplified).istrue());
-            wassert(actual(Importer::Options::from_string("accurate") == accurate).istrue());
+            wassert(actual(ImporterOptions::from_string("") == simplified).istrue());
+            wassert(actual(ImporterOptions::from_string("simplified") == simplified).istrue());
+            wassert(actual(ImporterOptions::from_string("accurate") == accurate).istrue());
         });
     }
 } test("msg_codec");

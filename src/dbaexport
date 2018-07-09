@@ -17,8 +17,10 @@ except ImportError:
 
 log = logging.getLogger("main")
 
+
 class CommandError(Exception):
     pass
+
 
 def setup_logging(args):
     FORMAT = "%(levelname)s: %(message)s"
@@ -26,6 +28,7 @@ def setup_logging(args):
         logging.basicConfig(level=logging.INFO, stream=sys.stderr, format=FORMAT)
     else:
         logging.basicConfig(level=logging.WARNING, stream=sys.stderr, format=FORMAT)
+
 
 def get_db(args):
     if not args.dsn:
@@ -41,11 +44,13 @@ def get_db(args):
     else:
         return dballe.DB.connect(dsn, args.user, args.password)
 
+
 def get_query(args):
     query = dballe.Record()
     for q in args.query:
         query.set_from_string(q)
     return query
+
 
 def get_outfd(args, text=False):
     """
@@ -68,7 +73,8 @@ if __name__ == "__main__":
     parser.add_argument("--verbose", action="store_true",
                         help="verbose output")
     parser.add_argument("--dsn", type=str, metavar="dsn",
-                        help="DSN, or URL-like database definition, to use for connecting to the DB-All.e database (can also be specified in the environment as DBA_DB)")
+                        help="DSN, or URL-like database definition, to use for connecting to the DB-All.e database"
+                             " (can also be specified in the environment as DBA_DB)")
     parser.add_argument("--user", type=str, metavar="name",
                         help="username to use for connecting to the DB-All.e database")
     parser.add_argument("--pass", type=str, metavar="password", dest="password",
@@ -111,23 +117,13 @@ if __name__ == "__main__":
             import dballe.dbacsv
             with get_outfd(args, text=True) as fd:
                 dballe.dbacsv.export(db, query, fd)
-        elif args.format == "gnur":
-            if not args.outfile:
-                raise CommandError("cannot export R data to standard output: please use --outfile")
-            import dballe.rconvert
-            import dballe.volnd
-            idx = (dballe.volnd.AnaIndex(), \
-                dballe.volnd.DateTimeIndex(), \
-                dballe.volnd.LevelIndex(), \
-                dballe.volnd.TimeRangeIndex(), \
-                dballe.volnd.NetworkIndex())
-            res = dballe.volnd.read(db.query_data(query), idx)
-            dballe.rconvert.volnd_save_to_r(res, args.outfile)
         elif args.format == "bufr":
-            if not args.outfile: raise CommandError("BUFR output requires --outfile")
+            if not args.outfile:
+                raise CommandError("BUFR output requires --outfile")
             db.export_to_file(query, "BUFR", args.outfile, generic=args.generic)
         elif args.format == "crex":
-            if not args.outfile: raise CommandError("CREX output requires --outfile")
+            if not args.outfile:
+                raise CommandError("CREX output requires --outfile")
             db.export_to_file(query, "CREX", args.outfile, generic=args.generic)
         else:
             raise CommandError("Exporter for {} is not available.".format(args.format))

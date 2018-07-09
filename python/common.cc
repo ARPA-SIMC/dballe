@@ -2,6 +2,7 @@
 #include <Python.h>
 #include <datetime.h>
 #include "dballe/types.h"
+#include "dballe/core/var.h"
 #include "config.h"
 
 #if PY_MAJOR_VERSION >= 3
@@ -20,12 +21,7 @@ wrpy_c_api* wrpy = 0;
 PyObject* format_varcode(wreport::Varcode code)
 {
     char buf[7];
-    snprintf(buf, 7, "%c%02d%03d",
-            WR_VAR_F(code) == 0 ? 'B' :
-            WR_VAR_F(code) == 1 ? 'R' :
-            WR_VAR_F(code) == 2 ? 'C' :
-            WR_VAR_F(code) == 3 ? 'D' : '?',
-            WR_VAR_X(code), WR_VAR_Y(code));
+    format_code(code, buf);
     return PyUnicode_FromString(buf);
 }
 

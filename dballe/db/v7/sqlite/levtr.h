@@ -43,15 +43,15 @@ protected:
     void _dump(std::function<void(int, const Level&, const Trange&)> out) override;
 
 public:
-    SQLiteLevTr(dballe::sql::SQLiteConnection& conn);
+    SQLiteLevTr(v7::Transaction& tr, dballe::sql::SQLiteConnection& conn);
     SQLiteLevTr(const LevTr&) = delete;
     SQLiteLevTr(const LevTr&&) = delete;
     SQLiteLevTr& operator=(const SQLiteLevTr&) = delete;
     ~SQLiteLevTr();
 
-    void prefetch_ids(const std::set<int>& id) override;
-    const LevTrEntry* lookup_id(int id) override;
-    int obtain_id(const LevTrEntry& desc) override;
+    void prefetch_ids(Tracer<>& trc, const std::set<int>& id) override;
+    const LevTrEntry* lookup_id(Tracer<>& trc, int id) override;
+    int obtain_id(Tracer<>& trc, const LevTrEntry& desc) override;
 };
 
 

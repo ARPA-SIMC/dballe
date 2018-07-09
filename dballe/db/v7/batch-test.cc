@@ -40,9 +40,10 @@ void Tests::register_tests()
 
 add_method("empty", [](Fixture& f) {
     using namespace dballe::db::v7;
+    db::v7::Tracer<> trc;
 
     Batch& batch = f.tr->batch;
-    batch::Station* station = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0), Ident()));
+    batch::Station* station = wcallchecked(batch.get_station(trc, "synop", Coords(11.0, 45.0), Ident()));
     wassert(actual(station->report) == "synop");
     wassert(actual(station->id) == MISSING_INT);
     wassert(actual(station->coords) == Coords(11.0, 45.0));
@@ -52,7 +53,7 @@ add_method("empty", [](Fixture& f) {
     wassert_true(station->station_data.to_insert.empty());
     wassert_true(station->station_data.to_update.empty());
 
-    station = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0), "AB123"));
+    station = wcallchecked(batch.get_station(trc, "synop", Coords(11.0, 45.0), "AB123"));
     wassert(actual(station->report) == "synop");
     wassert(actual(station->id) == MISSING_INT);
     wassert(actual(station->coords) == Coords(11.0, 45.0));
@@ -66,9 +67,10 @@ add_method("empty", [](Fixture& f) {
 
 add_method("reuse", [](Fixture& f) {
     using namespace dballe::db::v7;
+    db::v7::Tracer<> trc;
 
     Batch& batch = f.tr->batch;
-    batch::Station* station = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0), Ident()));
+    batch::Station* station = wcallchecked(batch.get_station(trc, "synop", Coords(11.0, 45.0), Ident()));
     wassert(actual(station->report) == "synop");
     wassert(actual(station->id) == MISSING_INT);
     wassert(actual(station->coords) == Coords(11.0, 45.0));
@@ -78,10 +80,10 @@ add_method("reuse", [](Fixture& f) {
     wassert_true(station->station_data.to_insert.empty());
     wassert_true(station->station_data.to_update.empty());
 
-    batch::Station* station1 = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0), Ident()));
+    batch::Station* station1 = wcallchecked(batch.get_station(trc, "synop", Coords(11.0, 45.0), Ident()));
     wassert(actual(station) == station1);
 
-    station = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0), "AB123"));
+    station = wcallchecked(batch.get_station(trc, "synop", Coords(11.0, 45.0), "AB123"));
     wassert(actual(station->report) == "synop");
     wassert(actual(station->id) == MISSING_INT);
     wassert(actual(station->coords) == Coords(11.0, 45.0));
@@ -92,12 +94,13 @@ add_method("reuse", [](Fixture& f) {
     wassert_true(station->station_data.to_insert.empty());
     wassert_true(station->station_data.to_update.empty());
 
-    station1 = wcallchecked(batch.get_station("synop", Coords(11.0, 45.0), "AB123"));
+    station1 = wcallchecked(batch.get_station(trc, "synop", Coords(11.0, 45.0), "AB123"));
     wassert(actual(station) == station1);
 });
 
 add_method("from_db", [](Fixture& f) {
     using namespace dballe::db::v7;
+    db::v7::Tracer<> trc;
 
     Coords coords(44.5008, 11.3288);
 
@@ -112,7 +115,7 @@ add_method("from_db", [](Fixture& f) {
 
     Batch& batch = f.tr->batch;
     batch.clear();
-    batch::Station* station = wcallchecked(batch.get_station("synop", coords, Ident()));
+    batch::Station* station = wcallchecked(batch.get_station(trc, "synop", coords, Ident()));
     wassert(actual(station->report) == "synop");
     wassert(actual(station->id) != MISSING_INT);
     wassert(actual(station->coords) == coords);
@@ -124,31 +127,32 @@ add_method("from_db", [](Fixture& f) {
     wassert_true(station->station_data.to_update.empty());
     wassert_true(station->station_data.ids_by_code.empty());
 
-    station->get_station_data();
+    station->get_station_data(trc);
     wassert_true(station->station_data.loaded);
     wassert_true(station->station_data.to_insert.empty());
     wassert_true(station->station_data.to_update.empty());
     wassert(actual(station->station_data.ids_by_code.size()) == 1u);
     {
         auto it = station->station_data.ids_by_code.begin();
-        wassert(actual(it->first) == WR_VAR(0, 7, 30));
-        wassert(actual(it->second) > 0u);
+        wassert(actual(it->varcode) == WR_VAR(0, 7, 30));
+        wassert(actual(it->id) > 0u);
     }
 
-    auto measured_data = station->get_measured_data(Datetime(2013, 10, 16, 10));
+    auto measured_data = station->get_measured_data(trc, Datetime(2013, 10, 16, 10));
     wassert(actual(measured_data.datetime) == Datetime(2013, 10, 16, 10));
     wassert_true(measured_data.to_insert.empty());
     wassert_true(measured_data.to_update.empty());
     wassert(actual(measured_data.ids_on_db.size()) == 1u);
     {
         auto it = measured_data.ids_on_db.begin();
-        wassert(actual(it->first.id) > 0);
-        wassert(actual(it->first.varcode) == WR_VAR(0, 12, 101));
-        wassert(actual(it->second) > 0u);
+        wassert(actual(it->id_varcode.id) > 0);
+        wassert(actual(it->id_varcode.varcode) == WR_VAR(0, 12, 101));
+        wassert(actual(it->id) > 0u);
     }
 });
 
 add_method("import", [](Fixture& f) {
+    db::v7::Tracer<> trc;
     Messages msgs1 = read_msgs("bufr/test-airep1.bufr", File::BUFR);
     f.tr->import_msg(msgs1[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
     db::v7::Batch& batch = f.tr->batch;
@@ -159,19 +163,20 @@ add_method("import", [](Fixture& f) {
 
 add_method("insert", [](Fixture& f) {
     using namespace db::v7;
+    db::v7::Tracer<> trc;
     Batch& batch = f.tr->batch;
     batch.set_write_attrs(false);
-    auto st = batch.get_station("synop", Coords(45.0, 11.0), Ident());
-    auto& st_data = st->get_station_data();
-    auto& data = st->get_measured_data(Datetime(2018, 6, 1));
+    auto st = batch.get_station(trc, "synop", Coords(45.0, 11.0), Ident());
+    auto& st_data = st->get_station_data(trc);
+    auto& data = st->get_measured_data(trc, Datetime(2018, 6, 1));
 
     Var sv(var(WR_VAR(0, 7, 30), 1000.0));
     st_data.add(&sv, batch::ERROR);
     Var dv(var(WR_VAR(0, 12, 101), 25.6));
-    int id_levtr = f.tr->levtr().obtain_id(LevTrEntry(Level(1), Trange(254)));
+    int id_levtr = f.tr->levtr().obtain_id(trc, LevTrEntry(Level(1), Trange(254)));
     data.add(id_levtr, &dv, batch::ERROR);
 
-    batch.write_pending();
+    batch.write_pending(trc);
     wassert(actual(batch.count_select_stations) == 1u);
     wassert(actual(batch.count_select_station_data) == 0u);
     wassert(actual(batch.count_select_data) == 0u);
@@ -179,16 +184,17 @@ add_method("insert", [](Fixture& f) {
 
 add_method("insert_double_station_value", [](Fixture& f) {
     using namespace db::v7;
+    db::v7::Tracer<> trc;
     Batch& batch = f.tr->batch;
     batch.set_write_attrs(false);
-    auto st = batch.get_station("synop", Coords(45.0, 11.0), Ident());
-    auto& st_data = st->get_station_data();
+    auto st = batch.get_station(trc, "synop", Coords(45.0, 11.0), Ident());
+    auto& st_data = st->get_station_data(trc);
 
     Var sv1(var(WR_VAR(0, 7, 30), 1000.0));
     Var sv2(var(WR_VAR(0, 7, 30), 1001.0));
     st_data.add(&sv1, batch::ERROR);
     st_data.add(&sv2, batch::ERROR);
-    batch.write_pending();
+    batch.write_pending(trc);
 
     wassert(actual(batch.count_select_stations) == 1u);
     wassert(actual(batch.count_select_station_data) == 0u);
@@ -203,17 +209,18 @@ add_method("insert_double_station_value", [](Fixture& f) {
 
 add_method("insert_double_measured_value", [](Fixture& f) {
     using namespace db::v7;
+    db::v7::Tracer<> trc;
     Batch& batch = f.tr->batch;
     batch.set_write_attrs(false);
-    auto st = batch.get_station("synop", Coords(45.0, 11.0), Ident());
-    auto& data = st->get_measured_data(Datetime(2018, 6, 1));
+    auto st = batch.get_station(trc, "synop", Coords(45.0, 11.0), Ident());
+    auto& data = st->get_measured_data(trc, Datetime(2018, 6, 1));
 
     Var dv1(var(WR_VAR(0, 12, 101), 25.6));
     Var dv2(var(WR_VAR(0, 12, 101), 25.7));
-    int id_levtr = f.tr->levtr().obtain_id(LevTrEntry(Level(1), Trange(254)));
+    int id_levtr = f.tr->levtr().obtain_id(trc, LevTrEntry(Level(1), Trange(254)));
     data.add(id_levtr, &dv1, batch::ERROR);
     data.add(id_levtr, &dv2, batch::ERROR);
-    batch.write_pending();
+    batch.write_pending(trc);
 
     wassert(actual(batch.count_select_stations) == 1u);
     wassert(actual(batch.count_select_station_data) == 0u);

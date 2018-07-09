@@ -10,6 +10,10 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
+Station::Station(v7::Transaction& tr)
+    : tr(tr)
+{
+}
 
 Station::~Station()
 {

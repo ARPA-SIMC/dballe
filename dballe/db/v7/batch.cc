@@ -18,7 +18,9 @@ void Batch::set_write_attrs(bool write_attrs)
 {
     if (this->write_attrs != write_attrs)
     {
-        write_pending();
+        // Throw away pending data. It should not cause damage, since all
+        // insert operations have their own write_pending at the end
+        // write_pending();
         clear();
     }
     this->write_attrs = write_attrs;
@@ -30,11 +32,11 @@ bool Batch::have_station(const std::string& report, const Coords& coords, const 
 
 }
 
-void Batch::new_station(const std::string& report, const Coords& coords, const Ident& ident)
+void Batch::new_station(Tracer<>& trc, const std::string& report, const Coords& coords, const Ident& ident)
 {
     if (last_station)
     {
-        last_station->write_pending(write_attrs);
+        last_station->write_pending(trc, write_attrs);
         delete last_station;
         last_station = nullptr;
     }
@@ -44,7 +46,7 @@ void Batch::new_station(const std::string& report, const Coords& coords, const I
     last_station->ident = ident;
 }
 
-batch::Station* Batch::get_station(const dballe::Station& station, bool station_can_add)
+batch::Station* Batch::get_station(Tracer<>& trc, const dballe::Station& station, bool station_can_add)
 {
     if (have_station(station.report, station.coords, station.ident))
     {
@@ -54,14 +56,14 @@ batch::Station* Batch::get_station(const dballe::Station& station, bool station_
     }
     v7::Station& st = transaction.station();
 
-    new_station(station.report, station.coords, station.ident);
+    new_station(trc, station.report, station.coords, station.ident);
 
     if (station.id != MISSING_INT)
         last_station->id = station.id;
     else
     {
         ++count_select_stations;
-        last_station->id = st.maybe_get_id(transaction, *last_station);
+        last_station->id = st.maybe_get_id(trc, *last_station);
     }
     if (last_station->id == MISSING_INT)
     {
@@ -78,16 +80,16 @@ batch::Station* Batch::get_station(const dballe::Station& station, bool station_
     return last_station;
 }
 
-batch::Station* Batch::get_station(const std::string& report, const Coords& coords, const Ident& ident)
+batch::Station* Batch::get_station(Tracer<>& trc, const std::string& report, const Coords& coords, const Ident& ident)
 {
     if (have_station(report, coords, ident))
         return last_station;
 
     v7::Station& st = transaction.station();
 
-    new_station(report, coords, ident);
+    new_station(trc, report, coords, ident);
 
-    last_station->id = st.maybe_get_id(transaction, *last_station);
+    last_station->id = st.maybe_get_id(trc, *last_station);
     ++count_select_stations;
     if (last_station->id == MISSING_INT)
     {
@@ -102,11 +104,11 @@ batch::Station* Batch::get_station(const std::string& report, const Coords& coor
     return last_station;
 }
 
-void Batch::write_pending()
+void Batch::write_pending(Tracer<>& trc)
 {
     if (!last_station)
         return;
-    last_station->write_pending(write_attrs);
+    last_station->write_pending(trc, write_attrs);
 }
 
 void Batch::clear()
@@ -143,7 +145,7 @@ void StationData::add(const wreport::Var* var, UpdateMode on_conflict)
         // Exists in the database
         switch (on_conflict)
         {
-            case UPDATE: to_update.emplace_back(in_db->second, var); break;
+            case UPDATE: to_update.emplace_back(in_db->id, var); break;
             case IGNORE: break;
             case ERROR: throw wreport::error_consistency("refusing to overwrite existing data");
         }
@@ -153,19 +155,25 @@ void StationData::add(const wreport::Var* var, UpdateMode on_conflict)
     }
 }
 
-void StationData::write_pending(Transaction& tr, int station_id, bool with_attrs)
+void StationData::write_pending(Tracer<>& trc, Transaction& tr, int station_id, bool with_attrs)
 {
     if (!to_insert.empty())
     {
         auto& st = tr.station_data();
-        st.insert(tr, station_id, to_insert, with_attrs);
+        st.insert(trc, station_id, to_insert, with_attrs);
         for (const auto& v: to_insert)
-            ids_by_code[v.var->code()] = v.id;
+        {
+            auto cur = ids_by_code.find(v.var->code());
+            if (cur == ids_by_code.end())
+                ids_by_code.add(IdVarcode(v.id, v.var->code()));
+            else
+                cur->id = v.id;
+        }
     }
     if (!to_update.empty())
     {
         auto& st = tr.station_data();
-        st.update(tr, to_update, with_attrs);
+        st.update(trc, to_update, with_attrs);
     }
     to_insert.clear();
     to_update.clear();
@@ -179,7 +187,7 @@ void MeasuredData::add(int id_levtr, const wreport::Var* var, UpdateMode on_conf
         // Exists in the database
         switch (on_conflict)
         {
-            case UPDATE: to_update.emplace_back(in_db->second, id_levtr, var); break;
+            case UPDATE: to_update.emplace_back(in_db->id, id_levtr, var); break;
             case IGNORE: break;
             case ERROR: throw wreport::error_consistency("refusing to overwrite existing data");
         }
@@ -189,20 +197,25 @@ void MeasuredData::add(int id_levtr, const wreport::Var* var, UpdateMode on_conf
     }
 }
 
-void MeasuredData::write_pending(Transaction& tr, int station_id, bool with_attrs)
+void MeasuredData::write_pending(Tracer<>& trc, Transaction& tr, int station_id, bool with_attrs)
 {
     if (!to_insert.empty())
     {
         auto& st = tr.data();
-        st.insert(tr, station_id, datetime, to_insert, with_attrs);
+        st.insert(trc, station_id, datetime, to_insert, with_attrs);
         for (const auto& v: to_insert)
-            ids_on_db[IdVarcode(v.id_levtr, v.var->code())] = v.id;
-
+        {
+            auto cur = ids_on_db.find(IdVarcode(v.id_levtr, v.var->code()));
+            if (cur == ids_on_db.end())
+                ids_on_db.add(MeasuredDataID(IdVarcode(v.id_levtr, v.var->code()), v.id));
+            else
+                cur->id = v.id;
+        }
     }
     if (!to_update.empty())
     {
         auto& st = tr.data();
-        st.update(tr, to_update, with_attrs);
+        st.update(trc, to_update, with_attrs);
     }
     to_insert.clear();
     to_update.clear();
@@ -211,64 +224,18 @@ void MeasuredData::write_pending(Transaction& tr, int station_id, bool with_attr
 
 MeasuredDataVector::~MeasuredDataVector()
 {
-    for (auto md: measured_data)
+    for (auto md: items)
         delete md;
 }
 
-MeasuredData* MeasuredDataVector::find(const Datetime& datetime)
-{
-    if (measured_data.empty()) return nullptr;
 
-    // Stick to linear search if the vector size is small
-    if (measured_data.size() < 6)
-    {
-        for (auto md: measured_data)
-            if (md->datetime == datetime)
-                return md;
-        return nullptr;
-    }
-
-    // Use binary search for larger vectors
-    if (dirty)
-    {
-        std::sort(measured_data.begin(), measured_data.end(), [](const MeasuredData* a, const MeasuredData* b) {
-            return a->datetime < b->datetime;
-        });
-        dirty = false;
-    }
-
-    // Binary search
-    int begin, end;
-    begin = -1, end = measured_data.size();
-    while (end - begin > 1)
-    {
-        int cur = (end + begin) / 2;
-        if (measured_data[cur]->datetime > datetime)
-            end = cur;
-        else
-            begin = cur;
-    }
-    if (begin == -1 || measured_data[begin]->datetime != datetime)
-        return nullptr;
-    else
-        return measured_data[begin];
-}
-
-MeasuredData& MeasuredDataVector::add(const Datetime& datetime)
-{
-    dirty = true;
-    measured_data.push_back(new MeasuredData(datetime));
-    return *measured_data.back();
-}
-
-
-StationData& Station::get_station_data()
+StationData& Station::get_station_data(Tracer<>& trc)
 {
     if (!station_data.loaded)
     {
         v7::StationData& sd = batch.transaction.station_data();
-        sd.query(id, [&](int data_id, wreport::Varcode code) {
-            station_data.ids_by_code.insert(std::make_pair(code, data_id));
+        sd.query(trc, id, [&](int data_id, wreport::Varcode code) {
+            station_data.ids_by_code.add(IdVarcode(data_id, code));
         });
         station_data.loaded = true;
         ++batch.count_select_station_data;
@@ -276,33 +243,34 @@ StationData& Station::get_station_data()
     return station_data;
 }
 
-MeasuredData& Station::get_measured_data(const Datetime& datetime)
+MeasuredData& Station::get_measured_data(Tracer<>& trc, const Datetime& datetime)
 {
-    if (MeasuredData* md = measured_data.find(datetime))
-        return *md;
+    auto mdi = measured_data.find(datetime);
+    if (mdi != measured_data.end())
+        return **mdi;
 
-    MeasuredData& md = measured_data.add(datetime);
+    MeasuredData* md = measured_data.add(new MeasuredData(datetime));
 
     if (!is_new)
     {
         v7::Data& d = batch.transaction.data();
-        d.query(id, datetime, [&](int data_id, int id_levtr, wreport::Varcode code) {
-            md.ids_on_db.insert(std::make_pair(IdVarcode(id_levtr, code), data_id));
+        d.query(trc, id, datetime, [&](int data_id, int id_levtr, wreport::Varcode code) {
+            md->ids_on_db.add(MeasuredDataID(IdVarcode(id_levtr, code), data_id));
         });
         ++batch.count_select_data;
     }
 
-    return md;
+    return *md;
 }
 
-void Station::write_pending(bool with_attrs)
+void Station::write_pending(Tracer<>& trc, bool with_attrs)
 {
     if (id == MISSING_INT)
-        id = batch.transaction.station().insert_new(batch.transaction, *this);
+        id = batch.transaction.station().insert_new(trc, *this);
 
-    station_data.write_pending(batch.transaction, id, with_attrs);
-    for (auto md: measured_data.measured_data)
-        md->write_pending(batch.transaction, id, with_attrs);
+    station_data.write_pending(trc, batch.transaction, id, with_attrs);
+    for (auto md: measured_data)
+        md->write_pending(trc, batch.transaction, id, with_attrs);
 }
 
 #if 0

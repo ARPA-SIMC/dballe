@@ -32,13 +32,10 @@ const char* format_server_type(ServerType type)
 
 Connection::Connection()
 {
-    profile = getenv("DBA_PROFILE") != nullptr;
 }
 
 Connection::~Connection()
 {
-    if (profile)
-        fprintf(stderr, "%s: %d queries\n", format_server_type(server_type), profile_query_count);
 }
 
 void Connection::add_datetime(Querybuf& qb, const Datetime& dt) const

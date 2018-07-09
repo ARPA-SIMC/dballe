@@ -6,28 +6,23 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
-os.environ["DBALLE_BUILDING_DOCS"]="true"
+os.environ["DBALLE_BUILDING_DOCS"] ="true"  # noqa
 
-try:
-    import rpy_options
-    rpy_options.set_options(VERBOSE=False)
-except ImportError:
-    pass
 import sys
 import inspect
-import wreport
 import dballe
 import dballe.volnd
-import dballe.rconvert
+
 
 def print_indented(spaces, *args):
     "Print a string, indented by the given number of spaces"
     for s in args:
         for line in s.split("\n"):
-            for i in range(1,spaces):
+            for i in range(1, spaces):
                 sys.stdout.write(" ")
             sys.stdout.write(line.replace("wreport.", "dballe."))
             sys.stdout.write("\n")
+
 
 c_argspecs = {
     "dballe.varinfo": "(varcode)",
@@ -95,7 +90,6 @@ for meth, args in [
     c_argspecs["DB." + meth] = args
 
 
-
 def document_class(cls):
     name = cls.__name__
     print()
@@ -108,8 +102,10 @@ def document_class(cls):
     print("```````")
     document_members(cls)
 
+
 def document(obj):
-    if obj.__doc__ == None: return
+    if obj.__doc__ is None:
+        return
 
     if inspect.ismodule(obj):
         print_indented(0, inspect.getdoc(obj))
@@ -122,15 +118,19 @@ def document(obj):
         print_indented(2, obj.__name__)
         print_indented(4, inspect.getdoc(obj))
 
+
 def document_members(cls, include=None, exclude=None):
     # List and classify members
     member_vars = []
     member_funcs = []
 
     for name, m in inspect.getmembers(cls):
-        if name[0] == '_': continue
-        if include is not None and name not in include: continue
-        if exclude is not None and name in exclude: continue
+        if name[0] == '_':
+            continue
+        if include is not None and name not in include:
+            continue
+        if exclude is not None and name in exclude:
+            continue
         fullname = cls.__name__ + "." + name
         if inspect.isroutine(m) and (inspect.isfunction(m) or fullname in c_argspecs):
             member_funcs.append((fullname, name, m))
@@ -206,7 +206,12 @@ a DB is used to access the database.
 Its members are:
 """)
 
-db_transaction_methods = ["attr_insert_data", "attr_insert_station", "attr_query_data", "attr_query_station", "attr_remove_data", "attr_remove_station", "export_to_file", "insert_data", "insert_station_data", "load", "query_data", "query_station_data", "query_stations", "query_summary", "remove", "remove_all", "remove_station_data"]
+db_transaction_methods = [
+        "attr_insert_data", "attr_insert_station", "attr_query_data",
+        "attr_query_station", "attr_remove_data", "attr_remove_station",
+        "export_to_file", "insert_data", "insert_station_data", "load",
+        "query_data", "query_station_data", "query_stations", "query_summary",
+        "remove", "remove_all", "remove_station_data"]
 db_deprecated_methods = ["attr_insert", "attr_remove", "query_attrs"]
 
 document_members(dballe.DB, exclude=db_transaction_methods + db_deprecated_methods)
@@ -315,24 +320,24 @@ print("""
 This is the list of dimensions supported by dballe.volnd:
 """)
 
-document (dballe.volnd.AnaIndex)
-document (dballe.volnd.NetworkIndex)
-document (dballe.volnd.LevelIndex)
-document (dballe.volnd.TimeRangeIndex)
-document (dballe.volnd.DateTimeIndex)
-document (dballe.volnd.IntervalIndex)
+document(dballe.volnd.AnaIndex)
+document(dballe.volnd.NetworkIndex)
+document(dballe.volnd.LevelIndex)
+document(dballe.volnd.TimeRangeIndex)
+document(dballe.volnd.DateTimeIndex)
+document(dballe.volnd.IntervalIndex)
 
 print("""
 The data object used by ``AnaIndex`` is:
 """)
 
-document (dballe.volnd.AnaIndexEntry)
+document(dballe.volnd.AnaIndexEntry)
 
 print("""
 The extraction is done using the dballe.volnd.read function:
 """)
 
-document (dballe.volnd.read)
+document(dballe.volnd.read)
 
 print("""
 The result of dballe.volnd.read is a dict mapping output variable names to a
@@ -343,11 +348,10 @@ indexes unless the *xxx*-Index definitions have been created with
 This is the dballe.volnd.Data class documentation:
 """)
 
-document (dballe.volnd.Data)
+document(dballe.volnd.Data)
 
 print("""
 The methods of dballe.volnd.Data are:
 """)
 
 document_members(dballe.volnd.Data)
-

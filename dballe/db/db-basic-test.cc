@@ -244,7 +244,7 @@ this->add_method("vacuum", [](Fixture& f) {
 
     // Invoke vacuum
     auto& db = *f.db;
-    db.vacuum();
+    wassert(db.vacuum());
 
     // Stations are still there
     {
@@ -269,7 +269,7 @@ this->add_method("vacuum", [](Fixture& f) {
     }
 
     // Invoke vacuum
-    db.vacuum();
+    wassert(db.vacuum());
 
     // Station 1 is gone
     {
@@ -281,15 +281,16 @@ this->add_method("vacuum", [](Fixture& f) {
 
     // Station 2 is still there with all its data
     {
+        auto tr = db.transaction();
         core::Query q;
         q.ana_id = data.stations["s2"].info.id;
-        auto c = db.query_stations(q);
+        auto c = wcallchecked(tr->query_stations(q));
         wassert(actual(c->remaining()) == 1);
 
-        auto sd = db.query_station_data(q);
+        auto sd = wcallchecked(tr->query_station_data(q));
         wassert(actual(sd->remaining()) == 1);
 
-        auto dd = db.query_data(q);
+        auto dd = wcallchecked(tr->query_data(q));
         wassert(actual(dd->remaining()) == 1);
     }
 });

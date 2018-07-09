@@ -3,6 +3,8 @@
 
 #include <dballe/file.h>
 #include <dballe/message.h>
+#include <dballe/fwd.h>
+#include <dballe/msg/fwd.h>
 #include <memory>
 #include <string>
 #include <cstdio>
@@ -18,10 +20,32 @@ struct Bulletin;
 }
 
 namespace dballe {
-struct Messages;
-struct Message;
-
 namespace msg {
+
+/**
+ * Options to control message import
+ */
+struct ImporterOptions
+{
+    bool simplified;
+
+    /// Create new Options initialised with default values
+    ImporterOptions()
+        : simplified(true) {}
+
+    bool operator==(const ImporterOptions& o) const { return simplified == o.simplified; }
+    bool operator!=(const ImporterOptions& o) const { return simplified != o.simplified; }
+
+    /// Print a summary of the options to \a out
+    void print(FILE* out);
+
+    /// Generate a string summary of import options
+    std::string to_string() const;
+
+    /// Opposite of to_string: create an Options from a string
+    static ImporterOptions from_string(const std::string& s);
+};
+
 
 /**
  * Message importer
@@ -32,33 +56,11 @@ namespace msg {
  */
 class Importer
 {
-public:
-    struct Options
-    {
-        bool simplified;
-
-        /// Create new Options initialised with default values
-        Options()
-            : simplified(true) {}
-
-        bool operator==(const Options& o) const { return simplified == o.simplified; }
-        bool operator!=(const Options& o) const { return simplified != o.simplified; }
-
-        /// Print a summary of the options to \a out
-        void print(FILE* out);
-
-        /// Generate a string summary of import options
-        std::string to_string() const;
-
-        /// Opposite of to_string: create an Options from a string
-        static Options from_string(const std::string& s);
-    };
-
 protected:
-    Options opts;
+    ImporterOptions opts;
 
 public:
-    Importer(const Options& opts);
+    Importer(const ImporterOptions& opts);
     virtual ~Importer();
 
     /**
@@ -92,8 +94,35 @@ public:
 
 
     /// Instantiate the right importer for the given type
-    static std::unique_ptr<Importer> create(File::Encoding type, const Options& opts=Options());
+    static std::unique_ptr<Importer> create(File::Encoding type, const ImporterOptions& opts=ImporterOptions());
 };
+
+
+/**
+ * Options to control message export
+ */
+struct ExporterOptions
+{
+    /// Name of template to use for output (leave empty to autodetect)
+    std::string template_name;
+    /// Originating centre
+    int centre;
+    /// Originating subcentre
+    int subcentre;
+    /// Originating application ID
+    int application;
+
+    /// Create new Options initialised with default values
+    ExporterOptions()
+        : centre(MISSING_INT), subcentre(MISSING_INT), application(MISSING_INT) {}
+
+    /// Print a summary of the options to \a out
+    void print(FILE* out);
+
+    /// Generate a string summary of export options
+    std::string to_string() const;
+};
+
 
 /**
  * Message exporter
@@ -104,34 +133,11 @@ public:
  */
 class Exporter
 {
-public:
-    struct Options
-    {
-        /// Name of template to use for output (leave empty to autodetect)
-        std::string template_name;
-        /// Originating centre
-        int centre;
-        /// Originating subcentre
-        int subcentre;
-        /// Originating application ID
-        int application;
-
-        /// Create new Options initialised with default values
-        Options()
-            : centre(MISSING_INT), subcentre(MISSING_INT), application(MISSING_INT) {}
-
-        /// Print a summary of the options to \a out
-        void print(FILE* out);
-
-        /// Generate a string summary of export options
-        std::string to_string() const;
-    };
-
 protected:
-    Options opts;
+    ExporterOptions opts;
 
 public:
-    Exporter(const Options& opts);
+    Exporter(const ExporterOptions& opts);
     virtual ~Exporter();
 
     /**
@@ -159,7 +165,7 @@ public:
 
 
     /// Instantiate the right importer for the given type
-    static std::unique_ptr<Exporter> create(File::Encoding type, const Options& opts=Options());
+    static std::unique_ptr<Exporter> create(File::Encoding type, const ExporterOptions& opts=ExporterOptions());
 };
 
 }

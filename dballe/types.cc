@@ -403,23 +403,6 @@ int Datetime::compare(const Datetime& o) const
     return second - o.second;
 }
 
-bool Datetime::operator==(const Datetime& dt) const
-{
-    return year == dt.year && month == dt.month && day == dt.day
-        && hour == dt.hour && minute == dt.minute && second == dt.second;
-}
-
-bool Datetime::operator!=(const Datetime& dt) const
-{
-    return year != dt.year || month != dt.month || day != dt.day
-        || hour != dt.hour || minute != dt.minute || second != dt.second;
-}
-
-bool Datetime::operator<(const Datetime& dt) const { return compare(dt) < 0; }
-bool Datetime::operator>(const Datetime& dt) const { return compare(dt) > 0; }
-bool Datetime::operator<=(const Datetime& dt) const { return compare(dt) <= 0; }
-bool Datetime::operator>=(const Datetime& dt) const { return compare(dt) >= 0; }
-
 Datetime Datetime::from_iso8601(const char* str)
 {
     int ye, mo, da, ho, mi, se;
@@ -630,13 +613,6 @@ int Coords::compare(const Coords& o) const
     if (int res = lat - o.lat) return res;
     return lon - o.lon;
 }
-
-bool Coords::operator==(const Coords& c) const { return lat == c.lat && lon == c.lon; }
-bool Coords::operator!=(const Coords& c) const { return lat != c.lat || lon != c.lon; }
-bool Coords::operator<(const Coords& o) const { return compare(o) < 0; }
-bool Coords::operator>(const Coords& o) const { return compare(o) > 0; }
-bool Coords::operator<=(const Coords& o) const { return compare(o) <= 0; }
-bool Coords::operator>=(const Coords& o) const { return compare(o) >= 0; }
 
 int Coords::print(FILE* out, const char* end) const
 {
@@ -879,21 +855,6 @@ int Level::compare(const Level& l) const
     return l2 - l.l2;
 }
 
-bool Level::operator==(const Level& l) const
-{
-    return ltype1 == l.ltype1 && l1 == l.l1
-        && ltype2 == l.ltype2 && l2 == l.l2;
-}
-
-bool Level::operator!=(const Level& l) const
-{
-    return ltype1 != l.ltype1 || l1 != l.l1
-        || ltype2 != l.ltype2 || l2 != l.l2;
-}
-
-bool Level::operator<(const Level& l) const { return compare(l) < 0; }
-bool Level::operator>(const Level& l) const { return compare(l) > 0; }
-
 static std::string describe_level(int ltype, int val)
 {
     char buf[256];
@@ -1055,19 +1016,6 @@ int Trange::compare(const Trange& t) const
     if ((res = p1 - t.p1)) return res;
     return p2 - t.p2;
 }
-
-bool Trange::operator==(const Trange& tr) const
-{
-    return pind == tr.pind && p1 == tr.p1 && p2 == tr.p2;
-}
-
-bool Trange::operator!=(const Trange& tr) const
-{
-    return pind != tr.pind || p1 != tr.p1 || p2 != tr.p2;
-}
-
-bool Trange::operator<(const Trange& t) const { return compare(t) < 0; }
-bool Trange::operator>(const Trange& t) const { return compare(t) > 0; }
 
 void Trange::to_stream(std::ostream& out, const char* undef) const
 {

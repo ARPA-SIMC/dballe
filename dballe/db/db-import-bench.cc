@@ -17,7 +17,7 @@ struct MessageTask : public benchmark::DBTask
     MessageTask(const std::string& pfx, const std::string& fname)
         : benchmark::DBTask(pfx + fname)
     {
-        dballe::msg::Importer::Options opts;
+        dballe::msg::ImporterOptions opts;
         std::unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR, opts);
         unique_ptr<File> f = core::File::open_test_data_file(File::BUFR, "bufr/" + fname);
         f->foreach([&](const BinaryMessage& rmsg) {

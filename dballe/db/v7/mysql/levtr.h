@@ -3,6 +3,7 @@
 
 #include <dballe/db/db.h>
 #include <dballe/db/v7/levtr.h>
+#include <dballe/db/v7/fwd.h>
 #include <dballe/sql/fwd.h>
 #include <cstdio>
 #include <memory>
@@ -34,15 +35,15 @@ protected:
     void _dump(std::function<void(int, const Level&, const Trange&)> out) override;
 
 public:
-    MySQLLevTr(dballe::sql::MySQLConnection& conn);
+    MySQLLevTr(v7::Transaction& tr, dballe::sql::MySQLConnection& conn);
     MySQLLevTr(const LevTr&) = delete;
     MySQLLevTr(const LevTr&&) = delete;
     MySQLLevTr& operator=(const MySQLLevTr&) = delete;
     ~MySQLLevTr();
 
-    void prefetch_ids(const std::set<int>& ids) override;
-    const LevTrEntry* lookup_id(int id) override;
-    int obtain_id(const LevTrEntry& desc) override;
+    void prefetch_ids(Tracer<>& trc, const std::set<int>& ids) override;
+    const LevTrEntry* lookup_id(Tracer<>& trc, int id) override;
+    int obtain_id(Tracer<>& trc, const LevTrEntry& desc) override;
 };
 
 

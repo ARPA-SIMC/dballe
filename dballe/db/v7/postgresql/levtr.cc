@@ -3,6 +3,8 @@
 #include "dballe/msg/msg.h"
 #include "dballe/sql/querybuf.h"
 #include "dballe/sql/postgresql.h"
+#include "dballe/db/v7/transaction.h"
+#include "dballe/db/v7/trace.h"
 #include <map>
 #include <sstream>
 #include <cstring>
@@ -37,8 +39,8 @@ Trange to_trange(const dballe::sql::postgresql::Result& res, unsigned row, int f
 
 }
 
-PostgreSQLLevTr::PostgreSQLLevTr(PostgreSQLConnection& conn)
-    : conn(conn)
+PostgreSQLLevTr::PostgreSQLLevTr(v7::Transaction& tr, PostgreSQLConnection& conn)
+    : v7::LevTr(tr), conn(conn)
 {
     conn.prepare("v7_levtr_select_id", R"(
         SELECT id FROM levtr WHERE ltype1=$1::int4 AND l1=$2::int4 AND ltype2=$3::int4 AND l2=$4::int4
@@ -56,7 +58,7 @@ PostgreSQLLevTr::~PostgreSQLLevTr()
 {
 }
 
-void PostgreSQLLevTr::prefetch_ids(const std::set<int>& ids)
+void PostgreSQLLevTr::prefetch_ids(Tracer<>& trc, const std::set<int>& ids)
 {
     if (ids.empty()) return;
 
@@ -71,19 +73,23 @@ void PostgreSQLLevTr::prefetch_ids(const std::set<int>& ids)
     } else
         qb.append("SELECT id, ltype1, l1, ltype2, l2, pind, p1, p2 FROM levtr");
 
+    Tracer<> trc_sel(trc ? trc->trace_select(qb) : nullptr);
     auto res = conn.exec(qb);
+    if (trc_sel) trc_sel->add_row(res.rowcount());
     for (unsigned row = 0; row < res.rowcount(); ++row)
         cache.insert(unique_ptr<LevTrEntry>(new LevTrEntry(
                     res.get_int4(row, 0), to_level(res, row, 1), to_trange(res, row, 5))));
 }
 
-const LevTrEntry* PostgreSQLLevTr::lookup_id(int id)
+const LevTrEntry* PostgreSQLLevTr::lookup_id(Tracer<>& trc, int id)
 {
     using namespace dballe::sql::postgresql;
     const LevTrEntry* e = cache.find_entry(id);
     if (e) return e;
 
+    Tracer<> trc_sel(trc ? trc->trace_select("v7_levtr_select_data") : nullptr);
     auto res = conn.exec_prepared("v7_levtr_select_data", id);
+    if (trc_sel) trc_sel->add_row(res.rowcount());
     switch (res.rowcount())
     {
         case 0: error_notfound::throwf("levtr with id %d not found in the database", id);
@@ -92,19 +98,23 @@ const LevTrEntry* PostgreSQLLevTr::lookup_id(int id)
     }
 }
 
-int PostgreSQLLevTr::obtain_id(const LevTrEntry& desc)
+int PostgreSQLLevTr::obtain_id(Tracer<>& trc, const LevTrEntry& desc)
 {
     using namespace dballe::sql::postgresql;
     int id = cache.find_id(desc);
     if (id != MISSING_INT) return id;
 
+    Tracer<> trc_oid(trc ? trc->trace_select("v7_levtr_select_id") : nullptr);
     Result res = conn.exec_prepared("v7_levtr_select_id",
             desc.level.ltype1, desc.level.l1, desc.level.ltype2, desc.level.l2,
             desc.trange.pind, desc.trange.p1, desc.trange.p2);
+    if (trc_oid) trc_oid->add_row(res.rowcount());
     switch (res.rowcount())
     {
         case 0:
         {
+            trc_oid.done();
+            trc_oid.reset(trc ? trc->trace_insert("v7_levtr_insert", 1) : nullptr);
             auto res = conn.exec_prepared_one_row("v7_levtr_insert",
                         desc.level.ltype1, desc.level.l1, desc.level.ltype2, desc.level.l2,
                         desc.trange.pind, desc.trange.p1, desc.trange.p2);

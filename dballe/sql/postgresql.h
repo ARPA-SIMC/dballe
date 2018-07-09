@@ -274,13 +274,11 @@ public:
 
     postgresql::Result exec_unchecked(const char* query)
     {
-        if (profile) ++profile_query_count;
         return PQexecParams(db, query, 0, nullptr, nullptr, nullptr, nullptr, 1);
     }
 
     postgresql::Result exec_unchecked(const std::string& query)
     {
-        if (profile) ++profile_query_count;
         return PQexecParams(db, query.c_str(), 0, nullptr, nullptr, nullptr, nullptr, 1);
     }
 
@@ -311,7 +309,6 @@ public:
     postgresql::Result exec_unchecked(const char* query, ARGS... args)
     {
         postgresql::Params<ARGS...> params(args...);
-        if (profile) ++profile_query_count;
         return PQexecParams(db, query, params.count, nullptr, params.args, params.lengths, params.formats, 1);
     }
 
@@ -319,7 +316,6 @@ public:
     postgresql::Result exec_unchecked(const std::string& query, ARGS... args)
     {
         postgresql::Params<ARGS...> params(args...);
-        if (profile) ++profile_query_count;
         return PQexecParams(db, query.c_str(), params.count, nullptr, params.args, params.lengths, params.formats, 1);
     }
 
@@ -348,13 +344,11 @@ public:
 
     postgresql::Result exec_prepared_unchecked(const char* name)
     {
-        if (profile) ++profile_query_count;
         return PQexecPrepared(db, name, 0, nullptr, nullptr, nullptr, 1);
     }
 
     postgresql::Result exec_prepared_unchecked(const std::string& name)
     {
-        if (profile) ++profile_query_count;
         return PQexecPrepared(db, name.c_str(), 0, nullptr, nullptr, nullptr, 1);
     }
 
@@ -385,7 +379,6 @@ public:
     postgresql::Result exec_prepared_unchecked(const char* name, ARGS... args)
     {
         postgresql::Params<ARGS...> params(args...);
-        if (profile) ++profile_query_count;
         return PQexecPrepared(db, name, params.count, params.args, params.lengths, params.formats, 1);
     }
 
@@ -393,7 +386,6 @@ public:
     postgresql::Result exec_prepared_unchecked(const std::string& name, ARGS... args)
     {
         postgresql::Params<ARGS...> params(args...);
-        if (profile) ++profile_query_count;
         return PQexecPrepared(db, name.c_str(), params.count, params.args, params.lengths, params.formats, 1);
     }
 

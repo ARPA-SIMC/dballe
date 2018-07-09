@@ -146,7 +146,7 @@ struct ReaderOptions
 
 struct Filter
 {
-    msg::Exporter::Options export_opts;
+    msg::ExporterOptions export_opts;
     int category = -1;
     int subcategory = -1;
     int checkdigit = -1;
@@ -188,7 +188,7 @@ protected:
     void read_file(const std::list<std::string>& fnames, Action& action);
 
 public:
-    msg::Importer::Options import_opts;
+    msg::ImporterOptions import_opts;
     Filter filter;
     bool verbose = false;
     unsigned count_successes = 0;

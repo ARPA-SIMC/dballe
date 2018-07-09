@@ -2,7 +2,8 @@
 #define DBA_DB_V7_H
 
 #include <dballe/db/db.h>
-#include <dballe/db/trace.h>
+#include <dballe/db/v7/trace.h>
+#include <dballe/db/v7/fwd.h>
 #include <wreport/varinfo.h>
 #include <string>
 #include <memory>
@@ -19,14 +20,7 @@ struct Sequence;
 }
 
 namespace db {
-
 namespace v7 {
-struct State;
-struct Driver;
-}
-
-namespace v7 {
-struct Transaction;
 
 /**
  * DB-ALLe database connection for database format V7
@@ -37,7 +31,7 @@ public:
     /// Database connection
     dballe::sql::Connection* conn;
     /// Database query tracing
-    Trace trace;
+    Trace* trace = nullptr;
     /// True if we print an EXPLAIN trace of all queries to stderr
     bool explain_queries = false;
 

@@ -1,5 +1,6 @@
 #include <Python.h>
 #include "dballe/types.h"
+#include "dballe/core/var.h"
 #include "dballe/core/values.h"
 #include "common.h"
 #include "types.h"
@@ -494,12 +495,7 @@ int station_from_python(PyObject* o, Station& out)
 PyObject* varcode_to_python(wreport::Varcode code)
 {
     char buf[7];
-    snprintf(buf, 7, "%c%02d%03d",
-            WR_VAR_F(code) == 0 ? 'B' :
-            WR_VAR_F(code) == 1 ? 'R' :
-            WR_VAR_F(code) == 2 ? 'C' :
-            WR_VAR_F(code) == 3 ? 'D' : '?',
-            WR_VAR_X(code), WR_VAR_Y(code));
+    format_code(code, buf);
     return PyUnicode_FromString(buf);
 }
 

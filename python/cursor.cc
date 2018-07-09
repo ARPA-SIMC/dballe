@@ -121,9 +121,15 @@ static PyObject* dpy_Cursor_iternext(dpy_Cursor* self)
 {
     if (self->cur->next())
     {
-        self->cur->to_record(*self->rec->rec);
-        Py_INCREF(self->rec);
-        return (PyObject*)self->rec;
+        try {
+            self->cur->to_record(*self->rec->rec);
+            Py_INCREF(self->rec);
+            return (PyObject*)self->rec;
+        } catch (wreport::error& e) {
+            return raise_wreport_exception(e);
+        } catch (std::exception& se) {
+            return raise_std_exception(se);
+        }
     } else {
         PyErr_SetNone(PyExc_StopIteration);
         return NULL;

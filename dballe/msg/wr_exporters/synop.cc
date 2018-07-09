@@ -18,9 +18,9 @@
  */
 
 #include "common.h"
-#include "msg/wr_codec.h"
+#include "dballe/msg/wr_codec.h"
+#include "dballe/msg/context.h"
 #include <wreport/bulletin.h>
-#include "msg/context.h"
 
 using namespace wreport;
 using namespace std;
@@ -53,7 +53,7 @@ struct Synop : public Template
     const msg::Context* c_radiation24;
     const msg::Context* c_tchange;
 
-    Synop(const Exporter::Options& opts, const Messages& msgs)
+    Synop(const ExporterOptions& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
     void scan_levels()
@@ -133,7 +133,7 @@ struct SynopECMWF : public Synop
     bool is_crex;
     Varcode prec_code;
 
-    SynopECMWF(const Exporter::Options& opts, const Messages& msgs)
+    SynopECMWF(const ExporterOptions& opts, const Messages& msgs)
         : Synop(opts, msgs) {}
 
     void add_prec()
@@ -201,7 +201,7 @@ struct SynopECMWF : public Synop
 
 struct SynopECMWFLand : public SynopECMWF
 {
-    SynopECMWFLand(const Exporter::Options& opts, const Messages& msgs)
+    SynopECMWFLand(const ExporterOptions& opts, const Messages& msgs)
         : SynopECMWF(opts, msgs) {}
 
     virtual const char* name() const { return SYNOP_ECMWF_LAND_NAME; }
@@ -278,7 +278,7 @@ struct SynopECMWFLand : public SynopECMWF
 
 struct SynopECMWFLandHigh : public SynopECMWF
 {
-    SynopECMWFLandHigh(const Exporter::Options& opts, const Messages& msgs)
+    SynopECMWFLandHigh(const ExporterOptions& opts, const Messages& msgs)
         : SynopECMWF(opts, msgs) {}
 
     virtual const char* name() const { return SYNOP_ECMWF_LAND_HIGH_NAME; }
@@ -345,7 +345,7 @@ struct SynopECMWFLandHigh : public SynopECMWF
 // Same as SynopECMWFLandHigh but just with a different local subtype
 struct SynopECMWFAuto : public SynopECMWFLand
 {
-    SynopECMWFAuto(const Exporter::Options& opts, const Messages& msgs)
+    SynopECMWFAuto(const ExporterOptions& opts, const Messages& msgs)
         : SynopECMWFLand(opts, msgs) {}
 
     virtual const char* name() const { return SYNOP_ECMWF_AUTO_NAME; }
@@ -366,7 +366,7 @@ struct SynopWMO : public Synop
     // we process its subsets
     Bulletin* cur_bulletin;
 
-    SynopWMO(const Exporter::Options& opts, const Messages& msgs)
+    SynopWMO(const ExporterOptions& opts, const Messages& msgs)
         : Synop(opts, msgs), cur_bulletin(0) {}
 
     virtual const char* name() const { return SYNOP_WMO_NAME; }
@@ -655,7 +655,7 @@ struct SynopWMO : public Synop
 void register_synop(TemplateRegistry& r)
 {
     r.register_factory(0, "synop", "Synop (autodetect)",
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 const Msg& msg = Msg::downcast(msgs[0]);
                 const Var* var = msg.get_st_name_var();
                 if (var)
@@ -670,11 +670,11 @@ void register_synop(TemplateRegistry& r)
                 }
             });
     r.register_factory(0, SYNOP_WMO_NAME, SYNOP_WMO_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new SynopWMO(opts, msgs));
             });
     r.register_factory(0, "synop-ecmwf", "Synop ECMWF (autodetect) (0.1)",
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 const Msg& msg = Msg::downcast(msgs[0]);
                 const Var* var = msg.get_st_type_var();
                 if (var != NULL && var->enqi() == 0)
@@ -690,15 +690,15 @@ void register_synop(TemplateRegistry& r)
                 return unique_ptr<Template>(new SynopECMWFLand(opts, msgs));
             });
     r.register_factory(0, SYNOP_ECMWF_LAND_NAME, SYNOP_ECMWF_LAND_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new SynopECMWFLand(opts, msgs));
             });
     r.register_factory(0, SYNOP_ECMWF_LAND_HIGH_NAME, SYNOP_ECMWF_LAND_HIGH_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new SynopECMWFLandHigh(opts, msgs));
             });
     r.register_factory(0, SYNOP_ECMWF_AUTO_NAME, SYNOP_ECMWF_AUTO_DESC,
-            [](const Exporter::Options& opts, const Messages& msgs) {
+            [](const ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new SynopECMWFAuto(opts, msgs));
             });
 }

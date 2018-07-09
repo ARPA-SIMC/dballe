@@ -12,8 +12,7 @@ endif
 if DO_DBALLE_PYTHON
 SUBDIRS += python
 endif
-SUBDIRS += .
-#examples 
+SUBDIRS += bench .
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA=libdballe.pc libdballef.pc
@@ -41,9 +40,8 @@ EXTRA_DIST = README.md LICENSE BENCHMARKS autogen.sh \
 	     libdballe.m4 libdballef.m4 \
 	     libdballe.pc.in libdballef.pc.in \
 	     $(conf_DATA) get_line_no run-check.conf.example \
-	     run-check run-local run-bench bench-plot show_code_notes \
+	     run-check run-local run-bench show_code_notes \
 	     fabfile.py \
-	     $(wildcard bench/*.csv) \
 	     UPGRADE-5.x \
 	     dbaexport.1 \
              fedora/SPECS/dballe.spec

@@ -24,14 +24,14 @@ struct InputFile
 
     InputFile(File::Encoding format, bool simplified)
     {
-        msg::Importer::Options importer_options;
+        msg::ImporterOptions importer_options;
         importer_options.simplified = simplified;
         input = File::create(format, stdin, false, "(stdin)").release();
         importer = msg::Importer::create(format, importer_options).release();
     }
     InputFile(const char* fname, File::Encoding format, bool simplified)
     {
-        msg::Importer::Options importer_options;
+        msg::ImporterOptions importer_options;
         importer_options.simplified = simplified;
         input = File::create(format, fname, "rb").release();
         importer = msg::Importer::create(format, importer_options).release();
@@ -89,6 +89,144 @@ struct OutputFile
     }
 };
 
+struct VoglioquestoOperation : public Operation
+{
+    dballe::Query* query = nullptr;
+    db::CursorValue* query_cur = nullptr;
+    bool valid_cached_attrs = false;
+
+    VoglioquestoOperation(const dballe::Record& input)
+        : query(Query::from_record(input).release())
+    {
+    }
+    ~VoglioquestoOperation()
+    {
+        if (query_cur) query_cur->discard_rest();
+        delete query_cur;
+        delete query;
+    }
+    int voglioquesto(db::Transaction& tr, bool station_context)
+    {
+        if (station_context)
+            query_cur = tr.query_station_data(*query).release();
+        else
+            query_cur = tr.query_data(*query).release();
+        return query_cur->remaining();
+    }
+    const char* dammelo(dballe::Record& output) override
+    {
+        output.clear();
+        if (!query_cur) return nullptr;
+
+        if (query_cur->next())
+        {
+            query_cur->to_record(output);
+            valid_cached_attrs = true;
+            // We bypass checks, since it comes from to_record that always sets "var"
+            return output.get("var")->enqc();
+        } else {
+            delete query_cur;
+            query_cur = nullptr;
+            return nullptr;
+        }
+    }
+    void voglioancora(db::Transaction& tr, std::function<void(std::unique_ptr<wreport::Var>&&)> dest) override
+    {
+        if (!query_cur) throw error_consistency("voglioancora called after dammelo returned end of data");
+        query_cur->attr_query(dest, !valid_cached_attrs);
+    }
+    void critica(db::Transaction& tr, const core::Record& qcinput) override
+    {
+        if (!query_cur) throw error_consistency("critica called after dammelo returned end of data");
+        if (dynamic_cast<const db::CursorStationData*>(query_cur))
+            tr.attr_insert_station(query_cur->attr_reference_id(), qcinput);
+        else
+            tr.attr_insert_data(query_cur->attr_reference_id(), qcinput);
+        valid_cached_attrs = false;
+    }
+    void scusa(db::Transaction& tr, const std::vector<wreport::Varcode>& attrs) override
+    {
+        if (!query_cur) throw error_consistency("scusa called after dammelo returned end of data");
+        if (dynamic_cast<const db::CursorStationData*>(query_cur))
+            tr.attr_remove_station(query_cur->attr_reference_id(), attrs);
+        else
+            tr.attr_remove_data(query_cur->attr_reference_id(), attrs);
+        valid_cached_attrs = false;
+    }
+};
+
+/// Store information about the database ID of a variable
+struct VarID
+{
+    wreport::Varcode code;
+    // True if it is a station value
+    bool station;
+    size_t id;
+    VarID(wreport::Varcode code, bool station, size_t id) : code(code), station(station), id(id) {}
+};
+
+struct PrendiloOperation : public Operation
+{
+    /// Store database variable IDs for all last inserted variables
+    std::vector<VarID> last_inserted_varids;
+    wreport::Varcode varcode = 0;
+
+    void set_varcode(wreport::Varcode varcode) override { this->varcode = varcode; }
+    int prendilo(db::Transaction& tr, const dballe::Record& input, bool station_context, unsigned perms)
+    {
+        last_inserted_varids.clear();
+        if (station_context)
+        {
+            StationValues sv(input);
+            tr.insert_station_data(sv, (perms & DbAPI::PERM_DATA_WRITE) != 0, (perms & DbAPI::PERM_ANA_WRITE) != 0);
+            for (const auto& v: sv.values)
+                last_inserted_varids.push_back(VarID(v.first, true, v.second.data_id));
+            return sv.info.id;
+        } else {
+            DataValues dv(input);
+            tr.insert_data(dv, (perms & DbAPI::PERM_DATA_WRITE) != 0, (perms & DbAPI::PERM_ANA_WRITE) != 0);
+            for (const auto& v: dv.values)
+                last_inserted_varids.push_back(VarID(v.first, false, v.second.data_id));
+            return dv.info.id;
+        }
+    }
+    void voglioancora(db::Transaction& tr, std::function<void(std::unique_ptr<wreport::Var>&&)> dest) override
+    {
+        throw error_consistency("voglioancora cannot be called after a prendilo");
+    }
+    void critica(db::Transaction& tr, const core::Record& qcinput) override
+    {
+        int data_id = MISSING_INT;
+        bool is_station = false;
+        // Lookup the variable we act on from the results of last prendilo
+        if (last_inserted_varids.size() == 1)
+        {
+            data_id = last_inserted_varids[0].id;
+            is_station = last_inserted_varids[0].station;
+        } else {
+            if (varcode == 0)
+                throw error_consistency("please set *var_related before calling critica after setting multiple variables in a single prendilo");
+            for (const auto& i: last_inserted_varids)
+                if (i.code == varcode)
+                {
+                    data_id = i.id;
+                    is_station = i.station;
+                    break;
+                }
+            if (data_id == MISSING_INT)
+                error_consistency::throwf("cannot insert attributes for *var_related=%01d%02d%03d: the last prendilo inserted %zd variables, none of which match *var_related", WR_VAR_FXY(varcode), last_inserted_varids.size());
+        }
+        if (is_station)
+            tr.attr_insert_station(data_id, qcinput);
+        else
+            tr.attr_insert_data(data_id, qcinput);
+    }
+    void scusa(db::Transaction& tr, const std::vector<wreport::Varcode>& attrs) override
+    {
+        throw error_consistency("scusa cannot be called after a prendilo");
+    }
+};
+
 
 DbAPI::DbAPI(std::shared_ptr<db::Transaction> tr, const char* anaflag, const char* dataflag, const char* attrflag)
     : DbAPI(tr, compute_permissions(anaflag, dataflag, attrflag))
@@ -96,7 +234,7 @@ DbAPI::DbAPI(std::shared_ptr<db::Transaction> tr, const char* anaflag, const cha
 }
 
 DbAPI::DbAPI(std::shared_ptr<db::Transaction> tr, unsigned perms)
-    : tr(tr), ana_cur(0), query_cur(0), input_file(0), output_file(0)
+    : tr(tr)
 {
     this->perms = perms;
 }
@@ -119,13 +257,6 @@ void DbAPI::shutdown(bool commit)
         ana_cur->discard_rest();
         delete ana_cur;
         ana_cur = nullptr;
-    }
-
-    if (query_cur)
-    {
-        query_cur->discard_rest();
-        delete query_cur;
-        query_cur = nullptr;
     }
 
     if (commit)
@@ -151,8 +282,8 @@ void DbAPI::scopa(const char* repinfofile)
         error_consistency::throwf(
             "scopa must be run with the database open in data write mode");
     tr->remove_all();
-    attr_state = ATTR_REFERENCE;
-    attr_reference_id = missing_int;
+    delete operation;
+    operation = nullptr;
 }
 
 void DbAPI::remove_all()
@@ -161,8 +292,8 @@ void DbAPI::remove_all()
         error_consistency::throwf(
             "remove_all must be run with the database open in data write mode");
     tr->remove_all();
-    attr_state = ATTR_REFERENCE;
-    attr_reference_id = missing_int;
+    delete operation;
+    operation = nullptr;
 }
 
 int DbAPI::quantesono()
@@ -175,8 +306,8 @@ int DbAPI::quantesono()
     }
     auto query = Query::from_record(input);
     ana_cur = tr->query_stations(*query).release();
-    attr_state = ATTR_REFERENCE;
-    attr_reference_id = missing_int;
+    delete operation;
+    operation = nullptr;
 
     return ana_cur->remaining();
 }
@@ -198,53 +329,21 @@ void DbAPI::elencamele()
 
 int DbAPI::voglioquesto()
 {
-    if (query_cur != NULL)
-    {
-        query_cur->discard_rest();
-        delete query_cur;
-        query_cur = NULL;
-    }
-    auto query = Query::from_record(input);
-    if (station_context)
-        query_cur = tr->query_station_data(*query).release();
-    else
-        query_cur = tr->query_data(*query).release();
-    attr_state = ATTR_REFERENCE;
-    attr_reference_id = missing_int;
-
-    return query_cur->remaining();
+    delete operation;
+    VoglioquestoOperation* op;
+    operation = op = new VoglioquestoOperation(input);
+    return op->voglioquesto(*tr, station_context);
 }
 
 const char* DbAPI::dammelo()
 {
-    if (query_cur == NULL)
-        throw error_consistency("dammelo called without a previous voglioquesto");
+    if (!operation) throw error_consistency("dammelo called without a previous voglioquesto");
 
     /* Reset qc record iterator, so that ancora will not return
      * leftover QC values from a previous query */
     qc_iter = -1;
 
-    output.clear();
-    if (query_cur->next())
-    {
-        query_cur->to_record(output);
-        // We bypass checks, since it comes from to_record that always sets "var"
-        const char* varstr = output.get("var")->enqc();
-
-        // Remember the varcode and reference ID for the next attribute
-        // operations
-        attr_state = ATTR_DAMMELO;
-        attr_varid = WR_STRING_TO_VAR(varstr + 1);
-        attr_reference_id = query_cur->attr_reference_id();
-
-        return varstr;
-    } else {
-        delete query_cur;
-        query_cur = NULL;
-        attr_state = ATTR_REFERENCE;
-        attr_reference_id = missing_int;
-        return 0;
-    }
+    return operation->dammelo(output);
 }
 
 void DbAPI::prendilo()
@@ -252,28 +351,10 @@ void DbAPI::prendilo()
     if (perms & PERM_DATA_RO)
         throw error_consistency(
             "idba_prendilo cannot be called with the database open in data readonly mode");
-
-    last_inserted_varids.clear();
-    attr_reference_id = missing_int;
-    attr_varid = 0;
-    if (station_context)
-    {
-        StationValues sv(input);
-        tr->insert_station_data(sv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
-        last_inserted_station_id = sv.info.id;
-        for (const auto& v: sv.values)
-            last_inserted_varids.push_back(VarID(v.first, true, v.second.data_id));
-    } else {
-        DataValues dv(input);
-        tr->insert_data(dv, (perms & PERM_DATA_WRITE) != 0, (perms & PERM_ANA_WRITE) != 0);
-        last_inserted_station_id = dv.info.id;
-        for (const auto& v: dv.values)
-            last_inserted_varids.push_back(VarID(v.first, false, v.second.data_id));
-    }
-
-    // Move attr_state to PRENDILO, so that the next critica() knows they can
-    // lookup the output of this insert
-    attr_state = ATTR_PRENDILO;
+    delete operation;
+    PrendiloOperation* po;
+    operation = po = new PrendiloOperation;
+    last_inserted_station_id = po->prendilo(*tr, input, station_context, perms);
     unsetb();
 }
 
@@ -287,8 +368,8 @@ void DbAPI::dimenticami()
         tr->remove_station_data(*query);
     else
         tr->remove(*query);
-    attr_state = ATTR_REFERENCE;
-    attr_reference_id = missing_int;
+    delete operation;
+    operation = nullptr;
 }
 
 int DbAPI::voglioancora()
@@ -321,27 +402,10 @@ int DbAPI::voglioancora()
     }
 
     qcoutput.clear_vars();
-
-    switch (attr_state)
-    {
-        case ATTR_REFERENCE:
-            if (attr_reference_id == missing_int || attr_varid == 0)
-                throw error_consistency("voglioancora was not called after a dammelo, or was called with an invalid *context_id or *var_related");
-            tr->attr_query_data(attr_reference_id, dest);
-            break;
-        case ATTR_DAMMELO:
-            if (dynamic_cast<const db::CursorStationData*>(query_cur))
-                tr->attr_query_station(query_cur->attr_reference_id(), dest);
-            else
-                tr->attr_query_data(query_cur->attr_reference_id(), dest);
-            break;
-        case ATTR_PRENDILO:
-            throw error_consistency("voglioancora cannot be called after a prendilo");
-    }
-
+    if (!operation) throw error_consistency("voglioancora was not called after a dammelo, or was called with an invalid *context_id or *var_related");
+    operation->voglioancora(*tr, dest);
     qc_iter = 0;
     qcinput.clear();
-
     return qc_count;
 }
 
@@ -351,56 +415,8 @@ void DbAPI::critica()
         throw error_consistency(
             "critica cannot be called with the database open in attribute readonly mode");
 
-    switch (attr_state)
-    {
-        case ATTR_REFERENCE:
-            if (attr_reference_id == missing_int || attr_varid == 0)
-                throw error_consistency("critica was not called after a dammelo or prendilo, or was called with an invalid *context_id or *var_related");
-            {
-                Values attrs(qcinput);
-                tr->attr_insert_data(attr_reference_id, attrs);
-            }
-            break;
-        case ATTR_DAMMELO:
-            if (dynamic_cast<const db::CursorStationData*>(query_cur))
-                tr->attr_insert_station(query_cur->attr_reference_id(), qcinput);
-            else
-                tr->attr_insert_data(query_cur->attr_reference_id(), qcinput);
-            break;
-        case ATTR_PRENDILO:
-            {
-                int data_id = MISSING_INT;
-                bool is_station = false;
-                if (attr_reference_id != MISSING_INT)
-                    error_consistency::throwf("cannot insert attributes for variable %01d%02d%03d: because of an internal inconsistency:"
-                                              " critica is run after a prendilo, but there is an attr_reference_id still being set."
-                                              " Please let the author(s) know.",
-                                              WR_VAR_F(attr_varid), WR_VAR_X(attr_varid), WR_VAR_Y(attr_varid));
-                // Lookup the variable we act on from the results of last prendilo
-                if (last_inserted_varids.size() == 1)
-                {
-                    data_id = last_inserted_varids[0].id;
-                    is_station = last_inserted_varids[0].station;
-                } else {
-                    for (const auto& i: last_inserted_varids)
-                        if (i.code == attr_varid)
-                        {
-                            data_id = i.id;
-                            is_station = i.station;
-                            break;
-                        }
-                    if (data_id == MISSING_INT)
-                        error_consistency::throwf("cannot insert attributes for variable %01d%02d%03d: the last prendilo inserted %zd variables, and *var_related is not set",
-                                WR_VAR_F(attr_varid), WR_VAR_X(attr_varid), WR_VAR_Y(attr_varid), last_inserted_varids.size());
-                }
-                if (is_station)
-                    tr->attr_insert_station(data_id, qcinput);
-                else
-                    tr->attr_insert_data(data_id, qcinput);
-            }
-            break;
-    }
-
+    if (!operation) throw error_consistency("critica was not called after a dammelo or prendilo, or was called with an invalid *context_id or *var_related");
+    operation->critica(*tr, qcinput);
     qcinput.clear();
 }
 
@@ -412,26 +428,11 @@ void DbAPI::scusa()
 
 
     // Retrieve the varcodes of the attributes we want to remove
-    std::vector<wreport::Varcode> arr;
-    read_qc_list(arr);
+    std::vector<wreport::Varcode> attrs;
+    read_qc_list(attrs);
 
-    switch (attr_state)
-    {
-        case ATTR_REFERENCE:
-            if (attr_reference_id == missing_int || attr_varid == 0)
-                throw error_consistency("scusa was not called after a dammelo, or was called with an invalid *context_id or *var_related");
-            tr->attr_remove_data(attr_reference_id, arr);
-            break;
-        case ATTR_DAMMELO:
-            if (dynamic_cast<const db::CursorStationData*>(query_cur))
-                tr->attr_remove_station(query_cur->attr_reference_id(), arr);
-            else
-                tr->attr_remove_data(query_cur->attr_reference_id(), arr);
-            break;
-        case ATTR_PRENDILO:
-            throw error_consistency("scusa cannot be called after a prendilo");
-    }
-
+    if (!operation) throw error_consistency("scusa was not called after a dammelo, or was called with an invalid *context_id or *var_related");
+    operation->scusa(*tr, attrs);
     qcinput.clear();
 }
 
@@ -494,7 +495,7 @@ bool DbAPI::messages_read_next()
 void DbAPI::messages_write_next(const char* template_name)
 {
     // Build an exporter for this template
-    msg::Exporter::Options options;
+    msg::ExporterOptions options;
     if (template_name) options.template_name = template_name;
     File& out = *(output_file->output);
     auto exporter = msg::Exporter::create(out.encoding(), options);

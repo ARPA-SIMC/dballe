@@ -45,6 +45,7 @@ EXTRA_PROGRAMS =
 dballeincludedir = $(includedir)/dballe
 
 nobase_dist_dballeinclude_HEADERS = \
+	fwd.h \
 	file.h \
 	message.h \
 	types.h \
@@ -54,6 +55,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	var.h \
 	core/error.h \
 	core/aliases.h \
+	core/benchmark.h \
 	core/defs.h \
 	core/var.h \
 	core/values.h \
@@ -66,10 +68,12 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/structbuf.h \
 	core/matcher.h \
 	core/match-wreport.h \
+	core/smallset.h \
 	core/varmatch.h \
 	core/string.h \
 	core/trace.h \
 	core/json.h \
+	msg/fwd.h \
 	msg/codec.h \
 	msg/bulletin.h \
 	msg/context.h \
@@ -84,11 +88,12 @@ nobase_dist_dballeinclude_HEADERS = \
 	sql/sql.h \
 	sql/querybuf.h \
 	sql/sqlite.h \
+	db/fwd.h \
 	db/defs.h \
 	db/db.h \
-	db/trace.h \
 	db/v7/fwd.h \
 	db/v7/utils.h \
+	db/v7/trace.h \
 	db/v7/transaction.h \
 	db/v7/batch.h \
 	db/v7/cache.h \
@@ -145,6 +150,7 @@ libdballe_la_SOURCES = \
 	var.cc \
 	core/error.cc \
 	core/aliases.cc \
+	core/benchmark.cc \
 	core/defs.cc \
 	core/var.cc \
 	core/values.cc \
@@ -196,8 +202,8 @@ libdballe_la_SOURCES = \
 	sql/querybuf.cc \
 	sql/sqlite.cc \
 	db/db.cc \
-	db/trace.cc \
 	db/v7/utils.cc \
+	db/v7/trace.cc \
 	db/v7/transaction.cc \
 	db/v7/batch.cc \
 	db/v7/cache.cc \
@@ -298,6 +304,7 @@ test_dballe_SOURCES = \
 	core/csv-test.cc \
 	core/matcher-test.cc \
 	core/match-wreport-test.cc \
+	core/smallset-test.cc \
 	core/varmatch-test.cc \
 	core/json-test.cc \
 	core/string-test.cc \
@@ -315,8 +322,8 @@ test_dballe_SOURCES = \
 	sql/querybuf-test.cc \
 	sql/sqlite-test.cc \
 	db/tests.cc \
-	db/trace-test.cc \
 	db/v7/utils-test.cc \
+	db/v7/trace-test.cc \
 	db/v7/batch-test.cc \
 	db/v7/cache-test.cc \
 	db/v7/repinfo-test.cc \
@@ -360,21 +367,19 @@ test_dballe_LDADD = \
 # Benchmark
 #
 
-noinst_PROGRAMS += bench-run
-
-dist_noinst_HEADERS += \
-	core/benchmark.h \
-	db/benchmark.h
-
-bench_run_SOURCES = \
-	core/benchmark.cc \
-	db/db-query-parse-bench.cc \
-	db/db-import-bench.cc \
-	db/db-query-bench.cc \
-	bench-main.cc
-bench_run_LDADD = \
-	libdballe.la \
-	$(common_libs)
+# TODO: remove/move code
+# noinst_PROGRAMS += bench-run
+# 
+# dist_noinst_HEADERS += \
+# 	db/benchmark.h
+# 
+# bench_run_SOURCES = \
+# 	db/db-query-parse-bench.cc \
+# 	db/db-import-bench.cc \
+# 	db/db-query-bench.cc
+# bench_run_LDADD = \
+# 	libdballe.la \
+# 	$(common_libs)
 
 
 #

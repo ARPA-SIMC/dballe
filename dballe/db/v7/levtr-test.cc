@@ -1,8 +1,9 @@
-#include "db/tests.h"
-#include "sql/sql.h"
-#include "db/v7/transaction.h"
-#include "db/v7/driver.h"
-#include "db/v7/levtr.h"
+#include "dballe/db/tests.h"
+#include "dballe/sql/sql.h"
+#include "dballe/db/v7/transaction.h"
+#include "dballe/db/v7/trace.h"
+#include "dballe/db/v7/driver.h"
+#include "dballe/db/v7/levtr.h"
 #include "config.h"
 
 using namespace dballe;
@@ -31,14 +32,15 @@ Tests test_mysql("db_v7_levtr_mysql", "MYSQL");
 void Tests::register_tests() {
 
 add_method("insert", [](Fixture& f) {
+    db::v7::Tracer<> trc;
     auto& lt = f.tr->levtr();
 
     // Insert a lev_tr
-    auto i = lt.obtain_id(db::v7::LevTrEntry(Level(1, 2, 0, 3), Trange(4, 5, 6)));
+    auto i = lt.obtain_id(trc, db::v7::LevTrEntry(Level(1, 2, 0, 3), Trange(4, 5, 6)));
     wassert(actual(i) == 1);
 
     // Insert another lev_tr
-    i = lt.obtain_id(db::v7::LevTrEntry(Level(2, 3, 1, 4), Trange(5, 6, 7)));
+    i = lt.obtain_id(trc, db::v7::LevTrEntry(Level(2, 3, 1, 4), Trange(5, 6, 7)));
     wassert(actual(i) == 2);
 });
 }

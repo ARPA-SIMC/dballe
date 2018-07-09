@@ -10,7 +10,7 @@ struct Vartable;
 namespace dballe {
 namespace tests {
 
-Messages read_msgs(const char* filename, File::Encoding type, const dballe::msg::Importer::Options& opts=dballe::msg::Importer::Options());
+Messages read_msgs(const char* filename, File::Encoding type, const dballe::msg::ImporterOptions& opts=dballe::msg::ImporterOptions());
 Messages read_msgs_csv(const char* filename);
 
 struct ActualMessage : public Actual<const Message&>
@@ -22,7 +22,7 @@ struct ActualMessage : public Actual<const Message&>
 
 inline ActualMessage actual(const Message& message) { return ActualMessage(message); }
 
-std::unique_ptr<wreport::Bulletin> export_msgs(File::Encoding enctype, const Messages& in, const std::string& tag, const dballe::msg::Exporter::Options& opts=dballe::msg::Exporter::Options());
+std::unique_ptr<wreport::Bulletin> export_msgs(File::Encoding enctype, const Messages& in, const std::string& tag, const dballe::msg::ExporterOptions& opts=dballe::msg::ExporterOptions());
 #define test_export_msgs(...) wcallchecked(export_msgs(__VA_ARGS__))
 
 void track_different_msgs(const Message& msg1, const Message& msg2, const std::string& prefix);
@@ -205,9 +205,9 @@ struct TestMessage
     TestMessage(File::Encoding type, const std::string& name);
     ~TestMessage();
 
-    void read_from_file(const std::string& fname, const msg::Importer::Options& input_opts);
-    void read_from_raw(const BinaryMessage& msg, const msg::Importer::Options& input_opts);
-    void read_from_msgs(const Messages& msgs, const msg::Exporter::Options& export_opts);
+    void read_from_file(const std::string& fname, const msg::ImporterOptions& input_opts);
+    void read_from_raw(const BinaryMessage& msg, const msg::ImporterOptions& input_opts);
+    void read_from_msgs(const Messages& msgs, const msg::ExporterOptions& export_opts);
     void dump() const;
 };
 
@@ -216,8 +216,8 @@ struct TestCodec
     std::string fname;
     File::Encoding type;
     bool verbose = false;
-    msg::Importer::Options input_opts;
-    msg::Exporter::Options output_opts;
+    msg::ImporterOptions input_opts;
+    msg::ExporterOptions output_opts;
     std::string expected_template;
     int expected_subsets = 1;
     int expected_min_vars = 1;

@@ -28,17 +28,17 @@ protected:
     void _dump(std::function<void(int, int, const Coords& coords, const char* ident)> out) override;
 
 public:
-    MySQLStation(dballe::sql::MySQLConnection& conn);
+    MySQLStation(v7::Transaction& tr, dballe::sql::MySQLConnection& conn);
     ~MySQLStation();
     MySQLStation(const MySQLStation&) = delete;
     MySQLStation(const MySQLStation&&) = delete;
     MySQLStation& operator=(const MySQLStation&) = delete;
 
-    int maybe_get_id(v7::Transaction& tr, const dballe::Station& st) override;
-    int insert_new(v7::Transaction& tr, const dballe::Station& desc) override;
-
-    void get_station_vars(int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
-    void add_station_vars(int id_station, Record& rec) override;
+    int maybe_get_id(Tracer<>& trc, const dballe::Station& st) override;
+    int insert_new(Tracer<>& trc, const dballe::Station& desc) override;
+    void get_station_vars(Tracer<>& trc, int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
+    void add_station_vars(Tracer<>& trc, int id_station, Record& rec) override;
+    void run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)>) override;
 };
 
 }

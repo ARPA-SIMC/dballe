@@ -4,7 +4,8 @@
 #include <wreport/conv.h>
 #include <wreport/codetables.h>
 #include <wreport/notes.h>
-#include <dballe/msg/context.h>
+#include "dballe/msg/msg.h"
+#include "dballe/msg/context.h"
 #include <cmath>
 
 // Define to debug the sounding group matching algorithm
@@ -42,7 +43,7 @@ protected:
     void import_group(unsigned start, unsigned length);
 
 public:
-    TempImporter(const msg::Importer::Options& opts) : WMOImporter(opts) {}
+    TempImporter(const msg::ImporterOptions& opts) : WMOImporter(opts) {}
     virtual ~TempImporter() {}
 
     virtual void init()
@@ -214,7 +215,7 @@ public:
     }
 };
 
-std::unique_ptr<Importer> Importer::createTemp(const msg::Importer::Options& opts)
+std::unique_ptr<Importer> Importer::createTemp(const msg::ImporterOptions& opts)
 {
     return unique_ptr<Importer>(new TempImporter(opts));
 }

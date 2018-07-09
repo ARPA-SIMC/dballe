@@ -1,6 +1,7 @@
 #include "dballe/db/tests.h"
 #include "dballe/db/v7/db.h"
 #include "dballe/db/v7/transaction.h"
+#include "dballe/db/v7/trace.h"
 #include "dbapi.h"
 #include "config.h"
 #include "msgapi.h"
@@ -123,54 +124,73 @@ this->add_method("query_basic", [](Fixture& f) {
     api.dimenticami();
     wassert(actual(api.voglioquesto()) == 0);
 });
+
 this->add_method("query_attrs", [](Fixture& f) {
     // Test attrs
     fortran::DbAPI api(f.tr, "write", "write", "write");
     populate_variables(api);
 
-    int reference_id;
+    for (const char* query: { "", "attrs", "best", "attrs,best" })
+    {
+        WREPORT_TEST_INFO(locinfo);
+        locinfo() << "Query: " << query;
 
-    // Query a variable
-    api.setc("var", "B12101");
-    wassert(actual(api.voglioquesto()) == 1);
-    api.dammelo();
+        int reference_id;
 
-    wassert(actual(api.test_get_attr_state()) == fortran::DbAPI::ATTR_DAMMELO);
+        // Query a variable
+        api.setc("var", "B12101");
+        api.setc("query", query);
+        wassert(actual(api.voglioquesto()) == 1);
+        wassert(api.dammelo());
 
-    // Store its context info to access attributes of this variable later
-    reference_id = api.enqi("context_id");
+        wassert(actual(api.test_get_operation()).istrue());
 
-    // It has no attributes
-    wassert(actual(api.voglioancora()) ==  0);
-    wassert(actual(api.test_get_attr_state()) == fortran::DbAPI::ATTR_DAMMELO);
+        // Store its context info to access attributes of this variable later
+        reference_id = api.enqi("context_id");
 
-    // Set one attribute after a dammelo
-    api.seti("*B33007", 50);
-    api.critica();
-    wassert(actual(api.test_get_attr_state()) == fortran::DbAPI::ATTR_DAMMELO);
+        // It has no attributes
+        wassert(actual(api.voglioancora()) == 0);
+        wassert(actual(api.test_get_operation()).istrue());
 
-    // It now has one attribute
-    wassert(actual(api.voglioancora()) ==  1);
+        // Set one attribute after a dammelo
+        api.seti("*B33007", 50);
+        wassert(api.critica());
+        wassert(actual(api.test_get_operation()).istrue());
 
+        // It now has one attribute
+        wassert(actual(api.voglioancora()) == 1);
+        wassert(actual(api.enqi("*B33007")) == 50);
 
-    // Query a different variable, it has no attributes
-    api.setc("var", "B11002");
-    wassert(actual(api.voglioquesto()) == 1);
-    api.dammelo();
-    wassert(actual(api.voglioancora()) == 0);
+        wassert(actual(api.ancora()) == "*B33007");
 
+        // Query it back, it has attributes
+        api.setc("var", "B12101");
+        api.setc("query", query);
+        wassert(actual(api.voglioquesto()) == 1);
+        wassert(api.dammelo());
+        wassert(actual(api.voglioancora()) == 1);
+        wassert(actual(api.enqi("*B33007")) == 50);
 
-    // Query the first variable using its stored reference id
-    api.seti("*context_id", reference_id);
-    api.setc("*var_related", "B12101");
-    wassert(actual(api.test_get_attr_state()) == fortran::DbAPI::ATTR_REFERENCE);
-    wassert(actual(api.voglioancora()) == 1);
-    wassert(actual(api.enqi("*B33007")) == 50);
+        // Query a different variable, it has no attributes
+        api.setc("var", "B11002");
+        api.setc("query", query);
+        wassert(actual(api.voglioquesto()) == 1);
+        wassert(api.dammelo());
+        wassert(actual(api.voglioancora()) == 0);
 
-    // Delete all attributes
-    api.scusa();
-    wassert(actual(api.voglioancora()) == 0);
+        // Query the first variable using its stored reference id
+        api.seti("*context_id", reference_id);
+        api.setc("*var_related", "B12101");
+        wassert(actual(api.test_get_operation()).istrue());
+        wassert(actual(api.voglioancora()) == 1);
+        wassert(actual(api.enqi("*B33007")) == 50);
+
+        // Delete all attributes
+        wassert(api.scusa());
+        wassert(actual(api.voglioancora()) == 0);
+    }
 });
+
 this->add_method("insert_attrs_prendilo", [](Fixture& f) {
     // Test attrs prendilo
     fortran::DbAPI api(f.tr, "write", "write", "write");
@@ -590,6 +610,13 @@ this->add_method("messages_bug2", [](Fixture& f) {
 this->add_method("attr_reference_id", [](Fixture& f) {
     // Test attr_reference_id behaviour
     fortran::DbAPI api(f.tr, "write", "write", "write");
+
+    // Try setting a context with a missing context_id
+    {
+        auto e = wassert_throws(wreport::error_consistency, api.setc("*var_related", "B07030"));
+        wassert(actual(e.what()).matches("\\*var_related set without context_id, or before any dammelo or prendilo"));
+    }
+
     // Initial data
     api.setd("lat", 44.5);
     api.setd("lon", 11.5);
@@ -612,7 +639,8 @@ this->add_method("attr_reference_id", [](Fixture& f) {
     wassert(actual(api.voglioquesto()) == 1);
     api.dammelo();
     // Get its reference id
-    wassert(actual(api.enqi("context_id")) != MISSING_INT);
+    int id_B07030 = wcallchecked(api.enqi("context_id"));
+    wassert(actual(id_B07030) != MISSING_INT);
     // Get its attrs (none)
     wassert(actual(api.voglioancora()) == 0);
     // Set an attr
@@ -623,33 +651,10 @@ this->add_method("attr_reference_id", [](Fixture& f) {
     api.setcontextana();
     api.setc("var", "B07030");
     wassert(actual(api.voglioquesto()) == 1);
-    api.dammelo();
+    wassert(api.dammelo());
     // Read its attrs (ok)
     wassert(actual(api.voglioancora()) == 1);
-    // Read attrs setting *context_id and *varid: it fails
-    api.seti("*context_id", MISSING_INT);
-    api.setc("*var_related", "B07030");
-    try {
-        api.voglioancora();
-    } catch (std::exception& e) {
-        wassert(actual(e.what()).matches("invalid \\*context_id"));
-    }
-    // Query the variable again, to delete all attributes
-    api.unsetall();
-    api.setcontextana();
-    api.setc("var", "B07030");
-    wassert(actual(api.voglioquesto()) == 1);
-    api.dammelo();
-    api.scusa();
-    wassert(actual(api.voglioancora()) == 0);
-    // Try to delete by *context_id and *varid: it fails
-    api.seti("*context_id", MISSING_INT);
-    api.setc("*var_related", "B07030");
-    try {
-        api.scusa();
-    } catch (std::exception& e) {
-        wassert(actual(e.what()).matches("invalid \\*context_id"));
-    }
+    // Cannot manipulate station attrs setting *context_id
 
     // Query the variable
     api.unsetall();
@@ -799,6 +804,111 @@ this->add_method("issue52", [](Fixture& f) {
     wassert(actual(dbapi.messages_read_next()).istrue());
 
     // error: no year information found in message to import
+});
+
+this->add_method("perf_data", [](Fixture& f) {
+    // Test prendilo anaid
+    fortran::DbAPI api(f.tr, "write", "write", "write");
+
+    // Run a prendilo
+    f.tr->trc->clear();
+    api.setd("lat", 44.5);
+    api.setd("lon", 11.5);
+    api.setc("rep_memo", "synop");
+    api.setdate(2013, 4, 25, 12, 0, 0);
+    api.setlevel(1, MISSING_INT, MISSING_INT, MISSING_INT);
+    api.settimerange(254, 0, 0);
+    api.setd("B10004", 100000.0);
+    api.prendilo(); // Pressure at ground level
+    v7::trace::Aggregate stats = f.tr->trc->aggregate("select");
+    wassert(actual(stats.count) == 2);
+    wassert(actual(stats.rows) == 0);
+    stats = f.tr->trc->aggregate("insert");
+    wassert(actual(stats.count) == 3);
+    wassert(actual(stats.rows) == 3);
+
+    // Query it back
+    f.tr->trc->clear();
+    api.unsetall();
+    api.setd("lat", 44.5);
+    api.setd("lon", 11.5);
+    api.setdate(2013, 4, 25, 12, 0, 0);
+    api.setc("var", "B10004");
+    wassert(actual(api.voglioquesto()) == 1);
+    stats = f.tr->trc->aggregate("select");
+    wassert(actual(stats.count) == 2);
+    wassert(actual(stats.rows) == 2);
+
+    // Query stations only
+    f.tr->trc->clear();
+    api.unsetall();
+    wassert(actual(api.quantesono()) == 1);
+    stats = f.tr->trc->aggregate("select");
+    wassert(actual(stats.count) == 1);
+    wassert(actual(stats.rows) == 1);
+});
+
+this->add_method("perf_read_attrs", [](Fixture& f) {
+    auto msgs = read_msgs("bufr/temp-gts1.bufr", File::BUFR, msg::ImporterOptions::from_string("accurate"));
+    wassert(f.tr->import_msgs(msgs, nullptr, 0));
+    wassert(f.tr->clear_cached_state());
+
+    // Readonly test session
+    fortran::DbAPI api(f.tr, "read", "read", "read");
+
+    // Read all station data and their attributes
+    f.tr->trc->clear();
+    api.unsetall();
+    api.setcontextana();
+    wassert(actual(api.voglioquesto()) == 7);
+    while (api.dammelo())
+        wassert(api.voglioancora());
+
+    // Check number of queries
+    v7::trace::Aggregate stats = f.tr->trc->aggregate("select");
+    wassert(actual(stats.count) == 8);
+    wassert(actual(stats.rows) == 14);
+
+    // Read all measured data and their attributes
+    f.tr->trc->clear();
+    api.unsetall();
+    wassert(actual(api.voglioquesto()) == 550);
+    while (api.dammelo())
+        wassert(api.voglioancora());
+
+    // Check number of queries
+    stats = f.tr->trc->aggregate("select");
+    wassert(actual(stats.count) == 552);
+    wassert(actual(stats.rows) == 1156);
+
+    // Repeat with query=attrs
+
+    // Read all station data and their attributes
+    f.tr->trc->clear();
+    api.unsetall();
+    api.setcontextana();
+    api.setc("query", "attrs");
+    wassert(actual(api.voglioquesto()) == 7);
+    while (api.dammelo())
+        wassert(api.voglioancora());
+
+    // Check number of queries
+    stats = f.tr->trc->aggregate("select");
+    wassert(actual(stats.count) == 1);
+    wassert(actual(stats.rows) == 7);
+
+    // Read all measured data and their attributes
+    f.tr->trc->clear();
+    api.unsetall();
+    api.setc("query", "attrs");
+    wassert(actual(api.voglioquesto()) == 550);
+    while (api.dammelo())
+        wassert(api.voglioancora());
+
+    // Check number of queries
+    stats = f.tr->trc->aggregate("select");
+    wassert(actual(stats.count) == 2);
+    wassert(actual(stats.rows) == 606);
 });
 
 }

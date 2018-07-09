@@ -2,10 +2,11 @@
 #define DBALLE_DB_V7_BATCH_H
 
 #include <dballe/core/values.h>
+#include <dballe/core/smallset.h>
 #include <dballe/db/v7/fwd.h>
 #include <dballe/db/v7/utils.h>
 #include <vector>
-#include <unordered_map>
+#include <tuple>
 #include <memory>
 
 namespace dballe {
@@ -20,7 +21,7 @@ protected:
     batch::Station* last_station = nullptr;
 
     bool have_station(const std::string& report, const Coords& coords, const Ident& ident);
-    void new_station(const std::string& report, const Coords& coords, const Ident& ident);
+    void new_station(Tracer<>& trc, const std::string& report, const Coords& coords, const Ident& ident);
 
 public:
     Transaction& transaction;
@@ -33,10 +34,10 @@ public:
 
     void set_write_attrs(bool write_attrs);
 
-    batch::Station* get_station(const dballe::Station& station, bool station_can_add);
-    batch::Station* get_station(const std::string& report, const Coords& coords, const Ident& ident);
+    batch::Station* get_station(Tracer<>& trc, const dballe::Station& station, bool station_can_add);
+    batch::Station* get_station(Tracer<>& trc, const std::string& report, const Coords& coords, const Ident& ident);
 
-    void write_pending();
+    void write_pending(Tracer<>& trc);
     void clear();
 };
 
@@ -64,15 +65,23 @@ struct StationDatum
     bool operator==(const StationDatum& o) const { return var->code() == o.var->code(); }
 };
 
+struct StationDataIDs : public core::SmallSet<StationDataIDs, IdVarcode, wreport::Varcode>
+{
+    static const wreport::Varcode& _smallset_get_value(const IdVarcode& item)
+    {
+        return item.varcode;
+    }
+};
+
 struct StationData
 {
-    std::unordered_map<wreport::Varcode, int> ids_by_code;
+    StationDataIDs ids_by_code;
     std::vector<StationDatum> to_insert;
     std::vector<StationDatum> to_update;
     bool loaded = false;
 
     void add(const wreport::Var* var, UpdateMode on_conflict);
-    void write_pending(Transaction& tr, int station_id, bool with_attrs);
+    void write_pending(Tracer<>& trc, Transaction& tr, int station_id, bool with_attrs);
 };
 
 struct MeasuredDatum
@@ -91,10 +100,29 @@ struct MeasuredDatum
     bool operator==(const MeasuredDatum& o) const { return id_levtr == o.id_levtr && var->code() == o.var->code(); }
 };
 
+struct MeasuredDataID
+{
+    IdVarcode id_varcode;
+    int id;
+
+    MeasuredDataID(IdVarcode id_varcode, int id)
+        : id_varcode(id_varcode), id(id)
+    {
+    }
+};
+
+struct MeasuredDataIDs : public core::SmallSet<MeasuredDataIDs, MeasuredDataID, IdVarcode>
+{
+    static const IdVarcode& _smallset_get_value(const MeasuredDataID& item)
+    {
+        return item.id_varcode;
+    }
+};
+
 struct MeasuredData
 {
     Datetime datetime;
-    std::unordered_map<IdVarcode, int> ids_on_db;
+    MeasuredDataIDs ids_on_db;
     std::vector<MeasuredDatum> to_insert;
     std::vector<MeasuredDatum> to_update;
 
@@ -104,14 +132,11 @@ struct MeasuredData
     }
 
     void add(int id_levtr, const wreport::Var* var, UpdateMode on_conflict);
-    void write_pending(Transaction& tr, int station_id, bool with_attrs);
+    void write_pending(Tracer<>& trc, Transaction& tr, int station_id, bool with_attrs);
 };
 
-struct MeasuredDataVector
+struct MeasuredDataVector : public core::SmallSet<MeasuredDataVector, MeasuredData*, Datetime>
 {
-    std::vector<MeasuredData*> measured_data;
-    bool dirty = false;
-
     MeasuredDataVector() {}
     MeasuredDataVector(const MeasuredDataVector&) = delete;
     MeasuredDataVector(MeasuredDataVector&&) = default;
@@ -119,8 +144,7 @@ struct MeasuredDataVector
     MeasuredDataVector& operator=(const MeasuredDataVector&) = delete;
     MeasuredDataVector& operator=(MeasuredDataVector&&) = default;
 
-    MeasuredData* find(const Datetime& datetime);
-    MeasuredData& add(const Datetime& datetime);
+    static const Datetime& _smallset_get_value(const MeasuredData* md) { return md->datetime; }
 };
 
 struct Station : public dballe::Station
@@ -133,10 +157,10 @@ struct Station : public dballe::Station
     Station(Batch& batch)
         : batch(batch) {}
 
-    StationData& get_station_data();
-    MeasuredData& get_measured_data(const Datetime& datetime);
+    StationData& get_station_data(Tracer<>& trc);
+    MeasuredData& get_measured_data(Tracer<>& trc, const Datetime& datetime);
 
-    void write_pending(bool with_attrs);
+    void write_pending(Tracer<>& trc, bool with_attrs);
 };
 
 }

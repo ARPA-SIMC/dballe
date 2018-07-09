@@ -2,6 +2,7 @@
 #include <wreport/utils/testrunner.h>
 #include <wreport/utils/term.h>
 #include <dballe/db/tests.h>
+#include <dballe/db/v7/trace.h>
 #include <signal.h>
 #include <cstdlib>
 #include <cstring>
@@ -16,6 +17,7 @@ void signal_to_exception(int)
 
 int main(int argc,const char* argv[])
 {
+    dballe::db::v7::Trace::set_in_test_suite();
     signal(SIGSEGV, signal_to_exception);
     signal(SIGILL, signal_to_exception);
 

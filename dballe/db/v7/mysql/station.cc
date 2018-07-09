@@ -1,7 +1,9 @@
 #include "station.h"
 #include "dballe/db/v7/transaction.h"
+#include "dballe/db/v7/trace.h"
 #include "dballe/db/v7/db.h"
 #include "dballe/db/v7/repinfo.h"
+#include "dballe/db/v7/qbuilder.h"
 #include "dballe/sql/mysql.h"
 #include "dballe/sql/querybuf.h"
 #include "dballe/record.h"
@@ -21,8 +23,8 @@ namespace db {
 namespace v7 {
 namespace mysql {
 
-MySQLStation::MySQLStation(MySQLConnection& conn)
-    : conn(conn)
+MySQLStation::MySQLStation(v7::Transaction& tr, MySQLConnection& conn)
+    : v7::Station(tr), conn(conn)
 {
 }
 
@@ -30,7 +32,7 @@ MySQLStation::~MySQLStation()
 {
 }
 
-int MySQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st)
+int MySQLStation::maybe_get_id(Tracer<>& trc, const dballe::Station& st)
 {
     int rep = tr.repinfo().obtain_id(st.report.c_str());
 
@@ -44,7 +46,9 @@ int MySQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st)
         qb.appendf("SELECT id FROM station WHERE rep=%d AND lat=%d AND lon=%d AND ident IS NULL",
                 rep, st.coords.lat, st.coords.lon);
     }
+    Tracer<> trc_sel(trc ? trc->trace_select(qb) : nullptr);
     auto res = conn.exec_store(qb);
+    if (trc_sel) trc_sel->add_row(res.rowcount());
     switch (res.rowcount())
     {
         case 0:
@@ -56,7 +60,7 @@ int MySQLStation::maybe_get_id(v7::Transaction& tr, const dballe::Station& st)
     }
 }
 
-int MySQLStation::insert_new(v7::Transaction& tr, const dballe::Station& desc)
+int MySQLStation::insert_new(Tracer<>& trc, const dballe::Station& desc)
 {
     // If no station was found, insert a new one
     int rep = tr.repinfo().get_id(desc.report.c_str());
@@ -72,8 +76,8 @@ int MySQLStation::insert_new(v7::Transaction& tr, const dballe::Station& desc)
             INSERT INTO station (rep, lat, lon, ident) VALUES (%d, %d, %d, NULL)
         )", rep, desc.coords.lat, desc.coords.lon);
     }
+    Tracer<> trc_ins(trc ? trc->trace_insert(qb, 1) : nullptr);
     conn.exec_no_data(qb);
-
     return conn.get_last_insert_id();
 }
 
@@ -111,7 +115,7 @@ int MySQLStation::insert_new(v7::Transaction& tr, const dballe::Station& desc)
     return conn.get_last_insert_id();
 #endif
 
-void MySQLStation::get_station_vars(int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+void MySQLStation::get_station_vars(Tracer<>& trc, int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     // Perform the query
     Querybuf qb;
@@ -123,9 +127,11 @@ void MySQLStation::get_station_vars(int id_station, std::function<void(std::uniq
     )", id_station);
     TRACE("get_station_vars Performing query: %s\n", qb.c_str());
 
+    Tracer<> trc_sel(trc ? trc->trace_select(qb) : nullptr);
     auto res = conn.exec_store(qb);
     while (auto row = res.fetch())
     {
+        if (trc_sel) trc_sel->add_row();
         Varcode code = row.as_int(0);
         TRACE("get_station_vars Got %d%02d%03d %s\n", WR_VAR_FXY(code), row.as_cstring(1));
 
@@ -140,17 +146,7 @@ void MySQLStation::get_station_vars(int id_station, std::function<void(std::uniq
     }
 }
 
-void MySQLStation::_dump(std::function<void(int, int, const Coords& coords, const char* ident)> out)
-{
-    auto res = conn.exec_store("SELECT id, rep, lat, lon, ident FROM station");
-    while (auto row = res.fetch())
-    {
-        const char* ident = row.isnull(4) ? nullptr : row.as_cstring(4);
-        out(row.as_int(0), row.as_int(1), Coords(row.as_int(2), row.as_int(3)), ident);
-    }
-}
-
-void MySQLStation::add_station_vars(int id_station, Record& rec)
+void MySQLStation::add_station_vars(Tracer<>& trc, int id_station, Record& rec)
 {
     Querybuf qb;
     qb.appendf(R"(
@@ -159,9 +155,46 @@ void MySQLStation::add_station_vars(int id_station, Record& rec)
          WHERE d.id_station=%d
     )", id_station);
 
+    Tracer<> trc_sel(trc ? trc->trace_select(qb) : nullptr);
     auto res = conn.exec_store(qb);
     while (auto row = res.fetch())
+    {
+        if (trc_sel) trc_sel->add_row();
         rec.set(newvar((wreport::Varcode)row.as_int(0), row.as_cstring(1)));
+    }
+}
+
+void MySQLStation::run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)> dest)
+{
+    if (qb.bind_in_ident)
+        throw error_unimplemented("binding in MySQL driver is not implemented");
+    Tracer<> trc_sel(trc ? trc->trace_select(qb.sql_query) : nullptr);
+
+    dballe::Station station;
+    conn.exec_use(qb.sql_query, [&](const sql::mysql::Row& row) {
+        if (trc_sel) trc_sel->add_row();
+        station.id = row.as_int(0);
+        station.report = tr.repinfo().get_rep_memo(row.as_int(1));
+        station.coords.lat = row.as_int(2);
+        station.coords.lon = row.as_int(3);
+
+        if (row.isnull(4))
+            station.ident.clear();
+        else
+            station.ident = row.as_string(4);
+
+        dest(station);
+    });
+}
+
+void MySQLStation::_dump(std::function<void(int, int, const Coords& coords, const char* ident)> out)
+{
+    auto res = conn.exec_store("SELECT id, rep, lat, lon, ident FROM station");
+    while (auto row = res.fetch())
+    {
+        const char* ident = row.isnull(4) ? nullptr : row.as_cstring(4);
+        out(row.as_int(0), row.as_int(1), Coords(row.as_int(2), row.as_int(3)), ident);
+    }
 }
 
 }

@@ -26,6 +26,9 @@ namespace {
 
 struct StationValues : protected std::vector<wreport::Var*>
 {
+    Tracer<>& trc;
+
+    StationValues(Tracer<>& trc) : trc(trc) {}
     ~StationValues()
     {
         for (iterator i = begin(); i != end(); ++i)
@@ -48,7 +51,7 @@ struct StationValues : protected std::vector<wreport::Var*>
     void read(v7::Transaction& tr, int id_station)
     {
         reset();
-        tr.station().get_station_vars(id_station, [&](std::unique_ptr<wreport::Var> var) {
+        tr.station().get_station_vars(trc, id_station, [&](std::unique_ptr<wreport::Var> var) {
             push_back(var.release());
         });
     }
@@ -103,7 +106,7 @@ struct DataRow
 
 bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest)
 {
-    auto tr = db->trace.trace_export_msgs(query);
+    Tracer<> trc(this->trc ? this->trc->trace_export_msgs(query) : nullptr);
     v7::LevTr& lt = levtr();
 
     // Message being built
@@ -117,7 +120,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
     Datetime last_datetime;
     int last_ana_id = -1;
 
-    StationValues station_values;
+    StationValues station_values(trc);
 
     if (db->explain_queries)
     {
@@ -128,7 +131,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
     // Retrieve results, buffering them locally to avoid performing concurrent
     // queries
     std::vector<DataRow> results;
-    db->driver().run_data_query(qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+    data().run_data_query(trc, qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
         results.emplace_back(station, id_levtr, datetime, id_data, move(var));
     });
 
@@ -190,7 +193,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
         }
 
         TRACE("Inserting var %01d%02d%03d (%s)\n", WR_VAR_FXY(var->code()), var->enqc());
-        msg::Context* ctx = lt.to_msg(row.id_levtr, *msg);
+        msg::Context* ctx = lt.to_msg(trc, row.id_levtr, *msg);
         if (ctx)
             ctx->set(row.release_var());
     }
@@ -211,8 +214,6 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
                 return false;
     }
 
-    // Useful for Oracle to end the session
-    tr->done();
     return true;
 }
 

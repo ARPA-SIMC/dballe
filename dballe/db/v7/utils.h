@@ -18,7 +18,10 @@ struct IdVarcode
     {
     }
 
-    bool operator==(const IdVarcode& o) const { return o.id == id && o.varcode == varcode; }
+    bool operator==(const IdVarcode& o) const { return std::tie(id, varcode) == std::tie(o.id, o.varcode); }
+    bool operator!=(const IdVarcode& o) const { return std::tie(id, varcode) != std::tie(o.id, o.varcode); }
+    bool operator<(const IdVarcode& o) const { return std::tie(id, varcode) < std::tie(o.id, o.varcode); }
+    bool operator>(const IdVarcode& o) const { return std::tie(id, varcode) > std::tie(o.id, o.varcode); }
 };
 
 }
