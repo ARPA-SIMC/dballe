@@ -51,11 +51,15 @@ struct Station
 
     bool operator==(const Station& o) const
     {
-        return id == o.id && report == o.report && coords == o.coords && ident == o.ident;
+        return std::tie(id, report, coords, ident) == std::tie(o.id, o.report, o.coords, o.ident);
     }
     bool operator!=(const Station& o) const
     {
-        return id != o.id || report != o.report || coords != o.coords || ident != o.ident;
+        return std::tie(id, report, coords, ident) != std::tie(o.id, o.report, o.coords, o.ident);
+    }
+    bool operator<(const Station& o) const
+    {
+        return std::tie(id, report, coords, ident) < std::tie(o.id, o.report, o.coords, o.ident);
     }
 
     /**

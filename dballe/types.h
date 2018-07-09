@@ -315,8 +315,12 @@ struct DatetimeRange
     /// Check if this range is open on both sides
     bool is_missing() const;
 
-    bool operator==(const DatetimeRange& dtr) const;
-    bool operator!=(const DatetimeRange& dtr) const;
+    bool operator==(const DatetimeRange& o) const { return std::tie(min, max) == std::tie(o.min, o.max); }
+    bool operator!=(const DatetimeRange& o) const { return std::tie(min, max) != std::tie(o.min, o.max); }
+    bool operator<(const DatetimeRange& o) const { return std::tie(min, max) < std::tie(o.min, o.max); }
+    bool operator<=(const DatetimeRange& o) const { return std::tie(min, max) <= std::tie(o.min, o.max); }
+    bool operator>(const DatetimeRange& o) const { return std::tie(min, max) > std::tie(o.min, o.max); }
+    bool operator>=(const DatetimeRange& o) const { return std::tie(min, max) >= std::tie(o.min, o.max); }
 
     /// Set the extremes
     void set(const Datetime& min, const Datetime& max);

@@ -467,16 +467,6 @@ bool DatetimeRange::is_missing() const
     return min.is_missing() && max.is_missing();
 }
 
-bool DatetimeRange::operator==(const DatetimeRange& dtr) const
-{
-    return min == dtr.min && max == dtr.max;
-}
-
-bool DatetimeRange::operator!=(const DatetimeRange& dtr) const
-{
-    return min != dtr.min || max != dtr.max;
-}
-
 void DatetimeRange::merge(const DatetimeRange& range)
 {
     if (!min.is_missing() && (range.min.is_missing() || range.min < min))
