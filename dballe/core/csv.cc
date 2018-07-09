@@ -43,7 +43,7 @@
  */
 
 #include <dballe/core/csv.h>
-#include <dballe/core/defs.h>
+#include <dballe/types.h>
 #include "dballe/var.h"
 #include <wreport/error.h>
 #include <cctype>

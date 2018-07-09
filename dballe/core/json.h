@@ -3,7 +3,7 @@
 
 #include <wreport/varinfo.h>
 #include <wreport/var.h>
-#include <dballe/core/defs.h>
+#include <dballe/types.h>
 #include <dballe/core/fwd.h>
 #include <vector>
 #include <ostream>
