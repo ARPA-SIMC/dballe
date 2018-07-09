@@ -762,7 +762,11 @@ static PyObject* dpy_export_to_file(PYDB* self, PyObject* args, PyObject* kw)
                 Messages msgs;
                 msgs.append(move(msg));
                 std::string encoded = exporter->to_binary(msgs);
+#if PY_MAJOR_VERSION >= 3
+                res = pyo_unique_ptr(PyObject_CallMethod(file, (char*)"write", (char*)"y#", encoded.data(), (int)encoded.size()));
+#else
                 res = pyo_unique_ptr(PyObject_CallMethod(file, (char*)"write", (char*)"s#", encoded.data(), (int)encoded.size()));
+#endif
                 if (!res)
                 {
                     has_error = true;
