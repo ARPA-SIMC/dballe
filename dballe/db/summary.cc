@@ -3,6 +3,8 @@
 #include "dballe/core/query.h"
 #include "dballe/core/record.h"
 #include "dballe/core/json.h"
+#include "dballe/msg/msg.h"
+#include "dballe/msg/context.h"
 #include <algorithm>
 #include <unordered_set>
 #include <cstring>
@@ -277,6 +279,76 @@ void Summary::add(const Station& station, const summary::VarDesc& vd, const dbal
 void Summary::add_cursor(const dballe::db::CursorSummary& cur)
 {
     add(cur.get_station(), summary::VarDesc(cur.get_level(), cur.get_trange(), cur.get_varcode()), cur.get_datetimerange(), cur.get_count());
+}
+
+void Summary::add_message(const dballe::Message& message)
+{
+    const Msg& msg = Msg::downcast(message);
+    const msg::Context* l_ana = msg.find_context(Level(), Trange());
+
+    Station station;
+
+    // Latitude
+    if (const wreport::Var* var = l_ana->find_by_id(DBA_MSG_LATITUDE))
+        station.coords.lat = var->enqi();
+    else
+        throw wreport::error_notfound("latitude not found in message to summarise");
+
+    // Longitude
+    if (const wreport::Var* var = l_ana->find_by_id(DBA_MSG_LONGITUDE))
+        station.coords.lon = var->enqi();
+    else
+        throw wreport::error_notfound("longitude not found in message to summarise");
+
+    // Report code
+    if (const wreport::Var* var = msg.get_rep_memo_var())
+        station.report = var->enqc();
+    else
+        station.report = Msg::repmemo_from_type(msg.type);
+
+    // Station identifier
+    if (const wreport::Var* var = l_ana->find_by_id(DBA_MSG_IDENT))
+        station.ident = var->enqc();
+
+    // Datetime
+    Datetime dt = msg.get_datetime();
+    DatetimeRange dtrange(dt, dt);
+
+    // TODO: obtain the StationEntry only once, and add the rest to it, to
+    // avoid looking it up for each variable
+
+    // Station variables
+    summary::VarDesc vd_ana;
+    vd_ana.level = Level();
+    vd_ana.trange = Trange();
+    for (size_t i = 0; i < l_ana->data.size(); ++i)
+    {
+        vd_ana.varcode = l_ana->data[i]->code();
+        add(station, vd_ana, dtrange, 1);
+    }
+
+    // Variables
+    for (size_t i = 0; i < msg.data.size(); ++i)
+    {
+        if (msg.data[i] == l_ana) continue;
+        const msg::Context& ctx = *msg.data[i];
+
+        summary::VarDesc vd(ctx.level, ctx.trange, 0);
+
+        for (size_t j = 0; j < ctx.data.size(); ++j)
+        {
+            const wreport::Var* var = ctx.data[j];
+            if (not var->isset()) continue;
+            vd.varcode = var->code();
+            add(station, vd, dtrange, 1);
+        }
+    }
+}
+
+void Summary::add_messages(const dballe::Messages& messages)
+{
+    for (const auto& message: messages)
+        add_message(message);
 }
 
 void Summary::add_filtered(const Summary& summary, const dballe::Query& query)

@@ -218,6 +218,12 @@ public:
     /// Add an entry to the summary taken from the current status of \a cur
     void add_cursor(const db::CursorSummary& cur);
 
+    /// Add the contents of a Message
+    void add_message(const dballe::Message& message);
+
+    /// Add the contents of a Messages
+    void add_messages(const dballe::Messages& messages);
+
     /// Merge the copy of another summary into this one
     void add_summary(const Summary& summary);
 

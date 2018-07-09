@@ -61,6 +61,23 @@ this->add_method("summary", [](Fixture& f) {
     wassert(actual(s.data_count()) == 4);
 });
 
+this->add_method("summary_msg", [](Fixture& f) {
+    Summary s;
+
+    // Summarise a message
+    Messages msgs = dballe::tests::read_msgs("bufr/synop-rad1.bufr", File::BUFR, msg::ImporterOptions::from_string("accurate"));
+    s.add_messages(msgs);
+
+    // Check its contents
+    wassert(actual(s.stations().size()) == 25);
+    wassert(actual(s.levels().size()) == 37);
+    wassert(actual(s.tranges().size()) == 9);
+    wassert(actual(s.varcodes().size()) == 34);
+    wassert(actual(s.datetime_min()) == Datetime(2015, 3, 5, 3));
+    wassert(actual(s.datetime_max()) == Datetime(2015, 3, 5, 3));
+    wassert(actual(s.data_count()) == 970);
+});
+
 this->add_method("merge_entries", [](Fixture& f) {
     Station station;
     station.report = "test";
@@ -88,31 +105,6 @@ this->add_method("merge_entries", [](Fixture& f) {
     wassert(actual(summary.stations().begin()->size()) == 1);
     wassert(actual(summary.stations().rbegin()->size()) == 1);
     wassert(actual(summary.data_count()) == 36u + 24u);
-});
-
-this->add_method("json_entry", [](Fixture& f) {
-#if 0
-    summary::Entry entry;
-    entry.station.report = "test";
-    entry.station.coords = Coords(44.5, 11.5);
-    entry.level = Level(1);
-    entry.trange = Trange::instant();
-    entry.varcode = WR_VAR(0, 1, 112);
-    entry.dtrange.set(Datetime(2018, 1, 1), Datetime(2018, 7, 1));
-    entry.count = 12;
-
-    std::stringstream json;
-    core::JSONWriter writer(json);
-    entry.to_json(writer);
-
-    wassert(actual(json.str()) == R"({"s":{"r":"test","c":[4450000,1150000],"i":null},"l":[1,null,null,null],"t":[254,0,0],"v":368,"d":[[2018,1,1,0,0,0],[2018,7,1,0,0,0]],"c":12})");
-
-    json.seekg(0);
-    core::json::Stream in(json);
-    summary::Entry entry1 = summary::Entry::from_json(in);
-
-    wassert(actual(entry1) == entry);
-#endif
 });
 
 this->add_method("json_summary", [](Fixture& f) {
