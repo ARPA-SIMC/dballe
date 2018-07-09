@@ -40,7 +40,9 @@ this->add_method("summary", [](Fixture& f) {
     wassert(f.populate(test_data));
 
     Summary s;
-    wassert(actual(s.is_valid()).isfalse());
+    wassert_true(s.datetime_min().is_missing());
+    wassert_true(s.datetime_max().is_missing());
+    wassert(actual(s.data_count()) == 0u);
 
     // Build the whole db summary
     core::Query query;
@@ -50,56 +52,46 @@ this->add_method("summary", [](Fixture& f) {
         s.add_cursor(*cur);
 
     // Check its contents
-    wassert(actual(s.is_valid()).istrue());
-    switch (DB::format)
-    {
-        case V7:
-        default:
-            wassert(actual(s.all_stations.size()) == 2);
-            break;
-    }
-    wassert(actual(s.all_levels.size()) == 1);
-    wassert(actual(s.all_tranges.size()) == 2);
-    wassert(actual(s.all_varcodes.size()) == 2);
+    wassert(actual(s.stations().size()) == 2);
+    wassert(actual(s.levels().size()) == 1);
+    wassert(actual(s.tranges().size()) == 2);
+    wassert(actual(s.varcodes().size()) == 2);
     wassert(actual(s.datetime_min()) == Datetime(1945, 4, 25, 8));
     wassert(actual(s.datetime_max()) == Datetime(1945, 4, 25, 8, 30));
     wassert(actual(s.data_count()) == 4);
 });
 
 this->add_method("merge_entries", [](Fixture& f) {
-    summary::Entry entry;
-    entry.station.report = "test";
-    entry.station.coords = Coords(44.5, 11.5);
-    entry.level = Level(1);
-    entry.trange = Trange::instant();
-    entry.varcode = WR_VAR(0, 1, 112);
-    entry.dtrange.set(Datetime(2018, 1, 1), Datetime(2018, 7, 1));
-    entry.count = 12;
+    Station station;
+    station.report = "test";
+    station.coords = Coords(44.5, 11.5);
+    summary::VarDesc vd(Level(1), Trange::instant(), WR_VAR(0, 1, 112));
+    DatetimeRange dtrange(Datetime(2018, 1, 1), Datetime(2018, 7, 1));
 
     db::Summary summary;
-    wassert(summary.merge_entries());
-    wassert(actual(summary.test_entries().size()) == 0);
-    summary.add_entry(entry);
-    wassert(summary.merge_entries());
-    wassert(actual(summary.test_entries().size()) == 1);
-    summary.add_entry(entry);
-    wassert(actual(summary.test_entries().size()) == 2);
-    wassert(summary.merge_entries());
-    wassert(actual(summary.test_entries().size()) == 1);
-    wassert(actual(summary.test_entries()[0].count) == 24u);
+    wassert(actual(summary.data_count()) == 0u);
 
-    summary.add_entry(entry);
-    entry.station.report = "test1";
-    summary.add_entry(entry);
-    summary.add_entry(entry);
-    wassert(actual(summary.test_entries().size()) == 4);
-    wassert(summary.merge_entries());
-    wassert(actual(summary.test_entries().size()) == 2);
-    wassert(actual(summary.test_entries()[0].count) == 36u);
-    wassert(actual(summary.test_entries()[1].count) == 24u);
+    summary.add(station, vd, dtrange, 12);
+    wassert(actual(summary.data_count()) == 12u);
+
+    summary.add(station, vd, dtrange, 12);
+    wassert(actual(summary.data_count()) == 24u);
+
+    wassert(actual(summary.stations().size()) == 1);
+    wassert(actual(summary.stations().begin()->size()) == 1);
+
+    summary.add(station, vd, dtrange, 12);
+    station.report = "test1";
+    summary.add(station, vd, dtrange, 12);
+    summary.add(station, vd, dtrange, 12);
+    wassert(actual(summary.stations().size()) == 2);
+    wassert(actual(summary.stations().begin()->size()) == 1);
+    wassert(actual(summary.stations().rbegin()->size()) == 1);
+    wassert(actual(summary.data_count()) == 36u + 24u);
 });
 
 this->add_method("json_entry", [](Fixture& f) {
+#if 0
     summary::Entry entry;
     entry.station.report = "test";
     entry.station.coords = Coords(44.5, 11.5);
@@ -120,44 +112,42 @@ this->add_method("json_entry", [](Fixture& f) {
     summary::Entry entry1 = summary::Entry::from_json(in);
 
     wassert(actual(entry1) == entry);
+#endif
 });
 
 this->add_method("json_summary", [](Fixture& f) {
-    summary::Entry entry;
-    entry.station.report = "test";
-    entry.station.coords = Coords(44.5, 11.5);
-    entry.level = Level(1);
-    entry.trange = Trange::instant();
-    entry.varcode = WR_VAR(0, 1, 112);
-    entry.dtrange.set(Datetime(2018, 1, 1), Datetime(2018, 7, 1));
-    entry.count = 12;
+    Station station;
+    station.report = "test";
+    station.coords = Coords(44.5, 11.5);
+    summary::VarDesc vd(Level(1), Trange::instant(), WR_VAR(0, 1, 112));
+    DatetimeRange dtrange(Datetime(2018, 1, 1), Datetime(2018, 7, 1));
 
     core::Query query;
     query.rep_memo = "synop";
     Summary summary;
-    summary.add_entry(entry);
-    entry.varcode = WR_VAR(0, 1, 113);
-    summary.add_entry(entry);
+    summary.add(station, vd, dtrange, 12);
+    vd.varcode = WR_VAR(0, 1, 113);
+    summary.add(station, vd, dtrange, 12);
 
     std::stringstream json;
     core::JSONWriter writer(json);
     summary.to_json(writer);
 
-    wassert(actual(json.str()) == R"({"e":[{"s":{"r":"test","c":[4450000,1150000],"i":null},"l":[1,null,null,null],"t":[254,0,0],"v":368,"d":[[2018,1,1,0,0,0],[2018,7,1,0,0,0]],"c":12},{"s":{"r":"test","c":[4450000,1150000],"i":null},"l":[1,null,null,null],"t":[254,0,0],"v":369,"d":[[2018,1,1,0,0,0],[2018,7,1,0,0,0]],"c":12}]})");
+    wassert(actual(json.str()) == R"({"e":[{"s":{"r":"test","c":[4450000,1150000],"i":null},"v":[{"l":[1,null,null,null],"t":[254,0,0],"v":368,"d":[[2018,1,1,0,0,0],[2018,7,1,0,0,0]],"c":12},{"l":[1,null,null,null],"t":[254,0,0],"v":369,"d":[[2018,1,1,0,0,0],[2018,7,1,0,0,0]],"c":12}]}]})");
 
     json.seekg(0);
     core::json::Stream in(json);
     Summary summary1 = wcallchecked(Summary::from_json(in));
     wassert_true(summary == summary1);
-    wassert(actual(summary.all_stations.size()) == summary1.all_stations.size());
-    wassert_true(summary.all_stations == summary1.all_stations);
-    wassert_true(summary.all_reports == summary1.all_reports);
-    wassert_true(summary.all_levels == summary1.all_levels);
-    wassert_true(summary.all_tranges == summary1.all_tranges);
-    wassert_true(summary.all_varcodes == summary1.all_varcodes);
-    wassert_true(summary.dtrange == summary1.dtrange);
-    wassert_true(summary.count == summary1.count);
-    wassert_true(summary.valid == summary1.valid);
+    wassert(actual(summary.stations().size()) == summary1.stations().size());
+    wassert_true(summary.stations() == summary1.stations());
+    wassert_true(summary.reports() == summary1.reports());
+    wassert_true(summary.levels() == summary1.levels());
+    wassert_true(summary.tranges() == summary1.tranges());
+    wassert_true(summary.varcodes() == summary1.varcodes());
+    wassert_true(summary.datetime_min() == summary1.datetime_min());
+    wassert_true(summary.datetime_max() == summary1.datetime_max());
+    wassert_true(summary.data_count() == summary1.data_count());
 });
 
 }

@@ -86,7 +86,7 @@ void Station::print(FILE* out, const char* end) const
     else
         fputs(ident.get(), out);
 
-    fputs(end, out);
+    fprintf(out, " %s%s", report.c_str(), end);
 }
 
 std::ostream& operator<<(std::ostream& out, const Station& st)

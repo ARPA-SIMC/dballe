@@ -65,9 +65,23 @@ void Explorer::revalidate(dballe::db::Transaction& tr)
     update_active_summary();
 }
 
+#if 0
+/// Represent whether a summary can satisfy a given query
+enum Support
+{
+    /// It cannot.
+    UNSUPPORTED = 0,
+    /// The query may select less data than this summary can estimate.
+    OVERESTIMATED = 1,
+    /// The query selects data that this summary can estimate exactly.
+    EXACT = 2,
+};
+#endif
+
 void Explorer::update_active_summary()
 {
     unique_ptr<db::Summary> new_active_summary(new db::Summary);
+    new_active_summary->add_filtered(*_global_summary, filter);
 
 #if 0
     switch (summary.supports(query))
@@ -79,11 +93,6 @@ void Explorer::update_active_summary()
             break;
     }
 #endif
-
-    _global_summary->iterate_filtered(filter, [&](const summary::Entry& entry) {
-        new_active_summary->add_entry(entry);
-        return true;
-    });
 
     _active_summary = new_active_summary.release();
 }

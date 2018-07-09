@@ -22,15 +22,15 @@ using namespace wreport;
 
 extern "C" {
 
-static PyObject* _export_stations(const std::map<int, Station>& stations)
+static PyObject* _export_stations(const db::summary::StationEntries& stations)
 {
     try {
         pyo_unique_ptr result(PyList_New(stations.size()));
 
         unsigned idx = 0;
-        for (const auto& s: stations)
+        for (const auto& entry: stations)
         {
-            pyo_unique_ptr station(station_to_python(s.second));
+            pyo_unique_ptr station(station_to_python(entry.station));
             if (PyList_SetItem(result, idx, station.release()))
                 return nullptr;
             ++idx;
@@ -44,7 +44,7 @@ static PyObject* dpy_Explorer_all_stations(dpy_Explorer* self, void* closure)
 {
     try {
         const auto& summary = self->explorer->global_summary();
-        return _export_stations(summary.all_stations);
+        return _export_stations(summary.stations());
     } DBALLE_CATCH_RETURN_PYO
 }
 
@@ -52,12 +52,12 @@ static PyObject* dpy_Explorer_stations(dpy_Explorer* self, void* closure)
 {
     try {
         const auto& summary = self->explorer->active_summary();
-        return _export_stations(summary.all_stations);
+        return _export_stations(summary.stations());
     } DBALLE_CATCH_RETURN_PYO
 }
 
 
-static PyObject* _export_reports(const std::set<std::string>& reports)
+static PyObject* _export_reports(const core::SortedSmallUniqueValueSet<std::string>& reports)
 {
     try {
         pyo_unique_ptr result(PyList_New(reports.size()));
@@ -79,7 +79,7 @@ static PyObject* dpy_Explorer_all_reports(dpy_Explorer* self, void* closure)
 {
     try {
         const auto& summary = self->explorer->global_summary();
-        return _export_reports(summary.all_reports);
+        return _export_reports(summary.reports());
     } DBALLE_CATCH_RETURN_PYO
 }
 
@@ -87,12 +87,12 @@ static PyObject* dpy_Explorer_reports(dpy_Explorer* self, void* closure)
 {
     try {
         const auto& summary = self->explorer->active_summary();
-        return _export_reports(summary.all_reports);
+        return _export_reports(summary.reports());
     } DBALLE_CATCH_RETURN_PYO
 }
 
 
-static PyObject* _export_levels(const std::set<dballe::Level>& levels)
+static PyObject* _export_levels(const core::SortedSmallUniqueValueSet<dballe::Level>& levels)
 {
     try {
         pyo_unique_ptr result(PyList_New(levels.size()));
@@ -114,7 +114,7 @@ static PyObject* dpy_Explorer_all_levels(dpy_Explorer* self, void* closure)
 {
     try {
         const auto& summary = self->explorer->global_summary();
-        return _export_levels(summary.all_levels);
+        return _export_levels(summary.levels());
     } DBALLE_CATCH_RETURN_PYO
 }
 
@@ -122,12 +122,12 @@ static PyObject* dpy_Explorer_levels(dpy_Explorer* self, void* closure)
 {
     try {
         const auto& summary = self->explorer->active_summary();
-        return _export_levels(summary.all_levels);
+        return _export_levels(summary.levels());
     } DBALLE_CATCH_RETURN_PYO
 }
 
 
-static PyObject* _export_tranges(const std::set<dballe::Trange>& tranges)
+static PyObject* _export_tranges(const core::SortedSmallUniqueValueSet<dballe::Trange>& tranges)
 {
     try {
         pyo_unique_ptr result(PyList_New(tranges.size()));
@@ -149,7 +149,7 @@ static PyObject* dpy_Explorer_all_tranges(dpy_Explorer* self, void* closure)
 {
     try {
         const auto& summary = self->explorer->global_summary();
-        return _export_tranges(summary.all_tranges);
+        return _export_tranges(summary.tranges());
     } DBALLE_CATCH_RETURN_PYO
 }
 
@@ -157,12 +157,12 @@ static PyObject* dpy_Explorer_tranges(dpy_Explorer* self, void* closure)
 {
     try {
         const auto& summary = self->explorer->active_summary();
-        return _export_tranges(summary.all_tranges);
+        return _export_tranges(summary.tranges());
     } DBALLE_CATCH_RETURN_PYO
 }
 
 
-static PyObject* _export_varcodes(const std::set<wreport::Varcode>& varcodes)
+static PyObject* _export_varcodes(const core::SortedSmallUniqueValueSet<wreport::Varcode>& varcodes)
 {
     try {
         pyo_unique_ptr result(PyList_New(varcodes.size()));
@@ -184,7 +184,7 @@ static PyObject* dpy_Explorer_all_varcodes(dpy_Explorer* self, void* closure)
 {
     try {
         const auto& summary = self->explorer->global_summary();
-        return _export_varcodes(summary.all_varcodes);
+        return _export_varcodes(summary.varcodes());
     } DBALLE_CATCH_RETURN_PYO
 }
 
@@ -192,7 +192,7 @@ static PyObject* dpy_Explorer_varcodes(dpy_Explorer* self, void* closure)
 {
     try {
         const auto& summary = self->explorer->active_summary();
-        return _export_varcodes(summary.all_varcodes);
+        return _export_varcodes(summary.varcodes());
     } DBALLE_CATCH_RETURN_PYO
 }
 
