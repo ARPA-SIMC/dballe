@@ -46,7 +46,7 @@ void Batch::new_station(Tracer<>& trc, const std::string& report, const Coords& 
     last_station->ident = ident;
 }
 
-batch::Station* Batch::get_station(Tracer<>& trc, const dballe::Station& station, bool station_can_add)
+batch::Station* Batch::get_station(Tracer<>& trc, const dballe::DBStation& station, bool station_can_add)
 {
     if (have_station(station.report, station.coords, station.ident))
     {

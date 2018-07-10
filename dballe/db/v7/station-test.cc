@@ -37,8 +37,8 @@ add_method("insert", [](Fixture& f) {
     db::v7::Tracer<> trc;
     // Insert some values and try to read them again
     auto& st = f.tr->station();
-    dballe::Station sde1;
-    dballe::Station sde2;
+    dballe::DBStation sde1;
+    dballe::DBStation sde2;
     int si;
 
     // Insert a mobile station

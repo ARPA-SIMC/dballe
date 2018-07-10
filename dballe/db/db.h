@@ -1,6 +1,8 @@
 #ifndef DBALLE_DB_H
 #define DBALLE_DB_H
 
+#include <dballe/fwd.h>
+#include <dballe/core/fwd.h>
 #include <dballe/transaction.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/values.h>
@@ -20,13 +22,6 @@
  */
 
 namespace dballe {
-struct Record;
-struct Query;
-struct Values;
-struct StationValues;
-struct DataValues;
-struct Message;
-struct Messages;
 struct DB;
 
 namespace db {
@@ -78,7 +73,7 @@ struct Cursor
     /**
      * Get the whole station data in a single call
      */
-    virtual Station get_station() const = 0;
+    virtual DBStation get_station() const = 0;
 
     /// Get the station identifier
     virtual int get_station_id() const = 0;

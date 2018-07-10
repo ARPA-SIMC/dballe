@@ -108,9 +108,9 @@ struct VectorBase : public Base<Interface>
         cur = results.end();
     }
 
-    dballe::Station get_station() const override
+    dballe::DBStation get_station() const override
     {
-        dballe::Station station;
+        dballe::DBStation station;
         station.report = get_rep_memo();
         station.id = get_station_id();
         station.coords = cur->station.coords;
@@ -148,9 +148,9 @@ struct VectorBase : public Base<Interface>
 
 struct StationResult
 {
-    dballe::Station station;
+    dballe::DBStation station;
 
-    StationResult(const dballe::Station& station) : station(station) {}
+    StationResult(const dballe::DBStation& station) : station(station) {}
 
     void dump(FILE* out) const
     {
@@ -174,7 +174,7 @@ struct Stations : public VectorBase<CursorStation, StationResult>
     void load(Tracer<>& trc, const StationQueryBuilder& qb)
     {
         results.clear();
-        this->tr->station().run_station_query(trc, qb, [&](const dballe::Station& desc) {
+        this->tr->station().run_station_query(trc, qb, [&](const dballe::DBStation& desc) {
             results.emplace_back(desc);
         });
         at_start = true;
@@ -185,11 +185,11 @@ struct Stations : public VectorBase<CursorStation, StationResult>
 
 struct StationDataResult
 {
-    dballe::Station station;
+    dballe::DBStation station;
     int id_data;
     Var* var;
 
-    StationDataResult(const dballe::Station& station, int id_data, Var* var) : station(station), id_data(id_data), var(var) {}
+    StationDataResult(const dballe::DBStation& station, int id_data, Var* var) : station(station), id_data(id_data), var(var) {}
     StationDataResult(const StationDataResult&) = delete;
     StationDataResult(StationDataResult&& o) : station(o.station), id_data(o.id_data), var(o.var) { o.var = nullptr; }
     StationDataResult& operator=(const StationDataResult&) = delete;
@@ -250,7 +250,7 @@ struct StationData : public BaseData<CursorStationData, StationDataResult>
     void load(Tracer<>& trc, const DataQueryBuilder& qb)
     {
         results.clear();
-        this->tr->station_data().run_station_data_query(trc, qb, [&](const dballe::Station& station, int id_data, std::unique_ptr<wreport::Var> var) {
+        this->tr->station_data().run_station_data_query(trc, qb, [&](const dballe::DBStation& station, int id_data, std::unique_ptr<wreport::Var> var) {
             results.emplace_back(station, id_data, var.release());
         });
         at_start = true;
@@ -281,7 +281,7 @@ struct DataResult : public StationDataResult
 
     using StationDataResult::StationDataResult;
 
-    DataResult(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, Var* var)
+    DataResult(const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, Var* var)
         : StationDataResult(station, id_data, var), id_levtr(id_levtr), datetime(datetime) {}
 
     void to_record(v7::Transaction& tr, Record& rec) const
@@ -309,7 +309,7 @@ struct Data : public BaseData<CursorData, DataResult>
     {
         results.clear();
         set<int> ids;
-        this->tr->data().run_data_query(trc, qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+        this->tr->data().run_data_query(trc, qb, [&](const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
             results.emplace_back(station, id_levtr, datetime, id_data, var.release());
             ids.insert(id_levtr);
         });
@@ -359,7 +359,7 @@ struct Best : public Data
     int insert_cur_prio;
 
     /// Append or replace the last result according to priotity. Returns false if the value has been ignored.
-    bool add_to_results(const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)
+    bool add_to_results(const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)
     {
         int prio = tr->repinfo().get_priority(station.report);
 
@@ -390,7 +390,7 @@ struct Best : public Data
     {
         results.clear();
         set<int> ids;
-        this->tr->data().run_data_query(trc, qb, [&](const dballe::Station& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+        this->tr->data().run_data_query(trc, qb, [&](const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
             if (add_to_results(station, id_levtr, datetime, id_data, move(var)))
                 ids.insert(id_levtr);
         });
@@ -415,13 +415,13 @@ struct Best : public Data
 
 struct SummaryResult
 {
-    dballe::Station station;
+    dballe::DBStation station;
     int id_levtr;
     wreport::Varcode code;
     DatetimeRange datetime;
     size_t count = 0;
 
-    SummaryResult(const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t count)
+    SummaryResult(const dballe::DBStation& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t count)
         : station(station), id_levtr(id_levtr), code(code), datetime(datetime), count(count) {}
 
     int get_station_id() const { return station.id; }
@@ -481,7 +481,7 @@ struct Summary : public VectorBase<CursorSummary, SummaryResult>
     {
         results.clear();
         set<int> ids;
-        this->tr->data().run_summary_query(trc, qb, [&](const dballe::Station& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t count) {
+        this->tr->data().run_summary_query(trc, qb, [&](const dballe::DBStation& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t count) {
             results.emplace_back(station, id_levtr, code, datetime, count);
             ids.insert(id_levtr);
         });

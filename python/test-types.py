@@ -52,7 +52,26 @@ class TestTrange(unittest.TestCase):
 @unittest.skipIf(sys.version_info[0] < 3, "python3 only")
 class TestStation(unittest.TestCase):
     def testCreateEmpty(self):
-        t = dballe.Station((None, None, None, None, None))
+        t = dballe.Station((None, None, None, None))
+        self.assertEqual(t, (None, None, None, None))
+        self.assertIsNone(t.report)
+        self.assertIsNone(t.lat)
+        self.assertIsNone(t.lon)
+        self.assertIsNone(t.ident)
+
+    def testCreateFull(self):
+        t = dballe.Station(("foo", 3.0, 4.0, "bar"))
+        self.assertEqual(t, ("foo", 3.0, 4.0, "bar"))
+        self.assertEqual(t.report, "foo")
+        self.assertEqual(t.lat, 3.0)
+        self.assertEqual(t.lon, 4.0)
+        self.assertEqual(t.ident, "bar")
+
+
+@unittest.skipIf(sys.version_info[0] < 3, "python3 only")
+class TestDBStation(unittest.TestCase):
+    def testCreateEmpty(self):
+        t = dballe.DBStation((None, None, None, None, None))
         self.assertEqual(t, (None, None, None, None, None))
         self.assertIsNone(t.report)
         self.assertIsNone(t.id)
@@ -61,7 +80,7 @@ class TestStation(unittest.TestCase):
         self.assertIsNone(t.ident)
 
     def testCreateFull(self):
-        t = dballe.Station(("foo", 2, 3.0, 4.0, "bar"))
+        t = dballe.DBStation(("foo", 2, 3.0, 4.0, "bar"))
         self.assertEqual(t, ("foo", 2, 3.0, 4.0, "bar"))
         self.assertEqual(t.report, "foo")
         self.assertEqual(t.id, 2)

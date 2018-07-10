@@ -131,6 +131,14 @@ void JSONWriter::add_datetime(const Datetime& val)
     }
 }
 
+void JSONWriter::add_datetime_range(const DatetimeRange& val)
+{
+    start_list();
+    add(val.min);
+    add(val.max);
+    end_list();
+}
+
 void JSONWriter::add_number(const std::string& val) {
     val_head();
     out << val;
@@ -147,6 +155,14 @@ void JSONWriter::add_var(const wreport::Var& val) {
     } else {
         add_null();
     }
+}
+
+void JSONWriter::add_ident(const Ident& val)
+{
+    if (val.is_missing())
+        add_null();
+    else
+        add_cstring(val);
 }
 
 void JSONWriter::add_break() {
@@ -179,20 +195,12 @@ void JSONWriter::end_mapping()
     stack.pop_back();
 }
 
-struct JSONParseException : public std::runtime_error {
-    using std::runtime_error::runtime_error;
-};
 
-static void parse_spaces(std::istream& in)
-{
-    while (isspace(in.peek()))
-        in.get();
-}
+namespace json {
 
-static void parse_fixed(std::istream& in, const char* expected)
+void Stream::expect_token(const char* token)
 {
-    const char* s = expected;
-    while (*s)
+    for (const char* s = token; *s; ++s)
     {
         int c = in.get();
         if (c != *s)
@@ -204,11 +212,23 @@ static void parse_fixed(std::istream& in, const char* expected)
                 // throw JSONParseException(str::fmtf("unexpected character '%c' looking for %s in %s", c, s, expected));
                 throw JSONParseException("unexpected character");
         }
-        ++s;
     }
 }
 
-static void parse_number(std::istream& in, JSONReader& e)
+void Stream::skip_spaces()
+{
+    while (isspace(in.peek()))
+        in.get();
+}
+
+double Stream::parse_double()
+{
+    string val;
+    std::tie(val, std::ignore) = parse_number();
+    return std::stod(val);
+}
+
+std::tuple<std::string, bool> Stream::parse_number()
 {
     string num;
     bool done = false;
@@ -243,20 +263,17 @@ static void parse_number(std::istream& in, JSONReader& e)
         }
     }
 
-    if (is_double)
-    {
-        e.on_add_double(strtod(num.c_str(), NULL));
-    } else {
-        e.on_add_int(strtoll(num.c_str(), NULL, 10));
-    }
+    skip_spaces();
 
-    parse_spaces(in);
+    return std::make_tuple(num, is_double);
 }
 
-static void parse_string(std::istream& in, JSONReader& e)
+std::string Stream::parse_string()
 {
     string res;
-    in.get(); // Eat the leading '"'
+    int c = in.get(); // Eat the leading '"'
+    if (c != '"')
+        throw JSONParseException("expected string does not begin with '\"'");
     bool done = false;
     while (!done)
     {
@@ -287,64 +304,200 @@ static void parse_string(std::istream& in, JSONReader& e)
                 break;
         }
     }
-    parse_spaces(in);
-    e.on_add_string(res);
+    skip_spaces();
+    return res;
 }
 
-static void parse_value(std::istream& in, JSONReader& e);
-
-static void parse_array(std::istream& in, JSONReader& e)
+Coords Stream::parse_coords()
 {
-    e.on_start_list();
-    in.get(); // Eat the leading '['
-    parse_spaces(in);
+    Coords res;
+    unsigned idx = 0;
+    parse_array([&]{
+        switch (identify_next())
+        {
+            case JSON_NUMBER:
+                switch (idx)
+                {
+                    case 0: res.lat = parse_signed<int>(); break;
+                    case 1: res.lon = parse_signed<int>(); break;
+                    default: throw JSONParseException("extra element in Coords array");
+                }
+                break;
+            case JSON_NULL: expect_token("null"); break;
+            default:
+                throw JSONParseException("unexpected element in Coords array");
+        }
+        ++idx;
+    });
+    return res;
+}
+
+Ident Stream::parse_ident()
+{
+    switch (identify_next())
+    {
+        case JSON_STRING: return Ident(parse_string());
+        case JSON_NULL: expect_token("null"); return Ident();
+        default: throw JSONParseException("unexpected element for Ident");
+    }
+}
+
+Level Stream::parse_level()
+{
+    Level res;
+    unsigned idx = 0;
+    parse_array([&]{
+        switch (identify_next())
+        {
+            case JSON_NUMBER:
+                switch (idx)
+                {
+                    case 0: res.ltype1 = parse_signed<int>(); break;
+                    case 1: res.l1 = parse_signed<int>(); break;
+                    case 2: res.ltype2 = parse_signed<int>(); break;
+                    case 3: res.l2 = parse_signed<int>(); break;
+                    default: throw JSONParseException("extra element in Level array");
+                }
+                break;
+            case JSON_NULL: expect_token("null"); break;
+            default:
+                throw JSONParseException("unexpected element in Level array");
+        }
+        ++idx;
+    });
+    return res;
+}
+
+Trange Stream::parse_trange()
+{
+    Trange res;
+    unsigned idx = 0;
+    parse_array([&]{
+        switch (identify_next())
+        {
+            case JSON_NUMBER:
+                switch (idx)
+                {
+                    case 0: res.pind = parse_signed<int>(); break;
+                    case 1: res.p1 = parse_signed<int>(); break;
+                    case 2: res.p2 = parse_signed<int>(); break;
+                    default: throw JSONParseException("extra element in Trange array");
+                }
+                break;
+            case JSON_NULL: expect_token("null"); break;
+            default:
+                throw JSONParseException("unexpected element in Trange array");
+        }
+        ++idx;
+    });
+    return res;
+}
+
+Datetime Stream::parse_datetime()
+{
+    switch (identify_next())
+    {
+        case JSON_NULL: expect_token("null"); return Datetime();
+        case JSON_ARRAY:
+        {
+            Datetime res;
+            unsigned idx = 0;
+            parse_array([&]{
+                switch (identify_next())
+                {
+                    case JSON_NUMBER:
+                        switch (idx)
+                        {
+                            case 0: res.year = parse_unsigned<unsigned short>(); break;
+                            case 1: res.month = parse_signed<unsigned char>(); break;
+                            case 2: res.day = parse_signed<unsigned char>(); break;
+                            case 3: res.hour = parse_signed<unsigned char>(); break;
+                            case 4: res.minute = parse_signed<unsigned char>(); break;
+                            case 5: res.second = parse_signed<unsigned char>(); break;
+                            default: throw JSONParseException("extra element in Datetime array");
+                        }
+                        break;
+                    case JSON_NULL: expect_token("null"); break;
+                    default:
+                        throw JSONParseException("unexpected element in Datetime array");
+                }
+                ++idx;
+            });
+            return res;
+        }
+        default: throw JSONParseException("unexpected element for Datetime");
+    }
+}
+
+DatetimeRange Stream::parse_datetime_range()
+{
+    DatetimeRange res;
+    unsigned idx = 0;
+    parse_array([&]{
+        switch (idx)
+        {
+            case 0: res.min = parse_datetime(); break;
+            case 1: res.max = parse_datetime(); break;
+            default: throw JSONParseException("extra element in DatetimeRange array");
+        }
+        ++idx;
+    });
+    return res;
+}
+
+
+void Stream::parse_array(std::function<void()> on_element)
+{
+    if (in.get() != '[')
+        throw JSONParseException("expected array does not begin with '['");
+    skip_spaces();
     while (in.peek() != ']')
     {
-        parse_value(in, e);
+        on_element();
         if (in.peek() == ',')
             in.get();
-        parse_spaces(in);
+        skip_spaces();
     }
-    in.get(); // Eat the trailing ']'
-    parse_spaces(in);
-    e.on_end_list();
+    if (in.get() != ']')
+        throw JSONParseException("array does not end with '['");
+    skip_spaces();
 }
 
-static void parse_object(std::istream& in, JSONReader& e)
+void Stream::parse_object(std::function<void(const std::string& key)> on_value)
 {
-    e.on_start_mapping();
-    in.get(); // Eat the leading '{'
-    parse_spaces(in);
+    if (in.get() != '{')
+        throw JSONParseException("expected object does not begin with '{'");
+    skip_spaces();
     while (in.peek() != '}')
     {
         if (in.peek() != '"')
             throw JSONParseException("expected a string as object key");
-        parse_string(in, e);
-        parse_spaces(in);
+        std::string key = parse_string();
+        skip_spaces();
         if (in.peek() == ':')
             in.get();
         else
             throw JSONParseException("':' expected after object key");
-        parse_value(in, e);
+        on_value(key);
         if (in.peek() == ',')
             in.get();
-        parse_spaces(in);
+        skip_spaces();
     }
-    in.get(); // Eat the trailing '}'
-    parse_spaces(in);
-    e.on_end_mapping();
+    if (in.get() != '}')
+        throw JSONParseException("expected object does not end with '}'");
+    skip_spaces();
 }
 
-static void parse_value(std::istream& in, JSONReader& e)
+Element Stream::identify_next()
 {
-    parse_spaces(in);
+    skip_spaces();
     switch (in.peek())
     {
         case EOF:
             throw JSONParseException("JSON string is truncated");
-        case '{': parse_object(in, e); break;
-        case '[': parse_array(in, e); break;
-        case '"': parse_string(in, e); break;
+        case '{': return JSON_OBJECT;
+        case '[': return JSON_ARRAY;
+        case '"': return JSON_STRING;
         case '-':
         case '0':
         case '1':
@@ -355,31 +508,76 @@ static void parse_value(std::istream& in, JSONReader& e)
         case '6':
         case '7':
         case '8':
-        case '9': parse_number(in, e); break;
-        case 't':
-            parse_fixed(in, "true");
-            e.on_add_bool(true);
-            parse_spaces(in);
-            break;
-        case 'f':
-            parse_fixed(in, "false");
-            e.on_add_bool(false);
-            parse_spaces(in);
-            break;
-        case 'n':
-            parse_fixed(in, "null");
-            e.on_add_null();
-            parse_spaces(in);
-            break;
+        case '9': return JSON_NUMBER;
+        case 't': return JSON_TRUE;
+        case 'f': return JSON_FALSE;
+        case 'n': return JSON_NULL;
         default:
-            // throw JSONParseException(str::fmtf("unexpected character '%c'", in.peek()));
+            // throw JSONParseException(str::fmtf("unexpected character '%c'", in.in.peek()));
             throw JSONParseException("unexpected character");
     }
-    parse_spaces(in);
+}
+
+}
+
+static void parse_value(json::Stream& in, JSONReader& e)
+{
+    switch (in.identify_next())
+    {
+        case json::JSON_OBJECT:
+            e.on_start_mapping();
+            in.parse_object([&](const std::string& key) {
+                e.on_add_string(key);
+                parse_value(in, e);
+            });
+            e.on_end_mapping();
+            break;
+        case json::JSON_ARRAY:
+            e.on_start_list();
+            in.parse_array([&]{
+                parse_value(in, e);
+            });
+            e.on_end_list();
+            break;
+        case json::JSON_STRING:
+            e.on_add_string(in.parse_string());
+            break;
+        case json::JSON_NUMBER: {
+            std::string val;
+            bool is_double;
+            std::tie(val, is_double) = in.parse_number();
+
+            if (is_double)
+                e.on_add_double(std::stod(val));
+            else
+                e.on_add_int(stoi(val));
+            break;
+        }
+        case json::JSON_TRUE:
+            in.expect_token("true");
+            e.on_add_bool(true);
+            in.skip_spaces();
+            break;
+        case json::JSON_FALSE:
+            in.expect_token("false");
+            e.on_add_bool(false);
+            in.skip_spaces();
+            break;
+        case json::JSON_NULL:
+            in.expect_token("null");
+            e.on_add_null();
+            in.skip_spaces();
+            break;
+        default:
+            // throw JSONParseException(str::fmtf("unexpected character '%c'", in.in.peek()));
+            throw JSONParseException("unexpected character");
+    }
+    in.skip_spaces();
 }
 
 void JSONReader::parse(std::istream& in) {
-    parse_value(in, *this);
+    json::Stream jstream(in);
+    parse_value(jstream, *this);
 }
 
 }

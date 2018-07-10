@@ -49,7 +49,7 @@ SQLiteStation::~SQLiteStation()
     delete istm;
 }
 
-int SQLiteStation::maybe_get_id(Tracer<>& trc, const dballe::Station& st)
+int SQLiteStation::maybe_get_id(Tracer<>& trc, const dballe::DBStation& st)
 {
     SQLiteStatement* s;
     int rep = tr.repinfo().obtain_id(st.report.c_str());
@@ -82,7 +82,7 @@ int SQLiteStation::maybe_get_id(Tracer<>& trc, const dballe::Station& st)
         return MISSING_INT;
 }
 
-int SQLiteStation::insert_new(Tracer<>& trc, const dballe::Station& desc)
+int SQLiteStation::insert_new(Tracer<>& trc, const dballe::DBStation& desc)
 {
     // If no station was found, insert a new one
     istm->bind_val(1, tr.repinfo().get_id(desc.report.c_str()));
@@ -146,14 +146,14 @@ void SQLiteStation::add_station_vars(Tracer<>& trc, int id_station, Record& rec)
     });
 }
 
-void SQLiteStation::run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station&)> dest)
+void SQLiteStation::run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb, std::function<void(const dballe::DBStation&)> dest)
 {
     Tracer<> trc_sel(trc ? trc->trace_select(qb.sql_query) : nullptr);
     auto stm = conn.sqlitestatement(qb.sql_query);
 
     if (qb.bind_in_ident) stm->bind_val(1, qb.bind_in_ident);
 
-    dballe::Station station;
+    dballe::DBStation station;
     stm->execute([&]() {
         if (trc_sel) trc_sel->add_row();
         station.id = stm->column_int(0);

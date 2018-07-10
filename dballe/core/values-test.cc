@@ -1,6 +1,6 @@
-#include "core/tests.h"
-#include "core/values.h"
-#include "core/record.h"
+#include "tests.h"
+#include "values.h"
+#include "record.h"
 #include <cstring>
 
 using namespace std;
@@ -21,6 +21,47 @@ void Tests::register_tests()
 
 add_method("station", []() {
     Station st;
+    st.report = "testreport";
+    st.coords = Coords(11.5, 42.5);
+    st.ident = "testident";
+
+    core::Record rec;
+    st.to_record(rec);
+
+    wassert_false(rec.get("ana_id"));
+    wassert_true(rec.get("rep_memo"));
+    wassert(actual(*rec.get("rep_memo")) == "testreport");
+    wassert_true(rec.get("lat"));
+    wassert(actual(*rec.get("lat")) == 1150000);
+    wassert_true(rec.get("lon"));
+    wassert(actual(*rec.get("lon")) == 4250000);
+    wassert_true(rec.get("mobile"));
+    wassert(actual(*rec.get("mobile")) == 1);
+    wassert_true(rec.get("ident"));
+    wassert(actual(*rec.get("ident")) == "testident");
+
+    Station st1(rec);
+    wassert(actual(st) == st1);
+
+    st = Station();
+    st.report = "testreport1";
+    st.coords = Coords(11.6, 42.6);
+    st.to_record(rec);
+
+    wassert_false(rec.get("ana_id"));
+    wassert_true(rec.get("rep_memo"));
+    wassert(actual(*rec.get("rep_memo")) == "testreport1");
+    wassert_true(rec.get("lat"));
+    wassert(actual(*rec.get("lat")) == 1160000);
+    wassert_true(rec.get("lon"));
+    wassert(actual(*rec.get("lon")) == 4260000);
+    wassert_true(rec.get("mobile"));
+    wassert(actual(*rec.get("mobile")) == 0);
+    wassert_false(rec.get("ident"));
+});
+
+add_method("dbstation", []() {
+    DBStation st;
     st.id = 1;
     st.report = "testreport";
     st.coords = Coords(11.5, 42.5);
@@ -42,10 +83,10 @@ add_method("station", []() {
     wassert_true(rec.get("ident"));
     wassert(actual(*rec.get("ident")) == "testident");
 
-    Station st1(rec);
+    DBStation st1(rec);
     wassert(actual(st) == st1);
 
-    st = Station();
+    st = DBStation();
     st.report = "testreport1";
     st.coords = Coords(11.6, 42.6);
     st.to_record(rec);

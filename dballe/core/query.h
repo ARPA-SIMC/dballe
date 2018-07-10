@@ -3,6 +3,7 @@
 
 #include <dballe/query.h>
 #include <dballe/core/defs.h>
+#include <dballe/core/fwd.h>
 #include <dballe/record.h>
 #include <wreport/varinfo.h>
 #include <set>
@@ -64,6 +65,12 @@ struct Query : public dballe::Query
     int limit = MISSING_INT;
     int block = MISSING_INT;
     int station = MISSING_INT;
+
+    bool operator==(const Query& o) const
+    {
+        return std::tie(want_missing, ana_id, prio_min, prio_max, rep_memo, mobile, ident, latrange, lonrange, datetime, level, trange, varcodes, query, ana_filter, data_filter, attr_filter, limit, block, station)
+            == std::tie(o.want_missing, o.ana_id, o.prio_min, o.prio_max, o.rep_memo, o.mobile, o.ident, o.latrange, o.lonrange, o.datetime, o.level, o.trange, o.varcodes, o.query, o.ana_filter, o.data_filter, o.attr_filter, o.limit, o.block, o.station);
+    }
 
     std::unique_ptr<dballe::Query> clone() const override;
 
@@ -138,6 +145,8 @@ struct Query : public dballe::Query
      * Throws an exception if query is not a core::Query.
      */
     static Query& downcast(dballe::Query& query);
+
+    static Query from_json(core::json::Stream& in);
 };
 
 }

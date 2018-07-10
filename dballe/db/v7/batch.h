@@ -34,7 +34,7 @@ public:
 
     void set_write_attrs(bool write_attrs);
 
-    batch::Station* get_station(Tracer<>& trc, const dballe::Station& station, bool station_can_add);
+    batch::Station* get_station(Tracer<>& trc, const dballe::DBStation& station, bool station_can_add);
     batch::Station* get_station(Tracer<>& trc, const std::string& report, const Coords& coords, const Ident& ident);
 
     void write_pending(Tracer<>& trc);
@@ -147,7 +147,7 @@ struct MeasuredDataVector : public core::SmallSet<MeasuredDataVector, MeasuredDa
     static const Datetime& _smallset_get_value(const MeasuredData* md) { return md->datetime; }
 };
 
-struct Station : public dballe::Station
+struct Station : public dballe::DBStation
 {
     Batch& batch;
     bool is_new = true;

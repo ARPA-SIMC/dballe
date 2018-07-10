@@ -1,6 +1,8 @@
 #ifndef DBALLE_DB_V7_STATION_H
 #define DBALLE_DB_V7_STATION_H
 
+#include <dballe/fwd.h>
+#include <dballe/core/fwd.h>
 #include <dballe/sql/fwd.h>
 #include <dballe/db/v7/fwd.h>
 #include <dballe/db/v7/cache.h>
@@ -16,10 +18,6 @@ struct Var;
 }
 
 namespace dballe {
-struct Record;
-struct Coords;
-struct Station;
-
 namespace db {
 namespace v7 {
 struct Transaction;
@@ -39,19 +37,19 @@ public:
      *
      * It returns MISSING_INT if it does not exist.
      */
-    virtual int maybe_get_id(Tracer<>& trc, const dballe::Station& st) = 0;
+    virtual int maybe_get_id(Tracer<>& trc, const dballe::DBStation& st) = 0;
 
     /**
      * Insert a new station in the database, without checking if it already exists.
      *
      * Returns the ID of the new station
      */
-    virtual int insert_new(Tracer<>& trc, const dballe::Station& desc) = 0;
+    virtual int insert_new(Tracer<>& trc, const dballe::DBStation& desc) = 0;
 
     /**
      * Run a station query, iterating on the resulting stations
      */
-    virtual void run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb, std::function<void(const dballe::Station& station)>) = 0;
+    virtual void run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb, std::function<void(const dballe::DBStation& station)>) = 0;
 
     /**
      * Export station variables

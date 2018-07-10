@@ -315,8 +315,12 @@ struct DatetimeRange
     /// Check if this range is open on both sides
     bool is_missing() const;
 
-    bool operator==(const DatetimeRange& dtr) const;
-    bool operator!=(const DatetimeRange& dtr) const;
+    bool operator==(const DatetimeRange& o) const { return std::tie(min, max) == std::tie(o.min, o.max); }
+    bool operator!=(const DatetimeRange& o) const { return std::tie(min, max) != std::tie(o.min, o.max); }
+    bool operator<(const DatetimeRange& o) const { return std::tie(min, max) < std::tie(o.min, o.max); }
+    bool operator<=(const DatetimeRange& o) const { return std::tie(min, max) <= std::tie(o.min, o.max); }
+    bool operator>(const DatetimeRange& o) const { return std::tie(min, max) > std::tie(o.min, o.max); }
+    bool operator>=(const DatetimeRange& o) const { return std::tie(min, max) >= std::tie(o.min, o.max); }
 
     /// Set the extremes
     void set(const Datetime& min, const Datetime& max);
@@ -747,6 +751,47 @@ struct Trange
 };
 
 std::ostream& operator<<(std::ostream& out, const Trange& l);
+
+
+/**
+ * A station identifier, that can be any string (including the empty string) or
+ * a missing value.
+ */
+class Ident
+{
+protected:
+    char* value = nullptr;
+
+public:
+    Ident() = default;
+    Ident(const char* value);
+    Ident(const std::string& value);
+    Ident(const Ident& o);
+    Ident(Ident&& o);
+    ~Ident();
+    Ident& operator=(const Ident& o);
+    Ident& operator=(Ident&& o);
+    Ident& operator=(const char* o);
+    Ident& operator=(const std::string& o);
+    const char* get() const { return value; }
+    void clear();
+    int compare(const Ident& o) const;
+    int compare(const char* o) const;
+    int compare(const std::string& o) const;
+    template<typename T> bool operator==(const T& o) const { return compare(o) == 0; }
+    template<typename T> bool operator!=(const T& o) const { return compare(o) != 0; }
+    template<typename T> bool operator<(const T& o) const  { return compare(o) < 0; }
+    template<typename T> bool operator<=(const T& o) const { return compare(o) <= 0; }
+    template<typename T> bool operator>(const T& o) const  { return compare(o) > 0; }
+    template<typename T> bool operator>=(const T& o) const { return compare(o) >= 0; }
+
+    bool is_missing() const { return value == nullptr; }
+
+    operator const char*() const { return value; }
+    operator std::string() const;
+};
+
+std::ostream& operator<<(std::ostream&, const Ident&);
 
 }
 

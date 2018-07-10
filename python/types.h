@@ -2,6 +2,8 @@
 #define DBALLE_PYTHON_TYPES_H
 
 #include <Python.h>
+#include <dballe/fwd.h>
+#include <dballe/core/fwd.h>
 
 extern "C" {
 
@@ -19,18 +21,17 @@ PyAPI_DATA(PyTypeObject) dpy_Trange_Type;
 
 PyAPI_DATA(PyTypeObject) dpy_Station_Type;
 
+#define dpy_DBStation_Check(ob) \
+     (Py_TYPE(ob) == &dpy_DBStation_Type || PyType_IsSubtype(Py_TYPE(ob), &dpy_DBStation_Type))
+
+PyAPI_DATA(PyTypeObject) dpy_DBStation_Type;
+
 #define dpy_Station_Check(ob) \
      (Py_TYPE(ob) == &dpy_Station_Type || PyType_IsSubtype(Py_TYPE(ob), &dpy_Station_Type))
 
 }
 
 namespace dballe {
-struct Datetime;
-struct DatetimeRange;
-struct Level;
-struct Trange;
-struct Station;
-
 namespace python {
 
 /// Convert a Level to a python Level structseq
@@ -50,6 +51,12 @@ PyObject* station_to_python(const Station& lev);
 
 /// Convert a structseq to a Station
 int station_from_python(PyObject* o, Station& out);
+
+/// Convert a Station to a python Station structseq
+PyObject* dbstation_to_python(const DBStation& lev);
+
+/// Convert a structseq to a Station
+int dbstation_from_python(PyObject* o, DBStation& out);
 
 /// Convert a varcode to a Python string
 PyObject* varcode_to_python(wreport::Varcode code);

@@ -140,7 +140,7 @@ class Tests : public FixtureTestCase<TransactionFixture<DB, DBData>>
                     if (auto t = dynamic_cast<v7::Transaction*>(f.tr.get()))
                     {
                         v7::Tracer<> trc;
-                        dballe::Station station;
+                        dballe::DBStation station;
                         station.report = "synop";
                         station.coords = Coords(1100000, 4500000);
                         station.ident = "ciao";
