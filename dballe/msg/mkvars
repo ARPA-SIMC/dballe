@@ -170,7 +170,7 @@ print >>fc, """
 /* Using %switch may be faster (remember to check when doing optimizations) */
 
 %{
-#include <dballe/core/defs.h>
+#include <dballe/types.h>
 #include <dballe/msg/vars.h>
 #include <string.h>
 
