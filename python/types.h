@@ -2,6 +2,7 @@
 #define DBALLE_PYTHON_TYPES_H
 
 #include <Python.h>
+#include <wreport/varinfo.h>
 #include <dballe/fwd.h>
 #include <dballe/core/fwd.h>
 
