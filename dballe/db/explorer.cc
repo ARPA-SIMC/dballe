@@ -1,3 +1,4 @@
+#define _DBALLE_LIBRARY_CODE
 #include "explorer.h"
 #include "dballe/core/query.h"
 #include "dballe/core/record.h"

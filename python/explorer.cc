@@ -1,4 +1,6 @@
+#define _DBALLE_LIBRARY_CODE
 #include <Python.h>
+#include "dballe/db/explorer.h"
 #include "common.h"
 #include "explorer.h"
 #include "types.h"
