@@ -4,11 +4,15 @@
 Build C++ code for accessing Msg contents by shortcut.
 """
 
-import sys, re, os
+from __future__ import (print_function, absolute_import, division, unicode_literals)
+import sys
+import re
+import os
 
 DESTDIR = "."
 if len(sys.argv) > 1:
     DESTDIR = sys.argv[1]
+
 
 class VC:
     def __init__(self, name):
@@ -23,14 +27,17 @@ class VC:
 
     def __cmp__(self, o):
         c = self.x.__cmp__(o.x)
-        if c != 0: return c
+        if c != 0:
+            return c
         return self.y.__cmp__(o.y)
+
 
 class Var:
     def __init__(self, line):
         def cleanint(x):
-           if x == '-': return "MISSING_INT"
-           return str(int(x))
+            if x == '-':
+                return "MISSING_INT"
+            return str(int(x))
 
         vals = re.split(r"\s*,\s*", line[:-1].strip())
 
@@ -41,27 +48,31 @@ class Var:
 
     def __str__(self):
         return ", ".join([self.name, str(self.b),
-                        ":".join([str(x) for x in self.letr[0:4]]),
-                        ":".join([str(x) for x in self.letr[4:]]),
-                        self.desc])
+                          ":".join([str(x) for x in self.letr[0:4]]),
+                          ":".join([str(x) for x in self.letr[4:]]),
+                          self.desc])
 
     def __cmp__(self, o):
         def cmpval(a, b):
             if a == "MISSING_INT" and b == "MISSING_INT":
                 return 0
-            if a == "MISSING_INT": return -1;
-            if b == "MISSING_INT": return 1;
+            if a == "MISSING_INT":
+                return -1
+            if b == "MISSING_INT":
+                return 1
             return int(b) - int(a)
         for i in range(len(self.letr)):
             c = cmpval(self.letr[i], o.letr[i])
-            if c != 0: return c
+            if c != 0:
+                return c
         return self.b.__cmp__(o.b)
+
 
 vars = [Var(line) for line in sys.stdin if not re.match(r"^\s*(?:#.+)?$", line)]
 vars.sort()
 
-fh = open("%s/vars.h" % DESTDIR, "w")
-print >>fh, """#ifndef DBA_MSG_VARS_H
+with open(os.path.join(DESTDIR, "vars.h"), "wt") as fh:
+    print("""#ifndef DBA_MSG_VARS_H
 #define DBA_MSG_VARS_H
 
 /** @file
@@ -111,55 +122,61 @@ int resolve_var(const char* name);
 
 /** Resolve a var name to a var ID, avoiding to compute the length of name */
 int resolve_var_substring(const char* name, int len);
-"""
+""", file=fh)
 
-for i, v in enumerate(vars):
-    print >>fh, "/** %s */" % v.desc
-    print >>fh, "#define DBA_MSG_%s %d" % (v.name, i)
-print >>fh, "/** Number of items in dba_msg_vartable */";
-print >>fh, "#define DBA_MSG_VARTABLE_SIZE %d" % i;
-print >>fh, """
+    for i, v in enumerate(vars):
+        print("/** %s */" % v.desc, file=fh)
+        print("#define DBA_MSG_%s %d" % (v.name, i), file=fh)
+    print("/** Number of items in dba_msg_vartable */", file=fh)
+    print("#define DBA_MSG_VARTABLE_SIZE %d" % i, file=fh)
+    print("""
 }
 
 #endif
-"""
-fh.close()
+""", file=fh)
 
-fh = open("%s/msg-extravars.h" % DESTDIR, "w")
-types = dict(int = 'int', num = 'double', str = 'const char*')
-ftypes = dict(int = 'i', num = 'd', str = 'c')
-for v in vars:
-    print >>fh, "/** Set the value of \"%s\" from a variable of type %s */" % (v.desc, types[v.type])
-    print >>fh, "inline void set_%s(%s val, int conf=-1) " % (v.name.lower(), types[v.type]),
-    #print >>sys.stderr, v
-    #print >>sys.stderr, "--", [ftypes[v.type], v.b.x, v.b.y] + v.letr;
-    print >>fh, "{ set%s(WR_VAR(0, %d, %d), val, conf, Level(%s, %s, %s, %s), Trange(%s, %s, %s)); }" % \
-        tuple([ftypes[v.type], v.b.x, v.b.y] + v.letr);
+with open(os.path.join(DESTDIR, "msg-extravars.h"), "wt") as fh:
+    types = {"int": "int", "num": "double", "str": "const char*"}
+    ftypes = {"int": "i", "num": "d", "str": "c"}
+    for v in vars:
+        print("""
+/** Set the value of "{desc}" from a variable of type {type} */
+inline void set_{name}({type} val, int conf=-1) {{ set{ftype}(WR_VAR(0, {vx}, {vy}), val, conf, Level({level}), Trange({trange})); }}
+/** Set the value of "{desc}" from a wreport::Var */
+inline void set_{name}_var(const wreport::Var& val) {{ set(val, WR_VAR(0, {vx}, {vy}), Level({level}), Trange({trange})); }}
+                tuple([v.b.x, v.b.y] + v.letr), file=fh)
+/** Get the "{desc}" physical value stored in the message */
+inline const wreport::Var* get_{name}_var() const {{ return find_by_id(DBA_MSG_{NAME}); }}
+""" .format(
+            name=v.name.lower(),
+            desc=v.desc,
+            type=types[v.type],
+            ftype=ftypes[v.type],
+            vx=v.b.x, vy=v.b.y,
+            level=", ".join(v.letr[:4]),
+            trange=", ".join(v.letr[4:]),
+            NAME=v.name,
+        ), file=fh)
 
-    print >>fh, "/** Set the value of \"%s\" from a wreport::Var */" % v.desc;
-    print >>fh, "inline void set_%s_var(const wreport::Var& val) " % v.name.lower(),
-    print >>fh, "{ set(val, WR_VAR(0, %d, %d), Level(%s, %s, %s, %s), Trange(%s, %s, %s)); }" % \
-            tuple([v.b.x, v.b.y] + v.letr)
 
-    print >>fh, "/** Get the \"%s\" physical value stored in the message */" % v.desc;
-    print >>fh, "inline const wreport::Var* get_%s_var() const" % v.name.lower();
-    print >>fh, "{ return find_by_id(DBA_MSG_%s); }" % \
-        v.name;
-fh.close()
+with open(os.path.join(DESTDIR, "context-extravars.h"), "wt") as fh:
+    for v in vars:
+        print("""
+/** Set the value of "{desc}" from a variable of type {type} */
+inline void set_{name}({type} val) {{ set{ftype}(WR_VAR(0, {vx}, {vy}), val); }}
+/** Get the "{desc}" physical value stored in the message */
+inline const wreport::Var* get_{name}() const {{ return find(WR_VAR(0, {vx}, {vy})); }}
+""" .format(
+            name=v.name.lower(),
+            desc=v.desc,
+            type=types[v.type],
+            ftype=ftypes[v.type],
+            vx=v.b.x, vy=v.b.y,
+        ), file=fh)
 
-fh = open("%s/context-extravars.h" % DESTDIR, "w")
-for v in vars:
-    print >>fh, "/** Set the value of \"%s\" from a variable of type %s */" % (v.desc, types[v.type])
-    print >>fh, "inline void set_%s(%s val) " % (v.name.lower(), types[v.type]),
-    print >>fh, "{ set%s(WR_VAR(0, %d, %d), val); }" % (ftypes[v.type], v.b.x, v.b.y)
 
-    print >>fh, "/** Get the \"%s\" physical value stored in the message */" % v.desc;
-    print >>fh, "inline const wreport::Var* get_%s() const" % v.name.lower();
-    print >>fh, "{ return find(WR_VAR(0, %d, %d)); }" % (v.b.x, v.b.y)
-fh.close()
-
-fc = open("%s/vars.gperf" % DESTDIR, "w")
-print >>fc, """
+with open(os.path.join(DESTDIR, "vars.gperf"), "wt") as fc:
+    print("""
 %define slot-name name
 %define class-name MsgVarLookup
 %define lookup-function-name find
@@ -178,38 +195,33 @@ namespace dballe {
 %}
 
 struct msgvardef { const char* name; int var; };
-%%"""
-for v in vars:
-    print >>fc, "%s, DBA_MSG_%s" % (v.name.lower(), v.name)
-print >>fc, """%%
+%%""", file=fc)
+    for v in vars:
+        print("{}, DBA_MSG_{}".format(v.name.lower(), v.name), file=fc)
+    print("""%%
 
 int resolve_var(const char* name)
 {
     struct msgvardef* res = MsgVarLookup::find(name, strlen(name));
-	if (res == NULL)
-		return -1;
-	else
-		return res->var;
+        if (res == NULL)
+                return -1;
+        else
+                return res->var;
 }
 
 int resolve_var_substring(const char* name, int len)
 {
     struct msgvardef* res = MsgVarLookup::find(name, len);
-	if (res == NULL)
-		return -1;
-	else
-		return res->var;
+        if (res == NULL)
+                return -1;
+        else
+                return res->var;
 }
 
-"""
+""", file=fc)
 
-print >>fc, "struct MsgVarShortcut shortcutTable[] = {"
-for v in vars:
-    print >>fc, " { WR_VAR(0, %d, %d), %s, %s, %s, %s, %s, %s, %s }," % tuple([v.b.x, v.b.y] + v.letr)
-print >>fc, "};"
-
-print >>fc, "} // namespace dballe"
-
-fc.close()
-
-sys.exit()
+    print("struct MsgVarShortcut shortcutTable[] = {", file=fc)
+    for v in vars:
+        print(" { WR_VAR(0, %d, %d), %s, %s, %s, %s, %s, %s, %s }," % tuple([v.b.x, v.b.y] + v.letr), file=fc)
+    print("};", file=fc)
+    print("} // namespace dballe", file=fc)
