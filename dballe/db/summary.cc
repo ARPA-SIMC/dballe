@@ -16,22 +16,6 @@ namespace dballe {
 namespace db {
 namespace summary {
 
-static Station station_from_json(core::json::Stream& in)
-{
-    Station res;
-    in.parse_object([&](const std::string& key) {
-        if (key == "r")
-            res.report = in.parse_string();
-        else if (key == "c")
-            res.coords = in.parse_coords();
-        else if (key == "i")
-            res.ident = in.parse_ident();
-        else
-            throw core::JSONParseException("unsupported key \"" + key + "\" for Station");
-    });
-    return res;
-}
-
 #if 0
 std::ostream& operator<<(std::ostream& out, const Entry& e)
 {
@@ -89,7 +73,8 @@ void VarEntry::dump(FILE* out) const
 }
 
 
-void StationEntry::add(const VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count)
+template<typename Station>
+void StationEntry<Station>::add(const VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count)
 {
     iterator i = find(vd);
     if (i != end())
@@ -98,13 +83,15 @@ void StationEntry::add(const VarDesc& vd, const dballe::DatetimeRange& dtrange, 
         SmallSet::add(VarEntry(vd, dtrange, count));
 }
 
-void StationEntry::add(const StationEntry& entries)
+template<typename Station>
+void StationEntry<Station>::add(const StationEntry& entries)
 {
     for (const auto& entry: entries)
         add(entry.var, entry.dtrange, entry.count);
 }
 
-void StationEntry::add_filtered(const StationEntry& entries, const dballe::Query& query)
+template<typename Station>
+void StationEntry<Station>::add_filtered(const StationEntry& entries, const dballe::Query& query)
 {
     const core::Query& q = core::Query::downcast(query);
 
@@ -128,15 +115,12 @@ void StationEntry::add_filtered(const StationEntry& entries, const dballe::Query
     }
 }
 
-void StationEntry::to_json(core::JSONWriter& writer) const
+template<typename Station>
+void StationEntry<Station>::to_json(core::JSONWriter& writer) const
 {
     writer.start_mapping();
     writer.add("s");
-    writer.start_mapping();
-    writer.add("r", station.report);
-    writer.add("c", station.coords);
-    writer.add("i", station.ident);
-    writer.end_mapping();
+    station.to_json(writer);
     writer.add("v");
     writer.start_list();
     for (const auto entry: *this)
@@ -145,12 +129,13 @@ void StationEntry::to_json(core::JSONWriter& writer) const
     writer.end_mapping();
 }
 
-StationEntry StationEntry::from_json(core::json::Stream& in)
+template<typename Station>
+StationEntry<Station> StationEntry<Station>::from_json(core::json::Stream& in)
 {
     StationEntry res;
     in.parse_object([&](const std::string& key) {
         if (key == "s")
-            res.station = station_from_json(in);
+            res.station = Station::from_json(in);
         else if (key == "v")
             in.parse_array([&]{
                 res.add(VarEntry::from_json(in));
@@ -161,7 +146,8 @@ StationEntry StationEntry::from_json(core::json::Stream& in)
     return res;
 }
 
-void StationEntry::dump(FILE* out) const
+template<typename Station>
+void StationEntry<Station>::dump(FILE* out) const
 {
     fprintf(out, "   Station: "); station.print(out);
     fprintf(out, "   Vars:\n");
@@ -170,29 +156,32 @@ void StationEntry::dump(FILE* out) const
 }
 
 
-void StationEntries::add(const Station& station, const VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count)
+template<typename Station>
+void StationEntries<Station>::add(const Station& station, const VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count)
 {
-    iterator cur = find(station);
+    iterator cur = this->find(station);
 
     if (cur != end())
         cur->add(vd, dtrange, count);
     else
-        SmallSet::add(StationEntry(station, vd, dtrange, count));
+        Parent::add(StationEntry<Station>(station, vd, dtrange, count));
 }
 
-void StationEntries::add(const StationEntries& entries)
+template<typename Station>
+void StationEntries<Station>::add(const StationEntries& entries)
 {
     for (auto entry: entries)
     {
-        iterator cur = find(entry.station);
+        iterator cur = this->find(entry.station);
         if (cur != end())
             cur->add(entry);
         else
-            SmallSet::add(entry);
+            Parent::add(entry);
     }
 }
 
-void StationEntries::add_filtered(const StationEntries& entries, const dballe::Query& query)
+template<typename Station>
+void StationEntries<Station>::add_filtered(const StationEntries& entries, const dballe::Query& query)
 {
     // Scan the filter building a todo list of things to match
     const core::Query& q = core::Query::downcast(query);
@@ -221,26 +210,28 @@ void StationEntries::add_filtered(const StationEntries& entries, const dballe::Q
             if (has_flt_ident && q.ident != station.ident)
                 continue;
 
-            iterator cur = find(entry.station);
+            iterator cur = this->find(entry.station);
             if (cur != end())
                 cur->add_filtered(entry, query);
             else
-                SmallSet::add(StationEntry(entry, query));
+                Parent::add(StationEntry<Station>(entry, query));
         }
     } else {
         for (auto entry: entries)
-            SmallSet::add(StationEntry(entry, query));
+            Parent::add(StationEntry<Station>(entry, query));
     }
 }
 
 }
 
 
-Summary::Summary()
+template<typename Station>
+BaseSummary<Station>::BaseSummary()
 {
 }
 
-void Summary::recompute_summaries() const
+template<typename Station>
+void BaseSummary<Station>::recompute_summaries() const
 {
     bool first = true;
     for (const auto& station_entry: entries)
@@ -270,18 +261,21 @@ void Summary::recompute_summaries() const
     dirty = false;
 }
 
-void Summary::add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count)
+template<typename Station>
+void BaseSummary<Station>::add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count)
 {
     entries.add(station, vd, dtrange, count);
     dirty = true;
 }
 
-void Summary::add_cursor(const dballe::db::CursorSummary& cur)
+template<typename Station>
+void BaseSummary<Station>::add_cursor(const dballe::db::CursorSummary& cur)
 {
     add(cur.get_station(), summary::VarDesc(cur.get_level(), cur.get_trange(), cur.get_varcode()), cur.get_datetimerange(), cur.get_count());
 }
 
-void Summary::add_message(const dballe::Message& message)
+template<typename Station>
+void BaseSummary<Station>::add_message(const dballe::Message& message)
 {
     const Msg& msg = Msg::downcast(message);
     const msg::Context* l_ana = msg.find_context(Level(), Trange());
@@ -345,19 +339,22 @@ void Summary::add_message(const dballe::Message& message)
     }
 }
 
-void Summary::add_messages(const dballe::Messages& messages)
+template<typename Station>
+void BaseSummary<Station>::add_messages(const dballe::Messages& messages)
 {
     for (const auto& message: messages)
         add_message(message);
 }
 
-void Summary::add_filtered(const Summary& summary, const dballe::Query& query)
+template<typename Station>
+void BaseSummary<Station>::add_filtered(const BaseSummary<Station>& summary, const dballe::Query& query)
 {
     entries.add_filtered(summary.entries, query);
     dirty = true;
 }
 
-void Summary::add_summary(const Summary& summary)
+template<typename Station>
+void BaseSummary<Station>::add_summary(const BaseSummary<Station>& summary)
 {
     entries.add(summary.entries);
     dirty = true;
@@ -468,7 +465,8 @@ bool Summary::iterate_filtered(const Query& query, std::function<bool(const summ
 }
 #endif
 
-void Summary::to_json(core::JSONWriter& writer) const
+template<typename Station>
+void BaseSummary<Station>::to_json(core::JSONWriter& writer) const
 {
     writer.start_mapping();
     writer.add("e");
@@ -479,13 +477,14 @@ void Summary::to_json(core::JSONWriter& writer) const
     writer.end_mapping();
 }
 
-Summary Summary::from_json(core::json::Stream& in)
+template<typename Station>
+BaseSummary<Station> BaseSummary<Station>::from_json(core::json::Stream& in)
 {
-    Summary summary;
+    BaseSummary<Station> summary;
     in.parse_object([&](const std::string& key) {
         if (key == "e")
             in.parse_array([&]{
-                summary.entries.add(summary::StationEntry::from_json(in));
+                summary.entries.add(summary::StationEntry<Station>::from_json(in));
             });
         else
             throw core::JSONParseException("unsupported key \"" + key + "\" for summary::Entry");
@@ -494,7 +493,8 @@ Summary Summary::from_json(core::json::Stream& in)
     return summary;
 }
 
-void Summary::dump(FILE* out) const
+template<typename Station>
+void BaseSummary<Station>::dump(FILE* out) const
 {
     fprintf(out, "Summary:\n");
     fprintf(out, "Stations:\n");
@@ -528,6 +528,9 @@ void Summary::dump(FILE* out) const
     fprintf(out, "Count: %zd\n", count);
     fprintf(out, "Dirty: %s\n", dirty ? "true" : "false");
 }
+
+template class BaseSummary<dballe::Station>;
+template class BaseSummary<dballe::DBStation>;
 
 }
 }

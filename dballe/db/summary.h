@@ -13,10 +13,6 @@
 
 namespace dballe {
 namespace db {
-
-class Matcher;
-class Summary;
-
 namespace summary {
 
 struct VarDesc
@@ -72,7 +68,10 @@ struct VarEntry
 };
 
 
-struct StationEntry : protected core::SmallSet<StationEntry, VarEntry, VarDesc>
+inline const VarDesc& station_entry_get_value(const VarEntry& item) { return item.var; }
+
+template<typename Station>
+struct StationEntry : protected core::SmallSet<VarEntry, VarDesc, station_entry_get_value>
 {
     using SmallSet::iterator;
     using SmallSet::const_iterator;
@@ -114,8 +113,6 @@ struct StationEntry : protected core::SmallSet<StationEntry, VarEntry, VarDesc>
     static StationEntry from_json(core::json::Stream& in);
 
     DBALLE_TEST_ONLY void dump(FILE* out) const;
-
-    static const VarDesc& _smallset_get_value(const VarEntry& e) { return e.var; }
 };
 
 
@@ -138,21 +135,26 @@ struct StationEntry : protected core::SmallSet<StationEntry, VarEntry, VarDesc>
 std::ostream& operator<<(std::ostream& out, const Entry& e);
 #endif
 
-struct StationEntries : protected core::SmallSet<StationEntries, StationEntry, Station>
+template<typename Station>
+inline const Station& station_entries_get_value(const StationEntry<Station>& item) { return item.station; }
+
+template<typename Station>
+struct StationEntries : protected core::SmallSet<StationEntry<Station>, Station, station_entries_get_value<Station>>
 {
-    using SmallSet::iterator;
-    using SmallSet::const_iterator;
-    using SmallSet::reverse_iterator;
-    using SmallSet::const_reverse_iterator;
-    using SmallSet::begin;
-    using SmallSet::end;
-    using SmallSet::rbegin;
-    using SmallSet::rend;
-    using SmallSet::size;
-    using SmallSet::empty;
-    using SmallSet::add;
-    bool operator==(const StationEntries& o) const { return SmallSet::operator==(o); }
-    bool operator!=(const StationEntries& o) const { return SmallSet::operator!=(o); }
+    typedef core::SmallSet<StationEntry<Station>, Station, station_entries_get_value<Station>> Parent;
+    typedef typename Parent::iterator iterator;
+    typedef typename Parent::const_iterator const_iterator;
+    typedef typename Parent::reverse_iterator reverse_iterator;
+    typedef typename Parent::const_reverse_iterator const_reverse_iterator;
+    using Parent::begin;
+    using Parent::end;
+    using Parent::rbegin;
+    using Parent::rend;
+    using Parent::size;
+    using Parent::empty;
+    using Parent::add;
+    bool operator==(const StationEntries<Station>& o) const { return Parent::operator==(o); }
+    bool operator!=(const StationEntries<Station>& o) const { return Parent::operator!=(o); }
 
     void add(const Station& station, const VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count);
     void add(const StationEntries& entry);
@@ -160,9 +162,7 @@ struct StationEntries : protected core::SmallSet<StationEntries, StationEntry, S
 
     bool has(const Station& station) const { return find(station) != end(); }
 
-    const StationEntries& sorted() const { if (dirty) rearrange_dirty(); return *this; }
-
-    static const Station& _smallset_get_value(const StationEntry& e) { return e.station; }
+    const StationEntries& sorted() const { if (this->dirty) this->rearrange_dirty(); return *this; }
 };
 
 }
@@ -171,11 +171,12 @@ struct StationEntries : protected core::SmallSet<StationEntries, StationEntry, S
 /**
  * High level objects for working with DB-All.e DB summaries
  */
-class Summary
+template<typename Station>
+class BaseSummary
 {
 protected:
     // Summary of items for the currently active filter
-    summary::StationEntries entries;
+    summary::StationEntries<Station> entries;
 
     mutable core::SortedSmallUniqueValueSet<std::string> m_reports;
     mutable core::SortedSmallUniqueValueSet<dballe::Level> m_levels;
@@ -189,14 +190,14 @@ protected:
     void recompute_summaries() const;
 
 public:
-    Summary();
+    BaseSummary();
 
-    bool operator==(const Summary& o) const
+    bool operator==(const BaseSummary& o) const
     {
         return entries == o.entries;
     }
 
-    const summary::StationEntries& stations() const { if (dirty) recompute_summaries(); return entries.sorted(); }
+    const summary::StationEntries<Station>& stations() const { if (dirty) recompute_summaries(); return entries.sorted(); }
     core::SortedSmallUniqueValueSet<std::string> reports() const { if (dirty) recompute_summaries(); return m_reports; }
     core::SortedSmallUniqueValueSet<dballe::Level> levels() const { if (dirty) recompute_summaries(); return m_levels; }
     core::SortedSmallUniqueValueSet<dballe::Trange> tranges() const { if (dirty) recompute_summaries(); return m_tranges; }
@@ -225,10 +226,10 @@ public:
     void add_messages(const dballe::Messages& messages);
 
     /// Merge the copy of another summary into this one
-    void add_summary(const Summary& summary);
+    void add_summary(const BaseSummary& summary);
 
     /// Merge the copy of another summary into this one
-    void add_filtered(const Summary& summary, const dballe::Query& query);
+    void add_filtered(const BaseSummary& summary, const dballe::Query& query);
 
 #if 0
     /**
@@ -248,7 +249,7 @@ public:
 
     void to_json(core::JSONWriter& writer) const;
 
-    static Summary from_json(core::json::Stream& in);
+    static BaseSummary from_json(core::json::Stream& in);
 
 #if 0
     DBALLE_TEST_ONLY std::vector<summary::Entry>& test_entries() { return entries; }
@@ -256,6 +257,12 @@ public:
 #endif
     DBALLE_TEST_ONLY void dump(FILE* out) const;
 };
+
+typedef BaseSummary<dballe::Station> Summary;
+typedef BaseSummary<dballe::DBStation> DBSummary;
+
+extern template class BaseSummary<dballe::Station>;
+extern template class BaseSummary<dballe::DBStation>;
 
 }
 }

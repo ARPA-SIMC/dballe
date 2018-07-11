@@ -65,12 +65,10 @@ struct StationDatum
     bool operator==(const StationDatum& o) const { return var->code() == o.var->code(); }
 };
 
-struct StationDataIDs : public core::SmallSet<StationDataIDs, IdVarcode, wreport::Varcode>
+inline const wreport::Varcode& station_data_ids_get_value(const IdVarcode& item) { return item.varcode; }
+
+struct StationDataIDs : public core::SmallSet<IdVarcode, wreport::Varcode, station_data_ids_get_value>
 {
-    static const wreport::Varcode& _smallset_get_value(const IdVarcode& item)
-    {
-        return item.varcode;
-    }
 };
 
 struct StationData
@@ -111,12 +109,10 @@ struct MeasuredDataID
     }
 };
 
-struct MeasuredDataIDs : public core::SmallSet<MeasuredDataIDs, MeasuredDataID, IdVarcode>
+inline const IdVarcode& measured_data_ids_get_value(const MeasuredDataID& item) { return item.id_varcode; }
+
+struct MeasuredDataIDs : public core::SmallSet<MeasuredDataID, IdVarcode, measured_data_ids_get_value>
 {
-    static const IdVarcode& _smallset_get_value(const MeasuredDataID& item)
-    {
-        return item.id_varcode;
-    }
 };
 
 struct MeasuredData
@@ -135,7 +131,9 @@ struct MeasuredData
     void write_pending(Tracer<>& trc, Transaction& tr, int station_id, bool with_attrs);
 };
 
-struct MeasuredDataVector : public core::SmallSet<MeasuredDataVector, MeasuredData*, Datetime>
+inline const Datetime& measured_data_vector_get_value(MeasuredData* const& item) { return item->datetime; }
+
+struct MeasuredDataVector : public core::SmallSet<MeasuredData*, Datetime, measured_data_vector_get_value>
 {
     MeasuredDataVector() {}
     MeasuredDataVector(const MeasuredDataVector&) = delete;
@@ -143,8 +141,6 @@ struct MeasuredDataVector : public core::SmallSet<MeasuredDataVector, MeasuredDa
     ~MeasuredDataVector();
     MeasuredDataVector& operator=(const MeasuredDataVector&) = delete;
     MeasuredDataVector& operator=(MeasuredDataVector&&) = default;
-
-    static const Datetime& _smallset_get_value(const MeasuredData* md) { return md->datetime; }
 };
 
 struct Station : public dballe::DBStation

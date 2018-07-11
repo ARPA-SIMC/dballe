@@ -22,7 +22,7 @@ using namespace wreport;
 
 extern "C" {
 
-static PyObject* _export_stations(const db::summary::StationEntries& stations)
+static PyObject* _export_stations(const db::summary::StationEntries<DBStation>& stations)
 {
     try {
         pyo_unique_ptr result(PyList_New(stations.size()));
@@ -30,7 +30,7 @@ static PyObject* _export_stations(const db::summary::StationEntries& stations)
         unsigned idx = 0;
         for (const auto& entry: stations)
         {
-            pyo_unique_ptr station(station_to_python(entry.station));
+            pyo_unique_ptr station(dbstation_to_python(entry.station));
             if (PyList_SetItem(result, idx, station.release()))
                 return nullptr;
             ++idx;

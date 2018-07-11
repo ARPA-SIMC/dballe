@@ -16,13 +16,13 @@ class Explorer
 {
 protected:
     /// Summary of the whole database
-    dballe::db::Summary* _global_summary = nullptr;
+    dballe::db::DBSummary* _global_summary = nullptr;
 
     /// Currently active filter
     dballe::core::Query filter;
 
     /// Summary of active_filter
-    dballe::db::Summary* _active_summary = nullptr;
+    dballe::db::DBSummary* _active_summary = nullptr;
 
     /// Regenerate _active_summary based on filter
     void update_active_summary();
@@ -47,10 +47,10 @@ public:
     void revalidate(dballe::db::Transaction& tr);
 
     /// Get a reference to the global summary
-    const dballe::db::Summary& global_summary() const;
+    const dballe::db::DBSummary& global_summary() const;
 
     /// Get a reference to the summary for the current filter
-    const dballe::db::Summary& active_summary() const;
+    const dballe::db::DBSummary& active_summary() const;
 
     /**
      * Update \a val in the database to have the value \a new_val
