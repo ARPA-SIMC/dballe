@@ -60,6 +60,12 @@ this->add_method("summary", [](Fixture& f) {
     wassert(actual(s.datetime_min()) == Datetime(1945, 4, 25, 8));
     wassert(actual(s.datetime_max()) == Datetime(1945, 4, 25, 8, 30));
     wassert(actual(s.data_count()) == 4);
+
+    query.ana_id = s.stations().begin()->station.id;
+    DBSummary s1;
+    s1.add_filtered(s, query);
+    wassert(actual(s1.stations().size()) == 1);
+    wassert(actual(s1.stations().begin()->station.id) == query.ana_id);
 });
 
 this->add_method("summary_msg", [](Fixture& f) {

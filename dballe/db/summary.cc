@@ -180,34 +180,90 @@ void StationEntries<Station>::add(const StationEntries& entries)
     }
 }
 
+namespace {
+
+struct StationFilterBase
+{
+    const core::Query& q;
+    bool has_flt_rep_memo;
+    bool has_flt_ident;
+    bool has_flt_area;
+    bool has_flt_station;
+
+    StationFilterBase(const dballe::Query& query)
+        : q(core::Query::downcast(query))
+    {
+        // Scan the filter building a todo list of things to match
+
+        // If there is any filtering on the station, build a whitelist of matching stations
+        has_flt_rep_memo = !q.rep_memo.empty();
+        has_flt_ident = !q.ident.is_missing();
+        has_flt_area = !q.latrange.is_missing() || !q.lonrange.is_missing();
+        has_flt_station = has_flt_rep_memo || has_flt_area || has_flt_ident;
+    }
+
+    template<typename Station>
+    bool matches_station(const Station& station)
+    {
+        if (has_flt_area)
+        {
+            if (!q.latrange.contains(station.coords.lat) ||
+                !q.lonrange.contains(station.coords.lon))
+                return false;
+        }
+
+        if (has_flt_rep_memo && q.rep_memo != station.report)
+            return false;
+
+        if (has_flt_ident && q.ident != station.ident)
+            return false;
+
+        return true;
+    }
+};
+
+template<class Station>
+struct StationFilter;
+
+template<>
+struct StationFilter<dballe::Station> : public StationFilterBase
+{
+    using StationFilterBase::StationFilterBase;
+    bool matches_station(const Station& station)
+    {
+        return StationFilterBase::matches_station(station);
+    }
+};
+
+template<>
+struct StationFilter<dballe::DBStation> : public StationFilterBase
+{
+    StationFilter(const dballe::Query& query)
+        : StationFilterBase(query)
+    {
+        has_flt_station |= (q.ana_id != MISSING_INT);
+    }
+
+    bool matches_station(const DBStation& station)
+    {
+        if (q.ana_id != MISSING_INT and station.id != q.ana_id)
+            return false;
+        return StationFilterBase::matches_station(station);
+    }
+};
+
+}
+
 template<typename Station>
 void StationEntries<Station>::add_filtered(const StationEntries& entries, const dballe::Query& query)
 {
-    // Scan the filter building a todo list of things to match
-    const core::Query& q = core::Query::downcast(query);
+    StationFilter<Station> filter(query);
 
-    // If there is any filtering on the station, build a whitelist of matching stations
-    bool has_flt_rep_memo = !q.rep_memo.empty();
-    bool has_flt_ident = !q.ident.is_missing();
-    bool has_flt_area = !q.latrange.is_missing() || !q.lonrange.is_missing();
-    if (has_flt_rep_memo || has_flt_area || has_flt_ident)
+    if (filter.has_flt_station)
     {
-        LatRange flt_area_latrange = q.latrange;
-        LonRange flt_area_lonrange = q.lonrange;
         for (auto entry: entries)
         {
-            const Station& station = entry.station;
-            if (has_flt_area)
-            {
-                if (!flt_area_latrange.contains(station.coords.lat) ||
-                    !flt_area_lonrange.contains(station.coords.lon))
-                    continue;
-            }
-
-            if (has_flt_rep_memo && q.rep_memo != station.report)
-                continue;
-
-            if (has_flt_ident && q.ident != station.ident)
+            if (!filter.matches_station(entry.station))
                 continue;
 
             iterator cur = this->find(entry.station);
