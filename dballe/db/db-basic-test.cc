@@ -204,6 +204,56 @@ this->add_method("missing_repmemo", [](Fixture& f) {
     wassert(actual(f.tr->query_summary(query)->remaining()) == 0);
 });
 
+this->add_method("update_with_ana_id", [](Fixture& f) {
+    {
+        DataValues vals;
+        vals.info.report = "synop";
+        vals.info.coords = Coords(44.10, 11.50);
+        vals.info.ident = "foo";
+        vals.info.level = Level(1);
+        vals.info.trange = Trange::instant();
+        vals.info.datetime = Datetime(2015, 4, 25, 12, 30, 45);
+        vals.values.set("B12101", 295.1);
+        f.tr->insert_data(vals, true, true);
+    }
+
+    core::Query query;
+    auto cur = f.tr->query_stations(query);
+    wassert(actual(cur->remaining()) == 1u);
+    wassert(cur->next());
+    int ana_id = cur->get_station_id();
+
+    // Replace by ana_id
+    {
+        DataValues vals;
+        vals.info.id = ana_id;
+        vals.info.level = Level(1);
+        vals.info.trange = Trange::instant();
+        vals.info.datetime = Datetime(2015, 4, 25, 12, 30, 45);
+        vals.values.set("B12101", 296.2);
+        wassert(f.tr->insert_data(vals, true, false));
+    }
+
+    auto dcur = f.tr->query_data(query);
+    wassert(actual(dcur->remaining()) == 1u);
+    wassert(dcur->next());
+
+    auto var = dcur->get_var();
+    wassert(actual(var.code()) == WR_VAR(0, 12, 101));
+    wassert(actual(var.enqd()) == 296.2);
+
+    // Remove by ana_id
+    query.clear();
+    query.ana_id = ana_id;
+    query.level = Level(1);
+    query.trange = Trange::instant();
+    wassert(f.tr->remove(query));
+
+    query.clear();
+    dcur = f.tr->query_data(query);
+    wassert(actual(dcur->remaining()) == 0u);
+});
+
 }
 
 template<typename DB>

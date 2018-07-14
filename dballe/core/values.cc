@@ -176,7 +176,7 @@ std::ostream& operator<<(std::ostream& out, const DBStation& st)
 
 void Sampling::set_from_record(const Record& rec)
 {
-    Station::set_from_record(rec);
+    DBStation::set_from_record(rec);
     const auto& r = core::Record::downcast(rec);
     datetime = r.get_datetime();
     if (datetime.is_missing()) throw error_notfound("record has no date and time information set");
@@ -188,7 +188,7 @@ void Sampling::set_from_record(const Record& rec)
 
 void Sampling::print(FILE* out, const char* end) const
 {
-    Station::print(out, " ");
+    DBStation::print(out, " ");
 
     if (datetime.is_missing())
         fputs("xxxx-xx-xx xx:xx:xx ", out);
