@@ -1,10 +1,10 @@
-%global releaseno 3
+%global releaseno 1
 # Note: define _srcarchivename in Travis build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
-Version: 7.33
+Version: 7.34
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -311,6 +311,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Mon Jul 16 2018 Emanuele Di Giacomo <edigiacomo@arpae.it> - 7.34-1
+- Serialization/deserialization and merge of db::Summary
+
 * Wed Jun 27 2018 Emanuele Di Giacomo <edigiacomo@arpae.it> - 7.33-3
 - optimizations addressing #117
 
