@@ -28,7 +28,6 @@ PyTypeObject dpy_DBStation_Type;
 namespace {
 
 #if PY_MAJOR_VERSION >= 3
-
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wwrite-strings"
