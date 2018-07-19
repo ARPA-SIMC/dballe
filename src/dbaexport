@@ -72,8 +72,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Export data from a DB-All.e database.')
     parser.add_argument("--verbose", action="store_true",
                         help="verbose output")
-    parser.add_argument("--dsn", type=str, metavar="dsn",
-                        help="DSN, or URL-like database definition, to use for connecting to the DB-All.e database"
+    parser.add_argument("--url", "--dsn", type=str, metavar="url",
+                        help="URL-like database definition, to use for connecting to the DB-All.e database"
                              " (can also be specified in the environment as DBA_DB)")
     parser.add_argument("--user", type=str, metavar="name",
                         help="username to use for connecting to the DB-All.e database")
