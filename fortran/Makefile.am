@@ -46,8 +46,6 @@ check_PROGRAMS = check_missing_msg
 #TESTS = $(check_PROGRAMS)
 dbtestlib = test.f90 dbtest.f90 dballef.mod
 
-CXXFLAGS += -O0
-
 check_missing_msg_SOURCES = test.f90 check_missing_msg.f90
 check_missing_msg_LDADD = libdballef.la -lpopt
 check_missing_msg_FCFLAGS = -g
@@ -99,29 +97,34 @@ check_transactions1_LDADD = libdballef.la -lpopt
 check_transactions1_FCFLAGS = -g
 
 
-noinst_PROGRAMS = dumpmsg_dballe mkmsg mkmsg-sca genattr
-
-dumpmsg_dballe_SOURCES = dumpmsg_dballe.f90 dballef.mod
-dumpmsg_dballe_LDADD = libdballef.la -lpopt
-dumpmsg_dballe_FCFLAGS = -g 
-
-mkmsg_SOURCES = mkmsg.f90 dballef.mod
-mkmsg_LDADD = libdballef.la -lpopt
-mkmsg_FCFLAGS = -g 
-
-mkmsg_sca_SOURCES = mkmsg-sca.f90 dballef.mod
-mkmsg_sca_LDADD = libdballef.la -lpopt
-mkmsg_sca_FCFLAGS = -g 
-
-genattr_SOURCES = genattr.f90 dballef.mod
-genattr_LDADD = libdballef.la -lpopt
-genattr_FCFLAGS = -g 
-
-noinst_PROGRAMS += dump_dballe check_messages_stdinstdout
-
-dump_dballe_SOURCES = dump_dballe.f90 dballef.mod
-dump_dballe_LDADD = libdballef.la -lpopt
-dump_dballe_FCFLAGS = -g 
+## Automake/make is not currently able to build these, they miss the
+## dballef.mod dependency and try to build them before the library is built. I
+## found no way to work around that, so I am disabling building these, since they
+## are not needed in the target package.
+#
+# noinst_PROGRAMS = dumpmsg_dballe mkmsg mkmsg-sca genattr
+#
+# dumpmsg_dballe_SOURCES = dumpmsg_dballe.f90 dballef.mod
+# dumpmsg_dballe_LDADD = libdballef.la -lpopt
+# dumpmsg_dballe_FCFLAGS = -g
+#
+# mkmsg_SOURCES = mkmsg.f90 dballef.mod
+# mkmsg_LDADD = libdballef.la -lpopt
+# mkmsg_FCFLAGS = -g
+#
+# mkmsg_sca_SOURCES = mkmsg-sca.f90 dballef.mod
+# mkmsg_sca_LDADD = libdballef.la -lpopt
+# mkmsg_sca_FCFLAGS = -g
+#
+# genattr_SOURCES = genattr.f90 dballef.mod
+# genattr_LDADD = libdballef.la -lpopt
+# genattr_FCFLAGS = -g
+#
+# noinst_PROGRAMS += dump_dballe check_messages_stdinstdout
+#
+# dump_dballe_SOURCES = dump_dballe.f90 dballef.mod
+# dump_dballe_LDADD = libdballef.la -lpopt
+# dump_dballe_FCFLAGS = -g
 
 EXTRA_DIST = fortran.dox check-utils.h
 
