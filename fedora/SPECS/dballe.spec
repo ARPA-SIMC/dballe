@@ -17,8 +17,34 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 %else
 %define python3_vers python3
 %endif
-BuildRequires: libtool, gperf, doxygen, python-docutils, lua-devel, libwreport-devel >= 3.11 , python-devel, %{python3_vers}-devel, popt-devel, postgresql-devel, mariadb-devel, sqlite-devel, help2man, libwreport-doc, python-wreport3, %{python3_vers}-wreport3, gcc-gfortran, numpy, %{python3_vers}-numpy
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, python-dballe
+BuildRequires: libtool
+BuildRequires: gperf
+BuildRequires: doxygen
+BuildRequires: python-docutils
+BuildRequires: pkgconfig(lua) > 5.1.1
+BuildRequires: pkgconfig(libwreport) >= 3.11
+BuildRequires: python-devel
+BuildRequires: %{python3_vers}-devel
+%if 0%{?rhel} == 7
+BuildRequires: popt-devel
+BuildRequires: postgresql-devel
+BuildRequires: mariadb-devel
+%else
+BuildRequires: pkgconfig(popt)
+BuildRequires: pkgconfig(libpq)
+BuildRequires: pkgconfig(mariadb)
+%endif
+BuildRequires: pkgconfig(sqlite3)
+BuildRequires: help2man
+BuildRequires: libwreport-doc
+BuildRequires: python-wreport3
+BuildRequires: %{python3_vers}-wreport3
+BuildRequires: gcc-gfortran
+BuildRequires: numpy
+BuildRequires: %{python3_vers}-numpy
+
+Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
+Requires: python-dballe
 
 %description
  Database for punctual meteorological data (Command line tools)
@@ -62,8 +88,13 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, python-dballe
 %package  -n libdballe-devel
 Summary:  DB-ALL.e core C development library
 Group:    Applications/Meteo
-Requires: lib%{name}6 = %{?epoch:%epoch:}%{version}-%{release}, lua-devel, postgresql-devel, mariadb-devel, sqlite-devel, popt-devel
-Obsoletes: libdballepp-devel 
+Requires: lib%{name}6 = %{?epoch:%epoch:}%{version}-%{release}
+Obsoletes: libdballepp-devel
+%if 0%{?rhel} == 7
+Requires: popt-devel
+Requires: postgresql-devel
+Requires: mariadb-devel
+%endif
 
 %description -n libdballe-devel
  DB-ALL.e core C development library
@@ -121,7 +152,7 @@ DB-ALL.e C shared library
 
 Summary:  DB-All.e Fortran development library
 Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, lua-devel
+Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
 
 %description -n libdballef-devel
  DB-All.e is a fast on-disk database where meteorological observed and
@@ -161,7 +192,9 @@ Common data files for all DB-All.e modules
 %package -n python-dballe
 Summary:  DB-ALL.e Python library
 Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, numpy, python-wreport3
+Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
+Requires: numpy
+Requires: python-wreport3
 
 %description -n python-dballe
  DB-ALL.e Python library for weather research
@@ -173,7 +206,9 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, numpy, python
 %package -n %{python3_vers}-dballe
 Summary:  DB-ALL.e Python library
 Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}, %{python3_vers}-numpy, %{python3_vers}-wreport3
+Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
+Requires: %{python3_vers}-numpy
+Requires: %{python3_vers}-wreport3
 
 %description -n %{python3_vers}-dballe
  DB-ALL.e Python library for weather research

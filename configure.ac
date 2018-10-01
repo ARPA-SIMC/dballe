@@ -168,6 +168,12 @@ then
     AC_SUBST(PYTHON_CFLAGS)
 fi
 
+PKGCONFIG_LIBS="-lm"
+PKGCONFIG_CFLAGS=""
+PKGCONFIG_REQUIRES="libwreport >= 3.6 sqlite3"
+AC_SUBST(PKGCONFIG_LIBS)
+AC_SUBST(PKGCONFIG_CFLAGS)
+AC_SUBST(PKGCONFIG_REQUIRES)
 
 dnl Check for wreport
 PKG_CHECK_MODULES(WREPORT,libwreport >= 3.6)
@@ -182,6 +188,7 @@ if test x$have_libpq = xyes
 then
     PKG_CHECK_MODULES(LIBPQ, libpq)
     AC_DEFINE([HAVE_LIBPQ], 1, [PostgreSQL is available])
+    PKGCONFIG_REQUIRES="$PKGCONFIG_REQUIRES libpq"
 else
     dnl libpq without .pc file
     have_libpq=yes
@@ -189,6 +196,7 @@ else
     AC_CHECK_HEADER([libpq-fe.h], [true], [have_libpq=no])
     LIBPQ_CFLAGS=
     LIBPQ_LIBS="-lpq"
+    PKGCONFIG_LIBS="$PKGCONFIG_LIBS -lpq"
     AC_SUBST(LIBPQ_CFLAGS)
     AC_SUBST(LIBPQ_LIBS)
     AC_DEFINE([HAVE_LIBPQ], 1, [PostgreSQL is available])
@@ -197,17 +205,25 @@ AM_CONDITIONAL([HAVE_LIBPQ], [test x"$have_libpq" = x"yes"])
 
 
 dnl Check for libmysqlclient
-AC_PATH_PROG(mysql_config, [mysql_config])
-if test x$mysql_config = x
+PKG_CHECK_EXISTS([mariadb], [have_mysql=yes], [have_mysql=no])
+if test x$have_mysql = xyes
 then
-    have_mysql=no
-else
-    have_mysql=yes
-    MYSQL_CFLAGS=`$mysql_config --cflags`
-    MYSQL_LIBS=`$mysql_config --libs_r`
-    AC_SUBST(MYSQL_CFLAGS)
-    AC_SUBST(MYSQL_LIBS)
+    PKG_CHECK_MODULES(MYSQL, mariadb)
     AC_DEFINE([HAVE_MYSQL], 1, [MySQL is available])
+    PKGCONFIG_REQUIRES="$PKGCONFIG_REQUIRES mariadb"
+else
+    AC_PATH_PROGS(mysql_config, [mysql_config mariadb_config])
+    if test x$mysql_config != x
+    then
+        have_mysql=yes
+        MYSQL_CFLAGS=`$mysql_config --cflags`
+        MYSQL_LIBS=`$mysql_config --libs_r`
+        PKGCONFIG_CFLAGS="$PKGCONFIG_CFLAGS $MYSQL_CFLAGS"
+        PKGCONFIG_LIBS="$PKGCONFIG_LIBS $MYSQL_LIBS"
+        AC_SUBST(MYSQL_CFLAGS)
+        AC_SUBST(MYSQL_LIBS)
+        AC_DEFINE([HAVE_MYSQL], 1, [MySQL is available])
+    fi
 fi
 AM_CONDITIONAL([HAVE_MYSQL], [test x"$have_mysql" = x"yes"])
 
@@ -217,16 +233,19 @@ PKG_CHECK_EXISTS([lua5.2], [have_lua=yes], [have_lua=no])
 if test x$have_lua = xyes
 then
         PKG_CHECK_MODULES(LUA,lua5.2,,[have_lua=no])
+        PKGCONFIG_REQUIRES="$PKGCONFIG_REQUIRES lua5.2"
 else
 	PKG_CHECK_EXISTS([lua5.1], [have_lua=yes], [have_lua=no])
 	if test x$have_lua = xyes
 	then
 		PKG_CHECK_MODULES(LUA,lua5.1,,[have_lua=no])
+        PKGCONFIG_REQUIRES="$PKGCONFIG_REQUIRES lua5.1 >= 5.1.1"
 	else
 		PKG_CHECK_EXISTS([lua], [have_lua=yes], [have_lua=no])
 		if test x$have_lua = xyes
 		then
 			PKG_CHECK_MODULES(LUA,lua,,[have_lua=no])
+            PKGCONFIG_REQUIRES="$PKGCONFIG_REQUIRES lua >= 5.1.1"
 		else
 			dnl We don't always have the luxury of .pc files for lua, it seems
 			have_lua=yes
@@ -236,6 +255,7 @@ else
 			then
 				LUA_CFLAGS=
 				LUA_LIBS="-llua"
+                PKGCONFIG_LIBS="$PKGCONFIG_LIBS $LUA_LIBS"
 			fi
 		fi
 	fi
@@ -247,12 +267,27 @@ fi
 AM_CONDITIONAL([LUA], [test x"$have_lua" = x"yes"])
 
 dnl Check for popt
-AC_CHECK_HEADER(popt.h, AC_DEFINE(HAVE_POPT_H, 1, popt.h has been found),
+PKG_CHECK_EXISTS([popt], [have_popt=yes], [have_popt=no])
+if test x$have_popt = xyes
+then
+    PKG_CHECK_MODULES(POPT,popt,,[have_popt=no])
+    PKGCONFIG_REQUIRES="$PKGCONFIG_REQUIRES popt"
+else
+    AC_CHECK_HEADER(popt.h, [have_popt=yes], [have_popt=no])
+    if test x$have_popt = xno
+    then
         AC_MSG_ERROR([*** popt.h not found. Check 'config.log' for more details.])
-)
-AC_CHECK_LIB(popt, poptGetContext, LIBS="$LIBS -lpopt",
+    fi
+    AC_CHECK_LIB(popt, poptGetContext, [have_popt=yes], [have_popt=no])
+    if test x$have_popt = xno
+    then
         AC_MSG_ERROR([*** libpopt not found. Check 'config.log' for more details.])
-)
+    fi
+    POPT_LIBS="-lpopt"
+    PKGCONFIG_LIBS="$PKGCONFIG_LIBS $POPT_LIBS"
+    AC_SUBST(POPT_LIBS)
+fi
+AC_DEFINE(HAVE_POPT_H, 1, popt.h has been found)
 
 LIBS="$LIBS -lm"
 

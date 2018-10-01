@@ -10,9 +10,9 @@ endif
 noinst_PROGRAMS = import query
 
 import_SOURCES = import.cc
-import_LDFLAGS = $(DBALLELIBS) $(WREPORT_LIBS) -lpopt
+import_LDFLAGS = $(DBALLELIBS)
 import_DEPENDENCIES = $(DBALLELIBS)
 
 query_SOURCES = query.cc
-query_LDFLAGS = $(DBALLELIBS) $(WREPORT_LIBS) -lpopt
+query_LDFLAGS = $(DBALLELIBS)
 query_DEPENDENCIES = $(DBALLELIBS)
