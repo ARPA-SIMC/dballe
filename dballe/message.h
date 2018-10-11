@@ -1,11 +1,11 @@
 #ifndef DBALLE_MESSAGE_H
 #define DBALLE_MESSAGE_H
 
+#include <dballe/fwd.h>
 #include <dballe/types.h>
 #include <wreport/varinfo.h>
 #include <vector>
 #include <memory>
-#include <iterator>
 
 namespace wreport {
 struct Var;
