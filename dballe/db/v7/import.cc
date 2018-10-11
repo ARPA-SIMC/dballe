@@ -118,7 +118,7 @@ void Transaction::import_msgs(const Messages& msgs, const char* repmemo, int fla
     batch.set_write_attrs(flags & DBA_IMPORT_ATTRS);
 
     for (const auto& i: msgs)
-        add_msg_to_batch(trc, i, repmemo, flags);
+        add_msg_to_batch(trc, *i, repmemo, flags);
 
     // Run the bulk insert
     batch.write_pending(trc);

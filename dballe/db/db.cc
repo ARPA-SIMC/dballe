@@ -54,10 +54,10 @@ unsigned Cursor::test_iterate(FILE* dump)
     return count;
 }
 
-void Transaction::import_msgs(const Messages& msgs, const char* repmemo, int flags)
+void Transaction::import_msgs(const std::vector<std::shared_ptr<Message>>& msgs, const char* repmemo, int flags)
 {
     for (const auto& i: msgs)
-        import_msg(i, repmemo, flags);
+        import_msg(*i, repmemo, flags);
 }
 
 }

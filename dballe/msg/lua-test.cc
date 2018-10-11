@@ -21,7 +21,7 @@ class Tests : public TestCase
             // Get a test message
             Messages msgs = read_msgs("bufr/obs0-1.22.bufr", File::BUFR);
             wassert(actual(msgs.size()) == 1u);
-            Msg& msg = Msg::downcast(msgs[0]);
+            auto msg = Msg::downcast(msgs[0]);
 
             dballe::tests::Lua test(
                 "function test() \n"
@@ -61,14 +61,14 @@ class Tests : public TestCase
             );
 
             // Push the variable as a global
-            msg.lua_push(test.L);
+            msg->lua_push(test.L);
             lua_setglobal(test.L, "msg");
 
             // Check that we can retrieve it
             lua_getglobal(test.L, "msg");
             Msg* msg1 = Msg::lua_check(test.L, 1);
             lua_pop(test.L, 1);
-            wassert(actual(&msg == msg1).istrue());
+            wassert(actual(msg.get() == msg1).istrue());
 
             wassert(actual(test.run()) == "");
         });

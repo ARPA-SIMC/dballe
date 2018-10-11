@@ -10,7 +10,7 @@ struct Var;
 
 namespace dballe {
 struct File;
-struct Messages;
+struct Message;
 struct Msg;
 
 namespace msg {
@@ -42,7 +42,7 @@ protected:
 	/// Template selected for exporter (empty if auto detect)
 	std::string exporter_template;
     /// Message being written
-    Messages* msgs;
+    std::vector<std::shared_ptr<dballe::Message>>* msgs;
 	/// Message subset being written
 	Msg* wmsg;
 	/// Last variables written with prendilo

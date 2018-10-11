@@ -34,6 +34,20 @@ Messages messages_from_csv(CSVReader& in);
  */
 void messages_to_csv(const Messages& msgs, CSVWriter& out);
 
+/**
+ * Compute the differences between two Messages
+ *
+ * Details of the differences found will be formatted using the wreport
+ * notes system (@see wreport/notes.h).
+ *
+ * @returns
+ *   The number of differences found
+ */
+unsigned messages_diff(const Messages& msgs1, const Messages& msgs2);
+
+/// Print all the contents of all the messages to an output stream
+void messages_print(const Messages& msgs, FILE* out);
+
 }
 
 /**
@@ -97,6 +111,13 @@ public:
      * Throws an exception if \a o is not a Msg.
      */
     static Msg& downcast(Message& o);
+
+    /**
+     * Returns a pointer to \a o downcasted as a Msg.
+     *
+     * Throws an exception if \a o is not a Msg.
+     */
+    static std::shared_ptr<Msg> downcast(std::shared_ptr<Message> o);
 
 
     std::unique_ptr<Message> clone() const override;
@@ -398,6 +419,7 @@ public:
     static Msg* lua_check(struct lua_State* L, int idx);
 };
 
+
 /**
  * Match adapter for Msg
  */
@@ -415,6 +437,7 @@ struct MatchedMsg : public Matched
     matcher::Result match_coords(const LatRange& latrange, const LonRange& lonrange) const override;
     matcher::Result match_rep_memo(const char* memo) const override;
 };
+
 
 /**
  * Match adapter for Messages

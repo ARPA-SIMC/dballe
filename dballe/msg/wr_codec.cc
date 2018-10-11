@@ -37,7 +37,7 @@ bool CrexImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(
 Messages WRImporter::from_bulletin(const wreport::Bulletin& msg) const
 {
     Messages res;
-    foreach_decoded_bulletin(msg, [&](unique_ptr<Message>&& m) { res.append(move(m)); return true; });
+    foreach_decoded_bulletin(msg, [&](unique_ptr<Message>&& m) { res.emplace_back(move(m)); return true; });
     return res;
 }
 
@@ -149,7 +149,7 @@ unique_ptr<wr::Template> WRExporter::infer_template(const Messages& msgs) const
     // Select initial template name
     string tpl = opts.template_name;
     if (tpl.empty())
-        tpl = infer_from_message(Msg::downcast(msgs[0]));
+        tpl = infer_from_message(*Msg::downcast(msgs[0]));
 
     // Get template factory
     const wr::TemplateFactory& fac = wr::TemplateRegistry::get(tpl);
@@ -185,13 +185,13 @@ const TemplateRegistry& TemplateRegistry::get()
 
         registry->register_factory(MISSING_INT, "wmo", "WMO style templates (autodetect)",
                 [](const ExporterOptions& opts, const Messages& msgs) {
-                    const Msg& msg = Msg::downcast(msgs[0]);
+                    auto msg = Msg::downcast(msgs[0]);
                     string tpl;
-                    switch (msg.type)
+                    switch (msg->type)
                     {
                         case MSG_TEMP_SHIP: tpl = "temp-wmo"; break;
                         default:
-                            tpl = msg_type_name(msg.type);
+                            tpl = msg_type_name(msg->type);
                             tpl += "-wmo";
                             break;
                     }
@@ -244,7 +244,7 @@ void Template::to_bulletin(wreport::Bulletin& bulletin)
     for (unsigned i = 0; i < msgs.size(); ++i)
     {
         Subset& s = bulletin.obtain_subset(i);
-        to_subset(Msg::downcast(msgs[i]), s);
+        to_subset(*Msg::downcast(msgs[i]), s);
     }
 }
 
@@ -252,7 +252,7 @@ void Template::setupBulletin(wreport::Bulletin& bulletin)
 {
     // Get reference time from first msg in the set
     // If not found, use current time.
-    Datetime dt = msgs[0].get_datetime();
+    Datetime dt = msgs[0]->get_datetime();
     bulletin.rep_year = dt.year;
     bulletin.rep_month = dt.month;
     bulletin.rep_day = dt.day;

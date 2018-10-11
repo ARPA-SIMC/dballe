@@ -12,6 +12,7 @@ namespace dballe {
 
 Message::~Message() {}
 
+#if 0
 
 /*
  * Messages
@@ -107,5 +108,7 @@ unsigned Messages::diff(const Messages& o) const
         diffs += msgs[i]->diff(*o.msgs[i]);
     return diffs;
 }
+
+#endif
 
 }

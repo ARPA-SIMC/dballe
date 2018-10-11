@@ -211,7 +211,7 @@ void dump(const std::string& tag, const Messages& msgs, const std::string& desc)
     string fname = "/tmp/" + tag + ".txt";
     FILE* out = fopen(fname.c_str(), "w");
     try {
-        msgs.print(out);
+        msg::messages_print(msgs, out);
     } catch (std::exception& e) {
         fprintf(out, "Dump interrupted: %s\n", e.what());
     }
@@ -282,18 +282,11 @@ void StripAttrs::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        Msg& m = Msg::downcast(mi);
-        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
-        {
-            msg::Context& c = **ci;
-            for (vector<wreport::Var*>::iterator vi = c.data.begin(); vi != c.data.end(); ++vi)
-            {
-                Var& v = **vi;
-                for (vector<wreport::Varcode>::const_iterator i = codes.begin();
-                        i != codes.end(); ++i)
-                    v.unseta(*i);
-            }
-        }
+        auto m = Msg::downcast(mi);
+        for (auto& ctx: m->data)
+            for (auto& var: ctx->data)
+                for (auto code: codes)
+                    var->unseta(code);
     }
 }
 
@@ -313,16 +306,10 @@ void StripSubstituteAttrs::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        Msg& m = Msg::downcast(mi);
-        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
-        {
-            msg::Context& c = **ci;
-            for (vector<wreport::Var*>::iterator vi = c.data.begin(); vi != c.data.end(); ++vi)
-            {
-                Var& v = **vi;
-                v.unseta(v.code());
-            }
-        }
+        auto m = Msg::downcast(mi);
+        for (auto& ctx: m->data)
+            for (auto& var: ctx->data)
+                var->unseta(var->code());
     }
 }
 
@@ -330,15 +317,13 @@ void StripVars::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        Msg& m = Msg::downcast(mi);
-        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); )
+        auto m = Msg::downcast(mi);
+        for (auto ci = m->data.begin(); ci != m->data.end(); )
         {
-            msg::Context& c = **ci;
-            for (vector<wreport::Varcode>::const_iterator i = codes.begin();
-                    i != codes.end(); ++i)
-                c.remove(*i);
-            if (c.data.empty())
-                ci = m.data.erase(ci);
+            for (const auto& code: codes)
+                (*ci)->remove(code);
+            if ((*ci)->data.empty())
+                ci = m->data.erase(ci);
             else
                 ++ci;
         }
@@ -364,21 +349,20 @@ void RoundLegacyVars::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        Msg& m = Msg::downcast(mi);
-        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
+        auto m = Msg::downcast(mi);
+        for (auto& ctx: m->data)
         {
-            msg::Context& c = **ci;
-            if (Var* var = c.edit(WR_VAR(0, 12, 101)))
+            if (Var* var = ctx->edit(WR_VAR(0, 12, 101)))
             {
                 Var var1(table->query(WR_VAR(0, 12, 1)), *var);
                 var->set(var1);
             }
-            if (Var* var = c.edit(WR_VAR(0, 12, 103)))
+            if (Var* var = ctx->edit(WR_VAR(0, 12, 103)))
             {
                 Var var1(table->query(WR_VAR(0, 12, 3)), *var);
                 var->set(var1);
             }
-            if (Var* var = c.edit(WR_VAR(0,  7,  30)))
+            if (Var* var = ctx->edit(WR_VAR(0,  7,  30)))
             {
                 Var var1(table->query(WR_VAR(0, 7, 1)), *var);
                 var->set(var1);
@@ -392,20 +376,20 @@ void RemoveSynopWMOOnlyVars::tweak(Messages& msgs)
     int seen_tprec_trange = MISSING_INT;
     for (auto& mi: msgs)
     {
-        Msg& m = Msg::downcast(mi);
+        auto m = Msg::downcast(mi);
         // Remove all 'cloud drift' levels
-        for (int i = 1; m.remove_context(Level::cloud(260, i), Trange::instant()); ++i)
+        for (int i = 1; m->remove_context(Level::cloud(260, i), Trange::instant()); ++i)
             ;
         // Remove all 'cloud elevation' levels
-        for (int i = 1; m.remove_context(Level::cloud(261, i), Trange::instant()); ++i)
+        for (int i = 1; m->remove_context(Level::cloud(261, i), Trange::instant()); ++i)
             ;
         // Remove all 'cloud direction and elevation' levels
-        for (int i = 1; m.remove_context(Level::cloud(262, i), Trange::instant()); ++i)
+        for (int i = 1; m->remove_context(Level::cloud(262, i), Trange::instant()); ++i)
             ;
         // Remove all 'cloud below' levels
-        for (int i = 1; m.remove_context(Level::cloud(263, i), Trange::instant()); ++i)
+        for (int i = 1; m->remove_context(Level::cloud(263, i), Trange::instant()); ++i)
             ;
-        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); )
+        for (vector<msg::Context*>::iterator ci = m->data.begin(); ci != m->data.end(); )
         {
             msg::Context& c = **ci;
             c.remove(WR_VAR(0, 20, 62)); // State of the ground (with/without snow)
@@ -439,7 +423,7 @@ void RemoveSynopWMOOnlyVars::tweak(Messages& msgs)
             if (c.trange.pind == 2 || c.trange.pind == 3)
                 c.remove(WR_VAR(0, 12, 101)); // min and max temperature
             if (c.data.empty())
-                ci = m.data.erase(ci);
+                ci = m->data.erase(ci);
             else
                 ++ci;
         }
@@ -450,8 +434,8 @@ void RemoveTempWMOOnlyVars::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        Msg& m = Msg::downcast(mi);
-        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); )
+        auto m = Msg::downcast(mi);
+        for (vector<msg::Context*>::iterator ci = m->data.begin(); ci != m->data.end(); )
         {
             msg::Context& c = **ci;
             c.remove(WR_VAR(0, 22, 43)); // Sea/water temperature
@@ -469,7 +453,7 @@ void RemoveTempWMOOnlyVars::tweak(Messages& msgs)
             c.remove(WR_VAR(0,  2,  3)); // Type of measuring equipment
 
             if (c.data.empty())
-                ci = m.data.erase(ci);
+                ci = m->data.erase(ci);
             else
                 ++ci;
         }
@@ -484,18 +468,15 @@ RemoveOddTempTemplateOnlyVars::RemoveOddTempTemplateOnlyVars()
 void RemoveSynopWMOOddprec::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
-    {
-        Msg& m = Msg::downcast(mi);
-        m.remove_context(Level(1), Trange(1, 0));
-    }
+        Msg::downcast(mi)->remove_context(Level(1), Trange(1, 0));
 }
 
 void TruncStName::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        Msg& m = Msg::downcast(mi);
-        if (msg::Context* c = m.edit_context(Level(), Trange()))
+        auto m = Msg::downcast(mi);
+        if (msg::Context* c = m->edit_context(Level(), Trange()))
             if (const Var* orig = c->find(WR_VAR(0, 1, 19)))
                 if (orig->isset())
                 {
@@ -517,11 +498,10 @@ void RoundGeopotential::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        Msg& m = Msg::downcast(mi);
-        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
+        auto m = Msg::downcast(mi);
+        for (auto& ctx: m->data)
         {
-            msg::Context& c = **ci;
-            if (Var* orig = c.edit(WR_VAR(0, 10, 8)))
+            if (Var* orig = ctx->edit(WR_VAR(0, 10, 8)))
             {
                 // Convert to B10009 (new GTS TEMP templates)
                 Var var2(table->query(WR_VAR(0, 10, 9)), *orig);
@@ -543,13 +523,12 @@ void HeightToGeopotential::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        Msg& m = Msg::downcast(mi);
-        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
+        auto m = Msg::downcast(mi);
+        for (auto& ctx: m->data)
         {
-            msg::Context& c = **ci;
-            if (c.level.ltype1 != 102) continue;
-            Var var(table->query(WR_VAR(0, 10, 8)), round(c.level.l1 * 9.807 / 10) * 10);
-            c.set(var);
+            if (ctx->level.ltype1 != 102) continue;
+            Var var(table->query(WR_VAR(0, 10, 8)), round(ctx->level.l1 * 9.807 / 10) * 10);
+            ctx->set(var);
         }
     }
 }
@@ -558,13 +537,10 @@ void RoundVSS::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        Msg& m = Msg::downcast(mi);
-        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
-        {
-            msg::Context& c = **ci;
-            if (Var* orig = c.edit(WR_VAR(0, 8, 42)))
+        auto m = Msg::downcast(mi);
+        for (auto& ctx: m->data)
+            if (Var* orig = ctx->edit(WR_VAR(0, 8, 42)))
                 orig->seti(convert_BUFR08001_to_BUFR08042(convert_BUFR08042_to_BUFR08001(orig->enqi())));
-        }
     }
 }
 
@@ -575,10 +551,7 @@ RemoveContext::RemoveContext(const Level& lev, const Trange& tr)
 void RemoveContext::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
-    {
-        Msg& m = Msg::downcast(mi);
-        m.remove_context(lev, tr);
-    }
+        Msg::downcast(mi)->remove_context(lev, tr);
 }
 
 }
@@ -642,7 +615,7 @@ void TestMessage::dump() const
 
     fname = basename + ".messages";
     out = fopen(fname.c_str(), "w");
-    msgs.print(out);
+    msg::messages_print(msgs, out);
     fclose(out);
     cerr << name << " interpreted saved in " << fname << endl;
 }
@@ -664,7 +637,7 @@ void TestCodec::do_compare(const TestMessage& msg1, const TestMessage& msg2)
     {
         stringstream str;
         notes::Collect c(str);
-        int diffs = msg1.msgs.diff(msg2.msgs);
+        int diffs = msg::messages_diff(msg1.msgs, msg2.msgs);
         if (diffs)
         {
             msg1.dump();

@@ -216,7 +216,7 @@ void Messages::duplicate(size_t size, const Datetime& datetime)
         emplace_back((*this)[i]);
         for (auto& message: back())
         {
-            auto msg = dynamic_cast<dballe::Msg*>(&message);
+            auto msg = dynamic_pointer_cast<dballe::Msg>(message);
             msg->set_datetime(datetime);
         }
     }

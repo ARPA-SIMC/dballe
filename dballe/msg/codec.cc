@@ -47,7 +47,7 @@ Importer::~Importer()
 Messages Importer::from_binary(const BinaryMessage& msg) const
 {
     Messages res;
-    foreach_decoded(msg, [&](unique_ptr<Message>&& m) { res.append(move(m)); return true; });
+    foreach_decoded(msg, [&](unique_ptr<Message>&& m) { res.emplace_back(move(m)); return true; });
     return res;
 }
 

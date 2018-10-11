@@ -223,7 +223,7 @@ public:
     void add_message(const dballe::Message& message);
 
     /// Add the contents of a Messages
-    void add_messages(const dballe::Messages& messages);
+    void add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages);
 
     /// Merge the copy of another summary into this one
     void add_summary(const BaseSummary& summary);

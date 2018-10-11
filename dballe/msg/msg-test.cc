@@ -1,7 +1,7 @@
 #include "tests.h"
 #include "msg.h"
 #include "context.h"
-#include "core/csv.h"
+#include "dballe/core/csv.h"
 #include <wreport/notes.h>
 
 using namespace std;
@@ -18,8 +18,7 @@ std::unique_ptr<Matcher> get_matcher(const char* q)
 
 void init(Messages& m)
 {
-    unique_ptr<Msg> msg(new Msg);
-    m.append(move(msg));
+    m.emplace_back(make_shared<Msg>());
 }
 
 // Ensure that the context vector inside the message is in strict ascending order
@@ -76,23 +75,25 @@ class Tests : public TestCase
         });
         add_method("compose", []() {
             // Try to write a generic message from scratch
-            Msg msg;
-            msg.type = MSG_GENERIC;
+            auto msg = make_shared<Msg>();
+            msg->type = MSG_GENERIC;
             //msg->type = MSG_SYNOP;
 
             // Fill in the dba_msg
-            msg.seti(WR_VAR(0, 4, 1), 2008,   -1, Level(), Trange());
-            msg.seti(WR_VAR(0, 4, 2),    5,   -1, Level(), Trange());
-            msg.seti(WR_VAR(0, 4, 3),    7,   -1, Level(), Trange());
+            msg->seti(WR_VAR(0, 4, 1), 2008,   -1, Level(), Trange());
+            msg->seti(WR_VAR(0, 4, 2),    5,   -1, Level(), Trange());
+            msg->seti(WR_VAR(0, 4, 3),    7,   -1, Level(), Trange());
             // ...
-            msg.setd(WR_VAR(0, 5, 1),   45.0, -1, Level(), Trange());
-            msg.setd(WR_VAR(0, 6, 1),   11.0, -1, Level(), Trange());
+            msg->setd(WR_VAR(0, 5, 1),   45.0, -1, Level(), Trange());
+            msg->setd(WR_VAR(0, 6, 1),   11.0, -1, Level(), Trange());
             // ...
-            msg.setd(WR_VAR(0,12, 101),  273.0, 75, Level(102, 2000), Trange::instant());
+            msg->setd(WR_VAR(0,12, 101),  273.0, 75, Level(102, 2000), Trange::instant());
 
             // Append the dba_msg to a dba_msgs
             Messages msgs;
-            msgs.append(msg);
+            msgs.emplace_back(msg);
+
+            // FIXME: missing an actual test?
         });
         add_method("repmemo", []() {
             // Test repmemo handling
@@ -357,10 +358,10 @@ class Tests : public TestCase
             Messages matched; init(matched);
             wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-            Msg::downcast(matched[0]).seti(WR_VAR(0, 1, 192), 2, -1, Level(), Trange());
+            Msg::downcast(matched[0])->seti(WR_VAR(0, 1, 192), 2, -1, Level(), Trange());
             wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-            Msg::downcast(matched[0]).seti(WR_VAR(0, 1, 192), 1, -1, Level(), Trange());
+            Msg::downcast(matched[0])->seti(WR_VAR(0, 1, 192), 1, -1, Level(), Trange());
             wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_YES);
         });
         add_method("msgs_match_blockstation", []() {
@@ -371,13 +372,13 @@ class Tests : public TestCase
                 Messages matched; init(matched);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_block(1);
+                Msg::downcast(matched[0])->set_block(1);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_block(11);
+                Msg::downcast(matched[0])->set_block(11);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_YES);
 
-                Msg::downcast(matched[0]).set_station(222);
+                Msg::downcast(matched[0])->set_station(222);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_YES);
             }
 
@@ -387,19 +388,19 @@ class Tests : public TestCase
                 Messages matched; init(matched);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_block(1);
+                Msg::downcast(matched[0])->set_block(1);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_block(11);
+                Msg::downcast(matched[0])->set_block(11);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_station(22);
+                Msg::downcast(matched[0])->set_station(22);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_station(222);
+                Msg::downcast(matched[0])->set_station(222);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_YES);
 
-                Msg::downcast(matched[0]).set_block(1);
+                Msg::downcast(matched[0])->set_block(1);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
             }
         });
@@ -411,10 +412,10 @@ class Tests : public TestCase
                 Messages matched; init(matched);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_datetime(Datetime(1999));
+                Msg::downcast(matched[0])->set_datetime(Datetime(1999));
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_datetime(Datetime(2000));
+                Msg::downcast(matched[0])->set_datetime(Datetime(2000));
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_YES);
             }
             {
@@ -423,10 +424,10 @@ class Tests : public TestCase
                 Messages matched; init(matched);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_datetime(Datetime(2001));
+                Msg::downcast(matched[0])->set_datetime(Datetime(2001));
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_datetime(Datetime(2000));
+                Msg::downcast(matched[0])->set_datetime(Datetime(2000));
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_YES);
             }
             {
@@ -435,19 +436,19 @@ class Tests : public TestCase
                 Messages matched; init(matched);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_datetime(Datetime(1999));
+                Msg::downcast(matched[0])->set_datetime(Datetime(1999));
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_datetime(Datetime(2011));
+                Msg::downcast(matched[0])->set_datetime(Datetime(2011));
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_datetime(Datetime(2000));
+                Msg::downcast(matched[0])->set_datetime(Datetime(2000));
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_YES);
 
-                Msg::downcast(matched[0]).set_datetime(Datetime(2005));
+                Msg::downcast(matched[0])->set_datetime(Datetime(2005));
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_YES);
 
-                Msg::downcast(matched[0]).set_datetime(Datetime(2010));
+                Msg::downcast(matched[0])->set_datetime(Datetime(2010));
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_YES);
             }
         });
@@ -459,12 +460,12 @@ class Tests : public TestCase
                 Messages matched; init(matched);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_latitude(43.0);
+                Msg::downcast(matched[0])->set_latitude(43.0);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_latitude(45.0);
+                Msg::downcast(matched[0])->set_latitude(45.0);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_YES);
-                Msg::downcast(matched[0]).set_latitude(46.0);
+                Msg::downcast(matched[0])->set_latitude(46.0);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_YES);
             }
             {
@@ -473,12 +474,12 @@ class Tests : public TestCase
                 Messages matched; init(matched);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_latitude(46.0);
+                Msg::downcast(matched[0])->set_latitude(46.0);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_latitude(45.0);
+                Msg::downcast(matched[0])->set_latitude(45.0);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_YES);
-                Msg::downcast(matched[0]).set_latitude(44.0);
+                Msg::downcast(matched[0])->set_latitude(44.0);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_YES);
             }
             {
@@ -487,12 +488,12 @@ class Tests : public TestCase
                 Messages matched; init(matched);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_longitude(43.0);
+                Msg::downcast(matched[0])->set_longitude(43.0);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_longitude(45.0);
+                Msg::downcast(matched[0])->set_longitude(45.0);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_YES);
-                Msg::downcast(matched[0]).set_longitude(45.0);
+                Msg::downcast(matched[0])->set_longitude(45.0);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_YES);
             }
             {
@@ -501,12 +502,12 @@ class Tests : public TestCase
                 Messages matched; init(matched);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_longitude(46.0);
+                Msg::downcast(matched[0])->set_longitude(46.0);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_longitude(45.0);
+                Msg::downcast(matched[0])->set_longitude(45.0);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_YES);
-                Msg::downcast(matched[0]).set_longitude(44.0);
+                Msg::downcast(matched[0])->set_longitude(44.0);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_YES);
             }
             {
@@ -515,13 +516,13 @@ class Tests : public TestCase
                 Messages matched; init(matched);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_latitude(45.5);
+                Msg::downcast(matched[0])->set_latitude(45.5);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_longitude(13.0);
+                Msg::downcast(matched[0])->set_longitude(13.0);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-                Msg::downcast(matched[0]).set_longitude(11.0);
+                Msg::downcast(matched[0])->set_longitude(11.0);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_YES);
             }
         });
@@ -532,10 +533,10 @@ class Tests : public TestCase
             Messages matched; init(matched);
             wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-            Msg::downcast(matched[0]).set_rep_memo("temp");
+            Msg::downcast(matched[0])->set_rep_memo("temp");
             wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-            Msg::downcast(matched[0]).set_rep_memo("synop");
+            Msg::downcast(matched[0])->set_rep_memo("synop");
             wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_YES);
         });
         add_method("msgs_match_empty", []() {
@@ -562,13 +563,12 @@ class Tests : public TestCase
             // Normalise before compare
             for (auto& i: msgs)
             {
-                Msg& m = Msg::downcast(i);
-                m.set_rep_memo("synop");
+                Msg::downcast(i)->set_rep_memo("synop");
                 //m.set_second(0);
             }
 
             notes::Collect c(cerr);
-            wassert(actual(msgs.diff(msgs1)) == 0u);
+            wassert(actual(msg::messages_diff(msgs, msgs1)) == 0u);
         });
         add_method("msgs_copy", []() {
             Messages msgs = read_msgs("bufr/synop-evapo.bufr", File::BUFR);

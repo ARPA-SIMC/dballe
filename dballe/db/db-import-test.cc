@@ -15,17 +15,17 @@ using namespace std;
 
 namespace {
 
-unsigned diff_msg(Message& first, Message& second, const char* tag)
+unsigned diff_msg(std::shared_ptr<Message> first, std::shared_ptr<Message> second, const char* tag)
 {
     notes::Collect c(cerr);
-    int diffs = first.diff(second);
-    if (diffs) dballe::tests::track_different_msgs(first, second, tag);
+    int diffs = first->diff(*second);
+    if (diffs) dballe::tests::track_different_msgs(*first, *second, tag);
     return diffs;
 }
 
-static void normalise_datetime(Msg& msg)
+static void normalise_datetime(std::shared_ptr<Msg> msg)
 {
-    msg::Context* ctx = msg.edit_context(Level(), Trange());
+    msg::Context* ctx = msg->edit_context(Level(), Trange());
     if (!ctx) return;
 
     // Strip datetime variables
@@ -59,17 +59,17 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
                 if (blacklist.find(files[i]) != blacklist.end()) continue;
                 try {
                     Messages inmsgs = read_msgs(files[i], File::CREX);
-                    Msg& msg = Msg::downcast(inmsgs[0]);
+                    auto msg = Msg::downcast(inmsgs[0]);
                     normalise_datetime(msg);
 
                     f.tr->remove_all();
-                    f.tr->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+                    f.tr->import_msg(*msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
                     // Explicitly set the rep_memo variable that is added during export
-                    msg.set_rep_memo(Msg::repmemo_from_type(msg.type));
+                    msg->set_rep_memo(Msg::repmemo_from_type(msg->type));
 
                     query.clear();
-                    query.rep_memo = Msg::repmemo_from_type(msg.type);
+                    query.rep_memo = Msg::repmemo_from_type(msg->type);
 
                     Messages msgs = wcallchecked(dballe::tests::messages_from_db(f.tr, query));
                     wassert(actual(msgs.size()) == 1u);
@@ -87,20 +87,20 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             {
                 try {
                     Messages inmsgs = read_msgs(files[i], File::BUFR);
-                    Msg& msg = Msg::downcast(inmsgs[0]);
+                    auto msg = Msg::downcast(inmsgs[0]);
                     normalise_datetime(msg);
 
                     f.tr->remove_all();
-                    wassert(f.tr->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA));
+                    wassert(f.tr->import_msg(*msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA));
 
                     query.clear();
-                    query.rep_memo = Msg::repmemo_from_type(msg.type);
+                    query.rep_memo = Msg::repmemo_from_type(msg->type);
 
                     Messages msgs = dballe::tests::messages_from_db(f.tr, query);
                     wassert(actual(msgs.size()) == 1u);
 
                     // Explicitly set the rep_memo variable that is added during export
-                    msg.set_rep_memo(Msg::repmemo_from_type(msg.type));
+                    msg->set_rep_memo(Msg::repmemo_from_type(msg->type));
 
                     wassert(actual(diff_msg(msg, msgs[0], "bufr")) == 0);
                 } catch (std::exception& e) {
@@ -116,19 +116,19 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             {
                 try {
                     Messages inmsgs = read_msgs(files[i], File::AOF);
-                    Msg& msg = Msg::downcast(inmsgs[0]);
+                    auto msg = Msg::downcast(inmsgs[0]);
                     normalise_datetime(msg);
 
                     f.tr->remove_all();
-                    f.tr->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+                    f.tr->import_msg(*msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
                     // Explicitly set the rep_memo variable that is added during export
-                    msg.set_rep_memo(Msg::repmemo_from_type(msg.type));
+                    msg->set_rep_memo(Msg::repmemo_from_type(msg->type));
 
                     // db->dump(stderr);
 
                     query.clear();
-                    query.rep_memo = Msg::repmemo_from_type(msg.type);
+                    query.rep_memo = Msg::repmemo_from_type(msg->type);
 
                     Messages msgs = dballe::tests::messages_from_db(f.tr, query);
                     wassert(actual(msgs.size()) == 1u);
@@ -146,22 +146,22 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             // msg2 has latitude 46.22
             Messages msgs1 = read_msgs("bufr/obs0-1.22.bufr", File::BUFR);
             Messages msgs2 = read_msgs("bufr/obs0-3.504.bufr", File::BUFR);
-            Msg& msg1 = Msg::downcast(msgs1[0]);
-            Msg& msg2 = Msg::downcast(msgs2[0]);
+            auto msg1 = Msg::downcast(msgs1[0]);
+            auto msg2 = Msg::downcast(msgs2[0]);
 
             normalise_datetime(msg1);
             normalise_datetime(msg2);
 
             f.tr->remove_all();
-            f.tr->import_msg(msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
-            f.tr->import_msg(msg2, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+            f.tr->import_msg(*msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+            f.tr->import_msg(*msg2, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
             // Explicitly set the rep_memo variable that is added during export
-            msg1.set_rep_memo(Msg::repmemo_from_type(msg1.type));
-            msg2.set_rep_memo(Msg::repmemo_from_type(msg2.type));
+            msg1->set_rep_memo(Msg::repmemo_from_type(msg1->type));
+            msg2->set_rep_memo(Msg::repmemo_from_type(msg2->type));
 
             query.clear();
-            query.rep_memo = Msg::repmemo_from_type(msg1.type);
+            query.rep_memo = Msg::repmemo_from_type(msg1->type);
 
             // Warning: this test used to fail with older versions of MySQL.
             // See http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=397597
@@ -177,21 +177,21 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             // msg1 has latitude 33.88
             // msg2 has latitude 46.22
             Messages msgs1 = read_msgs("bufr/obs0-1.22.bufr", File::BUFR);
-            Msg& msg1 = Msg::downcast(msgs1[0]);
+            auto msg1 = Msg::downcast(msgs1[0]);
 
             normalise_datetime(msg1);
 
             f.tr->remove_all();
             //auto t = db->transaction();
-            f.tr->import_msg(msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
-            f.tr->import_msg(msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+            f.tr->import_msg(*msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+            f.tr->import_msg(*msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
             //t->commit();
 
             // Explicitly set the rep_memo variable that is added during export
-            msg1.set_rep_memo(Msg::repmemo_from_type(msg1.type));
+            msg1->set_rep_memo(Msg::repmemo_from_type(msg1->type));
 
             core::Query query;
-            query.rep_memo = Msg::repmemo_from_type(msg1.type);
+            query.rep_memo = Msg::repmemo_from_type(msg1->type);
 
             Messages msgs = dballe::tests::messages_from_db(f.tr, query);
             wassert(actual(msgs.size()) == 1u);
@@ -203,10 +203,10 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             // Check automatic repinfo allocation
             core::Query query;
             Messages msgs = read_msgs("bufr/generic-new-repmemo.bufr", File::BUFR);
-            Msg& msg = Msg::downcast(msgs[0]);
+            auto msg = Msg::downcast(msgs[0]);
 
             f.tr->remove_all();
-            f.tr->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+            f.tr->import_msg(*msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
             query.clear();
             query.rep_memo = "enrico";
@@ -221,7 +221,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             Messages msgs = read_msgs("bufr/generic-onlystation.bufr", File::BUFR);
 
             f.tr->remove_all();
-            f.tr->import_msg(msgs[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+            f.tr->import_msg(*msgs[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
 
             std::unique_ptr<db::Cursor> cur = f.tr->query_stations(core::Query());
             wassert(actual(cur->remaining()) == 1);
@@ -248,7 +248,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             core::Record query;
             Messages msgs = read_msgs("bufr/arpa-station.bufr", File::BUFR);
             f.tr->remove_all();
-            wassert(f.tr->import_msg(msgs[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA));
+            wassert(f.tr->import_msg(*msgs[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA));
 
             // Redo it with manually generated messages, this should not get imported
             {
@@ -294,36 +294,36 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             };
 
             // Build test messages
-            Msg first;
-            add_common(first);
-            first.set_block(1);               // Station variable
-            first.set_station(2);             // Station variable
-            first.set_temp_2m(280.1);         // Data variable
-            first.set_wet_temp_2m(275.8);     // Data variable
+            auto first = make_shared<Msg>();
+            add_common(*first);
+            first->set_block(1);               // Station variable
+            first->set_station(2);             // Station variable
+            first->set_temp_2m(280.1);         // Data variable
+            first->set_wet_temp_2m(275.8);     // Data variable
 
-            Msg second;
-            add_common(second);
-            second.set_block(5);              // Station variable, different value
-            second.set_station(2);            // Station variable, same value
-            second.set_height_station(101.0); // Station variable, new value
-            second.set_temp_2m(281.1);        // Data variable, different value
-            second.set_wet_temp_2m(275.8);    // Data variable, same value
-            second.set_humidity(55.6);        // Data variable, new value
+            auto second = make_shared<Msg>();
+            add_common(*second);
+            second->set_block(5);              // Station variable, different value
+            second->set_station(2);            // Station variable, same value
+            second->set_height_station(101.0); // Station variable, new value
+            second->set_temp_2m(281.1);        // Data variable, different value
+            second->set_wet_temp_2m(275.8);    // Data variable, same value
+            second->set_humidity(55.6);        // Data variable, new value
 
-            Msg third;
-            add_common(third);
-            third.set_block(6);              // Station variable, different value
-            third.set_station(2);            // Station variable, same value
-            third.set_height_station(101.0); // Station variable, same value as the second
-            third.set_height_baro(102.0);    // Station variable, new value
-            third.set_temp_2m(282.1);        // Data variable, different value
-            third.set_wet_temp_2m(275.8);    // Data variable, same value
-            third.set_humidity(55.6);        // Data variable, same value as the second
-            third.set_dewpoint_2m(55.6);     // Data variable, new value
+            auto third = make_shared<Msg>();
+            add_common(*third);
+            third->set_block(6);              // Station variable, different value
+            third->set_station(2);            // Station variable, same value
+            third->set_height_station(101.0); // Station variable, same value as the second
+            third->set_height_baro(102.0);    // Station variable, new value
+            third->set_temp_2m(282.1);        // Data variable, different value
+            third->set_wet_temp_2m(275.8);    // Data variable, same value
+            third->set_humidity(55.6);        // Data variable, same value as the second
+            third->set_dewpoint_2m(55.6);     // Data variable, new value
 
             // Import the first message
             f.tr->remove_all();
-            f.tr->import_msg(first, NULL, DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE);
+            f.tr->import_msg(*first, NULL, DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE);
 
             // Export and check
             Messages export_first = dballe::tests::messages_from_db(f.tr, "rep_memo=synop");
@@ -331,7 +331,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             wassert(actual(diff_msg(first, export_first[0], "first")) == 0);
 
             // Import the second message
-            f.tr->import_msg(second, NULL, DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE);
+            f.tr->import_msg(*second, NULL, DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE);
 
             // Export and check
             Messages export_second = dballe::tests::messages_from_db(f.tr, "rep_memo=synop");
@@ -342,7 +342,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             f.tr->clear_cached_state();
 
             // Import the third message
-            f.tr->import_msg(third, NULL, DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE);
+            f.tr->import_msg(*third, NULL, DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE);
 
             // Export and check
             Messages export_third = dballe::tests::messages_from_db(f.tr, "rep_memo=synop");

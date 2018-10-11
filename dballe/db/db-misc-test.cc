@@ -623,7 +623,7 @@ this->add_method("query_best_bug1", [](Fixture& f) {
     for (int i = 0; files[i] != NULL; i++)
     {
         Messages inmsgs = read_msgs(files[i], File::BUFR);
-        wassert(f.tr->import_msg(inmsgs[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE));
+        wassert(f.tr->import_msg(*inmsgs[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE));
     }
 
     // Query all with best

@@ -41,9 +41,9 @@ Messages messages_from_csv(CSVReader& in)
             // If Report changes, we are done
             break;
 
-        unique_ptr<Msg> msg(new Msg);
+        auto msg = make_shared<Msg>();
         bool has_next = msg->from_csv(in);
-        res.append(std::move(msg));
+        res.emplace_back(std::move(msg));
         if (!has_next)
             break;
     }
@@ -53,7 +53,31 @@ Messages messages_from_csv(CSVReader& in)
 void messages_to_csv(const Messages& msgs, CSVWriter& out)
 {
     for (const auto& i: msgs)
-        Msg::downcast(i).to_csv(out);
+        Msg::downcast(i)->to_csv(out);
+}
+
+unsigned messages_diff(const Messages& msgs1, const Messages& msgs2)
+{
+    unsigned diffs = 0;
+    if (msgs1.size() != msgs2.size())
+    {
+        notes::logf("the message groups contain a different number of messages (first is %zd, second is %zd)\n",
+                msgs1.size(), msgs2.size());
+        ++diffs;
+    }
+    size_t count = min(msgs1.size(), msgs2.size());
+    for (size_t i = 0; i < count; ++i)
+        diffs += msgs1[i]->diff(*msgs2[i]);
+    return diffs;
+}
+
+void messages_print(const Messages& msgs, FILE* out)
+{
+    for (unsigned i = 0; i < msgs.size(); ++i)
+    {
+        fprintf(out, "Subset %d:\n", i);
+        msgs[i]->print(out);
+    }
 }
 
 }
@@ -145,6 +169,14 @@ Msg& Msg::downcast(Message& o)
     if (!ptr)
         throw error_consistency("Message given is not a Msg");
     return *ptr;
+}
+
+std::shared_ptr<Msg> Msg::downcast(std::shared_ptr<Message> o)
+{
+    auto ptr = dynamic_pointer_cast<Msg>(o);
+    if (!ptr)
+        throw error_consistency("Message given is not a Msg");
+    return ptr;
 }
 
 std::unique_ptr<Message> Msg::clone() const
@@ -933,7 +965,7 @@ MatchedMessages::~MatchedMessages()
 matcher::Result MatchedMessages::match_var_id(int val) const
 {
     for (const auto& i: m)
-        if (MatchedMsg(Msg::downcast(i)).match_var_id(val) == matcher::MATCH_YES)
+        if (MatchedMsg(*Msg::downcast(i)).match_var_id(val) == matcher::MATCH_YES)
             return matcher::MATCH_YES;
     return matcher::MATCH_NA;
 }
@@ -941,7 +973,7 @@ matcher::Result MatchedMessages::match_var_id(int val) const
 matcher::Result MatchedMessages::match_station_id(int val) const
 {
     for (const auto& i: m)
-        if (MatchedMsg(Msg::downcast(i)).match_station_id(val) == matcher::MATCH_YES)
+        if (MatchedMsg(*Msg::downcast(i)).match_station_id(val) == matcher::MATCH_YES)
             return matcher::MATCH_YES;
     return matcher::MATCH_NA;
 }
@@ -949,7 +981,7 @@ matcher::Result MatchedMessages::match_station_id(int val) const
 matcher::Result MatchedMessages::match_station_wmo(int block, int station) const
 {
     for (const auto& i: m)
-        if (MatchedMsg(Msg::downcast(i)).match_station_wmo(block, station) == matcher::MATCH_YES)
+        if (MatchedMsg(*Msg::downcast(i)).match_station_wmo(block, station) == matcher::MATCH_YES)
             return matcher::MATCH_YES;
     return matcher::MATCH_NA;
 }
@@ -957,7 +989,7 @@ matcher::Result MatchedMessages::match_station_wmo(int block, int station) const
 matcher::Result MatchedMessages::match_datetime(const DatetimeRange& range) const
 {
     for (const auto& i: m)
-        if (MatchedMsg(Msg::downcast(i)).match_datetime(range) == matcher::MATCH_YES)
+        if (MatchedMsg(*Msg::downcast(i)).match_datetime(range) == matcher::MATCH_YES)
             return matcher::MATCH_YES;
     return matcher::MATCH_NA;
 }
@@ -965,7 +997,7 @@ matcher::Result MatchedMessages::match_datetime(const DatetimeRange& range) cons
 matcher::Result MatchedMessages::match_coords(const LatRange& latrange, const LonRange& lonrange) const
 {
     for (const auto& i: m)
-        if (MatchedMsg(Msg::downcast(i)).match_coords(latrange, lonrange) == matcher::MATCH_YES)
+        if (MatchedMsg(*Msg::downcast(i)).match_coords(latrange, lonrange) == matcher::MATCH_YES)
             return matcher::MATCH_YES;
     return matcher::MATCH_NA;
 }
@@ -973,7 +1005,7 @@ matcher::Result MatchedMessages::match_coords(const LatRange& latrange, const Lo
 matcher::Result MatchedMessages::match_rep_memo(const char* memo) const
 {
     for (const auto& i: m)
-        if (MatchedMsg(Msg::downcast(i)).match_rep_memo(memo) == matcher::MATCH_YES)
+        if (MatchedMsg(*Msg::downcast(i)).match_rep_memo(memo) == matcher::MATCH_YES)
             return matcher::MATCH_YES;
     return matcher::MATCH_NA;
 }

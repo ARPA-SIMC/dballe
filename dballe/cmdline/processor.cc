@@ -368,7 +368,7 @@ void Reader::read_csv(const std::list<std::string>& fnames, Action& action)
 
             // We want it: move it to the item
             unique_ptr<Messages> msgs(new Messages);
-            msgs->append(move(msg));
+            msgs->emplace_back(move(msg));
             item.set_msgs(msgs.release());
 
             if (!filter.match_item(item))
@@ -791,7 +791,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
             if (!filter.match_index(item.idx))
                 return;
             unique_ptr<Messages> msgs(new Messages);
-            msgs->append(msg);
+            msgs->emplace_back(make_shared<Msg>(msg));
             item.set_msgs(msgs.release());
 
             if (!filter.match_item(item))

@@ -737,7 +737,7 @@ static PyObject* dpy_export_to_file(PYDB* self, PyObject* args, PyObject* kw)
             ReleaseGIL gil;
             self->db->export_msgs(*q, [&](unique_ptr<Message>&& msg) {
                 Messages msgs;
-                msgs.append(move(msg));
+                msgs.emplace_back(move(msg));
                 out->write(exporter->to_binary(msgs));
                 return true;
             });
@@ -760,7 +760,7 @@ static PyObject* dpy_export_to_file(PYDB* self, PyObject* args, PyObject* kw)
             bool has_error = false;
             self->db->export_msgs(*q, [&](unique_ptr<Message>&& msg) {
                 Messages msgs;
-                msgs.append(move(msg));
+                msgs.emplace_back(move(msg));
                 std::string encoded = exporter->to_binary(msgs);
 #if PY_MAJOR_VERSION >= 3
                 res = pyo_unique_ptr(PyObject_CallMethod(file, (char*)"write", (char*)"y#", encoded.data(), (int)encoded.size()));

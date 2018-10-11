@@ -116,9 +116,9 @@ class Tests : public TestCase
             // packed levels
             {
                 unique_ptr<Msg> msg(new Msg);
-                msg->sounding_pack_levels(Msg::downcast(msgs[0]));
+                msg->sounding_pack_levels(*Msg::downcast(msgs[0]));
                 msgs.clear();
-                msgs.append(move(msg));
+                msgs.emplace_back(move(msg));
             }
 
             // Export to BUFR
@@ -130,7 +130,7 @@ class Tests : public TestCase
                 std::unique_ptr<msg::Importer> bufr_importer(msg::Importer::create(File::BUFR/*, const Options& opts=Options()*/));
                 Messages msgs1 = wcallchecked(bufr_importer->from_bulletin(*bbulletin));
                 notes::Collect c(cerr);
-                wassert(actual(msgs.diff(msgs1)) == 0);
+                wassert(actual(msg::messages_diff(msgs, msgs1)) == 0);
             }
 
             // Export to CREX
@@ -142,7 +142,7 @@ class Tests : public TestCase
                 std::unique_ptr<msg::Importer> crex_importer(msg::Importer::create(File::CREX/*, const Options& opts=Options()*/));
                 Messages msgs1 = wcallchecked(crex_importer->from_bulletin(*cbulletin));
                 notes::Collect c(cerr);
-                wassert(actual(msgs.diff(msgs1)) == 0);
+                wassert(actual(msg::messages_diff(msgs, msgs1)) == 0);
             }
         });
 
@@ -495,13 +495,13 @@ class Tests : public TestCase
 
                     // Compare
                     notes::Collect c(cerr);
-                    int diffs = msgs.diff(msgs1);
+                    int diffs = msg::messages_diff(msgs, msgs1);
                     if (diffs)
                     {
                         FILE* out1 = fopen("/tmp/msg1.txt", "w");
                         FILE* out2 = fopen("/tmp/msg2.txt", "w");
-                        msgs.print(out1);
-                        msgs1.print(out2);
+                        msg::messages_print(msgs, out1);
+                        msg::messages_print(msgs1, out2);
                         fclose(out1);
                         fclose(out2);
                     }
@@ -560,7 +560,7 @@ class Tests : public TestCase
                     // Compare
                     stringstream str;
                     notes::Collect c(str);
-                    int diffs = msgs.diff(msgs1);
+                    int diffs = msg::messages_diff(msgs, msgs1);
                     if (diffs)
                     {
                         string tag = str::basename(files[i]);
@@ -627,7 +627,7 @@ class Tests : public TestCase
             // Test for a bug where geopotential levels became pressure levels
             Messages msgs1 = read_msgs("bufr/pilot-ecmwf-geopotential.bufr", File::BUFR);
             wassert(actual(msgs1.size()) == 1);
-            Msg& msg1 = Msg::downcast(msgs1[0]);
+            Msg& msg1 = Msg::downcast(*msgs1[0]);
 
             // Geopotential levels are converted to height above msl
             const msg::Context* c = msg1.find_context(Level(102, 900), Trange(254, 0, 0));
@@ -643,7 +643,7 @@ class Tests : public TestCase
             std::unique_ptr<msg::Importer> imp = msg::Importer::create(File::BUFR);
             Messages msgs2 = imp->from_bulletin(*bulletin);
             wassert(actual(msgs2.size()) == 1);
-            Msg& msg2 = Msg::downcast(msgs2[0]);
+            Msg& msg2 = Msg::downcast(*msgs2[0]);
 
             // Ensure we didn't get pressure levels
             wassert(actual(msg2.find_context(Level(100, 900), Trange(254, 0, 0))).isfalse());

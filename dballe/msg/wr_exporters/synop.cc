@@ -169,16 +169,16 @@ struct SynopECMWF : public Synop
         prec_code = 0;
         for (Messages::const_iterator mi = msgs.begin(); prec_code == 0 && mi != msgs.end(); ++mi)
         {
-            const Msg& msg = Msg::downcast(*mi);
-            if (msg.get_tot_prec24_var() != NULL)
+            auto msg = Msg::downcast(*mi);
+            if (msg->get_tot_prec24_var() != NULL)
                 prec_code = WR_VAR(0, 13, 23);
-            else if (msg.get_tot_prec12_var() != NULL)
+            else if (msg->get_tot_prec12_var() != NULL)
                 prec_code = WR_VAR(0, 13, 22);
-            else if (msg.get_tot_prec6_var() != NULL)
+            else if (msg->get_tot_prec6_var() != NULL)
                 prec_code = WR_VAR(0, 13, 21);
-            else if (msg.get_tot_prec3_var() != NULL)
+            else if (msg->get_tot_prec3_var() != NULL)
                 prec_code = WR_VAR(0, 13, 20);
-            else if (msg.get_tot_prec1_var() != NULL)
+            else if (msg->get_tot_prec1_var() != NULL)
                 prec_code = WR_VAR(0, 13, 19);
         }
         if (prec_code == 0)
@@ -656,8 +656,8 @@ void register_synop(TemplateRegistry& r)
 {
     r.register_factory(0, "synop", "Synop (autodetect)",
             [](const ExporterOptions& opts, const Messages& msgs) {
-                const Msg& msg = Msg::downcast(msgs[0]);
-                const Var* var = msg.get_st_name_var();
+                auto msg = Msg::downcast(msgs[0]);
+                const Var* var = msg->get_st_name_var();
                 if (var)
                 {
                     const wr::TemplateFactory& fac = wr::TemplateRegistry::get(SYNOP_WMO_NAME);
@@ -675,16 +675,15 @@ void register_synop(TemplateRegistry& r)
             });
     r.register_factory(0, "synop-ecmwf", "Synop ECMWF (autodetect) (0.1)",
             [](const ExporterOptions& opts, const Messages& msgs) {
-                const Msg& msg = Msg::downcast(msgs[0]);
-                const Var* var = msg.get_st_type_var();
+                auto msg = Msg::downcast(msgs[0]);
+                const Var* var = msg->get_st_type_var();
                 if (var != NULL && var->enqi() == 0)
                     return unique_ptr<Template>(new SynopECMWFAuto(opts, msgs));
 
                 // If it has a geopotential, it's a land high station
-                for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
-                        i != msg.data.end(); ++i)
-                    if ((*i)->level.ltype1 == 100)
-                        if ((*i)->find(WR_VAR(0, 10, 8)))
+                for (const auto& ctx: msg->data)
+                    if (ctx->level.ltype1 == 100)
+                        if (ctx->find(WR_VAR(0, 10, 8)))
                             return unique_ptr<Template>(new SynopECMWFLandHigh(opts, msgs));
 
                 return unique_ptr<Template>(new SynopECMWFLand(opts, msgs));

@@ -67,7 +67,7 @@ struct InputFile
 
     const Message& msg() const
     {
-        return current_msg[current_msg_idx];
+        return *current_msg[current_msg_idx];
     }
 };
 
@@ -504,7 +504,7 @@ void DbAPI::messages_write_next(const char* template_name)
     auto query = Query::from_record(input);
     tr->export_msgs(*query, [&](unique_ptr<Message>&& msg) {
         Messages msgs;
-        msgs.append(move(msg));
+        msgs.emplace_back(move(msg));
         out.write(exporter->to_binary(msgs));
         return true;
     });

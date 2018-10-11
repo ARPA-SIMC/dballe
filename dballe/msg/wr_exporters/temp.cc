@@ -147,15 +147,15 @@ struct TempBase : public Template
         bulletin.data_subcategory_local = 101;
         for (const auto& mi: msgs)
         {
-            const Msg& msg = Msg::downcast(mi);
-            if (msg.type == MSG_PILOT)
+            auto msg = Msg::downcast(mi);
+            if (msg->type == MSG_PILOT)
             {
                 bulletin.data_subcategory_local = 91;
                 break;
-            } else if (msg.get_ident_var()) {
+            } else if (msg->get_ident_var()) {
                 bulletin.data_subcategory_local = 102;
                 break;
-            } else if (msg.get_block_var()) {
+            } else if (msg->get_block_var()) {
                 break;
             }
         }
@@ -214,8 +214,8 @@ struct TempWMO : public TempBase
         bulletin.data_subcategory_local = 255;
         for (const auto& mi : msgs)
         {
-            const Msg& msg = Msg::downcast(mi);
-            if (msg.type == MSG_TEMP_SHIP)
+            auto msg = Msg::downcast(mi);
+            if (msg->type == MSG_TEMP_SHIP)
             {
                 bulletin.data_subcategory = 5;
                 break;
@@ -611,11 +611,10 @@ struct PilotWMO : public TempBase
 
         for (const auto& mi: msgs)
         {
-            const Msg& msg = Msg::downcast(mi);
-            for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
-                    i != msg.data.end(); ++i)
+            auto msg = Msg::downcast(mi);
+            for (const auto& ctx: msg->data)
             {
-                switch ((*i)->level.ltype1)
+                switch (ctx->level.ltype1)
                 {
                     case 100: ++has_press; break;
                     case 102: ++has_height; break;
@@ -870,18 +869,18 @@ void register_temp(TemplateRegistry& r)
 {
     r.register_factory(2, "temp", "Temp (autodetect)",
             [](const ExporterOptions& opts, const Messages& msgs) {
-                const Msg& msg = Msg::downcast(msgs[0]);
+                auto msg = Msg::downcast(msgs[0]);
 
                 // Get the type of equipment used
-                if (const wreport::Var* var = msg.get(WR_VAR(0, 2, 3), Level(1), Trange::instant()))
+                if (const wreport::Var* var = msg->get(WR_VAR(0, 2, 3), Level(1), Trange::instant()))
                     // Is it a Radar?
                     if (var->enq(0) == 3)
                         return unique_ptr<Template>(new TempRadar(opts, msgs));
 
                 // ECMWF temps use normal replication which cannot do more than 256 levels
-                if (msg.data.size() > 260)
+                if (msg->data.size() > 260)
                     return unique_ptr<Template>(new TempWMO(opts, msgs));
-                const Var* var = msg.get_sonde_tracking_var();
+                const Var* var = msg->get_sonde_tracking_var();
                 if (var)
                     return unique_ptr<Template>(new TempWMO(opts, msgs));
                 else
@@ -900,7 +899,7 @@ void register_temp(TemplateRegistry& r)
             });
     r.register_factory(2, "temp-ecmwf", "Temp ECMWF (autodetect)",
             [](const ExporterOptions& opts, const Messages& msgs) {
-                if (msgs.empty() || Msg::downcast(msgs[0]).type != MSG_TEMP_SHIP)
+                if (msgs.empty() || Msg::downcast(msgs[0])->type != MSG_TEMP_SHIP)
                     return unique_ptr<Template>(new TempEcmwfLand(opts, msgs));
                 else
                     return unique_ptr<Template>(new TempEcmwfShip(opts, msgs));
@@ -927,10 +926,10 @@ void register_temp(TemplateRegistry& r)
             });
     r.register_factory(2, "pilot", "pilot (autodetect)",
             [](const ExporterOptions& opts, const Messages& msgs) {
-                const Msg& msg = Msg::downcast(msgs[0]);
-                const Var* var = msg.get_sonde_tracking_var();
+                auto msg = Msg::downcast(msgs[0]);
+                const Var* var = msg->get_sonde_tracking_var();
                 // Try with another one in case the first was just unset
-                if (!var) var = msg.get_meas_equip_type_var();
+                if (!var) var = msg->get_meas_equip_type_var();
                 if (var)
                     return unique_ptr<Template>(new PilotWMO(opts, msgs));
                 else

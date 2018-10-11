@@ -21,10 +21,10 @@ void strip_attributes(Messages& msgs)
 {
     for (auto& i: msgs)
     {
-        Msg& msg = Msg::downcast(i);
-        for (vector<msg::Context*>::iterator j = msg.data.begin(); j != msg.data.end(); ++j)
-            for (vector<Var*>::iterator k = (*j)->data.begin(); k != (*j)->data.end(); ++k)
-                (*k)->clear_attrs();
+        auto msg = Msg::downcast(i);
+        for (auto& ctx: msg->data)
+            for (auto& var: ctx->data)
+                var->clear_attrs();
     }
 }
 
@@ -42,7 +42,7 @@ void normalise_encoding_quirks(Messages& amsgs, Messages& bmsgs)
     if (bmsgs.size() == 0) return;
 
     // Message-wide tweaks
-    if (Msg::downcast(amsgs[0]).type == MSG_PILOT)
+    if (Msg::downcast(amsgs[0])->type == MSG_PILOT)
     {
         dballe::tests::tweaks::StripVars stripper;
         stripper.codes.push_back(WR_VAR(0, 11, 61));
@@ -54,12 +54,12 @@ void normalise_encoding_quirks(Messages& amsgs, Messages& bmsgs)
     if (len > bmsgs.size()) len = bmsgs.size();
     for (size_t msgidx = 0; msgidx < len; ++msgidx)
     {
-        Msg& amsg = Msg::downcast(amsgs[msgidx]);
-        Msg& bmsg = Msg::downcast(bmsgs[msgidx]);
+        auto amsg = Msg::downcast(amsgs[msgidx]);
+        auto bmsg = Msg::downcast(bmsgs[msgidx]);
 
-        for (size_t i = 0; i < bmsg.data.size(); ++i)
+        for (size_t i = 0; i < bmsg->data.size(); ++i)
         {
-            msg::Context& ctx = *bmsg.data[i];
+            msg::Context& ctx = *bmsg->data[i];
             for (size_t j = 0; j < ctx.data.size(); ++j)
             {
                 int qc_is_undef = 0;
@@ -97,61 +97,58 @@ void normalise_encoding_quirks(Messages& amsgs, Messages& bmsgs)
 
                 // Propagate Vertical Significances
                 if (var.code() == WR_VAR(0, 8, 2))
-                    amsg.set(var, WR_VAR(0, 8, 2), ctx.level, ctx.trange);
+                    amsg->set(var, WR_VAR(0, 8, 2), ctx.level, ctx.trange);
             }
         }
         
         Var* var;
 
-        if ((var = bmsg.edit_by_id(DBA_MSG_BLOCK)) != NULL)
+        if ((var = bmsg->edit_by_id(DBA_MSG_BLOCK)) != NULL)
             var->clear_attrs();
-        if ((var = bmsg.edit_by_id(DBA_MSG_STATION)) != NULL)
+        if ((var = bmsg->edit_by_id(DBA_MSG_STATION)) != NULL)
             var->clear_attrs();
-        if ((var = bmsg.edit_by_id(DBA_MSG_ST_TYPE)) != NULL)
+        if ((var = bmsg->edit_by_id(DBA_MSG_ST_TYPE)) != NULL)
             var->clear_attrs();
-        if ((var = bmsg.edit_by_id(DBA_MSG_IDENT)) != NULL)
+        if ((var = bmsg->edit_by_id(DBA_MSG_IDENT)) != NULL)
             var->clear_attrs();
-        if ((var = bmsg.edit_by_id(DBA_MSG_FLIGHT_PHASE)) != NULL)
+        if ((var = bmsg->edit_by_id(DBA_MSG_FLIGHT_PHASE)) != NULL)
             var->clear_attrs();
 
-        if ((var = bmsg.edit_by_id(DBA_MSG_CLOUD_CL)) != NULL &&
-                var->enqi() == 62 && amsg.get_cloud_cl_var() == NULL)
-            amsg.set_cloud_cl_var(*var);
+        if ((var = bmsg->edit_by_id(DBA_MSG_CLOUD_CL)) != NULL &&
+                var->enqi() == 62 && amsg->get_cloud_cl_var() == NULL)
+            amsg->set_cloud_cl_var(*var);
 
-        if ((var = bmsg.edit_by_id(DBA_MSG_CLOUD_CM)) != NULL &&
-                var->enqi() == 61 && amsg.get_cloud_cm_var() == NULL)
-            amsg.set_cloud_cm_var(*var);
+        if ((var = bmsg->edit_by_id(DBA_MSG_CLOUD_CM)) != NULL &&
+                var->enqi() == 61 && amsg->get_cloud_cm_var() == NULL)
+            amsg->set_cloud_cm_var(*var);
 
-        if ((var = bmsg.edit_by_id(DBA_MSG_CLOUD_CH)) != NULL &&
-                var->enqi() == 60 && amsg.get_cloud_ch_var() == NULL)
-            amsg.set_cloud_ch_var(*var);
+        if ((var = bmsg->edit_by_id(DBA_MSG_CLOUD_CH)) != NULL &&
+                var->enqi() == 60 && amsg->get_cloud_ch_var() == NULL)
+            amsg->set_cloud_ch_var(*var);
 
-        propagate_if_missing(DBA_MSG_HEIGHT_ANEM, bmsg, amsg);
-        propagate_if_missing(DBA_MSG_NAVSYS, bmsg, amsg);
+        propagate_if_missing(DBA_MSG_HEIGHT_ANEM, *bmsg, *amsg);
+        propagate_if_missing(DBA_MSG_NAVSYS, *bmsg, *amsg);
 
         // In AOF, only synops and ships can encode direction and speed
-        if (amsg.type != MSG_SHIP && amsg.type != MSG_SYNOP)
+        if (amsg->type != MSG_SHIP && amsg->type != MSG_SYNOP)
         {
-            propagate_if_missing(DBA_MSG_ST_DIR, bmsg, amsg);
-            propagate_if_missing(DBA_MSG_ST_SPEED, bmsg, amsg);
+            propagate_if_missing(DBA_MSG_ST_DIR, *bmsg, *amsg);
+            propagate_if_missing(DBA_MSG_ST_SPEED, *bmsg, *amsg);
         }
 
-        propagate_if_missing(DBA_MSG_PRESS_TEND, bmsg, amsg);
+        propagate_if_missing(DBA_MSG_PRESS_TEND, *bmsg, *amsg);
 
         // AOF AMDAR has pressure indication, BUFR AMDAR has only height
-        if (amsg.type == MSG_AMDAR)
+        if (amsg->type == MSG_AMDAR)
         {
             // dba_var p = dba_msg_get_flight_press_var(amsg);
-            for (size_t i = 0; i < amsg.data.size(); ++i)
-            {
-                msg::Context& c = *amsg.data[i];
-                if (c.level.ltype1 == 100 && c.trange == Trange::instant())
-                    if (const Var* var = c.find(WR_VAR(0, 10, 4)))
+            for (auto& ctx: amsg->data)
+                if (ctx->level.ltype1 == 100 && ctx->trange == Trange::instant())
+                    if (const Var* var = ctx->find(WR_VAR(0, 10, 4)))
                     {
-                        bmsg.set(*var, WR_VAR(0, 10, 4), c.level, c.trange);
+                        bmsg->set(*var, WR_VAR(0, 10, 4), ctx->level, ctx->trange);
                         break;
                     }
-            }
 #if 0
             dba_var h = dba_msg_get_height_var(bmsg);
             if (p && h)
@@ -170,25 +167,25 @@ void normalise_encoding_quirks(Messages& amsgs, Messages& bmsgs)
 #endif
         }
 
-        if (amsg.type == MSG_TEMP)
+        if (amsg->type == MSG_TEMP)
         {
-            propagate_if_missing(DBA_MSG_SONDE_TYPE, bmsg, amsg);
-            propagate_if_missing(DBA_MSG_SONDE_METHOD, bmsg, amsg);
+            propagate_if_missing(DBA_MSG_SONDE_TYPE, *bmsg, *amsg);
+            propagate_if_missing(DBA_MSG_SONDE_METHOD, *bmsg, *amsg);
         }
 
-        if (amsg.type == MSG_TEMP_SHIP)
+        if (amsg->type == MSG_TEMP_SHIP)
         {
-            propagate_if_missing(DBA_MSG_HEIGHT_STATION, bmsg, amsg);
+            propagate_if_missing(DBA_MSG_HEIGHT_STATION, *bmsg, *amsg);
         }
 
-        if (amsg.type == MSG_TEMP || amsg.type == MSG_TEMP_SHIP)
+        if (amsg->type == MSG_TEMP || amsg->type == MSG_TEMP_SHIP)
         {
-            propagate_if_missing(DBA_MSG_CLOUD_N, bmsg, amsg);
-            propagate_if_missing(DBA_MSG_CLOUD_NH, bmsg, amsg);
-            propagate_if_missing(DBA_MSG_CLOUD_HH, bmsg, amsg);
-            propagate_if_missing(DBA_MSG_CLOUD_CL, bmsg, amsg);
-            propagate_if_missing(DBA_MSG_CLOUD_CM, bmsg, amsg);
-            propagate_if_missing(DBA_MSG_CLOUD_CH, bmsg, amsg);
+            propagate_if_missing(DBA_MSG_CLOUD_N, *bmsg, *amsg);
+            propagate_if_missing(DBA_MSG_CLOUD_NH, *bmsg, *amsg);
+            propagate_if_missing(DBA_MSG_CLOUD_HH, *bmsg, *amsg);
+            propagate_if_missing(DBA_MSG_CLOUD_CL, *bmsg, *amsg);
+            propagate_if_missing(DBA_MSG_CLOUD_CM, *bmsg, *amsg);
+            propagate_if_missing(DBA_MSG_CLOUD_CH, *bmsg, *amsg);
 
 #define FIX_GEOPOTENTIAL
 #ifdef FIX_GEOPOTENTIAL
@@ -201,15 +198,15 @@ void normalise_encoding_quirks(Messages& amsgs, Messages& bmsgs)
             //  - However, if we go back to heights, the precision should be
             //    preserved
             //    251710 / 9.80664 becomes 25667 as it was
-            for (size_t i = 0; i < amsg.data.size(); ++i)
+            for (size_t i = 0; i < amsg->data.size(); ++i)
             {
-                msg::Context& c = *amsg.data[i];
+                msg::Context& c = *amsg->data[i];
                 if (Var* var = c.edit(WR_VAR(0, 10, 3)))
                     var->setd(var->enqd() / 9.80665);
             }
-            for (size_t i = 0; i < bmsg.data.size(); ++i)
+            for (size_t i = 0; i < bmsg->data.size(); ++i)
             {
-                msg::Context& c = *bmsg.data[i];
+                msg::Context& c = *bmsg->data[i];
                 if (Var* var = c.edit(WR_VAR(0, 10, 3)))
                     var->setd(var->enqd() / 9.80665);
             }
@@ -217,19 +214,17 @@ void normalise_encoding_quirks(Messages& amsgs, Messages& bmsgs)
             // Decoding BUFR temp messages copies data from the surface level into
             // more classical places: compensate by copying the same data in the
             // AOF file
-            propagate_if_missing(DBA_MSG_PRESS, bmsg, amsg);
-            propagate_if_missing(DBA_MSG_TEMP_2M, bmsg, amsg);
-            propagate_if_missing(DBA_MSG_DEWPOINT_2M, bmsg, amsg);
-            propagate_if_missing(DBA_MSG_WIND_DIR, bmsg, amsg);
-            propagate_if_missing(DBA_MSG_WIND_SPEED, bmsg, amsg);
+            propagate_if_missing(DBA_MSG_PRESS, *bmsg, *amsg);
+            propagate_if_missing(DBA_MSG_TEMP_2M, *bmsg, *amsg);
+            propagate_if_missing(DBA_MSG_DEWPOINT_2M, *bmsg, *amsg);
+            propagate_if_missing(DBA_MSG_WIND_DIR, *bmsg, *amsg);
+            propagate_if_missing(DBA_MSG_WIND_SPEED, *bmsg, *amsg);
 #endif
         }
 
         // Remove attributes from all vertical sounding significances
-        for (size_t i = 0; i < bmsg.data.size(); ++i)
-        {
-            msg::Context& c = *bmsg.data[i];
-            if (Var* var = c.edit(WR_VAR(0, 8, 42)))
+        for (auto& ctx: bmsg->data)
+            if (Var* var = ctx->edit(WR_VAR(0, 8, 42)))
             {
                 var->clear_attrs();
                 // Remove SIGHUM that is added by ECMWF template conversions
@@ -237,7 +232,6 @@ void normalise_encoding_quirks(Messages& amsgs, Messages& bmsgs)
                 val &= ~BUFR08042::SIGHUM;
                 var->seti(val);
             }
-        }
     }
 }
 
@@ -291,7 +285,7 @@ class Tests : public TestCase
 
                     // Compare the two dba_msg
                     notes::Collect c(cerr);
-                    int diffs = amsgs.diff(bmsgs);
+                    int diffs = msg::messages_diff(amsgs, bmsgs);
                     if (diffs)
                     {
                         dballe::tests::track_different_msgs(amsgs, bmsgs, "aof");
@@ -326,7 +320,7 @@ class Tests : public TestCase
 
                     // Compare the two dba_msg
                     notes::Collect c(cerr);
-                    int diffs = amsgs.diff(bmsgs);
+                    int diffs = msg::messages_diff(amsgs, bmsgs);
                     if (diffs) 
                     {
                         dballe::tests::track_different_msgs(amsgs, bmsgs, "aof-bufr");
@@ -412,7 +406,7 @@ class Tests : public TestCase
 
                     // Compare the two dba_msg
                     notes::Collect c(cerr);
-                    int diffs = amsgs1.diff(amsgs2);
+                    int diffs = msg::messages_diff(amsgs1, amsgs2);
                     if (diffs) dballe::tests::track_different_msgs(amsgs1, amsgs2, "aof-2728");
                     wassert(actual(diffs) == 0);
                 } catch (std::exception& e) {
@@ -427,8 +421,8 @@ class Tests : public TestCase
             Messages msgs = read_msgs("aof/missing-cloud-h.aof", File::AOF);
             wassert(actual(msgs.size()) == 1);
 
-            const Msg& msg = Msg::downcast(msgs[0]);
-            wassert(actual(msg.get_cloud_h1_var()).isfalse());
+            auto msg = Msg::downcast(msgs[0]);
+            wassert(actual(msg->get_cloud_h1_var()).isfalse());
         });
 
         // Verify decoding of confidence intervals in optional ship group
@@ -436,8 +430,8 @@ class Tests : public TestCase
             Messages msgs = read_msgs("aof/confship.aof", File::AOF);
             wassert(actual(msgs.size()) == 1);
 
-            const Msg& msg = Msg::downcast(msgs[0]);
-            const Var* var = msg.get_st_dir_var();
+            auto msg = Msg::downcast(msgs[0]);
+            const Var* var = msg->get_st_dir_var();
             wassert(actual(var).istrue());
 
             const Var* attr = var->enqa(WR_VAR(0, 33, 7));

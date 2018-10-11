@@ -215,8 +215,8 @@ static void print_item_header(const Item& item)
         unsigned count = 0;
         for (const auto& i: *item.msgs)
         {
-            const Msg& m = Msg::downcast(i);
-            string new_type = msg_type_name(m.type);
+            auto m = Msg::downcast(i);
+            string new_type = msg_type_name(m->type);
             if (old_type.empty())
             {
                 old_type = new_type;
@@ -311,7 +311,7 @@ struct CSVMsgs : public cmdline::Action
         }
 
         for (const auto& mi: *item.msgs)
-            Msg::downcast(mi).to_csv(writer);
+            Msg::downcast(mi)->to_csv(writer);
         return true;
     }
 };
@@ -331,28 +331,28 @@ struct JSONMsgs : public cmdline::Action
         if (!item.msgs) return false;
 
         for (const auto& mi: *item.msgs) {
-            const Msg& msg = Msg::downcast(mi);
+            auto msg = Msg::downcast(mi);
             json.start_mapping();
             json.add("version");
             json.add(DBALLE_JSON_VERSION);
             json.add("network");
-            json.add(msg.get_rep_memo_var() ? msg.get_rep_memo_var()->enqc() : dballe::Msg::repmemo_from_type(msg.type));
+            json.add(msg->get_rep_memo_var() ? msg->get_rep_memo_var()->enqc() : dballe::Msg::repmemo_from_type(msg->type));
             json.add("ident");
-            if (msg.get_ident_var() != NULL)
-                json.add(msg.get_ident_var()->enqc());
+            if (msg->get_ident_var() != NULL)
+                json.add(msg->get_ident_var()->enqc());
             else
                 json.add_null();
             json.add("lon");
-            json.add_int(msg.get_longitude_var()->enqi());
+            json.add_int(msg->get_longitude_var()->enqi());
             json.add("lat");
-            json.add_int(msg.get_latitude_var()->enqi());
+            json.add_int(msg->get_latitude_var()->enqi());
             json.add("date");
             std::stringstream ss;
-            msg.get_datetime().to_stream_iso8601(ss, 'T', "Z");
+            msg->get_datetime().to_stream_iso8601(ss, 'T', "Z");
             json.add(ss.str().c_str());
             json.add("data");
             json.start_list();
-            for (const auto& ctx: msg.data) {
+            for (const auto& ctx: msg->data) {
                 json.start_mapping();
                 if (not ctx->is_station()) {
                     json.add("timerange");
@@ -439,7 +439,7 @@ struct DumpCooked : public cmdline::Action
         for (size_t i = 0; i < item.msgs->size(); ++i)
         {
             printf("#%d[%zd] ", item.idx, i);
-            (*item.msgs)[i].print(stdout);
+            (*item.msgs)[i]->print(stdout);
         }
         return true;
     }
@@ -1063,7 +1063,7 @@ struct Compare : public cmdline::Subcommand
             Messages msgs2 = importer2->from_binary(msg2);
 
             notes::Collect c(cerr);
-            int diffs = msgs1.diff(msgs2);
+            int diffs = msg::messages_diff(msgs1, msgs2);
             if (diffs > 0)
                 error_consistency::throwf("Messages #%zd contain %d differences", idx, diffs);
         }

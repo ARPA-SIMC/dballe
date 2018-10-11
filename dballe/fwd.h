@@ -9,7 +9,6 @@ struct Trange;
 struct Record;
 struct Coords;
 struct Query;
-struct Messages;
 struct Message;
 }
 

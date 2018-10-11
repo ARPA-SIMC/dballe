@@ -55,13 +55,13 @@ this->add_method("import", [](Fixture& f) {
     auto importer = msg::Importer::create(File::BUFR);
     Messages msgs = importer->from_binary(file.msgs[0]);
     wassert(actual(msgs.size()) == 1u);
-    Msg& msg = Msg::downcast(msgs[0]);
+    auto msg = Msg::downcast(msgs[0]);
 
     // Ensure they're ships
-    wassert(actual(msg.type) == MSG_SHIP);
+    wassert(actual(msg->type) == MSG_SHIP);
 
     // Check 001194 [SIM] Report mnemonic(CCITTIA5), too
-    const Var* var = msg.get_rep_memo_var();
+    const Var* var = msg->get_rep_memo_var();
     wassert(actual(var).istrue());
     wassert(actual(var->enqc()).istrue());
     wassert(actual(var->enq<std::string>()) == "ship");
@@ -86,9 +86,9 @@ this->add_method("issue62", [](Fixture& f) {
     auto importer = msg::Importer::create(File::BUFR);
     Messages msgs = importer->from_binary(file.msgs[0]);
     wassert(actual(msgs.size()) == 1u);
-    Msg& msg = Msg::downcast(msgs[0]);
+    auto msg = Msg::downcast(msgs[0]);
 
-    wassert(actual(msg.get_datetime()) == Datetime(2016, 3, 14, 23, 0, 4));
+    wassert(actual(msg->get_datetime()) == Datetime(2016, 3, 14, 23, 0, 4));
 });
 
 }

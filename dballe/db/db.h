@@ -386,7 +386,7 @@ public:
      *   Customise different aspects of the import process.  It is a bitmask of the
      *   various DBA_IMPORT_* macros.
      */
-    virtual void import_msgs(const Messages& msgs, const char* repmemo, int flags);
+    virtual void import_msgs(const std::vector<std::shared_ptr<Message>>& msgs, const char* repmemo, int flags);
 
     /**
      * Perform the query in `query', and send the results to dest.
@@ -737,7 +737,7 @@ public:
      *   Customise different aspects of the import process.  It is a bitmask of the
      *   various DBA_IMPORT_* macros.
      */
-    void import_msgs(const Messages& msgs, const char* repmemo, int flags);
+    void import_msgs(const std::vector<std::shared_ptr<Message>>& msgs, const char* repmemo, int flags);
 
     /**
      * Perform the query in `query', and send the results to dest.

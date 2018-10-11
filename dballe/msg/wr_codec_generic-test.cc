@@ -23,7 +23,7 @@ class Tests : public TestCase
             unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR);
 
             Messages msgs;
-            msgs.append(unique_ptr<Message>(new Msg));
+            msgs.emplace_back(make_shared<Msg>());
 
             // Export msg as a generic message
             BinaryMessage raw(File::BUFR);
@@ -34,7 +34,7 @@ class Tests : public TestCase
 
             // Check that the data are the same
             notes::Collect c(cerr);
-            int diffs = msgs.diff(msgs1);
+            int diffs = msg::messages_diff(msgs, msgs1);
             if (diffs) dballe::tests::track_different_msgs(msgs, msgs1, "genericempty");
             wassert(actual(diffs) == 0);
         });
@@ -119,7 +119,7 @@ class Tests : public TestCase
             //CHECKED(dba_msg_set_flight_press(	msg, 3,		45));
 
             Messages msgs;
-            msgs.append(move(msg));
+            msgs.emplace_back(move(msg));
 
             /* Export msg as a generic message */
             BinaryMessage raw(File::BUFR);
@@ -134,7 +134,7 @@ class Tests : public TestCase
 
             /* Check that the data are the same */
             notes::Collect c(cerr);
-            int diffs = msgs.diff(msgs1);
+            int diffs = msg::messages_diff(msgs, msgs1);
             if (diffs) dballe::tests::track_different_msgs(msgs, msgs1, "generic2");
             wassert(actual(diffs) == 0);
         });
@@ -174,7 +174,7 @@ class Tests : public TestCase
             msg->set(move(var), Level(1), Trange::instant());
 
             Messages msgs;
-            msgs.append(move(msg));
+            msgs.emplace_back(move(msg));
 
             // Encode the message
             BinaryMessage raw(File::BUFR);
@@ -185,7 +185,7 @@ class Tests : public TestCase
 
             // Check that the data are the same
             notes::Collect c(cerr);
-            int diffs = msgs.diff(msgs1);
+            int diffs = msg::messages_diff(msgs, msgs1);
             if (diffs) dballe::tests::track_different_msgs(msgs, msgs1, "genericattr");
             wassert(actual(diffs) == 0);
         });
@@ -197,8 +197,8 @@ class Tests : public TestCase
             wassert(actual(msgs.size()) > 0);
 
             // Convert it to generic, with a 'ship' rep_memo
-            Msg::downcast(msgs[0]).type = MSG_GENERIC;
-            Msg::downcast(msgs[0]).set_rep_memo("ship");
+            Msg::downcast(msgs[0])->type = MSG_GENERIC;
+            Msg::downcast(msgs[0])->set_rep_memo("ship");
 
             // Export it
             unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR);

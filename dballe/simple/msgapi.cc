@@ -62,7 +62,7 @@ MsgAPI::~MsgAPI()
 Msg* MsgAPI::curmsg()
 {
     if (msgs && curmsgidx < msgs->size())
-        return &Msg::downcast((*msgs)[curmsgidx]);
+        return &Msg::downcast(*(*msgs)[curmsgidx]);
     else
         return nullptr;
 }
@@ -88,9 +88,8 @@ bool MsgAPI::readNextMessage()
 
     if (BinaryMessage raw = file->read())
     {
-        unique_ptr<Messages> new_msgs(new Messages);
-        *new_msgs = importer->from_binary(raw);
-        msgs = new_msgs.release();
+        auto messages = importer->from_binary(raw);
+        msgs = new std::vector<std::shared_ptr<Message>>(std::move(messages));
         state &= ~STATE_BLANK;
         return true;
     }
@@ -308,7 +307,7 @@ void MsgAPI::flushSubset()
         flushVars();
         unique_ptr<Message> awmsg(wmsg);
         wmsg = 0;
-        msgs->append(move(awmsg));
+        msgs->emplace_back(move(awmsg));
     }
 }
 

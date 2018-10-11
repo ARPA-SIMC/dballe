@@ -54,7 +54,7 @@ static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const Mess
             // BC01-SYNOP
             // Get the hour from the first message
             // Default to 1 to simulate an odd observation time
-            int hour = msgs[0].get_datetime().is_missing() ? 1 : msgs[0].get_datetime().hour;
+            int hour = msgs[0]->get_datetime().is_missing() ? 1 : msgs[0]->get_datetime().hour;
 
             if ((hour % 6) == 0)
                 // 002 at main synoptic times 00, 06, 12, 18 UTC,
@@ -76,7 +76,7 @@ static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const Mess
         case 2:
             // BC20-PILOT
             // BC25-TEMP
-            switch (Msg::downcast(msgs[0]).type)
+            switch (Msg::downcast(msgs[0])->type)
             {
                 // 001 for PILOT data,
                 case MSG_PILOT:
@@ -99,7 +99,7 @@ static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const Mess
         // Missing data from this onwards
         case 3: b.data_subcategory = 0; break;
         case 4:
-            switch (Msg::downcast(msgs[0]).type)
+            switch (Msg::downcast(msgs[0])->type)
             {
                 case MSG_AIREP: b.data_subcategory = 1; break;
                 default: b.data_subcategory = 0; break;
@@ -132,7 +132,7 @@ static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, co
             // 13 for fixed stations
             // 14 for mobile stations
             b.data_subcategory_local = 13;
-            if (const wreport::Var* v = Msg::downcast(msgs[0]).get_ident_var())
+            if (const wreport::Var* v = Msg::downcast(msgs[0])->get_ident_var())
                 if (v->isset())
                     b.data_subcategory_local = 14;
             break;
@@ -142,12 +142,11 @@ static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, co
                 // 4 for z-level pilots
                 // 5 for p-level pilots
                 // Arbitrary default to z-level pilots
-                const Msg& msg = Msg::downcast(msgs[0]);
+                auto msg = Msg::downcast(msgs[0]);
                 b.data_subcategory_local = 4;
-                for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
-                        i != msg.data.end(); ++i)
+                for (const auto& ctx: msg->data)
                 {
-                    switch ((*i)->level.ltype1)
+                    switch (ctx->level.ltype1)
                     {
                         case 100: // Isobaric Surface
                             b.data_subcategory_local = 5;
@@ -160,7 +159,7 @@ static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, co
             }
             break;
         case 4:
-            switch (Msg::downcast(msgs[0]).type)
+            switch (Msg::downcast(msgs[0])->type)
             {
                 case MSG_AMDAR: b.data_subcategory_local = 8; break;
                 case MSG_ACARS: b.data_subcategory_local = 9; break;
@@ -239,8 +238,8 @@ bool Converter::operator()(const cmdline::Item& item)
     {
         // Force message type (will also influence choice of template later)
         MsgType type = Msg::type_from_repmemo(dest_rep_memo);
-        for (size_t i = 0; i < item.msgs->size(); ++i)
-            Msg::downcast((*item.msgs)[i]).type = type;
+        for (auto& msg: *item.msgs)
+            Msg::downcast(msg)->type = type;
     }
 
     if (item.bulletin and dest_rep_memo == NULL)
@@ -253,5 +252,3 @@ bool Converter::operator()(const cmdline::Item& item)
 
 }
 }
-
-/* vim:set ts=4 sw=4: */
