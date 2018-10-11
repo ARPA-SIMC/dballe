@@ -217,6 +217,7 @@ digits and description.
 | 013229 | [SIM] Density of snow                                              | KG/M**3                  | ####.#         |
 | 013230 | [SIM] Convective Available Potential Energy (CAPE)                 | J/KG                     | ####.#         |
 | 013231 | [SIM] Ossigeno disciolto sat                                       | %                        | ###.#          |
+| 013232 | [SIM] Evapotranspiration according to Penman Monteith              | KG/M**2                  | 3 digits       |
 | 014002 | Long-wave radiation, integrated over period specified              | J M-2                    | #####000       |
 | 014004 | Short-wave radiation, integrated over period specified             | J M-2                    | #####000       |
 | 014016 | NET RADIATION                                                      | J/M**2                   | #####0000      |

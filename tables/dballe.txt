@@ -207,6 +207,7 @@
  013229 [SIM] Density of snow                                            KG/M**3                    1            0  14 KG/M**3                   1          5
  013230 [SIM] Convective Available Potential Energy (CAPE)               J/KG                       1            0  17 J/KG                      1          5
  013231 [SIM] Ossigeno disciolto sat                                     %                          1            0  13 %                         1          4
+ 013232 [SIM] Evapotranspiration according to Penman Monteith            KG/M**2                    1            0   7 KG/M**2                   0          3
  014002 Long-wave radiation, integrated over period specified            J M-2                     -3       -65536  17 J M-2                    -3          5
  014004 Short-wave radiation, integrated over period specified           J M-2                     -3       -65536  17 J M-2                    -3          5
  014016 NET RADIATION                                                    J/M**2                    -4       -16384  15 J/M**2                   -4          5
