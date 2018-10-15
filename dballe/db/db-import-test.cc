@@ -58,7 +58,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             {
                 if (blacklist.find(files[i]) != blacklist.end()) continue;
                 try {
-                    Messages inmsgs = read_msgs(files[i], File::CREX);
+                    Messages inmsgs = read_msgs(files[i], Encoding::CREX);
                     auto msg = Msg::downcast(inmsgs[0]);
                     normalise_datetime(msg);
 
@@ -86,7 +86,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             for (int i = 0; files[i] != NULL; i++)
             {
                 try {
-                    Messages inmsgs = read_msgs(files[i], File::BUFR);
+                    Messages inmsgs = read_msgs(files[i], Encoding::BUFR);
                     auto msg = Msg::downcast(inmsgs[0]);
                     normalise_datetime(msg);
 
@@ -114,8 +114,8 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
 
             // msg1 has latitude 33.88
             // msg2 has latitude 46.22
-            Messages msgs1 = read_msgs("bufr/obs0-1.22.bufr", File::BUFR);
-            Messages msgs2 = read_msgs("bufr/obs0-3.504.bufr", File::BUFR);
+            Messages msgs1 = read_msgs("bufr/obs0-1.22.bufr", Encoding::BUFR);
+            Messages msgs2 = read_msgs("bufr/obs0-3.504.bufr", Encoding::BUFR);
             auto msg1 = Msg::downcast(msgs1[0]);
             auto msg2 = Msg::downcast(msgs2[0]);
 
@@ -146,7 +146,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             // Check that importing the same message twice works
             // msg1 has latitude 33.88
             // msg2 has latitude 46.22
-            Messages msgs1 = read_msgs("bufr/obs0-1.22.bufr", File::BUFR);
+            Messages msgs1 = read_msgs("bufr/obs0-1.22.bufr", Encoding::BUFR);
             auto msg1 = Msg::downcast(msgs1[0]);
 
             normalise_datetime(msg1);
@@ -172,7 +172,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
         this->add_method("auto_repinfo", [](Fixture& f) {
             // Check automatic repinfo allocation
             core::Query query;
-            Messages msgs = read_msgs("bufr/generic-new-repmemo.bufr", File::BUFR);
+            Messages msgs = read_msgs("bufr/generic-new-repmemo.bufr", Encoding::BUFR);
             auto msg = Msg::downcast(msgs[0]);
 
             f.tr->remove_all();
@@ -188,7 +188,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
         });
         this->add_method("station_only", [](Fixture& f) {
             // Check that a message that only contains station variables does get imported
-            Messages msgs = read_msgs("bufr/generic-onlystation.bufr", File::BUFR);
+            Messages msgs = read_msgs("bufr/generic-onlystation.bufr", Encoding::BUFR);
 
             f.tr->remove_all();
             f.tr->import_msg(*msgs[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
@@ -216,7 +216,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
         this->add_method("station_only_no_vars", [](Fixture& f) {
             // Check that a message that only contains station variables does get imported
             core::Record query;
-            Messages msgs = read_msgs("bufr/arpa-station.bufr", File::BUFR);
+            Messages msgs = read_msgs("bufr/arpa-station.bufr", Encoding::BUFR);
             f.tr->remove_all();
             wassert(f.tr->import_msg(*msgs[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA));
 

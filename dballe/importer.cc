@@ -1,4 +1,5 @@
 #include "importer.h"
+#include "file.h"
 #include "dballe/msg/wr_codec.h"
 #include <wreport/error.h>
 #include <wreport/bulletin.h>
@@ -62,13 +63,13 @@ std::vector<std::shared_ptr<Message>> Importer::from_binary(const BinaryMessage&
     return res;
 }
 
-std::unique_ptr<Importer> Importer::create(File::Encoding type, const ImporterOptions& opts)
+std::unique_ptr<Importer> Importer::create(Encoding type, const ImporterOptions& opts)
 {
     switch (type)
     {
-        case File::BUFR:
+        case Encoding::BUFR:
             return unique_ptr<Importer>(new msg::BufrImporter(opts));
-        case File::CREX:
+        case Encoding::CREX:
             return unique_ptr<Importer>(new msg::CrexImporter(opts));
         default:
             error_unimplemented::throwf("%s importer is not implemented yet", File::encoding_name(type));

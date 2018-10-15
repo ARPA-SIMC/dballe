@@ -47,8 +47,8 @@ public:
     void critica() override;
     void scusa() override;
     void fatto() override;
-    void messages_open_input(const char* filename, const char* mode, File::Encoding format, bool simplified=true) override;
-    void messages_open_output(const char* filename, const char* mode, File::Encoding format) override;
+    void messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified=true) override;
+    void messages_open_output(const char* filename, const char* mode, Encoding format) override;
     bool messages_read_next() override;
     void messages_write_next(const char* template_name=0) override;
 };

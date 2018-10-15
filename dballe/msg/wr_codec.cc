@@ -1,4 +1,5 @@
 #include "wr_codec.h"
+#include "dballe/file.h"
 #include "msg.h"
 #include "context.h"
 #include "wr_importers/base.h"

@@ -2,7 +2,8 @@
 #define DBALLE_MSG_WR_CODEC_H
 
 #include <dballe/importer.h>
-#include <dballe/msg/codec.h>
+#include <dballe/exporter.h>
+#include <dballe/msg/msg.h>
 #include <wreport/varinfo.h>
 #include <stdint.h>
 #include <map>

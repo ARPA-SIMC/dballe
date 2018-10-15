@@ -179,11 +179,11 @@ static void print_item_header(const Item& item)
 
         switch (item.rmsg->encoding)
         {
-            case File::BUFR:
+            case Encoding::BUFR:
                 if (item.bulletin != NULL)
                     print_bufr_header(*dynamic_cast<const BufrBulletin*>(item.bulletin));
                 break;
-            case File::CREX:
+            case Encoding::CREX:
                 if (item.bulletin != NULL)
                     print_crex_header(*dynamic_cast<const CrexBulletin*>(item.bulletin));
                 break;
@@ -228,11 +228,11 @@ struct Head : public cmdline::Action
         if (!item.rmsg) return false;
         switch (item.rmsg->encoding)
         {
-            case File::BUFR:
+            case Encoding::BUFR:
                 if (item.bulletin == NULL) return true;
                 dump_bufr_header(*item.rmsg, *dynamic_cast<const BufrBulletin*>(item.bulletin)); puts(".");
                 break;
-            case File::CREX:
+            case Encoding::CREX:
                 if (item.bulletin == NULL) return true;
                 dump_crex_header(*item.rmsg, *dynamic_cast<const CrexBulletin*>(item.bulletin)); puts(".");
                 break;
@@ -387,13 +387,13 @@ struct DumpMessage : public cmdline::Action
         puts(":");
         switch (item.rmsg->encoding)
         {
-            case File::BUFR:
+            case Encoding::BUFR:
                 {
                     if (item.bulletin == NULL) return true;
                     print_subsets(*item.bulletin);
                     break;
                 }
-            case File::CREX:
+            case Encoding::CREX:
                 {
                     if (item.bulletin == NULL) return true;
                     print_subsets(*item.bulletin);
@@ -912,7 +912,7 @@ struct Convert : public cmdline::Subcommand
 
     int main(poptContext optCon) override
     {
-        msg::ExporterOptions opts;
+        ExporterOptions opts;
         cmdline::Converter conv;
         cmdline::Reader reader(readeropts);
         reader.verbose = op_verbose;
@@ -957,7 +957,7 @@ struct Convert : public cmdline::Subcommand
                 conv.file = File::create(string_to_encoding(op_output_type), op_output_file, "w").release();
         }
 
-        conv.exporter = msg::Exporter::create(conv.file->encoding(), opts).release();
+        conv.exporter = Exporter::create(conv.file->encoding(), opts).release();
 
         reader.read(get_filenames(optCon), conv);
 

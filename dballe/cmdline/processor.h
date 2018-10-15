@@ -2,7 +2,8 @@
 #define DBALLE_CMDLINE_PROCESSOR_H
 
 #include <dballe/importer.h>
-#include <dballe/msg/codec.h>
+#include <dballe/exporter.h>
+#include <dballe/msg/msg.h>
 #include <stdexcept>
 #include <list>
 #include <string>
@@ -147,7 +148,7 @@ struct ReaderOptions
 
 struct Filter
 {
-    msg::ExporterOptions export_opts;
+    ExporterOptions export_opts;
     int category = -1;
     int subcategory = -1;
     int checkdigit = -1;

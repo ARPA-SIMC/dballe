@@ -19,7 +19,7 @@ class Tests : public TestCase
             // Test message access
 
             // Get a test message
-            Messages msgs = read_msgs("bufr/obs0-1.22.bufr", File::BUFR);
+            Messages msgs = read_msgs("bufr/obs0-1.22.bufr", Encoding::BUFR);
             wassert(actual(msgs.size()) == 1u);
             auto msg = Msg::downcast(msgs[0]);
 

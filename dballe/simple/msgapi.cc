@@ -2,10 +2,10 @@
 #include <wreport/var.h>
 #include "dballe/file.h"
 #include "dballe/importer.h"
+#include "dballe/exporter.h"
 #include "dballe/message.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
-#include "dballe/msg/codec.h"
 #include "dballe/core/var.h"
 #include <cstring>
 #include <cassert>
@@ -29,9 +29,9 @@ MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
     }
 
     if (strcasecmp(type, "BUFR") == 0)
-        file = File::create(File::BUFR, fname, mode).release();
+        file = File::create(Encoding::BUFR, fname, mode).release();
     else if (strcasecmp(type, "CREX") == 0)
-        file = File::create(File::CREX, fname, mode).release();
+        file = File::create(Encoding::CREX, fname, mode).release();
     else if (strcasecmp(type, "AUTO") == 0)
         file = File::create(fname, mode).release();
     else
@@ -317,9 +317,9 @@ void MsgAPI::flushMessage()
         flushSubset();
         if (exporter == 0)
         {
-            msg::ExporterOptions opts;
+            ExporterOptions opts;
             opts.template_name = exporter_template;
-            exporter = msg::Exporter::create(file->encoding(), opts).release();
+            exporter = Exporter::create(file->encoding(), opts).release();
         }
         file->write(exporter->to_binary(*msgs));
         delete msgs;
@@ -472,12 +472,12 @@ void MsgAPI::scusa()
     throw error_consistency("scusa does not make sense when writing messages");
 }
 
-void MsgAPI::messages_open_input(const char* filename, const char* mode, File::Encoding format, bool)
+void MsgAPI::messages_open_input(const char* filename, const char* mode, Encoding format, bool)
 {
     throw error_unimplemented("MsgAPI::messages_open_input");
 }
 
-void MsgAPI::messages_open_output(const char* filename, const char* mode, File::Encoding format)
+void MsgAPI::messages_open_output(const char* filename, const char* mode, Encoding format)
 {
     throw error_unimplemented("MsgAPI::messages_open_output");
 }

@@ -76,7 +76,7 @@ void Item::decode(Importer& imp, bool print_errors)
     // First step: decode raw message to bulletin
     switch (rmsg->encoding)
     {
-        case File::BUFR:
+        case Encoding::BUFR:
             try {
                 bulletin = BufrBulletin::decode(rmsg->data, rmsg->pathname.c_str(), rmsg->offset).release();
             } catch (error& e) {
@@ -85,7 +85,7 @@ void Item::decode(Importer& imp, bool print_errors)
                 bulletin = 0;
             }
             break;
-        case File::CREX:
+        case Encoding::CREX:
             try {
                 bulletin = CrexBulletin::decode(rmsg->data, rmsg->pathname.c_str(), rmsg->offset).release();
             } catch (error& e) {
@@ -99,8 +99,8 @@ void Item::decode(Importer& imp, bool print_errors)
     // Second step: decode to msgs
     switch (rmsg->encoding)
     {
-        case File::BUFR:
-        case File::CREX:
+        case Encoding::BUFR:
+        case Encoding::CREX:
             if (bulletin)
             {
                 msgs = new Messages;
@@ -276,8 +276,8 @@ bool Filter::match_item(const Item& item) const
     {
         switch (item.rmsg->encoding)
         {
-            case File::BUFR: return match_bufr(*item.rmsg, item.bulletin, item.msgs);
-            case File::CREX: return match_crex(*item.rmsg, item.bulletin, item.msgs);
+            case Encoding::BUFR: return match_bufr(*item.rmsg, item.bulletin, item.msgs);
+            case Encoding::CREX: return match_crex(*item.rmsg, item.bulletin, item.msgs);
             default: return false;
         }
     } else if (item.msgs)
@@ -786,7 +786,7 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
                 file = File::create(stdin, false, "standard input");
             }
         } else {
-            File::Encoding intype = string_to_encoding(input_type.c_str());
+            Encoding intype = string_to_encoding(input_type.c_str());
             if (name != fnames.end())
             {
                 file = File::create(intype, *name, "r");

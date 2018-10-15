@@ -2,9 +2,9 @@
 #include "processor.h"
 #include "dballe/file.h"
 #include "dballe/message.h"
+#include "dballe/exporter.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
-#include "dballe/msg/codec.h"
 
 #include <wreport/bulletin.h>
 
@@ -221,8 +221,8 @@ bool Converter::operator()(const cmdline::Item& item)
         }
 
         // Same encoding
-        if ((file->encoding() == File::BUFR && string(item.bulletin->encoding_name()) == "CREX")
-                || (file->encoding() == File::CREX && string(item.bulletin->encoding_name()) == "BUFR"))
+        if ((file->encoding() == Encoding::BUFR && string(item.bulletin->encoding_name()) == "CREX")
+                || (file->encoding() == Encoding::CREX && string(item.bulletin->encoding_name()) == "BUFR"))
         {
             fprintf(stderr, "encoding change not yet supported for low-level bufrex recoding\n");
             return false;

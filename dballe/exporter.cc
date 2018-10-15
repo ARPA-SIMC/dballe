@@ -1,5 +1,6 @@
-#include "codec.h"
-#include "wr_codec.h"
+#include "exporter.h"
+#include "file.h"
+#include "dballe/msg/wr_codec.h"
 #include <wreport/error.h>
 #include <wreport/bulletin.h>
 
@@ -9,7 +10,19 @@ using namespace wreport;
 using namespace std;
 
 namespace dballe {
-namespace msg {
+
+ExporterOptions::ExporterOptions()
+        : centre(MISSING_INT), subcentre(MISSING_INT), application(MISSING_INT) {}
+
+bool ExporterOptions::operator==(const ExporterOptions& o) const
+{
+    return std::tie(template_name, centre, subcentre, application) == std::tie(o.template_name, o.centre, o.subcentre, o.application);
+}
+
+bool ExporterOptions::operator!=(const ExporterOptions& o) const
+{
+    return std::tie(template_name, centre, subcentre, application) != std::tie(o.template_name, o.centre, o.subcentre, o.application);
+}
 
 void ExporterOptions::print(FILE* out)
 {
@@ -64,18 +77,17 @@ std::unique_ptr<wreport::Bulletin> Exporter::make_bulletin() const
     return std::unique_ptr<wreport::Bulletin>(nullptr);
 }
 
-std::unique_ptr<Exporter> Exporter::create(File::Encoding type, const ExporterOptions& opts)
+std::unique_ptr<Exporter> Exporter::create(Encoding type, const ExporterOptions& opts)
 {
     switch (type)
     {
-        case File::BUFR:
-            return unique_ptr<Exporter>(new BufrExporter(opts));
-        case File::CREX:
-            return unique_ptr<Exporter>(new CrexExporter(opts));
+        case Encoding::BUFR:
+            return unique_ptr<Exporter>(new msg::BufrExporter(opts));
+        case Encoding::CREX:
+            return unique_ptr<Exporter>(new msg::CrexExporter(opts));
         default:
             error_unimplemented::throwf("%s exporter is not implemented yet", File::encoding_name(type));
     }
 }
 
-}
 }

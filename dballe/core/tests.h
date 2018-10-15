@@ -51,9 +51,9 @@ static inline bool rnd(double prob)
 /// Return the pathname of a test file
 std::string datafile(const std::string& fname);
 
-std::unique_ptr<File> open_test_data(const char* filename, File::Encoding type);
+std::unique_ptr<File> open_test_data(const char* filename, Encoding type);
 
-BinaryMessage read_rawmsg(const char* filename, File::Encoding type);
+BinaryMessage read_rawmsg(const char* filename, Encoding type);
 
 class MemoryCSVWriter : public CSVWriter
 {

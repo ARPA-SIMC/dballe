@@ -26,8 +26,8 @@ struct ImportSynopOneStation: public Scenario
 
     void read_input()
     {
-        unique_ptr<File> f = File::create(File::BUFR, "extra/bufr/cdfin_synop.bufr", "r");
-        std::unique_ptr<Importer> importer = Importer::create(File::BUFR);
+        unique_ptr<File> f = File::create(Encoding::BUFR, "extra/bufr/cdfin_synop.bufr", "r");
+        std::unique_ptr<Importer> importer = Importer::create(Encoding::BUFR);
         f->foreach([&](const BinaryMessage& msg) {
             input.emplace_back(importer->from_binary(msg));
             return true;
@@ -62,8 +62,8 @@ struct ImportSynopManyTimes: public Scenario
 
     void read_input()
     {
-        unique_ptr<File> f = File::create(File::BUFR, "extra/bufr/synop-groundtemp.bufr", "r");
-        std::unique_ptr<Importer> importer = Importer::create(File::BUFR);
+        unique_ptr<File> f = File::create(Encoding::BUFR, "extra/bufr/synop-groundtemp.bufr", "r");
+        std::unique_ptr<Importer> importer = Importer::create(Encoding::BUFR);
         f->foreach([&](const BinaryMessage& msg) {
             messages = importer->from_binary(msg);
             return true;

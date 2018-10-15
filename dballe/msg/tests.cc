@@ -1,5 +1,4 @@
 #include "tests.h"
-#include "codec.h"
 #include "wr_codec.h"
 #include <dballe/core/csv.h>
 #include "context.h"
@@ -87,7 +86,7 @@ const char* crex_files[] = {
     NULL
 };
 
-Messages read_msgs(const char* filename, File::Encoding type, const ImporterOptions& opts)
+Messages read_msgs(const char* filename, Encoding type, const ImporterOptions& opts)
 {
     BinaryMessage raw = wcallchecked(read_rawmsg(filename, type));
     std::unique_ptr<Importer> importer = Importer::create(type, opts);
@@ -109,10 +108,10 @@ Messages read_msgs_csv(const char* filename)
     return msgs;
 }
 
-unique_ptr<Bulletin> export_msgs(File::Encoding enctype, const Messages& in, const std::string& tag, const dballe::msg::ExporterOptions& opts)
+unique_ptr<Bulletin> export_msgs(Encoding enctype, const Messages& in, const std::string& tag, const ExporterOptions& opts)
 {
     try {
-        std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(enctype, opts));
+        std::unique_ptr<Exporter> exporter(Exporter::create(enctype, opts));
         return exporter->to_bulletin(in);
     } catch (std::exception& e) {
         dballe::tests::dump("bul-" + tag, in);
@@ -532,7 +531,7 @@ void RemoveContext::tweak(Messages& msgs)
 
 }
 
-TestMessage::TestMessage(File::Encoding type, const std::string& name)
+TestMessage::TestMessage(Encoding type, const std::string& name)
     : name(name), type(type), raw(type)
 {
 }
@@ -553,17 +552,17 @@ void TestMessage::read_from_raw(const BinaryMessage& msg, const ImporterOptions&
     raw = msg;
     switch (type)
     {
-        case File::BUFR: bulletin = BufrBulletin::decode(raw.data).release(); break;
-        case File::CREX: bulletin = CrexBulletin::decode(raw.data).release(); break;
+        case Encoding::BUFR: bulletin = BufrBulletin::decode(raw.data).release(); break;
+        case Encoding::CREX: bulletin = CrexBulletin::decode(raw.data).release(); break;
         default: throw wreport::error_unimplemented("Unsupported message type");
     }
     msgs = importer->from_binary(raw);
 }
 
-void TestMessage::read_from_msgs(const Messages& _msgs, const msg::ExporterOptions& export_opts)
+void TestMessage::read_from_msgs(const Messages& _msgs, const ExporterOptions& export_opts)
 {
     // Export
-    std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(type, export_opts));
+    std::unique_ptr<Exporter> exporter(Exporter::create(type, export_opts));
     msgs = _msgs;
     delete bulletin;
     bulletin = exporter->to_bulletin(msgs).release();
@@ -596,7 +595,7 @@ void TestMessage::dump() const
     cerr << name << " interpreted saved in " << fname << endl;
 }
 
-TestCodec::TestCodec(const std::string& fname, File::Encoding type)
+TestCodec::TestCodec(const std::string& fname, Encoding type)
     : fname(fname), type(type)
 {
 }
@@ -668,7 +667,7 @@ void TestCodec::run_reimport()
 
     if (!expected_template.empty())
     {
-        std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
+        std::unique_ptr<Exporter> exporter(Exporter::create(type, output_opts));
         msg::WRExporter* exp = dynamic_cast<msg::WRExporter*>(exporter.get());
         auto tpl = exp->infer_template(orig.msgs);
         wassert(actual(tpl->name()) == expected_template);
@@ -717,7 +716,7 @@ void TestCodec::run_convert(const std::string& tplname)
 
     // Export
     if (verbose) cerr << "Exporting with template " << tplname << " and options " << output_opts.to_string() << endl;
-    msg::ExporterOptions output_opts = this->output_opts;
+    ExporterOptions output_opts = this->output_opts;
     output_opts.template_name = tplname;
     TestMessage exported(type, "exported");
     try {

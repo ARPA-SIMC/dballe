@@ -13,7 +13,7 @@ class Tests : public TestCase
     using TestCase::TestCase;
 
     void register_tests() override;
-} test("msg_codec");
+} test("importer");
 
 void Tests::register_tests()
 {

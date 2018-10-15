@@ -2,7 +2,6 @@
 #define DBALLE_IMPORTER_H
 
 #include <dballe/fwd.h>
-#include <dballe/file.h>
 #include <vector>
 #include <memory>
 #include <string>
@@ -51,8 +50,9 @@ class Importer
 protected:
     ImporterOptions opts;
 
-public:
     Importer(const ImporterOptions& opts);
+
+public:
     Importer(const Importer&) = delete;
     Importer(Importer&&) = delete;
     virtual ~Importer();
@@ -66,7 +66,7 @@ public:
      * @param msg
      *   Encoded message
      * @retval msgs
-     *   The resulting Messages
+     *   The resulting messages
      */
     std::vector<std::shared_ptr<Message>> from_binary(const BinaryMessage& msg) const;
 
@@ -97,7 +97,7 @@ public:
      * @param opts
      *   Options controlling import behaviour
      */
-    static std::unique_ptr<Importer> create(File::Encoding type, const ImporterOptions& opts=ImporterOptions());
+    static std::unique_ptr<Importer> create(Encoding type, const ImporterOptions& opts=ImporterOptions());
 };
 
 }

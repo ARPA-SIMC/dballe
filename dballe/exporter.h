@@ -1,27 +1,18 @@
-#ifndef DBA_MSG_CODEC_H
-#define DBA_MSG_CODEC_H
+#ifndef DBALLE_EXPORTER_H
+#define DBALLE_EXPORTER_H
 
-#include <dballe/file.h>
-#include <dballe/message.h>
 #include <dballe/fwd.h>
-#include <dballe/msg/fwd.h>
-#include <dballe/msg/msg.h>
+#include <vector>
 #include <memory>
 #include <string>
 #include <cstdio>
 #include <functional>
-
-/** @file
- * @ingroup msg
- * General codec options
- */
 
 namespace wreport {
 struct Bulletin;
 }
 
 namespace dballe {
-namespace msg {
 
 /**
  * Options to control message export
@@ -38,8 +29,10 @@ struct ExporterOptions
     int application;
 
     /// Create new Options initialised with default values
-    ExporterOptions()
-        : centre(MISSING_INT), subcentre(MISSING_INT), application(MISSING_INT) {}
+    ExporterOptions();
+
+    bool operator==(const ExporterOptions&) const;
+    bool operator!=(const ExporterOptions&) const;
 
     /// Print a summary of the options to \a out
     void print(FILE* out);
@@ -50,20 +43,22 @@ struct ExporterOptions
 
 
 /**
- * Message exporter
- *
- * This class is designed like a configurable virtual functor.
- *
- * Exporters of various kinds can provide their implementations.
+ * Message exporter interface
  */
 class Exporter
 {
 protected:
     ExporterOptions opts;
 
-public:
     Exporter(const ExporterOptions& opts);
+
+public:
+    Exporter(const Exporter&) = delete;
+    Exporter(Exporter&&) = delete;
     virtual ~Exporter();
+
+    Exporter& operator=(const Exporter&) = delete;
+    Exporter& operator=(Exporter&&) = delete;
 
     /**
      * Encode a message
@@ -71,14 +66,14 @@ public:
      * @param msgs
      *   Message to encode
      * @retval rmsg
-     *   The resulting BinaryMessage
+     *   The resulting encoded data
      */
-    virtual std::string to_binary(const Messages& msgs) const = 0;
+    virtual std::string to_binary(const std::vector<std::shared_ptr<Message>>& messages) const = 0;
 
     /**
      * Export to a Bulletin
      */
-    virtual std::unique_ptr<wreport::Bulletin> to_bulletin(const Messages& msgs) const = 0;
+    virtual std::unique_ptr<wreport::Bulletin> to_bulletin(const std::vector<std::shared_ptr<Message>>& msgs) const = 0;
 
     /**
      * Create a bulletin that works with this exporter.
@@ -90,10 +85,9 @@ public:
 
 
     /// Instantiate the right importer for the given type
-    static std::unique_ptr<Exporter> create(File::Encoding type, const ExporterOptions& opts=ExporterOptions());
+    static std::unique_ptr<Exporter> create(Encoding type, const ExporterOptions& opts=ExporterOptions());
 };
 
-}
 }
 
 #endif

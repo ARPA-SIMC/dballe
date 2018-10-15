@@ -548,7 +548,7 @@ class Tests : public TestCase
         });
         add_method("msgs_csv", []() {
             // Test CSV encoding/decoding
-            Messages msgs = read_msgs("bufr/synop-evapo.bufr", File::BUFR);
+            Messages msgs = read_msgs("bufr/synop-evapo.bufr", Encoding::BUFR);
 
             // Serialise to CSV
             MemoryCSVWriter csv;
@@ -571,7 +571,7 @@ class Tests : public TestCase
             wassert(actual(msg::messages_diff(msgs, msgs1)) == 0u);
         });
         add_method("msgs_copy", []() {
-            Messages msgs = read_msgs("bufr/synop-evapo.bufr", File::BUFR);
+            Messages msgs = read_msgs("bufr/synop-evapo.bufr", Encoding::BUFR);
             Messages msgs1(msgs);
             Messages msgs2;
             msgs2 = msgs;

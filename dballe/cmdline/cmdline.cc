@@ -211,14 +211,14 @@ void dba_cmdline_error(poptContext optCon, const char* fmt, ...)
     exit(1);
 }
 
-File::Encoding string_to_encoding(const char* type)
+Encoding string_to_encoding(const char* type)
 {
     if (strlen(type) >= 1) {
         switch (type[0]) {
             case 'b':
-                return File::BUFR;
+                return Encoding::BUFR;
             case 'c':
-                return File::CREX;
+                return Encoding::CREX;
         }
     }
     try {

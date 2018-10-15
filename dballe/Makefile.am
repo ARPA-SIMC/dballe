@@ -48,6 +48,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	fwd.h \
 	file.h \
 	importer.h \
+	exporter.h \
 	message.h \
 	types.h \
 	record.h \
@@ -75,7 +76,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/trace.h \
 	core/json.h \
 	msg/fwd.h \
-	msg/codec.h \
 	msg/bulletin.h \
 	msg/context.h \
 	msg/vars.h \
@@ -144,6 +144,7 @@ lib_LTLIBRARIES = libdballe.la
 libdballe_la_SOURCES = \
 	file.cc \
 	importer.cc \
+	exporter.cc \
 	message.cc \
 	types.cc \
 	record.cc \
@@ -172,7 +173,6 @@ libdballe_la_SOURCES = \
 	msg/context.cc \
 	msg/msg.cc \
 	msg/msg-lua.cc \
-	msg/codec.cc \
 	msg/wr_codec.cc \
 	msg/wr_importers/base.cc \
 	msg/wr_importers/synop.cc \
@@ -281,6 +281,7 @@ test_dballe_SOURCES = \
 	core/tests.cc \
 	file-test.cc \
 	importer-test.cc \
+	exporter-test.cc \
 	message-test.cc \
 	types-test.cc \
 	record-test.cc \
@@ -305,7 +306,6 @@ test_dballe_SOURCES = \
 	msg/bulletin-test.cc \
 	msg/vars-test.cc \
 	msg/context-test.cc \
-	msg/codec-test.cc \
 	msg/msg-test.cc \
 	msg/wr_codec_generic-test.cc \
 	msg/wr_codec-test.cc \

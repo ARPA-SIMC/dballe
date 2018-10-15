@@ -5,7 +5,6 @@
 #include <dballe/file.h>
 #include <dballe/message.h>
 #include <dballe/msg/msg.h>
-#include <dballe/msg/codec.h>
 #include <dballe/db/db.h>
 #include <wreport/error.h>
 #include <wreport/utils/string.h>
@@ -376,7 +375,7 @@ struct ExportCmd : public DatabaseCmd
         {
             return dbadb.do_export_dump(query, stdout);
         } else {
-            File::Encoding type = File::parse_encoding(op_output_type);
+            Encoding type = File::parse_encoding(op_output_type);
             auto file = File::create(type, stdout, false, "w");
             return dbadb.do_export(query, *file, op_output_template, forced_repmemo);
         }

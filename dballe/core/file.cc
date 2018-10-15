@@ -52,14 +52,14 @@ std::unique_ptr<dballe::File> File::open_test_data_file(Encoding type, const std
 
 BinaryMessage BufrFile::read()
 {
-    BinaryMessage res(BUFR);
+    BinaryMessage res(Encoding::BUFR);
     if (BufrBulletin::read(fd, res.data, m_name.c_str(), &res.offset))
     {
         res.pathname = m_name;
         res.index = idx++;
         return res;
     }
-    return BinaryMessage(BUFR);
+    return BinaryMessage(Encoding::BUFR);
 }
 
 void BufrFile::write(const std::string& msg)
@@ -69,14 +69,14 @@ void BufrFile::write(const std::string& msg)
 
 BinaryMessage CrexFile::read()
 {
-    BinaryMessage res(CREX);
+    BinaryMessage res(Encoding::CREX);
     if (CrexBulletin::read(fd, res.data, m_name.c_str(), &res.offset))
     {
         res.pathname = m_name;
         res.index = idx++;
         return res;
     }
-    return BinaryMessage(CREX);
+    return BinaryMessage(Encoding::CREX);
 }
 
 void CrexFile::write(const std::string& msg)

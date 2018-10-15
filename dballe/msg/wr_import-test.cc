@@ -44,7 +44,7 @@ class Tests : public TestCase
             std::string pathname = "bufr/" + fname;
             ImporterOptions opts;
             opts.simplified = false;
-            Messages msgs = wcallchecked(read_msgs(pathname.c_str(), File::BUFR, opts));
+            Messages msgs = wcallchecked(read_msgs(pathname.c_str(), Encoding::BUFR, opts));
             m(msgs);
         });
     }
@@ -55,7 +55,7 @@ class Tests : public TestCase
             std::string pathname = "bufr/" + fname;
             ImporterOptions opts;
             opts.simplified = true;
-            Messages msgs = read_msgs(pathname.c_str(), File::BUFR, opts);
+            Messages msgs = read_msgs(pathname.c_str(), Encoding::BUFR, opts);
             m(msgs);
         });
     }
@@ -64,7 +64,7 @@ class Tests : public TestCase
     {
         add_method(fname, [=]() {
             std::string pathname = "crex/" + fname;
-            Messages msgs = read_msgs(pathname.c_str(), File::CREX);
+            Messages msgs = read_msgs(pathname.c_str(), Encoding::CREX);
             m(msgs);
         });
     }
@@ -83,12 +83,12 @@ class Tests : public TestCase
             for (int i = 0; files[i] != NULL; i++)
             {
                 try {
-                    Messages msgs = read_msgs(files[i], File::BUFR);
+                    Messages msgs = read_msgs(files[i], Encoding::BUFR);
                     wassert(actual(msgs.size()) > 0);
                 } catch (std::exception& e) {
                     cerr << "Failing bulletin:";
                     try {
-                        BinaryMessage raw = read_rawmsg(files[i], File::BUFR);
+                        BinaryMessage raw = read_rawmsg(files[i], Encoding::BUFR);
                         unique_ptr<Bulletin> bulletin(BufrBulletin::decode(raw.data));
                         bulletin->print(stderr);
                     } catch (std::exception& e1) {
@@ -106,12 +106,12 @@ class Tests : public TestCase
             for (int i = 0; files[i] != NULL; i++)
             {
                 try {
-                    Messages msgs = read_msgs(files[i], File::CREX);
+                    Messages msgs = read_msgs(files[i], Encoding::CREX);
                     wassert(actual(msgs.size()) > 0);
                 } catch (std::exception& e) {
                     cerr << "Failing bulletin:";
                     try {
-                        BinaryMessage raw = read_rawmsg(files[i], File::CREX);
+                        BinaryMessage raw = read_rawmsg(files[i], Encoding::CREX);
                         unique_ptr<Bulletin> bulletin(CrexBulletin::decode(raw.data));
                         bulletin->print(stderr);
                     } catch (std::exception& e1) {
@@ -328,8 +328,8 @@ class Tests : public TestCase
             try
             {
                 // Read and interpretate the message
-                BinaryMessage raw = read_rawmsg("bufr/interpreted-range.bufr", File::BUFR);
-                std::unique_ptr<Importer> importer = Importer::create(File::BUFR);
+                BinaryMessage raw = read_rawmsg("bufr/interpreted-range.bufr", Encoding::BUFR);
+                std::unique_ptr<Importer> importer = Importer::create(Encoding::BUFR);
                 Messages msgs = importer->from_binary(raw);
                 throw TestFailed("error_domain was not thrown");
             } catch (wreport::error_domain& e) {
@@ -338,7 +338,7 @@ class Tests : public TestCase
 
             {
                 wreport::options::LocalOverride<bool> o(wreport::options::var_silent_domain_errors, true);
-                Messages msgs = read_msgs("bufr/interpreted-range.bufr", File::BUFR);
+                Messages msgs = read_msgs("bufr/interpreted-range.bufr", Encoding::BUFR);
                 wassert(actual(msgs.size()) == 1u);
                 const Msg& msg = Msg::downcast(*msgs[0]);
                 wassert(actual(msg.type) == MSG_SHIP);

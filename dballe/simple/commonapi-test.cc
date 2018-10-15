@@ -1,4 +1,4 @@
-#include "core/tests.h"
+#include "dballe/core/tests.h"
 #include "commonapi.h"
 
 using namespace std;
@@ -21,8 +21,8 @@ struct APITest : public CommonAPIImplementation
      int voglioancora() override { return 0; }
      void critica() override {}
      void scusa() override {}
-     void messages_open_input(const char* filename, const char* mode, File::Encoding format, bool simplified=true) override {}
-     void messages_open_output(const char* filename, const char* mode, File::Encoding format) override {}
+     void messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified=true) override {}
+     void messages_open_output(const char* filename, const char* mode, Encoding format) override {}
      bool messages_read_next() override { return false; }
      void messages_write_next(const char*) override {}
 };

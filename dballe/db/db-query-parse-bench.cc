@@ -2,7 +2,6 @@
 #include "dballe/file.h"
 #include "dballe/core/query.h"
 #include "dballe/msg/msg.h"
-#include "dballe/msg/codec.h"
 #include <vector>
 #include <cstdlib>
 

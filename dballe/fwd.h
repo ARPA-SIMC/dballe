@@ -2,6 +2,13 @@
 #define DBALLE_FWD_H
 
 namespace dballe {
+
+/// Supported encodings
+enum class Encoding {
+    BUFR = 0,
+    CREX = 1,
+};
+
 struct Datetime;
 struct DatetimeRange;
 struct Level;

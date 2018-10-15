@@ -128,13 +128,13 @@ int Dbadb::do_import(const std::string& fname, Reader& reader, int import_flags,
 
 int Dbadb::do_export(const Query& query, File& file, const char* output_template, const char* forced_repmemo)
 {
-    msg::ExporterOptions opts;
+    ExporterOptions opts;
     if (output_template && output_template[0] != 0)
         opts.template_name = output_template;
 
     if (forced_repmemo)
         forced_repmemo = forced_repmemo;
-    auto exporter = msg::Exporter::create(file.encoding(), opts);
+    auto exporter = Exporter::create(file.encoding(), opts);
 
     db.export_msgs(query, [&](unique_ptr<Message>&& msg) {
         /* Override the message type if the user asks for it */

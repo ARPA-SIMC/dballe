@@ -1,12 +1,12 @@
 #include "dbapi.h"
 #include "dballe/file.h"
 #include "dballe/importer.h"
+#include "dballe/exporter.h"
 #include "dballe/message.h"
 #include "dballe/core/query.h"
 #include "dballe/core/values.h"
 #include "dballe/db/db.h"
 #include "dballe/msg/msg.h"
-#include "dballe/msg/codec.h"
 #include <cstring>
 
 using namespace wreport;
@@ -23,14 +23,14 @@ struct InputFile
     unsigned current_msg_idx = 0;
     int import_flags = 0;
 
-    InputFile(File::Encoding format, bool simplified)
+    InputFile(Encoding format, bool simplified)
     {
         ImporterOptions importer_options;
         importer_options.simplified = simplified;
         input = File::create(format, stdin, false, "(stdin)").release();
         importer = Importer::create(format, importer_options).release();
     }
-    InputFile(const char* fname, File::Encoding format, bool simplified)
+    InputFile(const char* fname, Encoding format, bool simplified)
     {
         ImporterOptions importer_options;
         importer_options.simplified = simplified;
@@ -76,11 +76,11 @@ struct OutputFile
 {
     File* output = nullptr;
 
-    OutputFile(const char* mode, File::Encoding format)
+    OutputFile(const char* mode, Encoding format)
     {
         output = File::create(format, stdout, false, "(stdout)").release();
     }
-    OutputFile(const char* fname, const char* mode, File::Encoding format)
+    OutputFile(const char* fname, const char* mode, Encoding format)
     {
         output = File::create(format, fname, mode).release();
     }
@@ -437,7 +437,7 @@ void DbAPI::scusa()
     qcinput.clear();
 }
 
-void DbAPI::messages_open_input(const char* filename, const char* mode, File::Encoding format, bool simplified)
+void DbAPI::messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified)
 {
     // Consistency checks
     if (strchr(mode, 'r') == NULL)
@@ -465,7 +465,7 @@ void DbAPI::messages_open_input(const char* filename, const char* mode, File::En
         input_file->import_flags |= DBA_IMPORT_OVERWRITE;
 }
 
-void DbAPI::messages_open_output(const char* filename, const char* mode, File::Encoding format)
+void DbAPI::messages_open_output(const char* filename, const char* mode, Encoding format)
 {
     if (strchr(mode, 'w') == NULL && strchr(mode, 'a') == NULL)
         throw error_consistency("output files should be open with 'w' or 'a' mode");
@@ -496,10 +496,10 @@ bool DbAPI::messages_read_next()
 void DbAPI::messages_write_next(const char* template_name)
 {
     // Build an exporter for this template
-    msg::ExporterOptions options;
+    ExporterOptions options;
     if (template_name) options.template_name = template_name;
     File& out = *(output_file->output);
-    auto exporter = msg::Exporter::create(out.encoding(), options);
+    auto exporter = Exporter::create(out.encoding(), options);
 
     // Do the export with the current filter
     auto query = Query::from_record(input);

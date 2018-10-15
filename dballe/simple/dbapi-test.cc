@@ -334,7 +334,7 @@ this->add_method("perms_consistency", [](Fixture& f) {
     {
         fortran::DbAPI api(f.tr, "read", "read", "read");
         try {
-            api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
+            api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", Encoding::BUFR);
         } catch (std::exception& e) {
             wassert(actual(e.what()).contains("must be called on a session with writable"));
         }
@@ -342,7 +342,7 @@ this->add_method("perms_consistency", [](Fixture& f) {
     {
         fortran::DbAPI api(f.tr, "write", "read", "read");
         try {
-            api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
+            api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", Encoding::BUFR);
         } catch (std::exception& e) {
             wassert(actual(e.what()).contains("must be called on a session with writable"));
         }
@@ -350,32 +350,32 @@ this->add_method("perms_consistency", [](Fixture& f) {
     {
         fortran::DbAPI api(f.tr, "read", "add", "read");
         try {
-            api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
+            api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", Encoding::BUFR);
         } catch (std::exception& e) {
             wassert(actual(e.what()).contains("must be called on a session with writable"));
         }
     }
     {
         fortran::DbAPI api(f.tr, "write", "add", "read");
-        api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
+        api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", Encoding::BUFR);
     }
     {
         fortran::DbAPI api(f.tr, "write", "write", "read");
-        api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
+        api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", Encoding::BUFR);
     }
     {
         fortran::DbAPI api(f.tr, "write", "add", "write");
-        api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
+        api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", Encoding::BUFR);
     }
     {
         fortran::DbAPI api(f.tr, "write", "write", "write");
-        api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
+        api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", Encoding::BUFR);
     }
 });
 this->add_method("messages_read_messages", [](Fixture& f) {
     // 2 messages, 1 subset each
     fortran::DbAPI api(f.tr, "write", "write", "write");
-    api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", File::BUFR);
+    api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", Encoding::BUFR);
 
     // At the beginning, the DB is empty
     wassert(actual(api.voglioquesto()) == 0);
@@ -402,7 +402,7 @@ this->add_method("messages_read_messages_stdin", [](Fixture& f) {
     TempBind tb(0, in);
 
     // 2 messages, 1 subset each
-    api.messages_open_input("", "r", File::BUFR);
+    api.messages_open_input("", "r", Encoding::BUFR);
 
     // At the beginning, the DB is empty
     wassert(actual(api.voglioquesto()) == 0);
@@ -424,7 +424,7 @@ this->add_method("messages_read_messages_stdin", [](Fixture& f) {
 this->add_method("messages_read_subsets", [](Fixture& f) {
     // 1 message, 6 subsets
     fortran::DbAPI api(f.tr, "write", "write", "write");
-    api.messages_open_input(dballe::tests::datafile("bufr/temp-gts2.bufr").c_str(), "r", File::BUFR);
+    api.messages_open_input(dballe::tests::datafile("bufr/temp-gts2.bufr").c_str(), "r", Encoding::BUFR);
 
     // At the beginning, the DB is empty
     wassert(actual(api.voglioquesto()) == 0);
@@ -457,7 +457,7 @@ this->add_method("messages_read_subsets", [](Fixture& f) {
 this->add_method("messages_read_messages_subsets", [](Fixture& f) {
     // 2 messages, 2 subsets each
     fortran::DbAPI api(f.tr, "write", "write", "write");
-    api.messages_open_input(dballe::tests::datafile("bufr/db-messages1.bufr").c_str(), "r", File::BUFR);
+    api.messages_open_input(dballe::tests::datafile("bufr/db-messages1.bufr").c_str(), "r", Encoding::BUFR);
 
     // At the beginning, the DB is empty
     wassert(actual(api.voglioquesto()) == 0);
@@ -496,7 +496,7 @@ this->add_method("messages_write", [](Fixture& f) {
     // Write one message
     {
         fortran::DbAPI api(f.tr, "write", "write", "write");
-        api.messages_open_output("test.bufr", "wb", File::BUFR);
+        api.messages_open_output("test.bufr", "wb", Encoding::BUFR);
 
         api.setd("lat", 44.5);
         api.setd("lon", 11.5);
@@ -520,7 +520,7 @@ this->add_method("messages_write", [](Fixture& f) {
     // Read it back
     {
         fortran::DbAPI api(f.tr, "write", "write", "write");
-        api.messages_open_input("test.bufr", "rb", File::BUFR);
+        api.messages_open_input("test.bufr", "rb", Encoding::BUFR);
 
         wassert(actual(api.messages_read_next()).istrue());
         wassert(actual(api.voglioquesto()) == 2);
@@ -541,7 +541,7 @@ this->add_method("messages_write_stdout", [](Fixture& f) {
 
         {
             fortran::DbAPI api(f.tr, "write", "write", "write");
-            api.messages_open_output("", "wb", File::BUFR);
+            api.messages_open_output("", "wb", Encoding::BUFR);
 
             api.setd("lat", 44.5);
             api.setd("lon", 11.5);
@@ -568,7 +568,7 @@ this->add_method("messages_write_stdout", [](Fixture& f) {
     // Read it back
     {
         fortran::DbAPI api(f.tr, "write", "write", "write");
-        api.messages_open_input("test.bufr", "rb", File::BUFR);
+        api.messages_open_input("test.bufr", "rb", Encoding::BUFR);
 
         wassert(actual(api.messages_read_next()).istrue());
         wassert(actual(api.voglioquesto()) == 2);
@@ -584,7 +584,7 @@ this->add_method("messages_bug1", [](Fixture& f) {
     // Reproduce an issue reported by Paolo
     // 2 messages, 2 subsets each
     fortran::DbAPI api(f.tr, "write", "write", "write");
-    api.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140312.bufr").c_str(), "r", File::BUFR);
+    api.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140312.bufr").c_str(), "r", Encoding::BUFR);
     wassert(actual(api.messages_read_next()) == 1);
     api.unsetall();
     api.setcontextana();
@@ -598,7 +598,7 @@ this->add_method("messages_bug2", [](Fixture& f) {
     // Reproduce an issue reported by Paolo
     // 2 messages, 2 subsets each
     fortran::DbAPI api(f.tr, "write", "write", "write");
-    api.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140326.bufr").c_str(), "r", File::BUFR);
+    api.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140326.bufr").c_str(), "r", Encoding::BUFR);
     wassert(actual(api.messages_read_next()) == 1);
     api.unsetall();
     api.setcontextana();
@@ -731,8 +731,8 @@ this->add_method("stationdata_bug1", [](Fixture& f) {
         fortran::DbAPI dbapi0(f.tr, "write", "write", "write");
         dbapi0.scopa();
         // Copy a message using the API
-        dbapi0.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140403.bufr").c_str(), "r", File::BUFR);
-        dbapi0.messages_open_output("test.bufr", "w", File::BUFR);
+        dbapi0.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140403.bufr").c_str(), "r", Encoding::BUFR);
+        dbapi0.messages_open_output("test.bufr", "w", Encoding::BUFR);
         wassert(actual(dbapi0.messages_read_next()) == 1);
         //dbapi0.setcontextana();
         dbapi0.messages_write_next("generic");
@@ -748,8 +748,8 @@ this->add_method("stationdata_bug1", [](Fixture& f) {
     // values
 
     // // Compare the two messages
-    // std::unique_ptr<Msgs> msgs1 = read_msgs("bufr/generic-bug20140403.bufr", File::BUFR);
-    // std::unique_ptr<Msgs> msgs2 = read_msgs("./test.bufr", File::BUFR);
+    // std::unique_ptr<Msgs> msgs1 = read_msgs("bufr/generic-bug20140403.bufr", Encoding::BUFR);
+    // std::unique_ptr<Msgs> msgs2 = read_msgs("./test.bufr", Encoding::BUFR);
     // unsigned diffs = msgs1->diff(*msgs2);
     // if (diffs) dballe::tests::track_different_msgs(*msgs1, *msgs2, "apicopy");
     // wassert(actual(diffs) == 0);
@@ -799,7 +799,7 @@ this->add_method("issue52", [](Fixture& f) {
 
     std::string fname = dballe::tests::datafile("bufr/issue52.bufr");
     fortran::DbAPI dbapi(f.tr, "write", "write", "write");
-    wassert(dbapi.messages_open_input(fname.c_str(), "r", File::BUFR, true));
+    wassert(dbapi.messages_open_input(fname.c_str(), "r", Encoding::BUFR, true));
     wassert(actual(dbapi.messages_read_next()).istrue());
     wassert(actual(dbapi.messages_read_next()).istrue());
 
@@ -849,7 +849,7 @@ this->add_method("perf_data", [](Fixture& f) {
 });
 
 this->add_method("perf_read_attrs", [](Fixture& f) {
-    auto msgs = read_msgs("bufr/temp-gts1.bufr", File::BUFR, ImporterOptions::from_string("accurate"));
+    auto msgs = read_msgs("bufr/temp-gts1.bufr", Encoding::BUFR, ImporterOptions::from_string("accurate"));
     wassert(f.tr->import_msgs(msgs, nullptr, 0));
     wassert(f.tr->clear_cached_state());
 
@@ -981,7 +981,7 @@ this->add_method("issue75", [](Fixture& f) {
     {
         auto tr = f.db->transaction();
         fortran::DbAPI dbapi(tr, "write", "write", "write");
-        wassert(dbapi.messages_open_input(fname.c_str(), "r", File::BUFR, true));
+        wassert(dbapi.messages_open_input(fname.c_str(), "r", Encoding::BUFR, true));
         wassert(actual(dbapi.messages_read_next()).istrue());
         wassert(actual(dbapi.messages_read_next()).istrue());
         wassert(actual(dbapi.messages_read_next()).istrue());

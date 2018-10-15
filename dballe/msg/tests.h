@@ -1,7 +1,8 @@
 #include <dballe/core/tests.h>
 #include <dballe/message.h>
 #include <dballe/importer.h>
-#include <dballe/msg/codec.h>
+#include <dballe/exporter.h>
+#include <dballe/msg/msg.h>
 #include <vector>
 
 namespace wreport {
@@ -11,7 +12,7 @@ struct Vartable;
 namespace dballe {
 namespace tests {
 
-Messages read_msgs(const char* filename, File::Encoding type, const dballe::ImporterOptions& opts=dballe::ImporterOptions());
+Messages read_msgs(const char* filename, Encoding type, const dballe::ImporterOptions& opts=dballe::ImporterOptions());
 Messages read_msgs_csv(const char* filename);
 
 struct ActualMessage : public Actual<const Message&>
@@ -23,7 +24,7 @@ struct ActualMessage : public Actual<const Message&>
 
 inline ActualMessage actual(const Message& message) { return ActualMessage(message); }
 
-std::unique_ptr<wreport::Bulletin> export_msgs(File::Encoding enctype, const Messages& in, const std::string& tag, const dballe::msg::ExporterOptions& opts=dballe::msg::ExporterOptions());
+std::unique_ptr<wreport::Bulletin> export_msgs(Encoding enctype, const Messages& in, const std::string& tag, const dballe::ExporterOptions& opts=dballe::ExporterOptions());
 #define test_export_msgs(...) wcallchecked(export_msgs(__VA_ARGS__))
 
 void track_different_msgs(const Message& msg1, const Message& msg2, const std::string& prefix);
@@ -197,27 +198,27 @@ struct RemoveContext : public MessageTweaker
 struct TestMessage
 {
     std::string name;
-    File::Encoding type;
+    Encoding type;
     BinaryMessage raw;
     wreport::Bulletin* bulletin = 0;
     Messages msgs;
 
-    TestMessage(File::Encoding type, const std::string& name);
+    TestMessage(Encoding type, const std::string& name);
     ~TestMessage();
 
     void read_from_file(const std::string& fname, const ImporterOptions& input_opts);
     void read_from_raw(const BinaryMessage& msg, const ImporterOptions& input_opts);
-    void read_from_msgs(const Messages& msgs, const msg::ExporterOptions& export_opts);
+    void read_from_msgs(const Messages& msgs, const ExporterOptions& export_opts);
     void dump() const;
 };
 
 struct TestCodec
 {
     std::string fname;
-    File::Encoding type;
+    Encoding type;
     bool verbose = false;
     ImporterOptions input_opts;
-    msg::ExporterOptions output_opts;
+    ExporterOptions output_opts;
     std::string expected_template;
     int expected_subsets = 1;
     int expected_min_vars = 1;
@@ -231,7 +232,7 @@ struct TestCodec
 
     void do_compare(const TestMessage& msg1, const TestMessage& msg2);
 
-    TestCodec(const std::string& fname, File::Encoding type=File::BUFR);
+    TestCodec(const std::string& fname, Encoding type=Encoding::BUFR);
 
     void configure_ecmwf_to_wmo_tweaks();
 

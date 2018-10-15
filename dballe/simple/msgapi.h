@@ -13,10 +13,6 @@ struct File;
 struct Message;
 struct Msg;
 
-namespace msg {
-struct Exporter;
-}
-
 namespace fortran {
 
 class MsgAPI : public CommonAPIImplementation
@@ -36,10 +32,10 @@ protected:
     unsigned int state;
     /// Importer (NULL if we export)
     Importer* importer;
-	/// Exporter (NULL if we import)
-	msg::Exporter* exporter;
-	/// Template selected for exporter (empty if auto detect)
-	std::string exporter_template;
+    /// Exporter (NULL if we import)
+    Exporter* exporter;
+    /// Template selected for exporter (empty if auto detect)
+    std::string exporter_template;
     /// Message being written
     std::vector<std::shared_ptr<dballe::Message>>* msgs;
 	/// Message subset being written
@@ -113,8 +109,8 @@ public:
 	virtual void critica();
 	virtual void scusa();
     virtual void remove_all();
-    virtual void messages_open_input(const char* filename, const char* mode, File::Encoding format, bool);
-    virtual void messages_open_output(const char* filename, const char* mode, File::Encoding format);
+    virtual void messages_open_input(const char* filename, const char* mode, Encoding format, bool);
+    virtual void messages_open_output(const char* filename, const char* mode, Encoding format);
     virtual bool messages_read_next();
     virtual void messages_write_next(const char*);
 };

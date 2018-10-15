@@ -23,11 +23,6 @@ enum MsgType {
     MSG_POLLUTION   /**< Pollution data */
 };
 
-namespace msg {
-class Exporter;
-class ExporterOptions;
-
-}
 }
 
 #endif

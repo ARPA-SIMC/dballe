@@ -19,14 +19,14 @@ class Tests : public TestCase
     {
         add_method("empty", []() {
             // Try encoding and decoding an empty generic message
-            unique_ptr<Importer> importer = Importer::create(File::BUFR);
-            unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR);
+            unique_ptr<Importer> importer = Importer::create(Encoding::BUFR);
+            unique_ptr<Exporter> exporter = Exporter::create(Encoding::BUFR);
 
             Messages msgs;
             msgs.emplace_back(make_shared<Msg>());
 
             // Export msg as a generic message
-            BinaryMessage raw(File::BUFR);
+            BinaryMessage raw(Encoding::BUFR);
             raw.data = wcallchecked(exporter->to_binary(msgs));
 
             // Parse it back
@@ -40,8 +40,8 @@ class Tests : public TestCase
         });
         add_method("known", []() {
             // Try encoding and decoding a generic message
-            unique_ptr<Importer> importer = Importer::create(File::BUFR);
-            unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR);
+            unique_ptr<Importer> importer = Importer::create(Encoding::BUFR);
+            unique_ptr<Exporter> exporter = Exporter::create(Encoding::BUFR);
 
             unique_ptr<Msg> msg(new Msg);
 
@@ -122,7 +122,7 @@ class Tests : public TestCase
             msgs.emplace_back(move(msg));
 
             /* Export msg as a generic message */
-            BinaryMessage raw(File::BUFR);
+            BinaryMessage raw(Encoding::BUFR);
             raw.data = wcallchecked(exporter->to_binary(msgs));
 
             //FILE* out = fopen("/tmp/zaza.bufr", "wb");
@@ -140,8 +140,8 @@ class Tests : public TestCase
         });
         add_method("attrs", []() {
             // Check that attributes are properly exported
-            unique_ptr<Importer> importer = Importer::create(File::BUFR);
-            unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR);
+            unique_ptr<Importer> importer = Importer::create(Encoding::BUFR);
+            unique_ptr<Exporter> exporter = Exporter::create(Encoding::BUFR);
 
             /* Create a new message */
             unique_ptr<Msg> msg(new Msg);
@@ -177,7 +177,7 @@ class Tests : public TestCase
             msgs.emplace_back(move(msg));
 
             // Encode the message
-            BinaryMessage raw(File::BUFR);
+            BinaryMessage raw(Encoding::BUFR);
             raw.data = wcallchecked(exporter->to_binary(msgs));
 
             // Decode the message
@@ -193,7 +193,7 @@ class Tests : public TestCase
             // Test a bug in which B01194 ([SIM] Report mnemonic) appears twice
 
             // Import a synop message
-            Messages msgs = read_msgs("bufr/obs0-1.22.bufr", File::BUFR);
+            Messages msgs = read_msgs("bufr/obs0-1.22.bufr", Encoding::BUFR);
             wassert(actual(msgs.size()) > 0);
 
             // Convert it to generic, with a 'ship' rep_memo
@@ -201,7 +201,7 @@ class Tests : public TestCase
             Msg::downcast(msgs[0])->set_rep_memo("ship");
 
             // Export it
-            unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR);
+            unique_ptr<Exporter> exporter = Exporter::create(Encoding::BUFR);
             unique_ptr<Bulletin> bulletin = exporter->to_bulletin(msgs);
 
             // Ensure that B01194 only appears once

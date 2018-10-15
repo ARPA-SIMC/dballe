@@ -1,6 +1,5 @@
 #include <dballe/db/db.h>
 #include <dballe/file.h>
-#include <dballe/msg/codec.h>
 #include <dballe/core/benchmark.h>
 #include <dballe/core/record.h>
 #include <dballe/core/query.h>

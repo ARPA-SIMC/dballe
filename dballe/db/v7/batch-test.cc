@@ -153,7 +153,7 @@ add_method("from_db", [](Fixture& f) {
 
 add_method("import", [](Fixture& f) {
     db::v7::Tracer<> trc;
-    Messages msgs1 = read_msgs("bufr/test-airep1.bufr", File::BUFR);
+    Messages msgs1 = read_msgs("bufr/test-airep1.bufr", Encoding::BUFR);
     f.tr->import_msg(*msgs1[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
     db::v7::Batch& batch = f.tr->batch;
     wassert(actual(batch.count_select_stations) == 1u);
