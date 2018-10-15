@@ -174,7 +174,6 @@ struct Filter
     bool match_bufrex(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const Messages* msgs) const;
     bool match_bufr(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const Messages* msgs) const;
     bool match_crex(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const Messages* msgs) const;
-    bool match_aof(const BinaryMessage& rmsg, const Messages* msgs) const;
     bool match_item(const Item& item) const;
 };
 

@@ -8,7 +8,6 @@
 #include "dballe/core/csv.h"
 #include "dballe/core/json.h"
 #include "dballe/core/match-wreport.h"
-#include "dballe/msg/aof_codec.h"
 #include "dballe/cmdline/cmdline.h"
 #include <cstring>
 #include <cstdlib>
@@ -95,9 +94,6 @@ void Item::decode(Importer& imp, bool print_errors)
                 bulletin = 0;
             }
             break;
-        case File::AOF:
-            // Nothing to do for AOF
-            break;
     }
 
     // Second step: decode to msgs
@@ -115,16 +111,6 @@ void Item::decode(Importer& imp, bool print_errors)
                     delete msgs;
                     msgs = 0;
                 }
-            }
-            break;
-        case File::AOF:
-            msgs = new Messages;
-            try {
-                *msgs = imp.from_binary(*rmsg);
-            } catch (error& e) {
-                if (print_errors) print_parse_error(*rmsg, e);
-                delete msgs;
-                msgs = 0;
             }
             break;
     }
@@ -276,27 +262,6 @@ bool Filter::match_crex(const BinaryMessage& rmsg, const Bulletin* rm, const Mes
 #endif
 }
 
-bool Filter::match_aof(const BinaryMessage& rmsg, const Messages* msgs) const
-{
-    int category, subcategory;
-    msg::AOFImporter::get_category(rmsg, &category, &subcategory);
-
-    if (!match_common(rmsg, msgs))
-        return false;
-
-    if (this->category != -1)
-        if (this->category != category)
-            return false;
-
-    if (this->subcategory != -1)
-        if (this->subcategory != subcategory)
-            return false;
-
-    if (msgs) return match_msgs(*msgs);
-
-    return true;
-}
-
 bool Filter::match_msgs(const Messages& msgs) const
 {
     if (matcher && matcher->match(MatchedMessages(msgs)) != matcher::MATCH_YES)
@@ -313,7 +278,6 @@ bool Filter::match_item(const Item& item) const
         {
             case File::BUFR: return match_bufr(*item.rmsg, item.bulletin, item.msgs);
             case File::CREX: return match_crex(*item.rmsg, item.bulletin, item.msgs);
-            case File::AOF: return match_aof(*item.rmsg, item.msgs);
             default: return false;
         }
     } else if (item.msgs)

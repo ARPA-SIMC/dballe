@@ -63,7 +63,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/values.h \
 	core/file.h \
 	core/arrayfile.h \
-	core/aoffile.h \
 	core/csv.h \
 	core/record.h \
 	core/query.h \
@@ -83,7 +82,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	msg/msg.h \
 	msg/msg-extravars.h \
 	msg/context-extravars.h \
-	msg/aof_codec.h \
 	msg/wr_codec.h \
 	msg/wr_exporters/common.h \
 	sql/fwd.h \
@@ -159,7 +157,6 @@ libdballe_la_SOURCES = \
 	core/values.cc \
 	core/file.cc \
 	core/arrayfile.cc \
-	core/aoffile.cc \
 	core/csv.cc \
 	core/record_keyword.cc \
 	core/record.cc \
@@ -176,13 +173,6 @@ libdballe_la_SOURCES = \
 	msg/msg.cc \
 	msg/msg-lua.cc \
 	msg/codec.cc \
-	msg/aof_codec.cc \
-	msg/aof_importers/common.cc \
-	msg/aof_importers/synop.cc \
-	msg/aof_importers/dribu.cc \
-	msg/aof_importers/flight.cc \
-	msg/aof_importers/temp.cc \
-	msg/aof_importers/pilot.cc \
 	msg/wr_codec.cc \
 	msg/wr_importers/base.cc \
 	msg/wr_importers/synop.cc \
@@ -262,7 +252,6 @@ EXTRA_DIST += \
 	core/vasprintf.h \
 	core/byteswap.h \
 	msg/wr_importers/base.h \
-	msg/aof_importers/common.h \
 	msg/filter.cc \
 	msg/wr_importers/sat.cc
 
@@ -322,7 +311,6 @@ test_dballe_SOURCES = \
 	msg/wr_codec-test.cc \
 	msg/wr_import-test.cc \
 	msg/wr_export-test.cc \
-	msg/aof_codec-test.cc \
 	sql/querybuf-test.cc \
 	sql/sqlite-test.cc \
 	db/tests.cc \

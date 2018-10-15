@@ -1,5 +1,4 @@
 #include "importer.h"
-#include "dballe/msg/aof_codec.h"
 #include "dballe/msg/wr_codec.h"
 #include <wreport/error.h>
 #include <wreport/bulletin.h>
@@ -71,8 +70,6 @@ std::unique_ptr<Importer> Importer::create(File::Encoding type, const ImporterOp
             return unique_ptr<Importer>(new msg::BufrImporter(opts));
         case File::CREX:
             return unique_ptr<Importer>(new msg::CrexImporter(opts));
-        case File::AOF:
-            return unique_ptr<Importer>(new msg::AOFImporter(opts));
         default:
             error_unimplemented::throwf("%s importer is not implemented yet", File::encoding_name(type));
     }

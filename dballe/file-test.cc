@@ -40,15 +40,6 @@ class Tests : public TestCase
             wassert(actual(msg.index) == 0);
             wassert(actual(msg.offset) == 0);
         });
-        add_method("aof", []() {
-            // AOF Read test
-            auto file = File::create(File::AOF, tests::datafile("aof/obs1-11.0.aof"), "r");
-            BinaryMessage msg = wcallchecked(file->read());
-            wassert(actual(msg).istrue());
-            wassert(actual(msg.data.size()) == 140u);
-            wassert(actual(msg.index) == 0);
-            wassert(actual(msg.offset) == 140);
-        });
         add_method("parse_encoding", []() {
             // Parse encoding test
             wassert(actual(File::parse_encoding("BUFR")) == File::BUFR);
@@ -57,9 +48,6 @@ class Tests : public TestCase
             wassert(actual(File::parse_encoding("CREX")) == File::CREX);
             wassert(actual(File::parse_encoding("crex")) == File::CREX);
             wassert(actual(File::parse_encoding("CreX")) == File::CREX);
-            wassert(actual(File::parse_encoding("AOF")) == File::AOF);
-            wassert(actual(File::parse_encoding("aof")) == File::AOF);
-            wassert(actual(File::parse_encoding("AoF")) == File::AOF);
         });
     }
 } test("dballe_file");

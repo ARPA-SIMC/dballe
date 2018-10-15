@@ -1,6 +1,5 @@
 #include "file.h"
 #include "core/file.h"
-#include "core/aoffile.h"
 #include <wreport/error.h>
 #include <wreport/bulletin.h>
 #include <wreport/utils/string.h>
@@ -25,7 +24,6 @@ const char* File::encoding_name(File::Encoding enc)
     {
         case BUFR: return "BUFR";
         case CREX: return "CREX";
-        case AOF: return "AOF";
         default: error_notfound::throwf("unsupported encoding value %d", (int)enc);
     }
 }
@@ -41,7 +39,6 @@ File::Encoding File::parse_encoding(const std::string& s)
     std::string str = wreport::str::upper(s);
     if (str == "BUFR") return BUFR;
     if (str == "CREX") return CREX;
-    if (str == "AOF")  return AOF;
     error_notfound::throwf("unsupported encoding '%s'", s.c_str());
 }
 
@@ -100,8 +97,6 @@ unique_ptr<File> File::create(FILE* stream, bool close_on_exit, const std::strin
     {
         case 'B': return create(BUFR, st.release(), close_on_exit, name);
         case 'C': return create(CREX, st.release(), close_on_exit, name);
-        case 0:
-        case 0x38: return create(AOF, st.release(), close_on_exit, name);
         default: throw error_notfound("could not detect the encoding of " + name);
     }
 }
@@ -112,7 +107,6 @@ unique_ptr<File> File::create(File::Encoding type, FILE* stream, bool close_on_e
     {
         case BUFR: return unique_ptr<File>(new core::BufrFile(name, stream, close_on_exit));
         case CREX: return unique_ptr<File>(new core::CrexFile(name, stream, close_on_exit));
-        case AOF: return unique_ptr<File>(new core::AofFile(name, stream, close_on_exit));
         default: error_consistency::throwf("cannot handle unknown file type %d", (int)type);
     }
 }

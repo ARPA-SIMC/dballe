@@ -864,7 +864,7 @@ static PyMethodDef dpy_DB_methods[] = {
         load(fp, encoding=None, attrs=False, full_pseudoana=False, overwrite=False)
 
         Load a file object in the database. An encoding can optionally be
-        provided as a string ("BUFR", "CREX", "AOF"). If encoding is None then
+        provided as a string ("BUFR", "CREX"). If encoding is None then
         load will try to autodetect based on the first byte of the file.
     )" },
     {"remove_station_data", (PyCFunction)dpy_remove_station_data<dpy_DB>, METH_VARARGS,
@@ -919,7 +919,7 @@ static PyMethodDef dpy_Transaction_methods[] = {
         load(fp, encoding=None, attrs=False, full_pseudoana=False, overwrite=False)
 
         Load a file object in the database. An encoding can optionally be
-        provided as a string ("BUFR", "CREX", "AOF"). If encoding is None then
+        provided as a string ("BUFR", "CREX"). If encoding is None then
         load will try to autodetect based on the first byte of the file.
     )" },
     {"remove_station_data", (PyCFunction)dpy_remove_station_data<dpy_Transaction>, METH_VARARGS,

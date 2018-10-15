@@ -55,19 +55,6 @@ The actual details of what this means can vary. At the moment, the journal is
 disabled entirely, and interrupting a running program can result in a corrupted
 database file.
 
-## `DBA_AOF_ENDIANNESS`
-
-This controls the endianness used when writing `AOF` files.
-
-The possible values are:
-
-* `ARCH`: use the endianness of the current system
-* `LE`: Little Endian
-* `BE`: Big Endian
-`
-
-By default when the variable is not set, `ARCH` is used.
-
 ## `DBA_FORTRAN_TRACE` or `DBALLE_TRACE_FORTRAN`
 
 If present in the environment, the variable points to a file where DB-All.e

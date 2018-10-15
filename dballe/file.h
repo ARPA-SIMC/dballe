@@ -20,7 +20,6 @@ struct File
     typedef enum {
         BUFR = 0,
         CREX = 1,
-        AOF = 2,
     } Encoding;
 
     virtual ~File();

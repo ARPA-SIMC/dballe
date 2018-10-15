@@ -38,7 +38,6 @@ Description: DB-All.e C development library for weather research
      * soundings: temp, pilot
      * METAR reports
      * Satellite strides (decode only)
-  * Decoding of AOF reports
   * Interpretation of weather reports as physical data precisely located in
     space and time, and encoding of physical data into weather reports.
   * Smart on-disk database for observed and forecast weather data based on
@@ -132,7 +131,7 @@ Description: Database for punctual meteorological data (Command line tools)
  .
  This framework allows one to manage large amounts of data using its simple
  Application Program Interface, and provides tools to visualise, import
- and export in the standard formats BUFR, AOF and CREX.
+ and export in the standard formats BUFR, and CREX.
  .
  The main characteristics of DB-ALL.e are:
  .

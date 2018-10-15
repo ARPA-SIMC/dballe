@@ -87,30 +87,6 @@ const char* crex_files[] = {
     NULL
 };
 
-const char* aof_files[] = {
-	"aof/obs1-11.0.aof",
-	"aof/obs1-14.63.aof",
-	"aof/obs1-21.1.aof",
-	"aof/obs1-24.2104.aof",
-	"aof/obs1-24.34.aof",
-	"aof/obs2-144.2198.aof",
-	"aof/obs2-244.0.aof",
-	"aof/obs2-244.1.aof",
-	"aof/obs4-165.2027.aof",
-	"aof/obs5-35.61.aof",
-	"aof/obs5-36.30.aof",
-	"aof/obs6-32.1573.aof",
-	"aof/obs6-32.0.aof",
-	"aof/aof_27-2-144.aof",
-	"aof/aof_28-2-144.aof",
-	"aof/aof_27-2-244.aof",
-	"aof/aof_28-2-244.aof",
-	"aof/missing-cloud-h.aof",
-	"aof/brokenamdar.aof",
-	"aof/aof-undersealevel.aof",
-	NULL,
-};
-
 Messages read_msgs(const char* filename, File::Encoding type, const ImporterOptions& opts)
 {
     BinaryMessage raw = wcallchecked(read_rawmsg(filename, type));

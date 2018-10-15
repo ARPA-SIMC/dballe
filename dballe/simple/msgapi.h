@@ -91,7 +91,7 @@ public:
 	 * @param mode
 	 *   the fopen-style mode to use when opening the file
 	 * @param type
-	 *   the encoding to use for the file.  It can be "BUFR", "CREX", "AOF"
+	 *   the encoding to use for the file.  It can be "BUFR" or "CREX"
 	 *   (read only) or "AUTO" (read only).
 	 */
 	MsgAPI(const char* fname, const char* mode, const char* type);

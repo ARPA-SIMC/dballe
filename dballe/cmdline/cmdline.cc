@@ -219,8 +219,6 @@ File::Encoding string_to_encoding(const char* type)
                 return File::BUFR;
             case 'c':
                 return File::CREX;
-            case 'a':
-                return File::AOF;
         }
     }
     try {

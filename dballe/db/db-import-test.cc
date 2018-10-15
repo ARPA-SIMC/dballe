@@ -108,36 +108,6 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
                 }
             }
         });
-        this->add_method("aof", [](Fixture& f) {
-            // Test import/export with all AOF samples
-            core::Query query;
-            const char** files = dballe::tests::aof_files;
-            for (int i = 0; files[i] != NULL; i++)
-            {
-                try {
-                    Messages inmsgs = read_msgs(files[i], File::AOF);
-                    auto msg = Msg::downcast(inmsgs[0]);
-                    normalise_datetime(msg);
-
-                    f.tr->remove_all();
-                    f.tr->import_msg(*msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
-
-                    // Explicitly set the rep_memo variable that is added during export
-                    msg->set_rep_memo(Msg::repmemo_from_type(msg->type));
-
-                    // db->dump(stderr);
-
-                    query.clear();
-                    query.rep_memo = Msg::repmemo_from_type(msg->type);
-
-                    Messages msgs = dballe::tests::messages_from_db(f.tr, query);
-                    wassert(actual(msgs.size()) == 1u);
-                    wassert(actual(diff_msg(msg, msgs[0], "bufr")) == 0);
-                } catch (std::exception& e) {
-                    wassert(throw TestFailed(string("[") + files[i] + "] " + e.what()));
-                }
-            }
-        });
         this->add_method("multi", [](Fixture& f) {
             // Check that multiple messages are correctly identified during export
             core::Query query;

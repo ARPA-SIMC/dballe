@@ -32,8 +32,6 @@ MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
         file = File::create(File::BUFR, fname, mode).release();
     else if (strcasecmp(type, "CREX") == 0)
         file = File::create(File::CREX, fname, mode).release();
-    else if (strcasecmp(type, "AOF") == 0)
-        file = File::create(File::AOF, fname, mode).release();
     else if (strcasecmp(type, "AUTO") == 0)
         file = File::create(fname, mode).release();
     else

@@ -31,7 +31,6 @@ void track_different_msgs(const Messages& msgs1, const Messages& msgs2, const st
 
 extern const char* bufr_files[];
 extern const char* crex_files[];
-extern const char* aof_files[];
 
 const wreport::Var& want_var(const Message& msg, int shortcut);
 const wreport::Var& want_var(const Message& msg, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr);

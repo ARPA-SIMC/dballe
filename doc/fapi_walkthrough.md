@@ -201,8 +201,7 @@ attributes are deleted as well.
 ## Starting the work on a message
 
 Instead of connecting to a database, you can use the DB-All.e API to read and
-write message reports in BUFR, CREX format, and read, but not write, messages
-in AOF format.
+write message reports in BUFR and CREX format.
 
 To do that, use [idba_messaggi][] instead of both [idba_presentati][] and
 [idba_preparati][].  To write a message, your code will look like:
@@ -222,7 +221,7 @@ To do that, use [idba_messaggi][] instead of both [idba_presentati][] and
 1. the name of the file to open
 2. the open mode ("r" for read, "w" for write or create, "a" for append).
    See the documentation of libc's `fopen` for more details.
-3. the file format.  It can be "BUFR", "CREX", "AOF" or "AUTO".  "AUTO" tells
+3. the file format.  It can be "BUFR", "CREX", or "AUTO".  "AUTO" tells
    DB-All.e to autodetect the file format, but it only works when reading
    files, not when writing new one.
 

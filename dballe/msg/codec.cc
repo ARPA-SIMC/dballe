@@ -1,5 +1,4 @@
 #include "codec.h"
-#include "aof_codec.h"
 #include "wr_codec.h"
 #include <wreport/error.h>
 #include <wreport/bulletin.h>
@@ -73,8 +72,6 @@ std::unique_ptr<Exporter> Exporter::create(File::Encoding type, const ExporterOp
             return unique_ptr<Exporter>(new BufrExporter(opts));
         case File::CREX:
             return unique_ptr<Exporter>(new CrexExporter(opts));
-        case File::AOF:
-            //return unique_ptr<Exporter>(new AOFExporter(opts));
         default:
             error_unimplemented::throwf("%s exporter is not implemented yet", File::encoding_name(type));
     }
