@@ -1042,8 +1042,8 @@ struct Compare : public cmdline::Subcommand
             file2 = File::create(file2_name, "r");
         else
             file2 = File::create(string_to_encoding(op_output_type), file2_name, "r");
-        std::unique_ptr<msg::Importer> importer1 = msg::Importer::create(file1->encoding());
-        std::unique_ptr<msg::Importer> importer2 = msg::Importer::create(file2->encoding());
+        std::unique_ptr<Importer> importer1 = Importer::create(file1->encoding());
+        std::unique_ptr<Importer> importer2 = Importer::create(file2->encoding());
         size_t idx = 0;
         for ( ; ; ++idx)
         {

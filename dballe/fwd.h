@@ -10,6 +10,12 @@ struct Record;
 struct Coords;
 struct Query;
 struct Message;
+struct File;
+struct BinaryMessage;
+struct ImporterOptions;
+struct Importer;
+struct ExporterOptions;
+struct Exporter;
 }
 
 #endif

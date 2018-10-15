@@ -24,8 +24,6 @@ enum MsgType {
 };
 
 namespace msg {
-class Importer;
-class ImporterOptions;
 class Exporter;
 class ExporterOptions;
 

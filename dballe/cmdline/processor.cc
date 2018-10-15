@@ -58,7 +58,7 @@ void Item::set_msgs(Messages* new_msgs)
     msgs = new_msgs;
 }
 
-void Item::decode(msg::Importer& imp, bool print_errors)
+void Item::decode(Importer& imp, bool print_errors)
 {
     if (!rmsg) return;
 
@@ -833,7 +833,7 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
         }
 
 
-        std::unique_ptr<msg::Importer> imp = msg::Importer::create(file->encoding(), import_opts);
+        std::unique_ptr<Importer> imp = Importer::create(file->encoding(), import_opts);
         while (BinaryMessage bm = file->read())
         {
             Item item;

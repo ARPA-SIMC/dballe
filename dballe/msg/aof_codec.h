@@ -24,6 +24,7 @@
  * host endianness.
  */
 
+#include <dballe/importer.h>
 #include <dballe/msg/codec.h>
 #include <stdint.h>
 
@@ -68,7 +69,7 @@ public:
     AOFImporter(const ImporterOptions& opts=ImporterOptions());
     virtual ~AOFImporter();
 
-    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const override;
+    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>)> dest) const override;
 
     Messages from_bulletin(const wreport::Bulletin& msg) const override;
 

@@ -7,6 +7,7 @@
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
 #include <cmath>
+#include <ostream>
 
 // Define to debug the sounding group matching algorithm
 // #define DEBUG_GROUPS
@@ -43,7 +44,7 @@ protected:
     void import_group(unsigned start, unsigned length);
 
 public:
-    TempImporter(const msg::ImporterOptions& opts) : WMOImporter(opts) {}
+    TempImporter(const ImporterOptions& opts) : WMOImporter(opts) {}
     virtual ~TempImporter() {}
 
     virtual void init()
@@ -215,7 +216,7 @@ public:
     }
 };
 
-std::unique_ptr<Importer> Importer::createTemp(const msg::ImporterOptions& opts)
+std::unique_ptr<Importer> Importer::createTemp(const ImporterOptions& opts)
 {
     return unique_ptr<Importer>(new TempImporter(opts));
 }

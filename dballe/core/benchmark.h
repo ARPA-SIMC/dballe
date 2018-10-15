@@ -142,7 +142,7 @@ struct Benchmark
 /**
  * Container for parsed messages used for benchmarking
  */
-struct Messages : public std::vector<dballe::Messages>
+struct Messages : public std::vector<std::vector<std::shared_ptr<dballe::Message>>>
 {
     void load(const std::string& pathname, dballe::File::Encoding encoding=dballe::File::BUFR, const char* codec_options="accurate");
 

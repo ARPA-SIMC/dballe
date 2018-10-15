@@ -14,7 +14,6 @@ struct Message;
 struct Msg;
 
 namespace msg {
-struct Importer;
 struct Exporter;
 }
 
@@ -29,14 +28,14 @@ protected:
         STATE_VOGLIOQUESTO = 4,
         STATE_EOF = 8,
     };
-	File* file;
-	/**
-	 * State flag to track what actions have been performed in order to decide
-	 * what to do next
-	 */
-	unsigned int state;
-	/// Importer (NULL if we export)
-	msg::Importer* importer;
+    File* file;
+    /**
+     * State flag to track what actions have been performed in order to decide
+     * what to do next
+     */
+    unsigned int state;
+    /// Importer (NULL if we export)
+    Importer* importer;
 	/// Exporter (NULL if we import)
 	msg::Exporter* exporter;
 	/// Template selected for exporter (empty if auto detect)

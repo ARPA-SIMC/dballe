@@ -46,7 +46,7 @@ protected:
     void import_var(const Var& var);
 
 public:
-    GenericImporter(const msg::ImporterOptions& opts) : Importer(opts) {}
+    GenericImporter(const ImporterOptions& opts) : Importer(opts) {}
     virtual ~GenericImporter() {}
 
     void init() override
@@ -95,7 +95,7 @@ public:
     }
 };
 
-std::unique_ptr<Importer> Importer::createGeneric(const msg::ImporterOptions& opts)
+std::unique_ptr<Importer> Importer::createGeneric(const ImporterOptions& opts)
 {
     return unique_ptr<Importer>(new GenericImporter(opts));
 }

@@ -1,6 +1,7 @@
 #ifndef DBALLE_MSG_WR_CODEC_H
 #define DBALLE_MSG_WR_CODEC_H
 
+#include <dballe/importer.h>
 #include <dballe/msg/codec.h>
 #include <wreport/varinfo.h>
 #include <stdint.h>
@@ -27,7 +28,7 @@ public:
     /**
      * Import a decoded BUFR/CREX message
      */
-    Messages from_bulletin(const wreport::Bulletin& msg) const override;
+    std::vector<std::shared_ptr<Message>> from_bulletin(const wreport::Bulletin& msg) const override;
 
     /**
      * Build Message objects a decoded bulletin, calling \a dest on each
@@ -41,7 +42,7 @@ public:
      *   The function that consumes the interpreted messages.
      * @returns true if it got to the end of decoding, false if dest returned false.
      */
-    bool foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const;
+    bool foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::unique_ptr<Message>)> dest) const;
 };
 
 class BufrImporter : public WRImporter
@@ -50,7 +51,7 @@ public:
     BufrImporter(const ImporterOptions& opts=ImporterOptions());
     virtual ~BufrImporter();
 
-    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const override;
+    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>)> dest) const override;
 };
 
 class CrexImporter : public WRImporter
@@ -59,7 +60,7 @@ public:
     CrexImporter(const ImporterOptions& opts=ImporterOptions());
     virtual ~CrexImporter();
 
-    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const override;
+    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>)> dest) const override;
 };
 
 namespace wr {

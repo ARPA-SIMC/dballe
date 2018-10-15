@@ -19,7 +19,7 @@ class Tests : public TestCase
     {
         add_method("empty", []() {
             // Try encoding and decoding an empty generic message
-            unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR);
+            unique_ptr<Importer> importer = Importer::create(File::BUFR);
             unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR);
 
             Messages msgs;
@@ -40,7 +40,7 @@ class Tests : public TestCase
         });
         add_method("known", []() {
             // Try encoding and decoding a generic message
-            unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR);
+            unique_ptr<Importer> importer = Importer::create(File::BUFR);
             unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR);
 
             unique_ptr<Msg> msg(new Msg);
@@ -140,7 +140,7 @@ class Tests : public TestCase
         });
         add_method("attrs", []() {
             // Check that attributes are properly exported
-            unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR);
+            unique_ptr<Importer> importer = Importer::create(File::BUFR);
             unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR);
 
             /* Create a new message */

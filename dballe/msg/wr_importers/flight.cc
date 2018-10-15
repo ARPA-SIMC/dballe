@@ -43,7 +43,7 @@ protected:
     void import_var(const Var& var);
 
 public:
-    FlightImporter(const msg::ImporterOptions& opts) : WMOImporter(opts) {}
+    FlightImporter(const ImporterOptions& opts) : WMOImporter(opts) {}
     virtual ~FlightImporter()
     {
         // If there are leftover variables in deferred, deallocate them
@@ -154,7 +154,7 @@ public:
     }
 };
 
-std::unique_ptr<Importer> Importer::createFlight(const msg::ImporterOptions& opts)
+std::unique_ptr<Importer> Importer::createFlight(const ImporterOptions& opts)
 {
     return unique_ptr<Importer>(new FlightImporter(opts));
 }

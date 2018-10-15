@@ -1,5 +1,6 @@
 #include <dballe/core/tests.h>
 #include <dballe/message.h>
+#include <dballe/importer.h>
 #include <dballe/msg/codec.h>
 #include <vector>
 
@@ -10,7 +11,7 @@ struct Vartable;
 namespace dballe {
 namespace tests {
 
-Messages read_msgs(const char* filename, File::Encoding type, const dballe::msg::ImporterOptions& opts=dballe::msg::ImporterOptions());
+Messages read_msgs(const char* filename, File::Encoding type, const dballe::ImporterOptions& opts=dballe::ImporterOptions());
 Messages read_msgs_csv(const char* filename);
 
 struct ActualMessage : public Actual<const Message&>
@@ -205,8 +206,8 @@ struct TestMessage
     TestMessage(File::Encoding type, const std::string& name);
     ~TestMessage();
 
-    void read_from_file(const std::string& fname, const msg::ImporterOptions& input_opts);
-    void read_from_raw(const BinaryMessage& msg, const msg::ImporterOptions& input_opts);
+    void read_from_file(const std::string& fname, const ImporterOptions& input_opts);
+    void read_from_raw(const BinaryMessage& msg, const ImporterOptions& input_opts);
     void read_from_msgs(const Messages& msgs, const msg::ExporterOptions& export_opts);
     void dump() const;
 };
@@ -216,7 +217,7 @@ struct TestCodec
     std::string fname;
     File::Encoding type;
     bool verbose = false;
-    msg::ImporterOptions input_opts;
+    ImporterOptions input_opts;
     msg::ExporterOptions output_opts;
     std::string expected_template;
     int expected_subsets = 1;

@@ -93,7 +93,7 @@ protected:
     void import_var(const Var& var);
 
 public:
-    PollutionImporter(const msg::ImporterOptions& opts) : WMOImporter(opts) {}
+    PollutionImporter(const ImporterOptions& opts) : WMOImporter(opts) {}
     virtual ~PollutionImporter() {}
 
     virtual void init()
@@ -153,7 +153,7 @@ public:
     MsgType scanType(const Bulletin& bulletin) const { return MSG_POLLUTION; }
 };
 
-std::unique_ptr<Importer> Importer::createPollution(const msg::ImporterOptions& opts)
+std::unique_ptr<Importer> Importer::createPollution(const ImporterOptions& opts)
 {
     return unique_ptr<Importer>(new PollutionImporter(opts));
 }

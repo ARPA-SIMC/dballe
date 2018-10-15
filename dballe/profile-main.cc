@@ -1,5 +1,5 @@
 #include <dballe/file.h>
-#include <dballe/msg/codec.h>
+#include <dballe/importer.h>
 #include <dballe/db/db.h>
 #include <vector>
 #include <cstring>
@@ -20,14 +20,14 @@ struct Scenario
 
 struct ImportSynopOneStation: public Scenario
 {
-    vector<Messages> input;
+    std::vector<std::vector<std::shared_ptr<Message>>> input;
 
     const char* name() const override { return "import_synop_one_station"; }
 
     void read_input()
     {
         unique_ptr<File> f = File::create(File::BUFR, "extra/bufr/cdfin_synop.bufr", "r");
-        std::unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR);
+        std::unique_ptr<Importer> importer = Importer::create(File::BUFR);
         f->foreach([&](const BinaryMessage& msg) {
             input.emplace_back(importer->from_binary(msg));
             return true;
@@ -56,14 +56,14 @@ struct ImportSynopOneStation: public Scenario
 
 struct ImportSynopManyTimes: public Scenario
 {
-    Messages messages;
+    std::vector<std::shared_ptr<Message>> messages;
 
     const char* name() const override { return "import_synop_many_times"; }
 
     void read_input()
     {
         unique_ptr<File> f = File::create(File::BUFR, "extra/bufr/synop-groundtemp.bufr", "r");
-        std::unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR);
+        std::unique_ptr<Importer> importer = Importer::create(File::BUFR);
         f->foreach([&](const BinaryMessage& msg) {
             messages = importer->from_binary(msg);
             return true;

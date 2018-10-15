@@ -1,6 +1,7 @@
 #include "msgapi.h"
 #include <wreport/var.h>
 #include "dballe/file.h"
+#include "dballe/importer.h"
 #include "dballe/message.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
@@ -39,7 +40,7 @@ MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
         error_consistency::throwf("\"%s\" is not one of the supported message types", type);
 
     if (strchr(mode, 'r') != NULL)
-        importer = msg::Importer::create(file->encoding()).release();
+        importer = Importer::create(file->encoding()).release();
 }
 
 MsgAPI::~MsgAPI()

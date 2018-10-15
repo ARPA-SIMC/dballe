@@ -19,7 +19,7 @@ protected:
     virtual void import_var(const Var& var);
 
 public:
-    SynopImporter(const msg::ImporterOptions& opts)
+    SynopImporter(const ImporterOptions& opts)
         : SynopBaseImporter(opts) {}
     virtual ~SynopImporter() {}
 
@@ -88,7 +88,7 @@ void SynopImporter::import_var(const Var& var)
 
 } // anonynmous namespace
 
-std::unique_ptr<Importer> Importer::createSynop(const msg::ImporterOptions& opts)
+std::unique_ptr<Importer> Importer::createSynop(const ImporterOptions& opts)
 {
     return unique_ptr<Importer>(new SynopImporter(opts));
 }

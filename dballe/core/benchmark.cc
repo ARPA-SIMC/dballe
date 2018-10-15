@@ -6,7 +6,7 @@
 #include <system_error>
 #include <algorithm>
 #include "dballe/msg/msg.h"
-#include "dballe/msg/codec.h"
+#include "dballe/importer.h"
 
 using namespace std;
 
@@ -201,7 +201,7 @@ void BasicProgress::test_failed(const Task& t, std::exception& e)
 
 void Messages::load(const std::string& pathname, dballe::File::Encoding encoding, const char* codec_options)
 {
-    auto importer = msg::Importer::create(File::BUFR, msg::ImporterOptions::from_string(codec_options));
+    auto importer = Importer::create(File::BUFR, ImporterOptions::from_string(codec_options));
     auto in = File::create(encoding, pathname, "rb");
     in->foreach([&](const BinaryMessage& rmsg) {
         emplace_back(importer->from_binary(rmsg));

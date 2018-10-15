@@ -8,6 +8,7 @@
 #include "dballe/core/query.h"
 #include "dballe/core/values.h"
 #include "dballe/message.h"
+#include "dballe/importer.h"
 #include "dballe/msg/codec.h"
 #include "dballe/db/defs.h"
 #include <algorithm>
@@ -230,7 +231,7 @@ template<typename DB>
 static unsigned db_load_file_enc(DB& db, File::Encoding encoding, FILE* file, bool close_on_exit, const std::string& name, int flags)
 {
     std::unique_ptr<File> f = File::create(encoding, file, close_on_exit, name);
-    std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->encoding());
+    std::unique_ptr<Importer> imp = Importer::create(f->encoding());
     unsigned count = 0;
     f->foreach([&](const BinaryMessage& raw) {
         Messages msgs = imp->from_binary(raw);
@@ -245,7 +246,7 @@ template<typename DB>
 static unsigned db_load_file(DB& db, FILE* file, bool close_on_exit, const std::string& name, int flags)
 {
     std::unique_ptr<File> f = File::create(file, close_on_exit, name);
-    std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->encoding());
+    std::unique_ptr<Importer> imp = Importer::create(f->encoding());
     unsigned count = 0;
     f->foreach([&](const BinaryMessage& raw) {
         Messages msgs = imp->from_binary(raw);

@@ -4,7 +4,6 @@
 #include <dballe/fwd.h>
 #include <dballe/types.h>
 #include <wreport/varinfo.h>
-#include <vector>
 #include <memory>
 
 namespace wreport {
@@ -57,10 +56,6 @@ struct Message
      */
     virtual unsigned diff(const Message& msg) const = 0;
 };
-
-
-// TODO: remove this typedef from the stable API
-typedef std::vector<std::shared_ptr<Message>> Messages;
 
 }
 #endif

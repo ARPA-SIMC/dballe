@@ -42,7 +42,7 @@ class Tests : public TestCase
     {
         add_method("prec_" + fname, [=]() {
             std::string pathname = "bufr/" + fname;
-            msg::ImporterOptions opts;
+            ImporterOptions opts;
             opts.simplified = false;
             Messages msgs = wcallchecked(read_msgs(pathname.c_str(), File::BUFR, opts));
             m(msgs);
@@ -53,7 +53,7 @@ class Tests : public TestCase
     {
         add_method("simp_" + fname, [=]() {
             std::string pathname = "bufr/" + fname;
-            msg::ImporterOptions opts;
+            ImporterOptions opts;
             opts.simplified = true;
             Messages msgs = read_msgs(pathname.c_str(), File::BUFR, opts);
             m(msgs);
@@ -329,7 +329,7 @@ class Tests : public TestCase
             {
                 // Read and interpretate the message
                 BinaryMessage raw = read_rawmsg("bufr/interpreted-range.bufr", File::BUFR);
-                std::unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR);
+                std::unique_ptr<Importer> importer = Importer::create(File::BUFR);
                 Messages msgs = importer->from_binary(raw);
                 throw TestFailed("error_domain was not thrown");
             } catch (wreport::error_domain& e) {

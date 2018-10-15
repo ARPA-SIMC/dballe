@@ -282,7 +282,7 @@ void DB::import_msg(const Message& msg, const char* repmemo, int flags)
     t->commit();
 }
 
-void DB::import_msgs(const Messages& msgs, const char* repmemo, int flags)
+void DB::import_msgs(const std::vector<std::shared_ptr<Message>>& msgs, const char* repmemo, int flags)
 {
     auto t = transaction();
     t->import_msgs(msgs, repmemo, flags);

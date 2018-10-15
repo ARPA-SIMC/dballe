@@ -1,5 +1,6 @@
 #include "dbapi.h"
 #include "dballe/file.h"
+#include "dballe/importer.h"
 #include "dballe/message.h"
 #include "dballe/core/query.h"
 #include "dballe/core/values.h"
@@ -17,24 +18,24 @@ namespace fortran {
 struct InputFile
 {
     File* input = nullptr;
-    msg::Importer* importer = nullptr;
+    Importer* importer = nullptr;
     Messages current_msg;
     unsigned current_msg_idx = 0;
     int import_flags = 0;
 
     InputFile(File::Encoding format, bool simplified)
     {
-        msg::ImporterOptions importer_options;
+        ImporterOptions importer_options;
         importer_options.simplified = simplified;
         input = File::create(format, stdin, false, "(stdin)").release();
-        importer = msg::Importer::create(format, importer_options).release();
+        importer = Importer::create(format, importer_options).release();
     }
     InputFile(const char* fname, File::Encoding format, bool simplified)
     {
-        msg::ImporterOptions importer_options;
+        ImporterOptions importer_options;
         importer_options.simplified = simplified;
         input = File::create(format, fname, "rb").release();
-        importer = msg::Importer::create(format, importer_options).release();
+        importer = Importer::create(format, importer_options).release();
     }
     ~InputFile()
     {

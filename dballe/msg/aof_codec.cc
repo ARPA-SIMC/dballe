@@ -43,7 +43,7 @@ AOFImporter::AOFImporter(const ImporterOptions& opts)
     : Importer(opts) {}
 AOFImporter::~AOFImporter() {}
 
-bool AOFImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const
+bool AOFImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>)> dest) const
 {
     /* char id[10]; */
     TRACE("aof_message_decode\n");

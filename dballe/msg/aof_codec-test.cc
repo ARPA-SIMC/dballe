@@ -300,7 +300,7 @@ class Tests : public TestCase
         // Reencode to BUFR and compare
         add_method("reencode_bufr", []() {
             std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(File::BUFR));
-            std::unique_ptr<msg::Importer> importer(msg::Importer::create(File::BUFR));
+            std::unique_ptr<Importer> importer(Importer::create(File::BUFR));
             const char** files = dballe::tests::aof_files;
             // Note: missingclouds and brokenamdar were not in the original file list before it got unified
             for (size_t i = 0; files[i] != NULL; i++)

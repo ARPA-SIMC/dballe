@@ -5,6 +5,7 @@
 #include <dballe/message.h>
 #include <dballe/fwd.h>
 #include <dballe/msg/fwd.h>
+#include <dballe/msg/msg.h>
 #include <memory>
 #include <string>
 #include <cstdio>
@@ -21,82 +22,6 @@ struct Bulletin;
 
 namespace dballe {
 namespace msg {
-
-/**
- * Options to control message import
- */
-struct ImporterOptions
-{
-    bool simplified;
-
-    /// Create new Options initialised with default values
-    ImporterOptions()
-        : simplified(true) {}
-
-    bool operator==(const ImporterOptions& o) const { return simplified == o.simplified; }
-    bool operator!=(const ImporterOptions& o) const { return simplified != o.simplified; }
-
-    /// Print a summary of the options to \a out
-    void print(FILE* out);
-
-    /// Generate a string summary of import options
-    std::string to_string() const;
-
-    /// Opposite of to_string: create an Options from a string
-    static ImporterOptions from_string(const std::string& s);
-};
-
-
-/**
- * Message importer
- *
- * This class is designed like a configurable virtual functor.
- *
- * Importers of various kinds can provide their implementations.
- */
-class Importer
-{
-protected:
-    ImporterOptions opts;
-
-public:
-    Importer(const ImporterOptions& opts);
-    virtual ~Importer();
-
-    /**
-     * Decode a message from its raw encoded representation
-     *
-     * @param msg
-     *   Encoded message
-     * @retval msgs
-     *   The resulting Messages
-     */
-    Messages from_binary(const BinaryMessage& msg) const;
-
-    /**
-     * Decode a message from its raw encoded representation, calling \a dest on
-     * each resulting Message.
-     *
-     * Return false from \a dest to stop decoding.
-     *
-     * @param msg
-     *   Encoded message.
-     * @retval dest
-     *   The function that consumes the decoded messages.
-     * @returns true if it got to the end of decoding, false if dest returned false.
-     */
-    virtual bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const = 0;
-
-    /**
-     * Import a decoded BUFR/CREX message
-     */
-    virtual Messages from_bulletin(const wreport::Bulletin& msg) const = 0;
-
-
-    /// Instantiate the right importer for the given type
-    static std::unique_ptr<Importer> create(File::Encoding type, const ImporterOptions& opts=ImporterOptions());
-};
-
 
 /**
  * Options to control message export

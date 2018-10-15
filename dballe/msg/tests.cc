@@ -111,10 +111,10 @@ const char* aof_files[] = {
 	NULL,
 };
 
-Messages read_msgs(const char* filename, File::Encoding type, const msg::ImporterOptions& opts)
+Messages read_msgs(const char* filename, File::Encoding type, const ImporterOptions& opts)
 {
     BinaryMessage raw = wcallchecked(read_rawmsg(filename, type));
-    std::unique_ptr<msg::Importer> importer = msg::Importer::create(type, opts);
+    std::unique_ptr<Importer> importer = Importer::create(type, opts);
     return importer->from_binary(raw);
 }
 
@@ -566,14 +566,14 @@ TestMessage::~TestMessage()
     delete bulletin;
 }
 
-void TestMessage::read_from_file(const std::string& fname, const msg::ImporterOptions& input_opts)
+void TestMessage::read_from_file(const std::string& fname, const ImporterOptions& input_opts)
 {
     read_from_raw(read_rawmsg(fname.c_str(), type), input_opts);
 }
 
-void TestMessage::read_from_raw(const BinaryMessage& msg, const msg::ImporterOptions& input_opts)
+void TestMessage::read_from_raw(const BinaryMessage& msg, const ImporterOptions& input_opts)
 {
-    std::unique_ptr<msg::Importer> importer(msg::Importer::create(type, input_opts));
+    std::unique_ptr<Importer> importer(Importer::create(type, input_opts));
     raw = msg;
     switch (type)
     {

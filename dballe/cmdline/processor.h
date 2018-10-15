@@ -1,6 +1,7 @@
 #ifndef DBALLE_CMDLINE_PROCESSOR_H
 #define DBALLE_CMDLINE_PROCESSOR_H
 
+#include <dballe/importer.h>
 #include <dballe/msg/codec.h>
 #include <stdexcept>
 #include <list>
@@ -102,16 +103,16 @@ struct Item
     unsigned idx;
     BinaryMessage* rmsg;
     wreport::Bulletin* bulletin;
-    Messages* msgs;
+    std::vector<std::shared_ptr<Message>>* msgs;
 
     Item();
     ~Item();
 
     /// Decode all that can be decoded
-    void decode(msg::Importer& imp, bool print_errors=false);
+    void decode(Importer& imp, bool print_errors=false);
 
     /// Set the value of msgs, possibly replacing the previous one
-    void set_msgs(Messages* new_msgs);
+    void set_msgs(std::vector<std::shared_ptr<Message>>* new_msgs);
 
     /// Throw a ProcessingException based on e
     void processing_failed(std::exception& e) const __attribute__ ((noreturn));
@@ -188,7 +189,7 @@ protected:
     void read_file(const std::list<std::string>& fnames, Action& action);
 
 public:
-    msg::ImporterOptions import_opts;
+    ImporterOptions import_opts;
     Filter filter;
     bool verbose = false;
     unsigned count_successes = 0;

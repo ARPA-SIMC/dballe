@@ -19,6 +19,9 @@ struct Record;
 struct CSVReader;
 struct CSVWriter;
 
+// Compatibility/shortcut from old Messages implementation to new vector of shared_ptr
+typedef std::vector<std::shared_ptr<Message>> Messages;
+
 namespace msg {
 struct Context;
 

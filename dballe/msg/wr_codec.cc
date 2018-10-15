@@ -18,7 +18,7 @@ BufrImporter::BufrImporter(const ImporterOptions& opts)
     : WRImporter(opts) {}
 BufrImporter::~BufrImporter() {}
 
-bool BufrImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const
+bool BufrImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>)> dest) const
 {
     unique_ptr<BufrBulletin> bulletin(BufrBulletin::decode(msg.data));
     return foreach_decoded_bulletin(*bulletin, dest);
@@ -28,7 +28,7 @@ CrexImporter::CrexImporter(const ImporterOptions& opts)
     : WRImporter(opts) {}
 CrexImporter::~CrexImporter() {}
 
-bool CrexImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const
+bool CrexImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>)> dest) const
 {
     unique_ptr<CrexBulletin> bulletin(CrexBulletin::decode(msg.data));
     return foreach_decoded_bulletin(*bulletin, dest);
@@ -41,7 +41,7 @@ Messages WRImporter::from_bulletin(const wreport::Bulletin& msg) const
     return res;
 }
 
-bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::unique_ptr<Message>&&)> dest) const
+bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::unique_ptr<Message>)> dest) const
 {
     // Infer the right importer. See Common Code Table C-13
     std::unique_ptr<wr::Importer> importer;

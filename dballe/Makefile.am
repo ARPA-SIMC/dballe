@@ -47,6 +47,7 @@ dballeincludedir = $(includedir)/dballe
 nobase_dist_dballeinclude_HEADERS = \
 	fwd.h \
 	file.h \
+	importer.h \
 	message.h \
 	types.h \
 	record.h \
@@ -144,6 +145,7 @@ endif
 lib_LTLIBRARIES = libdballe.la
 libdballe_la_SOURCES = \
 	file.cc \
+	importer.cc \
 	message.cc \
 	types.cc \
 	record.cc \
@@ -289,6 +291,7 @@ test_dballe_SOURCES = \
 	tests-main.cc \
 	core/tests.cc \
 	file-test.cc \
+	importer-test.cc \
 	message-test.cc \
 	types-test.cc \
 	record-test.cc \

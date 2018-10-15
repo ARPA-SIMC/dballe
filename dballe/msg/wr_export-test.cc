@@ -127,7 +127,7 @@ class Tests : public TestCase
 
             // Import and check the differences
             {
-                std::unique_ptr<msg::Importer> bufr_importer(msg::Importer::create(File::BUFR/*, const Options& opts=Options()*/));
+                std::unique_ptr<Importer> bufr_importer(Importer::create(File::BUFR/*, const Options& opts=Options()*/));
                 Messages msgs1 = wcallchecked(bufr_importer->from_bulletin(*bbulletin));
                 notes::Collect c(cerr);
                 wassert(actual(msg::messages_diff(msgs, msgs1)) == 0);
@@ -139,7 +139,7 @@ class Tests : public TestCase
 
             // Import and check the differences
             {
-                std::unique_ptr<msg::Importer> crex_importer(msg::Importer::create(File::CREX/*, const Options& opts=Options()*/));
+                std::unique_ptr<Importer> crex_importer(Importer::create(File::CREX/*, const Options& opts=Options()*/));
                 Messages msgs1 = wcallchecked(crex_importer->from_bulletin(*cbulletin));
                 notes::Collect c(cerr);
                 wassert(actual(msg::messages_diff(msgs, msgs1)) == 0);
@@ -477,7 +477,7 @@ class Tests : public TestCase
             int i;
             std::unique_ptr<msg::Exporter> exporter;
             exporter = msg::Exporter::create(File::BUFR/*, const Options& opts=Options()*/);
-            std::unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR/*, opts*/);
+            std::unique_ptr<Importer> importer = Importer::create(File::BUFR/*, opts*/);
 
             for (i = 0; files[i] != NULL; i++)
             {
@@ -539,9 +539,9 @@ class Tests : public TestCase
             int i;
             std::unique_ptr<msg::Exporter> exporter;
             exporter = msg::Exporter::create(File::BUFR/*, const Options& opts=Options()*/);
-            msg::ImporterOptions import_opts;
+            ImporterOptions import_opts;
             import_opts.simplified = false;
-            std::unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR, import_opts);
+            std::unique_ptr<Importer> importer = Importer::create(File::BUFR, import_opts);
 
             for (i = 0; files[i] != NULL; i++)
             {
@@ -640,7 +640,7 @@ class Tests : public TestCase
             std::unique_ptr<Bulletin> bulletin = test_export_msgs(File::BUFR, msgs1, "towmo", output_opts);
 
             // Import again
-            std::unique_ptr<msg::Importer> imp = msg::Importer::create(File::BUFR);
+            std::unique_ptr<Importer> imp = Importer::create(File::BUFR);
             Messages msgs2 = imp->from_bulletin(*bulletin);
             wassert(actual(msgs2.size()) == 1);
             Msg& msg2 = Msg::downcast(*msgs2[0]);
@@ -659,7 +659,7 @@ class Tests : public TestCase
             std::unique_ptr<Bulletin> bulletin = test_export_msgs(File::CREX, msgs1, "tocrex", output_opts);
 
             // Import again
-            std::unique_ptr<msg::Importer> imp = msg::Importer::create(File::BUFR);
+            std::unique_ptr<Importer> imp = Importer::create(File::BUFR);
             Messages msgs2 = wcallchecked(imp->from_bulletin(*bulletin));
             wassert(actual(msgs2.size()) == 1);
         });

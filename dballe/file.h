@@ -1,14 +1,13 @@
 #ifndef DBALLE_FILE_H
 #define DBALLE_FILE_H
 
+#include <dballe/fwd.h>
 #include <dballe/types.h>
 #include <memory>
 #include <string>
 #include <functional>
 
 namespace dballe {
-
-struct BinaryMessage;
 
 /**
  * File object for doing I/O on binary message streams.
