@@ -160,7 +160,7 @@ struct StationEntries : protected core::SmallSet<StationEntry<Station>, Station,
     void add(const StationEntries& entry);
     void add_filtered(const StationEntries& entry, const dballe::Query& query);
 
-    bool has(const Station& station) const { return find(station) != end(); }
+    bool has(const Station& station) const { return this->find(station) != this->end(); }
 
     const StationEntries& sorted() const { if (this->dirty) this->rearrange_dirty(); return *this; }
 };
