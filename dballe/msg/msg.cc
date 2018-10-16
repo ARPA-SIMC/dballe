@@ -83,27 +83,6 @@ void messages_print(const Messages& msgs, FILE* out)
 }
 
 
-const char* msg_type_name(MessageType type)
-{
-    switch (type)
-    {
-        case MessageType::GENERIC: return "generic";
-        case MessageType::SYNOP: return "synop";
-        case MessageType::PILOT: return "pilot";
-        case MessageType::TEMP: return "temp";
-        case MessageType::TEMP_SHIP: return "temp_ship";
-        case MessageType::AIREP: return "airep";
-        case MessageType::AMDAR: return "amdar";
-        case MessageType::ACARS: return "acars";
-        case MessageType::SHIP: return "ship";
-        case MessageType::BUOY: return "buoy";
-        case MessageType::METAR: return "metar";
-        case MessageType::SAT: return "sat";
-        case MessageType::POLLUTION: return "pollution";
-    }
-    return "(unknown)";
-}
-
 Msg::Msg()
 {
     type = MessageType::GENERIC;
@@ -545,7 +524,7 @@ bool Msg::from_csv(CSVReader& in)
 
 void Msg::print(FILE* out) const
 {
-    fprintf(out, "%s message, rep_memo: %s, ", msg_type_name(type), m_rep_memo.c_str());
+    fprintf(out, "%s message, rep_memo: %s, ", format_message_type(type), m_rep_memo.c_str());
     m_coords.print(out, ", ");
     fprintf(out, "ident: %s, dt: ", m_ident.is_missing() ? "" : (const char*)m_ident);
     m_datetime.print_iso8601(out, 'T', ", ");
@@ -621,7 +600,7 @@ unsigned Msg::diff(const Message& o) const
     if (type != msg.type)
     {
         notes::logf("the messages have different type (first is %s (%d), second is %s (%d))\n",
-                msg_type_name(type), static_cast<int>(type), msg_type_name(msg.type), static_cast<int>(msg.type));
+                format_message_type(type), static_cast<int>(type), format_message_type(msg.type), static_cast<int>(msg.type));
         ++diffs;
     }
 

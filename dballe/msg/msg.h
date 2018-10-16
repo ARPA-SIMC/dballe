@@ -52,16 +52,6 @@ void messages_print(const Messages& msgs, FILE* out);
 }
 
 /**
- * Return a string with the name of a dba_msg_type
- *
- * @param type
- *   The dba_msg_type value to name
- * @return
- *   The name, as a const string.  This function is thread safe.
- */
-const char* msg_type_name(MessageType type);
-
-/**
  * Storage for related physical data
  */
 class Msg : public Message

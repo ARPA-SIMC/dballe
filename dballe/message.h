@@ -66,6 +66,17 @@ struct Message
     virtual unsigned diff(const Message& msg) const = 0;
 };
 
+/**
+ * Return a string with the name of a MessageType.
+ *
+ * @param type
+ *   The MessageType value to format
+ * @return
+ *   The name, as a const string.  This function is thread safe.
+ */
+const char* format_message_type(MessageType type);
+
+
 /// Serialize MessageType
 std::ostream& operator<<(std::ostream&, const dballe::MessageType&);
 

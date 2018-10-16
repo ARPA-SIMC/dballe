@@ -140,7 +140,7 @@ const char* infer_from_message(const Msg& msg)
         case MessageType::TEMP_SHIP: return "temp-ship";
         default: break;
     }
-    return msg_type_name(msg.type);
+    return format_message_type(msg.type);
 }
 
 }
@@ -192,7 +192,7 @@ const TemplateRegistry& TemplateRegistry::get()
                     {
                         case MessageType::TEMP_SHIP: tpl = "temp-wmo"; break;
                         default:
-                            tpl = msg_type_name(msg->type);
+                            tpl = format_message_type(msg->type);
                             tpl += "-wmo";
                             break;
                     }

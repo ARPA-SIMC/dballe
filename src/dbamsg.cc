@@ -195,7 +195,7 @@ static void print_item_header(const Item& item)
         for (const auto& i: *item.msgs)
         {
             auto m = Msg::downcast(i);
-            string new_type = msg_type_name(m->type);
+            string new_type = format_message_type(m->type);
             if (old_type.empty())
             {
                 old_type = new_type;
