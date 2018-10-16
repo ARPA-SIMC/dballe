@@ -47,6 +47,14 @@ struct Message
     virtual const wreport::Var* get(wreport::Varcode code, const Level& lev, const Trange& tr) const = 0;
 
     /**
+     * Get a variable given its shortcut name
+     *
+     * @return
+     *   A pointer to the variable, or nullptr if it was not found.
+     */
+    virtual const wreport::Var* get_shortcut(const char* name) const = 0;
+
+    /**
      * Iterate the contents of the message
      */
     virtual bool foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)>) const = 0;

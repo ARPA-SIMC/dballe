@@ -270,6 +270,11 @@ const Var* Msg::get(Varcode code, const Level& lev, const Trange& tr) const
     return ctx->find(code);
 }
 
+const Var* Msg::get_shortcut(const char* name) const
+{
+    return find_by_id(resolve_var(name));
+}
+
 bool Msg::foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)> dest) const
 {
     for (const auto& ctx: data)

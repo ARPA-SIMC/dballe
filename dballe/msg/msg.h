@@ -116,6 +116,7 @@ public:
     MessageType get_type() const override { return type; }
 
     const wreport::Var* get(wreport::Varcode code, const Level& lev, const Trange& tr) const override;
+    const wreport::Var* get_shortcut(const char* name) const override;
 
     bool foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)>) const override;
 
@@ -240,7 +241,7 @@ public:
      */
     const msg::Context* find_context_by_id(int id) const;
 
-    /** 
+    /**
      * Find a datum given its shortcut ID
      *
      * @param id
