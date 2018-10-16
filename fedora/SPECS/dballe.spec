@@ -21,7 +21,7 @@ BuildRequires: libtool
 BuildRequires: gcc-c++
 BuildRequires: gperf
 BuildRequires: doxygen
-BuildRequires: python-docutils
+BuildRequires: /usr/bin/rst2html
 BuildRequires: pkgconfig(lua) > 5.1.1
 BuildRequires: pkgconfig(libwreport) >= 3.11
 BuildRequires: python-devel
