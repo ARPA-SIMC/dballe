@@ -59,7 +59,7 @@ void messages_print(const Messages& msgs, FILE* out);
  * @return
  *   The name, as a const string.  This function is thread safe.
  */
-const char* msg_type_name(MsgType type);
+const char* msg_type_name(MessageType type);
 
 /**
  * Storage for related physical data
@@ -83,7 +83,7 @@ protected:
 
 public:
     /// Source of the data
-    MsgType type;
+    MessageType type;
 
     /** Context in the message */
     std::vector<msg::Context*> data;
@@ -123,6 +123,7 @@ public:
 
     std::unique_ptr<Message> clone() const override;
     Datetime get_datetime() const override { return m_datetime; }
+    MessageType get_type() const override { return type; }
 
     const wreport::Var* get(wreport::Varcode code, const Level& lev, const Trange& tr) const override;
 
@@ -399,12 +400,12 @@ public:
     /**
      * Get the message source type corresponding to the given report code
      */
-    static MsgType type_from_repmemo(const char* repmemo);
+    static MessageType type_from_repmemo(const char* repmemo);
 
     /**
      * Get the report code corresponding to the given message source type
      */
-    static const char* repmemo_from_type(MsgType type);
+    static const char* repmemo_from_type(MessageType type);
 
 #include <dballe/msg/msg-extravars.h>
 };

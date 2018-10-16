@@ -224,7 +224,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             {
                 f.tr->remove_all();
                 Msg msg;
-                msg.type = MSG_GENERIC;
+                msg.type = MessageType::GENERIC;
                 msg.set_rep_memo("synop");
                 msg.set_latitude(44.53000);
                 msg.set_longitude(11.30000);
@@ -238,7 +238,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             {
                 f.tr->remove_all();
                 Msg msg;
-                msg.type = MSG_GENERIC;
+                msg.type = MessageType::GENERIC;
                 msg.set_rep_memo("synop");
                 msg.set_latitude(44.53000);
                 msg.set_longitude(11.30000);
@@ -256,7 +256,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             // Try importing into a dirty database, no attributes involved
             core::Record query;
             auto add_common = [](Msg& msg) {
-                msg.type = MSG_SYNOP;
+                msg.type = MessageType::SYNOP;
                 msg.set_rep_memo("synop");
                 msg.set_latitude(45.4);
                 msg.set_longitude(11.2);

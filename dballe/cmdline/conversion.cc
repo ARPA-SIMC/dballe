@@ -76,10 +76,10 @@ static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const Mess
         case 2:
             // BC20-PILOT
             // BC25-TEMP
-            switch (Msg::downcast(msgs[0])->type)
+            switch (msgs[0]->get_type())
             {
                 // 001 for PILOT data,
-                case MSG_PILOT:
+                case MessageType::PILOT:
                     b.data_subcategory = 1;
                     // ncdf_pilot     =  4 ,& ! indicator for proc. NetCDF PILOT (z-levels)   input
                     // ncdf_pilot_p   =  5 ,& ! indicator for proc. NetCDF PILOT (p-levels)   input
@@ -87,9 +87,9 @@ static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const Mess
                 // 002 for PILOT SHIP data, (TODO)
                 // 003 for PILOT MOBIL data. (TODO)
                 // 004 for TEMP data,
-                case MSG_TEMP: b.data_subcategory = 4; break;
+                case MessageType::TEMP: b.data_subcategory = 4; break;
                 // 005 for TEMP SHIP data,
-                case MSG_TEMP_SHIP: b.data_subcategory = 5; break;
+                case MessageType::TEMP_SHIP: b.data_subcategory = 5; break;
                 // 006 for TEMP MOBIL data (TODO)
                 // Default to TEMP
                 default: b.data_subcategory = 4; break;
@@ -99,9 +99,9 @@ static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const Mess
         // Missing data from this onwards
         case 3: b.data_subcategory = 0; break;
         case 4:
-            switch (Msg::downcast(msgs[0])->type)
+            switch (msgs[0]->get_type())
             {
-                case MSG_AIREP: b.data_subcategory = 1; break;
+                case MessageType::AIREP: b.data_subcategory = 1; break;
                 default: b.data_subcategory = 0; break;
             }
             break;
@@ -159,10 +159,10 @@ static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, co
             }
             break;
         case 4:
-            switch (Msg::downcast(msgs[0])->type)
+            switch (msgs[0]->get_type())
             {
-                case MSG_AMDAR: b.data_subcategory_local = 8; break;
-                case MSG_ACARS: b.data_subcategory_local = 9; break;
+                case MessageType::AMDAR: b.data_subcategory_local = 8; break;
+                case MessageType::ACARS: b.data_subcategory_local = 9; break;
                 default: break;
             }
             break;
@@ -237,7 +237,7 @@ bool Converter::operator()(const cmdline::Item& item)
     if (dest_rep_memo != NULL)
     {
         // Force message type (will also influence choice of template later)
-        MsgType type = Msg::type_from_repmemo(dest_rep_memo);
+        MessageType type = Msg::type_from_repmemo(dest_rep_memo);
         for (auto& msg: *item.msgs)
             Msg::downcast(msg)->type = type;
     }

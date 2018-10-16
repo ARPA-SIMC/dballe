@@ -57,7 +57,7 @@ this->add_method("import", [](Fixture& f) {
     auto msg = Msg::downcast(msgs[0]);
 
     // Ensure they're ships
-    wassert(actual(msg->type) == MSG_SHIP);
+    wassert(actual(msg->type) == MessageType::SHIP);
 
     // Check 001194 [SIM] Report mnemonic(CCITTIA5), too
     const Var* var = msg->get_rep_memo_var();

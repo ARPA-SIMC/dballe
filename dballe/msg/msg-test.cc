@@ -76,8 +76,8 @@ class Tests : public TestCase
         add_method("compose", []() {
             // Try to write a generic message from scratch
             auto msg = make_shared<Msg>();
-            msg->type = MSG_GENERIC;
-            //msg->type = MSG_SYNOP;
+            msg->type = MessageType::GENERIC;
+            //msg->type = MessageType::SYNOP;
 
             // Fill in the dba_msg
             msg->seti(WR_VAR(0, 4, 1), 2008,   -1, Level(), Trange());
@@ -97,37 +97,37 @@ class Tests : public TestCase
         });
         add_method("repmemo", []() {
             // Test repmemo handling
-            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_SYNOP))) == MSG_SYNOP);
-            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_METAR))) == MSG_METAR);
-            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_SHIP))) == MSG_SHIP);
-            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_BUOY))) == MSG_BUOY);
-            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_AIREP))) == MSG_AIREP);
-            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_AMDAR))) == MSG_AMDAR);
-            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_ACARS))) == MSG_ACARS);
-            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_PILOT))) == MSG_PILOT);
-            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_TEMP))) == MSG_TEMP);
-            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_TEMP_SHIP))) == MSG_TEMP_SHIP);
-            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_SAT))) == MSG_SAT);
-            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_POLLUTION))) == MSG_POLLUTION);
-            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MSG_GENERIC))) == MSG_GENERIC);
+            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MessageType::SYNOP))) == MessageType::SYNOP);
+            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MessageType::METAR))) == MessageType::METAR);
+            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MessageType::SHIP))) == MessageType::SHIP);
+            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MessageType::BUOY))) == MessageType::BUOY);
+            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MessageType::AIREP))) == MessageType::AIREP);
+            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MessageType::AMDAR))) == MessageType::AMDAR);
+            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MessageType::ACARS))) == MessageType::ACARS);
+            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MessageType::PILOT))) == MessageType::PILOT);
+            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MessageType::TEMP))) == MessageType::TEMP);
+            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MessageType::TEMP_SHIP))) == MessageType::TEMP_SHIP);
+            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MessageType::SAT))) == MessageType::SAT);
+            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MessageType::POLLUTION))) == MessageType::POLLUTION);
+            wassert(actual(Msg::type_from_repmemo(Msg::repmemo_from_type(MessageType::GENERIC))) == MessageType::GENERIC);
 
-            wassert(actual(Msg::type_from_repmemo("synop")) == MSG_SYNOP);
-            wassert(actual(Msg::type_from_repmemo("SYNOP")) == MSG_SYNOP); // Case insensitive
-            wassert(actual(Msg::type_from_repmemo("metar")) == MSG_METAR);
-            wassert(actual(Msg::type_from_repmemo("ship")) == MSG_SHIP);
-            wassert(actual(Msg::type_from_repmemo("buoy")) == MSG_BUOY);
-            wassert(actual(Msg::type_from_repmemo("airep")) == MSG_AIREP);
-            wassert(actual(Msg::type_from_repmemo("amdar")) == MSG_AMDAR);
-            wassert(actual(Msg::type_from_repmemo("acars")) == MSG_ACARS);
-            wassert(actual(Msg::type_from_repmemo("pilot")) == MSG_PILOT);
-            wassert(actual(Msg::type_from_repmemo("temp")) == MSG_TEMP);
-            wassert(actual(Msg::type_from_repmemo("tempship")) == MSG_TEMP_SHIP);
-            wassert(actual(Msg::type_from_repmemo("satellite")) == MSG_SAT);
-            wassert(actual(Msg::type_from_repmemo("pollution")) == MSG_POLLUTION);
-            wassert(actual(Msg::type_from_repmemo("generic")) == MSG_GENERIC);
-            wassert(actual(Msg::type_from_repmemo("antani")) == MSG_GENERIC);
-            wassert(actual(Msg::type_from_repmemo("")) == MSG_GENERIC);
-            wassert(actual(Msg::type_from_repmemo(NULL)) == MSG_GENERIC);
+            wassert(actual(Msg::type_from_repmemo("synop")) == MessageType::SYNOP);
+            wassert(actual(Msg::type_from_repmemo("SYNOP")) == MessageType::SYNOP); // Case insensitive
+            wassert(actual(Msg::type_from_repmemo("metar")) == MessageType::METAR);
+            wassert(actual(Msg::type_from_repmemo("ship")) == MessageType::SHIP);
+            wassert(actual(Msg::type_from_repmemo("buoy")) == MessageType::BUOY);
+            wassert(actual(Msg::type_from_repmemo("airep")) == MessageType::AIREP);
+            wassert(actual(Msg::type_from_repmemo("amdar")) == MessageType::AMDAR);
+            wassert(actual(Msg::type_from_repmemo("acars")) == MessageType::ACARS);
+            wassert(actual(Msg::type_from_repmemo("pilot")) == MessageType::PILOT);
+            wassert(actual(Msg::type_from_repmemo("temp")) == MessageType::TEMP);
+            wassert(actual(Msg::type_from_repmemo("tempship")) == MessageType::TEMP_SHIP);
+            wassert(actual(Msg::type_from_repmemo("satellite")) == MessageType::SAT);
+            wassert(actual(Msg::type_from_repmemo("pollution")) == MessageType::POLLUTION);
+            wassert(actual(Msg::type_from_repmemo("generic")) == MessageType::GENERIC);
+            wassert(actual(Msg::type_from_repmemo("antani")) == MessageType::GENERIC);
+            wassert(actual(Msg::type_from_repmemo("")) == MessageType::GENERIC);
+            wassert(actual(Msg::type_from_repmemo(NULL)) == MessageType::GENERIC);
         });
         add_method("msg_match_stationid", []() {
             // Test station_id matcher
@@ -327,8 +327,8 @@ class Tests : public TestCase
         add_method("msg_csv", []() {
             // Test CSV encoding/decoding
             Msg msg;
-            msg.type = MSG_TEMP;
-            //msg->type = MSG_SYNOP;
+            msg.type = MessageType::TEMP;
+            //msg->type = MessageType::SYNOP;
 
             // Fill in the dba_msg
             msg.set_datetime(Datetime(2011, 5, 3, 12, 30, 45));

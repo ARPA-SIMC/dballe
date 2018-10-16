@@ -89,9 +89,9 @@ public:
         }
     }
 
-    MsgType scanType(const Bulletin&) const override
+    MessageType scanType(const Bulletin&) const override
     {
-        return MSG_GENERIC;
+        return MessageType::GENERIC;
     }
 };
 

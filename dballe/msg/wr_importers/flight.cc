@@ -123,7 +123,7 @@ public:
             msg->set_ident_var(*b01006);
     }
 
-    MsgType scanTypeFromVars(const Subset& subset) const
+    MessageType scanTypeFromVars(const Subset& subset) const
     {
         for (unsigned i = 0; i < subset.size(); ++i)
         {
@@ -131,24 +131,24 @@ public:
             {
                 case WR_VAR(0, 2, 65): // ACARS GROUND RECEIVING STATION
                     if (subset[0].isset())
-                        return MSG_ACARS;
+                        return MessageType::ACARS;
                     break;
             }
         }
-        return MSG_AMDAR;
+        return MessageType::AMDAR;
     }
 
-    MsgType scanType(const Bulletin& bulletin) const
+    MessageType scanType(const Bulletin& bulletin) const
     {
         switch (bulletin.data_subcategory_local)
         {
-            case 142: return MSG_AIREP;
-            case 144: return MSG_AMDAR;
-            case 145: return MSG_ACARS;
+            case 142: return MessageType::AIREP;
+            case 144: return MessageType::AMDAR;
+            case 145: return MessageType::ACARS;
             default:
                 // Scan for the presence of significant B codes
                 if (bulletin.subsets.empty())
-                    return MSG_GENERIC;
+                    return MessageType::GENERIC;
                 return scanTypeFromVars(bulletin.subsets[0]);
         }
     }

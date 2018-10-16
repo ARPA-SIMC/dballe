@@ -5,6 +5,7 @@
 #include <dballe/types.h>
 #include <wreport/varinfo.h>
 #include <memory>
+#include <iosfwd>
 
 namespace wreport {
 struct Var;
@@ -27,6 +28,9 @@ namespace dballe {
 struct Message
 {
     virtual ~Message();
+
+    /// Return the type of the data in the message
+    virtual MessageType get_type() const = 0;
 
     /// Get the reference Datetime for this message
     virtual Datetime get_datetime() const = 0;
@@ -61,6 +65,9 @@ struct Message
      */
     virtual unsigned diff(const Message& msg) const = 0;
 };
+
+/// Serialize MessageType
+std::ostream& operator<<(std::ostream&, const dballe::MessageType&);
 
 }
 #endif

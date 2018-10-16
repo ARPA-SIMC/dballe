@@ -124,7 +124,7 @@ class Tests : public TestCase
 
         add_crex_method("test-synop0.crex", [](const Messages& msgs) {
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_SYNOP);
+            wassert(actual(msg.type) == MessageType::SYNOP);
 
             IS(block, 10); IS(station, 837); IS(st_type, 1);
             wassert(actual(msg.get_datetime()) == Datetime(2004, 11, 30, 12, 0));
@@ -145,7 +145,7 @@ class Tests : public TestCase
 
         add_bufr_simplified_method("obs0-1.22.bufr", [](const Messages& msgs) {
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_SYNOP);
+            wassert(actual(msg.type) == MessageType::SYNOP);
 
             IS(block, 60); IS(station, 150); IS(st_type, 1);
             wassert(actual(msg.get_datetime()) == Datetime(2004, 11, 30, 12, 0));
@@ -166,7 +166,7 @@ class Tests : public TestCase
 
         add_bufr_simplified_method("synop-cloudbelow.bufr", [](const Messages& msgs) {
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_SYNOP);
+            wassert(actual(msg.type) == MessageType::SYNOP);
 
             // msg.print(stderr);
 
@@ -191,7 +191,7 @@ class Tests : public TestCase
 
         add_bufr_method("synop-cloudbelow.bufr", [](const Messages& msgs) {
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_SYNOP);
+            wassert(actual(msg.type) == MessageType::SYNOP);
 
             // msg.print(stderr);
 
@@ -223,7 +223,7 @@ class Tests : public TestCase
 
         add_bufr_simplified_method("temp-2-255.bufr", [](const Messages& msgs) {
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_TEMP);
+            wassert(actual(msg.type) == MessageType::TEMP);
 
             // No negative pressure layers please
             wassert(actual(msg.find_context(Level(100, -1), Trange::instant())).isfalse());
@@ -232,7 +232,7 @@ class Tests : public TestCase
         add_bufr_simplified_method("synop-longname.bufr", [](const Messages& msgs) {
             wassert(actual(msgs.size()) == 7u);
             const Msg& msg = Msg::downcast(*msgs[2]);
-            wassert(actual(msg.type) == MSG_SYNOP);
+            wassert(actual(msg.type) == MessageType::SYNOP);
 
             // Check that the long station name has been correctly truncated on import
             const Var* var = msg.get_st_name_var();
@@ -243,32 +243,32 @@ class Tests : public TestCase
         add_bufr_simplified_method("temp-bad1.bufr", [](const Messages& msgs) {
             wassert(actual(msgs.size()) == 1u);
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_TEMP);
+            wassert(actual(msg.type) == MessageType::TEMP);
         });
 
         add_bufr_simplified_method("temp-bad2.bufr", [](const Messages& msgs) {
             wassert(actual(msgs.size()) == 1u);
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_TEMP);
+            wassert(actual(msg.type) == MessageType::TEMP);
         });
 
         add_bufr_simplified_method("temp-bad3.bufr", [](const Messages& msgs) {
             wassert(actual(msgs.size()) == 1u);
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_TEMP);
+            wassert(actual(msg.type) == MessageType::TEMP);
         });
 
         add_bufr_simplified_method("temp-bad4.bufr", [](const Messages& msgs) {
             wassert(actual(msgs.size()) == 1u);
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_TEMP);
+            wassert(actual(msg.type) == MessageType::TEMP);
         });
 
         // ECWMF AIREP
         add_bufr_simplified_method("obs4-142.1.bufr", [](const Messages& msgs) {
             wassert(actual(msgs.size()) == 1u);
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_AIREP);
+            wassert(actual(msg.type) == MessageType::AIREP);
             IS(ident, "ACA872");
         });
 
@@ -276,7 +276,7 @@ class Tests : public TestCase
         add_bufr_simplified_method("obs4-144.4.bufr", [](const Messages& msgs) {
             wassert(actual(msgs.size()) == 1u);
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_AMDAR);
+            wassert(actual(msg.type) == MessageType::AMDAR);
             IS(ident, "EU4444");
         });
 
@@ -284,7 +284,7 @@ class Tests : public TestCase
         add_bufr_simplified_method("obs4-145.4.bufr", [](const Messages& msgs) {
             wassert(actual(msgs.size()) == 1u);
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_ACARS);
+            wassert(actual(msg.type) == MessageType::ACARS);
             IS(ident, "JBNYR3RA");
         });
 
@@ -292,7 +292,7 @@ class Tests : public TestCase
         add_bufr_simplified_method("gts-acars1.bufr", [](const Messages& msgs) {
             wassert(actual(msgs.size()) == 1u);
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_ACARS);
+            wassert(actual(msg.type) == MessageType::ACARS);
             IS(ident, "EU5331");
         });
 
@@ -300,7 +300,7 @@ class Tests : public TestCase
         add_bufr_simplified_method("gts-acars2.bufr", [](const Messages& msgs) {
             wassert(actual(msgs.size()) == 1u);
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_ACARS);
+            wassert(actual(msg.type) == MessageType::ACARS);
             IS(ident, "FJCYR4RA");
         });
 
@@ -310,7 +310,7 @@ class Tests : public TestCase
             const Msg& msg = Msg::downcast(*msgs[0]);
             // This contains the same data as an AMDAR and has undefined subtype and
             // localsubtype, so it gets identified as an AMDAR
-            wassert(actual(msg.type) == MSG_AMDAR);
+            wassert(actual(msg.type) == MessageType::AMDAR);
             IS(ident, "EU3375");
         });
 
@@ -318,7 +318,7 @@ class Tests : public TestCase
         add_bufr_simplified_method("gts-acars-us1.bufr", [](const Messages& msgs) {
             wassert(actual(msgs.size()) == 1u);
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_ACARS);
+            wassert(actual(msg.type) == MessageType::ACARS);
             IS(ident, "FJCYR4RA");
         });
 
@@ -341,7 +341,7 @@ class Tests : public TestCase
                 Messages msgs = read_msgs("bufr/interpreted-range.bufr", Encoding::BUFR);
                 wassert(actual(msgs.size()) == 1u);
                 const Msg& msg = Msg::downcast(*msgs[0]);
-                wassert(actual(msg.type) == MSG_SHIP);
+                wassert(actual(msg.type) == MessageType::SHIP);
                 IS(ident, "DBBC");
             }
         });
@@ -350,7 +350,7 @@ class Tests : public TestCase
         add_bufr_simplified_method("pilot-gts2.bufr", [](const Messages& msgs) {
             wassert(actual(msgs.size()) == 1u);
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_PILOT);
+            wassert(actual(msg.type) == MessageType::PILOT);
         });
 
         // WMO PILOT, with pressure levels
@@ -358,34 +358,34 @@ class Tests : public TestCase
             // FIXME: this still fails
             wassert(actual(msgs.size()) == 1u);
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_TEMP);
+            wassert(actual(msg.type) == MessageType::TEMP);
         });
 
         // WMO pilot pressure
         add_bufr_simplified_method("pilot-gts3.bufr", [](const Messages& msgs) {
             wassert(actual(msgs.size()) == 1u);
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_PILOT);
+            wassert(actual(msg.type) == MessageType::PILOT);
         });
 
         // WMO pilot geopotential
         add_bufr_simplified_method("pilot-gts4.bufr", [](const Messages& msgs) {
             wassert(actual(msgs.size()) == 1u);
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_PILOT);
+            wassert(actual(msg.type) == MessageType::PILOT);
         });
 
         add_bufr_simplified_method("vad.bufr", [](const Messages& msgs) {
             wassert(actual(msgs.size()) == 1u);
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_TEMP);
+            wassert(actual(msg.type) == MessageType::TEMP);
         });
 
         // Wind profiler
         add_bufr_simplified_method("temp-windprof1.bufr", [](const Messages& msgs) {
             wassert(actual(msgs.size()) == 1u);
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_TEMP);
+            wassert(actual(msg.type) == MessageType::TEMP);
         });
 
         // Precise import
@@ -401,7 +401,7 @@ class Tests : public TestCase
         add_bufr_simplified_method("test-soil1.bufr", [](const Messages& msgs) {
             wassert(actual(msgs.size()) == 1u);
             const Msg& msg = Msg::downcast(*msgs[0]);
-            wassert(actual(msg.type) == MSG_SYNOP);
+            wassert(actual(msg.type) == MessageType::SYNOP);
             IS2(WR_VAR(0, 12, 30), Level(106,   50), Trange::instant(), 288.5);
             IS2(WR_VAR(0, 12, 30), Level(106,  100), Trange::instant(), 289.4);
             IS2(WR_VAR(0, 12, 30), Level(106,  200), Trange::instant(), 288.6);

@@ -23,34 +23,34 @@ public:
         : SynopBaseImporter(opts) {}
     virtual ~ShipImporter() {}
 
-    MsgType scanType(const Bulletin& bulletin) const
+    MessageType scanType(const Bulletin& bulletin) const
     {
         switch (bulletin.data_category)
         {
             case 1:
                 switch (bulletin.data_subcategory_local)
                 {
-                    case 21: return MSG_BUOY;
+                    case 21: return MessageType::BUOY;
                     case 9:
                     case 11:
                     case 12:
                     case 13:
                     case 14:
-                    case 19: return MSG_SHIP;
+                    case 19: return MessageType::SHIP;
                     case 0: {
                         // Guess looking at the variables
                         if (bulletin.subsets.empty())
                             throw error_consistency("trying to import a SYNOP message with no data subset");
                         const Subset& subset = bulletin.subsets[0];
                         if (subset.size() > 1 && subset[0].code() == WR_VAR(0, 1, 5))
-                            return MSG_BUOY;
+                            return MessageType::BUOY;
                         else
-                            return MSG_SHIP;
+                            return MessageType::SHIP;
                     }
-                    default: return MSG_SHIP;
+                    default: return MessageType::SHIP;
                 }
                 break;
-            default: return MSG_GENERIC; break;
+            default: return MessageType::GENERIC; break;
         }
     }
 };

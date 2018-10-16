@@ -83,30 +83,30 @@ void messages_print(const Messages& msgs, FILE* out)
 }
 
 
-const char* msg_type_name(MsgType type)
+const char* msg_type_name(MessageType type)
 {
     switch (type)
     {
-        case MSG_GENERIC: return "generic";
-        case MSG_SYNOP: return "synop";
-        case MSG_PILOT: return "pilot";
-        case MSG_TEMP: return "temp";
-        case MSG_TEMP_SHIP: return "temp_ship";
-        case MSG_AIREP: return "airep";
-        case MSG_AMDAR: return "amdar";
-        case MSG_ACARS: return "acars";
-        case MSG_SHIP: return "ship";
-        case MSG_BUOY: return "buoy";
-        case MSG_METAR: return "metar";
-        case MSG_SAT: return "sat";
-        case MSG_POLLUTION: return "pollution";
+        case MessageType::GENERIC: return "generic";
+        case MessageType::SYNOP: return "synop";
+        case MessageType::PILOT: return "pilot";
+        case MessageType::TEMP: return "temp";
+        case MessageType::TEMP_SHIP: return "temp_ship";
+        case MessageType::AIREP: return "airep";
+        case MessageType::AMDAR: return "amdar";
+        case MessageType::ACARS: return "acars";
+        case MessageType::SHIP: return "ship";
+        case MessageType::BUOY: return "buoy";
+        case MessageType::METAR: return "metar";
+        case MessageType::SAT: return "sat";
+        case MessageType::POLLUTION: return "pollution";
     }
     return "(unknown)";
 }
 
 Msg::Msg()
 {
-    type = MSG_GENERIC;
+    type = MessageType::GENERIC;
 }
 
 Msg::~Msg()
@@ -186,7 +186,7 @@ std::unique_ptr<Message> Msg::clone() const
 
 void Msg::clear()
 {
-    type = MSG_GENERIC;
+    type = MessageType::GENERIC;
     for (vector<msg::Context*>::iterator i = data.begin(); i != data.end(); ++i)
         delete *i;
     data.clear();
@@ -559,9 +559,9 @@ void Msg::print(FILE* out) const
 
     switch (type)
     {
-        case MSG_PILOT:
-        case MSG_TEMP:
-        case MSG_TEMP_SHIP:
+        case MessageType::PILOT:
+        case MessageType::TEMP:
+        case MessageType::TEMP_SHIP:
             for (vector<msg::Context*>::const_iterator i = data.begin(); i != data.end(); ++i)
             {
                 const Var* vsig = (*i)->find_vsig();
@@ -621,7 +621,7 @@ unsigned Msg::diff(const Message& o) const
     if (type != msg.type)
     {
         notes::logf("the messages have different type (first is %s (%d), second is %s (%d))\n",
-                msg_type_name(type), type, msg_type_name(msg.type), msg.type);
+                msg_type_name(type), static_cast<int>(type), msg_type_name(msg.type), static_cast<int>(msg.type));
         ++diffs;
     }
 
@@ -713,56 +713,56 @@ void Msg::setc(Varcode code, const char* val, int conf, const Level& lev, const 
     set(std::move(var), lev, tr);
 }
 
-MsgType Msg::type_from_repmemo(const char* repmemo)
+MessageType Msg::type_from_repmemo(const char* repmemo)
 {
-    if (repmemo == NULL || repmemo[0] == 0) return MSG_GENERIC;
+    if (repmemo == NULL || repmemo[0] == 0) return MessageType::GENERIC;
     switch (tolower(repmemo[0]))
     {
         case 'a':
-            if (strcasecmp(repmemo+1, "cars")==0) return MSG_ACARS;
-            if (strcasecmp(repmemo+1, "irep")==0) return MSG_AIREP;
-            if (strcasecmp(repmemo+1, "mdar")==0) return MSG_AMDAR;
+            if (strcasecmp(repmemo+1, "cars")==0) return MessageType::ACARS;
+            if (strcasecmp(repmemo+1, "irep")==0) return MessageType::AIREP;
+            if (strcasecmp(repmemo+1, "mdar")==0) return MessageType::AMDAR;
             break;
         case 'b':
-            if (strcasecmp(repmemo+1, "uoy")==0) return MSG_BUOY;
+            if (strcasecmp(repmemo+1, "uoy")==0) return MessageType::BUOY;
             break;
         case 'm':
-            if (strcasecmp(repmemo+1, "etar")==0) return MSG_METAR;
+            if (strcasecmp(repmemo+1, "etar")==0) return MessageType::METAR;
             break;
         case 'p':
-            if (strcasecmp(repmemo+1, "ilot")==0) return MSG_PILOT;
-            if (strcasecmp(repmemo+1, "ollution")==0) return MSG_POLLUTION;
+            if (strcasecmp(repmemo+1, "ilot")==0) return MessageType::PILOT;
+            if (strcasecmp(repmemo+1, "ollution")==0) return MessageType::POLLUTION;
             break;
         case 's':
-            if (strcasecmp(repmemo+1, "atellite")==0) return MSG_SAT;
-            if (strcasecmp(repmemo+1, "hip")==0) return MSG_SHIP;
-            if (strcasecmp(repmemo+1, "ynop")==0) return MSG_SYNOP;
+            if (strcasecmp(repmemo+1, "atellite")==0) return MessageType::SAT;
+            if (strcasecmp(repmemo+1, "hip")==0) return MessageType::SHIP;
+            if (strcasecmp(repmemo+1, "ynop")==0) return MessageType::SYNOP;
             break;
         case 't':
-            if (strcasecmp(repmemo+1, "emp")==0) return MSG_TEMP;
-            if (strcasecmp(repmemo+1, "empship")==0) return MSG_TEMP_SHIP;
+            if (strcasecmp(repmemo+1, "emp")==0) return MessageType::TEMP;
+            if (strcasecmp(repmemo+1, "empship")==0) return MessageType::TEMP_SHIP;
             break;
     }
-    return MSG_GENERIC;
+    return MessageType::GENERIC;
 }
 
-const char* Msg::repmemo_from_type(MsgType type)
+const char* Msg::repmemo_from_type(MessageType type)
 {
     switch (type)
     {
-        case MSG_SYNOP:     return "synop";
-        case MSG_METAR:     return "metar";
-        case MSG_SHIP:      return "ship";
-        case MSG_BUOY:      return "buoy";
-        case MSG_AIREP:     return "airep";
-        case MSG_AMDAR:     return "amdar";
-        case MSG_ACARS:     return "acars";
-        case MSG_PILOT:     return "pilot";
-        case MSG_TEMP:      return "temp";
-        case MSG_TEMP_SHIP: return "tempship";
-        case MSG_SAT:       return "satellite";
-        case MSG_POLLUTION: return "pollution";
-        case MSG_GENERIC:
+        case MessageType::SYNOP:     return "synop";
+        case MessageType::METAR:     return "metar";
+        case MessageType::SHIP:      return "ship";
+        case MessageType::BUOY:      return "buoy";
+        case MessageType::AIREP:     return "airep";
+        case MessageType::AMDAR:     return "amdar";
+        case MessageType::ACARS:     return "acars";
+        case MessageType::PILOT:     return "pilot";
+        case MessageType::TEMP:      return "temp";
+        case MessageType::TEMP_SHIP: return "tempship";
+        case MessageType::SAT:       return "satellite";
+        case MessageType::POLLUTION: return "pollution";
+        case MessageType::GENERIC:
         default:            return "generic";
     }
 }

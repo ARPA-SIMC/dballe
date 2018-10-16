@@ -17,6 +17,13 @@ class Tests : public TestCase
 void Tests::register_tests()
 {
 
+add_method("get", []() {
+    auto msgs = read_msgs("bufr/gts-acars-uk1.bufr", Encoding::BUFR);
+
+    wassert(actual(msgs[0]->get_type()) == MessageType::AMDAR);
+    wassert(actual(msgs[0]->get_datetime()) == Datetime(2009, 2, 24, 11, 31));
+});
+
 add_method("foreach_var", []() {
     auto msgs = read_msgs("bufr/gts-acars-uk1.bufr", Encoding::BUFR);
 

@@ -150,7 +150,7 @@ public:
         msg->set(move(finalvar), lev, tr);
     }
 
-    MsgType scanType(const Bulletin& bulletin) const { return MSG_POLLUTION; }
+    MessageType scanType(const Bulletin& bulletin) const { return MessageType::POLLUTION; }
 };
 
 std::unique_ptr<Importer> Importer::createPollution(const ImporterOptions& opts)

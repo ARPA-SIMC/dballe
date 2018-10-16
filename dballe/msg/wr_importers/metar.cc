@@ -63,7 +63,7 @@ public:
         }
     }
 
-    MsgType scanType(const Bulletin& bulletin) const { return MSG_METAR; }
+    MessageType scanType(const Bulletin& bulletin) const { return MessageType::METAR; }
 };
 
 std::unique_ptr<Importer> Importer::createMetar(const ImporterOptions& opts)

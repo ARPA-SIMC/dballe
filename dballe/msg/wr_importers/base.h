@@ -34,7 +34,7 @@ public:
     Importer(const ImporterOptions& opts) : opts(opts) {}
     virtual ~Importer() {}
 
-    virtual MsgType scanType(const wreport::Bulletin& bulletin) const = 0;
+    virtual MessageType scanType(const wreport::Bulletin& bulletin) const = 0;
 
     void import(const wreport::Subset& subset, Msg& msg);
 

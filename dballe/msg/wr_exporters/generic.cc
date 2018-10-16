@@ -131,7 +131,7 @@ struct Generic : public Template
         // Report type
         if (repmemo)
             subset.store_variable(repmemo->code(), *repmemo);
-        else if (msg.type != MSG_GENERIC) // It is generic by default, no need to repeat it
+        else if (msg.type != MessageType::GENERIC) // It is generic by default, no need to repeat it
             subset.store_variable_c(WR_VAR(0, 1, 194), Msg::repmemo_from_type(msg.type));
         else
             subset.store_variable_undef(WR_VAR(0, 1, 194));

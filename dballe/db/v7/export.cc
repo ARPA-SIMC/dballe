@@ -150,7 +150,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
             if (msg.get() != NULL)
             {
                 TRACE("Sending old message to consumer\n");
-                if (msg->type == MSG_PILOT || msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
+                if (msg->type == MessageType::PILOT || msg->type == MessageType::TEMP || msg->type == MessageType::TEMP_SHIP)
                 {
                     unique_ptr<Msg> copy(new Msg);
                     msg->sounding_pack_levels(*copy);
@@ -201,7 +201,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
     if (msg.get() != NULL)
     {
         TRACE("Inserting leftover old message\n");
-        if (msg->type == MSG_PILOT || msg->type == MSG_TEMP || msg->type == MSG_TEMP_SHIP)
+        if (msg->type == MessageType::PILOT || msg->type == MessageType::TEMP || msg->type == MessageType::TEMP_SHIP)
         {
             unique_ptr<Msg> copy(new Msg);
             msg->sounding_pack_levels(*copy);

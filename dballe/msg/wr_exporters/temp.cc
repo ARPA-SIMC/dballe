@@ -148,7 +148,7 @@ struct TempBase : public Template
         for (const auto& mi: msgs)
         {
             auto msg = Msg::downcast(mi);
-            if (msg->type == MSG_PILOT)
+            if (msg->type == MessageType::PILOT)
             {
                 bulletin.data_subcategory_local = 91;
                 break;
@@ -215,7 +215,7 @@ struct TempWMO : public TempBase
         for (const auto& mi : msgs)
         {
             auto msg = Msg::downcast(mi);
-            if (msg->type == MSG_TEMP_SHIP)
+            if (msg->type == MessageType::TEMP_SHIP)
             {
                 bulletin.data_subcategory = 5;
                 break;
@@ -899,7 +899,7 @@ void register_temp(TemplateRegistry& r)
             });
     r.register_factory(2, "temp-ecmwf", "Temp ECMWF (autodetect)",
             [](const ExporterOptions& opts, const Messages& msgs) {
-                if (msgs.empty() || Msg::downcast(msgs[0])->type != MSG_TEMP_SHIP)
+                if (msgs.empty() || Msg::downcast(msgs[0])->type != MessageType::TEMP_SHIP)
                     return unique_ptr<Template>(new TempEcmwfLand(opts, msgs));
                 else
                     return unique_ptr<Template>(new TempEcmwfShip(opts, msgs));

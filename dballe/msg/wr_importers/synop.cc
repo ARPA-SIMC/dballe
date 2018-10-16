@@ -23,12 +23,12 @@ public:
         : SynopBaseImporter(opts) {}
     virtual ~SynopImporter() {}
 
-    MsgType scanType(const Bulletin& bulletin) const
+    MessageType scanType(const Bulletin& bulletin) const
     {
         switch (bulletin.data_category)
         {
-            case 0: return MSG_SYNOP;
-            default: return MSG_GENERIC; break;
+            case 0: return MessageType::SYNOP;
+            default: return MessageType::GENERIC; break;
         }
     }
 };

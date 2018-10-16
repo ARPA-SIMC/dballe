@@ -145,7 +145,7 @@ class Tests : public TestCase
 
             /* Create a new message */
             unique_ptr<Msg> msg(new Msg);
-            msg->type = MSG_GENERIC;
+            msg->type = MessageType::GENERIC;
 
             // Set some metadata
             msg->set_datetime(Datetime(2006, 1, 19, 14, 50));
@@ -197,7 +197,7 @@ class Tests : public TestCase
             wassert(actual(msgs.size()) > 0);
 
             // Convert it to generic, with a 'ship' rep_memo
-            Msg::downcast(msgs[0])->type = MSG_GENERIC;
+            Msg::downcast(msgs[0])->type = MessageType::GENERIC;
             Msg::downcast(msgs[0])->set_rep_memo("ship");
 
             // Export it

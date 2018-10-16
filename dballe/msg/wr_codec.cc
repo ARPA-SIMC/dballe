@@ -86,7 +86,7 @@ bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::fun
         default: importer = wr::Importer::createGeneric(opts); break;
     }
 
-    MsgType type = importer->scanType(msg);
+    MessageType type = importer->scanType(msg);
     for (unsigned i = 0; i < msg.subsets.size(); ++i)
     {
         std::unique_ptr<Msg> newmsg(new Msg);
@@ -137,7 +137,7 @@ const char* infer_from_message(const Msg& msg)
 {
     switch (msg.type)
     {
-        case MSG_TEMP_SHIP: return "temp-ship";
+        case MessageType::TEMP_SHIP: return "temp-ship";
         default: break;
     }
     return msg_type_name(msg.type);
@@ -190,7 +190,7 @@ const TemplateRegistry& TemplateRegistry::get()
                     string tpl;
                     switch (msg->type)
                     {
-                        case MSG_TEMP_SHIP: tpl = "temp-wmo"; break;
+                        case MessageType::TEMP_SHIP: tpl = "temp-wmo"; break;
                         default:
                             tpl = msg_type_name(msg->type);
                             tpl += "-wmo";
