@@ -18,6 +18,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 %define python3_vers python3
 %endif
 BuildRequires: libtool
+BuildRequires: gcc-c++
 BuildRequires: gperf
 BuildRequires: doxygen
 BuildRequires: python-docutils
