@@ -12,8 +12,6 @@
 #include <memory>
 #include <iosfwd>
 
-struct lua_State;
-
 namespace dballe {
 struct Record;
 struct CSVReader;
@@ -407,19 +405,6 @@ public:
     static const char* repmemo_from_type(MsgType type);
 
 #include <dballe/msg/msg-extravars.h>
-
-
-    /**
-     * Push the variable as an object in the lua stack
-     */
-    void lua_push(struct lua_State* L);
-
-    /**
-     * Check that the element at \a idx is a dba_msg
-     *
-     * @return the dba_msg element, or NULL if the check failed
-     */
-    static Msg* lua_check(struct lua_State* L, int idx);
 };
 
 

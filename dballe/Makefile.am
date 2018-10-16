@@ -4,12 +4,12 @@ EXTRA_DIST =
 CLEANFILES =
 noinst_DATA =
 
-AM_CPPFLAGS = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) -I$(top_builddir) $(WREPORT_CFLAGS) $(LIBPQ_CFLAGS) $(SQLITE3_CFLAGS) $(MYSQL_CFLAGS) $(LUA_CFLAGS)
+AM_CPPFLAGS = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) -I$(top_builddir) $(WREPORT_CFLAGS) $(LIBPQ_CFLAGS) $(SQLITE3_CFLAGS) $(MYSQL_CFLAGS)
 if FILE_OFFSET_BITS_64
 AM_CPPFLAGS += -D_FILE_OFFSET_BITS=64
 endif
 
-common_libs = $(WREPORT_LIBS) $(LIBPQ_LIBS) $(SQLITE3_LIBS) $(MYSQL_LIBS) $(LUA_LIBS) $(POPT_LIBS)
+common_libs = $(WREPORT_LIBS) $(LIBPQ_LIBS) $(SQLITE3_LIBS) $(MYSQL_LIBS) $(POPT_LIBS)
 
 #
 # Autobuilt files
@@ -172,7 +172,6 @@ libdballe_la_SOURCES = \
 	msg/vars.cc \
 	msg/context.cc \
 	msg/msg.cc \
-	msg/msg-lua.cc \
 	msg/wr_codec.cc \
 	msg/wr_importers/base.cc \
 	msg/wr_importers/synop.cc \
@@ -273,7 +272,6 @@ check-local:
 dist_noinst_HEADERS = \
 	core/tests.h \
 	msg/tests.h \
-	msg/tests-lua.h \
 	db/tests.h
 
 test_dballe_SOURCES = \
@@ -337,11 +335,6 @@ test_dballe_SOURCES = \
 	simple/dbapi-test.cc \
 	cmdline/processor-test.cc \
 	cmdline/dbadb-test.cc
-if LUA
-test_dballe_SOURCES += \
-	msg/lua-test.cc \
-	msg/tests-lua.cc
-endif
 if HAVE_LIBPQ
 test_dballe_SOURCES += \
 	sql/postgresql-test.cc
