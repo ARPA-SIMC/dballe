@@ -291,6 +291,15 @@ const Var* Msg::get(Varcode code, const Level& lev, const Trange& tr) const
     return ctx->find(code);
 }
 
+bool Msg::foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)> dest) const
+{
+    for (const auto& ctx: data)
+        for (const auto& var: ctx->data)
+            if (!dest(ctx->level, ctx->trange, *var))
+                return false;
+    return true;
+}
+
 wreport::Var* Msg::edit(wreport::Varcode code, const Level& lev, const Trange& tr)
 {
     msg::Context* ctx = edit_context(lev, tr);

@@ -126,6 +126,8 @@ public:
 
     const wreport::Var* get(wreport::Varcode code, const Level& lev, const Trange& tr) const override;
 
+    bool foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)>) const override;
+
     void print(FILE* out) const override;
     unsigned diff(const Message& msg) const override;
 

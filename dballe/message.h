@@ -42,6 +42,11 @@ struct Message
      */
     virtual const wreport::Var* get(wreport::Varcode code, const Level& lev, const Trange& tr) const = 0;
 
+    /**
+     * Iterate the contents of the message
+     */
+    virtual bool foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)>) const = 0;
+
     /// Print all the contents of this message to an output stream
     virtual void print(FILE* out) const = 0;
 
