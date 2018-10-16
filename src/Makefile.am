@@ -11,15 +11,15 @@ bin_PROGRAMS = dbatbl dbamsg
 dist_bin_SCRIPTS = dbatbl_makeb dbaexport
 
 dbatbl_SOURCES = dbatbl.cc
-dbatbl_LDFLAGS = $(DBALLELIBS) $(WREPORT_LIBS) -lpopt
+dbatbl_LDFLAGS = $(DBALLELIBS)
 dbatbl_DEPENDENCIES = $(DBALLELIBS)
 
 dbamsg_SOURCES = dbamsg.cc
-dbamsg_LDFLAGS = $(DBALLELIBS) $(WREPORT_LIBS) -lpopt
+dbamsg_LDFLAGS = $(DBALLELIBS)
 dbamsg_DEPENDENCIES = $(DBALLELIBS)
 
 bin_PROGRAMS += dbadb
 dbadb_SOURCES = dbadb.cc
-dbadb_LDFLAGS = $(DBALLELIBS) $(WREPORT_LIBS) -lpopt 
+dbadb_LDFLAGS = $(DBALLELIBS)
 dbadb_DEPENDENCIES = $(DBALLELIBS)
 
