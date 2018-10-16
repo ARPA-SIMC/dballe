@@ -59,7 +59,7 @@ DIR=`dirname $CMD`
 BASE=`basename $CMD`
 if [ "${BASE##*.}" = "py" ]
 then
-    CMD="$PYTHON $CMD"
+    CMD="libtool --mode=execute $PYTHON $CMD"
 fi
 if [ ! -z "$DEBUGGER" ]
 then
