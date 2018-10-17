@@ -160,7 +160,7 @@ const Var& want_var(const Message& msg, int shortcut)
 
 const Var& want_var(const Message& msg, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr)
 {
-    const Var* var = msg.get(code, lev, tr);
+    const Var* var = msg.get(lev, tr, code);
     if (!var)
         throw TestFailed("value is missing");
     if (!var->isset())

@@ -55,7 +55,7 @@ struct Buoy : public Template
 
     void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
     {
-        const Var* var = msg->get(srccode, level, trange);
+        const Var* var = msg->get(level, trange, srccode);
         if (var)
             subset->store_variable(code, *var);
         else

@@ -30,7 +30,7 @@ add_method("get", []() {
 add_method("get_shortcut", []() {
     auto msgs = read_msgs("bufr/gts-acars-uk1.bufr", Encoding::BUFR);
 
-    const wreport::Var* var = msgs[0]->get_shortcut("ident");
+    const wreport::Var* var = msgs[0]->get("ident");
     wassert(actual(var).istrue());
     wassert(actual(*var) == dballe::var("B01011", "EU3375"));
 });

@@ -62,6 +62,8 @@ protected:
      */
     int find_index(const Level& lev, const Trange& tr) const;
 
+    const wreport::Var* get_full(const Level& lev, const Trange& tr, wreport::Varcode code) const override;
+    const wreport::Var* get_shortcut(const char* name) const override;
     void set_copy(const Level& lev, const Trange& tr, wreport::Varcode code, const wreport::Var& var) override;
     void set_move(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var) override;
 
@@ -114,8 +116,6 @@ public:
     Ident get_ident() const override;
     std::string get_rep_memo() const override;
     MessageType get_type() const override { return type; }
-    const wreport::Var* get(wreport::Varcode code, const Level& lev, const Trange& tr) const override;
-    const wreport::Var* get_shortcut(const char* name) const override;
     bool foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)>) const override;
     void print(FILE* out) const override;
     unsigned diff(const Message& msg) const override;

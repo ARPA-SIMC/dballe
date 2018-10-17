@@ -330,7 +330,7 @@ void Template::add(Varcode code, int shortcut) const
 
 void Template::add(Varcode code, Varcode srccode, const Level& level, const Trange& trange) const
 {
-    add(code, msg->get(srccode, level, trange));
+    add(code, msg->get(level, trange, srccode));
 }
 
 void Template::add(wreport::Varcode code, const wreport::Var* var) const

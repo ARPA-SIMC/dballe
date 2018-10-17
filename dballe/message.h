@@ -53,7 +53,7 @@ struct Message
      * @return
      *   A pointer to the variable, or nullptr if it was not found.
      */
-    virtual const wreport::Var* get(wreport::Varcode code, const Level& lev, const Trange& tr) const = 0;
+    const wreport::Var* get(const Level& lev, const Trange& tr, wreport::Varcode code) const;
 
     /**
      * Get a variable given its shortcut name
@@ -61,7 +61,7 @@ struct Message
      * @return
      *   A pointer to the variable, or nullptr if it was not found.
      */
-    virtual const wreport::Var* get_shortcut(const char* name) const = 0;
+    const wreport::Var* get(const char* shortcut) const;
 
     /**
      * Add or replace a value
@@ -124,6 +124,12 @@ struct Message
     virtual unsigned diff(const Message& msg) const = 0;
 
 protected:
+    /// Implementation of get(const Level&, const Trange&, wreport::Varcode)
+    virtual const wreport::Var* get_full(const Level& lev, const Trange& tr, wreport::Varcode code) const = 0;
+
+    /// Implementation of get(const char* shortcut)
+    virtual const wreport::Var* get_shortcut(const char* name) const = 0;
+
     /// Implementation of set(const Level& const Trange&, std::unique_ptr<wreport::Var>)
     virtual void set_move(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var) = 0;
 

@@ -23,7 +23,7 @@ namespace {
 #define IS2(code, lev, tr, val) do { \
         WREPORT_TEST_INFO(locinfo); \
         locinfo() << #code #lev #tr; \
-        const Var* var = msg.get(code, lev, tr); \
+        const Var* var = msg.get(lev, tr, code); \
         wassert(actual(var).istrue()); \
         wassert(actual(*var) == val); \
     } while (0)
@@ -392,7 +392,7 @@ class Tests : public TestCase
         add_bufr_method("gts-synop-linate.bufr", [](const Messages& msgs) {
             wassert(actual(msgs.size()) == 1u);
             const Msg& msg = Msg::downcast(*msgs[0]);
-            const Var* v = msg.get(WR_VAR(0, 12, 101), Level(103, 2000), Trange(3, 0, 43200));
+            const Var* v = msg.get(Level(103, 2000), Trange(3, 0, 43200), WR_VAR(0, 12, 101));
             wassert(actual(v).istrue());
             wassert(actual(v->enqd()) == 284.75);
         });

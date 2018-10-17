@@ -321,7 +321,7 @@ bool Msg::remove_context(const Level& lev, const Trange& tr)
     return true;
 }
 
-const Var* Msg::get(Varcode code, const Level& lev, const Trange& tr) const
+const Var* Msg::get_full(const Level& lev, const Trange& tr, Varcode code) const
 {
     const msg::Context* ctx = find_context(lev, tr);
     if (ctx == NULL) return NULL;
@@ -362,7 +362,7 @@ bool Msg::remove(wreport::Varcode code, const Level& lev, const Trange& tr)
 const Var* Msg::find_by_id(int id) const
 {
     const MsgVarShortcut& v = shortcutTable[id];
-    return get(v.code, Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2));
+    return get(Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2), v.code);
 }
 
 const msg::Context* Msg::find_context_by_id(int id) const
@@ -870,7 +870,7 @@ matcher::Result MatchedMsg::match_var_id(int val) const
 
 matcher::Result MatchedMsg::match_station_id(int val) const
 {
-    if (const wreport::Var* var = m.get(WR_VAR(0, 1, 192), Level(), Trange()))
+    if (const wreport::Var* var = m.get(Level(), Trange(), WR_VAR(0, 1, 192)))
     {
         return var->enqi() == val ? matcher::MATCH_YES : matcher::MATCH_NO;
     } else

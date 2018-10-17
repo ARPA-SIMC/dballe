@@ -486,7 +486,7 @@ struct SynopWMO : public Synop
     {
         add(WR_VAR(0, 20,  62), DBA_MSG_STATE_GROUND);
         add(WR_VAR(0, 13,  13), DBA_MSG_TOT_SNOW);
-        if (const Var* var = msg.get(WR_VAR(0, 12, 121), Level(1), Trange(3, 0, 43200)))
+        if (const Var* var = msg.get(Level(1), Trange(3, 0, 43200), WR_VAR(0, 12, 121)))
             subset.store_variable(WR_VAR(0, 12, 113), *var);
         else
             subset.store_variable_undef(WR_VAR(0, 12, 113));

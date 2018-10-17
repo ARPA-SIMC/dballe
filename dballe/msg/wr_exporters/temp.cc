@@ -869,13 +869,13 @@ void register_temp(TemplateRegistry& r)
 {
     r.register_factory(2, "temp", "Temp (autodetect)",
             [](const ExporterOptions& opts, const Messages& msgs) {
-                auto msg = Msg::downcast(msgs[0]);
-
                 // Get the type of equipment used
-                if (const wreport::Var* var = msg->get(WR_VAR(0, 2, 3), Level(1), Trange::instant()))
+                if (const wreport::Var* var = msgs[0]->get(Level(1), Trange::instant(), WR_VAR(0, 2, 3)))
                     // Is it a Radar?
                     if (var->enq(0) == 3)
                         return unique_ptr<Template>(new TempRadar(opts, msgs));
+
+                auto msg = Msg::downcast(msgs[0]);
 
                 // ECMWF temps use normal replication which cannot do more than 256 levels
                 if (msg->data.size() > 260)

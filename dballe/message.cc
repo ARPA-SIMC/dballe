@@ -13,6 +13,16 @@ namespace dballe {
 
 Message::~Message() {}
 
+const wreport::Var* Message::get(const Level& lev, const Trange& tr, wreport::Varcode code) const
+{
+    return get_full(lev, tr, code);
+}
+
+const wreport::Var* Message::get(const char* shortcut) const
+{
+    return get_shortcut(shortcut);
+}
+
 void Message::set(const Level& lev, const Trange& tr, wreport::Varcode code, const wreport::Var& var)
 {
     set_copy(lev, tr, code, var);

@@ -59,19 +59,19 @@ class Tests : public TestCase
 
             wassert(msg_is_sorted(msg));
 
-            wassert(actual(msg.get(WR_VAR(0, 1, 1), lev1, tr1)).istrue());
-            wassert(actual(msg.get(WR_VAR(0, 1, 1), lev1, tr1)) == v3);
+            wassert(actual(msg.get(lev1, tr1, WR_VAR(0, 1, 1))).istrue());
+            wassert(actual(msg.get(lev1, tr1, WR_VAR(0, 1, 1))) == v3);
 
-            wassert(actual(msg.get(WR_VAR(0, 1, 1), lev1, tr2)).istrue());
-            wassert(actual(msg.get(WR_VAR(0, 1, 1), lev1, tr2)) == v4);
+            wassert(actual(msg.get(lev1, tr2, WR_VAR(0, 1, 1))).istrue());
+            wassert(actual(msg.get(lev1, tr2, WR_VAR(0, 1, 1))) == v4);
 
-            wassert(actual(msg.get(WR_VAR(0, 1, 1), lev2, tr1)).istrue());
-            wassert(actual(msg.get(WR_VAR(0, 1, 1), lev2, tr1)) == v2);
+            wassert(actual(msg.get(lev2, tr1, WR_VAR(0, 1, 1))).istrue());
+            wassert(actual(msg.get(lev2, tr1, WR_VAR(0, 1, 1))) == v2);
 
-            wassert(actual(msg.get(WR_VAR(0, 1, 2), lev1, tr2)) == (Var*)0);
-            wassert(actual(msg.get(WR_VAR(0, 1, 1), Level(0, 0, 0, 0), tr1)) == (Var*)0);
-            wassert(actual(msg.get(WR_VAR(0, 1, 1), Level(3, 3, 3, 3), tr1)) == (Var*)0);
-            wassert(actual(msg.get(WR_VAR(0, 1, 1), lev1, Trange(3, 3, 3))) == (Var*)0);
+            wassert(actual(msg.get(lev1, tr2, WR_VAR(0, 1, 2))) == (Var*)0);
+            wassert(actual(msg.get(Level(0, 0, 0, 0), tr1, WR_VAR(0, 1, 1))) == (Var*)0);
+            wassert(actual(msg.get(Level(3, 3, 3, 3), tr1, WR_VAR(0, 1, 1))) == (Var*)0);
+            wassert(actual(msg.get(lev1, Trange(3, 3, 3), WR_VAR(0, 1, 1))) == (Var*)0);
         });
         add_method("compose", []() {
             // Try to write a generic message from scratch
