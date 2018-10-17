@@ -379,7 +379,7 @@ void TempImporter::import_group(unsigned start, unsigned length)
                 case WR_VAR(0,  8, 42):
                     // Preserve missing VSS with only the one missing bit set,
                     // to act as a sounding context marker
-                    msg->seti(lev, Trange::instant(), WR_VAR(0,  8,  42), BUFR08042::MISSING, -1);
+                    msg->set(lev, Trange::instant(), newvar(WR_VAR(0,  8,  42), (int)BUFR08042::MISSING));
                     break;
             }
             continue;
@@ -399,7 +399,7 @@ void TempImporter::import_group(unsigned start, unsigned length)
                     // This accounts for weird data that has '1' for VSS
                     unsigned val = convert_BUFR08001_to_BUFR08042(var.enqi());
                     if (val == BUFR08042::ALL_MISSING)
-                        msg->seti(lev, Trange::instant(), WR_VAR(0,  8,  42), BUFR08042::MISSING, -1);
+                        msg->set(lev, Trange::instant(), newvar(WR_VAR(0,  8,  42), (int)BUFR08042::MISSING));
                     else
                     {
                         unique_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), (int)val));

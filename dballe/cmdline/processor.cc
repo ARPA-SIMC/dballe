@@ -711,7 +711,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING:
                     state.push(MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR);
-                    var.reset(new Var(dballe::var(val)));
+                    var = newvar(val);
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_MAPPING:
                     if (val == "v")
@@ -728,7 +728,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING:
                     state.push(MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY);
-                    attr.reset(new Var(dballe::var(val)));
+                    attr = newvar(val);
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY:
                     state.pop();

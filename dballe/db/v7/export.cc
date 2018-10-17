@@ -175,14 +175,14 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
                 station_values.read(*this, row.station.id);
 
             // Fill in report information
-            c_st.set(var(WR_VAR(0, 1, 194), row.station.report));
+            c_st.set(newvar(WR_VAR(0, 1, 194), row.station.report));
             msg->type = Msg::type_from_repmemo(row.station.report.c_str());
 
             // Fill in the basic station values
-            c_st.set(var(WR_VAR(0, 5, 1), row.station.coords.lat));
-            c_st.set(var(WR_VAR(0, 6, 1), row.station.coords.lon));
+            c_st.set(newvar(WR_VAR(0, 5, 1), row.station.coords.lat));
+            c_st.set(newvar(WR_VAR(0, 6, 1), row.station.coords.lon));
             if (!row.station.ident.is_missing())
-                c_st.set(var(WR_VAR(0, 1, 11), (const char*)row.station.ident));
+                c_st.set(newvar(WR_VAR(0, 1, 11), (const char*)row.station.ident));
 
             // Fill in station information
             station_values.to_context(c_st);

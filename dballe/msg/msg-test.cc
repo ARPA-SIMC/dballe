@@ -80,14 +80,15 @@ class Tests : public TestCase
             //msg->type = MessageType::SYNOP;
 
             // Fill in the dba_msg
-            msg->seti(Level(), Trange(), WR_VAR(0, 4, 1), 2008,   -1);
-            msg->seti(Level(), Trange(), WR_VAR(0, 4, 2),    5,   -1);
-            msg->seti(Level(), Trange(), WR_VAR(0, 4, 3),    7,   -1);
+            msg->set(Level(), Trange(), newvar(WR_VAR(0, 4, 1), 2008));
+            msg->set(Level(), Trange(), newvar(WR_VAR(0, 4, 2),    5));
+            msg->set(Level(), Trange(), newvar(WR_VAR(0, 4, 3),    7));
             // ...
-            msg->setd(Level(), Trange(), WR_VAR(0, 5, 1),   45.0, -1);
-            msg->setd(Level(), Trange(), WR_VAR(0, 6, 1),   11.0, -1);
+            msg->set(Level(), Trange(), newvar(WR_VAR(0, 5, 1),   45.0));
+            msg->set(Level(), Trange(), newvar(WR_VAR(0, 6, 1),   11.0));
             // ...
-            msg->setd(Level(102, 2000), Trange::instant(), WR_VAR(0,12, 101),  273.0, 75);
+            auto var = newvar(WR_VAR(0,12, 101),  273.0); var->seta(newvar(WR_VAR(0, 33, 7), 75));
+            msg->set(Level(102, 2000), Trange::instant(), std::move(var));
 
             // Append the dba_msg to a dba_msgs
             Messages msgs;
@@ -136,10 +137,10 @@ class Tests : public TestCase
             Msg matched;
             wassert(actual_matcher_result(m->match(MatchedMsg(matched))) == matcher::MATCH_NO);
 
-            matched.seti(Level(), Trange(), WR_VAR(0, 1, 192), 2, -1);
+            matched.set(Level(), Trange(), newvar(WR_VAR(0, 1, 192), 2));
             wassert(actual_matcher_result(m->match(MatchedMsg(matched))) == matcher::MATCH_NO);
 
-            matched.seti(Level(), Trange(), WR_VAR(0, 1, 192), 1, -1);
+            matched.set(Level(), Trange(), newvar(WR_VAR(0, 1, 192), 1));
             wassert(actual_matcher_result(m->match(MatchedMsg(matched))) == matcher::MATCH_YES);
         });
         add_method("msg_match_blockstation", []() {

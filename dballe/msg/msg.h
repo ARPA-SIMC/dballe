@@ -74,6 +74,59 @@ protected:
     void set_copy(const Level& lev, const Trange& tr, wreport::Varcode code, const wreport::Var& var) override;
     void set_move(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var) override;
 
+    /**
+     * Add or replace an integer value in the dba_msg
+     *
+     * @param code
+     *   The dba_varcode of the destination value..  See @ref vartable.h
+     * @param val
+     *   The integer value of the data
+     * @param conf
+     *   The confidence interval of the data, as the value of a B33007 WMO B (per
+     *   cent confidence) table entry, that is, a number between 0 and 100
+     *   inclusive.  -1 means no confidence interval attribute.
+     * @param lev
+     *   The Level of the value
+     * @param tr
+     *   The Trange of the value
+     */
+    void seti(const Level& lev, const Trange& tr, wreport::Varcode code, int val, int conf);
+
+    /**
+     * Add or replace a double value in the dba_msg
+     *
+     * @param code
+     *   The dba_varcode of the destination value.  See @ref vartable.h
+     * @param val
+     *   The double value of the data
+     * @param conf
+     *   The confidence interval of the data, as the value of a B33007 WMO B (per
+     *   cent confidence) table entry, that is, a number between 0 and 100
+     *   inclusive.  -1 means no confidence interval attribute.
+     * @param lev
+     *   The Level of the value
+     * @param tr
+     *   The Trange of the value
+     */
+    void setd(const Level& lev, const Trange& tr, wreport::Varcode code, double val, int conf);
+
+    /**
+     * Add or replace a string value in the dba_msg
+     *
+     * @param code
+     *   The dba_varcode of the destination value.  See @ref vartable.h
+     * @param val
+     *   The string value of the data
+     * @param conf
+     *   The confidence interval of the data, as the value of a B33007 WMO B (per
+     *   cent confidence) table entry, that is, a number between 0 and 100
+     *   inclusive.  -1 means no confidence interval attribute.
+     * @param lev
+     *   The Level of the value
+     * @param tr
+     *   The Trange of the value
+     */
+    void setc(const Level& lev, const Trange& tr, wreport::Varcode code, const char* val, int conf);
 public:
     /// Source of the data
     MessageType type;
@@ -319,59 +372,6 @@ public:
      */
     static const char* repmemo_from_type(MessageType type);
 
-    /**
-     * Add or replace an integer value in the dba_msg
-     *
-     * @param code
-     *   The dba_varcode of the destination value..  See @ref vartable.h
-     * @param val
-     *   The integer value of the data
-     * @param conf
-     *   The confidence interval of the data, as the value of a B33007 WMO B (per
-     *   cent confidence) table entry, that is, a number between 0 and 100
-     *   inclusive.  -1 means no confidence interval attribute.
-     * @param lev
-     *   The Level of the value
-     * @param tr
-     *   The Trange of the value
-     */
-    void seti(const Level& lev, const Trange& tr, wreport::Varcode code, int val, int conf);
-
-    /**
-     * Add or replace a double value in the dba_msg
-     *
-     * @param code
-     *   The dba_varcode of the destination value.  See @ref vartable.h
-     * @param val
-     *   The double value of the data
-     * @param conf
-     *   The confidence interval of the data, as the value of a B33007 WMO B (per
-     *   cent confidence) table entry, that is, a number between 0 and 100
-     *   inclusive.  -1 means no confidence interval attribute.
-     * @param lev
-     *   The Level of the value
-     * @param tr
-     *   The Trange of the value
-     */
-    void setd(const Level& lev, const Trange& tr, wreport::Varcode code, double val, int conf);
-
-    /**
-     * Add or replace a string value in the dba_msg
-     *
-     * @param code
-     *   The dba_varcode of the destination value.  See @ref vartable.h
-     * @param val
-     *   The string value of the data
-     * @param conf
-     *   The confidence interval of the data, as the value of a B33007 WMO B (per
-     *   cent confidence) table entry, that is, a number between 0 and 100
-     *   inclusive.  -1 means no confidence interval attribute.
-     * @param lev
-     *   The Level of the value
-     * @param tr
-     *   The Trange of the value
-     */
-    void setc(const Level& lev, const Trange& tr, wreport::Varcode code, const char* val, int conf);
 
 #include <dballe/msg/msg-extravars.h>
 };

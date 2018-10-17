@@ -344,7 +344,7 @@ void MsgAPI::prendilo()
             wmsg->type = Msg::type_from_repmemo(val);
         }
     if (const Var* var = input.get("ana_id"))
-        wmsg->seti(Level(), Trange(), WR_VAR(0, 1, 192), var->enqi(), -1);
+        wmsg->set(Level(), Trange(), newvar(WR_VAR(0, 1, 192), var->enqi()));
     if (const Var* var = input.get("ident"))
         wmsg->set_ident(var->enqc());
     if (const Var* var = input.get("lat"))
