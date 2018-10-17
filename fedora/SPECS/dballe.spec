@@ -230,13 +230,13 @@ cp -a . %{py3dir}
 
 autoreconf -ifv
 
-%configure FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs
+%configure FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs --disable-static
 make
 make check
 
 pushd %{py3dir}
 autoreconf -ifv
-%configure PYTHON=%{__python3} FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs
+%configure PYTHON=%{__python3} FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs --disable-static
 popd
 make
 make check -C python
@@ -291,8 +291,7 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 %{_includedir}/dballe/cmdline/*
 %{_includedir}/dballe/simple/*
 
-%{_libdir}/libdballe.a
-%{_libdir}/libdballe.la
+%exclude %{_libdir}/libdballe.la
 %{_libdir}/libdballe.so
 %{_libdir}/pkgconfig/libdballe.pc
 %{_datadir}/aclocal/libdballe.m4
@@ -302,9 +301,8 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 %defattr(-,root,root,-)
 %{_includedir}/dballe/dballef.h
 %{_includedir}/dballe/dballeff.h
-%{_libdir}/libdballef*.a
 %{_libdir}/pkgconfig/libdballef*
-%{_libdir}/libdballef*.la
+%exclude %{_libdir}/libdballef*.la
 %{_libdir}/libdballef*.so
 %{_datadir}/aclocal/libdballef*.m4
 %{_fmoddir}/*.mod
@@ -321,8 +319,7 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 %dir %{python2_sitelib}/dballe
 %{python2_sitelib}/dballe/*
 %dir %{python2_sitearch}
-%{python2_sitearch}/*.a
-%{python2_sitearch}/*.la
+%exclude %{python2_sitearch}/*.la
 %{python2_sitearch}/*.so*
 %{_bindir}/dbatbl_makeb
 
@@ -336,8 +333,7 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 %dir %{python3_sitelib}/dballe
 %{python3_sitelib}/dballe/*
 %dir %{python3_sitearch}
-%{python3_sitearch}/*.a
-%{python3_sitearch}/*.la
+%exclude %{python3_sitearch}/*.la
 %{python3_sitearch}/*.so*
 %{_bindir}/dbatbl_makeb
 
