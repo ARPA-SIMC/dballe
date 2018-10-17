@@ -1,5 +1,6 @@
 #include "message.h"
 #include "dballe/msg/msg.h"
+#include "dballe/msg/vars.h"
 #include <wreport/notes.h>
 
 using namespace std;
@@ -12,6 +13,14 @@ namespace dballe {
  */
 
 Message::~Message() {}
+
+std::unique_ptr<Message> Message::create(MessageType type)
+{
+    Msg* msg;
+    std::unique_ptr<Message> res(msg = new Msg);
+    msg->type = type;
+    return res;
+}
 
 const wreport::Var* Message::get(const Level& lev, const Trange& tr, wreport::Varcode code) const
 {
@@ -36,6 +45,21 @@ void Message::set(const Level& lev, const Trange& tr, const wreport::Var& var)
 void Message::set(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var)
 {
     set_move(lev, tr, std::move(var));
+}
+
+void Message::set(const char* shortcut, std::unique_ptr<wreport::Var> var)
+{
+    const MsgVarShortcut& v = shortcutTable[resolve_var(shortcut)];
+    if (v.code != var->code())
+        error_consistency::throwf("Message::set(%s) called with varcode of %01d%02d%03d instead of %02d%02d%03d",
+                shortcut, WR_VAR_FXY(var->code()), WR_VAR_FXY(v.code));
+    return set(Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2), std::move(var));
+}
+
+void Message::set(const char* shortcut, const wreport::Var& var)
+{
+    const MsgVarShortcut& v = shortcutTable[resolve_var(shortcut)];
+    return set(Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2), v.code, var);
 }
 
 const char* format_message_type(MessageType type)

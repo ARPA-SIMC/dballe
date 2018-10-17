@@ -105,6 +105,29 @@ struct Message
     void set(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var);
 
     /**
+     * Add or replace a value, taking ownership of the source variable without
+     * copying it.
+     *
+     * @param shortcut
+     *   Shortcut name mapping to a (Level, Trange, Varcode) triplet
+     * @param var
+     *   The Var with the value to set.  This Message will take ownership of memory
+     *   management.
+     */
+    void set(const char* shortcut, std::unique_ptr<wreport::Var> var);
+
+    /**
+     * Add or replace a value
+     *
+     * @param shortcut
+     *   Shortcut name mapping to a (Level, Trange, Varcode) triplet
+     * @param var
+     *   The Var with the value to set. If its varcode is different than the
+     *   varcode of the shortcut, a conversion will be attempted.
+     */
+    void set(const char* shortcut, const wreport::Var& var);
+
+    /**
      * Iterate the contents of the message
      */
     virtual bool foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)>) const = 0;
@@ -122,6 +145,11 @@ struct Message
      *   The number of differences found
      */
     virtual unsigned diff(const Message& msg) const = 0;
+
+    /**
+     * Create a new empty message
+     */
+    static std::unique_ptr<Message> create(MessageType type);
 
 protected:
     /// Implementation of get(const Level&, const Trange&, wreport::Varcode)

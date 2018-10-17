@@ -17,6 +17,34 @@ class Tests : public TestCase
 void Tests::register_tests()
 {
 
+add_method("create", []() {
+    auto msg = Message::create(MessageType::AMDAR);
+    msg->set("year", newvar("B04001", 2009));
+    msg->set("month", newvar("B04002", 2));
+    msg->set("day", newvar("B04003", 24));
+    msg->set("hour", newvar("B04004", 11));
+    msg->set("minute", newvar("B04005", 31));
+    msg->set("ident", newvar("B01011", "EU3375"));
+    msg->set("latitude", newvar("B05001", 48.90500));
+    msg->set("longitude", newvar("B06001", 10.63667));
+
+    Level l(102, 6260000);
+    Trange t = Trange::instant();
+    msg->set(l, t, var("B01006", "LH968"));
+    msg->set(l, t, var("B02061", 0));
+    msg->set(l, t, var("B02062", 3));
+    msg->set(l, t, var("B02064", 0));
+    msg->set(l, t, var("B07030", 6260.0));
+    msg->set(l, t, var("B08004", 3));
+    msg->set(l, t, var("B11001", 33));
+    msg->set(l, t, var("B11002", 33.4));
+    msg->set(l, t, var("B12101", 240.0));
+    msg->set(l, t, var("B13002", 0.0));
+
+    auto msgs = read_msgs("bufr/gts-acars-uk1.bufr", Encoding::BUFR);
+    wassert(actual(msg->diff(*msgs[0])) == 0);
+});
+
 add_method("get", []() {
     auto msgs = read_msgs("bufr/gts-acars-uk1.bufr", Encoding::BUFR);
 
