@@ -22,7 +22,6 @@ protected:
     const ImporterOptions& opts;
     const wreport::Subset* subset;
     Msg* msg;
-    int ye, mo, da, ho, mi, se;
 
     virtual void init();
     virtual void run() = 0;

@@ -153,8 +153,6 @@ class Tests : public TestCase
 
             wassert(test.run_reimport());
             wassert(test.run_convert("synop-wmo"));
-
-            test.after_convert_reimport.add(new StripDatetimeVars());
             wassert(test.run_convert("synop"));
         });
         add_testcodec("obs0-1.11188.bufr", [](TestCodec& test) {
@@ -319,10 +317,8 @@ class Tests : public TestCase
         add_testcodec("temp-bad1.bufr", [](TestCodec& test) {
             test.after_reimport_reimport.add(new StripQCAttrs());
             test.after_reimport_reimport.add(new StripSubstituteAttrs());
-            test.after_reimport_reimport.add(new StripDatetimeVars());
             test.after_convert_import.add(new StripQCAttrs());
             test.after_convert_import.add(new StripSubstituteAttrs());
-            test.after_convert_import.add(new StripDatetimeVars());
             test.expected_subsets = 1;
             test.expected_min_vars = 10;
             test.expected_data_category = 2;
@@ -334,10 +330,8 @@ class Tests : public TestCase
         add_testcodec("temp-bad2.bufr", [](TestCodec& test) {
             test.after_reimport_reimport.add(new StripQCAttrs());
             test.after_reimport_reimport.add(new StripSubstituteAttrs());
-            test.after_reimport_reimport.add(new StripDatetimeVars());
             test.after_convert_import.add(new StripQCAttrs());
             test.after_convert_import.add(new StripSubstituteAttrs());
-            test.after_convert_import.add(new StripDatetimeVars());
             test.expected_subsets = 1;
             test.expected_min_vars = 10;
             test.expected_data_category = 2;

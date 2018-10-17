@@ -13,7 +13,7 @@ class Tests : public TestCase
     using TestCase::TestCase;
 
     void register_tests() override;
-} test("importer");
+} test("dballe_importer");
 
 void Tests::register_tests()
 {

@@ -62,71 +62,13 @@ protected:
      */
     int find_index(const Level& lev, const Trange& tr) const;
 
-    /// Sensor network of origin of the Msg contents
-    std::string m_rep_memo;
-    /// Reference coordinates for the Msg contents
-    Coords m_coords;
-    /// Identifier of the contents originator
-    Ident m_ident;
-    /// Reference time for the Msg contents
-    Datetime m_datetime;
-
     void set_copy(const Level& lev, const Trange& tr, wreport::Varcode code, const wreport::Var& var) override;
     void set_move(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var) override;
 
-    /**
-     * Add or replace an integer value in the dba_msg
-     *
-     * @param code
-     *   The dba_varcode of the destination value..  See @ref vartable.h
-     * @param val
-     *   The integer value of the data
-     * @param conf
-     *   The confidence interval of the data, as the value of a B33007 WMO B (per
-     *   cent confidence) table entry, that is, a number between 0 and 100
-     *   inclusive.  -1 means no confidence interval attribute.
-     * @param lev
-     *   The Level of the value
-     * @param tr
-     *   The Trange of the value
-     */
     void seti(const Level& lev, const Trange& tr, wreport::Varcode code, int val, int conf);
-
-    /**
-     * Add or replace a double value in the dba_msg
-     *
-     * @param code
-     *   The dba_varcode of the destination value.  See @ref vartable.h
-     * @param val
-     *   The double value of the data
-     * @param conf
-     *   The confidence interval of the data, as the value of a B33007 WMO B (per
-     *   cent confidence) table entry, that is, a number between 0 and 100
-     *   inclusive.  -1 means no confidence interval attribute.
-     * @param lev
-     *   The Level of the value
-     * @param tr
-     *   The Trange of the value
-     */
     void setd(const Level& lev, const Trange& tr, wreport::Varcode code, double val, int conf);
-
-    /**
-     * Add or replace a string value in the dba_msg
-     *
-     * @param code
-     *   The dba_varcode of the destination value.  See @ref vartable.h
-     * @param val
-     *   The string value of the data
-     * @param conf
-     *   The confidence interval of the data, as the value of a B33007 WMO B (per
-     *   cent confidence) table entry, that is, a number between 0 and 100
-     *   inclusive.  -1 means no confidence interval attribute.
-     * @param lev
-     *   The Level of the value
-     * @param tr
-     *   The Trange of the value
-     */
     void setc(const Level& lev, const Trange& tr, wreport::Varcode code, const char* val, int conf);
+
 public:
     /// Source of the data
     MessageType type;
@@ -166,23 +108,16 @@ public:
      */
     static std::shared_ptr<Msg> downcast(std::shared_ptr<Message> o);
 
-
     std::unique_ptr<Message> clone() const override;
-    Datetime get_datetime() const override { return m_datetime; }
+    Datetime get_datetime() const override;
+    Coords get_coords() const override;
+    Ident get_ident() const override;
     MessageType get_type() const override { return type; }
-
     const wreport::Var* get(wreport::Varcode code, const Level& lev, const Trange& tr) const override;
     const wreport::Var* get_shortcut(const char* name) const override;
-
     bool foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)>) const override;
-
     void print(FILE* out) const override;
     unsigned diff(const Message& msg) const override;
-
-    void set_rep_memo(const std::string& r) { m_rep_memo = r; }
-    void set_coords(const Coords& c) { m_coords = c; }
-    void set_ident(const Ident& i) { m_ident = i; }
-    void set_datetime(const Datetime& dt) { m_datetime = dt; }
 
     /// Remove all information from Msg
     void clear();
@@ -334,19 +269,6 @@ public:
      */
     void sounding_pack_levels(Msg& dst) const;
 
-#if 0
-    /**
-     * Copy a Msg, adding the sounding significance from the level descriptions
-     * and moving the data at the same pressure level to the resulting
-     * pseudolevels.
-     *
-     * This is used to preprocess data before encoding, where the l2 field of the
-     * level description is temporarily used to store the vertical sounding
-     * significance, to simplify encoding.
-     */
-    void sounding_unpack_levels(Msg& dst) const;
-#endif
-
     /**
      * Read data from a CSV input.
      *
@@ -372,6 +294,10 @@ public:
      */
     static const char* repmemo_from_type(MessageType type);
 
+    /**
+     * Shortcut to set year...second variables in a single call
+     */
+    void set_datetime(const Datetime& dt);
 
 #include <dballe/msg/msg-extravars.h>
 };

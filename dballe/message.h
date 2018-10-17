@@ -35,6 +35,12 @@ struct Message
     /// Get the reference Datetime for this message
     virtual Datetime get_datetime() const = 0;
 
+    /// Get the reference coordinates for this message
+    virtual Coords get_coords() const = 0;
+
+    /// Get the station identifier for this message
+    virtual Ident get_ident() const = 0;
+
     /// Return a copy of this message
     virtual std::unique_ptr<Message> clone() const = 0;
 

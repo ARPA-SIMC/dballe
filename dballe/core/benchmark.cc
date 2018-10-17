@@ -212,14 +212,7 @@ void Messages::load(const std::string& pathname, dballe::Encoding encoding, cons
 void Messages::duplicate(size_t size, const Datetime& datetime)
 {
     for (size_t i = 0; i < size; ++i)
-    {
         emplace_back((*this)[i]);
-        for (auto& message: back())
-        {
-            auto msg = dynamic_pointer_cast<dballe::Msg>(message);
-            msg->set_datetime(datetime);
-        }
-    }
 }
 
 

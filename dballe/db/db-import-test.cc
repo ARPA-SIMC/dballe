@@ -23,21 +23,6 @@ unsigned diff_msg(std::shared_ptr<Message> first, std::shared_ptr<Message> secon
     return diffs;
 }
 
-static void normalise_datetime(std::shared_ptr<Msg> msg)
-{
-    msg::Context* ctx = msg->edit_context(Level(), Trange());
-    if (!ctx) return;
-
-    // Strip datetime variables
-    ctx->remove(WR_VAR(0, 4, 1));
-    ctx->remove(WR_VAR(0, 4, 2));
-    ctx->remove(WR_VAR(0, 4, 3));
-    ctx->remove(WR_VAR(0, 4, 4));
-    ctx->remove(WR_VAR(0, 4, 5));
-    ctx->remove(WR_VAR(0, 4, 6));
-}
-
-
 template<typename DB>
 class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
 {
@@ -60,7 +45,6 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
                 try {
                     Messages inmsgs = read_msgs(files[i], Encoding::CREX);
                     auto msg = Msg::downcast(inmsgs[0]);
-                    normalise_datetime(msg);
 
                     f.tr->remove_all();
                     f.tr->import_msg(*msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
@@ -88,7 +72,6 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
                 try {
                     Messages inmsgs = read_msgs(files[i], Encoding::BUFR);
                     auto msg = Msg::downcast(inmsgs[0]);
-                    normalise_datetime(msg);
 
                     f.tr->remove_all();
                     wassert(f.tr->import_msg(*msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA));
@@ -119,9 +102,6 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             auto msg1 = Msg::downcast(msgs1[0]);
             auto msg2 = Msg::downcast(msgs2[0]);
 
-            normalise_datetime(msg1);
-            normalise_datetime(msg2);
-
             f.tr->remove_all();
             f.tr->import_msg(*msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
             f.tr->import_msg(*msg2, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
@@ -148,8 +128,6 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             // msg2 has latitude 46.22
             Messages msgs1 = read_msgs("bufr/obs0-1.22.bufr", Encoding::BUFR);
             auto msg1 = Msg::downcast(msgs1[0]);
-
-            normalise_datetime(msg1);
 
             f.tr->remove_all();
             //auto t = db->transaction();

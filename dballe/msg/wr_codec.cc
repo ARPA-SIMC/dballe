@@ -462,7 +462,7 @@ void Template::do_D01013() const
     else if (!msg->get_datetime().is_missing())
         subset->store_variable_i(WR_VAR(0, 4, 6), msg->get_datetime().second);
     else
-        subset->store_variable_undef(WR_VAR(0, 4, 6));
+        subset->store_variable_i(WR_VAR(0, 4, 6), 0);
 }
 
 void Template::do_D01021() const

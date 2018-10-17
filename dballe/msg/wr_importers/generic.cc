@@ -159,12 +159,12 @@ void GenericImporter::import_var(const Var& var)
             break;
         }
         // Datetime entries that may have attributes to store
-        case WR_VAR(0,  4,  1): ye = var.enqi(); if (var.next_attr()) msg->set_year_var(var); break;
-        case WR_VAR(0,  4,  2): mo = var.enqi(); if (var.next_attr()) msg->set_month_var(var); break;
-        case WR_VAR(0,  4,  3): da = var.enqi(); if (var.next_attr()) msg->set_day_var(var); break;
-        case WR_VAR(0,  4,  4): ho = var.enqi(); if (var.next_attr()) msg->set_hour_var(var); break;
-        case WR_VAR(0,  4,  5): mi = var.enqi(); if (var.next_attr()) msg->set_minute_var(var); break;
-        case WR_VAR(0,  4,  6): se = var.enqi(); if (var.next_attr()) msg->set_second_var(var); break;
+        case WR_VAR(0,  4,  1): msg->set_year_var(var); break;
+        case WR_VAR(0,  4,  2): msg->set_month_var(var); break;
+        case WR_VAR(0,  4,  3): msg->set_day_var(var); break;
+        case WR_VAR(0,  4,  4): msg->set_hour_var(var); break;
+        case WR_VAR(0,  4,  5): msg->set_minute_var(var); break;
+        case WR_VAR(0,  4,  6): msg->set_second_var(var); break;
         // Anything else
         default:
             msg->set(lev, tr, map_code_to_dballe(var.code()), var);

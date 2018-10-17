@@ -221,6 +221,14 @@ unsigned Context::diff(const Context& ctx) const
     unsigned diffs = 0;
     while (i1 < data.size() || i2 < ctx.data.size())
     {
+        if (is_station())
+        {
+            // Skip second=0 in station context
+            if (i1 < data.size() && data[i1]->code() == WR_VAR(0, 4, 6) && data[i1]->enqi() == 0) ++i1;
+            if (i2 < ctx.data.size() && ctx.data[i2]->code() == WR_VAR(0, 4, 6) && ctx.data[i2]->enqi() == 0) ++i2;
+            if (i1 == data.size() && i2 == data.size())
+                break;
+        }
         if (i1 == data.size())
         {
             context_var_summary(ctx, *ctx.data[i2], notes::log());

@@ -305,16 +305,6 @@ void StripVars::tweak(Messages& msgs)
     }
 }
 
-StripDatetimeVars::StripDatetimeVars()
-{
-    codes.push_back(WR_VAR(0, 4, 1));
-    codes.push_back(WR_VAR(0, 4, 2));
-    codes.push_back(WR_VAR(0, 4, 3));
-    codes.push_back(WR_VAR(0, 4, 4));
-    codes.push_back(WR_VAR(0, 4, 5));
-    codes.push_back(WR_VAR(0, 4, 6));
-}
-
 RoundLegacyVars::RoundLegacyVars() : table(NULL)
 {
     table = Vartable::get_bufr(BufrTableID(0, 0, 0, 14, 0));
@@ -603,7 +593,6 @@ TestCodec::TestCodec(const std::string& fname, Encoding type)
 void TestCodec::configure_ecmwf_to_wmo_tweaks()
 {
     after_convert_import.add(new tweaks::StripQCAttrs);
-    after_convert_import.add(new tweaks::StripDatetimeVars);
 }
 
 void TestCodec::do_compare(const TestMessage& msg1, const TestMessage& msg2)

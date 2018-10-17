@@ -95,19 +95,14 @@ Msg::~Msg()
 }
 
 Msg::Msg(const Msg& m)
-    : m_rep_memo(m.m_rep_memo),
-      m_coords(m.m_coords),
-      m_ident(m.m_ident),
-      m_datetime(m.m_datetime),
-      type(m.type)
+    : type(m.type)
 {
     // Reserve space for the new contexts
     data.reserve(m.data.size());
 
     // Copy the contexts
-    for (vector<msg::Context*>::const_iterator i = m.data.begin();
-            i != m.data.end(); ++i)
-        data.push_back(new msg::Context(**i));
+    for (const auto& ctx: m.data)
+        data.push_back(new msg::Context(*ctx));
 }
 
 Msg& Msg::operator=(const Msg& m)
@@ -115,22 +110,19 @@ Msg& Msg::operator=(const Msg& m)
     // Manage a = a
     if (this == &m) return *this;
 
-    m_datetime = m.m_datetime;
     type = m.type;
 
     // Delete existing vars
-    for (vector<msg::Context*>::iterator i = data.begin();
-            i != data.end(); ++i)
-        delete *i;
+    for (auto& ctx: data)
+        delete ctx;
     data.clear();
 
     // Reserve space for the new contexts
     data.reserve(m.data.size());
 
     // Copy the contexts
-    for (vector<msg::Context*>::const_iterator i = m.data.begin();
-            i != m.data.end(); ++i)
-        data.push_back(new msg::Context(**i));
+    for (const auto& ctx: m.data)
+        data.push_back(new msg::Context(*ctx));
     return *this;
 }
 
@@ -161,6 +153,62 @@ std::shared_ptr<Msg> Msg::downcast(std::shared_ptr<Message> o)
 std::unique_ptr<Message> Msg::clone() const
 {
     return unique_ptr<Message>(new Msg(*this));
+}
+
+Datetime Msg::get_datetime() const
+{
+    int ye = MISSING_INT, mo=MISSING_INT, da=MISSING_INT, ho=MISSING_INT, mi=MISSING_INT, se=MISSING_INT;
+    if (const Var* v = find_by_id(DBA_MSG_YEAR))
+        ye = v->enqi();
+    if (const Var* v = find_by_id(DBA_MSG_MONTH))
+        mo = v->enqi();
+    if (const Var* v = find_by_id(DBA_MSG_DAY))
+        da = v->enqi();
+    if (const Var* v = find_by_id(DBA_MSG_HOUR))
+        ho = v->enqi();
+    if (const Var* v = find_by_id(DBA_MSG_MINUTE))
+        mi = v->enqi();
+    if (const Var* v = find_by_id(DBA_MSG_SECOND))
+        se = v->enqi();
+
+    if (ye == MISSING_INT)
+        return Datetime();
+
+    if (mo == MISSING_INT)
+        throw error_consistency("no month information found in message");
+    if (da == MISSING_INT)
+        throw error_consistency("no day information found in message");
+    if (ho == MISSING_INT)
+        throw error_consistency("no hour information found in message");
+    if (mi == MISSING_INT)
+        throw error_consistency("no minute information found in message");
+    if (se == MISSING_INT)
+        se = 0;
+
+    // Accept an hour of 24:00:00 and move it to 00:00:00 of the following
+    // day
+    Datetime::normalise_h24(ye, mo, da, ho, mi, se);
+
+    return Datetime(ye, mo, da, ho, mi, se);
+}
+
+Coords Msg::get_coords() const
+{
+    const Var* lat = get_latitude_var();
+    const Var* lon = get_longitude_var();
+    if (lat && lon)
+        return Coords(lat->enqd(), lon->enqd());
+    else
+        return Coords();
+}
+
+Ident Msg::get_ident() const
+{
+    const Var* ident = get_ident_var();
+    if (ident)
+        return Ident(ident->enqc());
+    else
+        return Ident();
 }
 
 void Msg::clear()
@@ -529,10 +577,11 @@ bool Msg::from_csv(CSVReader& in)
 
 void Msg::print(FILE* out) const
 {
-    fprintf(out, "%s message, rep_memo: %s, ", format_message_type(type), m_rep_memo.c_str());
-    m_coords.print(out, ", ");
-    fprintf(out, "ident: %s, dt: ", m_ident.is_missing() ? "" : (const char*)m_ident);
-    m_datetime.print_iso8601(out, 'T', ", ");
+    fprintf(out, "%s message, ", format_message_type(type));
+    get_coords().print(out, ", ");
+    auto ident = get_ident();
+    fprintf(out, "ident: %s, dt: ", ident.is_missing() ? "" : (const char*)ident);
+    get_datetime().print_iso8601(out, 'T', ", ");
 
     if (data.empty())
     {
@@ -754,10 +803,6 @@ const char* Msg::repmemo_from_type(MessageType type)
 void Msg::sounding_pack_levels(Msg& dst) const
 {
     dst.clear();
-    dst.m_rep_memo = m_rep_memo;
-    dst.m_coords = m_coords;
-    dst.m_ident = m_ident;
-    dst.m_datetime = m_datetime;
     dst.type = type;
 
     for (size_t i = 0; i < data.size(); ++i)
@@ -781,76 +826,16 @@ void Msg::sounding_pack_levels(Msg& dst) const
     }
 }
 
-#if 0
-void Msg::sounding_unpack_levels(Msg& dst) const
+void Msg::set_datetime(const Datetime& dt)
 {
-    dst.clear();
-    dst.type = type;
-
-    for (size_t i = 0; i < data.size(); ++i)
-    {
-        const msg::Context& ctx = *data[i];
-
-        const Var* vsig_var = ctx.find_vsig();
-        if (!vsig_var)
-        {
-            auto_ptr<msg::Context> newctx(new msg::Context(ctx));
-            dst.add_context(newctx);
-            continue;
-        }
-
-        int vsig = vsig_var->enqi();
-        if (vsig & VSIG_MISSING)
-        {
-            // If there is no vsig, then we consider it a normal level
-            auto_ptr<msg::Context> newctx(new msg::Context(ctx));
-            dst.add_context(newctx);
-            continue;
-        }
-
-        /* DBA_RUN_OR_GOTO(fail, dba_var_enqi(msg->data[i].var_press, &press)); */
-
-        /* TODO: delete the dba_msg_datum that do not belong in that level */
-
-        if (vsig & VSIG_SIGWIND)
-        {
-            auto_ptr<msg::Context> copy(new msg::Context(ctx));
-            copy->level.l2 = 6;
-            dst.add_context(copy);
-        }
-        if (vsig & VSIG_SIGTEMP)
-        {
-            auto_ptr<msg::Context> copy(new msg::Context(ctx));
-            copy->level.l2 = 5;
-            dst.add_context(copy);
-        }
-        if (vsig & VSIG_MAXWIND)
-        {
-            auto_ptr<msg::Context> copy(new msg::Context(ctx));
-            copy->level.l2 = 4;
-            dst.add_context(copy);
-        }
-        if (vsig & VSIG_TROPOPAUSE)
-        {
-            auto_ptr<msg::Context> copy(new msg::Context(ctx));
-            copy->level.l2 = 3;
-            dst.add_context(copy);
-        }
-        if (vsig & VSIG_STANDARD)
-        {
-            auto_ptr<msg::Context> copy(new msg::Context(ctx));
-            copy->level.l2 = 2;
-            dst.add_context(copy);
-        }
-        if (vsig & VSIG_SURFACE)
-        {
-            auto_ptr<msg::Context> copy(new msg::Context(ctx));
-            copy->level.l2 = 1;
-            dst.add_context(copy);
-        }
-    }
+    set_year(dt.year);
+    set_month(dt.month);
+    set_day(dt.day);
+    set_hour(dt.hour);
+    set_minute(dt.minute);
+    set_second(dt.second);
 }
-#endif
+
 
 MatchedMsg::MatchedMsg(const Msg& m)
     : m(m)

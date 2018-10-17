@@ -79,10 +79,10 @@ this->add_method("summary_msg", [](Fixture& f) {
     wassert(actual(s.stations().size()) == 25);
     wassert(actual(s.levels().size()) == 37);
     wassert(actual(s.tranges().size()) == 9);
-    wassert(actual(s.varcodes().size()) == 34);
+    wassert(actual(s.varcodes().size()) == 39);
     wassert(actual(s.datetime_min()) == Datetime(2015, 3, 5, 3));
     wassert(actual(s.datetime_max()) == Datetime(2015, 3, 5, 3));
-    wassert(actual(s.data_count()) == 970);
+    wassert(actual(s.data_count()) == 1095);
 });
 
 this->add_method("merge_entries", [](Fixture& f) {

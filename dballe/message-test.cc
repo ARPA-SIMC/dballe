@@ -51,7 +51,7 @@ add_method("foreach_var", []() {
         return true;
     });
 
-    wassert(actual(results.size()) == 13u);
+    wassert(actual(results.size()) == 18u);
     wassert(actual(results[0].l) == Level(102, 6260000));
     wassert(actual(results[0].t) == Trange::instant());
     wassert(actual(results[0].v) == var("B01006", "LH968"));
@@ -87,10 +87,25 @@ add_method("foreach_var", []() {
     wassert(actual(results[10].v) == var("B01011", "EU3375"));
     wassert(actual(results[11].l) == Level());
     wassert(actual(results[11].t) == Trange());
-    wassert(actual(results[11].v) == var("B05001", 48.90500));
+    wassert(actual(results[11].v) == var("B04001", 2009));
     wassert(actual(results[12].l) == Level());
     wassert(actual(results[12].t) == Trange());
-    wassert(actual(results[12].v) == var("B06001", 10.63667));
+    wassert(actual(results[12].v) == var("B04002", 2));
+    wassert(actual(results[13].l) == Level());
+    wassert(actual(results[13].t) == Trange());
+    wassert(actual(results[13].v) == var("B04003", 24));
+    wassert(actual(results[14].l) == Level());
+    wassert(actual(results[14].t) == Trange());
+    wassert(actual(results[14].v) == var("B04004", 11));
+    wassert(actual(results[15].l) == Level());
+    wassert(actual(results[15].t) == Trange());
+    wassert(actual(results[15].v) == var("B04005", 31));
+    wassert(actual(results[16].l) == Level());
+    wassert(actual(results[16].t) == Trange());
+    wassert(actual(results[16].v) == var("B05001", 48.90500));
+    wassert(actual(results[17].l) == Level());
+    wassert(actual(results[17].t) == Trange());
+    wassert(actual(results[17].v) == var("B06001", 10.63667));
 });
 
 }
