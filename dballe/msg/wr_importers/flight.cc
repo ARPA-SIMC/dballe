@@ -71,7 +71,7 @@ public:
             deferred.push_back(copy.release());
         }
         else
-            msg->set(var, var.code(), lev, Trange::instant());
+            msg->set(lev, Trange::instant(), var.code(), var);
     }
 
     void acquire(const Var& var, Varcode code)
@@ -84,7 +84,7 @@ public:
             deferred.push_back(copy.release());
         }
         else
-            msg->set(var, code, lev, Trange::instant());
+            msg->set(lev, Trange::instant(), code, var);
     }
 
     void set_level(const Level& newlev)
@@ -100,7 +100,7 @@ public:
         {
             unique_ptr<Var> var(*i);
             *i = 0;
-            msg->set(move(var), lev, Trange::instant());
+            msg->set(lev, Trange::instant(), move(var));
         }
         deferred.clear();
     }

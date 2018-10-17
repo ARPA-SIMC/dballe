@@ -243,7 +243,7 @@ void TempImporter::import_var(const Var& var)
         case WR_VAR(0,  7,  7): msg->set_height_release_var(var); break;
         case WR_VAR(0, 33, 24): msg->set_station_height_quality_var(var); break;
 /* Cloud information reported with vertical soundings */
-        case WR_VAR(0,  8,  2): msg->set(var, WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant()); break;
+        case WR_VAR(0,  8,  2): msg->set(Level::cloud(258, 0), Trange::instant(), WR_VAR(0, 8, 2), var); break;
         case WR_VAR(0, 20, 10): msg->set_cloud_n_var(var); break;
         case WR_VAR(0, 20, 11): msg->set_cloud_nh_var(var); break;
         case WR_VAR(0, 20, 13): msg->set_cloud_hh_var(var); break;
@@ -255,14 +255,14 @@ void TempImporter::import_var(const Var& var)
                 if (pos > 1 && (*subset)[pos - 2].code() == WR_VAR(0, 20, 12))
                     ++l2;
             }
-            msg->set(var, WR_VAR(0, 20, 12), Level::cloud(258, l2), Trange::instant());
+            msg->set(Level::cloud(258, l2), Trange::instant(), WR_VAR(0, 20, 12), var);
             break;
         }
         case WR_VAR(0, 22, 43): msg->set_water_temp_var(var); break;
 /* Temperature, dew-point and wind data at pressure levels */
         // Long time period or displacement (since launch time)
         case WR_VAR(0,  4, 16):
-        case WR_VAR(0,  4, 86): msg->set(var, WR_VAR(0, 4, 86), Level(100, press), Trange::instant()); break;
+        case WR_VAR(0,  4, 86): msg->set(Level(100, press), Trange::instant(), WR_VAR(0, 4, 86), var); break;
         // Extended vertical sounding significance
         case WR_VAR(0,  8, 42): {
                 if (pos == subset->size() - 1) throw error_consistency("B08042 found at end of message");
@@ -275,14 +275,14 @@ void TempImporter::import_var(const Var& var)
                     else
                         press = MISSING_INT;
                 }
-                msg->set(var, WR_VAR(0, 8, 42), Level(100, press), Trange::instant());
+                msg->set(Level(100, press), Trange::instant(), WR_VAR(0, 8, 42), var);
                 break;
         }
         // Pressure
         case WR_VAR(0,  7,  4):
                 press = var.enqd();
                 press_var = &var;
-                msg->set(var, WR_VAR(0, 10, 4), Level(100, press), Trange::instant());
+                msg->set(Level(100, press), Trange::instant(), WR_VAR(0, 10, 4), var);
                 break;
         // Vertical sounding significance
         case WR_VAR(0,  8,  1):
@@ -293,7 +293,7 @@ void TempImporter::import_var(const Var& var)
                 {
                     unique_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), (int)val));
                     nvar->setattrs(var);
-                    msg->set(move(nvar), Level(100, press), Trange::instant());
+                    msg->set(Level(100, press), Trange::instant(), move(nvar));
                 }
             }
             if (var.enqi() & BUFR08001::SURFACE)
@@ -303,28 +303,28 @@ void TempImporter::import_var(const Var& var)
             }
             break;
         // Geopotential
-        case WR_VAR(0, 10,  3): msg->set(var, WR_VAR(0, 10, 8), Level(100, press), Trange::instant()); break;
-        case WR_VAR(0, 10,  8): msg->set(var, WR_VAR(0, 10, 8), Level(100, press), Trange::instant()); break;
-        case WR_VAR(0, 10,  9): msg->set(var, WR_VAR(0, 10, 8), Level(100, press), Trange::instant()); break;
+        case WR_VAR(0, 10,  3): msg->set(Level(100, press), Trange::instant(), WR_VAR(0, 10, 8), var); break;
+        case WR_VAR(0, 10,  8): msg->set(Level(100, press), Trange::instant(), WR_VAR(0, 10, 8), var); break;
+        case WR_VAR(0, 10,  9): msg->set(Level(100, press), Trange::instant(), WR_VAR(0, 10, 8), var); break;
         // Latitude displacement
-        case WR_VAR(0,  5, 15): msg->set(var, WR_VAR(0, 5, 15), Level(100, press), Trange::instant()); break;
+        case WR_VAR(0,  5, 15): msg->set(Level(100, press), Trange::instant(), WR_VAR(0, 5, 15), var); break;
         // Longitude displacement
-        case WR_VAR(0,  6, 15): msg->set(var, WR_VAR(0, 6, 15), Level(100, press), Trange::instant()); break;
+        case WR_VAR(0,  6, 15): msg->set(Level(100, press), Trange::instant(), WR_VAR(0, 6, 15), var); break;
         // Dry bulb temperature
-        case WR_VAR(0, 12,  1): msg->set(var, WR_VAR(0, 12, 101), Level(100, press), Trange::instant()); break;
-        case WR_VAR(0, 12, 101): msg->set(var, WR_VAR(0, 12, 101), Level(100, press), Trange::instant()); break;
+        case WR_VAR(0, 12,  1): msg->set(Level(100, press), Trange::instant(), WR_VAR(0, 12, 101), var); break;
+        case WR_VAR(0, 12, 101): msg->set(Level(100, press), Trange::instant(), WR_VAR(0, 12, 101), var); break;
         // Wet bulb temperature
-        case WR_VAR(0, 12,  2): msg->set(var, WR_VAR(0, 12, 2), Level(100, press), Trange::instant()); break;
+        case WR_VAR(0, 12,  2): msg->set(Level(100, press), Trange::instant(), WR_VAR(0, 12, 2), var); break;
         // Dew point temperature
-        case WR_VAR(0, 12,  3): msg->set(var, WR_VAR(0, 12, 103), Level(100, press), Trange::instant()); break;
-        case WR_VAR(0, 12, 103): msg->set(var, WR_VAR(0, 12, 103), Level(100, press), Trange::instant()); break;
+        case WR_VAR(0, 12,  3): msg->set(Level(100, press), Trange::instant(), WR_VAR(0, 12, 103), var); break;
+        case WR_VAR(0, 12, 103): msg->set(Level(100, press), Trange::instant(), WR_VAR(0, 12, 103), var); break;
         // Wind direction
-        case WR_VAR(0, 11,  1): msg->set(var, WR_VAR(0, 11, 1), Level(100, press), Trange::instant()); break;
+        case WR_VAR(0, 11,  1): msg->set(Level(100, press), Trange::instant(), WR_VAR(0, 11, 1), var); break;
         // Wind speed
-        case WR_VAR(0, 11,  2): msg->set(var, WR_VAR(0, 11, 2), Level(100, press), Trange::instant()); break;
+        case WR_VAR(0, 11,  2): msg->set(Level(100, press), Trange::instant(), WR_VAR(0, 11, 2), var); break;
 /* Wind shear data at a pressure level */
-        case WR_VAR(0, 11, 61): msg->set(var, WR_VAR(0, 11, 61), Level(100, press), Trange::instant()); break;
-        case WR_VAR(0, 11, 62): msg->set(var, WR_VAR(0, 11, 62), Level(100, press), Trange::instant()); break;
+        case WR_VAR(0, 11, 61): msg->set(Level(100, press), Trange::instant(), WR_VAR(0, 11, 61), var); break;
+        case WR_VAR(0, 11, 62): msg->set(Level(100, press), Trange::instant(), WR_VAR(0, 11, 62), var); break;
         default:
                 WMOImporter::import_var(var);
                 break;
@@ -379,7 +379,7 @@ void TempImporter::import_group(unsigned start, unsigned length)
                 case WR_VAR(0,  8, 42):
                     // Preserve missing VSS with only the one missing bit set,
                     // to act as a sounding context marker
-                    msg->seti(WR_VAR(0,  8,  42), BUFR08042::MISSING, -1, lev, Trange::instant());
+                    msg->seti(lev, Trange::instant(), WR_VAR(0,  8,  42), BUFR08042::MISSING, -1);
                     break;
             }
             continue;
@@ -387,43 +387,43 @@ void TempImporter::import_group(unsigned start, unsigned length)
         switch (var.code())
         {
             case WR_VAR(0,  4, 16):
-            case WR_VAR(0,  4, 86): msg->set(var, WR_VAR(0,  4,  86), lev, Trange::instant()); break;
+            case WR_VAR(0,  4, 86): msg->set(lev, Trange::instant(), WR_VAR(0,  4,  86), var); break;
             case WR_VAR(0,  5,  1):
-            case WR_VAR(0,  5,  2): msg->set(var, WR_VAR(0,  5,   1), lev, Trange::instant()); break;
-            case WR_VAR(0,  5, 15): msg->set(var, WR_VAR(0,  5,  15), lev, Trange::instant()); break;
+            case WR_VAR(0,  5,  2): msg->set(lev, Trange::instant(), WR_VAR(0,  5,   1), var); break;
+            case WR_VAR(0,  5, 15): msg->set(lev, Trange::instant(), WR_VAR(0,  5,  15), var); break;
             case WR_VAR(0,  6,  1):
-            case WR_VAR(0,  6,  2): msg->set(var, WR_VAR(0,  6,   1), lev, Trange::instant()); break;
-            case WR_VAR(0,  6, 15): msg->set(var, WR_VAR(0,  6,  15), lev, Trange::instant()); break;
+            case WR_VAR(0,  6,  2): msg->set(lev, Trange::instant(), WR_VAR(0,  6,   1), var); break;
+            case WR_VAR(0,  6, 15): msg->set(lev, Trange::instant(), WR_VAR(0,  6,  15), var); break;
             case WR_VAR(0,  8,  1):
                 {
                     // This accounts for weird data that has '1' for VSS
                     unsigned val = convert_BUFR08001_to_BUFR08042(var.enqi());
                     if (val == BUFR08042::ALL_MISSING)
-                        msg->seti(WR_VAR(0,  8,  42), BUFR08042::MISSING, -1, lev, Trange::instant());
+                        msg->seti(lev, Trange::instant(), WR_VAR(0,  8,  42), BUFR08042::MISSING, -1);
                     else
                     {
                         unique_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), (int)val));
                         nvar->setattrs(var);
-                        msg->set(move(nvar), lev, Trange::instant());
+                        msg->set(lev, Trange::instant(), std::move(nvar));
                     }
                 }
                 break;
-            case WR_VAR(0,  8, 42): msg->set(var, WR_VAR(0,  8,  42), lev, Trange::instant()); break;
-            case WR_VAR(0, 10,  3): msg->set(var, WR_VAR(0, 10,   8), lev, Trange::instant()); break;
-            case WR_VAR(0, 10,  9): msg->set(var, WR_VAR(0, 10,   8), lev, Trange::instant()); break;
+            case WR_VAR(0,  8, 42): msg->set(lev, Trange::instant(), WR_VAR(0,  8,  42), var); break;
+            case WR_VAR(0, 10,  3): msg->set(lev, Trange::instant(), WR_VAR(0, 10,   8), var); break;
+            case WR_VAR(0, 10,  9): msg->set(lev, Trange::instant(), WR_VAR(0, 10,   8), var); break;
             case WR_VAR(0, 12,  1):
-            case WR_VAR(0, 12, 101): msg->set(var, WR_VAR(0, 12, 101), lev, Trange::instant()); break;
+            case WR_VAR(0, 12, 101): msg->set(lev, Trange::instant(), WR_VAR(0, 12, 101), var); break;
             case WR_VAR(0, 12,  3):
-            case WR_VAR(0, 12, 103): msg->set(var, WR_VAR(0, 12, 103), lev, Trange::instant()); break;
+            case WR_VAR(0, 12, 103): msg->set(lev, Trange::instant(), WR_VAR(0, 12, 103), var); break;
             case WR_VAR(0,  7,  4):
-            case WR_VAR(0, 10,  4): msg->set(var, WR_VAR(0, 10,   4), lev, Trange::instant()); break;
+            case WR_VAR(0, 10,  4): msg->set(lev, Trange::instant(), WR_VAR(0, 10,   4), var); break;
             case WR_VAR(0, 11,  1):
             case WR_VAR(0, 11,  2):
-                msg->set(var, var.code(), lev, Trange::instant());
+                msg->set(lev, Trange::instant(), var.code(), var);
                 break;
             // Variables from Radar doppler wind profiles
-            case WR_VAR(0, 11,  6): msg->set(var, var.code(), lev, Trange::instant()); break;
-            case WR_VAR(0, 11, 50): msg->set(var, var.code(), lev, Trange::instant()); break;
+            case WR_VAR(0, 11,  6): msg->set(lev, Trange::instant(), var.code(), var); break;
+            case WR_VAR(0, 11, 50): msg->set(lev, Trange::instant(), var.code(), var); break;
             case WR_VAR(0, 33,  2):
                 // Doppler wind profiles transmit quality information inline,
                 // following the variable they refer to.
@@ -446,14 +446,12 @@ void TempImporter::import_group(unsigned start, unsigned length)
                 }
                 break;
             //default:
-            //    msg->set(var, var.code(), lev, Trange::instant());
+            //    msg->set(lev, Trange::instant(), var.code(), var);
             //    break;
         }
     }
 }
 
-} // namespace wbimporter
-} // namespace msg
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
+}
+}
+}

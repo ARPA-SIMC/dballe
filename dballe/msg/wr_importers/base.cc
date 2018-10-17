@@ -86,7 +86,7 @@ void Importer::set(const wreport::Var& var, int shortcut)
 
 void Importer::set(const wreport::Var& var, wreport::Varcode code, const Level& level, const Trange& trange)
 {
-    msg->set(var, code, level, trange);
+    msg->set(level, trange, code, var);
 }
 
 std::unique_ptr<Importer> Importer::createSat(const ImporterOptions&) { throw error_unimplemented("WB sat Importers"); }
@@ -523,7 +523,7 @@ void SynopBaseImporter::set(std::unique_ptr<Interpreted> val)
     if (opts.simplified)
         queued.push_back(val.release());
     else
-        msg->set(move(val->var), val->level, val->trange);
+        msg->set(val->level, val->trange, move(val->var));
 }
 
 SynopBaseImporter::SynopBaseImporter(const ImporterOptions& opts)
@@ -567,7 +567,7 @@ void SynopBaseImporter::run()
     });
     for (auto& i: queued)
     {
-        msg->set(move(i->var), i->level, i->trange);
+        msg->set(i->level, i->trange, move(i->var));
         delete i;
         i = nullptr;
     }

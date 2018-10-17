@@ -52,10 +52,10 @@ class Tests : public TestCase
             Var* v3 = av3.get();
             Var* v4 = av4.get();
 
-            msg.set(move(av1), lev2, tr1); wassert(actual(msg.data.size()) == 1);
-            msg.set(move(av2), lev2, tr1); wassert(actual(msg.data.size()) == 1);
-            msg.set(move(av3), lev1, tr1); wassert(actual(msg.data.size()) == 2);
-            msg.set(move(av4), lev1, tr2); wassert(actual(msg.data.size()) == 3);
+            msg.set(lev2, tr1, move(av1)); wassert(actual(msg.data.size()) == 1);
+            msg.set(lev2, tr1, move(av2)); wassert(actual(msg.data.size()) == 1);
+            msg.set(lev1, tr1, move(av3)); wassert(actual(msg.data.size()) == 2);
+            msg.set(lev1, tr2, move(av4)); wassert(actual(msg.data.size()) == 3);
 
             wassert(msg_is_sorted(msg));
 
@@ -80,14 +80,14 @@ class Tests : public TestCase
             //msg->type = MessageType::SYNOP;
 
             // Fill in the dba_msg
-            msg->seti(WR_VAR(0, 4, 1), 2008,   -1, Level(), Trange());
-            msg->seti(WR_VAR(0, 4, 2),    5,   -1, Level(), Trange());
-            msg->seti(WR_VAR(0, 4, 3),    7,   -1, Level(), Trange());
+            msg->seti(Level(), Trange(), WR_VAR(0, 4, 1), 2008,   -1);
+            msg->seti(Level(), Trange(), WR_VAR(0, 4, 2),    5,   -1);
+            msg->seti(Level(), Trange(), WR_VAR(0, 4, 3),    7,   -1);
             // ...
-            msg->setd(WR_VAR(0, 5, 1),   45.0, -1, Level(), Trange());
-            msg->setd(WR_VAR(0, 6, 1),   11.0, -1, Level(), Trange());
+            msg->setd(Level(), Trange(), WR_VAR(0, 5, 1),   45.0, -1);
+            msg->setd(Level(), Trange(), WR_VAR(0, 6, 1),   11.0, -1);
             // ...
-            msg->setd(WR_VAR(0,12, 101),  273.0, 75, Level(102, 2000), Trange::instant());
+            msg->setd(Level(102, 2000), Trange::instant(), WR_VAR(0,12, 101),  273.0, 75);
 
             // Append the dba_msg to a dba_msgs
             Messages msgs;
@@ -136,10 +136,10 @@ class Tests : public TestCase
             Msg matched;
             wassert(actual_matcher_result(m->match(MatchedMsg(matched))) == matcher::MATCH_NO);
 
-            matched.seti(WR_VAR(0, 1, 192), 2, -1, Level(), Trange());
+            matched.seti(Level(), Trange(), WR_VAR(0, 1, 192), 2, -1);
             wassert(actual_matcher_result(m->match(MatchedMsg(matched))) == matcher::MATCH_NO);
 
-            matched.seti(WR_VAR(0, 1, 192), 1, -1, Level(), Trange());
+            matched.seti(Level(), Trange(), WR_VAR(0, 1, 192), 1, -1);
             wassert(actual_matcher_result(m->match(MatchedMsg(matched))) == matcher::MATCH_YES);
         });
         add_method("msg_match_blockstation", []() {
@@ -358,10 +358,10 @@ class Tests : public TestCase
             Messages matched; init(matched);
             wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-            Msg::downcast(matched[0])->seti(WR_VAR(0, 1, 192), 2, -1, Level(), Trange());
+            matched[0]->set(Level(), Trange(), var(WR_VAR(0, 1, 192), 2));
             wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
-            Msg::downcast(matched[0])->seti(WR_VAR(0, 1, 192), 1, -1, Level(), Trange());
+            matched[0]->set(Level(), Trange(), var(WR_VAR(0, 1, 192), 1));
             wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_YES);
         });
         add_method("msgs_match_blockstation", []() {

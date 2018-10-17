@@ -24,14 +24,14 @@ protected:
     void set_gen_sensor(const Var& var, Varcode code, const Level& defaultLevel, const Trange& trange)
     {
         if (height_sensor == MISSING_SENSOR_H || defaultLevel == Level(103, height_sensor * 1000))
-            msg->set(var, code, defaultLevel, trange);
+            msg->set(defaultLevel, trange, code, var);
         else if (opts.simplified)
         {
             Var var1(var);
             var1.seta(newvar(WR_VAR(0, 7, 32), height_sensor));
-            msg->set(var1, code, defaultLevel, trange);
+            msg->set(defaultLevel, trange, code, var1);
         } else
-            msg->set(var, code, Level(103, height_sensor * 1000), trange);
+            msg->set(Level(103, height_sensor * 1000), trange, code, var);
     }
 
     void set_gen_sensor(const Var& var, int shortcut)

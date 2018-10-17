@@ -55,6 +55,47 @@ struct Message
     virtual const wreport::Var* get_shortcut(const char* name) const = 0;
 
     /**
+     * Add or replace a value
+     *
+     * @param lev
+     *   The Level of the value
+     * @param tr
+     *   The Trange of the value
+     * @param code
+     *   The Varcode of the destination value.  If it is different than the
+     *   varcode of var, a conversion will be attempted.
+     * @param var
+     *   The Var with the value to set
+     */
+    void set(const Level& lev, const Trange& tr, wreport::Varcode code, const wreport::Var& var);
+
+    /**
+     * Add or replace a value
+     *
+     * @param lev
+     *   The Level of the value
+     * @param tr
+     *   The Trange of the value
+     * @param var
+     *   The Var with the value to set
+     */
+    void set(const Level& lev, const Trange& tr, const wreport::Var& var);
+
+    /**
+     * Add or replace a value, taking ownership of the source variable without
+     * copying it.
+     *
+     * @param lev
+     *   The Level of the value
+     * @param tr
+     *   The Trange of the value
+     * @param var
+     *   The Var with the value to set.  This Message will take ownership of memory
+     *   management.
+     */
+    void set(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var);
+
+    /**
      * Iterate the contents of the message
      */
     virtual bool foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)>) const = 0;
@@ -72,6 +113,13 @@ struct Message
      *   The number of differences found
      */
     virtual unsigned diff(const Message& msg) const = 0;
+
+protected:
+    /// Implementation of set(const Level& const Trange&, std::unique_ptr<wreport::Var>)
+    virtual void set_move(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var) = 0;
+
+    /// Implementation of set(const Level&, const Trange&, wreport::Varcode, const wreport::Var&)
+    virtual void set_copy(const Level& lev, const Trange& tr, wreport::Varcode code, const wreport::Var& var) = 0;
 };
 
 /**

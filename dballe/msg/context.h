@@ -182,8 +182,6 @@ public:
      *   The number of differences found
      */
     unsigned diff(const Context& ctx) const;
-
-#include <dballe/msg/context-extravars.h>
 };
 
 }

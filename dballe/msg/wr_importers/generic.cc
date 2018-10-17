@@ -155,7 +155,7 @@ void GenericImporter::import_var(const Var& var)
         case WR_VAR(0, 8, 1): {
             unique_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), (int)convert_BUFR08001_to_BUFR08042(var.enqi())));
             nvar->setattrs(var);
-            msg->set(move(nvar), lev, tr);
+            msg->set(lev, tr, move(nvar));
             break;
         }
         // Datetime entries that may have attributes to store
@@ -167,7 +167,7 @@ void GenericImporter::import_var(const Var& var)
         case WR_VAR(0,  4,  6): se = var.enqi(); if (var.next_attr()) msg->set_second_var(var); break;
         // Anything else
         default:
-            msg->set(var, map_code_to_dballe(var.code()), lev, tr);
+            msg->set(lev, tr, map_code_to_dballe(var.code()), var);
             break;
     }
 }

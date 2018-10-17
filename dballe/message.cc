@@ -13,6 +13,21 @@ namespace dballe {
 
 Message::~Message() {}
 
+void Message::set(const Level& lev, const Trange& tr, wreport::Varcode code, const wreport::Var& var)
+{
+    set_copy(lev, tr, code, var);
+}
+
+void Message::set(const Level& lev, const Trange& tr, const wreport::Var& var)
+{
+    set_copy(lev, tr, var.code(), var);
+}
+
+void Message::set(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var)
+{
+    set_move(lev, tr, std::move(var));
+}
+
 const char* format_message_type(MessageType type)
 {
     switch (type)

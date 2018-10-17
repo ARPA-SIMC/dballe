@@ -147,7 +147,7 @@ public:
         if (attr_pmc) finalvar->seta(*attr_pmc);
 
         // Store it into the dba_msg
-        msg->set(move(finalvar), lev, tr);
+        msg->set(lev, tr, move(finalvar));
     }
 
     MessageType scanType(const Bulletin& bulletin) const { return MessageType::POLLUTION; }

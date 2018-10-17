@@ -517,7 +517,7 @@ bool Msg::from_csv(CSVReader& in)
             Varcode vcode = varcode_parse(in.cols[11].c_str());
             unique_ptr<Var> var = newvar(vcode);
             var->setf(in.cols[12].c_str());
-            set(std::move(var), lev, tr);
+            set(lev, tr, std::move(var));
         } else
             error_consistency::throwf("cannot parse variable code %s", in.cols[11].c_str());
 
@@ -659,42 +659,42 @@ unsigned Msg::diff(const Message& o) const
 void Msg::set_by_id(const wreport::Var& var, int shortcut)
 {
     const MsgVarShortcut& v = shortcutTable[shortcut];
-    return set(var, v.code, Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2));
+    return set(Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2), v.code, var);
 }
 
-void Msg::set(const Var& var, Varcode code, const Level& lev, const Trange& tr)
+void Msg::set_copy(const Level& lev, const Trange& tr, Varcode code, const Var& var)
 {
-    set(var_copy_without_unset_attrs(var, code), lev, tr);
+    set_move(lev, tr, var_copy_without_unset_attrs(var, code));
 }
 
-void Msg::set(std::unique_ptr<Var>&& var, const Level& lev, const Trange& tr)
+void Msg::set_move(const Level& lev, const Trange& tr, std::unique_ptr<Var> var)
 {
     msg::Context& ctx = obtain_context(lev, tr);
     ctx.set(std::move(var));
 }
 
-void Msg::seti(Varcode code, int val, int conf, const Level& lev, const Trange& tr)
+void Msg::seti(const Level& lev, const Trange& tr, Varcode code, int val, int conf)
 {
     unique_ptr<Var> var(newvar(code, val));
     if (conf != -1)
         var->seta(newvar(WR_VAR(0, 33, 7), conf));
-    set(std::move(var), lev, tr);
+    set_move(lev, tr, std::move(var));
 }
 
-void Msg::setd(Varcode code, double val, int conf, const Level& lev, const Trange& tr)
+void Msg::setd(const Level& lev, const Trange& tr, Varcode code, double val, int conf)
 {
     unique_ptr<Var> var(newvar(code, val));
     if (conf != -1)
         var->seta(newvar(WR_VAR(0, 33, 7), conf));
-    set(std::move(var), lev, tr);
+    set_move(lev, tr, std::move(var));
 }
 
-void Msg::setc(Varcode code, const char* val, int conf, const Level& lev, const Trange& tr)
+void Msg::setc(const Level& lev, const Trange& tr, Varcode code, const char* val, int conf)
 {
     unique_ptr<Var> var(newvar(code, val));
     if (conf != -1)
         var->seta(newvar(WR_VAR(0, 33, 7), conf));
-    set(std::move(var), lev, tr);
+    set(lev, tr, std::move(var));
 }
 
 MessageType Msg::type_from_repmemo(const char* repmemo)
@@ -776,7 +776,7 @@ void Msg::sounding_pack_levels(Msg& dst) const
         for (size_t j = 0; j < ctx.data.size(); ++j)
         {
             unique_ptr<Var> copy(new Var(*ctx.data[j]));
-            dst.set(std::move(copy), Level(ctx.level.ltype1, ctx.level.l1), ctx.trange);
+            dst.set(Level(ctx.level.ltype1, ctx.level.l1), ctx.trange, std::move(copy));
         }
     }
 }

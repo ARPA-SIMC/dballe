@@ -67,11 +67,11 @@ void ShipImporter::import_var(const Var& var)
         case WR_VAR(0, 20, 35):
         case WR_VAR(0, 20, 36):
         case WR_VAR(0, 20, 37):
-        case WR_VAR(0, 20, 38): msg->set(var, var.code(), Level(1), Trange::instant()); break;
+        case WR_VAR(0, 20, 38): msg->set(Level(1), Trange::instant(), var.code(), var); break;
 
         // Ship marine data
-        case WR_VAR(0,  2, 38): msg->set(var, var.code(), Level(), Trange()); break;
-        case WR_VAR(0,  2, 39): msg->set(var, var.code(), Level(), Trange()); break;
+        case WR_VAR(0,  2, 38): msg->set(Level(), Trange(), var.code(), var); break;
+        case WR_VAR(0,  2, 39): msg->set(Level(), Trange(), var.code(), var); break;
         case WR_VAR(0, 22, 42):
         case WR_VAR(0, 22, 43):
             if (level.sea_depth == LevelContext::missing)
@@ -86,7 +86,7 @@ void ShipImporter::import_var(const Var& var)
         case WR_VAR(0, 22, 21):
         case WR_VAR(0, 22,  2):
         case WR_VAR(0, 22, 12):
-        case WR_VAR(0, 22, 22): msg->set(var, var.code(), Level(1), Trange::instant()); break;
+        case WR_VAR(0, 22, 22): msg->set(Level(1), Trange::instant(), var.code(), var); break;
             break;
 
         // D03023 swell waves (2 grups)

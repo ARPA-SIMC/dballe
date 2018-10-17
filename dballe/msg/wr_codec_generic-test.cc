@@ -105,11 +105,11 @@ class Tests : public TestCase
             msg->set_flight_roll(	3,		45);
             msg->set_latlon_spec(	3,		45);
             msg->set_datetime(Datetime(3, 3, 3, 3, 3, 0));
-            msg->seti(WR_VAR(0, 4, 1), 3, 45, Level(), Trange());
-            msg->seti(WR_VAR(0, 4, 2), 3, 45, Level(), Trange());
-            msg->seti(WR_VAR(0, 4, 3), 3, 45, Level(), Trange());
-            msg->seti(WR_VAR(0, 4, 4), 3, 45, Level(), Trange());
-            msg->seti(WR_VAR(0, 4, 5), 3, 45, Level(), Trange());
+            msg->seti(Level(), Trange(), WR_VAR(0, 4, 1), 3, 45);
+            msg->seti(Level(), Trange(), WR_VAR(0, 4, 2), 3, 45);
+            msg->seti(Level(), Trange(), WR_VAR(0, 4, 3), 3, 45);
+            msg->seti(Level(), Trange(), WR_VAR(0, 4, 4), 3, 45);
+            msg->seti(Level(), Trange(), WR_VAR(0, 4, 5), 3, 45);
             msg->set_latitude(		3,		45);
             msg->set_longitude(		3,		45);
             msg->set_height_station(3,		45);
@@ -161,7 +161,7 @@ class Tests : public TestCase
             var->seta(newvar(WR_VAR(0, 33, 5), 3));
 
             /* Add the variable to the message */
-            msg->set(move(var), Level(1), Trange::instant());
+            msg->set(Level(1), Trange::instant(), move(var));
 
             /* Create a second variable to add to the message */
             var = newvar(WR_VAR(0, 12, 102), 272.0);
@@ -171,7 +171,7 @@ class Tests : public TestCase
             var->seta(newvar(WR_VAR(0, 33, 5), 2));
 
             /* Add the variable to the message */
-            msg->set(move(var), Level(1), Trange::instant());
+            msg->set(Level(1), Trange::instant(), move(var));
 
             Messages msgs;
             msgs.emplace_back(move(msg));

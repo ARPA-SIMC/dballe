@@ -295,7 +295,7 @@ void MsgAPI::flushVars()
         unique_ptr<Var> var(vars.back());
         vars.pop_back();
 
-        wmsg->set(move(var), vars_level, vars_trange);
+        wmsg->set(vars_level, vars_trange, move(var));
     }
 }
 
@@ -344,7 +344,7 @@ void MsgAPI::prendilo()
             wmsg->type = Msg::type_from_repmemo(val);
         }
     if (const Var* var = input.get("ana_id"))
-        wmsg->seti(WR_VAR(0, 1, 192), var->enqi(), -1, Level(), Trange());
+        wmsg->seti(Level(), Trange(), WR_VAR(0, 1, 192), var->enqi(), -1);
     if (const Var* var = input.get("ident"))
         wmsg->set_ident(var->enqc());
     if (const Var* var = input.get("lat"))
