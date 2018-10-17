@@ -211,6 +211,16 @@ Ident Msg::get_ident() const
         return Ident();
 }
 
+std::string Msg::get_rep_memo() const
+{
+    // Postprocess extracting rep_memo information
+    const Var* rep_memo = get_rep_memo_var();
+    if (rep_memo)
+        return rep_memo->enqc();
+    else
+        return repmemo_from_type(type);
+}
+
 void Msg::clear()
 {
     type = MessageType::GENERIC;

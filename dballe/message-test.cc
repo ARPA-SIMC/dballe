@@ -22,6 +22,9 @@ add_method("get", []() {
 
     wassert(actual(msgs[0]->get_type()) == MessageType::AMDAR);
     wassert(actual(msgs[0]->get_datetime()) == Datetime(2009, 2, 24, 11, 31));
+    wassert(actual(msgs[0]->get_coords()) == Coords(48.90500, 10.63667));
+    wassert(actual(msgs[0]->get_ident()) == "EU3375");
+    wassert(actual(msgs[0]->get_rep_memo()) == "amdar");
 });
 
 add_method("get_shortcut", []() {

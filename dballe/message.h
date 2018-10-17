@@ -41,6 +41,9 @@ struct Message
     /// Get the station identifier for this message
     virtual Ident get_ident() const = 0;
 
+    /// Get the rep_memo for this message
+    virtual std::string get_rep_memo() const = 0;
+
     /// Return a copy of this message
     virtual std::unique_ptr<Message> clone() const = 0;
 

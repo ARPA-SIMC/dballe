@@ -112,6 +112,7 @@ public:
     Datetime get_datetime() const override;
     Coords get_coords() const override;
     Ident get_ident() const override;
+    std::string get_rep_memo() const override;
     MessageType get_type() const override { return type; }
     const wreport::Var* get(wreport::Varcode code, const Level& lev, const Trange& tr) const override;
     const wreport::Var* get_shortcut(const char* name) const override;
