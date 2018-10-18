@@ -64,10 +64,11 @@ Makefile
 /debian/dballe/
 /debian/libdballe-dev/
 /debian/libdballe-doc/
-/debian/libdballe6/
+/debian/libdballe8/
 /debian/libdballef-dev/
 /debian/libdballef5/
 /debian/python-dballe/
+/debian/python3-dballe/
 /debian/tmp/
 /python/python-dballe.html
 /python/python-dballe.rst
