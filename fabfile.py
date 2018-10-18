@@ -2,8 +2,8 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import unicode_literals
-from fabric.api import local, run, sudo, cd, env, hosts, shell_env
-from fabric.contrib.files import exists
+from fabric.api import local, run, cd, env, hosts, put
+from io import BytesIO
 import git
 import re
 from six.moves import shlex_quote
@@ -101,10 +101,6 @@ def test_ventiquattro():
 
 @hosts("ventotto")
 def test_ventotto():
-    fedora_cxxflags = "-O2 -g -pipe -Wall -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-strong"\
-                      " --param=ssp-buffer-size=4 -grecord-gcc-switches -specs=/usr/lib/rpm/redhat/redhat-hardened-cc1 -m64 -mtune=generic"
-    fedora_ldflags = "-Wl,-z,relro -specs=/usr/lib/rpm/redhat/redhat-hardened-ld"
-
     repo = git.Repo()
     remote = repo.remote("ventotto")
     push_url = remote.config_reader.get("url")
@@ -116,37 +112,16 @@ def test_ventotto():
         run(cmd("git", "reset", "--hard"))
         run(cmd("git", "clean", "-fx"))
         run(cmd("autoreconf", "-if"))
-        run(cmd("./configure",
-                "--build=x86_64-redhat-linux-gnu",
-                "--host=x86_64-redhat-linux-gnu",
-                "--program-prefix=",
-                "--disable-dependency-tracking",
-                "--prefix=/usr",
-                "--exec-prefix=/usr",
-                "--bindir=/usr/bin",
-                "--sbindir=/usr/sbin",
-                "--sysconfdir=/etc",
-                "--datadir=/usr/share",
-                "--includedir=/usr/include",
-                "--libdir=/usr/lib64",
-                "--libexecdir=/usr/libexec",
-                "--localstatedir=/var",
-                "--sharedstatedir=/var/lib",
-                "--mandir=/usr/share/man",
-                "--infodir=/usr/share/info",
-                "CFLAGS=" + fedora_cxxflags,
-                "CXXFLAGS=" + fedora_cxxflags,
-                "LDFLAGS=" + fedora_ldflags))
-        run(cmd("make"))
-        run(cmd("./run-check"))
+        res = run(cmd("rpm", "--eval", "%configure FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs"))
+        put(BytesIO(b"\n".join(res.stdout.splitlines())), "rpm-config")
+        run(cmd("chmod", "0755", "rpm-config"))
+        run(cmd("./rpm-config"))
+        run(cmd("make", "-j2"))
+        run(cmd("./run-check", "-j2"))
 
 
 @hosts("sette")
 def test_sette():
-    fedora_cxxflags = "-O2 -g -pipe -Wall -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-strong"\
-                      " --param=ssp-buffer-size=4 -grecord-gcc-switches -specs=/usr/lib/rpm/redhat/redhat-hardened-cc1 -m64 -mtune=generic"
-    fedora_ldflags = "-Wl,-z,relro -specs=/usr/lib/rpm/redhat/redhat-hardened-ld"
-
     repo = git.Repo()
     remote = repo.remote("sette")
     push_url = remote.config_reader.get("url")
@@ -158,29 +133,12 @@ def test_sette():
         run(cmd("git", "reset", "--hard"))
         run(cmd("git", "clean", "-fx"))
         run(cmd("autoreconf", "-if"))
-        run(cmd("./configure",
-                "--build=x86_64-redhat-linux-gnu",
-                "--host=x86_64-redhat-linux-gnu",
-                "--program-prefix=",
-                "--disable-dependency-tracking",
-                "--prefix=/usr",
-                "--exec-prefix=/usr",
-                "--bindir=/usr/bin",
-                "--sbindir=/usr/sbin",
-                "--sysconfdir=/etc",
-                "--datadir=/usr/share",
-                "--includedir=/usr/include",
-                "--libdir=/usr/lib64",
-                "--libexecdir=/usr/libexec",
-                "--localstatedir=/var",
-                "--sharedstatedir=/var/lib",
-                "--mandir=/usr/share/man",
-                "--infodir=/usr/share/info",
-                "CFLAGS=" + fedora_cxxflags,
-                "CXXFLAGS=" + fedora_cxxflags,
-                "LDFLAGS=" + fedora_ldflags))
-        run(cmd("make"))
-        run(cmd("./run-check"))
+        res = run(cmd("rpm", "--eval", "%configure FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs"))
+        put(BytesIO(b"\n".join(res.stdout.splitlines())), "rpm-config")
+        run(cmd("chmod", "0755", "rpm-config"))
+        run(cmd("./rpm-config"))
+        run(cmd("make", "-j2"))
+        run(cmd("./run-check", "-j2"))
 
 
 def test():
