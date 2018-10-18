@@ -30,7 +30,7 @@ if HAVE_RST2HTML
 doc_DATA += python-dballe.html
 endif
 
-python-dballe.rst: doc-dballe $(pkgpython_PYTHON)
+python-dballe.rst: doc-dballe $(pkgpython_PYTHON) $(pyexec_LTLIBRARIES)
 	libtool --mode=execute $(PYTHON) $(srcdir)/doc-dballe > $@ || (rm -f $@; false)
 
 python-dballe.html: python-dballe.rst
