@@ -42,7 +42,7 @@ struct Message
     virtual Ident get_ident() const = 0;
 
     /// Get the rep_memo for this message
-    virtual std::string get_rep_memo() const = 0;
+    virtual std::string get_network() const = 0;
 
     /// Return a copy of this message
     virtual std::unique_ptr<Message> clone() const = 0;
@@ -62,6 +62,14 @@ struct Message
      *   A pointer to the variable, or nullptr if it was not found.
      */
     const wreport::Var* get(const char* shortcut) const;
+
+    /**
+     * Get a variable given its shortcut name
+     *
+     * @return
+     *   A pointer to the variable, or nullptr if it was not found.
+     */
+    const wreport::Var* get(const std::string& shortcut) const;
 
     /**
      * Add or replace a value
@@ -153,17 +161,12 @@ struct Message
 
 protected:
     /// Implementation of get(const Level&, const Trange&, wreport::Varcode)
-    virtual const wreport::Var* get_full(const Level& lev, const Trange& tr, wreport::Varcode code) const = 0;
-
-    /// Implementation of get(const char* shortcut)
-    virtual const wreport::Var* get_shortcut(const char* name) const = 0;
+    virtual const wreport::Var* get_impl(const Level& lev, const Trange& tr, wreport::Varcode code) const = 0;
 
     /// Implementation of set(const Level& const Trange&, std::unique_ptr<wreport::Var>)
-    virtual void set_move(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var) = 0;
-
-    /// Implementation of set(const Level&, const Trange&, wreport::Varcode, const wreport::Var&)
-    virtual void set_copy(const Level& lev, const Trange& tr, wreport::Varcode code, const wreport::Var& var) = 0;
+    virtual void set_impl(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var) = 0;
 };
+
 
 /**
  * Return a string with the name of a MessageType.

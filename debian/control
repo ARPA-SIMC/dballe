@@ -17,7 +17,7 @@ Vcs-Git: https://github.com/ARPA-SIMC/dballe
 Package: libdballe-dev
 Section: libdevel
 Architecture: any
-Depends: libdballe7 (= ${binary:Version}), libwreport-dev, ${misc:Depends}
+Depends: libdballe8 (= ${binary:Version}), libwreport-dev, ${misc:Depends}
 Recommends: pkg-config
 Description: DB-All.e C development library for weather research
  DB-All.e is a fast on-disk database where meteorological observed and
@@ -54,7 +54,7 @@ Description: documentation for the DB-ALL.e C library for weather research
  .
  This is the documentation for the DB_All.e development the library.
 
-Package: libdballe7
+Package: libdballe8
 Section: libs
 Architecture: any
 Depends: dballe-common, ${shlibs:Depends}, ${misc:Depends}

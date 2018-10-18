@@ -1,8 +1,8 @@
 #ifndef DBALLE_RECORD_H
 #define DBALLE_RECORD_H
 
+#include <dballe/fwd.h>
 #include <wreport/var.h>
-#include <dballe/types.h>
 #include <memory>
 #include <functional>
 

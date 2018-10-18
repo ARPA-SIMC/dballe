@@ -5,17 +5,12 @@
  * Common base types used by most of DB-All.e code.
  */
 
+#include <dballe/fwd.h>
 #include <iosfwd>
 #include <functional>
-#include <limits.h>
 
 namespace dballe {
 struct CSVWriter;
-
-/**
- * Value to use for missing parts of level and time range values
- */
-static constexpr int MISSING_INT = INT_MAX;
 
 /**
  * Calendar date.
@@ -217,35 +212,12 @@ struct Datetime
      */
     int compare(const Datetime& other) const;
 
-    bool operator==(const Datetime& o) const
-    {
-        return std::tie(year, month, day, hour, minute, second) == std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
-    }
-
-    bool operator!=(const Datetime& o) const
-    {
-        return std::tie(year, month, day, hour, minute, second) != std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
-    }
-
-    bool operator<(const Datetime& o) const
-    {
-        return std::tie(year, month, day, hour, minute, second) < std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
-    }
-
-    bool operator>(const Datetime& o) const
-    {
-        return std::tie(year, month, day, hour, minute, second) > std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
-    }
-
-    bool operator<=(const Datetime& o) const
-    {
-        return std::tie(year, month, day, hour, minute, second) <= std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
-    }
-
-    bool operator>=(const Datetime& o) const
-    {
-        return std::tie(year, month, day, hour, minute, second) >= std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
-    }
+    bool operator==(const Datetime& o) const;
+    bool operator!=(const Datetime& o) const;
+    bool operator<(const Datetime& o) const;
+    bool operator>(const Datetime& o) const;
+    bool operator<=(const Datetime& o) const;
+    bool operator>=(const Datetime& o) const;
 
     /**
      * Print to an output stream in ISO8601 combined format.
@@ -315,12 +287,12 @@ struct DatetimeRange
     /// Check if this range is open on both sides
     bool is_missing() const;
 
-    bool operator==(const DatetimeRange& o) const { return std::tie(min, max) == std::tie(o.min, o.max); }
-    bool operator!=(const DatetimeRange& o) const { return std::tie(min, max) != std::tie(o.min, o.max); }
-    bool operator<(const DatetimeRange& o) const { return std::tie(min, max) < std::tie(o.min, o.max); }
-    bool operator<=(const DatetimeRange& o) const { return std::tie(min, max) <= std::tie(o.min, o.max); }
-    bool operator>(const DatetimeRange& o) const { return std::tie(min, max) > std::tie(o.min, o.max); }
-    bool operator>=(const DatetimeRange& o) const { return std::tie(min, max) >= std::tie(o.min, o.max); }
+    bool operator==(const DatetimeRange& o) const;
+    bool operator!=(const DatetimeRange& o) const;
+    bool operator<(const DatetimeRange& o) const;
+    bool operator<=(const DatetimeRange& o) const;
+    bool operator>(const DatetimeRange& o) const;
+    bool operator>=(const DatetimeRange& o) const;
 
     /// Set the extremes
     void set(const Datetime& min, const Datetime& max);
@@ -415,35 +387,12 @@ struct Coords
      */
     int compare(const Coords& o) const;
 
-    bool operator==(const Coords& o) const
-    {
-        return std::tie(lat, lon) == std::tie(o.lat, o.lon);
-    }
-
-    bool operator!=(const Coords& o) const
-    {
-        return std::tie(lat, lon) != std::tie(o.lat, o.lon);
-    }
-
-    bool operator<(const Coords& o) const
-    {
-        return std::tie(lat, lon) < std::tie(o.lat, o.lon);
-    }
-
-    bool operator>(const Coords& o) const
-    {
-        return std::tie(lat, lon) > std::tie(o.lat, o.lon);
-    }
-
-    bool operator<=(const Coords& o) const
-    {
-        return std::tie(lat, lon) <= std::tie(o.lat, o.lon);
-    }
-
-    bool operator>=(const Coords& o) const
-    {
-        return std::tie(lat, lon) >= std::tie(o.lat, o.lon);
-    }
+    bool operator==(const Coords& o) const;
+    bool operator!=(const Coords& o) const;
+    bool operator<(const Coords& o) const;
+    bool operator>(const Coords& o) const;
+    bool operator<=(const Coords& o) const;
+    bool operator>=(const Coords& o) const;
 
     /// Print to an output stream
     int print(FILE* out, const char* end="\n") const;
@@ -611,35 +560,12 @@ struct Level
     /// Check if this level is fully set to the missing value
     bool is_missing() const;
 
-    bool operator==(const Level& o) const
-    {
-        return std::tie(ltype1, l1, ltype2, l2) == std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
-    }
-
-    bool operator!=(const Level& o) const
-    {
-        return std::tie(ltype1, l1, ltype2, l2) != std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
-    }
-
-    bool operator<(const Level& o) const
-    {
-        return std::tie(ltype1, l1, ltype2, l2) < std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
-    }
-
-    bool operator>(const Level& o) const
-    {
-        return std::tie(ltype1, l1, ltype2, l2) > std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
-    }
-
-    bool operator<=(const Level& o) const
-    {
-        return std::tie(ltype1, l1, ltype2, l2) <= std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
-    }
-
-    bool operator>=(const Level& o) const
-    {
-        return std::tie(ltype1, l1, ltype2, l2) >= std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
-    }
+    bool operator==(const Level& o) const;
+    bool operator!=(const Level& o) const;
+    bool operator<(const Level& o) const;
+    bool operator>(const Level& o) const;
+    bool operator<=(const Level& o) const;
+    bool operator>=(const Level& o) const;
 
     /**
      * Generic comparison
@@ -700,35 +626,12 @@ struct Trange
      */
     int compare(const Trange& t) const;
 
-    bool operator==(const Trange& o) const
-    {
-        return std::tie(pind, p1, p2) == std::tie(o.pind, o.p1, o.p2);
-    }
-
-    bool operator!=(const Trange& o) const
-    {
-        return std::tie(pind, p1, p2) != std::tie(o.pind, o.p1, o.p2);
-    }
-
-    bool operator<(const Trange& o) const
-    {
-        return std::tie(pind, p1, p2) < std::tie(o.pind, o.p1, o.p2);
-    }
-
-    bool operator>(const Trange& o) const
-    {
-        return std::tie(pind, p1, p2) > std::tie(o.pind, o.p1, o.p2);
-    }
-
-    bool operator<=(const Trange& o) const
-    {
-        return std::tie(pind, p1, p2) <= std::tie(o.pind, o.p1, o.p2);
-    }
-
-    bool operator>=(const Trange& o) const
-    {
-        return std::tie(pind, p1, p2) >= std::tie(o.pind, o.p1, o.p2);
-    }
+    bool operator==(const Trange& o) const;
+    bool operator!=(const Trange& o) const;
+    bool operator<(const Trange& o) const;
+    bool operator>(const Trange& o) const;
+    bool operator<=(const Trange& o) const;
+    bool operator>=(const Trange& o) const;
 
     /**
      * Return a string description of this time range
@@ -773,8 +676,13 @@ public:
     Ident& operator=(Ident&& o);
     Ident& operator=(const char* o);
     Ident& operator=(const std::string& o);
+
+    /// Get the string value (might be nullptr in case of missing value)
     const char* get() const { return value; }
+
+    /// Set to missing value
     void clear();
+
     int compare(const Ident& o) const;
     int compare(const char* o) const;
     int compare(const std::string& o) const;
@@ -785,7 +693,8 @@ public:
     template<typename T> bool operator>(const T& o) const  { return compare(o) > 0; }
     template<typename T> bool operator>=(const T& o) const { return compare(o) >= 0; }
 
-    bool is_missing() const { return value == nullptr; }
+    /// Check if the Ident is set to the missing value
+    bool is_missing() const;
 
     operator const char*() const { return value; }
     operator std::string() const;
@@ -801,19 +710,9 @@ template<> struct hash<dballe::Level>
 {
     typedef dballe::Level argument_type;
     typedef size_t result_type;
-    result_type operator()(argument_type const& o) const noexcept
-    {
-        using dballe::MISSING_INT;
-        size_t res = 0;
-        if (o.ltype1 != MISSING_INT) res += o.ltype1;
-        if (o.l1 != MISSING_INT) res += o.l1;
-        if (o.ltype2 != MISSING_INT) res += o.ltype2 << 8;
-        if (o.l2 != MISSING_INT) res += o.l2;
-        return res;
-    }
+    result_type operator()(argument_type const& o) const noexcept;
 };
 
 }
-
 
 #endif

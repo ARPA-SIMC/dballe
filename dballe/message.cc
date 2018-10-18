@@ -1,6 +1,7 @@
 #include "message.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/vars.h"
+#include "dballe/core/var.h"
 #include <wreport/notes.h>
 
 using namespace std;
@@ -24,27 +25,34 @@ std::unique_ptr<Message> Message::create(MessageType type)
 
 const wreport::Var* Message::get(const Level& lev, const Trange& tr, wreport::Varcode code) const
 {
-    return get_full(lev, tr, code);
+    return get_impl(lev, tr, code);
 }
 
 const wreport::Var* Message::get(const char* shortcut) const
 {
-    return get_shortcut(shortcut);
+    const MsgVarShortcut& v = shortcutTable[resolve_var(shortcut)];
+    return get_impl(Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2), v.code);
+}
+
+const wreport::Var* Message::get(const std::string& shortcut) const
+{
+    const MsgVarShortcut& v = shortcutTable[resolve_var_substring(shortcut.data(), shortcut.size())];
+    return get_impl(Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2), v.code);
 }
 
 void Message::set(const Level& lev, const Trange& tr, wreport::Varcode code, const wreport::Var& var)
 {
-    set_copy(lev, tr, code, var);
+    set_impl(lev, tr, var_copy_without_unset_attrs(var, code));
 }
 
 void Message::set(const Level& lev, const Trange& tr, const wreport::Var& var)
 {
-    set_copy(lev, tr, var.code(), var);
+    set_impl(lev, tr, var_copy_without_unset_attrs(var));
 }
 
 void Message::set(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var)
 {
-    set_move(lev, tr, std::move(var));
+    set_impl(lev, tr, std::move(var));
 }
 
 void Message::set(const char* shortcut, std::unique_ptr<wreport::Var> var)

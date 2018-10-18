@@ -2,7 +2,6 @@
 #define DBALLE_FILE_H
 
 #include <dballe/fwd.h>
-#include <dballe/types.h>
 #include <memory>
 #include <string>
 #include <functional>

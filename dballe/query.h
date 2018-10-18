@@ -1,8 +1,9 @@
 #ifndef DBALLE_QUERY_H
 #define DBALLE_QUERY_H
 
-#include <wreport/var.h>
+#include <dballe/fwd.h>
 #include <dballe/types.h>
+#include <wreport/var.h>
 #include <string>
 #include <functional>
 #include <memory>

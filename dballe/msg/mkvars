@@ -143,7 +143,7 @@ with open(os.path.join(DESTDIR, "msg-extravars.h"), "wt") as fh:
 /** Set the value of "{desc}" from a variable of type {type} */
 inline void set_{name}({type} val, int conf=-1) {{ set{ftype}(Level({level}), Trange({trange}), WR_VAR(0, {vx}, {vy}), val, conf); }}
 /** Set the value of "{desc}" from a wreport::Var */
-inline void set_{name}_var(const wreport::Var& val) {{ set_copy(Level({level}), Trange({trange}), WR_VAR(0, {vx}, {vy}), val); }}
+inline void set_{name}_var(const wreport::Var& val) {{ set(Level({level}), Trange({trange}), WR_VAR(0, {vx}, {vy}), val); }}
 /** Get the "{desc}" physical value stored in the message */
 inline const wreport::Var* get_{name}_var() const {{ return find_by_id(DBA_MSG_{NAME}); }}
 """ .format(

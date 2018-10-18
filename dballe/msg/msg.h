@@ -62,10 +62,8 @@ protected:
      */
     int find_index(const Level& lev, const Trange& tr) const;
 
-    const wreport::Var* get_full(const Level& lev, const Trange& tr, wreport::Varcode code) const override;
-    const wreport::Var* get_shortcut(const char* name) const override;
-    void set_copy(const Level& lev, const Trange& tr, wreport::Varcode code, const wreport::Var& var) override;
-    void set_move(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var) override;
+    const wreport::Var* get_impl(const Level& lev, const Trange& tr, wreport::Varcode code) const override;
+    void set_impl(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var) override;
 
     void seti(const Level& lev, const Trange& tr, wreport::Varcode code, int val, int conf);
     void setd(const Level& lev, const Trange& tr, wreport::Varcode code, double val, int conf);
@@ -114,7 +112,7 @@ public:
     Datetime get_datetime() const override;
     Coords get_coords() const override;
     Ident get_ident() const override;
-    std::string get_rep_memo() const override;
+    std::string get_network() const override;
     MessageType get_type() const override { return type; }
     bool foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)>) const override;
     void print(FILE* out) const override;

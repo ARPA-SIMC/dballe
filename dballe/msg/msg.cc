@@ -211,7 +211,7 @@ Ident Msg::get_ident() const
         return Ident();
 }
 
-std::string Msg::get_rep_memo() const
+std::string Msg::get_network() const
 {
     // Postprocess extracting rep_memo information
     const Var* rep_memo = get_rep_memo_var();
@@ -321,16 +321,11 @@ bool Msg::remove_context(const Level& lev, const Trange& tr)
     return true;
 }
 
-const Var* Msg::get_full(const Level& lev, const Trange& tr, Varcode code) const
+const Var* Msg::get_impl(const Level& lev, const Trange& tr, Varcode code) const
 {
     const msg::Context* ctx = find_context(lev, tr);
     if (ctx == NULL) return NULL;
     return ctx->find(code);
-}
-
-const Var* Msg::get_shortcut(const char* name) const
-{
-    return find_by_id(resolve_var(name));
 }
 
 bool Msg::foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)> dest) const
@@ -721,12 +716,7 @@ void Msg::set_by_id(const wreport::Var& var, int shortcut)
     return set(Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2), v.code, var);
 }
 
-void Msg::set_copy(const Level& lev, const Trange& tr, Varcode code, const Var& var)
-{
-    set_move(lev, tr, var_copy_without_unset_attrs(var, code));
-}
-
-void Msg::set_move(const Level& lev, const Trange& tr, std::unique_ptr<Var> var)
+void Msg::set_impl(const Level& lev, const Trange& tr, std::unique_ptr<Var> var)
 {
     msg::Context& ctx = obtain_context(lev, tr);
     ctx.set(std::move(var));
@@ -737,7 +727,7 @@ void Msg::seti(const Level& lev, const Trange& tr, Varcode code, int val, int co
     unique_ptr<Var> var(newvar(code, val));
     if (conf != -1)
         var->seta(newvar(WR_VAR(0, 33, 7), conf));
-    set_move(lev, tr, std::move(var));
+    set(lev, tr, std::move(var));
 }
 
 void Msg::setd(const Level& lev, const Trange& tr, Varcode code, double val, int conf)
@@ -745,7 +735,7 @@ void Msg::setd(const Level& lev, const Trange& tr, Varcode code, double val, int
     unique_ptr<Var> var(newvar(code, val));
     if (conf != -1)
         var->seta(newvar(WR_VAR(0, 33, 7), conf));
-    set_move(lev, tr, std::move(var));
+    set(lev, tr, std::move(var));
 }
 
 void Msg::setc(const Level& lev, const Trange& tr, Varcode code, const char* val, int conf)

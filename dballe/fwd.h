@@ -1,6 +1,8 @@
 #ifndef DBALLE_FWD_H
 #define DBALLE_FWD_H
 
+#include <limits.h>
+
 namespace dballe {
 
 /// Supported encodings
@@ -26,20 +28,39 @@ enum class MessageType {
     POLLUTION = 13,  /**< Pollution data */
 };
 
+/**
+ * Value to use for missing integer values
+ */
+static constexpr int MISSING_INT = INT_MAX;
+
+// Types
+struct Date;
+struct Time;
 struct Datetime;
 struct DatetimeRange;
+struct Coords;
+struct LatRange;
+struct LonRange;
 struct Level;
 struct Trange;
+struct Ident;
+
 struct Record;
-struct Coords;
 struct Query;
 struct Message;
+
+// File
 struct File;
 struct BinaryMessage;
+
+// Importer
 struct ImporterOptions;
 struct Importer;
+
+// Exporter
 struct ExporterOptions;
 struct Exporter;
+
 }
 
 #endif
