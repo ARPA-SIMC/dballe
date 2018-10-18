@@ -72,7 +72,7 @@ struct Pollution : public Template
 
     void add(Varcode code, int shortcut)
     {
-        const Var* var = msg->find_by_id(shortcut);
+        const Var* var = msg->get(shortcut);
         if (var)
             subset->store_variable(code, *var);
         else

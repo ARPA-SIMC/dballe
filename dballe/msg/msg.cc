@@ -158,17 +158,17 @@ std::unique_ptr<Message> Msg::clone() const
 Datetime Msg::get_datetime() const
 {
     int ye = MISSING_INT, mo=MISSING_INT, da=MISSING_INT, ho=MISSING_INT, mi=MISSING_INT, se=MISSING_INT;
-    if (const Var* v = find_by_id(DBA_MSG_YEAR))
+    if (const Var* v = get(DBA_MSG_YEAR))
         ye = v->enqi();
-    if (const Var* v = find_by_id(DBA_MSG_MONTH))
+    if (const Var* v = get(DBA_MSG_MONTH))
         mo = v->enqi();
-    if (const Var* v = find_by_id(DBA_MSG_DAY))
+    if (const Var* v = get(DBA_MSG_DAY))
         da = v->enqi();
-    if (const Var* v = find_by_id(DBA_MSG_HOUR))
+    if (const Var* v = get(DBA_MSG_HOUR))
         ho = v->enqi();
-    if (const Var* v = find_by_id(DBA_MSG_MINUTE))
+    if (const Var* v = get(DBA_MSG_MINUTE))
         mi = v->enqi();
-    if (const Var* v = find_by_id(DBA_MSG_SECOND))
+    if (const Var* v = get(DBA_MSG_SECOND))
         se = v->enqi();
 
     if (ye == MISSING_INT)
@@ -354,7 +354,7 @@ bool Msg::remove(wreport::Varcode code, const Level& lev, const Trange& tr)
     return true;
 }
 
-const Var* Msg::find_by_id(int id) const
+const Var* Msg::get(int id) const
 {
     const MsgVarShortcut& v = shortcutTable[id];
     return get(Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2), v.code);

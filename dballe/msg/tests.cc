@@ -141,7 +141,7 @@ void track_different_msgs(const Messages& msgs1, const Messages& msgs2, const st
 
 void ActualMessage::is_undef(int shortcut) const
 {
-    const Var* var = Msg::downcast(_actual).find_by_id(shortcut);
+    const Var* var = Msg::downcast(_actual).get(shortcut);
     if (!var || !var->isset()) return;
     std::stringstream ss;
     ss << "value is " << var->enqc() << " instead of being undefined";
@@ -150,7 +150,7 @@ void ActualMessage::is_undef(int shortcut) const
 
 const Var& want_var(const Message& msg, int shortcut)
 {
-    const Var* var = Msg::downcast(msg).find_by_id(shortcut);
+    const Var* var = Msg::downcast(msg).get(shortcut);
     if (!var)
         throw TestFailed("value is missing");
     if (!var->isset())

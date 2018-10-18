@@ -145,7 +145,7 @@ inline void set_{name}({type} val, int conf=-1) {{ set{ftype}(Level({level}), Tr
 /** Set the value of "{desc}" from a wreport::Var */
 inline void set_{name}_var(const wreport::Var& val) {{ set(Level({level}), Trange({trange}), WR_VAR(0, {vx}, {vy}), val); }}
 /** Get the "{desc}" physical value stored in the message */
-inline const wreport::Var* get_{name}_var() const {{ return find_by_id(DBA_MSG_{NAME}); }}
+inline const wreport::Var* get_{name}_var() const {{ return get(DBA_MSG_{NAME}); }}
 """ .format(
             name=v.name.lower(),
             desc=v.desc,

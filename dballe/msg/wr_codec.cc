@@ -325,7 +325,7 @@ void Template::add(Varcode code, const msg::Context* ctx) const
 
 void Template::add(Varcode code, int shortcut) const
 {
-    add(code, msg->find_by_id(shortcut));
+    add(code, msg->get(shortcut));
 }
 
 void Template::add(Varcode code, Varcode srccode, const Level& level, const Trange& trange) const

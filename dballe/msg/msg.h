@@ -128,7 +128,18 @@ public:
     /// Remove all information from Msg
     void clear();
 
+    using Message::get;
     using Message::set;
+
+    /**
+     * Find a datum given its shortcut ID
+     *
+     * @param id
+     *   Shortcut ID of the value to set.
+     * @return
+     *   The value found, or NULL if it was not found.
+     */
+    const wreport::Var* get(int id) const;
 
     /**
      * Add or replace a value
@@ -227,16 +238,6 @@ public:
      *   True if the variable was removed, false if it was not found.
      */
     bool remove(wreport::Varcode code, const Level& lev, const Trange& tr);
-
-    /** 
-     * Find a datum given its shortcut ID
-     *
-     * @param id
-     *   Shortcut ID of the value to set.
-     * @return
-     *   The value found, or NULL if it was not found.
-     */
-    const wreport::Var* find_by_id(int id) const;
 
     /**
      * Copy a Msg, removing the sounding significance from the level
