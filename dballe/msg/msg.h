@@ -69,6 +69,13 @@ protected:
     void setd(const Level& lev, const Trange& tr, wreport::Varcode code, double val, int conf);
     void setc(const Level& lev, const Trange& tr, wreport::Varcode code, const char* val, int conf);
 
+    /**
+     * Add a missing context, taking care of its memory management
+     *
+     * Note: if the context already exists, an exception is thrown
+     */
+    void add_context(std::unique_ptr<msg::Context>&& ctx);
+
 public:
     /// Source of the data
     MessageType type;
@@ -122,11 +129,9 @@ public:
     void clear();
 
     /**
-     * Add a missing context, taking care of its memory management
-     *
-     * Note: if the context already exists, an exception is thrown
+     * Shortcut to set year...second variables in a single call
      */
-    void add_context(std::unique_ptr<msg::Context>&& ctx);
+    void set_datetime(const Datetime& dt);
 
     /**
      * Remove a context from the message
@@ -221,27 +226,6 @@ public:
      */
     const wreport::Var* find_by_id(int id) const;
 
-    /** 
-     * Find a contexts given level and timerange found in a shortcut ID
-     *
-     * @param id
-     *   Shortcut ID with the level information to use
-     * @return
-     *   The context found, or NULL if it was not found.
-     */
-    const msg::Context* find_context_by_id(int id) const;
-
-    /**
-     * Find a datum given its shortcut ID
-     *
-     * @param id
-     *   Shortcut ID of the value to set.
-     * @return
-     *   The value found, or NULL if it was not found.
-     */
-    wreport::Var* edit_by_id(int id);
-
-
     /**
      * Add or replace a value
      *
@@ -251,12 +235,6 @@ public:
      *   Shortcut ID of the value to set
      */
     void set_by_id(const wreport::Var& var, int shortcut);
-
-    /**
-     * Copy to dest all the variable in this message that match \a filter
-     * TODO: to be implemented
-     */
-    //void filter(const Record& filter, Msg& dest) const;
 
     /**
      * Copy a Msg, removing the sounding significance from the level
@@ -292,11 +270,6 @@ public:
      * Get the report code corresponding to the given message source type
      */
     static const char* repmemo_from_type(MessageType type);
-
-    /**
-     * Shortcut to set year...second variables in a single call
-     */
-    void set_datetime(const Datetime& dt);
 
 #include <dballe/msg/msg-extravars.h>
 };
