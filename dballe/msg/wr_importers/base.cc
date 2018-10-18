@@ -37,7 +37,7 @@ void Importer::import(const wreport::Subset& subset, Msg& msg)
 
 void Importer::set(const wreport::Var& var, int shortcut)
 {
-    msg->set_by_id(var, shortcut);
+    msg->set(shortcut, var);
 }
 
 void Importer::set(const wreport::Var& var, wreport::Varcode code, const Level& level, const Trange& trange)

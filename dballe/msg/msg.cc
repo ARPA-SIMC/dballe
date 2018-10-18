@@ -698,7 +698,7 @@ unsigned Msg::diff(const Message& o) const
     return diffs;
 }
 
-void Msg::set_by_id(const wreport::Var& var, int shortcut)
+void Msg::set(int shortcut, const wreport::Var& var)
 {
     const MsgVarShortcut& v = shortcutTable[shortcut];
     return set(Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2), v.code, var);

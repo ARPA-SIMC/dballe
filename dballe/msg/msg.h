@@ -128,6 +128,18 @@ public:
     /// Remove all information from Msg
     void clear();
 
+    using Message::set;
+
+    /**
+     * Add or replace a value
+     *
+     * @param shortcut
+     *   Shortcut ID of the value to set
+     * @param var
+     *   The Var with the value to set
+     */
+    void set(int shortcut, const wreport::Var& var);
+
     /**
      * Shortcut to set year...second variables in a single call
      */
@@ -225,16 +237,6 @@ public:
      *   The value found, or NULL if it was not found.
      */
     const wreport::Var* find_by_id(int id) const;
-
-    /**
-     * Add or replace a value
-     *
-     * @param var
-     *   The Var with the value to set
-     * @param shortcut
-     *   Shortcut ID of the value to set
-     */
-    void set_by_id(const wreport::Var& var, int shortcut);
 
     /**
      * Copy a Msg, removing the sounding significance from the level
