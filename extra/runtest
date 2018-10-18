@@ -31,6 +31,7 @@ export DBA_REPINFO=$TOP_SRCDIR/tables/repinfo.csv
 export DBA_TABLES=$TOP_SRCDIR/tables
 export DBA_TESTDATA=$TOP_SRCDIR/extra
 export DBA_INSECURE_SQLITE=1
+export PYTHONPATH=$TOP_SRCDIR/python/.libs
 
 TESTDIR="`mktemp -d`"
 cd "$TESTDIR"
@@ -81,6 +82,5 @@ else
         echo "Failed with result $RES"
     fi
 fi
-
 
 exit $RES
