@@ -18,11 +18,14 @@ _dballe_la_SOURCES = \
     record.cc \
     dballe.cc \
     db.cc \
-    explorer.cc \
     cursor.cc
 _dballe_la_CPPFLAGS = $(PYTHON_CFLAGS)
 _dballe_la_LDFLAGS = -module -avoid-version -export-symbols-regex init_dballe
 _dballe_la_LIBADD = ../dballe/libdballe.la
+
+if HAVE_PYTHON3
+_dballe_la_SOURCES += explorer.cc
+endif
 
 doc_DATA = python-dballe.rst
 
@@ -58,10 +61,12 @@ EXTRA_DIST = \
 
 AM_CPPFLAGS = -I/usr/include/python$(PYTHON_VERSION) -I$(top_srcdir)
 
+if HAVE_PYTHON3
 check-local: _dballe.so
 	for test in $(dballe_python_tests); do \
 		test -n "$$ARGS" -a "$${ARGS#$${test%.py}}" == "$$ARGS" && echo "Skipping $$test" && continue; \
 		PYTHON="$(PYTHON)" $(TESTS_ENVIRONMENT) $$test ; \
 	done
+endif
 
 CLEANFILES = python-dballe.rst python-dballe.html
