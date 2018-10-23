@@ -1,12 +1,14 @@
 #define _DBALLE_LIBRARY_CODE
 #include <Python.h>
 #include "dballe/db/explorer.h"
+#include "dballe/core/json.h"
 #include "common.h"
 #include "explorer.h"
 #include "types.h"
 #include "db.h"
 #include "record.h"
 #include <algorithm>
+#include <sstream>
 #include "config.h"
 
 using namespace std;
@@ -354,6 +356,40 @@ static PyObject* _revalidate(dpy_Explorer* self, PyObject* args)
     Py_RETURN_NONE;
 }
 
+template<typename dpy_Explorer>
+static PyObject* _to_json(dpy_Explorer* self)
+{
+    try {
+        std::ostringstream json;
+        {
+            ReleaseGIL rg;
+            core::JSONWriter writer(json);
+            self->explorer->to_json(writer);
+        }
+
+        return string_to_python(json.str());
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+template<typename dpy_Explorer>
+static PyObject* _from_json(dpy_Explorer* self, PyObject* args, PyObject* kw)
+{
+    static const char* kwlist[] = { "string", NULL };
+    const char* json_str;
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "s", const_cast<char**>(kwlist), &json_str))
+        return nullptr;
+    try {
+        {
+            ReleaseGIL rg;
+            std::istringstream json(json_str);
+            core::json::Stream in(json);
+            self->explorer->from_json(in);
+        }
+    } DBALLE_CATCH_RETURN_PYO
+
+    Py_RETURN_NONE;
+}
+
 }
 
 extern "C" {
@@ -366,6 +402,18 @@ static PyMethodDef dpy_Explorer_methods[] = {
 
         Use this when you suspect that the database has been externally modified
     )" },
+    {"to_json",           (PyCFunction)_to_json<dpy_Explorer>, METH_NOARGS, R"(
+        Serialize the contents of this explorer to JSON.
+
+        Only the global summary is serialized: the current query is not
+        preserved.
+    )" },
+    {"from_json",           (PyCFunction)_from_json<dpy_Explorer>, METH_VARARGS | METH_KEYWORDS, R"(
+        Replace the contents of this Explorer with the contents of the given
+        JSON string.
+
+        The query is preserved and the filtered status is recomputed.
+    )" },
     {nullptr}
 };
 
@@ -376,6 +424,18 @@ static PyMethodDef dpy_DBExplorer_methods[] = {
         Throw away all cached data and reload everything from the database.
 
         Use this when you suspect that the database has been externally modified
+    )" },
+    {"to_json",           (PyCFunction)_to_json<dpy_DBExplorer>, METH_NOARGS, R"(
+        Serialize the contents of this explorer to JSON.
+
+        Only the global summary is serialized: the current query is not
+        preserved.
+    )" },
+    {"from_json",         (PyCFunction)_from_json<dpy_DBExplorer>, METH_VARARGS | METH_KEYWORDS, R"(
+        Replace the contents of this Explorer with the contents of the given
+        JSON string.
+
+        The query is preserved and the filtered status is recomputed.
     )" },
     {nullptr}
 };

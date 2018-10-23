@@ -28,12 +28,7 @@ class BaseExplorerTestMixin(DballeDBMixin):
                 B01012=500)
         self.db.insert_data(data, False, True)
 
-    def testCreate(self):
-        explorer = self._explorer()
-        explorer.revalidate(self.db.transaction())
-        explorer.set_filter(dballe.Record(rep_memo="amdar"))
-
-        self.assertStrRepr(explorer)
+    def assertExplorerContents(self, explorer):
         self.assertCountEqual(explorer.all_stations, [
             self._station("synop", 1, 12.34560, 76.54320, None),
             self._station("amdar", 2, 12.34560, 76.54320, "foo"),
@@ -53,6 +48,22 @@ class BaseExplorerTestMixin(DballeDBMixin):
             datetime.datetime(1945, 4, 25,  8, 0), datetime.datetime(1945, 4, 25, 12, 0), 3)))
         self.assertEqual(explorer.stats, dballe.ExplorerStats((
             datetime.datetime(1945, 4, 25, 12, 0), datetime.datetime(1945, 4, 25, 12, 0), 1)))
+
+    def testCreate(self):
+        explorer = self._explorer()
+        explorer.revalidate(self.db.transaction())
+        explorer.set_filter(dballe.Record(rep_memo="amdar"))
+
+        self.assertStrRepr(explorer)
+        self.assertExplorerContents(explorer)
+
+        json_string = explorer.to_json()
+        self.assertIn('{"summary":{', json_string)
+
+        explorer1 = self._explorer()
+        explorer1.from_json(json_string)
+        explorer1.set_filter(dballe.Record(rep_memo="amdar"))
+        self.assertExplorerContents(explorer1)
 
 
 class ExplorerTestMixin(BaseExplorerTestMixin):
