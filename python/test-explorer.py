@@ -4,9 +4,9 @@ import unittest
 from testlib import DballeDBMixin
 
 
-class DballeTestMixin(DballeDBMixin):
+class BaseExplorerTestMixin(DballeDBMixin):
     def setUp(self):
-        super(DballeTestMixin, self).setUp()
+        super().setUp()
 
         data = dballe.Record(
                 lat=12.34560, lon=76.54320,
@@ -29,18 +29,17 @@ class DballeTestMixin(DballeDBMixin):
         self.db.insert_data(data, False, True)
 
     def testCreate(self):
-        explorer = dballe.Explorer()
+        explorer = self._explorer()
         explorer.revalidate(self.db.transaction())
         explorer.set_filter(dballe.Record(rep_memo="amdar"))
 
-        self.assertEqual(str(explorer), "Explorer")
-        self.assertEqual(repr(explorer), "Explorer object")
-        self.assertEqual(explorer.all_stations, [
-            ("synop", 1, 12.34560, 76.54320, None),
-            ("amdar", 2, 12.34560, 76.54320, "foo"),
+        self.assertStrRepr(explorer)
+        self.assertCountEqual(explorer.all_stations, [
+            self._station("synop", 1, 12.34560, 76.54320, None),
+            self._station("amdar", 2, 12.34560, 76.54320, "foo"),
         ])
-        self.assertEqual(explorer.stations, [
-            ("amdar", 2, 12.34560, 76.54320, "foo"),
+        self.assertCountEqual(explorer.stations, [
+            self._station("amdar", 2, 12.34560, 76.54320, "foo"),
         ])
         self.assertEqual(explorer.all_reports, ["amdar", "synop"])
         self.assertEqual(explorer.reports, ["amdar"])
@@ -56,11 +55,43 @@ class DballeTestMixin(DballeDBMixin):
             datetime.datetime(1945, 4, 25, 12, 0), datetime.datetime(1945, 4, 25, 12, 0), 1)))
 
 
-class DballeV7Test(DballeTestMixin, unittest.TestCase):
+class ExplorerTestMixin(BaseExplorerTestMixin):
+    def _explorer(self):
+        return dballe.Explorer()
+
+    def _station(self, rep, id, lat, lon, ident):
+        return dballe.Station((rep, lat, lon, ident))
+
+    def assertStrRepr(self, explorer):
+        self.assertEqual(str(explorer), "Explorer")
+        self.assertEqual(repr(explorer), "Explorer object")
+
+
+class DBExplorerTestMixin(BaseExplorerTestMixin):
+    def _explorer(self):
+        return dballe.DBExplorer()
+
+    def _station(self, rep, id, lat, lon, ident):
+        return dballe.DBStation((rep, id, lat, lon, ident))
+
+    def assertStrRepr(self, explorer):
+        self.assertEqual(str(explorer), "DBExplorer")
+        self.assertEqual(repr(explorer), "DBExplorer object")
+
+
+class DballeV7ExplorerTest(ExplorerTestMixin, unittest.TestCase):
     DB_FORMAT = "V7"
 
 
-class DballeMEMTest(DballeTestMixin, unittest.TestCase):
+class DballeV7DBExplorerTest(DBExplorerTestMixin, unittest.TestCase):
+    DB_FORMAT = "V7"
+
+
+class DballeMEMExplorerTest(ExplorerTestMixin, unittest.TestCase):
+    DB_FORMAT = "MEM"
+
+
+class DballeMEMDBExplorerTest(DBExplorerTestMixin, unittest.TestCase):
     DB_FORMAT = "MEM"
 
 

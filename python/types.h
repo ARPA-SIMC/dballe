@@ -48,19 +48,26 @@ PyObject* trange_to_python(const Trange& tr);
 int trange_from_python(PyObject* o, Trange& out);
 
 /// Convert a Station to a python Station structseq
-PyObject* station_to_python(const Station& lev);
+PyObject* station_to_python(const Station& s);
 
 /// Convert a structseq to a Station
 int station_from_python(PyObject* o, Station& out);
 
 /// Convert a Station to a python Station structseq
-PyObject* dbstation_to_python(const DBStation& lev);
+PyObject* dbstation_to_python(const DBStation& s);
 
 /// Convert a structseq to a Station
 int dbstation_from_python(PyObject* o, DBStation& out);
 
 /// Convert a varcode to a Python string
 PyObject* varcode_to_python(wreport::Varcode code);
+
+
+//template<typename T>
+//PyObject* to_python(const T&);
+
+inline PyObject* to_python(const Station& s) { return station_to_python(s); }
+inline PyObject* to_python(const DBStation& s) { return dbstation_to_python(s); }
 
 
 void register_types(PyObject* m);
