@@ -2,6 +2,7 @@
 #include "explorer.h"
 #include "dballe/core/query.h"
 #include "dballe/core/record.h"
+#include "dballe/core/json.h"
 #include <cstring>
 
 using namespace std;
@@ -9,6 +10,15 @@ using namespace dballe;
 
 namespace dballe {
 namespace db {
+
+#if 0
+namespace {
+template<typename T>
+bool has_db() { return false; }
+template<>
+bool has_db<dballe::DBStation>() { return true; }
+}
+#endif
 
 template<typename Station>
 BaseExplorer<Station>::BaseExplorer()
@@ -82,68 +92,33 @@ void BaseExplorer<Station>::update_active_summary()
 }
 
 template<typename Station>
-void BaseExplorer<Station>::update_station(values::Value &val, const wreport::Var &new_val)
+void BaseExplorer<Station>::to_json(core::JSONWriter& writer) const
 {
-    /*
-    DataValues vals;
-    vals.info.ana_id = val.ana_id;
-    vals.info.report = val.rep_memo;
-    vals.info.level = val.level;
-    vals.info.trange = val.trange;
-    vals.info.datetime = val.date;
-    vals.values.set(new_val);
-    db->insert_data(vals, true, false);
-    val.var = new_val;
-    */
-    throw std::runtime_error("not implemented");
+    writer.start_mapping();
+    writer.add("summary");
+    _global_summary->to_json(writer);
+    writer.end_mapping();
 }
 
 template<typename Station>
-void BaseExplorer<Station>::update_data(values::Value &val, const wreport::Var &new_val)
+void BaseExplorer<Station>::from_json(core::json::Stream& in)
 {
-    /*
-    StationValues vals;
-    vals.info.ana_id = val.ana_id;
-    vals.info.report = val.rep_memo;
-    vals.values.set(new_val);
-    db->insert_station_data(vals, true, false);
-    val.var = new_val;
-    */
-    throw std::runtime_error("not implemented");
-}
+    delete _global_summary;
+    _global_summary = nullptr;
+    delete _active_summary;
+    _active_summary = nullptr;
 
-template<typename Station>
-void BaseExplorer<Station>::update_attr(int var_id, wreport::Varcode var_related, const wreport::Var &new_val)
-{
-    /*
-    Values values;
-    values.set(new_val);
-    db->attr_insert_data(var_id, values);
-    */
-    throw std::runtime_error("not implemented");
-}
+    std::unique_ptr<BaseSummary<Station>> new_global_summary(new BaseSummary<Station>);
+    in.parse_object([&](const std::string& key) {
+        if (key == "summary")
+            new_global_summary->from_json(in);
+        else
+            throw core::JSONParseException("unsupported key \"" + key + "\" for db::Explorer");
+    });
 
-template<typename Station>
-void BaseExplorer<Station>::remove(const values::Value &val)
-{
-    /*
-    auto change = Query::create();
-    core::Query::downcast(*change).ana_id = val.ana_id;
-    core::Query::downcast(*change).rep_memo = val.rep_memo;
-    change->set_level(val.level);
-    change->set_trange(val.trange);
-    change->set_datetimerange(DatetimeRange(val.date, val.date));
-    core::Query::downcast(*change).varcodes.clear();
-    core::Query::downcast(*change).varcodes.insert(val.var.code());
-    db.remove(*change);
-    vector<Value>::iterator i = std::find(cache_values.begin(), cache_values.end(), val);
-    if (i != cache_values.end())
-    {
-        cache_values.erase(i);
-    }
-    // TODO: Stations and summary also need revalidating
-    */
-    throw std::runtime_error("not implemented");
+    _global_summary = new_global_summary.release();
+
+    update_active_summary();
 }
 
 template class BaseExplorer<dballe::Station>;

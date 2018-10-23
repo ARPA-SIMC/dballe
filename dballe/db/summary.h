@@ -188,6 +188,10 @@ protected:
 
 public:
     BaseSummary();
+    BaseSummary(const BaseSummary&) = delete;
+    BaseSummary(BaseSummary&&) = delete;
+    BaseSummary& operator=(const BaseSummary&) = delete;
+    BaseSummary& operator=(BaseSummary&&) = delete;
 
     bool operator==(const BaseSummary& o) const
     {
@@ -244,9 +248,16 @@ public:
     bool iterate_filtered(const Query& query, std::function<bool(const summary::Entry&)> f) const;
 #endif
 
+    /// Serialize to JSON
     void to_json(core::JSONWriter& writer) const;
 
-    static BaseSummary from_json(core::json::Stream& in);
+    /**
+     * Load contents from JSON.
+     *
+     * Merging is not yet supported, so this will throw an exception if called
+     * on a non-empty summary
+     */
+    void from_json(core::json::Stream& in);
 
 #if 0
     DBALLE_TEST_ONLY std::vector<summary::Entry>& test_entries() { return entries; }

@@ -30,7 +30,11 @@ protected:
 
 public:
     BaseExplorer();
+    BaseExplorer(const BaseExplorer&) = delete;
+    BaseExplorer(BaseExplorer&&) = delete;
     ~BaseExplorer();
+    BaseExplorer& operator=(const BaseExplorer&) = delete;
+    BaseExplorer& operator=(BaseExplorer&&) = delete;
 
     /// Get the current filter
     const dballe::Query& get_filter() const;
@@ -53,30 +57,11 @@ public:
     /// Get a reference to the summary for the current filter
     const dballe::db::BaseSummary<Station>& active_summary() const;
 
-    /**
-     * Update \a val in the database to have the value \a new_val
-     *
-     * Updates the 'val' member of 'val' if it succeeded, otherwise
-     * exceptions are raised
-     */
-    void update_station(values::Value& val, const wreport::Var& new_val);
+    /// Export the explorer to JSON
+    void to_json(core::JSONWriter& writer) const;
 
-    /**
-     * Update \a val in the database to have the value \a new_val
-     *
-     * Updates the 'val' member of 'val' if it succeeded, otherwise
-     * exceptions are raised
-     */
-    void update_data(values::Value& val, const wreport::Var& new_val);
-
-    /**
-     * Update an attribute
-     */
-    void update_attr(int var_id, wreport::Varcode var_related, const wreport::Var& new_val);
-
-    /// Remove the value from the database
-    void remove(const values::Value& val);
-
+    /// Load the explorer contents from JSON
+    void from_json(core::json::Stream& in);
 };
 
 

@@ -534,19 +534,20 @@ void BaseSummary<Station>::to_json(core::JSONWriter& writer) const
 }
 
 template<typename Station>
-BaseSummary<Station> BaseSummary<Station>::from_json(core::json::Stream& in)
+void BaseSummary<Station>::from_json(core::json::Stream& in)
 {
-    BaseSummary<Station> summary;
+    if (!entries.empty())
+        throw std::runtime_error("Summary::from_json can only be called on an empty Summary");
+
     in.parse_object([&](const std::string& key) {
         if (key == "e")
             in.parse_array([&]{
-                summary.entries.add(summary::StationEntry<Station>::from_json(in));
+                entries.add(summary::StationEntry<Station>::from_json(in));
             });
         else
             throw core::JSONParseException("unsupported key \"" + key + "\" for summary::Entry");
     });
-    summary.dirty = true;
-    return summary;
+    dirty = true;
 }
 
 template<typename Station>
