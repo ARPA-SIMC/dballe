@@ -1,5 +1,6 @@
 #include "values.h"
 #include "record.h"
+#include "json.h"
 #include <arpa/inet.h>
 #include <ostream>
 
@@ -64,6 +65,31 @@ void Station::print(FILE* out, const char* end) const
     fprintf(out, " %s%s", report.c_str(), end);
 }
 
+void Station::to_json(core::JSONWriter& writer) const
+{
+    writer.start_mapping();
+    writer.add("r", report);
+    writer.add("c", coords);
+    if (ident) writer.add("i", ident);
+    writer.end_mapping();
+}
+
+Station Station::from_json(core::json::Stream& in)
+{
+    Station res;
+    in.parse_object([&](const std::string& key) {
+        if (key == "r")
+            res.report = in.parse_string();
+        else if (key == "c")
+            res.coords = in.parse_coords();
+        else if (key == "i")
+            res.ident = in.parse_ident();
+        else
+            throw core::JSONParseException("unsupported key \"" + key + "\" for Station");
+    });
+    return res;
+}
+
 std::ostream& operator<<(std::ostream& out, const Station& st)
 {
     return out << st.coords << "," << st.ident << "," << st.report;
@@ -109,6 +135,34 @@ void DBStation::print(FILE* out, const char* end) const
     Station::print(out, end);
 }
 
+void DBStation::to_json(core::JSONWriter& writer) const
+{
+    writer.start_mapping();
+    if (id != MISSING_INT) writer.add("id", id);
+    writer.add("r", report);
+    writer.add("c", coords);
+    if (ident) writer.add("i", ident);
+    writer.end_mapping();
+}
+
+DBStation DBStation::from_json(core::json::Stream& in)
+{
+    DBStation res;
+    in.parse_object([&](const std::string& key) {
+        if (key == "id")
+            res.id = in.parse_unsigned<int>();
+        else if (key == "r")
+            res.report = in.parse_string();
+        else if (key == "c")
+            res.coords = in.parse_coords();
+        else if (key == "i")
+            res.ident = in.parse_ident();
+        else
+            throw core::JSONParseException("unsupported key \"" + key + "\" for Station");
+    });
+    return res;
+}
+
 std::ostream& operator<<(std::ostream& out, const DBStation& st)
 {
     if (st.id == MISSING_INT)
@@ -122,7 +176,7 @@ std::ostream& operator<<(std::ostream& out, const DBStation& st)
 
 void Sampling::set_from_record(const Record& rec)
 {
-    Station::set_from_record(rec);
+    DBStation::set_from_record(rec);
     const auto& r = core::Record::downcast(rec);
     datetime = r.get_datetime();
     if (datetime.is_missing()) throw error_notfound("record has no date and time information set");
@@ -134,7 +188,7 @@ void Sampling::set_from_record(const Record& rec)
 
 void Sampling::print(FILE* out, const char* end) const
 {
-    Station::print(out, " ");
+    DBStation::print(out, " ");
 
     if (datetime.is_missing())
         fputs("xxxx-xx-xx xx:xx:xx ", out);

@@ -5,6 +5,7 @@
  * Structures used as input to database insert functions.
  */
 
+#include <dballe/core/fwd.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/var.h>
 #include <dballe/record.h>
@@ -60,6 +61,9 @@ struct Station
      * @param end  String to print after the Station
      */
     void print(FILE* out, const char* end="\n") const;
+
+    void to_json(core::JSONWriter& writer) const;
+    static Station from_json(core::json::Stream& in);
 };
 
 std::ostream& operator<<(std::ostream&, const Station&);
@@ -107,6 +111,9 @@ struct DBStation : public Station
      * @param end  String to print after the Station
      */
     void print(FILE* out, const char* end="\n") const;
+
+    void to_json(core::JSONWriter& writer) const;
+    static DBStation from_json(core::json::Stream& in);
 };
 
 std::ostream& operator<<(std::ostream&, const DBStation&);

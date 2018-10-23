@@ -1,3 +1,4 @@
+#define _DBALLE_LIBRARY_CODE
 #include "explorer.h"
 #include "dballe/core/query.h"
 #include "dballe/core/record.h"
@@ -19,14 +20,14 @@ Explorer::~Explorer()
     delete _active_summary;
 }
 
-const dballe::db::Summary& Explorer::global_summary() const
+const dballe::db::DBSummary& Explorer::global_summary() const
 {
     if (!_global_summary)
         throw std::runtime_error("global summary is not available, call revalidate first");
     return *_global_summary;
 }
 
-const dballe::db::Summary& Explorer::active_summary() const
+const dballe::db::DBSummary& Explorer::active_summary() const
 {
     if (!_active_summary)
         throw std::runtime_error("active summary is not available, call revalidate first");
@@ -54,7 +55,7 @@ void Explorer::revalidate(dballe::db::Transaction& tr)
     core::Query query;
     query.query = "details";
 
-    unique_ptr<db::Summary> new_global_summary(new db::Summary);
+    unique_ptr<db::DBSummary> new_global_summary(new db::DBSummary);
 
     auto cur = tr.query_summary(query);
     while (cur->next())
@@ -80,7 +81,7 @@ enum Support
 
 void Explorer::update_active_summary()
 {
-    unique_ptr<db::Summary> new_active_summary(new db::Summary);
+    unique_ptr<db::DBSummary> new_active_summary(new db::DBSummary);
     new_active_summary->add_filtered(*_global_summary, filter);
 
 #if 0

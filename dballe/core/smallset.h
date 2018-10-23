@@ -7,10 +7,12 @@
 namespace dballe {
 namespace core {
 
+template<typename T> inline const T& smallset_default_get_value(const T& val) { return val; }
+
 /**
  * Set structure optimized for a small number of items
  */
-template<typename Parent, typename Item, typename Value=Item>
+template<typename Item, typename Value=Item, const Value& (*get_value)(const Item&)=smallset_default_get_value>
 struct SmallSet
 {
     mutable std::vector<Item> items;
@@ -32,14 +34,14 @@ struct SmallSet
     size_t size() const { return items.size(); }
     bool empty() const { return items.empty(); }
 
-    bool operator==(const SmallSet<Parent, Item, Value>& o) const
+    bool operator==(const SmallSet& o) const
     {
         if (dirty) rearrange_dirty();
         if (o.dirty) o.rearrange_dirty();
         return items == o.items;
     }
 
-    bool operator!=(const SmallSet<Parent, Item, Value>& o) const
+    bool operator!=(const SmallSet& o) const
     {
         if (dirty) rearrange_dirty();
         if (o.dirty) o.rearrange_dirty();
@@ -59,12 +61,12 @@ struct SmallSet
         while (end - begin > 1)
         {
             int cur = (end + begin) / 2;
-            if (value < Parent::_smallset_get_value(items[cur]))
+            if (value < get_value(items[cur]))
                 end = cur;
             else
                 begin = cur;
         }
-        if (begin == -1 || Parent::_smallset_get_value(items[begin]) != value)
+        if (begin == -1 || get_value(items[begin]) != value)
             return -1;
         else
             return begin;
@@ -78,7 +80,7 @@ struct SmallSet
         if (items.size() < 6)
         {
             for (auto it = std::begin(items); it != std::end(items); ++it)
-                if (Parent::_smallset_get_value(*it) == value)
+                if (get_value(*it) == value)
                     return it;
             return end();
         }
@@ -88,7 +90,7 @@ struct SmallSet
         if (dirty > 16)
         {
             std::sort(items.begin(), items.end(), [](const Item& a, const Item& b) {
-                return Parent::_smallset_get_value(a) < Parent::_smallset_get_value(b);
+                return get_value(a) < get_value(b);
             });
             dirty = 0;
         } else if (dirty) {
@@ -112,7 +114,7 @@ struct SmallSet
         if (items.size() < 6)
         {
             for (auto it = std::begin(items); it != std::end(items); ++it)
-                if (Parent::_smallset_get_value(*it) == value)
+                if (get_value(*it) == value)
                     return it;
             return end();
         }
@@ -122,7 +124,7 @@ struct SmallSet
         if (dirty > 16)
         {
             std::sort(items.begin(), items.end(), [](const Item& a, const Item& b) {
-                return Parent::_smallset_get_value(a) < Parent::_smallset_get_value(b);
+                return get_value(a) < get_value(b);
             });
             dirty = 0;
         } else if (dirty) {
@@ -151,7 +153,7 @@ struct SmallSet
     {
         // Rearrange newly inserted items by insertion sort
         for (size_t i = items.size() - dirty; i < items.size(); ++i)
-            for (size_t j = i; j > 0 && Parent::_smallset_get_value(items[j]) < Parent::_smallset_get_value(items[j - 1]); --j)
+            for (size_t j = i; j > 0 && get_value(items[j]) < get_value(items[j - 1]); --j)
                 std::swap(items[j], items[j - 1]);
         dirty = 0;
     }
@@ -159,51 +161,50 @@ struct SmallSet
 
 
 template<typename Value>
-struct SmallUniqueValueSet : protected SmallSet<SmallUniqueValueSet<Value>, Value, Value>
+struct SmallUniqueValueSet : protected SmallSet<Value>
 {
-    using SmallSet<SmallUniqueValueSet<Value>, Value, Value>::iterator;
-    using SmallSet<SmallUniqueValueSet<Value>, Value, Value>::const_iterator;
-    using SmallSet<SmallUniqueValueSet<Value>, Value, Value>::reverse_iterator;
-    using SmallSet<SmallUniqueValueSet<Value>, Value, Value>::const_reverse_iterator;
-    using SmallSet<SmallUniqueValueSet<Value>, Value, Value>::begin;
-    using SmallSet<SmallUniqueValueSet<Value>, Value, Value>::end;
-    using SmallSet<SmallUniqueValueSet<Value>, Value, Value>::rbegin;
-    using SmallSet<SmallUniqueValueSet<Value>, Value, Value>::rend;
-    using SmallSet<SmallUniqueValueSet<Value>, Value, Value>::empty;
-    using SmallSet<SmallUniqueValueSet<Value>, Value, Value>::size;
-    using SmallSet<SmallUniqueValueSet<Value>, Value, Value>::clear;
-
-    bool operator==(const SmallUniqueValueSet& o) const { return SmallSet<SmallUniqueValueSet<Value>, Value, Value>::operator==(o); }
-    bool operator!=(const SmallUniqueValueSet& o) const { return SmallSet<SmallUniqueValueSet<Value>, Value, Value>::operator!=(o); }
+    using SmallSet<Value>::iterator;
+    using SmallSet<Value>::const_iterator;
+    using SmallSet<Value>::reverse_iterator;
+    using SmallSet<Value>::const_reverse_iterator;
+    using SmallSet<Value>::begin;
+    using SmallSet<Value>::end;
+    using SmallSet<Value>::rbegin;
+    using SmallSet<Value>::rend;
+    using SmallSet<Value>::empty;
+    using SmallSet<Value>::size;
+    using SmallSet<Value>::clear;
+    bool operator==(const SmallUniqueValueSet& o) const { return SmallSet<Value>::operator==(o); }
+    bool operator!=(const SmallUniqueValueSet& o) const { return SmallSet<Value>::operator!=(o); }
 
     void add(const Value& val)
     {
         auto i = this->find(val);
         if (i != this->end()) return;
-        SmallSet<SmallUniqueValueSet<Value>, Value, Value>::add(val);
+        SmallSet<Value>::add(val);
     }
 
     bool has(const Value& val) const
     {
         return this->find(val) != this->end();
     }
-
-    static const Value& _smallset_get_value(const Value& value) { return value; }
 };
 
 
 template<typename Value>
 struct SortedSmallUniqueValueSet : public SmallUniqueValueSet<Value>
 {
-    typedef typename SmallSet<SmallUniqueValueSet<Value>, Value, Value>::iterator iterator;
-    typedef typename SmallSet<SmallUniqueValueSet<Value>, Value, Value>::const_iterator const_iterator;
-    typedef typename SmallSet<SmallUniqueValueSet<Value>, Value, Value>::reverse_iterator reverse_iterator;
-    typedef typename SmallSet<SmallUniqueValueSet<Value>, Value, Value>::const_reverse_iterator const_reverse_iterator;
-    using SmallSet<SmallUniqueValueSet<Value>, Value, Value>::end;
-    using SmallSet<SmallUniqueValueSet<Value>, Value, Value>::rend;
-    using SmallSet<SmallUniqueValueSet<Value>, Value, Value>::empty;
-    using SmallSet<SmallUniqueValueSet<Value>, Value, Value>::size;
-    using SmallSet<SmallUniqueValueSet<Value>, Value, Value>::clear;
+    typedef typename SmallUniqueValueSet<Value>::iterator iterator;
+    typedef typename SmallUniqueValueSet<Value>::const_iterator const_iterator;
+    typedef typename SmallUniqueValueSet<Value>::reverse_iterator reverse_iterator;
+    typedef typename SmallUniqueValueSet<Value>::const_reverse_iterator const_reverse_iterator;
+    using SmallUniqueValueSet<Value>::end;
+    using SmallUniqueValueSet<Value>::rend;
+    using SmallUniqueValueSet<Value>::empty;
+    using SmallUniqueValueSet<Value>::size;
+    using SmallUniqueValueSet<Value>::clear;
+    using SmallUniqueValueSet<Value>::operator==;
+    using SmallUniqueValueSet<Value>::operator!=;
 
     iterator begin()
     {
@@ -226,22 +227,17 @@ struct SortedSmallUniqueValueSet : public SmallUniqueValueSet<Value>
         return SmallUniqueValueSet<Value>::rbegin();
     }
 
-    bool operator==(const SortedSmallUniqueValueSet& o) const { return SmallUniqueValueSet<Value>::operator==(o); }
-    bool operator!=(const SortedSmallUniqueValueSet& o) const { return SmallUniqueValueSet<Value>::operator!=(o); }
-
     void add(const Value& val)
     {
         auto i = this->find(val);
         if (i != this->end()) return;
-        SmallSet<SmallUniqueValueSet<Value>, Value, Value>::add(val);
+        SmallUniqueValueSet<Value>::add(val);
     }
 
     bool has(const Value& val) const
     {
         return this->find(val) != this->end();
     }
-
-    static const Value& _smallset_get_value(const Value& value) { return value; }
 };
 
 }

@@ -16,9 +16,8 @@ class Tests : public TestCase
 } test("core_smallset");
 
 
-struct IntSmallSet : public core::SmallSet<IntSmallSet, int, int>
+struct IntSmallSet : public core::SmallSet<int>
 {
-    static const int& _smallset_get_value(const int& v) { return v; }
 };
 
 

@@ -28,7 +28,6 @@ PyTypeObject dpy_DBStation_Type;
 namespace {
 
 #if PY_MAJOR_VERSION >= 3
-
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wwrite-strings"
@@ -464,7 +463,7 @@ int station_from_python(PyObject* o, Station& out)
         unsigned size = PyTuple_Size(o);
         if (size != 4)
         {
-            PyErr_SetString(PyExc_TypeError, "station tuple must have exactly 5 elements");
+            PyErr_SetString(PyExc_TypeError, "station tuple must have exactly 4 elements");
             return -1;
         }
 
@@ -499,7 +498,7 @@ int station_from_python(PyObject* o, Station& out)
 PyObject* dbstation_to_python(const DBStation& st)
 {
 #if PY_MAJOR_VERSION >= 3
-    pyo_unique_ptr res(PyStructSequence_New(&dpy_Station_Type));
+    pyo_unique_ptr res(PyStructSequence_New(&dpy_DBStation_Type));
     if (!res) return nullptr;
 
     if (PyObject* v = string_to_python(st.report))

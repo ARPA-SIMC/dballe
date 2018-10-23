@@ -123,6 +123,31 @@ add_method("codec", []() {
     wassert(actual(*vals1[WR_VAR(0, 1, 19)].var) == *vals[WR_VAR(0, 1, 19)].var);
 });
 
+add_method("values", []() {
+    // Set station by ana_id
+    {
+        core::Record rec;
+        rec.set("ana_id", 1);
+        rec.set(Level(1));
+        rec.set(Trange::instant());
+        rec.set(Datetime(2018, 7, 1));
+        DataValues vals;
+        vals.set_from_record(rec);
+    }
+
+    // Set station by station data
+    {
+        core::Record rec;
+        rec.set("rep_memo", "test");
+        rec.set(Coords(44.5, 11.5));
+        rec.set(Level(1));
+        rec.set(Trange::instant());
+        rec.set(Datetime(2018, 7, 1));
+        DataValues vals;
+        vals.set_from_record(rec);
+    }
+});
+
 }
 
 }

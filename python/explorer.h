@@ -2,7 +2,8 @@
 #define DBALLE_PYTHON_EXPLORER_H
 
 #include <Python.h>
-#include <dballe/db/explorer.h>
+#include <dballe/db/fwd.h>
+#include <memory>
 
 extern "C" {
 

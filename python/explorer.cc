@@ -1,4 +1,6 @@
+#define _DBALLE_LIBRARY_CODE
 #include <Python.h>
+#include "dballe/db/explorer.h"
 #include "common.h"
 #include "explorer.h"
 #include "types.h"
@@ -22,7 +24,7 @@ using namespace wreport;
 
 extern "C" {
 
-static PyObject* _export_stations(const db::summary::StationEntries& stations)
+static PyObject* _export_stations(const db::summary::StationEntries<DBStation>& stations)
 {
     try {
         pyo_unique_ptr result(PyList_New(stations.size()));
@@ -30,7 +32,7 @@ static PyObject* _export_stations(const db::summary::StationEntries& stations)
         unsigned idx = 0;
         for (const auto& entry: stations)
         {
-            pyo_unique_ptr station(station_to_python(entry.station));
+            pyo_unique_ptr station(dbstation_to_python(entry.station));
             if (PyList_SetItem(result, idx, station.release()))
                 return nullptr;
             ++idx;
@@ -196,7 +198,76 @@ static PyObject* dpy_Explorer_varcodes(dpy_Explorer* self, void* closure)
     } DBALLE_CATCH_RETURN_PYO
 }
 
+#if PY_MAJOR_VERSION >= 3
+PyStructSequence_Field dpy_stats_fields[] = {
+    { "datetime_min", "Minimum datetime" },
+    { "datetime_max", "Maximum datetime" },
+    { "count", "Number of values" },
+    nullptr,
+};
 
+PyStructSequence_Desc dpy_stats_desc = {
+    "DBSummaryStats",
+    "DB-All.e summary statistics",
+    dpy_stats_fields,
+    3,
+};
+
+PyTypeObject dpy_stats_Type;
+
+
+static PyObject* _export_stats(const dballe::db::DBSummary& summary)
+{
+    try {
+        pyo_unique_ptr res(PyStructSequence_New(&dpy_stats_Type));
+        if (!res) return nullptr;
+
+        if (PyObject* v = datetime_to_python(summary.datetime_min()))
+            PyStructSequence_SET_ITEM((PyObject*)res, 0, v);
+        else
+            return nullptr;
+
+        if (PyObject* v = datetime_to_python(summary.datetime_max()))
+            PyStructSequence_SET_ITEM((PyObject*)res, 1, v);
+        else
+            return nullptr;
+
+        if (PyObject* v = PyInt_FromLong(summary.data_count()))
+            PyStructSequence_SET_ITEM((PyObject*)res, 2, v);
+        else
+            return nullptr;
+
+        return res.release();
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+static PyObject* dpy_Explorer_all_stats(dpy_Explorer* self, void* closure)
+{
+    try {
+        const auto& summary = self->explorer->global_summary();
+        return _export_stats(summary);
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+static PyObject* dpy_Explorer_stats(dpy_Explorer* self, void* closure)
+{
+    try {
+        const auto& summary = self->explorer->active_summary();
+        return _export_stats(summary);
+    } DBALLE_CATCH_RETURN_PYO
+}
+#endif
+
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wwrite-strings"
+#endif
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwrite-strings"
+#endif
 static PyGetSetDef dpy_Explorer_getsetters[] = {
     {"all_stations", (getter)dpy_Explorer_all_stations, nullptr, "get all stations", nullptr },
     {"stations", (getter)dpy_Explorer_stations, nullptr, "get the stations currently selected", nullptr },
@@ -208,8 +279,19 @@ static PyGetSetDef dpy_Explorer_getsetters[] = {
     {"tranges", (getter)dpy_Explorer_tranges, nullptr, "get the time range values currently selected", nullptr },
     {"all_varcodes", (getter)dpy_Explorer_all_varcodes, nullptr, "get all varcode values", nullptr },
     {"varcodes", (getter)dpy_Explorer_varcodes, nullptr, "get the varcode values currently selected", nullptr },
+#if PY_MAJOR_VERSION >= 3
+    {"all_stats", (getter)dpy_Explorer_all_stats, nullptr, "get stats for all values", nullptr },
+    {"stats", (getter)dpy_Explorer_stats, nullptr, "get stats for currently selected values", nullptr },
+#endif
     {nullptr}
 };
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 static PyObject* dpy_Explorer_set_filter(dpy_Explorer* self, PyObject* args)
 {
@@ -366,6 +448,10 @@ dpy_Explorer* explorer_create(std::unique_ptr<db::Explorer> explorer)
 void register_explorer(PyObject* m)
 {
     common_init();
+
+#if PY_MAJOR_VERSION >= 3
+    PyStructSequence_InitType(&dpy_stats_Type, &dpy_stats_desc);
+#endif
 
     dpy_Explorer_Type.tp_new = PyType_GenericNew;
     if (PyType_Ready(&dpy_Explorer_Type) < 0)

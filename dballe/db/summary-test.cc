@@ -39,7 +39,7 @@ this->add_method("summary", [](Fixture& f) {
     OldDballeTestDataSet test_data;
     wassert(f.populate(test_data));
 
-    Summary s;
+    DBSummary s;
     wassert_true(s.datetime_min().is_missing());
     wassert_true(s.datetime_max().is_missing());
     wassert(actual(s.data_count()) == 0u);
@@ -53,12 +53,19 @@ this->add_method("summary", [](Fixture& f) {
 
     // Check its contents
     wassert(actual(s.stations().size()) == 2);
+    wassert(actual(s.stations().begin()->station.id) != MISSING_INT);
     wassert(actual(s.levels().size()) == 1);
     wassert(actual(s.tranges().size()) == 2);
     wassert(actual(s.varcodes().size()) == 2);
     wassert(actual(s.datetime_min()) == Datetime(1945, 4, 25, 8));
     wassert(actual(s.datetime_max()) == Datetime(1945, 4, 25, 8, 30));
     wassert(actual(s.data_count()) == 4);
+
+    query.ana_id = s.stations().begin()->station.id;
+    DBSummary s1;
+    s1.add_filtered(s, query);
+    wassert(actual(s1.stations().size()) == 1);
+    wassert(actual(s1.stations().begin()->station.id) == query.ana_id);
 });
 
 this->add_method("summary_msg", [](Fixture& f) {
@@ -125,7 +132,7 @@ this->add_method("json_summary", [](Fixture& f) {
     core::JSONWriter writer(json);
     summary.to_json(writer);
 
-    wassert(actual(json.str()) == R"({"e":[{"s":{"r":"test","c":[4450000,1150000],"i":null},"v":[{"l":[1,null,null,null],"t":[254,0,0],"v":368,"d":[[2018,1,1,0,0,0],[2018,7,1,0,0,0]],"c":12},{"l":[1,null,null,null],"t":[254,0,0],"v":369,"d":[[2018,1,1,0,0,0],[2018,7,1,0,0,0]],"c":12}]}]})");
+    wassert(actual(json.str()) == R"({"e":[{"s":{"r":"test","c":[4450000,1150000]},"v":[{"l":[1,null,null,null],"t":[254,0,0],"v":368,"d":[[2018,1,1,0,0,0],[2018,7,1,0,0,0]],"c":12},{"l":[1,null,null,null],"t":[254,0,0],"v":369,"d":[[2018,1,1,0,0,0],[2018,7,1,0,0,0]],"c":12}]}]})");
 
     json.seekg(0);
     core::json::Stream in(json);
