@@ -5,7 +5,9 @@
 #include "record.h"
 #include "db.h"
 #include "cursor.h"
+#if PY_MAJOR_VERSION >= 3
 #include "explorer.h"
+#endif
 #include "dballe/types.h"
 #include "dballe/var.h"
 #include "config.h"
@@ -177,9 +179,10 @@ PyMODINIT_FUNC init_dballe(void)
     register_record(m);
     register_db(m);
     register_cursor(m);
-    register_explorer(m);
 
 #if PY_MAJOR_VERSION >= 3
+    register_explorer(m);
+
     return m;
 #endif
 }
