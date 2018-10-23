@@ -1,9 +1,3 @@
-#!/usr/bin/python
-# coding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 import dballe
 import datetime
 import unittest
@@ -56,6 +50,10 @@ class DballeTestMixin(DballeDBMixin):
         self.assertEqual(explorer.tranges, [(20, 111, 223)])
         self.assertEqual(explorer.all_varcodes, ["B01011", "B01012"])
         self.assertEqual(explorer.varcodes, ["B01012"])
+        self.assertEqual(explorer.all_stats, dballe.ExplorerStats((
+            datetime.datetime(1945, 4, 25,  8, 0), datetime.datetime(1945, 4, 25, 12, 0), 3)))
+        self.assertEqual(explorer.stats, dballe.ExplorerStats((
+            datetime.datetime(1945, 4, 25, 12, 0), datetime.datetime(1945, 4, 25, 12, 0), 1)))
 
 
 class DballeV7Test(DballeTestMixin, unittest.TestCase):
@@ -68,4 +66,4 @@ class DballeMEMTest(DballeTestMixin, unittest.TestCase):
 
 if __name__ == "__main__":
     from testlib import main
-    main("test_explorer")
+    main("test-explorer")
