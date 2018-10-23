@@ -15,6 +15,9 @@ namespace dballe {
 namespace db {
 namespace summary {
 
+/**
+ * Description of a variable, independent of where and when it was measured
+ */
 struct VarDesc
 {
     dballe::Level level;
@@ -36,6 +39,9 @@ struct VarDesc
     bool operator>=(const VarDesc& o) const { return std::tie(level, trange, varcode) >= std::tie(o.level, o.trange, o.varcode); }
 };
 
+/**
+ * Statistics about a variable
+ */
 struct VarEntry
 {
     VarDesc var;
@@ -70,6 +76,11 @@ struct VarEntry
 
 inline const VarDesc& station_entry_get_value(const VarEntry& item) { return item.var; }
 
+/**
+ * Information about a station, and statistics about its variables.
+ *
+ * It behaves similarly to a std::vector<VarEntry>
+ */
 template<typename Station>
 struct StationEntry : protected core::SmallSet<VarEntry, VarDesc, station_entry_get_value>
 {
@@ -116,28 +127,14 @@ struct StationEntry : protected core::SmallSet<VarEntry, VarDesc, station_entry_
 };
 
 
-#if 0
-    bool same_metadata(const Entry& o) const
-    {
-        return std::tie(station, level, trange, varcode) ==
-               std::tie(o.station, o.level, o.trange, o.varcode);
-    }
-
-    void merge(const Entry& o)
-    {
-        dtrange.merge(o.dtrange);
-        count += o.count;
-    }
-
-#endif
-
-#if 0
-std::ostream& operator<<(std::ostream& out, const Entry& e);
-#endif
-
 template<typename Station>
 inline const Station& station_entries_get_value(const StationEntry<Station>& item) { return item.station; }
 
+/**
+ * Index of all stations known to a summary
+ *
+ * It behaves similarly to a std::vector<StationEntry<Station>>
+ */
 template<typename Station>
 struct StationEntries : protected core::SmallSet<StationEntry<Station>, Station, station_entries_get_value<Station>>
 {
@@ -258,7 +255,14 @@ public:
     DBALLE_TEST_ONLY void dump(FILE* out) const;
 };
 
+/**
+ * Summary without database station IDs
+ */
 typedef BaseSummary<dballe::Station> Summary;
+
+/**
+ * Summary with database station IDs
+ */
 typedef BaseSummary<dballe::DBStation> DBSummary;
 
 extern template class BaseSummary<dballe::Station>;
