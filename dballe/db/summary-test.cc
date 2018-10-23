@@ -36,6 +36,22 @@ Tests<V7DB, DBStation> tg6("db_summary_v7_mysql_dbsummary", "MYSQL");
 void station_id_isset(const Station& station) {}
 void station_id_isset(const DBStation& station) { wassert(actual(station.id) != MISSING_INT); }
 
+std::unique_ptr<Summary> other_summary(const BaseSummary<DBStation>&) { return std::unique_ptr<Summary>(new Summary); }
+std::unique_ptr<DBSummary> other_summary(const BaseSummary<Station>&) { return std::unique_ptr<DBSummary>(new DBSummary); }
+Station other_station(const DBStation& station)
+{
+    Station res(station);
+    return res;
+}
+DBStation other_station(const Station& station)
+{
+    DBStation res;
+    res.report = station.report;
+    res.coords = station.coords;
+    res.ident = station.ident;
+    return res;
+}
+
 void set_query_station(core::Query& query, const Station& station)
 {
     query.rep_memo = station.report;
@@ -130,6 +146,29 @@ this->add_method("merge_entries", [](Fixture& f) {
     wassert(actual(summary.stations().begin()->size()) == 1);
     wassert(actual(summary.stations().rbegin()->size()) == 1);
     wassert(actual(summary.data_count()) == 36u + 24u);
+});
+
+this->add_method("merge_summaries", [](Fixture& f) {
+    BaseSummary<STATION> summary;
+
+    STATION station;
+    station.report = "test";
+    station.coords = Coords(44.5, 11.5);
+    summary::VarDesc vd(Level(1), Trange::instant(), WR_VAR(0, 1, 112));
+    DatetimeRange dtrange(Datetime(2018, 1, 1), Datetime(2018, 7, 1));
+
+    summary.add(station, vd, dtrange, 12u);
+
+    BaseSummary<STATION> summary1;
+    summary1.add(station, vd, dtrange, 3u);
+
+    auto summary2 = other_summary(summary);
+    summary2->add(other_station(station), vd, dtrange, 2u);
+
+    summary.add_summary(summary1);
+    summary.add_summary(*summary2);
+
+    wassert(actual(summary.data_count()) == 17u);
 });
 
 this->add_method("json_summary", [](Fixture& f) {

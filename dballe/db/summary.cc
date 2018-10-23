@@ -83,8 +83,8 @@ void StationEntry<Station>::add(const VarDesc& vd, const dballe::DatetimeRange& 
         SmallSet::add(VarEntry(vd, dtrange, count));
 }
 
-template<typename Station>
-void StationEntry<Station>::add(const StationEntry& entries)
+template<typename Station> template<typename OStation>
+void StationEntry<Station>::add(const StationEntry<OStation>& entries)
 {
     for (const auto& entry: entries)
         add(entry.var, entry.dtrange, entry.count);
@@ -168,15 +168,45 @@ void StationEntries<Station>::add(const Station& station, const VarDesc& vd, con
 }
 
 template<typename Station>
-void StationEntries<Station>::add(const StationEntries& entries)
+void StationEntries<Station>::add(const StationEntries<Station>& entries)
 {
-    for (auto entry: entries)
+    for (const auto& entry: entries)
     {
         iterator cur = this->find(entry.station);
         if (cur != end())
             cur->add(entry);
         else
             Parent::add(entry);
+    }
+}
+
+namespace {
+Station convert_station(const DBStation& station)
+{
+    Station res(station);
+    return res;
+}
+DBStation convert_station(const Station& station)
+{
+    DBStation res;
+    res.report = station.report;
+    res.coords = station.coords;
+    res.ident = station.ident;
+    return res;
+}
+}
+
+template<typename Station> template<typename OStation>
+void StationEntries<Station>::add(const StationEntries<OStation>& entries)
+{
+    for (const auto& entry: entries)
+    {
+        Station station = convert_station(entry.station);
+        iterator cur = this->find(station);
+        if (cur != end())
+            cur->add(entry);
+        else
+            Parent::add(StationEntry<Station>(station, entry));
     }
 }
 
@@ -409,10 +439,10 @@ void BaseSummary<Station>::add_filtered(const BaseSummary<Station>& summary, con
     dirty = true;
 }
 
-template<typename Station>
-void BaseSummary<Station>::add_summary(const BaseSummary<Station>& summary)
+template<typename Station> template<typename OStation>
+void BaseSummary<Station>::add_summary(const BaseSummary<OStation>& summary)
 {
-    entries.add(summary.entries);
+    entries.add(summary.stations());
     dirty = true;
 }
 
@@ -437,87 +467,6 @@ void Summary::merge_entries()
 
     if (tail != last)
         entries.erase(tail, last);
-}
-
-bool Summary::iterate(std::function<bool(const summary::Entry&)> f) const
-{
-    for (auto entry: entries)
-        if (!f(entry))
-            return false;
-    return true;
-}
-
-bool Summary::iterate_filtered(const Query& query, std::function<bool(const summary::Entry&)> f) const
-{
-    // Scan the filter building a todo list of things to match
-
-    const core::Query& q = core::Query::downcast(query);
-
-    // If there is any filtering on the station, build a whitelist of matching stations
-    bool has_flt_rep_memo = !q.rep_memo.empty();
-    std::unordered_set<int> wanted_stations;
-    bool has_flt_ident = !q.ident.is_missing();
-    bool has_flt_area = !q.get_latrange().is_missing() || !q.get_lonrange().is_missing();
-    bool has_flt_station = has_flt_ident || has_flt_area || q.ana_id != MISSING_INT;
-    if (has_flt_station)
-    {
-        LatRange flt_area_latrange = q.get_latrange();
-        LonRange flt_area_lonrange = q.get_lonrange();
-        for (auto s: all_stations)
-        {
-            const Station& station = s.second;
-            if (q.ana_id != MISSING_INT && station.id != q.ana_id)
-                continue;
-
-            if (has_flt_area)
-            {
-                if (!flt_area_latrange.contains(station.coords.lat) ||
-                    !flt_area_lonrange.contains(station.coords.lon))
-                    continue;
-            }
-
-            if (has_flt_rep_memo && q.rep_memo != station.report)
-                continue;
-
-            if (has_flt_ident && q.ident != station.ident)
-                continue;
-
-            wanted_stations.insert(station.id);
-        }
-    }
-
-    bool has_flt_level = !q.level.is_missing();
-    bool has_flt_trange = !q.trange.is_missing();
-    bool has_flt_varcode = !q.varcodes.empty();
-    wreport::Varcode wanted_varcode = has_flt_varcode ? *q.varcodes.begin() : 0;
-    DatetimeRange wanted_dtrange = q.get_datetimerange();
-
-    for (const auto& entry: entries)
-    {
-        if (has_flt_station)
-        {
-            if (wanted_stations.find(entry.station.id) == wanted_stations.end())
-                continue;
-        } else if (has_flt_rep_memo && q.rep_memo != entry.station.report)
-            continue;
-
-        if (has_flt_level && q.level != entry.level)
-            continue;
-
-        if (has_flt_trange && q.trange != entry.trange)
-            continue;
-
-        if (has_flt_varcode && wanted_varcode != entry.varcode)
-            continue;
-
-        if (!wanted_dtrange.contains(entry.dtrange))
-            continue;
-
-        if (!f(entry))
-            return false;
-    }
-
-    return true;
 }
 #endif
 
@@ -587,7 +536,11 @@ void BaseSummary<Station>::dump(FILE* out) const
 }
 
 template class BaseSummary<dballe::Station>;
+template void BaseSummary<dballe::Station>::add_summary(const BaseSummary<dballe::Station>&);
+template void BaseSummary<dballe::Station>::add_summary(const BaseSummary<dballe::DBStation>&);
 template class BaseSummary<dballe::DBStation>;
+template void BaseSummary<dballe::DBStation>::add_summary(const BaseSummary<dballe::Station>&);
+template void BaseSummary<dballe::DBStation>::add_summary(const BaseSummary<dballe::DBStation>&);
 
 }
 }

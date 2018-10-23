@@ -57,6 +57,10 @@ public:
     /// Get a reference to the summary for the current filter
     const dballe::db::BaseSummary<Station>& active_summary() const;
 
+    /// Merge the contents of another explorer into this one
+    template<typename OStation>
+    void merge(const BaseExplorer<OStation>& explorer);
+
     /// Export the explorer to JSON
     void to_json(core::JSONWriter& writer) const;
 
@@ -76,7 +80,11 @@ typedef BaseExplorer<dballe::Station> Explorer;
 typedef BaseExplorer<dballe::DBStation> DBExplorer;
 
 extern template class BaseExplorer<dballe::Station>;
+extern template void BaseExplorer<dballe::Station>::merge(const BaseExplorer<Station>&);
+extern template void BaseExplorer<dballe::Station>::merge(const BaseExplorer<DBStation>&);
 extern template class BaseExplorer<dballe::DBStation>;
+extern template void BaseExplorer<dballe::DBStation>::merge(const BaseExplorer<Station>&);
+extern template void BaseExplorer<dballe::DBStation>::merge(const BaseExplorer<DBStation>&);
 
 }
 }

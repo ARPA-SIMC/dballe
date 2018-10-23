@@ -145,6 +145,11 @@ this->add_method("filter_rep_memo", [](Fixture& f) {
     wassert(test_explorer_contents(explorer1));
 });
 
+// TODO: test merge
+//  - values are merged
+//  - query is preserved
+//  - filtered values are regenerated
+
 }
 
 }

@@ -121,8 +121,23 @@ void BaseExplorer<Station>::from_json(core::json::Stream& in)
     update_active_summary();
 }
 
+template<typename Station> template<typename OStation>
+void BaseExplorer<Station>::merge(const BaseExplorer<OStation>& explorer)
+{
+    delete _active_summary;
+    _active_summary = nullptr;
+
+    _global_summary->add_summary(explorer.global_summary());
+
+    update_active_summary();
+}
+
 template class BaseExplorer<dballe::Station>;
+template void BaseExplorer<dballe::Station>::merge(const BaseExplorer<Station>&);
+template void BaseExplorer<dballe::Station>::merge(const BaseExplorer<DBStation>&);
 template class BaseExplorer<dballe::DBStation>;
+template void BaseExplorer<dballe::DBStation>::merge(const BaseExplorer<Station>&);
+template void BaseExplorer<dballe::DBStation>::merge(const BaseExplorer<DBStation>&);
 
 }
 }

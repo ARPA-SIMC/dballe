@@ -102,6 +102,14 @@ struct StationEntry : protected core::SmallSet<VarEntry, VarDesc, station_entry_
 
     StationEntry() = default;
 
+    template<typename OStation>
+    StationEntry(const Station& station, const StationEntry<OStation>& entry)
+        : station(station)
+    {
+        for (const auto& item: entry)
+            this->add(item);
+    }
+
     StationEntry(const Station& station, const VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count)
         : station(station)
     {
@@ -117,7 +125,8 @@ struct StationEntry : protected core::SmallSet<VarEntry, VarDesc, station_entry_
     StationEntry(const StationEntry&) = default;
 
     void add(const VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count);
-    void add(const StationEntry& entries);
+    template<typename OStation>
+    void add(const StationEntry<OStation>& entries);
     void add_filtered(const StationEntry& entries, const dballe::Query& query);
 
     void to_json(core::JSONWriter& writer) const;
@@ -154,7 +163,9 @@ struct StationEntries : protected core::SmallSet<StationEntry<Station>, Station,
     bool operator!=(const StationEntries<Station>& o) const { return Parent::operator!=(o); }
 
     void add(const Station& station, const VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count);
-    void add(const StationEntries& entry);
+    template<typename OStation>
+    void add(const StationEntries<OStation>& entry);
+    void add(const StationEntries<Station>& entry);
     void add_filtered(const StationEntries& entry, const dballe::Query& query);
 
     bool has(const Station& station) const { return find(station) != end(); }
@@ -227,7 +238,8 @@ public:
     void add_messages(const dballe::Messages& messages);
 
     /// Merge the copy of another summary into this one
-    void add_summary(const BaseSummary& summary);
+    template<typename OSummary>
+    void add_summary(const BaseSummary<OSummary>& summary);
 
     /// Merge the copy of another summary into this one
     void add_filtered(const BaseSummary& summary, const dballe::Query& query);
@@ -240,12 +252,6 @@ public:
      * exist in the summary
      */
     void merge_entries();
-
-    /// Iterate all values in the summary
-    bool iterate(std::function<bool(const summary::Entry&)> f) const;
-
-    /// Iterate all values in the summary that match the given query
-    bool iterate_filtered(const Query& query, std::function<bool(const summary::Entry&)> f) const;
 #endif
 
     /// Serialize to JSON
@@ -259,10 +265,6 @@ public:
      */
     void from_json(core::json::Stream& in);
 
-#if 0
-    DBALLE_TEST_ONLY std::vector<summary::Entry>& test_entries() { return entries; }
-    DBALLE_TEST_ONLY const std::vector<summary::Entry>& test_entries() const { return entries; }
-#endif
     DBALLE_TEST_ONLY void dump(FILE* out) const;
 };
 
@@ -277,7 +279,11 @@ typedef BaseSummary<dballe::Station> Summary;
 typedef BaseSummary<dballe::DBStation> DBSummary;
 
 extern template class BaseSummary<dballe::Station>;
+extern template void BaseSummary<dballe::Station>::add_summary(const BaseSummary<dballe::Station>&);
+extern template void BaseSummary<dballe::Station>::add_summary(const BaseSummary<dballe::DBStation>&);
 extern template class BaseSummary<dballe::DBStation>;
+extern template void BaseSummary<dballe::DBStation>::add_summary(const BaseSummary<dballe::Station>&);
+extern template void BaseSummary<dballe::DBStation>::add_summary(const BaseSummary<dballe::DBStation>&);
 
 }
 }
