@@ -18,11 +18,14 @@ _dballe_la_SOURCES = \
     record.cc \
     dballe.cc \
     db.cc \
-    explorer.cc \
     cursor.cc
 _dballe_la_CPPFLAGS = $(PYTHON_CFLAGS)
 _dballe_la_LDFLAGS = -module -avoid-version -export-symbols-regex init_dballe
 _dballe_la_LIBADD = ../dballe/libdballe.la
+
+if HAVE_PYTHON3
+_dballe_la_SOURCES += explorer.cc
+endif
 
 doc_DATA = python-dballe.rst
 
