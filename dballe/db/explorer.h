@@ -12,24 +12,25 @@
 namespace dballe {
 namespace db {
 
-class Explorer
+template<typename Station>
+class BaseExplorer
 {
 protected:
     /// Summary of the whole database
-    dballe::db::DBSummary* _global_summary = nullptr;
+    dballe::db::BaseSummary<Station>* _global_summary = nullptr;
 
     /// Currently active filter
     dballe::core::Query filter;
 
     /// Summary of active_filter
-    dballe::db::DBSummary* _active_summary = nullptr;
+    dballe::db::BaseSummary<Station>* _active_summary = nullptr;
 
     /// Regenerate _active_summary based on filter
     void update_active_summary();
 
 public:
-    Explorer();
-    ~Explorer();
+    BaseExplorer();
+    ~BaseExplorer();
 
     /// Get the current filter
     const dballe::Query& get_filter() const;
@@ -47,10 +48,10 @@ public:
     void revalidate(dballe::db::Transaction& tr);
 
     /// Get a reference to the global summary
-    const dballe::db::DBSummary& global_summary() const;
+    const dballe::db::BaseSummary<Station>& global_summary() const;
 
     /// Get a reference to the summary for the current filter
-    const dballe::db::DBSummary& active_summary() const;
+    const dballe::db::BaseSummary<Station>& active_summary() const;
 
     /**
      * Update \a val in the database to have the value \a new_val
@@ -77,6 +78,20 @@ public:
     void remove(const values::Value& val);
 
 };
+
+
+/**
+ * Explorer without database station IDs
+ */
+typedef BaseExplorer<dballe::Station> Explorer;
+
+/**
+ * Explorer with database station IDs
+ */
+typedef BaseExplorer<dballe::DBStation> DBExplorer;
+
+extern template class BaseExplorer<dballe::Station>;
+extern template class BaseExplorer<dballe::DBStation>;
 
 }
 }

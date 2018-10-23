@@ -9,14 +9,6 @@
 #include <algorithm>
 #include "config.h"
 
-#if PY_MAJOR_VERSION >= 3
-    #define PyInt_FromLong PyLong_FromLong
-    #define PyInt_AsLong PyLong_AsLong
-    #define PyInt_Check PyLong_Check
-    #define PyInt_Type PyLong_Type
-    #define Py_TPFLAGS_HAVE_ITER 0
-#endif
-
 using namespace std;
 using namespace dballe;
 using namespace dballe::python;
@@ -198,7 +190,6 @@ static PyObject* dpy_Explorer_varcodes(dpy_Explorer* self, void* closure)
     } DBALLE_CATCH_RETURN_PYO
 }
 
-#if PY_MAJOR_VERSION >= 3
 PyStructSequence_Field dpy_stats_fields[] = {
     { "datetime_min", "Minimum datetime" },
     { "datetime_max", "Maximum datetime" },
@@ -207,8 +198,8 @@ PyStructSequence_Field dpy_stats_fields[] = {
 };
 
 PyStructSequence_Desc dpy_stats_desc = {
-    "DBSummaryStats",
-    "DB-All.e summary statistics",
+    "ExplorerStats",
+    "DB-All.e Explorer statistics",
     dpy_stats_fields,
     3,
 };
@@ -232,7 +223,7 @@ static PyObject* _export_stats(const dballe::db::DBSummary& summary)
         else
             return nullptr;
 
-        if (PyObject* v = PyInt_FromLong(summary.data_count()))
+        if (PyObject* v = PyLong_FromLong(summary.data_count()))
             PyStructSequence_SET_ITEM((PyObject*)res, 2, v);
         else
             return nullptr;
@@ -256,7 +247,6 @@ static PyObject* dpy_Explorer_stats(dpy_Explorer* self, void* closure)
         return _export_stats(summary);
     } DBALLE_CATCH_RETURN_PYO
 }
-#endif
 
 
 #if defined(__clang__)
@@ -279,10 +269,8 @@ static PyGetSetDef dpy_Explorer_getsetters[] = {
     {"tranges", (getter)dpy_Explorer_tranges, nullptr, "get the time range values currently selected", nullptr },
     {"all_varcodes", (getter)dpy_Explorer_all_varcodes, nullptr, "get all varcode values", nullptr },
     {"varcodes", (getter)dpy_Explorer_varcodes, nullptr, "get the varcode values currently selected", nullptr },
-#if PY_MAJOR_VERSION >= 3
     {"all_stats", (getter)dpy_Explorer_all_stats, nullptr, "get stats for all values", nullptr },
     {"stats", (getter)dpy_Explorer_stats, nullptr, "get stats for currently selected values", nullptr },
-#endif
     {nullptr}
 };
 #if defined(__clang__)
@@ -343,7 +331,7 @@ static int dpy_Explorer_init(dpy_Explorer* self, PyObject* args, PyObject* kw)
         return -1;
 
     try {
-        self->explorer = new db::Explorer;
+        self->explorer = new db::DBExplorer;
     } DBALLE_CATCH_RETURN_INT
 
     return 0;
@@ -432,11 +420,11 @@ namespace python {
 
 dpy_Explorer* explorer_create()
 {
-    unique_ptr<db::Explorer> explorer;
+    unique_ptr<db::DBExplorer> explorer;
     return explorer_create(move(explorer));
 }
 
-dpy_Explorer* explorer_create(std::unique_ptr<db::Explorer> explorer)
+dpy_Explorer* explorer_create(std::unique_ptr<db::DBExplorer> explorer)
 {
     dpy_Explorer* result = PyObject_New(dpy_Explorer, &dpy_Explorer_Type);
     if (!result) return nullptr;
@@ -449,9 +437,7 @@ void register_explorer(PyObject* m)
 {
     common_init();
 
-#if PY_MAJOR_VERSION >= 3
     PyStructSequence_InitType(&dpy_stats_Type, &dpy_stats_desc);
-#endif
 
     dpy_Explorer_Type.tp_new = PyType_GenericNew;
     if (PyType_Ready(&dpy_Explorer_Type) < 0)
@@ -459,6 +445,8 @@ void register_explorer(PyObject* m)
 
     Py_INCREF(&dpy_Explorer_Type);
     PyModule_AddObject(m, "Explorer", (PyObject*)&dpy_Explorer_Type);
+    Py_INCREF(&dpy_stats_Type);
+    PyModule_AddObject(m, "ExplorerStats", (PyObject*)&dpy_stats_Type);
 }
 
 }

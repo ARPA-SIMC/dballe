@@ -5,7 +5,6 @@ namespace dballe {
 namespace db {
 class DB;
 class Transaction;
-class Explorer;
 }
 }
 
