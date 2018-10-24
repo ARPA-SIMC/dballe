@@ -194,7 +194,7 @@ this->add_method("json_summary", [](Fixture& f) {
     json.seekg(0);
     core::json::Stream in(json);
     BaseSummary<STATION> summary1;
-    wassert(summary1.from_json(in));
+    wassert(summary1.load_json(in));
     wassert_true(summary == summary1);
     wassert(actual(summary.stations().size()) == summary1.stations().size());
     wassert_true(summary.stations() == summary1.stations());
@@ -205,6 +205,19 @@ this->add_method("json_summary", [](Fixture& f) {
     wassert_true(summary.datetime_min() == summary1.datetime_min());
     wassert_true(summary.datetime_max() == summary1.datetime_max());
     wassert_true(summary.data_count() == summary1.data_count());
+
+    // Check that load does merge
+    json.seekg(0);
+    core::json::Stream in1(json);
+    wassert(summary1.load_json(in1));
+    wassert(actual(summary.stations().size()) == summary1.stations().size());
+    wassert_true(summary.reports() == summary1.reports());
+    wassert_true(summary.levels() == summary1.levels());
+    wassert_true(summary.tranges() == summary1.tranges());
+    wassert_true(summary.varcodes() == summary1.varcodes());
+    wassert_true(summary.datetime_min() == summary1.datetime_min());
+    wassert_true(summary.datetime_max() == summary1.datetime_max());
+    wassert_true(summary.data_count() * 2 == summary1.data_count());
 });
 
 }

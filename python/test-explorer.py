@@ -51,7 +51,9 @@ class BaseExplorerTestMixin(DballeDBMixin):
 
     def testCreate(self):
         explorer = self._explorer()
-        explorer.revalidate(self.db.transaction())
+        with explorer.rebuild() as update:
+            with self.db.transaction() as tr:
+                update.add_db(tr)
         explorer.set_filter(dballe.Record(rep_memo="amdar"))
 
         self.assertStrRepr(explorer)
@@ -61,7 +63,8 @@ class BaseExplorerTestMixin(DballeDBMixin):
         self.assertIn('{"summary":{', json_string)
 
         explorer1 = self._explorer()
-        explorer1.from_json(json_string)
+        with explorer1.update() as update:
+            update.add_json(json_string)
         explorer1.set_filter(dballe.Record(rep_memo="amdar"))
         self.assertExplorerContents(explorer1)
 

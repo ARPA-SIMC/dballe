@@ -36,7 +36,7 @@ template<typename Station>
 const dballe::db::BaseSummary<Station>& BaseExplorer<Station>::global_summary() const
 {
     if (!_global_summary)
-        throw std::runtime_error("global summary is not available, call revalidate first");
+        throw std::runtime_error("global summary is not available, call rebuild or update first");
     return *_global_summary;
 }
 
@@ -44,7 +44,7 @@ template<typename Station>
 const dballe::db::BaseSummary<Station>& BaseExplorer<Station>::active_summary() const
 {
     if (!_active_summary)
-        throw std::runtime_error("active summary is not available, call revalidate first");
+        throw std::runtime_error("active summary is not available, call rebuild or update first");
     return *_active_summary;
 }
 
@@ -62,25 +62,23 @@ void BaseExplorer<Station>::set_filter(const dballe::Query& query)
 }
 
 template<typename Station>
-void BaseExplorer<Station>::revalidate(dballe::db::Transaction& tr)
+typename BaseExplorer<Station>::Update BaseExplorer<Station>::rebuild()
 {
     delete _global_summary;
-    _global_summary = nullptr;
+    _global_summary = new db::BaseSummary<Station>;
     delete _active_summary;
     _active_summary = nullptr;
+    return Update(this);
+}
 
-    core::Query query;
-    query.query = "details";
-
-    unique_ptr<db::BaseSummary<Station>> new_global_summary(new db::BaseSummary<Station>);
-
-    auto cur = tr.query_summary(query);
-    while (cur->next())
-        new_global_summary->add_cursor(*cur);
-
-    _global_summary = new_global_summary.release();
-
-    update_active_summary();
+template<typename Station>
+typename BaseExplorer<Station>::Update BaseExplorer<Station>::update()
+{
+    if (!_global_summary)
+        _global_summary = new db::BaseSummary<Station>;
+    delete _active_summary;
+    _active_summary = nullptr;
+    return Update(this);
 }
 
 template<typename Station>
@@ -101,43 +99,81 @@ void BaseExplorer<Station>::to_json(core::JSONWriter& writer) const
 }
 
 template<typename Station>
-void BaseExplorer<Station>::from_json(core::json::Stream& in)
-{
-    delete _global_summary;
-    _global_summary = nullptr;
-    delete _active_summary;
-    _active_summary = nullptr;
+BaseExplorer<Station>::Update::Update(BaseExplorer<Station>* explorer)
+    : explorer(explorer) {}
 
-    std::unique_ptr<BaseSummary<Station>> new_global_summary(new BaseSummary<Station>);
+template<typename Station>
+BaseExplorer<Station>::Update::Update() {}
+
+template<typename Station>
+BaseExplorer<Station>::Update::Update(Update&& o)
+    : explorer(o.explorer) { o.explorer = nullptr; }
+
+template<typename Station>
+BaseExplorer<Station>::Update::~Update()
+{
+    commit();
+}
+
+template<typename Station>
+void BaseExplorer<Station>::Update::commit()
+{
+    if (!explorer)
+        return;
+    explorer->update_active_summary();
+    explorer = nullptr;
+}
+
+template<typename Station>
+typename BaseExplorer<Station>::Update& BaseExplorer<Station>::Update::operator=(Update&& o)
+{
+    if (&o == this) return *this;
+    explorer = o.explorer;
+    o.explorer = nullptr;
+    return *this;
+}
+
+template<typename Station>
+void BaseExplorer<Station>::Update::add_db(dballe::db::Transaction& tr)
+{
+    core::Query query;
+    query.query = "details";
+
+    auto cur = tr.query_summary(query);
+    add_cursor(*cur);
+}
+
+template<typename Station>
+void BaseExplorer<Station>::Update::add_cursor(dballe::db::CursorSummary& cur)
+{
+    while (cur.next())
+        explorer->_global_summary->add_cursor(cur);
+}
+
+template<typename Station>
+void BaseExplorer<Station>::Update::add_json(core::json::Stream& in)
+{
     in.parse_object([&](const std::string& key) {
         if (key == "summary")
-            new_global_summary->from_json(in);
+            explorer->_global_summary->load_json(in);
         else
             throw core::JSONParseException("unsupported key \"" + key + "\" for db::Explorer");
     });
-
-    _global_summary = new_global_summary.release();
-
-    update_active_summary();
 }
 
 template<typename Station> template<typename OStation>
-void BaseExplorer<Station>::merge(const BaseExplorer<OStation>& explorer)
+void BaseExplorer<Station>::Update::add_explorer(const BaseExplorer<OStation>& explorer)
 {
-    delete _active_summary;
-    _active_summary = nullptr;
-
-    _global_summary->add_summary(explorer.global_summary());
-
-    update_active_summary();
+    this->explorer->_global_summary->add_summary(explorer.global_summary());
 }
 
+
 template class BaseExplorer<dballe::Station>;
-template void BaseExplorer<dballe::Station>::merge(const BaseExplorer<Station>&);
-template void BaseExplorer<dballe::Station>::merge(const BaseExplorer<DBStation>&);
+template void BaseExplorer<dballe::Station>::Update::add_explorer(const BaseExplorer<Station>&);
+template void BaseExplorer<dballe::Station>::Update::add_explorer(const BaseExplorer<DBStation>&);
 template class BaseExplorer<dballe::DBStation>;
-template void BaseExplorer<dballe::DBStation>::merge(const BaseExplorer<Station>&);
-template void BaseExplorer<dballe::DBStation>::merge(const BaseExplorer<DBStation>&);
+template void BaseExplorer<dballe::DBStation>::Update::add_explorer(const BaseExplorer<Station>&);
+template void BaseExplorer<dballe::DBStation>::Update::add_explorer(const BaseExplorer<DBStation>&);
 
 }
 }

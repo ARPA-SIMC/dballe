@@ -122,7 +122,10 @@ this->add_method("filter_rep_memo", [](Fixture& f) {
     wassert(f.populate(test_data));
 
     EXPLORER explorer;
-    explorer.revalidate(*f.tr);
+    {
+        auto update = explorer.rebuild();
+        wassert(update.add_db(*f.tr));
+    }
 
     core::Query query;
     query.set_from_test_string("rep_memo=metar");
@@ -138,17 +141,22 @@ this->add_method("filter_rep_memo", [](Fixture& f) {
     json.seekg(0);
     core::json::Stream in(json);
     EXPLORER explorer1;
-    wassert(explorer1.from_json(in));
+    {
+        auto update = explorer1.update();
+        wassert(update.add_json(in));
+    }
 
     explorer1.set_filter(query);
 
     wassert(test_explorer_contents(explorer1));
 });
 
+this->add_method("merge", [](Fixture& f) {
 // TODO: test merge
 //  - values are merged
 //  - query is preserved
 //  - filtered values are regenerated
+});
 
 }
 

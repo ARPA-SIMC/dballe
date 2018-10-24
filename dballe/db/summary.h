@@ -158,14 +158,22 @@ struct StationEntries : protected core::SmallSet<StationEntry<Station>, Station,
     using Parent::rend;
     using Parent::size;
     using Parent::empty;
-    using Parent::add;
     bool operator==(const StationEntries<Station>& o) const { return Parent::operator==(o); }
     bool operator!=(const StationEntries<Station>& o) const { return Parent::operator!=(o); }
 
+    /// Merge the given entry
     void add(const Station& station, const VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count);
+
+    /// Merge the given entries
     template<typename OStation>
     void add(const StationEntries<OStation>& entry);
+
+    /// Merge the given entries
     void add(const StationEntries<Station>& entry);
+
+    /// Merge the given entry
+    void add(const StationEntry<Station>& entry);
+
     void add_filtered(const StationEntries& entry, const dballe::Query& query);
 
     bool has(const Station& station) const { return find(station) != end(); }
@@ -257,13 +265,8 @@ public:
     /// Serialize to JSON
     void to_json(core::JSONWriter& writer) const;
 
-    /**
-     * Load contents from JSON.
-     *
-     * Merging is not yet supported, so this will throw an exception if called
-     * on a non-empty summary
-     */
-    void from_json(core::json::Stream& in);
+    /// Load contents from JSON, merging with the current contents
+    void load_json(core::json::Stream& in);
 
     DBALLE_TEST_ONLY void dump(FILE* out) const;
 };

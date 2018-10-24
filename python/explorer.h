@@ -21,6 +21,18 @@ PyAPI_DATA(PyTypeObject) dpy_DBExplorer_Type;
 
 typedef struct {
     PyObject_HEAD
+    dballe::db::DBExplorer::Update update;
+} dpy_DBExplorerUpdate;
+
+PyAPI_DATA(PyTypeObject) dpy_DBExplorerUpdate_Type;
+
+#define dpy_DBExplorerUpdate_Check(ob) \
+    (Py_TYPE(ob) == &dpy_DBExplorerUpdate_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), &dpy_DBExplorerUpdate_Type))
+
+
+typedef struct {
+    PyObject_HEAD
     dballe::db::Explorer* explorer;
 } dpy_Explorer;
 
@@ -30,7 +42,20 @@ PyAPI_DATA(PyTypeObject) dpy_Explorer_Type;
     (Py_TYPE(ob) == &dpy_Explorer_Type || \
      PyType_IsSubtype(Py_TYPE(ob), &dpy_Explorer_Type))
 
+
+typedef struct {
+    PyObject_HEAD
+    dballe::db::Explorer::Update update;
+} dpy_ExplorerUpdate;
+
+PyAPI_DATA(PyTypeObject) dpy_ExplorerUpdate_Type;
+
+#define dpy_ExplorerUpdate_Check(ob) \
+    (Py_TYPE(ob) == &dpy_ExplorerUpdate_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), &dpy_ExplorerUpdate_Type))
+
 }
+
 
 namespace dballe {
 namespace python {

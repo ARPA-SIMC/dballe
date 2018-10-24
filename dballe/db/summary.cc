@@ -171,14 +171,19 @@ template<typename Station>
 void StationEntries<Station>::add(const StationEntries<Station>& entries)
 {
     for (const auto& entry: entries)
-    {
-        iterator cur = this->find(entry.station);
-        if (cur != end())
-            cur->add(entry);
-        else
-            Parent::add(entry);
-    }
+        add(entry);
 }
+
+template<typename Station>
+void StationEntries<Station>::add(const StationEntry<Station>& entry)
+{
+    iterator cur = this->find(entry.station);
+    if (cur != end())
+        cur->add(entry);
+    else
+        Parent::add(entry);
+}
+
 
 namespace {
 Station convert_station(const DBStation& station)
@@ -483,11 +488,8 @@ void BaseSummary<Station>::to_json(core::JSONWriter& writer) const
 }
 
 template<typename Station>
-void BaseSummary<Station>::from_json(core::json::Stream& in)
+void BaseSummary<Station>::load_json(core::json::Stream& in)
 {
-    if (!entries.empty())
-        throw std::runtime_error("Summary::from_json can only be called on an empty Summary");
-
     in.parse_object([&](const std::string& key) {
         if (key == "e")
             in.parse_array([&]{
