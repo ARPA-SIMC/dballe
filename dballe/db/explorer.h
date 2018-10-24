@@ -58,6 +58,12 @@ public:
         template<typename OStation>
         void add_explorer(const BaseExplorer<OStation>& explorer);
 
+        /// Merge the contents of a message
+        void add_message(const dballe::Message& message);
+
+        /// Merge the contents of a vector of messages
+        void add_messages(const dballe::Messages& messages);
+
         void commit();
 
         friend class BaseExplorer<Station>;

@@ -182,6 +182,18 @@ void BaseExplorer<DBStation>::Update::add_explorer(const BaseExplorer<DBStation>
     this->explorer->_global_summary->add_summary(explorer.global_summary());
 }
 
+template<typename Station>
+void BaseExplorer<Station>::Update::add_message(const dballe::Message& message)
+{
+    this->explorer->_global_summary->add_message(message);
+}
+
+template<typename Station>
+void BaseExplorer<Station>::Update::add_messages(const dballe::Messages& messages)
+{
+    this->explorer->_global_summary->add_messages(messages);
+}
+
 template class BaseExplorer<dballe::Station>;
 template void BaseExplorer<dballe::Station>::Update::add_explorer(const BaseExplorer<DBStation>&);
 template class BaseExplorer<dballe::DBStation>;
