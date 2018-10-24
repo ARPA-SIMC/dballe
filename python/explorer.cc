@@ -594,6 +594,32 @@ struct ExplorerUpdateDefinition
 
         Py_RETURN_NONE;
     }
+
+    static PyObject* _add_explorer(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "explorer", NULL };
+        PyObject* explorer;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O", const_cast<char**>(kwlist), &explorer))
+            return nullptr;
+
+        if (dpy_Explorer_Check(explorer))
+        {
+            try {
+                ReleaseGIL rg;
+                self->update.add_explorer(*((dpy_Explorer*)explorer)->explorer);
+            } DBALLE_CATCH_RETURN_PYO
+        } else if (dpy_DBExplorer_Check(explorer)) {
+            try {
+                ReleaseGIL rg;
+                self->update.add_explorer(*((dpy_DBExplorer*)explorer)->explorer);
+            } DBALLE_CATCH_RETURN_PYO
+        } else {
+            PyErr_SetString(PyExc_TypeError, "Expected a dballe.Explorer or dballe.DBExplorer object");
+            return nullptr;
+        }
+
+        Py_RETURN_NONE;
+    }
 };
 
 template<> const char* ExplorerUpdateDefinition<dpy_ExplorerUpdate>::name = "ExplorerUpdate";
@@ -608,6 +634,9 @@ PyMethodDef ExplorerUpdateDefinition<Impl>::methods[] = {
     )" },
     {"add_json",          (PyCFunction)_add_json, METH_VARARGS | METH_KEYWORDS, R"(
         Add the contents of the given JSON string to the Explorer.
+    )" },
+    {"add_explorer",      (PyCFunction)_add_explorer, METH_VARARGS | METH_KEYWORDS, R"(
+        Add the contents of the given Explorer or DBExplorer to the Explorer.
     )" },
     {"__enter__",         (PyCFunction)_enter, METH_NOARGS, "Context manager __enter__" },
     {"__exit__",          (PyCFunction)_exit, METH_VARARGS, "Context manager __exit__" },

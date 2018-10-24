@@ -28,7 +28,7 @@ class BaseExplorerTestMixin(DballeDBMixin):
                 B01012=500)
         self.db.insert_data(data, False, True)
 
-    def assertExplorerContents(self, explorer):
+    def assertExplorerContents(self, explorer, count_unfiltered=3, count_filtered=1):
         self.assertCountEqual(explorer.all_stations, [
             self._station("synop", 1, 12.34560, 76.54320, None),
             self._station("amdar", 2, 12.34560, 76.54320, "foo"),
@@ -45,9 +45,9 @@ class BaseExplorerTestMixin(DballeDBMixin):
         self.assertEqual(explorer.all_varcodes, ["B01011", "B01012"])
         self.assertEqual(explorer.varcodes, ["B01012"])
         self.assertEqual(explorer.all_stats, dballe.ExplorerStats((
-            datetime.datetime(1945, 4, 25,  8, 0), datetime.datetime(1945, 4, 25, 12, 0), 3)))
+            datetime.datetime(1945, 4, 25,  8, 0), datetime.datetime(1945, 4, 25, 12, 0), count_unfiltered)))
         self.assertEqual(explorer.stats, dballe.ExplorerStats((
-            datetime.datetime(1945, 4, 25, 12, 0), datetime.datetime(1945, 4, 25, 12, 0), 1)))
+            datetime.datetime(1945, 4, 25, 12, 0), datetime.datetime(1945, 4, 25, 12, 0), count_filtered)))
 
     def testCreate(self):
         explorer = self._explorer()
@@ -67,6 +67,20 @@ class BaseExplorerTestMixin(DballeDBMixin):
             update.add_json(json_string)
         explorer1.set_filter(dballe.Record(rep_memo="amdar"))
         self.assertExplorerContents(explorer1)
+
+    def testMerge(self):
+        explorer = self._explorer()
+        with explorer.rebuild() as update:
+            with self.db.transaction() as tr:
+                update.add_db(tr)
+
+        explorer1 = self._explorer()
+        explorer1.set_filter(dballe.Record(rep_memo="amdar"))
+        with explorer1.rebuild() as update:
+            update.add_explorer(explorer)
+            update.add_explorer(explorer)
+
+        self.assertExplorerContents(explorer1, count_unfiltered=6, count_filtered=2)
 
 
 class ExplorerTestMixin(BaseExplorerTestMixin):

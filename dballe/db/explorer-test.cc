@@ -132,6 +132,12 @@ this->add_method("filter_rep_memo", [](Fixture& f) {
     explorer.set_filter(query);
 
     wassert(test_explorer_contents(explorer));
+    wassert(actual(explorer.global_summary().datetime_min()) == Datetime(1945, 4, 25, 8,  0));
+    wassert(actual(explorer.global_summary().datetime_max()) == Datetime(1945, 4, 25, 8, 30));
+    wassert(actual(explorer.global_summary().data_count()) == 4u);
+    wassert(actual(explorer.active_summary().datetime_min()) == Datetime(1945, 4, 25, 8, 30));
+    wassert(actual(explorer.active_summary().datetime_max()) == Datetime(1945, 4, 25, 8, 30));
+    wassert(actual(explorer.active_summary().data_count()) == 2u);
 
     std::stringstream json;
     core::JSONWriter writer(json);
@@ -149,13 +155,51 @@ this->add_method("filter_rep_memo", [](Fixture& f) {
     explorer1.set_filter(query);
 
     wassert(test_explorer_contents(explorer1));
+    wassert(actual(explorer1.global_summary().datetime_min()) == Datetime(1945, 4, 25, 8,  0));
+    wassert(actual(explorer1.global_summary().datetime_max()) == Datetime(1945, 4, 25, 8, 30));
+    wassert(actual(explorer1.global_summary().data_count()) == 4u);
+    wassert(actual(explorer1.active_summary().datetime_min()) == Datetime(1945, 4, 25, 8, 30));
+    wassert(actual(explorer1.active_summary().datetime_max()) == Datetime(1945, 4, 25, 8, 30));
+    wassert(actual(explorer1.active_summary().data_count()) == 2u);
 });
 
 this->add_method("merge", [](Fixture& f) {
-// TODO: test merge
-//  - values are merged
-//  - query is preserved
-//  - filtered values are regenerated
+    OldDballeTestDataSet test_data;
+    wassert(f.populate(test_data));
+
+    EXPLORER explorer;
+    {
+        auto update = explorer.rebuild();
+        wassert(update.add_db(*f.tr));
+    }
+
+    EXPLORER explorer1;
+    core::Query query;
+    query.set_from_test_string("rep_memo=metar");
+    explorer1.set_filter(query);
+
+    {
+        auto update = explorer1.update();
+        wassert(update.add_explorer(explorer));
+        wassert(update.add_explorer(explorer));
+    }
+
+    wassert(test_explorer_contents(explorer1));
+    wassert(actual(explorer1.global_summary().datetime_min()) == Datetime(1945, 4, 25, 8,  0));
+    wassert(actual(explorer1.global_summary().datetime_max()) == Datetime(1945, 4, 25, 8, 30));
+    wassert(actual(explorer1.global_summary().data_count()) == 8u);
+    wassert(actual(explorer1.active_summary().datetime_min()) == Datetime(1945, 4, 25, 8, 30));
+    wassert(actual(explorer1.active_summary().datetime_max()) == Datetime(1945, 4, 25, 8, 30));
+    wassert(actual(explorer1.active_summary().data_count()) == 4u);
+});
+
+this->add_method("merge_self", [](Fixture& f) {
+    EXPLORER explorer;
+    {
+        auto update = explorer.update();
+        auto e = wassert_throws(wreport::error_consistency, update.add_explorer(explorer));
+        wassert(actual(e.what()) == "Adding an Explorer to itself is not supported");
+    }
 });
 
 }

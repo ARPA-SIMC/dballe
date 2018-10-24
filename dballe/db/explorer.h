@@ -112,11 +112,9 @@ typedef BaseExplorer<dballe::Station> Explorer;
 typedef BaseExplorer<dballe::DBStation> DBExplorer;
 
 extern template class BaseExplorer<dballe::Station>;
-extern template void BaseExplorer<dballe::Station>::Update::add_explorer(const BaseExplorer<Station>&);
 extern template void BaseExplorer<dballe::Station>::Update::add_explorer(const BaseExplorer<DBStation>&);
 extern template class BaseExplorer<dballe::DBStation>;
 extern template void BaseExplorer<dballe::DBStation>::Update::add_explorer(const BaseExplorer<Station>&);
-extern template void BaseExplorer<dballe::DBStation>::Update::add_explorer(const BaseExplorer<DBStation>&);
 
 }
 }

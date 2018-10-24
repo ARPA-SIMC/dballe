@@ -58,7 +58,8 @@ template<typename Station>
 void BaseExplorer<Station>::set_filter(const dballe::Query& query)
 {
     filter = core::Query::downcast(query);
-    update_active_summary();
+    if (_global_summary)
+        update_active_summary();
 }
 
 template<typename Station>
@@ -166,14 +167,25 @@ void BaseExplorer<Station>::Update::add_explorer(const BaseExplorer<OStation>& e
 {
     this->explorer->_global_summary->add_summary(explorer.global_summary());
 }
-
+template<> template<>
+void BaseExplorer<Station>::Update::add_explorer(const BaseExplorer<Station>& explorer)
+{
+    if (this->explorer == &explorer)
+        wreport::error_consistency::throwf("Adding an Explorer to itself is not supported");
+    this->explorer->_global_summary->add_summary(explorer.global_summary());
+}
+template<> template<>
+void BaseExplorer<DBStation>::Update::add_explorer(const BaseExplorer<DBStation>& explorer)
+{
+    if (this->explorer == &explorer)
+        wreport::error_consistency::throwf("Adding an Explorer to itself is not supported");
+    this->explorer->_global_summary->add_summary(explorer.global_summary());
+}
 
 template class BaseExplorer<dballe::Station>;
-template void BaseExplorer<dballe::Station>::Update::add_explorer(const BaseExplorer<Station>&);
 template void BaseExplorer<dballe::Station>::Update::add_explorer(const BaseExplorer<DBStation>&);
 template class BaseExplorer<dballe::DBStation>;
 template void BaseExplorer<dballe::DBStation>::Update::add_explorer(const BaseExplorer<Station>&);
-template void BaseExplorer<dballe::DBStation>::Update::add_explorer(const BaseExplorer<DBStation>&);
 
 }
 }
