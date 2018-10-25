@@ -65,8 +65,6 @@ struct Base : public Interface
 
     virtual ~Base() {}
 
-    std::shared_ptr<dballe::db::Transaction> get_transaction() const override { return tr; }
-
     /**
      * Iterate the cursor until the end, returning the number of items.
      *
@@ -247,6 +245,8 @@ struct StationData : public BaseData<CursorStationData, StationDataResult>
 {
     using BaseData::BaseData;
 
+    std::shared_ptr<dballe::db::Transaction> get_transaction() const override { return tr; }
+
     void load(Tracer<>& trc, const DataQueryBuilder& qb)
     {
         results.clear();
@@ -304,6 +304,8 @@ struct DataResult : public StationDataResult
 struct Data : public BaseData<CursorData, DataResult>
 {
     using BaseData::BaseData;
+
+    std::shared_ptr<dballe::db::Transaction> get_transaction() const override { return tr; }
 
     void load(Tracer<>& trc, const DataQueryBuilder& qb)
     {

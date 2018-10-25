@@ -39,9 +39,6 @@ struct Cursor
 {
     virtual ~Cursor();
 
-    /// Get the database that created this cursor
-    virtual std::shared_ptr<db::Transaction> get_transaction() const = 0;
-
     /**
      * Get the number of rows still to be fetched
      *
@@ -106,6 +103,9 @@ struct CursorStation : public Cursor
 /// Common interface for cursors iterating over station or data values
 struct CursorValue : public Cursor
 {
+    /// Get the database that created this cursor
+    virtual std::shared_ptr<db::Transaction> get_transaction() const = 0;
+
     /// Get the variable code
     virtual wreport::Varcode get_varcode() const = 0;
 
