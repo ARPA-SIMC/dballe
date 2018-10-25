@@ -275,7 +275,7 @@ static PyObject* dpy_load(PYDB* self, PyObject* args, PyObject* kw)
         return nullptr;
 
     string repr;
-    if (object_repr(obj, repr))
+    if (object_repr(obj, repr) != 0)
         return nullptr;
 
     flags = (attrs ? DBA_IMPORT_ATTRS : 0) | (full_pseudoana ? DBA_IMPORT_FULL_PSEUDOANA : 0) | (overwrite ? DBA_IMPORT_OVERWRITE : 0);

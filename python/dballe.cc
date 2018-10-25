@@ -6,6 +6,7 @@
 #include "db.h"
 #include "cursor.h"
 #if PY_MAJOR_VERSION >= 3
+#include "file.h"
 #include "message.h"
 #include "explorer.h"
 #endif
@@ -186,6 +187,7 @@ PyMODINIT_FUNC init_dballe(void)
     register_cursor(m);
 
 #if PY_MAJOR_VERSION >= 3
+    register_file(m);
     register_message(m);
     register_explorer(m);
 
