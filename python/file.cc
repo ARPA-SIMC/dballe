@@ -522,6 +522,29 @@ struct FileDefinition
         } DBALLE_CATCH_RETURN_PYO
     }
 
+    static PyObject* _iter(dpy_File* self)
+    {
+        Py_INCREF(self);
+        return (PyObject*)self;
+    }
+
+    static PyObject* _iternext(dpy_File* self)
+    {
+        try {
+            if (BinaryMessage msg = self->file->file().read())
+            {
+                // TODO:
+                // self->cur->to_record(*self->rec->rec);
+                // Py_INCREF(self->rec);
+                // return (PyObject*)self->rec;
+                Py_RETURN_NONE;
+            } else {
+                PyErr_SetNone(PyExc_StopIteration);
+                return nullptr;
+            }
+        } DBALLE_CATCH_RETURN_PYO
+    }
+
 #if 0
     static PyObject* _datetime(dpy_Message* self, void* closure)
     {
@@ -711,8 +734,8 @@ PyTypeObject FileDefinition::type = {
     0,                         // tp_clear
     0,                         // tp_richcompare
     0,                         // tp_weaklistoffset
-    0,                         // tp_iter
-    0,                         // tp_iternext
+    (getiterfunc)_iter,        // tp_iter
+    (iternextfunc)_iternext,   // tp_iternext
     methods,                   // tp_methods
     0,                         // tp_members
     getsetters,                // tp_getset
