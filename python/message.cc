@@ -1,6 +1,7 @@
 #define _DBALLE_LIBRARY_CODE
 #include <Python.h>
 #include <dballe/message.h>
+#include <wreport/python.h>
 #include "common.h"
 #include "message.h"
 #include "types.h"
@@ -289,6 +290,175 @@ struct MessageDefinition
 
         return 0;
     }
+
+    static PyObject* _type(dpy_Message* self, void* closure)
+    {
+        try {
+            return message_type_to_python(self->message->get_type());
+        } DBALLE_CATCH_RETURN_PYO
+    }
+
+    static PyObject* _datetime(dpy_Message* self, void* closure)
+    {
+        try {
+            return datetime_to_python(self->message->get_datetime());
+        } DBALLE_CATCH_RETURN_PYO
+    }
+
+    static PyObject* _coords(dpy_Message* self, void* closure)
+    {
+        try {
+            return coords_to_python(self->message->get_coords());
+        } DBALLE_CATCH_RETURN_PYO
+    }
+
+    static PyObject* _ident(dpy_Message* self, void* closure)
+    {
+        try {
+            return ident_to_python(self->message->get_ident());
+        } DBALLE_CATCH_RETURN_PYO
+    }
+
+    static PyObject* _network(dpy_Message* self, void* closure)
+    {
+        try {
+            auto network = self->message->get_network();
+            return PyUnicode_FromStringAndSize(network.data(), network.size());
+        } DBALLE_CATCH_RETURN_PYO
+    }
+
+    static PyObject* _get(dpy_Message* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "level", "trange", "code", nullptr };
+        PyObject* pylevel = nullptr;
+        PyObject* pytrange = nullptr;
+        PyObject* pycode = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O", const_cast<char**>(kwlist), &pylevel, &pytrange, &pycode))
+            return nullptr;
+
+        try {
+            Level level;
+            if (level_from_python(pylevel, level) != 0)
+                return nullptr;
+
+            Trange trange;
+            if (trange_from_python(pytrange, trange) != 0)
+                return nullptr;
+
+            Varcode code;
+            if (varcode_from_python(pycode, code) != 0)
+                return nullptr;
+
+            const Var* res = self->message->get(level, trange, code);
+            if (!res)
+                Py_RETURN_NONE;
+            else
+                return (PyObject*)wrpy->var_create_copy(*res);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+
+    static PyObject* _get_named(dpy_Message* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "name", nullptr };
+        const char* name = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "s", const_cast<char**>(kwlist), &name))
+            return nullptr;
+
+        try {
+            const Var* res = self->message->get(name);
+            if (!res)
+                Py_RETURN_NONE;
+            else
+                return (PyObject*)wrpy->var_create_copy(*res);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+
+    static PyObject* _set(dpy_Message* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "level", "trange", "var", nullptr };
+        PyObject* pylevel = nullptr;
+        PyObject* pytrange = nullptr;
+        wrpy_Var* var = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "OOO!", const_cast<char**>(kwlist), &pylevel, &pytrange, wrpy->var_type, &var))
+            return nullptr;
+
+        try {
+            Level level;
+            if (level_from_python(pylevel, level) != 0)
+                return nullptr;
+
+            Trange trange;
+            if (trange_from_python(pytrange, trange) != 0)
+                return nullptr;
+
+            self->message->set(level, trange, var->var);
+        } DBALLE_CATCH_RETURN_PYO
+
+        Py_RETURN_NONE;
+    }
+
+    static PyObject* _set_named(dpy_Message* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "name", "var", nullptr };
+        const char* name = nullptr;
+        wrpy_Var* var = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "sO!", const_cast<char**>(kwlist), &name, wrpy->var_type, &var))
+            return nullptr;
+
+        try {
+            self->message->set(name, var->var);
+        } DBALLE_CATCH_RETURN_PYO
+
+        Py_RETURN_NONE;
+    }
+
+#if 0
+    /**
+     * Add or replace a value
+     *
+     * @param lev
+     *   The Level of the value
+     * @param tr
+     *   The Trange of the value
+     * @param code
+     *   The Varcode of the destination value.  If it is different than the
+     *   varcode of var, a conversion will be attempted.
+     * @param var
+     *   The Var with the value to set
+     */
+    void set(const Level& lev, const Trange& tr, wreport::Varcode code, const wreport::Var& var);
+
+    /**
+     * Add or replace a value
+     *
+     * @param lev
+     *   The Level of the value
+     * @param tr
+     *   The Trange of the value
+     * @param var
+     *   The Var with the value to set
+     */
+    void set(const Level& lev, const Trange& tr, const wreport::Var& var);
+
+    /**
+     * Add or replace a value, taking ownership of the source variable without
+     * copying it.
+     *
+     * @param lev
+     *   The Level of the value
+     * @param tr
+     *   The Trange of the value
+     * @param var
+     *   The Var with the value to set.  This Message will take ownership of memory
+     *   management.
+     */
+    void set(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var);
+
+    /**
+     * Iterate the contents of the message
+     */
+    virtual bool foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)>) const = 0;
+#endif
 };
 
 const char* MessageDefinition::name = "Message";
@@ -303,20 +473,11 @@ const char* MessageDefinition::qual_name = "dballe.Message";
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 #endif
 PyGetSetDef MessageDefinition::getsetters[] = {
-#if 0
-    {"all_stations", (getter)_all_stations<Impl>, nullptr, "get all stations", nullptr },
-    {"stations", (getter)_stations<Impl>, nullptr, "get the stations currently selected", nullptr },
-    {"all_reports", (getter)_all_reports<Impl>, nullptr, "get all rep_memo values", nullptr },
-    {"reports", (getter)_reports<Impl>, nullptr, "get the rep_memo values currently selected", nullptr },
-    {"all_levels", (getter)_all_levels<Impl>, nullptr, "get all level values", nullptr },
-    {"levels", (getter)_levels<Impl>, nullptr, "get the level values currently selected", nullptr },
-    {"all_tranges", (getter)_all_tranges<Impl>, nullptr, "get all time range values", nullptr },
-    {"tranges", (getter)_tranges<Impl>, nullptr, "get the time range values currently selected", nullptr },
-    {"all_varcodes", (getter)_all_varcodes<Impl>, nullptr, "get all varcode values", nullptr },
-    {"varcodes", (getter)_varcodes<Impl>, nullptr, "get the varcode values currently selected", nullptr },
-    {"all_stats", (getter)_all_stats<Impl>, nullptr, "get stats for all values", nullptr },
-    {"stats", (getter)_stats<Impl>, nullptr, "get stats for currently selected values", nullptr },
-#endif
+    {"type", (getter)_type, nullptr, "get message type", nullptr },
+    {"datetime", (getter)_datetime, nullptr, "get message datetime", nullptr },
+    {"coords", (getter)_coords, nullptr, "get message coordinates", nullptr },
+    {"ident", (getter)_ident, nullptr, "get message station identifier", nullptr },
+    {"network", (getter)_network, nullptr, "get message network", nullptr },
     {nullptr}
 };
 #if defined(__clang__)
@@ -327,32 +488,14 @@ PyGetSetDef MessageDefinition::getsetters[] = {
 #endif
 
 PyMethodDef MessageDefinition::methods[] = {
-#if 0
-    {"set_filter",        (PyCFunction)_set_filter, METH_VARARGS,
-        "Set a new filter, updating all browsing data" },
-    {"rebuild",           (PyCFunction)_rebuild, METH_NOARGS, R"(
-        Empty the Explorer and start adding new data to it.
-
-        Returns an ExplorerUpdate context manager object that can be used to
-        add data to the explorer in a single transaction.
-    )" },
-    {"update",            (PyCFunction)_update, METH_NOARGS, R"(
-        Start adding new data to the Explorer without clearing it first.
-
-        Returns an ExplorerUpdate context manager object that can be used to
-        add data to the explorer in a single transaction.
-    )" },
-    {"to_json",           (PyCFunction)_to_json, METH_NOARGS, R"(
-        Serialize the contents of this explorer to JSON.
-
-        Only the global summary is serialized: the current query is not
-        preserved.
-    )" },
-    {"query_summary_all",     (PyCFunction)_query_summary_all, METH_VARARGS | METH_KEYWORDS,
-        "Get all the Explorer summary information; returns a Cursor" },
-    {"query_summary",     (PyCFunction)_query_summary, METH_VARARGS | METH_KEYWORDS,
-        "Get the currently selected Explorer summary information; returns a Cursor" },
-#endif
+    {"get",          (PyCFunction)_get, METH_VARARGS | METH_KEYWORDS,
+        "Get a Var given level, timerange, and varcode; returns None if not found" },
+    {"get_named",    (PyCFunction)_get_named, METH_VARARGS | METH_KEYWORDS,
+        "Get a Var given its shortcut name; returns None if not found" },
+    {"set",          (PyCFunction)_set, METH_VARARGS | METH_KEYWORDS,
+        "Set a Var given level and timerange" },
+    {"set_named",    (PyCFunction)_set_named, METH_VARARGS | METH_KEYWORDS,
+        "Set a Var given its shortcut name" },
     {nullptr}
 };
 
@@ -452,6 +595,12 @@ int read_message_type(PyObject* from_python, dballe::MessageType& type)
 
     PyErr_SetString(PyExc_TypeError, "Expected str");
     return -1;
+}
+
+PyObject* message_type_to_python(MessageType type)
+{
+    const char* formatted = format_message_type(type);
+    return PyUnicode_FromString(formatted);
 }
 
 dpy_Message* message_create(MessageType type)

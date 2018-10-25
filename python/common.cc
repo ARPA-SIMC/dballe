@@ -290,6 +290,12 @@ int common_init()
         wrpy = (wrpy_c_api*)PyCapsule_Import("_wreport._C_API", 0);
         if (!wrpy)
             return -1;
+
+        if (wrpy->version_major != 1)
+        {
+            PyErr_Format(PyExc_RuntimeError, "wreport C API version is %d.%d but only 1.x is supported", wrpy->version_major, wrpy->version_minor);
+            return -1;
+        }
     }
 
     return 0;

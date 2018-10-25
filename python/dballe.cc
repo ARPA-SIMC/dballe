@@ -66,6 +66,10 @@ static PyObject* dballe_var_uncaught(PyTypeObject *type, PyObject *args)
             if (string_from_python(val, v))
                 return NULL;
             return (PyObject*)wrpy->var_create_c(dballe::varinfo(resolve_varcode(var_name)), v.c_str());
+        } else if ((Py_TYPE(val) == wrpy->var_type || PyType_IsSubtype(Py_TYPE(val), wrpy->var_type))) {
+            wrpy_Var* res = wrpy->var_create(dballe::varinfo(resolve_varcode(var_name)));
+            res->var.setval(((wrpy_Var*)val)->var);
+            return (PyObject*)res;
         } else if (val == Py_None) {
             return (PyObject*)wrpy->var_create(dballe::varinfo(resolve_varcode(var_name)));
         } else {

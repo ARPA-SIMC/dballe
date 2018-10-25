@@ -31,6 +31,9 @@ namespace python {
  */
 int read_message_type(PyObject* from_python, dballe::MessageType& type);
 
+/// Convert an MessageType to a python object
+PyObject* message_type_to_python(MessageType type);
+
 /**
  * Create a dpy_Message with a new message of the given type
  */

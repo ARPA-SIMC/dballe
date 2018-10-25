@@ -152,6 +152,36 @@ int double_from_python(PyObject* o, double& out)
 namespace dballe {
 namespace python {
 
+PyObject* coords_to_python(const Coords& coords)
+{
+    if (coords.is_missing())
+        Py_RETURN_NONE;
+
+    pyo_unique_ptr res(PyTuple_New(2));
+    if (!res) return nullptr;
+
+    pyo_unique_ptr lat(PyFloat_FromDouble(coords.dlat()));
+    if (!lat) return nullptr;
+
+    pyo_unique_ptr lon(PyFloat_FromDouble(coords.dlon()));
+    if (!lat) return nullptr;
+
+    if (PyTuple_SetItem(res, 0, lat.release()) != 0)
+        return nullptr;
+
+    if (PyTuple_SetItem(res, 1, lon.release()) != 0)
+        return nullptr;
+
+    return res.release();
+}
+
+PyObject* ident_to_python(const Ident& ident)
+{
+    if (ident.is_missing())
+        Py_RETURN_NONE;
+    return PyUnicode_FromString(ident.get());
+}
+
 PyObject* level_to_python(const Level& lev)
 {
     if (lev.is_missing())
@@ -391,14 +421,10 @@ PyObject* station_to_python(const Station& st)
     else
         return nullptr;
 
-    if (st.ident.is_missing())
-    {
-        Py_INCREF(Py_None);
-        PyStructSequence_SET_ITEM((PyObject*)res, 3, Py_None);
-    } else if (PyObject* v = PyUnicode_FromString(st.ident.get())) {
-        PyStructSequence_SET_ITEM((PyObject*)res, 3, v);
-    } else
+    pyo_unique_ptr ident(ident_to_python(st.ident));
+    if (!ident)
         return nullptr;
+    PyStructSequence_SET_ITEM((PyObject*)res, 3, ident.release());
 #else
     pyo_unique_ptr res(PyTuple_New(4));
     if (!res) return NULL;
@@ -418,14 +444,10 @@ PyObject* station_to_python(const Station& st)
     else
         return nullptr;
 
-    if (st.ident.is_missing())
-    {
-        Py_INCREF(Py_None);
-        PyTuple_SET_ITEM((PyObject*)res, 3, Py_None);
-    } else if (PyObject* v = PyUnicode_FromString(st.ident.get())) {
-        PyTuple_SET_ITEM((PyObject*)res, 3, v);
-    } else
+    pyo_unique_ptr ident(ident_to_python(st.ident));
+    if (!ident)
         return nullptr;
+    PyTuple_SET_ITEM((PyObject*)res, 3, ident.release());
 #endif
 
     return res.release();
@@ -638,6 +660,24 @@ PyObject* varcode_to_python(wreport::Varcode code)
     format_code(code, buf);
     return PyUnicode_FromString(buf);
 }
+
+#if PY_MAJOR_VERSION >= 3
+int varcode_from_python(PyObject* o, wreport::Varcode& code)
+{
+    try {
+        if (PyUnicode_Check(o))
+        {
+            const char* v = PyUnicode_AsUTF8(o);
+            if (v == nullptr) return -1;
+            code = resolve_varcode(v);
+            return 0;
+        }
+    } DBALLE_CATCH_RETURN_INT
+
+    PyErr_SetString(PyExc_TypeError, "Expected str");
+    return -1;
+}
+#endif
 
 
 void register_types(PyObject* m)

@@ -35,6 +35,12 @@ PyAPI_DATA(PyTypeObject) dpy_DBStation_Type;
 namespace dballe {
 namespace python {
 
+/// Convert a Coords to a python (lat, lon) tuple
+PyObject* coords_to_python(const Coords& coords);
+
+/// Convert a Coords to a python string or None
+PyObject* ident_to_python(const Ident& ident);
+
 /// Convert a Level to a python Level structseq
 PyObject* level_to_python(const Level& lev);
 
@@ -62,10 +68,16 @@ int dbstation_from_python(PyObject* o, DBStation& out);
 /// Convert a varcode to a Python string
 PyObject* varcode_to_python(wreport::Varcode code);
 
+#if PY_MAJOR_VERSION >= 3
+/// Convert a Python object to a Varcode
+int varcode_from_python(PyObject* o, wreport::Varcode& code);
+#endif
 
-//template<typename T>
-//PyObject* to_python(const T&);
-
+inline PyObject* to_python(const wreport::Varcode& s) { return varcode_to_python(s); }
+inline PyObject* to_python(const Coords& s) { return coords_to_python(s); }
+inline PyObject* to_python(const Ident& s) { return ident_to_python(s); }
+inline PyObject* to_python(const Level& s) { return level_to_python(s); }
+inline PyObject* to_python(const Trange& s) { return trange_to_python(s); }
 inline PyObject* to_python(const Station& s) { return station_to_python(s); }
 inline PyObject* to_python(const DBStation& s) { return dbstation_to_python(s); }
 
