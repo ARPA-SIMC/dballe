@@ -321,73 +321,83 @@ namespace {
 template<typename Station>
 struct SummaryCursor : public CursorSummary
 {
-    core::Query query;
-    const summary::StationEntries<Station>& entries;
-    typename summary::StationEntries<Station>::const_iterator station_entry;
-    typename summary::StationEntry<Station>::const_iterator var_entry;
+    struct Entry
+    {
+        const summary::StationEntry<Station>& station_entry;
+        const summary::VarEntry& var_entry;
+        Entry(const summary::StationEntry<Station>& station_entry, const summary::VarEntry& var_entry)
+            : station_entry(station_entry), var_entry(var_entry) {}
+    };
+    std::vector<Entry> results;
+    typename std::vector<Entry>::const_iterator cur;
     bool at_start = true;
 
     SummaryCursor(const summary::StationEntries<Station>& entries, const Query& query)
-        : query(core::Query::downcast(query)), entries(entries)
     {
+        const core::Query& q = core::Query::downcast(query);
+
+        summary::StationFilter<Station> filter(query);
+        DatetimeRange wanted_dtrange = q.get_datetimerange();
+
+        for (const auto& station_entry: entries)
+        {
+            if (filter.has_flt_station && !filter.matches_station(station_entry.station))
+                continue;
+
+            for (const auto& var_entry: station_entry)
+            {
+                if (!q.level.is_missing() && q.level != var_entry.var.level)
+                    continue;
+
+                if (!q.trange.is_missing() && q.trange != var_entry.var.trange)
+                    continue;
+
+                if (!q.varcodes.empty() && q.varcodes.find(var_entry.var.varcode) == q.varcodes.end())
+                    continue;
+
+                if (!wanted_dtrange.contains(var_entry.dtrange))
+                    continue;
+
+                results.emplace_back(station_entry, var_entry);
+            }
+        }
     }
 
-    int remaining() const override { return MISSING_INT; }
-
-    bool stay_on_first_valid()
+    int remaining() const override
     {
-        if (station_entry == entries.end())
-            return false;
-        if (var_entry != station_entry->end())
-            return true;
-        ++station_entry;
-        if (station_entry == entries.end())
-            return false;
-        var_entry = station_entry->begin();
-        return stay_on_first_valid();
+        if (at_start) return results.size();
+        return results.end() - cur;
     }
 
     bool next() override
     {
         if (at_start)
-        {
-            station_entry = entries.begin();
-            if (station_entry == entries.end())
-                return false;
-
-            var_entry = station_entry->begin();
-            at_start = false;
-
-            return stay_on_first_valid();
-        } else {
-            if (station_entry == entries.end())
-                return false;
-            if (var_entry != station_entry->end())
-                ++var_entry;
-            return stay_on_first_valid();
-        }
+            cur = results.begin();
+        else if (cur != results.end())
+            ++cur;
+        return cur != results.end();
     }
 
     void discard_rest() override
     {
-        station_entry = entries.end();
+        cur = results.end();
     }
 
     void to_record(Record& rec) override
     {
-        station_entry->station.to_record(rec);
+        cur->station_entry.station.to_record(rec);
 
         char bname[7];
-        format_bcode(var_entry->var.varcode, bname);
+        format_bcode(cur->var_entry.var.varcode, bname);
         rec.setc("var", bname);
 
-        if (var_entry->count > 0)
+        if (cur->var_entry.count > 0)
         {
-            rec.seti("context_id", var_entry->count);
-            rec.set(var_entry->dtrange);
+            rec.seti("context_id", cur->var_entry.count);
+            rec.set(cur->var_entry.dtrange);
         }
-        rec.set_level(var_entry->var.level);
-        rec.set_trange(var_entry->var.trange);
+        rec.set_level(cur->var_entry.var.level);
+        rec.set_trange(cur->var_entry.var.trange);
     }
 
     static DBStation _get_dbstation(const DBStation& s) { return s; }
@@ -404,17 +414,17 @@ struct SummaryCursor : public CursorSummary
 
     DBStation get_station() const override
     {
-        return _get_dbstation(station_entry->station);
+        return _get_dbstation(cur->station_entry.station);
     }
 
     int get_station_id() const override
     {
-        return _get_station_id(station_entry->station);
+        return _get_station_id(cur->station_entry.station);
     }
 
-    Coords get_coords() const override { return station_entry->station.coords; }
-    Ident get_ident() const override { return station_entry->station.ident; }
-    std::string get_report() const override { return station_entry->station.report; }
+    Coords get_coords() const override { return cur->station_entry.station.coords; }
+    Ident get_ident() const override { return cur->station_entry.station.ident; }
+    std::string get_report() const override { return cur->station_entry.station.report; }
 
     unsigned test_iterate(FILE* dump=0) override
     {
@@ -428,11 +438,11 @@ struct SummaryCursor : public CursorSummary
         return count;
     }
 
-    Level get_level() const override { return var_entry->var.level; }
-    Trange get_trange() const override { return var_entry->var.trange; }
-    wreport::Varcode get_varcode() const override { return var_entry->var.varcode; }
-    DatetimeRange get_datetimerange() const override { return var_entry->dtrange; }
-    size_t get_count() const override { return var_entry->count; }
+    Level get_level() const override { return cur->var_entry.var.level; }
+    Trange get_trange() const override { return cur->var_entry.var.trange; }
+    wreport::Varcode get_varcode() const override { return cur->var_entry.var.varcode; }
+    DatetimeRange get_datetimerange() const override { return cur->var_entry.dtrange; }
+    size_t get_count() const override { return cur->var_entry.count; }
 };
 
 }
