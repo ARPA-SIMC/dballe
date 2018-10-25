@@ -310,7 +310,7 @@ struct ExplorerDefinition
 
     static PyObject* _repr(Impl* self)
     {
-        string res = name;
+        string res = qual_name;
         res += " object";
         return PyUnicode_FromString(res.c_str());
     }
@@ -557,7 +557,7 @@ struct ExplorerUpdateDefinition
 
     static PyObject* _repr(Impl* self)
     {
-        string res = name;
+        string res = qual_name;
         res += " object";
         return PyUnicode_FromString(res.c_str());
     }

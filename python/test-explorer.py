@@ -111,7 +111,7 @@ class ExplorerTestMixin(BaseExplorerTestMixin):
 
     def assertStrRepr(self, explorer):
         self.assertEqual(str(explorer), "Explorer")
-        self.assertEqual(repr(explorer), "Explorer object")
+        self.assertEqual(repr(explorer), "dballe.Explorer object")
 
 
 class DBExplorerTestMixin(BaseExplorerTestMixin):
@@ -123,7 +123,7 @@ class DBExplorerTestMixin(BaseExplorerTestMixin):
 
     def assertStrRepr(self, explorer):
         self.assertEqual(str(explorer), "DBExplorer")
-        self.assertEqual(repr(explorer), "DBExplorer object")
+        self.assertEqual(repr(explorer), "dballe.DBExplorer object")
 
 
 class DballeV7ExplorerTest(ExplorerTestMixin, unittest.TestCase):

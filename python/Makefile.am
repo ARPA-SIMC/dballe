@@ -4,7 +4,7 @@ TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 
 export PYTHONPATH=.
 
-dballe_python_tests = test-core.py test-types.py test-record.py test-db.py test-explorer.py test-volnd.py test-csv.py
+dballe_python_tests = test-core.py test-types.py test-record.py test-message.py test-db.py test-explorer.py test-volnd.py test-csv.py
 
 # TESTS = $(dballe_python_tests)
 
@@ -24,7 +24,7 @@ _dballe_la_LDFLAGS = -module -avoid-version -export-symbols-regex init_dballe
 _dballe_la_LIBADD = ../dballe/libdballe.la
 
 if HAVE_PYTHON3
-_dballe_la_SOURCES += explorer.cc
+_dballe_la_SOURCES += message.cc explorer.cc
 endif
 
 doc_DATA = python-dballe.rst
@@ -48,6 +48,7 @@ EXTRA_DIST = \
     common.h \
     types.h \
     record.h \
+    message.h \
     db.h \
     cursor.h \
     explorer.h \
