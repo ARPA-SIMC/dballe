@@ -1,6 +1,7 @@
 #include <Python.h>
 #include <dballe/core/record.h>
 #include <dballe/core/defs.h>
+#include <dballe/core/query.h>
 #include "record.h"
 #include "common.h"
 #include "types.h"
@@ -778,6 +779,13 @@ RecordAccess::~RecordAccess()
 
 int RecordAccess::init(PyObject* o)
 {
+    if (!o || o == Py_None)
+    {
+        temp = new dballe::core::Record;
+        result = temp;
+        return 0;
+    }
+
     if (dpy_Record_Check(o))
         try {
             result = ((dpy_Record*)o)->rec;
@@ -797,7 +805,42 @@ int RecordAccess::init(PyObject* o)
             return 0;
         } DBALLE_CATCH_RETURN_INT
 
-    PyErr_SetString(PyExc_TypeError, "Expected dballe.Record or dict");
+    PyErr_SetString(PyExc_TypeError, "Expected dballe.Record or dict or None");
+    return -1;
+}
+
+int read_query(PyObject* from_python, dballe::Query& query)
+{
+    auto& q = core::Query::downcast(query);
+
+    try {
+        if (!from_python || from_python == Py_None)
+        {
+            q.clear();
+            return 0;
+        }
+
+        if (dpy_Record_Check(from_python))
+        {
+            query.set_from_record(*((dpy_Record*)from_python)->rec);
+            return 0;
+        }
+
+        if (PyDict_Check(from_python))
+        {
+            dballe::core::Record rec;
+            PyObject* key;
+            PyObject* value;
+            Py_ssize_t pos = 0;
+            while (PyDict_Next(from_python, &pos, &key, &value))
+                if (setpy(rec, key, value) == -1)
+                    return -1;
+            query.set_from_record(rec);
+            return 0;
+        }
+    } DBALLE_CATCH_RETURN_INT
+
+    PyErr_SetString(PyExc_TypeError, "Expected dballe.Record or dict or None");
     return -1;
 }
 

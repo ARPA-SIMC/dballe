@@ -372,7 +372,10 @@ struct SummaryCursor : public CursorSummary
     bool next() override
     {
         if (at_start)
+        {
             cur = results.begin();
+            at_start = false;
+        }
         else if (cur != results.end())
             ++cur;
         return cur != results.end();
@@ -454,7 +457,7 @@ BaseSummary<Station>::BaseSummary()
 }
 
 template<typename Station>
-std::unique_ptr<db::CursorSummary> BaseSummary<Station>::query_summary(const Query& query)
+std::unique_ptr<db::CursorSummary> BaseSummary<Station>::query_summary(const Query& query) const
 {
     return std::unique_ptr<db::CursorSummary>(new SummaryCursor<Station>(entries, query));
 }

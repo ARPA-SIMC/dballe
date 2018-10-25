@@ -49,7 +49,7 @@ class BaseExplorerTestMixin(DballeDBMixin):
         self.assertEqual(explorer.stats, dballe.ExplorerStats((
             datetime.datetime(1945, 4, 25, 12, 0), datetime.datetime(1945, 4, 25, 12, 0), count_filtered)))
 
-    def testCreate(self):
+    def test_create(self):
         explorer = self._explorer()
         with explorer.rebuild() as update:
             with self.db.transaction() as tr:
@@ -68,7 +68,7 @@ class BaseExplorerTestMixin(DballeDBMixin):
         explorer1.set_filter(dballe.Record(rep_memo="amdar"))
         self.assertExplorerContents(explorer1)
 
-    def testMerge(self):
+    def test_merge(self):
         explorer = self._explorer()
         with explorer.rebuild() as update:
             with self.db.transaction() as tr:
@@ -81,6 +81,25 @@ class BaseExplorerTestMixin(DballeDBMixin):
             update.add_explorer(explorer)
 
         self.assertExplorerContents(explorer1, count_unfiltered=6, count_filtered=2)
+
+    def test_query_summary(self):
+        explorer = self._explorer()
+        with explorer.rebuild() as update:
+            with self.db.transaction() as tr:
+                update.add_db(tr)
+        explorer.set_filter({"rep_memo": "amdar"})
+
+        with explorer.query_summary_all() as cur:
+            rows = list(cur)
+        self.assertEqual(len(rows), 3)
+
+        with explorer.query_summary() as cur:
+            rows = list(cur)
+        self.assertEqual(len(rows), 1)
+
+        with explorer.query_summary_all({"rep_memo": "amdar"}) as cur:
+            rows = list(cur)
+        self.assertEqual(len(rows), 1)
 
 
 class ExplorerTestMixin(BaseExplorerTestMixin):

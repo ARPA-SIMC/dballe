@@ -424,12 +424,10 @@ static PyObject* dpy_query_stations(PYDB* self, PyObject* args)
         return nullptr;
 
     try {
-        RecordAccess rec;
-        if (rec.init(record) == -1)
+        core::Query query;
+        if (read_query(record, query) == -1)
             return nullptr;
         ReleaseGIL gil;
-        core::Query query;
-        query.set_from_record(rec);
         std::unique_ptr<db::Cursor> res = self->db->query_stations(query);
         gil.lock();
         return (PyObject*)cursor_create(move(res));
@@ -448,11 +446,9 @@ static PyObject* dpy_query_data(PYDB* self, PyObject* args)
         return nullptr;
 
     try {
-        RecordAccess rec;
-        if (rec.init(record) == -1)
-            return nullptr;
         core::Query query;
-        query.set_from_record(rec);
+        if (read_query(record, query) == -1)
+            return nullptr;
         std::unique_ptr<db::Cursor> res;
         {
             ReleaseGIL gil;
@@ -474,11 +470,9 @@ static PyObject* dpy_query_station_data(PYDB* self, PyObject* args)
         return nullptr;
 
     try {
-        RecordAccess rec;
-        if (rec.init(record) == -1)
-            return nullptr;
         core::Query query;
-        query.set_from_record(rec);
+        if (read_query(record, query) == -1)
+            return nullptr;
         ReleaseGIL gil;
         std::unique_ptr<db::Cursor> res = self->db->query_station_data(query);
         gil.lock();
@@ -498,11 +492,9 @@ static PyObject* dpy_query_summary(PYDB* self, PyObject* args)
         return nullptr;
 
     try {
-        RecordAccess rec;
-        if (rec.init(record) == -1)
-            return nullptr;
         core::Query query;
-        query.set_from_record(rec);
+        if (read_query(record, query) == -1)
+            return nullptr;
         ReleaseGIL gil;
         std::unique_ptr<db::Cursor> res = self->db->query_summary(query);
         gil.lock();

@@ -100,6 +100,12 @@ this->add_method("summary", [](Fixture& f) {
     s1.add_filtered(s, query);
     wassert(actual(s1.stations().size()) == 1);
     // wassert(actual(s1.stations().begin()->station.id) == query.ana_id);
+
+    BaseSummary<STATION> s2;
+    cur = s.query_summary(query);
+    while (cur->next())
+        s2.add_cursor(*cur);
+    wassert(actual(s2.stations().size()) == 1);
 });
 
 this->add_method("summary_msg", [](Fixture& f) {

@@ -3,6 +3,7 @@
 #include "dballe/db/explorer.h"
 #include "dballe/core/json.h"
 #include "common.h"
+#include "cursor.h"
 #include "explorer.h"
 #include "types.h"
 #include "db.h"
@@ -329,15 +330,13 @@ struct ExplorerDefinition
 
     static PyObject* _set_filter(Impl* self, PyObject* args)
     {
-        dpy_Record* record;
-        if (!PyArg_ParseTuple(args, "O!", &dpy_Record_Type, &record))
+        PyObject* pyquery = nullptr;
+        if (!PyArg_ParseTuple(args, "O", &pyquery))
             return nullptr;
-
-        // TODO: if it is a dict, turn it directly into a Query?
 
         try {
             core::Query query;
-            query.set_from_record(*record->rec);
+            read_query(pyquery, query);
             ReleaseGIL rg;
             self->explorer->set_filter(query);
         } DBALLE_CATCH_RETURN_PYO
@@ -376,6 +375,42 @@ struct ExplorerDefinition
             auto res = update_create();
             res->update = self->explorer->update();
             return (PyObject*)res;
+        } DBALLE_CATCH_RETURN_PYO
+    }
+
+    static PyObject* _query_summary_all(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "query", nullptr };
+        PyObject* record = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "|O", const_cast<char**>(kwlist), &record))
+            return nullptr;
+
+        try {
+            core::Query query;
+            if (read_query(record, query) == -1)
+                return nullptr;
+            ReleaseGIL gil;
+            std::unique_ptr<db::Cursor> res = self->explorer->global_summary().query_summary(query);
+            gil.lock();
+            return (PyObject*)cursor_create(move(res));
+        } DBALLE_CATCH_RETURN_PYO
+    }
+
+    static PyObject* _query_summary(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "query", nullptr };
+        PyObject* record = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "|O", const_cast<char**>(kwlist), &record))
+            return nullptr;
+
+        try {
+            core::Query query;
+            if (read_query(record, query) == -1)
+                return nullptr;
+            ReleaseGIL gil;
+            std::unique_ptr<db::Cursor> res = self->explorer->active_summary().query_summary(query);
+            gil.lock();
+            return (PyObject*)cursor_create(move(res));
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -451,6 +486,10 @@ PyMethodDef ExplorerDefinition<Impl>::methods[] = {
         Only the global summary is serialized: the current query is not
         preserved.
     )" },
+    {"query_summary_all",     (PyCFunction)_query_summary_all, METH_VARARGS | METH_KEYWORDS,
+        "Get all the Explorer summary information; returns a Cursor" },
+    {"query_summary",     (PyCFunction)_query_summary, METH_VARARGS | METH_KEYWORDS,
+        "Get the currently selected Explorer summary information; returns a Cursor" },
     {nullptr}
 };
 
@@ -553,11 +592,7 @@ struct ExplorerUpdateDefinition
         try {
             ReleaseGIL gil;
             self->update.commit();
-        } catch (wreport::error& e) {
-            return raise_wreport_exception(e);
-        } catch (std::exception& se) {
-            return raise_std_exception(se);
-        }
+        } DBALLE_CATCH_RETURN_PYO
 
         Py_RETURN_NONE;
     }

@@ -22,21 +22,34 @@ using namespace wreport;
 
 extern "C" {
 
-static PyObject* dpy_Cursor_remaining(dpy_Cursor* self, void* closure) { return PyInt_FromLong(self->cur->remaining()); }
+static PyObject* dpy_Cursor_remaining(dpy_Cursor* self, void* closure)
+{
+    if (self->cur == nullptr)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "cannot access a cursor after the with block where it is used");
+        return nullptr;
+    }
+    return PyInt_FromLong(self->cur->remaining());
+}
 
 static PyGetSetDef dpy_Cursor_getsetters[] = {
-    {"remaining", (getter)dpy_Cursor_remaining, NULL, "number of results still to be returned", NULL },
-    {NULL}
+    {"remaining", (getter)dpy_Cursor_remaining, nullptr, "number of results still to be returned", nullptr },
+    {nullptr}
 };
 
 static PyObject* dpy_Cursor_query_attrs(dpy_Cursor* self, PyObject* args, PyObject* kw)
 {
+    if (self->cur == nullptr)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "cannot access a cursor after the with block where it is used");
+        return nullptr;
+    }
     if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use Cursor.attr_query, DB.attr_query_station or DB.attr_query_data instead of Cursor.query_attrs", 1))
         return NULL;
 
-    static char* kwlist[] = { "attrs", NULL };
+    static const char* kwlist[] = { "attrs", NULL };
     PyObject* attrs = 0;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "|O", kwlist, &attrs))
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "|O", const_cast<char**>(kwlist), &attrs))
         return NULL;
 
     // Read the attribute list, if provided
@@ -69,6 +82,11 @@ static PyObject* dpy_Cursor_query_attrs(dpy_Cursor* self, PyObject* args, PyObje
 
 static PyObject* dpy_Cursor_attr_query(dpy_Cursor* self)
 {
+    if (self->cur == nullptr)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "cannot access a cursor after the with block where it is used");
+        return nullptr;
+    }
     py_unique_ptr<dpy_Record> rec(record_create());
     try {
         if (auto c = dynamic_cast<const db::CursorStationData*>(self->cur))
@@ -88,11 +106,36 @@ static PyObject* dpy_Cursor_attr_query(dpy_Cursor* self)
     } DBALLE_CATCH_RETURN_PYO
 }
 
+static PyObject* dpy_Cursor_enter(dpy_Cursor* self)
+{
+    Py_INCREF(self);
+    return (PyObject*)self;
+}
+
+static PyObject* dpy_Cursor_exit(dpy_Cursor* self, PyObject* args)
+{
+    PyObject* exc_type;
+    PyObject* exc_val;
+    PyObject* exc_tb;
+    if (!PyArg_ParseTuple(args, "OOO", &exc_type, &exc_val, &exc_tb))
+        return nullptr;
+
+    try {
+        ReleaseGIL gil;
+        delete self->cur;
+        self->cur = nullptr;
+    } DBALLE_CATCH_RETURN_PYO
+
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef dpy_Cursor_methods[] = {
     {"query_attrs",      (PyCFunction)dpy_Cursor_query_attrs, METH_VARARGS | METH_KEYWORDS,
         "Query attributes for the current variable" },
     {"attr_query",       (PyCFunction)dpy_Cursor_attr_query, METH_NOARGS,
         "Query attributes for the current variable" },
+    {"__enter__",         (PyCFunction)dpy_Cursor_enter, METH_NOARGS, "Context manager __enter__" },
+    {"__exit__",          (PyCFunction)dpy_Cursor_exit, METH_VARARGS, "Context manager __exit__" },
     {NULL}
 };
 

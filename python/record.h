@@ -2,6 +2,7 @@
 #define DBALLE_PYTHON_RECORD_H
 
 #include <Python.h>
+#include <dballe/fwd.h>
 
 namespace dballe {
 struct Record;
@@ -43,6 +44,8 @@ public:
     operator dballe::Record&() { return *result; }
     operator const dballe::Record&() const { return *result; }
 };
+
+int read_query(PyObject* from_python, dballe::Query& query);
 
 dpy_Record* record_create();
 
