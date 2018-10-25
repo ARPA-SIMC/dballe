@@ -10,13 +10,8 @@ struct Var;
 
 namespace dballe {
 struct File;
-struct Messages;
+struct Message;
 struct Msg;
-
-namespace msg {
-struct Importer;
-struct Exporter;
-}
 
 namespace fortran {
 
@@ -29,20 +24,20 @@ protected:
         STATE_VOGLIOQUESTO = 4,
         STATE_EOF = 8,
     };
-	File* file;
-	/**
-	 * State flag to track what actions have been performed in order to decide
-	 * what to do next
-	 */
-	unsigned int state;
-	/// Importer (NULL if we export)
-	msg::Importer* importer;
-	/// Exporter (NULL if we import)
-	msg::Exporter* exporter;
-	/// Template selected for exporter (empty if auto detect)
-	std::string exporter_template;
+    File* file;
+    /**
+     * State flag to track what actions have been performed in order to decide
+     * what to do next
+     */
+    unsigned int state;
+    /// Importer (NULL if we export)
+    Importer* importer;
+    /// Exporter (NULL if we import)
+    Exporter* exporter;
+    /// Template selected for exporter (empty if auto detect)
+    std::string exporter_template;
     /// Message being written
-    Messages* msgs;
+    std::vector<std::shared_ptr<dballe::Message>>* msgs;
 	/// Message subset being written
 	Msg* wmsg;
 	/// Last variables written with prendilo
@@ -92,7 +87,7 @@ public:
 	 * @param mode
 	 *   the fopen-style mode to use when opening the file
 	 * @param type
-	 *   the encoding to use for the file.  It can be "BUFR", "CREX", "AOF"
+	 *   the encoding to use for the file.  It can be "BUFR" or "CREX"
 	 *   (read only) or "AUTO" (read only).
 	 */
 	MsgAPI(const char* fname, const char* mode, const char* type);
@@ -114,8 +109,8 @@ public:
 	virtual void critica();
 	virtual void scusa();
     virtual void remove_all();
-    virtual void messages_open_input(const char* filename, const char* mode, File::Encoding format, bool);
-    virtual void messages_open_output(const char* filename, const char* mode, File::Encoding format);
+    virtual void messages_open_input(const char* filename, const char* mode, Encoding format, bool);
+    virtual void messages_open_output(const char* filename, const char* mode, Encoding format);
     virtual bool messages_read_next();
     virtual void messages_write_next(const char*);
 };

@@ -18,7 +18,7 @@ forecast data can be stored, searched, retrieved and updated.
 
 This framework allows to manage large amounts of data using its simple
 Application Program Interface, and provides tools to visualise, import
-and export in the standard formats BUFR, AOF and CREX.
+and export in the standard formats BUFR, and CREX.
 
 The main characteristics of DB-ALL.e are:
 
@@ -114,16 +114,11 @@ Useful resources
 
 BUFR decoding:
 
- * http://www.knmi.nl/~meulenvd/code/bufr/dmtn1.html
-
-AOF decoding:
-
- * Reading of Fortran "unformatted sequential" from C/C++:
-   http://astronomy.swin.edu.au/~pbourke/dataformats/fortran/
+ * <http://www.knmi.nl/~meulenvd/code/bufr/dmtn1.html>
 
 ECWMF BUFR template codes:
 
- * http://www.ecmwf.int/research/ifsdocs/OBSERVATIONS/Chap2_Obs_types3.html
+ * <http://www.ecmwf.int/research/ifsdocs/OBSERVATIONS/Chap2_Obs_types3.html>
 
 
 Contact and copyright information

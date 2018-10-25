@@ -1,5 +1,4 @@
 #include "tests.h"
-#include "codec.h"
 #include "wr_codec.h"
 #include <dballe/core/csv.h>
 #include "context.h"
@@ -87,34 +86,10 @@ const char* crex_files[] = {
     NULL
 };
 
-const char* aof_files[] = {
-	"aof/obs1-11.0.aof",
-	"aof/obs1-14.63.aof",
-	"aof/obs1-21.1.aof",
-	"aof/obs1-24.2104.aof",
-	"aof/obs1-24.34.aof",
-	"aof/obs2-144.2198.aof",
-	"aof/obs2-244.0.aof",
-	"aof/obs2-244.1.aof",
-	"aof/obs4-165.2027.aof",
-	"aof/obs5-35.61.aof",
-	"aof/obs5-36.30.aof",
-	"aof/obs6-32.1573.aof",
-	"aof/obs6-32.0.aof",
-	"aof/aof_27-2-144.aof",
-	"aof/aof_28-2-144.aof",
-	"aof/aof_27-2-244.aof",
-	"aof/aof_28-2-244.aof",
-	"aof/missing-cloud-h.aof",
-	"aof/brokenamdar.aof",
-	"aof/aof-undersealevel.aof",
-	NULL,
-};
-
-Messages read_msgs(const char* filename, File::Encoding type, const msg::ImporterOptions& opts)
+Messages read_msgs(const char* filename, Encoding type, const ImporterOptions& opts)
 {
     BinaryMessage raw = wcallchecked(read_rawmsg(filename, type));
-    std::unique_ptr<msg::Importer> importer = msg::Importer::create(type, opts);
+    std::unique_ptr<Importer> importer = Importer::create(type, opts);
     return importer->from_binary(raw);
 }
 
@@ -133,10 +108,10 @@ Messages read_msgs_csv(const char* filename)
     return msgs;
 }
 
-unique_ptr<Bulletin> export_msgs(File::Encoding enctype, const Messages& in, const std::string& tag, const dballe::msg::ExporterOptions& opts)
+unique_ptr<Bulletin> export_msgs(Encoding enctype, const Messages& in, const std::string& tag, const ExporterOptions& opts)
 {
     try {
-        std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(enctype, opts));
+        std::unique_ptr<Exporter> exporter(Exporter::create(enctype, opts));
         return exporter->to_bulletin(in);
     } catch (std::exception& e) {
         dballe::tests::dump("bul-" + tag, in);
@@ -166,7 +141,7 @@ void track_different_msgs(const Messages& msgs1, const Messages& msgs2, const st
 
 void ActualMessage::is_undef(int shortcut) const
 {
-    const Var* var = Msg::downcast(_actual).find_by_id(shortcut);
+    const Var* var = Msg::downcast(_actual).get(shortcut);
     if (!var || !var->isset()) return;
     std::stringstream ss;
     ss << "value is " << var->enqc() << " instead of being undefined";
@@ -175,7 +150,7 @@ void ActualMessage::is_undef(int shortcut) const
 
 const Var& want_var(const Message& msg, int shortcut)
 {
-    const Var* var = Msg::downcast(msg).find_by_id(shortcut);
+    const Var* var = Msg::downcast(msg).get(shortcut);
     if (!var)
         throw TestFailed("value is missing");
     if (!var->isset())
@@ -185,7 +160,7 @@ const Var& want_var(const Message& msg, int shortcut)
 
 const Var& want_var(const Message& msg, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr)
 {
-    const Var* var = msg.get(code, lev, tr);
+    const Var* var = msg.get(lev, tr, code);
     if (!var)
         throw TestFailed("value is missing");
     if (!var->isset())
@@ -211,7 +186,7 @@ void dump(const std::string& tag, const Messages& msgs, const std::string& desc)
     string fname = "/tmp/" + tag + ".txt";
     FILE* out = fopen(fname.c_str(), "w");
     try {
-        msgs.print(out);
+        msg::messages_print(msgs, out);
     } catch (std::exception& e) {
         fprintf(out, "Dump interrupted: %s\n", e.what());
     }
@@ -282,18 +257,11 @@ void StripAttrs::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        Msg& m = Msg::downcast(mi);
-        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
-        {
-            msg::Context& c = **ci;
-            for (vector<wreport::Var*>::iterator vi = c.data.begin(); vi != c.data.end(); ++vi)
-            {
-                Var& v = **vi;
-                for (vector<wreport::Varcode>::const_iterator i = codes.begin();
-                        i != codes.end(); ++i)
-                    v.unseta(*i);
-            }
-        }
+        auto m = Msg::downcast(mi);
+        for (auto& ctx: m->data)
+            for (auto& var: ctx->data)
+                for (auto code: codes)
+                    var->unseta(code);
     }
 }
 
@@ -313,16 +281,10 @@ void StripSubstituteAttrs::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        Msg& m = Msg::downcast(mi);
-        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
-        {
-            msg::Context& c = **ci;
-            for (vector<wreport::Var*>::iterator vi = c.data.begin(); vi != c.data.end(); ++vi)
-            {
-                Var& v = **vi;
-                v.unseta(v.code());
-            }
-        }
+        auto m = Msg::downcast(mi);
+        for (auto& ctx: m->data)
+            for (auto& var: ctx->data)
+                var->unseta(var->code());
     }
 }
 
@@ -330,29 +292,17 @@ void StripVars::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        Msg& m = Msg::downcast(mi);
-        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); )
+        auto m = Msg::downcast(mi);
+        for (auto ci = m->data.begin(); ci != m->data.end(); )
         {
-            msg::Context& c = **ci;
-            for (vector<wreport::Varcode>::const_iterator i = codes.begin();
-                    i != codes.end(); ++i)
-                c.remove(*i);
-            if (c.data.empty())
-                ci = m.data.erase(ci);
+            for (const auto& code: codes)
+                (*ci)->remove(code);
+            if ((*ci)->data.empty())
+                ci = m->data.erase(ci);
             else
                 ++ci;
         }
     }
-}
-
-StripDatetimeVars::StripDatetimeVars()
-{
-    codes.push_back(WR_VAR(0, 4, 1));
-    codes.push_back(WR_VAR(0, 4, 2));
-    codes.push_back(WR_VAR(0, 4, 3));
-    codes.push_back(WR_VAR(0, 4, 4));
-    codes.push_back(WR_VAR(0, 4, 5));
-    codes.push_back(WR_VAR(0, 4, 6));
 }
 
 RoundLegacyVars::RoundLegacyVars() : table(NULL)
@@ -364,21 +314,20 @@ void RoundLegacyVars::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        Msg& m = Msg::downcast(mi);
-        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
+        auto m = Msg::downcast(mi);
+        for (auto& ctx: m->data)
         {
-            msg::Context& c = **ci;
-            if (Var* var = c.edit(WR_VAR(0, 12, 101)))
+            if (Var* var = ctx->edit(WR_VAR(0, 12, 101)))
             {
                 Var var1(table->query(WR_VAR(0, 12, 1)), *var);
                 var->set(var1);
             }
-            if (Var* var = c.edit(WR_VAR(0, 12, 103)))
+            if (Var* var = ctx->edit(WR_VAR(0, 12, 103)))
             {
                 Var var1(table->query(WR_VAR(0, 12, 3)), *var);
                 var->set(var1);
             }
-            if (Var* var = c.edit(WR_VAR(0,  7,  30)))
+            if (Var* var = ctx->edit(WR_VAR(0,  7,  30)))
             {
                 Var var1(table->query(WR_VAR(0, 7, 1)), *var);
                 var->set(var1);
@@ -392,20 +341,20 @@ void RemoveSynopWMOOnlyVars::tweak(Messages& msgs)
     int seen_tprec_trange = MISSING_INT;
     for (auto& mi: msgs)
     {
-        Msg& m = Msg::downcast(mi);
+        auto m = Msg::downcast(mi);
         // Remove all 'cloud drift' levels
-        for (int i = 1; m.remove_context(Level::cloud(260, i), Trange::instant()); ++i)
+        for (int i = 1; m->remove_context(Level::cloud(260, i), Trange::instant()); ++i)
             ;
         // Remove all 'cloud elevation' levels
-        for (int i = 1; m.remove_context(Level::cloud(261, i), Trange::instant()); ++i)
+        for (int i = 1; m->remove_context(Level::cloud(261, i), Trange::instant()); ++i)
             ;
         // Remove all 'cloud direction and elevation' levels
-        for (int i = 1; m.remove_context(Level::cloud(262, i), Trange::instant()); ++i)
+        for (int i = 1; m->remove_context(Level::cloud(262, i), Trange::instant()); ++i)
             ;
         // Remove all 'cloud below' levels
-        for (int i = 1; m.remove_context(Level::cloud(263, i), Trange::instant()); ++i)
+        for (int i = 1; m->remove_context(Level::cloud(263, i), Trange::instant()); ++i)
             ;
-        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); )
+        for (vector<msg::Context*>::iterator ci = m->data.begin(); ci != m->data.end(); )
         {
             msg::Context& c = **ci;
             c.remove(WR_VAR(0, 20, 62)); // State of the ground (with/without snow)
@@ -439,7 +388,7 @@ void RemoveSynopWMOOnlyVars::tweak(Messages& msgs)
             if (c.trange.pind == 2 || c.trange.pind == 3)
                 c.remove(WR_VAR(0, 12, 101)); // min and max temperature
             if (c.data.empty())
-                ci = m.data.erase(ci);
+                ci = m->data.erase(ci);
             else
                 ++ci;
         }
@@ -450,8 +399,8 @@ void RemoveTempWMOOnlyVars::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        Msg& m = Msg::downcast(mi);
-        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); )
+        auto m = Msg::downcast(mi);
+        for (vector<msg::Context*>::iterator ci = m->data.begin(); ci != m->data.end(); )
         {
             msg::Context& c = **ci;
             c.remove(WR_VAR(0, 22, 43)); // Sea/water temperature
@@ -469,7 +418,7 @@ void RemoveTempWMOOnlyVars::tweak(Messages& msgs)
             c.remove(WR_VAR(0,  2,  3)); // Type of measuring equipment
 
             if (c.data.empty())
-                ci = m.data.erase(ci);
+                ci = m->data.erase(ci);
             else
                 ++ci;
         }
@@ -484,18 +433,15 @@ RemoveOddTempTemplateOnlyVars::RemoveOddTempTemplateOnlyVars()
 void RemoveSynopWMOOddprec::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
-    {
-        Msg& m = Msg::downcast(mi);
-        m.remove_context(Level(1), Trange(1, 0));
-    }
+        Msg::downcast(mi)->remove_context(Level(1), Trange(1, 0));
 }
 
 void TruncStName::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        Msg& m = Msg::downcast(mi);
-        if (msg::Context* c = m.edit_context(Level(), Trange()))
+        auto m = Msg::downcast(mi);
+        if (msg::Context* c = m->edit_context(Level(), Trange()))
             if (const Var* orig = c->find(WR_VAR(0, 1, 19)))
                 if (orig->isset())
                 {
@@ -517,11 +463,10 @@ void RoundGeopotential::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        Msg& m = Msg::downcast(mi);
-        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
+        auto m = Msg::downcast(mi);
+        for (auto& ctx: m->data)
         {
-            msg::Context& c = **ci;
-            if (Var* orig = c.edit(WR_VAR(0, 10, 8)))
+            if (Var* orig = ctx->edit(WR_VAR(0, 10, 8)))
             {
                 // Convert to B10009 (new GTS TEMP templates)
                 Var var2(table->query(WR_VAR(0, 10, 9)), *orig);
@@ -543,13 +488,12 @@ void HeightToGeopotential::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        Msg& m = Msg::downcast(mi);
-        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
+        auto m = Msg::downcast(mi);
+        for (auto& ctx: m->data)
         {
-            msg::Context& c = **ci;
-            if (c.level.ltype1 != 102) continue;
-            Var var(table->query(WR_VAR(0, 10, 8)), round(c.level.l1 * 9.807 / 10) * 10);
-            c.set(var);
+            if (ctx->level.ltype1 != 102) continue;
+            Var var(table->query(WR_VAR(0, 10, 8)), round(ctx->level.l1 * 9.807 / 10) * 10);
+            ctx->set(var);
         }
     }
 }
@@ -558,13 +502,10 @@ void RoundVSS::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        Msg& m = Msg::downcast(mi);
-        for (vector<msg::Context*>::iterator ci = m.data.begin(); ci != m.data.end(); ++ci)
-        {
-            msg::Context& c = **ci;
-            if (Var* orig = c.edit(WR_VAR(0, 8, 42)))
+        auto m = Msg::downcast(mi);
+        for (auto& ctx: m->data)
+            if (Var* orig = ctx->edit(WR_VAR(0, 8, 42)))
                 orig->seti(convert_BUFR08001_to_BUFR08042(convert_BUFR08042_to_BUFR08001(orig->enqi())));
-        }
     }
 }
 
@@ -575,15 +516,12 @@ RemoveContext::RemoveContext(const Level& lev, const Trange& tr)
 void RemoveContext::tweak(Messages& msgs)
 {
     for (auto& mi: msgs)
-    {
-        Msg& m = Msg::downcast(mi);
-        m.remove_context(lev, tr);
-    }
+        Msg::downcast(mi)->remove_context(lev, tr);
 }
 
 }
 
-TestMessage::TestMessage(File::Encoding type, const std::string& name)
+TestMessage::TestMessage(Encoding type, const std::string& name)
     : name(name), type(type), raw(type)
 {
 }
@@ -593,28 +531,28 @@ TestMessage::~TestMessage()
     delete bulletin;
 }
 
-void TestMessage::read_from_file(const std::string& fname, const msg::ImporterOptions& input_opts)
+void TestMessage::read_from_file(const std::string& fname, const ImporterOptions& input_opts)
 {
     read_from_raw(read_rawmsg(fname.c_str(), type), input_opts);
 }
 
-void TestMessage::read_from_raw(const BinaryMessage& msg, const msg::ImporterOptions& input_opts)
+void TestMessage::read_from_raw(const BinaryMessage& msg, const ImporterOptions& input_opts)
 {
-    std::unique_ptr<msg::Importer> importer(msg::Importer::create(type, input_opts));
+    std::unique_ptr<Importer> importer(Importer::create(type, input_opts));
     raw = msg;
     switch (type)
     {
-        case File::BUFR: bulletin = BufrBulletin::decode(raw.data).release(); break;
-        case File::CREX: bulletin = CrexBulletin::decode(raw.data).release(); break;
+        case Encoding::BUFR: bulletin = BufrBulletin::decode(raw.data).release(); break;
+        case Encoding::CREX: bulletin = CrexBulletin::decode(raw.data).release(); break;
         default: throw wreport::error_unimplemented("Unsupported message type");
     }
     msgs = importer->from_binary(raw);
 }
 
-void TestMessage::read_from_msgs(const Messages& _msgs, const msg::ExporterOptions& export_opts)
+void TestMessage::read_from_msgs(const Messages& _msgs, const ExporterOptions& export_opts)
 {
     // Export
-    std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(type, export_opts));
+    std::unique_ptr<Exporter> exporter(Exporter::create(type, export_opts));
     msgs = _msgs;
     delete bulletin;
     bulletin = exporter->to_bulletin(msgs).release();
@@ -642,12 +580,12 @@ void TestMessage::dump() const
 
     fname = basename + ".messages";
     out = fopen(fname.c_str(), "w");
-    msgs.print(out);
+    msg::messages_print(msgs, out);
     fclose(out);
     cerr << name << " interpreted saved in " << fname << endl;
 }
 
-TestCodec::TestCodec(const std::string& fname, File::Encoding type)
+TestCodec::TestCodec(const std::string& fname, Encoding type)
     : fname(fname), type(type)
 {
 }
@@ -655,7 +593,6 @@ TestCodec::TestCodec(const std::string& fname, File::Encoding type)
 void TestCodec::configure_ecmwf_to_wmo_tweaks()
 {
     after_convert_import.add(new tweaks::StripQCAttrs);
-    after_convert_import.add(new tweaks::StripDatetimeVars);
 }
 
 void TestCodec::do_compare(const TestMessage& msg1, const TestMessage& msg2)
@@ -664,7 +601,7 @@ void TestCodec::do_compare(const TestMessage& msg1, const TestMessage& msg2)
     {
         stringstream str;
         notes::Collect c(str);
-        int diffs = msg1.msgs.diff(msg2.msgs);
+        int diffs = msg::messages_diff(msg1.msgs, msg2.msgs);
         if (diffs)
         {
             msg1.dump();
@@ -719,7 +656,7 @@ void TestCodec::run_reimport()
 
     if (!expected_template.empty())
     {
-        std::unique_ptr<msg::Exporter> exporter(msg::Exporter::create(type, output_opts));
+        std::unique_ptr<Exporter> exporter(Exporter::create(type, output_opts));
         msg::WRExporter* exp = dynamic_cast<msg::WRExporter*>(exporter.get());
         auto tpl = exp->infer_template(orig.msgs);
         wassert(actual(tpl->name()) == expected_template);
@@ -768,7 +705,7 @@ void TestCodec::run_convert(const std::string& tplname)
 
     // Export
     if (verbose) cerr << "Exporting with template " << tplname << " and options " << output_opts.to_string() << endl;
-    msg::ExporterOptions output_opts = this->output_opts;
+    ExporterOptions output_opts = this->output_opts;
     output_opts.template_name = tplname;
     TestMessage exported(type, "exported");
     try {

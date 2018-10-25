@@ -432,11 +432,10 @@ void register_ship(TemplateRegistry& r)
                 bool maybe_plain = true;
                 bool maybe_auto = true;
                 bool maybe_second = true;
-                const Msg& msg = Msg::downcast(msgs[0]);
-                for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
-                        i != msg.data.end(); ++i)
+                auto msg = Msg::downcast(msgs[0]);
+                for (const auto& ctx: msg->data)
                 {
-                    const msg::Context& c = **i;
+                    const msg::Context& c = *ctx;
                     switch (c.level.ltype1)
                     {
                         case MISSING_INT:

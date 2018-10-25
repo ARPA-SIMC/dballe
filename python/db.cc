@@ -8,7 +8,9 @@
 #include "dballe/core/query.h"
 #include "dballe/core/values.h"
 #include "dballe/message.h"
-#include "dballe/msg/codec.h"
+#include "dballe/importer.h"
+#include "dballe/exporter.h"
+#include "dballe/msg/msg.h"
 #include "dballe/db/defs.h"
 #include <algorithm>
 #include <wreport/bulletin.h>
@@ -227,10 +229,10 @@ static PyObject* dpy_insert_data(PYDB* self, PyObject* args, PyObject* kw)
 }
 
 template<typename DB>
-static unsigned db_load_file_enc(DB& db, File::Encoding encoding, FILE* file, bool close_on_exit, const std::string& name, int flags)
+static unsigned db_load_file_enc(DB& db, Encoding encoding, FILE* file, bool close_on_exit, const std::string& name, int flags)
 {
     std::unique_ptr<File> f = File::create(encoding, file, close_on_exit, name);
-    std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->encoding());
+    std::unique_ptr<Importer> imp = Importer::create(f->encoding());
     unsigned count = 0;
     f->foreach([&](const BinaryMessage& raw) {
         Messages msgs = imp->from_binary(raw);
@@ -245,7 +247,7 @@ template<typename DB>
 static unsigned db_load_file(DB& db, FILE* file, bool close_on_exit, const std::string& name, int flags)
 {
     std::unique_ptr<File> f = File::create(file, close_on_exit, name);
-    std::unique_ptr<msg::Importer> imp = msg::Importer::create(f->encoding());
+    std::unique_ptr<Importer> imp = Importer::create(f->encoding());
     unsigned count = 0;
     f->foreach([&](const BinaryMessage& raw) {
         Messages msgs = imp->from_binary(raw);
@@ -702,11 +704,11 @@ static PyObject* dpy_export_to_file(PYDB* self, PyObject* args, PyObject* kw)
     if (!PyArg_ParseTupleAndKeywords(args, kw, "O!sO|i", const_cast<char**>(kwlist), &dpy_Record_Type, &query, &format, &file, &as_generic))
         return NULL;
 
-    File::Encoding encoding = File::BUFR;
+    Encoding encoding = Encoding::BUFR;
     if (strcmp(format, "BUFR") == 0)
-        encoding = File::BUFR;
+        encoding = Encoding::BUFR;
     else if (strcmp(format, "CREX") == 0)
-        encoding = File::CREX;
+        encoding = Encoding::CREX;
     else
     {
         PyErr_SetString(PyExc_ValueError, "encoding must be one of BUFR or CREX");
@@ -720,16 +722,16 @@ static PyObject* dpy_export_to_file(PYDB* self, PyObject* args, PyObject* kw)
             return NULL;
         try {
             std::unique_ptr<File> out = File::create(encoding, filename, "wb");
-            msg::ExporterOptions opts;
+            ExporterOptions opts;
             if (as_generic)
                 opts.template_name = "generic";
-            auto exporter = msg::Exporter::create(out->encoding(), opts);
+            auto exporter = Exporter::create(out->encoding(), opts);
             auto q = Query::create();
             q->set_from_record(*query->rec);
             ReleaseGIL gil;
             self->db->export_msgs(*q, [&](unique_ptr<Message>&& msg) {
                 Messages msgs;
-                msgs.append(move(msg));
+                msgs.emplace_back(move(msg));
                 out->write(exporter->to_binary(msgs));
                 return true;
             });
@@ -742,17 +744,17 @@ static PyObject* dpy_export_to_file(PYDB* self, PyObject* args, PyObject* kw)
         }
     } else {
         try {
-            msg::ExporterOptions opts;
+            ExporterOptions opts;
             if (as_generic)
                 opts.template_name = "generic";
-            auto exporter = msg::Exporter::create(encoding, opts);
+            auto exporter = Exporter::create(encoding, opts);
             auto q = Query::create();
             q->set_from_record(*query->rec);
             pyo_unique_ptr res(nullptr);
             bool has_error = false;
             self->db->export_msgs(*q, [&](unique_ptr<Message>&& msg) {
                 Messages msgs;
-                msgs.append(move(msg));
+                msgs.emplace_back(move(msg));
                 std::string encoded = exporter->to_binary(msgs);
 #if PY_MAJOR_VERSION >= 3
                 res = pyo_unique_ptr(PyObject_CallMethod(file, (char*)"write", (char*)"y#", encoded.data(), (int)encoded.size()));
@@ -855,7 +857,7 @@ static PyMethodDef dpy_DB_methods[] = {
         load(fp, encoding=None, attrs=False, full_pseudoana=False, overwrite=False)
 
         Load a file object in the database. An encoding can optionally be
-        provided as a string ("BUFR", "CREX", "AOF"). If encoding is None then
+        provided as a string ("BUFR", "CREX"). If encoding is None then
         load will try to autodetect based on the first byte of the file.
     )" },
     {"remove_station_data", (PyCFunction)dpy_remove_station_data<dpy_DB>, METH_VARARGS,
@@ -910,7 +912,7 @@ static PyMethodDef dpy_Transaction_methods[] = {
         load(fp, encoding=None, attrs=False, full_pseudoana=False, overwrite=False)
 
         Load a file object in the database. An encoding can optionally be
-        provided as a string ("BUFR", "CREX", "AOF"). If encoding is None then
+        provided as a string ("BUFR", "CREX"). If encoding is None then
         load will try to autodetect based on the first byte of the file.
     )" },
     {"remove_station_data", (PyCFunction)dpy_remove_station_data<dpy_Transaction>, METH_VARARGS,

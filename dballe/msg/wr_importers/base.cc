@@ -25,7 +25,6 @@ static const Trange tr_std_wind_max10m(205, 0, 600);
 
 void Importer::init()
 {
-    ye = mo = da = ho = mi = se = MISSING_INT;
 }
 
 void Importer::import(const wreport::Subset& subset, Msg& msg)
@@ -34,62 +33,19 @@ void Importer::import(const wreport::Subset& subset, Msg& msg)
     this->msg = &msg;
     init();
     run();
-
-    // Postprocess extracting rep_memo information
-    const Var* rep_memo = msg.get_rep_memo_var();
-    if (rep_memo)
-        msg.set_rep_memo(rep_memo->enqc());
-    else
-        msg.set_rep_memo(std::string());
-
-    // Postprocess extracting coordinate information
-    const Var* lat = msg.get_latitude_var();
-    const Var* lon = msg.get_longitude_var();
-    if (lat && lon)
-        msg.set_coords(Coords(lat->enqd(), lon->enqd()));
-    else
-        msg.set_coords(Coords());
-
-    // Postprocess extracting ident information
-    const Var* ident = msg.get_ident_var();
-    if (ident)
-        msg.set_ident(Ident(ident->enqc()));
-    else
-        msg.set_ident(Ident());
-
-    // Postprocess extracting datetime information
-    if (ye == MISSING_INT)
-        msg.set_datetime(Datetime());
-    else
-    {
-        if (mo == MISSING_INT)
-            throw error_consistency("no month information found in message to import");
-        if (da == MISSING_INT)
-            throw error_consistency("no day information found in message to import");
-        if (ho == MISSING_INT)
-            throw error_consistency("no hour information found in message to import");
-        if (mi == MISSING_INT)
-            throw error_consistency("no minute information found in message to import");
-        if (se == MISSING_INT)
-            se = 0;
-        // Accept an hour of 24:00:00 and move it to 00:00:00 of the following
-        // day
-        Datetime::normalise_h24(ye, mo, da, ho, mi, se);
-        msg.set_datetime(Datetime(ye, mo, da, ho, mi, se));
-    }
 }
 
 void Importer::set(const wreport::Var& var, int shortcut)
 {
-    msg->set_by_id(var, shortcut);
+    msg->set(shortcut, var);
 }
 
 void Importer::set(const wreport::Var& var, wreport::Varcode code, const Level& level, const Trange& trange)
 {
-    msg->set(var, code, level, trange);
+    msg->set(level, trange, code, var);
 }
 
-std::unique_ptr<Importer> Importer::createSat(const msg::ImporterOptions&) { throw error_unimplemented("WB sat Importers"); }
+std::unique_ptr<Importer> Importer::createSat(const ImporterOptions&) { throw error_unimplemented("WB sat Importers"); }
 
 void WMOImporter::import_var(const Var& var)
 {
@@ -106,12 +62,12 @@ void WMOImporter::import_var(const Var& var)
         case WR_VAR(0,  1, 63): set(var, DBA_MSG_ST_NAME_ICAO); break;
         case WR_VAR(0,  2,  1): set(var, DBA_MSG_ST_TYPE); break;
         case WR_VAR(0,  1, 15): set(var, DBA_MSG_ST_NAME); break;
-        case WR_VAR(0,  4,  1): ye = var.enqi(); if (var.next_attr()) set(var, DBA_MSG_YEAR); break;
-        case WR_VAR(0,  4,  2): mo = var.enqi(); if (var.next_attr()) set(var, DBA_MSG_MONTH); break;
-        case WR_VAR(0,  4,  3): da = var.enqi(); if (var.next_attr()) set(var, DBA_MSG_DAY); break;
-        case WR_VAR(0,  4,  4): ho = var.enqi(); if (var.next_attr()) set(var, DBA_MSG_HOUR); break;
-        case WR_VAR(0,  4,  5): mi = var.enqi(); if (var.next_attr()) set(var, DBA_MSG_MINUTE); break;
-        case WR_VAR(0,  4,  6): se = var.enqi(); if (var.next_attr()) set(var, DBA_MSG_SECOND); break;
+        case WR_VAR(0,  4,  1): set(var, DBA_MSG_YEAR); break;
+        case WR_VAR(0,  4,  2): set(var, DBA_MSG_MONTH); break;
+        case WR_VAR(0,  4,  3): set(var, DBA_MSG_DAY); break;
+        case WR_VAR(0,  4,  4): set(var, DBA_MSG_HOUR); break;
+        case WR_VAR(0,  4,  5): set(var, DBA_MSG_MINUTE); break;
+        case WR_VAR(0,  4,  6): set(var, DBA_MSG_SECOND); break;
         case WR_VAR(0,  5,  1):
         case WR_VAR(0,  5,  2): set(var, DBA_MSG_LATITUDE); break;
         case WR_VAR(0,  6,  1):
@@ -523,10 +479,10 @@ void SynopBaseImporter::set(std::unique_ptr<Interpreted> val)
     if (opts.simplified)
         queued.push_back(val.release());
     else
-        msg->set(move(val->var), val->level, val->trange);
+        msg->set(val->level, val->trange, move(val->var));
 }
 
-SynopBaseImporter::SynopBaseImporter(const msg::ImporterOptions& opts)
+SynopBaseImporter::SynopBaseImporter(const ImporterOptions& opts)
     : WMOImporter(opts)
 {
 }
@@ -567,7 +523,7 @@ void SynopBaseImporter::run()
     });
     for (auto& i: queued)
     {
-        msg->set(move(i->var), i->level, i->trange);
+        msg->set(i->level, i->trange, move(i->var));
         delete i;
         i = nullptr;
     }

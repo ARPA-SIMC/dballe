@@ -1,10 +1,11 @@
 #include "msgapi.h"
 #include <wreport/var.h>
 #include "dballe/file.h"
+#include "dballe/importer.h"
+#include "dballe/exporter.h"
 #include "dballe/message.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
-#include "dballe/msg/codec.h"
 #include "dballe/core/var.h"
 #include <cstring>
 #include <cassert>
@@ -28,18 +29,16 @@ MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
     }
 
     if (strcasecmp(type, "BUFR") == 0)
-        file = File::create(File::BUFR, fname, mode).release();
+        file = File::create(Encoding::BUFR, fname, mode).release();
     else if (strcasecmp(type, "CREX") == 0)
-        file = File::create(File::CREX, fname, mode).release();
-    else if (strcasecmp(type, "AOF") == 0)
-        file = File::create(File::AOF, fname, mode).release();
+        file = File::create(Encoding::CREX, fname, mode).release();
     else if (strcasecmp(type, "AUTO") == 0)
         file = File::create(fname, mode).release();
     else
         error_consistency::throwf("\"%s\" is not one of the supported message types", type);
 
     if (strchr(mode, 'r') != NULL)
-        importer = msg::Importer::create(file->encoding()).release();
+        importer = Importer::create(file->encoding()).release();
 }
 
 MsgAPI::~MsgAPI()
@@ -62,7 +61,7 @@ MsgAPI::~MsgAPI()
 Msg* MsgAPI::curmsg()
 {
     if (msgs && curmsgidx < msgs->size())
-        return &Msg::downcast((*msgs)[curmsgidx]);
+        return &Msg::downcast(*(*msgs)[curmsgidx]);
     else
         return nullptr;
 }
@@ -88,9 +87,8 @@ bool MsgAPI::readNextMessage()
 
     if (BinaryMessage raw = file->read())
     {
-        unique_ptr<Messages> new_msgs(new Messages);
-        *new_msgs = importer->from_binary(raw);
-        msgs = new_msgs.release();
+        auto messages = importer->from_binary(raw);
+        msgs = new std::vector<std::shared_ptr<Message>>(std::move(messages));
         state &= ~STATE_BLANK;
         return true;
     }
@@ -297,7 +295,7 @@ void MsgAPI::flushVars()
         unique_ptr<Var> var(vars.back());
         vars.pop_back();
 
-        wmsg->set(move(var), vars_level, vars_trange);
+        wmsg->set(vars_level, vars_trange, move(var));
     }
 }
 
@@ -308,7 +306,7 @@ void MsgAPI::flushSubset()
         flushVars();
         unique_ptr<Message> awmsg(wmsg);
         wmsg = 0;
-        msgs->append(move(awmsg));
+        msgs->emplace_back(move(awmsg));
     }
 }
 
@@ -319,9 +317,9 @@ void MsgAPI::flushMessage()
         flushSubset();
         if (exporter == 0)
         {
-            msg::ExporterOptions opts;
+            ExporterOptions opts;
             opts.template_name = exporter_template;
-            exporter = msg::Exporter::create(file->encoding(), opts).release();
+            exporter = Exporter::create(file->encoding(), opts).release();
         }
         file->write(exporter->to_binary(*msgs));
         delete msgs;
@@ -346,7 +344,7 @@ void MsgAPI::prendilo()
             wmsg->type = Msg::type_from_repmemo(val);
         }
     if (const Var* var = input.get("ana_id"))
-        wmsg->seti(WR_VAR(0, 1, 192), var->enqi(), -1, Level(), Trange());
+        wmsg->set(Level(), Trange(), newvar(WR_VAR(0, 1, 192), var->enqi()));
     if (const Var* var = input.get("ident"))
         wmsg->set_ident(var->enqc());
     if (const Var* var = input.get("lat"))
@@ -474,12 +472,12 @@ void MsgAPI::scusa()
     throw error_consistency("scusa does not make sense when writing messages");
 }
 
-void MsgAPI::messages_open_input(const char* filename, const char* mode, File::Encoding format, bool)
+void MsgAPI::messages_open_input(const char* filename, const char* mode, Encoding format, bool)
 {
     throw error_unimplemented("MsgAPI::messages_open_input");
 }
 
-void MsgAPI::messages_open_output(const char* filename, const char* mode, File::Encoding format)
+void MsgAPI::messages_open_output(const char* filename, const char* mode, Encoding format)
 {
     throw error_unimplemented("MsgAPI::messages_open_output");
 }

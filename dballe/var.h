@@ -44,6 +44,7 @@ static inline wreport::Var var(C code) { return wreport::Var(varinfo(code)); }
 template<typename C, typename T>
 static inline wreport::Var var(C code, const T& val) { return wreport::Var(varinfo(code), val); }
 
+
 /// Create a new Var, as a copy of an existing variable
 static inline std::unique_ptr<wreport::Var> newvar(const wreport::Var& var)
 {

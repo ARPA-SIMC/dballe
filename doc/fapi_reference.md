@@ -130,8 +130,8 @@ Input/Output routines.
 </th>
 </thead>
 <tbody>
-<tr><td><code><a href='#idba_messages_open_input'>idba_messages_open_input(handle, filename, mode, format, simplified)</a></code></td><td>Open a BUFR, CREX, or AOF file for reading.</td></tr>
-<tr><td><code><a href='#idba_messages_open_output'>idba_messages_open_output(handle, filename, mode, format)</a></code></td><td>Open a BUFR, CREX, or AOF file for writing.</td></tr>
+<tr><td><code><a href='#idba_messages_open_input'>idba_messages_open_input(handle, filename, mode, format, simplified)</a></code></td><td>Open a BUFR, or CREX file for reading.</td></tr>
+<tr><td><code><a href='#idba_messages_open_output'>idba_messages_open_output(handle, filename, mode, format)</a></code></td><td>Open a BUFR, or CREX file for writing.</td></tr>
 <tr><td><code><a href='#idba_messages_read_next'>idba_messages_read_next(handle, found)</a></code></td><td>Read the next message and import it in the database.</td></tr>
 <tr><td><code><a href='#idba_messages_write_next'>idba_messages_write_next(handle, template_name)</a></code></td><td>Export the data from the database that match the current query and add them to the current message.</td></tr>
 </tbody>
@@ -357,7 +357,7 @@ Parameters:
 * `mode`: File open mode. It can be `"r"` for read, `"w"` for write
   (the old file is deleted), `"a"` for append
 * `type`: Format of the data in the file. It can be: `"BUFR"`,
-  `"CREX"`, `"AOF"` (read only), `"AUTO"` (autodetect, read only)
+  `"CREX"`, `"AUTO"` (autodetect, read only)
 
 Return value:
 
@@ -965,7 +965,7 @@ Parameters:
 * `filename`: The file name
 * `mode`: The opening mode. See the mode parameter of libc's fopen()
   call for details.
-* `format`: The file format ("BUFR", "CREX", or "AOF")
+* `format`: The file format ("BUFR", or "CREX")
 * `simplified`: true if the file is imported in simplified mode, false
   if it is imported in precise mode. This controls approximating
   levels and time ranges to standard values.
@@ -973,7 +973,7 @@ Parameters:
 Return value:
 
 The error indication for the function.
-Open a BUFR, CREX, or AOF file for reading.
+Open a BUFR, or CREX file for reading.
 
 Each session can only have one open input file: if one was previously
 open, it is closed before opening the new one.
@@ -986,12 +986,12 @@ Parameters:
 * `filename`: The file name
 * `mode`: The opening mode. See the mode parameter of libc's fopen()
   call for details.
-* `format`: The file format ("BUFR", "CREX", or "AOF")
+* `format`: The file format ("BUFR", or "CREX")
 
 Return value:
 
 The error indication for the function.
-Open a BUFR, CREX, or AOF file for writing.
+Open a BUFR, or CREX file for writing.
 
 Each session can only have one open input file: if one was previously
 open, it is closed before opening the new one.

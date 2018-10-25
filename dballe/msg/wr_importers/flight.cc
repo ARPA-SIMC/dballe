@@ -43,7 +43,7 @@ protected:
     void import_var(const Var& var);
 
 public:
-    FlightImporter(const msg::ImporterOptions& opts) : WMOImporter(opts) {}
+    FlightImporter(const ImporterOptions& opts) : WMOImporter(opts) {}
     virtual ~FlightImporter()
     {
         // If there are leftover variables in deferred, deallocate them
@@ -71,7 +71,7 @@ public:
             deferred.push_back(copy.release());
         }
         else
-            msg->set(var, var.code(), lev, Trange::instant());
+            msg->set(lev, Trange::instant(), var.code(), var);
     }
 
     void acquire(const Var& var, Varcode code)
@@ -84,7 +84,7 @@ public:
             deferred.push_back(copy.release());
         }
         else
-            msg->set(var, code, lev, Trange::instant());
+            msg->set(lev, Trange::instant(), code, var);
     }
 
     void set_level(const Level& newlev)
@@ -100,7 +100,7 @@ public:
         {
             unique_ptr<Var> var(*i);
             *i = 0;
-            msg->set(move(var), lev, Trange::instant());
+            msg->set(lev, Trange::instant(), move(var));
         }
         deferred.clear();
     }
@@ -123,7 +123,7 @@ public:
             msg->set_ident_var(*b01006);
     }
 
-    MsgType scanTypeFromVars(const Subset& subset) const
+    MessageType scanTypeFromVars(const Subset& subset) const
     {
         for (unsigned i = 0; i < subset.size(); ++i)
         {
@@ -131,30 +131,30 @@ public:
             {
                 case WR_VAR(0, 2, 65): // ACARS GROUND RECEIVING STATION
                     if (subset[0].isset())
-                        return MSG_ACARS;
+                        return MessageType::ACARS;
                     break;
             }
         }
-        return MSG_AMDAR;
+        return MessageType::AMDAR;
     }
 
-    MsgType scanType(const Bulletin& bulletin) const
+    MessageType scanType(const Bulletin& bulletin) const
     {
         switch (bulletin.data_subcategory_local)
         {
-            case 142: return MSG_AIREP;
-            case 144: return MSG_AMDAR;
-            case 145: return MSG_ACARS;
+            case 142: return MessageType::AIREP;
+            case 144: return MessageType::AMDAR;
+            case 145: return MessageType::ACARS;
             default:
                 // Scan for the presence of significant B codes
                 if (bulletin.subsets.empty())
-                    return MSG_GENERIC;
+                    return MessageType::GENERIC;
                 return scanTypeFromVars(bulletin.subsets[0]);
         }
     }
 };
 
-std::unique_ptr<Importer> Importer::createFlight(const msg::ImporterOptions& opts)
+std::unique_ptr<Importer> Importer::createFlight(const ImporterOptions& opts)
 {
     return unique_ptr<Importer>(new FlightImporter(opts));
 }

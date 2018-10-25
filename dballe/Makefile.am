@@ -4,12 +4,12 @@ EXTRA_DIST =
 CLEANFILES =
 noinst_DATA =
 
-AM_CPPFLAGS = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) -I$(top_builddir) $(WREPORT_CFLAGS) $(LIBPQ_CFLAGS) $(SQLITE3_CFLAGS) $(MYSQL_CFLAGS) $(LUA_CFLAGS)
+AM_CPPFLAGS = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) -I$(top_builddir) $(WREPORT_CFLAGS) $(LIBPQ_CFLAGS) $(SQLITE3_CFLAGS) $(MYSQL_CFLAGS)
 if FILE_OFFSET_BITS_64
 AM_CPPFLAGS += -D_FILE_OFFSET_BITS=64
 endif
 
-common_libs = $(WREPORT_LIBS) $(LIBPQ_LIBS) $(SQLITE3_LIBS) $(MYSQL_LIBS) $(LUA_LIBS) $(POPT_LIBS)
+common_libs = $(WREPORT_LIBS) $(LIBPQ_LIBS) $(SQLITE3_LIBS) $(MYSQL_LIBS) $(POPT_LIBS)
 
 #
 # Autobuilt files
@@ -25,14 +25,14 @@ BUILT_SOURCES = core/record_keyword.cc core/aliases.cc
 EXTRA_DIST += core/aliases.gperf core/aliases.cc core/record_keyword.gperf core/record_keyword.cc
 
 
-msg/vars.h msg/vars.gperf msg/msg-extravars.h msg/context-extravars.h: msg/vars.csv msg/mkvars
+msg/vars.h msg/vars.gperf msg/msg-extravars.h: msg/vars.csv msg/mkvars
 	$(srcdir)/msg/mkvars msg < $<
 
 msg/vars.cc: msg/vars.gperf
 	if ! gperf < $< > $@; then rm $@; /bin/false; fi
 
-BUILT_SOURCES += msg/vars.h msg/vars.cc msg/vars.gperf msg/msg-extravars.h msg/context-extravars.h
-EXTRA_DIST += msg/mkvars msg/vars.csv msg/vars.h msg/vars.gperf msg/vars.cc msg/vars.cc msg/msg-extravars.h msg/context-extravars.h
+BUILT_SOURCES += msg/vars.h msg/vars.cc msg/vars.gperf msg/msg-extravars.h
+EXTRA_DIST += msg/mkvars msg/vars.csv msg/vars.h msg/vars.gperf msg/vars.cc msg/vars.cc msg/msg-extravars.h
 
 noinst_PROGRAMS =
 EXTRA_PROGRAMS =
@@ -47,6 +47,8 @@ dballeincludedir = $(includedir)/dballe
 nobase_dist_dballeinclude_HEADERS = \
 	fwd.h \
 	file.h \
+	importer.h \
+	exporter.h \
 	message.h \
 	types.h \
 	record.h \
@@ -62,7 +64,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/values.h \
 	core/file.h \
 	core/arrayfile.h \
-	core/aoffile.h \
 	core/csv.h \
 	core/record.h \
 	core/query.h \
@@ -75,14 +76,11 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/trace.h \
 	core/json.h \
 	msg/fwd.h \
-	msg/codec.h \
 	msg/bulletin.h \
 	msg/context.h \
 	msg/vars.h \
 	msg/msg.h \
 	msg/msg-extravars.h \
-	msg/context-extravars.h \
-	msg/aof_codec.h \
 	msg/wr_codec.h \
 	msg/wr_exporters/common.h \
 	sql/fwd.h \
@@ -144,6 +142,8 @@ endif
 lib_LTLIBRARIES = libdballe.la
 libdballe_la_SOURCES = \
 	file.cc \
+	importer.cc \
+	exporter.cc \
 	message.cc \
 	types.cc \
 	record.cc \
@@ -157,7 +157,6 @@ libdballe_la_SOURCES = \
 	core/values.cc \
 	core/file.cc \
 	core/arrayfile.cc \
-	core/aoffile.cc \
 	core/csv.cc \
 	core/record_keyword.cc \
 	core/record.cc \
@@ -172,15 +171,6 @@ libdballe_la_SOURCES = \
 	msg/vars.cc \
 	msg/context.cc \
 	msg/msg.cc \
-	msg/msg-lua.cc \
-	msg/codec.cc \
-	msg/aof_codec.cc \
-	msg/aof_importers/common.cc \
-	msg/aof_importers/synop.cc \
-	msg/aof_importers/dribu.cc \
-	msg/aof_importers/flight.cc \
-	msg/aof_importers/temp.cc \
-	msg/aof_importers/pilot.cc \
 	msg/wr_codec.cc \
 	msg/wr_importers/base.cc \
 	msg/wr_importers/synop.cc \
@@ -260,7 +250,6 @@ EXTRA_DIST += \
 	core/vasprintf.h \
 	core/byteswap.h \
 	msg/wr_importers/base.h \
-	msg/aof_importers/common.h \
 	msg/filter.cc \
 	msg/wr_importers/sat.cc
 
@@ -282,13 +271,14 @@ check-local:
 dist_noinst_HEADERS = \
 	core/tests.h \
 	msg/tests.h \
-	msg/tests-lua.h \
 	db/tests.h
 
 test_dballe_SOURCES = \
 	tests-main.cc \
 	core/tests.cc \
 	file-test.cc \
+	importer-test.cc \
+	exporter-test.cc \
 	message-test.cc \
 	types-test.cc \
 	record-test.cc \
@@ -313,13 +303,11 @@ test_dballe_SOURCES = \
 	msg/bulletin-test.cc \
 	msg/vars-test.cc \
 	msg/context-test.cc \
-	msg/codec-test.cc \
 	msg/msg-test.cc \
 	msg/wr_codec_generic-test.cc \
 	msg/wr_codec-test.cc \
 	msg/wr_import-test.cc \
 	msg/wr_export-test.cc \
-	msg/aof_codec-test.cc \
 	sql/querybuf-test.cc \
 	sql/sqlite-test.cc \
 	db/tests.cc \
@@ -346,11 +334,6 @@ test_dballe_SOURCES = \
 	simple/dbapi-test.cc \
 	cmdline/processor-test.cc \
 	cmdline/dbadb-test.cc
-if LUA
-test_dballe_SOURCES += \
-	msg/lua-test.cc \
-	msg/tests-lua.cc
-endif
 if HAVE_LIBPQ
 test_dballe_SOURCES += \
 	sql/postgresql-test.cc

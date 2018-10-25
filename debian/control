@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 10), dh-python, dh-autoreconf,
   autotools-dev, pkg-config, doxygen, help2man,
   libsqlite3-dev (>= 3.14), libpq-dev, default-libmysqlclient-dev,
   libwreport-dev (>= 3.6), python-wreport, python3-wreport,
-  libpopt-dev, gperf, liblua5.1-0-dev,
+  libpopt-dev, gperf,
   gfortran | g77,
   python-all-dev, python3-all-dev, python-docutils, python-numpy, python3-numpy,
   python-six, python3-six
@@ -17,7 +17,7 @@ Vcs-Git: https://github.com/ARPA-SIMC/dballe
 Package: libdballe-dev
 Section: libdevel
 Architecture: any
-Depends: libdballe7 (= ${binary:Version}), libwreport-dev, ${misc:Depends}
+Depends: libdballe8 (= ${binary:Version}), libwreport-dev, ${misc:Depends}
 Recommends: pkg-config
 Description: DB-All.e C development library for weather research
  DB-All.e is a fast on-disk database where meteorological observed and
@@ -38,7 +38,6 @@ Description: DB-All.e C development library for weather research
      * soundings: temp, pilot
      * METAR reports
      * Satellite strides (decode only)
-  * Decoding of AOF reports
   * Interpretation of weather reports as physical data precisely located in
     space and time, and encoding of physical data into weather reports.
   * Smart on-disk database for observed and forecast weather data based on
@@ -55,7 +54,7 @@ Description: documentation for the DB-ALL.e C library for weather research
  .
  This is the documentation for the DB_All.e development the library.
 
-Package: libdballe7
+Package: libdballe8
 Section: libs
 Architecture: any
 Depends: dballe-common, ${shlibs:Depends}, ${misc:Depends}
@@ -132,7 +131,7 @@ Description: Database for punctual meteorological data (Command line tools)
  .
  This framework allows one to manage large amounts of data using its simple
  Application Program Interface, and provides tools to visualise, import
- and export in the standard formats BUFR, AOF and CREX.
+ and export in the standard formats BUFR, and CREX.
  .
  The main characteristics of DB-ALL.e are:
  .

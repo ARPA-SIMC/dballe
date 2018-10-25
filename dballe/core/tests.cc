@@ -177,12 +177,12 @@ std::string datafile(const std::string& fname)
 	return testdatadir + "/" + fname;
 }
 
-unique_ptr<File> open_test_data(const char* filename, File::Encoding type)
+unique_ptr<File> open_test_data(const char* filename, Encoding type)
 {
     return unique_ptr<File>(File::create(type, datafile(filename), "r"));
 }
 
-BinaryMessage read_rawmsg(const char* filename, File::Encoding type)
+BinaryMessage read_rawmsg(const char* filename, Encoding type)
 {
     unique_ptr<File> f = wcallchecked(open_test_data(filename, type));
     BinaryMessage res = f->read();

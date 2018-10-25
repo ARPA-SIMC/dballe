@@ -403,6 +403,36 @@ int Datetime::compare(const Datetime& o) const
     return second - o.second;
 }
 
+bool Datetime::operator==(const Datetime& o) const
+{
+    return std::tie(year, month, day, hour, minute, second) == std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
+}
+
+bool Datetime::operator!=(const Datetime& o) const
+{
+    return std::tie(year, month, day, hour, minute, second) != std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
+}
+
+bool Datetime::operator<(const Datetime& o) const
+{
+    return std::tie(year, month, day, hour, minute, second) < std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
+}
+
+bool Datetime::operator>(const Datetime& o) const
+{
+    return std::tie(year, month, day, hour, minute, second) > std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
+}
+
+bool Datetime::operator<=(const Datetime& o) const
+{
+    return std::tie(year, month, day, hour, minute, second) <= std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
+}
+
+bool Datetime::operator>=(const Datetime& o) const
+{
+    return std::tie(year, month, day, hour, minute, second) >= std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
+}
+
 Datetime Datetime::from_iso8601(const char* str)
 {
     int ye, mo, da, ho, mi, se;
@@ -466,6 +496,13 @@ bool DatetimeRange::is_missing() const
 {
     return min.is_missing() && max.is_missing();
 }
+
+bool DatetimeRange::operator==(const DatetimeRange& o) const { return std::tie(min, max) == std::tie(o.min, o.max); }
+bool DatetimeRange::operator!=(const DatetimeRange& o) const { return std::tie(min, max) != std::tie(o.min, o.max); }
+bool DatetimeRange::operator<(const DatetimeRange& o) const { return std::tie(min, max) < std::tie(o.min, o.max); }
+bool DatetimeRange::operator<=(const DatetimeRange& o) const { return std::tie(min, max) <= std::tie(o.min, o.max); }
+bool DatetimeRange::operator>(const DatetimeRange& o) const { return std::tie(min, max) > std::tie(o.min, o.max); }
+bool DatetimeRange::operator>=(const DatetimeRange& o) const { return std::tie(min, max) >= std::tie(o.min, o.max); }
 
 void DatetimeRange::merge(const DatetimeRange& range)
 {
@@ -603,6 +640,13 @@ int Coords::compare(const Coords& o) const
     if (int res = lat - o.lat) return res;
     return lon - o.lon;
 }
+
+bool Coords::operator==(const Coords& o) const { return std::tie(lat, lon) == std::tie(o.lat, o.lon); }
+bool Coords::operator!=(const Coords& o) const { return std::tie(lat, lon) != std::tie(o.lat, o.lon); }
+bool Coords::operator<(const Coords& o) const { return std::tie(lat, lon) < std::tie(o.lat, o.lon); }
+bool Coords::operator>(const Coords& o) const { return std::tie(lat, lon) > std::tie(o.lat, o.lon); }
+bool Coords::operator<=(const Coords& o) const { return std::tie(lat, lon) <= std::tie(o.lat, o.lon); }
+bool Coords::operator>=(const Coords& o) const { return std::tie(lat, lon) >= std::tie(o.lat, o.lon); }
 
 int Coords::print(FILE* out, const char* end) const
 {
@@ -836,6 +880,36 @@ std::ostream& operator<<(std::ostream& out, const LonRange& lr)
 
 bool Level::is_missing() const { return ltype1 == MISSING_INT && l1 == MISSING_INT && ltype2 == MISSING_INT && l2 == MISSING_INT; }
 
+bool Level::operator==(const Level& o) const
+{
+    return std::tie(ltype1, l1, ltype2, l2) == std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
+}
+
+bool Level::operator!=(const Level& o) const
+{
+    return std::tie(ltype1, l1, ltype2, l2) != std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
+}
+
+bool Level::operator<(const Level& o) const
+{
+    return std::tie(ltype1, l1, ltype2, l2) < std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
+}
+
+bool Level::operator>(const Level& o) const
+{
+    return std::tie(ltype1, l1, ltype2, l2) > std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
+}
+
+bool Level::operator<=(const Level& o) const
+{
+    return std::tie(ltype1, l1, ltype2, l2) <= std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
+}
+
+bool Level::operator>=(const Level& o) const
+{
+    return std::tie(ltype1, l1, ltype2, l2) >= std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
+}
+
 int Level::compare(const Level& l) const
 {
     int res;
@@ -1012,6 +1086,13 @@ int Trange::compare(const Trange& t) const
     if ((res = p1 - t.p1)) return res;
     return p2 - t.p2;
 }
+
+bool Trange::operator==(const Trange& o) const { return std::tie(pind, p1, p2) == std::tie(o.pind, o.p1, o.p2); }
+bool Trange::operator!=(const Trange& o) const { return std::tie(pind, p1, p2) != std::tie(o.pind, o.p1, o.p2); }
+bool Trange::operator<(const Trange& o) const { return std::tie(pind, p1, p2) < std::tie(o.pind, o.p1, o.p2); }
+bool Trange::operator>(const Trange& o) const { return std::tie(pind, p1, p2) > std::tie(o.pind, o.p1, o.p2); }
+bool Trange::operator<=(const Trange& o) const { return std::tie(pind, p1, p2) <= std::tie(o.pind, o.p1, o.p2); }
+bool Trange::operator>=(const Trange& o) const { return std::tie(pind, p1, p2) >= std::tie(o.pind, o.p1, o.p2); }
 
 void Trange::to_stream(std::ostream& out, const char* undef) const
 {
@@ -1207,6 +1288,9 @@ int Ident::compare(const std::string& o) const
     if (!value) return -1;
     return strcmp(value, o.c_str());
 }
+
+bool Ident::is_missing() const { return value == nullptr; }
+
 Ident::operator std::string() const
 {
     if (!value) throw error_consistency("ident is not set");
@@ -1221,5 +1305,20 @@ std::ostream& operator<<(std::ostream& out, const Ident& i)
         return out << (const char*)i;
 }
 
+
+}
+
+namespace std {
+
+size_t hash<dballe::Level>::operator()(dballe::Level const& o) const noexcept
+{
+    using dballe::MISSING_INT;
+    size_t res = 0;
+    if (o.ltype1 != MISSING_INT) res += o.ltype1;
+    if (o.l1 != MISSING_INT) res += o.l1;
+    if (o.ltype2 != MISSING_INT) res += o.ltype2 << 8;
+    if (o.l2 != MISSING_INT) res += o.l2;
+    return res;
+}
 
 }

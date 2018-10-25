@@ -176,7 +176,7 @@ struct StationEntries : protected core::SmallSet<StationEntry<Station>, Station,
 
     void add_filtered(const StationEntries& entry, const dballe::Query& query);
 
-    bool has(const Station& station) const { return find(station) != end(); }
+    bool has(const Station& station) const { return this->find(station) != this->end(); }
 
     const StationEntries& sorted() const { if (this->dirty) this->rearrange_dirty(); return *this; }
 };
@@ -255,7 +255,7 @@ public:
     void add_message(const dballe::Message& message);
 
     /// Add the contents of a Messages
-    void add_messages(const dballe::Messages& messages);
+    void add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages);
 
     /// Merge the copy of another summary into this one
     template<typename OSummary>

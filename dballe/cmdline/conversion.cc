@@ -2,9 +2,9 @@
 #include "processor.h"
 #include "dballe/file.h"
 #include "dballe/message.h"
+#include "dballe/exporter.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
-#include "dballe/msg/codec.h"
 
 #include <wreport/bulletin.h>
 
@@ -54,7 +54,7 @@ static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const Mess
             // BC01-SYNOP
             // Get the hour from the first message
             // Default to 1 to simulate an odd observation time
-            int hour = msgs[0].get_datetime().is_missing() ? 1 : msgs[0].get_datetime().hour;
+            int hour = msgs[0]->get_datetime().is_missing() ? 1 : msgs[0]->get_datetime().hour;
 
             if ((hour % 6) == 0)
                 // 002 at main synoptic times 00, 06, 12, 18 UTC,
@@ -76,10 +76,10 @@ static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const Mess
         case 2:
             // BC20-PILOT
             // BC25-TEMP
-            switch (Msg::downcast(msgs[0]).type)
+            switch (msgs[0]->get_type())
             {
                 // 001 for PILOT data,
-                case MSG_PILOT:
+                case MessageType::PILOT:
                     b.data_subcategory = 1;
                     // ncdf_pilot     =  4 ,& ! indicator for proc. NetCDF PILOT (z-levels)   input
                     // ncdf_pilot_p   =  5 ,& ! indicator for proc. NetCDF PILOT (p-levels)   input
@@ -87,9 +87,9 @@ static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const Mess
                 // 002 for PILOT SHIP data, (TODO)
                 // 003 for PILOT MOBIL data. (TODO)
                 // 004 for TEMP data,
-                case MSG_TEMP: b.data_subcategory = 4; break;
+                case MessageType::TEMP: b.data_subcategory = 4; break;
                 // 005 for TEMP SHIP data,
-                case MSG_TEMP_SHIP: b.data_subcategory = 5; break;
+                case MessageType::TEMP_SHIP: b.data_subcategory = 5; break;
                 // 006 for TEMP MOBIL data (TODO)
                 // Default to TEMP
                 default: b.data_subcategory = 4; break;
@@ -99,9 +99,9 @@ static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const Mess
         // Missing data from this onwards
         case 3: b.data_subcategory = 0; break;
         case 4:
-            switch (Msg::downcast(msgs[0]).type)
+            switch (msgs[0]->get_type())
             {
-                case MSG_AIREP: b.data_subcategory = 1; break;
+                case MessageType::AIREP: b.data_subcategory = 1; break;
                 default: b.data_subcategory = 0; break;
             }
             break;
@@ -132,7 +132,7 @@ static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, co
             // 13 for fixed stations
             // 14 for mobile stations
             b.data_subcategory_local = 13;
-            if (const wreport::Var* v = Msg::downcast(msgs[0]).get_ident_var())
+            if (const wreport::Var* v = Msg::downcast(msgs[0])->get_ident_var())
                 if (v->isset())
                     b.data_subcategory_local = 14;
             break;
@@ -142,12 +142,11 @@ static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, co
                 // 4 for z-level pilots
                 // 5 for p-level pilots
                 // Arbitrary default to z-level pilots
-                const Msg& msg = Msg::downcast(msgs[0]);
+                auto msg = Msg::downcast(msgs[0]);
                 b.data_subcategory_local = 4;
-                for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
-                        i != msg.data.end(); ++i)
+                for (const auto& ctx: msg->data)
                 {
-                    switch ((*i)->level.ltype1)
+                    switch (ctx->level.ltype1)
                     {
                         case 100: // Isobaric Surface
                             b.data_subcategory_local = 5;
@@ -160,10 +159,10 @@ static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, co
             }
             break;
         case 4:
-            switch (Msg::downcast(msgs[0]).type)
+            switch (msgs[0]->get_type())
             {
-                case MSG_AMDAR: b.data_subcategory_local = 8; break;
-                case MSG_ACARS: b.data_subcategory_local = 9; break;
+                case MessageType::AMDAR: b.data_subcategory_local = 8; break;
+                case MessageType::ACARS: b.data_subcategory_local = 9; break;
                 default: break;
             }
             break;
@@ -222,8 +221,8 @@ bool Converter::operator()(const cmdline::Item& item)
         }
 
         // Same encoding
-        if ((file->encoding() == File::BUFR && string(item.bulletin->encoding_name()) == "CREX")
-                || (file->encoding() == File::CREX && string(item.bulletin->encoding_name()) == "BUFR"))
+        if ((file->encoding() == Encoding::BUFR && string(item.bulletin->encoding_name()) == "CREX")
+                || (file->encoding() == Encoding::CREX && string(item.bulletin->encoding_name()) == "BUFR"))
         {
             fprintf(stderr, "encoding change not yet supported for low-level bufrex recoding\n");
             return false;
@@ -238,9 +237,9 @@ bool Converter::operator()(const cmdline::Item& item)
     if (dest_rep_memo != NULL)
     {
         // Force message type (will also influence choice of template later)
-        MsgType type = Msg::type_from_repmemo(dest_rep_memo);
-        for (size_t i = 0; i < item.msgs->size(); ++i)
-            Msg::downcast((*item.msgs)[i]).type = type;
+        MessageType type = Msg::type_from_repmemo(dest_rep_memo);
+        for (auto& msg: *item.msgs)
+            Msg::downcast(msg)->type = type;
     }
 
     if (item.bulletin and dest_rep_memo == NULL)
@@ -253,5 +252,3 @@ bool Converter::operator()(const cmdline::Item& item)
 
 }
 }
-
-/* vim:set ts=4 sw=4: */

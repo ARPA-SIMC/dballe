@@ -291,8 +291,7 @@ int idba_preparati(int dbahandle, int* handle, const char* anaflag, const char* 
  *   File open mode.  It can be `"r"` for read, `"w"` for write (the old file
  *   is deleted), `"a"` for append
  * @param type
- *   Format of the data in the file.  It can be: `"BUFR"`, `"CREX"`, `"AOF"`
- *   (read only), `"AUTO"` (autodetect, read only)
+ *   Format of the data in the file.  It can be: `"BUFR"`, `"CREX"`, `"AUTO"` (autodetect, read only)
  * @return
  *   The error indication for the function.
  */
@@ -1390,7 +1389,7 @@ int idba_scusa(int handle)
  */
 
 /**
- * Open a BUFR, CREX, or AOF file for reading.
+ * Open a BUFR, or CREX file for reading.
  *
  * Each session can only have one open input file: if one was previously open,
  * it is closed before opening the new one.
@@ -1402,7 +1401,7 @@ int idba_scusa(int handle)
  * @param mode
  *   The opening mode. See the mode parameter of libc's fopen() call for details.
  * @param format
- *   The file format ("BUFR", "CREX", or "AOF")
+ *   The file format ("BUFR", or "CREX")
  * @param simplified
  *   true if the file is imported in simplified mode, false if it is imported
  *   in precise mode. This controls approximating levels and time ranges to
@@ -1428,7 +1427,7 @@ int idba_messages_open_input(
 }
 
 /**
- * Open a BUFR, CREX, or AOF file for writing.
+ * Open a BUFR, or CREX file for writing.
  *
  * Each session can only have one open input file: if one was previously open,
  * it is closed before opening the new one.
@@ -1440,7 +1439,7 @@ int idba_messages_open_input(
  * @param mode
  *   The opening mode. See the mode parameter of libc's fopen() call for details.
  * @param format
- *   The file format ("BUFR", "CREX", or "AOF")
+ *   The file format ("BUFR", or "CREX")
  * @return
  *   The error indication for the function.
  */

@@ -93,7 +93,7 @@ protected:
     void import_var(const Var& var);
 
 public:
-    PollutionImporter(const msg::ImporterOptions& opts) : WMOImporter(opts) {}
+    PollutionImporter(const ImporterOptions& opts) : WMOImporter(opts) {}
     virtual ~PollutionImporter() {}
 
     virtual void init()
@@ -147,13 +147,13 @@ public:
         if (attr_pmc) finalvar->seta(*attr_pmc);
 
         // Store it into the dba_msg
-        msg->set(move(finalvar), lev, tr);
+        msg->set(lev, tr, move(finalvar));
     }
 
-    MsgType scanType(const Bulletin& bulletin) const { return MSG_POLLUTION; }
+    MessageType scanType(const Bulletin& bulletin) const { return MessageType::POLLUTION; }
 };
 
-std::unique_ptr<Importer> Importer::createPollution(const msg::ImporterOptions& opts)
+std::unique_ptr<Importer> Importer::createPollution(const ImporterOptions& opts)
 {
     return unique_ptr<Importer>(new PollutionImporter(opts));
 }

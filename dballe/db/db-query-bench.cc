@@ -2,7 +2,6 @@
 #include "dballe/core/values.h"
 #include "dballe/core/query.h"
 #include "dballe/msg/msg.h"
-#include "dballe/msg/codec.h"
 
 using namespace dballe;
 using namespace std;

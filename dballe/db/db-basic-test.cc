@@ -161,17 +161,17 @@ this->add_method("stationdata", [](Fixture& f) {
     }
 
     Messages msgs;
-    f.tr->export_msgs(core::Query(), [&](unique_ptr<Message>&& msg) { msgs.append(move(msg)); return true; });
+    f.tr->export_msgs(core::Query(), [&](unique_ptr<Message>&& msg) { msgs.push_back(move(msg)); return true; });
     wassert(actual(msgs.size()) == 2);
 
     //msgs.print(stderr);
 
-    wassert(actual(Msg::downcast(msgs[0]).get_rep_memo_var()->enqc()) == "synop");
-    wassert(actual(Msg::downcast(msgs[0]).get_st_name_var()->enqc()) == "Camse");
-    wassert(actual(Msg::downcast(msgs[0]).get_temp_2m_var()->enqd()) == 273.15);
-    wassert(actual(Msg::downcast(msgs[1]).get_rep_memo_var()->enqc()) == "temp");
-    wassert(actual(Msg::downcast(msgs[1]).get_st_name_var()->enqc()) == "Esmac");
-    wassert(actual(Msg::downcast(msgs[1]).get_temp_2m_var()->enqd()) == 274.15);
+    wassert(actual(Msg::downcast(msgs[0])->get_rep_memo_var()->enqc()) == "synop");
+    wassert(actual(Msg::downcast(msgs[0])->get_st_name_var()->enqc()) == "Camse");
+    wassert(actual(Msg::downcast(msgs[0])->get_temp_2m_var()->enqd()) == 273.15);
+    wassert(actual(Msg::downcast(msgs[1])->get_rep_memo_var()->enqc()) == "temp");
+    wassert(actual(Msg::downcast(msgs[1])->get_st_name_var()->enqc()) == "Esmac");
+    wassert(actual(Msg::downcast(msgs[1])->get_temp_2m_var()->enqd()) == 274.15);
 });
 this->add_method("query_ident", [](Fixture& f) {
     // Insert a mobile station

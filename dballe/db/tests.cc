@@ -41,7 +41,7 @@ Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const dballe::Que
 {
     Messages res;
     tr->export_msgs(query, [&](unique_ptr<Message>&& msg) {
-        res.append(move(msg));
+        res.emplace_back(move(msg));
         return true;
     });
     return res;
@@ -51,7 +51,7 @@ Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const char* query
 {
     Messages res;
     tr->export_msgs(*dballe::tests::query_from_string(query), [&](unique_ptr<Message>&& msg) {
-        res.append(move(msg));
+        res.emplace_back(move(msg));
         return true;
     });
     return res;

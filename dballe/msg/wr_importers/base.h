@@ -19,10 +19,9 @@ namespace wr {
 class Importer
 {
 protected:
-    const msg::ImporterOptions& opts;
+    const ImporterOptions& opts;
     const wreport::Subset* subset;
     Msg* msg;
-    int ye, mo, da, ho, mi, se;
 
     virtual void init();
     virtual void run() = 0;
@@ -31,22 +30,22 @@ protected:
     void set(const wreport::Var& var, wreport::Varcode code, const Level& level, const Trange& trange);
 
 public:
-    Importer(const msg::ImporterOptions& opts) : opts(opts) {}
+    Importer(const ImporterOptions& opts) : opts(opts) {}
     virtual ~Importer() {}
 
-    virtual MsgType scanType(const wreport::Bulletin& bulletin) const = 0;
+    virtual MessageType scanType(const wreport::Bulletin& bulletin) const = 0;
 
     void import(const wreport::Subset& subset, Msg& msg);
 
-    static std::unique_ptr<Importer> createSynop(const msg::ImporterOptions&);
-    static std::unique_ptr<Importer> createShip(const msg::ImporterOptions&);
-    static std::unique_ptr<Importer> createMetar(const msg::ImporterOptions&);
-    static std::unique_ptr<Importer> createTemp(const msg::ImporterOptions&);
-    static std::unique_ptr<Importer> createPilot(const msg::ImporterOptions&);
-    static std::unique_ptr<Importer> createFlight(const msg::ImporterOptions&);
-    static std::unique_ptr<Importer> createSat(const msg::ImporterOptions&);
-    static std::unique_ptr<Importer> createPollution(const msg::ImporterOptions&);
-    static std::unique_ptr<Importer> createGeneric(const msg::ImporterOptions&);
+    static std::unique_ptr<Importer> createSynop(const ImporterOptions&);
+    static std::unique_ptr<Importer> createShip(const ImporterOptions&);
+    static std::unique_ptr<Importer> createMetar(const ImporterOptions&);
+    static std::unique_ptr<Importer> createTemp(const ImporterOptions&);
+    static std::unique_ptr<Importer> createPilot(const ImporterOptions&);
+    static std::unique_ptr<Importer> createFlight(const ImporterOptions&);
+    static std::unique_ptr<Importer> createSat(const ImporterOptions&);
+    static std::unique_ptr<Importer> createPollution(const ImporterOptions&);
+    static std::unique_ptr<Importer> createGeneric(const ImporterOptions&);
 };
 
 class WMOImporter : public Importer
@@ -63,7 +62,7 @@ protected:
     }
 
 public:
-    WMOImporter(const msg::ImporterOptions& opts) : Importer(opts) {}
+    WMOImporter(const ImporterOptions& opts) : Importer(opts) {}
     virtual ~WMOImporter() {}
 };
 
@@ -220,7 +219,7 @@ protected:
     void set(std::unique_ptr<Interpreted> val);
 
 public:
-    SynopBaseImporter(const msg::ImporterOptions& opts);
+    SynopBaseImporter(const ImporterOptions& opts);
     ~SynopBaseImporter();
 
     void init() override;

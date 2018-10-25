@@ -8,7 +8,6 @@
 #include "dballe/core/csv.h"
 #include "dballe/core/json.h"
 #include "dballe/core/match-wreport.h"
-#include "dballe/msg/aof_codec.h"
 #include "dballe/cmdline/cmdline.h"
 #include <cstring>
 #include <cstdlib>
@@ -58,7 +57,7 @@ void Item::set_msgs(Messages* new_msgs)
     msgs = new_msgs;
 }
 
-void Item::decode(msg::Importer& imp, bool print_errors)
+void Item::decode(Importer& imp, bool print_errors)
 {
     if (!rmsg) return;
 
@@ -77,7 +76,7 @@ void Item::decode(msg::Importer& imp, bool print_errors)
     // First step: decode raw message to bulletin
     switch (rmsg->encoding)
     {
-        case File::BUFR:
+        case Encoding::BUFR:
             try {
                 bulletin = BufrBulletin::decode(rmsg->data, rmsg->pathname.c_str(), rmsg->offset).release();
             } catch (error& e) {
@@ -86,7 +85,7 @@ void Item::decode(msg::Importer& imp, bool print_errors)
                 bulletin = 0;
             }
             break;
-        case File::CREX:
+        case Encoding::CREX:
             try {
                 bulletin = CrexBulletin::decode(rmsg->data, rmsg->pathname.c_str(), rmsg->offset).release();
             } catch (error& e) {
@@ -95,16 +94,13 @@ void Item::decode(msg::Importer& imp, bool print_errors)
                 bulletin = 0;
             }
             break;
-        case File::AOF:
-            // Nothing to do for AOF
-            break;
     }
 
     // Second step: decode to msgs
     switch (rmsg->encoding)
     {
-        case File::BUFR:
-        case File::CREX:
+        case Encoding::BUFR:
+        case Encoding::CREX:
             if (bulletin)
             {
                 msgs = new Messages;
@@ -115,16 +111,6 @@ void Item::decode(msg::Importer& imp, bool print_errors)
                     delete msgs;
                     msgs = 0;
                 }
-            }
-            break;
-        case File::AOF:
-            msgs = new Messages;
-            try {
-                *msgs = imp.from_binary(*rmsg);
-            } catch (error& e) {
-                if (print_errors) print_parse_error(*rmsg, e);
-                delete msgs;
-                msgs = 0;
             }
             break;
     }
@@ -276,27 +262,6 @@ bool Filter::match_crex(const BinaryMessage& rmsg, const Bulletin* rm, const Mes
 #endif
 }
 
-bool Filter::match_aof(const BinaryMessage& rmsg, const Messages* msgs) const
-{
-    int category, subcategory;
-    msg::AOFImporter::get_category(rmsg, &category, &subcategory);
-
-    if (!match_common(rmsg, msgs))
-        return false;
-
-    if (this->category != -1)
-        if (this->category != category)
-            return false;
-
-    if (this->subcategory != -1)
-        if (this->subcategory != subcategory)
-            return false;
-
-    if (msgs) return match_msgs(*msgs);
-
-    return true;
-}
-
 bool Filter::match_msgs(const Messages& msgs) const
 {
     if (matcher && matcher->match(MatchedMessages(msgs)) != matcher::MATCH_YES)
@@ -311,9 +276,8 @@ bool Filter::match_item(const Item& item) const
     {
         switch (item.rmsg->encoding)
         {
-            case File::BUFR: return match_bufr(*item.rmsg, item.bulletin, item.msgs);
-            case File::CREX: return match_crex(*item.rmsg, item.bulletin, item.msgs);
-            case File::AOF: return match_aof(*item.rmsg, item.msgs);
+            case Encoding::BUFR: return match_bufr(*item.rmsg, item.bulletin, item.msgs);
+            case Encoding::CREX: return match_crex(*item.rmsg, item.bulletin, item.msgs);
             default: return false;
         }
     } else if (item.msgs)
@@ -368,7 +332,7 @@ void Reader::read_csv(const std::list<std::string>& fnames, Action& action)
 
             // We want it: move it to the item
             unique_ptr<Messages> msgs(new Messages);
-            msgs->append(move(msg));
+            msgs->emplace_back(move(msg));
             item.set_msgs(msgs.release());
 
             if (!filter.match_item(item))
@@ -747,7 +711,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING:
                     state.push(MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR);
-                    var.reset(new Var(dballe::var(val)));
+                    var = newvar(val);
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_MAPPING:
                     if (val == "v")
@@ -764,7 +728,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING:
                     state.push(MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY);
-                    attr.reset(new Var(dballe::var(val)));
+                    attr = newvar(val);
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY:
                     state.pop();
@@ -791,7 +755,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
             if (!filter.match_index(item.idx))
                 return;
             unique_ptr<Messages> msgs(new Messages);
-            msgs->append(msg);
+            msgs->emplace_back(make_shared<Msg>(msg));
             item.set_msgs(msgs.release());
 
             if (!filter.match_item(item))
@@ -822,7 +786,7 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
                 file = File::create(stdin, false, "standard input");
             }
         } else {
-            File::Encoding intype = string_to_encoding(input_type.c_str());
+            Encoding intype = string_to_encoding(input_type.c_str());
             if (name != fnames.end())
             {
                 file = File::create(intype, *name, "r");
@@ -833,7 +797,7 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
         }
 
 
-        std::unique_ptr<msg::Importer> imp = msg::Importer::create(file->encoding(), import_opts);
+        std::unique_ptr<Importer> imp = Importer::create(file->encoding(), import_opts);
         while (BinaryMessage bm = file->read())
         {
             Item item;

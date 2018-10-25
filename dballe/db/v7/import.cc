@@ -58,14 +58,19 @@ void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const 
 
     if (flags & DBA_IMPORT_FULL_PSEUDOANA || (station->is_new && station->id == MISSING_INT))
     {
-        for (size_t i = 0; i < l_ana->data.size(); ++i)
+        for (const auto& var: l_ana->data)
         {
-            Varcode code = l_ana->data[i]->code();
-            // Do not import datetime in the station info context
-            if (code >= WR_VAR(0, 4, 1) && code <= WR_VAR(0, 4, 6))
-                continue;
+            Varcode code = var->code();
 
-            station->get_station_data(trc).add(l_ana->data[i], flags & DBA_IMPORT_OVERWRITE ? batch::UPDATE : batch::IGNORE);
+            // Do not import datetime in the station info context, unless it has attributes
+            if (code == WR_VAR(0, 4, 1) && !var->next_attr()) continue;
+            if (code == WR_VAR(0, 4, 2) && !var->next_attr()) continue;
+            if (code == WR_VAR(0, 4, 3) && !var->next_attr()) continue;
+            if (code == WR_VAR(0, 4, 4) && !var->next_attr()) continue;
+            if (code == WR_VAR(0, 4, 5) && !var->next_attr()) continue;
+            if (code == WR_VAR(0, 4, 6) && !var->next_attr()) continue;
+
+            station->get_station_data(trc).add(var, flags & DBA_IMPORT_OVERWRITE ? batch::UPDATE : batch::IGNORE);
         }
     }
 
@@ -118,7 +123,7 @@ void Transaction::import_msgs(const Messages& msgs, const char* repmemo, int fla
     batch.set_write_attrs(flags & DBA_IMPORT_ATTRS);
 
     for (const auto& i: msgs)
-        add_msg_to_batch(trc, i, repmemo, flags);
+        add_msg_to_batch(trc, *i, repmemo, flags);
 
     // Run the bulk insert
     batch.write_pending(trc);

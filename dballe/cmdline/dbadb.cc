@@ -1,22 +1,3 @@
-/*
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "dbadb.h"
 #include "dballe/message.h"
 #include "dballe/msg/msg.h"
@@ -147,13 +128,13 @@ int Dbadb::do_import(const std::string& fname, Reader& reader, int import_flags,
 
 int Dbadb::do_export(const Query& query, File& file, const char* output_template, const char* forced_repmemo)
 {
-    msg::ExporterOptions opts;
+    ExporterOptions opts;
     if (output_template && output_template[0] != 0)
         opts.template_name = output_template;
 
     if (forced_repmemo)
         forced_repmemo = forced_repmemo;
-    auto exporter = msg::Exporter::create(file.encoding(), opts);
+    auto exporter = Exporter::create(file.encoding(), opts);
 
     db.export_msgs(query, [&](unique_ptr<Message>&& msg) {
         /* Override the message type if the user asks for it */
@@ -163,8 +144,8 @@ int Dbadb::do_export(const Query& query, File& file, const char* output_template
             m.type = Msg::type_from_repmemo(forced_repmemo);
             m.set_rep_memo(forced_repmemo);
         }
-        Messages msgs;
-        msgs.append(move(msg));
+        std::vector<std::shared_ptr<Message>> msgs;
+        msgs.emplace_back(move(msg));
         file.write(exporter->to_binary(msgs));
         return true;
     });

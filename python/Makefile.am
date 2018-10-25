@@ -33,17 +33,14 @@ if HAVE_RST2HTML
 doc_DATA += python-dballe.html
 endif
 
-_dballe.so: _dballe.la
-	ln -fs .libs/_dballe.so $@
-
-python-dballe.rst: doc-dballe $(pkgpython_PYTHON) _dballe.so
-	$(PYTHON) $(srcdir)/doc-dballe > $@ || (rm -f $@; false)
+python-dballe.rst: doc-dballe $(pkgpython_PYTHON) $(pyexec_LTLIBRARIES)
+	PYTHONPATH=.libs libtool --mode=execute $(PYTHON) $(srcdir)/doc-dballe > $@ || (rm -f $@; false)
 
 python-dballe.html: python-dballe.rst
 	rst2html $< > $@ || (rm -f $@; false)
 
 clean-local:
-	rm -f *.pyc dballe/*.pyc _dballe.so
+	rm -f *.pyc dballe/*.pyc
 	rm -rf __pycache__ dballe/__pycache__
 
 EXTRA_DIST = \
@@ -62,7 +59,7 @@ EXTRA_DIST = \
 AM_CPPFLAGS = -I/usr/include/python$(PYTHON_VERSION) -I$(top_srcdir)
 
 if HAVE_PYTHON3
-check-local: _dballe.so
+check-local:
 	for test in $(dballe_python_tests); do \
 		test -n "$$ARGS" -a "$${ARGS#$${test%.py}}" == "$$ARGS" && echo "Skipping $$test" && continue; \
 		PYTHON="$(PYTHON)" $(TESTS_ENVIRONMENT) $$test ; \

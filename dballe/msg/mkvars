@@ -141,11 +141,11 @@ with open(os.path.join(DESTDIR, "msg-extravars.h"), "wt") as fh:
     for v in vars:
         print("""
 /** Set the value of "{desc}" from a variable of type {type} */
-inline void set_{name}({type} val, int conf=-1) {{ set{ftype}(WR_VAR(0, {vx}, {vy}), val, conf, Level({level}), Trange({trange})); }}
+inline void set_{name}({type} val, int conf=-1) {{ set{ftype}(Level({level}), Trange({trange}), WR_VAR(0, {vx}, {vy}), val, conf); }}
 /** Set the value of "{desc}" from a wreport::Var */
-inline void set_{name}_var(const wreport::Var& val) {{ set(val, WR_VAR(0, {vx}, {vy}), Level({level}), Trange({trange})); }}
+inline void set_{name}_var(const wreport::Var& val) {{ set(Level({level}), Trange({trange}), WR_VAR(0, {vx}, {vy}), val); }}
 /** Get the "{desc}" physical value stored in the message */
-inline const wreport::Var* get_{name}_var() const {{ return find_by_id(DBA_MSG_{NAME}); }}
+inline const wreport::Var* get_{name}_var() const {{ return get(DBA_MSG_{NAME}); }}
 """ .format(
             name=v.name.lower(),
             desc=v.desc,
@@ -156,23 +156,6 @@ inline const wreport::Var* get_{name}_var() const {{ return find_by_id(DBA_MSG_{
             trange=", ".join(v.letr[4:]),
             NAME=v.name,
         ), file=fh)
-
-
-with open(os.path.join(DESTDIR, "context-extravars.h"), "wt") as fh:
-    for v in vars:
-        print("""
-/** Set the value of "{desc}" from a variable of type {type} */
-inline void set_{name}({type} val) {{ set{ftype}(WR_VAR(0, {vx}, {vy}), val); }}
-/** Get the "{desc}" physical value stored in the message */
-inline const wreport::Var* get_{name}() const {{ return find(WR_VAR(0, {vx}, {vy})); }}
-""" .format(
-            name=v.name.lower(),
-            desc=v.desc,
-            type=types[v.type],
-            ftype=ftypes[v.type],
-            vx=v.b.x, vy=v.b.y,
-        ), file=fh)
-
 
 with open(os.path.join(DESTDIR, "vars.gperf"), "wt") as fc:
     print("""

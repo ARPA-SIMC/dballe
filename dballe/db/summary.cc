@@ -572,10 +572,10 @@ void BaseSummary<Station>::add_message(const dballe::Message& message)
 }
 
 template<typename Station>
-void BaseSummary<Station>::add_messages(const dballe::Messages& messages)
+void BaseSummary<Station>::add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages)
 {
     for (const auto& message: messages)
-        add_message(message);
+        add_message(*message);
 }
 
 template<typename Station>

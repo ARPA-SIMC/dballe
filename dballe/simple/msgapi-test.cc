@@ -1,4 +1,4 @@
-#include "core/tests.h"
+#include "dballe/core/tests.h"
 #include "msgapi.h"
 #include <wreport/utils/sys.h>
 
@@ -32,8 +32,8 @@ void Tests::register_tests()
         // Test resuming after a broken BUFR
 
         // Concatenate a broken BUFR with a good one
-        BinaryMessage rm1(read_rawmsg("bufr/interpreted-range.bufr", File::BUFR));
-        BinaryMessage rm2(read_rawmsg("bufr/temp-gts1.bufr", File::BUFR));
+        BinaryMessage rm1(read_rawmsg("bufr/interpreted-range.bufr", Encoding::BUFR));
+        BinaryMessage rm2(read_rawmsg("bufr/temp-gts1.bufr", Encoding::BUFR));
 
         // Broken + good
         {

@@ -10,11 +10,6 @@ struct Bulletin;
 namespace dballe {
 struct File;
 
-namespace msg {
-struct Importer;
-struct Exporter;
-}
-
 namespace cmdline {
 
 struct Converter : public Action
@@ -24,7 +19,7 @@ struct Converter : public Action
     const char* dest_template;
     bool bufr2netcdf_categories;
 
-    msg::Exporter* exporter;
+    Exporter* exporter;
 
     Converter() : file(0), dest_rep_memo(0), dest_template(0), bufr2netcdf_categories(false), exporter(0) {}
     ~Converter();

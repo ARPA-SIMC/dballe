@@ -1,14 +1,13 @@
 #ifndef DBALLE_FILE_H
 #define DBALLE_FILE_H
 
-#include <dballe/types.h>
+#include <dballe/fwd.h>
 #include <memory>
 #include <string>
 #include <functional>
+#include <iosfwd>
 
 namespace dballe {
-
-struct BinaryMessage;
 
 /**
  * File object for doing I/O on binary message streams.
@@ -17,13 +16,6 @@ struct BinaryMessage;
  */
 struct File
 {
-    /// Supported encodings
-    typedef enum {
-        BUFR = 0,
-        CREX = 1,
-        AOF = 2,
-    } Encoding;
-
     virtual ~File();
 
     /// Get the file pathname
@@ -132,7 +124,7 @@ struct File
 struct BinaryMessage
 {
     /// Format of the binary data
-    File::Encoding encoding;
+    Encoding encoding;
 
     /// Binary message data
     std::string data;
@@ -150,12 +142,16 @@ struct BinaryMessage
     /// Index of the message from the beginning of the file
     int index = MISSING_INT;
 
-    BinaryMessage(File::Encoding encoding)
+    BinaryMessage(Encoding encoding)
         : encoding(encoding) {}
 
     /// Return true if the message is not empty
     operator bool() const;
 };
+
+
+/// Serialize Encoding
+std::ostream& operator<<(std::ostream&, const dballe::Encoding&);
 
 }
 

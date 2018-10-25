@@ -19,16 +19,16 @@ protected:
     virtual void import_var(const Var& var);
 
 public:
-    SynopImporter(const msg::ImporterOptions& opts)
+    SynopImporter(const ImporterOptions& opts)
         : SynopBaseImporter(opts) {}
     virtual ~SynopImporter() {}
 
-    MsgType scanType(const Bulletin& bulletin) const
+    MessageType scanType(const Bulletin& bulletin) const
     {
         switch (bulletin.data_category)
         {
-            case 0: return MSG_SYNOP;
-            default: return MSG_GENERIC; break;
+            case 0: return MessageType::SYNOP;
+            default: return MessageType::GENERIC; break;
         }
     }
 };
@@ -88,7 +88,7 @@ void SynopImporter::import_var(const Var& var)
 
 } // anonynmous namespace
 
-std::unique_ptr<Importer> Importer::createSynop(const msg::ImporterOptions& opts)
+std::unique_ptr<Importer> Importer::createSynop(const ImporterOptions& opts)
 {
     return unique_ptr<Importer>(new SynopImporter(opts));
 }

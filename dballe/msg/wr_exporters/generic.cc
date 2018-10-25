@@ -47,7 +47,7 @@ struct Generic : public Template
 
     void add(Varcode code, int shortcut)
     {
-        const Var* var = msg->find_by_id(shortcut);
+        const Var* var = msg->get(shortcut);
         if (var)
             subset->store_variable(code, *var);
         else
@@ -56,7 +56,7 @@ struct Generic : public Template
 
     void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
     {
-        const Var* var = msg->get(srccode, level, trange);
+        const Var* var = msg->get(level, trange, srccode);
         if (var)
             subset->store_variable(code, *var);
         else
@@ -131,7 +131,7 @@ struct Generic : public Template
         // Report type
         if (repmemo)
             subset.store_variable(repmemo->code(), *repmemo);
-        else if (msg.type != MSG_GENERIC) // It is generic by default, no need to repeat it
+        else if (msg.type != MessageType::GENERIC) // It is generic by default, no need to repeat it
             subset.store_variable_c(WR_VAR(0, 1, 194), Msg::repmemo_from_type(msg.type));
         else
             subset.store_variable_undef(WR_VAR(0, 1, 194));

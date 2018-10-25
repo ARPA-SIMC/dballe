@@ -12,8 +12,6 @@
 #include <vector>
 #include <memory>
 
-struct lua_State;
-
 namespace dballe {
 namespace msg {
 
@@ -32,14 +30,14 @@ public:
     Level level;
     Trange trange;
 
-	/**
-	 * The variables in this context
-	 */
-	std::vector<wreport::Var*> data;
+    /**
+     * The variables in this context
+     */
+    std::vector<wreport::Var*> data;
 
-	Context(const Level& lev, const Trange& tr);
+    Context(const Level& lev, const Trange& tr);
     Context(const Context& c);
-	~Context();
+    ~Context();
 
     Context& operator=(const Context& src);
 
@@ -184,41 +182,9 @@ public:
      *   The number of differences found
      */
     unsigned diff(const Context& ctx) const;
-
-    /**
-     * Push the variable as an object in the lua stack
-     */
-    void lua_push(struct lua_State* L);
-
-    /**
-     * Check that the element at \a idx is a dba_msg_context
-     *
-     * @return the dba_msg_context element, or NULL if the check failed
-     */
-    static Context* lua_check(struct lua_State* L, int idx);
-
-#include <dballe/msg/context-extravars.h>
 };
 
-
-
-#if 0
-dba_err dba_msg_context_set(dba_msg msg, dba_var var, dba_varcode code, int ltype, int l1, int l2, int pind, int p1, int p2);
-dba_err dba_msg_context_set_by_id(dba_msg msg, dba_var var, int id);
-dba_err dba_msg_context_set_nocopy_by_id(dba_msg msg, dba_var var, int id);
-dba_err dba_msg_context_seti(dba_msg msg, dba_varcode code, int val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2);
-dba_err dba_msg_context_setd(dba_msg msg, dba_varcode code, double val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2);
-dba_err dba_msg_context_setc(dba_msg msg, dba_varcode code, const char* val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2);
-#endif
-
-#if 0
-
-
-
-#endif
-
 }
 }
 
-// vim:set ts=4 sw=4:
 #endif

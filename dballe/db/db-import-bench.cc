@@ -1,7 +1,7 @@
 #include "dballe/db/benchmark.h"
 #include "dballe/core/file.h"
 #include "dballe/msg/msg.h"
-#include "dballe/msg/codec.h"
+#include "dballe/importer.h"
 
 using namespace dballe;
 using namespace std;
@@ -17,9 +17,9 @@ struct MessageTask : public benchmark::DBTask
     MessageTask(const std::string& pfx, const std::string& fname)
         : benchmark::DBTask(pfx + fname)
     {
-        dballe::msg::ImporterOptions opts;
-        std::unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR, opts);
-        unique_ptr<File> f = core::File::open_test_data_file(File::BUFR, "bufr/" + fname);
+        dballe::ImporterOptions opts;
+        std::unique_ptr<Importer> importer = Importer::create(Encoding::BUFR, opts);
+        unique_ptr<File> f = core::File::open_test_data_file(Encoding::BUFR, "bufr/" + fname);
         f->foreach([&](const BinaryMessage& rmsg) {
             importer->foreach_decoded(rmsg, [&](unique_ptr<Message>&& m) {
                 msgs.push_back(m.release());
