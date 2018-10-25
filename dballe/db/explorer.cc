@@ -189,7 +189,7 @@ void BaseExplorer<Station>::Update::add_message(const dballe::Message& message)
 }
 
 template<typename Station>
-void BaseExplorer<Station>::Update::add_messages(const dballe::Messages& messages)
+void BaseExplorer<Station>::Update::add_messages(const std::vector<std::shared_ptr<Message>>& messages)
 {
     this->explorer->_global_summary->add_messages(messages);
 }

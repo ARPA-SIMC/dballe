@@ -62,7 +62,7 @@ public:
         void add_message(const dballe::Message& message);
 
         /// Merge the contents of a vector of messages
-        void add_messages(const dballe::Messages& messages);
+        void add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages);
 
         void commit();
 
