@@ -138,13 +138,13 @@ this->add_method("stationdata", [](Fixture& f) {
             for (unsigned i = 0; i < 2; ++i)
             {
                 wassert(actual(cur->next()).istrue());
-                if (strcmp(cur->get_rep_memo(), "temp") == 0)
+                if (cur->get_report() == "temp")
                 {
                     wassert(actual(cur->get_station_id()) == svals_esmac.info.id);
                     cur->to_record(result);
                     wassert(actual(result["B01019"]) == "Esmac");
                     have_temp = true;
-                } else if (strcmp(cur->get_rep_memo(), "synop") == 0) {
+                } else if (cur->get_report() == "synop") {
                     wassert(actual(cur->get_station_id()) == svals_camse.info.id);
                     cur->to_record(result);
                     wassert(actual(result["B01019"]) == "Camse");

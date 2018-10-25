@@ -316,9 +316,137 @@ void StationEntries<Station>::add_filtered(const StationEntries& entries, const 
 }
 
 
+namespace {
+
+template<typename Station>
+struct SummaryCursor : public CursorSummary
+{
+    core::Query query;
+    const summary::StationEntries<Station>& entries;
+    typename summary::StationEntries<Station>::const_iterator station_entry;
+    typename summary::StationEntry<Station>::const_iterator var_entry;
+    bool at_start = true;
+
+    SummaryCursor(const summary::StationEntries<Station>& entries, const Query& query)
+        : query(core::Query::downcast(query)), entries(entries)
+    {
+    }
+
+    int remaining() const override { return MISSING_INT; }
+
+    bool stay_on_first_valid()
+    {
+        if (station_entry == entries.end())
+            return false;
+        if (var_entry != station_entry->end())
+            return true;
+        ++station_entry;
+        if (station_entry == entries.end())
+            return false;
+        var_entry = station_entry->begin();
+        return stay_on_first_valid();
+    }
+
+    bool next() override
+    {
+        if (at_start)
+        {
+            station_entry = entries.begin();
+            if (station_entry == entries.end())
+                return false;
+
+            var_entry = station_entry->begin();
+            at_start = false;
+
+            return stay_on_first_valid();
+        } else {
+            if (station_entry == entries.end())
+                return false;
+            if (var_entry != station_entry->end())
+                ++var_entry;
+            return stay_on_first_valid();
+        }
+    }
+
+    void discard_rest() override
+    {
+        station_entry = entries.end();
+    }
+
+    void to_record(Record& rec) override
+    {
+        station_entry->station.to_record(rec);
+
+        char bname[7];
+        format_bcode(var_entry->var.varcode, bname);
+        rec.setc("var", bname);
+
+        if (var_entry->count > 0)
+        {
+            rec.seti("context_id", var_entry->count);
+            rec.set(var_entry->dtrange);
+        }
+        rec.set_level(var_entry->var.level);
+        rec.set_trange(var_entry->var.trange);
+    }
+
+    static DBStation _get_dbstation(const DBStation& s) { return s; }
+    static DBStation _get_dbstation(const dballe::Station& station)
+    {
+        DBStation res;
+        res.report = station.report;
+        res.coords = station.coords;
+        res.ident = station.ident;
+        return res;
+    }
+    static int _get_station_id(const DBStation& s) { return s.id; }
+    static int _get_station_id(const dballe::Station& s) { return MISSING_INT; }
+
+    DBStation get_station() const override
+    {
+        return _get_dbstation(station_entry->station);
+    }
+
+    int get_station_id() const override
+    {
+        return _get_station_id(station_entry->station);
+    }
+
+    Coords get_coords() const override { return station_entry->station.coords; }
+    Ident get_ident() const override { return station_entry->station.ident; }
+    std::string get_report() const override { return station_entry->station.report; }
+
+    unsigned test_iterate(FILE* dump=0) override
+    {
+        unsigned count;
+        for (count = 0; next(); ++count)
+            ;
+#if 0
+            if (dump)
+                cur->dump(dump);
+#endif
+        return count;
+    }
+
+    Level get_level() const override { return var_entry->var.level; }
+    Trange get_trange() const override { return var_entry->var.trange; }
+    wreport::Varcode get_varcode() const override { return var_entry->var.varcode; }
+    DatetimeRange get_datetimerange() const override { return var_entry->dtrange; }
+    size_t get_count() const override { return var_entry->count; }
+};
+
+}
+
+
 template<typename Station>
 BaseSummary<Station>::BaseSummary()
 {
+}
+
+template<typename Station>
+std::unique_ptr<db::CursorSummary> BaseSummary<Station>::query_summary(const Query& query)
+{
+    return std::unique_ptr<db::CursorSummary>(new SummaryCursor<Station>(entries, query));
 }
 
 template<typename Station>

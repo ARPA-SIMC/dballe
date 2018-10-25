@@ -183,20 +183,18 @@ this->add_method("query_station", [](Fixture& f) {
             {
                 wassert(actual(cur->next()).istrue());
 
-                if (strcmp(cur->get_rep_memo(), "synop") == 0)
+                if (cur->get_report() == "synop")
                 {
-                    wassert(actual(cur->get_lat()) == 12.34560);
-                    wassert(actual(cur->get_lon()) == 76.54320);
-                    wassert(actual((void*)cur->get_ident()) == (void*)0);
+                    wassert(actual(cur->get_coords()) == Coords(12.34560, 76.54320));
+                    wassert(actual(cur->get_ident().is_missing()).istrue());
                     wassert(actual(cur).station_keys_match(oldf.stations["synop"].info));
                     have_synop = true;
                 }
 
-                if (strcmp(cur->get_rep_memo(), "metar") == 0)
+                if (cur->get_report() == "metar")
                 {
-                    wassert(actual(cur->get_lat()) == 12.34560);
-                    wassert(actual(cur->get_lon()) == 76.54320);
-                    wassert(actual((void*)cur->get_ident()) == (void*)0);
+                    wassert(actual(cur->get_coords()) == Coords(12.34560, 76.54320));
+                    wassert(actual(cur->get_ident().is_missing()).istrue());
                     wassert(actual(cur).station_keys_match(oldf.stations["metar"].info));
                     have_metar = true;
                 }
@@ -231,11 +229,9 @@ this->add_method("query_best", [](Fixture& f) {
 
     // There should be four items
     wassert(actual(cur->next()).istrue());
-    wassert(actual(cur->get_lat()) == 12.34560);
-    wassert(actual(cur->get_lon()) == 76.54320);
-    wassert(actual((void*)cur->get_ident()) == (void*)0);
-    wassert(actual((void*)cur->get_rep_memo()).istrue());
-    wassert(actual(cur->get_rep_memo()) == "synop");
+    wassert(actual(cur->get_coords()) == Coords(12.34560, 76.54320));
+    wassert(actual(cur->get_ident().is_missing()).istrue());
+    wassert(actual(cur->get_report()) == "synop");
     wassert(actual(cur->get_level()) == Level(10, 11, 15, 22));
     wassert(actual(cur->get_trange()) == Trange(20, 111, 122));
     wassert(actual(cur->get_varcode()) == WR_VAR(0, 1, 11));
@@ -789,7 +785,7 @@ this->add_method("insert_stationinfo_twice1", [](Fixture& f) {
     // sort by report name.
     vector<string> reports;
     while (cur->next())
-        reports.push_back(cur->get_rep_memo());
+        reports.push_back(cur->get_report());
     std::sort(reports.begin(), reports.end());
     wassert(actual(reports[0]) == "metar");
     wassert(actual(reports[1]) == "synop");

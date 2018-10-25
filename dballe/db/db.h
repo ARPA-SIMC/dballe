@@ -60,7 +60,7 @@ struct Cursor
     virtual void discard_rest() = 0;
 
     /**
-     * Fill in a record with the contents of a dba_db_cursor
+     * Fill in a record with the current contents of the cursor
      *
      * @param rec
      *   The record where to store the values
@@ -76,16 +76,13 @@ struct Cursor
     virtual int get_station_id() const = 0;
 
     /// Get the station latitude
-    virtual double get_lat() const = 0;
-
-    /// Get the station longitude
-    virtual double get_lon() const = 0;
+    virtual Coords get_coords() const = 0;
 
     /// Get the station identifier, or NULL if missing
-    virtual const char* get_ident(const char* def=0) const = 0;
+    virtual Ident get_ident() const = 0;
 
     /// Get the report name
-    virtual const char* get_rep_memo() const = 0;
+    virtual std::string get_report() const = 0;
 
     /**
      * Iterate the cursor until the end, returning the number of items.
@@ -461,9 +458,6 @@ public:
 
     /**
      * Start a test session with DB-All.e
-     *
-     * Take information from the environment (@see dba_db_create_from_env) and
-     * default to ./test.sqlite if nothing is specified.
      */
     static std::shared_ptr<DB> connect_test();
 

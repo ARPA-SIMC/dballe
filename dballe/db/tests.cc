@@ -60,14 +60,12 @@ Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const char* query
 
 void ActualCursor::station_keys_match(const Station& expected)
 {
-    wassert(actual(_actual.get_lat()) == expected.coords.dlat());
-    wassert(actual(_actual.get_lon()) == expected.coords.dlon());
+    wassert(actual(_actual.get_coords()) == expected.coords);
     if (expected.ident.is_missing())
         wassert(actual(_actual.get_ident() == nullptr).istrue());
     else
         wassert(actual(_actual.get_ident()) == (const char*)expected.ident);
-#warning Restore report checks once all DBs return rep_memo for station queries
-    //wassert(actual(cur.get_rep_memo()) == expected.report);
+    wassert(actual(_actual.get_report()) == expected.report);
 }
 
 void ActualCursor::station_vars_match(const StationValues& expected)
@@ -85,7 +83,7 @@ void ActualCursor::data_context_matches(const DataValues& expected)
     if (!c) throw TestFailed("cursor is not an instance of CursorData");
 
     wassert(actual(_actual).station_keys_match(expected.info));
-    wassert(actual(c->get_rep_memo()) == expected.info.report);
+    wassert(actual(c->get_report()) == expected.info.report);
     wassert(actual(c->get_level()) == expected.info.level);
     wassert(actual(c->get_trange()) == expected.info.trange);
     wassert(actual(c->get_datetime()) == expected.info.datetime);

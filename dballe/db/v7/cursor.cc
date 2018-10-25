@@ -106,27 +106,11 @@ struct VectorBase : public Base<Interface>
         cur = results.end();
     }
 
-    dballe::DBStation get_station() const override
-    {
-        dballe::DBStation station;
-        station.report = get_rep_memo();
-        station.id = get_station_id();
-        station.coords = cur->station.coords;
-        station.ident = cur->station.ident;
-        return station;
-    }
-
-    int get_station_id() const override { return cur->get_station_id(); }
-    const char* get_rep_memo() const override { return cur->station.report.c_str(); }
-    double get_lat() const override { return cur->station.coords.dlat(); }
-    double get_lon() const override { return cur->station.coords.dlon(); }
-    const char* get_ident(const char* def=0) const override
-    {
-        if (cur->station.ident.is_missing())
-            return def;
-        else
-            return cur->station.ident.get();
-    }
+    dballe::DBStation get_station() const override { return cur->station; }
+    int get_station_id() const override { return cur->station.id; }
+    std::string get_report() const override { return cur->station.report; }
+    Coords get_coords() const override { return cur->station.coords; }
+    Ident get_ident() const override { return cur->station.ident; }
 
     void to_record(Record& rec) override
     {
