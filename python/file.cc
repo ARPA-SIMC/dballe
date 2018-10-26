@@ -476,7 +476,6 @@ struct BinaryMessageDefinition
 
     static PyObject* _bytes(dpy_BinaryMessage* self)
     {
-        Py_INCREF(self);
         return PyBytes_FromStringAndSize(self->message.data.data(), self->message.data.size());
     }
 };
