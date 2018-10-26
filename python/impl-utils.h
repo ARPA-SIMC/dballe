@@ -56,6 +56,21 @@ struct MethVarargs
     }
 };
 
+template<typename IMPL>
+struct MethKwargs
+{
+    typedef IMPL Impl;
+    constexpr static const char* name = "TODO";
+    constexpr static const char* doc = "TODO: write method documentation";
+    constexpr static int flags = METH_VARARGS | METH_KEYWORDS;
+
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        PyErr_Format(PyExc_NotImplementedError, "method %s is not implemented", name);
+        return nullptr;
+    }
+};
+
 
 /*
  * Automatically define a null-terminated array of PyGetSetDef
