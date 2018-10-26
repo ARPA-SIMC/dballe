@@ -4,6 +4,7 @@ import unittest
 import os
 import re
 import sys
+import tempfile
 
 
 def test_pathname(fname):
@@ -14,7 +15,7 @@ def test_pathname(fname):
     return os.path.normpath(os.path.join(envdir, fname))
 
 
-class TestFile(unittest.TestCase):
+class TestFileRead(unittest.TestCase):
     def setUp(self):
         self.pathname = test_pathname("bufr/gts-acars-uk1.bufr")
 
@@ -48,10 +49,21 @@ class TestFile(unittest.TestCase):
             with dballe.File(fd) as f:
                 self.assertContents(f)
 
+    def test_fileno_encoding(self):
+        with open(self.pathname, "rb") as fd:
+            with dballe.File(fd, "BUFR") as f:
+                self.assertContents(f)
+
     def test_byteio(self):
         with open(self.pathname, "rb") as read_fd:
             with io.BytesIO(read_fd.read()) as fd:
                 with dballe.File(fd) as f:
+                    self.assertContents(f, pathname=r"^<_io\.BytesIO object at")
+
+    def test_byteio_encoding(self):
+        with open(self.pathname, "rb") as read_fd:
+            with io.BytesIO(read_fd.read()) as fd:
+                with dballe.File(fd, "BUFR") as f:
                     self.assertContents(f, pathname=r"^<_io\.BytesIO object at")
 
     def test_refcounting(self):
@@ -70,6 +82,71 @@ class TestFile(unittest.TestCase):
             self.assertEqual(sys.getrefcount(f), 4)  # file, __enter__ result, f, getrefcount
         self.assertEqual(sys.getrefcount(file), 3)  # file, f, _getrefcount
         self.assertEqual(sys.getrefcount(f), 3)  # file, f, _getrefcount
+
+
+class TestFileWrite(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        with dballe.File(test_pathname("bufr/gts-acars-uk1.bufr"), "rb") as file:
+            cls.messages = list(file)
+
+    def assertContentsOk(self, f):
+        reread = list(f)
+        self.assertEqual(self.messages, reread)
+
+    def test_named(self):
+        with tempfile.NamedTemporaryFile() as tf:
+            with dballe.File(tf.name, "wb") as f:
+                for msg in self.messages:
+                    f.write(msg)
+
+            with dballe.File(tf.name, "rb") as f:
+                self.assertContentsOk(f)
+
+    def test_named_encoding(self):
+        with tempfile.NamedTemporaryFile() as tf:
+            with dballe.File(tf.name, "wb", "BUFR") as f:
+                for msg in self.messages:
+                    f.write(msg)
+
+            with dballe.File(tf.name, "rb", "BUFR") as f:
+                self.assertContentsOk(f)
+
+    def test_fileno(self):
+        with tempfile.NamedTemporaryFile() as tf:
+            with dballe.File(tf) as f:
+                for msg in self.messages:
+                    f.write(msg)
+            tf.seek(0)
+            with dballe.File(tf, "rb") as f:
+                self.assertContentsOk(f)
+
+    def test_fileno_encoding(self):
+        with tempfile.NamedTemporaryFile() as tf:
+            with dballe.File(tf, "wb", "BUFR") as f:
+                for msg in self.messages:
+                    f.write(msg)
+            tf.seek(0)
+            with dballe.File(tf, "rb", "BUFR") as f:
+                self.assertContentsOk(f)
+
+    def test_byteio(self):
+        with io.BytesIO() as fd:
+            with dballe.File(fd, "wb") as f:
+                for msg in self.messages:
+                    f.write(msg)
+            fd.seek(0)
+            with dballe.File(fd, "rb") as f:
+                self.assertContentsOk(f)
+
+    def test_byteio_encoding(self):
+        with io.BytesIO() as fd:
+            with dballe.File(fd, "wb", "BUFR") as f:
+                for msg in self.messages:
+                    f.write(msg)
+            fd.seek(0)
+            with dballe.File(fd, "rb", "BUFR") as f:
+                self.assertContentsOk(f)
 
 
 if __name__ == "__main__":

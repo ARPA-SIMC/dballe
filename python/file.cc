@@ -275,6 +275,26 @@ struct Exit : MethVarargs<dpy_File>
     }
 };
 
+struct write : MethKwargs<dpy_File>
+{
+    constexpr static const char* name = "write";
+    constexpr static const char* doc = "Write a message to the file";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "data", nullptr };
+        const char* buf = nullptr;
+        int len;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "y#", const_cast<char**>(kwlist), &buf, &len))
+            return nullptr;
+
+        try {
+            std::string msg(buf, len);
+            self->file->file().write(msg);
+            Py_RETURN_NONE;
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
 
 struct FileDefinition : public Binding<FileDefinition, dpy_File>
 {
@@ -283,7 +303,7 @@ struct FileDefinition : public Binding<FileDefinition, dpy_File>
     constexpr static const char* doc = "Message file read/write access";
 
     GetSetters<GetName, GetEncoding> getsetters;
-    Methods<Enter, Exit> methods;
+    Methods<Enter, Exit, write> methods;
 
     static void _dealloc(Impl* self)
     {
