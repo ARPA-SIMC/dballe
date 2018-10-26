@@ -263,16 +263,18 @@ dpy_Cursor* cursor_create(std::unique_ptr<db::Cursor> cur)
     return result;
 }
 
-void register_cursor(PyObject* m)
+int register_cursor(PyObject* m)
 {
-    common_init();
+    if (common_init() != 0) return -1;
 
     dpy_Cursor_Type.tp_new = PyType_GenericNew;
     if (PyType_Ready(&dpy_Cursor_Type) < 0)
-        return;
+        return -1;
 
     Py_INCREF(&dpy_Cursor_Type);
-    PyModule_AddObject(m, "Cursor", (PyObject*)&dpy_Cursor_Type);
+    if (PyModule_AddObject(m, "Cursor", (PyObject*)&dpy_Cursor_Type) != 0) return -1;
+
+    return 0;
 }
 
 }

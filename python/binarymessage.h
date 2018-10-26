@@ -34,7 +34,7 @@ dpy_BinaryMessage* binarymessage_create(const BinaryMessage& message);
  */
 dpy_BinaryMessage* binarymessage_create(BinaryMessage&& message);
 
-void register_binarymessage(PyObject* m);
+int register_binarymessage(PyObject* m);
 
 }
 }

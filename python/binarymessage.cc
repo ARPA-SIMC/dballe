@@ -212,15 +212,18 @@ dpy_BinaryMessage* binarymessage_create(BinaryMessage&& message)
 }
 
 
-void register_binarymessage(PyObject* m)
+int register_binarymessage(PyObject* m)
 {
-    common_init();
+    if (common_init() != 0)
+        return -1;
 
     dpy_BinaryMessage_Type.tp_new = PyType_GenericNew;
     if (PyType_Ready(&dpy_BinaryMessage_Type) < 0)
-        return;
+        return -1;
     Py_INCREF(&dpy_BinaryMessage_Type);
     PyModule_AddObject(m, "BinaryMessage", (PyObject*)&dpy_BinaryMessage_Type);
+
+    return 0;
 }
 
 }

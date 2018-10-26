@@ -680,21 +680,24 @@ int varcode_from_python(PyObject* o, wreport::Varcode& code)
 #endif
 
 
-void register_types(PyObject* m)
+int register_types(PyObject* m)
 {
-    common_init();
+    if (common_init() != 0)
+        return -1;
 
 #if PY_MAJOR_VERSION >= 3
-    PyStructSequence_InitType(&dpy_Level_Type, &dpy_level_desc);
-    PyStructSequence_InitType(&dpy_Trange_Type, &dpy_trange_desc);
-    PyStructSequence_InitType(&dpy_Station_Type, &dpy_station_desc);
-    PyStructSequence_InitType(&dpy_DBStation_Type, &dpy_dbstation_desc);
+    if (PyStructSequence_InitType2(&dpy_Level_Type, &dpy_level_desc) != 0) return -1;
+    if (PyStructSequence_InitType2(&dpy_Trange_Type, &dpy_trange_desc) != 0) return -1;
+    if (PyStructSequence_InitType2(&dpy_Station_Type, &dpy_station_desc) != 0) return -1;
+    if (PyStructSequence_InitType2(&dpy_DBStation_Type, &dpy_dbstation_desc) != 0) return -1;
 
-    PyModule_AddObject(m, "Level", (PyObject*)&dpy_Level_Type);
-    PyModule_AddObject(m, "Trange", (PyObject*)&dpy_Trange_Type);
-    PyModule_AddObject(m, "Station", (PyObject*)&dpy_Station_Type);
-    PyModule_AddObject(m, "DBStation", (PyObject*)&dpy_DBStation_Type);
+    if (PyModule_AddObject(m, "Level", (PyObject*)&dpy_Level_Type) != 0) return -1;
+    if (PyModule_AddObject(m, "Trange", (PyObject*)&dpy_Trange_Type) != 0) return -1;
+    if (PyModule_AddObject(m, "Station", (PyObject*)&dpy_Station_Type) != 0) return -1;
+    if (PyModule_AddObject(m, "DBStation", (PyObject*)&dpy_DBStation_Type) != 0) return -1;
 #endif
+
+    return 0;
 }
 
 }

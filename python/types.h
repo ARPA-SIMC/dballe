@@ -81,8 +81,7 @@ inline PyObject* to_python(const Trange& s) { return trange_to_python(s); }
 inline PyObject* to_python(const Station& s) { return station_to_python(s); }
 inline PyObject* to_python(const DBStation& s) { return dbstation_to_python(s); }
 
-
-void register_types(PyObject* m);
+int register_types(PyObject* m);
 
 }
 }

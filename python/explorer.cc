@@ -764,9 +764,9 @@ dpy_DBExplorer* dbexplorer_create(std::unique_ptr<db::DBExplorer> explorer)
     return result;
 }
 
-void register_explorer(PyObject* m)
+int register_explorer(PyObject* m)
 {
-    common_init();
+    if (common_init() != 0) return -1;
 
     PyStructSequence_InitType(&dpy_stats_Type, &dpy_stats_desc);
     Py_INCREF(&dpy_stats_Type);
@@ -774,29 +774,31 @@ void register_explorer(PyObject* m)
 
     dpy_Explorer_Type.tp_new = PyType_GenericNew;
     if (PyType_Ready(&dpy_Explorer_Type) < 0)
-        return;
+        return -1;
     Py_INCREF(&dpy_Explorer_Type);
     PyModule_AddObject(m, "Explorer", (PyObject*)&dpy_Explorer_Type);
 
     dpy_ExplorerUpdate_Type.tp_new = PyType_GenericNew;
     if (PyType_Ready(&dpy_ExplorerUpdate_Type) < 0)
-        return;
+        return -1;
     // Only allow to create via an Explorer method
     // Py_INCREF(&dpy_ExplorerUpdate_Type);
     // PyModule_AddObject(m, "ExplorerUpdate", (PyObject*)&dpy_ExplorerUpdate_Type);
 
     dpy_DBExplorer_Type.tp_new = PyType_GenericNew;
     if (PyType_Ready(&dpy_DBExplorer_Type) < 0)
-        return;
+        return -1;
     Py_INCREF(&dpy_DBExplorer_Type);
     PyModule_AddObject(m, "DBExplorer", (PyObject*)&dpy_DBExplorer_Type);
 
     dpy_DBExplorerUpdate_Type.tp_new = PyType_GenericNew;
     if (PyType_Ready(&dpy_DBExplorerUpdate_Type) < 0)
-        return;
+        return -1;
     // Only allow to create via a DBExplorer method
     // Py_INCREF(&dpy_DBExplorerUpdate_Type);
     // PyModule_AddObject(m, "DBExplorerUpdate", (PyObject*)&dpy_DBExplorerUpdate_Type);
+
+    return 0;
 }
 
 }

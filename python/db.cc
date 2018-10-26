@@ -1161,20 +1161,22 @@ dpy_Transaction* transaction_create(std::shared_ptr<dballe::db::Transaction> tra
     return result;
 }
 
-void register_db(PyObject* m)
+int register_db(PyObject* m)
 {
-    common_init();
+    if (common_init() != 0) return -1;
 
     if (PyType_Ready(&dpy_Transaction_Type) < 0)
-        return;
+        return -1;
     Py_INCREF(&dpy_Transaction_Type);
 
     if (PyType_Ready(&dpy_DB_Type) < 0)
-        return;
+        return -1;
     Py_INCREF(&dpy_DB_Type);
 
-    PyModule_AddObject(m, "DB", (PyObject*)&dpy_DB_Type);
-    PyModule_AddObject(m, "Transaction", (PyObject*)&dpy_Transaction_Type);
+    if (PyModule_AddObject(m, "DB", (PyObject*)&dpy_DB_Type) != 0) return -1;
+    if (PyModule_AddObject(m, "Transaction", (PyObject*)&dpy_Transaction_Type) != 0) return -1;
+
+    return 0;
 }
 
 }

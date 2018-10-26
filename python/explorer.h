@@ -80,7 +80,7 @@ dpy_DBExplorer* dbexplorer_create();
  */
 dpy_DBExplorer* dbexplorer_create(std::unique_ptr<dballe::db::DBExplorer> explorer);
 
-void register_explorer(PyObject* m);
+int register_explorer(PyObject* m);
 
 }
 }

@@ -849,16 +849,18 @@ dpy_Record* record_create()
     return (dpy_Record*)PyObject_CallObject((PyObject*)&dpy_Record_Type, NULL);
 }
 
-void register_record(PyObject* m)
+int register_record(PyObject* m)
 {
-    common_init();
+    if (common_init() != 0) return -1;
 
     dpy_Record_Type.tp_new = PyType_GenericNew;
     if (PyType_Ready(&dpy_Record_Type) < 0)
-        return;
+        return -1;
     Py_INCREF(&dpy_Record_Type);
 
-    PyModule_AddObject(m, "Record", (PyObject*)&dpy_Record_Type);
+    if (PyModule_AddObject(m, "Record", (PyObject*)&dpy_Record_Type) != 0) return -1;
+
+    return 0;
 }
 
 }

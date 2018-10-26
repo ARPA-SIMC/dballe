@@ -276,39 +276,19 @@ struct Exit : MethVarargs<dpy_File>
 };
 
 
-template<>
-struct impl_traits<dpy_File>
+struct FileDefinition : public Binding<FileDefinition, dpy_File>
 {
-};
-
-
-struct FileDefinition
-{
-    GetSetters<GetName, GetEncoding> getsetters;
-    Methods<Enter, Exit> methods;
-
     constexpr static const char* name = "File";
     constexpr static const char* qual_name = "dballe.File";
     constexpr static const char* doc = "Message file read/write access";
 
-    static PyTypeObject type;
+    GetSetters<GetName, GetEncoding> getsetters;
+    Methods<Enter, Exit> methods;
 
-    static void _dealloc(dpy_File* self)
+    static void _dealloc(Impl* self)
     {
         delete self->file;
         Py_TYPE(self)->tp_free(self);
-    }
-
-    static PyObject* _str(dpy_File* self)
-    {
-        return PyUnicode_FromString(name);
-    }
-
-    static PyObject* _repr(dpy_File* self)
-    {
-        string res = qual_name;
-        res += " object";
-        return PyUnicode_FromString(res.c_str());
     }
 
     static int _init(dpy_File* self, PyObject* args, PyObject* kw)
@@ -352,50 +332,6 @@ struct FileDefinition
             }
         } DBALLE_CATCH_RETURN_PYO
     }
-
-    void fill_type(PyTypeObject& dest)
-    {
-        dest = PyTypeObject {
-            PyVarObject_HEAD_INIT(NULL, 0)
-            qual_name,                 // tp_name
-            sizeof(dpy_File),          // tp_basicsize
-            0,                         // tp_itemsize
-            (destructor)_dealloc,      // tp_dealloc
-            0,                         // tp_print
-            0,                         // tp_getattr
-            0,                         // tp_setattr
-            0,                         // tp_compare
-            (reprfunc)_repr,           // tp_repr
-            0,                         // tp_as_number
-            0,                         // tp_as_sequence
-            0,                         // tp_as_mapping
-            0,                         // tp_hash
-            0,                         // tp_call
-            (reprfunc)_str,            // tp_str
-            0,                         // tp_getattro
-            0,                         // tp_setattro
-            0,                         // tp_as_buffer
-            Py_TPFLAGS_DEFAULT,        // tp_flags
-            doc,                       // tp_doc
-            0,                         // tp_traverse
-            0,                         // tp_clear
-            0,                         // tp_richcompare
-            0,                         // tp_weaklistoffset
-            (getiterfunc)_iter,        // tp_iter
-            (iternextfunc)_iternext,   // tp_iternext
-            methods.as_py(),           // tp_methods
-            0,                         // tp_members
-            getsetters.as_py(),        // tp_getset
-            0,                         // tp_base
-            0,                         // tp_dict
-            0,                         // tp_descr_get
-            0,                         // tp_descr_set
-            0,                         // tp_dictoffset
-            (initproc)_init,           // tp_init
-            0,                         // tp_alloc
-            0,                         // tp_new
-        };
-    }
 };
 
 FileDefinition* file_definition = nullptr;
@@ -404,9 +340,7 @@ FileDefinition* file_definition = nullptr;
 
 
 extern "C" {
-
 PyTypeObject dpy_File_Type;
-
 }
 
 namespace dballe {
@@ -546,18 +480,16 @@ dpy_File* file_create_r_from_object(PyObject* o, Encoding encoding)
     return file_create(std::move(wrapper));
 }
 
-void register_file(PyObject* m)
+int register_file(PyObject* m)
 {
-    common_init();
+    if (common_init() != 0)
+        return -1;
 
     file_definition = new FileDefinition;
-    file_definition->fill_type(dpy_File_Type);
+    if (file_definition->activate(dpy_File_Type, m) != 0)
+        return -1;
 
-    dpy_File_Type.tp_new = PyType_GenericNew;
-    if (PyType_Ready(&dpy_File_Type) < 0)
-        return;
-    Py_INCREF(&dpy_File_Type);
-    PyModule_AddObject(m, "File", (PyObject*)&dpy_File_Type);
+    return 0;
 }
 
 }

@@ -49,7 +49,7 @@ int read_query(PyObject* from_python, dballe::Query& query);
 
 dpy_Record* record_create();
 
-void register_record(PyObject* m);
+int register_record(PyObject* m);
 
 }
 }

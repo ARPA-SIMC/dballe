@@ -114,6 +114,95 @@ struct Methods<>
     PyMethodDef* as_py() { return 0; }
 };
 
+
+/*
+ * Base helper class for python bindings
+ */
+
+template<typename Derived, typename IMPL>
+struct Binding
+{
+    typedef IMPL Impl;
+
+    static PyObject* _str(Impl* self)
+    {
+        return PyUnicode_FromString(Derived::name);
+    }
+
+    static PyObject* _repr(Impl* self)
+    {
+        std::string res = Derived::qual_name;
+        res += " object";
+        return PyUnicode_FromString(res.c_str());
+    }
+
+    constexpr static getiterfunc _iter = nullptr;
+    constexpr static iternextfunc _iternext = nullptr;
+
+    /**
+     * Activate this type.
+     *
+     * It fills in \a type, and if module is provided, it also registers the
+     * constructor in the module.
+     */
+    int activate(PyTypeObject& type, PyObject* module=nullptr)
+    {
+        Derived* d = static_cast<Derived*>(this);
+
+        type = PyTypeObject {
+            PyVarObject_HEAD_INIT(NULL, 0)
+            Derived::qual_name,        // tp_name
+            sizeof(Impl), // tp_basicsize
+            0,                         // tp_itemsize
+            (destructor)Derived::_dealloc, // tp_dealloc
+            0,                         // tp_print
+            0,                         // tp_getattr
+            0,                         // tp_setattr
+            0,                         // tp_compare
+            (reprfunc)Derived::_repr,  // tp_repr
+            0,                         // tp_as_number
+            0,                         // tp_as_sequence
+            0,                         // tp_as_mapping
+            0,                         // tp_hash
+            0,                         // tp_call
+            (reprfunc)Derived::_str,   // tp_str
+            0,                         // tp_getattro
+            0,                         // tp_setattro
+            0,                         // tp_as_buffer
+            Py_TPFLAGS_DEFAULT,        // tp_flags
+            Derived::doc,              // tp_doc
+            0,                         // tp_traverse
+            0,                         // tp_clear
+            0,                         // tp_richcompare
+            0,                         // tp_weaklistoffset
+            (getiterfunc)Derived::_iter, // tp_iter
+            (iternextfunc)Derived::_iternext,  // tp_iternext
+            d->methods.as_py(),        // tp_methods
+            0,                         // tp_members
+            d->getsetters.as_py(),     // tp_getset
+            0,                         // tp_base
+            0,                         // tp_dict
+            0,                         // tp_descr_get
+            0,                         // tp_descr_set
+            0,                         // tp_dictoffset
+            (initproc)Derived::_init,  // tp_init
+            0,                         // tp_alloc
+            PyType_GenericNew,         // tp_new
+        };
+
+        if (PyType_Ready(&type) != 0)
+            return -1;
+
+        if (module)
+        {
+            Py_INCREF(&type);
+            if (PyModule_AddObject(module, Derived::name, (PyObject*)&type) != 0)
+                return -1;
+        }
+        return 0;
+    }
+};
+
 }
 
 #endif

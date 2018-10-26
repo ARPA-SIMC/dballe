@@ -44,10 +44,9 @@ dpy_Message* message_create(MessageType type);
  */
 dpy_Message* message_create(std::shared_ptr<dballe::Message> message);
 
-void register_message(PyObject* m);
+int register_message(PyObject* m);
 
 }
 }
 
 #endif
-

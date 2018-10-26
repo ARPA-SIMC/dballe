@@ -49,7 +49,7 @@ namespace python {
  */
 dpy_Cursor* cursor_create(std::unique_ptr<db::Cursor> cur);
 
-void register_cursor(PyObject* m);
+int register_cursor(PyObject* m);
 
 }
 }

@@ -619,15 +619,17 @@ dpy_Message* message_create(std::shared_ptr<Message> message)
     return res;
 }
 
-void register_message(PyObject* m)
+int register_message(PyObject* m)
 {
-    common_init();
+    if (common_init() != 0) return -1;
 
     dpy_Message_Type.tp_new = PyType_GenericNew;
     if (PyType_Ready(&dpy_Message_Type) < 0)
-        return;
+        return -1;
     Py_INCREF(&dpy_Message_Type);
     PyModule_AddObject(m, "Message", (PyObject*)&dpy_Message_Type);
+
+    return 0;
 }
 
 }
