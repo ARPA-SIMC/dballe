@@ -3,6 +3,7 @@
 #include "common.h"
 #include "file.h"
 #include "binarymessage.h"
+#include "impl-utils.h"
 
 using namespace std;
 using namespace dballe;
@@ -218,12 +219,78 @@ struct DupInFileWrapper : public BaseFileObjFileWrapper
 
 namespace {
 
+struct GetName : Getter<dpy_File>
+{
+    constexpr static const char* name = "name";
+    constexpr static const char* doc = "get the file name";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            return string_to_python(self->file->file().pathname());
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct GetEncoding : Getter<dpy_File>
+{
+    constexpr static const char* name = "encoding";
+    constexpr static const char* doc = "get the file encoding";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            Encoding encoding = self->file->file().encoding();
+            return string_to_python(File::encoding_name(encoding));
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct Enter : MethNoargs<dpy_File>
+{
+    constexpr static const char* name = "__enter__";
+    constexpr static const char* doc = "Context manager __enter__";
+    static PyObject* run(Impl* self)
+    {
+        Py_INCREF(self);
+        return (PyObject*)self;
+    }
+};
+
+struct Exit : MethVarargs<dpy_File>
+{
+    constexpr static const char* name = "__exit__";
+    constexpr static const char* doc = "Context manager __exit__";
+    static PyObject* run(Impl* self, PyObject* args)
+    {
+        PyObject* exc_type;
+        PyObject* exc_val;
+        PyObject* exc_tb;
+        if (!PyArg_ParseTuple(args, "OOO", &exc_type, &exc_val, &exc_tb))
+            return nullptr;
+
+        try {
+            self->file->close();
+        } DBALLE_CATCH_RETURN_PYO
+
+        Py_RETURN_NONE;
+    }
+};
+
+
+template<>
+struct impl_traits<dpy_File>
+{
+};
+
+
 struct FileDefinition
 {
-    static const char* name;
-    static const char* qual_name;
-    static PyGetSetDef getsetters[];
-    static PyMethodDef methods[];
+    GetSetters<GetName, GetEncoding> getsetters;
+    Methods<Enter, Exit> methods;
+
+    constexpr static const char* name = "File";
+    constexpr static const char* qual_name = "dballe.File";
+    constexpr static const char* doc = "Message file read/write access";
+
     static PyTypeObject type;
 
     static void _dealloc(dpy_File* self)
@@ -267,42 +334,6 @@ struct FileDefinition
         return 0;
     }
 
-    static PyObject* _enter(dpy_File* self)
-    {
-        Py_INCREF(self);
-        return (PyObject*)self;
-    }
-
-    static PyObject* _exit(dpy_File* self, PyObject* args)
-    {
-        PyObject* exc_type;
-        PyObject* exc_val;
-        PyObject* exc_tb;
-        if (!PyArg_ParseTuple(args, "OOO", &exc_type, &exc_val, &exc_tb))
-            return nullptr;
-
-        try {
-            self->file->close();
-        } DBALLE_CATCH_RETURN_PYO
-
-        Py_RETURN_NONE;
-    }
-
-    static PyObject* _name(dpy_File* self, void* closure)
-    {
-        try {
-            return string_to_python(self->file->file().pathname());
-        } DBALLE_CATCH_RETURN_PYO
-    }
-
-    static PyObject* _encoding(dpy_File* self, void* closure)
-    {
-        try {
-            Encoding encoding = self->file->file().encoding();
-            return string_to_python(File::encoding_name(encoding));
-        } DBALLE_CATCH_RETURN_PYO
-    }
-
     static PyObject* _iter(dpy_File* self)
     {
         Py_INCREF(self);
@@ -321,83 +352,60 @@ struct FileDefinition
             }
         } DBALLE_CATCH_RETURN_PYO
     }
+
+    void fill_type(PyTypeObject& dest)
+    {
+        dest = PyTypeObject {
+            PyVarObject_HEAD_INIT(NULL, 0)
+            qual_name,                 // tp_name
+            sizeof(dpy_File),          // tp_basicsize
+            0,                         // tp_itemsize
+            (destructor)_dealloc,      // tp_dealloc
+            0,                         // tp_print
+            0,                         // tp_getattr
+            0,                         // tp_setattr
+            0,                         // tp_compare
+            (reprfunc)_repr,           // tp_repr
+            0,                         // tp_as_number
+            0,                         // tp_as_sequence
+            0,                         // tp_as_mapping
+            0,                         // tp_hash
+            0,                         // tp_call
+            (reprfunc)_str,            // tp_str
+            0,                         // tp_getattro
+            0,                         // tp_setattro
+            0,                         // tp_as_buffer
+            Py_TPFLAGS_DEFAULT,        // tp_flags
+            doc,                       // tp_doc
+            0,                         // tp_traverse
+            0,                         // tp_clear
+            0,                         // tp_richcompare
+            0,                         // tp_weaklistoffset
+            (getiterfunc)_iter,        // tp_iter
+            (iternextfunc)_iternext,   // tp_iternext
+            methods.as_py(),           // tp_methods
+            0,                         // tp_members
+            getsetters.as_py(),        // tp_getset
+            0,                         // tp_base
+            0,                         // tp_dict
+            0,                         // tp_descr_get
+            0,                         // tp_descr_set
+            0,                         // tp_dictoffset
+            (initproc)_init,           // tp_init
+            0,                         // tp_alloc
+            0,                         // tp_new
+        };
+    }
 };
 
-const char* FileDefinition::name = "File";
-const char* FileDefinition::qual_name = "dballe.File";
-
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wwrite-strings"
-#endif
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wwrite-strings"
-#endif
-PyGetSetDef FileDefinition::getsetters[] = {
-    {"name", (getter)_name, nullptr, "get the file name", nullptr },
-    {"encoding", (getter)_encoding, nullptr, "get the file encoding", nullptr },
-    {nullptr}
-};
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
-
-PyMethodDef FileDefinition::methods[] = {
-    {"__enter__",         (PyCFunction)_enter, METH_NOARGS, "Context manager __enter__" },
-    {"__exit__",          (PyCFunction)_exit, METH_VARARGS, "Context manager __exit__" },
-    {nullptr}
-};
-
-PyTypeObject FileDefinition::type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    qual_name,                 // tp_name
-    sizeof(dpy_File),          // tp_basicsize
-    0,                         // tp_itemsize
-    (destructor)_dealloc,      // tp_dealloc
-    0,                         // tp_print
-    0,                         // tp_getattr
-    0,                         // tp_setattr
-    0,                         // tp_compare
-    (reprfunc)_repr,           // tp_repr
-    0,                         // tp_as_number
-    0,                         // tp_as_sequence
-    0,                         // tp_as_mapping
-    0,                         // tp_hash
-    0,                         // tp_call
-    (reprfunc)_str,            // tp_str
-    0,                         // tp_getattro
-    0,                         // tp_setattro
-    0,                         // tp_as_buffer
-    Py_TPFLAGS_DEFAULT,        // tp_flags
-    "DB-All.e File",           // tp_doc
-    0,                         // tp_traverse
-    0,                         // tp_clear
-    0,                         // tp_richcompare
-    0,                         // tp_weaklistoffset
-    (getiterfunc)_iter,        // tp_iter
-    (iternextfunc)_iternext,   // tp_iternext
-    methods,                   // tp_methods
-    0,                         // tp_members
-    getsetters,                // tp_getset
-    0,                         // tp_base
-    0,                         // tp_dict
-    0,                         // tp_descr_get
-    0,                         // tp_descr_set
-    0,                         // tp_dictoffset
-    (initproc)_init,           // tp_init
-    0,                         // tp_alloc
-    0,                         // tp_new
-};
+FileDefinition* file_definition = nullptr;
 
 }
 
+
 extern "C" {
 
-PyTypeObject dpy_File_Type = FileDefinition::type;
+PyTypeObject dpy_File_Type;
 
 }
 
@@ -541,6 +549,9 @@ dpy_File* file_create_r_from_object(PyObject* o, Encoding encoding)
 void register_file(PyObject* m)
 {
     common_init();
+
+    file_definition = new FileDefinition;
+    file_definition->fill_type(dpy_File_Type);
 
     dpy_File_Type.tp_new = PyType_GenericNew;
     if (PyType_Ready(&dpy_File_Type) < 0)

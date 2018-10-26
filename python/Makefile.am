@@ -45,6 +45,7 @@ clean-local:
 
 EXTRA_DIST = \
     doc-dballe \
+    impl-utils.h \
     common.h \
     types.h \
     record.h \
