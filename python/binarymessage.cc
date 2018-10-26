@@ -2,6 +2,7 @@
 #include <Python.h>
 #include "common.h"
 #include "binarymessage.h"
+#include "impl-utils.h"
 
 using namespace std;
 using namespace dballe;
@@ -10,33 +11,91 @@ using namespace wreport;
 
 namespace {
 
-struct BinaryMessageDefinition
+struct GetEncoding : Getter<dpy_BinaryMessage>
 {
-    static const char* name;
-    static const char* qual_name;
-    static PyGetSetDef getsetters[];
-    static PyMethodDef methods[];
-    static PyTypeObject type;
+    constexpr static const char* name = "encoding";
+    constexpr static const char* doc = "message encoding";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            Encoding encoding = self->message.encoding;
+            return string_to_python(File::encoding_name(encoding));
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
 
-    static void _dealloc(dpy_BinaryMessage* self)
+struct GetPathname : Getter<dpy_BinaryMessage>
+{
+    constexpr static const char* name = "pathname";
+    constexpr static const char* doc = "pathname of the file the message came from, or None if unknown";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            if (self->message.pathname.empty())
+                Py_RETURN_NONE;
+            else
+                return string_to_python(self->message.pathname);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct GetOffset : Getter<dpy_BinaryMessage>
+{
+    constexpr static const char* name = "offset";
+    constexpr static const char* doc = "offset of the message in the input file, or None if unknown";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            if (self->message.offset == (off_t)-1)
+                Py_RETURN_NONE;
+            else
+                return PyLong_FromSize_t((size_t)self->message.offset);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct GetIndex : Getter<dpy_BinaryMessage>
+{
+    constexpr static const char* name = "index";
+    constexpr static const char* doc = "index of the message in the input file, or None if unknown";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            if (self->message.index == MISSING_INT)
+                Py_RETURN_NONE;
+            else
+                return PyLong_FromLong((long)self->message.index);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct Bytes : MethNoargs<dpy_BinaryMessage>
+{
+    constexpr static const char* name = "__bytes__";
+    constexpr static const char* doc = "Returns the contents of this message as a bytes object";
+    static PyObject* run(Impl* self)
+    {
+        return PyBytes_FromStringAndSize(self->message.data.data(), self->message.data.size());
+    }
+};
+
+
+struct BinaryMessageDefinition : public Binding<BinaryMessageDefinition, dpy_BinaryMessage>
+{
+    constexpr static const char* name = "BinaryMessage";
+    constexpr static const char* qual_name = "dballe.BinaryMessage";
+    constexpr static const char* doc = "Binary message";
+
+    GetSetters<GetEncoding, GetPathname, GetOffset, GetIndex> getsetters;
+    Methods<Bytes> methods;
+
+    static void _dealloc(Impl* self)
     {
         self->message.~BinaryMessage();
         Py_TYPE(self)->tp_free(self);
     }
 
-    static PyObject* _str(dpy_BinaryMessage* self)
-    {
-        return PyUnicode_FromString(name);
-    }
-
-    static PyObject* _repr(dpy_BinaryMessage* self)
-    {
-        string res = qual_name;
-        res += " object";
-        return PyUnicode_FromString(res.c_str());
-    }
-
-    static int _init(dpy_BinaryMessage* self, PyObject* args, PyObject* kw)
+    static int _init(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "data", "encoding", "pathname", "offset", "index", nullptr };
         PyObject* py_data = nullptr;
@@ -68,128 +127,14 @@ struct BinaryMessageDefinition
         } DBALLE_CATCH_RETURN_INT
         return 0;
     }
-
-    static PyObject* _encoding(dpy_BinaryMessage* self, void* closure)
-    {
-        try {
-            Encoding encoding = self->message.encoding;
-            return string_to_python(File::encoding_name(encoding));
-        } DBALLE_CATCH_RETURN_PYO
-    }
-
-    static PyObject* _pathname(dpy_BinaryMessage* self, void* closure)
-    {
-        try {
-            if (self->message.pathname.empty())
-                Py_RETURN_NONE;
-            else
-                return string_to_python(self->message.pathname);
-        } DBALLE_CATCH_RETURN_PYO
-    }
-
-    static PyObject* _offset(dpy_BinaryMessage* self, void* closure)
-    {
-        try {
-            if (self->message.offset == (off_t)-1)
-                Py_RETURN_NONE;
-            else
-                return PyLong_FromSize_t((size_t)self->message.offset);
-        } DBALLE_CATCH_RETURN_PYO
-    }
-
-    static PyObject* _index(dpy_BinaryMessage* self, void* closure)
-    {
-        try {
-            if (self->message.index == MISSING_INT)
-                Py_RETURN_NONE;
-            else
-                return PyLong_FromLong((long)self->message.index);
-        } DBALLE_CATCH_RETURN_PYO
-    }
-
-    static PyObject* _bytes(dpy_BinaryMessage* self)
-    {
-        return PyBytes_FromStringAndSize(self->message.data.data(), self->message.data.size());
-    }
 };
 
-const char* BinaryMessageDefinition::name = "BinaryMessage";
-const char* BinaryMessageDefinition::qual_name = "dballe.BinaryMessage";
-
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wwrite-strings"
-#endif
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wwrite-strings"
-#endif
-PyGetSetDef BinaryMessageDefinition::getsetters[] = {
-    {"encoding", (getter)_encoding, nullptr, "get the file encoding", nullptr },
-    {"pathname", (getter)_pathname, nullptr, "get the input file pathname", nullptr },
-    {"offset", (getter)_offset, nullptr, "get the offset of the message in the input file", nullptr },
-    {"index", (getter)_index, nullptr, "get the index of the message in the input file", nullptr },
-    {nullptr}
-};
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
-
-PyMethodDef BinaryMessageDefinition::methods[] = {
-    {"__bytes__",    (PyCFunction)_bytes, METH_NOARGS, "Returns the bytes contents of this message" },
-    {nullptr}
-};
-
-PyTypeObject BinaryMessageDefinition::type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    qual_name,                 // tp_name
-    sizeof(dpy_BinaryMessage), // tp_basicsize
-    0,                         // tp_itemsize
-    (destructor)_dealloc,      // tp_dealloc
-    0,                         // tp_print
-    0,                         // tp_getattr
-    0,                         // tp_setattr
-    0,                         // tp_compare
-    (reprfunc)_repr,           // tp_repr
-    0,                         // tp_as_number
-    0,                         // tp_as_sequence
-    0,                         // tp_as_mapping
-    0,                         // tp_hash
-    0,                         // tp_call
-    (reprfunc)_str,            // tp_str
-    0,                         // tp_getattro
-    0,                         // tp_setattro
-    0,                         // tp_as_buffer
-    Py_TPFLAGS_DEFAULT,        // tp_flags
-    "DB-All.e BinaryMessage",  // tp_doc
-    0,                         // tp_traverse
-    0,                         // tp_clear
-    0,                         // tp_richcompare
-    0,                         // tp_weaklistoffset
-    0,                         // tp_iter
-    0,                         // tp_iternext
-    methods,                   // tp_methods
-    0,                         // tp_members
-    getsetters,                // tp_getset
-    0,                         // tp_base
-    0,                         // tp_dict
-    0,                         // tp_descr_get
-    0,                         // tp_descr_set
-    0,                         // tp_dictoffset
-    (initproc)_init,           // tp_init
-    0,                         // tp_alloc
-    0,                         // tp_new
-};
+BinaryMessageDefinition* definition = nullptr;
 
 }
 
 extern "C" {
-
-PyTypeObject dpy_BinaryMessage_Type = BinaryMessageDefinition::type;
-
+PyTypeObject dpy_BinaryMessage_Type;
 }
 
 namespace dballe {
@@ -217,16 +162,12 @@ int register_binarymessage(PyObject* m)
     if (common_init() != 0)
         return -1;
 
-    dpy_BinaryMessage_Type.tp_new = PyType_GenericNew;
-    if (PyType_Ready(&dpy_BinaryMessage_Type) < 0)
+    definition = new BinaryMessageDefinition;
+    if (definition->activate(dpy_BinaryMessage_Type, m) != 0)
         return -1;
-    Py_INCREF(&dpy_BinaryMessage_Type);
-    PyModule_AddObject(m, "BinaryMessage", (PyObject*)&dpy_BinaryMessage_Type);
 
     return 0;
 }
 
 }
 }
-
-
