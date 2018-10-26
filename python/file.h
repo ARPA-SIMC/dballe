@@ -20,6 +20,7 @@ public:
     FileWrapper& operator=(const FileWrapper&) = delete;
     FileWrapper& operator=(FileWrapper&&) = delete;
 
+    virtual void close() = 0;
     virtual dballe::File& file() = 0;
 };
 

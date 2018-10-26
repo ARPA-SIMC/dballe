@@ -29,6 +29,7 @@ public:
     virtual ~File();
 
     std::string pathname() const override { return m_name; }
+    void close() override;
     bool foreach(std::function<bool(const BinaryMessage&)> dest) override;
 
     /**

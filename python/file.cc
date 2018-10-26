@@ -21,6 +21,11 @@ struct NamedFileWrapper : public FileWrapper
     std::unique_ptr<dballe::File> m_file;
     dballe::File& file() override { return *m_file; }
 
+    void close() override
+    {
+        m_file->close();
+    }
+
     int init(const std::string& filename, const char* mode)
     {
         try {
@@ -85,6 +90,12 @@ struct MemoryInFileWrapper : public BaseFileObjFileWrapper
 {
     pyo_unique_ptr data = nullptr;
 
+    void close() override
+    {
+        m_file->close();
+        data.clear();
+    }
+
     FILE* _fmemopen(PyObject* o)
     {
         if (read_filename(o) != 0)
@@ -143,6 +154,11 @@ struct MemoryInFileWrapper : public BaseFileObjFileWrapper
 
 struct DupInFileWrapper : public BaseFileObjFileWrapper
 {
+    void close() override
+    {
+        m_file->close();
+    }
+
     FILE* _fdopen(PyObject* o, int fileno)
     {
         if (read_filename(o) != 0)
@@ -167,7 +183,7 @@ struct DupInFileWrapper : public BaseFileObjFileWrapper
                 PyErr_SetFromErrno(PyExc_OSError);
             else
                 PyErr_SetFromErrnoWithFilename(PyExc_OSError, filename.c_str());
-            close(newfd);
+            ::close(newfd);
             return nullptr;
         }
 
@@ -267,8 +283,7 @@ struct FileDefinition
             return nullptr;
 
         try {
-            delete self->file;
-            self->file = nullptr;
+            self->file->close();
         } DBALLE_CATCH_RETURN_PYO
 
         Py_RETURN_NONE;

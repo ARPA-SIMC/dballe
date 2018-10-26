@@ -25,6 +25,11 @@ struct File
     virtual Encoding encoding() const = 0;
 
     /**
+     * Close the underlying file
+     */
+    virtual void close() = 0;
+
+    /**
      * Read a message from the file.
      *
      * @return

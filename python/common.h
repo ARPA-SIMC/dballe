@@ -41,6 +41,12 @@ public:
         return *this;
     }
 
+    void clear()
+    {
+        Py_XDECREF(ptr);
+        ptr = nullptr;
+    }
+
     /// Release the reference without calling Py_DECREF
     Obj* release()
     {
