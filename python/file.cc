@@ -470,14 +470,14 @@ std::unique_ptr<FileWrapper> wrapper_r_from_object(PyObject* o)
         if (!v) return nullptr;
         std::unique_ptr<NamedFileWrapper> wrapper(new NamedFileWrapper);
         wrapper->init(v, "rb");
-        return wrapper;
+        return std::unique_ptr<FileWrapper>(wrapper.release());
     }
     if (PyUnicode_Check(o)) {
         const char* v = PyUnicode_AsUTF8(o);
         if (!v) return nullptr;
         std::unique_ptr<NamedFileWrapper> wrapper(new NamedFileWrapper);
         wrapper->init(v, "rb");
-        return wrapper;
+        return std::unique_ptr<FileWrapper>(wrapper.release());
     }
 
     int fileno;
@@ -488,11 +488,11 @@ std::unique_ptr<FileWrapper> wrapper_r_from_object(PyObject* o)
     {
         std::unique_ptr<MemoryInFileWrapper> wrapper(new MemoryInFileWrapper);
         wrapper->init(o);
-        return wrapper;
+        return std::unique_ptr<FileWrapper>(wrapper.release());
     } else {
         std::unique_ptr<DupInFileWrapper> wrapper(new DupInFileWrapper);
         wrapper->init(o, fileno);
-        return wrapper;
+        return std::unique_ptr<FileWrapper>(wrapper.release());
     }
 }
 
@@ -504,14 +504,14 @@ std::unique_ptr<FileWrapper> wrapper_r_from_object(PyObject* o, Encoding encodin
         if (!v) return nullptr;
         std::unique_ptr<NamedFileWrapper> wrapper(new NamedFileWrapper);
         wrapper->init(v, "rb", encoding);
-        return wrapper;
+        return std::unique_ptr<FileWrapper>(wrapper.release());
     }
     if (PyUnicode_Check(o)) {
         const char* v = PyUnicode_AsUTF8(o);
         if (!v) return nullptr;
         std::unique_ptr<NamedFileWrapper> wrapper(new NamedFileWrapper);
         wrapper->init(v, "rb", encoding);
-        return wrapper;
+        return std::unique_ptr<FileWrapper>(wrapper.release());
     }
 
     int fileno;
@@ -522,11 +522,11 @@ std::unique_ptr<FileWrapper> wrapper_r_from_object(PyObject* o, Encoding encodin
     {
         std::unique_ptr<MemoryInFileWrapper> wrapper(new MemoryInFileWrapper);
         wrapper->init(o, encoding);
-        return wrapper;
+        return std::unique_ptr<FileWrapper>(wrapper.release());
     } else {
         std::unique_ptr<DupInFileWrapper> wrapper(new DupInFileWrapper);
         wrapper->init(o, fileno, encoding);
-        return wrapper;
+        return std::unique_ptr<FileWrapper>(wrapper.release());
     }
 }
 
