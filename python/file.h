@@ -41,6 +41,18 @@ PyAPI_DATA(PyTypeObject) dpy_File_Type;
     (Py_TYPE(ob) == &dpy_File_Type || \
      PyType_IsSubtype(Py_TYPE(ob), &dpy_File_Type))
 
+
+typedef struct {
+    PyObject_HEAD
+    dballe::BinaryMessage message;
+} dpy_BinaryMessage;
+
+PyAPI_DATA(PyTypeObject) dpy_BinaryMessage_Type;
+
+#define dpy_BinaryMessage_Check(ob) \
+    (Py_TYPE(ob) == &dpy_BinaryMessage_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), &dpy_BinaryMessage_Type))
+
 }
 
 
@@ -76,6 +88,16 @@ dpy_File* file_create_r_from_object(PyObject* o);
  * The python object can be a string with the file name, or a file-like object.
  */
 dpy_File* file_create_r_from_object(PyObject* o, Encoding encoding);
+
+/**
+ * Create a new dpy_BinaryMessage
+ */
+dpy_BinaryMessage* binarymessage_create(const BinaryMessage& message);
+
+/**
+ * Create a new dpy_BinaryMessage
+ */
+dpy_BinaryMessage* binarymessage_create(BinaryMessage&& message);
 
 #if 0
 /**

@@ -144,6 +144,10 @@ struct BinaryMessage
 
     BinaryMessage(Encoding encoding)
         : encoding(encoding) {}
+    BinaryMessage(const BinaryMessage&) = default;
+    BinaryMessage(BinaryMessage&&) = default;
+    BinaryMessage& operator=(const BinaryMessage&) = default;
+    BinaryMessage& operator=(BinaryMessage&&) = default;
 
     /// Return true if the message is not empty
     operator bool() const;
