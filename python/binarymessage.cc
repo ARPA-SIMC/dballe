@@ -134,7 +134,7 @@ BinaryMessageDefinition* definition = nullptr;
 }
 
 extern "C" {
-PyTypeObject dpy_BinaryMessage_Type;
+PyTypeObject* dpy_BinaryMessage_Type = nullptr;
 }
 
 namespace dballe {
@@ -142,7 +142,7 @@ namespace python {
 
 dpy_BinaryMessage* binarymessage_create(const BinaryMessage& message)
 {
-    dpy_BinaryMessage* res = PyObject_New(dpy_BinaryMessage, &dpy_BinaryMessage_Type);
+    dpy_BinaryMessage* res = PyObject_New(dpy_BinaryMessage, dpy_BinaryMessage_Type);
     if (!res) return nullptr;
     new (&(res->message)) BinaryMessage(message);
     return res;
@@ -150,7 +150,7 @@ dpy_BinaryMessage* binarymessage_create(const BinaryMessage& message)
 
 dpy_BinaryMessage* binarymessage_create(BinaryMessage&& message)
 {
-    dpy_BinaryMessage* res = PyObject_New(dpy_BinaryMessage, &dpy_BinaryMessage_Type);
+    dpy_BinaryMessage* res = PyObject_New(dpy_BinaryMessage, dpy_BinaryMessage_Type);
     if (!res) return nullptr;
     new (&(res->message)) BinaryMessage(std::move(message));
     return res;
@@ -163,7 +163,7 @@ int register_binarymessage(PyObject* m)
         return -1;
 
     definition = new BinaryMessageDefinition;
-    if (definition->activate(dpy_BinaryMessage_Type, m) != 0)
+    if (!(dpy_BinaryMessage_Type = definition->activate(m)))
         return -1;
 
     return 0;

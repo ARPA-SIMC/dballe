@@ -17,13 +17,6 @@ namespace python {
 
 wrpy_c_api* wrpy = 0;
 
-PyObject* format_varcode(wreport::Varcode code)
-{
-    char buf[7];
-    format_code(code, buf);
-    return PyUnicode_FromString(buf);
-}
-
 void set_wreport_exception(const wreport::error& e)
 {
     switch (e.code())

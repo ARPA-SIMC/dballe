@@ -340,7 +340,7 @@ FileDefinition* file_definition = nullptr;
 
 
 extern "C" {
-PyTypeObject dpy_File_Type;
+PyTypeObject* dpy_File_Type = nullptr;
 }
 
 namespace dballe {
@@ -348,7 +348,7 @@ namespace python {
 
 dpy_File* file_create(std::unique_ptr<FileWrapper> wrapper)
 {
-    dpy_File* res = PyObject_New(dpy_File, &dpy_File_Type);
+    dpy_File* res = PyObject_New(dpy_File, dpy_File_Type);
     if (!res) return nullptr;
     res->file = wrapper.release();
     return res;
@@ -486,7 +486,7 @@ int register_file(PyObject* m)
         return -1;
 
     file_definition = new FileDefinition;
-    if (file_definition->activate(dpy_File_Type, m) != 0)
+    if (!(dpy_File_Type = file_definition->activate(m)))
         return -1;
 
     return 0;

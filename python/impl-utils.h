@@ -2,7 +2,11 @@
 #define DBALLE_PYTHON_UTILS_H
 
 #include <Python.h>
+#include "common.h"
 #include <array>
+
+namespace dballe {
+namespace python {
 
 namespace {
 
@@ -160,11 +164,11 @@ struct Binding
      * It fills in \a type, and if module is provided, it also registers the
      * constructor in the module.
      */
-    int activate(PyTypeObject& type, PyObject* module=nullptr)
+    PyTypeObject* activate(PyObject* module=nullptr)
     {
         Derived* d = static_cast<Derived*>(this);
 
-        type = PyTypeObject {
+        py_unique_ptr<PyTypeObject> type = new PyTypeObject {
             PyVarObject_HEAD_INIT(NULL, 0)
             Derived::qual_name,        // tp_name
             sizeof(Impl), // tp_basicsize
@@ -205,18 +209,21 @@ struct Binding
             PyType_GenericNew,         // tp_new
         };
 
-        if (PyType_Ready(&type) != 0)
-            return -1;
+        if (PyType_Ready(type) != 0)
+            return nullptr;
 
         if (module)
         {
-            Py_INCREF(&type);
-            if (PyModule_AddObject(module, Derived::name, (PyObject*)&type) != 0)
-                return -1;
+            type.incref();
+            if (PyModule_AddObject(module, Derived::name, (PyObject*)type.get()) != 0)
+                return nullptr;
         }
-        return 0;
+        return type.release();
     }
 };
+
+}
+}
 
 }
 

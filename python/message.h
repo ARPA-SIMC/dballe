@@ -12,11 +12,11 @@ typedef struct {
     std::shared_ptr<dballe::Message> message;
 } dpy_Message;
 
-PyAPI_DATA(PyTypeObject) dpy_Message_Type;
+extern PyTypeObject* dpy_Message_Type;
 
 #define dpy_Message_Check(ob) \
-    (Py_TYPE(ob) == &dpy_Message_Type || \
-     PyType_IsSubtype(Py_TYPE(ob), &dpy_Message_Type))
+    (Py_TYPE(ob) == dpy_Message_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), dpy_Message_Type))
 
 }
 

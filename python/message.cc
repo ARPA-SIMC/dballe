@@ -267,7 +267,7 @@ MessageDefinition* definition = nullptr;
 }
 
 extern "C" {
-PyTypeObject dpy_Message_Type;
+PyTypeObject* dpy_Message_Type = nullptr;
 }
 
 namespace dballe {
@@ -328,7 +328,7 @@ PyObject* message_type_to_python(MessageType type)
 
 dpy_Message* message_create(MessageType type)
 {
-    dpy_Message* res = PyObject_New(dpy_Message, &dpy_Message_Type);
+    dpy_Message* res = PyObject_New(dpy_Message, dpy_Message_Type);
     if (!res) return nullptr;
     new (&(res->message)) std::shared_ptr<Message>(Message::create(type));
     return res;
@@ -336,7 +336,7 @@ dpy_Message* message_create(MessageType type)
 
 dpy_Message* message_create(std::shared_ptr<Message> message)
 {
-    dpy_Message* res = PyObject_New(dpy_Message, &dpy_Message_Type);
+    dpy_Message* res = PyObject_New(dpy_Message, dpy_Message_Type);
     if (!res) return nullptr;
     new (&(res->message)) std::shared_ptr<Message>(message);
     return res;
@@ -347,7 +347,7 @@ int register_message(PyObject* m)
     if (common_init() != 0) return -1;
 
     definition = new MessageDefinition;
-    if (definition->activate(dpy_Message_Type, m) != 0)
+    if (!(dpy_Message_Type = definition->activate(m)))
         return -1;
 
     return 0;

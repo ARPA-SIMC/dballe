@@ -37,6 +37,9 @@ public:
         return *this;
     }
 
+    void incref() { Py_XINCREF(ptr); }
+    void decref() { Py_XDECREF(ptr); }
+
     void clear()
     {
         Py_XDECREF(ptr);
@@ -91,12 +94,6 @@ struct ReleaseGIL
         _save = nullptr;
     }
 };
-
-
-/**
- * Return a python string representing a varcode
- */
-PyObject* format_varcode(wreport::Varcode code);
 
 /// Given a wreport exception, set the Python error indicator appropriately.
 void set_wreport_exception(const wreport::error& e);

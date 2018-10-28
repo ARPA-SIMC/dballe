@@ -274,12 +274,12 @@ struct set_filter : public MethKwargs<typename ImplTraits<Station>::Impl>
 
 dpy_ExplorerUpdate* update_create(const dpy_Explorer*)
 {
-    return (dpy_ExplorerUpdate*)PyObject_CallObject((PyObject*)&dpy_ExplorerUpdate_Type, nullptr);
+    return (dpy_ExplorerUpdate*)PyObject_CallObject((PyObject*)dpy_ExplorerUpdate_Type, nullptr);
 }
 
 dpy_DBExplorerUpdate* update_create(const dpy_DBExplorer*)
 {
-    return (dpy_DBExplorerUpdate*)PyObject_CallObject((PyObject*)&dpy_DBExplorerUpdate_Type, nullptr);
+    return (dpy_DBExplorerUpdate*)PyObject_CallObject((PyObject*)dpy_DBExplorerUpdate_Type, nullptr);
 }
 
 
@@ -616,10 +616,10 @@ Definition<DBStation>* definition_db = nullptr;
 
 extern "C" {
 
-PyTypeObject dpy_Explorer_Type;
-PyTypeObject dpy_DBExplorer_Type;
-PyTypeObject dpy_ExplorerUpdate_Type;
-PyTypeObject dpy_DBExplorerUpdate_Type;
+PyTypeObject* dpy_Explorer_Type = nullptr;
+PyTypeObject* dpy_DBExplorer_Type = nullptr;
+PyTypeObject* dpy_ExplorerUpdate_Type = nullptr;
+PyTypeObject* dpy_DBExplorerUpdate_Type = nullptr;
 
 }
 
@@ -634,7 +634,7 @@ dpy_Explorer* explorer_create()
 
 dpy_Explorer* explorer_create(std::unique_ptr<db::Explorer> explorer)
 {
-    dpy_Explorer* result = PyObject_New(dpy_Explorer, &dpy_Explorer_Type);
+    dpy_Explorer* result = PyObject_New(dpy_Explorer, dpy_Explorer_Type);
     if (!result) return nullptr;
 
     result->explorer = explorer.release();
@@ -649,7 +649,7 @@ dpy_DBExplorer* dbexplorer_create()
 
 dpy_DBExplorer* dbexplorer_create(std::unique_ptr<db::DBExplorer> explorer)
 {
-    dpy_DBExplorer* result = PyObject_New(dpy_DBExplorer, &dpy_DBExplorer_Type);
+    dpy_DBExplorer* result = PyObject_New(dpy_DBExplorer, dpy_DBExplorer_Type);
     if (!result) return nullptr;
 
     result->explorer = explorer.release();
@@ -665,17 +665,17 @@ int register_explorer(PyObject* m)
     PyModule_AddObject(m, "ExplorerStats", (PyObject*)&dpy_stats_Type);
 
     explorer::definition = new explorer::Definition<Station>;
-    if (explorer::definition->activate(dpy_Explorer_Type, m) != 0)
+    if (!(dpy_Explorer_Type = explorer::definition->activate(m)))
         return -1;
     explorer::definition_db = new explorer::Definition<DBStation>;
-    if (explorer::definition_db->activate(dpy_DBExplorer_Type, m) != 0)
+    if (!(dpy_DBExplorer_Type = explorer::definition_db->activate(m)))
         return -1;
 
     explorerupdate::definition = new explorerupdate::Definition<Station>;
-    if (explorerupdate::definition->activate(dpy_ExplorerUpdate_Type, m) != 0)
+    if (!(dpy_ExplorerUpdate_Type = explorerupdate::definition->activate(m)))
         return -1;
     explorerupdate::definition_db = new explorerupdate::Definition<DBStation>;
-    if (explorerupdate::definition_db->activate(dpy_DBExplorerUpdate_Type, m) != 0)
+    if (!(dpy_DBExplorerUpdate_Type = explorerupdate::definition_db->activate(m)))
         return -1;
 
     return 0;

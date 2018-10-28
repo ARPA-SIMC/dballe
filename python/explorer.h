@@ -12,11 +12,11 @@ typedef struct {
     dballe::db::DBExplorer* explorer;
 } dpy_DBExplorer;
 
-PyAPI_DATA(PyTypeObject) dpy_DBExplorer_Type;
+extern PyTypeObject* dpy_DBExplorer_Type;
 
 #define dpy_DBExplorer_Check(ob) \
-    (Py_TYPE(ob) == &dpy_DBExplorer_Type || \
-     PyType_IsSubtype(Py_TYPE(ob), &dpy_DBExplorer_Type))
+    (Py_TYPE(ob) == dpy_DBExplorer_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), dpy_DBExplorer_Type))
 
 
 typedef struct {
@@ -24,11 +24,11 @@ typedef struct {
     dballe::db::DBExplorer::Update update;
 } dpy_DBExplorerUpdate;
 
-PyAPI_DATA(PyTypeObject) dpy_DBExplorerUpdate_Type;
+extern PyTypeObject* dpy_DBExplorerUpdate_Type;
 
 #define dpy_DBExplorerUpdate_Check(ob) \
-    (Py_TYPE(ob) == &dpy_DBExplorerUpdate_Type || \
-     PyType_IsSubtype(Py_TYPE(ob), &dpy_DBExplorerUpdate_Type))
+    (Py_TYPE(ob) == dpy_DBExplorerUpdate_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), dpy_DBExplorerUpdate_Type))
 
 
 typedef struct {
@@ -36,11 +36,11 @@ typedef struct {
     dballe::db::Explorer* explorer;
 } dpy_Explorer;
 
-PyAPI_DATA(PyTypeObject) dpy_Explorer_Type;
+extern PyTypeObject* dpy_Explorer_Type;
 
 #define dpy_Explorer_Check(ob) \
-    (Py_TYPE(ob) == &dpy_Explorer_Type || \
-     PyType_IsSubtype(Py_TYPE(ob), &dpy_Explorer_Type))
+    (Py_TYPE(ob) == dpy_Explorer_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), dpy_Explorer_Type))
 
 
 typedef struct {
@@ -48,11 +48,11 @@ typedef struct {
     dballe::db::Explorer::Update update;
 } dpy_ExplorerUpdate;
 
-PyAPI_DATA(PyTypeObject) dpy_ExplorerUpdate_Type;
+extern PyTypeObject* dpy_ExplorerUpdate_Type;
 
 #define dpy_ExplorerUpdate_Check(ob) \
-    (Py_TYPE(ob) == &dpy_ExplorerUpdate_Type || \
-     PyType_IsSubtype(Py_TYPE(ob), &dpy_ExplorerUpdate_Type))
+    (Py_TYPE(ob) == dpy_ExplorerUpdate_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), dpy_ExplorerUpdate_Type))
 
 }
 

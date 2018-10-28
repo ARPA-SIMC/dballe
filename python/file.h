@@ -34,11 +34,11 @@ typedef struct {
     dballe::python::FileWrapper* file;
 } dpy_File;
 
-PyAPI_DATA(PyTypeObject) dpy_File_Type;
+extern PyTypeObject* dpy_File_Type;
 
 #define dpy_File_Check(ob) \
-    (Py_TYPE(ob) == &dpy_File_Type || \
-     PyType_IsSubtype(Py_TYPE(ob), &dpy_File_Type))
+    (Py_TYPE(ob) == dpy_File_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), dpy_File_Type))
 
 
 }

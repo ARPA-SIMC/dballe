@@ -12,11 +12,11 @@ typedef struct {
     dballe::BinaryMessage message;
 } dpy_BinaryMessage;
 
-PyAPI_DATA(PyTypeObject) dpy_BinaryMessage_Type;
+extern PyTypeObject* dpy_BinaryMessage_Type;
 
 #define dpy_BinaryMessage_Check(ob) \
-    (Py_TYPE(ob) == &dpy_BinaryMessage_Type || \
-     PyType_IsSubtype(Py_TYPE(ob), &dpy_BinaryMessage_Type))
+    (Py_TYPE(ob) == dpy_BinaryMessage_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), dpy_BinaryMessage_Type))
 
 }
 

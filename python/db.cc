@@ -3,6 +3,7 @@
 #include "record.h"
 #include "cursor.h"
 #include "common.h"
+#include "types.h"
 #include "dballe/types.h"
 #include "dballe/file.h"
 #include "dballe/core/query.h"
@@ -42,7 +43,7 @@ static PyObject* get_insert_ids(const Vals& vals)
     for (const auto& v: vals.values)
     {
         pyo_unique_ptr id(PyInt_FromLong(v.second.data_id));
-        pyo_unique_ptr varcode(format_varcode(v.first));
+        pyo_unique_ptr varcode(to_python(v.first));
 
         if (PyDict_SetItem(res, varcode, id))
             return nullptr;
