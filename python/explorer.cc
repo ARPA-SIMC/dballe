@@ -8,6 +8,7 @@
 #include "types.h"
 #include "db.h"
 #include "record.h"
+#include "impl-utils.h"
 #include <algorithm>
 #include <sstream>
 #include "config.h"
@@ -16,7 +17,6 @@ using namespace std;
 using namespace dballe;
 using namespace dballe::python;
 using namespace wreport;
-
 
 extern "C" {
 
@@ -39,6 +39,41 @@ PyTypeObject dpy_stats_Type;
 }
 
 namespace {
+
+template<typename T> struct ImplTraits {};
+
+template<> struct ImplTraits<Station>
+{
+    typedef dpy_Explorer Impl;
+    typedef dpy_ExplorerUpdate UpdateImpl;
+    typedef db::Explorer cpp_impl;
+    typedef db::Explorer::Update update_cpp_impl;
+};
+
+template<> struct ImplTraits<DBStation>
+{
+    typedef dpy_DBExplorer Impl;
+    typedef dpy_DBExplorerUpdate UpdateImpl;
+    typedef db::DBExplorer cpp_impl;
+    typedef db::DBExplorer::Update update_cpp_impl;
+};
+
+
+#if 0
+template<typename Station>
+struct GetAllStations : Getter<typename ImplTraits<Station>::Impl>
+{
+    constexpr static const char* name = "type";
+    constexpr static const char* doc = "message type";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            return message_type_to_python(self->message->get_type());
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+#endif
+
 
 template<typename Station>
 static PyObject* _export_stations(const db::summary::StationEntries<Station>& stations)
@@ -271,26 +306,10 @@ static PyObject* _stats(dpy_Explorer* self, void* closure)
 }
 
 
-template<typename T> struct ImplTraits {};
-
-template<> struct ImplTraits<dpy_Explorer>
-{
-    typedef db::Explorer cpp_impl;
-    typedef dpy_ExplorerUpdate dpy_Update;
-};
-template<> struct ImplTraits<dpy_DBExplorer>
-{
-    typedef db::DBExplorer cpp_impl;
-    typedef dpy_DBExplorerUpdate dpy_Update;
-};
-template<> struct ImplTraits<dpy_ExplorerUpdate> { typedef db::Explorer::Update cpp_impl; };
-template<> struct ImplTraits<dpy_DBExplorerUpdate> { typedef db::DBExplorer::Update cpp_impl; };
-
-
-
-template<class Impl>
+template<class Station>
 struct ExplorerDefinition
 {
+    typedef typename ImplTraits<Station>::Impl Impl;
     static const char* name;
     static const char* qual_name;
     static PyGetSetDef getsetters[];
@@ -322,7 +341,7 @@ struct ExplorerDefinition
             return -1;
 
         try {
-            self->explorer = new typename ImplTraits<Impl>::cpp_impl;
+            self->explorer = new typename ImplTraits<Station>::cpp_impl;
         } DBALLE_CATCH_RETURN_INT
 
         return 0;
@@ -358,7 +377,7 @@ struct ExplorerDefinition
         } DBALLE_CATCH_RETURN_PYO
     }
 
-    static typename ImplTraits<Impl>::dpy_Update* update_create();
+    static typename ImplTraits<Station>::UpdateImpl* update_create();
 
     static PyObject* _rebuild(Impl* self)
     {
@@ -415,20 +434,20 @@ struct ExplorerDefinition
     }
 };
 
-template<> const char* ExplorerDefinition<dpy_Explorer>::name = "Explorer";
-template<> const char* ExplorerDefinition<dpy_Explorer>::qual_name = "dballe.Explorer";
+template<> const char* ExplorerDefinition<Station>::name = "Explorer";
+template<> const char* ExplorerDefinition<Station>::qual_name = "dballe.Explorer";
 
-template<> const char* ExplorerDefinition<dpy_DBExplorer>::name = "DBExplorer";
-template<> const char* ExplorerDefinition<dpy_DBExplorer>::qual_name = "dballe.DBExplorer";
+template<> const char* ExplorerDefinition<DBStation>::name = "DBExplorer";
+template<> const char* ExplorerDefinition<DBStation>::qual_name = "dballe.DBExplorer";
 
 template<>
-dpy_ExplorerUpdate* ExplorerDefinition<dpy_Explorer>::update_create()
+dpy_ExplorerUpdate* ExplorerDefinition<Station>::update_create()
 {
     return (dpy_ExplorerUpdate*)PyObject_CallObject((PyObject*)&dpy_ExplorerUpdate_Type, nullptr);
 }
 
 template<>
-dpy_DBExplorerUpdate* ExplorerDefinition<dpy_DBExplorer>::update_create()
+dpy_DBExplorerUpdate* ExplorerDefinition<DBStation>::update_create()
 {
     return (dpy_DBExplorerUpdate*)PyObject_CallObject((PyObject*)&dpy_DBExplorerUpdate_Type, nullptr);
 }
@@ -536,9 +555,10 @@ PyTypeObject ExplorerDefinition<Impl>::type = {
 };
 
 
-template<class Impl>
+template<class Station>
 struct ExplorerUpdateDefinition
 {
+    typedef typename ImplTraits<Station>::UpdateImpl Impl;
     static const char* name;
     static const char* qual_name;
     static PyMethodDef methods[];
@@ -569,7 +589,7 @@ struct ExplorerUpdateDefinition
             return -1;
 
         try {
-            new (&(self->update)) typename ImplTraits<Impl>::cpp_impl;
+            new (&(self->update)) typename ImplTraits<Station>::update_cpp_impl;
         } DBALLE_CATCH_RETURN_INT
 
         return 0;
@@ -657,10 +677,10 @@ struct ExplorerUpdateDefinition
     }
 };
 
-template<> const char* ExplorerUpdateDefinition<dpy_ExplorerUpdate>::name = "ExplorerUpdate";
-template<> const char* ExplorerUpdateDefinition<dpy_ExplorerUpdate>::qual_name = "dballe.ExplorerUpdate";
-template<> const char* ExplorerUpdateDefinition<dpy_DBExplorerUpdate>::name = "DBExplorerUpdate";
-template<> const char* ExplorerUpdateDefinition<dpy_DBExplorerUpdate>::qual_name = "dballe.DBExplorerUpdate";
+template<> const char* ExplorerUpdateDefinition<Station>::name = "ExplorerUpdate";
+template<> const char* ExplorerUpdateDefinition<Station>::qual_name = "dballe.ExplorerUpdate";
+template<> const char* ExplorerUpdateDefinition<DBStation>::name = "DBExplorerUpdate";
+template<> const char* ExplorerUpdateDefinition<DBStation>::qual_name = "dballe.DBExplorerUpdate";
 
 template<typename Impl>
 PyMethodDef ExplorerUpdateDefinition<Impl>::methods[] = {
@@ -724,10 +744,10 @@ PyTypeObject ExplorerUpdateDefinition<Impl>::type = {
 
 extern "C" {
 
-PyTypeObject dpy_Explorer_Type = ExplorerDefinition<dpy_Explorer>::type;
-PyTypeObject dpy_DBExplorer_Type = ExplorerDefinition<dpy_DBExplorer>::type;
-PyTypeObject dpy_ExplorerUpdate_Type = ExplorerUpdateDefinition<dpy_ExplorerUpdate>::type;
-PyTypeObject dpy_DBExplorerUpdate_Type = ExplorerUpdateDefinition<dpy_DBExplorerUpdate>::type;
+PyTypeObject dpy_Explorer_Type = ExplorerDefinition<Station>::type;
+PyTypeObject dpy_DBExplorer_Type = ExplorerDefinition<DBStation>::type;
+PyTypeObject dpy_ExplorerUpdate_Type = ExplorerUpdateDefinition<Station>::type;
+PyTypeObject dpy_DBExplorerUpdate_Type = ExplorerUpdateDefinition<DBStation>::type;
 
 }
 
