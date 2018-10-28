@@ -19,7 +19,6 @@ extern PyTypeObject* dpy_Level_Type;
     (ob == Py_None || PyTuple_Check(ob) || \
      Py_TYPE(ob) == dpy_Level_Type || PyType_IsSubtype(Py_TYPE(ob), dpy_Level_Type))
 
-
 PyAPI_DATA(PyTypeObject) dpy_Trange_Type;
 
 #define dpy_Trange_Check(ob) \

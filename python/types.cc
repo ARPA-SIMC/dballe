@@ -164,12 +164,7 @@ struct Definition : public Binding<Definition, dpy_Level>
 
     static Py_hash_t _hash(dpy_Level* self)
     {
-        Py_hash_t res = 0;
-        if (self->level.ltype1 != MISSING_INT) res += self->level.ltype1;
-        if (self->level.l1 != MISSING_INT) res += self->level.l1;
-        if (self->level.ltype2 != MISSING_INT) res += self->level.ltype2 << 8;
-        if (self->level.l2 != MISSING_INT) res += self->level.l2;
-        return res;
+        return std::hash<dballe::Level>{}(self->level);
     }
 };
 

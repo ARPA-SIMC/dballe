@@ -1116,6 +1116,17 @@ void Trange::to_stream(std::ostream& out, const char* undef) const
     if (p2 == MISSING_INT) out << undef; else out << p2;
 }
 
+std::string Trange::to_string(const char* undef) const
+{
+    string res;
+    if (pind == MISSING_INT) res += undef; else res += std::to_string(pind);
+    res += ",";
+    if (p1 == MISSING_INT) res += undef; else res += std::to_string(p1);
+    res += ",";
+    if (p2 == MISSING_INT) res += undef; else res += std::to_string(p2);
+    return res;
+}
+
 void Trange::to_csv(CSVWriter& out) const
 {
     if (pind == MISSING_INT) out.add_value_empty(); else out.add_value(pind);
@@ -1331,6 +1342,16 @@ size_t hash<dballe::Level>::operator()(dballe::Level const& o) const noexcept
     if (o.l1 != MISSING_INT) res += o.l1;
     if (o.ltype2 != MISSING_INT) res += o.ltype2 << 8;
     if (o.l2 != MISSING_INT) res += o.l2;
+    return res;
+}
+
+size_t hash<dballe::Trange>::operator()(dballe::Trange const& o) const noexcept
+{
+    using dballe::MISSING_INT;
+    size_t res = 0;
+    if (o.pind != MISSING_INT) res += o.pind;
+    if (o.p1 != MISSING_INT) res += o.p1;
+    if (o.p2 != MISSING_INT) res += o.p2;
     return res;
 }
 

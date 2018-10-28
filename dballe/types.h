@@ -644,6 +644,9 @@ struct Trange
     /// Format to an output stream
     void to_stream(std::ostream& out, const char* undef="-") const;
 
+    /// Format to a string
+    std::string to_string(const char* undef="-") const;
+
     /**
      * Write the datetime to a CSV writer as 3 fields
      */
@@ -712,6 +715,13 @@ namespace std {
 template<> struct hash<dballe::Level>
 {
     typedef dballe::Level argument_type;
+    typedef size_t result_type;
+    result_type operator()(argument_type const& o) const noexcept;
+};
+
+template<> struct hash<dballe::Trange>
+{
+    typedef dballe::Trange argument_type;
     typedef size_t result_type;
     result_type operator()(argument_type const& o) const noexcept;
 };
