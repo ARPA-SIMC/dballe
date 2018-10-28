@@ -218,10 +218,10 @@ public:
     }
 
     const summary::StationEntries<Station>& stations() const { if (dirty) recompute_summaries(); return entries.sorted(); }
-    core::SortedSmallUniqueValueSet<std::string> reports() const { if (dirty) recompute_summaries(); return m_reports; }
-    core::SortedSmallUniqueValueSet<dballe::Level> levels() const { if (dirty) recompute_summaries(); return m_levels; }
-    core::SortedSmallUniqueValueSet<dballe::Trange> tranges() const { if (dirty) recompute_summaries(); return m_tranges; }
-    core::SortedSmallUniqueValueSet<wreport::Varcode> varcodes() const { if (dirty) recompute_summaries(); return m_varcodes; }
+    const core::SortedSmallUniqueValueSet<std::string>& reports() const { if (dirty) recompute_summaries(); return m_reports; }
+    const core::SortedSmallUniqueValueSet<dballe::Level>& levels() const { if (dirty) recompute_summaries(); return m_levels; }
+    const core::SortedSmallUniqueValueSet<dballe::Trange>& tranges() const { if (dirty) recompute_summaries(); return m_tranges; }
+    const core::SortedSmallUniqueValueSet<wreport::Varcode>& varcodes() const { if (dirty) recompute_summaries(); return m_varcodes; }
 
     /**
      * Recompute reports, levels, tranges, and varcodes.

@@ -2,16 +2,12 @@
 #define DBALLE_PYTHON_COMMON_H
 
 #include <Python.h>
+#include <dballe/fwd.h>
 #include <wreport/python.h>
 #include <wreport/error.h>
 #include <wreport/varinfo.h>
 
 namespace dballe {
-struct Datetime;
-struct DatetimeRange;
-struct Level;
-struct Trange;
-
 namespace python {
 
 extern wrpy_c_api* wrpy;
@@ -168,6 +164,10 @@ int string_from_python(PyObject* o, std::string& out);
 
 /// Call repr() on \a o, and return the result in \a out
 int object_repr(PyObject* o, std::string& out);
+
+inline PyObject* to_python(const Datetime& dt) { return datetime_to_python(dt); }
+// inline PyObject* to_python(const DatetimeRange& dtr) { return datetimerange_to_python(dtr); }
+inline PyObject* to_python(const std::string& s) { return string_to_python(s); }
 
 /**
  * call o.fileno() and return its result.

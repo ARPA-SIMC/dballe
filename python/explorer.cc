@@ -38,7 +38,19 @@ PyTypeObject dpy_stats_Type;
 
 }
 
+namespace dballe {
+namespace python {
+
+template<typename Station>
+inline PyObject* to_python(const db::summary::StationEntry<Station>& s) { return to_python(s.station); }
+
+}
+}
+
 namespace {
+
+struct All {};
+struct Selected {};
 
 template<typename T> struct ImplTraits {};
 
@@ -56,265 +68,340 @@ template<> struct ImplTraits<DBStation>
     typedef dpy_DBExplorerUpdate UpdateImpl;
     typedef db::DBExplorer cpp_impl;
     typedef db::DBExplorer::Update update_cpp_impl;
+    template<typename Scope>
+    static const db::BaseSummary<Station>& summary();
+};
+
+template<typename Station, typename Scope>
+const db::BaseSummary<Station>& get_summary(typename ImplTraits<Station>::Impl& impl) { throw std::runtime_error("not implemented"); }
+template<> const db::BaseSummary<Station>& get_summary<Station, All>(dpy_Explorer& impl) { return impl.explorer->global_summary(); }
+template<> const db::BaseSummary<Station>& get_summary<Station, Selected>(dpy_Explorer& impl) { return impl.explorer->active_summary(); }
+template<> const db::BaseSummary<DBStation>& get_summary<DBStation, All>(dpy_DBExplorer& impl) { return impl.explorer->global_summary(); }
+template<> const db::BaseSummary<DBStation>& get_summary<DBStation, Selected>(dpy_DBExplorer& impl) { return impl.explorer->active_summary(); }
+
+template<typename Station>
+struct get_stations {
+    static const db::summary::StationEntries<Station>& get(const db::BaseSummary<Station>& summary) { return summary.stations(); }
+};
+
+template<typename Station>
+struct get_reports {
+    static const core::SortedSmallUniqueValueSet<std::string>& get(const db::BaseSummary<Station>& summary) { return summary.reports(); }
+};
+
+template<typename Station>
+struct get_levels {
+    static const core::SortedSmallUniqueValueSet<dballe::Level>& get(const db::BaseSummary<Station>& summary) { return summary.levels(); }
+};
+
+template<typename Station>
+struct get_tranges {
+    static const core::SortedSmallUniqueValueSet<dballe::Trange>& get(const db::BaseSummary<Station>& summary) { return summary.tranges(); }
+};
+
+template<typename Station>
+struct get_varcodes {
+    static const core::SortedSmallUniqueValueSet<wreport::Varcode>& get(const db::BaseSummary<Station>& summary) { return summary.varcodes(); }
 };
 
 
-#if 0
-template<typename Station>
-struct GetAllStations : Getter<typename ImplTraits<Station>::Impl>
+template<typename Station, typename Scope, typename GET>
+struct BaseGetter : public Getter<typename ImplTraits<Station>::Impl>
 {
-    constexpr static const char* name = "type";
-    constexpr static const char* doc = "message type";
+    typedef typename ImplTraits<Station>::Impl Impl;
     static PyObject* get(Impl* self, void* closure)
     {
         try {
-            return message_type_to_python(self->message->get_type());
+            const auto& summary = get_summary<Station, Scope>(*self);
+            const auto& stations = GET::get(summary);
+            pyo_unique_ptr result(PyList_New(stations.size()));
+
+            unsigned idx = 0;
+            for (const auto& entry: stations)
+            {
+                pyo_unique_ptr station(to_python(entry));
+                if (PyList_SetItem(result, idx, station.release()))
+                    return nullptr;
+                ++idx;
+            }
+
+            return result.release();
         } DBALLE_CATCH_RETURN_PYO
     }
 };
-#endif
+
+template<typename Station>
+struct GetAllStations : public BaseGetter<Station, All, get_stations<Station>>
+{
+    constexpr static const char* name = "all_stations";
+    constexpr static const char* doc = "get all stations";
+};
+
+template<typename Station>
+struct GetStations : public BaseGetter<Station, Selected, get_stations<Station>>
+{
+    constexpr static const char* name = "stations";
+    constexpr static const char* doc = "get all the stations currently selected";
+};
+
+template<typename Station>
+struct GetAllReports : public BaseGetter<Station, All, get_reports<Station>>
+{
+    constexpr static const char* name = "all_reports";
+    constexpr static const char* doc = "get all report values";
+};
+
+template<typename Station>
+struct GetReports : public BaseGetter<Station, Selected, get_reports<Station>>
+{
+    constexpr static const char* name = "reports";
+    constexpr static const char* doc = "get all the report values currently selected";
+};
+
+template<typename Station>
+struct GetAllLevels : public BaseGetter<Station, All, get_levels<Station>>
+{
+    constexpr static const char* name = "all_levels";
+    constexpr static const char* doc = "get all level values";
+};
+
+template<typename Station>
+struct GetLevels : public BaseGetter<Station, Selected, get_levels<Station>>
+{
+    constexpr static const char* name = "levels";
+    constexpr static const char* doc = "get all the level values currently selected";
+};
+
+template<typename Station>
+struct GetAllTranges : public BaseGetter<Station, All, get_tranges<Station>>
+{
+    constexpr static const char* name = "all_tranges";
+    constexpr static const char* doc = "get all time range values";
+};
+
+template<typename Station>
+struct GetTranges : public BaseGetter<Station, Selected, get_tranges<Station>>
+{
+    constexpr static const char* name = "tranges";
+    constexpr static const char* doc = "get all the time range values currently selected";
+};
+
+template<typename Station>
+struct GetAllVarcodes : public BaseGetter<Station, All, get_varcodes<Station>>
+{
+    constexpr static const char* name = "all_varcodes";
+    constexpr static const char* doc = "get all varcode values";
+};
+
+template<typename Station>
+struct GetVarcodes : public BaseGetter<Station, Selected, get_varcodes<Station>>
+{
+    constexpr static const char* name = "varcodes";
+    constexpr static const char* doc = "get all the varcode values currently selected";
+};
+
+
+template<typename Station, typename Scope>
+struct BaseGetStats : public Getter<typename ImplTraits<Station>::Impl>
+{
+    typedef typename ImplTraits<Station>::Impl Impl;
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            const auto& summary = get_summary<Station, Scope>(*self);
+            pyo_unique_ptr res(PyStructSequence_New(&dpy_stats_Type));
+            if (!res) return nullptr;
+
+            if (PyObject* v = datetime_to_python(summary.datetime_min()))
+                PyStructSequence_SET_ITEM((PyObject*)res, 0, v);
+            else
+                return nullptr;
+
+            if (PyObject* v = datetime_to_python(summary.datetime_max()))
+                PyStructSequence_SET_ITEM((PyObject*)res, 1, v);
+            else
+                return nullptr;
+
+            if (PyObject* v = PyLong_FromLong(summary.data_count()))
+                PyStructSequence_SET_ITEM((PyObject*)res, 2, v);
+            else
+                return nullptr;
+
+            return res.release();
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+template<typename Station>
+struct GetAllStats : public BaseGetStats<Station, All>
+{
+    constexpr static const char* name = "all_stats";
+    constexpr static const char* doc = "get the stats for all values";
+};
+
+template<typename Station>
+struct GetStats : public BaseGetStats<Station, Selected>
+{
+    constexpr static const char* name = "stats";
+    constexpr static const char* doc = "get stats for the currently selected values";
+};
 
 
 template<typename Station>
-static PyObject* _export_stations(const db::summary::StationEntries<Station>& stations)
+struct set_filter : public MethKwargs<typename ImplTraits<Station>::Impl>
 {
-    try {
-        pyo_unique_ptr result(PyList_New(stations.size()));
+    typedef typename ImplTraits<Station>::Impl Impl;
+    constexpr static const char* name = "set_filter";
+    constexpr static const char* doc = "Set a new filter, updating all browsing data";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "query", nullptr };
+        PyObject* pyquery = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O", const_cast<char**>(kwlist), &pyquery))
+            return nullptr;
 
-        unsigned idx = 0;
-        for (const auto& entry: stations)
-        {
-            pyo_unique_ptr station(to_python(entry.station));
-            if (PyList_SetItem(result, idx, station.release()))
-                return nullptr;
-            ++idx;
-        }
+        try {
+            core::Query query;
+            read_query(pyquery, query);
+            ReleaseGIL rg;
+            self->explorer->set_filter(query);
+        } DBALLE_CATCH_RETURN_PYO
 
-        return result.release();
-    } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
+    }
+};
+
+dpy_ExplorerUpdate* update_create(const dpy_Explorer*)
+{
+    return (dpy_ExplorerUpdate*)PyObject_CallObject((PyObject*)&dpy_ExplorerUpdate_Type, nullptr);
 }
 
-template<typename dpy_Explorer>
-static PyObject* _all_stations(dpy_Explorer* self, void* closure)
+dpy_DBExplorerUpdate* update_create(const dpy_DBExplorer*)
 {
-    try {
-        const auto& summary = self->explorer->global_summary();
-        return _export_stations(summary.stations());
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename dpy_Explorer>
-static PyObject* _stations(dpy_Explorer* self, void* closure)
-{
-    try {
-        const auto& summary = self->explorer->active_summary();
-        return _export_stations(summary.stations());
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-
-static PyObject* _export_reports(const core::SortedSmallUniqueValueSet<std::string>& reports)
-{
-    try {
-        pyo_unique_ptr result(PyList_New(reports.size()));
-
-        unsigned idx = 0;
-        for (const auto& v: reports)
-        {
-            pyo_unique_ptr value(string_to_python(v));
-            if (PyList_SetItem(result, idx, value.release()))
-                return nullptr;
-            ++idx;
-        }
-
-        return result.release();
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename dpy_Explorer>
-static PyObject* _all_reports(dpy_Explorer* self, void* closure)
-{
-    try {
-        const auto& summary = self->explorer->global_summary();
-        return _export_reports(summary.reports());
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename dpy_Explorer>
-static PyObject* _reports(dpy_Explorer* self, void* closure)
-{
-    try {
-        const auto& summary = self->explorer->active_summary();
-        return _export_reports(summary.reports());
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-
-static PyObject* _export_levels(const core::SortedSmallUniqueValueSet<dballe::Level>& levels)
-{
-    try {
-        pyo_unique_ptr result(PyList_New(levels.size()));
-
-        unsigned idx = 0;
-        for (const auto& v: levels)
-        {
-            pyo_unique_ptr level(level_to_python(v));
-            if (PyList_SetItem(result, idx, level.release()))
-                return nullptr;
-            ++idx;
-        }
-
-        return result.release();
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename dpy_Explorer>
-static PyObject* _all_levels(dpy_Explorer* self, void* closure)
-{
-    try {
-        const auto& summary = self->explorer->global_summary();
-        return _export_levels(summary.levels());
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename dpy_Explorer>
-static PyObject* _levels(dpy_Explorer* self, void* closure)
-{
-    try {
-        const auto& summary = self->explorer->active_summary();
-        return _export_levels(summary.levels());
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-
-static PyObject* _export_tranges(const core::SortedSmallUniqueValueSet<dballe::Trange>& tranges)
-{
-    try {
-        pyo_unique_ptr result(PyList_New(tranges.size()));
-
-        unsigned idx = 0;
-        for (const auto& v: tranges)
-        {
-            pyo_unique_ptr trange(trange_to_python(v));
-            if (PyList_SetItem(result, idx, trange.release()))
-                return nullptr;
-            ++idx;
-        }
-
-        return result.release();
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename dpy_Explorer>
-static PyObject* _all_tranges(dpy_Explorer* self, void* closure)
-{
-    try {
-        const auto& summary = self->explorer->global_summary();
-        return _export_tranges(summary.tranges());
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename dpy_Explorer>
-static PyObject* _tranges(dpy_Explorer* self, void* closure)
-{
-    try {
-        const auto& summary = self->explorer->active_summary();
-        return _export_tranges(summary.tranges());
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-
-static PyObject* _export_varcodes(const core::SortedSmallUniqueValueSet<wreport::Varcode>& varcodes)
-{
-    try {
-        pyo_unique_ptr result(PyList_New(varcodes.size()));
-
-        unsigned idx = 0;
-        for (const auto& v: varcodes)
-        {
-            pyo_unique_ptr varcode(varcode_to_python(v));
-            if (PyList_SetItem(result, idx, varcode.release()))
-                return nullptr;
-            ++idx;
-        }
-
-        return result.release();
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename dpy_Explorer>
-static PyObject* _all_varcodes(dpy_Explorer* self, void* closure)
-{
-    try {
-        const auto& summary = self->explorer->global_summary();
-        return _export_varcodes(summary.varcodes());
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename dpy_Explorer>
-static PyObject* _varcodes(dpy_Explorer* self, void* closure)
-{
-    try {
-        const auto& summary = self->explorer->active_summary();
-        return _export_varcodes(summary.varcodes());
-    } DBALLE_CATCH_RETURN_PYO
+    return (dpy_DBExplorerUpdate*)PyObject_CallObject((PyObject*)&dpy_DBExplorerUpdate_Type, nullptr);
 }
 
 
 template<typename Station>
-static PyObject* _export_stats(const dballe::db::BaseSummary<Station>& summary)
+struct rebuild : public MethNoargs<typename ImplTraits<Station>::Impl>
 {
-    try {
-        pyo_unique_ptr res(PyStructSequence_New(&dpy_stats_Type));
-        if (!res) return nullptr;
+    typedef typename ImplTraits<Station>::Impl Impl;
+    constexpr static const char* name = "rebuild";
+    constexpr static const char* doc = R"(
+Empty the Explorer and start adding new data to it.
 
-        if (PyObject* v = datetime_to_python(summary.datetime_min()))
-            PyStructSequence_SET_ITEM((PyObject*)res, 0, v);
-        else
+Returns an ExplorerUpdate context manager object that can be used to
+add data to the explorer in a single transaction.)";
+
+    static PyObject* run(Impl* self)
+    {
+        try {
+            auto res = update_create(self);
+            res->update = self->explorer->rebuild();
+            return (PyObject*)res;
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+template<typename Station>
+struct update : public MethNoargs<typename ImplTraits<Station>::Impl>
+{
+    typedef typename ImplTraits<Station>::Impl Impl;
+    constexpr static const char* name = "update";
+    constexpr static const char* doc = R"(
+Start adding new data to the Explorer without clearing it first.
+
+Returns an ExplorerUpdate context manager object that can be used to
+add data to the explorer in a single transaction.)";
+
+    static PyObject* run(Impl* self)
+    {
+        try {
+            auto res = update_create(self);
+            res->update = self->explorer->update();
+            return (PyObject*)res;
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+template<typename Station>
+struct to_json : public MethNoargs<typename ImplTraits<Station>::Impl>
+{
+    typedef typename ImplTraits<Station>::Impl Impl;
+    constexpr static const char* name = "to_json";
+    constexpr static const char* doc = R"(
+Serialize the contents of this explorer to JSON.
+
+Only the global summary is serialized: the current query is not
+preserved.)";
+
+    static PyObject* run(Impl* self)
+    {
+        std::ostringstream json;
+        {
+            ReleaseGIL rg;
+            core::JSONWriter writer(json);
+            self->explorer->to_json(writer);
+        }
+
+        return string_to_python(json.str());
+    }
+};
+
+template<typename Station, typename Scope>
+struct BaseQuerySummary : public MethKwargs<typename ImplTraits<Station>::Impl>
+{
+    typedef typename ImplTraits<Station>::Impl Impl;
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "query", nullptr };
+        PyObject* record = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "|O", const_cast<char**>(kwlist), &record))
             return nullptr;
 
-        if (PyObject* v = datetime_to_python(summary.datetime_max()))
-            PyStructSequence_SET_ITEM((PyObject*)res, 1, v);
-        else
-            return nullptr;
+        try {
+            core::Query query;
+            if (read_query(record, query) == -1)
+                return nullptr;
+            ReleaseGIL gil;
+            const auto& summary = get_summary<Station, Scope>(*self);
+            std::unique_ptr<db::Cursor> res = summary.query_summary(query);
+            gil.lock();
+            return (PyObject*)cursor_create(move(res));
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
 
-        if (PyObject* v = PyLong_FromLong(summary.data_count()))
-            PyStructSequence_SET_ITEM((PyObject*)res, 2, v);
-        else
-            return nullptr;
-
-        return res.release();
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename dpy_Explorer>
-static PyObject* _all_stats(dpy_Explorer* self, void* closure)
+template<typename Station>
+struct query_summary_all : public BaseQuerySummary<Station, All>
 {
-    try {
-        const auto& summary = self->explorer->global_summary();
-        return _export_stats(summary);
-    } DBALLE_CATCH_RETURN_PYO
-}
+    constexpr static const char* name = "query_summary_all";
+    constexpr static const char* doc = "Get all the Explorer summary information; returns a Cursor";
+};
 
-template<typename dpy_Explorer>
-static PyObject* _stats(dpy_Explorer* self, void* closure)
+template<typename Station>
+struct query_summary : public BaseQuerySummary<Station, Selected>
 {
-    try {
-        const auto& summary = self->explorer->active_summary();
-        return _export_stats(summary);
-    } DBALLE_CATCH_RETURN_PYO
-}
+    constexpr static const char* name = "query_summary";
+    constexpr static const char* doc = "Get the currently selected Explorer summary information; returns a Cursor";
+};
 
 
 template<class Station>
-struct ExplorerDefinition
+struct ExplorerDefinition : public Binding<ExplorerDefinition<Station>, typename ImplTraits<Station>::Impl>
 {
     typedef typename ImplTraits<Station>::Impl Impl;
     static const char* name;
     static const char* qual_name;
-    static PyGetSetDef getsetters[];
-    static PyMethodDef methods[];
-    static PyTypeObject type;
+    constexpr static const char* doc = "Browser for a summary of DB-All-e database of message contents";
+    GetSetters<
+        GetAllStations<Station>, GetStations<Station>,
+        GetAllReports<Station>, GetReports<Station>,
+        GetAllLevels<Station>, GetLevels<Station>,
+        GetAllTranges<Station>, GetTranges<Station>,
+        GetAllVarcodes<Station>, GetVarcodes<Station>,
+        GetAllStats<Station>, GetStats<Station>> getsetters;
+    Methods<set_filter<Station>, rebuild<Station>, update<Station>, to_json<Station>, query_summary_all<Station>, query_summary<Station>> methods;
 
     static void _dealloc(Impl* self)
     {
@@ -347,91 +434,6 @@ struct ExplorerDefinition
         return 0;
     }
 
-    static PyObject* _set_filter(Impl* self, PyObject* args)
-    {
-        PyObject* pyquery = nullptr;
-        if (!PyArg_ParseTuple(args, "O", &pyquery))
-            return nullptr;
-
-        try {
-            core::Query query;
-            read_query(pyquery, query);
-            ReleaseGIL rg;
-            self->explorer->set_filter(query);
-        } DBALLE_CATCH_RETURN_PYO
-
-        Py_RETURN_NONE;
-    }
-
-    static PyObject* _to_json(Impl* self)
-    {
-        try {
-            std::ostringstream json;
-            {
-                ReleaseGIL rg;
-                core::JSONWriter writer(json);
-                self->explorer->to_json(writer);
-            }
-
-            return string_to_python(json.str());
-        } DBALLE_CATCH_RETURN_PYO
-    }
-
-    static typename ImplTraits<Station>::UpdateImpl* update_create();
-
-    static PyObject* _rebuild(Impl* self)
-    {
-        try {
-            auto res = update_create();
-            res->update = self->explorer->rebuild();
-            return (PyObject*)res;
-        } DBALLE_CATCH_RETURN_PYO
-    }
-
-    static PyObject* _update(Impl* self)
-    {
-        try {
-            auto res = update_create();
-            res->update = self->explorer->update();
-            return (PyObject*)res;
-        } DBALLE_CATCH_RETURN_PYO
-    }
-
-    static PyObject* _query_summary_all(Impl* self, PyObject* args, PyObject* kw)
-    {
-        static const char* kwlist[] = { "query", nullptr };
-        PyObject* record = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "|O", const_cast<char**>(kwlist), &record))
-            return nullptr;
-
-        try {
-            core::Query query;
-            if (read_query(record, query) == -1)
-                return nullptr;
-            ReleaseGIL gil;
-            std::unique_ptr<db::Cursor> res = self->explorer->global_summary().query_summary(query);
-            gil.lock();
-            return (PyObject*)cursor_create(move(res));
-        } DBALLE_CATCH_RETURN_PYO
-    }
-
-    static PyObject* _query_summary(Impl* self, PyObject* args, PyObject* kw)
-    {
-        static const char* kwlist[] = { "query", nullptr };
-        PyObject* record = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "|O", const_cast<char**>(kwlist), &record))
-            return nullptr;
-
-        try {
-            core::Query query;
-            if (read_query(record, query) == -1)
-                return nullptr;
-            ReleaseGIL gil;
-            std::unique_ptr<db::Cursor> res = self->explorer->active_summary().query_summary(query);
-            gil.lock();
-            return (PyObject*)cursor_create(move(res));
-        } DBALLE_CATCH_RETURN_PYO
-    }
 };
 
 template<> const char* ExplorerDefinition<Station>::name = "Explorer";
@@ -439,120 +441,6 @@ template<> const char* ExplorerDefinition<Station>::qual_name = "dballe.Explorer
 
 template<> const char* ExplorerDefinition<DBStation>::name = "DBExplorer";
 template<> const char* ExplorerDefinition<DBStation>::qual_name = "dballe.DBExplorer";
-
-template<>
-dpy_ExplorerUpdate* ExplorerDefinition<Station>::update_create()
-{
-    return (dpy_ExplorerUpdate*)PyObject_CallObject((PyObject*)&dpy_ExplorerUpdate_Type, nullptr);
-}
-
-template<>
-dpy_DBExplorerUpdate* ExplorerDefinition<DBStation>::update_create()
-{
-    return (dpy_DBExplorerUpdate*)PyObject_CallObject((PyObject*)&dpy_DBExplorerUpdate_Type, nullptr);
-}
-
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wwrite-strings"
-#endif
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wwrite-strings"
-#endif
-template<class Impl>
-PyGetSetDef ExplorerDefinition<Impl>::getsetters[] = {
-    {"all_stations", (getter)_all_stations<Impl>, nullptr, "get all stations", nullptr },
-    {"stations", (getter)_stations<Impl>, nullptr, "get the stations currently selected", nullptr },
-    {"all_reports", (getter)_all_reports<Impl>, nullptr, "get all rep_memo values", nullptr },
-    {"reports", (getter)_reports<Impl>, nullptr, "get the rep_memo values currently selected", nullptr },
-    {"all_levels", (getter)_all_levels<Impl>, nullptr, "get all level values", nullptr },
-    {"levels", (getter)_levels<Impl>, nullptr, "get the level values currently selected", nullptr },
-    {"all_tranges", (getter)_all_tranges<Impl>, nullptr, "get all time range values", nullptr },
-    {"tranges", (getter)_tranges<Impl>, nullptr, "get the time range values currently selected", nullptr },
-    {"all_varcodes", (getter)_all_varcodes<Impl>, nullptr, "get all varcode values", nullptr },
-    {"varcodes", (getter)_varcodes<Impl>, nullptr, "get the varcode values currently selected", nullptr },
-    {"all_stats", (getter)_all_stats<Impl>, nullptr, "get stats for all values", nullptr },
-    {"stats", (getter)_stats<Impl>, nullptr, "get stats for currently selected values", nullptr },
-    {nullptr}
-};
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
-
-template<typename Impl>
-PyMethodDef ExplorerDefinition<Impl>::methods[] = {
-    {"set_filter",        (PyCFunction)_set_filter, METH_VARARGS,
-        "Set a new filter, updating all browsing data" },
-    {"rebuild",           (PyCFunction)_rebuild, METH_NOARGS, R"(
-        Empty the Explorer and start adding new data to it.
-
-        Returns an ExplorerUpdate context manager object that can be used to
-        add data to the explorer in a single transaction.
-    )" },
-    {"update",            (PyCFunction)_update, METH_NOARGS, R"(
-        Start adding new data to the Explorer without clearing it first.
-
-        Returns an ExplorerUpdate context manager object that can be used to
-        add data to the explorer in a single transaction.
-    )" },
-    {"to_json",           (PyCFunction)_to_json, METH_NOARGS, R"(
-        Serialize the contents of this explorer to JSON.
-
-        Only the global summary is serialized: the current query is not
-        preserved.
-    )" },
-    {"query_summary_all",     (PyCFunction)_query_summary_all, METH_VARARGS | METH_KEYWORDS,
-        "Get all the Explorer summary information; returns a Cursor" },
-    {"query_summary",     (PyCFunction)_query_summary, METH_VARARGS | METH_KEYWORDS,
-        "Get the currently selected Explorer summary information; returns a Cursor" },
-    {nullptr}
-};
-
-template<typename Impl>
-PyTypeObject ExplorerDefinition<Impl>::type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    qual_name,                 // tp_name
-    sizeof(Impl),              // tp_basicsize
-    0,                         // tp_itemsize
-    (destructor)_dealloc,      // tp_dealloc
-    0,                         // tp_print
-    0,                         // tp_getattr
-    0,                         // tp_setattr
-    0,                         // tp_compare
-    (reprfunc)_repr,           // tp_repr
-    0,                         // tp_as_number
-    0,                         // tp_as_sequence
-    0,                         // tp_as_mapping
-    0,                         // tp_hash
-    0,                         // tp_call
-    (reprfunc)_str,            // tp_str
-    0,                         // tp_getattro
-    0,                         // tp_setattro
-    0,                         // tp_as_buffer
-    Py_TPFLAGS_DEFAULT,        // tp_flags
-    "DB-All.e Explorer",       // tp_doc
-    0,                         // tp_traverse
-    0,                         // tp_clear
-    0,                         // tp_richcompare
-    0,                         // tp_weaklistoffset
-    0,                         // tp_iter
-    0,                         // tp_iternext
-    methods,                   // tp_methods
-    0,                         // tp_members
-    getsetters,                // tp_getset
-    0,                         // tp_base
-    0,                         // tp_dict
-    0,                         // tp_descr_get
-    0,                         // tp_descr_set
-    0,                         // tp_dictoffset
-    (initproc)_init,           // tp_init
-    0,                         // tp_alloc
-    0,                         // tp_new
-};
 
 
 template<class Station>
@@ -740,12 +628,15 @@ PyTypeObject ExplorerUpdateDefinition<Impl>::type = {
     0,                         // tp_new
 };
 
+ExplorerDefinition<Station>* definition_explorer = nullptr;
+ExplorerDefinition<DBStation>* definition_dbexplorer = nullptr;
+
 }
 
 extern "C" {
 
-PyTypeObject dpy_Explorer_Type = ExplorerDefinition<Station>::type;
-PyTypeObject dpy_DBExplorer_Type = ExplorerDefinition<DBStation>::type;
+PyTypeObject dpy_Explorer_Type;
+PyTypeObject dpy_DBExplorer_Type;
 PyTypeObject dpy_ExplorerUpdate_Type = ExplorerUpdateDefinition<Station>::type;
 PyTypeObject dpy_DBExplorerUpdate_Type = ExplorerUpdateDefinition<DBStation>::type;
 
@@ -792,11 +683,12 @@ int register_explorer(PyObject* m)
     Py_INCREF(&dpy_stats_Type);
     PyModule_AddObject(m, "ExplorerStats", (PyObject*)&dpy_stats_Type);
 
-    dpy_Explorer_Type.tp_new = PyType_GenericNew;
-    if (PyType_Ready(&dpy_Explorer_Type) < 0)
+    definition_explorer = new ExplorerDefinition<Station>;
+    if (definition_explorer->activate(dpy_Explorer_Type, m) != 0)
         return -1;
-    Py_INCREF(&dpy_Explorer_Type);
-    PyModule_AddObject(m, "Explorer", (PyObject*)&dpy_Explorer_Type);
+    definition_dbexplorer = new ExplorerDefinition<DBStation>;
+    if (definition_dbexplorer->activate(dpy_DBExplorer_Type, m) != 0)
+        return -1;
 
     dpy_ExplorerUpdate_Type.tp_new = PyType_GenericNew;
     if (PyType_Ready(&dpy_ExplorerUpdate_Type) < 0)
@@ -804,12 +696,6 @@ int register_explorer(PyObject* m)
     // Only allow to create via an Explorer method
     // Py_INCREF(&dpy_ExplorerUpdate_Type);
     // PyModule_AddObject(m, "ExplorerUpdate", (PyObject*)&dpy_ExplorerUpdate_Type);
-
-    dpy_DBExplorer_Type.tp_new = PyType_GenericNew;
-    if (PyType_Ready(&dpy_DBExplorer_Type) < 0)
-        return -1;
-    Py_INCREF(&dpy_DBExplorer_Type);
-    PyModule_AddObject(m, "DBExplorer", (PyObject*)&dpy_DBExplorer_Type);
 
     dpy_DBExplorerUpdate_Type.tp_new = PyType_GenericNew;
     if (PyType_Ready(&dpy_DBExplorerUpdate_Type) < 0)
