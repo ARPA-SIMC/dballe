@@ -18,7 +18,7 @@ using namespace dballe::python;
 
 extern "C" {
 PyTypeObject* dpy_Level_Type = nullptr;
-PyTypeObject dpy_Trange_Type;
+PyTypeObject* dpy_Trange_Type = nullptr;
 PyTypeObject dpy_Station_Type;
 PyTypeObject dpy_DBStation_Type;
 }
@@ -40,7 +40,7 @@ PyObject* impl_richcompare(const T& a, const T& b, int op)
             PyErr_SetString(PyExc_TypeError, "Unsupported comparison");
             return nullptr;
     }
-    // Py_RETURN_RICHCOMPARE(a->level, lev_b, op);  From 3.7
+    // Py_RETURN_RICHCOMPARE(a, b, op);  From 3.7
 }
 
 namespace level {
@@ -52,7 +52,7 @@ struct ltype1 : Getter<dpy_Level>
     static PyObject* get(Impl* self, void* closure)
     {
         try {
-            return dballe_int_to_python(self->level.ltype1);
+            return dballe_int_to_python(self->val.ltype1);
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -64,7 +64,7 @@ struct l1 : Getter<dpy_Level>
     static PyObject* get(Impl* self, void* closure)
     {
         try {
-            return dballe_int_to_python(self->level.l1);
+            return dballe_int_to_python(self->val.l1);
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -76,7 +76,7 @@ struct ltype2 : Getter<dpy_Level>
     static PyObject* get(Impl* self, void* closure)
     {
         try {
-            return dballe_int_to_python(self->level.ltype2);
+            return dballe_int_to_python(self->val.ltype2);
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -88,7 +88,7 @@ struct l2 : Getter<dpy_Level>
     static PyObject* get(Impl* self, void* closure)
     {
         try {
-            return dballe_int_to_python(self->level.l2);
+            return dballe_int_to_python(self->val.l2);
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -104,14 +104,14 @@ struct Definition : public Binding<Definition, dpy_Level>
 
     static PyObject* _str(Impl* self)
     {
-        std::string res = self->level.to_string("None");
+        std::string res = self->val.to_string("None");
         return PyUnicode_FromStringAndSize(res.data(), res.size());
     }
 
     static PyObject* _repr(Impl* self)
     {
         std::string res = "dballe.Level(";
-        res += self->level.to_string("None");
+        res += self->val.to_string("None");
         res += ")";
         return PyUnicode_FromStringAndSize(res.data(), res.size());
     }
@@ -119,16 +119,16 @@ struct Definition : public Binding<Definition, dpy_Level>
     static PyObject* _iter(Impl* self)
     {
         py_unique_ptr<PyTupleObject> res((PyTupleObject*)PyTuple_New(4));
-        PyTuple_SET_ITEM(res, 0, dballe_int_to_python(self->level.ltype1));
-        PyTuple_SET_ITEM(res, 1, dballe_int_to_python(self->level.l1));
-        PyTuple_SET_ITEM(res, 2, dballe_int_to_python(self->level.ltype2));
-        PyTuple_SET_ITEM(res, 3, dballe_int_to_python(self->level.l2));
+        PyTuple_SET_ITEM(res, 0, dballe_int_to_python(self->val.ltype1));
+        PyTuple_SET_ITEM(res, 1, dballe_int_to_python(self->val.l1));
+        PyTuple_SET_ITEM(res, 2, dballe_int_to_python(self->val.ltype2));
+        PyTuple_SET_ITEM(res, 3, dballe_int_to_python(self->val.l2));
         return PyObject_GetIter((PyObject*)res.get());
     }
 
     static void _dealloc(Impl* self)
     {
-        self->level.~Level();
+        self->val.~Level();
         Py_TYPE(self)->tp_free(self);
     }
 
@@ -149,7 +149,7 @@ struct Definition : public Binding<Definition, dpy_Level>
         if (dballe_int_from_python(py_l2, l2) != 0) return -1;
 
         try {
-            new (&(self->level)) Level(ltype1, l1, ltype2, l2);
+            new (&(self->val)) Level(ltype1, l1, ltype2, l2);
         } DBALLE_CATCH_RETURN_INT
         return 0;
     }
@@ -159,18 +159,134 @@ struct Definition : public Binding<Definition, dpy_Level>
         Level lev_b;
         if (level_from_python(b, lev_b) != 0)
             return nullptr;
-        return impl_richcompare(a->level, lev_b, op);
+        return impl_richcompare(a->val, lev_b, op);
     }
 
     static Py_hash_t _hash(dpy_Level* self)
     {
-        return std::hash<dballe::Level>{}(self->level);
+        return std::hash<dballe::Level>{}(self->val);
     }
 };
 
 Definition* definition = nullptr;
 
 }
+
+namespace trange {
+
+struct pind : Getter<dpy_Trange>
+{
+    constexpr static const char* name = "pind";
+    constexpr static const char* doc = "Time range type indicator";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            return dballe_int_to_python(self->val.pind);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct p1 : Getter<dpy_Trange>
+{
+    constexpr static const char* name = "p1";
+    constexpr static const char* doc = "Time range P1 indicator";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            return dballe_int_to_python(self->val.p1);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct p2 : Getter<dpy_Trange>
+{
+    constexpr static const char* name = "p2";
+    constexpr static const char* doc = "Time range P2 indicator";
+
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            return dballe_int_to_python(self->val.p2);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct Definition : public Binding<Definition, dpy_Trange>
+{
+    constexpr static const char* name = "Trange";
+    constexpr static const char* qual_name = "dballe.Trange";
+    constexpr static const char* doc = "Time range";
+
+    GetSetters<pind, p1, p2> getsetters;
+    Methods<> methods;
+
+    static PyObject* _str(Impl* self)
+    {
+        std::string res = self->val.to_string("None");
+        return PyUnicode_FromStringAndSize(res.data(), res.size());
+    }
+
+    static PyObject* _repr(Impl* self)
+    {
+        std::string res = "dballe.Trange(";
+        res += self->val.to_string("None");
+        res += ")";
+        return PyUnicode_FromStringAndSize(res.data(), res.size());
+    }
+
+    static PyObject* _iter(Impl* self)
+    {
+        py_unique_ptr<PyTupleObject> res((PyTupleObject*)PyTuple_New(3));
+        PyTuple_SET_ITEM(res, 0, dballe_int_to_python(self->val.pind));
+        PyTuple_SET_ITEM(res, 1, dballe_int_to_python(self->val.p1));
+        PyTuple_SET_ITEM(res, 2, dballe_int_to_python(self->val.p2));
+        return PyObject_GetIter((PyObject*)res.get());
+    }
+
+    static void _dealloc(Impl* self)
+    {
+        self->val.~Trange();
+        Py_TYPE(self)->tp_free(self);
+    }
+
+    static int _init(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "pind", "p1", "p2", nullptr };
+        PyObject* py_pind = nullptr;
+        PyObject* py_p1 = nullptr;
+        PyObject* py_p2 = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "|OOO", const_cast<char**>(kwlist), &py_pind, &py_p1, &py_p2))
+            return -1;
+
+        int pind, p1, p2;
+        if (dballe_int_from_python(py_pind, pind) != 0) return -1;
+        if (dballe_int_from_python(py_p1, p1) != 0) return -1;
+        if (dballe_int_from_python(py_p2, p2) != 0) return -1;
+
+        try {
+            new (&(self->val)) Trange(pind, p1, p2);
+        } DBALLE_CATCH_RETURN_INT
+        return 0;
+    }
+
+    static PyObject* _richcompare(dpy_Trange *a, PyObject *b, int op)
+    {
+        Trange lev_b;
+        if (trange_from_python(b, lev_b) != 0)
+            return nullptr;
+        return impl_richcompare(a->val, lev_b, op);
+    }
+
+    static Py_hash_t _hash(dpy_Trange* self)
+    {
+        return std::hash<dballe::Trange>{}(self->val);
+    }
+};
+
+Definition* definition = nullptr;
+
+}
+
 
 #if PY_MAJOR_VERSION >= 3
 #if defined(__clang__)
@@ -182,20 +298,6 @@ Definition* definition = nullptr;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 #endif
-
-PyStructSequence_Field dpy_trange_fields[] = {
-    { "pind", "Time range type indicator" },
-    { "p1", "Time range P1 indicator" },
-    { "p2", "Time range P2 indicator" },
-    nullptr,
-};
-
-PyStructSequence_Desc dpy_trange_desc = {
-    "Trange",
-    "DB-All.e time range",
-    dpy_trange_fields,
-    3,
-};
 
 PyStructSequence_Field dpy_station_fields[] = {
     { "report", "rep_memo for this station" },
@@ -291,7 +393,7 @@ PyObject* level_to_python(const Level& lev)
 
     py_unique_ptr<dpy_Level> res = PyObject_New(dpy_Level, dpy_Level_Type);
     if (!res) return nullptr;
-    new (&(res->level)) Level(lev);
+    new (&(res->val)) Level(lev);
     return (PyObject*)res.release();
 }
 
@@ -305,7 +407,7 @@ int level_from_python(PyObject* o, Level& out)
 
     if (Py_TYPE(o) == dpy_Level_Type || PyType_IsSubtype(Py_TYPE(o), dpy_Level_Type))
     {
-        out = ((dpy_Level*)o)->level;
+        out = ((dpy_Level*)o)->val;
         return 0;
     }
     else if (PyTuple_Check(o))
@@ -345,51 +447,10 @@ PyObject* trange_to_python(const Trange& tr)
     if (tr.is_missing())
         Py_RETURN_NONE;
 
-#if PY_MAJOR_VERSION >= 3
-    pyo_unique_ptr res(PyStructSequence_New(&dpy_Trange_Type));
+    py_unique_ptr<dpy_Trange> res = PyObject_New(dpy_Trange, dpy_Trange_Type);
     if (!res) return nullptr;
-
-    if (PyObject* v = dballe_int_to_python(tr.pind))
-        PyStructSequence_SET_ITEM((PyObject*)res, 0, v);
-    else
-        return nullptr;
-
-    if (PyObject* v = dballe_int_to_python(tr.p1))
-        PyStructSequence_SET_ITEM((PyObject*)res, 1, v);
-    else
-        return nullptr;
-
-    if (PyObject* v = dballe_int_to_python(tr.p2))
-        PyStructSequence_SET_ITEM((PyObject*)res, 2, v);
-    else
-        return nullptr;
-#else
-    pyo_unique_ptr res(PyTuple_New(3));
-    if (!res) return NULL;
-
-    if (PyObject* v = dballe_int_to_python(tr.pind))
-        PyTuple_SET_ITEM((PyObject*)res, 0, v);
-    else {
-        Py_DECREF(res);
-        return NULL;
-    }
-
-    if (PyObject* v = dballe_int_to_python(tr.p1))
-        PyTuple_SET_ITEM((PyObject*)res, 1, v);
-    else {
-        Py_DECREF(res);
-        return NULL;
-    }
-
-    if (PyObject* v = dballe_int_to_python(tr.p2))
-        PyTuple_SET_ITEM((PyObject*)res, 2, v);
-    else {
-        Py_DECREF(res);
-        return NULL;
-    }
-#endif
-
-    return res.release();
+    new (&(res->val)) Trange(tr);
+    return (PyObject*)res.release();
 }
 
 int trange_from_python(PyObject* o, Trange& out)
@@ -400,20 +461,11 @@ int trange_from_python(PyObject* o, Trange& out)
         return 0;
     }
 
-#if PY_MAJOR_VERSION >= 3
-    if (Py_TYPE(o) == &dpy_Trange_Type || PyType_IsSubtype(Py_TYPE(o), &dpy_Trange_Type))
+    if (Py_TYPE(o) == dpy_Trange_Type || PyType_IsSubtype(Py_TYPE(o), dpy_Trange_Type))
     {
-        Trange res;
-        if (int err = dballe_int_from_python(PyStructSequence_GET_ITEM(o, 0), res.pind)) return err;
-        if (int err = dballe_int_from_python(PyStructSequence_GET_ITEM(o, 1), res.p1)) return err;
-        if (int err = dballe_int_from_python(PyStructSequence_GET_ITEM(o, 2), res.p2)) return err;
-        out = res;
+        out = ((dpy_Trange*)o)->val;
         return 0;
-    }
-    else
-#endif
-        if (PyTuple_Check(o))
-    {
+    } else if (PyTuple_Check(o)) {
         unsigned size = PyTuple_Size(o);
         if (size > 3)
         {
@@ -730,11 +782,12 @@ int register_types(PyObject* m)
     level::definition = new level::Definition;
     if (!(dpy_Level_Type = level::definition->activate(m)))
         return -1;
-    if (PyStructSequence_InitType2(&dpy_Trange_Type, &dpy_trange_desc) != 0) return -1;
+    trange::definition = new trange::Definition;
+    if (!(dpy_Trange_Type = trange::definition->activate(m)))
+        return -1;
     if (PyStructSequence_InitType2(&dpy_Station_Type, &dpy_station_desc) != 0) return -1;
     if (PyStructSequence_InitType2(&dpy_DBStation_Type, &dpy_dbstation_desc) != 0) return -1;
 
-    if (PyModule_AddObject(m, "Trange", (PyObject*)&dpy_Trange_Type) != 0) return -1;
     if (PyModule_AddObject(m, "Station", (PyObject*)&dpy_Station_Type) != 0) return -1;
     if (PyModule_AddObject(m, "DBStation", (PyObject*)&dpy_DBStation_Type) != 0) return -1;
 #endif

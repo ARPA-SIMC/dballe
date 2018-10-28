@@ -148,10 +148,10 @@ class CommonDBTestMixin(DballeDBMixin):
                 res[(result["ana_id"], result["rep_memo"], result["level"], result["trange"], result["var"])] = (
                     result["datemin"], result["datemax"], result["context_id"])
         self.assertEqual(
-                res[(1, "synop", dballe.Level(10, 11, 15, 22), (20, 111, 222), 'B01011')],
+                res[(1, "synop", dballe.Level(10, 11, 15, 22), dballe.Trange(20, 111, 222), 'B01011')],
                 (datetime.datetime(1945, 4, 25, 8, 0), datetime.datetime(1945, 4, 25, 8, 0), 1))
         self.assertEqual(
-                res[(1, "synop", dballe.Level(10, 11, 15, 22), (20, 111, 222), 'B01012')],
+                res[(1, "synop", dballe.Level(10, 11, 15, 22), dballe.Trange(20, 111, 222), 'B01012')],
                 (datetime.datetime(1945, 4, 25, 8, 0), datetime.datetime(1945, 4, 25, 8, 0), 1))
 
     def testAttrRemove(self):

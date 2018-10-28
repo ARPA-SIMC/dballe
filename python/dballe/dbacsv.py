@@ -178,11 +178,7 @@ class ColumnTrange(Column):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
             tr = rec["trange"]
-        return [
-            intormiss(tr[0]),
-            intormiss(tr[1]),
-            intormiss(tr[2])
-        ]
+        return [intormiss(tr.pind), intormiss(tr.p1), intormiss(tr.p2)]
 
 
 class ColumnVar(Column):

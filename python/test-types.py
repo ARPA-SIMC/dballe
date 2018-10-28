@@ -1,13 +1,6 @@
-#!/usr/bin/python
-# coding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 import dballe
 import unittest
 import sys
-import warnings
 
 
 @unittest.skipIf(sys.version_info[0] < 3, "python3 only")
@@ -39,14 +32,14 @@ class TestLevel(unittest.TestCase):
 @unittest.skipIf(sys.version_info[0] < 3, "python3 only")
 class TestTrange(unittest.TestCase):
     def testCreateEmpty(self):
-        t = dballe.Trange((None, None, None))
+        t = dballe.Trange(None, None, None)
         self.assertEqual(t, (None, None, None))
         self.assertIsNone(t.pind)
         self.assertIsNone(t.p1)
         self.assertIsNone(t.p2)
 
     def testCreateFull(self):
-        t = dballe.Trange((1, 2, 3))
+        t = dballe.Trange(1, 2, 3)
         self.assertEqual(t, (1, 2, 3))
         self.assertEqual(t.pind, 1)
         self.assertEqual(t.p1, 2)

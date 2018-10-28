@@ -117,7 +117,7 @@ class ReadMixin(DballeDBMixin):
         query = dballe.Record(ana_id=1, rep_memo="synop", year=2007, month=1, day=1)
 
         vars = read(self.db.query_data(query),
-                    (AnaIndex(), TimeRangeIndex(frozen=True, start=((4, -21600, 0), (4, -43200, 0)))),
+                    (AnaIndex(), TimeRangeIndex(frozen=True, start=(dballe.Trange(4, -21600, 0), (4, -43200, 0)))),
                     checkConflicts=False)
         self.assertEqual(len(vars["B13011"].dims[1]), 2)
 

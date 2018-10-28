@@ -10,7 +10,7 @@ extern "C" {
 
 typedef struct {
     PyObject_HEAD
-    dballe::Level level;
+    dballe::Level val;
 } dpy_Level;
 
 extern PyTypeObject* dpy_Level_Type;
@@ -19,11 +19,18 @@ extern PyTypeObject* dpy_Level_Type;
     (ob == Py_None || PyTuple_Check(ob) || \
      Py_TYPE(ob) == dpy_Level_Type || PyType_IsSubtype(Py_TYPE(ob), dpy_Level_Type))
 
-PyAPI_DATA(PyTypeObject) dpy_Trange_Type;
+
+typedef struct {
+    PyObject_HEAD
+    dballe::Trange val;
+} dpy_Trange;
+
+extern PyTypeObject* dpy_Trange_Type;
 
 #define dpy_Trange_Check(ob) \
     (ob == Py_None || PyTuple_Check(ob) || \
-     Py_TYPE(ob) == &dpy_Trange_Type || PyType_IsSubtype(Py_TYPE(ob), &dpy_Trange_Type))
+     Py_TYPE(ob) == dpy_Trange_Type || PyType_IsSubtype(Py_TYPE(ob), dpy_Trange_Type))
+
 
 PyAPI_DATA(PyTypeObject) dpy_Station_Type;
 
