@@ -5,9 +5,9 @@
 #include "dballe/core/var.h"
 #include "config.h"
 
-#if PY_MAJOR_VERSION >= 3
-    #define PyInt_AsLong PyLong_AsLong
-    #define PyInt_Type PyLong_Type
+#if PY_MAJOR_VERSION <= 2
+    #define PyLong_AsLong PyInt_AsLong
+    #define PyLong_Type PyInt_Type
 #endif
 
 using namespace wreport;
@@ -216,12 +216,12 @@ int file_get_fileno(PyObject* o)
     }
 
     // fileno = int(fileno_value)
-    if (!PyObject_TypeCheck(fileno_value, &PyInt_Type)) {
+    if (!PyObject_TypeCheck(fileno_value, &PyLong_Type)) {
         PyErr_SetString(PyExc_ValueError, "fileno() function must return an integer");
         return -1;
     }
 
-    return PyInt_AsLong(fileno_value);
+    return PyLong_AsLong(fileno_value);
 }
 
 PyObject* file_get_data(PyObject* o, char*&buf, Py_ssize_t& len)
@@ -264,6 +264,30 @@ int object_repr(PyObject* o, std::string& out)
 
     return 0;
 }
+
+PyObject* dballe_int_to_python(int val)
+{
+    if (val == MISSING_INT)
+        Py_RETURN_NONE;
+    return PyLong_FromLong(val);
+}
+
+int dballe_int_from_python(PyObject* o, int& out)
+{
+    if (o == NULL || o == Py_None)
+    {
+        out = MISSING_INT;
+        return 0;
+    }
+
+    int res = PyLong_AsLong(o);
+    if (res == -1 && PyErr_Occurred())
+        return -1;
+
+    out = res;
+    return 0;
+}
+
 
 int common_init()
 {

@@ -162,6 +162,14 @@ int string_from_python(PyObject* o, std::string& out);
 /// Call repr() on \a o, and return the result in \a out
 int object_repr(PyObject* o, std::string& out);
 
+/**
+ * If val is MISSING_INT, returns None, else return it as a PyLong
+ */
+PyObject* dballe_int_to_python(int val);
+
+/// Convert a Python object to an integer, returning MISSING_INT if it is None
+int dballe_int_from_python(PyObject* o, int& out);
+
 inline PyObject* to_python(const Datetime& dt) { return datetime_to_python(dt); }
 // inline PyObject* to_python(const DatetimeRange& dtr) { return datetimerange_to_python(dtr); }
 inline PyObject* to_python(const std::string& s) { return string_to_python(s); }

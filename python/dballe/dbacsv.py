@@ -153,10 +153,10 @@ class ColumnLevel(Column):
             warnings.simplefilter("ignore", DeprecationWarning)
             lev = rec["level"]
         return [
-            intormiss(lev[0]),
-            intormiss(lev[1]),
-            intormiss(lev[2]),
-            intormiss(lev[3])
+            intormiss(lev.ltype1),
+            intormiss(lev.l1),
+            intormiss(lev.ltype2),
+            intormiss(lev.l2)
         ]
 
 

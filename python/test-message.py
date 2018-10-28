@@ -24,7 +24,7 @@ class TestExplorer(unittest.TestCase):
         msg.set_named("latitude", dballe.var("B05001", 48.90500))
         msg.set_named("longitude", dballe.var("B06001", 10.63667))
 
-        lv = dballe.Level((102, 6260000, None, None))
+        lv = dballe.Level(102, 6260000, None, None)
         tr = dballe.Trange((254, 0, 0))
         msg.set(lv, tr, dballe.var("B01006", "LH968"))
         msg.set(lv, tr, dballe.var("B02061", 0))

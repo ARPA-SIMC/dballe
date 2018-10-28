@@ -157,6 +157,8 @@ struct Binding
 
     constexpr static getiterfunc _iter = nullptr;
     constexpr static iternextfunc _iternext = nullptr;
+    constexpr static richcmpfunc _richcompare = nullptr;
+    constexpr static hashfunc _hash = nullptr;
 
     /**
      * Activate this type.
@@ -177,12 +179,12 @@ struct Binding
             0,                         // tp_print
             0,                         // tp_getattr
             0,                         // tp_setattr
-            0,                         // tp_compare
+            0,                         // tp_reserved
             (reprfunc)Derived::_repr,  // tp_repr
             0,                         // tp_as_number
             0,                         // tp_as_sequence
             0,                         // tp_as_mapping
-            0,                         // tp_hash
+            (hashfunc)Derived::_hash,  // tp_hash
             0,                         // tp_call
             (reprfunc)Derived::_str,   // tp_str
             0,                         // tp_getattro
@@ -192,7 +194,7 @@ struct Binding
             Derived::doc,              // tp_doc
             0,                         // tp_traverse
             0,                         // tp_clear
-            0,                         // tp_richcompare
+            (richcmpfunc)Derived::_richcompare, // tp_richcompare
             0,                         // tp_weaklistoffset
             (getiterfunc)Derived::_iter, // tp_iter
             (iternextfunc)Derived::_iternext,  // tp_iternext

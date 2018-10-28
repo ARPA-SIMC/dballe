@@ -3,16 +3,22 @@
 
 #include <Python.h>
 #include <wreport/varinfo.h>
-#include <dballe/fwd.h>
+#include <dballe/types.h>
 #include <dballe/core/fwd.h>
 
 extern "C" {
 
-PyAPI_DATA(PyTypeObject) dpy_Level_Type;
+typedef struct {
+    PyObject_HEAD
+    dballe::Level level;
+} dpy_Level;
+
+extern PyTypeObject* dpy_Level_Type;
 
 #define dpy_Level_Check(ob) \
     (ob == Py_None || PyTuple_Check(ob) || \
-     Py_TYPE(ob) == &dpy_Level_Type || PyType_IsSubtype(Py_TYPE(ob), &dpy_Level_Type))
+     Py_TYPE(ob) == dpy_Level_Type || PyType_IsSubtype(Py_TYPE(ob), dpy_Level_Type))
+
 
 PyAPI_DATA(PyTypeObject) dpy_Trange_Type;
 

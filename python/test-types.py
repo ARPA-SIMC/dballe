@@ -5,10 +5,10 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import dballe
-import datetime
 import unittest
 import sys
 import warnings
+
 
 @unittest.skipIf(sys.version_info[0] < 3, "python3 only")
 class TestLevel(unittest.TestCase):
@@ -16,20 +16,24 @@ class TestLevel(unittest.TestCase):
         # structseq constructors have two arguments: sequence, dict=NULL)
         # this is undocumented, and possibly subject to change (see
         # https://bugs.python.org/issue1820)
-        l = dballe.Level((None, None, None, None))
-        self.assertEqual(l, (None, None, None, None))
-        self.assertIsNone(l.ltype1)
-        self.assertIsNone(l.l1)
-        self.assertIsNone(l.ltype2)
-        self.assertIsNone(l.l2)
+        lev = dballe.Level(None, None, None, None)
+        self.assertTrue(lev == lev)
+        self.assertTrue(lev <= lev)
+        self.assertEqual(lev, (None, None, None, None))
+        self.assertEqual(lev, dballe.Level(None, None, None, None))
+        self.assertIsNone(lev.ltype1)
+        self.assertIsNone(lev.l1)
+        self.assertIsNone(lev.ltype2)
+        self.assertIsNone(lev.l2)
 
     def testCreateFull(self):
-        l = dballe.Level((1, 2, 3, 4))
-        self.assertEqual(l, (1, 2, 3, 4))
-        self.assertEqual(l.ltype1, 1)
-        self.assertEqual(l.l1, 2)
-        self.assertEqual(l.ltype2, 3)
-        self.assertEqual(l.l2, 4)
+        lev = dballe.Level(1, 2, 3, 4)
+        self.assertEqual(lev, (1, 2, 3, 4))
+        self.assertEqual(lev, dballe.Level(1, 2, 3, 4))
+        self.assertEqual(lev.ltype1, 1)
+        self.assertEqual(lev.l1, 2)
+        self.assertEqual(lev.ltype2, 3)
+        self.assertEqual(lev.l2, 4)
 
 
 @unittest.skipIf(sys.version_info[0] < 3, "python3 only")
@@ -91,4 +95,4 @@ class TestDBStation(unittest.TestCase):
 
 if __name__ == "__main__":
     from testlib import main
-    main("test_types")
+    main("test-types")

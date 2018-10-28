@@ -5,13 +5,11 @@
 #include "common.h"
 #include "types.h"
 #include "config.h"
+#include "impl-utils.h"
 
-#if PY_MAJOR_VERSION >= 3
-    #define PyInt_FromLong PyLong_FromLong
-    #define PyInt_AsLong PyLong_AsLong
-    #define PyInt_Check PyLong_Check
-    #define PyInt_Type PyLong_Type
-    #define Py_TPFLAGS_HAVE_ITER 0
+#if PY_MAJOR_VERSION <= 2
+    #define PyLong_AsLong PyInt_AsLong
+    #define PyLong_FromLong PyInt_FromLong
 #endif
 
 using namespace std;
@@ -19,13 +17,165 @@ using namespace dballe;
 using namespace dballe::python;
 
 extern "C" {
-PyTypeObject dpy_Level_Type;
+PyTypeObject* dpy_Level_Type = nullptr;
 PyTypeObject dpy_Trange_Type;
 PyTypeObject dpy_Station_Type;
 PyTypeObject dpy_DBStation_Type;
 }
 
 namespace {
+
+template<typename T>
+PyObject* impl_richcompare(const T& a, const T& b, int op)
+{
+    switch (op)
+    {
+        case Py_LT: if (a <  b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
+        case Py_LE: if (a <= b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
+        case Py_EQ: if (a == b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
+        case Py_NE: if (a != b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
+        case Py_GT: if (a >  b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
+        case Py_GE: if (a >= b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
+        default:
+            PyErr_SetString(PyExc_TypeError, "Unsupported comparison");
+            return nullptr;
+    }
+    // Py_RETURN_RICHCOMPARE(a->level, lev_b, op);  From 3.7
+}
+
+namespace level {
+
+struct ltype1 : Getter<dpy_Level>
+{
+    constexpr static const char* name = "ltype1";
+    constexpr static const char* doc = "type of the level or of the first layer";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            return dballe_int_to_python(self->level.ltype1);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct l1 : Getter<dpy_Level>
+{
+    constexpr static const char* name = "l1";
+    constexpr static const char* doc = "value of the level or of the first layer";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            return dballe_int_to_python(self->level.l1);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct ltype2 : Getter<dpy_Level>
+{
+    constexpr static const char* name = "ltype2";
+    constexpr static const char* doc = "type of the second layer";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            return dballe_int_to_python(self->level.ltype2);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct l2 : Getter<dpy_Level>
+{
+    constexpr static const char* name = "l2";
+    constexpr static const char* doc = "value of the second layer";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            return dballe_int_to_python(self->level.l2);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct Definition : public Binding<Definition, dpy_Level>
+{
+    constexpr static const char* name = "Level";
+    constexpr static const char* qual_name = "dballe.Level";
+    constexpr static const char* doc = "Level or layer";
+
+    GetSetters<ltype1, l1, ltype2, l2> getsetters;
+    Methods<> methods;
+
+    static PyObject* _str(Impl* self)
+    {
+        std::string res = self->level.to_string("None");
+        return PyUnicode_FromStringAndSize(res.data(), res.size());
+    }
+
+    static PyObject* _repr(Impl* self)
+    {
+        std::string res = "dballe.Level(";
+        res += self->level.to_string("None");
+        res += ")";
+        return PyUnicode_FromStringAndSize(res.data(), res.size());
+    }
+
+    static PyObject* _iter(Impl* self)
+    {
+        py_unique_ptr<PyTupleObject> res((PyTupleObject*)PyTuple_New(4));
+        PyTuple_SET_ITEM(res, 0, dballe_int_to_python(self->level.ltype1));
+        PyTuple_SET_ITEM(res, 1, dballe_int_to_python(self->level.l1));
+        PyTuple_SET_ITEM(res, 2, dballe_int_to_python(self->level.ltype2));
+        PyTuple_SET_ITEM(res, 3, dballe_int_to_python(self->level.l2));
+        return PyObject_GetIter((PyObject*)res.get());
+    }
+
+    static void _dealloc(Impl* self)
+    {
+        self->level.~Level();
+        Py_TYPE(self)->tp_free(self);
+    }
+
+    static int _init(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "ltype1", "l1", "ltype2", "l2", nullptr };
+        PyObject* py_ltype1 = nullptr;
+        PyObject* py_l1 = nullptr;
+        PyObject* py_ltype2 = nullptr;
+        PyObject* py_l2 = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "|OOOO", const_cast<char**>(kwlist), &py_ltype1, &py_l1, &py_ltype2, &py_l2))
+            return -1;
+
+        int ltype1, l1, ltype2, l2;
+        if (dballe_int_from_python(py_ltype1, ltype1) != 0) return -1;
+        if (dballe_int_from_python(py_l1, l1) != 0) return -1;
+        if (dballe_int_from_python(py_ltype2, ltype2) != 0) return -1;
+        if (dballe_int_from_python(py_l2, l2) != 0) return -1;
+
+        try {
+            new (&(self->level)) Level(ltype1, l1, ltype2, l2);
+        } DBALLE_CATCH_RETURN_INT
+        return 0;
+    }
+
+    static PyObject* _richcompare(dpy_Level *a, PyObject *b, int op)
+    {
+        Level lev_b;
+        if (level_from_python(b, lev_b) != 0)
+            return nullptr;
+        return impl_richcompare(a->level, lev_b, op);
+    }
+
+    static Py_hash_t _hash(dpy_Level* self)
+    {
+        Py_hash_t res = 0;
+        if (self->level.ltype1 != MISSING_INT) res += self->level.ltype1;
+        if (self->level.l1 != MISSING_INT) res += self->level.l1;
+        if (self->level.ltype2 != MISSING_INT) res += self->level.ltype2 << 8;
+        if (self->level.l2 != MISSING_INT) res += self->level.l2;
+        return res;
+    }
+};
+
+Definition* definition = nullptr;
+
+}
 
 #if PY_MAJOR_VERSION >= 3
 #if defined(__clang__)
@@ -37,21 +187,6 @@ namespace {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 #endif
-
-PyStructSequence_Field dpy_level_fields[] = {
-    { "ltype1", "Type of the level or the first layer" },
-    { "l1", "Value of the level the first layer" },
-    { "ltype2", "Type of the second layer" },
-    { "l2", "Value of the second layer" },
-    nullptr,
-};
-
-PyStructSequence_Desc dpy_level_desc = {
-    "Level",
-    "DB-All.e level or layer",
-    dpy_level_fields,
-    4,
-};
 
 PyStructSequence_Field dpy_trange_fields[] = {
     { "pind", "Time range type indicator" },
@@ -108,34 +243,6 @@ PyStructSequence_Desc dpy_dbstation_desc = {
 
 #endif
 
-/// Convert an integer to Python, returning None if it is MISSING_INT
-PyObject* dballe_int_to_python(int val)
-{
-    if (val == MISSING_INT)
-    {
-        Py_INCREF(Py_None);
-        return Py_None;
-    } else
-        return PyInt_FromLong(val);
-}
-
-/// Convert a Python object to an integer, returning MISSING_INT if it is None
-int dballe_int_from_python(PyObject* o, int& out)
-{
-    if (o == NULL || o == Py_None)
-    {
-        out = MISSING_INT;
-        return 0;
-    }
-
-    int res = PyInt_AsLong(o);
-    if (res == -1 && PyErr_Occurred())
-        return -1;
-
-    out = res;
-    return 0;
-}
-
 /// Convert a Python object to a double
 int double_from_python(PyObject* o, double& out)
 {
@@ -187,63 +294,10 @@ PyObject* level_to_python(const Level& lev)
     if (lev.is_missing())
         Py_RETURN_NONE;
 
-#if PY_MAJOR_VERSION >= 3
-    pyo_unique_ptr res(PyStructSequence_New(&dpy_Level_Type));
+    py_unique_ptr<dpy_Level> res = PyObject_New(dpy_Level, dpy_Level_Type);
     if (!res) return nullptr;
-
-    if (PyObject* v = dballe_int_to_python(lev.ltype1))
-        PyStructSequence_SET_ITEM((PyObject*)res, 0, v);
-    else
-        return nullptr;
-
-    if (PyObject* v = dballe_int_to_python(lev.l1))
-        PyStructSequence_SET_ITEM((PyObject*)res, 1, v);
-    else
-        return nullptr;
-
-    if (PyObject* v = dballe_int_to_python(lev.ltype2))
-        PyStructSequence_SET_ITEM((PyObject*)res, 2, v);
-    else
-        return nullptr;
-
-    if (PyObject* v = dballe_int_to_python(lev.l2))
-        PyStructSequence_SET_ITEM((PyObject*)res, 3, v);
-    else
-        return nullptr;
-#else
-    pyo_unique_ptr res(PyTuple_New(4));
-    if (!res) return NULL;
-
-    if (PyObject* v = dballe_int_to_python(lev.ltype1))
-        PyTuple_SET_ITEM((PyObject*)res, 0, v);
-    else {
-        Py_DECREF(res);
-        return NULL;
-    }
-
-    if (PyObject* v = dballe_int_to_python(lev.l1))
-        PyTuple_SET_ITEM((PyObject*)res, 1, v);
-    else {
-        Py_DECREF(res);
-        return NULL;
-    }
-
-    if (PyObject* v = dballe_int_to_python(lev.ltype2))
-        PyTuple_SET_ITEM((PyObject*)res, 2, v);
-    else {
-        Py_DECREF(res);
-        return NULL;
-    }
-
-    if (PyObject* v = dballe_int_to_python(lev.l2))
-        PyTuple_SET_ITEM((PyObject*)res, 3, v);
-    else {
-        Py_DECREF(res);
-        return NULL;
-    }
-#endif
-
-    return res.release();
+    new (&(res->level)) Level(lev);
+    return (PyObject*)res.release();
 }
 
 int level_from_python(PyObject* o, Level& out)
@@ -254,20 +308,12 @@ int level_from_python(PyObject* o, Level& out)
         return 0;
     }
 
-#if PY_MAJOR_VERSION >= 3
-    if (Py_TYPE(o) == &dpy_Level_Type || PyType_IsSubtype(Py_TYPE(o), &dpy_Level_Type))
+    if (Py_TYPE(o) == dpy_Level_Type || PyType_IsSubtype(Py_TYPE(o), dpy_Level_Type))
     {
-        Level res;
-        if (int err = dballe_int_from_python(PyStructSequence_GET_ITEM(o, 0), res.ltype1)) return err;
-        if (int err = dballe_int_from_python(PyStructSequence_GET_ITEM(o, 1), res.l1)) return err;
-        if (int err = dballe_int_from_python(PyStructSequence_GET_ITEM(o, 2), res.ltype2)) return err;
-        if (int err = dballe_int_from_python(PyStructSequence_GET_ITEM(o, 3), res.l2)) return err;
-        out = res;
+        out = ((dpy_Level*)o)->level;
         return 0;
     }
-    else
-#endif
-        if (PyTuple_Check(o))
+    else if (PyTuple_Check(o))
     {
         unsigned size = PyTuple_Size(o);
         if (size > 4)
@@ -294,7 +340,7 @@ int level_from_python(PyObject* o, Level& out)
     }
     else
     {
-        PyErr_SetString(PyExc_TypeError, "level must be None, a tuple or a Level structseq");
+        PyErr_SetString(PyExc_TypeError, "level must be None, a tuple or a dballe.Level");
         return -1;
     }
 }
@@ -686,12 +732,13 @@ int register_types(PyObject* m)
         return -1;
 
 #if PY_MAJOR_VERSION >= 3
-    if (PyStructSequence_InitType2(&dpy_Level_Type, &dpy_level_desc) != 0) return -1;
+    level::definition = new level::Definition;
+    if (!(dpy_Level_Type = level::definition->activate(m)))
+        return -1;
     if (PyStructSequence_InitType2(&dpy_Trange_Type, &dpy_trange_desc) != 0) return -1;
     if (PyStructSequence_InitType2(&dpy_Station_Type, &dpy_station_desc) != 0) return -1;
     if (PyStructSequence_InitType2(&dpy_DBStation_Type, &dpy_dbstation_desc) != 0) return -1;
 
-    if (PyModule_AddObject(m, "Level", (PyObject*)&dpy_Level_Type) != 0) return -1;
     if (PyModule_AddObject(m, "Trange", (PyObject*)&dpy_Trange_Type) != 0) return -1;
     if (PyModule_AddObject(m, "Station", (PyObject*)&dpy_Station_Type) != 0) return -1;
     if (PyModule_AddObject(m, "DBStation", (PyObject*)&dpy_DBStation_Type) != 0) return -1;

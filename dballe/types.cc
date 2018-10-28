@@ -1033,6 +1033,19 @@ void Level::to_stream(std::ostream& out, const char* undef) const
     if (l2 == MISSING_INT) out << undef; else out << l2;
 }
 
+std::string Level::to_string(const char* undef) const
+{
+    string res;
+    if (ltype1 == MISSING_INT) res += undef; else res += std::to_string(ltype1);
+    res += ",";
+    if (l1 == MISSING_INT) res += undef; else res += std::to_string(l1);
+    res += ",";
+    if (ltype2 == MISSING_INT) res += undef; else res += std::to_string(ltype2);
+    res += ",";
+    if (l2 == MISSING_INT) res += undef; else res += std::to_string(l2);
+    return res;
+}
+
 void Level::to_csv(CSVWriter& out) const
 {
     if (ltype1 == MISSING_INT) out.add_value_empty(); else out.add_value(ltype1);
