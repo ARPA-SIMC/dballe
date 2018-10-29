@@ -30,6 +30,80 @@ using namespace dballe;
 using namespace dballe::python;
 using namespace wreport;
 
+namespace {
+/**
+ * call o.fileno() and return its result.
+ *
+ * In case of AttributeError and IOError (parent of UnsupportedOperation, not
+ * available from C), it clear the error indicator.
+ *
+ * Returns -1 if fileno() was not available or some other exception happened.
+ * Use PyErr_Occurred to tell between the two.
+ */
+int file_get_fileno(PyObject* o);
+
+/**
+ * call o.data() and return its result, both as a PyObject and as a buffer.
+ *
+ * The data returned in buf and len will be valid as long as the returned
+ * object stays valid.
+ */
+PyObject* file_get_data(PyObject* o, char*&buf, Py_ssize_t& len);
+
+int file_get_fileno(PyObject* o)
+{
+    // fileno_value = obj.fileno()
+    pyo_unique_ptr fileno_meth(PyObject_GetAttrString(o, "fileno"));
+    if (!fileno_meth) return -1;
+    pyo_unique_ptr fileno_args(Py_BuildValue("()"));
+    if (!fileno_args) return -1;
+    PyObject* fileno_value = PyObject_Call(fileno_meth, fileno_args, NULL);
+    if (!fileno_value)
+    {
+        if (PyErr_ExceptionMatches(PyExc_AttributeError) || PyErr_ExceptionMatches(PyExc_IOError))
+            PyErr_Clear();
+        return -1;
+    }
+
+    // fileno = int(fileno_value)
+    if (!PyObject_TypeCheck(fileno_value, &PyLong_Type)) {
+        PyErr_SetString(PyExc_ValueError, "fileno() function must return an integer");
+        return -1;
+    }
+
+    return PyLong_AsLong(fileno_value);
+}
+
+PyObject* file_get_data(PyObject* o, char*&buf, Py_ssize_t& len)
+{
+    // Use read() instead
+    pyo_unique_ptr read_meth(PyObject_GetAttrString(o, "read"));
+    pyo_unique_ptr read_args(Py_BuildValue("()"));
+    pyo_unique_ptr data(PyObject_Call(read_meth, read_args, NULL));
+    if (!data) return nullptr;
+
+#if PY_MAJOR_VERSION >= 3
+    if (!PyObject_TypeCheck(data, &PyBytes_Type)) {
+        PyErr_SetString(PyExc_ValueError, "read() function must return a bytes object");
+        return nullptr;
+    }
+    if (PyBytes_AsStringAndSize(data, &buf, &len))
+        return nullptr;
+#else
+    if (!PyObject_TypeCheck(data, &PyString_Type)) {
+        Py_DECREF(data);
+        PyErr_SetString(PyExc_ValueError, "read() function must return a string object");
+        return nullptr;
+    }
+    if (PyString_AsStringAndSize(data, &buf, &len))
+        return nullptr;
+#endif
+
+    return data.release();
+}
+
+
+
 template<typename Vals>
 static PyObject* get_insert_ids(const Vals& vals)
 {
@@ -740,6 +814,7 @@ static PyObject* dpy_tr_rollback(dpy_Transaction* self)
     Py_RETURN_NONE;
 }
 
+}
 
 static PyMethodDef dpy_DB_methods[] = {
     {"get_default_format", (PyCFunction)dpy_DB_get_default_format, METH_NOARGS | METH_CLASS,

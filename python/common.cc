@@ -131,66 +131,6 @@ double double_from_python(PyObject* o)
     return res;
 }
 
-int file_get_fileno(PyObject* o)
-{
-    // fileno_value = obj.fileno()
-    pyo_unique_ptr fileno_meth(PyObject_GetAttrString(o, "fileno"));
-    if (!fileno_meth) return -1;
-    pyo_unique_ptr fileno_args(Py_BuildValue("()"));
-    if (!fileno_args) return -1;
-    PyObject* fileno_value = PyObject_Call(fileno_meth, fileno_args, NULL);
-    if (!fileno_value)
-    {
-        if (PyErr_ExceptionMatches(PyExc_AttributeError) || PyErr_ExceptionMatches(PyExc_IOError))
-            PyErr_Clear();
-        return -1;
-    }
-
-    // fileno = int(fileno_value)
-    if (!PyObject_TypeCheck(fileno_value, &PyLong_Type)) {
-        PyErr_SetString(PyExc_ValueError, "fileno() function must return an integer");
-        return -1;
-    }
-
-    return PyLong_AsLong(fileno_value);
-}
-
-PyObject* file_get_data(PyObject* o, char*&buf, Py_ssize_t& len)
-{
-    // Use read() instead
-    pyo_unique_ptr read_meth(PyObject_GetAttrString(o, "read"));
-    pyo_unique_ptr read_args(Py_BuildValue("()"));
-    pyo_unique_ptr data(PyObject_Call(read_meth, read_args, NULL));
-    if (!data) return nullptr;
-
-#if PY_MAJOR_VERSION >= 3
-    if (!PyObject_TypeCheck(data, &PyBytes_Type)) {
-        PyErr_SetString(PyExc_ValueError, "read() function must return a bytes object");
-        return nullptr;
-    }
-    if (PyBytes_AsStringAndSize(data, &buf, &len))
-        return nullptr;
-#else
-    if (!PyObject_TypeCheck(data, &PyString_Type)) {
-        Py_DECREF(data);
-        PyErr_SetString(PyExc_ValueError, "read() function must return a string object");
-        return nullptr;
-    }
-    if (PyString_AsStringAndSize(data, &buf, &len))
-        return nullptr;
-#endif
-
-    return data.release();
-}
-
-
-std::string object_repr(PyObject* o)
-{
-    pyo_unique_ptr repr(PyObject_Repr(o));
-    if (!repr) throw PythonException();
-    return string_from_python(repr);
-}
-
 PyObject* dballe_int_to_python(int val)
 {
     if (val == MISSING_INT)
@@ -210,6 +150,12 @@ int dballe_int_from_python(PyObject* o)
     return res;
 }
 
+std::string object_repr(PyObject* o)
+{
+    pyo_unique_ptr repr(PyObject_Repr(o));
+    if (!repr) throw PythonException();
+    return string_from_python(repr);
+}
 
 int common_init()
 {
