@@ -181,6 +181,22 @@ struct Binding
 {
     typedef IMPL Impl;
 
+    PySequenceMethods _sequence_methods {
+        .sq_length = (lenfunc)Derived::sq_length,
+        .sq_concat = (binaryfunc)Derived::sq_concat,
+        .sq_repeat = (ssizeargfunc)Derived::sq_repeat,
+        .sq_item = (ssizeargfunc)Derived::sq_item,
+        .sq_ass_item = (ssizeobjargproc)Derived::sq_ass_item,
+        .sq_contains = (objobjproc)Derived::sq_contains,
+        .sq_inplace_concat = (binaryfunc)Derived::sq_inplace_concat,
+        .sq_inplace_repeat = (ssizeargfunc)Derived::sq_inplace_repeat,
+    };
+    PyMappingMethods _mapping_methods {
+        .mp_length = (lenfunc)Derived::mp_length,
+        .mp_subscript = (binaryfunc)Derived::mp_subscript,
+        .mp_ass_subscript = (objobjargproc)Derived::mp_ass_subscript,
+    };
+
     static PyObject* _str(Impl* self)
     {
         return PyUnicode_FromString(Derived::name);
@@ -197,6 +213,19 @@ struct Binding
     constexpr static iternextfunc _iternext = nullptr;
     constexpr static richcmpfunc _richcompare = nullptr;
     constexpr static hashfunc _hash = nullptr;
+
+    constexpr static lenfunc sq_length = nullptr;
+    constexpr static binaryfunc sq_concat = nullptr;
+    constexpr static ssizeargfunc sq_repeat = nullptr;
+    constexpr static ssizeargfunc sq_item = nullptr;
+    constexpr static ssizeobjargproc sq_ass_item = nullptr;
+    constexpr static objobjproc sq_contains = nullptr;
+    constexpr static binaryfunc sq_inplace_concat = nullptr;
+    constexpr static ssizeargfunc sq_inplace_repeat = nullptr;
+
+    constexpr static lenfunc mp_length = nullptr;
+    constexpr static binaryfunc mp_subscript = nullptr;
+    constexpr static objobjargproc mp_ass_subscript = nullptr;
 
     static int _init(Impl* self, PyObject* args, PyObject* kw)
     {
@@ -221,6 +250,18 @@ struct Binding
             tp_flags |= Py_TPFLAGS_HAVE_ITER;
 #endif
 
+        PySequenceMethods* tp_as_sequence = nullptr;
+        if ((void*)Derived::sq_length || (void*)Derived::sq_concat || (void*)Derived::sq_repeat ||
+            (void*)Derived::sq_item || (void*)Derived::sq_ass_item || (void*)Derived::sq_contains ||
+            (void*)Derived::sq_inplace_concat || (void*)Derived::sq_inplace_repeat )
+        {
+            tp_as_sequence = &_sequence_methods;
+        }
+
+        PyMappingMethods* tp_as_mapping = nullptr;
+        if ((void*)Derived::mp_length || (void*)Derived::mp_subscript || (void*)Derived::mp_ass_subscript)
+            tp_as_mapping = &_mapping_methods;
+
         py_unique_ptr<PyTypeObject> type = new PyTypeObject {
             PyVarObject_HEAD_INIT(NULL, 0)
             Derived::qual_name,        // tp_name
@@ -233,8 +274,8 @@ struct Binding
             0,                         // tp_reserved
             (reprfunc)Derived::_repr,  // tp_repr
             0,                         // tp_as_number
-            0,                         // tp_as_sequence
-            0,                         // tp_as_mapping
+            tp_as_sequence,            // tp_as_sequence
+            tp_as_mapping,             // tp_as_mapping
             (hashfunc)Derived::_hash,  // tp_hash
             0,                         // tp_call
             (reprfunc)Derived::_str,   // tp_str

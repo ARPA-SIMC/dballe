@@ -9,6 +9,7 @@ import datetime
 import unittest
 import warnings
 
+
 class RecordTest(unittest.TestCase):
     def setUp(self):
         if not hasattr(self, "assertCountEqual"):
@@ -44,12 +45,14 @@ class RecordTest(unittest.TestCase):
         self.assertEqual(self.r.var("B12101").code, "B12101")
 
     def testKey(self):
-        self.assertEqual(self.r.key("lon").code, "B00000")
-        self.assertEqual(self.r.key("lon").enqd(), 11.54321)
-        self.assertEqual(self.r.key("lon").enqi(), 1154321)
-        self.assertEqual(self.r.key("lon").enqc(), "1154321")
-        self.assertEqual(self.r.key("lon").enq(), 11.54321)
-        self.assertEqual(self.r.get("lon"), self.r.key("lon").enqd())
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            self.assertEqual(self.r.key("lon").code, "B00000")
+            self.assertEqual(self.r.key("lon").enqd(), 11.54321)
+            self.assertEqual(self.r.key("lon").enqi(), 1154321)
+            self.assertEqual(self.r.key("lon").enqc(), "1154321")
+            self.assertEqual(self.r.key("lon").enq(), 11.54321)
+            self.assertEqual(self.r.get("lon"), self.r.key("lon").enqd())
 
     def testMulti(self):
         with warnings.catch_warnings():
@@ -132,7 +135,7 @@ class RecordTest(unittest.TestCase):
             self.assertEqual("timerange" not in r, True)
 
     def testKeys(self):
-        res = self.r.keys();
+        res = self.r.keys()
         self.assertCountEqual(res, [
             "lat", "lon",
             "year", "month", "day", "hour", "min", "sec",
@@ -142,7 +145,7 @@ class RecordTest(unittest.TestCase):
             "B12101", "B01002", "B01001"])
 
     def testItems(self):
-        res = self.r.items();
+        res = self.r.items()
         self.assertCountEqual(res, [
             ("lat", 45.12345), ("lon", 11.54321),
             ("year", 2007), ("month", 2), ("day", 1),
@@ -155,7 +158,7 @@ class RecordTest(unittest.TestCase):
             ("B01001", 1)])
 
     def testToDict(self):
-        res = self.r.keys();
+        res = self.r.keys()
         self.assertCountEqual(res, {
             "lat": 45.12345, "lon": 11.54321,
             "year": 2007, "month": 2, "day": 1,
@@ -257,15 +260,15 @@ class RecordTest(unittest.TestCase):
             self.assertEqual(rec["date"], d)
             self.assertEqual(rec["datetime"], d)
 
-        l = (1, 2, 1, 3)
-        rec["level"] = l
+        lev = (1, 2, 1, 3)
+        rec["level"] = lev
         self.assertEqual(rec["leveltype1"], 1)
         self.assertEqual(rec["l1"], 2)
         self.assertEqual(rec["leveltype2"], 1)
         self.assertEqual(rec["l2"], 3)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
-            self.assertEqual(rec["level"], l)
+            self.assertEqual(rec["level"], lev)
 
         t = (4, 5, 6)
         rec["trange"] = t
@@ -280,7 +283,7 @@ class RecordTest(unittest.TestCase):
         # Test that KeyError is raised for several different types of lookup
         rec = dballe.Record()
         self.assertRaises(KeyError, rec.__getitem__, "nonexistent")
-        #self.assertRaises(KeyError, rec.__getitem__, "B01001")
+        # self.assertRaises(KeyError, rec.__getitem__, "B01001")
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
             self.assertRaises(KeyError, rec.__getitem__, "date")
@@ -293,23 +296,22 @@ class RecordTest(unittest.TestCase):
             warnings.simplefilter("ignore", DeprecationWarning)
             self.assertEqual(rec.get("date", None), None)
 
-
     def testRecordClear(self):
         rec = dballe.Record(ana_id=1, B12101=21.5)
-        self.assertIn("ana_id", rec);
-        self.assertIn("B12101", rec);
+        self.assertIn("ana_id", rec)
+        self.assertIn("B12101", rec)
 
         rec.clear()
-        self.assertNotIn("ana_id", rec);
-        self.assertNotIn("B12101", rec);
+        self.assertNotIn("ana_id", rec)
+        self.assertNotIn("B12101", rec)
 
         rec.update(ana_id=1, B12101=21.5)
-        self.assertIn("ana_id", rec);
-        self.assertIn("B12101", rec);
+        self.assertIn("ana_id", rec)
+        self.assertIn("B12101", rec)
 
         rec.clear_vars()
-        self.assertIn("ana_id", rec);
-        self.assertNotIn("B12101", rec);
+        self.assertIn("ana_id", rec)
+        self.assertNotIn("B12101", rec)
 
     def testRecordConstructor(self):
         rec = dballe.Record(
@@ -330,10 +332,10 @@ class RecordTest(unittest.TestCase):
         master["B01001"] = 4
 
         if True:
-                r1 = master;
-                self.assertEqual(r1["block"], 4)
-                self.assertEqual(r1["latmin"], 4.1234)
-                self.assertEqual(r1["B01001"], 4)
+            r1 = master
+            self.assertEqual(r1["block"], 4)
+            self.assertEqual(r1["latmin"], 4.1234)
+            self.assertEqual(r1["B01001"], 4)
 
         r2 = master.copy()
         self.assertEqual(r2["block"], 4)

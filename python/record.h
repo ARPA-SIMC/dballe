@@ -15,11 +15,11 @@ typedef struct {
     dballe::Record* rec;
 } dpy_Record;
 
-PyAPI_DATA(PyTypeObject) dpy_Record_Type;
+extern PyTypeObject* dpy_Record_Type;
 
 #define dpy_Record_Check(ob) \
-    (Py_TYPE(ob) == &dpy_Record_Type || \
-     PyType_IsSubtype(Py_TYPE(ob), &dpy_Record_Type))
+    (Py_TYPE(ob) == dpy_Record_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), dpy_Record_Type))
 }
 
 namespace dballe {

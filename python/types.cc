@@ -37,7 +37,7 @@ PyObject* impl_richcompare(const T& a, const T& b, int op)
         case Py_NE: if (a != b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
         case Py_GT: if (a >  b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
         case Py_GE: if (a >= b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
-        default: return Py_NotImplemented;
+        default: Py_RETURN_NOTIMPLEMENTED;
     }
     // Py_RETURN_RICHCOMPARE(a, b, op);  From 3.7
 }

@@ -172,7 +172,7 @@ struct Definition : public Binding<Definition, dpy_Cursor>
             ensure_valid_cursor(self);
             Py_INCREF(self);
             return (PyObject*)self;
-        } DBALLE_CATCH_RETURN_PYO;
+        } DBALLE_CATCH_RETURN_PYO
     }
 
     static PyObject* _iternext(Impl* self)

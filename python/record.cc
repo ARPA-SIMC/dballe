@@ -6,11 +6,9 @@
 #include "common.h"
 #include "types.h"
 #include <vector>
-#include "config.h"
+#include "impl-utils.h"
 
-#if PY_MAJOR_VERSION >= 3
-    #define Py_TPFLAGS_HAVE_ITER 0
-#else
+#if PY_MAJOR_VERSION <= 2
     #define PyLong_AsLong PyInt_AsLong
     #define PyLong_Check PyInt_Check
 #endif
@@ -21,94 +19,10 @@ using namespace dballe::python;
 using namespace wreport;
 
 extern "C" {
-
-static const char* level_keys[4] = { "leveltype1", "l1", "leveltype2", "l2" };
-static const char* trange_keys[3] = { "pindicator", "p1", "p2" };
-static int any_key_set(const Record& rec, const char** keys, unsigned len)
-{
-    for (unsigned i = 0; i < len; ++i)
-        if (rec.isset(keys[i]))
-            return 1;
-    return 0;
+PyTypeObject* dpy_Record_Type = nullptr;
 }
 
-
-/*
- * Record
- */
-
-static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val);
-static int dpy_Record_contains(dpy_Record* self, PyObject *value);
-static PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key);
-
-static PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key)
-{
-    try {
-        string varname = string_from_python(key);
-
-        // Just look at the first character to see if we need to check for python
-        // API specific keys
-        switch (varname[0])
-        {
-            case 'd':
-                if (varname == "datetime" || varname == "date")
-                {
-                    if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
-                        return NULL;
-                    auto dt = core::Record::downcast(*self->rec).get_datetime();
-                    if (!dt.is_missing()) return datetime_to_python(dt);
-                    PyErr_SetString(PyExc_KeyError, varname.c_str());
-                    return NULL;
-                } else if (varname == "datemin") {
-                    if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
-                        return NULL;
-                    auto dt = core::Record::downcast(*self->rec).get_datetimerange().min;
-                    if (!dt.is_missing()) return datetime_to_python(dt);
-                    PyErr_SetString(PyExc_KeyError, varname.c_str());
-                    return NULL;
-                } else if (varname == "datemax") {
-                    if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
-                        return NULL;
-                    auto dt = core::Record::downcast(*self->rec).get_datetimerange().max;
-                    if (!dt.is_missing()) return datetime_to_python(dt);
-                    PyErr_SetString(PyExc_KeyError, varname.c_str());
-                    return NULL;
-                }
-                break;
-            case 'l':
-                if (varname == "level")
-                {
-                    if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
-                        return NULL;
-                    auto lev = core::Record::downcast(*self->rec).get_level();
-                    if (!lev.is_missing()) return level_to_python(lev);
-                    PyErr_SetString(PyExc_KeyError, varname.c_str());
-                    return NULL;
-                }
-                break;
-            case 't':
-                if (varname == "trange" || varname == "timerange")
-                {
-                    if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
-                        return NULL;
-                    auto tr = core::Record::downcast(*self->rec).get_trange();
-                    if (!tr.is_missing()) return trange_to_python(tr);
-                    PyErr_SetString(PyExc_KeyError, varname.c_str());
-                    return NULL;
-                }
-                break;
-        }
-
-        const Var* var = self->rec->get(varname.c_str());
-        if (var == NULL)
-            Py_RETURN_NONE;
-
-        if (!var->isset())
-            Py_RETURN_NONE;
-
-        return wrpy->var_value_to_python(*var);
-    } DBALLE_CATCH_RETURN_PYO
-}
+namespace {
 
 /**
  * Set key=val in rec.
@@ -202,15 +116,87 @@ static void setpy(dballe::Record& rec, PyObject* key, PyObject* val)
     }
 }
 
-static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
+static PyObject* __getitem__(dpy_Record* self, PyObject* key)
 {
     try {
-        setpy(*self->rec, key, val);
-        return 0;
-    } DBALLE_CATCH_RETURN_INT
+        string varname = string_from_python(key);
+
+        // Just look at the first character to see if we need to check for python
+        // API specific keys
+        switch (varname[0])
+        {
+            case 'd':
+                if (varname == "datetime" || varname == "date")
+                {
+                    if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
+                        return NULL;
+                    auto dt = core::Record::downcast(*self->rec).get_datetime();
+                    if (!dt.is_missing()) return datetime_to_python(dt);
+                    PyErr_SetString(PyExc_KeyError, varname.c_str());
+                    return NULL;
+                } else if (varname == "datemin") {
+                    if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
+                        return NULL;
+                    auto dt = core::Record::downcast(*self->rec).get_datetimerange().min;
+                    if (!dt.is_missing()) return datetime_to_python(dt);
+                    PyErr_SetString(PyExc_KeyError, varname.c_str());
+                    return NULL;
+                } else if (varname == "datemax") {
+                    if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
+                        return NULL;
+                    auto dt = core::Record::downcast(*self->rec).get_datetimerange().max;
+                    if (!dt.is_missing()) return datetime_to_python(dt);
+                    PyErr_SetString(PyExc_KeyError, varname.c_str());
+                    return NULL;
+                }
+                break;
+            case 'l':
+                if (varname == "level")
+                {
+                    if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
+                        return NULL;
+                    auto lev = core::Record::downcast(*self->rec).get_level();
+                    if (!lev.is_missing()) return level_to_python(lev);
+                    PyErr_SetString(PyExc_KeyError, varname.c_str());
+                    return NULL;
+                }
+                break;
+            case 't':
+                if (varname == "trange" || varname == "timerange")
+                {
+                    if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
+                        return NULL;
+                    auto tr = core::Record::downcast(*self->rec).get_trange();
+                    if (!tr.is_missing()) return trange_to_python(tr);
+                    PyErr_SetString(PyExc_KeyError, varname.c_str());
+                    return NULL;
+                }
+                break;
+        }
+
+        const Var* var = self->rec->get(varname.c_str());
+        if (var == NULL)
+            Py_RETURN_NONE;
+
+        if (!var->isset())
+            Py_RETURN_NONE;
+
+        return wrpy->var_value_to_python(*var);
+    } DBALLE_CATCH_RETURN_PYO
 }
 
-static int dpy_Record_contains(dpy_Record* self, PyObject *value)
+static const char* level_keys[4] = { "leveltype1", "l1", "leveltype2", "l2" };
+static const char* trange_keys[3] = { "pindicator", "p1", "p2" };
+static int any_key_set(const Record& rec, const char** keys, unsigned len)
+{
+    for (unsigned i = 0; i < len; ++i)
+        if (rec.isset(keys[i]))
+            return 1;
+    return 0;
+}
+
+
+static int __in__(dpy_Record* self, PyObject *value)
 {
     try {
         string varname = string_from_python(value);
@@ -261,406 +247,305 @@ static int dpy_Record_contains(dpy_Record* self, PyObject *value)
     } DBALLE_CATCH_RETURN_INT
 }
 
-static PyObject* dpy_Record_copy(dpy_Record* self)
+
+struct copy : MethNoargs<dpy_Record>
 {
-    dpy_Record* result = PyObject_New(dpy_Record, &dpy_Record_Type);
-    if (!result) return NULL;
-    try {
-        result->rec = self->rec->clone().release();
-        return (PyObject*)result;
-    } DBALLE_CATCH_RETURN_PYO
-}
+    constexpr static const char* name = "copy";
+    constexpr static const char* doc = "return a deep copy of the Record";
+    static PyObject* run(Impl* self)
+    {
+        try {
+            py_unique_ptr<dpy_Record> result(throw_ifnull(PyObject_New(dpy_Record, dpy_Record_Type)));
+            result->rec = self->rec->clone().release();
+            return (PyObject*)result.release();
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
 
-static PyObject* dpy_Record_clear(dpy_Record* self)
+struct clear : MethNoargs<dpy_Record>
 {
-    try {
-        self->rec->clear();
-        Py_RETURN_NONE;
-    } DBALLE_CATCH_RETURN_PYO
-}
+    constexpr static const char* name = "clear";
+    constexpr static const char* doc = "remove all data from the record";
+    static PyObject* run(Impl* self)
+    {
+        try {
+            self->rec->clear();
+            Py_RETURN_NONE;
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
 
-static PyObject* dpy_Record_clear_vars(dpy_Record* self)
+struct clear_vars : MethNoargs<dpy_Record>
 {
-    try {
-        self->rec->clear_vars();
-        Py_RETURN_NONE;
-    } DBALLE_CATCH_RETURN_PYO
-}
+    constexpr static const char* name = "clear_vars";
+    constexpr static const char* doc = "remove all variables from the record, leaving the keywords intact";
+    static PyObject* run(Impl* self)
+    {
+        try {
+            self->rec->clear_vars();
+            Py_RETURN_NONE;
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
 
-static PyObject* dpy_Record_keys(dpy_Record* self)
+struct to_dict : MethNoargs<dpy_Record>
 {
-    pyo_unique_ptr result(PyList_New(0));
-    if (!result) return nullptr;
+    constexpr static const char* name = "to_dict";
+    constexpr static const char* doc = "return a dict with all the key: value assignments set in the Record.";
+    static PyObject* run(Impl* self)
+    {
+        try {
+            pyo_unique_ptr result(throw_ifnull(PyDict_New()));
+            self->rec->foreach_key([&](const char* key, const wreport::Var& val) {
+                pyo_unique_ptr py_val(throw_ifnull(wrpy->var_value_to_python(val)));
+                if (PyDict_SetItemString(result, key, py_val.get()))
+                    throw PythonException();
+            });
+            return result.release();
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
 
-    try {
-        bool fail = false;
-        self->rec->foreach_key([&](const char* key, const wreport::Var&) {
-            if (fail) return;
-
-            pyo_unique_ptr item(PyUnicode_FromString(key));
-            if (!item) { fail = true; return; }
-
-            if (PyList_Append(result, item)) { fail = true; return; }
-        });
-
-        return result.release();
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_Record_items(dpy_Record* self)
+struct keys : MethNoargs<dpy_Record>
 {
-    pyo_unique_ptr result(PyList_New(0));
-    if (!result) return nullptr;
+    constexpr static const char* name = "keys";
+    constexpr static const char* doc = "return a list with all the keys set in the Record.";
+    static PyObject* run(Impl* self)
+    {
+        try {
+            pyo_unique_ptr result(throw_ifnull(PyList_New(0)));
 
-    try {
-        bool fail = false;
-        self->rec->foreach_key([&](const char* key, const wreport::Var& val) {
-            if (fail) return;
+            self->rec->foreach_key([&](const char* key, const wreport::Var&) {
+                pyo_unique_ptr item(throw_ifnull(PyUnicode_FromString(key)));
+                if (PyList_Append(result, item) != 0)
+                    throw PythonException();
+            });
 
-            pyo_unique_ptr py_key(PyUnicode_FromString(key));
-            if (!py_key) { fail = true; return; }
-            pyo_unique_ptr py_val(wrpy->var_value_to_python(val));
-            if (!py_val) { fail = true; return; }
-            pyo_unique_ptr item(PyTuple_Pack(2, py_key.get(), py_val.get()));
-            if (!item) { fail = true; return; }
+            return result.release();
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
 
-            if (PyList_Append(result, item)) { fail = true; return; }
-        });
-
-        return result.release();
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_Record_to_dict(dpy_Record* self)
+struct items : MethNoargs<dpy_Record>
 {
-    pyo_unique_ptr result(PyDict_New());
-    if (!result) return nullptr;
+    constexpr static const char* name = "items";
+    constexpr static const char* doc = "return a list with all the (key, value) tuples set in the Record.";
+    static PyObject* run(Impl* self)
+    {
+        try {
+            pyo_unique_ptr result(throw_ifnull(PyList_New(0)));
 
-    try {
-        bool fail = false;
-        self->rec->foreach_key([&](const char* key, const wreport::Var& val) {
-            if (fail) return;
+            self->rec->foreach_key([&](const char* key, const wreport::Var& val) {
+                pyo_unique_ptr py_key(throw_ifnull(PyUnicode_FromString(key)));
+                pyo_unique_ptr py_val(throw_ifnull(wrpy->var_value_to_python(val)));
+                pyo_unique_ptr item(throw_ifnull(PyTuple_Pack(2, py_key.get(), py_val.get())));
+                if (PyList_Append(result, item))
+                    throw PythonException();
+            });
 
-            pyo_unique_ptr py_val(wrpy->var_value_to_python(val));
-            if (!py_val) { fail = true; return; }
+            return result.release();
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
 
-            if (PyDict_SetItemString(result, key, py_val.get()))
+struct varitems : MethNoargs<dpy_Record>
+{
+    constexpr static const char* name = "varitems";
+    constexpr static const char* doc = "return a list with all the (key, `dballe.Var`_) tuples set in the Record.";
+    static PyObject* run(Impl* self)
+    {
+        try {
+            pyo_unique_ptr result(throw_ifnull(PyList_New(0)));
+            self->rec->foreach_key([&](const char* key, const wreport::Var& val) {
+                pyo_unique_ptr py_key(throw_ifnull(PyUnicode_FromString(key)));
+                pyo_unique_ptr py_val(throw_ifnull((PyObject*)wrpy->var_create_copy(val)));
+                pyo_unique_ptr item(throw_ifnull(PyTuple_Pack(2, py_key.get(), py_val.get())));
+                if (PyList_Append(result, item))
+                    throw PythonException();
+            });
+            return result.release();
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct var : MethKwargs<dpy_Record>
+{
+    constexpr static const char* name = "var";
+    constexpr static const char* doc = "return a `dballe.Var`_ from the record, given its key.";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "name", nullptr };
+        const char* name = NULL;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "s", const_cast<char**>(kwlist), &name))
+            return nullptr;
+        try {
+            return throw_ifnull((PyObject*)wrpy->var_create_copy((*self->rec)[name]));
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct update : MethKwargs<dpy_Record>
+{
+    constexpr static const char* name = "update";
+    constexpr static const char* doc = "set many record keys/vars in a single shot, via kwargs";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        try {
+            if (kw)
             {
-                fail = true;
-                return;
+                PyObject *key, *value;
+                Py_ssize_t pos = 0;
+
+                while (PyDict_Next(kw, &pos, &key, &value))
+                    setpy(*self->rec, key, value);
             }
-        });
+            Py_RETURN_NONE;
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
 
-        return result.release();
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_Record_varitems(dpy_Record* self)
+struct get : MethKwargs<dpy_Record>
 {
-    pyo_unique_ptr result(PyList_New(0));
-    if (!result) return nullptr;
+    constexpr static const char* name = "get";
+    constexpr static const char* doc = "lookup a value, returning a fallback value (None by default) if unset";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "key", "default", NULL };
+        PyObject* key;
+        PyObject* def = Py_None;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O|O", const_cast<char**>(kwlist), &key, &def))
+            return nullptr;
 
-    try {
-        bool fail = false;
-        self->rec->foreach_key([&](const char* key, const wreport::Var& val) {
-            if (fail) return;
+        try {
+            int has = __in__(self, key);
+            if (has < 0) return NULL;
+            if (!has)
+            {
+                Py_INCREF(def);
+                return def;
+            }
 
-            pyo_unique_ptr py_key(PyUnicode_FromString(key));
-            if (!py_key) { fail = true; return; }
-            pyo_unique_ptr py_val((PyObject*)wrpy->var_create_copy(val));
-            if (!py_val) { fail = true; return; }
-            pyo_unique_ptr item(PyTuple_Pack(2, py_key.get(), py_val.get()));
-            if (!item) { fail = true; return; }
+            return __getitem__(self, key);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
 
-            if (PyList_Append(result, item)) { fail = true; return; }
-        });
-
-        return result.release();
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_Record_var(dpy_Record* self, PyObject* args)
+struct attrs : MethKwargs<dpy_Record>
 {
-    const char* name = NULL;
-    if (!PyArg_ParseTuple(args, "s", &name))
-        return nullptr;
-
-    try {
-        return (PyObject*)wrpy->var_create_copy((*self->rec)[name]);
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_Record_update(dpy_Record* self, PyObject *args, PyObject *kw)
-{
-    try {
-        if (kw)
-        {
-            PyObject *key, *value;
-            Py_ssize_t pos = 0;
-
-            while (PyDict_Next(kw, &pos, &key, &value))
-                setpy(*self->rec, key, value);
-        }
-        Py_RETURN_NONE;
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_Record_get(dpy_Record* self, PyObject *args, PyObject* kw)
-{
-    static const char* kwlist[] = { "key", "default", NULL };
-    PyObject* key;
-    PyObject* def = Py_None;
-
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|O", const_cast<char**>(kwlist), &key, &def))
-        return nullptr;
-
-    try {
-        int has = dpy_Record_contains(self, key);
-        if (has < 0) return NULL;
-        if (!has)
-        {
-            Py_INCREF(def);
-            return def;
-        }
-
-        return dpy_Record_getitem(self, key);
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_Record_vars(dpy_Record* self)
-{
-    if (PyErr_WarnEx(PyExc_DeprecationWarning, "Record.vars() may disappear in a future version of DB-All.e, and no replacement is planned", 1))
-        return nullptr;
-
-    const std::vector<wreport::Var*>& vars = core::Record::downcast(*self->rec).vars();
-
-    pyo_unique_ptr result(PyTuple_New(vars.size()));
-    if (!result) return NULL;
-
-    try {
-        for (size_t i = 0; i < vars.size(); ++i)
-        {
-            pyo_unique_ptr v((PyObject*)wrpy->var_create_copy(*vars[i]));
-            if (!v) return nullptr;
-
-            if (PyTuple_SetItem(result, i, v.release()))
-                return nullptr;
-        }
-        return result.release();
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_Record_attrs(dpy_Record* self, PyObject *args, PyObject* kw)
-{
-    static const char* kwlist[] = { "code", NULL };
-    const char* code = nullptr;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "s", const_cast<char**>(kwlist), &code))
-        return nullptr;
-
-    try {
-        const wreport::Var& var = (*self->rec)[code];
-
-        pyo_unique_ptr result(PyDict_New());
-        if (!result) return nullptr;
-
-        for (const Var* a = var.next_attr(); a != nullptr; a = a->next_attr())
-        {
-            string key = wreport::varcode_format(a->code());
-            pyo_unique_ptr val((PyObject*)wrpy->var_create_copy(*a));
-            if (PyDict_SetItemString(result, key.c_str(), val.get()))
-                return nullptr;
-        }
-
-        return result.release();
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_Record_date_extremes(dpy_Record* self)
-{
-    if (PyErr_WarnEx(PyExc_DeprecationWarning, "Record.date_extremes may disappear in a future version of DB-All.e, and no replacement is planned", 1))
-        return NULL;
-
-    try {
-        DatetimeRange dtr = core::Record::downcast(*self->rec).get_datetimerange();
-
-        pyo_unique_ptr dt_min(datetime_to_python(dtr.min));
-        pyo_unique_ptr dt_max(datetime_to_python(dtr.max));
-
-        if (!dt_min || !dt_max) return NULL;
-
-        return Py_BuildValue("(NN)", dt_min.release(), dt_max.release());
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_Record_set_from_string(dpy_Record* self, PyObject *args)
-{
-    if (PyErr_WarnEx(PyExc_DeprecationWarning, "Record.set_from_string() may disappear in a future version of DB-All.e, and no replacement is planned", 1))
-        return nullptr;
-
-    const char* str = NULL;
-    if (!PyArg_ParseTuple(args, "s", &str))
-        return NULL;
-
-    try {
-        core::Record::downcast(*self->rec).set_from_string(str);
-        Py_RETURN_NONE;
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyMethodDef dpy_Record_methods[] = {
-    {"copy", (PyCFunction)dpy_Record_copy, METH_NOARGS, "return a deep copy of the Record" },
-    {"clear", (PyCFunction)dpy_Record_clear, METH_NOARGS, "remove all data from the record" },
-    {"clear_vars", (PyCFunction)dpy_Record_clear_vars, METH_NOARGS, "remove all variables from the record, leaving the keywords intact" },
-    {"keys", (PyCFunction)dpy_Record_keys, METH_NOARGS, "return a list with all the keys set in the Record." },
-    {"items", (PyCFunction)dpy_Record_items, METH_NOARGS, "return a list with all the (key, value) tuples set in the Record." },
-    {"to_dict", (PyCFunction)dpy_Record_to_dict, METH_NOARGS, "return a dict with all the key: value assignments set in the Record." },
-    {"varitems", (PyCFunction)dpy_Record_varitems, METH_NOARGS, "return a list with all the (key, `dballe.Var`_) tuples set in the Record." },
-    {"var", (PyCFunction)dpy_Record_var, METH_VARARGS, "return a `dballe.Var`_ from the record, given its key." },
-    {"update", (PyCFunction)dpy_Record_update, METH_VARARGS | METH_KEYWORDS, "set many record keys/vars in a single shot, via kwargs" },
-    {"get", (PyCFunction)dpy_Record_get, METH_VARARGS | METH_KEYWORDS, "lookup a value, returning a fallback value (None by default) if unset" },
-    {"attrs", (PyCFunction)dpy_Record_attrs, METH_VARARGS | METH_KEYWORDS, R"(
+    constexpr static const char* name = "attrs";
+    constexpr static const char* doc = R"(
         attrs(code) -> {code: var}
 
-        return a dict with the attributes of the given varcode)" },
-    // Deprecated
-    {"key", (PyCFunction)dpy_Record_var, METH_VARARGS, "(deprecated) return a `dballe.Var`_ from the record, given its key." },
-    {"vars", (PyCFunction)dpy_Record_vars, METH_NOARGS, "(deprecated) return a sequence with all the variables set on the Record. Note that this does not include keys." },
-    {"date_extremes", (PyCFunction)dpy_Record_date_extremes, METH_NOARGS, "(deprecated) get two datetime objects with the lower and upper bounds of the datetime period in this record" },
-    {"set_from_string", (PyCFunction)dpy_Record_set_from_string, METH_VARARGS, "(deprecated) set values from a 'key=val' string" },
-
-    {NULL}
-};
-
-static int dpy_Record_init(dpy_Record* self, PyObject* args, PyObject* kw)
-{
-    // Construct on preallocated memory
-    try {
-        self->rec = Record::create().release();
-
-        if (kw)
-        {
-            PyObject *key, *value;
-            Py_ssize_t pos = 0;
-
-            while (PyDict_Next(kw, &pos, &key, &value))
-                setpy(*self->rec, key, value);
-        }
-
-        return 0;
-    } DBALLE_CATCH_RETURN_INT
-}
-
-static void dpy_Record_dealloc(dpy_Record* self)
-{
-    delete self->rec;
-    self->rec = 0;
-    Py_TYPE(self)->tp_free(self);
-}
-
-static PyObject* dpy_Record_str(dpy_Record* self)
-{
-    /*
-    std::string f = self->var.format("None");
-    return PyString_FromString(f.c_str());
-    */
-    return PyUnicode_FromString("Record");
-}
-
-static PyObject* dpy_Record_repr(dpy_Record* self)
-{
-    /*
-    string res = "Var('";
-    res += varcode_format(self->var.code());
-    if (self->var.info()->is_string())
+        return a dict with the attributes of the given varcode
+    )";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
-        res += "', '";
-        res += self->var.format();
-        res += "')";
-    } else {
-        res += "', ";
-        res += self->var.format("None");
-        res += ")";
-    }
-    return PyString_FromString(res.c_str());
-    */
-    return PyUnicode_FromString("Record object");
-}
+        static const char* kwlist[] = { "code", NULL };
+        const char* code = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "s", const_cast<char**>(kwlist), &code))
+            return nullptr;
 
-static PySequenceMethods dpy_Record_sequence = {
-    0,                               // sq_length
-    0,                               // sq_concat
-    0,                               // sq_repeat
-    0,                               // sq_item
-    0,                               // sq_slice
-    0,                               // sq_ass_item
-    0,                               // sq_ass_slice
-    (objobjproc)dpy_Record_contains, // sq_contains
-};
-static PyMappingMethods dpy_Record_mapping = {
-    0,                                 // __len__
-    (binaryfunc)dpy_Record_getitem,    // __getitem__
-    (objobjargproc)dpy_Record_setitem, // __setitem__
+        try {
+            const wreport::Var& var = (*self->rec)[code];
+            pyo_unique_ptr result(throw_ifnull(PyDict_New()));
+            for (const Var* a = var.next_attr(); a != nullptr; a = a->next_attr())
+            {
+                string key = wreport::varcode_format(a->code());
+                pyo_unique_ptr val(throw_ifnull((PyObject*)wrpy->var_create_copy(*a)));
+                if (PyDict_SetItemString(result, key.c_str(), val.get()))
+                    return nullptr;
+            }
+            return result.release();
+        } DBALLE_CATCH_RETURN_PYO
+    }
 };
 
-static PyObject* dpy_Record_iter(dpy_Record* self)
+struct key : MethKwargs<dpy_Record>
 {
-    pyo_unique_ptr keys(dpy_Record_keys(self));
-    if (!keys) return nullptr;
-    pyo_unique_ptr iter(PyObject_GetIter(keys));
-    if (!iter) return nullptr;
-    return iter.release();
-}
+    constexpr static const char* name = "key";
+    constexpr static const char* doc = "return a `dballe.Var`_ from the record, given its key. (deprecated)";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use Record.var instead of Record.key", 1))
+            return nullptr;
 
-static PyObject* dpy_Record_richcompare(dpy_Record* a, dpy_Record* b, int op)
+        static const char* kwlist[] = { "name", nullptr };
+        const char* name = NULL;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "s", const_cast<char**>(kwlist), &name))
+            return nullptr;
+        try {
+            return throw_ifnull((PyObject*)wrpy->var_create_copy((*self->rec)[name]));
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct vars : MethNoargs<dpy_Record>
 {
-    PyObject *result;
+    constexpr static const char* name = "vars";
+    constexpr static const char* doc = "return a sequence with all the variables set on the Record. Note that this does not include keys (deprecated)";
+    static PyObject* run(Impl* self)
+    {
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, "Record.vars() may disappear in a future version of DB-All.e, and no replacement is planned", 1))
+            return nullptr;
 
-    // Make sure both arguments are Records.
-    if (!(dpy_Record_Check(a) && dpy_Record_Check(b))) {
-        result = Py_NotImplemented;
-        goto out;
+        try {
+            const std::vector<wreport::Var*>& vars = core::Record::downcast(*self->rec).vars();
+            pyo_unique_ptr result(throw_ifnull(PyTuple_New(vars.size())));
+            for (size_t i = 0; i < vars.size(); ++i)
+            {
+                pyo_unique_ptr v(throw_ifnull((PyObject*)wrpy->var_create_copy(*vars[i])));
+                if (PyTuple_SetItem(result, i, v.release()))
+                    return nullptr;
+            }
+            return result.release();
+        } DBALLE_CATCH_RETURN_PYO
     }
+};
 
-    int cmp;
-    switch (op) {
-        case Py_EQ: cmp = *a->rec == *b->rec; break;
-        case Py_NE: cmp = *a->rec != *b->rec; break;
-        default:
-            // https://www.python.org/dev/peps/pep-0207/
-            // If the function cannot compare the particular combination of objects, it
-            // should return a new reference to Py_NotImplemented.
-            result = Py_NotImplemented;
-            goto out;
+struct date_extremes : MethNoargs<dpy_Record>
+{
+    constexpr static const char* name = "date_extremes";
+    constexpr static const char* doc = "get two datetime objects with the lower and upper bounds of the datetime period in this record (deprecated)";
+    static PyObject* run(Impl* self)
+    {
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, "Record.date_extremes may disappear in a future version of DB-All.e, and no replacement is planned", 1))
+            return nullptr;
+
+        try {
+            DatetimeRange dtr = core::Record::downcast(*self->rec).get_datetimerange();
+            pyo_unique_ptr dt_min(datetime_to_python(dtr.min));
+            pyo_unique_ptr dt_max(datetime_to_python(dtr.max));
+            return Py_BuildValue("(NN)", dt_min.release(), dt_max.release());
+        } DBALLE_CATCH_RETURN_PYO
     }
-    result = cmp ? Py_True : Py_False;
+};
 
-out:
-    Py_INCREF(result);
-    return result;
-}
+struct set_from_string : MethKwargs<dpy_Record>
+{
+    constexpr static const char* name = "set_from_string";
+    constexpr static const char* doc = "set values from a 'key=val' string (deprecated)";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, "Record.set_from_string() may disappear in a future version of DB-All.e, and no replacement is planned", 1))
+            return nullptr;
 
-PyTypeObject dpy_Record_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "dballe.Record",           // tp_name
-    sizeof(dpy_Record),        // tp_basicsize
-    0,                         // tp_itemsize
-    (destructor)dpy_Record_dealloc, // tp_dealloc
-    0,                         // tp_print
-    0,                         // tp_getattr
-    0,                         // tp_setattr
-    0,                         // tp_compare
-    (reprfunc)dpy_Record_repr, // tp_repr
-    0,                         // tp_as_number
-    &dpy_Record_sequence,      // tp_as_sequence
-    &dpy_Record_mapping,       // tp_as_mapping
-    0,                         // tp_hash
-    0,                         // tp_call
-    (reprfunc)dpy_Record_str,  // tp_str
-    0,                         // tp_getattro
-    0,                         // tp_setattro
-    0,                         // tp_as_buffer
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_ITER, // tp_flags
-    R"(
+        const char* str = nullptr;
+        if (!PyArg_ParseTuple(args, "s", &str))
+            return nullptr;
+
+        try {
+            core::Record::downcast(*self->rec).set_from_string(str);
+        } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
+    }
+};
+
+
+struct Definition : public Binding<Definition, dpy_Record>
+{
+    constexpr static const char* name = "Record";
+    constexpr static const char* qual_name = "dballe.Record";
+    constexpr static const char* doc = R"(
         A record holds a number of key->value mappings, similar to a dict.
 
         Keys are strings, from a fixed set of keywords defined in DB-All.e and
@@ -716,25 +601,106 @@ PyTypeObject dpy_Record_Type = {
             # Use .vars() to get a list of only the varcode keys
             for varcode in rec.vars():
                 print(varcode, rec.get(varcode, "undefined"), rec.var(varcode).info.desc)
-    )",                        // tp_doc
-    0,                         // tp_traverse
-    0,                         // tp_clear
-    (richcmpfunc)dpy_Record_richcompare, // tp_richcompare
-    0,                         // tp_weaklistoffset
-    (getiterfunc)dpy_Record_iter, // tp_iter
-    0,                         // tp_iternext
-    dpy_Record_methods,        // tp_methods
-    0,                         // tp_members
-    0,                         // tp_getset
-    0,                         // tp_base
-    0,                         // tp_dict
-    0,                         // tp_descr_get
-    0,                         // tp_descr_set
-    0,                         // tp_dictoffset
-    (initproc)dpy_Record_init, // tp_init
-    0,                         // tp_alloc
-    0,                         // tp_new
+    )";
+
+    GetSetters<> getsetters;
+    Methods<
+        copy, clear, clear_vars,
+        keys, items, varitems, to_dict,
+        get, var, attrs,
+        update,
+        // Deprecated
+        key, vars, date_extremes, set_from_string
+    > methods;
+
+    static int _init(Impl* self, PyObject* args, PyObject* kw)
+    {
+        // Construct on preallocated memory
+        try {
+            self->rec = Record::create().release();
+
+            if (kw)
+            {
+                PyObject *key, *value;
+                Py_ssize_t pos = 0;
+
+                while (PyDict_Next(kw, &pos, &key, &value))
+                    setpy(*self->rec, key, value);
+            }
+
+            return 0;
+        } DBALLE_CATCH_RETURN_INT
+    }
+
+    static void _dealloc(Impl* self)
+    {
+        delete self->rec;
+        Py_TYPE(self)->tp_free(self);
+    }
+
+    static PyObject* _richcompare(Impl* a, Impl* b, int op)
+    {
+        // Make sure both arguments are Records.
+        if (!(dpy_Record_Check(a) && dpy_Record_Check(b)))
+            Py_RETURN_NOTIMPLEMENTED;
+
+        switch (op) {
+            case Py_EQ: if (*a->rec == *b->rec) Py_RETURN_TRUE; else Py_RETURN_FALSE;
+            case Py_NE: if (*a->rec != *b->rec) Py_RETURN_TRUE; else Py_RETURN_FALSE;
+            default: Py_RETURN_NOTIMPLEMENTED;
+        }
+    }
+
+    static PyObject* _iter(dpy_Record* self)
+    {
+        try {
+            pyo_unique_ptr keys(keys::run(self));
+            if (!keys) return nullptr;
+            pyo_unique_ptr iter(PyObject_GetIter(keys));
+            if (!iter) return nullptr;
+            return iter.release();
+        } DBALLE_CATCH_RETURN_PYO
+    }
+
+#if 0
+    static PyObject* _iternext(Impl* self)
+    {
+        try {
+            ensure_valid_cursor(self);
+            if (self->cur->next())
+            {
+                self->cur->to_record(*self->rec->rec);
+                Py_INCREF(self->rec);
+                return (PyObject*)self->rec;
+            } else {
+                PyErr_SetNone(PyExc_StopIteration);
+                return nullptr;
+            }
+        } DBALLE_CATCH_RETURN_PYO
+    }
+#endif
+
+    static int sq_contains(dpy_Record* self, PyObject *value)
+    {
+        return __in__(self, value);
+    }
+
+    static PyObject* mp_subscript(dpy_Record* self, PyObject* key)
+    {
+        return __getitem__(self, key);
+    }
+
+    static int mp_ass_subscript(dpy_Record* self, PyObject *key, PyObject *val)
+    {
+        try {
+            setpy(*self->rec, key, val);
+            return 0;
+        } DBALLE_CATCH_RETURN_INT
+    }
+
 };
+
+Definition* definition = nullptr;
 
 }
 
@@ -811,20 +777,15 @@ void read_query(PyObject* from_python, dballe::Query& query)
 
 dpy_Record* record_create()
 {
-    return (dpy_Record*)throw_ifnull(PyObject_CallObject((PyObject*)&dpy_Record_Type, NULL));
+    return (dpy_Record*)throw_ifnull(PyObject_CallObject((PyObject*)dpy_Record_Type, NULL));
 }
 
 void register_record(PyObject* m)
 {
     common_init();
 
-    dpy_Record_Type.tp_new = PyType_GenericNew;
-    if (PyType_Ready(&dpy_Record_Type) < 0)
-        throw PythonException();
-    Py_INCREF(&dpy_Record_Type);
-
-    if (PyModule_AddObject(m, "Record", (PyObject*)&dpy_Record_Type) != 0)
-        throw PythonException();
+    definition = new Definition;
+    dpy_Record_Type = definition->activate(m);
 }
 
 }

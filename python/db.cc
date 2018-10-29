@@ -646,7 +646,7 @@ struct export_to_file : MethKwargs<Impl>
         const char* format;
         PyObject* file;
         int as_generic = 0;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "O!sO|i", const_cast<char**>(kwlist), &dpy_Record_Type, &query, &format, &file, &as_generic))
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O!sO|i", const_cast<char**>(kwlist), dpy_Record_Type, &query, &format, &file, &as_generic))
             return NULL;
 
         try {
