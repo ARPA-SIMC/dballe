@@ -765,6 +765,8 @@ wreport::Varcode varcode_from_python(PyObject* o)
 
 void register_types(PyObject* m)
 {
+    common_init();
+
     /*
      * PyDateTimeAPI, that is used by all the PyDate* and PyTime* macros, is
      * defined as a static variable defaulting to NULL, and it needs to be

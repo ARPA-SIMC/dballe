@@ -656,29 +656,26 @@ dpy_DBExplorer* dbexplorer_create(std::unique_ptr<db::DBExplorer> explorer)
     return result;
 }
 
-int register_explorer(PyObject* m)
+void register_explorer(PyObject* m)
 {
-    if (common_init() != 0) return -1;
+    common_init();
 
     PyStructSequence_InitType(&dpy_stats_Type, &dpy_stats_desc);
     Py_INCREF(&dpy_stats_Type);
-    PyModule_AddObject(m, "ExplorerStats", (PyObject*)&dpy_stats_Type);
+    if (PyModule_AddObject(m, "ExplorerStats", (PyObject*)&dpy_stats_Type) != 0)
+        throw PythonException();
 
     explorer::definition = new explorer::Definition<Station>;
-    if (!(dpy_Explorer_Type = explorer::definition->activate(m)))
-        return -1;
+    dpy_Explorer_Type = explorer::definition->activate(m);
+
     explorer::definition_db = new explorer::Definition<DBStation>;
-    if (!(dpy_DBExplorer_Type = explorer::definition_db->activate(m)))
-        return -1;
+    dpy_DBExplorer_Type = explorer::definition_db->activate(m);
 
     explorerupdate::definition = new explorerupdate::Definition<Station>;
-    if (!(dpy_ExplorerUpdate_Type = explorerupdate::definition->activate(m)))
-        return -1;
-    explorerupdate::definition_db = new explorerupdate::Definition<DBStation>;
-    if (!(dpy_DBExplorerUpdate_Type = explorerupdate::definition_db->activate(m)))
-        return -1;
+    dpy_ExplorerUpdate_Type = explorerupdate::definition->activate(m);
 
-    return 0;
+    explorerupdate::definition_db = new explorerupdate::Definition<DBStation>;
+    dpy_DBExplorerUpdate_Type = explorerupdate::definition_db->activate(m);
 }
 
 }

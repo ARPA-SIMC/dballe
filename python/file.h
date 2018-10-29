@@ -77,7 +77,7 @@ dpy_File* file_create_r_from_object(PyObject* o);
  */
 dpy_File* file_create_r_from_object(PyObject* o, Encoding encoding);
 
-int register_file(PyObject* m);
+void register_file(PyObject* m);
 
 }
 }

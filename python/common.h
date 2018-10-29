@@ -177,7 +177,7 @@ std::string object_repr(PyObject* o);
  *
  * This can be called multiple times and will execute only once.
  */
-int common_init();
+void common_init();
 
 }
 }

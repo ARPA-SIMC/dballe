@@ -151,22 +151,20 @@ std::string object_repr(PyObject* o)
     return string_from_python(repr);
 }
 
-int common_init()
+void common_init()
 {
     if (!wrpy)
     {
         wrpy = (wrpy_c_api*)PyCapsule_Import("_wreport._C_API", 0);
         if (!wrpy)
-            return -1;
+            throw PythonException();
 
         if (wrpy->version_major != 1)
         {
             PyErr_Format(PyExc_RuntimeError, "wreport C API version is %d.%d but only 1.x is supported", wrpy->version_major, wrpy->version_minor);
-            return -1;
+            throw PythonException();
         }
     }
-
-    return 0;
 }
 
 }

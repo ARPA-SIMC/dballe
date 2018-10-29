@@ -480,16 +480,12 @@ dpy_File* file_create_r_from_object(PyObject* o, Encoding encoding)
     return file_create(std::move(wrapper));
 }
 
-int register_file(PyObject* m)
+void register_file(PyObject* m)
 {
-    if (common_init() != 0)
-        return -1;
+    common_init();
 
     file_definition = new FileDefinition;
-    if (!(dpy_File_Type = file_definition->activate(m)))
-        return -1;
-
-    return 0;
+    dpy_File_Type = file_definition->activate(m);
 }
 
 }

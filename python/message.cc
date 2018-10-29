@@ -328,15 +328,12 @@ dpy_Message* message_create(std::shared_ptr<Message> message)
     return res;
 }
 
-int register_message(PyObject* m)
+void register_message(PyObject* m)
 {
-    if (common_init() != 0) return -1;
+    common_init();
 
     definition = new MessageDefinition;
-    if (!(dpy_Message_Type = definition->activate(m)))
-        return -1;
-
-    return 0;
+    dpy_Message_Type = definition->activate(m);
 }
 
 }

@@ -261,7 +261,7 @@ dpy_Cursor* cursor_create(std::unique_ptr<db::Cursor> cur)
 
 int register_cursor(PyObject* m)
 {
-    if (common_init() != 0) return -1;
+    common_init();
 
     dpy_Cursor_Type.tp_new = PyType_GenericNew;
     if (PyType_Ready(&dpy_Cursor_Type) < 0)

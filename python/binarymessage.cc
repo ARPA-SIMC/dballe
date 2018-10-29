@@ -157,16 +157,12 @@ dpy_BinaryMessage* binarymessage_create(BinaryMessage&& message)
 }
 
 
-int register_binarymessage(PyObject* m)
+void register_binarymessage(PyObject* m)
 {
-    if (common_init() != 0)
-        return -1;
+    common_init();
 
     definition = new BinaryMessageDefinition;
-    if (!(dpy_BinaryMessage_Type = definition->activate(m)))
-        return -1;
-
-    return 0;
+    dpy_BinaryMessage_Type = definition->activate(m);
 }
 
 }

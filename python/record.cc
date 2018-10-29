@@ -9,10 +9,10 @@
 #include "config.h"
 
 #if PY_MAJOR_VERSION >= 3
-    #define PyInt_FromLong PyLong_FromLong
-    #define PyInt_AsLong PyLong_AsLong
-    #define PyInt_Check PyLong_Check
     #define Py_TPFLAGS_HAVE_ITER 0
+#else
+    #define PyLong_AsLong PyInt_AsLong
+    #define PyLong_Check PyInt_Check
 #endif
 
 using namespace std;
@@ -180,8 +180,8 @@ static int setpy(dballe::Record& rec, PyObject* key, PyObject* val)
             if (v == -1.0 && PyErr_Occurred())
                 return -1;
             rec.set(name.c_str(), v);
-        } else if (PyInt_Check(val)) {
-            long v = PyInt_AsLong(val);
+        } else if (PyLong_Check(val)) {
+            long v = PyLong_AsLong(val);
             if (v == -1 && PyErr_Occurred())
                 return -1;
             rec.set(name.c_str(), (int)v);
@@ -817,18 +817,17 @@ dpy_Record* record_create()
     return (dpy_Record*)PyObject_CallObject((PyObject*)&dpy_Record_Type, NULL);
 }
 
-int register_record(PyObject* m)
+void register_record(PyObject* m)
 {
-    if (common_init() != 0) return -1;
+    common_init();
 
     dpy_Record_Type.tp_new = PyType_GenericNew;
     if (PyType_Ready(&dpy_Record_Type) < 0)
-        return -1;
+        throw PythonException();
     Py_INCREF(&dpy_Record_Type);
 
-    if (PyModule_AddObject(m, "Record", (PyObject*)&dpy_Record_Type) != 0) return -1;
-
-    return 0;
+    if (PyModule_AddObject(m, "Record", (PyObject*)&dpy_Record_Type) != 0)
+        throw PythonException();
 }
 
 }

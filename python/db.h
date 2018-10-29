@@ -50,13 +50,13 @@ dpy_Transaction* transaction_create(std::shared_ptr<dballe::db::Transaction> tra
  */
 int db_read_attrlist(PyObject* attrs, db::AttrList& codes);
 
-int register_db(PyObject* m);
-
 bool db_load_fileobj(DB* db, PyObject* obj);
 
 bool db_load_filelike(DB* db, PyObject* obj);
 
 bool db_load_fileno(DB* db, PyObject* obj);
+
+void register_db(PyObject* m);
 
 }
 }

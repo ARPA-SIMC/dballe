@@ -171,13 +171,13 @@ PyMODINIT_FUNC init_dballe(void)
     try {
         pyo_unique_ptr m(PyModule_Create(&dballe_module));
         register_types(m);
-        if (register_record(m) != 0) return nullptr;
-        if (register_db(m) != 0) return nullptr;
+        register_record(m);
+        register_db(m);
         if (register_cursor(m) != 0) return nullptr;
-        if (register_binarymessage(m) != 0) return nullptr;
-        if (register_file(m) != 0) return nullptr;
-        if (register_message(m) != 0) return nullptr;
-        if (register_explorer(m) != 0) return nullptr;
+        register_binarymessage(m);
+        register_file(m);
+        register_message(m);
+        register_explorer(m);
 
         return m.release();
     } DBALLE_CATCH_RETURN_PYO
