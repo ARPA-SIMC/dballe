@@ -27,6 +27,7 @@ if HAVE_PYTHON3
 _dballe_la_SOURCES += binarymessage.cc file.cc message.cc explorer.cc
 endif
 
+if HAVE_PYTHON3
 doc_DATA = python-dballe.rst
 
 if HAVE_RST2HTML
@@ -38,6 +39,7 @@ python-dballe.rst: doc-dballe $(pkgpython_PYTHON) $(pyexec_LTLIBRARIES)
 
 python-dballe.html: python-dballe.rst
 	rst2html $< > $@ || (rm -f $@; false)
+endif
 
 clean-local:
 	rm -f *.pyc dballe/*.pyc

@@ -8,11 +8,6 @@
 #include <vector>
 #include "impl-utils.h"
 
-#if PY_MAJOR_VERSION <= 2
-    #define PyLong_AsLong PyInt_AsLong
-    #define PyLong_Check PyInt_Check
-#endif
-
 using namespace std;
 using namespace dballe;
 using namespace dballe::python;
@@ -93,11 +88,19 @@ static void setpy(dballe::Record& rec, PyObject* key, PyObject* val)
         if (v == -1.0 && PyErr_Occurred())
             throw PythonException();
         rec.set(name.c_str(), v);
+#if PY_MAJOR_VERSION <= 2
+    } else if (PyInt_Check(val)) {
+        long v = PyInt_AsLong(val);
+        if (v == -1 && PyErr_Occurred())
+            throw PythonException();
+        rec.set(name.c_str(), (int)v);
+#else
     } else if (PyLong_Check(val)) {
         long v = PyLong_AsLong(val);
         if (v == -1 && PyErr_Occurred())
             throw PythonException();
         rec.set(name.c_str(), (int)v);
+#endif
     } else if (
             PyUnicode_Check(val)
 #if PY_MAJOR_VERSION >= 3
@@ -642,12 +645,25 @@ struct Definition : public Binding<Definition, dpy_Record>
     {
         // Make sure both arguments are Records.
         if (!(dpy_Record_Check(a) && dpy_Record_Check(b)))
+#if PY_MAJOR_VERSION >= 3
             Py_RETURN_NOTIMPLEMENTED;
+#else
+        {
+            Py_INCREF(Py_NotImplemented);
+            return Py_NotImplemented;
+        }
+#endif
 
         switch (op) {
             case Py_EQ: if (*a->rec == *b->rec) Py_RETURN_TRUE; else Py_RETURN_FALSE;
             case Py_NE: if (*a->rec != *b->rec) Py_RETURN_TRUE; else Py_RETURN_FALSE;
+#if PY_MAJOR_VERSION >= 3
             default: Py_RETURN_NOTIMPLEMENTED;
+#else
+            default:
+                Py_INCREF(Py_NotImplemented);
+                return Py_NotImplemented;
+#endif
         }
     }
 

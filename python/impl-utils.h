@@ -244,9 +244,14 @@ struct Binding
     {
         Derived* d = static_cast<Derived*>(this);
 
-        unsigned long tp_flags = Py_TPFLAGS_DEFAULT;
 #if PY_MAJOR_VERSION <= 2
-        if (Derived::_iter)
+        long tp_flags = Py_TPFLAGS_DEFAULT;
+#else
+        unsigned long tp_flags = Py_TPFLAGS_DEFAULT;
+#endif
+
+#if PY_MAJOR_VERSION <= 2
+        if ((void*)Derived::_iter)
             tp_flags |= Py_TPFLAGS_HAVE_ITER;
 #endif
 

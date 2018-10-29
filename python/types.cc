@@ -11,6 +11,7 @@
 #if PY_MAJOR_VERSION <= 2
     #define PyLong_AsLong PyInt_AsLong
     #define PyLong_FromLong PyInt_FromLong
+    #define Py_hash_t Py_ssize_t
 #endif
 
 using namespace std;
@@ -37,7 +38,13 @@ PyObject* impl_richcompare(const T& a, const T& b, int op)
         case Py_NE: if (a != b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
         case Py_GT: if (a >  b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
         case Py_GE: if (a >= b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
+#if PY_MAJOR_VERSION >= 3
         default: Py_RETURN_NOTIMPLEMENTED;
+#else
+        default:
+            Py_INCREF(Py_NotImplemented);
+            return Py_NotImplemented;
+#endif
     }
     // Py_RETURN_RICHCOMPARE(a, b, op);  From 3.7
 }
