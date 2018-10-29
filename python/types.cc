@@ -20,8 +20,8 @@ using namespace dballe::python;
 extern "C" {
 PyTypeObject* dpy_Level_Type = nullptr;
 PyTypeObject* dpy_Trange_Type = nullptr;
-PyTypeObject dpy_Station_Type;
-PyTypeObject dpy_DBStation_Type;
+PyTypeObject* dpy_Station_Type = nullptr;
+PyTypeObject* dpy_DBStation_Type = nullptr;
 }
 
 namespace {
@@ -286,58 +286,206 @@ Definition* definition = nullptr;
 
 }
 
+namespace station {
 
-#if PY_MAJOR_VERSION >= 3
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wwrite-strings"
-#endif
+template<typename Station>
+struct StationImplTraits {};
 
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wwrite-strings"
-#endif
-
-PyStructSequence_Field dpy_station_fields[] = {
-    { "report", "rep_memo for this station" },
-    { "lat", "Station latitude" },
-    { "lon", "Station longitude" },
-    { "ident", "Mobile station identifier" },
-    nullptr,
+template<>
+struct StationImplTraits<Station>
+{
+    typedef dpy_Station Impl;
 };
 
-PyStructSequence_Desc dpy_station_desc = {
-    "Station",
-    "DB-All.e station",
-    dpy_station_fields,
-    4,
+template<>
+struct StationImplTraits<DBStation>
+{
+    typedef dpy_DBStation Impl;
 };
 
-PyStructSequence_Field dpy_dbstation_fields[] = {
-    { "report", "rep_memo for this station" },
-    { "id", "Database ID of the station" },
-    { "lat", "Station latitude" },
-    { "lon", "Station longitude" },
-    { "ident", "Mobile station identifier" },
-    nullptr,
+template<typename Station>
+struct report : Getter<typename StationImplTraits<Station>::Impl>
+{
+    typedef typename StationImplTraits<Station>::Impl Impl;
+    constexpr static const char* name = "report";
+    constexpr static const char* doc = "report for this station";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            if (self->val.report.empty())
+                Py_RETURN_NONE;
+            else
+                return to_python(self->val.report);
+        } DBALLE_CATCH_RETURN_PYO
+    }
 };
 
-PyStructSequence_Desc dpy_dbstation_desc = {
-    "DBStation",
-    "DB-All.e DB station",
-    dpy_dbstation_fields,
-    5,
+struct id : Getter<dpy_DBStation>
+{
+    constexpr static const char* name = "id";
+    constexpr static const char* doc = "database ID for this station";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            return dballe_int_to_python(self->val.id);
+        } DBALLE_CATCH_RETURN_PYO
+    }
 };
 
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
+template<typename Station>
+struct lat : Getter<typename StationImplTraits<Station>::Impl>
+{
+    typedef typename StationImplTraits<Station>::Impl Impl;
+    constexpr static const char* name = "lat";
+    constexpr static const char* doc = "station latitude";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            if (self->val.coords.lat == MISSING_INT)
+                Py_RETURN_NONE;
+            else
+                return PyFloat_FromDouble(self->val.coords.dlat());
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
 
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
+template<typename Station>
+struct lon : Getter<typename StationImplTraits<Station>::Impl>
+{
+    typedef typename StationImplTraits<Station>::Impl Impl;
+    constexpr static const char* name = "lon";
+    constexpr static const char* doc = "station longitude";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            if (self->val.coords.lon == MISSING_INT)
+                Py_RETURN_NONE;
+            else
+                return PyFloat_FromDouble(self->val.coords.dlon());
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
 
-#endif
+template<typename Station>
+struct ident : Getter<typename StationImplTraits<Station>::Impl>
+{
+    typedef typename StationImplTraits<Station>::Impl Impl;
+    constexpr static const char* name = "ident";
+    constexpr static const char* doc = "mobile station identifier";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            return to_python(self->val.ident);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+template<typename Base, typename Station>
+struct BaseDefinition : public Binding<Base, typename StationImplTraits<Station>::Impl>
+{
+    typedef typename StationImplTraits<Station>::Impl Impl;
+
+    Methods<> methods;
+
+    static PyObject* _str(Impl* self)
+    {
+        std::string res = self->val.to_string("None");
+        return PyUnicode_FromStringAndSize(res.data(), res.size());
+    }
+
+    static PyObject* _repr(Impl* self)
+    {
+        std::string res = Base::qual_name;
+        res += "(";
+        res += self->val.to_string("None");
+        res += ")";
+        return PyUnicode_FromStringAndSize(res.data(), res.size());
+    }
+
+    static void _dealloc(Impl* self)
+    {
+        self->val.~Station();
+        Py_TYPE(self)->tp_free(self);
+    }
+
+    static int _init(Impl* self, PyObject* args, PyObject* kw)
+    {
+        try {
+            new (&(self->val)) Station(Base::from_args(args, kw));
+            return 0;
+        } DBALLE_CATCH_RETURN_INT
+    }
+
+    static PyObject* _richcompare(Impl *a, PyObject *b, int op)
+    {
+        try {
+            Station st_b = from_python<Station>(b);
+            return impl_richcompare(a->val, st_b, op);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+
+    static Py_hash_t _hash(Impl* self)
+    {
+        return std::hash<Station>{}(self->val);
+    }
+};
+
+struct Definition : public BaseDefinition<Definition, Station>
+{
+    constexpr static const char* name = "Station";
+    constexpr static const char* qual_name = "dballe.Station";
+    constexpr static const char* doc = "Station information";
+    GetSetters<report<Station>, lat<Station>, lon<Station>, ident<Station>> getsetters;
+    static Station from_args(PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "report", "lat", "lon", "ident", nullptr };
+        PyObject* py_report = nullptr;
+        PyObject* py_lat = nullptr;
+        PyObject* py_lon = nullptr;
+        PyObject* py_ident = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "OOO|O", const_cast<char**>(kwlist), &py_report, &py_lat, &py_lon, &py_ident))
+            throw PythonException();
+
+        Station res;
+        if (py_report != Py_None)
+            res.report = from_python<std::string>(py_report);
+        res.coords = coords_from_python(py_lat, py_lon);
+        res.ident = from_python<Ident>(py_ident);
+        return res;
+    }
+};
+
+struct DBDefinition : public BaseDefinition<DBDefinition, DBStation>
+{
+    constexpr static const char* name = "DBStation";
+    constexpr static const char* qual_name = "dballe.DBStation";
+    constexpr static const char* doc = "Station information with database ID";
+    GetSetters<report<Station>, id, lat<Station>, lon<Station>, ident<Station>> getsetters;
+    static DBStation from_args(PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "report", "id", "lat", "lon", "ident", nullptr };
+        PyObject* py_report = nullptr;
+        PyObject* py_id = nullptr;
+        PyObject* py_lat = nullptr;
+        PyObject* py_lon = nullptr;
+        PyObject* py_ident = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "OOOO|O", const_cast<char**>(kwlist), &py_report, &py_id, &py_lat, &py_lon, &py_ident))
+            throw PythonException();
+
+        DBStation res;
+        if (py_report != Py_None)
+            res.report = from_python<std::string>(py_report);
+        res.id = dballe_int_from_python(py_id);
+        res.coords = coords_from_python(py_lat, py_lon);
+        res.ident = from_python<Ident>(py_ident);
+        return res;
+    }
+};
+
+Definition* definition = nullptr;
+DBDefinition* dbdefinition = nullptr;
+
+}
 
 }
 
@@ -348,10 +496,7 @@ namespace python {
 PyObject* datetime_to_python(const Datetime& dt)
 {
     if (dt.is_missing())
-    {
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
+        Py_RETURN_NONE;
 
     return PyDateTime_FromDateAndTime(
             dt.year, dt.month,  dt.day,
@@ -397,21 +542,27 @@ PyObject* coords_to_python(const Coords& coords)
         Py_RETURN_NONE;
 
     pyo_unique_ptr res(PyTuple_New(2));
-    if (!res) return nullptr;
+    if (!res) throw PythonException();
 
-    pyo_unique_ptr lat(PyFloat_FromDouble(coords.dlat()));
-    if (!lat) return nullptr;
+    if (PyTuple_SetItem(res, 0, to_python(coords.dlat())) != 0)
+        throw PythonException();
 
-    pyo_unique_ptr lon(PyFloat_FromDouble(coords.dlon()));
-    if (!lat) return nullptr;
-
-    if (PyTuple_SetItem(res, 0, lat.release()) != 0)
-        return nullptr;
-
-    if (PyTuple_SetItem(res, 1, lon.release()) != 0)
-        return nullptr;
+    if (PyTuple_SetItem(res, 1, to_python(coords.dlon())) != 0)
+        throw PythonException();
 
     return res.release();
+}
+
+Coords coords_from_python(PyObject* lat, PyObject* lon)
+{
+    if ((!lat || lat == Py_None) && (!lon || lon == Py_None))
+        return Coords();
+
+    if (lat && lat != Py_None && lon && lon != Py_None)
+        return Coords(from_python<double>(lat), from_python<double>(lon));
+
+    PyErr_SetString(PyExc_ValueError, "both latitude and longitude must be either None or set");
+    throw PythonException();
 }
 
 PyObject* ident_to_python(const Ident& ident)
@@ -423,7 +574,7 @@ PyObject* ident_to_python(const Ident& ident)
 
 Ident ident_from_python(PyObject* o)
 {
-    if (o == Py_None)
+    if (!o || o == Py_None)
         return Ident();
 
     // TODO: when migrating to python3 only, this can be replaced with a
@@ -527,208 +678,73 @@ Trange trange_from_python(PyObject* o)
 
 PyObject* station_to_python(const Station& st)
 {
-#if PY_MAJOR_VERSION >= 3
-    pyo_unique_ptr res(PyStructSequence_New(&dpy_Station_Type));
+    py_unique_ptr<dpy_Station> res = PyObject_New(dpy_Station, dpy_Station_Type);
     if (!res) return nullptr;
-
-    if (PyObject* v = string_to_python(st.report))
-        PyStructSequence_SET_ITEM((PyObject*)res, 0, v);
-    else
-        return nullptr;
-
-    if (PyObject* v = PyFloat_FromDouble(st.coords.dlat()))
-        PyStructSequence_SET_ITEM((PyObject*)res, 1, v);
-    else
-        return nullptr;
-
-    if (PyObject* v = PyFloat_FromDouble(st.coords.dlon()))
-        PyStructSequence_SET_ITEM((PyObject*)res, 2, v);
-    else
-        return nullptr;
-
-    pyo_unique_ptr ident(ident_to_python(st.ident));
-    if (!ident)
-        return nullptr;
-    PyStructSequence_SET_ITEM((PyObject*)res, 3, ident.release());
-#else
-    pyo_unique_ptr res(PyTuple_New(4));
-    if (!res) return NULL;
-
-    if (PyObject* v = string_to_python(st.report))
-        PyTuple_SET_ITEM((PyObject*)res, 0, v);
-    else
-        return NULL;
-
-    if (PyObject* v = PyFloat_FromDouble(st.coords.dlat()))
-        PyTuple_SET_ITEM((PyObject*)res, 1, v);
-    else
-        return nullptr;
-
-    if (PyObject* v = PyFloat_FromDouble(st.coords.dlon()))
-        PyTuple_SET_ITEM((PyObject*)res, 2, v);
-    else
-        return nullptr;
-
-    pyo_unique_ptr ident(ident_to_python(st.ident));
-    if (!ident)
-        return nullptr;
-    PyTuple_SET_ITEM((PyObject*)res, 3, ident.release());
-#endif
-
-    return res.release();
+    new (&(res->val)) Station(st);
+    return (PyObject*)res.release();
 }
 
 Station station_from_python(PyObject* o)
 {
-#if PY_MAJOR_VERSION >= 3
-    if (Py_TYPE(o) == &dpy_Station_Type || PyType_IsSubtype(Py_TYPE(o), &dpy_Station_Type))
-    {
-        Station res;
-        res.report = string_from_python(PyStructSequence_GET_ITEM(o, 0));
-        res.coords.set(
-            from_python<double>(PyStructSequence_GET_ITEM(o, 1)),
-            from_python<double>(PyStructSequence_GET_ITEM(o, 2))
-        );
-        res.ident = ident_from_python(PyStructSequence_GET_ITEM(o, 3));
-        return res;
-    } else
-#endif
-        if (PyTuple_Check(o))
+    if (Py_TYPE(o) == dpy_Station_Type || PyType_IsSubtype(Py_TYPE(o), dpy_Station_Type))
+        return ((dpy_Station*)o)->val;
+
+    if (PyTuple_Check(o))
     {
         unsigned size = PyTuple_Size(o);
         if (size != 4)
         {
-            PyErr_SetString(PyExc_TypeError, "station tuple must have exactly 4 elements");
+            PyErr_SetString(PyExc_TypeError, "Station tuple must have exactly 4 elements");
             throw PythonException();
         }
 
         Station res;
-        res.report = string_from_python(PyTuple_GET_ITEM(o, 0));
-        res.coords.set(
-            from_python<double>(PyTuple_GET_ITEM(o, 1)),
-            from_python<double>(PyTuple_GET_ITEM(o, 2))
-        );
+        PyObject* py_report = PyTuple_GET_ITEM(o, 0);
+        if (py_report != Py_None)
+            res.report = string_from_python(py_report);
+        res.coords = coords_from_python(PyTuple_GET_ITEM(o, 1), PyTuple_GET_ITEM(o, 2));
         res.ident = ident_from_python(PyTuple_GET_ITEM(o, 3));
         return res;
     }
-    else
-    {
-        PyErr_SetString(PyExc_TypeError, "station must be a 4-tuple or a Station structseq");
-        throw PythonException();
-    }
+
+    PyErr_SetString(PyExc_TypeError, "station must be a 4-tuple or a Station object");
+    throw PythonException();
 }
 
 PyObject* dbstation_to_python(const DBStation& st)
 {
-#if PY_MAJOR_VERSION >= 3
-    pyo_unique_ptr res(PyStructSequence_New(&dpy_DBStation_Type));
+    py_unique_ptr<dpy_DBStation> res = PyObject_New(dpy_DBStation, dpy_DBStation_Type);
     if (!res) return nullptr;
-
-    if (PyObject* v = string_to_python(st.report))
-        PyStructSequence_SET_ITEM((PyObject*)res, 0, v);
-    else
-        return nullptr;
-
-    if (PyObject* v = dballe_int_to_python(st.id))
-        PyStructSequence_SET_ITEM((PyObject*)res, 1, v);
-    else
-        return nullptr;
-
-    if (PyObject* v = PyFloat_FromDouble(st.coords.dlat()))
-        PyStructSequence_SET_ITEM((PyObject*)res, 2, v);
-    else
-        return nullptr;
-
-    if (PyObject* v = PyFloat_FromDouble(st.coords.dlon()))
-        PyStructSequence_SET_ITEM((PyObject*)res, 3, v);
-    else
-        return nullptr;
-
-    if (st.ident.is_missing())
-    {
-        Py_INCREF(Py_None);
-        PyStructSequence_SET_ITEM((PyObject*)res, 4, Py_None);
-    } else if (PyObject* v = PyUnicode_FromString(st.ident.get())) {
-        PyStructSequence_SET_ITEM((PyObject*)res, 4, v);
-    } else
-        return nullptr;
-#else
-    pyo_unique_ptr res(PyTuple_New(5));
-    if (!res) return NULL;
-
-    if (PyObject* v = string_to_python(st.report))
-        PyTuple_SET_ITEM((PyObject*)res, 0, v);
-    else
-        return NULL;
-
-    if (PyObject* v = dballe_int_to_python(st.id))
-        PyTuple_SET_ITEM((PyObject*)res, 1, v);
-    else
-        return nullptr;
-
-    if (PyObject* v = PyFloat_FromDouble(st.coords.dlat()))
-        PyTuple_SET_ITEM((PyObject*)res, 2, v);
-    else
-        return nullptr;
-
-    if (PyObject* v = PyFloat_FromDouble(st.coords.dlon()))
-        PyTuple_SET_ITEM((PyObject*)res, 3, v);
-    else
-        return nullptr;
-
-    if (st.ident.is_missing())
-    {
-        Py_INCREF(Py_None);
-        PyTuple_SET_ITEM((PyObject*)res, 4, Py_None);
-    } else if (PyObject* v = PyUnicode_FromString(st.ident.get())) {
-        PyTuple_SET_ITEM((PyObject*)res, 4, v);
-    } else
-        return nullptr;
-#endif
-
-    return res.release();
+    new (&(res->val)) DBStation(st);
+    return (PyObject*)res.release();
 }
 
 DBStation dbstation_from_python(PyObject* o)
 {
-#if PY_MAJOR_VERSION >= 3
-    if (Py_TYPE(o) == &dpy_DBStation_Type || PyType_IsSubtype(Py_TYPE(o), &dpy_DBStation_Type))
-    {
-        DBStation res;
-        res.report = string_from_python(PyStructSequence_GET_ITEM(o, 0));
-        res.id = dballe_int_from_python(PyStructSequence_GET_ITEM(o, 1));
-        res.coords.set(
-            from_python<double>(PyStructSequence_GET_ITEM(o, 2)),
-            from_python<double>(PyStructSequence_GET_ITEM(o, 3))
-        );
-        res.ident = ident_from_python(PyStructSequence_GET_ITEM(o, 4));
-        return res;
-    } else
-#endif
-        if (PyTuple_Check(o))
+    if (Py_TYPE(o) == dpy_DBStation_Type || PyType_IsSubtype(Py_TYPE(o), dpy_DBStation_Type))
+        return ((dpy_DBStation*)o)->val;
+
+    if (PyTuple_Check(o))
     {
         unsigned size = PyTuple_Size(o);
         if (size != 5)
         {
-            PyErr_SetString(PyExc_TypeError, "dbstation tuple must have exactly 5 elements");
+            PyErr_SetString(PyExc_TypeError, "DBStation tuple must have exactly 4 elements");
             throw PythonException();
         }
 
         DBStation res;
-        res.report = string_from_python(PyTuple_GET_ITEM(o, 0));
+        PyObject* py_report = PyTuple_GET_ITEM(o, 0);
         res.id = dballe_int_from_python(PyTuple_GET_ITEM(o, 1));
-        res.coords.set(
-            from_python<double>(PyTuple_GET_ITEM(o, 2)),
-            from_python<double>(PyTuple_GET_ITEM(o, 3))
-        );
+        if (py_report != Py_None)
+            res.report = string_from_python(py_report);
+        res.coords = coords_from_python(PyTuple_GET_ITEM(o, 2), PyTuple_GET_ITEM(o, 3));
         res.ident = ident_from_python(PyTuple_GET_ITEM(o, 4));
         return res;
     }
-    else
-    {
-        PyErr_SetString(PyExc_TypeError, "station must be a 5-tuple or a DBStation structseq");
-        throw PythonException();
-    }
+
+    PyErr_SetString(PyExc_TypeError, "station must be a 5-tuple or a DBStation object");
+    throw PythonException();
 }
 
 PyObject* varcode_to_python(wreport::Varcode code)
@@ -769,19 +785,18 @@ int register_types(PyObject* m)
     if (!PyDateTimeAPI)
         PyDateTime_IMPORT;
 
-#if PY_MAJOR_VERSION >= 3
     level::definition = new level::Definition;
     if (!(dpy_Level_Type = level::definition->activate(m)))
         return -1;
     trange::definition = new trange::Definition;
     if (!(dpy_Trange_Type = trange::definition->activate(m)))
         return -1;
-    if (PyStructSequence_InitType2(&dpy_Station_Type, &dpy_station_desc) != 0) return -1;
-    if (PyStructSequence_InitType2(&dpy_DBStation_Type, &dpy_dbstation_desc) != 0) return -1;
-
-    if (PyModule_AddObject(m, "Station", (PyObject*)&dpy_Station_Type) != 0) return -1;
-    if (PyModule_AddObject(m, "DBStation", (PyObject*)&dpy_DBStation_Type) != 0) return -1;
-#endif
+    station::definition = new station::Definition;
+    if (!(dpy_Station_Type = station::definition->activate(m)))
+        return -1;
+    station::dbdefinition = new station::DBDefinition;
+    if (!(dpy_DBStation_Type = station::dbdefinition->activate(m)))
+        return -1;
 
     return 0;
 }

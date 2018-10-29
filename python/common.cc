@@ -75,7 +75,9 @@ void set_std_exception(const std::exception& e)
 
 PyObject* string_to_python(const std::string& str)
 {
-    return PyUnicode_FromStringAndSize(str.data(), str.size());
+    PyObject* res = PyUnicode_FromStringAndSize(str.data(), str.size());
+    if (!res) throw PythonException();
+    return res;
 }
 
 bool pyobject_is_string(PyObject* o)
@@ -131,11 +133,20 @@ double double_from_python(PyObject* o)
     return res;
 }
 
+PyObject* double_to_python(double val)
+{
+    PyObject* res = PyFloat_FromDouble(val);
+    if (!res) throw PythonException();
+    return res;
+}
+
 PyObject* dballe_int_to_python(int val)
 {
     if (val == MISSING_INT)
         Py_RETURN_NONE;
-    return PyLong_FromLong(val);
+    PyObject* res = PyLong_FromLong(val);
+    if (!res) throw PythonException();
+    return res;
 }
 
 int dballe_int_from_python(PyObject* o)

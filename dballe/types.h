@@ -396,6 +396,9 @@ struct Coords
 
     /// Print to an output stream
     int print(FILE* out, const char* end="\n") const;
+
+    /// Format to a string
+    std::string to_string(const char* undef="-") const;
 };
 
 std::ostream& operator<<(std::ostream&, const Coords&);
@@ -722,6 +725,20 @@ template<> struct hash<dballe::Level>
 template<> struct hash<dballe::Trange>
 {
     typedef dballe::Trange argument_type;
+    typedef size_t result_type;
+    result_type operator()(argument_type const& o) const noexcept;
+};
+
+template<> struct hash<dballe::Coords>
+{
+    typedef dballe::Coords argument_type;
+    typedef size_t result_type;
+    result_type operator()(argument_type const& o) const noexcept;
+};
+
+template<> struct hash<dballe::Ident>
+{
+    typedef dballe::Ident argument_type;
     typedef size_t result_type;
     result_type operator()(argument_type const& o) const noexcept;
 };

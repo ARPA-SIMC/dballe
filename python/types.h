@@ -33,15 +33,26 @@ extern PyTypeObject* dpy_Trange_Type;
      Py_TYPE(ob) == dpy_Trange_Type || PyType_IsSubtype(Py_TYPE(ob), dpy_Trange_Type))
 
 
-PyAPI_DATA(PyTypeObject) dpy_Station_Type;
+typedef struct {
+    PyObject_HEAD
+    dballe::Station val;
+} dpy_Station;
 
-#define dpy_DBStation_Check(ob) \
-     (Py_TYPE(ob) == &dpy_DBStation_Type || PyType_IsSubtype(Py_TYPE(ob), &dpy_DBStation_Type))
-
-PyAPI_DATA(PyTypeObject) dpy_DBStation_Type;
+extern PyTypeObject* dpy_Station_Type;
 
 #define dpy_Station_Check(ob) \
-     (Py_TYPE(ob) == &dpy_Station_Type || PyType_IsSubtype(Py_TYPE(ob), &dpy_Station_Type))
+     (Py_TYPE(ob) == dpy_Station_Type || PyType_IsSubtype(Py_TYPE(ob), dpy_Station_Type))
+
+
+typedef struct {
+    PyObject_HEAD
+    dballe::DBStation val;
+} dpy_DBStation;
+
+extern PyTypeObject* dpy_DBStation_Type;
+
+#define dpy_DBStation_Check(ob) \
+     (Py_TYPE(ob) == dpy_DBStation_Type || PyType_IsSubtype(Py_TYPE(ob), dpy_DBStation_Type))
 
 }
 
@@ -66,7 +77,10 @@ template<> inline DatetimeRange from_python<DatetimeRange>(PyObject* o) { return
 PyObject* coords_to_python(const Coords& coords);
 inline PyObject* to_python(const Coords& s) { return coords_to_python(s); }
 
-/// Convert a Coords to a python string or None
+/// Convert two python object (one for lat, one for lon) to a Coords
+Coords coords_from_python(PyObject* lat, PyObject* lon);
+
+/// Convert a Ident to a python string or None
 PyObject* ident_to_python(const Ident& ident);
 inline PyObject* to_python(const Ident& s) { return ident_to_python(s); }
 

@@ -54,6 +54,18 @@ struct Station
     {
         return std::tie(report, coords, ident) < std::tie(o.report, o.coords, o.ident);
     }
+    bool operator<=(const Station& o) const
+    {
+        return std::tie(report, coords, ident) <= std::tie(o.report, o.coords, o.ident);
+    }
+    bool operator>(const Station& o) const
+    {
+        return std::tie(report, coords, ident) > std::tie(o.report, o.coords, o.ident);
+    }
+    bool operator>=(const Station& o) const
+    {
+        return std::tie(report, coords, ident) >= std::tie(o.report, o.coords, o.ident);
+    }
 
     /**
      * Print the Station to a FILE*.
@@ -62,6 +74,9 @@ struct Station
      * @param end  String to print after the Station
      */
     void print(FILE* out, const char* end="\n") const;
+
+    /// Format to a string
+    std::string to_string(const char* undef="-") const;
 
     void to_json(core::JSONWriter& writer) const;
     static Station from_json(core::json::Stream& in);
@@ -104,6 +119,18 @@ struct DBStation : public Station
     {
         return std::tie(id, report, coords, ident) < std::tie(o.id, o.report, o.coords, o.ident);
     }
+    bool operator<=(const DBStation& o) const
+    {
+        return std::tie(id, report, coords, ident) <= std::tie(o.id, o.report, o.coords, o.ident);
+    }
+    bool operator>(const DBStation& o) const
+    {
+        return std::tie(id, report, coords, ident) > std::tie(o.id, o.report, o.coords, o.ident);
+    }
+    bool operator>=(const DBStation& o) const
+    {
+        return std::tie(id, report, coords, ident) >= std::tie(o.id, o.report, o.coords, o.ident);
+    }
 
     /**
      * Print the Station to a FILE*.
@@ -112,6 +139,9 @@ struct DBStation : public Station
      * @param end  String to print after the Station
      */
     void print(FILE* out, const char* end="\n") const;
+
+    /// Format to a string
+    std::string to_string(const char* undef="-") const;
 
     void to_json(core::JSONWriter& writer) const;
     static DBStation from_json(core::json::Stream& in);
@@ -386,6 +416,24 @@ struct DataValues
 
     /// Print the contents of this StationValues
     void print(FILE* out) const;
+};
+
+}
+
+namespace std {
+
+template<> struct hash<dballe::Station>
+{
+    typedef dballe::Station argument_type;
+    typedef size_t result_type;
+    result_type operator()(argument_type const& o) const noexcept;
+};
+
+template<> struct hash<dballe::DBStation>
+{
+    typedef dballe::DBStation argument_type;
+    typedef size_t result_type;
+    result_type operator()(argument_type const& o) const noexcept;
 };
 
 }

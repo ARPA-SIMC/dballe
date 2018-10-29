@@ -148,6 +148,10 @@ template<> inline std::string from_python<std::string>(PyObject* o) { return str
 double double_from_python(PyObject* o);
 template<> inline double from_python<double>(PyObject* o) { return double_from_python(o); }
 
+/// Convert a double to a Python object
+PyObject* double_to_python(double val);
+inline PyObject* to_python(double val) { return double_to_python(val); }
+
 /// Check if a python object is a string
 bool pyobject_is_string(PyObject* o);
 

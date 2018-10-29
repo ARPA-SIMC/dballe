@@ -107,7 +107,7 @@ class ExplorerTestMixin(BaseExplorerTestMixin):
         return dballe.Explorer()
 
     def _station(self, rep, id, lat, lon, ident):
-        return dballe.Station((rep, lat, lon, ident))
+        return dballe.Station(rep, lat, lon, ident)
 
     def assertStrRepr(self, explorer):
         self.assertEqual(str(explorer), "Explorer")
@@ -119,7 +119,7 @@ class DBExplorerTestMixin(BaseExplorerTestMixin):
         return dballe.DBExplorer()
 
     def _station(self, rep, id, lat, lon, ident):
-        return dballe.DBStation((rep, id, lat, lon, ident))
+        return dballe.DBStation(rep, id, lat, lon, ident)
 
     def assertStrRepr(self, explorer):
         self.assertEqual(str(explorer), "DBExplorer")

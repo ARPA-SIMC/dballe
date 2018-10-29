@@ -3,7 +3,6 @@ import unittest
 import sys
 
 
-@unittest.skipIf(sys.version_info[0] < 3, "python3 only")
 class TestLevel(unittest.TestCase):
     def testCreateEmpty(self):
         # structseq constructors have two arguments: sequence, dict=NULL)
@@ -29,7 +28,6 @@ class TestLevel(unittest.TestCase):
         self.assertEqual(lev.l2, 4)
 
 
-@unittest.skipIf(sys.version_info[0] < 3, "python3 only")
 class TestTrange(unittest.TestCase):
     def testCreateEmpty(self):
         t = dballe.Trange(None, None, None)
@@ -46,39 +44,61 @@ class TestTrange(unittest.TestCase):
         self.assertEqual(t.p2, 3)
 
 
-@unittest.skipIf(sys.version_info[0] < 3, "python3 only")
-class TestStation(unittest.TestCase):
+class StationTestMixin:
+    def assertContents(self, init_tuple):
+        t = self.Station(*init_tuple)
+        self.assertEqual(t, init_tuple)
+        self.assertEqual(t, self.Station(*init_tuple))
+        self.assertCountEqual([t], [self.Station(*init_tuple)])
+        return t
+
+
+class TestStation(StationTestMixin, unittest.TestCase):
+    Station = dballe.Station
+
     def testCreateEmpty(self):
-        t = dballe.Station((None, None, None, None))
-        self.assertEqual(t, (None, None, None, None))
+        t = self.assertContents((None, None, None, None))
         self.assertIsNone(t.report)
         self.assertIsNone(t.lat)
         self.assertIsNone(t.lon)
         self.assertIsNone(t.ident)
 
+    def testCreatePartial(self):
+        t = self.assertContents(("foo", 3.0, 4.0, None))
+        self.assertEqual(t.report, "foo")
+        self.assertEqual(t.lat, 3.0)
+        self.assertEqual(t.lon, 4.0)
+        self.assertIsNone(t.ident)
+
     def testCreateFull(self):
-        t = dballe.Station(("foo", 3.0, 4.0, "bar"))
-        self.assertEqual(t, ("foo", 3.0, 4.0, "bar"))
+        t = self.assertContents(("foo", 3.0, 4.0, "bar"))
         self.assertEqual(t.report, "foo")
         self.assertEqual(t.lat, 3.0)
         self.assertEqual(t.lon, 4.0)
         self.assertEqual(t.ident, "bar")
 
 
-@unittest.skipIf(sys.version_info[0] < 3, "python3 only")
-class TestDBStation(unittest.TestCase):
+class TestDBStation(StationTestMixin, unittest.TestCase):
+    Station = dballe.DBStation
+
     def testCreateEmpty(self):
-        t = dballe.DBStation((None, None, None, None, None))
-        self.assertEqual(t, (None, None, None, None, None))
+        t = self.assertContents((None, None, None, None, None))
         self.assertIsNone(t.report)
         self.assertIsNone(t.id)
         self.assertIsNone(t.lat)
         self.assertIsNone(t.lon)
         self.assertIsNone(t.ident)
 
+    def testCreatePartial(self):
+        t = self.assertContents(("foo", 2, 3.0, 4.0, None))
+        self.assertEqual(t.report, "foo")
+        self.assertEqual(t.id, 2)
+        self.assertEqual(t.lat, 3.0)
+        self.assertEqual(t.lon, 4.0)
+        self.assertIsNone(t.ident)
+
     def testCreateFull(self):
-        t = dballe.DBStation(("foo", 2, 3.0, 4.0, "bar"))
-        self.assertEqual(t, ("foo", 2, 3.0, 4.0, "bar"))
+        t = self.assertContents(("foo", 2, 3.0, 4.0, "bar"))
         self.assertEqual(t.report, "foo")
         self.assertEqual(t.id, 2)
         self.assertEqual(t.lat, 3.0)

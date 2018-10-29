@@ -653,6 +653,21 @@ int Coords::print(FILE* out, const char* end) const
     return fprintf(out, "%.5f,%.5f%s", dlat(), dlon(), end);
 }
 
+std::string Coords::to_string(const char* undef) const
+{
+    string res;
+    if (lat == MISSING_INT)
+        res += undef;
+    else
+        res += std::to_string(dlat());
+    res += ",";
+    if (lon == MISSING_INT)
+        res += undef;
+    else
+        res += std::to_string(dlon());
+    return res;
+}
+
 std::ostream& operator<<(std::ostream& out, const Coords& c)
 {
     if (c.is_missing())
@@ -1353,6 +1368,18 @@ size_t hash<dballe::Trange>::operator()(dballe::Trange const& o) const noexcept
     if (o.p1 != MISSING_INT) res += o.p1;
     if (o.p2 != MISSING_INT) res += o.p2;
     return res;
+}
+
+size_t hash<dballe::Coords>::operator()(dballe::Coords const& o) const noexcept
+{
+    return o.lat xor o.lon;
+}
+
+size_t hash<dballe::Ident>::operator()(dballe::Ident const& o) const noexcept
+{
+    if (o.is_missing())
+        return 0;
+    return std::hash<std::string>{}(o.get());
 }
 
 }

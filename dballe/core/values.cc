@@ -65,6 +65,19 @@ void Station::print(FILE* out, const char* end) const
     fprintf(out, " %s%s", report.c_str(), end);
 }
 
+std::string Station::to_string(const char* undef) const
+{
+    string res = report;
+    res += ",";
+    res += coords.to_string(undef);
+    res += ",";
+    if (ident.is_missing())
+        res += undef;
+    else
+        res += ident.get();
+    return res;
+}
+
 void Station::to_json(core::JSONWriter& writer) const
 {
     writer.start_mapping();
@@ -133,6 +146,24 @@ void DBStation::print(FILE* out, const char* end) const
         fprintf(out, "%d,", id);
 
     Station::print(out, end);
+}
+
+std::string DBStation::to_string(const char* undef) const
+{
+    string res = report;
+    res += ",";
+    if (id == MISSING_INT)
+        res += undef;
+    else
+        res += std::to_string(id);
+    res += ",";
+    res += coords.to_string(undef);
+    res += ",";
+    if (ident.is_missing())
+        res += undef;
+    else
+        res += ident.get();
+    return res;
 }
 
 void DBStation::to_json(core::JSONWriter& writer) const
@@ -444,6 +475,27 @@ void DataValues::print(FILE* out) const
 {
     info.print(out);
     values.print(out);
+}
+
+}
+
+namespace std {
+
+size_t hash<dballe::Station>::operator()(dballe::Station const& o) const noexcept
+{
+    size_t res = std::hash<std::string>{}(o.report);
+    res += std::hash<dballe::Coords>{}(o.coords);
+    res += std::hash<dballe::Ident>{}(o.ident);
+    return res;
+}
+
+size_t hash<dballe::DBStation>::operator()(dballe::DBStation const& o) const noexcept
+{
+    size_t res = std::hash<std::string>{}(o.report);
+    res += o.id;
+    res += std::hash<dballe::Coords>{}(o.coords);
+    res += std::hash<dballe::Ident>{}(o.ident);
+    return res;
 }
 
 }
