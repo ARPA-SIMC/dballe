@@ -214,7 +214,7 @@ struct SQLiteTransaction : public Transaction
         conn.exec("ROLLBACK");
         fired = true;
     }
-    void rollback_nothrow()
+    void rollback_nothrow() noexcept override
     {
         conn.exec_nothrow("ROLLBACK");
         fired = true;

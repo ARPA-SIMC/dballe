@@ -493,7 +493,7 @@ struct MySQLTransaction : public Transaction
         conn.exec_no_data("ROLLBACK");
         fired = true;
     }
-    void rollback_nothrow() noexcept
+    void rollback_nothrow() noexcept override
     {
         conn.exec_no_data_nothrow("ROLLBACK");
         fired = true;

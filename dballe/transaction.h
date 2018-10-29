@@ -22,6 +22,9 @@ public:
 
     /// Roll back this transaction
     virtual void rollback() = 0;
+
+    /// Roll back this transaction
+    virtual void rollback_nothrow() noexcept = 0;
 };
 
 }

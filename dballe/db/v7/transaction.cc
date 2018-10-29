@@ -31,7 +31,7 @@ Transaction::Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Tra
 
 Transaction::~Transaction()
 {
-    rollback();
+    rollback_nothrow();
     delete m_data;
     delete m_station_data;
     delete m_levtr;
@@ -78,6 +78,15 @@ void Transaction::rollback()
 {
     if (fired) return;
     sql_transaction->rollback();
+    clear_cached_state();
+    fired = true;
+    trc.done();
+}
+
+void Transaction::rollback_nothrow() noexcept
+{
+    if (fired) return;
+    sql_transaction->rollback_nothrow();
     clear_cached_state();
     fired = true;
     trc.done();

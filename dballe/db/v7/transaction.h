@@ -61,6 +61,7 @@ public:
 
     void commit() override;
     void rollback() override;
+    void rollback_nothrow() noexcept override;
     void clear_cached_state() override;
 
     std::unique_ptr<db::CursorStation> query_stations(const Query& query);
