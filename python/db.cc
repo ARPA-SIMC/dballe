@@ -15,14 +15,10 @@
 #include "dballe/db/defs.h"
 #include <algorithm>
 #include <wreport/bulletin.h>
-#include "config.h"
+#include "impl-utils.h"
 
-#if PY_MAJOR_VERSION >= 3
-    #define PyInt_FromLong PyLong_FromLong
-    #define PyInt_AsLong PyLong_AsLong
-    #define PyInt_Check PyLong_Check
-    #define PyInt_Type PyLong_Type
-    #define Py_TPFLAGS_HAVE_ITER 0
+#if PY_MAJOR_VERSION <= 2
+    #define PyLong_FromLong PyInt_FromLong
 #endif
 
 using namespace std;
@@ -31,6 +27,7 @@ using namespace dballe::python;
 using namespace wreport;
 
 namespace {
+
 /**
  * call o.fileno() and return its result.
  *
@@ -40,16 +37,6 @@ namespace {
  * Returns -1 if fileno() was not available or some other exception happened.
  * Use PyErr_Occurred to tell between the two.
  */
-int file_get_fileno(PyObject* o);
-
-/**
- * call o.data() and return its result, both as a PyObject and as a buffer.
- *
- * The data returned in buf and len will be valid as long as the returned
- * object stays valid.
- */
-PyObject* file_get_data(PyObject* o, char*&buf, Py_ssize_t& len);
-
 int file_get_fileno(PyObject* o)
 {
     // fileno_value = obj.fileno()
@@ -74,6 +61,12 @@ int file_get_fileno(PyObject* o)
     return PyLong_AsLong(fileno_value);
 }
 
+/**
+ * call o.data() and return its result, both as a PyObject and as a buffer.
+ *
+ * The data returned in buf and len will be valid as long as the returned
+ * object stays valid.
+ */
 PyObject* file_get_data(PyObject* o, char*&buf, Py_ssize_t& len)
 {
     // Use read() instead
@@ -102,177 +95,432 @@ PyObject* file_get_data(PyObject* o, char*&buf, Py_ssize_t& len)
     return data.release();
 }
 
-
-
 template<typename Vals>
 static PyObject* get_insert_ids(const Vals& vals)
 {
-    pyo_unique_ptr res(PyDict_New());
-
-    pyo_unique_ptr ana_id(PyInt_FromLong(vals.info.id));
-    if (!ana_id) return nullptr;
+    pyo_unique_ptr res(throw_ifnull(PyDict_New()));
+    pyo_unique_ptr ana_id(throw_ifnull(PyLong_FromLong(vals.info.id)));
     if (PyDict_SetItemString(res, "ana_id", ana_id))
-        return nullptr;
+        throw PythonException();
 
     for (const auto& v: vals.values)
     {
-        pyo_unique_ptr id(PyInt_FromLong(v.second.data_id));
+        pyo_unique_ptr id(throw_ifnull(PyLong_FromLong(v.second.data_id)));
         pyo_unique_ptr varcode(to_python(v.first));
 
         if (PyDict_SetItem(res, varcode, id))
-            return nullptr;
+            throw PythonException();
     }
 
     return res.release();
 }
 
-static PyGetSetDef dpy_DB_getsetters[] = {
-    //{"code", (getter)dpy_Var_code, NULL, "variable code", NULL },
-    //{"isset", (getter)dpy_Var_isset, NULL, "true if the value is set", NULL },
-    {NULL}
+template<typename Impl>
+struct insert_station_data : MethKwargs<Impl>
+{
+    constexpr static const char* name = "insert_station_data";
+    constexpr static const char* doc = "Insert station values in the database";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "record", "can_replace", "can_add_stations", NULL };
+        PyObject* record;
+        int can_replace = 0;
+        int station_can_add = 0;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O|ii", const_cast<char**>(kwlist), &record, &can_replace, &station_can_add))
+            return nullptr;
+
+        try {
+            RecordAccess rec(record);
+            ReleaseGIL gil;
+            StationValues vals(rec);
+            self->db->insert_station_data(vals, can_replace, station_can_add);
+            gil.lock();
+            return get_insert_ids(vals);
+        } DBALLE_CATCH_RETURN_PYO
+    }
 };
 
-static PyGetSetDef dpy_Transaction_getsetters[] = {
-    //{"code", (getter)dpy_Var_code, NULL, "variable code", NULL },
-    //{"isset", (getter)dpy_Var_isset, NULL, "true if the value is set", NULL },
-    {NULL}
+template<typename Impl>
+struct insert_data : MethKwargs<Impl>
+{
+    constexpr static const char* name = "insert_data";
+    constexpr static const char* doc = "Insert data values in the database";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "record", "can_replace", "can_add_stations", NULL };
+        PyObject* record;
+        int can_replace = 0;
+        int station_can_add = 0;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O|ii", const_cast<char**>(kwlist), &record, &can_replace, &station_can_add))
+            return nullptr;
+
+        try {
+            RecordAccess rec(record);
+            ReleaseGIL gil;
+            DataValues vals(rec);
+            self->db->insert_data(vals, can_replace, station_can_add);
+            gil.lock();
+            return get_insert_ids(vals);
+        } DBALLE_CATCH_RETURN_PYO
+    }
 };
 
-static PyObject* dpy_DB_get_default_format(PyTypeObject *type)
+template<typename Impl>
+struct remove_station_data : MethKwargs<Impl>
 {
-    try {
-        string format = db::format_format(DB::get_default_format());
-        return PyUnicode_FromString(format.c_str());
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_DB_set_default_format(PyTypeObject *type, PyObject *args)
-{
-    const char* format;
-    if (!PyArg_ParseTuple(args, "s", &format))
-        return NULL;
-
-    try {
-        DB::set_default_format(db::format_parse(format));
-
-        Py_RETURN_NONE;
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_DB_connect_from_file(PyTypeObject *type, PyObject *args)
-{
-    const char* fname;
-    if (!PyArg_ParseTuple(args, "s", &fname))
-        return NULL;
-
-    shared_ptr<DB> db;
-    try {
-        db = DB::connect_from_file(fname);
-        return (PyObject*)db_create(db);
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_DB_connect_from_url(PyTypeObject *type, PyObject *args)
-{
-    const char* url;
-    if (!PyArg_ParseTuple(args, "s", &url))
-        return NULL;
-
-    shared_ptr<DB> db;
-    try {
-        db = DB::connect_from_url(url);
-        return (PyObject*)db_create(db);
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_DB_connect_test(PyTypeObject *type)
-{
-    shared_ptr<DB> db;
-    try {
-        db = DB::connect_test();
-        return (PyObject*)db_create(db);
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_DB_is_url(PyTypeObject *type, PyObject *args)
-{
-    const char* url;
-    if (!PyArg_ParseTuple(args, "s", &url))
-        return NULL;
-
-    if (DB::is_url(url))
-        Py_RETURN_TRUE;
-    else
-        Py_RETURN_FALSE;
-}
-
-static PyObject* dpy_DB_reset(dpy_DB* self, PyObject *args)
-{
-    const char* repinfo_file = 0;
-    if (!PyArg_ParseTuple(args, "|s", &repinfo_file))
-        return NULL;
-
-    try {
-        self->db->reset(repinfo_file);
-        Py_RETURN_NONE;
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_DB_transaction(dpy_DB* self, PyObject *args)
-{
-    int readonly = 0;
-    if (!PyArg_ParseTuple(args, "|p", &readonly))
-        return NULL;
-
-    try {
-        auto res = self->db->transaction(readonly);
-        return (PyObject*)transaction_create(move(res));
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-/*
-virtual void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated) = 0;
-*/
-
-template<typename PYDB>
-static PyObject* dpy_insert_station_data(PYDB* self, PyObject* args, PyObject* kw)
-{
-    static const char* kwlist[] = { "record", "can_replace", "can_add_stations", NULL };
-    PyObject* record;
-    int can_replace = 0;
-    int station_can_add = 0;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|ii", const_cast<char**>(kwlist), &record, &can_replace, &station_can_add))
-        return NULL;
-
-    try {
-        RecordAccess rec;
-        if (rec.init(record) == -1)
+    constexpr static const char* name = "remove_station_data";
+    constexpr static const char* doc = "Remove station variables from the database";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "query", NULL };
+        PyObject* pyquery;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O", const_cast<char**>(kwlist), &pyquery))
             return nullptr;
-        StationValues vals(rec);
-        self->db->insert_station_data(vals, can_replace, station_can_add);
-        return get_insert_ids(vals);
-    } DBALLE_CATCH_RETURN_PYO
-}
 
-template<typename PYDB>
-static PyObject* dpy_insert_data(PYDB* self, PyObject* args, PyObject* kw)
+        try {
+            core::Query query;
+            read_query(pyquery, query);
+            ReleaseGIL gil;
+            self->db->remove_station_data(query);
+        } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
+    }
+};
+
+template<typename Base, typename Impl>
+struct MethQuery : public MethKwargs<Impl>
 {
-    static const char* kwlist[] = { "record", "can_replace", "can_add_stations", NULL };
-    PyObject* record;
-    int can_replace = 0;
-    int station_can_add = 0;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|ii", const_cast<char**>(kwlist), &record, &can_replace, &station_can_add))
-        return NULL;
-
-    try {
-        RecordAccess rec;
-        if (rec.init(record) == -1)
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "query", NULL };
+        PyObject* pyquery;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O", const_cast<char**>(kwlist), &pyquery))
             return nullptr;
-        DataValues vals(rec);
-        self->db->insert_data(vals, can_replace, station_can_add);
-        return get_insert_ids(vals);
-    } DBALLE_CATCH_RETURN_PYO
-}
+
+        try {
+            core::Query query;
+            read_query(pyquery, query);
+            return Base::run_query(self, query);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+template<typename Impl>
+struct remove : MethQuery<remove<Impl>, Impl>
+{
+    constexpr static const char* name = "remove";
+    constexpr static const char* doc = "Remove data variables from the database";
+    static PyObject* run_query(Impl* self, dballe::Query& query)
+    {
+        ReleaseGIL gil;
+        self->db->remove(query);
+        Py_RETURN_NONE;
+    }
+};
+
+template<typename Impl>
+struct remove_all : MethNoargs<Impl>
+{
+    constexpr static const char* name = "remove_all";
+    constexpr static const char* doc = "Remove all data from the database";
+    static PyObject* run(Impl* self)
+    {
+        try {
+            ReleaseGIL gil;
+            self->db->remove_all();
+        } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
+    }
+};
+
+template<typename Impl>
+struct query_stations : MethQuery<query_stations<Impl>, Impl>
+{
+    constexpr static const char* name = "query_stations";
+    constexpr static const char* doc = "Query the station archive in the database; returns a Cursor";
+    static PyObject* run_query(Impl* self, dballe::Query& query)
+    {
+        ReleaseGIL gil;
+        std::unique_ptr<db::Cursor> res = self->db->query_stations(query);
+        gil.lock();
+        return (PyObject*)cursor_create(move(res));
+    }
+};
+
+template<typename Impl>
+struct query_station_data : MethQuery<query_station_data<Impl>, Impl>
+{
+    constexpr static const char* name = "query_station_data";
+    constexpr static const char* doc = "Query the station variables in the database; returns a Cursor";
+    static PyObject* run_query(Impl* self, dballe::Query& query)
+    {
+        ReleaseGIL gil;
+        std::unique_ptr<db::Cursor> res = self->db->query_station_data(query);
+        gil.lock();
+        return (PyObject*)cursor_create(move(res));
+    }
+};
+
+template<typename Impl>
+struct query_data : MethQuery<query_data<Impl>, Impl>
+{
+    constexpr static const char* name = "query_data";
+    constexpr static const char* doc = "Query the variables in the database; returns a Cursor";
+    static PyObject* run_query(Impl* self, dballe::Query& query)
+    {
+        ReleaseGIL gil;
+        std::unique_ptr<db::Cursor> res = self->db->query_data(query);
+        gil.lock();
+        return (PyObject*)cursor_create(move(res));
+    }
+};
+
+template<typename Impl>
+struct query_summary : MethQuery<query_summary<Impl>, Impl>
+{
+    constexpr static const char* name = "query_summary";
+    constexpr static const char* doc = "Query the summary of the results of a query; returns a Cursor";
+    static PyObject* run_query(Impl* self, dballe::Query& query)
+    {
+        ReleaseGIL gil;
+        std::unique_ptr<db::Cursor> res = self->db->query_summary(query);
+        gil.lock();
+        return (PyObject*)cursor_create(move(res));
+    }
+};
+
+template<typename Impl>
+struct query_attrs : MethKwargs<Impl>
+{
+    constexpr static const char* name = "query_attrs";
+    constexpr static const char* doc = "Query attributes (deprecated)";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use DB.attr_query_station or DB.attr_query_data instead of DB.query_attrs", 1))
+            return nullptr;
+
+        static const char* kwlist[] = { "varcode", "reference_id", "attrs", NULL };
+        int reference_id;
+        const char* varname;
+        PyObject* attrs = 0;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "si|O", const_cast<char**>(kwlist), &varname, &reference_id, &attrs))
+            return nullptr;
+
+        try {
+            // Read the attribute list, if provided
+            db::AttrList codes = db_read_attrlist(attrs);
+            py_unique_ptr<dpy_Record> rec(record_create());
+
+            ReleaseGIL gil;
+            self->db->attr_query_data(reference_id, [&](unique_ptr<Var>&& var) {
+                if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
+                    return;
+                rec->rec->set(move(var));
+            });
+            gil.lock();
+            return (PyObject*)rec.release();
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+
+template<typename Impl>
+struct attr_query_station : MethKwargs<Impl>
+{
+    constexpr static const char* name = "attr_query_station";
+    constexpr static const char* doc = "query station data attributes";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "varid", NULL };
+        int varid;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "i", const_cast<char**>(kwlist), &varid))
+            return nullptr;
+
+        try {
+            py_unique_ptr<dpy_Record> rec(record_create());
+            ReleaseGIL gil;
+            self->db->attr_query_station(varid, [&](unique_ptr<Var> var) {
+                rec->rec->set(move(var));
+            });
+            gil.lock();
+            return (PyObject*)rec.release();
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+template<typename Impl>
+struct attr_query_data : MethKwargs<Impl>
+{
+    constexpr static const char* name = "attr_query_data";
+    constexpr static const char* doc = "query data attributes";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "varid", NULL };
+        int varid;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "i", const_cast<char**>(kwlist), &varid))
+            return nullptr;
+
+        try {
+            py_unique_ptr<dpy_Record> rec(record_create());
+            ReleaseGIL gil;
+            self->db->attr_query_data(varid, [&](unique_ptr<Var>&& var) {
+                rec->rec->set(move(var));
+            });
+            gil.lock();
+            return (PyObject*)rec.release();
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+template<typename Impl>
+struct attr_insert : MethKwargs<Impl>
+{
+    constexpr static const char* name = "attr_insert";
+    constexpr static const char* doc = "Insert new attributes into the database (deprecated)";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use DB.attr_insert_station or DB.attr_insert_data instead of DB.attr_insert", 1))
+            return nullptr;
+
+        static const char* kwlist[] = { "varcode", "attrs", "varid", NULL };
+        int varid = -1;
+        const char* varname;
+        PyObject* record;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "sO|i", const_cast<char**>(kwlist),
+                    &varname,
+                    &record,
+                    &varid))
+            return nullptr;
+
+        if (varid == -1)
+        {
+            PyErr_SetString(PyExc_ValueError, "please provide a reference_id argument: implicitly reusing the one from the last insert is not supported anymore");
+            return nullptr;
+        }
+
+        try {
+            RecordAccess rec(record);
+            ReleaseGIL gil;
+            self->db->attr_insert_data(varid, Values(rec));
+        } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
+    }
+};
+
+template<typename Impl>
+struct attr_insert_station : MethKwargs<Impl>
+{
+    constexpr static const char* name = "attr_insert_station";
+    constexpr static const char* doc = "Insert new attributes into the database";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "varid", "attrs", NULL };
+        int varid;
+        PyObject* attrs;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "iO", const_cast<char**>(kwlist), &varid, &attrs))
+            return nullptr;
+
+        try {
+            RecordAccess rec(attrs);
+            ReleaseGIL gil;
+            self->db->attr_insert_station(varid, Values(rec));
+        } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
+    }
+};
+
+template<typename Impl>
+struct attr_insert_data : MethKwargs<Impl>
+{
+    constexpr static const char* name = "attr_insert_data";
+    constexpr static const char* doc = "Insert new attributes into the database";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "varid", "attrs", NULL };
+        int varid;
+        PyObject* attrs;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "iO", const_cast<char**>(kwlist), &varid, &attrs))
+            return nullptr;
+
+        try {
+            RecordAccess rec(attrs);
+            ReleaseGIL gil;
+            self->db->attr_insert_data(varid, Values(rec));
+        } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
+    }
+};
+
+template<typename Impl>
+struct attr_remove : MethKwargs<Impl>
+{
+    constexpr static const char* name = "attr_remove";
+    constexpr static const char* doc = "Remove attributes (deprecated)";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use DB.attr_remove_station or DB.attr_remove_data instead of DB.attr_remove", 1))
+            return nullptr;
+
+        static const char* kwlist[] = { "varcode", "varid", "attrs", NULL };
+        int varid;
+        const char* varname;
+        PyObject* attrs = 0;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "si|O", const_cast<char**>(kwlist), &varname, &varid, &attrs))
+            return nullptr;
+
+        try {
+            // Read the attribute list, if provided
+            db::AttrList codes = db_read_attrlist(attrs);
+            ReleaseGIL gil;
+            self->db->attr_remove_data(varid, codes);
+        } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
+    }
+};
+
+template<typename Impl>
+struct attr_remove_station : MethKwargs<Impl>
+{
+    constexpr static const char* name = "attr_remove_station";
+    constexpr static const char* doc = "Remove attributes from station variables";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "varid", "attrs", NULL };
+        int varid;
+        PyObject* attrs;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "i|O", const_cast<char**>(kwlist), &varid, &attrs))
+            return nullptr;
+
+        try {
+            db::AttrList codes = db_read_attrlist(attrs);
+            ReleaseGIL gil;
+            self->db->attr_remove_station(varid, codes);
+        } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
+    }
+};
+
+template<typename Impl>
+struct attr_remove_data : MethKwargs<Impl>
+{
+    constexpr static const char* name = "attr_remove_data";
+    constexpr static const char* doc = "Remove attributes from data variables";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "varid", "attrs", NULL };
+        int varid;
+        PyObject* attrs;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "i|O", const_cast<char**>(kwlist), &varid, &attrs))
+            return nullptr;
+
+        try {
+            db::AttrList codes = db_read_attrlist(attrs);
+            ReleaseGIL gil;
+            self->db->attr_remove_data(varid, codes);
+        } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
+    }
+};
 
 template<typename DB>
 static unsigned db_load_file_enc(DB& db, Encoding encoding, FILE* file, bool close_on_exit, const std::string& name, int flags)
@@ -304,863 +552,520 @@ static unsigned db_load_file(DB& db, FILE* file, bool close_on_exit, const std::
     return count;
 }
 
-template<typename PYDB>
-static PyObject* dpy_load(PYDB* self, PyObject* args, PyObject* kw)
+template<typename Impl>
+struct load : MethKwargs<Impl>
 {
-    static const char* kwlist[] = {"fp", "encoding", "attrs", "full_pseudoana", "overwrite", NULL};
+    constexpr static const char* name = "load";
+    constexpr static const char* doc = R"(
+        load(fp, encoding=None, attrs=False, full_pseudoana=False, overwrite=False)
 
-    PyObject* obj;
-    const char* encoding = nullptr;
-    int attrs = 0;
-    int full_pseudoana = 0;
-    int overwrite = 0;
-    int flags = 0;
+        Load a file object in the database. An encoding can optionally be
+        provided as a string ("BUFR", "CREX"). If encoding is None then
+        load will try to autodetect based on the first byte of the file.
+    )";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = {"fp", "encoding", "attrs", "full_pseudoana", "overwrite", NULL};
+        PyObject* obj;
+        const char* encoding = nullptr;
+        int attrs = 0;
+        int full_pseudoana = 0;
+        int overwrite = 0;
+        int flags = 0;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O|siii", const_cast<char**>(kwlist), &obj, &encoding, &attrs, &full_pseudoana, &overwrite))
+            return nullptr;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|siii", const_cast<char**>(kwlist), &obj, &encoding, &attrs, &full_pseudoana, &overwrite))
-        return nullptr;
+        try {
+            string repr = object_repr(obj);
 
-    try {
-        string repr = object_repr(obj);
+            flags = (attrs ? DBA_IMPORT_ATTRS : 0) | (full_pseudoana ? DBA_IMPORT_FULL_PSEUDOANA : 0) | (overwrite ? DBA_IMPORT_OVERWRITE : 0);
 
-        flags = (attrs ? DBA_IMPORT_ATTRS : 0) | (full_pseudoana ? DBA_IMPORT_FULL_PSEUDOANA : 0) | (overwrite ? DBA_IMPORT_OVERWRITE : 0);
-
-        int fileno = file_get_fileno(obj);
-        if (fileno == -1)
-        {
-            if (PyErr_Occurred()) return nullptr;
-
-            char* buf;
-            Py_ssize_t len;
-            pyo_unique_ptr data = file_get_data(obj, buf, len);
-            if (!data) return nullptr;
-
-            FILE* f = fmemopen(buf, len, "r");
-            if (!f) return nullptr;
-            unsigned count;
-            if (encoding)
-            {
-                count = db_load_file_enc(*self->db, File::parse_encoding(encoding), f, true, repr, flags);
-            } else
-                count = db_load_file(*self->db, f, true, repr, flags);
-            return PyInt_FromLong(count);
-        } else {
-            // Duplicate the file descriptor because both python and libc will want to
-            // close it
-            fileno = dup(fileno);
+            int fileno = file_get_fileno(obj);
             if (fileno == -1)
             {
-                PyErr_Format(PyExc_OSError, "cannot dup() the file handle from %s", repr.c_str());
-                return nullptr;
+                if (PyErr_Occurred()) return nullptr;
+
+                char* buf;
+                Py_ssize_t len;
+                pyo_unique_ptr data = file_get_data(obj, buf, len);
+                if (!data) return nullptr;
+
+                FILE* f = fmemopen(buf, len, "r");
+                if (!f) return nullptr;
+                unsigned count;
+                if (encoding)
+                {
+                    count = db_load_file_enc(*self->db, File::parse_encoding(encoding), f, true, repr, flags);
+                } else
+                    count = db_load_file(*self->db, f, true, repr, flags);
+                return PyLong_FromLong(count);
+            } else {
+                // Duplicate the file descriptor because both python and libc will want to
+                // close it
+                fileno = dup(fileno);
+                if (fileno == -1)
+                {
+                    PyErr_Format(PyExc_OSError, "cannot dup() the file handle from %s", repr.c_str());
+                    return nullptr;
+                }
+
+                FILE* f = fdopen(fileno, "rb");
+                if (f == nullptr)
+                {
+                    close(fileno);
+                    PyErr_Format(PyExc_OSError, "cannot fdopen() the dup()ed file handle from %s", repr.c_str());
+                    return nullptr;
+                }
+
+                unsigned count;
+                if (encoding)
+                {
+                    count = db_load_file_enc(*self->db, File::parse_encoding(encoding), f, true, repr, flags);
+                } else
+                    count = db_load_file(*self->db, f, true, repr, flags);
+                return PyLong_FromLong(count);
             }
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
 
-            FILE* f = fdopen(fileno, "rb");
-            if (f == nullptr)
-            {
-                close(fileno);
-                PyErr_Format(PyExc_OSError, "cannot fdopen() the dup()ed file handle from %s", repr.c_str());
-                return nullptr;
-            }
-
-            unsigned count;
-            if (encoding)
-            {
-                count = db_load_file_enc(*self->db, File::parse_encoding(encoding), f, true, repr, flags);
-            } else
-                count = db_load_file(*self->db, f, true, repr, flags);
-            return PyInt_FromLong(count);
-        }
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-
-template<typename PYDB>
-static PyObject* dpy_remove_station_data(PYDB* self, PyObject* args)
+template<typename Impl>
+struct export_to_file : MethKwargs<Impl>
 {
-    PyObject* record;
-    if (!PyArg_ParseTuple(args, "O", &record))
-        return nullptr;
-
-    try {
-        RecordAccess rec;
-        if (rec.init(record) == -1)
-            return nullptr;
-        core::Query query;
-        query.set_from_record(rec);
-        self->db->remove_station_data(query);
-        Py_RETURN_NONE;
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename PYDB>
-static PyObject* dpy_remove(PYDB* self, PyObject* args)
-{
-    PyObject* record;
-    if (!PyArg_ParseTuple(args, "O", &record))
-        return nullptr;
-
-    try {
-        RecordAccess rec;
-        if (rec.init(record) == -1)
-            return nullptr;
-        core::Query query;
-        query.set_from_record(rec);
-        ReleaseGIL gil;
-        self->db->remove(query);
-        Py_RETURN_NONE;
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_DB_disappear(dpy_DB* self)
-{
-    try {
-        self->db->disappear();
-        Py_RETURN_NONE;
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename PYDB>
-static PyObject* dpy_remove_all(PYDB* self)
-{
-    try {
-        self->db->remove_all();
-        Py_RETURN_NONE;
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_DB_vacuum(dpy_DB* self)
-{
-    try {
-        self->db->vacuum();
-        Py_RETURN_NONE;
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename PYDB>
-static PyObject* dpy_query_stations(PYDB* self, PyObject* args)
-{
-    PyObject* record;
-    if (!PyArg_ParseTuple(args, "O", &record))
-        return nullptr;
-
-    try {
-        core::Query query;
-        if (read_query(record, query) == -1)
-            return nullptr;
-        ReleaseGIL gil;
-        std::unique_ptr<db::Cursor> res = self->db->query_stations(query);
-        gil.lock();
-        return (PyObject*)cursor_create(move(res));
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename PYDB>
-static PyObject* dpy_query_data(PYDB* self, PyObject* args)
-{
-    PyObject* record;
-    if (!PyArg_ParseTuple(args, "O", &record))
-        return nullptr;
-
-    try {
-        core::Query query;
-        if (read_query(record, query) == -1)
-            return nullptr;
-        std::unique_ptr<db::Cursor> res;
-        {
-            ReleaseGIL gil;
-            res = self->db->query_data(query);
-        }
-        return (PyObject*)cursor_create(move(res));
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename PYDB>
-static PyObject* dpy_query_station_data(PYDB* self, PyObject* args)
-{
-    PyObject* record;
-    if (!PyArg_ParseTuple(args, "O", &record))
-        return nullptr;
-
-    try {
-        core::Query query;
-        if (read_query(record, query) == -1)
-            return nullptr;
-        ReleaseGIL gil;
-        std::unique_ptr<db::Cursor> res = self->db->query_station_data(query);
-        gil.lock();
-        return (PyObject*)cursor_create(move(res));
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename PYDB>
-static PyObject* dpy_query_summary(PYDB* self, PyObject* args)
-{
-    PyObject* record;
-    if (!PyArg_ParseTuple(args, "O", &record))
-        return nullptr;
-
-    try {
-        core::Query query;
-        if (read_query(record, query) == -1)
-            return nullptr;
-        ReleaseGIL gil;
-        std::unique_ptr<db::Cursor> res = self->db->query_summary(query);
-        gil.lock();
-        return (PyObject*)cursor_create(move(res));
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_DB_query_attrs(dpy_DB* self, PyObject* args, PyObject* kw)
-{
-    if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use DB.attr_query_station or DB.attr_query_data instead of DB.query_attrs", 1))
-        return NULL;
-
-    static const char* kwlist[] = { "varcode", "reference_id", "attrs", NULL };
-    int reference_id;
-    const char* varname;
-    PyObject* attrs = 0;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "si|O", const_cast<char**>(kwlist), &varname, &reference_id, &attrs))
-        return NULL;
-
-    // Read the attribute list, if provided
-    db::AttrList codes;
-    if (db_read_attrlist(attrs, codes))
-        return NULL;
-
-    py_unique_ptr<dpy_Record> rec(record_create());
-    try {
-        self->db->attr_query_data(reference_id, [&](unique_ptr<Var>&& var) {
-            if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
-                return;
-            rec->rec->set(move(var));
-        });
-        return (PyObject*)rec.release();
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename PYDB>
-static PyObject* dpy_attr_query_station(PYDB* self, PyObject* args)
-{
-    int reference_id;
-    if (!PyArg_ParseTuple(args, "i", &reference_id))
-        return NULL;
-
-    py_unique_ptr<dpy_Record> rec(record_create());
-    try {
-        self->db->attr_query_station(reference_id, [&](unique_ptr<Var> var) {
-            rec->rec->set(move(var));
-        });
-        return (PyObject*)rec.release();
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename PYDB>
-static PyObject* dpy_attr_query_data(PYDB* self, PyObject* args)
-{
-    int reference_id;
-    if (!PyArg_ParseTuple(args, "i", &reference_id))
-        return NULL;
-
-    py_unique_ptr<dpy_Record> rec(record_create());
-    try {
-        self->db->attr_query_data(reference_id, [&](unique_ptr<Var>&& var) {
-            rec->rec->set(move(var));
-        });
-        return (PyObject*)rec.release();
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_DB_attr_insert(dpy_DB* self, PyObject* args, PyObject* kw)
-{
-    if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use DB.attr_insert_station or DB.attr_insert_data instead of DB.attr_insert", 1))
-        return NULL;
-
-    static const char* kwlist[] = { "varcode", "attrs", "reference_id", NULL };
-    int reference_id = -1;
-    const char* varname;
-    PyObject* record;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "sO|i", const_cast<char**>(kwlist),
-                &varname,
-                &record,
-                &reference_id))
-        return nullptr;
-
-    if (reference_id == -1)
+    constexpr static const char* name = "export_to_file";
+    constexpr static const char* doc = "Export data matching a query as bulletins to a named file";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
-        PyErr_SetString(PyExc_ValueError, "please provide a reference_id argument: implicitly reusing the one from the last insert is not supported anymore");
-        return nullptr;
+        static const char* kwlist[] = { "query", "format", "filename", "generic", NULL };
+        dpy_Record* query;
+        const char* format;
+        PyObject* file;
+        int as_generic = 0;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O!sO|i", const_cast<char**>(kwlist), &dpy_Record_Type, &query, &format, &file, &as_generic))
+            return NULL;
+
+        try {
+            Encoding encoding = Encoding::BUFR;
+            if (strcmp(format, "BUFR") == 0)
+                encoding = Encoding::BUFR;
+            else if (strcmp(format, "CREX") == 0)
+                encoding = Encoding::CREX;
+            else
+            {
+                PyErr_SetString(PyExc_ValueError, "encoding must be one of BUFR or CREX");
+                return NULL;
+            }
+
+            if (pyobject_is_string(file))
+            {
+                std::string filename = string_from_python(file);
+                std::unique_ptr<File> out = File::create(encoding, filename, "wb");
+                ExporterOptions opts;
+                if (as_generic)
+                    opts.template_name = "generic";
+                auto exporter = Exporter::create(out->encoding(), opts);
+                auto q = Query::create();
+                q->set_from_record(*query->rec);
+                ReleaseGIL gil;
+                self->db->export_msgs(*q, [&](unique_ptr<Message>&& msg) {
+                    Messages msgs;
+                    msgs.emplace_back(move(msg));
+                    out->write(exporter->to_binary(msgs));
+                    return true;
+                });
+                gil.lock();
+                Py_RETURN_NONE;
+            } else {
+                ExporterOptions opts;
+                if (as_generic)
+                    opts.template_name = "generic";
+                auto exporter = Exporter::create(encoding, opts);
+                auto q = Query::create();
+                q->set_from_record(*query->rec);
+                pyo_unique_ptr res(nullptr);
+                bool has_error = false;
+                self->db->export_msgs(*q, [&](unique_ptr<Message>&& msg) {
+                    Messages msgs;
+                    msgs.emplace_back(move(msg));
+                    std::string encoded = exporter->to_binary(msgs);
+#if PY_MAJOR_VERSION >= 3
+                    res = pyo_unique_ptr(PyObject_CallMethod(file, (char*)"write", (char*)"y#", encoded.data(), (int)encoded.size()));
+#else
+                    res = pyo_unique_ptr(PyObject_CallMethod(file, (char*)"write", (char*)"s#", encoded.data(), (int)encoded.size()));
+#endif
+                    if (!res)
+                    {
+                        has_error = true;
+                        return false;
+                    }
+                    return true;
+                });
+                if (has_error)
+                    return nullptr;
+                Py_RETURN_NONE;
+            }
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+namespace pydb {
+
+struct get_default_format : ClassMethNoargs
+{
+    constexpr static const char* name = "get_default_format";
+    constexpr static const char* doc = "get the default DB format";
+    static PyObject* run(PyTypeObject* cls)
+    {
+        try {
+            string format = db::format_format(DB::get_default_format());
+            return PyUnicode_FromString(format.c_str());
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct set_default_format : ClassMethKwargs
+{
+    constexpr static const char* name = "set_default_format";
+    constexpr static const char* doc = "set the default DB format";
+    static PyObject* run(PyTypeObject* cls, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "format", nullptr };
+        const char* format;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "s", const_cast<char**>(kwlist), &format))
+            return nullptr;
+
+        try {
+            DB::set_default_format(db::format_parse(format));
+            Py_RETURN_NONE;
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct connect_from_file : ClassMethKwargs
+{
+    constexpr static const char* name = "connect_from_file";
+    constexpr static const char* doc = "create a DB to access a SQLite file";
+    static PyObject* run(PyTypeObject* cls, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "name", nullptr };
+        const char* name;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "s", const_cast<char**>(kwlist), &name))
+            return nullptr;
+
+        try {
+            ReleaseGIL gil;
+            std::shared_ptr<DB> db = DB::connect_from_file(name);
+            gil.lock();
+            return (PyObject*)db_create(db);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct connect_from_url : ClassMethKwargs
+{
+    constexpr static const char* name = "connect_from_url";
+    constexpr static const char* doc = "create a DB to access a database identified by a DB-All.e URL";
+    static PyObject* run(PyTypeObject* cls, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "url", nullptr };
+        const char* url;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "s", const_cast<char**>(kwlist), &url))
+            return nullptr;
+
+        try {
+            ReleaseGIL gil;
+            shared_ptr<DB> db = DB::connect_from_url(url);
+            gil.lock();
+            return (PyObject*)db_create(db);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct connect_test : ClassMethNoargs
+{
+    constexpr static const char* name = "connect_test";
+    constexpr static const char* doc = "Create a DB for running the test suite, as configured in the test environment";
+    static PyObject* run(PyTypeObject* cls)
+    {
+        try {
+            ReleaseGIL gil;
+            std::shared_ptr<DB> db = DB::connect_test();
+            gil.lock();
+            return (PyObject*)db_create(db);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct is_url : ClassMethKwargs
+{
+    constexpr static const char* name = "is_url";
+    constexpr static const char* doc = "Checks if a string looks like a DB-All.e DB url";
+    static PyObject* run(PyTypeObject* cls, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "url", nullptr };
+        const char* url;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "s", const_cast<char**>(kwlist), &url))
+            return nullptr;
+
+        try {
+            if (DB::is_url(url))
+                Py_RETURN_TRUE;
+            else
+                Py_RETURN_FALSE;
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct transaction : MethKwargs<dpy_DB>
+{
+    constexpr static const char* name = "transaction";
+    constexpr static const char* doc = "Create a new database transaction";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "readonly", nullptr };
+        int readonly = 0;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "|p", const_cast<char**>(kwlist), &readonly))
+            return nullptr;
+
+        try {
+            auto res = self->db->transaction(readonly);
+            return (PyObject*)transaction_create(move(res));
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct disappear : MethNoargs<dpy_DB>
+{
+    constexpr static const char* name = "disappear";
+    constexpr static const char* doc = "Remove all DB-All.e tables and data from the database, if possible";
+    static PyObject* run(Impl* self)
+    {
+        try {
+            ReleaseGIL gil;
+            self->db->disappear();
+        } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
+    }
+};
+
+struct reset : MethKwargs<dpy_DB>
+{
+    constexpr static const char* name = "reset";
+    constexpr static const char* doc = "Reset the database, removing all existing Db-All.e tables and re-creating them empty.";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "repinfo_file", nullptr };
+        const char* repinfo_file = 0;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "|s", const_cast<char**>(kwlist), &repinfo_file))
+            return nullptr;
+
+        try {
+            ReleaseGIL gil;
+            self->db->reset(repinfo_file);
+        } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
+    }
+};
+
+struct vacuum : MethNoargs<dpy_DB>
+{
+    constexpr static const char* name = "vacuum";
+    constexpr static const char* doc = "Perform database cleanup operations";
+    static PyObject* run(Impl* self)
+    {
+        try {
+            ReleaseGIL gil;
+            self->db->vacuum();
+        } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
+    }
+};
+
+
+struct Definition : public Binding<Definition, dpy_DB>
+{
+    constexpr static const char* name = "DB";
+    constexpr static const char* qual_name = "dballe.DB";
+    constexpr static const char* doc = "DB-All.e database access";
+
+    GetSetters<> getsetters;
+    Methods<
+        get_default_format, set_default_format,
+        connect_from_file, connect_from_url, connect_test, is_url,
+        disappear, reset, vacuum,
+        transaction,
+        insert_station_data<Impl>, insert_data<Impl>,
+        remove_station_data<Impl>, remove<Impl>, remove_all<Impl>,
+        query_stations<Impl>, query_station_data<Impl>, query_data<Impl>, query_summary<Impl>, query_attrs<Impl>,
+        attr_query_station<Impl>, attr_query_data<Impl>,
+        attr_insert<Impl>, attr_insert_station<Impl>, attr_insert_data<Impl>,
+        attr_remove<Impl>, attr_remove_station<Impl>, attr_remove_data<Impl>,
+        load<Impl>, export_to_file<Impl>
+        > methods;
+
+    static void _dealloc(Impl* self)
+    {
+        self->db.~shared_ptr<DB>();
+        Py_TYPE(self)->tp_free(self);
     }
 
-    try {
-        RecordAccess rec;
-        if (rec.init(record) == -1)
+    static int _init(Impl* self, PyObject* args, PyObject* kw)
+    {
+        // People should not invoke DB() as a constructor, but if they do,
+        // this is better than a segfault later on
+        PyErr_SetString(PyExc_NotImplementedError, "DB objects cannot be constructed explicitly");
+        return -1;
+    }
+};
+
+Definition* definition = nullptr;
+
+}
+
+
+namespace pytr {
+
+typedef MethGenericEnter<dpy_Transaction> __enter__;
+
+struct __exit__ : MethVarargs<dpy_Transaction>
+{
+    constexpr static const char* name = "__exit__";
+    constexpr static const char* doc = "Context manager __exit__";
+    static PyObject* run(Impl* self, PyObject* args)
+    {
+        PyObject* exc_type;
+        PyObject* exc_val;
+        PyObject* exc_tb;
+        if (!PyArg_ParseTuple(args, "OOO", &exc_type, &exc_val, &exc_tb))
             return nullptr;
-        self->db->attr_insert_data(reference_id, Values(rec));
-        Py_RETURN_NONE;
-    } DBALLE_CATCH_RETURN_PYO
-}
 
-template<typename PYDB>
-static PyObject* dpy_attr_insert_station(PYDB* self, PyObject* args)
-{
-    int data_id;
-    PyObject* attrs;
-    if (!PyArg_ParseTuple(args, "iO", &data_id, &attrs))
-        return nullptr;
-
-    try {
-        RecordAccess rec;
-        if (rec.init(attrs) == -1)
-            return nullptr;
-        self->db->attr_insert_station(data_id, Values(rec));
-        Py_RETURN_NONE;
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename PYDB>
-static PyObject* dpy_attr_insert_data(PYDB* self, PyObject* args)
-{
-    int data_id;
-    PyObject* attrs;
-    if (!PyArg_ParseTuple(args, "iO", &data_id, &attrs))
-        return NULL;
-
-    try {
-        RecordAccess rec;
-        if (rec.init(attrs) == -1)
-            return nullptr;
-        self->db->attr_insert_data(data_id, Values(rec));
-        Py_RETURN_NONE;
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_DB_attr_remove(dpy_DB* self, PyObject* args, PyObject* kw)
-{
-    if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use DB.attr_remove_station or DB.attr_remove_data instead of DB.attr_remove", 1))
-        return NULL;
-
-    static const char* kwlist[] = { "varcode", "reference_id", "attrs", NULL };
-    int reference_id;
-    const char* varname;
-    PyObject* attrs = 0;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "si|O", const_cast<char**>(kwlist), &varname, &reference_id, &attrs))
-        return NULL;
-
-    // Read the attribute list, if provided
-    db::AttrList codes;
-    if (db_read_attrlist(attrs, codes))
-        return NULL;
-
-    try {
-        self->db->attr_remove_data(reference_id, codes);
-        Py_RETURN_NONE;
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename PYDB>
-static PyObject* dpy_attr_remove_station(PYDB* self, PyObject* args)
-{
-    int reference_id;
-    PyObject* attrs = 0;
-    if (!PyArg_ParseTuple(args, "i|O", &reference_id, &attrs))
-        return NULL;
-
-    // Read the attribute list, if provided
-    db::AttrList codes;
-    if (db_read_attrlist(attrs, codes))
-        return NULL;
-
-    try {
-        self->db->attr_remove_station(reference_id, codes);
-        Py_RETURN_NONE;
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename PYDB>
-static PyObject* dpy_attr_remove_data(PYDB* self, PyObject* args)
-{
-    int reference_id;
-    PyObject* attrs = 0;
-    if (!PyArg_ParseTuple(args, "i|O", &reference_id, &attrs))
-        return NULL;
-
-    // Read the attribute list, if provided
-    db::AttrList codes;
-    if (db_read_attrlist(attrs, codes))
-        return NULL;
-
-    try {
-        self->db->attr_remove_data(reference_id, codes);
-        Py_RETURN_NONE;
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-template<typename PYDB>
-static PyObject* dpy_export_to_file(PYDB* self, PyObject* args, PyObject* kw)
-{
-    static const char* kwlist[] = { "query", "format", "filename", "generic", NULL };
-    dpy_Record* query;
-    const char* format;
-    PyObject* file;
-    int as_generic = 0;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "O!sO|i", const_cast<char**>(kwlist), &dpy_Record_Type, &query, &format, &file, &as_generic))
-        return NULL;
-
-    try {
-        Encoding encoding = Encoding::BUFR;
-        if (strcmp(format, "BUFR") == 0)
-            encoding = Encoding::BUFR;
-        else if (strcmp(format, "CREX") == 0)
-            encoding = Encoding::CREX;
-        else
-        {
-            PyErr_SetString(PyExc_ValueError, "encoding must be one of BUFR or CREX");
-            return NULL;
-        }
-
-        if (pyobject_is_string(file))
-        {
-            std::string filename = string_from_python(file);
-            std::unique_ptr<File> out = File::create(encoding, filename, "wb");
-            ExporterOptions opts;
-            if (as_generic)
-                opts.template_name = "generic";
-            auto exporter = Exporter::create(out->encoding(), opts);
-            auto q = Query::create();
-            q->set_from_record(*query->rec);
-            ReleaseGIL gil;
-            self->db->export_msgs(*q, [&](unique_ptr<Message>&& msg) {
-                Messages msgs;
-                msgs.emplace_back(move(msg));
-                out->write(exporter->to_binary(msgs));
-                return true;
-            });
-            gil.lock();
-            Py_RETURN_NONE;
-        } else {
-            ExporterOptions opts;
-            if (as_generic)
-                opts.template_name = "generic";
-            auto exporter = Exporter::create(encoding, opts);
-            auto q = Query::create();
-            q->set_from_record(*query->rec);
-            pyo_unique_ptr res(nullptr);
-            bool has_error = false;
-            self->db->export_msgs(*q, [&](unique_ptr<Message>&& msg) {
-                Messages msgs;
-                msgs.emplace_back(move(msg));
-                std::string encoded = exporter->to_binary(msgs);
-#if PY_MAJOR_VERSION >= 3
-                res = pyo_unique_ptr(PyObject_CallMethod(file, (char*)"write", (char*)"y#", encoded.data(), (int)encoded.size()));
-#else
-                res = pyo_unique_ptr(PyObject_CallMethod(file, (char*)"write", (char*)"s#", encoded.data(), (int)encoded.size()));
-#endif
-                if (!res)
-                {
-                    has_error = true;
-                    return false;
-                }
-                return true;
-            });
-            if (has_error)
-                return nullptr;
-            Py_RETURN_NONE;
-        }
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_tr_enter(dpy_Transaction* self)
-{
-    Py_INCREF(self);
-    return (PyObject*)self;
-}
-
-static PyObject* dpy_tr_exit(dpy_Transaction* self, PyObject* args)
-{
-    PyObject* exc_type;
-    PyObject* exc_val;
-    PyObject* exc_tb;
-    if (!PyArg_ParseTuple(args, "OOO", &exc_type, &exc_val, &exc_tb))
-        return nullptr;
-
-    try {
-        {
+        try {
             ReleaseGIL gil;
             if (exc_type == Py_None)
                 self->db->commit();
             else
                 self->db->rollback();
-        }
-        Py_RETURN_FALSE;
-    } DBALLE_CATCH_RETURN_PYO
-}
-
-static PyObject* dpy_tr_commit(dpy_Transaction* self)
-{
-    try {
-        ReleaseGIL gil;
-        self->db->commit();
-    } DBALLE_CATCH_RETURN_PYO
-
-    Py_RETURN_NONE;
-}
-
-static PyObject* dpy_tr_rollback(dpy_Transaction* self)
-{
-    try {
-        ReleaseGIL gil;
-        self->db->rollback();
-    } DBALLE_CATCH_RETURN_PYO
-
-    Py_RETURN_NONE;
-}
-
-}
-
-static PyMethodDef dpy_DB_methods[] = {
-    {"get_default_format", (PyCFunction)dpy_DB_get_default_format, METH_NOARGS | METH_CLASS,
-        "Get the default DB format" },
-    {"set_default_format", (PyCFunction)dpy_DB_set_default_format, METH_VARARGS | METH_CLASS,
-        "Set the default DB format" },
-    {"connect_from_file", (PyCFunction)dpy_DB_connect_from_file, METH_VARARGS | METH_CLASS,
-        "Create a DB connecting to a SQLite file" },
-    {"connect_from_url",  (PyCFunction)dpy_DB_connect_from_url, METH_VARARGS | METH_CLASS,
-        "Create a DB as defined in an URL-like string" },
-    {"connect_test",      (PyCFunction)dpy_DB_connect_test, METH_NOARGS | METH_CLASS,
-        "Create a DB for running the test suite, as configured in the test environment" },
-    {"is_url",            (PyCFunction)dpy_DB_is_url, METH_VARARGS | METH_CLASS,
-        "Checks if a string looks like a DB url" },
-    {"transaction",       (PyCFunction)dpy_DB_transaction, METH_VARARGS,
-        "Create a new database transaction" },
-    {"disappear",         (PyCFunction)dpy_DB_disappear, METH_NOARGS,
-        "Remove all our traces from the database, if applicable." },
-    {"reset",             (PyCFunction)dpy_DB_reset, METH_VARARGS,
-        "Reset the database, removing all existing Db-All.e tables and re-creating them empty." },
-    {"insert_station_data", (PyCFunction)dpy_insert_station_data<dpy_DB>, METH_VARARGS | METH_KEYWORDS,
-        "Insert station values in the database" },
-    {"insert_data",       (PyCFunction)dpy_insert_data<dpy_DB>, METH_VARARGS | METH_KEYWORDS,
-        "Insert data values in the database" },
-    {"load",              (PyCFunction)dpy_load<dpy_DB>, METH_VARARGS | METH_KEYWORDS, R"(
-        load(fp, encoding=None, attrs=False, full_pseudoana=False, overwrite=False)
-
-        Load a file object in the database. An encoding can optionally be
-        provided as a string ("BUFR", "CREX"). If encoding is None then
-        load will try to autodetect based on the first byte of the file.
-    )" },
-    {"remove_station_data", (PyCFunction)dpy_remove_station_data<dpy_DB>, METH_VARARGS,
-        "Remove station variables from the database" },
-    {"remove",            (PyCFunction)dpy_remove<dpy_DB>, METH_VARARGS,
-        "Remove variables from the database" },
-    {"remove_all",            (PyCFunction)dpy_remove_all<dpy_DB>, METH_NOARGS,
-        "Remove all data from the database" },
-    {"vacuum",            (PyCFunction)dpy_DB_vacuum, METH_NOARGS,
-        "Perform database cleanup operations" },
-    {"query_stations",    (PyCFunction)dpy_query_stations<dpy_DB>, METH_VARARGS,
-        "Query the station archive in the database; returns a Cursor" },
-    {"query_station_data", (PyCFunction)dpy_query_station_data<dpy_DB>, METH_VARARGS,
-        "Query the station variables in the database; returns a Cursor" },
-    {"query_data",        (PyCFunction)dpy_query_data<dpy_DB>, METH_VARARGS,
-        "Query the variables in the database; returns a Cursor" },
-    {"query_summary",     (PyCFunction)dpy_query_summary<dpy_DB>, METH_VARARGS,
-        "Query the summary of the results of a query; returns a Cursor" },
-    {"query_attrs",       (PyCFunction)dpy_DB_query_attrs, METH_VARARGS | METH_KEYWORDS,
-        "Query attributes" },
-    {"attr_query_station", (PyCFunction)dpy_attr_query_station<dpy_DB>, METH_VARARGS,
-        "Query attributes" },
-    {"attr_query_data",   (PyCFunction)dpy_attr_query_data<dpy_DB>, METH_VARARGS,
-        "Query attributes" },
-    {"attr_insert",       (PyCFunction)dpy_DB_attr_insert, METH_VARARGS | METH_KEYWORDS,
-        "Insert new attributes into the database" },
-    {"attr_insert_station", (PyCFunction)dpy_attr_insert_station<dpy_DB>, METH_VARARGS,
-        "Insert new attributes into the database" },
-    {"attr_insert_data",  (PyCFunction)dpy_attr_insert_data<dpy_DB>, METH_VARARGS,
-        "Insert new attributes into the database" },
-    {"attr_remove",       (PyCFunction)dpy_DB_attr_remove, METH_VARARGS | METH_KEYWORDS,
-        "Remove attributes" },
-    {"attr_remove_station", (PyCFunction)dpy_attr_remove_station<dpy_DB>, METH_VARARGS,
-        "Remove attributes" },
-    {"attr_remove_data",  (PyCFunction)dpy_attr_remove_data<dpy_DB>, METH_VARARGS,
-        "Remove attributes" },
-    {"export_to_file",    (PyCFunction)dpy_export_to_file<dpy_DB>, METH_VARARGS | METH_KEYWORDS,
-        "Export data matching a query as bulletins to a named file" },
-    {NULL}
-};
-
-static PyMethodDef dpy_Transaction_methods[] = {
-//    {"disappear",         (PyCFunction)dpy_DB_disappear, METH_NOARGS,
-//        "Remove all our traces from the database, if applicable." },
-//    {"reset",             (PyCFunction)dpy_DB_reset, METH_VARARGS,
-//        "Reset the database, removing all existing Db-All.e tables and re-creating them empty." },
-    {"insert_station_data", (PyCFunction)dpy_insert_station_data<dpy_Transaction>, METH_VARARGS | METH_KEYWORDS,
-        "Insert station values in the database" },
-    {"insert_data",       (PyCFunction)dpy_insert_data<dpy_Transaction>, METH_VARARGS | METH_KEYWORDS,
-        "Insert data values in the database" },
-    {"load",              (PyCFunction)dpy_load<dpy_Transaction>, METH_VARARGS | METH_KEYWORDS, R"(
-        load(fp, encoding=None, attrs=False, full_pseudoana=False, overwrite=False)
-
-        Load a file object in the database. An encoding can optionally be
-        provided as a string ("BUFR", "CREX"). If encoding is None then
-        load will try to autodetect based on the first byte of the file.
-    )" },
-    {"remove_station_data", (PyCFunction)dpy_remove_station_data<dpy_Transaction>, METH_VARARGS,
-        "Remove station variables from the database" },
-    {"remove",            (PyCFunction)dpy_remove<dpy_Transaction>, METH_VARARGS,
-        "Remove variables from the database" },
-    {"remove_all",            (PyCFunction)dpy_remove_all<dpy_Transaction>, METH_NOARGS,
-        "Remove all data from the database" },
-//    {"vacuum",            (PyCFunction)dpy_DB_vacuum, METH_NOARGS,
-//        "Perform database cleanup operations" },
-    {"query_stations",    (PyCFunction)dpy_query_stations<dpy_Transaction>, METH_VARARGS,
-        "Query the station archive in the database; returns a Cursor" },
-    {"query_station_data", (PyCFunction)dpy_query_station_data<dpy_Transaction>, METH_VARARGS,
-        "Query the station variables in the database; returns a Cursor" },
-    {"query_data",        (PyCFunction)dpy_query_data<dpy_Transaction>, METH_VARARGS,
-        "Query the variables in the database; returns a Cursor" },
-    {"query_summary",     (PyCFunction)dpy_query_summary<dpy_Transaction>, METH_VARARGS,
-        "Query the summary of the results of a query; returns a Cursor" },
-    {"attr_query_station", (PyCFunction)dpy_attr_query_station<dpy_Transaction>, METH_VARARGS,
-        "Query attributes" },
-    {"attr_query_data",   (PyCFunction)dpy_attr_query_data<dpy_Transaction>, METH_VARARGS,
-        "Query attributes" },
-    {"attr_insert_station", (PyCFunction)dpy_attr_insert_station<dpy_Transaction>, METH_VARARGS,
-        "Insert new attributes into the database" },
-    {"attr_insert_data",  (PyCFunction)dpy_attr_insert_data<dpy_Transaction>, METH_VARARGS,
-        "Insert new attributes into the database" },
-    {"attr_remove_station", (PyCFunction)dpy_attr_remove_station<dpy_Transaction>, METH_VARARGS,
-        "Remove attributes" },
-    {"attr_remove_data",  (PyCFunction)dpy_attr_remove_data<dpy_Transaction>, METH_VARARGS,
-        "Remove attributes" },
-    {"export_to_file",    (PyCFunction)dpy_export_to_file<dpy_Transaction>, METH_VARARGS | METH_KEYWORDS,
-        "Export data matching a query as bulletins to a named file" },
-    {"__enter__",         (PyCFunction)dpy_tr_enter, METH_NOARGS, "Context manager __enter__" },
-    {"__exit__",          (PyCFunction)dpy_tr_exit, METH_VARARGS, "Context manager __exit__" },
-    {"commit",            (PyCFunction)dpy_tr_commit, METH_NOARGS, "Commit the transaction" },
-    {"rollback",          (PyCFunction)dpy_tr_rollback, METH_NOARGS, "Roll back the transaction" },
-    {NULL}
-};
-
-static int dpy_DB_init(dpy_DB* self, PyObject* args, PyObject* kw)
-{
-    // People should not invoke DB() as a constructor, but if they do,
-    // this is better than a segfault later on
-    //PyErr_SetString(PyExc_NotImplementedError, "DB objects cannot be constructed explicitly");
-    //return -1;
-    return 0;
-}
-
-static dpy_DB* dpy_DB_new(PyTypeObject* subtype, PyObject* args, PyObject* kw)
-{
-    dpy_DB* self = reinterpret_cast<dpy_DB*>(subtype->tp_alloc(subtype, 0));
-    if (!self) return self;
-    new(&(self->db)) std::shared_ptr<DB>();
-    return self;
-}
-
-static void dpy_DB_dealloc(dpy_DB* self)
-{
-    self->db.~shared_ptr<DB>();
-    Py_TYPE(self)->tp_free(self);
-}
-
-static PyObject* dpy_DB_str(dpy_DB* self)
-{
-    /*
-    std::string f = self->var.format("None");
-    return PyUnicode_FromString(f.c_str());
-    */
-    return PyUnicode_FromString("DB");
-}
-
-static PyObject* dpy_DB_repr(dpy_DB* self)
-{
-    /*
-    string res = "Var('";
-    res += varcode_format(self->var.code());
-    if (self->var.info()->is_string())
-    {
-        res += "', '";
-        res += self->var.format();
-        res += "')";
-    } else {
-        res += "', ";
-        res += self->var.format("None");
-        res += ")";
+        } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
     }
-    return PyUnicode_FromString(res.c_str());
-    */
-    return PyUnicode_FromString("DB object");
+};
+
+struct commit : MethNoargs<dpy_Transaction>
+{
+    constexpr static const char* name = "commit";
+    constexpr static const char* doc = "commit the transaction";
+    static PyObject* run(Impl* self)
+    {
+        try {
+            ReleaseGIL gil;
+            self->db->commit();
+        } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
+    }
+};
+
+struct rollback : MethNoargs<dpy_Transaction>
+{
+    constexpr static const char* name = "rollback";
+    constexpr static const char* doc = "roll back the transaction";
+    static PyObject* run(Impl* self)
+    {
+        try {
+            ReleaseGIL gil;
+            self->db->rollback();
+        } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
+    }
+};
+
+
+struct Definition : public Binding<Definition, dpy_Transaction>
+{
+    constexpr static const char* name = "Transaction";
+    constexpr static const char* qual_name = "dballe.Transaction";
+    constexpr static const char* doc = "DB-All.e transaction";
+
+    GetSetters<> getsetters;
+    Methods<
+        insert_station_data<Impl>, insert_data<Impl>,
+        remove_station_data<Impl>, remove<Impl>, remove_all<Impl>,
+        query_stations<Impl>, query_station_data<Impl>, query_data<Impl>, query_summary<Impl>,
+        attr_query_station<Impl>, attr_query_data<Impl>,
+        attr_insert_station<Impl>, attr_insert_data<Impl>,
+        attr_remove_station<Impl>, attr_remove_data<Impl>,
+        load<Impl>, export_to_file<Impl>,
+        __enter__, __exit__, commit, rollback
+        > methods;
+
+    static void _dealloc(Impl* self)
+    {
+        self->db.~shared_ptr<dballe::db::Transaction>();
+        Py_TYPE(self)->tp_free(self);
+    }
+
+    static int _init(Impl* self, PyObject* args, PyObject* kw)
+    {
+        // People should not invoke Transaction() as a constructor, but if they do,
+        // this is better than a segfault later on
+        PyErr_SetString(PyExc_NotImplementedError, "Transaction objects cannot be constructed explicitly");
+        return -1;
+    }
+};
+
+Definition* definition = nullptr;
+
 }
 
-
-static int dpy_Transaction_init(dpy_Transaction* self, PyObject* args, PyObject* kw)
-{
-    return 0;
-}
-
-static dpy_Transaction* dpy_Transaction_new(PyTypeObject* subtype, PyObject* args, PyObject* kw)
-{
-    dpy_Transaction* self = reinterpret_cast<dpy_Transaction*>(subtype->tp_alloc(subtype, 0));
-    if (!self) return self;
-    new(&(self->db)) std::shared_ptr<dballe::db::Transaction>();
-    return self;
-}
-
-static void dpy_Transaction_dealloc(dpy_Transaction* self)
-{
-    self->db.~shared_ptr<dballe::db::Transaction>();
-    Py_TYPE(self)->tp_free(self);
-}
-
-static PyObject* dpy_Transaction_str(dpy_Transaction* self)
-{
-    return PyUnicode_FromString("Transaction");
-}
-
-static PyObject* dpy_Transaction_repr(dpy_Transaction* self)
-{
-    return PyUnicode_FromString("Transaction object");
 }
 
 
 extern "C" {
 
-PyTypeObject dpy_Transaction_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "dballe.Transaction",      // tp_name
-    sizeof(dpy_Transaction),   // tp_basicsize
-    0,                         // tp_itemsize
-    (destructor)dpy_Transaction_dealloc, // tp_dealloc
-    0,                         // tp_print
-    0,                         // tp_getattr
-    0,                         // tp_setattr
-    0,                         // tp_compare
-    (reprfunc)dpy_Transaction_repr, // tp_repr
-    0,                         // tp_as_number
-    0,                         // tp_as_sequence
-    0,                         // tp_as_mapping
-    0,                         // tp_hash
-    0,                         // tp_call
-    (reprfunc)dpy_Transaction_str, // tp_str
-    0,                         // tp_getattro
-    0,                         // tp_setattro
-    0,                         // tp_as_buffer
-    Py_TPFLAGS_DEFAULT,        // tp_flags
-    "DB-All.e Transaction",    // tp_doc
-    0,                         // tp_traverse
-    0,                         // tp_clear
-    0,                         // tp_richcompare
-    0,                         // tp_weaklistoffset
-    0,                         // tp_iter
-    0,                         // tp_iternext
-    dpy_Transaction_methods,   // tp_methods
-    0,                         // tp_members
-    dpy_Transaction_getsetters, // tp_getset
-    0,                         // tp_base
-    0,                         // tp_dict
-    0,                         // tp_descr_get
-    0,                         // tp_descr_set
-    0,                         // tp_dictoffset
-    (initproc)dpy_Transaction_init, // tp_init
-    0,                         // tp_alloc
-    (newfunc)dpy_Transaction_new, // tp_new
-};
-
-PyTypeObject dpy_DB_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "dballe.DB",               // tp_name
-    sizeof(dpy_DB),            // tp_basicsize
-    0,                         // tp_itemsize
-    (destructor)dpy_DB_dealloc, // tp_dealloc
-    0,                         // tp_print
-    0,                         // tp_getattr
-    0,                         // tp_setattr
-    0,                         // tp_compare
-    (reprfunc)dpy_DB_repr,     // tp_repr
-    0,                         // tp_as_number
-    0,                         // tp_as_sequence
-    0,                         // tp_as_mapping
-    0,                         // tp_hash
-    0,                         // tp_call
-    (reprfunc)dpy_DB_str,      // tp_str
-    0,                         // tp_getattro
-    0,                         // tp_setattro
-    0,                         // tp_as_buffer
-    Py_TPFLAGS_DEFAULT,        // tp_flags
-    "DB-All.e DB",             // tp_doc
-    0,                         // tp_traverse
-    0,                         // tp_clear
-    0,                         // tp_richcompare
-    0,                         // tp_weaklistoffset
-    0,                         // tp_iter
-    0,                         // tp_iternext
-    dpy_DB_methods,            // tp_methods
-    0,                         // tp_members
-    dpy_DB_getsetters,         // tp_getset
-    0,                         // tp_base
-    0,                         // tp_dict
-    0,                         // tp_descr_get
-    0,                         // tp_descr_set
-    0,                         // tp_dictoffset
-    (initproc)dpy_DB_init,     // tp_init
-    0,                         // tp_alloc
-    (newfunc)dpy_DB_new,       // tp_new
-};
+PyTypeObject* dpy_DB_Type = nullptr;
+PyTypeObject* dpy_Transaction_Type = nullptr;
 
 }
 
 namespace dballe {
 namespace python {
 
-int db_read_attrlist(PyObject* attrs, db::AttrList& codes)
+db::AttrList db_read_attrlist(PyObject* attrs)
 {
-    if (!attrs) return 0;
+    db::AttrList res;
+    if (!attrs) return res;
+    pyo_unique_ptr iter(throw_ifnull(PyObject_GetIter(attrs)));
 
-    pyo_unique_ptr iter(PyObject_GetIter(attrs));
-    if (!iter) return -1;
-
-    try {
-        while (PyObject* iter_item = PyIter_Next(iter)) {
-            pyo_unique_ptr item(iter_item);
-            string name = string_from_python(item);
-            codes.push_back(resolve_varcode(name));
-        }
-        return 0;
-    } DBALLE_CATCH_RETURN_INT
+    while (PyObject* iter_item = PyIter_Next(iter)) {
+        pyo_unique_ptr item(iter_item);
+        string name = string_from_python(item);
+        res.push_back(resolve_varcode(name));
+    }
+    return res;
 }
 
 dpy_DB* db_create(std::shared_ptr<DB> db)
 {
-    dpy_DB* result = (dpy_DB*)PyObject_CallObject((PyObject*)&dpy_DB_Type, nullptr);
-    if (!result)
-        return NULL;
-    result->db = db;
-    return result;
+    py_unique_ptr<dpy_DB> res = throw_ifnull(PyObject_New(dpy_DB, dpy_DB_Type));
+    new (&(res->db)) std::shared_ptr<DB>(db);
+    return res.release();
 }
 
-dpy_Transaction* transaction_create(std::shared_ptr<dballe::db::Transaction> transaction)
+dpy_Transaction* transaction_create(std::shared_ptr<db::Transaction> transaction)
 {
-    dpy_Transaction* result = (dpy_Transaction*)PyObject_CallObject((PyObject*)&dpy_Transaction_Type, nullptr);
-    if (!result)
-        return NULL;
-    result->db = transaction;
-    return result;
+    py_unique_ptr<dpy_Transaction> res = throw_ifnull(PyObject_New(dpy_Transaction, dpy_Transaction_Type));
+    new (&(res->db)) std::shared_ptr<db::Transaction>(transaction);
+    return res.release();
 }
 
 void register_db(PyObject* m)
 {
     common_init();
 
-    if (PyType_Ready(&dpy_Transaction_Type) < 0)
-        throw PythonException();
-    Py_INCREF(&dpy_Transaction_Type);
+    pydb::definition = new pydb::Definition;
+    dpy_DB_Type = pydb::definition->activate(m);
 
-    if (PyType_Ready(&dpy_DB_Type) < 0)
-        throw PythonException();
-    Py_INCREF(&dpy_DB_Type);
-
-    if (PyModule_AddObject(m, "DB", (PyObject*)&dpy_DB_Type) != 0)
-        throw PythonException();
-    if (PyModule_AddObject(m, "Transaction", (PyObject*)&dpy_Transaction_Type) != 0)
-        throw PythonException();
+    pytr::definition = new pytr::Definition;
+    dpy_Transaction_Type = pytr::definition->activate(m);
 }
 
 }

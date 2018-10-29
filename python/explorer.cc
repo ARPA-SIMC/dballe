@@ -362,8 +362,7 @@ struct BaseQuerySummary : public MethKwargs<typename ImplTraits<Station>::Impl>
 
         try {
             core::Query query;
-            if (read_query(record, query) == -1)
-                return nullptr;
+            read_query(record, query);
             ReleaseGIL gil;
             const auto& summary = get_summary<Station, Scope>(*self);
             std::unique_ptr<db::Cursor> res = summary.query_summary(query);
@@ -497,7 +496,7 @@ Add the summary of the contents of the given database to the Explorer.
     {
         static const char* kwlist[] = { "tr", NULL };
         dpy_Transaction* tr;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "O!", const_cast<char**>(kwlist), &dpy_Transaction_Type, &tr))
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O!", const_cast<char**>(kwlist), dpy_Transaction_Type, &tr))
             return nullptr;
 
         try {

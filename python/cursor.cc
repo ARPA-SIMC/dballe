@@ -52,13 +52,12 @@ static PyObject* dpy_Cursor_query_attrs(dpy_Cursor* self, PyObject* args, PyObje
     if (!PyArg_ParseTupleAndKeywords(args, kw, "|O", const_cast<char**>(kwlist), &attrs))
         return NULL;
 
-    // Read the attribute list, if provided
-    db::AttrList codes;
-    if (db_read_attrlist(attrs, codes))
-        return NULL;
-
-    py_unique_ptr<dpy_Record> rec(record_create());
     try {
+        // Read the attribute list, if provided
+        db::AttrList codes = db_read_attrlist(attrs);
+
+        py_unique_ptr<dpy_Record> rec(record_create());
+
         if (auto c = dynamic_cast<const db::CursorStationData*>(self->cur))
             c->get_transaction()->attr_query_station(c->attr_reference_id(), [&](unique_ptr<Var>&& var) {
                 if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())

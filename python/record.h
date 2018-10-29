@@ -25,6 +25,13 @@ PyAPI_DATA(PyTypeObject) dpy_Record_Type;
 namespace dballe {
 namespace python {
 
+/**
+ * Access a Record from a python object.
+ *
+ * If the object is a dpy_Record object, returns a reference to the record inside.
+ *
+ * Otherwise, create a temporary Record
+ */
 class RecordAccess
 {
 protected:
@@ -32,20 +39,18 @@ protected:
     dballe::Record* result = nullptr;
 
 public:
-    RecordAccess() = default;
+    RecordAccess(PyObject*);
     RecordAccess(const RecordAccess&) = delete;
     RecordAccess(RecordAccess&&) = delete;
     ~RecordAccess();
     RecordAccess& operator=(const RecordAccess&) = delete;
     RecordAccess& operator=(RecordAccess&&) = delete;
 
-    int init(PyObject*);
-
     operator dballe::Record&() { return *result; }
     operator const dballe::Record&() const { return *result; }
 };
 
-int read_query(PyObject* from_python, dballe::Query& query);
+void read_query(PyObject* from_python, dballe::Query& query);
 
 dpy_Record* record_create();
 

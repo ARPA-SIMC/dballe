@@ -115,99 +115,99 @@ static PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key)
  *
  * Returns 0 on success, -1 on failures with a python exception set
  */
-static int setpy(dballe::Record& rec, PyObject* key, PyObject* val)
+static void setpy(dballe::Record& rec, PyObject* key, PyObject* val)
 {
-    try {
-        string name = string_from_python(key);
+    string name = string_from_python(key);
 
-        // Check for shortcut keys
-        if (name == "datetime" || name == "date")
-        {
-            if (name == "date")
-                if (int res = PyErr_WarnEx(PyExc_DeprecationWarning, "please use rec[\"datetime\"] instead of rec[\"date\"]", 1))
-                    return res;
+    // Check for shortcut keys
+    if (name == "datetime" || name == "date")
+    {
+        if (name == "date")
+            if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use rec[\"datetime\"] instead of rec[\"date\"]", 1))
+                throw PythonException();
 
-            if (val && PySequence_Check(val))
-                rec.set(datetimerange_from_python(val));
-            else
-                rec.set(datetime_from_python(val));
-            return 0;
-        }
+        if (val && PySequence_Check(val))
+            rec.set(datetimerange_from_python(val));
+        else
+            rec.set(datetime_from_python(val));
+        return;
+    }
 
-        if (name == "datemin") {
-            if (int res = PyErr_WarnEx(PyExc_DeprecationWarning, "please use rec[\"datetime\"] = (min, max) instead of rec[\"datemin\"]", 1))
-                return res;
-            DatetimeRange dtr = core::Record::downcast(rec).get_datetimerange();
-            dtr.min = datetime_from_python(val);
-            rec.set(dtr);
-            return 0;
-        }
+    if (name == "datemin") {
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use rec[\"datetime\"] = (min, max) instead of rec[\"datemin\"]", 1))
+            throw PythonException();
+        DatetimeRange dtr = core::Record::downcast(rec).get_datetimerange();
+        dtr.min = datetime_from_python(val);
+        rec.set(dtr);
+        return;
+    }
 
-        if (name == "datemax") {
-            if (int res = PyErr_WarnEx(PyExc_DeprecationWarning, "please use rec[\"datetime\"] = (min, max) instead of rec[\"datemax\"]", 1))
-                return res;
-            DatetimeRange dtr = core::Record::downcast(rec).get_datetimerange();
-            dtr.max = datetime_from_python(val);
-            rec.set(dtr);
-            return 0;
-        }
+    if (name == "datemax") {
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use rec[\"datetime\"] = (min, max) instead of rec[\"datemax\"]", 1))
+            throw PythonException();
+        DatetimeRange dtr = core::Record::downcast(rec).get_datetimerange();
+        dtr.max = datetime_from_python(val);
+        rec.set(dtr);
+        return;
+    }
 
-        if (name == "level")
-        {
-            rec.set(level_from_python(val));
-            return 0;
-        }
+    if (name == "level")
+    {
+        rec.set(level_from_python(val));
+        return;
+    }
 
-        if (name == "trange" || name == "timerange")
-        {
-            if (name == "timerange")
-                if (int res = PyErr_WarnEx(PyExc_DeprecationWarning, "please use rec[\"trange\"] instead of rec[\"timerange\"]", 1))
-                    return res;
-            rec.set(trange_from_python(val));
-            return 0;
-        }
+    if (name == "trange" || name == "timerange")
+    {
+        if (name == "timerange")
+            if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use rec[\"trange\"] instead of rec[\"timerange\"]", 1))
+                throw PythonException();
+        rec.set(trange_from_python(val));
+        return;
+    }
 
-        if (!val)
-        {
-            // del rec[val]
-            rec.unset(name.c_str());
-            return 0;
-        }
+    if (!val)
+    {
+        // del rec[val]
+        rec.unset(name.c_str());
+        return;
+    }
 
-        if (PyFloat_Check(val))
-        {
-            double v = PyFloat_AsDouble(val);
-            if (v == -1.0 && PyErr_Occurred())
-                return -1;
-            rec.set(name.c_str(), v);
-        } else if (PyLong_Check(val)) {
-            long v = PyLong_AsLong(val);
-            if (v == -1 && PyErr_Occurred())
-                return -1;
-            rec.set(name.c_str(), (int)v);
-        } else if (
-                PyUnicode_Check(val)
+    if (PyFloat_Check(val))
+    {
+        double v = PyFloat_AsDouble(val);
+        if (v == -1.0 && PyErr_Occurred())
+            throw PythonException();
+        rec.set(name.c_str(), v);
+    } else if (PyLong_Check(val)) {
+        long v = PyLong_AsLong(val);
+        if (v == -1 && PyErr_Occurred())
+            throw PythonException();
+        rec.set(name.c_str(), (int)v);
+    } else if (
+            PyUnicode_Check(val)
 #if PY_MAJOR_VERSION >= 3
-                || PyBytes_Check(val)
+            || PyBytes_Check(val)
 #else
-                || PyString_Check(val)
+            || PyString_Check(val)
 #endif
-                ) {
-            string value = string_from_python(val);
-            rec.set(name.c_str(), value.c_str());
-        } else if (val == Py_None) {
-            rec.unset(name.c_str());
-        } else {
-            PyErr_SetString(PyExc_TypeError, "Expected int, float, str, unicode, or None");
-            return -1;
-        }
-        return 0;
-    } DBALLE_CATCH_RETURN_INT
+            ) {
+        string value = string_from_python(val);
+        rec.set(name.c_str(), value.c_str());
+    } else if (val == Py_None) {
+        rec.unset(name.c_str());
+    } else {
+        PyErr_SetString(PyExc_TypeError, "Expected int, float, str, unicode, or None");
+        throw PythonException();
+    }
 }
 
 static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
 {
-    return setpy(*self->rec, key, val);
+    try {
+        setpy(*self->rec, key, val);
+        return 0;
+    } DBALLE_CATCH_RETURN_INT
 }
 
 static int dpy_Record_contains(dpy_Record* self, PyObject *value)
@@ -392,17 +392,17 @@ static PyObject* dpy_Record_var(dpy_Record* self, PyObject* args)
 
 static PyObject* dpy_Record_update(dpy_Record* self, PyObject *args, PyObject *kw)
 {
-    if (kw)
-    {
-        PyObject *key, *value;
-        Py_ssize_t pos = 0;
+    try {
+        if (kw)
+        {
+            PyObject *key, *value;
+            Py_ssize_t pos = 0;
 
-        while (PyDict_Next(kw, &pos, &key, &value))
-            if (setpy(*self->rec, key, value) == -1)
-                return nullptr;
-    }
-
-    Py_RETURN_NONE;
+            while (PyDict_Next(kw, &pos, &key, &value))
+                setpy(*self->rec, key, value);
+        }
+        Py_RETURN_NONE;
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_Record_get(dpy_Record* self, PyObject *args, PyObject* kw)
@@ -534,19 +534,20 @@ static PyMethodDef dpy_Record_methods[] = {
 static int dpy_Record_init(dpy_Record* self, PyObject* args, PyObject* kw)
 {
     // Construct on preallocated memory
-    self->rec = Record::create().release();
+    try {
+        self->rec = Record::create().release();
 
-    if (kw)
-    {
-        PyObject *key, *value;
-        Py_ssize_t pos = 0;
+        if (kw)
+        {
+            PyObject *key, *value;
+            Py_ssize_t pos = 0;
 
-        while (PyDict_Next(kw, &pos, &key, &value))
-            if (setpy(*self->rec, key, value) == -1)
-                return -1;
-    }
+            while (PyDict_Next(kw, &pos, &key, &value))
+                setpy(*self->rec, key, value);
+        }
 
-    return 0;
+        return 0;
+    } DBALLE_CATCH_RETURN_INT
 }
 
 static void dpy_Record_dealloc(dpy_Record* self)
@@ -740,81 +741,77 @@ PyTypeObject dpy_Record_Type = {
 namespace dballe {
 namespace python {
 
-RecordAccess::~RecordAccess()
-{
-    delete temp;
-}
-
-int RecordAccess::init(PyObject* o)
+RecordAccess::RecordAccess(PyObject* o)
 {
     if (!o || o == Py_None)
     {
         temp = new dballe::core::Record;
         result = temp;
-        return 0;
+        return;
     }
 
     if (dpy_Record_Check(o))
-        try {
-            result = ((dpy_Record*)o)->rec;
-            return 0;
-        } DBALLE_CATCH_RETURN_INT
+    {
+        result = ((dpy_Record*)o)->rec;
+        return;
+    }
 
     if (PyDict_Check(o))
-        try {
-            temp = new dballe::core::Record;
-            result = temp;
-            PyObject* key;
-            PyObject* value;
-            Py_ssize_t pos = 0;
-            while (PyDict_Next(o, &pos, &key, &value))
-                if (setpy(*temp, key, value) == -1)
-                    return -1;
-            return 0;
-        } DBALLE_CATCH_RETURN_INT
+    {
+        temp = new dballe::core::Record;
+        result = temp;
+        PyObject* key;
+        PyObject* value;
+        Py_ssize_t pos = 0;
+        while (PyDict_Next(o, &pos, &key, &value))
+            setpy(*temp, key, value);
+        return;
+    }
 
     PyErr_SetString(PyExc_TypeError, "Expected dballe.Record or dict or None");
-    return -1;
+    throw PythonException();
 }
 
-int read_query(PyObject* from_python, dballe::Query& query)
+RecordAccess::~RecordAccess()
+{
+    delete temp;
+}
+
+void read_query(PyObject* from_python, dballe::Query& query)
 {
     auto& q = core::Query::downcast(query);
 
-    try {
-        if (!from_python || from_python == Py_None)
-        {
-            q.clear();
-            return 0;
-        }
+    if (!from_python || from_python == Py_None)
+    {
+        q.clear();
+        return;
+    }
 
-        if (dpy_Record_Check(from_python))
-        {
-            query.set_from_record(*((dpy_Record*)from_python)->rec);
-            return 0;
-        }
+    if (dpy_Record_Check(from_python))
+    {
+        query.set_from_record(*((dpy_Record*)from_python)->rec);
+        return;
+    }
 
-        if (PyDict_Check(from_python))
-        {
-            dballe::core::Record rec;
-            PyObject* key;
-            PyObject* value;
-            Py_ssize_t pos = 0;
-            while (PyDict_Next(from_python, &pos, &key, &value))
-                if (setpy(rec, key, value) == -1)
-                    return -1;
-            query.set_from_record(rec);
-            return 0;
-        }
-    } DBALLE_CATCH_RETURN_INT
+    if (PyDict_Check(from_python))
+    {
+        dballe::core::Record rec;
+        PyObject* key;
+        PyObject* value;
+        Py_ssize_t pos = 0;
+        while (PyDict_Next(from_python, &pos, &key, &value))
+            setpy(rec, key, value);
+        query.set_from_record(rec);
+        return;
+    }
 
     PyErr_SetString(PyExc_TypeError, "Expected dballe.Record or dict or None");
-    return -1;
+    throw PythonException();
 }
 
 dpy_Record* record_create()
 {
-    return (dpy_Record*)PyObject_CallObject((PyObject*)&dpy_Record_Type, NULL);
+    return (dpy_Record*)throw_ifnull(PyObject_CallObject((PyObject*)&dpy_Record_Type, NULL));
 }
 
 void register_record(PyObject* m)

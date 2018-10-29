@@ -45,6 +45,19 @@ struct MethNoargs
     }
 };
 
+struct ClassMethNoargs
+{
+    constexpr static const char* name = "TODO";
+    constexpr static const char* doc = "TODO: write method documentation";
+    constexpr static int flags = METH_NOARGS | METH_CLASS;
+
+    static PyObject* run(PyTypeObject* cls)
+    {
+        PyErr_Format(PyExc_NotImplementedError, "method %s is not implemented", name);
+        return nullptr;
+    }
+};
+
 template<typename IMPL>
 struct MethVarargs
 {
@@ -72,6 +85,31 @@ struct MethKwargs
     {
         PyErr_Format(PyExc_NotImplementedError, "method %s is not implemented", name);
         return nullptr;
+    }
+};
+
+struct ClassMethKwargs
+{
+    constexpr static const char* name = "TODO";
+    constexpr static const char* doc = "TODO: write method documentation";
+    constexpr static int flags = METH_VARARGS | METH_KEYWORDS | METH_CLASS;
+
+    static PyObject* run(PyTypeObject* cls, PyObject* args, PyObject* kw)
+    {
+        PyErr_Format(PyExc_NotImplementedError, "method %s is not implemented", name);
+        return nullptr;
+    }
+};
+
+template<typename Impl>
+struct MethGenericEnter : MethNoargs<Impl>
+{
+    constexpr static const char* name = "__enter__";
+    constexpr static const char* doc = "Context manager __enter__";
+    static PyObject* run(Impl* self)
+    {
+        Py_INCREF(self);
+        return (PyObject*)self;
     }
 };
 
