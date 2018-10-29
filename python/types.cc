@@ -530,8 +530,8 @@ DatetimeRange datetimerange_from_python(PyObject* val)
         PyErr_SetString(PyExc_TypeError, "Expected a 2-tuple of datetime() objects");
         throw PythonException();
     }
-    pyo_unique_ptr dtmin(PySequence_GetItem(val, 0));
-    pyo_unique_ptr dtmax(PySequence_GetItem(val, 1));
+    pyo_unique_ptr dtmin(throw_ifnull(PySequence_GetItem(val, 0)));
+    pyo_unique_ptr dtmax(throw_ifnull(PySequence_GetItem(val, 1)));
 
     return DatetimeRange(datetime_from_python(dtmin), datetime_from_python(dtmax));
 }
@@ -568,7 +568,7 @@ PyObject* ident_to_python(const Ident& ident)
 {
     if (ident.is_missing())
         Py_RETURN_NONE;
-    return PyUnicode_FromString(ident.get());
+    return throw_ifnull(PyUnicode_FromString(ident.get()));
 }
 
 Ident ident_from_python(PyObject* o)
@@ -587,8 +587,7 @@ PyObject* level_to_python(const Level& lev)
     if (lev.is_missing())
         Py_RETURN_NONE;
 
-    py_unique_ptr<dpy_Level> res = PyObject_New(dpy_Level, dpy_Level_Type);
-    if (!res) return nullptr;
+    py_unique_ptr<dpy_Level> res = throw_ifnull(PyObject_New(dpy_Level, dpy_Level_Type));
     new (&(res->val)) Level(lev);
     return (PyObject*)res.release();
 }
@@ -635,8 +634,7 @@ PyObject* trange_to_python(const Trange& tr)
     if (tr.is_missing())
         Py_RETURN_NONE;
 
-    py_unique_ptr<dpy_Trange> res = PyObject_New(dpy_Trange, dpy_Trange_Type);
-    if (!res) return nullptr;
+    py_unique_ptr<dpy_Trange> res = throw_ifnull(PyObject_New(dpy_Trange, dpy_Trange_Type));
     new (&(res->val)) Trange(tr);
     return (PyObject*)res.release();
 }
@@ -677,8 +675,7 @@ Trange trange_from_python(PyObject* o)
 
 PyObject* station_to_python(const Station& st)
 {
-    py_unique_ptr<dpy_Station> res = PyObject_New(dpy_Station, dpy_Station_Type);
-    if (!res) return nullptr;
+    py_unique_ptr<dpy_Station> res = throw_ifnull(PyObject_New(dpy_Station, dpy_Station_Type));
     new (&(res->val)) Station(st);
     return (PyObject*)res.release();
 }
@@ -712,8 +709,7 @@ Station station_from_python(PyObject* o)
 
 PyObject* dbstation_to_python(const DBStation& st)
 {
-    py_unique_ptr<dpy_DBStation> res = PyObject_New(dpy_DBStation, dpy_DBStation_Type);
-    if (!res) return nullptr;
+    py_unique_ptr<dpy_DBStation> res = throw_ifnull(PyObject_New(dpy_DBStation, dpy_DBStation_Type));
     new (&(res->val)) DBStation(st);
     return (PyObject*)res.release();
 }
@@ -750,7 +746,7 @@ PyObject* varcode_to_python(wreport::Varcode code)
 {
     char buf[7];
     format_code(code, buf);
-    return PyUnicode_FromString(buf);
+    return throw_ifnull(PyUnicode_FromString(buf));
 }
 
 #if PY_MAJOR_VERSION >= 3
@@ -767,7 +763,7 @@ wreport::Varcode varcode_from_python(PyObject* o)
 #endif
 
 
-int register_types(PyObject* m)
+void register_types(PyObject* m)
 {
     /*
      * PyDateTimeAPI, that is used by all the PyDate* and PyTime* macros, is
@@ -781,19 +777,16 @@ int register_types(PyObject* m)
         PyDateTime_IMPORT;
 
     level::definition = new level::Definition;
-    if (!(dpy_Level_Type = level::definition->activate(m)))
-        return -1;
-    trange::definition = new trange::Definition;
-    if (!(dpy_Trange_Type = trange::definition->activate(m)))
-        return -1;
-    station::definition = new station::Definition;
-    if (!(dpy_Station_Type = station::definition->activate(m)))
-        return -1;
-    station::dbdefinition = new station::DBDefinition;
-    if (!(dpy_DBStation_Type = station::dbdefinition->activate(m)))
-        return -1;
+    dpy_Level_Type = level::definition->activate(m);
 
-    return 0;
+    trange::definition = new trange::Definition;
+    dpy_Trange_Type = trange::definition->activate(m);
+
+    station::definition = new station::Definition;
+    dpy_Station_Type = station::definition->activate(m);
+
+    station::dbdefinition = new station::DBDefinition;
+    dpy_DBStation_Type = station::dbdefinition->activate(m);
 }
 
 }

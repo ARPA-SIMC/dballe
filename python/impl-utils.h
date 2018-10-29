@@ -212,13 +212,13 @@ struct Binding
         };
 
         if (PyType_Ready(type) != 0)
-            return nullptr;
+            throw PythonException();
 
         if (module)
         {
             type.incref();
             if (PyModule_AddObject(module, Derived::name, (PyObject*)type.get()) != 0)
-                return nullptr;
+                throw PythonException();
         }
         return type.release();
     }

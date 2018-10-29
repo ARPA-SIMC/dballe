@@ -130,7 +130,7 @@ wreport::Varcode varcode_from_python(PyObject* o);
 template<> inline wreport::Varcode from_python<wreport::Varcode>(PyObject* o) { return varcode_from_python(o); }
 #endif
 
-int register_types(PyObject* m);
+void register_types(PyObject* m);
 
 }
 }

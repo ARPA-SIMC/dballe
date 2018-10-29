@@ -168,17 +168,19 @@ PyMODINIT_FUNC init_dballe(void)
     using namespace dballe::python;
 
 #if PY_MAJOR_VERSION >= 3
-    pyo_unique_ptr m(PyModule_Create(&dballe_module));
-    if (register_types(m) != 0) return nullptr;
-    if (register_record(m) != 0) return nullptr;
-    if (register_db(m) != 0) return nullptr;
-    if (register_cursor(m) != 0) return nullptr;
-    if (register_binarymessage(m) != 0) return nullptr;
-    if (register_file(m) != 0) return nullptr;
-    if (register_message(m) != 0) return nullptr;
-    if (register_explorer(m) != 0) return nullptr;
+    try {
+        pyo_unique_ptr m(PyModule_Create(&dballe_module));
+        register_types(m);
+        if (register_record(m) != 0) return nullptr;
+        if (register_db(m) != 0) return nullptr;
+        if (register_cursor(m) != 0) return nullptr;
+        if (register_binarymessage(m) != 0) return nullptr;
+        if (register_file(m) != 0) return nullptr;
+        if (register_message(m) != 0) return nullptr;
+        if (register_explorer(m) != 0) return nullptr;
 
-    return m.release();
+        return m.release();
+    } DBALLE_CATCH_RETURN_PYO
 #else
     pyo_unique_ptr m(Py_InitModule3("_dballe", dballe_methods, "DB-All.e Python interface."));
     register_types(m);
