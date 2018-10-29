@@ -26,6 +26,11 @@ using namespace dballe;
 using namespace dballe::python;
 using namespace wreport;
 
+extern "C" {
+PyTypeObject* dpy_DB_Type = nullptr;
+PyTypeObject* dpy_Transaction_Type = nullptr;
+}
+
 namespace {
 
 /**
@@ -908,14 +913,6 @@ struct Definition : public Binding<Definition, dpy_DB>
         self->db.~shared_ptr<DB>();
         Py_TYPE(self)->tp_free(self);
     }
-
-    static int _init(Impl* self, PyObject* args, PyObject* kw)
-    {
-        // People should not invoke DB() as a constructor, but if they do,
-        // this is better than a segfault later on
-        PyErr_SetString(PyExc_NotImplementedError, "DB objects cannot be constructed explicitly");
-        return -1;
-    }
 };
 
 Definition* definition = nullptr;
@@ -1002,27 +999,11 @@ struct Definition : public Binding<Definition, dpy_Transaction>
         self->db.~shared_ptr<dballe::db::Transaction>();
         Py_TYPE(self)->tp_free(self);
     }
-
-    static int _init(Impl* self, PyObject* args, PyObject* kw)
-    {
-        // People should not invoke Transaction() as a constructor, but if they do,
-        // this is better than a segfault later on
-        PyErr_SetString(PyExc_NotImplementedError, "Transaction objects cannot be constructed explicitly");
-        return -1;
-    }
 };
 
 Definition* definition = nullptr;
 
 }
-
-}
-
-
-extern "C" {
-
-PyTypeObject* dpy_DB_Type = nullptr;
-PyTypeObject* dpy_Transaction_Type = nullptr;
 
 }
 

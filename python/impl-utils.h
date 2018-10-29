@@ -198,6 +198,13 @@ struct Binding
     constexpr static richcmpfunc _richcompare = nullptr;
     constexpr static hashfunc _hash = nullptr;
 
+    static int _init(Impl* self, PyObject* args, PyObject* kw)
+    {
+        // Default implementation raising NotImplementedError
+        PyErr_Format(PyExc_NotImplementedError, "%s objects cannot be constructed explicitly", Derived::qual_name);
+        return -1;
+    }
+
     /**
      * Activate this type.
      *
@@ -207,6 +214,12 @@ struct Binding
     PyTypeObject* activate(PyObject* module=nullptr)
     {
         Derived* d = static_cast<Derived*>(this);
+
+        unsigned long tp_flags = Py_TPFLAGS_DEFAULT;
+#if PY_MAJOR_VERSION <= 2
+        if (Derived::_iter)
+            tp_flags |= Py_TPFLAGS_HAVE_ITER;
+#endif
 
         py_unique_ptr<PyTypeObject> type = new PyTypeObject {
             PyVarObject_HEAD_INIT(NULL, 0)
@@ -228,7 +241,7 @@ struct Binding
             0,                         // tp_getattro
             0,                         // tp_setattro
             0,                         // tp_as_buffer
-            Py_TPFLAGS_DEFAULT,        // tp_flags
+            tp_flags,                  // tp_flags
             Derived::doc,              // tp_doc
             0,                         // tp_traverse
             0,                         // tp_clear

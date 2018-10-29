@@ -34,11 +34,11 @@ typedef struct {
     dpy_Record* rec;
 } dpy_Cursor;
 
-PyAPI_DATA(PyTypeObject) dpy_Cursor_Type;
+extern PyTypeObject* dpy_Cursor_Type;
 
 #define dpy_Cursor_Check(ob) \
-    (Py_TYPE(ob) == &dpy_Cursor_Type || \
-     PyType_IsSubtype(Py_TYPE(ob), &dpy_Cursor_Type))
+    (Py_TYPE(ob) == dpy_Cursor_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), dpy_Cursor_Type))
 }
 
 namespace dballe {
@@ -49,9 +49,8 @@ namespace python {
  */
 dpy_Cursor* cursor_create(std::unique_ptr<db::Cursor> cur);
 
-int register_cursor(PyObject* m);
+void register_cursor(PyObject* m);
 
 }
 }
-
 #endif

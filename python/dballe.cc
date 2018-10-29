@@ -173,7 +173,7 @@ PyMODINIT_FUNC init_dballe(void)
         register_types(m);
         register_record(m);
         register_db(m);
-        if (register_cursor(m) != 0) return nullptr;
+        register_cursor(m);
         register_binarymessage(m);
         register_file(m);
         register_message(m);
