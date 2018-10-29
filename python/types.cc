@@ -498,9 +498,9 @@ PyObject* datetime_to_python(const Datetime& dt)
     if (dt.is_missing())
         Py_RETURN_NONE;
 
-    return PyDateTime_FromDateAndTime(
+    return throw_ifnull(PyDateTime_FromDateAndTime(
             dt.year, dt.month,  dt.day,
-            dt.hour, dt.minute, dt.second, 0);
+            dt.hour, dt.minute, dt.second, 0));
 }
 
 Datetime datetime_from_python(PyObject* dt)
@@ -541,8 +541,7 @@ PyObject* coords_to_python(const Coords& coords)
     if (coords.is_missing())
         Py_RETURN_NONE;
 
-    pyo_unique_ptr res(PyTuple_New(2));
-    if (!res) throw PythonException();
+    pyo_unique_ptr res(throw_ifnull(PyTuple_New(2)));
 
     if (PyTuple_SetItem(res, 0, to_python(coords.dlat())) != 0)
         throw PythonException();
@@ -759,11 +758,7 @@ wreport::Varcode varcode_from_python(PyObject* o)
 {
     try {
         if (PyUnicode_Check(o))
-        {
-            const char* v = PyUnicode_AsUTF8(o);
-            if (v == nullptr) throw PythonException();
-            return resolve_varcode(v);
-        }
+            return resolve_varcode(throw_ifnull(PyUnicode_AsUTF8(o)));
     } DBALLE_CATCH_RETURN_INT
 
     PyErr_SetString(PyExc_TypeError, "Expected str");

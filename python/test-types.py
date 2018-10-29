@@ -1,6 +1,5 @@
 import dballe
 import unittest
-import sys
 
 
 class TestLevel(unittest.TestCase):

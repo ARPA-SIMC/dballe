@@ -133,6 +133,13 @@ void set_std_exception(const std::exception& e);
         set_std_exception(se); return -1; \
     }
 
+template<typename T>
+inline T* throw_ifnull(T* o)
+{
+    if (!o) throw PythonException();
+    return o;
+}
+
 /// Base template for all from_python shortcuts
 template<typename T> inline T from_python(PyObject*) { throw std::runtime_error("method not implemented"); }
 

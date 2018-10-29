@@ -75,9 +75,7 @@ void set_std_exception(const std::exception& e)
 
 PyObject* string_to_python(const std::string& str)
 {
-    PyObject* res = PyUnicode_FromStringAndSize(str.data(), str.size());
-    if (!res) throw PythonException();
-    return res;
+    return throw_ifnull(PyUnicode_FromStringAndSize(str.data(), str.size()));
 }
 
 bool pyobject_is_string(PyObject* o)
@@ -97,28 +95,18 @@ bool pyobject_is_string(PyObject* o)
 std::string string_from_python(PyObject* o)
 {
 #if PY_MAJOR_VERSION >= 3
-    if (PyBytes_Check(o)) {
-        const char* v = PyBytes_AsString(o);
-        if (!v) throw PythonException();
-        return v;
-    }
+    if (PyBytes_Check(o))
+        return throw_ifnull(PyBytes_AsString(o));
 #else
-    if (PyString_Check(o)) {
-        const char* v = PyString_AsString(o);
-        if (!v) throw PythonException();
-        return v;
-    }
+    if (PyString_Check(o))
+        return throw_ifnull(PyString_AsString(o));
 #endif
     if (PyUnicode_Check(o)) {
 #if PY_MAJOR_VERSION >= 3
-        const char* v = PyUnicode_AsUTF8(o);
-        if (!v) throw PythonException();
-        return v;
+        return throw_ifnull(PyUnicode_AsUTF8(o));
 #else
-        pyo_unique_ptr utf8(PyUnicode_AsUTF8String(o));
-        const char* v = PyString_AsString(utf8);
-        if (!v) throw PythonException();
-        return v;
+        pyo_unique_ptr utf8(throw_ifnull(PyUnicode_AsUTF8String(o)));
+        return throw_ifnull(PyString_AsString(utf8));
 #endif
     }
     PyErr_SetString(PyExc_TypeError, "value must be an instance of str, bytes or unicode");
@@ -135,18 +123,14 @@ double double_from_python(PyObject* o)
 
 PyObject* double_to_python(double val)
 {
-    PyObject* res = PyFloat_FromDouble(val);
-    if (!res) throw PythonException();
-    return res;
+    return throw_ifnull(PyFloat_FromDouble(val));
 }
 
 PyObject* dballe_int_to_python(int val)
 {
     if (val == MISSING_INT)
         Py_RETURN_NONE;
-    PyObject* res = PyLong_FromLong(val);
-    if (!res) throw PythonException();
-    return res;
+    return throw_ifnull(PyLong_FromLong(val));
 }
 
 int dballe_int_from_python(PyObject* o)
@@ -163,8 +147,7 @@ int dballe_int_from_python(PyObject* o)
 
 std::string object_repr(PyObject* o)
 {
-    pyo_unique_ptr repr(PyObject_Repr(o));
-    if (!repr) throw PythonException();
+    pyo_unique_ptr repr(throw_ifnull(PyObject_Repr(o)));
     return string_from_python(repr);
 }
 
