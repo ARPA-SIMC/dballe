@@ -219,7 +219,7 @@ struct DupInFileWrapper : public BaseFileObjFileWrapper
 
 namespace {
 
-struct GetName : Getter<dpy_File>
+struct getter_name : Getter<dpy_File>
 {
     constexpr static const char* name = "name";
     constexpr static const char* doc = "get the file name";
@@ -231,7 +231,7 @@ struct GetName : Getter<dpy_File>
     }
 };
 
-struct GetEncoding : Getter<dpy_File>
+struct encoding : Getter<dpy_File>
 {
     constexpr static const char* name = "encoding";
     constexpr static const char* doc = "get the file encoding";
@@ -244,18 +244,9 @@ struct GetEncoding : Getter<dpy_File>
     }
 };
 
-struct Enter : MethNoargs<dpy_File>
-{
-    constexpr static const char* name = "__enter__";
-    constexpr static const char* doc = "Context manager __enter__";
-    static PyObject* run(Impl* self)
-    {
-        Py_INCREF(self);
-        return (PyObject*)self;
-    }
-};
+typedef MethGenericEnter<dpy_File> __enter__;
 
-struct Exit : MethVarargs<dpy_File>
+struct __exit__ : MethVarargs<dpy_File>
 {
     constexpr static const char* name = "__exit__";
     constexpr static const char* doc = "Context manager __exit__";
@@ -282,8 +273,8 @@ struct FileDefinition : public Binding<FileDefinition, dpy_File>
     constexpr static const char* qual_name = "dballe.File";
     constexpr static const char* doc = "Message file read access. To write files, you can write BinaryMessage objects to normal Python files.";
 
-    GetSetters<GetName, GetEncoding> getsetters;
-    Methods<Enter, Exit> methods;
+    GetSetters<getter_name, encoding> getsetters;
+    Methods<__enter__, __exit__> methods;
 
     static void _dealloc(Impl* self)
     {

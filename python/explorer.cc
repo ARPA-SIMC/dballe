@@ -20,6 +20,16 @@ using namespace wreport;
 
 extern "C" {
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wwrite-strings"
+#endif
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwrite-strings"
+#endif
+
 PyStructSequence_Field dpy_stats_fields[] = {
     { "datetime_min", "Minimum datetime" },
     { "datetime_max", "Maximum datetime" },
@@ -34,7 +44,20 @@ PyStructSequence_Desc dpy_stats_desc = {
     3,
 };
 
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+
 PyTypeObject dpy_stats_Type;
+
+PyTypeObject* dpy_Explorer_Type = nullptr;
+PyTypeObject* dpy_DBExplorer_Type = nullptr;
+PyTypeObject* dpy_ExplorerUpdate_Type = nullptr;
+PyTypeObject* dpy_DBExplorerUpdate_Type = nullptr;
 
 }
 
@@ -610,15 +633,6 @@ template<> const char* Definition<DBStation>::qual_name = "dballe.DBExplorerUpda
 Definition<Station>* definition = nullptr;
 Definition<DBStation>* definition_db = nullptr;
 }
-
-}
-
-extern "C" {
-
-PyTypeObject* dpy_Explorer_Type = nullptr;
-PyTypeObject* dpy_DBExplorer_Type = nullptr;
-PyTypeObject* dpy_ExplorerUpdate_Type = nullptr;
-PyTypeObject* dpy_DBExplorerUpdate_Type = nullptr;
 
 }
 

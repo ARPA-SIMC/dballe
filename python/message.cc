@@ -12,6 +12,10 @@ using namespace dballe;
 using namespace dballe::python;
 using namespace wreport;
 
+extern "C" {
+PyTypeObject* dpy_Message_Type = nullptr;
+}
+
 namespace {
 
 struct GetType : Getter<dpy_Message>
@@ -169,53 +173,12 @@ struct set_named : MethKwargs<dpy_Message>
 
 #if 0
     /**
-     * Add or replace a value
-     *
-     * @param lev
-     *   The Level of the value
-     * @param tr
-     *   The Trange of the value
-     * @param code
-     *   The Varcode of the destination value.  If it is different than the
-     *   varcode of var, a conversion will be attempted.
-     * @param var
-     *   The Var with the value to set
-     */
-    void set(const Level& lev, const Trange& tr, wreport::Varcode code, const wreport::Var& var);
-
-    /**
-     * Add or replace a value
-     *
-     * @param lev
-     *   The Level of the value
-     * @param tr
-     *   The Trange of the value
-     * @param var
-     *   The Var with the value to set
-     */
-    void set(const Level& lev, const Trange& tr, const wreport::Var& var);
-
-    /**
-     * Add or replace a value, taking ownership of the source variable without
-     * copying it.
-     *
-     * @param lev
-     *   The Level of the value
-     * @param tr
-     *   The Trange of the value
-     * @param var
-     *   The Var with the value to set.  This Message will take ownership of memory
-     *   management.
-     */
-    void set(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var);
-
-    /**
      * Iterate the contents of the message
      */
     virtual bool foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)>) const = 0;
 #endif
 
-struct MessageDefinition : public Binding<MessageDefinition, dpy_Message>
+struct Definition : public Binding<Definition, dpy_Message>
 {
     constexpr static const char* name = "Message";
     constexpr static const char* qual_name = "dballe.Message";
@@ -248,12 +211,8 @@ struct MessageDefinition : public Binding<MessageDefinition, dpy_Message>
     }
 };
 
-MessageDefinition* definition = nullptr;
+Definition* definition = nullptr;
 
-}
-
-extern "C" {
-PyTypeObject* dpy_Message_Type = nullptr;
 }
 
 namespace dballe {
@@ -332,7 +291,7 @@ void register_message(PyObject* m)
 {
     common_init();
 
-    definition = new MessageDefinition;
+    definition = new Definition;
     dpy_Message_Type = definition->activate(m);
 }
 
