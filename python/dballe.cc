@@ -18,8 +18,8 @@
 #if PY_MAJOR_VERSION >= 3
     #define PyInt_FromLong PyLong_FromLong
     #define PyInt_AsLong PyLong_AsLong
-    #define PyInt_Check PyLong_Check
-    #define Py_TPFLAGS_HAVE_ITER 0
+#else
+    #define PyLong_Check PyInt_Check
 #endif
 
 using namespace std;
@@ -49,12 +49,12 @@ static PyObject* dballe_var_uncaught(PyTypeObject *type, PyObject *args)
         {
             double v = PyFloat_AsDouble(val);
             if (v == -1.0 && PyErr_Occurred())
-                return NULL;
+                return nullptr;
             return (PyObject*)wrpy->var_create_d(dballe::varinfo(resolve_varcode(var_name)), v);
-        } else if (PyInt_Check(val)) {
+        } else if (PyLong_Check(val)) {
             long v = PyInt_AsLong(val);
             if (v == -1 && PyErr_Occurred())
-                return NULL;
+                return nullptr;
             return (PyObject*)wrpy->var_create_i(dballe::varinfo(resolve_varcode(var_name)), (int)v);
         } else if (
                 PyUnicode_Check(val)
@@ -64,10 +64,8 @@ static PyObject* dballe_var_uncaught(PyTypeObject *type, PyObject *args)
                 || PyString_Check(val)
 #endif
                 ) {
-            string v;
-            if (string_from_python(val, v))
-                return NULL;
-            return (PyObject*)wrpy->var_create_c(dballe::varinfo(resolve_varcode(var_name)), v.c_str());
+            string v = string_from_python(val);
+            return (PyObject*)wrpy->var_create_s(dballe::varinfo(resolve_varcode(var_name)), v);
         } else if ((Py_TYPE(val) == wrpy->var_type || PyType_IsSubtype(Py_TYPE(val), wrpy->var_type))) {
             wrpy_Var* res = wrpy->var_create(dballe::varinfo(resolve_varcode(var_name)));
             res->var.setval(((wrpy_Var*)val)->var);
@@ -86,11 +84,7 @@ static PyObject* dballe_var(PyTypeObject *type, PyObject *args)
 {
     try {
         return dballe_var_uncaught(type, args);
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 #define get_int_or_missing(intvar, ovar) \

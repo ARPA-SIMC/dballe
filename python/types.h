@@ -4,7 +4,8 @@
 #include <Python.h>
 #include <wreport/varinfo.h>
 #include <dballe/types.h>
-#include <dballe/core/fwd.h>
+#include <dballe/core/values.h>
+#include "common.h"
 
 extern "C" {
 
@@ -47,44 +48,62 @@ PyAPI_DATA(PyTypeObject) dpy_DBStation_Type;
 namespace dballe {
 namespace python {
 
+/// Convert a Datetime to a python datetime object
+PyObject* datetime_to_python(const Datetime& dt);
+
+/// Convert a python datetime object to a Datetime
+Datetime datetime_from_python(PyObject* dt);
+
+/// Convert a sequence of two python datetime objects to a DatetimeRange
+DatetimeRange datetimerange_from_python(PyObject* dt);
+
 /// Convert a Coords to a python (lat, lon) tuple
 PyObject* coords_to_python(const Coords& coords);
 
 /// Convert a Coords to a python string or None
 PyObject* ident_to_python(const Ident& ident);
 
+/// Convert a python object to an Ident
+Ident ident_from_python(PyObject* o);
+
 /// Convert a Level to a python Level structseq
 PyObject* level_to_python(const Level& lev);
 
 /// Convert a None, structseq or 4-tuple to a Level
-int level_from_python(PyObject* o, Level& out);
+Level level_from_python(PyObject* o);
 
 /// Convert a Trange to a python Trange structseq
 PyObject* trange_to_python(const Trange& tr);
 
 /// Convert a None, structseq or 3-tuple to a Trange
-int trange_from_python(PyObject* o, Trange& out);
+Trange trange_from_python(PyObject* o);
 
 /// Convert a Station to a python Station structseq
 PyObject* station_to_python(const Station& s);
 
 /// Convert a structseq to a Station
-int station_from_python(PyObject* o, Station& out);
+Station station_from_python(PyObject* o);
 
 /// Convert a Station to a python Station structseq
 PyObject* dbstation_to_python(const DBStation& s);
 
 /// Convert a structseq to a Station
-int dbstation_from_python(PyObject* o, DBStation& out);
+DBStation dbstation_from_python(PyObject* o);
 
 /// Convert a varcode to a Python string
 PyObject* varcode_to_python(wreport::Varcode code);
 
 #if PY_MAJOR_VERSION >= 3
 /// Convert a Python object to a Varcode
-int varcode_from_python(PyObject* o, wreport::Varcode& code);
+wreport::Varcode varcode_from_python(PyObject* o);
 #endif
 
+/*
+ * to_python shortcuts
+ */
+
+inline PyObject* to_python(const Datetime& dt) { return datetime_to_python(dt); }
+// inline PyObject* to_python(const DatetimeRange& dtr) { return datetimerange_to_python(dtr); }
 inline PyObject* to_python(const wreport::Varcode& s) { return varcode_to_python(s); }
 inline PyObject* to_python(const Coords& s) { return coords_to_python(s); }
 inline PyObject* to_python(const Ident& s) { return ident_to_python(s); }
@@ -92,6 +111,21 @@ inline PyObject* to_python(const Level& s) { return level_to_python(s); }
 inline PyObject* to_python(const Trange& s) { return trange_to_python(s); }
 inline PyObject* to_python(const Station& s) { return station_to_python(s); }
 inline PyObject* to_python(const DBStation& s) { return dbstation_to_python(s); }
+
+
+/*
+ * from_python shortcuts
+ */
+template<> inline Datetime from_python<Datetime>(PyObject* o) { return datetime_from_python(o); }
+template<> inline DatetimeRange from_python<DatetimeRange>(PyObject* o) { return datetimerange_from_python(o); }
+template<> inline Ident from_python<Ident>(PyObject* o) { return ident_from_python(o); }
+template<> inline Level from_python<Level>(PyObject* o) { return level_from_python(o); }
+template<> inline Trange from_python<Trange>(PyObject* o) { return trange_from_python(o); }
+#if PY_MAJOR_VERSION >= 3
+template<> inline wreport::Varcode from_python<wreport::Varcode>(PyObject* o) { return varcode_from_python(o); }
+#endif
+template<> inline Station from_python<Station>(PyObject* o) { return station_from_python(o); }
+template<> inline DBStation from_python<DBStation>(PyObject* o) { return dbstation_from_python(o); }
 
 int register_types(PyObject* m);
 

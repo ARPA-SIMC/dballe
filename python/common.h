@@ -3,6 +3,7 @@
 
 #include <Python.h>
 #include <dballe/fwd.h>
+#include <dballe/types.h>
 #include <wreport/python.h>
 #include <wreport/error.h>
 #include <wreport/varinfo.h>
@@ -95,72 +96,57 @@ struct ReleaseGIL
     }
 };
 
+/**
+ * Exception raised when a python function returns an error with an exception
+ * set.
+ *
+ * When catching this exception, python exception information is already set,
+ * so the only thing to do is to return the appropriate error to the python
+ * caller.
+ *
+ * This exception carries to information, because it is all set in the python
+ * exception information.
+ */
+struct PythonException : public std::exception {};
+
 /// Given a wreport exception, set the Python error indicator appropriately.
 void set_wreport_exception(const wreport::error& e);
-
-/**
- * Given a wreport exception, set the Python error indicator appropriately.
- *
- * @retval
- *   Always returns NULL, so one can do:
- *   try {
- *     // ...code...
- *   } catch (wreport::error& e) {
- *     return raise_wreport_exception(e);
- *   }
- */
-PyObject* raise_wreport_exception(const wreport::error& e);
 
 /// Given a generic exception, set the Python error indicator appropriately.
 void set_std_exception(const std::exception& e);
 
-/**
- * Given a generic exception, set the Python error indicator appropriately.
- *
- * @retval
- *   Always returns NULL, so one can do:
- *   try {
- *     // ...code...
- *   } catch (std::exception& e) {
- *     return raise_std_exception(e);
- *   }
- */
-PyObject* raise_std_exception(const std::exception& e);
-
 #define DBALLE_CATCH_RETURN_PYO \
-      catch (wreport::error& e) { \
+      catch (PythonException&) { \
+        return nullptr; \
+    } catch (wreport::error& e) { \
         set_wreport_exception(e); return nullptr; \
     } catch (std::exception& se) { \
         set_std_exception(se); return nullptr; \
     }
 
 #define DBALLE_CATCH_RETURN_INT \
-      catch (wreport::error& e) { \
+      catch (PythonException&) { \
+        return -1; \
+    } catch (wreport::error& e) { \
         set_wreport_exception(e); return -1; \
     } catch (std::exception& se) { \
         set_std_exception(se); return -1; \
     }
 
-/// Convert a Datetime to a python datetime object
-PyObject* datetime_to_python(const Datetime& dt);
-
-/// Convert a python datetime object to a Datetime
-int datetime_from_python(PyObject* dt, Datetime& out);
-
-/// Convert a sequence of two python datetime objects to a DatetimeRange
-int datetimerange_from_python(PyObject* dt, DatetimeRange& out);
-
 /// Convert an utf8 string to a python str object
 PyObject* string_to_python(const std::string& str);
+
+/// Convert a python string, bytes or unicode to an utf8 string
+std::string string_from_python(PyObject* o);
+
+/// Convert a Python object to a double
+double double_from_python(PyObject* o);
 
 /// Check if a python object is a string
 bool pyobject_is_string(PyObject* o);
 
-/// Convert a python string, bytes or unicode to an utf8 string
-int string_from_python(PyObject* o, std::string& out);
-
-/// Call repr() on \a o, and return the result in \a out
-int object_repr(PyObject* o, std::string& out);
+/// Call repr() on \a o, and return the result as a string
+std::string object_repr(PyObject* o);
 
 /**
  * If val is MISSING_INT, returns None, else return it as a PyLong
@@ -168,11 +154,20 @@ int object_repr(PyObject* o, std::string& out);
 PyObject* dballe_int_to_python(int val);
 
 /// Convert a Python object to an integer, returning MISSING_INT if it is None
-int dballe_int_from_python(PyObject* o, int& out);
+int dballe_int_from_python(PyObject* o);
 
-inline PyObject* to_python(const Datetime& dt) { return datetime_to_python(dt); }
-// inline PyObject* to_python(const DatetimeRange& dtr) { return datetimerange_to_python(dtr); }
+/*
+ * to_python shortcuts
+ */
+
 inline PyObject* to_python(const std::string& s) { return string_to_python(s); }
+
+/*
+ * from_python shortcuts
+ */
+template<typename T> inline T from_python(PyObject*) { throw std::runtime_error("method not implemented"); }
+template<> inline std::string from_python<std::string>(PyObject* o) { return string_from_python(o); }
+template<> inline double from_python<double>(PyObject* o) { return double_from_python(o); }
 
 /**
  * call o.fileno() and return its result.

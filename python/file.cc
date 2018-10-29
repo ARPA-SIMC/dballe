@@ -57,28 +57,28 @@ struct BaseFileObjFileWrapper : public FileWrapper
      */
     int read_filename(PyObject* o)
     {
-        pyo_unique_ptr attr_name(PyObject_GetAttrString(o, "name"));
-        if (attr_name)
-        {
-            if (PyUnicode_Check(attr_name))
+        try {
+            pyo_unique_ptr attr_name(PyObject_GetAttrString(o, "name"));
+            if (attr_name)
             {
-                const char* v = PyUnicode_AsUTF8(attr_name);
-                if (v == nullptr)
-                    return -1;
-                filename = v;
-                return 0;
+                if (PyUnicode_Check(attr_name))
+                {
+                    const char* v = PyUnicode_AsUTF8(attr_name);
+                    if (v == nullptr)
+                        return -1;
+                    filename = v;
+                    return 0;
+                }
             }
-        }
-        else
-            PyErr_Clear();
+            else
+                PyErr_Clear();
 
-        pyo_unique_ptr repr(PyObject_Repr(o));
-        if (!repr) return -1;
+            pyo_unique_ptr repr(PyObject_Repr(o));
+            if (!repr) return -1;
 
-        if (string_from_python(repr, filename))
-            return -1;
-
-        return 0;
+            filename = string_from_python(repr);
+            return 0;
+        } DBALLE_CATCH_RETURN_INT
     }
 };
 

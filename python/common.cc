@@ -1,6 +1,5 @@
 #include "common.h"
 #include <Python.h>
-#include <datetime.h>
 #include "dballe/types.h"
 #include "dballe/core/var.h"
 #include "config.h"
@@ -69,76 +68,9 @@ void set_wreport_exception(const wreport::error& e)
     }
 }
 
-PyObject* raise_wreport_exception(const wreport::error& e)
-{
-    set_wreport_exception(e);
-    return nullptr;
-}
-
 void set_std_exception(const std::exception& e)
 {
     PyErr_SetString(PyExc_RuntimeError, e.what());
-}
-
-PyObject* raise_std_exception(const std::exception& e)
-{
-    set_std_exception(e);
-    return NULL;
-}
-
-PyObject* datetime_to_python(const Datetime& dt)
-{
-    if (dt.is_missing())
-    {
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    return PyDateTime_FromDateAndTime(
-            dt.year, dt.month,  dt.day,
-            dt.hour, dt.minute, dt.second, 0);
-}
-
-int datetime_from_python(PyObject* dt, Datetime& out)
-{
-    if (dt == NULL || dt == Py_None)
-    {
-        out = Datetime();
-        return 0;
-    }
-
-    if (!PyDateTime_Check(dt))
-    {
-        PyErr_SetString(PyExc_TypeError, "value must be an instance of datetime.datetime");
-        return -1;
-    }
-
-    out = Datetime(
-        PyDateTime_GET_YEAR((PyDateTime_DateTime*)dt),
-        PyDateTime_GET_MONTH((PyDateTime_DateTime*)dt),
-        PyDateTime_GET_DAY((PyDateTime_DateTime*)dt),
-        PyDateTime_DATE_GET_HOUR((PyDateTime_DateTime*)dt),
-        PyDateTime_DATE_GET_MINUTE((PyDateTime_DateTime*)dt),
-        PyDateTime_DATE_GET_SECOND((PyDateTime_DateTime*)dt));
-    return 0;
-}
-
-int datetimerange_from_python(PyObject* val, DatetimeRange& out)
-{
-    if (PySequence_Size(val) != 2)
-    {
-        PyErr_SetString(PyExc_TypeError, "Expected a 2-tuple of datetime() objects");
-        return -1;
-    }
-    pyo_unique_ptr dtmin(PySequence_GetItem(val, 0));
-    pyo_unique_ptr dtmax(PySequence_GetItem(val, 1));
-
-    if (datetime_from_python(dtmin, out.min))
-        return -1;
-    if (datetime_from_python(dtmax, out.max))
-        return -1;
-
-    return 0;
 }
 
 PyObject* string_to_python(const std::string& str)
@@ -160,44 +92,43 @@ bool pyobject_is_string(PyObject* o)
     return false;
 }
 
-int string_from_python(PyObject* o, std::string& out)
+std::string string_from_python(PyObject* o)
 {
 #if PY_MAJOR_VERSION >= 3
     if (PyBytes_Check(o)) {
         const char* v = PyBytes_AsString(o);
-        if (v == NULL) return -1;
-        out = v;
-        return 0;
+        if (!v) throw PythonException();
+        return v;
     }
 #else
     if (PyString_Check(o)) {
         const char* v = PyString_AsString(o);
-        if (v == NULL) return -1;
-        out = v;
-        return 0;
+        if (!v) throw PythonException();
+        return v;
     }
 #endif
     if (PyUnicode_Check(o)) {
 #if PY_MAJOR_VERSION >= 3
         const char* v = PyUnicode_AsUTF8(o);
-        if (v == NULL) return -1;
-        out = v;
-        return 0;
+        if (!v) throw PythonException();
+        return v;
 #else
-        PyObject *utf8 = PyUnicode_AsUTF8String(o);
+        pyo_unique_ptr utf8(PyUnicode_AsUTF8String(o));
         const char* v = PyString_AsString(utf8);
-        if (v == NULL)
-        {
-            Py_DECREF(utf8);
-            return -1;
-        }
-        out = v;
-        Py_DECREF(utf8);
-        return 0;
+        if (!v) throw PythonException();
+        return v;
 #endif
     }
     PyErr_SetString(PyExc_TypeError, "value must be an instance of str, bytes or unicode");
-    return -1;
+    throw PythonException();
+}
+
+double double_from_python(PyObject* o)
+{
+    double res = PyFloat_AsDouble(o);
+    if (res == -1.0 && PyErr_Occurred())
+        throw PythonException();
+    return res;
 }
 
 int file_get_fileno(PyObject* o)
@@ -253,16 +184,11 @@ PyObject* file_get_data(PyObject* o, char*&buf, Py_ssize_t& len)
 }
 
 
-int object_repr(PyObject* o, std::string& out)
+std::string object_repr(PyObject* o)
 {
-    pyo_unique_ptr fileno_repr(PyObject_Repr(o));
-    if (!fileno_repr) return -1;
-
-    std::string name;
-    if (string_from_python(fileno_repr, name))
-        return -1;
-
-    return 0;
+    pyo_unique_ptr repr(PyObject_Repr(o));
+    if (!repr) throw PythonException();
+    return string_from_python(repr);
 }
 
 PyObject* dballe_int_to_python(int val)
@@ -272,36 +198,21 @@ PyObject* dballe_int_to_python(int val)
     return PyLong_FromLong(val);
 }
 
-int dballe_int_from_python(PyObject* o, int& out)
+int dballe_int_from_python(PyObject* o)
 {
     if (o == NULL || o == Py_None)
-    {
-        out = MISSING_INT;
-        return 0;
-    }
+        return MISSING_INT;
 
     int res = PyLong_AsLong(o);
     if (res == -1 && PyErr_Occurred())
-        return -1;
+        throw PythonException();
 
-    out = res;
-    return 0;
+    return res;
 }
 
 
 int common_init()
 {
-    /*
-     * PyDateTimeAPI, that is used by all the PyDate* and PyTime* macros, is
-     * defined as a static variable defaulting to NULL, and it needs to be
-     * initialized on each and every C file where it is used.
-     *
-     * Therefore, we need to have a common_init() to call from all
-     * initialization functions. *sigh*
-     */
-    if (!PyDateTimeAPI)
-        PyDateTime_IMPORT;
-
     if (!wrpy)
     {
         wrpy = (wrpy_c_api*)PyCapsule_Import("_wreport._C_API", 0);

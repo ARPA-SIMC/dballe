@@ -1,4 +1,5 @@
 #include <Python.h>
+#include <datetime.h>
 #include "dballe/types.h"
 #include "dballe/core/var.h"
 #include "dballe/core/values.h"
@@ -142,24 +143,23 @@ struct Definition : public Binding<Definition, dpy_Level>
         if (!PyArg_ParseTupleAndKeywords(args, kw, "|OOOO", const_cast<char**>(kwlist), &py_ltype1, &py_l1, &py_ltype2, &py_l2))
             return -1;
 
-        int ltype1, l1, ltype2, l2;
-        if (dballe_int_from_python(py_ltype1, ltype1) != 0) return -1;
-        if (dballe_int_from_python(py_l1, l1) != 0) return -1;
-        if (dballe_int_from_python(py_ltype2, ltype2) != 0) return -1;
-        if (dballe_int_from_python(py_l2, l2) != 0) return -1;
-
         try {
-            new (&(self->val)) Level(ltype1, l1, ltype2, l2);
+            new (&(self->val)) Level(
+                dballe_int_from_python(py_ltype1),
+                dballe_int_from_python(py_l1),
+                dballe_int_from_python(py_ltype2),
+                dballe_int_from_python(py_l2)
+            );
         } DBALLE_CATCH_RETURN_INT
         return 0;
     }
 
     static PyObject* _richcompare(dpy_Level *a, PyObject *b, int op)
     {
-        Level lev_b;
-        if (level_from_python(b, lev_b) != 0)
-            return nullptr;
-        return impl_richcompare(a->val, lev_b, op);
+        try {
+            Level lev_b = level_from_python(b);
+            return impl_richcompare(a->val, lev_b, op);
+        } DBALLE_CATCH_RETURN_PYO
     }
 
     static Py_hash_t _hash(dpy_Level* self)
@@ -258,23 +258,22 @@ struct Definition : public Binding<Definition, dpy_Trange>
         if (!PyArg_ParseTupleAndKeywords(args, kw, "|OOO", const_cast<char**>(kwlist), &py_pind, &py_p1, &py_p2))
             return -1;
 
-        int pind, p1, p2;
-        if (dballe_int_from_python(py_pind, pind) != 0) return -1;
-        if (dballe_int_from_python(py_p1, p1) != 0) return -1;
-        if (dballe_int_from_python(py_p2, p2) != 0) return -1;
-
         try {
-            new (&(self->val)) Trange(pind, p1, p2);
+            new (&(self->val)) Trange(
+                dballe_int_from_python(py_pind),
+                dballe_int_from_python(py_p1),
+                dballe_int_from_python(py_p2)
+            );
         } DBALLE_CATCH_RETURN_INT
         return 0;
     }
 
     static PyObject* _richcompare(dpy_Trange *a, PyObject *b, int op)
     {
-        Trange lev_b;
-        if (trange_from_python(b, lev_b) != 0)
-            return nullptr;
-        return impl_richcompare(a->val, lev_b, op);
+        try {
+            Trange lev_b = trange_from_python(b);
+            return impl_richcompare(a->val, lev_b, op);
+        } DBALLE_CATCH_RETURN_PYO
     }
 
     static Py_hash_t _hash(dpy_Trange* self)
@@ -340,21 +339,57 @@ PyStructSequence_Desc dpy_dbstation_desc = {
 
 #endif
 
-/// Convert a Python object to a double
-int double_from_python(PyObject* o, double& out)
-{
-    double res = PyFloat_AsDouble(o);
-    if (res == -1.0 && PyErr_Occurred())
-        return -1;
-    out = res;
-    return 0;
-}
-
 }
 
 
 namespace dballe {
 namespace python {
+
+PyObject* datetime_to_python(const Datetime& dt)
+{
+    if (dt.is_missing())
+    {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    return PyDateTime_FromDateAndTime(
+            dt.year, dt.month,  dt.day,
+            dt.hour, dt.minute, dt.second, 0);
+}
+
+Datetime datetime_from_python(PyObject* dt)
+{
+    if (dt == NULL || dt == Py_None)
+        return Datetime();
+
+    if (!PyDateTime_Check(dt))
+    {
+        PyErr_SetString(PyExc_TypeError, "value must be an instance of datetime.datetime");
+        throw PythonException();
+    }
+
+    return Datetime(
+        PyDateTime_GET_YEAR((PyDateTime_DateTime*)dt),
+        PyDateTime_GET_MONTH((PyDateTime_DateTime*)dt),
+        PyDateTime_GET_DAY((PyDateTime_DateTime*)dt),
+        PyDateTime_DATE_GET_HOUR((PyDateTime_DateTime*)dt),
+        PyDateTime_DATE_GET_MINUTE((PyDateTime_DateTime*)dt),
+        PyDateTime_DATE_GET_SECOND((PyDateTime_DateTime*)dt));
+}
+
+DatetimeRange datetimerange_from_python(PyObject* val)
+{
+    if (PySequence_Size(val) != 2)
+    {
+        PyErr_SetString(PyExc_TypeError, "Expected a 2-tuple of datetime() objects");
+        throw PythonException();
+    }
+    pyo_unique_ptr dtmin(PySequence_GetItem(val, 0));
+    pyo_unique_ptr dtmax(PySequence_GetItem(val, 1));
+
+    return DatetimeRange(datetime_from_python(dtmin), datetime_from_python(dtmax));
+}
 
 PyObject* coords_to_python(const Coords& coords)
 {
@@ -386,6 +421,17 @@ PyObject* ident_to_python(const Ident& ident)
     return PyUnicode_FromString(ident.get());
 }
 
+Ident ident_from_python(PyObject* o)
+{
+    if (o == Py_None)
+        return Ident();
+
+    // TODO: when migrating to python3 only, this can be replaced with a
+    // simple call to PyUnicode_AsUTF8. Currently string_from_python is
+    // only used to get version-independent string extraction
+    return Ident(string_from_python(o));
+}
+
 PyObject* level_to_python(const Level& lev)
 {
     if (lev.is_missing())
@@ -397,49 +443,41 @@ PyObject* level_to_python(const Level& lev)
     return (PyObject*)res.release();
 }
 
-int level_from_python(PyObject* o, Level& out)
+Level level_from_python(PyObject* o)
 {
     if (o == NULL || o == Py_None)
-    {
-        out = Level();
-        return 0;
-    }
+        return Level();
 
     if (Py_TYPE(o) == dpy_Level_Type || PyType_IsSubtype(Py_TYPE(o), dpy_Level_Type))
-    {
-        out = ((dpy_Level*)o)->val;
-        return 0;
-    }
-    else if (PyTuple_Check(o))
+        return ((dpy_Level*)o)->val;
+
+    if (PyTuple_Check(o))
     {
         unsigned size = PyTuple_Size(o);
         if (size > 4)
         {
             PyErr_SetString(PyExc_TypeError, "level tuple must have at most 4 elements");
-            return -1;
+            throw PythonException();
         }
 
         Level res;
-        if (size < 1) { out = res; return 0; }
+        if (size < 1) return res;
 
-        if (int err = dballe_int_from_python(PyTuple_GET_ITEM(o, 0), res.ltype1)) return err;
-        if (size < 2) { out = res; return 0; }
+        res.ltype1 = dballe_int_from_python(PyTuple_GET_ITEM(o, 0));
+        if (size < 2) return res;
 
-        if (int err = dballe_int_from_python(PyTuple_GET_ITEM(o, 1), res.l1)) return err;
-        if (size < 3) { out = res; return 0; }
+        res.l1 = dballe_int_from_python(PyTuple_GET_ITEM(o, 1));
+        if (size < 3) return res;
 
-        if (int err = dballe_int_from_python(PyTuple_GET_ITEM(o, 2), res.ltype2)) return err;
-        if (size < 4) { out = res; return 0; }
+        res.ltype2 = dballe_int_from_python(PyTuple_GET_ITEM(o, 2));
+        if (size < 4) return res;
 
-        if (int err = dballe_int_from_python(PyTuple_GET_ITEM(o, 3), res.l2)) return err;
-        out = res;
-        return 0;
+        res.l2 = dballe_int_from_python(PyTuple_GET_ITEM(o, 3));
+        return res;
     }
-    else
-    {
-        PyErr_SetString(PyExc_TypeError, "level must be None, a tuple or a dballe.Level");
-        return -1;
-    }
+
+    PyErr_SetString(PyExc_TypeError, "level must be None, a tuple or a dballe.Level");
+    throw PythonException();
 }
 
 PyObject* trange_to_python(const Trange& tr)
@@ -453,44 +491,38 @@ PyObject* trange_to_python(const Trange& tr)
     return (PyObject*)res.release();
 }
 
-int trange_from_python(PyObject* o, Trange& out)
+Trange trange_from_python(PyObject* o)
 {
     if (o == NULL || o == Py_None)
-    {
-        out = Trange();
-        return 0;
-    }
+        return Trange();
 
     if (Py_TYPE(o) == dpy_Trange_Type || PyType_IsSubtype(Py_TYPE(o), dpy_Trange_Type))
+        return ((dpy_Trange*)o)->val;
+
+    if (PyTuple_Check(o))
     {
-        out = ((dpy_Trange*)o)->val;
-        return 0;
-    } else if (PyTuple_Check(o)) {
         unsigned size = PyTuple_Size(o);
         if (size > 3)
         {
             PyErr_SetString(PyExc_TypeError, "time range tuple must have at most 3 elements");
-            return -1;
+            throw PythonException();
         }
 
         Trange res;
-        if (size < 1) { out = res; return 0; }
+        if (size < 1) return res;
 
-        if (int err = dballe_int_from_python(PyTuple_GET_ITEM(o, 0), res.pind)) return err;
-        if (size < 2) { out = res; return 0; }
+        res.pind = dballe_int_from_python(PyTuple_GET_ITEM(o, 0));
+        if (size < 2) return res;
 
-        if (int err = dballe_int_from_python(PyTuple_GET_ITEM(o, 1), res.p1)) return err;
-        if (size < 3) { out = res; return 0; }
+        res.p1 = dballe_int_from_python(PyTuple_GET_ITEM(o, 1));
+        if (size < 3) return res;
 
-        if (int err = dballe_int_from_python(PyTuple_GET_ITEM(o, 2), res.p2)) return err;
-        out = res;
-        return 0;
+        res.p2 = dballe_int_from_python(PyTuple_GET_ITEM(o, 2));
+        return res;
     }
-    else
-    {
-        PyErr_SetString(PyExc_TypeError, "time range must be None, a tuple or a Trange structseq");
-        return -1;
-    }
+
+    PyErr_SetString(PyExc_TypeError, "time range must be None, a tuple or a Trange structseq");
+    throw PythonException();
 }
 
 PyObject* station_to_python(const Station& st)
@@ -546,31 +578,19 @@ PyObject* station_to_python(const Station& st)
     return res.release();
 }
 
-int station_from_python(PyObject* o, Station& out)
+Station station_from_python(PyObject* o)
 {
 #if PY_MAJOR_VERSION >= 3
     if (Py_TYPE(o) == &dpy_Station_Type || PyType_IsSubtype(Py_TYPE(o), &dpy_Station_Type))
     {
         Station res;
-        if (int err = string_from_python(PyStructSequence_GET_ITEM(o, 0), res.report)) return err;
-
-        double dlat, dlon;
-        if (int err = double_from_python(PyStructSequence_GET_ITEM(o, 1), dlat)) return err;
-        if (int err = double_from_python(PyStructSequence_GET_ITEM(o, 2), dlon)) return err;
-        res.coords.set(dlat, dlon);
-
-        PyObject* ident = PyStructSequence_GET_ITEM(o, 3);
-        if (ident != Py_None)
-        {
-            // TODO: when migrating to python3 only, this can be replaced with a
-            // simple call to PyUnicode_AsUTF8. Currently string_from_python is
-            // only used to get version-independent string extraction
-            std::string ident_val;
-            if (int err = string_from_python(ident, ident_val)) return err;
-            res.ident = ident_val;
-        }
-        out = res;
-        return 0;
+        res.report = string_from_python(PyStructSequence_GET_ITEM(o, 0));
+        res.coords.set(
+            from_python<double>(PyStructSequence_GET_ITEM(o, 1)),
+            from_python<double>(PyStructSequence_GET_ITEM(o, 2))
+        );
+        res.ident = ident_from_python(PyStructSequence_GET_ITEM(o, 3));
+        return res;
     } else
 #endif
         if (PyTuple_Check(o))
@@ -579,34 +599,22 @@ int station_from_python(PyObject* o, Station& out)
         if (size != 4)
         {
             PyErr_SetString(PyExc_TypeError, "station tuple must have exactly 4 elements");
-            return -1;
+            throw PythonException();
         }
 
         Station res;
-        if (int err = string_from_python(PyTuple_GET_ITEM(o, 0), res.report)) return err;
-
-        double dlat, dlon;
-        if (int err = double_from_python(PyTuple_GET_ITEM(o, 1), dlat)) return err;
-        if (int err = double_from_python(PyTuple_GET_ITEM(o, 2), dlon)) return err;
-        res.coords.set(dlat, dlon);
-
-        PyObject* ident = PyTuple_GET_ITEM(o, 3);
-        if (ident != Py_None)
-        {
-            // TODO: when migrating to python3 only, this can be replaced with a
-            // simple call to PyUnicode_AsUTF8. Currently string_from_python is
-            // only used to get version-independent string extraction
-            std::string ident_val;
-            if (int err = string_from_python(ident, ident_val)) return err;
-            res.ident = ident_val;
-        }
-        out = res;
-        return 0;
+        res.report = string_from_python(PyTuple_GET_ITEM(o, 0));
+        res.coords.set(
+            from_python<double>(PyTuple_GET_ITEM(o, 1)),
+            from_python<double>(PyTuple_GET_ITEM(o, 2))
+        );
+        res.ident = ident_from_python(PyTuple_GET_ITEM(o, 3));
+        return res;
     }
     else
     {
         PyErr_SetString(PyExc_TypeError, "station must be a 4-tuple or a Station structseq");
-        return -1;
+        throw PythonException();
     }
 }
 
@@ -681,32 +689,20 @@ PyObject* dbstation_to_python(const DBStation& st)
     return res.release();
 }
 
-int dbstation_from_python(PyObject* o, DBStation& out)
+DBStation dbstation_from_python(PyObject* o)
 {
 #if PY_MAJOR_VERSION >= 3
     if (Py_TYPE(o) == &dpy_DBStation_Type || PyType_IsSubtype(Py_TYPE(o), &dpy_DBStation_Type))
     {
         DBStation res;
-        if (int err = string_from_python(PyStructSequence_GET_ITEM(o, 0), res.report)) return err;
-        if (int err = dballe_int_from_python(PyStructSequence_GET_ITEM(o, 1), res.id)) return err;
-
-        double dlat, dlon;
-        if (int err = double_from_python(PyStructSequence_GET_ITEM(o, 2), dlat)) return err;
-        if (int err = double_from_python(PyStructSequence_GET_ITEM(o, 3), dlon)) return err;
-        res.coords.set(dlat, dlon);
-
-        PyObject* ident = PyStructSequence_GET_ITEM(o, 4);
-        if (ident != Py_None)
-        {
-            // TODO: when migrating to python3 only, this can be replaced with a
-            // simple call to PyUnicode_AsUTF8. Currently string_from_python is
-            // only used to get version-independent string extraction
-            std::string ident_val;
-            if (int err = string_from_python(ident, ident_val)) return err;
-            res.ident = ident_val;
-        }
-        out = res;
-        return 0;
+        res.report = string_from_python(PyStructSequence_GET_ITEM(o, 0));
+        res.id = dballe_int_from_python(PyStructSequence_GET_ITEM(o, 1));
+        res.coords.set(
+            from_python<double>(PyStructSequence_GET_ITEM(o, 2)),
+            from_python<double>(PyStructSequence_GET_ITEM(o, 3))
+        );
+        res.ident = ident_from_python(PyStructSequence_GET_ITEM(o, 4));
+        return res;
     } else
 #endif
         if (PyTuple_Check(o))
@@ -715,35 +711,23 @@ int dbstation_from_python(PyObject* o, DBStation& out)
         if (size != 5)
         {
             PyErr_SetString(PyExc_TypeError, "dbstation tuple must have exactly 5 elements");
-            return -1;
+            throw PythonException();
         }
 
         DBStation res;
-        if (int err = string_from_python(PyTuple_GET_ITEM(o, 0), res.report)) return err;
-        if (int err = dballe_int_from_python(PyTuple_GET_ITEM(o, 1), res.id)) return err;
-
-        double dlat, dlon;
-        if (int err = double_from_python(PyTuple_GET_ITEM(o, 2), dlat)) return err;
-        if (int err = double_from_python(PyTuple_GET_ITEM(o, 3), dlon)) return err;
-        res.coords.set(dlat, dlon);
-
-        PyObject* ident = PyTuple_GET_ITEM(o, 4);
-        if (ident != Py_None)
-        {
-            // TODO: when migrating to python3 only, this can be replaced with a
-            // simple call to PyUnicode_AsUTF8. Currently string_from_python is
-            // only used to get version-independent string extraction
-            std::string ident_val;
-            if (int err = string_from_python(ident, ident_val)) return err;
-            res.ident = ident_val;
-        }
-        out = res;
-        return 0;
+        res.report = string_from_python(PyTuple_GET_ITEM(o, 0));
+        res.id = dballe_int_from_python(PyTuple_GET_ITEM(o, 1));
+        res.coords.set(
+            from_python<double>(PyTuple_GET_ITEM(o, 2)),
+            from_python<double>(PyTuple_GET_ITEM(o, 3))
+        );
+        res.ident = ident_from_python(PyTuple_GET_ITEM(o, 4));
+        return res;
     }
     else
     {
         PyErr_SetString(PyExc_TypeError, "station must be a 5-tuple or a DBStation structseq");
-        return -1;
+        throw PythonException();
     }
 }
 
@@ -755,28 +739,35 @@ PyObject* varcode_to_python(wreport::Varcode code)
 }
 
 #if PY_MAJOR_VERSION >= 3
-int varcode_from_python(PyObject* o, wreport::Varcode& code)
+wreport::Varcode varcode_from_python(PyObject* o)
 {
     try {
         if (PyUnicode_Check(o))
         {
             const char* v = PyUnicode_AsUTF8(o);
-            if (v == nullptr) return -1;
-            code = resolve_varcode(v);
-            return 0;
+            if (v == nullptr) throw PythonException();
+            return resolve_varcode(v);
         }
     } DBALLE_CATCH_RETURN_INT
 
     PyErr_SetString(PyExc_TypeError, "Expected str");
-    return -1;
+    throw PythonException();
 }
 #endif
 
 
 int register_types(PyObject* m)
 {
-    if (common_init() != 0)
-        return -1;
+    /*
+     * PyDateTimeAPI, that is used by all the PyDate* and PyTime* macros, is
+     * defined as a static variable defaulting to NULL, and it needs to be
+     * initialized on each and every C file where it is used.
+     *
+     * Therefore, we need to have a common_init() to call from all
+     * initialization functions. *sigh*
+     */
+    if (!PyDateTimeAPI)
+        PyDateTime_IMPORT;
 
 #if PY_MAJOR_VERSION >= 3
     level::definition = new level::Definition;

@@ -90,17 +90,9 @@ struct get : MethKwargs<dpy_Message>
             return nullptr;
 
         try {
-            Level level;
-            if (level_from_python(pylevel, level) != 0)
-                return nullptr;
-
-            Trange trange;
-            if (trange_from_python(pytrange, trange) != 0)
-                return nullptr;
-
-            Varcode code;
-            if (varcode_from_python(pycode, code) != 0)
-                return nullptr;
+            Level level = level_from_python(pylevel);
+            Trange trange = trange_from_python(pytrange);
+            Varcode code = varcode_from_python(pycode);
 
             const Var* res = self->message->get(level, trange, code);
             if (!res)
@@ -146,14 +138,8 @@ struct set : MethKwargs<dpy_Message>
             return nullptr;
 
         try {
-            Level level;
-            if (level_from_python(pylevel, level) != 0)
-                return nullptr;
-
-            Trange trange;
-            if (trange_from_python(pytrange, trange) != 0)
-                return nullptr;
-
+            Level level = level_from_python(pylevel);
+            Trange trange = trange_from_python(pytrange);
             self->message->set(level, trange, var->var);
         } DBALLE_CATCH_RETURN_PYO
 

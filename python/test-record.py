@@ -435,4 +435,4 @@ class RecordTest(unittest.TestCase):
 
 if __name__ == "__main__":
     from testlib import main
-    main("test_record")
+    main("test-record")

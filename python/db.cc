@@ -69,11 +69,7 @@ static PyObject* dpy_DB_get_default_format(PyTypeObject *type)
     try {
         string format = db::format_format(DB::get_default_format());
         return PyUnicode_FromString(format.c_str());
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_DB_set_default_format(PyTypeObject *type, PyObject *args)
@@ -86,11 +82,7 @@ static PyObject* dpy_DB_set_default_format(PyTypeObject *type, PyObject *args)
         DB::set_default_format(db::format_parse(format));
 
         Py_RETURN_NONE;
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_DB_connect_from_file(PyTypeObject *type, PyObject *args)
@@ -102,12 +94,8 @@ static PyObject* dpy_DB_connect_from_file(PyTypeObject *type, PyObject *args)
     shared_ptr<DB> db;
     try {
         db = DB::connect_from_file(fname);
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
-    return (PyObject*)db_create(db);
+        return (PyObject*)db_create(db);
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_DB_connect_from_url(PyTypeObject *type, PyObject *args)
@@ -119,12 +107,8 @@ static PyObject* dpy_DB_connect_from_url(PyTypeObject *type, PyObject *args)
     shared_ptr<DB> db;
     try {
         db = DB::connect_from_url(url);
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
-    return (PyObject*)db_create(db);
+        return (PyObject*)db_create(db);
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_DB_connect_test(PyTypeObject *type)
@@ -132,12 +116,8 @@ static PyObject* dpy_DB_connect_test(PyTypeObject *type)
     shared_ptr<DB> db;
     try {
         db = DB::connect_test();
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
-    return (PyObject*)db_create(db);
+        return (PyObject*)db_create(db);
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_DB_is_url(PyTypeObject *type, PyObject *args)
@@ -160,13 +140,8 @@ static PyObject* dpy_DB_reset(dpy_DB* self, PyObject *args)
 
     try {
         self->db->reset(repinfo_file);
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
-
-    Py_RETURN_NONE;
+        Py_RETURN_NONE;
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_DB_transaction(dpy_DB* self, PyObject *args)
@@ -178,11 +153,7 @@ static PyObject* dpy_DB_transaction(dpy_DB* self, PyObject *args)
     try {
         auto res = self->db->transaction(readonly);
         return (PyObject*)transaction_create(move(res));
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 /*
@@ -271,17 +242,14 @@ static PyObject* dpy_load(PYDB* self, PyObject* args, PyObject* kw)
     int overwrite = 0;
     int flags = 0;
 
-
     if (!PyArg_ParseTupleAndKeywords(args, kw, "O|siii", const_cast<char**>(kwlist), &obj, &encoding, &attrs, &full_pseudoana, &overwrite))
         return nullptr;
 
-    string repr;
-    if (object_repr(obj, repr) != 0)
-        return nullptr;
-
-    flags = (attrs ? DBA_IMPORT_ATTRS : 0) | (full_pseudoana ? DBA_IMPORT_FULL_PSEUDOANA : 0) | (overwrite ? DBA_IMPORT_OVERWRITE : 0);
-
     try {
+        string repr = object_repr(obj);
+
+        flags = (attrs ? DBA_IMPORT_ATTRS : 0) | (full_pseudoana ? DBA_IMPORT_FULL_PSEUDOANA : 0) | (overwrite ? DBA_IMPORT_OVERWRITE : 0);
+
         int fileno = file_get_fileno(obj);
         if (fileno == -1)
         {
@@ -327,11 +295,7 @@ static PyObject* dpy_load(PYDB* self, PyObject* args, PyObject* kw)
                 count = db_load_file(*self->db, f, true, repr, flags);
             return PyInt_FromLong(count);
         }
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 
@@ -349,13 +313,8 @@ static PyObject* dpy_remove_station_data(PYDB* self, PyObject* args)
         core::Query query;
         query.set_from_record(rec);
         self->db->remove_station_data(query);
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
-
-    Py_RETURN_NONE;
+        Py_RETURN_NONE;
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 template<typename PYDB>
@@ -373,25 +332,16 @@ static PyObject* dpy_remove(PYDB* self, PyObject* args)
         query.set_from_record(rec);
         ReleaseGIL gil;
         self->db->remove(query);
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
-
-    Py_RETURN_NONE;
+        Py_RETURN_NONE;
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_DB_disappear(dpy_DB* self)
 {
     try {
         self->db->disappear();
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
-    Py_RETURN_NONE;
+        Py_RETURN_NONE;
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 template<typename PYDB>
@@ -399,24 +349,16 @@ static PyObject* dpy_remove_all(PYDB* self)
 {
     try {
         self->db->remove_all();
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
-    Py_RETURN_NONE;
+        Py_RETURN_NONE;
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_DB_vacuum(dpy_DB* self)
 {
     try {
         self->db->vacuum();
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
-    Py_RETURN_NONE;
+        Py_RETURN_NONE;
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 template<typename PYDB>
@@ -434,11 +376,7 @@ static PyObject* dpy_query_stations(PYDB* self, PyObject* args)
         std::unique_ptr<db::Cursor> res = self->db->query_stations(query);
         gil.lock();
         return (PyObject*)cursor_create(move(res));
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 template<typename PYDB>
@@ -458,11 +396,7 @@ static PyObject* dpy_query_data(PYDB* self, PyObject* args)
             res = self->db->query_data(query);
         }
         return (PyObject*)cursor_create(move(res));
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 template<typename PYDB>
@@ -480,11 +414,7 @@ static PyObject* dpy_query_station_data(PYDB* self, PyObject* args)
         std::unique_ptr<db::Cursor> res = self->db->query_station_data(query);
         gil.lock();
         return (PyObject*)cursor_create(move(res));
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 template<typename PYDB>
@@ -502,11 +432,7 @@ static PyObject* dpy_query_summary(PYDB* self, PyObject* args)
         std::unique_ptr<db::Cursor> res = self->db->query_summary(query);
         gil.lock();
         return (PyObject*)cursor_create(move(res));
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_DB_query_attrs(dpy_DB* self, PyObject* args, PyObject* kw)
@@ -705,23 +631,21 @@ static PyObject* dpy_export_to_file(PYDB* self, PyObject* args, PyObject* kw)
     if (!PyArg_ParseTupleAndKeywords(args, kw, "O!sO|i", const_cast<char**>(kwlist), &dpy_Record_Type, &query, &format, &file, &as_generic))
         return NULL;
 
-    Encoding encoding = Encoding::BUFR;
-    if (strcmp(format, "BUFR") == 0)
-        encoding = Encoding::BUFR;
-    else if (strcmp(format, "CREX") == 0)
-        encoding = Encoding::CREX;
-    else
-    {
-        PyErr_SetString(PyExc_ValueError, "encoding must be one of BUFR or CREX");
-        return NULL;
-    }
-
-    if (pyobject_is_string(file))
-    {
-        std::string filename;
-        if (string_from_python(file, filename))
+    try {
+        Encoding encoding = Encoding::BUFR;
+        if (strcmp(format, "BUFR") == 0)
+            encoding = Encoding::BUFR;
+        else if (strcmp(format, "CREX") == 0)
+            encoding = Encoding::CREX;
+        else
+        {
+            PyErr_SetString(PyExc_ValueError, "encoding must be one of BUFR or CREX");
             return NULL;
-        try {
+        }
+
+        if (pyobject_is_string(file))
+        {
+            std::string filename = string_from_python(file);
             std::unique_ptr<File> out = File::create(encoding, filename, "wb");
             ExporterOptions opts;
             if (as_generic)
@@ -738,13 +662,7 @@ static PyObject* dpy_export_to_file(PYDB* self, PyObject* args, PyObject* kw)
             });
             gil.lock();
             Py_RETURN_NONE;
-        } catch (wreport::error& e) {
-            return raise_wreport_exception(e);
-        } catch (std::exception& se) {
-            return raise_std_exception(se);
-        }
-    } else {
-        try {
+        } else {
             ExporterOptions opts;
             if (as_generic)
                 opts.template_name = "generic";
@@ -772,12 +690,8 @@ static PyObject* dpy_export_to_file(PYDB* self, PyObject* args, PyObject* kw)
             if (has_error)
                 return nullptr;
             Py_RETURN_NONE;
-        } catch (wreport::error& e) {
-            return raise_wreport_exception(e);
-        } catch (std::exception& se) {
-            return raise_std_exception(se);
         }
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_tr_enter(dpy_Transaction* self)
@@ -803,11 +717,7 @@ static PyObject* dpy_tr_exit(dpy_Transaction* self, PyObject* args)
                 self->db->rollback();
         }
         Py_RETURN_FALSE;
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_tr_commit(dpy_Transaction* self)
@@ -815,7 +725,7 @@ static PyObject* dpy_tr_commit(dpy_Transaction* self)
     try {
         ReleaseGIL gil;
         self->db->commit();
-    } DBALLE_CATCH_RETURN_PYO;
+    } DBALLE_CATCH_RETURN_PYO
 
     Py_RETURN_NONE;
 }
@@ -825,7 +735,7 @@ static PyObject* dpy_tr_rollback(dpy_Transaction* self)
     try {
         ReleaseGIL gil;
         self->db->rollback();
-    } DBALLE_CATCH_RETURN_PYO;
+    } DBALLE_CATCH_RETURN_PYO
 
     Py_RETURN_NONE;
 }
@@ -1135,9 +1045,7 @@ int db_read_attrlist(PyObject* attrs, db::AttrList& codes)
     try {
         while (PyObject* iter_item = PyIter_Next(iter)) {
             pyo_unique_ptr item(iter_item);
-            string name;
-            if (string_from_python(item, name))
-                return -1;
+            string name = string_from_python(item);
             codes.push_back(resolve_varcode(name));
         }
         return 0;

@@ -43,11 +43,9 @@ static PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key);
 
 static PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key)
 {
-    string varname;
-    if (string_from_python(key, varname))
-        return nullptr;
-
     try {
+        string varname = string_from_python(key);
+
         // Just look at the first character to see if we need to check for python
         // API specific keys
         switch (varname[0])
@@ -119,11 +117,9 @@ static PyObject* dpy_Record_getitem(dpy_Record* self, PyObject* key)
  */
 static int setpy(dballe::Record& rec, PyObject* key, PyObject* val)
 {
-    string name;
-    if (string_from_python(key, name))
-        return -1;
-
     try {
+        string name = string_from_python(key);
+
         // Check for shortcut keys
         if (name == "datetime" || name == "date")
         {
@@ -132,15 +128,9 @@ static int setpy(dballe::Record& rec, PyObject* key, PyObject* val)
                     return res;
 
             if (val && PySequence_Check(val))
-            {
-                DatetimeRange dtr;
-                if (datetimerange_from_python(val, dtr)) return -1;
-                rec.set(dtr);
-            } else {
-                Datetime dt;
-                if (datetime_from_python(val, dt)) return -1;
-                rec.set(dt);
-            }
+                rec.set(datetimerange_from_python(val));
+            else
+                rec.set(datetime_from_python(val));
             return 0;
         }
 
@@ -148,7 +138,7 @@ static int setpy(dballe::Record& rec, PyObject* key, PyObject* val)
             if (int res = PyErr_WarnEx(PyExc_DeprecationWarning, "please use rec[\"datetime\"] = (min, max) instead of rec[\"datemin\"]", 1))
                 return res;
             DatetimeRange dtr = core::Record::downcast(rec).get_datetimerange();
-            if (datetime_from_python(val, dtr.min)) return -1;
+            dtr.min = datetime_from_python(val);
             rec.set(dtr);
             return 0;
         }
@@ -157,16 +147,14 @@ static int setpy(dballe::Record& rec, PyObject* key, PyObject* val)
             if (int res = PyErr_WarnEx(PyExc_DeprecationWarning, "please use rec[\"datetime\"] = (min, max) instead of rec[\"datemax\"]", 1))
                 return res;
             DatetimeRange dtr = core::Record::downcast(rec).get_datetimerange();
-            if (datetime_from_python(val, dtr.max)) return -1;
+            dtr.max = datetime_from_python(val);
             rec.set(dtr);
             return 0;
         }
 
         if (name == "level")
         {
-            Level lev;
-            if (level_from_python(val, lev)) return -1;
-            rec.set(lev);
+            rec.set(level_from_python(val));
             return 0;
         }
 
@@ -175,9 +163,7 @@ static int setpy(dballe::Record& rec, PyObject* key, PyObject* val)
             if (name == "timerange")
                 if (int res = PyErr_WarnEx(PyExc_DeprecationWarning, "please use rec[\"trange\"] instead of rec[\"timerange\"]", 1))
                     return res;
-            Trange tr;
-            if (trange_from_python(val, tr)) return -1;
-            rec.set(tr);
+            rec.set(trange_from_python(val));
             return 0;
         }
 
@@ -207,9 +193,7 @@ static int setpy(dballe::Record& rec, PyObject* key, PyObject* val)
                 || PyString_Check(val)
 #endif
                 ) {
-            string value;
-            if (string_from_python(val, value))
-                return -1;
+            string value = string_from_python(val);
             rec.set(name.c_str(), value.c_str());
         } else if (val == Py_None) {
             rec.unset(name.c_str());
@@ -228,53 +212,53 @@ static int dpy_Record_setitem(dpy_Record* self, PyObject *key, PyObject *val)
 
 static int dpy_Record_contains(dpy_Record* self, PyObject *value)
 {
-    string varname;
-    if (string_from_python(value, varname))
-        return -1;
+    try {
+        string varname = string_from_python(value);
 
-    switch (varname[0])
-    {
-        case 'd':
-            // We don't bother checking the seconds, since they default to 0 if
-            // missing
-            if (varname == "date")
-            {
-                if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
-                    return -1;
-                return !core::Record::downcast(*self->rec).get_datetime().is_missing();
-            }
-            else if (varname == "datemin")
-            {
-                if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
-                    return -1;
-                return !core::Record::downcast(*self->rec).get_datetimerange().min.is_missing();
-            }
-            else if (varname == "datemax")
-            {
-                if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
-                    return -1;
-                return !core::Record::downcast(*self->rec).get_datetimerange().max.is_missing();
-            }
-            break;
-        case 'l':
-            if (varname == "level")
-            {
-                if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
-                    return -1;
-                return any_key_set(*self->rec, level_keys, 4);
-            }
-            break;
-        case 't':
-            if (varname == "trange" || varname == "timerange")
-            {
-                if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
-                    return -1;
-                return any_key_set(*self->rec, trange_keys, 3);
-            }
-            break;
-    }
+        switch (varname[0])
+        {
+            case 'd':
+                // We don't bother checking the seconds, since they default to 0 if
+                // missing
+                if (varname == "date")
+                {
+                    if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
+                        return -1;
+                    return !core::Record::downcast(*self->rec).get_datetime().is_missing();
+                }
+                else if (varname == "datemin")
+                {
+                    if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
+                        return -1;
+                    return !core::Record::downcast(*self->rec).get_datetimerange().min.is_missing();
+                }
+                else if (varname == "datemax")
+                {
+                    if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
+                        return -1;
+                    return !core::Record::downcast(*self->rec).get_datetimerange().max.is_missing();
+                }
+                break;
+            case 'l':
+                if (varname == "level")
+                {
+                    if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
+                        return -1;
+                    return any_key_set(*self->rec, level_keys, 4);
+                }
+                break;
+            case 't':
+                if (varname == "trange" || varname == "timerange")
+                {
+                    if (PyErr_WarnEx(PyExc_DeprecationWarning, "date, datemin, datemax, level, trange, and timerange  may disappear as record keys in a future version of DB-All.e; no replacement is planned", 1))
+                        return -1;
+                    return any_key_set(*self->rec, trange_keys, 3);
+                }
+                break;
+        }
 
-    return self->rec->isset(varname.c_str()) ? 1 : 0;
+        return self->rec->isset(varname.c_str()) ? 1 : 0;
+    } DBALLE_CATCH_RETURN_INT
 }
 
 static PyObject* dpy_Record_copy(dpy_Record* self)
@@ -463,11 +447,7 @@ static PyObject* dpy_Record_vars(dpy_Record* self)
                 return nullptr;
         }
         return result.release();
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_Record_attrs(dpy_Record* self, PyObject *args, PyObject* kw)
@@ -492,11 +472,7 @@ static PyObject* dpy_Record_attrs(dpy_Record* self, PyObject *args, PyObject* kw
         }
 
         return result.release();
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_Record_date_extremes(dpy_Record* self)
@@ -513,11 +489,7 @@ static PyObject* dpy_Record_date_extremes(dpy_Record* self)
         if (!dt_min || !dt_max) return NULL;
 
         return Py_BuildValue("(NN)", dt_min.release(), dt_max.release());
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dpy_Record_set_from_string(dpy_Record* self, PyObject *args)
@@ -532,11 +504,7 @@ static PyObject* dpy_Record_set_from_string(dpy_Record* self, PyObject *args)
     try {
         core::Record::downcast(*self->rec).set_from_string(str);
         Py_RETURN_NONE;
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 static PyMethodDef dpy_Record_methods[] = {
