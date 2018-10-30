@@ -182,7 +182,7 @@ struct Binding
     typedef IMPL Impl;
 
 #if 0
-    // Not supported in Centos 7
+    // Not supported in Centos 7, use this when we can use a newer C++ compiler
     PySequenceMethods _sequence_methods {
         .sq_length = (lenfunc)Derived::sq_length,
         .sq_concat = (binaryfunc)Derived::sq_concat,

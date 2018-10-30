@@ -52,6 +52,8 @@ public:
     BufrImporter(const ImporterOptions& opts=ImporterOptions());
     virtual ~BufrImporter();
 
+    Encoding encoding() const override { return Encoding::BUFR; }
+
     bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>)> dest) const override;
 };
 
@@ -60,6 +62,8 @@ class CrexImporter : public WRImporter
 public:
     CrexImporter(const ImporterOptions& opts=ImporterOptions());
     virtual ~CrexImporter();
+
+    Encoding encoding() const override { return Encoding::CREX; }
 
     bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>)> dest) const override;
 };

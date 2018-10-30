@@ -16,6 +16,10 @@
 #include <algorithm>
 #include <wreport/bulletin.h>
 #include "impl-utils.h"
+#if PY_MAJOR_VERSION >= 3
+#include "message.h"
+#include "importer.h"
+#endif
 
 #if PY_MAJOR_VERSION <= 2
     #define PyLong_FromLong PyInt_FromLong
@@ -713,6 +717,114 @@ struct export_to_file : MethKwargs<Impl>
     }
 };
 
+
+template<typename Impl>
+struct import_messages : MethKwargs<Impl>
+{
+    constexpr static const char* name = "import_messages";
+    constexpr static const char* doc = R"(
+        import(msgs, report=None, flags=0)
+
+        Import one or more Messages into the database.
+
+        `msgs` can be:
+         * a dballe.Message object
+         * a sequence of dballe.Message objects
+
+        `report` is the network name to use for importing the data. If left to
+        None, the network is selected automatically from the message type
+
+        `attrs` if set to True, requests the variable attributes to also be imported.
+
+        `update_station`, if set to True, station information is merged with
+        existing one in the database. If false (default), station information
+        is imported only when the station did not exist in the database.
+
+        `overwrite`, if set to True, causes existing information already in the
+        database to be overwritten. If false (default), trying to import a
+        message which contains data already present in the database causes the
+        import to fail.
+    )";
+
+    [[noreturn]] static void throw_typeerror()
+    {
+        PyErr_SetString(PyExc_TypeError, "import_messages requires a dballe.Message, a sequence of dballe.Message objects, an iterable of dballe.Message objects, or the result of Importer.from_file");
+        throw PythonException();
+    }
+
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+#if PY_MAJOR_VERSION >= 3
+        static const char* kwlist[] = {"message", "report", "attrs", "update_station", "overwrite", nullptr};
+        PyObject* obj = nullptr;
+        const char* report = nullptr;
+        int attrs = 0;
+        int full_pseudoana = 0;
+        int overwrite = 0;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O|sppp", const_cast<char**>(kwlist), &obj, &report, &attrs, &full_pseudoana, &overwrite))
+            return nullptr;
+
+        try {
+            int flags = (attrs ? DBA_IMPORT_ATTRS : 0) | (full_pseudoana ? DBA_IMPORT_FULL_PSEUDOANA : 0) | (overwrite ? DBA_IMPORT_OVERWRITE : 0);
+
+            if (dpy_Message_Check(obj))
+            {
+                self->db->import_msg(*(((dpy_Message*)obj)->message), report, flags);
+                Py_RETURN_NONE;
+            }
+
+            if (dpy_ImporterFile_Check(obj))
+            {
+                dpy_ImporterFile* impf = (dpy_ImporterFile*)obj;
+                while (auto binmsg = impf->file->file->file().read())
+                {
+                    auto messages = impf->importer->importer->from_binary(binmsg);
+                    self->db->import_msgs(messages, report, flags);
+                }
+                Py_RETURN_NONE;
+            }
+
+            if (PySequence_Check(obj))
+            {
+                // Iterate sequence
+                Py_ssize_t len = PySequence_Length(obj);
+                if (len == -1) return nullptr;
+                if (len == 0)
+                    Py_RETURN_NONE;
+                std::vector<std::shared_ptr<Message>> messages;
+                messages.reserve(len);
+                for (Py_ssize_t i = 0; i < len; ++i)
+                {
+                    pyo_unique_ptr o(throw_ifnull(PySequence_ITEM(obj, i)));
+                    if (!dpy_Message_Check(o)) throw_typeerror();
+                    messages.push_back(((dpy_Message*)o.get())->message);
+                }
+                self->db->import_msgs(messages, report, flags);
+                Py_RETURN_NONE;
+            }
+
+            if (PyIter_Check(obj))
+            {
+                // Iterate iterator
+                pyo_unique_ptr iterator = throw_ifnull(PyObject_GetIter(obj));
+                while (pyo_unique_ptr item = PyIter_Next(iterator))
+                {
+                    if (!dpy_Message_Check(item)) throw_typeerror();
+                    self->db->import_msg(*(((dpy_Message*)item.get())->message), report, flags);
+                }
+                if (PyErr_Occurred()) return nullptr;
+                Py_RETURN_NONE;
+            }
+
+            throw_typeerror();
+        } DBALLE_CATCH_RETURN_PYO
+#else
+        PyErr_SetString(PyExc_NotImplementedError, "import is only available on Python 3");
+        return nullptr;
+#endif
+    }
+};
+
 namespace pydb {
 
 struct get_default_format : ClassMethNoargs
@@ -905,7 +1017,7 @@ struct Definition : public Binding<Definition, dpy_DB>
         attr_query_station<Impl>, attr_query_data<Impl>,
         attr_insert<Impl>, attr_insert_station<Impl>, attr_insert_data<Impl>,
         attr_remove<Impl>, attr_remove_station<Impl>, attr_remove_data<Impl>,
-        load<Impl>, export_to_file<Impl>
+        import_messages<Impl>, load<Impl>, export_to_file<Impl>
         > methods;
 
     static void _dealloc(Impl* self)
@@ -990,7 +1102,7 @@ struct Definition : public Binding<Definition, dpy_Transaction>
         attr_query_station<Impl>, attr_query_data<Impl>,
         attr_insert_station<Impl>, attr_insert_data<Impl>,
         attr_remove_station<Impl>, attr_remove_data<Impl>,
-        load<Impl>, export_to_file<Impl>,
+        import_messages<Impl>, load<Impl>, export_to_file<Impl>,
         __enter__, __exit__, commit, rollback
         > methods;
 

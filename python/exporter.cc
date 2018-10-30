@@ -17,21 +17,17 @@ PyTypeObject* dpy_Exporter_Type = nullptr;
 
 namespace {
 
-#if 0
-struct __bytes__ : MethNoargs<dpy_Exporter>
-{
-    constexpr static const char* name = "__bytes__";
-    constexpr static const char* doc = "Returns the contents of this message as a bytes object";
-    static PyObject* run(Impl* self)
-    {
-        return PyBytes_FromStringAndSize(self->message.data.data(), self->message.data.size());
-    }
-};
-#endif
 struct to_binary : MethKwargs<dpy_Exporter>
 {
     constexpr static const char* name = "to_binary";
     constexpr static const char* doc = "Encode a dballe.Message or a sequence of dballe.Message into a bytes object";
+
+    [[noreturn]] static void throw_typeerror()
+    {
+        PyErr_SetString(PyExc_ValueError, "to_binary requires a dballe.Message or a non-empty sequence of dballe.Message objects, or an iterable of dballe.Message objects");
+        throw PythonException();
+    }
+
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "contents", nullptr };
@@ -47,25 +43,25 @@ struct to_binary : MethKwargs<dpy_Exporter>
                 // Iterate sequence
                 Py_ssize_t len = PySequence_Length(contents);
                 if (len == -1) return nullptr;
-                if (len == 0)
-                {
-                    PyErr_SetString(PyExc_ValueError, "to_binary requires a dballe.Message or a non-empty sequence of dballe.Message objects");
-                    return nullptr;
-                }
+                if (len == 0) throw_typeerror();
+                messages.reserve(len);
                 for (Py_ssize_t i = 0; i < len; ++i)
                 {
                     pyo_unique_ptr o(throw_ifnull(PySequence_ITEM(contents, i)));
-                    if (!dpy_Message_Check(o))
-                    {
-                        PyErr_SetString(PyExc_TypeError, "to_binary requires a dballe.Message or a sequence of dballe.Message objects");
-                        return nullptr;
-                    }
+                    if (!dpy_Message_Check(o)) throw_typeerror();
                     messages.push_back(((dpy_Message*)o.get())->message);
                 }
-            } else {
-                PyErr_SetString(PyExc_TypeError, "to_binary requires a dballe.Message or a sequence of dballe.Message objects");
-                return nullptr;
-            }
+            } else if (PyIter_Check(contents)) {
+                // Iterate iterator
+                pyo_unique_ptr iterator = throw_ifnull(PyObject_GetIter(contents));
+                while (pyo_unique_ptr item = PyIter_Next(iterator))
+                {
+                    if (!dpy_Message_Check(item)) throw_typeerror();
+                    messages.push_back(((dpy_Message*)item.get())->message);
+                }
+                if (PyErr_Occurred()) return nullptr;
+            } else
+                throw_typeerror();
 
             std::string encoded = self->exporter->to_binary(messages);
             return PyBytes_FromStringAndSize(encoded.data(), encoded.size());

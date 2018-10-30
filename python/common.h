@@ -24,6 +24,7 @@ protected:
     Obj* ptr;
 
 public:
+    py_unique_ptr() : ptr(nullptr) {}
     py_unique_ptr(Obj* o) : ptr(o) {}
     py_unique_ptr(const py_unique_ptr&) = delete;
     py_unique_ptr(py_unique_ptr&& o) : ptr(o.ptr) { o.ptr = nullptr; }

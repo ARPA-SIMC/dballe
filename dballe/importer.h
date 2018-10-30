@@ -61,6 +61,11 @@ public:
     Importer& operator=(Importer&&) = delete;
 
     /**
+     * Return the encoding for this importer
+     */
+    virtual Encoding encoding() const = 0;
+
+    /**
      * Decode a message from its raw encoded representation
      *
      * @param msg

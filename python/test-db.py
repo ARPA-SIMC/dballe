@@ -5,12 +5,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import dballe
-import os
 import io
 import datetime
 import unittest
 import warnings
-from testlib import DballeDBMixin
+from testlib import DballeDBMixin, test_pathname
 
 
 class CommonDBTestMixin(DballeDBMixin):
@@ -158,20 +157,20 @@ class CommonDBTestMixin(DballeDBMixin):
         self.db.attr_remove_data(self.attr_ref, ("B33007",))
 
     def testLoadFile(self):
-        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "rb") as fp:
+        with io.open(test_pathname("bufr/vad.bufr"), "rb") as fp:
             self.db.remove_all()
             self.db.load(fp)
             self.assertTrue(self.db.query_data(dballe.Record()).remaining > 0)
 
     def testLoadFileLike(self):
-        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "rb") as fp:
+        with io.open(test_pathname("bufr/vad.bufr"), "rb") as fp:
             s = io.BytesIO(fp.read())
             self.db.remove_all()
             self.db.load(s)
             self.assertTrue(self.db.query_data(dballe.Record()).remaining > 0)
 
     def testLoadFileWithAttrs(self):
-        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withB33196.bufr", "rb") as fp:
+        with io.open(test_pathname("bufr/issue91-withB33196.bufr"), "rb") as fp:
             self.db.remove_all()
             self.db.load(fp, attrs=True)
             r = next(self.db.query_data(dballe.Record()))
@@ -179,22 +178,20 @@ class CommonDBTestMixin(DballeDBMixin):
             self.assertTrue("B33196" in a)
 
     def testLoadFileOverwrite(self):
-        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withoutB33196.bufr", "rb") as fp:
+        with io.open(test_pathname("bufr/issue91-withoutB33196.bufr"), "rb") as fp:
             self.db.remove_all()
             self.db.load(fp, overwrite=True)
             r = next(self.db.query_data(dballe.Record()))
             self.db.attr_query_data(r["context_id"])  # cannot verify the result, but expecting not to raise
             self.assertTrue(r["B12101"] == 274.15)
 
-        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withB33196.bufr", "rb") as fp:
+        with io.open(test_pathname("bufr/issue91-withB33196.bufr"), "rb") as fp:
             self.db.load(fp, overwrite=True)
             r = next(self.db.query_data(dballe.Record()))
             self.db.attr_query_data(r["context_id"])  # cannot verify the result, but expecting not to raise)
             self.assertTrue(r["B12101"] == 273.15)
 
     def testLoadFileno(self):
-        import os
-
         class F(object):
             def __init__(self, path):
                 self.path = path
@@ -212,51 +209,51 @@ class CommonDBTestMixin(DballeDBMixin):
             def __exit__(self, type, value, traceback):
                 self.fp.close()
 
-        with F(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr") as f:
+        with F(test_pathname("bufr/vad.bufr")) as f:
             self.db.remove_all()
             self.db.load(f)
             self.assertTrue(self.db.query_data(dballe.Record()).remaining > 0)
 
     def testLoadAutodetect(self):
         # BUFR, autodetectable
-        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "rb") as fp:
+        with io.open(test_pathname("bufr/vad.bufr"), "rb") as fp:
             self.db.remove_all()
             self.assertEqual(self.db.load(fp), 25)
 
         # BUFR, not autodetectable
-        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/synop-groundtemp.bufr", "rb") as fp:
+        with io.open(test_pathname("bufr/synop-groundtemp.bufr"), "rb") as fp:
             self.db.remove_all()
             with self.assertRaises(KeyError):
                 self.db.load(fp)
 
         # CREX, autodetectable
 
-        with io.open(os.getenv("DBA_TESTDATA") + "/crex/test-synop0.crex", "rb") as fp:
+        with io.open(test_pathname("crex/test-synop0.crex"), "rb") as fp:
             self.db.remove_all()
             self.assertEqual(self.db.load(fp), 1)
 
         # BUFR
-        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "rb") as fp:
+        with io.open(test_pathname("bufr/vad.bufr"), "rb") as fp:
             self.db.remove_all()
             self.assertEqual(self.db.load(fp, "BUFR"), 25)
 
         # BUFR
-        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/synop-groundtemp.bufr", "rb") as fp:
+        with io.open(test_pathname("bufr/synop-groundtemp.bufr"), "rb") as fp:
             self.db.remove_all()
             self.assertEqual(self.db.load(fp, "BUFR"), 1)
 
         # CREX loaded as BUFR yields no results
-        with io.open(os.getenv("DBA_TESTDATA") + "/crex/test-synop0.crex", "rb") as fp:
+        with io.open(test_pathname("crex/test-synop0.crex"), "rb") as fp:
             self.db.remove_all()
             self.assertEqual(self.db.load(fp, "BUFR"), 0)
 
         # CREX
-        with io.open(os.getenv("DBA_TESTDATA") + "/crex/test-synop0.crex", "rb") as fp:
+        with io.open(test_pathname("crex/test-synop0.crex"), "rb") as fp:
             self.db.remove_all()
             self.assertEqual(self.db.load(fp, "CREX"), 1)
 
         # BUFR loaded as CREX yields no results
-        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/vad.bufr", "rb") as fp:
+        with io.open(test_pathname("bufr/vad.bufr"), "rb") as fp:
             self.db.remove_all()
             self.assertEqual(self.db.load(fp, "CREX"), 0)
 
@@ -273,6 +270,34 @@ class CommonDBTestMixin(DballeDBMixin):
         s = "synop"
         t = "temp"
         self.assertEqual(reports, [s, s, s, s, s, s, t, t, t, t, t])
+
+    def test_import_message(self):
+        importer = dballe.Importer("BUFR")
+        with dballe.File(test_pathname("bufr/vad.bufr")) as fp:
+            for binmsg in fp:
+                for msg in importer.from_binary(binmsg):
+                    self.db.import_messages(msg)
+        self.assertEqual(self.db.query_data({}).remaining, 371)
+
+    def test_import_message_sequence(self):
+        importer = dballe.Importer("BUFR")
+        with dballe.File(test_pathname("bufr/vad.bufr")) as fp:
+            for binmsg in fp:
+                self.db.import_messages(importer.from_binary(binmsg))
+        self.assertEqual(self.db.query_data({}).remaining, 371)
+
+    def test_import_message_iter(self):
+        importer = dballe.Importer("BUFR")
+        with dballe.File(test_pathname("bufr/vad.bufr")) as fp:
+            for binmsg in fp:
+                self.db.import_messages((x for x in importer.from_binary(binmsg)))
+        self.assertEqual(self.db.query_data({}).remaining, 371)
+
+    def test_import_importerfile(self):
+        importer = dballe.Importer("BUFR")
+        with dballe.File(test_pathname("bufr/vad.bufr")) as fp:
+            self.db.import_messages(importer.from_file(fp))
+        self.assertEqual(self.db.query_data({}).remaining, 371)
 
 
 class FullDBTestMixin(CommonDBTestMixin):
@@ -306,7 +331,7 @@ class FullDBTestMixin(CommonDBTestMixin):
 
 class AttrTestMixin(object):
     def testLoadFileOverwriteAttrs(self):
-        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withoutB33196.bufr", "rb") as fp:
+        with io.open(test_pathname("bufr/issue91-withoutB33196.bufr"), "rb") as fp:
             self.db.remove_all()
             self.db.load(fp, attrs=True, overwrite=True)
             r = next(self.db.query_data(dballe.Record()))
@@ -314,7 +339,7 @@ class AttrTestMixin(object):
             self.assertTrue(r["B12101"] == 274.15)
             self.assertTrue("B33196" not in a)
 
-        with io.open(os.getenv("DBA_TESTDATA") + "/bufr/issue91-withB33196.bufr", "rb") as fp:
+        with io.open(test_pathname("bufr/issue91-withB33196.bufr"), "rb") as fp:
             self.db.load(fp, attrs=True, overwrite=True)
             r = next(self.db.query_data(dballe.Record()))
             a = self.db.attr_query_data(r["context_id"])

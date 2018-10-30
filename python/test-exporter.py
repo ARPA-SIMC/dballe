@@ -20,6 +20,9 @@ class TestExporter(MessageTestMixin, unittest.TestCase):
         self.assertEqual(binmsg2[:4], b"BUFR")
         self.assertEqual(binmsg2[-4:], b"7777")
 
+        binmsg3 = exporter.to_binary((msg for i in range(2)))
+        self.assertEqual(binmsg3, binmsg2)
+
         with self.assertRaises(ValueError):
             exporter.to_binary([])
 

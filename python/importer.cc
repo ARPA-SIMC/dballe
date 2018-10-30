@@ -21,6 +21,32 @@ PyTypeObject* dpy_ImporterFile_Type = nullptr;
 namespace {
 
 namespace importerfile {
+
+typedef MethGenericEnter<dpy_ImporterFile> __enter__;
+
+struct __exit__ : MethVarargs<dpy_ImporterFile>
+{
+    constexpr static const char* name = "__exit__";
+    constexpr static const char* doc = "Context manager __exit__";
+    static PyObject* run(Impl* self, PyObject* args)
+    {
+        PyObject* exc_type;
+        PyObject* exc_val;
+        PyObject* exc_tb;
+        if (!PyArg_ParseTuple(args, "OOO", &exc_type, &exc_val, &exc_tb))
+            return nullptr;
+
+        try {
+            Py_XDECREF(self->importer);
+            self->importer = nullptr;
+            Py_XDECREF(self->file);
+            self->file = nullptr;
+        } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
+    }
+};
+
+
 struct Definition : public Binding<Definition, dpy_ImporterFile>
 {
     constexpr static const char* name = "ImporterFile";
@@ -28,24 +54,37 @@ struct Definition : public Binding<Definition, dpy_ImporterFile>
     constexpr static const char* doc = "Message importer iterating over a dballe.File contents";
 
     GetSetters<> getsetters;
-    Methods<> methods;
+    Methods<__enter__, __exit__> methods;
+
+    static void check_valid(Impl* self)
+    {
+        if (!self->file || !self->importer)
+        {
+            PyErr_SetString(PyExc_RuntimeError, "cannot access a dballe.ImporterFile after the with block where it was used");
+            throw PythonException();
+        }
+    }
 
     static void _dealloc(Impl* self)
     {
-        Py_DECREF(self->importer);
-        Py_DECREF(self->file);
+        Py_XDECREF(self->importer);
+        Py_XDECREF(self->file);
         Py_TYPE(self)->tp_free(self);
     }
 
     static PyObject* _iter(Impl* self)
     {
-        Py_INCREF(self);
-        return (PyObject*)self;
+        try {
+            check_valid(self);
+            Py_INCREF(self);
+            return (PyObject*)self;
+        } DBALLE_CATCH_RETURN_PYO
     }
 
     static PyObject* _iternext(Impl* self)
     {
         try {
+            check_valid(self);
             BinaryMessage binmsg = self->file->file->file().read();
             if (!binmsg)
             {
@@ -91,15 +130,25 @@ struct from_file : MethKwargs<dpy_Importer>
     constexpr static const char* doc = "Wrap a dballe.File into a sequence of tuples of dballe.Message objects";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
+        // TODO: also accept any one-argument constructors for File (and we can provide the encoding because we have it)
         static const char* kwlist[] = { "file", nullptr };
-        dpy_File* file = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "O!", const_cast<char**>(kwlist), dpy_File_Type, &file))
+        PyObject* obj = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O", const_cast<char**>(kwlist), &obj))
             return nullptr;
 
         try {
+            py_unique_ptr<dpy_File> file;
+
+            if (dpy_File_Check(obj))
+            {
+                Py_INCREF(obj);
+                file = (dpy_File*)obj;
+            } else {
+                file = file_create_r_from_object(obj, self->importer->encoding());
+            }
+
             py_unique_ptr<dpy_ImporterFile> res = throw_ifnull(PyObject_New(dpy_ImporterFile, dpy_ImporterFile_Type));
-            Py_INCREF(file);
-            res->file = file;
+            res->file = file.release();
             Py_INCREF(self);
             res->importer = self;
             return (PyObject*)res.release();
