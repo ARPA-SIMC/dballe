@@ -1,8 +1,9 @@
 import dballe
 import unittest
+from testlibmsg import MessageTestMixin
 
 
-class TestExplorer(unittest.TestCase):
+class TestExplorer(MessageTestMixin, unittest.TestCase):
     def test_empty(self):
         msg = dballe.Message("synop")
         self.assertEqual(str(msg), "Message")
@@ -14,28 +15,8 @@ class TestExplorer(unittest.TestCase):
         self.assertEqual(msg.network, "synop")
 
     def test_create(self):
-        msg = dballe.Message("amdar")
-        msg.set_named("year", dballe.var("B04001", 2009))
-        msg.set_named("month", dballe.var("B04002", 2))
-        msg.set_named("day", dballe.var("B04003", 24))
-        msg.set_named("hour", dballe.var("B04004", 11))
-        msg.set_named("minute", dballe.var("B04005", 31))
-        msg.set_named("ident", dballe.var("B01011", "EU3375"))
-        msg.set_named("latitude", dballe.var("B05001", 48.90500))
-        msg.set_named("longitude", dballe.var("B06001", 10.63667))
-
-        lv = dballe.Level(102, 6260000, None, None)
-        tr = dballe.Trange(254, 0, 0)
-        msg.set(lv, tr, dballe.var("B01006", "LH968"))
-        msg.set(lv, tr, dballe.var("B02061", 0))
-        msg.set(lv, tr, dballe.var("B02062", 3))
-        msg.set(lv, tr, dballe.var("B02064", 0))
-        msg.set(lv, tr, dballe.var("B07030", 6260.0))
-        msg.set(lv, tr, dballe.var("B08004", 3))
-        msg.set(lv, tr, dballe.var("B11001", 33))
-        msg.set(lv, tr, dballe.var("B11002", 33.4))
-        msg.set(lv, tr, dballe.var("B12101", 240.0))
-        msg.set(lv, tr, dballe.var("B13002", 0.0))
+        msg = self.make_gts_acars_uk1_message()
+        self.assert_gts_acars_uk1_contents(msg)
 
 #    auto msgs = read_msgs("bufr/gts-acars-uk1.bufr", Encoding::BUFR);
 #    wassert(actual(msg->diff(*msgs[0])) == 0);

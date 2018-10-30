@@ -2,6 +2,7 @@
 #include <Python.h>
 #include "common.h"
 #include "exporter.h"
+#include "message.h"
 #include "dballe/file.h"
 #include "impl-utils.h"
 
@@ -17,64 +18,6 @@ PyTypeObject* dpy_Exporter_Type = nullptr;
 namespace {
 
 #if 0
-struct encoding : Getter<dpy_Exporter>
-{
-    constexpr static const char* name = "encoding";
-    constexpr static const char* doc = "message encoding";
-    static PyObject* get(Impl* self, void* closure)
-    {
-        try {
-            Encoding encoding = self->message.encoding;
-            return string_to_python(File::encoding_name(encoding));
-        } DBALLE_CATCH_RETURN_PYO
-    }
-};
-
-struct pathname : Getter<dpy_Exporter>
-{
-    constexpr static const char* name = "pathname";
-    constexpr static const char* doc = "pathname of the file the message came from, or None if unknown";
-    static PyObject* get(Impl* self, void* closure)
-    {
-        try {
-            if (self->message.pathname.empty())
-                Py_RETURN_NONE;
-            else
-                return string_to_python(self->message.pathname);
-        } DBALLE_CATCH_RETURN_PYO
-    }
-};
-
-struct offset : Getter<dpy_Exporter>
-{
-    constexpr static const char* name = "offset";
-    constexpr static const char* doc = "offset of the message in the input file, or None if unknown";
-    static PyObject* get(Impl* self, void* closure)
-    {
-        try {
-            if (self->message.offset == (off_t)-1)
-                Py_RETURN_NONE;
-            else
-                return PyLong_FromSize_t((size_t)self->message.offset);
-        } DBALLE_CATCH_RETURN_PYO
-    }
-};
-
-struct index : Getter<dpy_Exporter>
-{
-    constexpr static const char* name = "index";
-    constexpr static const char* doc = "index of the message in the input file, or None if unknown";
-    static PyObject* get(Impl* self, void* closure)
-    {
-        try {
-            if (self->message.index == MISSING_INT)
-                Py_RETURN_NONE;
-            else
-                return PyLong_FromLong((long)self->message.index);
-        } DBALLE_CATCH_RETURN_PYO
-    }
-};
-
 struct __bytes__ : MethNoargs<dpy_Exporter>
 {
     constexpr static const char* name = "__bytes__";
@@ -85,6 +28,51 @@ struct __bytes__ : MethNoargs<dpy_Exporter>
     }
 };
 #endif
+struct to_binary : MethKwargs<dpy_Exporter>
+{
+    constexpr static const char* name = "to_binary";
+    constexpr static const char* doc = "Encode a dballe.Message or a sequence of dballe.Message into a bytes object";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "contents", nullptr };
+        PyObject* contents = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O", const_cast<char**>(kwlist), &contents))
+            return nullptr;
+        try {
+            std::vector<std::shared_ptr<Message>> messages;
+            if (dpy_Message_Check(contents))
+            {
+                messages.push_back(((dpy_Message*)contents)->message);
+            } else if (PySequence_Check(contents)) {
+                // Iterate sequence
+                Py_ssize_t len = PySequence_Length(contents);
+                if (len == -1) return nullptr;
+                if (len == 0)
+                {
+                    PyErr_SetString(PyExc_ValueError, "to_binary requires a dballe.Message or a non-empty sequence of dballe.Message objects");
+                    return nullptr;
+                }
+                for (Py_ssize_t i = 0; i < len; ++i)
+                {
+                    pyo_unique_ptr o(throw_ifnull(PySequence_ITEM(contents, i)));
+                    if (!dpy_Message_Check(o))
+                    {
+                        PyErr_SetString(PyExc_TypeError, "to_binary requires a dballe.Message or a sequence of dballe.Message objects");
+                        return nullptr;
+                    }
+                    messages.push_back(((dpy_Message*)o.get())->message);
+                }
+            } else {
+                PyErr_SetString(PyExc_TypeError, "to_binary requires a dballe.Message or a sequence of dballe.Message objects");
+                return nullptr;
+            }
+
+            std::string encoded = self->exporter->to_binary(messages);
+            return PyBytes_FromStringAndSize(encoded.data(), encoded.size());
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
 
 struct Definition : public Binding<Definition, dpy_Exporter>
 {
@@ -93,7 +81,7 @@ struct Definition : public Binding<Definition, dpy_Exporter>
     constexpr static const char* doc = "Message exporter";
 
     GetSetters<> getsetters;
-    Methods<> methods;
+    Methods<to_binary> methods;
 
     static void _dealloc(Impl* self)
     {

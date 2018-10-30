@@ -90,7 +90,7 @@ struct get : MethKwargs<dpy_Message>
         PyObject* pylevel = nullptr;
         PyObject* pytrange = nullptr;
         PyObject* pycode = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "O", const_cast<char**>(kwlist), &pylevel, &pytrange, &pycode))
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "OOO", const_cast<char**>(kwlist), &pylevel, &pytrange, &pycode))
             return nullptr;
 
         try {
@@ -273,16 +273,14 @@ PyObject* message_type_to_python(MessageType type)
 
 dpy_Message* message_create(MessageType type)
 {
-    dpy_Message* res = PyObject_New(dpy_Message, dpy_Message_Type);
-    if (!res) return nullptr;
+    dpy_Message* res = throw_ifnull(PyObject_New(dpy_Message, dpy_Message_Type));
     new (&(res->message)) std::shared_ptr<Message>(Message::create(type));
     return res;
 }
 
 dpy_Message* message_create(std::shared_ptr<Message> message)
 {
-    dpy_Message* res = PyObject_New(dpy_Message, dpy_Message_Type);
-    if (!res) return nullptr;
+    dpy_Message* res = throw_ifnull(PyObject_New(dpy_Message, dpy_Message_Type));
     new (&(res->message)) std::shared_ptr<Message>(message);
     return res;
 }

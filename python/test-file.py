@@ -1,17 +1,9 @@
 import dballe
 import io
 import unittest
-import os
 import re
 import sys
-
-
-def test_pathname(fname):
-    if fname.startswith("."):
-        return fname
-
-    envdir = os.environ.get("DBA_TESTDATA", ".")
-    return os.path.normpath(os.path.join(envdir, fname))
+from testlib import test_pathname
 
 
 class TestFileRead(unittest.TestCase):

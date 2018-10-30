@@ -18,6 +18,14 @@ def main(testname):
     unittest.main(argv=argv)
 
 
+def test_pathname(fname):
+    if fname.startswith("."):
+        return fname
+
+    envdir = os.environ.get("DBA_TESTDATA", ".")
+    return os.path.normpath(os.path.join(envdir, fname))
+
+
 def not_so_random(seed):
     """
     Predictable random number generator, independent from python versions

@@ -2,6 +2,8 @@
 #include <Python.h>
 #include "common.h"
 #include "importer.h"
+#include "binarymessage.h"
+#include "message.h"
 #include "dballe/file.h"
 #include "impl-utils.h"
 
@@ -16,75 +18,25 @@ PyTypeObject* dpy_Importer_Type = nullptr;
 
 namespace {
 
-#if 0
-struct encoding : Getter<dpy_Importer>
+struct from_binary : MethKwargs<dpy_Importer>
 {
-    constexpr static const char* name = "encoding";
-    constexpr static const char* doc = "message encoding";
-    static PyObject* get(Impl* self, void* closure)
+    constexpr static const char* name = "from_binary";
+    constexpr static const char* doc = "Decode a BinaryMessage to a tuple of dballe.Message objects";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
+        static const char* kwlist[] = { "binmsg", nullptr };
+        dpy_BinaryMessage* binmsg = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O!", const_cast<char**>(kwlist), dpy_BinaryMessage_Type, &binmsg))
+            return nullptr;
         try {
-            Encoding encoding = self->message.encoding;
-            return string_to_python(File::encoding_name(encoding));
+            auto messages = self->importer->from_binary(binmsg->message);
+            pyo_unique_ptr res(throw_ifnull(PyTuple_New(messages.size())));
+            for (size_t i = 0; i < messages.size(); ++i)
+                PyTuple_SET_ITEM((PyTupleObject*)res.get(), i, (PyObject*)message_create(messages[i]));
+            return res.release();
         } DBALLE_CATCH_RETURN_PYO
     }
 };
-
-struct pathname : Getter<dpy_Importer>
-{
-    constexpr static const char* name = "pathname";
-    constexpr static const char* doc = "pathname of the file the message came from, or None if unknown";
-    static PyObject* get(Impl* self, void* closure)
-    {
-        try {
-            if (self->message.pathname.empty())
-                Py_RETURN_NONE;
-            else
-                return string_to_python(self->message.pathname);
-        } DBALLE_CATCH_RETURN_PYO
-    }
-};
-
-struct offset : Getter<dpy_Importer>
-{
-    constexpr static const char* name = "offset";
-    constexpr static const char* doc = "offset of the message in the input file, or None if unknown";
-    static PyObject* get(Impl* self, void* closure)
-    {
-        try {
-            if (self->message.offset == (off_t)-1)
-                Py_RETURN_NONE;
-            else
-                return PyLong_FromSize_t((size_t)self->message.offset);
-        } DBALLE_CATCH_RETURN_PYO
-    }
-};
-
-struct index : Getter<dpy_Importer>
-{
-    constexpr static const char* name = "index";
-    constexpr static const char* doc = "index of the message in the input file, or None if unknown";
-    static PyObject* get(Impl* self, void* closure)
-    {
-        try {
-            if (self->message.index == MISSING_INT)
-                Py_RETURN_NONE;
-            else
-                return PyLong_FromLong((long)self->message.index);
-        } DBALLE_CATCH_RETURN_PYO
-    }
-};
-
-struct __bytes__ : MethNoargs<dpy_Importer>
-{
-    constexpr static const char* name = "__bytes__";
-    constexpr static const char* doc = "Returns the contents of this message as a bytes object";
-    static PyObject* run(Impl* self)
-    {
-        return PyBytes_FromStringAndSize(self->message.data.data(), self->message.data.size());
-    }
-};
-#endif
 
 struct Definition : public Binding<Definition, dpy_Importer>
 {
@@ -93,7 +45,7 @@ struct Definition : public Binding<Definition, dpy_Importer>
     constexpr static const char* doc = "Message importer";
 
     GetSetters<> getsetters;
-    Methods<> methods;
+    Methods<from_binary> methods;
 
     static void _dealloc(Impl* self)
     {
