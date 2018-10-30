@@ -2,6 +2,7 @@ import dballe
 import unittest
 from testlib import test_pathname
 from testlibmsg import MessageTestMixin
+import sys
 
 
 class TestImporter(MessageTestMixin, unittest.TestCase):
@@ -34,6 +35,37 @@ class TestImporter(MessageTestMixin, unittest.TestCase):
         msg = importer.from_binary(binmsg)
         self.assertEqual(len(msg), 1)
         self.assert_gts_acars_uk1_contents(msg[0])
+
+    def test_fromfile(self):
+        pathname = test_pathname("bufr/gts-acars-uk1.bufr")
+        importer = dballe.Importer("BUFR")
+
+        with dballe.File(pathname) as f:
+            decoded = list(importer.from_file(f))
+
+        self.assertEqual(len(decoded), 1)
+        self.assertEqual(len(decoded[0]), 1)
+        msg = decoded[0][0]
+        self.assert_gts_acars_uk1_contents(msg)
+
+    def test_refcounts(self):
+        pathname = test_pathname("bufr/gts-acars-uk1.bufr")
+        importer = dballe.Importer("BUFR")
+        self.assertEqual(sys.getrefcount(importer), 2)  # importer, getrefcount
+
+        with dballe.File(pathname) as f:
+            self.assertEqual(sys.getrefcount(importer), 2)  # importer, getrefcount
+            self.assertEqual(sys.getrefcount(f), 3)  # __enter__ result, f, getrefcount
+            fimp = importer.from_file(f)
+            self.assertEqual(sys.getrefcount(importer), 3)  # importer, fimp, getrefcount
+            self.assertEqual(sys.getrefcount(f), 4)  # __enter__ result, f, fimp, getrefcount
+            decoded = list(fimp)
+            self.assertEqual(sys.getrefcount(importer), 3)  # importer, fimp, getrefcount
+            self.assertEqual(sys.getrefcount(f), 4)  # __enter__ result, f, fimp, getrefcount
+
+        self.assertEqual(sys.getrefcount(importer), 3)  # importer, fimp, getrefcount
+        self.assertEqual(sys.getrefcount(f), 3)  # f, fimp, getrefcount
+        self.assertEqual(len(decoded), 1)
 
 
 if __name__ == "__main__":

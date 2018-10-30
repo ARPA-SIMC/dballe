@@ -2,7 +2,8 @@
 #define DBALLE_PYTHON_IMPORTER_H
 
 #include <Python.h>
-#include <dballe/importer.h>
+#include "dballe/importer.h"
+#include "file.h"
 #include <memory>
 
 extern "C" {
@@ -17,6 +18,20 @@ extern PyTypeObject* dpy_Importer_Type;
 #define dpy_Importer_Check(ob) \
     (Py_TYPE(ob) == dpy_Importer_Type || \
      PyType_IsSubtype(Py_TYPE(ob), dpy_Importer_Type))
+
+
+typedef struct {
+    PyObject_HEAD
+    dpy_File* file;
+    dpy_Importer* importer;
+} dpy_ImporterFile;
+
+extern PyTypeObject* dpy_ImporterFile_Type;
+
+#define dpy_ImporterFile_Check(ob) \
+    (Py_TYPE(ob) == dpy_ImporterFile_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), dpy_ImporterFile_Type))
+
 
 }
 
