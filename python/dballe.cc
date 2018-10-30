@@ -9,6 +9,8 @@
 #include "binarymessage.h"
 #include "file.h"
 #include "message.h"
+#include "importer.h"
+#include "exporter.h"
 #include "explorer.h"
 #endif
 #include "dballe/types.h"
@@ -176,6 +178,8 @@ PyMODINIT_FUNC init_dballe(void)
         register_cursor(m);
         register_binarymessage(m);
         register_file(m);
+        register_importer(m);
+        register_exporter(m);
         register_message(m);
         register_explorer(m);
 
