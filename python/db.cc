@@ -755,7 +755,7 @@ struct import_messages : MethKwargs<Impl>
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
 #if PY_MAJOR_VERSION >= 3
-        static const char* kwlist[] = {"message", "report", "attrs", "update_station", "overwrite", nullptr};
+        static const char* kwlist[] = {"messages", "report", "attrs", "update_station", "overwrite", nullptr};
         PyObject* obj = nullptr;
         const char* report = nullptr;
         int attrs = 0;

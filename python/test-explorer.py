@@ -1,7 +1,7 @@
 import dballe
 import datetime
 import unittest
-from testlib import DballeDBMixin
+from testlib import DballeDBMixin, test_pathname
 
 
 class BaseExplorerTestMixin(DballeDBMixin):
@@ -100,6 +100,39 @@ class BaseExplorerTestMixin(DballeDBMixin):
         with explorer.query_summary_all({"rep_memo": "amdar"}) as cur:
             rows = list(cur)
         self.assertEqual(len(rows), 1)
+
+    def test_create_from_msgs(self):
+        importer = dballe.Importer("BUFR")
+
+        explorer = self._explorer()
+        with explorer.rebuild() as update:
+            with importer.from_file(test_pathname("bufr/gts-acars-uk1.bufr")) as imp:
+                update.add_messages(imp)
+        explorer.set_filter({"level": dballe.Level(102, 6260000)})
+
+        self.assertCountEqual(explorer.all_stations, [
+            self._station("amdar", None, 48.90500, 10.63667, "EU3375"),
+        ])
+        self.assertCountEqual(explorer.stations, [
+            self._station("amdar", None, 48.90500, 10.63667, "EU3375"),
+        ])
+        self.assertEqual(explorer.all_reports, ["amdar"])
+        self.assertEqual(explorer.reports, ["amdar"])
+        self.assertEqual(explorer.all_levels, [dballe.Level(102, 6260000), None])
+        self.assertEqual(explorer.levels, [dballe.Level(102, 6260000)])
+        self.assertEqual(explorer.all_tranges, [dballe.Trange(254, 0, 0), None])
+        self.assertEqual(explorer.tranges, [dballe.Trange(254, 0, 0)])
+        self.assertCountEqual(explorer.all_varcodes, [
+            "B04001", "B04002", "B04003", "B04004", "B04005", "B01011", "B05001", "B06001",
+            "B01006", "B02061", "B02062", "B02064", "B07030", "B08004", "B11001", "B11002", "B12101", "B13002",
+        ])
+        self.assertCountEqual(explorer.varcodes, [
+            "B01006", "B02061", "B02062", "B02064", "B07030", "B08004", "B11001", "B11002", "B12101", "B13002",
+        ])
+        self.assertEqual(explorer.all_stats, dballe.ExplorerStats((
+            datetime.datetime(2009, 2, 24, 11, 31), datetime.datetime(2009, 2, 24, 11, 31), 18)))
+        self.assertEqual(explorer.stats, dballe.ExplorerStats((
+            datetime.datetime(2009, 2, 24, 11, 31), datetime.datetime(2009, 2, 24, 11, 31), 10)))
 
 
 class ExplorerTestMixin(BaseExplorerTestMixin):

@@ -5,6 +5,8 @@
 #include "common.h"
 #include "cursor.h"
 #include "explorer.h"
+#include "message.h"
+#include "importer.h"
 #include "types.h"
 #include "db.h"
 #include "record.h"
@@ -593,6 +595,81 @@ Add the contents of the given Explorer or DBExplorer to the Explorer.
     }
 };
 
+template<typename Station>
+struct add_messages : public MethKwargs<typename ImplTraits<Station>::UpdateImpl>
+{
+    typedef typename ImplTraits<Station>::UpdateImpl Impl;
+    constexpr static const char* name = "add_messages";
+    constexpr static const char* doc = R"(
+Add dballe.Message objects to the explorer.
+
+It takes the same messages argument of dballe.DB.import_messages
+)";
+    [[noreturn]] static void throw_typeerror()
+    {
+        PyErr_SetString(PyExc_TypeError, "add_messages requires a dballe.Message, a sequence of dballe.Message objects, an iterable of dballe.Message objects, or the result of Importer.from_file");
+        throw PythonException();
+    }
+
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "messages", nullptr };
+        PyObject* obj;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O", const_cast<char**>(kwlist), &obj))
+            return nullptr;
+
+        try {
+            if (dpy_Message_Check(obj))
+            {
+                self->update.add_message(*(((dpy_Message*)obj)->message));
+                Py_RETURN_NONE;
+            }
+
+            if (dpy_ImporterFile_Check(obj))
+            {
+                dpy_ImporterFile* impf = (dpy_ImporterFile*)obj;
+                while (auto binmsg = impf->file->file->file().read())
+                {
+                    auto messages = impf->importer->importer->from_binary(binmsg);
+                    self->update.add_messages(messages);
+                }
+                Py_RETURN_NONE;
+            }
+
+            if (PySequence_Check(obj))
+            {
+                // Iterate sequence
+                Py_ssize_t len = PySequence_Length(obj);
+                if (len == -1) return nullptr;
+                if (len == 0)
+                    Py_RETURN_NONE;
+                for (Py_ssize_t i = 0; i < len; ++i)
+                {
+                    pyo_unique_ptr o(throw_ifnull(PySequence_ITEM(obj, i)));
+                    if (!dpy_Message_Check(o)) throw_typeerror();
+                    self->update.add_message(*(((dpy_Message*)o.get())->message));
+                }
+                Py_RETURN_NONE;
+            }
+
+            if (PyIter_Check(obj))
+            {
+                // Iterate iterator
+                pyo_unique_ptr iterator = throw_ifnull(PyObject_GetIter(obj));
+                while (pyo_unique_ptr item = PyIter_Next(iterator))
+                {
+                    if (!dpy_Message_Check(item)) throw_typeerror();
+                    self->update.add_message(*(((dpy_Message*)item.get())->message));
+                }
+                if (PyErr_Occurred()) return nullptr;
+                Py_RETURN_NONE;
+            }
+
+            throw_typeerror();
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
 
 template<class Station>
 struct Definition : public Binding<Definition<Station>, typename ImplTraits<Station>::UpdateImpl>
@@ -601,7 +678,7 @@ struct Definition : public Binding<Definition<Station>, typename ImplTraits<Stat
     static const char* name;
     static const char* qual_name;
     constexpr static const char* doc = "Manage updates to an Explorer";
-    Methods<__enter__<Station>, __exit__<Station>, add_db<Station>, add_json<Station>, add_explorer<Station>> methods;
+    Methods<__enter__<Station>, __exit__<Station>, add_db<Station>, add_json<Station>, add_explorer<Station>, add_messages<Station>> methods;
     GetSetters<> getsetters;
 
     static void _dealloc(Impl* self)

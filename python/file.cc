@@ -458,16 +458,14 @@ std::unique_ptr<FileWrapper> wrapper_r_from_object(PyObject* o, Encoding encodin
 dpy_File* file_create_r_from_object(PyObject* o)
 {
     auto wrapper = wrapper_r_from_object(o);
-    if (!wrapper)
-        return nullptr;
+    if (!wrapper) throw PythonException();
     return file_create(std::move(wrapper));
 }
 
 dpy_File* file_create_r_from_object(PyObject* o, Encoding encoding)
 {
     auto wrapper = wrapper_r_from_object(o, encoding);
-    if (!wrapper)
-        return nullptr;
+    if (!wrapper) throw PythonException();
     return file_create(std::move(wrapper));
 }
 
