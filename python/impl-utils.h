@@ -181,6 +181,8 @@ struct Binding
 {
     typedef IMPL Impl;
 
+#if 0
+    // Not supported in Centos 7
     PySequenceMethods _sequence_methods {
         .sq_length = (lenfunc)Derived::sq_length,
         .sq_concat = (binaryfunc)Derived::sq_concat,
@@ -196,6 +198,25 @@ struct Binding
         .mp_subscript = (binaryfunc)Derived::mp_subscript,
         .mp_ass_subscript = (objobjargproc)Derived::mp_ass_subscript,
     };
+#else
+    PySequenceMethods _sequence_methods;
+    PyMappingMethods _mapping_methods;
+
+    Binding()
+    {
+        _sequence_methods.sq_length = (lenfunc)Derived::sq_length;
+        _sequence_methods.sq_concat = (binaryfunc)Derived::sq_concat;
+        _sequence_methods.sq_repeat = (ssizeargfunc)Derived::sq_repeat;
+        _sequence_methods.sq_item = (ssizeargfunc)Derived::sq_item;
+        _sequence_methods.sq_ass_item = (ssizeobjargproc)Derived::sq_ass_item;
+        _sequence_methods.sq_contains = (objobjproc)Derived::sq_contains;
+        _sequence_methods.sq_inplace_concat = (binaryfunc)Derived::sq_inplace_concat;
+        _sequence_methods.sq_inplace_repeat = (ssizeargfunc)Derived::sq_inplace_repeat;
+        _mapping_methods.mp_length = (lenfunc)Derived::mp_length;
+        _mapping_methods.mp_subscript = (binaryfunc)Derived::mp_subscript;
+        _mapping_methods.mp_ass_subscript = (objobjargproc)Derived::mp_ass_subscript;
+    }
+#endif
 
     static PyObject* _str(Impl* self)
     {
