@@ -129,6 +129,7 @@ def test_sette():
 
     local(cmd("git", "push", "sette", "HEAD"))
     with cd(remote_dir):
+        run(cmd("git", "reset", "--hard"))
         run(cmd("git", "checkout", "-B", "test_sette", repo.head.commit.hexsha))
         run(cmd("git", "reset", "--hard"))
         run(cmd("git", "clean", "-fx"))
