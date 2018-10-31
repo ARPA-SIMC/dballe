@@ -2,11 +2,28 @@
 
 import os
 os.environ["DBALLE_BUILDING_DOCS"] = "true"  # noqa
-
 import sys
+import re
 import inspect
 import dballe
 import dballe.volnd
+
+re_docparsep = re.compile(r"\n(?:\s*\n)+")
+re_signature = re.compile(r"\S+\(.*\)")
+re_linebreak = re.compile(r"\s*\n\s*")
+
+
+def split_doc_summary(doc):
+    res = re_docparsep.split(doc, maxsplit=1)
+    if len(res) == 1:
+        dstrip = doc.strip()
+        if "\n" in dstrip:
+            return None, doc
+        else:
+            return doc, None
+    else:
+        summary = re_linebreak.sub(" ", res[0])
+        return summary, res[1]
 
 
 class Generator:
@@ -55,8 +72,9 @@ class Generator:
         name = cls.__name__
         self.title("dballe.{}".format(name))
         self.print(inspect.getdoc(cls).replace("wreport.", "dballe."))
-        self.title("Members", char="`")
-        self.document_members(cls)
+        if self.has_members(cls):
+            self.title("Members", char="`")
+            self.document_members(cls)
         self.spacer()
 
     def document(self, obj):
@@ -74,9 +92,64 @@ class Generator:
             self.print_indented(2, obj.__name__)
             self.print_indented(4, inspect.getdoc(obj))
 
+    def document_getsetter(self, cls, name, obj):
+        doc = inspect.getdoc(obj)
+
+        summary, rest = split_doc_summary(doc)
+        if summary:
+            if rest:
+                self.print_indented(2, "{}.{}: {}".format(cls.__name__, name, summary))
+                self.print_indented(4, rest)
+            else:
+                self.print_indented(2, "{}.{}".format(cls.__name__, name))
+                self.print_indented(4, summary)
+        else:
+            self.print_indented(2, "{}.{}".format(cls.__name__, name))
+            self.print_indented(4, doc)
+
+    def document_cfunction(self, cls, name, obj):
+        # Split signature and summary
+        doc = inspect.getdoc(obj)
+
+        signature, rest = split_doc_summary(doc)
+        if signature and re_signature.search(signature):
+            if signature.startswith(cls.__name__ + "."):
+                signature = signature[len(cls.__name__) + 1:]
+            self.print_indented(2, "{}.{}".format(cls.__name__, signature))
+            if rest:
+                self.print_indented(4, rest)
+        else:
+            self.print_indented(2, "{}.{}(…)".format(cls.__name__, name))
+            self.print_indented(4, doc)
+
+    def document_function(self, cls, name, obj):
+        argspec = inspect.formatargspec(*inspect.getargspec(obj))
+        self.print_indented(2, "{}.{}{}".format(cls.__name__, name, argspec))
+        self.print_indented(4, inspect.getdoc(obj))
+
+    def has_members(self, cls, include=None, exclude=None):
+        for name, m in inspect.getmembers(cls):
+            if name[0] == '_':
+                continue
+            if include is not None and name not in include:
+                continue
+            if exclude is not None and name in exclude:
+                continue
+            if inspect.isroutine(m):
+                return True
+            elif inspect.isfunction(m):
+                return True
+            elif inspect.isclass(m) or inspect.ismodule(m):
+                pass
+            elif m.__class__.__name__ == "_Feature":
+                pass
+            else:
+                return True
+
     def document_members(self, cls, include=None, exclude=None):
         # List and classify members
         member_vars = []
+        member_cfuncs = []
         member_funcs = []
 
         for name, m in inspect.getmembers(cls):
@@ -86,39 +159,41 @@ class Generator:
                 continue
             if exclude is not None and name in exclude:
                 continue
-            fullname = cls.__name__ + "." + name
-            if inspect.isroutine(m) and (inspect.isfunction(m) or fullname in c_argspecs):
-                member_funcs.append((fullname, name, m))
+            if inspect.isroutine(m):
+                member_cfuncs.append((name, m))
+            elif inspect.isfunction(m):
+                member_funcs.append((name, m))
             elif inspect.isclass(m) or inspect.ismodule(m):
                 pass
             elif m.__class__.__name__ == "_Feature":
                 pass
             else:
-                member_vars.append((fullname, name, m))
+                member_vars.append((name, m))
 
         member_vars.sort()
+        member_cfuncs.sort()
         member_funcs.sort()
 
-        # Document vars and get/setters
-        for fullname, name, m in member_vars:
+        # Hyperlink destinations
+        for name, m in member_vars:
             self.print(".. _{}.{}:".format(cls.__name__, name))
-        for fullname, name, m in member_funcs:
+        for name, m in member_cfuncs:
             self.print(".. _{}.{}():".format(cls.__name__, name))
+        for name, m in member_funcs:
+            self.print(".. _{}.{}():".format(cls.__name__, name))
+
+        # Document vars and get/setters
         self.spacer()
-        for fullname, name, m in member_vars:
-            self.print_indented(2, "{}.{}".format(cls.__name__, name))
-            self.print_indented(4, inspect.getdoc(m))
+        for name, m in member_vars:
+            self.document_getsetter(cls, name, m)
+
+        # Document C functions
+        for name, m in member_cfuncs:
+            self.document_cfunction(cls, name, m)
 
         # Document functions
-        for fullname, name, m in member_funcs:
-            argspec = c_argspecs.get(fullname, None)
-            if argspec is None:
-                if inspect.isfunction(m):
-                    argspec = inspect.formatargspec(*inspect.getargspec(m))
-                else:
-                    argspec = ""
-            self.print_indented(2, "{}.{}{}".format(cls.__name__, name, argspec))
-            self.print_indented(4, inspect.getdoc(m))
+        for name, m in member_funcs:
+            self.document_function(cls, name, m)
 
         self.spacer()
 
@@ -128,26 +203,6 @@ c_argspecs = {
     "dballe.var": "(varcode[, default])",
     "dballe.describe_level": "(ltype1=None, l1=None, ltype2=None, l2=None)",
     "dballe.describe_trange": "(pind=None, p1=None, p2=None)",
-    "Var.enqi": "()",
-    "Var.enqc": "()",
-    "Var.enqd": "()",
-    "Var.enq": "()",
-    "Var.get": "(default=None)",
-    "Var.format": "(default='')",
-    "Record.to_dict": "()",
-    "Record.clear": "()",
-    "Record.clear_vars": "()",
-    "Record.get": "(key, default=None)",
-    "Record.copy": "()",
-    "Record.key": "(key)",
-    "Record.var": "(key)",
-    "Record.keys": "()",
-    "Record.items": "()",
-    "Record.varitems": "()",
-    "Record.vars": "()",
-    "Record.update": "(\\*\\*kwargs)",
-    "Record.date_extremes": "()",
-    "Record.set_from_string": "(str)",
     "Transaction.commit": "()",
     "Transaction.rollback": "()",
     "DB.get_default_format": "()",
@@ -215,11 +270,17 @@ and several classes, documented in their own sections.
 gen.document_class(dballe.Var)
 gen.document_class(dballe.Varinfo)
 gen.document_class(dballe.Vartable)
+gen.document_class(dballe.Level)
+gen.document_class(dballe.Trange)
+gen.document_class(dballe.Station)
+gen.document_class(dballe.DBStation)
 gen.document_class(dballe.Record)
-
-gen.para("""
-Note that all the functions that take a dballe.Record, can also take a Python dict.
-""")
+gen.document_class(dballe.BinaryMessage)
+gen.document_class(dballe.File)
+gen.document_class(dballe.Message)
+gen.document_class(dballe.Importer)
+gen.document_class(dballe.ImporterFile)
+gen.document_class(dballe.Exporter)
 
 gen.para("""
 dballe.DB

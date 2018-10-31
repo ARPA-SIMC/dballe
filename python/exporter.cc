@@ -20,7 +20,11 @@ namespace {
 struct to_binary : MethKwargs<dpy_Exporter>
 {
     constexpr static const char* name = "to_binary";
-    constexpr static const char* doc = "Encode a dballe.Message or a sequence of dballe.Message into a bytes object";
+    constexpr static const char* signature = "contents: Union[dballe.Message, Sequence[dballe.Message], Iterable[dballe.Message]]";
+    constexpr static const char* returns = "bytes";
+    constexpr static const char* doc = R"(
+Encode a dballe.Message or a sequence of dballe.Message into a bytes object.
+)";
 
     [[noreturn]] static void throw_typeerror()
     {
@@ -74,7 +78,12 @@ struct Definition : public Binding<Definition, dpy_Exporter>
 {
     constexpr static const char* name = "Exporter";
     constexpr static const char* qual_name = "dballe.Exporter";
-    constexpr static const char* doc = "Message exporter";
+    constexpr static const char* doc = R"(
+Message exporter.
+
+This is the engine that can reconstruct a standard BUFR or CREX message from
+the contents of a `dballe.Message`_.
+)";
 
     GetSetters<> getsetters;
     Methods<to_binary> methods;

@@ -254,7 +254,8 @@ static int __in__(dpy_Record* self, PyObject *value)
 struct copy : MethNoargs<dpy_Record>
 {
     constexpr static const char* name = "copy";
-    constexpr static const char* doc = "return a deep copy of the Record";
+    constexpr static const char* returns = "Record";
+    constexpr static const char* summary = "return a deep copy of the Record";
     static PyObject* run(Impl* self)
     {
         try {
@@ -268,7 +269,7 @@ struct copy : MethNoargs<dpy_Record>
 struct clear : MethNoargs<dpy_Record>
 {
     constexpr static const char* name = "clear";
-    constexpr static const char* doc = "remove all data from the record";
+    constexpr static const char* summary = "remove all data from the record";
     static PyObject* run(Impl* self)
     {
         try {
@@ -281,7 +282,7 @@ struct clear : MethNoargs<dpy_Record>
 struct clear_vars : MethNoargs<dpy_Record>
 {
     constexpr static const char* name = "clear_vars";
-    constexpr static const char* doc = "remove all variables from the record, leaving the keywords intact";
+    constexpr static const char* summary = "remove all variables from the record, leaving the keywords intact";
     static PyObject* run(Impl* self)
     {
         try {
@@ -294,7 +295,8 @@ struct clear_vars : MethNoargs<dpy_Record>
 struct to_dict : MethNoargs<dpy_Record>
 {
     constexpr static const char* name = "to_dict";
-    constexpr static const char* doc = "return a dict with all the key: value assignments set in the Record.";
+    constexpr static const char* returns = "dict";
+    constexpr static const char* summary = "return a dict with all the key: value assignments set in the Record.";
     static PyObject* run(Impl* self)
     {
         try {
@@ -312,7 +314,8 @@ struct to_dict : MethNoargs<dpy_Record>
 struct keys : MethNoargs<dpy_Record>
 {
     constexpr static const char* name = "keys";
-    constexpr static const char* doc = "return a list with all the keys set in the Record.";
+    constexpr static const char* returns = "List[str]";
+    constexpr static const char* summary = "return a list with all the keys set in the Record.";
     static PyObject* run(Impl* self)
     {
         try {
@@ -332,7 +335,8 @@ struct keys : MethNoargs<dpy_Record>
 struct items : MethNoargs<dpy_Record>
 {
     constexpr static const char* name = "items";
-    constexpr static const char* doc = "return a list with all the (key, value) tuples set in the Record.";
+    constexpr static const char* returns = "List[(str, Any)]";
+    constexpr static const char* summary = "return a list with all the (key, value) tuples set in the Record.";
     static PyObject* run(Impl* self)
     {
         try {
@@ -354,7 +358,8 @@ struct items : MethNoargs<dpy_Record>
 struct varitems : MethNoargs<dpy_Record>
 {
     constexpr static const char* name = "varitems";
-    constexpr static const char* doc = "return a list with all the (key, `dballe.Var`_) tuples set in the Record.";
+    constexpr static const char* returns = "List[(str, dballe.Var)]";
+    constexpr static const char* summary = "return a list with all the (key, `dballe.Var`_) tuples set in the Record.";
     static PyObject* run(Impl* self)
     {
         try {
@@ -374,7 +379,9 @@ struct varitems : MethNoargs<dpy_Record>
 struct var : MethKwargs<dpy_Record>
 {
     constexpr static const char* name = "var";
-    constexpr static const char* doc = "return a `dballe.Var`_ from the record, given its key.";
+    constexpr static const char* signature = "str";
+    constexpr static const char* returns = "dballe.Var";
+    constexpr static const char* summary = "return a `dballe.Var`_ from the record, given its key.";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "name", nullptr };
@@ -390,7 +397,8 @@ struct var : MethKwargs<dpy_Record>
 struct update : MethKwargs<dpy_Record>
 {
     constexpr static const char* name = "update";
-    constexpr static const char* doc = "set many record keys/vars in a single shot, via kwargs";
+    constexpr static const char* signature = "key: str: value: Any, …";
+    constexpr static const char* summary = "set many record keys/vars in a single shot, via kwargs";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         try {
@@ -410,7 +418,9 @@ struct update : MethKwargs<dpy_Record>
 struct get : MethKwargs<dpy_Record>
 {
     constexpr static const char* name = "get";
-    constexpr static const char* doc = "lookup a value, returning a fallback value (None by default) if unset";
+    constexpr static const char* signature = "key: str, default: Any=None";
+    constexpr static const char* returns = "Any";
+    constexpr static const char* summary = "lookup a value, returning a fallback value (None by default) if unset";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "key", "default", NULL };
@@ -436,11 +446,9 @@ struct get : MethKwargs<dpy_Record>
 struct attrs : MethKwargs<dpy_Record>
 {
     constexpr static const char* name = "attrs";
-    constexpr static const char* doc = R"(
-        attrs(code) -> {code: var}
-
-        return a dict with the attributes of the given varcode
-    )";
+    constexpr static const char* signature = "code: str";
+    constexpr static const char* returns = "Dict[str, dballe.Var]";
+    constexpr static const char* summary = "return a dict with the attributes of the given varcode";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "code", NULL };
@@ -466,7 +474,9 @@ struct attrs : MethKwargs<dpy_Record>
 struct key : MethKwargs<dpy_Record>
 {
     constexpr static const char* name = "key";
-    constexpr static const char* doc = "return a `dballe.Var`_ from the record, given its key. (deprecated)";
+    constexpr static const char* signature = "name: str";
+    constexpr static const char* returns = "dballe.Var";
+    constexpr static const char* summary = "return a `dballe.Var`_ from the record, given its key. (deprecated)";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use Record.var instead of Record.key", 1))
@@ -485,6 +495,7 @@ struct key : MethKwargs<dpy_Record>
 struct vars : MethNoargs<dpy_Record>
 {
     constexpr static const char* name = "vars";
+    constexpr static const char* returns = "Sequence[dballe.Var]";
     constexpr static const char* doc = "return a sequence with all the variables set on the Record. Note that this does not include keys (deprecated)";
     static PyObject* run(Impl* self)
     {
@@ -508,7 +519,8 @@ struct vars : MethNoargs<dpy_Record>
 struct date_extremes : MethNoargs<dpy_Record>
 {
     constexpr static const char* name = "date_extremes";
-    constexpr static const char* doc = "get two datetime objects with the lower and upper bounds of the datetime period in this record (deprecated)";
+    constexpr static const char* returns = "Tuple[datetime.datetime, datetime.datetimer]";
+    constexpr static const char* summary = "get two datetime objects with the lower and upper bounds of the datetime period in this record (deprecated)";
     static PyObject* run(Impl* self)
     {
         if (PyErr_WarnEx(PyExc_DeprecationWarning, "Record.date_extremes may disappear in a future version of DB-All.e, and no replacement is planned", 1))
@@ -526,7 +538,8 @@ struct date_extremes : MethNoargs<dpy_Record>
 struct set_from_string : MethKwargs<dpy_Record>
 {
     constexpr static const char* name = "set_from_string";
-    constexpr static const char* doc = "set values from a 'key=val' string (deprecated)";
+    constexpr static const char* signature = "str";
+    constexpr static const char* summary = "set values from a 'key=val' string (deprecated)";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         if (PyErr_WarnEx(PyExc_DeprecationWarning, "Record.set_from_string() may disappear in a future version of DB-All.e, and no replacement is planned", 1))

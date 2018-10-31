@@ -139,10 +139,22 @@ static PyObject* dballe_describe_trange(PyTypeObject *type, PyObject *args, PyOb
 }
 
 static PyMethodDef dballe_methods[] = {
-    {"varinfo", (PyCFunction)dballe_varinfo, METH_VARARGS, "Query the DB-All.e variable table returning a Varinfo" },
-    {"var", (PyCFunction)dballe_var, METH_VARARGS, "Query the DB-All.e variable table returning a Var, optionally initialized with a value" },
-    {"describe_level", (PyCFunction)dballe_describe_level, METH_VARARGS | METH_KEYWORDS, "Return a string description for a level" },
-    {"describe_trange", (PyCFunction)dballe_describe_trange, METH_VARARGS | METH_KEYWORDS, "Return a string description for a time range" },
+    {"varinfo", (PyCFunction)dballe_varinfo, METH_VARARGS, R"(
+varinfo(str) -> str
+
+Query the DB-All.e variable table returning a Varinfo)" },
+    {"var", (PyCFunction)dballe_var, METH_VARARGS, R"(
+var(code, val: Any=None) -> dballe.Var
+
+Query the DB-All.e variable table returning a Var, optionally initialized with a value)" },
+    {"describe_level", (PyCFunction)dballe_describe_level, METH_VARARGS | METH_KEYWORDS, R"(
+describe_level(ltype1: int, l1: int=None, ltype2: int=None, l2: int=None) -> str
+
+Return a string description for a level)" },
+    {"describe_trange", (PyCFunction)dballe_describe_trange, METH_VARARGS | METH_KEYWORDS, R"(
+describe_trange(pind: int, p1: int=None, p2: int=None) -> str
+
+Return a string description for a time range)" },
     { NULL }
 };
 
@@ -174,13 +186,13 @@ PyMODINIT_FUNC init_dballe(void)
         pyo_unique_ptr m(PyModule_Create(&dballe_module));
         register_types(m);
         register_record(m);
-        register_db(m);
-        register_cursor(m);
         register_binarymessage(m);
         register_file(m);
+        register_message(m);
         register_importer(m);
         register_exporter(m);
-        register_message(m);
+        register_db(m);
+        register_cursor(m);
         register_explorer(m);
 
         return m.release();

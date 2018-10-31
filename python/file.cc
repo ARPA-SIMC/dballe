@@ -271,7 +271,28 @@ struct FileDefinition : public Binding<FileDefinition, dpy_File>
 {
     constexpr static const char* name = "File";
     constexpr static const char* qual_name = "dballe.File";
-    constexpr static const char* doc = "Message file read access. To write files, you can write BinaryMessage objects to normal Python files.";
+    constexpr static const char* doc = R"(
+Read-only access to files with weather bulletins in BUFR or CREX format.
+
+No write functions are supported: to write files, you can simply write
+dballe.BinaryMessage_ objects or encoded messages to normal Python files.
+
+Constructor: File(file: Union[str, File], encoding: str=None)
+
+`file` can be a file name, or a file-like object. If a file-like object
+supports `fileno()`, that file descriptor is `dup()`-ed and used for efficient
+reading. Otherwise, `file.read()` is called to load the data to read in memory.
+
+If `encoding` is omitted, it is auto detected by looking at the first byte of
+the file only. Files with leading padding data will not be detected properly,
+and you need to explicitly specify the encoding to read them.
+
+Example usage::
+
+    with dballe.File("test.bufr", "BUFR") as f:
+        for binmsg in f:
+            print("#{m.index}: {m.pathname}:{m.offset}: {m.encoding} message".format(m=binmsg))
+)";
 
     GetSetters<getter_name, encoding> getsetters;
     Methods<__enter__, __exit__> methods;

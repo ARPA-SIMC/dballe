@@ -172,6 +172,12 @@ int dballe_int_from_python(PyObject* o);
 /// Call repr() on \a o, and return the result as a string
 std::string object_repr(PyObject* o);
 
+/**
+ * Build a function docstring from its components.
+ *
+ * Returns a newly allocated string.
+ */
+char* build_method_doc(const char* name, const char* signature, const char* returns, const char* summary, const char* doc);
 
 /**
  * Initialize the python bits to use used by the common functions.

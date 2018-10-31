@@ -35,7 +35,10 @@ struct MethNoargs
 {
     typedef IMPL Impl;
     constexpr static const char* name = "TODO";
-    constexpr static const char* doc = "TODO: write method documentation";
+    constexpr static const char* signature = "";
+    constexpr static const char* returns = nullptr;
+    constexpr static const char* summary = nullptr;
+    constexpr static const char* doc = nullptr;
     constexpr static int flags = METH_NOARGS;
 
     static PyObject* run(Impl* self)
@@ -48,7 +51,10 @@ struct MethNoargs
 struct ClassMethNoargs
 {
     constexpr static const char* name = "TODO";
-    constexpr static const char* doc = "TODO: write method documentation";
+    constexpr static const char* signature = "";
+    constexpr static const char* returns = nullptr;
+    constexpr static const char* summary = nullptr;
+    constexpr static const char* doc = nullptr;
     constexpr static int flags = METH_NOARGS | METH_CLASS;
 
     static PyObject* run(PyTypeObject* cls)
@@ -63,7 +69,10 @@ struct MethVarargs
 {
     typedef IMPL Impl;
     constexpr static const char* name = "TODO";
-    constexpr static const char* doc = "TODO: write method documentation";
+    constexpr static const char* signature = "…";
+    constexpr static const char* returns = nullptr;
+    constexpr static const char* summary = nullptr;
+    constexpr static const char* doc = nullptr;
     constexpr static int flags = METH_VARARGS;
 
     static PyObject* run(Impl* self, PyObject* args)
@@ -78,7 +87,10 @@ struct MethKwargs
 {
     typedef IMPL Impl;
     constexpr static const char* name = "TODO";
-    constexpr static const char* doc = "TODO: write method documentation";
+    constexpr static const char* signature = "…";
+    constexpr static const char* returns = nullptr;
+    constexpr static const char* summary = nullptr;
+    constexpr static const char* doc = nullptr;
     constexpr static int flags = METH_VARARGS | METH_KEYWORDS;
 
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
@@ -91,7 +103,10 @@ struct MethKwargs
 struct ClassMethKwargs
 {
     constexpr static const char* name = "TODO";
-    constexpr static const char* doc = "TODO: write method documentation";
+    constexpr static const char* signature = "…";
+    constexpr static const char* returns = nullptr;
+    constexpr static const char* summary = nullptr;
+    constexpr static const char* doc = nullptr;
     constexpr static int flags = METH_VARARGS | METH_KEYWORDS | METH_CLASS;
 
     static PyObject* run(PyTypeObject* cls, PyObject* args, PyObject* kw)
@@ -105,7 +120,9 @@ template<typename Impl>
 struct MethGenericEnter : MethNoargs<Impl>
 {
     constexpr static const char* name = "__enter__";
-    constexpr static const char* doc = "Context manager __enter__";
+    constexpr static const char* returns = "self";
+    constexpr static const char* summary = "Context manager __enter__";
+    constexpr static const char* doc = "Returns the object itself";
     static PyObject* run(Impl* self)
     {
         Py_INCREF(self);
@@ -119,7 +136,7 @@ struct MethGenericEnter : MethNoargs<Impl>
  */
 
 template<typename Getter>
-constexpr PyGetSetDef as_py_getset()
+PyGetSetDef as_py_getset()
 {
     return {(char*)Getter::name, (getter)Getter::get, nullptr, (char*)Getter::doc, Getter::closure};
 }
@@ -150,7 +167,8 @@ struct GetSetters<>
 template<typename Method>
 constexpr PyMethodDef as_py_method()
 {
-    return {(char*)Method::name, (PyCFunction)Method::run, Method::flags, (char*)Method::doc};
+    char* doc = dballe::python::build_method_doc(Method::name, Method::signature, Method::returns, Method::summary, Method::doc);
+    return {(char*)Method::name, (PyCFunction)Method::run, Method::flags, doc};
 }
 
 template<typename... METHODS>

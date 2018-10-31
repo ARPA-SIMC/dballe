@@ -2,7 +2,8 @@
 #include <Python.h>
 #include "dballe/types.h"
 #include "dballe/core/var.h"
-#include "config.h"
+#include <string>
+#include <cstring>
 
 #if PY_MAJOR_VERSION <= 2
     #define PyLong_AsLong PyInt_AsLong
@@ -149,6 +150,61 @@ std::string object_repr(PyObject* o)
 {
     pyo_unique_ptr repr(throw_ifnull(PyObject_Repr(o)));
     return string_from_python(repr);
+}
+
+char* build_method_doc(const char* name, const char* signature, const char* returns, const char* summary, const char* doc)
+{
+    std::string res;
+    unsigned doc_indent = 0;
+    if (doc)
+    {
+        // Look up doc indentation
+        // Count the leading spaces of the first non-empty line
+        unsigned indent = 0;
+        for (const char* c = doc; *c; ++c)
+        {
+            if (isblank(*c))
+                ++indent;
+            else if (*c == '\n' || *c == '\r')
+            {
+                // strip empty lines
+                doc = c;
+                indent = 0;
+            }
+            else
+            {
+                doc_indent = indent;
+                break;
+            }
+        }
+    }
+
+    // Function name and signature
+    res += name;
+    res += '(';
+    res += signature;
+    res += ')';
+    if (returns)
+    {
+        res += " -> ";
+        res += returns;
+    }
+    res += "\n\n";
+
+    // Indented summary
+    if (summary)
+    {
+        for (unsigned i = 0; i < doc_indent; ++i) res += ' ';
+        res += summary;
+        res += "\n\n";
+    }
+
+    // Docstring
+    if (doc)
+        res += doc;
+
+    // Return a C string with a copy of res
+    return strndup(res.data(), res.size());
 }
 
 void common_init()

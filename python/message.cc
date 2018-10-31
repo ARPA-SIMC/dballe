@@ -83,7 +83,9 @@ struct GetNetwork : Getter<dpy_Message>
 struct get : MethKwargs<dpy_Message>
 {
     constexpr static const char* name = "get";
-    constexpr static const char* doc = "Get a Var given level, timerange, and varcode; returns None if not found";
+    constexpr static const char* signature = "level: dballe.Level, trange: dballe.Trange, code: str";
+    constexpr static const char* returns = "Union[dballe.Var, None]";
+    constexpr static const char* summary = "Get a Var given its level, timerange, and varcode; returns None if not found";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "level", "trange", "code", nullptr };
@@ -110,7 +112,9 @@ struct get : MethKwargs<dpy_Message>
 struct get_named : MethKwargs<dpy_Message>
 {
     constexpr static const char* name = "get_named";
-    constexpr static const char* doc = "Get a Var given its shortcut name; returns None if not found";
+    constexpr static const char* signature = "name: str";
+    constexpr static const char* returns = "Union[dballe.Var, None]";
+    constexpr static const char* summary = "Get a Var given its shortcut name; returns None if not found";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "name", nullptr };
@@ -131,7 +135,8 @@ struct get_named : MethKwargs<dpy_Message>
 struct set : MethKwargs<dpy_Message>
 {
     constexpr static const char* name = "set";
-    constexpr static const char* doc = "Set a Var given level and timerange";
+    constexpr static const char* signature = "level: dballe.Level, trange: dballe.Trange, var: dballe.Var";
+    constexpr static const char* summary = "Set a Var given level and timerange";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "level", "trange", "var", nullptr };
@@ -154,7 +159,8 @@ struct set : MethKwargs<dpy_Message>
 struct set_named : MethKwargs<dpy_Message>
 {
     constexpr static const char* name = "set_named";
-    constexpr static const char* doc = "Set a Var given its shortcut name";
+    constexpr static const char* signature = "name: str, var: dballe.Var";
+    constexpr static const char* summary = "Set a Var given its shortcut name";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "name", "var", nullptr };
@@ -171,18 +177,50 @@ struct set_named : MethKwargs<dpy_Message>
     }
 };
 
-#if 0
-    /**
-     * Iterate the contents of the message
-     */
-    virtual bool foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)>) const = 0;
-#endif
-
 struct Definition : public Binding<Definition, dpy_Message>
 {
     constexpr static const char* name = "Message";
     constexpr static const char* qual_name = "dballe.Message";
-    constexpr static const char* doc = "Decoded message";
+    constexpr static const char* doc = R"(
+The contents of a decoded BUFR or CREX message.
+
+DB-All.e can interpret the contents of most weather messages commonly in use,
+and represent them as variables identified by dballe.Level_, dballe.Trange_,
+datetime, coordinates, network, and mobile station identifier.
+
+A message contains only one reference station (coordinates, network, mobile
+station identifier), only one reference datetime, and many (level, trange,
+varcode, value) variables.
+
+Variables that describe the station are accessible using None for level and
+trange.
+
+Constructor: Message(type: str)
+
+`type` is a string identifying the message type, and it will affect how the
+message will be encoded by the exporter.
+
+Available values are:
+ * generic
+ * synop
+ * pilot
+ * temp
+ * temp_ship;
+ * airep
+ * amdar
+ * acars
+ * ship
+ * buoy
+ * metar
+ * sat
+
+Example usage::
+
+    importer = dballe.Importer("BUFR")
+    with importer.from_file("test.bufr") as f:
+        for msg in f:
+            print("{m.report},{m.coords},{m.ident},{m.datetime},{m.type}".format(m=msg))
+)";
     GetSetters<GetType, GetDatetime, GetCoords, GetIdent, GetNetwork> getsetters;
     Methods<get, get_named, set, set_named> methods;
 

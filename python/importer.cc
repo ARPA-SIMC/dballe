@@ -51,7 +51,15 @@ struct Definition : public Binding<Definition, dpy_ImporterFile>
 {
     constexpr static const char* name = "ImporterFile";
     constexpr static const char* qual_name = "dballe.ImporterFile";
-    constexpr static const char* doc = "Message importer iterating over a dballe.File contents";
+    constexpr static const char* doc = R"(
+Message importer iterating over the contents of a a dballe.File_.
+
+This is never instantiated explicitly, but is returned by
+`Importer.from_file()`_.
+
+It can be used in a context manager, and it is an iterable that yields tuples
+of `dballe.Message`_ objects.
+)";
 
     GetSetters<> getsetters;
     Methods<__enter__, __exit__> methods;
@@ -107,7 +115,9 @@ namespace importer {
 struct from_binary : MethKwargs<dpy_Importer>
 {
     constexpr static const char* name = "from_binary";
-    constexpr static const char* doc = "Decode a BinaryMessage to a tuple of dballe.Message objects";
+    constexpr static const char* signature = "binmsg: dballe.BinaryMessage";
+    constexpr static const char* returns = "Sequence[dballe.BinaryMessage]";
+    constexpr static const char* summary = "Decode a BinaryMessage to a tuple of dballe.Message objects";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "binmsg", nullptr };
@@ -127,10 +137,16 @@ struct from_binary : MethKwargs<dpy_Importer>
 struct from_file : MethKwargs<dpy_Importer>
 {
     constexpr static const char* name = "from_file";
-    constexpr static const char* doc = "Wrap a dballe.File into a sequence of tuples of dballe.Message objects";
+    constexpr static const char* signature = "file: Union[dballe.File, str, File]";
+    constexpr static const char* returns = "dballe.ImporterFile";
+    constexpr static const char* doc = R"(
+Wrap a dballe.File into a sequence of tuples of dballe.Message objects.
+
+`file` can be a `dballe.File`_, a file name, or a file-like object. A `dballe.File`_
+is automatically constructed if needed, using the importer encoding.
+)";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
-        // TODO: also accept any one-argument constructors for File (and we can provide the encoding because we have it)
         static const char* kwlist[] = { "file", nullptr };
         PyObject* obj = nullptr;
         if (!PyArg_ParseTupleAndKeywords(args, kw, "O", const_cast<char**>(kwlist), &obj))
@@ -160,7 +176,43 @@ struct Definition : public Binding<Definition, dpy_Importer>
 {
     constexpr static const char* name = "Importer";
     constexpr static const char* qual_name = "dballe.Importer";
-    constexpr static const char* doc = "Message importer";
+    constexpr static const char* doc = R"(
+Message importer.
+
+This is the engine that decodes binary messages and interprets their contents
+using a uniform data model.
+
+Note that one binary message is often decoded to multiple data messages, in
+case, for example, of compressed BUFR files.
+
+Constructor: Importer(encoding: str, simplified: bool=True)
+
+`encoding` can be :code:`"BUFR"` or :code:`"CREX"`.
+
+`simplified` control whether messages are constructed using standard levels and
+time ranges, or using the exact levels and time ranges contained in the input.
+For example, a simplified intepretation of a synop message will place the
+temperature at 2M above ground, regardless of the reported sensor height. A
+non-simplified import will place the temperature reading at the reported sensor
+height.
+
+When a message is imported in simplified mode, the actual context information
+will be stored as data attributes.
+
+Example usage::
+
+    importer = dballe.Importer("BUFR")
+    with importer.from_file("test.bufr") as f:
+        for msg in f:
+            print("{m.report},{m.coords},{m.ident},{m.datetime},{m.type}".format(m=msg))
+
+    importer = dballe.Importer("BUFR")
+    with dbale.File("test.bufr") as f:
+        for binmsg in f:
+            msgs = importer.from_binary(binmsg)
+            for msg in msgs:
+                print("#{b.index}: {m.report},{m.coords},{m.ident},{m.datetime},{m.type}".format(b=binmsg, m=msg))
+)";
 
     GetSetters<> getsetters;
     Methods<from_binary, from_file> methods;

@@ -76,7 +76,7 @@ struct index : Getter<dpy_BinaryMessage>
 struct __bytes__ : MethNoargs<dpy_BinaryMessage>
 {
     constexpr static const char* name = "__bytes__";
-    constexpr static const char* doc = "Returns the contents of this message as a bytes object";
+    constexpr static const char* summary = "Returns the contents of this message as a bytes object";
     static PyObject* run(Impl* self)
     {
         return PyBytes_FromStringAndSize(self->message.data.data(), self->message.data.size());
@@ -88,7 +88,13 @@ struct Definition : public Binding<Definition, dpy_BinaryMessage>
 {
     constexpr static const char* name = "BinaryMessage";
     constexpr static const char* qual_name = "dballe.BinaryMessage";
-    constexpr static const char* doc = "Binary message";
+    constexpr static const char* doc = R"(
+Binary message.
+
+This is basically a simple wrapper around a bytes() object, providing extra
+information about the filename, offset and index where the message data was
+read. Is it used by dballe.File_ to return the binary messages it reads.
+)";
 
     GetSetters<encoding, pathname, offset, index> getsetters;
     Methods<__bytes__> methods;

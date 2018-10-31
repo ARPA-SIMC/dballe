@@ -103,7 +103,11 @@ struct Definition : public Binding<Definition, dpy_Level>
 {
     constexpr static const char* name = "Level";
     constexpr static const char* qual_name = "dballe.Level";
-    constexpr static const char* doc = "Level or layer";
+    constexpr static const char* doc = R"(
+Level or layer.
+
+Constructor: Level(ltype1: int=None, l1: int=None, ltype2: int=None, l2: int=None)
+)";
 
     GetSetters<ltype1, l1, ltype2, l2> getsetters;
     Methods<> methods;
@@ -220,7 +224,11 @@ struct Definition : public Binding<Definition, dpy_Trange>
 {
     constexpr static const char* name = "Trange";
     constexpr static const char* qual_name = "dballe.Trange";
-    constexpr static const char* doc = "Time range";
+    constexpr static const char* doc = R"(
+Time range.
+
+Constructor: Trange(pind: int=None, p1: int=None, p2: int=None)
+)";
 
     GetSetters<pind, p1, p2> getsetters;
     Methods<> methods;
@@ -439,7 +447,11 @@ struct Definition : public BaseDefinition<Definition, Station>
 {
     constexpr static const char* name = "Station";
     constexpr static const char* qual_name = "dballe.Station";
-    constexpr static const char* doc = "Station information";
+    constexpr static const char* doc = R"(
+Station information.
+
+Constructor: Station(report: str, lat: float, lon: float, ident: str=None)
+)";
     GetSetters<report<Station>, lat<Station>, lon<Station>, ident<Station>> getsetters;
     static Station from_args(PyObject* args, PyObject* kw)
     {
@@ -464,7 +476,11 @@ struct DBDefinition : public BaseDefinition<DBDefinition, DBStation>
 {
     constexpr static const char* name = "DBStation";
     constexpr static const char* qual_name = "dballe.DBStation";
-    constexpr static const char* doc = "Station information with database ID";
+    constexpr static const char* doc = R"(
+Station information with database ID.
+
+Constructor: Station(report: str, id: int, lat: float, lon: float, ident: str=None)
+)";
     GetSetters<report<Station>, id, lat<Station>, lon<Station>, ident<Station>> getsetters;
     static DBStation from_args(PyObject* args, PyObject* kw)
     {
