@@ -1,12 +1,7 @@
-#!/usr/bin/python2
-# coding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+#!/usr/bin/python3
 
 import os
-os.environ["DBALLE_BUILDING_DOCS"] ="true"  # noqa
+os.environ["DBALLE_BUILDING_DOCS"] = "true"  # noqa
 
 import sys
 import inspect
@@ -14,14 +9,118 @@ import dballe
 import dballe.volnd
 
 
-def print_indented(spaces, *args):
-    "Print a string, indented by the given number of spaces"
-    for s in args:
-        for line in s.split("\n"):
-            for i in range(1, spaces):
-                sys.stdout.write(" ")
-            sys.stdout.write(line.replace("wreport.", "dballe."))
-            sys.stdout.write("\n")
+class Generator:
+    def __init__(self):
+        self.whitespace = True
+
+    def spacer(self):
+        if self.whitespace:
+            return
+        print()
+        self.whitespace = True
+
+    def print(self, *args, **kw):
+        self.whitespace = False
+        print(*args, **kw)
+
+    def print_indented(self, spaces, *args):
+        "Print a string, indented by the given number of spaces"
+        self.whitespace = False
+        for s in args:
+            for line in s.split("\n"):
+                for i in range(1, spaces):
+                    sys.stdout.write(" ")
+                sys.stdout.write(line.replace("wreport.", "dballe."))
+                sys.stdout.write("\n")
+
+    def text(self, text: str):
+        self.print(text.lstrip())
+
+    def para(self, text: str):
+        if not self.whitespace:
+            print()
+        print(text.lstrip())
+        print()
+        self.whitespace = True
+
+    def title(self, line, char='-', over=False):
+        self.spacer()
+        if over:
+            print(char * len(line))
+        print(line)
+        print(char * len(line))
+        print()
+
+    def document_class(self, cls):
+        name = cls.__name__
+        self.title("dballe.{}".format(name))
+        self.print(inspect.getdoc(cls).replace("wreport.", "dballe."))
+        self.title("Members", char="`")
+        self.document_members(cls)
+        self.spacer()
+
+    def document(self, obj):
+        if obj.__doc__ is None:
+            return
+
+        if inspect.ismodule(obj):
+            self.print_indented(0, inspect.getdoc(obj))
+            self.spacer()
+        elif inspect.isroutine(obj) and inspect.isfunction(obj):
+            # A Python function
+            self.print_indented(2, '``'+obj.__name__ + inspect.formatargspec(*inspect.getargspec(obj))+"``")
+            self.print_indented(4, inspect.getdoc(obj))
+        else:
+            self.print_indented(2, obj.__name__)
+            self.print_indented(4, inspect.getdoc(obj))
+
+    def document_members(self, cls, include=None, exclude=None):
+        # List and classify members
+        member_vars = []
+        member_funcs = []
+
+        for name, m in inspect.getmembers(cls):
+            if name[0] == '_':
+                continue
+            if include is not None and name not in include:
+                continue
+            if exclude is not None and name in exclude:
+                continue
+            fullname = cls.__name__ + "." + name
+            if inspect.isroutine(m) and (inspect.isfunction(m) or fullname in c_argspecs):
+                member_funcs.append((fullname, name, m))
+            elif inspect.isclass(m) or inspect.ismodule(m):
+                pass
+            elif m.__class__.__name__ == "_Feature":
+                pass
+            else:
+                member_vars.append((fullname, name, m))
+
+        member_vars.sort()
+        member_funcs.sort()
+
+        # Document vars and get/setters
+        for fullname, name, m in member_vars:
+            self.print(".. _{}.{}:".format(cls.__name__, name))
+        for fullname, name, m in member_funcs:
+            self.print(".. _{}.{}():".format(cls.__name__, name))
+        self.spacer()
+        for fullname, name, m in member_vars:
+            self.print_indented(2, "{}.{}".format(cls.__name__, name))
+            self.print_indented(4, inspect.getdoc(m))
+
+        # Document functions
+        for fullname, name, m in member_funcs:
+            argspec = c_argspecs.get(fullname, None)
+            if argspec is None:
+                if inspect.isfunction(m):
+                    argspec = inspect.formatargspec(*inspect.getargspec(m))
+                else:
+                    argspec = ""
+            self.print_indented(2, "{}.{}{}".format(cls.__name__, name, argspec))
+            self.print_indented(4, inspect.getdoc(m))
+
+        self.spacer()
 
 
 c_argspecs = {
@@ -46,7 +145,7 @@ c_argspecs = {
     "Record.items": "()",
     "Record.varitems": "()",
     "Record.vars": "()",
-    "Record.update": "(\*\*kwargs)",
+    "Record.update": "(\\*\\*kwargs)",
     "Record.date_extremes": "()",
     "Record.set_from_string": "(str)",
     "Transaction.commit": "()",
@@ -90,114 +189,39 @@ for meth, args in [
     c_argspecs["DB." + meth] = args
 
 
-def document_class(cls):
-    name = cls.__name__
-    print()
-    print("dballe.{}".format(name))
-    print("-" * (len(name) + 7))
-    print()
-    print(inspect.getdoc(cls).replace("wreport.", "dballe."))
-    print()
-    print("Members")
-    print("```````")
-    document_members(cls)
+gen = Generator()
 
-
-def document(obj):
-    if obj.__doc__ is None:
-        return
-
-    if inspect.ismodule(obj):
-        print_indented(0, inspect.getdoc(obj))
-        print
-    elif inspect.isroutine(obj) and inspect.isfunction(obj):
-        # A Python function
-        print_indented(2, '``'+obj.__name__ + inspect.formatargspec(*inspect.getargspec(obj))+"``")
-        print_indented(4, inspect.getdoc(obj))
-    else:
-        print_indented(2, obj.__name__)
-        print_indented(4, inspect.getdoc(obj))
-
-
-def document_members(cls, include=None, exclude=None):
-    # List and classify members
-    member_vars = []
-    member_funcs = []
-
-    for name, m in inspect.getmembers(cls):
-        if name[0] == '_':
-            continue
-        if include is not None and name not in include:
-            continue
-        if exclude is not None and name in exclude:
-            continue
-        fullname = cls.__name__ + "." + name
-        if inspect.isroutine(m) and (inspect.isfunction(m) or fullname in c_argspecs):
-            member_funcs.append((fullname, name, m))
-        elif inspect.isclass(m) or inspect.ismodule(m):
-            pass
-        elif m.__class__.__name__ == "_Feature":
-            pass
-        else:
-            member_vars.append((fullname, name, m))
-
-    member_vars.sort()
-    member_funcs.sort()
-
-    # Document vars and get/setters
-    for fullname, name, m in member_vars:
-        print(".. _{}.{}:".format(cls.__name__, name))
-    for fullname, name, m in member_funcs:
-        print(".. _{}.{}():".format(cls.__name__, name))
-    print()
-    for fullname, name, m in member_vars:
-        print_indented(2, "{}.{}".format(cls.__name__, name))
-        print_indented(4, inspect.getdoc(m))
-
-    # Document functions
-    for fullname, name, m in member_funcs:
-        argspec = c_argspecs.get(fullname, None)
-        if argspec is None:
-            if inspect.isfunction(m):
-                argspec = inspect.formatargspec(*inspect.getargspec(m))
-            else:
-                argspec = ""
-        print_indented(2, "{}.{}{}".format(cls.__name__, name, argspec))
-        print_indented(4, inspect.getdoc(m))
-
-
-print("""===================================
-README for DB-All.e Python bindings
-===================================
-
+gen.title("README for DB-All.e Python bindings", char="=", over=True)
+gen.para("""
 The DB-All.e Python bindings provide 2 levels of access to a DB-All.e database:
 a complete API similar to the Fortran and C++ API, and a high-level API called
 volnd that allows to automatically export matrices of data out of the database.
 
 .. contents::
+""")
 
-The DB-All.e API
-================
+gen.title("The DB-All.e API", char="=")
 
+gen.para("""
 The 'dballe' module has a few global methods:
 """)
 
-document_members(dballe)
+gen.document_members(dballe)
 
-print("""
+gen.para("""
 and several classes, documented in their own sections.
 """)
 
-document_class(dballe.Var)
-document_class(dballe.Varinfo)
-document_class(dballe.Vartable)
-document_class(dballe.Record)
+gen.document_class(dballe.Var)
+gen.document_class(dballe.Varinfo)
+gen.document_class(dballe.Vartable)
+gen.document_class(dballe.Record)
 
-print("""
+gen.para("""
 Note that all the functions that take a dballe.Record, can also take a Python dict.
 """)
 
-print("""
+gen.para("""
 dballe.DB
 ---------
 
@@ -214,17 +238,17 @@ db_transaction_methods = [
         "remove", "remove_all", "remove_station_data"]
 db_deprecated_methods = ["attr_insert", "attr_remove", "query_attrs"]
 
-document_members(dballe.DB, exclude=db_transaction_methods + db_deprecated_methods)
+gen.document_members(dballe.DB, exclude=db_transaction_methods + db_deprecated_methods)
 
-print("""
+gen.para("""
 These methods are the same in dballe.DB and dballe.Transaction. The version in
 dballe.DB is implemented by automatically creating a temporary transaction and
 running the dballe.Transaction method inside it.
 """)
 
-document_members(dballe.DB, include=db_transaction_methods)
+gen.document_members(dballe.DB, include=db_transaction_methods)
 
-print("""
+gen.para("""
 dballe.Transaction
 ------------------
 
@@ -261,16 +285,16 @@ Its members are:
 
 """)
 
-document_members(dballe.Transaction, exclude=db_transaction_methods)
+gen.document_members(dballe.Transaction, exclude=db_transaction_methods)
 
-print("""
+gen.para("""
 The dballe.Transaction methods are the same as those in dballe.DB. The version
 in dballe.DB is implemented by automatically creating a temporary transaction
 and running the dballe.Transaction method inside it.
 """)
-document_members(dballe.Transaction, include=db_transaction_methods)
+gen.document_members(dballe.Transaction, include=db_transaction_methods)
 
-print("""
+gen.para("""
 
 Examples:
 
@@ -299,7 +323,7 @@ Examples:
 """)
 
 
-print("""
+gen.para("""
 dballe.Cursor
 -------------
 
@@ -307,39 +331,39 @@ a Cursor is the result of database queries. It is generally not used explicitly
 and just iterated, but it does have a few members:
 """)
 
-document_members(dballe.Cursor)
+gen.document_members(dballe.Cursor)
 
-print("""
+gen.para("""
 The volnd API
 =============
 """)
 
-document(dballe.volnd)
+gen.document(dballe.volnd)
 
-print("""
+gen.para("""
 This is the list of dimensions supported by dballe.volnd:
 """)
 
-document(dballe.volnd.AnaIndex)
-document(dballe.volnd.NetworkIndex)
-document(dballe.volnd.LevelIndex)
-document(dballe.volnd.TimeRangeIndex)
-document(dballe.volnd.DateTimeIndex)
-document(dballe.volnd.IntervalIndex)
+gen.document(dballe.volnd.AnaIndex)
+gen.document(dballe.volnd.NetworkIndex)
+gen.document(dballe.volnd.LevelIndex)
+gen.document(dballe.volnd.TimeRangeIndex)
+gen.document(dballe.volnd.DateTimeIndex)
+gen.document(dballe.volnd.IntervalIndex)
 
-print("""
+gen.para("""
 The data object used by ``AnaIndex`` is:
 """)
 
-document(dballe.volnd.AnaIndexEntry)
+gen.document(dballe.volnd.AnaIndexEntry)
 
-print("""
+gen.para("""
 The extraction is done using the dballe.volnd.read function:
 """)
 
-document(dballe.volnd.read)
+gen.document(dballe.volnd.read)
 
-print("""
+gen.para("""
 The result of dballe.volnd.read is a dict mapping output variable names to a
 dballe.volnd.Data object with the results.  All the Data objects share their
 indexes unless the *xxx*-Index definitions have been created with
@@ -348,10 +372,10 @@ indexes unless the *xxx*-Index definitions have been created with
 This is the dballe.volnd.Data class documentation:
 """)
 
-document(dballe.volnd.Data)
+gen.document(dballe.volnd.Data)
 
-print("""
+gen.para("""
 The methods of dballe.volnd.Data are:
 """)
 
-document_members(dballe.volnd.Data)
+gen.document_members(dballe.volnd.Data)

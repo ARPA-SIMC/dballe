@@ -723,7 +723,7 @@ struct import_messages : MethKwargs<Impl>
 {
     constexpr static const char* name = "import_messages";
     constexpr static const char* doc = R"(
-        import(msgs, report=None, flags=0)
+        import_messages(msgs, report=None, attrs=False, update_station=False, overwrite=False) -> None
 
         Import one or more Messages into the database.
 
