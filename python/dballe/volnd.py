@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 """
-volnd is an easy way of extracting entire matrixes of data out of a DB-All.e
+volnd is a way of extracting entire matrixes of data out of a DB-All.e
 database.
 
 This module allows to extract multidimensional matrixes of data given a list of
@@ -246,7 +246,7 @@ class LevelIndex(ListIndex):
     """
     Index for levels, as they come out of the database
 
-    The constructor syntax is: ``LevelIndex(shared=True, frozen=False), start=None``.
+    The constructor syntax is: ``LevelIndex(shared=True, frozen=False, start=None)``.
 
     The index saves all levels as dballe.Level tuples, in the same order
     as they come out of the database.

@@ -68,13 +68,13 @@ class Generator:
         print(char * len(line))
         print()
 
-    def document_class(self, cls):
+    def document_class(self, cls, **kw):
         name = cls.__name__
         self.title("dballe.{}".format(name))
         self.print(inspect.getdoc(cls).replace("wreport.", "dballe."))
-        if self.has_members(cls):
+        if self.has_members(cls, **kw):
             self.title("Members", char="`")
-            self.document_members(cls)
+            self.document_members(cls, **kw)
         self.spacer()
 
     def document(self, obj):
@@ -198,52 +198,6 @@ class Generator:
         self.spacer()
 
 
-c_argspecs = {
-    "dballe.varinfo": "(varcode)",
-    "dballe.var": "(varcode[, default])",
-    "dballe.describe_level": "(ltype1=None, l1=None, ltype2=None, l2=None)",
-    "dballe.describe_trange": "(pind=None, p1=None, p2=None)",
-    "Transaction.commit": "()",
-    "Transaction.rollback": "()",
-    "DB.get_default_format": "()",
-    "DB.set_default_format": "(fmt: str)",
-    "DB.connect_from_file": "(filename: str)",
-    "DB.connect_from_url": "(url: str)",
-    "DB.connect_test": "()",
-    "DB.is_url": "(url: str)",
-    "DB.transaction": "()",
-    "DB.disappear": "()",
-    "DB.reset": "(repinfo_filename: str=None)",
-    "DB.insert": "(record: Union[dballe.Record, dict], can_replace: bool=False, can_add_stations: bool=False)",
-    "DB.remove": "(query: Union[dballe.Record, dict])",
-    "DB.vacuum": "()",
-    "DB.query_attrs": "(query: Union[dballe.Record, dict])",
-    "Cursor.attr_query": "()",
-}
-
-for meth, args in [
-            ("attr_insert_data", "(data_id: int, attrs: Union[dballe.Record, dict])"),
-            ("attr_insert_station", "(data_id: int, attrs: Union[dballe.Record, dict])"),
-            ("attr_query_data", "(data_id: int)"),
-            ("attr_query_station", "(data_id: int)"),
-            ("attr_remove_data", "(data_id: int, attrs: Union[dballe.Record, dict]=None)"),
-            ("attr_remove_station", "(data_id: int, attrs: Union[dballe.Record, dict]=None)"),
-            ("export_to_file", "(query: Union[dballe.Record, dict], format: str, filename: str, generic: bool=False)"),
-            ("insert_data", "(record: Union[dballe.Record, dict], can_replace: bool=False, can_add_stations:bool=False)"),
-            ("insert_station_data", "(record: Union[dballe.Record, dict], can_replace: bool=False, can_add_stations:bool=False)"),
-            ("load", "(file: str)"),
-            ("query_data", "(query: Union[dballe.Record, dict])"),
-            ("query_station_data", "(query: Union[dballe.Record, dict])"),
-            ("query_stations", "(query: Union[dballe.Record, dict])"),
-            ("query_summary", "(query: Union[dballe.Record, dict])"),
-            ("remove", "(query: Union[dballe.Record, dict])"),
-            ("remove_all", "()"),
-            ("remove_station_data", "(query: Union[dballe.Record, dict])"),
-        ]:
-    c_argspecs["Transaction." + meth] = args
-    c_argspecs["DB." + meth] = args
-
-
 gen = Generator()
 
 gen.title("README for DB-All.e Python bindings", char="=", over=True)
@@ -281,118 +235,10 @@ gen.document_class(dballe.Message)
 gen.document_class(dballe.Importer)
 gen.document_class(dballe.ImporterFile)
 gen.document_class(dballe.Exporter)
+gen.document_class(dballe.DB, exclude=("attr_insert", "attr_remove", "query_attrs", "load", "export_to_file"))
+gen.document_class(dballe.Transaction, exclude=("load", "export_to_file"))
+gen.document_class(dballe.Cursor, exclude=("query_attrs"))
 
-gen.para("""
-dballe.DB
----------
-
-a DB is used to access the database.
-
-Its members are:
-""")
-
-db_transaction_methods = [
-        "attr_insert_data", "attr_insert_station", "attr_query_data",
-        "attr_query_station", "attr_remove_data", "attr_remove_station",
-        "export_to_file", "insert_data", "insert_station_data", "load",
-        "query_data", "query_station_data", "query_stations", "query_summary",
-        "remove", "remove_all", "remove_station_data"]
-db_deprecated_methods = ["attr_insert", "attr_remove", "query_attrs"]
-
-gen.document_members(dballe.DB, exclude=db_transaction_methods + db_deprecated_methods)
-
-gen.para("""
-These methods are the same in dballe.DB and dballe.Transaction. The version in
-dballe.DB is implemented by automatically creating a temporary transaction and
-running the dballe.Transaction method inside it.
-""")
-
-gen.document_members(dballe.DB, include=db_transaction_methods)
-
-gen.para("""
-dballe.Transaction
-------------------
-
-A Transaction is used to execute DB operations in an all-or-nothing fashion. In
-fact, most DB methods are implemented using a short-lived temporary
-transaction.
-
-You cannot have more than one active dballe.Transaction for each dballe.DB. An
-attempt to start a second one will result in an exception being raised. Note
-that dballe.DB functions like `insert_data` or `export_to_file` create a
-temporary transaction to run, and so they will also fail if a transaction is
-currently open. The general idea is that all database work should be done
-inside a transaction.
-
-Transactions run using the `REPEATABLE READ` isolation level of the underlying
-database. This usually means that modifications performed inside a transaction
-are not visible to other database connections until the transaction is
-committed. If a transaction is rolled back, all changes done with it are
-undone.
-
-Transactions can also be used as context managers, like this:
-
-::
-
-    with db.transaction() as t:
-        for i in range(10):
-            t.insert({
-                "lat": 44.5 + i, "lon": 11.4 + i, "level": (1,),
-                "trange": (254,), "date": datetime.datetime(2013, 4, 25, 12, 0, 0),
-                "B11101": 22.4 + i, "B12103": 17.2
-            })
-
-Its members are:
-
-""")
-
-gen.document_members(dballe.Transaction, exclude=db_transaction_methods)
-
-gen.para("""
-The dballe.Transaction methods are the same as those in dballe.DB. The version
-in dballe.DB is implemented by automatically creating a temporary transaction
-and running the dballe.Transaction method inside it.
-""")
-gen.document_members(dballe.Transaction, include=db_transaction_methods)
-
-gen.para("""
-
-Examples:
-
-::
-
-    # Connect to a database and run a query
-    db = dballe.DB.connect_from_file("db.sqlite")
-    query = dballe.Record(latmin=44.0, latmax=45.0, lonmin=11.0, lonmax=12.0)
-
-    # The result is a dballe.Cursor, which can be iterated to get results as
-    # dballe.Record objects.
-    # The results always point to the same Record to avoid creating a new one
-    # for every iteration: if you need to store them, use Record.copy()
-    for rec in db.query_data(query):
-        print(rec["lat"], rec["lon"], rec["var"], rec.var().format("undefined"))
-
-    # Insert 2 new variables in the database
-    db.insert({
-        "lat": 44.5, "lon": 11.4,
-        "level": (1,),
-        "trange": (254,),
-        "date": datetime.datetime(2013, 4, 25, 12, 0, 0),
-        "B11101": 22.4,
-        "B12103": 17.2,
-    })
-""")
-
-
-gen.para("""
-dballe.Cursor
--------------
-
-a Cursor is the result of database queries. It is generally not used explicitly
-and just iterated, but it does have a few members:
-""")
-
-gen.document_members(dballe.Cursor)
 
 gen.para("""
 The volnd API

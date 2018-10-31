@@ -47,6 +47,8 @@ struct remaining : Getter<dpy_Cursor>
 struct query_attrs : MethKwargs<dpy_Cursor>
 {
     constexpr static const char* name = "query_attrs";
+    constexpr static const char* signature = "attrs: Iterable[str]";
+    constexpr static const char* returns = "dballe.Record";
     constexpr static const char* doc = "Query attributes for the current variable (deprecated)";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
@@ -97,7 +99,8 @@ struct query_attrs : MethKwargs<dpy_Cursor>
 struct attr_query : MethNoargs<dpy_Cursor>
 {
     constexpr static const char* name = "attr_query";
-    constexpr static const char* doc = "Query attributes for the current variable";
+    constexpr static const char* returns = "dballe.Record";
+    constexpr static const char* summary = "Query attributes for the current variable";
     static PyObject* run(Impl* self)
     {
         try {
@@ -154,7 +157,11 @@ struct Definition : public Binding<Definition, dpy_Cursor>
 {
     constexpr static const char* name = "Cursor";
     constexpr static const char* qual_name = "dballe.Cursor";
-    constexpr static const char* doc = "cursor iterating dballe.DB query results";
+    constexpr static const char* summary = "cursor iterating dballe.DB query results";
+    constexpr static const char* doc = R"(
+a Cursor is the result of database queries. It is generally not used explicitly
+and just iterated.
+)";
 
     GetSetters<remaining> getsetters;
     Methods<__enter__, __exit__, query_attrs, attr_query> methods;

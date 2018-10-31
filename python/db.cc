@@ -128,7 +128,14 @@ template<typename Impl>
 struct insert_station_data : MethKwargs<Impl>
 {
     constexpr static const char* name = "insert_station_data";
-    constexpr static const char* doc = "Insert station values in the database";
+    constexpr static const char* signature = "record: Union[dict, dballe.Record], can_replace: bool=False, can_add_stations: bool=False";
+    constexpr static const char* returns = "Dict[str, int]";
+    constexpr static const char* summary = "Insert station values in the database";
+    constexpr static const char* doc = R"(
+The return value is a dict that always contains `ana_id` mapped to the station
+ID just inserted, and an entry for each varcode inserted mapping to the
+database ID of its value.
+)";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "record", "can_replace", "can_add_stations", NULL };
@@ -153,7 +160,14 @@ template<typename Impl>
 struct insert_data : MethKwargs<Impl>
 {
     constexpr static const char* name = "insert_data";
-    constexpr static const char* doc = "Insert data values in the database";
+    constexpr static const char* signature = "record: Union[dict, dballe.Record], can_replace: bool=False, can_add_stations: bool=False";
+    constexpr static const char* returns = "Dict[str, int]";
+    constexpr static const char* summary = "Insert data values in the database";
+    constexpr static const char* doc = R"(
+The return value is a dict that always contains `ana_id` mapped to the station
+ID just inserted, and an entry for each varcode inserted mapping to the
+database ID of its value.
+)";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "record", "can_replace", "can_add_stations", NULL };
@@ -174,31 +188,10 @@ struct insert_data : MethKwargs<Impl>
     }
 };
 
-template<typename Impl>
-struct remove_station_data : MethKwargs<Impl>
-{
-    constexpr static const char* name = "remove_station_data";
-    constexpr static const char* doc = "Remove station variables from the database";
-    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
-    {
-        static const char* kwlist[] = { "query", NULL };
-        PyObject* pyquery;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "O", const_cast<char**>(kwlist), &pyquery))
-            return nullptr;
-
-        try {
-            core::Query query;
-            read_query(pyquery, query);
-            ReleaseGIL gil;
-            self->db->remove_station_data(query);
-        } DBALLE_CATCH_RETURN_PYO
-        Py_RETURN_NONE;
-    }
-};
-
 template<typename Base, typename Impl>
 struct MethQuery : public MethKwargs<Impl>
 {
+    constexpr static const char* signature = "query: Union[dict, dballe.Record]";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "query", NULL };
@@ -215,10 +208,25 @@ struct MethQuery : public MethKwargs<Impl>
 };
 
 template<typename Impl>
+struct remove_station_data : MethQuery<remove_station_data<Impl>, Impl>
+{
+    constexpr static const char* name = "remove_station_data";
+    constexpr static const char* summary = "Remove station variables from the database";
+    static PyObject* run_query(Impl* self, dballe::Query& query)
+    {
+        try {
+            ReleaseGIL gil;
+            self->db->remove_station_data(query);
+        } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
+    }
+};
+
+template<typename Impl>
 struct remove : MethQuery<remove<Impl>, Impl>
 {
     constexpr static const char* name = "remove";
-    constexpr static const char* doc = "Remove data variables from the database";
+    constexpr static const char* summary = "Remove data variables from the database";
     static PyObject* run_query(Impl* self, dballe::Query& query)
     {
         ReleaseGIL gil;
@@ -231,7 +239,7 @@ template<typename Impl>
 struct remove_all : MethNoargs<Impl>
 {
     constexpr static const char* name = "remove_all";
-    constexpr static const char* doc = "Remove all data from the database";
+    constexpr static const char* summary = "Remove all data from the database";
     static PyObject* run(Impl* self)
     {
         try {
@@ -246,7 +254,8 @@ template<typename Impl>
 struct query_stations : MethQuery<query_stations<Impl>, Impl>
 {
     constexpr static const char* name = "query_stations";
-    constexpr static const char* doc = "Query the station archive in the database; returns a Cursor";
+    constexpr static const char* returns = "dballe.Cursor";
+    constexpr static const char* summary = "Query the station archive in the database";
     static PyObject* run_query(Impl* self, dballe::Query& query)
     {
         ReleaseGIL gil;
@@ -260,7 +269,8 @@ template<typename Impl>
 struct query_station_data : MethQuery<query_station_data<Impl>, Impl>
 {
     constexpr static const char* name = "query_station_data";
-    constexpr static const char* doc = "Query the station variables in the database; returns a Cursor";
+    constexpr static const char* returns = "dballe.Cursor";
+    constexpr static const char* summary = "Query the station variables in the database";
     static PyObject* run_query(Impl* self, dballe::Query& query)
     {
         ReleaseGIL gil;
@@ -274,7 +284,8 @@ template<typename Impl>
 struct query_data : MethQuery<query_data<Impl>, Impl>
 {
     constexpr static const char* name = "query_data";
-    constexpr static const char* doc = "Query the variables in the database; returns a Cursor";
+    constexpr static const char* returns = "dballe.Cursor";
+    constexpr static const char* summary = "Query the variables in the database";
     static PyObject* run_query(Impl* self, dballe::Query& query)
     {
         ReleaseGIL gil;
@@ -288,7 +299,8 @@ template<typename Impl>
 struct query_summary : MethQuery<query_summary<Impl>, Impl>
 {
     constexpr static const char* name = "query_summary";
-    constexpr static const char* doc = "Query the summary of the results of a query; returns a Cursor";
+    constexpr static const char* returns = "dballe.Cursor";
+    constexpr static const char* summary = "Query the summary of the results of a query";
     static PyObject* run_query(Impl* self, dballe::Query& query)
     {
         ReleaseGIL gil;
@@ -302,7 +314,8 @@ template<typename Impl>
 struct query_attrs : MethKwargs<Impl>
 {
     constexpr static const char* name = "query_attrs";
-    constexpr static const char* doc = "Query attributes (deprecated)";
+    constexpr static const char* signature = "varcode: str, reference_id: int, attrs: Iterable[str]";
+    constexpr static const char* summary = "Query attributes (deprecated)";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use DB.attr_query_station or DB.attr_query_data instead of DB.query_attrs", 1))
@@ -337,7 +350,9 @@ template<typename Impl>
 struct attr_query_station : MethKwargs<Impl>
 {
     constexpr static const char* name = "attr_query_station";
-    constexpr static const char* doc = "query station data attributes";
+    constexpr static const char* signature = "varid: int";
+    constexpr static const char* returns = "dballe.Record";
+    constexpr static const char* summary = "query station data attributes";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "varid", NULL };
@@ -361,6 +376,8 @@ template<typename Impl>
 struct attr_query_data : MethKwargs<Impl>
 {
     constexpr static const char* name = "attr_query_data";
+    constexpr static const char* signature = "varid: int";
+    constexpr static const char* returns = "dballe.Record";
     constexpr static const char* doc = "query data attributes";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
@@ -385,6 +402,7 @@ template<typename Impl>
 struct attr_insert : MethKwargs<Impl>
 {
     constexpr static const char* name = "attr_insert";
+    constexpr static const char* signature = "varcode: str, attrs: Union[dballe.Record, dict], varid: int=None";
     constexpr static const char* doc = "Insert new attributes into the database (deprecated)";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
@@ -420,7 +438,8 @@ template<typename Impl>
 struct attr_insert_station : MethKwargs<Impl>
 {
     constexpr static const char* name = "attr_insert_station";
-    constexpr static const char* doc = "Insert new attributes into the database";
+    constexpr static const char* signature = "varid: int, attrs: Union[dballe.Record, dict]";
+    constexpr static const char* summary = "Insert new attributes into the database";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "varid", "attrs", NULL };
@@ -442,7 +461,8 @@ template<typename Impl>
 struct attr_insert_data : MethKwargs<Impl>
 {
     constexpr static const char* name = "attr_insert_data";
-    constexpr static const char* doc = "Insert new attributes into the database";
+    constexpr static const char* signature = "varid: int, attrs: Union[dballe.Record, dict]";
+    constexpr static const char* summary = "Insert new attributes into the database";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "varid", "attrs", NULL };
@@ -464,6 +484,7 @@ template<typename Impl>
 struct attr_remove : MethKwargs<Impl>
 {
     constexpr static const char* name = "attr_remove";
+    constexpr static const char* signature = "varcode: str, varid: int=None, attrs: Iterable[str]";
     constexpr static const char* doc = "Remove attributes (deprecated)";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
@@ -491,7 +512,8 @@ template<typename Impl>
 struct attr_remove_station : MethKwargs<Impl>
 {
     constexpr static const char* name = "attr_remove_station";
-    constexpr static const char* doc = "Remove attributes from station variables";
+    constexpr static const char* signature = "varid: int, attrs: Iterable[str]";
+    constexpr static const char* summary = "Remove attributes from station variables";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "varid", "attrs", NULL };
@@ -513,7 +535,8 @@ template<typename Impl>
 struct attr_remove_data : MethKwargs<Impl>
 {
     constexpr static const char* name = "attr_remove_data";
-    constexpr static const char* doc = "Remove attributes from data variables";
+    constexpr static const char* signature = "varid: int, attrs: Iterable[str]";
+    constexpr static const char* summary = "Remove attributes from data variables";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "varid", "attrs", NULL };
@@ -565,12 +588,12 @@ template<typename Impl>
 struct load : MethKwargs<Impl>
 {
     constexpr static const char* name = "load";
+    constexpr static const char* signature = "fp: file, encoding: str=None, attrs: bool=False, full_pseudoana: bool=False, overwrite: bool=False";
+    constexpr static const char* summary = "Load a file object in the database. (deprecated)";
     constexpr static const char* doc = R"(
-        load(fp, encoding=None, attrs=False, full_pseudoana=False, overwrite=False)
-
-        Load a file object in the database. An encoding can optionally be
-        provided as a string ("BUFR", "CREX"). If encoding is None then
-        load will try to autodetect based on the first byte of the file.
+An encoding can optionally be provided as a
+string ("BUFR", "CREX"). If encoding is None then load will try to autodetect
+based on the first byte of the file.
     )";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
@@ -642,15 +665,16 @@ template<typename Impl>
 struct export_to_file : MethKwargs<Impl>
 {
     constexpr static const char* name = "export_to_file";
-    constexpr static const char* doc = "Export data matching a query as bulletins to a named file";
+    constexpr static const char* signature = "query: Union[dballe.Record, dict], format: str, filename: Union[str, file], generic: bool=False";
+    constexpr static const char* summary = "Export data matching a query as bulletins to a named file (deprecated)";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "query", "format", "filename", "generic", NULL };
-        dpy_Record* query;
+        PyObject* pyquery;
         const char* format;
         PyObject* file;
         int as_generic = 0;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "O!sO|i", const_cast<char**>(kwlist), dpy_Record_Type, &query, &format, &file, &as_generic))
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "OsO|i", const_cast<char**>(kwlist), &pyquery, &format, &file, &as_generic))
             return NULL;
 
         try {
@@ -665,6 +689,9 @@ struct export_to_file : MethKwargs<Impl>
                 return NULL;
             }
 
+            core::Query query;
+            read_query(pyquery, query);
+
             if (pyobject_is_string(file))
             {
                 std::string filename = string_from_python(file);
@@ -673,10 +700,8 @@ struct export_to_file : MethKwargs<Impl>
                 if (as_generic)
                     opts.template_name = "generic";
                 auto exporter = Exporter::create(out->encoding(), opts);
-                auto q = Query::create();
-                q->set_from_record(*query->rec);
                 ReleaseGIL gil;
-                self->db->export_msgs(*q, [&](unique_ptr<Message>&& msg) {
+                self->db->export_msgs(query, [&](unique_ptr<Message>&& msg) {
                     Messages msgs;
                     msgs.emplace_back(move(msg));
                     out->write(exporter->to_binary(msgs));
@@ -689,11 +714,9 @@ struct export_to_file : MethKwargs<Impl>
                 if (as_generic)
                     opts.template_name = "generic";
                 auto exporter = Exporter::create(encoding, opts);
-                auto q = Query::create();
-                q->set_from_record(*query->rec);
                 pyo_unique_ptr res(nullptr);
                 bool has_error = false;
-                self->db->export_msgs(*q, [&](unique_ptr<Message>&& msg) {
+                self->db->export_msgs(query, [&](unique_ptr<Message>&& msg) {
                     Messages msgs;
                     msgs.emplace_back(move(msg));
                     std::string encoded = exporter->to_binary(msgs);
@@ -722,29 +745,27 @@ template<typename Impl>
 struct import_messages : MethKwargs<Impl>
 {
     constexpr static const char* name = "import_messages";
+    constexpr static const char* signature = "messages: Union[dballe.Message, Sequence[dballe.Message], Iterable[dballe.Message], dballe.ImporterFile], report: str=None, attrs: bool=False, update_station: bool=False, overwrite: bool=False";
+    constexpr static const char* summary = "Import one or more Messages into the database.";
     constexpr static const char* doc = R"(
-        import_messages(msgs, report=None, attrs=False, update_station=False, overwrite=False) -> None
+`messages` can be:
+ * a `dballe.Message`_ object
+ * a sequence or iterable of `dballe.Message`_ objects
+ * a `dballe.ImporterFile`_ that generates a sequence of `dballe.Message`_ objects
 
-        Import one or more Messages into the database.
+`report` is the network name to use for importing the data. If left to None,
+the network is selected automatically from the message type
 
-        `msgs` can be:
-         * a dballe.Message object
-         * a sequence of dballe.Message objects
+`attrs` if set to True, requests the variable attributes to also be imported.
 
-        `report` is the network name to use for importing the data. If left to
-        None, the network is selected automatically from the message type
+`update_station`, if set to True, station information is merged with existing
+one in the database. If false (default), station information is imported only
+when the station did not exist in the database.
 
-        `attrs` if set to True, requests the variable attributes to also be imported.
-
-        `update_station`, if set to True, station information is merged with
-        existing one in the database. If false (default), station information
-        is imported only when the station did not exist in the database.
-
-        `overwrite`, if set to True, causes existing information already in the
-        database to be overwritten. If false (default), trying to import a
-        message which contains data already present in the database causes the
-        import to fail.
-    )";
+`overwrite`, if set to True, causes existing information already in the
+database to be overwritten. If false (default), trying to import a message
+which contains data already present in the database causes the import to fail.
+)";
 
     [[noreturn]] static void throw_typeerror()
     {
@@ -830,7 +851,8 @@ namespace pydb {
 struct get_default_format : ClassMethNoargs
 {
     constexpr static const char* name = "get_default_format";
-    constexpr static const char* doc = "get the default DB format";
+    constexpr static const char* returns = "str";
+    constexpr static const char* summary = "get the default DB format";
     static PyObject* run(PyTypeObject* cls)
     {
         try {
@@ -843,7 +865,8 @@ struct get_default_format : ClassMethNoargs
 struct set_default_format : ClassMethKwargs
 {
     constexpr static const char* name = "set_default_format";
-    constexpr static const char* doc = "set the default DB format";
+    constexpr static const char* signature = "format: str";
+    constexpr static const char* summary = "set the default DB format";
     static PyObject* run(PyTypeObject* cls, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "format", nullptr };
@@ -861,7 +884,9 @@ struct set_default_format : ClassMethKwargs
 struct connect_from_file : ClassMethKwargs
 {
     constexpr static const char* name = "connect_from_file";
-    constexpr static const char* doc = "create a DB to access a SQLite file";
+    constexpr static const char* signature = "name: str";
+    constexpr static const char* returns = "dballe.DB";
+    constexpr static const char* summary = "create a DB to access a SQLite file";
     static PyObject* run(PyTypeObject* cls, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "name", nullptr };
@@ -881,7 +906,9 @@ struct connect_from_file : ClassMethKwargs
 struct connect_from_url : ClassMethKwargs
 {
     constexpr static const char* name = "connect_from_url";
-    constexpr static const char* doc = "create a DB to access a database identified by a DB-All.e URL";
+    constexpr static const char* signature = "url: str";
+    constexpr static const char* returns = "dballe.DB";
+    constexpr static const char* summary = "create a DB to access a database identified by a DB-All.e URL";
     static PyObject* run(PyTypeObject* cls, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "url", nullptr };
@@ -901,7 +928,8 @@ struct connect_from_url : ClassMethKwargs
 struct connect_test : ClassMethNoargs
 {
     constexpr static const char* name = "connect_test";
-    constexpr static const char* doc = "Create a DB for running the test suite, as configured in the test environment";
+    constexpr static const char* returns = "dballe.DB";
+    constexpr static const char* summary = "Create a DB for running the test suite, as configured in the test environment";
     static PyObject* run(PyTypeObject* cls)
     {
         try {
@@ -916,7 +944,9 @@ struct connect_test : ClassMethNoargs
 struct is_url : ClassMethKwargs
 {
     constexpr static const char* name = "is_url";
-    constexpr static const char* doc = "Checks if a string looks like a DB-All.e DB url";
+    constexpr static const char* signature = "url: str";
+    constexpr static const char* returns = "bool";
+    constexpr static const char* summary = "Checks if a string looks like a DB-All.e DB url";
     static PyObject* run(PyTypeObject* cls, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "url", nullptr };
@@ -936,7 +966,9 @@ struct is_url : ClassMethKwargs
 struct transaction : MethKwargs<dpy_DB>
 {
     constexpr static const char* name = "transaction";
-    constexpr static const char* doc = "Create a new database transaction";
+    constexpr static const char* signature = "readonly: bool=False";
+    constexpr static const char* returns = "dballe.Transaction";
+    constexpr static const char* summary = "Create a new database transaction";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "readonly", nullptr };
@@ -968,6 +1000,7 @@ struct disappear : MethNoargs<dpy_DB>
 struct reset : MethKwargs<dpy_DB>
 {
     constexpr static const char* name = "reset";
+    constexpr static const char* signature = "repinfo_file: str=None";
     constexpr static const char* doc = "Reset the database, removing all existing Db-All.e tables and re-creating them empty.";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
@@ -1003,7 +1036,41 @@ struct Definition : public Binding<Definition, dpy_DB>
 {
     constexpr static const char* name = "DB";
     constexpr static const char* qual_name = "dballe.DB";
-    constexpr static const char* doc = "DB-All.e database access";
+    constexpr static const char* doc = R"(
+DB-All.e database access.
+
+Many methods are the same in `dballe.DB`_ and `dballe.Transaction`_. The
+versions in `dballe.DB`_ are implemented by automatically creating a temporary
+transaction and running the equivalent `dballe.Transaction`_ method inside it.
+
+dballe.DB objects are not constructed explicitly, but via one of the
+DB.connect_from_file, DB.connect_from_url, or DB.connect_test class methods.
+
+Examples:
+
+::
+
+    # Connect to a database and run a query
+    db = dballe.DB.connect_from_file("db.sqlite")
+    query = {latmin=44.0, latmax=45.0, lonmin=11.0, lonmax=12.0}
+
+    # The result is a dballe.Cursor, which can be iterated to get results as
+    # dballe.Record objects.
+    # The results always point to the same Record to avoid creating a new one
+    # for every iteration: if you need to store them, use Record.copy()
+    for rec in db.query_data(query):
+        print(rec["lat"], rec["lon"], rec["var"], rec.var().format("undefined"))
+
+    # Insert 2 new variables in the database
+    db.insert_data({
+        "lat": 44.5, "lon": 11.4,
+        "level": dballe.Level(1),
+        "trange": dballe.Trange(254),
+        "date": datetime.datetime(2013, 4, 25, 12, 0, 0),
+        "B11101": 22.4,
+        "B12103": 17.2,
+    })
+)";
 
     GetSetters<> getsetters;
     Methods<
@@ -1062,7 +1129,7 @@ struct __exit__ : MethVarargs<dpy_Transaction>
 struct commit : MethNoargs<dpy_Transaction>
 {
     constexpr static const char* name = "commit";
-    constexpr static const char* doc = "commit the transaction";
+    constexpr static const char* summary = "commit the transaction";
     static PyObject* run(Impl* self)
     {
         try {
@@ -1076,7 +1143,7 @@ struct commit : MethNoargs<dpy_Transaction>
 struct rollback : MethNoargs<dpy_Transaction>
 {
     constexpr static const char* name = "rollback";
-    constexpr static const char* doc = "roll back the transaction";
+    constexpr static const char* summary = "roll back the transaction";
     static PyObject* run(Impl* self)
     {
         try {
@@ -1092,7 +1159,42 @@ struct Definition : public Binding<Definition, dpy_Transaction>
 {
     constexpr static const char* name = "Transaction";
     constexpr static const char* qual_name = "dballe.Transaction";
-    constexpr static const char* doc = "DB-All.e transaction";
+    constexpr static const char* doc = R"(
+DB-All.e transaction
+
+A Transaction is used to execute DB operations in an all-or-nothing fashion. In
+fact, most DB methods are implemented using a short-lived temporary
+transaction.
+
+You cannot have more than one active dballe.Transaction for each dballe.DB. An
+attempt to start a second one will result in an exception being raised. Note
+that dballe.DB functions like `insert_data` or `export_to_file` create a
+temporary transaction to run, and so they will also fail if a transaction is
+currently open. The general idea is that all database work should be done
+inside a transaction.
+
+Transactions run using the `REPEATABLE READ` isolation level of the underlying
+database. This usually means that modifications performed inside a transaction
+are not visible to other database connections until the transaction is
+committed. If a transaction is rolled back, all changes done with it are
+undone.
+
+Transactions can also be used as context managers, like this:
+
+::
+
+    with db.transaction() as t:
+        for i in range(10):
+            t.insert({
+                "lat": 44.5 + i, "lon": 11.4 + i, "level": (1,),
+                "trange": (254,), "date": datetime.datetime(2013, 4, 25, 12, 0, 0),
+                "B11101": 22.4 + i, "B12103": 17.2
+            })
+
+The dballe.Transaction methods are the same as those in dballe.DB. The version
+in dballe.DB is implemented by automatically creating a temporary transaction
+and running the dballe.Transaction method inside it.
+)";
 
     GetSetters<> getsetters;
     Methods<
