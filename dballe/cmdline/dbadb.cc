@@ -35,7 +35,7 @@ struct Importer : public Action
 bool Importer::operator()(const Item& item)
 {
     if (!transaction.get())
-        transaction = db.transaction();
+        transaction = dynamic_pointer_cast<db::Transaction>(db.transaction());
 
     if (item.msgs == NULL)
     {
@@ -55,7 +55,7 @@ bool Importer::operator()(const Item& item)
 /// Query data in the database and output results as arbitrary human readable text
 int Dbadb::do_dump(const Query& query, FILE* out)
 {
-    auto tr = db.transaction();
+    auto tr = dynamic_pointer_cast<db::Transaction>(db.transaction());
     unique_ptr<db::Cursor> cursor = tr->query_data(query);
 
     auto res = Record::create();
@@ -73,7 +73,7 @@ int Dbadb::do_dump(const Query& query, FILE* out)
 /// Query stations in the database and output results as arbitrary human readable text
 int Dbadb::do_stations(const Query& query, FILE* out)
 {
-    auto tr = db.transaction();
+    auto tr = dynamic_pointer_cast<db::Transaction>(db.transaction());
     unique_ptr<db::Cursor> cursor = tr->query_stations(query);
 
     auto res = Record::create();

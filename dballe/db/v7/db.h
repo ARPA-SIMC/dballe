@@ -50,7 +50,7 @@ public:
     /// Access the backend DB driver
     v7::Driver& driver();
 
-    std::shared_ptr<dballe::db::Transaction> transaction(bool readonly=false) override;
+    std::shared_ptr<dballe::Transaction> transaction(bool readonly=false) override;
     std::shared_ptr<dballe::db::Transaction> test_transaction(bool readonly=false) override;
 
     void disappear();

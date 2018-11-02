@@ -331,7 +331,7 @@ this->add_method("vacuum", [](Fixture& f) {
 
     // Station 2 is still there with all its data
     {
-        auto tr = db.transaction();
+        auto tr = dynamic_pointer_cast<db::Transaction>(db.transaction());
         core::Query q;
         q.ana_id = data.stations["s2"].info.id;
         auto c = wcallchecked(tr->query_stations(q));

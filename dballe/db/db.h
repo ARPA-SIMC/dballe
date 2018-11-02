@@ -159,21 +159,10 @@ struct CursorSummary : public Cursor
 };
 
 
-class Transaction : public std::enable_shared_from_this<Transaction>
+class Transaction : public dballe::Transaction
 {
 public:
-    typedef dballe::DB DB;
-
     virtual ~Transaction() {}
-
-    /// Commit this transaction
-    virtual void commit() = 0;
-
-    /// Roll back this transaction
-    virtual void rollback() = 0;
-
-    /// Roll back this transaction
-    virtual void rollback_nothrow() noexcept = 0;
 
     /**
      * Clear state information cached during the transaction.
@@ -452,7 +441,7 @@ public:
     /**
      * Create an in-memory database
      */
-    static std::shared_ptr<DB> connect_memory(const std::string& arg = std::string());
+    static std::shared_ptr<DB> connect_memory();
 
     /**
      * Start a test session with DB-All.e
@@ -497,13 +486,6 @@ public:
      *   used.
      */
     virtual void reset(const char* repinfo_file=0) = 0;
-
-public:
-    /**
-     * Begin a transaction on this database, and return a Transaction object
-     * that can be used to commit it.
-     */
-    virtual std::shared_ptr<dballe::db::Transaction> transaction(bool readonly=false) = 0;
 
     /**
      * Same as transaction(), but the resulting transaction will throw an

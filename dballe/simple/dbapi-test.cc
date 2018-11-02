@@ -920,7 +920,7 @@ this->add_method("attr_insert", [](Fixture& f) {
     // Reproduce a problem with attribute insert when inserting a variable
     // that already exists in the database
     {
-        auto tr = f.db->transaction();
+        auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
         fortran::DbAPI pre(tr, "write", "write", "write");
         pre.unsetall();
         pre.seti("lat", 4452128);
@@ -937,7 +937,7 @@ this->add_method("attr_insert", [](Fixture& f) {
     }
 
     {
-        auto tr = f.db->transaction();
+        auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
         fortran::DbAPI dbapi0(tr, "write", "write", "write");
         dbapi0.unsetall();
         dbapi0.seti("lat", 4452128);
@@ -960,14 +960,14 @@ this->add_method("issue73", [](Fixture& f) {
     using namespace wreport;
 
     {
-        auto tr = f.db->transaction();
+        auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
         fortran::DbAPI dbapi(tr, "write", "write", "write");
         wassert(populate_variables(dbapi));
         wassert(dbapi.fatto());
     }
 
     {
-        auto tr = f.db->transaction();
+        auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
         fortran::DbAPI dbapi(tr, "read", "read", "read");
         dbapi.setc("varlist", "B10004,B12101,B12103");
         wassert(actual(dbapi.voglioquesto()) == 1);
@@ -979,7 +979,7 @@ this->add_method("issue75", [](Fixture& f) {
 
     std::string fname = dballe::tests::datafile("bufr/issue75.bufr");
     {
-        auto tr = f.db->transaction();
+        auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
         fortran::DbAPI dbapi(tr, "write", "write", "write");
         wassert(dbapi.messages_open_input(fname.c_str(), "r", Encoding::BUFR, true));
         wassert(actual(dbapi.messages_read_next()).istrue());
@@ -990,7 +990,7 @@ this->add_method("issue75", [](Fixture& f) {
     }
 
     {
-        auto tr = f.db->transaction();
+        auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
         fortran::DbAPI dbapi(tr, "read", "read", "read");
         dbapi.setc("rep_memo", "temp");
         dbapi.setcontextana();
@@ -1005,7 +1005,7 @@ this->add_method("transactions", [](Fixture& f) {
     // FIXME: move check to fortran and python bindings
     // Write, do not commit
     {
-        auto tr = f.db->transaction();
+        auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
         fortran::DbAPI api(tr, "write", "write", "write");
         wassert(actual(api.voglioquesto()) == 0);
         api.setd("lat", 44.5);
@@ -1021,7 +1021,7 @@ this->add_method("transactions", [](Fixture& f) {
 
     // Write, commit
     {
-        auto tr = f.db->transaction();
+        auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
         fortran::DbAPI api(tr, "write", "write", "write");
         wassert(actual(api.voglioquesto()) == 0);
         api.setd("lat", 44.5);
@@ -1038,7 +1038,7 @@ this->add_method("transactions", [](Fixture& f) {
 
     // This time, data was written
     {
-        auto tr = f.db->transaction();
+        auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
         fortran::DbAPI api(tr, "write", "write", "write");
         wassert(actual(api.voglioquesto()) == 1);
     }

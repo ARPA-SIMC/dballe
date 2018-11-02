@@ -270,7 +270,7 @@ int idba_preparati(int dbahandle, int* handle, const char* anaflag, const char* 
         unsigned perms = fortran::DbAPI::compute_permissions(anaflag, dataflag, attrflag);
         bool readonly = !(perms & (fortran::DbAPI::PERM_ANA_WRITE | fortran::DbAPI::PERM_DATA_ADD | fortran::DbAPI::PERM_DATA_WRITE | fortran::DbAPI::PERM_ATTR_WRITE));
         auto db = dynamic_pointer_cast<db::DB>(DB::connect_from_url(hs.url.c_str()));
-        auto tr = db->transaction(readonly);
+        auto tr = dynamic_pointer_cast<db::Transaction>(db->transaction(readonly));
         h.api = new fortran::DbAPI(tr, perms);
 
         return fortran::success();

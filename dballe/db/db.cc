@@ -122,7 +122,7 @@ shared_ptr<DB> DB::connect_from_file(const char* pathname)
     return create(unique_ptr<sql::Connection>(conn.release()));
 }
 
-shared_ptr<DB> DB::connect_memory(const std::string& arg)
+shared_ptr<DB> DB::connect_memory()
 {
     sql::SQLiteConnection* sqlite_conn;
 
@@ -155,126 +155,126 @@ const char* DB::default_repinfo_file()
 
 std::unique_ptr<db::CursorStation> DB::query_stations(const Query& query)
 {
-    auto t = transaction();
+    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     auto res = t->query_stations(query);
     return res;
 }
 
 std::unique_ptr<db::CursorStationData> DB::query_station_data(const Query& query)
 {
-    auto t = transaction();
+    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     auto res = t->query_station_data(query);
     return res;
 }
 
 std::unique_ptr<db::CursorData> DB::query_data(const Query& query)
 {
-    auto t = transaction();
+    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     auto res = t->query_data(query);
     return res;
 }
 
 std::unique_ptr<db::CursorSummary> DB::query_summary(const Query& query)
 {
-    auto t = transaction();
+    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     auto res = t->query_summary(query);
     return res;
 }
 
 void DB::attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
 {
-    auto t = transaction();
+    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     t->attr_query_station(data_id, move(dest));
     t->commit();
 }
 
 void DB::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
 {
-    auto t = transaction();
+    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     t->attr_query_data(data_id, move(dest));
     t->commit();
 }
 
 void DB::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
 {
-    auto t = transaction();
+    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     t->insert_station_data(vals, can_replace, station_can_add);
     t->commit();
 }
 
 void DB::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
 {
-    auto t = transaction();
+    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     t->insert_data(vals, can_replace, station_can_add);
     t->commit();
 }
 
 void DB::remove_station_data(const Query& query)
 {
-    auto t = transaction();
+    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     t->remove_station_data(query);
     t->commit();
 }
 
 void DB::remove(const Query& query)
 {
-    auto t = transaction();
+    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     t->remove(query);
     t->commit();
 }
 
 void DB::remove_all()
 {
-    auto t = transaction();
+    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     t->remove_all();
     t->commit();
 }
 
 void DB::attr_insert_station(int data_id, const Values& attrs)
 {
-    auto t = transaction();
+    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     t->attr_insert_station(data_id, attrs);
     t->commit();
 }
 
 void DB::attr_insert_data(int data_id, const Values& attrs)
 {
-    auto t = transaction();
+    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     t->attr_insert_data(data_id, attrs);
     t->commit();
 }
 
 void DB::attr_remove_station(int data_id, const db::AttrList& attrs)
 {
-    auto t = transaction();
+    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     t->attr_remove_station(data_id, attrs);
     t->commit();
 }
 
 void DB::attr_remove_data(int data_id, const db::AttrList& attrs)
 {
-    auto t = transaction();
+    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     t->attr_remove_data(data_id, attrs);
     t->commit();
 }
 
 void DB::import_msg(const Message& msg, const char* repmemo, int flags)
 {
-    auto t = transaction();
+    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     t->import_msg(msg, repmemo, flags);
     t->commit();
 }
 
 void DB::import_msgs(const std::vector<std::shared_ptr<Message>>& msgs, const char* repmemo, int flags)
 {
-    auto t = transaction();
+    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     t->import_msgs(msgs, repmemo, flags);
     t->commit();
 }
 
 bool DB::export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest)
 {
-    auto t = transaction();
+    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     bool res = t->export_msgs(query, dest);
     t->commit();
     return res;
@@ -282,7 +282,7 @@ bool DB::export_msgs(const Query& query, std::function<bool(std::unique_ptr<Mess
 
 void DB::dump(FILE* out)
 {
-    auto t = transaction();
+    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     t->dump(out);
     t->rollback();
 }

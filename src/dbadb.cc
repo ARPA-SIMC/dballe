@@ -245,7 +245,7 @@ struct RepinfoCmd : public DatabaseCmd
         /* Get the optional name of the repinfo file.  If missing, the default will be used */
         const char* fname = poptGetArg(optCon);
 
-        auto tr = db->transaction();
+        auto tr = dynamic_pointer_cast<db::Transaction>(db->transaction());
         int added, deleted, updated;
         tr->update_repinfo(fname, &added, &deleted, &updated);
         tr->commit();

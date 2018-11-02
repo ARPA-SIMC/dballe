@@ -280,7 +280,7 @@ template<typename DB>
 void DBFixture<DB>::test_setup()
 {
     BaseDBFixture<DB>::test_setup();
-    auto tr = this->db->transaction();
+    auto tr = dynamic_pointer_cast<db::Transaction>(this->db->transaction());
     tr->remove_all();
     int added, deleted, updated;
     tr->update_repinfo(nullptr, &added, &deleted, &updated);
@@ -302,7 +302,7 @@ std::shared_ptr<dballe::db::v7::DB> V7DB::create_db(const std::string& backend)
 
 void TestDataSet::populate_db(db::DB& db)
 {
-    auto tr = db.transaction();
+    auto tr = dynamic_pointer_cast<db::Transaction>(db.transaction());
     populate_transaction(*tr);
     tr->commit();
 }

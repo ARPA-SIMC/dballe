@@ -977,7 +977,7 @@ struct transaction : MethKwargs<dpy_DB>
             return nullptr;
 
         try {
-            auto res = self->db->transaction(readonly);
+            auto res = dynamic_pointer_cast<db::Transaction>(self->db->transaction(readonly));
             return (PyObject*)transaction_create(move(res));
         } DBALLE_CATCH_RETURN_PYO
     }

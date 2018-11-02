@@ -4,6 +4,8 @@
 
 namespace dballe {
 
+Transaction::~Transaction() {}
+
 DB::~DB()
 {
 }
