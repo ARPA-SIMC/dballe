@@ -164,23 +164,50 @@ struct GetSetters<>
  * Automatically define a null-terminated array of PyMethodDef
  */
 
-template<typename Method>
-constexpr PyMethodDef as_py_method()
+struct Method
 {
-    char* doc = dballe::python::build_method_doc(Method::name, Method::signature, Method::returns, Method::summary, Method::doc);
-    return {(char*)Method::name, (PyCFunction)Method::run, Method::flags, doc};
+    const char* name;
+    PyCFunction run;
+    int flags;
+    std::string doc;
+
+    Method(const char* name, const char* signature, const char* returns, const char* summary, const char* doc,
+           PyCFunction run, int flags)
+        : name(name), run(run), flags(flags), doc(dballe::python::build_method_doc(name, signature, returns, summary, doc))
+    {
+    }
+
+    PyMethodDef def() const
+    {
+        return PyMethodDef {const_cast<char*>(name), run, flags, const_cast<char*>(this->doc.data())};
+    }
+};
+
+template<typename Meth>
+Method as_method()
+{
+    return Method(Meth::name, Meth::signature, Meth::returns, Meth::summary, Meth::doc, (PyCFunction)Meth::run, Meth::flags);
 }
 
 template<typename... METHODS>
 struct Methods
 {
-    typedef std::array<PyMethodDef, sizeof...(METHODS) + 1> Data;
+    typedef std::array<Method, sizeof...(METHODS)> Data;
+    typedef std::array<PyMethodDef, sizeof...(METHODS) + 1> Defs;
     Data m_data;
-    Methods() : m_data({ as_py_method<METHODS>()..., {nullptr} })
+    Defs m_defs;
+    Methods() : m_data({ as_method<METHODS>()... })
     {
+        for (unsigned i = 0; i < m_data.size(); ++i)
+            m_defs[i] = m_data[i].def();
+        m_defs[m_defs.size() - 1] = { nullptr };
     }
 
-    PyMethodDef* as_py() { return const_cast<PyMethodDef*>(m_data.data()); }
+    PyMethodDef* as_py()
+    {
+
+        return const_cast<PyMethodDef*>(m_defs.data());
+    }
 };
 
 template<>

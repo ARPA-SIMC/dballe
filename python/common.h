@@ -177,7 +177,7 @@ std::string object_repr(PyObject* o);
  *
  * Returns a newly allocated string.
  */
-char* build_method_doc(const char* name, const char* signature, const char* returns, const char* summary, const char* doc);
+std::string build_method_doc(const char* name, const char* signature, const char* returns, const char* summary, const char* doc);
 
 /**
  * Initialize the python bits to use used by the common functions.

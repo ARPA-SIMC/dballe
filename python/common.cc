@@ -3,7 +3,6 @@
 #include "dballe/types.h"
 #include "dballe/core/var.h"
 #include <string>
-#include <cstring>
 
 #if PY_MAJOR_VERSION <= 2
     #define PyLong_AsLong PyInt_AsLong
@@ -152,7 +151,7 @@ std::string object_repr(PyObject* o)
     return string_from_python(repr);
 }
 
-char* build_method_doc(const char* name, const char* signature, const char* returns, const char* summary, const char* doc)
+std::string build_method_doc(const char* name, const char* signature, const char* returns, const char* summary, const char* doc)
 {
     std::string res;
     unsigned doc_indent = 0;
@@ -204,7 +203,7 @@ char* build_method_doc(const char* name, const char* signature, const char* retu
         res += doc;
 
     // Return a C string with a copy of res
-    return strndup(res.data(), res.size());
+    return res;
 }
 
 void common_init()
