@@ -1,5 +1,5 @@
-#include "sql/mysql.h"
-#include "sql/querybuf.h"
+#include "mysql.h"
+#include "querybuf.h"
 #include "dballe/types.h"
 #include <cstring>
 #include <cstdarg>

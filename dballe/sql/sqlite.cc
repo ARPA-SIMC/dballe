@@ -1,5 +1,5 @@
-#include "sql/sqlite.h"
-#include "sql/querybuf.h"
+#include "sqlite.h"
+#include "querybuf.h"
 #include "dballe/types.h"
 #include <cstdarg>
 #include <cstdio>

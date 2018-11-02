@@ -1,11 +1,11 @@
 #ifndef DBALLE_DB_V7_TRANSACTION_H
 #define DBALLE_DB_V7_TRANSACTION_H
 
-#include <dballe/transaction.h>
 #include <dballe/db/db.h>
 #include <dballe/db/v7/fwd.h>
 #include <dballe/db/v7/data.h>
 #include <dballe/db/v7/batch.h>
+#include <dballe/sql/fwd.h>
 #include <memory>
 
 namespace dballe {
@@ -33,7 +33,7 @@ public:
 
     std::shared_ptr<v7::DB> db;
     /// SQL-side transaction
-    dballe::Transaction* sql_transaction = nullptr;
+    dballe::sql::Transaction* sql_transaction = nullptr;
     /// True if commit or rollback have already been called on this transaction
     bool fired = false;
     /// Batch importer
@@ -41,7 +41,7 @@ public:
     /// Tracing system
     v7::Tracer<v7::trace::Transaction> trc;
 
-    Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Transaction> sql_transaction);
+    Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::sql::Transaction> sql_transaction);
     Transaction(const Transaction&) = delete;
     Transaction(Transaction&&) = delete;
     Transaction& operator=(const Transaction&) = delete;
@@ -86,7 +86,7 @@ public:
     bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) override;
     void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated) override;
 
-    static Transaction& downcast(dballe::Transaction& transaction);
+    static Transaction& downcast(dballe::db::Transaction& transaction);
 
     void dump(FILE* out) override;
 };

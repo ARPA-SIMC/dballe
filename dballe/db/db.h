@@ -1,9 +1,8 @@
-#ifndef DBALLE_DB_H
-#define DBALLE_DB_H
+#ifndef DBALLE_DB_DB_H
+#define DBALLE_DB_DB_H
 
 #include <dballe/fwd.h>
 #include <dballe/core/fwd.h>
-#include <dballe/transaction.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/values.h>
 #include <dballe/db/defs.h>
@@ -159,10 +158,21 @@ struct CursorSummary : public Cursor
 };
 
 
-class Transaction : public dballe::Transaction, public std::enable_shared_from_this<Transaction>
+class Transaction : public std::enable_shared_from_this<Transaction>
 {
 public:
     typedef dballe::DB DB;
+
+    virtual ~Transaction() {}
+
+    /// Commit this transaction
+    virtual void commit() = 0;
+
+    /// Roll back this transaction
+    virtual void rollback() = 0;
+
+    /// Roll back this transaction
+    virtual void rollback_nothrow() noexcept = 0;
 
     /**
      * Clear state information cached during the transaction.

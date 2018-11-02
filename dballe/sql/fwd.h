@@ -6,10 +6,7 @@
  */
 
 namespace dballe {
-class Transaction;
-
 namespace sql {
-
 class Querybuf;
 class Transaction;
 class Statement;
@@ -19,7 +16,6 @@ class MySQLConnection;
 class PostgreSQLConnection;
 class SQLiteConnection;
 class SQLiteStatement;
-
 }
 }
 #endif

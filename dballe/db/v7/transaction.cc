@@ -19,7 +19,7 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
-Transaction::Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Transaction> sql_transaction)
+Transaction::Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::sql::Transaction> sql_transaction)
     : db(db), sql_transaction(sql_transaction.release()), batch(*this), trc(db->trace->trace_transaction())
 {
     m_repinfo = db->driver().create_repinfo(*this).release();
@@ -101,7 +101,7 @@ void Transaction::clear_cached_state()
     batch.clear();
 }
 
-Transaction& Transaction::downcast(dballe::Transaction& transaction)
+Transaction& Transaction::downcast(dballe::db::Transaction& transaction)
 {
     v7::Transaction* t = dynamic_cast<v7::Transaction*>(&transaction);
     assert(t);
