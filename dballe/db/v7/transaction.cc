@@ -176,10 +176,10 @@ void Transaction::remove_station_data(const Query& query)
     cursor::run_delete_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), true, db->explain_queries);
 }
 
-void Transaction::remove(const Query& query)
+void Transaction::remove_data(const Query& query)
 {
-    Tracer<> trc(this->trc ? this->trc->trace_remove(query) : nullptr);
-    cursor::run_delete_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), false, db->explain_queries); // TODO: tracing
+    Tracer<> trc(this->trc ? this->trc->trace_remove_data(query) : nullptr);
+    cursor::run_delete_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), false, db->explain_queries);
 }
 
 std::unique_ptr<db::CursorStation> Transaction::query_stations(const Query& query)

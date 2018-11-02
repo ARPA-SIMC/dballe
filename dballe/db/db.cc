@@ -209,27 +209,6 @@ void DB::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
     t->commit();
 }
 
-void DB::remove_station_data(const Query& query)
-{
-    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
-    t->remove_station_data(query);
-    t->commit();
-}
-
-void DB::remove(const Query& query)
-{
-    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
-    t->remove(query);
-    t->commit();
-}
-
-void DB::remove_all()
-{
-    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
-    t->remove_all();
-    t->commit();
-}
-
 void DB::attr_insert_station(int data_id, const Values& attrs)
 {
     auto t = dynamic_pointer_cast<db::Transaction>(transaction());

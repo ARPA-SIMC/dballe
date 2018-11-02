@@ -260,7 +260,7 @@ this->add_method("delete", [](Fixture& f) {
 
     query.clear();
     query.datetime = DatetimeRange(Datetime(1945, 4, 25, 8, 10), Datetime());
-    f.tr->remove(query);
+    f.tr->remove_data(query);
 
     // 2 remaining after remove
     query.clear();
@@ -316,7 +316,7 @@ this->add_method("delete_notfound", [](Fixture& f) {
 
     // Try to remove using a query that matches none
     query.attr_filter = "B33007<50";
-    f.tr->remove(query);
+    f.tr->remove_data(query);
 
     // Verify that nothing has been deleted
     query.clear();

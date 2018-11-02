@@ -74,7 +74,7 @@ public:
     void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add) override;
     void insert_data(DataValues& vals, bool can_replace, bool station_can_add) override;
     void remove_station_data(const Query& query) override;
-    void remove(const Query& query);
+    void remove_data(const Query& query) override;
     void remove_all() override;
 
     void attr_insert_station(int data_id, const Values& attrs) override;

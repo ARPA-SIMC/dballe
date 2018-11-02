@@ -223,14 +223,33 @@ struct remove_station_data : MethQuery<remove_station_data<Impl>, Impl>
 };
 
 template<typename Impl>
-struct remove : MethQuery<remove<Impl>, Impl>
+struct remove_data : MethQuery<remove_data<Impl>, Impl>
 {
-    constexpr static const char* name = "remove";
+    constexpr static const char* name = "remove_data";
     constexpr static const char* summary = "Remove data variables from the database";
     static PyObject* run_query(Impl* self, dballe::Query& query)
     {
-        ReleaseGIL gil;
-        self->db->remove(query);
+        try {
+            ReleaseGIL gil;
+            self->db->remove_data(query);
+        } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
+    }
+};
+
+template<typename Impl>
+struct remove : MethQuery<remove<Impl>, Impl>
+{
+    constexpr static const char* name = "remove";
+    constexpr static const char* summary = "Remove data variables from the database (deprecated)";
+    static PyObject* run_query(Impl* self, dballe::Query& query)
+    {
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use remove_data instead of DB.remove", 1))
+            return nullptr;
+        try {
+            ReleaseGIL gil;
+            self->db->remove_data(query);
+        } DBALLE_CATCH_RETURN_PYO
         Py_RETURN_NONE;
     }
 };
@@ -1079,7 +1098,7 @@ Examples:
         disappear, reset, vacuum,
         transaction,
         insert_station_data<Impl>, insert_data<Impl>,
-        remove_station_data<Impl>, remove<Impl>, remove_all<Impl>,
+        remove_station_data<Impl>, remove_data<Impl>, remove_all<Impl>, remove<Impl>,
         query_stations<Impl>, query_station_data<Impl>, query_data<Impl>, query_summary<Impl>, query_attrs<Impl>,
         attr_query_station<Impl>, attr_query_data<Impl>,
         attr_insert<Impl>, attr_insert_station<Impl>, attr_insert_data<Impl>,
@@ -1199,7 +1218,7 @@ and running the dballe.Transaction method inside it.
     GetSetters<> getsetters;
     Methods<
         insert_station_data<Impl>, insert_data<Impl>,
-        remove_station_data<Impl>, remove<Impl>, remove_all<Impl>,
+        remove_station_data<Impl>, remove_data<Impl>, remove_all<Impl>, remove<Impl>,
         query_stations<Impl>, query_station_data<Impl>, query_data<Impl>, query_summary<Impl>,
         attr_query_station<Impl>, attr_query_data<Impl>,
         attr_insert_station<Impl>, attr_insert_data<Impl>,

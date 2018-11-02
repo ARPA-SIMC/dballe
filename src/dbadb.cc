@@ -409,7 +409,7 @@ struct DeleteCmd : public DatabaseCmd
 
         auto db = connect();
         // TODO: check that there is something
-        db->remove(query);
+        db->remove_data(query);
         return 0;
     }
 };

@@ -21,5 +21,25 @@ std::shared_ptr<DB> DB::connect_from_url(const std::string& url)
     }
 }
 
+void DB::remove_all()
+{
+    auto t = transaction();
+    t->remove_all();
+    t->commit();
+}
+
+void DB::remove_station_data(const Query& query)
+{
+    auto t = transaction();
+    t->remove_station_data(query);
+    t->commit();
+}
+
+void DB::remove_data(const Query& query)
+{
+    auto t = transaction();
+    t->remove_data(query);
+    t->commit();
+}
 
 }

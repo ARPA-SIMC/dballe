@@ -247,7 +247,7 @@ this->add_method("update_with_ana_id", [](Fixture& f) {
     query.ana_id = ana_id;
     query.level = Level(1);
     query.trange = Trange::instant();
-    wassert(f.tr->remove(query));
+    wassert(f.tr->remove_data(query));
 
     query.clear();
     dcur = f.tr->query_data(query);
@@ -307,7 +307,7 @@ this->add_method("vacuum", [](Fixture& f) {
     {
         core::Query q;
         q.ana_id = data.stations["s1"].info.id;
-        db.remove(q);
+        db.remove_data(q);
     }
 
     {

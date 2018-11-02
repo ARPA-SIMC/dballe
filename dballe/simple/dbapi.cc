@@ -368,7 +368,7 @@ void DbAPI::dimenticami()
     if (station_context)
         tr->remove_station_data(*query);
     else
-        tr->remove(*query);
+        tr->remove_data(*query);
     delete operation;
     operation = nullptr;
 }

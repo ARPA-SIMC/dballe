@@ -167,9 +167,9 @@ Tracer<> Transaction::trace_remove_station_data(const Query& query)
     return Tracer<>(add_child(new trace::Step("remove_station_data", query_to_string(query))));
 }
 
-Tracer<> Transaction::trace_remove(const Query& query)
+Tracer<> Transaction::trace_remove_data(const Query& query)
 {
-    return Tracer<>(add_child(new trace::Step("remove", query_to_string(query))));
+    return Tracer<>(add_child(new trace::Step("remove_data", query_to_string(query))));
 }
 
 }

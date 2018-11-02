@@ -174,17 +174,6 @@ public:
     virtual void clear_cached_state() = 0;
 
     /**
-     * Remove all data from the database.
-     *
-     * This is faster than remove() with an empty record, and unlike reset() it
-     * preserves existing report information.
-     *
-     * @param transaction
-     *   The current active transaction.
-     */
-    virtual void remove_all() = 0;
-
-    /**
      * Start a query on the station variables archive.
      *
      * The cursor will iterate over unique lat, lon, ident triples, and will
@@ -296,24 +285,6 @@ public:
      *   be created.
      */
     virtual void insert_data(DataValues& vals, bool can_replace, bool station_can_add) = 0;
-
-    /**
-     * Remove data from the database
-     *
-     * @param query
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input") to select the items to be deleted
-     */
-    virtual void remove_station_data(const Query& query) = 0;
-
-    /**
-     * Remove data from the database
-     *
-     * @param rec
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input") to select the items to be deleted
-     */
-    virtual void remove(const Query& rec) = 0;
 
     /**
      * Insert new attributes on a station value
@@ -528,32 +499,6 @@ public:
      *   be created.
      */
     void insert_data(DataValues& vals, bool can_replace, bool station_can_add);
-
-    /**
-     * Remove data from the database
-     *
-     * @param query
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input") to select the items to be deleted
-     */
-    void remove_station_data(const Query& query);
-
-    /**
-     * Remove data from the database
-     *
-     * @param rec
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input") to select the items to be deleted
-     */
-    void remove(const Query& query);
-
-    /**
-     * Remove all data from the database.
-     *
-     * This is faster than remove() with an empty record, and unlike reset() it
-     * preserves existing report information.
-     */
-    void remove_all();
 
     /**
      * Perform database cleanup operations.
