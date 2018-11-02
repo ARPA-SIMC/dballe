@@ -25,7 +25,7 @@ namespace v7 {
 /**
  * DB-ALLe database connection for database format V7
  */
-class DB : public dballe::DB
+class DB : public dballe::db::DB
 {
 public:
     /// Database connection
@@ -45,7 +45,7 @@ public:
     DB(std::unique_ptr<dballe::sql::Connection> conn);
     virtual ~DB();
 
-    db::Format format() const { return V7; }
+    db::Format format() const { return Format::V7; }
 
     /// Access the backend DB driver
     v7::Driver& driver();

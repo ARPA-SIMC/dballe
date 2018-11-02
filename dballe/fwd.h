@@ -61,6 +61,23 @@ struct Importer;
 struct ExporterOptions;
 struct Exporter;
 
+struct DB;
+
+namespace db {
+
+/**
+ * Known database formats
+ */
+enum class Format {
+    V5 = 0,        // Deprecated (add C++14 attributes when possible)
+    V6 = 1,        // Deprecated (add C++14 attributes when possible)
+    MEM = 2,       // Deprecated (add C++14 attributes when possible)
+    MESSAGES = 3,  // Deprecated (add C++14 attributes when possible)
+    V7 = 4,
+};
+
+}
+
 }
 
 #endif

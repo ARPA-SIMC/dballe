@@ -17,28 +17,28 @@ using namespace wreport;
 namespace dballe {
 namespace db {
 
-static Format default_format = V7;
+static Format default_format = Format::V7;
 
 std::string format_format(Format format)
 {
     switch (format)
     {
-        case V5: return "V5";
-        case V6: return "V6";
-        case MEM: return "MEM";
-        case MESSAGES: return "MESSAGES";
-        case V7: return "V7";
+        case Format::V5: return "V5";
+        case Format::V6: return "V6";
+        case Format::MEM: return "MEM";
+        case Format::MESSAGES: return "MESSAGES";
+        case Format::V7: return "V7";
         default: return "unknown format " + std::to_string((int)format);
     }
 }
 
 Format format_parse(const std::string& str)
 {
-    if (str == "V7") return V7;
-    if (str == "V6") return V6;
-    if (str == "V5") return V5;
-    if (str == "MEM") return MEM;
-    if (str == "MESSAGES") return MESSAGES;
+    if (str == "V7") return Format::V7;
+    if (str == "V6") return Format::V6;
+    if (str == "V5") return Format::V5;
+    if (str == "MEM") return Format::MEM;
+    if (str == "MESSAGES") return Format::MESSAGES;
     error_consistency::throwf("unsupported database format: '%s'", str.c_str());
 }
 
@@ -60,12 +60,6 @@ void Transaction::import_msgs(const std::vector<std::shared_ptr<Message>>& msgs,
         import_msg(*i, repmemo, flags);
 }
 
-}
-
-DB::~DB()
-{
-}
-
 Format DB::get_default_format() { return default_format; }
 void DB::set_default_format(Format format) { default_format = format; }
 
@@ -79,7 +73,7 @@ bool DB::is_url(const char* str)
     return false;
 }
 
-shared_ptr<DB> DB::create(unique_ptr<sql::Connection> conn)
+std::shared_ptr<DB> DB::create(unique_ptr<sql::Connection> conn)
 {
     // Autodetect format
     Format format = default_format;
@@ -93,11 +87,11 @@ shared_ptr<DB> DB::create(unique_ptr<sql::Connection> conn)
     // Try with reading it from the settings table
     string version = conn->get_setting("version");
     if (version == "V5")
-        format = V5;
+        format = Format::V5;
     else if (version == "V6")
-        format = V6;
+        format = Format::V6;
     else if (version == "V7")
-        format = V7;
+        format = Format::V7;
     else if (version == "")
         found = false;// Some other key exists, but the version has not been set
     else
@@ -107,16 +101,16 @@ shared_ptr<DB> DB::create(unique_ptr<sql::Connection> conn)
     if (!found)
     {
         if (conn->has_table("lev_tr"))
-            format = V6;
+            format = Format::V6;
         else if (conn->has_table("context"))
-            format = V5;
+            format = Format::V5;
     }
 
     switch (format)
     {
-        case V5: throw error_unimplemented("V5 format is not supported anymore by this version of DB-All.e");
-        case V6: throw error_unimplemented("V6 format is not supported anymore by this version of DB-All.e");
-        case V7: return static_pointer_cast<DB>(make_shared<v7::DB>(move(conn)));
+        case Format::V5: throw error_unimplemented("V5 format is not supported anymore by this version of DB-All.e");
+        case Format::V6: throw error_unimplemented("V6 format is not supported anymore by this version of DB-All.e");
+        case Format::V7: return static_pointer_cast<DB>(make_shared<v7::DB>(move(conn)));
         default: error_consistency::throwf("requested unknown format %d", (int)format);
     }
 }
@@ -126,17 +120,6 @@ shared_ptr<DB> DB::connect_from_file(const char* pathname)
     unique_ptr<sql::SQLiteConnection> conn(new sql::SQLiteConnection);
     conn->open_file(pathname);
     return create(unique_ptr<sql::Connection>(conn.release()));
-}
-
-shared_ptr<DB> DB::connect_from_url(const char* url)
-{
-    if (strncmp(url, "mem:", 4) == 0)
-    {
-        return connect_memory(url + 4);
-    } else {
-        unique_ptr<sql::Connection> conn(sql::Connection::create_from_url(url));
-        return create(move(conn));
-    }
 }
 
 shared_ptr<DB> DB::connect_memory(const std::string& arg)
@@ -150,14 +133,14 @@ shared_ptr<DB> DB::connect_memory(const std::string& arg)
     return res;
 }
 
-shared_ptr<DB> DB::connect_test()
+std::shared_ptr<DB> DB::connect_test()
 {
-    if (default_format == MEM)
+    if (default_format == Format::MEM)
         return connect_memory();
 
     const char* envurl = getenv("DBA_DB");
     if (envurl != NULL)
-        return connect_from_url(envurl);
+        return dynamic_pointer_cast<dballe::db::DB>(dballe::DB::connect_from_url(envurl));
     else
         return connect_from_file("test.sqlite");
 }
@@ -309,4 +292,5 @@ void DB::print_info(FILE* out)
     fprintf(out, "Format: %s\n", format_format(format()).c_str());
 }
 
+}
 }

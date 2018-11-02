@@ -856,7 +856,7 @@ struct get_default_format : ClassMethNoargs
     static PyObject* run(PyTypeObject* cls)
     {
         try {
-            string format = db::format_format(DB::get_default_format());
+            string format = db::format_format(db::DB::get_default_format());
             return PyUnicode_FromString(format.c_str());
         } DBALLE_CATCH_RETURN_PYO
     }
@@ -875,7 +875,7 @@ struct set_default_format : ClassMethKwargs
             return nullptr;
 
         try {
-            DB::set_default_format(db::format_parse(format));
+            db::DB::set_default_format(db::format_parse(format));
             Py_RETURN_NONE;
         } DBALLE_CATCH_RETURN_PYO
     }
@@ -896,7 +896,7 @@ struct connect_from_file : ClassMethKwargs
 
         try {
             ReleaseGIL gil;
-            std::shared_ptr<DB> db = DB::connect_from_file(name);
+            std::shared_ptr<db::DB> db = db::DB::connect_from_file(name);
             gil.lock();
             return (PyObject*)db_create(db);
         } DBALLE_CATCH_RETURN_PYO
@@ -918,7 +918,7 @@ struct connect_from_url : ClassMethKwargs
 
         try {
             ReleaseGIL gil;
-            shared_ptr<DB> db = DB::connect_from_url(url);
+            shared_ptr<db::DB> db = dynamic_pointer_cast<db::DB>(DB::connect_from_url(url));
             gil.lock();
             return (PyObject*)db_create(db);
         } DBALLE_CATCH_RETURN_PYO
@@ -934,7 +934,7 @@ struct connect_test : ClassMethNoargs
     {
         try {
             ReleaseGIL gil;
-            std::shared_ptr<DB> db = DB::connect_test();
+            std::shared_ptr<db::DB> db = db::DB::connect_test();
             gil.lock();
             return (PyObject*)db_create(db);
         } DBALLE_CATCH_RETURN_PYO
@@ -955,7 +955,7 @@ struct is_url : ClassMethKwargs
             return nullptr;
 
         try {
-            if (DB::is_url(url))
+            if (db::DB::is_url(url))
                 Py_RETURN_TRUE;
             else
                 Py_RETURN_FALSE;
@@ -1089,7 +1089,7 @@ Examples:
 
     static void _dealloc(Impl* self)
     {
-        self->db.~shared_ptr<DB>();
+        self->db.~shared_ptr<db::DB>();
         Py_TYPE(self)->tp_free(self);
     }
 };
@@ -1238,10 +1238,10 @@ db::AttrList db_read_attrlist(PyObject* attrs)
     return res;
 }
 
-dpy_DB* db_create(std::shared_ptr<DB> db)
+dpy_DB* db_create(std::shared_ptr<db::DB> db)
 {
     py_unique_ptr<dpy_DB> res = throw_ifnull(PyObject_New(dpy_DB, dpy_DB_Type));
-    new (&(res->db)) std::shared_ptr<DB>(db);
+    new (&(res->db)) std::shared_ptr<db::DB>(db);
     return res.release();
 }
 

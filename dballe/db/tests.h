@@ -35,7 +35,7 @@ struct TestDataSet
     TestDataSet() {}
     virtual ~TestDataSet() {}
 
-    void populate_db(DB& db);
+    void populate_db(db::DB& db);
     virtual void populate_transaction(db::Transaction& tr);
 };
 
@@ -56,7 +56,7 @@ struct V7DB
 {
     typedef db::v7::DB DB;
     typedef db::v7::Transaction TR;
-    static const auto format = db::V7;
+    static const auto format = db::Format::V7;
     static std::shared_ptr<DB> create_db(const std::string& backend);
 };
 

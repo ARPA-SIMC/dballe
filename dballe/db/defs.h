@@ -22,17 +22,6 @@ namespace dballe {
 namespace db {
 
 /**
- * Known database formats
- */
-typedef enum {
-    V5 = 0,
-    V6 = 1,
-    MEM = 2,
-    MESSAGES = 3,
-    V7 = 4,
-} Format;
-
-/**
  * Structure uesd to pass lists of varcodes
  */
 typedef std::vector<wreport::Varcode> AttrList;

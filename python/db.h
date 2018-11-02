@@ -9,7 +9,7 @@ extern "C" {
 
 typedef struct {
     PyObject_HEAD
-    std::shared_ptr<dballe::DB> db;
+    std::shared_ptr<dballe::db::DB> db;
 } dpy_DB;
 
 extern PyTypeObject* dpy_DB_Type;
@@ -38,7 +38,7 @@ namespace python {
 /**
  * Create a new dpy_DB, sharing memory management
  */
-dpy_DB* db_create(std::shared_ptr<DB> db);
+dpy_DB* db_create(std::shared_ptr<db::DB> db);
 
 /**
  * Create a new dpy_Transaction, taking over memory management

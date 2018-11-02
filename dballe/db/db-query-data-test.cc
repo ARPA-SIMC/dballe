@@ -363,7 +363,7 @@ this->add_method("query_ordering", [](Fixture& f) {
     core::Record test;
     switch (DB::format)
     {
-        case V7:
+        case Format::V7:
             // v7: ana_id(coords, ident, report), datetime, level, trange, code
             wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals01)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
             wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals07)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12103=280.15

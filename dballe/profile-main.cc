@@ -36,7 +36,7 @@ struct ImportSynopOneStation: public Scenario
 
     void import()
     {
-        auto db = DB::connect_test();
+        auto db = db::DB::connect_test();
         db->reset();
         auto t = db->transaction();
         for (const auto& msgs: input)
@@ -72,7 +72,7 @@ struct ImportSynopManyTimes: public Scenario
 
     void import()
     {
-        auto db = DB::connect_test();
+        auto db = db::DB::connect_test();
         db->reset();
         {
             auto t = db->transaction();

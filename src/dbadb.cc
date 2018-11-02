@@ -60,7 +60,7 @@ struct poptOption dbTable[] = {
     POPT_TABLEEND
 };
 
-static shared_ptr<DB> connect()
+static std::shared_ptr<db::DB> connect()
 {
     const char* chosen_url;
 
@@ -74,7 +74,7 @@ static shared_ptr<DB> connect()
         chosen_url = op_url;
 
     /* If url looks like a url, treat it accordingly */
-    auto db = DB::connect_from_url(chosen_url);
+    auto db = dynamic_pointer_cast<db::DB>(DB::connect_from_url(chosen_url));
 
     // Wipe database if requested
     if (op_wipe_first)
@@ -430,7 +430,7 @@ struct InfoCmd : public DatabaseCmd
 
         auto db = connect();
 
-        string default_format = db::format_format(DB::get_default_format());
+        string default_format = db::format_format(db::DB::get_default_format());
         fprintf(stdout, "Default format for new DBs: %s\n", default_format.c_str());
         db->print_info(stdout);
 

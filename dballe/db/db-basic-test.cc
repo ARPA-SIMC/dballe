@@ -128,7 +128,7 @@ this->add_method("stationdata", [](Fixture& f) {
     core::Record result;
     switch (DB::format)
     {
-        case V7:
+        case Format::V7:
         {
             bool have_temp = false;
             bool have_synop = false;

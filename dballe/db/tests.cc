@@ -300,7 +300,7 @@ std::shared_ptr<dballe::db::v7::DB> V7DB::create_db(const std::string& backend)
 }
 
 
-void TestDataSet::populate_db(DB& db)
+void TestDataSet::populate_db(db::DB& db)
 {
     auto tr = db.transaction();
     populate_transaction(*tr);
@@ -356,7 +356,7 @@ ActualDB<dballe::db::Transaction> actual(std::shared_ptr<dballe::db::v7::Transac
 template class BaseDBFixture<V7DB>;
 template class DBFixture<V7DB>;
 template class EmptyTransactionFixture<V7DB>;
-template class ActualDB<dballe::DB>;
+template class ActualDB<dballe::db::DB>;
 template class ActualDB<dballe::db::Transaction>;
 
 }

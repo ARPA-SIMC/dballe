@@ -23,21 +23,20 @@
 #include <dballe/file.h>
 #include <dballe/core/query.h>
 #include <dballe/cmdline/processor.h>
+#include <dballe/db/fwd.h>
 #include <list>
 #include <cstdio>
 
 namespace dballe {
-struct DB;
-
 namespace cmdline {
 
 class Dbadb
 {
 protected:
-    DB& db;
+    db::DB& db;
 
 public:
-    Dbadb(DB& db) : db(db) {}
+    Dbadb(db::DB& db) : db(db) {}
 
     /// Query data in the database and output results as arbitrary human readable text
     int do_dump(const Query& query, FILE* out);

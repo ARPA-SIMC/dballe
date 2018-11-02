@@ -171,7 +171,7 @@ this->add_method("query_station", [](Fixture& f) {
 
     switch (DB::format)
     {
-        case V7:
+        case Format::V7:
         {
             bool have_synop = false;
             bool have_metar = false;
@@ -706,7 +706,7 @@ this->add_method("update", [](Fixture& f) {
     // value removes the attributes
     switch (DB::format)
     {
-        case V7:
+        case Format::V7:
             wassert(actual(run_attr_query_data(f.tr, cur->attr_reference_id(), qattrs)) == 0);
             break;
         default:

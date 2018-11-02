@@ -17,12 +17,12 @@ namespace {
 
 struct Importer : public Action
 {
-    DB& db;
+    dballe::db::DB& db;
     int import_flags = 0;
     const char* forced_repmemo = nullptr;
     shared_ptr<dballe::db::Transaction> transaction;
 
-    Importer(DB& db) : db(db) {}
+    Importer(db::DB& db) : db(db) {}
 
     virtual bool operator()(const cmdline::Item& item);
     void commit()

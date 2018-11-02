@@ -54,6 +54,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	record.h \
 	query.h \
 	var.h \
+	db.h \
 	core/fwd.h \
 	core/error.h \
 	core/aliases.h \
@@ -148,6 +149,7 @@ libdballe_la_SOURCES = \
 	record.cc \
 	query.cc \
 	var.cc \
+	db.cc \
 	core/error.cc \
 	core/aliases.cc \
 	core/benchmark.cc \
@@ -283,6 +285,7 @@ test_dballe_SOURCES = \
 	record-test.cc \
 	query-test.cc \
 	var-test.cc \
+	db-test.cc \
 	core/aliases-test.cc \
 	core/defs-test.cc \
 	core/var-test.cc \

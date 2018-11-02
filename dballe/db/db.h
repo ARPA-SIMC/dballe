@@ -2,6 +2,7 @@
 #define DBALLE_DB_DB_H
 
 #include <dballe/fwd.h>
+#include <dballe/db.h>
 #include <dballe/core/fwd.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/values.h>
@@ -434,13 +435,9 @@ public:
     virtual void dump(FILE* out) = 0;
 };
 
-}
-
-class DB: public std::enable_shared_from_this<DB>
+class DB: public dballe::DB
 {
 public:
-    virtual ~DB();
-
     static db::Format get_default_format();
     static void set_default_format(db::Format format);
 
@@ -451,15 +448,6 @@ public:
      *   The pathname to a SQLite file
      */
     static std::shared_ptr<DB> connect_from_file(const char* pathname);
-
-    /**
-     * Create from an url-like specification, as described in
-     * doc/fapi_connect.md
-     *
-     * @param url
-     *   The url-like connection descriptor
-     */
-    static std::shared_ptr<DB> connect_from_url(const char* url);
 
     /**
      * Create an in-memory database
@@ -769,5 +757,6 @@ public:
     static const char* default_repinfo_file();
 };
 
+}
 }
 #endif

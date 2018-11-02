@@ -166,9 +166,9 @@ int idba_presentati(int* dbahandle, const char* url)
         if (!wipe.empty())
         {
             // Disappear then reset, to allow migrating a db from V6 to V7
-            auto db = DB::connect_from_url(hs.url.c_str());
+            auto db = dynamic_pointer_cast<db::DB>(DB::connect_from_url(hs.url.c_str()));
             db->disappear();
-            db = DB::connect_from_url(hs.url.c_str());
+            db = dynamic_pointer_cast<db::DB>(DB::connect_from_url(hs.url.c_str()));
             db->reset();
         }
 
@@ -269,7 +269,7 @@ int idba_preparati(int dbahandle, int* handle, const char* anaflag, const char* 
         IF_TRACING(h.trace.log_preparati(dbahandle, *handle, anaflag, dataflag, attrflag));
         unsigned perms = fortran::DbAPI::compute_permissions(anaflag, dataflag, attrflag);
         bool readonly = !(perms & (fortran::DbAPI::PERM_ANA_WRITE | fortran::DbAPI::PERM_DATA_ADD | fortran::DbAPI::PERM_DATA_WRITE | fortran::DbAPI::PERM_ATTR_WRITE));
-        auto db = DB::connect_from_url(hs.url.c_str());
+        auto db = dynamic_pointer_cast<db::DB>(DB::connect_from_url(hs.url.c_str()));
         auto tr = db->transaction(readonly);
         h.api = new fortran::DbAPI(tr, perms);
 

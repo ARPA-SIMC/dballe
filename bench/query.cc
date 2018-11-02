@@ -8,7 +8,7 @@
 
 struct BenchmarkQuery : public dballe::benchmark::Task
 {
-    std::shared_ptr<dballe::DB> db;
+    std::shared_ptr<dballe::db::DB> db;
     const char* m_name;
     const char* m_pathname;
     unsigned months;
@@ -16,7 +16,7 @@ struct BenchmarkQuery : public dballe::benchmark::Task
     unsigned minutes;
 
     BenchmarkQuery(const char* name, const char* pathname, unsigned months=12, unsigned hours=24, unsigned minutes=1)
-        : db(dballe::DB::connect_test()), m_name(name), m_pathname(pathname), months(months), hours(hours), minutes(minutes)
+        : db(dballe::db::DB::connect_test()), m_name(name), m_pathname(pathname), months(months), hours(hours), minutes(minutes)
     {
     }
 

@@ -136,7 +136,7 @@ class Tests : public FixtureTestCase<TransactionFixture<DB, DBData>>
             // Manually insert an orphan station
             switch (DB::format)
             {
-                case V7:
+                case Format::V7:
                     if (auto t = dynamic_cast<v7::Transaction*>(f.tr.get()))
                     {
                         v7::Tracer<> trc;
@@ -166,7 +166,7 @@ class Tests : public FixtureTestCase<TransactionFixture<DB, DBData>>
             auto cur = f.tr->query_stations(core::Query());
             switch (f.db->format())
             {
-                case V7:
+                case Format::V7:
                     wassert(actual(cur->remaining()) == 4);
                     break;
                 default: error_unimplemented::throwf("cannot run this test on a database of format %d", (int)DB::format);
