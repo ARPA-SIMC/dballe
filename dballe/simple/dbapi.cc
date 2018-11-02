@@ -21,7 +21,7 @@ struct InputFile
     Importer* importer = nullptr;
     Messages current_msg;
     unsigned current_msg_idx = 0;
-    int import_flags = 0;
+    DBImportMessageOptions opts;
 
     InputFile(Encoding format, bool simplified)
     {
@@ -458,11 +458,11 @@ void DbAPI::messages_open_input(const char* filename, const char* mode, Encoding
     else
         input_file = new InputFile(format, simplified);
 
-    input_file->import_flags |= DBA_IMPORT_FULL_PSEUDOANA;
+    input_file->opts.update_station = true;
     if (perms & PERM_ATTR_WRITE)
-        input_file->import_flags |= DBA_IMPORT_ATTRS;
+        input_file->opts.import_attributes = true;
     if (perms & PERM_DATA_WRITE)
-        input_file->import_flags |= DBA_IMPORT_OVERWRITE;
+        input_file->opts.overwrite = true;
 }
 
 void DbAPI::messages_open_output(const char* filename, const char* mode, Encoding format)
@@ -489,7 +489,7 @@ bool DbAPI::messages_read_next()
         throw error_consistency("messages_read_next called but there are no open input files");
     if (!input_file->next())
         return false;
-    tr->import_msg(input_file->msg(), NULL, input_file->import_flags);
+    tr->import_message(input_file->msg(), input_file->opts);
     return true;
 }
 

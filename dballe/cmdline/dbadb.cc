@@ -17,10 +17,9 @@ namespace {
 
 struct Importer : public Action
 {
-    dballe::db::DB& db;
-    int import_flags = 0;
-    const char* forced_repmemo = nullptr;
-    shared_ptr<dballe::db::Transaction> transaction;
+    dballe::DB& db;
+    DBImportMessageOptions opts;
+    std::shared_ptr<dballe::Transaction> transaction;
 
     Importer(db::DB& db) : db(db) {}
 
@@ -43,7 +42,7 @@ bool Importer::operator()(const Item& item)
         return false;
     }
     try {
-        transaction->import_msgs(*item.msgs, forced_repmemo, import_flags);
+        transaction->import_messages(*item.msgs, opts);
     } catch (std::exception& e) {
         item.processing_failed(e);
     }
@@ -97,11 +96,10 @@ int Dbadb::do_export_dump(const Query& query, FILE* out)
     return 0;
 }
 
-int Dbadb::do_import(const list<string>& fnames, Reader& reader, int import_flags, const char* forced_repmemo)
+int Dbadb::do_import(const list<string>& fnames, Reader& reader, const DBImportMessageOptions& opts)
 {
     Importer importer(db);
-    importer.import_flags = import_flags;
-    importer.forced_repmemo = forced_repmemo;
+    importer.opts = opts;
     reader.read(fnames, importer);
     importer.commit();
     if (reader.verbose)
@@ -119,11 +117,11 @@ int Dbadb::do_import(const list<string>& fnames, Reader& reader, int import_flag
     return reader.has_fail_file() ? 0 : 1;
 }
 
-int Dbadb::do_import(const std::string& fname, Reader& reader, int import_flags, const char* forced_repmemo)
+int Dbadb::do_import(const std::string& fname, Reader& reader, const DBImportMessageOptions& opts)
 {
     list<string> fnames;
     fnames.push_back(fname);
-    return do_import(fnames, reader, import_flags, forced_repmemo);
+    return do_import(fnames, reader, opts);
 }
 
 int Dbadb::do_export(const Query& query, File& file, const char* output_template, const char* forced_repmemo)

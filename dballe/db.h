@@ -3,8 +3,45 @@
 
 #include <dballe/fwd.h>
 #include <memory>
+#include <vector>
 
 namespace dballe {
+
+/**
+ * Options controlling how messages are imported in the database
+ */
+struct DBImportMessageOptions
+{
+    /**
+     * Report name to use to import data.
+     *
+     * If left empty (default), then it will be chosen automatically based on
+     * the message type.
+     */
+    std::string report;
+
+    /// Import variable attributes
+    bool import_attributes = false;
+
+    /**
+     * Update station information.
+     *
+     * If set to true, station information is merged with existing data in the
+     * database. If false (default), station information is imported only when
+     * the station did not exist in the database.
+     */
+    bool update_station = false;
+
+    /**
+     * Replace existing data.
+     *
+     * If set to true, causes existing information already in the database to
+     * be overwritten. If false (default), trying to import a message which
+     * contains data already present in the database causes the import to fail.
+     */
+    bool overwrite = false;
+};
+
 
 class Transaction : public std::enable_shared_from_this<Transaction>
 {
@@ -46,6 +83,26 @@ public:
      *   The query selecting the data to remove
      */
     virtual void remove_data(const Query& query) = 0;
+
+    /**
+     * Import a Message into the DB-All.e database
+     *
+     * @param message
+     *   The Message to import
+     * @param opts
+     *   Options controlling the import process
+     */
+    virtual void import_message(const Message& message, const DBImportMessageOptions& opts=DBImportMessageOptions()) = 0;
+
+    /**
+     * Import Messages into the DB-All.e database
+     *
+     * @param messages
+     *   The messages to import
+     * @param opts
+     *   Options controlling the import process
+     */
+    virtual void import_messages(const std::vector<std::shared_ptr<Message>>& messages, const DBImportMessageOptions& opts=DBImportMessageOptions());
 };
 
 
@@ -91,6 +148,26 @@ struct DB: public std::enable_shared_from_this<DB>
      *   The query selecting the data to remove
      */
     void remove_data(const Query& query);
+
+    /**
+     * Import a Message into the DB-All.e database
+     *
+     * @param message
+     *   The Message to import
+     * @param opts
+     *   Options controlling the import process
+     */
+    void import_message(const Message& message, const DBImportMessageOptions& opts=DBImportMessageOptions());
+
+    /**
+     * Import Messages into the DB-All.e database
+     *
+     * @param messages
+     *   The messages to import
+     * @param opts
+     *   Options controlling the import process
+     */
+    void import_messages(const std::vector<std::shared_ptr<Message>>& messages, const DBImportMessageOptions& opts=DBImportMessageOptions());
 };
 
 }

@@ -26,7 +26,7 @@ protected:
     /// Variable data
     v7::Data* m_data = nullptr;
 
-    void add_msg_to_batch(Tracer<>& trc, const Message& message, const char* repmemo, int flags);
+    void add_msg_to_batch(Tracer<>& trc, const Message& message, const DBImportMessageOptions& opts);
 
 public:
     typedef v7::DB DB;
@@ -81,8 +81,8 @@ public:
     void attr_insert_data(int data_id, const Values& attrs) override;
     void attr_remove_station(int data_id, const db::AttrList& attrs) override;
     void attr_remove_data(int data_id, const db::AttrList& attrs) override;
-    void import_msg(const Message& msg, const char* repmemo, int flags) override;
-    void import_msgs(const std::vector<std::shared_ptr<Message>>& msgs, const char* repmemo, int flags) override;
+    void import_message(const Message& message, const DBImportMessageOptions& opts) override;
+    void import_messages(const std::vector<std::shared_ptr<Message>>& msgs, const DBImportMessageOptions& opts) override;
     bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) override;
     void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated) override;
 

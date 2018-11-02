@@ -17,7 +17,7 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
-void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const char* repmemo, int flags)
+void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const DBImportMessageOptions& opts)
 {
     const Msg& msg = Msg::downcast(message);
     const msg::Context* l_ana = msg.find_context(Level(), Trange());
@@ -41,8 +41,8 @@ void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const 
 
     // Report code
     std::string report;
-    if (repmemo != NULL)
-        report = repmemo;
+    if (!opts.report.empty())
+        report = opts.report;
     else {
         if (const Var* var = msg.get_rep_memo_var())
             report = var->enqc();
@@ -56,7 +56,7 @@ void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const 
     else
         station = batch.get_station(trc, report, coords, Ident());
 
-    if (flags & DBA_IMPORT_FULL_PSEUDOANA || (station->is_new && station->id == MISSING_INT))
+    if (opts.update_station || (station->is_new && station->id == MISSING_INT))
     {
         for (const auto& var: l_ana->data)
         {
@@ -70,7 +70,7 @@ void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const 
             if (code == WR_VAR(0, 4, 5) && !var->next_attr()) continue;
             if (code == WR_VAR(0, 4, 6) && !var->next_attr()) continue;
 
-            station->get_station_data(trc).add(var, flags & DBA_IMPORT_OVERWRITE ? batch::UPDATE : batch::IGNORE);
+            station->get_station_data(trc).add(var, opts.overwrite ? batch::UPDATE : batch::IGNORE);
         }
     }
 
@@ -99,31 +99,31 @@ void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const 
         {
             const Var* var = ctx.data[j];
             if (not var->isset()) continue;
-            md->add(id_levtr, var, flags & DBA_IMPORT_OVERWRITE ? batch::UPDATE : batch::IGNORE);
+            md->add(id_levtr, var, opts.overwrite ? batch::UPDATE : batch::IGNORE);
         }
     }
 }
 
-void Transaction::import_msg(const Message& message, const char* repmemo, int flags)
+void Transaction::import_message(const Message& message, const DBImportMessageOptions& opts)
 {
     Tracer<> trc(this->trc ? this->trc->trace_import(1) : nullptr);
 
-    batch.set_write_attrs(flags & DBA_IMPORT_ATTRS);
+    batch.set_write_attrs(opts.import_attributes);
 
-    add_msg_to_batch(trc, message, repmemo, flags);
+    add_msg_to_batch(trc, message, opts);
 
     // Run the bulk insert
     batch.write_pending(trc);
 }
 
-void Transaction::import_msgs(const Messages& msgs, const char* repmemo, int flags)
+void Transaction::import_messages(const Messages& messages, const DBImportMessageOptions& opts)
 {
-    Tracer<> trc(this->trc ? this->trc->trace_import(msgs.size()) : nullptr);
+    Tracer<> trc(this->trc ? this->trc->trace_import(messages.size()) : nullptr);
 
-    batch.set_write_attrs(flags & DBA_IMPORT_ATTRS);
+    batch.set_write_attrs(opts.import_attributes);
 
-    for (const auto& i: msgs)
-        add_msg_to_batch(trc, *i, repmemo, flags);
+    for (const auto& i: messages)
+        add_msg_to_batch(trc, *i, opts);
 
     // Run the bulk insert
     batch.write_pending(trc);

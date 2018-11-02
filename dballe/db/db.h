@@ -329,34 +329,6 @@ public:
     virtual void attr_remove_data(int data_id, const db::AttrList& attrs) = 0;
 
     /**
-     * Import a Message into the DB-All.e database
-     *
-     * @param msg
-     *   The Message containing the data to import
-     * @param repmemo
-     *   Report mnemonic to which imported data belong.  If NULL is passed, then it
-     *   will be chosen automatically based on the message type.
-     * @param flags
-     *   Customise different aspects of the import process.  It is a bitmask of the
-     *   various DBA_IMPORT_* macros.
-     */
-    virtual void import_msg(const Message& msg, const char* repmemo, int flags) = 0;
-
-    /**
-     * Import Messages into the DB-All.e database
-     *
-     * @param msgs
-     *   The Messages containing the data to import
-     * @param repmemo
-     *   Report mnemonic to which imported data belong.  If NULL is passed, then it
-     *   will be chosen automatically based on the message type.
-     * @param flags
-     *   Customise different aspects of the import process.  It is a bitmask of the
-     *   various DBA_IMPORT_* macros.
-     */
-    virtual void import_msgs(const std::vector<std::shared_ptr<Message>>& msgs, const char* repmemo, int flags);
-
-    /**
      * Perform the query in `query', and send the results to dest.
      *
      * Return false from dest to interrupt the query.
@@ -629,34 +601,6 @@ public:
      *   associated to the value will be deleted.
      */
     void attr_remove_data(int data_id, const db::AttrList& attrs);
-
-    /**
-     * Import a Message into the DB-All.e database
-     *
-     * @param msg
-     *   The Message containing the data to import
-     * @param repmemo
-     *   Report mnemonic to which imported data belong.  If NULL is passed, then it
-     *   will be chosen automatically based on the message type.
-     * @param flags
-     *   Customise different aspects of the import process.  It is a bitmask of the
-     *   various DBA_IMPORT_* macros.
-     */
-    void import_msg(const Message& msg, const char* repmemo, int flags);
-
-    /**
-     * Import Messages into the DB-All.e database
-     *
-     * @param msgs
-     *   The Messages containing the data to import
-     * @param repmemo
-     *   Report mnemonic to which imported data belong.  If NULL is passed, then it
-     *   will be chosen automatically based on the message type.
-     * @param flags
-     *   Customise different aspects of the import process.  It is a bitmask of the
-     *   various DBA_IMPORT_* macros.
-     */
-    void import_msgs(const std::vector<std::shared_ptr<Message>>& msgs, const char* repmemo, int flags);
 
     /**
      * Perform the query in `query', and send the results to dest.

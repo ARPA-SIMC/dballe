@@ -36,9 +36,9 @@ struct BenchmarkImport : public dballe::benchmark::Task
 
     void run_once() override
     {
-        auto tr = std::dynamic_pointer_cast<dballe::db::Transaction>(db->transaction());
+        auto tr = db->transaction();
         for (const auto& msgs: messages)
-            tr->import_msgs(msgs, nullptr, 0);
+            tr->import_messages(msgs);
         tr->commit();
     }
 

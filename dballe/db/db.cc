@@ -54,12 +54,6 @@ unsigned Cursor::test_iterate(FILE* dump)
     return count;
 }
 
-void Transaction::import_msgs(const std::vector<std::shared_ptr<Message>>& msgs, const char* repmemo, int flags)
-{
-    for (const auto& i: msgs)
-        import_msg(*i, repmemo, flags);
-}
-
 Format DB::get_default_format() { return default_format; }
 void DB::set_default_format(Format format) { default_format = format; }
 
@@ -234,20 +228,6 @@ void DB::attr_remove_data(int data_id, const db::AttrList& attrs)
 {
     auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     t->attr_remove_data(data_id, attrs);
-    t->commit();
-}
-
-void DB::import_msg(const Message& msg, const char* repmemo, int flags)
-{
-    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
-    t->import_msg(msg, repmemo, flags);
-    t->commit();
-}
-
-void DB::import_msgs(const std::vector<std::shared_ptr<Message>>& msgs, const char* repmemo, int flags)
-{
-    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
-    t->import_msgs(msgs, repmemo, flags);
     t->commit();
 }
 

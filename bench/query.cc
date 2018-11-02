@@ -36,9 +36,9 @@ struct BenchmarkQuery : public dballe::benchmark::Task
                     for (unsigned minute = 0; minute < minutes; ++minute)
                         messages.duplicate(size, dballe::Datetime(year, month, 1, hour, minute));
 
-        auto tr = std::dynamic_pointer_cast<dballe::db::Transaction>(db->transaction());
+        auto tr = db->transaction();
         for (const auto& msgs: messages)
-            tr->import_msgs(msgs, nullptr, 0);
+            tr->import_messages(msgs);
         tr->commit();
     }
 

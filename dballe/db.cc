@@ -6,6 +6,13 @@ namespace dballe {
 
 Transaction::~Transaction() {}
 
+void Transaction::import_messages(const std::vector<std::shared_ptr<Message>>& messages, const DBImportMessageOptions& opts)
+{
+    for (const auto& i: messages)
+        import_message(*i, opts);
+}
+
+
 DB::~DB()
 {
 }
@@ -41,5 +48,20 @@ void DB::remove_data(const Query& query)
     t->remove_data(query);
     t->commit();
 }
+
+void DB::import_message(const Message& message, const DBImportMessageOptions& opts)
+{
+    auto t = transaction();
+    t->import_message(message, opts);
+    t->commit();
+}
+
+void DB::import_messages(const std::vector<std::shared_ptr<Message>>& messages, const DBImportMessageOptions& opts)
+{
+    auto t = transaction();
+    t->import_messages(messages, opts);
+    t->commit();
+}
+
 
 }

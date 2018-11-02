@@ -15,6 +15,8 @@ using namespace std;
 
 namespace {
 
+static DBImportMessageOptions default_opts;
+
 unsigned diff_msg(std::shared_ptr<Message> first, std::shared_ptr<Message> second, const char* tag)
 {
     notes::Collect c(cerr);
@@ -31,6 +33,9 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
 
     void register_tests() override
     {
+        default_opts.import_attributes = true;
+        default_opts.update_station = true;
+
         this->add_method("crex", [](Fixture& f) {
             core::Query query;
             // Test import/export with all CREX samples
@@ -47,13 +52,13 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
                     auto msg = Msg::downcast(inmsgs[0]);
 
                     f.tr->remove_all();
-                    f.tr->import_msg(*msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+                    f.tr->import_message(*msg, default_opts);
 
                     // Explicitly set the rep_memo variable that is added during export
-                    msg->set_rep_memo(Msg::repmemo_from_type(msg->type));
+                    msg->set_rep_memo(Msg::repmemo_from_type(msg->get_type()));
 
                     query.clear();
-                    query.rep_memo = Msg::repmemo_from_type(msg->type);
+                    query.rep_memo = Msg::repmemo_from_type(msg->get_type());
 
                     Messages msgs = wcallchecked(dballe::tests::messages_from_db(f.tr, query));
                     wassert(actual(msgs.size()) == 1u);
@@ -74,7 +79,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
                     auto msg = Msg::downcast(inmsgs[0]);
 
                     f.tr->remove_all();
-                    wassert(f.tr->import_msg(*msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA));
+                    wassert(f.tr->import_message(*msg, default_opts));
 
                     query.clear();
                     query.rep_memo = Msg::repmemo_from_type(msg->type);
@@ -103,8 +108,8 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             auto msg2 = Msg::downcast(msgs2[0]);
 
             f.tr->remove_all();
-            f.tr->import_msg(*msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
-            f.tr->import_msg(*msg2, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+            f.tr->import_message(*msg1, default_opts);
+            f.tr->import_message(*msg2, default_opts);
 
             // Explicitly set the rep_memo variable that is added during export
             msg1->set_rep_memo(Msg::repmemo_from_type(msg1->type));
@@ -131,8 +136,8 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
 
             f.tr->remove_all();
             //auto t = db->transaction();
-            f.tr->import_msg(*msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
-            f.tr->import_msg(*msg1, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+            f.tr->import_message(*msg1, default_opts);
+            f.tr->import_message(*msg1, default_opts);
             //t->commit();
 
             // Explicitly set the rep_memo variable that is added during export
@@ -154,7 +159,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             auto msg = Msg::downcast(msgs[0]);
 
             f.tr->remove_all();
-            f.tr->import_msg(*msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+            f.tr->import_message(*msg, default_opts);
 
             query.clear();
             query.rep_memo = "enrico";
@@ -169,7 +174,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             Messages msgs = read_msgs("bufr/generic-onlystation.bufr", Encoding::BUFR);
 
             f.tr->remove_all();
-            f.tr->import_msg(*msgs[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+            f.tr->import_message(*msgs[0], default_opts);
 
             std::unique_ptr<db::Cursor> cur = f.tr->query_stations(core::Query());
             wassert(actual(cur->remaining()) == 1);
@@ -196,7 +201,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             core::Record query;
             Messages msgs = read_msgs("bufr/arpa-station.bufr", Encoding::BUFR);
             f.tr->remove_all();
-            wassert(f.tr->import_msg(*msgs[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA));
+            wassert(f.tr->import_message(*msgs[0], default_opts));
 
             // Redo it with manually generated messages, this should not get imported
             {
@@ -206,7 +211,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
                 msg.set_rep_memo("synop");
                 msg.set_latitude(44.53000);
                 msg.set_longitude(11.30000);
-                wassert(f.tr->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA));
+                wassert(f.tr->import_message(msg, default_opts));
             }
 
             // Same but with a datetime set. This should not get imported, but it
@@ -223,7 +228,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
                 msg.set_datetime(Datetime(1000, 1, 1, 0, 0, 0));
 #warning TODO: fix this test to give an error once we do not need to support this bug anymore
                 //try {
-                    f.tr->import_msg(msg, NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+                    f.tr->import_message(msg, default_opts);
                     //wassert(actual(false).istrue());
                 //} catch (error_notfound& e) {
                     // ok.
@@ -231,6 +236,10 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             }
         });
         this->add_method("import_dirty", [](Fixture& f) {
+            DBImportMessageOptions opts;
+            opts.update_station = true;
+            opts.overwrite = true;
+
             // Try importing into a dirty database, no attributes involved
             core::Record query;
             auto add_common = [](Msg& msg) {
@@ -271,7 +280,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
 
             // Import the first message
             f.tr->remove_all();
-            f.tr->import_msg(*first, NULL, DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE);
+            f.tr->import_message(*first, opts);
 
             // Export and check
             Messages export_first = dballe::tests::messages_from_db(f.tr, "rep_memo=synop");
@@ -279,7 +288,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             wassert(actual(diff_msg(first, export_first[0], "first")) == 0);
 
             // Import the second message
-            f.tr->import_msg(*second, NULL, DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE);
+            f.tr->import_message(*second, opts);
 
             // Export and check
             Messages export_second = dballe::tests::messages_from_db(f.tr, "rep_memo=synop");
@@ -290,7 +299,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             f.tr->clear_cached_state();
 
             // Import the third message
-            f.tr->import_msg(*third, NULL, DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE);
+            f.tr->import_message(*third, opts);
 
             // Export and check
             Messages export_third = dballe::tests::messages_from_db(f.tr, "rep_memo=synop");

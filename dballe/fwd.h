@@ -62,6 +62,8 @@ struct ExporterOptions;
 struct Exporter;
 
 struct DB;
+struct DBImportMessageOptions;
+struct Transaction;
 
 namespace db {
 

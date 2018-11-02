@@ -302,24 +302,23 @@ struct ImportCmd : public DatabaseCmd
         reader.import_opts.simplified = !op_precise_import;
 
         // Configure the importer
-        int import_flags = 0;
+        DBImportMessageOptions opts;
         if (op_overwrite)
-            import_flags |= DBA_IMPORT_OVERWRITE;
+            opts.overwrite = true;
         if (op_fast)
             setenv("DBA_INSECURE_SQLITE", "true", true);
         if (!op_no_attrs)
-            import_flags |= DBA_IMPORT_ATTRS;
+            opts.import_attributes = true;
         if (op_full_pseudoana)
-            import_flags |= DBA_IMPORT_FULL_PSEUDOANA;
+            opts.update_station = true;
 
         auto db = connect();
 
-        const char* forced_repmemo = NULL;
         if (strcmp(op_report, "") != 0)
-            forced_repmemo = op_report;
+            opts.report = op_report;
 
         Dbadb dbadb(*db);
-        return dbadb.do_import(get_filenames(optCon), reader, import_flags, forced_repmemo);
+        return dbadb.do_import(get_filenames(optCon), reader, opts);
     }
 };
 
