@@ -17,175 +17,6 @@
 #include <iosfwd>
 
 namespace dballe {
-
-/**
- * Information about a station
- */
-struct Station
-{
-    /// rep_memo for this station
-    std::string report;
-
-    /// Station coordinates
-    Coords coords;
-
-    /// Mobile station identifier
-    Ident ident;
-
-
-    Station() = default;
-    Station(const dballe::Record& rec) { set_from_record(rec); }
-
-    /// Fill this Station with values from a dballe::Record
-    void set_from_record(const Record& rec);
-
-    /// Copy ana_id, report, coords and ident to rec
-    void to_record(Record& rec) const;
-
-    bool operator==(const Station& o) const
-    {
-        return std::tie(report, coords, ident) == std::tie(o.report, o.coords, o.ident);
-    }
-    bool operator!=(const Station& o) const
-    {
-        return std::tie(report, coords, ident) != std::tie(o.report, o.coords, o.ident);
-    }
-    bool operator<(const Station& o) const
-    {
-        return std::tie(report, coords, ident) < std::tie(o.report, o.coords, o.ident);
-    }
-    bool operator<=(const Station& o) const
-    {
-        return std::tie(report, coords, ident) <= std::tie(o.report, o.coords, o.ident);
-    }
-    bool operator>(const Station& o) const
-    {
-        return std::tie(report, coords, ident) > std::tie(o.report, o.coords, o.ident);
-    }
-    bool operator>=(const Station& o) const
-    {
-        return std::tie(report, coords, ident) >= std::tie(o.report, o.coords, o.ident);
-    }
-
-    /**
-     * Print the Station to a FILE*.
-     *
-     * @param out  The output stream
-     * @param end  String to print after the Station
-     */
-    void print(FILE* out, const char* end="\n") const;
-
-    /// Format to a string
-    std::string to_string(const char* undef="-") const;
-
-    void to_json(core::JSONWriter& writer) const;
-    static Station from_json(core::json::Stream& in);
-};
-
-std::ostream& operator<<(std::ostream&, const Station&);
-
-
-struct DBStation : public Station
-{
-    /**
-     * Database ID of the station.
-     *
-     * It will be filled when the Station is inserted on the database.
-     */
-    int id = MISSING_INT;
-
-
-    DBStation() = default;
-    DBStation(const dballe::Record& rec) { set_from_record(rec); }
-
-    /// Reset the database ID
-    void clear_ids() { id = MISSING_INT; }
-
-    /// Fill this Station with values from a dballe::Record
-    void set_from_record(const Record& rec);
-
-    /// Copy ana_id, report, coords and ident to rec
-    void to_record(Record& rec) const;
-
-    bool operator==(const DBStation& o) const
-    {
-        return std::tie(id, report, coords, ident) == std::tie(o.id, o.report, o.coords, o.ident);
-    }
-    bool operator!=(const DBStation& o) const
-    {
-        return std::tie(id, report, coords, ident) != std::tie(o.id, o.report, o.coords, o.ident);
-    }
-    bool operator<(const DBStation& o) const
-    {
-        return std::tie(id, report, coords, ident) < std::tie(o.id, o.report, o.coords, o.ident);
-    }
-    bool operator<=(const DBStation& o) const
-    {
-        return std::tie(id, report, coords, ident) <= std::tie(o.id, o.report, o.coords, o.ident);
-    }
-    bool operator>(const DBStation& o) const
-    {
-        return std::tie(id, report, coords, ident) > std::tie(o.id, o.report, o.coords, o.ident);
-    }
-    bool operator>=(const DBStation& o) const
-    {
-        return std::tie(id, report, coords, ident) >= std::tie(o.id, o.report, o.coords, o.ident);
-    }
-
-    /**
-     * Print the Station to a FILE*.
-     *
-     * @param out  The output stream
-     * @param end  String to print after the Station
-     */
-    void print(FILE* out, const char* end="\n") const;
-
-    /// Format to a string
-    std::string to_string(const char* undef="-") const;
-
-    void to_json(core::JSONWriter& writer) const;
-    static DBStation from_json(core::json::Stream& in);
-};
-
-std::ostream& operator<<(std::ostream&, const DBStation&);
-
-/**
- * Information about a physical variable
- */
-struct Sampling : public DBStation
-{
-    /// Date and time at which the value was measured or forecast
-    Datetime datetime;
-
-    /// Vertical level or layer
-    Level level;
-
-    /// Time range
-    Trange trange;
-
-    Sampling() = default;
-    Sampling(const dballe::Record& rec) { set_from_record(rec); }
-    void set_from_record(const Record& rec);
-    Sampling& operator=(const Sampling&) = default;
-    Sampling& operator=(const Station& st) {
-        Station::operator=(st);
-        return *this;
-    }
-
-    bool operator==(const Sampling& o) const
-    {
-        return Station::operator==(o) && datetime == o.datetime && level == o.level && trange == o.trange;
-    }
-
-    /**
-     * Print the Sampling contents to a FILE*.
-     *
-     * @param out  The output stream
-     * @param end  String to print after the Station
-     */
-    void print(FILE* out, const char* end="\n") const;
-};
-
 namespace values {
 
 /**
@@ -363,24 +194,24 @@ struct Values : protected std::map<wreport::Varcode, values::Value>
  */
 struct StationValues
 {
-    DBStation info;
+    DBStation station;
     Values values;
 
     StationValues() = default;
-    StationValues(const dballe::Record& rec) : info(rec), values(rec) {}
+    StationValues(const dballe::Record& rec);
 
     /// Set from the contents of a dballe::Record
     void set_from_record(const Record& rec);
 
     bool operator==(const StationValues& o) const
     {
-        return info == o.info && values == o.values;
+        return std::tie(station, values) == std::tie(o.station, o.values);
     }
 
     /// Reset all the database IDs
     void clear_ids()
     {
-        info.clear_ids();
+        station.id = MISSING_INT;
         values.clear_ids();
     }
 
@@ -393,47 +224,38 @@ struct StationValues
  */
 struct DataValues
 {
-    Sampling info;
+    /// Sampling station
+    DBStation station;
+
+    /// Date and time at which the value was measured or forecast
+    Datetime datetime;
+
+    /// Vertical level or layer
+    Level level;
+
+    /// Time range
+    Trange trange;
+
     Values values;
 
     DataValues() = default;
-    DataValues(const dballe::Record& rec) : info(rec), values(rec) {}
+    DataValues(const dballe::Record& rec);
 
     /// Set from the contents of a dballe::Record
     void set_from_record(const Record& rec);
 
-    bool operator==(const DataValues& o) const
-    {
-        return info == o.info && values == o.values;
-    }
+    bool operator==(const DataValues& o) const { return std::tie(station, datetime, level, trange, values) == std::tie(o.station, o.datetime, o.level, o.trange, o.values); }
+    bool operator!=(const DataValues& o) const { return std::tie(station, datetime, level, trange, values) != std::tie(o.station, o.datetime, o.level, o.trange, o.values); }
 
     /// Reset all the database IDs
     void clear_ids()
     {
-        info.clear_ids();
+        station.id = MISSING_INT;
         values.clear_ids();
     }
 
     /// Print the contents of this StationValues
-    void print(FILE* out) const;
-};
-
-}
-
-namespace std {
-
-template<> struct hash<dballe::Station>
-{
-    typedef dballe::Station argument_type;
-    typedef size_t result_type;
-    result_type operator()(argument_type const& o) const noexcept;
-};
-
-template<> struct hash<dballe::DBStation>
-{
-    typedef dballe::DBStation argument_type;
-    typedef size_t result_type;
-    result_type operator()(argument_type const& o) const noexcept;
+    void print(FILE* out, const char* end="\n") const;
 };
 
 }

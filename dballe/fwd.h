@@ -44,6 +44,8 @@ struct LonRange;
 struct Level;
 struct Trange;
 struct Ident;
+struct Station;
+struct DBStation;
 
 struct Record;
 struct Query;
@@ -64,6 +66,10 @@ struct Exporter;
 struct DB;
 struct DBImportMessageOptions;
 struct Transaction;
+struct CursorStation;
+struct CursorStationData;
+struct CursorData;
+struct CursorSummary;
 
 namespace db {
 

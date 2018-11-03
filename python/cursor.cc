@@ -206,7 +206,7 @@ Definition* definition = nullptr;
 namespace dballe {
 namespace python {
 
-dpy_Cursor* cursor_create(std::unique_ptr<db::Cursor> cur)
+dpy_Cursor* cursor_create(std::unique_ptr<Cursor> cur)
 {
     py_unique_ptr<dpy_Cursor> result(throw_ifnull(PyObject_New(dpy_Cursor, dpy_Cursor_Type)));
     result->cur = cur.release();

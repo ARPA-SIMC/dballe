@@ -16,35 +16,35 @@ struct DBData : public TestDataSet
 {
     DBData()
     {
-        stations["st1_synop"].info.coords = Coords(12.34560, 76.54320);
-        stations["st1_synop"].info.report = "synop";
+        stations["st1_synop"].station.coords = Coords(12.34560, 76.54320);
+        stations["st1_synop"].station.report = "synop";
         stations["st1_synop"].values.set(newvar("block", 1));
         stations["st1_synop"].values.set(newvar("station", 1));
         stations["st1_synop"].values.set(newvar("B07030", 42.0)); // height
-        stations["st1_metar"].info = stations["st1_synop"].info;
-        stations["st1_metar"].info.report = "metar";
+        stations["st1_metar"].station = stations["st1_synop"].station;
+        stations["st1_metar"].station.report = "metar";
         stations["st1_metar"].values.set(newvar("block", 1));
         stations["st1_metar"].values.set(newvar("station", 2));
         stations["st1_metar"].values.set(newvar("B07030", 50.0)); // height
-        stations["st2_temp"].info.coords = Coords(23.45670, 65.43210);
-        stations["st2_temp"].info.report = "temp";
+        stations["st2_temp"].station.coords = Coords(23.45670, 65.43210);
+        stations["st2_temp"].station.report = "temp";
         stations["st2_temp"].values.set(newvar("block", 3));
         stations["st2_temp"].values.set(newvar("station", 4));
         stations["st2_temp"].values.set(newvar("B07030", 100.0)); // height
-        stations["st2_metar"].info = stations["st2_temp"].info;
-        stations["st2_metar"].info.report = "metar";
+        stations["st2_metar"].station = stations["st2_temp"].station;
+        stations["st2_metar"].station.report = "metar";
         stations["st2_metar"].values.set(newvar("block", 3));
         stations["st2_metar"].values.set(newvar("station", 4));
         stations["st2_metar"].values.set(newvar("B07030", 110.0)); // height
-        data["rec1"].info = stations["st1_metar"].info;
-        data["rec1"].info.datetime = Datetime(1945, 4, 25, 8);
-        data["rec1"].info.level = Level(10, 11, 15, 22);
-        data["rec1"].info.trange = Trange(20, 111, 122);
+        data["rec1"].station = stations["st1_metar"].station;
+        data["rec1"].datetime = Datetime(1945, 4, 25, 8);
+        data["rec1"].level = Level(10, 11, 15, 22);
+        data["rec1"].trange = Trange(20, 111, 122);
         data["rec1"].values.set("B12101", 290.0);
-        data["rec2"].info = stations["st2_metar"].info;
-        data["rec2"].info.datetime = Datetime(1945, 4, 25, 8);
-        data["rec2"].info.level = Level(10, 11, 15, 22);
-        data["rec2"].info.trange = Trange(20, 111, 122);
+        data["rec2"].station = stations["st2_metar"].station;
+        data["rec2"].datetime = Datetime(1945, 4, 25, 8);
+        data["rec2"].level = Level(10, 11, 15, 22);
+        data["rec2"].trange = Trange(20, 111, 122);
         data["rec2"].values.set("B12101", 300.0);
         data["rec2"].values.set("B12103", 298.0);
     }

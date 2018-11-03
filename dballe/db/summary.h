@@ -243,13 +243,13 @@ public:
      *   The cursor to use to iterate over the results. The results are the
      *   same as DB::query_summary.
      */
-    std::unique_ptr<db::CursorSummary> query_summary(const Query& query) const;
+    std::unique_ptr<dballe::CursorSummary> query_summary(const Query& query) const;
 
     /// Add an entry to the summary
     void add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count);
 
     /// Add an entry to the summary taken from the current status of \a cur
-    void add_cursor(const db::CursorSummary& cur);
+    void add_cursor(const dballe::CursorSummary& cur);
 
     /// Add the contents of a Message
     void add_message(const dballe::Message& message);

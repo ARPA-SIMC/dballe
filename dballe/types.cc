@@ -1345,6 +1345,88 @@ std::ostream& operator<<(std::ostream& out, const Ident& i)
 }
 
 
+/*
+ * Station
+ */
+
+void Station::print(FILE* out, const char* end) const
+{
+    if (coords.is_missing())
+        fputs("(-,-) ", out);
+    else
+        coords.print(out, " ");
+
+    if (ident.is_missing())
+        fputs("-", out);
+    else
+        fputs(ident.get(), out);
+
+    fprintf(out, " %s%s", report.c_str(), end);
+}
+
+std::string Station::to_string(const char* undef) const
+{
+    string res = report;
+    res += ",";
+    res += coords.to_string(undef);
+    res += ",";
+    if (ident.is_missing())
+        res += undef;
+    else
+        res += ident.get();
+    return res;
+}
+
+std::ostream& operator<<(std::ostream& out, const Station& st)
+{
+    return out << st.coords << "," << st.ident << "," << st.report;
+}
+
+
+/*
+ * DBStation
+ */
+
+void DBStation::print(FILE* out, const char* end) const
+{
+    if (id == MISSING_INT)
+        fputs("- ", out);
+    else
+        fprintf(out, "%d,", id);
+
+    Station::print(out, end);
+}
+
+std::string DBStation::to_string(const char* undef) const
+{
+    string res = report;
+    res += ",";
+    if (id == MISSING_INT)
+        res += undef;
+    else
+        res += std::to_string(id);
+    res += ",";
+    res += coords.to_string(undef);
+    res += ",";
+    if (ident.is_missing())
+        res += undef;
+    else
+        res += ident.get();
+    return res;
+}
+
+std::ostream& operator<<(std::ostream& out, const DBStation& st)
+{
+    if (st.id == MISSING_INT)
+        out << "-,";
+    else
+        out << st.id << ",";
+
+    return out << (const Station&)st;
+}
+
+
+
 }
 
 namespace std {
@@ -1380,6 +1462,23 @@ size_t hash<dballe::Ident>::operator()(dballe::Ident const& o) const noexcept
     if (o.is_missing())
         return 0;
     return std::hash<std::string>{}(o.get());
+}
+
+size_t hash<dballe::Station>::operator()(dballe::Station const& o) const noexcept
+{
+    size_t res = std::hash<std::string>{}(o.report);
+    res += std::hash<dballe::Coords>{}(o.coords);
+    res += std::hash<dballe::Ident>{}(o.ident);
+    return res;
+}
+
+size_t hash<dballe::DBStation>::operator()(dballe::DBStation const& o) const noexcept
+{
+    size_t res = std::hash<std::string>{}(o.report);
+    res += o.id;
+    res += std::hash<dballe::Coords>{}(o.coords);
+    res += std::hash<dballe::Ident>{}(o.ident);
+    return res;
 }
 
 }

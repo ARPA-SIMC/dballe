@@ -64,10 +64,10 @@ public:
     void rollback_nothrow() noexcept override;
     void clear_cached_state() override;
 
-    std::unique_ptr<db::CursorStation> query_stations(const Query& query);
-    std::unique_ptr<db::CursorStationData> query_station_data(const Query& query) override;
-    std::unique_ptr<db::CursorData> query_data(const Query& query);
-    std::unique_ptr<db::CursorSummary> query_summary(const Query& query);
+    std::unique_ptr<dballe::CursorStation> query_stations(const Query& query);
+    std::unique_ptr<dballe::CursorStationData> query_station_data(const Query& query) override;
+    std::unique_ptr<dballe::CursorData> query_data(const Query& query);
+    std::unique_ptr<dballe::CursorSummary> query_summary(const Query& query);
     void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
     void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
 

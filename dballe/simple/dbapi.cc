@@ -90,10 +90,11 @@ struct OutputFile
     }
 };
 
+template<typename Cursor>
 struct VoglioquestoOperation : public Operation
 {
     dballe::Query* query = nullptr;
-    db::CursorValue* query_cur = nullptr;
+    Cursor* query_cur = nullptr;
     bool valid_cached_attrs = false;
 
     VoglioquestoOperation(const dballe::Record& input)
@@ -102,7 +103,7 @@ struct VoglioquestoOperation : public Operation
     }
     ~VoglioquestoOperation()
     {
-        if (query_cur) query_cur->discard_rest();
+        if (query_cur) query_cur->discard();
         delete query_cur;
         delete query;
     }
@@ -182,13 +183,13 @@ struct PrendiloOperation : public Operation
             tr.insert_station_data(sv, (perms & DbAPI::PERM_DATA_WRITE) != 0, (perms & DbAPI::PERM_ANA_WRITE) != 0);
             for (const auto& v: sv.values)
                 last_inserted_varids.push_back(VarID(v.first, true, v.second.data_id));
-            return sv.info.id;
+            return sv.station.id;
         } else {
             DataValues dv(input);
             tr.insert_data(dv, (perms & DbAPI::PERM_DATA_WRITE) != 0, (perms & DbAPI::PERM_ANA_WRITE) != 0);
             for (const auto& v: dv.values)
                 last_inserted_varids.push_back(VarID(v.first, false, v.second.data_id));
-            return dv.info.id;
+            return dv.station.id;
         }
     }
     void voglioancora(db::Transaction& tr, std::function<void(std::unique_ptr<wreport::Var>&&)> dest) override
@@ -255,7 +256,7 @@ void DbAPI::shutdown(bool commit)
 
     if (ana_cur)
     {
-        ana_cur->discard_rest();
+        ana_cur->discard();
         delete ana_cur;
         ana_cur = nullptr;
     }
@@ -301,7 +302,7 @@ int DbAPI::quantesono()
 {
     if (ana_cur != NULL)
     {
-        ana_cur->discard_rest();
+        ana_cur->discard();
         delete ana_cur;
         ana_cur = 0;
     }
@@ -331,9 +332,20 @@ void DbAPI::elencamele()
 int DbAPI::voglioquesto()
 {
     delete operation;
-    VoglioquestoOperation* op;
-    operation = op = new VoglioquestoOperation(input);
-    return op->voglioquesto(*tr, station_context);
+    if (station_context)
+    {
+        VoglioquestoOperation<db::CursorStationData>* op;
+        operation = op = new VoglioquestoOperation<db::CursorStationData>(input);
+        op->query_cur = dynamic_cast<db::CursorStationData*>(tr->query_station_data(*op->query).release());
+        return op->query_cur->remaining();
+    }
+    else
+    {
+        VoglioquestoOperation<db::CursorData>* op;
+        operation = op = new VoglioquestoOperation<db::CursorData>(input);
+        op->query_cur = dynamic_cast<db::CursorData*>(tr->query_data(*op->query).release());
+        return op->query_cur->remaining();
+    }
 }
 
 const char* DbAPI::dammelo()

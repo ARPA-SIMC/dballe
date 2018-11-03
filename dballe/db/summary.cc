@@ -50,7 +50,7 @@ VarEntry VarEntry::from_json(core::json::Stream& in)
         else if (key == "v")
             res.var.varcode = in.parse_unsigned<unsigned short>();
         else if (key == "d")
-            res.dtrange = in.parse_datetime_range();
+            res.dtrange = in.parse_datetimerange();
         else if (key == "c")
             res.count = in.parse_unsigned<size_t>();
         else
@@ -120,7 +120,7 @@ void StationEntry<Station>::to_json(core::JSONWriter& writer) const
 {
     writer.start_mapping();
     writer.add("s");
-    station.to_json(writer);
+    writer.add(station);
     writer.add("v");
     writer.start_list();
     for (const auto entry: *this)
@@ -135,7 +135,7 @@ StationEntry<Station> StationEntry<Station>::from_json(core::json::Stream& in)
     StationEntry res;
     in.parse_object([&](const std::string& key) {
         if (key == "s")
-            res.station = Station::from_json(in);
+            res.station = in.parse<Station>();
         else if (key == "v")
             in.parse_array([&]{
                 res.add(VarEntry::from_json(in));
@@ -319,7 +319,7 @@ void StationEntries<Station>::add_filtered(const StationEntries& entries, const 
 namespace {
 
 template<typename Station>
-struct SummaryCursor : public CursorSummary
+struct SummaryCursor : public dballe::CursorSummary
 {
     struct Entry
     {
@@ -381,14 +381,14 @@ struct SummaryCursor : public CursorSummary
         return cur != results.end();
     }
 
-    void discard_rest() override
+    void discard() override
     {
         cur = results.end();
     }
 
     void to_record(Record& rec) override
     {
-        cur->station_entry.station.to_record(rec);
+        rec.set(cur->station_entry.station);
 
         char bname[7];
         format_bcode(cur->var_entry.var.varcode, bname);
@@ -420,6 +420,7 @@ struct SummaryCursor : public CursorSummary
         return _get_dbstation(cur->station_entry.station);
     }
 
+#if 0
     int get_station_id() const override
     {
         return _get_station_id(cur->station_entry.station);
@@ -440,6 +441,7 @@ struct SummaryCursor : public CursorSummary
 #endif
         return count;
     }
+#endif
 
     Level get_level() const override { return cur->var_entry.var.level; }
     Trange get_trange() const override { return cur->var_entry.var.trange; }
@@ -457,9 +459,9 @@ BaseSummary<Station>::BaseSummary()
 }
 
 template<typename Station>
-std::unique_ptr<db::CursorSummary> BaseSummary<Station>::query_summary(const Query& query) const
+std::unique_ptr<dballe::CursorSummary> BaseSummary<Station>::query_summary(const Query& query) const
 {
-    return std::unique_ptr<db::CursorSummary>(new SummaryCursor<Station>(entries, query));
+    return std::unique_ptr<dballe::CursorSummary>(new SummaryCursor<Station>(entries, query));
 }
 
 template<typename Station>
@@ -501,7 +503,7 @@ void BaseSummary<Station>::add(const Station& station, const summary::VarDesc& v
 }
 
 template<typename Station>
-void BaseSummary<Station>::add_cursor(const dballe::db::CursorSummary& cur)
+void BaseSummary<Station>::add_cursor(const dballe::CursorSummary& cur)
 {
     add(cur.get_station(), summary::VarDesc(cur.get_level(), cur.get_trange(), cur.get_varcode()), cur.get_datetimerange(), cur.get_count());
 }

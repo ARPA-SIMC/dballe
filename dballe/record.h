@@ -2,6 +2,7 @@
 #define DBALLE_RECORD_H
 
 #include <dballe/fwd.h>
+#include <dballe/types.h>
 #include <wreport/var.h>
 #include <memory>
 #include <functional>
@@ -95,6 +96,10 @@ struct Record
     virtual void set_var(const wreport::Var& var) = 0;
     /// Set var.code() == var
     virtual void set_var_acquire(std::unique_ptr<wreport::Var>&& var) = 0;
+    /// Set rep_memo, lat, lon, ident
+    virtual void set_station(const Station& s) = 0;
+    /// Set rep_memo, lat, lon, ident, ana_id
+    virtual void set_dbstation(const DBStation& s) = 0;
 
     void set(const char* key, int val) { seti(key, val); }
     void set(const char* key, double val) { setd(key, val); }
@@ -109,6 +114,8 @@ struct Record
     void set(const Trange& tr) { set_trange(tr); }
     void set(const wreport::Var& var) { set_var(var); }
     void set(std::unique_ptr<wreport::Var>&& var) { set_var_acquire(std::move(var)); }
+    void set(const Station& s) { set_station(s); }
+    void set(const DBStation& s) { set_dbstation(s); }
 
     /// Remove/unset a key from the record
     virtual void unset(const char* key) = 0;
@@ -145,6 +152,34 @@ struct Record
             return var->enq(def);
         return def;
     }
+
+    /// Compose a Coords out of lat, lon values
+    virtual Coords get_coords() const = 0;
+
+    /// Compose an Ident out of the ident value
+    virtual Ident get_ident() const = 0;
+
+    /// Compose a Level out of the leveltype1...l2 values
+    virtual Level get_level() const = 0;
+
+    /// Compose a Trange out of the pindicator...p2 values
+    virtual Trange get_trange() const = 0;
+
+    /// Compose a Datetime out of the year...sec values
+    virtual Datetime get_datetime() const = 0;
+
+    /// Compose a DatetimeRange out of the yearmin...secmax values
+    virtual DatetimeRange get_datetimerange() const = 0;
+
+    /// Compose a Station out of rep_memo, lat, lon, ident
+    virtual Station get_station() const = 0;
+
+    /// Compose a DBStation out of rep_memo, lat, lon, ident, ana_id
+    virtual DBStation get_dbstation() const = 0;
+
+    /// Generic templatized get
+    template<typename T>
+    inline T get() const { throw wreport::error_unimplemented(); }
 
     /**
      * Copy all data from the record source into dest.  At the end of the function,
@@ -198,6 +233,15 @@ protected:
     virtual void foreach_key_ref(std::function<void(const char*, const wreport::Var&)> dest) const = 0;
     virtual void foreach_key_copy(std::function<void(const char*, std::unique_ptr<wreport::Var>&&)> dest) const = 0;
 };
+
+template<> inline Coords Record::get() const { return get_coords(); }
+template<> inline Station Record::get() const { return get_station(); }
+template<> inline DBStation Record::get() const { return get_dbstation(); }
+template<> inline Ident Record::get() const { return get_ident(); }
+template<> inline Level Record::get() const { return get_level(); }
+template<> inline Trange Record::get() const { return get_trange(); }
+template<> inline Datetime Record::get() const { return get_datetime(); }
+template<> inline DatetimeRange Record::get() const { return get_datetimerange(); }
 
 }
 #endif

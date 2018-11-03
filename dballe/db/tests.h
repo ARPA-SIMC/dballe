@@ -109,12 +109,12 @@ struct DBFixture : public BaseDBFixture<DB>
 };
 
 
-struct ActualCursor : public Actual<dballe::db::Cursor&>
+struct ActualCursor : public Actual<dballe::Cursor&>
 {
     using Actual::Actual;
 
     /// Check cursor context after a query_stations
-    void station_keys_match(const Station& expected);
+    void station_keys_match(const DBStation& expected);
 
     /// Check cursor context after a query_stations
     void station_vars_match(const StationValues& expected);
@@ -132,7 +132,9 @@ struct ActualCursor : public Actual<dballe::db::Cursor&>
     }
     /// Check cursor data variable after a query_data
     void data_var_matches(const DataValues& expected) {
-        if (auto c = dynamic_cast<dballe::db::CursorValue*>(&_actual))
+        if (auto c = dynamic_cast<dballe::CursorStationData*>(&_actual))
+            data_var_matches(*expected.values[c->get_varcode()].var);
+        else if (auto c = dynamic_cast<dballe::CursorData*>(&_actual))
             data_var_matches(*expected.values[c->get_varcode()].var);
         else
             throw wreport::error_consistency("cannot call data_var_matches on this kind of cursor");
@@ -147,7 +149,9 @@ struct ActualCursor : public Actual<dballe::db::Cursor&>
     /// Check cursor data context and variable after a query_data
     void data_matches(const DataValues& ds)
     {
-        if (auto c = dynamic_cast<dballe::db::CursorValue*>(&_actual))
+        if (auto c = dynamic_cast<dballe::CursorStationData*>(&_actual))
+            data_matches(ds, c->get_varcode());
+        else if (auto c = dynamic_cast<dballe::CursorData*>(&_actual))
             data_matches(ds, c->get_varcode());
         else
             throw wreport::error_consistency("cannot call data_matches on this kind of cursor");
@@ -176,16 +180,16 @@ struct ActualDB : public Actual<std::shared_ptr<DB>>
     void try_summary_query(const std::string& query, unsigned expected, result_checker checker=nullptr);
 };
 
-inline ActualCursor actual(dballe::db::Cursor& actual) { return ActualCursor(actual); }
-inline ActualCursor actual(dballe::db::CursorStation& actual) { return ActualCursor(actual); }
-inline ActualCursor actual(dballe::db::CursorStationData& actual) { return ActualCursor(actual); }
-inline ActualCursor actual(dballe::db::CursorData& actual) { return ActualCursor(actual); }
-inline ActualCursor actual(dballe::db::CursorSummary& actual) { return ActualCursor(actual); }
-inline ActualCursor actual(std::unique_ptr<dballe::db::Cursor>& actual) { return ActualCursor(*actual); }
-inline ActualCursor actual(std::unique_ptr<dballe::db::CursorStation>& actual) { return ActualCursor(*actual); }
-inline ActualCursor actual(std::unique_ptr<dballe::db::CursorStationData>& actual) { return ActualCursor(*actual); }
-inline ActualCursor actual(std::unique_ptr<dballe::db::CursorData>& actual) { return ActualCursor(*actual); }
-inline ActualCursor actual(std::unique_ptr<dballe::db::CursorSummary>& actual) { return ActualCursor(*actual); }
+inline ActualCursor actual(dballe::Cursor& actual) { return ActualCursor(actual); }
+inline ActualCursor actual(dballe::CursorStation& actual) { return ActualCursor(actual); }
+inline ActualCursor actual(dballe::CursorStationData& actual) { return ActualCursor(actual); }
+inline ActualCursor actual(dballe::CursorData& actual) { return ActualCursor(actual); }
+inline ActualCursor actual(dballe::CursorSummary& actual) { return ActualCursor(actual); }
+inline ActualCursor actual(std::unique_ptr<dballe::Cursor>& actual) { return ActualCursor(*actual); }
+inline ActualCursor actual(std::unique_ptr<dballe::CursorStation>& actual) { return ActualCursor(*actual); }
+inline ActualCursor actual(std::unique_ptr<dballe::CursorStationData>& actual) { return ActualCursor(*actual); }
+inline ActualCursor actual(std::unique_ptr<dballe::CursorData>& actual) { return ActualCursor(*actual); }
+inline ActualCursor actual(std::unique_ptr<dballe::CursorSummary>& actual) { return ActualCursor(*actual); }
 inline ActualDB<dballe::DB> actual(std::shared_ptr<dballe::DB> actual) { return ActualDB<dballe::DB>(actual); }
 ActualDB<dballe::DB> actual(std::shared_ptr<dballe::db::v7::DB> actual);
 inline ActualDB<dballe::db::Transaction> actual(std::shared_ptr<dballe::db::Transaction> actual) { return ActualDB<dballe::db::Transaction>(actual); }

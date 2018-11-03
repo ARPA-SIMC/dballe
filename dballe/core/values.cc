@@ -8,228 +8,6 @@ using namespace std;
 using namespace wreport;
 
 namespace dballe {
-
-void Station::set_from_record(const Record& rec)
-{
-    if (const Var* var = rec.get("lat"))
-        coords.lat = var->enqi();
-    else
-        throw error_notfound("record has no 'lat' set");
-
-    if (const Var* var = rec.get("lon"))
-        coords.lon = var->enqi();
-    else
-        throw error_notfound("record has no 'lon' set");
-
-    ident.clear();
-    if (const Var* var = rec.get("ident"))
-        ident = var->isset() ? var->enqc() : 0;
-
-    report.clear();
-    if (const Var* var = rec.get("rep_memo"))
-    {
-        if (var->isset())
-            report = var->enqs();
-        else
-            throw error_notfound("record has no 'rep_memo' set");
-    }
-}
-
-void Station::to_record(Record& rec) const
-{
-    rec.set("rep_memo", report);
-
-    rec.set_coords(coords);
-    if (ident.is_missing())
-    {
-        rec.unset("ident");
-        rec.seti("mobile", 0);
-    } else {
-        rec.setc("ident", ident);
-        rec.seti("mobile", 1);
-    }
-}
-
-void Station::print(FILE* out, const char* end) const
-{
-    if (coords.is_missing())
-        fputs("(-,-) ", out);
-    else
-        coords.print(out, " ");
-
-    if (ident.is_missing())
-        fputs("-", out);
-    else
-        fputs(ident.get(), out);
-
-    fprintf(out, " %s%s", report.c_str(), end);
-}
-
-std::string Station::to_string(const char* undef) const
-{
-    string res = report;
-    res += ",";
-    res += coords.to_string(undef);
-    res += ",";
-    if (ident.is_missing())
-        res += undef;
-    else
-        res += ident.get();
-    return res;
-}
-
-void Station::to_json(core::JSONWriter& writer) const
-{
-    writer.start_mapping();
-    writer.add("r", report);
-    writer.add("c", coords);
-    if (ident) writer.add("i", ident);
-    writer.end_mapping();
-}
-
-Station Station::from_json(core::json::Stream& in)
-{
-    Station res;
-    in.parse_object([&](const std::string& key) {
-        if (key == "r")
-            res.report = in.parse_string();
-        else if (key == "c")
-            res.coords = in.parse_coords();
-        else if (key == "i")
-            res.ident = in.parse_ident();
-        else
-            throw core::JSONParseException("unsupported key \"" + key + "\" for Station");
-    });
-    return res;
-}
-
-std::ostream& operator<<(std::ostream& out, const Station& st)
-{
-    return out << st.coords << "," << st.ident << "," << st.report;
-}
-
-
-void DBStation::set_from_record(const Record& rec)
-{
-    if (const Var* var = rec.get("ana_id"))
-    {
-        // If we have ana_id, the rest is optional
-        id = var->enqi();
-        coords.lat = rec.enq("lat", MISSING_INT);
-        coords.lon = rec.enq("lon", MISSING_INT);
-        ident.clear();
-        if (const Var* var = rec.get("ident"))
-            ident = var->isset() ? var->enqc() : 0;
-        report = rec.enq("rep_memo", "");
-    } else {
-        // If we do not have ana_id, we require at least lat, lon and rep_memo
-        id = MISSING_INT;
-        Station::set_from_record(rec);
-    }
-}
-
-void DBStation::to_record(Record& rec) const
-{
-    if (id != MISSING_INT)
-        rec.set("ana_id", id);
-    else
-        rec.unset("ana_id");
-
-    Station::to_record(rec);
-}
-
-void DBStation::print(FILE* out, const char* end) const
-{
-    if (id == MISSING_INT)
-        fputs("- ", out);
-    else
-        fprintf(out, "%d,", id);
-
-    Station::print(out, end);
-}
-
-std::string DBStation::to_string(const char* undef) const
-{
-    string res = report;
-    res += ",";
-    if (id == MISSING_INT)
-        res += undef;
-    else
-        res += std::to_string(id);
-    res += ",";
-    res += coords.to_string(undef);
-    res += ",";
-    if (ident.is_missing())
-        res += undef;
-    else
-        res += ident.get();
-    return res;
-}
-
-void DBStation::to_json(core::JSONWriter& writer) const
-{
-    writer.start_mapping();
-    if (id != MISSING_INT) writer.add("id", id);
-    writer.add("r", report);
-    writer.add("c", coords);
-    if (ident) writer.add("i", ident);
-    writer.end_mapping();
-}
-
-DBStation DBStation::from_json(core::json::Stream& in)
-{
-    DBStation res;
-    in.parse_object([&](const std::string& key) {
-        if (key == "id")
-            res.id = in.parse_unsigned<int>();
-        else if (key == "r")
-            res.report = in.parse_string();
-        else if (key == "c")
-            res.coords = in.parse_coords();
-        else if (key == "i")
-            res.ident = in.parse_ident();
-        else
-            throw core::JSONParseException("unsupported key \"" + key + "\" for Station");
-    });
-    return res;
-}
-
-std::ostream& operator<<(std::ostream& out, const DBStation& st)
-{
-    if (st.id == MISSING_INT)
-        out << "-,";
-    else
-        out << st.id << ",";
-
-    return out << (const Station&)st;
-}
-
-
-void Sampling::set_from_record(const Record& rec)
-{
-    DBStation::set_from_record(rec);
-    const auto& r = core::Record::downcast(rec);
-    datetime = r.get_datetime();
-    if (datetime.is_missing()) throw error_notfound("record has no date and time information set");
-    level = r.get_level();
-    if (level.is_missing()) throw error_notfound("record has no level information set");
-    trange = r.get_trange();
-    if (trange.is_missing()) throw error_notfound("record has no time range information set");
-}
-
-void Sampling::print(FILE* out, const char* end) const
-{
-    DBStation::print(out, " ");
-
-    if (datetime.is_missing())
-        fputs("xxxx-xx-xx xx:xx:xx ", out);
-    else
-        datetime.print_iso8601(out, ' ', " ");
-
-    level.print(out, "-", " ");
-    trange.print(out, "-", end);
-}
-
 namespace values {
 
 void Value::print(FILE* out) const
@@ -453,49 +231,50 @@ void Values::decode(const std::vector<uint8_t>& buf, std::function<void(std::uni
 }
 
 
+StationValues::StationValues(const dballe::Record& rec)
+    : station(rec.get_dbstation()), values(rec)
+{
+}
+
 void StationValues::set_from_record(const Record& rec)
 {
-    info.set_from_record(rec);
+    station = rec.get_dbstation();
     values.set_from_record(rec);
 }
 
 void StationValues::print(FILE* out) const
 {
-    info.print(out);
+    station.print(out);
     values.print(out);
 }
+
+DataValues::DataValues(const dballe::Record& rec)
+    : station(rec.get_dbstation()), datetime(rec.get_datetime()), level(rec.get_level()), trange(rec.get_trange()), values(rec) {}
 
 void DataValues::set_from_record(const Record& rec)
 {
-    info.set_from_record(rec);
+    station = rec.get_dbstation();
+    datetime = rec.get_datetime();
+    if (datetime.is_missing()) throw error_notfound("record has no date and time information set");
+    level = rec.get_level();
+    if (level.is_missing()) throw error_notfound("record has no level information set");
+    trange = rec.get_trange();
+    if (trange.is_missing()) throw error_notfound("record has no time range information set");
     values.set_from_record(rec);
 }
 
-void DataValues::print(FILE* out) const
+void DataValues::print(FILE* out, const char* end) const
 {
-    info.print(out);
+    station.print(out, " ");
+
+    if (datetime.is_missing())
+        fputs("xxxx-xx-xx xx:xx:xx ", out);
+    else
+        datetime.print_iso8601(out, ' ', " ");
+
+    level.print(out, "-", " ");
+    trange.print(out, "-", end);
     values.print(out);
-}
-
-}
-
-namespace std {
-
-size_t hash<dballe::Station>::operator()(dballe::Station const& o) const noexcept
-{
-    size_t res = std::hash<std::string>{}(o.report);
-    res += std::hash<dballe::Coords>{}(o.coords);
-    res += std::hash<dballe::Ident>{}(o.ident);
-    return res;
-}
-
-size_t hash<dballe::DBStation>::operator()(dballe::DBStation const& o) const noexcept
-{
-    size_t res = std::hash<std::string>{}(o.report);
-    res += o.id;
-    res += std::hash<dballe::Coords>{}(o.coords);
-    res += std::hash<dballe::Ident>{}(o.ident);
-    return res;
 }
 
 }

@@ -108,7 +108,7 @@ template<typename Vals>
 static PyObject* get_insert_ids(const Vals& vals)
 {
     pyo_unique_ptr res(throw_ifnull(PyDict_New()));
-    pyo_unique_ptr ana_id(throw_ifnull(PyLong_FromLong(vals.info.id)));
+    pyo_unique_ptr ana_id(throw_ifnull(PyLong_FromLong(vals.station.id)));
     if (PyDict_SetItemString(res, "ana_id", ana_id))
         throw PythonException();
 
@@ -278,7 +278,7 @@ struct query_stations : MethQuery<query_stations<Impl>, Impl>
     static PyObject* run_query(Impl* self, dballe::Query& query)
     {
         ReleaseGIL gil;
-        std::unique_ptr<db::Cursor> res = self->db->query_stations(query);
+        auto res = self->db->query_stations(query);
         gil.lock();
         return (PyObject*)cursor_create(move(res));
     }
@@ -293,7 +293,7 @@ struct query_station_data : MethQuery<query_station_data<Impl>, Impl>
     static PyObject* run_query(Impl* self, dballe::Query& query)
     {
         ReleaseGIL gil;
-        std::unique_ptr<db::Cursor> res = self->db->query_station_data(query);
+        auto res = self->db->query_station_data(query);
         gil.lock();
         return (PyObject*)cursor_create(move(res));
     }
@@ -308,7 +308,7 @@ struct query_data : MethQuery<query_data<Impl>, Impl>
     static PyObject* run_query(Impl* self, dballe::Query& query)
     {
         ReleaseGIL gil;
-        std::unique_ptr<db::Cursor> res = self->db->query_data(query);
+        auto res = self->db->query_data(query);
         gil.lock();
         return (PyObject*)cursor_create(move(res));
     }
@@ -323,7 +323,7 @@ struct query_summary : MethQuery<query_summary<Impl>, Impl>
     static PyObject* run_query(Impl* self, dballe::Query& query)
     {
         ReleaseGIL gil;
-        std::unique_ptr<db::Cursor> res = self->db->query_summary(query);
+        auto res = self->db->query_summary(query);
         gil.lock();
         return (PyObject*)cursor_create(move(res));
     }

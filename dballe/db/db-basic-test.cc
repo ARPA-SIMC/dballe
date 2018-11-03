@@ -72,7 +72,7 @@ this->add_method("repinfo", [](Fixture& f) {
 this->add_method("simple", [](Fixture& f) {
     // Test remove_all
     f.tr->remove_all();
-    std::unique_ptr<db::Cursor> cur = f.tr->query_data(core::Query());
+    std::unique_ptr<Cursor> cur = f.tr->query_data(core::Query());
     wassert(actual(cur->remaining()) == 0);
 
     // Check that it is idempotent
@@ -97,27 +97,27 @@ this->add_method("stationdata", [](Fixture& f) {
 
     // Insert two values in two networks
     DataValues vals;
-    vals.info.coords = Coords(12.077, 44.600);
-    vals.info.report = "synop";
-    vals.info.level = Level(103, 2000);
-    vals.info.trange = Trange::instant();
-    vals.info.datetime = Datetime(2014, 1, 1, 0, 0, 0);
+    vals.station.coords = Coords(12.077, 44.600);
+    vals.station.report = "synop";
+    vals.level = Level(103, 2000);
+    vals.trange = Trange::instant();
+    vals.datetime = Datetime(2014, 1, 1, 0, 0, 0);
     vals.values.set("B12101", 273.15);
     f.tr->insert_data(vals, true, true);
     vals.clear_ids();
-    vals.info.report = "temp";
+    vals.station.report = "temp";
     vals.values.set("B12101", 274.15);
     f.tr->insert_data(vals, true, true);
 
     // Insert station names in both networks
     StationValues svals_camse;
-    svals_camse.info.coords = vals.info.coords;
-    svals_camse.info.report = "synop";
+    svals_camse.station.coords = vals.station.coords;
+    svals_camse.station.report = "synop";
     svals_camse.values.set("B01019", "Camse");
     f.tr->insert_station_data(svals_camse, true, true);
     StationValues svals_esmac;
-    svals_esmac.info.coords = vals.info.coords;
-    svals_esmac.info.report = "temp";
+    svals_esmac.station.coords = vals.station.coords;
+    svals_esmac.station.report = "temp";
     svals_esmac.values.set("B01019", "Esmac");
     f.tr->insert_station_data(svals_esmac, true, true);
 
@@ -138,14 +138,15 @@ this->add_method("stationdata", [](Fixture& f) {
             for (unsigned i = 0; i < 2; ++i)
             {
                 wassert(actual(cur->next()).istrue());
-                if (cur->get_report() == "temp")
+                DBStation station = cur->get_station();
+                if (station.report == "temp")
                 {
-                    wassert(actual(cur->get_station_id()) == svals_esmac.info.id);
+                    wassert(actual(station.id) == svals_esmac.station.id);
                     cur->to_record(result);
                     wassert(actual(result["B01019"]) == "Esmac");
                     have_temp = true;
-                } else if (cur->get_report() == "synop") {
-                    wassert(actual(cur->get_station_id()) == svals_camse.info.id);
+                } else if (station.report == "synop") {
+                    wassert(actual(station.id) == svals_camse.station.id);
                     cur->to_record(result);
                     wassert(actual(result["B01019"]) == "Camse");
                     have_synop = true;
@@ -176,12 +177,12 @@ this->add_method("stationdata", [](Fixture& f) {
 this->add_method("query_ident", [](Fixture& f) {
     // Insert a mobile station
     DataValues vals;
-    vals.info.report = "synop";
-    vals.info.coords = Coords(44.10, 11.50);
-    vals.info.ident = "foo";
-    vals.info.level = Level(1);
-    vals.info.trange = Trange::instant();
-    vals.info.datetime = Datetime(2015, 4, 25, 12, 30, 45);
+    vals.station.report = "synop";
+    vals.station.coords = Coords(44.10, 11.50);
+    vals.station.ident = "foo";
+    vals.level = Level(1);
+    vals.trange = Trange::instant();
+    vals.datetime = Datetime(2015, 4, 25, 12, 30, 45);
     vals.values.set("B12101", 295.1);
     f.tr->insert_data(vals, true, true);
 
@@ -207,12 +208,12 @@ this->add_method("missing_repmemo", [](Fixture& f) {
 this->add_method("update_with_ana_id", [](Fixture& f) {
     {
         DataValues vals;
-        vals.info.report = "synop";
-        vals.info.coords = Coords(44.10, 11.50);
-        vals.info.ident = "foo";
-        vals.info.level = Level(1);
-        vals.info.trange = Trange::instant();
-        vals.info.datetime = Datetime(2015, 4, 25, 12, 30, 45);
+        vals.station.report = "synop";
+        vals.station.coords = Coords(44.10, 11.50);
+        vals.station.ident = "foo";
+        vals.level = Level(1);
+        vals.trange = Trange::instant();
+        vals.datetime = Datetime(2015, 4, 25, 12, 30, 45);
         vals.values.set("B12101", 295.1);
         f.tr->insert_data(vals, true, true);
     }
@@ -221,15 +222,15 @@ this->add_method("update_with_ana_id", [](Fixture& f) {
     auto cur = f.tr->query_stations(query);
     wassert(actual(cur->remaining()) == 1u);
     wassert(cur->next());
-    int ana_id = cur->get_station_id();
+    int ana_id = cur->get_station().id;
 
     // Replace by ana_id
     {
         DataValues vals;
-        vals.info.id = ana_id;
-        vals.info.level = Level(1);
-        vals.info.trange = Trange::instant();
-        vals.info.datetime = Datetime(2015, 4, 25, 12, 30, 45);
+        vals.station.id = ana_id;
+        vals.level = Level(1);
+        vals.trange = Trange::instant();
+        vals.datetime = Datetime(2015, 4, 25, 12, 30, 45);
         vals.values.set("B12101", 296.2);
         wassert(f.tr->insert_data(vals, true, false));
     }
@@ -269,24 +270,24 @@ this->add_method("reset", [](Fixture& f) {
 
 this->add_method("vacuum", [](Fixture& f) {
     TestDataSet data;
-    data.stations["s1"].info.report = "synop";
-    data.stations["s1"].info.coords = Coords(12.34560, 76.54320);
+    data.stations["s1"].station.report = "synop";
+    data.stations["s1"].station.coords = Coords(12.34560, 76.54320);
     data.stations["s1"].values.set("B01019", "Station 1");
 
-    data.stations["s2"].info.report = "metar";
-    data.stations["s2"].info.coords = Coords(23.45670, 65.43210);
+    data.stations["s2"].station.report = "metar";
+    data.stations["s2"].station.coords = Coords(23.45670, 65.43210);
     data.stations["s2"].values.set("B01019", "Station 2");
 
-    data.data["s1"].info = data.stations["s1"].info;
-    data.data["s1"].info.level = Level(10, 11, 15, 22);
-    data.data["s1"].info.trange = Trange(20, 111, 122);
-    data.data["s1"].info.datetime = Datetime(1945, 4, 25, 8);
+    data.data["s1"].station = data.stations["s1"].station;
+    data.data["s1"].level = Level(10, 11, 15, 22);
+    data.data["s1"].trange = Trange(20, 111, 122);
+    data.data["s1"].datetime = Datetime(1945, 4, 25, 8);
     data.data["s1"].values.set("B01011", "Data 1");
 
-    data.data["s2"].info = data.stations["s2"].info;
-    data.data["s2"].info.level = Level(10, 11, 15, 22);
-    data.data["s2"].info.trange = Trange(20, 111, 122);
-    data.data["s2"].info.datetime = Datetime(1945, 4, 25, 8);
+    data.data["s2"].station = data.stations["s2"].station;
+    data.data["s2"].level = Level(10, 11, 15, 22);
+    data.data["s2"].trange = Trange(20, 111, 122);
+    data.data["s2"].datetime = Datetime(1945, 4, 25, 8);
     data.data["s2"].values.set("B01011", "Data 2");
 
     // Insert some data
@@ -306,7 +307,7 @@ this->add_method("vacuum", [](Fixture& f) {
     // Delete all measured values, but not station values
     {
         core::Query q;
-        q.ana_id = data.stations["s1"].info.id;
+        q.ana_id = data.stations["s1"].station.id;
         db.remove_data(q);
     }
 
@@ -324,7 +325,7 @@ this->add_method("vacuum", [](Fixture& f) {
     // Station 1 is gone
     {
         core::Query q;
-        q.ana_id = data.stations["s1"].info.id;
+        q.ana_id = data.stations["s1"].station.id;
         auto c = db.query_stations(q);
         wassert(actual(c->remaining()) == 0);
     }
@@ -333,7 +334,7 @@ this->add_method("vacuum", [](Fixture& f) {
     {
         auto tr = dynamic_pointer_cast<db::Transaction>(db.transaction());
         core::Query q;
-        q.ana_id = data.stations["s2"].info.id;
+        q.ana_id = data.stations["s2"].station.id;
         auto c = wcallchecked(tr->query_stations(q));
         wassert(actual(c->remaining()) == 1);
 

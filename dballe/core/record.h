@@ -144,13 +144,13 @@ protected:
     wreport::Var& obtain(wreport::Varcode code);
 
 public:
-	Record();
-	Record(const Record& rec);
-	~Record();
+    Record();
+    Record(const Record& rec);
+    ~Record();
 
     std::unique_ptr<dballe::Record> clone() const override;
 
-	Record& operator=(const Record& rec);
+    Record& operator=(const Record& rec);
 
     void clear() override;
     void clear_vars() override;
@@ -168,6 +168,8 @@ public:
     void set_trange(const Trange& tr) override;
     void set_var(const wreport::Var& var) override;
     void set_var_acquire(std::unique_ptr<wreport::Var>&& var) override;
+    void set_station(const Station& s) override;
+    void set_dbstation(const DBStation& s) override;
     void unset(const char* name) override;
     const wreport::Var* get(const char* key) const override;
     void add(const dballe::Record& source) override;
@@ -204,14 +206,14 @@ public:
 	 */
 	void set_to_difference(const Record& source1, const Record& source2);
 
-    /// Compose a Level out of the leveltype1...l2 values
-    Level get_level() const;
-    /// Compose a Trange out of the pindicator...p2 values
-    Trange get_trange() const;
-    /// Compose a Datetime out of the year...sec values
-    Datetime get_datetime() const;
-    /// Compose a DatetimeRange out of the yearmin...secmax values
-    DatetimeRange get_datetimerange() const;
+    Coords get_coords() const override;
+    Ident get_ident() const override;
+    Level get_level() const override;
+    Trange get_trange() const override;
+    Datetime get_datetime() const override;
+    DatetimeRange get_datetimerange() const override;
+    Station get_station() const override;
+    DBStation get_dbstation() const override;
 
     /**
      * Iterate all keys in the record, calling f on them.

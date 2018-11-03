@@ -807,7 +807,22 @@ bool Record::iter_keys(std::function<bool(dba_keyword, const wreport::Var&)> f) 
 
 const std::vector<wreport::Var*>& Record::vars() const
 {
-	return m_vars;
+    return m_vars;
+}
+
+Coords Record::get_coords() const
+{
+    return Coords(
+            enq("lat", MISSING_INT),
+            enq("lon", MISSING_INT));
+}
+
+Ident Record::get_ident() const
+{
+    Ident ident;
+    if (const Var* var = get("ident"))
+        ident = var->isset() ? var->enqc() : 0;
+    return ident;
 }
 
 Level Record::get_level() const
@@ -872,11 +887,101 @@ DatetimeRange Record::get_datetimerange() const
     return DatetimeRange(yemin, momin, damin, homin, mimin, semin, yemax, momax, damax, homax, mimax, semax);
 }
 
+Station Record::get_station() const
+{
+    Station res;
+    if (const Var* var = get("lat"))
+        res.coords.lat = var->enqi();
+    else
+        throw error_notfound("record has no 'lat' set");
+
+    if (const Var* var = get("lon"))
+        res.coords.lon = var->enqi();
+    else
+        throw error_notfound("record has no 'lon' set");
+
+    if (const Var* var = get("ident"))
+        res.ident = var->isset() ? var->enqc() : 0;
+
+    if (const Var* var = get("rep_memo"))
+    {
+        if (var->isset())
+            res.report = var->enqs();
+        else
+            throw error_notfound("record has no 'rep_memo' set");
+    }
+    return res;
+}
+
+DBStation Record::get_dbstation() const
+{
+    DBStation res;
+    if (const Var* var = get("ana_id"))
+    {
+        // If we have ana_id, the rest is optional
+        res.id = var->enqi();
+        res.coords.lat = enq("lat", MISSING_INT);
+        res.coords.lon = enq("lon", MISSING_INT);
+        if (const Var* var = get("ident"))
+            res.ident = var->isset() ? var->enqc() : 0;
+        res.report = enq("rep_memo", "");
+    } else {
+        // If we do not have ana_id, we require at least lat, lon and rep_memo
+        res.id = MISSING_INT;
+        if (const Var* var = get("lat"))
+            res.coords.lat = var->enqi();
+        else
+            throw error_notfound("record has no 'lat' set");
+
+        if (const Var* var = get("lon"))
+            res.coords.lon = var->enqi();
+        else
+            throw error_notfound("record has no 'lon' set");
+
+        if (const Var* var = get("ident"))
+            res.ident = var->isset() ? var->enqc() : 0;
+
+        if (const Var* var = get("rep_memo"))
+        {
+            if (var->isset())
+                res.report = var->enqs();
+            else
+                throw error_notfound("record has no 'rep_memo' set");
+        }
+    }
+    return res;
+}
+
+
 void Record::set_coords(const Coords& c)
 {
     seti("lat", c.lat);
     seti("lon", c.lon);
 }
+
+void Record::set_station(const Station& s)
+{
+    set("rep_memo", s.report);
+    set_coords(s.coords);
+    if (s.ident.is_missing())
+    {
+        unset("ident");
+        seti("mobile", 0);
+    } else {
+        setc("ident", s.ident);
+        seti("mobile", 1);
+    }
+}
+
+void Record::set_dbstation(const DBStation& s)
+{
+    set_station(s);
+    if (s.id != MISSING_INT)
+        set("ana_id", s.id);
+    else
+        unset("ana_id");
+}
+
 
 void Record::set_from_string(const char* str)
 {

@@ -42,18 +42,6 @@ Format format_parse(const std::string& str)
     error_consistency::throwf("unsupported database format: '%s'", str.c_str());
 }
 
-Cursor::~Cursor()
-{
-}
-
-unsigned Cursor::test_iterate(FILE* dump)
-{
-    unsigned count;
-    for (count = 0; next(); ++count)
-        ;
-    return count;
-}
-
 Format DB::get_default_format() { return default_format; }
 void DB::set_default_format(Format format) { default_format = format; }
 
@@ -145,34 +133,6 @@ const char* DB::default_repinfo_file()
     if (repinfo_file == 0 || repinfo_file[0] == 0)
         repinfo_file = TABLE_DIR "/repinfo.csv";
     return repinfo_file;
-}
-
-std::unique_ptr<db::CursorStation> DB::query_stations(const Query& query)
-{
-    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
-    auto res = t->query_stations(query);
-    return res;
-}
-
-std::unique_ptr<db::CursorStationData> DB::query_station_data(const Query& query)
-{
-    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
-    auto res = t->query_station_data(query);
-    return res;
-}
-
-std::unique_ptr<db::CursorData> DB::query_data(const Query& query)
-{
-    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
-    auto res = t->query_data(query);
-    return res;
-}
-
-std::unique_ptr<db::CursorSummary> DB::query_summary(const Query& query)
-{
-    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
-    auto res = t->query_summary(query);
-    return res;
 }
 
 void DB::attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)

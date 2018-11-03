@@ -55,7 +55,7 @@ bool Importer::operator()(const Item& item)
 int Dbadb::do_dump(const Query& query, FILE* out)
 {
     auto tr = dynamic_pointer_cast<db::Transaction>(db.transaction());
-    unique_ptr<db::Cursor> cursor = tr->query_data(query);
+    unique_ptr<Cursor> cursor = tr->query_data(query);
 
     auto res = Record::create();
     for (unsigned i = 0; cursor->next(); ++i)
@@ -73,7 +73,7 @@ int Dbadb::do_dump(const Query& query, FILE* out)
 int Dbadb::do_stations(const Query& query, FILE* out)
 {
     auto tr = dynamic_pointer_cast<db::Transaction>(db.transaction());
-    unique_ptr<db::Cursor> cursor = tr->query_stations(query);
+    unique_ptr<Cursor> cursor = tr->query_stations(query);
 
     auto res = Record::create();
     for (unsigned i = 0; cursor->next(); ++i)

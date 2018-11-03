@@ -15,40 +15,40 @@ struct DBData : public TestDataSet
 {
     DBData()
     {
-        stations["st1_synop"].info.coords = Coords(12.34560, 76.54320);
-        stations["st1_synop"].info.report = "synop";
+        stations["st1_synop"].station.coords = Coords(12.34560, 76.54320);
+        stations["st1_synop"].station.report = "synop";
         stations["st1_synop"].values.set(newvar("B07030", 42.0)); // height
-        stations["st1_metar"].info = stations["st1_synop"].info;
-        stations["st1_metar"].info.report = "metar";
+        stations["st1_metar"].station = stations["st1_synop"].station;
+        stations["st1_metar"].station.report = "metar";
         stations["st1_metar"].values.set(newvar("block", 1));
         stations["st1_metar"].values.set(newvar("station", 2));
         stations["st1_metar"].values.set(newvar("B07030", 50.0)); // height
-        stations["st2_temp"].info.coords = Coords(23.45670, 65.43210);
-        stations["st2_temp"].info.report = "temp";
+        stations["st2_temp"].station.coords = Coords(23.45670, 65.43210);
+        stations["st2_temp"].station.report = "temp";
         stations["st2_temp"].values.set(newvar("B07030", 100.0)); // height
-        stations["st2_metar"].info = stations["st2_temp"].info;
-        stations["st2_metar"].info.report = "metar";
+        stations["st2_metar"].station = stations["st2_temp"].station;
+        stations["st2_metar"].station.report = "metar";
         stations["st2_metar"].values.set(newvar("block", 3));
         stations["st2_metar"].values.set(newvar("station", 4));
         stations["st2_metar"].values.set(newvar("B07030", 110.0)); // height
-        data["rec1a"].info = stations["st1_metar"].info;
-        data["rec1a"].info.datetime = Datetime(1945, 4, 25, 8);
-        data["rec1a"].info.level = Level(10, 11, 15, 22);
-        data["rec1a"].info.trange = Trange(20, 111, 122);
+        data["rec1a"].station = stations["st1_metar"].station;
+        data["rec1a"].datetime = Datetime(1945, 4, 25, 8);
+        data["rec1a"].level = Level(10, 11, 15, 22);
+        data["rec1a"].trange = Trange(20, 111, 122);
         data["rec1a"].values.set("B12101", 290.0);
         data["rec1a"].values.set("B12103", 280.0);
         data["rec1b"] = data["rec1a"];
-        data["rec1b"].info.datetime = Datetime(1945, 4, 26, 8);
+        data["rec1b"].datetime = Datetime(1945, 4, 26, 8);
         data["rec1b"].values.set("B12101", 291.0);
         data["rec1b"].values.set("B12103", 281.0);
-        data["rec2a"].info = stations["st2_metar"].info;
-        data["rec2a"].info.datetime = Datetime(1945, 4, 25, 8);
-        data["rec2a"].info.level = Level(10, 11, 15, 22);
-        data["rec2a"].info.trange = Trange(20, 111, 122);
+        data["rec2a"].station = stations["st2_metar"].station;
+        data["rec2a"].datetime = Datetime(1945, 4, 25, 8);
+        data["rec2a"].level = Level(10, 11, 15, 22);
+        data["rec2a"].trange = Trange(20, 111, 122);
         data["rec2a"].values.set("B12101", 300.0);
         data["rec2a"].values.set("B12103", 298.0);
         data["rec2b"] = data["rec2a"];
-        data["rec2b"].info.datetime = Datetime(1945, 4, 26, 8);
+        data["rec2b"].datetime = Datetime(1945, 4, 26, 8);
         data["rec2b"].values.set("B12101", 301.0);
         data["rec2b"].values.set("B12103", 291.0);
     }
@@ -65,8 +65,8 @@ struct DBDataFixture : public TransactionFixture<DB, DBData>
     void create_db() override
     {
         TransactionFixture<DB, DBData>::create_db();
-        st1_id = this->test_data.stations["st1_metar"].info.id;
-        st2_id = this->test_data.stations["st2_metar"].info.id;
+        st1_id = this->test_data.stations["st1_metar"].station.id;
+        st2_id = this->test_data.stations["st2_metar"].station.id;
     }
 };
 

@@ -30,7 +30,7 @@ extern "C" {
 
 typedef struct {
     PyObject_HEAD
-    dballe::db::Cursor* cur;
+    dballe::Cursor* cur;
     dpy_Record* rec;
 } dpy_Cursor;
 
@@ -47,7 +47,7 @@ namespace python {
 /**
  * Create a new dpy_Cursor, taking ownership of memory management
  */
-dpy_Cursor* cursor_create(std::unique_ptr<db::Cursor> cur);
+dpy_Cursor* cursor_create(std::unique_ptr<Cursor> cur);
 
 void register_cursor(PyObject* m);
 

@@ -4,6 +4,19 @@
 
 namespace dballe {
 
+/*
+ * Cursor*
+ */
+
+Cursor::~Cursor()
+{
+}
+
+
+/*
+ * Transaction
+ */
+
 Transaction::~Transaction() {}
 
 void Transaction::import_messages(const std::vector<std::shared_ptr<Message>>& messages, const DBImportMessageOptions& opts)
@@ -12,6 +25,10 @@ void Transaction::import_messages(const std::vector<std::shared_ptr<Message>>& m
         import_message(*i, opts);
 }
 
+
+/*
+ * DB
+ */
 
 DB::~DB()
 {
@@ -26,6 +43,34 @@ std::shared_ptr<DB> DB::connect_from_url(const std::string& url)
         std::unique_ptr<sql::Connection> conn(sql::Connection::create_from_url(url));
         return db::DB::create(move(conn));
     }
+}
+
+std::unique_ptr<CursorStation> DB::query_stations(const Query& query)
+{
+    auto t = transaction();
+    auto res = t->query_stations(query);
+    return res;
+}
+
+std::unique_ptr<CursorStationData> DB::query_station_data(const Query& query)
+{
+    auto t = transaction();
+    auto res = t->query_station_data(query);
+    return res;
+}
+
+std::unique_ptr<CursorData> DB::query_data(const Query& query)
+{
+    auto t = transaction();
+    auto res = t->query_data(query);
+    return res;
+}
+
+std::unique_ptr<CursorSummary> DB::query_summary(const Query& query)
+{
+    auto t = transaction();
+    auto res = t->query_summary(query);
+    return res;
 }
 
 void DB::remove_all()

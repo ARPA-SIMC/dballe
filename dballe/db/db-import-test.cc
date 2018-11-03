@@ -176,7 +176,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             f.tr->remove_all();
             f.tr->import_message(*msgs[0], default_opts);
 
-            std::unique_ptr<db::Cursor> cur = f.tr->query_stations(core::Query());
+            auto cur = f.tr->query_stations(core::Query());
             wassert(actual(cur->remaining()) == 1);
             wassert(actual(cur->next()).istrue());
 

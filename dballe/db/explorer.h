@@ -49,7 +49,7 @@ public:
         void add_db(dballe::db::Transaction& tr);
 
         /// Merge summary data from a database
-        void add_cursor(dballe::db::CursorSummary& cur);
+        void add_cursor(dballe::CursorSummary& cur);
 
         /// Load the explorer contents from JSON
         void add_json(core::json::Stream& in);

@@ -26,7 +26,7 @@ add_method("station", []() {
     st.ident = "testident";
 
     core::Record rec;
-    st.to_record(rec);
+    rec.set(st);
 
     wassert_false(rec.get("ana_id"));
     wassert_true(rec.get("rep_memo"));
@@ -40,13 +40,13 @@ add_method("station", []() {
     wassert_true(rec.get("ident"));
     wassert(actual(*rec.get("ident")) == "testident");
 
-    Station st1(rec);
+    Station st1 = rec.get_station();
     wassert(actual(st) == st1);
 
     st = Station();
     st.report = "testreport1";
     st.coords = Coords(11.6, 42.6);
-    st.to_record(rec);
+    rec.set(st);
 
     wassert_false(rec.get("ana_id"));
     wassert_true(rec.get("rep_memo"));
@@ -68,7 +68,7 @@ add_method("dbstation", []() {
     st.ident = "testident";
 
     core::Record rec;
-    st.to_record(rec);
+    rec.set(st);
 
     wassert_true(rec.get("ana_id"));
     wassert(actual(*rec.get("ana_id")) == 1);
@@ -83,13 +83,13 @@ add_method("dbstation", []() {
     wassert_true(rec.get("ident"));
     wassert(actual(*rec.get("ident")) == "testident");
 
-    DBStation st1(rec);
+    DBStation st1 = rec.get_dbstation();
     wassert(actual(st) == st1);
 
     st = DBStation();
     st.report = "testreport1";
     st.coords = Coords(11.6, 42.6);
-    st.to_record(rec);
+    rec.set(st);
 
     wassert_false(rec.get("ana_id"));
     wassert_true(rec.get("rep_memo"));

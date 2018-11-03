@@ -18,25 +18,25 @@ struct DBData : public TestDataSet
 {
     DBData()
     {
-        data["ds0"].info.coords = Coords(12.34560, 76.54321);
-        data["ds0"].info.report = "synop";
-        data["ds0"].info.datetime = Datetime(1945, 4, 25, 8, 0);
-        data["ds0"].info.level = Level(1, 2, 0, 3);
-        data["ds0"].info.trange = Trange(4, 5, 6);
+        data["ds0"].station.coords = Coords(12.34560, 76.54321);
+        data["ds0"].station.report = "synop";
+        data["ds0"].datetime = Datetime(1945, 4, 25, 8, 0);
+        data["ds0"].level = Level(1, 2, 0, 3);
+        data["ds0"].trange = Trange(4, 5, 6);
         data["ds0"].values.set("B01012", 500);
         data["ds1"] = data["ds0"];
-        data["ds1"].info.datetime = Datetime(1945, 4, 26, 8, 0);
+        data["ds1"].datetime = Datetime(1945, 4, 26, 8, 0);
         data["ds1"].values.set("B01012", 400);
 
-        data["ds2"].info.coords = Coords(12.34560, 76.54321);
-        data["ds2"].info.report = "synop";
-        data["ds2"].info.ident = "ciao";
-        data["ds2"].info.datetime = Datetime(1945, 4, 26, 8, 0);
-        data["ds2"].info.level = Level(1, 2, 0, 3);
-        data["ds2"].info.trange = Trange(4, 5, 6);
+        data["ds2"].station.coords = Coords(12.34560, 76.54321);
+        data["ds2"].station.report = "synop";
+        data["ds2"].station.ident = "ciao";
+        data["ds2"].datetime = Datetime(1945, 4, 26, 8, 0);
+        data["ds2"].level = Level(1, 2, 0, 3);
+        data["ds2"].trange = Trange(4, 5, 6);
         data["ds2"].values.set("B01012", 300);
         data["ds3"] = data["ds2"];
-        data["ds3"].info.report = "metar";
+        data["ds3"].station.report = "metar";
         data["ds3"].values.set("B01012", 200);
     }
 };
@@ -114,17 +114,17 @@ this->add_method("export", [](Fixture& f) {
     // Import some data in the station extra information context
     StationValues st;
     // do not set datetime, level, trange, to insert a station variable
-    st.info.coords = Coords(45.0, 11.0);
-    st.info.report = "synop";
+    st.station.coords = Coords(45.0, 11.0);
+    st.station.report = "synop";
     st.values.set("B01001", 10);
     f.tr->insert_station_data(st, false, true);
 
     // Import one real datum
     DataValues dv;
-    dv.info = st.info;
-    dv.info.datetime = Datetime(2000, 1, 1, 0, 0, 0);
-    dv.info.level = Level(103, 2000);
-    dv.info.trange = Trange(254, 0, 0);
+    dv.station = st.station;
+    dv.datetime = Datetime(2000, 1, 1, 0, 0, 0);
+    dv.level = Level(103, 2000);
+    dv.trange = Trange(254, 0, 0);
     dv.values.set("B12101", 290.0);
     f.tr->insert_data(dv, false, true);
 

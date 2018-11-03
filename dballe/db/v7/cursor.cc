@@ -100,17 +100,19 @@ struct VectorBase : public Base<Interface>
         return cur != results.end();
     }
 
-    void discard_rest() override
+    void discard() override
     {
         at_start = false;
         cur = results.end();
     }
 
     dballe::DBStation get_station() const override { return cur->station; }
+#if 0
     int get_station_id() const override { return cur->station.id; }
     std::string get_report() const override { return cur->station.report; }
     Coords get_coords() const override { return cur->station.coords; }
     Ident get_ident() const override { return cur->station.ident; }
+#endif
 
     void to_record(Record& rec) override
     {
@@ -143,7 +145,7 @@ struct StationResult
     void to_record(v7::Transaction& tr, Record& rec) const
     {
         tr.repinfo().to_record(station.report, rec);
-        station.to_record(rec);
+        rec.set_dbstation(station);
         Tracer<> trc(tr.trc ? tr.trc->trace_add_station_vars() : nullptr);
         tr.station().add_station_vars(trc, station.id, rec);
     }
@@ -192,7 +194,7 @@ struct StationDataResult
     void to_record(v7::Transaction& tr, Record& rec) const
     {
         tr.repinfo().to_record(station.report, rec);
-        station.to_record(rec);
+        rec.set_dbstation(station);
         rec.seti("context_id", id_data);
 
         char bname[7];
@@ -415,7 +417,7 @@ struct SummaryResult
     void to_record(v7::Transaction& tr, Record& rec) const
     {
         tr.repinfo().to_record(station.report, rec);
-        station.to_record(rec);
+        rec.set_dbstation(station);
 
         char bname[7];
         format_bcode(code, bname);
@@ -480,7 +482,7 @@ struct Summary : public VectorBase<CursorSummary, SummaryResult>
 
 }
 
-unique_ptr<CursorStation> run_station_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
+unique_ptr<dballe::CursorStation> run_station_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
 
@@ -494,12 +496,12 @@ unique_ptr<CursorStation> run_station_query(Tracer<>& trc, std::shared_ptr<v7::T
     }
 
     auto resptr = new Stations(tr, modifiers);
-    unique_ptr<CursorStation> res(resptr);
+    unique_ptr<db::CursorStation> res(resptr);
     resptr->load(trc, qb);
     return res;
 }
 
-unique_ptr<CursorStationData> run_station_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
+unique_ptr<dballe::CursorStationData> run_station_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
     DataQueryBuilder qb(tr, q, modifiers, true);
@@ -511,7 +513,7 @@ unique_ptr<CursorStationData> run_station_data_query(Tracer<>& trc, std::shared_
         tr->db->conn->explain(qb.sql_query, stderr);
     }
 
-    unique_ptr<CursorStationData> res;
+    unique_ptr<db::CursorStationData> res;
     if (modifiers & DBA_DB_MODIFIER_BEST)
     {
         throw error_unimplemented("best queries of station vars");
@@ -526,7 +528,7 @@ unique_ptr<CursorStationData> run_station_data_query(Tracer<>& trc, std::shared_
     return res;
 }
 
-unique_ptr<CursorData> run_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
+unique_ptr<dballe::CursorData> run_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
     DataQueryBuilder qb(tr, q, modifiers, false);
@@ -552,7 +554,7 @@ unique_ptr<CursorData> run_data_query(Tracer<>& trc, std::shared_ptr<v7::Transac
     return res;
 }
 
-unique_ptr<CursorSummary> run_summary_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
+unique_ptr<dballe::CursorSummary> run_summary_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
     if (modifiers & DBA_DB_MODIFIER_BEST)

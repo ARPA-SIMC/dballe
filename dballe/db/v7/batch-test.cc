@@ -105,11 +105,11 @@ add_method("from_db", [](Fixture& f) {
     Coords coords(44.5008, 11.3288);
 
     TestDataSet ds;
-    ds.stations["synop"].info.coords = coords;
-    ds.stations["synop"].info.report = "synop";
+    ds.stations["synop"].station.coords = coords;
+    ds.stations["synop"].station.report = "synop";
     ds.stations["synop"].values.set("B07030", 78); // Height
-    ds.data["synop"].info = ds.stations["synop"].info;
-    ds.data["synop"].info.datetime = Datetime(2013, 10, 16, 10);
+    ds.data["synop"].station = ds.stations["synop"].station;
+    ds.data["synop"].datetime = Datetime(2013, 10, 16, 10);
     ds.data["synop"].values.set(WR_VAR(0, 12, 101), 16.5);
     wassert(f.populate(ds));
 

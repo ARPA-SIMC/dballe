@@ -9,7 +9,6 @@ struct DB;
 
 namespace db {
 struct CursorStation;
-struct CursorValue;
 struct Transaction;
 }
 
@@ -22,7 +21,7 @@ class DbAPI : public CommonAPIImplementation
 {
 protected:
     std::shared_ptr<db::Transaction> tr;
-    db::CursorStation* ana_cur = nullptr;
+    CursorStation* ana_cur = nullptr;
     InputFile* input_file = nullptr;
     OutputFile* output_file = nullptr;
     int last_inserted_station_id;

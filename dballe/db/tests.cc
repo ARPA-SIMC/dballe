@@ -58,19 +58,14 @@ Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const char* query
 }
 
 
-void ActualCursor::station_keys_match(const Station& expected)
+void ActualCursor::station_keys_match(const DBStation& expected)
 {
-    wassert(actual(_actual.get_coords()) == expected.coords);
-    if (expected.ident.is_missing())
-        wassert(actual(_actual.get_ident() == nullptr).istrue());
-    else
-        wassert(actual(_actual.get_ident()) == (const char*)expected.ident);
-    wassert(actual(_actual.get_report()) == expected.report);
+    wassert(actual(_actual.get_station()) == expected);
 }
 
 void ActualCursor::station_vars_match(const StationValues& expected)
 {
-    wassert(actual(_actual).station_keys_match(expected.info));
+    wassert(actual(_actual).station_keys_match(expected.station));
 
     auto rec = Record::create();
     _actual.to_record(*rec);
@@ -82,45 +77,59 @@ void ActualCursor::data_context_matches(const DataValues& expected)
     db::CursorData* c = dynamic_cast<db::CursorData*>(&_actual);
     if (!c) throw TestFailed("cursor is not an instance of CursorData");
 
-    wassert(actual(_actual).station_keys_match(expected.info));
-    wassert(actual(c->get_report()) == expected.info.report);
-    wassert(actual(c->get_level()) == expected.info.level);
-    wassert(actual(c->get_trange()) == expected.info.trange);
-    wassert(actual(c->get_datetime()) == expected.info.datetime);
+    wassert(actual(_actual).station_keys_match(expected.station));
+    wassert(actual(c->get_level()) == expected.level);
+    wassert(actual(c->get_trange()) == expected.trange);
+    wassert(actual(c->get_datetime()) == expected.datetime);
 
     auto rec = Record::create();
     _actual.to_record(*rec);
-    wassert(actual(rec->enq("rep_memo", "")) == expected.info.report);
-    wassert(actual(rec->enq("leveltype1", MISSING_INT)) == expected.info.level.ltype1);
-    wassert(actual(rec->enq("l1", MISSING_INT))         == expected.info.level.l1);
-    wassert(actual(rec->enq("leveltype2", MISSING_INT)) == expected.info.level.ltype2);
-    wassert(actual(rec->enq("l2", MISSING_INT))         == expected.info.level.l2);
-    wassert(actual(rec->enq("pindicator", MISSING_INT)) == expected.info.trange.pind);
-    wassert(actual(rec->enq("p1", MISSING_INT))         == expected.info.trange.p1);
-    wassert(actual(rec->enq("p2", MISSING_INT))         == expected.info.trange.p2);
-    wassert(actual(rec->enq("year", MISSING_INT))  == expected.info.datetime.year);
-    wassert(actual(rec->enq("month", MISSING_INT)) == expected.info.datetime.month);
-    wassert(actual(rec->enq("day", MISSING_INT))   == expected.info.datetime.day);
-    wassert(actual(rec->enq("hour", MISSING_INT))  == expected.info.datetime.hour);
-    wassert(actual(rec->enq("min", MISSING_INT))   == expected.info.datetime.minute);
-    wassert(actual(rec->enq("sec", MISSING_INT))   == expected.info.datetime.second);
+    wassert(actual(rec->enq("rep_memo", "")) == expected.station.report);
+    wassert(actual(rec->enq("leveltype1", MISSING_INT)) == expected.level.ltype1);
+    wassert(actual(rec->enq("l1", MISSING_INT))         == expected.level.l1);
+    wassert(actual(rec->enq("leveltype2", MISSING_INT)) == expected.level.ltype2);
+    wassert(actual(rec->enq("l2", MISSING_INT))         == expected.level.l2);
+    wassert(actual(rec->enq("pindicator", MISSING_INT)) == expected.trange.pind);
+    wassert(actual(rec->enq("p1", MISSING_INT))         == expected.trange.p1);
+    wassert(actual(rec->enq("p2", MISSING_INT))         == expected.trange.p2);
+    wassert(actual(rec->enq("year", MISSING_INT))  == expected.datetime.year);
+    wassert(actual(rec->enq("month", MISSING_INT)) == expected.datetime.month);
+    wassert(actual(rec->enq("day", MISSING_INT))   == expected.datetime.day);
+    wassert(actual(rec->enq("hour", MISSING_INT))  == expected.datetime.hour);
+    wassert(actual(rec->enq("min", MISSING_INT))   == expected.datetime.minute);
+    wassert(actual(rec->enq("sec", MISSING_INT))   == expected.datetime.second);
 }
 
 void ActualCursor::data_var_matches(const wreport::Var& expected)
 {
-    db::CursorValue* c = dynamic_cast<db::CursorValue*>(&_actual);
-    if (!c) throw TestFailed("cursor is not an instance of CursorValue");
-
-    wassert(actual(c->get_varcode()) == expected.code());
-    wassert(actual(c->get_var()) == expected);
-    auto rec = Record::create();
-    wassert(_actual.to_record(*rec));
-    const Var* actvar = nullptr;
-    for (const auto& i: core::Record::downcast(*rec).vars())
-        if (i->code() == expected.code())
-            actvar = i;
-    wassert(actual(actvar).istrue());
-    wassert(actual(actvar->value_equals(expected)).istrue());
+    if (db::CursorStationData* c = dynamic_cast<db::CursorStationData*>(&_actual))
+    {
+        wassert(actual(c->get_varcode()) == expected.code());
+        wassert(actual(c->get_var()) == expected);
+        auto rec = Record::create();
+        wassert(_actual.to_record(*rec));
+        const Var* actvar = nullptr;
+        for (const auto& i: core::Record::downcast(*rec).vars())
+            if (i->code() == expected.code())
+                actvar = i;
+        wassert(actual(actvar).istrue());
+        wassert(actual(actvar->value_equals(expected)).istrue());
+    }
+    else if (db::CursorData* c = dynamic_cast<db::CursorData*>(&_actual))
+    {
+        wassert(actual(c->get_varcode()) == expected.code());
+        wassert(actual(c->get_var()) == expected);
+        auto rec = Record::create();
+        wassert(_actual.to_record(*rec));
+        const Var* actvar = nullptr;
+        for (const auto& i: core::Record::downcast(*rec).vars())
+            if (i->code() == expected.code())
+                actvar = i;
+        wassert(actual(actvar).istrue());
+        wassert(actual(actvar->value_equals(expected)).istrue());
+    }
+    else
+        throw TestFailed("cursor is not an instance of CursorValue");
 }
 
 void ActualCursor::data_matches(const DataValues& ds, wreport::Varcode code)
@@ -141,11 +150,11 @@ template<typename DB>
 void ActualDB<DB>::try_data_query(const Query& query, unsigned expected)
 {
     // Run the query
-    unique_ptr<db::Cursor> cur = this->_actual->query_data(query);
+    unique_ptr<Cursor> cur = this->_actual->query_data(query);
 
     // Check the number of results
     wassert(actual(cur->remaining()) == expected);
-    unsigned count = cur->test_iterate(/* stderr */);
+    unsigned count = dynamic_cast<db::CursorData*>(cur.get())->test_iterate(/* stderr */);
     wassert(actual(count) == expected);
 }
 
@@ -153,11 +162,11 @@ template<typename DB>
 void ActualDB<DB>::try_station_query(const std::string& query, unsigned expected)
 {
     // Run the query
-    unique_ptr<db::Cursor> cur = this->_actual->query_stations(core_query_from_string(query));
+    unique_ptr<Cursor> cur = this->_actual->query_stations(core_query_from_string(query));
 
     // Check the number of results
     wassert(actual(cur->remaining()) == expected);
-    unsigned count = cur->test_iterate(/* stderr */);
+    unsigned count = dynamic_cast<db::CursorStation*>(cur.get())->test_iterate(/* stderr */);
     wassert(actual(count) == expected);
 }
 
@@ -165,7 +174,7 @@ template<typename DB>
 void ActualDB<DB>::try_summary_query(const std::string& query, unsigned expected, result_checker check_results)
 {
     // Run the query
-    unique_ptr<db::Cursor> cur = this->_actual->query_summary(core_query_from_string(query));
+    unique_ptr<Cursor> cur = this->_actual->query_summary(core_query_from_string(query));
 
     // Check the number of results
     // query_summary counts results in advance only optionally
@@ -318,8 +327,8 @@ void TestDataSet::populate_transaction(db::Transaction& tr)
 
 OldDballeTestDataSet::OldDballeTestDataSet()
 {
-    stations["synop"].info.report = "synop";
-    stations["synop"].info.coords = Coords(12.34560, 76.54320);
+    stations["synop"].station.report = "synop";
+    stations["synop"].station.coords = Coords(12.34560, 76.54320);
     stations["synop"].values.set("B07030", 42);     // Height
     stations["synop"].values.set("B07031", 234);    // Heightbaro
     stations["synop"].values.set("B01001", 1);      // Block
@@ -327,19 +336,19 @@ OldDballeTestDataSet::OldDballeTestDataSet()
     stations["synop"].values.set("B01019", "Cippo Lippo");  // Name
 
     stations["metar"] = stations["synop"];
-    stations["metar"].info.report = "metar";
+    stations["metar"].station.report = "metar";
 
-    data["synop"].info = stations["synop"].info;
-    data["synop"].info.level = Level(10, 11, 15, 22);
-    data["synop"].info.trange = Trange(20, 111, 122);
-    data["synop"].info.datetime = Datetime(1945, 4, 25, 8);
+    data["synop"].station = stations["synop"].station;
+    data["synop"].level = Level(10, 11, 15, 22);
+    data["synop"].trange = Trange(20, 111, 122);
+    data["synop"].datetime = Datetime(1945, 4, 25, 8);
     data["synop"].values.set("B01011", "DB-All.e!");
     data["synop"].values.set("B01012", 300);
 
-    data["metar"].info = stations["metar"].info;
-    data["metar"].info.level = Level(10, 11, 15, 22);
-    data["metar"].info.trange = Trange(20, 111, 123);
-    data["metar"].info.datetime = Datetime(1945, 4, 25, 8, 30);
+    data["metar"].station = stations["metar"].station;
+    data["metar"].level = Level(10, 11, 15, 22);
+    data["metar"].trange = Trange(20, 111, 123);
+    data["metar"].datetime = Datetime(1945, 4, 25, 8, 30);
     data["metar"].values.set("B01011", "Arpa-Sim!");
     data["metar"].values.set("B01012", 400);
 }

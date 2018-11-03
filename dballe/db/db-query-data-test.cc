@@ -41,15 +41,15 @@ struct DateHourDataSet : public TestDataSet
     DateHourDataSet()
     {
         DataValues d;
-        d.info.coords = Coords(12.34560, 76.54320);
-        d.info.report = "synop";
-        d.info.level = Level(10, 11, 15, 22);
-        d.info.trange = Trange(20, 111, 122);
+        d.station.coords = Coords(12.34560, 76.54320);
+        d.station.report = "synop";
+        d.level = Level(10, 11, 15, 22);
+        d.trange = Trange(20, 111, 122);
         data["1"] = d;
-        data["1"].info.datetime = Datetime(2013, 10, 30, 11);
+        data["1"].datetime = Datetime(2013, 10, 30, 11);
         data["1"].values.set("B12101", 11.5);
         data["2"] = d;
-        data["2"].info.datetime = Datetime(2013, 10, 30, 12);
+        data["2"].datetime = Datetime(2013, 10, 30, 12);
         data["2"].values.set("B12101", 12.5);
     }
 };
@@ -59,15 +59,15 @@ struct DateDayDataSet : public TestDataSet
     DateDayDataSet()
     {
         DataValues d;
-        d.info.coords = Coords(12.34560, 76.54320);
-        d.info.report = "synop";
-        d.info.level = Level(10, 11, 15, 22);
-        d.info.trange = Trange(20, 111, 122);
+        d.station.coords = Coords(12.34560, 76.54320);
+        d.station.report = "synop";
+        d.level = Level(10, 11, 15, 22);
+        d.trange = Trange(20, 111, 122);
         data["1"] = d;
-        data["1"].info.datetime = Datetime(2013, 10, 23);
+        data["1"].datetime = Datetime(2013, 10, 23);
         data["1"].values.set("B12101", 23.5);
         data["2"] = d;
-        data["2"].info.datetime = Datetime(2013, 10, 24);
+        data["2"].datetime = Datetime(2013, 10, 24);
         data["2"].values.set("B12101", 24.5);
     }
 };
@@ -109,14 +109,14 @@ void OldFixtureTests<DB>::register_tests()
 {
 this->add_method("ana_id", [](Fixture& f) {
     char query[20];
-    snprintf(query, 20, "ana_id=%d", f.test_data.data["synop"].info.id);
+    snprintf(query, 20, "ana_id=%d", f.test_data.data["synop"].station.id);
     TRY_QUERY(query, 2);
     TRY_QUERY("ana_id=4242", 0);
 });
 this->add_method("ana_context", [](Fixture& f) {
     // Query data in station context
     core::Query query;
-    unique_ptr<db::Cursor> cur = f.tr->query_station_data(query);
+    auto cur = f.tr->query_station_data(query);
     wassert(actual(cur->remaining()) == 10);
 });
 this->add_method("year", [](Fixture& f) {

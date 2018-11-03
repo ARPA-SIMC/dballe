@@ -145,7 +145,7 @@ void BaseExplorer<Station>::Update::add_db(dballe::db::Transaction& tr)
 }
 
 template<typename Station>
-void BaseExplorer<Station>::Update::add_cursor(dballe::db::CursorSummary& cur)
+void BaseExplorer<Station>::Update::add_cursor(dballe::CursorSummary& cur)
 {
     while (cur.next())
         explorer->_global_summary->add_cursor(cur);

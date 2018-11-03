@@ -34,80 +34,20 @@ std::string format_format(Format format);
 Format format_parse(const std::string& str);
 
 
-/// Common interface for all kinds of cursors
-struct Cursor
+struct CursorStation : public dballe::CursorStation
 {
-    virtual ~Cursor();
-
-    /**
-     * Get the number of rows still to be fetched
-     *
-     * @return
-     *   The number of rows still to be queried.  The value is undefined if no
-     *   query has been successfully peformed yet using this cursor.
-     */
-    virtual int remaining() const = 0;
-
-    /**
-     * Get a new item from the results of a query
-     *
-     * @returns
-     *   true if a new record has been read, false if there is no more data to read
-     */
-    virtual bool next() = 0;
-
-    /// Discard the results that have not been read yet
-    virtual void discard_rest() = 0;
-
-    /**
-     * Fill in a record with the current contents of the cursor
-     *
-     * @param rec
-     *   The record where to store the values
-     */
-    virtual void to_record(Record& rec) = 0;
-
-    /**
-     * Get the whole station data in a single call
-     */
-    virtual DBStation get_station() const = 0;
-
-    /// Get the station identifier
-    virtual int get_station_id() const = 0;
-
-    /// Get the station latitude
-    virtual Coords get_coords() const = 0;
-
-    /// Get the station identifier, or NULL if missing
-    virtual Ident get_ident() const = 0;
-
-    /// Get the report name
-    virtual std::string get_report() const = 0;
-
     /**
      * Iterate the cursor until the end, returning the number of items.
      *
      * If dump is a FILE pointer, also dump the cursor values to it
      */
-    virtual unsigned test_iterate(FILE* dump=0);
+    virtual unsigned test_iterate(FILE* dump=0) = 0;
 };
 
-/// Cursor iterating over stations
-struct CursorStation : public Cursor
-{
-};
-
-/// Common interface for cursors iterating over station or data values
-struct CursorValue : public Cursor
+struct CursorStationData : public dballe::CursorStationData
 {
     /// Get the database that created this cursor
     virtual std::shared_ptr<db::Transaction> get_transaction() const = 0;
-
-    /// Get the variable code
-    virtual wreport::Varcode get_varcode() const = 0;
-
-    /// Get the variable
-    virtual wreport::Var get_var() const = 0;
 
     /**
      * Return an integer value that can be used to refer to the current
@@ -119,43 +59,47 @@ struct CursorValue : public Cursor
      * Query/return the attributes for the current value of this cursor
      */
     virtual void attr_query(std::function<void(std::unique_ptr<wreport::Var>)>&& dest, bool force_read=false) = 0;
+
+    /**
+     * Iterate the cursor until the end, returning the number of items.
+     *
+     * If dump is a FILE pointer, also dump the cursor values to it
+     */
+    virtual unsigned test_iterate(FILE* dump=0) = 0;
 };
 
-/// Cursor iterating over station data values
-struct CursorStationData : public CursorValue
+struct CursorData : public dballe::CursorData
 {
+    /// Get the database that created this cursor
+    virtual std::shared_ptr<db::Transaction> get_transaction() const = 0;
+
+    /**
+     * Return an integer value that can be used to refer to the current
+     * variable for attribute access
+     */
+    virtual int attr_reference_id() const = 0;
+
+    /**
+     * Query/return the attributes for the current value of this cursor
+     */
+    virtual void attr_query(std::function<void(std::unique_ptr<wreport::Var>)>&& dest, bool force_read=false) = 0;
+
+    /**
+     * Iterate the cursor until the end, returning the number of items.
+     *
+     * If dump is a FILE pointer, also dump the cursor values to it
+     */
+    virtual unsigned test_iterate(FILE* dump=0) = 0;
 };
 
-/// Cursor iterating over data values
-struct CursorData : public CursorValue
+struct CursorSummary : public dballe::CursorSummary
 {
-    /// Get the level
-    virtual Level get_level() const = 0;
-
-    /// Get the time range
-    virtual Trange get_trange() const = 0;
-
-    /// Get the datetime
-    virtual Datetime get_datetime() const = 0;
-};
-
-/// Cursor iterating over summary entries
-struct CursorSummary : public Cursor
-{
-    /// Get the level
-    virtual Level get_level() const = 0;
-
-    /// Get the time range
-    virtual Trange get_trange() const = 0;
-
-    /// Get the variable code
-    virtual wreport::Varcode get_varcode() const = 0;
-
-    /// Get the datetime range
-    virtual DatetimeRange get_datetimerange() const = 0;
-
-    /// Get the count of elements
-    virtual size_t get_count() const = 0;
+    /**
+     * Iterate the cursor until the end, returning the number of items.
+     *
+     * If dump is a FILE pointer, also dump the cursor values to it
+     */
+    virtual unsigned test_iterate(FILE* dump=0) = 0;
 };
 
 
@@ -172,63 +116,6 @@ public:
      * transaction.
      */
     virtual void clear_cached_state() = 0;
-
-    /**
-     * Start a query on the station variables archive.
-     *
-     * The cursor will iterate over unique lat, lon, ident triples, and will
-     * contain all station vars. If a station var exists twice on two different
-     * networks, only one will be present: the one of the network with the
-     * highest priority.
-     *
-     * @param query
-     *   The record with the query data (see @ref dba_record_keywords)
-     * @return
-     *   The cursor to use to iterate over the results
-     */
-    virtual std::unique_ptr<db::CursorStation> query_stations(const Query& query) = 0;
-
-    /**
-     * Query the station variables in the database.
-     *
-     * When multiple values per variable are present, the results will be presented
-     * in increasing order of priority.
-     *
-     * @param query
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input")
-     * @return
-     *   The cursor to use to iterate over the results
-     */
-    virtual std::unique_ptr<db::CursorStationData> query_station_data(const Query& query) = 0;
-
-    /**
-     * Query the database.
-     *
-     * When multiple values per variable are present, the results will be presented
-     * in increasing order of priority.
-     *
-     * @param query
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input")
-     * @return
-     *   The cursor to use to iterate over the results
-     */
-    virtual std::unique_ptr<db::CursorData> query_data(const Query& query) = 0;
-
-    /**
-     * Query a summary of what the result would be for a query.
-     *
-     * @param query
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input")
-     * @return
-     *   The cursor to use to iterate over the results. The results are the
-     *   same as query_data, except that no context_id, datetime and value are
-     *   provided, so it only gives all the available combinations of data
-     *   contexts.
-     */
-    virtual std::unique_ptr<db::CursorSummary> query_summary(const Query& query) = 0;
 
     /**
      * Query attributes on a station value
@@ -482,63 +369,6 @@ public:
      * Depending on database size, this routine can take a few minutes to execute.
      */
     virtual void vacuum() = 0;
-
-    /**
-     * Start a query on the station variables archive.
-     *
-     * The cursor will iterate over unique lat, lon, ident triples, and will
-     * contain all station vars. If a station var exists twice on two different
-     * networks, only one will be present: the one of the network with the
-     * highest priority.
-     *
-     * @param query
-     *   The record with the query data (see @ref dba_record_keywords)
-     * @return
-     *   The cursor to use to iterate over the results
-     */
-    virtual std::unique_ptr<db::CursorStation> query_stations(const Query& query);
-
-    /**
-     * Query the station variables in the database.
-     *
-     * When multiple values per variable are present, the results will be presented
-     * in increasing order of priority.
-     *
-     * @param query
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input")
-     * @return
-     *   The cursor to use to iterate over the results
-     */
-    virtual std::unique_ptr<db::CursorStationData> query_station_data(const Query& query);
-
-    /**
-     * Query the database.
-     *
-     * When multiple values per variable are present, the results will be presented
-     * in increasing order of priority.
-     *
-     * @param query
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input")
-     * @return
-     *   The cursor to use to iterate over the results
-     */
-    virtual std::unique_ptr<db::CursorData> query_data(const Query& query);
-
-    /**
-     * Query a summary of what the result would be for a query.
-     *
-     * @param query
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input")
-     * @return
-     *   The cursor to use to iterate over the results. The results are the
-     *   same as query_data, except that no context_id, datetime and value are
-     *   provided, so it only gives all the available combinations of data
-     *   contexts.
-     */
-    virtual std::unique_ptr<db::CursorSummary> query_summary(const Query& query);
 
     /**
      * Query attributes on a station value

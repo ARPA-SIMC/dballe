@@ -711,6 +711,116 @@ public:
 
 std::ostream& operator<<(std::ostream&, const Ident&);
 
+
+/**
+ * Station information
+ */
+struct Station
+{
+    /// Report name for this station
+    std::string report;
+
+    /// Station coordinates
+    Coords coords;
+
+    /// Mobile station identifier
+    Ident ident;
+
+
+    Station() = default;
+
+    bool operator==(const Station& o) const
+    {
+        return std::tie(report, coords, ident) == std::tie(o.report, o.coords, o.ident);
+    }
+    bool operator!=(const Station& o) const
+    {
+        return std::tie(report, coords, ident) != std::tie(o.report, o.coords, o.ident);
+    }
+    bool operator<(const Station& o) const
+    {
+        return std::tie(report, coords, ident) < std::tie(o.report, o.coords, o.ident);
+    }
+    bool operator<=(const Station& o) const
+    {
+        return std::tie(report, coords, ident) <= std::tie(o.report, o.coords, o.ident);
+    }
+    bool operator>(const Station& o) const
+    {
+        return std::tie(report, coords, ident) > std::tie(o.report, o.coords, o.ident);
+    }
+    bool operator>=(const Station& o) const
+    {
+        return std::tie(report, coords, ident) >= std::tie(o.report, o.coords, o.ident);
+    }
+
+    /**
+     * Print the Station to a FILE*.
+     *
+     * @param out  The output stream
+     * @param end  String to print after the Station
+     */
+    void print(FILE* out, const char* end="\n") const;
+
+    /// Format to a string
+    std::string to_string(const char* undef="-") const;
+};
+
+std::ostream& operator<<(std::ostream&, const Station&);
+
+
+struct DBStation : public Station
+{
+    /**
+     * Database ID of the station.
+     *
+     * It will be filled when the Station is inserted on the database.
+     */
+    int id = MISSING_INT;
+
+
+    DBStation() = default;
+
+    bool operator==(const DBStation& o) const
+    {
+        return std::tie(id, report, coords, ident) == std::tie(o.id, o.report, o.coords, o.ident);
+    }
+    bool operator!=(const DBStation& o) const
+    {
+        return std::tie(id, report, coords, ident) != std::tie(o.id, o.report, o.coords, o.ident);
+    }
+    bool operator<(const DBStation& o) const
+    {
+        return std::tie(id, report, coords, ident) < std::tie(o.id, o.report, o.coords, o.ident);
+    }
+    bool operator<=(const DBStation& o) const
+    {
+        return std::tie(id, report, coords, ident) <= std::tie(o.id, o.report, o.coords, o.ident);
+    }
+    bool operator>(const DBStation& o) const
+    {
+        return std::tie(id, report, coords, ident) > std::tie(o.id, o.report, o.coords, o.ident);
+    }
+    bool operator>=(const DBStation& o) const
+    {
+        return std::tie(id, report, coords, ident) >= std::tie(o.id, o.report, o.coords, o.ident);
+    }
+
+    /**
+     * Print the Station to a FILE*.
+     *
+     * @param out  The output stream
+     * @param end  String to print after the Station
+     */
+    void print(FILE* out, const char* end="\n") const;
+
+    /// Format to a string
+    std::string to_string(const char* undef="-") const;
+};
+
+std::ostream& operator<<(std::ostream&, const DBStation&);
+
+
 }
 
 namespace std {
@@ -739,6 +849,20 @@ template<> struct hash<dballe::Coords>
 template<> struct hash<dballe::Ident>
 {
     typedef dballe::Ident argument_type;
+    typedef size_t result_type;
+    result_type operator()(argument_type const& o) const noexcept;
+};
+
+template<> struct hash<dballe::Station>
+{
+    typedef dballe::Station argument_type;
+    typedef size_t result_type;
+    result_type operator()(argument_type const& o) const noexcept;
+};
+
+template<> struct hash<dballe::DBStation>
+{
+    typedef dballe::DBStation argument_type;
     typedef size_t result_type;
     result_type operator()(argument_type const& o) const noexcept;
 };
