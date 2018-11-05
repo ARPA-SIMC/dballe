@@ -143,12 +143,12 @@ this->add_method("stationdata", [](Fixture& f) {
                 {
                     wassert(actual(station.id) == svals_esmac.station.id);
                     cur->to_record(result);
-                    wassert(actual(result["B01019"]) == "Esmac");
+                    wassert(actual(*result.get_var(WR_VAR(0, 1, 19))) == "Esmac");
                     have_temp = true;
                 } else if (station.report == "synop") {
                     wassert(actual(station.id) == svals_camse.station.id);
                     cur->to_record(result);
-                    wassert(actual(result["B01019"]) == "Camse");
+                    wassert(actual(*result.get_var(WR_VAR(0, 1, 19))) == "Camse");
                     have_synop = true;
                 }
             }

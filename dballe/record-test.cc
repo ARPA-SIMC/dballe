@@ -22,6 +22,7 @@ class Tests : public TestCase
     {
         add_method("record", []() {
         });
+#if 0
         add_method("foreach_key", []() {
             auto rec = Record::create();
             rec->set("lat", 44.5);
@@ -35,6 +36,7 @@ class Tests : public TestCase
             wassert(actual(res[0]) == "B12101=290.40");
             wassert(actual(res[1]) == "lat=44.50000");
         });
+#endif
         add_method("metadata", []() {
             wreport::Varinfo info = Record::key_info("rep_memo");
             wassert(actual(info->type) == Vartype::String);

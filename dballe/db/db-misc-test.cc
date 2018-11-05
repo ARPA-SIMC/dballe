@@ -924,7 +924,7 @@ this->add_method("query_repmemo_in_results", [](Fixture& f) {
     while (cur->next())
     {
         cur->to_record(res);
-        wassert(actual(res["rep_memo"].isset()).istrue());
+        wassert(actual(res.enq("rep_memo", (const char*)nullptr)).istrue());
     }
 });
 

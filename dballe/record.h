@@ -132,9 +132,6 @@ struct Record
     /// Check if two records differ
     bool operator!=(const Record& rec) const;
 
-    /// Get a value, if set, or throw an exception if not
-    const wreport::Var& operator[](const char* key) const;
-
     const char* enq(const char* key, const char* def) const
     {
         if (const wreport::Var* var = get(key))
@@ -218,6 +215,9 @@ struct Record
     static wreport::Varinfo key_info(const std::string& key);
 
 protected:
+    /// Get a value, if set, or throw an exception if not
+    const wreport::Var& operator[](const char* key) const;
+
     /// Get a value, if set, or nullptr if not
     virtual const wreport::Var* get(const char* key) const = 0;
 };

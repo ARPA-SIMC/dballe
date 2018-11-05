@@ -403,7 +403,13 @@ struct var : MethKwargs<dpy_Record>
         if (!PyArg_ParseTupleAndKeywords(args, kw, "s", const_cast<char**>(kwlist), &name))
             return nullptr;
         try {
-            return throw_ifnull((PyObject*)wrpy->var_create_copy((*self->rec)[name]));
+            const wreport::Var* var = core::Record::downcast(*self->rec).get(name);
+            if (!var)
+            {
+                PyErr_SetString(PyExc_KeyError, name);
+                return nullptr;
+            }
+            return throw_ifnull((PyObject*)wrpy->var_create_copy(*var));
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -471,9 +477,15 @@ struct attrs : MethKwargs<dpy_Record>
             return nullptr;
 
         try {
-            const wreport::Var& var = (*self->rec)[code];
+            wreport::Varcode varcode = resolve_varcode(code);
+            const wreport::Var* var = self->rec->get_var(varcode);
+            if (!var)
+            {
+                PyErr_SetString(PyExc_KeyError, name);
+                return nullptr;
+            }
             pyo_unique_ptr result(throw_ifnull(PyDict_New()));
-            for (const Var* a = var.next_attr(); a != nullptr; a = a->next_attr())
+            for (const Var* a = var->next_attr(); a != nullptr; a = a->next_attr())
             {
                 string key = wreport::varcode_format(a->code());
                 pyo_unique_ptr val(throw_ifnull((PyObject*)wrpy->var_create_copy(*a)));
@@ -501,7 +513,13 @@ struct key : MethKwargs<dpy_Record>
         if (!PyArg_ParseTupleAndKeywords(args, kw, "s", const_cast<char**>(kwlist), &name))
             return nullptr;
         try {
-            return throw_ifnull((PyObject*)wrpy->var_create_copy((*self->rec)[name]));
+            const wreport::Var* var = core::Record::downcast(*self->rec).get(name);
+            if (!var)
+            {
+                PyErr_SetString(PyExc_KeyError, name);
+                return nullptr;
+            }
+            return throw_ifnull((PyObject*)wrpy->var_create_copy(*var));
         } DBALLE_CATCH_RETURN_PYO
     }
 };
