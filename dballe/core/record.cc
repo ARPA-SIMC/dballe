@@ -952,6 +952,10 @@ DBStation Record::get_dbstation() const
     return res;
 }
 
+const wreport::Var* Record::get_var(wreport::Varcode code) const
+{
+    return var_peek(code);
+}
 
 void Record::set_coords(const Coords& c)
 {
@@ -1111,7 +1115,7 @@ MatchedRecord::~MatchedRecord()
 
 matcher::Result MatchedRecord::match_var_id(int val) const
 {
-    if (const wreport::Var* var = r.get("B33195"))
+    if (const wreport::Var* var = r.get_var(WR_VAR(0, 33, 195)))
     {
         return var->enqi() == val ? matcher::MATCH_YES : matcher::MATCH_NO;
     } else
@@ -1120,16 +1124,15 @@ matcher::Result MatchedRecord::match_var_id(int val) const
 
 matcher::Result MatchedRecord::match_station_id(int val) const
 {
-    if (const wreport::Var* var = r.get("ana_id"))
-    {
-        return var->enqi() == val ? matcher::MATCH_YES : matcher::MATCH_NO;
-    } else
+    int ana_id = r.enq("ana_id", MISSING_INT);
+    if (ana_id == MISSING_INT)
         return matcher::MATCH_NA;
+    return ana_id == val ? matcher::MATCH_YES : matcher::MATCH_NO;
 }
 
 matcher::Result MatchedRecord::match_station_wmo(int block, int station) const
 {
-    if (const wreport::Var* var = r.get("B01001"))
+    if (const wreport::Var* var = r.get_var(WR_VAR(0, 1, 1)))
     {
         // Match block
         if (var->enqi() != block) return matcher::MATCH_NO;
@@ -1138,7 +1141,7 @@ matcher::Result MatchedRecord::match_station_wmo(int block, int station) const
         if (station == -1) return matcher::MATCH_YES;
 
         // Match station
-        if (const wreport::Var* var = r.get("B01002"))
+        if (const wreport::Var* var = r.get_var(WR_VAR(0, 1, 2)))
         {
             if (var->enqi() != station) return matcher::MATCH_NO;
             return matcher::MATCH_YES;
@@ -1156,15 +1159,17 @@ matcher::Result MatchedRecord::match_datetime(const DatetimeRange& range) const
 
 matcher::Result MatchedRecord::match_coords(const LatRange& latrange, const LonRange& lonrange) const
 {
+    int lat = r.enq("lat", MISSING_INT);
     matcher::Result r1 = matcher::MATCH_NA;
-    if (const wreport::Var* var = r.get("lat"))
-        r1 = latrange.contains(var->enqi()) ? matcher::MATCH_YES : matcher::MATCH_NO;
+    if (lat != MISSING_INT)
+        r1 = latrange.contains(lat) ? matcher::MATCH_YES : matcher::MATCH_NO;
     else if (latrange.is_missing())
         r1 = matcher::MATCH_YES;
 
+    int lon = r.enq("lon", MISSING_INT);
     matcher::Result r2 = matcher::MATCH_NA;
-    if (const wreport::Var* var = r.get("lon"))
-        r2 = lonrange.contains(var->enqi()) ? matcher::MATCH_YES : matcher::MATCH_NO;
+    if (lon != MISSING_INT)
+        r2 = lonrange.contains(lon) ? matcher::MATCH_YES : matcher::MATCH_NO;
     else if (lonrange.is_missing())
         r2 = matcher::MATCH_YES;
 
@@ -1177,10 +1182,10 @@ matcher::Result MatchedRecord::match_coords(const LatRange& latrange, const LonR
 
 matcher::Result MatchedRecord::match_rep_memo(const char* memo) const
 {
-    if (const Var* var = r.get("rep_memo"))
-        if (var->isset())
-            return strcmp(memo, var->enqc()) == 0 ? matcher::MATCH_YES : matcher::MATCH_NO;
-    return matcher::MATCH_NA;
+    const char* report = r.enq("rep_memo", (const char*)nullptr);
+    if (!report)
+        return matcher::MATCH_NA;
+    return strcmp(report, memo) == 0 ? matcher::MATCH_YES : matcher::MATCH_NO;
 }
 
 }

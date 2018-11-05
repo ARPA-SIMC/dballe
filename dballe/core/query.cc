@@ -82,8 +82,8 @@ void Query::set_from_record(const dballe::Record& rec)
     // Mobile
     mobile = rec.enq("mobile", MISSING_INT);
     // Ident
-    if (const Var* var = rec.get("ident"))
-        ident = var->enqc();
+    if (const char* val = rec.enq("ident", (const char*)nullptr))
+        ident = val;
     else
         ident.clear();
     // Latitude
@@ -112,10 +112,10 @@ void Query::set_from_record(const dballe::Record& rec)
     trange = r.get_trange();
     // Varcodes
     varcodes.clear();
-    if (const Var* var = rec.get("var"))
-        varcodes.insert(resolve_varcode(var->enq("")));
-    else if (const Var* var = rec.get("varlist"))
-        resolve_varlist(var->enq(""), varcodes);
+    if (const char* var = rec.enq("var", (const char*)nullptr))
+        varcodes.insert(resolve_varcode(var));
+    else if (const char* varlist = rec.enq("varlist", (const char*)nullptr))
+        resolve_varlist(varlist, varcodes);
     // Query
     query = rec.enq("query", "");
     // Filters
@@ -585,10 +585,9 @@ void Query::serialize(JSONWriter& out) const
 unsigned Query::parse_modifiers(const dballe::Record& rec)
 {
     /* Decode query modifiers */
-    const Var* var = rec.get("query");
-    if (!var) return 0;
-    if (!var->isset()) return 0;
-    return parse_modifiers(var->enqc());
+    const char* q = rec.enq("query", (const char*)nullptr);
+    if (!q) return 0;
+    return parse_modifiers(q);
 }
 
 unsigned Query::parse_modifiers(const char* s)

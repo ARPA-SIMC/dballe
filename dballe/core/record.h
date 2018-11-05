@@ -171,7 +171,6 @@ public:
     void set_station(const Station& s) override;
     void set_dbstation(const DBStation& s) override;
     void unset(const char* name) override;
-    const wreport::Var* get(const char* key) const override;
     void add(const dballe::Record& source) override;
     bool contains(const dballe::Record& subset) const override;
     bool equals(const dballe::Record& rec) const override;
@@ -214,6 +213,7 @@ public:
     DatetimeRange get_datetimerange() const override;
     Station get_station() const override;
     DBStation get_dbstation() const override;
+    const wreport::Var* get_var(wreport::Varcode code) const override;
 
     /**
      * Iterate all keys in the record, calling f on them.
@@ -255,6 +255,9 @@ public:
      * Encode in a one-liner of comma-separated assignments
      */
     std::string to_string() const;
+
+    // TODO: deprecate: this is currently only used for the python bindings
+    const wreport::Var* get(const char* key) const override;
 
 	/**
 	 * Return the name of a dba_keyword

@@ -177,8 +177,22 @@ static PyObject* __getitem__(dpy_Record* self, PyObject* key)
                 break;
         }
 
-        const Var* var = self->rec->get(varname.c_str());
-        if (var == NULL)
+        core::dba_keyword rec_key = core::Record::keyword_byname_len(varname.c_str(), varname.size());
+        if (rec_key != core::DBA_KEY_ERROR)
+        {
+            const Var* var = core::Record::downcast(*self->rec).get(varname.c_str());
+            if (!var)
+                Py_RETURN_NONE;
+
+            if (!var->isset())
+                Py_RETURN_NONE;
+
+            return wrpy->var_value_to_python(*var);
+        }
+
+        wreport::Varcode code = resolve_varcode(varname);
+        const Var* var = self->rec->get_var(code);
+        if (!var)
             Py_RETURN_NONE;
 
         if (!var->isset())

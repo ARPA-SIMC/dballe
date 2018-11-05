@@ -120,9 +120,6 @@ struct Record
     /// Remove/unset a key from the record
     virtual void unset(const char* key) = 0;
 
-    /// Get a value, if set, or nullptr if not
-    virtual const wreport::Var* get(const char* key) const = 0;
-
     /// Check if a value is set
     virtual bool isset(const char* key) const;
 
@@ -181,6 +178,9 @@ struct Record
     template<typename T>
     inline T get() const { throw wreport::error_unimplemented(); }
 
+    /// Return a variable if present, or nullptr if not
+    virtual const wreport::Var* get_var(wreport::Varcode code) const = 0;
+
     /**
      * Copy all data from the record source into dest.  At the end of the function,
      * dest will contain its previous values, plus the values in source.  If a
@@ -230,6 +230,8 @@ struct Record
     static wreport::Varinfo key_info(const std::string& key);
 
 protected:
+    /// Get a value, if set, or nullptr if not
+    virtual const wreport::Var* get(const char* key) const = 0;
     virtual void foreach_key_ref(std::function<void(const char*, const wreport::Var&)> dest) const = 0;
     virtual void foreach_key_copy(std::function<void(const char*, std::unique_ptr<wreport::Var>&&)> dest) const = 0;
 };

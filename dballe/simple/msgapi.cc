@@ -282,7 +282,7 @@ const char* MsgAPI::dammelo()
 
     // Return the pointer to the copy inside the output record. We cannot
     // return vname as it is in the local stack
-    return output.get("var")->enqc();
+    return output.enq("var", (const char*)nullptr);
 }
 
 void MsgAPI::flushVars()
@@ -336,21 +336,20 @@ void MsgAPI::prendilo()
     if (!wmsg) wmsg = new Msg;
 
     // Store record metainfo
-    if (const Var* var = input.get("rep_memo"))
-        if (var->isset())
-        {
-            const char* val = var->enqc();
-            wmsg->set_rep_memo(val);
-            wmsg->type = Msg::type_from_repmemo(val);
-        }
-    if (const Var* var = input.get("ana_id"))
-        wmsg->set(Level(), Trange(), newvar(WR_VAR(0, 1, 192), var->enqi()));
-    if (const Var* var = input.get("ident"))
-        wmsg->set_ident(var->enqc());
-    if (const Var* var = input.get("lat"))
-        wmsg->set_latitude(var->enqd());
-    if (const Var* var = input.get("lon"))
-        wmsg->set_longitude(var->enqd());
+    if (const char* val = input.enq("rep_memo", (const char*)nullptr))
+    {
+        wmsg->set_rep_memo(val);
+        wmsg->type = Msg::type_from_repmemo(val);
+    }
+    DBStation station = input.get_dbstation();
+    if (station.id != MISSING_INT)
+        wmsg->set(Level(), Trange(), newvar(WR_VAR(0, 1, 192), station.id));
+    if (!station.ident.is_missing())
+        wmsg->set_ident(station.ident);
+    if (station.coords.lat != MISSING_INT)
+        wmsg->set_latitude(station.coords.dlat());
+    if (station.coords.lon != MISSING_INT)
+        wmsg->set_longitude(station.coords.dlon());
 
     int ye = input.enq("year", MISSING_INT);
     int mo = input.enq("month", MISSING_INT);
@@ -386,38 +385,36 @@ void MsgAPI::prendilo()
         vars.push_back(new Var(**v));
     input.clear_vars();
 
-    if (const Var* var = input.get("query"))
-        if (var->isset())
+    if (const char* query = input.enq("query", (const char*)nullptr))
+    {
+        if (strcasecmp(query, "subset") == 0)
         {
-            const char* query = var->enqc();
-            if (strcasecmp(query, "subset") == 0)
-            {
-                flushSubset();
-            } else if (strncasecmp(query, "message", 7) == 0) {
-                // Check that message is followed by spaces or end of string
-                const char* s = query + 7;
-                if (*s != 0 && !isblank(*s))
-                    error_consistency::throwf("Query type \"%s\" is not among the supported values", query);
-                // Skip the spaces after message
-                while (*s != 0 && isblank(*s))
-                    ++s;
-
-                // Set or reset the exporter template
-                if (exporter_template != s)
-                {
-                    // If it has changed, we need to recreate the exporter
-                    delete exporter;
-                    exporter = 0;
-                    exporter_template = s;
-                }
-
-                flushMessage();
-            } else
+            flushSubset();
+        } else if (strncasecmp(query, "message", 7) == 0) {
+            // Check that message is followed by spaces or end of string
+            const char* s = query + 7;
+            if (*s != 0 && !isblank(*s))
                 error_consistency::throwf("Query type \"%s\" is not among the supported values", query);
+            // Skip the spaces after message
+            while (*s != 0 && isblank(*s))
+                ++s;
 
-            // Uset query after using it: it needs to be explicitly set every time
-            input.unset("query");
-        }
+            // Set or reset the exporter template
+            if (exporter_template != s)
+            {
+                // If it has changed, we need to recreate the exporter
+                delete exporter;
+                exporter = 0;
+                exporter_template = s;
+            }
+
+            flushMessage();
+        } else
+            error_consistency::throwf("Query type \"%s\" is not among the supported values", query);
+
+        // Uset query after using it: it needs to be explicitly set every time
+        input.unset("query");
+    }
 }
 
 void MsgAPI::dimenticami()

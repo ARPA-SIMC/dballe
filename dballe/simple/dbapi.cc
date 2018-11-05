@@ -125,7 +125,7 @@ struct VoglioquestoOperation : public Operation
             query_cur->to_record(output);
             valid_cached_attrs = true;
             // We bypass checks, since it comes from to_record that always sets "var"
-            return output.get("var")->enqc();
+            return output.enq("var", (const char*)nullptr);
         } else {
             delete query_cur;
             query_cur = nullptr;

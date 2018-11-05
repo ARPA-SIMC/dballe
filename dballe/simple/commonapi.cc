@@ -125,69 +125,45 @@ void CommonAPIImplementation::test_input_to_output()
 int CommonAPIImplementation::enqi(const char* param)
 {
     Record& rec = choose_output_record(param);
-    if (const Var* var = rec.get(param))
-    {
-        if (!var->isset()) return missing_int;
-        return var->enqi();
-    }
-    else
-        return missing_int;
+    return rec.enq(param, missing_int);
 }
 
 signed char CommonAPIImplementation::enqb(const char* param)
 {
     Record& rec = choose_output_record(param);
-    if (const Var* var = rec.get(param))
-    {
-        if (!var->isset()) return missing_byte;
-        int value = var->enqi();
-        if (value < numeric_limits<signed char>::min()
-                || value > numeric_limits<signed char>::max())
-            error_consistency::throwf("value queried (%d) does not fit in a byte", value);
-        return value;
-    }
-    else
+    int value = rec.enq(param, missing_int);
+    if (value == missing_int)
         return missing_byte;
+
+    if (value < numeric_limits<signed char>::min()
+            || value > numeric_limits<signed char>::max())
+        error_consistency::throwf("value queried (%d) does not fit in a byte", value);
+    return value;
 }
 
 float CommonAPIImplementation::enqr(const char* param)
 {
     Record& rec = choose_output_record(param);
-    if (const Var* var = rec.get(param))
-    {
-        if (!var->isset()) return missing_float;
-        double value = var->enqd();
-
-        if (value < -numeric_limits<float>::max()
-                || value > numeric_limits<float>::max())
-            error_consistency::throwf("value queried (%f) does not fit in a real", value);
-        return value;
-    } else
+    double value = rec.enq(param, missing_double);
+    if (value == missing_double)
         return missing_float;
+
+    if (value < -numeric_limits<float>::max()
+            || value > numeric_limits<float>::max())
+        error_consistency::throwf("value queried (%f) does not fit in a real", value);
+    return value;
 }
 
 double CommonAPIImplementation::enqd(const char* param)
 {
     Record& rec = choose_output_record(param);
-    if (const Var* var = rec.get(param))
-    {
-        if (!var->isset()) return missing_double;
-        return var->enqd();
-    } else
-        return missing_double;
+    return rec.enq(param, missing_double);
 }
 
 const char* CommonAPIImplementation::enqc(const char* param)
 {
     Record& rec = choose_output_record(param);
-    if (const Var* var = rec.get(param))
-    {
-        if (var->isset())
-            return var->enqc();
-        else
-            return nullptr;
-    }
-    return nullptr;
+    return rec.enq(param, (const char*)nullptr);
 }
 
 void CommonAPIImplementation::seti(const char* param, int value)
@@ -394,33 +370,29 @@ void CommonAPIImplementation::fatto()
 void CommonAPIImplementation::read_qc_list(vector<Varcode>& res_arr) const
 {
     res_arr.clear();
-    if (const Var* var = qcinput.get("var"))
-        if (var->isset())
+    if (const char* val = qcinput.enq("var", (const char*)nullptr))
+    {
+        // Get only the QC values in *varlist
+        if (*val != '*')
+            throw error_consistency("QC values must start with '*'");
+
+        res_arr.push_back(resolve_varcode(val + 1));
+        return;
+    }
+
+    if (const char* val = qcinput.enq("varlist", (const char*)nullptr))
+    {
+        // Get only the QC values in *varlist
+        size_t pos;
+        size_t len;
+
+        for (pos = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
         {
-            const char* val = var->enqc();
-            // Get only the QC values in *varlist
-            if (*val != '*')
-                throw error_consistency("QC values must start with '*'");
-
-            res_arr.push_back(resolve_varcode(val + 1));
-            return;
+            if (*(val + pos) != '*')
+                throw error_consistency("QC value names must start with '*'");
+            res_arr.push_back(resolve_varcode(val + pos + 1));
         }
-
-    if (const Var* var = qcinput.get("varlist"))
-        if (var->isset())
-        {
-            const char* val = var->enqc();
-            // Get only the QC values in *varlist
-            size_t pos;
-            size_t len;
-
-            for (pos = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
-            {
-                if (*(val + pos) != '*')
-                    throw error_consistency("QC value names must start with '*'");
-                res_arr.push_back(resolve_varcode(val + pos + 1));
-            }
-        }
+    }
 }
 
 }

@@ -22,7 +22,7 @@ core/aliases.cc: core/aliases.gperf
 	if ! gperf < $< > $@; then rm $@; /bin/false; fi
 
 BUILT_SOURCES = core/record_keyword.cc core/aliases.cc
-EXTRA_DIST += core/aliases.gperf core/aliases.cc core/record_keyword.gperf core/record_keyword.cc
+EXTRA_DIST += mklookup core/aliases.gperf core/aliases.cc core/record_keyword.gperf core/record_keyword.cc
 
 
 msg/vars.h msg/vars.gperf msg/msg-extravars.h: msg/vars.csv msg/mkvars

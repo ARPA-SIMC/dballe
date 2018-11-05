@@ -622,7 +622,6 @@ based on the first byte of the file.
         int attrs = 0;
         int full_pseudoana = 0;
         int overwrite = 0;
-        int flags = 0;
         if (!PyArg_ParseTupleAndKeywords(args, kw, "O|siii", const_cast<char**>(kwlist), &obj, &encoding, &attrs, &full_pseudoana, &overwrite))
             return nullptr;
 
