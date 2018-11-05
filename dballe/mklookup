@@ -120,18 +120,17 @@ class Builder:
 
 
 class Table:
-    re_switch_line = re.compile(r"^(?P<indent>\s*)switch\s*\(key\)\s*{\s*//\s*mklookup\s*$")
     re_case_line = re.compile(r'^\s*case\s*"(?P<key>[^"]+)"\s*:\s*(?P<code>.*)$')
     re_default_line = re.compile(r'^\s*default\s*:\s*(?P<code>.+)$')
     re_trailing_break = re.compile(r"\s*break\s*;\s*$")
 
-    def __init__(self):
+    def __init__(self, indent):
         self.keys = {}
-        self.lead = []
-        self.tail = []
         self.default = ""
         self.cur_key = None
         self.cur_code = None
+        self.re_end_switch = re.compile("^" + re.escape(indent) + r"}\s*")
+        self.indent = indent
 
     def _add_key_code(self):
         self.keys[self.cur_key] = self.re_trailing_break.sub("", self.cur_code)
@@ -160,54 +159,63 @@ class Table:
         if self.cur_key:
             self._add_key_code()
 
-    def load(self, fname):
-        re_end_switch = None
-        at_start = True
-        at_end = False
-        with open(fname) as fd:
-            for lineno, line in enumerate(fd, start=1):
-                line = line.rstrip()
-                if at_start:
-                    mo = self.re_switch_line.match(line)
-                    if not mo:
-                        self.lead.append(line)
-                    else:
-                        re_end_switch = re.compile("^" + re.escape(mo.group("indent")) + r"}\s*")
-                        at_start = False
-                    continue
-                elif at_end:
-                    self.tail.append(line)
-                elif re_end_switch.match(line):
-                    self._end_switch()
-                    at_end = True
-                else:
-                    self._load_switch_line(line)
-
-        if not at_start and not at_end:
+    def parse_line(self, lineno, line):
+        if self.re_end_switch.match(line):
             self._end_switch()
+            return Verbatim()
 
-    def _load_switch_line(self, line):
         mo = self.re_case_line.match(line)
         if mo:
             self._start_key(mo.group("key"), mo.group("code"))
-        else:
-            mo = self.re_default_line.match(line)
-            if mo:
-                self._add_default(mo.group("code"))
-            else:
-                self._add_code(line)
+            return None
+
+        mo = self.re_default_line.match(line)
+        if mo:
+            self._add_default(mo.group("code"))
+            return None
+
+        self._add_code(line)
+        return None
 
     def dump(self):
         for k, v in self.keys.items():
             print("{}: {}".format(k, v))
 
-    def build(self):
-        for line in self.lead:
-            print(line)
-        builder = Builder(4)
+    def print(self, file):
+        builder = Builder(len(self.indent), file=file)
         builder.build_len_switch(self.keys, self.default)
-        for line in self.tail:
-            print(line)
+
+
+class Verbatim:
+    re_switch_line = re.compile(r"^(?P<indent>\s*)switch\s*\(key\)\s*{\s*//\s*mklookup\s*$")
+
+    def __init__(self):
+        self.lines = []
+
+    def parse_line(self, lineno, line):
+        mo = self.re_switch_line.match(line)
+        if not mo:
+            self.lines.append(line)
+            return None
+        else:
+            return Table(indent=mo.group("indent"))
+
+    def print(self, file):
+        for line in self.lines:
+            print(line, file=file)
+
+
+def parse(fname):
+    """
+    Parse a file into a sequence of blocks
+    """
+    blocks = [Verbatim()]
+    with open(fname) as fd:
+        for lineno, line in enumerate(fd, start=1):
+            next_block = blocks[-1].parse_line(lineno, line.rstrip())
+            if next_block is not None:
+                blocks.append(next_block)
+    return blocks
 
 
 def main():
@@ -226,9 +234,9 @@ def main():
         level = logging.INFO
     logging.basicConfig(level=level, stream=sys.stderr, format=log_format)
 
-    table = Table()
-    table.load(args.pathname)
-    table.build()
+    blocks = parse(args.pathname)
+    for block in blocks:
+        block.print(sys.stdout)
 
 
 if __name__ == "__main__":
