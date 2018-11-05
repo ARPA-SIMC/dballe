@@ -315,7 +315,7 @@ struct to_dict : MethNoargs<dpy_Record>
     {
         try {
             pyo_unique_ptr result(throw_ifnull(PyDict_New()));
-            self->rec->foreach_key([&](const char* key, const wreport::Var& val) {
+            core::Record::downcast(*self->rec).foreach_key([&](const char* key, const wreport::Var& val) {
                 pyo_unique_ptr py_val(throw_ifnull(wrpy->var_value_to_python(val)));
                 if (PyDict_SetItemString(result, key, py_val.get()))
                     throw PythonException();
@@ -335,7 +335,7 @@ struct keys : MethNoargs<dpy_Record>
         try {
             pyo_unique_ptr result(throw_ifnull(PyList_New(0)));
 
-            self->rec->foreach_key([&](const char* key, const wreport::Var&) {
+            core::Record::downcast(*self->rec).foreach_key([&](const char* key, const wreport::Var&) {
                 pyo_unique_ptr item(throw_ifnull(PyUnicode_FromString(key)));
                 if (PyList_Append(result, item) != 0)
                     throw PythonException();
@@ -356,7 +356,7 @@ struct items : MethNoargs<dpy_Record>
         try {
             pyo_unique_ptr result(throw_ifnull(PyList_New(0)));
 
-            self->rec->foreach_key([&](const char* key, const wreport::Var& val) {
+            core::Record::downcast(*self->rec).foreach_key([&](const char* key, const wreport::Var& val) {
                 pyo_unique_ptr py_key(throw_ifnull(PyUnicode_FromString(key)));
                 pyo_unique_ptr py_val(throw_ifnull(wrpy->var_value_to_python(val)));
                 pyo_unique_ptr item(throw_ifnull(PyTuple_Pack(2, py_key.get(), py_val.get())));
@@ -378,7 +378,7 @@ struct varitems : MethNoargs<dpy_Record>
     {
         try {
             pyo_unique_ptr result(throw_ifnull(PyList_New(0)));
-            self->rec->foreach_key([&](const char* key, const wreport::Var& val) {
+            core::Record::downcast(*self->rec).foreach_key([&](const char* key, const wreport::Var& val) {
                 pyo_unique_ptr py_key(throw_ifnull(PyUnicode_FromString(key)));
                 pyo_unique_ptr py_val(throw_ifnull((PyObject*)wrpy->var_create_copy(val)));
                 pyo_unique_ptr item(throw_ifnull(PyTuple_Pack(2, py_key.get(), py_val.get())));

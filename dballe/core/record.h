@@ -143,6 +143,9 @@ protected:
     /// Return the Var for a variable, creating it if it is missing
     wreport::Var& obtain(wreport::Varcode code);
 
+    void foreach_key_ref(std::function<void(const char*, const wreport::Var&)> dest) const;
+    void foreach_key_copy(std::function<void(const char*, std::unique_ptr<wreport::Var>&&)> dest) const;
+
 public:
     Record();
     Record(const Record& rec);
@@ -174,8 +177,6 @@ public:
     void add(const dballe::Record& source) override;
     bool contains(const dballe::Record& subset) const override;
     bool equals(const dballe::Record& rec) const override;
-    void foreach_key_ref(std::function<void(const char*, const wreport::Var&)> dest) const override;
-    void foreach_key_copy(std::function<void(const char*, std::unique_ptr<wreport::Var>&&)> dest) const override;
     void print(FILE* out) const override;
 
     /**
@@ -258,6 +259,18 @@ public:
 
     // TODO: deprecate: this is currently only used for the python bindings
     const wreport::Var* get(const char* key) const override;
+
+    /**
+     * Generate a sequence of key names and const Var& for all the
+     * contents of the record
+     */
+    void foreach_key(std::function<void(const char*, const wreport::Var&)> dest) const { foreach_key_ref(dest); }
+
+    /**
+     * Generate a sequence of key names and unique_ptr<Var> for all the
+     * contents of the record
+     */
+    void foreach_key(std::function<void(const char*, std::unique_ptr<wreport::Var>&&)> dest) const { foreach_key_copy(dest); }
 
 	/**
 	 * Return the name of a dba_keyword
