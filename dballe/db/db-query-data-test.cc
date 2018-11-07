@@ -206,8 +206,9 @@ this->add_method("latlon", [](Fixture& f) {
     TRY_QUERY("lonmin=77., lonmax=76.54330", 4);
     TRY_QUERY("lonmin=77., lonmax=76.54320", 4);
     TRY_QUERY("lonmin=77., lonmax=-10", 0);
-    TRY_QUERY("lonmin=0., lonmax=360.", 4);
-    TRY_QUERY("lonmin=-180., lonmax=180.", 4);
+    TRY_QUERY("lonmin=0., lonmax=360.", 0);
+    TRY_QUERY("lonmin=76.54320, lonmax=436.54320", 4);
+    TRY_QUERY("lonmin=-180., lonmax=180.", 0);
 });
 this->add_method("mobile", [](Fixture& f) {
     // fixed/mobile queries

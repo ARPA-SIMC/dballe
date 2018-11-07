@@ -162,9 +162,10 @@ add_method("lon", []() {
 });
 
 add_method("lonrange", []() {
+    // See issue #132: setting lonmin/lonmax now normalizes at each set
     core::Query q;
     q.set_from_test_string("lonmin=0, lonmax=360.0");
-    wassert(actual(q.lonrange) == LonRange(0.0, 360.0));
+    wassert(actual(q.lonrange) == LonRange(0.0, 0.0));
 });
 
 add_method("datetime", []() {
