@@ -115,29 +115,46 @@ struct VoglioquestoOperation : public Operation
             query_cur = tr.query_data(*query).release();
         return query_cur->remaining();
     }
-    const char* dammelo(dballe::Record& output) override
+    wreport::Varcode dammelo(dballe::Record& output) override
     {
         output.clear();
-        if (!query_cur) return nullptr;
+        if (!query_cur) return 0;
 
         if (query_cur->next())
         {
             query_cur->to_record(output);
             valid_cached_attrs = true;
-            // We bypass checks, since it comes from to_record that always sets "var"
-            return output.enq("var", (const char*)nullptr);
+            return query_cur->get_varcode();
         } else {
             delete query_cur;
             query_cur = nullptr;
-            return nullptr;
+            return 0;
         }
     }
-    void voglioancora(db::Transaction& tr, std::function<void(std::unique_ptr<wreport::Var>&&)> dest) override
+    void voglioancora(db::Transaction& tr, std::vector<wreport::Var>& dest) override
     {
         if (!query_cur) throw error_consistency("voglioancora called after dammelo returned end of data");
-        query_cur->attr_query(dest, !valid_cached_attrs);
+        function<void(unique_ptr<Var>&&)> consumer;
+        if (selected_attr_codes.empty())
+        {
+            consumer = [&](unique_ptr<Var>&& var) {
+                // TODO: move into qcoutput
+                dest.emplace_back(std::move(*var));
+            };
+        } else {
+            consumer = [&](unique_ptr<Var>&& var) {
+                for (auto code: selected_attr_codes)
+                    if (code == var->code())
+                    {
+                        // TODO: move into qcoutput
+                        dest.emplace_back(std::move(*var));
+                        break;
+                    }
+            };
+        }
+        query_cur->attr_query(consumer, !valid_cached_attrs);
     }
-    void critica(db::Transaction& tr, const core::Record& qcinput) override
+    void critica(db::Transaction& tr, const Values& qcinput) override
     {
         if (!query_cur) throw error_consistency("critica called after dammelo returned end of data");
         if (dynamic_cast<const db::CursorStationData*>(query_cur))
@@ -146,13 +163,13 @@ struct VoglioquestoOperation : public Operation
             tr.attr_insert_data(query_cur->attr_reference_id(), qcinput);
         valid_cached_attrs = false;
     }
-    void scusa(db::Transaction& tr, const std::vector<wreport::Varcode>& attrs) override
+    void scusa(db::Transaction& tr) override
     {
         if (!query_cur) throw error_consistency("scusa called after dammelo returned end of data");
         if (dynamic_cast<const db::CursorStationData*>(query_cur))
-            tr.attr_remove_station(query_cur->attr_reference_id(), attrs);
+            tr.attr_remove_station(query_cur->attr_reference_id(), selected_attr_codes);
         else
-            tr.attr_remove_data(query_cur->attr_reference_id(), attrs);
+            tr.attr_remove_data(query_cur->attr_reference_id(), selected_attr_codes);
         valid_cached_attrs = false;
     }
 };
@@ -176,6 +193,11 @@ struct PrendiloOperation : public Operation
     void set_varcode(wreport::Varcode varcode) override { this->varcode = varcode; }
     int prendilo(db::Transaction& tr, const dballe::Record& input, bool station_context, unsigned perms)
     {
+        // fprintf(stderr, "PRENDILO DB\n");
+        // tr.dump(stderr);
+        // fprintf(stderr, "PRENDILO RECORD\n");
+        // input.print(stderr);
+
         last_inserted_varids.clear();
         if (station_context)
         {
@@ -192,11 +214,16 @@ struct PrendiloOperation : public Operation
             return dv.station.id;
         }
     }
-    void voglioancora(db::Transaction& tr, std::function<void(std::unique_ptr<wreport::Var>&&)> dest) override
+    void select_attrs(const std::vector<wreport::Varcode>& varcodes) override
+    {
+        if (!varcodes.empty())
+            throw error_consistency("*var and *varlist cannot be set after a prendilo");
+    }
+    void voglioancora(db::Transaction& tr, std::vector<wreport::Var>& dest) override
     {
         throw error_consistency("voglioancora cannot be called after a prendilo");
     }
-    void critica(db::Transaction& tr, const core::Record& qcinput) override
+    void critica(db::Transaction& tr, const Values& qcinput) override
     {
         int data_id = MISSING_INT;
         bool is_station = false;
@@ -223,7 +250,7 @@ struct PrendiloOperation : public Operation
         else
             tr.attr_insert_data(data_id, qcinput);
     }
-    void scusa(db::Transaction& tr, const std::vector<wreport::Varcode>& attrs) override
+    void scusa(db::Transaction& tr) override
     {
         throw error_consistency("scusa cannot be called after a prendilo");
     }
@@ -348,7 +375,7 @@ int DbAPI::voglioquesto()
     }
 }
 
-const char* DbAPI::dammelo()
+wreport::Varcode DbAPI::dammelo()
 {
     if (!operation) throw error_consistency("dammelo called without a previous voglioquesto");
 
@@ -388,38 +415,12 @@ void DbAPI::dimenticami()
 int DbAPI::voglioancora()
 {
     // Query attributes
-    int qc_count = 0;
-
-    // Retrieve the varcodes of the attributes that we want
-    std::vector<wreport::Varcode> arr;
-    read_qc_list(arr);
-
-    function<void(unique_ptr<Var>&&)> dest;
-
-    if (arr.empty())
-    {
-        dest = [&](unique_ptr<Var>&& var) {
-            qcoutput.set(move(var));
-            ++qc_count;
-        };
-    } else {
-        dest = [&](unique_ptr<Var>&& var) {
-            for (auto code: arr)
-                if (code == var->code())
-                {
-                    qcoutput.set(move(var));
-                    ++qc_count;
-                    break;
-                }
-        };
-    }
-
-    qcoutput.clear_vars();
+    qcoutput.clear();
     if (!operation) throw error_consistency("voglioancora was not called after a dammelo, or was called with an invalid *context_id or *var_related");
-    operation->voglioancora(*tr, dest);
+    operation->voglioancora(*tr, qcoutput);
     qc_iter = 0;
     qcinput.clear();
-    return qc_count;
+    return qcoutput.size();
 }
 
 void DbAPI::critica()
@@ -441,11 +442,8 @@ void DbAPI::scusa()
 
 
     // Retrieve the varcodes of the attributes we want to remove
-    std::vector<wreport::Varcode> attrs;
-    read_qc_list(attrs);
-
     if (!operation) throw error_consistency("scusa was not called after a dammelo, or was called with an invalid *context_id or *var_related");
-    operation->scusa(*tr, attrs);
+    operation->scusa(*tr);
     qcinput.clear();
 }
 

@@ -177,17 +177,6 @@ struct Constraints
     Constraints(const core::Query& query, const char* tbl, Querybuf& q)
         : query(query), tbl(tbl), q(q), found(false) {}
 
-#if 0
-    void add_int(dba_keyword key, const char* sql)
-    {
-        const Var* var = rec.key_peek(key);
-        if (!var || !var->isset()) return;
-        //TRACE("found %s: adding %s. val is %d\n", info(key)->desc, sql, *out);
-        q.append_listf(sql, tbl, var->enqi());
-        found = true;
-    }
-#endif
-
     void add_lat()
     {
         if (query.latrange.is_missing()) return;

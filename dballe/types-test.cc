@@ -192,6 +192,12 @@ add_method("lonrange", []() {
     wassert(actual(lr.imin) == -1000000);
     wassert(actual(lr.imax) == 0);
     wassert(actual(lr) == LonRange(-10.0, 0.0));
+
+    lr.set(0.0, 360.0);
+    //wassert(actual(lr.imin) == -1000000);
+    //wassert(actual(lr.imax) == 0);
+    //wassert(actual(lr) == LonRange(-10.0, 0.0));
+    wassert_true(lr.contains(180.0));
 });
 add_method("level_descs", []() {
     // Try to get descriptions for all the layers

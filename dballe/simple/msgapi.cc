@@ -223,7 +223,7 @@ int MsgAPI::voglioquesto()
     return count;
 }
 
-const char* MsgAPI::dammelo()
+wreport::Varcode MsgAPI::dammelo()
 {
     if ((state & STATE_VOGLIOQUESTO) == 0)
         throw error_consistency("dammelo called without a previous voglioquesto");
@@ -279,10 +279,7 @@ const char* MsgAPI::dammelo()
     format_bcode(code, vname);
     output.set("var", vname);
     output.set(var);
-
-    // Return the pointer to the copy inside the output record. We cannot
-    // return vname as it is in the local stack
-    return output.enq("var", (const char*)nullptr);
+    return code;
 }
 
 void MsgAPI::flushVars()
@@ -336,10 +333,10 @@ void MsgAPI::prendilo()
     if (!wmsg) wmsg = new Msg;
 
     // Store record metainfo
-    if (const char* val = input.enq("rep_memo", (const char*)nullptr))
+    if (!input.station.report.empty())
     {
-        wmsg->set_rep_memo(val);
-        wmsg->type = Msg::type_from_repmemo(val);
+        wmsg->set_rep_memo(input.station.report.c_str());
+        wmsg->type = Msg::type_from_repmemo(input.station.report.c_str());
     }
     DBStation station = input.get_dbstation();
     if (station.id != MISSING_INT)
@@ -385,16 +382,16 @@ void MsgAPI::prendilo()
         vars.push_back(new Var(**v));
     input.clear_vars();
 
-    if (const char* query = input.enq("query", (const char*)nullptr))
+    if (!input.query.empty())
     {
-        if (strcasecmp(query, "subset") == 0)
+        if (strcasecmp(input.query.c_str(), "subset") == 0)
         {
             flushSubset();
-        } else if (strncasecmp(query, "message", 7) == 0) {
+        } else if (strncasecmp(input.query.c_str(), "message", 7) == 0) {
             // Check that message is followed by spaces or end of string
-            const char* s = query + 7;
+            const char* s = input.query.c_str() + 7;
             if (*s != 0 && !isblank(*s))
-                error_consistency::throwf("Query type \"%s\" is not among the supported values", query);
+                error_consistency::throwf("Query type \"%s\" is not among the supported values", input.query.c_str());
             // Skip the spaces after message
             while (*s != 0 && isblank(*s))
                 ++s;
@@ -410,7 +407,7 @@ void MsgAPI::prendilo()
 
             flushMessage();
         } else
-            error_consistency::throwf("Query type \"%s\" is not among the supported values", query);
+            error_consistency::throwf("Query type \"%s\" is not among the supported values", input.query.c_str());
 
         // Uset query after using it: it needs to be explicitly set every time
         input.unset("query");
@@ -435,17 +432,10 @@ int MsgAPI::voglioancora()
     const Var& var = *(ctx.data[iter_var]);
 
     qcoutput.clear();
-
-    int count = 0;
     for (const Var* attr = var.next_attr(); attr; attr = attr->next_attr())
-    {
-        qcoutput.set(*attr);
-        ++count;
-    }
-
+        qcoutput.push_back(*attr);
     qc_iter = 0;
-
-    return count;
+    return qcoutput.size();
 }
 
 void MsgAPI::critica()
@@ -458,9 +448,8 @@ void MsgAPI::critica()
     if (vars.size() > 1)
         throw error_consistency("critica has been called after setting many variables with a single prendilo, so I do not know which one should get the attributes");
 
-    const vector<Var*>& avars = qcinput.vars();
-    for (vector<Var*>::const_iterator i = avars.begin(); i != avars.end(); ++i)
-        vars[0]->seta(**i);
+    for (const auto& i: qcinput)
+        vars[0]->seta(*i.second.var);
     qcinput.clear();
 }
 

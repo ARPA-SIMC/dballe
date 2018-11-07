@@ -161,6 +161,12 @@ add_method("lon", []() {
     wassert(actual(q.lonrange) == LonRange(42.0, 42.0));
 });
 
+add_method("lonrange", []() {
+    core::Query q;
+    q.set_from_test_string("lonmin=0, lonmax=360.0");
+    wassert(actual(q.lonrange) == LonRange(0.0, 360.0));
+});
+
 add_method("datetime", []() {
     core::Query q;
     wassert(q.set_from_test_string("year=2015"));

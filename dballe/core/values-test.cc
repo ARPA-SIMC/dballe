@@ -28,17 +28,17 @@ add_method("station", []() {
     core::Record rec;
     rec.set(st);
 
-    wassert_false(rec.get("ana_id"));
-    wassert_true(rec.get("rep_memo"));
-    wassert(actual(*rec.get("rep_memo")) == "testreport");
-    wassert_true(rec.get("lat"));
-    wassert(actual(*rec.get("lat")) == 1150000);
-    wassert_true(rec.get("lon"));
-    wassert(actual(*rec.get("lon")) == 4250000);
-    wassert_true(rec.get("mobile"));
-    wassert(actual(*rec.get("mobile")) == 1);
-    wassert_true(rec.get("ident"));
-    wassert(actual(*rec.get("ident")) == "testident");
+    wassert_false(rec.isset("ana_id"));
+    wassert_true(rec.isset("rep_memo"));
+    wassert(actual(rec.enqs("rep_memo", "")) == "testreport");
+    wassert_true(rec.isset("lat"));
+    wassert(actual(rec.enqi("lat", MISSING_INT)) == 1150000);
+    wassert_true(rec.isset("lon"));
+    wassert(actual(rec.enqi("lon", MISSING_INT)) == 4250000);
+    wassert_true(rec.isset("mobile"));
+    wassert(actual(rec.enqi("mobile", MISSING_INT)) == 1);
+    wassert_true(rec.isset("ident"));
+    wassert(actual(rec.enqs("ident", "")) == "testident");
 
     Station st1 = rec.get_station();
     wassert(actual(st) == st1);
@@ -48,16 +48,16 @@ add_method("station", []() {
     st.coords = Coords(11.6, 42.6);
     rec.set(st);
 
-    wassert_false(rec.get("ana_id"));
-    wassert_true(rec.get("rep_memo"));
-    wassert(actual(*rec.get("rep_memo")) == "testreport1");
-    wassert_true(rec.get("lat"));
-    wassert(actual(*rec.get("lat")) == 1160000);
-    wassert_true(rec.get("lon"));
-    wassert(actual(*rec.get("lon")) == 4260000);
-    wassert_true(rec.get("mobile"));
-    wassert(actual(*rec.get("mobile")) == 0);
-    wassert_false(rec.get("ident"));
+    wassert_false(rec.isset("ana_id"));
+    wassert_true(rec.isset("rep_memo"));
+    wassert(actual(rec.enqs("rep_memo", "")) == "testreport1");
+    wassert_true(rec.isset("lat"));
+    wassert(actual(rec.enqi("lat", MISSING_INT)) == 1160000);
+    wassert_true(rec.isset("lon"));
+    wassert(actual(rec.enqi("lon", MISSING_INT)) == 4260000);
+    wassert_true(rec.isset("mobile"));
+    wassert(actual(rec.enqi("mobile", MISSING_INT)) == 0);
+    wassert_false(rec.isset("ident"));
 });
 
 add_method("dbstation", []() {
@@ -70,18 +70,18 @@ add_method("dbstation", []() {
     core::Record rec;
     rec.set(st);
 
-    wassert_true(rec.get("ana_id"));
-    wassert(actual(*rec.get("ana_id")) == 1);
-    wassert_true(rec.get("rep_memo"));
-    wassert(actual(*rec.get("rep_memo")) == "testreport");
-    wassert_true(rec.get("lat"));
-    wassert(actual(*rec.get("lat")) == 1150000);
-    wassert_true(rec.get("lon"));
-    wassert(actual(*rec.get("lon")) == 4250000);
-    wassert_true(rec.get("mobile"));
-    wassert(actual(*rec.get("mobile")) == 1);
-    wassert_true(rec.get("ident"));
-    wassert(actual(*rec.get("ident")) == "testident");
+    wassert_true(rec.isset("ana_id"));
+    wassert(actual(rec.enqi("ana_id", MISSING_INT)) == 1);
+    wassert_true(rec.isset("rep_memo"));
+    wassert(actual(rec.enqs("rep_memo", "")) == "testreport");
+    wassert_true(rec.isset("lat"));
+    wassert(actual(rec.enqi("lat", MISSING_INT)) == 1150000);
+    wassert_true(rec.isset("lon"));
+    wassert(actual(rec.enqi("lon", MISSING_INT)) == 4250000);
+    wassert_true(rec.isset("mobile"));
+    wassert(actual(rec.enqi("mobile", MISSING_INT)) == 1);
+    wassert_true(rec.isset("ident"));
+    wassert(actual(rec.enqs("ident", "")) == "testident");
 
     DBStation st1 = rec.get_dbstation();
     wassert(actual(st) == st1);
@@ -91,16 +91,16 @@ add_method("dbstation", []() {
     st.coords = Coords(11.6, 42.6);
     rec.set(st);
 
-    wassert_false(rec.get("ana_id"));
-    wassert_true(rec.get("rep_memo"));
-    wassert(actual(*rec.get("rep_memo")) == "testreport1");
-    wassert_true(rec.get("lat"));
-    wassert(actual(*rec.get("lat")) == 1160000);
-    wassert_true(rec.get("lon"));
-    wassert(actual(*rec.get("lon")) == 4260000);
-    wassert_true(rec.get("mobile"));
-    wassert(actual(*rec.get("mobile")) == 0);
-    wassert_false(rec.get("ident"));
+    wassert_false(rec.isset("ana_id"));
+    wassert_true(rec.isset("rep_memo"));
+    wassert(actual(rec.enqs("rep_memo", "")) == "testreport1");
+    wassert_true(rec.isset("lat"));
+    wassert(actual(rec.enqi("lat", MISSING_INT)) == 1160000);
+    wassert_true(rec.isset("lon"));
+    wassert(actual(rec.enqi("lon", MISSING_INT)) == 4260000);
+    wassert_true(rec.isset("mobile"));
+    wassert(actual(rec.enqi("mobile", MISSING_INT)) == 0);
+    wassert_false(rec.isset("ident"));
 });
 
 add_method("codec", []() {

@@ -17,29 +17,50 @@ namespace fortran {
 
 Operation::~Operation() {}
 void Operation::set_varcode(wreport::Varcode varcode) {}
-const char* Operation::dammelo(dballe::Record& output) { throw error_consistency("dammelo called without a previous voglioquesto"); }
+wreport::Varcode Operation::dammelo(dballe::Record& output) { throw error_consistency("dammelo called without a previous voglioquesto"); }
 
 
 struct VaridOperation : public Operation
 {
+    /// Varcode of the data variable
     wreport::Varcode varcode;
+    /// Database ID of the data variable
     int varid;
 
     VaridOperation(int varid) : varid(varid) {}
     void set_varcode(wreport::Varcode varcode) override { this->varcode = varcode; }
-    void voglioancora(db::Transaction& tr, std::function<void(std::unique_ptr<wreport::Var>&&)> dest) override
+    void voglioancora(db::Transaction& tr, std::vector<wreport::Var>& dest) override
     {
         if (!varid)
             throw error_consistency("voglioancora called with an invalid *context_id");
-        tr.attr_query_data(varid, dest);
+        // Retrieve the varcodes of the attributes that we want
+        function<void(unique_ptr<Var>&&)> consumer;
+        if (selected_attr_codes.empty())
+        {
+            consumer = [&](unique_ptr<Var>&& var) {
+                // TODO: move into qcoutput
+                dest.emplace_back(std::move(*var));
+            };
+        } else {
+            consumer = [&](unique_ptr<Var>&& var) {
+                for (auto code: selected_attr_codes)
+                    if (code == var->code())
+                    {
+                        // TODO: move into qcoutput
+                        dest.emplace_back(std::move(*var));
+                        break;
+                    }
+            };
+        }
+        tr.attr_query_data(varid, consumer);
     }
-    void critica(db::Transaction& tr, const core::Record& qcinput) override
+    void critica(db::Transaction& tr, const Values& qcinput) override
     {
         tr.attr_insert_data(varid, qcinput);
     }
-    void scusa(db::Transaction& tr, const std::vector<wreport::Varcode>& attrs) override
+    void scusa(db::Transaction& tr) override
     {
-        tr.attr_remove_data(varid, attrs);
+        tr.attr_remove_data(varid, selected_attr_codes);
     }
 };
 
@@ -93,30 +114,6 @@ unsigned CommonAPIImplementation::compute_permissions(const char* anaflag, const
     return perms;
 }
 
-Record& CommonAPIImplementation::choose_input_record(const char*& param)
-{
-    switch (param[0])
-    {
-        case '*':
-            param = param + 1;
-            return qcinput;
-        default:
-            return input;
-    }
-}
-
-Record& CommonAPIImplementation::choose_output_record(const char*& param)
-{
-    switch (param[0])
-    {
-        case '*':
-            param = param + 1;
-            return qcoutput;
-        default:
-            return output;
-    }
-}
-
 void CommonAPIImplementation::test_input_to_output()
 {
     output = input;
@@ -124,14 +121,36 @@ void CommonAPIImplementation::test_input_to_output()
 
 int CommonAPIImplementation::enqi(const char* param)
 {
-    Record& rec = choose_output_record(param);
-    return rec.enq(param, missing_int);
+    if (param[0] == '*')
+    {
+        if (strcmp(param + 1, "context_id") == 0)
+            // TODO: it seems that this always returned missing, by querying a Record that was never set
+            return missing_int;
+        else
+        {
+            wreport::Varcode code = resolve_varcode(param + 1);
+            for (const auto& var: qcoutput)
+                if (var.code() == code)
+                    return var.enqi();
+            return missing_int;
+        }
+    }
+    return output.enq(param, missing_int);
 }
 
 signed char CommonAPIImplementation::enqb(const char* param)
 {
-    Record& rec = choose_output_record(param);
-    int value = rec.enq(param, missing_int);
+    int value = missing_int;
+    if (param[0] == '*')
+    {
+        wreport::Varcode code = resolve_varcode(param + 1);
+        for (const auto& var: qcoutput)
+            if (var.code() == code)
+                value = var.enqi();
+    } else {
+        value = output.enq(param, missing_int);
+    }
+
     if (value == missing_int)
         return missing_byte;
 
@@ -143,8 +162,17 @@ signed char CommonAPIImplementation::enqb(const char* param)
 
 float CommonAPIImplementation::enqr(const char* param)
 {
-    Record& rec = choose_output_record(param);
-    double value = rec.enq(param, missing_double);
+    double value = missing_double;
+    if (param[0] == '*')
+    {
+        wreport::Varcode code = resolve_varcode(param + 1);
+        for (const auto& var: qcoutput)
+            if (var.code() == code)
+                value = var.enqd();
+    } else {
+        value = output.enq(param, missing_double);
+    }
+
     if (value == missing_double)
         return missing_float;
 
@@ -156,14 +184,44 @@ float CommonAPIImplementation::enqr(const char* param)
 
 double CommonAPIImplementation::enqd(const char* param)
 {
-    Record& rec = choose_output_record(param);
-    return rec.enq(param, missing_double);
+    if (param[0] == '*')
+    {
+        wreport::Varcode code = resolve_varcode(param + 1);
+        for (const auto& var: qcoutput)
+            if (var.code() == code)
+                return var.enqd();
+        return missing_double;
+    }
+    return output.enq(param, missing_double);
 }
 
-const char* CommonAPIImplementation::enqc(const char* param)
+std::string CommonAPIImplementation::enqc(const char* param)
 {
-    Record& rec = choose_output_record(param);
-    return rec.enq(param, (const char*)nullptr);
+    if (param[0] == '*')
+    {
+        wreport::Varcode code = resolve_varcode(param + 1);
+        for (const auto& var: qcoutput)
+            if (var.code() == code)
+                return var.enqc();
+        return std::string();
+    }
+    return output.enq(param, std::string());
+}
+
+bool CommonAPIImplementation::enqc(const char* param, std::string& res)
+{
+    if (param[0] == '*')
+    {
+        wreport::Varcode code = resolve_varcode(param + 1);
+        for (const auto& var: qcoutput)
+            if (var.code() == code)
+            {
+                res = var.enqc();
+                return true;
+            }
+        return false;
+    }
+    return output.enqsb(param, res);
 }
 
 void CommonAPIImplementation::seti(const char* param, int value)
@@ -178,10 +236,11 @@ void CommonAPIImplementation::seti(const char* param, int value)
             else
                 operation = new VaridOperation(value);
         } else {
-            qcinput.seti(param + 1, value);
+            qcinput.set(resolve_varcode(param + 1), value);
         }
-    } else
-        input.seti(param, value);
+        return;
+    }
+    input.seti(param, value);
 }
 
 void CommonAPIImplementation::setb(const char* param, signed char value)
@@ -196,8 +255,12 @@ void CommonAPIImplementation::setr(const char* param, float value)
 
 void CommonAPIImplementation::setd(const char* param, double value)
 {
-    Record& rec = choose_input_record(param);
-    rec.set(param, value);
+    if (param[0] == '*')
+    {
+        qcinput.set(resolve_varcode(param + 1), value);
+        return;
+    }
+    input.set(param, value);
 }
 
 void CommonAPIImplementation::setc(const char* param, const char* value)
@@ -209,11 +272,37 @@ void CommonAPIImplementation::setc(const char* param, const char* value)
             if (!operation)
                 throw error_consistency("*var_related set without context_id, or before any dammelo or prendilo");
             operation->set_varcode(resolve_varcode(value));
+        } else if (strcmp(param + 1, "var") == 0) {
+            if (!operation)
+                throw error_consistency("*var set without context_id, or before any dammelo or prendilo");
+            std::vector<wreport::Varcode> varcodes { resolve_varcode(value + 1) };
+            operation->select_attrs(varcodes);
+        } else if (strcmp(param + 1, "varlist") == 0) {
+            if (!operation)
+                throw error_consistency("*varlist set without context_id, or before any dammelo or prendilo");
+            std::vector<wreport::Varcode> varcodes;
+            size_t pos = 0;
+            while (true)
+            {
+                size_t len = strcspn(value + pos, ",");
+                if (len == 0) break;
+
+                if (*(value + pos) != '*')
+                    throw error_consistency("QC value names must start with '*'");
+                varcodes.push_back(resolve_varcode(value + pos + 1));
+
+                if (!*(value + pos + len))
+                    break;
+                pos += len + 1;
+            }
+            operation->select_attrs(varcodes);
         } else {
-            qcinput.setc(param + 1, value);
+            // Set varcode=value
+            qcinput.set(resolve_varcode(param + 1), value);
         }
-    } else
-        input.setc(param, value);
+        return;
+    }
+    input.setc(param, value);
 }
 
 void CommonAPIImplementation::setcontextana()
@@ -226,15 +315,16 @@ void CommonAPIImplementation::setcontextana()
 
 void CommonAPIImplementation::enqlevel(int& ltype1, int& l1, int& ltype2, int& l2)
 {
-    ltype1 = output.enq("leveltype1", API::missing_int);
-    l1 = output.enq("l1", API::missing_int);
-    ltype2 = output.enq("leveltype2", API::missing_int);
-    l2 = output.enq("l2", API::missing_int);
+    Level lev = output.get_level(); // TODO: access Record directly
+    ltype1 = lev.ltype1 != MISSING_INT ? lev.ltype1 : API::missing_int;
+    l1     = lev.l1     != MISSING_INT ? lev.l1     : API::missing_int;
+    ltype2 = lev.ltype2 != MISSING_INT ? lev.ltype2 : API::missing_int;
+    l2     = lev.l2     != MISSING_INT ? lev.l2     : API::missing_int;
 }
 
 void CommonAPIImplementation::setlevel(int ltype1, int l1, int ltype2, int l2)
 {
-    Level level(ltype1, l1, ltype2, l2);
+    Level level(ltype1, l1, ltype2, l2);  // TODO: access Record directly
     if (!level.is_missing())
         station_context = false;
     input.set_level(level);
@@ -242,14 +332,15 @@ void CommonAPIImplementation::setlevel(int ltype1, int l1, int ltype2, int l2)
 
 void CommonAPIImplementation::enqtimerange(int& ptype, int& p1, int& p2)
 {
-    ptype = output.enq("pindicator", API::missing_int);
-    p1 = output.enq("p1", API::missing_int);
-    p2 = output.enq("p2", API::missing_int);
+    Trange tr = output.get_trange(); // TODO: access Record directly
+    ptype = tr.pind != MISSING_INT ? tr.pind : API::missing_int;
+    p1    = tr.p1   != MISSING_INT ? tr.p1   : API::missing_int;
+    p2    = tr.p2   != MISSING_INT ? tr.p2   : API::missing_int;
 }
 
 void CommonAPIImplementation::settimerange(int ptype, int p1, int p2)
 {
-    Trange trange(ptype, p1, p2);
+    Trange trange(ptype, p1, p2);  // TODO: access Record directly
     if (!trange.is_missing())
         station_context = false;
     input.set_trange(trange);
@@ -257,12 +348,13 @@ void CommonAPIImplementation::settimerange(int ptype, int p1, int p2)
 
 void CommonAPIImplementation::enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec)
 {
-    year = output.enq("year", API::missing_int);
-    month = output.enq("month", API::missing_int);
-    day = output.enq("day", API::missing_int);
-    hour = output.enq("hour", API::missing_int);
-    min = output.enq("min", API::missing_int);
-    sec = output.enq("sec", API::missing_int);
+    Datetime dt = output.get_datetime();  // TODO: Access Record directly
+    year = dt.year != 0xffff ? dt.year : API::missing_int;
+    month = dt.month != 0xff ? dt.month : API::missing_int;
+    day = dt.day != 0xff ? dt.day : API::missing_int;
+    hour = dt.hour != 0xff ? dt.hour : API::missing_int;
+    min = dt.minute != 0xff ? dt.minute : API::missing_int;
+    sec = dt.second != 0xff ? dt.second : API::missing_int;
 }
 
 void CommonAPIImplementation::setdate(int year, int month, int day, int hour, int min, int sec)
@@ -293,20 +385,43 @@ void CommonAPIImplementation::setdatemax(int year, int month, int day, int hour,
 
 void CommonAPIImplementation::unset(const char* param)
 {
-    Record& rec = choose_input_record(param);
-    rec.unset(param);
+    if (param[0] == '*')
+    {
+        if (strcmp(param + 1, "var_related") == 0)
+        {
+            if (!operation)
+                throw error_consistency("*var_related set without context_id, or before any dammelo or prendilo");
+            operation->set_varcode(0);
+        } else if (strcmp(param + 1, "var") == 0) {
+            if (!operation) return;
+            operation->select_attrs(std::vector<wreport::Varcode>());
+        } else if (strcmp(param + 1, "varlist") == 0) {
+            if (!operation) return;
+            operation->select_attrs(std::vector<wreport::Varcode>());
+        } else {
+            // Set varcode=value
+            qcinput.erase(resolve_varcode(param + 1));
+        }
+        return;
+    }
+    input.unset(param);
 }
 
 void CommonAPIImplementation::unsetall()
 {
     qcinput.clear();
     input.clear();
+    if (operation)
+    {
+        operation->set_varcode(0);
+        operation->select_attrs(std::vector<wreport::Varcode>());
+    }
     station_context = false;
 }
 
 void CommonAPIImplementation::unsetb()
 {
-    qcinput.clear_vars();
+    qcinput.clear();
     input.clear_vars();
 }
 
@@ -351,10 +466,10 @@ const char* CommonAPIImplementation::ancora()
 
     if (qc_iter < 0)
         throw error_consistency("ancora called without a previous voglioancora");
-    if ((unsigned)qc_iter >= qcoutput.vars().size())
+    if ((unsigned)qc_iter >= qcoutput.size())
         throw error_notfound("ancora called with no (or no more) results available");
 
-    Varcode var = qcoutput.vars()[qc_iter]->code();
+    Varcode var = qcoutput[qc_iter].code();
     format_bcode(var, parm + 1);
 
     /* Get next value from qc */
@@ -365,34 +480,6 @@ const char* CommonAPIImplementation::ancora()
 
 void CommonAPIImplementation::fatto()
 {
-}
-
-void CommonAPIImplementation::read_qc_list(vector<Varcode>& res_arr) const
-{
-    res_arr.clear();
-    if (const char* val = qcinput.enq("var", (const char*)nullptr))
-    {
-        // Get only the QC values in *varlist
-        if (*val != '*')
-            throw error_consistency("QC values must start with '*'");
-
-        res_arr.push_back(resolve_varcode(val + 1));
-        return;
-    }
-
-    if (const char* val = qcinput.enq("varlist", (const char*)nullptr))
-    {
-        // Get only the QC values in *varlist
-        size_t pos;
-        size_t len;
-
-        for (pos = 0; (len = strcspn(val + pos, ",")) > 0; pos += len + 1)
-        {
-            if (*(val + pos) != '*')
-                throw error_consistency("QC value names must start with '*'");
-            res_arr.push_back(resolve_varcode(val + pos + 1));
-        }
-    }
 }
 
 }

@@ -336,6 +336,28 @@ Datetime Datetime::from_julian(int jday, int ho, int mi, int se)
     return Datetime(Date::from_julian(jday), Time(ho, mi, se));
 }
 
+static void check_partial_consistency(const Datetime& dt)
+{
+    if (dt.year == 0xffff)
+    {
+        if (dt.month  != 0xff) error_consistency::throwf("month %d given with no year", dt.month);
+        if (dt.day    != 0xff) error_consistency::throwf("day %d given with no year", dt.day);
+        if (dt.hour   != 0xff) error_consistency::throwf("hour %d given with no year", dt.hour);
+        if (dt.minute != 0xff) error_consistency::throwf("minute %d given with no year", dt.minute);
+        if (dt.second != 0xff) error_consistency::throwf("second %d given with no year", dt.second);
+    }
+    if (dt.month == 0xff) {
+        if (dt.day != 0xff) error_consistency::throwf("day %d given with no month", dt.day);
+    }
+    if (dt.hour == 0xff) {
+        if (dt.minute != 0xff) error_consistency::throwf("minute %d given with no hour", dt.minute);
+        if (dt.second != 0xff) error_consistency::throwf("second %d given with no hour", dt.second);
+    }
+    if (dt.minute == 0xff) {
+        if (dt.second != 0xff) error_consistency::throwf("second %d given with no minute", dt.second);
+    }
+}
+
 static void check_partial_consistency(int ye, int mo, int da, int ho, int mi, int se)
 {
     if (ye == MISSING_INT)
@@ -380,6 +402,28 @@ Datetime Datetime::upper_bound(int ye, int mo, int da, int ho, int mi, int se)
     if (mi == MISSING_INT) mi = 59;
     if (se == MISSING_INT) se = 59;
     return Datetime(ye, mo, da, ho, mi, se);
+}
+
+void Datetime::set_lower_bound()
+{
+    check_partial_consistency(*this);
+    if (year   == 0xffff) { month = day = hour = minute = second = 0xff; return; }
+    if (month  == 0xff) month = 1;
+    if (day    == 0xff) day = 1;
+    if (hour   == 0xff) hour = 0;
+    if (minute == 0xff) minute = 0;
+    if (second == 0xff) second = 0;
+}
+
+void Datetime::set_upper_bound()
+{
+    check_partial_consistency(*this);
+    if (year   == 0xffff) { month = day = hour = minute = second = 0xff; return; }
+    if (month  == 0xff) month = 12;
+    if (day    == 0xff) day = Date::days_in_month(year, month);
+    if (hour   == 0xff) hour = 23;
+    if (minute == 0xff) minute = 59;
+    if (second == 0xff) second = 59;
 }
 
 Date Datetime::date() const { return is_missing() ? Date() : Date(year, month, day); }
@@ -459,6 +503,11 @@ int Datetime::print_iso8601(FILE* out, char sep, const char* end) const
 {
     return fprintf(out, "%04hu-%02hhu-%02hhu%c%02hhu:%02hhu:%02hhu%s",
             year, month, day, sep, hour, minute, second, end);
+}
+
+int Datetime::print(FILE* out, const char* end) const
+{
+    return print_iso8601(out, 'T', end);
 }
 
 void Datetime::to_csv_iso8601(CSVWriter& out, char sep, const char* tz) const
@@ -563,6 +612,13 @@ bool DatetimeRange::is_disjoint(const DatetimeRange& dtr) const
     return false;
 }
 
+int DatetimeRange::print(FILE* out, const char* end) const
+{
+    int res = min.print(out, " to ");
+    res += max.print(out, end);
+    return res;
+}
+
 std::ostream& operator<<(std::ostream& out, const DatetimeRange& dtr)
 {
     if (dtr.min == dtr.max)
@@ -613,6 +669,26 @@ Coords::Coords(double lat, double lon)
 bool Coords::is_missing() const
 {
     return lat == MISSING_INT && lon == MISSING_INT;
+}
+
+void Coords::set_lat(double lat) { this->lat = ll_to_int(lat); }
+
+void Coords::set_lon(double lon) { this->lon = normalon(ll_to_int(lon)); }
+
+void Coords::set_lat(int lat)
+{
+    if (lat == MISSING_INT)
+        this->lat = this->lon = MISSING_INT;
+    else
+        this->lat = lat;
+}
+
+void Coords::set_lon(int lon)
+{
+    if (lon == MISSING_INT)
+        this->lat = this->lon = MISSING_INT;
+    else
+        this->lon = normalon(lon);
 }
 
 void Coords::set(int lat, int lon)
@@ -682,6 +758,27 @@ std::ostream& operator<<(std::ostream& out, const Coords& c)
             ;
 }
 
+int Coords::lat_to_int(double lat)
+{
+    return ll_to_int(lat);
+}
+
+int Coords::lon_to_int(double lon)
+{
+    return normalon(ll_to_int(lon));
+}
+
+double Coords::lat_from_int(int lat)
+{
+    return ll_from_int(lat);
+}
+
+double Coords::lon_from_int(int lon)
+{
+    return ll_from_int(lon);
+}
+
+
 /*
  * LatRange
  */
@@ -746,6 +843,13 @@ bool LatRange::contains(double lat) const
 bool LatRange::contains(const LatRange& lr) const
 {
     return imin <= lr.imin && lr.imax <= imax;
+}
+
+int LatRange::print(FILE* out, const char* end) const
+{
+    double dmin, dmax;
+    get(dmin, dmax);
+    return fprintf(out, "(%.5f to %.5f)%s", dmin, dmax, end);
 }
 
 std::ostream& operator<<(std::ostream& out, const LatRange& lr)
@@ -825,6 +929,11 @@ void LonRange::set(double min, double max)
     set(ll_to_int(min), ll_to_int(max));
 }
 
+void LonRange::set(const LonRange& lr)
+{
+    set(lr.imin, lr.imax);
+}
+
 bool LonRange::contains(int lon) const
 {
     if (imin == imax)
@@ -873,6 +982,13 @@ bool LonRange::contains(const LonRange& lr) const
             return lr.imin <= imin || lr.imax >= imax;
         }
     }
+}
+
+int LonRange::print(FILE* out, const char* end) const
+{
+    double dmin, dmax;
+    get(dmin, dmax);
+    return fprintf(out, "(%.5f to %.5f)%s", dmin, dmax, end);
 }
 
 std::ostream& operator<<(std::ostream& out, const LonRange& lr)
@@ -1349,19 +1465,35 @@ std::ostream& operator<<(std::ostream& out, const Ident& i)
  * Station
  */
 
-void Station::print(FILE* out, const char* end) const
+bool Station::is_missing() const
 {
+    return report.empty() && coords.is_missing() && ident.is_missing();
+}
+
+int Station::print(FILE* out, const char* end) const
+{
+    int res = 0;
     if (coords.is_missing())
+    {
         fputs("(-,-) ", out);
+        res += 6;
+    }
     else
-        coords.print(out, " ");
+        res += coords.print(out, " ");
 
     if (ident.is_missing())
-        fputs("-", out);
+    {
+        putc('-', out);
+        res += 1;
+    }
     else
+    {
         fputs(ident.get(), out);
+        res += strlen(ident.get());
+    }
 
-    fprintf(out, " %s%s", report.c_str(), end);
+    res += fprintf(out, " %s%s", report.c_str(), end);
+    return res;
 }
 
 std::string Station::to_string(const char* undef) const
@@ -1387,14 +1519,24 @@ std::ostream& operator<<(std::ostream& out, const Station& st)
  * DBStation
  */
 
-void DBStation::print(FILE* out, const char* end) const
+bool DBStation::is_missing() const
 {
-    if (id == MISSING_INT)
-        fputs("- ", out);
-    else
-        fprintf(out, "%d,", id);
+    return Station::is_missing() && id == MISSING_INT;
+}
 
-    Station::print(out, end);
+int DBStation::print(FILE* out, const char* end) const
+{
+    int res = 0;
+    if (id == MISSING_INT)
+    {
+        fputs("- ", out);
+        res += 2;
+    }
+    else
+        res += fprintf(out, "%d,", id);
+
+    res += Station::print(out, end);
+    return res;
 }
 
 std::string DBStation::to_string(const char* undef) const

@@ -1,5 +1,5 @@
-#ifndef FDBA_DBAPI_H
-#define FDBA_DBAPI_H
+#ifndef DBALLE_SIMPLE_DBAPI_H
+#define DBALLE_SIMPLE_DBAPI_H
 
 #include "commonapi.h"
 #include <dballe/file.h>
@@ -39,7 +39,7 @@ public:
     int quantesono() override;
     void elencamele() override;
     int voglioquesto() override;
-    const char* dammelo() override;
+    wreport::Varcode dammelo() override;
     void prendilo() override;
     void dimenticami() override;
     int voglioancora() override;

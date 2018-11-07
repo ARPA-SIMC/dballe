@@ -108,11 +108,13 @@ struct Query : public dballe::Query
      */
     bool is_subquery(const dballe::Query& other) const override;
 
+#if 0
     /**
      * Generate a sequence of dba_keyword and Var for all contents
      * of the query that can be represented in a record.
      */
     void foreach_key(std::function<void(const char*, wreport::Var&&)> dest) const override;
+#endif
 
     /// Print the query contents to stderr
     void print(FILE* out) const override;
@@ -120,11 +122,13 @@ struct Query : public dballe::Query
     /// Send the contents to a JSONWriter
     void serialize(JSONWriter& out) const;
 
+#if 0
     /**
      * Parse the query=* modifiers specification inside the record, returning the
      * ORed flags
      */
     static unsigned parse_modifiers(const dballe::Record& rec);
+#endif
 
     /**
      * Parse the modifiers specification given a query=* string, returning the ORed

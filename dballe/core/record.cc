@@ -1,10 +1,8 @@
 #include "record.h"
+#include "query.h"
 #include "var.h"
 #include "aliases.h"
 #include "defs.h"
-
-#include "config.h"
-
 #include <sstream>
 #include <stdio.h>
 #include <string.h>
@@ -18,46 +16,95 @@ using namespace std;
 namespace dballe {
 namespace core {
 
-/*
- * Size of the keyword table.  It should be the number of items in
- * dba_record_keyword.gperf, plus 1
- */
-#define KEYWORD_TABLE_SIZE DBA_KEY_COUNT
-
-#define assert_is_dba_record(rec) do { \
-		assert((rec) != NULL); \
-	} while (0)
-
-std::ostream& operator<<(std::ostream& o, dba_keyword k)
-{
-    return o << Record::keyword_name(k);
-}
-
 Record::Record()
 {
-	memset(keydata, 0, sizeof(keydata));
 }
 
 Record::Record(const Record& rec)
+    : priomin(rec.priomin), priomax(rec.priomax), mobile(rec.mobile),
+      station(rec.station), latrange(rec.latrange), lonrange(rec.lonrange),
+      datetime(rec.datetime), level(rec.level), trange(rec.trange),
+      var(rec.var), varlist(rec.varlist), query(rec.query),
+      ana_filter(rec.ana_filter), data_filter(rec.data_filter), attr_filter(rec.attr_filter),
+      count(rec.count)
 {
-	// Copy the keyword table
-	for (int i = 0; i < KEYWORD_TABLE_SIZE; ++i)
-	{
-		if (rec.keydata[i] == NULL)
-			keydata[i] = NULL;
-		else
-			keydata[i] = new Var(*rec.keydata[i]);
-	}
+    // Copy the variable list
+    for (auto& var: rec.m_vars)
+        m_vars.push_back(new Var(*var));
+}
 
-	// Copy the variable list
-	for (vector<Var*>::const_iterator i = rec.m_vars.begin();
-			i != rec.m_vars.end(); ++i)
-		m_vars.push_back(new Var(**i));
+Record::Record(Record&& rec)
+    : priomin(rec.priomin), priomax(rec.priomax), mobile(rec.mobile),
+      station(rec.station), latrange(rec.latrange), lonrange(rec.lonrange),
+      datetime(rec.datetime), level(rec.level), trange(rec.trange),
+      var(rec.var), varlist(std::move(rec.varlist)), query(std::move(rec.query)),
+      ana_filter(std::move(rec.ana_filter)), data_filter(std::move(rec.data_filter)), attr_filter(std::move(rec.attr_filter)),
+      count(rec.count), m_vars(std::move(rec.m_vars))
+{
 }
 
 Record::~Record()
 {
-	clear();
+    clear();
+}
+
+Record& Record::operator=(const Record& rec)
+{
+    // Prevent self-copying
+    if (this == &rec) return *this;
+
+    priomin = rec.priomin;
+    priomax = rec.priomax;
+    mobile = rec.mobile;
+    station = rec.station;
+    latrange = rec.latrange;
+    lonrange = rec.lonrange;
+    datetime = rec.datetime;
+    level = rec.level;
+    trange = rec.trange;
+    var = rec.var;
+    varlist = rec.varlist;
+    query = rec.query;
+    ana_filter = rec.ana_filter;
+    data_filter = rec.data_filter;
+    attr_filter = rec.attr_filter;
+    count = rec.count;
+
+    // Copy the variable list
+    clear_vars();
+    for (const auto& var: rec.m_vars)
+        m_vars.push_back(new Var(*var));
+
+    return *this;
+}
+
+Record& Record::operator=(Record&& rec)
+{
+    // Prevent self-copying
+    if (this == &rec) return *this;
+
+    priomin = rec.priomin;
+    priomax = rec.priomax;
+    mobile = rec.mobile;
+    station = rec.station;
+    latrange = rec.latrange;
+    lonrange = rec.lonrange;
+    datetime = rec.datetime;
+    level = rec.level;
+    trange = rec.trange;
+    var = rec.var;
+    varlist = std::move(rec.varlist);
+    query = std::move(rec.query);
+    ana_filter = std::move(rec.ana_filter);
+    data_filter = std::move(rec.data_filter);
+    attr_filter = std::move(rec.attr_filter);
+    count = rec.count;
+
+    // Copy the variable list
+    clear_vars();
+    m_vars = std::move(rec.m_vars);
+
+    return *this;
 }
 
 unique_ptr<dballe::Record> Record::clone() const
@@ -79,29 +126,6 @@ Record& Record::downcast(dballe::Record& record)
     if (!ptr)
         throw error_consistency("record given is not a core::Record");
     return *ptr;
-}
-
-wreport::Var& Record::obtain(const char* name)
-{
-    Varcode code = 0;
-    if (name[0] != 'B' && (code = varcode_alias_resolve(name)) == 0)
-    {
-        dba_keyword param = keyword_byname(name);
-        if (param == DBA_KEY_ERROR)
-            error_notfound::throwf("invalid parameter \"%s\"", name);
-        return obtain(param);
-    } else {
-        if (code == 0)
-            code = WR_STRING_TO_VAR(name + 1);
-        return obtain(code);
-    }
-}
-
-wreport::Var& Record::obtain(dba_keyword key)
-{
-    if (keydata[key] == NULL)
-        keydata[key] = new Var(keyword_info(key));
-    return *keydata[key];
 }
 
 wreport::Var& Record::obtain(wreport::Varcode key)
@@ -126,259 +150,189 @@ wreport::Var& Record::obtain(wreport::Varcode key)
     return *m_vars[pos];
 }
 
+void Record::unset_var(wreport::Varcode code)
+{
+    int pos = find_item(code);
+    if (pos != -1)
+    {
+        delete m_vars[pos];
+        m_vars.erase(m_vars.begin() + pos);
+    }
+}
+
 void Record::seti(const char* key, int val)
 {
+    unsigned len = strlen(key);
     if (val == MISSING_INT)
-        unset(key);
-    else
-        obtain(key).seti(val);
+    {
+        bool done = _unset(key, len);
+        if (!done)
+            unset_var(resolve_varcode(key));
+        return;
+    }
+
+    bool done = _seti(key, len, val);
+    if (!done)
+        obtain(resolve_varcode(key)).seti(val);
 }
+
 void Record::setd(const char* key, double val)
 {
-    obtain(key).setd(val);
+    unsigned len = strlen(key);
+    bool done = _setd(key, len, val);
+    if (!done)
+        obtain(resolve_varcode(key)).setd(val);
 }
+
 void Record::setc(const char* key, const char* val)
 {
     if (!val)
-        unset(key);
-    else
     {
-        obtain(key).setc(val);
+        unset(key);
+        return;
     }
+
+    unsigned len = strlen(key);
+    bool done = _setc(key, len, val);
+    if (!done)
+        obtain(resolve_varcode(key)).setc(val);
 }
+
 void Record::sets(const char* key, const std::string& val)
 {
-    obtain(key).setc(val.c_str());
+    unsigned len = strlen(key);
+    bool done = _sets(key, len, val);
+    if (!done)
+        obtain(resolve_varcode(key)).sets(val);
 }
+
 void Record::setf(const char* key, const char* val)
 {
-    // See https://github.com/ARPA-SIMC/dballe/issues/29
-    auto& var = obtain(key);
-    switch (var.info()->type)
+    if (!val || strcmp(val, "-") == 0)
     {
-        case Vartype::String:
-        case Vartype::Binary:
-            var.setf(val);
-            break;
-        case Vartype::Decimal:
-        case Vartype::Integer:
-            if (strcmp(val, "-") == 0)
-                unset(key);
-            else
-                var.setf(val);
-            break;
+        unset(key);
+        return;
     }
+
+    unsigned len = strlen(key);
+    bool done = _setf(key, len, val);
+    if (!done)
+        obtain(resolve_varcode(key)).setf(val);
+}
+
+int Record::enqi(const char* key, int def) const
+{
+    bool found;
+    int res = _enqi(key, strlen(key), found);
+    if (found) return res == MISSING_INT ? def : res;
+
+    const Var* var = get_var(resolve_varcode(key));
+    if (!var) return def;
+    return var->enq(def);
+}
+
+double Record::enqd(const char* key, double def) const
+{
+    bool found, missing;
+    double res = _enqd(key, strlen(key), found, missing);
+    if (found) return missing ? def : res;
+
+    const Var* var = get_var(resolve_varcode(key));
+    if (!var) return def;
+    return var->enq(def);
+}
+
+bool Record::enqdb(const char* key, double& res) const
+{
+    bool found, missing;
+    double maybe_res = _enqd(key, strlen(key), found, missing);
+    if (found)
+    {
+        if (missing)
+            return false;
+        res = maybe_res;
+        return true;
+    }
+
+    const Var* var = get_var(resolve_varcode(key));
+    if (!var) return false;
+    if (!var->isset()) return false;
+    res = var->enqd();
+    return true;
+}
+
+#if 0
+const char* Record::enq(const char* key, const char* def) const
+{
+    throw error_unimplemented("Record::enq const char*");
+}
+#endif
+
+std::string Record::enqs(const char* key, const std::string& def) const
+{
+    bool found, missing;
+    std::string res = _enqs(key, strlen(key), found, missing);
+    if (found) return missing ? def : res;
+
+    const Var* var = get_var(resolve_varcode(key));
+    if (!var) return def;
+    return var->enq(def);
+}
+
+bool Record::enqsb(const char* key, std::string& res) const
+{
+    bool found, missing;
+    std::string maybe_res = _enqs(key, strlen(key), found, missing);
+    if (found)
+    {
+        if (missing)
+            return false;
+        res = maybe_res;
+        return true;
+    }
+
+    const Var* var = get_var(resolve_varcode(key));
+    if (!var) return false;
+    if (!var->isset()) return false;
+    res = var->enqs();
+    return true;
+}
+
+bool Record::isset(const char* key) const
+{
+    bool res;
+    bool found = _isset(key, strlen(key), res);
+    if (found) return res;
+
+    const Var* var = get_var(resolve_varcode(key));
+    if (!var) return false;
+    if (!var->isset()) return false;
+    return true;
 }
 
 void Record::set_datetime(const Datetime& dt)
 {
     if (dt.is_missing())
     {
-        key_unset(DBA_KEY_YEAR);
-        key_unset(DBA_KEY_MONTH);
-        key_unset(DBA_KEY_DAY);
-        key_unset(DBA_KEY_HOUR);
-        key_unset(DBA_KEY_MIN);
-        key_unset(DBA_KEY_SEC);
+        datetime = DatetimeRange();
     } else {
-        seti("year",  (int)dt.year);
-        seti("month", (int)dt.month);
-        seti("day",   (int)dt.day);
-        seti("hour",  (int)dt.hour);
-        seti("min",   (int)dt.minute);
-        seti("sec",   (int)dt.second);
+        datetime.min = datetime.max = dt;
     }
-    key_unset(DBA_KEY_YEARMIN);
-    key_unset(DBA_KEY_MONTHMIN);
-    key_unset(DBA_KEY_DAYMIN);
-    key_unset(DBA_KEY_HOURMIN);
-    key_unset(DBA_KEY_MINUMIN);
-    key_unset(DBA_KEY_SECMIN);
-    key_unset(DBA_KEY_YEARMAX);
-    key_unset(DBA_KEY_MONTHMAX);
-    key_unset(DBA_KEY_DAYMAX);
-    key_unset(DBA_KEY_HOURMAX);
-    key_unset(DBA_KEY_MINUMAX);
-    key_unset(DBA_KEY_SECMAX);
 }
 
 void Record::set_datetimerange(const DatetimeRange& range)
 {
-    if (range.is_missing())
-    {
-        key_unset(DBA_KEY_YEAR);
-        key_unset(DBA_KEY_MONTH);
-        key_unset(DBA_KEY_DAY);
-        key_unset(DBA_KEY_HOUR);
-        key_unset(DBA_KEY_MIN);
-        key_unset(DBA_KEY_SEC);
-        key_unset(DBA_KEY_YEARMIN);
-        key_unset(DBA_KEY_MONTHMIN);
-        key_unset(DBA_KEY_DAYMIN);
-        key_unset(DBA_KEY_HOURMIN);
-        key_unset(DBA_KEY_MINUMIN);
-        key_unset(DBA_KEY_SECMIN);
-        key_unset(DBA_KEY_YEARMAX);
-        key_unset(DBA_KEY_MONTHMAX);
-        key_unset(DBA_KEY_DAYMAX);
-        key_unset(DBA_KEY_HOURMAX);
-        key_unset(DBA_KEY_MINUMAX);
-        key_unset(DBA_KEY_SECMAX);
-    } else if (range.min == range.max) {
-        set(range.min);
-    } else if (range.min.is_missing()) {
-        key_unset(DBA_KEY_YEAR);
-        key_unset(DBA_KEY_MONTH);
-        key_unset(DBA_KEY_DAY);
-        key_unset(DBA_KEY_HOUR);
-        key_unset(DBA_KEY_MIN);
-        key_unset(DBA_KEY_SEC);
-        key_unset(DBA_KEY_YEARMIN);
-        key_unset(DBA_KEY_MONTHMIN);
-        key_unset(DBA_KEY_DAYMIN);
-        key_unset(DBA_KEY_HOURMIN);
-        key_unset(DBA_KEY_MINUMIN);
-        key_unset(DBA_KEY_SECMIN);
-        seti("yearmax", range.max.year);
-        seti("monthmax", range.max.month);
-        seti("daymax", range.max.day);
-        seti("hourmax", range.max.hour);
-        seti("minumax", range.max.minute);
-        seti("secmax", range.max.second);
-    } else if (range.max.is_missing()) {
-        key_unset(DBA_KEY_YEAR);
-        key_unset(DBA_KEY_MONTH);
-        key_unset(DBA_KEY_DAY);
-        key_unset(DBA_KEY_HOUR);
-        key_unset(DBA_KEY_MIN);
-        key_unset(DBA_KEY_SEC);
-        seti("yearmin", range.min.year);
-        seti("monthmin", range.min.month);
-        seti("daymin", range.min.day);
-        seti("hourmin", range.min.hour);
-        seti("minumin", range.min.minute);
-        seti("secmin", range.min.second);
-        key_unset(DBA_KEY_YEARMAX);
-        key_unset(DBA_KEY_MONTHMAX);
-        key_unset(DBA_KEY_DAYMAX);
-        key_unset(DBA_KEY_HOURMAX);
-        key_unset(DBA_KEY_MINUMAX);
-        key_unset(DBA_KEY_SECMAX);
-    } else {
-        if (range.min.year == range.max.year)
-        {
-            seti("year", range.min.year);
-            key_unset(DBA_KEY_YEARMIN);
-            key_unset(DBA_KEY_YEARMAX);
-        }
-        else
-        {
-            key_unset(DBA_KEY_YEAR);
-            seti("yearmin", range.min.year);
-            seti("yearmax", range.max.year);
-        }
-        if (range.min.month == range.max.month)
-        {
-            seti("month", range.min.month);
-            key_unset(DBA_KEY_MONTHMIN);
-            key_unset(DBA_KEY_MONTHMAX);
-        }
-        else
-        {
-            key_unset(DBA_KEY_MONTH);
-            seti("monthmin", range.min.month);
-            seti("monthmax", range.max.month);
-        }
-        if (range.min.day == range.max.day)
-        {
-            seti("day", range.min.day);
-            key_unset(DBA_KEY_DAYMIN);
-            key_unset(DBA_KEY_DAYMAX);
-        }
-        else
-        {
-            key_unset(DBA_KEY_DAY);
-            seti("daymin", range.min.day);
-            seti("daymax", range.max.day);
-        }
-        if (range.min.hour == range.max.hour)
-        {
-            seti("hour", range.min.hour);
-            key_unset(DBA_KEY_HOURMIN);
-            key_unset(DBA_KEY_HOURMAX);
-        }
-        else
-        {
-            key_unset(DBA_KEY_HOUR);
-            seti("hourmin", range.min.hour);
-            seti("hourmax", range.max.hour);
-        }
-        if (range.min.minute == range.max.minute)
-        {
-            seti("min", range.min.minute);
-            key_unset(DBA_KEY_MINUMIN);
-            key_unset(DBA_KEY_MINUMAX);
-        }
-        else
-        {
-            key_unset(DBA_KEY_MIN);
-            seti("minumin", range.min.minute);
-            seti("minumax", range.max.minute);
-        }
-        if (range.min.second == range.max.second)
-        {
-            seti("sec", range.min.second);
-            key_unset(DBA_KEY_SECMIN);
-            key_unset(DBA_KEY_SECMAX);
-        }
-        else
-        {
-            key_unset(DBA_KEY_SEC);
-            seti("secmin", range.min.second);
-            seti("secmax", range.max.second);
-        }
-    }
+    datetime = range;
 }
 
 void Record::set_level(const Level& lev)
 {
-    if (lev.ltype1 == MISSING_INT)
-        unset("leveltype1");
-    else
-        seti("leveltype1", lev.ltype1);
-
-    if (lev.l1 == MISSING_INT)
-        unset("l1");
-    else
-        seti("l1", lev.l1);
-
-    if (lev.ltype2 == MISSING_INT)
-        unset("leveltype2");
-    else
-        seti("leveltype2", lev.ltype2);
-
-    if (lev.l2 == MISSING_INT)
-        unset("l2");
-    else
-        seti("l2", lev.l2);
+    level = lev;
 }
 
 void Record::set_trange(const Trange& tr)
 {
-    if (tr.pind == MISSING_INT)
-        unset("pindicator");
-    else
-        seti("pindicator", tr.pind);
-
-    if (tr.p1 == MISSING_INT)
-        unset("p1");
-    else
-        seti("p1", tr.p1);
-
-    if (tr.p2 == MISSING_INT)
-        unset("p2");
-    else
-        seti("p2", tr.p2);
+    trange = tr;
 }
 
 void Record::set_var(const wreport::Var& var)
@@ -386,7 +340,7 @@ void Record::set_var(const wreport::Var& var)
     if (var.isset())
         obtain(var.code()).setval(var);
     else
-        var_unset(var.code());
+        unset_var(var.code());
 }
 
 void Record::set_var_acquire(std::unique_ptr<wreport::Var>&& var)
@@ -413,134 +367,69 @@ void Record::set_var_acquire(std::unique_ptr<wreport::Var>&& var)
 
 void Record::set_latrange(const LatRange& lr)
 {
-    if (lr.is_missing())
-    {
-        unset("lat");
-        unset("latmin");
-        unset("latmax");
-    } else if (lr.imin == lr.imax) {
-        seti("lat", lr.imin);
-        unset("latmin");
-        unset("latmax");
-    } else {
-        unset("lat");
-        seti("latmin", lr.imin);
-        seti("latmax", lr.imax);
-    }
+    latrange = lr;
 }
 
 void Record::set_lonrange(const LonRange& lr)
 {
-    if (lr.is_missing())
-    {
-        unset("lon");
-        unset("lonmin");
-        unset("lonmax");
-    } else if (lr.imin == lr.imax) {
-        seti("lon", lr.imin);
-        unset("lonmin");
-        unset("lonmax");
-    } else {
-        unset("lon");
-        seti("lonmin", lr.imin);
-        seti("lonmax", lr.imax);
-    }
+    lonrange = lr;
 }
 
-const wreport::Var* Record::get(const char* key) const
+bool Record::equals(const Record& rec) const
 {
-    Varcode code = 0;
-    if (key[0] != 'B' && (code = varcode_alias_resolve(key)) == 0)
-    {
-        dba_keyword param = keyword_byname(key);
-        if (param == DBA_KEY_ERROR)
-            error_notfound::throwf("invalid parameter \"%s\"", key);
-        return key_peek(param);
-    } else {
-        if (code == 0)
-            code = WR_STRING_TO_VAR(key + 1);
-        return var_peek(code);
-    }
+    if (std::tie(priomin, priomax, mobile, station, latrange, lonrange, datetime, level, trange, var, varlist, query, ana_filter, data_filter, attr_filter, count) != std::tie(rec.priomin, rec.priomax, rec.mobile, rec.station, rec.latrange, rec.lonrange, rec.datetime, rec.level, rec.trange, rec.var, rec.varlist, rec.query, rec.ana_filter, rec.data_filter, rec.attr_filter, rec.count))
+        return false;
+
+    // Compare the variables
+    vector<Var*>::const_iterator i1 = m_vars.begin();
+    vector<Var*>::const_iterator i2 = rec.m_vars.begin();
+    for ( ; i1 != m_vars.end() && i2 != rec.m_vars.end(); ++i1, ++i2)
+        if (**i1 != **i2) return false;
+    if (i1 != m_vars.end() || i2 != rec.m_vars.end())
+        return false;
+
+    return true;
 }
 
-Record& Record::operator=(const Record& rec)
-{
-	// Prevent self-copying
-	if (this == &rec) return *this;
-
-	// Copy the keyword table first
-	for (int i = 0; i < KEYWORD_TABLE_SIZE; i++)
-	{
-		if (keydata[i] != NULL)
-		{
-			if (rec.keydata[i] != NULL)
-				*keydata[i] = *rec.keydata[i];
-			else
-			{
-				delete keydata[i];
-				keydata[i] = NULL;
-			}
-		} else if (rec.keydata[i] != NULL)
-			keydata[i] = new Var(*rec.keydata[i]);
-	}
-
-	// Copy the variable list
-	clear_vars();
-	for (vector<Var*>::const_iterator i = rec.m_vars.begin();
-			i != rec.m_vars.end(); ++i)
-		m_vars.push_back(new Var(**i));
-
-	return *this;
-}
-
-bool Record::equals(const dballe::Record& other) const
+bool Record::operator==(const dballe::Record& other) const
 {
     const auto& rec = downcast(other);
+    return equals(rec);
+}
 
-	// Compare the keywords
-	for (int i = 0; i < KEYWORD_TABLE_SIZE; i++)
-	{
-		if (keydata[i] == NULL && rec.keydata[i] == NULL)
-			continue;
-
-		if (keydata[i] == NULL || rec.keydata[i] == NULL)
-			return false;
-
-		if (*keydata[i] != *rec.keydata[i])
-			return false;
-	}
-
-	// Compare the variables
-	vector<Var*>::const_iterator i1 = m_vars.begin();
-	vector<Var*>::const_iterator i2 = rec.m_vars.begin();
-	for ( ; i1 != m_vars.end() && i2 != rec.m_vars.end(); ++i1, ++i2)
-		if (**i1 != **i2) return false;
-	if (i1 != m_vars.end() || i2 != rec.m_vars.end())
-		return false;
-
-	return true;
+bool Record::operator!=(const dballe::Record& other) const
+{
+    const auto& rec = downcast(other);
+    return !equals(rec);
 }
 
 void Record::clear_vars()
 {
-	for (vector<Var*>::iterator i = m_vars.begin();
-			i != m_vars.end(); ++i)
-		delete *i;
-	m_vars.clear();
+    for (auto& var: m_vars)
+        delete var;
+    m_vars.clear();
 }
 
 void Record::clear()
 {
-	for (int i = 0; i < KEYWORD_TABLE_SIZE; ++i)
-		if (keydata[i] != NULL)
-		{
-			delete keydata[i];
-			keydata[i] = NULL;
-		}
-	clear_vars();
+    priomin = priomax = mobile = MISSING_INT;
+    station = DBStation();
+    latrange = LatRange();
+    lonrange = LonRange();
+    datetime = DatetimeRange();
+    level = Level();
+    trange = Trange();
+    var = 0;
+    varlist.clear();
+    query.clear();
+    ana_filter.clear();
+    data_filter.clear();
+    attr_filter.clear();
+    count = MISSING_INT;
+    clear_vars();
 }
 
-int Record::find_item(Varcode code) const throw ()
+int Record::find_item(Varcode code) const noexcept
 {
 	/* Binary search */
 	int low = 0, high = m_vars.size() - 1;
@@ -584,6 +473,7 @@ void Record::remove_item(Varcode code)
 	m_vars.erase(m_vars.begin() + pos);
 }
 
+#if 0
 void Record::add(const dballe::Record& rec)
 {
     const auto& source = downcast(rec);
@@ -623,7 +513,9 @@ void Record::add(const dballe::Record& rec)
 	for ( ; src != source.m_vars.end(); ++src)
 		m_vars.push_back(new Var(**src));
 }
+#endif
 
+#if 0
 void Record::set_to_difference(const Record& source1, const Record& source2)
 {
     // Copy the keyword table
@@ -672,7 +564,9 @@ void Record::set_to_difference(const Record& source1, const Record& source2)
 	for ( ; s2 != source2.m_vars.end(); ++s2)
 		m_vars.push_back(new Var(**s2));
 }
+#endif
 
+#if 0
 bool Record::contains(const dballe::Record& rec) const
 {
     const auto& subset = downcast(rec);
@@ -711,11 +605,7 @@ bool Record::contains(const dballe::Record& rec) const
 	}
 	return true;
 }
-
-const Var* Record::key_peek(dba_keyword parameter) const throw ()
-{
-	return keydata[parameter];
-}
+#endif
 
 const Var* Record::var_peek(Varcode code) const throw ()
 {
@@ -724,40 +614,14 @@ const Var* Record::var_peek(Varcode code) const throw ()
 	return m_vars[pos];
 }
 
-void Record::key_unset(dba_keyword parameter)
-{
-	if (keydata[parameter] != NULL)
-	{
-		delete keydata[parameter];
-		keydata[parameter] = NULL;
-	}
-}
-void Record::var_unset(wreport::Varcode code)
-{
-	int pos = find_item(code);
-	if (pos != -1)
-	{
-		delete m_vars[pos];
-		m_vars.erase(m_vars.begin() + pos);
-	}
-}
-
 void Record::unset(const char* name)
 {
-	Varcode code = 0;
-	if (name[0] != 'B' && (code = varcode_alias_resolve(name)) == 0)
-	{
-		dba_keyword param = keyword_byname(name);
-		if (param == DBA_KEY_ERROR)
-			error_notfound::throwf("invalid parameter \"%s\"", name);
-		return key_unset(param);
-	} else {
-		if (code == 0)
-			code = WR_STRING_TO_VAR(name + 1);
-		return var_unset(code);
-	}
+    if (_unset(name, strlen(name)))
+        return;
+    unset_var(resolve_varcode(name));
 }
 
+#if 0
 void Record::foreach_key_ref(std::function<void(const char*, const wreport::Var&)> dest) const
 {
     // Generate keys
@@ -793,7 +657,9 @@ void Record::foreach_key_copy(std::function<void(const char*, std::unique_ptr<wr
         dest(varcode.c_str(), move(newvar(*i)));
     }
 }
+#endif
 
+#if 0
 bool Record::iter_keys(std::function<bool(dba_keyword, const wreport::Var&)> f) const
 {
     for (unsigned i = 0; i < KEYWORD_TABLE_SIZE; ++i)
@@ -803,7 +669,7 @@ bool Record::iter_keys(std::function<bool(dba_keyword, const wreport::Var&)> f) 
     }
     return true;
 }
-
+#endif
 
 const std::vector<wreport::Var*>& Record::vars() const
 {
@@ -812,144 +678,50 @@ const std::vector<wreport::Var*>& Record::vars() const
 
 Coords Record::get_coords() const
 {
-    return Coords(
-            enq("lat", MISSING_INT),
-            enq("lon", MISSING_INT));
+    return station.coords;
 }
 
 Ident Record::get_ident() const
 {
-    Ident ident;
-    if (const Var* var = get("ident"))
-        ident = var->isset() ? var->enqc() : 0;
-    return ident;
+    return station.ident;
 }
 
 Level Record::get_level() const
 {
-    return Level(
-            enq("leveltype1", MISSING_INT),
-            enq("l1",         MISSING_INT),
-            enq("leveltype2", MISSING_INT),
-            enq("l2",         MISSING_INT));
+    return level;
 }
 
 Trange Record::get_trange() const
 {
-    return Trange(
-            enq("pindicator", MISSING_INT),
-            enq("p1",         MISSING_INT),
-            enq("p2",         MISSING_INT));
+    return trange;
 }
 
 Datetime Record::get_datetime() const
 {
-    if (const Var* var = key_peek(DBA_KEY_YEAR))
-        return Datetime::lower_bound(
-            var->enqi(),
-            enq("month", MISSING_INT),
-            enq("day", MISSING_INT),
-            enq("hour", MISSING_INT),
-            enq("min", MISSING_INT),
-            enq("sec", MISSING_INT));
-    else
+    if (datetime.min != datetime.max)
         return Datetime();
+
+    Datetime res = datetime.min;
+    res.set_lower_bound();
+    return res;
 }
 
 DatetimeRange Record::get_datetimerange() const
 {
-    // fetch all values involved in the computation
-    int ye = enq("year", MISSING_INT);
-    int mo = enq("month", MISSING_INT);
-    int da = enq("day", MISSING_INT);
-    int ho = enq("hour", MISSING_INT);
-    int mi = enq("min", MISSING_INT);
-    int se = enq("sec", MISSING_INT);
-    int yemin = enq("yearmin", MISSING_INT);
-    int momin = enq("monthmin", MISSING_INT);
-    int damin = enq("daymin", MISSING_INT);
-    int homin = enq("hourmin", MISSING_INT);
-    int mimin = enq("minumin", MISSING_INT);
-    int semin = enq("secmin", MISSING_INT);
-    int yemax = enq("yearmax", MISSING_INT);
-    int momax = enq("monthmax", MISSING_INT);
-    int damax = enq("daymax", MISSING_INT);
-    int homax = enq("hourmax", MISSING_INT);
-    int mimax = enq("minumax", MISSING_INT);
-    int semax = enq("secmax", MISSING_INT);
-    // give absolute values priority over ranges
-    if (ye != MISSING_INT) yemin = yemax = ye;
-    if (mo != MISSING_INT) momin = momax = mo;
-    if (da != MISSING_INT) damin = damax = da;
-    if (ho != MISSING_INT) homin = homax = ho;
-    if (mi != MISSING_INT) mimin = mimax = mi;
-    if (se != MISSING_INT) semin = semax = se;
-    return DatetimeRange(yemin, momin, damin, homin, mimin, semin, yemax, momax, damax, homax, mimax, semax);
+    DatetimeRange res = datetime;
+    res.min.set_lower_bound();
+    res.max.set_upper_bound();
+    return res;
 }
 
 Station Record::get_station() const
 {
-    Station res;
-    if (const Var* var = get("lat"))
-        res.coords.lat = var->enqi();
-    else
-        throw error_notfound("record has no 'lat' set");
-
-    if (const Var* var = get("lon"))
-        res.coords.lon = var->enqi();
-    else
-        throw error_notfound("record has no 'lon' set");
-
-    if (const Var* var = get("ident"))
-        res.ident = var->isset() ? var->enqc() : 0;
-
-    if (const Var* var = get("rep_memo"))
-    {
-        if (var->isset())
-            res.report = var->enqs();
-        else
-            throw error_notfound("record has no 'rep_memo' set");
-    }
-    return res;
+    return station;
 }
 
 DBStation Record::get_dbstation() const
 {
-    DBStation res;
-    if (const Var* var = get("ana_id"))
-    {
-        // If we have ana_id, the rest is optional
-        res.id = var->enqi();
-        res.coords.lat = enq("lat", MISSING_INT);
-        res.coords.lon = enq("lon", MISSING_INT);
-        if (const Var* var = get("ident"))
-            res.ident = var->isset() ? var->enqc() : 0;
-        res.report = enq("rep_memo", "");
-    } else {
-        // If we do not have ana_id, we require at least lat, lon and rep_memo
-        res.id = MISSING_INT;
-        if (const Var* var = get("lat"))
-            res.coords.lat = var->enqi();
-        else
-            throw error_notfound("record has no 'lat' set");
-
-        if (const Var* var = get("lon"))
-            res.coords.lon = var->enqi();
-        else
-            throw error_notfound("record has no 'lon' set");
-
-        if (const Var* var = get("ident"))
-            res.ident = var->isset() ? var->enqc() : 0;
-
-        if (const Var* var = get("rep_memo"))
-        {
-            if (var->isset())
-                res.report = var->enqs();
-            else
-                throw error_notfound("record has no 'rep_memo' set");
-        }
-    }
-    return res;
+    return station;
 }
 
 const wreport::Var* Record::get_var(wreport::Varcode code) const
@@ -959,31 +731,21 @@ const wreport::Var* Record::get_var(wreport::Varcode code) const
 
 void Record::set_coords(const Coords& c)
 {
-    seti("lat", c.lat);
-    seti("lon", c.lon);
+    station.coords = c;
 }
 
 void Record::set_station(const Station& s)
 {
-    set("rep_memo", s.report);
-    set_coords(s.coords);
-    if (s.ident.is_missing())
-    {
-        unset("ident");
-        seti("mobile", 0);
-    } else {
-        setc("ident", s.ident);
-        seti("mobile", 1);
-    }
+    station.report = s.report;
+    station.coords = s.coords;
+    station.ident = s.ident;
+    mobile = station.ident.is_missing() ? 0 : 1;
 }
 
 void Record::set_dbstation(const DBStation& s)
 {
-    set_station(s);
-    if (s.id != MISSING_INT)
-        set("ana_id", s.id);
-    else
-        unset("ana_id");
+    station = s;
+    mobile = station.ident.is_missing() ? 0 : 1;
 }
 
 
@@ -1016,41 +778,164 @@ void Record::set_from_test_string(const std::string& s)
     }
 }
 
-std::string Record::to_string() const
+namespace {
+
+struct BufferPrinter
 {
     std::stringstream s;
     bool first = true;
 
-    for (int i = 0; i < KEYWORD_TABLE_SIZE; ++i)
-        if (keydata[i] != NULL)
-        {
-            if (first)
-                first = false;
-            else
-                s << ",";
-            s << keyword_name((dba_keyword)i) << "=" << keydata[i]->format("");
-        }
-
-    for (vector<Var*>::const_iterator i = m_vars.begin(); i != m_vars.end(); ++i)
+    template<typename KEY, typename VAL>
+    void print(const KEY& key, const VAL& val)
     {
         if (first)
             first = false;
         else
             s << ",";
-        s << wreport::varcode_format((*i)->code()) << "=" << (*i)->format("");
+        s << key << "=" << val;
     }
 
-    return s.str();
+    void print_varlist(const char* key, const std::set<wreport::Varcode>& varlist)
+    {
+        s << key << "=";
+        bool first = true;
+        for (const auto& code: varlist)
+        {
+            if (first)
+                first = false;
+            else
+                s << ",";
+            char buf[8];
+            format_bcode(code, buf);
+            s << buf;
+        }
+    }
+};
+
+struct FilePrinter
+{
+    FILE* out;
+
+    template<typename VAL>
+    void print(const char* key, const VAL& val)
+    {
+        fprintf(out, "%s=", key);
+        val.print(out);
+    }
+
+    void print(const char* key, int val)
+    {
+        fprintf(out, "%s=%d\n", key, val);
+    }
+
+    void print(const char* key, const std::string& val)
+    {
+        fprintf(out, "%s=%s\n", key, val.c_str());
+    }
+
+    void print_varlist(const char* key, const std::set<wreport::Varcode>& varlist)
+    {
+        fprintf(out, "%s=", key);
+        bool first = true;
+        for (const auto& code: varlist)
+        {
+            if (first)
+                first = false;
+            else
+                putc(',', out);
+            char buf[8];
+            format_bcode(code, buf);
+            fputs(buf, out);
+        }
+    }
+};
+
+}
+
+std::string Record::to_string() const
+{
+    BufferPrinter printer;
+
+    if (priomin != MISSING_INT) printer.print("priomin", priomin);
+    if (priomax != MISSING_INT) printer.print("priomax", priomax);
+    if (mobile != MISSING_INT) printer.print("mobile", mobile);
+    if (!station.is_missing()) printer.print("station", station);
+    if (!latrange.is_missing()) printer.print("latrange", latrange);
+    if (!lonrange.is_missing()) printer.print("lonrange", lonrange);
+    if (!datetime.is_missing()) printer.print("datetime", datetime);
+    if (!level.is_missing()) printer.print("level", level);
+    if (!trange.is_missing()) printer.print("trange", trange);
+    if (var) printer.print("var", varcode_format(var));
+    if (!varlist.empty()) printer.print_varlist("varlist", varlist);
+    if (!query.empty()) printer.print("query", query);
+    if (!ana_filter.empty()) printer.print("ana_filter", ana_filter);
+    if (!data_filter.empty()) printer.print("data_filter", data_filter);
+    if (!attr_filter.empty()) printer.print("attr_filter", attr_filter);
+    if (count != MISSING_INT) printer.print("count", count);
+
+    for (const auto& var: m_vars)
+        printer.print(varcode_format(var->code()), var->format(""));
+
+    return printer.s.str();
 }
 
 void Record::print(FILE* out) const
 {
-	for (int i = 0; i < KEYWORD_TABLE_SIZE; ++i)
-		if (keydata[i] != NULL)
-			keydata[i]->print(out);
+    FilePrinter printer;
+    printer.out = out;
 
-	for (vector<Var*>::const_iterator i = m_vars.begin(); i != m_vars.end(); ++i)
-		(*i)->print(out);
+    if (priomin != MISSING_INT) printer.print("priomin", priomin);
+    if (priomax != MISSING_INT) printer.print("priomax", priomax);
+    if (mobile != MISSING_INT) printer.print("mobile", mobile);
+    if (!station.is_missing()) printer.print("station", station);
+    if (!latrange.is_missing()) printer.print("latrange", station);
+    if (!lonrange.is_missing()) printer.print("lonrange", lonrange);
+    if (!datetime.is_missing()) printer.print("datetime", datetime);
+    if (!level.is_missing()) printer.print("level", level);
+    if (!trange.is_missing()) printer.print("trange", trange);
+    if (var) printer.print("var", varcode_format(var));
+    if (!varlist.empty()) printer.print_varlist("varlist", varlist);
+    if (!query.empty()) printer.print("query", query);
+    if (!ana_filter.empty()) printer.print("ana_filter", ana_filter);
+    if (!data_filter.empty()) printer.print("data_filter", data_filter);
+    if (!attr_filter.empty()) printer.print("attr_filter", attr_filter);
+    if (count != MISSING_INT) printer.print("count", count);
+
+    for (const auto& var: m_vars)
+        var->print(out);
+}
+
+void Record::to_query(core::Query& q) const
+{
+    q.want_missing = 0;
+    q.ana_id = station.id;
+    q.prio_min = priomin;
+    q.prio_max = priomax;
+    q.rep_memo = station.report;
+    q.mobile = mobile;
+    q.ident = station.ident;
+    q.latrange = latrange;
+    q.lonrange.set(lonrange); // use set() so it checks for open ended ranges and x,x+360 ranges
+    q.datetime = datetime;
+    q.datetime.min.set_lower_bound();
+    q.datetime.max.set_upper_bound();
+    q.level = level;
+    q.trange = trange;
+    if (var)
+    {
+        q.varcodes.clear();
+        q.varcodes.insert(var);
+    }
+    else
+        q.varcodes = varlist;
+    q.query = query;
+    q.ana_filter = ana_filter;
+    q.data_filter = data_filter;
+    q.attr_filter = attr_filter;
+    q.limit = count;
+    // WMO block/station come from variables
+    q.block = enq("block", MISSING_INT);
+    q.station = enq("station", MISSING_INT);
 }
 
 
@@ -1182,10 +1067,10 @@ matcher::Result MatchedRecord::match_coords(const LatRange& latrange, const LonR
 
 matcher::Result MatchedRecord::match_rep_memo(const char* memo) const
 {
-    const char* report = r.enq("rep_memo", (const char*)nullptr);
-    if (!report)
+    std::string report = r.enqs("rep_memo", std::string());
+    if (report.empty())
         return matcher::MATCH_NA;
-    return strcmp(report, memo) == 0 ? matcher::MATCH_YES : matcher::MATCH_NO;
+    return report == memo ? matcher::MATCH_YES : matcher::MATCH_NO;
 }
 
 }

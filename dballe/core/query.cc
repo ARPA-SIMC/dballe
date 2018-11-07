@@ -63,70 +63,7 @@ void Query::clear()
 
 void Query::set_from_record(const dballe::Record& rec)
 {
-    const auto& r = core::Record::downcast(rec);
-
-    want_missing = 0;
-    // Ana ID
-    ana_id = rec.enq("ana_id", MISSING_INT);
-    // Priority
-    int i = rec.enq("priority", MISSING_INT);
-    if (i != MISSING_INT)
-        prio_min = prio_max = i;
-    else
-    {
-        prio_min = rec.enq("priomin", MISSING_INT);
-        prio_max = rec.enq("priomax", MISSING_INT);
-    }
-    // Network
-    rep_memo = rec.enq("rep_memo", "");
-    // Mobile
-    mobile = rec.enq("mobile", MISSING_INT);
-    // Ident
-    if (const char* val = rec.enq("ident", (const char*)nullptr))
-        ident = val;
-    else
-        ident.clear();
-    // Latitude
-    i = rec.enq("lat", MISSING_INT);
-    if (i != MISSING_INT)
-        latrange.set(i, i);
-    else
-    {
-        int imin = rec.enq("latmin", MISSING_INT);
-        int imax = rec.enq("latmax", MISSING_INT);
-        latrange.set(
-                imin == MISSING_INT ? LatRange::IMIN : imin,
-                imax == MISSING_INT ? LatRange::IMAX : imax);
-    }
-    // Longitude
-    i = rec.enq("lon", MISSING_INT);
-    if (i != MISSING_INT)
-        lonrange.set(i, i);
-    else
-        lonrange.set(rec.enq("lonmin", MISSING_INT), rec.enq("lonmax", MISSING_INT));
-    // Datetime
-    datetime = r.get_datetimerange();
-    // Level
-    level = r.get_level();
-    // Trange
-    trange = r.get_trange();
-    // Varcodes
-    varcodes.clear();
-    if (const char* var = rec.enq("var", (const char*)nullptr))
-        varcodes.insert(resolve_varcode(var));
-    else if (const char* varlist = rec.enq("varlist", (const char*)nullptr))
-        resolve_varlist(varlist, varcodes);
-    // Query
-    query = rec.enq("query", "");
-    // Filters
-    ana_filter = rec.enq("ana_filter", "");
-    data_filter = rec.enq("data_filter", "");
-    attr_filter = rec.enq("attr_filter", "");
-    // Limit
-    limit = rec.enq("limit", MISSING_INT);
-    // WMO block/station
-    block = rec.enq("block", MISSING_INT);
-    station = rec.enq("station", MISSING_INT);
+    core::Record::downcast(rec).to_query(*this);
 }
 
 void Query::set_from_test_string(const std::string& s)
@@ -244,6 +181,7 @@ bool Query::is_subquery(const dballe::Query& other_gen) const
     return true;
 }
 
+#if 0
 namespace {
 
 struct VarGen
@@ -385,6 +323,7 @@ void Query::foreach_key(std::function<void(const char*, Var&&)> dest) const
     if (block != MISSING_INT) dest("block", Var(varinfo(WR_VAR(0, 1, 1)), block));
     if (station != MISSING_INT) dest("station", Var(varinfo(WR_VAR(0, 1, 2)), station));
 }
+#endif
 
 namespace {
 
@@ -582,6 +521,7 @@ void Query::serialize(JSONWriter& out) const
     if (station != MISSING_INT) out.add("station", station);
 }
 
+#if 0
 unsigned Query::parse_modifiers(const dballe::Record& rec)
 {
     /* Decode query modifiers */
@@ -589,6 +529,7 @@ unsigned Query::parse_modifiers(const dballe::Record& rec)
     if (!q) return 0;
     return parse_modifiers(q);
 }
+#endif
 
 unsigned Query::parse_modifiers(const char* s)
 {

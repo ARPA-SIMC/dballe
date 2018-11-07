@@ -15,14 +15,14 @@ common_libs = $(WREPORT_LIBS) $(LIBPQ_LIBS) $(SQLITE3_LIBS) $(MYSQL_LIBS) $(POPT
 # Autobuilt files
 #
 
-core/record_keyword.cc: core/record_keyword.gperf
-	if ! gperf < $< > $@; then rm $@; /bin/false; fi
+core/record-access.cc: core/record-access.in.cc mklookup
+	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
 
 core/aliases.cc: core/aliases.gperf
 	if ! gperf < $< > $@; then rm $@; /bin/false; fi
 
-BUILT_SOURCES = core/record_keyword.cc core/aliases.cc
-EXTRA_DIST += mklookup core/aliases.gperf core/aliases.cc core/record_keyword.gperf core/record_keyword.cc
+BUILT_SOURCES = core/record-access.cc core/aliases.cc
+EXTRA_DIST += mklookup core/aliases.gperf core/aliases.cc core/record-access.in.cc core/record-access.cc
 
 
 msg/vars.h msg/vars.gperf msg/msg-extravars.h: msg/vars.csv msg/mkvars
@@ -159,8 +159,8 @@ libdballe_la_SOURCES = \
 	core/file.cc \
 	core/arrayfile.cc \
 	core/csv.cc \
-	core/record_keyword.cc \
 	core/record.cc \
+	core/record-access.cc \
 	core/query.cc \
 	core/structbuf.cc \
 	core/matcher.cc \
@@ -380,17 +380,6 @@ profile_run_LDADD = \
 	libdballe.la \
 	$(common_libs)
 
-
-#
-# Documentation
-#
-
-noinst_PROGRAMS += dump-core-info
-
-dump_core_info_SOURCES = core/dump-core-info.cc
-dump_core_info_LDADD = \
-	libdballe.la \
-	$(common_libs)
 
 # toplevel
 

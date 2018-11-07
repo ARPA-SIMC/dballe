@@ -2,13 +2,13 @@
 #define DBALLE_CORE_FWD_H
 
 namespace dballe {
-struct Station;
-struct DBStation;
 struct Values;
 struct StationValues;
 struct DataValues;
 
 namespace core {
+class Record;
+class Query;
 class JSONWriter;
 class JSONReader;
 namespace json {

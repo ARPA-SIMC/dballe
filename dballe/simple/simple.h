@@ -1,8 +1,8 @@
-#ifndef FDBA_SIMPLE_H
-#define FDBA_SIMPLE_H
+#ifndef DBALLE_SIMPLE_SIMPLE_H
+#define DBALLE_SIMPLE_SIMPLE_H
 
-#include <dballe/file.h>
-#include <dballe/types.h>
+#include <dballe/fwd.h>
+#include <wreport/varinfo.h>
 
 namespace dballe {
 namespace fortran {
@@ -27,7 +27,8 @@ struct API
     virtual signed char enqb(const char* param) = 0;
     virtual float enqr(const char* param) = 0;
     virtual double enqd(const char* param) = 0;
-    virtual const char* enqc(const char* param) = 0;
+    virtual std::string enqc(const char* param) = 0;
+    virtual bool enqc(const char* param, std::string& res) = 0;
     virtual void seti(const char* param, int value) = 0;
     virtual void setb(const char* param, signed char value) = 0;
     virtual void setr(const char* param, float value) = 0;
@@ -48,7 +49,7 @@ struct API
     virtual int quantesono() = 0;
     virtual void elencamele() = 0;
     virtual int voglioquesto() = 0;
-    virtual const char* dammelo() = 0;
+    virtual wreport::Varcode dammelo() = 0;
     virtual void prendilo() = 0;
     virtual void dimenticami() = 0;
     virtual int voglioancora() = 0;

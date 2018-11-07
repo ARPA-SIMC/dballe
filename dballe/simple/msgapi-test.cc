@@ -171,7 +171,7 @@ void Tests::register_tests()
             msgapi0.seti("mobile", 0);
             msgapi0.seti("block", 0);
             msgapi0.seti("station", 101);
-            msgapi0.prendilo();
+            wassert(msgapi0.prendilo());
         }
         // error: no year information found in message to import
     });

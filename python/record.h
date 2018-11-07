@@ -3,6 +3,7 @@
 
 #include <Python.h>
 #include <dballe/fwd.h>
+#include <dballe/core/fwd.h>
 
 namespace dballe {
 struct Record;
@@ -51,6 +52,7 @@ public:
 };
 
 void read_query(PyObject* from_python, dballe::Query& query);
+bool _record_enqpython(const dballe::core::Record& rec, const char* key, unsigned len, PyObject*& result);
 
 dpy_Record* record_create();
 

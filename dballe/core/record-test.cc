@@ -1,5 +1,5 @@
-#include "core/tests.h"
-#include "core/record.h"
+#include "tests.h"
+#include "record.h"
 
 using namespace dballe::tests;
 using namespace dballe;
@@ -17,6 +17,7 @@ class Tests : public TestCase
 void Tests::register_tests()
 {
 
+#if 0
 add_method("keyword_name", []() {
     // Keyword name resolution
     using namespace dballe::core;
@@ -36,13 +37,18 @@ add_method("keyword_name", []() {
     wassert(actual(core::Record::keyword_byname("lon") == DBA_KEY_LON).istrue());
     wassert(actual(core::Record::keyword_info(DBA_KEY_LON)->desc) == "Longitude");
 });
+#endif
+
 add_method("get_set", []() {
     // Check that things don't exist at the beginning
     core::Record rec;
-    wassert(actual(rec.get("ana_id")).isfalse());
-    wassert(actual(rec.get("lat")).isfalse());
-    wassert(actual(rec.get("B20001")).isfalse());
-    wassert(actual(rec.get("B20003")).isfalse());
+    wassert(actual(rec.isset("ana_id")).isfalse());
+    wassert(actual(rec.isset("lat")).isfalse());
+    wassert(actual(rec.isset("lon")).isfalse());
+    wassert(actual(rec.isset("yearmin")).isfalse());
+    wassert(actual(rec.isset("monthmin")).isfalse());
+    wassert(actual(rec.isset("B20001")).isfalse());
+    wassert(actual(rec.isset("B20003")).isfalse());
 
     // Set various things
     rec.set("ana_id", -10);
@@ -53,29 +59,31 @@ add_method("get_set", []() {
     rec.set("B20003", "456");
 
     // Check that they now exist
-    wassert(actual(rec.get("ana_id")).istrue());
-    wassert(actual(rec.get("lat")).istrue());
-    wassert(actual(rec.get("B20001")).istrue());
-    wassert(actual(rec.get("B20003")).istrue());
+    wassert(actual(rec.isset("ana_id")).istrue());
+    wassert(actual(rec.isset("lat")).istrue());
+    wassert(actual(rec.isset("lon")).istrue());
+    wassert(actual(rec.isset("yearmin")).istrue());
+    wassert(actual(rec.isset("B20001")).istrue());
+    wassert(actual(rec.isset("B20003")).istrue());
 
     // Check that they have the right value
-    wassert(actual(rec.get("ana_id")->enqi()) == -10);
-    wassert(actual(rec.get("ana_id")->enqd()) == -10.0);
-    wassert(actual(rec.get("lon")->enqi()) == 7654321);
-    wassert(actual(rec.get("lon")->enqd()) == 76.54321);
-    wassert(actual(rec.get("lon")->enqc()) == "7654321");
-    wassert(actual(rec.get("lat")->enqd()) == 12.34567);
-    wassert(actual(rec.get("yearmin")->enqd()) == 1976.0);
-    wassert(actual(rec.get("B20001")->enqd()) == 4560.0);
-    wassert(actual(rec.get("B20003")->enqd()) == 456);
+    wassert(actual(rec.enqi("ana_id", MISSING_INT)) == -10);
+    wassert(actual(rec.enqd("ana_id", 0)) == -10.0);
+    wassert(actual(rec.enqi("lon", MISSING_INT)) == 7654321);
+    wassert(actual(rec.enqd("lon", 0)) == 76.54321);
+    wassert(actual(rec.enqs("lon", "")) == "7654321");
+    wassert(actual(rec.enqd("lat", 0)) == 12.34567);
+    wassert(actual(rec.enqd("yearmin", 0)) == 1976.0);
+    wassert(actual(rec.enqd("B20001", 0)) == 4560.0);
+    wassert(actual(rec.enqd("B20003", 0)) == 456);
 
     // See if unset works for keywords
     rec.unset("lat");
-    wassert(actual(rec.get("lat")).isfalse());
+    wassert(actual(rec.isset("lat")).isfalse());
 
     // See if unset works for variables
     rec.unset("B20001");
-    wassert(actual(rec.get("B20001")).isfalse());
+    wassert(actual(rec.isset("B20001")).isfalse());
 
     /* fprintf(stderr, "IVAL: %d\n", ival); */
     /* fprintf(stderr, "DVAL: %f\n", fval); */
@@ -89,12 +97,14 @@ add_method("get_set", []() {
 
     // See if clear clears
     rec.clear();
-    wassert(actual(rec.get("lat")).isfalse());
-    wassert(actual(rec.get("B20003")).isfalse());
+    wassert(actual(rec.isset("lat")).isfalse());
+    wassert(actual(rec.isset("yearmin")).isfalse());
+    wassert(actual(rec.isset("B20003")).isfalse());
 
     rec.clear();
-    wassert(actual(rec.get("lat")).isfalse());
-    wassert(actual(rec.get("B20003")).isfalse());
+    wassert(actual(rec.isset("lat")).isfalse());
+    wassert(actual(rec.isset("yearmin")).isfalse());
+    wassert(actual(rec.isset("B20003")).isfalse());
 });
 add_method("ident", []() {
     // This used to cause a segfault
@@ -192,6 +202,7 @@ add_method("get_set_datetime", []() {
     Datetime dt = rec.get_datetime();
     wassert(actual(dt) == Datetime(2012, 5, 15, 17, 30, 30));
 });
+#if 0
 add_method("iter", []() {
     // Test iteration
     using namespace dballe::core;
@@ -209,6 +220,7 @@ add_method("iter", []() {
     wassert(actual(res).istrue());
     wassert(actual(count) == 8);
 });
+#endif
 add_method("extremes", []() {
     // Test querying extremes by Datetime
     core::Record rec;

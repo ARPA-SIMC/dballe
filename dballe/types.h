@@ -191,6 +191,12 @@ struct Datetime
      */
     static Datetime upper_bound(int ye, int mo, int da, int ho, int mi, int se);
 
+    /// Fill possibly missing fields with their lowest valid value
+    void set_lower_bound();
+
+    /// Fill possibly missing fields with their highest valid value
+    void set_upper_bound();
+
     /// Return a Date with this date
     Date date() const;
 
@@ -223,6 +229,11 @@ struct Datetime
      * Print to an output stream in ISO8601 combined format.
      */
     int print_iso8601(FILE* out, char sep='T', const char* end="\n") const;
+
+    /**
+     * Print to an output stream in ISO8601 combined format.
+     */
+    int print(FILE* out, const char* end="\n") const;
 
     /**
      * Write the datetime to an output stream in ISO8601 combined format.
@@ -326,6 +337,9 @@ struct DatetimeRange
 
     /// Check if the two ranges are completely disjoint
     bool is_disjoint(const DatetimeRange& dtr) const;
+
+    /// Print to an output stream in ISO8601 combined format.
+    int print(FILE* out, const char* end="\n") const;
 };
 
 std::ostream& operator<<(std::ostream& out, const DatetimeRange& dtr);
@@ -363,6 +377,18 @@ struct Coords
     /// Check if these coordinates are undefined
     bool is_missing() const;
 
+    /// Set the latitude only
+    void set_lat(double lat);
+
+    /// Set the longitude only
+    void set_lon(double lon);
+
+    /// Set the latitude only, in 1/100000 of a degree
+    void set_lat(int lat);
+
+    /// Set the longitude only, in 1/100000 of a degree
+    void set_lon(int lon);
+
     /// Set from integers in 1/100000 of a degree
     void set(int lat, int lon);
 
@@ -399,6 +425,18 @@ struct Coords
 
     /// Format to a string
     std::string to_string(const char* undef="-") const;
+
+    /// Convert a latitude to the internal integer representation
+    static int lat_to_int(double lat);
+
+    /// Convert a longitude to the internal integer representation
+    static int lon_to_int(double lat);
+
+    /// Convert a latitude from the internal integer representation
+    static double lat_from_int(int lat);
+
+    /// Convert a longitude from the internal integer representation
+    static double lon_from_int(int lon);
 };
 
 std::ostream& operator<<(std::ostream&, const Coords&);
@@ -469,6 +507,14 @@ struct LatRange
 
     /// Check if a range is inside this range (extremes included)
     bool contains(const LatRange& lr) const;
+
+    /**
+     * Print the LatRange to a FILE*.
+     *
+     * @param out  The output stream
+     * @param end  String to print after the Station
+     */
+    int print(FILE* out, const char* end="\n") const;
 };
 
 std::ostream& operator<<(std::ostream& out, const LatRange& lr);
@@ -526,11 +572,23 @@ struct LonRange
      */
     void get(double& min, double& max) const;
 
-    /// Set the extremes as integers
+    /**
+     * Set the extremes as integers, throwing an error in case of open ended
+     * ranges
+     */
     void set(int min, int max);
 
-    /// Set the extremes in degrees
+    /**
+     * Set the extremes in degrees, throwing an error in case of open ended
+     * ranges
+     */
     void set(double min, double max);
+
+    /**
+     * Set from another LonRange, throwing an error in case of open ended
+     * ranges
+     */
+    void set(const LonRange& lr);
 
     /// Check if a point is inside this range (extremes included)
     bool contains(int lon) const;
@@ -540,6 +598,14 @@ struct LonRange
 
     /// Check if a range is inside this range (extremes included)
     bool contains(const LonRange& lr) const;
+
+    /**
+     * Print the LonRange to a FILE*.
+     *
+     * @param out  The output stream
+     * @param end  String to print after the Station
+     */
+    int print(FILE* out, const char* end="\n") const;
 };
 
 std::ostream& operator<<(std::ostream& out, const LonRange& lr);
@@ -729,6 +795,9 @@ struct Station
 
     Station() = default;
 
+    /// Return true if all the station fields are empty
+    bool is_missing() const;
+
     bool operator==(const Station& o) const
     {
         return std::tie(report, coords, ident) == std::tie(o.report, o.coords, o.ident);
@@ -760,7 +829,7 @@ struct Station
      * @param out  The output stream
      * @param end  String to print after the Station
      */
-    void print(FILE* out, const char* end="\n") const;
+    int print(FILE* out, const char* end="\n") const;
 
     /// Format to a string
     std::string to_string(const char* undef="-") const;
@@ -780,6 +849,9 @@ struct DBStation : public Station
 
 
     DBStation() = default;
+
+    /// Return true if all the station fields are empty
+    bool is_missing() const;
 
     bool operator==(const DBStation& o) const
     {
@@ -812,7 +884,7 @@ struct DBStation : public Station
      * @param out  The output stream
      * @param end  String to print after the Station
      */
-    void print(FILE* out, const char* end="\n") const;
+    int print(FILE* out, const char* end="\n") const;
 
     /// Format to a string
     std::string to_string(const char* undef="-") const;

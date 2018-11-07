@@ -3,6 +3,7 @@
 
 #include "simple.h"
 #include <dballe/core/record.h>
+#include <dballe/core/values.h>
 #include <dballe/db/fwd.h>
 #include <functional>
 
@@ -12,14 +13,23 @@ namespace fortran {
 /**
  * Operation-specific behaviour for the API
  */
-struct Operation
+class Operation
 {
+protected:
+    /// Selected varcodes
+    std::vector<wreport::Varcode> selected_attr_codes;
+
+public:
     virtual ~Operation();
     virtual void set_varcode(wreport::Varcode varcode);
-    virtual void voglioancora(db::Transaction& tr, std::function<void(std::unique_ptr<wreport::Var>&&)> dest) = 0;
-    virtual void critica(db::Transaction& tr, const core::Record& qcinput) = 0;
-    virtual void scusa(db::Transaction& tr, const std::vector<wreport::Varcode>& attrs) = 0;
-    virtual const char* dammelo(dballe::Record& output);
+    virtual void select_attrs(const std::vector<wreport::Varcode>& varcodes)
+    {
+        selected_attr_codes = varcodes;
+    }
+    virtual void voglioancora(db::Transaction& tr, std::vector<wreport::Var>& dest) = 0;
+    virtual void critica(db::Transaction& tr, const Values& qcinput) = 0;
+    virtual void scusa(db::Transaction& tr) = 0;
+    virtual wreport::Varcode dammelo(dballe::Record& output);
 };
 
 /**
@@ -49,31 +59,17 @@ protected:
     core::Record input;
     bool station_context = false;
     core::Record output;
-    core::Record qcinput;
-    core::Record qcoutput;
+    Values qcinput;
+    // TODO: replace with Values, reimplementing Values merging with wreport's sorted vector
+    std::vector<wreport::Var> qcoutput;
     int qc_iter;
     int qc_count;
 
     Operation* operation = nullptr;
 
-	// Last string returned by one of the spiega* functions, held here so
-	// that we can deallocate it when needed.
-	std::string cached_spiega;
-
-	/**
-	 * Choose the input record to use for param.  Also, adjust param to remove
-	 * a leading '*' if present.
-	 */
-	Record& choose_input_record(const char*& param);
-
-	/**
-	 * Choose the output record to use for param.  Also, adjust param to remove
-	 * a leading '*' if present.
-	 */
-	Record& choose_output_record(const char*& param);
-
-	/// Reads the list of QC values to operate on, for dba_voglioancora and dba_scusa
-	void read_qc_list(std::vector<wreport::Varcode>& res_arr) const;
+    // Last string returned by one of the spiega* functions, held here so
+    // that we can deallocate it when needed.
+    std::string cached_spiega;
 
 public:
     CommonAPIImplementation();
@@ -84,7 +80,8 @@ public:
     signed char enqb(const char* param) override;
     float enqr(const char* param) override;
     double enqd(const char* param) override;
-    const char* enqc(const char* param) override;
+    std::string enqc(const char* param) override;
+    bool enqc(const char* param, std::string& res) override;
     void seti(const char* param, int value) override;
     void setb(const char* param, signed char value) override;
     void setr(const char* param, float value) override;
@@ -112,8 +109,8 @@ public:
 
     const core::Record& test_get_input() const { return input; }
     const core::Record& test_get_output() const { return output; }
-    const core::Record& test_get_qcinput() const { return qcinput; }
-    const core::Record& test_get_qcoutput() const { return qcoutput; }
+    const Values& test_get_qcinput() const { return qcinput; }
+    // const core::Record& test_get_qcoutput() const { return qcoutput; }
 };
 
 }

@@ -187,11 +187,9 @@ class RecordTest(unittest.TestCase):
         r = dballe.Record()
         r["B33036"] = 75
         r["B12101"] = 273.15
-        res = []
         ri = iter(r)
-        res.append(next(ri))
-        res.append(next(ri))
-        self.assertEqual(res, ["B12101", "B33036"])
+        res = list(ri)
+        self.assertCountEqual(res, ["B12101", "B33036"])
 
     def testSetDict(self):
         r = dballe.Record()

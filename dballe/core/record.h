@@ -8,72 +8,18 @@
 
 #include <dballe/record.h>
 #include <dballe/core/defs.h>
+#include <dballe/core/fwd.h>
 #include <dballe/var.h>
 #include <dballe/core/matcher.h>
 #include <vector>
+#include <set>
 #include <functional>
 
 namespace dballe {
 namespace core {
 
 /**
- * Keyword used to quickly access context and query information from a record.
- */
-typedef enum {
-	DBA_KEY_ERROR		= -1,
-	DBA_KEY_PRIORITY	=  0,
-	DBA_KEY_PRIOMAX		=  1,
-	DBA_KEY_PRIOMIN		=  2,
-	DBA_KEY_REP_MEMO	=  3,
-	DBA_KEY_ANA_ID		=  4,
-	DBA_KEY_MOBILE		=  5,
-	DBA_KEY_IDENT		=  6,
-	DBA_KEY_LAT			=  7,
-	DBA_KEY_LON			=  8,
-	DBA_KEY_LATMAX		=  9,
-	DBA_KEY_LATMIN		= 10,
-	DBA_KEY_LONMAX		= 11,
-	DBA_KEY_LONMIN		= 12,
-	DBA_KEY_YEAR		= 13,
-	DBA_KEY_MONTH		= 14,
-	DBA_KEY_DAY			= 15,
-	DBA_KEY_HOUR		= 16,
-	DBA_KEY_MIN			= 17,
-	DBA_KEY_SEC			= 18,
-	DBA_KEY_YEARMAX		= 19,
-	DBA_KEY_YEARMIN		= 20,
-	DBA_KEY_MONTHMAX	= 21,
-	DBA_KEY_MONTHMIN	= 22,
-	DBA_KEY_DAYMAX		= 23,
-	DBA_KEY_DAYMIN		= 24,
-	DBA_KEY_HOURMAX		= 25,
-	DBA_KEY_HOURMIN		= 26,
-	DBA_KEY_MINUMAX		= 27,
-	DBA_KEY_MINUMIN		= 28,
-	DBA_KEY_SECMAX		= 29,
-	DBA_KEY_SECMIN		= 30,
-	DBA_KEY_LEVELTYPE1	= 31,
-	DBA_KEY_L1			= 32,
-	DBA_KEY_LEVELTYPE2	= 33,
-	DBA_KEY_L2			= 34,
-	DBA_KEY_PINDICATOR	= 35,
-	DBA_KEY_P1			= 36,
-	DBA_KEY_P2			= 37,
-	DBA_KEY_VAR			= 38,
-	DBA_KEY_VARLIST		= 39,
-	DBA_KEY_CONTEXT_ID	= 40,
-	DBA_KEY_QUERY		= 41,
-	DBA_KEY_ANA_FILTER	= 42,
-	DBA_KEY_DATA_FILTER	= 43,
-	DBA_KEY_ATTR_FILTER	= 44,
-	DBA_KEY_LIMIT		= 45,
-	DBA_KEY_VAR_RELATED	= 46,
-	DBA_KEY_COUNT		= 47,
-} dba_keyword;
-
-std::ostream& operator<<(std::ostream& o, dba_keyword k);
-
-/** DB-All.E record.
+ * DB-All.E record.
  *
  * A Record is a container for one observation of meteorological values, that
  * includes anagraphical informations, physical location of the observation in
@@ -81,15 +27,30 @@ std::ostream& operator<<(std::ostream& o, dba_keyword k);
  */
 class Record : public dballe::Record
 {
-protected:
-	/* The storage for the core keyword data */
-	wreport::Var* keydata[DBA_KEY_COUNT];
+public:
+    int priomin = MISSING_INT;
+    int priomax = MISSING_INT;
+    int mobile = MISSING_INT;
+    DBStation station;
+    LatRange latrange;
+    LonRange lonrange;
+    DatetimeRange datetime;
+    Level level;
+    Trange trange;
+    wreport::Varcode var = 0;
+    std::set<wreport::Varcode> varlist;
+    std::string query;
+    std::string ana_filter;
+    std::string data_filter;
+    std::string attr_filter;
+    int count = MISSING_INT;
 
+protected:
     // The variables, sorted by varcode
     std::vector<wreport::Var*> m_vars;
 
-	/// Find an item by wreport::Varcode, returning -1 if not found
-	int find_item(wreport::Varcode code) const throw ();
+    /// Find an item by wreport::Varcode, returning -1 if not found
+    int find_item(wreport::Varcode code) const noexcept;
 
 	/// Find an item by wreport::Varcode, raising an exception if not found
 	wreport::Var& get_item(wreport::Varcode code);
@@ -101,15 +62,6 @@ protected:
 	void remove_item(wreport::Varcode code);
 
     /**
-     * Look at the value of a parameter
-     *
-     * @return
-     *   A const pointer to the internal variable, or NULL if the variable has not
-     *   been found.
-     */
-    const wreport::Var* key_peek(dba_keyword parameter) const throw ();
-
-    /**
      * Look at the value of a variable
      *
      * @return
@@ -119,26 +71,12 @@ protected:
     const wreport::Var* var_peek(wreport::Varcode code) const throw ();
 
     /**
-     * Remove a parameter from the record.
-     *
-     * @param parameter
-     *   The parameter to remove.
-     */
-    void key_unset(dba_keyword parameter);
-
-    /**
-     * Remove a parameter from the record.
+     * Remove a variable from the record.
      *
      * @param code
-     *   The variable to remove.  See @ref vartable.h
+     *   The variable to remove
      */
-    void var_unset(wreport::Varcode code);
-
-    /// Return the Var for a key, creating it if it is missing
-    wreport::Var& obtain(const char* key);
-
-    /// Return the Var for a key, creating it if it is missing
-    wreport::Var& obtain(dba_keyword key);
+    void unset_var(wreport::Varcode code);
 
     /// Return the Var for a variable, creating it if it is missing
     wreport::Var& obtain(wreport::Varcode code);
@@ -146,14 +84,34 @@ protected:
     void foreach_key_ref(std::function<void(const char*, const wreport::Var&)> dest) const;
     void foreach_key_copy(std::function<void(const char*, std::unique_ptr<wreport::Var>&&)> dest) const;
 
+    int _enqi(const char* key, unsigned len, bool& found) const;
+    double _enqd(const char* key, unsigned len, bool& found, bool& missing) const;
+    std::string _enqs(const char* key, unsigned len, bool& found, bool& missing) const;
+
+    bool _seti(const char* key, unsigned len, int val);
+    bool _setd(const char* key, unsigned len, double val);
+    bool _setc(const char* key, unsigned len, const char* val);
+    bool _sets(const char* key, unsigned len, const std::string& val);
+    bool _setf(const char* key, unsigned len, const char* val);
+
+    bool _unset(const char* key, unsigned len);
+    bool _isset(const char* key, unsigned len, bool& res) const;
+
+    bool equals(const Record& rec) const;
+
 public:
     Record();
     Record(const Record& rec);
+    Record(Record&& rec);
     ~Record();
 
     std::unique_ptr<dballe::Record> clone() const override;
 
     Record& operator=(const Record& rec);
+    Record& operator=(Record&& rec);
+
+    bool operator==(const dballe::Record& rec) const override;
+    bool operator!=(const dballe::Record& rec) const override;
 
     void clear() override;
     void clear_vars() override;
@@ -174,9 +132,12 @@ public:
     void set_station(const Station& s) override;
     void set_dbstation(const DBStation& s) override;
     void unset(const char* name) override;
+#if 0
     void add(const dballe::Record& source) override;
+#endif
+#if 0
     bool contains(const dballe::Record& subset) const override;
-    bool equals(const dballe::Record& rec) const override;
+#endif
     void print(FILE* out) const override;
 
     /**
@@ -193,6 +154,7 @@ public:
      */
     static Record& downcast(dballe::Record& query);
 
+#if 0
 	/**
 	 * Set the record to contain only those fields that change source1 into source2.
 	 *
@@ -205,6 +167,15 @@ public:
 	 *   The new record that has changes over source1.
 	 */
 	void set_to_difference(const Record& source1, const Record& source2);
+#endif
+
+    int enqi(const char* key, int def) const override;
+    double enqd(const char* key, double def) const override;
+    bool enqdb(const char* key, double& res) const override;
+    std::string enqs(const char* key, const std::string& def) const override;
+    bool enqsb(const char* key, std::string& res) const override;
+
+    bool isset(const char* key) const;
 
     Coords get_coords() const override;
     Ident get_ident() const override;
@@ -216,6 +187,7 @@ public:
     DBStation get_dbstation() const override;
     const wreport::Var* get_var(wreport::Varcode code) const override;
 
+#if 0
     /**
      * Iterate all keys in the record, calling f on them.
      *
@@ -225,6 +197,7 @@ public:
      * false if it stopped because f returned false.
      */
     bool iter_keys(std::function<bool(dba_keyword, const wreport::Var&)> f) const;
+#endif
 
     /// Return the varcode-sorted vector with the variables
     const std::vector<wreport::Var*>& vars() const;
@@ -257,9 +230,12 @@ public:
      */
     std::string to_string() const;
 
-    // TODO: deprecate: this is currently only used for the python bindings
-    const wreport::Var* get(const char* key) const override;
+    /**
+     * Copy the contents to a query
+     */
+    void to_query(core::Query& q) const;
 
+#if 0
     /**
      * Generate a sequence of key names and const Var& for all the
      * contents of the record
@@ -271,7 +247,9 @@ public:
      * contents of the record
      */
     void foreach_key(std::function<void(const char*, std::unique_ptr<wreport::Var>&&)> dest) const { foreach_key_copy(dest); }
+#endif
 
+#if 0
 	/**
 	 * Return the name of a dba_keyword
 	 *
@@ -309,6 +287,7 @@ public:
 	 *   valid keyword.
 	 */
 	static dba_keyword keyword_byname_len(const char* tag, int len);
+#endif
 };
 
 

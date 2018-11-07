@@ -177,18 +177,11 @@ static PyObject* __getitem__(dpy_Record* self, PyObject* key)
                 break;
         }
 
-        core::dba_keyword rec_key = core::Record::keyword_byname_len(varname.c_str(), varname.size());
-        if (rec_key != core::DBA_KEY_ERROR)
-        {
-            const Var* var = core::Record::downcast(*self->rec).get(varname.c_str());
-            if (!var)
-                Py_RETURN_NONE;
-
-            if (!var->isset())
-                Py_RETURN_NONE;
-
-            return wrpy->var_value_to_python(*var);
-        }
+        const core::Record& rec = core::Record::downcast(*self->rec);
+        PyObject* res;
+        bool found = _record_enqpython(rec, varname.c_str(), varname.size(), res);
+        if (found)
+            return res;
 
         wreport::Varcode code = resolve_varcode(varname);
         const Var* var = self->rec->get_var(code);
@@ -306,6 +299,243 @@ struct clear_vars : MethNoargs<dpy_Record>
     }
 };
 
+namespace {
+
+template<typename Dest>
+void iterate_record(const core::Record& rec, Dest& dest)
+{
+    if (rec.priomin != MISSING_INT)
+    {
+        if (rec.priomax == rec.priomin)
+            dest.add_int("priority", rec.priomin);
+        dest.add_int("priomin", rec.priomin);
+    }
+    if (rec.priomax != MISSING_INT) dest.add_int("priomax", rec.priomax);
+    if (!rec.station.report.empty()) dest.add_string("rep_memo", rec.station.report);
+    if (rec.station.id != MISSING_INT) dest.add_int("ana_id", rec.station.id);
+    if (rec.mobile != MISSING_INT) dest.add_bool("mobile", rec.mobile);
+    if (!rec.station.ident.is_missing()) dest.add_string("ident", rec.station.ident);
+    if (rec.station.coords.lat != MISSING_INT) dest.add_double("lat", rec.station.coords.dlat());
+    if (rec.station.coords.lon != MISSING_INT) dest.add_double("lon", rec.station.coords.dlon());
+    if (rec.latrange.imax != rec.latrange.imin)
+    {
+        if (rec.latrange.imax != LatRange::IMAX) dest.add_double("latmax", rec.latrange.dmax());
+        if (rec.latrange.imin != LatRange::IMIN) dest.add_double("latmin", rec.latrange.dmin());
+    }
+    if (rec.lonrange.imax != rec.lonrange.imin)
+    {
+        if (rec.lonrange.imax != MISSING_INT) dest.add_double("lonmax", rec.lonrange.dmax());
+        if (rec.lonrange.imin != MISSING_INT) dest.add_double("lonmin", rec.lonrange.dmin());
+    }
+    if (!rec.datetime.is_missing())
+    {
+        if (rec.datetime.min == rec.datetime.max)
+        {
+            if (rec.datetime.min.year != 0xffff) dest.add_int("year",  (int)rec.datetime.min.year);
+            if (rec.datetime.min.month  != 0xff) dest.add_int("month", (int)rec.datetime.min.month);
+            if (rec.datetime.min.day    != 0xff) dest.add_int("day",   (int)rec.datetime.min.day);
+            if (rec.datetime.min.hour   != 0xff) dest.add_int("hour",  (int)rec.datetime.min.hour);
+            if (rec.datetime.min.minute != 0xff) dest.add_int("min",   (int)rec.datetime.min.minute);
+            if (rec.datetime.min.second != 0xff) dest.add_int("sec",   (int)rec.datetime.min.second);
+        } else {
+            if (rec.datetime.max.year != 0xffff) dest.add_int("yearmax",  (int)rec.datetime.max.year);
+            if (rec.datetime.min.year != 0xffff) dest.add_int("yearmin",  (int)rec.datetime.min.year);
+            if (rec.datetime.max.month  != 0xff) dest.add_int("monthmax", (int)rec.datetime.max.month);
+            if (rec.datetime.min.month  != 0xff) dest.add_int("monthmin", (int)rec.datetime.min.month);
+            if (rec.datetime.max.day    != 0xff) dest.add_int("daymax",   (int)rec.datetime.max.day);
+            if (rec.datetime.min.day    != 0xff) dest.add_int("daymin",   (int)rec.datetime.min.day);
+            if (rec.datetime.max.hour   != 0xff) dest.add_int("hourmax",  (int)rec.datetime.max.hour);
+            if (rec.datetime.min.hour   != 0xff) dest.add_int("hourmin",  (int)rec.datetime.min.hour);
+            if (rec.datetime.max.minute != 0xff) dest.add_int("minumax",  (int)rec.datetime.max.minute);
+            if (rec.datetime.min.minute != 0xff) dest.add_int("minumin",  (int)rec.datetime.min.minute);
+            if (rec.datetime.max.second != 0xff) dest.add_int("secmax",   (int)rec.datetime.max.second);
+            if (rec.datetime.min.second != 0xff) dest.add_int("secmin",   (int)rec.datetime.min.second);
+        }
+    }
+    if (rec.level.ltype1 != MISSING_INT) dest.add_int("leveltype1", rec.level.ltype1);
+    if (rec.level.l1     != MISSING_INT) dest.add_int("l1", rec.level.l1);
+    if (rec.level.ltype2 != MISSING_INT) dest.add_int("leveltype2", rec.level.ltype2);
+    if (rec.level.l2     != MISSING_INT) dest.add_int("l2", rec.level.l2);
+    if (rec.trange.pind != MISSING_INT) dest.add_int("pindicator", rec.trange.pind);
+    if (rec.trange.p1   != MISSING_INT) dest.add_int("p1", rec.trange.p1);
+    if (rec.trange.p2   != MISSING_INT) dest.add_int("p2", rec.trange.p2);
+    if (rec.var != 0) dest.add_varcode("var", rec.var);
+    if (!rec.varlist.empty()) dest.add_varlist("varlist", rec.varlist);
+    if (rec.count != MISSING_INT) dest.add_int("context_id", rec.count);
+    if (!rec.query.empty()) dest.add_string("query", rec.query);
+    if (!rec.ana_filter.empty()) dest.add_string("ana_filter", rec.ana_filter);
+    if (!rec.data_filter.empty()) dest.add_string("data_filter", rec.data_filter);
+    if (!rec.attr_filter.empty()) dest.add_string("attr_filter", rec.attr_filter);
+    if (rec.count != MISSING_INT) dest.add_int("limit", rec.count);
+    for (const auto& var: rec.vars())
+        dest.add_var(*var);
+}
+
+struct ToPython
+{
+    pyo_unique_ptr to_python(const int& val) { return pyo_unique_ptr(throw_ifnull(PyLong_FromLong(val))); };
+    pyo_unique_ptr to_python(const double& val) { return pyo_unique_ptr(throw_ifnull(PyFloat_FromDouble(val))); };
+    pyo_unique_ptr to_python(const std::string& val) { return pyo_unique_ptr(throw_ifnull(PyUnicode_FromStringAndSize(val.data(), val.size()))); }
+    pyo_unique_ptr to_python(const wreport::Var& val) { return pyo_unique_ptr(throw_ifnull((PyObject*)wrpy->var_value_to_python(val))); }
+};
+
+struct ToDict : public ToPython
+{
+    PyObject* dict;
+    ToDict(PyObject* dict) : dict(dict) {}
+
+    template<typename T>
+    void _add(const char* key, const T& val)
+    {
+        if (PyDict_SetItemString(dict, key, to_python(val).get()))
+            throw PythonException();
+    }
+
+    void add_int(const char* key, int val) { _add(key, val); }
+    void add_double(const char* key, double val) { _add(key, val); }
+    void add_string(const char* key, const std::string& val) { _add(key, val); }
+
+    void add_bool(const char* key, int val)
+    {
+        if (val)
+        {
+            if (PyDict_SetItemString(dict, key, Py_True))
+                throw PythonException();
+        } else {
+            if (PyDict_SetItemString(dict, key, Py_False))
+                throw PythonException();
+        }
+    }
+
+    void add_varcode(const char* key, wreport::Varcode val)
+    {
+        char buf[8];
+        format_bcode(val, buf);
+        pyo_unique_ptr py_val(throw_ifnull(PyUnicode_FromStringAndSize(buf, 6)));
+        if (PyDict_SetItemString(dict, key, py_val.get()))
+            throw PythonException();
+    }
+
+    void add_varlist(const char* key, const std::set<wreport::Varcode>& val)
+    {
+        std::string formatted;
+        bool first = true;
+        for (const auto& code: val)
+        {
+            if (first)
+                first = false;
+            else
+                formatted += ",";
+            char buf[8];
+            format_bcode(code, buf);
+            formatted += buf;
+        }
+        _add(key, formatted);
+    }
+
+    void add_var(const wreport::Var& var)
+    {
+        char key[8];
+        format_bcode(var.code(), key);
+        _add(key, var);
+    }
+};
+
+struct ToKeys
+{
+    PyObject* list;
+    ToKeys(PyObject* list) : list(list) {}
+
+    void _add_key(const char* key)
+    {
+        pyo_unique_ptr item(throw_ifnull(PyUnicode_FromString(key)));
+        if (PyList_Append(list, item) != 0)
+            throw PythonException();
+    }
+
+    void add_int(const char* key, int val) { _add_key(key); }
+    void add_double(const char* key, double val) { _add_key(key); }
+    void add_string(const char* key, const std::string& val) { _add_key(key); }
+    void add_bool(const char* key, int val) { _add_key(key); }
+    void add_varcode(const char* key, wreport::Varcode val) { _add_key(key); }
+    void add_varlist(const char* key, const std::set<wreport::Varcode>& val) { _add_key(key); }
+    void add_var(const wreport::Var& var)
+    {
+        char key[8];
+        format_bcode(var.code(), key);
+        _add_key(key);
+    }
+};
+
+struct ToItems : public ToPython
+{
+    PyObject* list;
+    ToItems(PyObject* list) : list(list) {}
+
+    template<typename T>
+    void _add(const char* key, const T& val)
+    {
+        pyo_unique_ptr py_key(throw_ifnull(PyUnicode_FromString(key)));
+        pyo_unique_ptr py_val(to_python(val));
+        pyo_unique_ptr item(throw_ifnull(PyTuple_Pack(2, py_key.get(), py_val.get())));
+        if (PyList_Append(list, item))
+            throw PythonException();
+    }
+
+    void add_int(const char* key, int val) { _add(key, val); }
+    void add_double(const char* key, double val) { _add(key, val); }
+    void add_string(const char* key, const std::string& val) { _add(key, val); }
+
+    void add_bool(const char* key, int val)
+    {
+        pyo_unique_ptr py_key(throw_ifnull(PyUnicode_FromString(key)));
+        pyo_unique_ptr item;
+        if (val)
+            item = throw_ifnull(PyTuple_Pack(2, py_key.get(), Py_True));
+        else
+            item = throw_ifnull(PyTuple_Pack(2, py_key.get(), Py_False));
+        if (PyList_Append(list, item))
+            throw PythonException();
+    }
+
+    void add_varcode(const char* key, wreport::Varcode val)
+    {
+        char buf[8];
+        format_bcode(val, buf);
+        pyo_unique_ptr py_val(throw_ifnull(PyUnicode_FromStringAndSize(buf, 6)));
+        pyo_unique_ptr py_key(throw_ifnull(PyUnicode_FromString(key)));
+        pyo_unique_ptr item(throw_ifnull(PyTuple_Pack(2, py_key.get(), py_val.get())));
+        if (PyList_Append(list, item))
+            throw PythonException();
+    }
+
+    void add_varlist(const char* key, const std::set<wreport::Varcode>& val)
+    {
+        std::string formatted;
+        bool first = true;
+        for (const auto& code: val)
+        {
+            if (first)
+                first = false;
+            else
+                formatted += ",";
+            char buf[8];
+            format_bcode(code, buf);
+            formatted += buf;
+        }
+        _add(key, formatted);
+    }
+
+    void add_var(const wreport::Var& var)
+    {
+        char key[8];
+        format_bcode(var.code(), key);
+        _add(key, var);
+    }
+};
+
+}
+
 struct to_dict : MethNoargs<dpy_Record>
 {
     constexpr static const char* name = "to_dict";
@@ -315,11 +545,8 @@ struct to_dict : MethNoargs<dpy_Record>
     {
         try {
             pyo_unique_ptr result(throw_ifnull(PyDict_New()));
-            core::Record::downcast(*self->rec).foreach_key([&](const char* key, const wreport::Var& val) {
-                pyo_unique_ptr py_val(throw_ifnull(wrpy->var_value_to_python(val)));
-                if (PyDict_SetItemString(result, key, py_val.get()))
-                    throw PythonException();
-            });
+            ToDict to_dict(result);
+            iterate_record(core::Record::downcast(*self->rec), to_dict);
             return result.release();
         } DBALLE_CATCH_RETURN_PYO
     }
@@ -334,13 +561,8 @@ struct keys : MethNoargs<dpy_Record>
     {
         try {
             pyo_unique_ptr result(throw_ifnull(PyList_New(0)));
-
-            core::Record::downcast(*self->rec).foreach_key([&](const char* key, const wreport::Var&) {
-                pyo_unique_ptr item(throw_ifnull(PyUnicode_FromString(key)));
-                if (PyList_Append(result, item) != 0)
-                    throw PythonException();
-            });
-
+            ToKeys to_keys(result);
+            iterate_record(core::Record::downcast(*self->rec), to_keys);
             return result.release();
         } DBALLE_CATCH_RETURN_PYO
     }
@@ -355,15 +577,8 @@ struct items : MethNoargs<dpy_Record>
     {
         try {
             pyo_unique_ptr result(throw_ifnull(PyList_New(0)));
-
-            core::Record::downcast(*self->rec).foreach_key([&](const char* key, const wreport::Var& val) {
-                pyo_unique_ptr py_key(throw_ifnull(PyUnicode_FromString(key)));
-                pyo_unique_ptr py_val(throw_ifnull(wrpy->var_value_to_python(val)));
-                pyo_unique_ptr item(throw_ifnull(PyTuple_Pack(2, py_key.get(), py_val.get())));
-                if (PyList_Append(result, item))
-                    throw PythonException();
-            });
-
+            ToItems to_keys(result);
+            iterate_record(core::Record::downcast(*self->rec), to_keys);
             return result.release();
         } DBALLE_CATCH_RETURN_PYO
     }
@@ -376,6 +591,11 @@ struct varitems : MethNoargs<dpy_Record>
     constexpr static const char* summary = "return a list with all the (key, `dballe.Var`_) tuples set in the Record.";
     static PyObject* run(Impl* self)
     {
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use Record.keys or Record.items instead of Record.varitems", 1))
+            return nullptr;
+        PyErr_SetString(PyExc_NotImplementedError, "Record.varitems() is not implemented");
+        return nullptr;
+#if 0
         try {
             pyo_unique_ptr result(throw_ifnull(PyList_New(0)));
             core::Record::downcast(*self->rec).foreach_key([&](const char* key, const wreport::Var& val) {
@@ -387,6 +607,7 @@ struct varitems : MethNoargs<dpy_Record>
             });
             return result.release();
         } DBALLE_CATCH_RETURN_PYO
+#endif
     }
 };
 
@@ -398,6 +619,11 @@ struct var : MethKwargs<dpy_Record>
     constexpr static const char* summary = "return a `dballe.Var`_ from the record, given its key.";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use Record.__getitem__ instead of Record.var", 1))
+            return nullptr;
+        PyErr_SetString(PyExc_NotImplementedError, "Record.var() is not implemented");
+        return nullptr;
+#if 0
         static const char* kwlist[] = { "name", nullptr };
         const char* name = NULL;
         if (!PyArg_ParseTupleAndKeywords(args, kw, "s", const_cast<char**>(kwlist), &name))
@@ -411,6 +637,7 @@ struct var : MethKwargs<dpy_Record>
             }
             return throw_ifnull((PyObject*)wrpy->var_create_copy(*var));
         } DBALLE_CATCH_RETURN_PYO
+#endif
     }
 };
 
@@ -507,7 +734,9 @@ struct key : MethKwargs<dpy_Record>
     {
         if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use Record.var instead of Record.key", 1))
             return nullptr;
-
+        PyErr_SetString(PyExc_NotImplementedError, "Record.key() is not implemented");
+        return nullptr;
+#if 0
         static const char* kwlist[] = { "name", nullptr };
         const char* name = NULL;
         if (!PyArg_ParseTupleAndKeywords(args, kw, "s", const_cast<char**>(kwlist), &name))
@@ -521,6 +750,7 @@ struct key : MethKwargs<dpy_Record>
             }
             return throw_ifnull((PyObject*)wrpy->var_create_copy(*var));
         } DBALLE_CATCH_RETURN_PYO
+#endif
     }
 };
 

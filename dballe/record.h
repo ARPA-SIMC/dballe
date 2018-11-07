@@ -101,6 +101,8 @@ struct Record
     /// Set rep_memo, lat, lon, ident, ana_id
     virtual void set_dbstation(const DBStation& s) = 0;
 
+    // Uniform set interface
+
     void set(const char* key, int val) { seti(key, val); }
     void set(const char* key, double val) { setd(key, val); }
     void set(const char* key, const char* val) { setc(key, val); }
@@ -121,31 +123,32 @@ struct Record
     virtual void unset(const char* key) = 0;
 
     /// Check if a value is set
-    virtual bool isset(const char* key) const;
+    virtual bool isset(const char* key) const = 0;
 
     /// Check if two records are the same
-    virtual bool equals(const Record& rec) const = 0;
-
-    /// Check if two records are the same
-    bool operator==(const Record& rec) const;
+    virtual bool operator==(const Record& rec) const = 0;
 
     /// Check if two records differ
-    bool operator!=(const Record& rec) const;
+    virtual bool operator!=(const Record& rec) const = 0;
 
-    const char* enq(const char* key, const char* def) const
-    {
-        if (const wreport::Var* var = get(key))
-            return var->enq(def);
-        return def;
-    }
+    /// Query an integer value, returning def if missing
+    virtual int enqi(const char* key, int def) const = 0;
 
-    template<typename T>
-    T enq(const char* key, const T& def) const
-    {
-        if (const wreport::Var* var = get(key))
-            return var->enq(def);
-        return def;
-    }
+    /// Query a double value, returning def if missing
+    virtual double enqd(const char* key, double def) const = 0;
+
+    /// Query a double value, returning false if missing
+    virtual bool enqdb(const char* key, double& res) const = 0;
+
+    /// Query a string value, returning def if missing
+    virtual std::string enqs(const char* key, const std::string& def) const = 0;
+
+    /// Query a string value, returning false if missing
+    virtual bool enqsb(const char* key, std::string& res) const = 0;
+
+    inline int enq(const char* key, int def) const { return enqi(key, def); }
+    inline double enq(const char* key, double def) const { return enqd(key, def); }
+    inline std::string enq(const char* key, const std::string& def) const { return enqs(key, def); }
 
     /// Compose a Coords out of lat, lon values
     virtual Coords get_coords() const = 0;
@@ -178,6 +181,7 @@ struct Record
     /// Return a variable if present, or nullptr if not
     virtual const wreport::Var* get_var(wreport::Varcode code) const = 0;
 
+#if 0
     /**
      * Copy all data from the record source into dest.  At the end of the function,
      * dest will contain its previous values, plus the values in source.  If a
@@ -188,38 +192,18 @@ struct Record
      *   The record to copy data from.
      */
     virtual void add(const Record& source) = 0;
+#endif
 
+#if 0
     /**
      * Return true if all elements of \a subset are present in this record,
      * with the same value
      */
     virtual bool contains(const Record& subset) const = 0;
+#endif
 
     /// Print the contents of this record to the given stream
     virtual void print(FILE* out) const = 0;
-
-    /**
-     * Return informations about a key
-     *
-     * @return
-     *   The wreport::Varinfo structure corresponding to the key
-     */
-    static wreport::Varinfo key_info(const char* key);
-
-    /**
-     * Return informations about a key
-     *
-     * @return
-     *   The wreport::Varinfo structure corresponding to the key
-     */
-    static wreport::Varinfo key_info(const std::string& key);
-
-protected:
-    /// Get a value, if set, or throw an exception if not
-    const wreport::Var& operator[](const char* key) const;
-
-    /// Get a value, if set, or nullptr if not
-    virtual const wreport::Var* get(const char* key) const = 0;
 };
 
 template<> inline Coords Record::get() const { return get_coords(); }

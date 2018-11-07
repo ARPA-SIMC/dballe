@@ -1,5 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
+EXTRA_DIST =
+
 TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 
 export PYTHONPATH=.
@@ -15,6 +17,7 @@ pyexec_LTLIBRARIES = _dballe.la
 _dballe_la_SOURCES = \
     common.cc \
     types.cc \
+    record-access.cc \
     record.cc \
     dballe.cc \
     db.cc \
@@ -26,6 +29,12 @@ _dballe_la_LIBADD = ../dballe/libdballe.la
 if HAVE_PYTHON3
 _dballe_la_SOURCES += binarymessage.cc file.cc message.cc importer.cc exporter.cc explorer.cc
 endif
+
+record-access.cc: record-access.in.cc $(top_srcdir)/dballe/mklookup
+	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
+
+BUILT_SOURCES = record-access.cc
+EXTRA_DIST += record-access.in.cc record-access.cc
 
 if HAVE_PYTHON3
 doc_DATA = python-dballe.rst

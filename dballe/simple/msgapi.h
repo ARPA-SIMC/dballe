@@ -93,26 +93,21 @@ public:
 	MsgAPI(const char* fname, const char* mode, const char* type);
 	virtual ~MsgAPI();
 
-	virtual void scopa(const char* repinfofile = 0);
-
-	virtual int quantesono();
-	virtual void elencamele();
-
-	virtual int voglioquesto();
-	virtual const char* dammelo();
-
-	virtual void prendilo();
-	virtual void dimenticami();
-
-	virtual int voglioancora();
-
-	virtual void critica();
-	virtual void scusa();
-    virtual void remove_all();
-    virtual void messages_open_input(const char* filename, const char* mode, Encoding format, bool);
-    virtual void messages_open_output(const char* filename, const char* mode, Encoding format);
-    virtual bool messages_read_next();
-    virtual void messages_write_next(const char*);
+    void scopa(const char* repinfofile=0) override;
+    int quantesono() override;
+    void elencamele() override;
+    int voglioquesto() override;
+    wreport::Varcode dammelo() override;
+    void prendilo() override;
+    void dimenticami() override;
+    int voglioancora() override;
+    void critica() override;
+    void scusa() override;
+    void remove_all() override;
+    void messages_open_input(const char* filename, const char* mode, Encoding format, bool) override;
+    void messages_open_output(const char* filename, const char* mode, Encoding format) override;
+    bool messages_read_next() override;
+    void messages_write_next(const char*) override;
 };
 
 }

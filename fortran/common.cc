@@ -27,5 +27,23 @@ void cstring_to_fortran(const char* str, char* buf, unsigned buf_len)
         memset(buf + len, ' ', buf_len - len);
 }
 
+void cstring_to_fortran(const std::string& str, char* buf, unsigned buf_len)
+{
+    // Copy the result values
+    size_t len;
+    if (buf_len == 0)
+        len = 0;
+    else
+    {
+        len = str.size();
+        if (len > buf_len)
+            len = buf_len;
+        memcpy(buf, str.data(), len);
+    }
+
+    if (len < buf_len)
+        memset(buf + len, ' ', buf_len - len);
+}
+
 }
 }

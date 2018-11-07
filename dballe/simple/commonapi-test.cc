@@ -15,7 +15,7 @@ struct APITest : public CommonAPIImplementation
      int quantesono() override { return 0; }
      void elencamele() override {}
      int voglioquesto() override { return 0; }
-     const char* dammelo() override { return nullptr; }
+     wreport::Varcode dammelo() override { return 0; }
      void prendilo() override {}
      void dimenticami() override {}
      int voglioancora() override { return 0; }
@@ -40,7 +40,7 @@ void Tests::register_tests()
     add_method("seti", []() {
         APITest api;
         api.seti("ana_id", 1);
-        wassert(actual(api.test_get_input().get("ana_id")->enqi()) == 1);
+        wassert(actual(api.test_get_input().enqi("ana_id", MISSING_INT)) == 1);
     });
 
     add_method("set_undef_key", []() {

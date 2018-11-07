@@ -647,10 +647,14 @@ int idba_enqc(int handle, const char* parameter, char* value, unsigned value_len
 {
     try {
         HSimple& h = hsimp.get(handle);
-        const char* v = h.api->enqc(parameter);
+        std::string v;
+        bool found = h.api->enqc(parameter, v);
 
         // Copy the result values
-        fortran::cstring_to_fortran(v, value, value_len);
+        if (found)
+            fortran::cstring_to_fortran(v, value, value_len);
+        else
+            fortran::cstring_to_fortran(nullptr, value, value_len);
 
         return fortran::success();
     } catch (error& e) {
@@ -1162,7 +1166,7 @@ int idba_voglioquesto(int handle, int* count)
  * @param handle
  *   Handle to a DB-All.e session
  * @retval parameter
- *   Contains the ID of the parameter retrieved by this fetch
+ *   Contains the variable code of the parameter retrieved by this fetch
  * @return
  *   The error indicator for the function
  */
@@ -1171,9 +1175,11 @@ int idba_dammelo(int handle, char* parameter, int parameter_len)
     try {
         HSimple& h = hsimp.get(handle);
         IF_TRACING(h.trace.log_dammelo());
-        const char* res = h.api->dammelo();
-        IF_TRACING(fortran::log_result(res));
-        fortran::cstring_to_fortran(res, parameter, parameter_len);
+        wreport::Varcode res = h.api->dammelo();
+        char buf[8];
+        format_bcode(res, buf);
+        IF_TRACING(fortran::log_result(buf));
+        fortran::cstring_to_fortran(buf, parameter, parameter_len);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);

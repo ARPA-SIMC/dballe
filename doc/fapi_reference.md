@@ -805,8 +805,8 @@ fastest to change remains the varcode.
 Parameters:
 
 * `handle`: Handle to a DB-All.e session
-* `parameter`: Contains the ID of the parameter retrieved by this
-  fetch
+* `parameter`: Contains the variable code of the parameter retrieved
+  by this fetch
 
 Return value:
 
