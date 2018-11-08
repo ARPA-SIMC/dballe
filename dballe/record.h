@@ -31,53 +31,6 @@ struct Record
     /// Remove all Bxxyyy keys from the record, leaving the rest intact
     virtual void clear_vars() = 0;
 
-    /**
-     * Set a key to an integer value.
-     *
-     * If the key that is being set has a decimal component (like lat and lon),
-     * the integer value represents the units of maximum precision of the
-     * field. For example, using seti to set lat to 4500000 is the same as
-     * setting it to 45.0.
-     */
-    virtual void seti(const char* key, int val) = 0;
-
-    /**
-     * Set a key to a double value.
-     */
-    virtual void setd(const char* key, double val) = 0;
-
-    /**
-     * Set a key to a string value.
-     *
-     * If the key that is being set has a decimal component (like lat and lon),
-     * the string is converted to an integer value representing the units of
-     * maximum precision of the field. For example, using seti to set lat to
-     * "4500000" is the same as setting it to 45.0.
-     */
-    virtual void setc(const char* key, const char* val) = 0;
-
-    /**
-     * Set a key to a string value.
-     *
-     * If the key that is being set has a decimal component (like lat and lon),
-     * the string is converted to an integer value representing the units of
-     * maximum precision of the field. For example, using seti to set lat to
-     * "4500000" is the same as setting it to 45.0.
-     */
-    virtual void sets(const char* key, const std::string& val) = 0;
-
-    /**
-     * Set a key to a string value.
-     *
-     * Contrarily to setc, the string is parsed according to the natural
-     * representation for the given key. For example, if lat is set to "45",
-     * then it gets the value 45.0.
-     *
-     * Also, if a Decimal or Integer value is assigned "-", it is unset
-     * instead.
-     */
-    virtual void setf(const char* key, const char* val) = 0;
-
     /// Set year, month, day, hour, min, sec
     virtual void set_datetime(const Datetime& dt) = 0;
     /// Set lat, lon
@@ -103,10 +56,6 @@ struct Record
 
     // Uniform set interface
 
-    void set(const char* key, int val) { seti(key, val); }
-    void set(const char* key, double val) { setd(key, val); }
-    void set(const char* key, const char* val) { setc(key, val); }
-    void set(const char* key, const std::string& val) { sets(key, val); }
     void set(const Datetime& dt) { set_datetime(dt); }
     void set(const DatetimeRange& dt) { set_datetimerange(dt); }
     void set(const Coords& c) { set_coords(c); }
@@ -119,36 +68,11 @@ struct Record
     void set(const Station& s) { set_station(s); }
     void set(const DBStation& s) { set_dbstation(s); }
 
-    /// Remove/unset a key from the record
-    virtual void unset(const char* key) = 0;
-
-    /// Check if a value is set
-    virtual bool isset(const char* key) const = 0;
-
     /// Check if two records are the same
     virtual bool operator==(const Record& rec) const = 0;
 
     /// Check if two records differ
     virtual bool operator!=(const Record& rec) const = 0;
-
-    /// Query an integer value, returning def if missing
-    virtual int enqi(const char* key, int def) const = 0;
-
-    /// Query a double value, returning def if missing
-    virtual double enqd(const char* key, double def) const = 0;
-
-    /// Query a double value, returning false if missing
-    virtual bool enqdb(const char* key, double& res) const = 0;
-
-    /// Query a string value, returning def if missing
-    virtual std::string enqs(const char* key, const std::string& def) const = 0;
-
-    /// Query a string value, returning false if missing
-    virtual bool enqsb(const char* key, std::string& res) const = 0;
-
-    inline int enq(const char* key, int def) const { return enqi(key, def); }
-    inline double enq(const char* key, double def) const { return enqd(key, def); }
-    inline std::string enq(const char* key, const std::string& def) const { return enqs(key, def); }
 
     /// Compose a Coords out of lat, lon values
     virtual Coords get_coords() const = 0;

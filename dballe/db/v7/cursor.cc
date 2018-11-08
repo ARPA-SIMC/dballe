@@ -9,7 +9,7 @@
 #include "dballe/db/v7/levtr.h"
 #include "dballe/db/v7/data.h"
 #include "dballe/types.h"
-#include "dballe/record.h"
+#include "dballe/core/record.h"
 #include "dballe/var.h"
 #include "dballe/core/var.h"
 #include "dballe/core/query.h"
@@ -144,7 +144,8 @@ struct StationResult
     int get_station_id() const { return station.id; }
     void to_record(v7::Transaction& tr, Record& rec) const
     {
-        tr.repinfo().to_record(station.report, rec);
+        core::Record& r = core::Record::downcast(rec);
+        tr.repinfo().to_record(station.report, r);
         rec.set_dbstation(station);
         Tracer<> trc(tr.trc ? tr.trc->trace_add_station_vars() : nullptr);
         tr.station().add_station_vars(trc, station.id, rec);
@@ -193,14 +194,11 @@ struct StationDataResult
 
     void to_record(v7::Transaction& tr, Record& rec) const
     {
-        tr.repinfo().to_record(station.report, rec);
+        core::Record& r = core::Record::downcast(rec);
+        tr.repinfo().to_record(station.report, r);
         rec.set_dbstation(station);
-        rec.seti("context_id", id_data);
-
-        char bname[7];
-        format_bcode(var->code(), bname);
-        rec.setc("var", bname);
-
+        r.count = id_data;
+        r.var = var->code();
         rec.clear_vars();
         // TODO: this could be optimized with a move, but it would mean that
         // to_record can only be called once. That is currently the case, but
@@ -416,17 +414,14 @@ struct SummaryResult
 
     void to_record(v7::Transaction& tr, Record& rec) const
     {
-        tr.repinfo().to_record(station.report, rec);
-        rec.set_dbstation(station);
-
-        char bname[7];
-        format_bcode(code, bname);
-        rec.setc("var", bname);
-
+        core::Record& r = core::Record::downcast(rec);
+        tr.repinfo().to_record(station.report, r);
+        r.set_dbstation(station);
+        r.var = code;
         if (count > 0)
         {
-            rec.seti("context_id", count);
-            rec.set(datetime);
+            r.count = count;
+            r.set(datetime);
         }
     }
 

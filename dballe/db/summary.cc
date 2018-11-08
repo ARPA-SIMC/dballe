@@ -388,15 +388,12 @@ struct SummaryCursor : public dballe::CursorSummary
 
     void to_record(Record& rec) override
     {
+        core::Record& r = core::Record::downcast(rec);
         rec.set(cur->station_entry.station);
-
-        char bname[7];
-        format_bcode(cur->var_entry.var.varcode, bname);
-        rec.setc("var", bname);
-
+        r.var = cur->var_entry.var.varcode;
         if (cur->var_entry.count > 0)
         {
-            rec.seti("context_id", cur->var_entry.count);
+            r.count = cur->var_entry.count;
             rec.set(cur->var_entry.dtrange);
         }
         rec.set_level(cur->var_entry.var.level);

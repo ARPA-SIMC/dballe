@@ -1,5 +1,6 @@
 #include <Python.h>
 #include <dballe/core/record.h>
+#include <dballe/core/record-access.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/query.h>
 #include "record.h"
@@ -24,7 +25,7 @@ namespace {
  *
  * Returns 0 on success, -1 on failures with a python exception set
  */
-static void setpy(dballe::Record& rec, PyObject* key, PyObject* val)
+static void setpy(dballe::core::Record& rec, PyObject* key, PyObject* val)
 {
     string name = string_from_python(key);
 
@@ -78,41 +79,28 @@ static void setpy(dballe::Record& rec, PyObject* key, PyObject* val)
     if (!val)
     {
         // del rec[val]
-        rec.unset(name.c_str());
+        record_unset(rec, name.c_str());
         return;
     }
 
+    // TODO: name is a string, we have the length, could it be useful?
+    // Worth making a version of the enq/set functions that take std::string as key?
     if (PyFloat_Check(val))
     {
         double v = PyFloat_AsDouble(val);
         if (v == -1.0 && PyErr_Occurred())
             throw PythonException();
-        rec.set(name.c_str(), v);
-#if PY_MAJOR_VERSION <= 2
-    } else if (PyInt_Check(val)) {
-        long v = PyInt_AsLong(val);
-        if (v == -1 && PyErr_Occurred())
-            throw PythonException();
-        rec.set(name.c_str(), (int)v);
-#else
+        record_setd(rec, name.c_str(), v);
     } else if (PyLong_Check(val)) {
         long v = PyLong_AsLong(val);
         if (v == -1 && PyErr_Occurred())
             throw PythonException();
-        rec.set(name.c_str(), (int)v);
-#endif
-    } else if (
-            PyUnicode_Check(val)
-#if PY_MAJOR_VERSION >= 3
-            || PyBytes_Check(val)
-#else
-            || PyString_Check(val)
-#endif
-            ) {
+        record_seti(rec, name.c_str(), (int)v);
+    } else if (PyUnicode_Check(val) || PyBytes_Check(val)) {
         string value = string_from_python(val);
-        rec.set(name.c_str(), value.c_str());
+        record_sets(rec, name.c_str(), value);
     } else if (val == Py_None) {
-        rec.unset(name.c_str());
+        record_unset(rec, name.c_str());
     } else {
         PyErr_SetString(PyExc_TypeError, "Expected int, float, str, unicode, or None");
         throw PythonException();
@@ -197,10 +185,10 @@ static PyObject* __getitem__(dpy_Record* self, PyObject* key)
 
 static const char* level_keys[4] = { "leveltype1", "l1", "leveltype2", "l2" };
 static const char* trange_keys[3] = { "pindicator", "p1", "p2" };
-static int any_key_set(const Record& rec, const char** keys, unsigned len)
+static int any_key_set(const core::Record& rec, const char** keys, unsigned len)
 {
     for (unsigned i = 0; i < len; ++i)
-        if (rec.isset(keys[i]))
+        if (record_isset(rec, keys[i]))
             return 1;
     return 0;
 }
@@ -253,7 +241,7 @@ static int __in__(dpy_Record* self, PyObject *value)
                 break;
         }
 
-        return self->rec->isset(varname.c_str()) ? 1 : 0;
+        return record_isset(*self->rec, varname.c_str()) ? 1 : 0;
     } DBALLE_CATCH_RETURN_INT
 }
 
@@ -267,7 +255,7 @@ struct copy : MethNoargs<dpy_Record>
     {
         try {
             py_unique_ptr<dpy_Record> result(throw_ifnull(PyObject_New(dpy_Record, dpy_Record_Type)));
-            result->rec = self->rec->clone().release();
+            result->rec = new core::Record(*self->rec);
             return (PyObject*)result.release();
         } DBALLE_CATCH_RETURN_PYO
     }
@@ -893,9 +881,8 @@ struct Definition : public Binding<Definition, dpy_Record>
 
     static int _init(Impl* self, PyObject* args, PyObject* kw)
     {
-        // Construct on preallocated memory
         try {
-            self->rec = Record::create().release();
+            self->rec = new core::Record;
 
             if (kw)
             {

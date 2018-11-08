@@ -66,6 +66,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/arrayfile.h \
 	core/csv.h \
 	core/record.h \
+	core/record-access.h \
 	core/query.h \
 	core/structbuf.h \
 	core/matcher.h \
@@ -292,6 +293,7 @@ test_dballe_SOURCES = \
 	core/values-test.cc \
 	core/file-test.cc \
 	core/record-test.cc \
+	core/record-access-test.cc \
 	core/query-test.cc \
 	core/structbuf-test.cc \
 	core/csv-test.cc \

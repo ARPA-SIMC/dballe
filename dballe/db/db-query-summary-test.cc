@@ -104,21 +104,19 @@ class Tests : public FixtureTestCase<DBDataFixture<DB>>
             wassert(actual(f.tr).try_summary_query("year=1001", 0));
             wassert(actual(f.tr).try_summary_query("yearmin=1999", 0));
             auto check_base = [](const vector<core::Record>& res) {
-                wassert(actual(res[0].enq("lat", MISSING_INT)) == 1234560);
-                wassert(actual(res[0].enq("lon", MISSING_INT)) == 7654320);
+                wassert(actual(res[0].station.coords) == Coords(12.34560, 76.54320));
                 wassert(actual(res[0].get_level()) == Level(10, 11, 15, 22));
                 wassert(actual(res[0].get_trange()) == Trange(20, 111, 122));
-                wassert(actual(res[0].enq("var", "")) == "B12101");
+                wassert(actual(res[0].var) == WR_VAR(0, 12, 101));
             };
             auto check_nodetails = [&](const vector<core::Record>& res) {
                 wassert(check_base(res));
-                wassert(actual(res[0].isset("context_id")).isfalse());
-                wassert(actual(res[0].isset("yearmin")).isfalse());
-                wassert(actual(res[0].isset("yearmax")).isfalse());
+                wassert(actual(res[0].count) == MISSING_INT);
+                wassert_true(res[0].datetime.is_missing());
             };
             auto check_details = [&](const vector<core::Record>& res) {
                 wassert(check_base(res));
-                wassert(actual(res[0].enq("context_id", MISSING_INT)) == 2);
+                wassert(actual(res[0].count) == 2);
                 DatetimeRange dtr = res[0].get_datetimerange();
                 wassert(actual(dtr.min) == Datetime(1945, 4, 25, 8));
                 wassert(actual(dtr.max) == Datetime(1945, 4, 26, 8));

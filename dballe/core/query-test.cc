@@ -1,6 +1,7 @@
 #include "dballe/core/tests.h"
 #include "dballe/core/query.h"
 #include "dballe/core/record.h"
+#include "dballe/core/record-access.h"
 #include <stdexcept>
 
 using namespace std;
@@ -45,24 +46,24 @@ add_method("all_unset", []() {
 
 add_method("all_set", []() {
     core::Record rec;
-    rec.set("ana_id", 4);
-    rec.set("priority", 1);
-    rec.set("rep_memo", "foo");
-    rec.set("mobile", 0);
-    rec.set("ident", "bar");
-    rec.set("lat", 44.123);
-    rec.set("lon", 11.123);
-    rec.set(Datetime(2000, 1, 2, 12, 30, 45));
-    rec.set(Level(10, 11, 12, 13));
-    rec.set(Trange(20, 21, 22));
-    rec.set("var", "B12101");
-    rec.set("query", "best");
-    rec.set("ana_filter", "B01001=1");
-    rec.set("data_filter", "B12101>260");
-    rec.set("attr_filter", "B33007>50");
-    rec.set("limit", 100);
-    rec.set("block", 16);
-    rec.set("station", 404);
+    record_seti(rec, "ana_id", 4);
+    record_seti(rec, "priority", 1);
+    record_setc(rec, "rep_memo", "foo");
+    record_seti(rec, "mobile", 0);
+    record_setc(rec, "ident", "bar");
+    record_setd(rec, "lat", 44.123);
+    record_setd(rec, "lon", 11.123);
+    rec.set_datetime(Datetime(2000, 1, 2, 12, 30, 45));
+    rec.set_level(Level(10, 11, 12, 13));
+    rec.set_trange(Trange(20, 21, 22));
+    record_setc(rec, "var", "B12101");
+    record_setc(rec, "query", "best");
+    record_setc(rec, "ana_filter", "B01001=1");
+    record_setc(rec, "data_filter", "B12101>260");
+    record_setc(rec, "attr_filter", "B33007>50");
+    record_seti(rec, "limit", 100);
+    record_seti(rec, "block", 16);
+    record_seti(rec, "station", 404);
 
     core::Query q;
     q.set_from_record(rec);
@@ -221,7 +222,7 @@ add_method("modifiers", []() {
 
 add_method("issue107", []() {
     core::Record rec;
-    rec.set("month", 6);
+    record_seti(rec, "month", 6);
 
     core::Query q;
     wassert_throws(wreport::error_consistency, q.set_from_record(rec));

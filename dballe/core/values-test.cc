@@ -19,90 +19,6 @@ class Tests : public TestCase
 void Tests::register_tests()
 {
 
-add_method("station", []() {
-    Station st;
-    st.report = "testreport";
-    st.coords = Coords(11.5, 42.5);
-    st.ident = "testident";
-
-    core::Record rec;
-    rec.set(st);
-
-    wassert_false(rec.isset("ana_id"));
-    wassert_true(rec.isset("rep_memo"));
-    wassert(actual(rec.enqs("rep_memo", "")) == "testreport");
-    wassert_true(rec.isset("lat"));
-    wassert(actual(rec.enqi("lat", MISSING_INT)) == 1150000);
-    wassert_true(rec.isset("lon"));
-    wassert(actual(rec.enqi("lon", MISSING_INT)) == 4250000);
-    wassert_true(rec.isset("mobile"));
-    wassert(actual(rec.enqi("mobile", MISSING_INT)) == 1);
-    wassert_true(rec.isset("ident"));
-    wassert(actual(rec.enqs("ident", "")) == "testident");
-
-    Station st1 = rec.get_station();
-    wassert(actual(st) == st1);
-
-    st = Station();
-    st.report = "testreport1";
-    st.coords = Coords(11.6, 42.6);
-    rec.set(st);
-
-    wassert_false(rec.isset("ana_id"));
-    wassert_true(rec.isset("rep_memo"));
-    wassert(actual(rec.enqs("rep_memo", "")) == "testreport1");
-    wassert_true(rec.isset("lat"));
-    wassert(actual(rec.enqi("lat", MISSING_INT)) == 1160000);
-    wassert_true(rec.isset("lon"));
-    wassert(actual(rec.enqi("lon", MISSING_INT)) == 4260000);
-    wassert_true(rec.isset("mobile"));
-    wassert(actual(rec.enqi("mobile", MISSING_INT)) == 0);
-    wassert_false(rec.isset("ident"));
-});
-
-add_method("dbstation", []() {
-    DBStation st;
-    st.id = 1;
-    st.report = "testreport";
-    st.coords = Coords(11.5, 42.5);
-    st.ident = "testident";
-
-    core::Record rec;
-    rec.set(st);
-
-    wassert_true(rec.isset("ana_id"));
-    wassert(actual(rec.enqi("ana_id", MISSING_INT)) == 1);
-    wassert_true(rec.isset("rep_memo"));
-    wassert(actual(rec.enqs("rep_memo", "")) == "testreport");
-    wassert_true(rec.isset("lat"));
-    wassert(actual(rec.enqi("lat", MISSING_INT)) == 1150000);
-    wassert_true(rec.isset("lon"));
-    wassert(actual(rec.enqi("lon", MISSING_INT)) == 4250000);
-    wassert_true(rec.isset("mobile"));
-    wassert(actual(rec.enqi("mobile", MISSING_INT)) == 1);
-    wassert_true(rec.isset("ident"));
-    wassert(actual(rec.enqs("ident", "")) == "testident");
-
-    DBStation st1 = rec.get_dbstation();
-    wassert(actual(st) == st1);
-
-    st = DBStation();
-    st.report = "testreport1";
-    st.coords = Coords(11.6, 42.6);
-    rec.set(st);
-
-    wassert_false(rec.isset("ana_id"));
-    wassert_true(rec.isset("rep_memo"));
-    wassert(actual(rec.enqs("rep_memo", "")) == "testreport1");
-    wassert_true(rec.isset("lat"));
-    wassert(actual(rec.enqi("lat", MISSING_INT)) == 1160000);
-    wassert_true(rec.isset("lon"));
-    wassert(actual(rec.enqi("lon", MISSING_INT)) == 4260000);
-    wassert_true(rec.isset("mobile"));
-    wassert(actual(rec.enqi("mobile", MISSING_INT)) == 0);
-    wassert_false(rec.isset("ident"));
-});
-
 add_method("codec", []() {
     Values vals;
     // Integer variable
@@ -127,7 +43,7 @@ add_method("values", []() {
     // Set station by ana_id
     {
         core::Record rec;
-        rec.set("ana_id", 1);
+        rec.station.id = 1;
         rec.set(Level(1));
         rec.set(Trange::instant());
         rec.set(Datetime(2018, 7, 1));
@@ -138,7 +54,7 @@ add_method("values", []() {
     // Set station by station data
     {
         core::Record rec;
-        rec.set("rep_memo", "test");
+        rec.station.report = "test";
         rec.set(Coords(44.5, 11.5));
         rec.set(Level(1));
         rec.set(Trange::instant());

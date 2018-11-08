@@ -1,4 +1,5 @@
 #include "record.h"
+#include "record-access.h"
 #include "query.h"
 #include "var.h"
 #include "aliases.h"
@@ -158,156 +159,6 @@ void Record::unset_var(wreport::Varcode code)
         delete m_vars[pos];
         m_vars.erase(m_vars.begin() + pos);
     }
-}
-
-void Record::seti(const char* key, int val)
-{
-    unsigned len = strlen(key);
-    if (val == MISSING_INT)
-    {
-        bool done = _unset(key, len);
-        if (!done)
-            unset_var(resolve_varcode(key));
-        return;
-    }
-
-    bool done = _seti(key, len, val);
-    if (!done)
-        obtain(resolve_varcode(key)).seti(val);
-}
-
-void Record::setd(const char* key, double val)
-{
-    unsigned len = strlen(key);
-    bool done = _setd(key, len, val);
-    if (!done)
-        obtain(resolve_varcode(key)).setd(val);
-}
-
-void Record::setc(const char* key, const char* val)
-{
-    if (!val)
-    {
-        unset(key);
-        return;
-    }
-
-    unsigned len = strlen(key);
-    bool done = _setc(key, len, val);
-    if (!done)
-        obtain(resolve_varcode(key)).setc(val);
-}
-
-void Record::sets(const char* key, const std::string& val)
-{
-    unsigned len = strlen(key);
-    bool done = _sets(key, len, val);
-    if (!done)
-        obtain(resolve_varcode(key)).sets(val);
-}
-
-void Record::setf(const char* key, const char* val)
-{
-    if (!val || strcmp(val, "-") == 0)
-    {
-        unset(key);
-        return;
-    }
-
-    unsigned len = strlen(key);
-    bool done = _setf(key, len, val);
-    if (!done)
-        obtain(resolve_varcode(key)).setf(val);
-}
-
-int Record::enqi(const char* key, int def) const
-{
-    bool found;
-    int res = _enqi(key, strlen(key), found);
-    if (found) return res == MISSING_INT ? def : res;
-
-    const Var* var = get_var(resolve_varcode(key));
-    if (!var) return def;
-    return var->enq(def);
-}
-
-double Record::enqd(const char* key, double def) const
-{
-    bool found, missing;
-    double res = _enqd(key, strlen(key), found, missing);
-    if (found) return missing ? def : res;
-
-    const Var* var = get_var(resolve_varcode(key));
-    if (!var) return def;
-    return var->enq(def);
-}
-
-bool Record::enqdb(const char* key, double& res) const
-{
-    bool found, missing;
-    double maybe_res = _enqd(key, strlen(key), found, missing);
-    if (found)
-    {
-        if (missing)
-            return false;
-        res = maybe_res;
-        return true;
-    }
-
-    const Var* var = get_var(resolve_varcode(key));
-    if (!var) return false;
-    if (!var->isset()) return false;
-    res = var->enqd();
-    return true;
-}
-
-#if 0
-const char* Record::enq(const char* key, const char* def) const
-{
-    throw error_unimplemented("Record::enq const char*");
-}
-#endif
-
-std::string Record::enqs(const char* key, const std::string& def) const
-{
-    bool found, missing;
-    std::string res = _enqs(key, strlen(key), found, missing);
-    if (found) return missing ? def : res;
-
-    const Var* var = get_var(resolve_varcode(key));
-    if (!var) return def;
-    return var->enq(def);
-}
-
-bool Record::enqsb(const char* key, std::string& res) const
-{
-    bool found, missing;
-    std::string maybe_res = _enqs(key, strlen(key), found, missing);
-    if (found)
-    {
-        if (missing)
-            return false;
-        res = maybe_res;
-        return true;
-    }
-
-    const Var* var = get_var(resolve_varcode(key));
-    if (!var) return false;
-    if (!var->isset()) return false;
-    res = var->enqs();
-    return true;
-}
-
-bool Record::isset(const char* key) const
-{
-    bool res;
-    bool found = _isset(key, strlen(key), res);
-    if (found) return res;
-
-    const Var* var = get_var(resolve_varcode(key));
-    if (!var) return false;
-    if (!var->isset()) return false;
-    return true;
 }
 
 void Record::set_datetime(const Datetime& dt)
@@ -607,20 +458,6 @@ bool Record::contains(const dballe::Record& rec) const
 }
 #endif
 
-const Var* Record::var_peek(Varcode code) const throw ()
-{
-	int pos = find_item(code);
-	if (pos == -1) return NULL;
-	return m_vars[pos];
-}
-
-void Record::unset(const char* name)
-{
-    if (_unset(name, strlen(name)))
-        return;
-    unset_var(resolve_varcode(name));
-}
-
 #if 0
 void Record::foreach_key_ref(std::function<void(const char*, const wreport::Var&)> dest) const
 {
@@ -726,7 +563,9 @@ DBStation Record::get_dbstation() const
 
 const wreport::Var* Record::get_var(wreport::Varcode code) const
 {
-    return var_peek(code);
+    int pos = find_item(code);
+    if (pos == -1) return NULL;
+    return m_vars[pos];
 }
 
 void Record::set_coords(const Coords& c)
@@ -757,7 +596,7 @@ void Record::set_from_string(const char* str)
     if (!s) error_consistency::throwf("there should be an = between the name and the value in '%s'", str);
 
     string key(str, s - str);
-    setf(key.c_str(), s + 1);
+    record_setf(*this, key.c_str(), s + 1);
 }
 
 void Record::set_from_test_string(const std::string& s)
@@ -934,8 +773,14 @@ void Record::to_query(core::Query& q) const
     q.attr_filter = attr_filter;
     q.limit = count;
     // WMO block/station come from variables
-    q.block = enq("block", MISSING_INT);
-    q.station = enq("station", MISSING_INT);
+    if (const Var* block = get_var(WR_VAR(0, 1, 1)))
+        q.block = block->enq(MISSING_INT);
+    else
+        q.block = MISSING_INT;
+    if (const Var* station = get_var(WR_VAR(0, 1, 2)))
+        q.station = station->enq(MISSING_INT);
+    else
+        q.station = MISSING_INT;
 }
 
 
@@ -1009,7 +854,7 @@ matcher::Result MatchedRecord::match_var_id(int val) const
 
 matcher::Result MatchedRecord::match_station_id(int val) const
 {
-    int ana_id = r.enq("ana_id", MISSING_INT);
+    int ana_id = r.station.id;
     if (ana_id == MISSING_INT)
         return matcher::MATCH_NA;
     return ana_id == val ? matcher::MATCH_YES : matcher::MATCH_NO;
@@ -1044,14 +889,14 @@ matcher::Result MatchedRecord::match_datetime(const DatetimeRange& range) const
 
 matcher::Result MatchedRecord::match_coords(const LatRange& latrange, const LonRange& lonrange) const
 {
-    int lat = r.enq("lat", MISSING_INT);
+    int lat = r.station.coords.lat;
     matcher::Result r1 = matcher::MATCH_NA;
     if (lat != MISSING_INT)
         r1 = latrange.contains(lat) ? matcher::MATCH_YES : matcher::MATCH_NO;
     else if (latrange.is_missing())
         r1 = matcher::MATCH_YES;
 
-    int lon = r.enq("lon", MISSING_INT);
+    int lon = r.station.coords.lon;
     matcher::Result r2 = matcher::MATCH_NA;
     if (lon != MISSING_INT)
         r2 = lonrange.contains(lon) ? matcher::MATCH_YES : matcher::MATCH_NO;
@@ -1067,7 +912,7 @@ matcher::Result MatchedRecord::match_coords(const LatRange& latrange, const LonR
 
 matcher::Result MatchedRecord::match_rep_memo(const char* memo) const
 {
-    std::string report = r.enqs("rep_memo", std::string());
+    std::string report = r.station.report;
     if (report.empty())
         return matcher::MATCH_NA;
     return report == memo ? matcher::MATCH_YES : matcher::MATCH_NO;

@@ -888,8 +888,7 @@ this->add_method("query_best_priomax", [](Fixture& f) {
         core::Record result;
         cur->to_record(result);
 
-        wassert(actual(result.isset("rep_memo")).istrue());
-        wassert(actual(result.enq("rep_memo", "")) == "generic");
+        wassert(actual(result.station.report) == "generic");
 
         cur->discard();
     }
@@ -908,8 +907,7 @@ this->add_method("query_best_priomax", [](Fixture& f) {
         core::Record result;
         cur->to_record(result);
 
-        wassert(actual(result.isset("rep_memo")).istrue());
-        wassert(actual(result.enq("rep_memo", "")) == "tempship");
+        wassert(actual(result.station.report) == "tempship");
 
         cur->discard();
     }
@@ -924,7 +922,7 @@ this->add_method("query_repmemo_in_results", [](Fixture& f) {
     while (cur->next())
     {
         cur->to_record(res);
-        wassert(actual(res.isset("rep_memo")).istrue());
+        wassert_false(res.station.report.empty());
     }
 });
 

@@ -13,7 +13,7 @@ extern "C" {
 
 typedef struct {
     PyObject_HEAD
-    dballe::Record* rec;
+    dballe::core::Record* rec;
 } dpy_Record;
 
 extern PyTypeObject* dpy_Record_Type;
@@ -36,8 +36,8 @@ namespace python {
 class RecordAccess
 {
 protected:
-    dballe::Record* temp = nullptr;
-    dballe::Record* result = nullptr;
+    dballe::core::Record* temp = nullptr;
+    dballe::core::Record* result = nullptr;
 
 public:
     RecordAccess(PyObject*);
@@ -47,8 +47,8 @@ public:
     RecordAccess& operator=(const RecordAccess&) = delete;
     RecordAccess& operator=(RecordAccess&&) = delete;
 
-    operator dballe::Record&() { return *result; }
-    operator const dballe::Record&() const { return *result; }
+    operator dballe::core::Record&() { return *result; }
+    operator const dballe::core::Record&() const { return *result; }
 };
 
 void read_query(PyObject* from_python, dballe::Query& query);

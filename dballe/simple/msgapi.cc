@@ -132,22 +132,22 @@ void MsgAPI::elencamele()
     const msg::Context* ctx = msg->find_context(Level(), Trange());
     if (!ctx) return;
 
-    output.set("mobile", 0);
-    output.set("rep_memo", Msg::repmemo_from_type(msg->type));
+    output.mobile = 0;
+    output.station.report = Msg::repmemo_from_type(msg->type);
 
     for (size_t l = 0; l < ctx->data.size(); ++l)
     {
         const Var& var = *(ctx->data[l]);
         switch (var.code())
         {
-            case WR_VAR(0, 5,   1): output.set("lat", var.enqd()); break;
-            case WR_VAR(0, 6,   1): output.set("lon", var.enqd()); break;
+            case WR_VAR(0, 5,   1): output.station.coords.set_lat(var.enqd()); break;
+            case WR_VAR(0, 6,   1): output.station.coords.set_lon(var.enqd()); break;
             case WR_VAR(0, 1,  11):
-                output.set("ident", var.enqc());
-                output.set("mobile", 1);
+                output.station.ident = var.enqc();
+                output.mobile = 1;
                 break;
-            case WR_VAR(0, 1, 192): output.set("ana_id", var.enqi()); break;
-            case WR_VAR(0, 1, 194): output.set("rep_memo", var.enqc()); break;
+            case WR_VAR(0, 1, 192): output.station.id = var.enqi(); break;
+            case WR_VAR(0, 1, 194): output.station.report = var.enqc(); break;
             default: output.set(var); break;
         }
     }
@@ -241,31 +241,33 @@ wreport::Varcode MsgAPI::dammelo()
     // Set metainfo from msg ana layer
     if (const msg::Context* ctx = msg->find_context(Level(), Trange()))
     {
-        output.set("mobile", 0);
-        output.set("rep_memo", Msg::repmemo_from_type(msg->type));
+        output.mobile = 0;
+        output.station.report = Msg::repmemo_from_type(msg->type);
 
+        Datetime dt;
         for (size_t l = 0; l < ctx->data.size(); ++l)
         {
             const Var& var = *(ctx->data[l]);
             switch (var.code())
             {
-                case WR_VAR(0, 5,   1): output.set("lat", var.enqd()); break;
-                case WR_VAR(0, 6,   1): output.set("lon", var.enqd()); break;
-                case WR_VAR(0, 4,   1): output.seti("year", var.enqi()); break;
-                case WR_VAR(0, 4,   2): output.seti("month", var.enqi()); break;
-                case WR_VAR(0, 4,   3): output.seti("day", var.enqi()); break;
-                case WR_VAR(0, 4,   4): output.seti("hour", var.enqi()); break;
-                case WR_VAR(0, 4,   5): output.seti("min", var.enqi()); break;
-                case WR_VAR(0, 4,   6): output.seti("sec", var.enqi()); break;
+                case WR_VAR(0, 5,   1): output.station.coords.set_lat(var.enqd()); break;
+                case WR_VAR(0, 6,   1): output.station.coords.set_lon(var.enqd()); break;
+                case WR_VAR(0, 4,   1): dt.year   = var.enqi(); break;
+                case WR_VAR(0, 4,   2): dt.month  = var.enqi(); break;
+                case WR_VAR(0, 4,   3): dt.day    = var.enqi(); break;
+                case WR_VAR(0, 4,   4): dt.hour   = var.enqi(); break;
+                case WR_VAR(0, 4,   5): dt.minute = var.enqi(); break;
+                case WR_VAR(0, 4,   6): dt.second = var.enqi(); break;
                 case WR_VAR(0, 1,  11):
-                    output.set("ident", var.enqc());
-                    output.set("mobile", 1);
+                    output.station.ident = var.enqc();
+                    output.mobile = 1;
                     break;
-                case WR_VAR(0, 1, 192): output.set("ana_id", var.enqi()); break;
-                case WR_VAR(0, 1, 194): output.set("rep_memo", var.enqc()); break;
+                case WR_VAR(0, 1, 192): output.station.id = var.enqi(); break;
+                case WR_VAR(0, 1, 194): output.station.report = var.enqc(); break;
                 default: output.set(var); break;
             }
         }
+        output.set(dt);
     }
 
     msg::Context* ctx = msg->data[iter_ctx];
@@ -273,13 +275,9 @@ wreport::Varcode MsgAPI::dammelo()
     output.set(ctx->trange);
 
     const Var& var = *ctx->data[iter_var];
-
-    char vname[10];
-    Varcode code = var.code();
-    format_bcode(code, vname);
-    output.set("var", vname);
+    output.var = var.code();
     output.set(var);
-    return code;
+    return var.code();
 }
 
 void MsgAPI::flushVars()
@@ -348,35 +346,19 @@ void MsgAPI::prendilo()
     if (station.coords.lon != MISSING_INT)
         wmsg->set_longitude(station.coords.dlon());
 
-    int ye = input.enq("year", MISSING_INT);
-    int mo = input.enq("month", MISSING_INT);
-    int da = input.enq("day", MISSING_INT);
-    int ho = input.enq("hour", MISSING_INT);
-    int mi = input.enq("min", MISSING_INT);
-    int se = input.enq("sec", MISSING_INT);
-
-    if (ye != MISSING_INT)
+    Datetime dt = input.get_datetime();
+    if (!dt.is_missing())
     {
-        if (mo == MISSING_INT)
-            throw error_consistency("no month information found in message to import");
-        if (da == MISSING_INT)
-            throw error_consistency("no day information found in message to import");
-        if (ho == MISSING_INT)
-            throw error_consistency("no hour information found in message to import");
-        wmsg->set_datetime(Datetime(ye, mo, da, ho, mi, se));
+        dt.set_lower_bound();
+        wmsg->set_datetime(dt);
     }
 
     const vector<Var*>& in_vars = input.vars();
     flushVars();
     assert(vars.empty());
 
-    vars_level.ltype1 = input.enq("leveltype1", MISSING_INT);
-    vars_level.l1 = input.enq("l1", MISSING_INT);
-    vars_level.ltype2 = input.enq("leveltype2", MISSING_INT);
-    vars_level.l2 = input.enq("l2", MISSING_INT);
-    vars_trange.pind = input.enq("pindicator", MISSING_INT);
-    vars_trange.p1 = input.enq("p1", MISSING_INT);
-    vars_trange.p2 = input.enq("p2", MISSING_INT);
+    vars_level = input.level;
+    vars_trange = input.trange;
 
     for (vector<Var*>::const_iterator v = in_vars.begin(); v != in_vars.end(); ++v)
         vars.push_back(new Var(**v));
@@ -410,7 +392,7 @@ void MsgAPI::prendilo()
             error_consistency::throwf("Query type \"%s\" is not among the supported values", input.query.c_str());
 
         // Uset query after using it: it needs to be explicitly set every time
-        input.unset("query");
+        input.query.clear();
     }
 }
 

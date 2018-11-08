@@ -30,10 +30,10 @@ class Tests : public TestCase
             core::Record matched;
             wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-            matched.set("ana_id", 2);
+            matched.station.id = 2;
             wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-            matched.set("ana_id", 1);
+            matched.station.id = 1;
             wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_YES);
         });
 
@@ -45,13 +45,13 @@ class Tests : public TestCase
                 core::Record matched;
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-                matched.set("block", 1);
+                matched.obtain(WR_VAR(0, 1, 1)).set(1);
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-                matched.set("block", 11);
+                matched.obtain(WR_VAR(0, 1, 1)).set(11);
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_YES);
 
-                matched.set("station", 222);
+                matched.obtain(WR_VAR(0, 1, 2)).set(222);
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_YES);
             }
 
@@ -61,22 +61,22 @@ class Tests : public TestCase
                 core::Record matched;
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-                matched.set("block", 1);
+                matched.obtain(WR_VAR(0, 1, 1)).set(1);
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-                matched.set("block", 11);
+                matched.obtain(WR_VAR(0, 1, 1)).set(11);
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-                matched.set("station", 22);
+                matched.obtain(WR_VAR(0, 1, 2)).set(22);
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-                matched.set("station", 222);
+                matched.obtain(WR_VAR(0, 1, 2)).set(222);
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_YES);
 
-                matched.set("block", 1);
+                matched.obtain(WR_VAR(0, 1, 1)).set(1);
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-                matched.unset("block");
+                matched.unset_var(WR_VAR(0, 1, 1));
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
             }
         });
@@ -89,10 +89,10 @@ class Tests : public TestCase
                 core::Record matched;
                 wassert(actual(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-                matched.set("year", 1999);
+                matched.datetime.min.year = matched.datetime.max.year = 1999;
                 wassert(actual(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-                matched.set("year", 2000);
+                matched.datetime.min.year = matched.datetime.max.year = 2000;
                 wassert(actual(m->match(MatchedRecord(matched))) == matcher::MATCH_YES);
             }
             {
@@ -101,10 +101,10 @@ class Tests : public TestCase
                 core::Record matched;
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-                matched.set("year", 2001);
+                matched.datetime.min.year = matched.datetime.max.year = 2001;
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-                matched.set("year", 2000);
+                matched.datetime.min.year = matched.datetime.max.year = 2000;
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_YES);
             }
             {
@@ -113,19 +113,19 @@ class Tests : public TestCase
                 core::Record matched;
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-                matched.set("year", 1999);
+                matched.datetime.min.year = matched.datetime.max.year = 1999;
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-                matched.set("year", 2011);
+                matched.datetime.min.year = matched.datetime.max.year = 2011;
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-                matched.set("year", 2000);
+                matched.datetime.min.year = matched.datetime.max.year = 2000;
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_YES);
 
-                matched.set("year", 2005);
+                matched.datetime.min.year = matched.datetime.max.year = 2005;
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_YES);
 
-                matched.set("year", 2010);
+                matched.datetime.min.year = matched.datetime.max.year = 2010;
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_YES);
             }
         });
@@ -137,13 +137,11 @@ class Tests : public TestCase
 
                 core::Record matched;
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
-
-                matched.set("lat", 43.0);
+                matched.station.coords.set_lat(43.0);
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
-
-                matched.set("lat", 45.0);
+                matched.station.coords.set_lat(45.0);
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_YES);
-                matched.set("lat", 46.0);
+                matched.station.coords.set_lat(46.0);
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_YES);
             }
             {
@@ -151,13 +149,11 @@ class Tests : public TestCase
 
                 core::Record matched;
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
-
-                matched.set("lat", 4600000);
+                matched.station.coords.lat = 4600000;
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
-
-                matched.set("lat", 4500000);
+                matched.station.coords.lat = 4500000;
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_YES);
-                matched.set("lat", 4400000);
+                matched.station.coords.lat = 4400000;
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_YES);
             }
             {
@@ -166,12 +162,9 @@ class Tests : public TestCase
                 core::Record matched;
                 wassert(actual(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-                matched.set("lon", 4300000);
+                matched.station.coords.set_lon(43.0);
                 wassert(actual(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
-
-                matched.set("lon", 4500000);
-                wassert(actual(m->match(MatchedRecord(matched))) == matcher::MATCH_YES);
-                matched.set("lon", 4500000);
+                matched.station.coords.set_lon(45.0);
                 wassert(actual(m->match(MatchedRecord(matched))) == matcher::MATCH_YES);
             }
             {
@@ -179,13 +172,11 @@ class Tests : public TestCase
 
                 core::Record matched;
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
-
-                matched.set("lon", 4600000);
+                matched.station.coords.set_lon(46.0);
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
-
-                matched.set("lon", 4500000);
+                matched.station.coords.set_lon(45.0);
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_YES);
-                matched.set("lon", 4400000);
+                matched.station.coords.set_lon(44.0);
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_YES);
             }
             {
@@ -194,13 +185,13 @@ class Tests : public TestCase
                 core::Record matched;
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-                matched.set("lat", 4550000);
+                matched.station.coords.set_lat(45.5);
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-                matched.set("lon", 1300000);
+                matched.station.coords.set_lon(13.0);
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-                matched.set("lon", 1100000);
+                matched.station.coords.set_lon(11.0);
                 wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_YES);
             }
         });
@@ -212,10 +203,10 @@ class Tests : public TestCase
             core::Record matched;
             wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-            matched.set("rep_memo", "temp");
+            matched.station.report = "temp";
             wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_NO);
 
-            matched.set("rep_memo", "synop");
+            matched.station.report = "synop";
             wassert(actual_matcher_result(m->match(MatchedRecord(matched))) == matcher::MATCH_YES);
         });
 

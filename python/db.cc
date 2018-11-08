@@ -8,6 +8,7 @@
 #include "dballe/file.h"
 #include "dballe/core/query.h"
 #include "dballe/core/values.h"
+#include "dballe/core/record.h"
 #include "dballe/message.h"
 #include "dballe/importer.h"
 #include "dballe/exporter.h"

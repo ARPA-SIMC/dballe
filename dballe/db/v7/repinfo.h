@@ -8,6 +8,7 @@
  */
 
 #include <dballe/sql/fwd.h>
+#include <dballe/core/fwd.h>
 #include <memory>
 #include <map>
 #include <string>
@@ -87,7 +88,7 @@ struct Repinfo
      * given ID
      */
     // FIXME: still used?
-    void to_record(const std::string& report, Record& rec);
+    void to_record(const std::string& report, core::Record& rec);
 
     /// Get the rep_memo for a given ID; throws if id is not valud
     // FIXME: use std::string?

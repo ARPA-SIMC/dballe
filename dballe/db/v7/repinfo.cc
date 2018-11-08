@@ -2,6 +2,7 @@
 #include "dballe/db/db.h"
 #include "dballe/record.h"
 #include "dballe/core/query.h"
+#include "dballe/core/record.h"
 #include "dballe/core/csv.h"
 #include <wreport/error.h>
 #include <algorithm>
@@ -18,16 +19,16 @@ Repinfo::Repinfo(dballe::sql::Connection& conn)
 {
 }
 
-void Repinfo::to_record(const std::string& report, Record& rec)
+void Repinfo::to_record(const std::string& report, core::Record& rec)
 {
     const repinfo::Cache* c = get_by_memo(report.c_str());
     if (c)
     {
-        rec.sets("rep_memo", report);
-        rec.seti("priority", c->prio);
+        rec.station.report = report;
+        rec.priomin = rec.priomax = c->prio;
     } else {
-        rec.unset("rep_memo");
-        rec.unset("priority");
+        rec.station.report.clear();
+        rec.priomin = rec.priomax = MISSING_INT;
     }
 }
 

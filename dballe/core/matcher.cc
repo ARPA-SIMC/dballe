@@ -1,5 +1,6 @@
 #include "matcher.h"
 #include "defs.h"
+#include "record.h"
 #include "query.h"
 #include <cmath>
 #include <vector>
@@ -104,7 +105,7 @@ struct And : public Matcher
         return res;
     }
 
-    virtual void to_record(dballe::Record& rec) const
+    void to_record(core::Record& rec) const override
     {
         for (std::vector<const Matcher*>::const_iterator i = exprs.begin();
                 i != exprs.end(); ++i)
@@ -119,13 +120,13 @@ struct AnaIDMatcher : public Matcher
 
     AnaIDMatcher(int ana_id) : ana_id(ana_id) {}
 
-    virtual Result match(const Matched& v) const
+    Result match(const Matched& v) const override
     {
         return v.match_station_id(ana_id) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
-    virtual void to_record(Record& rec) const
+    void to_record(core::Record& rec) const override
     {
-        rec.set("ana_id", ana_id);
+        rec.station.id = ana_id;
     }
 };
 
@@ -136,17 +137,17 @@ struct WMOMatcher : public Matcher
 
     WMOMatcher(int block, int station=-1) : block(block), station(station) {}
 
-    virtual Result match(const Matched& v) const
+    Result match(const Matched& v) const override
     {
         return v.match_station_wmo(block, station) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
-    virtual void to_record(Record& rec) const
+    void to_record(core::Record& rec) const override
     {
-        rec.set("block", block);
+        rec.obtain(WR_VAR(0, 1, 1)).set(block);
         if (station != -1)
-            rec.set("station", station);
+            rec.obtain(WR_VAR(0, 1, 2)).set(station);
         else
-            rec.unset("station");
+            rec.unset_var(WR_VAR(0, 1, 2));
     }
 };
 
@@ -157,12 +158,12 @@ struct DateMatcher : public Matcher
 
     DateMatcher(const DatetimeRange& range) : range(range) {}
 
-    virtual Result match(const Matched& v) const
+    Result match(const Matched& v) const override
     {
         return v.match_datetime(range) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
 
-    virtual void to_record(Record& rec) const
+    void to_record(core::Record& rec) const override
     {
         rec.set_datetimerange(range);
     }
@@ -176,12 +177,12 @@ struct CoordMatcher : public Matcher
     CoordMatcher(const LatRange& latrange, const LonRange& lonrange)
         : latrange(latrange), lonrange(lonrange) {}
 
-    virtual Result match(const Matched& v) const
+    Result match(const Matched& v) const override
     {
         return v.match_coords(latrange, lonrange) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
 
-    virtual void to_record(Record& rec) const
+    void to_record(core::Record& rec) const override
     {
         rec.set_latrange(latrange);
         rec.set_lonrange(lonrange);
@@ -202,13 +203,13 @@ struct ReteMatcher : public Matcher
 
     ReteMatcher(const std::string& rete) : rete(tolower(rete)) {}
 
-    virtual Result match(const Matched& v) const
+    Result match(const Matched& v) const override
     {
         return v.match_rep_memo(rete.c_str()) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
-    virtual void to_record(Record& rec) const
+    void to_record(core::Record& rec) const override
     {
-        rec.set("rep_memo", rete.c_str());
+        rec.station.report = rete;
     }
 };
 

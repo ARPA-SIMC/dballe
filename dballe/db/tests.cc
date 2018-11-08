@@ -84,20 +84,11 @@ void ActualCursor::data_context_matches(const DataValues& expected)
 
     auto rec = Record::create();
     _actual.to_record(*rec);
-    wassert(actual(rec->enq("rep_memo", "")) == expected.station.report);
-    wassert(actual(rec->enq("leveltype1", MISSING_INT)) == expected.level.ltype1);
-    wassert(actual(rec->enq("l1", MISSING_INT))         == expected.level.l1);
-    wassert(actual(rec->enq("leveltype2", MISSING_INT)) == expected.level.ltype2);
-    wassert(actual(rec->enq("l2", MISSING_INT))         == expected.level.l2);
-    wassert(actual(rec->enq("pindicator", MISSING_INT)) == expected.trange.pind);
-    wassert(actual(rec->enq("p1", MISSING_INT))         == expected.trange.p1);
-    wassert(actual(rec->enq("p2", MISSING_INT))         == expected.trange.p2);
-    wassert(actual(rec->enq("year", MISSING_INT))  == expected.datetime.year);
-    wassert(actual(rec->enq("month", MISSING_INT)) == expected.datetime.month);
-    wassert(actual(rec->enq("day", MISSING_INT))   == expected.datetime.day);
-    wassert(actual(rec->enq("hour", MISSING_INT))  == expected.datetime.hour);
-    wassert(actual(rec->enq("min", MISSING_INT))   == expected.datetime.minute);
-    wassert(actual(rec->enq("sec", MISSING_INT))   == expected.datetime.second);
+    const core::Record& r = core::Record::downcast(*rec);
+    wassert(actual(r.station.report) == expected.station.report);
+    wassert(actual(r.level) == expected.level);
+    wassert(actual(r.trange) == expected.trange);
+    wassert(actual(r.get_datetime()) == expected.datetime);
 }
 
 void ActualCursor::data_var_matches(const wreport::Var& expected)
@@ -193,17 +184,13 @@ void ActualDB<DB>::try_summary_query(const std::string& query, unsigned expected
     {
         // Sort the records, to make it easier to test results later
         std::sort(results.begin(), results.end(), [](const core::Record& a, const core::Record& b) {
-            if (int res = a.enq("ana_id", MISSING_INT) - b.enq("ana_id", MISSING_INT)) return res < 0;
-            string sa = a.enq("rep_memo", "");
-            string sb = b.enq("rep_memo", "");
-            if (sa < sb) return true;
-            if (sa > sb) return false;
-            Level la = a.get_level();
-            Level lb = b.get_level();
+            if (int res = a.station.id - b.station.id) return res < 0;
+            if (a.station.report < b.station.report) return true;
+            if (a.station.report > b.station.report) return false;
+            Level la = a.level;
+            Level lb = b.level;
             if (int res = la.compare(lb)) return res < 0;
-            sa = a.enq("var", "");
-            sb = b.enq("var", "");
-            if (sa < sb) return true;
+            if (a.var < b.var) return true;
             return false;
         });
 

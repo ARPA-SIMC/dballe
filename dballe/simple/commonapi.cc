@@ -1,6 +1,7 @@
 #include "commonapi.h"
 #include "dballe/var.h"
 #include "dballe/types.h"
+#include "dballe/core/record-access.h"
 #include "dballe/db/db.h"
 #include <stdio.h>  // snprintf
 #include <limits>
@@ -135,7 +136,7 @@ int CommonAPIImplementation::enqi(const char* param)
             return missing_int;
         }
     }
-    return output.enq(param, missing_int);
+    return record_enqi(output, param, missing_int);
 }
 
 signed char CommonAPIImplementation::enqb(const char* param)
@@ -148,7 +149,7 @@ signed char CommonAPIImplementation::enqb(const char* param)
             if (var.code() == code)
                 value = var.enqi();
     } else {
-        value = output.enq(param, missing_int);
+        value = record_enqi(output, param, missing_int);
     }
 
     if (value == missing_int)
@@ -170,7 +171,7 @@ float CommonAPIImplementation::enqr(const char* param)
             if (var.code() == code)
                 value = var.enqd();
     } else {
-        value = output.enq(param, missing_double);
+        value = record_enqd(output, param, missing_double);
     }
 
     if (value == missing_double)
@@ -192,7 +193,7 @@ double CommonAPIImplementation::enqd(const char* param)
                 return var.enqd();
         return missing_double;
     }
-    return output.enq(param, missing_double);
+    return record_enqd(output, param, missing_double);
 }
 
 std::string CommonAPIImplementation::enqc(const char* param)
@@ -205,7 +206,7 @@ std::string CommonAPIImplementation::enqc(const char* param)
                 return var.enqc();
         return std::string();
     }
-    return output.enq(param, std::string());
+    return record_enqs(output, param, std::string());
 }
 
 bool CommonAPIImplementation::enqc(const char* param, std::string& res)
@@ -221,7 +222,7 @@ bool CommonAPIImplementation::enqc(const char* param, std::string& res)
             }
         return false;
     }
-    return output.enqsb(param, res);
+    return record_enqsb(output, param, res);
 }
 
 void CommonAPIImplementation::seti(const char* param, int value)
@@ -240,7 +241,7 @@ void CommonAPIImplementation::seti(const char* param, int value)
         }
         return;
     }
-    input.seti(param, value);
+    record_seti(input, param, value);
 }
 
 void CommonAPIImplementation::setb(const char* param, signed char value)
@@ -260,7 +261,7 @@ void CommonAPIImplementation::setd(const char* param, double value)
         qcinput.set(resolve_varcode(param + 1), value);
         return;
     }
-    input.set(param, value);
+    record_setd(input, param, value);
 }
 
 void CommonAPIImplementation::setc(const char* param, const char* value)
@@ -302,7 +303,7 @@ void CommonAPIImplementation::setc(const char* param, const char* value)
         }
         return;
     }
-    input.setc(param, value);
+    record_setc(input, param, value);
 }
 
 void CommonAPIImplementation::setcontextana()
@@ -404,7 +405,7 @@ void CommonAPIImplementation::unset(const char* param)
         }
         return;
     }
-    input.unset(param);
+    record_unset(input, param);
 }
 
 void CommonAPIImplementation::unsetall()

@@ -61,41 +61,8 @@ protected:
 	/// Remove an item by wreport::Varcode
 	void remove_item(wreport::Varcode code);
 
-    /**
-     * Look at the value of a variable
-     *
-     * @return
-     *   A const pointer to the internal variable, or NULL if the variable has not
-     *   been found.
-     */
-    const wreport::Var* var_peek(wreport::Varcode code) const throw ();
-
-    /**
-     * Remove a variable from the record.
-     *
-     * @param code
-     *   The variable to remove
-     */
-    void unset_var(wreport::Varcode code);
-
-    /// Return the Var for a variable, creating it if it is missing
-    wreport::Var& obtain(wreport::Varcode code);
-
     void foreach_key_ref(std::function<void(const char*, const wreport::Var&)> dest) const;
     void foreach_key_copy(std::function<void(const char*, std::unique_ptr<wreport::Var>&&)> dest) const;
-
-    int _enqi(const char* key, unsigned len, bool& found) const;
-    double _enqd(const char* key, unsigned len, bool& found, bool& missing) const;
-    std::string _enqs(const char* key, unsigned len, bool& found, bool& missing) const;
-
-    bool _seti(const char* key, unsigned len, int val);
-    bool _setd(const char* key, unsigned len, double val);
-    bool _setc(const char* key, unsigned len, const char* val);
-    bool _sets(const char* key, unsigned len, const std::string& val);
-    bool _setf(const char* key, unsigned len, const char* val);
-
-    bool _unset(const char* key, unsigned len);
-    bool _isset(const char* key, unsigned len, bool& res) const;
 
     bool equals(const Record& rec) const;
 
@@ -115,11 +82,6 @@ public:
 
     void clear() override;
     void clear_vars() override;
-    void seti(const char* key, int val) override;
-    void setd(const char* key, double val) override;
-    void setc(const char* key, const char* val) override;
-    void sets(const char* key, const std::string& val) override;
-    void setf(const char* key, const char* val) override;
     void set_datetime(const Datetime& dt) override;
     void set_datetimerange(const DatetimeRange& range) override;
     void set_coords(const Coords& c) override;
@@ -131,7 +93,6 @@ public:
     void set_var_acquire(std::unique_ptr<wreport::Var>&& var) override;
     void set_station(const Station& s) override;
     void set_dbstation(const DBStation& s) override;
-    void unset(const char* name) override;
 #if 0
     void add(const dballe::Record& source) override;
 #endif
@@ -169,14 +130,6 @@ public:
 	void set_to_difference(const Record& source1, const Record& source2);
 #endif
 
-    int enqi(const char* key, int def) const override;
-    double enqd(const char* key, double def) const override;
-    bool enqdb(const char* key, double& res) const override;
-    std::string enqs(const char* key, const std::string& def) const override;
-    bool enqsb(const char* key, std::string& res) const override;
-
-    bool isset(const char* key) const;
-
     Coords get_coords() const override;
     Ident get_ident() const override;
     Level get_level() const override;
@@ -198,9 +151,6 @@ public:
      */
     bool iter_keys(std::function<bool(dba_keyword, const wreport::Var&)> f) const;
 #endif
-
-    /// Return the varcode-sorted vector with the variables
-    const std::vector<wreport::Var*>& vars() const;
 
     /**
      * Set a value in the record according to an assignment encoded in a string.
@@ -288,6 +238,20 @@ public:
 	 */
 	static dba_keyword keyword_byname_len(const char* tag, int len);
 #endif
+
+    // TODO: remove these:
+
+    /// Return the Var for a variable, creating it if it is missing
+    wreport::Var& obtain(wreport::Varcode code);
+    /// Return the varcode-sorted vector with the variables
+    const std::vector<wreport::Var*>& vars() const;
+    /**
+     * Remove a variable from the record.
+     *
+     * @param code
+     *   The variable to remove
+     */
+    void unset_var(wreport::Varcode code);
 };
 
 
