@@ -13,7 +13,6 @@
 #include <iosfwd>
 
 namespace dballe {
-struct Record;
 struct CSVReader;
 struct CSVWriter;
 

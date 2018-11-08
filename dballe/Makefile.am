@@ -51,8 +51,9 @@ nobase_dist_dballeinclude_HEADERS = \
 	exporter.h \
 	message.h \
 	types.h \
-	record.h \
+	data.h \
 	query.h \
+	record.h \
 	var.h \
 	db.h \
 	core/fwd.h \
@@ -66,6 +67,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/arrayfile.h \
 	core/csv.h \
 	core/record.h \
+	core/data.h \
 	core/record-access.h \
 	core/query.h \
 	core/structbuf.h \
@@ -147,8 +149,9 @@ libdballe_la_SOURCES = \
 	exporter.cc \
 	message.cc \
 	types.cc \
-	record.cc \
+	data.cc \
 	query.cc \
+	record.cc \
 	var.cc \
 	db.cc \
 	core/error.cc \
@@ -160,6 +163,7 @@ libdballe_la_SOURCES = \
 	core/file.cc \
 	core/arrayfile.cc \
 	core/csv.cc \
+	core/data.cc \
 	core/record.cc \
 	core/record-access.cc \
 	core/query.cc \
@@ -283,8 +287,9 @@ test_dballe_SOURCES = \
 	exporter-test.cc \
 	message-test.cc \
 	types-test.cc \
-	record-test.cc \
+	data-test.cc \
 	query-test.cc \
+	record-test.cc \
 	var-test.cc \
 	db-test.cc \
 	core/aliases-test.cc \
@@ -292,6 +297,7 @@ test_dballe_SOURCES = \
 	core/var-test.cc \
 	core/values-test.cc \
 	core/file-test.cc \
+	core/data-test.cc \
 	core/record-test.cc \
 	core/record-access-test.cc \
 	core/query-test.cc \
