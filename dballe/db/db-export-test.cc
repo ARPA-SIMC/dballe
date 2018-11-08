@@ -112,7 +112,7 @@ this->add_method("export", [](Fixture& f) {
     // Text exporting of extra station information
 
     // Import some data in the station extra information context
-    StationValues st;
+    core::Data st;
     // do not set datetime, level, trange, to insert a station variable
     st.station.coords = Coords(45.0, 11.0);
     st.station.report = "synop";

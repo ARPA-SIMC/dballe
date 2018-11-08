@@ -231,23 +231,6 @@ void Values::decode(const std::vector<uint8_t>& buf, std::function<void(std::uni
 }
 
 
-StationValues::StationValues(const dballe::Record& rec)
-    : station(rec.get_dbstation()), values(rec)
-{
-}
-
-void StationValues::set_from_record(const Record& rec)
-{
-    station = rec.get_dbstation();
-    values.set_from_record(rec);
-}
-
-void StationValues::print(FILE* out) const
-{
-    station.print(out);
-    values.print(out);
-}
-
 DataValues::DataValues(const dballe::Record& rec)
     : station(rec.get_dbstation()), datetime(rec.get_datetime()), level(rec.get_level()), trange(rec.get_trange()), values(rec) {}
 

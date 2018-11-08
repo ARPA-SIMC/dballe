@@ -48,6 +48,7 @@ struct Station;
 struct DBStation;
 
 struct Record;
+struct Data;
 struct Query;
 struct Message;
 

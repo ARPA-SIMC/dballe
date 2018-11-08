@@ -259,6 +259,12 @@ bool Data::operator!=(const dballe::Data& other) const
     return std::tie(station, datetime, level, trange, values) != std::tie(o.station, o.datetime, o.level, o.trange, o.values);
 }
 
+void Data::clear_ids()
+{
+    station.id = MISSING_INT;
+    values.clear_ids();
+}
+
 void Data::clear_vars()
 {
     values.clear();

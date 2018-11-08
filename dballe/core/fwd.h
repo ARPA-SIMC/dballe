@@ -3,11 +3,11 @@
 
 namespace dballe {
 struct Values;
-struct StationValues;
 struct DataValues;
 
 namespace core {
 class Record;
+class Data;
 class Query;
 class JSONWriter;
 class JSONReader;

@@ -4,6 +4,7 @@
 #include "dballe/exporter.h"
 #include "dballe/message.h"
 #include "dballe/core/query.h"
+#include "dballe/core/data.h"
 #include "dballe/core/values.h"
 #include "dballe/db/db.h"
 #include "dballe/msg/msg.h"
@@ -201,11 +202,12 @@ struct PrendiloOperation : public Operation
         last_inserted_varids.clear();
         if (station_context)
         {
-            StationValues sv(input);
-            tr.insert_station_data(sv, (perms & DbAPI::PERM_DATA_WRITE) != 0, (perms & DbAPI::PERM_ANA_WRITE) != 0);
-            for (const auto& v: sv.values)
+            core::Data data;
+            core::Record::downcast(input).to_data(data);
+            tr.insert_station_data(data, (perms & DbAPI::PERM_DATA_WRITE) != 0, (perms & DbAPI::PERM_ANA_WRITE) != 0);
+            for (const auto& v: data.values)
                 last_inserted_varids.push_back(VarID(v.first, true, v.second.data_id));
-            return sv.station.id;
+            return data.station.id;
         } else {
             DataValues dv(input);
             tr.insert_data(dv, (perms & DbAPI::PERM_DATA_WRITE) != 0, (perms & DbAPI::PERM_ANA_WRITE) != 0);

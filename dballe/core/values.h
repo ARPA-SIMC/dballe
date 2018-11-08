@@ -190,36 +190,6 @@ struct Values : protected std::map<wreport::Varcode, values::Value>
 };
 
 /**
- * A set of station values.
- */
-struct StationValues
-{
-    DBStation station;
-    Values values;
-
-    StationValues() = default;
-    StationValues(const dballe::Record& rec);
-
-    /// Set from the contents of a dballe::Record
-    void set_from_record(const Record& rec);
-
-    bool operator==(const StationValues& o) const
-    {
-        return std::tie(station, values) == std::tie(o.station, o.values);
-    }
-
-    /// Reset all the database IDs
-    void clear_ids()
-    {
-        station.id = MISSING_INT;
-        values.clear_ids();
-    }
-
-    /// Print the contents of this StationValues
-    void print(FILE* out) const;
-};
-
-/**
  * A set of measured values
  */
 struct DataValues
@@ -254,7 +224,7 @@ struct DataValues
         values.clear_ids();
     }
 
-    /// Print the contents of this StationValues
+    /// Print the contents of this DataValues
     void print(FILE* out, const char* end="\n") const;
 };
 

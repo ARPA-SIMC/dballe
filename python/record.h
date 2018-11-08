@@ -47,6 +47,8 @@ public:
     RecordAccess& operator=(const RecordAccess&) = delete;
     RecordAccess& operator=(RecordAccess&&) = delete;
 
+    dballe::core::Record& get() { return *result; }
+    const dballe::core::Record& get() const { return *result; }
     operator dballe::core::Record&() { return *result; }
     operator const dballe::core::Record&() const { return *result; }
 };

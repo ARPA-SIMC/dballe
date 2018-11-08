@@ -1,6 +1,7 @@
 #include <dballe/msg/tests.h>
 #include <dballe/core/record.h>
 #include <dballe/core/values.h>
+#include <dballe/core/data.h>
 #include <dballe/db/db.h>
 #include <dballe/sql/fwd.h>
 #include <utility>
@@ -28,7 +29,7 @@ Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const char* query
 struct TestDataSet
 {
     /// Arbitrarily named station values
-    std::map<std::string, StationValues> stations;
+    std::map<std::string, core::Data> stations;
     /// Arbitrarily named data values
     std::map<std::string, DataValues> data;
 
@@ -117,14 +118,14 @@ struct ActualCursor : public Actual<dballe::Cursor&>
     void station_keys_match(const DBStation& expected);
 
     /// Check cursor context after a query_stations
-    void station_vars_match(const StationValues& expected);
+    void station_vars_match(const Data& expected);
 
     /// Check cursor data context after a query_data
     void data_context_matches(const DataValues& expected);
 
     /// Check cursor data variable after a query_data
-    void data_var_matches(const StationValues& expected, wreport::Varcode code) {
-        data_var_matches(*expected.values[code].var);
+    void data_var_matches(const Data& expected, wreport::Varcode code) {
+        data_var_matches(*core::Data::downcast(expected).values[code].var);
     }
     /// Check cursor data variable after a query_data
     void data_var_matches(const DataValues& expected, wreport::Varcode code) {

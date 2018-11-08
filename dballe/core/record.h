@@ -185,6 +185,11 @@ public:
      */
     void to_query(core::Query& q) const;
 
+    /**
+     * Copy the contents to a query
+     */
+    void to_data(core::Data& q) const;
+
 #if 0
     /**
      * Generate a sequence of key names and const Var& for all the

@@ -63,13 +63,14 @@ void ActualCursor::station_keys_match(const DBStation& expected)
     wassert(actual(_actual.get_station()) == expected);
 }
 
-void ActualCursor::station_vars_match(const StationValues& expected)
+void ActualCursor::station_vars_match(const Data& expected)
 {
-    wassert(actual(_actual).station_keys_match(expected.station));
+    const core::Data& exp = core::Data::downcast(expected);
+    wassert(actual(_actual).station_keys_match(exp.station));
 
     auto rec = Record::create();
     _actual.to_record(*rec);
-    wassert(actual(*rec).vars_equal(expected.values));
+    wassert(actual(*rec).vars_equal(exp.values));
 }
 
 void ActualCursor::data_context_matches(const DataValues& expected)

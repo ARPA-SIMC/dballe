@@ -110,12 +110,12 @@ this->add_method("stationdata", [](Fixture& f) {
     f.tr->insert_data(vals, true, true);
 
     // Insert station names in both networks
-    StationValues svals_camse;
+    core::Data svals_camse;
     svals_camse.station.coords = vals.station.coords;
     svals_camse.station.report = "synop";
     svals_camse.values.set("B01019", "Camse");
     f.tr->insert_station_data(svals_camse, true, true);
-    StationValues svals_esmac;
+    core::Data svals_esmac;
     svals_esmac.station.coords = vals.station.coords;
     svals_esmac.station.report = "temp";
     svals_esmac.values.set("B01019", "Esmac");

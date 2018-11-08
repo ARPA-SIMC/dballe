@@ -29,6 +29,9 @@ struct Data
     /// Remove all contents from the record
     virtual void clear() = 0;
 
+    /// Unset all database IDs in station and values
+    virtual void clear_ids() = 0;
+
     /// Remove all Bxxyyy keys from the record, leaving the rest intact
     virtual void clear_vars() = 0;
 

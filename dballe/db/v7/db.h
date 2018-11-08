@@ -10,7 +10,6 @@
 
 namespace dballe {
 struct Station;
-struct StationValues;
 struct DataValues;
 
 namespace sql {

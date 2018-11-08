@@ -933,7 +933,7 @@ void CommitTests<DB>::register_tests() {
 
 this->add_method("fd_leaks", [](Fixture& f) {
     // Test connect leaks
-    StationValues vals;
+    core::Data vals;
     // Set station data
     vals.station.coords = Coords(12.34560, 76.54320);
     vals.station.report = "synop";

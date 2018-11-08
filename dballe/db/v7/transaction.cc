@@ -8,6 +8,7 @@
 #include "batch.h"
 #include "trace.h"
 #include "dballe/core/query.h"
+#include "dballe/core/data.h"
 #include "dballe/sql/sql.h"
 #include <cassert>
 #include <memory>
@@ -115,22 +116,23 @@ void Transaction::remove_all()
     clear_cached_state();
 }
 
-void Transaction::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
+void Transaction::insert_station_data(dballe::Data& vals, bool can_replace, bool station_can_add)
 {
     Tracer<> trc(this->trc ? this->trc->trace_insert_station_data() : nullptr);
-    batch::Station* st = batch.get_station(trc, vals.station, station_can_add);
+    core::Data& data = core::Data::downcast(vals);
+    batch::Station* st = batch.get_station(trc, data.station, station_can_add);
 
     // Add all the variables we find
     batch::StationData& sd = st->get_station_data(trc);
-    for (auto& i: vals.values)
+    for (auto& i: data.values)
         sd.add(i.second.var, can_replace ? batch::UPDATE : batch::ERROR);
 
     // Perform changes
     batch.write_pending(trc);
 
     // Read the IDs from the results
-    vals.station.id = st->id;
-    for (auto& v: vals.values)
+    data.station.id = st->id;
+    for (auto& v: data.values)
     {
         auto i = sd.ids_by_code.find(v.first);
         if (i == sd.ids_by_code.end())

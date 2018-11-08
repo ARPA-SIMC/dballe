@@ -153,7 +153,7 @@ public:
      *   data for a station that does not yet exists in the database, it will
      *   be created.
      */
-    virtual void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add) = 0;
+    virtual void insert_station_data(Data& vals, bool can_replace, bool station_can_add) = 0;
 
     /**
      * Insert data values into the database
@@ -339,7 +339,7 @@ public:
      *   data for a station that does not yet exists in the database, it will
      *   be created.
      */
-    void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add);
+    void insert_station_data(Data& vals, bool can_replace, bool station_can_add);
 
     /**
      * Insert data values into the database

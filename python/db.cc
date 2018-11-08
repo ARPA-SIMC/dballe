@@ -8,6 +8,7 @@
 #include "dballe/file.h"
 #include "dballe/core/query.h"
 #include "dballe/core/values.h"
+#include "dballe/core/data.h"
 #include "dballe/core/record.h"
 #include "dballe/message.h"
 #include "dballe/importer.h"
@@ -149,7 +150,8 @@ database ID of its value.
         try {
             RecordAccess rec(record);
             ReleaseGIL gil;
-            StationValues vals(rec);
+            core::Data vals;
+            rec.get().to_data(vals);
             self->db->insert_station_data(vals, can_replace, station_can_add);
             gil.lock();
             return get_insert_ids(vals);

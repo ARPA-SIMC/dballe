@@ -1,6 +1,7 @@
 #include "record.h"
 #include "record-access.h"
 #include "query.h"
+#include "data.h"
 #include "var.h"
 #include "aliases.h"
 #include "defs.h"
@@ -781,6 +782,17 @@ void Record::to_query(core::Query& q) const
         q.station = station->enq(MISSING_INT);
     else
         q.station = MISSING_INT;
+}
+
+void Record::to_data(core::Data& d) const
+{
+    d.station = station;
+    d.datetime = datetime.min;
+    d.datetime.set_lower_bound();
+    d.level = level;
+    d.trange = trange;
+    for (const auto& var: m_vars)
+        d.values.set(*var);
 }
 
 

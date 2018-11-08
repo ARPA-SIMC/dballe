@@ -70,6 +70,7 @@ public:
 
     void clear() override;
     void clear_vars() override;
+    void clear_ids() override;
 #if 0
     void set_datetime(const Datetime& dt) override;
     void set_datetimerange(const DatetimeRange& range) override;
