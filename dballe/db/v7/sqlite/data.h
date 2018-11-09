@@ -43,7 +43,7 @@ public:
 
     void update(Tracer<>& trc, std::vector<typename Parent::BatchValue>& vars, bool with_attrs) override;
     void read_attrs(Tracer<>& trc, int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
-    void write_attrs(Tracer<>& trc, int id_data, const Values& values) override;
+    void write_attrs(Tracer<>& trc, int id_data, const core::Values& values) override;
     void remove_all_attrs(Tracer<>& trc, int id_data) override;
     void remove(Tracer<>& trc, const v7::IdQueryBuilder& qb) override;
 };

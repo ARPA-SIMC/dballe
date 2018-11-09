@@ -8,7 +8,7 @@ using namespace std;
 using namespace wreport;
 
 namespace dballe {
-namespace values {
+namespace core {
 
 void Value::print(FILE* out) const
 {
@@ -21,6 +21,8 @@ void Value::print(FILE* out) const
     else
         var->print(out);
 }
+
+namespace value {
 
 Encoder::Encoder()
 {
@@ -152,7 +154,7 @@ void Values::add_data_id(wreport::Varcode code, int data_id)
     i->second.data_id = data_id;
 }
 
-void Values::set_from_record(const Record& rec)
+void Values::set_from_record(const dballe::Record& rec)
 {
     const auto& r = core::Record::downcast(rec);
     for (const auto& i: r.vars())
@@ -163,7 +165,7 @@ void Values::set(const wreport::Var& v)
 {
     auto i = find(v.code());
     if (i == end())
-        insert(make_pair(v.code(), values::Value(v)));
+        insert(make_pair(v.code(), Value(v)));
     else
         i->second.set(v);
 }
@@ -173,7 +175,7 @@ void Values::set(std::unique_ptr<wreport::Var>&& v)
     auto code = v->code();
     auto i = find(code);
     if (i == end())
-        insert(make_pair(code, values::Value(move(v))));
+        insert(make_pair(code, Value(move(v))));
     else
         i->second.set(move(v));
 }
@@ -184,7 +186,7 @@ void Values::set(const Values& vals)
         set(*vi.second.var);
 }
 
-const values::Value& Values::operator[](wreport::Varcode code) const
+const Value& Values::operator[](wreport::Varcode code) const
 {
     auto i = find(code);
     if (i == end())
@@ -193,7 +195,7 @@ const values::Value& Values::operator[](wreport::Varcode code) const
     return i->second;
 }
 
-const values::Value* Values::get(wreport::Varcode code) const
+const Value* Values::get(wreport::Varcode code) const
 {
     auto i = find(code);
     if (i == end())
@@ -209,7 +211,7 @@ void Values::print(FILE* out) const
 
 std::vector<uint8_t> Values::encode() const
 {
-    values::Encoder enc;
+    value::Encoder enc;
     for (const auto& i: *this)
         enc.append(*i.second.var);
     return enc.buf;
@@ -217,7 +219,7 @@ std::vector<uint8_t> Values::encode() const
 
 std::vector<uint8_t> Values::encode_attrs(const wreport::Var& var)
 {
-    values::Encoder enc;
+    value::Encoder enc;
     for (const Var* a = var.next_attr(); a != NULL; a = a->next_attr())
         enc.append(*a);
     return enc.buf;
@@ -225,9 +227,10 @@ std::vector<uint8_t> Values::encode_attrs(const wreport::Var& var)
 
 void Values::decode(const std::vector<uint8_t>& buf, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
-    values::Decoder dec(buf);
+    value::Decoder dec(buf);
     while (dec.size)
         dest(move(dec.decode_var()));
 }
 
+}
 }

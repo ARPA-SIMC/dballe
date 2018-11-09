@@ -43,14 +43,14 @@ void MySQLDataCommon<Parent>::read_attrs(Tracer<>& trc, int id_data, std::functi
     char query[128];
     snprintf(query, 128, "SELECT attrs FROM %s WHERE id=%d", Parent::table_name, id_data);
     Tracer<> trc_sel(trc ? trc->trace_select(query) : nullptr);
-    Values::decode(
+    core::Values::decode(
             conn.exec_store(query).expect_one_result().as_blob(0),
             dest);
     if (trc_sel) trc_sel->add_row();
 }
 
 template<typename Parent>
-void MySQLDataCommon<Parent>::write_attrs(Tracer<>& trc, int id_data, const Values& values)
+void MySQLDataCommon<Parent>::write_attrs(Tracer<>& trc, int id_data, const core::Values& values)
 {
     vector<uint8_t> encoded = values.encode();
     string escaped = conn.escape(encoded);
@@ -74,7 +74,7 @@ namespace {
 bool match_attrs(const Varmatch& match, const std::vector<uint8_t>& attrs)
 {
     bool found = false;
-    Values::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
+    core::Values::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
         if (match(*var))
             found = true;
     });
@@ -127,7 +127,7 @@ void MySQLDataCommon<Parent>::update(Tracer<>& trc, std::vector<typename Parent:
         Querybuf qb;
         if (with_attrs && v.var->next_attr())
         {
-            values::Encoder enc;
+            core::value::Encoder enc;
             enc.append_attributes(*v.var);
             string escaped_attrs = conn.escape(enc.buf);
             qb.appendf("UPDATE %s SET value='%s', attrs=X'%s' WHERE id=%d", Parent::table_name, escaped_value.c_str(), escaped_attrs.c_str(), v.id);
@@ -173,7 +173,7 @@ void MySQLStationData::insert(Tracer<>& trc, int id_station, std::vector<batch::
         string escaped_value = conn.escape(v->var->enqc());
         if (with_attrs && v->var->next_attr())
         {
-            values::Encoder enc;
+            core::value::Encoder enc;
             enc.append_attributes(*v->var);
             string escaped_attrs = conn.escape(enc.buf);
             qb.appendf("INSERT INTO station_data (id_station, code, value, attrs) VALUES (%d, %d, '%s', X'%s')",
@@ -206,7 +206,7 @@ void MySQLStationData::run_station_data_query(Tracer<>& trc, const v7::DataQuery
         const char* value = row.as_cstring(7);
         auto var = newvar(code, value);
         if (qb.select_attrs)
-            values::Decoder::decode_attrs(row.as_blob(8), *var);
+            core::value::Decoder::decode_attrs(row.as_blob(8), *var);
 
         // Postprocessing filter of attr_filter
         if (qb.attr_filter && !qb.match_attrs(*var))
@@ -285,7 +285,7 @@ void MySQLData::insert(Tracer<>& trc, int id_station, const Datetime& datetime, 
 
         if (with_attrs && v->var->next_attr())
         {
-            values::Encoder enc;
+            core::value::Encoder enc;
             enc.append_attributes(*v->var);
             string escaped_attrs = conn.escape(enc.buf);
             qb.appendf("INSERT INTO data (id_station, id_levtr, datetime, code, value, attrs) VALUES (%d, %d, '%04d-%02d-%02d %02d:%02d:%02d', %d, '%s', X'%s')",
@@ -318,7 +318,7 @@ void MySQLData::run_data_query(Tracer<>& trc, const v7::DataQueryBuilder& qb, st
         const char* value = row.as_cstring(9);
         auto var = newvar(code, value);
         if (qb.select_attrs)
-            values::Decoder::decode_attrs(row.as_blob(10), *var);
+            core::value::Decoder::decode_attrs(row.as_blob(10), *var);
 
         // Postprocessing filter of attr_filter
         if (qb.attr_filter && !qb.match_attrs(*var))

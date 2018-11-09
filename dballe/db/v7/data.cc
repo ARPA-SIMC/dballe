@@ -17,16 +17,16 @@ template<typename Traits>
 const char* DataCommon<Traits>::table_name = Traits::table_name;
 
 template<typename Traits>
-void DataCommon<Traits>::read_attrs_into_values(Tracer<>& trc, int id_data, Values& values)
+void DataCommon<Traits>::read_attrs_into_values(Tracer<>& trc, int id_data, core::Values& values)
 {
     read_attrs(trc, id_data, [&](unique_ptr<wreport::Var> var) { values.set(move(var)); });
 }
 
 template<typename Traits>
-void DataCommon<Traits>::merge_attrs(Tracer<>& trc, int id_data, const Values& attrs)
+void DataCommon<Traits>::merge_attrs(Tracer<>& trc, int id_data, const core::Values& attrs)
 {
     // Read existing attributes
-    Values merged;
+    core::Values merged;
     read_attrs_into_values(trc, id_data, merged);
 
     // Merge attributes from attrs
@@ -43,7 +43,7 @@ void DataCommon<Traits>::remove_attrs(Tracer<>& trc, int id_data, const db::Attr
         remove_all_attrs(trc, id_data);
     else {
         // Read existing attributes
-        Values remaining;
+        core::Values remaining;
         read_attrs_into_values(trc, id_data, remaining);
 
         for (const auto& i: attrs)
@@ -79,7 +79,7 @@ void StationDataDumper::print_row(int id, int id_station, wreport::Varcode code,
     else
         fprintf(out, " %s\n", val);
 
-    Values::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
+    core::Values::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
         fprintf(out, "     ");
         var->print(out);
     });
@@ -116,7 +116,7 @@ void DataDumper::print_row(int id, int id_station, int id_levtr, const Datetime&
     else
         fprintf(out, " %s\n", val);
 
-    Values::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
+    core::Values::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
         fprintf(out, "     ");
         var->print(out);
     });

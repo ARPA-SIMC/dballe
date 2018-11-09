@@ -451,7 +451,7 @@ struct attr_insert : MethKwargs<Impl>
         try {
             RecordAccess rec(record);
             ReleaseGIL gil;
-            self->db->attr_insert_data(varid, Values(rec));
+            self->db->attr_insert_data(varid, core::Values(rec));
         } DBALLE_CATCH_RETURN_PYO
         Py_RETURN_NONE;
     }
@@ -474,7 +474,7 @@ struct attr_insert_station : MethKwargs<Impl>
         try {
             RecordAccess rec(attrs);
             ReleaseGIL gil;
-            self->db->attr_insert_station(varid, Values(rec));
+            self->db->attr_insert_station(varid, core::Values(rec));
         } DBALLE_CATCH_RETURN_PYO
         Py_RETURN_NONE;
     }
@@ -497,7 +497,7 @@ struct attr_insert_data : MethKwargs<Impl>
         try {
             RecordAccess rec(attrs);
             ReleaseGIL gil;
-            self->db->attr_insert_data(varid, Values(rec));
+            self->db->attr_insert_data(varid, core::Values(rec));
         } DBALLE_CATCH_RETURN_PYO
         Py_RETURN_NONE;
     }

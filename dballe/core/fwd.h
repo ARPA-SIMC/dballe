@@ -2,9 +2,8 @@
 #define DBALLE_CORE_FWD_H
 
 namespace dballe {
-struct Values;
-
 namespace core {
+struct Values;
 class Record;
 class Data;
 class Query;

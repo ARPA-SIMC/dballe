@@ -155,7 +155,7 @@ struct VoglioquestoOperation : public Operation
         }
         query_cur->attr_query(consumer, !valid_cached_attrs);
     }
-    void critica(db::Transaction& tr, const Values& qcinput) override
+    void critica(db::Transaction& tr, const core::Values& qcinput) override
     {
         if (!query_cur) throw error_consistency("critica called after dammelo returned end of data");
         if (dynamic_cast<const db::CursorStationData*>(query_cur))
@@ -223,7 +223,7 @@ struct PrendiloOperation : public Operation
     {
         throw error_consistency("voglioancora cannot be called after a prendilo");
     }
-    void critica(db::Transaction& tr, const Values& qcinput) override
+    void critica(db::Transaction& tr, const core::Values& qcinput) override
     {
         int data_id = MISSING_INT;
         bool is_station = false;

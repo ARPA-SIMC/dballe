@@ -59,12 +59,12 @@ void SQLiteDataCommon<Parent>::read_attrs(Tracer<>& trc, int id_data, std::funct
     read_attrs_stm->bind_val(1, id_data);
     read_attrs_stm->execute_one([&]() {
         if (trc_sel) trc_sel->add_row();
-        Values::decode(read_attrs_stm->column_blob(0), dest);
+        core::Values::decode(read_attrs_stm->column_blob(0), dest);
     });
 }
 
 template<typename Parent>
-void SQLiteDataCommon<Parent>::write_attrs(Tracer<>& trc, int id_data, const Values& values)
+void SQLiteDataCommon<Parent>::write_attrs(Tracer<>& trc, int id_data, const core::Values& values)
 {
     if (!write_attrs_stm)
     {
@@ -98,7 +98,7 @@ namespace {
 bool match_attrs(const Varmatch& match, const std::vector<uint8_t>& attrs)
 {
     bool found = false;
-    Values::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
+    core::Values::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
         if (match(*var))
             found = true;
     });
@@ -139,7 +139,7 @@ void SQLiteDataCommon<Parent>::update(Tracer<>& trc, std::vector<typename Parent
     for (auto& v: vars)
     {
         ustm->bind_val(1, v.var->enqc());
-        values::Encoder enc;
+        core::value::Encoder enc;
         if (with_attrs && v.var->next_attr())
         {
             enc.append_attributes(*v.var);
@@ -188,7 +188,7 @@ void SQLiteStationData::insert(Tracer<>& trc, int id_station, std::vector<batch:
             continue;
         istm->bind_val(2, v->var->code());
         istm->bind_val(3, v->var->enqc());
-        values::Encoder enc;
+        core::value::Encoder enc;
         if (with_attrs && v->var->next_attr())
         {
             enc.append_attributes(*v->var);
@@ -216,7 +216,7 @@ void SQLiteStationData::run_station_data_query(Tracer<>& trc, const v7::DataQuer
         const char* value = stm->column_string(7);
         auto var = newvar(code, value);
         if (qb.select_attrs)
-            values::Decoder::decode_attrs(stm->column_blob(8), *var);
+            core::value::Decoder::decode_attrs(stm->column_blob(8), *var);
 
         // Postprocessing filter of attr_filter
         if (qb.attr_filter && !qb.match_attrs(*var))
@@ -294,7 +294,7 @@ void SQLiteData::insert(Tracer<>& trc, int id_station, const Datetime& datetime,
         istm->bind_val(2, v->id_levtr);
         istm->bind_val(4, v->var->code());
         istm->bind_val(5, v->var->enqc());
-        values::Encoder enc;
+        core::value::Encoder enc;
         if (with_attrs && v->var->next_attr())
         {
             enc.append_attributes(*v->var);
@@ -322,7 +322,7 @@ void SQLiteData::run_data_query(Tracer<>& trc, const v7::DataQueryBuilder& qb, s
         const char* value = stm->column_string(9);
         auto var = newvar(code, value);
         if (qb.select_attrs)
-            values::Decoder::decode_attrs(stm->column_blob(10), *var);
+            core::value::Decoder::decode_attrs(stm->column_blob(10), *var);
 
         // Postprocessing filter of attr_filter
         if (qb.attr_filter && !qb.match_attrs(*var))

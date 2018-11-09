@@ -1,6 +1,8 @@
 #ifndef DBALLE_DB_V7_DATAV7_H
 #define DBALLE_DB_V7_DATAV7_H
 
+#include <dballe/fwd.h>
+#include <dballe/core/fwd.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/values.h>
 #include <dballe/sql/fwd.h>
@@ -14,9 +16,6 @@
 #include <functional>
 
 namespace dballe {
-struct Record;
-struct Values;
-
 namespace db {
 namespace v7 {
 
@@ -32,12 +31,12 @@ protected:
     /**
      * Load attributes from the database into a Values
      */
-    void read_attrs_into_values(Tracer<>& trc, int id_data, Values& values);
+    void read_attrs_into_values(Tracer<>& trc, int id_data, core::Values& values);
 
     /**
      * Replace the attributes of a variable with those in Values
      */
-    virtual void write_attrs(Tracer<>& trc, int id_data, const Values& values) = 0;
+    virtual void write_attrs(Tracer<>& trc, int id_data, const core::Values& values) = 0;
 
     /**
      * Remove all attributes from a variable
@@ -67,7 +66,7 @@ public:
      * * Existing attributes in attrs are overwritten.
      * * New attributes in attrs are inesrted.
      */
-    void merge_attrs(Tracer<>& trc, int id_data, const Values& attrs);
+    void merge_attrs(Tracer<>& trc, int id_data, const core::Values& attrs);
 
     /**
      * Remove the given attributes from the given variable, if they exist.

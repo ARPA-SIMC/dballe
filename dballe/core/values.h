@@ -17,7 +17,7 @@
 #include <iosfwd>
 
 namespace dballe {
-namespace values {
+namespace core {
 
 /**
  * A station or measured value
@@ -87,6 +87,8 @@ struct Value
     void print(FILE* out) const;
 };
 
+namespace value {
+
 struct Encoder
 {
     std::vector<uint8_t> buf;
@@ -121,29 +123,29 @@ struct Decoder
 /**
  * Collection of Value objects, indexed by wreport::Varcode
  */
-struct Values : protected std::map<wreport::Varcode, values::Value>
+struct Values : protected std::map<wreport::Varcode, Value>
 {
     Values() = default;
     Values(const dballe::Record& rec) { set_from_record(rec); }
 
-    typedef std::map<wreport::Varcode, values::Value>::const_iterator const_iterator;
-    typedef std::map<wreport::Varcode, values::Value>::iterator iterator;
-    const_iterator begin() const { return std::map<wreport::Varcode, values::Value>::begin(); }
-    const_iterator end() const { return std::map<wreport::Varcode, values::Value>::end(); }
-    iterator begin() { return std::map<wreport::Varcode, values::Value>::begin(); }
-    iterator end() { return std::map<wreport::Varcode, values::Value>::end(); }
-    size_t size() const { return std::map<wreport::Varcode, values::Value>::size(); }
-    bool empty() const { return std::map<wreport::Varcode, values::Value>::empty(); }
-    void clear() { return std::map<wreport::Varcode, values::Value>::clear(); }
-    void erase(wreport::Varcode code) { std::map<wreport::Varcode, values::Value>::erase(code); }
+    typedef std::map<wreport::Varcode, Value>::const_iterator const_iterator;
+    typedef std::map<wreport::Varcode, Value>::iterator iterator;
+    const_iterator begin() const { return std::map<wreport::Varcode, Value>::begin(); }
+    const_iterator end() const { return std::map<wreport::Varcode, Value>::end(); }
+    iterator begin() { return std::map<wreport::Varcode, Value>::begin(); }
+    iterator end() { return std::map<wreport::Varcode, Value>::end(); }
+    size_t size() const { return std::map<wreport::Varcode, Value>::size(); }
+    bool empty() const { return std::map<wreport::Varcode, Value>::empty(); }
+    void clear() { return std::map<wreport::Varcode, Value>::clear(); }
+    void erase(wreport::Varcode code) { std::map<wreport::Varcode, Value>::erase(code); }
     bool operator==(const Values& o) const;
 
-    const values::Value& operator[](wreport::Varcode code) const;
-    const values::Value& operator[](const char* code) const { return operator[](resolve_varcode(code)); }
-    const values::Value& operator[](const std::string& code) const { return operator[](resolve_varcode(code)); }
-    const values::Value* get(wreport::Varcode code) const;
-    const values::Value* get(const char* code) const { return get(resolve_varcode(code)); }
-    const values::Value* get(const std::string& code) const { return get(resolve_varcode(code)); }
+    const Value& operator[](wreport::Varcode code) const;
+    const Value& operator[](const char* code) const { return operator[](resolve_varcode(code)); }
+    const Value& operator[](const std::string& code) const { return operator[](resolve_varcode(code)); }
+    const Value* get(wreport::Varcode code) const;
+    const Value* get(const char* code) const { return get(resolve_varcode(code)); }
+    const Value* get(const std::string& code) const { return get(resolve_varcode(code)); }
 
     /// Set from a wreport::Var
     void set(const wreport::Var&);
@@ -161,7 +163,7 @@ struct Values : protected std::map<wreport::Varcode, values::Value>
     void add_data_id(wreport::Varcode code, int data_id);
 
     /// Set from the contents of a dballe::Record
-    void set_from_record(const Record& rec);
+    void set_from_record(const dballe::Record& rec);
 
     /// Reset all the database IDs
     void clear_ids()
@@ -189,6 +191,7 @@ struct Values : protected std::map<wreport::Varcode, values::Value>
     void print(FILE* out) const;
 };
 
+}
 }
 
 #endif

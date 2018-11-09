@@ -106,9 +106,9 @@ struct ActualRecord : public wreport::tests::Actual<const dballe::Record&>
     }
 #endif
     /// Check that actual and expected have the same vars
-    void vars_equal(const Record& expected) const { vars_equal(Values(expected)); }
+    void vars_equal(const Record& expected) const { vars_equal(core::Values(expected)); }
     /// Check that actual and expected have the same vars
-    void vars_equal(const Values& expected) const;
+    void vars_equal(const core::Values& expected) const;
 };
 
 // Set a record from a ", "-separated string of assignments

@@ -138,7 +138,7 @@ struct ActualCursor : public Actual<dballe::Cursor&>
             throw wreport::error_consistency("cannot call data_var_matches on this kind of cursor");
     }
     /// Check cursor data variable after a query_data
-    void data_var_matches(const Values& expected, wreport::Varcode code) {
+    void data_var_matches(const core::Values& expected, wreport::Varcode code) {
         data_var_matches(*expected[code].var);
     }
     /// Check cursor data variable after a query_data

@@ -20,7 +20,7 @@ void Tests::register_tests()
 {
 
 add_method("codec", []() {
-    Values vals;
+    core::Values vals;
     // Integer variable
     vals.set(newvar(WR_VAR(0, 1, 2), 123));
     // Floating point variable
@@ -31,8 +31,8 @@ add_method("codec", []() {
     vector<uint8_t> encoded = vals.encode();
     wassert(actual(encoded.size()) == (14 + strlen("Test string value") + 1));
 
-    Values vals1;
-    Values::decode(encoded, [&](std::unique_ptr<wreport::Var> var) { vals1.set(move(var)); });
+    core::Values vals1;
+    core::Values::decode(encoded, [&](std::unique_ptr<wreport::Var> var) { vals1.set(move(var)); });
 
     wassert(actual(*vals1[WR_VAR(0, 1, 2)].var) == *vals[WR_VAR(0, 1, 2)].var);
     wassert(actual(*vals1[WR_VAR(0, 12, 101)].var) == *vals[WR_VAR(0, 12, 101)].var);

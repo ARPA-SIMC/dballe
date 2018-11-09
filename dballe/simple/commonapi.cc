@@ -55,7 +55,7 @@ struct VaridOperation : public Operation
         }
         tr.attr_query_data(varid, consumer);
     }
-    void critica(db::Transaction& tr, const Values& qcinput) override
+    void critica(db::Transaction& tr, const core::Values& qcinput) override
     {
         tr.attr_insert_data(varid, qcinput);
     }

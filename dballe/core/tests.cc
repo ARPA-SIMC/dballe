@@ -221,7 +221,7 @@ void TestRecordValEqual::check() const
 }
 #endif
 
-void ActualRecord::vars_equal(const Values& expected) const
+void ActualRecord::vars_equal(const core::Values& expected) const
 {
     WREPORT_TEST_INFO(locinfo);
     const auto& act = core::Record::downcast(_actual);

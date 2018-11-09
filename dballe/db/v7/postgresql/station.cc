@@ -99,7 +99,7 @@ void PostgreSQLStation::get_station_vars(Tracer<>& trc, int id_station, std::fun
         if (!res.is_null(row, 2))
         {
             TRACE("get_station_vars new attribute\n");
-            Values::decode(res.get_bytea(row, 2), [&](unique_ptr<wreport::Var> a) { var->seta(move(a)); });
+            core::Values::decode(res.get_bytea(row, 2), [&](unique_ptr<wreport::Var> a) { var->seta(move(a)); });
         }
 
         dest(move(var));

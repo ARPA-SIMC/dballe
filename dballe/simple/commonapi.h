@@ -27,7 +27,7 @@ public:
         selected_attr_codes = varcodes;
     }
     virtual void voglioancora(db::Transaction& tr, std::vector<wreport::Var>& dest) = 0;
-    virtual void critica(db::Transaction& tr, const Values& qcinput) = 0;
+    virtual void critica(db::Transaction& tr, const core::Values& qcinput) = 0;
     virtual void scusa(db::Transaction& tr) = 0;
     virtual wreport::Varcode dammelo(dballe::Record& output);
 };
@@ -59,7 +59,7 @@ protected:
     core::Record input;
     bool station_context = false;
     core::Record output;
-    Values qcinput;
+    core::Values qcinput;
     // TODO: replace with Values, reimplementing Values merging with wreport's sorted vector
     std::vector<wreport::Var> qcoutput;
     int qc_iter;
@@ -109,7 +109,7 @@ public:
 
     const core::Record& test_get_input() const { return input; }
     const core::Record& test_get_output() const { return output; }
-    const Values& test_get_qcinput() const { return qcinput; }
+    const core::Values& test_get_qcinput() const { return qcinput; }
     // const core::Record& test_get_qcoutput() const { return qcoutput; }
 };
 

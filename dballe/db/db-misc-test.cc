@@ -23,7 +23,7 @@ struct NavileDataSet : public TestDataSet
     }
 };
 
-unsigned run_attr_query_data(std::shared_ptr<db::Transaction> tr, int data_id, Values& dest)
+unsigned run_attr_query_data(std::shared_ptr<db::Transaction> tr, int data_id, core::Values& dest)
 {
     unsigned count = 0;
     tr->attr_query_data(data_id, [&](unique_ptr<Var> var) { dest.set(move(var)); ++count; });
@@ -79,7 +79,7 @@ this->add_method("insert", [](Fixture& f) {
     ds.data["synop"].values.set(WR_VAR(0, 12, 101), 16.5);
     wassert(f.populate(ds));
 
-    Values attrs;
+    core::Values attrs;
     attrs.set("B33007", 50);
     wassert(f.tr->attr_insert_data(ds.data["synop"].values[WR_VAR(0, 12, 101)].data_id, attrs));
 
@@ -437,7 +437,7 @@ this->add_method("attrs", [](Fixture& f) {
     wassert(actual(found).istrue());
 
     // Insert new attributes about this report
-    Values qc;
+    core::Values qc;
     qc.set("B33002", 2);
     qc.set("B33003", 5);
     qc.set("B33005", 33);
@@ -500,7 +500,7 @@ this->add_method("attrs1", [](Fixture& f) {
     // Insert a data record
     f.tr->insert_data(oldf.data["synop"], true, true);
 
-    Values qc;
+    core::Values qc;
     qc.set("B01007",  1);
     qc.set("B02048",  2);
     qc.set("B05040",  3);
@@ -561,7 +561,7 @@ this->add_method("query_ana_filter", [](Fixture& f) {
     cur->discard();
 
     // Insert new attributes about this report
-    Values qc;
+    core::Values qc;
     qc.set("B01001", 50);
     qc.set("B01008", "50");
     f.tr->attr_insert_data(context_id, qc);
@@ -664,7 +664,7 @@ this->add_method("update", [](Fixture& f) {
 
     core::Data dataset = oldf.data["synop"];
     f.tr->insert_data(dataset, true, true);
-    Values attrs;
+    core::Values attrs;
     attrs.set("B33007", 50);
     f.tr->attr_insert_data(dataset.values["B01012"].data_id, attrs);
 
@@ -686,7 +686,7 @@ this->add_method("update", [](Fixture& f) {
     wassert(actual(var.enqi()) == 300);
 
     // Query the attributes and check that they are there
-    Values qattrs;
+    core::Values qattrs;
     wassert(actual(run_attr_query_data(f.tr, dynamic_cast<db::CursorData*>(cur.get())->attr_reference_id(), qattrs)) == 1);
     wassert(actual(qattrs["B33007"].var->enq(MISSING_INT)) == 50);
 

@@ -3,6 +3,7 @@
 
 #include <dballe/fwd.h>
 #include <dballe/db.h>
+#include <dballe/db/fwd.h>
 #include <dballe/core/fwd.h>
 #include <dballe/core/defs.h>
 #include <dballe/db/defs.h>
@@ -21,10 +22,7 @@
  */
 
 namespace dballe {
-struct DB;
-
 namespace db {
-struct Transaction;
 
 /// Format a db::Format value to a string
 std::string format_format(Format format);
@@ -139,10 +137,10 @@ public:
     /**
      * Insert station values into the database
      *
-     * The IDs of the station andl all variables that were inserted will be
+     * The IDs of the station and all variables that were inserted will be
      * stored in vals.
      *
-     * @param vals
+     * @param data
      *   The values to insert.
      * @param can_replace
      *   If true, then existing data can be rewritten, else data can only be added.
@@ -152,15 +150,15 @@ public:
      *   data for a station that does not yet exists in the database, it will
      *   be created.
      */
-    virtual void insert_station_data(Data& vals, bool can_replace, bool station_can_add) = 0;
+    virtual void insert_station_data(Data& data, bool can_replace, bool station_can_add) = 0;
 
     /**
      * Insert data values into the database
      *
-     * The IDs of the station andl all variables that were inserted will be
+     * The IDs of the station and all variables that were inserted will be
      * stored in vals.
      *
-     * @param vals
+     * @param data
      *   The values to insert.
      * @param can_replace
      *   If true, then existing data can be rewritten, else data can only be added.
@@ -170,7 +168,7 @@ public:
      *   data for a station that does not yet exists in the database, it will
      *   be created.
      */
-    virtual void insert_data(Data& vals, bool can_replace, bool station_can_add) = 0;
+    virtual void insert_data(Data& data, bool can_replace, bool station_can_add) = 0;
 
     /**
      * Insert new attributes on a station value
@@ -180,7 +178,7 @@ public:
      * @param attrs
      *   The attributes to be added
      */
-    virtual void attr_insert_station(int data_id, const Values& attrs) = 0;
+    virtual void attr_insert_station(int data_id, const core::Values& attrs) = 0;
 
     /**
      * Insert new attributes on a data value
@@ -190,7 +188,7 @@ public:
      * @param attrs
      *   The attributes to be added
      */
-    virtual void attr_insert_data(int data_id, const Values& attrs) = 0;
+    virtual void attr_insert_data(int data_id, const core::Values& attrs) = 0;
 
     /**
      * Delete attributes from a station value
@@ -397,7 +395,7 @@ public:
      * @param attrs
      *   The attributes to be added
      */
-    void attr_insert_station(int data_id, const Values& attrs);
+    void attr_insert_station(int data_id, const core::Values& attrs);
 
     /**
      * Insert new attributes on a data value
@@ -407,7 +405,7 @@ public:
      * @param attrs
      *   The attributes to be added
      */
-    void attr_insert_data(int data_id, const Values& attrs);
+    void attr_insert_data(int data_id, const core::Values& attrs);
 
     /**
      * Delete attributes from a station value
