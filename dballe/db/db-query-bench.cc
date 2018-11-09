@@ -95,7 +95,7 @@ struct B : benchmark::DBBenchmark
             for (const auto& report: reports)
             {
                 //fprintf(stderr, "INSERT LATLON %d REPORT %s\n", latlon, report.c_str());
-                DataValues vals;
+                core::Data vals;
                 vals.info.coords = Coords((double)latlon, (double)latlon);
                 vals.info.report = report;
                 for (int year = 2010; year < 2015; ++year)

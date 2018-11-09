@@ -72,7 +72,7 @@ public:
     void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
 
     void insert_station_data(dballe::Data& vals, bool can_replace, bool station_can_add) override;
-    void insert_data(DataValues& vals, bool can_replace, bool station_can_add) override;
+    void insert_data(dballe::Data& vals, bool can_replace, bool station_can_add) override;
     void remove_station_data(const Query& query) override;
     void remove_data(const Query& query) override;
     void remove_all() override;

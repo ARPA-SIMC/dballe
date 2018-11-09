@@ -31,7 +31,7 @@ struct TestDataSet
     /// Arbitrarily named station values
     std::map<std::string, core::Data> stations;
     /// Arbitrarily named data values
-    std::map<std::string, DataValues> data;
+    std::map<std::string, core::Data> data;
 
     TestDataSet() {}
     virtual ~TestDataSet() {}
@@ -121,22 +121,19 @@ struct ActualCursor : public Actual<dballe::Cursor&>
     void station_vars_match(const Data& expected);
 
     /// Check cursor data context after a query_data
-    void data_context_matches(const DataValues& expected);
+    void data_context_matches(const Data& expected);
 
     /// Check cursor data variable after a query_data
     void data_var_matches(const Data& expected, wreport::Varcode code) {
         data_var_matches(*core::Data::downcast(expected).values[code].var);
     }
     /// Check cursor data variable after a query_data
-    void data_var_matches(const DataValues& expected, wreport::Varcode code) {
-        data_var_matches(*expected.values[code].var);
-    }
-    /// Check cursor data variable after a query_data
-    void data_var_matches(const DataValues& expected) {
+    void data_var_matches(const Data& expected) {
+        const core::Data& d = core::Data::downcast(expected);
         if (auto c = dynamic_cast<dballe::CursorStationData*>(&_actual))
-            data_var_matches(*expected.values[c->get_varcode()].var);
+            data_var_matches(*d.values[c->get_varcode()].var);
         else if (auto c = dynamic_cast<dballe::CursorData*>(&_actual))
-            data_var_matches(*expected.values[c->get_varcode()].var);
+            data_var_matches(*d.values[c->get_varcode()].var);
         else
             throw wreport::error_consistency("cannot call data_var_matches on this kind of cursor");
     }
@@ -148,7 +145,7 @@ struct ActualCursor : public Actual<dballe::Cursor&>
     void data_var_matches(const wreport::Var& expected);
 
     /// Check cursor data context and variable after a query_data
-    void data_matches(const DataValues& ds)
+    void data_matches(const Data& ds)
     {
         if (auto c = dynamic_cast<dballe::CursorStationData*>(&_actual))
             data_matches(ds, c->get_varcode());
@@ -158,7 +155,7 @@ struct ActualCursor : public Actual<dballe::Cursor&>
             throw wreport::error_consistency("cannot call data_matches on this kind of cursor");
     }
     /// Check cursor data context and variable after a query_data
-    void data_matches(const DataValues& ds, wreport::Varcode code);
+    void data_matches(const Data& ds, wreport::Varcode code);
 };
 
 typedef std::function<void(const std::vector<core::Record>&)> result_checker;

@@ -230,34 +230,4 @@ void Values::decode(const std::vector<uint8_t>& buf, std::function<void(std::uni
         dest(move(dec.decode_var()));
 }
 
-
-DataValues::DataValues(const dballe::Record& rec)
-    : station(rec.get_dbstation()), datetime(rec.get_datetime()), level(rec.get_level()), trange(rec.get_trange()), values(rec) {}
-
-void DataValues::set_from_record(const Record& rec)
-{
-    station = rec.get_dbstation();
-    datetime = rec.get_datetime();
-    if (datetime.is_missing()) throw error_notfound("record has no date and time information set");
-    level = rec.get_level();
-    if (level.is_missing()) throw error_notfound("record has no level information set");
-    trange = rec.get_trange();
-    if (trange.is_missing()) throw error_notfound("record has no time range information set");
-    values.set_from_record(rec);
-}
-
-void DataValues::print(FILE* out, const char* end) const
-{
-    station.print(out, " ");
-
-    if (datetime.is_missing())
-        fputs("xxxx-xx-xx xx:xx:xx ", out);
-    else
-        datetime.print_iso8601(out, ' ', " ");
-
-    level.print(out, "-", " ");
-    trange.print(out, "-", end);
-    values.print(out);
-}
-
 }

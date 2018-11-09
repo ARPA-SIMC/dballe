@@ -183,7 +183,8 @@ database ID of its value.
         try {
             RecordAccess rec(record);
             ReleaseGIL gil;
-            DataValues vals(rec);
+            core::Data vals;
+            rec.get().to_data(vals);
             self->db->insert_data(vals, can_replace, station_can_add);
             gil.lock();
             return get_insert_ids(vals);

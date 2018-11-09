@@ -40,7 +40,7 @@ struct DateHourDataSet : public TestDataSet
 {
     DateHourDataSet()
     {
-        DataValues d;
+        core::Data d;
         d.station.coords = Coords(12.34560, 76.54320);
         d.station.report = "synop";
         d.level = Level(10, 11, 15, 22);
@@ -58,7 +58,7 @@ struct DateDayDataSet : public TestDataSet
 {
     DateDayDataSet()
     {
-        DataValues d;
+        core::Data d;
         d.station.coords = Coords(12.34560, 76.54320);
         d.station.report = "synop";
         d.level = Level(10, 11, 15, 22);
@@ -346,7 +346,8 @@ this->add_method("query_ordering", [](Fixture& f) {
     auto insert = [&](const char* str) {
         core::Record rec;
         rec.set_from_test_string(str);
-        DataValues vals(rec);
+        core::Data vals;
+        rec.to_data(vals);
         wassert(f.tr->insert_data(vals, false, true));
         return vals;
     };

@@ -73,23 +73,24 @@ void ActualCursor::station_vars_match(const Data& expected)
     wassert(actual(*rec).vars_equal(exp.values));
 }
 
-void ActualCursor::data_context_matches(const DataValues& expected)
+void ActualCursor::data_context_matches(const Data& expected)
 {
     db::CursorData* c = dynamic_cast<db::CursorData*>(&_actual);
     if (!c) throw TestFailed("cursor is not an instance of CursorData");
 
-    wassert(actual(_actual).station_keys_match(expected.station));
-    wassert(actual(c->get_level()) == expected.level);
-    wassert(actual(c->get_trange()) == expected.trange);
-    wassert(actual(c->get_datetime()) == expected.datetime);
+    const core::Data& exp = core::Data::downcast(expected);
+    wassert(actual(_actual).station_keys_match(exp.station));
+    wassert(actual(c->get_level()) == exp.level);
+    wassert(actual(c->get_trange()) == exp.trange);
+    wassert(actual(c->get_datetime()) == exp.datetime);
 
     auto rec = Record::create();
     _actual.to_record(*rec);
     const core::Record& r = core::Record::downcast(*rec);
-    wassert(actual(r.station.report) == expected.station.report);
-    wassert(actual(r.level) == expected.level);
-    wassert(actual(r.trange) == expected.trange);
-    wassert(actual(r.get_datetime()) == expected.datetime);
+    wassert(actual(r.station.report) == exp.station.report);
+    wassert(actual(r.level) == exp.level);
+    wassert(actual(r.trange) == exp.trange);
+    wassert(actual(r.get_datetime()) == exp.datetime);
 }
 
 void ActualCursor::data_var_matches(const wreport::Var& expected)
@@ -124,7 +125,7 @@ void ActualCursor::data_var_matches(const wreport::Var& expected)
         throw TestFailed("cursor is not an instance of CursorValue");
 }
 
-void ActualCursor::data_matches(const DataValues& ds, wreport::Varcode code)
+void ActualCursor::data_matches(const Data& ds, wreport::Varcode code)
 {
     wassert(actual(_actual).data_context_matches(ds));
     wassert(actual(_actual).data_var_matches(ds, code));

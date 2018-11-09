@@ -189,45 +189,6 @@ struct Values : protected std::map<wreport::Varcode, values::Value>
     void print(FILE* out) const;
 };
 
-/**
- * A set of measured values
- */
-struct DataValues
-{
-    /// Sampling station
-    DBStation station;
-
-    /// Date and time at which the value was measured or forecast
-    Datetime datetime;
-
-    /// Vertical level or layer
-    Level level;
-
-    /// Time range
-    Trange trange;
-
-    Values values;
-
-    DataValues() = default;
-    DataValues(const dballe::Record& rec);
-
-    /// Set from the contents of a dballe::Record
-    void set_from_record(const Record& rec);
-
-    bool operator==(const DataValues& o) const { return std::tie(station, datetime, level, trange, values) == std::tie(o.station, o.datetime, o.level, o.trange, o.values); }
-    bool operator!=(const DataValues& o) const { return std::tie(station, datetime, level, trange, values) != std::tie(o.station, o.datetime, o.level, o.trange, o.values); }
-
-    /// Reset all the database IDs
-    void clear_ids()
-    {
-        station.id = MISSING_INT;
-        values.clear_ids();
-    }
-
-    /// Print the contents of this DataValues
-    void print(FILE* out, const char* end="\n") const;
-};
-
 }
 
 #endif

@@ -4,7 +4,6 @@
 #include "dballe/sql/sql.h"
 #include "dballe/sql/sqlite.h"
 #include "dballe/message.h"
-#include "dballe/core/values.h"
 #include "dballe/file.h"
 #include <wreport/error.h>
 #include <cstring>
@@ -156,7 +155,7 @@ void DB::insert_station_data(Data& vals, bool can_replace, bool station_can_add)
     t->commit();
 }
 
-void DB::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
+void DB::insert_data(Data& vals, bool can_replace, bool station_can_add)
 {
     auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     t->insert_data(vals, can_replace, station_can_add);

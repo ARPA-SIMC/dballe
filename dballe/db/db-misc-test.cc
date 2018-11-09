@@ -329,7 +329,7 @@ this->add_method("delete_notfound", [](Fixture& f) {
 this->add_method("query_datetime", [](Fixture& f) {
     // Test datetime queries
     /* Prepare test data */
-    DataValues base;
+    core::Data base;
     base.station.coords = Coords(12.0, 48.0);
     base.station.report = "synop";
     base.level = Level(1, 0, 1, 0);
@@ -348,7 +348,7 @@ this->add_method("query_datetime", [](Fixture& f) {
     cur->discard(); \
 } while(0)
 
-    DataValues a, b;
+    core::Data a, b;
 
     /* Year */
     f.tr->remove_all();
@@ -662,7 +662,7 @@ this->add_method("update", [](Fixture& f) {
     // Test value update
     OldDballeTestDataSet oldf;
 
-    DataValues dataset = oldf.data["synop"];
+    core::Data dataset = oldf.data["synop"];
     f.tr->insert_data(dataset, true, true);
     Values attrs;
     attrs.set("B33007", 50);
@@ -691,7 +691,7 @@ this->add_method("update", [](Fixture& f) {
     wassert(actual(qattrs["B33007"].var->enq(MISSING_INT)) == 50);
 
     // Update it
-    DataValues update;
+    core::Data update;
     update.station.id = ana_id;
     update.station.report = "synop";
     update.datetime = q.datetime.min;
@@ -802,7 +802,7 @@ this->add_method("insert_undefined_level2", [](Fixture& f) {
     OldDballeTestDataSet oldf;
 
     // Insert with undef leveltype2 and l2
-    DataValues dataset;
+    core::Data dataset;
     dataset.station = oldf.data["synop"].station;
     dataset.datetime = oldf.data["synop"].datetime;
     dataset.level = Level(44, 55);
@@ -846,7 +846,7 @@ this->add_method("query_bad_attrfilter", [](Fixture& f) {
 this->add_method("query_best_priomax", [](Fixture& f) {
     // Test querying priomax together with query=best
     // Prepare the common parts of some data
-    DataValues insert;
+    core::Data insert;
     insert.station.coords = Coords(1.0, 1.0);
     insert.level = Level(1, 0);
     insert.trange = Trange(254, 0, 0);

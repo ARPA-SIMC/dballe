@@ -1,6 +1,8 @@
 #ifndef DBA_DB_V7_H
 #define DBA_DB_V7_H
 
+#include <dballe/fwd.h>
+#include <dballe/sql/fwd.h>
 #include <dballe/db/db.h>
 #include <dballe/db/v7/trace.h>
 #include <dballe/db/v7/fwd.h>
@@ -9,15 +11,6 @@
 #include <memory>
 
 namespace dballe {
-struct Station;
-struct DataValues;
-
-namespace sql {
-struct Connection;
-struct Statement;
-struct Sequence;
-}
-
 namespace db {
 namespace v7 {
 

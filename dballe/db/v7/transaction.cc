@@ -141,29 +141,30 @@ void Transaction::insert_station_data(dballe::Data& vals, bool can_replace, bool
     }
 }
 
-void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
+void Transaction::insert_data(dballe::Data& vals, bool can_replace, bool station_can_add)
 {
-    if (vals.values.empty())
+    core::Data& data = core::Data::downcast(vals);
+    if (data.values.empty())
         throw error_notfound("no variables found in input record");
 
     Tracer<> trc(this->trc ? this->trc->trace_insert_data() : nullptr);
-    batch::Station* st = batch.get_station(trc, vals.station, station_can_add);
+    batch::Station* st = batch.get_station(trc, data.station, station_can_add);
 
-    batch::MeasuredData& md = st->get_measured_data(trc, vals.datetime);
+    batch::MeasuredData& md = st->get_measured_data(trc, data.datetime);
 
     // Insert the lev_tr data, and get the ID
-    int id_levtr = levtr().obtain_id(trc, LevTrEntry(vals.level, vals.trange));
+    int id_levtr = levtr().obtain_id(trc, LevTrEntry(data.level, data.trange));
 
     // Add all the variables we find
-    for (auto& i: vals.values)
+    for (auto& i: data.values)
         md.add(id_levtr, i.second.var, can_replace ? batch::UPDATE : batch::ERROR);
 
     // Perform changes
     batch.write_pending(trc);
 
     // Read the IDs from the results
-    vals.station.id = st->id;
-    for (auto& v: vals.values)
+    data.station.id = st->id;
+    for (auto& v: data.values)
     {
         auto i = md.ids_on_db.find(IdVarcode(id_levtr, v.first));
         if (i == md.ids_on_db.end())

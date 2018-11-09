@@ -5,7 +5,6 @@
 #include <dballe/db.h>
 #include <dballe/core/fwd.h>
 #include <dballe/core/defs.h>
-#include <dballe/core/values.h>
 #include <dballe/db/defs.h>
 #include <dballe/msg/fwd.h>
 #include <dballe/sql/fwd.h>
@@ -171,7 +170,7 @@ public:
      *   data for a station that does not yet exists in the database, it will
      *   be created.
      */
-    virtual void insert_data(DataValues& vals, bool can_replace, bool station_can_add) = 0;
+    virtual void insert_data(Data& vals, bool can_replace, bool station_can_add) = 0;
 
     /**
      * Insert new attributes on a station value
@@ -357,7 +356,7 @@ public:
      *   data for a station that does not yet exists in the database, it will
      *   be created.
      */
-    void insert_data(DataValues& vals, bool can_replace, bool station_can_add);
+    void insert_data(Data& vals, bool can_replace, bool station_can_add);
 
     /**
      * Perform database cleanup operations.

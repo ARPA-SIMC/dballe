@@ -96,7 +96,7 @@ this->add_method("stationdata", [](Fixture& f) {
     // Test adding station data for different networks
 
     // Insert two values in two networks
-    DataValues vals;
+    core::Data vals;
     vals.station.coords = Coords(12.077, 44.600);
     vals.station.report = "synop";
     vals.level = Level(103, 2000);
@@ -176,7 +176,7 @@ this->add_method("stationdata", [](Fixture& f) {
 });
 this->add_method("query_ident", [](Fixture& f) {
     // Insert a mobile station
-    DataValues vals;
+    core::Data vals;
     vals.station.report = "synop";
     vals.station.coords = Coords(44.10, 11.50);
     vals.station.ident = "foo";
@@ -207,7 +207,7 @@ this->add_method("missing_repmemo", [](Fixture& f) {
 
 this->add_method("update_with_ana_id", [](Fixture& f) {
     {
-        DataValues vals;
+        core::Data vals;
         vals.station.report = "synop";
         vals.station.coords = Coords(44.10, 11.50);
         vals.station.ident = "foo";
@@ -226,7 +226,7 @@ this->add_method("update_with_ana_id", [](Fixture& f) {
 
     // Replace by ana_id
     {
-        DataValues vals;
+        core::Data vals;
         vals.station.id = ana_id;
         vals.level = Level(1);
         vals.trange = Trange::instant();

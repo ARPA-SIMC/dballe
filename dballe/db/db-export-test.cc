@@ -120,7 +120,7 @@ this->add_method("export", [](Fixture& f) {
     f.tr->insert_station_data(st, false, true);
 
     // Import one real datum
-    DataValues dv;
+    core::Data dv;
     dv.station = st.station;
     dv.datetime = Datetime(2000, 1, 1, 0, 0, 0);
     dv.level = Level(103, 2000);

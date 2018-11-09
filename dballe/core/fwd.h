@@ -3,7 +3,6 @@
 
 namespace dballe {
 struct Values;
-struct DataValues;
 
 namespace core {
 class Record;
