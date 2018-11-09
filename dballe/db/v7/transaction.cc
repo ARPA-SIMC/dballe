@@ -125,7 +125,7 @@ void Transaction::insert_station_data(dballe::Data& vals, bool can_replace, bool
     // Add all the variables we find
     batch::StationData& sd = st->get_station_data(trc);
     for (auto& i: data.values)
-        sd.add(i.second.var, can_replace ? batch::UPDATE : batch::ERROR);
+        sd.add(i.var, can_replace ? batch::UPDATE : batch::ERROR);
 
     // Perform changes
     batch.write_pending(trc);
@@ -134,10 +134,10 @@ void Transaction::insert_station_data(dballe::Data& vals, bool can_replace, bool
     data.station.id = st->id;
     for (auto& v: data.values)
     {
-        auto i = sd.ids_by_code.find(v.first);
+        auto i = sd.ids_by_code.find(v.code());
         if (i == sd.ids_by_code.end())
             continue;
-        v.second.data_id = i->id;
+        v.data_id = i->id;
     }
 }
 
@@ -157,7 +157,7 @@ void Transaction::insert_data(dballe::Data& vals, bool can_replace, bool station
 
     // Add all the variables we find
     for (auto& i: data.values)
-        md.add(id_levtr, i.second.var, can_replace ? batch::UPDATE : batch::ERROR);
+        md.add(id_levtr, i.var, can_replace ? batch::UPDATE : batch::ERROR);
 
     // Perform changes
     batch.write_pending(trc);
@@ -166,10 +166,10 @@ void Transaction::insert_data(dballe::Data& vals, bool can_replace, bool station
     data.station.id = st->id;
     for (auto& v: data.values)
     {
-        auto i = md.ids_on_db.find(IdVarcode(id_levtr, v.first));
+        auto i = md.ids_on_db.find(IdVarcode(id_levtr, v.code()));
         if (i == md.ids_on_db.end())
             continue;
-        v.second.data_id = i->id;
+        v.data_id = i->id;
     }
 }
 

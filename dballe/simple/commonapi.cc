@@ -400,8 +400,7 @@ void CommonAPIImplementation::unset(const char* param)
             if (!operation) return;
             operation->select_attrs(std::vector<wreport::Varcode>());
         } else {
-            // Set varcode=value
-            qcinput.erase(resolve_varcode(param + 1));
+            qcinput.unset(resolve_varcode(param + 1));
         }
         return;
     }

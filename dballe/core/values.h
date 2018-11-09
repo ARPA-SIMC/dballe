@@ -30,6 +30,7 @@ struct Value
     /// wreport::Var representing the value
     wreport::Var* var = nullptr;
 
+    Value() = default;
     Value(const Value& o) : data_id(o.data_id), var(o.var ? new wreport::Var(*o.var) : nullptr) {}
     Value(Value&& o) : data_id(o.data_id), var(o.var) { o.var = nullptr; }
 
@@ -58,6 +59,7 @@ struct Value
         o.var = nullptr;
         return *this;
     }
+
     bool operator==(const Value& o) const
     {
         if (data_id != o.data_id) return false;
@@ -66,9 +68,16 @@ struct Value
         return *var == *o.var;
     }
 
+    /// Return the varcode of the variable, or 0 if no variable has been set yet
+    wreport::Varcode code() const { return var ? var->code() : 0; }
+
     /// Reset the database ID
     void clear_ids() { data_id = MISSING_INT; }
 
+    /// Print the contents of this Value
+    void print(FILE* out) const;
+
+protected:
     /// Fill from a wreport::Var
     void set(const wreport::Var& v)
     {
@@ -83,8 +92,7 @@ struct Value
         var = v.release();
     }
 
-    /// Print the contents of this Value
-    void print(FILE* out) const;
+    friend class Values;
 };
 
 namespace value {
@@ -123,22 +131,32 @@ struct Decoder
 /**
  * Collection of Value objects, indexed by wreport::Varcode
  */
-struct Values : protected std::map<wreport::Varcode, Value>
+class Values
 {
+public:
+    typedef std::vector<Value>::const_iterator const_iterator;
+    typedef std::vector<Value>::iterator iterator;
+
+protected:
+    std::vector<Value> m_values;
+
+    iterator insert_new(Value&& val);
+
+public:
     Values() = default;
     Values(const dballe::Record& rec) { set_from_record(rec); }
 
-    typedef std::map<wreport::Varcode, Value>::const_iterator const_iterator;
-    typedef std::map<wreport::Varcode, Value>::iterator iterator;
-    const_iterator begin() const { return std::map<wreport::Varcode, Value>::begin(); }
-    const_iterator end() const { return std::map<wreport::Varcode, Value>::end(); }
-    iterator begin() { return std::map<wreport::Varcode, Value>::begin(); }
-    iterator end() { return std::map<wreport::Varcode, Value>::end(); }
-    size_t size() const { return std::map<wreport::Varcode, Value>::size(); }
-    bool empty() const { return std::map<wreport::Varcode, Value>::empty(); }
-    void clear() { return std::map<wreport::Varcode, Value>::clear(); }
-    void erase(wreport::Varcode code) { std::map<wreport::Varcode, Value>::erase(code); }
+    const_iterator begin() const { return m_values.begin(); }
+    const_iterator end() const { return m_values.end(); }
+    iterator begin() { return m_values.begin(); }
+    iterator end() { return m_values.end(); }
+    iterator find(wreport::Varcode code) noexcept;
+    const_iterator find(wreport::Varcode code) const noexcept;
+    size_t size() const { return m_values.size(); }
+    bool empty() const { return m_values.empty(); }
+    void clear() { return m_values.clear(); }
     bool operator==(const Values& o) const;
+    bool operator!=(const Values& o) const;
 
     const Value& operator[](wreport::Varcode code) const;
     const Value& operator[](const char* code) const { return operator[](resolve_varcode(code)); }
@@ -159,8 +177,11 @@ struct Values : protected std::map<wreport::Varcode, Value>
     /// Set from a variable created by dballe::newvar()
     template<typename C, typename T> void set(C code, const T& val) { this->set(newvar(code, val)); }
 
+    /// Remove one variable
+    void unset(wreport::Varcode code);
+
     /// Set the database ID for the Value with this wreport::Varcode
-    void add_data_id(wreport::Varcode code, int data_id);
+    void set_data_id(wreport::Varcode code, int data_id);
 
     /// Set from the contents of a dballe::Record
     void set_from_record(const dballe::Record& rec);
@@ -168,9 +189,16 @@ struct Values : protected std::map<wreport::Varcode, Value>
     /// Reset all the database IDs
     void clear_ids()
     {
-        for (auto& i : *this)
-            i.second.clear_ids();
+        for (auto& val : m_values)
+            val.clear_ids();
     }
+
+    /**
+     * Move the Var contained in this Values as attributes to dest.
+     *
+     * After this function is called, this Values will be empty.
+     */
+    void move_to_attributes(wreport::Var& dest);
 
     /**
      * Encode these values in a DB-All.e specific binary representation

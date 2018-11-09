@@ -47,7 +47,7 @@ void DataCommon<Traits>::remove_attrs(Tracer<>& trc, int id_data, const db::Attr
         read_attrs_into_values(trc, id_data, remaining);
 
         for (const auto& i: attrs)
-            remaining.erase(i);
+            remaining.unset(i);
 
         if (remaining.empty())
             remove_all_attrs(trc, id_data);

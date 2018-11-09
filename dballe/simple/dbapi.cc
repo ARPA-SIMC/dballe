@@ -206,11 +206,11 @@ struct PrendiloOperation : public Operation
         {
             tr.insert_station_data(data, (perms & DbAPI::PERM_DATA_WRITE) != 0, (perms & DbAPI::PERM_ANA_WRITE) != 0);
             for (const auto& v: data.values)
-                last_inserted_varids.push_back(VarID(v.first, true, v.second.data_id));
+                last_inserted_varids.push_back(VarID(v.code(), true, v.data_id));
         } else {
             tr.insert_data(data, (perms & DbAPI::PERM_DATA_WRITE) != 0, (perms & DbAPI::PERM_ANA_WRITE) != 0);
             for (const auto& v: data.values)
-                last_inserted_varids.push_back(VarID(v.first, false, v.second.data_id));
+                last_inserted_varids.push_back(VarID(v.code(), false, v.data_id));
         }
         return data.station.id;
     }

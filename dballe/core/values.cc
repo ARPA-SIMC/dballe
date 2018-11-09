@@ -136,22 +136,90 @@ void Decoder::decode_attrs(const std::vector<uint8_t>& buf, wreport::Var& var)
 
 bool Values::operator==(const Values& o) const
 {
-    auto a = begin();
-    auto b = o.begin();
-    while (a != end() && b != o.end())
-    {
-        if (*a != *b) return false;
-        ++a;
-        ++b;
-    }
-    return a == end() && b == o.end();
+    return m_values == o.m_values;
 }
 
-void Values::add_data_id(wreport::Varcode code, int data_id)
+bool Values::operator!=(const Values& o) const
+{
+    return m_values != o.m_values;
+}
+
+Values::iterator Values::find(wreport::Varcode code) noexcept
+{
+    /* Binary search */
+    if (m_values.empty())
+        return m_values.end();
+
+    iterator low = m_values.begin(), high = (m_values.end() - 1);
+    while (low <= high)
+    {
+        iterator middle = low + (high - low) / 2;
+        int cmp = (int)code - (int)(middle->code());
+        if (cmp < 0)
+            high = middle - 1;
+        else if (cmp > 0)
+            low = middle + 1;
+        else
+            return middle;
+    }
+    return m_values.end();
+}
+
+Values::const_iterator Values::find(wreport::Varcode code) const noexcept
+{
+    /* Binary search */
+    if (m_values.empty())
+        return m_values.end();
+
+    const_iterator low = m_values.cbegin(), high = (m_values.cend() - 1);
+    while (low <= high)
+    {
+        const_iterator middle = low + (high - low) / 2;
+        int cmp = (int)code - (int)middle->code();
+        if (cmp < 0)
+            high = middle - 1;
+        else if (cmp > 0)
+            low = middle + 1;
+        else
+            return middle;
+    }
+    return m_values.end();
+}
+
+Values::iterator Values::insert_new(Value&& val)
+{
+    // Insertionsort, since the common case is to work with small arrays
+    wreport::Varcode key = val.code();
+
+    // Enlarge the buffer
+    m_values.resize(m_values.size() + 1);
+
+    // Insertionsort
+    iterator pos;
+    for (pos = m_values.end() - 1; pos > m_values.begin(); --pos)
+    {
+        if ((pos - 1)->code() > key)
+            *pos = std::move(*(pos - 1));
+        else
+            break;
+    }
+    *pos = std::move(val);
+    return pos;
+}
+
+void Values::unset(wreport::Varcode code)
+{
+    iterator pos = find(code);
+    if (pos == end())
+        return;
+    m_values.erase(pos);
+}
+
+void Values::set_data_id(wreport::Varcode code, int data_id)
 {
     auto i = find(code);
     if (i == end()) return;
-    i->second.data_id = data_id;
+    i->data_id = data_id;
 }
 
 void Values::set_from_record(const dballe::Record& rec)
@@ -161,13 +229,24 @@ void Values::set_from_record(const dballe::Record& rec)
         set(*i);
 }
 
+void Values::move_to_attributes(wreport::Var& dest)
+{
+    for (auto& val: m_values)
+    {
+        std::unique_ptr<wreport::Var> var(val.var);
+        val.var = nullptr;
+        dest.seta(std::move(var));
+    }
+    m_values.clear();
+}
+
 void Values::set(const wreport::Var& v)
 {
     auto i = find(v.code());
     if (i == end())
-        insert(make_pair(v.code(), Value(v)));
+        insert_new(Value(v));
     else
-        i->second.set(v);
+        i->set(v);
 }
 
 void Values::set(std::unique_ptr<wreport::Var>&& v)
@@ -175,15 +254,15 @@ void Values::set(std::unique_ptr<wreport::Var>&& v)
     auto code = v->code();
     auto i = find(code);
     if (i == end())
-        insert(make_pair(code, Value(move(v))));
+        insert_new(Value(move(v)));
     else
-        i->second.set(move(v));
+        i->set(std::move(v));
 }
 
 void Values::set(const Values& vals)
 {
     for (const auto& vi: vals)
-        set(*vi.second.var);
+        set(*vi.var);
 }
 
 const Value& Values::operator[](wreport::Varcode code) const
@@ -192,7 +271,7 @@ const Value& Values::operator[](wreport::Varcode code) const
     if (i == end())
         error_notfound::throwf("variable %01d%02d%03d not found",
                 WR_VAR_F(code), WR_VAR_X(code), WR_VAR_Y(code));
-    return i->second;
+    return *i;
 }
 
 const Value* Values::get(wreport::Varcode code) const
@@ -200,20 +279,20 @@ const Value* Values::get(wreport::Varcode code) const
     auto i = find(code);
     if (i == end())
         return nullptr;
-    return &i->second;
+    return &*i;
 }
 
 void Values::print(FILE* out) const
 {
     for (const auto& i: *this)
-        i.second.print(out);
+        i.print(out);
 }
 
 std::vector<uint8_t> Values::encode() const
 {
     value::Encoder enc;
     for (const auto& i: *this)
-        enc.append(*i.second.var);
+        enc.append(*i.var);
     return enc.buf;
 }
 

@@ -230,7 +230,7 @@ void ActualRecord::vars_equal(const core::Values& expected) const
     const vector<Var*>& vars1 = act.vars();
     vector<Var*> vars2;
     for (const auto& i : expected)
-        vars2.push_back(i.second.var);
+        vars2.push_back(i.var);
 
     if (vars1.size() != vars2.size())
     {

@@ -430,9 +430,7 @@ void MsgAPI::critica()
     if (vars.size() > 1)
         throw error_consistency("critica has been called after setting many variables with a single prendilo, so I do not know which one should get the attributes");
 
-    for (const auto& i: qcinput)
-        vars[0]->seta(*i.second.var);
-    qcinput.clear();
+    qcinput.move_to_attributes(*vars[0]);
 }
 
 void MsgAPI::scusa()

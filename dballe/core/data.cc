@@ -735,7 +735,7 @@ void Data::print(FILE* out) const
     if (!level.is_missing()) printer.print("level", level);
     if (!trange.is_missing()) printer.print("trange", trange);
     for (const auto& var: values)
-        var.second.var->print(out);
+        var.print(out);
 }
 
 #if 0

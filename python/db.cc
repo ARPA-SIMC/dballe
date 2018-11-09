@@ -116,8 +116,8 @@ static PyObject* get_insert_ids(const Vals& vals)
 
     for (const auto& v: vals.values)
     {
-        pyo_unique_ptr id(throw_ifnull(PyLong_FromLong(v.second.data_id)));
-        pyo_unique_ptr varcode(to_python(v.first));
+        pyo_unique_ptr id(throw_ifnull(PyLong_FromLong(v.data_id)));
+        pyo_unique_ptr varcode(to_python(v.code()));
 
         if (PyDict_SetItem(res, varcode, id))
             throw PythonException();
