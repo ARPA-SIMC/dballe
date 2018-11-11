@@ -85,6 +85,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	msg/vars.h \
 	msg/msg.h \
 	msg/msg-extravars.h \
+	msg/cursor.h \
 	msg/wr_codec.h \
 	msg/wr_exporters/common.h \
 	sql/fwd.h \
@@ -179,6 +180,7 @@ libdballe_la_SOURCES = \
 	msg/vars.cc \
 	msg/context.cc \
 	msg/msg.cc \
+	msg/cursor.cc \
 	msg/wr_codec.cc \
 	msg/wr_importers/base.cc \
 	msg/wr_importers/synop.cc \
@@ -317,6 +319,7 @@ test_dballe_SOURCES = \
 	msg/vars-test.cc \
 	msg/context-test.cc \
 	msg/msg-test.cc \
+	msg/cursor-test.cc \
 	msg/wr_codec_generic-test.cc \
 	msg/wr_codec-test.cc \
 	msg/wr_import-test.cc \
