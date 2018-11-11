@@ -47,6 +47,7 @@ struct Ident;
 struct Station;
 struct DBStation;
 
+// Aggregates
 struct Record;
 struct Data;
 struct Query;
@@ -67,6 +68,7 @@ struct Exporter;
 struct DB;
 struct DBImportMessageOptions;
 struct Transaction;
+struct Cursor;
 struct CursorStation;
 struct CursorStationData;
 struct CursorData;

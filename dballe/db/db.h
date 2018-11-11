@@ -2,6 +2,7 @@
 #define DBALLE_DB_DB_H
 
 #include <dballe/fwd.h>
+#include <dballe/cursor.h>
 #include <dballe/db.h>
 #include <dballe/db/fwd.h>
 #include <dballe/core/fwd.h>
