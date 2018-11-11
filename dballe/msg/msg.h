@@ -1,5 +1,5 @@
-#ifndef DBA_MSG_H
-#define DBA_MSG_H
+#ifndef DBALLE_MSG_H
+#define DBALLE_MSG_H
 
 #include <dballe/message.h>
 #include <dballe/var.h>
@@ -118,7 +118,7 @@ public:
     Datetime get_datetime() const override;
     Coords get_coords() const override;
     Ident get_ident() const override;
-    std::string get_network() const override;
+    std::string get_report() const override;
     MessageType get_type() const override { return type; }
     bool foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)>) const override;
     void print(FILE* out) const override;

@@ -211,7 +211,7 @@ Ident Msg::get_ident() const
         return Ident();
 }
 
-std::string Msg::get_network() const
+std::string Msg::get_report() const
 {
     // Postprocess extracting rep_memo information
     const Var* rep_memo = get_rep_memo_var();

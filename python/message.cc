@@ -66,15 +66,15 @@ struct GetIdent : Getter<dpy_Message>
     }
 };
 
-struct GetNetwork : Getter<dpy_Message>
+struct GetReport : Getter<dpy_Message>
 {
-    constexpr static const char* name = "network";
-    constexpr static const char* doc = "message network";
+    constexpr static const char* name = "report";
+    constexpr static const char* doc = "message report";
     static PyObject* get(Impl* self, void* closure)
     {
         try {
-            auto network = self->message->get_network();
-            return PyUnicode_FromStringAndSize(network.data(), network.size());
+            auto report = self->message->get_report();
+            return PyUnicode_FromStringAndSize(report.data(), report.size());
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -221,7 +221,7 @@ Example usage::
         for msg in f:
             print("{m.report},{m.coords},{m.ident},{m.datetime},{m.type}".format(m=msg))
 )";
-    GetSetters<GetType, GetDatetime, GetCoords, GetIdent, GetNetwork> getsetters;
+    GetSetters<GetType, GetDatetime, GetCoords, GetIdent, GetReport> getsetters;
     Methods<get, get_named, set, set_named> methods;
 
     static void _dealloc(Impl* self)

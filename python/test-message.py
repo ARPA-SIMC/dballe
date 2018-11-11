@@ -12,7 +12,7 @@ class TestMessage(MessageTestMixin, unittest.TestCase):
         self.assertIsNone(msg.datetime)
         self.assertIsNone(msg.coords)
         self.assertIsNone(msg.ident)
-        self.assertEqual(msg.network, "synop")
+        self.assertEqual(msg.report, "synop")
 
     def test_create(self):
         msg = self.make_gts_acars_uk1_message()
