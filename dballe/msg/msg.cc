@@ -1,6 +1,8 @@
 #include "msg.h"
 #include "context.h"
+#include "dballe/cursor.h"
 #include "dballe/msg/vars.h"
+#include "dballe/msg/cursor.h"
 #include "dballe/core/var.h"
 #include "dballe/core/csv.h"
 #include <wreport/codetables.h>
@@ -358,6 +360,21 @@ const Var* Msg::get(int id) const
 {
     const MsgVarShortcut& v = shortcutTable[id];
     return get(Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2), v.code);
+}
+
+std::unique_ptr<dballe::CursorStation> Msg::query_stations(const Query& query) const
+{
+    return std::unique_ptr<dballe::CursorStation>(new msg::CursorStation(*this));
+}
+
+std::unique_ptr<CursorStationData> Msg::query_station_data(const Query& query) const
+{
+    return std::unique_ptr<dballe::CursorStationData>(new msg::CursorStationData(*this));
+}
+
+std::unique_ptr<CursorData> Msg::query_data(const Query& query) const
+{
+    return std::unique_ptr<dballe::CursorData>(new msg::CursorData(*this));
 }
 
 namespace {

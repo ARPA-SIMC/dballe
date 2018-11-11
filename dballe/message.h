@@ -140,6 +140,39 @@ struct Message
      */
     virtual bool foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)>) const = 0;
 
+    /**
+     * Return a Cursor to access the station information in the message.
+     *
+     * The cursor will have only one result, with the one station present in
+     * the message, contain all station vars.
+     *
+     * @param query
+     *   The query data  (note: currently ignored)
+     * @return
+     *   The cursor to use to iterate over the results
+     */
+    virtual std::unique_ptr<CursorStation> query_stations(const Query& query) const = 0;
+
+    /**
+     * Query the station variables in the message.
+     *
+     * @param query
+     *   The query data  (note: currently ignored)
+     * @return
+     *   The cursor to use to iterate over the results
+     */
+    virtual std::unique_ptr<CursorStationData> query_station_data(const Query& query) const = 0;
+
+    /**
+     * Query the variables in the message.
+     *
+     * @param query
+     *   The query data  (note: currently ignored)
+     * @return
+     *   The cursor to use to iterate over the results
+     */
+    virtual std::unique_ptr<CursorData> query_data(const Query& query) const = 0;
+
     /// Print all the contents of this message to an output stream
     virtual void print(FILE* out) const = 0;
 

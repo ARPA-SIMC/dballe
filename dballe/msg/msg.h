@@ -260,6 +260,10 @@ public:
     /// Output in CSV format
     void to_csv(CSVWriter& out) const;
 
+    std::unique_ptr<CursorStation> query_stations(const Query& query) const override;
+    std::unique_ptr<CursorStationData> query_station_data(const Query& query) const override;
+    std::unique_ptr<CursorData> query_data(const Query& query) const override;
+
     /// Output the CSV header
     static void csv_header(CSVWriter& out);
 
