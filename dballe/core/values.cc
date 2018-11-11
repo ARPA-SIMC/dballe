@@ -240,6 +240,15 @@ void Values::move_to_attributes(wreport::Var& dest)
     m_values.clear();
 }
 
+void Values::set(Value&& val)
+{
+    auto i = find(val.code());
+    if (i == end())
+        insert_new(std::move(val));
+    else
+        *i = std::move(val);
+}
+
 void Values::set(const wreport::Var& v)
 {
     auto i = find(v.code());
@@ -280,6 +289,13 @@ const Value* Values::get(wreport::Varcode code) const
     if (i == end())
         return nullptr;
     return &*i;
+}
+
+const wreport::Var* Values::get_var(wreport::Varcode code) const
+{
+    const Value* val = get(code);
+    if (!val) return nullptr;
+    return val->var;
 }
 
 void Values::print(FILE* out) const

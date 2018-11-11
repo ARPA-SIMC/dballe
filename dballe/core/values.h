@@ -37,8 +37,14 @@ struct Value
     /// Construct from a wreport::Var
     Value(const wreport::Var& var) : var(new wreport::Var(var)) {}
 
+    /// Construct from a wreport::Var
+    Value(int data_id, const wreport::Var& var) : data_id(data_id), var(new wreport::Var(var)) {}
+
     /// Construct from a wreport::Var, taking ownership of it
     Value(std::unique_ptr<wreport::Var>&& var) : var(var.release()) {}
+
+    /// Construct from a wreport::Var, taking ownership of it
+    Value(int data_id, std::unique_ptr<wreport::Var>&& var) : data_id(data_id), var(var.release()) {}
 
     ~Value() { delete var; }
 
@@ -164,12 +170,18 @@ public:
     const Value* get(wreport::Varcode code) const;
     const Value* get(const char* code) const { return get(resolve_varcode(code)); }
     const Value* get(const std::string& code) const { return get(resolve_varcode(code)); }
+    const wreport::Var* get_var(wreport::Varcode code) const;
+    const wreport::Var* get_var(const char* code) const { return get_var(resolve_varcode(code)); }
+    const wreport::Var* get_var(const std::string& code) const { return get_var(resolve_varcode(code)); }
 
     /// Set from a wreport::Var
     void set(const wreport::Var&);
 
     /// Set from a wreport::Var, taking ownership of it
     void set(std::unique_ptr<wreport::Var>&&);
+
+    /// Set with a Value
+    void set(Value&& val);
 
     /// Set with all the variables from vals
     void set(const Values& vals);
