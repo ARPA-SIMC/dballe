@@ -94,26 +94,25 @@ struct OutputFile
 template<typename Cursor>
 struct VoglioquestoOperation : public Operation
 {
-    dballe::Query* query = nullptr;
+    const dballe::Query& query;
     Cursor* query_cur = nullptr;
     bool valid_cached_attrs = false;
 
-    VoglioquestoOperation(const dballe::Record& input)
-        : query(Query::from_record(input).release())
+    VoglioquestoOperation(const dballe::core::Query& query)
+        : query(query)
     {
     }
     ~VoglioquestoOperation()
     {
         if (query_cur) query_cur->discard();
         delete query_cur;
-        delete query;
     }
     int voglioquesto(db::Transaction& tr, bool station_context)
     {
         if (station_context)
-            query_cur = tr.query_station_data(*query).release();
+            query_cur = tr.query_station_data(query).release();
         else
-            query_cur = tr.query_data(*query).release();
+            query_cur = tr.query_data(query).release();
         return query_cur->remaining();
     }
     wreport::Varcode dammelo(dballe::Record& output) override
@@ -192,27 +191,20 @@ struct PrendiloOperation : public Operation
     wreport::Varcode varcode = 0;
 
     void set_varcode(wreport::Varcode varcode) override { this->varcode = varcode; }
-    int prendilo(db::Transaction& tr, const dballe::Record& input, bool station_context, unsigned perms)
+    int prendilo(db::Transaction& tr, dballe::core::Data& input, bool station_context, unsigned perms)
     {
-        // fprintf(stderr, "PRENDILO DB\n");
-        // tr.dump(stderr);
-        // fprintf(stderr, "PRENDILO RECORD\n");
-        // input.print(stderr);
-
         last_inserted_varids.clear();
-        core::Data data;
-        core::Record::downcast(input).to_data(data);
         if (station_context)
         {
-            tr.insert_station_data(data, (perms & DbAPI::PERM_DATA_WRITE) != 0, (perms & DbAPI::PERM_ANA_WRITE) != 0);
-            for (const auto& v: data.values)
+            tr.insert_station_data(input, (perms & DbAPI::PERM_DATA_WRITE) != 0, (perms & DbAPI::PERM_ANA_WRITE) != 0);
+            for (const auto& v: input.values)
                 last_inserted_varids.push_back(VarID(v.code(), true, v.data_id));
         } else {
-            tr.insert_data(data, (perms & DbAPI::PERM_DATA_WRITE) != 0, (perms & DbAPI::PERM_ANA_WRITE) != 0);
-            for (const auto& v: data.values)
+            tr.insert_data(input, (perms & DbAPI::PERM_DATA_WRITE) != 0, (perms & DbAPI::PERM_ANA_WRITE) != 0);
+            for (const auto& v: input.values)
                 last_inserted_varids.push_back(VarID(v.code(), false, v.data_id));
         }
-        return data.station.id;
+        return input.station.id;
     }
     void select_attrs(const std::vector<wreport::Varcode>& varcodes) override
     {
@@ -333,8 +325,7 @@ int DbAPI::quantesono()
         delete ana_cur;
         ana_cur = 0;
     }
-    auto query = Query::from_record(input);
-    ana_cur = tr->query_stations(*query).release();
+    ana_cur = tr->query_stations(input_query).release();
     delete operation;
     operation = nullptr;
 
@@ -362,15 +353,15 @@ int DbAPI::voglioquesto()
     if (station_context)
     {
         VoglioquestoOperation<db::CursorStationData>* op;
-        operation = op = new VoglioquestoOperation<db::CursorStationData>(input);
-        op->query_cur = dynamic_cast<db::CursorStationData*>(tr->query_station_data(*op->query).release());
+        operation = op = new VoglioquestoOperation<db::CursorStationData>(input_query);
+        op->query_cur = dynamic_cast<db::CursorStationData*>(tr->query_station_data(input_query).release());
         return op->query_cur->remaining();
     }
     else
     {
         VoglioquestoOperation<db::CursorData>* op;
-        operation = op = new VoglioquestoOperation<db::CursorData>(input);
-        op->query_cur = dynamic_cast<db::CursorData*>(tr->query_data(*op->query).release());
+        operation = op = new VoglioquestoOperation<db::CursorData>(input_query);
+        op->query_cur = dynamic_cast<db::CursorData*>(tr->query_data(input_query).release());
         return op->query_cur->remaining();
     }
 }
@@ -394,7 +385,8 @@ void DbAPI::prendilo()
     delete operation;
     PrendiloOperation* po;
     operation = po = new PrendiloOperation;
-    last_inserted_station_id = po->prendilo(*tr, input, station_context, perms);
+    input_data.datetime.set_lower_bound();
+    last_inserted_station_id = po->prendilo(*tr, input_data, station_context, perms);
     unsetb();
 }
 
@@ -403,11 +395,10 @@ void DbAPI::dimenticami()
     if (! (perms & PERM_DATA_WRITE))
         throw error_consistency("dimenticami must be called with the database open in data write mode");
 
-    auto query = Query::from_record(input);
     if (station_context)
-        tr->remove_station_data(*query);
+        tr->remove_station_data(input_query);
     else
-        tr->remove_data(*query);
+        tr->remove_data(input_query);
     delete operation;
     operation = nullptr;
 }
@@ -512,8 +503,7 @@ void DbAPI::messages_write_next(const char* template_name)
     auto exporter = Exporter::create(out.encoding(), options);
 
     // Do the export with the current filter
-    auto query = Query::from_record(input);
-    tr->export_msgs(*query, [&](unique_ptr<Message>&& msg) {
+    tr->export_msgs(input_query, [&](unique_ptr<Message>&& msg) {
         Messages msgs;
         msgs.emplace_back(move(msg));
         out.write(exporter->to_binary(msgs));

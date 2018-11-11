@@ -1623,16 +1623,4 @@ int idba_spiegab(
 
 /*@}*/
 
-int idba_test_input_to_output(int handle)
-{
-    try {
-        HSimple& h = hsimp.get(handle);
-        h.api->test_input_to_output();
-        return fortran::success();
-    } catch (error& e) {
-        return fortran::error(e);
-    }
-}
-
-
 }

@@ -331,49 +331,48 @@ void MsgAPI::prendilo()
     if (!wmsg) wmsg = new Msg;
 
     // Store record metainfo
-    if (!input.station.report.empty())
+    if (!input_data.station.report.empty())
     {
-        wmsg->set_rep_memo(input.station.report.c_str());
-        wmsg->type = Msg::type_from_repmemo(input.station.report.c_str());
+        wmsg->set_rep_memo(input_data.station.report.c_str());
+        wmsg->type = Msg::type_from_repmemo(input_data.station.report.c_str());
     }
-    DBStation station = input.get_dbstation();
-    if (station.id != MISSING_INT)
-        wmsg->set(Level(), Trange(), newvar(WR_VAR(0, 1, 192), station.id));
-    if (!station.ident.is_missing())
-        wmsg->set_ident(station.ident);
-    if (station.coords.lat != MISSING_INT)
-        wmsg->set_latitude(station.coords.dlat());
-    if (station.coords.lon != MISSING_INT)
-        wmsg->set_longitude(station.coords.dlon());
+    if (input_data.station.id != MISSING_INT)
+        wmsg->set(Level(), Trange(), newvar(WR_VAR(0, 1, 192), input_data.station.id));
+    if (!input_data.station.ident.is_missing())
+        wmsg->set_ident(input_data.station.ident);
+    if (input_data.station.coords.lat != MISSING_INT)
+        wmsg->set_latitude(input_data.station.coords.dlat());
+    if (input_data.station.coords.lon != MISSING_INT)
+        wmsg->set_longitude(input_data.station.coords.dlon());
 
-    Datetime dt = input.get_datetime();
-    if (!dt.is_missing())
+    Datetime dt = input_data.datetime;
+    if (!input_data.datetime.is_missing())
     {
         dt.set_lower_bound();
         wmsg->set_datetime(dt);
     }
 
-    const vector<Var*>& in_vars = input.vars();
     flushVars();
     assert(vars.empty());
 
-    vars_level = input.level;
-    vars_trange = input.trange;
+    vars_level = input_data.level;
+    vars_trange = input_data.trange;
 
-    for (vector<Var*>::const_iterator v = in_vars.begin(); v != in_vars.end(); ++v)
-        vars.push_back(new Var(**v));
-    input.clear_vars();
+    // FIXME: this could move variables instead of copying them
+    for (const auto& val: input_data.values)
+        vars.push_back(new Var(*val.var));
+    input_data.clear_vars();
 
-    if (!input.query.empty())
+    if (!input_query.query.empty())
     {
-        if (strcasecmp(input.query.c_str(), "subset") == 0)
+        if (strcasecmp(input_query.query.c_str(), "subset") == 0)
         {
             flushSubset();
-        } else if (strncasecmp(input.query.c_str(), "message", 7) == 0) {
+        } else if (strncasecmp(input_query.query.c_str(), "message", 7) == 0) {
             // Check that message is followed by spaces or end of string
-            const char* s = input.query.c_str() + 7;
+            const char* s = input_query.query.c_str() + 7;
             if (*s != 0 && !isblank(*s))
-                error_consistency::throwf("Query type \"%s\" is not among the supported values", input.query.c_str());
+                error_consistency::throwf("Query type \"%s\" is not among the supported values", input_query.query.c_str());
             // Skip the spaces after message
             while (*s != 0 && isblank(*s))
                 ++s;
@@ -389,10 +388,10 @@ void MsgAPI::prendilo()
 
             flushMessage();
         } else
-            error_consistency::throwf("Query type \"%s\" is not among the supported values", input.query.c_str());
+            error_consistency::throwf("Query type \"%s\" is not among the supported values", input_query.query.c_str());
 
         // Uset query after using it: it needs to be explicitly set every time
-        input.query.clear();
+        input_query.query.clear();
     }
 }
 

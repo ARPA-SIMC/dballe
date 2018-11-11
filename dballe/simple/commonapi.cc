@@ -115,11 +115,6 @@ unsigned CommonAPIImplementation::compute_permissions(const char* anaflag, const
     return perms;
 }
 
-void CommonAPIImplementation::test_input_to_output()
-{
-    output = input;
-}
-
 int CommonAPIImplementation::enqi(const char* param)
 {
     if (param[0] == '*')
@@ -196,6 +191,7 @@ double CommonAPIImplementation::enqd(const char* param)
     return record_enqd(output, param, missing_double);
 }
 
+#if 0
 std::string CommonAPIImplementation::enqc(const char* param)
 {
     if (param[0] == '*')
@@ -208,6 +204,7 @@ std::string CommonAPIImplementation::enqc(const char* param)
     }
     return record_enqs(output, param, std::string());
 }
+#endif
 
 bool CommonAPIImplementation::enqc(const char* param, std::string& res)
 {
@@ -241,7 +238,8 @@ void CommonAPIImplementation::seti(const char* param, int value)
         }
         return;
     }
-    record_seti(input, param, value);
+    if (!_seti(param, strlen(param), value))
+        input_data.values.set(resolve_varcode(param), value);
 }
 
 void CommonAPIImplementation::setb(const char* param, signed char value)
@@ -261,7 +259,8 @@ void CommonAPIImplementation::setd(const char* param, double value)
         qcinput.set(resolve_varcode(param + 1), value);
         return;
     }
-    record_setd(input, param, value);
+    if (!_setd(param, strlen(param), value))
+        input_data.values.set(resolve_varcode(param), value);
 }
 
 void CommonAPIImplementation::setc(const char* param, const char* value)
@@ -303,14 +302,16 @@ void CommonAPIImplementation::setc(const char* param, const char* value)
         }
         return;
     }
-    record_setc(input, param, value);
+    if (!_setc(param, strlen(param), value))
+        input_data.values.set(resolve_varcode(param), value);
 }
 
 void CommonAPIImplementation::setcontextana()
 {
-    input.set_datetime(Datetime());
-    input.set_level(Level());
-    input.set_trange(Trange());
+    input_query.datetime = DatetimeRange();
+    input_data.datetime = Datetime();
+    input_query.level = input_data.level = Level();
+    input_query.trange = input_data.trange = Trange();
     station_context = true;
 }
 
@@ -325,10 +326,10 @@ void CommonAPIImplementation::enqlevel(int& ltype1, int& l1, int& ltype2, int& l
 
 void CommonAPIImplementation::setlevel(int ltype1, int l1, int ltype2, int l2)
 {
-    Level level(ltype1, l1, ltype2, l2);  // TODO: access Record directly
+    Level level(ltype1, l1, ltype2, l2);
     if (!level.is_missing())
         station_context = false;
-    input.set_level(level);
+    input_query.level = input_data.level = level;
 }
 
 void CommonAPIImplementation::enqtimerange(int& ptype, int& p1, int& p2)
@@ -341,10 +342,10 @@ void CommonAPIImplementation::enqtimerange(int& ptype, int& p1, int& p2)
 
 void CommonAPIImplementation::settimerange(int ptype, int p1, int p2)
 {
-    Trange trange(ptype, p1, p2);  // TODO: access Record directly
+    Trange trange(ptype, p1, p2);
     if (!trange.is_missing())
         station_context = false;
-    input.set_trange(trange);
+    input_query.trange = input_data.trange = trange;
 }
 
 void CommonAPIImplementation::enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec)
@@ -363,25 +364,21 @@ void CommonAPIImplementation::setdate(int year, int month, int day, int hour, in
     Datetime dt(year, month, day, hour, min, sec);
     if (!dt.is_missing())
         station_context = false;
-    input.set_datetime(dt);
+    input_query.datetime.min = input_query.datetime.max = input_data.datetime = dt;
 }
 
 void CommonAPIImplementation::setdatemin(int year, int month, int day, int hour, int min, int sec)
 {
-    DatetimeRange dtr = input.get_datetimerange();
-    dtr.min = Datetime(year, month, day, hour, min, sec);
-    if (!dtr.min.is_missing())
+    input_query.datetime.min = Datetime(year, month, day, hour, min, sec);
+    if (!input_query.datetime.min.is_missing())
         station_context = true;
-    input.set_datetimerange(dtr);
 }
 
 void CommonAPIImplementation::setdatemax(int year, int month, int day, int hour, int min, int sec)
 {
-    DatetimeRange dtr = input.get_datetimerange();
-    dtr.max = Datetime(year, month, day, hour, min, sec);
-    if (!dtr.max.is_missing())
+    input_query.datetime.max = Datetime(year, month, day, hour, min, sec);
+    if (!input_query.datetime.max.is_missing())
         station_context = true;
-    input.set_datetimerange(dtr);
 }
 
 void CommonAPIImplementation::unset(const char* param)
@@ -404,13 +401,15 @@ void CommonAPIImplementation::unset(const char* param)
         }
         return;
     }
-    record_unset(input, param);
+    if (!_unset(param, strlen(param)))
+        input_data.values.unset(resolve_varcode(param));
 }
 
 void CommonAPIImplementation::unsetall()
 {
     qcinput.clear();
-    input.clear();
+    input_query.clear();
+    input_data.clear();
     if (operation)
     {
         operation->set_varcode(0);
@@ -422,7 +421,7 @@ void CommonAPIImplementation::unsetall()
 void CommonAPIImplementation::unsetb()
 {
     qcinput.clear();
-    input.clear_vars();
+    input_data.clear_vars();
 }
 
 const char* CommonAPIImplementation::spiegal(int ltype1, int l1, int ltype2, int l2)

@@ -7,7 +7,7 @@ program check_range
       use dbtest
       use dballef
       
-      integer :: handle,idbhandle,handle_err, errcode
+      integer :: handle,idbhandle,handle_err, errcode, i
       real :: rval
       !data var/ "B22070", "B22074", "B22001", "B22071", "B22042"/
       integer debug
@@ -22,6 +22,10 @@ program check_range
       ierr = idba_preparati(idbhandle,handle,"write","write","write")
       call ensure_no_error("preparati")
 
+!     Clear the database
+      ierr = idba_scopa(handle, "")
+      call ensure_no_error("scopa")
+
 !     Check that NaN values are trapped
       rval = 0.
       rval = log(rval) / log(rval)
@@ -29,14 +33,32 @@ program check_range
       errcode = idba_error_code()
       call ensure("set to NaN", errcode == 13)
 
-!     Check that negative reals can be read
+!     Insert a station with negative latitude and longitude
+      ierr = idba_set(handle, "lat", -45.6789)
+      call ensure_no_error("set lat negative")
       ierr = idba_set(handle, "lon", -12.3456)
       call ensure_no_error("set lon negative")
-      ierr = idba_test_input_to_output(handle)
-      call ensure_no_error("input to output")
+      ierr = idba_set(handle, "rep_memo", "synop")
+      call ensure_no_error("set rep_memo")
+      ierr = idba_set(handle, "block", 1)
+      call ensure_no_error("set block")
+      ierr = idba_prendilo(handle)
+      call ensure_no_error("first prendilo")
+
+!     Read it back
+      ierr = idba_quantesono(handle, i)
+      call ensure_no_error("quantesono 1")
+      call ensure("quantesono 1", i.eq.1)
+      ierr = idba_elencamele(handle)
+      call ensure_no_error("elencamele")
+
+!     Check that negative reals can be read
+      ierr = idba_enqr(handle, "lat", rval)
+      call ensure_no_error("enq lat negative")
+      call ensure("read negative real 1", rval == -45.6789)
       ierr = idba_enqr(handle, "lon", rval)
       call ensure_no_error("enq lon negative")
-      call ensure("read negative real", rval == -12.3456)
+      call ensure("read negative real 2", rval == -12.3456)
 
       ierr = idba_fatto(handle)
       call ensure_no_error("fatto")

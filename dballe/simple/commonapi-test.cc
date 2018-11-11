@@ -40,7 +40,8 @@ void Tests::register_tests()
     add_method("seti", []() {
         APITest api;
         api.seti("ana_id", 1);
-        wassert(actual(api.test_get_input().station.id) == 1);
+        wassert(actual(api.test_get_input_query().ana_id) == 1);
+        wassert(actual(api.test_get_input_data().station.id) == 1);
     });
 
     add_method("set_undef_key", []() {

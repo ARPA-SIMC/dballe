@@ -3,7 +3,8 @@
 
 #include "simple.h"
 #include <dballe/core/record.h>
-#include <dballe/core/values.h>
+#include <dballe/core/query.h>
+#include <dballe/core/data.h>
 #include <dballe/db/fwd.h>
 #include <functional>
 
@@ -56,7 +57,8 @@ public:
 
 protected:
     unsigned perms;
-    core::Record input;
+    core::Query input_query;
+    core::Data input_data;
     bool station_context = false;
     core::Record output;
     core::Values qcinput;
@@ -71,16 +73,19 @@ protected:
     // that we can deallocate it when needed.
     std::string cached_spiega;
 
+    bool _seti(const char* key, unsigned len, int val);
+    bool _setd(const char* key, unsigned len, double val);
+    bool _setc(const char* key, unsigned len, const char* val);
+    bool _unset(const char* key, unsigned len);
+
 public:
     CommonAPIImplementation();
     virtual ~CommonAPIImplementation();
 
-    void test_input_to_output() override;
     int enqi(const char* param) override;
     signed char enqb(const char* param) override;
     float enqr(const char* param) override;
     double enqd(const char* param) override;
-    std::string enqc(const char* param) override;
     bool enqc(const char* param, std::string& res) override;
     void seti(const char* param, int value) override;
     void setb(const char* param, signed char value) override;
@@ -107,7 +112,8 @@ public:
 
     const Operation* test_get_operation() const { return operation; }
 
-    const core::Record& test_get_input() const { return input; }
+    const core::Query& test_get_input_query() const { return input_query; }
+    const core::Data& test_get_input_data() const { return input_data; }
     const core::Record& test_get_output() const { return output; }
     const core::Values& test_get_qcinput() const { return qcinput; }
     // const core::Record& test_get_qcoutput() const { return qcoutput; }

@@ -44,6 +44,7 @@ Makefile
 /dballe/msg/vars.h
 /dballe/msg/msg-extravars.h
 /dballe/msg/context-extravars.h
+/dballe/simple/commonapi-access.cc
 /dballe/test-dballe
 /dballe/bench-run
 /dballe/profile-run

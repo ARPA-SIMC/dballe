@@ -18,11 +18,17 @@ common_libs = $(WREPORT_LIBS) $(LIBPQ_LIBS) $(SQLITE3_LIBS) $(MYSQL_LIBS) $(POPT
 core/record-access.cc: core/record-access.in.cc mklookup
 	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
 
+simple/commonapi-access.cc: simple/commonapi-access.in.cc mklookup
+	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
+
 core/aliases.cc: core/aliases.gperf
 	if ! gperf < $< > $@; then rm $@; /bin/false; fi
 
-BUILT_SOURCES = core/record-access.cc core/aliases.cc
-EXTRA_DIST += mklookup core/aliases.gperf core/aliases.cc core/record-access.in.cc core/record-access.cc
+BUILT_SOURCES = core/record-access.cc core/aliases.cc \
+                simple/commonapi-access.cc
+EXTRA_DIST += mklookup core/aliases.gperf core/aliases.cc \
+              core/record-access.in.cc core/record-access.cc
+	      simple/commonapi-access.in.cc simple/commonapi-access.cc
 
 
 msg/vars.h msg/vars.gperf msg/msg-extravars.h: msg/vars.csv msg/mkvars
@@ -79,6 +85,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/string.h \
 	core/trace.h \
 	core/json.h \
+	core/access-impl.h \
 	msg/fwd.h \
 	msg/bulletin.h \
 	msg/context.h \
@@ -231,6 +238,7 @@ libdballe_la_SOURCES = \
 	cmdline/dbadb.cc \
 	simple/simple.cc \
 	simple/commonapi.cc \
+	simple/commonapi-access.cc \
 	simple/msgapi.cc \
 	simple/dbapi.cc
 if HAVE_LIBPQ
