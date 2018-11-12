@@ -27,9 +27,6 @@ struct API
     virtual signed char enqb(const char* param) = 0;
     virtual float enqr(const char* param) = 0;
     virtual double enqd(const char* param) = 0;
-#if 0
-    virtual std::string enqc(const char* param) = 0;
-#endif
     virtual bool enqc(const char* param, std::string& res) = 0;
     virtual void seti(const char* param, int value) = 0;
     virtual void setb(const char* param, signed char value) = 0;

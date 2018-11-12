@@ -80,7 +80,11 @@ protected:
 
 public:
     CommonAPIImplementation();
+    CommonAPIImplementation(const CommonAPIImplementation&) = delete;
+    CommonAPIImplementation(CommonAPIImplementation&&) = delete;
     virtual ~CommonAPIImplementation();
+    CommonAPIImplementation& operator=(const CommonAPIImplementation&) = delete;
+    CommonAPIImplementation& operator=(CommonAPIImplementation&&) = delete;
 
     int enqi(const char* param) override;
     signed char enqb(const char* param) override;
