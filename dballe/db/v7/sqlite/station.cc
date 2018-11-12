@@ -146,6 +146,23 @@ void SQLiteStation::add_station_vars(Tracer<>& trc, int id_station, Record& rec)
     });
 }
 
+void SQLiteStation::add_station_vars(Tracer<>& trc, int id_station, core::Values& values)
+{
+    const char* query = R"(
+        SELECT d.code, d.value
+          FROM station_data d
+         WHERE d.id_station = ?
+    )";
+
+    Tracer<> trc_sel(trc ? trc->trace_select(query) : nullptr);
+    auto stm = conn.sqlitestatement(query);
+    stm->bind(id_station);
+    stm->execute([&]() {
+        if (trc_sel) trc_sel->add_row();
+        values.set(newvar((wreport::Varcode)stm->column_int(0), stm->column_string(1)));
+    });
+}
+
 void SQLiteStation::run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb, std::function<void(const dballe::DBStation&)> dest)
 {
     Tracer<> trc_sel(trc ? trc->trace_select(qb.sql_query) : nullptr);

@@ -844,7 +844,7 @@ this->add_method("perf_data", [](Fixture& f) {
     api.unsetall();
     wassert(actual(api.quantesono()) == 1);
     stats = f.tr->trc->aggregate("select");
-    wassert(actual(stats.count) == 1);
+    wassert(actual(stats.count) == 2);
     wassert(actual(stats.rows) == 1);
 });
 

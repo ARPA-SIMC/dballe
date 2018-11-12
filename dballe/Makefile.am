@@ -18,6 +18,15 @@ common_libs = $(WREPORT_LIBS) $(LIBPQ_LIBS) $(SQLITE3_LIBS) $(MYSQL_LIBS) $(POPT
 core/record-access.cc: core/record-access.in.cc mklookup
 	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
 
+msg/cursor-access.cc: msg/cursor-access.in.cc mklookup
+	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
+
+db/v7/cursor-access.cc: db/v7/cursor-access.in.cc mklookup
+	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
+
+db/summary-access.tcc: db/summary-access.in.tcc mklookup
+	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
+
 simple/commonapi-access.cc: simple/commonapi-access.in.cc mklookup
 	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
 
@@ -25,9 +34,13 @@ core/aliases.cc: core/aliases.gperf
 	if ! gperf < $< > $@; then rm $@; /bin/false; fi
 
 BUILT_SOURCES = core/record-access.cc core/aliases.cc \
-                simple/commonapi-access.cc
+                msg/cursor-access.cc db/v7/cursor-access.cc \
+                db/summary-access.tcc simple/commonapi-access.cc
 EXTRA_DIST += mklookup core/aliases.gperf core/aliases.cc \
               core/record-access.in.cc core/record-access.cc
+	      msg/cursor-access.in.cc msg/cursor-access.cc \
+	      db/v7/cursor-access.in.cc db/v7/cursor-access.cc \
+	      db/summary-access.in.tcc db/summary-access.tcc \
 	      simple/commonapi-access.in.cc simple/commonapi-access.cc
 
 
@@ -188,6 +201,7 @@ libdballe_la_SOURCES = \
 	msg/context.cc \
 	msg/msg.cc \
 	msg/cursor.cc \
+	msg/cursor-access.cc \
 	msg/wr_codec.cc \
 	msg/wr_importers/base.cc \
 	msg/wr_importers/synop.cc \
@@ -227,6 +241,7 @@ libdballe_la_SOURCES = \
 	db/v7/sqlite/driver.cc \
 	db/v7/db.cc \
 	db/v7/cursor.cc \
+	db/v7/cursor-access.cc \
 	db/v7/qbuilder.cc \
 	db/v7/import.cc \
 	db/v7/export.cc \

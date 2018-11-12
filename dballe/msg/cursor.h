@@ -46,13 +46,11 @@ struct CursorStation : public dballe::CursorStation
         at_start = false;
     }
 
-#if 0
     bool enqi(const char* key, unsigned len, int& res) const override;
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
     bool enqf(const char* key, unsigned len, std::string& res) const override;
-#endif
-    void to_record(Record& rec) override {}
+    void to_record(Record& record) override {}
 
     DBStation get_station() const override { return station; }
 };
@@ -103,13 +101,11 @@ struct CursorStationData : public dballe::CursorStationData
         cur = ctx->data.end();
     }
 
-#if 0
     bool enqi(const char* key, unsigned len, int& res) const override;
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
     bool enqf(const char* key, unsigned len, std::string& res) const override;
-#endif
-    void to_record(Record& rec) override {}
+    void to_record(Record& record) override {}
 
     DBStation get_station() const override { return station; }
 
@@ -183,13 +179,11 @@ struct CursorData : public dballe::CursorData
         cur = rows.end();
     }
 
-#if 0
     bool enqi(const char* key, unsigned len, int& res) const override;
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
     bool enqf(const char* key, unsigned len, std::string& res) const override;
-#endif
-    void to_record(Record& rec) override {}
+    void to_record(Record& record) override {}
 
     DBStation get_station() const override { return station; }
 

@@ -13,13 +13,11 @@ struct EmptyCursor : public Interface
     bool next() override { return false; }
     void discard() override {}
 
-#if 0
-    bool enqi(const char* key, unsigned len, int& res) const override { return false; }
-    bool enqd(const char* key, unsigned len, double& res) const override { return false; }
-    bool enqs(const char* key, unsigned len, std::string& res) const override { return false; }
-    bool enqf(const char* key, unsigned len, std::string& res) const override { return false; }
-#endif
-    void to_record(Record& rec) override {}
+    bool enqi(const char* key, unsigned len, int& res) const { return false; }
+    bool enqd(const char* key, unsigned len, double& res) const { return false; }
+    bool enqs(const char* key, unsigned len, std::string& res) const { return false; }
+    bool enqf(const char* key, unsigned len, std::string& res) const { return false; }
+    void to_record(Record& record) override {}
 
     DBStation get_station() const override { return DBStation(); }
 };

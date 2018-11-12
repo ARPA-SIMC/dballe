@@ -181,6 +181,104 @@ struct StationEntries : protected core::SmallSet<StationEntry<Station>, Station,
     const StationEntries& sorted() const { if (this->dirty) this->rearrange_dirty(); return *this; }
 };
 
+
+template<typename Station>
+struct Cursor : public dballe::CursorSummary
+{
+    struct Entry
+    {
+        const summary::StationEntry<Station>& station_entry;
+        const summary::VarEntry& var_entry;
+        Entry(const summary::StationEntry<Station>& station_entry, const summary::VarEntry& var_entry)
+            : station_entry(station_entry), var_entry(var_entry) {}
+    };
+    std::vector<Entry> results;
+    typename std::vector<Entry>::const_iterator cur;
+    bool at_start = true;
+
+    Cursor(const summary::StationEntries<Station>& entries, const Query& query);
+
+    int remaining() const override
+    {
+        if (at_start) return results.size();
+        return results.end() - cur;
+    }
+
+    bool next() override
+    {
+        if (at_start)
+        {
+            cur = results.begin();
+            at_start = false;
+        }
+        else if (cur != results.end())
+            ++cur;
+        return cur != results.end();
+    }
+
+    void discard() override
+    {
+        cur = results.end();
+    }
+
+    void to_record(Record& rec) override;
+
+    static DBStation _get_dbstation(const DBStation& s) { return s; }
+    static DBStation _get_dbstation(const dballe::Station& station)
+    {
+        DBStation res;
+        res.report = station.report;
+        res.coords = station.coords;
+        res.ident = station.ident;
+        return res;
+    }
+    static int _get_station_id(const DBStation& s) { return s.id; }
+    static int _get_station_id(const dballe::Station& s) { return MISSING_INT; }
+
+    DBStation get_station() const override
+    {
+        return _get_dbstation(cur->station_entry.station);
+    }
+
+#if 0
+    int get_station_id() const override
+    {
+        return _get_station_id(cur->station_entry.station);
+    }
+
+    Coords get_coords() const override { return cur->station_entry.station.coords; }
+    Ident get_ident() const override { return cur->station_entry.station.ident; }
+    std::string get_report() const override { return cur->station_entry.station.report; }
+
+    unsigned test_iterate(FILE* dump=0) override
+    {
+        unsigned count;
+        for (count = 0; next(); ++count)
+            ;
+#if 0
+            if (dump)
+                cur->dump(dump);
+#endif
+        return count;
+    }
+#endif
+
+    Level get_level() const override { return cur->var_entry.var.level; }
+    Trange get_trange() const override { return cur->var_entry.var.trange; }
+    wreport::Varcode get_varcode() const override { return cur->var_entry.var.varcode; }
+    DatetimeRange get_datetimerange() const override { return cur->var_entry.dtrange; }
+    size_t get_count() const override { return cur->var_entry.count; }
+
+    bool enqi(const char* key, unsigned len, int& res) const override;
+    bool enqd(const char* key, unsigned len, double& res) const override;
+    bool enqs(const char* key, unsigned len, std::string& res) const override;
+    bool enqf(const char* key, unsigned len, std::string& res) const override;
+};
+
+
+extern template class Cursor<dballe::Station>;
+extern template class Cursor<dballe::DBStation>;
+
 }
 
 

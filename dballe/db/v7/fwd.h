@@ -15,6 +15,7 @@ struct DB;
 struct Repinfo;
 struct Station;
 struct LevTr;
+struct LevTrEntry;
 struct SQLTrace;
 struct Driver;
 

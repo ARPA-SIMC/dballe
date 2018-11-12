@@ -164,6 +164,24 @@ void MySQLStation::add_station_vars(Tracer<>& trc, int id_station, Record& rec)
     }
 }
 
+void MySQLStation::add_station_vars(Tracer<>& trc, int id_station, core::Values& values)
+{
+    Querybuf qb;
+    qb.appendf(R"(
+        SELECT d.code, d.value
+          FROM station_data d
+         WHERE d.id_station=%d
+    )", id_station);
+
+    Tracer<> trc_sel(trc ? trc->trace_select(qb) : nullptr);
+    auto res = conn.exec_store(qb);
+    while (auto row = res.fetch())
+    {
+        if (trc_sel) trc_sel->add_row();
+        values.set(newvar((wreport::Varcode)row.as_int(0), row.as_cstring(1)));
+    }
+}
+
 void MySQLStation::run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb, std::function<void(const dballe::DBStation&)> dest)
 {
     if (qb.bind_in_ident)
