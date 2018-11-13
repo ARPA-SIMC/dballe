@@ -392,7 +392,7 @@ struct BaseQuerySummary : public MethKwargs<typename ImplTraits<Station>::Impl>
             const auto& summary = get_summary<Station, Scope>(*self);
             auto res = summary.query_summary(query);
             gil.lock();
-            return (PyObject*)cursor_create(move(res));
+            return (PyObject*)cursor_create(std::unique_ptr<db::summary::Cursor<Station>>(dynamic_cast<db::summary::Cursor<Station>*>(res.release())));
         } DBALLE_CATCH_RETURN_PYO
     }
 };

@@ -236,7 +236,14 @@ gen.document_class(dballe.ImporterFile)
 gen.document_class(dballe.Exporter)
 gen.document_class(dballe.DB, exclude=("attr_insert", "attr_remove", "query_attrs", "load", "export_to_file"))
 gen.document_class(dballe.Transaction, exclude=("load", "export_to_file"))
-gen.document_class(dballe.Cursor, exclude=("query_attrs"))
+gen.document_class(dballe.CursorStationDB)
+gen.document_class(dballe.CursorStationDataDB, exclude=("query_attrs"))
+gen.document_class(dballe.CursorDataDB, exclude=("query_attrs"))
+gen.document_class(dballe.CursorSummaryDB)
+gen.document_class(dballe.CursorSummarySummary)
+gen.document_class(dballe.CursorSummaryDBSummary)
+gen.document_class(dballe.Explorer)
+gen.document_class(dballe.DBExplorer)
 
 
 gen.para("""

@@ -275,14 +275,14 @@ template<typename Impl>
 struct query_stations : MethQuery<query_stations<Impl>, Impl>
 {
     constexpr static const char* name = "query_stations";
-    constexpr static const char* returns = "dballe.Cursor";
+    constexpr static const char* returns = "dballe.CursorStation";
     constexpr static const char* summary = "Query the station archive in the database";
     static PyObject* run_query(Impl* self, dballe::Query& query)
     {
         ReleaseGIL gil;
         auto res = self->db->query_stations(query);
         gil.lock();
-        return (PyObject*)cursor_create(move(res));
+        return (PyObject*)cursor_create(std::unique_ptr<db::CursorStation>(dynamic_cast<db::CursorStation*>(res.release())));
     }
 };
 
@@ -290,14 +290,14 @@ template<typename Impl>
 struct query_station_data : MethQuery<query_station_data<Impl>, Impl>
 {
     constexpr static const char* name = "query_station_data";
-    constexpr static const char* returns = "dballe.Cursor";
+    constexpr static const char* returns = "dballe.CursorStationData";
     constexpr static const char* summary = "Query the station variables in the database";
     static PyObject* run_query(Impl* self, dballe::Query& query)
     {
         ReleaseGIL gil;
         auto res = self->db->query_station_data(query);
         gil.lock();
-        return (PyObject*)cursor_create(move(res));
+        return (PyObject*)cursor_create(std::unique_ptr<db::CursorStationData>(dynamic_cast<db::CursorStationData*>(res.release())));
     }
 };
 
@@ -305,14 +305,14 @@ template<typename Impl>
 struct query_data : MethQuery<query_data<Impl>, Impl>
 {
     constexpr static const char* name = "query_data";
-    constexpr static const char* returns = "dballe.Cursor";
+    constexpr static const char* returns = "dballe.CursorData";
     constexpr static const char* summary = "Query the variables in the database";
     static PyObject* run_query(Impl* self, dballe::Query& query)
     {
         ReleaseGIL gil;
         auto res = self->db->query_data(query);
         gil.lock();
-        return (PyObject*)cursor_create(move(res));
+        return (PyObject*)cursor_create(std::unique_ptr<db::CursorData>(dynamic_cast<db::CursorData*>(res.release())));
     }
 };
 
@@ -320,14 +320,14 @@ template<typename Impl>
 struct query_summary : MethQuery<query_summary<Impl>, Impl>
 {
     constexpr static const char* name = "query_summary";
-    constexpr static const char* returns = "dballe.Cursor";
+    constexpr static const char* returns = "dballe.CursorSummary";
     constexpr static const char* summary = "Query the summary of the results of a query";
     static PyObject* run_query(Impl* self, dballe::Query& query)
     {
         ReleaseGIL gil;
         auto res = self->db->query_summary(query);
         gil.lock();
-        return (PyObject*)cursor_create(move(res));
+        return (PyObject*)cursor_create(std::unique_ptr<db::CursorSummary>(dynamic_cast<db::CursorSummary*>(res.release())));
     }
 };
 
@@ -1077,10 +1077,10 @@ Examples:
     db = dballe.DB.connect_from_file("db.sqlite")
     query = {latmin=44.0, latmax=45.0, lonmin=11.0, lonmax=12.0}
 
-    # The result is a dballe.Cursor, which can be iterated to get results as
-    # dict objects.
-    for rec in db.query_data(query):
-        print(rec["lat"], rec["lon"], rec["var"], rec.var().format("undefined"))
+    # The result is a dballe.Cursor (dballe.CursorData in this case), which can
+    # be iterated to get results as dict objects.
+    for row in db.query_data(query):
+        print(row["lat"], row["lon"], row["var"], row.var().format("undefined"))
 
     # Insert 2 new variables in the database
     db.insert_data({

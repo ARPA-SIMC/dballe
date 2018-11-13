@@ -22,22 +22,83 @@
 #define DBALLE_PYTHON_CURSOR_H
 
 #include <Python.h>
+#include <dballe/types.h>
 #include <dballe/db/db.h>
-#include "record.h"
-#include "db.h"
+#include <dballe/db/summary.h>
 
 extern "C" {
 
 typedef struct {
     PyObject_HEAD
-    dballe::Cursor* cur;
-} dpy_Cursor;
+    dballe::db::CursorStation* cur;
+} dpy_CursorStationDB;
 
-extern PyTypeObject* dpy_Cursor_Type;
+extern PyTypeObject* dpy_CursorStationDB_Type;
 
-#define dpy_Cursor_Check(ob) \
-    (Py_TYPE(ob) == dpy_Cursor_Type || \
-     PyType_IsSubtype(Py_TYPE(ob), dpy_Cursor_Type))
+#define dpy_CursorStationDB_Check(ob) \
+    (Py_TYPE(ob) == dpy_CursorStationDB_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), dpy_CursorStationDB_Type))
+
+
+typedef struct {
+    PyObject_HEAD
+    dballe::db::CursorStationData* cur;
+} dpy_CursorStationDataDB;
+
+extern PyTypeObject* dpy_CursorStationDataDB_Type;
+
+#define dpy_CursorStationDataDB_Check(ob) \
+    (Py_TYPE(ob) == dpy_CursorStationDataDB_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), dpy_CursorStationDataDB_Type))
+
+
+typedef struct {
+    PyObject_HEAD
+    dballe::db::CursorData* cur;
+} dpy_CursorDataDB;
+
+extern PyTypeObject* dpy_CursorDataDB_Type;
+
+#define dpy_CursorDataDB_Check(ob) \
+    (Py_TYPE(ob) == dpy_CursorDataDB_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), dpy_CursorDataDB_Type))
+
+
+typedef struct {
+    PyObject_HEAD
+    dballe::db::CursorSummary* cur;
+} dpy_CursorSummaryDB;
+
+extern PyTypeObject* dpy_CursorSummaryDB_Type;
+
+#define dpy_CursorSummaryDB_Check(ob) \
+    (Py_TYPE(ob) == dpy_CursorSummaryDB_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), dpy_CursorSummaryDB_Type))
+
+
+typedef struct {
+    PyObject_HEAD
+    dballe::db::summary::Cursor<dballe::Station>* cur;
+} dpy_CursorSummarySummary;
+
+extern PyTypeObject* dpy_CursorSummarySummary_Type;
+
+#define dpy_CursorSummarySummary_Check(ob) \
+    (Py_TYPE(ob) == dpy_CursorSummarySummary_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), dpy_CursorSummarySummary_Type))
+
+
+typedef struct {
+    PyObject_HEAD
+    dballe::db::summary::Cursor<dballe::DBStation>* cur;
+} dpy_CursorSummaryDBSummary;
+
+extern PyTypeObject* dpy_CursorSummarySummary_Type;
+
+#define dpy_CursorSummaryDBSummary_Check(ob) \
+    (Py_TYPE(ob) == dpy_CursorSummaryDBSummary_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), dpy_CursorSummaryDBSummary_Type))
+
 }
 
 namespace dballe {
@@ -46,7 +107,12 @@ namespace python {
 /**
  * Create a new dpy_Cursor, taking ownership of memory management
  */
-dpy_Cursor* cursor_create(std::unique_ptr<Cursor> cur);
+dpy_CursorStationDB* cursor_create(std::unique_ptr<db::CursorStation> cur);
+dpy_CursorStationDataDB* cursor_create(std::unique_ptr<db::CursorStationData> cur);
+dpy_CursorDataDB* cursor_create(std::unique_ptr<db::CursorData> cur);
+dpy_CursorSummaryDB* cursor_create(std::unique_ptr<db::CursorSummary> cur);
+dpy_CursorSummarySummary* cursor_create(std::unique_ptr<db::summary::Cursor<Station>> cur);
+dpy_CursorSummaryDBSummary* cursor_create(std::unique_ptr<db::summary::Cursor<DBStation>> cur);
 
 void register_cursor(PyObject* m);
 

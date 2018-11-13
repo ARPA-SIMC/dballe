@@ -17,12 +17,18 @@ using namespace dballe::python;
 using namespace wreport;
 
 extern "C" {
-PyTypeObject* dpy_Cursor_Type = nullptr;
+PyTypeObject* dpy_CursorStationDB_Type = nullptr;
+PyTypeObject* dpy_CursorStationDataDB_Type = nullptr;
+PyTypeObject* dpy_CursorDataDB_Type = nullptr;
+PyTypeObject* dpy_CursorSummaryDB_Type = nullptr;
+PyTypeObject* dpy_CursorSummarySummary_Type = nullptr;
+PyTypeObject* dpy_CursorSummaryDBSummary_Type = nullptr;
 }
 
 namespace {
 
-void ensure_valid_cursor(dpy_Cursor* self)
+template<typename Impl>
+void ensure_valid_cursor(Impl* self)
 {
     if (self->cur == nullptr)
     {
@@ -31,7 +37,8 @@ void ensure_valid_cursor(dpy_Cursor* self)
     }
 }
 
-struct remaining : Getter<dpy_Cursor>
+template<typename Impl>
+struct remaining : Getter<Impl>
 {
     constexpr static const char* name = "remaining";
     constexpr static const char* doc = "number of results still to be returned";
@@ -44,7 +51,8 @@ struct remaining : Getter<dpy_Cursor>
     }
 };
 
-struct query_attrs : MethKwargs<dpy_Cursor>
+template<typename Impl>
+struct query_attrs : MethKwargs<Impl>
 {
     constexpr static const char* name = "query_attrs";
     constexpr static const char* signature = "attrs: Iterable[str]";
@@ -68,33 +76,18 @@ struct query_attrs : MethKwargs<dpy_Cursor>
 
             pyo_unique_ptr res(throw_ifnull(PyDict_New()));
 
-            if (auto c = dynamic_cast<const db::CursorStationData*>(self->cur))
-            {
-                c->get_transaction()->attr_query_station(c->attr_reference_id(), [&](unique_ptr<Var>&& var) {
-                    if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
-                        return;
-                    set_var(res, *var);
-                });
-            }
-            else if (auto c = dynamic_cast<const db::CursorData*>(self->cur))
-            {
-                c->get_transaction()->attr_query_data(c->attr_reference_id(), [&](unique_ptr<Var>&& var) {
-                    if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
-                        return;
-                    set_var(res, *var);
-                });
-            }
-            else
-            {
-                PyErr_SetString(PyExc_ValueError, "the cursor does ont come from DB.query_station_data or DB.query_data");
-                return nullptr;
-            }
+            self->cur->get_transaction()->attr_query_station(self->cur->attr_reference_id(), [&](unique_ptr<Var>&& var) {
+                if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
+                    return;
+                set_var(res, *var);
+            });
             return (PyObject*)res.release();
         } DBALLE_CATCH_RETURN_PYO
     }
 };
 
-struct attr_query : MethNoargs<dpy_Cursor>
+template<typename Impl>
+struct attr_query : MethNoargs<Impl>
 {
     constexpr static const char* name = "attr_query";
     constexpr static const char* returns = "Dict[str, Any]";
@@ -104,31 +97,16 @@ struct attr_query : MethNoargs<dpy_Cursor>
         try {
             ensure_valid_cursor(self);
             pyo_unique_ptr res(throw_ifnull(PyDict_New()));
-            if (auto c = dynamic_cast<const db::CursorStationData*>(self->cur))
-            {
-                c->get_transaction()->attr_query_station(c->attr_reference_id(), [&](unique_ptr<Var>&& var) {
-                    set_var(res, *var);
-                });
-            }
-            else if (auto c = dynamic_cast<const db::CursorData*>(self->cur))
-            {
-                c->get_transaction()->attr_query_data(c->attr_reference_id(), [&](unique_ptr<Var>&& var) {
-                    set_var(res, *var);
-                });
-            }
-            else
-            {
-                PyErr_SetString(PyExc_ValueError, "the cursor does ont come from DB.query_station_data or DB.query_data");
-                return nullptr;
-            }
+            self->cur->get_transaction()->attr_query_station(self->cur->attr_reference_id(), [&](unique_ptr<Var>&& var) {
+                set_var(res, *var);
+            });
             return (PyObject*)res.release();
         } DBALLE_CATCH_RETURN_PYO
     }
 };
 
-typedef MethGenericEnter<dpy_Cursor> __enter__;
-
-struct __exit__ : MethVarargs<dpy_Cursor>
+template<typename Impl>
+struct __exit__ : MethVarargs<Impl>
 {
     constexpr static const char* name = "__exit__";
     constexpr static const char* doc = "Context manager __exit__";
@@ -149,18 +127,15 @@ struct __exit__ : MethVarargs<dpy_Cursor>
     }
 };
 
-struct Definition : public Binding<Definition, dpy_Cursor>
-{
-    constexpr static const char* name = "Cursor";
-    constexpr static const char* qual_name = "dballe.Cursor";
-    constexpr static const char* summary = "cursor iterating dballe.DB query results";
-    constexpr static const char* doc = R"(
-a Cursor is the result of database queries. It is generally not used explicitly
-and just iterated.
-)";
 
-    GetSetters<remaining> getsetters;
-    Methods<__enter__, __exit__, query_attrs, attr_query> methods;
+template<typename Definition, typename Impl>
+struct DefinitionBase : public Binding<Definition, Impl>
+{
+    constexpr static const char* doc = R"(
+A Cursor is the result of database queries. It is generally iterated through
+the contents of the result. Each iteration returns the cursor itself, that can
+be used to access the result values.
+)";
 
     static void _dealloc(Impl* self)
     {
@@ -193,26 +168,184 @@ and just iterated.
     }
 };
 
-Definition* definition = nullptr;
+struct DefinitionStationDB : public DefinitionBase<DefinitionStationDB, dpy_CursorStationDB>
+{
+    constexpr static const char* name = "CursorStationDB";
+    constexpr static const char* qual_name = "dballe.CursorStationDB";
+    constexpr static const char* summary = "cursor iterating dballe.DB query_station results";
+
+    GetSetters<remaining<Impl>> getsetters;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>> methods;
+
+    static PyObject* mp_subscript(Impl* self, PyObject* key)
+    {
+        PyErr_SetString(PyExc_NotImplementedError, "Cursor.__getitem__is not yet implemented");
+        return nullptr;
+    }
+};
+
+
+struct DefinitionStationDataDB : public DefinitionBase<DefinitionStationDataDB, dpy_CursorStationDataDB>
+{
+    constexpr static const char* name = "CursorStationDataDB";
+    constexpr static const char* qual_name = "dballe.CursorStationDataDB";
+    constexpr static const char* summary = "cursor iterating dballe.DB query_station_data results";
+
+    GetSetters<remaining<Impl>> getsetters;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>, query_attrs<Impl>, attr_query<Impl>> methods;
+
+    static PyObject* mp_subscript(Impl* self, PyObject* key)
+    {
+        PyErr_SetString(PyExc_NotImplementedError, "Cursor.__getitem__is not yet implemented");
+        return nullptr;
+    }
+};
+
+
+struct DefinitionDataDB : public DefinitionBase<DefinitionDataDB, dpy_CursorDataDB>
+{
+    constexpr static const char* name = "CursorDataDB";
+    constexpr static const char* qual_name = "dballe.CursorDataDB";
+    constexpr static const char* summary = "cursor iterating dballe.DB query_data results";
+
+    GetSetters<remaining<Impl>> getsetters;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>, query_attrs<Impl>, attr_query<Impl>> methods;
+
+    static PyObject* mp_subscript(Impl* self, PyObject* key)
+    {
+        PyErr_SetString(PyExc_NotImplementedError, "Cursor.__getitem__is not yet implemented");
+        return nullptr;
+    }
+};
+
+
+struct DefinitionSummaryDB : public DefinitionBase<DefinitionSummaryDB, dpy_CursorSummaryDB>
+{
+    constexpr static const char* name = "CursorSummaryDB";
+    constexpr static const char* qual_name = "dballe.CursorSummaryDB";
+    constexpr static const char* summary = "cursor iterating dballe.DB query_summary results";
+
+    GetSetters<remaining<Impl>> getsetters;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>> methods;
+
+    static PyObject* mp_subscript(Impl* self, PyObject* key)
+    {
+        PyErr_SetString(PyExc_NotImplementedError, "Cursor.__getitem__is not yet implemented");
+        return nullptr;
+    }
+};
+
+
+struct DefinitionSummarySummary : public DefinitionBase<DefinitionSummarySummary, dpy_CursorSummarySummary>
+{
+    constexpr static const char* name = "CursorSummarySummary";
+    constexpr static const char* qual_name = "dballe.CursorSummarySummary";
+    constexpr static const char* summary = "cursor iterating dballe.Explorer query_summary* results";
+
+    GetSetters<remaining<Impl>> getsetters;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>> methods;
+
+    static PyObject* mp_subscript(Impl* self, PyObject* key)
+    {
+        PyErr_SetString(PyExc_NotImplementedError, "Cursor.__getitem__is not yet implemented");
+        return nullptr;
+    }
+};
+
+
+struct DefinitionSummaryDBSummary : public DefinitionBase<DefinitionSummaryDBSummary, dpy_CursorSummaryDBSummary>
+{
+    constexpr static const char* name = "CursorSummaryDBSummary";
+    constexpr static const char* qual_name = "dballe.CursorSummaryDBSummary";
+    constexpr static const char* summary = "cursor iterating dballe.DBExplorer query_summary* results";
+
+    GetSetters<remaining<Impl>> getsetters;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>> methods;
+
+    static PyObject* mp_subscript(Impl* self, PyObject* key)
+    {
+        PyErr_SetString(PyExc_NotImplementedError, "Cursor.__getitem__is not yet implemented");
+        return nullptr;
+    }
+};
+
+
+DefinitionStationDB*         definition_stationdb = nullptr;
+DefinitionStationDataDB*     definition_stationdatadb = nullptr;
+DefinitionDataDB*            definition_datadb = nullptr;
+DefinitionSummaryDB*         definition_summarydb = nullptr;
+DefinitionSummarySummary*    definition_summarysummary = nullptr;
+DefinitionSummaryDBSummary*  definition_summarydbsummary = nullptr;
 
 }
 
 namespace dballe {
 namespace python {
 
-dpy_Cursor* cursor_create(std::unique_ptr<Cursor> cur)
+dpy_CursorStationDB* cursor_create(std::unique_ptr<db::CursorStation> cur)
 {
-    py_unique_ptr<dpy_Cursor> result(throw_ifnull(PyObject_New(dpy_Cursor, dpy_Cursor_Type)));
+    py_unique_ptr<dpy_CursorStationDB> result(throw_ifnull(PyObject_New(dpy_CursorStationDB, dpy_CursorStationDB_Type)));
     result->cur = cur.release();
     return result.release();
 }
+
+dpy_CursorStationDataDB* cursor_create(std::unique_ptr<db::CursorStationData> cur)
+{
+    py_unique_ptr<dpy_CursorStationDataDB> result(throw_ifnull(PyObject_New(dpy_CursorStationDataDB, dpy_CursorStationDataDB_Type)));
+    result->cur = cur.release();
+    return result.release();
+}
+
+dpy_CursorDataDB* cursor_create(std::unique_ptr<db::CursorData> cur)
+{
+    py_unique_ptr<dpy_CursorDataDB> result(throw_ifnull(PyObject_New(dpy_CursorDataDB, dpy_CursorDataDB_Type)));
+    result->cur = cur.release();
+    return result.release();
+}
+
+dpy_CursorSummaryDB* cursor_create(std::unique_ptr<db::CursorSummary> cur)
+{
+    py_unique_ptr<dpy_CursorSummaryDB> result(throw_ifnull(PyObject_New(dpy_CursorSummaryDB, dpy_CursorSummaryDB_Type)));
+    result->cur = cur.release();
+    return result.release();
+}
+
+dpy_CursorSummarySummary* cursor_create(std::unique_ptr<db::summary::Cursor<Station>> cur)
+{
+    py_unique_ptr<dpy_CursorSummarySummary> result(throw_ifnull(PyObject_New(dpy_CursorSummarySummary, dpy_CursorSummarySummary_Type)));
+    result->cur = cur.release();
+    return result.release();
+}
+
+dpy_CursorSummaryDBSummary* cursor_create(std::unique_ptr<db::summary::Cursor<DBStation>> cur)
+{
+    py_unique_ptr<dpy_CursorSummaryDBSummary> result(throw_ifnull(PyObject_New(dpy_CursorSummaryDBSummary, dpy_CursorSummaryDBSummary_Type)));
+    result->cur = cur.release();
+    return result.release();
+}
+
 
 void register_cursor(PyObject* m)
 {
     common_init();
 
-    definition = new Definition;
-    dpy_Cursor_Type = definition->activate(m);
+    definition_stationdb = new DefinitionStationDB;
+    dpy_CursorStationDB_Type = definition_stationdb->activate(m);
+
+    definition_stationdatadb = new DefinitionStationDataDB;
+    dpy_CursorStationDataDB_Type = definition_stationdatadb->activate(m);
+
+    definition_datadb = new DefinitionDataDB;
+    dpy_CursorDataDB_Type = definition_datadb->activate(m);
+
+    definition_summarydb = new DefinitionSummaryDB;
+    dpy_CursorSummaryDB_Type = definition_summarydb->activate(m);
+
+    definition_summarysummary = new DefinitionSummarySummary;
+    dpy_CursorSummarySummary_Type = definition_summarysummary->activate(m);
+
+    definition_summarydbsummary = new DefinitionSummaryDBSummary;
+    dpy_CursorSummaryDBSummary_Type = definition_summarydbsummary->activate(m);
 }
 
 }
