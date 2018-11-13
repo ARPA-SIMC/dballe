@@ -88,7 +88,8 @@ this->add_method("insert", [](Fixture& f) {
         auto cur = f.tr->query_stations(core::Query());
         wassert(actual(cur->remaining()) == 1);
         cur->next();
-        wassert(actual(cur).station_vars_match(ds.stations["synop"]));
+        wassert(actual(cur).station_keys_match(ds.stations["synop"].station));
+        wassert(actual(cur).data_var_matches(ds.stations["synop"].values));
     }
 
     // Query and verify the measured data
@@ -341,10 +342,9 @@ this->add_method("query_datetime", [](Fixture& f) {
     auto cur = f.tr->query_data(*dballe::tests::query_from_string(querystr)); \
     wassert(actual(cur->remaining()) == 1); \
     wassert(actual(cur->next()).istrue()); \
-    cur->to_record(result); \
     wassert(actual(cur->remaining()) == 0); \
-    wassert(actual_varcode(result.vars()[0]->code()) == WR_VAR(0, 1, 12)); \
-    wassert(actual(cur->get_datetime()) == ab.datetime); \
+    wassert(actual_varcode(cur->get_varcode()) == WR_VAR(0, 1, 12)); \
+    wassert(actual(cur->get_datetime()) == cur->get_datetime()); \
     cur->discard(); \
 } while(0)
 
@@ -425,8 +425,7 @@ this->add_method("attrs", [](Fixture& f) {
     bool found = false;
     while (cur->next())
     {
-        cur->to_record(result);
-        if (result.vars()[0]->code() == WR_VAR(0, 1, 11))
+        if (cur->get_varcode() == WR_VAR(0, 1, 11))
         {
             context_id = dynamic_cast<db::CursorData*>(cur.get())->attr_reference_id();
             cur->discard();
@@ -735,17 +734,10 @@ this->add_method("query_stepbystep", [](Fixture& f) {
     // results should match what was inserted
     wassert(actual(cur).data_matches(oldf.data["metar"]));
     // just call to_record now, to check if in the next call old variables are removed
-    core::Record result;
-    cur->to_record(result);
 
     wassert(actual(cur->next()).istrue());
     wassert(actual(cur->remaining()) == 2);
     wassert(actual(cur).data_matches(oldf.data["metar"]));
-
-    // Variables from the previous to_record should be removed
-    cur->to_record(result);
-    wassert(actual(result.vars().size()) == 1u);
-
 
     wassert(actual(cur->next()).istrue());
     wassert(actual(cur->remaining()) == 1);
@@ -772,7 +764,8 @@ this->add_method("insert_stationinfo_twice", [](Fixture& f) {
     auto cur = f.tr->query_station_data(query);
     wassert(actual(cur->remaining()) == 1);
     cur->next();
-    wassert(actual(cur).station_vars_match(ds.stations["synop"]));
+    wassert(actual(cur).station_keys_match(ds.stations["synop"].station));
+    wassert(actual(cur).data_var_matches(ds.stations["synop"].values));
 });
 this->add_method("insert_stationinfo_twice1", [](Fixture& f) {
     // Test double insert of station info
@@ -813,13 +806,9 @@ this->add_method("insert_undefined_level2", [](Fixture& f) {
     // Query it back
     auto cur = f.tr->query_data(*query_from_string("leveltype1=44, l1=55"));
     wassert(actual(cur->remaining()) == 1);
-
     wassert(actual(cur->next()).istrue());
-    core::Record result;
-    cur->to_record(result);
-    wassert(actual(result.get_level()) == Level(44, 55));
-    wassert(actual(result.get_trange()) == Trange(20));
-
+    wassert(actual(cur->get_level()) == Level(44, 55));
+    wassert(actual(cur->get_trange()) == Trange(20));
     wassert(actual(cur->next()).isfalse());
 });
 this->add_method("query_undefined_level2", [](Fixture& f) {
@@ -881,15 +870,9 @@ this->add_method("query_best_priomax", [](Fixture& f) {
         query.datetime = DatetimeRange(Datetime(2009, 11, 11, 0, 0, 0), Datetime(2009, 11, 11, 0, 0, 0));
         query.varcodes.insert(WR_VAR(0, 12, 101));
         auto cur = f.tr->query_data(query);
-
         wassert(actual(cur->remaining()) == 1);
-
         wassert(actual(cur->next()).istrue());
-        core::Record result;
-        cur->to_record(result);
-
-        wassert(actual(result.station.report) == "generic");
-
+        wassert(actual(cur->get_station().report) == "generic");
         cur->discard();
     }
 
@@ -904,10 +887,7 @@ this->add_method("query_best_priomax", [](Fixture& f) {
         wassert(actual(cur->remaining()) == 1);
 
         wassert(actual(cur->next()).istrue());
-        core::Record result;
-        cur->to_record(result);
-
-        wassert(actual(result.station.report) == "tempship");
+        wassert(actual(cur->get_station().report) == "tempship");
 
         cur->discard();
     }
@@ -920,10 +900,7 @@ this->add_method("query_repmemo_in_results", [](Fixture& f) {
     core::Record res;
     auto cur = f.tr->query_data(core::Query());
     while (cur->next())
-    {
-        cur->to_record(res);
-        wassert_false(res.station.report.empty());
-    }
+        wassert_false(cur->get_station().report.empty());
 });
 
 }

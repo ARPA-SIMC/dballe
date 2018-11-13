@@ -2,7 +2,6 @@
 #define DBALLE_CURSOR_H
 
 #include <dballe/fwd.h>
-#include <dballe/record.h>
 #include <wreport/var.h>
 #include <memory>
 #include <vector>
@@ -47,14 +46,6 @@ struct Cursor
 
     /// Query the content of the cursor, as a formatted string. Returns false if the value is unset
     virtual bool enqf(const char* key, unsigned len, std::string& res) const = 0;
-
-    /**
-     * Fill in a Data structure with the current contents of the cursor
-     *
-     * @param data
-     *   The Data where to store the values
-     */
-    virtual void to_record(Record& record) = 0;
 
     /**
      * Get the whole station data in a single call

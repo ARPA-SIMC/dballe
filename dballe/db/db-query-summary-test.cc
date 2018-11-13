@@ -103,23 +103,33 @@ class Tests : public FixtureTestCase<DBDataFixture<DB>>
         this->add_method("query_year", [](Fixture& f) {
             wassert(actual(f.tr).try_summary_query("year=1001", 0));
             wassert(actual(f.tr).try_summary_query("yearmin=1999", 0));
-            auto check_base = [](const vector<core::Record>& res) {
-                wassert(actual(res[0].station.coords) == Coords(12.34560, 76.54320));
-                wassert(actual(res[0].get_level()) == Level(10, 11, 15, 22));
-                wassert(actual(res[0].get_trange()) == Trange(20, 111, 122));
-                wassert(actual(res[0].var) == WR_VAR(0, 12, 101));
+            auto check_base = [](const db::DBSummary& res) {
+                wassert(actual(res.stations().size()) == 2u);
+                wassert(actual(res.stations().begin()->station.coords) == Coords(12.34560, 76.54320));
+                wassert(actual(res.levels().size()) == 1u);
+                wassert(actual(*res.levels().begin()) == Level(10, 11, 15, 22));
+                wassert(actual(res.tranges().size()) == 1u);
+                wassert(actual(*res.tranges().begin()) == Trange(20, 111, 122));
+                wassert(actual(res.varcodes().size()) == 2u);
+                wassert(actual(*res.varcodes().begin()) == WR_VAR(0, 12, 101));
+                wassert(actual(*(res.varcodes().begin() + 1)) == WR_VAR(0, 12, 103));
             };
-            auto check_nodetails = [&](const vector<core::Record>& res) {
+            auto check_nodetails = [&](const db::DBSummary& res) {
                 wassert(check_base(res));
-                wassert(actual(res[0].count) == MISSING_INT);
-                wassert_true(res[0].datetime.is_missing());
+                wassert(actual(res.data_count()) == 0);
+                wassert_true(res.datetime_min().is_missing());
+                wassert_true(res.datetime_max().is_missing());
             };
-            auto check_details = [&](const vector<core::Record>& res) {
+            auto check_details = [&](const db::DBSummary& res) {
                 wassert(check_base(res));
-                wassert(actual(res[0].count) == 2);
-                DatetimeRange dtr = res[0].get_datetimerange();
-                wassert(actual(dtr.min) == Datetime(1945, 4, 25, 8));
-                wassert(actual(dtr.max) == Datetime(1945, 4, 26, 8));
+                wassert(actual(res.data_count()) == 8u);
+                wassert(actual(res.datetime_min()) == Datetime(1945, 4, 25, 8));
+                wassert(actual(res.datetime_max()) == Datetime(1945, 4, 26, 8));
+                auto entry = res.stations().begin();
+                auto varentry = entry->begin();
+                wassert(actual(varentry->count) == 2u);
+                wassert(actual(varentry->dtrange.min) == Datetime(1945, 4, 25, 8));
+                wassert(actual(varentry->dtrange.max) == Datetime(1945, 4, 26, 8));
             };
             wassert(actual(f.tr).try_summary_query("yearmin=1945", 4, check_nodetails));
             wassert(actual(f.tr).try_summary_query("yearmin=1945, query=details", 4, check_details));

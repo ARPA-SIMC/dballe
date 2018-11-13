@@ -19,19 +19,6 @@ Repinfo::Repinfo(dballe::sql::Connection& conn)
 {
 }
 
-void Repinfo::to_record(const std::string& report, core::Record& rec)
-{
-    const repinfo::Cache* c = get_by_memo(report.c_str());
-    if (c)
-    {
-        rec.station.report = report;
-        rec.priomin = rec.priomax = c->prio;
-    } else {
-        rec.station.report.clear();
-        rec.priomin = rec.priomax = MISSING_INT;
-    }
-}
-
 const char* Repinfo::get_rep_memo(int id)
 {
     if (const repinfo::Cache* c = get_by_id(id))

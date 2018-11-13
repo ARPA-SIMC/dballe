@@ -221,8 +221,6 @@ struct Cursor : public dballe::CursorSummary
         cur = results.end();
     }
 
-    void to_record(Record& rec) override;
-
     static DBStation _get_dbstation(const DBStation& s) { return s; }
     static DBStation _get_dbstation(const dballe::Station& station)
     {

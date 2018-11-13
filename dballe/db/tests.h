@@ -2,24 +2,15 @@
 #include <dballe/core/record.h>
 #include <dballe/core/values.h>
 #include <dballe/core/data.h>
+#include <dballe/db/fwd.h>
+#include <dballe/db/v7/fwd.h>
 #include <dballe/db/db.h>
+#include <dballe/db/summary.h>
 #include <dballe/sql/fwd.h>
 #include <utility>
 #include <functional>
 
 namespace dballe {
-struct DB;
-
-namespace db {
-
-namespace v7 {
-struct Driver;
-class DB;
-class Transaction;
-}
-
-}
-
 namespace tests {
 
 Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const dballe::Query& query);
@@ -117,9 +108,6 @@ struct ActualCursor : public Actual<dballe::Cursor&>
     /// Check cursor context after a query_stations
     void station_keys_match(const DBStation& expected);
 
-    /// Check cursor context after a query_stations
-    void station_vars_match(const Data& expected);
-
     /// Check cursor data context after a query_data
     void data_context_matches(const Data& expected);
 
@@ -127,13 +115,19 @@ struct ActualCursor : public Actual<dballe::Cursor&>
     void data_var_matches(const Data& expected, wreport::Varcode code) {
         data_var_matches(*core::Data::downcast(expected).values.want(code).var);
     }
-    /// Check cursor data variable after a query_data
-    void data_var_matches(const Data& expected) {
-        const core::Data& d = core::Data::downcast(expected);
-        if (auto c = dynamic_cast<dballe::CursorStationData*>(&_actual))
-            data_var_matches(*d.values.want(c->get_varcode()).var);
+    /// Check cursor data variable(s) after a query_data
+    void data_var_matches(const core::Values& expected) {
+        if (auto c = dynamic_cast<dballe::db::CursorStation*>(&_actual))
+        {
+            core::Values actual_values = c->get_values();
+            if (!actual_values.vars_equal(expected))
+                // Quick hack to get proper formatting of mismatch
+                wassert(actual(c->get_values()) == expected);
+        }
+        else if (auto c = dynamic_cast<dballe::CursorStationData*>(&_actual))
+            data_var_matches(*expected.want(c->get_varcode()).var);
         else if (auto c = dynamic_cast<dballe::CursorData*>(&_actual))
-            data_var_matches(*d.values.want(c->get_varcode()).var);
+            data_var_matches(*expected.want(c->get_varcode()).var);
         else
             throw wreport::error_consistency("cannot call data_var_matches on this kind of cursor");
     }
@@ -158,7 +152,7 @@ struct ActualCursor : public Actual<dballe::Cursor&>
     void data_matches(const Data& ds, wreport::Varcode code);
 };
 
-typedef std::function<void(const std::vector<core::Record>&)> result_checker;
+typedef std::function<void(const db::DBSummary&)> result_checker;
 
 template<typename DB>
 struct ActualDB : public Actual<std::shared_ptr<DB>>

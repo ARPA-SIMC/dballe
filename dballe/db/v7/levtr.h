@@ -4,19 +4,13 @@
 #include <dballe/core/defs.h>
 #include <dballe/db/v7/cache.h>
 #include <dballe/db/v7/fwd.h>
+#include <dballe/msg/fwd.h>
 #include <memory>
 #include <set>
 #include <cstdio>
 #include <functional>
 
 namespace dballe {
-struct Record;
-struct Msg;
-
-namespace msg {
-struct Context;
-}
-
 namespace db {
 namespace v7 {
 

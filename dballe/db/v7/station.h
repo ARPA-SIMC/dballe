@@ -3,7 +3,6 @@
 
 #include <dballe/fwd.h>
 #include <dballe/core/fwd.h>
-#include <dballe/core/record.h>
 #include <dballe/sql/fwd.h>
 #include <dballe/db/v7/fwd.h>
 #include <dballe/db/v7/cache.h>
@@ -57,12 +56,11 @@ public:
     virtual void get_station_vars(Tracer<>& trc, int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
 
     /**
-     * Add all station variables (without attributes) to rec.
+     * Add all station variables (without attributes) to values.
      *
      * If the same variable exists in many different networks, the one with the
      * highest priority will be used.
      */
-    virtual void add_station_vars(Tracer<>& trc, int id_station, Record& rec) = 0;
     virtual void add_station_vars(Tracer<>& trc, int id_station, core::Values& values) = 0;
 
     /**

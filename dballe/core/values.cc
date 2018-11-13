@@ -143,6 +143,23 @@ bool Values::operator!=(const Values& o) const
     return m_values != o.m_values;
 }
 
+bool Values::vars_equal(const Values& o) const
+{
+    const_iterator a = begin();
+    const_iterator b = o.begin();
+    while (a != end() && b != o.end())
+    {
+        if (!a->var && !b->var)
+            ;
+        else if (!a->var || !b->var)
+            return false;
+        else if (*a->var != *b->var)
+            return false;
+        ++a; ++b;
+    }
+    return a == end() && b == o.end();
+}
+
 Values::iterator Values::find(wreport::Varcode code) noexcept
 {
     /* Binary search */
@@ -328,6 +345,19 @@ void Values::decode(const std::vector<uint8_t>& buf, std::function<void(std::uni
     value::Decoder dec(buf);
     while (dec.size)
         dest(move(dec.decode_var()));
+}
+
+std::ostream& operator<<(std::ostream& o, const Values& values)
+{
+    for (const auto& val: values)
+    {
+        if (val.data_id != MISSING_INT)
+            o << val.data_id << ":";
+        else
+            o << "-:";
+        o << varcode_format(val.code()) << ":" << val.var->format() << endl;
+    }
+    return o;
 }
 
 }

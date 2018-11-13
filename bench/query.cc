@@ -49,7 +49,7 @@ struct BenchmarkQuery : public dballe::benchmark::Task
         dballe::core::Record rec;
         auto cur = tr->query_data(query);
         while (cur->next())
-            cur->to_record(rec);
+            ;
         tr->commit();
     }
 

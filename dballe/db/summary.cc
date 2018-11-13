@@ -346,21 +346,6 @@ Cursor<Station>::Cursor(const summary::StationEntries<Station>& entries, const Q
     }
 }
 
-template<typename Station>
-void Cursor<Station>::to_record(Record& rec)
-{
-    core::Record& r = core::Record::downcast(rec);
-    rec.set(cur->station_entry.station);
-    r.var = cur->var_entry.var.varcode;
-    if (cur->var_entry.count > 0)
-    {
-        r.count = cur->var_entry.count;
-        rec.set(cur->var_entry.dtrange);
-    }
-    rec.set_level(cur->var_entry.var.level);
-    rec.set_trange(cur->var_entry.var.trange);
-}
-
 template class Cursor<dballe::Station>;
 template class Cursor<dballe::DBStation>;
 

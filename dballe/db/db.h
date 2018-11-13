@@ -35,6 +35,11 @@ Format format_parse(const std::string& str);
 struct CursorStation : public dballe::CursorStation
 {
     /**
+     * Get the station data values
+     */
+    virtual core::Values get_values() const = 0;
+
+    /**
      * Iterate the cursor until the end, returning the number of items.
      *
      * If dump is a FILE pointer, also dump the cursor values to it

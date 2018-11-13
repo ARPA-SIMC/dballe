@@ -8,13 +8,6 @@
 #include <memory>
 
 namespace dballe {
-struct Record;
-struct Msg;
-
-namespace msg {
-struct Context;
-}
-
 namespace db {
 namespace v7 {
 namespace sqlite {
@@ -53,7 +46,6 @@ public:
     const LevTrEntry* lookup_id(Tracer<>& trc, int id) override;
     int obtain_id(Tracer<>& trc, const LevTrEntry& desc) override;
 };
-
 
 }
 }

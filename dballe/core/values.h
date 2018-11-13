@@ -162,6 +162,9 @@ public:
     bool operator==(const Values& o) const;
     bool operator!=(const Values& o) const;
 
+    /// Check if the variables are the same, regardless of the data_id
+    bool vars_equal(const Values& o) const;
+
     // const Value& operator[](size_t idx) const { return m_values[idx]; }
 
     /**
@@ -247,6 +250,8 @@ public:
     /// Print the contents of this Values
     void print(FILE* out) const;
 };
+
+std::ostream& operator<<(std::ostream&, const Values&);
 
 }
 }

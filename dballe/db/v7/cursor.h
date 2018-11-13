@@ -114,12 +114,12 @@ struct Stations : public Base<CursorStation, StationRow>
 {
     using Base::Base;
     dballe::DBStation get_station() const override { return this->cur->station; }
+    core::Values get_values() const override { return this->cur->values; }
     void load(Tracer<>& trc, const StationQueryBuilder& qb);
     bool enqi(const char* key, unsigned len, int& res) const override;
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
     bool enqf(const char* key, unsigned len, std::string& res) const override;
-    void to_record(Record& rec) override;
 };
 
 
@@ -142,7 +142,6 @@ struct StationData : public Base<CursorStationData, StationDataRow>
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
     bool enqf(const char* key, unsigned len, std::string& res) const override;
-    void to_record(Record& rec) override;
 };
 
 
@@ -197,7 +196,6 @@ struct Data : public LevtrBase<CursorData, DataRow>
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
     bool enqf(const char* key, unsigned len, std::string& res) const override;
-    void to_record(Record& rec) override;
 };
 
 
@@ -219,7 +217,6 @@ struct Summary : public LevtrBase<CursorSummary, SummaryRow>
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
     bool enqf(const char* key, unsigned len, std::string& res) const override;
-    void to_record(Record& rec) override;
 };
 
 

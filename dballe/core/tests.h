@@ -98,15 +98,6 @@ struct ActualRecord : public wreport::tests::Actual<const dballe::Record&>
 {
     ActualRecord(const dballe::Record& actual) : wreport::tests::Actual<const dballe::Record&>(actual) {}
 
-#if 0
-    TestRecordValEqual equals(const Record& expected, const char* name) { return TestRecordValEqual(this->actual, expected, name); }
-    TestRecordValEqual equals_with_missing_int(const Record& expected, const char* name)
-    {
-        return TestRecordValEqual(this->actual, expected, name, true);
-    }
-#endif
-    /// Check that actual and expected have the same vars
-    void vars_equal(const Record& expected) const { vars_equal(core::Values(expected)); }
     /// Check that actual and expected have the same vars
     void vars_equal(const core::Values& expected) const;
 };

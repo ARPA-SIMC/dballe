@@ -125,7 +125,6 @@ this->add_method("stationdata", [](Fixture& f) {
     auto cur = f.tr->query_stations(core::Query());
 
     // Check results
-    core::Record result;
     switch (DB::format)
     {
         case Format::V7:
@@ -139,21 +138,19 @@ this->add_method("stationdata", [](Fixture& f) {
             {
                 wassert(actual(cur->next()).istrue());
                 DBStation station = cur->get_station();
+                core::Values values = dynamic_cast<db::CursorStation*>(cur.get())->get_values();
                 if (station.report == "temp")
                 {
                     wassert(actual(station.id) == svals_esmac.station.id);
-                    cur->to_record(result);
-                    wassert(actual(*result.get_var(WR_VAR(0, 1, 19))) == "Esmac");
+                    wassert(actual(*values.get_var(WR_VAR(0, 1, 19))) == "Esmac");
                     have_temp = true;
                 } else if (station.report == "synop") {
                     wassert(actual(station.id) == svals_camse.station.id);
-                    cur->to_record(result);
-                    wassert(actual(*result.get_var(WR_VAR(0, 1, 19))) == "Camse");
+                    wassert(actual(*values.get_var(WR_VAR(0, 1, 19))) == "Camse");
                     have_synop = true;
                 }
             }
             wassert(actual(cur->next()).isfalse());
-
             wassert(actual(have_temp).istrue());
             wassert(actual(have_synop).istrue());
             break;

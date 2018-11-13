@@ -13,7 +13,6 @@
 #include "dballe/core/var.h"
 #include "dballe/core/data.h"
 #include "dballe/core/query.h"
-#include "dballe/core/record.h"
 #include "wreport/var.h"
 #include <unordered_map>
 #include <cstring>
@@ -120,14 +119,6 @@ void Stations::load(Tracer<>& trc, const StationQueryBuilder& qb)
     cur = results.begin();
 }
 
-void Stations::to_record(Record& rec)
-{
-    core::Record& r = core::Record::downcast(rec);
-    tr->repinfo().to_record(cur->station.report, r);
-    rec.set_dbstation(cur->station);
-    Tracer<> trc(tr->trc ? tr->trc->trace_add_station_vars() : nullptr);
-    tr->station().add_station_vars(trc, cur->station.id, rec);
-}
 
 StationData::StationData(DataQueryBuilder& qb, bool with_attributes)
     : Base(qb.tr), with_attributes(with_attributes) {}
@@ -140,21 +131,6 @@ void StationData::load(Tracer<>& trc, const DataQueryBuilder& qb)
     });
     at_start = true;
     cur = results.begin();
-}
-
-void StationData::to_record(Record& rec)
-{
-    core::Record& r = core::Record::downcast(rec);
-    tr->repinfo().to_record(cur->station.report, r);
-    rec.set_dbstation(cur->station);
-    r.count = cur->value.data_id;
-    r.var = cur->value.var->code();
-    rec.clear_vars();
-    // TODO: this could be optimized with a move, but it would mean that
-    // to_record can only be called once. That is currently the case, but
-    // not explicitly specified anywhere, so the change needs to happen
-    // when we can check what breaks.
-    rec.set(*cur->value.var);
 }
 
 void StationData::attr_query(std::function<void(std::unique_ptr<wreport::Var>)>&& dest, bool force_read)
@@ -205,24 +181,6 @@ void Data::load(Tracer<>& trc, const DataQueryBuilder& qb)
     this->tr->levtr().prefetch_ids(trc, ids);
 }
 
-void Data::to_record(Record& rec)
-{
-    core::Record& r = core::Record::downcast(rec);
-    tr->repinfo().to_record(cur->station.report, r);
-    rec.set_dbstation(cur->station);
-    rec.set_level(get_level());
-    rec.set_trange(get_trange());
-    rec.set_datetime(cur->datetime);
-    r.count = cur->value.data_id;
-    r.var = cur->value.var->code();
-    rec.clear_vars();
-    // TODO: this could be optimized with a move, but it would mean that
-    // to_record can only be called once. That is currently the case, but
-    // not explicitly specified anywhere, so the change needs to happen
-    // when we can check what breaks.
-    rec.set(*cur->value.var);
-}
-
 void Data::attr_query(std::function<void(std::unique_ptr<wreport::Var>)>&& dest, bool force_read)
 {
     if (!force_read && with_attributes)
@@ -248,22 +206,6 @@ void Summary::load(Tracer<>& trc, const SummaryQueryBuilder& qb)
 
     this->tr->levtr().prefetch_ids(trc, ids);
 }
-
-void Summary::to_record(Record& rec)
-{
-    core::Record& r = core::Record::downcast(rec);
-    tr->repinfo().to_record(cur->station.report, r);
-    r.set_dbstation(cur->station);
-    r.set_level(get_level());
-    r.set_trange(get_trange());
-    r.var = cur->code;
-    if (cur->count > 0)
-    {
-        r.count = cur->count;
-        r.set(cur->dtrange);
-    }
-}
-
 
 namespace {
 

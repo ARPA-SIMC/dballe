@@ -3,6 +3,12 @@
 
 namespace dballe {
 class Msg;
+namespace msg {
+class Context;
+class CursorStation;
+class CursorStationData;
+class CursorData;
+}
 }
 
 #endif

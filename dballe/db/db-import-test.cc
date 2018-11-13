@@ -180,21 +180,13 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             wassert(actual(cur->remaining()) == 1);
             wassert(actual(cur->next()).istrue());
 
-            core::Record result;
-            cur->to_record(result);
-
-            const std::vector<wreport::Var*>& vars = result.vars();
+            auto vars = dynamic_cast<const db::CursorStation*>(cur.get())->get_values();
             wassert(actual(vars.size()) == 5);
-            wassert(actual(varcode_format(vars[0]->code())) == "B01019");
-            wassert(actual(vars[0]->format()) == "My beautifull station");
-            wassert(actual(varcode_format(vars[1]->code())) == "B01194");
-            wassert(actual(vars[1]->format()) == "generic");
-            wassert(actual(varcode_format(vars[2]->code())) == "B05001");
-            wassert(actual(vars[2]->format()) == "45.00000");
-            wassert(actual(varcode_format(vars[3]->code())) == "B06001");
-            wassert(actual(vars[3]->format()) == "10.00000");
-            wassert(actual(varcode_format(vars[4]->code())) == "B07030");
-            wassert(actual(vars[4]->format()) == "22.3");
+            wassert(actual(vars.get_var(WR_VAR(0, 1, 19))->format()) == "My beautifull station");
+            wassert(actual(vars.get_var(WR_VAR(0, 1, 194))->format()) == "generic");
+            wassert(actual(vars.get_var(WR_VAR(0, 5, 1))->format()) == "45.00000");
+            wassert(actual(vars.get_var(WR_VAR(0, 6, 1))->format()) == "10.00000");
+            wassert(actual(vars.get_var(WR_VAR(0, 7, 30))->format()) == "22.3");
         });
         this->add_method("station_only_no_vars", [](Fixture& f) {
             // Check that a message that only contains station variables does get imported

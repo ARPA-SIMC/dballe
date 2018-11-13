@@ -8,8 +8,6 @@
 #include <map>
 
 namespace dballe {
-struct Record;
-
 namespace db {
 namespace v7 {
 namespace sqlite {

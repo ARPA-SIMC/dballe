@@ -106,16 +106,6 @@ void PostgreSQLStation::get_station_vars(Tracer<>& trc, int id_station, std::fun
     };
 }
 
-void PostgreSQLStation::add_station_vars(Tracer<>& trc, int id_station, Record& rec)
-{
-    using namespace dballe::sql::postgresql;
-    Tracer<> trc_sel(trc ? trc->trace_select("v7_station_add_station_vars") : nullptr);
-    Result res(conn.exec_prepared("v7_station_add_station_vars", id_station));
-    if (trc_sel) trc_sel->add_row(res.rowcount());
-    for (unsigned row = 0; row < res.rowcount(); ++row)
-        rec.set(newvar((Varcode)res.get_int4(row, 0), res.get_string(row, 1)));
-}
-
 void PostgreSQLStation::add_station_vars(Tracer<>& trc, int id_station, core::Values& values)
 {
     using namespace dballe::sql::postgresql;

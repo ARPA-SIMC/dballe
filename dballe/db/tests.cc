@@ -63,16 +63,6 @@ void ActualCursor::station_keys_match(const DBStation& expected)
     wassert(actual(_actual.get_station()) == expected);
 }
 
-void ActualCursor::station_vars_match(const Data& expected)
-{
-    const core::Data& exp = core::Data::downcast(expected);
-    wassert(actual(_actual).station_keys_match(exp.station));
-
-    auto rec = Record::create();
-    _actual.to_record(*rec);
-    wassert(actual(*rec).vars_equal(exp.values));
-}
-
 void ActualCursor::data_context_matches(const Data& expected)
 {
     db::CursorData* c = dynamic_cast<db::CursorData*>(&_actual);
@@ -84,13 +74,10 @@ void ActualCursor::data_context_matches(const Data& expected)
     wassert(actual(c->get_trange()) == exp.trange);
     wassert(actual(c->get_datetime()) == exp.datetime);
 
-    auto rec = Record::create();
-    _actual.to_record(*rec);
-    const core::Record& r = core::Record::downcast(*rec);
-    wassert(actual(r.station.report) == exp.station.report);
-    wassert(actual(r.level) == exp.level);
-    wassert(actual(r.trange) == exp.trange);
-    wassert(actual(r.get_datetime()) == exp.datetime);
+    wassert(actual(c->get_station().report) == exp.station.report);
+    wassert(actual(c->get_level()) == exp.level);
+    wassert(actual(c->get_trange()) == exp.trange);
+    wassert(actual(c->get_datetime()) == exp.datetime);
 }
 
 void ActualCursor::data_var_matches(const wreport::Var& expected)
@@ -99,27 +86,11 @@ void ActualCursor::data_var_matches(const wreport::Var& expected)
     {
         wassert(actual(c->get_varcode()) == expected.code());
         wassert(actual(c->get_var()) == expected);
-        auto rec = Record::create();
-        wassert(_actual.to_record(*rec));
-        const Var* actvar = nullptr;
-        for (const auto& i: core::Record::downcast(*rec).vars())
-            if (i->code() == expected.code())
-                actvar = i;
-        wassert(actual(actvar).istrue());
-        wassert(actual(actvar->value_equals(expected)).istrue());
     }
     else if (db::CursorData* c = dynamic_cast<db::CursorData*>(&_actual))
     {
         wassert(actual(c->get_varcode()) == expected.code());
         wassert(actual(c->get_var()) == expected);
-        auto rec = Record::create();
-        wassert(_actual.to_record(*rec));
-        const Var* actvar = nullptr;
-        for (const auto& i: core::Record::downcast(*rec).vars())
-            if (i->code() == expected.code())
-                actvar = i;
-        wassert(actual(actvar).istrue());
-        wassert(actual(actvar->value_equals(expected)).istrue());
     }
     else
         throw TestFailed("cursor is not an instance of CursorValue");
@@ -167,37 +138,24 @@ template<typename DB>
 void ActualDB<DB>::try_summary_query(const std::string& query, unsigned expected, result_checker check_results)
 {
     // Run the query
-    unique_ptr<Cursor> cur = this->_actual->query_summary(core_query_from_string(query));
+    auto cur = this->_actual->query_summary(core_query_from_string(query));
 
     // Check the number of results
     // query_summary counts results in advance only optionally
     if (cur->remaining() != 0)
         wassert(actual(cur->remaining()) == expected);
 
-    vector<core::Record> results;
+    db::DBSummary summary;
+    unsigned found = 0;
     while (cur->next())
     {
-        results.emplace_back(core::Record());
-        cur->to_record(results.back());
+        ++found;
+        summary.add_cursor(*cur);
     }
-    wassert(actual(results.size()) == expected);
+    wassert(actual(found) == expected);
 
     if (check_results)
-    {
-        // Sort the records, to make it easier to test results later
-        std::sort(results.begin(), results.end(), [](const core::Record& a, const core::Record& b) {
-            if (int res = a.station.id - b.station.id) return res < 0;
-            if (a.station.report < b.station.report) return true;
-            if (a.station.report > b.station.report) return false;
-            Level la = a.level;
-            Level lb = b.level;
-            if (int res = la.compare(lb)) return res < 0;
-            if (a.var < b.var) return true;
-            return false;
-        });
-
-        wassert(check_results(results));
-    }
+        wassert(check_results(summary));
 }
 
 bool has_driver(const std::string& backend)

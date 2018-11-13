@@ -9,7 +9,6 @@
 
 #include <dballe/sql/fwd.h>
 #include <dballe/core/fwd.h>
-#include <dballe/core/record.h>
 #include <memory>
 #include <map>
 #include <string>
@@ -77,13 +76,6 @@ struct Repinfo
     virtual ~Repinfo() {}
 
     //static std::unique_ptr<Repinfo> create(Connection& conn);
-
-    /**
-     * Fill repinfo information in a Record based on the repinfo entry with the
-     * given ID
-     */
-    // FIXME: still used?
-    void to_record(const std::string& report, core::Record& rec);
 
     /// Get the rep_memo for a given ID; throws if id is not valud
     // FIXME: use std::string?

@@ -129,23 +129,6 @@ void SQLiteStation::get_station_vars(Tracer<>& trc, int id_station, std::functio
     });
 }
 
-void SQLiteStation::add_station_vars(Tracer<>& trc, int id_station, Record& rec)
-{
-    const char* query = R"(
-        SELECT d.code, d.value
-          FROM station_data d
-         WHERE d.id_station = ?
-    )";
-
-    Tracer<> trc_sel(trc ? trc->trace_select(query) : nullptr);
-    auto stm = conn.sqlitestatement(query);
-    stm->bind(id_station);
-    stm->execute([&]() {
-        if (trc_sel) trc_sel->add_row();
-        rec.set(newvar((wreport::Varcode)stm->column_int(0), stm->column_string(1)));
-    });
-}
-
 void SQLiteStation::add_station_vars(Tracer<>& trc, int id_station, core::Values& values)
 {
     const char* query = R"(

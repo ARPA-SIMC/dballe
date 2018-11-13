@@ -1,6 +1,7 @@
 #include "dbadb.h"
 #include "dballe/message.h"
 #include "dballe/msg/msg.h"
+#include "dballe/core/values.h"
 #include "dballe/db/db.h"
 
 #include <cstdlib>
@@ -55,14 +56,17 @@ bool Importer::operator()(const Item& item)
 int Dbadb::do_dump(const Query& query, FILE* out)
 {
     auto tr = dynamic_pointer_cast<db::Transaction>(db.transaction());
-    unique_ptr<Cursor> cursor = tr->query_data(query);
+    auto cursor = tr->query_data(query);
 
     auto res = Record::create();
     for (unsigned i = 0; cursor->next(); ++i)
     {
-        cursor->to_record(*res);
         fprintf(out, "#%u: -----------------------\n", i);
-        res->print(out);
+        fprintf(out, "Station: "); cursor->get_station().print(out);
+        fprintf(out, "Datetime: "); cursor->get_datetime().print(out);
+        fprintf(out, "Level: "); cursor->get_level().print(out);
+        fprintf(out, "Trange: "); cursor->get_trange().print(out);
+        fprintf(out, "Var: "); cursor->get_var().print(out);
     }
 
     tr->rollback();
@@ -73,14 +77,18 @@ int Dbadb::do_dump(const Query& query, FILE* out)
 int Dbadb::do_stations(const Query& query, FILE* out)
 {
     auto tr = dynamic_pointer_cast<db::Transaction>(db.transaction());
-    unique_ptr<Cursor> cursor = tr->query_stations(query);
+    unique_ptr<db::CursorStation> cursor(dynamic_cast<db::CursorStation*>(tr->query_stations(query).release()));
 
     auto res = Record::create();
     for (unsigned i = 0; cursor->next(); ++i)
     {
-        cursor->to_record(*res);
         fprintf(out, "#%u: -----------------------\n", i);
-        res->print(out);
+        fprintf(out, "Station: "); cursor->get_station().print(out);
+        auto values = cursor->get_values();
+        for (const auto& val: values)
+        {
+            fprintf(out, "Var: "); val.var->print(out);
+        }
     }
 
     tr->rollback();

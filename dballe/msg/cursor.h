@@ -50,7 +50,6 @@ struct CursorStation : public dballe::CursorStation
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
     bool enqf(const char* key, unsigned len, std::string& res) const override;
-    void to_record(Record& record) override {}
 
     DBStation get_station() const override { return station; }
 };
@@ -105,7 +104,6 @@ struct CursorStationData : public dballe::CursorStationData
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
     bool enqf(const char* key, unsigned len, std::string& res) const override;
-    void to_record(Record& record) override {}
 
     DBStation get_station() const override { return station; }
 
@@ -189,7 +187,6 @@ struct CursorData : public dballe::CursorData
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
     bool enqf(const char* key, unsigned len, std::string& res) const override;
-    void to_record(Record& record) override {}
 
     DBStation get_station() const override { return station; }
 
