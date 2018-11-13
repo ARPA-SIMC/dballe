@@ -3,13 +3,13 @@
 #include "dballe/db/explorer.h"
 #include "dballe/core/json.h"
 #include "common.h"
+#include "record.h"
 #include "cursor.h"
 #include "explorer.h"
 #include "message.h"
 #include "importer.h"
 #include "types.h"
 #include "db.h"
-#include "record.h"
 #include "impl-utils.h"
 #include <algorithm>
 #include <sstream>
@@ -381,13 +381,13 @@ struct BaseQuerySummary : public MethKwargs<typename ImplTraits<Station>::Impl>
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "query", nullptr };
-        PyObject* record = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "|O", const_cast<char**>(kwlist), &record))
+        PyObject* pyquery = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "|O", const_cast<char**>(kwlist), &pyquery))
             return nullptr;
 
         try {
             core::Query query;
-            read_query(record, query);
+            read_query(pyquery, query);
             ReleaseGIL gil;
             const auto& summary = get_summary<Station, Scope>(*self);
             auto res = summary.query_summary(query);

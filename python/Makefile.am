@@ -17,7 +17,8 @@ pyexec_LTLIBRARIES = _dballe.la
 _dballe_la_SOURCES = \
     common.cc \
     types.cc \
-    record-access.cc \
+    data-access.cc \
+    query-access.cc \
     record.cc \
     dballe.cc \
     db.cc \
@@ -30,11 +31,16 @@ if HAVE_PYTHON3
 _dballe_la_SOURCES += binarymessage.cc file.cc message.cc importer.cc exporter.cc explorer.cc
 endif
 
-record-access.cc: record-access.in.cc $(top_srcdir)/dballe/mklookup
+data-access.cc: data-access.in.cc $(top_srcdir)/dballe/mklookup
 	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
 
-BUILT_SOURCES = record-access.cc
-EXTRA_DIST += record-access.in.cc record-access.cc
+query-access.cc: query-access.in.cc $(top_srcdir)/dballe/mklookup
+	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
+
+BUILT_SOURCES = data-access.cc query-access.cc
+EXTRA_DIST += \
+	data-access.in.cc data-access.cc \
+	query-access.in.cc query-access.cc
 
 if HAVE_PYTHON3
 doc_DATA = python-dballe.rst

@@ -783,6 +783,177 @@ wreport::Varcode varcode_from_python(PyObject* o)
 }
 #endif
 
+std::string dballe_nullable_string_from_python(PyObject* o)
+{
+    if (!o || o == Py_None)
+        return std::string();
+    if (PyUnicode_Check(o))
+        return throw_ifnull(PyUnicode_AsUTF8(o));
+    if (PyBytes_Check(o))
+        return throw_ifnull(PyBytes_AsString(o));
+    PyErr_SetString(PyExc_TypeError, "report value must be an instance of str, bytes, or None");
+    throw PythonException();
+}
+
+int dballe_int_lat_from_python(PyObject* o)
+{
+    if (!o || o == Py_None)
+        return MISSING_INT;
+    if (PyLong_Check(o))
+    {
+        int res = PyLong_AsLong(o);
+        if (res == -1 && PyErr_Occurred())
+            throw PythonException();
+        return res;
+    }
+    if (PyFloat_Check(o))
+    {
+        double res = PyFloat_AsDouble(o);
+        if (res == -1.0 && PyErr_Occurred())
+            throw PythonException();
+        return Coords::lat_to_int(res);
+    }
+    PyErr_SetString(PyExc_TypeError, "latitude value must be an instance of int, float, or None");
+    throw PythonException();
+}
+
+int dballe_int_lon_from_python(PyObject* o)
+{
+    if (!o || o == Py_None)
+        return MISSING_INT;
+    if (PyLong_Check(o))
+    {
+        int res = PyLong_AsLong(o);
+        if (res == -1 && PyErr_Occurred())
+            throw PythonException();
+        return res;
+    }
+    if (PyFloat_Check(o))
+    {
+        double res = PyFloat_AsDouble(o);
+        if (res == -1.0 && PyErr_Occurred())
+            throw PythonException();
+        return Coords::lon_to_int(res);
+    }
+    PyErr_SetString(PyExc_TypeError, "longitude value must be an instance of int, float, or None");
+    throw PythonException();
+}
+
+void set_lat_from_python(PyObject* o, Coords& coords)
+{
+    if (!o || o == Py_None)
+        coords = Coords();
+    else if (PyLong_Check(o))
+    {
+        int res = PyLong_AsLong(o);
+        if (res == -1 && PyErr_Occurred())
+            throw PythonException();
+        coords.set_lat(res);
+    }
+    else if (PyFloat_Check(o))
+    {
+        double res = PyFloat_AsDouble(o);
+        if (res == -1.0 && PyErr_Occurred())
+            throw PythonException();
+        coords.set_lat(res);
+    }
+    else
+    {
+        PyErr_SetString(PyExc_TypeError, "latitude value must be an instance of int, float, or None");
+        throw PythonException();
+    }
+}
+
+void set_lon_from_python(PyObject* o, Coords& coords)
+{
+    if (!o || o == Py_None)
+        coords = Coords();
+    else if (PyLong_Check(o))
+    {
+        int res = PyLong_AsLong(o);
+        if (res == -1 && PyErr_Occurred())
+            throw PythonException();
+        coords.set_lon(res);
+    }
+    else if (PyFloat_Check(o))
+    {
+        double res = PyFloat_AsDouble(o);
+        if (res == -1.0 && PyErr_Occurred())
+            throw PythonException();
+        coords.set_lon(res);
+    }
+    else
+    {
+        PyErr_SetString(PyExc_TypeError, "longitude value must be an instance of int, float, or None");
+        throw PythonException();
+    }
+}
+
+unsigned short datetime_int16_from_python(PyObject* o)
+{
+    if (!o || o == Py_None)
+        return 0xffff;
+    if (PyLong_Check(o))
+    {
+        int res = PyLong_AsLong(o);
+        if (res == -1 && PyErr_Occurred())
+            throw PythonException();
+        return res;
+    }
+    PyErr_SetString(PyExc_TypeError, "datetime value must be an instance of int, or None");
+    throw PythonException();
+}
+
+unsigned char datetime_int8_from_python(PyObject* o)
+{
+    if (!o || o == Py_None)
+        return 0xff;
+    if (PyLong_Check(o))
+    {
+        int res = PyLong_AsLong(o);
+        if (res == -1 && PyErr_Occurred())
+            throw PythonException();
+        return res;
+    }
+    PyErr_SetString(PyExc_TypeError, "datetime value must be an instance of int, or None");
+    throw PythonException();
+}
+
+void set_values_from_python(dballe::core::Values& values, wreport::Varcode code, PyObject* val)
+{
+    if (!val || val == Py_None)
+        values.unset(code);
+    else if (PyFloat_Check(val))
+    {
+        double v = PyFloat_AsDouble(val);
+        if (v == -1.0 && PyErr_Occurred())
+            throw PythonException();
+        values.set(code, v);
+    } else if (PyLong_Check(val)) {
+        long v = PyLong_AsLong(val);
+        if (v == -1 && PyErr_Occurred())
+            throw PythonException();
+        values.set(code, (int)v);
+    } else if (PyUnicode_Check(val) || PyBytes_Check(val)) {
+        values.set(code, string_from_python(val));
+    } else {
+        PyErr_SetString(PyExc_TypeError, "Expected int, float, str, unicode, or None");
+        throw PythonException();
+    }
+}
+
+std::set<wreport::Varcode> varcodes_from_python(PyObject* o)
+{
+    std::set<wreport::Varcode> res;
+
+    // Iterate, resolve, and insert into res
+    pyo_unique_ptr seq(throw_ifnull(PySequence_Fast(o, "varcodes must be a sequence of strings")));
+    auto size = PySequence_Fast_GET_SIZE(seq.get());
+    PyObject** vals = PySequence_Fast_ITEMS(seq.get());
+    for (unsigned i = 0; i < size; ++i)
+        res.insert(varcode_from_python(vals[i]));
+    return res;
+}
 
 void register_types(PyObject* m)
 {

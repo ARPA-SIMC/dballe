@@ -1,5 +1,4 @@
 #include <Python.h>
-#include <dballe/core/record.h>
 #include "cursor.h"
 #include "record.h"
 #include "db.h"

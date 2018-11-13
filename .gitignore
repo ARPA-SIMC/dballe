@@ -77,4 +77,5 @@ Makefile
 /debian/tmp/
 /python/python-dballe.html
 /python/python-dballe.rst
-/python/record-access.cc
+/python/data-access.cc
+/python/query-access.cc

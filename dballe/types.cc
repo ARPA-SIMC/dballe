@@ -788,7 +788,9 @@ constexpr int LatRange::IMAX;
 constexpr double LatRange::DMIN;
 constexpr double LatRange::DMAX;
 
-LatRange::LatRange(int min, int max) : imin(min), imax(max) {}
+LatRange::LatRange(int min, int max)
+    : imin(min == MISSING_INT ? LatRange::IMIN : min),
+      imax(max == MISSING_INT ? LatRange::IMAX : max) {}
 
 LatRange::LatRange(double min, double max)
     : imin(ll_to_int(min)),
@@ -819,8 +821,8 @@ void LatRange::get(double& min, double& max) const
 
 void LatRange::set(int min, int max)
 {
-    imin = min;
-    imax = max;
+    imin = min == MISSING_INT ? LatRange::IMIN : min;
+    imax = max == MISSING_INT ? LatRange::IMAX : max;
 }
 
 void LatRange::set(double min, double max)

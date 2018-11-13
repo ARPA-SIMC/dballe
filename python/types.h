@@ -130,6 +130,17 @@ wreport::Varcode varcode_from_python(PyObject* o);
 template<> inline wreport::Varcode from_python<wreport::Varcode>(PyObject* o) { return varcode_from_python(o); }
 #endif
 
+std::string dballe_nullable_string_from_python(PyObject* o);
+
+int dballe_int_lat_from_python(PyObject* o);
+int dballe_int_lon_from_python(PyObject* o);
+void set_lat_from_python(PyObject* o, Coords& coords);
+void set_lon_from_python(PyObject* o, Coords& coords);
+unsigned short datetime_int16_from_python(PyObject* o);
+unsigned char datetime_int8_from_python(PyObject* o);
+void set_values_from_python(dballe::core::Values& values, wreport::Varcode code, PyObject* val);
+std::set<wreport::Varcode> varcodes_from_python(PyObject* o);
+
 void register_types(PyObject* m);
 
 }

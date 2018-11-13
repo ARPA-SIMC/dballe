@@ -3,7 +3,6 @@
 
 #include <Python.h>
 #include <dballe/db/db.h>
-#include "record.h"
 
 extern "C" {
 

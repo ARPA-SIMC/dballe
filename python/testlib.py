@@ -50,7 +50,7 @@ def fill_volnd(db):
     db.remove_all()
 
     attrs = {}
-    rec = {"mobile": 0}
+    rec = {}
 
     def contexts():
         # 2 networks
