@@ -598,6 +598,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     state.pop();
                     attr->set(MISSING_INT);
                     var->seta(*attr);
+                    ctx->set(*var);
                     break;
                 default: throw std::runtime_error("Invalid JSON value add_null");
             }
@@ -615,6 +616,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     state.pop();
                     attr->set(val);
                     var->seta(*attr);
+                    ctx->set(*var);
                     break;
                 default: throw std::runtime_error("Invalid JSON value add_bool");
             }
@@ -675,6 +677,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     state.pop();
                     attr->set(val);
                     var->seta(*attr);
+                    ctx->set(*var);
                     break;
                 default: throw std::runtime_error("Invalid JSON value add_int");
             }
@@ -692,6 +695,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     state.pop();
                     attr->set(val);
                     var->seta(*attr);
+                    ctx->set(*var);
                     break;
                 default: throw std::runtime_error("Invalid JSON value add_double");
             }
@@ -770,6 +774,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     state.pop();
                     attr->set(val);
                     var->seta(*attr);
+                    ctx->set(*var);
                     break;
                 default: throw std::runtime_error("Invalid JSON value add_string");
             }
