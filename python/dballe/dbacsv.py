@@ -309,7 +309,7 @@ class Exporter:
 
             # Load station variables for this station
             if id not in self.station_data:
-                query = dballe.Record(ana_id=id)
+                query = dict(ana_id=id)
                 items = {}
                 for record in tr.query_station_data(query):
                     v = record.var(record["var"])

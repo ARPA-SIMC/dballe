@@ -48,7 +48,7 @@ struct query_attrs : MethKwargs<dpy_Cursor>
 {
     constexpr static const char* name = "query_attrs";
     constexpr static const char* signature = "attrs: Iterable[str]";
-    constexpr static const char* returns = "dballe.Record";
+    constexpr static const char* returns = "Dict[str, Any]";
     constexpr static const char* doc = "Query attributes for the current variable (deprecated)";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
@@ -66,24 +66,22 @@ struct query_attrs : MethKwargs<dpy_Cursor>
             // Read the attribute list, if provided
             db::AttrList codes = db_read_attrlist(attrs);
 
-            py_unique_ptr<dpy_Record> rec(record_create());
+            pyo_unique_ptr res(throw_ifnull(PyDict_New()));
 
             if (auto c = dynamic_cast<const db::CursorStationData*>(self->cur))
             {
-                ReleaseGIL gil;
                 c->get_transaction()->attr_query_station(c->attr_reference_id(), [&](unique_ptr<Var>&& var) {
                     if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
                         return;
-                    rec->rec->set(move(var));
+                    set_var(res, *var);
                 });
             }
             else if (auto c = dynamic_cast<const db::CursorData*>(self->cur))
             {
-                ReleaseGIL gil;
                 c->get_transaction()->attr_query_data(c->attr_reference_id(), [&](unique_ptr<Var>&& var) {
                     if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
                         return;
-                    rec->rec->set(move(var));
+                    set_var(res, *var);
                 });
             }
             else
@@ -91,7 +89,7 @@ struct query_attrs : MethKwargs<dpy_Cursor>
                 PyErr_SetString(PyExc_ValueError, "the cursor does ont come from DB.query_station_data or DB.query_data");
                 return nullptr;
             }
-            return (PyObject*)rec.release();
+            return (PyObject*)res.release();
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -99,25 +97,23 @@ struct query_attrs : MethKwargs<dpy_Cursor>
 struct attr_query : MethNoargs<dpy_Cursor>
 {
     constexpr static const char* name = "attr_query";
-    constexpr static const char* returns = "dballe.Record";
+    constexpr static const char* returns = "Dict[str, Any]";
     constexpr static const char* summary = "Query attributes for the current variable";
     static PyObject* run(Impl* self)
     {
         try {
             ensure_valid_cursor(self);
-            py_unique_ptr<dpy_Record> rec(record_create());
+            pyo_unique_ptr res(throw_ifnull(PyDict_New()));
             if (auto c = dynamic_cast<const db::CursorStationData*>(self->cur))
             {
-                ReleaseGIL gil;
                 c->get_transaction()->attr_query_station(c->attr_reference_id(), [&](unique_ptr<Var>&& var) {
-                    rec->rec->set(move(var));
+                    set_var(res, *var);
                 });
             }
             else if (auto c = dynamic_cast<const db::CursorData*>(self->cur))
             {
-                ReleaseGIL gil;
                 c->get_transaction()->attr_query_data(c->attr_reference_id(), [&](unique_ptr<Var>&& var) {
-                    rec->rec->set(move(var));
+                    set_var(res, *var);
                 });
             }
             else
@@ -125,7 +121,7 @@ struct attr_query : MethNoargs<dpy_Cursor>
                 PyErr_SetString(PyExc_ValueError, "the cursor does ont come from DB.query_station_data or DB.query_data");
                 return nullptr;
             }
-            return (PyObject*)rec.release();
+            return (PyObject*)res.release();
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -169,7 +165,6 @@ and just iterated.
     static void _dealloc(Impl* self)
     {
         delete self->cur;
-        Py_DECREF(self->rec);
         Py_TYPE(self)->tp_free(self);
     }
 
@@ -188,9 +183,8 @@ and just iterated.
             ensure_valid_cursor(self);
             if (self->cur->next())
             {
-                self->cur->to_record(*self->rec->rec);
-                Py_INCREF(self->rec);
-                return (PyObject*)self->rec;
+                Py_INCREF(self);
+                return (PyObject*)self;
             } else {
                 PyErr_SetNone(PyExc_StopIteration);
                 return nullptr;
@@ -210,7 +204,6 @@ dpy_Cursor* cursor_create(std::unique_ptr<Cursor> cur)
 {
     py_unique_ptr<dpy_Cursor> result(throw_ifnull(PyObject_New(dpy_Cursor, dpy_Cursor_Type)));
     result->cur = cur.release();
-    result->rec = record_create();
     return result.release();
 }
 

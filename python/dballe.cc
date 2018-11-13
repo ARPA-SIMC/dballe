@@ -2,7 +2,6 @@
 #include <wreport/python.h>
 #include "common.h"
 #include "types.h"
-#include "record.h"
 #include "db.h"
 #include "cursor.h"
 #if PY_MAJOR_VERSION >= 3
@@ -185,7 +184,6 @@ PyMODINIT_FUNC init_dballe(void)
     try {
         pyo_unique_ptr m(PyModule_Create(&dballe_module));
         register_types(m);
-        register_record(m);
         register_binarymessage(m);
         register_file(m);
         register_message(m);
@@ -200,7 +198,6 @@ PyMODINIT_FUNC init_dballe(void)
 #else
     pyo_unique_ptr m(Py_InitModule3("_dballe", dballe_methods, "DB-All.e Python interface."));
     register_types(m);
-    register_record(m);
     register_db(m);
     register_cursor(m);
 #endif

@@ -15,7 +15,7 @@ the same meaning.
 
 This example code extracts temperatures in a station by datetime matrix::
 
-        query = dballe.Record()
+        query = dict()
         query["var"] = "B12001"
         query["rep_memo"] = "synop"
         query["level"] = (105, 2)
@@ -174,6 +174,7 @@ class ListIndex(Index, list):
             self.append(self.details_from_record(rec))
         return pos
 
+
 class AnaIndexEntry(namedtuple("AnaIndexEntry", ("id", "lat", "lon", "ident"))):
     """
     AnaIndex entry, with various data about a single station.
@@ -187,18 +188,19 @@ class AnaIndexEntry(namedtuple("AnaIndexEntry", ("id", "lat", "lon", "ident"))):
     @classmethod
     def from_record(cls, rec):
         """
-        Create an index entry from the contents of a dballe.Record
+        Create an index entry from the contents of a Dict[str, Any]
         """
         return cls(rec["ana_id"], rec["lat"], rec["lon"], rec.get("ident", None))
 
     def __str__(self):
-        if self[3] == None:
+        if self[3] is None:
             return "Station at lat %.5f lon %.5f" % (self.lat, self.lon)
         else:
             return "%s at lat %.5f lon %.5f" % (self.ident, self.lat, self.lon)
 
     def __repr__(self):
         return "AnaIndexEntry" + tuple.__repr__(self)
+
 
 class AnaIndex(ListIndex):
     """

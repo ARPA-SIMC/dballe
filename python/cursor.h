@@ -31,7 +31,6 @@ extern "C" {
 typedef struct {
     PyObject_HEAD
     dballe::Cursor* cur;
-    dpy_Record* rec;
 } dpy_Cursor;
 
 extern PyTypeObject* dpy_Cursor_Type;

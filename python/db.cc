@@ -130,7 +130,7 @@ template<typename Impl>
 struct insert_station_data : MethKwargs<Impl>
 {
     constexpr static const char* name = "insert_station_data";
-    constexpr static const char* signature = "record: Union[dict, dballe.Record], can_replace: bool=False, can_add_stations: bool=False";
+    constexpr static const char* signature = "record: Dict[str, Any], can_replace: bool=False, can_add_stations: bool=False";
     constexpr static const char* returns = "Dict[str, int]";
     constexpr static const char* summary = "Insert station values in the database";
     constexpr static const char* doc = R"(
@@ -140,21 +140,20 @@ database ID of its value.
 )";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = { "record", "can_replace", "can_add_stations", NULL };
-        PyObject* record;
+        static const char* kwlist[] = { "data", "can_replace", "can_add_stations", NULL };
+        PyObject* pydata;
         int can_replace = 0;
         int station_can_add = 0;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "O|ii", const_cast<char**>(kwlist), &record, &can_replace, &station_can_add))
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O|ii", const_cast<char**>(kwlist), &pydata, &can_replace, &station_can_add))
             return nullptr;
 
         try {
-            RecordAccess rec(record);
+            core::Data data;
+            read_data(pydata, data);
             ReleaseGIL gil;
-            core::Data vals;
-            rec.get().to_data(vals);
-            self->db->insert_station_data(vals, can_replace, station_can_add);
+            self->db->insert_station_data(data, can_replace, station_can_add);
             gil.lock();
-            return get_insert_ids(vals);
+            return get_insert_ids(data);
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -163,7 +162,7 @@ template<typename Impl>
 struct insert_data : MethKwargs<Impl>
 {
     constexpr static const char* name = "insert_data";
-    constexpr static const char* signature = "record: Union[dict, dballe.Record], can_replace: bool=False, can_add_stations: bool=False";
+    constexpr static const char* signature = "record: Dict[str, Any], can_replace: bool=False, can_add_stations: bool=False";
     constexpr static const char* returns = "Dict[str, int]";
     constexpr static const char* summary = "Insert data values in the database";
     constexpr static const char* doc = R"(
@@ -173,21 +172,20 @@ database ID of its value.
 )";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = { "record", "can_replace", "can_add_stations", NULL };
-        PyObject* record;
+        static const char* kwlist[] = { "data", "can_replace", "can_add_stations", NULL };
+        PyObject* pydata;
         int can_replace = 0;
         int station_can_add = 0;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "O|ii", const_cast<char**>(kwlist), &record, &can_replace, &station_can_add))
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O|ii", const_cast<char**>(kwlist), &pydata, &can_replace, &station_can_add))
             return nullptr;
 
         try {
-            RecordAccess rec(record);
+            core::Data data;
             ReleaseGIL gil;
-            core::Data vals;
-            rec.get().to_data(vals);
-            self->db->insert_data(vals, can_replace, station_can_add);
+            read_data(pydata, data);
+            self->db->insert_data(data, can_replace, station_can_add);
             gil.lock();
-            return get_insert_ids(vals);
+            return get_insert_ids(data);
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -195,7 +193,7 @@ database ID of its value.
 template<typename Base, typename Impl>
 struct MethQuery : public MethKwargs<Impl>
 {
-    constexpr static const char* signature = "query: Union[dict, dballe.Record]";
+    constexpr static const char* signature = "query: Dict[str, Any]";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "query", NULL };
@@ -354,16 +352,13 @@ struct query_attrs : MethKwargs<Impl>
         try {
             // Read the attribute list, if provided
             db::AttrList codes = db_read_attrlist(attrs);
-            py_unique_ptr<dpy_Record> rec(record_create());
-
-            ReleaseGIL gil;
+            pyo_unique_ptr res(throw_ifnull(PyDict_New()));
             self->db->attr_query_data(reference_id, [&](unique_ptr<Var>&& var) {
                 if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
                     return;
-                rec->rec->set(move(var));
+                set_var(res, *var);
             });
-            gil.lock();
-            return (PyObject*)rec.release();
+            return (PyObject*)res.release();
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -374,7 +369,7 @@ struct attr_query_station : MethKwargs<Impl>
 {
     constexpr static const char* name = "attr_query_station";
     constexpr static const char* signature = "varid: int";
-    constexpr static const char* returns = "dballe.Record";
+    constexpr static const char* returns = "Dict[str, Any]";
     constexpr static const char* summary = "query station data attributes";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
@@ -384,13 +379,11 @@ struct attr_query_station : MethKwargs<Impl>
             return nullptr;
 
         try {
-            py_unique_ptr<dpy_Record> rec(record_create());
-            ReleaseGIL gil;
+            pyo_unique_ptr res(throw_ifnull(PyDict_New()));
             self->db->attr_query_station(varid, [&](unique_ptr<Var> var) {
-                rec->rec->set(move(var));
+                set_var(res, *var);
             });
-            gil.lock();
-            return (PyObject*)rec.release();
+            return (PyObject*)res.release();
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -400,7 +393,7 @@ struct attr_query_data : MethKwargs<Impl>
 {
     constexpr static const char* name = "attr_query_data";
     constexpr static const char* signature = "varid: int";
-    constexpr static const char* returns = "dballe.Record";
+    constexpr static const char* returns = "Dict[str, Any]";
     constexpr static const char* doc = "query data attributes";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
@@ -410,13 +403,11 @@ struct attr_query_data : MethKwargs<Impl>
             return nullptr;
 
         try {
-            py_unique_ptr<dpy_Record> rec(record_create());
-            ReleaseGIL gil;
+            pyo_unique_ptr res(throw_ifnull(PyDict_New()));
             self->db->attr_query_data(varid, [&](unique_ptr<Var>&& var) {
-                rec->rec->set(move(var));
+                set_var(res, *var);
             });
-            gil.lock();
-            return (PyObject*)rec.release();
+            return (PyObject*)res.release();
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -425,7 +416,7 @@ template<typename Impl>
 struct attr_insert : MethKwargs<Impl>
 {
     constexpr static const char* name = "attr_insert";
-    constexpr static const char* signature = "varcode: str, attrs: Union[dballe.Record, dict], varid: int=None";
+    constexpr static const char* signature = "varcode: str, attrs: Dict[str, Any], varid: int=None";
     constexpr static const char* doc = "Insert new attributes into the database (deprecated)";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
@@ -462,7 +453,7 @@ template<typename Impl>
 struct attr_insert_station : MethKwargs<Impl>
 {
     constexpr static const char* name = "attr_insert_station";
-    constexpr static const char* signature = "varid: int, attrs: Union[dballe.Record, dict]";
+    constexpr static const char* signature = "varid: int, attrs: Dict[str, Any]";
     constexpr static const char* summary = "Insert new attributes into the database";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
@@ -486,7 +477,7 @@ template<typename Impl>
 struct attr_insert_data : MethKwargs<Impl>
 {
     constexpr static const char* name = "attr_insert_data";
-    constexpr static const char* signature = "varid: int, attrs: Union[dballe.Record, dict]";
+    constexpr static const char* signature = "varid: int, attrs: Dict[str, Any]";
     constexpr static const char* summary = "Insert new attributes into the database";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
@@ -693,7 +684,7 @@ template<typename Impl>
 struct export_to_file : MethKwargs<Impl>
 {
     constexpr static const char* name = "export_to_file";
-    constexpr static const char* signature = "query: Union[dballe.Record, dict], format: str, filename: Union[str, file], generic: bool=False";
+    constexpr static const char* signature = "query: Dict[str, Any], format: str, filename: Union[str, file], generic: bool=False";
     constexpr static const char* summary = "Export data matching a query as bulletins to a named file (deprecated)";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
@@ -1087,9 +1078,7 @@ Examples:
     query = {latmin=44.0, latmax=45.0, lonmin=11.0, lonmax=12.0}
 
     # The result is a dballe.Cursor, which can be iterated to get results as
-    # dballe.Record objects.
-    # The results always point to the same Record to avoid creating a new one
-    # for every iteration: if you need to store them, use Record.copy()
+    # dict objects.
     for rec in db.query_data(query):
         print(rec["lat"], rec["lon"], rec["var"], rec.var().format("undefined"))
 
