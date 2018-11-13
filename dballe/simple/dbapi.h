@@ -31,15 +31,13 @@ public:
     DbAPI(std::shared_ptr<db::Transaction> tr, unsigned perms);
     virtual ~DbAPI();
 
+    void seti(const char* param, int value) override;
     void scopa(const char* repinfofile=0) override;
     void remove_all() override;
     int quantesono() override;
     int voglioquesto() override;
     void prendilo() override;
     void dimenticami() override;
-    int voglioancora() override;
-    void critica() override;
-    void scusa() override;
     void fatto() override;
     void messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified=true) override;
     void messages_open_output(const char* filename, const char* mode, Encoding format) override;

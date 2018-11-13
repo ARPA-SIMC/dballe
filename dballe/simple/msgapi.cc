@@ -5,6 +5,7 @@
 #include "dballe/exporter.h"
 #include "dballe/message.h"
 #include "dballe/msg/msg.h"
+#include "dballe/msg/cursor.h"
 #include "dballe/msg/context.h"
 #include "dballe/core/var.h"
 #include <cstring>
@@ -16,9 +17,260 @@ using namespace std;
 namespace dballe {
 namespace fortran {
 
+namespace {
+
+struct QuantesonoOperation : public CursorOperation<CursorStation>
+{
+    const MsgAPI& api;
+
+    QuantesonoOperation(const MsgAPI& api)
+        : api(api)
+    {
+    }
+
+    int run()
+    {
+        const Msg* curmsg = api.curmsg();
+        if (!curmsg)
+            throw error_consistency("quantesono called without a current message");
+        cursor = curmsg->query_stations(api.input_query);
+        return cursor->remaining();
+    }
+
+    bool elencamele() override
+    {
+        return cursor->next();
+    }
+
+    void voglioancora(Attributes& dest) override { throw error_consistency("voglioancora cannot be called after quantesono/elencamele"); }
+    void critica(core::Values& qcinput) override { throw error_consistency("critica cannot be called after quantesono/elencamele"); }
+    void scusa() override { throw error_consistency("scusa cannot be called after quantesono/elencamele"); }
+};
+
+template<typename Cursor>
+struct CursorTraits {};
+
+template<>
+struct CursorTraits<msg::CursorStationData>
+{
+    static inline std::unique_ptr<msg::CursorStationData> query(const dballe::Msg& msg, const core::Query& query)
+    {
+        return std::unique_ptr<msg::CursorStationData>(dynamic_cast<msg::CursorStationData*>(msg.query_station_data(query).release()));
+    }
+    /*
+    static inline void attr_insert(db::Transaction& tr, int id, const core::Values& values)
+    {
+        tr.attr_insert_station(id, values);
+    }
+    */
+};
+
+template<>
+struct CursorTraits<msg::CursorData>
+{
+    static inline std::unique_ptr<msg::CursorData> query(const dballe::Msg& msg, const core::Query& query)
+    {
+        return std::unique_ptr<msg::CursorData>(dynamic_cast<msg::CursorData*>(msg.query_data(query).release()));
+    }
+    /*
+    static inline void attr_insert(db::Transaction& tr, int id, const core::Values& values)
+    {
+        tr.attr_insert_data(id, values);
+    }
+    */
+};
+
+template<typename Cursor>
+struct VoglioquestoOperation : public CursorOperation<Cursor>
+{
+    MsgAPI& api;
+    bool valid_cached_attrs = false;
+    bool dammelo_ended = false;
+
+    VoglioquestoOperation(MsgAPI& api)
+        : api(api)
+    {
+    }
+
+    int run()
+    {
+        Msg* msg = api.curmsg();
+        if (!msg) return API::missing_int;
+
+        // this->cursor.reset(CursorTraits<Cursor>::query(*msg, api.input_query).release());
+        this->cursor.reset(dynamic_cast<Cursor*>(msg->query_station_and_data(api.input_query).release()));
+        return this->cursor->remaining();
+    }
+
+    wreport::Varcode dammelo(dballe::Record& output) override
+    {
+        output.clear();
+        if (dammelo_ended) return 0;
+
+        if (this->cursor->next())
+        {
+            this->cursor->to_record(output);
+            valid_cached_attrs = true;
+            return this->cursor->get_varcode();
+        } else {
+            dammelo_ended = true;
+            return 0;
+        }
+    }
+
+    void voglioancora(Attributes& dest) override
+    {
+        if (dammelo_ended) throw error_consistency("voglioancora called after dammelo returned end of data");
+
+        wreport::Var var = this->cursor->get_var();
+        api.qcoutput.values.clear();
+        for (const Var* attr = var.next_attr(); attr; attr = attr->next_attr())
+            api.qcoutput.values.set(*attr);
+        api.qcoutput.has_new_values();
+        api.qcinput.clear();
+    }
+
+    void critica(core::Values& qcinput) override
+    {
+        throw error_consistency("critica has been called without a previous prendilo");
+    }
+
+    void scusa() override
+    {
+        throw error_consistency("scusa does not make sense when writing messages");
+    }
+};
+
+struct PrendiloOperation : public Operation
+{
+    /// Store database variable IDs for all last inserted variables
+    MsgAPI& api;
+    wreport::Varcode varcode = 0;
+    /// Level for vars
+    Level vars_level;
+    /// Time range for vars
+    Trange vars_trange;
+    /// Last variables written with prendilo
+    core::Values vars;
+
+    PrendiloOperation(MsgAPI& api)
+        : api(api)
+    {
+    }
+    ~PrendiloOperation()
+    {
+        if (!vars.empty() && api.wmsg)
+            flushVars();
+    }
+
+    void set_varcode(wreport::Varcode varcode) override { this->varcode = varcode; }
+
+    void flushVars()
+    {
+        // Acquire the variables still around from the last prendilo
+        vars.move_to([&](std::unique_ptr<wreport::Var> var) {
+            api.wmsg->set(vars_level, vars_trange, std::move(var));
+        });
+    }
+
+    void run()
+    {
+        if (!api.msgs) api.msgs = new Messages;
+        if (!api.wmsg) api.wmsg = new Msg;
+
+        // Store record metainfo
+        if (!api.input_data.station.report.empty())
+        {
+            api.wmsg->set_rep_memo(api.input_data.station.report.c_str());
+            api.wmsg->type = Msg::type_from_repmemo(api.input_data.station.report.c_str());
+        }
+        if (api.input_data.station.id != MISSING_INT)
+            api.wmsg->set(Level(), Trange(), newvar(WR_VAR(0, 1, 192), api.input_data.station.id));
+        if (!api.input_data.station.ident.is_missing())
+            api.wmsg->set_ident(api.input_data.station.ident);
+        if (api.input_data.station.coords.lat != MISSING_INT)
+            api.wmsg->set_latitude(api.input_data.station.coords.dlat());
+        if (api.input_data.station.coords.lon != MISSING_INT)
+            api.wmsg->set_longitude(api.input_data.station.coords.dlon());
+
+        Datetime dt = api.input_data.datetime;
+        if (!api.input_data.datetime.is_missing())
+        {
+            dt.set_lower_bound();
+            api.wmsg->set_datetime(dt);
+        }
+
+        flushVars();
+        assert(vars.empty());
+
+        vars_level = api.input_data.level;
+        vars_trange = api.input_data.trange;
+
+        vars = std::move(api.input_data.values);
+
+        if (!api.input_query.query.empty())
+        {
+            if (strcasecmp(api.input_query.query.c_str(), "subset") == 0)
+            {
+                api.flushSubset();
+            } else if (strncasecmp(api.input_query.query.c_str(), "message", 7) == 0) {
+                // Check that message is followed by spaces or end of string
+                const char* s = api.input_query.query.c_str() + 7;
+                if (*s != 0 && !isblank(*s))
+                    error_consistency::throwf("Query type \"%s\" is not among the supported values", api.input_query.query.c_str());
+                // Skip the spaces after message
+                while (*s != 0 && isblank(*s))
+                    ++s;
+
+                // Set or reset the exporter template
+                api.set_exporter(s);
+
+                api.flushMessage();
+            } else
+                error_consistency::throwf("Query type \"%s\" is not among the supported values", api.input_query.query.c_str());
+
+            // Uset query after using it: it needs to be explicitly set every time
+            api.input_query.query.clear();
+        }
+    }
+#if 0
+    void select_attrs(const std::vector<wreport::Varcode>& varcodes) override
+    {
+        if (!varcodes.empty())
+            throw error_consistency("*var and *varlist cannot be set after a prendilo");
+    }
+#endif
+    void voglioancora(Attributes& dest) override
+    {
+        throw error_consistency("voglioancora cannot be called after a prendilo");
+    }
+    void critica(core::Values& qcinput) override
+    {
+        if (vars.empty())
+            throw error_consistency("critica has been called without a previous prendilo");
+        if (vars.size() > 1)
+            throw error_consistency("critica has been called after setting many variables with a single prendilo, so I do not know which one should get the attributes");
+
+        qcinput.move_to_attributes(*vars.begin()->var);
+    }
+
+    void scusa() override
+    {
+        throw error_consistency("scusa does not make sense when writing messages");
+    }
+    int enqi(const char* param) const override { wreport::error_consistency::throwf("enqi %s cannot be called after a prendilo", param); }
+    double enqd(const char* param) const override { throw wreport::error_consistency("enqd cannot be called after a prendilo"); }
+    bool enqc(const char* param, std::string& res) const override { throw wreport::error_consistency("enqc cannot be called after a prendilo"); }
+    void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) const override { throw wreport::error_consistency("enqlevel cannot be called after a prendilo"); }
+    void enqtimerange(int& ptype, int& p1, int& p2) const override { throw wreport::error_consistency("enqtimerange cannot be called after a prendilo"); }
+    void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec) const override { throw wreport::error_consistency("enqdate cannot be called after a prendilo"); }
+};
+
+}
+
 
 MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
-    : file(0), state(STATE_BLANK), importer(0), exporter(0), msgs(0), wmsg(0), curmsgidx(0), iter_ctx(-1), iter_var(-1),
+    : file(0), state(STATE_BLANK), importer(0), curmsgidx(0),
         cached_cat(0), cached_subcat(0), cached_lcat(0)
 {
     if (strchr(mode, 'r') != NULL)
@@ -43,19 +295,48 @@ MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
 
 MsgAPI::~MsgAPI()
 {
-    if (perms & (PERM_DATA_WRITE | PERM_DATA_ADD))
+    reset_operation();
+    if (wmsg)
     {
-        if (wmsg) flushSubset();
-        if (msgs) flushMessage();
-    } else {
-        if (wmsg) delete wmsg;
-        if (msgs) delete msgs;
+        flushSubset();
+        flushMessage();
     }
     if (file) delete file;
     if (importer) delete importer;
     if (exporter) delete exporter;
-    for (vector<Var*>::iterator i = vars.begin(); i != vars.end(); ++i)
-        delete *i;
+}
+
+void MsgAPI::flushSubset()
+{
+    unique_ptr<Message> awmsg(wmsg);
+    wmsg = nullptr;
+    msgs->emplace_back(move(awmsg));
+}
+
+void MsgAPI::flushMessage()
+{
+    if (wmsg)
+        flushSubset();
+    if (!msgs->empty())
+    {
+        if (!exporter)
+        {
+            ExporterOptions opts;
+            opts.template_name = exporter_template;
+            exporter = Exporter::create(file->encoding(), opts).release();
+        }
+        file->write(exporter->to_binary(*msgs));
+    }
+    delete msgs;
+    msgs = nullptr;
+}
+
+const Msg* MsgAPI::curmsg() const
+{
+    if (msgs && curmsgidx < msgs->size())
+        return &Msg::downcast(*(*msgs)[curmsgidx]);
+    else
+        return nullptr;
 }
 
 Msg* MsgAPI::curmsg()
@@ -115,82 +396,7 @@ int MsgAPI::quantesono()
     if (state & STATE_EOF)
         return missing_int;
     state |= STATE_QUANTESONO;
-        
-    return 1;
-}
-
-void MsgAPI::elencamele()
-{
-    if ((state & STATE_QUANTESONO) == 0)
-        throw error_consistency("elencamele called without a previous quantesono");
-
-    output.clear();
-
-    Msg* msg = curmsg();
-    if (!msg) return;
-
-    const msg::Context* ctx = msg->find_context(Level(), Trange());
-    if (!ctx) return;
-
-    output.mobile = 0;
-    output.station.report = Msg::repmemo_from_type(msg->type);
-
-    for (size_t l = 0; l < ctx->data.size(); ++l)
-    {
-        const Var& var = *(ctx->data[l]);
-        switch (var.code())
-        {
-            case WR_VAR(0, 5,   1): output.station.coords.set_lat(var.enqd()); break;
-            case WR_VAR(0, 6,   1): output.station.coords.set_lon(var.enqd()); break;
-            case WR_VAR(0, 1,  11):
-                output.station.ident = var.enqc();
-                output.mobile = 1;
-                break;
-            case WR_VAR(0, 1, 192): output.station.id = var.enqi(); break;
-            case WR_VAR(0, 1, 194): output.station.report = var.enqc(); break;
-            default: output.set(var); break;
-        }
-    }
-}
-
-bool MsgAPI::incrementMsgIters()
-{
-    if (iter_ctx < 0)
-    {
-        iter_ctx = 0;
-        iter_var = -1;
-    }
-
-    Msg* msg = curmsg();
-    if ((unsigned)iter_ctx >= msg->data.size())
-        return false;
-
-    const msg::Context* ctx = msg->data[iter_ctx];
-    if (iter_var < (int)ctx->data.size() - 1)
-    {
-        ++iter_var;
-    } else {
-        ++iter_ctx;
-        iter_var = 0;
-    }
-
-    // Skip redundant variables in the pseudoana layer
-    if ((unsigned)iter_ctx < msg->data.size() && msg->data[iter_ctx]->level == Level())
-    {
-        vector<Var*> data = msg->data[iter_ctx]->data;
-        while((unsigned)iter_var < data.size() && WR_VAR_X(data[iter_var]->code()) >= 4 && WR_VAR_X(data[iter_var]->code()) <= 6)
-            ++iter_var;
-        if ((unsigned)iter_var == data.size())
-        {
-            ++iter_ctx;
-            iter_var = 0;
-        }
-    }
-
-    if ((unsigned)iter_ctx >= msg->data.size())
-        return false;
-
-    return true;
+    return reset_operation(new QuantesonoOperation(*this));
 }
 
 int MsgAPI::voglioquesto()
@@ -201,125 +407,23 @@ int MsgAPI::voglioquesto()
         return missing_int;
     state |= STATE_VOGLIOQUESTO;
 
-    iter_ctx = iter_var = -1;
-
-    Msg* msg = curmsg();
-    if (!msg) return missing_int;
-
-    int count = 0;
-    for (size_t l = 0; l < msg->data.size(); ++l)
-    {
-        const msg::Context* ctx = msg->data[l];
-        if (ctx->level == Level())
-        {
-            // Count skipping datetime and coordinate variables
-            for (vector<Var*>::const_iterator i = ctx->data.begin();
-                    i != ctx->data.end(); ++i)
-                if (WR_VAR_X((*i)->code()) < 4 || WR_VAR_X((*i)->code()) > 6)
-                    ++count;
-        } else
-            count += ctx->data.size();
-    }
-    return count;
+#if 0
+    if (station_context)
+        return reset_operation(new VoglioquestoOperation<msg::CursorStationData>(*this));
+    else
+#endif
+        return reset_operation(new VoglioquestoOperation<msg::CursorData>(*this));
 }
 
-wreport::Varcode MsgAPI::dammelo()
+void MsgAPI::set_exporter(const char* template_name)
 {
-    if ((state & STATE_VOGLIOQUESTO) == 0)
-        throw error_consistency("dammelo called without a previous voglioquesto");
+    if (exporter and exporter_template == template_name)
+        return;
 
-    output.clear();
-
-    Msg* msg = curmsg();
-    if (!msg) return 0;
-
-    if (!incrementMsgIters())
-        return 0;
-
-    output.set(msg->get_datetime());
-
-    // Set metainfo from msg ana layer
-    if (const msg::Context* ctx = msg->find_context(Level(), Trange()))
-    {
-        output.mobile = 0;
-        output.station.report = Msg::repmemo_from_type(msg->type);
-
-        Datetime dt;
-        for (size_t l = 0; l < ctx->data.size(); ++l)
-        {
-            const Var& var = *(ctx->data[l]);
-            switch (var.code())
-            {
-                case WR_VAR(0, 5,   1): output.station.coords.set_lat(var.enqd()); break;
-                case WR_VAR(0, 6,   1): output.station.coords.set_lon(var.enqd()); break;
-                case WR_VAR(0, 4,   1): dt.year   = var.enqi(); break;
-                case WR_VAR(0, 4,   2): dt.month  = var.enqi(); break;
-                case WR_VAR(0, 4,   3): dt.day    = var.enqi(); break;
-                case WR_VAR(0, 4,   4): dt.hour   = var.enqi(); break;
-                case WR_VAR(0, 4,   5): dt.minute = var.enqi(); break;
-                case WR_VAR(0, 4,   6): dt.second = var.enqi(); break;
-                case WR_VAR(0, 1,  11):
-                    output.station.ident = var.enqc();
-                    output.mobile = 1;
-                    break;
-                case WR_VAR(0, 1, 192): output.station.id = var.enqi(); break;
-                case WR_VAR(0, 1, 194): output.station.report = var.enqc(); break;
-                default: output.set(var); break;
-            }
-        }
-        output.set(dt);
-    }
-
-    msg::Context* ctx = msg->data[iter_ctx];
-    output.set(ctx->level);
-    output.set(ctx->trange);
-
-    const Var& var = *ctx->data[iter_var];
-    output.var = var.code();
-    output.set(var);
-    return var.code();
-}
-
-void MsgAPI::flushVars()
-{
-    // Acquire the variables still around from the last prendilo
-    while (!vars.empty())
-    {
-        // Pop a variable from the vector and take ownership of
-        // its memory management
-        unique_ptr<Var> var(vars.back());
-        vars.pop_back();
-
-        wmsg->set(vars_level, vars_trange, move(var));
-    }
-}
-
-void MsgAPI::flushSubset()
-{
-    if (wmsg)
-    {
-        flushVars();
-        unique_ptr<Message> awmsg(wmsg);
-        wmsg = 0;
-        msgs->emplace_back(move(awmsg));
-    }
-}
-
-void MsgAPI::flushMessage()
-{
-    if (msgs)
-    {
-        flushSubset();
-        if (exporter == 0)
-        {
-            ExporterOptions opts;
-            opts.template_name = exporter_template;
-            exporter = Exporter::create(file->encoding(), opts).release();
-        }
-        file->write(exporter->to_binary(*msgs));
-        delete msgs;
-        msgs = 0;
-    }
+    // If it has changed, we need to recreate the exporter
+    delete exporter;
+    exporter = nullptr;
+    exporter_template = template_name;
 }
 
 void MsgAPI::prendilo()
@@ -327,115 +431,14 @@ void MsgAPI::prendilo()
     if (perms & PERM_DATA_RO)
         error_consistency("prendilo cannot be called with the file open in read mode");
 
-    if (!msgs) msgs = new Messages;
-    if (!wmsg) wmsg = new Msg;
-
-    // Store record metainfo
-    if (!input_data.station.report.empty())
-    {
-        wmsg->set_rep_memo(input_data.station.report.c_str());
-        wmsg->type = Msg::type_from_repmemo(input_data.station.report.c_str());
-    }
-    if (input_data.station.id != MISSING_INT)
-        wmsg->set(Level(), Trange(), newvar(WR_VAR(0, 1, 192), input_data.station.id));
-    if (!input_data.station.ident.is_missing())
-        wmsg->set_ident(input_data.station.ident);
-    if (input_data.station.coords.lat != MISSING_INT)
-        wmsg->set_latitude(input_data.station.coords.dlat());
-    if (input_data.station.coords.lon != MISSING_INT)
-        wmsg->set_longitude(input_data.station.coords.dlon());
-
-    Datetime dt = input_data.datetime;
-    if (!input_data.datetime.is_missing())
-    {
-        dt.set_lower_bound();
-        wmsg->set_datetime(dt);
-    }
-
-    flushVars();
-    assert(vars.empty());
-
-    vars_level = input_data.level;
-    vars_trange = input_data.trange;
-
-    // FIXME: this could move variables instead of copying them
-    for (const auto& val: input_data.values)
-        vars.push_back(new Var(*val.var));
-    input_data.clear_vars();
-
-    if (!input_query.query.empty())
-    {
-        if (strcasecmp(input_query.query.c_str(), "subset") == 0)
-        {
-            flushSubset();
-        } else if (strncasecmp(input_query.query.c_str(), "message", 7) == 0) {
-            // Check that message is followed by spaces or end of string
-            const char* s = input_query.query.c_str() + 7;
-            if (*s != 0 && !isblank(*s))
-                error_consistency::throwf("Query type \"%s\" is not among the supported values", input_query.query.c_str());
-            // Skip the spaces after message
-            while (*s != 0 && isblank(*s))
-                ++s;
-
-            // Set or reset the exporter template
-            if (exporter_template != s)
-            {
-                // If it has changed, we need to recreate the exporter
-                delete exporter;
-                exporter = 0;
-                exporter_template = s;
-            }
-
-            flushMessage();
-        } else
-            error_consistency::throwf("Query type \"%s\" is not among the supported values", input_query.query.c_str());
-
-        // Uset query after using it: it needs to be explicitly set every time
-        input_query.query.clear();
-    }
+    input_data.datetime.set_lower_bound();
+    reset_operation(new PrendiloOperation(*this));
+    unsetb();
 }
 
 void MsgAPI::dimenticami()
 {
     throw error_consistency("dimenticami does not make sense when writing messages");
-}
-
-int MsgAPI::voglioancora()
-{
-    Msg* msg = curmsg();
-    if (msg == 0 || iter_ctx < 0 || iter_var < 0)
-        throw error_consistency("voglioancora called before dammelo");
-
-    if ((unsigned)iter_ctx >= msg->data.size()) return 0;
-    const msg::Context& ctx = *(msg->data[iter_ctx]);
-
-    if ((unsigned)iter_var >= ctx.data.size()) return 0;
-    const Var& var = *(ctx.data[iter_var]);
-
-    qcoutput.values.clear();
-    for (const Var* attr = var.next_attr(); attr; attr = attr->next_attr())
-        qcoutput.values.set(*attr);
-    qcoutput.has_new_values();
-    qcinput.clear();
-    return qcoutput.values.size();
-}
-
-void MsgAPI::critica()
-{
-    if (perms & PERM_ATTR_RO)
-        throw error_consistency(
-            "critica cannot be called with the database open in attribute readonly mode");
-    if (vars.empty())
-        throw error_consistency("critica has been called without a previous prendilo");
-    if (vars.size() > 1)
-        throw error_consistency("critica has been called after setting many variables with a single prendilo, so I do not know which one should get the attributes");
-
-    qcinput.move_to_attributes(*vars[0]);
-}
-
-void MsgAPI::scusa()
-{
-    throw error_consistency("scusa does not make sense when writing messages");
 }
 
 void MsgAPI::messages_open_input(const char* filename, const char* mode, Encoding format, bool)

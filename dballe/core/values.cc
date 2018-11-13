@@ -229,6 +229,17 @@ void Values::set_from_record(const dballe::Record& rec)
         set(*i);
 }
 
+void Values::move_to(std::function<void(std::unique_ptr<wreport::Var>)> dest)
+{
+    for (auto& val: m_values)
+    {
+        std::unique_ptr<wreport::Var> var(val.var);
+        val.var = nullptr;
+        dest(std::move(var));
+    }
+    m_values.clear();
+}
+
 void Values::move_to_attributes(wreport::Var& dest)
 {
     for (auto& val: m_values)

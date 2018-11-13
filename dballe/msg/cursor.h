@@ -133,7 +133,7 @@ struct CursorData : public dballe::CursorData
     std::vector<CursorDataRow>::const_iterator cur;
     bool at_start = true;
 
-    CursorData(const Msg& msg)
+    CursorData(const Msg& msg, bool merged=false)
     {
         station.report = msg.get_report();
         station.coords = msg.get_coords();
@@ -143,9 +143,15 @@ struct CursorData : public dballe::CursorData
         for (const auto& ctx: msg.data)
         {
             if (ctx->level.is_missing() && ctx->trange.is_missing())
-                continue;
-            for (std::vector<wreport::Var*>::const_iterator cur = ctx->data.begin(); cur != ctx->data.end(); ++cur)
-                rows.emplace_back(ctx, cur);
+            {
+                if (!merged) continue;
+                for (std::vector<wreport::Var*>::const_iterator cur = ctx->data.begin(); cur != ctx->data.end(); ++cur)
+                    if (WR_VAR_X((*cur)->code()) < 4 || WR_VAR_X((*cur)->code()) > 6)
+                        rows.emplace_back(ctx, cur);
+            } else {
+                for (std::vector<wreport::Var*>::const_iterator cur = ctx->data.begin(); cur != ctx->data.end(); ++cur)
+                    rows.emplace_back(ctx, cur);
+            }
         }
     }
 

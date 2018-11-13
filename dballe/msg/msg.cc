@@ -377,6 +377,11 @@ std::unique_ptr<CursorData> Msg::query_data(const Query& query) const
     return std::unique_ptr<dballe::CursorData>(new msg::CursorData(*this));
 }
 
+std::unique_ptr<CursorData> Msg::query_station_and_data(const Query& query) const
+{
+    return std::unique_ptr<dballe::CursorData>(new msg::CursorData(*this, true));
+}
+
 namespace {
 
 struct VarContext

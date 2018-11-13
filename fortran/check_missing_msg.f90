@@ -96,7 +96,7 @@
         if (n == DBA_MVI) then
           exit
         end if
-      
+
         do i = 1, n
           ierr = idba_dammelo (handle,btable)
           call ensure_no_error("dammelo")

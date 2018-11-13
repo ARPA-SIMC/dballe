@@ -2,7 +2,6 @@
 #include "dballe/var.h"
 #include "dballe/types.h"
 #include "dballe/core/record-access.h"
-#include "dballe/db/db.h"
 #include <stdio.h>  // snprintf
 #include <limits>
 #include <cstdlib>
@@ -70,60 +69,6 @@ float Operation::enqr(const char* param) const
         error_consistency::throwf("value queried (%f) does not fit in a real", value);
     return value;
 }
-
-struct VaridOperation : public Operation
-{
-    /// Varcode of the data variable
-    wreport::Varcode varcode;
-    /// Database ID of the data variable
-    int varid;
-
-    VaridOperation(int varid) : varid(varid) {}
-    void run()
-    {
-    }
-    void set_varcode(wreport::Varcode varcode) override { this->varcode = varcode; }
-    void voglioancora(db::Transaction& tr, Attributes& dest) override
-    {
-        if (!varid)
-            throw error_consistency("voglioancora called with an invalid *context_id");
-        // Retrieve the varcodes of the attributes that we want
-        function<void(unique_ptr<Var>&&)> consumer;
-        if (selected_attr_codes.empty())
-        {
-            consumer = [&](unique_ptr<Var>&& var) {
-                dest.values.set(std::move(var));
-            };
-        } else {
-            consumer = [&](unique_ptr<Var>&& var) {
-                for (auto code: selected_attr_codes)
-                    if (code == var->code())
-                    {
-                        dest.values.set(std::move(var));
-                        break;
-                    }
-            };
-        }
-        dest.values.clear();
-        tr.attr_query_data(varid, consumer);
-        dest.has_new_values();
-    }
-    void critica(db::Transaction& tr, const core::Values& qcinput) override
-    {
-        tr.attr_insert_data(varid, qcinput);
-    }
-    void scusa(db::Transaction& tr) override
-    {
-        tr.attr_remove_data(varid, selected_attr_codes);
-    }
-    int enqi(const char* param) const override { throw wreport::error_unimplemented("Varid::enqi handle *params or forward to previous operation"); }
-    double enqd(const char* param) const override { throw wreport::error_unimplemented("Varid::enqd handle *params or forward to previous operation"); }
-    bool enqc(const char* param, std::string& res) const override { throw wreport::error_unimplemented("Varid::enqc handle *params or forward to previous operation"); }
-    void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) const override { throw wreport::error_unimplemented("VaridOperation::enqlevel forward to previous operation"); }
-    void enqtimerange(int& ptype, int& p1, int& p2) const override { throw wreport::error_unimplemented("VaridOperation::enqtimerange forward to previous operation"); }
-    void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec) const override { throw wreport::error_unimplemented("VaridOperation::enqdata forward to previous operation"); }
-};
-
 
 
 CommonAPIImplementation::CommonAPIImplementation()
@@ -263,15 +208,7 @@ void CommonAPIImplementation::seti(const char* param, int value)
 {
     if (param[0] == '*')
     {
-        if (strcmp(param + 1, "context_id") == 0)
-        {
-            if (value != MISSING_INT)
-                reset_operation(new VaridOperation(value));
-            else
-                reset_operation();
-        } else {
-            qcinput.set(resolve_varcode(param + 1), value);
-        }
+        qcinput.set(resolve_varcode(param + 1), value);
         return;
     }
     if (!_seti(param, strlen(param), value))
@@ -482,12 +419,45 @@ wreport::Varcode CommonAPIImplementation::dammelo()
     return operation->dammelo(output);
 }
 
+int CommonAPIImplementation::voglioancora()
+{
+    // Query attributes
+    if (!operation) throw error_consistency("voglioancora was not called after a dammelo, or was called with an invalid *context_id or *var_related");
+    operation->voglioancora(qcoutput);
+    qcinput.clear();
+    return qcoutput.values.size();
+}
+
 const char* CommonAPIImplementation::ancora()
 {
     static char parm[10] = "*";
     Varcode code = qcoutput.next();
     format_bcode(code, parm + 1);
     return parm;
+}
+
+void CommonAPIImplementation::critica()
+{
+    if (perms & PERM_ATTR_RO)
+        throw error_consistency(
+            "critica cannot be called with the database open in attribute readonly mode");
+
+    if (!operation) throw error_consistency("critica was not called after a dammelo or prendilo, or was called with an invalid *context_id or *var_related");
+    operation->critica(qcinput);
+    qcinput.clear();
+}
+
+void CommonAPIImplementation::scusa()
+{
+    if (! (perms & PERM_ATTR_WRITE))
+        throw error_consistency(
+            "scusa must be called with the database open in attribute write mode");
+
+
+    // Retrieve the varcodes of the attributes we want to remove
+    if (!operation) throw error_consistency("scusa was not called after a dammelo, or was called with an invalid *context_id or *var_related");
+    operation->scusa();
+    qcinput.clear();
 }
 
 void CommonAPIImplementation::fatto()

@@ -6,7 +6,6 @@
 #include <dballe/core/record.h>
 #include <dballe/core/query.h>
 #include <dballe/core/data.h>
-#include <dballe/db/fwd.h>
 #include <functional>
 #include <cstring>
 
@@ -53,9 +52,9 @@ public:
     {
         selected_attr_codes = varcodes;
     }
-    virtual void voglioancora(db::Transaction& tr, Attributes& dest) = 0;
-    virtual void critica(db::Transaction& tr, const core::Values& qcinput) = 0;
-    virtual void scusa(db::Transaction& tr) = 0;
+    virtual void voglioancora(Attributes& dest) = 0;
+    virtual void critica(core::Values& qcinput) = 0;
+    virtual void scusa() = 0;
     virtual bool elencamele();
     virtual wreport::Varcode dammelo(dballe::Record& output);
 
@@ -242,7 +241,10 @@ public:
     const char* spiegab(const char* varcode, const char* value) override;
     void elencamele() override;
     wreport::Varcode dammelo() override;
+    int voglioancora() override;
     const char* ancora() override;
+    void critica() override;
+    void scusa() override;
     void fatto() override;
 
     const Operation* test_get_operation() const { return operation; }

@@ -32,23 +32,11 @@ protected:
     unsigned int state;
     /// Importer (NULL if we export)
     Importer* importer;
-    /// Exporter (NULL if we import)
-    Exporter* exporter;
-    /// Template selected for exporter (empty if auto detect)
+    /// Name of the last exporter template set
     std::string exporter_template;
-    /// Message being written
-    std::vector<std::shared_ptr<dballe::Message>>* msgs;
-	/// Message subset being written
-	Msg* wmsg;
-	/// Last variables written with prendilo
-	std::vector<wreport::Var*> vars;
-	/// Level for vars
-	Level vars_level;
-	/// Time range for vars
-	Trange vars_trange;
+    /// Exporter (NULL if we import)
+    Exporter* exporter = nullptr;
 	size_t curmsgidx;
-	int iter_ctx;
-	int iter_var;
 	/// Category set for the message that we are writing
 	int cached_cat;
 	/// Subcategory set for the message that we are writing
@@ -64,23 +52,13 @@ protected:
 	 */
 	bool readNextMessage();
 
-	/**
-	 * Increment message iterators
-	 * @returns
-	 *   true if it could move on, false if we are at the end
-	 */
-	bool incrementMsgIters();
-
-	/**
-	 * Get a pointer to the current message being read or written
-	 */
-	Msg* curmsg();
-
-	void flushVars();
-	void flushSubset();
-	void flushMessage();
 
 public:
+    /// Message subset being written
+    Msg* wmsg = nullptr;
+    /// Message being written
+    std::vector<std::shared_ptr<dballe::Message>>* msgs = nullptr;
+
 	/**
 	 * @param fname 
 	 *   the name of the file to open
@@ -93,16 +71,20 @@ public:
 	MsgAPI(const char* fname, const char* mode, const char* type);
 	virtual ~MsgAPI();
 
+    /**
+     * Get a pointer to the current message being read or written
+     */
+    const Msg* curmsg() const;
+    Msg* curmsg();
+    void flushSubset();
+    void flushMessage();
+    void set_exporter(const char* template_name);
+
     void scopa(const char* repinfofile=0) override;
     int quantesono() override;
-    void elencamele() override;
     int voglioquesto() override;
-    wreport::Varcode dammelo() override;
     void prendilo() override;
     void dimenticami() override;
-    int voglioancora() override;
-    void critica() override;
-    void scusa() override;
     void remove_all() override;
     void messages_open_input(const char* filename, const char* mode, Encoding format, bool) override;
     void messages_open_output(const char* filename, const char* mode, Encoding format) override;

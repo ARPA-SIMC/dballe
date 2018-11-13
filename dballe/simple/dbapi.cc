@@ -91,6 +91,8 @@ struct OutputFile
     }
 };
 
+namespace {
+
 struct QuantesonoOperation : public CursorOperation<CursorStation>
 {
     const DbAPI& api;
@@ -111,12 +113,10 @@ struct QuantesonoOperation : public CursorOperation<CursorStation>
         return cursor->next();
     }
 
-    void voglioancora(db::Transaction& tr, Attributes& dest) override { throw error_consistency("voglioancora cannot be called after quantesono/elencamele"); }
-    void critica(db::Transaction& tr, const core::Values& qcinput) override { throw error_consistency("critica cannot be called after quantesono/elencamele"); }
-    void scusa(db::Transaction& tr) override { throw error_consistency("scusa cannot be called after quantesono/elencamele"); }
+    void voglioancora(Attributes& dest) override { throw error_consistency("voglioancora cannot be called after quantesono/elencamele"); }
+    void critica(core::Values& qcinput) override { throw error_consistency("critica cannot be called after quantesono/elencamele"); }
+    void scusa() override { throw error_consistency("scusa cannot be called after quantesono/elencamele"); }
 };
-
-namespace {
 
 template<typename Cursor>
 struct CursorTraits {};
@@ -155,8 +155,6 @@ struct CursorTraits<db::CursorData>
     }
 };
 
-}
-
 template<typename Cursor>
 struct VoglioquestoOperation : public CursorOperation<Cursor>
 {
@@ -190,7 +188,7 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
             return 0;
         }
     }
-    void voglioancora(db::Transaction& tr, Attributes& dest) override
+    void voglioancora(Attributes& dest) override
     {
         if (dammelo_ended) throw error_consistency("voglioancora called after dammelo returned end of data");
         function<void(unique_ptr<Var>&&)> consumer;
@@ -213,16 +211,16 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
         this->cursor->attr_query(consumer, !valid_cached_attrs);
         dest.has_new_values();
     }
-    void critica(db::Transaction& tr, const core::Values& qcinput) override
+    void critica(core::Values& qcinput) override
     {
         if (dammelo_ended) throw error_consistency("critica called after dammelo returned end of data");
-        CursorTraits<Cursor>::attr_insert(tr, this->cursor->attr_reference_id(), qcinput);
+        CursorTraits<Cursor>::attr_insert(*api.tr, this->cursor->attr_reference_id(), qcinput);
         valid_cached_attrs = false;
     }
-    void scusa(db::Transaction& tr) override
+    void scusa() override
     {
         if (dammelo_ended) throw error_consistency("scusa called after dammelo returned end of data");
-        CursorTraits<Cursor>::attr_remove(tr, this->cursor->attr_reference_id(), this->selected_attr_codes);
+        CursorTraits<Cursor>::attr_remove(*api.tr, this->cursor->attr_reference_id(), this->selected_attr_codes);
         valid_cached_attrs = false;
     }
 };
@@ -278,11 +276,11 @@ struct PrendiloOperation : public Operation
         if (!varcodes.empty())
             throw error_consistency("*var and *varlist cannot be set after a prendilo");
     }
-    void voglioancora(db::Transaction& tr, Attributes& dest) override
+    void voglioancora(Attributes& dest) override
     {
         throw error_consistency("voglioancora cannot be called after a prendilo");
     }
-    void critica(db::Transaction& tr, const core::Values& qcinput) override
+    void critica(core::Values& qcinput) override
     {
         int data_id = MISSING_INT;
         bool is_station = false;
@@ -305,11 +303,11 @@ struct PrendiloOperation : public Operation
                 error_consistency::throwf("cannot insert attributes for *var_related=%01d%02d%03d: the last prendilo inserted %zd variables, none of which match *var_related", WR_VAR_FXY(varcode), last_inserted_varids.size());
         }
         if (is_station)
-            tr.attr_insert_station(data_id, qcinput);
+            api.tr->attr_insert_station(data_id, qcinput);
         else
-            tr.attr_insert_data(data_id, qcinput);
+            api.tr->attr_insert_data(data_id, qcinput);
     }
-    void scusa(db::Transaction& tr) override
+    void scusa() override
     {
         throw error_consistency("scusa cannot be called after a prendilo");
     }
@@ -329,6 +327,62 @@ struct PrendiloOperation : public Operation
     void enqtimerange(int& ptype, int& p1, int& p2) const override { throw wreport::error_consistency("enqtimerange cannot be called after a prendilo"); }
     void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec) const override { throw wreport::error_consistency("enqdate cannot be called after a prendilo"); }
 };
+
+struct VaridOperation : public Operation
+{
+    DbAPI& api;
+    /// Varcode of the data variable
+    wreport::Varcode varcode;
+    /// Database ID of the data variable
+    int varid;
+
+    VaridOperation(DbAPI& api, int varid) : api(api), varid(varid) {}
+    void run()
+    {
+    }
+    void set_varcode(wreport::Varcode varcode) override { this->varcode = varcode; }
+    void voglioancora(Attributes& dest) override
+    {
+        if (!varid)
+            throw error_consistency("voglioancora called with an invalid *context_id");
+        // Retrieve the varcodes of the attributes that we want
+        function<void(unique_ptr<Var>&&)> consumer;
+        if (selected_attr_codes.empty())
+        {
+            consumer = [&](unique_ptr<Var>&& var) {
+                dest.values.set(std::move(var));
+            };
+        } else {
+            consumer = [&](unique_ptr<Var>&& var) {
+                for (auto code: selected_attr_codes)
+                    if (code == var->code())
+                    {
+                        dest.values.set(std::move(var));
+                        break;
+                    }
+            };
+        }
+        dest.values.clear();
+        api.tr->attr_query_data(varid, consumer);
+        dest.has_new_values();
+    }
+    void critica(core::Values& qcinput) override
+    {
+        api.tr->attr_insert_data(varid, qcinput);
+    }
+    void scusa() override
+    {
+        api.tr->attr_remove_data(varid, selected_attr_codes);
+    }
+    int enqi(const char* param) const override { throw wreport::error_unimplemented("Varid::enqi handle *params or forward to previous operation"); }
+    double enqd(const char* param) const override { throw wreport::error_unimplemented("Varid::enqd handle *params or forward to previous operation"); }
+    bool enqc(const char* param, std::string& res) const override { throw wreport::error_unimplemented("Varid::enqc handle *params or forward to previous operation"); }
+    void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) const override { throw wreport::error_unimplemented("VaridOperation::enqlevel forward to previous operation"); }
+    void enqtimerange(int& ptype, int& p1, int& p2) const override { throw wreport::error_unimplemented("VaridOperation::enqtimerange forward to previous operation"); }
+    void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec) const override { throw wreport::error_unimplemented("VaridOperation::enqdata forward to previous operation"); }
+};
+
+}
 
 
 DbAPI::DbAPI(std::shared_ptr<db::Transaction> tr, const char* anaflag, const char* dataflag, const char* attrflag)
@@ -387,6 +441,22 @@ void DbAPI::remove_all()
     operation = nullptr;
 }
 
+void DbAPI::seti(const char* param, int value)
+{
+    if (param[0] == '*')
+    {
+        if (strcmp(param + 1, "context_id") == 0)
+        {
+            if (value != MISSING_INT)
+                reset_operation(new VaridOperation(*this, value));
+            else
+                reset_operation();
+            return;
+        }
+    }
+    return CommonAPIImplementation::seti(param, value);
+}
+
 int DbAPI::quantesono()
 {
     return reset_operation(new QuantesonoOperation(*this));
@@ -421,39 +491,6 @@ void DbAPI::dimenticami()
         tr->remove_data(input_query);
     delete operation;
     operation = nullptr;
-}
-
-int DbAPI::voglioancora()
-{
-    // Query attributes
-    if (!operation) throw error_consistency("voglioancora was not called after a dammelo, or was called with an invalid *context_id or *var_related");
-    operation->voglioancora(*tr, qcoutput);
-    qcinput.clear();
-    return qcoutput.values.size();
-}
-
-void DbAPI::critica()
-{
-    if (perms & PERM_ATTR_RO)
-        throw error_consistency(
-            "critica cannot be called with the database open in attribute readonly mode");
-
-    if (!operation) throw error_consistency("critica was not called after a dammelo or prendilo, or was called with an invalid *context_id or *var_related");
-    operation->critica(*tr, qcinput);
-    qcinput.clear();
-}
-
-void DbAPI::scusa()
-{
-    if (! (perms & PERM_ATTR_WRITE))
-        throw error_consistency(
-            "scusa must be called with the database open in attribute write mode");
-
-
-    // Retrieve the varcodes of the attributes we want to remove
-    if (!operation) throw error_consistency("scusa was not called after a dammelo, or was called with an invalid *context_id or *var_related");
-    operation->scusa(*tr);
-    qcinput.clear();
 }
 
 void DbAPI::messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified)

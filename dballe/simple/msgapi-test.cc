@@ -159,6 +159,33 @@ void Tests::register_tests()
       include "check-utils.h"
 #endif
     });
+    add_method("create", []() {
+        using namespace wreport;
+        sys::unlink_ifexists("tmp.bufr");
+        {
+            MsgAPI msgapi0("tmp.bufr", "w", "BUFR");
+            msgapi0.setcontextana();
+            msgapi0.setc("rep_memo", "temp");
+            msgapi0.setd("lat", 45.027700);
+            msgapi0.setd("lon", 9.666700);
+            msgapi0.seti("mobile", 0);
+            msgapi0.seti("block", 0);
+            msgapi0.seti("station", 101);
+            wassert(msgapi0.prendilo());
+
+            msgapi0.setlevel(1, 0, API::missing_int, API::missing_int);
+            msgapi0.settimerange(254, 0, 0);
+            msgapi0.setdate(2018, 6, 1, 0, 0, 0);
+            msgapi0.setd("B12101", 25.5);
+            wassert(msgapi0.prendilo());
+
+            msgapi0.setc("query", "message");
+            wassert(msgapi0.prendilo());
+        }
+
+        wassert(actual_file("tmp.bufr").startswith("BUFR"));
+        // error: no year information found in message to import
+    });
     add_method("issue46", []() {
         using namespace wreport;
         sys::unlink_ifexists("tmp.bufr");

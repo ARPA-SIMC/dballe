@@ -232,6 +232,8 @@ public:
      */
     void move_to_attributes(wreport::Var& dest);
 
+    void move_to(std::function<void(std::unique_ptr<wreport::Var>)> dest);
+
     /**
      * Encode these values in a DB-All.e specific binary representation
      */

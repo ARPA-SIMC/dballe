@@ -263,6 +263,7 @@ public:
     std::unique_ptr<CursorStation> query_stations(const Query& query) const override;
     std::unique_ptr<CursorStationData> query_station_data(const Query& query) const override;
     std::unique_ptr<CursorData> query_data(const Query& query) const override;
+    std::unique_ptr<CursorData> query_station_and_data(const Query& query) const;
 
     /// Output the CSV header
     static void csv_header(CSVWriter& out);
