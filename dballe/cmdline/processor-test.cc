@@ -63,7 +63,14 @@ add_method("parse_index", [] {
 
 add_method("parse_json", [] {
     struct TestAction : public Action {
-        virtual bool operator()(const Item& item) { return true; }
+        std::vector<std::unique_ptr<dballe::Message>> messages;
+
+        virtual bool operator()(const Item& item) {
+            for (auto& m: *(item.msgs)) {
+                messages.push_back(m.clone());
+            }
+            return true;
+        }
     };
 
     ReaderOptions opts;
@@ -71,7 +78,36 @@ add_method("parse_json", [] {
     Reader reader(opts);
     TestAction action;
 
-    reader.read({dballe::tests::datafile("/json/issue76.json")}, action);
+    reader.read({dballe::tests::datafile("/json/issue134.json")}, action);
+    wassert(actual(action.messages.size()) == 4);
+
+    {
+        const wreport::Var* var = action.messages.at(0)->get(WR_VAR(0, 12, 101), dballe::Level(103, 2000), dballe::Trange(254, 0, 0));
+        wassert(actual(var) != (const wreport::Var*)0);
+        const wreport::Var* attr = var->enqa(WR_VAR(0, 33, 7));
+        wassert(actual(attr) != (const wreport::Var*)0);
+        wassert(actual(attr->enqi()) == 0);
+    }
+    {
+        const wreport::Var* var = action.messages.at(1)->get(WR_VAR(0, 12, 101), dballe::Level(103, 2000), dballe::Trange(254, 0, 0));
+        wassert(actual(var) != (const wreport::Var*)0);
+        const wreport::Var* attr = var->enqa(WR_VAR(0, 33, 7));
+        wassert(actual(attr) == (const wreport::Var*)0);
+    }
+    {
+        const wreport::Var* var = action.messages.at(2)->get(WR_VAR(0, 12, 101), dballe::Level(103, 2000), dballe::Trange(254, 0, 0));
+        wassert(actual(var) != (const wreport::Var*)0);
+        const wreport::Var* attr = var->enqa(WR_VAR(0, 8, 44));
+        wassert(actual(attr) != (const wreport::Var*)0);
+        wassert(actual(attr->enqs()) == "ciao");
+    }
+    {
+        const wreport::Var* var = action.messages.at(3)->get(WR_VAR(0, 12, 101), dballe::Level(103, 2000), dballe::Trange(254, 0, 0));
+        wassert(actual(var) != (const wreport::Var*)0);
+        const wreport::Var* attr = var->enqa(WR_VAR(0, 12, 102));
+        wassert(actual(attr) != (const wreport::Var*)0);
+        wassert(actual(attr->enqd()) == 0.1);
+    }
 });
 
 add_method("issue77", [] {
