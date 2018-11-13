@@ -56,7 +56,7 @@ public:
     virtual void critica(core::Values& qcinput) = 0;
     virtual void scusa() = 0;
     virtual bool elencamele();
-    virtual wreport::Varcode dammelo(dballe::Record& output);
+    virtual wreport::Varcode dammelo();
 
     virtual int enqi(const char* param) const = 0;
     virtual signed char enqb(const char* param) const;
@@ -174,7 +174,6 @@ public:
     core::Query input_query;
     core::Data input_data;
     bool station_context = false;
-    core::Record output;
     core::Values qcinput;
     Attributes qcoutput;
 
@@ -251,7 +250,6 @@ public:
 
     const core::Query& test_get_input_query() const { return input_query; }
     const core::Data& test_get_input_data() const { return input_data; }
-    const core::Record& test_get_output() const { return output; }
     const core::Values& test_get_qcinput() const { return qcinput; }
     // const core::Record& test_get_qcoutput() const { return qcoutput; }
 

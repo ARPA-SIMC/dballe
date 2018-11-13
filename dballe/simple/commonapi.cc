@@ -42,7 +42,7 @@ void Attributes::has_new_values()
 Operation::~Operation() {}
 void Operation::set_varcode(wreport::Varcode varcode) {}
 bool Operation::elencamele() { throw error_consistency("elencamele called without a previous quantesono"); }
-wreport::Varcode Operation::dammelo(dballe::Record& output) { throw error_consistency("dammelo called without a previous voglioquesto"); }
+wreport::Varcode Operation::dammelo() { throw error_consistency("dammelo called without a previous voglioquesto"); }
 
 signed char Operation::enqb(const char* param) const
 {
@@ -416,7 +416,7 @@ wreport::Varcode CommonAPIImplementation::dammelo()
 {
     if (!operation) throw error_consistency("dammelo called without a previous voglioquesto");
     qcoutput.invalidate();
-    return operation->dammelo(output);
+    return operation->dammelo();
 }
 
 int CommonAPIImplementation::voglioancora()

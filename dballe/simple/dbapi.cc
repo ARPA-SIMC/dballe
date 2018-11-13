@@ -173,14 +173,12 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
         return this->cursor->remaining();
     }
 
-    wreport::Varcode dammelo(dballe::Record& output) override
+    wreport::Varcode dammelo() override
     {
-        output.clear();
         if (dammelo_ended) return 0;
 
         if (this->cursor->next())
         {
-            this->cursor->to_record(output);
             valid_cached_attrs = true;
             return this->cursor->get_varcode();
         } else {
