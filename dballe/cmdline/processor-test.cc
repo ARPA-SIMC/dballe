@@ -79,7 +79,7 @@ add_method("parse_json", [] {
     TestAction action;
 
     reader.read({dballe::tests::datafile("/json/issue134.json")}, action);
-    wassert(actual(action.messages.size()) == 4);
+    wassert(actual(action.messages.size()) == 5);
 
     {
         const wreport::Var* var = action.messages.at(0)->get(WR_VAR(0, 12, 101), dballe::Level(103, 2000), dballe::Trange(254, 0, 0));
@@ -107,6 +107,16 @@ add_method("parse_json", [] {
         const wreport::Var* attr = var->enqa(WR_VAR(0, 12, 102));
         wassert(actual(attr) != (const wreport::Var*)0);
         wassert(actual(attr->enqd()) == 0.1);
+    }
+    {
+        const wreport::Var* var = action.messages.at(4)->get(WR_VAR(0, 12, 101), dballe::Level(103, 2000), dballe::Trange(254, 0, 0));
+        wassert(actual(var) != (const wreport::Var*)0);
+        const wreport::Var* attr1 = var->enqa(WR_VAR(0, 8, 44));
+        wassert(actual(attr1) != (const wreport::Var*)0);
+        wassert(actual(attr1->enqs()) == "ciao");
+        const wreport::Var* attr2 = var->enqa(WR_VAR(0, 12, 102));
+        wassert(actual(attr2) != (const wreport::Var*)0);
+        wassert(actual(attr2->enqd()) == 0.1);
     }
 });
 
