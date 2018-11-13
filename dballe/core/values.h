@@ -9,7 +9,6 @@
 #include <dballe/types.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/var.h>
-#include <dballe/record.h>
 #include <wreport/varinfo.h>
 #include <vector>
 #include <map>
@@ -150,7 +149,6 @@ protected:
 
 public:
     Values() = default;
-    Values(const dballe::Record& rec) { set_from_record(rec); }
 
     const_iterator begin() const { return m_values.begin(); }
     const_iterator end() const { return m_values.end(); }
@@ -214,9 +212,6 @@ public:
 
     /// Set the database ID for the Value with this wreport::Varcode
     void set_data_id(wreport::Varcode code, int data_id);
-
-    /// Set from the contents of a dballe::Record
-    void set_from_record(const dballe::Record& rec);
 
     /// Reset all the database IDs
     void clear_ids()

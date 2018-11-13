@@ -48,7 +48,6 @@ struct Station;
 struct DBStation;
 
 // Aggregates
-struct Record;
 struct Data;
 struct Query;
 struct Message;

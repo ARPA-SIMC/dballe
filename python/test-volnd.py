@@ -72,14 +72,14 @@ class ReadMixin(DballeDBMixin):
 
     def testIndexFind(self):
         # Ana in one dimension, network in the other
-        query = dballe.Record(ana_id=1, var="B13011", rep_memo="synop")
+        query = dict(ana_id=1, var="B13011", rep_memo="synop")
         query["datetime"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
         vars = read(self.db.query_data(query), (AnaIndex(), TimeRangeIndex()))
         self.assertEqual(vars["B13011"].dims[1].index((4, -21600, 0)), 1)
 
     def testFilter(self):
         # Ana in one dimension, network in the other
-        query = dballe.Record(ana_id=1, var="B13011", rep_memo="synop")
+        query = dict(ana_id=1, var="B13011", rep_memo="synop")
         query["datetime"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
@@ -90,7 +90,7 @@ class ReadMixin(DballeDBMixin):
 
     def testUnsharedIndex(self):
         # Ana in one dimension, network in the other
-        query = dballe.Record(ana_id=1, rep_memo="synop")
+        query = dict(ana_id=1, rep_memo="synop")
 
         vars = read(self.db.query_data(query),
                     (AnaIndex(), TimeRangeIndex(), DateTimeIndex()))
@@ -103,7 +103,7 @@ class ReadMixin(DballeDBMixin):
 
     def testConflicts(self):
         # Ana in one dimension, network in the other
-        query = dballe.Record(ana_id=1, var="B13011")
+        query = dict(ana_id=1, var="B13011")
         query["datetime"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
         # Here conflicting values are overwritten
         vars = read(self.db.query_data(query), (AnaIndex(), ), checkConflicts=False)
@@ -114,7 +114,7 @@ class ReadMixin(DballeDBMixin):
 
     def testFixedIndex(self):
         # Ana in one dimension, network in the other
-        query = dballe.Record(ana_id=1, rep_memo="synop", year=2007, month=1, day=1)
+        query = dict(ana_id=1, rep_memo="synop", year=2007, month=1, day=1)
 
         vars = read(self.db.query_data(query),
                     (AnaIndex(), TimeRangeIndex(frozen=True, start=(dballe.Trange(4, -21600, 0), (4, -43200, 0)))),
@@ -134,7 +134,7 @@ class ReadMixin(DballeDBMixin):
 
     def testAnaNetwork(self):
         # Ana in one dimension, network in the other
-        query = dballe.Record()
+        query = {}
         query["var"] = "B10004"
         query["datetime"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
         vars = read(self.db.query_data(query), (AnaIndex(), NetworkIndex()))
@@ -161,7 +161,7 @@ class ReadMixin(DballeDBMixin):
     def testAnaTrangeNetwork(self):
         # 3 dimensions: ana, timerange, network
         # 2 variables
-        query = dballe.Record(datetime=datetime.datetime(2007, 1, 1, 0, 0, 0))
+        query = dict(datetime=datetime.datetime(2007, 1, 1, 0, 0, 0))
         vars = read(self.db.query_data(query), (AnaIndex(), TimeRangeIndex(shared=False), NetworkIndex()))
         self.assertEqual(len(vars), 2)
         self.assertEqual(sorted(vars.keys()), ["B10004", "B13011"])
@@ -214,7 +214,7 @@ class ReadMixin(DballeDBMixin):
     def testAttrs(self):
         # Same export as testAnaNetwork, but check that the
         # attributes are synchronised
-        query = dballe.Record()
+        query = {}
         query["var"] = "B10004"
         query["datetime"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
         vars = read(self.db.query_data(query), (AnaIndex(), NetworkIndex()), attributes=True)
@@ -247,7 +247,7 @@ class ReadMixin(DballeDBMixin):
     def testSomeAttrs(self):
         # Same export as testAnaNetwork, but check that the
         # attributes are synchronised
-        query = dballe.Record()
+        query = {}
         query["var"] = "B10004"
         query["datetime"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
         vars = read(self.db.query_data(query), (AnaIndex(), NetworkIndex()), attributes=('B33040',))
@@ -276,7 +276,7 @@ class ReadMixin(DballeDBMixin):
         self.assertEqual(round(ma.average(a.vals)), 54)
 
     def testEmptyExport(self):
-        query = dballe.Record()
+        query = {}
         query["ana_id"] = 5000
         vars = read(self.db.query_data(query), (AnaIndex(), NetworkIndex()), attributes=True)
         self.assertEqual(len(vars), 0)
@@ -286,7 +286,7 @@ class ReadMixin(DballeDBMixin):
         # has successfuly added an item, we used to end up with
         # a 'ghost' index entry with no items in it
         indexes = (TimeRangeIndex(), LevelIndex(frozen=True, start=(dballe.Level(3, 2, None, None),)))
-        query = dballe.Record()
+        query = {}
         query['ana_id'] = 1
         query['var'] = 'B13011'
         vars = read(self.db.query_data(query), indexes, checkConflicts=False)
@@ -299,13 +299,13 @@ class ReadMixin(DballeDBMixin):
                    LevelIndex(frozen=True, start=((1, None, None), (3, 2, None))),
                    TimeRangeIndex(),
                    DateTimeIndex())
-        query = dballe.Record()
+        query = {}
         query['rep_memo'] = 'synop'
         read(self.db.query_data(query), indexes, checkConflicts=True, attributes=True)
 
     def testExportAna(self):
         indexes = (AnaIndex(),)
-        query = dballe.Record()
+        query = {}
         query["rep_memo"] = "synop"
         vars = read(self.db.query_station_data(query), indexes, checkConflicts=True)
         self.assertEqual(sorted(vars.keys()), ["B01001", "B01002", "B01019"])
@@ -313,7 +313,7 @@ class ReadMixin(DballeDBMixin):
     def testExportSyncAna(self):
         # Export some data
         indexes = (AnaIndex(), DateTimeIndex())
-        query = dballe.Record()
+        query = {}
         query["rep_memo"] = 'synop'
         query["level"] = (1,)
         query["trange"] = (4, -21600, 0)

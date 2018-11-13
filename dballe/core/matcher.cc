@@ -105,11 +105,11 @@ struct And : public Matcher
         return res;
     }
 
-    void to_record(core::Record& rec) const override
+    void to_query(core::Query& query) const override
     {
         for (std::vector<const Matcher*>::const_iterator i = exprs.begin();
                 i != exprs.end(); ++i)
-            (*i)->to_record(rec);
+            (*i)->to_query(query);
     }
 };
 
@@ -124,9 +124,9 @@ struct AnaIDMatcher : public Matcher
     {
         return v.match_station_id(ana_id) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
-    void to_record(core::Record& rec) const override
+    void to_query(core::Query& query) const override
     {
-        rec.station.id = ana_id;
+        query.ana_id = ana_id;
     }
 };
 
@@ -141,13 +141,13 @@ struct WMOMatcher : public Matcher
     {
         return v.match_station_wmo(block, station) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
-    void to_record(core::Record& rec) const override
+    void to_query(core::Query& query) const override
     {
-        rec.obtain(WR_VAR(0, 1, 1)).set(block);
+        query.block = block;
         if (station != -1)
-            rec.obtain(WR_VAR(0, 1, 2)).set(station);
+            query.station = station;
         else
-            rec.unset_var(WR_VAR(0, 1, 2));
+            query.station = MISSING_INT;
     }
 };
 
@@ -163,9 +163,9 @@ struct DateMatcher : public Matcher
         return v.match_datetime(range) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
 
-    void to_record(core::Record& rec) const override
+    void to_query(core::Query& query) const override
     {
-        rec.set_datetimerange(range);
+        query.datetime = range;
     }
 };
 
@@ -182,10 +182,10 @@ struct CoordMatcher : public Matcher
         return v.match_coords(latrange, lonrange) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
 
-    void to_record(core::Record& rec) const override
+    void to_query(core::Query& query) const override
     {
-        rec.set_latrange(latrange);
-        rec.set_lonrange(lonrange);
+        query.latrange = latrange;
+        query.lonrange = lonrange;
     }
 };
 
@@ -207,9 +207,9 @@ struct ReteMatcher : public Matcher
     {
         return v.match_rep_memo(rete.c_str()) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
-    void to_record(core::Record& rec) const override
+    void to_query(core::Query& query) const override
     {
-        rec.station.report = rete;
+        query.rep_memo = rete;
     }
 };
 

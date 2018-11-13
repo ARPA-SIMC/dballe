@@ -199,8 +199,8 @@ struct MethQuery : public MethKwargs<Impl>
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "query", NULL };
-        PyObject* pyquery;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "O", const_cast<char**>(kwlist), &pyquery))
+        PyObject* pyquery = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "|O", const_cast<char**>(kwlist), &pyquery))
             return nullptr;
 
         try {
@@ -435,10 +435,10 @@ struct attr_insert : MethKwargs<Impl>
         static const char* kwlist[] = { "varcode", "attrs", "varid", NULL };
         int varid = -1;
         const char* varname;
-        PyObject* record;
+        PyObject* attrs;
         if (!PyArg_ParseTupleAndKeywords(args, kw, "sO|i", const_cast<char**>(kwlist),
                     &varname,
-                    &record,
+                    &attrs,
                     &varid))
             return nullptr;
 
@@ -449,9 +449,10 @@ struct attr_insert : MethKwargs<Impl>
         }
 
         try {
-            RecordAccess rec(record);
+            core::Values values;
+            read_values(attrs, values);
             ReleaseGIL gil;
-            self->db->attr_insert_data(varid, core::Values(rec));
+            self->db->attr_insert_data(varid, values);
         } DBALLE_CATCH_RETURN_PYO
         Py_RETURN_NONE;
     }
@@ -472,9 +473,10 @@ struct attr_insert_station : MethKwargs<Impl>
             return nullptr;
 
         try {
-            RecordAccess rec(attrs);
+            core::Values values;
+            read_values(attrs, values);
             ReleaseGIL gil;
-            self->db->attr_insert_station(varid, core::Values(rec));
+            self->db->attr_insert_station(varid, values);
         } DBALLE_CATCH_RETURN_PYO
         Py_RETURN_NONE;
     }
@@ -495,9 +497,10 @@ struct attr_insert_data : MethKwargs<Impl>
             return nullptr;
 
         try {
-            RecordAccess rec(attrs);
+            core::Values values;
+            read_values(attrs, values);
             ReleaseGIL gil;
-            self->db->attr_insert_data(varid, core::Values(rec));
+            self->db->attr_insert_data(varid, values);
         } DBALLE_CATCH_RETURN_PYO
         Py_RETURN_NONE;
     }

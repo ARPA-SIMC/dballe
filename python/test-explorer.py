@@ -8,7 +8,7 @@ class BaseExplorerTestMixin(DballeDBMixin):
     def setUp(self):
         super().setUp()
 
-        data = dballe.Record(
+        data = dict(
                 lat=12.34560, lon=76.54320,
                 datetime=datetime.datetime(1945, 4, 25, 8, 0, 0),
                 level=(10, 11, 15, 22),
@@ -18,7 +18,7 @@ class BaseExplorerTestMixin(DballeDBMixin):
                 B01012=500)
         self.db.insert_data(data, False, True)
 
-        data = dballe.Record(
+        data = dict(
                 lat=12.34560, lon=76.54320,
                 ident="foo",
                 datetime=datetime.datetime(1945, 4, 25, 12, 0, 0),
@@ -54,7 +54,7 @@ class BaseExplorerTestMixin(DballeDBMixin):
         with explorer.rebuild() as update:
             with self.db.transaction() as tr:
                 update.add_db(tr)
-        explorer.set_filter(dballe.Record(rep_memo="amdar"))
+        explorer.set_filter({"rep_memo": "amdar"})
 
         self.assertStrRepr(explorer)
         self.assertExplorerContents(explorer)
@@ -65,7 +65,7 @@ class BaseExplorerTestMixin(DballeDBMixin):
         explorer1 = self._explorer()
         with explorer1.update() as update:
             update.add_json(json_string)
-        explorer1.set_filter(dballe.Record(rep_memo="amdar"))
+        explorer1.set_filter({"rep_memo": "amdar"})
         self.assertExplorerContents(explorer1)
 
     def test_merge(self):
@@ -75,7 +75,7 @@ class BaseExplorerTestMixin(DballeDBMixin):
                 update.add_db(tr)
 
         explorer1 = self._explorer()
-        explorer1.set_filter(dballe.Record(rep_memo="amdar"))
+        explorer1.set_filter({"rep_memo": "amdar"})
         with explorer1.rebuild() as update:
             update.add_explorer(explorer)
             update.add_explorer(explorer)

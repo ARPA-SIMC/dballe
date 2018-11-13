@@ -2,6 +2,7 @@
 #define DBALLE_CURSOR_H
 
 #include <dballe/fwd.h>
+#include <dballe/record.h>
 #include <wreport/var.h>
 #include <memory>
 #include <vector>

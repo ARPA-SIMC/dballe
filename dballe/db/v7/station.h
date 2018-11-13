@@ -3,6 +3,7 @@
 
 #include <dballe/fwd.h>
 #include <dballe/core/fwd.h>
+#include <dballe/core/record.h>
 #include <dballe/sql/fwd.h>
 #include <dballe/db/v7/fwd.h>
 #include <dballe/db/v7/cache.h>
@@ -20,7 +21,6 @@ struct Var;
 namespace dballe {
 namespace db {
 namespace v7 {
-struct Transaction;
 
 struct Station
 {

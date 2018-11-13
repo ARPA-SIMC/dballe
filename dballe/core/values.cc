@@ -1,5 +1,4 @@
 #include "values.h"
-#include "record.h"
 #include "json.h"
 #include <arpa/inet.h>
 #include <ostream>
@@ -220,13 +219,6 @@ void Values::set_data_id(wreport::Varcode code, int data_id)
     auto i = find(code);
     if (i == end()) return;
     i->data_id = data_id;
-}
-
-void Values::set_from_record(const dballe::Record& rec)
-{
-    const auto& r = core::Record::downcast(rec);
-    for (const auto& i: r.vars())
-        set(*i);
 }
 
 void Values::move_to(std::function<void(std::unique_ptr<wreport::Var>)> dest)

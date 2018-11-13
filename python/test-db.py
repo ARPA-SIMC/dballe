@@ -16,7 +16,7 @@ class CommonDBTestMixin(DballeDBMixin):
     def setUp(self):
         super(CommonDBTestMixin, self).setUp()
 
-        data = dballe.Record(
+        data = dict(
                 lat=12.34560, lon=76.54320,
                 mobile=0,
                 datetime=datetime.datetime(1945, 4, 25, 8, 0, 0),
@@ -32,25 +32,22 @@ class CommonDBTestMixin(DballeDBMixin):
         data["B33036"] = 75
         self.db.attr_insert_data(ids["B01011"], data)
 
-        for rec in self.db.query_data(dballe.Record(var="B01011")):
+        for rec in self.db.query_data(dict(var="B01011")):
             self.attr_ref = rec["context_id"]
 
     def testQueryExport(self):
-        query = dballe.Record()
-        self.db.export_to_file(query, "BUFR", "/dev/null")
-        self.db.export_to_file(query, "CREX", "/dev/null")
-        self.db.export_to_file(query, "BUFR", "/dev/null", generic=True)
-        self.db.export_to_file(query, "CREX", "/dev/null", generic=True)
+        self.db.export_to_file({}, "BUFR", "/dev/null")
+        self.db.export_to_file({}, "CREX", "/dev/null")
+        self.db.export_to_file({}, "BUFR", "/dev/null", generic=True)
+        self.db.export_to_file({}, "CREX", "/dev/null", generic=True)
 
     def testExportFileObject(self):
-        query = dballe.Record()
         out = io.BytesIO()
-        self.db.export_to_file(query, "BUFR", out)
+        self.db.export_to_file({}, "BUFR", out)
         self.assertTrue(out.getvalue().startswith(b"BUFR"))
 
     def testQueryAna(self):
-        query = dballe.Record()
-        cur = self.db.query_stations(query)
+        cur = self.db.query_stations()
         self.assertEqual(cur.remaining, 1)
         count = 0
         for result in cur:
@@ -66,9 +63,7 @@ class CommonDBTestMixin(DballeDBMixin):
             {"code": "B01012", "val": 500},
         ]
 
-        query = dballe.Record()
-        query["latmin"] = 10.0
-        cur = self.db.query_data(query)
+        cur = self.db.query_data({"latmin": 10.0})
         self.assertEqual(cur.remaining, 2)
         for idx, result in enumerate(cur):
             self.assertEqual(cur.remaining, 2-idx-1)
@@ -93,9 +88,7 @@ class CommonDBTestMixin(DballeDBMixin):
             self.assertFalse(result.attrs(result["var"]))
 
     def testQueryDataLimit(self):
-        query = dballe.Record()
-        query["limit"] = 1
-        cur = self.db.query_data(query)
+        cur = self.db.query_data({"limit": 1})
         self.assertEqual(cur.remaining, 1)
 
     def testQueryAttrs(self):
@@ -116,8 +109,7 @@ class CommonDBTestMixin(DballeDBMixin):
 
     def testQueryCursorAttrs(self):
         # Query a variable
-        query = dballe.Record(var="B01011")
-        cur = self.db.query_data(query)
+        cur = self.db.query_data({"var": "B01011"})
         data = next(cur)
         self.assertTrue(data)
 
@@ -137,9 +129,7 @@ class CommonDBTestMixin(DballeDBMixin):
         self.assertEqual(count, 2)
 
     def testQuerySummary(self):
-        query = dballe.Record()
-        query["query"] = "details"
-        cur = self.db.query_summary(query)
+        cur = self.db.query_summary({"query": "details"})
         res = dict()
         for result in cur:
             with warnings.catch_warnings():
@@ -160,20 +150,20 @@ class CommonDBTestMixin(DballeDBMixin):
         with io.open(test_pathname("bufr/vad.bufr"), "rb") as fp:
             self.db.remove_all()
             self.db.load(fp)
-            self.assertTrue(self.db.query_data(dballe.Record()).remaining > 0)
+            self.assertTrue(self.db.query_data().remaining > 0)
 
     def testLoadFileLike(self):
         with io.open(test_pathname("bufr/vad.bufr"), "rb") as fp:
             s = io.BytesIO(fp.read())
             self.db.remove_all()
             self.db.load(s)
-            self.assertTrue(self.db.query_data(dballe.Record()).remaining > 0)
+            self.assertTrue(self.db.query_data().remaining > 0)
 
     def testLoadFileWithAttrs(self):
         with io.open(test_pathname("bufr/issue91-withB33196.bufr"), "rb") as fp:
             self.db.remove_all()
             self.db.load(fp, attrs=True)
-            r = next(self.db.query_data(dballe.Record()))
+            r = next(self.db.query_data())
             a = self.db.attr_query_data(r["context_id"])
             self.assertTrue("B33196" in a)
 
@@ -181,13 +171,13 @@ class CommonDBTestMixin(DballeDBMixin):
         with io.open(test_pathname("bufr/issue91-withoutB33196.bufr"), "rb") as fp:
             self.db.remove_all()
             self.db.load(fp, overwrite=True)
-            r = next(self.db.query_data(dballe.Record()))
+            r = next(self.db.query_data())
             self.db.attr_query_data(r["context_id"])  # cannot verify the result, but expecting not to raise
             self.assertTrue(r["B12101"] == 274.15)
 
         with io.open(test_pathname("bufr/issue91-withB33196.bufr"), "rb") as fp:
             self.db.load(fp, overwrite=True)
-            r = next(self.db.query_data(dballe.Record()))
+            r = next(self.db.query_data())
             self.db.attr_query_data(r["context_id"])  # cannot verify the result, but expecting not to raise)
             self.assertTrue(r["B12101"] == 273.15)
 
@@ -212,7 +202,7 @@ class CommonDBTestMixin(DballeDBMixin):
         with F(test_pathname("bufr/vad.bufr")) as f:
             self.db.remove_all()
             self.db.load(f)
-            self.assertTrue(self.db.query_data(dballe.Record()).remaining > 0)
+            self.assertTrue(self.db.query_data().remaining > 0)
 
     def testLoadAutodetect(self):
         # BUFR, autodetectable
@@ -261,7 +251,7 @@ class CommonDBTestMixin(DballeDBMixin):
         from testlib import fill_volnd
         self.db.remove_all()
         fill_volnd(self.db)
-        query = dballe.Record()
+        query = {}
         query["var"] = "B10004"
         query["datetime"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
         reports = []
@@ -334,14 +324,14 @@ class AttrTestMixin(object):
         with io.open(test_pathname("bufr/issue91-withoutB33196.bufr"), "rb") as fp:
             self.db.remove_all()
             self.db.load(fp, attrs=True, overwrite=True)
-            r = next(self.db.query_data(dballe.Record()))
+            r = next(self.db.query_data())
             a = self.db.attr_query_data(r["context_id"])
             self.assertTrue(r["B12101"] == 274.15)
             self.assertTrue("B33196" not in a)
 
         with io.open(test_pathname("bufr/issue91-withB33196.bufr"), "rb") as fp:
             self.db.load(fp, attrs=True, overwrite=True)
-            r = next(self.db.query_data(dballe.Record()))
+            r = next(self.db.query_data())
             a = self.db.attr_query_data(r["context_id"])
             self.assertTrue(r["B12101"] == 273.15)
             self.assertTrue("B33196" in a)

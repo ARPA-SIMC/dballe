@@ -9,18 +9,13 @@
 
 #include <dballe/sql/fwd.h>
 #include <dballe/core/fwd.h>
+#include <dballe/core/record.h>
 #include <memory>
 #include <map>
 #include <string>
 #include <vector>
 
 namespace dballe {
-struct Record;
-
-namespace core {
-struct Query;
-}
-
 namespace db {
 namespace v7 {
 

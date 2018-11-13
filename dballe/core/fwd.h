@@ -4,7 +4,6 @@
 namespace dballe {
 namespace core {
 struct Values;
-class Record;
 class Data;
 class Query;
 class JSONWriter;

@@ -3,6 +3,7 @@
 #include <dballe/core/record-access.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/query.h>
+#include <dballe/core/data.h>
 #include "record.h"
 #include "common.h"
 #include "types.h"
@@ -101,6 +102,38 @@ static void setpy(dballe::core::Record& rec, PyObject* key, PyObject* val)
         record_sets(rec, name.c_str(), value);
     } else if (val == Py_None) {
         record_unset(rec, name.c_str());
+    } else {
+        PyErr_SetString(PyExc_TypeError, "Expected int, float, str, unicode, or None");
+        throw PythonException();
+    }
+}
+
+static void setpy(dballe::core::Values& values, PyObject* key, PyObject* val)
+{
+    wreport::Varcode code = varcode_from_python(key);
+
+    if (!val)
+    {
+        // del rec[val]
+        values.unset(code);
+        return;
+    }
+
+    if (PyFloat_Check(val))
+    {
+        double v = PyFloat_AsDouble(val);
+        if (v == -1.0 && PyErr_Occurred())
+            throw PythonException();
+        values.set(code, v);
+    } else if (PyLong_Check(val)) {
+        long v = PyLong_AsLong(val);
+        if (v == -1 && PyErr_Occurred())
+            throw PythonException();
+        values.set(code, (int)v);
+    } else if (PyUnicode_Check(val) || PyBytes_Check(val)) {
+        values.set(code, string_from_python(val));
+    } else if (val == Py_None) {
+        values.unset(code);
     } else {
         PyErr_SetString(PyExc_TypeError, "Expected int, float, str, unicode, or None");
         throw PythonException();
@@ -1021,19 +1054,11 @@ RecordAccess::~RecordAccess()
     delete temp;
 }
 
-void read_query(PyObject* from_python, dballe::Query& query)
+void read_query(PyObject* from_python, dballe::core::Query& query)
 {
-    auto& q = core::Query::downcast(query);
-
     if (!from_python || from_python == Py_None)
     {
-        q.clear();
-        return;
-    }
-
-    if (dpy_Record_Check(from_python))
-    {
-        query.set_from_record(*((dpy_Record*)from_python)->rec);
+        query.clear();
         return;
     }
 
@@ -1049,7 +1074,53 @@ void read_query(PyObject* from_python, dballe::Query& query)
         return;
     }
 
-    PyErr_SetString(PyExc_TypeError, "Expected dballe.Record or dict or None");
+    PyErr_SetString(PyExc_TypeError, "Expected dict or None");
+    throw PythonException();
+}
+
+void read_data(PyObject* from_python, dballe::core::Data& data)
+{
+    if (!from_python || from_python == Py_None)
+    {
+        data.clear();
+        return;
+    }
+
+    if (PyDict_Check(from_python))
+    {
+        dballe::core::Record rec;
+        PyObject* key;
+        PyObject* value;
+        Py_ssize_t pos = 0;
+        while (PyDict_Next(from_python, &pos, &key, &value))
+            setpy(rec, key, value);
+        rec.to_data(data);
+        return;
+    }
+
+    PyErr_SetString(PyExc_TypeError, "Expected dict or None");
+    throw PythonException();
+}
+
+void read_values(PyObject* from_python, dballe::core::Values& values)
+{
+    if (!from_python || from_python == Py_None)
+    {
+        values.clear();
+        return;
+    }
+
+    if (PyDict_Check(from_python))
+    {
+        PyObject* key;
+        PyObject* value;
+        Py_ssize_t pos = 0;
+        while (PyDict_Next(from_python, &pos, &key, &value))
+            setpy(values, key, value);
+        return;
+    }
+
+    PyErr_SetString(PyExc_TypeError, "Expected dict or None");
     throw PythonException();
 }
 

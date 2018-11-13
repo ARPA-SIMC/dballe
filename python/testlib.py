@@ -40,7 +40,6 @@ def not_so_random(seed):
 
 
 def fill_volnd(db):
-    import dballe
     import datetime
 
     # We want a predictable dataset
@@ -50,8 +49,8 @@ def fill_volnd(db):
     # Wipe the test database
     db.remove_all()
 
-    attrs = dballe.Record()
-    rec = dballe.Record(mobile=0)
+    attrs = {}
+    rec = {"mobile": 0}
 
     def contexts():
         # 2 networks

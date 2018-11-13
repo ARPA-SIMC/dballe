@@ -4,10 +4,7 @@
 #include <Python.h>
 #include <dballe/fwd.h>
 #include <dballe/core/fwd.h>
-
-namespace dballe {
-struct Record;
-}
+#include <dballe/core/record.h>
 
 extern "C" {
 
@@ -53,7 +50,9 @@ public:
     operator const dballe::core::Record&() const { return *result; }
 };
 
-void read_query(PyObject* from_python, dballe::Query& query);
+void read_query(PyObject* from_python, dballe::core::Query& query);
+void read_data(PyObject* from_python, dballe::core::Data& data);
+void read_values(PyObject* from_python, dballe::core::Values& values);
 bool _record_enqpython(const dballe::core::Record& rec, const char* key, unsigned len, PyObject*& result);
 
 dpy_Record* record_create();
