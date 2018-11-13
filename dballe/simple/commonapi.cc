@@ -16,10 +16,60 @@ using namespace std;
 namespace dballe {
 namespace fortran {
 
+wreport::Varcode Attributes::next()
+{
+    if (!valid)
+        throw error_consistency("ancora called without a previous voglioancora");
+    if (current == values.end())
+        throw error_notfound("ancora called with no (or no more) results available");
+
+    Varcode res = current->code();
+    ++current;
+    return res;
+}
+
+void Attributes::invalidate()
+{
+    valid = false;
+    values.clear();
+}
+
+void Attributes::has_new_values()
+{
+    valid = true;
+    current = values.begin();
+}
+
 Operation::~Operation() {}
 void Operation::set_varcode(wreport::Varcode varcode) {}
+bool Operation::elencamele() { throw error_consistency("elencamele called without a previous quantesono"); }
 wreport::Varcode Operation::dammelo(dballe::Record& output) { throw error_consistency("dammelo called without a previous voglioquesto"); }
 
+signed char Operation::enqb(const char* param) const
+{
+    int value = enqi(param);
+
+    if (value == API::missing_int)
+        return API::missing_byte;
+
+    if (value < numeric_limits<signed char>::min()
+            || value > numeric_limits<signed char>::max())
+        error_consistency::throwf("value queried (%d) does not fit in a byte", value);
+    return value;
+}
+
+float Operation::enqr(const char* param) const
+{
+    double value = enqd(param);
+
+    if (value == API::missing_double)
+        return API::missing_float;
+
+    if (value < -numeric_limits<float>::max()
+            || value > numeric_limits<float>::max())
+        error_consistency::throwf("value queried (%f) does not fit in a real", value);
+    return value;
+}
 
 struct VaridOperation : public Operation
 {
@@ -29,8 +79,11 @@ struct VaridOperation : public Operation
     int varid;
 
     VaridOperation(int varid) : varid(varid) {}
+    void run()
+    {
+    }
     void set_varcode(wreport::Varcode varcode) override { this->varcode = varcode; }
-    void voglioancora(db::Transaction& tr, std::vector<wreport::Var>& dest) override
+    void voglioancora(db::Transaction& tr, Attributes& dest) override
     {
         if (!varid)
             throw error_consistency("voglioancora called with an invalid *context_id");
@@ -39,21 +92,21 @@ struct VaridOperation : public Operation
         if (selected_attr_codes.empty())
         {
             consumer = [&](unique_ptr<Var>&& var) {
-                // TODO: move into qcoutput
-                dest.emplace_back(std::move(*var));
+                dest.values.set(std::move(var));
             };
         } else {
             consumer = [&](unique_ptr<Var>&& var) {
                 for (auto code: selected_attr_codes)
                     if (code == var->code())
                     {
-                        // TODO: move into qcoutput
-                        dest.emplace_back(std::move(*var));
+                        dest.values.set(std::move(var));
                         break;
                     }
             };
         }
+        dest.values.clear();
         tr.attr_query_data(varid, consumer);
+        dest.has_new_values();
     }
     void critica(db::Transaction& tr, const core::Values& qcinput) override
     {
@@ -63,12 +116,17 @@ struct VaridOperation : public Operation
     {
         tr.attr_remove_data(varid, selected_attr_codes);
     }
+    int enqi(const char* param) const override { throw wreport::error_unimplemented("Varid::enqi handle *params or forward to previous operation"); }
+    double enqd(const char* param) const override { throw wreport::error_unimplemented("Varid::enqd handle *params or forward to previous operation"); }
+    bool enqc(const char* param, std::string& res) const override { throw wreport::error_unimplemented("Varid::enqc handle *params or forward to previous operation"); }
+    void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) const override { throw wreport::error_unimplemented("VaridOperation::enqlevel forward to previous operation"); }
+    void enqtimerange(int& ptype, int& p1, int& p2) const override { throw wreport::error_unimplemented("VaridOperation::enqtimerange forward to previous operation"); }
+    void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec) const override { throw wreport::error_unimplemented("VaridOperation::enqdata forward to previous operation"); }
 };
 
 
 
 CommonAPIImplementation::CommonAPIImplementation()
-    : perms(0), qc_iter(-1), qc_count(0)
 {
 }
 
@@ -124,103 +182,82 @@ int CommonAPIImplementation::enqi(const char* param)
             return missing_int;
         else
         {
+            if (!qcoutput.valid)
+                error_consistency::throwf("enqi %s can only be called after a voglioancora", param);
             wreport::Varcode code = resolve_varcode(param + 1);
-            for (const auto& var: qcoutput)
-                if (var.code() == code)
-                    return var.enqi();
-            return missing_int;
+            return qcoutput.values.enq(code, API::missing_int);
         }
     }
-    return record_enqi(output, param, missing_int);
+    if (!operation) return missing_int;
+    return operation->enqi(param);
 }
 
 signed char CommonAPIImplementation::enqb(const char* param)
 {
-    int value = missing_int;
-    if (param[0] == '*')
-    {
-        wreport::Varcode code = resolve_varcode(param + 1);
-        for (const auto& var: qcoutput)
-            if (var.code() == code)
-                value = var.enqi();
-    } else {
-        value = record_enqi(output, param, missing_int);
-    }
-
-    if (value == missing_int)
-        return missing_byte;
-
-    if (value < numeric_limits<signed char>::min()
-            || value > numeric_limits<signed char>::max())
-        error_consistency::throwf("value queried (%d) does not fit in a byte", value);
-    return value;
+    if (!operation) return missing_byte;
+    return operation->enqb(param);
 }
 
 float CommonAPIImplementation::enqr(const char* param)
 {
-    double value = missing_double;
-    if (param[0] == '*')
-    {
-        wreport::Varcode code = resolve_varcode(param + 1);
-        for (const auto& var: qcoutput)
-            if (var.code() == code)
-                value = var.enqd();
-    } else {
-        value = record_enqd(output, param, missing_double);
-    }
-
-    if (value == missing_double)
-        return missing_float;
-
-    if (value < -numeric_limits<float>::max()
-            || value > numeric_limits<float>::max())
-        error_consistency::throwf("value queried (%f) does not fit in a real", value);
-    return value;
+    if (!operation) return missing_float;
+    return operation->enqr(param);
 }
 
 double CommonAPIImplementation::enqd(const char* param)
 {
     if (param[0] == '*')
     {
+        if (!qcoutput.valid)
+            error_consistency::throwf("enqd %s can only be called after a voglioancora", param);
         wreport::Varcode code = resolve_varcode(param + 1);
-        for (const auto& var: qcoutput)
-            if (var.code() == code)
-                return var.enqd();
-        return missing_double;
+        return qcoutput.values.enq(code, API::missing_double);
     }
-    return record_enqd(output, param, missing_double);
+    if (!operation) return missing_double;
+    return operation->enqd(param);
 }
-
-#if 0
-std::string CommonAPIImplementation::enqc(const char* param)
-{
-    if (param[0] == '*')
-    {
-        wreport::Varcode code = resolve_varcode(param + 1);
-        for (const auto& var: qcoutput)
-            if (var.code() == code)
-                return var.enqc();
-        return std::string();
-    }
-    return record_enqs(output, param, std::string());
-}
-#endif
 
 bool CommonAPIImplementation::enqc(const char* param, std::string& res)
 {
     if (param[0] == '*')
     {
+        if (!qcoutput.valid)
+            error_consistency::throwf("enqc %s can only be called after a voglioancora", param);
         wreport::Varcode code = resolve_varcode(param + 1);
-        for (const auto& var: qcoutput)
-            if (var.code() == code)
-            {
-                res = var.enqc();
-                return true;
-            }
-        return false;
+        const Var* var = qcoutput.values.get_var(code);
+        if (!var) return false;
+        if (!var->isset()) return false;
+        res = var->enqc();
+        return true;
     }
-    return record_enqsb(output, param, res);
+    if (!operation) return false;
+    return operation->enqc(param, res);
 }
+
+void CommonAPIImplementation::enqlevel(int& ltype1, int& l1, int& ltype2, int& l2)
+{
+    if (!operation)
+        ltype1 = l1 = ltype2 = l2 = MISSING_INT;
+    else
+        return operation->enqlevel(ltype1, l1, ltype2, l2);
+}
+
+void CommonAPIImplementation::enqtimerange(int& pind, int& p1, int& p2)
+{
+    if (!operation)
+        pind = p1 = p2 = MISSING_INT;
+    else
+        return operation->enqtimerange(pind, p1, p2);
+}
+
+void CommonAPIImplementation::enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec)
+{
+    if (!operation)
+        year = month = day = hour = min = sec = MISSING_INT;
+    else
+        return operation->enqdate(year, month, day, hour, min, sec);
+}
+
 
 void CommonAPIImplementation::seti(const char* param, int value)
 {
@@ -228,11 +265,10 @@ void CommonAPIImplementation::seti(const char* param, int value)
     {
         if (strcmp(param + 1, "context_id") == 0)
         {
-            delete operation;
-            if (value == MISSING_INT)
-                operation = nullptr;
+            if (value != MISSING_INT)
+                reset_operation(new VaridOperation(value));
             else
-                operation = new VaridOperation(value);
+                reset_operation();
         } else {
             qcinput.set(resolve_varcode(param + 1), value);
         }
@@ -315,15 +351,6 @@ void CommonAPIImplementation::setcontextana()
     station_context = true;
 }
 
-void CommonAPIImplementation::enqlevel(int& ltype1, int& l1, int& ltype2, int& l2)
-{
-    Level lev = output.get_level(); // TODO: access Record directly
-    ltype1 = lev.ltype1 != MISSING_INT ? lev.ltype1 : API::missing_int;
-    l1     = lev.l1     != MISSING_INT ? lev.l1     : API::missing_int;
-    ltype2 = lev.ltype2 != MISSING_INT ? lev.ltype2 : API::missing_int;
-    l2     = lev.l2     != MISSING_INT ? lev.l2     : API::missing_int;
-}
-
 void CommonAPIImplementation::setlevel(int ltype1, int l1, int ltype2, int l2)
 {
     Level level(ltype1, l1, ltype2, l2);
@@ -332,31 +359,12 @@ void CommonAPIImplementation::setlevel(int ltype1, int l1, int ltype2, int l2)
     input_query.level = input_data.level = level;
 }
 
-void CommonAPIImplementation::enqtimerange(int& ptype, int& p1, int& p2)
-{
-    Trange tr = output.get_trange(); // TODO: access Record directly
-    ptype = tr.pind != MISSING_INT ? tr.pind : API::missing_int;
-    p1    = tr.p1   != MISSING_INT ? tr.p1   : API::missing_int;
-    p2    = tr.p2   != MISSING_INT ? tr.p2   : API::missing_int;
-}
-
 void CommonAPIImplementation::settimerange(int ptype, int p1, int p2)
 {
     Trange trange(ptype, p1, p2);
     if (!trange.is_missing())
         station_context = false;
     input_query.trange = input_data.trange = trange;
-}
-
-void CommonAPIImplementation::enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec)
-{
-    Datetime dt = output.get_datetime();  // TODO: Access Record directly
-    year = dt.year != 0xffff ? dt.year : API::missing_int;
-    month = dt.month != 0xff ? dt.month : API::missing_int;
-    day = dt.day != 0xff ? dt.day : API::missing_int;
-    hour = dt.hour != 0xff ? dt.hour : API::missing_int;
-    min = dt.minute != 0xff ? dt.minute : API::missing_int;
-    sec = dt.second != 0xff ? dt.second : API::missing_int;
 }
 
 void CommonAPIImplementation::setdate(int year, int month, int day, int hour, int min, int sec)
@@ -459,21 +467,26 @@ const char* CommonAPIImplementation::spiegab(const char* varcode, const char* va
     return cached_spiega.c_str();
 }
 
+void CommonAPIImplementation::elencamele()
+{
+    if (!operation)
+        throw error_consistency("elencamele called without a previous quantesono");
+    if (!operation->elencamele())
+        reset_operation();
+}
+
+wreport::Varcode CommonAPIImplementation::dammelo()
+{
+    if (!operation) throw error_consistency("dammelo called without a previous voglioquesto");
+    qcoutput.invalidate();
+    return operation->dammelo(output);
+}
+
 const char* CommonAPIImplementation::ancora()
 {
     static char parm[10] = "*";
-
-    if (qc_iter < 0)
-        throw error_consistency("ancora called without a previous voglioancora");
-    if ((unsigned)qc_iter >= qcoutput.size())
-        throw error_notfound("ancora called with no (or no more) results available");
-
-    Varcode var = qcoutput[qc_iter].code();
-    format_bcode(var, parm + 1);
-
-    /* Get next value from qc */
-    ++qc_iter;
-
+    Varcode code = qcoutput.next();
+    format_bcode(code, parm + 1);
     return parm;
 }
 

@@ -412,11 +412,12 @@ int MsgAPI::voglioancora()
     if ((unsigned)iter_var >= ctx.data.size()) return 0;
     const Var& var = *(ctx.data[iter_var]);
 
-    qcoutput.clear();
+    qcoutput.values.clear();
     for (const Var* attr = var.next_attr(); attr; attr = attr->next_attr())
-        qcoutput.push_back(*attr);
-    qc_iter = 0;
-    return qcoutput.size();
+        qcoutput.values.set(*attr);
+    qcoutput.has_new_values();
+    qcinput.clear();
+    return qcoutput.values.size();
 }
 
 void MsgAPI::critica()

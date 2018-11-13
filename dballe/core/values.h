@@ -164,15 +164,35 @@ public:
     bool operator==(const Values& o) const;
     bool operator!=(const Values& o) const;
 
-    const Value& operator[](wreport::Varcode code) const;
-    const Value& operator[](const char* code) const { return operator[](resolve_varcode(code)); }
-    const Value& operator[](const std::string& code) const { return operator[](resolve_varcode(code)); }
+    // const Value& operator[](size_t idx) const { return m_values[idx]; }
+
+    /**
+     * Lookup a value, throwing an exception if not found
+     */
+    const Value& want(wreport::Varcode code) const;
+    const Value& want(const char* code) const { return want(resolve_varcode(code)); }
+    const Value& want(const std::string& code) const { return want(resolve_varcode(code)); }
+
+    /**
+     * Lookup a value, returning nullptr if not found
+     */
     const Value* get(wreport::Varcode code) const;
     const Value* get(const char* code) const { return get(resolve_varcode(code)); }
     const Value* get(const std::string& code) const { return get(resolve_varcode(code)); }
+
+    /**
+     * Lookup a variable, returning nullptr if not found
+     */
     const wreport::Var* get_var(wreport::Varcode code) const;
     const wreport::Var* get_var(const char* code) const { return get_var(resolve_varcode(code)); }
     const wreport::Var* get_var(const std::string& code) const { return get_var(resolve_varcode(code)); }
+
+    template<typename C, typename T> T enq(C code, const T& def)
+    {
+        if (const wreport::Var* var = get_var(code))
+            return var->enq(def);
+        return def;
+    }
 
     /// Set from a wreport::Var
     void set(const wreport::Var&);

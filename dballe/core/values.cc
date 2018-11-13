@@ -274,7 +274,7 @@ void Values::set(const Values& vals)
         set(*vi.var);
 }
 
-const Value& Values::operator[](wreport::Varcode code) const
+const Value& Values::want(wreport::Varcode code) const
 {
     auto i = find(code);
     if (i == end())

@@ -30,7 +30,7 @@ bool Stations::enqi(const char* key, unsigned len, int& res) const
         default: break;
     }
     r.maybe_search_values(key, cur->values);
-    return r.missing();
+    return !r.missing();
 }
 
 bool Stations::enqd(const char* key, unsigned len, double& res) const
@@ -47,7 +47,7 @@ bool Stations::enqd(const char* key, unsigned len, double& res) const
         default: break;
     }
     r.maybe_search_values(key, cur->values);
-    return r.missing();
+    return !r.missing();
 }
 
 bool Stations::enqs(const char* key, unsigned len, std::string& res) const
@@ -64,7 +64,7 @@ bool Stations::enqs(const char* key, unsigned len, std::string& res) const
         default: break;
     }
     r.maybe_search_values(key, cur->values);
-    return r.missing();
+    return !r.missing();
 }
 
 bool Stations::enqf(const char* key, unsigned len, std::string& res) const
@@ -81,7 +81,7 @@ bool Stations::enqf(const char* key, unsigned len, std::string& res) const
         default: break;
     }
     r.maybe_search_values(key, cur->values);
-    return r.missing();
+    return !r.missing();
 }
 
 
@@ -105,7 +105,7 @@ bool StationData::enqi(const char* key, unsigned len, int& res) const
         default: break;
     }
     r.maybe_search_value(key, cur->value);
-    return r.missing();
+    return !r.missing();
 }
 
 bool StationData::enqd(const char* key, unsigned len, double& res) const
@@ -124,7 +124,7 @@ bool StationData::enqd(const char* key, unsigned len, double& res) const
         default: break;
     }
     r.maybe_search_value(key, cur->value);
-    return r.missing();
+    return !r.missing();
 }
 
 bool StationData::enqs(const char* key, unsigned len, std::string& res) const
@@ -143,7 +143,7 @@ bool StationData::enqs(const char* key, unsigned len, std::string& res) const
         default: break;
     }
     r.maybe_search_value(key, cur->value);
-    return r.missing();
+    return !r.missing();
 }
 
 bool StationData::enqf(const char* key, unsigned len, std::string& res) const
@@ -162,7 +162,7 @@ bool StationData::enqf(const char* key, unsigned len, std::string& res) const
         default: break;
     }
     r.maybe_search_value(key, cur->value);
-    return r.missing();
+    return !r.missing();
 }
 
 
@@ -199,7 +199,7 @@ bool Data::enqi(const char* key, unsigned len, int& res) const
         default: break;
     }
     r.maybe_search_value(key, cur->value);
-    return r.missing();
+    return !r.missing();
 }
 
 bool Data::enqd(const char* key, unsigned len, double& res) const
@@ -231,7 +231,7 @@ bool Data::enqd(const char* key, unsigned len, double& res) const
         default: break;
     }
     r.maybe_search_value(key, cur->value);
-    return r.missing();
+    return !r.missing();
 }
 
 bool Data::enqs(const char* key, unsigned len, std::string& res) const
@@ -263,7 +263,7 @@ bool Data::enqs(const char* key, unsigned len, std::string& res) const
         default: break;
     }
     r.maybe_search_value(key, cur->value);
-    return r.missing();
+    return !r.missing();
 }
 
 bool Data::enqf(const char* key, unsigned len, std::string& res) const
@@ -295,7 +295,7 @@ bool Data::enqf(const char* key, unsigned len, std::string& res) const
         default: break;
     }
     r.maybe_search_value(key, cur->value);
-    return r.missing();
+    return !r.missing();
 }
 
 
@@ -339,7 +339,7 @@ bool Summary::enqi(const char* key, unsigned len, int& res) const
         default: break;
     }
     r.throw_if_notfound(key);
-    return r.missing();
+    return !r.missing();
 }
 
 bool Summary::enqd(const char* key, unsigned len, double& res) const
@@ -378,7 +378,7 @@ bool Summary::enqd(const char* key, unsigned len, double& res) const
         default: break;
     }
     r.throw_if_notfound(key);
-    return r.missing();
+    return !r.missing();
 }
 
 bool Summary::enqs(const char* key, unsigned len, std::string& res) const
@@ -417,7 +417,7 @@ bool Summary::enqs(const char* key, unsigned len, std::string& res) const
         default: break;
     }
     r.throw_if_notfound(key);
-    return r.missing();
+    return !r.missing();
 }
 
 bool Summary::enqf(const char* key, unsigned len, std::string& res) const
@@ -456,7 +456,7 @@ bool Summary::enqf(const char* key, unsigned len, std::string& res) const
         default: break;
     }
     r.throw_if_notfound(key);
-    return r.missing();
+    return !r.missing();
 }
 
 }

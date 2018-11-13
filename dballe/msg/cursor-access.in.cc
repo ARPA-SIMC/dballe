@@ -25,7 +25,7 @@ bool CursorStation::enqi(const char* key, unsigned len, int& res) const
         default: break;
     }
     r.maybe_search_values(key, station_ctx);
-    return r.missing();
+    return !r.missing();
 }
 
 bool CursorStation::enqd(const char* key, unsigned len, double& res) const
@@ -42,7 +42,7 @@ bool CursorStation::enqd(const char* key, unsigned len, double& res) const
         default: break;
     }
     r.maybe_search_values(key, station_ctx);
-    return r.missing();
+    return !r.missing();
 }
 
 bool CursorStation::enqs(const char* key, unsigned len, std::string& res) const
@@ -59,7 +59,7 @@ bool CursorStation::enqs(const char* key, unsigned len, std::string& res) const
         default: break;
     }
     r.maybe_search_values(key, station_ctx);
-    return r.missing();
+    return !r.missing();
 }
 
 bool CursorStation::enqf(const char* key, unsigned len, std::string& res) const
@@ -76,7 +76,7 @@ bool CursorStation::enqf(const char* key, unsigned len, std::string& res) const
         default: break;
     }
     r.maybe_search_values(key, station_ctx);
-    return r.missing();
+    return !r.missing();
 }
 
 
@@ -100,7 +100,7 @@ bool CursorStationData::enqi(const char* key, unsigned len, int& res) const
         default: break;
     }
     r.maybe_search_value(key, *cur);
-    return r.missing();
+    return !r.missing();
 }
 
 bool CursorStationData::enqd(const char* key, unsigned len, double& res) const
@@ -119,7 +119,7 @@ bool CursorStationData::enqd(const char* key, unsigned len, double& res) const
         default: break;
     }
     r.maybe_search_value(key, *cur);
-    return r.missing();
+    return !r.missing();
 }
 
 bool CursorStationData::enqs(const char* key, unsigned len, std::string& res) const
@@ -138,7 +138,7 @@ bool CursorStationData::enqs(const char* key, unsigned len, std::string& res) co
         default: break;
     }
     r.maybe_search_value(key, *cur);
-    return r.missing();
+    return !r.missing();
 }
 
 bool CursorStationData::enqf(const char* key, unsigned len, std::string& res) const
@@ -157,7 +157,7 @@ bool CursorStationData::enqf(const char* key, unsigned len, std::string& res) co
         default: break;
     }
     r.maybe_search_value(key, *cur);
-    return r.missing();
+    return !r.missing();
 }
 
 
@@ -194,7 +194,7 @@ bool CursorData::enqi(const char* key, unsigned len, int& res) const
         default: break;
     }
     r.maybe_search_value(key, *(cur->var));
-    return r.missing();
+    return !r.missing();
 }
 
 bool CursorData::enqd(const char* key, unsigned len, double& res) const
@@ -226,7 +226,7 @@ bool CursorData::enqd(const char* key, unsigned len, double& res) const
         default: break;
     }
     r.maybe_search_value(key, *(cur->var));
-    return r.missing();
+    return !r.missing();
 }
 
 bool CursorData::enqs(const char* key, unsigned len, std::string& res) const
@@ -258,7 +258,7 @@ bool CursorData::enqs(const char* key, unsigned len, std::string& res) const
         default: break;
     }
     r.maybe_search_value(key, *(cur->var));
-    return r.missing();
+    return !r.missing();
 }
 
 bool CursorData::enqf(const char* key, unsigned len, std::string& res) const
@@ -290,7 +290,7 @@ bool CursorData::enqf(const char* key, unsigned len, std::string& res) const
         default: break;
     }
     r.maybe_search_value(key, *(cur->var));
-    return r.missing();
+    return !r.missing();
 }
 
 }

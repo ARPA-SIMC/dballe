@@ -34,9 +34,9 @@ add_method("codec", []() {
     core::Values vals1;
     core::Values::decode(encoded, [&](std::unique_ptr<wreport::Var> var) { vals1.set(move(var)); });
 
-    wassert(actual(*vals1[WR_VAR(0, 1, 2)].var) == *vals[WR_VAR(0, 1, 2)].var);
-    wassert(actual(*vals1[WR_VAR(0, 12, 101)].var) == *vals[WR_VAR(0, 12, 101)].var);
-    wassert(actual(*vals1[WR_VAR(0, 1, 19)].var) == *vals[WR_VAR(0, 1, 19)].var);
+    wassert(actual(*vals1.want(WR_VAR(0, 1, 2)).var) == *vals.want(WR_VAR(0, 1, 2)).var);
+    wassert(actual(*vals1.want(WR_VAR(0, 12, 101)).var) == *vals.want(WR_VAR(0, 12, 101)).var);
+    wassert(actual(*vals1.want(WR_VAR(0, 1, 19)).var) == *vals.want(WR_VAR(0, 1, 19)).var);
 });
 
 }

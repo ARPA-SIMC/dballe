@@ -125,21 +125,21 @@ struct ActualCursor : public Actual<dballe::Cursor&>
 
     /// Check cursor data variable after a query_data
     void data_var_matches(const Data& expected, wreport::Varcode code) {
-        data_var_matches(*core::Data::downcast(expected).values[code].var);
+        data_var_matches(*core::Data::downcast(expected).values.want(code).var);
     }
     /// Check cursor data variable after a query_data
     void data_var_matches(const Data& expected) {
         const core::Data& d = core::Data::downcast(expected);
         if (auto c = dynamic_cast<dballe::CursorStationData*>(&_actual))
-            data_var_matches(*d.values[c->get_varcode()].var);
+            data_var_matches(*d.values.want(c->get_varcode()).var);
         else if (auto c = dynamic_cast<dballe::CursorData*>(&_actual))
-            data_var_matches(*d.values[c->get_varcode()].var);
+            data_var_matches(*d.values.want(c->get_varcode()).var);
         else
             throw wreport::error_consistency("cannot call data_var_matches on this kind of cursor");
     }
     /// Check cursor data variable after a query_data
     void data_var_matches(const core::Values& expected, wreport::Varcode code) {
-        data_var_matches(*expected[code].var);
+        data_var_matches(*expected.want(code).var);
     }
     /// Check cursor data variable after a query_data
     void data_var_matches(const wreport::Var& expected);

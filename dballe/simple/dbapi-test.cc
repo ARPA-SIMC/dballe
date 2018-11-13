@@ -160,8 +160,8 @@ this->add_method("query_attrs", [](Fixture& f) {
         // It now has one attribute
         wassert(actual(api.voglioancora()) == 1);
         wassert(actual(api.enqi("*B33007")) == 50);
-
         wassert(actual(api.ancora()) == "*B33007");
+        wassert(actual(api.enqi("*B33007")) == 50);
 
         // Query it back, it has attributes
         api.setc("var", "B12101");
@@ -194,7 +194,6 @@ this->add_method("query_attrs", [](Fixture& f) {
 this->add_method("insert_attrs_prendilo", [](Fixture& f) {
     // Test attrs prendilo
     fortran::DbAPI api(f.tr, "write", "write", "write");
-    populate_variables(api);
 
     // Set one attribute after a prendilo
     api.setd("lat", 44.5);
@@ -205,6 +204,7 @@ this->add_method("insert_attrs_prendilo", [](Fixture& f) {
     api.settimerange(254, 0, 0);
     api.setd("B10004", 100000.0);
     api.prendilo(); // Pressure at ground level
+    wassert(actual(api.enqi("ana_id")) != 0);
     api.seti("*B33007", 60);
     api.critica();
 
@@ -212,18 +212,23 @@ this->add_method("insert_attrs_prendilo", [](Fixture& f) {
     api.unsetall();
     api.setc("var", "B10004");
     wassert(actual(api.voglioquesto()) == 1);
-    api.dammelo();
+    wassert(actual(api.dammelo()) == WR_VAR(0, 10, 4));
     wassert(actual(api.voglioancora()) == 1);
     wassert(actual(api.enqi("*B33007")) == 60);
+    wassert(actual(api.enqd("*B33007")) == 60.0);
+    string res;
+    wassert_true(api.enqc("*B33007", res));
+    wassert(actual(res) == "60");
 });
+
 this->add_method("insert_attrs_prendilo_anaid", [](Fixture& f) {
     // Test prendilo anaid
     fortran::DbAPI api(f.tr, "write", "write", "write");
     populate_variables(api);
 
     // Run a prendilo
-    api.setd("lat", 44.5);
-    api.setd("lon", 11.5);
+    api.setd("lat", 44.6);
+    api.setd("lon", 11.6);
     api.setc("rep_memo", "synop");
     api.setdate(2013, 4, 25, 12, 0, 0);
     api.setlevel(1, MISSING_INT, MISSING_INT, MISSING_INT);
@@ -231,15 +236,25 @@ this->add_method("insert_attrs_prendilo_anaid", [](Fixture& f) {
     api.setd("B10004", 100000.0);
     api.prendilo(); // Pressure at ground level
 
-    int anaid = api.enqi("*ana_id");
+    int anaid = api.enqi("ana_id");
     wassert(actual(anaid) != MISSING_INT);
 
     // Query it back
     api.unsetall();
     api.seti("ana_id", anaid);
-    api.setc("var", "B12101");
+    api.setc("var", "B10004");
     wassert(actual(api.voglioquesto()) == 1);
+    wassert(actual(api.dammelo()) == WR_VAR(0, 10, 4));
+
+    // Querying the variable of the other station with the same ana_id has no
+    // results
+    api.unsetall();
+    api.seti("ana_id", anaid);
+    api.setc("var", "B12101");
+    wassert(actual(api.voglioquesto()) == 0);
+    wassert(actual(api.dammelo()) == 0);
 });
+
 this->add_method("insert_auto_repmemo", [](Fixture& f) {
     // Check that an unknown rep_memo is correctly handled on insert
     fortran::DbAPI api(f.tr, "write", "write", "write");
@@ -260,6 +275,7 @@ this->add_method("insert_auto_repmemo", [](Fixture& f) {
     wassert(actual(api.voglioquesto()) == 1);
     wassert(actual(api.dammelo()) == WR_VAR(0, 12, 101));
 });
+
 this->add_method("undefined_level2", [](Fixture& f) {
     // Test handling of values with undefined leveltype2 and l2
     fortran::DbAPI api(f.tr, "write", "write", "write");
@@ -286,6 +302,7 @@ this->add_method("undefined_level2", [](Fixture& f) {
     wassert(actual(api.enqi("p1")) == fortran::DbAPI::missing_int);
     wassert(actual(api.enqi("p2")) == fortran::DbAPI::missing_int);
 });
+
 this->add_method("delete_attrs_dammelo", [](Fixture& f) {
     // Test deleting attributes after a dammelo
     fortran::DbAPI api(f.tr, "write", "write", "write");
@@ -330,6 +347,7 @@ this->add_method("delete_attrs_dammelo", [](Fixture& f) {
     // The QC attrs record should be cleaned
     wassert(actual(api.enqi("*B33007")) == MISSING_INT);
 });
+
 this->add_method("perms_consistency", [](Fixture& f) {
     {
         fortran::DbAPI api(f.tr, "read", "read", "read");
@@ -372,6 +390,7 @@ this->add_method("perms_consistency", [](Fixture& f) {
         api.messages_open_input(dballe::tests::datafile("bufr/synotemp.bufr").c_str(), "r", Encoding::BUFR);
     }
 });
+
 this->add_method("messages_read_messages", [](Fixture& f) {
     // 2 messages, 1 subset each
     fortran::DbAPI api(f.tr, "write", "write", "write");
@@ -607,6 +626,7 @@ this->add_method("messages_bug2", [](Fixture& f) {
     // Bug: missing variable 000000 in table dballe
     wassert(actual(api.voglioancora()) == 0);
 });
+
 this->add_method("attr_reference_id", [](Fixture& f) {
     // Test attr_reference_id behaviour
     fortran::DbAPI api(f.tr, "write", "write", "write");
@@ -693,6 +713,7 @@ this->add_method("attr_reference_id", [](Fixture& f) {
     api.setc("*var_related", "B12101");
     api.scusa();
 });
+
 this->add_method("attrs_bug1", [](Fixture& f) {
     // Reproduce a bug when setting attributes
     fortran::DbAPI dbapi0(f.tr, "write", "write", "write");
@@ -725,6 +746,7 @@ this->add_method("attrs_bug1", [](Fixture& f) {
     wassert(actual(dbapi0.dammelo()) == WR_VAR(0, 13, 3));
     wassert(actual(dbapi0.voglioancora()) == 3);
 });
+
 this->add_method("stationdata_bug1", [](Fixture& f) {
     // Reproduce a bug handling station data
     {

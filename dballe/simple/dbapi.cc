@@ -91,85 +91,138 @@ struct OutputFile
     }
 };
 
-template<typename Cursor>
-struct VoglioquestoOperation : public Operation
+struct QuantesonoOperation : public CursorOperation<CursorStation>
 {
-    const dballe::Query& query;
-    Cursor* query_cur = nullptr;
-    bool valid_cached_attrs = false;
+    const DbAPI& api;
 
-    VoglioquestoOperation(const dballe::core::Query& query)
-        : query(query)
+    QuantesonoOperation(const DbAPI& api)
+        : api(api)
     {
     }
-    ~VoglioquestoOperation()
+
+    int run()
     {
-        if (query_cur) query_cur->discard();
-        delete query_cur;
+        cursor = api.tr->query_stations(api.input_query);
+        return cursor->remaining();
     }
-    int voglioquesto(db::Transaction& tr, bool station_context)
+
+    bool elencamele() override
     {
-        if (station_context)
-            query_cur = tr.query_station_data(query).release();
-        else
-            query_cur = tr.query_data(query).release();
-        return query_cur->remaining();
+        return cursor->next();
     }
+
+    void voglioancora(db::Transaction& tr, Attributes& dest) override { throw error_consistency("voglioancora cannot be called after quantesono/elencamele"); }
+    void critica(db::Transaction& tr, const core::Values& qcinput) override { throw error_consistency("critica cannot be called after quantesono/elencamele"); }
+    void scusa(db::Transaction& tr) override { throw error_consistency("scusa cannot be called after quantesono/elencamele"); }
+};
+
+namespace {
+
+template<typename Cursor>
+struct CursorTraits {};
+
+template<>
+struct CursorTraits<db::CursorStationData>
+{
+    static inline std::unique_ptr<db::CursorStationData> query(db::Transaction& tr, const core::Query& query)
+    {
+        return std::unique_ptr<db::CursorStationData>(dynamic_cast<db::CursorStationData*>(tr.query_station_data(query).release()));
+    }
+    static inline void attr_insert(db::Transaction& tr, int id, const core::Values& values)
+    {
+        tr.attr_insert_station(id, values);
+    }
+    static inline void attr_remove(db::Transaction& tr, int id, const std::vector<wreport::Varcode>& attrs)
+    {
+        tr.attr_remove_station(id, attrs);
+    }
+};
+
+template<>
+struct CursorTraits<db::CursorData>
+{
+    static inline std::unique_ptr<db::CursorData> query(db::Transaction& tr, const core::Query& query)
+    {
+        return std::unique_ptr<db::CursorData>(dynamic_cast<db::CursorData*>(tr.query_data(query).release()));
+    }
+    static inline void attr_insert(db::Transaction& tr, int id, const core::Values& values)
+    {
+        tr.attr_insert_data(id, values);
+    }
+    static inline void attr_remove(db::Transaction& tr, int id, const std::vector<wreport::Varcode>& attrs)
+    {
+        tr.attr_remove_data(id, attrs);
+    }
+};
+
+}
+
+template<typename Cursor>
+struct VoglioquestoOperation : public CursorOperation<Cursor>
+{
+    const DbAPI& api;
+    bool valid_cached_attrs = false;
+    bool dammelo_ended = false;
+
+    VoglioquestoOperation(const DbAPI& api)
+        : api(api)
+    {
+    }
+
+    int run()
+    {
+        this->cursor.reset(CursorTraits<Cursor>::query(*api.tr, api.input_query).release());
+        return this->cursor->remaining();
+    }
+
     wreport::Varcode dammelo(dballe::Record& output) override
     {
         output.clear();
-        if (!query_cur) return 0;
+        if (dammelo_ended) return 0;
 
-        if (query_cur->next())
+        if (this->cursor->next())
         {
-            query_cur->to_record(output);
+            this->cursor->to_record(output);
             valid_cached_attrs = true;
-            return query_cur->get_varcode();
+            return this->cursor->get_varcode();
         } else {
-            delete query_cur;
-            query_cur = nullptr;
+            dammelo_ended = true;
             return 0;
         }
     }
-    void voglioancora(db::Transaction& tr, std::vector<wreport::Var>& dest) override
+    void voglioancora(db::Transaction& tr, Attributes& dest) override
     {
-        if (!query_cur) throw error_consistency("voglioancora called after dammelo returned end of data");
+        if (dammelo_ended) throw error_consistency("voglioancora called after dammelo returned end of data");
         function<void(unique_ptr<Var>&&)> consumer;
-        if (selected_attr_codes.empty())
+        if (this->selected_attr_codes.empty())
         {
             consumer = [&](unique_ptr<Var>&& var) {
-                // TODO: move into qcoutput
-                dest.emplace_back(std::move(*var));
+                dest.values.set(std::move(*var));
             };
         } else {
             consumer = [&](unique_ptr<Var>&& var) {
-                for (auto code: selected_attr_codes)
+                for (auto code: this->selected_attr_codes)
                     if (code == var->code())
                     {
-                        // TODO: move into qcoutput
-                        dest.emplace_back(std::move(*var));
+                        dest.values.set(std::move(*var));
                         break;
                     }
             };
         }
-        query_cur->attr_query(consumer, !valid_cached_attrs);
+        dest.values.clear();
+        this->cursor->attr_query(consumer, !valid_cached_attrs);
+        dest.has_new_values();
     }
     void critica(db::Transaction& tr, const core::Values& qcinput) override
     {
-        if (!query_cur) throw error_consistency("critica called after dammelo returned end of data");
-        if (dynamic_cast<const db::CursorStationData*>(query_cur))
-            tr.attr_insert_station(query_cur->attr_reference_id(), qcinput);
-        else
-            tr.attr_insert_data(query_cur->attr_reference_id(), qcinput);
+        if (dammelo_ended) throw error_consistency("critica called after dammelo returned end of data");
+        CursorTraits<Cursor>::attr_insert(tr, this->cursor->attr_reference_id(), qcinput);
         valid_cached_attrs = false;
     }
     void scusa(db::Transaction& tr) override
     {
-        if (!query_cur) throw error_consistency("scusa called after dammelo returned end of data");
-        if (dynamic_cast<const db::CursorStationData*>(query_cur))
-            tr.attr_remove_station(query_cur->attr_reference_id(), selected_attr_codes);
-        else
-            tr.attr_remove_data(query_cur->attr_reference_id(), selected_attr_codes);
+        if (dammelo_ended) throw error_consistency("scusa called after dammelo returned end of data");
+        CursorTraits<Cursor>::attr_remove(tr, this->cursor->attr_reference_id(), this->selected_attr_codes);
         valid_cached_attrs = false;
     }
 };
@@ -187,31 +240,45 @@ struct VarID
 struct PrendiloOperation : public Operation
 {
     /// Store database variable IDs for all last inserted variables
+    DbAPI& api;
     std::vector<VarID> last_inserted_varids;
     wreport::Varcode varcode = 0;
+    int last_inserted_station_id = API::missing_int;
+    int last_inserted_data_id = API::missing_int;
+
+    PrendiloOperation(DbAPI& api)
+        : api(api)
+    {
+    }
 
     void set_varcode(wreport::Varcode varcode) override { this->varcode = varcode; }
-    int prendilo(db::Transaction& tr, dballe::core::Data& input, bool station_context, unsigned perms)
+
+    void run()
     {
+        // db::Transaction& tr, dballe::core::Data& input, bool station_context, unsigned perms)
         last_inserted_varids.clear();
-        if (station_context)
+        if (api.station_context)
         {
-            tr.insert_station_data(input, (perms & DbAPI::PERM_DATA_WRITE) != 0, (perms & DbAPI::PERM_ANA_WRITE) != 0);
-            for (const auto& v: input.values)
+            api.tr->insert_station_data(api.input_data, (api.perms & DbAPI::PERM_DATA_WRITE) != 0, (api.perms & DbAPI::PERM_ANA_WRITE) != 0);
+            for (const auto& v: api.input_data.values)
                 last_inserted_varids.push_back(VarID(v.code(), true, v.data_id));
         } else {
-            tr.insert_data(input, (perms & DbAPI::PERM_DATA_WRITE) != 0, (perms & DbAPI::PERM_ANA_WRITE) != 0);
-            for (const auto& v: input.values)
+            api.tr->insert_data(api.input_data, (api.perms & DbAPI::PERM_DATA_WRITE) != 0, (api.perms & DbAPI::PERM_ANA_WRITE) != 0);
+            for (const auto& v: api.input_data.values)
                 last_inserted_varids.push_back(VarID(v.code(), false, v.data_id));
         }
-        return input.station.id;
+        last_inserted_station_id = api.input_data.station.id;
+        if (api.input_data.values.size() == 1)
+            last_inserted_data_id = api.input_data.values.begin()->data_id;
+        else
+            last_inserted_data_id = API::missing_int;
     }
     void select_attrs(const std::vector<wreport::Varcode>& varcodes) override
     {
         if (!varcodes.empty())
             throw error_consistency("*var and *varlist cannot be set after a prendilo");
     }
-    void voglioancora(db::Transaction& tr, std::vector<wreport::Var>& dest) override
+    void voglioancora(db::Transaction& tr, Attributes& dest) override
     {
         throw error_consistency("voglioancora cannot be called after a prendilo");
     }
@@ -246,6 +313,21 @@ struct PrendiloOperation : public Operation
     {
         throw error_consistency("scusa cannot be called after a prendilo");
     }
+    int enqi(const char* param) const override
+    {
+        if (strcmp(param, "ana_id") == 0)
+        {
+            return last_inserted_station_id;
+        } else if (strcmp(param, "context_id") == 0) {
+            return last_inserted_data_id;
+        } else
+            wreport::error_consistency::throwf("enqi %s cannot be called after a prendilo", param);
+    }
+    double enqd(const char* param) const override { throw wreport::error_consistency("enqd cannot be called after a prendilo"); }
+    bool enqc(const char* param, std::string& res) const override { throw wreport::error_consistency("enqc cannot be called after a prendilo"); }
+    void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) const override { throw wreport::error_consistency("enqlevel cannot be called after a prendilo"); }
+    void enqtimerange(int& ptype, int& p1, int& p2) const override { throw wreport::error_consistency("enqtimerange cannot be called after a prendilo"); }
+    void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec) const override { throw wreport::error_consistency("enqdate cannot be called after a prendilo"); }
 };
 
 
@@ -273,12 +355,8 @@ void DbAPI::shutdown(bool commit)
     delete output_file;
     output_file = nullptr;
 
-    if (ana_cur)
-    {
-        ana_cur->discard();
-        delete ana_cur;
-        ana_cur = nullptr;
-    }
+    delete operation;
+    operation = nullptr;
 
     if (commit)
         tr->commit();
@@ -287,14 +365,6 @@ void DbAPI::shutdown(bool commit)
 void DbAPI::fatto()
 {
     shutdown(true);
-}
-
-int DbAPI::enqi(const char* param)
-{
-    if (strcmp(param, "*ana_id") == 0)
-        return last_inserted_station_id;
-    else
-        return CommonAPIImplementation::enqi(param);
 }
 
 void DbAPI::scopa(const char* repinfofile)
@@ -319,62 +389,15 @@ void DbAPI::remove_all()
 
 int DbAPI::quantesono()
 {
-    if (ana_cur != NULL)
-    {
-        ana_cur->discard();
-        delete ana_cur;
-        ana_cur = 0;
-    }
-    ana_cur = tr->query_stations(input_query).release();
-    delete operation;
-    operation = nullptr;
-
-    return ana_cur->remaining();
-}
-
-void DbAPI::elencamele()
-{
-    if (ana_cur == NULL)
-        throw error_consistency("elencamele called without a previous quantesono");
-
-    output.clear();
-    if (ana_cur->next())
-        ana_cur->to_record(output);
-    else
-    {
-        delete ana_cur;
-        ana_cur = NULL;
-    }
+    return reset_operation(new QuantesonoOperation(*this));
 }
 
 int DbAPI::voglioquesto()
 {
-    delete operation;
     if (station_context)
-    {
-        VoglioquestoOperation<db::CursorStationData>* op;
-        operation = op = new VoglioquestoOperation<db::CursorStationData>(input_query);
-        op->query_cur = dynamic_cast<db::CursorStationData*>(tr->query_station_data(input_query).release());
-        return op->query_cur->remaining();
-    }
+        return reset_operation(new VoglioquestoOperation<db::CursorStationData>(*this));
     else
-    {
-        VoglioquestoOperation<db::CursorData>* op;
-        operation = op = new VoglioquestoOperation<db::CursorData>(input_query);
-        op->query_cur = dynamic_cast<db::CursorData*>(tr->query_data(input_query).release());
-        return op->query_cur->remaining();
-    }
-}
-
-wreport::Varcode DbAPI::dammelo()
-{
-    if (!operation) throw error_consistency("dammelo called without a previous voglioquesto");
-
-    /* Reset qc record iterator, so that ancora will not return
-     * leftover QC values from a previous query */
-    qc_iter = -1;
-
-    return operation->dammelo(output);
+        return reset_operation(new VoglioquestoOperation<db::CursorData>(*this));
 }
 
 void DbAPI::prendilo()
@@ -382,11 +405,8 @@ void DbAPI::prendilo()
     if (perms & PERM_DATA_RO)
         throw error_consistency(
             "idba_prendilo cannot be called with the database open in data readonly mode");
-    delete operation;
-    PrendiloOperation* po;
-    operation = po = new PrendiloOperation;
     input_data.datetime.set_lower_bound();
-    last_inserted_station_id = po->prendilo(*tr, input_data, station_context, perms);
+    reset_operation(new PrendiloOperation(*this));
     unsetb();
 }
 
@@ -406,12 +426,10 @@ void DbAPI::dimenticami()
 int DbAPI::voglioancora()
 {
     // Query attributes
-    qcoutput.clear();
     if (!operation) throw error_consistency("voglioancora was not called after a dammelo, or was called with an invalid *context_id or *var_related");
     operation->voglioancora(*tr, qcoutput);
-    qc_iter = 0;
     qcinput.clear();
-    return qcoutput.size();
+    return qcoutput.values.size();
 }
 
 void DbAPI::critica()
