@@ -58,10 +58,8 @@ EXTRA_DIST = \
 
 AM_CPPFLAGS = -I/usr/include/python$(PYTHON_VERSION) -I$(top_srcdir)
 
+# TODO: environment variable to skip a test
 check-local: _dballe.so
-	for test in $(dballe_python_tests); do \
-		test -n "$$ARGS" -a "$${ARGS#$${test%.py}}" == "$$ARGS" && echo "Skipping $$test" && continue; \
-		PYTHON="$(PYTHON)" $(TESTS_ENVIRONMENT) $$test ; \
-	done
+	PYTHON="$(PYTHON)" $(TESTS_ENVIRONMENT) $(dballe_python_tests)
 
 CLEANFILES = python-dballe.rst python-dballe.html

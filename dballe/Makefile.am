@@ -273,9 +273,7 @@ TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 #TESTS = $(check_PROGRAMS)
 
 check-local:
-	for test in $(check_PROGRAMS); do \
-		$(TESTS_ENVIRONMENT) $$test ; \
-	done
+	$(TESTS_ENVIRONMENT) $(check_PROGRAMS)
 
 #CXXFLAGS += -O0
 
