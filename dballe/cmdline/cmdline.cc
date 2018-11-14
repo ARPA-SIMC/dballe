@@ -503,7 +503,7 @@ int Command::main(int argc, const char* argv[])
 
 unsigned dba_cmdline_get_query(poptContext optCon, Query& query)
 {
-    core::Record rec;
+    core::Query& q = core::Query::downcast(query);
     unsigned res;
     const char* queryparm;
     for (res = 0; (queryparm = poptPeekArg(optCon)) != NULL; ++res)
@@ -515,9 +515,8 @@ unsigned dba_cmdline_get_query(poptContext optCon, Query& query)
         /* Mark as processed */
         poptGetArg(optCon);
 
-        rec.set_from_string(queryparm);
+        q.set_from_string(queryparm);
     }
-    query.set_from_record(rec);
     return res;
 }
 

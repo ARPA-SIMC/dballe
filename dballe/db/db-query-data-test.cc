@@ -158,10 +158,10 @@ this->add_method("year", [](Fixture& f) {
 });
 this->add_method("block_station", [](Fixture& f) {
     // Block and station queries
-    TRY_QUERY("B01001=1", 4);
-    TRY_QUERY("B01001=2", 0);
-    TRY_QUERY("B01002=52", 4);
-    TRY_QUERY("B01002=53", 0);
+    TRY_QUERY("block=1", 4);
+    TRY_QUERY("block=2", 0);
+    TRY_QUERY("station=52", 4);
+    TRY_QUERY("station=53", 0);
 });
 this->add_method("ana_filter", [](Fixture& f) {
     // ana_filter queries

@@ -96,14 +96,14 @@ class Tests : public FixtureTestCase<TransactionFixture<DB, DBData>>
             // FIXME: add some mobile stations to the test fixture to test ident
         });
         this->add_method("query_block_station", [](Fixture& f) {
-            wassert(actual(f.tr).try_station_query("B01001=1", 2));
-            wassert(actual(f.tr).try_station_query("B01001=2", 0));
-            wassert(actual(f.tr).try_station_query("B01001=3", 2));
-            wassert(actual(f.tr).try_station_query("B01001=4", 0));
-            wassert(actual(f.tr).try_station_query("B01002=1", 1));
-            wassert(actual(f.tr).try_station_query("B01002=2", 1));
-            wassert(actual(f.tr).try_station_query("B01002=3", 0));
-            wassert(actual(f.tr).try_station_query("B01002=4", 2));
+            wassert(actual(f.tr).try_station_query("block=1", 2));
+            wassert(actual(f.tr).try_station_query("block=2", 0));
+            wassert(actual(f.tr).try_station_query("block=3", 2));
+            wassert(actual(f.tr).try_station_query("block=4", 0));
+            wassert(actual(f.tr).try_station_query("station=1", 1));
+            wassert(actual(f.tr).try_station_query("station=2", 1));
+            wassert(actual(f.tr).try_station_query("station=3", 0));
+            wassert(actual(f.tr).try_station_query("station=4", 2));
         });
         this->add_method("query_mobile", [](Fixture& f) {
         });

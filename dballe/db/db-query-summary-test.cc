@@ -141,10 +141,10 @@ class Tests : public FixtureTestCase<DBDataFixture<DB>>
             wassert(actual(f.tr).try_summary_query("year=1946", 0));
         });
         this->add_method("query_blockstation", [](Fixture& f) {
-            wassert(actual(f.tr).try_summary_query("B01001=1", 2));
-            wassert(actual(f.tr).try_summary_query("B01001=2", 0));
-            wassert(actual(f.tr).try_summary_query("B01002=3", 0));
-            wassert(actual(f.tr).try_summary_query("B01002=4", 2));
+            wassert(actual(f.tr).try_summary_query("block=1", 2));
+            wassert(actual(f.tr).try_summary_query("block=2", 0));
+            wassert(actual(f.tr).try_summary_query("station=3", 0));
+            wassert(actual(f.tr).try_summary_query("station=4", 2));
         });
         this->add_method("query_ana_filter", [](Fixture& f) {
             wassert(actual(f.tr).try_summary_query("ana_filter=block=1", 2));

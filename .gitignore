@@ -37,6 +37,7 @@ Makefile
 /dbaexport.1
 /dballe/core/record_keyword.cc
 /dballe/core/record-access.cc
+/dballe/core/query-access.cc
 /dballe/core/aliases.cc
 /dballe/core/aliases-reverse.cc
 /dballe/msg/vars.gperf

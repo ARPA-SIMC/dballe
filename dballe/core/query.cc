@@ -12,6 +12,13 @@ using namespace std;
 namespace dballe {
 namespace core {
 
+void Query::validate()
+{
+    lonrange.set(lonrange);
+    datetime.min.set_lower_bound();
+    datetime.max.set_upper_bound();
+}
+
 std::unique_ptr<dballe::Query> Query::clone() const
 {
     return unique_ptr<Query>(new Query(*this));
@@ -61,21 +68,38 @@ void Query::clear()
     station = MISSING_INT;
 }
 
-void Query::set_from_record(const dballe::Record& rec)
+void Query::set_from_string(const char* str)
 {
-    core::Record::downcast(rec).to_query(*this);
+    // Split the input as name=val
+    const char* s = strchr(str, '=');
+
+    if (!s) error_consistency::throwf("there should be an = between the name and the value in '%s'", str);
+
+    string key(str, s - str);
+    setf(key.data(), key.size(), s + 1);
 }
 
 void Query::set_from_test_string(const std::string& s)
 {
+    clear();
     if (s.empty())
-        clear();
-    else
+        return;
+
+    size_t cur = 0;
+    while (true)
     {
-        core::Record rec;
-        rec.set_from_test_string(s);
-        set_from_record(rec);
+        size_t next = s.find(", ", cur);
+        if (next == string::npos)
+        {
+            set_from_string(s.substr(cur).c_str());
+            break;
+        } else {
+            set_from_string(s.substr(cur, next - cur).c_str());
+            cur = next + 2;
+        }
     }
+
+    validate();
 }
 
 namespace {

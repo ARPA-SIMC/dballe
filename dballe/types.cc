@@ -886,11 +886,15 @@ LonRange::LonRange(double min, double max)
 
 bool LonRange::operator==(const LonRange& lr) const
 {
+    if ((imin == MISSING_INT || imax == MISSING_INT) && (lr.imin == MISSING_INT || lr.imax == MISSING_INT))
+        return true;
     return imin == lr.imin && imax == lr.imax;
 }
 
 bool LonRange::operator!=(const LonRange& lr) const
 {
+    if ((imin == MISSING_INT || imax == MISSING_INT) && (lr.imin == MISSING_INT || lr.imax == MISSING_INT))
+        return false;
     return imin != lr.imin || imax != lr.imax;
 }
 

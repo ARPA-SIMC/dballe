@@ -393,6 +393,7 @@ int MsgAPI::quantesono()
         readNextMessage();
     if (state & STATE_EOF)
         return missing_int;
+    input_query.validate();
     state |= STATE_QUANTESONO;
     return reset_operation(new QuantesonoOperation(*this));
 }
@@ -403,6 +404,7 @@ int MsgAPI::voglioquesto()
         readNextMessage();
     if (state & STATE_EOF)
         return missing_int;
+    input_query.validate();
     state |= STATE_VOGLIOQUESTO;
 
 #if 0

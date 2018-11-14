@@ -33,6 +33,7 @@ void read_query(PyObject* from_python, dballe::core::Query& query)
             std::string k = string_from_python(key);
             query_setpy(query, k.data(), k.size(), value);
         }
+        query.validate();
         return;
     }
 

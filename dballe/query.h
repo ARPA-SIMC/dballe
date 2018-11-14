@@ -9,15 +9,11 @@
 #include <memory>
 
 namespace dballe {
-struct Record;
 
 /// Query used to filter DB-All.e data
 struct Query
 {
     virtual ~Query() {}
-
-    /// Set the query values from the contents of a Record
-    virtual void set_from_record(const dballe::Record& rec) = 0;
 
     /// Get the Datetime bounds set in this query
     virtual DatetimeRange get_datetimerange() const = 0;
@@ -76,9 +72,6 @@ struct Query
 
     /// Create a new Query
     static std::unique_ptr<Query> create();
-
-    /// Create a new Query
-    static std::unique_ptr<Query> from_record(const Record& rec);
 };
 
 }

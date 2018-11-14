@@ -457,11 +457,13 @@ void DbAPI::seti(const char* param, int value)
 
 int DbAPI::quantesono()
 {
+    input_query.validate();
     return reset_operation(new QuantesonoOperation(*this));
 }
 
 int DbAPI::voglioquesto()
 {
+    input_query.validate();
     if (station_context)
         return reset_operation(new VoglioquestoOperation<db::CursorStationData>(*this));
     else

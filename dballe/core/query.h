@@ -72,6 +72,17 @@ struct Query : public dballe::Query
             == std::tie(o.want_missing, o.ana_id, o.prio_min, o.prio_max, o.rep_memo, o.mobile, o.ident, o.latrange, o.lonrange, o.datetime, o.level, o.trange, o.varcodes, o.query, o.ana_filter, o.data_filter, o.attr_filter, o.limit, o.block, o.station);
     }
 
+    /**
+     * Check the query fields for consistency, and fill in missing values:
+     *
+     *  - month without year, day without month, and so on, cause errors
+     *  - only one longitude extreme without the other causes error
+     *  - min and max datetimes are filled with the actual minimum and maximum
+     *    values acceptable for that range (year=2017, for example, becomes
+     *    min=2017-01-01 00:00:00, max=2017-12-31 23:59:59
+     */
+    void validate();
+
     std::unique_ptr<dballe::Query> clone() const override;
 
     unsigned get_modifiers() const;
@@ -89,7 +100,19 @@ struct Query : public dballe::Query
 
     void clear() override;
 
-    void set_from_record(const dballe::Record& rec) override;
+    /**
+     * Set a value in the record according to an assignment encoded in a string.
+     *
+     * String can use keywords, aliases and varcodes.  Examples: ana_id=3,
+     * name=Bologna, B12012=32.4
+     *
+     * In case of numeric parameter, a hyphen ("-") means MISSING_INT (e.g.,
+     * `leveltype2=-`).
+     *
+     * @param str
+     *   The string containing the assignment.
+     */
+    void set_from_string(const char* str);
 
     /**
      * Set a record from a ", "-separated string of assignments.
@@ -151,6 +174,9 @@ struct Query : public dballe::Query
     static Query& downcast(dballe::Query& query);
 
     static Query from_json(core::json::Stream& in);
+
+protected:
+    void setf(const char* key, unsigned len, const char* val);
 };
 
 }
