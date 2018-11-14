@@ -6,8 +6,8 @@
 #include "types.h"
 #include "dballe/types.h"
 #include "dballe/file.h"
+#include "dballe/values.h"
 #include "dballe/core/query.h"
-#include "dballe/core/values.h"
 #include "dballe/core/data.h"
 #include "dballe/message.h"
 #include "dballe/importer.h"
@@ -439,7 +439,7 @@ struct attr_insert : MethKwargs<Impl>
         }
 
         try {
-            core::Values values;
+            Values values;
             read_values(attrs, values);
             ReleaseGIL gil;
             self->db->attr_insert_data(varid, values);
@@ -463,7 +463,7 @@ struct attr_insert_station : MethKwargs<Impl>
             return nullptr;
 
         try {
-            core::Values values;
+            Values values;
             read_values(attrs, values);
             ReleaseGIL gil;
             self->db->attr_insert_station(varid, values);
@@ -487,7 +487,7 @@ struct attr_insert_data : MethKwargs<Impl>
             return nullptr;
 
         try {
-            core::Values values;
+            Values values;
             read_values(attrs, values);
             ReleaseGIL gil;
             self->db->attr_insert_data(varid, values);

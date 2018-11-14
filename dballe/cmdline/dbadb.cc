@@ -1,7 +1,7 @@
 #include "dbadb.h"
 #include "dballe/message.h"
 #include "dballe/msg/msg.h"
-#include "dballe/core/values.h"
+#include "dballe/values.h"
 #include "dballe/db/db.h"
 
 #include <cstdlib>

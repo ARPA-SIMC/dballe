@@ -3,7 +3,6 @@
 #include <dballe/var.h>
 #include <dballe/types.h>
 #include <dballe/value.h>
-#include <dballe/core/values.h>
 #include <dballe/core/var.h>
 #include <dballe/msg/context.h>
 

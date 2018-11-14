@@ -162,14 +162,14 @@ void DB::insert_data(Data& vals, bool can_replace, bool station_can_add)
     t->commit();
 }
 
-void DB::attr_insert_station(int data_id, const core::Values& attrs)
+void DB::attr_insert_station(int data_id, const Values& attrs)
 {
     auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     t->attr_insert_station(data_id, attrs);
     t->commit();
 }
 
-void DB::attr_insert_data(int data_id, const core::Values& attrs)
+void DB::attr_insert_data(int data_id, const Values& attrs)
 {
     auto t = dynamic_pointer_cast<db::Transaction>(transaction());
     t->attr_insert_data(data_id, attrs);

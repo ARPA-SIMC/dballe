@@ -77,8 +77,8 @@ public:
     void remove_data(const Query& query) override;
     void remove_all() override;
 
-    void attr_insert_station(int data_id, const core::Values& attrs) override;
-    void attr_insert_data(int data_id, const core::Values& attrs) override;
+    void attr_insert_station(int data_id, const Values& attrs) override;
+    void attr_insert_data(int data_id, const Values& attrs) override;
     void attr_remove_station(int data_id, const db::AttrList& attrs) override;
     void attr_remove_data(int data_id, const db::AttrList& attrs) override;
     void import_message(const Message& message, const DBImportMessageOptions& opts) override;

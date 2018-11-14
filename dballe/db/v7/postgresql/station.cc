@@ -6,7 +6,7 @@
 #include "dballe/db/v7/repinfo.h"
 #include "dballe/sql/postgresql.h"
 #include "dballe/core/var.h"
-#include "dballe/core/values.h"
+#include "dballe/values.h"
 #include <wreport/var.h>
 
 using namespace wreport;
@@ -98,14 +98,14 @@ void PostgreSQLStation::get_station_vars(Tracer<>& trc, int id_station, std::fun
         if (!res.is_null(row, 2))
         {
             TRACE("get_station_vars new attribute\n");
-            core::DBValues::decode(res.get_bytea(row, 2), [&](unique_ptr<wreport::Var> a) { var->seta(move(a)); });
+            DBValues::decode(res.get_bytea(row, 2), [&](unique_ptr<wreport::Var> a) { var->seta(move(a)); });
         }
 
         dest(move(var));
     };
 }
 
-void PostgreSQLStation::add_station_vars(Tracer<>& trc, int id_station, core::DBValues& values)
+void PostgreSQLStation::add_station_vars(Tracer<>& trc, int id_station, DBValues& values)
 {
     using namespace dballe::sql::postgresql;
     Tracer<> trc_sel(trc ? trc->trace_select("v7_station_add_station_vars") : nullptr);

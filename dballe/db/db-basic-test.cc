@@ -138,7 +138,7 @@ this->add_method("stationdata", [](Fixture& f) {
             {
                 wassert(actual(cur->next()).istrue());
                 DBStation station = cur->get_station();
-                core::DBValues values = dynamic_cast<db::CursorStation*>(cur.get())->get_values();
+                DBValues values = dynamic_cast<db::CursorStation*>(cur.get())->get_values();
                 if (station.report == "temp")
                 {
                     wassert(actual(station.id) == svals_esmac.station.id);

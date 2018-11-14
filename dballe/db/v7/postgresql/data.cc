@@ -6,6 +6,7 @@
 #include "dballe/db/v7/repinfo.h"
 #include "dballe/sql/postgresql.h"
 #include "dballe/sql/querybuf.h"
+#include "dballe/values.h"
 #include "dballe/core/values.h"
 #include "dballe/core/varmatch.h"
 #include <algorithm>
@@ -44,14 +45,14 @@ void PostgreSQLDataCommon<Parent>::read_attrs(Tracer<>& trc, int id_data, std::f
         conn.prepare(select_attrs_query_name, query);
     }
     Tracer<> trc_sel(trc ? trc->trace_select("SELECT attrs FROM … WHERE id=$1::int4") : nullptr);
-    core::Values::decode(
+    Values::decode(
             conn.exec_prepared_one_row(select_attrs_query_name, id_data).get_bytea(0, 0),
             dest);
     if (trc_sel) trc_sel->add_row();
 }
 
 template<typename Parent>
-void PostgreSQLDataCommon<Parent>::write_attrs(Tracer<>& trc, int id_data, const core::Values& values)
+void PostgreSQLDataCommon<Parent>::write_attrs(Tracer<>& trc, int id_data, const Values& values)
 {
     if (write_attrs_query_name.empty())
     {
@@ -86,7 +87,7 @@ namespace {
 bool match_attrs(const Varmatch& match, const std::vector<uint8_t>& attrs)
 {
     bool found = false;
-    core::Values::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
+    Values::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
         if (match(*var))
             found = true;
     });

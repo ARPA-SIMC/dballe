@@ -1,7 +1,7 @@
 #include <wreport/tests.h>
 #include <dballe/file.h>
+#include <dballe/values.h>
 #include <dballe/core/query.h>
-#include <dballe/core/values.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/csv.h>
 #include <cstdlib>

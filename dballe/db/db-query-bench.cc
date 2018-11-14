@@ -1,5 +1,5 @@
 #include "dballe/db/benchmark.h"
-#include "dballe/core/values.h"
+#include "dballe/values.h"
 #include "dballe/core/query.h"
 #include "dballe/msg/msg.h"
 

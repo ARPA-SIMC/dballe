@@ -3,6 +3,7 @@
 
 #include "simple.h"
 #include <dballe/cursor.h>
+#include <dballe/values.h>
 #include <dballe/core/query.h>
 #include <dballe/core/data.h>
 #include <functional>
@@ -16,8 +17,8 @@ namespace fortran {
  */
 struct Attributes
 {
-    core::Values values;
-    core::Values::const_iterator current;
+    Values values;
+    Values::const_iterator current;
     bool valid = false;
 
     /// Return the next attribute in the result set
@@ -52,7 +53,7 @@ public:
         selected_attr_codes = varcodes;
     }
     virtual void voglioancora(Attributes& dest) = 0;
-    virtual void critica(core::Values& qcinput) = 0;
+    virtual void critica(Values& qcinput) = 0;
     virtual void scusa() = 0;
     virtual bool elencamele();
     virtual wreport::Varcode dammelo();
@@ -173,7 +174,7 @@ public:
     core::Query input_query;
     core::Data input_data;
     bool station_context = false;
-    core::Values qcinput;
+    Values qcinput;
     Attributes qcoutput;
 
 protected:
@@ -249,8 +250,7 @@ public:
 
     const core::Query& test_get_input_query() const { return input_query; }
     const core::Data& test_get_input_data() const { return input_data; }
-    const core::Values& test_get_qcinput() const { return qcinput; }
-    // const core::Record& test_get_qcoutput() const { return qcoutput; }
+    const Values& test_get_qcinput() const { return qcinput; }
 
     friend class Operation;
 };

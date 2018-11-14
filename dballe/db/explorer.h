@@ -2,7 +2,6 @@
 #define DBALLE_DB_EXPLORER_H
 
 #include <dballe/core/query.h>
-#include <dballe/core/values.h>
 #include <dballe/db/db.h>
 #include <dballe/db/summary.h>
 #include <vector>

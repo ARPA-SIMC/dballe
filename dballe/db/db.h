@@ -5,8 +5,6 @@
 #include <dballe/cursor.h>
 #include <dballe/db.h>
 #include <dballe/db/fwd.h>
-#include <dballe/core/fwd.h>
-#include <dballe/core/defs.h>
 #include <dballe/db/defs.h>
 #include <dballe/msg/fwd.h>
 #include <dballe/sql/fwd.h>
@@ -37,7 +35,7 @@ struct CursorStation : public dballe::CursorStation
     /**
      * Get the station data values
      */
-    virtual core::DBValues get_values() const = 0;
+    virtual DBValues get_values() const = 0;
 
     /**
      * Iterate the cursor until the end, returning the number of items.
@@ -184,7 +182,7 @@ public:
      * @param attrs
      *   The attributes to be added
      */
-    virtual void attr_insert_station(int data_id, const core::Values& attrs) = 0;
+    virtual void attr_insert_station(int data_id, const Values& attrs) = 0;
 
     /**
      * Insert new attributes on a data value
@@ -194,7 +192,7 @@ public:
      * @param attrs
      *   The attributes to be added
      */
-    virtual void attr_insert_data(int data_id, const core::Values& attrs) = 0;
+    virtual void attr_insert_data(int data_id, const Values& attrs) = 0;
 
     /**
      * Delete attributes from a station value
@@ -401,7 +399,7 @@ public:
      * @param attrs
      *   The attributes to be added
      */
-    void attr_insert_station(int data_id, const core::Values& attrs);
+    void attr_insert_station(int data_id, const Values& attrs);
 
     /**
      * Insert new attributes on a data value
@@ -411,7 +409,7 @@ public:
      * @param attrs
      *   The attributes to be added
      */
-    void attr_insert_data(int data_id, const core::Values& attrs);
+    void attr_insert_data(int data_id, const Values& attrs);
 
     /**
      * Delete attributes from a station value

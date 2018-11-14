@@ -3,9 +3,9 @@
 #include "dballe/importer.h"
 #include "dballe/exporter.h"
 #include "dballe/message.h"
+#include "dballe/values.h"
 #include "dballe/core/query.h"
 #include "dballe/core/data.h"
-#include "dballe/core/values.h"
 #include "dballe/db/db.h"
 #include "dballe/msg/msg.h"
 #include <cstring>
@@ -114,7 +114,7 @@ struct QuantesonoOperation : public CursorOperation<CursorStation>
     }
 
     void voglioancora(Attributes& dest) override { throw error_consistency("voglioancora cannot be called after quantesono/elencamele"); }
-    void critica(core::Values& qcinput) override { throw error_consistency("critica cannot be called after quantesono/elencamele"); }
+    void critica(Values& qcinput) override { throw error_consistency("critica cannot be called after quantesono/elencamele"); }
     void scusa() override { throw error_consistency("scusa cannot be called after quantesono/elencamele"); }
 };
 
@@ -128,7 +128,7 @@ struct CursorTraits<db::CursorStationData>
     {
         return std::unique_ptr<db::CursorStationData>(dynamic_cast<db::CursorStationData*>(tr.query_station_data(query).release()));
     }
-    static inline void attr_insert(db::Transaction& tr, int id, const core::Values& values)
+    static inline void attr_insert(db::Transaction& tr, int id, const Values& values)
     {
         tr.attr_insert_station(id, values);
     }
@@ -145,7 +145,7 @@ struct CursorTraits<db::CursorData>
     {
         return std::unique_ptr<db::CursorData>(dynamic_cast<db::CursorData*>(tr.query_data(query).release()));
     }
-    static inline void attr_insert(db::Transaction& tr, int id, const core::Values& values)
+    static inline void attr_insert(db::Transaction& tr, int id, const Values& values)
     {
         tr.attr_insert_data(id, values);
     }
@@ -209,7 +209,7 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
         this->cursor->attr_query(consumer, !valid_cached_attrs);
         dest.has_new_values();
     }
-    void critica(core::Values& qcinput) override
+    void critica(Values& qcinput) override
     {
         if (dammelo_ended) throw error_consistency("critica called after dammelo returned end of data");
         CursorTraits<Cursor>::attr_insert(*api.tr, this->cursor->attr_reference_id(), qcinput);
@@ -278,7 +278,7 @@ struct PrendiloOperation : public Operation
     {
         throw error_consistency("voglioancora cannot be called after a prendilo");
     }
-    void critica(core::Values& qcinput) override
+    void critica(Values& qcinput) override
     {
         int data_id = MISSING_INT;
         bool is_station = false;
@@ -364,7 +364,7 @@ struct VaridOperation : public Operation
         api.tr->attr_query_data(varid, consumer);
         dest.has_new_values();
     }
-    void critica(core::Values& qcinput) override
+    void critica(Values& qcinput) override
     {
         api.tr->attr_insert_data(varid, qcinput);
     }

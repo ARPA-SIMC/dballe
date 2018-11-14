@@ -4,7 +4,7 @@
 #include <dballe/types.h>
 #include <dballe/db/db.h>
 #include <dballe/db/v7/transaction.h>
-#include <dballe/core/values.h>
+#include <dballe/values.h>
 #include <memory>
 
 namespace dballe {
@@ -18,7 +18,7 @@ namespace cursor {
 struct StationRow
 {
     dballe::DBStation station;
-    core::DBValues values;
+    DBValues values;
 
     StationRow(const dballe::DBStation& station) : station(station) {}
 
@@ -114,7 +114,7 @@ struct Stations : public Base<CursorStation, StationRow>
 {
     using Base::Base;
     dballe::DBStation get_station() const override { return this->cur->station; }
-    core::DBValues get_values() const override { return this->cur->values; }
+    DBValues get_values() const override { return this->cur->values; }
     void load(Tracer<>& trc, const StationQueryBuilder& qb);
     bool enqi(const char* key, unsigned len, int& res) const override;
     bool enqd(const char* key, unsigned len, double& res) const override;

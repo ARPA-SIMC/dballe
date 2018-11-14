@@ -2,7 +2,7 @@
 #define DBALLE_CORE_DATA_H
 
 #include <dballe/data.h>
-#include <dballe/core/values.h>
+#include <dballe/values.h>
 
 namespace dballe {
 namespace core {

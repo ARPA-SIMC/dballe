@@ -3,8 +3,8 @@
 
 #include <Python.h>
 #include <wreport/varinfo.h>
+#include <dballe/fwd.h>
 #include <dballe/types.h>
-#include <dballe/core/values.h>
 #include "common.h"
 #include <set>
 
@@ -142,8 +142,8 @@ unsigned char datetime_int8_from_python(PyObject* o);
 
 template<typename Values>
 void set_values_from_python(Values& values, wreport::Varcode code, PyObject* val);
-extern template void set_values_from_python(core::Values& values, wreport::Varcode code, PyObject* val);
-extern template void set_values_from_python(core::DBValues& values, wreport::Varcode code, PyObject* val);
+extern template void set_values_from_python(Values& values, wreport::Varcode code, PyObject* val);
+extern template void set_values_from_python(DBValues& values, wreport::Varcode code, PyObject* val);
 
 std::set<wreport::Varcode> varcodes_from_python(PyObject* o);
 

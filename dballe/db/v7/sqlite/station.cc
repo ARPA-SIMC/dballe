@@ -6,7 +6,7 @@
 #include "dballe/db/v7/qbuilder.h"
 #include "dballe/sql/sqlite.h"
 #include "dballe/core/var.h"
-#include "dballe/core/values.h"
+#include "dballe/values.h"
 #include <wreport/var.h>
 
 using namespace wreport;
@@ -121,14 +121,14 @@ void SQLiteStation::get_station_vars(Tracer<>& trc, int id_station, std::functio
         if (!stm->column_isnull(2))
         {
             TRACE("get_station_vars add attributes\n");
-            core::DBValues::decode(stm->column_blob(2), [&](unique_ptr<wreport::Var> a) { var->seta(move(a)); });
+            DBValues::decode(stm->column_blob(2), [&](unique_ptr<wreport::Var> a) { var->seta(move(a)); });
         }
 
         dest(move(var));
     });
 }
 
-void SQLiteStation::add_station_vars(Tracer<>& trc, int id_station, core::DBValues& values)
+void SQLiteStation::add_station_vars(Tracer<>& trc, int id_station, DBValues& values)
 {
     const char* query = R"(
         SELECT d.code, d.value

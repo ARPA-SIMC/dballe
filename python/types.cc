@@ -1,8 +1,8 @@
 #include <Python.h>
 #include <datetime.h>
 #include "dballe/types.h"
+#include "dballe/values.h"
 #include "dballe/core/var.h"
-#include "dballe/core/values.h"
 #include "common.h"
 #include "types.h"
 #include "config.h"
@@ -943,8 +943,8 @@ void set_values_from_python(Values& values, wreport::Varcode code, PyObject* val
     }
 }
 
-template void set_values_from_python(core::Values& values, wreport::Varcode code, PyObject* val);
-template void set_values_from_python(core::DBValues& values, wreport::Varcode code, PyObject* val);
+template void set_values_from_python(Values& values, wreport::Varcode code, PyObject* val);
+template void set_values_from_python(DBValues& values, wreport::Varcode code, PyObject* val);
 
 
 std::set<wreport::Varcode> varcodes_from_python(PyObject* o)

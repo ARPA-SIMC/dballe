@@ -51,6 +51,8 @@ struct Value;
 struct DBValue;
 
 // Aggregates
+struct Values;
+struct DBValues;
 struct Data;
 struct Query;
 struct Message;

@@ -6,6 +6,7 @@
 #include "dballe/db/v7/trace.h"
 #include "dballe/sql/sqlite.h"
 #include "dballe/sql/querybuf.h"
+#include "dballe/values.h"
 #include "dballe/core/values.h"
 #include "dballe/core/varmatch.h"
 #include <algorithm>
@@ -58,12 +59,12 @@ void SQLiteDataCommon<Parent>::read_attrs(Tracer<>& trc, int id_data, std::funct
     read_attrs_stm->bind_val(1, id_data);
     read_attrs_stm->execute_one([&]() {
         if (trc_sel) trc_sel->add_row();
-        core::Values::decode(read_attrs_stm->column_blob(0), dest);
+        Values::decode(read_attrs_stm->column_blob(0), dest);
     });
 }
 
 template<typename Parent>
-void SQLiteDataCommon<Parent>::write_attrs(Tracer<>& trc, int id_data, const core::Values& values)
+void SQLiteDataCommon<Parent>::write_attrs(Tracer<>& trc, int id_data, const Values& values)
 {
     if (!write_attrs_stm)
     {
@@ -97,7 +98,7 @@ namespace {
 bool match_attrs(const Varmatch& match, const std::vector<uint8_t>& attrs)
 {
     bool found = false;
-    core::Values::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
+    Values::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
         if (match(*var))
             found = true;
     });

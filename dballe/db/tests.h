@@ -1,5 +1,5 @@
 #include <dballe/msg/tests.h>
-#include <dballe/core/values.h>
+#include <dballe/values.h>
 #include <dballe/core/data.h>
 #include <dballe/db/fwd.h>
 #include <dballe/db/v7/fwd.h>
@@ -115,10 +115,10 @@ struct ActualCursor : public Actual<dballe::Cursor&>
         data_var_matches(core::Data::downcast(expected).values.var(code));
     }
     /// Check cursor data variable(s) after a query_data
-    void data_var_matches(const core::DBValues& expected) {
+    void data_var_matches(const DBValues& expected) {
         if (auto c = dynamic_cast<dballe::db::CursorStation*>(&_actual))
         {
-            core::DBValues actual_values = c->get_values();
+            DBValues actual_values = c->get_values();
             if (!actual_values.vars_equal(expected))
                 // Quick hack to get proper formatting of mismatch
                 wassert(actual(c->get_values()) == expected);
@@ -131,7 +131,7 @@ struct ActualCursor : public Actual<dballe::Cursor&>
             throw wreport::error_consistency("cannot call data_var_matches on this kind of cursor");
     }
     /// Check cursor data variable after a query_data
-    void data_var_matches(const core::Values& expected, wreport::Varcode code) {
+    void data_var_matches(const Values& expected, wreport::Varcode code) {
         data_var_matches(expected.var(code));
     }
     /// Check cursor data variable after a query_data

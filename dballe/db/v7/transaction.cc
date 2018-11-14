@@ -229,14 +229,14 @@ void Transaction::attr_query_data(int data_id, std::function<void(std::unique_pt
     d.read_attrs(trc, data_id, dest);
 }
 
-void Transaction::attr_insert_station(int data_id, const core::Values& attrs)
+void Transaction::attr_insert_station(int data_id, const Values& attrs)
 {
     Tracer<> trc(this->trc ? this->trc->trace_func("attr_insert_station") : nullptr);
     auto& d = station_data();
     d.merge_attrs(trc, data_id, attrs);
 }
 
-void Transaction::attr_insert_data(int data_id, const core::Values& attrs)
+void Transaction::attr_insert_data(int data_id, const Values& attrs)
 {
     Tracer<> trc(this->trc ? this->trc->trace_func("attr_insert_data") : nullptr);
     auto& d = data();

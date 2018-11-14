@@ -7,7 +7,7 @@
 #include "dballe/sql/mysql.h"
 #include "dballe/sql/querybuf.h"
 #include "dballe/core/var.h"
-#include "dballe/core/values.h"
+#include "dballe/values.h"
 #include <wreport/var.h>
 
 using namespace wreport;
@@ -138,14 +138,14 @@ void MySQLStation::get_station_vars(Tracer<>& trc, int id_station, std::function
         if (!row.isnull(2))
         {
             TRACE("get_station_vars add attributes\n");
-            core::DBValues::decode(row.as_blob(2), [&](unique_ptr<wreport::Var> a) { var->seta(move(a)); });
+            DBValues::decode(row.as_blob(2), [&](unique_ptr<wreport::Var> a) { var->seta(move(a)); });
         }
 
         dest(move(var));
     }
 }
 
-void MySQLStation::add_station_vars(Tracer<>& trc, int id_station, core::DBValues& values)
+void MySQLStation::add_station_vars(Tracer<>& trc, int id_station, DBValues& values)
 {
     Querybuf qb;
     qb.appendf(R"(

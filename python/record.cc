@@ -65,7 +65,7 @@ void read_data(PyObject* from_python, dballe::core::Data& data)
     throw PythonException();
 }
 
-void read_values(PyObject* from_python, dballe::core::Values& values)
+void read_values(PyObject* from_python, dballe::Values& values)
 {
     if (!from_python || from_python == Py_None)
     {

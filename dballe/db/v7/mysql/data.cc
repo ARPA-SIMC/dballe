@@ -6,6 +6,7 @@
 #include "dballe/db/v7/repinfo.h"
 #include "dballe/sql/mysql.h"
 #include "dballe/sql/querybuf.h"
+#include "dballe/values.h"
 #include "dballe/core/values.h"
 #include "dballe/core/varmatch.h"
 #include <algorithm>
@@ -42,14 +43,14 @@ void MySQLDataCommon<Parent>::read_attrs(Tracer<>& trc, int id_data, std::functi
     char query[128];
     snprintf(query, 128, "SELECT attrs FROM %s WHERE id=%d", Parent::table_name, id_data);
     Tracer<> trc_sel(trc ? trc->trace_select(query) : nullptr);
-    core::Values::decode(
+    Values::decode(
             conn.exec_store(query).expect_one_result().as_blob(0),
             dest);
     if (trc_sel) trc_sel->add_row();
 }
 
 template<typename Parent>
-void MySQLDataCommon<Parent>::write_attrs(Tracer<>& trc, int id_data, const core::Values& values)
+void MySQLDataCommon<Parent>::write_attrs(Tracer<>& trc, int id_data, const Values& values)
 {
     vector<uint8_t> encoded = values.encode();
     string escaped = conn.escape(encoded);
@@ -73,7 +74,7 @@ namespace {
 bool match_attrs(const Varmatch& match, const std::vector<uint8_t>& attrs)
 {
     bool found = false;
-    core::Values::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
+    Values::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
         if (match(*var))
             found = true;
     });

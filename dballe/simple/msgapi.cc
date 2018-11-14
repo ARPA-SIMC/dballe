@@ -43,7 +43,7 @@ struct QuantesonoOperation : public CursorOperation<CursorStation>
     }
 
     void voglioancora(Attributes& dest) override { throw error_consistency("voglioancora cannot be called after quantesono/elencamele"); }
-    void critica(core::Values& qcinput) override { throw error_consistency("critica cannot be called after quantesono/elencamele"); }
+    void critica(Values& qcinput) override { throw error_consistency("critica cannot be called after quantesono/elencamele"); }
     void scusa() override { throw error_consistency("scusa cannot be called after quantesono/elencamele"); }
 };
 
@@ -58,7 +58,7 @@ struct CursorTraits<msg::CursorStationData>
         return std::unique_ptr<msg::CursorStationData>(dynamic_cast<msg::CursorStationData*>(msg.query_station_data(query).release()));
     }
     /*
-    static inline void attr_insert(db::Transaction& tr, int id, const core::Values& values)
+    static inline void attr_insert(db::Transaction& tr, int id, const Values& values)
     {
         tr.attr_insert_station(id, values);
     }
@@ -73,7 +73,7 @@ struct CursorTraits<msg::CursorData>
         return std::unique_ptr<msg::CursorData>(dynamic_cast<msg::CursorData*>(msg.query_data(query).release()));
     }
     /*
-    static inline void attr_insert(db::Transaction& tr, int id, const core::Values& values)
+    static inline void attr_insert(db::Transaction& tr, int id, const Values& values)
     {
         tr.attr_insert_data(id, values);
     }
@@ -128,7 +128,7 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
         api.qcinput.clear();
     }
 
-    void critica(core::Values& qcinput) override
+    void critica(Values& qcinput) override
     {
         throw error_consistency("critica has been called without a previous prendilo");
     }
@@ -149,7 +149,7 @@ struct PrendiloOperation : public Operation
     /// Time range for vars
     Trange vars_trange;
     /// Last variables written with prendilo
-    core::Values vars;
+    Values vars;
 
     PrendiloOperation(MsgAPI& api)
         : api(api)
@@ -242,7 +242,7 @@ struct PrendiloOperation : public Operation
     {
         throw error_consistency("voglioancora cannot be called after a prendilo");
     }
-    void critica(core::Values& qcinput) override
+    void critica(Values& qcinput) override
     {
         if (vars.empty())
             throw error_consistency("critica has been called without a previous prendilo");

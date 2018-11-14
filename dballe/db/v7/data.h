@@ -2,9 +2,9 @@
 #define DBALLE_DB_V7_DATAV7_H
 
 #include <dballe/fwd.h>
+#include <dballe/values.h>
 #include <dballe/core/fwd.h>
 #include <dballe/core/defs.h>
-#include <dballe/core/values.h>
 #include <dballe/sql/fwd.h>
 #include <dballe/db/defs.h>
 #include <dballe/db/v7/fwd.h>
@@ -31,18 +31,18 @@ protected:
     /**
      * Load attributes from the database into a Values
      */
-    void read_attrs_into_values(Tracer<>& trc, int id_data, core::Values& values);
+    void read_attrs_into_values(Tracer<>& trc, int id_data, Values& values);
 
     /**
      * Load attributes from the database into a Values, except those whose
      * Varcode is in `exclude`
      */
-    void read_attrs_into_values(Tracer<>& trc, int id_data, core::Values& values, const db::AttrList& exclude);
+    void read_attrs_into_values(Tracer<>& trc, int id_data, Values& values, const db::AttrList& exclude);
 
     /**
      * Replace the attributes of a variable with those in Values
      */
-    virtual void write_attrs(Tracer<>& trc, int id_data, const core::Values& values) = 0;
+    virtual void write_attrs(Tracer<>& trc, int id_data, const Values& values) = 0;
 
     /**
      * Remove all attributes from a variable
@@ -72,7 +72,7 @@ public:
      * * Existing attributes in attrs are overwritten.
      * * New attributes in attrs are inesrted.
      */
-    void merge_attrs(Tracer<>& trc, int id_data, const core::Values& attrs);
+    void merge_attrs(Tracer<>& trc, int id_data, const Values& attrs);
 
     /**
      * Remove the given attributes from the given variable, if they exist.

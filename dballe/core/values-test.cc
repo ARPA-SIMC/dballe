@@ -18,24 +18,7 @@ class Tests : public TestCase
 void Tests::register_tests()
 {
 
-add_method("codec", []() {
-    core::Values vals;
-    // Integer variable
-    vals.set(newvar(WR_VAR(0, 1, 2), 123));
-    // Floating point variable
-    vals.set(newvar(WR_VAR(0, 12, 101), 280.23));
-    // Text variable
-    vals.set(newvar(WR_VAR(0, 1, 19), "Test string value"));
-
-    vector<uint8_t> encoded = vals.encode();
-    wassert(actual(encoded.size()) == (14 + strlen("Test string value") + 1));
-
-    core::Values vals1;
-    core::Values::decode(encoded, [&](std::unique_ptr<wreport::Var> var) { vals1.set(move(var)); });
-
-    wassert(actual(vals1.var(WR_VAR(0, 1, 2))) == vals.var(WR_VAR(0, 1, 2)));
-    wassert(actual(vals1.var(WR_VAR(0, 12, 101))) == vals.var(WR_VAR(0, 12, 101)));
-    wassert(actual(vals1.var(WR_VAR(0, 1, 19))) == vals.var(WR_VAR(0, 1, 19)));
+add_method("empty", []() {
 });
 
 }

@@ -4,7 +4,6 @@
 #include <dballe/core/fwd.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/query.h>
-#include <dballe/core/values.h>
 #include <dballe/core/smallset.h>
 #include <dballe/db/db.h>
 #include <vector>

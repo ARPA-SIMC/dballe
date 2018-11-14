@@ -61,7 +61,7 @@ public:
      * If the same variable exists in many different networks, the one with the
      * highest priority will be used.
      */
-    virtual void add_station_vars(Tracer<>& trc, int id_station, core::DBValues& values) = 0;
+    virtual void add_station_vars(Tracer<>& trc, int id_station, DBValues& values) = 0;
 
     /**
      * Dump the entire contents of the table to an output stream

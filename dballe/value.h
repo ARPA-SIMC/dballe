@@ -4,6 +4,7 @@
 #include <dballe/fwd.h>
 #include <wreport/varinfo.h>
 #include <memory>
+#include <iosfwd>
 
 namespace wreport {
 struct Var;
