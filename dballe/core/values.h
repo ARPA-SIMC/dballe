@@ -207,8 +207,16 @@ public:
     /// Set with all the variables from vals
     void set(const Values& vals);
 
-    /// Set from a variable created by dballe::newvar()
-    template<typename C, typename T> void set(C code, const T& val) { this->set(newvar(code, val)); }
+    /// Set a variable value, creating it if it does not exist
+    template<typename C, typename T> void set(const C& code, const T& val) { this->set(newvar(code, val)); }
+
+    template<typename C, typename T>
+    void setf(const C& code, const T& val)
+    {
+        auto var = newvar(code);
+        var->setf(val);
+        this->set(std::move(var));
+    }
 
     /// Remove one variable
     void unset(wreport::Varcode code);

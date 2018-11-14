@@ -1,8 +1,6 @@
 #include "repinfo.h"
 #include "dballe/db/db.h"
-#include "dballe/record.h"
 #include "dballe/core/query.h"
-#include "dballe/core/record.h"
 #include "dballe/core/csv.h"
 #include <wreport/error.h>
 #include <algorithm>

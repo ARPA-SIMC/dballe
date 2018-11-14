@@ -1,6 +1,5 @@
 #include <wreport/tests.h>
 #include <dballe/file.h>
-#include <dballe/record.h>
 #include <dballe/core/query.h>
 #include <dballe/core/values.h>
 #include <dballe/core/defs.h>
@@ -94,17 +93,7 @@ struct TestRecordVarsEqual
 };
 #endif
 
-struct ActualRecord : public wreport::tests::Actual<const dballe::Record&>
-{
-    ActualRecord(const dballe::Record& actual) : wreport::tests::Actual<const dballe::Record&>(actual) {}
-
-    /// Check that actual and expected have the same vars
-    void vars_equal(const core::Values& expected) const;
-};
-
-// Set a record from a ", "-separated string of assignments
-void set_record_from_string(Record& rec, const std::string& s);
-std::unique_ptr<Record> record_from_string(const std::string& s);
+// Set a query from a ", "-separated string of assignments
 std::unique_ptr<Query> query_from_string(const std::string& s);
 core::Query core_query_from_string(const std::string& s);
 
@@ -119,8 +108,6 @@ struct ActualMatcherResult : public Actual<int>
 inline ActualMatcherResult actual_matcher_result(int actual) { return ActualMatcherResult(actual); }
 
 using wreport::tests::actual;
-
-inline dballe::tests::ActualRecord actual(const dballe::Record& actual) { return dballe::tests::ActualRecord(actual); }
 
 inline ActualCString actual(const dballe::Ident& ident) { return ActualCString(ident); }
 

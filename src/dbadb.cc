@@ -1,7 +1,6 @@
 #include <dballe/cmdline/dbadb.h>
 #include <dballe/cmdline/processor.h>
 #include <dballe/cmdline/cmdline.h>
-#include <dballe/record.h>
 #include <dballe/file.h>
 #include <dballe/message.h>
 #include <dballe/msg/msg.h>

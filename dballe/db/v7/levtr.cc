@@ -1,5 +1,4 @@
 #include "levtr.h"
-#include "dballe/core/record.h"
 #include "dballe/msg/msg.h"
 
 using namespace std;

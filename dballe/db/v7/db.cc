@@ -9,7 +9,6 @@
 #include "dballe/db/v7/data.h"
 #include "cursor.h"
 #include "dballe/core/query.h"
-#include "dballe/core/record.h"
 #include "dballe/core/values.h"
 #include "dballe/types.h"
 #include <cstring>

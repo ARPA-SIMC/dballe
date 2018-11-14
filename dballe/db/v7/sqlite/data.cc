@@ -6,7 +6,6 @@
 #include "dballe/db/v7/trace.h"
 #include "dballe/sql/sqlite.h"
 #include "dballe/sql/querybuf.h"
-#include "dballe/record.h"
 #include "dballe/core/values.h"
 #include "dballe/core/varmatch.h"
 #include <algorithm>

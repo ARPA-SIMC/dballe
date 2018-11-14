@@ -1,7 +1,6 @@
 #include <dballe/db/db.h>
 #include <dballe/file.h>
 #include <dballe/core/benchmark.h>
-#include <dballe/core/record.h>
 #include <dballe/core/query.h>
 #include <dballe/msg/msg.h>
 #include <vector>
@@ -46,7 +45,6 @@ struct BenchmarkQuery : public dballe::benchmark::Task
     {
         auto tr = std::dynamic_pointer_cast<dballe::db::Transaction>(db->transaction());
         dballe::core::Query query;
-        dballe::core::Record rec;
         auto cur = tr->query_data(query);
         while (cur->next())
             ;

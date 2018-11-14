@@ -1,7 +1,5 @@
 #include "dballe/core/tests.h"
 #include "dballe/core/query.h"
-#include "dballe/core/record.h"
-#include "dballe/core/record-access.h"
 #include <stdexcept>
 
 using namespace std;

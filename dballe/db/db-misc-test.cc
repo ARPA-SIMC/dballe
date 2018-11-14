@@ -338,7 +338,6 @@ this->add_method("query_datetime", [](Fixture& f) {
     base.values.set("B01012", 500);
 
 #define WANTRESULT(querystr, ab) do { \
-    core::Record result; \
     auto cur = f.tr->query_data(*dballe::tests::query_from_string(querystr)); \
     wassert(actual(cur->remaining()) == 1); \
     wassert(actual(cur->next()).istrue()); \
@@ -416,7 +415,6 @@ this->add_method("attrs", [](Fixture& f) {
     wassert(f.populate(oldf));
 
     core::Query query;
-    core::Record result;
     query.latrange.set(1000000, LatRange::IMAX);
     auto cur = f.tr->query_data(query);
 
@@ -897,7 +895,6 @@ this->add_method("query_repmemo_in_results", [](Fixture& f) {
     OldDballeTestDataSet oldf;
     wassert(f.populate(oldf));
 
-    core::Record res;
     auto cur = f.tr->query_data(core::Query());
     while (cur->next())
         wassert_false(cur->get_station().report.empty());

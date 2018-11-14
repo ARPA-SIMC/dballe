@@ -1,7 +1,6 @@
 #include "commonapi.h"
 #include "dballe/var.h"
 #include "dballe/types.h"
-#include "dballe/core/record-access.h"
 #include <stdio.h>  // snprintf
 #include <limits>
 #include <cstdlib>

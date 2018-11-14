@@ -1,5 +1,4 @@
 #include "tests.h"
-#include "record.h"
 #include "matcher.h"
 #include <wreport/utils/string.h>
 #include <unistd.h>
@@ -220,53 +219,6 @@ void TestRecordValEqual::check() const
     }
 }
 #endif
-
-void ActualRecord::vars_equal(const core::Values& expected) const
-{
-    WREPORT_TEST_INFO(locinfo);
-    const auto& act = core::Record::downcast(_actual);
-    locinfo() << "Expected: " /* << expected.to_string() */ << " actual: " << act.to_string();
-
-    const vector<Var*>& vars1 = act.vars();
-    vector<Var*> vars2;
-    for (const auto& i : expected)
-        vars2.push_back(i.var);
-
-    if (vars1.size() != vars2.size())
-    {
-        std::stringstream ss;
-        ss << "records have a different number of variables. Expected is " << vars2.size() << " and actual has " << vars1.size();
-        throw TestFailed(ss.str());
-    }
-
-    for (unsigned i = 0; i < vars1.size(); ++i)
-    {
-        if (*vars1[i] != *vars2[i])
-        {
-            std::stringstream ss;
-            ss << "records variables differ at position " << i << ": expected is "
-               << varcode_format(vars2[i]->code()) << "=" << vars2[i]->format("")
-               << " and actual has "
-               << varcode_format(vars1[i]->code()) << "=" << vars1[i]->format("");
-            throw TestFailed(ss.str());
-        }
-    }
-}
-
-void set_record_from_string(Record& rec, const std::string& s)
-{
-    auto& r = core::Record::downcast(rec);
-    str::Split split(s, ", ");
-    for (const auto& i: split)
-        r.set_from_string(i.c_str());
-}
-
-unique_ptr<Record> record_from_string(const std::string& s)
-{
-    auto res = Record::create();
-    set_record_from_string(*res, s);
-    return move(res);
-}
 
 unique_ptr<Query> query_from_string(const std::string& s)
 {

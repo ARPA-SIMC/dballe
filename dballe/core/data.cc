@@ -1,4 +1,6 @@
 #include "data.h"
+#include <cstring>
+#include <sstream>
 
 using namespace wreport;
 
@@ -23,6 +25,11 @@ Data& Data::downcast(dballe::Data& data)
     if (!ptr)
         throw error_consistency("data given is not a core::Data");
     return *ptr;
+}
+
+void Data::validate()
+{
+    datetime.set_lower_bound();
 }
 
 #if 0
@@ -203,27 +210,27 @@ void Record::set_dbstation(const DBStation& s)
     station = s;
     mobile = station.ident.is_missing() ? 0 : 1;
 }
+#endif
 
-
-void Record::set_from_string(const char* str)
+void Data::set_from_string(const char* str)
 {
     // Split the input as name=val
     const char* s = strchr(str, '=');
 
     if (!s) error_consistency::throwf("there should be an = between the name and the value in '%s'", str);
 
-    string key(str, s - str);
-    record_setf(*this, key.c_str(), s + 1);
+    std::string key(str, s - str);
+    setf(key.data(), key.size(), s + 1);
 }
 
-void Record::set_from_test_string(const std::string& s)
+void Data::set_from_test_string(const std::string& s)
 {
     if (s.empty()) return;
     size_t cur = 0;
     while (true)
     {
         size_t next = s.find(", ", cur);
-        if (next == string::npos)
+        if (next == std::string::npos)
         {
             set_from_string(s.substr(cur).c_str());
             break;
@@ -232,12 +239,11 @@ void Record::set_from_test_string(const std::string& s)
             cur = next + 2;
         }
     }
+    validate();
 }
-#endif
 
 namespace {
 
-#if 0
 struct BufferPrinter
 {
     std::stringstream s;
@@ -269,7 +275,6 @@ struct BufferPrinter
         }
     }
 };
-#endif
 
 struct FilePrinter
 {
@@ -311,34 +316,20 @@ struct FilePrinter
 
 }
 
-#if 0
-std::string Record::to_string() const
+std::string Data::to_string() const
 {
     BufferPrinter printer;
 
-    if (priomin != MISSING_INT) printer.print("priomin", priomin);
-    if (priomax != MISSING_INT) printer.print("priomax", priomax);
-    if (mobile != MISSING_INT) printer.print("mobile", mobile);
     if (!station.is_missing()) printer.print("station", station);
-    if (!latrange.is_missing()) printer.print("latrange", latrange);
-    if (!lonrange.is_missing()) printer.print("lonrange", lonrange);
     if (!datetime.is_missing()) printer.print("datetime", datetime);
     if (!level.is_missing()) printer.print("level", level);
     if (!trange.is_missing()) printer.print("trange", trange);
-    if (var) printer.print("var", varcode_format(var));
-    if (!varlist.empty()) printer.print_varlist("varlist", varlist);
-    if (!query.empty()) printer.print("query", query);
-    if (!ana_filter.empty()) printer.print("ana_filter", ana_filter);
-    if (!data_filter.empty()) printer.print("data_filter", data_filter);
-    if (!attr_filter.empty()) printer.print("attr_filter", attr_filter);
-    if (count != MISSING_INT) printer.print("count", count);
-
-    for (const auto& var: m_vars)
-        printer.print(varcode_format(var->code()), var->format(""));
+    for (const auto& val: values)
+        // TODO: add data_id
+        printer.print(varcode_format(val.code()), val.var->format(""));
 
     return printer.s.str();
 }
-#endif
 
 void Data::print(FILE* out) const
 {

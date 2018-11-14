@@ -190,7 +190,6 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
         });
         this->add_method("station_only_no_vars", [](Fixture& f) {
             // Check that a message that only contains station variables does get imported
-            core::Record query;
             Messages msgs = read_msgs("bufr/arpa-station.bufr", Encoding::BUFR);
             f.tr->remove_all();
             wassert(f.tr->import_message(*msgs[0], default_opts));
@@ -233,7 +232,6 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             opts.overwrite = true;
 
             // Try importing into a dirty database, no attributes involved
-            core::Record query;
             auto add_common = [](Msg& msg) {
                 msg.type = MessageType::SYNOP;
                 msg.set_rep_memo("synop");

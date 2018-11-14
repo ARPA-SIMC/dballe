@@ -55,6 +55,8 @@ bool CommonAPIImplementation::_seti(const char* key, unsigned len, int val)
         case "data_filter": throw error_consistency("cannot seti data_filter");
         case "attr_filter": throw error_consistency("cannot seti attr_filter");
         case "limit":       input_query.limit = val;
+        case "block":       input_query.block = val;   input_data.values.set(WR_VAR(0, 1, 1), val);
+        case "station":     input_query.station = val; input_data.values.set(WR_VAR(0, 1, 2), val);
         default: return false;
     }
     return true;
@@ -109,6 +111,8 @@ bool CommonAPIImplementation::_setd(const char* key, unsigned len, double val)
         case "data_filter": throw error_consistency("cannot setd data_filter");
         case "attr_filter": throw error_consistency("cannot setd attr_filter");
         case "limit":       input_query.limit = val;
+        case "block":       input_query.block = val;   input_data.values.set(WR_VAR(0, 1, 1), val);
+        case "station":     input_query.station = val; input_data.values.set(WR_VAR(0, 1, 2), val);
         default: return false;
     }
     return true;
@@ -163,6 +167,8 @@ bool CommonAPIImplementation::_setc(const char* key, unsigned len, const char* v
         case "data_filter": input_query.data_filter = val;
         case "attr_filter": input_query.attr_filter = val;
         case "limit":       input_query.limit = strtol(val, nullptr, 10);
+        case "block":       input_query.block   = strtol(val, nullptr, 10); input_data.values.set(WR_VAR(0, 1, 1), val);
+        case "station":     input_query.station = strtol(val, nullptr, 10); input_data.values.set(WR_VAR(0, 1, 2), val);
         default: return false;
     }
     return true;
@@ -217,6 +223,8 @@ bool CommonAPIImplementation::_unset(const char* key, unsigned len)
         case "data_filter": input_query.data_filter.clear();
         case "attr_filter": input_query.attr_filter.clear();
         case "limit":       input_query.limit = MISSING_INT;
+        case "block":       input_query.block   = MISSING_INT; input_data.values.unset(WR_VAR(0, 1, 1));
+        case "station":     input_query.station = MISSING_INT; input_data.values.unset(WR_VAR(0, 1, 2));
         default: return false;
     }
     return true;

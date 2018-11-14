@@ -344,12 +344,10 @@ this->add_method("datetime2", [](Fixture& f) {
 });
 this->add_method("query_ordering", [](Fixture& f) {
     auto insert = [&](const char* str) {
-        core::Record rec;
-        rec.set_from_test_string(str);
-        core::Data vals;
-        rec.to_data(vals);
-        wassert(f.tr->insert_data(vals, false, true));
-        return vals;
+        core::Data data;
+        data.set_from_test_string(str);
+        wassert(f.tr->insert_data(data, false, true));
+        return data;
     };
     auto vals01 = insert("lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=synop, B12101=280.15");
     auto vals02 = insert("lat=2, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=synop, B12101=280.15");
@@ -362,7 +360,6 @@ this->add_method("query_ordering", [](Fixture& f) {
     auto cur = f.tr->query_data(core::Query());
     wassert(actual(cur->remaining()) == 7);
 
-    core::Record test;
     switch (DB::format)
     {
         case Format::V7:

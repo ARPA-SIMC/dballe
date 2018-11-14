@@ -1,6 +1,5 @@
 #include "matcher.h"
 #include "defs.h"
-#include "record.h"
 #include "query.h"
 #include <cmath>
 #include <vector>

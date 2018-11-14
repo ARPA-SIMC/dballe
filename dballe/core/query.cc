@@ -1,7 +1,6 @@
 #include "query.h"
 #include "var.h"
 #include "json.h"
-#include "record.h"
 #include <sstream>
 #include <cmath>
 #include <cstring>

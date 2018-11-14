@@ -57,8 +57,6 @@ int Dbadb::do_dump(const Query& query, FILE* out)
 {
     auto tr = dynamic_pointer_cast<db::Transaction>(db.transaction());
     auto cursor = tr->query_data(query);
-
-    auto res = Record::create();
     for (unsigned i = 0; cursor->next(); ++i)
     {
         fprintf(out, "#%u: -----------------------\n", i);
@@ -78,8 +76,6 @@ int Dbadb::do_stations(const Query& query, FILE* out)
 {
     auto tr = dynamic_pointer_cast<db::Transaction>(db.transaction());
     unique_ptr<db::CursorStation> cursor(dynamic_cast<db::CursorStation*>(tr->query_stations(query).release()));
-
-    auto res = Record::create();
     for (unsigned i = 0; cursor->next(); ++i)
     {
         fprintf(out, "#%u: -----------------------\n", i);

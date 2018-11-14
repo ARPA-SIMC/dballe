@@ -6,7 +6,6 @@
 #include "dballe/db/v7/qbuilder.h"
 #include "dballe/sql/mysql.h"
 #include "dballe/sql/querybuf.h"
-#include "dballe/record.h"
 #include "dballe/core/var.h"
 #include "dballe/core/values.h"
 #include <wreport/var.h>

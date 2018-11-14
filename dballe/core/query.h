@@ -4,7 +4,6 @@
 #include <dballe/query.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/fwd.h>
-#include <dballe/record.h>
 #include <wreport/varinfo.h>
 #include <set>
 

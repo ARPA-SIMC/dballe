@@ -5,7 +5,6 @@
 #include "dballe/db/v7/trace.h"
 #include "dballe/db/v7/qbuilder.h"
 #include "dballe/sql/sqlite.h"
-#include "dballe/record.h"
 #include "dballe/core/var.h"
 #include "dballe/core/values.h"
 #include <wreport/var.h>

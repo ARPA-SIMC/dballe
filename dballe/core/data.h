@@ -39,6 +39,16 @@ public:
     bool operator==(const dballe::Data& rec) const override;
     bool operator!=(const dballe::Data& rec) const override;
 
+    /**
+     * Check the data fields for consistency, and fill in missing values:
+     *
+     *  - month without year, day without month, and so on, cause errors
+     *  - min and max datetimes are filled with the actual minimum and maximum
+     *    values acceptable for that range (year=2017, for example, becomes
+     *    min=2017-01-01 00:00:00, max=2017-12-31 23:59:59
+     */
+    void validate();
+
     void clear() override;
     void clear_vars() override;
     void clear_ids() override;
@@ -83,9 +93,8 @@ public:
     const wreport::Var* get_var(wreport::Varcode code) const override;
 #endif
 
-#if 0
     /**
-     * Set a value in the record according to an assignment encoded in a string.
+     * Set a value according to an assignment encoded in a string.
      *
      * String can use keywords, aliases and varcodes.  Examples: ana_id=3,
      * name=Bologna, B12012=32.4
@@ -99,7 +108,7 @@ public:
     void set_from_string(const char* str);
 
      /**
-     * Set a record from a ", "-separated string of assignments.
+     * Set the Data from a ", "-separated string of assignments.
      *
      * The implementation is not efficient and the method is not safe for any
      * input, since ", " could appear in a station identifier. It is however
@@ -111,7 +120,9 @@ public:
      * Encode in a one-liner of comma-separated assignments
      */
     std::string to_string() const;
-#endif
+
+protected:
+    void setf(const char* key, unsigned len, const char* val);
 };
 
 }

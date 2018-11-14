@@ -1,5 +1,4 @@
 #include <dballe/msg/tests.h>
-#include <dballe/core/record.h>
 #include <dballe/core/values.h>
 #include <dballe/core/data.h>
 #include <dballe/db/fwd.h>

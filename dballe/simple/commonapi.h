@@ -3,7 +3,6 @@
 
 #include "simple.h"
 #include <dballe/cursor.h>
-#include <dballe/core/record.h>
 #include <dballe/core/query.h>
 #include <dballe/core/data.h>
 #include <functional>

@@ -1,8 +1,6 @@
 #include "cmdline.h"
-#include <dballe/record.h>
-#include <dballe/core/query.h>
-#include <dballe/core/record.h>
-#include <dballe/msg/wr_codec.h>
+#include "dballe/core/query.h"
+#include "dballe/msg/wr_codec.h"
 #include <wreport/notes.h>
 #include <popt.h>
 #include <cstring>

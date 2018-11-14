@@ -5,7 +5,6 @@
 #include "dballe/db/v7/db.h"
 #include "dballe/db/v7/repinfo.h"
 #include "dballe/sql/postgresql.h"
-#include "dballe/record.h"
 #include "dballe/core/var.h"
 #include "dballe/core/values.h"
 #include <wreport/var.h>

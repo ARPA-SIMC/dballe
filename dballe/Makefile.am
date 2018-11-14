@@ -15,10 +15,10 @@ common_libs = $(WREPORT_LIBS) $(LIBPQ_LIBS) $(SQLITE3_LIBS) $(MYSQL_LIBS) $(POPT
 # Autobuilt files
 #
 
-core/record-access.cc: core/record-access.in.cc mklookup
+core/query-access.cc: core/query-access.in.cc mklookup
 	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
 
-core/query-access.cc: core/query-access.in.cc mklookup
+core/data-access.cc: core/data-access.in.cc mklookup
 	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
 
 msg/cursor-access.cc: msg/cursor-access.in.cc mklookup
@@ -36,12 +36,12 @@ simple/commonapi-access.cc: simple/commonapi-access.in.cc mklookup
 core/aliases.cc: core/aliases.gperf
 	if ! gperf < $< > $@; then rm $@; /bin/false; fi
 
-BUILT_SOURCES = core/record-access.cc core/aliases.cc core/query-access.cc \
+BUILT_SOURCES = core/aliases.cc core/query-access.cc core/data-access.cc \
                 msg/cursor-access.cc db/v7/cursor-access.cc \
                 db/summary-access.tcc simple/commonapi-access.cc
 EXTRA_DIST += mklookup core/aliases.gperf core/aliases.cc \
-			  core/record-access.in.cc core/record-access.cc \
 			  core/query-access.in.cc core/query-access.cc \
+			  core/data-access.in.cc core/data-access.cc \
 			  msg/cursor-access.in.cc msg/cursor-access.cc \
 			  db/v7/cursor-access.in.cc db/v7/cursor-access.cc \
 			  db/summary-access.in.tcc db/summary-access.tcc \
@@ -76,7 +76,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	types.h \
 	data.h \
 	query.h \
-	record.h \
 	var.h \
 	cursor.h \
 	db.h \
@@ -90,9 +89,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/file.h \
 	core/arrayfile.h \
 	core/csv.h \
-	core/record.h \
 	core/data.h \
-	core/record-access.h \
 	core/query.h \
 	core/structbuf.h \
 	core/matcher.h \
@@ -177,7 +174,6 @@ libdballe_la_SOURCES = \
 	types.cc \
 	data.cc \
 	query.cc \
-	record.cc \
 	var.cc \
 	cursor.cc \
 	db.cc \
@@ -191,8 +187,7 @@ libdballe_la_SOURCES = \
 	core/arrayfile.cc \
 	core/csv.cc \
 	core/data.cc \
-	core/record.cc \
-	core/record-access.cc \
+	core/data-access.cc \
 	core/query.cc \
 	core/query-access.cc \
 	core/structbuf.cc \
@@ -321,7 +316,6 @@ test_dballe_SOURCES = \
 	types-test.cc \
 	data-test.cc \
 	query-test.cc \
-	record-test.cc \
 	var-test.cc \
 	cursor-test.cc \
 	db-test.cc \
@@ -331,8 +325,6 @@ test_dballe_SOURCES = \
 	core/values-test.cc \
 	core/file-test.cc \
 	core/data-test.cc \
-	core/record-test.cc \
-	core/record-access-test.cc \
 	core/query-test.cc \
 	core/structbuf-test.cc \
 	core/csv-test.cc \

@@ -2,7 +2,6 @@
 #include "dballe/db/db.h"
 #include "dballe/db/v7/db.h"
 #include "dballe/db/v7/transaction.h"
-#include "dballe/record.h"
 #include "dballe/msg/msg.h"
 #include "config.h"
 

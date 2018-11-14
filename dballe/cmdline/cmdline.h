@@ -8,6 +8,7 @@
 
 #include <wreport/error.h>
 #include <dballe/file.h>
+#include <dballe/fwd.h>
 #include <popt.h>
 #include <memory>
 #include <vector>
@@ -15,13 +16,6 @@
 #include <string>
 
 namespace dballe {
-struct Record;
-struct Query;
-
-namespace core {
-struct Query;
-}
-
 namespace cmdline {
 
 struct Subcommand

@@ -5,7 +5,6 @@
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
 #include "dballe/msg/bulletin.h"
-#include "dballe/record.h"
 #include "dballe/file.h"
 #include "dballe/core/query.h"
 #include "dballe/core/matcher.h"

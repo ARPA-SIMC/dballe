@@ -6,7 +6,6 @@
 #include "dballe/db/v7/repinfo.h"
 #include "dballe/sql/mysql.h"
 #include "dballe/sql/querybuf.h"
-#include "dballe/record.h"
 #include "dballe/core/values.h"
 #include "dballe/core/varmatch.h"
 #include <algorithm>

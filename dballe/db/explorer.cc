@@ -1,7 +1,6 @@
 #define _DBALLE_LIBRARY_CODE
 #include "explorer.h"
 #include "dballe/core/query.h"
-#include "dballe/core/record.h"
 #include "dballe/core/json.h"
 #include <cstring>
 
