@@ -138,15 +138,15 @@ this->add_method("stationdata", [](Fixture& f) {
             {
                 wassert(actual(cur->next()).istrue());
                 DBStation station = cur->get_station();
-                core::Values values = dynamic_cast<db::CursorStation*>(cur.get())->get_values();
+                core::DBValues values = dynamic_cast<db::CursorStation*>(cur.get())->get_values();
                 if (station.report == "temp")
                 {
                     wassert(actual(station.id) == svals_esmac.station.id);
-                    wassert(actual(*values.get_var(WR_VAR(0, 1, 19))) == "Esmac");
+                    wassert(actual(values.var(WR_VAR(0, 1, 19))) == "Esmac");
                     have_temp = true;
                 } else if (station.report == "synop") {
                     wassert(actual(station.id) == svals_camse.station.id);
-                    wassert(actual(*values.get_var(WR_VAR(0, 1, 19))) == "Camse");
+                    wassert(actual(values.var(WR_VAR(0, 1, 19))) == "Camse");
                     have_synop = true;
                 }
             }

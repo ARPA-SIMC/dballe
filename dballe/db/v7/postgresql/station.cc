@@ -98,14 +98,14 @@ void PostgreSQLStation::get_station_vars(Tracer<>& trc, int id_station, std::fun
         if (!res.is_null(row, 2))
         {
             TRACE("get_station_vars new attribute\n");
-            core::Values::decode(res.get_bytea(row, 2), [&](unique_ptr<wreport::Var> a) { var->seta(move(a)); });
+            core::DBValues::decode(res.get_bytea(row, 2), [&](unique_ptr<wreport::Var> a) { var->seta(move(a)); });
         }
 
         dest(move(var));
     };
 }
 
-void PostgreSQLStation::add_station_vars(Tracer<>& trc, int id_station, core::Values& values)
+void PostgreSQLStation::add_station_vars(Tracer<>& trc, int id_station, core::DBValues& values)
 {
     using namespace dballe::sql::postgresql;
     Tracer<> trc_sel(trc ? trc->trace_select("v7_station_add_station_vars") : nullptr);

@@ -18,7 +18,7 @@ namespace cursor {
 struct StationRow
 {
     dballe::DBStation station;
-    core::Values values;
+    core::DBValues values;
 
     StationRow(const dballe::DBStation& station) : station(station) {}
 
@@ -28,7 +28,7 @@ struct StationRow
 struct StationDataRow
 {
     dballe::DBStation station;
-    core::Value value;
+    DBValue value;
 
     StationDataRow(const dballe::DBStation& station, int id_data, std::unique_ptr<wreport::Var> var) : station(station), value(id_data, std::move(var)) {}
     StationDataRow(const StationDataRow&) = delete;
@@ -114,7 +114,7 @@ struct Stations : public Base<CursorStation, StationRow>
 {
     using Base::Base;
     dballe::DBStation get_station() const override { return this->cur->station; }
-    core::Values get_values() const override { return this->cur->values; }
+    core::DBValues get_values() const override { return this->cur->values; }
     void load(Tracer<>& trc, const StationQueryBuilder& qb);
     bool enqi(const char* key, unsigned len, int& res) const override;
     bool enqd(const char* key, unsigned len, double& res) const override;
@@ -135,7 +135,7 @@ struct StationData : public Base<CursorStationData, StationDataRow>
     void load(Tracer<>& trc, const DataQueryBuilder& qb);
     dballe::DBStation get_station() const override { return this->cur->station; }
     wreport::Varcode get_varcode() const override { return cur->value.code(); }
-    wreport::Var get_var() const override { return *cur->value.var; }
+    wreport::Var get_var() const override { return *cur->value; }
     int attr_reference_id() const override { return cur->value.data_id; }
     void attr_query(std::function<void(std::unique_ptr<wreport::Var>)>&& dest, bool force_read) override;
     bool enqi(const char* key, unsigned len, int& res) const override;
@@ -187,7 +187,7 @@ struct Data : public LevtrBase<CursorData, DataRow>
     dballe::DBStation get_station() const override { return this->cur->station; }
     Datetime get_datetime() const override { return cur->datetime; }
     wreport::Varcode get_varcode() const override { return cur->value.code(); }
-    wreport::Var get_var() const override { return *cur->value.var; }
+    wreport::Var get_var() const override { return *cur->value; }
     int attr_reference_id() const override { return cur->value.data_id; }
 
     void attr_query(std::function<void(std::unique_ptr<wreport::Var>)>&& dest, bool force_read) override;

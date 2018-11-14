@@ -258,22 +258,6 @@ struct BufferPrinter
             s << ",";
         s << key << "=" << val;
     }
-
-    void print_varlist(const char* key, const std::set<wreport::Varcode>& varlist)
-    {
-        s << key << "=";
-        bool first = true;
-        for (const auto& code: varlist)
-        {
-            if (first)
-                first = false;
-            else
-                s << ",";
-            char buf[8];
-            format_bcode(code, buf);
-            s << buf;
-        }
-    }
 };
 
 struct FilePrinter
@@ -296,22 +280,6 @@ struct FilePrinter
     {
         fprintf(out, "%s=%s\n", key, val.c_str());
     }
-
-    void print_varlist(const char* key, const std::set<wreport::Varcode>& varlist)
-    {
-        fprintf(out, "%s=", key);
-        bool first = true;
-        for (const auto& code: varlist)
-        {
-            if (first)
-                first = false;
-            else
-                putc(',', out);
-            char buf[8];
-            format_bcode(code, buf);
-            fputs(buf, out);
-        }
-    }
 };
 
 }
@@ -325,8 +293,7 @@ std::string Data::to_string() const
     if (!level.is_missing()) printer.print("level", level);
     if (!trange.is_missing()) printer.print("trange", trange);
     for (const auto& val: values)
-        // TODO: add data_id
-        printer.print(varcode_format(val.code()), val.var->format(""));
+        printer.print(varcode_format(val.code()), val);
 
     return printer.s.str();
 }

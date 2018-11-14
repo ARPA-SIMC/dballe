@@ -74,6 +74,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	exporter.h \
 	message.h \
 	types.h \
+	value.h \
 	data.h \
 	query.h \
 	var.h \
@@ -172,6 +173,7 @@ libdballe_la_SOURCES = \
 	exporter.cc \
 	message.cc \
 	types.cc \
+	value.cc \
 	data.cc \
 	query.cc \
 	var.cc \
@@ -314,6 +316,7 @@ test_dballe_SOURCES = \
 	exporter-test.cc \
 	message-test.cc \
 	types-test.cc \
+	value-test.cc \
 	data-test.cc \
 	query-test.cc \
 	var-test.cc \

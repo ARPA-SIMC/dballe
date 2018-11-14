@@ -21,17 +21,13 @@ public:
     Datetime datetime;
     Level level;
     Trange trange;
-    Values values;
+    DBValues values;
 
 public:
     Data() = default;
     Data(const Data& rec) = default;
     Data(Data&& rec) = default;
     ~Data();
-
-#if 0
-    std::unique_ptr<dballe::Data> clone() const override;
-#endif
 
     Data& operator=(const Data& rec) = default;
     Data& operator=(Data&& rec) = default;

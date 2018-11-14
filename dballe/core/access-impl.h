@@ -2,6 +2,7 @@
 
 #include <dballe/var.h>
 #include <dballe/types.h>
+#include <dballe/value.h>
 #include <dballe/core/values.h>
 #include <dballe/core/var.h>
 #include <dballe/msg/context.h>
@@ -55,14 +56,14 @@ struct MaybeBase
         }
     }
 
-    void maybe_search_value(const char* key, const dballe::core::Value& value)
+    void maybe_search_value(const char* key, const dballe::Value& value)
     {
         if (_found)
             return;
         wreport::Varcode code = dballe::resolve_varcode(key);
         if (code != value.code())
             throw_if_notfound(key);
-        const wreport::Var* var = value.var;
+        const wreport::Var* var = value.get();
         _found = true;
         if (var && var->isset())
         {
@@ -71,12 +72,13 @@ struct MaybeBase
         }
     }
 
-    void maybe_search_values(const char* key, const dballe::core::Values& values)
+    template<typename Values>
+    void maybe_search_values(const char* key, const Values& values)
     {
         if (_found)
             return;
         wreport::Varcode code = dballe::resolve_varcode(key);
-        const wreport::Var* var = values.get_var(code);
+        const wreport::Var* var = values.maybe_var(code);
         _found = true;
         if (var && var->isset())
         {

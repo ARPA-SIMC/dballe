@@ -9,17 +9,6 @@ using namespace wreport;
 namespace dballe {
 namespace core {
 
-void Value::print(FILE* out) const
-{
-    if (data_id == MISSING_INT)
-        fputs("-------- ", out);
-    else
-        fprintf(out, "%8d ", data_id);
-    if (!var)
-        fputs("-\n", out);
-    else
-        var->print(out);
-}
 
 namespace value {
 
@@ -133,34 +122,20 @@ void Decoder::decode_attrs(const std::vector<uint8_t>& buf, wreport::Var& var)
 
 }
 
-bool Values::operator==(const Values& o) const
+template<typename Value>
+bool ValuesBase<Value>::operator==(const ValuesBase<Value>& o) const
 {
     return m_values == o.m_values;
 }
 
-bool Values::operator!=(const Values& o) const
+template<typename Value>
+bool ValuesBase<Value>::operator!=(const ValuesBase<Value>& o) const
 {
     return m_values != o.m_values;
 }
 
-bool Values::vars_equal(const Values& o) const
-{
-    const_iterator a = begin();
-    const_iterator b = o.begin();
-    while (a != end() && b != o.end())
-    {
-        if (!a->var && !b->var)
-            ;
-        else if (!a->var || !b->var)
-            return false;
-        else if (*a->var != *b->var)
-            return false;
-        ++a; ++b;
-    }
-    return a == end() && b == o.end();
-}
-
-Values::iterator Values::find(wreport::Varcode code) noexcept
+template<typename Value>
+typename ValuesBase<Value>::iterator ValuesBase<Value>::find(wreport::Varcode code) noexcept
 {
     /* Binary search */
     if (m_values.empty())
@@ -181,7 +156,8 @@ Values::iterator Values::find(wreport::Varcode code) noexcept
     return m_values.end();
 }
 
-Values::const_iterator Values::find(wreport::Varcode code) const noexcept
+template<typename Value>
+typename ValuesBase<Value>::const_iterator ValuesBase<Value>::find(wreport::Varcode code) const noexcept
 {
     /* Binary search */
     if (m_values.empty())
@@ -202,7 +178,8 @@ Values::const_iterator Values::find(wreport::Varcode code) const noexcept
     return m_values.end();
 }
 
-Values::iterator Values::insert_new(Value&& val)
+template<typename Value>
+typename ValuesBase<Value>::iterator ValuesBase<Value>::insert_new(Value&& val)
 {
     // Insertionsort, since the common case is to work with small arrays
     wreport::Varcode key = val.code();
@@ -223,7 +200,8 @@ Values::iterator Values::insert_new(Value&& val)
     return pos;
 }
 
-void Values::unset(wreport::Varcode code)
+template<typename Value>
+void ValuesBase<Value>::unset(wreport::Varcode code)
 {
     iterator pos = find(code);
     if (pos == end())
@@ -231,36 +209,8 @@ void Values::unset(wreport::Varcode code)
     m_values.erase(pos);
 }
 
-void Values::set_data_id(wreport::Varcode code, int data_id)
-{
-    auto i = find(code);
-    if (i == end()) return;
-    i->data_id = data_id;
-}
-
-void Values::move_to(std::function<void(std::unique_ptr<wreport::Var>)> dest)
-{
-    for (auto& val: m_values)
-    {
-        std::unique_ptr<wreport::Var> var(val.var);
-        val.var = nullptr;
-        dest(std::move(var));
-    }
-    m_values.clear();
-}
-
-void Values::move_to_attributes(wreport::Var& dest)
-{
-    for (auto& val: m_values)
-    {
-        std::unique_ptr<wreport::Var> var(val.var);
-        val.var = nullptr;
-        dest.seta(std::move(var));
-    }
-    m_values.clear();
-}
-
-void Values::set(Value&& val)
+template<typename Value>
+void ValuesBase<Value>::set(Value&& val)
 {
     auto i = find(val.code());
     if (i == end())
@@ -269,32 +219,36 @@ void Values::set(Value&& val)
         *i = std::move(val);
 }
 
-void Values::set(const wreport::Var& v)
+template<typename Value>
+void ValuesBase<Value>::set(const wreport::Var& v)
 {
     auto i = find(v.code());
     if (i == end())
         insert_new(Value(v));
     else
-        i->set(v);
+        i->reset(v);
 }
 
-void Values::set(std::unique_ptr<wreport::Var>&& v)
+template<typename Value>
+void ValuesBase<Value>::set(std::unique_ptr<wreport::Var>&& v)
 {
     auto code = v->code();
     auto i = find(code);
     if (i == end())
         insert_new(Value(move(v)));
     else
-        i->set(std::move(v));
+        i->reset(std::move(v));
 }
 
-void Values::set(const Values& vals)
+template<typename Value>
+void ValuesBase<Value>::merge(const ValuesBase<Value>& vals)
 {
     for (const auto& vi: vals)
-        set(*vi.var);
+        set(*vi);
 }
 
-const Value& Values::want(wreport::Varcode code) const
+template<typename Value>
+const Value& ValuesBase<Value>::value(wreport::Varcode code) const
 {
     auto i = find(code);
     if (i == end())
@@ -303,7 +257,23 @@ const Value& Values::want(wreport::Varcode code) const
     return *i;
 }
 
-const Value* Values::get(wreport::Varcode code) const
+template<typename Value>
+const wreport::Var& ValuesBase<Value>::var(wreport::Varcode code) const
+{
+    auto i = find(code);
+    if (i == end())
+        error_notfound::throwf("variable %01d%02d%03d not found",
+                WR_VAR_F(code), WR_VAR_X(code), WR_VAR_Y(code));
+
+    if (!i->get())
+        error_notfound::throwf("variable %01d%02d%03d not set",
+                WR_VAR_F(code), WR_VAR_X(code), WR_VAR_Y(code));
+
+    return **i;
+}
+
+template<typename Value>
+const Value* ValuesBase<Value>::maybe_value(wreport::Varcode code) const
 {
     auto i = find(code);
     if (i == end())
@@ -311,54 +281,124 @@ const Value* Values::get(wreport::Varcode code) const
     return &*i;
 }
 
-const wreport::Var* Values::get_var(wreport::Varcode code) const
+template<typename Value>
+const wreport::Var* ValuesBase<Value>::maybe_var(wreport::Varcode code) const
 {
-    const Value* val = get(code);
-    if (!val) return nullptr;
-    return val->var;
+    auto i = find(code);
+    if (i == end())
+        return nullptr;
+    if (!i->get()) return nullptr;
+    return i->get();
 }
 
-void Values::print(FILE* out) const
+template<typename Value>
+void ValuesBase<Value>::move_to(std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
-    for (const auto& i: *this)
-        i.print(out);
+    for (auto& val: m_values)
+        dest(val.release());
+    m_values.clear();
 }
 
-std::vector<uint8_t> Values::encode() const
+template<typename Value>
+void ValuesBase<Value>::move_to_attributes(wreport::Var& dest)
+{
+    for (auto& val: m_values)
+        dest.seta(val.release());
+    m_values.clear();
+}
+
+template<typename Value>
+void ValuesBase<Value>::print(FILE* out) const
+{
+    for (const auto& val: *this)
+        val.print(out);
+}
+
+template<typename Value>
+std::vector<uint8_t> ValuesBase<Value>::encode() const
 {
     value::Encoder enc;
     for (const auto& i: *this)
-        enc.append(*i.var);
+        enc.append(*i);
     return enc.buf;
 }
 
-std::vector<uint8_t> Values::encode_attrs(const wreport::Var& var)
+template<typename Value>
+std::vector<uint8_t> ValuesBase<Value>::encode_attrs(const wreport::Var& var)
 {
     value::Encoder enc;
-    for (const Var* a = var.next_attr(); a != NULL; a = a->next_attr())
+    for (const Var* a = var.next_attr(); a != nullptr; a = a->next_attr())
         enc.append(*a);
     return enc.buf;
 }
 
-void Values::decode(const std::vector<uint8_t>& buf, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+template<typename Value>
+void ValuesBase<Value>::decode(const std::vector<uint8_t>& buf, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     value::Decoder dec(buf);
     while (dec.size)
         dest(move(dec.decode_var()));
 }
 
+Values& Values::operator=(DBValues&& o)
+{
+    clear();
+    o.move_to([&](std::unique_ptr<wreport::Var> var) {
+        m_values.emplace_back(std::move(var));
+    });
+    return *this;
+}
+
+
+DBValues& DBValues::operator=(Values&& o)
+{
+    clear();
+    o.move_to([&](std::unique_ptr<wreport::Var> var) {
+        m_values.emplace_back(std::move(var));
+    });
+    return *this;
+}
+
+bool DBValues::vars_equal(const DBValues& o) const
+{
+    const_iterator a = begin();
+    const_iterator b = o.begin();
+    while (a != end() && b != o.end())
+    {
+        if (!a->get() && !b->get())
+            ;
+        else if (!a->get() || !b->get())
+            return false;
+        else if (*a->get() != *b->get())
+            return false;
+        ++a; ++b;
+    }
+    return a == end() && b == o.end();
+}
+
+void DBValues::set_data_id(wreport::Varcode code, int data_id)
+{
+    auto i = find(code);
+    if (i == end()) return;
+    i->data_id = data_id;
+}
+
 std::ostream& operator<<(std::ostream& o, const Values& values)
 {
     for (const auto& val: values)
-    {
-        if (val.data_id != MISSING_INT)
-            o << val.data_id << ":";
-        else
-            o << "-:";
-        o << varcode_format(val.code()) << ":" << val.var->format() << endl;
-    }
+        o << val << endl;
     return o;
 }
+
+std::ostream& operator<<(std::ostream& o, const DBValues& values)
+{
+    for (const auto& val: values)
+        o << val << endl;
+    return o;
+}
+
+template struct ValuesBase<Value>;
+template struct ValuesBase<DBValue>;
 
 }
 }

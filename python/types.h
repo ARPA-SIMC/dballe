@@ -6,6 +6,7 @@
 #include <dballe/types.h>
 #include <dballe/core/values.h>
 #include "common.h"
+#include <set>
 
 extern "C" {
 
@@ -138,7 +139,12 @@ void set_lat_from_python(PyObject* o, Coords& coords);
 void set_lon_from_python(PyObject* o, Coords& coords);
 unsigned short datetime_int16_from_python(PyObject* o);
 unsigned char datetime_int8_from_python(PyObject* o);
-void set_values_from_python(dballe::core::Values& values, wreport::Varcode code, PyObject* val);
+
+template<typename Values>
+void set_values_from_python(Values& values, wreport::Varcode code, PyObject* val);
+extern template void set_values_from_python(core::Values& values, wreport::Varcode code, PyObject* val);
+extern template void set_values_from_python(core::DBValues& values, wreport::Varcode code, PyObject* val);
+
 std::set<wreport::Varcode> varcodes_from_python(PyObject* o);
 
 void register_types(PyObject* m);

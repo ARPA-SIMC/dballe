@@ -112,27 +112,27 @@ struct ActualCursor : public Actual<dballe::Cursor&>
 
     /// Check cursor data variable after a query_data
     void data_var_matches(const Data& expected, wreport::Varcode code) {
-        data_var_matches(*core::Data::downcast(expected).values.want(code).var);
+        data_var_matches(core::Data::downcast(expected).values.var(code));
     }
     /// Check cursor data variable(s) after a query_data
-    void data_var_matches(const core::Values& expected) {
+    void data_var_matches(const core::DBValues& expected) {
         if (auto c = dynamic_cast<dballe::db::CursorStation*>(&_actual))
         {
-            core::Values actual_values = c->get_values();
+            core::DBValues actual_values = c->get_values();
             if (!actual_values.vars_equal(expected))
                 // Quick hack to get proper formatting of mismatch
                 wassert(actual(c->get_values()) == expected);
         }
         else if (auto c = dynamic_cast<dballe::CursorStationData*>(&_actual))
-            data_var_matches(*expected.want(c->get_varcode()).var);
+            data_var_matches(expected.var(c->get_varcode()));
         else if (auto c = dynamic_cast<dballe::CursorData*>(&_actual))
-            data_var_matches(*expected.want(c->get_varcode()).var);
+            data_var_matches(expected.var(c->get_varcode()));
         else
             throw wreport::error_consistency("cannot call data_var_matches on this kind of cursor");
     }
     /// Check cursor data variable after a query_data
     void data_var_matches(const core::Values& expected, wreport::Varcode code) {
-        data_var_matches(*expected.want(code).var);
+        data_var_matches(expected.var(code));
     }
     /// Check cursor data variable after a query_data
     void data_var_matches(const wreport::Var& expected);

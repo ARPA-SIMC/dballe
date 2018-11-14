@@ -1,5 +1,6 @@
 #define _DBALLE_LIBRARY_CODE
 #include "summary.h"
+#include "dballe/core/var.h"
 #include "dballe/core/query.h"
 #include "dballe/core/json.h"
 #include "dballe/msg/msg.h"

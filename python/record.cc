@@ -2,6 +2,7 @@
 #include "dballe/core/defs.h"
 #include "dballe/core/query.h"
 #include "dballe/core/data.h"
+#include "dballe/core/var.h"
 #include "record.h"
 #include "common.h"
 #include "types.h"

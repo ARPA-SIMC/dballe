@@ -37,7 +37,7 @@ struct CursorStation : public dballe::CursorStation
     /**
      * Get the station data values
      */
-    virtual core::Values get_values() const = 0;
+    virtual core::DBValues get_values() const = 0;
 
     /**
      * Iterate the cursor until the end, returning the number of items.

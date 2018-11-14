@@ -83,7 +83,7 @@ int Dbadb::do_stations(const Query& query, FILE* out)
         auto values = cursor->get_values();
         for (const auto& val: values)
         {
-            fprintf(out, "Var: "); val.var->print(out);
+            fprintf(out, "Var: "); val->print(out);
         }
     }
 

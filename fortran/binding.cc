@@ -1,6 +1,7 @@
 #include "config.h"
 #include "dballe/simple/msgapi.h"
 #include "dballe/simple/dbapi.h"
+#include "dballe/core/var.h"
 #include "dballe/core/string.h"
 #include "dballe/db/db.h"
 

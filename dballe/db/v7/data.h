@@ -34,6 +34,12 @@ protected:
     void read_attrs_into_values(Tracer<>& trc, int id_data, core::Values& values);
 
     /**
+     * Load attributes from the database into a Values, except those whose
+     * Varcode is in `exclude`
+     */
+    void read_attrs_into_values(Tracer<>& trc, int id_data, core::Values& values, const db::AttrList& exclude);
+
+    /**
      * Replace the attributes of a variable with those in Values
      */
     virtual void write_attrs(Tracer<>& trc, int id_data, const core::Values& values) = 0;

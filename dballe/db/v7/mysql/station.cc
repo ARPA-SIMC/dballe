@@ -138,14 +138,14 @@ void MySQLStation::get_station_vars(Tracer<>& trc, int id_station, std::function
         if (!row.isnull(2))
         {
             TRACE("get_station_vars add attributes\n");
-            core::Values::decode(row.as_blob(2), [&](unique_ptr<wreport::Var> a) { var->seta(move(a)); });
+            core::DBValues::decode(row.as_blob(2), [&](unique_ptr<wreport::Var> a) { var->seta(move(a)); });
         }
 
         dest(move(var));
     }
 }
 
-void MySQLStation::add_station_vars(Tracer<>& trc, int id_station, core::Values& values)
+void MySQLStation::add_station_vars(Tracer<>& trc, int id_station, core::DBValues& values)
 {
     Querybuf qb;
     qb.appendf(R"(

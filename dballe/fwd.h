@@ -47,6 +47,9 @@ struct Ident;
 struct Station;
 struct DBStation;
 
+struct Value;
+struct DBValue;
+
 // Aggregates
 struct Data;
 struct Query;

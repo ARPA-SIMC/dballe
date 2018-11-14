@@ -137,7 +137,7 @@ void StationData::attr_query(std::function<void(std::unique_ptr<wreport::Var>)>&
 {
     if (!force_read && with_attributes)
     {
-        for (const wreport::Var* a = cur->value.var->next_attr(); a != NULL; a = a->next_attr())
+        for (const wreport::Var* a = cur->value->next_attr(); a != NULL; a = a->next_attr())
             dest(std::unique_ptr<wreport::Var>(new Var(*a)));
     } else {
         tr->attr_query_station(attr_reference_id(), std::move(dest));
@@ -185,7 +185,7 @@ void Data::attr_query(std::function<void(std::unique_ptr<wreport::Var>)>&& dest,
 {
     if (!force_read && with_attributes)
     {
-        for (const Var* a = cur->value.var->next_attr(); a != NULL; a = a->next_attr())
+        for (const Var* a = cur->value->next_attr(); a != NULL; a = a->next_attr())
             dest(std::unique_ptr<wreport::Var>(new Var(*a)));
     } else {
         tr->attr_query_data(attr_reference_id(), std::move(dest));
@@ -254,7 +254,7 @@ struct Best : public Data
 
         // Replace
         results.back().station = station;
-        results.back().value = core::Value(id_data, std::move(var));
+        results.back().value = DBValue(id_data, std::move(var));
         insert_cur_prio = prio;
         return true;
 
@@ -282,7 +282,7 @@ struct Best : public Data
     {
         if (!force_read && with_attributes)
         {
-            for (const Var* a = cur->value.var->next_attr(); a != NULL; a = a->next_attr())
+            for (const Var* a = cur->value->next_attr(); a != NULL; a = a->next_attr())
                 dest(std::unique_ptr<wreport::Var>(new Var(*a)));
         } else {
             tr->attr_query_data(attr_reference_id(), std::move(dest));

@@ -1,6 +1,7 @@
 #ifndef DBALLE_DB_V7_BATCH_H
 #define DBALLE_DB_V7_BATCH_H
 
+#include <dballe/types.h>
 #include <dballe/core/values.h>
 #include <dballe/core/smallset.h>
 #include <dballe/db/v7/fwd.h>

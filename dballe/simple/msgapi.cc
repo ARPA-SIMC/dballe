@@ -249,7 +249,7 @@ struct PrendiloOperation : public Operation
         if (vars.size() > 1)
             throw error_consistency("critica has been called after setting many variables with a single prendilo, so I do not know which one should get the attributes");
 
-        qcinput.move_to_attributes(*vars.begin()->var);
+        qcinput.move_to_attributes(**vars.begin());
     }
 
     void scusa() override

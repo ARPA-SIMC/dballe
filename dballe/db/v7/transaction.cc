@@ -125,7 +125,7 @@ void Transaction::insert_station_data(dballe::Data& vals, bool can_replace, bool
     // Add all the variables we find
     batch::StationData& sd = st->get_station_data(trc);
     for (auto& i: data.values)
-        sd.add(i.var, can_replace ? batch::UPDATE : batch::ERROR);
+        sd.add(i.get(), can_replace ? batch::UPDATE : batch::ERROR);
 
     // Perform changes
     batch.write_pending(trc);
@@ -157,7 +157,7 @@ void Transaction::insert_data(dballe::Data& vals, bool can_replace, bool station
 
     // Add all the variables we find
     for (auto& i: data.values)
-        md.add(id_levtr, i.var, can_replace ? batch::UPDATE : batch::ERROR);
+        md.add(id_levtr, i.get(), can_replace ? batch::UPDATE : batch::ERROR);
 
     // Perform changes
     batch.write_pending(trc);

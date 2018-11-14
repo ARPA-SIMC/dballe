@@ -182,11 +182,11 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
 
             auto vars = dynamic_cast<const db::CursorStation*>(cur.get())->get_values();
             wassert(actual(vars.size()) == 5);
-            wassert(actual(vars.get_var(WR_VAR(0, 1, 19))->format()) == "My beautifull station");
-            wassert(actual(vars.get_var(WR_VAR(0, 1, 194))->format()) == "generic");
-            wassert(actual(vars.get_var(WR_VAR(0, 5, 1))->format()) == "45.00000");
-            wassert(actual(vars.get_var(WR_VAR(0, 6, 1))->format()) == "10.00000");
-            wassert(actual(vars.get_var(WR_VAR(0, 7, 30))->format()) == "22.3");
+            wassert(actual(vars.var(WR_VAR(0, 1, 19)).format()) == "My beautifull station");
+            wassert(actual(vars.var(WR_VAR(0, 1, 194)).format()) == "generic");
+            wassert(actual(vars.var(WR_VAR(0, 5, 1)).format()) == "45.00000");
+            wassert(actual(vars.var(WR_VAR(0, 6, 1)).format()) == "10.00000");
+            wassert(actual(vars.var(WR_VAR(0, 7, 30)).format()) == "22.3");
         });
         this->add_method("station_only_no_vars", [](Fixture& f) {
             // Check that a message that only contains station variables does get imported

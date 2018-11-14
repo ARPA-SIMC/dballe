@@ -919,7 +919,8 @@ unsigned char datetime_int8_from_python(PyObject* o)
     throw PythonException();
 }
 
-void set_values_from_python(dballe::core::Values& values, wreport::Varcode code, PyObject* val)
+template<typename Values>
+void set_values_from_python(Values& values, wreport::Varcode code, PyObject* val)
 {
     if (!val || val == Py_None)
         values.unset(code);
@@ -941,6 +942,10 @@ void set_values_from_python(dballe::core::Values& values, wreport::Varcode code,
         throw PythonException();
     }
 }
+
+template void set_values_from_python(core::Values& values, wreport::Varcode code, PyObject* val);
+template void set_values_from_python(core::DBValues& values, wreport::Varcode code, PyObject* val);
+
 
 std::set<wreport::Varcode> varcodes_from_python(PyObject* o)
 {

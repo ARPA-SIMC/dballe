@@ -1,5 +1,6 @@
 #include "commonapi.h"
 #include "dballe/var.h"
+#include "dballe/core/var.h"
 #include "dballe/types.h"
 #include <stdio.h>  // snprintf
 #include <limits>
@@ -168,7 +169,7 @@ bool CommonAPIImplementation::enqc(const char* param, std::string& res)
         if (!qcoutput.valid)
             error_consistency::throwf("enqc %s can only be called after a voglioancora", param);
         wreport::Varcode code = resolve_varcode(param + 1);
-        const Var* var = qcoutput.values.get_var(code);
+        const Var* var = qcoutput.values.maybe_var(code);
         if (!var) return false;
         if (!var->isset()) return false;
         res = var->enqc();

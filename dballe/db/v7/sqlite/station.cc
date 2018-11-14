@@ -121,14 +121,14 @@ void SQLiteStation::get_station_vars(Tracer<>& trc, int id_station, std::functio
         if (!stm->column_isnull(2))
         {
             TRACE("get_station_vars add attributes\n");
-            core::Values::decode(stm->column_blob(2), [&](unique_ptr<wreport::Var> a) { var->seta(move(a)); });
+            core::DBValues::decode(stm->column_blob(2), [&](unique_ptr<wreport::Var> a) { var->seta(move(a)); });
         }
 
         dest(move(var));
     });
 }
 
-void SQLiteStation::add_station_vars(Tracer<>& trc, int id_station, core::Values& values)
+void SQLiteStation::add_station_vars(Tracer<>& trc, int id_station, core::DBValues& values)
 {
     const char* query = R"(
         SELECT d.code, d.value

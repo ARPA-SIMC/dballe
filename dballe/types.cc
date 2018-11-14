@@ -1573,8 +1573,6 @@ std::ostream& operator<<(std::ostream& out, const DBStation& st)
     return out << (const Station&)st;
 }
 
-
-
 }
 
 namespace std {

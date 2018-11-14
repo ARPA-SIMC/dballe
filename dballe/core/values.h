@@ -5,11 +5,9 @@
  * Structures used as input to database insert functions.
  */
 
-#include <dballe/core/fwd.h>
-#include <dballe/types.h>
-#include <dballe/core/defs.h>
-#include <dballe/core/var.h>
-#include <wreport/varinfo.h>
+#include <dballe/fwd.h>
+#include <dballe/value.h>
+#include <dballe/var.h>
 #include <vector>
 #include <map>
 #include <functional>
@@ -17,89 +15,6 @@
 
 namespace dballe {
 namespace core {
-
-/**
- * A station or measured value
- */
-struct Value
-{
-    /// Database ID of the value
-    int data_id = MISSING_INT;
-
-    /// wreport::Var representing the value
-    wreport::Var* var = nullptr;
-
-    Value() = default;
-    Value(const Value& o) : data_id(o.data_id), var(o.var ? new wreport::Var(*o.var) : nullptr) {}
-    Value(Value&& o) : data_id(o.data_id), var(o.var) { o.var = nullptr; }
-
-    /// Construct from a wreport::Var
-    Value(const wreport::Var& var) : var(new wreport::Var(var)) {}
-
-    /// Construct from a wreport::Var
-    Value(int data_id, const wreport::Var& var) : data_id(data_id), var(new wreport::Var(var)) {}
-
-    /// Construct from a wreport::Var, taking ownership of it
-    Value(std::unique_ptr<wreport::Var>&& var) : var(var.release()) {}
-
-    /// Construct from a wreport::Var, taking ownership of it
-    Value(int data_id, std::unique_ptr<wreport::Var>&& var) : data_id(data_id), var(var.release()) {}
-
-    ~Value() { delete var; }
-
-    Value& operator=(const Value& o)
-    {
-        if (this == &o) return *this;
-        data_id = o.data_id;
-        delete var;
-        var = o.var ? new wreport::Var(*o.var) : nullptr;
-        return *this;
-    }
-    Value& operator=(Value&& o)
-    {
-        if (this == &o) return *this;
-        data_id = o.data_id;
-        delete var;
-        var = o.var;
-        o.var = nullptr;
-        return *this;
-    }
-
-    bool operator==(const Value& o) const
-    {
-        if (data_id != o.data_id) return false;
-        if (var == o.var) return true;
-        if (!var || !o.var) return false;
-        return *var == *o.var;
-    }
-
-    /// Return the varcode of the variable, or 0 if no variable has been set yet
-    wreport::Varcode code() const { return var ? var->code() : 0; }
-
-    /// Reset the database ID
-    void clear_ids() { data_id = MISSING_INT; }
-
-    /// Print the contents of this Value
-    void print(FILE* out) const;
-
-protected:
-    /// Fill from a wreport::Var
-    void set(const wreport::Var& v)
-    {
-        delete var;
-        var = new wreport::Var(v);
-    }
-
-    /// Fill from a wreport::Var, taking ownership of it
-    void set(std::unique_ptr<wreport::Var>&& v)
-    {
-        delete var;
-        var = v.release();
-    }
-
-    friend class Values;
-};
-
 namespace value {
 
 struct Encoder
@@ -133,14 +48,12 @@ struct Decoder
 
 }
 
-/**
- * Collection of Value objects, indexed by wreport::Varcode
- */
-class Values
+template<typename Value>
+class ValuesBase
 {
 public:
-    typedef std::vector<Value>::const_iterator const_iterator;
-    typedef std::vector<Value>::iterator iterator;
+    typedef typename std::vector<Value>::const_iterator const_iterator;
+    typedef typename std::vector<Value>::iterator iterator;
 
 protected:
     std::vector<Value> m_values;
@@ -148,7 +61,11 @@ protected:
     iterator insert_new(Value&& val);
 
 public:
-    Values() = default;
+    ValuesBase() = default;
+    ValuesBase(const ValuesBase&) = default;
+    ValuesBase(ValuesBase&&) = default;
+    ValuesBase& operator=(const ValuesBase&) = default;
+    ValuesBase& operator=(ValuesBase&&) = default;
 
     const_iterator begin() const { return m_values.begin(); }
     const_iterator end() const { return m_values.end(); }
@@ -159,41 +76,8 @@ public:
     size_t size() const { return m_values.size(); }
     bool empty() const { return m_values.empty(); }
     void clear() { return m_values.clear(); }
-    bool operator==(const Values& o) const;
-    bool operator!=(const Values& o) const;
-
-    /// Check if the variables are the same, regardless of the data_id
-    bool vars_equal(const Values& o) const;
-
-    // const Value& operator[](size_t idx) const { return m_values[idx]; }
-
-    /**
-     * Lookup a value, throwing an exception if not found
-     */
-    const Value& want(wreport::Varcode code) const;
-    const Value& want(const char* code) const { return want(resolve_varcode(code)); }
-    const Value& want(const std::string& code) const { return want(resolve_varcode(code)); }
-
-    /**
-     * Lookup a value, returning nullptr if not found
-     */
-    const Value* get(wreport::Varcode code) const;
-    const Value* get(const char* code) const { return get(resolve_varcode(code)); }
-    const Value* get(const std::string& code) const { return get(resolve_varcode(code)); }
-
-    /**
-     * Lookup a variable, returning nullptr if not found
-     */
-    const wreport::Var* get_var(wreport::Varcode code) const;
-    const wreport::Var* get_var(const char* code) const { return get_var(resolve_varcode(code)); }
-    const wreport::Var* get_var(const std::string& code) const { return get_var(resolve_varcode(code)); }
-
-    template<typename C, typename T> T enq(C code, const T& def)
-    {
-        if (const wreport::Var* var = get_var(code))
-            return var->enq(def);
-        return def;
-    }
+    bool operator==(const ValuesBase<Value>& o) const;
+    bool operator!=(const ValuesBase<Value>& o) const;
 
     /// Set from a wreport::Var
     void set(const wreport::Var&);
@@ -204,8 +88,11 @@ public:
     /// Set with a Value
     void set(Value&& val);
 
-    /// Set with all the variables from vals
-    void set(const Values& vals);
+    /// Remove one variable
+    void unset(wreport::Varcode code);
+
+    /// Add all the variables from vals
+    void merge(const ValuesBase<Value>& vals);
 
     /// Set a variable value, creating it if it does not exist
     template<typename C, typename T> void set(const C& code, const T& val) { this->set(newvar(code, val)); }
@@ -218,27 +105,60 @@ public:
         this->set(std::move(var));
     }
 
-    /// Remove one variable
-    void unset(wreport::Varcode code);
+    /**
+     * Lookup a value, throwing an exception if not found
+     */
+    const Value& value(wreport::Varcode code) const;
+    const Value& value(const char* code) const { return value(resolve_varcode(code)); }
+    const Value& value(const std::string& code) const { return value(resolve_varcode(code)); }
 
-    /// Set the database ID for the Value with this wreport::Varcode
-    void set_data_id(wreport::Varcode code, int data_id);
+    /**
+     * Lookup a wreport::Var, throwing an exception if not found
+     */
+    const wreport::Var& var(wreport::Varcode code) const;
+    const wreport::Var& var(const char* code) const { return var(resolve_varcode(code)); }
+    const wreport::Var& var(const std::string& code) const { return var(resolve_varcode(code)); }
 
-    /// Reset all the database IDs
-    void clear_ids()
+    /**
+     * Lookup a value, returning nullptr if not found
+     */
+    const Value* maybe_value(wreport::Varcode code) const;
+    const Value* maybe_value(const char* code) const { return maybe_value(resolve_varcode(code)); }
+    const Value* maybe_value(const std::string& code) const { return maybe_value(resolve_varcode(code)); }
+
+    /**
+     * Lookup a variable, returning nullptr if not found
+     */
+    const wreport::Var* maybe_var(wreport::Varcode code) const;
+    const wreport::Var* maybe_var(const char* code) const { return maybe_var(resolve_varcode(code)); }
+    const wreport::Var* maybe_var(const std::string& code) const { return maybe_var(resolve_varcode(code)); }
+
+    /**
+     * Get the value of a variable, or def if it is not set
+     */
+    template<typename C, typename T> T enq(C code, const T& def)
     {
-        for (auto& val : m_values)
-            val.clear_ids();
+        if (const wreport::Var* var = maybe_var(code))
+            return var->enq(def);
+        return def;
     }
 
     /**
-     * Move the Var contained in this Values as attributes to dest.
+     * Move all the Var as attributes to dest.
      *
-     * After this function is called, this Values will be empty.
+     * After this method is called, this Values will be empty.
      */
     void move_to_attributes(wreport::Var& dest);
 
+    /**
+     * Move all the Var passing them to the given function.
+     *
+     * After this method is called, this Values will be empty.
+     */
     void move_to(std::function<void(std::unique_ptr<wreport::Var>)> dest);
+
+    /// Print the contents of this Values
+    void print(FILE* out) const;
 
     /**
      * Encode these values in a DB-All.e specific binary representation
@@ -254,12 +174,50 @@ public:
      * Decode variables from a DB-All.e specific binary representation
      */
     static void decode(const std::vector<uint8_t>& buf, std::function<void(std::unique_ptr<wreport::Var>)> dest);
+};
 
-    /// Print the contents of this Values
-    void print(FILE* out) const;
+struct DBValues;
+
+/**
+ * Collection of Value objects, indexed by wreport::Varcode
+ */
+struct Values : public ValuesBase<Value>
+{
+    using ValuesBase<Value>::ValuesBase;
+
+    Values& operator=(DBValues&&);
+};
+
+
+/**
+ * Collection of DBValue objects, indexed by wreport::Varcode
+ */
+struct DBValues : public ValuesBase<DBValue>
+{
+public:
+    using ValuesBase<DBValue>::ValuesBase;
+
+    DBValues& operator=(Values&&);
+
+    /// Check if the variables are the same, regardless of the data_id
+    bool vars_equal(const DBValues& o) const;
+
+    /// Set the database ID for the Value with this wreport::Varcode
+    void set_data_id(wreport::Varcode code, int data_id);
+
+    /// Reset all the database IDs
+    void clear_ids()
+    {
+        for (auto& val : m_values)
+            val.data_id = MISSING_INT;
+    }
 };
 
 std::ostream& operator<<(std::ostream&, const Values&);
+std::ostream& operator<<(std::ostream&, const DBValues&);
+
+extern template struct ValuesBase<Value>;
+extern template struct ValuesBase<DBValue>;
 
 }
 }

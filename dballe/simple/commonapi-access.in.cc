@@ -1,4 +1,5 @@
 #include "commonapi.h"
+#include "dballe/core/var.h"
 #include <cstring>
 
 using namespace wreport;

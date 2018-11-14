@@ -6,8 +6,14 @@
  */
 
 #include <dballe/fwd.h>
+#include <wreport/varinfo.h>
+#include <memory>
 #include <iosfwd>
 #include <functional>
+
+namespace wreport {
+class Var;
+}
 
 namespace dballe {
 struct CSVWriter;
@@ -891,7 +897,6 @@ struct DBStation : public Station
 };
 
 std::ostream& operator<<(std::ostream&, const DBStation&);
-
 
 }
 

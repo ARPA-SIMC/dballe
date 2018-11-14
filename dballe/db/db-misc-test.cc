@@ -81,7 +81,7 @@ this->add_method("insert", [](Fixture& f) {
 
     core::Values attrs;
     attrs.set("B33007", 50);
-    wassert(f.tr->attr_insert_data(ds.data["synop"].values.want(WR_VAR(0, 12, 101)).data_id, attrs));
+    wassert(f.tr->attr_insert_data(ds.data["synop"].values.value(WR_VAR(0, 12, 101)).data_id, attrs));
 
     // Query and verify the station data
     {
@@ -105,7 +105,7 @@ this->add_method("insert", [](Fixture& f) {
     {
         int count = 0;
         unique_ptr<Var> attr;
-        wassert(f.tr->attr_query_data(ds.data["synop"].values.want(WR_VAR(0, 12, 101)).data_id, [&](std::unique_ptr<wreport::Var>&& var) {
+        wassert(f.tr->attr_query_data(ds.data["synop"].values.value(WR_VAR(0, 12, 101)).data_id, [&](std::unique_ptr<wreport::Var>&& var) {
             ++count;
             attr = move(var);
         }));
@@ -128,8 +128,8 @@ this->add_method("insert_perms", [](Fixture& f) {
         wassert(actual(e.what()).contains("station not found"));
     }
     wassert(actual(oldf.data["synop"].station.id) == MISSING_INT);
-    wassert(actual(oldf.data["synop"].values.want("B01011").data_id) == MISSING_INT);
-    wassert(actual(oldf.data["synop"].values.want("B01012").data_id) == MISSING_INT);
+    wassert(actual(oldf.data["synop"].values.value("B01011").data_id) == MISSING_INT);
+    wassert(actual(oldf.data["synop"].values.value("B01012").data_id) == MISSING_INT);
     oldf.data["synop"].clear_ids();
 
     // Insert the record
@@ -444,17 +444,17 @@ this->add_method("attrs", [](Fixture& f) {
     qc.clear();
     wassert(actual(run_attr_query_data(f.tr, context_id, qc)) == 3);
 
-    const auto* attr = qc.get("B33002");
+    const auto* attr = qc.maybe_var("B33002");
     wassert(actual(attr).istrue());
-    wassert(actual(attr->var->enqi()) == 2);
+    wassert(actual(attr->enqi()) == 2);
 
-    attr = qc.get("B33003");
+    attr = qc.maybe_var("B33003");
     wassert(actual(attr).istrue());
-    wassert(actual(attr->var->enqi()) == 5);
+    wassert(actual(attr->enqi()) == 5);
 
-    attr = qc.get("B33005");
+    attr = qc.maybe_var("B33005");
     wassert(actual(attr).istrue());
-    wassert(actual(attr->var->enqi()) == 33);
+    wassert(actual(attr->enqi()) == 33);
 
     // Delete a couple of items
     vector<Varcode> codes;
@@ -472,11 +472,11 @@ this->add_method("attrs", [](Fixture& f) {
     qc.clear();
     wassert(actual(run_attr_query_data(f.tr, context_id, qc)) == 1);
 
-    wassert(actual(qc.get("B33002")).isfalse());
-    wassert(actual(qc.get("B33005")).isfalse());
-    attr = qc.get("B33003");
+    wassert(actual(qc.maybe_var("B33002")).isfalse());
+    wassert(actual(qc.maybe_var("B33005")).isfalse());
+    attr = qc.maybe_var("B33003");
     wassert(actual(attr).istrue());
-    wassert(actual(attr->var->enqi()) == 5);
+    wassert(actual(attr->enqi()) == 5);
     /*dba_error_remove_callback(DBA_ERR_NONE, crash, 0);*/
 });
 this->add_method("query_station", [](Fixture& f) {
@@ -508,7 +508,7 @@ this->add_method("attrs1", [](Fixture& f) {
     qc.set("B05021",  8);
     qc.set("B07025",  9);
     qc.set("B05022", 10);
-    f.tr->attr_insert_data(oldf.data["synop"].values.want(WR_VAR(0, 1, 11)).data_id, qc);
+    f.tr->attr_insert_data(oldf.data["synop"].values.value(WR_VAR(0, 1, 11)).data_id, qc);
 
     // Query back the B01011 variable to read the attr reference id
     auto cur = f.tr->query_data(*query_from_string("var=B01011"));
@@ -522,16 +522,16 @@ this->add_method("attrs1", [](Fixture& f) {
 
     // Check that all the attributes come out
     wassert(actual(qc.size()) == 10);
-    wassert(actual_varcode(qc.want("B01007").var->code()) == WR_VAR(0,   1,  7)); wassert(actual(*qc.want("B01007").var) ==  1);
-    wassert(actual_varcode(qc.want("B02048").var->code()) == WR_VAR(0,   2, 48)); wassert(actual(*qc.want("B02048").var) ==  2);
-    wassert(actual_varcode(qc.want("B05021").var->code()) == WR_VAR(0,   5, 21)); wassert(actual(*qc.want("B05021").var) ==  8);
-    wassert(actual_varcode(qc.want("B05022").var->code()) == WR_VAR(0,   5, 22)); wassert(actual(*qc.want("B05022").var) == 10);
-    wassert(actual_varcode(qc.want("B05040").var->code()) == WR_VAR(0,   5, 40)); wassert(actual(*qc.want("B05040").var) ==  3);
-    wassert(actual_varcode(qc.want("B05041").var->code()) == WR_VAR(0,   5, 41)); wassert(actual(*qc.want("B05041").var) ==  4);
-    wassert(actual_varcode(qc.want("B05043").var->code()) == WR_VAR(0,   5, 43)); wassert(actual(*qc.want("B05043").var) ==  5);
-    wassert(actual_varcode(qc.want("B07024").var->code()) == WR_VAR(0,   7, 24)); wassert(actual(*qc.want("B07024").var) ==  7);
-    wassert(actual_varcode(qc.want("B07025").var->code()) == WR_VAR(0,   7, 25)); wassert(actual(*qc.want("B07025").var) ==  9);
-    wassert(actual_varcode(qc.want("B33032").var->code()) == WR_VAR(0,  33, 32)); wassert(actual(*qc.want("B33032").var) ==  6);
+    wassert(actual_varcode(qc.var("B01007").code()) == WR_VAR(0,   1,  7)); wassert(actual(qc.var("B01007")) ==  1);
+    wassert(actual_varcode(qc.var("B02048").code()) == WR_VAR(0,   2, 48)); wassert(actual(qc.var("B02048")) ==  2);
+    wassert(actual_varcode(qc.var("B05021").code()) == WR_VAR(0,   5, 21)); wassert(actual(qc.var("B05021")) ==  8);
+    wassert(actual_varcode(qc.var("B05022").code()) == WR_VAR(0,   5, 22)); wassert(actual(qc.var("B05022")) == 10);
+    wassert(actual_varcode(qc.var("B05040").code()) == WR_VAR(0,   5, 40)); wassert(actual(qc.var("B05040")) ==  3);
+    wassert(actual_varcode(qc.var("B05041").code()) == WR_VAR(0,   5, 41)); wassert(actual(qc.var("B05041")) ==  4);
+    wassert(actual_varcode(qc.var("B05043").code()) == WR_VAR(0,   5, 43)); wassert(actual(qc.var("B05043")) ==  5);
+    wassert(actual_varcode(qc.var("B07024").code()) == WR_VAR(0,   7, 24)); wassert(actual(qc.var("B07024")) ==  7);
+    wassert(actual_varcode(qc.var("B07025").code()) == WR_VAR(0,   7, 25)); wassert(actual(qc.var("B07025")) ==  9);
+    wassert(actual_varcode(qc.var("B33032").code()) == WR_VAR(0,  33, 32)); wassert(actual(qc.var("B33032")) ==  6);
 });
 this->add_method("longitude_wrap", [](Fixture& f) {
     // Test longitude wrapping around
@@ -663,7 +663,7 @@ this->add_method("update", [](Fixture& f) {
     f.tr->insert_data(dataset, true, true);
     core::Values attrs;
     attrs.set("B33007", 50);
-    f.tr->attr_insert_data(dataset.values.want("B01012").data_id, attrs);
+    f.tr->attr_insert_data(dataset.values.value("B01012").data_id, attrs);
 
     core::Query q;
     q.latrange.set(12.34560, 12.34560);
@@ -685,7 +685,7 @@ this->add_method("update", [](Fixture& f) {
     // Query the attributes and check that they are there
     core::Values qattrs;
     wassert(actual(run_attr_query_data(f.tr, dynamic_cast<db::CursorData*>(cur.get())->attr_reference_id(), qattrs)) == 1);
-    wassert(actual(qattrs.want("B33007").var->enq(MISSING_INT)) == 50);
+    wassert(actual(qattrs.var("B33007").enq(MISSING_INT)) == 50);
 
     // Update it
     core::Data update;
