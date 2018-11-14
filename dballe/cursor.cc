@@ -23,6 +23,7 @@ struct EmptyCursor : public Interface
 
 struct EmptyCursorStation : public EmptyCursor<dballe::CursorStation>
 {
+    DBValues get_values() const override { return DBValues(); }
 };
 
 struct EmptyCursorStationData : public EmptyCursor<dballe::CursorStationData>

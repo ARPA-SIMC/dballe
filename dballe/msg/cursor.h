@@ -52,6 +52,14 @@ struct CursorStation : public dballe::CursorStation
     bool enqf(const char* key, unsigned len, std::string& res) const override;
 
     DBStation get_station() const override { return station; }
+
+    DBValues get_values() const override
+    {
+        DBValues res;
+        for (const auto& val: station_ctx->data)
+            res.set(*val);
+        return res;
+    }
 };
 
 

@@ -2,6 +2,7 @@
 #define DBALLE_CURSOR_H
 
 #include <dballe/fwd.h>
+#include <dballe/values.h>
 #include <wreport/var.h>
 #include <memory>
 #include <vector>
@@ -56,6 +57,11 @@ struct Cursor
 /// Cursor iterating over stations
 struct CursorStation : public Cursor
 {
+    /**
+     * Get the station data values
+     */
+    virtual DBValues get_values() const = 0;
+
     /// Create a CursorStation iterating on no results
     static std::unique_ptr<CursorStation> make_empty();
 };
