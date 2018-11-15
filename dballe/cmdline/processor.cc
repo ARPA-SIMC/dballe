@@ -500,8 +500,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     // Then, context overwrite is allowed.
                     // msg.add_context(std::move(ctx));
                     msg::Context& ctx2 = msg.obtain_context(ctx->level, ctx->trange);
-                    for (const auto& ci: ctx->data)
-                        ctx2.set(*ci);
+                    ctx2.values.merge(ctx->values);
                     state.pop();
                     break;
                 }
@@ -555,7 +554,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_KEY:
                     var->unset();
-                    ctx->set(*var);
+                    ctx->values.set(*var);
                     state.pop();
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY:
@@ -572,7 +571,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
             switch (s) {
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_KEY:
                     var->set(val);
-                    ctx->set(*var);
+                    ctx->values.set(*var);
                     state.pop();
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY:
@@ -632,7 +631,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     // Var::seti on decimal vars is considered as the value
                     // with the scale already applied
                     var->setf(to_string(val).c_str());
-                    ctx->set(*var);
+                    ctx->values.set(*var);
                     state.pop();
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY:
@@ -649,7 +648,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
             switch (s) {
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_KEY:
                     var->set(val);
-                    ctx->set(*var);
+                    ctx->values.set(*var);
                     state.pop();
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY:
@@ -723,7 +722,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_KEY:
                     var->set(val);
-                    ctx->set(*var);
+                    ctx->values.set(*var);
                     state.pop();
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING:

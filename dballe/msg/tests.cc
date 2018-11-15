@@ -259,7 +259,7 @@ void StripAttrs::tweak(Messages& msgs)
     {
         auto m = Msg::downcast(mi);
         for (auto& ctx: m->data)
-            for (auto& var: ctx->data)
+            for (auto& var: ctx->values)
                 for (auto code: codes)
                     var->unseta(code);
     }
@@ -283,7 +283,7 @@ void StripSubstituteAttrs::tweak(Messages& msgs)
     {
         auto m = Msg::downcast(mi);
         for (auto& ctx: m->data)
-            for (auto& var: ctx->data)
+            for (auto& var: ctx->values)
                 var->unseta(var->code());
     }
 }
@@ -296,8 +296,8 @@ void StripVars::tweak(Messages& msgs)
         for (auto ci = m->data.begin(); ci != m->data.end(); )
         {
             for (const auto& code: codes)
-                (*ci)->remove(code);
-            if ((*ci)->data.empty())
+                (*ci)->values.unset(code);
+            if ((*ci)->values.empty())
                 ci = m->data.erase(ci);
             else
                 ++ci;
@@ -317,17 +317,17 @@ void RoundLegacyVars::tweak(Messages& msgs)
         auto m = Msg::downcast(mi);
         for (auto& ctx: m->data)
         {
-            if (Var* var = ctx->edit(WR_VAR(0, 12, 101)))
+            if (Var* var = ctx->values.maybe_var(WR_VAR(0, 12, 101)))
             {
                 Var var1(table->query(WR_VAR(0, 12, 1)), *var);
                 var->set(var1);
             }
-            if (Var* var = ctx->edit(WR_VAR(0, 12, 103)))
+            if (Var* var = ctx->values.maybe_var(WR_VAR(0, 12, 103)))
             {
                 Var var1(table->query(WR_VAR(0, 12, 3)), *var);
                 var->set(var1);
             }
-            if (Var* var = ctx->edit(WR_VAR(0,  7,  30)))
+            if (Var* var = ctx->values.maybe_var(WR_VAR(0,  7,  30)))
             {
                 Var var1(table->query(WR_VAR(0, 7, 1)), *var);
                 var->set(var1);
@@ -357,37 +357,37 @@ void RemoveSynopWMOOnlyVars::tweak(Messages& msgs)
         for (vector<msg::Context*>::iterator ci = m->data.begin(); ci != m->data.end(); )
         {
             msg::Context& c = **ci;
-            c.remove(WR_VAR(0, 20, 62)); // State of the ground (with/without snow)
-            c.remove(WR_VAR(0, 14, 31)); // Total sunshine
-            c.remove(WR_VAR(0, 13, 33)); // Evaporation/evapotranspiration
-            c.remove(WR_VAR(0, 12,121)); // Ground minimum temperature
-            c.remove(WR_VAR(0, 11, 43)); // Maximum wind gust
-            c.remove(WR_VAR(0, 11, 41)); // Maximum wind gust
-            c.remove(WR_VAR(0, 10,  8)); // Geopotential
-            c.remove(WR_VAR(0,  7, 31)); // Height of barometer
-            c.remove(WR_VAR(0,  2,  4)); // Type of instrumentation for evaporation measurement
-            c.remove(WR_VAR(0,  2,  2)); // Type of instrumentation for wind measurement
-            c.remove(WR_VAR(0,  1, 19)); // Long station or site name
-            c.remove(WR_VAR(0, 14,  2)); // Radiation data
-            c.remove(WR_VAR(0, 14,  4)); // Radiation data
-            c.remove(WR_VAR(0, 14, 16)); // Radiation data
-            c.remove(WR_VAR(0, 14, 28)); // Radiation data
-            c.remove(WR_VAR(0, 14, 29)); // Radiation data
-            c.remove(WR_VAR(0, 14, 30)); // Radiation data
-            if (c.find(WR_VAR(0, 13, 11)))
+            c.values.unset(WR_VAR(0, 20, 62)); // State of the ground (with/without snow)
+            c.values.unset(WR_VAR(0, 14, 31)); // Total sunshine
+            c.values.unset(WR_VAR(0, 13, 33)); // Evaporation/evapotranspiration
+            c.values.unset(WR_VAR(0, 12,121)); // Ground minimum temperature
+            c.values.unset(WR_VAR(0, 11, 43)); // Maximum wind gust
+            c.values.unset(WR_VAR(0, 11, 41)); // Maximum wind gust
+            c.values.unset(WR_VAR(0, 10,  8)); // Geopotential
+            c.values.unset(WR_VAR(0,  7, 31)); // Height of barometer
+            c.values.unset(WR_VAR(0,  2,  4)); // Type of instrumentation for evaporation measurement
+            c.values.unset(WR_VAR(0,  2,  2)); // Type of instrumentation for wind measurement
+            c.values.unset(WR_VAR(0,  1, 19)); // Long station or site name
+            c.values.unset(WR_VAR(0, 14,  2)); // Radiation data
+            c.values.unset(WR_VAR(0, 14,  4)); // Radiation data
+            c.values.unset(WR_VAR(0, 14, 16)); // Radiation data
+            c.values.unset(WR_VAR(0, 14, 28)); // Radiation data
+            c.values.unset(WR_VAR(0, 14, 29)); // Radiation data
+            c.values.unset(WR_VAR(0, 14, 30)); // Radiation data
+            if (c.values.maybe_var(WR_VAR(0, 13, 11)))
             {
                 // Keep only one total precipitation measurement common
                 // to all subsets
                 if (seen_tprec_trange == MISSING_INT)
                     seen_tprec_trange = c.trange.p2;
                 else if (c.trange.p2 != seen_tprec_trange)
-                    c.remove(WR_VAR(0, 13, 11));
+                    c.values.unset(WR_VAR(0, 13, 11));
             }
             if (c.trange == Trange(4, 0, 86400))
-                c.remove(WR_VAR(0, 10, 60)); // 24h pressure change
+                c.values.unset(WR_VAR(0, 10, 60)); // 24h pressure change
             if (c.trange.pind == 2 || c.trange.pind == 3)
-                c.remove(WR_VAR(0, 12, 101)); // min and max temperature
-            if (c.data.empty())
+                c.values.unset(WR_VAR(0, 12, 101)); // min and max temperature
+            if (c.values.empty())
                 ci = m->data.erase(ci);
             else
                 ++ci;
@@ -403,21 +403,21 @@ void RemoveTempWMOOnlyVars::tweak(Messages& msgs)
         for (vector<msg::Context*>::iterator ci = m->data.begin(); ci != m->data.end(); )
         {
             msg::Context& c = **ci;
-            c.remove(WR_VAR(0, 22, 43)); // Sea/water temperature
-            c.remove(WR_VAR(0, 11, 62)); // Absolute wind shear layer above
-            c.remove(WR_VAR(0, 11, 61)); // Absolute wind shear layer below
-            c.remove(WR_VAR(0,  7, 31)); // Height of barometer above MSL
-            c.remove(WR_VAR(0,  7,  7)); // Height (of release above MSL)
-            c.remove(WR_VAR(0,  6, 15)); // Longitude displacement
-            c.remove(WR_VAR(0,  5, 15)); // Latitude displacement
-            c.remove(WR_VAR(0,  4, 86)); // Long time period or displacement
-            c.remove(WR_VAR(0,  4,  6)); // Second
-            c.remove(WR_VAR(0,  2, 14)); // Tracking technique / status of system
-            c.remove(WR_VAR(0,  2, 13)); // Solar and infrared radiation correction
-            c.remove(WR_VAR(0,  2, 12)); // Radiosonde computational method
-            c.remove(WR_VAR(0,  2,  3)); // Type of measuring equipment
+            c.values.unset(WR_VAR(0, 22, 43)); // Sea/water temperature
+            c.values.unset(WR_VAR(0, 11, 62)); // Absolute wind shear layer above
+            c.values.unset(WR_VAR(0, 11, 61)); // Absolute wind shear layer below
+            c.values.unset(WR_VAR(0,  7, 31)); // Height of barometer above MSL
+            c.values.unset(WR_VAR(0,  7,  7)); // Height (of release above MSL)
+            c.values.unset(WR_VAR(0,  6, 15)); // Longitude displacement
+            c.values.unset(WR_VAR(0,  5, 15)); // Latitude displacement
+            c.values.unset(WR_VAR(0,  4, 86)); // Long time period or displacement
+            c.values.unset(WR_VAR(0,  4,  6)); // Second
+            c.values.unset(WR_VAR(0,  2, 14)); // Tracking technique / status of system
+            c.values.unset(WR_VAR(0,  2, 13)); // Solar and infrared radiation correction
+            c.values.unset(WR_VAR(0,  2, 12)); // Radiosonde computational method
+            c.values.unset(WR_VAR(0,  2,  3)); // Type of measuring equipment
 
-            if (c.data.empty())
+            if (c.values.empty())
                 ci = m->data.erase(ci);
             else
                 ++ci;
@@ -442,7 +442,7 @@ void TruncStName::tweak(Messages& msgs)
     {
         auto m = Msg::downcast(mi);
         if (msg::Context* c = m->edit_context(Level(), Trange()))
-            if (const Var* orig = c->find(WR_VAR(0, 1, 19)))
+            if (const Var* orig = c->values.maybe_var(WR_VAR(0, 1, 19)))
                 if (orig->isset())
                 {
                     const char* val = orig->enqc();
@@ -450,7 +450,7 @@ void TruncStName::tweak(Messages& msgs)
                     strncpy(buf, val, 20);
                     buf[19] = '>';
                     buf[20] = 0;
-                    c->set(Var(orig->info(), buf));
+                    c->values.set(Var(orig->info(), buf));
                 }
     }
 }
@@ -466,7 +466,7 @@ void RoundGeopotential::tweak(Messages& msgs)
         auto m = Msg::downcast(mi);
         for (auto& ctx: m->data)
         {
-            if (Var* orig = ctx->edit(WR_VAR(0, 10, 8)))
+            if (Var* orig = ctx->values.maybe_var(WR_VAR(0, 10, 8)))
             {
                 // Convert to B10009 (new GTS TEMP templates)
                 Var var2(table->query(WR_VAR(0, 10, 9)), *orig);
@@ -493,7 +493,7 @@ void HeightToGeopotential::tweak(Messages& msgs)
         {
             if (ctx->level.ltype1 != 102) continue;
             Var var(table->query(WR_VAR(0, 10, 8)), round(ctx->level.l1 * 9.807 / 10) * 10);
-            ctx->set(var);
+            ctx->values.set(var);
         }
     }
 }
@@ -504,7 +504,7 @@ void RoundVSS::tweak(Messages& msgs)
     {
         auto m = Msg::downcast(mi);
         for (auto& ctx: m->data)
-            if (Var* orig = ctx->edit(WR_VAR(0, 8, 42)))
+            if (Var* orig = ctx->values.maybe_var(WR_VAR(0, 8, 42)))
                 orig->seti(convert_BUFR08001_to_BUFR08042(convert_BUFR08042_to_BUFR08001(orig->enqi())));
     }
 }

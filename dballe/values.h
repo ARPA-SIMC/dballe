@@ -43,6 +43,7 @@ public:
     size_t size() const { return m_values.size(); }
     bool empty() const { return m_values.empty(); }
     void clear() { return m_values.clear(); }
+    void reserve(typename std::vector<Value>::size_type size) { m_values.reserve(size); }
     bool operator==(const ValuesBase<Value>& o) const;
     bool operator!=(const ValuesBase<Value>& o) const;
 
@@ -87,6 +88,13 @@ public:
     const wreport::Var& var(const std::string& code) const { return var(resolve_varcode(code)); }
 
     /**
+     * Lookup a wreport::Var, throwing an exception if not found (non-const version)
+     */
+    wreport::Var& var(wreport::Varcode code);
+    wreport::Var& var(const char* code) { return var(resolve_varcode(code)); }
+    wreport::Var& var(const std::string& code) { return var(resolve_varcode(code)); }
+
+    /**
      * Lookup a value, returning nullptr if not found
      */
     const Value* maybe_value(wreport::Varcode code) const;
@@ -99,6 +107,13 @@ public:
     const wreport::Var* maybe_var(wreport::Varcode code) const;
     const wreport::Var* maybe_var(const char* code) const { return maybe_var(resolve_varcode(code)); }
     const wreport::Var* maybe_var(const std::string& code) const { return maybe_var(resolve_varcode(code)); }
+
+    /**
+     * Lookup a variable, returning nullptr if not found (non-const version)
+     */
+    wreport::Var* maybe_var(wreport::Varcode code);
+    wreport::Var* maybe_var(const char* code) { return maybe_var(resolve_varcode(code)); }
+    wreport::Var* maybe_var(const std::string& code) { return maybe_var(resolve_varcode(code)); }
 
     /**
      * Get the value of a variable, or def if it is not set
@@ -156,7 +171,10 @@ struct DBValues;
 struct Values : public values::ValuesBase<Value>
 {
     using ValuesBase<Value>::ValuesBase;
+    explicit Values(const DBValues&);
+    explicit Values(DBValues&&);
 
+    Values& operator=(const DBValues&);
     Values& operator=(DBValues&&);
 };
 
@@ -168,7 +186,10 @@ struct DBValues : public values::ValuesBase<DBValue>
 {
 public:
     using ValuesBase<DBValue>::ValuesBase;
+    explicit DBValues(const Values&);
+    explicit DBValues(Values&&);
 
+    DBValues& operator=(const Values&);
     DBValues& operator=(Values&&);
 
     /// Check if the variables are the same, regardless of the data_id

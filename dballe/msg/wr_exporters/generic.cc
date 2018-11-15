@@ -148,9 +148,9 @@ struct Generic : public Template
         // Then the station context
         if (const msg::Context* ctx = msg.find_station_context())
         {
-            for (size_t j = 0; j < ctx->data.size(); ++j)
+            for (const auto& val: ctx->values)
             {
-                const Var& var = *(ctx->data[j]);
+                const Var& var = *val;
 
                 // Do not add rep_memo and datetime twice
                 switch (var.code())
@@ -178,9 +178,9 @@ struct Generic : public Template
             const msg::Context& ctx = *msg.data[i];
             if (ctx.is_station()) continue;
 
-            for (size_t j = 0; j < ctx.data.size(); ++j)
+            for (const auto& val: ctx.values)
             {
-                const Var& var = *ctx.data[j];
+                const Var& var = *val;
                 if (!var.isset()) continue; // Don't add undef vars
                 if (&var == repmemo) continue; // Don't add rep_memo again
 

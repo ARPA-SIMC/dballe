@@ -326,14 +326,14 @@ bool Msg::remove_context(const Level& lev, const Trange& tr)
 const Var* Msg::get_impl(const Level& lev, const Trange& tr, Varcode code) const
 {
     const msg::Context* ctx = find_context(lev, tr);
-    if (ctx == NULL) return NULL;
-    return ctx->find(code);
+    if (!ctx) return nullptr;
+    return ctx->values.maybe_var(code);
 }
 
 bool Msg::foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)> dest) const
 {
     for (const auto& ctx: data)
-        for (const auto& var: ctx->data)
+        for (const auto& var: ctx->values)
             if (!dest(ctx->level, ctx->trange, *var))
                 return false;
     return true;
@@ -343,18 +343,20 @@ wreport::Var* Msg::edit(wreport::Varcode code, const Level& lev, const Trange& t
 {
     msg::Context* ctx = edit_context(lev, tr);
     if (ctx == NULL) return NULL;
-    return ctx->edit(code);
+    return ctx->values.maybe_var(code);
 }
 
+#if 0
 bool Msg::remove(wreport::Varcode code, const Level& lev, const Trange& tr)
 {
     msg::Context* ctx = edit_context(lev, tr);
     if (!ctx) return false;
     if (!ctx->remove(code)) return false;
-    if (ctx->data.empty())
+    if (ctx->values.empty())
         remove_context(lev, tr);
     return true;
 }
+#endif
 
 const Var* Msg::get(int id) const
 {
@@ -449,10 +451,9 @@ void Msg::to_csv(CSVWriter& out) const
             ci != data.end(); ++ci)
     {
         msg::Context& c = **ci;
-        for (std::vector<wreport::Var*>::const_iterator vi = c.data.begin();
-                vi != c.data.end(); ++vi)
+        for (const auto& val: c.values)
         {
-            Var& v = **vi;
+            const Var& v = *val;
 
             vc.print(out, c);
 
@@ -697,7 +698,7 @@ unsigned Msg::diff(const Message& o) const
                 ++i1;
                 ++i2;
             } else if (cmp < 0) {
-                if (data[i1]->data.size() != 0)
+                if (!data[i1]->values.empty())
                 {
                     notes::log() << "Context ";
                     context_summary(*data[i1], notes::log());
@@ -706,7 +707,7 @@ unsigned Msg::diff(const Message& o) const
                 }
                 ++i1;
             } else {
-                if (msg.data[i2]->data.size() != 0)
+                if (!msg.data[i2]->values.empty())
                 {
                     notes::log() << "Context ";
                     context_summary(*msg.data[i2], notes::log());
@@ -729,7 +730,7 @@ void Msg::set(int shortcut, const wreport::Var& var)
 void Msg::set_impl(const Level& lev, const Trange& tr, std::unique_ptr<Var> var)
 {
     msg::Context& ctx = obtain_context(lev, tr);
-    ctx.set(std::move(var));
+    ctx.values.set(std::move(var));
 }
 
 void Msg::seti(const Level& lev, const Trange& tr, Varcode code, int val, int conf)
@@ -828,9 +829,9 @@ void Msg::sounding_pack_levels(Msg& dst) const
         }
 
         // FIXME: shouldn't this also set significance bits in the output level?
-        for (size_t j = 0; j < ctx.data.size(); ++j)
+        for (const auto& val: ctx.values)
         {
-            unique_ptr<Var> copy(new Var(*ctx.data[j]));
+            unique_ptr<Var> copy(new Var(*val));
             dst.set(Level(ctx.level.ltype1, ctx.level.l1), ctx.trange, std::move(copy));
         }
     }
@@ -856,14 +857,12 @@ MatchedMsg::~MatchedMsg()
 {
 }
 
-matcher::Result MatchedMsg::match_var_id(int val) const
+matcher::Result MatchedMsg::match_var_id(int value) const
 {
-    for (std::vector<msg::Context*>::const_iterator ci = m.data.begin();
-            ci != m.data.end(); ++ci)
-        for (std::vector<wreport::Var*>::const_iterator vi = (*ci)->data.begin();
-                vi != (*ci)->data.end(); ++vi)
-            if (const Var* a = (*vi)->enqa(WR_VAR(0, 33, 195)))
-                if (a->enqi() == val)
+    for (const auto& ctx: m.data)
+        for (const auto& val: ctx->values)
+            if (const Var* a = val->enqa(WR_VAR(0, 33, 195)))
+                if (a->enqi() == value)
                     return matcher::MATCH_YES;
     return matcher::MATCH_NA;
 }

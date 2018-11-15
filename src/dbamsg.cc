@@ -337,7 +337,7 @@ struct JSONMsgs : public cmdline::Action
                 }
                 json.add("vars");
                 json.start_mapping();
-                for (const auto& var: ctx->data) {
+                for (const auto& var: ctx->values) {
                     json.add(wreport::varcode_format(var->code()));
                     json.start_mapping();
                     json.add("v");

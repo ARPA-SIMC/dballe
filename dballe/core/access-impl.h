@@ -4,7 +4,6 @@
 #include <dballe/types.h>
 #include <dballe/value.h>
 #include <dballe/core/var.h>
-#include <dballe/msg/context.h>
 
 namespace {
 
@@ -78,22 +77,6 @@ struct MaybeBase
             return;
         wreport::Varcode code = dballe::resolve_varcode(key);
         const wreport::Var* var = values.maybe_var(code);
-        _found = true;
-        if (var && var->isset())
-        {
-            _missing = false;
-            _val = var->enq<T>();
-        }
-    }
-
-    void maybe_search_values(const char* key, const dballe::msg::Context* ctx)
-    {
-        if (_found)
-            return;
-        if (!ctx)
-            return;
-        wreport::Varcode code = dballe::resolve_varcode(key);
-        const wreport::Var* var = ctx->find(code);
         _found = true;
         if (var && var->isset())
         {

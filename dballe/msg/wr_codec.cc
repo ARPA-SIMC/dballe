@@ -307,7 +307,7 @@ void Template::add(Varcode code, const msg::Context* ctx, Varcode srccode) const
 {
     if (!ctx)
         subset->store_variable_undef(code);
-    else if (const Var* var = ctx->find(srccode))
+    else if (const Var* var = ctx->values.maybe_var(srccode))
         subset->store_variable(code, *var);
     else
         subset->store_variable_undef(code);
@@ -317,7 +317,7 @@ void Template::add(Varcode code, const msg::Context* ctx) const
 {
     if (!ctx)
         subset->store_variable_undef(code);
-    else if (const Var* var = ctx->find(code))
+    else if (const Var* var = ctx->values.maybe_var(code))
         subset->store_variable(*var);
     else
         subset->store_variable_undef(code);
@@ -344,7 +344,7 @@ void Template::add(wreport::Varcode code, const wreport::Var* var) const
 const Var* Template::find_station_var(wreport::Varcode code) const
 {
     if (!c_station) return nullptr;
-    return c_station->find(code);
+    return c_station->values.maybe_var(code);
 }
 
 void Template::do_station_name(wreport::Varcode dstcode) const

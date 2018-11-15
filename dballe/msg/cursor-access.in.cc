@@ -24,7 +24,7 @@ bool CursorStation::enqi(const char* key, unsigned len, int& res) const
         case "lon":         r.set(station.coords.lon);
         default: break;
     }
-    r.maybe_search_values(key, station_ctx);
+    r.maybe_search_values(key, station_ctx->values);
     return !r.missing();
 }
 
@@ -41,7 +41,7 @@ bool CursorStation::enqd(const char* key, unsigned len, double& res) const
         case "lon":         r.set(station.coords.dlon());
         default: break;
     }
-    r.maybe_search_values(key, station_ctx);
+    r.maybe_search_values(key, station_ctx->values);
     return !r.missing();
 }
 
@@ -58,7 +58,7 @@ bool CursorStation::enqs(const char* key, unsigned len, std::string& res) const
         case "lon":         r.set(station.coords.lon);
         default: break;
     }
-    r.maybe_search_values(key, station_ctx);
+    r.maybe_search_values(key, station_ctx->values);
     return !r.missing();
 }
 
@@ -75,7 +75,7 @@ bool CursorStation::enqf(const char* key, unsigned len, std::string& res) const
         case "lon":         r.set_latlon(station.coords.dlon());
         default: break;
     }
-    r.maybe_search_values(key, station_ctx);
+    r.maybe_search_values(key, station_ctx->values);
     return !r.missing();
 }
 

@@ -9,6 +9,7 @@
 
 #include <dballe/var.h>
 #include <dballe/types.h>
+#include <dballe/values.h>
 #include <vector>
 #include <memory>
 
@@ -29,17 +30,14 @@ protected:
 public:
     Level level;
     Trange trange;
-
-    /**
-     * The variables in this context
-     */
-    std::vector<wreport::Var*> data;
+    Values values;
 
     Context(const Level& lev, const Trange& tr);
-    Context(const Context& c);
-    ~Context();
+    Context(const Context& c) = default;
+    Context(Context&& c) = default;
 
-    Context& operator=(const Context& src);
+    Context& operator=(const Context& src) = default;
+    Context& operator=(Context&& src) = default;
 
     /// @return true if this is the station context, else false
     bool is_station() const;
@@ -62,88 +60,6 @@ public:
      *   -1 if l < ltype,l1,l2; 0 if l == ltype,l1,l2; 1 if l > ltype,l1,l2
      */
     int compare(const Level& lev, const Trange& tr) const;
-
-    /**
-     * Add a Var to the level
-     *
-     * If a variable exists with the same code, it is replaced
-     *
-     * @param var
-     *   The variable to add or replace.
-     */
-    void set(const wreport::Var& var);
-
-    /**
-     * Add a Var to the level
-     *
-     * If a variable exists with the same code, it is replaced
-     *
-     * The Context will take ownership of memory management for \a var
-     *
-     * @param var
-     *   The variable to add or replace.
-     */
-    void set(std::unique_ptr<wreport::Var> var);
-
-    /**
-     * Add or replace an integer value
-     *
-     * @param code
-     *   The wreport::Varcode of the destination value.
-     * @param val
-     *   The integer value of the data
-     */
-    void seti(wreport::Varcode code, int val);
-
-    /**
-     * Add or replace a double value
-     *
-     * @param code
-     *   The wreport::Varcode of the destination value.
-     * @param val
-     *   The double value of the data
-     */
-    void setd(wreport::Varcode code, double val);
-
-    /**
-     * Add or replace a string value
-     *
-     * @param code
-     *   The wreport::Varcode of the destination value.
-     * @param val
-     *   The string value of the data
-     */
-    void setc(wreport::Varcode code, const char* val);
-
-    /**
-     * Find a variable given its varcode
-     *
-     * @param code
-     *   The wreport::Varcode of the variable to query.  See @ref vartable.h
-     * @return
-     *   The variable found, or NULL if it was not found.
-     */
-    const wreport::Var* find(wreport::Varcode code) const;
-
-    /**
-     * Find a variable given its varcode
-     *
-     * @param code
-     *   The wreport::Varcode of the variable to query.  See @ref vartable.h
-     * @return
-     *   The variable found, or NULL if it was not found.
-     */
-    wreport::Var* edit(wreport::Varcode code);
-
-    /**
-     * Remove a variable given its varcode
-     *
-     * @param code
-     *   The wreport::Varcode of the variable to query.  See @ref vartable.h
-     * @return
-     *   True if the variable was removed, false if it was not found.
-     */
-    bool remove(wreport::Varcode code);
 
     /** 
      * Find a variable given its shortcut ID

@@ -87,7 +87,7 @@ struct Metar : public Template
                 i != msg.data.end(); ++i)
         {
             const msg::Context* c = *i;
-            if (c->find(WR_VAR(0, 20, 9)))
+            if (c->values.maybe_var(WR_VAR(0, 20, 9)))
                 c_wtr = c;
         }
 

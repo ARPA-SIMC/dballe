@@ -58,7 +58,7 @@ void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const 
 
     if (opts.update_station || (station->is_new && station->id == MISSING_INT))
     {
-        for (const auto& var: l_ana->data)
+        for (const auto& var: l_ana->values)
         {
             Varcode code = var->code();
 
@@ -70,7 +70,7 @@ void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const 
             if (code == WR_VAR(0, 4, 5) && !var->next_attr()) continue;
             if (code == WR_VAR(0, 4, 6) && !var->next_attr()) continue;
 
-            station->get_station_data(trc).add(var, opts.overwrite ? batch::UPDATE : batch::IGNORE);
+            station->get_station_data(trc).add(var.get(), opts.overwrite ? batch::UPDATE : batch::IGNORE);
         }
     }
 
@@ -95,11 +95,10 @@ void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const 
         // Get the database ID of the lev_tr
         int id_levtr = lt.obtain_id(trc, LevTrEntry(ctx.level, ctx.trange));
 
-        for (size_t j = 0; j < ctx.data.size(); ++j)
+        for (const auto& val: ctx.values)
         {
-            const Var* var = ctx.data[j];
-            if (not var->isset()) continue;
-            md->add(id_levtr, var, opts.overwrite ? batch::UPDATE : batch::IGNORE);
+            if (not val->isset()) continue;
+            md->add(id_levtr, val.get(), opts.overwrite ? batch::UPDATE : batch::IGNORE);
         }
     }
 }

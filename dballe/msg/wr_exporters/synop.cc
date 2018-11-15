@@ -77,7 +77,7 @@ struct Synop : public Template
                     switch (c->trange.pind)
                     {
                         case 1:
-                            for (const auto v: c->data)
+                            for (const auto v: c->values)
                             {
                                 switch (v->code())
                                 {
@@ -110,7 +110,7 @@ struct Synop : public Template
                             }
                             break;
                         case 4:
-                            if (c->find(WR_VAR(0, 12, 49)))
+                            if (c->values.maybe_var(WR_VAR(0, 12, 49)))
                                 c_tchange = c;
                             break;
                     }
@@ -437,12 +437,12 @@ struct SynopWMO : public Synop
         {
             if (const msg::Context* c = msg.find_context(Level::cloud(260, i), Trange::instant()))
             {
-                if (const Var* var = c->find(WR_VAR(0,  8,  2)))
+                if (const Var* var = c->values.maybe_var(WR_VAR(0,  8,  2)))
                     subset.store_variable(*var);
                 else
                     subset.store_variable_undef(WR_VAR(0,  8,  2));
 
-                if (const Var* var = c->find(WR_VAR(0, 20, 54)))
+                if (const Var* var = c->values.maybe_var(WR_VAR(0, 20, 54)))
                     subset.store_variable(*var);
                 else
                     subset.store_variable_undef(WR_VAR(0, 20, 54));
@@ -458,17 +458,17 @@ struct SynopWMO : public Synop
     {
         if (const msg::Context* c = msg.find_context(Level::cloud(262, 0), Trange::instant()))
         {
-            if (const Var* var = c->find(WR_VAR(0,  5, 21)))
+            if (const Var* var = c->values.maybe_var(WR_VAR(0,  5, 21)))
                 subset.store_variable(*var);
             else
                 subset.store_variable_undef(WR_VAR(0,  5, 21));
 
-            if (const Var* var = c->find(WR_VAR(0,  7, 21)))
+            if (const Var* var = c->values.maybe_var(WR_VAR(0,  7, 21)))
                 subset.store_variable(*var);
             else
                 subset.store_variable_undef(WR_VAR(0,  7, 21));
 
-            if (const Var* var = c->find(WR_VAR(0, 20, 12)))
+            if (const Var* var = c->values.maybe_var(WR_VAR(0, 20, 12)))
                 subset.store_variable(*var);
             else
                 subset.store_variable_undef(WR_VAR(0, 20, 12));
@@ -501,7 +501,7 @@ struct SynopWMO : public Synop
         if (c_sunshine1)
         {
             subset->store_variable_d(WR_VAR(0,  4, 24), -c_sunshine1->trange.p2 / 3600);
-            if (const Var* var = c_sunshine1->find(WR_VAR(0, 14, 31)))
+            if (const Var* var = c_sunshine1->values.maybe_var(WR_VAR(0, 14, 31)))
                 subset->store_variable(*var);
             else
                 subset->store_variable_undef(WR_VAR(0, 14, 31));
@@ -512,7 +512,7 @@ struct SynopWMO : public Synop
         if (c_sunshine2)
         {
             subset->store_variable_d(WR_VAR(0,  4, 24), -c_sunshine2->trange.p2 / 3600);
-            if (const Var* var = c_sunshine2->find(WR_VAR(0, 14, 31)))
+            if (const Var* var = c_sunshine2->values.maybe_var(WR_VAR(0, 14, 31)))
                 subset->store_variable(*var);
             else
                 subset->store_variable_undef(WR_VAR(0, 14, 31));
@@ -683,7 +683,7 @@ void register_synop(TemplateRegistry& r)
                 // If it has a geopotential, it's a land high station
                 for (const auto& ctx: msg->data)
                     if (ctx->level.ltype1 == 100)
-                        if (ctx->find(WR_VAR(0, 10, 8)))
+                        if (ctx->values.maybe_var(WR_VAR(0, 10, 8)))
                             return unique_ptr<Template>(new SynopECMWFLandHigh(opts, msgs));
 
                 return unique_ptr<Template>(new SynopECMWFLand(opts, msgs));

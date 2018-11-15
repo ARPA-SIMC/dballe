@@ -448,9 +448,9 @@ void BaseSummary<Station>::add_message(const dballe::Message& message)
     summary::VarDesc vd_ana;
     vd_ana.level = Level();
     vd_ana.trange = Trange();
-    for (size_t i = 0; i < l_ana->data.size(); ++i)
+    for (const auto& val: l_ana->values)
     {
-        vd_ana.varcode = l_ana->data[i]->code();
+        vd_ana.varcode = val->code();
         add(station, vd_ana, dtrange, 1);
     }
 
@@ -462,11 +462,10 @@ void BaseSummary<Station>::add_message(const dballe::Message& message)
 
         summary::VarDesc vd(ctx.level, ctx.trange, 0);
 
-        for (size_t j = 0; j < ctx.data.size(); ++j)
+        for (const auto& val: ctx.values)
         {
-            const wreport::Var* var = ctx.data[j];
-            if (not var->isset()) continue;
-            vd.varcode = var->code();
+            if (not val->isset()) continue;
+            vd.varcode = val->code();
             add(station, vd, dtrange, 1);
         }
     }

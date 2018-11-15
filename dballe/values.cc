@@ -159,6 +159,21 @@ const wreport::Var& ValuesBase<Value>::var(wreport::Varcode code) const
 }
 
 template<typename Value>
+wreport::Var& ValuesBase<Value>::var(wreport::Varcode code)
+{
+    auto i = find(code);
+    if (i == end())
+        error_notfound::throwf("variable %01d%02d%03d not found",
+                WR_VAR_F(code), WR_VAR_X(code), WR_VAR_Y(code));
+
+    if (!i->get())
+        error_notfound::throwf("variable %01d%02d%03d not set",
+                WR_VAR_F(code), WR_VAR_X(code), WR_VAR_Y(code));
+
+    return **i;
+}
+
+template<typename Value>
 const Value* ValuesBase<Value>::maybe_value(wreport::Varcode code) const
 {
     auto i = find(code);
@@ -169,6 +184,16 @@ const Value* ValuesBase<Value>::maybe_value(wreport::Varcode code) const
 
 template<typename Value>
 const wreport::Var* ValuesBase<Value>::maybe_var(wreport::Varcode code) const
+{
+    auto i = find(code);
+    if (i == end())
+        return nullptr;
+    if (!i->get()) return nullptr;
+    return i->get();
+}
+
+template<typename Value>
+wreport::Var* ValuesBase<Value>::maybe_var(wreport::Varcode code)
 {
     auto i = find(code);
     if (i == end())
@@ -231,20 +256,76 @@ template struct ValuesBase<DBValue>;
 
 }
 
+Values::Values(const DBValues& o)
+{
+    clear();
+    reserve(o.size());
+    for (const auto& val: o)
+        if (const Var* var = val.get())
+            m_values.emplace_back(*var);
+}
+
+Values::Values(DBValues&& o)
+{
+    clear();
+    reserve(o.size());
+    o.move_to([&](std::unique_ptr<wreport::Var> var) {
+        m_values.emplace_back(std::move(var));
+    });
+}
+
+Values& Values::operator=(const DBValues& o)
+{
+    clear();
+    reserve(o.size());
+    for (const auto& val: o)
+        if (const Var* var = val.get())
+            m_values.emplace_back(*var);
+    return *this;
+}
 
 Values& Values::operator=(DBValues&& o)
 {
     clear();
+    reserve(o.size());
     o.move_to([&](std::unique_ptr<wreport::Var> var) {
         m_values.emplace_back(std::move(var));
     });
     return *this;
 }
 
+DBValues::DBValues(const Values& o)
+{
+    clear();
+    reserve(o.size());
+    for (const auto& val: o)
+        if (const Var* var = val.get())
+            m_values.emplace_back(*var);
+}
+
+DBValues::DBValues(Values&& o)
+{
+    clear();
+    reserve(o.size());
+    o.move_to([&](std::unique_ptr<wreport::Var> var) {
+        m_values.emplace_back(std::move(var));
+    });
+}
+
+DBValues& DBValues::operator=(const Values& o)
+{
+    clear();
+    reserve(o.size());
+    for (const auto& val: o)
+        if (const Var* var = val.get())
+            m_values.emplace_back(*var);
+    return *this;
+}
 
 DBValues& DBValues::operator=(Values&& o)
 {
     clear();
+    reserve(o.size());
     o.move_to([&](std::unique_ptr<wreport::Var> var) {
         m_values.emplace_back(std::move(var));
     });

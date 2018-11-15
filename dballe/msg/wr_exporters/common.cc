@@ -76,7 +76,7 @@ void ExporterModule::add(Varcode code, const msg::Context* ctx, Varcode srccode)
 {
     if (!ctx)
         subset->store_variable_undef(code);
-    else if (const Var* var = ctx->find(srccode))
+    else if (const Var* var = ctx->values.maybe_var(srccode))
         subset->store_variable(code, *var);
     else
         subset->store_variable_undef(code);
@@ -86,7 +86,7 @@ void ExporterModule::add(Varcode code, const msg::Context* ctx) const
 {
     if (!ctx)
         subset->store_variable_undef(code);
-    else if (const Var* var = ctx->find(code))
+    else if (const Var* var = ctx->values.maybe_var(code))
         subset->store_variable(*var);
     else
         subset->store_variable_undef(code);
@@ -147,7 +147,7 @@ void CommonSynopExporter::scan_context(const msg::Context& c)
             switch (c.trange.pind)
             {
                 case 1:
-                    if (c.find(WR_VAR(0, 13, 11)))
+                    if (c.values.maybe_var(WR_VAR(0, 13, 11)))
                     {
                         if (c.trange.p2 == 86400)
                             c_prec24 = &c;
@@ -158,10 +158,10 @@ void CommonSynopExporter::scan_context(const msg::Context& c)
                     }
                     break;
                 case 2:
-                    if (c.find(WR_VAR(0, 12, 101))) c_tmax = &c;
+                    if (c.values.maybe_var(WR_VAR(0, 12, 101))) c_tmax = &c;
                     break;
                 case 3:
-                    if (c.find(WR_VAR(0, 12, 101))) c_tmin = &c;
+                    if (c.values.maybe_var(WR_VAR(0, 12, 101))) c_tmin = &c;
                     break;
                 case 4:
                     if (const Var* v = c.find_by_id(DBA_MSG_PRESS_3H))
@@ -174,7 +174,7 @@ void CommonSynopExporter::scan_context(const msg::Context& c)
                 case 205:
                     if (const Var* v = c.find_by_id(DBA_MSG_PRESS_TEND))
                         v_ptend = v;
-                    if (c.find(WR_VAR(0, 20, 4)) || c.find(WR_VAR(0, 20, 5)))
+                    if (c.values.maybe_var(WR_VAR(0, 20, 4)) || c.values.maybe_var(WR_VAR(0, 20, 5)))
                         c_past_wtr = &c;
                     break;
                 case 254:
@@ -184,14 +184,14 @@ void CommonSynopExporter::scan_context(const msg::Context& c)
                         v_pressmsl = v;
                     if (c.find_by_id(DBA_MSG_VISIBILITY))
                         c_visib = &c;
-                    if (c.find(WR_VAR(0, 22, 43)))
+                    if (c.values.maybe_var(WR_VAR(0, 22, 43)))
                         c_depth = &c;
                     break;
             }
             break;
         case 100:
             // Look for geopotential
-            if (const Var* v = c.find(WR_VAR(0, 10, 8)))
+            if (const Var* v = c.values.maybe_var(WR_VAR(0, 10, 8)))
             {
                 c_geopotential = &c;
                 v_geopotential = v;
@@ -222,10 +222,10 @@ void CommonSynopExporter::scan_context(const msg::Context& c)
             }
             break;
         case 103:
-            if (c.find(WR_VAR(0, 11, 1)) || c.find(WR_VAR(0, 11, 2)))
+            if (c.values.maybe_var(WR_VAR(0, 11, 1)) || c.values.maybe_var(WR_VAR(0, 11, 2)))
                 if (!c_wind)
                     c_wind = &c;
-            if (c.find(WR_VAR(0, 11, 41)) || c.find(WR_VAR(0, 11, 43)))
+            if (c.values.maybe_var(WR_VAR(0, 11, 41)) || c.values.maybe_var(WR_VAR(0, 11, 43)))
             {
                 if (!c_gust1)
                     c_gust1 = &c;
@@ -237,7 +237,7 @@ void CommonSynopExporter::scan_context(const msg::Context& c)
             switch (c.trange.pind)
             {
                 case 1:
-                    if (c.find(WR_VAR(0, 13, 11)))
+                    if (c.values.maybe_var(WR_VAR(0, 13, 11)))
                     {
                         if (c.trange.p2 == 86400)
                             c_prec24 = &c;
@@ -248,10 +248,10 @@ void CommonSynopExporter::scan_context(const msg::Context& c)
                     }
                     break;
                 case 2:
-                    if (c.find(WR_VAR(0, 12, 101))) c_tmax = &c;
+                    if (c.values.maybe_var(WR_VAR(0, 12, 101))) c_tmax = &c;
                     break;
                 case 3:
-                    if (c.find(WR_VAR(0, 12, 101))) c_tmin = &c;
+                    if (c.values.maybe_var(WR_VAR(0, 12, 101))) c_tmin = &c;
                     break;
                 case 254:
                     if (c.find_by_id(DBA_MSG_TEMP_2M) || c.find_by_id(DBA_MSG_DEWPOINT_2M) || c.find_by_id(DBA_MSG_HUMIDITY))
@@ -375,7 +375,7 @@ void CommonSynopExporter::add_D02041()
     if (c_tmax || c_tmin)
     {
         const msg::Context* c_first = c_tmax ? c_tmax : c_tmin;
-        add_sensor_height(*c_first, c_first->find(WR_VAR(0, 12, 101)));
+        add_sensor_height(*c_first, c_first->values.maybe_var(WR_VAR(0, 12, 101)));
     }
     else
         subset->store_variable_undef(WR_VAR(0,  7, 32));
@@ -388,7 +388,7 @@ void CommonSynopExporter::add_D02058()
     if (c_tmax || c_tmin)
     {
         const msg::Context* c_first = c_tmax ? c_tmax : c_tmin;
-        add_marine_sensor_height(*c_first, c_first->find(WR_VAR(0, 12, 101)));
+        add_marine_sensor_height(*c_first, c_first->values.maybe_var(WR_VAR(0, 12, 101)));
     }
     else
     {
@@ -403,7 +403,7 @@ void CommonSynopExporter::add_D02034()
 {
     if (c_prec24)
     {
-        const Var* var = c_prec24->find(WR_VAR(0, 13, 11));
+        const Var* var = c_prec24->values.maybe_var(WR_VAR(0, 13, 11));
         add_sensor_height(*c_prec24, var);
         add(WR_VAR(0, 13, 23), c_prec24, DBA_MSG_TOT_PREC24);
     } else {
@@ -417,7 +417,7 @@ void CommonSynopExporter::add_D02040()
 {
     if (c_prec1)
     {
-        const Var* prec_var = c_prec1->find(WR_VAR(0, 13, 11));
+        const Var* prec_var = c_prec1->values.maybe_var(WR_VAR(0, 13, 11));
         add_sensor_height(*c_prec1, prec_var);
     } else {
         subset->store_variable_undef(WR_VAR(0,  7, 32));
@@ -432,10 +432,10 @@ void CommonSynopExporter::add_D02042()
     {
         // Look for the sensor height in the context of any of the found levels
         const msg::Context* c_first = c_wind ? c_wind : c_gust1 ? c_gust1 : c_gust2;
-        const Var* sample_var = c_first->find(WR_VAR(0, 11, 1));
-        if (!sample_var) sample_var = c_first->find(WR_VAR(0, 11, 2));
-        if (!sample_var) sample_var = c_first->find(WR_VAR(0, 11, 41));
-        if (!sample_var) sample_var = c_first->find(WR_VAR(0, 11, 43));
+        const Var* sample_var = c_first->values.maybe_var(WR_VAR(0, 11, 1));
+        if (!sample_var) sample_var = c_first->values.maybe_var(WR_VAR(0, 11, 2));
+        if (!sample_var) sample_var = c_first->values.maybe_var(WR_VAR(0, 11, 41));
+        if (!sample_var) sample_var = c_first->values.maybe_var(WR_VAR(0, 11, 43));
         add_sensor_height(*c_first, sample_var);
 
         add(WR_VAR(0, 2, 2), c_ana);
@@ -444,8 +444,8 @@ void CommonSynopExporter::add_D02042()
         if (c_wind)
         {
             // Compute time range from level and attrs
-            const Var* var_dir = c_wind->find(WR_VAR(0, 11, 1));
-            const Var* var_speed = c_wind->find(WR_VAR(0, 11, 2));
+            const Var* var_dir = c_wind->values.maybe_var(WR_VAR(0, 11, 1));
+            const Var* var_speed = c_wind->values.maybe_var(WR_VAR(0, 11, 2));
             int tr = MISSING_INT;
             if (c_wind->trange.pind == 200)
                 tr = c_wind->trange.p2;
@@ -489,10 +489,10 @@ void CommonSynopExporter::add_D02059()
     {
         // Look for the sensor height in the context of any of the found levels
         const msg::Context* c_first = c_wind ? c_wind : c_gust1 ? c_gust1 : c_gust2;
-        const Var* sample_var = c_first->find(WR_VAR(0, 11, 1));
-        if (!sample_var) sample_var = c_first->find(WR_VAR(0, 11, 2));
-        if (!sample_var) sample_var = c_first->find(WR_VAR(0, 11, 41));
-        if (!sample_var) sample_var = c_first->find(WR_VAR(0, 11, 43));
+        const Var* sample_var = c_first->values.maybe_var(WR_VAR(0, 11, 1));
+        if (!sample_var) sample_var = c_first->values.maybe_var(WR_VAR(0, 11, 2));
+        if (!sample_var) sample_var = c_first->values.maybe_var(WR_VAR(0, 11, 41));
+        if (!sample_var) sample_var = c_first->values.maybe_var(WR_VAR(0, 11, 43));
         add_marine_sensor_height(*c_first, sample_var);
 
         add(WR_VAR(0, 2, 2), c_ana);
@@ -501,8 +501,8 @@ void CommonSynopExporter::add_D02059()
         if (c_wind)
         {
             // Compute time range from level and attrs
-            const Var* var_dir = c_wind->find(WR_VAR(0, 11, 1));
-            const Var* var_speed = c_wind->find(WR_VAR(0, 11, 2));
+            const Var* var_dir = c_wind->values.maybe_var(WR_VAR(0, 11, 1));
+            const Var* var_speed = c_wind->values.maybe_var(WR_VAR(0, 11, 2));
             int tr = MISSING_INT;
             if (c_wind->trange.pind == 200)
                 tr = c_wind->trange.p2;
@@ -546,8 +546,8 @@ void CommonSynopExporter::add_wind_gust(const msg::Context* c)
     if (c)
     {
         // Compute time range from level and attrs
-        const Var* var_dir = c->find(WR_VAR(0, 11, 43));
-        const Var* var_speed = c->find(WR_VAR(0, 11, 41));
+        const Var* var_dir = c->values.maybe_var(WR_VAR(0, 11, 43));
+        const Var* var_speed = c->values.maybe_var(WR_VAR(0, 11, 41));
         int tr = MISSING_INT;
         if (c->trange.pind == 205)
             tr = c->trange.p2;
@@ -607,7 +607,7 @@ void CommonSynopExporter::add_prec_group(const msg::Context* c)
             subset->store_variable_d(WR_VAR(0,  4, 24), -c->trange.p2 / 3600);
         else
             subset->store_variable_undef(WR_VAR(0,  4, 24));
-        if (const Var* var = c->find(WR_VAR(0, 13, 11)))
+        if (const Var* var = c->values.maybe_var(WR_VAR(0, 13, 11)))
             subset->store_variable(*var);
         else
             subset->store_variable_undef(WR_VAR(0, 13, 11));
@@ -728,8 +728,8 @@ void CommonSynopExporter::add_D02038()
     {
         int hour = msg->get_datetime().hour;
         // Look for a p2 override in the attributes
-        const Var* v = c_past_wtr->find(WR_VAR(0, 20, 4));
-        if (!v) v = c_past_wtr->find(WR_VAR(0, 20, 5));
+        const Var* v = c_past_wtr->values.maybe_var(WR_VAR(0, 20, 4));
+        if (!v) v = c_past_wtr->values.maybe_var(WR_VAR(0, 20, 5));
         add_time_period(WR_VAR(0, 4, 24), *c_past_wtr, v, hour % 6 == 0 ? tr_std_past_wtr6 : tr_std_past_wtr3);
     } else
         subset->store_variable_undef(WR_VAR(0, 4, 24));

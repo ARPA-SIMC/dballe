@@ -157,19 +157,19 @@ public:
             const Context* sfc = msg->find_context(Level(100, surface_press), Trange::instant());
             if (sfc != NULL)
             {
-                const Var* var = sfc->find(WR_VAR(0, 12, 1));
+                const Var* var = sfc->values.maybe_var(WR_VAR(0, 12, 1));
                 if (var && msg->get_temp_2m_var())
                     msg->set_temp_2m_var(*var);
 
-                var = sfc->find(WR_VAR(0, 12, 3));
+                var = sfc->values.maybe_var(WR_VAR(0, 12, 3));
                 if (var && msg->get_dewpoint_2m_var())
                     msg->set_dewpoint_2m_var(*var);
 
-                var = sfc->find(WR_VAR(0, 11, 1));
+                var = sfc->values.maybe_var(WR_VAR(0, 11, 1));
                 if (var && !msg->get_wind_dir_var())
                     msg->set_wind_dir_var(*var);
 
-                var = sfc->find(WR_VAR(0, 11, 2));
+                var = sfc->values.maybe_var(WR_VAR(0, 11, 2));
                 if (var && !msg->get_wind_speed_var())
                     msg->set_wind_speed_var(*var);
             }

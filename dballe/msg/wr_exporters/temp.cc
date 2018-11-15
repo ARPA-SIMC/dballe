@@ -93,9 +93,9 @@ struct TempBase : public Template
             double press = c.level.l1;
 
             /* Add pressure */
-            const Var* press_var = c.find(WR_VAR(0, 10, 4));
+            const Var* press_var = c.values.maybe_var(WR_VAR(0, 10, 4));
             if (!press_var)
-                press_var = c.find(WR_VAR(0, 7, 4));
+                press_var = c.values.maybe_var(WR_VAR(0, 7, 4));
             if (press_var)
                 subset->store_variable(WR_VAR(0, 7, 4), *press_var);
             else if (press == MISSING_INT)
@@ -231,7 +231,7 @@ struct TempWMO : public TempBase
     void do_D03054(const msg::Context& c)
     {
         add(WR_VAR(0,  4,  86), &c);
-        if (const Var* vss = c.find(WR_VAR(0, 8, 42)))
+        if (const Var* vss = c.values.maybe_var(WR_VAR(0, 8, 42)))
         {
             // Deal with 'missing VSS' group markers
             if (vss->enq((int)BUFR08042::MISSING) & BUFR08042::MISSING)
@@ -252,7 +252,7 @@ struct TempWMO : public TempBase
                 break;
             case 102:
                 add(WR_VAR(0, 7, 4), &c, WR_VAR(0, 10, 4));
-                if (const Var* var = c.find(WR_VAR(0, 10, 8)))
+                if (const Var* var = c.values.maybe_var(WR_VAR(0, 10, 8)))
                     add(WR_VAR(0, 10, 9), var);
                 else
                     subset->store_variable_d(WR_VAR(0, 10, 9), (double)c.level.l1);
@@ -314,13 +314,13 @@ struct TempWMO : public TempBase
             if (!c->find_vsig()) continue;
             // Skip levels not for us
             if (!(
-                  c->find(WR_VAR(0, 10,   8))
-               || c->find(WR_VAR(0, 12, 101))
-               || c->find(WR_VAR(0, 12, 103))
-               || c->find(WR_VAR(0, 11,   1))
-               || c->find(WR_VAR(0, 11,   2))) && (
-                  c->find(WR_VAR(0, 11, 61))
-               || c->find(WR_VAR(0, 11, 62)))
+                  c->values.maybe_var(WR_VAR(0, 10,   8))
+               || c->values.maybe_var(WR_VAR(0, 12, 101))
+               || c->values.maybe_var(WR_VAR(0, 12, 103))
+               || c->values.maybe_var(WR_VAR(0, 11,   1))
+               || c->values.maybe_var(WR_VAR(0, 11,   2))) && (
+                  c->values.maybe_var(WR_VAR(0, 11, 61))
+               || c->values.maybe_var(WR_VAR(0, 11, 62)))
                )
                 continue;
             do_D03054(*c);
@@ -342,8 +342,8 @@ struct TempWMO : public TempBase
             if (c->level.ltype1 != 100) continue;
             // Skip levels not for us
             if (!(
-                  c->find(WR_VAR(0, 11, 61))
-               || c->find(WR_VAR(0, 11, 62))))
+                  c->values.maybe_var(WR_VAR(0, 11, 61))
+               || c->values.maybe_var(WR_VAR(0, 11, 62))))
                 continue;
             if (do_D03051(*c))
                 ++group_count;
@@ -418,7 +418,7 @@ struct TempRadar : public TempBase
             const msg::Context* c = *i;
             // We are only interested in height levels
             if (c->level.ltype1 != 102) continue;
-            if (const Var* var = c->find(WR_VAR(0, 7, 7)))
+            if (const Var* var = c->values.maybe_var(WR_VAR(0, 7, 7)))
                 add(WR_VAR(0, 7, 7), var);
             else
                 subset.store_variable_d(WR_VAR(0, 7, 7), c->level.l1/1000.0);
@@ -427,7 +427,7 @@ struct TempRadar : public TempBase
             for (unsigned i = 0; i < 2; ++i)
             {
                 Varcode code = codes[i];
-                if (const wreport::Var *var = c->find(code))
+                if (const wreport::Var *var = c->values.maybe_var(code))
                 {
                     add(code, var);
                     add(WR_VAR(0, 33, 2), var->enqa(WR_VAR(0, 33,  2)));
@@ -805,7 +805,7 @@ struct PilotEcmwf : public TempBase
             if (vss == NULL) continue;
 
             /* Add pressure */
-            if (const Var* var = c.find(WR_VAR(0, 10, 4)))
+            if (const Var* var = c.values.maybe_var(WR_VAR(0, 10, 4)))
                 subset.store_variable(WR_VAR(0,  7,  4), *var);
             else if (c.level.ltype1 == 100)
                 subset.store_variable_d(WR_VAR(0,  7,  4), c.level.l1);
@@ -820,9 +820,9 @@ struct PilotEcmwf : public TempBase
             }
 
             /* Add geopotential */
-            if (const Var* var = c.find(WR_VAR(0, 10, 3)))
+            if (const Var* var = c.values.maybe_var(WR_VAR(0, 10, 3)))
                 subset.store_variable(WR_VAR(0, 10, 3), *var);
-            else if (const Var* var = c.find(WR_VAR(0, 10, 8)))
+            else if (const Var* var = c.values.maybe_var(WR_VAR(0, 10, 8)))
                 subset.store_variable(WR_VAR(0, 10, 3), *var);
             else if (c.level.ltype1 == 102)
                 subset.store_variable_d(WR_VAR(0, 10, 3), (double)c.level.l1 * 9.80665);
@@ -830,13 +830,13 @@ struct PilotEcmwf : public TempBase
                 subset.store_variable_undef(WR_VAR(0, 10, 3));
 
             /* Add wind direction */
-            if (const Var* var = c.find(WR_VAR(0, 11, 1)))
+            if (const Var* var = c.values.maybe_var(WR_VAR(0, 11, 1)))
                 subset.store_variable(WR_VAR(0, 11, 1), *var);
             else
                 subset.store_variable_undef(WR_VAR(0, 11, 1));
 
                 /* Add wind speed */
-            if (const Var* var = c.find(WR_VAR(0, 11, 2)))
+            if (const Var* var = c.values.maybe_var(WR_VAR(0, 11, 2)))
                 subset.store_variable(WR_VAR(0, 11, 2), *var);
             else
                 subset.store_variable_undef(WR_VAR(0, 11, 2));

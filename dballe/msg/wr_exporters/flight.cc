@@ -85,7 +85,7 @@ struct FlightBase : public Template
 
     void add(Varcode code, Varcode srccode) const
     {
-        const Var* var = flight_ctx->find(srccode);
+        const Var* var = flight_ctx->values.maybe_var(srccode);
         if (var)
             subset->store_variable(code, *var);
         else
@@ -284,7 +284,7 @@ struct AmdarWMO : public FlightBase
         do_D01011();
         do_D01013();
         /* 12 */
-        if (const wreport::Var* v = flight_ctx->find(WR_VAR(0,  7, 30)))
+        if (const wreport::Var* v = flight_ctx->values.maybe_var(WR_VAR(0,  7, 30)))
             add(WR_VAR(0,  7, 10), v);
         else if (flight_ctx->level.ltype1 == 102)
             subset.store_variable_d(WR_VAR(0,  7, 10), (double)flight_ctx->level.l1 / 1000.0);

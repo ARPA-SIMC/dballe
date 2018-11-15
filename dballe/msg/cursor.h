@@ -55,10 +55,7 @@ struct CursorStation : public dballe::CursorStation
 
     DBValues get_values() const override
     {
-        DBValues res;
-        for (const auto& val: station_ctx->data)
-            res.set(*val);
-        return res;
+        return DBValues(station_ctx->values);
     }
 };
 
@@ -68,7 +65,7 @@ struct CursorStationData : public dballe::CursorStationData
     dballe::DBStation station;
     const msg::Context* ctx;
     bool at_start = true;
-    std::vector<wreport::Var*>::const_iterator cur;
+    Values::const_iterator cur;
 
     CursorStationData(const Msg& msg)
         : ctx(msg.find_station_context())
@@ -81,8 +78,8 @@ struct CursorStationData : public dballe::CursorStationData
     int remaining() const override
     {
         if (at_start)
-            return ctx->data.size();
-        return ctx->data.end() - cur;
+            return ctx->values.size();
+        return ctx->values.end() - cur;
     }
 
     bool next() override
@@ -90,22 +87,22 @@ struct CursorStationData : public dballe::CursorStationData
         if (at_start)
         {
             at_start = false;
-            cur = ctx->data.begin();
+            cur = ctx->values.begin();
             return true;
         }
-        else if (cur == ctx->data.end())
+        else if (cur == ctx->values.end())
             return false;
         else
         {
             ++cur;
-            return cur == ctx->data.end();
+            return cur == ctx->values.end();
         }
     }
 
     void discard() override
     {
         at_start = false;
-        cur = ctx->data.end();
+        cur = ctx->values.end();
     }
 
     bool enqi(const char* key, unsigned len, int& res) const override;
@@ -123,9 +120,9 @@ struct CursorStationData : public dballe::CursorStationData
 struct CursorDataRow
 {
     const dballe::msg::Context* ctx;
-    std::vector<wreport::Var*>::const_iterator var;
+    Values::const_iterator var;
 
-    CursorDataRow(const dballe::msg::Context* ctx, std::vector<wreport::Var*>::const_iterator var)
+    CursorDataRow(const dballe::msg::Context* ctx, Values::const_iterator var)
         : ctx(ctx), var(var)
     {
     }
@@ -151,11 +148,11 @@ struct CursorData : public dballe::CursorData
             if (ctx->level.is_missing() && ctx->trange.is_missing())
             {
                 if (!merged) continue;
-                for (std::vector<wreport::Var*>::const_iterator cur = ctx->data.begin(); cur != ctx->data.end(); ++cur)
+                for (Values::const_iterator cur = ctx->values.begin(); cur != ctx->values.end(); ++cur)
                     if (WR_VAR_X((*cur)->code()) < 4 || WR_VAR_X((*cur)->code()) > 6)
                         rows.emplace_back(ctx, cur);
             } else {
-                for (std::vector<wreport::Var*>::const_iterator cur = ctx->data.begin(); cur != ctx->data.end(); ++cur)
+                for (Values::const_iterator cur = ctx->values.begin(); cur != ctx->values.end(); ++cur)
                     rows.emplace_back(ctx, cur);
             }
         }

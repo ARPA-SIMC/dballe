@@ -140,7 +140,7 @@ struct ShipECMWFBase : public ShipBase
                 i != msg.data.end(); ++i)
         {
             const msg::Context* c = *i;
-            if (c->find(WR_VAR(0, 11, 1)) || c->find(WR_VAR(0, 11, 2)))
+            if (c->values.maybe_var(WR_VAR(0, 11, 1)) || c->values.maybe_var(WR_VAR(0, 11, 2)))
                 c_wind = c;
         }
 
@@ -439,13 +439,12 @@ void register_ship(TemplateRegistry& r)
                     switch (c.level.ltype1)
                     {
                         case MISSING_INT:
-                            for (std::vector<wreport::Var*>::const_iterator vi = c.data.begin();
-                                    vi != c.data.end(); ++vi)
+                            for (const auto& val: c.values)
                             {
-                                switch ((*vi)->code())
+                                switch (val->code())
                                 {
                                     case WR_VAR(0, 2, 1):
-                                        switch ((*vi)->enq(0))
+                                        switch (val->enq(0))
                                         {
                                             case 0: maybe_plain = false; break;
                                             case 1: maybe_auto = false; break;

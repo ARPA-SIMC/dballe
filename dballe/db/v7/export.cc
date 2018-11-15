@@ -24,35 +24,22 @@ namespace v7 {
 namespace {
 
 
-struct StationValues : protected std::vector<wreport::Var*>
+struct StationValues : protected Values
 {
     Tracer<>& trc;
 
     StationValues(Tracer<>& trc) : trc(trc) {}
-    ~StationValues()
-    {
-        for (iterator i = begin(); i != end(); ++i)
-            delete *i;
-    }
 
-    void reset()
+    void to_context(msg::Context& c)
     {
-        for (iterator i = begin(); i != end(); ++i)
-            delete *i;
-        clear();
-    }
-
-    void to_context(msg::Context& c) const
-    {
-        for (const_iterator i = begin(); i != end(); ++i)
-            c.set(**i);
+        c.values.merge(*this);
     }
 
     void read(v7::Transaction& tr, int id_station)
     {
-        reset();
+        clear();
         tr.station().get_station_vars(trc, id_station, [&](std::unique_ptr<wreport::Var> var) {
-            push_back(var.release());
+            set(std::move(var));
         });
     }
 };
@@ -175,14 +162,14 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
                 station_values.read(*this, row.station.id);
 
             // Fill in report information
-            c_st.set(newvar(WR_VAR(0, 1, 194), row.station.report));
+            c_st.values.set(newvar(WR_VAR(0, 1, 194), row.station.report));
             msg->type = Msg::type_from_repmemo(row.station.report.c_str());
 
             // Fill in the basic station values
-            c_st.set(newvar(WR_VAR(0, 5, 1), row.station.coords.lat));
-            c_st.set(newvar(WR_VAR(0, 6, 1), row.station.coords.lon));
+            c_st.values.set(newvar(WR_VAR(0, 5, 1), row.station.coords.lat));
+            c_st.values.set(newvar(WR_VAR(0, 6, 1), row.station.coords.lon));
             if (!row.station.ident.is_missing())
-                c_st.set(newvar(WR_VAR(0, 1, 11), (const char*)row.station.ident));
+                c_st.values.set(newvar(WR_VAR(0, 1, 11), (const char*)row.station.ident));
 
             // Fill in station information
             station_values.to_context(c_st);
@@ -195,7 +182,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
         TRACE("Inserting var %01d%02d%03d (%s)\n", WR_VAR_FXY(var->code()), var->enqc());
         msg::Context* ctx = lt.to_msg(trc, row.id_levtr, *msg);
         if (ctx)
-            ctx->set(row.release_var());
+            ctx->values.set(row.release_var());
     }
 
     if (msg.get() != NULL)

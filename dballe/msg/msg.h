@@ -224,6 +224,7 @@ public:
      */
     wreport::Var* edit(wreport::Varcode code, const Level& lev, const Trange& tr);
 
+#if 0
     /**
      * Remove a variable given its description
      *
@@ -237,6 +238,7 @@ public:
      *   True if the variable was removed, false if it was not found.
      */
     bool remove(wreport::Varcode code, const Level& lev, const Trange& tr);
+#endif
 
     /**
      * Copy a Msg, removing the sounding significance from the level

@@ -143,9 +143,9 @@ struct Pollution : public Template
             const msg::Context& ctx = *msg.data[i];
             if (ctx.level.ltype1 != 103) continue;
             if (ctx.trange.pind != 0) continue;
-            for (size_t j = 0; j < ctx.data.size(); ++j)
+            for (const auto& val: ctx.values)
             {
-                const Var& var = *ctx.data[j];
+                const Var& var = *val;
                 if (var.code() < WR_VAR(0, 15, 193) || var.code() > WR_VAR(0, 15, 198)) continue;
                 if (mainvar != NULL)
                     error_consistency::throwf("found more than one variable to export in one template: B%02d%03d and B%02d%03d",
