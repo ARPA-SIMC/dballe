@@ -18,7 +18,7 @@ namespace cursor {
 struct StationRow
 {
     dballe::DBStation station;
-    DBValues values;
+    mutable std::unique_ptr<DBValues> values;
 
     StationRow(const dballe::DBStation& station) : station(station) {}
 
@@ -114,12 +114,15 @@ struct Stations : public Base<CursorStation, StationRow>
 {
     using Base::Base;
     dballe::DBStation get_station() const override { return this->cur->station; }
-    DBValues get_values() const override { return this->cur->values; }
+    DBValues get_values() const override;
     void load(Tracer<>& trc, const StationQueryBuilder& qb);
     bool enqi(const char* key, unsigned len, int& res) const override;
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
     bool enqf(const char* key, unsigned len, std::string& res) const override;
+
+protected:
+    const DBValues& values() const;
 };
 
 

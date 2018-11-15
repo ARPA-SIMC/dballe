@@ -29,7 +29,7 @@ bool Stations::enqi(const char* key, unsigned len, int& res) const
         case "lon":         r.set(cur->station.coords.lon);
         default: break;
     }
-    r.maybe_search_values(key, cur->values);
+    r.maybe_search_values(key, values());
     return !r.missing();
 }
 
@@ -46,7 +46,7 @@ bool Stations::enqd(const char* key, unsigned len, double& res) const
         case "lon":         r.set(cur->station.coords.dlon());
         default: break;
     }
-    r.maybe_search_values(key, cur->values);
+    r.maybe_search_values(key, values());
     return !r.missing();
 }
 
@@ -63,7 +63,7 @@ bool Stations::enqs(const char* key, unsigned len, std::string& res) const
         case "lon":         r.set(cur->station.coords.lon);
         default: break;
     }
-    r.maybe_search_values(key, cur->values);
+    r.maybe_search_values(key, values());
     return !r.missing();
 }
 
@@ -80,7 +80,7 @@ bool Stations::enqf(const char* key, unsigned len, std::string& res) const
         case "lon":         r.set_latlon(cur->station.coords.dlon());
         default: break;
     }
-    r.maybe_search_values(key, cur->values);
+    r.maybe_search_values(key, values());
     return !r.missing();
 }
 
