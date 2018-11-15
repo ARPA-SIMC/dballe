@@ -1,10 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 """
 Build C++ code for accessing Msg contents by shortcut.
 """
 
-from __future__ import (print_function, absolute_import, division, unicode_literals)
 import sys
 import re
 import os
@@ -25,11 +24,8 @@ class VC:
     def __str__(self):
         return "B%02d%03d" % (self.x, self.y)
 
-    def __cmp__(self, o):
-        c = self.x.__cmp__(o.x)
-        if c != 0:
-            return c
-        return self.y.__cmp__(o.y)
+    def __lt__(self, o):
+        return (self.x, self.y) < (o.x, o.y)
 
 
 class Var:
@@ -52,20 +48,8 @@ class Var:
                           ":".join([str(x) for x in self.letr[4:]]),
                           self.desc])
 
-    def __cmp__(self, o):
-        def cmpval(a, b):
-            if a == "MISSING_INT" and b == "MISSING_INT":
-                return 0
-            if a == "MISSING_INT":
-                return -1
-            if b == "MISSING_INT":
-                return 1
-            return int(b) - int(a)
-        for i in range(len(self.letr)):
-            c = cmpval(self.letr[i], o.letr[i])
-            if c != 0:
-                return c
-        return self.b.__cmp__(o.b)
+    def __lt__(self, o):
+        return (self.letr, self.b) < (o.letr, o.b)
 
 
 vars = [Var(line) for line in sys.stdin if not re.match(r"^\s*(?:#.+)?$", line)]
