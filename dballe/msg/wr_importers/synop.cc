@@ -8,6 +8,7 @@ using namespace wreport;
 using namespace std;
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -94,6 +95,7 @@ std::unique_ptr<Importer> Importer::createSynop(const ImporterOptions& opts)
 }
 
 
+}
 }
 }
 }

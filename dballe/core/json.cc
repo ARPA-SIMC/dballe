@@ -1,4 +1,5 @@
 #include "json.h"
+#include "dballe/values.h"
 #include <cctype>
 #include <cmath>
 
@@ -131,6 +132,32 @@ void JSONWriter::add_dbstation(const DBStation& s)
     add("c", s.coords);
     if (s.ident) add("i", s.ident);
     end_mapping();
+}
+
+void JSONWriter::add_values(const Values& values)
+{
+    start_mapping();
+    for (const auto& var: values) {
+        add(wreport::varcode_format(var->code()));
+        start_mapping();
+        add("v");
+        add(*var);
+        if (var->next_attr()) {
+            add("a");
+            start_mapping();
+            for (const wreport::Var* attr = var->next_attr(); attr; attr = attr->next_attr()) {
+                add(wreport::varcode_format(attr->code()));
+                add(*attr);
+            }
+            end_mapping();
+        }
+        end_mapping();
+    }
+    end_mapping();
+}
+
+void JSONWriter::add_dbvalues(const DBValues& values)
+{
 }
 
 void JSONWriter::add_datetime(const Datetime& val)

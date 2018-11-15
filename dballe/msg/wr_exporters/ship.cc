@@ -1,22 +1,3 @@
-/*
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "common.h"
 #include "dballe/msg/wr_codec.h"
 #include "dballe/msg/context.h"
@@ -44,6 +25,7 @@ using namespace std;
 #define SHIP_WMO_DESC "Ship WMO"
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -58,7 +40,7 @@ struct ShipBase : public Template
     ShipBase(const ExporterOptions& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         Template::setupBulletin(bulletin);
 
@@ -67,15 +49,14 @@ struct ShipBase : public Template
         bulletin.data_category = 1;
         bulletin.data_subcategory = 255;
     }
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         Template::to_subset(msg, subset);
         synop.init(msg, subset);
 
         // Scan message finding context for the data that follow
-        for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
-                i != msg.data.end(); ++i)
-            synop.scan_context(**i);
+        for (const auto& ctx: msg.data)
+            synop.scan_context(ctx);
     }
 
     void do_D01093()
@@ -89,10 +70,10 @@ struct ShipBase : public Template
 
     void do_ship_head()
     {
-        add(WR_VAR(0,  1, 11), c_station);
+        add(WR_VAR(0,  1, 11), msg->station_data);
         add(WR_VAR(0,  1, 12), c_gnd_instant);
         add(WR_VAR(0,  1, 13), c_gnd_instant);
-        add(WR_VAR(0,  2,  1), c_station);
+        add(WR_VAR(0,  2,  1), msg->station_data);
     }
 };
 
@@ -130,18 +111,16 @@ struct ShipECMWFBase : public ShipBase
             bulletin.datadesc.push_back(WR_VAR(0, 33,   7));
         }
     }
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         ShipBase::to_subset(msg, subset);
 
         // Look for significant levels
         const msg::Context* c_wind = NULL;
-        for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
-                i != msg.data.end(); ++i)
+        for (const auto& ctx: msg.data)
         {
-            const msg::Context* c = *i;
-            if (c->values.maybe_var(WR_VAR(0, 11, 1)) || c->values.maybe_var(WR_VAR(0, 11, 2)))
-                c_wind = c;
+            if (ctx.values.maybe_var(WR_VAR(0, 11, 1)) || ctx.values.maybe_var(WR_VAR(0, 11, 2)))
+                c_wind = &ctx;
         }
 
         do_ship_head();
@@ -311,7 +290,7 @@ struct ShipECMWFSecondRecord : public ShipBase
             bulletin.datadesc.push_back(WR_VAR(0, 33,   7));
         }
     }
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         ShipBase::to_subset(msg, subset);
 
@@ -361,7 +340,7 @@ struct ShipWMO : public ShipBase
     virtual const char* name() const { return SHIP_WMO_NAME; }
     virtual const char* description() const { return SHIP_WMO_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         ShipBase::setupBulletin(bulletin);
 
@@ -377,7 +356,7 @@ struct ShipWMO : public ShipBase
 
         bulletin.load_tables();
     }
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         ShipBase::to_subset(msg, subset);
 
@@ -432,30 +411,27 @@ void register_ship(TemplateRegistry& r)
                 bool maybe_plain = true;
                 bool maybe_auto = true;
                 bool maybe_second = true;
-                auto msg = Msg::downcast(msgs[0]);
-                for (const auto& ctx: msg->data)
+                auto msg = Message::downcast(msgs[0]);
+                for (const auto& val: msg->station_data)
                 {
-                    const msg::Context& c = *ctx;
-                    switch (c.level.ltype1)
+                    switch (val->code())
                     {
-                        case MISSING_INT:
-                            for (const auto& val: c.values)
+                        case WR_VAR(0, 2, 1):
+                            switch (val->enq(0))
                             {
-                                switch (val->code())
-                                {
-                                    case WR_VAR(0, 2, 1):
-                                        switch (val->enq(0))
-                                        {
-                                            case 0: maybe_plain = false; break;
-                                            case 1: maybe_auto = false; break;
-                                        }
-                                        break;
-                                    case WR_VAR(0, 2, 2):
-                                        maybe_plain = maybe_auto = maybe_second = false;
-                                        break;
-                                }
+                                case 0: maybe_plain = false; break;
+                                case 1: maybe_auto = false; break;
                             }
                             break;
+                        case WR_VAR(0, 2, 2):
+                            maybe_plain = maybe_auto = maybe_second = false;
+                            break;
+                    }
+                }
+                for (const auto& ctx: msg->data)
+                {
+                    switch (ctx.level.ltype1)
+                    {
                         case 264: maybe_plain = maybe_auto = false; break;
                     }
                 }
@@ -502,6 +478,7 @@ void register_ship(TemplateRegistry& r)
             });
 }
 
+}
 }
 }
 }

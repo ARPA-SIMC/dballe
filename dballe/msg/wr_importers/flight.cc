@@ -29,6 +29,7 @@ using namespace wreport;
 using namespace std;
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -233,9 +234,7 @@ void FlightImporter::import_var(const Var& var)
     }
 }
 
-} // namespace wbimporter
-} // namespace msg
-} // namespace dballe
-
-
-/* vim:set ts=4 sw=4: */
+}
+}
+}
+}

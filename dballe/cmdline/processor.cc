@@ -51,7 +51,7 @@ Item::~Item()
     if (rmsg) delete rmsg;
 }
 
-void Item::set_msgs(Messages* new_msgs)
+void Item::set_msgs(std::vector<std::shared_ptr<dballe::Message>>* new_msgs)
 {
     if (msgs) delete msgs;
     msgs = new_msgs;
@@ -103,7 +103,7 @@ void Item::decode(Importer& imp, bool print_errors)
         case Encoding::CREX:
             if (bulletin)
             {
-                msgs = new Messages;
+                msgs = new std::vector<std::shared_ptr<dballe::Message>>;
                 try {
                     *msgs = imp.from_bulletin(*bulletin);
                 } catch (error& e) {
@@ -198,7 +198,7 @@ bool Filter::match_index(int idx) const
     return imatcher.match(idx);
 }
 
-bool Filter::match_common(const BinaryMessage&, const Messages* msgs) const
+bool Filter::match_common(const BinaryMessage&, const std::vector<std::shared_ptr<dballe::Message>>* msgs) const
 {
     if (msgs == NULL && parsable)
         return false;
@@ -207,7 +207,7 @@ bool Filter::match_common(const BinaryMessage&, const Messages* msgs) const
     return true;
 }
 
-bool Filter::match_bufrex(const BinaryMessage& rmsg, const Bulletin* rm, const Messages* msgs) const
+bool Filter::match_bufrex(const BinaryMessage& rmsg, const Bulletin* rm, const std::vector<std::shared_ptr<dballe::Message>>* msgs) const
 {
     if (!match_common(rmsg, msgs))
         return false;
@@ -235,14 +235,14 @@ bool Filter::match_bufrex(const BinaryMessage& rmsg, const Bulletin* rm, const M
     return true;
 }
 
-bool Filter::match_bufr(const BinaryMessage& rmsg, const Bulletin* rm, const Messages* msgs) const
+bool Filter::match_bufr(const BinaryMessage& rmsg, const Bulletin* rm, const std::vector<std::shared_ptr<dballe::Message>>* msgs) const
 {
     if (!match_bufrex(rmsg, rm, msgs))
         return false;
     return true;
 }
 
-bool Filter::match_crex(const BinaryMessage& rmsg, const Bulletin* rm, const Messages* msgs) const
+bool Filter::match_crex(const BinaryMessage& rmsg, const Bulletin* rm, const std::vector<std::shared_ptr<dballe::Message>>* msgs) const
 {
     if (!match_bufrex(rmsg, rm, msgs))
         return false;
@@ -262,9 +262,9 @@ bool Filter::match_crex(const BinaryMessage& rmsg, const Bulletin* rm, const Mes
 #endif
 }
 
-bool Filter::match_msgs(const Messages& msgs) const
+bool Filter::match_msgs(const std::vector<std::shared_ptr<dballe::Message>>& msgs) const
 {
-    if (matcher && matcher->match(MatchedMessages(msgs)) != matcher::MATCH_YES)
+    if (matcher && matcher->match(impl::MatchedMessages(msgs)) != matcher::MATCH_YES)
         return false;
 
     return true;
@@ -321,7 +321,7 @@ void Reader::read_csv(const std::list<std::string>& fnames, Action& action)
         while (true)
         {
             // Read input message
-            unique_ptr<Msg> msg(new Msg);
+            unique_ptr<impl::Message> msg(new impl::Message);
             if (!msg->from_csv(*csvin))
                 break;
 
@@ -331,7 +331,7 @@ void Reader::read_csv(const std::list<std::string>& fnames, Action& action)
                 continue;
 
             // We want it: move it to the item
-            unique_ptr<Messages> msgs(new Messages);
+            unique_ptr<impl::Messages> msgs(new impl::Messages);
             msgs->emplace_back(move(msg));
             item.set_msgs(msgs.release());
 
@@ -349,8 +349,8 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
         std::istream* in;
         bool close_on_exit;
 
-        Msg msg;
-        std::unique_ptr<msg::Context> ctx;
+        impl::Message msg;
+        std::unique_ptr<impl::msg::Context> ctx;
         std::unique_ptr<wreport::Var> var;
         std::unique_ptr<wreport::Var> attr;
 
@@ -401,7 +401,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                 delete in;
         }
 
-        void parse_msgs(std::function<void(const Msg&)> cb) {
+        void parse_msgs(std::function<void(const impl::Message&)> cb) {
             if (in) {
                 while (!in->eof())
                 {
@@ -465,7 +465,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                 switch (s) {
                     case MSG_DATA_LIST:
                         state.push(MSG_DATA_LIST_ITEM);
-                        ctx.reset(new msg::Context(Level(), Trange()));
+                        ctx.reset(new impl::msg::Context(Level(), Trange()));
                         break;
                     case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR:
                         state.pop();
@@ -499,8 +499,13 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     // of "lon", "lat", "ident", "network".
                     // Then, context overwrite is allowed.
                     // msg.add_context(std::move(ctx));
-                    msg::Context& ctx2 = msg.obtain_context(ctx->level, ctx->trange);
-                    ctx2.values.merge(ctx->values);
+                    if (ctx->level.is_missing() && ctx->trange.is_missing())
+                    {
+                        msg.station_data.merge(ctx->values);
+                    } else {
+                        impl::msg::Context& ctx2 = msg.obtain_context(ctx->level, ctx->trange);
+                        ctx2.values.merge(ctx->values);
+                    }
                     state.pop();
                     break;
                 }
@@ -749,12 +754,12 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
         } else {
             jsonreader.reset(new JSONMsgReader(cin));
         }
-        jsonreader->parse_msgs([&](const Msg& msg) {
+        jsonreader->parse_msgs([&](const impl::Message& msg) {
             ++item.idx;
             if (!filter.match_index(item.idx))
                 return;
-            unique_ptr<Messages> msgs(new Messages);
-            msgs->emplace_back(make_shared<Msg>(msg));
+            unique_ptr<impl::Messages> msgs(new impl::Messages);
+            msgs->emplace_back(make_shared<impl::Message>(msg));
             item.set_msgs(msgs.release());
 
             if (!filter.match_item(item))

@@ -12,8 +12,8 @@
 namespace dballe {
 namespace tests {
 
-Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const dballe::Query& query);
-Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const char* query);
+impl::Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const dballe::Query& query);
+impl::Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const char* query);
 
 /// Base for datasets used to populate test databases
 struct TestDataSet

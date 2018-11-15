@@ -13,6 +13,7 @@ struct Var;
 }
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -21,7 +22,7 @@ class Importer
 protected:
     const ImporterOptions& opts;
     const wreport::Subset* subset;
-    Msg* msg;
+    impl::Message* msg;
 
     virtual void init();
     virtual void run() = 0;
@@ -35,7 +36,7 @@ public:
 
     virtual MessageType scanType(const wreport::Bulletin& bulletin) const = 0;
 
-    void import(const wreport::Subset& subset, Msg& msg);
+    void import(const wreport::Subset& subset, impl::Message& msg);
 
     static std::unique_ptr<Importer> createSynop(const ImporterOptions&);
     static std::unique_ptr<Importer> createShip(const ImporterOptions&);
@@ -226,6 +227,7 @@ public:
     void run() override;
 };
 
+}
 }
 }
 }

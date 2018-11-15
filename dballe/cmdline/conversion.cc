@@ -31,7 +31,7 @@ void Converter::process_bufrex_msg(const BinaryMessage& orig, const Bulletin& ms
     file->write(raw);
 }
 
-void Converter::process_dba_msg(const BinaryMessage& orig, const Messages& msgs)
+void Converter::process_dba_msg(const BinaryMessage& orig, const std::vector<std::shared_ptr<dballe::Message>>& msgs)
 {
     string raw;
     try {
@@ -43,7 +43,7 @@ void Converter::process_dba_msg(const BinaryMessage& orig, const Messages& msgs)
 }
 
 // Recompute data_category and data_subcategory according to WMO international values
-static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const Messages& msgs)
+static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const std::vector<std::shared_ptr<dballe::Message>>& msgs)
 {
     b.data_category = orig.data_category;
     b.data_subcategory_local = 255;
@@ -121,7 +121,7 @@ static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const Mess
 
 // Compute local data_subcategory to tell bufr2netcdf output files apart using
 // lokal-specific categorisation
-static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, const Messages& msgs)
+static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, const std::vector<std::shared_ptr<dballe::Message>>& msgs)
 {
     switch (orig.data_category)
     {
@@ -132,7 +132,7 @@ static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, co
             // 13 for fixed stations
             // 14 for mobile stations
             b.data_subcategory_local = 13;
-            if (const wreport::Var* v = Msg::downcast(msgs[0])->get_ident_var())
+            if (const wreport::Var* v = impl::Message::downcast(msgs[0])->get_ident_var())
                 if (v->isset())
                     b.data_subcategory_local = 14;
             break;
@@ -142,11 +142,11 @@ static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, co
                 // 4 for z-level pilots
                 // 5 for p-level pilots
                 // Arbitrary default to z-level pilots
-                auto msg = Msg::downcast(msgs[0]);
+                auto msg = impl::Message::downcast(msgs[0]);
                 b.data_subcategory_local = 4;
                 for (const auto& ctx: msg->data)
                 {
-                    switch (ctx->level.ltype1)
+                    switch (ctx.level.ltype1)
                     {
                         case 100: // Isobaric Surface
                             b.data_subcategory_local = 5;
@@ -170,7 +170,7 @@ static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, co
 }
 
 
-void Converter::process_dba_msg_from_bulletin(const BinaryMessage& orig, const Bulletin& bulletin, const Messages& msgs)
+void Converter::process_dba_msg_from_bulletin(const BinaryMessage& orig, const Bulletin& bulletin, const std::vector<std::shared_ptr<dballe::Message>>& msgs)
 {
     string raw;
     try {
@@ -237,9 +237,9 @@ bool Converter::operator()(const cmdline::Item& item)
     if (dest_rep_memo != NULL)
     {
         // Force message type (will also influence choice of template later)
-        MessageType type = Msg::type_from_repmemo(dest_rep_memo);
+        MessageType type = impl::Message::type_from_repmemo(dest_rep_memo);
         for (auto& msg: *item.msgs)
-            Msg::downcast(msg)->type = type;
+            impl::Message::downcast(msg)->type = type;
     }
 
     if (item.bulletin and dest_rep_memo == NULL)

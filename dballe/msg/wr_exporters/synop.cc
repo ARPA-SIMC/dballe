@@ -1,22 +1,3 @@
-/*
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "common.h"
 #include "dballe/msg/wr_codec.h"
 #include "dballe/msg/context.h"
@@ -38,6 +19,7 @@ using namespace std;
 #define SYNOP_ECMWF_AUTO_DESC "Synop ECMWF land auto (0.3)"
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -66,29 +48,27 @@ struct Synop : public Template
         c_tchange = NULL;
 
         // Scan message finding context for the data that follow
-        for (std::vector<msg::Context*>::const_iterator i = msg->data.begin();
-                i != msg->data.end(); ++i)
+        for (const auto& ctx: msg->data)
         {
-            const msg::Context* c = *i;
-            synop.scan_context(*c);
-            switch (c->level.ltype1)
+            synop.scan_context(ctx);
+            switch (ctx.level.ltype1)
             {
                 case 1:
-                    switch (c->trange.pind)
+                    switch (ctx.trange.pind)
                     {
                         case 1:
-                            for (const auto v: c->values)
+                            for (const auto v: ctx.values)
                             {
                                 switch (v->code())
                                 {
                                     case WR_VAR(0, 14, 31):
                                         if (!c_sunshine1)
-                                            c_sunshine1 = c;
+                                            c_sunshine1 = &ctx;
                                         else if (!c_sunshine2)
-                                            c_sunshine2 = c;
+                                            c_sunshine2 = &ctx;
                                         break;
                                     case WR_VAR(0, 13, 33):
-                                        c_evapo = c;
+                                        c_evapo = &ctx;
                                         break;
                                     case WR_VAR(0, 14,  2):
                                     case WR_VAR(0, 14,  4):
@@ -96,13 +76,13 @@ struct Synop : public Template
                                     case WR_VAR(0, 14, 28):
                                     case WR_VAR(0, 14, 29):
                                     case WR_VAR(0, 14, 30):
-                                        switch (c->trange.p2)
+                                        switch (ctx.trange.p2)
                                         {
                                             case  1 * 3600:
-                                                c_radiation1 = c;
+                                                c_radiation1 = &ctx;
                                                 break;
                                             case 24 * 3600:
-                                                c_radiation24 = c;
+                                                c_radiation24 = &ctx;
                                                 break;
                                         }
                                         break;
@@ -110,8 +90,8 @@ struct Synop : public Template
                             }
                             break;
                         case 4:
-                            if (c->values.maybe_var(WR_VAR(0, 12, 49)))
-                                c_tchange = c;
+                            if (ctx.values.maybe_var(WR_VAR(0, 12, 49)))
+                                c_tchange = &ctx;
                             break;
                     }
                     break;
@@ -119,7 +99,7 @@ struct Synop : public Template
         }
     }
 
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         Template::to_subset(msg, subset);
         synop.init(msg, subset);
@@ -153,7 +133,7 @@ struct SynopECMWF : public Synop
             subset->store_variable_undef(prec_code);
     }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         Synop::setupBulletin(bulletin);
 
@@ -169,7 +149,7 @@ struct SynopECMWF : public Synop
         prec_code = 0;
         for (Messages::const_iterator mi = msgs.begin(); prec_code == 0 && mi != msgs.end(); ++mi)
         {
-            auto msg = Msg::downcast(*mi);
+            auto msg = Message::downcast(*mi);
             if (msg->get_tot_prec24_var() != NULL)
                 prec_code = WR_VAR(0, 13, 23);
             else if (msg->get_tot_prec12_var() != NULL)
@@ -188,7 +168,7 @@ struct SynopECMWF : public Synop
         bulletin.data_subcategory = 255;
         bulletin.data_subcategory_local = 1;
     }
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         Synop::to_subset(msg, subset);
         synop.add_ecmwf_synop_head();
@@ -204,10 +184,10 @@ struct SynopECMWFLand : public SynopECMWF
     SynopECMWFLand(const ExporterOptions& opts, const Messages& msgs)
         : SynopECMWF(opts, msgs) {}
 
-    virtual const char* name() const { return SYNOP_ECMWF_LAND_NAME; }
-    virtual const char* description() const { return SYNOP_ECMWF_LAND_DESC; }
+    const char* name() const override { return SYNOP_ECMWF_LAND_NAME; }
+    const char* description() const override { return SYNOP_ECMWF_LAND_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         SynopECMWF::setupBulletin(bulletin);
 
@@ -230,7 +210,7 @@ struct SynopECMWFLand : public SynopECMWF
         bulletin.load_tables();
     }
 
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         SynopECMWF::to_subset(msg, subset);
         synop.add_D02001();
@@ -281,10 +261,10 @@ struct SynopECMWFLandHigh : public SynopECMWF
     SynopECMWFLandHigh(const ExporterOptions& opts, const Messages& msgs)
         : SynopECMWF(opts, msgs) {}
 
-    virtual const char* name() const { return SYNOP_ECMWF_LAND_HIGH_NAME; }
-    virtual const char* description() const { return SYNOP_ECMWF_LAND_HIGH_DESC; }
+    const char* name() const override { return SYNOP_ECMWF_LAND_HIGH_NAME; }
+    const char* description() const override { return SYNOP_ECMWF_LAND_HIGH_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         SynopECMWF::setupBulletin(bulletin);
 
@@ -307,7 +287,7 @@ struct SynopECMWFLandHigh : public SynopECMWF
         bulletin.load_tables();
     }
 
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         SynopECMWF::to_subset(msg, subset);
 
@@ -348,10 +328,10 @@ struct SynopECMWFAuto : public SynopECMWFLand
     SynopECMWFAuto(const ExporterOptions& opts, const Messages& msgs)
         : SynopECMWFLand(opts, msgs) {}
 
-    virtual const char* name() const { return SYNOP_ECMWF_AUTO_NAME; }
-    virtual const char* description() const { return SYNOP_ECMWF_AUTO_DESC; }
+    const char* name() const override { return SYNOP_ECMWF_AUTO_NAME; }
+    const char* description() const override { return SYNOP_ECMWF_AUTO_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         SynopECMWFLand::setupBulletin(bulletin);
 
@@ -394,10 +374,10 @@ struct SynopWMO : public Synop
     // vertical coordinates
     void do_D01090()
     {
-        add(WR_VAR(0,  1,  1), c_station);
-        add(WR_VAR(0,  1,  2), c_station);
+        add(WR_VAR(0,  1,  1), msg->station_data);
+        add(WR_VAR(0,  1,  2), msg->station_data);
         do_station_name(WR_VAR(0,  1, 15));
-        add(WR_VAR(0,  2,  1), c_station);
+        add(WR_VAR(0,  2,  1), msg->station_data);
         do_D01011();
         do_D01012();
         do_D01021();
@@ -405,7 +385,7 @@ struct SynopWMO : public Synop
     }
 
     // D02036  Clouds with bases below station level
-    void do_D02036(const Msg& msg, wreport::Subset& subset)
+    void do_D02036(const Message& msg, wreport::Subset& subset)
     {
         // Number of individual cloud layers or masses
         int max_cloud_group = 0;
@@ -430,7 +410,7 @@ struct SynopWMO : public Synop
     }
 
     // D02047  Direction of cloud drift
-    void do_D02047(const Msg& msg, wreport::Subset& subset)
+    void do_D02047(const Message& msg, wreport::Subset& subset)
     {
         // D02047  Direction of cloud drift
         for (int i = 1; i <= 3; ++i)
@@ -454,7 +434,7 @@ struct SynopWMO : public Synop
     }
 
     // D02048  Direction and elevation of cloud
-    void do_D02048(const Msg& msg, wreport::Subset& subset)
+    void do_D02048(const Message& msg, wreport::Subset& subset)
     {
         if (const msg::Context* c = msg.find_context(Level::cloud(262, 0), Trange::instant()))
         {
@@ -482,7 +462,7 @@ struct SynopWMO : public Synop
     }
 
     // D02037  State of ground, snow depth, ground minimum temperature
-    void do_D02037(const Msg& msg, wreport::Subset& subset)
+    void do_D02037(const Message& msg, wreport::Subset& subset)
     {
         add(WR_VAR(0, 20,  62), DBA_MSG_STATE_GROUND);
         add(WR_VAR(0, 13,  13), DBA_MSG_TOT_SNOW);
@@ -532,7 +512,7 @@ struct SynopWMO : public Synop
         subset->store_variable_undef(WR_VAR(0,  7, 32));
     }
 
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    virtual void to_subset(const Message& msg, wreport::Subset& subset)
     {
         Synop::to_subset(msg, subset);
 
@@ -656,7 +636,7 @@ void register_synop(TemplateRegistry& r)
 {
     r.register_factory(0, "synop", "Synop (autodetect)",
             [](const ExporterOptions& opts, const Messages& msgs) {
-                auto msg = Msg::downcast(msgs[0]);
+                auto msg = Message::downcast(msgs[0]);
                 const Var* var = msg->get_st_name_var();
                 if (var)
                 {
@@ -675,15 +655,15 @@ void register_synop(TemplateRegistry& r)
             });
     r.register_factory(0, "synop-ecmwf", "Synop ECMWF (autodetect) (0.1)",
             [](const ExporterOptions& opts, const Messages& msgs) {
-                auto msg = Msg::downcast(msgs[0]);
+                auto msg = Message::downcast(msgs[0]);
                 const Var* var = msg->get_st_type_var();
                 if (var != NULL && var->enqi() == 0)
                     return unique_ptr<Template>(new SynopECMWFAuto(opts, msgs));
 
                 // If it has a geopotential, it's a land high station
                 for (const auto& ctx: msg->data)
-                    if (ctx->level.ltype1 == 100)
-                        if (ctx->values.maybe_var(WR_VAR(0, 10, 8)))
+                    if (ctx.level.ltype1 == 100)
+                        if (ctx.values.maybe_var(WR_VAR(0, 10, 8)))
                             return unique_ptr<Template>(new SynopECMWFLandHigh(opts, msgs));
 
                 return unique_ptr<Template>(new SynopECMWFLand(opts, msgs));
@@ -702,6 +682,7 @@ void register_synop(TemplateRegistry& r)
             });
 }
 
+}
 }
 }
 }

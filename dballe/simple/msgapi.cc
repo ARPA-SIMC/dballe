@@ -30,7 +30,7 @@ struct QuantesonoOperation : public CursorOperation<CursorStation>
 
     int run()
     {
-        const Msg* curmsg = api.curmsg();
+        const impl::Message* curmsg = api.curmsg();
         if (!curmsg)
             throw error_consistency("quantesono called without a current message");
         cursor = curmsg->query_stations(api.input_query);
@@ -51,11 +51,11 @@ template<typename Cursor>
 struct CursorTraits {};
 
 template<>
-struct CursorTraits<msg::CursorStationData>
+struct CursorTraits<impl::msg::CursorStationData>
 {
-    static inline std::unique_ptr<msg::CursorStationData> query(const dballe::Msg& msg, const core::Query& query)
+    static inline std::unique_ptr<impl::msg::CursorStationData> query(const dballe::impl::Message& msg, const core::Query& query)
     {
-        return std::unique_ptr<msg::CursorStationData>(dynamic_cast<msg::CursorStationData*>(msg.query_station_data(query).release()));
+        return std::unique_ptr<impl::msg::CursorStationData>(dynamic_cast<impl::msg::CursorStationData*>(msg.query_station_data(query).release()));
     }
     /*
     static inline void attr_insert(db::Transaction& tr, int id, const Values& values)
@@ -66,11 +66,11 @@ struct CursorTraits<msg::CursorStationData>
 };
 
 template<>
-struct CursorTraits<msg::CursorData>
+struct CursorTraits<impl::msg::CursorData>
 {
-    static inline std::unique_ptr<msg::CursorData> query(const dballe::Msg& msg, const core::Query& query)
+    static inline std::unique_ptr<impl::msg::CursorData> query(const dballe::impl::Message& msg, const core::Query& query)
     {
-        return std::unique_ptr<msg::CursorData>(dynamic_cast<msg::CursorData*>(msg.query_data(query).release()));
+        return std::unique_ptr<impl::msg::CursorData>(dynamic_cast<impl::msg::CursorData*>(msg.query_data(query).release()));
     }
     /*
     static inline void attr_insert(db::Transaction& tr, int id, const Values& values)
@@ -94,7 +94,7 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
 
     int run()
     {
-        Msg* msg = api.curmsg();
+        impl::Message* msg = api.curmsg();
         if (!msg) return API::missing_int;
 
         // this->cursor.reset(CursorTraits<Cursor>::query(*msg, api.input_query).release());
@@ -173,17 +173,17 @@ struct PrendiloOperation : public Operation
 
     void run()
     {
-        if (!api.msgs) api.msgs = new Messages;
-        if (!api.wmsg) api.wmsg = new Msg;
+        if (!api.msgs) api.msgs = new std::vector<std::shared_ptr<dballe::Message>>;
+        if (!api.wmsg) api.wmsg = new impl::Message;
 
         // Store record metainfo
         if (!api.input_data.station.report.empty())
         {
             api.wmsg->set_rep_memo(api.input_data.station.report.c_str());
-            api.wmsg->type = Msg::type_from_repmemo(api.input_data.station.report.c_str());
+            api.wmsg->type = impl::Message::type_from_repmemo(api.input_data.station.report.c_str());
         }
         if (api.input_data.station.id != MISSING_INT)
-            api.wmsg->set(Level(), Trange(), newvar(WR_VAR(0, 1, 192), api.input_data.station.id));
+            api.wmsg->station_data.set(newvar(WR_VAR(0, 1, 192), api.input_data.station.id));
         if (!api.input_data.station.ident.is_missing())
             api.wmsg->set_ident(api.input_data.station.ident);
         if (api.input_data.station.coords.lat != MISSING_INT)
@@ -329,18 +329,18 @@ void MsgAPI::flushMessage()
     msgs = nullptr;
 }
 
-const Msg* MsgAPI::curmsg() const
+const impl::Message* MsgAPI::curmsg() const
 {
     if (msgs && curmsgidx < msgs->size())
-        return &Msg::downcast(*(*msgs)[curmsgidx]);
+        return &impl::Message::downcast(*(*msgs)[curmsgidx]);
     else
         return nullptr;
 }
 
-Msg* MsgAPI::curmsg()
+impl::Message* MsgAPI::curmsg()
 {
     if (msgs && curmsgidx < msgs->size())
-        return &Msg::downcast(*(*msgs)[curmsgidx]);
+        return &impl::Message::downcast(*(*msgs)[curmsgidx]);
     else
         return nullptr;
 }
@@ -409,10 +409,10 @@ int MsgAPI::voglioquesto()
 
 #if 0
     if (station_context)
-        return reset_operation(new VoglioquestoOperation<msg::CursorStationData>(*this));
+        return reset_operation(new VoglioquestoOperation<impl::msg::CursorStationData>(*this));
     else
 #endif
-        return reset_operation(new VoglioquestoOperation<msg::CursorData>(*this));
+        return reset_operation(new VoglioquestoOperation<impl::msg::CursorData>(*this));
 }
 
 void MsgAPI::set_exporter(const char* template_name)

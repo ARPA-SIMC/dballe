@@ -68,39 +68,39 @@ this->add_method("export", [](Fixture& f) {
 
     // Put some data in the database and check that it gets exported properly
     // Query back the data
-    Messages messages = dballe::tests::messages_from_db(f.tr, core::Query());
+    impl::Messages messages = dballe::tests::messages_from_db(f.tr, core::Query());
     wassert(actual(messages.size()) == 4u);
 
     int synmsg = 2;
     int metmsg = 3;
-    if (Msg::downcast(messages[2])->type == MessageType::METAR)
+    if (impl::Message::downcast(messages[2])->type == MessageType::METAR)
     {
         // Since the order here is not determined, enforce one
         std::swap(synmsg, metmsg);
     }
 
-    wassert(actual(Msg::downcast(messages[0])->type) == MessageType::SYNOP);
+    wassert(actual(impl::Message::downcast(messages[0])->type) == MessageType::SYNOP);
     wassert(actual(*messages[0], DBA_MSG_LATITUDE) == 12.34560);
     wassert(actual(*messages[0], DBA_MSG_LONGITUDE) == 76.54321);
     wassert(actual(*messages[0]).is_undef(DBA_MSG_IDENT));
     wassert(actual(messages[0]->get_datetime()) == Datetime(1945, 4, 25, 8, 0, 0));
     wassert(actual(*messages[0], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)) == 500);
 
-    wassert(actual(Msg::downcast(messages[1])->type) == MessageType::SYNOP);
+    wassert(actual(impl::Message::downcast(messages[1])->type) == MessageType::SYNOP);
     wassert(actual(*messages[1], DBA_MSG_LATITUDE) == 12.34560);
     wassert(actual(*messages[1], DBA_MSG_LONGITUDE) == 76.54321);
     wassert(actual(*messages[1]).is_undef(DBA_MSG_IDENT));
     wassert(actual(messages[1]->get_datetime()) == Datetime(1945, 4, 26, 8, 0, 0));
     wassert(actual(*messages[1], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)) == 400);
 
-    wassert(actual(Msg::downcast(messages[synmsg])->type) == MessageType::SYNOP);
+    wassert(actual(impl::Message::downcast(messages[synmsg])->type) == MessageType::SYNOP);
     wassert(actual(*messages[synmsg], DBA_MSG_LATITUDE) == 12.34560);
     wassert(actual(*messages[synmsg], DBA_MSG_LONGITUDE) == 76.54321);
     wassert(actual(*messages[synmsg], DBA_MSG_IDENT), "ciao");
     wassert(actual(messages[synmsg]->get_datetime()) == Datetime(1945, 4, 26, 8, 0, 0));
     wassert(actual(*messages[synmsg], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)) == 300);
 
-    wassert(actual(Msg::downcast(messages[metmsg])->type) == MessageType::METAR);
+    wassert(actual(impl::Message::downcast(messages[metmsg])->type) == MessageType::METAR);
     wassert(actual(*messages[metmsg], DBA_MSG_LATITUDE) == 12.34560);
     wassert(actual(*messages[metmsg], DBA_MSG_LONGITUDE) == 76.54321);
     wassert(actual(*messages[metmsg], DBA_MSG_IDENT), "ciao");
@@ -128,9 +128,9 @@ this->add_method("export", [](Fixture& f) {
     f.tr->insert_data(dv, false, true);
 
     // Query back the data
-    Messages msgs = dballe::tests::messages_from_db(f.tr, core::Query());
+    impl::Messages msgs = dballe::tests::messages_from_db(f.tr, core::Query());
     wassert(actual(msgs.size()) == 1u);
-    auto msg = Msg::downcast(msgs[0]);
+    auto msg = impl::Message::downcast(msgs[0]);
 
     wassert(actual(msg->type) == MessageType::SYNOP);
     wassert(actual(*msgs[0], DBA_MSG_LATITUDE) == 45.0);
@@ -144,7 +144,7 @@ this->add_method("missing_repmemo", [](Fixture& f) {
     // Text exporting of extra station information
     core::Query query;
     query.rep_memo = "nonexisting";
-    Messages msgs = wcallchecked(dballe::tests::messages_from_db(f.tr, query));
+    impl::Messages msgs = wcallchecked(dballe::tests::messages_from_db(f.tr, query));
     wassert(actual(msgs.size()) == 0u);
 });
 

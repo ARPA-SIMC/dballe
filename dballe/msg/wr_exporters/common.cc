@@ -1,23 +1,3 @@
-/*
- * dballe/wr_exporter/common - Common infrastructure for wreport exporters
- *
- * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
 #include "common.h"
 #include <wreport/subset.h>
 #include <dballe/msg/context.h>
@@ -26,6 +6,7 @@ using namespace wreport;
 using namespace std;
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -42,7 +23,7 @@ static int override_trange(const Var* var, int orig)
     return orig;
 }
 
-void ExporterModule::init(const Msg& msg, wreport::Subset& subset)
+void ExporterModule::init(const Message& msg, wreport::Subset& subset)
 {
     this->msg = &msg;
     this->subset = &subset;
@@ -107,7 +88,7 @@ void ExporterModule::add_ecmwf_synop_head()
     add(WR_VAR(0,  2,  1), c_ana);
 }
 
-void CommonSynopExporter::init(const Msg& msg, wreport::Subset& subset)
+void CommonSynopExporter::init(const Message& msg, wreport::Subset& subset)
 {
     ExporterModule::init(msg, subset);
     c_geopotential = 0;
@@ -876,6 +857,7 @@ void CommonSynopExporter::add_D02024()
     }
 }
 
+}
 }
 }
 }

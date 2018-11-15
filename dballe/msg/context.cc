@@ -9,16 +9,12 @@ using namespace wreport;
 using namespace std;
 
 namespace dballe {
+namespace impl {
 namespace msg {
 
 Context::Context(const Level& lev, const Trange& tr)
     : level(lev), trange(tr)
 {
-}
-
-bool Context::is_station() const
-{
-    return level == Level() && trange == Trange();
 }
 
 int Context::compare(const Context& ctx) const
@@ -83,14 +79,6 @@ unsigned Context::diff(const Context& ctx) const
     unsigned diffs = 0;
     while (i1 != values.end() && i2 != ctx.values.end())
     {
-        // Skip second=0 in station context
-        if (is_station())
-        {
-            if (i1->code() == WR_VAR(0, 4, 6) && (*i1)->enqi() == 0) ++i1;
-            if (i2->code() == WR_VAR(0, 4, 6) && (*i2)->enqi() == 0) ++i2;
-            if (i1 == values.end() || i2 == ctx.values.end())
-                break;
-        }
         int cmp = (int)i1->code() - (int)i2->code();
         if (cmp == 0)
         {
@@ -148,5 +136,6 @@ const Var* Context::find_vsig() const
     return res;
 }
 
+}
 }
 }

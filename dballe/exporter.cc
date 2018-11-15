@@ -82,9 +82,9 @@ std::unique_ptr<Exporter> Exporter::create(Encoding type, const ExporterOptions&
     switch (type)
     {
         case Encoding::BUFR:
-            return unique_ptr<Exporter>(new msg::BufrExporter(opts));
+            return unique_ptr<Exporter>(new impl::msg::BufrExporter(opts));
         case Encoding::CREX:
-            return unique_ptr<Exporter>(new msg::CrexExporter(opts));
+            return unique_ptr<Exporter>(new impl::msg::CrexExporter(opts));
         default:
             error_unimplemented::throwf("%s exporter is not implemented yet", File::encoding_name(type));
     }

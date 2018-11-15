@@ -1,22 +1,3 @@
-/*
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "dballe/msg/wr_codec.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
@@ -50,6 +31,7 @@ using namespace std;
 #define ACARS_WMO_DESC "ACARS WMO"
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -92,7 +74,7 @@ struct FlightBase : public Template
             subset->store_variable_undef(code);
     }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         Template::setupBulletin(bulletin);
 
@@ -107,16 +89,15 @@ struct FlightBase : public Template
         bulletin.data_category = 4;
         bulletin.data_subcategory = 255;
     }
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         Template::to_subset(msg, subset);
 
         // Find what is the level where the airplane is in
         flight_ctx = 0;
 
-        for (unsigned i = 0; i < msg.data.size(); ++i)
+        for (const auto& ctx : msg.data)
         {
-            const msg::Context& ctx = *msg.data[i];
             if (ctx.trange != Trange::instant()) continue;
 
             bool use = false;
@@ -174,7 +155,7 @@ struct Airep : public FlightBase
         bulletin.load_tables();
     }
 
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         FlightBase::to_subset(msg, subset);
 
@@ -269,7 +250,7 @@ struct AmdarWMO : public FlightBase
         bulletin.load_tables();
     }
 
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         FlightBase::to_subset(msg, subset);
 
@@ -377,7 +358,7 @@ struct Acars : public FlightBase
         bulletin.load_tables();
     }
 
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         FlightBase::to_subset(msg, subset);
         /*  0 */ add(WR_VAR(0,  1,  6));
@@ -477,6 +458,7 @@ void register_flight(TemplateRegistry& r)
             });
 }
 
+}
 }
 }
 }

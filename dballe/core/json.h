@@ -84,6 +84,8 @@ public:
     void add_var(const wreport::Var& val);
     void add_station(const Station& s);
     void add_dbstation(const DBStation& s);
+    void add_values(const Values& values);
+    void add_dbvalues(const DBValues& values);
     void add_break();
 
     void add(const std::string& val) { add_string(val); }
@@ -102,6 +104,8 @@ public:
     void add(const wreport::Var& val) { add_var(val); }
     void add(const Station& s) { add_station(s); }
     void add(const DBStation& s) { add_dbstation(s); }
+    void add(const Values& v) { add_values(v); }
+    void add(const DBValues& v) { add_dbvalues(v); }
 
     template<typename T>
     void add(const char* a, T b)

@@ -7,6 +7,7 @@
 #include <dballe/core/matcher.h>
 #include <dballe/msg/fwd.h>
 #include <dballe/msg/vars.h>
+#include <dballe/msg/context.h>
 #include <stdio.h>
 #include <vector>
 #include <memory>
@@ -16,11 +17,11 @@ namespace dballe {
 struct CSVReader;
 struct CSVWriter;
 
+namespace impl {
 // Compatibility/shortcut from old Messages implementation to new vector of shared_ptr
-typedef std::vector<std::shared_ptr<Message>> Messages;
+typedef std::vector<std::shared_ptr<dballe::Message>> Messages;
 
 namespace msg {
-struct Context;
 
 /**
  * Read data from a CSV input.
@@ -48,12 +49,57 @@ unsigned messages_diff(const Messages& msgs1, const Messages& msgs2);
 /// Print all the contents of all the messages to an output stream
 void messages_print(const Messages& msgs, FILE* out);
 
+
+class Contexts
+{
+public:
+    typedef std::vector<msg::Context>::const_iterator const_iterator;
+    typedef std::vector<msg::Context>::iterator iterator;
+    typedef std::vector<msg::Context>::const_reverse_iterator const_reverse_iterator;
+    typedef std::vector<msg::Context>::reverse_iterator reverse_iterator;
+
+protected:
+    std::vector<msg::Context> m_contexts;
+
+    iterator insert_new(const Level& level, const Trange& trange);
+
+public:
+    Contexts() = default;
+    Contexts(const Contexts&) = default;
+    Contexts(Contexts&&) = default;
+    Contexts& operator=(const Contexts&) = default;
+    Contexts& operator=(Contexts&&) = default;
+
+    const_iterator begin() const { return m_contexts.begin(); }
+    const_iterator end() const { return m_contexts.end(); }
+    iterator begin() { return m_contexts.begin(); }
+    iterator end() { return m_contexts.end(); }
+    const_reverse_iterator rbegin() const { return m_contexts.rbegin(); }
+    const_reverse_iterator rend() const { return m_contexts.rend(); }
+    const_iterator cbegin() const { return m_contexts.cbegin(); }
+    const_iterator cend() const { return m_contexts.cend(); }
+
+    const_iterator find(const Level& level, const Trange& trange) const;
+    iterator find(const Level& level, const Trange& trange);
+
+    iterator obtain(const Level& level, const Trange& trange);
+    bool drop(const Level& level, const Trange& trange);
+
+    size_t size() const { return m_contexts.size(); }
+    bool empty() const { return m_contexts.empty(); }
+    void clear() { return m_contexts.clear(); }
+    void reserve(typename std::vector<Value>::size_type size) { m_contexts.reserve(size); }
+    iterator erase(iterator pos) { return m_contexts.erase(pos); }
+    iterator erase(const_iterator pos) { return m_contexts.erase(pos); }
+};
+
 }
+
 
 /**
  * Storage for related physical data
  */
-class Msg : public Message
+class Message : public dballe::Message
 {
 protected:
     /**
@@ -68,53 +114,40 @@ protected:
     void setd(const Level& lev, const Trange& tr, wreport::Varcode code, double val, int conf);
     void setc(const Level& lev, const Trange& tr, wreport::Varcode code, const char* val, int conf);
 
-    /**
-     * Add a missing context, taking care of its memory management
-     *
-     * Note: if the context already exists, an exception is thrown
-     */
-    void add_context(std::unique_ptr<msg::Context>&& ctx);
-
 public:
     /// Source of the data
-    MessageType type;
+    MessageType type = MessageType::GENERIC;
+    Values station_data;
+    msg::Contexts data;
 
-    /** Context in the message */
-    std::vector<msg::Context*> data;
-
-    /**
-     * Create a new dba_msg
-     *
-     * By default, type is MSG_GENERIC
-     */
-    Msg();
-    ~Msg();
-
-    Msg(const Msg& m);
-    Msg& operator=(const Msg& m);
+    Message() = default;
+    Message(const Message&) = default;
+    Message(Message&&) = default;
+    Message& operator=(const Message& m) = default;
+    Message& operator=(Message&& m) = default;
 
     /**
-     * Return a reference to \a o downcasted as a Msg.
+     * Return a reference to \a o downcasted as an impl::Message.
      *
-     * Throws an exception if \a o is not a Msg.
+     * Throws an exception if \a o is not an impl::Message.
      */
-    static const Msg& downcast(const Message& o);
+    static const Message& downcast(const dballe::Message& o);
 
     /**
-     * Return a reference to \a o downcasted as a Msg.
+     * Return a reference to \a o downcasted as an impl::Message.
      *
-     * Throws an exception if \a o is not a Msg.
+     * Throws an exception if \a o is not an impl::Message.
      */
-    static Msg& downcast(Message& o);
+    static Message& downcast(dballe::Message& o);
 
     /**
-     * Returns a pointer to \a o downcasted as a Msg.
+     * Returns a pointer to \a o downcasted as an impl::Message.
      *
-     * Throws an exception if \a o is not a Msg.
+     * Throws an exception if \a o is not an impl::Message.
      */
-    static std::shared_ptr<Msg> downcast(std::shared_ptr<Message> o);
+    static std::shared_ptr<Message> downcast(std::shared_ptr<dballe::Message> o);
 
-    std::unique_ptr<Message> clone() const override;
+    std::unique_ptr<dballe::Message> clone() const override;
     Datetime get_datetime() const override;
     Coords get_coords() const override;
     Ident get_ident() const override;
@@ -122,13 +155,13 @@ public:
     MessageType get_type() const override { return type; }
     bool foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)>) const override;
     void print(FILE* out) const override;
-    unsigned diff(const Message& msg) const override;
+    unsigned diff(const dballe::Message& msg) const override;
 
-    /// Remove all information from Msg
+    /// Reset the messages as if it was just created
     void clear();
 
-    using Message::get;
-    using Message::set;
+    using dballe::Message::get;
+    using dballe::Message::set;
 
     /**
      * Find a datum given its shortcut ID
@@ -207,9 +240,6 @@ public:
      */
     msg::Context& obtain_context(const Level& lev, const Trange& tr);
 
-    /// Shortcut to obtain_context(Level(), Trange());
-    msg::Context& obtain_station_context();
-
     /**
      * Find a variable given its description
      *
@@ -241,14 +271,14 @@ public:
 #endif
 
     /**
-     * Copy a Msg, removing the sounding significance from the level
+     * Copy a Message, removing the sounding significance from the level
      * descriptions and packing together the data at the same pressure level.
      *
      * This is used to postprocess data after decoding, where the l2 field of the
      * level description is temporarily used to store the vertical sounding
      * significance, to simplify decoding.
      */
-    void sounding_pack_levels(Msg& dst) const;
+    void sounding_pack_levels(Message& dst) const;
 
     /**
      * Read data from a CSV input.
@@ -285,13 +315,13 @@ public:
 
 
 /**
- * Match adapter for Msg
+ * Match adapter for impl::Message
  */
 struct MatchedMsg : public Matched
 {
-    const Msg& m;
+    const impl::Message& m;
 
-    MatchedMsg(const Msg& r);
+    MatchedMsg(const impl::Message& r);
     ~MatchedMsg();
 
     matcher::Result match_var_id(int val) const override;
@@ -308,9 +338,9 @@ struct MatchedMsg : public Matched
  */
 struct MatchedMessages : public Matched
 {
-    const Messages& m;
+    const std::vector<std::shared_ptr<dballe::Message>>& m;
 
-    MatchedMessages(const Messages& m);
+    MatchedMessages(const std::vector<std::shared_ptr<dballe::Message>>& m);
     ~MatchedMessages();
 
     matcher::Result match_var_id(int val) const override;
@@ -321,5 +351,6 @@ struct MatchedMessages : public Matched
     matcher::Result match_rep_memo(const char* memo) const override;
 };
 
+}
 }
 #endif

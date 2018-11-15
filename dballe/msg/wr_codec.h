@@ -16,10 +16,8 @@ struct Subset;
 }
 
 namespace dballe {
-struct Msg;
-
+namespace impl {
 namespace msg {
-struct Context;
 
 class WRImporter : public Importer
 {
@@ -29,7 +27,7 @@ public:
     /**
      * Import a decoded BUFR/CREX message
      */
-    std::vector<std::shared_ptr<Message>> from_bulletin(const wreport::Bulletin& msg) const override;
+    std::vector<std::shared_ptr<dballe::Message>> from_bulletin(const wreport::Bulletin& msg) const override;
 
     /**
      * Build Message objects a decoded bulletin, calling \a dest on each
@@ -43,7 +41,7 @@ public:
      *   The function that consumes the interpreted messages.
      * @returns true if it got to the end of decoding, false if dest returned false.
      */
-    bool foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::unique_ptr<Message>)> dest) const;
+    bool foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::unique_ptr<dballe::Message>)> dest) const;
 };
 
 class BufrImporter : public WRImporter
@@ -54,7 +52,7 @@ public:
 
     Encoding encoding() const override { return Encoding::BUFR; }
 
-    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>)> dest) const override;
+    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<dballe::Message>)> dest) const override;
 };
 
 class CrexImporter : public WRImporter
@@ -65,7 +63,7 @@ public:
 
     Encoding encoding() const override { return Encoding::CREX; }
 
-    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>)> dest) const override;
+    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<dballe::Message>)> dest) const override;
 };
 
 namespace wr {
@@ -80,7 +78,7 @@ public:
     /**
      * Import a decoded BUFR/CREX message
      */
-    std::unique_ptr<wreport::Bulletin> to_bulletin(const Messages& msgs) const override;
+    std::unique_ptr<wreport::Bulletin> to_bulletin(const std::vector<std::shared_ptr<dballe::Message>>& msgs) const override;
 
     /**
      * Infer a template name from the message contents
@@ -116,11 +114,13 @@ class Template
 {
 protected:
     virtual void setupBulletin(wreport::Bulletin& bulletin);
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset);
+    virtual void to_subset(const Message& msg, wreport::Subset& subset);
 
     void add(wreport::Varcode code, const msg::Context* ctx, int shortcut) const;
     void add(wreport::Varcode code, const msg::Context* ctx, wreport::Varcode srccode) const;
     void add(wreport::Varcode code, const msg::Context* ctx) const;
+    void add(wreport::Varcode code, const Values& values) const;
+    void add(wreport::Varcode code, const Values& values, int shortcut) const;
     void add(wreport::Varcode code, int shortcut) const;
     void add(wreport::Varcode code, wreport::Varcode srccode, const Level& level, const Trange& trange) const;
     void add(wreport::Varcode code, const wreport::Var* var) const;
@@ -150,8 +150,7 @@ protected:
 public:
     const ExporterOptions& opts;
     const Messages& msgs;
-    const Msg* msg = 0;     // Msg being read
-    const msg::Context* c_station = 0;
+    const Message* msg = 0;     // Message being read
     const msg::Context* c_gnd_instant = 0;
     wreport::Subset* subset = 0; // Subset being written
 
@@ -189,6 +188,7 @@ struct TemplateRegistry : public std::map<std::string, TemplateFactory>
             TemplateFactory::factory_func fac);
 };
 
+}
 }
 }
 }

@@ -29,6 +29,7 @@ using namespace wreport;
 using namespace std;
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -130,7 +131,7 @@ void GenericImporter::import_defined(const Var& var)
             {
                 // Set the rep memo if we found it
                 const char* repmemo = var.enqc();
-                msg->type = Msg::type_from_repmemo(repmemo);
+                msg->type = Message::type_from_repmemo(repmemo);
                 msg->set_rep_memo(repmemo, -1);
             }
             break;
@@ -172,6 +173,7 @@ void GenericImporter::import_var(const Var& var)
     }
 }
 
+}
 }
 }
 }

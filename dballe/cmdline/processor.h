@@ -170,11 +170,11 @@ struct Filter
     void matcher_from_record(const Query& query);
 
     bool match_index(int idx) const;
-    bool match_common(const BinaryMessage& rmsg, const Messages* msgs) const;
-    bool match_msgs(const Messages& msgs) const;
-    bool match_bufrex(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const Messages* msgs) const;
-    bool match_bufr(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const Messages* msgs) const;
-    bool match_crex(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const Messages* msgs) const;
+    bool match_common(const BinaryMessage& rmsg, const std::vector<std::shared_ptr<dballe::Message>>* msgs) const;
+    bool match_msgs(const std::vector<std::shared_ptr<dballe::Message>>& msgs) const;
+    bool match_bufrex(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const std::vector<std::shared_ptr<dballe::Message>>* msgs) const;
+    bool match_bufr(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const std::vector<std::shared_ptr<dballe::Message>>* msgs) const;
+    bool match_crex(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const std::vector<std::shared_ptr<dballe::Message>>* msgs) const;
     bool match_item(const Item& item) const;
 };
 

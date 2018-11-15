@@ -37,9 +37,9 @@ std::unique_ptr<dballe::sql::Connection> get_test_connection(const std::string& 
 }
 
 
-Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const dballe::Query& query)
+impl::Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const dballe::Query& query)
 {
-    Messages res;
+    impl::Messages res;
     tr->export_msgs(query, [&](unique_ptr<Message>&& msg) {
         res.emplace_back(move(msg));
         return true;
@@ -47,9 +47,9 @@ Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const dballe::Que
     return res;
 }
 
-Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const char* query)
+impl::Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const char* query)
 {
-    Messages res;
+    impl::Messages res;
     tr->export_msgs(*dballe::tests::query_from_string(query), [&](unique_ptr<Message>&& msg) {
         res.emplace_back(move(msg));
         return true;

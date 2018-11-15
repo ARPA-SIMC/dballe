@@ -1,22 +1,3 @@
-/*
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "dballe/msg/wr_codec.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
@@ -49,6 +30,7 @@ using namespace std;
 
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -66,9 +48,9 @@ struct TempBase : public Template
     int count_levels() const
     {
         int lev_no = 0;
-        for (size_t i = 0; i < msg->data.size(); ++i)
+        for (const auto& ctx: msg->data)
         {
-            if (msg->data[i]->find_vsig() != NULL)
+            if (ctx.find_vsig() != NULL)
                 ++lev_no;
         }
         return lev_no;
@@ -80,9 +62,9 @@ struct TempBase : public Template
         subset->store_variable_i(WR_VAR(0, 31,  1), count);
 
         // Iterate backwards as we need to add levels in decreasing pressure order
-        for (int i = msg->data.size() - 1; i >= 0; --i)
+        for (auto i = msg->data.rbegin(); i != msg->data.rend(); ++i)
         {
-            msg::Context& c = *msg->data[i];
+            const msg::Context& c = *i;
 
             // We only want levels with a vertical sounding significance
             const Var* vss = c.find_vsig();
@@ -147,7 +129,7 @@ struct TempBase : public Template
         bulletin.data_subcategory_local = 101;
         for (const auto& mi: msgs)
         {
-            auto msg = Msg::downcast(mi);
+            auto msg = Message::downcast(mi);
             if (msg->type == MessageType::PILOT)
             {
                 bulletin.data_subcategory_local = 91;
@@ -161,7 +143,7 @@ struct TempBase : public Template
         }
     }
 
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         Template::to_subset(msg, subset);
     }
@@ -202,10 +184,10 @@ struct TempWMO : public TempBase
     TempWMO(const ExporterOptions& opts, const Messages& msgs)
         : TempBase(opts, msgs) {}
 
-    virtual const char* name() const { return TEMP_WMO_NAME; }
-    virtual const char* description() const { return TEMP_WMO_DESC; }
+    const char* name() const override { return TEMP_WMO_NAME; }
+    const char* description() const override { return TEMP_WMO_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         TempBase::setupBulletin(bulletin);
 
@@ -214,7 +196,7 @@ struct TempWMO : public TempBase
         bulletin.data_subcategory_local = 255;
         for (const auto& mi : msgs)
         {
-            auto msg = Msg::downcast(mi);
+            auto msg = Message::downcast(mi);
             if (msg->type == MessageType::TEMP_SHIP)
             {
                 bulletin.data_subcategory = 5;
@@ -270,11 +252,11 @@ struct TempWMO : public TempBase
         add(WR_VAR(0, 11,   2), &c);
     }
 
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         TempBase::to_subset(msg, subset);
         do_D01001(); // station id
-        add(WR_VAR(0,  1, 11), c_station, DBA_MSG_IDENT);
+        add(WR_VAR(0,  1, 11), msg.station_data, DBA_MSG_IDENT);
         add(WR_VAR(0,  2, 11), c_gnd_instant, DBA_MSG_SONDE_TYPE);
         add(WR_VAR(0,  2, 13), c_gnd_instant, DBA_MSG_SONDE_CORRECTION);
         add(WR_VAR(0,  2, 14), c_gnd_instant, DBA_MSG_SONDE_TRACKING);
@@ -283,10 +265,10 @@ struct TempWMO : public TempBase
         do_D01011(); // date
         do_D01013(); // time
         do_D01021(); // coordinates
-        add(WR_VAR(0,  7, 30), c_station, DBA_MSG_HEIGHT_STATION);
-        add(WR_VAR(0,  7, 31), c_station, DBA_MSG_HEIGHT_BARO);
-        add(WR_VAR(0,  7,  7), c_station, DBA_MSG_HEIGHT_RELEASE);
-        add(WR_VAR(0, 33, 24), c_station, DBA_MSG_STATION_HEIGHT_QUALITY);
+        add(WR_VAR(0,  7, 30), msg.station_data, DBA_MSG_HEIGHT_STATION);
+        add(WR_VAR(0,  7, 31), msg.station_data, DBA_MSG_HEIGHT_BARO);
+        add(WR_VAR(0,  7,  7), msg.station_data, DBA_MSG_HEIGHT_RELEASE);
+        add(WR_VAR(0, 33, 24), msg.station_data, DBA_MSG_STATION_HEIGHT_QUALITY);
 
         // Cloud information reported with vertical soundings
         add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
@@ -304,26 +286,25 @@ struct TempWMO : public TempBase
 
         // Temperature, dew-point and wind data at pressure levels
         int group_count = 0;
-        for (std::vector<msg::Context*>::const_reverse_iterator i = msg.data.rbegin();
-                i != msg.data.rend(); ++i)
+        for (auto i = msg.data.rbegin(); i != msg.data.rend(); ++i)
         {
             // Iterate backwards to get pressure levels sorted from the higher
             // to the lower pressure
-            const msg::Context* c = *i;
+            const msg::Context& c = *i;
             // Skip non-presure levels
-            if (!c->find_vsig()) continue;
+            if (!c.find_vsig()) continue;
             // Skip levels not for us
             if (!(
-                  c->values.maybe_var(WR_VAR(0, 10,   8))
-               || c->values.maybe_var(WR_VAR(0, 12, 101))
-               || c->values.maybe_var(WR_VAR(0, 12, 103))
-               || c->values.maybe_var(WR_VAR(0, 11,   1))
-               || c->values.maybe_var(WR_VAR(0, 11,   2))) && (
-                  c->values.maybe_var(WR_VAR(0, 11, 61))
-               || c->values.maybe_var(WR_VAR(0, 11, 62)))
+                  c.values.maybe_var(WR_VAR(0, 10,   8))
+               || c.values.maybe_var(WR_VAR(0, 12, 101))
+               || c.values.maybe_var(WR_VAR(0, 12, 103))
+               || c.values.maybe_var(WR_VAR(0, 11,   1))
+               || c.values.maybe_var(WR_VAR(0, 11,   2))) && (
+                  c.values.maybe_var(WR_VAR(0, 11, 61))
+               || c.values.maybe_var(WR_VAR(0, 11, 62)))
                )
                 continue;
-            do_D03054(*c);
+            do_D03054(c);
             ++group_count;
         }
         subset[rep_count_pos].seti(group_count);
@@ -332,20 +313,19 @@ struct TempWMO : public TempBase
         rep_count_pos = subset.size();
         subset.store_variable_undef(WR_VAR(0, 31, 1));
         group_count = 0;
-        for (std::vector<msg::Context*>::const_reverse_iterator i = msg.data.rbegin();
-                i != msg.data.rend(); ++i)
+        for (auto i = msg.data.rbegin(); i != msg.data.rend(); ++i)
         {
             // Iterate backwards to get pressure levels sorted from the higher
             // to the lower pressure
-            const msg::Context* c = *i;
+            const msg::Context& c = *i;
             // Skip non-pressure levels
-            if (c->level.ltype1 != 100) continue;
+            if (c.level.ltype1 != 100) continue;
             // Skip levels not for us
             if (!(
-                  c->values.maybe_var(WR_VAR(0, 11, 61))
-               || c->values.maybe_var(WR_VAR(0, 11, 62))))
+                  c.values.maybe_var(WR_VAR(0, 11, 61))
+               || c.values.maybe_var(WR_VAR(0, 11, 62))))
                 continue;
-            if (do_D03051(*c))
+            if (do_D03051(c))
                 ++group_count;
         }
         subset[rep_count_pos].seti(group_count);
@@ -391,11 +371,11 @@ struct TempRadar : public TempBase
         bulletin.load_tables();
     }
 
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         TempBase::to_subset(msg, subset);
-        add(WR_VAR(0, 1, 33), c_station);
-        add(WR_VAR(0, 1, 34), c_station);
+        add(WR_VAR(0, 1, 33), msg.station_data);
+        add(WR_VAR(0, 1, 34), msg.station_data);
         do_D01001(); // station id
         do_D01011(); // date
         do_D01012(); // date
@@ -410,24 +390,23 @@ struct TempRadar : public TempBase
 
         // Sounding levels
         int group_count = 0;
-        for (std::vector<msg::Context*>::const_reverse_iterator i = msg.data.rbegin();
-                i != msg.data.rend(); ++i)
+        for (auto i = msg.data.rbegin(); i != msg.data.rend(); ++i)
         {
             // Iterate backwards to get pressure levels sorted from the higher
             // to the lower pressure
-            const msg::Context* c = *i;
+            const msg::Context& c = *i;
             // We are only interested in height levels
-            if (c->level.ltype1 != 102) continue;
-            if (const Var* var = c->values.maybe_var(WR_VAR(0, 7, 7)))
+            if (c.level.ltype1 != 102) continue;
+            if (const Var* var = c.values.maybe_var(WR_VAR(0, 7, 7)))
                 add(WR_VAR(0, 7, 7), var);
             else
-                subset.store_variable_d(WR_VAR(0, 7, 7), c->level.l1/1000.0);
-            add(WR_VAR(0, 11,   1), c);
+                subset.store_variable_d(WR_VAR(0, 7, 7), c.level.l1/1000.0);
+            add(WR_VAR(0, 11,   1), &c);
             static const Varcode codes[] = { WR_VAR(0, 11,   2), WR_VAR(0, 11,   6) };
             for (unsigned i = 0; i < 2; ++i)
             {
                 Varcode code = codes[i];
-                if (const wreport::Var *var = c->values.maybe_var(code))
+                if (const wreport::Var *var = c.values.maybe_var(code))
                 {
                     add(code, var);
                     add(WR_VAR(0, 33, 2), var->enqa(WR_VAR(0, 33,  2)));
@@ -436,7 +415,7 @@ struct TempRadar : public TempBase
                     subset.store_variable_undef(WR_VAR(0, 33,   2));
                 }
             }
-            add(WR_VAR(0, 11,  50), c);
+            add(WR_VAR(0, 11,  50), &c);
             ++group_count;
         }
         subset[rep_count_pos].seti(group_count);
@@ -474,7 +453,7 @@ struct TempEcmwfLand : public TempBase
         bulletin.load_tables();
     }
 
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         TempBase::to_subset(msg, subset);
         /*  0 */ add(WR_VAR(0,  1,  1), DBA_MSG_BLOCK);
@@ -556,7 +535,7 @@ struct TempEcmwfShip : public TempBase
         bulletin.load_tables();
     }
 
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         TempBase::to_subset(msg, subset);
         /*  0 */ add(WR_VAR(0,  1, 11), DBA_MSG_IDENT);
@@ -611,10 +590,10 @@ struct PilotWMO : public TempBase
 
         for (const auto& mi: msgs)
         {
-            auto msg = Msg::downcast(mi);
+            auto msg = Message::downcast(mi);
             for (const auto& ctx: msg->data)
             {
-                switch (ctx->level.ltype1)
+                switch (ctx.level.ltype1)
                 {
                     case 100: ++has_press; break;
                     case 102: ++has_height; break;
@@ -629,7 +608,7 @@ struct PilotWMO : public TempBase
         TempBase::to_bulletin(bulletin);
     }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         TempBase::setupBulletin(bulletin);
 
@@ -645,7 +624,8 @@ struct PilotWMO : public TempBase
             bulletin.datadesc.push_back(WR_VAR(3, 9, 51)); // For height levels
         bulletin.load_tables();
     }
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         TempBase::to_subset(msg, subset);
 
@@ -676,10 +656,9 @@ struct PilotWMO : public TempBase
 
         /* Iterate backwards as we need to add levels in decreasing pressure order */
         int group_count = 0;
-        for (std::vector<msg::Context*>::const_reverse_iterator i = msg.data.rbegin();
-                i != msg.data.rend(); ++i)
+        for (auto i = msg.data.rbegin(); i != msg.data.rend(); ++i)
         {
-            const msg::Context& c = **i;
+            const msg::Context& c = *i;
             // We only want levels with a vertical sounding significance
             const Var* vss = c.find_vsig();
             if (vss == NULL) continue;
@@ -714,12 +693,11 @@ struct PilotWMO : public TempBase
         rep_count_pos = subset.size();
         subset.store_variable_undef(WR_VAR(0, 31,  1));
         group_count = 0;
-        for (std::vector<msg::Context*>::const_reverse_iterator i = msg.data.rbegin();
-                i != msg.data.rend(); ++i)
+        for (auto i = msg.data.rbegin(); i != msg.data.rend(); ++i)
         {
             // Iterate backwards to get pressure levels sorted from the higher
             // to the lower pressure
-            const msg::Context& c = **i;
+            const msg::Context& c = *i;
             // Skip levels that do not fit
             if (pressure_levs && c.level.ltype1 != 100) continue;
             if (!pressure_levs && c.level.ltype1 != 102) continue;
@@ -778,7 +756,7 @@ struct PilotEcmwf : public TempBase
 
         bulletin.load_tables();
     }
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         TempBase::to_subset(msg, subset);
 
@@ -797,9 +775,9 @@ struct PilotEcmwf : public TempBase
 
         /* Iterate backwards as we need to add levels in decreasing pressure order */
         int group_count = 0;
-        for (int i = msg.data.size() - 1; i >= 0; --i)
+        for (auto i = msg.data.rbegin(); i != msg.data.rend(); ++i)
         {
-            msg::Context& c = *msg.data[i];
+            const msg::Context& c = *i;
             // We only want levels with a vertical sounding significance
             const Var* vss = c.find_vsig();
             if (vss == NULL) continue;
@@ -875,7 +853,7 @@ void register_temp(TemplateRegistry& r)
                     if (var->enq(0) == 3)
                         return unique_ptr<Template>(new TempRadar(opts, msgs));
 
-                auto msg = Msg::downcast(msgs[0]);
+                auto msg = Message::downcast(msgs[0]);
 
                 // ECMWF temps use normal replication which cannot do more than 256 levels
                 if (msg->data.size() > 260)
@@ -899,7 +877,7 @@ void register_temp(TemplateRegistry& r)
             });
     r.register_factory(2, "temp-ecmwf", "Temp ECMWF (autodetect)",
             [](const ExporterOptions& opts, const Messages& msgs) {
-                if (msgs.empty() || Msg::downcast(msgs[0])->type != MessageType::TEMP_SHIP)
+                if (msgs.empty() || Message::downcast(msgs[0])->type != MessageType::TEMP_SHIP)
                     return unique_ptr<Template>(new TempEcmwfLand(opts, msgs));
                 else
                     return unique_ptr<Template>(new TempEcmwfShip(opts, msgs));
@@ -926,7 +904,7 @@ void register_temp(TemplateRegistry& r)
             });
     r.register_factory(2, "pilot", "pilot (autodetect)",
             [](const ExporterOptions& opts, const Messages& msgs) {
-                auto msg = Msg::downcast(msgs[0]);
+                auto msg = Message::downcast(msgs[0]);
                 const Var* var = msg->get_sonde_tracking_var();
                 // Try with another one in case the first was just unset
                 if (!var) var = msg->get_meas_equip_type_var();
@@ -937,6 +915,7 @@ void register_temp(TemplateRegistry& r)
             });
 }
 
+}
 }
 }
 }

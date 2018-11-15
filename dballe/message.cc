@@ -17,8 +17,8 @@ Message::~Message() {}
 
 std::unique_ptr<Message> Message::create(MessageType type)
 {
-    Msg* msg;
-    std::unique_ptr<Message> res(msg = new Msg);
+    impl::Message* msg;
+    std::unique_ptr<Message> res(msg = new impl::Message);
     msg->type = type;
     return res;
 }

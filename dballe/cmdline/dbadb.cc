@@ -142,8 +142,8 @@ int Dbadb::do_export(const Query& query, File& file, const char* output_template
         /* Override the message type if the user asks for it */
         if (forced_repmemo != NULL)
         {
-            Msg& m = Msg::downcast(*msg);
-            m.type = Msg::type_from_repmemo(forced_repmemo);
+            impl::Message& m = impl::Message::downcast(*msg);
+            m.type = impl::Message::type_from_repmemo(forced_repmemo);
             m.set_rep_memo(forced_repmemo);
         }
         std::vector<std::shared_ptr<Message>> msgs;

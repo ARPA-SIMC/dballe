@@ -2,6 +2,8 @@
 #define FDBA_MSGAPI_H
 
 #include "commonapi.h"
+#include <dballe/fwd.h>
+#include <dballe/msg/fwd.h>
 #include <dballe/core/defs.h>
 
 namespace wreport {
@@ -9,10 +11,6 @@ struct Var;
 }
 
 namespace dballe {
-struct File;
-struct Message;
-struct Msg;
-
 namespace fortran {
 
 class MsgAPI : public CommonAPIImplementation
@@ -55,7 +53,7 @@ protected:
 
 public:
     /// Message subset being written
-    Msg* wmsg = nullptr;
+    impl::Message* wmsg = nullptr;
     /// Message being written
     std::vector<std::shared_ptr<dballe::Message>>* msgs = nullptr;
 
@@ -74,8 +72,8 @@ public:
     /**
      * Get a pointer to the current message being read or written
      */
-    const Msg* curmsg() const;
-    Msg* curmsg();
+    const impl::Message* curmsg() const;
+    impl::Message* curmsg();
     void flushSubset();
     void flushMessage();
     void set_exporter(const char* template_name);

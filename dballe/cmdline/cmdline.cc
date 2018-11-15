@@ -520,8 +520,8 @@ unsigned dba_cmdline_get_query(poptContext optCon, Query& query)
 
 void list_templates()
 {
-    const msg::wr::TemplateRegistry& reg = msg::wr::TemplateRegistry::get();
-    for (msg::wr::TemplateRegistry::const_iterator i = reg.begin(); i != reg.end(); ++i)
+    const impl::msg::wr::TemplateRegistry& reg = impl::msg::wr::TemplateRegistry::get();
+    for (impl::msg::wr::TemplateRegistry::const_iterator i = reg.begin(); i != reg.end(); ++i)
         fprintf(stdout, "%s - %s\n",
                 i->second.name.c_str(), i->second.description.c_str());
 }

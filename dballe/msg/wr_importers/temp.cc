@@ -24,6 +24,7 @@ using namespace std;
 #define MISSING_PRESS -1.0
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -452,6 +453,7 @@ void TempImporter::import_group(unsigned start, unsigned length)
     }
 }
 
+}
 }
 }
 }

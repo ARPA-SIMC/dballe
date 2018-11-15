@@ -36,6 +36,8 @@ public:
 
     const_iterator begin() const { return m_values.begin(); }
     const_iterator end() const { return m_values.end(); }
+    const_iterator cbegin() const { return m_values.cbegin(); }
+    const_iterator cend() const { return m_values.cend(); }
     iterator begin() { return m_values.begin(); }
     iterator end() { return m_values.end(); }
     iterator find(wreport::Varcode code) noexcept;

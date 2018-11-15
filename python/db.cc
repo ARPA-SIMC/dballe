@@ -577,7 +577,7 @@ static unsigned db_load_file_enc(DB& db, Encoding encoding, FILE* file, bool clo
     std::unique_ptr<Importer> imp = Importer::create(f->encoding());
     unsigned count = 0;
     f->foreach([&](const BinaryMessage& raw) {
-        Messages messages = imp->from_binary(raw);
+        impl::Messages messages = imp->from_binary(raw);
         db.import_messages(messages, opts);
         ++count;
         return true;
@@ -592,7 +592,7 @@ static unsigned db_load_file(DB& db, FILE* file, bool close_on_exit, const std::
     std::unique_ptr<Importer> imp = Importer::create(f->encoding());
     unsigned count = 0;
     f->foreach([&](const BinaryMessage& raw) {
-        Messages messages = imp->from_binary(raw);
+        impl::Messages messages = imp->from_binary(raw);
         db.import_messages(messages, opts);
         ++count;
         return true;
@@ -720,7 +720,7 @@ struct export_to_file : MethKwargs<Impl>
                 auto exporter = Exporter::create(out->encoding(), opts);
                 ReleaseGIL gil;
                 self->db->export_msgs(query, [&](unique_ptr<Message>&& msg) {
-                    Messages msgs;
+                    impl::Messages msgs;
                     msgs.emplace_back(move(msg));
                     out->write(exporter->to_binary(msgs));
                     return true;
@@ -735,7 +735,7 @@ struct export_to_file : MethKwargs<Impl>
                 pyo_unique_ptr res(nullptr);
                 bool has_error = false;
                 self->db->export_msgs(query, [&](unique_ptr<Message>&& msg) {
-                    Messages msgs;
+                    impl::Messages msgs;
                     msgs.emplace_back(move(msg));
                     std::string encoded = exporter->to_binary(msgs);
 #if PY_MAJOR_VERSION >= 3

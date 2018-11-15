@@ -46,7 +46,7 @@ public:
      *
      * @returns the context, or 0 if the id is not valid.
      */
-    msg::Context* to_msg(Tracer<>& trc, int id, Msg& msg);
+    impl::msg::Context* to_msg(Tracer<>& trc, int id, impl::Message& msg);
 
     /**
      * Lookup a LevTr entry from the cache, throwing an exception if it is not found

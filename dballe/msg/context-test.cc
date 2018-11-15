@@ -17,8 +17,8 @@ class Tests : public TestCase
     {
         add_method("compare", []() {
             Level lev(9, 8, 7, 6);
-            unique_ptr<msg::Context> c1(new msg::Context(lev, Trange(1, 2, 3)));
-            unique_ptr<msg::Context> c2(new msg::Context(lev, Trange(1, 3, 2)));
+            unique_ptr<impl::msg::Context> c1(new impl::msg::Context(lev, Trange(1, 2, 3)));
+            unique_ptr<impl::msg::Context> c2(new impl::msg::Context(lev, Trange(1, 3, 2)));
 
             wassert(actual(c1->values.size()) == 0);
             wassert(actual(c1->level) == lev);
@@ -49,8 +49,8 @@ class Tests : public TestCase
         // Test Context external ordering
         add_method("compare_external", []() {
             Trange tr(1, 2, 3);
-            unique_ptr<msg::Context> c1(new msg::Context(Level(1, 2, 3, 4), tr));
-            unique_ptr<msg::Context> c2(new msg::Context(Level(2, 1, 4, 3), tr));
+            unique_ptr<impl::msg::Context> c1(new impl::msg::Context(Level(1, 2, 3, 4), tr));
+            unique_ptr<impl::msg::Context> c2(new impl::msg::Context(Level(2, 1, 4, 3), tr));
 
             wassert(actual(c1->values.size()) == 0);
             wassert(actual(c1->level) == Level(1, 2, 3, 4));
@@ -73,7 +73,7 @@ class Tests : public TestCase
 
         // Test msg::Context internal ordering
         add_method("compare_internal", []() {
-            unique_ptr<msg::Context> c(new msg::Context(Level(1, 2, 3, 4), Trange::instant()));
+            unique_ptr<impl::msg::Context> c(new impl::msg::Context(Level(1, 2, 3, 4), Trange::instant()));
 
             c->values.set(var(WR_VAR(0, 1, 1)));
             wassert(actual(c->values.size()) == 1);

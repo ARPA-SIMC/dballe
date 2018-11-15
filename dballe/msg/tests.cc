@@ -86,19 +86,19 @@ const char* crex_files[] = {
     NULL
 };
 
-Messages read_msgs(const char* filename, Encoding type, const ImporterOptions& opts)
+impl::Messages read_msgs(const char* filename, Encoding type, const ImporterOptions& opts)
 {
     BinaryMessage raw = wcallchecked(read_rawmsg(filename, type));
     std::unique_ptr<Importer> importer = Importer::create(type, opts);
     return importer->from_binary(raw);
 }
 
-Messages read_msgs_csv(const char* filename)
+impl::Messages read_msgs_csv(const char* filename)
 {
     std::string fname = datafile(filename);
     CSVReader reader(fname);
 
-    Messages msgs = msg::messages_from_csv(reader);
+    impl::Messages msgs = impl::msg::messages_from_csv(reader);
     if (msgs.empty())
     {
         std::stringstream ss;
@@ -108,7 +108,7 @@ Messages read_msgs_csv(const char* filename)
     return msgs;
 }
 
-unique_ptr<Bulletin> export_msgs(Encoding enctype, const Messages& in, const std::string& tag, const ExporterOptions& opts)
+unique_ptr<Bulletin> export_msgs(Encoding enctype, const impl::Messages& in, const std::string& tag, const ExporterOptions& opts)
 {
     try {
         std::unique_ptr<Exporter> exporter(Exporter::create(enctype, opts));
@@ -133,7 +133,7 @@ void track_different_msgs(const Message& msg1, const Message& msg2, const std::s
 	cerr << "Wrote mismatching messages to " << fname1 << " and " << fname2 << endl;
 }
 
-void track_different_msgs(const Messages& msgs1, const Messages& msgs2, const std::string& prefix)
+void track_different_msgs(const impl::Messages& msgs1, const impl::Messages& msgs2, const std::string& prefix)
 {
     dump(prefix + "1", msgs1, "first message");
     dump(prefix + "2", msgs2, "second message");
@@ -141,7 +141,7 @@ void track_different_msgs(const Messages& msgs1, const Messages& msgs2, const st
 
 void ActualMessage::is_undef(int shortcut) const
 {
-    const Var* var = Msg::downcast(_actual).get(shortcut);
+    const Var* var = impl::Message::downcast(_actual).get(shortcut);
     if (!var || !var->isset()) return;
     std::stringstream ss;
     ss << "value is " << var->enqc() << " instead of being undefined";
@@ -150,7 +150,7 @@ void ActualMessage::is_undef(int shortcut) const
 
 const Var& want_var(const Message& msg, int shortcut)
 {
-    const Var* var = Msg::downcast(msg).get(shortcut);
+    const Var* var = impl::Message::downcast(msg).get(shortcut);
     if (!var)
         throw TestFailed("value is missing");
     if (!var->isset())
@@ -168,7 +168,7 @@ const Var& want_var(const Message& msg, wreport::Varcode code, const dballe::Lev
     return *var;
 }
 
-void dump(const std::string& tag, const Msg& msg, const std::string& desc)
+void dump(const std::string& tag, const impl::Message& msg, const std::string& desc)
 {
     string fname = "/tmp/" + tag + ".txt";
     FILE* out = fopen(fname.c_str(), "w");
@@ -181,12 +181,12 @@ void dump(const std::string& tag, const Msg& msg, const std::string& desc)
     cerr << desc << " saved in " << fname << endl;
 }
 
-void dump(const std::string& tag, const Messages& msgs, const std::string& desc)
+void dump(const std::string& tag, const impl::Messages& msgs, const std::string& desc)
 {
     string fname = "/tmp/" + tag + ".txt";
     FILE* out = fopen(fname.c_str(), "w");
     try {
-        msg::messages_print(msgs, out);
+        impl::msg::messages_print(msgs, out);
     } catch (std::exception& e) {
         fprintf(out, "Dump interrupted: %s\n", e.what());
     }
@@ -245,7 +245,7 @@ void MessageTweakers::add(MessageTweaker* tweak)
     tweaks.push_back(tweak);
 }
 
-void MessageTweakers::apply(Messages& msgs)
+void MessageTweakers::apply(impl::Messages& msgs)
 {
     for (vector<MessageTweaker*>::iterator i = tweaks.begin(); i != tweaks.end(); ++i)
         (*i)->tweak(msgs);
@@ -253,13 +253,18 @@ void MessageTweakers::apply(Messages& msgs)
 
 namespace tweaks {
 
-void StripAttrs::tweak(Messages& msgs)
+void StripAttrs::tweak(impl::Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        auto m = Msg::downcast(mi);
+        auto m = impl::Message::downcast(mi);
+
+        for (auto& var: m->station_data)
+            for (auto code: codes)
+                var->unseta(code);
+
         for (auto& ctx: m->data)
-            for (auto& var: ctx->values)
+            for (auto& var: ctx.values)
                 for (auto code: codes)
                     var->unseta(code);
     }
@@ -277,27 +282,34 @@ StripContextAttrs::StripContextAttrs()
     codes.push_back(WR_VAR(0, 4, 194));
 }
 
-void StripSubstituteAttrs::tweak(Messages& msgs)
+void StripSubstituteAttrs::tweak(impl::Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        auto m = Msg::downcast(mi);
+        auto m = impl::Message::downcast(mi);
+        for (auto& var: m->station_data)
+            var->unseta(var->code());
+
         for (auto& ctx: m->data)
-            for (auto& var: ctx->values)
+            for (auto& var: ctx.values)
                 var->unseta(var->code());
     }
 }
 
-void StripVars::tweak(Messages& msgs)
+void StripVars::tweak(impl::Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        auto m = Msg::downcast(mi);
+        auto m = impl::Message::downcast(mi);
+
+        for (const auto& code: codes)
+            m->station_data.unset(code);
+
         for (auto ci = m->data.begin(); ci != m->data.end(); )
         {
             for (const auto& code: codes)
-                (*ci)->values.unset(code);
-            if ((*ci)->values.empty())
+                ci->values.unset(code);
+            if (ci->values.empty())
                 ci = m->data.erase(ci);
             else
                 ++ci;
@@ -310,24 +322,24 @@ RoundLegacyVars::RoundLegacyVars() : table(NULL)
     table = Vartable::get_bufr(BufrTableID(0, 0, 0, 14, 0));
 }
 
-void RoundLegacyVars::tweak(Messages& msgs)
+void RoundLegacyVars::tweak(impl::Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        auto m = Msg::downcast(mi);
+        auto m = impl::Message::downcast(mi);
         for (auto& ctx: m->data)
         {
-            if (Var* var = ctx->values.maybe_var(WR_VAR(0, 12, 101)))
+            if (Var* var = ctx.values.maybe_var(WR_VAR(0, 12, 101)))
             {
                 Var var1(table->query(WR_VAR(0, 12, 1)), *var);
                 var->set(var1);
             }
-            if (Var* var = ctx->values.maybe_var(WR_VAR(0, 12, 103)))
+            if (Var* var = ctx.values.maybe_var(WR_VAR(0, 12, 103)))
             {
                 Var var1(table->query(WR_VAR(0, 12, 3)), *var);
                 var->set(var1);
             }
-            if (Var* var = ctx->values.maybe_var(WR_VAR(0,  7,  30)))
+            if (Var* var = ctx.values.maybe_var(WR_VAR(0,  7,  30)))
             {
                 Var var1(table->query(WR_VAR(0, 7, 1)), *var);
                 var->set(var1);
@@ -336,12 +348,12 @@ void RoundLegacyVars::tweak(Messages& msgs)
     }
 }
 
-void RemoveSynopWMOOnlyVars::tweak(Messages& msgs)
+void RemoveSynopWMOOnlyVars::tweak(impl::Messages& msgs)
 {
     int seen_tprec_trange = MISSING_INT;
     for (auto& mi: msgs)
     {
-        auto m = Msg::downcast(mi);
+        auto m = impl::Message::downcast(mi);
         // Remove all 'cloud drift' levels
         for (int i = 1; m->remove_context(Level::cloud(260, i), Trange::instant()); ++i)
             ;
@@ -354,9 +366,9 @@ void RemoveSynopWMOOnlyVars::tweak(Messages& msgs)
         // Remove all 'cloud below' levels
         for (int i = 1; m->remove_context(Level::cloud(263, i), Trange::instant()); ++i)
             ;
-        for (vector<msg::Context*>::iterator ci = m->data.begin(); ci != m->data.end(); )
+        for (auto ci = m->data.begin(); ci != m->data.end(); )
         {
-            msg::Context& c = **ci;
+            impl::msg::Context& c = *ci;
             c.values.unset(WR_VAR(0, 20, 62)); // State of the ground (with/without snow)
             c.values.unset(WR_VAR(0, 14, 31)); // Total sunshine
             c.values.unset(WR_VAR(0, 13, 33)); // Evaporation/evapotranspiration
@@ -395,14 +407,14 @@ void RemoveSynopWMOOnlyVars::tweak(Messages& msgs)
     }
 }
 
-void RemoveTempWMOOnlyVars::tweak(Messages& msgs)
+void RemoveTempWMOOnlyVars::tweak(impl::Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        auto m = Msg::downcast(mi);
-        for (vector<msg::Context*>::iterator ci = m->data.begin(); ci != m->data.end(); )
+        auto m = impl::Message::downcast(mi);
+        for (auto ci = m->data.begin(); ci != m->data.end(); )
         {
-            msg::Context& c = **ci;
+            impl::msg::Context& c = *ci;
             c.values.unset(WR_VAR(0, 22, 43)); // Sea/water temperature
             c.values.unset(WR_VAR(0, 11, 62)); // Absolute wind shear layer above
             c.values.unset(WR_VAR(0, 11, 61)); // Absolute wind shear layer below
@@ -430,28 +442,27 @@ RemoveOddTempTemplateOnlyVars::RemoveOddTempTemplateOnlyVars()
     codes.push_back(WR_VAR(0, 2, 12)); // Radiosonde computational method
 }
 
-void RemoveSynopWMOOddprec::tweak(Messages& msgs)
+void RemoveSynopWMOOddprec::tweak(impl::Messages& msgs)
 {
     for (auto& mi: msgs)
-        Msg::downcast(mi)->remove_context(Level(1), Trange(1, 0));
+        impl::Message::downcast(mi)->remove_context(Level(1), Trange(1, 0));
 }
 
-void TruncStName::tweak(Messages& msgs)
+void TruncStName::tweak(impl::Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        auto m = Msg::downcast(mi);
-        if (msg::Context* c = m->edit_context(Level(), Trange()))
-            if (const Var* orig = c->values.maybe_var(WR_VAR(0, 1, 19)))
-                if (orig->isset())
-                {
-                    const char* val = orig->enqc();
-                    char buf[21];
-                    strncpy(buf, val, 20);
-                    buf[19] = '>';
-                    buf[20] = 0;
-                    c->values.set(Var(orig->info(), buf));
-                }
+        auto m = impl::Message::downcast(mi);
+        if (Var* orig = m->station_data.maybe_var(WR_VAR(0, 1, 19)))
+            if (orig->isset())
+            {
+                const char* val = orig->enqc();
+                char buf[21];
+                strncpy(buf, val, 20);
+                buf[19] = '>';
+                buf[20] = 0;
+                orig->set(buf);
+            }
     }
 }
 
@@ -459,14 +470,14 @@ RoundGeopotential::RoundGeopotential()
 {
     table = Vartable::get_bufr(BufrTableID(0, 0, 0, 14, 0));
 }
-void RoundGeopotential::tweak(Messages& msgs)
+void RoundGeopotential::tweak(impl::Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        auto m = Msg::downcast(mi);
+        auto m = impl::Message::downcast(mi);
         for (auto& ctx: m->data)
         {
-            if (Var* orig = ctx->values.maybe_var(WR_VAR(0, 10, 8)))
+            if (Var* orig = ctx.values.maybe_var(WR_VAR(0, 10, 8)))
             {
                 // Convert to B10009 (new GTS TEMP templates)
                 Var var2(table->query(WR_VAR(0, 10, 9)), *orig);
@@ -484,27 +495,27 @@ HeightToGeopotential::HeightToGeopotential()
 {
     table = Vartable::get_bufr(BufrTableID(0, 0, 0, 14, 0));
 }
-void HeightToGeopotential::tweak(Messages& msgs)
+void HeightToGeopotential::tweak(impl::Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        auto m = Msg::downcast(mi);
+        auto m = impl::Message::downcast(mi);
         for (auto& ctx: m->data)
         {
-            if (ctx->level.ltype1 != 102) continue;
-            Var var(table->query(WR_VAR(0, 10, 8)), round(ctx->level.l1 * 9.807 / 10) * 10);
-            ctx->values.set(var);
+            if (ctx.level.ltype1 != 102) continue;
+            Var var(table->query(WR_VAR(0, 10, 8)), round(ctx.level.l1 * 9.807 / 10) * 10);
+            ctx.values.set(var);
         }
     }
 }
 
-void RoundVSS::tweak(Messages& msgs)
+void RoundVSS::tweak(impl::Messages& msgs)
 {
     for (auto& mi: msgs)
     {
-        auto m = Msg::downcast(mi);
+        auto m = impl::Message::downcast(mi);
         for (auto& ctx: m->data)
-            if (Var* orig = ctx->values.maybe_var(WR_VAR(0, 8, 42)))
+            if (Var* orig = ctx.values.maybe_var(WR_VAR(0, 8, 42)))
                 orig->seti(convert_BUFR08001_to_BUFR08042(convert_BUFR08042_to_BUFR08001(orig->enqi())));
     }
 }
@@ -513,10 +524,10 @@ RemoveContext::RemoveContext(const Level& lev, const Trange& tr)
     : lev(lev), tr(tr)
 {
 }
-void RemoveContext::tweak(Messages& msgs)
+void RemoveContext::tweak(impl::Messages& msgs)
 {
     for (auto& mi: msgs)
-        Msg::downcast(mi)->remove_context(lev, tr);
+        impl::Message::downcast(mi)->remove_context(lev, tr);
 }
 
 }
@@ -549,7 +560,7 @@ void TestMessage::read_from_raw(const BinaryMessage& msg, const ImporterOptions&
     msgs = importer->from_binary(raw);
 }
 
-void TestMessage::read_from_msgs(const Messages& _msgs, const ExporterOptions& export_opts)
+void TestMessage::read_from_msgs(const impl::Messages& _msgs, const ExporterOptions& export_opts)
 {
     // Export
     std::unique_ptr<Exporter> exporter(Exporter::create(type, export_opts));
@@ -580,7 +591,7 @@ void TestMessage::dump() const
 
     fname = basename + ".messages";
     out = fopen(fname.c_str(), "w");
-    msg::messages_print(msgs, out);
+    impl::msg::messages_print(msgs, out);
     fclose(out);
     cerr << name << " interpreted saved in " << fname << endl;
 }
@@ -601,7 +612,7 @@ void TestCodec::do_compare(const TestMessage& msg1, const TestMessage& msg2)
     {
         stringstream str;
         notes::Collect c(str);
-        int diffs = msg::messages_diff(msg1.msgs, msg2.msgs);
+        int diffs = impl::msg::messages_diff(msg1.msgs, msg2.msgs);
         if (diffs)
         {
             msg1.dump();
@@ -657,7 +668,7 @@ void TestCodec::run_reimport()
     if (!expected_template.empty())
     {
         std::unique_ptr<Exporter> exporter(Exporter::create(type, output_opts));
-        msg::WRExporter* exp = dynamic_cast<msg::WRExporter*>(exporter.get());
+        impl::msg::WRExporter* exp = dynamic_cast<impl::msg::WRExporter*>(exporter.get());
         auto tpl = exp->infer_template(orig.msgs);
         wassert(actual(tpl->name()) == expected_template);
     }

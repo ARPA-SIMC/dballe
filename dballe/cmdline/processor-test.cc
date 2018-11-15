@@ -1,4 +1,4 @@
-#include "core/tests.h"
+#include "dballe/core/tests.h"
 #include "processor.h"
 #include <limits>
 
@@ -71,7 +71,7 @@ add_method("parse_json", [] {
     Reader reader(opts);
     TestAction action;
 
-    reader.read({dballe::tests::datafile("/json/issue76.json")}, action);
+    wassert(reader.read({dballe::tests::datafile("/json/issue76.json")}, action));
 });
 
 add_method("issue77", [] {

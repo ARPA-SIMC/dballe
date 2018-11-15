@@ -1,22 +1,3 @@
-/*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "dballe/msg/wr_codec.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
@@ -30,6 +11,7 @@ using namespace std;
 #define GENERIC_DESC "Generic (255.0)"
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -91,7 +73,7 @@ struct Generic : public Template
             subset->store_variable_undef(code);
     }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         Template::setupBulletin(bulletin);
 
@@ -120,7 +102,7 @@ struct Generic : public Template
         // Store a pointer to it because we modify it later
         this->bulletin = &bulletin;
     }
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         Template::to_subset(msg, subset);
 
@@ -132,7 +114,7 @@ struct Generic : public Template
         if (repmemo)
             subset.store_variable(repmemo->code(), *repmemo);
         else if (msg.type != MessageType::GENERIC) // It is generic by default, no need to repeat it
-            subset.store_variable_c(WR_VAR(0, 1, 194), Msg::repmemo_from_type(msg.type));
+            subset.store_variable_c(WR_VAR(0, 1, 194), Message::repmemo_from_type(msg.type));
         else
             subset.store_variable_undef(WR_VAR(0, 1, 194));
 
@@ -146,7 +128,7 @@ struct Generic : public Template
         add_datetime_var(WR_VAR(0, 4, 6), !dt.is_missing(), dt.second);
 
         // Then the station context
-        for (const auto& val: msg.find_station_context())
+        for (const auto& val: msg.station_data)
         {
             const Var& var = *val;
 
@@ -170,11 +152,8 @@ struct Generic : public Template
         }
 
         // Then do the other contexts
-        for (size_t i = 0; i < msg.data.size(); ++i)
+        for (const auto& ctx: msg.data)
         {
-            const msg::Context& ctx = *msg.data[i];
-            if (ctx.is_station()) continue;
-
             for (const auto& val: ctx.values)
             {
                 const Var& var = *val;
@@ -261,6 +240,7 @@ void register_generic(TemplateRegistry& r)
             });
 }
 
+}
 }
 }
 }

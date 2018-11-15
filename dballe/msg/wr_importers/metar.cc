@@ -8,6 +8,7 @@ using namespace wreport;
 using namespace std;
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -105,6 +106,7 @@ void MetarImporter::import_var(const Var& var)
     }
 }
 
+}
 }
 }
 }

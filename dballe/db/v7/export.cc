@@ -24,16 +24,11 @@ namespace v7 {
 namespace {
 
 
-struct StationValues : protected Values
+struct StationValues : public Values
 {
     Tracer<>& trc;
 
     StationValues(Tracer<>& trc) : trc(trc) {}
-
-    void to_context(msg::Context& c)
-    {
-        c.values.merge(*this);
-    }
 
     void read(v7::Transaction& tr, int id_station)
     {
@@ -97,7 +92,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
     v7::LevTr& lt = levtr();
 
     // Message being built
-    unique_ptr<Msg> msg;
+    unique_ptr<impl::Message> msg;
 
     // The big export query
     DataQueryBuilder qb(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT | DBA_DB_MODIFIER_WITH_ATTRIBUTES, false);
@@ -139,7 +134,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
                 TRACE("Sending old message to consumer\n");
                 if (msg->type == MessageType::PILOT || msg->type == MessageType::TEMP || msg->type == MessageType::TEMP_SHIP)
                 {
-                    unique_ptr<Msg> copy(new Msg);
+                    unique_ptr<impl::Message> copy(new impl::Message);
                     msg->sounding_pack_levels(*copy);
                     /* DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_reverse_levels(msg)); */
                     if (!dest(move(copy)))
@@ -150,29 +145,27 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
             }
 
             // Start writing a new message
-            msg.reset(new Msg);
+            msg.reset(new impl::Message);
 
             // Fill in datetime
             msg->set_datetime(row.datetime);
-
-            msg::Context& c_st = msg->obtain_station_context();
 
             // Update station layer cache if needed
             if (row.station.id != last_ana_id)
                 station_values.read(*this, row.station.id);
 
             // Fill in report information
-            c_st.values.set(newvar(WR_VAR(0, 1, 194), row.station.report));
-            msg->type = Msg::type_from_repmemo(row.station.report.c_str());
+            msg->station_data.set(newvar(WR_VAR(0, 1, 194), row.station.report));
+            msg->type = impl::Message::type_from_repmemo(row.station.report.c_str());
 
             // Fill in the basic station values
-            c_st.values.set(newvar(WR_VAR(0, 5, 1), row.station.coords.lat));
-            c_st.values.set(newvar(WR_VAR(0, 6, 1), row.station.coords.lon));
+            msg->station_data.set(newvar(WR_VAR(0, 5, 1), row.station.coords.lat));
+            msg->station_data.set(newvar(WR_VAR(0, 6, 1), row.station.coords.lon));
             if (!row.station.ident.is_missing())
-                c_st.values.set(newvar(WR_VAR(0, 1, 11), (const char*)row.station.ident));
+                msg->station_data.set(newvar(WR_VAR(0, 1, 11), (const char*)row.station.ident));
 
             // Fill in station information
-            station_values.to_context(c_st);
+            msg->station_data.merge(station_values);
 
             // Update current context information
             last_datetime = row.datetime;
@@ -180,7 +173,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
         }
 
         TRACE("Inserting var %01d%02d%03d (%s)\n", WR_VAR_FXY(var->code()), var->enqc());
-        msg::Context* ctx = lt.to_msg(trc, row.id_levtr, *msg);
+        impl::msg::Context* ctx = lt.to_msg(trc, row.id_levtr, *msg);
         if (ctx)
             ctx->values.set(row.release_var());
     }
@@ -190,7 +183,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
         TRACE("Inserting leftover old message\n");
         if (msg->type == MessageType::PILOT || msg->type == MessageType::TEMP || msg->type == MessageType::TEMP_SHIP)
         {
-            unique_ptr<Msg> copy(new Msg);
+            unique_ptr<impl::Message> copy(new impl::Message);
             msg->sounding_pack_levels(*copy);
             /* DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_reverse_levels(msg)); */
             if (!dest(move(copy)))

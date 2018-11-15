@@ -68,9 +68,9 @@ std::unique_ptr<Importer> Importer::create(Encoding type, const ImporterOptions&
     switch (type)
     {
         case Encoding::BUFR:
-            return unique_ptr<Importer>(new msg::BufrImporter(opts));
+            return unique_ptr<Importer>(new impl::msg::BufrImporter(opts));
         case Encoding::CREX:
-            return unique_ptr<Importer>(new msg::CrexImporter(opts));
+            return unique_ptr<Importer>(new impl::msg::CrexImporter(opts));
         default:
             error_unimplemented::throwf("%s importer is not implemented yet", File::encoding_name(type));
     }

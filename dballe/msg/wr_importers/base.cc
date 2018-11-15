@@ -15,6 +15,7 @@ using namespace wreport;
 using namespace std;
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -27,7 +28,7 @@ void Importer::init()
 {
 }
 
-void Importer::import(const wreport::Subset& subset, Msg& msg)
+void Importer::import(const wreport::Subset& subset, Message& msg)
 {
     this->subset = &subset;
     this->msg = &msg;
@@ -653,6 +654,7 @@ void SynopBaseImporter::import_var(const Var& var)
     }
 }
 
+}
 }
 }
 }

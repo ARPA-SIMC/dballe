@@ -5,6 +5,7 @@
 using namespace wreport;
 
 namespace dballe {
+namespace impl {
 namespace msg {
 
 /*
@@ -182,13 +183,13 @@ bool CursorData::enqi(const char* key, unsigned len, int& res) const
         case "hour":        r.set((int)datetime.hour);
         case "min":         r.set((int)datetime.minute);
         case "sec":         r.set((int)datetime.second);
-        case "leveltype1":  r.maybe_set_int(cur->ctx->level.ltype1);
-        case "l1":          r.maybe_set_int(cur->ctx->level.l1);
-        case "leveltype2":  r.maybe_set_int(cur->ctx->level.ltype2);
-        case "l2":          r.maybe_set_int(cur->ctx->level.l2);
-        case "pindicator":  r.maybe_set_int(cur->ctx->trange.pind);
-        case "p1":          r.maybe_set_int(cur->ctx->trange.p1);
-        case "p2":          r.maybe_set_int(cur->ctx->trange.p2);
+        case "leveltype1":  r.maybe_set_int(cur->level.ltype1);
+        case "l1":          r.maybe_set_int(cur->level.l1);
+        case "leveltype2":  r.maybe_set_int(cur->level.ltype2);
+        case "l2":          r.maybe_set_int(cur->level.l2);
+        case "pindicator":  r.maybe_set_int(cur->trange.pind);
+        case "p1":          r.maybe_set_int(cur->trange.p1);
+        case "p2":          r.maybe_set_int(cur->trange.p2);
         case "var":         throw error_consistency("cannot enqi var");
         case "context_id":  r.found();
         default: break;
@@ -214,13 +215,13 @@ bool CursorData::enqd(const char* key, unsigned len, double& res) const
         case "hour":        r.set((int)datetime.hour);
         case "min":         r.set((int)datetime.minute);
         case "sec":         r.set((int)datetime.second);
-        case "leveltype1":  r.maybe_set_int(cur->ctx->level.ltype1);
-        case "l1":          r.maybe_set_int(cur->ctx->level.l1);
-        case "leveltype2":  r.maybe_set_int(cur->ctx->level.ltype2);
-        case "l2":          r.maybe_set_int(cur->ctx->level.l2);
-        case "pindicator":  r.maybe_set_int(cur->ctx->trange.pind);
-        case "p1":          r.maybe_set_int(cur->ctx->trange.p1);
-        case "p2":          r.maybe_set_int(cur->ctx->trange.p2);
+        case "leveltype1":  r.maybe_set_int(cur->level.ltype1);
+        case "l1":          r.maybe_set_int(cur->level.l1);
+        case "leveltype2":  r.maybe_set_int(cur->level.ltype2);
+        case "l2":          r.maybe_set_int(cur->level.l2);
+        case "pindicator":  r.maybe_set_int(cur->trange.pind);
+        case "p1":          r.maybe_set_int(cur->trange.p1);
+        case "p2":          r.maybe_set_int(cur->trange.p2);
         case "var":         throw error_consistency("cannot enqi var");
         case "context_id":  r.found();
         default: break;
@@ -246,13 +247,13 @@ bool CursorData::enqs(const char* key, unsigned len, std::string& res) const
         case "hour":        r.set((int)datetime.hour);
         case "min":         r.set((int)datetime.minute);
         case "sec":         r.set((int)datetime.second);
-        case "leveltype1":  r.maybe_set_int(cur->ctx->level.ltype1);
-        case "l1":          r.maybe_set_int(cur->ctx->level.l1);
-        case "leveltype2":  r.maybe_set_int(cur->ctx->level.ltype2);
-        case "l2":          r.maybe_set_int(cur->ctx->level.l2);
-        case "pindicator":  r.maybe_set_int(cur->ctx->trange.pind);
-        case "p1":          r.maybe_set_int(cur->ctx->trange.p1);
-        case "p2":          r.maybe_set_int(cur->ctx->trange.p2);
+        case "leveltype1":  r.maybe_set_int(cur->level.ltype1);
+        case "l1":          r.maybe_set_int(cur->level.l1);
+        case "leveltype2":  r.maybe_set_int(cur->level.ltype2);
+        case "l2":          r.maybe_set_int(cur->level.l2);
+        case "pindicator":  r.maybe_set_int(cur->trange.pind);
+        case "p1":          r.maybe_set_int(cur->trange.p1);
+        case "p2":          r.maybe_set_int(cur->trange.p2);
         case "var":         r.set_varcode((*(cur->var))->code());
         case "context_id":  r.found();
         default: break;
@@ -278,13 +279,13 @@ bool CursorData::enqf(const char* key, unsigned len, std::string& res) const
         case "hour":        r.set((int)datetime.hour);
         case "min":         r.set((int)datetime.minute);
         case "sec":         r.set((int)datetime.second);
-        case "leveltype1":  r.maybe_set_int(cur->ctx->level.ltype1);
-        case "l1":          r.maybe_set_int(cur->ctx->level.l1);
-        case "leveltype2":  r.maybe_set_int(cur->ctx->level.ltype2);
-        case "l2":          r.maybe_set_int(cur->ctx->level.l2);
-        case "pindicator":  r.maybe_set_int(cur->ctx->trange.pind);
-        case "p1":          r.maybe_set_int(cur->ctx->trange.p1);
-        case "p2":          r.maybe_set_int(cur->ctx->trange.p2);
+        case "leveltype1":  r.maybe_set_int(cur->level.ltype1);
+        case "l1":          r.maybe_set_int(cur->level.l1);
+        case "leveltype2":  r.maybe_set_int(cur->level.ltype2);
+        case "l2":          r.maybe_set_int(cur->level.l2);
+        case "pindicator":  r.maybe_set_int(cur->trange.pind);
+        case "p1":          r.maybe_set_int(cur->trange.p1);
+        case "p2":          r.maybe_set_int(cur->trange.p2);
         case "var":         r.set_varcode((*(cur->var))->code());
         case "context_id":  r.found();
         default: break;
@@ -293,5 +294,6 @@ bool CursorData::enqf(const char* key, unsigned len, std::string& res) const
     return !r.missing();
 }
 
+}
 }
 }

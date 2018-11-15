@@ -193,7 +193,7 @@ static void print_item_header(const Item& item)
         unsigned count = 0;
         for (const auto& i: *item.msgs)
         {
-            auto m = Msg::downcast(i);
+            auto m = impl::Message::downcast(i);
             string new_type = format_message_type(m->type);
             if (old_type.empty())
             {
@@ -265,7 +265,7 @@ struct CSVBulletin : public cmdline::Action
 };
 
 /**
- * Print a Msgs in CSV format
+ * Print a impl::Message in CSV format
  */
 
 struct CSVMsgs : public cmdline::Action
@@ -281,12 +281,12 @@ struct CSVMsgs : public cmdline::Action
 
         if (first)
         {
-            Msg::csv_header(writer);
+            impl::Message::csv_header(writer);
             first = false;
         }
 
         for (const auto& mi: *item.msgs)
-            Msg::downcast(mi)->to_csv(writer);
+            impl::Message::downcast(mi)->to_csv(writer);
         return true;
     }
 };
@@ -306,12 +306,12 @@ struct JSONMsgs : public cmdline::Action
         if (!item.msgs) return false;
 
         for (const auto& mi: *item.msgs) {
-            auto msg = Msg::downcast(mi);
+            auto msg = impl::Message::downcast(mi);
             json.start_mapping();
             json.add("version");
             json.add(DBALLE_JSON_VERSION);
             json.add("network");
-            json.add(msg->get_rep_memo_var() ? msg->get_rep_memo_var()->enqc() : dballe::Msg::repmemo_from_type(msg->type));
+            json.add(msg->get_rep_memo_var() ? msg->get_rep_memo_var()->enqc() : dballe::impl::Message::repmemo_from_type(msg->type));
             json.add("ident");
             if (msg->get_ident_var() != NULL)
                 json.add(msg->get_ident_var()->enqc());
@@ -327,36 +327,21 @@ struct JSONMsgs : public cmdline::Action
             json.add(ss.str().c_str());
             json.add("data");
             json.start_list();
-            for (const auto& ctx: msg->data) {
                 json.start_mapping();
-                if (not ctx->is_station()) {
-                    json.add("timerange");
-                    json.add(ctx->trange);
-                    json.add("level");
-                    json.add(ctx->level);
-                }
                 json.add("vars");
-                json.start_mapping();
-                for (const auto& var: ctx->values) {
-                    json.add(wreport::varcode_format(var->code()));
+                json.add(msg->station_data);
+                json.end_mapping();
+                for (const auto& ctx: msg->data) {
                     json.start_mapping();
-                    json.add("v");
-                    json.add(*var);
-                    if (var->next_attr()) {
-                        json.add("a");
-                        json.start_mapping();
-                        for (const Var* attr = var->next_attr(); attr; attr = attr->next_attr()) {
-                            json.add(wreport::varcode_format(attr->code()));
-                            json.add(*attr);
-                        }
-                        json.end_mapping();
-                    }
+                    json.add("timerange");
+                    json.add(ctx.trange);
+                    json.add("level");
+                    json.add(ctx.level);
+                    json.add("vars");
+                    json.add(ctx.values);
                     json.end_mapping();
                 }
-                json.end_mapping();
-                json.end_mapping();
-            }
-            json.end_list();
+                json.end_list();
             json.end_mapping();
             json.add_break();
         }
@@ -731,13 +716,15 @@ struct Cat : public cmdline::Subcommand
     }
 };
 
+#if 0
 struct StoreMessages : public cmdline::Action, public vector<BinaryMessage>
 {
-	virtual void operator()(const BinaryMessage& rmsg, const wreport::Bulletin*, const Messages*)
-	{
-		push_back(rmsg);
-	}
+    void operator()(const BinaryMessage& rmsg, const wreport::Bulletin*, const impl::Messages*) override
+    {
+        push_back(rmsg);
+    }
 };
+#endif
 
 #if 0
 static dba_err bisect_test(struct message_vector* vec, size_t first, size_t last, int* fails)
@@ -1030,11 +1017,11 @@ struct Compare : public cmdline::Subcommand
             if (!found1 && !found2)
                 break;
 
-            Messages msgs1 = importer1->from_binary(msg1);
-            Messages msgs2 = importer2->from_binary(msg2);
+            impl::Messages msgs1 = importer1->from_binary(msg1);
+            impl::Messages msgs2 = importer2->from_binary(msg2);
 
             notes::Collect c(cerr);
-            int diffs = msg::messages_diff(msgs1, msgs2);
+            int diffs = impl::msg::messages_diff(msgs1, msgs2);
             if (diffs > 0)
                 error_consistency::throwf("Messages #%zd contain %d differences", idx, diffs);
         }

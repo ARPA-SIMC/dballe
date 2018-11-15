@@ -8,6 +8,7 @@ using namespace wreport;
 using namespace std;
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -70,8 +71,8 @@ void ShipImporter::import_var(const Var& var)
         case WR_VAR(0, 20, 38): msg->set(Level(1), Trange::instant(), var.code(), var); break;
 
         // Ship marine data
-        case WR_VAR(0,  2, 38): msg->set(Level(), Trange(), var.code(), var); break;
-        case WR_VAR(0,  2, 39): msg->set(Level(), Trange(), var.code(), var); break;
+        case WR_VAR(0,  2, 38): msg->station_data.set(var.code(), var); break;
+        case WR_VAR(0,  2, 39): msg->station_data.set(var.code(), var); break;
         case WR_VAR(0, 22, 42):
         case WR_VAR(0, 22, 43):
             if (level.sea_depth == LevelContext::missing)
@@ -108,6 +109,7 @@ std::unique_ptr<Importer> Importer::createShip(const ImporterOptions& opts)
 }
 
 
+}
 }
 }
 }

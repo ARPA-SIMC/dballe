@@ -153,7 +153,7 @@ add_method("from_db", [](Fixture& f) {
 
 add_method("import", [](Fixture& f) {
     db::v7::Tracer<> trc;
-    Messages msgs1 = read_msgs("bufr/test-airep1.bufr", Encoding::BUFR);
+    impl::Messages msgs1 = read_msgs("bufr/test-airep1.bufr", Encoding::BUFR);
     DBImportMessageOptions opts;
     opts.import_attributes = true;
     opts.update_station = true;

@@ -1,24 +1,3 @@
-/*
- * dballe/wr_exporter/common - Common infrastructure for wreport exporters
- *
- * Copyright (C) 2013--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #ifndef DBALLE_MSG_WREXPORTER_BASE_H
 #define DBALLE_MSG_WREXPORTER_BASE_H
 
@@ -31,6 +10,7 @@ struct Var;
 }
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -39,7 +19,7 @@ class ExporterModule
 protected:
     // Subset being written
     wreport::Subset* subset;
-    const Msg* msg = 0;
+    const Message* msg = 0;
     const msg::Context* c_ana = 0;
     const msg::Context* c_surface_instant = 0;
 
@@ -49,7 +29,7 @@ protected:
     void add(wreport::Varcode code, const wreport::Var* var) const;
 
 public:
-    void init(const Msg& msg, wreport::Subset& subset);
+    void init(const Message& msg, wreport::Subset& subset);
     void scan_context(const msg::Context& c);
 
     void add_ecmwf_synop_head();
@@ -84,7 +64,7 @@ public:
     const wreport::Var* v_ptend;
     const wreport::Var* v_geopotential;
 
-    void init(const Msg& msg, wreport::Subset& subset);
+    void init(const Message& msg, wreport::Subset& subset);
     void scan_context(const msg::Context& c);
 
     // Pressure data
@@ -164,6 +144,7 @@ public:
     void add_time_period(wreport::Varcode code, const msg::Context& c, const wreport::Var* sample_var, const Trange& tr_std);
 };
 
+}
 }
 }
 }

@@ -2,12 +2,14 @@
 #define DBALLE_MSG_FWD_H
 
 namespace dballe {
-class Msg;
+namespace impl {
+class Message;
 namespace msg {
 class Context;
 class CursorStation;
 class CursorStationData;
 class CursorData;
+}
 }
 }
 

@@ -14,6 +14,7 @@
 #include <memory>
 
 namespace dballe {
+namespace impl {
 namespace msg {
 
 /**
@@ -39,9 +40,6 @@ public:
     Context& operator=(const Context& src) = default;
     Context& operator=(Context&& src) = default;
 
-    /// @return true if this is the station context, else false
-    bool is_station() const;
-
     /**
      * Compare two dba_msg_context strutures, for use in sorting.
      *
@@ -57,7 +55,7 @@ public:
      * use in sorting.
      *
      * @return
-     *   -1 if l < ltype,l1,l2; 0 if l == ltype,l1,l2; 1 if l > ltype,l1,l2
+     *   -1 if l < lev, tr; 0 if l == lev, tr; 1 if l > lev, tr
      */
     int compare(const Level& lev, const Trange& tr) const;
 
@@ -100,6 +98,7 @@ public:
     unsigned diff(const Context& ctx) const;
 };
 
+}
 }
 }
 

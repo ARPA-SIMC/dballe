@@ -52,9 +52,9 @@ this->add_method("import", [](Fixture& f) {
 
     // Decode results
     auto importer = Importer::create(Encoding::BUFR);
-    Messages msgs = importer->from_binary(file.msgs[0]);
+    impl::Messages msgs = importer->from_binary(file.msgs[0]);
     wassert(actual(msgs.size()) == 1u);
-    auto msg = Msg::downcast(msgs[0]);
+    auto msg = impl::Message::downcast(msgs[0]);
 
     // Ensure they're ships
     wassert(actual(msg->type) == MessageType::SHIP);
@@ -83,9 +83,9 @@ this->add_method("issue62", [](Fixture& f) {
 
     // Decode results
     auto importer = Importer::create(Encoding::BUFR);
-    Messages msgs = importer->from_binary(file.msgs[0]);
+    impl::Messages msgs = importer->from_binary(file.msgs[0]);
     wassert(actual(msgs.size()) == 1u);
-    auto msg = Msg::downcast(msgs[0]);
+    auto msg = impl::Message::downcast(msgs[0]);
 
     wassert(actual(msg->get_datetime()) == Datetime(2016, 3, 14, 23, 0, 4));
 });

@@ -10,6 +10,7 @@ using namespace wreport;
 using namespace std;
 
 namespace dballe {
+namespace impl {
 namespace msg {
 
 WRImporter::WRImporter(const ImporterOptions& opts)
@@ -19,7 +20,7 @@ BufrImporter::BufrImporter(const ImporterOptions& opts)
     : WRImporter(opts) {}
 BufrImporter::~BufrImporter() {}
 
-bool BufrImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>)> dest) const
+bool BufrImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<dballe::Message>)> dest) const
 {
     unique_ptr<BufrBulletin> bulletin(BufrBulletin::decode(msg.data));
     return foreach_decoded_bulletin(*bulletin, dest);
@@ -29,7 +30,7 @@ CrexImporter::CrexImporter(const ImporterOptions& opts)
     : WRImporter(opts) {}
 CrexImporter::~CrexImporter() {}
 
-bool CrexImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>)> dest) const
+bool CrexImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<dballe::Message>)> dest) const
 {
     unique_ptr<CrexBulletin> bulletin(CrexBulletin::decode(msg.data));
     return foreach_decoded_bulletin(*bulletin, dest);
@@ -38,11 +39,11 @@ bool CrexImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(
 Messages WRImporter::from_bulletin(const wreport::Bulletin& msg) const
 {
     Messages res;
-    foreach_decoded_bulletin(msg, [&](unique_ptr<Message>&& m) { res.emplace_back(move(m)); return true; });
+    foreach_decoded_bulletin(msg, [&](unique_ptr<dballe::Message>&& m) { res.emplace_back(move(m)); return true; });
     return res;
 }
 
-bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::unique_ptr<Message>)> dest) const
+bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::unique_ptr<dballe::Message>)> dest) const
 {
     // Infer the right importer. See Common Code Table C-13
     std::unique_ptr<wr::Importer> importer;
@@ -89,7 +90,7 @@ bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::fun
     MessageType type = importer->scanType(msg);
     for (unsigned i = 0; i < msg.subsets.size(); ++i)
     {
-        std::unique_ptr<Msg> newmsg(new Msg);
+        std::unique_ptr<Message> newmsg(new Message);
         newmsg->type = type;
         importer->import(msg.subsets[i], *newmsg);
         if (!dest(move(newmsg)))
@@ -133,7 +134,7 @@ std::string CrexExporter::to_binary(const Messages& msgs) const
 
 namespace {
 
-const char* infer_from_message(const Msg& msg)
+const char* infer_from_message(const Message& msg)
 {
     switch (msg.type)
     {
@@ -150,7 +151,7 @@ unique_ptr<wr::Template> WRExporter::infer_template(const Messages& msgs) const
     // Select initial template name
     string tpl = opts.template_name;
     if (tpl.empty())
-        tpl = infer_from_message(*Msg::downcast(msgs[0]));
+        tpl = infer_from_message(Message::downcast(*msgs[0]));
 
     // Get template factory
     const wr::TemplateFactory& fac = wr::TemplateRegistry::get(tpl);
@@ -186,7 +187,7 @@ const TemplateRegistry& TemplateRegistry::get()
 
         registry->register_factory(MISSING_INT, "wmo", "WMO style templates (autodetect)",
                 [](const ExporterOptions& opts, const Messages& msgs) {
-                    auto msg = Msg::downcast(msgs[0]);
+                    auto msg = Message::downcast(msgs[0]);
                     string tpl;
                     switch (msg->type)
                     {
@@ -245,7 +246,7 @@ void Template::to_bulletin(wreport::Bulletin& bulletin)
     for (unsigned i = 0; i < msgs.size(); ++i)
     {
         Subset& s = bulletin.obtain_subset(i);
-        to_subset(*Msg::downcast(msgs[i]), s);
+        to_subset(Message::downcast(*msgs[i]), s);
     }
 }
 
@@ -285,11 +286,10 @@ void Template::setupBulletin(wreport::Bulletin& bulletin)
     }
 }
 
-void Template::to_subset(const Msg& msg, wreport::Subset& subset)
+void Template::to_subset(const Message& msg, wreport::Subset& subset)
 {
     this->msg = &msg;
     this->subset = &subset;
-    this->c_station = msg.find_context(Level(), Trange());
     this->c_gnd_instant = msg.find_context(Level(1), Trange::instant());
 }
 
@@ -317,11 +317,27 @@ void Template::add(Varcode code, const msg::Context* ctx) const
 {
     if (!ctx)
         subset->store_variable_undef(code);
-    else if (const Var* var = ctx->values.maybe_var(code))
+    else
+        add(code, ctx->values);
+}
+
+void Template::add(Varcode code, const Values& values) const
+{
+    if (const Var* var = values.maybe_var(code))
         subset->store_variable(*var);
     else
         subset->store_variable_undef(code);
 }
+
+void Template::add(Varcode code, const Values& values, int shortcut) const
+{
+    const MsgVarShortcut& v = shortcutTable[shortcut];
+    if (const Var* var = values.maybe_var(v.code))
+        subset->store_variable(code, *var);
+    else
+        subset->store_variable_undef(code);
+}
+
 
 void Template::add(Varcode code, int shortcut) const
 {
@@ -343,15 +359,13 @@ void Template::add(wreport::Varcode code, const wreport::Var* var) const
 
 const Var* Template::find_station_var(wreport::Varcode code) const
 {
-    if (!c_station) return nullptr;
-    return c_station->values.maybe_var(code);
+    return msg->station_data.maybe_var(code);
 }
 
 void Template::do_station_name(wreport::Varcode dstcode) const
 {
-    if (!c_station)
-        subset->store_variable_undef(dstcode);
-    else if (const wreport::Var* var = c_station->find_by_id(DBA_MSG_ST_NAME))
+    const MsgVarShortcut& v = shortcutTable[DBA_MSG_ST_NAME];
+    if (const wreport::Var* var = msg->station_data.maybe_var(v.code))
     {
         Varinfo info = subset->tables->btable->query(dstcode);
         Var name(info);
@@ -379,21 +393,21 @@ void Template::do_ecmwf_past_wtr() const
 
 void Template::do_station_height() const
 {
-    add(WR_VAR(0,  7, 30), c_station);
-    add(WR_VAR(0,  7, 31), c_station);
+    add(WR_VAR(0,  7, 30), msg->station_data);
+    add(WR_VAR(0,  7, 31), msg->station_data);
 }
 
 void Template::do_D01001() const
 {
-    add(WR_VAR(0,  1,  1), c_station, DBA_MSG_BLOCK);
-    add(WR_VAR(0,  1,  2), c_station, DBA_MSG_STATION);
+    add(WR_VAR(0,  1,  1), msg->station_data, DBA_MSG_BLOCK);
+    add(WR_VAR(0,  1,  2), msg->station_data, DBA_MSG_STATION);
 }
 
 void Template::do_D01004() const
 {
     do_D01001();
     do_station_name(WR_VAR(0, 1, 15));
-    add(WR_VAR(0,  2,  1), c_station, DBA_MSG_ST_TYPE);
+    add(WR_VAR(0,  2,  1), msg->station_data, DBA_MSG_ST_TYPE);
 }
 
 void Template::do_D01011() const
@@ -467,22 +481,23 @@ void Template::do_D01013() const
 
 void Template::do_D01021() const
 {
-    add(WR_VAR(0,  5,  1), c_station, DBA_MSG_LATITUDE);
-    add(WR_VAR(0,  6,  1), c_station, DBA_MSG_LONGITUDE);
+    add(WR_VAR(0,  5,  1), msg->station_data, DBA_MSG_LATITUDE);
+    add(WR_VAR(0,  6,  1), msg->station_data, DBA_MSG_LONGITUDE);
 }
 
 void Template::do_D01022() const
 {
     do_D01021();
-    add(WR_VAR(0,  7,  1), c_station, DBA_MSG_HEIGHT_STATION);
+    add(WR_VAR(0,  7,  1), msg->station_data, DBA_MSG_HEIGHT_STATION);
 }
 
 void Template::do_D01023() const
 {
-    add(WR_VAR(0,  5,  2), c_station, DBA_MSG_LATITUDE);
-    add(WR_VAR(0,  6,  2), c_station, DBA_MSG_LONGITUDE);
+    add(WR_VAR(0,  5,  2), msg->station_data, DBA_MSG_LATITUDE);
+    add(WR_VAR(0,  6,  2), msg->station_data, DBA_MSG_LONGITUDE);
 }
 
+}
 }
 }
 }

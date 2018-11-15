@@ -53,7 +53,7 @@ class Tests : public TestCase
             for (i = 0; files[i] != NULL; i++)
             {
                 try {
-                    Messages msgs = read_msgs(files[i], Encoding::BUFR);
+                    impl::Messages msgs = read_msgs(files[i], Encoding::BUFR);
                     wassert(actual(msgs.size()) > 0);
 
                     std::unique_ptr<Exporter> exporter;
@@ -87,7 +87,7 @@ class Tests : public TestCase
             for (i = 0; files[i] != NULL; i++)
             {
                 try {
-                    Messages msgs = read_msgs(files[i], Encoding::CREX);
+                    impl::Messages msgs = read_msgs(files[i], Encoding::CREX);
                     wassert(actual(msgs.size()) > 0);
 
                     std::unique_ptr<Exporter> exporter = Exporter::create(Encoding::BUFR/*, const Options& opts=Options()*/);
@@ -109,14 +109,14 @@ class Tests : public TestCase
         });
         add_method("reproduce_temp", []() {
             // Export a well known TEMP which used to fail
-            Messages msgs = wcallchecked(read_msgs_csv("csv/temp1.csv"));
+            impl::Messages msgs = wcallchecked(read_msgs_csv("csv/temp1.csv"));
             wassert(actual(msgs.size()) > 0);
 
             // Replace with packed levels because comparison later happens against
             // packed levels
             {
-                unique_ptr<Msg> msg(new Msg);
-                msg->sounding_pack_levels(*Msg::downcast(msgs[0]));
+                unique_ptr<impl::Message> msg(new impl::Message);
+                msg->sounding_pack_levels(*impl::Message::downcast(msgs[0]));
                 msgs.clear();
                 msgs.emplace_back(move(msg));
             }
@@ -128,9 +128,9 @@ class Tests : public TestCase
             // Import and check the differences
             {
                 std::unique_ptr<Importer> bufr_importer(Importer::create(Encoding::BUFR/*, const Options& opts=Options()*/));
-                Messages msgs1 = wcallchecked(bufr_importer->from_bulletin(*bbulletin));
+                impl::Messages msgs1 = wcallchecked(bufr_importer->from_bulletin(*bbulletin));
                 notes::Collect c(cerr);
-                wassert(actual(msg::messages_diff(msgs, msgs1)) == 0);
+                wassert(actual(impl::msg::messages_diff(msgs, msgs1)) == 0);
             }
 
             // Export to CREX
@@ -140,9 +140,9 @@ class Tests : public TestCase
             // Import and check the differences
             {
                 std::unique_ptr<Importer> crex_importer(Importer::create(Encoding::CREX/*, const Options& opts=Options()*/));
-                Messages msgs1 = wcallchecked(crex_importer->from_bulletin(*cbulletin));
+                impl::Messages msgs1 = wcallchecked(crex_importer->from_bulletin(*cbulletin));
                 notes::Collect c(cerr);
-                wassert(actual(msg::messages_diff(msgs, msgs1)) == 0);
+                wassert(actual(impl::msg::messages_diff(msgs, msgs1)) == 0);
             }
         });
 
@@ -478,24 +478,24 @@ class Tests : public TestCase
                 if (blacklist.find(files[i]) != blacklist.end()) continue;
                 try {
                     // Import
-                    Messages msgs = read_msgs(files[i], Encoding::BUFR);
+                    impl::Messages msgs = read_msgs(files[i], Encoding::BUFR);
                     wassert(actual(msgs.size()) > 0);
 
                     // Export
                     unique_ptr<Bulletin> bbulletin = exporter->to_bulletin(msgs);
 
                     // Import again
-                    Messages msgs1 = importer->from_bulletin(*bbulletin);
+                    impl::Messages msgs1 = importer->from_bulletin(*bbulletin);
 
                     // Compare
                     notes::Collect c(cerr);
-                    int diffs = msg::messages_diff(msgs, msgs1);
+                    int diffs = impl::msg::messages_diff(msgs, msgs1);
                     if (diffs)
                     {
                         FILE* out1 = fopen("/tmp/msg1.txt", "w");
                         FILE* out2 = fopen("/tmp/msg2.txt", "w");
-                        msg::messages_print(msgs, out1);
-                        msg::messages_print(msgs1, out2);
+                        impl::msg::messages_print(msgs, out1);
+                        impl::msg::messages_print(msgs1, out2);
                         fclose(out1);
                         fclose(out2);
                     }
@@ -542,19 +542,19 @@ class Tests : public TestCase
                 if (blacklist.find(files[i]) != blacklist.end()) continue;
                 try {
                     // Import
-                    Messages msgs = read_msgs(files[i], Encoding::BUFR, import_opts);
+                    impl::Messages msgs = read_msgs(files[i], Encoding::BUFR, import_opts);
                     wassert(actual(msgs.size()) > 0);
 
                     // Export
                     unique_ptr<Bulletin> bbulletin = exporter->to_bulletin(msgs);
 
                     // Import again
-                    Messages msgs1 = importer->from_bulletin(*bbulletin);
+                    impl::Messages msgs1 = importer->from_bulletin(*bbulletin);
 
                     // Compare
                     stringstream str;
                     notes::Collect c(str);
-                    int diffs = msg::messages_diff(msgs, msgs1);
+                    int diffs = impl::msg::messages_diff(msgs, msgs1);
                     if (diffs)
                     {
                         string tag = str::basename(files[i]);
@@ -579,7 +579,7 @@ class Tests : public TestCase
         // Old PILOT
         add_method("old_pilot1", []() {
             // Test that pilot subtype is set correctly
-            Messages msgs = read_msgs("bufr/obs2-91.2.bufr", Encoding::BUFR);
+            impl::Messages msgs = read_msgs("bufr/obs2-91.2.bufr", Encoding::BUFR);
             ExporterOptions opts;
             opts.template_name = "pilot-wmo";
             unique_ptr<Bulletin> bulletin = test_export_msgs(Encoding::BUFR, msgs, "pilotwmo", opts);
@@ -619,12 +619,12 @@ class Tests : public TestCase
         });
         add_method("new_pilot4", []() {
             // Test for a bug where geopotential levels became pressure levels
-            Messages msgs1 = read_msgs("bufr/pilot-ecmwf-geopotential.bufr", Encoding::BUFR);
+            impl::Messages msgs1 = read_msgs("bufr/pilot-ecmwf-geopotential.bufr", Encoding::BUFR);
             wassert(actual(msgs1.size()) == 1);
-            Msg& msg1 = Msg::downcast(*msgs1[0]);
+            impl::Message& msg1 = impl::Message::downcast(*msgs1[0]);
 
             // Geopotential levels are converted to height above msl
-            const msg::Context* c = msg1.find_context(Level(102, 900), Trange(254, 0, 0));
+            const impl::msg::Context* c = msg1.find_context(Level(102, 900), Trange(254, 0, 0));
             wassert(actual(c).istrue());
 
             // Convert to WMO template
@@ -635,16 +635,16 @@ class Tests : public TestCase
 
             // Import again
             std::unique_ptr<Importer> imp = Importer::create(Encoding::BUFR);
-            Messages msgs2 = imp->from_bulletin(*bulletin);
+            impl::Messages msgs2 = imp->from_bulletin(*bulletin);
             wassert(actual(msgs2.size()) == 1);
-            Msg& msg2 = Msg::downcast(*msgs2[0]);
+            impl::Message& msg2 = impl::Message::downcast(*msgs2[0]);
 
             // Ensure we didn't get pressure levels
             wassert(actual(msg2.find_context(Level(100, 900), Trange(254, 0, 0))).isfalse());
         });
         add_method("new_pilot5", []() {
             // Test for a range error in one specific BUFR
-            Messages msgs1 = read_msgs("bufr/temp-2-255.bufr", Encoding::BUFR);
+            impl::Messages msgs1 = read_msgs("bufr/temp-2-255.bufr", Encoding::BUFR);
             wassert(actual(msgs1.size()) == 1);
 
             // Convert to CREX
@@ -654,13 +654,13 @@ class Tests : public TestCase
 
             // Import again
             std::unique_ptr<Importer> imp = Importer::create(Encoding::BUFR);
-            Messages msgs2 = wcallchecked(imp->from_bulletin(*bulletin));
+            impl::Messages msgs2 = wcallchecked(imp->from_bulletin(*bulletin));
             wassert(actual(msgs2.size()) == 1);
         });
         // Old SHIP
         add_method("old_ship1", []() {
             // Test that temp ship subtype is set correctly
-            Messages msgs = read_msgs("bufr/obs2-102.1.bufr", Encoding::BUFR);
+            impl::Messages msgs = read_msgs("bufr/obs2-102.1.bufr", Encoding::BUFR);
             ExporterOptions opts;
             opts.template_name = "temp-wmo";
             unique_ptr<Bulletin> bulletin = test_export_msgs(Encoding::BUFR, msgs, "tempship", opts);

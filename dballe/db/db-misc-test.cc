@@ -621,7 +621,7 @@ this->add_method("query_best_bug1", [](Fixture& f) {
     opts.overwrite = true;
     for (int i = 0; files[i] != NULL; i++)
     {
-        Messages inmsgs = read_msgs(files[i], Encoding::BUFR);
+        impl::Messages inmsgs = read_msgs(files[i], Encoding::BUFR);
         wassert(f.tr->import_message(*inmsgs[0], opts));
     }
 

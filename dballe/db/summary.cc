@@ -410,32 +410,20 @@ void BaseSummary<Station>::add_cursor(const dballe::CursorSummary& cur)
 template<typename Station>
 void BaseSummary<Station>::add_message(const dballe::Message& message)
 {
-    const Msg& msg = Msg::downcast(message);
-    const msg::Context* l_ana = msg.find_context(Level(), Trange());
+    const impl::Message& msg = impl::Message::downcast(message);
 
     Station station;
 
-    // Latitude
-    if (const wreport::Var* var = l_ana->find_by_id(DBA_MSG_LATITUDE))
-        station.coords.lat = var->enqi();
-    else
-        throw wreport::error_notfound("latitude not found in message to summarise");
-
-    // Longitude
-    if (const wreport::Var* var = l_ana->find_by_id(DBA_MSG_LONGITUDE))
-        station.coords.lon = var->enqi();
-    else
-        throw wreport::error_notfound("longitude not found in message to summarise");
+    // Coordinates
+    station.coords = msg.get_coords();
+    if (station.coords.is_missing())
+        throw wreport::error_notfound("coordinates not found in message to summarise");
 
     // Report code
-    if (const wreport::Var* var = msg.get_rep_memo_var())
-        station.report = var->enqc();
-    else
-        station.report = Msg::repmemo_from_type(msg.type);
+    station.report = msg.get_report();
 
     // Station identifier
-    if (const wreport::Var* var = l_ana->find_by_id(DBA_MSG_IDENT))
-        station.ident = var->enqc();
+    station.ident = msg.get_ident();
 
     // Datetime
     Datetime dt = msg.get_datetime();
@@ -448,18 +436,15 @@ void BaseSummary<Station>::add_message(const dballe::Message& message)
     summary::VarDesc vd_ana;
     vd_ana.level = Level();
     vd_ana.trange = Trange();
-    for (const auto& val: l_ana->values)
+    for (const auto& val: msg.station_data)
     {
         vd_ana.varcode = val->code();
         add(station, vd_ana, dtrange, 1);
     }
 
     // Variables
-    for (size_t i = 0; i < msg.data.size(); ++i)
+    for (const auto& ctx: msg.data)
     {
-        if (msg.data[i] == l_ana) continue;
-        const msg::Context& ctx = *msg.data[i];
-
         summary::VarDesc vd(ctx.level, ctx.trange, 0);
 
         for (const auto& val: ctx.values)

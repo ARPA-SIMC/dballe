@@ -7,6 +7,7 @@
 #include <dballe/msg/context.h>
 
 namespace dballe {
+namespace impl {
 namespace msg {
 
 struct CursorStation : public dballe::CursorStation
@@ -15,7 +16,7 @@ struct CursorStation : public dballe::CursorStation
     const Values& station_values;
     bool at_start = true;
 
-    CursorStation(const Msg& msg)
+    CursorStation(const impl::Message& msg)
         : station_values(msg.find_station_context())
     {
         station.report = msg.get_report();
@@ -67,7 +68,7 @@ struct CursorStationData : public dballe::CursorStationData
     bool at_start = true;
     Values::const_iterator cur;
 
-    CursorStationData(const Msg& msg)
+    CursorStationData(const impl::Message& msg)
         : station_values(msg.find_station_context())
     {
         station.report = msg.get_report();
@@ -119,11 +120,17 @@ struct CursorStationData : public dballe::CursorStationData
 
 struct CursorDataRow
 {
-    const dballe::msg::Context* ctx;
+    Level level;
+    Trange trange;
     Values::const_iterator var;
 
-    CursorDataRow(const dballe::msg::Context* ctx, Values::const_iterator var)
-        : ctx(ctx), var(var)
+    CursorDataRow(Values::const_iterator var)
+        : var(var)
+    {
+    }
+
+    CursorDataRow(const Level& level, const Trange& trange, Values::const_iterator var)
+        : level(level), trange(trange), var(var)
     {
     }
 };
@@ -136,25 +143,24 @@ struct CursorData : public dballe::CursorData
     std::vector<CursorDataRow>::const_iterator cur;
     bool at_start = true;
 
-    CursorData(const Msg& msg, bool merged=false)
+    CursorData(const impl::Message& msg, bool merged=false)
     {
         station.report = msg.get_report();
         station.coords = msg.get_coords();
         station.ident = msg.get_ident();
         datetime = msg.get_datetime();
 
+        if (merged)
+        {
+            for (Values::const_iterator cur = msg.station_data.begin(); cur != msg.station_data.end(); ++cur)
+                if (WR_VAR_X((*cur)->code()) < 4 || WR_VAR_X((*cur)->code()) > 6)
+                    rows.emplace_back(cur);
+        }
+
         for (const auto& ctx: msg.data)
         {
-            if (ctx->level.is_missing() && ctx->trange.is_missing())
-            {
-                if (!merged) continue;
-                for (Values::const_iterator cur = ctx->values.begin(); cur != ctx->values.end(); ++cur)
-                    if (WR_VAR_X((*cur)->code()) < 4 || WR_VAR_X((*cur)->code()) > 6)
-                        rows.emplace_back(ctx, cur);
-            } else {
-                for (Values::const_iterator cur = ctx->values.begin(); cur != ctx->values.end(); ++cur)
-                    rows.emplace_back(ctx, cur);
-            }
+            for (Values::const_iterator cur = ctx.values.begin(); cur != ctx.values.end(); ++cur)
+                rows.emplace_back(ctx.level, ctx.trange, cur);
         }
     }
 
@@ -197,13 +203,14 @@ struct CursorData : public dballe::CursorData
 
     wreport::Varcode get_varcode() const override { return (*(cur->var))->code(); }
     wreport::Var get_var() const override { return **(cur->var); }
-    Level get_level() const override { return cur->ctx->level; }
-    Trange get_trange() const override { return cur->ctx->trange; }
+    Level get_level() const override { return cur->level; }
+    Trange get_trange() const override { return cur->trange; }
     Datetime get_datetime() const override { return datetime; }
 };
 
 
 
+}
 }
 }
 

@@ -20,7 +20,7 @@ struct InputFile
 {
     File* input = nullptr;
     Importer* importer = nullptr;
-    Messages current_msg;
+    std::vector<std::shared_ptr<dballe::Message>> current_msg;
     unsigned current_msg_idx = 0;
     DBImportMessageOptions opts;
 
@@ -559,7 +559,7 @@ void DbAPI::messages_write_next(const char* template_name)
 
     // Do the export with the current filter
     tr->export_msgs(input_query, [&](unique_ptr<Message>&& msg) {
-        Messages msgs;
+        std::vector<std::shared_ptr<dballe::Message>> msgs;
         msgs.emplace_back(move(msg));
         out.write(exporter->to_binary(msgs));
         return true;
