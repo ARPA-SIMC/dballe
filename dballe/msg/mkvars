@@ -4,13 +4,16 @@
 Build C++ code for accessing Msg contents by shortcut.
 """
 
+import argparse
 import sys
 import re
-import os
+import logging
 
-DESTDIR = "."
-if len(sys.argv) > 1:
-    DESTDIR = sys.argv[1]
+log = logging.getLogger("mklookup")
+
+
+class Fail(Exception):
+    pass
 
 
 class VC:
@@ -52,11 +55,13 @@ class Var:
         return (self.letr, self.b) < (o.letr, o.b)
 
 
-vars = [Var(line) for line in sys.stdin if not re.match(r"^\s*(?:#.+)?$", line)]
-vars.sort()
+class Vars:
+    def __init__(self, file):
+        self.vars = [Var(line) for line in file if not re.match(r"^\s*(?:#.+)?$", line)]
+        self.vars.sort()
 
-with open(os.path.join(DESTDIR, "vars.h"), "wt") as fh:
-    print("""#ifndef DBA_MSG_VARS_H
+    def print_vars_h(self, file):
+        print("""#ifndef DBA_MSG_VARS_H
 #define DBA_MSG_VARS_H
 
 /** @file
@@ -106,43 +111,43 @@ int resolve_var(const char* name);
 
 /** Resolve a var name to a var ID, avoiding to compute the length of name */
 int resolve_var_substring(const char* name, int len);
-""", file=fh)
+""", file=file)
 
-    for i, v in enumerate(vars):
-        print("/** %s */" % v.desc, file=fh)
-        print("#define DBA_MSG_%s %d" % (v.name, i), file=fh)
-    print("/** Number of items in dba_msg_vartable */", file=fh)
-    print("#define DBA_MSG_VARTABLE_SIZE %d" % i, file=fh)
-    print("""
+        for i, v in enumerate(self.vars):
+            print("/** %s */" % v.desc, file=file)
+            print("#define DBA_MSG_%s %d" % (v.name, i), file=file)
+        print("/** Number of items in dba_msg_vartable */", file=file)
+        print("#define DBA_MSG_VARTABLE_SIZE %d" % i, file=file)
+        print("""
 }
 
 #endif
-""", file=fh)
+""", file=file)
 
-with open(os.path.join(DESTDIR, "msg-extravars.h"), "wt") as fh:
-    types = {"int": "int", "num": "double", "str": "const char*"}
-    ftypes = {"int": "i", "num": "d", "str": "c"}
-    for v in vars:
+    def print_extravars_h(self, file):
+        types = {"int": "int", "num": "double", "str": "const char*"}
+        ftypes = {"int": "i", "num": "d", "str": "c"}
+        for v in self.vars:
+            print("""
+    /** Set the value of "{desc}" from a variable of type {type} */
+    inline void set_{name}({type} val, int conf=-1) {{ set{ftype}(Level({level}), Trange({trange}), WR_VAR(0, {vx}, {vy}), val, conf); }}
+    /** Set the value of "{desc}" from a wreport::Var */
+    inline void set_{name}_var(const wreport::Var& val) {{ set(Level({level}), Trange({trange}), WR_VAR(0, {vx}, {vy}), val); }}
+    /** Get the "{desc}" physical value stored in the message */
+    inline const wreport::Var* get_{name}_var() const {{ return get(DBA_MSG_{NAME}); }}
+    """ .format(
+                name=v.name.lower(),
+                desc=v.desc,
+                type=types[v.type],
+                ftype=ftypes[v.type],
+                vx=v.b.x, vy=v.b.y,
+                level=", ".join(v.letr[:4]),
+                trange=", ".join(v.letr[4:]),
+                NAME=v.name,
+            ), file=file)
+
+    def print_vars_gperf(self, file):
         print("""
-/** Set the value of "{desc}" from a variable of type {type} */
-inline void set_{name}({type} val, int conf=-1) {{ set{ftype}(Level({level}), Trange({trange}), WR_VAR(0, {vx}, {vy}), val, conf); }}
-/** Set the value of "{desc}" from a wreport::Var */
-inline void set_{name}_var(const wreport::Var& val) {{ set(Level({level}), Trange({trange}), WR_VAR(0, {vx}, {vy}), val); }}
-/** Get the "{desc}" physical value stored in the message */
-inline const wreport::Var* get_{name}_var() const {{ return get(DBA_MSG_{NAME}); }}
-""" .format(
-            name=v.name.lower(),
-            desc=v.desc,
-            type=types[v.type],
-            ftype=ftypes[v.type],
-            vx=v.b.x, vy=v.b.y,
-            level=", ".join(v.letr[:4]),
-            trange=", ".join(v.letr[4:]),
-            NAME=v.name,
-        ), file=fh)
-
-with open(os.path.join(DESTDIR, "vars.gperf"), "wt") as fc:
-    print("""
 %define slot-name name
 %define class-name MsgVarLookup
 %define lookup-function-name find
@@ -161,10 +166,10 @@ namespace dballe {
 %}
 
 struct msgvardef { const char* name; int var; };
-%%""", file=fc)
-    for v in vars:
-        print("{}, DBA_MSG_{}".format(v.name.lower(), v.name), file=fc)
-    print("""%%
+%%""", file=file)
+        for v in self.vars:
+            print("{}, DBA_MSG_{}".format(v.name.lower(), v.name), file=file)
+        print("""%%
 
 int resolve_var(const char* name)
 {
@@ -184,10 +189,45 @@ int resolve_var_substring(const char* name, int len)
                 return res->var;
 }
 
-""", file=fc)
+""", file=file)
 
-    print("struct MsgVarShortcut shortcutTable[] = {", file=fc)
-    for v in vars:
-        print(" { WR_VAR(0, %d, %d), %s, %s, %s, %s, %s, %s, %s }," % tuple([v.b.x, v.b.y] + v.letr), file=fc)
-    print("};", file=fc)
-    print("} // namespace dballe", file=fc)
+        print("struct MsgVarShortcut shortcutTable[] = {", file=file)
+        for v in self.vars:
+            print(" { WR_VAR(0, %d, %d), %s, %s, %s, %s, %s, %s, %s }," % tuple([v.b.x, v.b.y] + v.letr), file=file)
+        print("};", file=file)
+        print("}", file=file)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+            description="build C++ code for named import/export of variables")
+    parser.add_argument("--verbose", "-v", action="store_true", help="verbose output")
+    parser.add_argument("--debug", action="store_true", help="debug output")
+    parser.add_argument("output", nargs="?", help="output file type")
+    args = parser.parse_args()
+
+    log_format = "%(asctime)-15s %(levelname)s %(message)s"
+    level = logging.WARN
+    if args.debug:
+        level = logging.DEBUG
+    elif args.verbose:
+        level = logging.INFO
+    logging.basicConfig(level=level, stream=sys.stderr, format=log_format)
+
+    vars = Vars(sys.stdin)
+    if args.output == "vars.h":
+        vars.print_vars_h(sys.stdout)
+    elif args.output == "msg-extravars.h":
+        vars.print_extravars_h(sys.stdout)
+    elif args.output == "vars.gperf":
+        vars.print_vars_gperf(sys.stdout)
+    else:
+        raise Fail("Output type {} is not recognised".format(args.output))
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Fail as e:
+        log.error("%s", e)
+        sys.exit(1)

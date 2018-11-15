@@ -48,8 +48,14 @@ EXTRA_DIST += mklookup core/aliases.gperf core/aliases.cc \
 			  simple/commonapi-access.in.cc simple/commonapi-access.cc
 
 
-msg/vars.h msg/vars.gperf msg/msg-extravars.h: msg/vars.csv msg/mkvars
-	$(srcdir)/msg/mkvars msg < $<
+msg/vars.h: msg/vars.csv msg/mkvars
+	if ! $(srcdir)/msg/mkvars vars.h < $< > $@; then rm $@; /bin/false; fi
+
+msg/vars.gperf: msg/vars.csv msg/mkvars
+	if ! $(srcdir)/msg/mkvars vars.gperf < $< > $@; then rm $@; /bin/false; fi
+
+msg/msg-extravars.h: msg/vars.csv msg/mkvars
+	if ! $(srcdir)/msg/mkvars msg-extravars.h < $< > $@; then rm $@; /bin/false; fi
 
 msg/vars.cc: msg/vars.gperf
 	if ! gperf < $< > $@; then rm $@; /bin/false; fi
