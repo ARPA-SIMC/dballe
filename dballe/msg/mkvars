@@ -16,7 +16,61 @@ class Fail(Exception):
     pass
 
 
-class VC:
+def int_or_none(val):
+    if val == "-":
+        return None
+    return int(val)
+
+
+def format_int_or_none(val):
+    if val is None:
+        return "MISSING_INT"
+    return str(val)
+
+
+class LevTrBase:
+    def is_missing(self):
+        return all(x is None for x in self.as_tuple())
+
+    def as_type(self):
+        vals = list(self.as_tuple())
+        while vals and vals[-1] is None:
+            vals.pop()
+        return "{name}({vals})".format(name=self.CPP_NAME, vals=",".join(format_int_or_none(x) for x in vals))
+
+    def __str__(self):
+        return ", ".join((format_int_or_none(i) for i in self.as_tuple()))
+
+    def __lt__(self, o):
+        return tuple(-1 if x is None else x for x in (self.as_tuple())) < tuple(-1 if x is None else x for x in (o.as_tuple()))
+
+
+class Level(LevTrBase):
+    CPP_NAME = "Level"
+
+    def __init__(self, ltype1, l1, ltype2, l2):
+        self.ltype1 = int_or_none(ltype1)
+        self.l1 = int_or_none(l1)
+        self.ltype2 = int_or_none(ltype2)
+        self.l2 = int_or_none(l2)
+
+    def as_tuple(self):
+        return (self.ltype1, self.l1, self.ltype2, self.l2)
+
+
+class Trange(LevTrBase):
+    CPP_NAME = "Trange"
+
+    def __init__(self, pind, p1, p2):
+        self.pind = int_or_none(pind)
+        self.p1 = int_or_none(p1)
+        self.p2 = int_or_none(p2)
+
+    def as_tuple(self):
+        return (self.pind, self.p1, self.p2)
+
+
+class Varcode:
     def __init__(self, name):
         m = re.match(r"B(\d\d)(\d\d\d)", name)
         if not m:
@@ -41,18 +95,16 @@ class Var:
         vals = re.split(r"\s*,\s*", line[:-1].strip())
 
         self.name, self.type = vals[0:2]
-        self.b = VC(vals[2])
-        self.letr = [cleanint(x) for x in vals[3:-1]]
-        self.desc = vals[-1]
+        self.level = Level(*vals[3:7])
+        self.trange = Trange(*vals[7:10])
+        self.varcode = Varcode(vals[2])
+        self.desc = vals[10]
 
     def __str__(self):
-        return ", ".join([self.name, str(self.b),
-                          ":".join([str(x) for x in self.letr[0:4]]),
-                          ":".join([str(x) for x in self.letr[4:]]),
-                          self.desc])
+        return ", ".join((self.name, str(self.varcode), str(self.level), str(self.trange), self.desc))
 
     def __lt__(self, o):
-        return (self.letr, self.b) < (o.letr, o.b)
+        return (self.level, self.trange, self.varcode) < (o.level, o.trange, o.varcode)
 
 
 class Vars:
@@ -124,25 +176,78 @@ int resolve_var_substring(const char* name, int len);
 #endif
 """, file=file)
 
+    def print_shortcuts_h(self, file):
+        print("""#ifndef DBALLE_MSG_SHORTCUTS_H
+#define DBALLE_MSG_SHORTCUTS_H
+
+#include <dballe/types.h>
+#include <wreport/varinfo.h>
+
+namespace dballe {
+namespace impl {
+namespace msg {
+
+struct Shortcut
+{
+    bool station_data;
+    Level level;
+    Trange trange;
+    wreport::Varcode code;
+};
+""", file=file)
+
+        for v in self.vars:
+            print("extern Shortcut DBA_MSG_{name};".format(name=v.name.upper()), file=file)
+
+        print("""
+}
+}
+}
+
+#endif""", file=file)
+
+    def print_shortcuts_cc(self, file):
+        print("""#include "shortcuts.h"
+
+namespace dballe {
+namespace impl {
+namespace msg {
+
+""", file=file)
+
+        for v in self.vars:
+            print('Shortcut DBA_MSG_{name} = {{ {station}, {level}, {trange}, WR_VAR(0, {vx}, {vy}) }};'.format(
+                name=v.name.upper(),
+                station="true" if v.level.is_missing() and v.trange.is_missing() else "false",
+                level=v.level.as_type(),
+                trange=v.trange.as_type(),
+                vx=v.varcode.x, vy=v.varcode.y,
+            ), file=file)
+
+        print("""
+}
+}
+}""", file=file)
+
     def print_extravars_h(self, file):
         types = {"int": "int", "num": "double", "str": "const char*"}
         ftypes = {"int": "i", "num": "d", "str": "c"}
         for v in self.vars:
             print("""
-    /** Set the value of "{desc}" from a variable of type {type} */
-    inline void set_{name}({type} val, int conf=-1) {{ set{ftype}(Level({level}), Trange({trange}), WR_VAR(0, {vx}, {vy}), val, conf); }}
-    /** Set the value of "{desc}" from a wreport::Var */
-    inline void set_{name}_var(const wreport::Var& val) {{ set(Level({level}), Trange({trange}), WR_VAR(0, {vx}, {vy}), val); }}
-    /** Get the "{desc}" physical value stored in the message */
-    inline const wreport::Var* get_{name}_var() const {{ return get(DBA_MSG_{NAME}); }}
-    """ .format(
+/** Set the value of "{desc}" from a variable of type {type} */
+inline void set_{name}({type} val, int conf=-1) {{ set{ftype}({level}, {trange}, WR_VAR(0, {vx}, {vy}), val, conf); }}
+/** Set the value of "{desc}" from a wreport::Var */
+inline void set_{name}_var(const wreport::Var& val) {{ set({level}, {trange}, WR_VAR(0, {vx}, {vy}), val); }}
+/** Get the "{desc}" physical value stored in the message */
+inline const wreport::Var* get_{name}_var() const {{ return get(DBA_MSG_{NAME}); }}
+""" .format(
                 name=v.name.lower(),
                 desc=v.desc,
                 type=types[v.type],
                 ftype=ftypes[v.type],
-                vx=v.b.x, vy=v.b.y,
-                level=", ".join(v.letr[:4]),
-                trange=", ".join(v.letr[4:]),
+                vx=v.varcode.x, vy=v.varcode.y,
+                level=v.level.as_type(),
+                trange=v.trange.as_type(),
                 NAME=v.name,
             ), file=file)
 
@@ -193,7 +298,10 @@ int resolve_var_substring(const char* name, int len)
 
         print("struct MsgVarShortcut shortcutTable[] = {", file=file)
         for v in self.vars:
-            print(" { WR_VAR(0, %d, %d), %s, %s, %s, %s, %s, %s, %s }," % tuple([v.b.x, v.b.y] + v.letr), file=file)
+            args = [v.varcode.x, v.varcode.y]
+            args.extend(format_int_or_none(x) for x in v.level.as_tuple())
+            args.extend(format_int_or_none(x) for x in v.trange.as_tuple())
+            print(" { WR_VAR(0, %d, %d), %s, %s, %s, %s, %s, %s, %s }," % tuple(args), file=file)
         print("};", file=file)
         print("}", file=file)
 
@@ -221,6 +329,10 @@ def main():
         vars.print_extravars_h(sys.stdout)
     elif args.output == "vars.gperf":
         vars.print_vars_gperf(sys.stdout)
+    elif args.output == "shortcuts.h":
+        vars.print_shortcuts_h(sys.stdout)
+    elif args.output == "shortcuts.cc":
+        vars.print_shortcuts_cc(sys.stdout)
     else:
         raise Fail("Output type {} is not recognised".format(args.output))
 
