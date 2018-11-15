@@ -237,6 +237,7 @@ class Tests : public TestCase
                 auto m = get_matcher("latmin=45.00");
 
                 Msg matched;
+                matched.set_longitude(11.0);
                 wassert(actual_matcher_result(m->match(MatchedMsg(matched))) == matcher::MATCH_NO);
 
                 matched.set_latitude(43.0);
@@ -251,6 +252,7 @@ class Tests : public TestCase
                 auto m = get_matcher("latmax=45.00");
 
                 Msg matched;
+                matched.set_longitude(11.0);
                 wassert(actual_matcher_result(m->match(MatchedMsg(matched))) == matcher::MATCH_NO);
 
                 matched.set_latitude(46.0);
@@ -265,6 +267,7 @@ class Tests : public TestCase
                 auto m = get_matcher("lonmin=45.00, lonmax=180.0");
 
                 Msg matched;
+                matched.set_latitude(11.0);
                 wassert(actual_matcher_result(m->match(MatchedMsg(matched))) == matcher::MATCH_NO);
 
                 matched.set_longitude(43.0);
@@ -279,6 +282,7 @@ class Tests : public TestCase
                 auto m = get_matcher("lonmin=-180, lonmax=45.0");
 
                 Msg matched;
+                matched.set_latitude(11.0);
                 wassert(actual_matcher_result(m->match(MatchedMsg(matched))) == matcher::MATCH_NO);
 
                 matched.set_longitude(46.0);
@@ -459,6 +463,7 @@ class Tests : public TestCase
                 auto m = get_matcher("latmin=45.00");
 
                 Messages matched; init(matched);
+                Msg::downcast(matched[0])->set_longitude(11.0);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
                 Msg::downcast(matched[0])->set_latitude(43.0);
@@ -473,6 +478,7 @@ class Tests : public TestCase
                 auto m = get_matcher("latmax=45.00");
 
                 Messages matched; init(matched);
+                Msg::downcast(matched[0])->set_longitude(11.0);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
                 Msg::downcast(matched[0])->set_latitude(46.0);
@@ -487,6 +493,7 @@ class Tests : public TestCase
                 auto m = get_matcher("lonmin=45.00, lonmax=180.0");
 
                 Messages matched; init(matched);
+                Msg::downcast(matched[0])->set_latitude(11.0);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
                 Msg::downcast(matched[0])->set_longitude(43.0);
@@ -501,6 +508,7 @@ class Tests : public TestCase
                 auto m = get_matcher("lonmin=-180, lonmax=45.0");
 
                 Messages matched; init(matched);
+                Msg::downcast(matched[0])->set_latitude(11.0);
                 wassert(actual_matcher_result(m->match(MatchedMessages(matched))) == matcher::MATCH_NO);
 
                 Msg::downcast(matched[0])->set_longitude(46.0);

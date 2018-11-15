@@ -146,30 +146,27 @@ struct Generic : public Template
         add_datetime_var(WR_VAR(0, 4, 6), !dt.is_missing(), dt.second);
 
         // Then the station context
-        if (const msg::Context* ctx = msg.find_station_context())
+        for (const auto& val: msg.find_station_context())
         {
-            for (const auto& val: ctx->values)
+            const Var& var = *val;
+
+            // Do not add rep_memo and datetime twice
+            switch (var.code())
             {
-                const Var& var = *val;
-
-                // Do not add rep_memo and datetime twice
-                switch (var.code())
-                {
-                    case WR_VAR(0, 1, 194):
-                    case WR_VAR(0, 4, 1):
-                    case WR_VAR(0, 4, 2):
-                    case WR_VAR(0, 4, 3):
-                    case WR_VAR(0, 4, 4):
-                    case WR_VAR(0, 4, 5):
-                    case WR_VAR(0, 4, 6):
-                        continue;
-                    default:
-                        break;
-                }
-
-                // Store the variable
-                add_var_and_attrs(var);
+                case WR_VAR(0, 1, 194):
+                case WR_VAR(0, 4, 1):
+                case WR_VAR(0, 4, 2):
+                case WR_VAR(0, 4, 3):
+                case WR_VAR(0, 4, 4):
+                case WR_VAR(0, 4, 5):
+                case WR_VAR(0, 4, 6):
+                    continue;
+                default:
+                    break;
             }
+
+            // Store the variable
+            add_var_and_attrs(var);
         }
 
         // Then do the other contexts

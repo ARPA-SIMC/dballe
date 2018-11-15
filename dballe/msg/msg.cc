@@ -258,9 +258,13 @@ const msg::Context* Msg::find_context(const Level& lev, const Trange& tr) const
     return data[pos];
 }
 
-const msg::Context* Msg::find_station_context() const
+const Values& Msg::find_station_context() const
 {
-    return find_context(Level(), Trange());
+static const Values empty_values;
+    const msg::Context* ctx = find_context(Level(), Trange());
+    if (!ctx)
+        return empty_values;
+    return ctx->values;
 }
 
 msg::Context* Msg::edit_context(const Level& lev, const Trange& tr)
@@ -878,10 +882,9 @@ matcher::Result MatchedMsg::match_station_id(int val) const
 
 matcher::Result MatchedMsg::match_station_wmo(int block, int station) const
 {
-    const msg::Context* c = m.find_station_context();
-    if (!c) return matcher::MATCH_NA;
+    const Values& c = m.find_station_context();
 
-    if (const wreport::Var* var = c->find_by_id(DBA_MSG_BLOCK))
+    if (const wreport::Var* var = c.maybe_var(WR_VAR(0, 1, 1)))
     {
         // Match block
         if (var->enqi() != block) return matcher::MATCH_NO;
@@ -890,7 +893,7 @@ matcher::Result MatchedMsg::match_station_wmo(int block, int station) const
         if (station == -1) return matcher::MATCH_YES;
 
         // Match station
-        if (const wreport::Var* var = c->find_by_id(DBA_MSG_STATION))
+        if (const wreport::Var* var = c.maybe_var(WR_VAR(0, 1, 2)))
         {
             if (var->enqi() != station) return matcher::MATCH_NO;
             return matcher::MATCH_YES;
@@ -908,20 +911,18 @@ matcher::Result MatchedMsg::match_datetime(const DatetimeRange& range) const
 
 matcher::Result MatchedMsg::match_coords(const LatRange& latrange, const LonRange& lonrange) const
 {
-    const msg::Context* c = m.find_station_context();
-    if (!c) return matcher::MATCH_NA;
+    Coords coords = m.get_coords();
+    if (coords.is_missing())
+    {
+        matcher::Result r1 = latrange.is_missing() ? matcher::MATCH_YES : matcher::MATCH_NA;
+        matcher::Result r2 = lonrange.is_missing() ? matcher::MATCH_YES : matcher::MATCH_NA;
+        if (r1 == matcher::MATCH_YES && r2 == matcher::MATCH_YES)
+            return matcher::MATCH_YES;
+        return matcher::MATCH_NA;
+    }
 
-    matcher::Result r1 = matcher::MATCH_NA;
-    if (const wreport::Var* var = c->find_by_id(DBA_MSG_LATITUDE))
-        r1 = latrange.contains(var->enqi()) ? matcher::MATCH_YES : matcher::MATCH_NO;
-    else if (latrange.is_missing())
-        r1 = matcher::MATCH_YES;
-
-    matcher::Result r2 = matcher::MATCH_NA;
-    if (const wreport::Var* var = c->find_by_id(DBA_MSG_LONGITUDE))
-        r2 = lonrange.contains(var->enqi()) ? matcher::MATCH_YES : matcher::MATCH_NO;
-    else if (lonrange.is_missing())
-        r2 = matcher::MATCH_YES;
+    matcher::Result r1 = latrange.contains(coords.lat) ? matcher::MATCH_YES : matcher::MATCH_NO;
+    matcher::Result r2 = lonrange.contains(coords.lon) ? matcher::MATCH_YES : matcher::MATCH_NO;
 
     if (r1 == matcher::MATCH_YES && r2 == matcher::MATCH_YES)
         return matcher::MATCH_YES;

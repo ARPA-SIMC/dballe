@@ -12,11 +12,11 @@ namespace msg {
 struct CursorStation : public dballe::CursorStation
 {
     dballe::DBStation station;
-    const Context* station_ctx;
+    const Values& station_values;
     bool at_start = true;
 
     CursorStation(const Msg& msg)
-        : station_ctx(msg.find_station_context())
+        : station_values(msg.find_station_context())
     {
         station.report = msg.get_report();
         station.coords = msg.get_coords();
@@ -55,7 +55,7 @@ struct CursorStation : public dballe::CursorStation
 
     DBValues get_values() const override
     {
-        return DBValues(station_ctx->values);
+        return DBValues(station_values);
     }
 };
 
@@ -63,12 +63,12 @@ struct CursorStation : public dballe::CursorStation
 struct CursorStationData : public dballe::CursorStationData
 {
     dballe::DBStation station;
-    const msg::Context* ctx;
+    const Values& station_values;
     bool at_start = true;
     Values::const_iterator cur;
 
     CursorStationData(const Msg& msg)
-        : ctx(msg.find_station_context())
+        : station_values(msg.find_station_context())
     {
         station.report = msg.get_report();
         station.coords = msg.get_coords();
@@ -78,8 +78,8 @@ struct CursorStationData : public dballe::CursorStationData
     int remaining() const override
     {
         if (at_start)
-            return ctx->values.size();
-        return ctx->values.end() - cur;
+            return station_values.size();
+        return station_values.end() - cur;
     }
 
     bool next() override
@@ -87,22 +87,22 @@ struct CursorStationData : public dballe::CursorStationData
         if (at_start)
         {
             at_start = false;
-            cur = ctx->values.begin();
+            cur = station_values.begin();
             return true;
         }
-        else if (cur == ctx->values.end())
+        else if (cur == station_values.end())
             return false;
         else
         {
             ++cur;
-            return cur == ctx->values.end();
+            return cur == station_values.end();
         }
     }
 
     void discard() override
     {
         at_start = false;
-        cur = ctx->values.end();
+        cur = station_values.end();
     }
 
     bool enqi(const char* key, unsigned len, int& res) const override;

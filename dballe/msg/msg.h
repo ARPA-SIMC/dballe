@@ -180,7 +180,7 @@ public:
      * @return
      *   The context found, or NULL if it was not found.
      */
-    const msg::Context* find_station_context() const;
+    const Values& find_station_context() const;
 
     /**
      * Find a msg::Context given its description
