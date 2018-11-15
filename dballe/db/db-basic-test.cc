@@ -138,7 +138,7 @@ this->add_method("stationdata", [](Fixture& f) {
             {
                 wassert(actual(cur->next()).istrue());
                 DBStation station = cur->get_station();
-                DBValues values = dynamic_cast<db::CursorStation*>(cur.get())->get_values();
+                DBValues values = cur->get_values();
                 if (station.report == "temp")
                 {
                     wassert(actual(station.id) == svals_esmac.station.id);
@@ -329,7 +329,7 @@ this->add_method("vacuum", [](Fixture& f) {
 
     // Station 2 is still there with all its data
     {
-        auto tr = dynamic_pointer_cast<db::Transaction>(db.transaction());
+        auto tr = db.transaction();
         core::Query q;
         q.ana_id = data.stations["s2"].station.id;
         auto c = wcallchecked(tr->query_stations(q));

@@ -180,7 +180,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             wassert(actual(cur->remaining()) == 1);
             wassert(actual(cur->next()).istrue());
 
-            auto vars = dynamic_cast<const db::CursorStation*>(cur.get())->get_values();
+            auto vars = cur->get_values();
             wassert(actual(vars.size()) == 5);
             wassert(actual(vars.var(WR_VAR(0, 1, 19)).format()) == "My beautifull station");
             wassert(actual(vars.var(WR_VAR(0, 1, 194)).format()) == "generic");
