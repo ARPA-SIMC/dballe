@@ -28,7 +28,7 @@ class CSVMixin(DballeDBMixin):
         self.assertEqual(lines[1],
                          "Station,Latitude,Longitude,Network,Datetime,Level1,L1,Level2,L2,Time range,P1,P2,Variable,Value,Attr B33007,Attr B33040")
         self.assertEqual(lines[2],
-                         "1,10.0,15.0,synop,2006-12-31 23:57:09,3,2,-,-,4,-21600,0,B13011,3.8,69,")
+                         "1,10.00000,15.00000,synop,2006-12-31 23:57:09,3,2,-,-,4,-21600,0,B13011,3.8,69,")
 
     def testAttrs(self):
         self.db.reset()
@@ -76,4 +76,4 @@ class TestCSVMEM(CSVMixin, unittest.TestCase):
 
 if __name__ == "__main__":
     from testlib import main
-    main("test_csv")
+    main("test-csv")
