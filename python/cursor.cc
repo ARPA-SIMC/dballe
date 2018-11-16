@@ -161,6 +161,15 @@ be used to access the result values.
             }
         } DBALLE_CATCH_RETURN_PYO
     }
+
+    static PyObject* mp_subscript(Impl* self, PyObject* pykey)
+    {
+        try {
+            Py_ssize_t len;
+            const char* key = throw_ifnull(PyUnicode_AsUTF8AndSize(pykey, &len));
+            return enqpy(*self->cur, key, len);
+        } DBALLE_CATCH_RETURN_PYO
+    }
 };
 
 struct DefinitionStationDB : public DefinitionBase<DefinitionStationDB, dpy_CursorStationDB>
@@ -171,12 +180,6 @@ struct DefinitionStationDB : public DefinitionBase<DefinitionStationDB, dpy_Curs
 
     GetSetters<remaining<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>> methods;
-
-    static PyObject* mp_subscript(Impl* self, PyObject* key)
-    {
-        PyErr_SetString(PyExc_NotImplementedError, "Cursor.__getitem__is not yet implemented");
-        return nullptr;
-    }
 };
 
 
@@ -188,12 +191,6 @@ struct DefinitionStationDataDB : public DefinitionBase<DefinitionStationDataDB, 
 
     GetSetters<remaining<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, query_attrs<Impl>, attr_query<Impl>> methods;
-
-    static PyObject* mp_subscript(Impl* self, PyObject* key)
-    {
-        PyErr_SetString(PyExc_NotImplementedError, "Cursor.__getitem__is not yet implemented");
-        return nullptr;
-    }
 };
 
 
@@ -205,12 +202,6 @@ struct DefinitionDataDB : public DefinitionBase<DefinitionDataDB, dpy_CursorData
 
     GetSetters<remaining<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, query_attrs<Impl>, attr_query<Impl>> methods;
-
-    static PyObject* mp_subscript(Impl* self, PyObject* key)
-    {
-        PyErr_SetString(PyExc_NotImplementedError, "Cursor.__getitem__is not yet implemented");
-        return nullptr;
-    }
 };
 
 
@@ -222,12 +213,6 @@ struct DefinitionSummaryDB : public DefinitionBase<DefinitionSummaryDB, dpy_Curs
 
     GetSetters<remaining<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>> methods;
-
-    static PyObject* mp_subscript(Impl* self, PyObject* key)
-    {
-        PyErr_SetString(PyExc_NotImplementedError, "Cursor.__getitem__is not yet implemented");
-        return nullptr;
-    }
 };
 
 

@@ -554,10 +554,10 @@ PyObject* coords_to_python(const Coords& coords)
 
     pyo_unique_ptr res(throw_ifnull(PyTuple_New(2)));
 
-    if (PyTuple_SetItem(res, 0, to_python(coords.dlat())) != 0)
+    if (PyTuple_SetItem(res, 0, dballe_int_lat_to_python(coords.lat)) != 0)
         throw PythonException();
 
-    if (PyTuple_SetItem(res, 1, to_python(coords.dlon())) != 0)
+    if (PyTuple_SetItem(res, 1, dballe_int_lon_to_python(coords.lon)) != 0)
         throw PythonException();
 
     return res.release();
@@ -568,6 +568,7 @@ Coords coords_from_python(PyObject* lat, PyObject* lon)
     if ((!lat || lat == Py_None) && (!lon || lon == Py_None))
         return Coords();
 
+    // TODO: check for int and Decimal
     if (lat && lat != Py_None && lon && lon != Py_None)
         return Coords(from_python<double>(lat), from_python<double>(lon));
 
@@ -894,6 +895,81 @@ int dballe_int_lon_from_python(PyObject* o)
     }
     PyErr_SetString(PyExc_TypeError, "longitude value must be an instance of int, float, or None");
     throw PythonException();
+}
+
+namespace {
+
+struct Decimal
+{
+    PyObject* mod;
+    PyObject* ctor;
+
+    Decimal()
+        : mod(throw_ifnull(PyImport_ImportModule("decimal"))),
+          ctor(throw_ifnull(PyObject_GetAttrString(mod, "Decimal")))
+    {
+    }
+
+    PyObject* make_lat(const char* val)
+    {
+        pyo_unique_ptr arg(throw_ifnull(PyUnicode_FromString(val)));
+        return throw_ifnull(PyObject_CallFunctionObjArgs(ctor, arg.get(), nullptr));
+    }
+    PyObject* make_lat(const std::string& val)
+    {
+        pyo_unique_ptr arg(throw_ifnull(PyUnicode_FromStringAndSize(val.data(), val.size())));
+        return throw_ifnull(PyObject_CallFunctionObjArgs(ctor, arg.get(), nullptr));
+    }
+    PyObject* make_lat(int val)
+    {
+        double dval = Coords::lat_from_int(val);
+        char buf[16];
+        int size = snprintf(buf, 16, "%.5f", dval);
+        pyo_unique_ptr arg(throw_ifnull(PyUnicode_FromStringAndSize(buf, size)));
+        return throw_ifnull(PyObject_CallFunctionObjArgs(ctor, arg.get(), nullptr));
+    }
+
+    PyObject* make_lon(const char* val)
+    {
+        pyo_unique_ptr arg(throw_ifnull(PyUnicode_FromString(val)));
+        return throw_ifnull(PyObject_CallFunctionObjArgs(ctor, arg.get(), nullptr));
+    }
+    PyObject* make_lon(const std::string& val)
+    {
+        pyo_unique_ptr arg(throw_ifnull(PyUnicode_FromStringAndSize(val.data(), val.size())));
+        return throw_ifnull(PyObject_CallFunctionObjArgs(ctor, arg.get(), nullptr));
+    }
+    PyObject* make_lon(int val)
+    {
+        double dval = Coords::lon_from_int(val);
+        char buf[16];
+        int size = snprintf(buf, 16, "%.5f", dval);
+        pyo_unique_ptr arg(throw_ifnull(PyUnicode_FromStringAndSize(buf, size)));
+        return throw_ifnull(PyObject_CallFunctionObjArgs(ctor, arg.get(), nullptr));
+    }
+};
+
+Decimal* decimal = nullptr;
+
+}
+
+
+PyObject* dballe_int_lat_to_python(int lat)
+{
+    if (lat == MISSING_INT)
+        Py_RETURN_NONE;
+    if (!decimal)
+        decimal = new Decimal;
+    return decimal->make_lat(lat);
+}
+
+PyObject* dballe_int_lon_to_python(int lon)
+{
+    if (lon == MISSING_INT)
+        Py_RETURN_NONE;
+    if (!decimal)
+        decimal = new Decimal;
+    return decimal->make_lon(lon);
 }
 
 void set_lat_from_python(PyObject* o, Coords& coords)

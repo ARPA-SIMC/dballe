@@ -50,7 +50,7 @@ bool Base<Interface, Row>::next()
 {
     if (at_start)
         at_start = false;
-    else
+    else if (cur != results.end())
         ++cur;
     return cur != results.end();
 }
@@ -63,6 +63,12 @@ void Base<Interface, Row>::discard()
 }
 
 template<typename Interface, typename Row>
+int Base<Interface, Row>::get_priority() const
+{
+    return tr->repinfo().get_priority(cur->station.report);
+}
+
+template<typename Interface, typename Row>
 unsigned Base<Interface, Row>::test_iterate(FILE* dump)
 {
     unsigned count;
@@ -71,6 +77,11 @@ unsigned Base<Interface, Row>::test_iterate(FILE* dump)
             cur->dump(dump);
     return count;
 }
+
+template class Base<CursorStation, StationRow>;
+template class Base<CursorStationData, StationDataRow>;
+template class Base<CursorData, DataRow>;
+template class Base<CursorSummary, SummaryRow>;
 
 
 void StationRow::dump(FILE* out) const

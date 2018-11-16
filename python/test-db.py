@@ -1,13 +1,9 @@
-#!/usr/bin/python
-# coding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+#!/usr/bin/env python3
 import dballe
 import io
 import datetime
 import unittest
+from decimal import Decimal
 import warnings
 from testlib import DballeDBMixin, test_pathname
 
@@ -45,15 +41,15 @@ class CommonDBTestMixin(DballeDBMixin):
         self.db.export_to_file({}, "BUFR", out)
         self.assertTrue(out.getvalue().startswith(b"BUFR"))
 
-    def testQueryAna(self):
+    def testQueryStations(self):
         cur = self.db.query_stations()
         self.assertEqual(cur.remaining, 1)
         count = 0
-        for result in cur:
-                self.assertEqual(result["lat"], 12.34560)
-                self.assertEqual(result["lon"], 76.54320)
-                self.assertNotIn("B01011", result)
-                count = count + 1
+        for idx, result in enumerate(cur):
+            self.assertEqual(result["lat"], Decimal("12.34560"))
+            self.assertEqual(result["lon"], Decimal("76.54320"))
+            self.assertNotIn("B01011", result)
+            count += 1
         self.assertEqual(count, 1)
 
     def testQueryData(self):
@@ -66,7 +62,7 @@ class CommonDBTestMixin(DballeDBMixin):
         self.assertEqual(cur.remaining, 2)
         for idx, result in enumerate(cur):
             self.assertEqual(cur.remaining, 2-idx-1)
-            var = result.var(result["var"])
+            var = result["var"]
             self.assertEqual(var.code, expected[idx]["code"])
             self.assertEqual(var.enq(), expected[idx]["val"])
             self.assertFalse(result.attrs(result["var"]))
@@ -81,7 +77,7 @@ class CommonDBTestMixin(DballeDBMixin):
         self.assertEqual(cur.remaining, 2)
         for idx, result in enumerate(cur):
             self.assertEqual(cur.remaining, 2-idx-1)
-            var = result.var(result["var"])
+            var = result["var"]
             self.assertEqual(var.code, expected[idx]["code"])
             self.assertEqual(var.enq(), expected[idx]["val"])
             self.assertFalse(result.attrs(result["var"]))
@@ -101,7 +97,7 @@ class CommonDBTestMixin(DballeDBMixin):
         count = 0
         for code in data:
             self.assertIn(code, expected)
-            self.assertEqual(data[code], expected[code])
+            self.assertEqual(data[code].enq(), expected[code])
             del expected[code]
             count += 1
         self.assertEqual(count, 2)
@@ -134,7 +130,7 @@ class CommonDBTestMixin(DballeDBMixin):
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", DeprecationWarning)
                 res[(result["ana_id"], result["rep_memo"], result["level"], result["trange"], result["var"])] = (
-                    result["datemin"], result["datemax"], result["context_id"])
+                    result["datetimemin"], result["datetimemax"], result["count"])
         self.assertEqual(
                 res[(1, "synop", dballe.Level(10, 11, 15, 22), dballe.Trange(20, 111, 222), 'B01011')],
                 (datetime.datetime(1945, 4, 25, 8, 0), datetime.datetime(1945, 4, 25, 8, 0), 1))
@@ -172,13 +168,17 @@ class CommonDBTestMixin(DballeDBMixin):
             self.db.load(fp, overwrite=True)
             r = next(self.db.query_data())
             self.db.attr_query_data(r["context_id"])  # cannot verify the result, but expecting not to raise
-            self.assertTrue(r["B12101"] == 274.15)
+            var = r["var"]
+            self.assertEqual(var.code, "B12101")
+            self.assertEqual(var.enqd(), 274.15)
 
         with io.open(test_pathname("bufr/issue91-withB33196.bufr"), "rb") as fp:
             self.db.load(fp, overwrite=True)
             r = next(self.db.query_data())
             self.db.attr_query_data(r["context_id"])  # cannot verify the result, but expecting not to raise)
-            self.assertTrue(r["B12101"] == 273.15)
+            var = r["var"]
+            self.assertEqual(var.code, "B12101")
+            self.assertEqual(var.enqd(), 273.15)
 
     def testLoadFileno(self):
         class F(object):
@@ -325,14 +325,18 @@ class AttrTestMixin(object):
             self.db.load(fp, attrs=True, overwrite=True)
             r = next(self.db.query_data())
             a = self.db.attr_query_data(r["context_id"])
-            self.assertTrue(r["B12101"] == 274.15)
+            var = r["var"]
+            self.assertEqual(var.code, "B12101")
+            self.assertEqual(var.enq(), 274.15)
             self.assertTrue("B33196" not in a)
 
         with io.open(test_pathname("bufr/issue91-withB33196.bufr"), "rb") as fp:
             self.db.load(fp, attrs=True, overwrite=True)
             r = next(self.db.query_data())
             a = self.db.attr_query_data(r["context_id"])
-            self.assertTrue(r["B12101"] == 273.15)
+            var = r["var"]
+            self.assertEqual(var.code, "B12101")
+            self.assertEqual(var.enq(), 273.15)
             self.assertTrue("B33196" in a)
 
 

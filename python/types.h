@@ -142,7 +142,11 @@ Values values_from_python(PyObject* o);
 std::string dballe_nullable_string_from_python(PyObject* o);
 
 int dballe_int_lat_from_python(PyObject* o);
+PyObject* dballe_int_lat_to_python(int lat);
+
 int dballe_int_lon_from_python(PyObject* o);
+PyObject* dballe_int_lon_to_python(int lon);
+
 void set_lat_from_python(PyObject* o, Coords& coords);
 void set_lon_from_python(PyObject* o, Coords& coords);
 unsigned short datetime_int16_from_python(PyObject* o);

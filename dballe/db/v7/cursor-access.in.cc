@@ -20,7 +20,7 @@ bool Stations::enqi(const char* key, unsigned len, int& res) const
 {
     Maybe<Int> r(res);
     switch (key) { // mklookup
-        case "priority":    r.set(tr->repinfo().get_priority(cur->station.report));
+        case "priority":    r.set(get_priority());
         case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
         case "ana_id":      r.set(cur->station.id);
         case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
@@ -37,7 +37,7 @@ bool Stations::enqd(const char* key, unsigned len, double& res) const
 {
     Maybe<Double> r(res);
     switch (key) { // mklookup
-        case "priority":    r.set(tr->repinfo().get_priority(cur->station.report));
+        case "priority":    r.set(get_priority());
         case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
         case "ana_id":      r.set(cur->station.id);
         case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
@@ -54,7 +54,7 @@ bool Stations::enqs(const char* key, unsigned len, std::string& res) const
 {
     Maybe<String> r(res);
     switch (key) { // mklookup
-        case "priority":    r.set(tr->repinfo().get_priority(cur->station.report));
+        case "priority":    r.set(get_priority());
         case "rep_memo":    r.set(cur->station.report);
         case "ana_id":      r.set(cur->station.id);
         case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
@@ -71,7 +71,7 @@ bool Stations::enqf(const char* key, unsigned len, std::string& res) const
 {
     Maybe<String> r(res);
     switch (key) { // mklookup
-        case "priority":    r.set(tr->repinfo().get_priority(cur->station.report));
+        case "priority":    r.set(get_priority());
         case "rep_memo":    r.set(cur->station.report);
         case "ana_id":      r.set(cur->station.id);
         case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
@@ -93,7 +93,7 @@ bool StationData::enqi(const char* key, unsigned len, int& res) const
 {
     Maybe<Int> r(res);
     switch (key) { // mklookup
-        case "priority":    r.set(tr->repinfo().get_priority(cur->station.report));
+        case "priority":    r.set(get_priority());
         case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
         case "ana_id":      r.set(cur->station.id);
         case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
@@ -112,7 +112,7 @@ bool StationData::enqd(const char* key, unsigned len, double& res) const
 {
     Maybe<Double> r(res);
     switch (key) { // mklookup
-        case "priority":    r.set(tr->repinfo().get_priority(cur->station.report));
+        case "priority":    r.set(get_priority());
         case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
         case "ana_id":      r.set(cur->station.id);
         case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
@@ -131,7 +131,7 @@ bool StationData::enqs(const char* key, unsigned len, std::string& res) const
 {
     Maybe<String> r(res);
     switch (key) { // mklookup
-        case "priority":    r.set(tr->repinfo().get_priority(cur->station.report));
+        case "priority":    r.set(get_priority());
         case "rep_memo":    r.set(cur->station.report);
         case "ana_id":      r.set(cur->station.id);
         case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
@@ -150,7 +150,7 @@ bool StationData::enqf(const char* key, unsigned len, std::string& res) const
 {
     Maybe<String> r(res);
     switch (key) { // mklookup
-        case "priority":    r.set(tr->repinfo().get_priority(cur->station.report));
+        case "priority":    r.set(get_priority());
         case "rep_memo":    r.set(cur->station.report);
         case "ana_id":      r.set(cur->station.id);
         case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
@@ -174,7 +174,7 @@ bool Data::enqi(const char* key, unsigned len, int& res) const
 {
     Maybe<Int> r(res);
     switch (key) { // mklookup
-        case "priority":    r.set(tr->repinfo().get_priority(cur->station.report));
+        case "priority":    r.set(get_priority());
         case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
         case "ana_id":      r.set(cur->station.id);
         case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
@@ -206,7 +206,7 @@ bool Data::enqd(const char* key, unsigned len, double& res) const
 {
     Maybe<Double> r(res);
     switch (key) { // mklookup
-        case "priority":    r.set(tr->repinfo().get_priority(cur->station.report));
+        case "priority":    r.set(get_priority());
         case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
         case "ana_id":      r.set(cur->station.id);
         case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
@@ -238,7 +238,7 @@ bool Data::enqs(const char* key, unsigned len, std::string& res) const
 {
     Maybe<String> r(res);
     switch (key) { // mklookup
-        case "priority":    r.set(tr->repinfo().get_priority(cur->station.report));
+        case "priority":    r.set(get_priority());
         case "rep_memo":    r.set(cur->station.report);
         case "ana_id":      r.set(cur->station.id);
         case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
@@ -270,7 +270,7 @@ bool Data::enqf(const char* key, unsigned len, std::string& res) const
 {
     Maybe<String> r(res);
     switch (key) { // mklookup
-        case "priority":    r.set(tr->repinfo().get_priority(cur->station.report));
+        case "priority":    r.set(get_priority());
         case "rep_memo":    r.set(cur->station.report);
         case "ana_id":      r.set(cur->station.id);
         case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
@@ -307,7 +307,7 @@ bool Summary::enqi(const char* key, unsigned len, int& res) const
 {
     Maybe<Int> r(res);
     switch (key) { // mklookup
-        case "priority":    r.set(tr->repinfo().get_priority(cur->station.report));
+        case "priority":    r.set(get_priority());
         case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
         case "ana_id":      r.set(cur->station.id);
         case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
@@ -346,7 +346,7 @@ bool Summary::enqd(const char* key, unsigned len, double& res) const
 {
     Maybe<Double> r(res);
     switch (key) { // mklookup
-        case "priority":    r.set(tr->repinfo().get_priority(cur->station.report));
+        case "priority":    r.set(get_priority());
         case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
         case "ana_id":      r.set(cur->station.id);
         case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
@@ -385,7 +385,7 @@ bool Summary::enqs(const char* key, unsigned len, std::string& res) const
 {
     Maybe<String> r(res);
     switch (key) { // mklookup
-        case "priority":    r.set(tr->repinfo().get_priority(cur->station.report));
+        case "priority":    r.set(get_priority());
         case "rep_memo":    r.set(cur->station.report);
         case "ana_id":      r.set(cur->station.id);
         case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
@@ -424,7 +424,7 @@ bool Summary::enqf(const char* key, unsigned len, std::string& res) const
 {
     Maybe<String> r(res);
     switch (key) { // mklookup
-        case "priority":    r.set(tr->repinfo().get_priority(cur->station.report));
+        case "priority":    r.set(get_priority());
         case "rep_memo":    r.set(cur->station.report);
         case "ana_id":      r.set(cur->station.id);
         case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);

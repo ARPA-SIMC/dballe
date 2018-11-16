@@ -98,6 +98,8 @@ struct Base : public Interface
     bool next() override;
     void discard() override;
 
+    int get_priority() const;
+
     /**
      * Iterate the cursor until the end, returning the number of items.
      *
@@ -105,6 +107,11 @@ struct Base : public Interface
      */
     unsigned test_iterate(FILE* dump=0) override;
 };
+
+extern template class Base<CursorStation, StationRow>;
+extern template class Base<CursorStationData, StationDataRow>;
+extern template class Base<CursorData, DataRow>;
+extern template class Base<CursorSummary, SummaryRow>;
 
 
 /**
