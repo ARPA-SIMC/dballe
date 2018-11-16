@@ -154,14 +154,14 @@ void StationData::load(Tracer<>& trc, const DataQueryBuilder& qb)
     cur = results.begin();
 }
 
-void StationData::attr_query(std::function<void(std::unique_ptr<wreport::Var>)>&& dest, bool force_read)
+void StationData::attr_query(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read)
 {
     if (!force_read && with_attributes)
     {
         for (const wreport::Var* a = cur->value->next_attr(); a != NULL; a = a->next_attr())
             dest(std::unique_ptr<wreport::Var>(new Var(*a)));
     } else {
-        tr->attr_query_station(attr_reference_id(), std::move(dest));
+        tr->attr_query_station(attr_reference_id(), dest);
     }
 }
 
@@ -202,14 +202,14 @@ void Data::load(Tracer<>& trc, const DataQueryBuilder& qb)
     this->tr->levtr().prefetch_ids(trc, ids);
 }
 
-void Data::attr_query(std::function<void(std::unique_ptr<wreport::Var>)>&& dest, bool force_read)
+void Data::attr_query(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read)
 {
     if (!force_read && with_attributes)
     {
         for (const Var* a = cur->value->next_attr(); a != NULL; a = a->next_attr())
             dest(std::unique_ptr<wreport::Var>(new Var(*a)));
     } else {
-        tr->attr_query_data(attr_reference_id(), std::move(dest));
+        tr->attr_query_data(attr_reference_id(), dest);
     }
 }
 
@@ -299,14 +299,14 @@ struct Best : public Data
         this->tr->levtr().prefetch_ids(trc, ids);
     }
 
-    void attr_query(std::function<void(std::unique_ptr<wreport::Var>)>&& dest, bool force_read) override
+    void attr_query(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read) override
     {
         if (!force_read && with_attributes)
         {
             for (const Var* a = cur->value->next_attr(); a != NULL; a = a->next_attr())
                 dest(std::unique_ptr<wreport::Var>(new Var(*a)));
         } else {
-            tr->attr_query_data(attr_reference_id(), std::move(dest));
+            tr->attr_query_data(attr_reference_id(), dest);
         }
     }
 };

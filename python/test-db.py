@@ -4,7 +4,6 @@ import io
 import datetime
 import unittest
 from decimal import Decimal
-import warnings
 from testlib import DballeDBMixin, test_pathname
 
 
@@ -21,6 +20,8 @@ class CommonDBTestMixin(DballeDBMixin):
                 B01011="Hey Hey!!",
                 B01012=500)
         ids = self.db.insert_data(data, False, True)
+
+        self.db.insert_station_data({"ana_id": ids["ana_id"], "B02005": 0.5})
 
         data.clear()
         data["B33007"] = 50
@@ -48,9 +49,29 @@ class CommonDBTestMixin(DballeDBMixin):
         for idx, result in enumerate(cur):
             self.assertEqual(result["lat"], Decimal("12.34560"))
             self.assertEqual(result["lon"], Decimal("76.54320"))
+            self.assertEqual(result.enqi("lat"), 1234560)
+            self.assertEqual(result.enqd("lat"), 12.34560)
+            self.assertEqual(result.enqs("lat"), "1234560")
+            self.assertEqual(result.enqf("lat"), "12.34560")
             self.assertNotIn("B01011", result)
             count += 1
         self.assertEqual(count, 1)
+
+    def testQueryStationData(self):
+        cur = self.db.query_station_data({"latmin": 10.0})
+        self.assertEqual(cur.remaining, 1)
+        for idx, result in enumerate(cur):
+            self.assertEqual(cur.remaining, 0)
+            self.assertEqual(result.enqi("lat"), 1234560)
+            self.assertEqual(result.enqd("lat"), 12.34560)
+            self.assertEqual(result.enqs("lat"), "1234560")
+            self.assertEqual(result.enqf("lat"), "12.34560")
+            var = result["var"]
+            self.assertEqual(var.code, "B02005")
+            self.assertEqual(var.enq(), Decimal("0.5"))
+            # FIXME: this should trigger a query: how do we test it?
+            # self.assertEqual({k: v.enq() for k, v in result.attr_query().items()}, expected[idx]["attrs"])
+            self.assertEqual(result.attr_query(), {})
 
     def testQueryData(self):
         expected = [
@@ -62,6 +83,10 @@ class CommonDBTestMixin(DballeDBMixin):
         self.assertEqual(cur.remaining, 2)
         for idx, result in enumerate(cur):
             self.assertEqual(cur.remaining, 2-idx-1)
+            self.assertEqual(result.enqi("lat"), 1234560)
+            self.assertEqual(result.enqd("lat"), 12.34560)
+            self.assertEqual(result.enqs("lat"), "1234560")
+            self.assertEqual(result.enqf("lat"), "12.34560")
             var = result["var"]
             self.assertEqual(var.code, expected[idx]["code"])
             self.assertEqual(var.enq(), expected[idx]["val"])
@@ -125,13 +150,15 @@ class CommonDBTestMixin(DballeDBMixin):
         self.assertEqual(count, 2)
 
     def testQuerySummary(self):
-        cur = self.db.query_summary({"query": "details"})
-        res = dict()
-        for result in cur:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", DeprecationWarning)
-                res[(result["ana_id"], result["rep_memo"], result["level"], result["trange"], result["var"])] = (
-                    result["datetimemin"], result["datetimemax"], result["count"])
+        res = {}
+        for result in self.db.query_summary({"query": "details"}):
+            self.assertEqual(result["lat"], Decimal("12.34560"))
+            self.assertEqual(result.enqi("lat"), 1234560)
+            self.assertEqual(result.enqd("lat"), 12.34560)
+            self.assertEqual(result.enqs("lat"), "1234560")
+            self.assertEqual(result.enqf("lat"), "12.34560")
+            res[(result["ana_id"], result["rep_memo"], result["level"], result["trange"], result["var"])] = (
+                result["datetimemin"], result["datetimemax"], result["count"])
         self.assertEqual(
                 res[(1, "synop", dballe.Level(10, 11, 15, 22), dballe.Trange(20, 111, 222), 'B01011')],
                 (datetime.datetime(1945, 4, 25, 8, 0), datetime.datetime(1945, 4, 25, 8, 0), 1))

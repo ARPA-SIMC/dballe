@@ -54,7 +54,7 @@ struct CursorStationData : public dballe::CursorStationData
     /**
      * Query/return the attributes for the current value of this cursor
      */
-    virtual void attr_query(std::function<void(std::unique_ptr<wreport::Var>)>&& dest, bool force_read=false) = 0;
+    virtual void attr_query(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read=false) = 0;
 
     /**
      * Iterate the cursor until the end, returning the number of items.
@@ -78,7 +78,7 @@ struct CursorData : public dballe::CursorData
     /**
      * Query/return the attributes for the current value of this cursor
      */
-    virtual void attr_query(std::function<void(std::unique_ptr<wreport::Var>)>&& dest, bool force_read=false) = 0;
+    virtual void attr_query(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read=false) = 0;
 
     /**
      * Iterate the cursor until the end, returning the number of items.
@@ -121,7 +121,7 @@ public:
      * @param dest
      *   The function that will be called on each resulting attribute
      */
-    virtual void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) = 0;
+    virtual void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
 
     /**
      * Query attributes on a data value
@@ -131,7 +131,7 @@ public:
      * @param dest
      *   The function that will be called on each resulting attribute
      */
-    virtual void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) = 0;
+    virtual void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
 
     /**
      * Insert station values into the database

@@ -68,8 +68,8 @@ public:
     std::unique_ptr<dballe::CursorStationData> query_station_data(const Query& query) override;
     std::unique_ptr<dballe::CursorData> query_data(const Query& query);
     std::unique_ptr<dballe::CursorSummary> query_summary(const Query& query);
-    void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
-    void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
+    void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
+    void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
 
     void insert_station_data(dballe::Data& vals, bool can_replace, bool station_can_add) override;
     void insert_data(dballe::Data& vals, bool can_replace, bool station_can_add) override;

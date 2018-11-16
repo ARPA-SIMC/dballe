@@ -81,6 +81,17 @@ struct query_attrs : MethKwargs<Impl>
     }
 };
 
+namespace {
+inline void run_attr_query(const db::CursorStationData& cur, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+{
+    cur.get_transaction()->attr_query_station(cur.attr_reference_id(), dest);
+}
+inline void run_attr_query(const db::CursorData& cur, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+{
+    cur.get_transaction()->attr_query_data(cur.attr_reference_id(), dest);
+}
+}
+
 template<typename Impl>
 struct attr_query : MethNoargs<Impl>
 {
@@ -92,10 +103,114 @@ struct attr_query : MethNoargs<Impl>
         try {
             ensure_valid_cursor(self);
             pyo_unique_ptr res(throw_ifnull(PyDict_New()));
-            self->cur->get_transaction()->attr_query_data(self->cur->attr_reference_id(), [&](unique_ptr<Var>&& var) {
+            run_attr_query(*self->cur, [&](unique_ptr<Var>&& var) {
                 add_var_to_dict(res, *var);
             });
             return (PyObject*)res.release();
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+template<typename Impl>
+struct enqi : MethKwargs<Impl>
+{
+    constexpr static const char* name = "enqi";
+    constexpr static const char* signature = "key: str";
+    constexpr static const char* returns = "Union[int, None]";
+    constexpr static const char* summary = "Return the integer value for a keyword";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        try {
+            ensure_valid_cursor(self);
+
+            static const char* kwlist[] = { "key", nullptr };
+            const char* key;
+            Py_ssize_t len;
+            if (!PyArg_ParseTupleAndKeywords(args, kw, "s#", const_cast<char**>(kwlist), &key, &len))
+                return nullptr;
+
+            int res;
+            if (!self->cur->enqi(key, len, res))
+                Py_RETURN_NONE;
+            return PyLong_FromLong(res);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+template<typename Impl>
+struct enqd : MethKwargs<Impl>
+{
+    constexpr static const char* name = "enqd";
+    constexpr static const char* signature = "key: str";
+    constexpr static const char* returns = "Union[float, None]";
+    constexpr static const char* summary = "Return the float value for a keyword";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        try {
+            ensure_valid_cursor(self);
+
+            static const char* kwlist[] = { "key", nullptr };
+            const char* key;
+            Py_ssize_t len;
+            if (!PyArg_ParseTupleAndKeywords(args, kw, "s#", const_cast<char**>(kwlist), &key, &len))
+                return nullptr;
+
+            double res;
+            if (!self->cur->enqd(key, len, res))
+                Py_RETURN_NONE;
+            return PyFloat_FromDouble(res);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+template<typename Impl>
+struct enqs : MethKwargs<Impl>
+{
+    constexpr static const char* name = "enqs";
+    constexpr static const char* signature = "key: str";
+    constexpr static const char* returns = "Union[str, None]";
+    constexpr static const char* summary = "Return the string value for a keyword";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        try {
+            ensure_valid_cursor(self);
+
+            static const char* kwlist[] = { "key", nullptr };
+            const char* key;
+            Py_ssize_t len;
+            if (!PyArg_ParseTupleAndKeywords(args, kw, "s#", const_cast<char**>(kwlist), &key, &len))
+                return nullptr;
+
+            std::string res;
+            if (!self->cur->enqs(key, len, res))
+                Py_RETURN_NONE;
+            return PyUnicode_FromStringAndSize(res.data(), res.size());
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+template<typename Impl>
+struct enqf : MethKwargs<Impl>
+{
+    constexpr static const char* name = "enqf";
+    constexpr static const char* signature = "key: str";
+    constexpr static const char* returns = "Union[str, None]";
+    constexpr static const char* summary = "Return the formatted string value for a keyword";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        try {
+            ensure_valid_cursor(self);
+
+            static const char* kwlist[] = { "key", nullptr };
+            const char* key;
+            Py_ssize_t len;
+            if (!PyArg_ParseTupleAndKeywords(args, kw, "s#", const_cast<char**>(kwlist), &key, &len))
+                return nullptr;
+
+            std::string res;
+            if (!self->cur->enqf(key, len, res))
+                Py_RETURN_NONE;
+            return PyUnicode_FromStringAndSize(res.data(), res.size());
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -180,7 +295,7 @@ struct DefinitionStationDB : public DefinitionBase<DefinitionStationDB, dpy_Curs
     constexpr static const char* summary = "cursor iterating dballe.DB query_station results";
 
     GetSetters<remaining<Impl>> getsetters;
-    Methods<MethGenericEnter<Impl>, __exit__<Impl>> methods;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
 
@@ -191,7 +306,7 @@ struct DefinitionStationDataDB : public DefinitionBase<DefinitionStationDataDB, 
     constexpr static const char* summary = "cursor iterating dballe.DB query_station_data results";
 
     GetSetters<remaining<Impl>> getsetters;
-    Methods<MethGenericEnter<Impl>, __exit__<Impl>, query_attrs<Impl>, attr_query<Impl>> methods;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>, query_attrs<Impl>, attr_query<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
 
@@ -202,7 +317,7 @@ struct DefinitionDataDB : public DefinitionBase<DefinitionDataDB, dpy_CursorData
     constexpr static const char* summary = "cursor iterating dballe.DB query_data results";
 
     GetSetters<remaining<Impl>> getsetters;
-    Methods<MethGenericEnter<Impl>, __exit__<Impl>, query_attrs<Impl>, attr_query<Impl>> methods;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>, query_attrs<Impl>, attr_query<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
 
@@ -213,7 +328,7 @@ struct DefinitionSummaryDB : public DefinitionBase<DefinitionSummaryDB, dpy_Curs
     constexpr static const char* summary = "cursor iterating dballe.DB query_summary results";
 
     GetSetters<remaining<Impl>> getsetters;
-    Methods<MethGenericEnter<Impl>, __exit__<Impl>> methods;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
 
@@ -224,7 +339,7 @@ struct DefinitionSummarySummary : public DefinitionBase<DefinitionSummarySummary
     constexpr static const char* summary = "cursor iterating dballe.Explorer query_summary* results";
 
     GetSetters<remaining<Impl>> getsetters;
-    Methods<MethGenericEnter<Impl>, __exit__<Impl>> methods;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
 
@@ -235,7 +350,7 @@ struct DefinitionSummaryDBSummary : public DefinitionBase<DefinitionSummaryDBSum
     constexpr static const char* summary = "cursor iterating dballe.DBExplorer query_summary* results";
 
     GetSetters<remaining<Impl>> getsetters;
-    Methods<MethGenericEnter<Impl>, __exit__<Impl>> methods;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
 

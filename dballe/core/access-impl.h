@@ -45,7 +45,7 @@ struct MaybeBase
             return;
         wreport::Varcode code = dballe::resolve_varcode(key);
         if (code != var->code())
-            throw_if_notfound(key);
+            throw_notfound(key);
         _found = true;
         if (var && var->isset())
         {
@@ -60,7 +60,7 @@ struct MaybeBase
             return;
         wreport::Varcode code = dballe::resolve_varcode(key);
         if (code != value.code())
-            throw_if_notfound(key);
+            throw_notfound(key);
         const wreport::Var* var = value.get();
         _found = true;
         if (var && var->isset())
@@ -85,9 +85,15 @@ struct MaybeBase
         }
     }
 
-    [[noreturn]] void throw_if_notfound(const char* key)
+    [[noreturn]] void throw_notfound(const char* key)
     {
         wreport::error_notfound::throwf("key %s not found on this query result", key);
+    }
+
+    void throw_if_notfound(const char* key)
+    {
+        if (!_found)
+            throw_notfound(key);
     }
 };
 

@@ -213,7 +213,7 @@ std::unique_ptr<dballe::CursorSummary> Transaction::query_summary(const Query& q
     return move(res);
 }
 
-void Transaction::attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
+void Transaction::attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     Tracer<> trc(this->trc ? this->trc->trace_func("attr_query_station") : nullptr);
     // Create the query
@@ -221,7 +221,7 @@ void Transaction::attr_query_station(int data_id, std::function<void(std::unique
     d.read_attrs(trc, data_id, dest);
 }
 
-void Transaction::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
+void Transaction::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     Tracer<> trc(this->trc ? this->trc->trace_func("attr_query_data") : nullptr);
     // Create the query
