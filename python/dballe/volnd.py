@@ -190,7 +190,7 @@ class AnaIndexEntry(namedtuple("AnaIndexEntry", ("id", "lat", "lon", "ident"))):
         """
         Create an index entry from the contents of a Dict[str, Any]
         """
-        return cls(rec["ana_id"], rec["lat"], rec["lon"], rec.get("ident", None))
+        return cls(rec["ana_id"], rec["lat"], rec["lon"], rec["ident"])
 
     def __str__(self):
         if self[3] is None:
@@ -222,6 +222,7 @@ class AnaIndex(ListIndex):
 
     def short_name(self):
         return "AnaIndex["+str(len(self))+"]"
+
 
 class NetworkIndex(ListIndex):
     """
@@ -286,6 +287,7 @@ class TimeRangeIndex(ListIndex):
     def short_name(self):
         return "TimeRangeIndex["+str(len(self))+"]"
 
+
 class DateTimeIndex(ListIndex):
     """
     Index for datetimes, as they come out of the database.
@@ -299,7 +301,7 @@ class DateTimeIndex(ListIndex):
         # Suppress deprecation warnings until we have something better
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
-            return rec["date"]
+            return rec["datetime"]
 
     def details_from_record(self, rec):
         return self.key_from_record(rec)
@@ -447,6 +449,7 @@ class IntervalIndex(Index):
         else:
             return IntervalIndex(self._start, self._step, self._tolerance, self._end)
 
+
 class Data:
     """
     Container for collecting variable data.  It contains the variable data
@@ -485,7 +488,7 @@ class Data:
 
         self._lastPos = None
 
-    def append(self, rec):
+    def append(self, rec, val):
         """
         Collect a new value from the given dballe record.
 
@@ -497,7 +500,7 @@ class Data:
             pos = tuple(dim.index_record(rec) for dim in self.dims)
 
             # Save the value with its indexes
-            self.vals.append( (pos, rec[self.name]) )
+            self.vals.append((pos, val.enq()))
 
             # Save the last position for appendAttrs
             self._lastPos = pos
@@ -646,35 +649,33 @@ def read(cursor, dims, filter=None, checkConflicts=True, attributes=None):
     if it is a sequence, then it is the sequence of attributes that should
     be read.
     """
-    ndims = len(dims)
     vars = {}
-    #print "volnd iterate"
     # Iterate results
     for rec in cursor:
         # Discard the values that filter does not like
         if filter and not filter(rec):
             continue
 
-        varname = rec["var"]
+        v = rec["var"]
 
         # Instantiate the index objects here for every variable
         # when it appears the first time, sharing those indexes that
         # need to be shared and creating new indexes for the individual
         # ones
-        if varname not in vars:
-            var = Data(varname, [x.copy() for x in dims], checkConflicts)
-            vars[varname] = var
+        if v.code not in vars:
+            var = Data(v.code, [x.copy() for x in dims], checkConflicts)
+            vars[v.code] = var
         else:
-            var = vars[varname]
+            var = vars[v.code]
 
         # Save every value with its indexes
-        if not var.append(rec):
+        if not var.append(rec, v):
             continue
 
         # Add the attributes
-        if attributes != None:
-            arec = cursor.attr_query();
-            if attributes == True:
+        if attributes is not None:
+            arec = cursor.attr_query()
+            if attributes:
                 var.appendAttrs(arec)
             else:
                 var.appendAttrs(arec, attributes)
