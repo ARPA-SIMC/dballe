@@ -4,6 +4,7 @@
 #include <Python.h>
 #include <wreport/varinfo.h>
 #include <dballe/fwd.h>
+#include <dballe/core/fwd.h>
 #include <dballe/types.h>
 #include "common.h"
 #include <set>
@@ -129,6 +130,15 @@ inline PyObject* to_python(const wreport::Varcode& s) { return varcode_to_python
 wreport::Varcode varcode_from_python(PyObject* o);
 template<> inline wreport::Varcode from_python<wreport::Varcode>(PyObject* o) { return varcode_from_python(o); }
 
+/// Convert a Python dict to a Query
+std::unique_ptr<Query> query_from_python(PyObject* o);
+
+/// Convert a Python dict to a Data
+std::unique_ptr<Data> data_from_python(PyObject* o);
+
+/// Convert a Python dict to a Values
+Values values_from_python(PyObject* o);
+
 std::string dballe_nullable_string_from_python(PyObject* o);
 
 int dballe_int_lat_from_python(PyObject* o);
@@ -144,6 +154,11 @@ extern template void set_values_from_python(Values& values, wreport::Varcode cod
 extern template void set_values_from_python(DBValues& values, wreport::Varcode code, PyObject* val);
 
 std::set<wreport::Varcode> varcodes_from_python(PyObject* o);
+
+void add_var_to_dict(PyObject* dict, const wreport::Var& var);
+
+void query_setpy(core::Query& query, const char* key, unsigned len, PyObject* val);
+void data_setpy(core::Data& data, const char* key, unsigned len, PyObject* val);
 
 void register_types(PyObject* m);
 

@@ -3,6 +3,8 @@
 #include "dballe/types.h"
 #include "dballe/values.h"
 #include "dballe/core/var.h"
+#include "dballe/core/query.h"
+#include "dballe/core/data.h"
 #include "common.h"
 #include "types.h"
 #include "config.h"
@@ -769,6 +771,75 @@ wreport::Varcode varcode_from_python(PyObject* o)
     throw PythonException();
 }
 
+std::unique_ptr<Query> query_from_python(PyObject* o)
+{
+    core::Query* q;
+    std::unique_ptr<dballe::Query> res(q = new core::Query);
+    if (!o || o == Py_None)
+        return res;
+
+    if (PyDict_Check(o))
+    {
+        PyObject* key;
+        PyObject* value;
+        Py_ssize_t pos = 0;
+        while (PyDict_Next(o, &pos, &key, &value))
+        {
+            std::string k = string_from_python(key);
+            query_setpy(*q, k.data(), k.size(), value);
+        }
+        q->validate();
+        return res;
+    }
+
+    PyErr_SetString(PyExc_TypeError, "Expected dict or None");
+    throw PythonException();
+}
+
+std::unique_ptr<Data> data_from_python(PyObject* from_python)
+{
+    core::Data* d;
+    std::unique_ptr<Data> res(d = new core::Data);
+    if (!from_python || from_python == Py_None)
+        return res;
+
+    if (PyDict_Check(from_python))
+    {
+        PyObject* key;
+        PyObject* value;
+        Py_ssize_t pos = 0;
+        while (PyDict_Next(from_python, &pos, &key, &value))
+        {
+            std::string k = string_from_python(key);
+            data_setpy(*d, k.data(), k.size(), value);
+        }
+        return res;
+    }
+
+    PyErr_SetString(PyExc_TypeError, "Expected dict or None");
+    throw PythonException();
+}
+
+Values values_from_python(PyObject* from_python)
+{
+    Values values;
+    if (!from_python || from_python == Py_None)
+        return values;
+
+    if (PyDict_Check(from_python))
+    {
+        PyObject* key;
+        PyObject* value;
+        Py_ssize_t pos = 0;
+        while (PyDict_Next(from_python, &pos, &key, &value))
+            set_values_from_python(values, varcode_from_python(key), value);
+        return values;
+    }
+
+    PyErr_SetString(PyExc_TypeError, "Expected dict or None");
+    throw PythonException();
+}
+
 std::string dballe_nullable_string_from_python(PyObject* o)
 {
     if (!o || o == Py_None)
@@ -932,6 +1003,14 @@ void set_values_from_python(Values& values, wreport::Varcode code, PyObject* val
 template void set_values_from_python(Values& values, wreport::Varcode code, PyObject* val);
 template void set_values_from_python(DBValues& values, wreport::Varcode code, PyObject* val);
 
+void add_var_to_dict(PyObject* dict, const wreport::Var& var)
+{
+    char bcode[7];
+    format_bcode(var.code(), bcode);
+    pyo_unique_ptr pyvar((PyObject*)throw_ifnull(wrpy->var_create_copy(var)));
+    if (PyDict_SetItemString(dict, bcode, pyvar))
+        throw PythonException();
+}
 
 std::set<wreport::Varcode> varcodes_from_python(PyObject* o)
 {

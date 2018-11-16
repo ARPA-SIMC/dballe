@@ -19,7 +19,6 @@ _dballe_la_SOURCES = \
     types.cc \
     data-access.cc \
     query-access.cc \
-    record.cc \
     binarymessage.cc \
     file.cc \
     message.cc \
@@ -65,7 +64,6 @@ EXTRA_DIST += \
     impl-utils.h \
     common.h \
     types.h \
-    record.h \
     binarymessage.h \
     file.h \
     message.h \

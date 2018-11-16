@@ -1,6 +1,5 @@
 #include <Python.h>
 #include "db.h"
-#include "record.h"
 #include "cursor.h"
 #include "common.h"
 #include "types.h"
@@ -89,9 +88,9 @@ PyObject* file_get_data(PyObject* o, char*&buf, Py_ssize_t& len)
     return data.release();
 }
 
-template<typename Vals>
-static PyObject* get_insert_ids(const Vals& vals)
+static PyObject* get_insert_ids(const Data& data)
 {
+    const core::Data& vals = core::Data::downcast(data);
     pyo_unique_ptr res(throw_ifnull(PyDict_New()));
     pyo_unique_ptr ana_id(throw_ifnull(PyLong_FromLong(vals.station.id)));
     if (PyDict_SetItemString(res, "ana_id", ana_id))
@@ -131,12 +130,11 @@ database ID of its value.
             return nullptr;
 
         try {
-            core::Data data;
-            read_data(pydata, data);
+            auto data = data_from_python(pydata);
             ReleaseGIL gil;
-            self->db->insert_station_data(data, can_replace, station_can_add);
+            self->db->insert_station_data(*data, can_replace, station_can_add);
             gil.lock();
-            return get_insert_ids(data);
+            return get_insert_ids(*data);
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -163,12 +161,11 @@ database ID of its value.
             return nullptr;
 
         try {
-            core::Data data;
+            auto data = data_from_python(pydata);
             ReleaseGIL gil;
-            read_data(pydata, data);
-            self->db->insert_data(data, can_replace, station_can_add);
+            self->db->insert_data(*data, can_replace, station_can_add);
             gil.lock();
-            return get_insert_ids(data);
+            return get_insert_ids(*data);
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -185,9 +182,8 @@ struct MethQuery : public MethKwargs<Impl>
             return nullptr;
 
         try {
-            core::Query query;
-            read_query(pyquery, query);
-            return Base::run_query(self, query);
+            auto query = query_from_python(pyquery);
+            return Base::run_query(self, *query);
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -339,7 +335,7 @@ struct query_attrs : MethKwargs<Impl>
             self->db->attr_query_data(reference_id, [&](unique_ptr<Var>&& var) {
                 if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
                     return;
-                set_var(res, *var);
+                add_var_to_dict(res, *var);
             });
             return (PyObject*)res.release();
         } DBALLE_CATCH_RETURN_PYO
@@ -364,7 +360,7 @@ struct attr_query_station : MethKwargs<Impl>
         try {
             pyo_unique_ptr res(throw_ifnull(PyDict_New()));
             self->db->attr_query_station(varid, [&](unique_ptr<Var> var) {
-                set_var(res, *var);
+                add_var_to_dict(res, *var);
             });
             return (PyObject*)res.release();
         } DBALLE_CATCH_RETURN_PYO
@@ -388,7 +384,7 @@ struct attr_query_data : MethKwargs<Impl>
         try {
             pyo_unique_ptr res(throw_ifnull(PyDict_New()));
             self->db->attr_query_data(varid, [&](unique_ptr<Var>&& var) {
-                set_var(res, *var);
+                add_var_to_dict(res, *var);
             });
             return (PyObject*)res.release();
         } DBALLE_CATCH_RETURN_PYO
@@ -423,8 +419,7 @@ struct attr_insert : MethKwargs<Impl>
         }
 
         try {
-            Values values;
-            read_values(attrs, values);
+            Values values = values_from_python(attrs);
             ReleaseGIL gil;
             self->db->attr_insert_data(varid, values);
         } DBALLE_CATCH_RETURN_PYO
@@ -447,8 +442,7 @@ struct attr_insert_station : MethKwargs<Impl>
             return nullptr;
 
         try {
-            Values values;
-            read_values(attrs, values);
+            Values values = values_from_python(attrs);
             ReleaseGIL gil;
             self->db->attr_insert_station(varid, values);
         } DBALLE_CATCH_RETURN_PYO
@@ -471,8 +465,7 @@ struct attr_insert_data : MethKwargs<Impl>
             return nullptr;
 
         try {
-            Values values;
-            read_values(attrs, values);
+            Values values = values_from_python(attrs);
             ReleaseGIL gil;
             self->db->attr_insert_data(varid, values);
         } DBALLE_CATCH_RETURN_PYO
@@ -691,8 +684,7 @@ struct export_to_file : MethKwargs<Impl>
                 return NULL;
             }
 
-            core::Query query;
-            read_query(pyquery, query);
+            auto query = query_from_python(pyquery);
 
             if (pyobject_is_string(file))
             {
@@ -703,7 +695,7 @@ struct export_to_file : MethKwargs<Impl>
                     opts.template_name = "generic";
                 auto exporter = Exporter::create(out->encoding(), opts);
                 ReleaseGIL gil;
-                self->db->export_msgs(query, [&](unique_ptr<Message>&& msg) {
+                self->db->export_msgs(*query, [&](unique_ptr<Message>&& msg) {
                     impl::Messages msgs;
                     msgs.emplace_back(move(msg));
                     out->write(exporter->to_binary(msgs));
@@ -718,7 +710,7 @@ struct export_to_file : MethKwargs<Impl>
                 auto exporter = Exporter::create(encoding, opts);
                 pyo_unique_ptr res(nullptr);
                 bool has_error = false;
-                self->db->export_msgs(query, [&](unique_ptr<Message>&& msg) {
+                self->db->export_msgs(*query, [&](unique_ptr<Message>&& msg) {
                     impl::Messages msgs;
                     msgs.emplace_back(move(msg));
                     std::string encoded = exporter->to_binary(msgs);

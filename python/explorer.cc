@@ -3,7 +3,6 @@
 #include "dballe/db/explorer.h"
 #include "dballe/core/json.h"
 #include "common.h"
-#include "record.h"
 #include "cursor.h"
 #include "explorer.h"
 #include "message.h"
@@ -287,10 +286,9 @@ struct set_filter : public MethKwargs<typename ImplTraits<Station>::Impl>
             return nullptr;
 
         try {
-            core::Query query;
-            read_query(pyquery, query);
+            auto query = query_from_python(pyquery);
             ReleaseGIL rg;
-            self->explorer->set_filter(query);
+            self->explorer->set_filter(*query);
         } DBALLE_CATCH_RETURN_PYO
 
         Py_RETURN_NONE;
@@ -386,11 +384,10 @@ struct BaseQuerySummary : public MethKwargs<typename ImplTraits<Station>::Impl>
             return nullptr;
 
         try {
-            core::Query query;
-            read_query(pyquery, query);
+            auto query = query_from_python(pyquery);
             ReleaseGIL gil;
             const auto& summary = get_summary<Station, Scope>(*self);
-            auto res = summary.query_summary(query);
+            auto res = summary.query_summary(*query);
             gil.lock();
             return (PyObject*)cursor_create(std::unique_ptr<db::summary::Cursor<Station>>(dynamic_cast<db::summary::Cursor<Station>*>(res.release())));
         } DBALLE_CATCH_RETURN_PYO

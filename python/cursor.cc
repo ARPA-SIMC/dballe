@@ -1,6 +1,6 @@
 #include <Python.h>
 #include "cursor.h"
-#include "record.h"
+#include "types.h"
 #include "db.h"
 #include "common.h"
 #include <algorithm>
@@ -74,7 +74,7 @@ struct query_attrs : MethKwargs<Impl>
             self->cur->get_transaction()->attr_query_station(self->cur->attr_reference_id(), [&](unique_ptr<Var>&& var) {
                 if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
                     return;
-                set_var(res, *var);
+                add_var_to_dict(res, *var);
             });
             return (PyObject*)res.release();
         } DBALLE_CATCH_RETURN_PYO
@@ -93,7 +93,7 @@ struct attr_query : MethNoargs<Impl>
             ensure_valid_cursor(self);
             pyo_unique_ptr res(throw_ifnull(PyDict_New()));
             self->cur->get_transaction()->attr_query_station(self->cur->attr_reference_id(), [&](unique_ptr<Var>&& var) {
-                set_var(res, *var);
+                add_var_to_dict(res, *var);
             });
             return (PyObject*)res.release();
         } DBALLE_CATCH_RETURN_PYO
