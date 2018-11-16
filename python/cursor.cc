@@ -92,7 +92,7 @@ struct attr_query : MethNoargs<Impl>
         try {
             ensure_valid_cursor(self);
             pyo_unique_ptr res(throw_ifnull(PyDict_New()));
-            self->cur->get_transaction()->attr_query_station(self->cur->attr_reference_id(), [&](unique_ptr<Var>&& var) {
+            self->cur->get_transaction()->attr_query_data(self->cur->attr_reference_id(), [&](unique_ptr<Var>&& var) {
                 add_var_to_dict(res, *var);
             });
             return (PyObject*)res.release();

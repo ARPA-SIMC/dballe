@@ -500,7 +500,7 @@ class Data:
             pos = tuple(dim.index_record(rec) for dim in self.dims)
 
             # Save the value with its indexes
-            self.vals.append((pos, val.enq()))
+            self.vals.append((pos, val))
 
             # Save the last position for appendAttrs
             self._lastPos = pos
@@ -520,9 +520,10 @@ class Data:
         """
         if not self._lastPos:
             return
-        for code in rec:
-            if codes is not None and code not in codes: continue
-            #print "Attr", var.code(), "for", self.name, "at", self._lastPos
+        for code, var in rec.items():
+            if codes is not None and code not in codes:
+                continue
+            # print "Attr", var.code(), "for", self.name, "at", self._lastPos
             if code in self.attrs:
                 data = self.attrs[code]
             else:
@@ -530,7 +531,7 @@ class Data:
                 self.attrs[code] = data
             # Append at the same position as the last variable
             # collected
-            data.vals.append((self._lastPos, rec[code]))
+            data.vals.append((self._lastPos, var))
 
     def _instantiateIntMatrix(self):
         shape = tuple(len(d) for d in self.dims)
@@ -540,7 +541,7 @@ class Data:
             # used for encoding
             bits = self.info.bit_len
             if bits <= 8:
-                #print 'uint8'
+                # print 'uint8'
                 a = numpy.empty(shape, dtype='uint8')
             elif bits <= 16:
                 #print 'uint16'
@@ -585,9 +586,9 @@ class Data:
         shape = tuple(len(x) for x in self.dims)
 
         # Create the data array, with all values set as missing
-        #print "volnd finalise instantiate"
+        # print "volnd finalise instantiate"
         if self.info.type == "string":
-            #print self.info, "string"
+            # print self.info, "string"
             a = numpy.empty(shape, dtype=object)
             # Fill the array with all the values, at the given indexes
             for pos, val in self.vals:
@@ -605,7 +606,7 @@ class Data:
             for pos, val in self.vals:
                 if self._checkConflicts and not mask[pos]:
                     raise IndexError("Got more than one value for " + self.name + " at position " + str(pos))
-                a[pos] = val
+                a[pos] = val.enqd()
                 mask[pos] = False
             a = ma.array(a, mask=mask)
 
@@ -613,7 +614,7 @@ class Data:
         self.vals = a
 
         # Finalise all the attributes as well
-        #print "volnd finalise fill"
+        # print "volnd finalise fill"
         invalid = []
         for key, d in self.attrs.items():
             if not d.finalise():
@@ -675,7 +676,7 @@ def read(cursor, dims, filter=None, checkConflicts=True, attributes=None):
         # Add the attributes
         if attributes is not None:
             arec = cursor.attr_query()
-            if attributes:
+            if attributes is True:
                 var.appendAttrs(arec)
             else:
                 var.appendAttrs(arec, attributes)
