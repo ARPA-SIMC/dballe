@@ -115,8 +115,7 @@ class CommonDBTestMixin(DballeDBMixin):
         expected["B33036"] = 75
 
         count = 0
-        for code in attrs:
-            var = attrs.var(code)
+        for code, var in attrs.items():
             assert var.code in expected
             self.assertEqual(var.enq(), expected[var.code])
             del expected[var.code]
@@ -158,25 +157,31 @@ class CommonDBTestMixin(DballeDBMixin):
         with io.open(test_pathname("bufr/issue91-withB33196.bufr"), "rb") as fp:
             self.db.remove_all()
             self.db.load(fp, attrs=True)
-            r = next(self.db.query_data())
-            a = self.db.attr_query_data(r["context_id"])
+            with self.db.query_data() as cur:
+                rec = next(cur)
+                context_id = rec["context_id"]
+            a = self.db.attr_query_data(context_id)
             self.assertTrue("B33196" in a)
 
     def testLoadFileOverwrite(self):
         with io.open(test_pathname("bufr/issue91-withoutB33196.bufr"), "rb") as fp:
             self.db.remove_all()
             self.db.load(fp, overwrite=True)
-            r = next(self.db.query_data())
-            self.db.attr_query_data(r["context_id"])  # cannot verify the result, but expecting not to raise
-            var = r["var"]
+            with self.db.query_data() as cur:
+                rec = next(cur)
+                context_id = rec["context_id"]
+                var = rec["var"]
+            self.db.attr_query_data(context_id)  # cannot verify the result, but expecting not to raise
             self.assertEqual(var.code, "B12101")
             self.assertEqual(var.enqd(), 274.15)
 
         with io.open(test_pathname("bufr/issue91-withB33196.bufr"), "rb") as fp:
             self.db.load(fp, overwrite=True)
-            r = next(self.db.query_data())
-            self.db.attr_query_data(r["context_id"])  # cannot verify the result, but expecting not to raise)
-            var = r["var"]
+            with self.db.query_data() as cur:
+                rec = next(cur)
+                context_id = rec["context_id"]
+                var = rec["var"]
+            self.db.attr_query_data(context_id)  # cannot verify the result, but expecting not to raise)
             self.assertEqual(var.code, "B12101")
             self.assertEqual(var.enqd(), 273.15)
 
@@ -294,7 +299,6 @@ class FullDBTestMixin(CommonDBTestMixin):
         with self.db.transaction() as tr:
             tr.insert_data({
                 "lat": 12.34560, "lon": 76.54320,
-                "mobile": 0,
                 "datetime": datetime.datetime(1945, 4, 25, 9, 0, 0),
                 "level": (10, 11, 15, 22),
                 "trange": (20, 111, 222),
@@ -307,7 +311,6 @@ class FullDBTestMixin(CommonDBTestMixin):
             with self.db.transaction() as tr:
                 tr.insert_data({
                     "lat": 12.34560, "lon": 76.54320,
-                    "mobile": 0,
                     "datetime": datetime.datetime(1945, 4, 25, 10, 0, 0),
                     "level": (10, 11, 15, 22),
                     "trange": (20, 111, 222),
@@ -323,18 +326,22 @@ class AttrTestMixin(object):
         with io.open(test_pathname("bufr/issue91-withoutB33196.bufr"), "rb") as fp:
             self.db.remove_all()
             self.db.load(fp, attrs=True, overwrite=True)
-            r = next(self.db.query_data())
-            a = self.db.attr_query_data(r["context_id"])
-            var = r["var"]
+            with self.db.query_data() as cur:
+                rec = next(cur)
+                context_id = rec["context_id"]
+                var = rec["var"]
+            a = self.db.attr_query_data(context_id)
             self.assertEqual(var.code, "B12101")
             self.assertEqual(var.enq(), 274.15)
             self.assertTrue("B33196" not in a)
 
         with io.open(test_pathname("bufr/issue91-withB33196.bufr"), "rb") as fp:
             self.db.load(fp, attrs=True, overwrite=True)
-            r = next(self.db.query_data())
-            a = self.db.attr_query_data(r["context_id"])
-            var = r["var"]
+            with self.db.query_data() as cur:
+                rec = next(cur)
+                context_id = rec["context_id"]
+                var = rec["var"]
+            a = self.db.attr_query_data(context_id)
             self.assertEqual(var.code, "B12101")
             self.assertEqual(var.enq(), 273.15)
             self.assertTrue("B33196" in a)

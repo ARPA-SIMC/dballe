@@ -165,6 +165,7 @@ be used to access the result values.
     static PyObject* mp_subscript(Impl* self, PyObject* pykey)
     {
         try {
+            ensure_valid_cursor(self);
             Py_ssize_t len;
             const char* key = throw_ifnull(PyUnicode_AsUTF8AndSize(pykey, &len));
             return enqpy(*self->cur, key, len);
