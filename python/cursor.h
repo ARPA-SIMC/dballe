@@ -108,6 +108,10 @@ PyObject* enqpy(db::CursorStation& cur, const char* key, unsigned len);
 PyObject* enqpy(db::CursorStationData& cur, const char* key, unsigned len);
 PyObject* enqpy(db::CursorData& cur, const char* key, unsigned len);
 PyObject* enqpy(db::CursorSummary& cur, const char* key, unsigned len);
+template<typename Station>
+PyObject* enqpy(db::summary::Cursor<Station>& cur, const char* key, unsigned len);
+extern template PyObject* enqpy(db::summary::Cursor<Station>& cur, const char* key, unsigned len);
+extern template PyObject* enqpy(db::summary::Cursor<DBStation>& cur, const char* key, unsigned len);
 
 /**
  * Create a new dpy_Cursor, taking ownership of memory management

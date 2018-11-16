@@ -224,12 +224,6 @@ struct DefinitionSummarySummary : public DefinitionBase<DefinitionSummarySummary
 
     GetSetters<remaining<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>> methods;
-
-    static PyObject* mp_subscript(Impl* self, PyObject* key)
-    {
-        PyErr_SetString(PyExc_NotImplementedError, "Cursor.__getitem__is not yet implemented");
-        return nullptr;
-    }
 };
 
 
@@ -241,12 +235,6 @@ struct DefinitionSummaryDBSummary : public DefinitionBase<DefinitionSummaryDBSum
 
     GetSetters<remaining<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>> methods;
-
-    static PyObject* mp_subscript(Impl* self, PyObject* key)
-    {
-        PyErr_SetString(PyExc_NotImplementedError, "Cursor.__getitem__is not yet implemented");
-        return nullptr;
-    }
 };
 
 

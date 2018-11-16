@@ -143,5 +143,56 @@ PyObject* enqpy(db::CursorSummary& cur, const char* key, unsigned len)
     }
 }
 
+namespace {
+int get_station_id(const Station& station) { return MISSING_INT; }
+int get_station_id(const DBStation& station) { return station.id; }
+}
+
+template<typename Station>
+PyObject* enqpy(db::summary::Cursor<Station>& cur, const char* key, unsigned len)
+{
+    switch (key) { // mklookup
+        case "priority":    Py_RETURN_NONE;
+        case "rep_memo":    return string_to_python(cur.cur->station_entry.station.report);
+        case "report":      return string_to_python(cur.cur->station_entry.station.report);
+        case "ana_id":      return dballe_int_to_python(get_station_id(cur.cur->station_entry.station));
+        case "mobile":      if (cur.cur->station_entry.station.ident.is_missing()) Py_RETURN_FALSE; else Py_RETURN_TRUE;
+        case "ident":       return ident_to_python(cur.cur->station_entry.station.ident);
+        case "lat":         return dballe_int_lat_to_python(cur.cur->station_entry.station.coords.lat);
+        case "lon":         return dballe_int_lon_to_python(cur.cur->station_entry.station.coords.lon);
+        case "yearmax":     if (cur.cur->var_entry.dtrange.is_missing()) Py_RETURN_NONE; else return throw_ifnull(PyLong_FromLong(cur.cur->var_entry.dtrange.max.year));
+        case "yearmin":     if (cur.cur->var_entry.dtrange.is_missing()) Py_RETURN_NONE; else return throw_ifnull(PyLong_FromLong(cur.cur->var_entry.dtrange.min.year));
+        case "monthmax":    if (cur.cur->var_entry.dtrange.is_missing()) Py_RETURN_NONE; else return throw_ifnull(PyLong_FromLong(cur.cur->var_entry.dtrange.max.month));
+        case "monthmin":    if (cur.cur->var_entry.dtrange.is_missing()) Py_RETURN_NONE; else return throw_ifnull(PyLong_FromLong(cur.cur->var_entry.dtrange.min.month));
+        case "daymax":      if (cur.cur->var_entry.dtrange.is_missing()) Py_RETURN_NONE; else return throw_ifnull(PyLong_FromLong(cur.cur->var_entry.dtrange.max.day));
+        case "daymin":      if (cur.cur->var_entry.dtrange.is_missing()) Py_RETURN_NONE; else return throw_ifnull(PyLong_FromLong(cur.cur->var_entry.dtrange.min.day));
+        case "hourmax":     if (cur.cur->var_entry.dtrange.is_missing()) Py_RETURN_NONE; else return throw_ifnull(PyLong_FromLong(cur.cur->var_entry.dtrange.max.hour));
+        case "hourmin":     if (cur.cur->var_entry.dtrange.is_missing()) Py_RETURN_NONE; else return throw_ifnull(PyLong_FromLong(cur.cur->var_entry.dtrange.min.hour));
+        case "minumax":     if (cur.cur->var_entry.dtrange.is_missing()) Py_RETURN_NONE; else return throw_ifnull(PyLong_FromLong(cur.cur->var_entry.dtrange.max.minute));
+        case "minumin":     if (cur.cur->var_entry.dtrange.is_missing()) Py_RETURN_NONE; else return throw_ifnull(PyLong_FromLong(cur.cur->var_entry.dtrange.min.minute));
+        case "secmax":      if (cur.cur->var_entry.dtrange.is_missing()) Py_RETURN_NONE; else return throw_ifnull(PyLong_FromLong(cur.cur->var_entry.dtrange.max.second));
+        case "secmin":      if (cur.cur->var_entry.dtrange.is_missing()) Py_RETURN_NONE; else return throw_ifnull(PyLong_FromLong(cur.cur->var_entry.dtrange.min.second));
+        case "leveltype1":  return dballe_int_to_python(cur.cur->var_entry.var.level.ltype1);
+        case "l1":          return dballe_int_to_python(cur.cur->var_entry.var.level.l1);
+        case "leveltype2":  return dballe_int_to_python(cur.cur->var_entry.var.level.ltype2);
+        case "l2":          return dballe_int_to_python(cur.cur->var_entry.var.level.l2);
+        case "pindicator":  return dballe_int_to_python(cur.cur->var_entry.var.trange.pind);
+        case "p1":          return dballe_int_to_python(cur.cur->var_entry.var.trange.p1);
+        case "p2":          return dballe_int_to_python(cur.cur->var_entry.var.trange.p2);
+        case "var":         return varcode_to_python(cur.cur->var_entry.var.varcode);
+        case "count":       return dballe_int_to_python(cur.cur->var_entry.count);
+        case "coords":      return coords_to_python(cur.cur->station_entry.station.coords);
+        case "station":     return to_python(cur.cur->station_entry.station);
+        case "datetimemin": if (cur.cur->var_entry.dtrange.is_missing()) Py_RETURN_NONE; else return datetime_to_python(cur.cur->var_entry.dtrange.min);
+        case "datetimemax": if (cur.cur->var_entry.dtrange.is_missing()) Py_RETURN_NONE; else return datetime_to_python(cur.cur->var_entry.dtrange.max);
+        case "level":       return level_to_python(cur.cur->var_entry.var.level);
+        case "trange":      return trange_to_python(cur.cur->var_entry.var.trange);
+        default:            PyErr_Format(PyExc_KeyError, "key %s not found", key); throw PythonException();
+    }
+}
+
+template PyObject* enqpy(db::summary::Cursor<Station>& cur, const char* key, unsigned len);
+template PyObject* enqpy(db::summary::Cursor<DBStation>& cur, const char* key, unsigned len);
+
 }
 }
