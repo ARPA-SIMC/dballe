@@ -54,8 +54,8 @@ class CommonDBTestMixin(DballeDBMixin):
 
     def testQueryData(self):
         expected = [
-            {"code": "B01011", "val": "Hey Hey!!"},
-            {"code": "B01012", "val": 500},
+            {"code": "B01011", "val": "Hey Hey!!", "attrs": {'B33007': 50, 'B33036': 75}},
+            {"code": "B01012", "val": 500, "attrs": {}},
         ]
 
         cur = self.db.query_data({"latmin": 10.0})
@@ -65,12 +65,13 @@ class CommonDBTestMixin(DballeDBMixin):
             var = result["var"]
             self.assertEqual(var.code, expected[idx]["code"])
             self.assertEqual(var.enq(), expected[idx]["val"])
-            self.assertFalse(result.attrs(result["var"]))
+            # FIXME: this should trigger a query: how do we test it?
+            self.assertEqual({k: v.enq() for k, v in result.attr_query().items()}, expected[idx]["attrs"])
 
     def testQueryDataAttrs(self):
         expected = [
-            {"code": "B01011", "val": "Hey Hey!!"},
-            {"code": "B01012", "val": 500},
+            {"code": "B01011", "val": "Hey Hey!!", "attrs": {'B33007': 50, 'B33036': 75}},
+            {"code": "B01012", "val": 500, "attrs": {}},
         ]
 
         cur = self.db.query_data({"latmin": 10.0, "query": "attrs"})
@@ -80,7 +81,8 @@ class CommonDBTestMixin(DballeDBMixin):
             var = result["var"]
             self.assertEqual(var.code, expected[idx]["code"])
             self.assertEqual(var.enq(), expected[idx]["val"])
-            self.assertFalse(result.attrs(result["var"]))
+            # FIXME: this should NOT trigger a query: how do we test it?
+            self.assertEqual({k: v.enq() for k, v in result.attr_query().items()}, expected[idx]["attrs"])
 
     def testQueryDataLimit(self):
         cur = self.db.query_data({"limit": 1})
