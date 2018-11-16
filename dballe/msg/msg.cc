@@ -195,17 +195,17 @@ std::unique_ptr<dballe::Message> Message::clone() const
 Datetime Message::get_datetime() const
 {
     int ye = MISSING_INT, mo=MISSING_INT, da=MISSING_INT, ho=MISSING_INT, mi=MISSING_INT, se=MISSING_INT;
-    if (const Var* v = get(sc::year))
+    if (const Var* v = station_data.maybe_var(sc::year.code))
         ye = v->enqi();
-    if (const Var* v = get(sc::month))
+    if (const Var* v = station_data.maybe_var(sc::month.code))
         mo = v->enqi();
-    if (const Var* v = get(sc::day))
+    if (const Var* v = station_data.maybe_var(sc::day.code))
         da = v->enqi();
-    if (const Var* v = get(sc::hour))
+    if (const Var* v = station_data.maybe_var(sc::hour.code))
         ho = v->enqi();
-    if (const Var* v = get(sc::minute))
+    if (const Var* v = station_data.maybe_var(sc::minute.code))
         mi = v->enqi();
-    if (const Var* v = get(sc::second))
+    if (const Var* v = station_data.maybe_var(sc::second.code))
         se = v->enqi();
 
     if (ye == MISSING_INT)
@@ -231,8 +231,8 @@ Datetime Message::get_datetime() const
 
 Coords Message::get_coords() const
 {
-    const Var* lat = get_latitude_var();
-    const Var* lon = get_longitude_var();
+    const Var* lat = station_data.maybe_var(sc::latitude.code);
+    const Var* lon = station_data.maybe_var(sc::longitude.code);
     if (lat && lon)
         return Coords(lat->enqd(), lon->enqd());
     else
@@ -241,7 +241,7 @@ Coords Message::get_coords() const
 
 Ident Message::get_ident() const
 {
-    const Var* ident = get_ident_var();
+    const Var* ident = station_data.maybe_var(sc::ident.code);
     if (ident)
         return Ident(ident->enqc());
     else
@@ -251,7 +251,7 @@ Ident Message::get_ident() const
 std::string Message::get_report() const
 {
     // Postprocess extracting rep_memo information
-    const Var* rep_memo = get_rep_memo_var();
+    const Var* rep_memo = station_data.maybe_var(sc::rep_memo.code);
     if (rep_memo)
         return rep_memo->enqc();
     else
@@ -384,9 +384,9 @@ struct VarContext
     VarContext(const impl::Message& m) : msg(m)
     {
         // Extract datetime, lat, lon
-        lat = m.get_latitude_var();
-        lon = m.get_longitude_var();
-        memo = m.get_rep_memo_var();
+        lat = m.station_data.maybe_var(sc::latitude.code);
+        lon = m.station_data.maybe_var(sc::longitude.code);
+        memo = m.station_data.maybe_var(sc::rep_memo.code);
         if (memo)
             rep_memo = memo->enqc();
         else
@@ -1015,7 +1015,7 @@ matcher::Result MatchedMsg::match_coords(const LatRange& latrange, const LonRang
 
 matcher::Result MatchedMsg::match_rep_memo(const char* memo) const
 {
-    if (const Var* var = m.get_rep_memo_var())
+    if (const Var* var = m.station_data.maybe_var(sc::rep_memo.code))
     {
         if (!var->isset()) return matcher::MATCH_NA;
         return strcmp(memo, var->enqc()) == 0 ? matcher::MATCH_YES : matcher::MATCH_NO;

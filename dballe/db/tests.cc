@@ -4,7 +4,6 @@
 #include "v7/driver.h"
 #include "dballe/sql/sql.h"
 #include "dballe/sql/sqlite.h"
-#include "dballe/msg/vars.h"
 #include <wreport/error.h>
 #include <algorithm>
 #include <unistd.h>

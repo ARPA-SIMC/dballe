@@ -114,76 +114,13 @@ class Vars:
         self.vars = [Var(line) for line in file if not re.match(r"^\s*(?:#.+)?$", line)]
         self.vars.sort()
 
-    def print_vars_h(self, file):
-        print("""#ifndef DBA_MSG_VARS_H
-#define DBA_MSG_VARS_H
-
-/** @file
- * @ingroup msg
- * Shortcut IDs and functions to quickly refer to commonly used values inside a
- * dballe::msg::Msg.
- *
- * The shortcuts are defined in the file vars.csv, which maps a name to the tuple
- * (preferred C type, BLocal, Level type, L1, L2, P indicator, P1, P2).  The file
- * vars.csv is used to generate code (vars.h and vars.c) that provides a set of
- * getters and setters for every named value.
- */
-
-#include <wreport/varinfo.h>
-
-namespace dballe {
-
-/**
- * Full data corresponding to a shortcut ID
- */
-struct MsgVarShortcut {
-    /** Variable description code */
-    wreport::Varcode code;
-    /** Type of the first level.  See @ref level_table. */
-    int ltype1;
-    /** L1 value of the level.  See @ref level_table. */
-    int l1;
-    /** Type of the second level.  See @ref level_table. */
-    int ltype2;
-    /** L2 value of the level.  See @ref level_table. */
-    int l2;
-    /** Time range type indicator.  See @ref trange_table. */
-    int pind;
-    /** Time range P1 indicator.  See @ref trange_table. */
-    int p1;
-    /** Time range P2 indicator.  See @ref trange_table. */
-    int p2;
-};
-
-/** Array with all the full expansions of the shortcut IDs, indexed by shortcut
-  * ID
-  */
-extern struct MsgVarShortcut shortcutTable[];
-
-/** Resolve a var name to a var ID */
-int resolve_var(const char* name);
-
-/** Resolve a var name to a var ID, avoiding to compute the length of name */
-int resolve_var_substring(const char* name, int len);
-""", file=file)
-
-        for i, v in enumerate(self.vars):
-            print("/** %s */" % v.desc, file=file)
-            print("#define DBA_MSG_%s %d" % (v.name, i), file=file)
-        print("/** Number of items in dba_msg_vartable */", file=file)
-        print("#define DBA_MSG_VARTABLE_SIZE %d" % i, file=file)
-        print("""
-}
-
-#endif
-""", file=file)
-
     def print_shortcuts_h(self, file):
         print("""#ifndef DBALLE_CORE_SHORTCUTS_H
 #define DBALLE_CORE_SHORTCUTS_H
 
 #include <dballe/types.h>
 #include <wreport/varinfo.h>
+#include <iosfwd>
 
 namespace dballe {
 namespace impl {
@@ -194,7 +131,16 @@ struct Shortcut
     Level level;
     Trange trange;
     wreport::Varcode code;
+
+    static const Shortcut& by_name(const char* name);
+    static const Shortcut& by_name(const std::string& name);
+    static const Shortcut& by_name(const char* name, unsigned len);
+
+    bool operator==(const Shortcut& o) const { return std::tie(station_data, level, trange, code) == std::tie(o.station_data, o.level, o.trange, o.code); }
 };
+
+std::ostream& operator<<(std::ostream& out, const Shortcut& shortcut);
+
 
 namespace sc {
 """, file=file)
@@ -211,9 +157,23 @@ namespace sc {
 
     def print_shortcuts_cc(self, file):
         print("""#include "shortcuts.h"
+#include "var.h"
+#include <cstring>
+#include <ostream>
 
 namespace dballe {
 namespace impl {
+
+const Shortcut& Shortcut::by_name(const char* name) { return by_name(name, strlen(name)); }
+const Shortcut& Shortcut::by_name(const std::string& name) { return by_name(name.data(), name.size()); }
+
+std::ostream& operator<<(std::ostream& out, const Shortcut& shortcut)
+{
+    char buf[7];
+    format_bcode(shortcut.code, buf);
+    return out << shortcut.level << ":" << shortcut.trange << ":" << buf;
+}
+
 namespace sc {
 
 """, file=file)
@@ -228,6 +188,27 @@ namespace sc {
             ), file=file)
 
         print("""
+}
+}
+}""", file=file)
+
+    def print_shortcuts_access_in_cc(self, file):
+        print("""#include "shortcuts.h"
+#include <wreport/error.h>
+#include <cstring>
+
+namespace dballe {
+namespace impl {
+
+const Shortcut& Shortcut::by_name(const char* key, unsigned len)
+{
+    switch (key) { // mklookup""", file=file)
+
+        for v in self.vars:
+            print('        case "{name}": return sc::{name};'.format(name=v.name.lower()), file=file)
+
+        print("""        default: wreport::error_notfound::throwf("Shortcut name '%s' not found", key);
+    }
 }
 }
 }""", file=file)
@@ -252,60 +233,6 @@ inline const wreport::Var* get_{name}_var() const {{ return get({level}, {trange
                 level=v.level.as_type(),
                 trange=v.trange.as_type(),
             ), file=file)
-
-    def print_vars_gperf(self, file):
-        print("""
-%define slot-name name
-%define class-name MsgVarLookup
-%define lookup-function-name find
-%struct-type
-%language=C++
-%global-table
-%compare-strncmp
-/* Using %switch may be faster (remember to check when doing optimizations) */
-
-%{
-#include <dballe/types.h>
-#include <dballe/msg/vars.h>
-#include <string.h>
-
-namespace dballe {
-%}
-
-struct msgvardef { const char* name; int var; };
-%%""", file=file)
-        for v in self.vars:
-            print("{}, DBA_MSG_{}".format(v.name.lower(), v.name), file=file)
-        print("""%%
-
-int resolve_var(const char* name)
-{
-    struct msgvardef* res = MsgVarLookup::find(name, strlen(name));
-        if (res == NULL)
-                return -1;
-        else
-                return res->var;
-}
-
-int resolve_var_substring(const char* name, int len)
-{
-    struct msgvardef* res = MsgVarLookup::find(name, len);
-        if (res == NULL)
-                return -1;
-        else
-                return res->var;
-}
-
-""", file=file)
-
-        print("struct MsgVarShortcut shortcutTable[] = {", file=file)
-        for v in self.vars:
-            args = [v.varcode.x, v.varcode.y]
-            args.extend(format_int_or_none(x) for x in v.level.as_tuple())
-            args.extend(format_int_or_none(x) for x in v.trange.as_tuple())
-            print(" { WR_VAR(0, %d, %d), %s, %s, %s, %s, %s, %s, %s }," % tuple(args), file=file)
-        print("};", file=file)
-        print("}", file=file)
 
 
 class Cmd:
@@ -362,6 +289,8 @@ class Cmd:
             meth = vars.print_shortcuts_h
         elif self.args.type == "shortcuts.cc":
             meth = vars.print_shortcuts_cc
+        elif self.args.type == "shortcuts-access.in.cc":
+            meth = vars.print_shortcuts_access_in_cc
         else:
             raise Fail("Output type {} is not recognised".format(self.args.type))
 

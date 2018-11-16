@@ -1,5 +1,4 @@
 #include "dballe/msg/context.h"
-#include "dballe/msg/vars.h"
 #include <wreport/notes.h>
 #include <sstream>
 #include <cstdlib>
@@ -29,11 +28,6 @@ int Context::compare(const Level& lev, const Trange& tr) const
     int res;
     if ((res = level.compare(lev))) return res;
     return trange.compare(tr);
-}
-
-const Var* Context::find_by_id(int id) const
-{
-    return values.maybe_var(shortcutTable[id].code);
 }
 
 void Context::print(FILE* out) const

@@ -40,10 +40,9 @@ Makefile
 /dballe/core/aliases.cc
 /dballe/core/aliases-reverse.cc
 /dballe/core/shortcuts.h
+/dballe/core/shortcuts-access.cc
+/dballe/core/shortcuts-access.in.cc
 /dballe/core/shortcuts.cc
-/dballe/msg/vars.gperf
-/dballe/msg/vars.cc
-/dballe/msg/vars.h
 /dballe/msg/msg-extravars.h
 /dballe/msg/context-extravars.h
 /dballe/msg/cursor-access.cc

@@ -1,6 +1,6 @@
 #include "message.h"
 #include "dballe/msg/msg.h"
-#include "dballe/msg/vars.h"
+#include "dballe/core/shortcuts.h"
 #include "dballe/core/var.h"
 #include <wreport/notes.h>
 
@@ -30,14 +30,14 @@ const wreport::Var* Message::get(const Level& lev, const Trange& tr, wreport::Va
 
 const wreport::Var* Message::get(const char* shortcut) const
 {
-    const MsgVarShortcut& v = shortcutTable[resolve_var(shortcut)];
-    return get_impl(Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2), v.code);
+    const impl::Shortcut& s = impl::Shortcut::by_name(shortcut);
+    return get_impl(s.level, s.trange, s.code);
 }
 
 const wreport::Var* Message::get(const std::string& shortcut) const
 {
-    const MsgVarShortcut& v = shortcutTable[resolve_var_substring(shortcut.data(), shortcut.size())];
-    return get_impl(Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2), v.code);
+    const impl::Shortcut& s = impl::Shortcut::by_name(shortcut);
+    return get_impl(s.level, s.trange, s.code);
 }
 
 void Message::set(const Level& lev, const Trange& tr, wreport::Varcode code, const wreport::Var& var)
@@ -57,17 +57,17 @@ void Message::set(const Level& lev, const Trange& tr, std::unique_ptr<wreport::V
 
 void Message::set(const char* shortcut, std::unique_ptr<wreport::Var> var)
 {
-    const MsgVarShortcut& v = shortcutTable[resolve_var(shortcut)];
-    if (v.code != var->code())
+    const impl::Shortcut& s = impl::Shortcut::by_name(shortcut);
+    if (s.code != var->code())
         error_consistency::throwf("Message::set(%s) called with varcode of %01d%02d%03d instead of %02d%02d%03d",
-                shortcut, WR_VAR_FXY(var->code()), WR_VAR_FXY(v.code));
-    return set(Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2), std::move(var));
+                shortcut, WR_VAR_FXY(var->code()), WR_VAR_FXY(s.code));
+    return set(s.level, s.trange, std::move(var));
 }
 
 void Message::set(const char* shortcut, const wreport::Var& var)
 {
-    const MsgVarShortcut& v = shortcutTable[resolve_var(shortcut)];
-    return set(Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2), v.code, var);
+    const impl::Shortcut& s = impl::Shortcut::by_name(shortcut);
+    return set(s.level, s.trange, s.code, var);
 }
 
 const char* format_message_type(MessageType type)

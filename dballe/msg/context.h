@@ -59,16 +59,6 @@ public:
      */
     int compare(const Level& lev, const Trange& tr) const;
 
-    /** 
-     * Find a variable given its shortcut ID
-     *
-     * @param id
-     *   Shortcut ID of the value to set (see @ref vars.h)
-     * @return
-     *   The variable found, or NULL if it was not found.
-     */
-    const wreport::Var* find_by_id(int id) const;
-
     /**
      * If this context is the right context for a vertical sounding significance
      * and contains a vertical sounding significance variable, return it. Else,
