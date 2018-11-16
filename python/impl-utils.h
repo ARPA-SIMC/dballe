@@ -310,16 +310,7 @@ struct Binding
     {
         Derived* d = static_cast<Derived*>(this);
 
-#if PY_MAJOR_VERSION <= 2
-        long tp_flags = Py_TPFLAGS_DEFAULT;
-#else
         unsigned long tp_flags = Py_TPFLAGS_DEFAULT;
-#endif
-
-#if PY_MAJOR_VERSION <= 2
-        if ((void*)Derived::_iter)
-            tp_flags |= Py_TPFLAGS_HAVE_ITER;
-#endif
 
         PySequenceMethods* tp_as_sequence = nullptr;
         if ((void*)Derived::sq_length || (void*)Derived::sq_concat || (void*)Derived::sq_repeat ||

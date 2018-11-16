@@ -4,24 +4,15 @@
 #include "types.h"
 #include "db.h"
 #include "cursor.h"
-#if PY_MAJOR_VERSION >= 3
 #include "binarymessage.h"
 #include "file.h"
 #include "message.h"
 #include "importer.h"
 #include "exporter.h"
 #include "explorer.h"
-#endif
 #include "dballe/types.h"
 #include "dballe/var.h"
 #include "config.h"
-
-#if PY_MAJOR_VERSION >= 3
-    #define PyInt_FromLong PyLong_FromLong
-    #define PyInt_AsLong PyLong_AsLong
-#else
-    #define PyLong_Check PyInt_Check
-#endif
 
 using namespace std;
 using namespace dballe;
@@ -53,18 +44,11 @@ static PyObject* dballe_var_uncaught(PyTypeObject *type, PyObject *args)
                 return nullptr;
             return (PyObject*)wrpy->var_create_d(dballe::varinfo(resolve_varcode(var_name)), v);
         } else if (PyLong_Check(val)) {
-            long v = PyInt_AsLong(val);
+            long v = PyLong_AsLong(val);
             if (v == -1 && PyErr_Occurred())
                 return nullptr;
             return (PyObject*)wrpy->var_create_i(dballe::varinfo(resolve_varcode(var_name)), (int)v);
-        } else if (
-                PyUnicode_Check(val)
-#if PY_MAJOR_VERSION >= 3
-                || PyBytes_Check(val)
-#else
-                || PyString_Check(val)
-#endif
-                ) {
+        } else if (PyUnicode_Check(val) || PyBytes_Check(val)) {
             string v = string_from_python(val);
             return (PyObject*)wrpy->var_create_s(dballe::varinfo(resolve_varcode(var_name)), v);
         } else if ((Py_TYPE(val) == wrpy->var_type || PyType_IsSubtype(Py_TYPE(val), wrpy->var_type))) {
@@ -93,7 +77,7 @@ static PyObject* dballe_var(PyTypeObject *type, PyObject *args)
     if (ovar == Py_None) \
         intvar = MISSING_INT; \
     else { \
-        intvar = PyInt_AsLong(ovar); \
+        intvar = PyLong_AsLong(ovar); \
         if (intvar == -1 && PyErr_Occurred()) \
             return NULL; \
     }
@@ -157,7 +141,7 @@ Return a string description for a time range)" },
     { NULL }
 };
 
-#if PY_MAJOR_VERSION >= 3
+
 static PyModuleDef dballe_module = {
     PyModuleDef_HEAD_INIT,
     "_dballe",       /* m_name */
@@ -170,17 +154,11 @@ static PyModuleDef dballe_module = {
     NULL,           /* m_free */
 
 };
-#endif
 
-#if PY_MAJOR_VERSION >= 3
 PyMODINIT_FUNC PyInit__dballe(void)
-#else
-PyMODINIT_FUNC init_dballe(void)
-#endif
 {
     using namespace dballe::python;
 
-#if PY_MAJOR_VERSION >= 3
     try {
         pyo_unique_ptr m(PyModule_Create(&dballe_module));
         register_types(m);
@@ -195,12 +173,6 @@ PyMODINIT_FUNC init_dballe(void)
 
         return m.release();
     } DBALLE_CATCH_RETURN_PYO
-#else
-    pyo_unique_ptr m(Py_InitModule3("_dballe", dballe_methods, "DB-All.e Python interface."));
-    register_types(m);
-    register_db(m);
-    register_cursor(m);
-#endif
 }
 
 }

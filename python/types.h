@@ -125,11 +125,9 @@ template<> inline DBStation from_python<DBStation>(PyObject* o) { return dbstati
 PyObject* varcode_to_python(wreport::Varcode code);
 inline PyObject* to_python(const wreport::Varcode& s) { return varcode_to_python(s); }
 
-#if PY_MAJOR_VERSION >= 3
 /// Convert a Python object to a Varcode
 wreport::Varcode varcode_from_python(PyObject* o);
 template<> inline wreport::Varcode from_python<wreport::Varcode>(PyObject* o) { return varcode_from_python(o); }
-#endif
 
 std::string dballe_nullable_string_from_python(PyObject* o);
 

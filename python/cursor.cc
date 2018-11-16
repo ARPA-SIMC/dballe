@@ -6,10 +6,6 @@
 #include <algorithm>
 #include "impl-utils.h"
 
-#if PY_MAJOR_VERSION <= 2
-    #define PyLong_FromLong PyInt_FromLong
-#endif
-
 using namespace std;
 using namespace dballe;
 using namespace dballe::python;

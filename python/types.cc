@@ -8,12 +8,6 @@
 #include "config.h"
 #include "impl-utils.h"
 
-#if PY_MAJOR_VERSION <= 2
-    #define PyLong_AsLong PyInt_AsLong
-    #define PyLong_FromLong PyInt_FromLong
-    #define Py_hash_t Py_ssize_t
-#endif
-
 using namespace std;
 using namespace dballe;
 using namespace dballe::python;
@@ -38,13 +32,7 @@ PyObject* impl_richcompare(const T& a, const T& b, int op)
         case Py_NE: if (a != b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
         case Py_GT: if (a >  b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
         case Py_GE: if (a >= b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
-#if PY_MAJOR_VERSION >= 3
         default: Py_RETURN_NOTIMPLEMENTED;
-#else
-        default:
-            Py_INCREF(Py_NotImplemented);
-            return Py_NotImplemented;
-#endif
     }
     // Py_RETURN_RICHCOMPARE(a, b, op);  From 3.7
 }
@@ -770,7 +758,6 @@ PyObject* varcode_to_python(wreport::Varcode code)
     return throw_ifnull(PyUnicode_FromString(buf));
 }
 
-#if PY_MAJOR_VERSION >= 3
 wreport::Varcode varcode_from_python(PyObject* o)
 {
     try {
@@ -781,7 +768,6 @@ wreport::Varcode varcode_from_python(PyObject* o)
     PyErr_SetString(PyExc_TypeError, "Expected str");
     throw PythonException();
 }
-#endif
 
 std::string dballe_nullable_string_from_python(PyObject* o)
 {

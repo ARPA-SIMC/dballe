@@ -53,6 +53,10 @@ Makefile
 /dballe/bench-run
 /dballe/profile-run
 /dballe/dump-core-info
+/python/python-dballe.html
+/python/python-dballe.rst
+/python/data-access.cc
+/python/query-access.cc
 /tables/B0000000000200014001.txt
 /tables/B000000002001400.txt
 /tables/B990204.txt
@@ -73,10 +77,5 @@ Makefile
 /debian/libdballe8/
 /debian/libdballef-dev/
 /debian/libdballef5/
-/debian/python-dballe/
 /debian/python3-dballe/
 /debian/tmp/
-/python/python-dballe.html
-/python/python-dballe.rst
-/python/data-access.cc
-/python/query-access.cc

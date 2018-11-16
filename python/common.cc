@@ -4,11 +4,6 @@
 #include "dballe/core/var.h"
 #include <string>
 
-#if PY_MAJOR_VERSION <= 2
-    #define PyLong_AsLong PyInt_AsLong
-    #define PyLong_Type PyInt_Type
-#endif
-
 using namespace wreport;
 
 namespace dballe {
@@ -80,35 +75,17 @@ PyObject* string_to_python(const std::string& str)
 
 bool pyobject_is_string(PyObject* o)
 {
-#if PY_MAJOR_VERSION >= 3
-    if (PyBytes_Check(o))
-        return true;
-#else
-    if (PyString_Check(o))
-        return true;
-#endif
-    if (PyUnicode_Check(o))
+    if (PyUnicode_Check(o) || PyBytes_Check(o))
         return true;
     return false;
 }
 
 std::string string_from_python(PyObject* o)
 {
-#if PY_MAJOR_VERSION >= 3
+    if (PyUnicode_Check(o))
+        return throw_ifnull(PyUnicode_AsUTF8(o));
     if (PyBytes_Check(o))
         return throw_ifnull(PyBytes_AsString(o));
-#else
-    if (PyString_Check(o))
-        return throw_ifnull(PyString_AsString(o));
-#endif
-    if (PyUnicode_Check(o)) {
-#if PY_MAJOR_VERSION >= 3
-        return throw_ifnull(PyUnicode_AsUTF8(o));
-#else
-        pyo_unique_ptr utf8(throw_ifnull(PyUnicode_AsUTF8String(o)));
-        return throw_ifnull(PyString_AsString(utf8));
-#endif
-    }
     PyErr_SetString(PyExc_TypeError, "value must be an instance of str, bytes or unicode");
     throw PythonException();
 }

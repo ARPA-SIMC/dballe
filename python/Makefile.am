@@ -20,16 +20,18 @@ _dballe_la_SOURCES = \
     data-access.cc \
     query-access.cc \
     record.cc \
+    binarymessage.cc \
+    file.cc \
+    message.cc \
+    importer.cc \
+    exporter.cc \
     dballe.cc \
     db.cc \
-    cursor.cc
+    cursor.cc \
+    explorer.cc
 _dballe_la_CPPFLAGS = $(PYTHON_CFLAGS)
 _dballe_la_LDFLAGS = -module -avoid-version -export-symbols-regex init_dballe
 _dballe_la_LIBADD = ../dballe/libdballe.la
-
-if HAVE_PYTHON3
-_dballe_la_SOURCES += binarymessage.cc file.cc message.cc importer.cc exporter.cc explorer.cc
-endif
 
 data-access.cc: data-access.in.cc $(top_srcdir)/dballe/mklookup
 	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
@@ -42,7 +44,6 @@ EXTRA_DIST += \
 	data-access.in.cc data-access.cc \
 	query-access.in.cc query-access.cc
 
-if HAVE_PYTHON3
 doc_DATA = python-dballe.rst
 
 if HAVE_RST2HTML
@@ -54,7 +55,6 @@ python-dballe.rst: doc-dballe $(pkgpython_PYTHON) $(pyexec_LTLIBRARIES)
 
 python-dballe.html: python-dballe.rst
 	rst2html $< > $@ || (rm -f $@; false)
-endif
 
 clean-local:
 	rm -f *.pyc dballe/*.pyc
@@ -81,12 +81,10 @@ EXTRA_DIST += \
 
 AM_CPPFLAGS = -I/usr/include/python$(PYTHON_VERSION) -I$(top_srcdir)
 
-if HAVE_PYTHON3
 check-local:
 	for test in $(dballe_python_tests); do \
 		test -n "$$ARGS" -a "$${ARGS#$${test%.py}}" == "$$ARGS" && echo "Skipping $$test" && continue; \
 		PYTHON="$(PYTHON)" $(TESTS_ENVIRONMENT) $$test ; \
 	done
-endif
 
 CLEANFILES = python-dballe.rst python-dballe.html

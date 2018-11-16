@@ -159,7 +159,7 @@ then
 fi
 
 dnl Check for python
-AM_PATH_PYTHON([], [], [
+AM_PATH_PYTHON([3], [], [
 	enable_dballe_python=no
 ])
 if test x$enable_dballe_python = xyes
@@ -167,13 +167,6 @@ then
     PYTHON_CFLAGS=`unset CFLAGS; $PYTHON-config --cflags`
     AC_SUBST(PYTHON_CFLAGS)
 fi
-
-dnl Export information about the current major python version
-dnl FIXME: remove when we finally only support python3
-PYTHON_MAJOR_VERSION=[`$PYTHON -c 'import sys; print(sys.version_info[0])'`]
-AC_SUBST(PYTHON_MAJOR_VERSION)
-AM_CONDITIONAL([HAVE_PYTHON2], [test $PYTHON_MAJOR_VERSION = 2])
-AM_CONDITIONAL([HAVE_PYTHON3], [test $PYTHON_MAJOR_VERSION = 3])
 
 PKGCONFIG_LIBS="-lm"
 PKGCONFIG_CFLAGS=""

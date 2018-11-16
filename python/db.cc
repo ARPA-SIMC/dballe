@@ -17,14 +17,8 @@
 #include <algorithm>
 #include <wreport/bulletin.h>
 #include "impl-utils.h"
-#if PY_MAJOR_VERSION >= 3
 #include "message.h"
 #include "importer.h"
-#endif
-
-#if PY_MAJOR_VERSION <= 2
-    #define PyLong_FromLong PyInt_FromLong
-#endif
 
 using namespace std;
 using namespace dballe;
@@ -85,22 +79,12 @@ PyObject* file_get_data(PyObject* o, char*&buf, Py_ssize_t& len)
     pyo_unique_ptr data(PyObject_Call(read_meth, read_args, NULL));
     if (!data) return nullptr;
 
-#if PY_MAJOR_VERSION >= 3
     if (!PyObject_TypeCheck(data, &PyBytes_Type)) {
         PyErr_SetString(PyExc_ValueError, "read() function must return a bytes object");
         return nullptr;
     }
     if (PyBytes_AsStringAndSize(data, &buf, &len))
         return nullptr;
-#else
-    if (!PyObject_TypeCheck(data, &PyString_Type)) {
-        Py_DECREF(data);
-        PyErr_SetString(PyExc_ValueError, "read() function must return a string object");
-        return nullptr;
-    }
-    if (PyString_AsStringAndSize(data, &buf, &len))
-        return nullptr;
-#endif
 
     return data.release();
 }
@@ -738,11 +722,7 @@ struct export_to_file : MethKwargs<Impl>
                     impl::Messages msgs;
                     msgs.emplace_back(move(msg));
                     std::string encoded = exporter->to_binary(msgs);
-#if PY_MAJOR_VERSION >= 3
                     res = pyo_unique_ptr(PyObject_CallMethod(file, (char*)"write", (char*)"y#", encoded.data(), (int)encoded.size()));
-#else
-                    res = pyo_unique_ptr(PyObject_CallMethod(file, (char*)"write", (char*)"s#", encoded.data(), (int)encoded.size()));
-#endif
                     if (!res)
                     {
                         has_error = true;
@@ -793,7 +773,6 @@ which contains data already present in the database causes the import to fail.
 
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
-#if PY_MAJOR_VERSION >= 3
         static const char* kwlist[] = {"messages", "report", "import_attributes", "update_station", "overwrite", nullptr};
         PyObject* obj = nullptr;
         const char* report = nullptr;
@@ -861,10 +840,6 @@ which contains data already present in the database causes the import to fail.
 
             throw_typeerror();
         } DBALLE_CATCH_RETURN_PYO
-#else
-        PyErr_SetString(PyExc_NotImplementedError, "import is only available on Python 3");
-        return nullptr;
-#endif
     }
 };
 
