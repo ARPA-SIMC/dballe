@@ -1,4 +1,5 @@
 #include "dballe/msg/msg.h"
+#include "dballe/core/shortcuts.h"
 #include "dballe/msg/wr_codec.h"
 #include <wreport/bulletin.h>
 #include <cstdlib>
@@ -26,7 +27,7 @@ struct Buoy : public Template
     virtual const char* name() const { return BUOY_NAME; }
     virtual const char* description() const { return BUOY_DESC; }
 
-    void add(Varcode code, int shortcut)
+    void add(Varcode code, const Shortcut& shortcut)
     {
         const Var* var = msg->get(shortcut);
         if (var)
@@ -88,33 +89,33 @@ struct Buoy : public Template
             subset.back().setattrs(*var);
         } else
             subset.store_variable_undef(WR_VAR(0, 1, 5));
-        /*  1 */ add(WR_VAR(0,  1, 12), DBA_MSG_ST_DIR);
-        /*  2 */ add(WR_VAR(0,  1, 13), DBA_MSG_ST_SPEED);
-        /*  3 */ add(WR_VAR(0,  2,  1), DBA_MSG_ST_TYPE);
+        /*  1 */ add(WR_VAR(0,  1, 12), sc::st_dir);
+        /*  2 */ add(WR_VAR(0,  1, 13), sc::st_speed);
+        /*  3 */ add(WR_VAR(0,  2,  1), sc::st_type);
         do_D01011();
         do_D01012();
-        /*  9 */ add(WR_VAR(0,  5,  2), DBA_MSG_LATITUDE);
-        /* 10 */ add(WR_VAR(0,  6,  2), DBA_MSG_LONGITUDE);
-        /* 11 */ add(WR_VAR(0, 10,  4), DBA_MSG_PRESS);
-        /* 12 */ add(WR_VAR(0, 10, 51), DBA_MSG_PRESS_MSL);
-        /* 13 */ add(WR_VAR(0, 10, 61), DBA_MSG_PRESS_3H);
-        /* 14 */ add(WR_VAR(0, 10, 63), DBA_MSG_PRESS_TEND);
-        /* 15 */ add(WR_VAR(0, 11, 11), DBA_MSG_WIND_DIR);
-        /* 16 */ add(WR_VAR(0, 11, 12), DBA_MSG_WIND_SPEED);
-        /* 17 */ add(WR_VAR(0, 12,  4), DBA_MSG_TEMP_2M);
-        /* 18 */ add(WR_VAR(0, 12,  6), DBA_MSG_DEWPOINT_2M);
-        /* 19 */ add(WR_VAR(0, 13,  3), DBA_MSG_HUMIDITY);
-        /* 20 */ add(WR_VAR(0, 20,  1), DBA_MSG_VISIBILITY);
-        /* 21 */ add(WR_VAR(0, 20,  3), DBA_MSG_PRES_WTR);
+        /*  9 */ add(WR_VAR(0,  5,  2), sc::latitude);
+        /* 10 */ add(WR_VAR(0,  6,  2), sc::longitude);
+        /* 11 */ add(WR_VAR(0, 10,  4), sc::press);
+        /* 12 */ add(WR_VAR(0, 10, 51), sc::press_msl);
+        /* 13 */ add(WR_VAR(0, 10, 61), sc::press_3h);
+        /* 14 */ add(WR_VAR(0, 10, 63), sc::press_tend);
+        /* 15 */ add(WR_VAR(0, 11, 11), sc::wind_dir);
+        /* 16 */ add(WR_VAR(0, 11, 12), sc::wind_speed);
+        /* 17 */ add(WR_VAR(0, 12,  4), sc::temp_2m);
+        /* 18 */ add(WR_VAR(0, 12,  6), sc::dewpoint_2m);
+        /* 19 */ add(WR_VAR(0, 13,  3), sc::humidity);
+        /* 20 */ add(WR_VAR(0, 20,  1), sc::visibility);
+        /* 21 */ add(WR_VAR(0, 20,  3), sc::pres_wtr);
         do_ecmwf_past_wtr();
-        /* 24 */ add(WR_VAR(0, 20, 10), DBA_MSG_CLOUD_N);
+        /* 24 */ add(WR_VAR(0, 20, 10), sc::cloud_n);
         /* 25 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
-        /* 26 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
-        /* 27 */ add(WR_VAR(0, 20, 13), DBA_MSG_CLOUD_HH);
-        /* 28 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CL);
-        /* 29 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CM);
-        /* 30 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CH);
-        /* 31 */ add(WR_VAR(0, 22, 42), DBA_MSG_WATER_TEMP);
+        /* 26 */ add(WR_VAR(0, 20, 11), sc::cloud_nh);
+        /* 27 */ add(WR_VAR(0, 20, 13), sc::cloud_hh);
+        /* 28 */ add(WR_VAR(0, 20, 12), sc::cloud_cl);
+        /* 29 */ add(WR_VAR(0, 20, 12), sc::cloud_cm);
+        /* 30 */ add(WR_VAR(0, 20, 12), sc::cloud_ch);
+        /* 31 */ add(WR_VAR(0, 22, 42), sc::water_temp);
 
         if (!is_crex)
         {

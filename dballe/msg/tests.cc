@@ -139,7 +139,7 @@ void track_different_msgs(const impl::Messages& msgs1, const impl::Messages& msg
     dump(prefix + "2", msgs2, "second message");
 }
 
-void ActualMessage::is_undef(int shortcut) const
+void ActualMessage::is_undef(const impl::Shortcut& shortcut) const
 {
     const Var* var = impl::Message::downcast(_actual).get(shortcut);
     if (!var || !var->isset()) return;
@@ -148,7 +148,7 @@ void ActualMessage::is_undef(int shortcut) const
     throw TestFailed(ss.str());
 }
 
-const Var& want_var(const Message& msg, int shortcut)
+const Var& want_var(const Message& msg, const impl::Shortcut& shortcut)
 {
     const Var* var = impl::Message::downcast(msg).get(shortcut);
     if (!var)

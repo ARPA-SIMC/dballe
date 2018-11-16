@@ -1,5 +1,6 @@
 #include "base.h"
 #include "dballe/core/var.h"
+#include "dballe/core/shortcuts.h"
 #include "dballe/msg/msg.h"
 #include <wreport/bulletin.h>
 #include <algorithm>
@@ -36,7 +37,7 @@ void Importer::import(const wreport::Subset& subset, Message& msg)
     run();
 }
 
-void Importer::set(const wreport::Var& var, int shortcut)
+void Importer::set(const wreport::Var& var, const Shortcut& shortcut)
 {
     msg->set(shortcut, var);
 }
@@ -53,26 +54,26 @@ void WMOImporter::import_var(const Var& var)
     switch (var.code())
     {
         // General bulletin metadata
-        case WR_VAR(0,  1,  1): set(var, DBA_MSG_BLOCK); break;
-        case WR_VAR(0,  1,  2): set(var, DBA_MSG_STATION); break;
+        case WR_VAR(0,  1,  1): set(var, sc::block); break;
+        case WR_VAR(0,  1,  2): set(var, sc::station); break;
         case WR_VAR(0,  1,  5):
         case WR_VAR(0,  1,  6):
-        case WR_VAR(0,  1, 11): set(var, DBA_MSG_IDENT); break;
-        case WR_VAR(0,  1, 12): set(var, DBA_MSG_ST_DIR); break;
-        case WR_VAR(0,  1, 13): set(var, DBA_MSG_ST_SPEED); break;
-        case WR_VAR(0,  1, 63): set(var, DBA_MSG_ST_NAME_ICAO); break;
-        case WR_VAR(0,  2,  1): set(var, DBA_MSG_ST_TYPE); break;
-        case WR_VAR(0,  1, 15): set(var, DBA_MSG_ST_NAME); break;
-        case WR_VAR(0,  4,  1): set(var, DBA_MSG_YEAR); break;
-        case WR_VAR(0,  4,  2): set(var, DBA_MSG_MONTH); break;
-        case WR_VAR(0,  4,  3): set(var, DBA_MSG_DAY); break;
-        case WR_VAR(0,  4,  4): set(var, DBA_MSG_HOUR); break;
-        case WR_VAR(0,  4,  5): set(var, DBA_MSG_MINUTE); break;
-        case WR_VAR(0,  4,  6): set(var, DBA_MSG_SECOND); break;
+        case WR_VAR(0,  1, 11): set(var, sc::ident); break;
+        case WR_VAR(0,  1, 12): set(var, sc::st_dir); break;
+        case WR_VAR(0,  1, 13): set(var, sc::st_speed); break;
+        case WR_VAR(0,  1, 63): set(var, sc::st_name_icao); break;
+        case WR_VAR(0,  2,  1): set(var, sc::st_type); break;
+        case WR_VAR(0,  1, 15): set(var, sc::st_name); break;
+        case WR_VAR(0,  4,  1): set(var, sc::year); break;
+        case WR_VAR(0,  4,  2): set(var, sc::month); break;
+        case WR_VAR(0,  4,  3): set(var, sc::day); break;
+        case WR_VAR(0,  4,  4): set(var, sc::hour); break;
+        case WR_VAR(0,  4,  5): set(var, sc::minute); break;
+        case WR_VAR(0,  4,  6): set(var, sc::second); break;
         case WR_VAR(0,  5,  1):
-        case WR_VAR(0,  5,  2): set(var, DBA_MSG_LATITUDE); break;
+        case WR_VAR(0,  5,  2): set(var, sc::latitude); break;
         case WR_VAR(0,  6,  1):
-        case WR_VAR(0,  6,  2): set(var, DBA_MSG_LONGITUDE); break;
+        case WR_VAR(0,  6,  2): set(var, sc::longitude); break;
     }
 }
 
@@ -302,19 +303,17 @@ void UnsupportedContext::peek_var(const wreport::Var& var, unsigned pos)
 }
 
 
-Interpreted::Interpreted(int shortcut, const wreport::Var& var)
+Interpreted::Interpreted(const Shortcut& shortcut, const wreport::Var& var)
 {
-    const auto& v = shortcutTable[shortcut];
-    level = Level(v.ltype1, v.l1, v.ltype2, v.l2);
-    trange = Trange(v.pind, v.p1, v.p2);
-    this->var = var_copy_without_unset_attrs(var, v.code);
+    level = shortcut.level;
+    trange = shortcut.trange;
+    this->var = var_copy_without_unset_attrs(var, shortcut.code);
 }
 
-Interpreted::Interpreted(int shortcut, const wreport::Var& var, const Level& level, const Trange& trange)
+Interpreted::Interpreted(const Shortcut& shortcut, const wreport::Var& var, const Level& level, const Trange& trange)
     : level(level), trange(trange)
 {
-    const auto& v = shortcutTable[shortcut];
-    this->var = var_copy_without_unset_attrs(var, v.code);
+    this->var = var_copy_without_unset_attrs(var, shortcut.code);
 }
 
 Interpreted::Interpreted(wreport::Varcode code, const wreport::Var& var, const Level& level, const Trange& trange)
@@ -404,7 +403,7 @@ void SynopBaseImporter::set_gen_sensor(const Var& var, Varcode code, const Level
     set(move(res));
 }
 
-void SynopBaseImporter::set_gen_sensor(const Var& var, int shortcut)
+void SynopBaseImporter::set_gen_sensor(const Var& var, const Shortcut& shortcut)
 {
     if (unsupported.is_unsupported()) return;
     auto res = create_interpreted(opts.simplified, shortcut, var);
@@ -413,7 +412,7 @@ void SynopBaseImporter::set_gen_sensor(const Var& var, int shortcut)
     set(move(res));
 }
 
-void SynopBaseImporter::set_baro_sensor(const Var& var, int shortcut)
+void SynopBaseImporter::set_baro_sensor(const Var& var, const Shortcut& shortcut)
 {
     if (unsupported.is_unsupported()) return;
     auto res = create_interpreted(opts.simplified, shortcut, var);
@@ -422,7 +421,7 @@ void SynopBaseImporter::set_baro_sensor(const Var& var, int shortcut)
     set(move(res));
 }
 
-void SynopBaseImporter::set_past_weather(const wreport::Var& var, int shortcut)
+void SynopBaseImporter::set_past_weather(const wreport::Var& var, const Shortcut& shortcut)
 {
     if (unsupported.is_unsupported()) return;
     auto res = create_interpreted(opts.simplified, shortcut, var);
@@ -431,7 +430,7 @@ void SynopBaseImporter::set_past_weather(const wreport::Var& var, int shortcut)
     set(move(res));
 }
 
-void SynopBaseImporter::set_wind(const wreport::Var& var, int shortcut)
+void SynopBaseImporter::set_wind(const wreport::Var& var, const Shortcut& shortcut)
 {
     if (trange.time_sig != MISSING_TIME_SIG && trange.time_sig != 2)
         error_consistency::throwf("Found unsupported time significance %d for wind direction", trange.time_sig);
@@ -444,7 +443,7 @@ void SynopBaseImporter::set_wind(const wreport::Var& var, int shortcut)
     set(move(res));
 }
 
-void SynopBaseImporter::set_wind_max(const wreport::Var& var, int shortcut)
+void SynopBaseImporter::set_wind_max(const wreport::Var& var, const Shortcut& shortcut)
 {
     if (unsupported.is_unsupported()) return;
     auto res = create_interpreted(opts.simplified, shortcut, var, lev_std_wind, tr_std_wind_max10m);
@@ -463,7 +462,7 @@ void SynopBaseImporter::set_pressure(const wreport::Var& var)
         set(var, WR_VAR(0, 10,  8), Level(100, level.press_std), Trange::instant());
 }
 
-void SynopBaseImporter::set(const wreport::Var& var, int shortcut)
+void SynopBaseImporter::set(const wreport::Var& var, const Shortcut& shortcut)
 {
     if (unsupported.is_unsupported()) return;
     WMOImporter::set(var, shortcut);
@@ -558,20 +557,20 @@ void SynopBaseImporter::import_var(const Var& var)
         // Ship identification, movement, date/time, horizontal and vertical
         // coordinates
         case WR_VAR(0,  7,  1):
-        case WR_VAR(0,  7, 30): set(var, DBA_MSG_HEIGHT_STATION); break;
+        case WR_VAR(0,  7, 30): set(var, sc::height_station); break;
         case WR_VAR(0,  7, 31):
             /* Store also in the ana level, so that if the
              * pressure later is missing we still have
              * access to the value */
-            set(var, DBA_MSG_HEIGHT_BARO);
+            set(var, sc::height_baro);
             break;
 
         // Pressure data (complete)
-        case WR_VAR(0, 10,  4): set_baro_sensor(var, DBA_MSG_PRESS); break;
-        case WR_VAR(0, 10, 51): set_baro_sensor(var, DBA_MSG_PRESS_MSL); break;
-        case WR_VAR(0, 10, 61): set_baro_sensor(var, DBA_MSG_PRESS_3H); break;
-        case WR_VAR(0, 10, 62): set_baro_sensor(var, DBA_MSG_PRESS_24H); break;
-        case WR_VAR(0, 10, 63): set_baro_sensor(var, DBA_MSG_PRESS_TEND); break;
+        case WR_VAR(0, 10,  4): set_baro_sensor(var, sc::press); break;
+        case WR_VAR(0, 10, 51): set_baro_sensor(var, sc::press_msl); break;
+        case WR_VAR(0, 10, 61): set_baro_sensor(var, sc::press_3h); break;
+        case WR_VAR(0, 10, 62): set_baro_sensor(var, sc::press_24h); break;
+        case WR_VAR(0, 10, 63): set_baro_sensor(var, sc::press_tend); break;
         case WR_VAR(0, 10,  3):
         case WR_VAR(0, 10,  8):
         case WR_VAR(0, 10,  9): set_pressure(var); break;
@@ -580,25 +579,25 @@ void SynopBaseImporter::import_var(const Var& var)
 
         // Temperature and humidity data (complete)
         case WR_VAR(0, 12,   4):
-        case WR_VAR(0, 12, 101): set_gen_sensor(var, DBA_MSG_TEMP_2M); break;
+        case WR_VAR(0, 12, 101): set_gen_sensor(var, sc::temp_2m); break;
         case WR_VAR(0, 12,   6):
-        case WR_VAR(0, 12, 103): set_gen_sensor(var, DBA_MSG_DEWPOINT_2M); break;
-        case WR_VAR(0, 13,   3): set_gen_sensor(var, DBA_MSG_HUMIDITY); break;
+        case WR_VAR(0, 12, 103): set_gen_sensor(var, sc::dewpoint_2m); break;
+        case WR_VAR(0, 13,   3): set_gen_sensor(var, sc::humidity); break;
         case WR_VAR(0, 12,   2):
-        case WR_VAR(0, 12, 102): set_gen_sensor(var, DBA_MSG_WET_TEMP_2M); break;
+        case WR_VAR(0, 12, 102): set_gen_sensor(var, sc::wet_temp_2m); break;
 
         // Visibility data (complete)
-        case WR_VAR(0, 20,  1): set_gen_sensor(var, DBA_MSG_VISIBILITY); break;
+        case WR_VAR(0, 20,  1): set_gen_sensor(var, sc::visibility); break;
 
         // Precipitation past 24h (complete)
-        case WR_VAR(0, 13, 19): set_gen_sensor(var, DBA_MSG_TOT_PREC1); break;
-        case WR_VAR(0, 13, 20): set_gen_sensor(var, DBA_MSG_TOT_PREC3); break;
-        case WR_VAR(0, 13, 21): set_gen_sensor(var, DBA_MSG_TOT_PREC6); break;
-        case WR_VAR(0, 13, 22): set_gen_sensor(var, DBA_MSG_TOT_PREC12); break;
-        case WR_VAR(0, 13, 23): set_gen_sensor(var, DBA_MSG_TOT_PREC24); break;
+        case WR_VAR(0, 13, 19): set_gen_sensor(var, sc::tot_prec1); break;
+        case WR_VAR(0, 13, 20): set_gen_sensor(var, sc::tot_prec3); break;
+        case WR_VAR(0, 13, 21): set_gen_sensor(var, sc::tot_prec6); break;
+        case WR_VAR(0, 13, 22): set_gen_sensor(var, sc::tot_prec12); break;
+        case WR_VAR(0, 13, 23): set_gen_sensor(var, sc::tot_prec24); break;
 
         // Cloud data
-        case WR_VAR(0, 20, 10): set(var, DBA_MSG_CLOUD_N); break;
+        case WR_VAR(0, 20, 10): set(var, sc::cloud_n); break;
 
         // Individual cloud layers or masses (complete)
         // Clouds with bases below station level (complete)
@@ -612,9 +611,9 @@ void SynopBaseImporter::import_var(const Var& var)
             break;
 
         // Present and past weather (complete)
-        case WR_VAR(0, 20,  3): set(var, DBA_MSG_PRES_WTR); break;
-        case WR_VAR(0, 20,  4): set_past_weather(var, DBA_MSG_PAST_WTR1_6H); break;
-        case WR_VAR(0, 20,  5): set_past_weather(var, DBA_MSG_PAST_WTR2_6H); break;
+        case WR_VAR(0, 20,  3): set(var, sc::pres_wtr); break;
+        case WR_VAR(0, 20,  4): set_past_weather(var, sc::past_wtr1_6h); break;
+        case WR_VAR(0, 20,  5): set_past_weather(var, sc::past_wtr2_6h); break;
 
         // Precipitation measurement (complete)
         case WR_VAR(0, 13, 11): set_gen_sensor(var, WR_VAR(0, 13, 11), Level(1), Trange(1, 0, abs(trange.time_period))); break;
@@ -628,7 +627,7 @@ void SynopBaseImporter::import_var(const Var& var)
             break;
 
         // Wind data (complete)
-        case WR_VAR(0, 2, 2): set(var, DBA_MSG_WIND_INST); break;
+        case WR_VAR(0, 2, 2): set(var, sc::wind_inst); break;
 
         /* Note B/C 1.10.5.3.2 Calm shall be reported by
          * setting wind direction to 0 and wind speed to 0.
@@ -637,14 +636,14 @@ void SynopBaseImporter::import_var(const Var& var)
          * missing value indicator.
          */
         case WR_VAR(0, 11,  1):
-        case WR_VAR(0, 11, 11): set_wind(var, DBA_MSG_WIND_DIR); break;
+        case WR_VAR(0, 11, 11): set_wind(var, sc::wind_dir); break;
         case WR_VAR(0, 11,  2):
-        case WR_VAR(0, 11, 12): set_wind(var, DBA_MSG_WIND_SPEED); break;
-        case WR_VAR(0, 11, 43): set_wind_max(var, DBA_MSG_WIND_GUST_MAX_DIR); break;
-        case WR_VAR(0, 11, 41): set_wind_max(var, DBA_MSG_WIND_GUST_MAX_SPEED); break;
+        case WR_VAR(0, 11, 12): set_wind(var, sc::wind_speed); break;
+        case WR_VAR(0, 11, 43): set_wind_max(var, sc::wind_gust_max_dir); break;
+        case WR_VAR(0, 11, 41): set_wind_max(var, sc::wind_gust_max_speed); break;
 
-        case WR_VAR(0, 12,  5): set(var, DBA_MSG_WET_TEMP_2M); break;
-        case WR_VAR(0, 10,197): set(var, DBA_MSG_HEIGHT_ANEM); break;
+        case WR_VAR(0, 12,  5): set(var, sc::wet_temp_2m); break;
+        case WR_VAR(0, 10,197): set(var, sc::height_anem); break;
 
         case WR_VAR(0, 12, 30):
             set(var, WR_VAR(0, 12, 30), Level(106, level.ground_depth == LevelContext::missing ? MISSING_INT : level.ground_depth * 1000), Trange::instant());

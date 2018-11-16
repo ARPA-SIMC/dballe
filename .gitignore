@@ -39,6 +39,8 @@ Makefile
 /dballe/core/data-access.cc
 /dballe/core/aliases.cc
 /dballe/core/aliases-reverse.cc
+/dballe/core/shortcuts.h
+/dballe/core/shortcuts.cc
 /dballe/msg/vars.gperf
 /dballe/msg/vars.cc
 /dballe/msg/vars.h

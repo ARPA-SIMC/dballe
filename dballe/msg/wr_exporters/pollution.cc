@@ -1,4 +1,5 @@
 #include "dballe/msg/wr_codec.h"
+#include "dballe/core/shortcuts.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
 #include <wreport/bulletin.h>
@@ -51,24 +52,6 @@ struct Pollution : public Template
 
     virtual const char* name() const { return POLLUTION_NAME; }
     virtual const char* description() const { return POLLUTION_DESC; }
-
-    void add(Varcode code, int shortcut)
-    {
-        const Var* var = msg->get(shortcut);
-        if (var)
-            subset->store_variable(code, *var);
-        else
-            subset->store_variable_undef(code);
-    }
-
-    void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
-    {
-        const Var* var = msg->get(level, trange, srccode);
-        if (var)
-            subset->store_variable(code, *var);
-        else
-            subset->store_variable_undef(code);
-    }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
@@ -196,18 +179,18 @@ struct Pollution : public Template
 
         // Add the variables to the subset
 
-        /*  0 */ add(WR_VAR(0,  1,  19), DBA_MSG_ST_NAME);
-        /*  1 */ add(WR_VAR(0,  1, 212), DBA_MSG_POLL_LCODE);
-        /*  2 */ add(WR_VAR(0,  1, 213), DBA_MSG_POLL_SCODE);
-        /*  3 */ add(WR_VAR(0,  1, 214), DBA_MSG_POLL_GEMSCODE);
-        /*  4 */ add(WR_VAR(0,  1, 215), DBA_MSG_POLL_SOURCE);
-        /*  5 */ add(WR_VAR(0,  1, 216), DBA_MSG_POLL_ATYPE);
-        /*  6 */ add(WR_VAR(0,  1, 217), DBA_MSG_POLL_TTYPE);
+        /*  0 */ add(WR_VAR(0,  1,  19), sc::st_name);
+        /*  1 */ add(WR_VAR(0,  1, 212), sc::poll_lcode);
+        /*  2 */ add(WR_VAR(0,  1, 213), sc::poll_scode);
+        /*  3 */ add(WR_VAR(0,  1, 214), sc::poll_gemscode);
+        /*  4 */ add(WR_VAR(0,  1, 215), sc::poll_source);
+        /*  5 */ add(WR_VAR(0,  1, 216), sc::poll_atype);
+        /*  6 */ add(WR_VAR(0,  1, 217), sc::poll_ttype);
         do_D01011();
         do_D01013();
-        /* 13 */ add(WR_VAR(0,  5,   1), DBA_MSG_LATITUDE);
-        /* 14 */ add(WR_VAR(0,  6,   1), DBA_MSG_LONGITUDE);
-        /* 15 */ add(WR_VAR(0,  7,  30), DBA_MSG_HEIGHT_STATION);
+        /* 13 */ add(WR_VAR(0,  5,   1), sc::latitude);
+        /* 14 */ add(WR_VAR(0,  6,   1), sc::longitude);
+        /* 15 */ add(WR_VAR(0,  7,  30), sc::height_station);
 
 
         /* 16 */ subset.store_variable_i(WR_VAR(0,  7, 32), l1);

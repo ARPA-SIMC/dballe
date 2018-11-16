@@ -1,13 +1,15 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 """
-Build C++ code for accessing Msg contents by shortcut.
+Build C++ code for accessing variables by shortcut.
 """
 
 import argparse
 import sys
 import re
+import os
 import logging
+from contextlib import contextmanager
 
 log = logging.getLogger("mklookup")
 
@@ -177,15 +179,14 @@ int resolve_var_substring(const char* name, int len);
 """, file=file)
 
     def print_shortcuts_h(self, file):
-        print("""#ifndef DBALLE_MSG_SHORTCUTS_H
-#define DBALLE_MSG_SHORTCUTS_H
+        print("""#ifndef DBALLE_CORE_SHORTCUTS_H
+#define DBALLE_CORE_SHORTCUTS_H
 
 #include <dballe/types.h>
 #include <wreport/varinfo.h>
 
 namespace dballe {
 namespace impl {
-namespace msg {
 
 struct Shortcut
 {
@@ -194,10 +195,12 @@ struct Shortcut
     Trange trange;
     wreport::Varcode code;
 };
+
+namespace sc {
 """, file=file)
 
         for v in self.vars:
-            print("extern Shortcut DBA_MSG_{name};".format(name=v.name.upper()), file=file)
+            print("extern const Shortcut {name};".format(name=v.name.lower()), file=file)
 
         print("""
 }
@@ -211,13 +214,13 @@ struct Shortcut
 
 namespace dballe {
 namespace impl {
-namespace msg {
+namespace sc {
 
 """, file=file)
 
         for v in self.vars:
-            print('Shortcut DBA_MSG_{name} = {{ {station}, {level}, {trange}, WR_VAR(0, {vx}, {vy}) }};'.format(
-                name=v.name.upper(),
+            print('const Shortcut {name} = {{ {station}, {level}, {trange}, WR_VAR(0, {vx}, {vy}) }};'.format(
+                name=v.name.lower(),
                 station="true" if v.level.is_missing() and v.trange.is_missing() else "false",
                 level=v.level.as_type(),
                 trange=v.trange.as_type(),
@@ -239,7 +242,7 @@ inline void set_{name}({type} val, int conf=-1) {{ set{ftype}({level}, {trange},
 /** Set the value of "{desc}" from a wreport::Var */
 inline void set_{name}_var(const wreport::Var& val) {{ set({level}, {trange}, WR_VAR(0, {vx}, {vy}), val); }}
 /** Get the "{desc}" physical value stored in the message */
-inline const wreport::Var* get_{name}_var() const {{ return get(DBA_MSG_{NAME}); }}
+inline const wreport::Var* get_{name}_var() const {{ return get({level}, {trange}, WR_VAR(0, {vx}, {vy})); }}
 """ .format(
                 name=v.name.lower(),
                 desc=v.desc,
@@ -248,7 +251,6 @@ inline const wreport::Var* get_{name}_var() const {{ return get(DBA_MSG_{NAME});
                 vx=v.varcode.x, vy=v.varcode.y,
                 level=v.level.as_type(),
                 trange=v.trange.as_type(),
-                NAME=v.name,
             ), file=file)
 
     def print_vars_gperf(self, file):
@@ -306,40 +308,72 @@ int resolve_var_substring(const char* name, int len)
         print("}", file=file)
 
 
-def main():
-    parser = argparse.ArgumentParser(
-            description="build C++ code for named import/export of variables")
-    parser.add_argument("--verbose", "-v", action="store_true", help="verbose output")
-    parser.add_argument("--debug", action="store_true", help="debug output")
-    parser.add_argument("output", nargs="?", help="output file type")
-    args = parser.parse_args()
+class Cmd:
+    def __init__(self):
+        parser = argparse.ArgumentParser(
+                description="build C++ code for named import/export of variables")
+        parser.add_argument("--verbose", "-v", action="store_true", help="verbose output")
+        parser.add_argument("--debug", action="store_true", help="debug output")
+        parser.add_argument("-o", "--outfile", action="store", help="output file (default: stdout)")
+        parser.add_argument("-t", "--type", action="store", help="output file type")
+        parser.add_argument("input", nargs="?", help="input file")
+        self.args = parser.parse_args()
 
-    log_format = "%(asctime)-15s %(levelname)s %(message)s"
-    level = logging.WARN
-    if args.debug:
-        level = logging.DEBUG
-    elif args.verbose:
-        level = logging.INFO
-    logging.basicConfig(level=level, stream=sys.stderr, format=log_format)
+        log_format = "%(asctime)-15s %(levelname)s %(message)s"
+        level = logging.WARN
+        if self.args.debug:
+            level = logging.DEBUG
+        elif self.args.verbose:
+            level = logging.INFO
+        logging.basicConfig(level=level, stream=sys.stderr, format=log_format)
 
-    vars = Vars(sys.stdin)
-    if args.output == "vars.h":
-        vars.print_vars_h(sys.stdout)
-    elif args.output == "msg-extravars.h":
-        vars.print_extravars_h(sys.stdout)
-    elif args.output == "vars.gperf":
-        vars.print_vars_gperf(sys.stdout)
-    elif args.output == "shortcuts.h":
-        vars.print_shortcuts_h(sys.stdout)
-    elif args.output == "shortcuts.cc":
-        vars.print_shortcuts_cc(sys.stdout)
-    else:
-        raise Fail("Output type {} is not recognised".format(args.output))
+    @contextmanager
+    def infile(self):
+        if self.args.input:
+            with open(self.args.input, "rt") as fd:
+                yield fd
+        else:
+            yield sys.stdin
+
+    @contextmanager
+    def outfile(self):
+        if self.args.outfile:
+            with open(self.args.outfile, "wt") as fd:
+                try:
+                    yield fd
+                except Exception as e:
+                    if os.path.exists(self.args.outfile):
+                        os.unlink(self.args.outfile)
+                    raise e
+        else:
+            yield sys.stdout
+
+    def main(self):
+        with self.infile() as fd:
+            vars = Vars(fd)
+
+        if self.args.type == "vars.h":
+            meth = vars.print_vars_h
+        elif self.args.type == "msg-extravars.h":
+            meth = vars.print_extravars_h
+        elif self.args.type == "vars.gperf":
+            meth = vars.print_vars_gperf
+        elif self.args.type == "shortcuts.h":
+            meth = vars.print_shortcuts_h
+        elif self.args.type == "shortcuts.cc":
+            meth = vars.print_shortcuts_cc
+        else:
+            raise Fail("Output type {} is not recognised".format(self.args.type))
+
+        with self.outfile() as fd:
+            meth(fd)
 
 
 if __name__ == "__main__":
     try:
-        main()
+        cmd = Cmd()
+        cmd.main()
     except Fail as e:
         log.error("%s", e)
+        cmd.rollback()
         sys.exit(1)

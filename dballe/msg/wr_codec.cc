@@ -2,6 +2,7 @@
 #include "dballe/file.h"
 #include "msg.h"
 #include "context.h"
+#include "dballe/core/shortcuts.h"
 #include "wr_importers/base.h"
 #include <wreport/bulletin.h>
 #include <wreport/vartable.h>
@@ -293,11 +294,11 @@ void Template::to_subset(const Message& msg, wreport::Subset& subset)
     this->c_gnd_instant = msg.find_context(Level(1), Trange::instant());
 }
 
-void Template::add(Varcode code, const msg::Context* ctx, int shortcut) const
+void Template::add(Varcode code, const msg::Context* ctx, const Shortcut& shortcut) const
 {
     if (!ctx)
         subset->store_variable_undef(code);
-    else if (const Var* var = ctx->find_by_id(shortcut))
+    else if (const Var* var = ctx->values.maybe_var(shortcut.code))
         subset->store_variable(code, *var);
     else
         subset->store_variable_undef(code);
@@ -329,17 +330,16 @@ void Template::add(Varcode code, const Values& values) const
         subset->store_variable_undef(code);
 }
 
-void Template::add(Varcode code, const Values& values, int shortcut) const
+void Template::add(Varcode code, const Values& values, const Shortcut& shortcut) const
 {
-    const MsgVarShortcut& v = shortcutTable[shortcut];
-    if (const Var* var = values.maybe_var(v.code))
+    if (const Var* var = values.maybe_var(shortcut.code))
         subset->store_variable(code, *var);
     else
         subset->store_variable_undef(code);
 }
 
 
-void Template::add(Varcode code, int shortcut) const
+void Template::add(Varcode code, const Shortcut& shortcut) const
 {
     add(code, msg->get(shortcut));
 }
@@ -364,8 +364,7 @@ const Var* Template::find_station_var(wreport::Varcode code) const
 
 void Template::do_station_name(wreport::Varcode dstcode) const
 {
-    const MsgVarShortcut& v = shortcutTable[DBA_MSG_ST_NAME];
-    if (const wreport::Var* var = msg->station_data.maybe_var(v.code))
+    if (const wreport::Var* var = msg->station_data.maybe_var(sc::st_name.code))
     {
         Varinfo info = subset->tables->btable->query(dstcode);
         Var name(info);
@@ -383,11 +382,11 @@ void Template::do_ecmwf_past_wtr() const
 
     if (hour % 6 == 0)
     {
-        add(WR_VAR(0, 20,  4), DBA_MSG_PAST_WTR1_6H);
-        add(WR_VAR(0, 20,  5), DBA_MSG_PAST_WTR2_6H);
+        add(WR_VAR(0, 20,  4), sc::past_wtr1_6h);
+        add(WR_VAR(0, 20,  5), sc::past_wtr2_6h);
     } else {
-        add(WR_VAR(0, 20,  4), DBA_MSG_PAST_WTR1_3H);
-        add(WR_VAR(0, 20,  5), DBA_MSG_PAST_WTR2_3H);
+        add(WR_VAR(0, 20,  4), sc::past_wtr1_3h);
+        add(WR_VAR(0, 20,  5), sc::past_wtr2_3h);
     }
 }
 
@@ -399,15 +398,15 @@ void Template::do_station_height() const
 
 void Template::do_D01001() const
 {
-    add(WR_VAR(0,  1,  1), msg->station_data, DBA_MSG_BLOCK);
-    add(WR_VAR(0,  1,  2), msg->station_data, DBA_MSG_STATION);
+    add(WR_VAR(0,  1,  1), msg->station_data, sc::block);
+    add(WR_VAR(0,  1,  2), msg->station_data, sc::station);
 }
 
 void Template::do_D01004() const
 {
     do_D01001();
     do_station_name(WR_VAR(0, 1, 15));
-    add(WR_VAR(0,  2,  1), msg->station_data, DBA_MSG_ST_TYPE);
+    add(WR_VAR(0,  2,  1), msg->station_data, sc::st_type);
 }
 
 void Template::do_D01011() const
@@ -481,20 +480,20 @@ void Template::do_D01013() const
 
 void Template::do_D01021() const
 {
-    add(WR_VAR(0,  5,  1), msg->station_data, DBA_MSG_LATITUDE);
-    add(WR_VAR(0,  6,  1), msg->station_data, DBA_MSG_LONGITUDE);
+    add(WR_VAR(0,  5,  1), msg->station_data, sc::latitude);
+    add(WR_VAR(0,  6,  1), msg->station_data, sc::longitude);
 }
 
 void Template::do_D01022() const
 {
     do_D01021();
-    add(WR_VAR(0,  7,  1), msg->station_data, DBA_MSG_HEIGHT_STATION);
+    add(WR_VAR(0,  7,  1), msg->station_data, sc::height_station);
 }
 
 void Template::do_D01023() const
 {
-    add(WR_VAR(0,  5,  2), msg->station_data, DBA_MSG_LATITUDE);
-    add(WR_VAR(0,  6,  2), msg->station_data, DBA_MSG_LONGITUDE);
+    add(WR_VAR(0,  5,  2), msg->station_data, sc::latitude);
+    add(WR_VAR(0,  6,  2), msg->station_data, sc::longitude);
 }
 
 }

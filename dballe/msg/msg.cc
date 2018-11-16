@@ -1,7 +1,7 @@
 #include "msg.h"
 #include "context.h"
 #include "dballe/cursor.h"
-#include "dballe/msg/vars.h"
+#include "dballe/core/shortcuts.h"
 #include "dballe/msg/cursor.h"
 #include "dballe/core/var.h"
 #include "dballe/core/csv.h"
@@ -195,17 +195,17 @@ std::unique_ptr<dballe::Message> Message::clone() const
 Datetime Message::get_datetime() const
 {
     int ye = MISSING_INT, mo=MISSING_INT, da=MISSING_INT, ho=MISSING_INT, mi=MISSING_INT, se=MISSING_INT;
-    if (const Var* v = get(DBA_MSG_YEAR))
+    if (const Var* v = get(sc::year))
         ye = v->enqi();
-    if (const Var* v = get(DBA_MSG_MONTH))
+    if (const Var* v = get(sc::month))
         mo = v->enqi();
-    if (const Var* v = get(DBA_MSG_DAY))
+    if (const Var* v = get(sc::day))
         da = v->enqi();
-    if (const Var* v = get(DBA_MSG_HOUR))
+    if (const Var* v = get(sc::hour))
         ho = v->enqi();
-    if (const Var* v = get(DBA_MSG_MINUTE))
+    if (const Var* v = get(sc::minute))
         mi = v->enqi();
-    if (const Var* v = get(DBA_MSG_SECOND))
+    if (const Var* v = get(sc::second))
         se = v->enqi();
 
     if (ye == MISSING_INT)
@@ -343,12 +343,11 @@ wreport::Var* Message::edit(wreport::Varcode code, const Level& lev, const Trang
     return ctx->values.maybe_var(code);
 }
 
-const Var* Message::get(int id) const
+const Var* Message::get(const Shortcut& shortcut) const
 {
-    const MsgVarShortcut& v = shortcutTable[id];
-    if (v.ltype1 == MISSING_INT && v.l1 == MISSING_INT && v.ltype2 == MISSING_INT && v.l2 == MISSING_INT && v.pind == MISSING_INT && v.p1 == MISSING_INT && v.p2 == MISSING_INT)
-        return station_data.maybe_var(v.code);
-    return get(Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2), v.code);
+    if (shortcut.station_data)
+        return station_data.maybe_var(shortcut.code);
+    return get(shortcut.level, shortcut.trange, shortcut.code);
 }
 
 std::unique_ptr<dballe::CursorStation> Message::query_stations(const Query& query) const
@@ -787,18 +786,17 @@ unsigned Message::diff(const dballe::Message& o) const
     return diffs;
 }
 
-void Message::set(int shortcut, const wreport::Var& var)
+void Message::set(const Shortcut& shortcut, const wreport::Var& var)
 {
-    const MsgVarShortcut& v = shortcutTable[shortcut];
-    if (v.ltype1 == MISSING_INT && v.l1 == MISSING_INT && v.ltype2 == MISSING_INT && v.l2 == MISSING_INT && v.pind == MISSING_INT && v.p1 == MISSING_INT && v.p2 == MISSING_INT)
+    if (shortcut.station_data)
     {
-        if (v.code == var.code())
+        if (shortcut.code == var.code())
             station_data.set(var);
         else
-            station_data.set(var_copy_without_unset_attrs(var, v.code));
+            station_data.set(var_copy_without_unset_attrs(var, shortcut.code));
     }
     else
-        set(Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2), v.code, var);
+        set(shortcut.level, shortcut.trange, shortcut.code, var);
 }
 
 void Message::set_impl(const Level& lev, const Trange& tr, std::unique_ptr<Var> var)

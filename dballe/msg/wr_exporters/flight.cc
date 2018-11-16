@@ -1,4 +1,5 @@
 #include "dballe/msg/wr_codec.h"
+#include "dballe/core/shortcuts.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
 #include <wreport/bulletin.h>
@@ -51,7 +52,7 @@ struct FlightBase : public Template
         Template::add(code, var);
     }
 
-    void add(Varcode code, int shortcut) const
+    void add(Varcode code, const Shortcut& shortcut) const
     {
         const Var* var = msg->get(shortcut);
         if (var)
@@ -104,11 +105,11 @@ struct FlightBase : public Template
             switch (ctx.level.ltype1)
             {
                 case 100:
-                     use = ctx.find_by_id(DBA_MSG_PRESS) != NULL
-                        || ctx.find_by_id(DBA_MSG_HEIGHT_STATION) != NULL;
+                     use = ctx.values.maybe_var(sc::press.code) != nullptr
+                        || ctx.values.maybe_var(sc::height_station.code) != nullptr;
                      break;
                 case 102:
-                     use = ctx.find_by_id(DBA_MSG_HEIGHT_STATION) != NULL;
+                     use = ctx.values.maybe_var(sc::height_station.code) != nullptr;
                      break;
             }
             if (use)
@@ -159,12 +160,12 @@ struct Airep : public FlightBase
     {
         FlightBase::to_subset(msg, subset);
 
-        /*  0 */ add(WR_VAR(0,  1,  6), DBA_MSG_IDENT);
+        /*  0 */ add(WR_VAR(0,  1,  6), sc::ident);
         /*  1 */ add(WR_VAR(0,  2, 61));
         do_D01011();
         do_D01012();
-        /*  7 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
-        /*  8 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
+        /*  7 */ add(WR_VAR(0,  5,  1), sc::latitude);
+        /*  8 */ add(WR_VAR(0,  6,  1), sc::longitude);
         /*  9 */ add(WR_VAR(0,  8,  4));
         /* 10 */ add(WR_VAR(0,  7,  2), WR_VAR(0,  7,  30)); /* HEIGHT OF STATION -> HEIGHT OR ALTITUDE */
         /* 11 */ add(WR_VAR(0, 12,  1), WR_VAR(0, 12, 101)); /* TEMPERATURE/DRY-BULB TEMPERATURE */
@@ -258,10 +259,10 @@ struct AmdarWMO : public FlightBase
 
         ///*  0 */ add(WR_VAR(0,  1, 33));
         ///*  1 */ add(WR_VAR(0,  1, 34));
-        /*  2 */ add(WR_VAR(0,  1,  8), DBA_MSG_IDENT);
+        /*  2 */ add(WR_VAR(0,  1,  8), sc::ident);
         /*  3 */ add(WR_VAR(0,  1, 23));
-        /*  4 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
-        /*  5 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
+        /*  4 */ add(WR_VAR(0,  5,  1), sc::latitude);
+        /*  5 */ add(WR_VAR(0,  6,  1), sc::longitude);
         do_D01011();
         do_D01013();
         /* 12 */
@@ -362,7 +363,7 @@ struct Acars : public FlightBase
     {
         FlightBase::to_subset(msg, subset);
         /*  0 */ add(WR_VAR(0,  1,  6));
-        /*  1 */ add(WR_VAR(0,  1,  8), DBA_MSG_IDENT);
+        /*  1 */ add(WR_VAR(0,  1,  8), sc::ident);
         /*  2 */ add(WR_VAR(0,  2, 61));
         /*  3 */ add(WR_VAR(0,  2, 62));
         /*  4 */ add(WR_VAR(0,  2,  2));
@@ -372,8 +373,8 @@ struct Acars : public FlightBase
         /*  8 */ add(WR_VAR(0,  2,  1));
         do_D01011();
         do_D01012();
-        /* 14 */ add(WR_VAR(0,  5,  2), DBA_MSG_LATITUDE);
-        /* 15 */ add(WR_VAR(0,  6,  2), DBA_MSG_LONGITUDE);
+        /* 14 */ add(WR_VAR(0,  5,  2), sc::latitude);
+        /* 15 */ add(WR_VAR(0,  6,  2), sc::longitude);
         /* 16 */ add(WR_VAR(0,  8,  4));
         /* 17 */ add(WR_VAR(0,  7,  4), WR_VAR(0, 10,   4));
         /* 18 */ add(WR_VAR(0,  8, 21));

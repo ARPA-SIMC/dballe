@@ -60,7 +60,7 @@ clean-local:
 	rm -f *.pyc dballe/*.pyc
 	rm -rf __pycache__ dballe/__pycache__
 
-EXTRA_DIST = \
+EXTRA_DIST += \
     doc-dballe \
     impl-utils.h \
     common.h \

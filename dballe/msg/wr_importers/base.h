@@ -27,7 +27,7 @@ protected:
     virtual void init();
     virtual void run() = 0;
 
-    void set(const wreport::Var& var, int shortcut);
+    void set(const wreport::Var& var, const Shortcut& shortcut);
     void set(const wreport::Var& var, wreport::Varcode code, const Level& level, const Trange& trange);
 
 public:
@@ -155,8 +155,8 @@ struct Interpreted
      * Beging building using a copy of var, and level and timerange from \a
      * shortcut
      */
-    Interpreted(int shortcut, const wreport::Var& var);
-    Interpreted(int shortcut, const wreport::Var& var, const Level& level, const Trange& trange);
+    Interpreted(const Shortcut& shortcut, const wreport::Var& var);
+    Interpreted(const Shortcut& shortcut, const wreport::Var& var, const Level& level, const Trange& trange);
     Interpreted(wreport::Varcode code, const wreport::Var& var, const Level& level, const Trange& trange);
     virtual ~Interpreted();
 
@@ -209,13 +209,13 @@ protected:
     virtual void import_var(const wreport::Var& var);
 
     void set_gen_sensor(const wreport::Var& var, wreport::Varcode code, const Level& defaultLevel, const Trange& trange);
-    void set_gen_sensor(const wreport::Var& var, int shortcut);
-    void set_baro_sensor(const wreport::Var& var, int shortcut);
-    void set_past_weather(const wreport::Var& var, int shortcut);
-    void set_wind(const wreport::Var& var, int shortcut);
-    void set_wind_max(const wreport::Var& var, int shortcut);
+    void set_gen_sensor(const wreport::Var& var, const Shortcut& shortcut);
+    void set_baro_sensor(const wreport::Var& var, const Shortcut& shortcut);
+    void set_past_weather(const wreport::Var& var, const Shortcut& shortcut);
+    void set_wind(const wreport::Var& var, const Shortcut& shortcut);
+    void set_wind_max(const wreport::Var& var, const Shortcut& shortcut);
     void set_pressure(const wreport::Var& var);
-    void set(const wreport::Var& var, int shortcut);
+    void set(const wreport::Var& var, const Shortcut& shortcut);
     void set(const wreport::Var& var, wreport::Varcode code, const Level& level, const Trange& trange);
     void set(std::unique_ptr<Interpreted> val);
 

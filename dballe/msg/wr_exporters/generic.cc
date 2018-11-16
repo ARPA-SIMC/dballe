@@ -27,24 +27,6 @@ struct Generic : public Template
     virtual const char* name() const { return GENERIC_NAME; }
     virtual const char* description() const { return GENERIC_DESC; }
 
-    void add(Varcode code, int shortcut)
-    {
-        const Var* var = msg->get(shortcut);
-        if (var)
-            subset->store_variable(code, *var);
-        else
-            subset->store_variable_undef(code);
-    }
-
-    void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
-    {
-        const Var* var = msg->get(level, trange, srccode);
-        if (var)
-            subset->store_variable(code, *var);
-        else
-            subset->store_variable_undef(code);
-    }
-
     void add_var_and_attrs(const Var& var)
     {
         // Store the variable

@@ -1,4 +1,5 @@
 #include "dballe/msg/wr_codec.h"
+#include "dballe/core/shortcuts.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
 #include <wreport/bulletin.h>
@@ -256,29 +257,29 @@ struct TempWMO : public TempBase
     {
         TempBase::to_subset(msg, subset);
         do_D01001(); // station id
-        add(WR_VAR(0,  1, 11), msg.station_data, DBA_MSG_IDENT);
-        add(WR_VAR(0,  2, 11), c_gnd_instant, DBA_MSG_SONDE_TYPE);
-        add(WR_VAR(0,  2, 13), c_gnd_instant, DBA_MSG_SONDE_CORRECTION);
-        add(WR_VAR(0,  2, 14), c_gnd_instant, DBA_MSG_SONDE_TRACKING);
-        add(WR_VAR(0,  2,  3), c_gnd_instant, DBA_MSG_MEAS_EQUIP_TYPE);
+        add(WR_VAR(0,  1, 11), msg.station_data, sc::ident);
+        add(WR_VAR(0,  2, 11), c_gnd_instant, sc::sonde_type);
+        add(WR_VAR(0,  2, 13), c_gnd_instant, sc::sonde_correction);
+        add(WR_VAR(0,  2, 14), c_gnd_instant, sc::sonde_tracking);
+        add(WR_VAR(0,  2,  3), c_gnd_instant, sc::meas_equip_type);
         subset.store_variable_i(WR_VAR(0, 8, 21), 18);
         do_D01011(); // date
         do_D01013(); // time
         do_D01021(); // coordinates
-        add(WR_VAR(0,  7, 30), msg.station_data, DBA_MSG_HEIGHT_STATION);
-        add(WR_VAR(0,  7, 31), msg.station_data, DBA_MSG_HEIGHT_BARO);
-        add(WR_VAR(0,  7,  7), msg.station_data, DBA_MSG_HEIGHT_RELEASE);
-        add(WR_VAR(0, 33, 24), msg.station_data, DBA_MSG_STATION_HEIGHT_QUALITY);
+        add(WR_VAR(0,  7, 30), msg.station_data, sc::height_station);
+        add(WR_VAR(0,  7, 31), msg.station_data, sc::height_baro);
+        add(WR_VAR(0,  7,  7), msg.station_data, sc::height_release);
+        add(WR_VAR(0, 33, 24), msg.station_data, sc::station_height_quality);
 
         // Cloud information reported with vertical soundings
         add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
-        add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
-        add(WR_VAR(0, 20, 13), DBA_MSG_CLOUD_HH);
-        add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CL);
-        add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CM);
-        add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CH);
+        add(WR_VAR(0, 20, 11), sc::cloud_nh);
+        add(WR_VAR(0, 20, 13), sc::cloud_hh);
+        add(WR_VAR(0, 20, 12), sc::cloud_cl);
+        add(WR_VAR(0, 20, 12), sc::cloud_cm);
+        add(WR_VAR(0, 20, 12), sc::cloud_ch);
         subset.store_variable_undef(WR_VAR(0, 8, 2));
-        add(WR_VAR(0, 22, 43), c_gnd_instant, DBA_MSG_WATER_TEMP);
+        add(WR_VAR(0, 22, 43), c_gnd_instant, sc::water_temp);
 
         // Undef for now, we fill it later
         size_t rep_count_pos = subset.size();
@@ -380,7 +381,7 @@ struct TempRadar : public TempBase
         do_D01011(); // date
         do_D01012(); // date
         do_D01022(); // date
-        add(WR_VAR(0,  2,  3), c_gnd_instant, DBA_MSG_MEAS_EQUIP_TYPE);
+        add(WR_VAR(0,  2,  3), c_gnd_instant, sc::meas_equip_type);
         add(WR_VAR(0, 2, 121), c_gnd_instant);
         add(WR_VAR(0, 2, 125), c_gnd_instant);
 
@@ -456,22 +457,22 @@ struct TempEcmwfLand : public TempBase
     void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         TempBase::to_subset(msg, subset);
-        /*  0 */ add(WR_VAR(0,  1,  1), DBA_MSG_BLOCK);
-        /*  1 */ add(WR_VAR(0,  1,  2), DBA_MSG_STATION);
-        /*  2 */ add(WR_VAR(0,  2, 11), DBA_MSG_SONDE_TYPE);
-        /*  3 */ add(WR_VAR(0,  2, 12), DBA_MSG_SONDE_METHOD);
+        /*  0 */ add(WR_VAR(0,  1,  1), sc::block);
+        /*  1 */ add(WR_VAR(0,  1,  2), sc::station);
+        /*  2 */ add(WR_VAR(0,  2, 11), sc::sonde_type);
+        /*  3 */ add(WR_VAR(0,  2, 12), sc::sonde_method);
         do_D01011();
         do_D01012();
-        /*  9 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
-        /* 10 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
-        /* 11 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT_STATION);
-        /* 12 */ add(WR_VAR(0, 20, 10), DBA_MSG_CLOUD_N);
+        /*  9 */ add(WR_VAR(0,  5,  1), sc::latitude);
+        /* 10 */ add(WR_VAR(0,  6,  1), sc::longitude);
+        /* 11 */ add(WR_VAR(0,  7,  1), sc::height_station);
+        /* 12 */ add(WR_VAR(0, 20, 10), sc::cloud_n);
         /* 13 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
-        /* 14 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
-        /* 15 */ add(WR_VAR(0, 20, 13), DBA_MSG_CLOUD_HH);
-        /* 16 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CL);
-        /* 17 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CM);
-        /* 18 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CH);
+        /* 14 */ add(WR_VAR(0, 20, 11), sc::cloud_nh);
+        /* 15 */ add(WR_VAR(0, 20, 13), sc::cloud_hh);
+        /* 16 */ add(WR_VAR(0, 20, 12), sc::cloud_cl);
+        /* 17 */ add(WR_VAR(0, 20, 12), sc::cloud_cm);
+        /* 18 */ add(WR_VAR(0, 20, 12), sc::cloud_ch);
         add_sounding_levels();
         if (!is_crex)
         {
@@ -538,23 +539,23 @@ struct TempEcmwfShip : public TempBase
     void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         TempBase::to_subset(msg, subset);
-        /*  0 */ add(WR_VAR(0,  1, 11), DBA_MSG_IDENT);
-        /*  1 */ add(WR_VAR(0,  1, 12), DBA_MSG_ST_DIR);
-        /*  2 */ add(WR_VAR(0,  1, 13), DBA_MSG_ST_SPEED);
-        /*  3 */ add(WR_VAR(0,  2, 11), DBA_MSG_SONDE_TYPE);
-        /*  4 */ add(WR_VAR(0,  2, 12), DBA_MSG_SONDE_METHOD);
+        /*  0 */ add(WR_VAR(0,  1, 11), sc::ident);
+        /*  1 */ add(WR_VAR(0,  1, 12), sc::st_dir);
+        /*  2 */ add(WR_VAR(0,  1, 13), sc::st_speed);
+        /*  3 */ add(WR_VAR(0,  2, 11), sc::sonde_type);
+        /*  4 */ add(WR_VAR(0,  2, 12), sc::sonde_method);
         do_D01011();
         do_D01012();
-        /* 10 */ add(WR_VAR(0,  5,  2), DBA_MSG_LATITUDE);
-        /* 11 */ add(WR_VAR(0,  6,  2), DBA_MSG_LONGITUDE);
-        /* 12 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT_STATION);
-        /* 13 */ add(WR_VAR(0, 20, 10), DBA_MSG_CLOUD_N);
+        /* 10 */ add(WR_VAR(0,  5,  2), sc::latitude);
+        /* 11 */ add(WR_VAR(0,  6,  2), sc::longitude);
+        /* 12 */ add(WR_VAR(0,  7,  1), sc::height_station);
+        /* 13 */ add(WR_VAR(0, 20, 10), sc::cloud_n);
         /* 14 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
-        /* 15 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
-        /* 16 */ add(WR_VAR(0, 20, 13), DBA_MSG_CLOUD_HH);
-        /* 17 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CL);
-        /* 18 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CM);
-        /* 19 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CH);
+        /* 15 */ add(WR_VAR(0, 20, 11), sc::cloud_nh);
+        /* 16 */ add(WR_VAR(0, 20, 13), sc::cloud_hh);
+        /* 17 */ add(WR_VAR(0, 20, 12), sc::cloud_cl);
+        /* 18 */ add(WR_VAR(0, 20, 12), sc::cloud_cm);
+        /* 19 */ add(WR_VAR(0, 20, 12), sc::cloud_ch);
         add_sounding_levels();
         if (!is_crex)
         {
@@ -630,25 +631,25 @@ struct PilotWMO : public TempBase
         TempBase::to_subset(msg, subset);
 
         // Identification of launch site and instrumentation
-        add(WR_VAR(0,  1,  1), DBA_MSG_BLOCK);
-        add(WR_VAR(0,  1,  2), DBA_MSG_STATION);
-        add(WR_VAR(0,  1, 11), DBA_MSG_IDENT);
-        add(WR_VAR(0,  2, 11), DBA_MSG_SONDE_TYPE);
-        add(WR_VAR(0,  2, 14), DBA_MSG_SONDE_TRACKING);
-        add(WR_VAR(0,  2,  3), DBA_MSG_MEAS_EQUIP_TYPE);
+        add(WR_VAR(0,  1,  1), sc::block);
+        add(WR_VAR(0,  1,  2), sc::station);
+        add(WR_VAR(0,  1, 11), sc::ident);
+        add(WR_VAR(0,  2, 11), sc::sonde_type);
+        add(WR_VAR(0,  2, 14), sc::sonde_tracking);
+        add(WR_VAR(0,  2,  3), sc::meas_equip_type);
 
         // Date/time of launch
-        add(WR_VAR(0,  8, 21), 18); // Launch time
+        add(WR_VAR(0,  8, 21), sc::timesig); // Launch time
         do_D01011();
         do_D01013();
 
         // Horizontal and vertical coordinates of launch site
-        add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
-        add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
-        add(WR_VAR(0,  7, 30), DBA_MSG_HEIGHT_STATION);
-        add(WR_VAR(0,  7, 31), DBA_MSG_HEIGHT_BARO);
-        add(WR_VAR(0,  7,  7), DBA_MSG_HEIGHT_RELEASE);
-        add(WR_VAR(0, 33, 24), DBA_MSG_STATION_HEIGHT_QUALITY);
+        add(WR_VAR(0,  5,  1), sc::latitude);
+        add(WR_VAR(0,  6,  1), sc::longitude);
+        add(WR_VAR(0,  7, 30), sc::height_station);
+        add(WR_VAR(0,  7, 31), sc::height_baro);
+        add(WR_VAR(0,  7,  7), sc::height_release);
+        add(WR_VAR(0, 33, 24), sc::station_height_quality);
 
         // Keep track of where we stored
         int rep_count_pos = subset.size();
@@ -760,15 +761,15 @@ struct PilotEcmwf : public TempBase
     {
         TempBase::to_subset(msg, subset);
 
-        /*  0 */ add(WR_VAR(0,  1,  1), DBA_MSG_BLOCK);
-        /*  1 */ add(WR_VAR(0,  1,  2), DBA_MSG_STATION);
-        /*  2 */ add(WR_VAR(0,  2, 11), DBA_MSG_SONDE_TYPE);
-        /*  3 */ add(WR_VAR(0,  2, 12), DBA_MSG_SONDE_METHOD);
+        /*  0 */ add(WR_VAR(0,  1,  1), sc::block);
+        /*  1 */ add(WR_VAR(0,  1,  2), sc::station);
+        /*  2 */ add(WR_VAR(0,  2, 11), sc::sonde_type);
+        /*  3 */ add(WR_VAR(0,  2, 12), sc::sonde_method);
         do_D01011();
         do_D01012();
-        /*  9 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
-        /* 10 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
-        /* 11 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT_STATION);
+        /*  9 */ add(WR_VAR(0,  5,  1), sc::latitude);
+        /* 10 */ add(WR_VAR(0,  6,  1), sc::longitude);
+        /* 11 */ add(WR_VAR(0,  7,  1), sc::height_station);
 
         int rep_count_pos = subset.size();
         subset.store_variable_undef(WR_VAR(0, 31,  1));

@@ -2,11 +2,13 @@
 #include "dballe/db/db.h"
 #include "dballe/db/v7/db.h"
 #include "dballe/db/v7/transaction.h"
+#include "dballe/core/shortcuts.h"
 #include "dballe/msg/msg.h"
 #include "config.h"
 
 using namespace dballe;
 using namespace dballe::db;
+using namespace dballe::impl;
 using namespace dballe::tests;
 using namespace wreport;
 using namespace std;
@@ -80,30 +82,30 @@ this->add_method("export", [](Fixture& f) {
     }
 
     wassert(actual(impl::Message::downcast(messages[0])->type) == MessageType::SYNOP);
-    wassert(actual(*messages[0], DBA_MSG_LATITUDE) == 12.34560);
-    wassert(actual(*messages[0], DBA_MSG_LONGITUDE) == 76.54321);
-    wassert(actual(*messages[0]).is_undef(DBA_MSG_IDENT));
+    wassert(actual(*messages[0], sc::latitude) == 12.34560);
+    wassert(actual(*messages[0], sc::longitude) == 76.54321);
+    wassert(actual(*messages[0]).is_undef(sc::ident));
     wassert(actual(messages[0]->get_datetime()) == Datetime(1945, 4, 25, 8, 0, 0));
     wassert(actual(*messages[0], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)) == 500);
 
     wassert(actual(impl::Message::downcast(messages[1])->type) == MessageType::SYNOP);
-    wassert(actual(*messages[1], DBA_MSG_LATITUDE) == 12.34560);
-    wassert(actual(*messages[1], DBA_MSG_LONGITUDE) == 76.54321);
-    wassert(actual(*messages[1]).is_undef(DBA_MSG_IDENT));
+    wassert(actual(*messages[1], sc::latitude) == 12.34560);
+    wassert(actual(*messages[1], sc::longitude) == 76.54321);
+    wassert(actual(*messages[1]).is_undef(sc::ident));
     wassert(actual(messages[1]->get_datetime()) == Datetime(1945, 4, 26, 8, 0, 0));
     wassert(actual(*messages[1], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)) == 400);
 
     wassert(actual(impl::Message::downcast(messages[synmsg])->type) == MessageType::SYNOP);
-    wassert(actual(*messages[synmsg], DBA_MSG_LATITUDE) == 12.34560);
-    wassert(actual(*messages[synmsg], DBA_MSG_LONGITUDE) == 76.54321);
-    wassert(actual(*messages[synmsg], DBA_MSG_IDENT), "ciao");
+    wassert(actual(*messages[synmsg], sc::latitude) == 12.34560);
+    wassert(actual(*messages[synmsg], sc::longitude) == 76.54321);
+    wassert(actual(*messages[synmsg], sc::ident), "ciao");
     wassert(actual(messages[synmsg]->get_datetime()) == Datetime(1945, 4, 26, 8, 0, 0));
     wassert(actual(*messages[synmsg], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)) == 300);
 
     wassert(actual(impl::Message::downcast(messages[metmsg])->type) == MessageType::METAR);
-    wassert(actual(*messages[metmsg], DBA_MSG_LATITUDE) == 12.34560);
-    wassert(actual(*messages[metmsg], DBA_MSG_LONGITUDE) == 76.54321);
-    wassert(actual(*messages[metmsg], DBA_MSG_IDENT), "ciao");
+    wassert(actual(*messages[metmsg], sc::latitude) == 12.34560);
+    wassert(actual(*messages[metmsg], sc::longitude) == 76.54321);
+    wassert(actual(*messages[metmsg], sc::ident), "ciao");
     wassert(actual(messages[metmsg]->get_datetime()) == Datetime(1945, 4, 26, 8, 0, 0));
     wassert(actual(*messages[metmsg], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)) == 200);
 });
@@ -133,11 +135,11 @@ this->add_method("export", [](Fixture& f) {
     auto msg = impl::Message::downcast(msgs[0]);
 
     wassert(actual(msg->type) == MessageType::SYNOP);
-    wassert(actual(*msgs[0], DBA_MSG_LATITUDE) == 45.0);
-    wassert(actual(*msgs[0], DBA_MSG_LONGITUDE) == 11.0);
-    wassert(actual(*msgs[0]).is_undef(DBA_MSG_IDENT));
-    wassert(actual(*msgs[0], DBA_MSG_BLOCK) == 10);
-    wassert(actual(*msgs[0], DBA_MSG_TEMP_2M) == 290.0);
+    wassert(actual(*msgs[0], sc::latitude) == 45.0);
+    wassert(actual(*msgs[0], sc::longitude) == 11.0);
+    wassert(actual(*msgs[0]).is_undef(sc::ident));
+    wassert(actual(*msgs[0], sc::block) == 10);
+    wassert(actual(*msgs[0], sc::temp_2m) == 290.0);
 });
 
 this->add_method("missing_repmemo", [](Fixture& f) {

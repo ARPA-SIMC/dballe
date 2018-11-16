@@ -3,6 +3,7 @@
 
 #include <dballe/importer.h>
 #include <dballe/exporter.h>
+#include <dballe/core/fwd.h>
 #include <dballe/msg/msg.h>
 #include <wreport/varinfo.h>
 #include <stdint.h>
@@ -116,12 +117,12 @@ protected:
     virtual void setupBulletin(wreport::Bulletin& bulletin);
     virtual void to_subset(const Message& msg, wreport::Subset& subset);
 
-    void add(wreport::Varcode code, const msg::Context* ctx, int shortcut) const;
+    void add(wreport::Varcode code, const msg::Context* ctx, const Shortcut& shortcut) const;
     void add(wreport::Varcode code, const msg::Context* ctx, wreport::Varcode srccode) const;
     void add(wreport::Varcode code, const msg::Context* ctx) const;
     void add(wreport::Varcode code, const Values& values) const;
-    void add(wreport::Varcode code, const Values& values, int shortcut) const;
-    void add(wreport::Varcode code, int shortcut) const;
+    void add(wreport::Varcode code, const Values& values, const Shortcut& shortcut) const;
+    void add(wreport::Varcode code, const Shortcut& shortcut) const;
     void add(wreport::Varcode code, wreport::Varcode srccode, const Level& level, const Trange& trange) const;
     void add(wreport::Varcode code, const wreport::Var* var) const;
     // Set station name, truncating it if it's too long

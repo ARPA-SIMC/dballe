@@ -84,9 +84,9 @@ check_messages_SOURCES = $(dbtestlib) check_messages.f90
 check_messages_LDADD = libdballef.la
 check_messages_FCFLAGS = -g
 
-check_messages_stdinstdout_SOURCES = $(dbtestlib) check_messages_stdinstdout.f90
-check_messages_stdinstdout_LDADD = libdballef.la
-check_messages_stdinstdout_FCFLAGS = -g
+# check_messages_stdinstdout_SOURCES = $(dbtestlib) check_messages_stdinstdout.f90
+# check_messages_stdinstdout_LDADD = libdballef.la
+# check_messages_stdinstdout_FCFLAGS = -g
 
 check_multiplehandler_SOURCES = $(dbtestlib) check_multiplehandler.f90
 check_multiplehandler_LDADD = libdballef.la

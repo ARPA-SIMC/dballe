@@ -21,6 +21,12 @@ core/query-access.cc: core/query-access.in.cc mklookup
 core/data-access.cc: core/data-access.in.cc mklookup
 	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
 
+core/shortcuts.h: vars.csv mkvars
+	$(top_srcdir)/dballe/mkvars -t shortcuts.h $< -o $@
+
+core/shortcuts.cc: vars.csv mkvars
+	$(top_srcdir)/dballe/mkvars -t shortcuts.cc $< -o $@
+
 msg/cursor-access.cc: msg/cursor-access.in.cc mklookup
 	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
 
@@ -36,10 +42,11 @@ simple/commonapi-access.cc: simple/commonapi-access.in.cc mklookup
 core/aliases.cc: core/aliases.gperf
 	if ! gperf < $< > $@; then rm $@; /bin/false; fi
 
-BUILT_SOURCES = core/aliases.cc core/query-access.cc core/data-access.cc \
-                msg/cursor-access.cc db/v7/cursor-access.cc \
-                db/summary-access.tcc simple/commonapi-access.cc
-EXTRA_DIST += mklookup core/aliases.gperf core/aliases.cc \
+BUILT_SOURCES = core/aliases.cc core/shortcuts.h core/shortcuts.cc \
+				core/query-access.cc core/data-access.cc \
+				msg/cursor-access.cc db/v7/cursor-access.cc \
+				db/summary-access.tcc simple/commonapi-access.cc
+EXTRA_DIST += mklookup core/aliases.gperf core/aliases.cc core/shortcuts.h core/shortcuts.cc \
 			  core/query-access.in.cc core/query-access.cc \
 			  core/data-access.in.cc core/data-access.cc \
 			  msg/cursor-access.in.cc msg/cursor-access.cc \
@@ -48,20 +55,20 @@ EXTRA_DIST += mklookup core/aliases.gperf core/aliases.cc \
 			  simple/commonapi-access.in.cc simple/commonapi-access.cc
 
 
-msg/vars.h: msg/vars.csv msg/mkvars
-	if ! $(srcdir)/msg/mkvars vars.h < $< > $@; then rm $@; /bin/false; fi
+msg/vars.h: vars.csv mkvars
+	$(top_srcdir)/dballe/mkvars -t vars.h $< -o $@
 
-msg/vars.gperf: msg/vars.csv msg/mkvars
-	if ! $(srcdir)/msg/mkvars vars.gperf < $< > $@; then rm $@; /bin/false; fi
+msg/vars.gperf: vars.csv mkvars
+	$(top_srcdir)/dballe/mkvars -t vars.gperf $< -o $@
 
-msg/msg-extravars.h: msg/vars.csv msg/mkvars
-	if ! $(srcdir)/msg/mkvars msg-extravars.h < $< > $@; then rm $@; /bin/false; fi
+msg/msg-extravars.h: vars.csv mkvars
+	$(top_srcdir)/dballe/mkvars -t msg-extravars.h $< -o $@
 
 msg/vars.cc: msg/vars.gperf
 	if ! gperf < $< > $@; then rm $@; /bin/false; fi
 
 BUILT_SOURCES += msg/vars.h msg/vars.cc msg/vars.gperf msg/msg-extravars.h
-EXTRA_DIST += msg/mkvars msg/vars.csv msg/vars.h msg/vars.gperf msg/vars.cc msg/vars.cc msg/msg-extravars.h
+EXTRA_DIST += mkvars vars.csv msg/vars.h msg/vars.gperf msg/vars.cc msg/vars.cc msg/msg-extravars.h
 
 noinst_PROGRAMS =
 EXTRA_PROGRAMS =
@@ -89,6 +96,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	db.h \
 	core/fwd.h \
 	core/error.h \
+	core/shortcuts.h \
 	core/aliases.h \
 	core/benchmark.h \
 	core/defs.h \
@@ -189,6 +197,7 @@ libdballe_la_SOURCES = \
 	db.cc \
 	core/error.cc \
 	core/aliases.cc \
+	core/shortcuts.cc \
 	core/benchmark.cc \
 	core/defs.cc \
 	core/var.cc \

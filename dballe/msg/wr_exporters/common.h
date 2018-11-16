@@ -23,7 +23,7 @@ protected:
     const msg::Context* c_ana = 0;
     const msg::Context* c_surface_instant = 0;
 
-    void add(wreport::Varcode code, const msg::Context* ctx, int shortcut) const;
+    void add(wreport::Varcode code, const msg::Context* ctx, const Shortcut& shortcut) const;
     void add(wreport::Varcode code, const msg::Context* ctx, wreport::Varcode srccode) const;
     void add(wreport::Varcode code, const msg::Context* ctx) const;
     void add(wreport::Varcode code, const wreport::Var* var) const;

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "dballe/core/shortcuts.h"
 #include "dballe/msg/wr_codec.h"
 #include "dballe/msg/context.h"
 #include <wreport/bulletin.h>
@@ -175,7 +176,7 @@ struct SynopECMWF : public Synop
         do_D01011();
         do_D01012();
         do_D01021();
-        /* 10 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT_STATION);
+        /* 10 */ add(WR_VAR(0,  7,  1), sc::height_station);
     }
 };
 
@@ -215,31 +216,31 @@ struct SynopECMWFLand : public SynopECMWF
         SynopECMWF::to_subset(msg, subset);
         synop.add_D02001();
         synop.add_ecmwf_synop_weather();
-        /* 24 */ add(WR_VAR(0, 20, 10), DBA_MSG_CLOUD_N);
+        /* 24 */ add(WR_VAR(0, 20, 10), sc::cloud_n);
         /* 25 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
-        /* 26 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
-        /* 27 */ add(WR_VAR(0, 20, 13), DBA_MSG_CLOUD_HH);
-        /* 28 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CL);
-        /* 29 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CM);
-        /* 30 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CH);
+        /* 26 */ add(WR_VAR(0, 20, 11), sc::cloud_nh);
+        /* 27 */ add(WR_VAR(0, 20, 13), sc::cloud_hh);
+        /* 28 */ add(WR_VAR(0, 20, 12), sc::cloud_cl);
+        /* 29 */ add(WR_VAR(0, 20, 12), sc::cloud_cm);
+        /* 30 */ add(WR_VAR(0, 20, 12), sc::cloud_ch);
         /* 31 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(259, 1), Trange::instant());
-        /* 32 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_N1);
-        /* 33 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_C1);
-        /* 34 */ add(WR_VAR(0, 20, 13), DBA_MSG_CLOUD_H1);
+        /* 32 */ add(WR_VAR(0, 20, 11), sc::cloud_n1);
+        /* 33 */ add(WR_VAR(0, 20, 12), sc::cloud_c1);
+        /* 34 */ add(WR_VAR(0, 20, 13), sc::cloud_h1);
         /* 35 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(259, 2), Trange::instant());
-        /* 36 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_N2);
-        /* 37 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_C2);
-        /* 38 */ add(WR_VAR(0, 20, 13), DBA_MSG_CLOUD_H2);
+        /* 36 */ add(WR_VAR(0, 20, 11), sc::cloud_n2);
+        /* 37 */ add(WR_VAR(0, 20, 12), sc::cloud_c2);
+        /* 38 */ add(WR_VAR(0, 20, 13), sc::cloud_h2);
         /* 39 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(259, 3), Trange::instant());
-        /* 40 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_N3);
-        /* 41 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_C3);
-        /* 42 */ add(WR_VAR(0, 20, 13), DBA_MSG_CLOUD_H3);
+        /* 40 */ add(WR_VAR(0, 20, 11), sc::cloud_n3);
+        /* 41 */ add(WR_VAR(0, 20, 12), sc::cloud_c3);
+        /* 42 */ add(WR_VAR(0, 20, 13), sc::cloud_h3);
         /* 43 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(259, 4), Trange::instant());
-        /* 44 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_N4);
-        /* 45 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_C4);
-        /* 46 */ add(WR_VAR(0, 20, 13), DBA_MSG_CLOUD_H4);
+        /* 44 */ add(WR_VAR(0, 20, 11), sc::cloud_n4);
+        /* 45 */ add(WR_VAR(0, 20, 12), sc::cloud_c4);
+        /* 46 */ add(WR_VAR(0, 20, 13), sc::cloud_h4);
         /* 47 */ add_prec();
-        /* 48 */ add(WR_VAR(0, 13, 13), DBA_MSG_TOT_SNOW);
+        /* 48 */ add(WR_VAR(0, 13, 13), sc::tot_snow);
 
         if (!is_crex)
         {
@@ -297,15 +298,15 @@ struct SynopECMWFLandHigh : public SynopECMWF
         /* 14 */ add(WR_VAR(0, 10, 61), synop.v_pchange3);
         /* 15 */ add(WR_VAR(0, 10, 63), synop.v_ptend);
         synop.add_ecmwf_synop_weather();
-        /* 25 */ add(WR_VAR(0, 20, 10), DBA_MSG_CLOUD_N);
+        /* 25 */ add(WR_VAR(0, 20, 10), sc::cloud_n);
         /* 26 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
-        /* 27 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
-        /* 28 */ add(WR_VAR(0, 20, 13), DBA_MSG_CLOUD_HH);
-        /* 29 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CL);
-        /* 30 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CM);
-        /* 31 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CH);
+        /* 27 */ add(WR_VAR(0, 20, 11), sc::cloud_nh);
+        /* 28 */ add(WR_VAR(0, 20, 13), sc::cloud_hh);
+        /* 29 */ add(WR_VAR(0, 20, 12), sc::cloud_cl);
+        /* 30 */ add(WR_VAR(0, 20, 12), sc::cloud_cm);
+        /* 31 */ add(WR_VAR(0, 20, 12), sc::cloud_ch);
         /* 32 */ add_prec();
-        /* 33 */ add(WR_VAR(0, 13, 13), DBA_MSG_TOT_SNOW);
+        /* 33 */ add(WR_VAR(0, 13, 13), sc::tot_snow);
 
         if (!is_crex)
         {
@@ -464,8 +465,8 @@ struct SynopWMO : public Synop
     // D02037  State of ground, snow depth, ground minimum temperature
     void do_D02037(const Message& msg, wreport::Subset& subset)
     {
-        add(WR_VAR(0, 20,  62), DBA_MSG_STATE_GROUND);
-        add(WR_VAR(0, 13,  13), DBA_MSG_TOT_SNOW);
+        add(WR_VAR(0, 20,  62), sc::state_ground);
+        add(WR_VAR(0, 13,  13), sc::tot_snow);
         if (const Var* var = msg.get(Level(1), Trange(3, 0, 43200), WR_VAR(0, 12, 121)))
             subset.store_variable(WR_VAR(0, 12, 113), *var);
         else

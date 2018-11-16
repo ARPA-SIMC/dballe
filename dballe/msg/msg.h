@@ -3,10 +3,10 @@
 
 #include <dballe/message.h>
 #include <dballe/var.h>
+#include <dballe/core/fwd.h>
+#include <dballe/msg/fwd.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/matcher.h>
-#include <dballe/msg/fwd.h>
-#include <dballe/msg/vars.h>
 #include <dballe/msg/context.h>
 #include <stdio.h>
 #include <vector>
@@ -164,14 +164,14 @@ public:
     using dballe::Message::set;
 
     /**
-     * Find a datum given its shortcut ID
+     * Find a datum given its shortcut
      *
-     * @param id
-     *   Shortcut ID of the value to set.
+     * @param shortcut
+     *   Shortcut of the value to set.
      * @return
-     *   The value found, or NULL if it was not found.
+     *   The value found, or nullptr if it was not found.
      */
-    const wreport::Var* get(int id) const;
+    const wreport::Var* get(const Shortcut& shortcut) const;
 
     /**
      * Add or replace a value
@@ -181,7 +181,7 @@ public:
      * @param var
      *   The Var with the value to set
      */
-    void set(int shortcut, const wreport::Var& var);
+    void set(const Shortcut& shortcut, const wreport::Var& var);
 
     /**
      * Shortcut to set year...second variables in a single call
