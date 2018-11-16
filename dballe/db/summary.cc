@@ -231,7 +231,7 @@ struct StationFilterBase
         // Scan the filter building a todo list of things to match
 
         // If there is any filtering on the station, build a whitelist of matching stations
-        has_flt_rep_memo = !q.rep_memo.empty();
+        has_flt_rep_memo = !q.report.empty();
         has_flt_ident = !q.ident.is_missing();
         has_flt_area = !q.latrange.is_missing() || !q.lonrange.is_missing();
         has_flt_station = has_flt_rep_memo || has_flt_area || has_flt_ident;
@@ -247,7 +247,7 @@ struct StationFilterBase
                 return false;
         }
 
-        if (has_flt_rep_memo && q.rep_memo != station.report)
+        if (has_flt_rep_memo && q.report != station.report)
             return false;
 
         if (has_flt_ident && q.ident != station.ident)

@@ -164,7 +164,7 @@ struct DateMatcher : public Matcher
 
     void to_query(core::Query& query) const override
     {
-        query.datetime = range;
+        query.dtrange = range;
     }
 };
 
@@ -208,7 +208,7 @@ struct ReteMatcher : public Matcher
     }
     void to_query(core::Query& query) const override
     {
-        query.rep_memo = rete;
+        query.report = rete;
     }
 };
 
@@ -232,14 +232,14 @@ std::unique_ptr<Matcher> Matcher::create(const dballe::Query& query_gen)
             res->exprs.push_back(new WMOMatcher(query.block));
     }
 
-    if (!query.datetime.is_missing())
-        res->exprs.push_back(new DateMatcher(query.datetime));
+    if (!query.dtrange.is_missing())
+        res->exprs.push_back(new DateMatcher(query.dtrange));
 
     if (!query.latrange.is_missing() || !query.lonrange.is_missing())
         res->exprs.push_back(new CoordMatcher(query.latrange, query.lonrange));
 
-    if (!query.rep_memo.empty())
-        res->exprs.push_back(new ReteMatcher(query.rep_memo));
+    if (!query.report.empty())
+        res->exprs.push_back(new ReteMatcher(query.report));
 
     return unique_ptr<Matcher>(res.release());
 }

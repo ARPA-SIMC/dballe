@@ -14,8 +14,8 @@ namespace core {
 void Query::validate()
 {
     lonrange.set(lonrange);
-    datetime.min.set_lower_bound();
-    datetime.max.set_upper_bound();
+    dtrange.min.set_lower_bound();
+    dtrange.max.set_upper_bound();
 }
 
 std::unique_ptr<dballe::Query> Query::clone() const
@@ -47,14 +47,14 @@ unsigned Query::get_modifiers() const
 void Query::clear()
 {
     ana_id = MISSING_INT;
-    prio_min = MISSING_INT;
-    prio_max = MISSING_INT;
-    rep_memo.clear();
+    priomin = MISSING_INT;
+    priomax = MISSING_INT;
+    report.clear();
     mobile = MISSING_INT;
     ident.clear();
     latrange = LatRange();
     lonrange = LonRange();
-    datetime = DatetimeRange();
+    dtrange = DatetimeRange();
     level = Level();
     trange = Trange();
     varcodes.clear();
@@ -169,13 +169,13 @@ bool Query::is_subquery(const dballe::Query& other_gen) const
     const Query& other = downcast(other_gen);
 
     if (removed_or_changed(ana_id, other.ana_id)) return false;
-    if (!is_subrange(prio_min, prio_max, other.prio_min, other.prio_max)) return false;
-    if (removed_or_changed(rep_memo, other.rep_memo)) return false;
+    if (!is_subrange(priomin, priomax, other.priomin, other.priomax)) return false;
+    if (removed_or_changed(report, other.report)) return false;
     if (removed_or_changed(mobile, other.mobile)) return false;
     if (removed_or_changed(ident, other.ident)) return false;
     if (!other.latrange.contains(latrange)) return false;
     if (!other.lonrange.contains(lonrange)) return false;
-    if (!other.datetime.contains(datetime)) return false;
+    if (!other.dtrange.contains(dtrange)) return false;
     if (removed_or_changed(level.ltype1, other.level.ltype1)) return false;
     if (removed_or_changed(level.l1, other.level.l1)) return false;
     if (removed_or_changed(level.ltype2, other.level.ltype2)) return false;
@@ -203,150 +203,6 @@ bool Query::is_subquery(const dballe::Query& other_gen) const
     if (removed_or_changed(station, other.station)) return false;
     return true;
 }
-
-#if 0
-namespace {
-
-struct VarGen
-{
-    std::function<void(const char*, Var&&)>& dest;
-
-    VarGen(std::function<void(const char*, Var&&)>& dest)
-        : dest(dest) {}
-
-    template<typename T>
-    void gen(dba_keyword key, const T& val)
-    {
-        Varinfo info = Record::keyword_info(key);
-        dest(Record::keyword_name(key), Var(info, val));
-    };
-
-    void gen(dba_keyword key, const std::string& val)
-    {
-        Varinfo info = Record::keyword_info(key);
-        dest(Record::keyword_name(key), Var(info, val.c_str()));
-    };
-
-    void gen(dba_keyword key, const Ident& val)
-    {
-        Varinfo info = Record::keyword_info(key);
-        dest(Record::keyword_name(key), Var(info, val.get()));
-    };
-};
-
-}
-
-void Query::foreach_key(std::function<void(const char*, Var&&)> dest) const
-{
-    VarGen vargen(dest);
-
-    if (ana_id != MISSING_INT) vargen.gen(DBA_KEY_ANA_ID, ana_id);
-    if (prio_min != prio_max)
-    {
-        if (prio_min != MISSING_INT)
-            vargen.gen(DBA_KEY_PRIORITY, prio_min);
-    } else {
-        if (prio_min != MISSING_INT)
-            vargen.gen(DBA_KEY_PRIOMIN, prio_min);
-        if (prio_max != MISSING_INT)
-            vargen.gen(DBA_KEY_PRIOMAX, prio_max);
-    }
-    if (!rep_memo.empty())
-        vargen.gen(DBA_KEY_REP_MEMO, rep_memo);
-    if (mobile != MISSING_INT)
-        vargen.gen(DBA_KEY_MOBILE, mobile);
-    if (!ident.is_missing())
-        vargen.gen(DBA_KEY_IDENT, ident);
-    if (!latrange.is_missing())
-    {
-        if (latrange.imin == latrange.imax)
-            vargen.gen(DBA_KEY_LAT, latrange.imin);
-        else
-        {
-            if (latrange.imin != LatRange::IMIN) vargen.gen(DBA_KEY_LATMIN, latrange.imin);
-            if (latrange.imax != LatRange::IMAX) vargen.gen(DBA_KEY_LATMAX, latrange.imax);
-        }
-    }
-    if (!lonrange.is_missing())
-    {
-        if (lonrange.imin == lonrange.imax)
-            vargen.gen(DBA_KEY_LON, lonrange.imin);
-        else
-        {
-            vargen.gen(DBA_KEY_LONMIN, lonrange.imin);
-            vargen.gen(DBA_KEY_LONMAX, lonrange.imax);
-        }
-    }
-    if (datetime.min == datetime.max)
-    {
-        if (!datetime.min.is_missing())
-        {
-            vargen.gen(DBA_KEY_YEAR, datetime.min.year);
-            vargen.gen(DBA_KEY_MONTH, datetime.min.month);
-            vargen.gen(DBA_KEY_DAY, datetime.min.day);
-            vargen.gen(DBA_KEY_HOUR, datetime.min.hour);
-            vargen.gen(DBA_KEY_MIN, datetime.min.minute);
-            vargen.gen(DBA_KEY_SEC, datetime.min.second);
-        }
-    } else {
-        if (!datetime.min.is_missing())
-        {
-            vargen.gen(DBA_KEY_YEARMIN, datetime.min.year);
-            vargen.gen(DBA_KEY_MONTHMIN, datetime.min.month);
-            vargen.gen(DBA_KEY_DAYMIN, datetime.min.day);
-            vargen.gen(DBA_KEY_HOURMIN, datetime.min.hour);
-            vargen.gen(DBA_KEY_MINUMIN, datetime.min.minute);
-            vargen.gen(DBA_KEY_SECMIN, datetime.min.second);
-        }
-        if (!datetime.max.is_missing())
-        {
-            vargen.gen(DBA_KEY_YEARMAX, datetime.max.year);
-            vargen.gen(DBA_KEY_MONTHMAX, datetime.max.month);
-            vargen.gen(DBA_KEY_DAYMAX, datetime.max.day);
-            vargen.gen(DBA_KEY_HOURMAX, datetime.max.hour);
-            vargen.gen(DBA_KEY_MINUMAX, datetime.max.minute);
-            vargen.gen(DBA_KEY_SECMAX, datetime.max.second);
-        }
-    }
-    if (level.ltype1 != MISSING_INT) vargen.gen(DBA_KEY_LEVELTYPE1, level.ltype1);
-    if (level.l1 != MISSING_INT) vargen.gen(DBA_KEY_L1, level.l1);
-    if (level.ltype2 != MISSING_INT) vargen.gen(DBA_KEY_LEVELTYPE2, level.ltype2);
-    if (level.l2 != MISSING_INT) vargen.gen(DBA_KEY_L2, level.l2);
-    if (trange.pind != MISSING_INT) vargen.gen(DBA_KEY_PINDICATOR, trange.pind);
-    if (trange.p1 != MISSING_INT) vargen.gen(DBA_KEY_P1, trange.p1);
-    if (trange.p2 != MISSING_INT) vargen.gen(DBA_KEY_P2, trange.p2);
-    switch (varcodes.size())
-    {
-         case 0:
-             break;
-         case 1:
-             vargen.gen(DBA_KEY_VAR, varcode_format(*varcodes.begin()));
-             break;
-         default: {
-             string codes;
-             for (const auto& code: varcodes)
-             {
-                 if (codes.empty())
-                     codes = varcode_format(code);
-                 else
-                 {
-                     codes += ",";
-                     codes += varcode_format(code);
-                 }
-             }
-             vargen.gen(DBA_KEY_VARLIST, codes);
-             break;
-         }
-    }
-    if (!query.empty()) vargen.gen(DBA_KEY_QUERY, query);
-    if (!ana_filter.empty()) vargen.gen(DBA_KEY_ANA_FILTER, ana_filter);
-    if (!data_filter.empty()) vargen.gen(DBA_KEY_DATA_FILTER, data_filter);
-    if (!attr_filter.empty()) vargen.gen(DBA_KEY_ATTR_FILTER, attr_filter);
-    if (limit != MISSING_INT) vargen.gen(DBA_KEY_LIMIT, limit);
-    if (block != MISSING_INT) dest("block", Var(varinfo(WR_VAR(0, 1, 1)), block));
-    if (station != MISSING_INT) dest("station", Var(varinfo(WR_VAR(0, 1, 2)), station));
-}
-#endif
 
 namespace {
 
@@ -473,14 +329,14 @@ struct Printer
     void print()
     {
         print_int("ana_id", q.ana_id);
-        print_int("prio_min", q.prio_min);
-        print_int("prio_max", q.prio_max);
-        print_str("rep_memo", !q.rep_memo.empty(), q.rep_memo);
+        print_int("priomin", q.priomin);
+        print_int("priomax", q.priomax);
+        print_str("report", !q.report.empty(), q.report);
         print_int("mobile", q.mobile);
         print_ident(q.ident);
         print_latrange(q.latrange);
         print_lonrange(q.lonrange);
-        print_datetimerange(q.datetime);
+        print_datetimerange(q.dtrange);
         print_level("level", q.level);
         print_trange("trange", q.trange);
         print_varcodes("varcodes", q.varcodes);
@@ -506,9 +362,9 @@ void Query::print(FILE* out) const
 void Query::serialize(JSONWriter& out) const
 {
     if (ana_id != MISSING_INT) out.add("ana_id", ana_id);
-    if (prio_min != MISSING_INT) out.add("prio_min", prio_min);
-    if (prio_max != MISSING_INT) out.add("prio_max", prio_max);
-    if (!rep_memo.empty()) out.add("rep_memo", rep_memo);
+    if (priomin != MISSING_INT) out.add("prio_min", priomin);
+    if (priomax != MISSING_INT) out.add("prio_max", priomax);
+    if (!report.empty()) out.add("rep_memo", report);
     if (mobile != MISSING_INT) out.add("mobile", mobile);
     if (!ident.is_missing()) out.add("ident", ident.get());
     if (!latrange.is_missing())
@@ -521,12 +377,12 @@ void Query::serialize(JSONWriter& out) const
         out.add("lonmin", lonrange.imin);
         out.add("lonmax", lonrange.imax);
     }
-    if (datetime.min == datetime.max)
+    if (dtrange.min == dtrange.max)
     {
-        if (!datetime.min.is_missing()) out.add("datetime", datetime.min);
+        if (!dtrange.min.is_missing()) out.add("datetime", dtrange.min);
     } else {
-        if (!datetime.min.is_missing()) out.add("datetime_min", datetime.min);
-        if (!datetime.max.is_missing()) out.add("datetime_max", datetime.max);
+        if (!dtrange.min.is_missing()) out.add("datetime_min", dtrange.min);
+        if (!dtrange.max.is_missing()) out.add("datetime_max", dtrange.max);
     }
     if (!level.is_missing()) out.add("level", level);
     if (!trange.is_missing()) out.add("trange", trange);
@@ -543,16 +399,6 @@ void Query::serialize(JSONWriter& out) const
     if (block != MISSING_INT) out.add("block", block);
     if (station != MISSING_INT) out.add("station", station);
 }
-
-#if 0
-unsigned Query::parse_modifiers(const dballe::Record& rec)
-{
-    /* Decode query modifiers */
-    const char* q = rec.enq("query", (const char*)nullptr);
-    if (!q) return 0;
-    return parse_modifiers(q);
-}
-#endif
 
 unsigned Query::parse_modifiers(const char* s)
 {
@@ -622,11 +468,11 @@ Query Query::from_json(core::json::Stream& in)
         if (key == "ana_id")
             res.ana_id = in.parse_signed<int>();
         else if (key == "prio_min")
-            res.prio_min = in.parse_signed<int>();
+            res.priomin = in.parse_signed<int>();
         else if (key == "prio_max")
-            res.prio_max = in.parse_signed<int>();
+            res.priomax = in.parse_signed<int>();
         else if (key == "rep_memo")
-            res.rep_memo = in.parse_string();
+            res.report = in.parse_string();
         else if (key == "mobile")
             res.mobile = in.parse_signed<int>();
         else if (key == "ident")
@@ -640,14 +486,11 @@ Query Query::from_json(core::json::Stream& in)
         else if (key == "lonmax")
             res.lonrange.imax = in.parse_signed<int>();
         else if (key == "datetime")
-        {
-            res.datetime.min = in.parse_datetime();
-            res.datetime.max = res.datetime.min;
-        }
+            res.dtrange.max = res.dtrange.min = in.parse_datetime();
         else if (key == "datetime_min")
-            res.datetime.min = in.parse_datetime();
+            res.dtrange.min = in.parse_datetime();
         else if (key == "datetime_max")
-            res.datetime.max = in.parse_datetime();
+            res.dtrange.max = in.parse_datetime();
         else if (key == "level")
             res.level = in.parse_level();
         else if (key == "trange")

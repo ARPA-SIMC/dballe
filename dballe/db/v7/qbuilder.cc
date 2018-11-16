@@ -311,16 +311,16 @@ bool StationQueryBuilder::build_where()
             break;
     }
 
-    if (!query.rep_memo.empty())
+    if (!query.report.empty())
     {
-        int src_val = tr->repinfo().get_id(query.rep_memo.c_str());
+        int src_val = tr->repinfo().get_id(query.report.c_str());
         if (src_val == -1)
         {
             sql_where.append_listf("1=0");
-            TRACE("rep_memo %s not found: adding AND 1=0\n", query.rep_memo.c_str());
+            TRACE("rep_memo %s not found: adding AND 1=0\n", query.report.c_str());
         } else {
             sql_where.append_listf("s.rep=%d", src_val);
-            TRACE("found rep_memo %s: adding AND s.rep=%d\n", query.rep_memo.c_str(), src_val);
+            TRACE("found rep_memo %s: adding AND s.rep=%d\n", query.report.c_str(), src_val);
         }
         has_where = true;
     }
@@ -603,10 +603,10 @@ bool QueryBuilder::add_dt_where(const char* tbl)
     if (query_station_vars) return false;
 
     bool found = false;
-    if (!query.datetime.is_missing())
+    if (!query.dtrange.is_missing())
     {
-        Datetime dtmin = query.datetime.min;
-        Datetime dtmax = query.datetime.max;
+        Datetime dtmin = query.dtrange.min;
+        Datetime dtmax = query.dtrange.max;
         if (dtmin == dtmax)
         {
             // Add constraint on the exact date interval
@@ -712,7 +712,7 @@ bool QueryBuilder::add_repinfo_where(const char* tbl)
 {
     bool found = false;
 
-    if (query.prio_min != MISSING_INT || query.prio_max != MISSING_INT)
+    if (query.priomin != MISSING_INT || query.priomax != MISSING_INT)
     {
         // Filter the repinfo cache and build a IN query
         std::vector<int> ids = tr->repinfo().ids_by_prio(query);
@@ -734,16 +734,16 @@ bool QueryBuilder::add_repinfo_where(const char* tbl)
         found = true;
     }
 
-    if (!query.rep_memo.empty())
+    if (!query.report.empty())
     {
-        int src_val = tr->repinfo().get_id(query.rep_memo.c_str());
+        int src_val = tr->repinfo().get_id(query.report.c_str());
         if (src_val == -1)
         {
             sql_where.append_listf("1=0");
-            TRACE("rep_memo %s not found: adding AND 1=0\n", query.rep_memo.c_str());
+            TRACE("rep_memo %s not found: adding AND 1=0\n", query.report.c_str());
         } else {
             sql_where.append_listf("%s.rep=%d", tbl, src_val);
-            TRACE("found rep_memo %s: adding AND %s.rep=%d\n", query.rep_memo.c_str(), tbl, (int)src_val);
+            TRACE("found rep_memo %s: adding AND %s.rep=%d\n", query.report.c_str(), tbl, (int)src_val);
         }
         found = true;
     }

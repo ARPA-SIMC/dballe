@@ -145,7 +145,7 @@ this->add_method("export", [](Fixture& f) {
 this->add_method("missing_repmemo", [](Fixture& f) {
     // Text exporting of extra station information
     core::Query query;
-    query.rep_memo = "nonexisting";
+    query.report = "nonexisting";
     impl::Messages msgs = wcallchecked(dballe::tests::messages_from_db(f.tr, query));
     wassert(actual(msgs.size()) == 0u);
 });

@@ -10,10 +10,10 @@ namespace core {
 void Query::setf(const char* key, unsigned len, const char* val)
 {
     switch (key) { // mklookup
-        case "priority":    prio_min = prio_max = strtol(val, nullptr, 10);
-        case "priomax":     prio_max = strtol(val, nullptr, 10);
-        case "priomin":     prio_min = strtol(val, nullptr, 10);
-        case "rep_memo":    rep_memo = val;
+        case "priority":    priomin = priomax = strtol(val, nullptr, 10);
+        case "priomax":     priomax = strtol(val, nullptr, 10);
+        case "priomin":     priomin = strtol(val, nullptr, 10);
+        case "rep_memo":    report = val;
         case "ana_id":      ana_id = strtol(val, nullptr, 10);
         case "mobile":      mobile = strtol(val, nullptr, 10);
         case "ident":       ident = val;
@@ -23,24 +23,24 @@ void Query::setf(const char* key, unsigned len, const char* val)
         case "latmin":      latrange.imin = Coords::lat_to_int(strtod(val, nullptr));
         case "lonmax":      lonrange.imax = Coords::lon_to_int(strtod(val, nullptr));
         case "lonmin":      lonrange.imin = Coords::lon_to_int(strtod(val, nullptr));
-        case "year":        datetime.min.year   = datetime.max.year = strtol(val, nullptr, 10);
-        case "month":       datetime.min.month  = datetime.max.month = strtol(val, nullptr, 10);
-        case "day":         datetime.min.day    = datetime.max.day = strtol(val, nullptr, 10);
-        case "hour":        datetime.min.hour   = datetime.max.hour = strtol(val, nullptr, 10);
-        case "min":         datetime.min.minute = datetime.max.minute = strtol(val, nullptr, 10);
-        case "sec":         datetime.min.second = datetime.max.second = strtol(val, nullptr, 10);
-        case "yearmax":     datetime.max.year = strtol(val, nullptr, 10);
-        case "yearmin":     datetime.min.year = strtol(val, nullptr, 10);
-        case "monthmax":    datetime.max.month = strtol(val, nullptr, 10);
-        case "monthmin":    datetime.min.month = strtol(val, nullptr, 10);
-        case "daymax":      datetime.max.day = strtol(val, nullptr, 10);
-        case "daymin":      datetime.min.day = strtol(val, nullptr, 10);
-        case "hourmax":     datetime.max.hour = strtol(val, nullptr, 10);
-        case "hourmin":     datetime.min.hour = strtol(val, nullptr, 10);
-        case "minumax":     datetime.max.minute = strtol(val, nullptr, 10);
-        case "minumin":     datetime.min.minute = strtol(val, nullptr, 10);
-        case "secmax":      datetime.max.second = strtol(val, nullptr, 10);
-        case "secmin":      datetime.min.second = strtol(val, nullptr, 10);
+        case "year":        dtrange.min.year   = dtrange.max.year = strtol(val, nullptr, 10);
+        case "month":       dtrange.min.month  = dtrange.max.month = strtol(val, nullptr, 10);
+        case "day":         dtrange.min.day    = dtrange.max.day = strtol(val, nullptr, 10);
+        case "hour":        dtrange.min.hour   = dtrange.max.hour = strtol(val, nullptr, 10);
+        case "min":         dtrange.min.minute = dtrange.max.minute = strtol(val, nullptr, 10);
+        case "sec":         dtrange.min.second = dtrange.max.second = strtol(val, nullptr, 10);
+        case "yearmax":     dtrange.max.year = strtol(val, nullptr, 10);
+        case "yearmin":     dtrange.min.year = strtol(val, nullptr, 10);
+        case "monthmax":    dtrange.max.month = strtol(val, nullptr, 10);
+        case "monthmin":    dtrange.min.month = strtol(val, nullptr, 10);
+        case "daymax":      dtrange.max.day = strtol(val, nullptr, 10);
+        case "daymin":      dtrange.min.day = strtol(val, nullptr, 10);
+        case "hourmax":     dtrange.max.hour = strtol(val, nullptr, 10);
+        case "hourmin":     dtrange.min.hour = strtol(val, nullptr, 10);
+        case "minumax":     dtrange.max.minute = strtol(val, nullptr, 10);
+        case "minumin":     dtrange.min.minute = strtol(val, nullptr, 10);
+        case "secmax":      dtrange.max.second = strtol(val, nullptr, 10);
+        case "secmin":      dtrange.min.second = strtol(val, nullptr, 10);
         case "leveltype1":  level.ltype1 = strtol(val, nullptr, 10);
         case "l1":          level.l1 = strtol(val, nullptr, 10);
         case "leveltype2":  level.ltype2 = strtol(val, nullptr, 10);

@@ -281,7 +281,7 @@ void CommonAPIImplementation::setc(const char* param, const char* value)
 
 void CommonAPIImplementation::setcontextana()
 {
-    input_query.datetime = DatetimeRange();
+    input_query.dtrange = DatetimeRange();
     input_data.datetime = Datetime();
     input_query.level = input_data.level = Level();
     input_query.trange = input_data.trange = Trange();
@@ -309,20 +309,20 @@ void CommonAPIImplementation::setdate(int year, int month, int day, int hour, in
     Datetime dt(year, month, day, hour, min, sec);
     if (!dt.is_missing())
         station_context = false;
-    input_query.datetime.min = input_query.datetime.max = input_data.datetime = dt;
+    input_query.dtrange.min = input_query.dtrange.max = input_data.datetime = dt;
 }
 
 void CommonAPIImplementation::setdatemin(int year, int month, int day, int hour, int min, int sec)
 {
-    input_query.datetime.min = Datetime(year, month, day, hour, min, sec);
-    if (!input_query.datetime.min.is_missing())
+    input_query.dtrange.min = Datetime(year, month, day, hour, min, sec);
+    if (!input_query.dtrange.min.is_missing())
         station_context = true;
 }
 
 void CommonAPIImplementation::setdatemax(int year, int month, int day, int hour, int min, int sec)
 {
-    input_query.datetime.max = Datetime(year, month, day, hour, min, sec);
-    if (!input_query.datetime.max.is_missing())
+    input_query.dtrange.max = Datetime(year, month, day, hour, min, sec);
+    if (!input_query.dtrange.max.is_missing())
         station_context = true;
 }
 

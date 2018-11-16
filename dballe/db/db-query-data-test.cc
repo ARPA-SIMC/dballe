@@ -14,25 +14,25 @@ namespace {
 static inline core::Query query_exact(const Datetime& dt)
 {
     core::Query query;
-    query.datetime = DatetimeRange(dt, dt);
+    query.dtrange = DatetimeRange(dt, dt);
     return query;
 }
 static inline core::Query query_min(const Datetime& dt)
 {
     core::Query query;
-    query.datetime = DatetimeRange(dt, Datetime());
+    query.dtrange = DatetimeRange(dt, Datetime());
     return query;
 }
 static inline core::Query query_max(const Datetime& dt)
 {
     core::Query query;
-    query.datetime = DatetimeRange(Datetime(), dt);
+    query.dtrange = DatetimeRange(Datetime(), dt);
     return query;
 }
 static inline core::Query query_minmax(const Datetime& min, const Datetime& max)
 {
     core::Query query;
-    query.datetime = DatetimeRange(min, max);
+    query.dtrange = DatetimeRange(min, max);
     return query;
 }
 

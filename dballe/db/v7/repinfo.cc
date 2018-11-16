@@ -80,8 +80,8 @@ std::vector<int> Repinfo::ids_by_prio(const core::Query& q)
     for (std::vector<repinfo::Cache>::const_iterator i = cache.begin();
             i != cache.end(); ++i)
     {
-        if (q.prio_min != MISSING_INT && i->prio < q.prio_min) continue;
-        if (q.prio_max != MISSING_INT && i->prio > q.prio_max) continue;
+        if (q.priomin != MISSING_INT && i->prio < q.priomin) continue;
+        if (q.priomax != MISSING_INT && i->prio > q.priomax) continue;
         res.push_back(i->id);
     }
 

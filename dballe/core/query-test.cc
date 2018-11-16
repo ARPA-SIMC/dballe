@@ -22,14 +22,14 @@ void Tests::register_tests()
 add_method("all_unset", []() {
     core::Query q;
     wassert(actual(q.ana_id) == MISSING_INT);
-    wassert(actual(q.prio_min) == MISSING_INT);
-    wassert(actual(q.prio_max) == MISSING_INT);
-    wassert(actual(q.rep_memo) == "");
+    wassert(actual(q.priomin) == MISSING_INT);
+    wassert(actual(q.priomax) == MISSING_INT);
+    wassert(actual(q.report) == "");
     wassert(actual(q.mobile) == MISSING_INT);
     wassert(actual(q.ident.is_missing()).istrue());
     wassert(actual(q.latrange) == LatRange());
     wassert(actual(q.lonrange) == LonRange());
-    wassert(actual(q.datetime) == DatetimeRange());
+    wassert(actual(q.dtrange) == DatetimeRange());
     wassert(actual(q.level) == Level());
     wassert(actual(q.trange) == Trange());
     wassert(actual(q.varcodes.size()) == 0);
@@ -91,28 +91,28 @@ add_method("all_set", []() {
 add_method("prio", []() {
     core::Query q;
     q.set_from_test_string("priority=11");
-    wassert(actual(q.prio_min) == 11);
-    wassert(actual(q.prio_max) == 11);
+    wassert(actual(q.priomin) == 11);
+    wassert(actual(q.priomax) == 11);
 
     q.clear();
     q.set_from_test_string("priomin=12");
-    wassert(actual(q.prio_min) == 12);
-    wassert(actual(q.prio_max) == MISSING_INT);
+    wassert(actual(q.priomin) == 12);
+    wassert(actual(q.priomax) == MISSING_INT);
 
     q.clear();
     q.set_from_test_string("priomax=12");
-    wassert(actual(q.prio_min) == MISSING_INT);
-    wassert(actual(q.prio_max) == 12);
+    wassert(actual(q.priomin) == MISSING_INT);
+    wassert(actual(q.priomax) == 12);
 
     q.clear();
     q.set_from_test_string("priomin=11, priomax=22");
-    wassert(actual(q.prio_min) == 11);
-    wassert(actual(q.prio_max) == 22);
+    wassert(actual(q.priomin) == 11);
+    wassert(actual(q.priomax) == 22);
 
     q.clear();
     q.set_from_test_string("priomin=11, priomax=22, priority=16");
-    wassert(actual(q.prio_min) == 16);
-    wassert(actual(q.prio_max) == 16);
+    wassert(actual(q.priomin) == 16);
+    wassert(actual(q.priomax) == 16);
 });
 
 add_method("lat", []() {
@@ -167,14 +167,14 @@ add_method("lonrange", []() {
     wassert(actual(q.lonrange) == LonRange(0.0, 0.0));
 });
 
-add_method("datetime", []() {
+add_method("dtrange", []() {
     core::Query q;
     wassert(q.set_from_test_string("year=2015"));
-    wassert(actual(q.datetime) == DatetimeRange(2015,  1,  1,  0 , 0,  0, 2015, 12, 31, 23, 59, 59));
+    wassert(actual(q.dtrange) == DatetimeRange(2015,  1,  1,  0 , 0,  0, 2015, 12, 31, 23, 59, 59));
 
     q.clear();
     wassert(q.set_from_test_string("year=2015, monthmin=1, monthmax=2"));
-    wassert(actual(q.datetime) == DatetimeRange(2015,  1,  1,  0 , 0,  0, 2015,  2, 28, 23, 59, 59));
+    wassert(actual(q.dtrange) == DatetimeRange(2015,  1,  1,  0 , 0,  0, 2015,  2, 28, 23, 59, 59));
 
     q.clear();
     auto e = wassert_throws(wreport::error_consistency, q.set_from_test_string("year=2015, monthmin=2, day=28"));
@@ -186,7 +186,7 @@ add_method("datetime", []() {
 
     q.clear();
     wassert(q.set_from_test_string("yearmin=2010, yearmax=2012, year=2000, month=2, hour=12, min=30"));
-    wassert(actual(q.datetime) == DatetimeRange(2000,  2,  1,  12, 30,  0, 2000,  2, 29, 12, 30, 59));
+    wassert(actual(q.dtrange) == DatetimeRange(2000,  2,  1,  12, 30,  0, 2000,  2, 29, 12, 30, 59));
 
     q.clear();
     e = wassert_throws(wreport::error_consistency, q.set_from_test_string("yearmin=2010, yearmax=2012, year=2000, month=2, min=30"));

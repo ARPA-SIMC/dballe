@@ -58,7 +58,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
                     msg->set_rep_memo(impl::Message::repmemo_from_type(msg->get_type()));
 
                     query.clear();
-                    query.rep_memo = impl::Message::repmemo_from_type(msg->get_type());
+                    query.report = impl::Message::repmemo_from_type(msg->get_type());
 
                     impl::Messages msgs = wcallchecked(dballe::tests::messages_from_db(f.tr, query));
                     wassert(actual(msgs.size()) == 1u);
@@ -82,7 +82,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
                     wassert(f.tr->import_message(*msg, default_opts));
 
                     query.clear();
-                    query.rep_memo = impl::Message::repmemo_from_type(msg->type);
+                    query.report = impl::Message::repmemo_from_type(msg->type);
 
                     impl::Messages msgs = dballe::tests::messages_from_db(f.tr, query);
                     wassert(actual(msgs.size()) == 1u);
@@ -116,7 +116,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             msg2->set_rep_memo(impl::Message::repmemo_from_type(msg2->type));
 
             query.clear();
-            query.rep_memo = impl::Message::repmemo_from_type(msg1->type);
+            query.report = impl::Message::repmemo_from_type(msg1->type);
 
             // Warning: this test used to fail with older versions of MySQL.
             // See http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=397597
@@ -144,7 +144,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             msg1->set_rep_memo(impl::Message::repmemo_from_type(msg1->type));
 
             core::Query query;
-            query.rep_memo = impl::Message::repmemo_from_type(msg1->type);
+            query.report = impl::Message::repmemo_from_type(msg1->type);
 
             impl::Messages msgs = dballe::tests::messages_from_db(f.tr, query);
             wassert(actual(msgs.size()) == 1u);
@@ -162,7 +162,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             f.tr->import_message(*msg, default_opts);
 
             query.clear();
-            query.rep_memo = "enrico";
+            query.report = "enrico";
 
             impl::Messages outmsgs = dballe::tests::messages_from_db(f.tr, query);
             wassert(actual(outmsgs.size()) == 1u);

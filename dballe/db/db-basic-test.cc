@@ -195,7 +195,7 @@ this->add_method("query_ident", [](Fixture& f) {
 this->add_method("missing_repmemo", [](Fixture& f) {
     // Test querying with a missing rep_memo
     core::Query query;
-    query.rep_memo = "nonexisting";
+    query.report = "nonexisting";
     wassert(actual(f.tr->query_stations(query)->remaining()) == 0);
     wassert(actual(f.tr->query_station_data(query)->remaining()) == 0);
     wassert(actual(f.tr->query_data(query)->remaining()) == 0);

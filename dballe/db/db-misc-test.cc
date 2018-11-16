@@ -262,7 +262,7 @@ this->add_method("delete", [](Fixture& f) {
     cur->discard();
 
     query.clear();
-    query.datetime = DatetimeRange(Datetime(1945, 4, 25, 8, 10), Datetime());
+    query.dtrange = DatetimeRange(Datetime(1945, 4, 25, 8, 10), Datetime());
     f.tr->remove_data(query);
 
     // 2 remaining after remove
@@ -603,7 +603,7 @@ this->add_method("query_station_best", [](Fixture& f) {
     wassert(f.populate(oldf));
 
     core::Query q;
-    q.datetime = DatetimeRange(Datetime(1000, 1, 1, 0, 0, 0), Datetime(1000, 1, 1, 0, 0, 0));
+    q.dtrange = DatetimeRange(Datetime(1000, 1, 1, 0, 0, 0), Datetime(1000, 1, 1, 0, 0, 0));
     q.query = "best";
     auto cur = f.tr->query_data(q);
     while (cur->next())
@@ -668,8 +668,8 @@ this->add_method("update", [](Fixture& f) {
     core::Query q;
     q.latrange.set(12.34560, 12.34560);
     q.lonrange.set(76.54320, 76.54320);
-    q.datetime = DatetimeRange(Datetime(1945, 4, 25, 8, 0, 0), Datetime(1945, 4, 25, 8, 0, 0));
-    q.rep_memo = "synop";
+    q.dtrange = DatetimeRange(Datetime(1945, 4, 25, 8, 0, 0), Datetime(1945, 4, 25, 8, 0, 0));
+    q.report = "synop";
     q.level = Level(10, 11, 15, 22);
     q.trange = Trange(20, 111, 122);
     q.varcodes.insert(WR_VAR(0, 1, 12));
@@ -691,7 +691,7 @@ this->add_method("update", [](Fixture& f) {
     core::Data update;
     update.station.id = ana_id;
     update.station.report = "synop";
-    update.datetime = q.datetime.min;
+    update.datetime = q.dtrange.min;
     update.level = q.level;
     update.trange = q.trange;
     update.values.set(var.code(), 200);
@@ -865,7 +865,7 @@ this->add_method("query_best_priomax", [](Fixture& f) {
     {
         core::Query query;
         query.query = "best";
-        query.datetime = DatetimeRange(Datetime(2009, 11, 11, 0, 0, 0), Datetime(2009, 11, 11, 0, 0, 0));
+        query.dtrange = DatetimeRange(Datetime(2009, 11, 11, 0, 0, 0), Datetime(2009, 11, 11, 0, 0, 0));
         query.varcodes.insert(WR_VAR(0, 12, 101));
         auto cur = f.tr->query_data(query);
         wassert(actual(cur->remaining()) == 1);
@@ -877,9 +877,9 @@ this->add_method("query_best_priomax", [](Fixture& f) {
     // Query with querybest and priomax
     {
         core::Query query;
-        query.prio_max = 100;
+        query.priomax = 100;
         query.query = "best";
-        query.datetime = DatetimeRange(Datetime(2009, 11, 11, 0, 0, 0), Datetime(2009, 11, 11, 0, 0, 0));
+        query.dtrange = DatetimeRange(Datetime(2009, 11, 11, 0, 0, 0), Datetime(2009, 11, 11, 0, 0, 0));
         query.varcodes.insert(WR_VAR(0, 12, 101));
         auto cur = f.tr->query_data(query);
         wassert(actual(cur->remaining()) == 1);

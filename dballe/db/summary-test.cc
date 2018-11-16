@@ -54,7 +54,7 @@ DBStation other_station(const Station& station)
 
 void set_query_station(core::Query& query, const Station& station)
 {
-    query.rep_memo = station.report;
+    query.report = station.report;
     query.set_latrange(LatRange(station.coords.lat, station.coords.lat));
     query.set_lonrange(LonRange(station.coords.lon, station.coords.lon));
     query.ident = station.ident;
@@ -185,7 +185,7 @@ this->add_method("json_summary", [](Fixture& f) {
     DatetimeRange dtrange(Datetime(2018, 1, 1), Datetime(2018, 7, 1));
 
     core::Query query;
-    query.rep_memo = "synop";
+    query.report = "synop";
     BaseSummary<STATION> summary;
     summary.add(station, vd, dtrange, 12);
     vd.varcode = WR_VAR(0, 1, 113);
