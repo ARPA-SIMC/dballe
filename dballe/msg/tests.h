@@ -12,7 +12,8 @@ struct Vartable;
 namespace dballe {
 namespace tests {
 
-impl::Messages read_msgs(const char* filename, Encoding type, const dballe::ImporterOptions& opts=dballe::ImporterOptions());
+impl::Messages read_msgs(const char* filename, Encoding type, const dballe::ImporterOptions& opts=dballe::ImporterOptions::defaults);
+impl::Messages read_msgs(const char* filename, Encoding type, const std::string& opts);
 impl::Messages read_msgs_csv(const char* filename);
 
 struct ActualMessage : public Actual<const Message&>
@@ -24,7 +25,7 @@ struct ActualMessage : public Actual<const Message&>
 
 inline ActualMessage actual(const Message& message) { return ActualMessage(message); }
 
-std::unique_ptr<wreport::Bulletin> export_msgs(Encoding enctype, const impl::Messages& in, const std::string& tag, const dballe::ExporterOptions& opts=dballe::ExporterOptions());
+std::unique_ptr<wreport::Bulletin> export_msgs(Encoding enctype, const impl::Messages& in, const std::string& tag, const dballe::ExporterOptions& opts=dballe::ExporterOptions::defaults);
 #define test_export_msgs(...) wcallchecked(export_msgs(__VA_ARGS__))
 
 void track_different_msgs(const Message& msg1, const Message& msg2, const std::string& prefix);
@@ -210,8 +211,8 @@ struct TestCodec
     std::string fname;
     Encoding type;
     bool verbose = false;
-    ImporterOptions input_opts;
-    ExporterOptions output_opts;
+    impl::ImporterOptions input_opts;
+    impl::ExporterOptions output_opts;
     std::string expected_template;
     int expected_subsets = 1;
     int expected_min_vars = 1;

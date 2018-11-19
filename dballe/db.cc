@@ -4,6 +4,15 @@
 
 namespace dballe {
 
+const DBImportOptions DBImportOptions::defaults;
+
+std::unique_ptr<DBImportOptions> DBImportOptions::create()
+{
+    return std::unique_ptr<DBImportOptions>(new DBImportOptions);
+}
+
+const DBInsertOptions DBInsertOptions::defaults;
+
 /*
  * Cursor*
  */
@@ -19,7 +28,7 @@ Cursor::~Cursor()
 
 Transaction::~Transaction() {}
 
-void Transaction::import_messages(const std::vector<std::shared_ptr<Message>>& messages, const DBImportMessageOptions& opts)
+void Transaction::import_messages(const std::vector<std::shared_ptr<Message>>& messages, const DBImportOptions& opts)
 {
     for (const auto& i: messages)
         import_message(*i, opts);
@@ -94,19 +103,18 @@ void DB::remove_data(const Query& query)
     t->commit();
 }
 
-void DB::import_message(const Message& message, const DBImportMessageOptions& opts)
+void DB::import_message(const Message& message, const DBImportOptions& opts)
 {
     auto t = transaction();
     t->import_message(message, opts);
     t->commit();
 }
 
-void DB::import_messages(const std::vector<std::shared_ptr<Message>>& messages, const DBImportMessageOptions& opts)
+void DB::import_messages(const std::vector<std::shared_ptr<Message>>& messages, const DBImportOptions& opts)
 {
     auto t = transaction();
     t->import_messages(messages, opts);
     t->commit();
 }
-
 
 }

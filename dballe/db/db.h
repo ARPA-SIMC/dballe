@@ -21,6 +21,31 @@
  */
 
 namespace dballe {
+
+namespace impl {
+
+/// DBImportOptions with public constructor and copy, safe to use in dballe code but not accessible from the public API
+struct DBImportOptions : public dballe::DBImportOptions
+{
+    DBImportOptions() = default;
+    DBImportOptions(const DBImportOptions& o) = default;
+    DBImportOptions(DBImportOptions&& o) = default;
+    DBImportOptions& operator=(const DBImportOptions&) = default;
+    DBImportOptions& operator=(DBImportOptions&&) = default;
+};
+
+/// DBInsertOptions with public constructor and copy, safe to use in dballe code but not accessible from the public API
+struct DBInsertOptions : public dballe::DBInsertOptions
+{
+    DBInsertOptions() = default;
+    DBInsertOptions(const DBInsertOptions& o) = default;
+    DBInsertOptions(DBInsertOptions&& o) = default;
+    DBInsertOptions& operator=(const DBInsertOptions&) = default;
+    DBInsertOptions& operator=(DBInsertOptions&&) = default;
+};
+
+}
+
 namespace db {
 
 /// Format a db::Format value to a string

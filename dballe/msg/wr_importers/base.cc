@@ -47,7 +47,7 @@ void Importer::set(const wreport::Var& var, wreport::Varcode code, const Level& 
     msg->set(level, trange, code, var);
 }
 
-std::unique_ptr<Importer> Importer::createSat(const ImporterOptions&) { throw error_unimplemented("WB sat Importers"); }
+std::unique_ptr<Importer> Importer::createSat(const dballe::ImporterOptions&) { throw error_unimplemented("WB sat Importers"); }
 
 void WMOImporter::import_var(const Var& var)
 {
@@ -482,7 +482,7 @@ void SynopBaseImporter::set(std::unique_ptr<Interpreted> val)
         msg->set(val->level, val->trange, move(val->var));
 }
 
-SynopBaseImporter::SynopBaseImporter(const ImporterOptions& opts)
+SynopBaseImporter::SynopBaseImporter(const dballe::ImporterOptions& opts)
     : WMOImporter(opts)
 {
 }

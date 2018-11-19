@@ -112,7 +112,7 @@ this->add_method("summary_msg", [](Fixture& f) {
     BaseSummary<STATION> s;
 
     // Summarise a message
-    impl::Messages msgs = dballe::tests::read_msgs("bufr/synop-rad1.bufr", Encoding::BUFR, ImporterOptions::from_string("accurate"));
+    impl::Messages msgs = dballe::tests::read_msgs("bufr/synop-rad1.bufr", Encoding::BUFR, "accurate");
     s.add_messages(msgs);
 
     // Check its contents

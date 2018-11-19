@@ -42,7 +42,7 @@ protected:
     }
 
 public:
-    MetarImporter(const ImporterOptions& opts) : WMOImporter(opts) {}
+    MetarImporter(const dballe::ImporterOptions& opts) : WMOImporter(opts) {}
     virtual ~MetarImporter() {}
 
     virtual void init()
@@ -67,7 +67,7 @@ public:
     MessageType scanType(const Bulletin& bulletin) const { return MessageType::METAR; }
 };
 
-std::unique_ptr<Importer> Importer::createMetar(const ImporterOptions& opts)
+std::unique_ptr<Importer> Importer::createMetar(const dballe::ImporterOptions& opts)
 {
     return unique_ptr<Importer>(new MetarImporter(opts));
 }

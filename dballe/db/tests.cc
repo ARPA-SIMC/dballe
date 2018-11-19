@@ -16,7 +16,6 @@ using namespace std;
 
 namespace dballe {
 namespace tests {
-
 namespace {
 
 std::unique_ptr<dballe::sql::Connection> get_test_connection(const std::string& backend)

@@ -17,7 +17,7 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
-void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const DBImportMessageOptions& opts)
+void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const dballe::DBImportOptions& opts)
 {
     const impl::Message& msg = impl::Message::downcast(message);
 
@@ -83,7 +83,7 @@ void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const 
     }
 }
 
-void Transaction::import_message(const dballe::Message& message, const DBImportMessageOptions& opts)
+void Transaction::import_message(const dballe::Message& message, const dballe::DBImportOptions& opts)
 {
     Tracer<> trc(this->trc ? this->trc->trace_import(1) : nullptr);
 
@@ -95,7 +95,7 @@ void Transaction::import_message(const dballe::Message& message, const DBImportM
     batch.write_pending(trc);
 }
 
-void Transaction::import_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages, const DBImportMessageOptions& opts)
+void Transaction::import_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages, const dballe::DBImportOptions& opts)
 {
     Tracer<> trc(this->trc ? this->trc->trace_import(messages.size()) : nullptr);
 

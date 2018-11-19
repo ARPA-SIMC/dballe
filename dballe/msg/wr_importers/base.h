@@ -20,7 +20,7 @@ namespace wr {
 class Importer
 {
 protected:
-    const ImporterOptions& opts;
+    const dballe::ImporterOptions& opts;
     const wreport::Subset* subset;
     impl::Message* msg;
 
@@ -31,22 +31,22 @@ protected:
     void set(const wreport::Var& var, wreport::Varcode code, const Level& level, const Trange& trange);
 
 public:
-    Importer(const ImporterOptions& opts) : opts(opts) {}
+    Importer(const dballe::ImporterOptions& opts) : opts(opts) {}
     virtual ~Importer() {}
 
     virtual MessageType scanType(const wreport::Bulletin& bulletin) const = 0;
 
     void import(const wreport::Subset& subset, impl::Message& msg);
 
-    static std::unique_ptr<Importer> createSynop(const ImporterOptions&);
-    static std::unique_ptr<Importer> createShip(const ImporterOptions&);
-    static std::unique_ptr<Importer> createMetar(const ImporterOptions&);
-    static std::unique_ptr<Importer> createTemp(const ImporterOptions&);
-    static std::unique_ptr<Importer> createPilot(const ImporterOptions&);
-    static std::unique_ptr<Importer> createFlight(const ImporterOptions&);
-    static std::unique_ptr<Importer> createSat(const ImporterOptions&);
-    static std::unique_ptr<Importer> createPollution(const ImporterOptions&);
-    static std::unique_ptr<Importer> createGeneric(const ImporterOptions&);
+    static std::unique_ptr<Importer> createSynop(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer> createShip(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer> createMetar(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer> createTemp(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer> createPilot(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer> createFlight(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer> createSat(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer> createPollution(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer> createGeneric(const dballe::ImporterOptions&);
 };
 
 class WMOImporter : public Importer
@@ -63,7 +63,7 @@ protected:
     }
 
 public:
-    WMOImporter(const ImporterOptions& opts) : Importer(opts) {}
+    WMOImporter(const dballe::ImporterOptions& opts) : Importer(opts) {}
     virtual ~WMOImporter() {}
 };
 
@@ -220,7 +220,7 @@ protected:
     void set(std::unique_ptr<Interpreted> val);
 
 public:
-    SynopBaseImporter(const ImporterOptions& opts);
+    SynopBaseImporter(const dballe::ImporterOptions& opts);
     ~SynopBaseImporter();
 
     void init() override;

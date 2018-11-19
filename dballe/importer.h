@@ -15,18 +15,15 @@ struct Bulletin;
 namespace dballe {
 
 /**
- * Options to control message import
+ * Options to control message import.
+ *
+ * To maintain ABI stability and allow to add options to this class, code using
+ * the stable ABI cannot create objects, but need to use the create() static
+ * methods.
  */
 struct ImporterOptions
 {
     bool simplified = true;
-
-    /// Create new Options initialised with default values
-    ImporterOptions();
-    ImporterOptions(const ImporterOptions&) = default;
-    ImporterOptions(ImporterOptions&&) = default;
-    ImporterOptions& operator=(const ImporterOptions&) = default;
-    ImporterOptions& operator=(ImporterOptions&&) = default;
 
     bool operator==(const ImporterOptions&) const;
     bool operator!=(const ImporterOptions&) const;
@@ -37,8 +34,24 @@ struct ImporterOptions
     /// Generate a string summary of import options
     std::string to_string() const;
 
+    /// Create with default values
+    static std::unique_ptr<ImporterOptions> create();
+
     /// Opposite of to_string: create an Options from a string
-    static ImporterOptions from_string(const std::string& s);
+    static std::unique_ptr<ImporterOptions> create(const std::string& s);
+
+    /// Default importer options
+    static const ImporterOptions defaults;
+
+    friend class Importer;
+
+protected:
+    ImporterOptions() = default;
+    ImporterOptions(const std::string& s);
+    ImporterOptions(const ImporterOptions&) = default;
+    ImporterOptions(ImporterOptions&&) = default;
+    ImporterOptions& operator=(const ImporterOptions&) = default;
+    ImporterOptions& operator=(ImporterOptions&&) = default;
 };
 
 
@@ -102,7 +115,17 @@ public:
      * @param opts
      *   Options controlling import behaviour
      */
-    static std::unique_ptr<Importer> create(Encoding type, const ImporterOptions& opts=ImporterOptions());
+    static std::unique_ptr<Importer> create(Encoding type, const ImporterOptions& opts=ImporterOptions::defaults);
+
+    /**
+     * Instantiate an importer
+     *
+     * @param type
+     *   The input file type
+     * @param opts
+     *   Options controlling import behaviour
+     */
+    static std::unique_ptr<Importer> create(Encoding type, const std::string& opts);
 };
 
 }

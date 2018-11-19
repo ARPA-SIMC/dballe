@@ -21,7 +21,7 @@ struct Generic : public Template
 {
     Bulletin* bulletin;
 
-    Generic(const ExporterOptions& opts, const Messages& msgs)
+    Generic(const dballe::ExporterOptions& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
     virtual const char* name() const { return GENERIC_NAME; }
@@ -217,7 +217,7 @@ struct Generic : public Template
 void register_generic(TemplateRegistry& r)
 {
     r.register_factory(255, GENERIC_NAME, GENERIC_DESC,
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new Generic(opts, msgs));
             });
 }

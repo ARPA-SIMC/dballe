@@ -15,10 +15,6 @@ struct Bulletin;
 }
 
 namespace dballe {
-struct Query;
-struct BinaryMessage;
-struct Matcher;
-
 namespace cmdline {
 
 /**
@@ -148,7 +144,7 @@ struct ReaderOptions
 
 struct Filter
 {
-    ExporterOptions export_opts;
+    impl::ExporterOptions export_opts;
     int category = -1;
     int subcategory = -1;
     int checkdigit = -1;
@@ -189,7 +185,7 @@ protected:
     void read_file(const std::list<std::string>& fnames, Action& action);
 
 public:
-    ImporterOptions import_opts;
+    impl::ImporterOptions import_opts;
     Filter filter;
     bool verbose = false;
     unsigned count_successes = 0;

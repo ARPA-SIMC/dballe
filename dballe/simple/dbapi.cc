@@ -22,18 +22,18 @@ struct InputFile
     Importer* importer = nullptr;
     std::vector<std::shared_ptr<dballe::Message>> current_msg;
     unsigned current_msg_idx = 0;
-    DBImportMessageOptions opts;
+    impl::DBImportOptions opts;
 
     InputFile(Encoding format, bool simplified)
     {
-        ImporterOptions importer_options;
+        impl::ImporterOptions importer_options;
         importer_options.simplified = simplified;
         input = File::create(format, stdin, false, "(stdin)").release();
         importer = Importer::create(format, importer_options).release();
     }
     InputFile(const char* fname, Encoding format, bool simplified)
     {
-        ImporterOptions importer_options;
+        impl::ImporterOptions importer_options;
         importer_options.simplified = simplified;
         input = File::create(format, fname, "rb").release();
         importer = Importer::create(format, importer_options).release();
@@ -552,7 +552,7 @@ bool DbAPI::messages_read_next()
 void DbAPI::messages_write_next(const char* template_name)
 {
     // Build an exporter for this template
-    ExporterOptions options;
+    impl::ExporterOptions options;
     if (template_name) options.template_name = template_name;
     File& out = *(output_file->output);
     auto exporter = Exporter::create(out.encoding(), options);

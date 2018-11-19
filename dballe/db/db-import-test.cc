@@ -15,7 +15,7 @@ using namespace std;
 
 namespace {
 
-static DBImportMessageOptions default_opts;
+static impl::DBImportOptions default_opts;
 
 unsigned diff_msg(std::shared_ptr<Message> first, std::shared_ptr<Message> second, const char* tag)
 {
@@ -227,9 +227,9 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             }
         });
         this->add_method("import_dirty", [](Fixture& f) {
-            DBImportMessageOptions opts;
-            opts.update_station = true;
-            opts.overwrite = true;
+            auto opts = DBImportOptions::create();
+            opts->update_station = true;
+            opts->overwrite = true;
 
             // Try importing into a dirty database, no attributes involved
             auto add_common = [](impl::Message& msg) {
@@ -270,7 +270,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
 
             // Import the first message
             f.tr->remove_all();
-            f.tr->import_message(*first, opts);
+            f.tr->import_message(*first, *opts);
 
             // Export and check
             impl::Messages export_first = dballe::tests::messages_from_db(f.tr, "rep_memo=synop");
@@ -278,7 +278,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             wassert(actual(diff_msg(first, export_first[0], "first")) == 0);
 
             // Import the second message
-            f.tr->import_message(*second, opts);
+            f.tr->import_message(*second, *opts);
 
             // Export and check
             impl::Messages export_second = dballe::tests::messages_from_db(f.tr, "rep_memo=synop");
@@ -289,7 +289,7 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             f.tr->clear_cached_state();
 
             // Import the third message
-            f.tr->import_message(*third, opts);
+            f.tr->import_message(*third, *opts);
 
             // Export and check
             impl::Messages export_third = dballe::tests::messages_from_db(f.tr, "rep_memo=synop");

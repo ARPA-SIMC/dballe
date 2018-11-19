@@ -319,7 +319,7 @@ void MsgAPI::flushMessage()
     {
         if (!exporter)
         {
-            ExporterOptions opts;
+            impl::ExporterOptions opts;
             opts.template_name = exporter_template;
             exporter = Exporter::create(file->encoding(), opts).release();
         }

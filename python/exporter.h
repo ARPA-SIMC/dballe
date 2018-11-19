@@ -27,7 +27,7 @@ namespace python {
 /**
  * Create a new dpy_Exporter
  */
-dpy_Exporter* exporter_create(Encoding type, const ExporterOptions& opts=ExporterOptions());
+dpy_Exporter* exporter_create(Encoding type, const dballe::ExporterOptions& opts=dballe::ExporterOptions::defaults);
 
 void register_exporter(PyObject* m);
 

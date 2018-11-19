@@ -22,7 +22,7 @@ struct Metar : public Template
 {
     bool is_crex;
 
-    Metar(const ExporterOptions& opts, const Messages& msgs)
+    Metar(const dballe::ExporterOptions& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
     virtual const char* name() const { return METAR_NAME; }
@@ -112,7 +112,7 @@ struct Metar : public Template
 void register_metar(TemplateRegistry& r)
 {
     r.register_factory(0, METAR_NAME, METAR_DESC,
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new Metar(opts, msgs));
             });
 }

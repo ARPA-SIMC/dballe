@@ -21,7 +21,7 @@ struct Buoy : public Template
 {
     bool is_crex;
 
-    Buoy(const ExporterOptions& opts, const Messages& msgs)
+    Buoy(const dballe::ExporterOptions& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
     virtual const char* name() const { return BUOY_NAME; }
@@ -137,7 +137,7 @@ struct Buoy : public Template
 void register_buoy(TemplateRegistry& r)
 {
     r.register_factory(1, BUOY_NAME, BUOY_DESC,
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new Buoy(opts, msgs));
             });
 }

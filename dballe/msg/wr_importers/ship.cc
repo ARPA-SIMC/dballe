@@ -20,7 +20,7 @@ protected:
     virtual void import_var(const Var& var);
 
 public:
-    ShipImporter(const ImporterOptions& opts)
+    ShipImporter(const dballe::ImporterOptions& opts)
         : SynopBaseImporter(opts) {}
     virtual ~ShipImporter() {}
 
@@ -103,7 +103,7 @@ void ShipImporter::import_var(const Var& var)
 
 } // anonynmous namespace
 
-std::unique_ptr<Importer> Importer::createShip(const ImporterOptions& opts)
+std::unique_ptr<Importer> Importer::createShip(const dballe::ImporterOptions& opts)
 {
     return unique_ptr<Importer>(new ShipImporter(opts));
 }

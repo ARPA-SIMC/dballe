@@ -11,8 +11,13 @@ using namespace std;
 
 namespace dballe {
 
-ExporterOptions::ExporterOptions()
-        : centre(MISSING_INT), subcentre(MISSING_INT), application(MISSING_INT) {}
+const ExporterOptions ExporterOptions::defaults;
+
+std::unique_ptr<ExporterOptions> ExporterOptions::create()
+{
+    return std::unique_ptr<ExporterOptions>(new ExporterOptions);
+}
+
 
 bool ExporterOptions::operator==(const ExporterOptions& o) const
 {

@@ -13,7 +13,7 @@
 #include <iosfwd>
 
 namespace dballe {
-namespace values {
+namespace impl {
 
 template<typename Value>
 class ValuesBase
@@ -170,7 +170,7 @@ struct DBValues;
 /**
  * Collection of Value objects, indexed by wreport::Varcode
  */
-struct Values : public values::ValuesBase<Value>
+struct Values : public impl::ValuesBase<Value>
 {
     using ValuesBase<Value>::ValuesBase;
     explicit Values(const DBValues&);
@@ -184,7 +184,7 @@ struct Values : public values::ValuesBase<Value>
 /**
  * Collection of DBValue objects, indexed by wreport::Varcode
  */
-struct DBValues : public values::ValuesBase<DBValue>
+struct DBValues : public impl::ValuesBase<DBValue>
 {
 public:
     using ValuesBase<DBValue>::ValuesBase;

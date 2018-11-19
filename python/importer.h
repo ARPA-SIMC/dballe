@@ -42,7 +42,7 @@ namespace python {
 /**
  * Create a new dpy_Importer
  */
-dpy_Importer* importer_create(Encoding encoding, const ImporterOptions& opts=ImporterOptions());
+dpy_Importer* importer_create(Encoding encoding, const dballe::ImporterOptions& opts=dballe::ImporterOptions::defaults);
 
 void register_importer(PyObject* m);
 

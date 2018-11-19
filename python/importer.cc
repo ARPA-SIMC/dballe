@@ -6,6 +6,7 @@
 #include "file.h"
 #include "message.h"
 #include "dballe/file.h"
+#include "dballe/msg/msg.h"
 #include "impl-utils.h"
 
 using namespace std;
@@ -232,7 +233,7 @@ Example usage::
             return -1;
 
         try {
-            ImporterOptions opts;
+            impl::ImporterOptions opts;
             if (simplified != -1)
                 opts.simplified = simplified;
             self->importer = Importer::create(File::parse_encoding(encoding), opts).release();
@@ -249,7 +250,7 @@ Definition* definition = nullptr;
 namespace dballe {
 namespace python {
 
-dpy_Importer* importer_create(Encoding encoding, const ImporterOptions& opts)
+dpy_Importer* importer_create(Encoding encoding, const dballe::ImporterOptions& opts)
 {
     dpy_Importer* res = PyObject_New(dpy_Importer, dpy_Importer_Type);
     if (!res) return nullptr;

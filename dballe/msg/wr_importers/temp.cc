@@ -45,7 +45,7 @@ protected:
     void import_group(unsigned start, unsigned length);
 
 public:
-    TempImporter(const ImporterOptions& opts) : WMOImporter(opts) {}
+    TempImporter(const dballe::ImporterOptions& opts) : WMOImporter(opts) {}
     virtual ~TempImporter() {}
 
     virtual void init()
@@ -217,7 +217,7 @@ public:
     }
 };
 
-std::unique_ptr<Importer> Importer::createTemp(const ImporterOptions& opts)
+std::unique_ptr<Importer> Importer::createTemp(const dballe::ImporterOptions& opts)
 {
     return unique_ptr<Importer>(new TempImporter(opts));
 }

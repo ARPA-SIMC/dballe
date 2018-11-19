@@ -23,7 +23,7 @@ namespace msg {
 class WRImporter : public Importer
 {
 public:
-    WRImporter(const ImporterOptions& opts);
+    WRImporter(const dballe::ImporterOptions& opts);
 
     /**
      * Import a decoded BUFR/CREX message
@@ -48,7 +48,7 @@ public:
 class BufrImporter : public WRImporter
 {
 public:
-    BufrImporter(const ImporterOptions& opts=ImporterOptions());
+    BufrImporter(const dballe::ImporterOptions& opts=dballe::ImporterOptions::defaults);
     virtual ~BufrImporter();
 
     Encoding encoding() const override { return Encoding::BUFR; }
@@ -59,7 +59,7 @@ public:
 class CrexImporter : public WRImporter
 {
 public:
-    CrexImporter(const ImporterOptions& opts=ImporterOptions());
+    CrexImporter(const dballe::ImporterOptions& opts=dballe::ImporterOptions::defaults);
     virtual ~CrexImporter();
 
     Encoding encoding() const override { return Encoding::CREX; }
@@ -74,7 +74,7 @@ class Template;
 class WRExporter : public Exporter
 {
 public:
-    WRExporter(const ExporterOptions& opts);
+    WRExporter(const dballe::ExporterOptions& opts);
 
     /**
      * Import a decoded BUFR/CREX message
@@ -90,7 +90,7 @@ public:
 class BufrExporter : public WRExporter
 {
 public:
-    BufrExporter(const ExporterOptions& opts=ExporterOptions());
+    BufrExporter(const dballe::ExporterOptions& opts=dballe::ExporterOptions::defaults);
     virtual ~BufrExporter();
 
     virtual std::string to_binary(const Messages& msgs) const;
@@ -100,7 +100,7 @@ public:
 class CrexExporter : public WRExporter
 {
 public:
-    CrexExporter(const ExporterOptions& opts=ExporterOptions());
+    CrexExporter(const dballe::ExporterOptions& opts=dballe::ExporterOptions::defaults);
     virtual ~CrexExporter();
 
     virtual std::string to_binary(const Messages& msgs) const;
@@ -149,13 +149,13 @@ protected:
     void do_D01023() const;
 
 public:
-    const ExporterOptions& opts;
+    const dballe::ExporterOptions& opts;
     const Messages& msgs;
     const Message* msg = 0;     // Message being read
     const msg::Context* c_gnd_instant = 0;
     wreport::Subset* subset = 0; // Subset being written
 
-    Template(const ExporterOptions& opts, const Messages& msgs)
+    Template(const dballe::ExporterOptions& opts, const Messages& msgs)
         : opts(opts), msgs(msgs) {}
     virtual ~Template() {}
 
@@ -166,7 +166,7 @@ public:
 
 struct TemplateFactory
 {
-    typedef std::function<std::unique_ptr<Template>(const ExporterOptions& opts, const Messages& msgs)> factory_func;
+    typedef std::function<std::unique_ptr<Template>(const dballe::ExporterOptions& opts, const Messages& msgs)> factory_func;
 
     unsigned data_category = MISSING_INT;
     std::string name;

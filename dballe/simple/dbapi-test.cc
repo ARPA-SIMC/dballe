@@ -871,8 +871,8 @@ this->add_method("perf_data", [](Fixture& f) {
 });
 
 this->add_method("perf_read_attrs", [](Fixture& f) {
-    auto msgs = read_msgs("bufr/temp-gts1.bufr", Encoding::BUFR, ImporterOptions::from_string("accurate"));
-    wassert(f.tr->import_messages(msgs, DBImportMessageOptions()));
+    auto msgs = read_msgs("bufr/temp-gts1.bufr", Encoding::BUFR, impl::ImporterOptions("accurate"));
+    wassert(f.tr->import_messages(msgs, DBImportOptions::defaults));
     wassert(f.tr->clear_cached_state());
 
     // Readonly test session

@@ -6,7 +6,7 @@ using namespace std;
 using namespace wreport;
 
 namespace dballe {
-namespace values {
+namespace impl {
 
 template<typename Value>
 bool ValuesBase<Value>::operator==(const ValuesBase<Value>& o) const

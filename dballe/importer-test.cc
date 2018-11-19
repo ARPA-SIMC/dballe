@@ -1,4 +1,5 @@
 #include "core/tests.h"
+#include "msg/msg.h"
 #include "importer.h"
 
 using namespace wreport;
@@ -19,13 +20,13 @@ void Tests::register_tests()
 {
 
 add_method("options", []() {
-    ImporterOptions simplified;
-    ImporterOptions accurate;
+    impl::ImporterOptions simplified;
+    impl::ImporterOptions accurate;
     accurate.simplified = false;
 
-    wassert(actual(ImporterOptions::from_string("") == simplified).istrue());
-    wassert(actual(ImporterOptions::from_string("simplified") == simplified).istrue());
-    wassert(actual(ImporterOptions::from_string("accurate") == accurate).istrue());
+    wassert(actual(impl::ImporterOptions("") == simplified).istrue());
+    wassert(actual(impl::ImporterOptions("simplified") == simplified).istrue());
+    wassert(actual(impl::ImporterOptions("accurate") == accurate).istrue());
 });
 
 }

@@ -93,6 +93,13 @@ impl::Messages read_msgs(const char* filename, Encoding type, const ImporterOpti
     return importer->from_binary(raw);
 }
 
+impl::Messages read_msgs(const char* filename, Encoding type, const std::string& opts)
+{
+    BinaryMessage raw = wcallchecked(read_rawmsg(filename, type));
+    std::unique_ptr<Importer> importer = Importer::create(type, opts);
+    return importer->from_binary(raw);
+}
+
 impl::Messages read_msgs_csv(const char* filename)
 {
     std::string fname = datafile(filename);
@@ -716,7 +723,7 @@ void TestCodec::run_convert(const std::string& tplname)
 
     // Export
     if (verbose) cerr << "Exporting with template " << tplname << " and options " << output_opts.to_string() << endl;
-    ExporterOptions output_opts = this->output_opts;
+    impl::ExporterOptions output_opts = this->output_opts;
     output_opts.template_name = tplname;
     TestMessage exported(type, "exported");
     try {

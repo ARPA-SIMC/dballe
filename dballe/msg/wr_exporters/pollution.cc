@@ -47,7 +47,7 @@ static double intexp10(unsigned x)
 
 struct Pollution : public Template
 {
-    Pollution(const ExporterOptions& opts, const Messages& msgs)
+    Pollution(const dballe::ExporterOptions& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
     virtual const char* name() const { return POLLUTION_NAME; }
@@ -222,7 +222,7 @@ struct Pollution : public Template
 void register_pollution(TemplateRegistry& r)
 {
     r.register_factory(8, POLLUTION_NAME, POLLUTION_DESC,
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new Pollution(opts, msgs));
             });
 }

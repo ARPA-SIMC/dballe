@@ -42,7 +42,7 @@ class Tests : public TestCase
     {
         add_method("prec_" + fname, [=]() {
             std::string pathname = "bufr/" + fname;
-            ImporterOptions opts;
+            impl::ImporterOptions opts;
             opts.simplified = false;
             impl::Messages msgs = wcallchecked(read_msgs(pathname.c_str(), Encoding::BUFR, opts));
             m(msgs);
@@ -53,7 +53,7 @@ class Tests : public TestCase
     {
         add_method("simp_" + fname, [=]() {
             std::string pathname = "bufr/" + fname;
-            ImporterOptions opts;
+            impl::ImporterOptions opts;
             opts.simplified = true;
             impl::Messages msgs = read_msgs(pathname.c_str(), Encoding::BUFR, opts);
             m(msgs);

@@ -41,7 +41,7 @@ this->add_method("import", [](Fixture& f) {
     // Import a synop
     cmdline::ReaderOptions opts;
     cmdline::Reader reader(opts);
-    wassert(actual(dbadb.do_import(dballe::tests::datafile("bufr/obs0-1.22.bufr"), reader, DBImportMessageOptions())) == 0);
+    wassert(actual(dbadb.do_import(dballe::tests::datafile("bufr/obs0-1.22.bufr"), reader, DBImportOptions::defaults)) == 0);
 
     // Export forcing report as temp
     core::Query query;
@@ -73,7 +73,7 @@ this->add_method("issue62", [](Fixture& f) {
     // Import a synop
     cmdline::ReaderOptions opts;
     cmdline::Reader reader(opts);
-    wassert(actual(dbadb.do_import(dballe::tests::datafile("bufr/issue62.bufr"), reader, DBImportMessageOptions())) == 0);
+    wassert(actual(dbadb.do_import(dballe::tests::datafile("bufr/issue62.bufr"), reader, DBImportOptions::defaults)) == 0);
 
     // Export
     core::Query query;

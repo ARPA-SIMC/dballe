@@ -4,6 +4,7 @@
 #include "exporter.h"
 #include "message.h"
 #include "dballe/file.h"
+#include "dballe/msg/msg.h"
 #include "impl-utils.h"
 
 using namespace std;
@@ -106,7 +107,7 @@ the contents of a `dballe.Message`_.
             return -1;
 
         try {
-            ExporterOptions opts;
+            impl::ExporterOptions opts;
             if (template_name) opts.template_name = template_name;
             if (centre != -1) opts.centre = centre;
             if (subcentre != -1) opts.subcentre = subcentre;

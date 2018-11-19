@@ -548,7 +548,7 @@ struct attr_remove_data : MethKwargs<Impl>
 };
 
 template<typename DB>
-static unsigned db_load_file_enc(DB& db, Encoding encoding, FILE* file, bool close_on_exit, const std::string& name, DBImportMessageOptions& opts)
+static unsigned db_load_file_enc(DB& db, Encoding encoding, FILE* file, bool close_on_exit, const std::string& name, DBImportOptions& opts)
 {
     std::unique_ptr<File> f = File::create(encoding, file, close_on_exit, name);
     std::unique_ptr<Importer> imp = Importer::create(f->encoding());
@@ -563,7 +563,7 @@ static unsigned db_load_file_enc(DB& db, Encoding encoding, FILE* file, bool clo
 }
 
 template<typename DB>
-static unsigned db_load_file(DB& db, FILE* file, bool close_on_exit, const std::string& name, DBImportMessageOptions& opts)
+static unsigned db_load_file(DB& db, FILE* file, bool close_on_exit, const std::string& name, DBImportOptions& opts)
 {
     std::unique_ptr<File> f = File::create(file, close_on_exit, name);
     std::unique_ptr<Importer> imp = Importer::create(f->encoding());
@@ -600,12 +600,12 @@ based on the first byte of the file.
             return nullptr;
 
         try {
-            DBImportMessageOptions opts;
+            auto opts = DBImportOptions::create();
             string repr = object_repr(obj);
 
-            opts.import_attributes = attrs;
-            opts.update_station = full_pseudoana;
-            opts.overwrite = overwrite;
+            opts->import_attributes = attrs;
+            opts->update_station = full_pseudoana;
+            opts->overwrite = overwrite;
 
             int fileno = file_get_fileno(obj);
             if (fileno == -1)
@@ -622,9 +622,9 @@ based on the first byte of the file.
                 unsigned count;
                 if (encoding)
                 {
-                    count = db_load_file_enc(*self->db, File::parse_encoding(encoding), f, true, repr, opts);
+                    count = db_load_file_enc(*self->db, File::parse_encoding(encoding), f, true, repr, *opts);
                 } else
-                    count = db_load_file(*self->db, f, true, repr, opts);
+                    count = db_load_file(*self->db, f, true, repr, *opts);
                 return PyLong_FromLong(count);
             } else {
                 // Duplicate the file descriptor because both python and libc will want to
@@ -647,9 +647,9 @@ based on the first byte of the file.
                 unsigned count;
                 if (encoding)
                 {
-                    count = db_load_file_enc(*self->db, File::parse_encoding(encoding), f, true, repr, opts);
+                    count = db_load_file_enc(*self->db, File::parse_encoding(encoding), f, true, repr, *opts);
                 } else
-                    count = db_load_file(*self->db, f, true, repr, opts);
+                    count = db_load_file(*self->db, f, true, repr, *opts);
                 return PyLong_FromLong(count);
             }
         } DBALLE_CATCH_RETURN_PYO
@@ -690,7 +690,7 @@ struct export_to_file : MethKwargs<Impl>
             {
                 std::string filename = string_from_python(file);
                 std::unique_ptr<File> out = File::create(encoding, filename, "wb");
-                ExporterOptions opts;
+                impl::ExporterOptions opts;
                 if (as_generic)
                     opts.template_name = "generic";
                 auto exporter = Exporter::create(out->encoding(), opts);
@@ -704,7 +704,7 @@ struct export_to_file : MethKwargs<Impl>
                 gil.lock();
                 Py_RETURN_NONE;
             } else {
-                ExporterOptions opts;
+                impl::ExporterOptions opts;
                 if (as_generic)
                     opts.template_name = "generic";
                 auto exporter = Exporter::create(encoding, opts);
@@ -775,15 +775,15 @@ which contains data already present in the database causes the import to fail.
             return nullptr;
 
         try {
-            DBImportMessageOptions opts;
-            if (report) opts.report = report;
-            opts.import_attributes = import_attributes;
-            opts.update_station = update_station;
-            opts.overwrite = overwrite;
+            auto opts = DBImportOptions::create();
+            if (report) opts->report = report;
+            opts->import_attributes = import_attributes;
+            opts->update_station = update_station;
+            opts->overwrite = overwrite;
 
             if (dpy_Message_Check(obj))
             {
-                self->db->import_message(*(((dpy_Message*)obj)->message), opts);
+                self->db->import_message(*(((dpy_Message*)obj)->message), *opts);
                 Py_RETURN_NONE;
             }
 
@@ -793,7 +793,7 @@ which contains data already present in the database causes the import to fail.
                 while (auto binmsg = impf->file->file->file().read())
                 {
                     auto messages = impf->importer->importer->from_binary(binmsg);
-                    self->db->import_messages(messages, opts);
+                    self->db->import_messages(messages, *opts);
                 }
                 Py_RETURN_NONE;
             }
@@ -813,7 +813,7 @@ which contains data already present in the database causes the import to fail.
                     if (!dpy_Message_Check(o)) throw_typeerror();
                     messages.push_back(((dpy_Message*)o.get())->message);
                 }
-                self->db->import_messages(messages, opts);
+                self->db->import_messages(messages, *opts);
                 Py_RETURN_NONE;
             }
 
@@ -824,7 +824,7 @@ which contains data already present in the database causes the import to fail.
                 while (pyo_unique_ptr item = PyIter_Next(iterator))
                 {
                     if (!dpy_Message_Check(item)) throw_typeerror();
-                    self->db->import_message(*(((dpy_Message*)item.get())->message), opts);
+                    self->db->import_message(*(((dpy_Message*)item.get())->message), *opts);
                 }
                 if (PyErr_Occurred()) return nullptr;
                 Py_RETURN_NONE;

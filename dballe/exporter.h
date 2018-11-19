@@ -15,21 +15,23 @@ struct Bulletin;
 namespace dballe {
 
 /**
- * Options to control message export
+ * Options to control message export.
+ *
+ * To maintain ABI stability and allow to add options to this class, code using
+ * the stable ABI cannot create objects, but need to use the create() static
+ * methods.
  */
 struct ExporterOptions
 {
     /// Name of template to use for output (leave empty to autodetect)
     std::string template_name;
     /// Originating centre
-    int centre;
+    int centre = MISSING_INT;
     /// Originating subcentre
-    int subcentre;
+    int subcentre = MISSING_INT;
     /// Originating application ID
-    int application;
+    int application = MISSING_INT;
 
-    /// Create new Options initialised with default values
-    ExporterOptions();
 
     bool operator==(const ExporterOptions&) const;
     bool operator!=(const ExporterOptions&) const;
@@ -39,6 +41,21 @@ struct ExporterOptions
 
     /// Generate a string summary of export options
     std::string to_string() const;
+
+    /// Create with default values
+    static std::unique_ptr<ExporterOptions> create();
+
+    static const ExporterOptions defaults;
+
+    friend class Exporter;
+
+protected:
+    /// Create new Options initialised with default values
+    ExporterOptions() = default;
+    ExporterOptions(const ExporterOptions&) = default;
+    ExporterOptions(ExporterOptions&&) = default;
+    ExporterOptions& operator=(const ExporterOptions&) = default;
+    ExporterOptions& operator=(ExporterOptions&&) = default;
 };
 
 
@@ -85,7 +102,7 @@ public:
 
 
     /// Instantiate the right importer for the given type
-    static std::unique_ptr<Exporter> create(Encoding type, const ExporterOptions& opts=ExporterOptions());
+    static std::unique_ptr<Exporter> create(Encoding type, const ExporterOptions& opts=ExporterOptions::defaults);
 };
 
 }

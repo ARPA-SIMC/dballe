@@ -70,7 +70,8 @@ struct ExporterOptions;
 struct Exporter;
 
 struct DB;
-struct DBImportMessageOptions;
+struct DBImportOptions;
+struct DBInsertOptions;
 struct Transaction;
 struct Cursor;
 struct CursorStation;

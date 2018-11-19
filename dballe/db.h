@@ -9,9 +9,12 @@
 namespace dballe {
 
 /**
- * Options controlling how messages are imported in the database
+ * Options controlling how messages are imported in the database.
+ *
+ * To allow to add members this structure without breaking the ABI, creation of
+ * new instances is restricted to DBImportOptions::create().
  */
-struct DBImportMessageOptions
+struct DBImportOptions
 {
     /**
      * Report name to use to import data.
@@ -41,6 +44,51 @@ struct DBImportMessageOptions
      * contains data already present in the database causes the import to fail.
      */
     bool overwrite = false;
+
+    static std::unique_ptr<DBImportOptions> create();
+
+    static const DBImportOptions defaults;
+
+    friend class DB;
+    friend class Transaction;
+protected:
+    DBImportOptions() = default;
+    DBImportOptions(const DBImportOptions&) = default;
+    DBImportOptions(DBImportOptions&&) = default;
+    DBImportOptions& operator=(const DBImportOptions&) = default;
+    DBImportOptions& operator=(DBImportOptions&&) = default;
+};
+
+
+/**
+ * Options controlling how values are inserted in the database
+ *
+ * To allow to add members this structure without breaking the ABI, creation of
+ * new instances is restricted to DBInsertOptions::create().
+ */
+struct DBInsertOptions
+{
+    /// If true, then existing data can be rewritten, else data can only be added.
+    bool can_replace = false;
+
+    /**
+     * If false, it will not create a missing station record, and only data for
+     * existing stations can be added. If true, then if we are inserting data
+     * for a station that does not yet exists in the database, it will be
+     * created.
+     */
+    bool can_add_stations = true;
+
+    static std::unique_ptr<DBInsertOptions> create();
+
+    static const DBInsertOptions defaults;
+
+protected:
+    DBInsertOptions() = default;
+    DBInsertOptions(const DBInsertOptions&) = default;
+    DBInsertOptions(DBInsertOptions&&) = default;
+    DBInsertOptions& operator=(const DBInsertOptions&) = default;
+    DBInsertOptions& operator=(DBInsertOptions&&) = default;
 };
 
 
@@ -150,7 +198,10 @@ public:
      * @param opts
      *   Options controlling the import process
      */
-    virtual void import_message(const Message& message, const DBImportMessageOptions& opts=DBImportMessageOptions()) = 0;
+    virtual void import_message(const Message& message, const DBImportOptions& opts) = 0;
+
+    /// import_message version with default options
+    void import_message(const Message& message);
 
     /**
      * Import Messages into the DB-All.e database
@@ -160,7 +211,10 @@ public:
      * @param opts
      *   Options controlling the import process
      */
-    virtual void import_messages(const std::vector<std::shared_ptr<Message>>& messages, const DBImportMessageOptions& opts=DBImportMessageOptions());
+    virtual void import_messages(const std::vector<std::shared_ptr<Message>>& messages, const DBImportOptions& opts);
+
+    /// import_messages version with default options
+    void import_messages(const std::vector<std::shared_ptr<Message>>& messages);
 };
 
 
@@ -272,7 +326,7 @@ struct DB: public std::enable_shared_from_this<DB>
      * @param opts
      *   Options controlling the import process
      */
-    void import_message(const Message& message, const DBImportMessageOptions& opts=DBImportMessageOptions());
+    void import_message(const Message& message, const DBImportOptions& opts=DBImportOptions::defaults);
 
     /**
      * Import Messages into the DB-All.e database
@@ -282,7 +336,7 @@ struct DB: public std::enable_shared_from_this<DB>
      * @param opts
      *   Options controlling the import process
      */
-    void import_messages(const std::vector<std::shared_ptr<Message>>& messages, const DBImportMessageOptions& opts=DBImportMessageOptions());
+    void import_messages(const std::vector<std::shared_ptr<Message>>& messages, const DBImportOptions& opts=DBImportOptions::defaults);
 };
 
 }

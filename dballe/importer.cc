@@ -11,7 +11,12 @@ using namespace std;
 
 namespace dballe {
 
-ImporterOptions::ImporterOptions() {}
+const ImporterOptions ImporterOptions::defaults;
+
+ImporterOptions::ImporterOptions(const std::string& s)
+    : simplified(s != "accurate")
+{
+}
 
 bool ImporterOptions::operator==(const ImporterOptions& o) const
 {
@@ -36,14 +41,14 @@ std::string ImporterOptions::to_string() const
     return res;
 }
 
-ImporterOptions ImporterOptions::from_string(const std::string& s)
+std::unique_ptr<ImporterOptions> ImporterOptions::create()
 {
-    ImporterOptions res;
-    if (s.empty()) return res;
-    if (s == "simplified") return res;
-    if (s == "accurate")
-        res.simplified = false;
-    return res;
+    return std::unique_ptr<ImporterOptions>(new ImporterOptions);
+}
+
+std::unique_ptr<ImporterOptions> ImporterOptions::create(const std::string& s)
+{
+    return std::unique_ptr<ImporterOptions>(new ImporterOptions(s));
 }
 
 
@@ -76,5 +81,9 @@ std::unique_ptr<Importer> Importer::create(Encoding type, const ImporterOptions&
     }
 }
 
+std::unique_ptr<Importer> Importer::create(Encoding type, const std::string& opts)
+{
+    return Importer::create(type, ImporterOptions(opts));
+}
 
 }

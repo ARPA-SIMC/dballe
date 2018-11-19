@@ -301,23 +301,23 @@ struct ImportCmd : public DatabaseCmd
         reader.import_opts.simplified = !op_precise_import;
 
         // Configure the importer
-        DBImportMessageOptions opts;
+        auto opts = DBImportOptions::create();
         if (op_overwrite)
-            opts.overwrite = true;
+            opts->overwrite = true;
         if (op_fast)
             setenv("DBA_INSECURE_SQLITE", "true", true);
         if (!op_no_attrs)
-            opts.import_attributes = true;
+            opts->import_attributes = true;
         if (op_full_pseudoana)
-            opts.update_station = true;
+            opts->update_station = true;
 
         auto db = connect();
 
         if (strcmp(op_report, "") != 0)
-            opts.report = op_report;
+            opts->report = op_report;
 
         Dbadb dbadb(*db);
-        return dbadb.do_import(get_filenames(optCon), reader, opts);
+        return dbadb.do_import(get_filenames(optCon), reader, *opts);
     }
 };
 

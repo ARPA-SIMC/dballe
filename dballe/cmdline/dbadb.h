@@ -29,10 +29,10 @@ public:
     int do_export_dump(const Query& query, FILE* out);
 
     /// Import the given files
-    int do_import(const std::list<std::string>& fnames, Reader& reader, const DBImportMessageOptions& opts);
+    int do_import(const std::list<std::string>& fnames, Reader& reader, const DBImportOptions& opts);
 
     /// Import one file
-    int do_import(const std::string& fname, Reader& reader, const DBImportMessageOptions& opts);
+    int do_import(const std::string& fname, Reader& reader, const DBImportOptions& opts);
 
     /// Export messages writing them to the givne file
     int do_export(const Query& query, File& file, const char* output_template=NULL, const char* forced_repmemo=NULL);

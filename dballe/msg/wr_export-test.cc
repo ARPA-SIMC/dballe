@@ -533,7 +533,7 @@ class Tests : public TestCase
             int i;
             std::unique_ptr<Exporter> exporter;
             exporter = Exporter::create(Encoding::BUFR/*, const Options& opts=Options()*/);
-            ImporterOptions import_opts;
+            impl::ImporterOptions import_opts;
             import_opts.simplified = false;
             std::unique_ptr<Importer> importer = Importer::create(Encoding::BUFR, import_opts);
 
@@ -580,7 +580,7 @@ class Tests : public TestCase
         add_method("old_pilot1", []() {
             // Test that pilot subtype is set correctly
             impl::Messages msgs = read_msgs("bufr/obs2-91.2.bufr", Encoding::BUFR);
-            ExporterOptions opts;
+            impl::ExporterOptions opts;
             opts.template_name = "pilot-wmo";
             unique_ptr<Bulletin> bulletin = test_export_msgs(Encoding::BUFR, msgs, "pilotwmo", opts);
             wassert(actual(bulletin->data_category) == 2);
@@ -628,7 +628,7 @@ class Tests : public TestCase
             wassert(actual(c).istrue());
 
             // Convert to WMO template
-            ExporterOptions output_opts;
+            impl::ExporterOptions output_opts;
             output_opts.template_name = "pilot-wmo";
             //if (verbose) cerr << "Exporting " << output_opts.to_string() << endl;
             std::unique_ptr<Bulletin> bulletin = test_export_msgs(Encoding::BUFR, msgs1, "towmo", output_opts);
@@ -648,7 +648,7 @@ class Tests : public TestCase
             wassert(actual(msgs1.size()) == 1);
 
             // Convert to CREX
-            ExporterOptions output_opts;
+            impl::ExporterOptions output_opts;
             output_opts.template_name = "temp-wmo";
             std::unique_ptr<Bulletin> bulletin = test_export_msgs(Encoding::CREX, msgs1, "tocrex", output_opts);
 
@@ -661,7 +661,7 @@ class Tests : public TestCase
         add_method("old_ship1", []() {
             // Test that temp ship subtype is set correctly
             impl::Messages msgs = read_msgs("bufr/obs2-102.1.bufr", Encoding::BUFR);
-            ExporterOptions opts;
+            impl::ExporterOptions opts;
             opts.template_name = "temp-wmo";
             unique_ptr<Bulletin> bulletin = test_export_msgs(Encoding::BUFR, msgs, "tempship", opts);
             wassert(actual(bulletin->data_category) == 2);

@@ -19,10 +19,10 @@ namespace {
 struct Importer : public Action
 {
     dballe::DB& db;
-    DBImportMessageOptions opts;
+    const DBImportOptions& opts;
     std::shared_ptr<dballe::Transaction> transaction;
 
-    Importer(db::DB& db) : db(db) {}
+    Importer(db::DB& db, const DBImportOptions& opts) : db(db), opts(opts) {}
 
     virtual bool operator()(const cmdline::Item& item);
     void commit()
@@ -100,10 +100,9 @@ int Dbadb::do_export_dump(const Query& query, FILE* out)
     return 0;
 }
 
-int Dbadb::do_import(const list<string>& fnames, Reader& reader, const DBImportMessageOptions& opts)
+int Dbadb::do_import(const list<string>& fnames, Reader& reader, const DBImportOptions& opts)
 {
-    Importer importer(db);
-    importer.opts = opts;
+    Importer importer(db, opts);
     reader.read(fnames, importer);
     importer.commit();
     if (reader.verbose)
@@ -121,7 +120,7 @@ int Dbadb::do_import(const list<string>& fnames, Reader& reader, const DBImportM
     return reader.has_fail_file() ? 0 : 1;
 }
 
-int Dbadb::do_import(const std::string& fname, Reader& reader, const DBImportMessageOptions& opts)
+int Dbadb::do_import(const std::string& fname, Reader& reader, const DBImportOptions& opts)
 {
     list<string> fnames;
     fnames.push_back(fname);
@@ -130,7 +129,7 @@ int Dbadb::do_import(const std::string& fname, Reader& reader, const DBImportMes
 
 int Dbadb::do_export(const Query& query, File& file, const char* output_template, const char* forced_repmemo)
 {
-    ExporterOptions opts;
+    impl::ExporterOptions opts;
     if (output_template && output_template[0] != 0)
         opts.template_name = output_template;
 

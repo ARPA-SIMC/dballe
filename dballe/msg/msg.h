@@ -8,6 +8,8 @@
 #include <dballe/core/defs.h>
 #include <dballe/core/matcher.h>
 #include <dballe/msg/context.h>
+#include <dballe/importer.h>
+#include <dballe/exporter.h>
 #include <stdio.h>
 #include <vector>
 #include <memory>
@@ -18,6 +20,32 @@ struct CSVReader;
 struct CSVWriter;
 
 namespace impl {
+
+/// ImporterOptions with default constructor usable
+struct ImporterOptions : public dballe::ImporterOptions
+{
+    ImporterOptions() = default;
+    ImporterOptions(const std::string& s) : dballe::ImporterOptions(s) {}
+    ImporterOptions(const ImporterOptions&) = default;
+    ImporterOptions(ImporterOptions&&) = default;
+    ImporterOptions& operator=(const ImporterOptions&) = default;
+    ImporterOptions& operator=(ImporterOptions&&) = default;
+    using dballe::ImporterOptions::operator==;
+    using dballe::ImporterOptions::operator!=;
+};
+
+/// ExporterOptions with default constructor usable
+struct ExporterOptions : public dballe::ExporterOptions
+{
+    ExporterOptions() = default;
+    ExporterOptions(const ExporterOptions&) = default;
+    ExporterOptions(ExporterOptions&&) = default;
+    ExporterOptions& operator=(const ExporterOptions&) = default;
+    ExporterOptions& operator=(ExporterOptions&&) = default;
+    using dballe::ExporterOptions::operator==;
+    using dballe::ExporterOptions::operator!=;
+};
+
 // Compatibility/shortcut from old Messages implementation to new vector of shared_ptr
 typedef std::vector<std::shared_ptr<dballe::Message>> Messages;
 

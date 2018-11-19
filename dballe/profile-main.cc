@@ -39,12 +39,12 @@ struct ImportSynopOneStation: public Scenario
         auto db = db::DB::connect_test();
         db->reset();
         auto t = db->transaction();
-        DBImportMessageOptions opts;
-        opts.report = "synop";
-        opts.import_attributes = true;
-        opts.overwrite = true;
+        auto opts = DBImportOptions::create();
+        opts->report = "synop";
+        opts->import_attributes = true;
+        opts->overwrite = true;
         for (const auto& msgs: input)
-            t->import_messages(msgs, opts);
+            t->import_messages(msgs, *opts);
         t->commit();
     }
 
@@ -77,23 +77,23 @@ struct ImportSynopManyTimes: public Scenario
     {
         auto db = db::DB::connect_test();
         db->reset();
-        DBImportMessageOptions opts;
-        opts.report = "synop";
-        opts.import_attributes = true;
-        opts.overwrite = true;
+        auto opts = DBImportOptions::create();
+        opts->report = "synop";
+        opts->import_attributes = true;
+        opts->overwrite = true;
         {
             auto t = db->transaction();
-            t->import_messages(messages, opts);
+            t->import_messages(messages, *opts);
             t->commit();
         }
         {
             auto t = db->transaction();
-            t->import_messages(messages, opts);
+            t->import_messages(messages, *opts);
             t->commit();
         }
         {
             auto t = db->transaction();
-            t->import_messages(messages, opts);
+            t->import_messages(messages, *opts);
             t->commit();
         }
     }

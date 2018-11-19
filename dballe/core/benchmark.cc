@@ -201,7 +201,7 @@ void BasicProgress::test_failed(const Task& t, std::exception& e)
 
 void Messages::load(const std::string& pathname, dballe::Encoding encoding, const char* codec_options)
 {
-    auto importer = Importer::create(Encoding::BUFR, ImporterOptions::from_string(codec_options));
+    auto importer = Importer::create(Encoding::BUFR, codec_options);
     auto in = File::create(encoding, pathname, "rb");
     in->foreach([&](const BinaryMessage& rmsg) {
         emplace_back(importer->from_binary(rmsg));
