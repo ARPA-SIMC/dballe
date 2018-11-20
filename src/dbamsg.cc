@@ -898,7 +898,7 @@ struct Convert : public cmdline::Subcommand
 
     int main(poptContext optCon) override
     {
-        ExporterOptions opts;
+        impl::ExporterOptions opts;
         cmdline::Converter conv;
         cmdline::Reader reader(readeropts);
         reader.verbose = op_verbose;

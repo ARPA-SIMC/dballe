@@ -28,7 +28,7 @@ protected:
     iterator insert_new(Value&& val);
 
 public:
-    ValuesBase() = default;
+    ValuesBase() {}
     ValuesBase(const ValuesBase&) = default;
     ValuesBase(ValuesBase&&) = default;
     ValuesBase& operator=(const ValuesBase&) = default;
@@ -173,6 +173,7 @@ struct DBValues;
 struct Values : public impl::ValuesBase<Value>
 {
     using ValuesBase<Value>::ValuesBase;
+    Values() = default;
     explicit Values(const DBValues&);
     explicit Values(DBValues&&);
 
@@ -188,6 +189,7 @@ struct DBValues : public impl::ValuesBase<DBValue>
 {
 public:
     using ValuesBase<DBValue>::ValuesBase;
+    DBValues() = default;
     explicit DBValues(const Values&);
     explicit DBValues(Values&&);
 

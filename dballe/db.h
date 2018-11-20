@@ -200,9 +200,6 @@ public:
      */
     virtual void import_message(const Message& message, const DBImportOptions& opts=DBImportOptions::defaults) = 0;
 
-    /// import_message version with default options
-    void import_message(const Message& message);
-
     /**
      * Import Messages into the DB-All.e database
      *
@@ -212,9 +209,6 @@ public:
      *   Options controlling the import process
      */
     virtual void import_messages(const std::vector<std::shared_ptr<Message>>& messages, const DBImportOptions& opts=DBImportOptions::defaults);
-
-    /// import_messages version with default options
-    void import_messages(const std::vector<std::shared_ptr<Message>>& messages);
 
     /**
      * Insert station values into the database

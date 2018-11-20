@@ -329,7 +329,7 @@ unique_ptr<dballe::CursorStation> run_station_query(Tracer<>& trc, std::shared_p
     auto resptr = new Stations(tr);
     unique_ptr<db::CursorStation> res(resptr);
     resptr->load(trc, qb);
-    return res;
+    return std::move(res);
 }
 
 unique_ptr<dballe::CursorStationData> run_station_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
@@ -356,7 +356,7 @@ unique_ptr<dballe::CursorStationData> run_station_data_query(Tracer<>& trc, std:
         res.reset(resptr);
         resptr->load(trc, qb);
     }
-    return res;
+    return std::move(res);
 }
 
 unique_ptr<dballe::CursorData> run_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
@@ -382,7 +382,7 @@ unique_ptr<dballe::CursorData> run_data_query(Tracer<>& trc, std::shared_ptr<v7:
         res.reset(resptr);
         resptr->load(trc, qb);
     }
-    return res;
+    return std::move(res);
 }
 
 unique_ptr<dballe::CursorSummary> run_summary_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
@@ -403,7 +403,7 @@ unique_ptr<dballe::CursorSummary> run_summary_query(Tracer<>& trc, std::shared_p
     auto resptr = new Summary(tr);
     unique_ptr<CursorSummary> res(resptr);
     resptr->load(trc, qb);
-    return res;
+    return std::move(res);
 }
 
 void run_delete_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool station_vars, bool explain)
