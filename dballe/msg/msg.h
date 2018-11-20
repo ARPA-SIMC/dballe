@@ -118,7 +118,7 @@ public:
     void clear() { return m_contexts.clear(); }
     void reserve(typename std::vector<Value>::size_type size) { m_contexts.reserve(size); }
     iterator erase(iterator pos) { return m_contexts.erase(pos); }
-    iterator erase(const_iterator pos) { return m_contexts.erase(pos); }
+    // iterator erase(const_iterator pos) { return m_contexts.erase(pos); }
 };
 
 }
