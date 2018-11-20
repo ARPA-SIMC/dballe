@@ -198,7 +198,7 @@ public:
      * @param opts
      *   Options controlling the import process
      */
-    virtual void import_message(const Message& message, const DBImportOptions& opts) = 0;
+    virtual void import_message(const Message& message, const DBImportOptions& opts=DBImportOptions::defaults) = 0;
 
     /// import_message version with default options
     void import_message(const Message& message);
@@ -211,10 +211,36 @@ public:
      * @param opts
      *   Options controlling the import process
      */
-    virtual void import_messages(const std::vector<std::shared_ptr<Message>>& messages, const DBImportOptions& opts);
+    virtual void import_messages(const std::vector<std::shared_ptr<Message>>& messages, const DBImportOptions& opts=DBImportOptions::defaults);
 
     /// import_messages version with default options
     void import_messages(const std::vector<std::shared_ptr<Message>>& messages);
+
+    /**
+     * Insert station values into the database
+     *
+     * The IDs of the station and all variables that were inserted will be
+     * stored in vals.
+     *
+     * @param data
+     *   The values to insert.
+     * @param opts
+     *   Options controlling the insert operation
+     */
+    virtual void insert_station_data(Data& data, const DBInsertOptions& opts=DBInsertOptions::defaults) = 0;
+
+    /**
+     * Insert data values into the database
+     *
+     * The IDs of the station and all variables that were inserted will be
+     * stored in vals.
+     *
+     * @param data
+     *   The values to insert.
+     * @param opts
+     *   Options controlling the insert operation
+     */
+    virtual void insert_data(Data& data, const DBInsertOptions& opts=DBInsertOptions::defaults) = 0;
 };
 
 
@@ -337,6 +363,37 @@ struct DB: public std::enable_shared_from_this<DB>
      *   Options controlling the import process
      */
     void import_messages(const std::vector<std::shared_ptr<Message>>& messages, const DBImportOptions& opts=DBImportOptions::defaults);
+
+    /**
+     * Insert station values into the database
+     *
+     * The IDs of the station andl all variables that were inserted will be
+     * stored in vals.
+     *
+     * @param vals
+     *   The values to insert.
+     * @param opts
+     *   Options controlling the insert operation
+     */
+    void insert_station_data(Data& vals, const DBInsertOptions& opts=DBInsertOptions::defaults);
+
+    /**
+     * Insert data values into the database
+     *
+     * The IDs of the station andl all variables that were inserted will be
+     * stored in vals.
+     *
+     * @param vals
+     *   The values to insert.
+     * @param can_replace
+     *   If true, then existing data can be rewritten, else data can only be added.
+     * @param station_can_add
+     *   If false, it will not create a missing station record, and only data
+     *   for existing stations can be added. If true, then if we are inserting
+     *   data for a station that does not yet exists in the database, it will
+     *   be created.
+     */
+    void insert_data(Data& vals, const DBInsertOptions& opts=DBInsertOptions::defaults);
 };
 
 }

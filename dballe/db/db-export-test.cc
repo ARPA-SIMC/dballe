@@ -118,7 +118,7 @@ this->add_method("export", [](Fixture& f) {
     st.station.coords = Coords(45.0, 11.0);
     st.station.report = "synop";
     st.values.set("B01001", 10);
-    f.tr->insert_station_data(st, false, true);
+    f.tr->insert_station_data(st);
 
     // Import one real datum
     core::Data dv;
@@ -127,7 +127,7 @@ this->add_method("export", [](Fixture& f) {
     dv.level = Level(103, 2000);
     dv.trange = Trange(254, 0, 0);
     dv.values.set("B12101", 290.0);
-    f.tr->insert_data(dv, false, true);
+    f.tr->insert_data(dv);
 
     // Query back the data
     impl::Messages msgs = dballe::tests::messages_from_db(f.tr, core::Query());

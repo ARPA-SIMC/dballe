@@ -148,20 +148,6 @@ void DB::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport
     t->commit();
 }
 
-void DB::insert_station_data(Data& vals, bool can_replace, bool station_can_add)
-{
-    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
-    t->insert_station_data(vals, can_replace, station_can_add);
-    t->commit();
-}
-
-void DB::insert_data(Data& vals, bool can_replace, bool station_can_add)
-{
-    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
-    t->insert_data(vals, can_replace, station_can_add);
-    t->commit();
-}
-
 void DB::attr_insert_station(int data_id, const Values& attrs)
 {
     auto t = dynamic_pointer_cast<db::Transaction>(transaction());

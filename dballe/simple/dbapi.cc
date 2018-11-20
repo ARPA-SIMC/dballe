@@ -241,10 +241,13 @@ struct PrendiloOperation : public Operation
     wreport::Varcode varcode = 0;
     int last_inserted_station_id = API::missing_int;
     int last_inserted_data_id = API::missing_int;
+    impl::DBInsertOptions opts;
 
     PrendiloOperation(DbAPI& api)
         : api(api)
     {
+        opts.can_replace = (api.perms & DbAPI::PERM_DATA_WRITE) != 0;
+        opts.can_add_stations = (api.perms & DbAPI::PERM_ANA_WRITE) != 0;
     }
 
     void set_varcode(wreport::Varcode varcode) override { this->varcode = varcode; }
@@ -255,11 +258,11 @@ struct PrendiloOperation : public Operation
         last_inserted_varids.clear();
         if (api.station_context)
         {
-            api.tr->insert_station_data(api.input_data, (api.perms & DbAPI::PERM_DATA_WRITE) != 0, (api.perms & DbAPI::PERM_ANA_WRITE) != 0);
+            api.tr->insert_station_data(api.input_data, opts);
             for (const auto& v: api.input_data.values)
                 last_inserted_varids.push_back(VarID(v.code(), true, v.data_id));
         } else {
-            api.tr->insert_data(api.input_data, (api.perms & DbAPI::PERM_DATA_WRITE) != 0, (api.perms & DbAPI::PERM_ANA_WRITE) != 0);
+            api.tr->insert_data(api.input_data, opts);
             for (const auto& v: api.input_data.values)
                 last_inserted_varids.push_back(VarID(v.code(), false, v.data_id));
         }

@@ -159,42 +159,6 @@ public:
     virtual void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
 
     /**
-     * Insert station values into the database
-     *
-     * The IDs of the station and all variables that were inserted will be
-     * stored in vals.
-     *
-     * @param data
-     *   The values to insert.
-     * @param can_replace
-     *   If true, then existing data can be rewritten, else data can only be added.
-     * @param station_can_add
-     *   If false, it will not create a missing station record, and only data
-     *   for existing stations can be added. If true, then if we are inserting
-     *   data for a station that does not yet exists in the database, it will
-     *   be created.
-     */
-    virtual void insert_station_data(Data& data, bool can_replace, bool station_can_add) = 0;
-
-    /**
-     * Insert data values into the database
-     *
-     * The IDs of the station and all variables that were inserted will be
-     * stored in vals.
-     *
-     * @param data
-     *   The values to insert.
-     * @param can_replace
-     *   If true, then existing data can be rewritten, else data can only be added.
-     * @param station_can_add
-     *   If false, it will not create a missing station record, and only data
-     *   for existing stations can be added. If true, then if we are inserting
-     *   data for a station that does not yet exists in the database, it will
-     *   be created.
-     */
-    virtual void insert_data(Data& data, bool can_replace, bool station_can_add) = 0;
-
-    /**
      * Insert new attributes on a station value
      *
      * @param data_id
@@ -343,42 +307,6 @@ public:
      * exception if commit is called. Used for tests.
      */
     virtual std::shared_ptr<dballe::db::Transaction> test_transaction(bool readonly=false) = 0;
-
-    /**
-     * Insert station values into the database
-     *
-     * The IDs of the station andl all variables that were inserted will be
-     * stored in vals.
-     *
-     * @param vals
-     *   The values to insert.
-     * @param can_replace
-     *   If true, then existing data can be rewritten, else data can only be added.
-     * @param station_can_add
-     *   If false, it will not create a missing station record, and only data
-     *   for existing stations can be added. If true, then if we are inserting
-     *   data for a station that does not yet exists in the database, it will
-     *   be created.
-     */
-    void insert_station_data(Data& vals, bool can_replace, bool station_can_add);
-
-    /**
-     * Insert data values into the database
-     *
-     * The IDs of the station andl all variables that were inserted will be
-     * stored in vals.
-     *
-     * @param vals
-     *   The values to insert.
-     * @param can_replace
-     *   If true, then existing data can be rewritten, else data can only be added.
-     * @param station_can_add
-     *   If false, it will not create a missing station record, and only data
-     *   for existing stations can be added. If true, then if we are inserting
-     *   data for a station that does not yet exists in the database, it will
-     *   be created.
-     */
-    void insert_data(Data& vals, bool can_replace, bool station_can_add);
 
     /**
      * Perform database cleanup operations.

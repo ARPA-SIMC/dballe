@@ -117,4 +117,18 @@ void DB::import_messages(const std::vector<std::shared_ptr<Message>>& messages, 
     t->commit();
 }
 
+void DB::insert_station_data(Data& vals, const DBInsertOptions& opts)
+{
+    auto t = transaction();
+    t->insert_station_data(vals, opts);
+    t->commit();
+}
+
+void DB::insert_data(Data& vals, const DBInsertOptions& opts)
+{
+    auto t = transaction();
+    t->insert_data(vals, opts);
+    t->commit();
+}
+
 }

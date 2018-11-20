@@ -103,23 +103,23 @@ this->add_method("stationdata", [](Fixture& f) {
     vals.trange = Trange::instant();
     vals.datetime = Datetime(2014, 1, 1, 0, 0, 0);
     vals.values.set("B12101", 273.15);
-    f.tr->insert_data(vals, true, true);
+    f.tr->insert_data(vals);
     vals.clear_ids();
     vals.station.report = "temp";
     vals.values.set("B12101", 274.15);
-    f.tr->insert_data(vals, true, true);
+    f.tr->insert_data(vals);
 
     // Insert station names in both networks
     core::Data svals_camse;
     svals_camse.station.coords = vals.station.coords;
     svals_camse.station.report = "synop";
     svals_camse.values.set("B01019", "Camse");
-    f.tr->insert_station_data(svals_camse, true, true);
+    f.tr->insert_station_data(svals_camse);
     core::Data svals_esmac;
     svals_esmac.station.coords = vals.station.coords;
     svals_esmac.station.report = "temp";
     svals_esmac.values.set("B01019", "Esmac");
-    f.tr->insert_station_data(svals_esmac, true, true);
+    f.tr->insert_station_data(svals_esmac);
 
     // Query back all the data
     auto cur = f.tr->query_stations(core::Query());
@@ -181,7 +181,7 @@ this->add_method("query_ident", [](Fixture& f) {
     vals.trange = Trange::instant();
     vals.datetime = Datetime(2015, 4, 25, 12, 30, 45);
     vals.values.set("B12101", 295.1);
-    f.tr->insert_data(vals, true, true);
+    f.tr->insert_data(vals);
 
     wassert(actual(f.tr).try_station_query("ident=foo", 1));
     wassert(actual(f.tr).try_station_query("ident=bar", 0));
@@ -212,7 +212,7 @@ this->add_method("update_with_ana_id", [](Fixture& f) {
         vals.trange = Trange::instant();
         vals.datetime = Datetime(2015, 4, 25, 12, 30, 45);
         vals.values.set("B12101", 295.1);
-        f.tr->insert_data(vals, true, true);
+        f.tr->insert_data(vals);
     }
 
     core::Query query;
@@ -229,7 +229,9 @@ this->add_method("update_with_ana_id", [](Fixture& f) {
         vals.trange = Trange::instant();
         vals.datetime = Datetime(2015, 4, 25, 12, 30, 45);
         vals.values.set("B12101", 296.2);
-        wassert(f.tr->insert_data(vals, true, false));
+        impl::DBInsertOptions opts;
+        opts.can_replace = true; opts.can_add_stations = false;
+        wassert(f.tr->insert_data(vals, opts));
     }
 
     auto dcur = f.tr->query_data(query);

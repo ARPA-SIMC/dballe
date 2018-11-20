@@ -125,14 +125,17 @@ database ID of its value.
         static const char* kwlist[] = { "data", "can_replace", "can_add_stations", NULL };
         PyObject* pydata;
         int can_replace = 0;
-        int station_can_add = 0;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "O|ii", const_cast<char**>(kwlist), &pydata, &can_replace, &station_can_add))
+        int can_add_stations = 0;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O|ii", const_cast<char**>(kwlist), &pydata, &can_replace, &can_add_stations))
             return nullptr;
 
         try {
             auto data = data_from_python(pydata);
             ReleaseGIL gil;
-            self->db->insert_station_data(*data, can_replace, station_can_add);
+            impl::DBInsertOptions opts;
+            opts.can_replace = can_replace;
+            opts.can_add_stations = can_add_stations;
+            self->db->insert_station_data(*data, opts);
             gil.lock();
             return get_insert_ids(*data);
         } DBALLE_CATCH_RETURN_PYO
@@ -156,14 +159,17 @@ database ID of its value.
         static const char* kwlist[] = { "data", "can_replace", "can_add_stations", NULL };
         PyObject* pydata;
         int can_replace = 0;
-        int station_can_add = 0;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "O|ii", const_cast<char**>(kwlist), &pydata, &can_replace, &station_can_add))
+        int can_add_stations = 0;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O|ii", const_cast<char**>(kwlist), &pydata, &can_replace, &can_add_stations))
             return nullptr;
 
         try {
             auto data = data_from_python(pydata);
             ReleaseGIL gil;
-            self->db->insert_data(*data, can_replace, station_can_add);
+            impl::DBInsertOptions opts;
+            opts.can_replace = can_replace;
+            opts.can_add_stations = can_add_stations;
+            self->db->insert_data(*data, opts);
             gil.lock();
             return get_insert_ids(*data);
         } DBALLE_CATCH_RETURN_PYO

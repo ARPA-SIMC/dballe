@@ -264,10 +264,13 @@ void TestDataSet::populate_db(db::DB& db)
 void TestDataSet::populate_transaction(db::Transaction& tr)
 {
     // TODO: do everything in a single batch
+    impl::DBInsertOptions opts;
+    opts.can_replace = true;
+    opts.can_add_stations = true;
     for (auto& d: stations)
-        wassert(tr.insert_station_data(d.second, true, true));
+        wassert(tr.insert_station_data(d.second, opts));
     for (auto& d: data)
-        wassert(tr.insert_data(d.second, true, true));
+        wassert(tr.insert_data(d.second, opts));
 }
 
 OldDballeTestDataSet::OldDballeTestDataSet()

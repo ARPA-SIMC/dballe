@@ -346,7 +346,7 @@ this->add_method("query_ordering", [](Fixture& f) {
     auto insert = [&](const char* str) {
         core::Data data;
         data.set_from_test_string(str);
-        wassert(f.tr->insert_data(data, false, true));
+        wassert(f.tr->insert_data(data));
         return data;
     };
     auto vals01 = insert("lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=synop, B12101=280.15");

@@ -116,16 +116,16 @@ void Transaction::remove_all()
     clear_cached_state();
 }
 
-void Transaction::insert_station_data(dballe::Data& vals, bool can_replace, bool station_can_add)
+void Transaction::insert_station_data(dballe::Data& vals, const dballe::DBInsertOptions& opts)
 {
     Tracer<> trc(this->trc ? this->trc->trace_insert_station_data() : nullptr);
     core::Data& data = core::Data::downcast(vals);
-    batch::Station* st = batch.get_station(trc, data.station, station_can_add);
+    batch::Station* st = batch.get_station(trc, data.station, opts.can_add_stations);
 
     // Add all the variables we find
     batch::StationData& sd = st->get_station_data(trc);
     for (auto& i: data.values)
-        sd.add(i.get(), can_replace ? batch::UPDATE : batch::ERROR);
+        sd.add(i.get(), opts.can_replace ? batch::UPDATE : batch::ERROR);
 
     // Perform changes
     batch.write_pending(trc);
@@ -141,14 +141,14 @@ void Transaction::insert_station_data(dballe::Data& vals, bool can_replace, bool
     }
 }
 
-void Transaction::insert_data(dballe::Data& vals, bool can_replace, bool station_can_add)
+void Transaction::insert_data(dballe::Data& vals, const dballe::DBInsertOptions& opts)
 {
     core::Data& data = core::Data::downcast(vals);
     if (data.values.empty())
         throw error_notfound("no variables found in input record");
 
     Tracer<> trc(this->trc ? this->trc->trace_insert_data() : nullptr);
-    batch::Station* st = batch.get_station(trc, data.station, station_can_add);
+    batch::Station* st = batch.get_station(trc, data.station, opts.can_add_stations);
 
     batch::MeasuredData& md = st->get_measured_data(trc, data.datetime);
 
@@ -157,7 +157,7 @@ void Transaction::insert_data(dballe::Data& vals, bool can_replace, bool station
 
     // Add all the variables we find
     for (auto& i: data.values)
-        md.add(id_levtr, i.get(), can_replace ? batch::UPDATE : batch::ERROR);
+        md.add(id_levtr, i.get(), opts.can_replace ? batch::UPDATE : batch::ERROR);
 
     // Perform changes
     batch.write_pending(trc);

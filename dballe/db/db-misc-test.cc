@@ -117,10 +117,13 @@ this->add_method("insert", [](Fixture& f) {
 this->add_method("insert_perms", [](Fixture& f) {
     // Test insert
     OldDballeTestDataSet oldf;
+    impl::DBInsertOptions opts;
+    opts.can_replace = false;
+    opts.can_add_stations = false;
 
     // Check if adding a nonexisting station when not allowed causes an error
     try {
-        f.tr->insert_data(oldf.data["synop"], false, false);
+        f.tr->insert_data(oldf.data["synop"], opts);
         throw TestFailed("error_consistency should have been thrown");
     } catch (error_consistency& e) {
         wassert(actual(e.what()).contains("insert a station entry when it is forbidden"));
@@ -133,15 +136,19 @@ this->add_method("insert_perms", [](Fixture& f) {
     oldf.data["synop"].clear_ids();
 
     // Insert the record
-    wassert(f.tr->insert_data(oldf.data["synop"], false, true));
+    opts.can_add_stations = true;
+    wassert(f.tr->insert_data(oldf.data["synop"], opts));
     oldf.data["synop"].clear_ids();
     // Check if duplicate updates are allowed by insert
-    wassert(f.tr->insert_data(oldf.data["synop"], true, false));
+    opts.can_replace = true;
+    opts.can_add_stations = false;
+    wassert(f.tr->insert_data(oldf.data["synop"], opts));
     oldf.data["synop"].clear_ids();
     // Check if overwrites are trapped by insert_new
     oldf.data["synop"].values.set("B01011", "DB-All.e?");
+    opts.can_replace = opts.can_add_stations = false;
     try {
-        f.tr->insert_data(oldf.data["synop"], false, false);
+        f.tr->insert_data(oldf.data["synop"], opts);
         throw TestFailed("wreport::error should have been thrown");
     } catch (wreport::error& e) {
         wassert(actual(e.what()).matches("refusing to overwrite existing data|cannot replace an existing value|Duplicate entry"));
@@ -152,11 +159,11 @@ this->add_method("insert_twice", [](Fixture& f) {
     OldDballeTestDataSet oldf;
 
     // Insert the record twice
-    wassert(f.tr->insert_data(oldf.data["synop"], false, true));
+    wassert(f.tr->insert_data(oldf.data["synop"]));
     // This should fail, refusing to replace station info
     oldf.data["synop"].values.set("B01011", "DB-All.e?");
     try {
-        f.tr->insert_data(oldf.data["synop"], false, true);
+        f.tr->insert_data(oldf.data["synop"]);
         throw TestFailed("wreport::error should have been thrown");
     } catch (wreport::error& e) {
         wassert(actual(e.what()).matches("refusing to overwrite existing data|cannot replace an existing value|Duplicate entry"));
@@ -348,15 +355,17 @@ this->add_method("query_datetime", [](Fixture& f) {
 } while(0)
 
     core::Data a, b;
+    impl::DBInsertOptions disallow;
+    disallow.can_replace = disallow.can_add_stations = false;
 
     /* Year */
     f.tr->remove_all();
     a = base;
     a.datetime = Datetime(2005);
-    f.tr->insert_data(a, false, true);
+    f.tr->insert_data(a);
     b = base;
     b.datetime = Datetime(2006);
-    f.tr->insert_data(b, false, false);
+    f.tr->insert_data(b, disallow);
     WANTRESULT("yearmin=2006", b);
     WANTRESULT("yearmax=2005", a);
     WANTRESULT("year=2006", b);
@@ -365,10 +374,10 @@ this->add_method("query_datetime", [](Fixture& f) {
     f.tr->remove_all();
     a = base;
     a.datetime = Datetime(2006, 4);
-    f.tr->insert_data(a, false, true);
+    f.tr->insert_data(a);
     b = base;
     b.datetime = Datetime(2006, 5);
-    f.tr->insert_data(b, false, false);
+    f.tr->insert_data(b, disallow);
     WANTRESULT("year=2006, monthmin=5", b);
     WANTRESULT("year=2006, monthmax=4", a);
     WANTRESULT("year=2006, month=5", b);
@@ -377,10 +386,10 @@ this->add_method("query_datetime", [](Fixture& f) {
     f.tr->remove_all();
     a = base;
     a.datetime = Datetime(2006, 5, 2);
-    f.tr->insert_data(a, false, true);
+    f.tr->insert_data(a);
     b = base;
     b.datetime = Datetime(2006, 5, 3);
-    f.tr->insert_data(b, false, false);
+    f.tr->insert_data(b, disallow);
     WANTRESULT("year=2006, month=5, daymin=3", b);
     WANTRESULT("year=2006, month=5, daymax=2", a);
     WANTRESULT("year=2006, month=5, day=3", b);
@@ -389,10 +398,10 @@ this->add_method("query_datetime", [](Fixture& f) {
     f.tr->remove_all();
     a = base;
     a.datetime = Datetime(2006, 5, 3, 12);
-    f.tr->insert_data(a, false, true);
+    f.tr->insert_data(a);
     b = base;
     b.datetime = Datetime(2006, 5, 3, 13);
-    f.tr->insert_data(b, false, false);
+    f.tr->insert_data(b, disallow);
     WANTRESULT("year=2006, month=5, day=3, hourmin=13", b);
     WANTRESULT("year=2006, month=5, day=3, hourmax=12", a);
     WANTRESULT("year=2006, month=5, day=3, hour=13", b);
@@ -401,10 +410,10 @@ this->add_method("query_datetime", [](Fixture& f) {
     f.tr->remove_all();
     a = base;
     a.datetime = Datetime(2006, 5, 3, 12, 29);
-    f.tr->insert_data(a, false, true);
+    f.tr->insert_data(a);
     b = base;
     b.datetime = Datetime(2006, 5, 3, 12, 30);
-    f.tr->insert_data(b, false, false);
+    f.tr->insert_data(b, disallow);
     WANTRESULT("year=2006, month=5, day=3, hour=12, minumin=30", b);
     WANTRESULT("year=2006, month=5, day=3, hour=12, minumax=29", a);
     WANTRESULT("year=2006, month=5, day=3, hour=12, min=30", b);
@@ -493,9 +502,11 @@ this->add_method("query_station", [](Fixture& f) {
 this->add_method("attrs1", [](Fixture& f) {
     // Test attributes
     OldDballeTestDataSet oldf;
+    impl::DBInsertOptions opts;
+    opts.can_replace = opts.can_add_stations = true;
 
     // Insert a data record
-    f.tr->insert_data(oldf.data["synop"], true, true);
+    f.tr->insert_data(oldf.data["synop"], opts);
 
     Values qc;
     qc.set("B01007",  1);
@@ -536,9 +547,11 @@ this->add_method("attrs1", [](Fixture& f) {
 this->add_method("longitude_wrap", [](Fixture& f) {
     // Test longitude wrapping around
     OldDballeTestDataSet oldf;
+    impl::DBInsertOptions opts;
+    opts.can_replace = opts.can_add_stations = true;
 
     // Insert a data record
-    f.tr->insert_data(oldf.data["synop"], true, true);
+    f.tr->insert_data(oldf.data["synop"], opts);
 
     auto cur = f.tr->query_data(*query_from_string("latmin=10.0, latmax=15.0, lonmin=70.0, lonmax=-160.0"));
     wassert(actual(cur->remaining()) == 2);
@@ -658,9 +671,11 @@ this->add_method("query_invalid_sql", [](Fixture& f) {
 this->add_method("update", [](Fixture& f) {
     // Test value update
     OldDballeTestDataSet oldf;
+    impl::DBInsertOptions opts;
+    opts.can_replace = opts.can_add_stations = true;
 
     core::Data dataset = oldf.data["synop"];
-    f.tr->insert_data(dataset, true, true);
+    f.tr->insert_data(dataset, opts);
     Values attrs;
     attrs.set("B33007", 50);
     f.tr->attr_insert_data(dataset.values.value("B01012").data_id, attrs);
@@ -695,7 +710,8 @@ this->add_method("update", [](Fixture& f) {
     update.level = q.level;
     update.trange = q.trange;
     update.values.set(var.code(), 200);
-    wassert(f.tr->insert_data(update, true, false));
+    opts.can_replace = true; opts.can_add_stations = false;
+    wassert(f.tr->insert_data(update, opts));
 
     // Query again
     cur = f.tr->query_data(q);
@@ -752,10 +768,12 @@ this->add_method("query_stepbystep", [](Fixture& f) {
 this->add_method("insert_stationinfo_twice", [](Fixture& f) {
     // Test double insert of station info
     NavileDataSet ds;
+    impl::DBInsertOptions opts;
+    opts.can_replace = opts.can_add_stations = true;
 
     //wassert(actual(f.db).empty());
-    f.tr->insert_station_data(ds.stations["synop"], true, true);
-    f.tr->insert_station_data(ds.stations["synop"], true, true);
+    f.tr->insert_station_data(ds.stations["synop"], opts);
+    f.tr->insert_station_data(ds.stations["synop"], opts);
 
     // Query station data and ensure there is only one info (height)
     core::Query query;
@@ -768,10 +786,12 @@ this->add_method("insert_stationinfo_twice", [](Fixture& f) {
 this->add_method("insert_stationinfo_twice1", [](Fixture& f) {
     // Test double insert of station info
     NavileDataSet ds;
+    impl::DBInsertOptions opts;
+    opts.can_replace = opts.can_add_stations = true;
     ds.stations["metar"] = ds.stations["synop"];
     ds.stations["metar"].station.report = "metar";
-    f.tr->insert_station_data(ds.stations["synop"], true, true);
-    f.tr->insert_station_data(ds.stations["metar"], true, true);
+    f.tr->insert_station_data(ds.stations["synop"], opts);
+    f.tr->insert_station_data(ds.stations["metar"], opts);
 
     // Query station data and ensure there is only one info (height)
     core::Query query;
@@ -791,6 +811,8 @@ this->add_method("insert_stationinfo_twice1", [](Fixture& f) {
 this->add_method("insert_undefined_level2", [](Fixture& f) {
     // Test handling of values with undefined leveltype2 and l2
     OldDballeTestDataSet oldf;
+    impl::DBInsertOptions opts;
+    opts.can_replace = opts.can_add_stations = true;
 
     // Insert with undef leveltype2 and l2
     core::Data dataset;
@@ -799,7 +821,7 @@ this->add_method("insert_undefined_level2", [](Fixture& f) {
     dataset.level = Level(44, 55);
     dataset.trange = Trange(20);
     dataset.values.set("B01012", 300);
-    f.tr->insert_data(dataset, true, true);
+    f.tr->insert_data(dataset, opts);
 
     // Query it back
     auto cur = f.tr->query_data(*query_from_string("leveltype1=44, l1=55"));
@@ -858,7 +880,7 @@ this->add_method("query_best_priomax", [](Fixture& f) {
         insert.clear_ids();
         insert.station.report = *i;
         insert.values.set("B12101", (int)(i - rep_memos));
-        f.tr->insert_data(insert, false, true);
+        f.tr->insert_data(insert);
     }
 
     // Query with querybest only
@@ -912,13 +934,16 @@ this->add_method("fd_leaks", [](Fixture& f) {
     vals.station.coords = Coords(12.34560, 76.54320);
     vals.station.report = "synop";
     vals.values.set("B07030", 42.0); // Height
+    impl::DBInsertOptions opts;
+    opts.can_replace = true;
+    opts.can_add_stations = true;
 
     // Assume a max open file limit of 1100
     for (unsigned i = 0; i < 1100; ++i)
     {
         auto db = DB::create_db(f.backend);
         vals.clear_ids();
-        wassert(db->insert_station_data(vals, true, true));
+        wassert(db->insert_station_data(vals, opts));
     }
 });
 
