@@ -191,11 +191,14 @@ void common_init()
         if (!wrpy)
             throw PythonException();
 
+#if 0
+        // TODO: reenable when the new wreport has been deployed
         if (wrpy->version_major != 1)
         {
             PyErr_Format(PyExc_RuntimeError, "wreport C API version is %d.%d but only 1.x is supported", wrpy->version_major, wrpy->version_minor);
             throw PythonException();
         }
+#endif
     }
 }
 
