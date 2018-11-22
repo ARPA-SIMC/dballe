@@ -224,7 +224,7 @@ def parse(fname):
 @contextmanager
 def outfile(args):
     if args.outfile:
-        with open(args.outfile, "wt") as fd:
+        with open(args.outfile, "wt", encoding="utf8") as fd:
             try:
                 yield fd
             except Exception as e:

@@ -265,7 +265,7 @@ class Cmd:
     @contextmanager
     def outfile(self):
         if self.args.outfile:
-            with open(self.args.outfile, "wt") as fd:
+            with open(self.args.outfile, "wt", encoding="utf8") as fd:
                 try:
                     yield fd
                 except Exception as e:
