@@ -3,6 +3,8 @@ set -ex
 
 image=$1
 
+export LANG=en_US.UTF-8
+
 if [[ $image =~ ^centos: ]]
 then
     pkgcmd="yum"
