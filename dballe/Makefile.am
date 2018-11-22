@@ -16,10 +16,10 @@ common_libs = $(WREPORT_LIBS) $(LIBPQ_LIBS) $(SQLITE3_LIBS) $(MYSQL_LIBS) $(POPT
 #
 
 core/query-access.cc: core/query-access.in.cc mklookup
-	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
+	$(top_srcdir)/dballe/mklookup $< -o $@
 
 core/data-access.cc: core/data-access.in.cc mklookup
-	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
+	$(top_srcdir)/dballe/mklookup $< -o $@
 
 core/shortcuts.h: vars.csv mkvars
 	$(top_srcdir)/dballe/mkvars -t shortcuts.h $< -o $@
@@ -31,22 +31,22 @@ core/shortcuts-access.in.cc: vars.csv mkvars
 	$(top_srcdir)/dballe/mkvars -t shortcuts-access.in.cc $< -o $@
 
 core/shortcuts-access.cc: core/shortcuts-access.in.cc mklookup
-	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
+	$(top_srcdir)/dballe/mklookup $< -o $@
 
 msg/msg-extravars.h: vars.csv mkvars
 	$(top_srcdir)/dballe/mkvars -t msg-extravars.h $< -o $@
 
 msg/cursor-access.cc: msg/cursor-access.in.cc mklookup
-	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
+	$(top_srcdir)/dballe/mklookup $< -o $@
 
 db/v7/cursor-access.cc: db/v7/cursor-access.in.cc mklookup
-	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
+	$(top_srcdir)/dballe/mklookup $< -o $@
 
 db/summary-access.tcc: db/summary-access.in.tcc mklookup
-	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
+	$(top_srcdir)/dballe/mklookup $< -o $@
 
 simple/commonapi-access.cc: simple/commonapi-access.in.cc mklookup
-	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
+	$(top_srcdir)/dballe/mklookup $< -o $@
 
 core/aliases.cc: core/aliases.gperf
 	if ! gperf < $< > $@; then rm $@; /bin/false; fi

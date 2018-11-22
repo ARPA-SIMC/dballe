@@ -34,13 +34,13 @@ _dballe_la_LDFLAGS = -module -avoid-version -export-symbols-regex init_dballe
 _dballe_la_LIBADD = ../dballe/libdballe.la
 
 data-access.cc: data-access.in.cc $(top_srcdir)/dballe/mklookup
-	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
+	$(top_srcdir)/dballe/mklookup $< -o $@
 
 query-access.cc: query-access.in.cc $(top_srcdir)/dballe/mklookup
-	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
+	$(top_srcdir)/dballe/mklookup $< -o $@
 
 cursor-access.cc: cursor-access.in.cc $(top_srcdir)/dballe/mklookup
-	if ! $(top_srcdir)/dballe/mklookup $< > $@; then rm $@; /bin/false; fi
+	$(top_srcdir)/dballe/mklookup $< -o $@
 
 BUILT_SOURCES = data-access.cc query-access.cc
 EXTRA_DIST += \
