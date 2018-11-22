@@ -322,6 +322,18 @@ class CommonDBTestMixin(DballeDBMixin):
             self.db.import_messages(importer.from_file(fp))
         self.assertEqual(self.db.query_data({}).remaining, 371)
 
+    def test_query_attrs(self):
+        # See #114
+        with self.db.query_data({"var": "B01011"}) as cur:
+            self.assertEqual(cur.remaining, 1)
+            self.assertEqual(cur["var"].code, "B01011")
+            self.assertCountEqual(cur["attrs"], [])
+
+        with self.db.query_data({"var": "B01011", "query": "attrs"}) as cur:
+            self.assertEqual(cur.remaining, 1)
+            self.assertEqual(cur["var"].code, "B01011")
+            self.assertCountEqual((repr(x) for x in cur["attrs"]), ["Var('B33007', 50)", "Var('B33036', 75)"])
+
 
 class FullDBTestMixin(CommonDBTestMixin):
     def test_transaction_enter_exit(self):

@@ -1079,6 +1079,15 @@ void set_values_from_python(Values& values, wreport::Varcode code, PyObject* val
 template void set_values_from_python(Values& values, wreport::Varcode code, PyObject* val);
 template void set_values_from_python(DBValues& values, wreport::Varcode code, PyObject* val);
 
+PyObject* attrs_to_python(const wreport::Var& var)
+{
+    pyo_unique_ptr list(PyList_New(0));
+    for (const wreport::Var* a = var.next_attr(); a; a = a->next_attr())
+        if (PyList_Append(list, (PyObject*)wrpy->var_create_copy(*a)) == -1)
+            throw PythonException();
+    return list.release();
+}
+
 void add_var_to_dict(PyObject* dict, const wreport::Var& var)
 {
     char bcode[7];

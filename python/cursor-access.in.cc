@@ -46,6 +46,7 @@ PyObject* enqpy(db::CursorStationData& cur, const char* key, unsigned len)
             case "station":     return dbstation_to_python(c->cur->station);
             case "var":         return (PyObject*)throw_ifnull(wrpy->var_create_copy(*c->cur->value));
             case "context_id":  return dballe_int_to_python(c->cur->value.data_id);
+            case "attrs":       return attrs_to_python(*c->cur->value);
             default:            PyErr_Format(PyExc_KeyError, "key %s not found", key); throw PythonException();
         }
     } else {
@@ -86,6 +87,7 @@ PyObject* enqpy(db::CursorData& cur, const char* key, unsigned len)
             case "level":       return level_to_python(c->get_levtr().level);
             case "trange":      return trange_to_python(c->get_levtr().trange);
             case "var":         return (PyObject*)throw_ifnull(wrpy->var_create_copy(*c->cur->value));
+            case "attrs":       return attrs_to_python(*c->cur->value);
             case "context_id":  return dballe_int_to_python(c->cur->value.data_id);
             default:            PyErr_Format(PyExc_KeyError, "key %s not found", key); throw PythonException();
         }

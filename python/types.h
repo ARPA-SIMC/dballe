@@ -159,6 +159,9 @@ extern template void set_values_from_python(DBValues& values, wreport::Varcode c
 
 std::set<wreport::Varcode> varcodes_from_python(PyObject* o);
 
+/// Return a list with all the attributes in var [Var]
+PyObject* attrs_to_python(const wreport::Var& var);
+
 void add_var_to_dict(PyObject* dict, const wreport::Var& var);
 
 void query_setpy(core::Query& query, const char* key, unsigned len, PyObject* val);
