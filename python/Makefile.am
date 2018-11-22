@@ -55,7 +55,7 @@ doc_DATA += python-dballe.html
 endif
 
 python-dballe.rst: doc-dballe $(pkgpython_PYTHON) $(pyexec_LTLIBRARIES)
-	PYTHONIOENCODING=utf-8:surrogateescape PYTHONPATH=.libs libtool --mode=execute $(PYTHON) $(srcdir)/doc-dballe > $@ || (rm -f $@; false)
+	PYTHONPATH=.libs libtool --mode=execute $(PYTHON) $(srcdir)/doc-dballe -o $@
 
 python-dballe.html: python-dballe.rst
 	rst2html $< > $@ || (rm -f $@; false)

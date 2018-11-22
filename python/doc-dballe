@@ -5,12 +5,21 @@ os.environ["DBALLE_BUILDING_DOCS"] = "true"  # noqa
 import sys
 import re
 import inspect
+from contextlib import contextmanager
+import argparse
+import logging
 import dballe
 import dballe.volnd
+
+log = logging.getLogger("doc-dballe")
 
 re_docparsep = re.compile(r"\n(?:\s*\n)+")
 re_signature = re.compile(r"\S+\(.*\)")
 re_linebreak = re.compile(r"\s*\n\s*")
+
+
+class Fail(Exception):
+    pass
 
 
 def split_doc_summary(doc):
@@ -27,17 +36,19 @@ def split_doc_summary(doc):
 
 
 class Generator:
-    def __init__(self):
+    def __init__(self, file=sys.stdout):
         self.whitespace = True
+        self.file = file
 
     def spacer(self):
         if self.whitespace:
             return
-        print()
+        print(file=self.file)
         self.whitespace = True
 
     def print(self, *args, **kw):
         self.whitespace = False
+        kw["file"] = self.file
         print(*args, **kw)
 
     def print_indented(self, spaces, *args):
@@ -46,27 +57,27 @@ class Generator:
         for s in args:
             for line in s.split("\n"):
                 for i in range(1, spaces):
-                    sys.stdout.write(" ")
-                sys.stdout.write(line.replace("wreport.", "dballe."))
-                sys.stdout.write("\n")
+                    self.file.write(" ")
+                self.file.write(line.replace("wreport.", "dballe."))
+                self.file.write("\n")
 
     def text(self, text: str):
         self.print(text.lstrip())
 
     def para(self, text: str):
         if not self.whitespace:
-            print()
-        print(text.lstrip())
-        print()
+            print(file=self.file)
+        print(text.lstrip(), file=self.file)
+        print(file=self.file)
         self.whitespace = True
 
     def title(self, line, char='-', over=False):
         self.spacer()
         if over:
-            print(char * len(line))
-        print(line)
-        print(char * len(line))
-        print()
+            print(char * len(line), file=self.file)
+        print(line, file=self.file)
+        print(char * len(line), file=self.file)
+        print(file=self.file)
 
     def document_class(self, cls, **kw):
         name = cls.__name__
@@ -198,10 +209,11 @@ class Generator:
         self.spacer()
 
 
-gen = Generator()
+def print_docs(file):
+    gen = Generator(file=file)
 
-gen.title("README for DB-All.e Python bindings", char="=", over=True)
-gen.para("""
+    gen.title("README for DB-All.e Python bindings", char="=", over=True)
+    gen.para("""
 The DB-All.e Python bindings provide 2 levels of access to a DB-All.e database:
 a complete API similar to the Fortran and C++ API, and a high-level API called
 volnd that allows to automatically export matrices of data out of the database.
@@ -209,74 +221,59 @@ volnd that allows to automatically export matrices of data out of the database.
 .. contents::
 """)
 
-gen.title("The DB-All.e API", char="=")
+    gen.title("The DB-All.e API", char="=")
 
-gen.para("""
-The 'dballe' module has a few global methods:
-""")
+    gen.para("The 'dballe' module has a few global methods:") 
+    gen.document_members(dballe)
 
-gen.document_members(dballe)
+    gen.para("and several classes, documented in their own sections.")
 
-gen.para("""
-and several classes, documented in their own sections.
-""")
+    gen.document_class(dballe.Var)
+    gen.document_class(dballe.Varinfo)
+    gen.document_class(dballe.Vartable)
+    gen.document_class(dballe.Level)
+    gen.document_class(dballe.Trange)
+    gen.document_class(dballe.Station)
+    gen.document_class(dballe.DBStation)
+    gen.document_class(dballe.BinaryMessage)
+    gen.document_class(dballe.File)
+    gen.document_class(dballe.Message)
+    gen.document_class(dballe.Importer)
+    gen.document_class(dballe.ImporterFile)
+    gen.document_class(dballe.Exporter)
+    gen.document_class(dballe.DB, exclude=("attr_insert", "attr_remove", "query_attrs", "load", "export_to_file"))
+    gen.document_class(dballe.Transaction, exclude=("load", "export_to_file"))
+    gen.document_class(dballe.CursorStationDB)
+    gen.document_class(dballe.CursorStationDataDB, exclude=("query_attrs"))
+    gen.document_class(dballe.CursorDataDB, exclude=("query_attrs"))
+    gen.document_class(dballe.CursorSummaryDB)
+    gen.document_class(dballe.CursorSummarySummary)
+    gen.document_class(dballe.CursorSummaryDBSummary)
+    gen.document_class(dballe.Explorer)
+    gen.document_class(dballe.DBExplorer)
 
-gen.document_class(dballe.Var)
-gen.document_class(dballe.Varinfo)
-gen.document_class(dballe.Vartable)
-gen.document_class(dballe.Level)
-gen.document_class(dballe.Trange)
-gen.document_class(dballe.Station)
-gen.document_class(dballe.DBStation)
-gen.document_class(dballe.BinaryMessage)
-gen.document_class(dballe.File)
-gen.document_class(dballe.Message)
-gen.document_class(dballe.Importer)
-gen.document_class(dballe.ImporterFile)
-gen.document_class(dballe.Exporter)
-gen.document_class(dballe.DB, exclude=("attr_insert", "attr_remove", "query_attrs", "load", "export_to_file"))
-gen.document_class(dballe.Transaction, exclude=("load", "export_to_file"))
-gen.document_class(dballe.CursorStationDB)
-gen.document_class(dballe.CursorStationDataDB, exclude=("query_attrs"))
-gen.document_class(dballe.CursorDataDB, exclude=("query_attrs"))
-gen.document_class(dballe.CursorSummaryDB)
-gen.document_class(dballe.CursorSummarySummary)
-gen.document_class(dballe.CursorSummaryDBSummary)
-gen.document_class(dballe.Explorer)
-gen.document_class(dballe.DBExplorer)
+    gen.title("The volnd API", char="=")
 
+    gen.document(dballe.volnd)
 
-gen.para("""
-The volnd API
-=============
-""")
+    gen.para("This is the list of dimensions supported by dballe.volnd:")
 
-gen.document(dballe.volnd)
+    gen.document(dballe.volnd.AnaIndex)
+    gen.document(dballe.volnd.NetworkIndex)
+    gen.document(dballe.volnd.LevelIndex)
+    gen.document(dballe.volnd.TimeRangeIndex)
+    gen.document(dballe.volnd.DateTimeIndex)
+    gen.document(dballe.volnd.IntervalIndex)
 
-gen.para("""
-This is the list of dimensions supported by dballe.volnd:
-""")
+    gen.para("The data object used by ``AnaIndex`` is:")
 
-gen.document(dballe.volnd.AnaIndex)
-gen.document(dballe.volnd.NetworkIndex)
-gen.document(dballe.volnd.LevelIndex)
-gen.document(dballe.volnd.TimeRangeIndex)
-gen.document(dballe.volnd.DateTimeIndex)
-gen.document(dballe.volnd.IntervalIndex)
+    gen.document(dballe.volnd.AnaIndexEntry)
 
-gen.para("""
-The data object used by ``AnaIndex`` is:
-""")
+    gen.para("The extraction is done using the dballe.volnd.read function:")
 
-gen.document(dballe.volnd.AnaIndexEntry)
+    gen.document(dballe.volnd.read)
 
-gen.para("""
-The extraction is done using the dballe.volnd.read function:
-""")
-
-gen.document(dballe.volnd.read)
-
-gen.para("""
+    gen.para("""
 The result of dballe.volnd.read is a dict mapping output variable names to a
 dballe.volnd.Data object with the results.  All the Data objects share their
 indexes unless the *xxx*-Index definitions have been created with
@@ -285,10 +282,51 @@ indexes unless the *xxx*-Index definitions have been created with
 This is the dballe.volnd.Data class documentation:
 """)
 
-gen.document(dballe.volnd.Data)
+    gen.document(dballe.volnd.Data)
 
-gen.para("""
-The methods of dballe.volnd.Data are:
-""")
+    gen.para("The methods of dballe.volnd.Data are:")
 
-gen.document_members(dballe.volnd.Data)
+    gen.document_members(dballe.volnd.Data)
+
+
+@contextmanager
+def outfile(args):
+    if args.outfile:
+        with open(args.outfile, "wt", encoding="utf8") as fd:
+            try:
+                yield fd
+            except Exception as e:
+                if os.path.exists(args.outfile):
+                    os.unlink(args.outfile)
+                raise e
+    else:
+        yield sys.stdout
+
+
+def main():
+    parser = argparse.ArgumentParser(
+            description="build documentation for DB-All.e Python bindings")
+    parser.add_argument("--verbose", "-v", action="store_true", help="verbose output")
+    parser.add_argument("--debug", action="store_true", help="debug output")
+    parser.add_argument("-o", "--outfile", action="store", help="output file (default: stdout)")
+    parser.add_argument("pathname", nargs="?", help="source file with the lookup table description")
+    args = parser.parse_args()
+
+    log_format = "%(asctime)-15s %(levelname)s %(message)s"
+    level = logging.WARN
+    if args.debug:
+        level = logging.DEBUG
+    elif args.verbose:
+        level = logging.INFO
+    logging.basicConfig(level=level, stream=sys.stderr, format=log_format)
+
+    with outfile(args) as out:
+        print_docs(out)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Fail as e:
+        log.error("%s", e)
+        sys.exit(1)
