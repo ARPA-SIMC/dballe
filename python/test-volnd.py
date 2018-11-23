@@ -1,9 +1,4 @@
-#!/usr/bin/python
-# coding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+#!/usr/bin/python3
 import dballe
 from dballe.volnd import tddivmod1, tddivmod2, tddivmod3, read, AnaIndex, LevelIndex, TimeRangeIndex, DateTimeIndex, NetworkIndex
 from testlib import DballeDBMixin

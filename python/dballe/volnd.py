@@ -1,6 +1,3 @@
-#!/usr/bin/python
-# -*- coding: UTF-8 -*-
-
 """
 volnd is a way of extracting entire matrixes of data out of a DB-All.e
 database.
@@ -38,10 +35,6 @@ This example code extracts temperatures in a station by datetime matrix::
 #       ana_id?)
 # TODO: leggere i dati di anagrafica
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 import dballe
 from collections import namedtuple
 import datetime
