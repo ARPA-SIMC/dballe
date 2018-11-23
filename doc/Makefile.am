@@ -93,7 +93,7 @@ uninstall-local:
 	rm -rf $(DESTDIR)$(docdir)/c_api
 
 
-EXTRA_DIST += doxy2swig.py introduzione.odt
+EXTRA_DIST += introduzione.odt
 
 CLEANFILES += doxygen_sqlite3.db
 
