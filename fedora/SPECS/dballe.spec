@@ -291,7 +291,6 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 %dir %{python3_sitearch}
 %exclude %{python3_sitearch}/*.la
 %{python3_sitearch}/*.so*
-%{_bindir}/dbatbl_makeb
 
 %post
 /sbin/ldconfig
