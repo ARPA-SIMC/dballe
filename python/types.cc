@@ -587,11 +587,7 @@ Ident ident_from_python(PyObject* o)
 {
     if (!o || o == Py_None)
         return Ident();
-
-    // TODO: when migrating to python3 only, this can be replaced with a
-    // simple call to PyUnicode_AsUTF8. Currently string_from_python is
-    // only used to get version-independent string extraction
-    return Ident(string_from_python(o));
+    return Ident(throw_ifnull(PyUnicode_AsUTF8(o)));
 }
 
 PyObject* level_to_python(const Level& lev)
@@ -871,7 +867,12 @@ int dballe_int_lat_from_python(PyObject* o)
             throw PythonException();
         return Coords::lat_to_int(res);
     }
-    PyErr_SetString(PyExc_TypeError, "latitude value must be an instance of int, float, or None");
+    if (PyUnicode_Check(o))
+    {
+        double res = strtod(throw_ifnull(PyUnicode_AsUTF8(o)), nullptr);
+        return Coords::lat_to_int(res);
+    }
+    PyErr_SetString(PyExc_TypeError, "latitude value must be an instance of int, float, str, or None");
     throw PythonException();
 }
 
@@ -893,7 +894,12 @@ int dballe_int_lon_from_python(PyObject* o)
             throw PythonException();
         return Coords::lon_to_int(res);
     }
-    PyErr_SetString(PyExc_TypeError, "longitude value must be an instance of int, float, or None");
+    if (PyUnicode_Check(o))
+    {
+        double res = strtod(throw_ifnull(PyUnicode_AsUTF8(o)), nullptr);
+        return Coords::lon_to_int(res);
+    }
+    PyErr_SetString(PyExc_TypeError, "longitude value must be an instance of int, float, str, or None");
     throw PythonException();
 }
 

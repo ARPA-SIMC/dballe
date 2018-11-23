@@ -237,7 +237,7 @@ class ColumnAttribute(Column):
         self.values.add(var.format(""))
 
     def title(self):
-        data = next(iter(self.attributes.itervalues()))
+        data = next(iter(self.attributes.values()))
         var = data.get(self.varcode, None)
         if var is None:
             value = ""
