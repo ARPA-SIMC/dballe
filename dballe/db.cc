@@ -13,6 +13,11 @@ std::unique_ptr<DBImportOptions> DBImportOptions::create()
 
 const DBInsertOptions DBInsertOptions::defaults;
 
+std::unique_ptr<DBInsertOptions> DBInsertOptions::create()
+{
+    return std::unique_ptr<DBInsertOptions>(new DBInsertOptions);
+}
+
 /*
  * Cursor*
  */
