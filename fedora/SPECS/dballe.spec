@@ -209,7 +209,7 @@ Requires: %{python3_vers}-wreport3
 %build
 
 autoreconf -ifv
-%configure FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs
+%configure FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs --disable-static
 make
 make check
 
