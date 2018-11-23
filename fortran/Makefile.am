@@ -131,8 +131,6 @@ EXTRA_DIST = fortran.dox check-utils.h
 CLEANFILES = *.mod
 
 check-local:
-	for test in $(check_PROGRAMS); do \
-		$(TESTS_ENVIRONMENT) $$test ; \
-	done
+	$(TESTS_ENVIRONMENT) -v $(check_PROGRAMS)
 
 endif
